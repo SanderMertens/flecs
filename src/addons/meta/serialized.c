@@ -63,7 +63,7 @@ int flecs_meta_serialize_primitive(
     }
 
     ecs_meta_type_op_t *op = flecs_meta_ops_add(ops, flecs_meta_primitive_to_op_kind(ptr->kind));
-    op->offset = offset,
+    op->offset = offset;
     op->type = type;
     op->size = flecs_meta_type_size(world, type);
     return 0;
@@ -79,7 +79,7 @@ int flecs_meta_serialize_enum(
     (void)world;
     
     ecs_meta_type_op_t *op = flecs_meta_ops_add(ops, EcsOpEnum);
-    op->offset = offset,
+    op->offset = offset;
     op->type = type;
     op->size = ECS_SIZEOF(ecs_i32_t);
     return 0;
@@ -95,7 +95,7 @@ int flecs_meta_serialize_bitmask(
     (void)world;
     
     ecs_meta_type_op_t *op = flecs_meta_ops_add(ops, EcsOpBitmask);
-    op->offset = offset,
+    op->offset = offset;
     op->type = type;
     op->size = ECS_SIZEOF(ecs_u32_t);
     return 0;
@@ -263,16 +263,11 @@ int flecs_meta_serialize_component(
         return -1;
     }
 
-    switch(ptr->kind) {
-    case EcsArrayType:
+    if (ptr->kind == EcsArrayType) {
         return flecs_meta_serialize_array_component(world, type, ops);
-        break;
-    default:
+    } else {
         return flecs_meta_serialize_type(world, type, 0, ops);
-        break;
     }
-
-    return 0;
 }
 
 void ecs_meta_type_serialized_init(

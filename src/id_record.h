@@ -131,7 +131,7 @@ ecs_table_record_t* flecs_table_record_get(
     ecs_id_t id);
 
 /* Find table record for id record */
-const ecs_table_record_t* flecs_id_record_get_table(
+ecs_table_record_t* flecs_id_record_get_table(
     const ecs_id_record_t *idr,
     const ecs_table_t *table);
 

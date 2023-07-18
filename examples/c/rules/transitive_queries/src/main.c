@@ -102,11 +102,11 @@ int main(int argc, char *argv[]) {
             { .id = Person },
             { 
                 .first.id = LocatedIn, 
-                .second = { .name = (char*)"Location", .flags = EcsIsVariable },
+                .second = { .name = "Location", .flags = EcsIsVariable },
             },
             {
                 .first.id = Country, 
-                .src = { .name = (char*)"Location", .flags = EcsIsVariable },
+                .src = { .name = "Location", .flags = EcsIsVariable },
             },
         }
     });

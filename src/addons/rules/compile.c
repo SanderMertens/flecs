@@ -514,7 +514,7 @@ void flecs_rule_discover_vars(
     flecs_set_var_label(&rule_vars[0], NULL);
     rule_vars[0].id = 0;
     rule_vars[0].table_id = EcsVarNone;
-    var_names[0] = (char*)rule_vars[0].name;
+    var_names[0] = ECS_CONST_CAST(char*, rule_vars[0].name);
     rule_vars ++;
     var_names ++;
     var_count --;
@@ -523,7 +523,7 @@ void flecs_rule_discover_vars(
         ecs_rule_var_t *user_vars = ecs_vec_first_t(vars, ecs_rule_var_t);
         ecs_os_memcpy_n(rule_vars, user_vars, ecs_rule_var_t, var_count);
         for (i = 0; i < var_count; i ++) {
-            var_names[i] = (char*)rule_vars[i].name;
+            var_names[i] = ECS_CONST_CAST(char*, rule_vars[i].name);
         }
     }
 

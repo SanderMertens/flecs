@@ -102,7 +102,7 @@ ecs_map_val_t* ecs_map_get(
 
 /* Get element as pointer (auto-dereferences _ptr) */
 FLECS_API
-void* _ecs_map_get_deref(
+void* ecs_map_get_deref_(
     const ecs_map_t *map,
     ecs_map_key_t key);
 
@@ -173,7 +173,7 @@ void ecs_map_copy(
     const ecs_map_t *src);
 
 #define ecs_map_get_ref(m, T, k) ECS_CAST(T**, ecs_map_get(m, k))
-#define ecs_map_get_deref(m, T, k) ECS_CAST(T*, _ecs_map_get_deref(m, k))
+#define ecs_map_get_deref(m, T, k) ECS_CAST(T*, ecs_map_get_deref_(m, k))
 #define ecs_map_ensure_ref(m, T, k) ECS_CAST(T**, ecs_map_ensure(m, k))
 
 #define ecs_map_insert_ptr(m, k, v) ecs_map_insert(m, k, ECS_CAST(ecs_map_val_t, v))

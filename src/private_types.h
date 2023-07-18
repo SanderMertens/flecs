@@ -182,22 +182,22 @@ typedef struct ecs_table__t {
  * entity has a set of components not previously observed before. When a new
  * table is created, it is automatically matched with existing queries */
 struct ecs_table_t {
-    uint64_t id;                     /* Table id in sparse set */
-    ecs_flags32_t flags;             /* Flags for testing table properties */
-    uint16_t storage_count;          /* Number of components (excluding tags) */
-    ecs_type_t type;                 /* Identifies table type in type_index */
+    uint64_t id;                       /* Table id in sparse set */
+    ecs_flags32_t flags;               /* Flags for testing table properties */
+    uint16_t storage_count;            /* Number of components (excluding tags) */
+    ecs_type_t type;                   /* Identifies table type in type_index */
 
-    ecs_graph_node_t node;           /* Graph node */
-    ecs_data_t data;                 /* Component storage */
-    ecs_type_info_t **type_info;     /* Cached type info */
-    int32_t *dirty_state;            /* Keep track of changes in columns */
+    ecs_graph_node_t node;             /* Graph node */
+    ecs_data_t data;                   /* Component storage */
+    const ecs_type_info_t **type_info; /* Cached type info */
+    int32_t *dirty_state;              /* Keep track of changes in columns */
 
-    ecs_table_t *storage_table;      /* Table without tags */
-    ecs_id_t *storage_ids;           /* Component ids (prevent indirection) */
-    int32_t *storage_map;            /* Map type <-> data type
-                                      *  - 0..count(T):        type -> data_type
-                                      *  - count(T)..count(S): data_type -> type
-                                      */
+    ecs_table_t *storage_table;        /* Table without tags */
+    ecs_id_t *storage_ids;             /* Component ids (prevent indirection) */
+    int32_t *storage_map;              /* Map type <-> data type
+                                        *  - 0..count(T):        type -> data_type
+                                        *  - count(T)..count(S): data_type -> type
+                                        */
 
     ecs_table__t *_;                 /* Infrequently accessed table metadata */
 };
@@ -508,7 +508,7 @@ struct ecs_stage_t {
     ecs_entity_t scope;              /* Entity of current scope */
     ecs_entity_t with;               /* Id to add by default to new entities */
     ecs_entity_t base;               /* Currently instantiated top-level base */
-    ecs_entity_t *lookup_path;       /* Search path used by lookup operations */
+    const ecs_entity_t *lookup_path; /* Search path used by lookup operations */
 
     /* Properties */
     bool auto_merge;                 /* Should this stage automatically merge? */

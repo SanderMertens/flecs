@@ -587,12 +587,11 @@ typedef struct ecs_term_id_t {
                                  * To explicitly set the id to 0, leave the id
                                  * member to 0 and set EcsIsEntity in flags. */
 
-    char *name;                 /**< Name. This can be either the variable name
+    const char *name;           /**< Name. This can be either the variable name
                                  * (when the EcsIsVariable flag is set) or an
-                                 * entity name. Entity names are used to 
-                                 * initialize the id member during term 
-                                 * finalization and will be freed when term.move
-                                 * is set to true. */
+                                 * entity name. When ecs_term_t::move is true,
+                                 * the API assumes ownership over the string and
+                                 * will free it when the term is destroyed. */
 
     ecs_entity_t trav;          /**< Relationship to traverse when looking for the
                                  * component. The relationship must have
@@ -2046,12 +2045,12 @@ ecs_entity_t ecs_get_entity(
  * @return True if the pointer is of the specified type.
  */
 FLECS_API
-bool _ecs_poly_is(
+bool ecs_poly_is_(
     const ecs_poly_t *object,
     int32_t type);
 
 #define ecs_poly_is(object, type)\
-    _ecs_poly_is(object, type##_magic)
+    ecs_poly_is_(object, type##_magic)
 
 /** Make a pair id.
  * This function is equivalent to using the ecs_pair macro, and is added for

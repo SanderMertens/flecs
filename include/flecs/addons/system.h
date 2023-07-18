@@ -121,7 +121,7 @@ ecs_entity_t ecs_system_init(
         desc.callback = id_; \
         ecs_id(id_) = ecs_system_init(world, &desc); \
     } \
-    ecs_assert(ecs_id(id_) != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_id(id_) != 0, ECS_INVALID_PARAMETER, NULL)
 
 /** Declare & define a system.
  * 
@@ -132,7 +132,7 @@ ecs_entity_t ecs_system_init(
     ecs_entity_t ecs_id(id) = 0; ECS_SYSTEM_DEFINE(world, id, phase, __VA_ARGS__);\
     ecs_entity_t id = ecs_id(id);\
     (void)ecs_id(id);\
-    (void)id;
+    (void)id
 
 /** Shorthand for creating a system with ecs_system_init.
  *

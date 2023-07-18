@@ -1017,7 +1017,7 @@ void flecs_query_sort_table(
     void *ptr = NULL;
     int32_t size = 0;
     if (column_index != -1) {
-        ecs_type_info_t *ti = table->type_info[column_index];
+        const ecs_type_info_t *ti = table->type_info[column_index];
         ecs_vec_t *column = &data->columns[column_index];
         size = ti->size;
         ptr = ecs_vec_first(column);
@@ -1790,10 +1790,10 @@ void flecs_query_iter_init(
     ecs_poly_assert(poly, ecs_query_t);
 
     if (filter) {
-        iter[1] = ecs_query_iter(world, (ecs_query_t*)poly);
+        iter[1] = ecs_query_iter(world, ECS_CONST_CAST(ecs_query_t*, poly));
         iter[0] = ecs_term_chain_iter(&iter[1], filter);
     } else {
-        iter[0] = ecs_query_iter(world, (ecs_query_t*)poly);
+        iter[0] = ecs_query_iter(world, ECS_CONST_CAST(ecs_query_t*, poly));
     }
 }
 
@@ -2168,7 +2168,7 @@ ecs_iter_t ecs_query_iter(
 
     ecs_iter_t result = {
         .real_world = world,
-        .world = (ecs_world_t*)stage,
+        .world = ECS_CONST_CAST(ecs_world_t*, stage),
         .terms = query->filter.terms,
         .field_count = query->filter.field_count,
         .table_count = table_count,
@@ -2183,8 +2183,8 @@ ecs_iter_t ecs_query_iter(
     if (!(query->flags & EcsQueryTrivialIter)) {
         /* Check if non-This terms (like singleton terms) still match */
         if (!(filter->flags & EcsFilterMatchOnlyThis)) {
-            fit = flecs_filter_iter_w_flags(
-                (ecs_world_t*)stage, &query->filter, EcsIterIgnoreThis);
+            fit = flecs_filter_iter_w_flags(ECS_CONST_CAST(ecs_world_t*, stage),
+                &query->filter, EcsIterIgnoreThis);
             if (!ecs_filter_next(&fit)) {
                 /* No match, so return nothing */
                 ecs_iter_fini(&fit);

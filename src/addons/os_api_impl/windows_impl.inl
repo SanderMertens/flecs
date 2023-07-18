@@ -6,17 +6,32 @@
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
-#include <winsock2.h>
-#include <windows.h>
+#include <WinSock2.h>
+#include <Windows.h>
+
+typedef struct ecs_win_thread_t {
+    HANDLE thread;
+    ecs_os_thread_callback_t callback;
+    void *arg;
+} ecs_win_thread_t;
+
+static
+DWORD flecs_win_thread(void *ptr) {
+    ecs_win_thread_t *thread = ptr;
+    thread->callback(thread->arg);
+    return 0;
+}
 
 static
 ecs_os_thread_t win_thread_new(
     ecs_os_thread_callback_t callback, 
     void *arg)
 {
-    HANDLE *thread = ecs_os_malloc_t(HANDLE);
-    *thread = CreateThread(
-        NULL, 0, (LPTHREAD_START_ROUTINE)callback, arg, 0, NULL);
+    ecs_win_thread_t *thread = ecs_os_malloc_t(ecs_win_thread_t);
+    thread->arg= arg;
+    thread->callback = callback;
+    thread->thread = CreateThread(
+        NULL, 0, (LPTHREAD_START_ROUTINE)flecs_win_thread, thread, 0, NULL);
     return (ecs_os_thread_t)(uintptr_t)thread;
 }
 
@@ -24,8 +39,8 @@ static
 void* win_thread_join(
     ecs_os_thread_t thr)
 {
-    HANDLE *thread = (HANDLE*)(uintptr_t)thr;
-    DWORD r = WaitForSingleObject(*thread, INFINITE);
+    ecs_win_thread_t *thread = (ecs_win_thread_t*)(uintptr_t)thr;
+    DWORD r = WaitForSingleObject(thread->thread, INFINITE);
     if (r == WAIT_FAILED) {
         ecs_err("win_thread_join: WaitForSingleObject failed");
     }
@@ -43,14 +58,14 @@ static
 int32_t win_ainc(
     int32_t *count) 
 {
-    return InterlockedIncrement(count);
+    return InterlockedIncrement((volatile long*)count);
 }
 
 static
 int32_t win_adec(
     int32_t *count) 
 {
-    return InterlockedDecrement(count);
+    return InterlockedDecrement((volatile long*)count);
 }
 
 static
@@ -184,20 +199,21 @@ void win_enable_high_timer_resolution(bool enable)
         return;
     }
 
-    LONG (__stdcall *pNtSetTimerResolution)(
-        ULONG desired, BOOLEAN set, ULONG * current);
+    union {
+        LONG (__stdcall *f)(
+            ULONG desired, BOOLEAN set, ULONG * current);
+        FARPROC p;
+    } func;
 
-    pNtSetTimerResolution = (LONG(__stdcall*)(ULONG, BOOLEAN, ULONG*))
-        GetProcAddress(hntdll, "NtSetTimerResolution");
-
-    if(!pNtSetTimerResolution) {
+    func.p = GetProcAddress(hntdll, "NtSetTimerResolution");
+    if(!func.p) {
         return;
     }
 
     ULONG current, resolution = 10000; /* 1 ms */
 
     if (!enable && win_current_resolution) {
-        pNtSetTimerResolution(win_current_resolution, 0, &current);
+        func.f(win_current_resolution, 0, &current);
         win_current_resolution = 0;
         return;
     } else if (!enable) {
@@ -209,13 +225,13 @@ void win_enable_high_timer_resolution(bool enable)
     }
 
     if (win_current_resolution) {
-        pNtSetTimerResolution(win_current_resolution, 0, &current);
+        func.f(win_current_resolution, 0, &current);
     }
 
-    if (pNtSetTimerResolution(resolution, 1, &current)) {
+    if (func.f(resolution, 1, &current)) {
         /* Try setting a lower resolution */
         resolution *= 2;
-        if(pNtSetTimerResolution(resolution, 1, &current)) return;
+        if(func.f(resolution, 1, &current)) return;
     }
 
     win_current_resolution = resolution;
@@ -227,7 +243,7 @@ uint64_t win_time_now(void) {
 
     LARGE_INTEGER qpc_t;
     QueryPerformanceCounter(&qpc_t);
-    now = (uint64_t)(qpc_t.QuadPart / win_time_freq);
+    now = (uint64_t)((double)qpc_t.QuadPart / win_time_freq);
 
     return now;
 }

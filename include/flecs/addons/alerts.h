@@ -43,6 +43,7 @@ FLECS_API extern ECS_COMPONENT_DECLARE(FlecsAlerts);
 FLECS_API extern ECS_COMPONENT_DECLARE(EcsAlert);
 FLECS_API extern ECS_COMPONENT_DECLARE(EcsAlertInstance);
 FLECS_API extern ECS_COMPONENT_DECLARE(EcsAlertsActive);
+FLECS_API extern ECS_COMPONENT_DECLARE(EcsAlertTimeout);
 
 /* Alert severity tags */
 FLECS_API extern ECS_TAG_DECLARE(EcsAlertInfo);

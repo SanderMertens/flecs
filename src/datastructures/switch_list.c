@@ -328,7 +328,7 @@ uint64_t flecs_switch_get(
 ecs_vec_t* flecs_switch_values(
     const ecs_switch_t *sw)
 {
-    return (ecs_vec_t*)&sw->values;
+    return ECS_CONST_CAST(ecs_vec_t*, &sw->values);
 }
 
 int32_t flecs_switch_case_count(

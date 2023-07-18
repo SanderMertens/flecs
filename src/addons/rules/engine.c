@@ -20,13 +20,13 @@ ecs_allocator_t* flecs_rule_get_allocator(
 }
 
 static
-ecs_rule_op_ctx_t* _flecs_op_ctx(
+ecs_rule_op_ctx_t* flecs_op_ctx_(
     const ecs_rule_run_ctx_t *ctx)
 {
     return &ctx->op_ctx[ctx->op_index];
 }
 
-#define flecs_op_ctx(ctx, op_kind) (&_flecs_op_ctx(ctx)->is.op_kind)
+#define flecs_op_ctx(ctx, op_kind) (&flecs_op_ctx_(ctx)->is.op_kind)
 
 static
 ecs_table_range_t flecs_range_from_entity(
@@ -557,7 +557,7 @@ bool flecs_rule_with_id(
         }
     }
 
-    const ecs_table_record_t *tr = flecs_id_record_get_table(idr, table);
+    ecs_table_record_t *tr = flecs_id_record_get_table(idr, table);
     if (!tr) {
         return false;
     }
@@ -1871,7 +1871,7 @@ ecs_iter_t ecs_rule_iter(
     ecs_run_aperiodic(rule->filter.world, EcsAperiodicEmptyTables);
 
     int32_t i, var_count = rule->var_count, op_count = rule->op_count;
-    it.world = (ecs_world_t*)world;
+    it.world = ECS_CONST_CAST(ecs_world_t*, world);
     it.real_world = rule->filter.world;
     it.terms = rule->filter.terms;
     it.next = ecs_rule_next;

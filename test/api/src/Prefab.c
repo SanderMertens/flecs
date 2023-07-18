@@ -3576,7 +3576,7 @@ void Prefab_override_dont_inherit() {
 void Prefab_prefab_w_switch() {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Movement, Union)
+    ECS_ENTITY(world, Movement, Union);
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
 

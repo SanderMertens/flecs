@@ -85,7 +85,7 @@ void ecs_vec_remove_last(
 FLECS_API
 ecs_vec_t ecs_vec_copy(
     struct ecs_allocator_t *allocator,
-    ecs_vec_t *vec,
+    const ecs_vec_t *vec,
     ecs_size_t size);
 
 #define ecs_vec_copy_t(allocator, vec, T) \

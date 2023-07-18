@@ -283,9 +283,11 @@ ecs_entity_t ecs_system_init(
         system->multi_threaded = desc->multi_threaded;
         system->no_readonly = desc->no_readonly;
 
-        if (desc->interval != 0 || desc->rate != 0 || desc->tick_source != 0) {
+        if (ECS_NEQZERO(desc->interval) || ECS_NEQZERO(desc->rate) || 
+            ECS_NEQZERO(desc->tick_source)) 
+        {
 #ifdef FLECS_TIMER
-            if (desc->interval != 0) {
+            if (ECS_NEQZERO(desc->interval)) {
                 ecs_set_interval(world, entity, desc->interval);
             }
 
@@ -348,9 +350,11 @@ ecs_entity_t ecs_system_init(
             system->no_readonly = desc->no_readonly;
         }
 
-        if (desc->interval != 0 || desc->rate != 0 || desc->tick_source != 0) {
+        if (ECS_NEQZERO(desc->interval) || desc->rate != 0 || 
+            desc->tick_source != 0) 
+        {
 #ifdef FLECS_TIMER
-            if (desc->interval != 0) {
+            if (ECS_NEQZERO(desc->interval)) {
                 ecs_set_interval(world, entity, desc->interval);
             }
             if (desc->rate != 0) {

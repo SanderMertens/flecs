@@ -73,12 +73,12 @@ int main(int argc, char *argv[]) {
             { .first.id = RangedUnit },
             {
                 .first.id = Platoon, 
-                .second = { .name = (char*)"Platoon", .flags = EcsIsVariable },
+                .second = { .name = "Platoon", .flags = EcsIsVariable },
             },
             { 
                 .first.id = Player, 
-                .src = { .name = (char*)"Platoon", .flags = EcsIsVariable },
-                .second = { .name = (char*)"Player", .flags = EcsIsVariable },
+                .src = { .name = "Platoon", .flags = EcsIsVariable },
+                .second = { .name = "Player", .flags = EcsIsVariable },
             }
         }
     });

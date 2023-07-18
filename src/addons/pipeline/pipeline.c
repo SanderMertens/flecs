@@ -181,7 +181,9 @@ bool flecs_pipeline_check_term(
                 flecs_pipeline_set_write_state(write_state, id);
             }
             break;
-        default:
+        case EcsInOutDefault:
+        case EcsInOutNone:
+        case EcsIn:
             break;
         }
 
@@ -193,7 +195,10 @@ bool flecs_pipeline_check_term(
                  * the main store so it must be merged first */
                 return true;
             }
-        default:
+            /* fall through */
+        case EcsInOutDefault:
+        case EcsInOutNone:
+        case EcsOut:
             break;
         }
     }
@@ -514,7 +519,8 @@ void ecs_run_pipeline(
         flecs_create_worker_threads(world);
     }
 
-    EcsPipeline *p = (EcsPipeline*)ecs_get(world, pipeline, EcsPipeline);
+    EcsPipeline *p = 
+        ECS_CONST_CAST(EcsPipeline*, ecs_get(world, pipeline, EcsPipeline));
     flecs_workers_progress(world, p->state, delta_time);
 
     if (ecs_using_task_threads(world))
@@ -834,9 +840,9 @@ void FlecsPipelineFini(
 
 #define flecs_bootstrap_phase(world, phase, depends_on)\
     flecs_bootstrap_tag(world, phase);\
-    _flecs_bootstrap_phase(world, phase, depends_on)
+    flecs_bootstrap_phase_(world, phase, depends_on)
 static
-void _flecs_bootstrap_phase(
+void flecs_bootstrap_phase_(
     ecs_world_t *world,
     ecs_entity_t phase,
     ecs_entity_t depends_on)

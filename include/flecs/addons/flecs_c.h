@@ -43,7 +43,7 @@
         ecs_assert(id_ != 0, ECS_INVALID_PARAMETER, NULL); \
     } \
     (void)id_; \
-    (void)ecs_id(id_);
+    (void)ecs_id(id_)
 
 /** Declare & define an entity.
  *
@@ -53,7 +53,7 @@
 #define ECS_ENTITY(world, id, ...) \
     ecs_entity_t ecs_id(id); \
     ecs_entity_t id = 0; \
-    ECS_ENTITY_DEFINE(world, id, __VA_ARGS__);
+    ECS_ENTITY_DEFINE(world, id, __VA_ARGS__)
 
 /** Forward declare a tag. */
 #define ECS_TAG_DECLARE ECS_DECLARE
@@ -109,8 +109,8 @@
         desc.type.size = ECS_SIZEOF(id_); \
         desc.type.alignment = ECS_ALIGNOF(id_); \
         ecs_id(id_) = ecs_component_init(world, &desc);\
-        ecs_assert(ecs_id(id_) != 0, ECS_INVALID_PARAMETER, NULL);\
-    }
+    }\
+    ecs_assert(ecs_id(id_) != 0, ECS_INVALID_PARAMETER, NULL)
 
 /** Declare & define a component.
  *
@@ -154,7 +154,7 @@
     ECS_OBSERVER_DEFINE(world, id, kind, __VA_ARGS__);\
     ecs_entity_t id = ecs_id(id);\
     (void)ecs_id(id);\
-    (void)id;
+    (void)id
 
 /** Shorthand for creating an entity with ecs_entity_init.
  *

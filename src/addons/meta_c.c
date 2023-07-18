@@ -338,7 +338,8 @@ const char* meta_parse_member(
         /* If the [ was separated by a space, it will not be parsed as part of
          * the name */
         if (*ptr == '[') {
-            array_start = (char*)ptr; /* safe, will not be modified */
+            /* safe, will not be modified */
+            array_start = ECS_CONST_CAST(char*, ptr);
         }
     }
 
@@ -811,8 +812,13 @@ int ecs_meta_from_desc(
             goto error;
         }
         break;
-    default:
+    case EcsPrimitiveType:
+    case EcsArrayType:
+    case EcsVectorType:
+    case EcsOpaqueType:
         break;
+    default:
+        ecs_throw(ECS_INTERNAL_ERROR, "invalid type kind");
     }
 
     return 0;

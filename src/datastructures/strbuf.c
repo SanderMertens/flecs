@@ -249,7 +249,7 @@ void flecs_strbuf_grow(
 static
 void flecs_strbuf_grow_str(
     ecs_strbuf_t *b,
-    char *str,
+    const char *str,
     char *alloc_str,
     int32_t size)
 {
@@ -262,7 +262,7 @@ void flecs_strbuf_grow_str(
     e->super.buffer_embedded = false;
     e->super.pos = size ? size : (int32_t)ecs_os_strlen(str);
     e->super.next = NULL;
-    e->super.buf = str;
+    e->super.buf = ECS_CONST_CAST(char*, str);
     e->alloc_str = alloc_str;
 }
 
@@ -572,7 +572,7 @@ bool ecs_strbuf_appendstr_zerocpy_const(
     ecs_assert(str != NULL, ECS_INVALID_PARAMETER, NULL);
     /* Removes const modifier, but logic prevents changing / delete string */
     flecs_strbuf_init(b);
-    flecs_strbuf_grow_str(b, (char*)str, NULL, 0);
+    flecs_strbuf_grow_str(b, str, NULL, 0);
     return true;
 }
 
@@ -585,7 +585,7 @@ bool ecs_strbuf_appendstr_zerocpyn_const(
     ecs_assert(str != NULL, ECS_INVALID_PARAMETER, NULL);
     /* Removes const modifier, but logic prevents changing / delete string */
     flecs_strbuf_init(b);
-    flecs_strbuf_grow_str(b, (char*)str, NULL, n);
+    flecs_strbuf_grow_str(b, str, NULL, n);
     return true;
 }
 

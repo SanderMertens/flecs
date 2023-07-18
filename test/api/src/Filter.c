@@ -11466,7 +11466,7 @@ void Filter_oneof_w_mismatching_obj() {
     ECS_ENTITY(world, Rel, (OneOf, Parent));
     ECS_ENTITY(world, ObjA, (ChildOf, Parent));
     ECS_ENTITY(world, ObjB, (ChildOf, Parent));
-    ECS_TAG(world, ObjC)
+    ECS_TAG(world, ObjC);
 
     ecs_entity_t e1 = ecs_new_w_pair(world, Rel, ObjA);
     test_assert( ecs_has_pair(world, e1, Rel, ObjA));
@@ -11493,7 +11493,7 @@ void Filter_oneof_w_mismatching_obj_expr() {
     ECS_ENTITY(world, Rel, (OneOf, Parent));
     ECS_ENTITY(world, ObjA, (ChildOf, Parent));
     ECS_ENTITY(world, ObjB, (ChildOf, Parent));
-    ECS_TAG(world, ObjC)
+    ECS_TAG(world, ObjC);
 
     ecs_entity_t e1 = ecs_new_w_pair(world, Rel, ObjA);
     test_assert( ecs_has_pair(world, e1, Rel, ObjA));

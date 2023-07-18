@@ -67,6 +67,38 @@
     #endif
 #endif
 
+/* Ignored warnings */
+#if defined(ECS_TARGET_CLANG)
+/* Warns for double or redundant semicolons. There are legitimate cases where a
+ * semicolon after an empty statement is useful, for example after a macro that
+ * is replaced with a code block. With this warning enabled, semicolons would 
+ * only have to be added after macro's that are not code blocks, which in some
+ * cases isn't possible as the implementation of a macro can be different in
+ * debug/release mode. */
+#pragma clang diagnostic ignored "-Wextra-semi-stmt"
+/* This is valid in C99, and Flecs must be compiled as C99. */
+#pragma clang diagnostic ignored "-Wdeclaration-after-statement"
+/* Clang attribute to detect fallthrough isn't supported on older versions. 
+ * Implicit fallthrough is still detected by gcc and ignored with "fall through"
+ * comments */
+#pragma clang diagnostic ignored "-Wimplicit-fallthrough"
+/* This warning prevents adding a default case when all enum constants are part
+ * of the switch. In C however an enum type can assume any value in the range of
+ * the type, and this warning makes it harder to catch invalid enum values. */
+#pragma clang diagnostic ignored "-Wcovered-switch-default"
+/* This warning prevents some casts of function results to a different kind of
+ * type, e.g. casting an int result to double. Not very useful in practice, as
+ * it just forces the code to assign to a variable first, then cast. */
+#pragma clang diagnostic ignored "-Wbad-function-cast"
+/* Format strings can be passed down from other functions. */
+#pragma clang diagnostic ignored "-Wformat-nonliteral"
+#elif defined(ECS_TARGET_GCC)
+#pragma GCC diagnostic ignored "-Wextra-semi-stmt"
+#pragma GCC diagnostic ignored "-Wdeclaration-after-statement"
+#pragma GCC diagnostic ignored "-Wbad-function-cast"
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+#endif
+
 /* Standard library dependencies */
 #include <assert.h>
 #include <stdarg.h>
@@ -168,8 +200,20 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 #define ECS_CAST(T, V) (static_cast<T>(V))
 #endif
 
-#define ECS_CONCAT(a, b) a ## b
+/* Utility macro for doing const casts without warnings */
+#ifndef __cplusplus
+#define ECS_CONST_CAST(type, value) ((type)(uintptr_t)(value))
+#else
+#define ECS_CONST_CAST(type, value) (const_cast<type>(value))
+#endif
 
+/* Utility macro's to do bitwise comparisons between floats without warnings */
+#define ECS_EQ(a, b) (ecs_os_memcmp(&(a), &(b), sizeof(a)) == 0)
+#define ECS_NEQ(a, b) (!ECS_EQ(a, b))
+#define ECS_EQZERO(a) ECS_EQ(a, (uint64_t){0})
+#define ECS_NEQZERO(a) ECS_NEQ(a, (uint64_t){0})
+
+#define ECS_CONCAT(a, b) a ## b
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Magic numbers for sanity checking
@@ -214,10 +258,7 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 ////////////////////////////////////////////////////////////////////////////////
 
 /** Translate C type to id. */
-#define ecs_id(T) FLECS__E##T
-
-/** Translate C type to system function. */
-#define ecs_iter_action(T) FLECS__F##T
+#define ecs_id(T) FLECS_ID##T##ID_
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -296,7 +337,7 @@ typedef struct ecs_allocator_t ecs_allocator_t;
         (void)type_info;\
         for (int32_t i = 0; i < _count; i ++) {\
             type *dst_var = &((type*)_dst_ptr)[i];\
-            type *src_var = &((type*)_src_ptr)[i];\
+            const type *src_var = &((const type*)_src_ptr)[i];\
             (void)dst_var;\
             (void)src_var;\
             __VA_ARGS__\

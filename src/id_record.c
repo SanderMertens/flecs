@@ -585,7 +585,7 @@ ecs_table_record_t* flecs_table_record_get(
     return (ecs_table_record_t*)ecs_table_cache_get(&idr->cache, table);
 }
 
-const ecs_table_record_t* flecs_id_record_get_table(
+ecs_table_record_t* flecs_id_record_get_table(
     const ecs_id_record_t *idr,
     const ecs_table_t *table)
 {

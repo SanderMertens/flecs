@@ -19,14 +19,14 @@ ECS_TAG_DECLARE(EcsCounterId);
 ECS_TAG_DECLARE(EcsGauge);
 
 /* Internal components */
-ECS_COMPONENT_DECLARE(EcsMetricMember);
-ECS_COMPONENT_DECLARE(EcsMetricId);
-ECS_COMPONENT_DECLARE(EcsMetricOneOf);
-ECS_COMPONENT_DECLARE(EcsMetricCountIds);
-ECS_COMPONENT_DECLARE(EcsMetricCountTargets);
-ECS_COMPONENT_DECLARE(EcsMetricMemberInstance);
-ECS_COMPONENT_DECLARE(EcsMetricIdInstance);
-ECS_COMPONENT_DECLARE(EcsMetricOneOfInstance);
+static ECS_COMPONENT_DECLARE(EcsMetricMember);
+static ECS_COMPONENT_DECLARE(EcsMetricId);
+static ECS_COMPONENT_DECLARE(EcsMetricOneOf);
+static ECS_COMPONENT_DECLARE(EcsMetricCountIds);
+static ECS_COMPONENT_DECLARE(EcsMetricCountTargets);
+static ECS_COMPONENT_DECLARE(EcsMetricMemberInstance);
+static ECS_COMPONENT_DECLARE(EcsMetricIdInstance);
+static ECS_COMPONENT_DECLARE(EcsMetricOneOfInstance);
 
 /** Context for metric */
 typedef struct {

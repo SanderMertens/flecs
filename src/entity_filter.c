@@ -344,10 +344,10 @@ int32_t flecs_get_flattened_target(
         return -1;
     }
 
-    const ecs_table_record_t *tr = flecs_id_record_get_table(idr, table);
+    ecs_table_record_t *tr = flecs_id_record_get_table(idr, table);
     if (tr) {
         *src_out = ecs_record_get_entity(r);
-        *tr_out = (ecs_table_record_t*)tr;
+        *tr_out = tr;
         return tr->column;
     }
 

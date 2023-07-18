@@ -11,7 +11,7 @@
 
 static ECS_COPY(ecs_string_t, dst, src, {
     ecs_os_free(*(ecs_string_t*)dst);
-    *(ecs_string_t*)dst = ecs_os_strdup(*(ecs_string_t*)src);
+    *(ecs_string_t*)dst = ecs_os_strdup(*(const ecs_string_t*)src);
 })
 
 static ECS_MOVE(ecs_string_t, dst, src, {
@@ -79,7 +79,7 @@ static void flecs_struct_dtor(
     ecs_member_t *members = ecs_vec_first_t(&ptr->members, ecs_member_t);
     int32_t i, count = ecs_vec_count(&ptr->members);
     for (i = 0; i < count; i ++) {
-        ecs_os_free((char*)members[i].name);
+        ecs_os_free(ECS_CONST_CAST(char*, members[i].name));
     }
     ecs_vec_fini_t(NULL, &ptr->members, ecs_member_t);
 }
@@ -114,7 +114,7 @@ static void flecs_constants_dtor(
     ecs_map_iter_t it = ecs_map_iter(constants);
     while (ecs_map_next(&it)) {
         ecs_enum_constant_t *c = ecs_map_ptr(&it);
-        ecs_os_free((char*)c->name);
+        ecs_os_free(ECS_CONST_CAST(char*, c->name));
         ecs_os_free(c);
     }
     ecs_map_fini(constants);
@@ -122,7 +122,7 @@ static void flecs_constants_dtor(
 
 static void flecs_constants_copy(
     ecs_map_t *dst,
-    ecs_map_t *src)
+    const ecs_map_t *src)
 {
     ecs_map_copy(dst, src);
 
@@ -336,7 +336,7 @@ void flecs_set_struct_member(
         member->count = 1;
     }
 
-    ecs_os_strset((char**)&member->name, name);
+    ecs_os_strset(ECS_CONST_CAST(char**, &member->name), name);
 
     if (ranges) {
         member->range = ranges->value;
@@ -547,7 +547,7 @@ int flecs_add_constant_to_enum(
     while (ecs_map_next(&it)) {
         ecs_enum_constant_t *c = ecs_map_ptr(&it);
         if (c->constant == e) {
-            ecs_os_free((char*)c->name);
+            ecs_os_free(ECS_CONST_CAST(char*, c->name));
             ecs_map_remove_free(&ptr->constants, ecs_map_key(&it));
         }
     }
@@ -621,7 +621,7 @@ int flecs_add_constant_to_bitmask(
     while (ecs_map_next(&it)) {
         ecs_bitmask_constant_t *c = ecs_map_ptr(&it);
         if (c->constant == e) {
-            ecs_os_free((char*)c->name);
+            ecs_os_free(ECS_CONST_CAST(char*, c->name));
             ecs_map_remove_free(&ptr->constants, ecs_map_key(&it));
         }
     }
@@ -1328,126 +1328,126 @@ void FlecsMetaImport(
     ecs_entity_t type_kind = ecs_enum_init(world, &(ecs_enum_desc_t){
         .entity = ecs_entity(world, { .name = "TypeKind" }),
         .constants = {
-            {.name = "PrimitiveType"},
-            {.name = "BitmaskType"},
-            {.name = "EnumType"},
-            {.name = "StructType"},
-            {.name = "ArrayType"},
-            {.name = "VectorType"},
-            {.name = "OpaqueType"}
+            { .name = "PrimitiveType" },
+            { .name = "BitmaskType" },
+            { .name = "EnumType" },
+            { .name = "StructType" },
+            { .name = "ArrayType" },
+            { .name = "VectorType" },
+            { .name = "OpaqueType" }
         }
     });
 
     ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity = ecs_id(EcsMetaType),
         .members = {
-            {.name = (char*)"kind", .type = type_kind}
+            { .name = "kind", .type = type_kind }
         }
     });
 
     ecs_entity_t primitive_kind = ecs_enum_init(world, &(ecs_enum_desc_t){
         .entity = ecs_entity(world, { .name = "PrimitiveKind" }),
         .constants = {
-            {.name = "Bool", 1}, 
-            {.name = "Char"}, 
-            {.name = "Byte"}, 
-            {.name = "U8"}, 
-            {.name = "U16"}, 
-            {.name = "U32"}, 
-            {.name = "U64"},
-            {.name = "I8"}, 
-            {.name = "I16"}, 
-            {.name = "I32"}, 
-            {.name = "I64"}, 
-            {.name = "F32"}, 
-            {.name = "F64"}, 
-            {.name = "UPtr"},
-            {.name = "IPtr"}, 
-            {.name = "String"}, 
-            {.name = "Entity"}
+            { .name = "Bool", 1 }, 
+            { .name = "Char" }, 
+            { .name = "Byte" }, 
+            { .name = "U8" }, 
+            { .name = "U16" }, 
+            { .name = "U32" }, 
+            { .name = "U64 "},
+            { .name = "I8" }, 
+            { .name = "I16" }, 
+            { .name = "I32" }, 
+            { .name = "I64" }, 
+            { .name = "F32" }, 
+            { .name = "F64" }, 
+            { .name = "UPtr "},
+            { .name = "IPtr" }, 
+            { .name = "String" }, 
+            { .name = "Entity" }
         }
     });
 
     ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity = ecs_id(EcsPrimitive),
         .members = {
-            {.name = (char*)"kind", .type = primitive_kind}
+            { .name = "kind", .type = primitive_kind }
         }
     });
 
     ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity = ecs_id(EcsMember),
         .members = {
-            {.name = (char*)"type", .type = ecs_id(ecs_entity_t)},
-            {.name = (char*)"count", .type = ecs_id(ecs_i32_t)},
-            {.name = (char*)"unit", .type = ecs_id(ecs_entity_t)},
-            {.name = (char*)"offset", .type = ecs_id(ecs_i32_t)}
+            { .name = "type", .type = ecs_id(ecs_entity_t) },
+            { .name = "count", .type = ecs_id(ecs_i32_t) },
+            { .name = "unit", .type = ecs_id(ecs_entity_t) },
+            { .name = "offset", .type = ecs_id(ecs_i32_t) }
         }
     });
 
     ecs_entity_t vr = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity = ecs_entity(world, { .name = "value_range" }),
         .members = {
-            {.name = (char*)"min", .type = ecs_id(ecs_f64_t)},
-            {.name = (char*)"max", .type = ecs_id(ecs_f64_t)}
+            { .name = "min", .type = ecs_id(ecs_f64_t) },
+            { .name = "max", .type = ecs_id(ecs_f64_t) }
         }
     });
 
     ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity = ecs_id(EcsMemberRanges),
         .members = {
-            { .name = (char*)"value", .type = vr},
-            { .name = (char*)"warning", .type = vr},
-            { .name = (char*)"error", .type = vr}
+            { .name = "value", .type = vr },
+            { .name = "warning", .type = vr },
+            { .name = "error", .type = vr }
         }
     });
 
     ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity = ecs_id(EcsArray),
         .members = {
-            {.name = (char*)"type", .type = ecs_id(ecs_entity_t)},
-            {.name = (char*)"count", .type = ecs_id(ecs_i32_t)},
+            { .name = "type", .type = ecs_id(ecs_entity_t) },
+            { .name = "count", .type = ecs_id(ecs_i32_t) },
         }
     });
 
     ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity = ecs_id(EcsVector),
         .members = {
-            {.name = (char*)"type", .type = ecs_id(ecs_entity_t)}
+            { .name = "type", .type = ecs_id(ecs_entity_t) }
         }
     });
 
     ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity = ecs_id(EcsOpaque),
         .members = {
-            { .name = (char*)"as_type", .type = ecs_id(ecs_entity_t) }
+            { .name = "as_type", .type = ecs_id(ecs_entity_t) }
         }
     });
 
     ecs_entity_t ut = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity = ecs_entity(world, { .name = "unit_translation" }),
         .members = {
-            {.name = (char*)"factor", .type = ecs_id(ecs_i32_t)},
-            {.name = (char*)"power", .type = ecs_id(ecs_i32_t)}
+            { .name = "factor", .type = ecs_id(ecs_i32_t) },
+            { .name = "power", .type = ecs_id(ecs_i32_t) }
         }
     });
 
     ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity = ecs_id(EcsUnit),
         .members = {
-            {.name = (char*)"symbol", .type = ecs_id(ecs_string_t)},
-            {.name = (char*)"prefix", .type = ecs_id(ecs_entity_t)},
-            {.name = (char*)"base", .type = ecs_id(ecs_entity_t)},
-            {.name = (char*)"over", .type = ecs_id(ecs_entity_t)},
-            {.name = (char*)"translation", .type = ut}
+            { .name = "symbol", .type = ecs_id(ecs_string_t) },
+            { .name = "prefix", .type = ecs_id(ecs_entity_t) },
+            { .name = "base", .type = ecs_id(ecs_entity_t) },
+            { .name = "over", .type = ecs_id(ecs_entity_t) },
+            { .name = "translation", .type = ut }
         }
     });
 
     ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity = ecs_id(EcsUnitPrefix),
         .members = {
-            {.name = (char*)"symbol", .type = ecs_id(ecs_string_t)},
-            {.name = (char*)"translation", .type = ut}
+            { .name = "symbol", .type = ecs_id(ecs_string_t) },
+            { .name = "translation", .type = ut }
         }
     });
 }

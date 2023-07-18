@@ -114,7 +114,7 @@ void ecs_table_cache_insert(
     }
 
     result->cache = cache;
-    result->table = (ecs_table_t*)table;
+    result->table = ECS_CONST_CAST(ecs_table_t*, table);
     result->empty = empty;
 
     flecs_table_cache_list_insert(cache, result);
@@ -264,7 +264,7 @@ bool flecs_table_cache_all_iter(
     return out->next != NULL || out->next_list != NULL;
 }
 
-ecs_table_cache_hdr_t* _flecs_table_cache_next(
+ecs_table_cache_hdr_t* flecs_table_cache_next_(
     ecs_table_cache_iter_t *it)
 {
     ecs_table_cache_hdr_t *next = it->next;

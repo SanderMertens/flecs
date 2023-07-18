@@ -87,8 +87,8 @@ ecs_entity_t ecs_import_from_library(
 {
     ecs_check(library_name != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    char *import_func = (char*)module_name; /* safe */
-    char *module = (char*)module_name;
+    char *import_func = ECS_CONST_CAST(char*, module_name);
+    char *module = ECS_CONST_CAST(char*, module_name);
 
     if (!ecs_os_has_modules() || !ecs_os_has_dl()) {
         ecs_err(

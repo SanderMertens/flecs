@@ -49,7 +49,7 @@ int flecs_expr_ser_primitive(
 {
     switch(kind) {
     case EcsBool:
-        if (*(bool*)base) {
+        if (*(const bool*)base) {
             ecs_strbuf_appendlit(str, "true");
         } else {
             ecs_strbuf_appendlit(str, "false");
@@ -57,9 +57,9 @@ int flecs_expr_ser_primitive(
         break;
     case EcsChar: {
         char chbuf[3];
-        char ch = *(char*)base;
+        char ch = *(const char*)base;
         if (ch) {
-            ecs_chresc(chbuf, *(char*)base, '"');
+            ecs_chresc(chbuf, *(const char*)base, '"');
             if (is_expr) ecs_strbuf_appendch(str, '"');
             ecs_strbuf_appendstr(str, chbuf);
             if (is_expr) ecs_strbuf_appendch(str, '"');
@@ -69,46 +69,46 @@ int flecs_expr_ser_primitive(
         break;
     }
     case EcsByte:
-        ecs_strbuf_appendint(str, flecs_uto(int64_t, *(uint8_t*)base));
+        ecs_strbuf_appendint(str, flecs_uto(int64_t, *(const uint8_t*)base));
         break;
     case EcsU8:
-        ecs_strbuf_appendint(str, flecs_uto(int64_t, *(uint8_t*)base));
+        ecs_strbuf_appendint(str, flecs_uto(int64_t, *(const uint8_t*)base));
         break;
     case EcsU16:
-        ecs_strbuf_appendint(str, flecs_uto(int64_t, *(uint16_t*)base));
+        ecs_strbuf_appendint(str, flecs_uto(int64_t, *(const uint16_t*)base));
         break;
     case EcsU32:
-        ecs_strbuf_appendint(str, flecs_uto(int64_t, *(uint32_t*)base));
+        ecs_strbuf_appendint(str, flecs_uto(int64_t, *(const uint32_t*)base));
         break;
     case EcsU64:
-        ecs_strbuf_append(str, "%llu", *(uint64_t*)base);
+        ecs_strbuf_append(str, "%llu", *(const uint64_t*)base);
         break;
     case EcsI8:
-        ecs_strbuf_appendint(str, flecs_ito(int64_t, *(int8_t*)base));
+        ecs_strbuf_appendint(str, flecs_ito(int64_t, *(const int8_t*)base));
         break;
     case EcsI16:
-        ecs_strbuf_appendint(str, flecs_ito(int64_t, *(int16_t*)base));
+        ecs_strbuf_appendint(str, flecs_ito(int64_t, *(const int16_t*)base));
         break;
     case EcsI32:
-        ecs_strbuf_appendint(str, flecs_ito(int64_t, *(int32_t*)base));
+        ecs_strbuf_appendint(str, flecs_ito(int64_t, *(const int32_t*)base));
         break;
     case EcsI64:
-        ecs_strbuf_appendint(str, *(int64_t*)base);
+        ecs_strbuf_appendint(str, *(const int64_t*)base);
         break;
     case EcsF32:
-        ecs_strbuf_appendflt(str, (double)*(float*)base, 0);
+        ecs_strbuf_appendflt(str, (double)*(const float*)base, 0);
         break;
     case EcsF64:
-        ecs_strbuf_appendflt(str, *(double*)base, 0);
+        ecs_strbuf_appendflt(str, *(const double*)base, 0);
         break;
     case EcsIPtr:
-        ecs_strbuf_appendint(str, flecs_ito(int64_t, *(intptr_t*)base));
+        ecs_strbuf_appendint(str, flecs_ito(int64_t, *(const intptr_t*)base));
         break;
     case EcsUPtr:
-        ecs_strbuf_append(str, "%u", *(uintptr_t*)base);
+        ecs_strbuf_append(str, "%u", *(const uintptr_t*)base);
         break;
     case EcsString: {
-        char *value = *(char**)base;
+        const char *value = *ECS_CONST_CAST(const char**, base);
         if (value) {
             if (!is_expr) {
                 ecs_strbuf_appendstr(str, value);
@@ -133,7 +133,7 @@ int flecs_expr_ser_primitive(
         break;
     }
     case EcsEntity: {
-        ecs_entity_t e = *(ecs_entity_t*)base;
+        ecs_entity_t e = *(const ecs_entity_t*)base;
         if (!e) {
             ecs_strbuf_appendch(str, '0');
         } else {
@@ -160,7 +160,7 @@ int flecs_expr_ser_enum(
     const EcsEnum *enum_type = ecs_get(world, op->type, EcsEnum);
     ecs_check(enum_type != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    int32_t val = *(int32_t*)base;
+    int32_t val = *(const int32_t*)base;
     
     /* Enumeration constants are stored in a map that is keyed on the
      * enumeration value. */
@@ -190,7 +190,7 @@ int flecs_expr_ser_bitmask(
 {
     const EcsBitmask *bitmask_type = ecs_get(world, op->type, EcsBitmask);
     ecs_check(bitmask_type != NULL, ECS_INVALID_PARAMETER, NULL);
-    uint32_t value = *(uint32_t*)ptr;
+    uint32_t value = *(const uint32_t*)ptr;
 
     ecs_strbuf_list_push(str, "", "|");
 
@@ -352,7 +352,26 @@ int flecs_expr_ser_type_op(
             goto error;
         }
         break;
-    default:
+    case EcsOpScope:
+    case EcsOpPrimitive:
+    case EcsOpBool:
+    case EcsOpChar:
+    case EcsOpByte:
+    case EcsOpU8:
+    case EcsOpU16:
+    case EcsOpU32:
+    case EcsOpU64:
+    case EcsOpI8:
+    case EcsOpI16:
+    case EcsOpI32:
+    case EcsOpI64:
+    case EcsOpF32:
+    case EcsOpF64:
+    case EcsOpUPtr:
+    case EcsOpIPtr:
+    case EcsOpEntity:
+    case EcsOpString:
+    case EcsOpOpaque:
         if (flecs_expr_ser_primitive(world, flecs_expr_op_to_primitive_kind(op->kind), 
             ECS_OFFSET(ptr, op->offset), str, is_expr))
         {
@@ -361,6 +380,8 @@ int flecs_expr_ser_type_op(
             goto error;
         }
         break;
+    default:
+        ecs_throw(ECS_INVALID_PARAMETER, "invalid operation");
     }
 
     return 0;
@@ -411,11 +432,36 @@ int flecs_expr_ser_type_ops(
             ecs_strbuf_list_pop(str, "}");
             in_array ++;
             break;
-        default:
+        case EcsOpArray:
+        case EcsOpVector:
+        case EcsOpEnum:
+        case EcsOpBitmask:
+        case EcsOpScope:
+        case EcsOpPrimitive:
+        case EcsOpBool:
+        case EcsOpChar:
+        case EcsOpByte:
+        case EcsOpU8:
+        case EcsOpU16:
+        case EcsOpU32:
+        case EcsOpU64:
+        case EcsOpI8:
+        case EcsOpI16:
+        case EcsOpI32:
+        case EcsOpI64:
+        case EcsOpF32:
+        case EcsOpF64:
+        case EcsOpUPtr:
+        case EcsOpIPtr:
+        case EcsOpEntity:
+        case EcsOpString:
+        case EcsOpOpaque:
             if (flecs_expr_ser_type_op(world, op, base, str, is_expr)) {
                 goto error;
             }
             break;
+        default:
+            ecs_throw(ECS_INVALID_PARAMETER, "invalid operation");
         }
     }
 

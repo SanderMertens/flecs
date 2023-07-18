@@ -84,7 +84,7 @@ int main(int argc, char *argv[]) {
 
     ecs_trace("ecs_set(world, e, String, {\"Hello World\"})");
     ecs_log_push();
-        ecs_set(world, e, String, {(char*)"Hello World"});
+        ecs_set(world, e, String, {ECS_CONST_CAST(char*, "Hello World")});
     ecs_log_pop();
 
     // This operation changes the entity's archetype, which invokes a move

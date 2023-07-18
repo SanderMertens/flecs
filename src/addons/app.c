@@ -84,7 +84,7 @@ int ecs_app_run(
     /* Don't set FPS & threads if custom run action is set, as the platform on
      * which the app is running may not support it. */
     if (run_action == flecs_default_run_action) {
-        if (ecs_app_desc.target_fps != 0) {
+        if (ECS_NEQZERO(ecs_app_desc.target_fps)) {
             ecs_set_target_fps(world, ecs_app_desc.target_fps);
         }
         if (ecs_app_desc.threads) {

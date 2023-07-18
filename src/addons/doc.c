@@ -28,7 +28,8 @@ void ecs_doc_set_name(
     const char *name)
 {
     ecs_set_pair(world, entity, EcsDocDescription, EcsName, {
-        .value = (char*)name
+        /* Safe, value gets copied by copy hook */
+        .value = ECS_CONST_CAST(char*, name)
     });
 }
 
@@ -38,7 +39,8 @@ void ecs_doc_set_brief(
     const char *description)
 {
     ecs_set_pair(world, entity, EcsDocDescription, EcsDocBrief, {
-        .value = (char*)description
+        /* Safe, value gets copied by copy hook */
+        .value = ECS_CONST_CAST(char*, description)
     });
 }
 
@@ -48,7 +50,8 @@ void ecs_doc_set_detail(
     const char *description)
 {
     ecs_set_pair(world, entity, EcsDocDescription, EcsDocDetail, {
-        .value = (char*)description
+        /* Safe, value gets copied by copy hook */
+        .value = ECS_CONST_CAST(char*, description)
     });
 }
 
@@ -58,7 +61,8 @@ void ecs_doc_set_link(
     const char *link)
 {
     ecs_set_pair(world, entity, EcsDocDescription, EcsDocLink, {
-        .value = (char*)link
+        /* Safe, value gets copied by copy hook */
+        .value = ECS_CONST_CAST(char*, link)
     });
 }
 
@@ -68,7 +72,8 @@ void ecs_doc_set_color(
     const char *color)
 {
     ecs_set_pair(world, entity, EcsDocDescription, EcsDocColor, {
-        .value = (char*)color
+        /* Safe, value gets copied by copy hook */
+        .value = ECS_CONST_CAST(char*, color)
     });
 }
 
