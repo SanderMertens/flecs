@@ -61,8 +61,7 @@ int32_t flecs_run_pipeline_ops(
     ecs_stage_t* stage,
     int32_t stage_index,
     int32_t stage_count,
-    ecs_ftime_t delta_time,
-    bool main_thread);
+    ecs_ftime_t delta_time);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Worker API

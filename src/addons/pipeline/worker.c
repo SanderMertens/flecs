@@ -57,7 +57,7 @@ void* flecs_worker(void *arg) {
         ecs_entity_t old_scope = ecs_set_scope((ecs_world_t*)stage, 0);
 
         ecs_dbg_3("worker %d: run", stage->id);
-        flecs_run_pipeline_ops(world, stage, stage->id, world->stage_count, world->info.delta_time, false);
+        flecs_run_pipeline_ops(world, stage, stage->id, world->stage_count, world->info.delta_time);
 
         ecs_set_scope((ecs_world_t*)stage, old_scope);
 
