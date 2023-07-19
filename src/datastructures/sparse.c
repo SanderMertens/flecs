@@ -92,7 +92,7 @@ ecs_page_t* flecs_sparse_get_page(
     if (page_index >= ecs_vec_count(&sparse->pages)) {
         return NULL;
     }
-    return ecs_vec_get_t(&sparse->pages, ecs_page_t, page_index);;
+    return ecs_vec_get_t(&sparse->pages, ecs_page_t, page_index);
 }
 
 static

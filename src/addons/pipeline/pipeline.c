@@ -529,43 +529,38 @@ int32_t flecs_run_pipeline_ops(
     ecs_stage_t* stage,
     int32_t stage_index,
     int32_t stage_count,
-    ecs_ftime_t delta_time,
-    bool main_thread)
+    ecs_ftime_t delta_time)
 {
     ecs_pipeline_state_t* pq = world->pq;
     ecs_pipeline_op_t* op = pq->cur_op;
     int32_t i = pq->cur_i;
+
+    ecs_assert(!stage_index || op->multi_threaded, ECS_INTERNAL_ERROR, NULL);
 
     int32_t count = ecs_vec_count(&pq->systems);
     ecs_entity_t* systems = ecs_vec_first_t(&pq->systems, ecs_entity_t);
     int32_t ran_since_merge = i - op->offset;
 
     for (; i < count; i++) {
-        /* Run system if:
-         * - this is the main thread, or if
-         * - the system is multithreaded
-         */
-        if (main_thread || op->multi_threaded) {
-            ecs_entity_t system = systems[i];
-            const EcsPoly* poly = ecs_get_pair(world, system, EcsPoly, EcsSystem);
-            ecs_assert(poly != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_system_t* sys = ecs_poly(poly->poly, ecs_system_t);
+        ecs_entity_t system = systems[i];
+        const EcsPoly* poly = ecs_get_pair(world, system, EcsPoly, EcsSystem);
+        ecs_assert(poly != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_system_t* sys = ecs_poly(poly->poly, ecs_system_t);
 
-            /* Keep track of the last frame for which the system has ran, so we
-            * know from where to resume the schedule in case the schedule
-            * changes during a merge. */
-            sys->last_frame = world->info.frame_count_total + 1;
+        /* Keep track of the last frame for which the system has ran, so we
+        * know from where to resume the schedule in case the schedule
+        * changes during a merge. */
+        sys->last_frame = world->info.frame_count_total + 1;
 
-            ecs_stage_t* s = NULL;
-            if (!op->no_readonly) {
-                /* If system is no_readonly it operates on the actual world, not
-                 * the stage. Only pass stage to system if it's readonly. */
-                s = stage;
-            }
-
-            ecs_run_intern(world, s, system, sys, stage_index,
-                stage_count, delta_time, 0, 0, NULL);
+        ecs_stage_t* s = NULL;
+        if (!op->no_readonly) {
+            /* If system is no_readonly it operates on the actual world, not
+                * the stage. Only pass stage to system if it's readonly. */
+            s = stage;
         }
+
+        ecs_run_intern(world, s, system, sys, stage_index,
+            stage_count, delta_time, 0, 0, NULL);
 
         world->info.systems_ran_frame++;
         ran_since_merge++;
@@ -595,7 +590,7 @@ void flecs_run_pipeline(
 
     ecs_assert(!stage_index, ECS_INVALID_OPERATION, NULL);
 
-    bool multi_threaded = ecs_get_stage_count(world) > 1;;
+    bool multi_threaded = ecs_get_stage_count(world) > 1;
 
     // Update the pipeline the workers will execute
     world->pq = pq;
@@ -633,7 +628,7 @@ void flecs_run_pipeline(
             ecs_time_measure(&st);
         }
 
-        const int32_t i = flecs_run_pipeline_ops(world, stage, stage_index, stage_count, delta_time, true);
+        const int32_t i = flecs_run_pipeline_ops(world, stage, stage_index, stage_count, delta_time);
 
         if (measure_time) {
             /* Don't include merge time in system time */
