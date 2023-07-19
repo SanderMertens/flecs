@@ -92,11 +92,16 @@
 #pragma clang diagnostic ignored "-Wbad-function-cast"
 /* Format strings can be passed down from other functions. */
 #pragma clang diagnostic ignored "-Wformat-nonliteral"
-#elif defined(ECS_TARGET_GCC)
-#pragma GCC diagnostic ignored "-Wextra-semi-stmt"
+/* Useful, but not reliable enough. It can incorrectly flag macro's as unused
+ * in standalone builds. */
+#pragma clang diagnostic ignored "-Wunused-macros"
+#elif defined(ECS_TARGET_GNU)
+#ifndef __cplusplus
 #pragma GCC diagnostic ignored "-Wdeclaration-after-statement"
 #pragma GCC diagnostic ignored "-Wbad-function-cast"
+#endif
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
+#pragma GCC diagnostic ignored "-Wunused-macros"
 #endif
 
 /* Standard library dependencies */

@@ -1,11 +1,11 @@
 #include <system.h>
 
 struct Position { 
-    double x, y;
+    int32_t x, y;
 };
 
 struct Velocity { 
-    double x, y;
+    int32_t x, y;
 };
 
 int main(int, char *[]) {

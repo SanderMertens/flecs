@@ -1046,7 +1046,13 @@ int ecs_meta_set_float(
     void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
 
     switch(op->kind) {
-    cases_T_bool(ptr, value);
+    case EcsOpBool:
+        if (ECS_EQZERO(value)) {
+            set_T(bool, ptr, false);
+        } else {
+            set_T(bool, ptr, true);
+        }
+        break;
     cases_T_signed(ptr, value, ecs_meta_bounds_float);
     cases_T_unsigned(ptr, value, ecs_meta_bounds_float);
     cases_T_float(ptr, value);

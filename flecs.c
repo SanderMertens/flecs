@@ -5426,11 +5426,11 @@ ecs_poly_t* ecs_poly_get_(
     return NULL;
 }
 
+#ifndef FLECS_NDEBUG
 #define assert_object(cond, file, line, type_name)\
     ecs_assert_((cond), ECS_INVALID_PARAMETER, #cond, file, line, type_name);\
     assert(cond)
 
-#ifndef FLECS_NDEBUG
 void* ecs_poly_assert_(
     const ecs_poly_t *poly,
     int32_t type,
@@ -27444,7 +27444,13 @@ int ecs_meta_set_float(
     void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
 
     switch(op->kind) {
-    cases_T_bool(ptr, value);
+    case EcsOpBool:
+        if (ECS_EQZERO(value)) {
+            set_T(bool, ptr, false);
+        } else {
+            set_T(bool, ptr, true);
+        }
+        break;
     cases_T_signed(ptr, value, ecs_meta_bounds_float);
     cases_T_unsigned(ptr, value, ecs_meta_bounds_float);
     cases_T_float(ptr, value);

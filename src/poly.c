@@ -187,11 +187,11 @@ ecs_poly_t* ecs_poly_get_(
     return NULL;
 }
 
+#ifndef FLECS_NDEBUG
 #define assert_object(cond, file, line, type_name)\
     ecs_assert_((cond), ECS_INVALID_PARAMETER, #cond, file, line, type_name);\
     assert(cond)
 
-#ifndef FLECS_NDEBUG
 void* ecs_poly_assert_(
     const ecs_poly_t *poly,
     int32_t type,
