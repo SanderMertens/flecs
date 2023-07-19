@@ -20,15 +20,17 @@ const char* flecs_json_token_str(
     case JsonColon: return ":";
     case JsonComma: return ",";
     case JsonNumber: return "number";
+    case JsonLargeString:
     case JsonString: return "string";
     case JsonTrue: return "true";
     case JsonFalse: return "false";
     case JsonNull: return "null";
     case JsonInvalid: return "invalid";
     default:
-        ecs_abort(ECS_INTERNAL_ERROR, NULL);
+        ecs_throw(ECS_INTERNAL_ERROR, NULL);
     }
-    return "invalid";
+error:
+    return "<<invalid token kind>>";
 }
 
 const char* flecs_json_parse(

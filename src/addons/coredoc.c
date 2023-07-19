@@ -24,8 +24,8 @@ void FlecsCoreDocImport(
     ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity = ecs_id(EcsComponent),
         .members = {
-            {.name = (char*)"size", .type = ecs_id(ecs_i32_t)},
-            {.name = (char*)"alignment", .type = ecs_id(ecs_i32_t)}
+            {.name = "size", .type = ecs_id(ecs_i32_t)},
+            {.name = "alignment", .type = ecs_id(ecs_i32_t)}
         }
     });
 

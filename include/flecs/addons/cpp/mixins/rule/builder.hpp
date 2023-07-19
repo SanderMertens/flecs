@@ -28,8 +28,8 @@ struct rule_builder final : _::rule_builder_base<Components...> {
         if (name != nullptr) {
             ecs_entity_desc_t entity_desc = {};
             entity_desc.name = name;
-            entity_desc.sep = "::",
-            entity_desc.root_sep = "::",
+            entity_desc.sep = "::";
+            entity_desc.root_sep = "::";
             this->m_desc.entity = ecs_entity_init(world, &entity_desc);
         }
     }

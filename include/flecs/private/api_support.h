@@ -33,7 +33,7 @@ extern "C" {
 ////////////////////////////////////////////////////////////////////////////////
 
 /** This allows passing 0 as type to functions that accept ids */
-#define FLECS__E0 0
+#define FLECS_ID0ID_ 0
 
 FLECS_API
 char* ecs_module_path_from_c(

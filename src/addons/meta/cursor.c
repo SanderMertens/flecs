@@ -39,6 +39,7 @@ const char* flecs_meta_op_kind_str(
     case EcsOpIPtr: return "IPtr";
     case EcsOpString: return "String";
     case EcsOpEntity: return "Entity";
+    case EcsOpScope: return "Scope";
     default: return "<< invalid kind >>";
     }
 }
@@ -49,7 +50,7 @@ ecs_meta_scope_t* flecs_meta_cursor_get_scope(
     const ecs_meta_cursor_t *cursor)
 {
     ecs_check(cursor != NULL, ECS_INVALID_PARAMETER, NULL);
-    return (ecs_meta_scope_t*)&cursor->scope[cursor->depth];
+    return ECS_CONST_CAST(ecs_meta_scope_t*, &cursor->scope[cursor->depth]);
 error:
     return NULL;
 }
@@ -540,7 +541,11 @@ int ecs_meta_push(
             next_scope->ops = &next_scope->ops[1];
             next_scope->op_count --;
             break;
-
+        
+        case EcsPrimitiveType:
+        case EcsEnumType:
+        case EcsBitmaskType:
+        case EcsOpaqueType:
         default:
             break;
         }
@@ -550,12 +555,35 @@ int ecs_meta_push(
         break;
     }
 
-    default: {
+    case EcsOpPop:
+    case EcsOpScope:
+    case EcsOpEnum:
+    case EcsOpBitmask:
+    case EcsOpPrimitive:
+    case EcsOpBool:
+    case EcsOpChar:
+    case EcsOpByte:
+    case EcsOpU8:
+    case EcsOpU16:
+    case EcsOpU32:
+    case EcsOpU64:
+    case EcsOpI8:
+    case EcsOpI16:
+    case EcsOpI32:
+    case EcsOpI64:
+    case EcsOpF32:
+    case EcsOpF64:
+    case EcsOpUPtr:
+    case EcsOpIPtr:
+    case EcsOpString:
+    case EcsOpEntity: {
         char *path = ecs_get_fullpath(world, scope->type);
         ecs_err("invalid push for type '%s'", path);
         ecs_os_free(path);
         goto error;
     }
+    default:
+        ecs_throw(ECS_INVALID_PARAMETER, "invalid operation");
     }
 
     if (scope->is_collection && !scope->opaque) {
@@ -684,7 +712,7 @@ const char* ecs_meta_get_member(
 }
 
 /* Utilities for type conversions and bounds checking */
-struct {
+static struct {
     int64_t min, max;
 } ecs_meta_bounds_signed[EcsMetaTypeOpKindLast + 1] = {
     [EcsOpBool]    = {false,      true},
@@ -708,7 +736,7 @@ struct {
     [EcsOpBitmask] = {0,          INT32_MAX}
 };
 
-struct {
+static struct {
     uint64_t min, max;
 } ecs_meta_bounds_unsigned[EcsMetaTypeOpKindLast + 1] = {
     [EcsOpBool]    = {false,      true},
@@ -729,7 +757,7 @@ struct {
     [EcsOpBitmask] = {0,          UINT32_MAX}
 };
 
-struct {
+static struct {
     double min, max;
 } ecs_meta_bounds_float[EcsMetaTypeOpKindLast + 1] = {
     [EcsOpBool]    = {false,      true},
@@ -834,12 +862,24 @@ int ecs_meta_set_bool(
         }
     }
     /* fall through */
-    default:
+    case EcsOpArray:
+    case EcsOpVector:
+    case EcsOpPush:
+    case EcsOpPop:
+    case EcsOpScope:
+    case EcsOpPrimitive:
+    case EcsOpF32:
+    case EcsOpF64:
+    case EcsOpString:
         flecs_meta_conversion_error(cursor, op, "bool");
         return -1;
+    default:
+        ecs_throw(ECS_INVALID_PARAMETER, "invalid operation");
     }
 
     return 0;
+error:
+    return -1;
 }
 
 int ecs_meta_set_char(
@@ -868,12 +908,32 @@ int ecs_meta_set_char(
         }
     }
     /* fall through */
-    default:
+    case EcsOpArray:
+    case EcsOpVector:
+    case EcsOpPush:
+    case EcsOpPop:
+    case EcsOpScope:
+    case EcsOpBitmask:
+    case EcsOpPrimitive:
+    case EcsOpByte:
+    case EcsOpU8:
+    case EcsOpU16:
+    case EcsOpU32:
+    case EcsOpU64:
+    case EcsOpF32:
+    case EcsOpF64:
+    case EcsOpUPtr:
+    case EcsOpString:
+    case EcsOpEntity:
         flecs_meta_conversion_error(cursor, op, "char");
         return -1;
+    default:
+        ecs_throw(ECS_INVALID_PARAMETER, "invalid operation");
     }
 
     return 0;
+error:
+    return -1;
 }
 
 int ecs_meta_set_int(
@@ -907,14 +967,24 @@ int ecs_meta_set_int(
         }
     }
     /* fall through */
-    default: {
+    case EcsOpArray:
+    case EcsOpVector:
+    case EcsOpPush:
+    case EcsOpPop:
+    case EcsOpScope:
+    case EcsOpPrimitive:
+    case EcsOpString: {
         if(!value) return ecs_meta_set_null(cursor);
         flecs_meta_conversion_error(cursor, op, "int");
         return -1;
     }
+    default:
+        ecs_throw(ECS_INVALID_PARAMETER, "invalid operation");
     }
 
     return 0;
+error:
+    return -1;
 }
 
 int ecs_meta_set_uint(
@@ -948,13 +1018,23 @@ int ecs_meta_set_uint(
         }
     }
     /* fall through */
-    default:
+    case EcsOpArray:
+    case EcsOpVector:
+    case EcsOpPush:
+    case EcsOpPop:
+    case EcsOpScope:
+    case EcsOpPrimitive:
+    case EcsOpString:
         if(!value) return ecs_meta_set_null(cursor);
         flecs_meta_conversion_error(cursor, op, "uint");
         return -1;
+    default:
+        ecs_throw(ECS_INVALID_PARAMETER, "invalid operation");
     }
 
     return 0;
+error:
+    return -1;
 }
 
 int ecs_meta_set_float(
@@ -966,7 +1046,13 @@ int ecs_meta_set_float(
     void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
 
     switch(op->kind) {
-    cases_T_bool(ptr, value);
+    case EcsOpBool:
+        if (ECS_EQZERO(value)) {
+            set_T(bool, ptr, false);
+        } else {
+            set_T(bool, ptr, true);
+        }
+        break;
     cases_T_signed(ptr, value, ecs_meta_bounds_float);
     cases_T_unsigned(ptr, value, ecs_meta_bounds_float);
     cases_T_float(ptr, value);
@@ -986,17 +1072,28 @@ int ecs_meta_set_float(
             break;
         } else if (opaque->assign_entity && (value >= 0)) {
             opaque->assign_entity(
-                ptr, (ecs_world_t*)cursor->world, (ecs_entity_t)value);
+                ptr, ECS_CONST_CAST(ecs_world_t*, cursor->world), 
+                    (ecs_entity_t)value);
             break;
         }
     }
     /* fall through */
-    default:
+    case EcsOpArray:
+    case EcsOpVector:
+    case EcsOpPush:
+    case EcsOpPop:
+    case EcsOpScope:
+    case EcsOpPrimitive:
+    case EcsOpString:
         flecs_meta_conversion_error(cursor, op, "float");
         return -1;
+    default:
+        ecs_throw(ECS_INVALID_PARAMETER, "invalid operation");
     }
 
     return 0;
+error:
+    return -1;
 }
 
 int ecs_meta_set_value(
@@ -1169,7 +1266,7 @@ int ecs_meta_set_string(
             }
         } else {
             ecs_err("invalid value for boolean '%s'", value);
-            return -1;
+            goto error;
         }
         break;
     case EcsOpI8:
@@ -1216,7 +1313,7 @@ int ecs_meta_set_string(
             char *path = ecs_get_fullpath(cursor->world, op->type);
             ecs_err("unresolved enum constant '%s' for type '%s'", value, path);
             ecs_os_free(path);
-            return -1;
+            goto error;
         }
 
         const ecs_i32_t *v = ecs_get_pair_object(
@@ -1225,7 +1322,7 @@ int ecs_meta_set_string(
             char *path = ecs_get_fullpath(cursor->world, op->type);
             ecs_err("'%s' is not an enum constant for type '%s'", value, path);
             ecs_os_free(path);
-            return -1;
+            goto error;
         }
 
         set_T(ecs_i32_t, ptr, v[0]);
@@ -1233,20 +1330,20 @@ int ecs_meta_set_string(
     }
     case EcsOpBitmask:
         if (flecs_meta_parse_bitmask(cursor, op, ptr, value) != 0) {
-            return -1;
+            goto error;
         }
         break;
     case EcsOpEntity: {
         ecs_entity_t e = 0;
         if (flecs_meta_cursor_lookup(cursor, value, &e)) {
-            return -1;
+            goto error;
         }
         set_T(ecs_entity_t, ptr, e);
         break;
     }
     case EcsOpPop:
         ecs_err("excess element '%s' in scope", value);
-        return -1;
+        goto error;
     case EcsOpOpaque: {
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
         ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, NULL);
@@ -1259,20 +1356,30 @@ int ecs_meta_set_string(
         } else if (opaque->assign_entity) {
             ecs_entity_t e = 0;
             if (flecs_meta_cursor_lookup(cursor, value, &e)) {
-                return -1;
+                goto error;
             }
-            opaque->assign_entity(ptr, (ecs_world_t*)cursor->world, e);
+            opaque->assign_entity(ptr, 
+                ECS_CONST_CAST(ecs_world_t*, cursor->world), e);
             break;
         }
     }
     /* fall through */
-    default:
+    case EcsOpArray:
+    case EcsOpVector:
+    case EcsOpPush:
+    case EcsOpScope:
+    case EcsOpPrimitive:
         ecs_err("unsupported conversion from string '%s' to '%s'",
             value, flecs_meta_op_kind_str(op->kind));
-        return -1;
+        goto error;
+    default:
+        ecs_throw(ECS_INVALID_PARAMETER, "invalid operation");
+        break;
     }
 
     return 0;
+error:
+    return -1;
 }
 
 int ecs_meta_set_string_literal(
@@ -1286,7 +1393,7 @@ int ecs_meta_set_string_literal(
     ecs_size_t len = ecs_os_strlen(value);
     if (value[0] != '\"' || value[len - 1] != '\"') {
         ecs_err("invalid string literal '%s'", value);
-        return -1;
+        goto error;
     }
 
     switch(op->kind) {
@@ -1294,10 +1401,31 @@ int ecs_meta_set_string_literal(
         set_T(ecs_char_t, ptr, value[1]);
         break;
 
-    default:
-    case EcsOpEntity:
-    case EcsOpString:
+    case EcsOpArray:
+    case EcsOpVector:
     case EcsOpOpaque:
+    case EcsOpPush:
+    case EcsOpPop:
+    case EcsOpScope:
+    case EcsOpEnum:
+    case EcsOpBitmask:
+    case EcsOpPrimitive:
+    case EcsOpBool:
+    case EcsOpByte:
+    case EcsOpU8:
+    case EcsOpU16:
+    case EcsOpU32:
+    case EcsOpU64:
+    case EcsOpI8:
+    case EcsOpI16:
+    case EcsOpI32:
+    case EcsOpI64:
+    case EcsOpF32:
+    case EcsOpF64:
+    case EcsOpUPtr:
+    case EcsOpIPtr:
+    case EcsOpString:
+    case EcsOpEntity:
         len -= 2;
 
         char *result = ecs_os_malloc(len + 1);
@@ -1311,9 +1439,14 @@ int ecs_meta_set_string_literal(
 
         ecs_os_free(result);
         break;
+    default:
+        ecs_throw(ECS_INVALID_PARAMETER, "invalid operation");
+        break;
     }
 
     return 0;
+error:
+    return -1;
 }
 
 int ecs_meta_set_entity(
@@ -1331,17 +1464,46 @@ int ecs_meta_set_entity(
     case EcsOpOpaque: {
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
         if (opaque && opaque->assign_entity) {
-            opaque->assign_entity(ptr, (ecs_world_t*)cursor->world, value);
+            opaque->assign_entity(ptr, 
+                ECS_CONST_CAST(ecs_world_t*, cursor->world), value);
             break;
         }
     }
     /* fall through */
-    default:
+    case EcsOpArray:
+    case EcsOpVector:
+    case EcsOpPush:
+    case EcsOpPop:
+    case EcsOpScope:
+    case EcsOpEnum:
+    case EcsOpBitmask:
+    case EcsOpPrimitive:
+    case EcsOpBool:
+    case EcsOpChar:
+    case EcsOpByte:
+    case EcsOpU8:
+    case EcsOpU16:
+    case EcsOpU32:
+    case EcsOpU64:
+    case EcsOpI8:
+    case EcsOpI16:
+    case EcsOpI32:
+    case EcsOpI64:
+    case EcsOpF32:
+    case EcsOpF64:
+    case EcsOpUPtr:
+    case EcsOpIPtr:
+    case EcsOpString:
         flecs_meta_conversion_error(cursor, op, "entity");
-        return -1;
+        goto error;
+    default:
+        ecs_throw(ECS_INVALID_PARAMETER, "invalid operation");
+        break;
     }
 
     return 0;
+error:
+    return -1;
 }
 
 int ecs_meta_set_null(
@@ -1363,12 +1525,40 @@ int ecs_meta_set_null(
         }
     }
     /* fall through */
-    default:
+    case EcsOpArray:
+    case EcsOpVector:
+    case EcsOpPush:
+    case EcsOpPop:
+    case EcsOpScope:
+    case EcsOpEnum:
+    case EcsOpBitmask:
+    case EcsOpPrimitive:
+    case EcsOpBool:
+    case EcsOpChar:
+    case EcsOpByte:
+    case EcsOpU8:
+    case EcsOpU16:
+    case EcsOpU32:
+    case EcsOpU64:
+    case EcsOpI8:
+    case EcsOpI16:
+    case EcsOpI32:
+    case EcsOpI64:
+    case EcsOpF32:
+    case EcsOpF64:
+    case EcsOpUPtr:
+    case EcsOpIPtr:
+    case EcsOpEntity:
         flecs_meta_conversion_error(cursor, op, "null");
-        return -1;
+        goto error;
+    default:
+        ecs_throw(ECS_INVALID_PARAMETER, "invalid operation");
+        break;
     }
 
     return 0;
+error:
+    return -1;
 }
 
 bool ecs_meta_get_bool(
@@ -1391,14 +1581,24 @@ bool ecs_meta_get_bool(
     case EcsOpU64:  return *(ecs_u64_t*)ptr != 0;
     case EcsOpIPtr: return *(ecs_iptr_t*)ptr != 0;
     case EcsOpUPtr: return *(ecs_uptr_t*)ptr != 0;
-    case EcsOpF32:  return *(ecs_f32_t*)ptr != 0;
-    case EcsOpF64:  return *(ecs_f64_t*)ptr != 0;
+    case EcsOpF32:  return ECS_NEQZERO(*(ecs_f32_t*)ptr);
+    case EcsOpF64:  return ECS_NEQZERO(*(ecs_f64_t*)ptr);
     case EcsOpString: return *(const char**)ptr != NULL;
     case EcsOpEnum: return *(ecs_i32_t*)ptr != 0;
     case EcsOpBitmask: return *(ecs_u32_t*)ptr != 0;
     case EcsOpEntity: return *(ecs_entity_t*)ptr != 0;
-    default: ecs_throw(ECS_INVALID_PARAMETER,
-                "invalid element for bool");
+    case EcsOpArray:
+    case EcsOpVector:
+    case EcsOpOpaque:
+    case EcsOpPush:
+    case EcsOpPop:
+    case EcsOpScope:
+    case EcsOpPrimitive:
+        ecs_throw(ECS_INVALID_PARAMETER, "invalid element for bool");
+        break;
+    default:
+        ecs_throw(ECS_INVALID_PARAMETER, "invalid operation");
+        break;
     }
 
 error:
@@ -1412,9 +1612,35 @@ char ecs_meta_get_char(
     ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
     void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
     switch(op->kind) {
-    case EcsOpChar: return *(ecs_char_t*)ptr != 0;
-    default: ecs_throw(ECS_INVALID_PARAMETER,
-                "invalid element for char");
+    case EcsOpChar: 
+        return *(ecs_char_t*)ptr != 0;
+    case EcsOpArray:
+    case EcsOpVector:
+    case EcsOpOpaque:
+    case EcsOpPush:
+    case EcsOpPop:
+    case EcsOpScope:
+    case EcsOpEnum:
+    case EcsOpBitmask:
+    case EcsOpPrimitive:
+    case EcsOpBool:
+    case EcsOpByte:
+    case EcsOpU8:
+    case EcsOpU16:
+    case EcsOpU32:
+    case EcsOpU64:
+    case EcsOpI8:
+    case EcsOpI16:
+    case EcsOpI32:
+    case EcsOpI64:
+    case EcsOpF32:
+    case EcsOpF64:
+    case EcsOpUPtr:
+    case EcsOpIPtr:
+    case EcsOpString:
+    case EcsOpEntity:
+        ecs_throw(ECS_INVALID_PARAMETER, "invalid element for char");
+        break;
     }
 
 error:
@@ -1428,31 +1654,41 @@ int64_t ecs_meta_get_int(
     ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
     void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
     switch(op->kind) {
-    case EcsOpBool: return *(ecs_bool_t*)ptr;
-    case EcsOpI8:   return *(ecs_i8_t*)ptr;
-    case EcsOpU8:   return *(ecs_u8_t*)ptr;
-    case EcsOpChar: return *(ecs_char_t*)ptr;
-    case EcsOpByte: return *(ecs_u8_t*)ptr;
-    case EcsOpI16:  return *(ecs_i16_t*)ptr;
-    case EcsOpU16:  return *(ecs_u16_t*)ptr;
-    case EcsOpI32:  return *(ecs_i32_t*)ptr;
-    case EcsOpU32:  return *(ecs_u32_t*)ptr;
-    case EcsOpI64:  return *(ecs_i64_t*)ptr;
-    case EcsOpU64:  return flecs_uto(int64_t, *(ecs_u64_t*)ptr);
-    case EcsOpIPtr: return *(ecs_iptr_t*)ptr;
-    case EcsOpUPtr: return flecs_uto(int64_t, *(ecs_uptr_t*)ptr);
-    case EcsOpF32:  return (int64_t)*(ecs_f32_t*)ptr;
-    case EcsOpF64:  return (int64_t)*(ecs_f64_t*)ptr;
+    case EcsOpBool: return *(const ecs_bool_t*)ptr;
+    case EcsOpI8:   return *(const ecs_i8_t*)ptr;
+    case EcsOpU8:   return *(const ecs_u8_t*)ptr;
+    case EcsOpChar: return *(const ecs_char_t*)ptr;
+    case EcsOpByte: return *(const ecs_u8_t*)ptr;
+    case EcsOpI16:  return *(const ecs_i16_t*)ptr;
+    case EcsOpU16:  return *(const ecs_u16_t*)ptr;
+    case EcsOpI32:  return *(const ecs_i32_t*)ptr;
+    case EcsOpU32:  return *(const ecs_u32_t*)ptr;
+    case EcsOpI64:  return *(const ecs_i64_t*)ptr;
+    case EcsOpU64:  return flecs_uto(int64_t, *(const ecs_u64_t*)ptr);
+    case EcsOpIPtr: return *(const ecs_iptr_t*)ptr;
+    case EcsOpUPtr: return flecs_uto(int64_t, *(const ecs_uptr_t*)ptr);
+    case EcsOpF32:  return (int64_t)*(const ecs_f32_t*)ptr;
+    case EcsOpF64:  return (int64_t)*(const ecs_f64_t*)ptr;
     case EcsOpString: return atoi(*(const char**)ptr);
-    case EcsOpEnum: return *(ecs_i32_t*)ptr;
-    case EcsOpBitmask: return *(ecs_u32_t*)ptr;
+    case EcsOpEnum: return *(const ecs_i32_t*)ptr;
+    case EcsOpBitmask: return *(const ecs_u32_t*)ptr;
     case EcsOpEntity:
         ecs_throw(ECS_INVALID_PARAMETER,
             "invalid conversion from entity to int");
         break;
-    default: ecs_throw(ECS_INVALID_PARAMETER, "invalid element for int");
+    case EcsOpArray:
+    case EcsOpVector:
+    case EcsOpOpaque:
+    case EcsOpPush:
+    case EcsOpPop:
+    case EcsOpScope:
+    case EcsOpPrimitive:
+        ecs_throw(ECS_INVALID_PARAMETER, "invalid element for int");
+        break;
+    default:
+        ecs_throw(ECS_INVALID_PARAMETER, "invalid operation");
+        break;
     }
-
 error:
     return 0;
 }
@@ -1465,25 +1701,36 @@ uint64_t ecs_meta_get_uint(
     void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
     switch(op->kind) {
     case EcsOpBool: return *(ecs_bool_t*)ptr;
-    case EcsOpI8:   return flecs_ito(uint64_t, *(ecs_i8_t*)ptr);
+    case EcsOpI8:   return flecs_ito(uint64_t, *(const ecs_i8_t*)ptr);
     case EcsOpU8:   return *(ecs_u8_t*)ptr;
-    case EcsOpChar: return flecs_ito(uint64_t, *(ecs_char_t*)ptr);
-    case EcsOpByte: return flecs_ito(uint64_t, *(ecs_u8_t*)ptr);
-    case EcsOpI16:  return flecs_ito(uint64_t, *(ecs_i16_t*)ptr);
+    case EcsOpChar: return flecs_ito(uint64_t, *(const ecs_char_t*)ptr);
+    case EcsOpByte: return flecs_ito(uint64_t, *(const ecs_u8_t*)ptr);
+    case EcsOpI16:  return flecs_ito(uint64_t, *(const ecs_i16_t*)ptr);
     case EcsOpU16:  return *(ecs_u16_t*)ptr;
-    case EcsOpI32:  return flecs_ito(uint64_t, *(ecs_i32_t*)ptr);
+    case EcsOpI32:  return flecs_ito(uint64_t, *(const ecs_i32_t*)ptr);
     case EcsOpU32:  return *(ecs_u32_t*)ptr;
-    case EcsOpI64:  return flecs_ito(uint64_t, *(ecs_i64_t*)ptr);
+    case EcsOpI64:  return flecs_ito(uint64_t, *(const ecs_i64_t*)ptr);
     case EcsOpU64:  return *(ecs_u64_t*)ptr;
-    case EcsOpIPtr: return flecs_ito(uint64_t, *(ecs_i64_t*)ptr);
+    case EcsOpIPtr: return flecs_ito(uint64_t, *(const ecs_i64_t*)ptr);
     case EcsOpUPtr: return *(ecs_uptr_t*)ptr;
-    case EcsOpF32:  return flecs_ito(uint64_t, *(ecs_f32_t*)ptr);
-    case EcsOpF64:  return flecs_ito(uint64_t, *(ecs_f64_t*)ptr);
+    case EcsOpF32:  return flecs_ito(uint64_t, *(const ecs_f32_t*)ptr);
+    case EcsOpF64:  return flecs_ito(uint64_t, *(const ecs_f64_t*)ptr);
     case EcsOpString: return flecs_ito(uint64_t, atoi(*(const char**)ptr));
-    case EcsOpEnum: return flecs_ito(uint64_t, *(ecs_i32_t*)ptr);
-    case EcsOpBitmask: return *(ecs_u32_t*)ptr;
-    case EcsOpEntity: return *(ecs_entity_t*)ptr;
-    default: ecs_throw(ECS_INVALID_PARAMETER, "invalid element for uint");
+    case EcsOpEnum: return flecs_ito(uint64_t, *(const ecs_i32_t*)ptr);
+    case EcsOpBitmask: return *(const ecs_u32_t*)ptr;
+    case EcsOpEntity: return *(const ecs_entity_t*)ptr;
+    case EcsOpArray:
+    case EcsOpVector:
+    case EcsOpOpaque:
+    case EcsOpPush:
+    case EcsOpPop:
+    case EcsOpScope:
+    case EcsOpPrimitive:
+        ecs_throw(ECS_INVALID_PARAMETER, "invalid element for uint");
+        break;
+    default:
+        ecs_throw(ECS_INVALID_PARAMETER, "invalid operation");
+        break;
     }
 error:
     return 0;
@@ -1495,29 +1742,40 @@ double flecs_meta_to_float(
     const void *ptr)
 {
     switch(kind) {
-    case EcsOpBool: return *(ecs_bool_t*)ptr;
-    case EcsOpI8:   return *(ecs_i8_t*)ptr;
-    case EcsOpU8:   return *(ecs_u8_t*)ptr;
-    case EcsOpChar: return *(ecs_char_t*)ptr;
-    case EcsOpByte: return *(ecs_u8_t*)ptr;
-    case EcsOpI16:  return *(ecs_i16_t*)ptr;
-    case EcsOpU16:  return *(ecs_u16_t*)ptr;
-    case EcsOpI32:  return *(ecs_i32_t*)ptr;
-    case EcsOpU32:  return *(ecs_u32_t*)ptr;
-    case EcsOpI64:  return (double)*(ecs_i64_t*)ptr;
-    case EcsOpU64:  return (double)*(ecs_u64_t*)ptr;
-    case EcsOpIPtr: return (double)*(ecs_iptr_t*)ptr;
-    case EcsOpUPtr: return (double)*(ecs_uptr_t*)ptr;
-    case EcsOpF32:  return (double)*(ecs_f32_t*)ptr;
-    case EcsOpF64:  return *(ecs_f64_t*)ptr;
-    case EcsOpString: return atof(*(const char**)ptr);
-    case EcsOpEnum: return *(ecs_i32_t*)ptr;
-    case EcsOpBitmask: return *(ecs_u32_t*)ptr;
+    case EcsOpBool: return *(const ecs_bool_t*)ptr;
+    case EcsOpI8:   return *(const ecs_i8_t*)ptr;
+    case EcsOpU8:   return *(const ecs_u8_t*)ptr;
+    case EcsOpChar: return *(const ecs_char_t*)ptr;
+    case EcsOpByte: return *(const ecs_u8_t*)ptr;
+    case EcsOpI16:  return *(const ecs_i16_t*)ptr;
+    case EcsOpU16:  return *(const ecs_u16_t*)ptr;
+    case EcsOpI32:  return *(const ecs_i32_t*)ptr;
+    case EcsOpU32:  return *(const ecs_u32_t*)ptr;
+    case EcsOpI64:  return (double)*(const ecs_i64_t*)ptr;
+    case EcsOpU64:  return (double)*(const ecs_u64_t*)ptr;
+    case EcsOpIPtr: return (double)*(const ecs_iptr_t*)ptr;
+    case EcsOpUPtr: return (double)*(const ecs_uptr_t*)ptr;
+    case EcsOpF32:  return (double)*(const ecs_f32_t*)ptr;
+    case EcsOpF64:  return *(const ecs_f64_t*)ptr;
+    case EcsOpString: return atof(*ECS_CONST_CAST(const char**, ptr));
+    case EcsOpEnum: return *(const ecs_i32_t*)ptr;
+    case EcsOpBitmask: return *(const ecs_u32_t*)ptr;
     case EcsOpEntity:
         ecs_throw(ECS_INVALID_PARAMETER,
             "invalid conversion from entity to float");
         break;
-    default: ecs_throw(ECS_INVALID_PARAMETER, "invalid element for float");
+    case EcsOpArray:
+    case EcsOpVector:
+    case EcsOpOpaque:
+    case EcsOpPush:
+    case EcsOpPop:
+    case EcsOpScope:
+    case EcsOpPrimitive:
+        ecs_throw(ECS_INVALID_PARAMETER, "invalid element for float");
+        break;
+    default:
+        ecs_throw(ECS_INVALID_PARAMETER, "invalid operation");
+        break;
     }
 error:
     return 0;
@@ -1540,7 +1798,34 @@ const char* ecs_meta_get_string(
     void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
     switch(op->kind) {
     case EcsOpString: return *(const char**)ptr;
-    default: ecs_throw(ECS_INVALID_PARAMETER, "invalid element for string");
+    case EcsOpArray:
+    case EcsOpVector:
+    case EcsOpOpaque:
+    case EcsOpPush:
+    case EcsOpPop:
+    case EcsOpScope:
+    case EcsOpEnum:
+    case EcsOpBitmask:
+    case EcsOpPrimitive:
+    case EcsOpChar:
+    case EcsOpBool:
+    case EcsOpByte:
+    case EcsOpU8:
+    case EcsOpU16:
+    case EcsOpU32:
+    case EcsOpU64:
+    case EcsOpI8:
+    case EcsOpI16:
+    case EcsOpI32:
+    case EcsOpI64:
+    case EcsOpF32:
+    case EcsOpF64:
+    case EcsOpUPtr:
+    case EcsOpIPtr:
+    case EcsOpEntity:
+    default:
+        ecs_throw(ECS_INVALID_PARAMETER, "invalid element for string");
+        break;
     }
 error:
     return 0;
@@ -1554,7 +1839,33 @@ ecs_entity_t ecs_meta_get_entity(
     void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
     switch(op->kind) {
     case EcsOpEntity: return *(ecs_entity_t*)ptr;
-    default: ecs_throw(ECS_INVALID_PARAMETER, "invalid element for entity");
+    case EcsOpArray:
+    case EcsOpVector:
+    case EcsOpOpaque:
+    case EcsOpPush:
+    case EcsOpPop:
+    case EcsOpScope:
+    case EcsOpEnum:
+    case EcsOpBitmask:
+    case EcsOpPrimitive:
+    case EcsOpChar:
+    case EcsOpBool:
+    case EcsOpByte:
+    case EcsOpU8:
+    case EcsOpU16:
+    case EcsOpU32:
+    case EcsOpU64:
+    case EcsOpI8:
+    case EcsOpI16:
+    case EcsOpI32:
+    case EcsOpI64:
+    case EcsOpF32:
+    case EcsOpF64:
+    case EcsOpUPtr:
+    case EcsOpIPtr:
+    case EcsOpString:
+        ecs_throw(ECS_INVALID_PARAMETER, "invalid element for entity");
+        break;
     }
 error:
     return 0;

@@ -230,17 +230,35 @@ int json_typeinfo_ser_type_op(
         break;
     case EcsOpOpaque:
         /* Can't happen, already handled above */
-        ecs_abort(ECS_INTERNAL_ERROR, NULL);
+        ecs_throw(ECS_INTERNAL_ERROR, NULL);
         break;
-    default:
+    case EcsOpBool:
+    case EcsOpChar:
+    case EcsOpByte:
+    case EcsOpU8:
+    case EcsOpU16:
+    case EcsOpU32:
+    case EcsOpU64:
+    case EcsOpI8:
+    case EcsOpI16:
+    case EcsOpI32:
+    case EcsOpI64:
+    case EcsOpF32:
+    case EcsOpF64:
+    case EcsOpUPtr:
+    case EcsOpIPtr:
+    case EcsOpEntity:
+    case EcsOpString:
         if (json_typeinfo_ser_primitive( 
             flecs_json_op_to_primitive_kind(op->kind), str))
         {
-            /* Unknown operation */
             ecs_throw(ECS_INTERNAL_ERROR, NULL);
-            return -1;
         }
         break;
+    case EcsOpScope:
+    case EcsOpPrimitive:
+    default:
+        ecs_throw(ECS_INTERNAL_ERROR, NULL);
     }
 
     if (st) {
@@ -248,9 +266,9 @@ int json_typeinfo_ser_type_op(
             &st->members, ecs_member_t, op->member_index);
         ecs_assert(m != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        bool value_range = m->range.min != m->range.max;
-        bool error_range = m->error_range.min != m->error_range.max;
-        bool warning_range = m->warning_range.min != m->warning_range.max;
+        bool value_range = ECS_NEQ(m->range.min, m->range.max);
+        bool error_range = ECS_NEQ(m->error_range.min, m->error_range.max);
+        bool warning_range = ECS_NEQ(m->warning_range.min, m->warning_range.max);
 
         ecs_entity_t unit = m->unit;
         if (unit || error_range || warning_range || value_range) {
@@ -316,11 +334,36 @@ int json_typeinfo_ser_type_ops(
         case EcsOpPop:
             flecs_json_object_pop(str);
             break;
-        default:
+        case EcsOpArray:
+        case EcsOpVector:
+        case EcsOpEnum:
+        case EcsOpBitmask:
+        case EcsOpBool:
+        case EcsOpChar:
+        case EcsOpByte:
+        case EcsOpU8:
+        case EcsOpU16:
+        case EcsOpU32:
+        case EcsOpU64:
+        case EcsOpI8:
+        case EcsOpI16:
+        case EcsOpI32:
+        case EcsOpI64:
+        case EcsOpF32:
+        case EcsOpF64:
+        case EcsOpUPtr:
+        case EcsOpIPtr:
+        case EcsOpEntity:
+        case EcsOpString:
+        case EcsOpOpaque:
             if (json_typeinfo_ser_type_op(world, op, str, st)) {
                 goto error;
             }
             break;
+        case EcsOpPrimitive:
+        case EcsOpScope:
+        default:
+            ecs_throw(ECS_INTERNAL_ERROR, NULL);
         }
     }
 

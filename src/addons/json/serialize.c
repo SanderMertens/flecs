@@ -47,7 +47,7 @@ int json_ser_enum(
     const EcsEnum *enum_type = ecs_get(world, op->type, EcsEnum);
     ecs_check(enum_type != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    int32_t value = *(int32_t*)base;
+    int32_t value = *(const int32_t*)base;
     
     /* Enumeration constants are stored in a map that is keyed on the
      * enumeration value. */
@@ -82,7 +82,7 @@ int json_ser_bitmask(
     const EcsBitmask *bitmask_type = ecs_get(world, op->type, EcsBitmask);
     ecs_check(bitmask_type != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    uint32_t value = *(uint32_t*)ptr;
+    uint32_t value = *(const uint32_t*)ptr;
     if (!value) {
         ecs_strbuf_appendch(str, '0');
         return 0;
@@ -309,7 +309,7 @@ int json_ser_type_op(
         break;
     case EcsOpF32:
         ecs_strbuf_appendflt(str, 
-            (ecs_f64_t)*(ecs_f32_t*)ECS_OFFSET(ptr, op->offset), '"');
+            (ecs_f64_t)*(const ecs_f32_t*)ECS_OFFSET(ptr, op->offset), '"');
         break;
     case EcsOpF64:
         ecs_strbuf_appendflt(str, 
@@ -341,7 +341,7 @@ int json_ser_type_op(
         }
         break;
     case EcsOpEntity: {
-        ecs_entity_t e = *(ecs_entity_t*)ECS_OFFSET(ptr, op->offset);
+        ecs_entity_t e = *(const ecs_entity_t*)ECS_OFFSET(ptr, op->offset);
         if (!e) {
             ecs_strbuf_appendch(str, '0');
         } else {
@@ -349,17 +349,31 @@ int json_ser_type_op(
         }
         break;
     }
-
-    default:
+    case EcsOpBool:
+    case EcsOpChar:
+    case EcsOpByte:
+    case EcsOpU8:
+    case EcsOpU16:
+    case EcsOpU32:
+    case EcsOpU64:
+    case EcsOpI8:
+    case EcsOpI16:
+    case EcsOpI32:
+    case EcsOpI64:
+    case EcsOpUPtr:
+    case EcsOpIPtr:
+    case EcsOpString:
         if (ecs_primitive_to_expr_buf(world, 
             flecs_json_op_to_primitive_kind(op->kind), 
             ECS_OFFSET(ptr, op->offset), str)) 
         {
-            /* Unknown operation */
             ecs_throw(ECS_INTERNAL_ERROR, NULL);
-            return -1;
         }
         break;
+    case EcsOpPrimitive:
+    case EcsOpScope:
+    default:
+        ecs_throw(ECS_INTERNAL_ERROR, NULL);
     }
 
     return 0;
@@ -408,11 +422,36 @@ int json_ser_type_ops(
             flecs_json_object_pop(str);
             in_array ++;
             break;
-        default:
+        case EcsOpArray:
+        case EcsOpVector:
+        case EcsOpScope:
+        case EcsOpEnum:
+        case EcsOpBitmask:
+        case EcsOpPrimitive:
+        case EcsOpBool:
+        case EcsOpChar:
+        case EcsOpByte:
+        case EcsOpU8:
+        case EcsOpU16:
+        case EcsOpU32:
+        case EcsOpU64:
+        case EcsOpI8:
+        case EcsOpI16:
+        case EcsOpI32:
+        case EcsOpI64:
+        case EcsOpF32:
+        case EcsOpF64:
+        case EcsOpUPtr:
+        case EcsOpIPtr:
+        case EcsOpEntity:
+        case EcsOpString:
+        case EcsOpOpaque:
             if (json_ser_type_op(world, op, base, str)) {
                 goto error;
             }
             break;
+        default:
+            ecs_throw(ECS_INTERNAL_ERROR, NULL);
         }
     }
 
@@ -1425,7 +1464,7 @@ void flecs_json_serialize_iter_result_parent(
         return;
     }
 
-    const ecs_table_record_t *tr = flecs_id_record_get_table(
+    ecs_table_record_t *tr = flecs_id_record_get_table(
         world->idr_childof_wildcard, it->table);
     if (tr == NULL) {
         return;
@@ -1484,7 +1523,7 @@ void flecs_json_serialize_iter_result_entity_labels(
     }
 
 #ifdef FLECS_DOC
-    const ecs_table_record_t *tr = flecs_id_record_get_table(
+    ecs_table_record_t *tr = flecs_id_record_get_table(
         ser_idr->idr_doc_name, it->table);
     if (tr == NULL) {
         return;
@@ -1525,7 +1564,7 @@ void flecs_json_serialize_iter_result_colors(
         return;
     }
 
-    const ecs_table_record_t *tr = flecs_id_record_get_table(
+    ecs_table_record_t *tr = flecs_id_record_get_table(
         ser_idr->idr_doc_color, it->table);
     if (tr == NULL) {
         return;

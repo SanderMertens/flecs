@@ -117,7 +117,7 @@ int flecs_term_id_lookup(
     bool free_name,
     ecs_filter_finalize_ctx_t *ctx)
 {
-    char *name = term_id->name;
+    const char *name = term_id->name;
     if (!name) {
         return 0;
     }
@@ -126,7 +126,8 @@ int flecs_term_id_lookup(
         if (!ecs_os_strcmp(name, "This") || !ecs_os_strcmp(name, "this")) {
             term_id->id = EcsThis;
             if (free_name) {
-                ecs_os_free(term_id->name);
+                /* Safe, if free_name is true the filter owns the name */
+                ecs_os_free(ECS_CONST_CAST(char*, term_id->name));
             }
             term_id->name = NULL;
         }
@@ -185,7 +186,8 @@ int flecs_term_id_lookup(
         }
 
         if (free_name) {
-            ecs_os_free(name);
+            /* Safe, if free_name is true, the filter owns the name */
+            ecs_os_free(ECS_CONST_CAST(char*, name));
         }
 
         term_id->name = NULL;
@@ -1062,9 +1064,10 @@ ecs_term_t ecs_term_move(
 void ecs_term_fini(
     ecs_term_t *term)
 {
-    ecs_os_free(term->first.name);
-    ecs_os_free(term->src.name);
-    ecs_os_free(term->second.name);
+    /* Safe, values are owned by term */
+    ecs_os_free(ECS_CONST_CAST(char*, term->first.name));
+    ecs_os_free(ECS_CONST_CAST(char*, term->src.name));
+    ecs_os_free(ECS_CONST_CAST(char*, term->second.name));
     ecs_os_free(term->name);
 
     term->first.name = NULL;
@@ -1319,10 +1322,10 @@ void flecs_filter_iter_init(
     ecs_poly_assert(poly, ecs_filter_t);
 
     if (filter) {
-        iter[1] = ecs_filter_iter(world, (ecs_filter_t*)poly);
+        iter[1] = ecs_filter_iter(world, ECS_CONST_CAST(ecs_filter_t*, poly));
         iter[0] = ecs_term_chain_iter(&iter[1], filter);
     } else {
-        iter[0] = ecs_filter_iter(world, (ecs_filter_t*)poly);
+        iter[0] = ecs_filter_iter(world, ECS_CONST_CAST(ecs_filter_t*, poly));
     }
 }
 
@@ -2232,8 +2235,8 @@ ecs_iter_t ecs_term_iter(
     }
 
     ecs_iter_t it = {
-        .real_world = (ecs_world_t*)world,
-        .world = (ecs_world_t*)stage,
+        .real_world = ECS_CONST_CAST(ecs_world_t*, world),
+        .world = ECS_CONST_CAST(ecs_world_t*, stage),
         .field_count = 1,
         .next = ecs_term_next
     };
@@ -2270,11 +2273,11 @@ ecs_iter_t ecs_term_chain_iter(
     }
 
     ecs_iter_t it = {
-        .real_world = (ecs_world_t*)world,
+        .real_world = world,
         .world = chain_it->world,
         .terms = term,
         .field_count = 1,
-        .chain_it = (ecs_iter_t*)chain_it,
+        .chain_it = ECS_CONST_CAST(ecs_iter_t*, chain_it),
         .next = ecs_term_next
     };
 
@@ -2635,8 +2638,8 @@ ecs_iter_t flecs_filter_iter_w_flags(
     }
 
     ecs_iter_t it = {
-        .real_world = (ecs_world_t*)world,
-        .world = (ecs_world_t*)stage,
+        .real_world = ECS_CONST_CAST(ecs_world_t*, world),
+        .world = ECS_CONST_CAST(ecs_world_t*, stage),
         .terms = filter ? filter->terms : NULL,
         .next = ecs_filter_next,
         .flags = flags,
@@ -2690,7 +2693,7 @@ ecs_iter_t flecs_filter_iter_w_flags(
         it.variable_count = 1;
 
         /* Set variable name array */
-        it.variable_names = (char**)filter->variable_names;
+        it.variable_names = ECS_CONST_CAST(char**, filter->variable_names);
     }
 
     flecs_iter_init(stage, &it, flecs_iter_cache_all);
@@ -2716,7 +2719,7 @@ ecs_iter_t ecs_filter_chain_iter(
         .field_count = filter->field_count,
         .world = chain_it->world,
         .real_world = chain_it->real_world,
-        .chain_it = (ecs_iter_t*)chain_it,
+        .chain_it = ECS_CONST_CAST(ecs_iter_t*, chain_it),
         .next = ecs_filter_next,
         .sizes = filter->sizes
     };

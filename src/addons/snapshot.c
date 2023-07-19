@@ -47,7 +47,7 @@ ecs_data_t* flecs_duplicate_data(
     /* Copy each column */
     for (i = 0; i < column_count; i ++) {
         ecs_vec_t *column = &result->columns[i];
-        ecs_type_info_t *ti = table->type_info[i];
+        const ecs_type_info_t *ti = table->type_info[i];
         int32_t size = ti->size;
         ecs_copy_t copy = ti->hooks.copy;
         if (copy) {
@@ -86,8 +86,10 @@ void snapshot_table(
     ecs_assert(l != NULL, ECS_INTERNAL_ERROR, NULL);
     
     l->table = table;
-    l->type = flecs_type_copy((ecs_world_t*)world, &table->type);
-    l->data = flecs_duplicate_data((ecs_world_t*)world, table, &table->data);
+    l->type = flecs_type_copy(
+        ECS_CONST_CAST(ecs_world_t*, world), &table->type);
+    l->data = flecs_duplicate_data(
+        ECS_CONST_CAST(ecs_world_t*, world), table, &table->data);
 }
 
 static
@@ -100,9 +102,9 @@ ecs_snapshot_t* snapshot_create(
     ecs_snapshot_t *result = ecs_os_calloc_t(ecs_snapshot_t);
     ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
 
-    ecs_run_aperiodic((ecs_world_t*)world, 0);
+    ecs_run_aperiodic(ECS_CONST_CAST(ecs_world_t*, world), 0);
 
-    result->world = (ecs_world_t*)world;
+    result->world = ECS_CONST_CAST(ecs_world_t*, world);
 
     /* If no iterator is provided, the snapshot will be taken of the entire
      * world, and we can simply copy the entity index as it will be restored

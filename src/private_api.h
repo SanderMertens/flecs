@@ -38,7 +38,7 @@ void flecs_bootstrap(
     ecs_add_id(world, name, EcsFinal);\
     ecs_add_pair(world, name, EcsChildOf, ecs_get_scope(world));\
     ecs_set(world, name, EcsComponent, {.size = 0});\
-    ecs_set_name(world, name, (char*)&#name[ecs_os_strlen(world->info.name_prefix)]);\
+    ecs_set_name(world, name, (const char*)&#name[ecs_os_strlen(world->info.name_prefix)]);\
     ecs_set_symbol(world, name, #name)
 
 /* Bootstrap functions for other parts in the code */
@@ -187,7 +187,7 @@ void flecs_filter_apply_iter_flags(
 #define flecs_signed_ecs_size_t__ true
 #define flecs_signed_ecs_entity_t__ false
 
-uint64_t _flecs_ito(
+uint64_t flecs_ito_(
     size_t dst_size,
     bool dst_signed,
     bool lt_zero,
@@ -196,7 +196,7 @@ uint64_t _flecs_ito(
 
 #ifndef FLECS_NDEBUG
 #define flecs_ito(T, value)\
-    (T)_flecs_ito(\
+    (T)flecs_ito_(\
         sizeof(T),\
         flecs_signed_##T##__,\
         (value) < 0,\
@@ -204,7 +204,7 @@ uint64_t _flecs_ito(
         FLECS_CONVERSION_ERR(T, (value)))
 
 #define flecs_uto(T, value)\
-    (T)_flecs_ito(\
+    (T)flecs_ito_(\
         sizeof(T),\
         flecs_signed_##T##__,\
         false,\
@@ -295,14 +295,6 @@ uint64_t flecs_string_hash(
 void flecs_table_hashmap_init(
     ecs_world_t *world,
     ecs_hashmap_t *hm);
-
-#define assert_func(cond) _assert_func(cond, #cond, __FILE__, __LINE__, __func__)
-void _assert_func(
-    bool cond,
-    const char *cond_str,
-    const char *file,
-    int32_t line,
-    const char *func);
 
 void flecs_dump_backtrace(
     FILE *stream);

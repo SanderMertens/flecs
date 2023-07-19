@@ -404,8 +404,8 @@ ecs_entity_t ecs_lookup_path_w_sep(
     ecs_entity_t cur;
     bool lookup_path_search = false;
 
-    ecs_entity_t *lookup_path = ecs_get_lookup_path(stage);
-    ecs_entity_t *lookup_path_cur = lookup_path;
+    const ecs_entity_t *lookup_path = ecs_get_lookup_path(stage);
+    const ecs_entity_t *lookup_path_cur = lookup_path;
     while (lookup_path_cur && *lookup_path_cur) {
         lookup_path_cur ++;
     }
@@ -507,8 +507,9 @@ ecs_entity_t* ecs_set_lookup_path(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
-    ecs_entity_t *cur = stage->lookup_path;
-    stage->lookup_path = (ecs_entity_t*)lookup_path;
+    /* Safe: application owns lookup path */
+    ecs_entity_t *cur = ECS_CONST_CAST(ecs_entity_t*, stage->lookup_path);
+    stage->lookup_path = lookup_path;
 
     return cur;
 error:
@@ -520,7 +521,8 @@ ecs_entity_t* ecs_get_lookup_path(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     const ecs_stage_t *stage = flecs_stage_from_readonly_world(world);
-    return stage->lookup_path;
+    /* Safe: application owns lookup path */
+    return ECS_CONST_CAST(ecs_entity_t*, stage->lookup_path);
 error:
     return NULL;
 }

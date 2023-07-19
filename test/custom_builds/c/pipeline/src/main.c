@@ -1,7 +1,7 @@
 #include <pipeline.h>
 
 typedef struct {
-    float x, y;
+    int32_t x, y;
 } Position, Velocity;
 
 void Move(ecs_iter_t *it) {

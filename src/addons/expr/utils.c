@@ -312,7 +312,9 @@ char* ecs_interpolate_string(
                 goto error;
             }
 
-            ecs_parse_expr_desc_t expr_desc = { .vars = (ecs_vars_t*)vars };
+            ecs_parse_expr_desc_t expr_desc = { 
+                .vars = ECS_CONST_CAST(ecs_vars_t*, vars) 
+            };
             ecs_value_t expr_result = {0};
             if (!ecs_parse_expr(world, token, &expr_result, &expr_desc)) {
                 goto error;

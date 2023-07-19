@@ -22,7 +22,8 @@ struct app_builder {
     {
         const ecs_world_info_t *stats = ecs_get_world_info(world);
         m_desc.target_fps = stats->target_fps;
-        if (m_desc.target_fps == static_cast<ecs_ftime_t>(0.0)) {
+        ecs_ftime_t t_zero = 0.0;
+        if (ECS_EQ(m_desc.target_fps, t_zero)) {
             m_desc.target_fps = 60;
         }
     }

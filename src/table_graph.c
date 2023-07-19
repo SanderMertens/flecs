@@ -772,7 +772,7 @@ void flecs_add_overrides_for_base(
     }
 
     if (flags & EcsTableHasIsA) {
-        const ecs_table_record_t *tr = flecs_id_record_get_table(
+        ecs_table_record_t *tr = flecs_id_record_get_table(
             world->idr_isa_wildcard, base_table);
         ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
         int32_t i = tr->column, end = i + tr->count;
@@ -799,7 +799,7 @@ void flecs_add_with_property(
         return;
     }
     
-    const ecs_table_record_t *tr = flecs_id_record_get_table(
+    ecs_table_record_t *tr = flecs_id_record_get_table(
         idr_with_wildcard, table);
     if (tr) {
         int32_t i = tr->column, end = i + tr->count;
@@ -848,7 +848,7 @@ ecs_table_t* flecs_find_table_with(
             return flecs_table_ensure(world, &dst_type, true, node);
         } else if (idr->flags & EcsIdExclusive) {
             /* Relationship is exclusive, check if table already has it */
-            const ecs_table_record_t *tr = flecs_id_record_get_table(idr, node);
+            ecs_table_record_t *tr = flecs_id_record_get_table(idr, node);
             if (tr) {
                 /* Table already has an instance of the relationship, create
                  * a new id sequence with the existing id replaced */
@@ -1214,7 +1214,7 @@ ecs_table_t* ecs_table_find(
     int32_t id_count)
 {
     ecs_type_t type = {
-        .array = (ecs_id_t*)ids,
+        .array = ECS_CONST_CAST(ecs_id_t*, ids),
         .count = id_count
     };
     return flecs_table_ensure(world, &type, false, NULL);

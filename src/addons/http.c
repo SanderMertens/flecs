@@ -43,9 +43,9 @@
 #define WIN32_LEAN_AND_MEAN
 #endif
 #pragma comment(lib, "Ws2_32.lib")
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include <windows.h>
+#include <WinSock2.h>
+#include <WS2tcpip.h>
+#include <Windows.h>
 typedef SOCKET ecs_http_socket_t;
 #else
 #include <unistd.h>
@@ -60,10 +60,11 @@ typedef SOCKET ecs_http_socket_t;
 #include <netinet/in.h>
 #endif
 typedef int ecs_http_socket_t;
-#endif
 
 #if !defined(MSG_NOSIGNAL)
 #define MSG_NOSIGNAL (0)
+#endif
+
 #endif
 
 /* Max length of request method */
@@ -83,9 +84,6 @@ typedef int ecs_http_socket_t;
 
 /* Minimum interval between printing statistics (ms) */
 #define ECS_HTTP_MIN_STATS_INTERVAL (10 * 1000)
-
-/* Max length of headers in reply */
-#define ECS_HTTP_REPLY_HEADER_SIZE (1024)
 
 /* Receive buffer size */
 #define ECS_HTTP_SEND_RECV_BUFFER_SIZE (16 * 1024)
@@ -342,8 +340,15 @@ int http_getnameinfo(
     ecs_assert(addr_len > 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(host_len > 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(port_len > 0, ECS_INTERNAL_ERROR, NULL);
-    return getnameinfo(addr, (uint32_t)addr_len, host, (uint32_t)host_len, 
-        port, (uint32_t)port_len, flags);
+#if defined(ECS_TARGET_WINDOWS)
+    return getnameinfo(addr, addr_len, host, 
+        flecs_ito(uint32_t, host_len), port, flecs_ito(uint32_t, port_len), 
+        flags);
+#else
+    return getnameinfo(addr, flecs_ito(uint32_t, addr_len), host, 
+        flecs_ito(uint32_t, host_len), port, flecs_ito(uint32_t, port_len), 
+        flags);
+#endif
 }
 
 static
@@ -353,7 +358,11 @@ int http_bind(
     ecs_size_t addr_len)
 {
     ecs_assert(addr_len > 0, ECS_INTERNAL_ERROR, NULL);
-    return bind(sock, addr, (uint32_t)addr_len);
+#if defined(ECS_TARGET_WINDOWS)
+    return bind(sock, addr, addr_len);
+#else
+    return bind(sock, addr, flecs_ito(uint32_t, addr_len));
+#endif
 }
 
 static
@@ -613,7 +622,8 @@ char* http_decode_request(
     for (i = 0; i < count; i ++) {
         req->pub.params[i].key = &res[frag->param_offsets[i]];
         req->pub.params[i].value = &res[frag->param_value_offsets[i]];
-        http_decode_url_str((char*)req->pub.params[i].value);
+        /* Safe, member is only const so that end-user can't change it */
+        http_decode_url_str(ECS_CONST_CAST(char*, req->pub.params[i].value));
     }
 
     req->pub.header_count = frag->header_count;
@@ -684,7 +694,8 @@ bool http_parse_request(
             frag->buf.max = ECS_HTTP_METHOD_LEN_MAX;
             frag->state = HttpFragStateMethod;
             frag->header_buf_ptr = frag->header_buf;
-            /* fallthrough */
+            
+            /* fall through */
         case HttpFragStateMethod:
             if (c == ' ') {
                 http_parse_method(frag);
@@ -725,7 +736,8 @@ bool http_parse_request(
             }
             http_header_buf_reset(frag);
             frag->state = HttpFragStateHeaderName;
-            /* fallthrough */
+
+            /* fall through */
         case HttpFragStateHeaderName:
             if (c == ':') {
                 frag->state = HttpFragStateHeaderValueStart;
@@ -753,7 +765,8 @@ bool http_parse_request(
             if (c == ' ') { /* skip first space */
                 break;
             }
-            /* fallthrough */
+
+            /* fall through */
         case HttpFragStateHeaderValue:
             if (c == '\r') {
                 if (frag->parse_content_length) {
@@ -1145,7 +1158,7 @@ void http_accept_connections(
 #ifdef ECS_TARGET_WINDOWS
     /* If on Windows, test if winsock needs to be initialized */
     SOCKET testsocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (SOCKET_ERROR == testsocket && WSANOTINITIALISED == WSAGetLastError()) {
+    if (INVALID_SOCKET == testsocket && WSANOTINITIALISED == WSAGetLastError()){
         WSADATA data = { 0 };
         int result = WSAStartup(MAKEWORD(2, 2), &data);
         if (result) {
@@ -1283,7 +1296,9 @@ void http_do_request(
     ecs_http_reply_t *reply,
     const ecs_http_request_impl_t *req)
 {
-    if (srv->callback((ecs_http_request_t*)req, reply, srv->ctx) == false) {
+    if (srv->callback(ECS_CONST_CAST(ecs_http_request_t*, req), reply, 
+        srv->ctx) == false) 
+    {
         reply->code = 404;
         reply->status = "Resource not found";
         ecs_os_linc(&ecs_http_request_not_handled_count);
@@ -1350,7 +1365,8 @@ void http_purge_request_cache(
             ecs_http_request_entry_t *entry = &entries[i];
             if (fini || ((time - entry->time) > ECS_HTTP_CACHE_PURGE_TIMEOUT)) {
                 ecs_http_request_key_t *key = &keys[i];
-                ecs_os_free((char*)key->array);
+                /* Safe, code owns the value */
+                ecs_os_free(ECS_CONST_CAST(char*, key->array));
                 ecs_os_free(entry->content);
                 flecs_hm_bucket_remove(&srv->request_cache, bucket, 
                     ecs_map_key(&it), i);

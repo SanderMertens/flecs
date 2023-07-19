@@ -485,8 +485,9 @@ ecs_entity_t flecs_largest_type(
     case EcsIPtr:   return ecs_id(ecs_i64_t);
     case EcsString: return ecs_id(ecs_string_t);
     case EcsEntity: return ecs_id(ecs_entity_t);
-    default: ecs_abort(ECS_INTERNAL_ERROR, NULL);
+    default: ecs_throw(ECS_INTERNAL_ERROR, NULL);
     }
+error:
     return 0;
 }
 
@@ -532,7 +533,12 @@ bool flecs_oper_valid_for_type(
     case EcsShiftLeft:
     case EcsShiftRight:
         return (type == ecs_id(ecs_u64_t));
+    case EcsExprOperUnknown:
+    case EcsLeftParen:
+    case EcsMin:
+        return false;
     default: 
+        ecs_abort(ECS_INTERNAL_ERROR, NULL);
         return false;
     }
 }
@@ -601,9 +607,23 @@ bool flecs_expr_op_is_equality(
     case EcsCondLt:
     case EcsCondLtEq:
         return true;
-    default:
+    case EcsCondAnd:
+    case EcsCondOr:
+    case EcsShiftLeft:
+    case EcsShiftRight:
+    case EcsAdd:
+    case EcsSub:
+    case EcsMul:
+    case EcsDiv:
+    case EcsExprOperUnknown:
+    case EcsLeftParen:
+    case EcsMin:
         return false;
+    default:
+        ecs_throw(ECS_INTERNAL_ERROR, "invalid operator");
     }
+error:
+    return false;
 }
 
 static
@@ -639,8 +659,17 @@ ecs_entity_t flecs_binary_expr_type(
          * should not be casted to bool */
         result_type = ecs_id(ecs_bool_t);
         break;
-    default:
+    case EcsShiftLeft:
+    case EcsShiftRight:
+    case EcsAdd:
+    case EcsSub:
+    case EcsMul:
+    case EcsExprOperUnknown:
+    case EcsLeftParen:
+    case EcsMin:
         break;
+    default:
+        ecs_throw(ECS_INTERNAL_ERROR, "invalid operator");
     }
 
     /* Result type for arithmetic operators is determined by operands */
@@ -690,6 +719,8 @@ done:
 
     *operand_type_out = operand_type;
     return result_type;
+error:
+    return 0;
 }
 
 /* Macro's to let the compiler do the operations & conversion work for us */
@@ -706,6 +737,24 @@ done:
         ECS_BINARY_OP_T(left, right, result, op, ecs_i64_t, ecs_i64_t);\
     } else if (left->type == ecs_id(ecs_f64_t)) { \
         ECS_BINARY_OP_T(left, right, result, op, ecs_f64_t, ecs_f64_t);\
+    } else {\
+        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
+    }
+
+#define ECS_BINARY_COND_EQ_OP(left, right, result, op)\
+    if (left->type == ecs_id(ecs_u64_t)) { \
+        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_u64_t);\
+    } else if (left->type == ecs_id(ecs_i64_t)) { \
+        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_i64_t);\
+    } else if (left->type == ecs_id(ecs_f64_t)) { \
+        ecs_parser_error(name, expr, ptr - expr, "unsupported operator for floating point");\
+        return -1;\
+    } else if (left->type == ecs_id(ecs_u8_t)) { \
+        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_u8_t);\
+    } else if (left->type == ecs_id(ecs_char_t)) { \
+        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_char_t);\
+    } else if (left->type == ecs_id(ecs_bool_t)) { \
+        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_bool_t);\
     } else {\
         ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
     }
@@ -757,12 +806,12 @@ int flecs_binary_expr_do(
     ecs_entity_t operand_type, type = flecs_binary_expr_type(
         world, name, expr, ptr, lvalue, rvalue, op, &operand_type);
     if (!type) {
-        return -1;
+        goto error;
     }
 
     if (!flecs_oper_valid_for_type(type, op)) {
         ecs_parser_error(name, expr, ptr - expr, "invalid operator for type");
-        return -1;
+        goto error;
     }
 
     flecs_value_cast(world, stack, lvalue, operand_type);
@@ -790,10 +839,10 @@ int flecs_binary_expr_do(
         ECS_BINARY_OP(lvalue, rvalue, storage, /);
         break;
     case EcsCondEq:
-        ECS_BINARY_COND_OP(lvalue, rvalue, storage, ==);
+        ECS_BINARY_COND_EQ_OP(lvalue, rvalue, storage, ==);
         break;
     case EcsCondNeq:
-        ECS_BINARY_COND_OP(lvalue, rvalue, storage, !=);
+        ECS_BINARY_COND_EQ_OP(lvalue, rvalue, storage, !=);
         break;
     case EcsCondGt:
         ECS_BINARY_COND_OP(lvalue, rvalue, storage, >);
@@ -819,9 +868,13 @@ int flecs_binary_expr_do(
     case EcsShiftRight:
         ECS_BINARY_UINT_OP(lvalue, rvalue, storage, >>);
         break;
-    default:
+    case EcsExprOperUnknown:
+    case EcsLeftParen:
+    case EcsMin:
         ecs_parser_error(name, expr, ptr - expr, "unsupported operator");
-        return -1;
+        goto error;
+    default:
+        ecs_throw(ECS_INTERNAL_ERROR, NULL);
     }
 
     if (storage->ptr != result->ptr) {
@@ -835,6 +888,8 @@ int flecs_binary_expr_do(
     }
 
     return 0;
+error:
+    return -1;
 }
 
 static

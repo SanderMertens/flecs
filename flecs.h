@@ -522,6 +522,43 @@ extern "C" {
     #endif
 #endif
 
+/* Ignored warnings */
+#if defined(ECS_TARGET_CLANG)
+/* Warns for double or redundant semicolons. There are legitimate cases where a
+ * semicolon after an empty statement is useful, for example after a macro that
+ * is replaced with a code block. With this warning enabled, semicolons would 
+ * only have to be added after macro's that are not code blocks, which in some
+ * cases isn't possible as the implementation of a macro can be different in
+ * debug/release mode. */
+#pragma clang diagnostic ignored "-Wextra-semi-stmt"
+/* This is valid in C99, and Flecs must be compiled as C99. */
+#pragma clang diagnostic ignored "-Wdeclaration-after-statement"
+/* Clang attribute to detect fallthrough isn't supported on older versions. 
+ * Implicit fallthrough is still detected by gcc and ignored with "fall through"
+ * comments */
+#pragma clang diagnostic ignored "-Wimplicit-fallthrough"
+/* This warning prevents adding a default case when all enum constants are part
+ * of the switch. In C however an enum type can assume any value in the range of
+ * the type, and this warning makes it harder to catch invalid enum values. */
+#pragma clang diagnostic ignored "-Wcovered-switch-default"
+/* This warning prevents some casts of function results to a different kind of
+ * type, e.g. casting an int result to double. Not very useful in practice, as
+ * it just forces the code to assign to a variable first, then cast. */
+#pragma clang diagnostic ignored "-Wbad-function-cast"
+/* Format strings can be passed down from other functions. */
+#pragma clang diagnostic ignored "-Wformat-nonliteral"
+/* Useful, but not reliable enough. It can incorrectly flag macro's as unused
+ * in standalone builds. */
+#pragma clang diagnostic ignored "-Wunused-macros"
+#elif defined(ECS_TARGET_GNU)
+#ifndef __cplusplus
+#pragma GCC diagnostic ignored "-Wdeclaration-after-statement"
+#pragma GCC diagnostic ignored "-Wbad-function-cast"
+#endif
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+#pragma GCC diagnostic ignored "-Wunused-macros"
+#endif
+
 /* Standard library dependencies */
 #include <assert.h>
 #include <stdarg.h>
@@ -662,8 +699,20 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 #define ECS_CAST(T, V) (static_cast<T>(V))
 #endif
 
-#define ECS_CONCAT(a, b) a ## b
+/* Utility macro for doing const casts without warnings */
+#ifndef __cplusplus
+#define ECS_CONST_CAST(type, value) ((type)(uintptr_t)(value))
+#else
+#define ECS_CONST_CAST(type, value) (const_cast<type>(value))
+#endif
 
+/* Utility macro's to do bitwise comparisons between floats without warnings */
+#define ECS_EQ(a, b) (ecs_os_memcmp(&(a), &(b), sizeof(a)) == 0)
+#define ECS_NEQ(a, b) (!ECS_EQ(a, b))
+#define ECS_EQZERO(a) ECS_EQ(a, (uint64_t){0})
+#define ECS_NEQZERO(a) ECS_NEQ(a, (uint64_t){0})
+
+#define ECS_CONCAT(a, b) a ## b
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Magic numbers for sanity checking
@@ -708,10 +757,7 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 ////////////////////////////////////////////////////////////////////////////////
 
 /** Translate C type to id. */
-#define ecs_id(T) FLECS__E##T
-
-/** Translate C type to system function. */
-#define ecs_iter_action(T) FLECS__F##T
+#define ecs_id(T) FLECS_ID##T##ID_
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -790,7 +836,7 @@ typedef struct ecs_allocator_t ecs_allocator_t;
         (void)type_info;\
         for (int32_t i = 0; i < _count; i ++) {\
             type *dst_var = &((type*)_dst_ptr)[i];\
-            type *src_var = &((type*)_src_ptr)[i];\
+            const type *src_var = &((const type*)_src_ptr)[i];\
             (void)dst_var;\
             (void)src_var;\
             __VA_ARGS__\
@@ -925,7 +971,7 @@ void ecs_vec_remove_last(
 FLECS_API
 ecs_vec_t ecs_vec_copy(
     struct ecs_allocator_t *allocator,
-    ecs_vec_t *vec,
+    const ecs_vec_t *vec,
     ecs_size_t size);
 
 #define ecs_vec_copy_t(allocator, vec, T) \
@@ -1438,7 +1484,7 @@ ecs_map_val_t* ecs_map_get(
 
 /* Get element as pointer (auto-dereferences _ptr) */
 FLECS_API
-void* _ecs_map_get_deref(
+void* ecs_map_get_deref_(
     const ecs_map_t *map,
     ecs_map_key_t key);
 
@@ -1509,7 +1555,7 @@ void ecs_map_copy(
     const ecs_map_t *src);
 
 #define ecs_map_get_ref(m, T, k) ECS_CAST(T**, ecs_map_get(m, k))
-#define ecs_map_get_deref(m, T, k) ECS_CAST(T*, _ecs_map_get_deref(m, k))
+#define ecs_map_get_deref(m, T, k) ECS_CAST(T*, ecs_map_get_deref_(m, k))
 #define ecs_map_ensure_ref(m, T, k) ECS_CAST(T**, ecs_map_ensure(m, k))
 
 #define ecs_map_insert_ptr(m, k, v) ecs_map_insert(m, k, ECS_CAST(ecs_map_val_t, v))
@@ -2224,7 +2270,7 @@ void ecs_os_set_api_defaults(void);
 #define ecs_offset(ptr, T, index)\
     ECS_CAST(T*, ECS_OFFSET(ptr, ECS_SIZEOF(T) * index))
 
-#if defined(ECS_TARGET_MSVC)
+#ifndef ECS_TARGET_POSIX
 #define ecs_os_strcat(str1, str2) strcat_s(str1, INT_MAX, str2)
 #define ecs_os_sprintf(ptr, ...) sprintf_s(ptr, INT_MAX, __VA_ARGS__)
 #define ecs_os_vsprintf(ptr, fmt, args) vsprintf_s(ptr, INT_MAX, fmt, args)
@@ -2247,7 +2293,7 @@ void ecs_os_set_api_defaults(void);
 #endif
 
 /* Files */
-#if defined(ECS_TARGET_MSVC)
+#ifndef ECS_TARGET_POSIX
 #define ecs_os_fopen(result, file, mode) fopen_s(result, file, mode)
 #else
 #define ecs_os_fopen(result, file, mode) (*(result)) = fopen(file, mode)
@@ -2724,12 +2770,11 @@ typedef struct ecs_term_id_t {
                                  * To explicitly set the id to 0, leave the id
                                  * member to 0 and set EcsIsEntity in flags. */
 
-    char *name;                 /**< Name. This can be either the variable name
+    const char *name;           /**< Name. This can be either the variable name
                                  * (when the EcsIsVariable flag is set) or an
-                                 * entity name. Entity names are used to 
-                                 * initialize the id member during term 
-                                 * finalization and will be freed when term.move
-                                 * is set to true. */
+                                 * entity name. When ecs_term_t::move is true,
+                                 * the API assumes ownership over the string and
+                                 * will free it when the term is destroyed. */
 
     ecs_entity_t trav;          /**< Relationship to traverse when looking for the
                                  * component. The relationship must have
@@ -3232,7 +3277,7 @@ extern "C" {
 ////////////////////////////////////////////////////////////////////////////////
 
 /** This allows passing 0 as type to functions that accept ids */
-#define FLECS__E0 0
+#define FLECS_ID0ID_ 0
 
 FLECS_API
 char* ecs_module_path_from_c(
@@ -3335,7 +3380,7 @@ typedef struct {
 } flecs_hashmap_result_t;
 
 FLECS_DBG_API
-void _flecs_hashmap_init(
+void flecs_hashmap_init_(
     ecs_hashmap_t *hm,
     ecs_size_t key_size,
     ecs_size_t value_size,
@@ -3344,34 +3389,34 @@ void _flecs_hashmap_init(
     ecs_allocator_t *allocator);
 
 #define flecs_hashmap_init(hm, K, V, hash, compare, allocator)\
-    _flecs_hashmap_init(hm, ECS_SIZEOF(K), ECS_SIZEOF(V), hash, compare, allocator)
+    flecs_hashmap_init_(hm, ECS_SIZEOF(K), ECS_SIZEOF(V), hash, compare, allocator)
 
 FLECS_DBG_API
 void flecs_hashmap_fini(
     ecs_hashmap_t *map);
 
 FLECS_DBG_API
-void* _flecs_hashmap_get(
+void* flecs_hashmap_get_(
     const ecs_hashmap_t *map,
     ecs_size_t key_size,
     const void *key,
     ecs_size_t value_size);
 
 #define flecs_hashmap_get(map, key, V)\
-    (V*)_flecs_hashmap_get(map, ECS_SIZEOF(*key), key, ECS_SIZEOF(V))
+    (V*)flecs_hashmap_get_(map, ECS_SIZEOF(*key), key, ECS_SIZEOF(V))
 
 FLECS_DBG_API
-flecs_hashmap_result_t _flecs_hashmap_ensure(
+flecs_hashmap_result_t flecs_hashmap_ensure_(
     ecs_hashmap_t *map,
     ecs_size_t key_size,
     const void *key,
     ecs_size_t value_size);
 
 #define flecs_hashmap_ensure(map, key, V)\
-    _flecs_hashmap_ensure(map, ECS_SIZEOF(*key), key, ECS_SIZEOF(V))
+    flecs_hashmap_ensure_(map, ECS_SIZEOF(*key), key, ECS_SIZEOF(V))
 
 FLECS_DBG_API
-void _flecs_hashmap_set(
+void flecs_hashmap_set_(
     ecs_hashmap_t *map,
     ecs_size_t key_size,
     void *key,
@@ -3379,20 +3424,20 @@ void _flecs_hashmap_set(
     const void *value);
 
 #define flecs_hashmap_set(map, key, value)\
-    _flecs_hashmap_set(map, ECS_SIZEOF(*key), key, ECS_SIZEOF(*value), value)
+    flecs_hashmap_set_(map, ECS_SIZEOF(*key), key, ECS_SIZEOF(*value), value)
 
 FLECS_DBG_API
-void _flecs_hashmap_remove(
+void flecs_hashmap_remove_(
     ecs_hashmap_t *map,
     ecs_size_t key_size,
     const void *key,
     ecs_size_t value_size);
 
 #define flecs_hashmap_remove(map, key, V)\
-    _flecs_hashmap_remove(map, ECS_SIZEOF(*key), key, ECS_SIZEOF(V))
+    flecs_hashmap_remove_(map, ECS_SIZEOF(*key), key, ECS_SIZEOF(V))
 
 FLECS_DBG_API
-void _flecs_hashmap_remove_w_hash(
+void flecs_hashmap_remove_w_hash_(
     ecs_hashmap_t *map,
     ecs_size_t key_size,
     const void *key,
@@ -3400,7 +3445,7 @@ void _flecs_hashmap_remove_w_hash(
     uint64_t hash);
 
 #define flecs_hashmap_remove_w_hash(map, key, V, hash)\
-    _flecs_hashmap_remove_w_hash(map, ECS_SIZEOF(*key), key, ECS_SIZEOF(V), hash)
+    flecs_hashmap_remove_w_hash_(map, ECS_SIZEOF(*key), key, ECS_SIZEOF(V), hash)
 
 FLECS_DBG_API
 ecs_hm_bucket_t* flecs_hashmap_get_bucket(
@@ -3424,17 +3469,17 @@ flecs_hashmap_iter_t flecs_hashmap_iter(
     ecs_hashmap_t *map);
 
 FLECS_DBG_API
-void* _flecs_hashmap_next(
+void* flecs_hashmap_next_(
     flecs_hashmap_iter_t *it,
     ecs_size_t key_size,
     void *key_out,
     ecs_size_t value_size);
 
 #define flecs_hashmap_next(map, V)\
-    (V*)_flecs_hashmap_next(map, 0, NULL, ECS_SIZEOF(V))
+    (V*)flecs_hashmap_next_(map, 0, NULL, ECS_SIZEOF(V))
 
 #define flecs_hashmap_next_w_key(map, K, key, V)\
-    (V*)_flecs_hashmap_next(map, ECS_SIZEOF(K), key, ECS_SIZEOF(V))
+    (V*)flecs_hashmap_next_(map, ECS_SIZEOF(K), key, ECS_SIZEOF(V))
 
 #ifdef __cplusplus
 }
@@ -4753,12 +4798,12 @@ ecs_entity_t ecs_get_entity(
  * @return True if the pointer is of the specified type.
  */
 FLECS_API
-bool _ecs_poly_is(
+bool ecs_poly_is_(
     const ecs_poly_t *object,
     int32_t type);
 
 #define ecs_poly_is(object, type)\
-    _ecs_poly_is(object, type##_magic)
+    ecs_poly_is_(object, type##_magic)
 
 /** Make a pair id.
  * This function is equivalent to using the ecs_pair macro, and is added for
@@ -8183,7 +8228,7 @@ int ecs_value_move_ctor(
         ecs_assert(id_ != 0, ECS_INVALID_PARAMETER, NULL); \
     } \
     (void)id_; \
-    (void)ecs_id(id_);
+    (void)ecs_id(id_)
 
 /** Declare & define an entity.
  *
@@ -8193,7 +8238,7 @@ int ecs_value_move_ctor(
 #define ECS_ENTITY(world, id, ...) \
     ecs_entity_t ecs_id(id); \
     ecs_entity_t id = 0; \
-    ECS_ENTITY_DEFINE(world, id, __VA_ARGS__);
+    ECS_ENTITY_DEFINE(world, id, __VA_ARGS__)
 
 /** Forward declare a tag. */
 #define ECS_TAG_DECLARE ECS_DECLARE
@@ -8249,8 +8294,8 @@ int ecs_value_move_ctor(
         desc.type.size = ECS_SIZEOF(id_); \
         desc.type.alignment = ECS_ALIGNOF(id_); \
         ecs_id(id_) = ecs_component_init(world, &desc);\
-        ecs_assert(ecs_id(id_) != 0, ECS_INVALID_PARAMETER, NULL);\
-    }
+    }\
+    ecs_assert(ecs_id(id_) != 0, ECS_INVALID_PARAMETER, NULL)
 
 /** Declare & define a component.
  *
@@ -8294,7 +8339,7 @@ int ecs_value_move_ctor(
     ECS_OBSERVER_DEFINE(world, id, kind, __VA_ARGS__);\
     ecs_entity_t id = ecs_id(id);\
     (void)ecs_id(id);\
-    (void)id;
+    (void)id
 
 /** Shorthand for creating an entity with ecs_entity_init.
  *
@@ -9108,7 +9153,7 @@ extern "C" {
 ////////////////////////////////////////////////////////////////////////////////
 
 FLECS_API
-void _ecs_deprecated(
+void ecs_deprecated_(
     const char *file, 
     int32_t line, 
     const char *msg);
@@ -9120,7 +9165,7 @@ void _ecs_deprecated(
  * @param level The log level.
  */
 FLECS_API
-void _ecs_log_push(int32_t level);
+void ecs_log_push_(int32_t level);
 
 /** Decrease log stack.
  * This operation decreases the indent_ value of the OS API and can be useful to
@@ -9129,7 +9174,7 @@ void _ecs_log_push(int32_t level);
  * @param level The log level.
  */
 FLECS_API
-void _ecs_log_pop(int32_t level);
+void ecs_log_pop_(int32_t level);
 
 /** Should current level be logged.
  * This operation returns true when the specified log level should be logged 
@@ -9156,13 +9201,13 @@ const char* ecs_strerror(
 //// Dummy macros for when logging is disabled
 ////////////////////////////////////////////////////////////////////////////////
 
-#define _ecs_deprecated(file, line, msg)\
+#define ecs_deprecated_(file, line, msg)\
     (void)file;\
     (void)line;\
     (void)msg
 
-#define _ecs_log_push(level)
-#define _ecs_log_pop(level)
+#define ecs_log_push_(level)
+#define ecs_log_pop_(level)
 #define ecs_should_log(level) false
 
 #define ecs_strerror(error_code)\
@@ -9176,7 +9221,7 @@ const char* ecs_strerror(
 ////////////////////////////////////////////////////////////////////////////////
 
 FLECS_API
-void _ecs_print(
+void ecs_print_(
     int32_t level,
     const char *file,
     int32_t line,
@@ -9184,7 +9229,7 @@ void _ecs_print(
     ...);
 
 FLECS_API
-void _ecs_printv(
+void ecs_printv_(
     int level,
     const char *file,
     int32_t line,
@@ -9192,7 +9237,7 @@ void _ecs_printv(
     va_list args);
 
 FLECS_API
-void _ecs_log(
+void ecs_log_(
     int32_t level,
     const char *file,
     int32_t line,
@@ -9200,7 +9245,7 @@ void _ecs_log(
     ...);
 
 FLECS_API
-void _ecs_logv(
+void ecs_logv_(
     int level,
     const char *file,
     int32_t line,
@@ -9208,7 +9253,7 @@ void _ecs_logv(
     va_list args);
 
 FLECS_API
-void _ecs_abort(
+void ecs_abort_(
     int32_t error_code,
     const char *file,
     int32_t line,
@@ -9216,7 +9261,7 @@ void _ecs_abort(
     ...);
 
 FLECS_API
-bool _ecs_assert(
+bool ecs_assert_(
     bool condition,
     int32_t error_code,
     const char *condition_str,
@@ -9226,7 +9271,7 @@ bool _ecs_assert(
     ...);
 
 FLECS_API
-void _ecs_parser_error(
+void ecs_parser_error_(
     const char *name,
     const char *expr, 
     int64_t column,
@@ -9234,7 +9279,7 @@ void _ecs_parser_error(
     ...);
 
 FLECS_API
-void _ecs_parser_errorv(
+void ecs_parser_errorv_(
     const char *name,
     const char *expr, 
     int64_t column,
@@ -9250,37 +9295,37 @@ void _ecs_parser_errorv(
 
 /* Base logging function. Accepts a custom level */
 #define ecs_print(level, ...)\
-    _ecs_print(level, __FILE__, __LINE__, __VA_ARGS__)
+    ecs_print_(level, __FILE__, __LINE__, __VA_ARGS__)
 
 #define ecs_printv(level, fmt, args)\
-    _ecs_printv(level, __FILE__, __LINE__, fmt, args)
+    ecs_printv_(level, __FILE__, __LINE__, fmt, args)
 
 #define ecs_log(level, ...)\
-    _ecs_log(level, __FILE__, __LINE__, __VA_ARGS__)
+    ecs_log_(level, __FILE__, __LINE__, __VA_ARGS__)
 
 #define ecs_logv(level, fmt, args)\
-    _ecs_logv(level, __FILE__, __LINE__, fmt, args)
+    ecs_logv_(level, __FILE__, __LINE__, fmt, args)
 
 /* Tracing. Used for logging of infrequent events  */
-#define _ecs_trace(file, line, ...) _ecs_log(0, file, line, __VA_ARGS__)
-#define ecs_trace(...) _ecs_trace(__FILE__, __LINE__, __VA_ARGS__)
+#define ecs_trace_(file, line, ...) ecs_log_(0, file, line, __VA_ARGS__)
+#define ecs_trace(...) ecs_trace_(__FILE__, __LINE__, __VA_ARGS__)
 
 /* Warning. Used when an issue occurs, but operation is successful */
-#define _ecs_warn(file, line, ...) _ecs_log(-2, file, line, __VA_ARGS__)
-#define ecs_warn(...) _ecs_warn(__FILE__, __LINE__, __VA_ARGS__)
+#define ecs_warn_(file, line, ...) ecs_log_(-2, file, line, __VA_ARGS__)
+#define ecs_warn(...) ecs_warn_(__FILE__, __LINE__, __VA_ARGS__)
 
 /* Error. Used when an issue occurs, and operation failed. */
-#define _ecs_err(file, line, ...) _ecs_log(-3, file, line, __VA_ARGS__)
-#define ecs_err(...) _ecs_err(__FILE__, __LINE__, __VA_ARGS__)
+#define ecs_err_(file, line, ...) ecs_log_(-3, file, line, __VA_ARGS__)
+#define ecs_err(...) ecs_err_(__FILE__, __LINE__, __VA_ARGS__)
 
 /* Fatal. Used when an issue occurs, and the application cannot continue. */
-#define _ecs_fatal(file, line, ...) _ecs_log(-4, file, line, __VA_ARGS__)
-#define ecs_fatal(...) _ecs_fatal(__FILE__, __LINE__, __VA_ARGS__)
+#define ecs_fatal_(file, line, ...) ecs_log_(-4, file, line, __VA_ARGS__)
+#define ecs_fatal(...) ecs_fatal_(__FILE__, __LINE__, __VA_ARGS__)
 
 /* Optionally include warnings about using deprecated features */
 #ifndef FLECS_NO_DEPRECATED_WARNINGS
 #define ecs_deprecated(...)\
-    _ecs_deprecated(__FILE__, __LINE__, __VA_ARGS__)
+    ecs_deprecated_(__FILE__, __LINE__, __VA_ARGS__)
 #else
 #define ecs_deprecated(...)
 #endif // FLECS_NO_DEPRECATED_WARNINGS
@@ -9303,13 +9348,13 @@ void _ecs_parser_errorv(
 #define ecs_dbg_2(...) ecs_log(2, __VA_ARGS__);
 #define ecs_dbg_3(...) ecs_log(3, __VA_ARGS__);
 
-#define ecs_log_push_1() _ecs_log_push(1);
-#define ecs_log_push_2() _ecs_log_push(2);
-#define ecs_log_push_3() _ecs_log_push(3);
+#define ecs_log_push_1() ecs_log_push_(1);
+#define ecs_log_push_2() ecs_log_push_(2);
+#define ecs_log_push_3() ecs_log_push_(3);
 
-#define ecs_log_pop_1() _ecs_log_pop(1);
-#define ecs_log_pop_2() _ecs_log_pop(2);
-#define ecs_log_pop_3() _ecs_log_pop(3);
+#define ecs_log_pop_1() ecs_log_pop_(1);
+#define ecs_log_pop_2() ecs_log_pop_(2);
+#define ecs_log_pop_3() ecs_log_pop_(3);
 
 #define ecs_should_log_1() ecs_should_log(1)
 #define ecs_should_log_2() ecs_should_log(2)
@@ -9324,12 +9369,12 @@ void _ecs_parser_errorv(
 #define ecs_dbg_2(...) ecs_log(2, __VA_ARGS__);
 #define ecs_dbg_3(...)
 
-#define ecs_log_push_1() _ecs_log_push(1);
-#define ecs_log_push_2() _ecs_log_push(2);
+#define ecs_log_push_1() ecs_log_push_(1);
+#define ecs_log_push_2() ecs_log_push_(2);
 #define ecs_log_push_3()
 
-#define ecs_log_pop_1() _ecs_log_pop(1);
-#define ecs_log_pop_2() _ecs_log_pop(2);
+#define ecs_log_pop_1() ecs_log_pop_(1);
+#define ecs_log_pop_2() ecs_log_pop_(2);
 #define ecs_log_pop_3()
 
 #define ecs_should_log_1() ecs_should_log(1)
@@ -9344,11 +9389,11 @@ void _ecs_parser_errorv(
 #define ecs_dbg_2(...)
 #define ecs_dbg_3(...)
 
-#define ecs_log_push_1() _ecs_log_push(1);
+#define ecs_log_push_1() ecs_log_push_(1);
 #define ecs_log_push_2()
 #define ecs_log_push_3()
 
-#define ecs_log_pop_1() _ecs_log_pop(1);
+#define ecs_log_pop_1() ecs_log_pop_(1);
 #define ecs_log_pop_2()
 #define ecs_log_pop_3()
 
@@ -9396,13 +9441,13 @@ void _ecs_parser_errorv(
 #define ecs_dbg ecs_dbg_1
 
 /* Default level for push/pop is 0 */
-#define ecs_log_push() _ecs_log_push(0)
-#define ecs_log_pop() _ecs_log_pop(0)
+#define ecs_log_push() ecs_log_push_(0)
+#define ecs_log_pop() ecs_log_pop_(0)
 
 /** Abort.
  * Unconditionally aborts process. */
 #define ecs_abort(error_code, ...)\
-    _ecs_abort(error_code, __FILE__, __LINE__, __VA_ARGS__);\
+    ecs_abort_(error_code, __FILE__, __LINE__, __VA_ARGS__);\
     ecs_os_abort(); abort(); /* satisfy compiler/static analyzers */
 
 /** Assert. 
@@ -9411,7 +9456,7 @@ void _ecs_parser_errorv(
 #define ecs_assert(condition, error_code, ...)
 #else
 #define ecs_assert(condition, error_code, ...)\
-    if (!_ecs_assert(condition, error_code, #condition, __FILE__, __LINE__, __VA_ARGS__)) {\
+    if (!ecs_assert_(condition, error_code, #condition, __FILE__, __LINE__, __VA_ARGS__)) {\
         ecs_os_abort();\
     }\
     assert(condition) /* satisfy compiler/static analyzers */
@@ -9442,7 +9487,7 @@ void _ecs_parser_errorv(
 #else
 #ifdef FLECS_SOFT_ASSERT
 #define ecs_check(condition, error_code, ...)\
-    if (!_ecs_assert(condition, error_code, #condition, __FILE__, __LINE__, __VA_ARGS__)) {\
+    if (!ecs_assert_(condition, error_code, #condition, __FILE__, __LINE__, __VA_ARGS__)) {\
         goto error;\
     }
 #else // FLECS_SOFT_ASSERT
@@ -9459,7 +9504,7 @@ void _ecs_parser_errorv(
 #else
 #ifdef FLECS_SOFT_ASSERT
 #define ecs_throw(error_code, ...)\
-    _ecs_abort(error_code, __FILE__, __LINE__, __VA_ARGS__);\
+    ecs_abort_(error_code, __FILE__, __LINE__, __VA_ARGS__);\
     goto error;
 #else
 #define ecs_throw(error_code, ...)\
@@ -9470,10 +9515,10 @@ void _ecs_parser_errorv(
 
 /** Parser error */
 #define ecs_parser_error(name, expr, column, ...)\
-    _ecs_parser_error(name, expr, column, __VA_ARGS__)
+    ecs_parser_error_(name, expr, column, __VA_ARGS__)
 
 #define ecs_parser_errorv(name, expr, column, fmt, args)\
-    _ecs_parser_errorv(name, expr, column, fmt, args)
+    ecs_parser_errorv_(name, expr, column, fmt, args)
 
 #endif // FLECS_LEGACY
 
@@ -10746,7 +10791,7 @@ ecs_entity_t ecs_system_init(
         desc.callback = id_; \
         ecs_id(id_) = ecs_system_init(world, &desc); \
     } \
-    ecs_assert(ecs_id(id_) != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_id(id_) != 0, ECS_INVALID_PARAMETER, NULL)
 
 /** Declare & define a system.
  * 
@@ -10757,7 +10802,7 @@ ecs_entity_t ecs_system_init(
     ecs_entity_t ecs_id(id) = 0; ECS_SYSTEM_DEFINE(world, id, phase, __VA_ARGS__);\
     ecs_entity_t id = ecs_id(id);\
     (void)ecs_id(id);\
-    (void)id;
+    (void)id
 
 /** Shorthand for creating a system with ecs_system_init.
  *
@@ -11410,7 +11455,7 @@ FLECS_API extern ECS_TAG_DECLARE(EcsCounterId);
 FLECS_API extern ECS_TAG_DECLARE(EcsGauge);
 
 /** Tag added to metric instances */
-FLECS_API extern ECS_COMPONENT_DECLARE(EcsMetricInstance);
+FLECS_API extern ECS_TAG_DECLARE(EcsMetricInstance);
 
 /** Component with metric instance value */
 FLECS_API extern ECS_COMPONENT_DECLARE(EcsMetricValue);
@@ -11574,6 +11619,7 @@ FLECS_API extern ECS_COMPONENT_DECLARE(FlecsAlerts);
 FLECS_API extern ECS_COMPONENT_DECLARE(EcsAlert);
 FLECS_API extern ECS_COMPONENT_DECLARE(EcsAlertInstance);
 FLECS_API extern ECS_COMPONENT_DECLARE(EcsAlertsActive);
+FLECS_API extern ECS_COMPONENT_DECLARE(EcsAlertTimeout);
 
 /* Alert severity tags */
 FLECS_API extern ECS_TAG_DECLARE(EcsAlertInfo);
@@ -15064,7 +15110,7 @@ ecs_entity_t ecs_module_init(
 
 #define ECS_MODULE(world, id)\
     ecs_entity_t ecs_id(id) = 0; ECS_MODULE_DEFINE(world, id)\
-    (void)ecs_id(id);
+    (void)ecs_id(id)
 
 /** Wrapper around ecs_import.
  * This macro provides a convenient way to load a module with the world. It can
@@ -15072,7 +15118,7 @@ ecs_entity_t ecs_module_init(
  *
  * ECS_IMPORT(world, FlecsSystemsPhysics);
  */
-#define ECS_IMPORT(world, id) ecs_import_c(world, id##Import, #id);
+#define ECS_IMPORT(world, id) ecs_import_c(world, id##Import, #id)
 
 #ifdef __cplusplus
 }
@@ -18013,7 +18059,8 @@ struct app_builder {
     {
         const ecs_world_info_t *stats = ecs_get_world_info(world);
         m_desc.target_fps = stats->target_fps;
-        if (m_desc.target_fps == static_cast<ecs_ftime_t>(0.0)) {
+        ecs_ftime_t t_zero = 0.0;
+        if (ECS_EQ(m_desc.target_fps, t_zero)) {
             m_desc.target_fps = 60;
         }
     }
@@ -21042,6 +21089,7 @@ private:
 } // namespace flecs
 
 /** @} */
+
 /**
  * @file addons/cpp/entity.hpp
  * @brief Entity class.
@@ -26864,8 +26912,8 @@ struct filter_builder final : _::filter_builder_base<Components...> {
         if (name != nullptr) {
             ecs_entity_desc_t entity_desc = {};
             entity_desc.name = name;
-            entity_desc.sep = "::",
-            entity_desc.root_sep = "::",
+            entity_desc.sep = "::";
+            entity_desc.root_sep = "::";
             this->m_desc.entity = ecs_entity_init(world, &entity_desc);
         }
     }
@@ -27361,8 +27409,8 @@ struct query_builder final : _::query_builder_base<Components...> {
         if (name != nullptr) {
             ecs_entity_desc_t entity_desc = {};
             entity_desc.name = name;
-            entity_desc.sep = "::",
-            entity_desc.root_sep = "::",
+            entity_desc.sep = "::";
+            entity_desc.root_sep = "::";
             this->m_desc.filter.entity = ecs_entity_init(world, &entity_desc);
         }
     }
@@ -28761,8 +28809,8 @@ struct rule_builder final : _::rule_builder_base<Components...> {
         if (name != nullptr) {
             ecs_entity_desc_t entity_desc = {};
             entity_desc.name = name;
-            entity_desc.sep = "::",
-            entity_desc.root_sep = "::",
+            entity_desc.sep = "::";
+            entity_desc.root_sep = "::";
             this->m_desc.entity = ecs_entity_init(world, &entity_desc);
         }
     }
@@ -29605,8 +29653,8 @@ struct alert_builder final : _::alert_builder_base<Components...> {
         if (name != nullptr) {
             ecs_entity_desc_t entity_desc = {};
             entity_desc.name = name;
-            entity_desc.sep = "::",
-            entity_desc.root_sep = "::",
+            entity_desc.sep = "::";
+            entity_desc.root_sep = "::";
             this->m_desc.entity = ecs_entity_init(world, &entity_desc);
         }
     }

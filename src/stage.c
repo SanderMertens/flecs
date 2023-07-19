@@ -416,7 +416,7 @@ void* flecs_defer_set(
         ecs_record_t *r = flecs_entities_get(world, entity);
         table = r->table;
         if (r && table && (storage_table = table->storage_table)) {
-            const ecs_table_record_t *tr = flecs_id_record_get_table(
+            ecs_table_record_t *tr = flecs_id_record_get_table(
                 idr, storage_table);
             if (tr) {
                 /* Entity has the component */
@@ -610,7 +610,7 @@ void ecs_set_stage_count(
         ECS_INTERNAL_ERROR, NULL);
 
     bool auto_merge = true;
-    ecs_entity_t *lookup_path = NULL;
+    const ecs_entity_t *lookup_path = NULL;
     ecs_entity_t scope = 0;
     ecs_entity_t with = 0;
     if (world->stage_count >= 1) {
@@ -682,7 +682,7 @@ int32_t ecs_get_stage_id(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
     if (ecs_poly_is(world, ecs_stage_t)) {
-        ecs_stage_t *stage = (ecs_stage_t*)world;
+        ecs_stage_t *stage = ECS_CONST_CAST(ecs_stage_t*, world);
 
         /* Index 0 is reserved for main stage */
         return stage->id;
@@ -803,7 +803,7 @@ bool ecs_stage_is_readonly(
     const ecs_world_t *world = ecs_get_world(stage);
 
     if (ecs_poly_is(stage, ecs_stage_t)) {
-        if (((ecs_stage_t*)stage)->async) {
+        if (((const ecs_stage_t*)stage)->async) {
             return false;
         }
     }

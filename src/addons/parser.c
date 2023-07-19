@@ -10,9 +10,6 @@
 #include "../private_api.h"
 #include <ctype.h>
 
-#define ECS_ANNOTATION_LENGTH_MAX (16)
-
-#define TOK_NEWLINE '\n'
 #define TOK_COLON ':'
 #define TOK_AND ','
 #define TOK_OR "||"
@@ -23,7 +20,6 @@
 #define TOK_BRACKET_CLOSE ']'
 #define TOK_SCOPE_OPEN '{'
 #define TOK_SCOPE_CLOSE '}'
-#define TOK_WILDCARD '*'
 #define TOK_VARIABLE '$'
 #define TOK_PAREN_OPEN '('
 #define TOK_PAREN_CLOSE ')'
@@ -278,15 +274,16 @@ int flecs_parse_identifier(
         }
     }
 
-    out->name = ecs_os_strdup(tptr);
+    char *name = ecs_os_strdup(tptr);
+    out->name = name;
 
-    ecs_size_t len = ecs_os_strlen(out->name);
+    ecs_size_t len = ecs_os_strlen(name);
     if (out->flags & EcsIsName) {
-        if (out->name[len - 1] != TOK_EXPR_STRING) {
+        if (name[len - 1] != TOK_EXPR_STRING) {
             ecs_parser_error(NULL, token, 0, "missing '\"' at end of string");
             return -1;
         } else {
-            out->name[len - 1] = '\0';
+            name[len - 1] = '\0';
         }
     }
 
@@ -325,8 +322,9 @@ ecs_oper_kind_t flecs_parse_operator(
     } else if (ch == TOK_NOT) {
         return EcsNot;
     } else {
-        ecs_abort(ECS_INTERNAL_ERROR, NULL);
+        ecs_throw(ECS_INTERNAL_ERROR, NULL);
     }
+error:
     return 0;
 }
 
@@ -956,15 +954,15 @@ char* ecs_parse_term(
             }
         }
     }
-    
+
     ptr = ecs_parse_ws_eol(ptr);
     if (!ptr[0]) {
         *term = (ecs_term_t){0};
-        return (char*)ptr;
+        return ECS_CONST_CAST(char*, ptr);
     }
 
     if (ptr == expr && !strcmp(expr, "0")) {
-        return (char*)&ptr[1];
+        return ECS_CONST_CAST(char*, &ptr[1]);
     }
 
     /* Parse next element */
@@ -976,7 +974,8 @@ char* ecs_parse_term(
     /* Check for $() notation */
     if (term->first.name && !ecs_os_strcmp(term->first.name, "$")) {
         if (term->src.name) {
-            ecs_os_free(term->first.name);
+            /* Safe, parser owns name */
+            ecs_os_free(ECS_CONST_CAST(char*, term->first.name));
             
             term->first = term->src;
 
@@ -1033,7 +1032,8 @@ char* ecs_parse_term(
 
         src->flags = EcsIsEntity;
         src->id = 0;
-        ecs_os_free(term->first.name);
+        /* Safe, parser owns string */
+        ecs_os_free(ECS_CONST_CAST(char*, term->first.name));
         term->first.name = NULL;
     }
 
@@ -1076,7 +1076,7 @@ char* ecs_parse_term(
 
     ptr = ecs_parse_ws(ptr);
 
-    return (char*)ptr;
+    return ECS_CONST_CAST(char*, ptr);
 error:
     if (term) {
         ecs_term_fini(term);

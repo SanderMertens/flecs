@@ -271,7 +271,7 @@ void ecs_world_stats_get(
     ECS_COUNTER_RECORD(&s->performance.merge_time, t, world->info.merge_time_total);
     ECS_COUNTER_RECORD(&s->performance.rematch_time, t, world->info.rematch_time_total);
     ECS_GAUGE_RECORD(&s->performance.delta_time, t, delta_world_time);
-    if (delta_world_time != 0 && delta_frame_count != 0) {
+    if (ECS_NEQZERO(delta_world_time) && ECS_NEQZERO(delta_frame_count)) {
         ECS_GAUGE_RECORD(&s->performance.fps, t, (double)1 / (delta_world_time / (double)delta_frame_count));
     } else {
         ECS_GAUGE_RECORD(&s->performance.fps, t, 0);

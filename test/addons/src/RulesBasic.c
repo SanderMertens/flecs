@@ -1289,7 +1289,7 @@ void RulesBasic_1_this_src_w_component_pair_2_tables() {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_TAG(world, TgtA)
+    ECS_TAG(world, TgtA);
     ECS_TAG(world, FragmentA);
     ECS_TAG(world, FragmentB);
 

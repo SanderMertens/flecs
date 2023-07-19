@@ -53,7 +53,8 @@ void flecs_iter_init(
     ecs_assert(!ECS_BIT_IS_SET(it->flags, EcsIterIsValid), 
         ECS_INTERNAL_ERROR, NULL);
 
-    ecs_stage_t *stage = flecs_stage_from_world((ecs_world_t**)&world);
+    ecs_stage_t *stage = flecs_stage_from_world(
+        ECS_CONST_CAST(ecs_world_t**, &world));
     ecs_stack_t *stack = &stage->allocators.iter_stack;
 
     it->priv.cache.used = 0;
@@ -772,7 +773,7 @@ void ecs_iter_set_var_as_table(
     int32_t var_id,
     const ecs_table_t *table)
 {
-    ecs_table_range_t range = { .table = (ecs_table_t*)table };
+    ecs_table_range_t range = { .table = ECS_CONST_CAST(ecs_table_t*, table) };
     ecs_iter_set_var_as_range(it, var_id, &range);
 }
 
@@ -847,7 +848,7 @@ ecs_iter_t ecs_page_iter(
     };
     result.next = ecs_page_next;
     result.fini = ecs_chained_iter_fini;
-    result.chain_it = (ecs_iter_t*)it;
+    result.chain_it = ECS_CONST_CAST(ecs_iter_t*, it);
 
     return result;
 error:
@@ -997,7 +998,7 @@ ecs_iter_t ecs_worker_iter(
     };
     result.next = ecs_worker_next;
     result.fini = ecs_chained_iter_fini;
-    result.chain_it = (ecs_iter_t*)it;
+    result.chain_it = ECS_CONST_CAST(ecs_iter_t*, it);
 
     return result;
 error:

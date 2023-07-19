@@ -30,7 +30,16 @@ bool flecs_type_is_number(
     case EcsF32:
     case EcsF64:
         return true;
+
+    case EcsBool:
+    case EcsByte:
+    case EcsUPtr:
+    case EcsIPtr:
+    case EcsString:
+    case EcsEntity:
+        return false;
     default:
+        ecs_abort(ECS_INVALID_PARAMETER, NULL);
         return false;
     }
 }
@@ -173,11 +182,11 @@ bool flecs_member_range_overlaps(
     const ecs_member_value_range_t *range,
     const ecs_member_value_range_t *with)
 {
-    if (with->min == with->max) {
+    if (ECS_EQ(with->min, with->max)) {
         return false;
     }
 
-    if (range->min == range->max) {
+    if (ECS_EQ(range->min, range->max)) {
         return false;
     }
 
@@ -230,7 +239,7 @@ ecs_entity_t ecs_struct_init(
         const ecs_member_value_range_t *range = &m_desc->range;
         const ecs_member_value_range_t *error = &m_desc->error_range;
         const ecs_member_value_range_t *warning = &m_desc->warning_range;
-        if (range->min != range->max) {
+        if (ECS_NEQ(range->min, range->max)) {
             ranges = ecs_get_mut(world, m, EcsMemberRanges);
             if (range->min > range->max) {
                 char *member_name = ecs_get_fullpath(world, m);
@@ -242,7 +251,7 @@ ecs_entity_t ecs_struct_init(
             ranges->value.min = range->min;
             ranges->value.max = range->max;
         }
-        if (error->min != error->max) {
+        if (ECS_NEQ(error->min, error->max)) {
             if (error->min > error->max) {
                 char *member_name = ecs_get_fullpath(world, m);
                 ecs_err("member '%s' has an invalid error range [%d..%d]",
@@ -264,7 +273,7 @@ ecs_entity_t ecs_struct_init(
             ranges->error.max = error->max;
         }
 
-        if (warning->min != warning->max) {
+        if (ECS_NEQ(warning->min, warning->max)) {
             if (warning->min > warning->max) {
                 char *member_name = ecs_get_fullpath(world, m);
                 ecs_err("member '%s' has an invalid warning range [%d..%d]",
@@ -400,7 +409,7 @@ ecs_entity_t ecs_unit_prefix_init(
     }
 
     ecs_set(world, t, EcsUnitPrefix, {
-        .symbol = (char*)desc->symbol,
+        .symbol = ECS_CONST_CAST(char*, desc->symbol),
         .translation = desc->translation
     });
 

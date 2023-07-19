@@ -85,7 +85,7 @@ void ecs_vec_clear(
 
 ecs_vec_t ecs_vec_copy(
     ecs_allocator_t *allocator,
-    ecs_vec_t *v,
+    const ecs_vec_t *v,
     ecs_size_t size)
 {
     ecs_dbg_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);

@@ -582,7 +582,7 @@ static
 char* plecs_trim_annot(
     char *annot)
 {
-    annot = (char*)ecs_parse_ws(annot);
+    annot = ECS_CONST_CAST(char*, ecs_parse_ws(annot));
     int32_t len = ecs_os_strlen(annot) - 1;
     while (isspace(annot[len]) && (len > 0)) {
         annot[len] = '\0';
@@ -2167,14 +2167,14 @@ ecs_entity_t ecs_script_init(
 
     if (script != desc->str) {
         /* Safe cast, only happens when script is loaded from file */
-        ecs_os_free((char*)script);
+        ecs_os_free(ECS_CONST_CAST(char*, script));
     }
 
     return e;
 error:
     if (script != desc->str) {
         /* Safe cast, only happens when script is loaded from file */
-        ecs_os_free((char*)script);
+        ecs_os_free(ECS_CONST_CAST(char*, script));
     }
     if (!desc->entity) {
         ecs_delete(world, e);

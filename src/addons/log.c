@@ -135,7 +135,7 @@ void flecs_colorize_buf(
     }
 }
 
-void _ecs_printv(
+void ecs_printv_(
     int level,
     const char *file,
     int32_t line,
@@ -164,7 +164,7 @@ void _ecs_printv(
     }
 }
 
-void _ecs_print(
+void ecs_print_(
     int level,
     const char *file,
     int32_t line,
@@ -173,11 +173,11 @@ void _ecs_print(
 {
     va_list args;
     va_start(args, fmt);
-    _ecs_printv(level, file, line, fmt, args);
+    ecs_printv_(level, file, line, fmt, args);
     va_end(args);    
 }
 
-void _ecs_logv(
+void ecs_logv_(
     int level,
     const char *file,
     int32_t line,
@@ -188,10 +188,10 @@ void _ecs_logv(
         return;
     }
 
-    _ecs_printv(level, file, line, fmt, args);
+    ecs_printv_(level, file, line, fmt, args);
 }
 
-void _ecs_log(
+void ecs_log_(
     int level,
     const char *file,
     int32_t line,
@@ -204,12 +204,12 @@ void _ecs_log(
 
     va_list args;
     va_start(args, fmt);
-    _ecs_printv(level, file, line, fmt, args);
+    ecs_printv_(level, file, line, fmt, args);
     va_end(args);    
 }
 
 
-void _ecs_log_push(
+void ecs_log_push_(
     int32_t level) 
 {
     if (level <= ecs_os_api.log_level_) {
@@ -217,7 +217,7 @@ void _ecs_log_push(
     }
 }
 
-void _ecs_log_pop(
+void ecs_log_pop_(
     int32_t level)
 {
     if (level <= ecs_os_api.log_level_) {
@@ -226,7 +226,7 @@ void _ecs_log_pop(
     }
 }
 
-void _ecs_parser_errorv(
+void ecs_parser_errorv_(
     const char *name,
     const char *expr, 
     int64_t column_arg,
@@ -291,7 +291,7 @@ void _ecs_parser_errorv(
     }
 }
 
-void _ecs_parser_error(
+void ecs_parser_error_(
     const char *name,
     const char *expr, 
     int64_t column,
@@ -301,12 +301,12 @@ void _ecs_parser_error(
     if (ecs_os_api.log_level_  >= -2) {
         va_list args;
         va_start(args, fmt);
-        _ecs_parser_errorv(name, expr, column, fmt, args);
+        ecs_parser_errorv_(name, expr, column, fmt, args);
         va_end(args);
     }
 }
 
-void _ecs_abort(
+void ecs_abort_(
     int32_t err,
     const char *file,
     int32_t line,
@@ -318,15 +318,15 @@ void _ecs_abort(
         va_start(args, fmt);
         char *msg = ecs_vasprintf(fmt, args);
         va_end(args);
-        _ecs_fatal(file, line, "%s (%s)", msg, ecs_strerror(err));
+        ecs_fatal_(file, line, "%s (%s)", msg, ecs_strerror(err));
         ecs_os_free(msg);
     } else {
-        _ecs_fatal(file, line, "%s", ecs_strerror(err));
+        ecs_fatal_(file, line, "%s", ecs_strerror(err));
     }
     ecs_os_api.log_last_error_ = err;
 }
 
-bool _ecs_assert(
+bool ecs_assert_(
     bool condition,
     int32_t err,
     const char *cond_str,
@@ -341,11 +341,11 @@ bool _ecs_assert(
             va_start(args, fmt);
             char *msg = ecs_vasprintf(fmt, args);
             va_end(args);            
-            _ecs_fatal(file, line, "assert: %s %s (%s)", 
+            ecs_fatal_(file, line, "assert: %s %s (%s)", 
                 cond_str, msg, ecs_strerror(err));
             ecs_os_free(msg);
         } else {
-            _ecs_fatal(file, line, "assert: %s %s", 
+            ecs_fatal_(file, line, "assert: %s %s", 
                 cond_str, ecs_strerror(err));
         }
         ecs_os_api.log_last_error_ = err;
@@ -354,12 +354,12 @@ bool _ecs_assert(
     return condition;
 }
 
-void _ecs_deprecated(
+void ecs_deprecated_(
     const char *file,
     int32_t line,
     const char *msg)
 {
-    _ecs_err(file, line, "%s", msg);
+    ecs_err_(file, line, "%s", msg);
 }
 
 bool ecs_should_log(int32_t level) {
@@ -430,7 +430,7 @@ const char* ecs_strerror(
 
 /* Empty bodies for when logging is disabled */
 
-void _ecs_log(
+void ecs_log_(
     int32_t level,
     const char *file,
     int32_t line,
@@ -443,7 +443,7 @@ void _ecs_log(
     (void)fmt;
 }
 
-void _ecs_parser_error(
+void ecs_parser_error_(
     const char *name,
     const char *expr, 
     int64_t column,
@@ -456,7 +456,7 @@ void _ecs_parser_error(
     (void)fmt;
 }
 
-void _ecs_parser_errorv(
+void ecs_parser_errorv_(
     const char *name,
     const char *expr, 
     int64_t column,
@@ -470,7 +470,7 @@ void _ecs_parser_errorv(
     (void)args;
 }
 
-void _ecs_abort(
+void ecs_abort_(
     int32_t error_code,
     const char *file,
     int32_t line,
@@ -483,7 +483,7 @@ void _ecs_abort(
     (void)fmt;
 }
 
-bool _ecs_assert(
+bool ecs_assert_(
     bool condition,
     int32_t error_code,
     const char *condition_str,

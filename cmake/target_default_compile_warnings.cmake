@@ -4,34 +4,35 @@ function(target_default_compile_warnings_c THIS)
             OR CMAKE_C_COMPILER_ID STREQUAL "AppleClang")
 
         target_compile_options(${THIS} PRIVATE
-                #$<$<CONFIG:RELEASE>:-Werror>
                 $<$<CONFIG:Debug>:-Wshadow>
                 $<$<CONFIG:Debug>:-Wunused>
-                -Wall -Wextra
+                -Wall -Wextra -Werror
                 -Wcast-align
                 -Wpedantic
                 -Wconversion
                 -Wsign-conversion
-                -Wdouble-promotion)
+                -Wdouble-promotion
+                -Wno-missing-prototypes
+                -Wno-missing-variable-declarations)
 
     elseif (CMAKE_C_COMPILER_ID STREQUAL "GNU")
 
         target_compile_options(${THIS} PRIVATE
-                #$<$<CONFIG:RELEASE>:-Werror>
                 $<$<CONFIG:Debug>:-Wshadow>
                 $<$<CONFIG:Debug>:-Wunused>
-                -Wall -Wextra
+                -Wall -Wextra -Werror
                 -Wcast-align
                 -Wpedantic
                 -Wconversion
                 -Wsign-conversion
-                -Wdouble-promotion)
+                -Wdouble-promotion
+                -Wno-missing-prototypes
+                -Wno-missing-variable-declarations)
 
     elseif (CMAKE_C_COMPILER_ID STREQUAL "MSVC")
 
         target_compile_options(${THIS} PRIVATE
-                #$<$<CONFIG:RELEASE>:/WX>
-                /W3
+                /W3 /WX
                 /w14242 /w14254 /w14263
                 /w14265 /w14287 /we4289
                 /w14296 /w14311 /w14545

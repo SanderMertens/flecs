@@ -26,7 +26,7 @@ const ecs_entity_t* flecs_bulk_new(
     ecs_table_diff_t *diff);
 
 typedef struct {
-    ecs_type_info_t *ti;
+    const ecs_type_info_t *ti;
     void *ptr;
 } flecs_component_ptr_t;
 
@@ -37,7 +37,7 @@ flecs_component_ptr_t flecs_get_component_w_index(
     int32_t row)
 {
     ecs_check(column_index < table->storage_count, ECS_NOT_A_COMPONENT, NULL);
-    ecs_type_info_t *ti = table->type_info[column_index];
+    const ecs_type_info_t *ti = table->type_info[column_index];
     ecs_vec_t *column = &table->data.columns[column_index];
     return (flecs_component_ptr_t){
         .ti = ti,
@@ -108,7 +108,7 @@ void* flecs_get_base_component(
 
     /* Table should always be in the table index for (IsA, *), otherwise the
      * HasBase flag should not have been set */
-    const ecs_table_record_t *tr_isa = flecs_id_record_get_table(
+    ecs_table_record_t *tr_isa = flecs_id_record_get_table(
         world->idr_isa_wildcard, table);
     ecs_check(tr_isa != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -498,8 +498,7 @@ void flecs_set_union(
                 continue;
             }
 
-            const ecs_table_record_t *tr = flecs_id_record_get_table(
-                idr, table);
+            ecs_table_record_t *tr = flecs_id_record_get_table(idr, table);
             ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
             ecs_assert(table->_ != NULL, ECS_INTERNAL_ERROR, NULL);
             int32_t column = tr->column - table->_->sw_offset;
@@ -894,7 +893,7 @@ const ecs_entity_t* flecs_bulk_new(
                 "ids cannot be wildcards");
 
             int32_t index = tr->column;
-            ecs_type_info_t *ti = table->type_info[index];
+            const ecs_type_info_t *ti = table->type_info[index];
             ecs_vec_t *column = &table->data.columns[index];
             int32_t size = ti->size;
             ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
@@ -1053,7 +1052,7 @@ void flecs_invoke_hook(
     it.real_world = world;
     it.table = table;
     it.ptrs[0] = ptr;
-    it.sizes = (ecs_size_t*)&ti->size;
+    it.sizes = ECS_CONST_CAST(ecs_size_t*, &ti->size);
     it.ids[0] = id;
     it.event = event;
     it.event_id = id;
@@ -1219,7 +1218,8 @@ ecs_entity_t ecs_new_id(
      * make sure we have the actual world. Cast away const since this is one of
      * the few functions that may modify the world while it is in readonly mode,
      * since it is thread safe (uses atomic inc when in threading mode) */
-    ecs_world_t *unsafe_world = (ecs_world_t*)ecs_get_world(world);
+    ecs_world_t *unsafe_world = 
+        ECS_CONST_CAST(ecs_world_t*, ecs_get_world(world));
 
     ecs_entity_t entity;
     if (stage->async || (unsafe_world->flags & EcsWorldMultiThreaded)) {
@@ -1256,7 +1256,8 @@ ecs_entity_t ecs_new_low_id(
      * make sure we have the actual world. Cast away const since this is one of
      * the few functions that may modify the world while it is in readonly mode,
      * but only if single threaded. */
-    ecs_world_t *unsafe_world = (ecs_world_t*)ecs_get_world(world);
+    ecs_world_t *unsafe_world = 
+        ECS_CONST_CAST(ecs_world_t*, ecs_get_world(world));
     if (unsafe_world->flags & EcsWorldReadonly) {
         /* Can't issue new comp id while iterating when in multithreaded mode */
         ecs_check(ecs_get_stage_count(world) <= 1,
@@ -1850,7 +1851,7 @@ const ecs_entity_t* ecs_bulk_init(
             i ++;
         }
 
-        ids.array = (ecs_id_t*)desc->ids;
+        ids.array = ECS_CONST_CAST(ecs_id_t*, desc->ids);
         ids.count = i;
 
         ecs_table_diff_t table_diff;
@@ -3171,7 +3172,8 @@ ecs_entity_t ecs_set_id(
     }
 
     /* Safe to cast away const: function won't modify if move arg is false */
-    flecs_copy_ptr_w_id(world, stage, entity, id, size, (void*)ptr);
+    flecs_copy_ptr_w_id(world, stage, entity, id, size, 
+        ECS_CONST_CAST(void*, ptr));
     return entity;
 error:
     return 0;
@@ -3283,7 +3285,7 @@ bool ecs_has_id(
     ecs_id_record_t *idr = flecs_id_record_get(world, id);
     int32_t column;
     if (idr) {
-        const ecs_table_record_t *tr = flecs_id_record_get_table(idr, table);
+        ecs_table_record_t *tr = flecs_id_record_get_table(idr, table);
         if (tr) {
             return true;
         }
@@ -3387,7 +3389,7 @@ ecs_entity_t ecs_get_target(
     return ecs_pair_second(world, table->type.array[tr->column + index]);
 look_in_base:
     if (table->flags & EcsTableHasIsA) {
-        const ecs_table_record_t *isa_tr = flecs_id_record_get_table(
+        ecs_table_record_t *isa_tr = flecs_id_record_get_table(
             world->idr_isa_wildcard, table);
         ecs_assert(isa_tr != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -3904,7 +3906,7 @@ void ecs_ensure(
     ecs_check(entity != 0, ECS_INVALID_PARAMETER, NULL);
 
     /* Const cast is safe, function checks for threading */
-    world = (ecs_world_t*)ecs_get_world(world);
+    world = ECS_CONST_CAST(ecs_world_t*, ecs_get_world(world));
 
     /* The entity index can be mutated while in staged/readonly mode, as long as
      * the world is not multithreaded. */
@@ -4524,12 +4526,12 @@ void flecs_cmd_batch_for_entity(
             /* Add is batched, but keep Modified */
             cmd->kind = EcsOpModified;
 
-            /* fallthrough */
+            /* fall through */
         case EcsOpAdd:
             table = flecs_find_table_add(world, table, id, diff);
             world->info.cmd.batched_command_count ++;
             break;
-        case EcsOpModified: {
+        case EcsOpModified:
             if (start_table) {
                 /* If a modified was inserted for an existing component, the value
                  * of the component could have been changed. If this is the case,
@@ -4542,7 +4544,7 @@ void flecs_cmd_batch_for_entity(
                 flecs_component_ptr_t ptr = flecs_get_component_ptr(
                     world, start_table, row, cmd->id);
                 if (ptr.ptr) {
-                    ecs_type_info_t *ti = ptr.ti;
+                    const ecs_type_info_t *ti = ptr.ti;
                     ecs_iter_action_t on_set;
                     if ((on_set = ti->hooks.on_set)) {
                         flecs_invoke_hook(world, start_table, 1, row, &entity,
@@ -4551,7 +4553,6 @@ void flecs_cmd_batch_for_entity(
                 }
             }
             break;
-        }
         case EcsOpSet:
         case EcsOpMut:
             table = flecs_find_table_add(world, table, id, diff);
@@ -4576,7 +4577,14 @@ void flecs_cmd_batch_for_entity(
             table = &world->store.root;
             world->info.cmd.batched_command_count ++;
             break;
-        default:
+        case EcsOpClone:
+        case EcsOpBulkNew:
+        case EcsOpPath:
+        case EcsOpDelete:
+        case EcsOpOnDeleteAction:
+        case EcsOpEnable:
+        case EcsOpDisable:
+        case EcsOpSkip:
             break;
         }
 
@@ -4621,7 +4629,20 @@ void flecs_cmd_batch_for_entity(
                 }
                 break;
             }
-            default:
+        case EcsOpClone:
+        case EcsOpBulkNew:
+        case EcsOpAdd:
+        case EcsOpRemove:
+        case EcsOpEmplace:
+        case EcsOpModified:
+        case EcsOpAddModified:
+        case EcsOpPath:
+        case EcsOpDelete:
+        case EcsOpClear:
+        case EcsOpOnDeleteAction:
+        case EcsOpEnable:
+        case EcsOpDisable:
+        case EcsOpSkip:
                 break;
             }
         } while ((cur = next_for_entity));

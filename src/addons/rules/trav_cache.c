@@ -79,7 +79,7 @@ void flecs_rule_build_up_cache(
 
         ecs_record_t *r = flecs_entities_get_any(world, second);
         if (r->table) {
-            const ecs_table_record_t *r_tr = flecs_id_record_get_table(
+            ecs_table_record_t *r_tr = flecs_id_record_get_table(
                 cache->idr, r->table);
             if (!r_tr) {
                 return;
@@ -133,7 +133,7 @@ void flecs_rule_get_up_cache(
         }
     }
 
-    const ecs_table_record_t *tr = flecs_id_record_get_table(idr, table);
+    ecs_table_record_t *tr = flecs_id_record_get_table(idr, table);
     if (!tr) {
         ecs_vec_reset_t(a, &cache->entities, ecs_trav_elem_t);
         return;

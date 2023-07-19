@@ -15,7 +15,7 @@ static int64_t flecs_s_max[] = {
 static uint64_t flecs_u_max[] = { 
     [1] = UINT8_MAX, [2] = UINT16_MAX, [4] = UINT32_MAX, [8] = UINT64_MAX };
 
-uint64_t _flecs_ito(
+uint64_t flecs_ito_(
     size_t size,
     bool is_signed,
     bool lt_zero,

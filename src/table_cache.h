@@ -55,10 +55,10 @@ bool flecs_table_cache_all_iter(
     ecs_table_cache_t *cache,
     ecs_table_cache_iter_t *out);
 
-ecs_table_cache_hdr_t* _flecs_table_cache_next(
+ecs_table_cache_hdr_t* flecs_table_cache_next_(
     ecs_table_cache_iter_t *it);
 
 #define flecs_table_cache_next(it, T)\
-    (ECS_CAST(T*, _flecs_table_cache_next(it)))
+    (ECS_CAST(T*, flecs_table_cache_next_(it)))
 
 #endif

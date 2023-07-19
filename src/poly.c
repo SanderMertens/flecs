@@ -97,7 +97,7 @@ void* assert_mixin(
     return ECS_OFFSET(hdr, offset);
 }
 
-void* _ecs_poly_init(
+void* ecs_poly_init_(
     ecs_poly_t *poly,
     int32_t type,
     ecs_size_t size,
@@ -115,7 +115,7 @@ void* _ecs_poly_init(
     return poly;
 }
 
-void _ecs_poly_fini(
+void ecs_poly_fini_(
     ecs_poly_t *poly,
     int32_t type)
 {
@@ -130,7 +130,7 @@ void _ecs_poly_fini(
     hdr->magic = 0;
 }
 
-EcsPoly* _ecs_poly_bind(
+EcsPoly* ecs_poly_bind_(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t tag)
@@ -159,7 +159,7 @@ EcsPoly* _ecs_poly_bind(
     return result;
 }
 
-void _ecs_poly_modified(
+void ecs_poly_modified_(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t tag)
@@ -167,7 +167,7 @@ void _ecs_poly_modified(
     ecs_modified_pair(world, entity, ecs_id(EcsPoly), tag);
 }
 
-const EcsPoly* _ecs_poly_bind_get(
+const EcsPoly* ecs_poly_bind_get_(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t tag)
@@ -175,24 +175,24 @@ const EcsPoly* _ecs_poly_bind_get(
     return ecs_get_pair(world, entity, EcsPoly, tag);
 }
 
-ecs_poly_t* _ecs_poly_get(
+ecs_poly_t* ecs_poly_get_(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t tag)
 {
-    const EcsPoly *p = _ecs_poly_bind_get(world, entity, tag);
+    const EcsPoly *p = ecs_poly_bind_get_(world, entity, tag);
     if (p) {
         return p->poly;
     }
     return NULL;
 }
 
+#ifndef FLECS_NDEBUG
 #define assert_object(cond, file, line, type_name)\
-    _ecs_assert((cond), ECS_INVALID_PARAMETER, #cond, file, line, type_name);\
+    ecs_assert_((cond), ECS_INVALID_PARAMETER, #cond, file, line, type_name);\
     assert(cond)
 
-#ifndef FLECS_NDEBUG
-void* _ecs_poly_assert(
+void* ecs_poly_assert_(
     const ecs_poly_t *poly,
     int32_t type,
     const char *file,
@@ -204,11 +204,11 @@ void* _ecs_poly_assert(
     const char *type_name = hdr->mixins->type_name;
     assert_object(hdr->magic == ECS_OBJECT_MAGIC, file, line, type_name);
     assert_object(hdr->type == type, file, line, type_name);
-    return (ecs_poly_t*)poly;
+    return ECS_CONST_CAST(ecs_poly_t*, poly);
 }
 #endif
 
-bool _ecs_poly_is(
+bool ecs_poly_is_(
     const ecs_poly_t *poly,
     int32_t type)
 {
@@ -234,7 +234,7 @@ ecs_observable_t* ecs_get_observable(
 const ecs_world_t* ecs_get_world(
     const ecs_poly_t *poly)
 {
-    if (((ecs_header_t*)poly)->type == ecs_world_t_magic) {
+    if (((const ecs_header_t*)poly)->type == ecs_world_t_magic) {
         return poly;
     }
     return *(ecs_world_t**)assert_mixin(poly, EcsMixinWorld);

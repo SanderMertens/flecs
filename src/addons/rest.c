@@ -7,7 +7,7 @@
 
 #ifdef FLECS_REST
 
-ECS_TAG_DECLARE(EcsRestPlecs);
+static ECS_TAG_DECLARE(EcsRestPlecs);
 
 typedef struct {
     ecs_world_t *world;
@@ -26,8 +26,6 @@ int64_t ecs_rest_query_name_error_count = 0;
 int64_t ecs_rest_query_name_from_cache_count = 0;
 int64_t ecs_rest_enable_count = 0;
 int64_t ecs_rest_enable_error_count = 0;
-int64_t ecs_rest_set_count = 0;
-int64_t ecs_rest_set_error_count = 0;
 int64_t ecs_rest_delete_count = 0;
 int64_t ecs_rest_delete_error_count = 0;
 int64_t ecs_rest_world_stats_count = 0;
@@ -155,7 +153,7 @@ void flecs_rest_string_param(
 {
     const char *value = ecs_http_get_param(req, name);
     if (value) {
-        *value_out = (char*)value;
+        *value_out = ECS_CONST_CAST(char*, value);
     }
 }
 
@@ -268,11 +266,8 @@ bool flecs_rest_set(
     ecs_http_reply_t *reply,
     const char *path)
 {
-    ecs_os_linc(&ecs_rest_set_count);
-
     ecs_entity_t e;
     if (!(e = flecs_rest_entity_from_path(world, reply, path))) {
-        ecs_os_linc(&ecs_rest_set_error_count);
         return true;
     }
 
@@ -283,7 +278,6 @@ bool flecs_rest_set(
     if (ecs_entity_from_json(world, e, data, &desc) == NULL) {
         flecs_reply_error(reply, "invalid request");
         reply->code = 400;
-        ecs_os_linc(&ecs_rest_set_error_count);
         return true;
     }
     
@@ -296,8 +290,6 @@ bool flecs_rest_delete(
     ecs_http_reply_t *reply,
     const char *path)
 {
-    ecs_os_linc(&ecs_rest_set_count);
-
     ecs_entity_t e;
     if (!(e = flecs_rest_entity_from_path(world, reply, path))) {
         ecs_os_linc(&ecs_rest_delete_error_count);
@@ -523,7 +515,7 @@ bool flecs_rest_reply_query(
 #ifdef FLECS_MONITOR
 
 static
-void _flecs_rest_array_append(
+void flecs_rest_array_append_(
     ecs_strbuf_t *reply,
     const char *field,
     int32_t field_len,
@@ -546,7 +538,7 @@ void _flecs_rest_array_append(
 }
 
 #define flecs_rest_array_append(reply, field, values, t)\
-    _flecs_rest_array_append(reply, field, sizeof(field) - 1, values, t)
+    flecs_rest_array_append_(reply, field, sizeof(field) - 1, values, t)
 
 static
 void flecs_rest_gauge_append(
@@ -839,7 +831,7 @@ void flecs_rest_reply_table_append_memory(
     allocated += table->data.records.size * ECS_SIZEOF(ecs_record_t*);
 
     int32_t i, storage_count = table->storage_count;
-    ecs_type_info_t **ti = table->type_info;
+    const ecs_type_info_t **ti = table->type_info;
     ecs_vec_t *storages = table->data.columns;
 
     for (i = 0; i < storage_count; i ++) {

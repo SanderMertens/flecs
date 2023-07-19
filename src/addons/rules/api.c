@@ -8,7 +8,7 @@
 
 #ifdef FLECS_RULES
 
-ecs_mixins_t ecs_rule_t_mixins = {
+static ecs_mixins_t ecs_rule_t_mixins = {
     .type_name = "ecs_rule_t",
     .elems = {
         [EcsMixinWorld] = offsetof(ecs_rule_t, filter.world),
@@ -67,10 +67,10 @@ void flecs_rule_iter_mixin_init(
     ecs_poly_assert(poly, ecs_rule_t);
 
     if (filter) {
-        iter[1] = ecs_rule_iter(world, (ecs_rule_t*)poly);
+        iter[1] = ecs_rule_iter(world, ECS_CONST_CAST(ecs_rule_t*, poly));
         iter[0] = ecs_term_chain_iter(&iter[1], filter);
     } else {
-        iter[0] = ecs_rule_iter(world, (ecs_rule_t*)poly);
+        iter[0] = ecs_rule_iter(world, ECS_CONST_CAST(ecs_rule_t*, poly));
     }
 }
 
@@ -268,6 +268,7 @@ char* ecs_rule_str_w_profile(
                 ecs_strbuf_appendstr(&buf, ", #[yellow]\"");
                 ecs_strbuf_appendstr(&buf, rule->filter.terms[term_index].second.name);
                 ecs_strbuf_appendstr(&buf, "\"#[reset]");
+                break;
             }
             default:
                 break;

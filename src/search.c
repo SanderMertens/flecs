@@ -332,7 +332,7 @@ int32_t flecs_relation_depth_walk(
 {
     int32_t result = 0;
 
-    const ecs_table_record_t *tr = flecs_id_record_get_table(idr, table);
+    ecs_table_record_t *tr = flecs_id_record_get_table(idr, table);
     if (!tr) {
         return 0;
     }

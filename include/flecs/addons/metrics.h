@@ -53,7 +53,7 @@ FLECS_API extern ECS_TAG_DECLARE(EcsCounterId);
 FLECS_API extern ECS_TAG_DECLARE(EcsGauge);
 
 /** Tag added to metric instances */
-FLECS_API extern ECS_COMPONENT_DECLARE(EcsMetricInstance);
+FLECS_API extern ECS_TAG_DECLARE(EcsMetricInstance);
 
 /** Component with metric instance value */
 FLECS_API extern ECS_COMPONENT_DECLARE(EcsMetricValue);

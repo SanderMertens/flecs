@@ -684,7 +684,7 @@ const char* flecs_json_parse_column(
 
     ecs_json_token_t token_kind = 0;
     ecs_vec_t *data = &table->data.columns[data_column];
-    ecs_type_info_t *ti = table->type_info[data_column];
+    const ecs_type_info_t *ti = table->type_info[data_column];
     ecs_size_t size = ti->size;
     ecs_entity_t type = ti->component;
     ecs_record_t **record_array = ecs_vec_first_t(records, ecs_record_t*);

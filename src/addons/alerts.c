@@ -174,24 +174,31 @@ ecs_entity_t flecs_alert_out_of_range_kind(
     const EcsMemberRanges *ranges,
     const void *value_ptr)
 {
-    double value;
+    double value = 0;
 
     switch(alert->kind) {
-    case EcsU8: value = *(uint8_t*)value_ptr; break;
-    case EcsU16: value = *(uint16_t*)value_ptr; break;
-    case EcsU32: value = *(uint32_t*)value_ptr; break;
-    case EcsU64: value = (double)*(uint64_t*)value_ptr; break;
-    case EcsI8: value = *(int8_t*)value_ptr; break;
-    case EcsI16: value = *(int16_t*)value_ptr; break;
-    case EcsI32: value = *(int32_t*)value_ptr; break;
-    case EcsI64: value = (double)*(int64_t*)value_ptr; break;
-    case EcsF32: value = (double)*(float*)value_ptr; break;
-    case EcsF64: value = *(double*)value_ptr; break;
-    default: return 0;
+    case EcsU8: value = *(const uint8_t*)value_ptr; break;
+    case EcsU16: value = *(const uint16_t*)value_ptr; break;
+    case EcsU32: value = *(const uint32_t*)value_ptr; break;
+    case EcsU64: value = (double)*(const uint64_t*)value_ptr; break;
+    case EcsI8: value = *(const int8_t*)value_ptr; break;
+    case EcsI16: value = *(const int16_t*)value_ptr; break;
+    case EcsI32: value = *(const int32_t*)value_ptr; break;
+    case EcsI64: value = (double)*(const int64_t*)value_ptr; break;
+    case EcsF32: value = (double)*(const float*)value_ptr; break;
+    case EcsF64: value = *(const double*)value_ptr; break;
+    case EcsBool:
+    case EcsChar:
+    case EcsByte:
+    case EcsUPtr:
+    case EcsIPtr:
+    case EcsString:
+    case EcsEntity:
+        return 0;
     }
 
-    bool has_error = ranges->error.min != ranges->error.max;
-    bool has_warning = ranges->warning.min != ranges->warning.max;
+    bool has_error = ECS_NEQ(ranges->error.min, ranges->error.max);
+    bool has_warning = ECS_NEQ(ranges->warning.min, ranges->warning.max);
 
     if (has_error && (value < ranges->error.min || value > ranges->error.max)) {
         return EcsAlertError;
@@ -284,7 +291,7 @@ void MonitorAlerts(ecs_iter_t *it) {
                     ecs_set(world, ai, EcsMetricSource, { .entity = e });
                     ecs_set(world, ai, EcsMetricValue, { .value = 0 });
                     ecs_add_pair(world, ai, ecs_id(EcsAlert), src_severity);
-                    if (alert[i].retain_period != 0) {
+                    if (ECS_NEQZERO(alert[i].retain_period)) {
                         ecs_set(world, ai, EcsAlertTimeout, {
                             .inactive_time = 0,
                             .expire_time = alert[i].retain_period
@@ -412,7 +419,7 @@ void MonitorAlertInstances(ecs_iter_t *it) {
                 }
 
                 if (timeout) {
-                    if (timeout[i].inactive_time != 0) {
+                    if (ECS_NEQZERO(timeout[i].inactive_time)) {
                         /* The alert just became active. Remove Disabled tag */
                         flecs_alerts_add_alert_to_src(world, e, parent, ai);
                         ecs_remove_id(world, ai, EcsDisabled);
@@ -431,7 +438,7 @@ void MonitorAlertInstances(ecs_iter_t *it) {
         /* Alert instance is no longer active */
 
         if (timeout) {
-            if (timeout[i].inactive_time == 0) {
+            if (ECS_EQZERO(timeout[i].inactive_time)) {
                 /* The alert just became inactive. Add Disabled tag */
                 flecs_alerts_remove_alert_from_src(world, e, parent);
                 ecs_add_id(world, ai, EcsDisabled);

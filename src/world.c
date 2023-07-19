@@ -74,10 +74,6 @@ const ecs_entity_t EcsOnTableCreate =               FLECS_HI_COMPONENT_ID + 38;
 const ecs_entity_t EcsOnTableDelete =               FLECS_HI_COMPONENT_ID + 39;
 const ecs_entity_t EcsOnTableEmpty =                FLECS_HI_COMPONENT_ID + 40;
 const ecs_entity_t EcsOnTableFill =                 FLECS_HI_COMPONENT_ID + 41;
-const ecs_entity_t EcsOnCreateTrigger =             FLECS_HI_COMPONENT_ID + 42;
-const ecs_entity_t EcsOnDeleteTrigger =             FLECS_HI_COMPONENT_ID + 43;
-const ecs_entity_t EcsOnDeleteObservable =          FLECS_HI_COMPONENT_ID + 44;
-const ecs_entity_t EcsOnComponentHooks =            FLECS_HI_COMPONENT_ID + 45;
 const ecs_entity_t EcsOnDeleteTarget =              FLECS_HI_COMPONENT_ID + 46;
 
 /* Timers */
@@ -327,7 +323,7 @@ const ecs_stage_t* flecs_stage_from_readonly_world(
         return &world->stages[0];
 
     } else if (ecs_poly_is(world, ecs_stage_t)) {
-        return (ecs_stage_t*)world;
+        return ECS_CONST_CAST(ecs_stage_t*, world);
     }
     
     return NULL;    
@@ -348,7 +344,7 @@ ecs_stage_t* flecs_stage_from_world(
     }
 
     *world_ptr = ((ecs_stage_t*)world)->world;
-    return (ecs_stage_t*)world;
+    return ECS_CONST_CAST(ecs_stage_t*, world);
 }
 
 ecs_world_t* flecs_suspend_readonly(
@@ -358,7 +354,7 @@ ecs_world_t* flecs_suspend_readonly(
     ecs_assert(stage_world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(state != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_world_t *world = (ecs_world_t*)ecs_get_world(stage_world);
+    ecs_world_t *world = ECS_CONST_CAST(ecs_world_t*, ecs_get_world(stage_world));
     ecs_poly_assert(world, ecs_world_t);
 
     bool is_readonly = ECS_BIT_IS_SET(world->flags, EcsWorldReadonly);
@@ -667,7 +663,7 @@ bool flecs_world_iter_next(
     }
 
     ecs_world_t *world = it->real_world;
-    it->entities = (ecs_entity_t*)flecs_entities_ids(world);
+    it->entities = ECS_CONST_CAST(ecs_entity_t*, flecs_entities_ids(world));
     it->count = flecs_entities_count(world);
     flecs_iter_validate(it);
 
@@ -688,8 +684,8 @@ void flecs_world_iter_init(
         iter[0] = ecs_term_iter(world, filter);
     } else {
         iter[0] = (ecs_iter_t){
-            .world = (ecs_world_t*)world,
-            .real_world = (ecs_world_t*)ecs_get_world(world),
+            .world = ECS_CONST_CAST(ecs_world_t*, world),
+            .real_world = ECS_CONST_CAST(ecs_world_t*, ecs_get_world(world)),
             .next = flecs_world_iter_next
         };
     }
@@ -961,23 +957,6 @@ ecs_world_t *ecs_init(void) {
     return world;
 }
 
-#define ARG(short, long, action)\
-    if (i < argc) {\
-        if (argv[i][0] == '-') {\
-            if (argv[i][1] == '-') {\
-                if (long && !strcmp(&argv[i][2], long ? long : "")) {\
-                    action;\
-                    parsed = true;\
-                }\
-            } else {\
-                if (short && argv[i][1] == short) {\
-                    action;\
-                    parsed = true;\
-                }\
-            }\
-        }\
-    }
-
 ecs_world_t* ecs_init_w_args(
     int argc,
     char *argv[])
@@ -985,7 +964,7 @@ ecs_world_t* ecs_init_w_args(
     ecs_world_t *world = ecs_init();
 
     (void)argc;
-    (void) argv;
+    (void)argv;
 
 #ifdef FLECS_DOC
     if (argc) {
@@ -1469,7 +1448,7 @@ void ecs_measure_frame_time(
     ecs_poly_assert(world, ecs_world_t);
     ecs_check(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
 
-    if (world->info.target_fps == (ecs_ftime_t)0 || enable) {
+    if (ECS_EQZERO(world->info.target_fps) || enable) {
         ECS_BIT_COND(world->flags, EcsWorldMeasureFrameTime, enable);
     }
 error:
@@ -1606,7 +1585,7 @@ ecs_type_info_t* flecs_type_info_ensure(
         ecs_assert(ti_mut != NULL, ECS_INTERNAL_ERROR, NULL);
         ti_mut->component = component;
     } else {
-        ti_mut = (ecs_type_info_t*)ti;
+        ti_mut = ECS_CONST_CAST(ecs_type_info_t*, ti);
     }
 
     if (!ti_mut->name) {
@@ -1699,7 +1678,7 @@ void flecs_type_info_fini(
     }
     if (ti->name) {
         /* Safe to cast away const, world has ownership over string */
-        ecs_os_free((char*)ti->name);
+        ecs_os_free(ECS_CONST_CAST(char*, ti->name));
         ti->name = NULL;
     }
 }
@@ -1734,7 +1713,7 @@ ecs_ftime_t flecs_insert_sleep(
     ecs_time_t start = *stop, now = start;
     ecs_ftime_t delta_time = (ecs_ftime_t)ecs_time_measure(stop);
 
-    if (world->info.target_fps == (ecs_ftime_t)0.0) {
+    if (ECS_EQZERO(world->info.target_fps)) {
         return delta_time;
     }
 
@@ -1752,7 +1731,7 @@ ecs_ftime_t flecs_insert_sleep(
     do {
         /* Only call sleep when sleep_time is not 0. On some platforms, even
          * a sleep with a timeout of 0 can cause stutter. */
-        if (sleep_time != 0) {
+        if (ECS_NEQZERO(sleep_time)) {
             ecs_sleepf((double)sleep_time);
         }
 
@@ -1774,14 +1753,16 @@ ecs_ftime_t flecs_start_measure_frame(
 
     ecs_ftime_t delta_time = 0;
 
-    if ((world->flags & EcsWorldMeasureFrameTime) || (user_delta_time == 0)) {
+    if ((world->flags & EcsWorldMeasureFrameTime) || 
+        (ECS_EQZERO(user_delta_time))) 
+    {
         ecs_time_t t = world->frame_start_time;
         do {
             if (world->frame_start_time.nanosec || world->frame_start_time.sec){ 
                 delta_time = flecs_insert_sleep(world, &t);
             } else {
                 ecs_time_measure(&t);
-                if (world->info.target_fps != 0) {
+                if (ECS_NEQZERO(world->info.target_fps)) {
                     delta_time = (ecs_ftime_t)1.0 / world->info.target_fps;
                 } else {
                     /* Best guess */
@@ -1790,7 +1771,7 @@ ecs_ftime_t flecs_start_measure_frame(
             }
         
         /* Keep trying while delta_time is zero */
-        } while (delta_time == 0);
+        } while (ECS_EQZERO(delta_time));
 
         world->frame_start_time = t;  
 
@@ -1819,12 +1800,12 @@ ecs_ftime_t ecs_frame_begin(
 {
     ecs_poly_assert(world, ecs_world_t);
     ecs_check(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, NULL);
-    ecs_check(user_delta_time != 0 || ecs_os_has_time(), 
+    ecs_check(ECS_NEQZERO(user_delta_time) || ecs_os_has_time(), 
         ECS_MISSING_OS_API, "get_time");
 
     /* Start measuring total frame time */
     ecs_ftime_t delta_time = flecs_start_measure_frame(world, user_delta_time);
-    if (user_delta_time == 0) {
+    if (ECS_EQZERO(user_delta_time)) {
         user_delta_time = delta_time;
     }  
 
@@ -1929,7 +1910,7 @@ void flecs_process_pending_tables(
     }
 
     /* Safe to cast, world is not readonly */
-    ecs_world_t *world = (ecs_world_t*)world_r;
+    ecs_world_t *world = ECS_CONST_CAST(ecs_world_t*, world_r);
     
     /* If pending buffer is NULL there already is a stackframe that's iterating
      * the table list. This can happen when an observer for a table event results
@@ -2075,11 +2056,11 @@ int32_t ecs_delete_empty_tables(
     int32_t delete_count = 0, clear_count = 0;
     bool time_budget = false;
 
-    if (time_budget_seconds != 0 || (ecs_should_log_1() && ecs_os_has_time())) {
+    if (ECS_NEQZERO(time_budget_seconds) || (ecs_should_log_1() && ecs_os_has_time())) {
         ecs_time_measure(&start);
     }
 
-    if (time_budget_seconds != 0) {
+    if (ECS_NEQZERO(time_budget_seconds)) {
         time_budget = true;
     }
 

@@ -279,7 +279,7 @@ ecs_map_val_t* ecs_map_get(
     return flecs_map_bucket_get(flecs_map_get_bucket(map, key), key);
 }
 
-void* _ecs_map_get_deref(
+void* ecs_map_get_deref_(
     const ecs_map_t *map,
     ecs_map_key_t key)
 {
