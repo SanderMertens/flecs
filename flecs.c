@@ -16973,7 +16973,8 @@ void* flecs_worker(void *arg) {
         ecs_entity_t old_scope = ecs_set_scope((ecs_world_t*)stage, 0);
 
         ecs_dbg_3("worker %d: run", stage->id);
-        flecs_run_pipeline_ops(world, stage, stage->id, world->stage_count, world->info.delta_time);
+        flecs_run_pipeline_ops(world, stage, stage->id, world->stage_count, 
+            world->info.delta_time);
 
         ecs_set_scope((ecs_world_t*)stage, old_scope);
 
@@ -17004,13 +17005,11 @@ void flecs_create_worker_threads(
         ecs_poly_assert(stage, ecs_stage_t);
 
         ecs_assert(stage->thread == 0, ECS_INTERNAL_ERROR, NULL);
-        if (ecs_using_task_threads(world))
-        {
-            /* workers are using tasks in an external task manager provided to the OS API */
+        if (ecs_using_task_threads(world)) {
+            /* workers are using tasks in an external task manager provided to 
+             * the OS API */
             stage->thread = ecs_os_task_new(flecs_worker, stage);
-        }
-        else
-        {
+        } else {
             /* workers are using long-running os threads */
             stage->thread = ecs_os_thread_new(flecs_worker, stage);
         }
@@ -17027,8 +17026,7 @@ void flecs_start_workers(
 
     ecs_assert(ecs_get_stage_count(world) == threads, ECS_INTERNAL_ERROR, NULL);
 
-    if (!ecs_using_task_threads(world))
-    {
+    if (!ecs_using_task_threads(world)) {
         flecs_create_worker_threads(world);
     }
 }
@@ -17129,13 +17127,10 @@ bool flecs_join_worker_threads(
 
     /* Join all threads with main */
     for (i = 1; i < count; i ++) {
-        if (ecs_using_task_threads(world))
-        {
+        if (ecs_using_task_threads(world)) {
             /* Join using the override provided */
             ecs_os_task_join(stages[i].thread);
-        }
-        else
-        {
+        } else {
             ecs_os_thread_join(stages[i].thread);
         }
         stages[i].thread = 0;
@@ -17189,7 +17184,10 @@ void flecs_set_threads_internal(
     int32_t threads,
     bool use_task_api)
 {
-    ecs_assert(threads <= 1 || (use_task_api ? ecs_os_has_task_support() : ecs_os_has_threading()), ECS_MISSING_OS_API, NULL);
+    ecs_assert(threads <= 1 || (use_task_api 
+        ? ecs_os_has_task_support() 
+        : ecs_os_has_threading()), 
+            ECS_MISSING_OS_API, NULL);
     
     int32_t stage_count = ecs_get_stage_count(world);
     bool worker_method_changed = (use_task_api != world->workers_use_task_api);
@@ -17754,8 +17752,7 @@ void ecs_run_pipeline(
     }
 
     /* create any worker task threads request */
-    if (ecs_using_task_threads(world))
-    {
+    if (ecs_using_task_threads(world)) {
         flecs_create_worker_threads(world);
     }
 
@@ -17763,8 +17760,7 @@ void ecs_run_pipeline(
         ECS_CONST_CAST(EcsPipeline*, ecs_get(world, pipeline, EcsPipeline));
     flecs_workers_progress(world, p->state, delta_time);
 
-    if (ecs_using_task_threads(world))
-    {
+    if (ecs_using_task_threads(world)) {
         /* task threads were temporary and may now be joined */
         flecs_join_worker_threads(world);
     }
@@ -17874,7 +17870,8 @@ void flecs_run_pipeline(
             ecs_time_measure(&st);
         }
 
-        const int32_t i = flecs_run_pipeline_ops(world, stage, stage_index, stage_count, delta_time);
+        const int32_t i = flecs_run_pipeline_ops(
+            world, stage, stage_index, stage_count, delta_time);
 
         if (measure_time) {
             /* Don't include merge time in system time */
@@ -17965,8 +17962,7 @@ bool ecs_progress(
     }
 
     /* create any worker task threads request */
-    if (ecs_using_task_threads(world))
-    {
+    if (ecs_using_task_threads(world)) {
         flecs_create_worker_threads(world);
     }
 
@@ -17979,8 +17975,7 @@ bool ecs_progress(
 
     ecs_frame_end(world);
 
-    if (ecs_using_task_threads(world))
-    {
+    if (ecs_using_task_threads(world)) {
         /* task threads were temporary and may now be joined */
         flecs_join_worker_threads(world);
     }
