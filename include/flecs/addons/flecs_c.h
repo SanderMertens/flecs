@@ -408,6 +408,9 @@
 #define ecs_singleton_get(world, comp)\
     ecs_get(world, ecs_id(comp), comp)
 
+#define ecs_singleton_set_ptr(world, comp, ptr)\
+    ecs_set_ptr(world, ecs_id(comp), comp, ptr)
+
 #define ecs_singleton_set(world, comp, ...)\
     ecs_set(world, ecs_id(comp), comp, __VA_ARGS__)
 
