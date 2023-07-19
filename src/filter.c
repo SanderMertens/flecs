@@ -146,7 +146,7 @@ int flecs_term_id_lookup(
         return 0;
     }
 
-    ecs_entity_t e = ecs_lookup_symbol(world, name, true);
+    ecs_entity_t e = ecs_lookup_symbol(world, name, true, true);
     if (scope && !e) {
         e = ecs_lookup_child(world, scope, name);
     }

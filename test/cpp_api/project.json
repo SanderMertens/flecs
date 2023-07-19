@@ -986,7 +986,8 @@
                 "implicit_module",
                 "module_in_namespace_w_root_name",
                 "module_as_entity",
-                "module_as_component"
+                "module_as_component",
+                "module_with_core_name"
             ]
         }, {
             "id": "ImplicitComponents",
@@ -1073,6 +1074,7 @@
                 "reregister_after_reset_w_hooks_and_in_use",
                 "reregister_after_reset_w_hooks_and_in_use_implicit",
                 "register_component_w_reset_in_multithreaded",
+                "register_component_w_core_name",
                 "count",
                 "count_id",
                 "count_pair",

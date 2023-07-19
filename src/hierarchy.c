@@ -349,7 +349,8 @@ error:
 ecs_entity_t ecs_lookup_symbol(
     const ecs_world_t *world,
     const char *name,
-    bool lookup_as_path)
+    bool lookup_as_path,
+    bool recursive)
 {   
     if (!name) {
         return 0;
@@ -364,7 +365,7 @@ ecs_entity_t ecs_lookup_symbol(
     }
 
     if (lookup_as_path) {
-        return ecs_lookup_fullpath(world, name);
+        return ecs_lookup_path_w_sep(world, 0, name, ".", NULL, recursive);
     }
 
 error:

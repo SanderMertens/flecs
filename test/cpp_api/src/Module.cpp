@@ -56,6 +56,13 @@ public:
 
 }
 
+struct Module {
+    Module(flecs::world& world) {
+        world.module<Module>();
+        world.component<Position>();
+    }
+};
+
 void Module_import() {
     flecs::world world;
     auto m = world.import<ns::SimpleModule>();
@@ -255,4 +262,17 @@ void Module_module_as_component() {
 
     auto e = world.component<ns::SimpleModule>();
     test_assert(m == e);
+}
+
+void Module_module_with_core_name() {
+    flecs::world world;
+
+    flecs::entity m = world.import<Module>();
+    test_assert(m != 0);
+    test_str(m.path().c_str(), "::Module");
+
+    flecs::entity pos = m.lookup("Position");
+    test_assert(pos != 0);
+    test_str(pos.path().c_str(), "::Module::Position");
+    test_assert(pos == world.id<Position>());
 }

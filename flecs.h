@@ -5960,12 +5960,19 @@ ecs_entity_t ecs_lookup_path_w_sep(
  *
  * This operation can be useful to resolve, for example, a type by its C 
  * identifier, which does not include the Flecs namespacing.
+ * 
+ * @param world The world.
+ * @param symbol The symbol.
+ * @param lookup_as_path If not found as a symbol, lookup as path.
+ * @param recursive If looking up as path, recursively traverse up the tree.
+ * @return The entity if found, else 0.
  */
 FLECS_API
 ecs_entity_t ecs_lookup_symbol(
     const ecs_world_t *world,
     const char *symbol,
-    bool lookup_as_path);
+    bool lookup_as_path,
+    bool recursive);
 
 /** Get a path identifier for an entity.
  * This operation creates a path that contains the names of the entities from
@@ -27900,7 +27907,7 @@ ecs_entity_t do_import(world& world, const char *symbol) {
     ecs_set_scope(world, scope);
 
     // It should now be possible to lookup the module
-    ecs_entity_t m = ecs_lookup_symbol(world, symbol, true);
+    ecs_entity_t m = ecs_lookup_symbol(world, symbol, true, false);
     ecs_assert(m != 0, ECS_MODULE_UNDEFINED, symbol);
     ecs_assert(m == m_c, ECS_INTERNAL_ERROR, NULL);
 
@@ -27913,7 +27920,7 @@ template <typename T>
 flecs::entity import(world& world) {
     const char *symbol = _::symbol_name<T>();
 
-    ecs_entity_t m = ecs_lookup_symbol(world, symbol, true);
+    ecs_entity_t m = ecs_lookup_symbol(world, symbol, true, false);
     
     if (!_::cpp_type<T>::registered(world)) {
 

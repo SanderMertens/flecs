@@ -945,6 +945,7 @@ void Module_implicit_module(void);
 void Module_module_in_namespace_w_root_name(void);
 void Module_module_as_entity(void);
 void Module_module_as_component(void);
+void Module_module_with_core_name(void);
 
 // Testsuite 'ImplicitComponents'
 void ImplicitComponents_add(void);
@@ -1023,6 +1024,7 @@ void World_register_meta_after_reset(void);
 void World_reregister_after_reset_w_hooks_and_in_use(void);
 void World_reregister_after_reset_w_hooks_and_in_use_implicit(void);
 void World_register_component_w_reset_in_multithreaded(void);
+void World_register_component_w_core_name(void);
 void World_count(void);
 void World_count_id(void);
 void World_count_pair(void);
@@ -4902,6 +4904,10 @@ bake_test_case Module_testcases[] = {
     {
         "module_as_component",
         Module_module_as_component
+    },
+    {
+        "module_with_core_name",
+        Module_module_with_core_name
     }
 };
 
@@ -5194,6 +5200,10 @@ bake_test_case World_testcases[] = {
     {
         "register_component_w_reset_in_multithreaded",
         World_register_component_w_reset_in_multithreaded
+    },
+    {
+        "register_component_w_core_name",
+        World_register_component_w_core_name
     },
     {
         "count",
@@ -6195,7 +6205,7 @@ static bake_test_suite suites[] = {
         "Module",
         NULL,
         NULL,
-        11,
+        12,
         Module_testcases
     },
     {
@@ -6223,7 +6233,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        96,
+        97,
         World_testcases
     },
     {

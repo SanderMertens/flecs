@@ -472,7 +472,8 @@ ecs_entity_t meta_lookup_array(
         goto error;
     }
 
-    ecs_entity_t element_type = ecs_lookup_symbol(world, params.type.type, true);
+    ecs_entity_t element_type = ecs_lookup_symbol(
+        world, params.type.type, true, true);
     if (!element_type) {
         ecs_meta_error(ctx, params_decl, "unknown element type '%s'",
             params.type.type);
@@ -640,7 +641,7 @@ ecs_entity_t meta_lookup(
         } else if (!ecs_os_strcmp(typename, "char*")) {
             type = ecs_id(ecs_string_t);
         } else {
-            type = ecs_lookup_symbol(world, typename, true);
+            type = ecs_lookup_symbol(world, typename, true, true);
         }
     } else {
         if (!ecs_os_strcmp(typename, "char")) {
@@ -655,7 +656,7 @@ ecs_entity_t meta_lookup(
             typename = "flecs.meta.string";
         }
 
-        type = ecs_lookup_symbol(world, typename, true);
+        type = ecs_lookup_symbol(world, typename, true, true);
     }
 
     if (count != 1) {

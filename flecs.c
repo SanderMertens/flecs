@@ -19151,7 +19151,7 @@ ecs_entity_t ecs_cpp_component_register(
     /* If no entity is found, lookup symbol to check if the component was
      * registered under a different name. */
     } else if (!implicit_name) {
-        ent = ecs_lookup_symbol(world, symbol, false);
+        ent = ecs_lookup_symbol(world, symbol, false, false);
         ecs_assert(ent == 0 || (ent == id), ECS_INCONSISTENT_COMPONENT_ID, symbol);
     }
 
@@ -19184,7 +19184,7 @@ ecs_entity_t ecs_cpp_component_register_explicit(
         if (!name) {
             // If no name was provided first check if a type with the provided
             // symbol was already registered.
-            id = ecs_lookup_symbol(world, symbol, false);
+            id = ecs_lookup_symbol(world, symbol, false, false);
             if (id) {
                 existing_name = ecs_get_path_w_sep(world, 0, id, "::", "::");
                 name = existing_name;
@@ -46466,7 +46466,8 @@ ecs_entity_t meta_lookup_array(
         goto error;
     }
 
-    ecs_entity_t element_type = ecs_lookup_symbol(world, params.type.type, true);
+    ecs_entity_t element_type = ecs_lookup_symbol(
+        world, params.type.type, true, true);
     if (!element_type) {
         ecs_meta_error(ctx, params_decl, "unknown element type '%s'",
             params.type.type);
@@ -46634,7 +46635,7 @@ ecs_entity_t meta_lookup(
         } else if (!ecs_os_strcmp(typename, "char*")) {
             type = ecs_id(ecs_string_t);
         } else {
-            type = ecs_lookup_symbol(world, typename, true);
+            type = ecs_lookup_symbol(world, typename, true, true);
         }
     } else {
         if (!ecs_os_strcmp(typename, "char")) {
@@ -46649,7 +46650,7 @@ ecs_entity_t meta_lookup(
             typename = "flecs.meta.string";
         }
 
-        type = ecs_lookup_symbol(world, typename, true);
+        type = ecs_lookup_symbol(world, typename, true, true);
     }
 
     if (count != 1) {
@@ -50616,7 +50617,7 @@ int flecs_term_id_lookup(
         return 0;
     }
 
-    ecs_entity_t e = ecs_lookup_symbol(world, name, true);
+    ecs_entity_t e = ecs_lookup_symbol(world, name, true, true);
     if (scope && !e) {
         e = ecs_lookup_child(world, scope, name);
     }
@@ -62398,7 +62399,8 @@ error:
 ecs_entity_t ecs_lookup_symbol(
     const ecs_world_t *world,
     const char *name,
-    bool lookup_as_path)
+    bool lookup_as_path,
+    bool recursive)
 {   
     if (!name) {
         return 0;
@@ -62413,7 +62415,7 @@ ecs_entity_t ecs_lookup_symbol(
     }
 
     if (lookup_as_path) {
-        return ecs_lookup_fullpath(world, name);
+        return ecs_lookup_path_w_sep(world, 0, name, ".", NULL, recursive);
     }
 
 error:

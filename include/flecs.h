@@ -3207,12 +3207,19 @@ ecs_entity_t ecs_lookup_path_w_sep(
  *
  * This operation can be useful to resolve, for example, a type by its C 
  * identifier, which does not include the Flecs namespacing.
+ * 
+ * @param world The world.
+ * @param symbol The symbol.
+ * @param lookup_as_path If not found as a symbol, lookup as path.
+ * @param recursive If looking up as path, recursively traverse up the tree.
+ * @return The entity if found, else 0.
  */
 FLECS_API
 ecs_entity_t ecs_lookup_symbol(
     const ecs_world_t *world,
     const char *symbol,
-    bool lookup_as_path);
+    bool lookup_as_path,
+    bool recursive);
 
 /** Get a path identifier for an entity.
  * This operation creates a path that contains the names of the entities from

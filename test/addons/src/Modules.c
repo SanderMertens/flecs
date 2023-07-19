@@ -280,11 +280,11 @@ void Modules_lookup_by_symbol() {
 
     ECS_IMPORT(world, SimpleModule);
 
-    ecs_entity_t e = ecs_lookup_symbol(world, "Position", true);
+    ecs_entity_t e = ecs_lookup_symbol(world, "Position", true, true);
     test_assert(e != 0);
     test_assert(e == ecs_id(Position));
 
-    e = ecs_lookup_symbol(world, "SimpleFooComponent", true);
+    e = ecs_lookup_symbol(world, "SimpleFooComponent", true, true);
     test_assert(e != 0);
     test_assert(e == ecs_id(SimpleFooComponent));
 

@@ -334,7 +334,7 @@ ecs_entity_t ecs_cpp_component_register(
     /* If no entity is found, lookup symbol to check if the component was
      * registered under a different name. */
     } else if (!implicit_name) {
-        ent = ecs_lookup_symbol(world, symbol, false);
+        ent = ecs_lookup_symbol(world, symbol, false, false);
         ecs_assert(ent == 0 || (ent == id), ECS_INCONSISTENT_COMPONENT_ID, symbol);
     }
 
@@ -367,7 +367,7 @@ ecs_entity_t ecs_cpp_component_register_explicit(
         if (!name) {
             // If no name was provided first check if a type with the provided
             // symbol was already registered.
-            id = ecs_lookup_symbol(world, symbol, false);
+            id = ecs_lookup_symbol(world, symbol, false, false);
             if (id) {
                 existing_name = ecs_get_path_w_sep(world, 0, id, "::", "::");
                 name = existing_name;

@@ -178,7 +178,7 @@ void Lookup_lookup_symbol_by_id() {
     ecs_world_t *world = ecs_mini();
 
     ecs_ensure(world, 1000);
-    ecs_entity_t e = ecs_lookup_symbol(world, "1000", true);
+    ecs_entity_t e = ecs_lookup_symbol(world, "1000", true, true);
     test_int(e, 1000);
 
     ecs_fini(world);
@@ -188,7 +188,7 @@ void Lookup_lookup_symbol_w_digit() {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_set_symbol(world, 0, "10_id");    
-    ecs_entity_t e2 = ecs_lookup_symbol(world, "10_id", true);
+    ecs_entity_t e2 = ecs_lookup_symbol(world, "10_id", true, true);
     test_assert(e == e2);
 
     ecs_fini(world);
@@ -297,7 +297,7 @@ void Lookup_lookup_null() {
 void Lookup_lookup_symbol_null() {
     ecs_world_t *world = ecs_mini();
 
-    test_assert(ecs_lookup_symbol(world, NULL, true) == 0);
+    test_assert(ecs_lookup_symbol(world, NULL, true, true) == 0);
 
     ecs_fini(world);
 }
@@ -389,11 +389,11 @@ void Lookup_lookup_path_wildcard_from_scope() {
 void Lookup_resolve_builtin_symbols() {
     ecs_world_t *world = ecs_mini();
 
-    test_assert(ecs_lookup_symbol(world, "EcsComponent", false) == ecs_id(EcsComponent));
-    test_assert(ecs_lookup_symbol(world, "EcsIdentifier", false) == ecs_id(EcsIdentifier));
+    test_assert(ecs_lookup_symbol(world, "EcsComponent", false, true) == ecs_id(EcsComponent));
+    test_assert(ecs_lookup_symbol(world, "EcsIdentifier", false, true) == ecs_id(EcsIdentifier));
 
-    test_assert(ecs_lookup_symbol(world, "EcsName", false) == EcsName);
-    test_assert(ecs_lookup_symbol(world, "EcsSymbol", false) == EcsSymbol);
+    test_assert(ecs_lookup_symbol(world, "EcsName", false, true) == EcsName);
+    test_assert(ecs_lookup_symbol(world, "EcsSymbol", false, true) == EcsSymbol);
 
     ecs_fini(world);
 }

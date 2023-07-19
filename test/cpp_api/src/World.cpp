@@ -303,6 +303,16 @@ void World_register_component_w_reset_in_multithreaded() {
     test_int(p->y, 20);
 }
 
+struct Module { };
+
+void World_register_component_w_core_name() {
+    flecs::world ecs;
+
+    flecs::entity c = ecs.component<Module>();
+    test_assert(c != 0);
+    test_str(c.path().c_str(), "::Module");
+}
+
 template <typename T>
 struct Tmp { int32_t v; };
 struct Test { };
@@ -1704,3 +1714,4 @@ void World_id_from_pair_type() {
     test_assert(id.first() == ecs.id<Position>());
     test_assert(id.second() == ecs.id<Velocity>());
 }
+
