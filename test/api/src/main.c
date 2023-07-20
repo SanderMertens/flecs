@@ -1439,6 +1439,16 @@ void Query_query_changed_or(void);
 void Query_query_changed_w_singleton(void);
 void Query_query_changed_w_only_singleton(void);
 void Query_query_changed_w_only_singleton_after_set(void);
+void Query_query_changed_w_only_singleton_after_out_term(void);
+void Query_query_changed_w_only_singleton_after_singleton_out_term(void);
+void Query_query_changed_w_only_parent(void);
+void Query_query_changed_w_only_parent_after_set(void);
+void Query_query_changed_w_only_parent_after_out_term(void);
+void Query_query_changed_w_only_parent_after_parent_out_term(void);
+void Query_query_changed_tag(void);
+void Query_query_changed_no_source(void);
+void Query_query_changed_no_source_component(void);
+void Query_query_changed_w_not_out(void);
 void Query_subquery_match_existing(void);
 void Query_subquery_match_new(void);
 void Query_subquery_inactive(void);
@@ -8109,6 +8119,46 @@ bake_test_case Query_testcases[] = {
         Query_query_changed_w_only_singleton_after_set
     },
     {
+        "query_changed_w_only_singleton_after_out_term",
+        Query_query_changed_w_only_singleton_after_out_term
+    },
+    {
+        "query_changed_w_only_singleton_after_singleton_out_term",
+        Query_query_changed_w_only_singleton_after_singleton_out_term
+    },
+    {
+        "query_changed_w_only_parent",
+        Query_query_changed_w_only_parent
+    },
+    {
+        "query_changed_w_only_parent_after_set",
+        Query_query_changed_w_only_parent_after_set
+    },
+    {
+        "query_changed_w_only_parent_after_out_term",
+        Query_query_changed_w_only_parent_after_out_term
+    },
+    {
+        "query_changed_w_only_parent_after_parent_out_term",
+        Query_query_changed_w_only_parent_after_parent_out_term
+    },
+    {
+        "query_changed_tag",
+        Query_query_changed_tag
+    },
+    {
+        "query_changed_no_source",
+        Query_query_changed_no_source
+    },
+    {
+        "query_changed_no_source_component",
+        Query_query_changed_no_source_component
+    },
+    {
+        "query_changed_w_not_out",
+        Query_query_changed_w_not_out
+    },
+    {
         "subquery_match_existing",
         Query_subquery_match_existing
     },
@@ -12666,7 +12716,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        209,
+        219,
         Query_testcases
     },
     {

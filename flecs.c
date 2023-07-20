@@ -56087,44 +56087,52 @@ ecs_query_table_match_t* flecs_query_cache_add(
 
 typedef struct {
     ecs_table_t *table;
-    int32_t *dirty_state;
     int32_t column;
-} table_dirty_state_t;
+} flecs_table_column_t;
 
 static
-void flecs_query_get_dirty_state(
+void flecs_query_get_column_for_term(
     ecs_query_t *query,
     ecs_query_table_match_t *match,
-    int32_t term,
-    table_dirty_state_t *out)
+    int32_t t,
+    flecs_table_column_t *out)
 {
-    ecs_world_t *world = query->filter.world;
-    ecs_entity_t src = match->sources[term];
-    ecs_table_t *table;
+    const ecs_filter_t *filter = &query->filter;
+    ecs_world_t *world = filter->world;
+    ecs_term_t *term = &filter->terms[t];
+    int32_t field = term->field_index;
+    ecs_entity_t src = match->sources[field];
+    ecs_table_t *table = NULL;
     int32_t column = -1;
 
-    if (!src) {
-        table = match->table;
-        column = match->storage_columns[term];
-    } else {
-        const ecs_filter_t *filter = &query->filter;
-        table = ecs_get_table(world, src);
-        if (ecs_term_match_this(&filter->terms[term])) {
-            int32_t ref_index = -match->columns[term] - 1;
-            ecs_ref_t *ref = ecs_vec_get_t(&match->refs, ecs_ref_t, ref_index);
-            if (ref->id != 0) {
-                ecs_ref_update(world, ref);
-                column = ref->tr->column;
-                column = ecs_table_type_to_storage_index(table, column);
+    if (term->oper != EcsNot) {
+        if (!src) {
+            if (term->src.flags != EcsIsEntity) {
+                table = match->table;
+                column = match->storage_columns[field];
+                if (column == -2) {
+                    /* Shared field */
+                    column = -1;
+                }
             }
         } else {
-            column = match->columns[term];
+            table = ecs_get_table(world, src);
+            if (ecs_term_match_this(term)) {
+                int32_t ref_index = -match->columns[field] - 1;
+                ecs_ref_t *ref = ecs_vec_get_t(&match->refs, ecs_ref_t, ref_index);
+                if (ref->id != 0) {
+                    ecs_ref_update(world, ref);
+                    column = ref->tr->column;
+                    column = ecs_table_type_to_storage_index(table, column);
+                }
+            } else {
+                column = -(match->columns[field] + 1);
+            }
         }
     }
 
     out->table = table;
     out->column = column;
-    out->dirty_state = flecs_table_get_dirty_state(world, table);
 }
 
 /* Get match monitor. Monitors are used to keep track of whether components 
@@ -56144,18 +56152,18 @@ bool flecs_query_get_match_monitor(
     /* Mark terms that don't need to be monitored. This saves time when reading
      * and/or updating the monitor. */
     const ecs_filter_t *f = &query->filter;
-    int32_t i, t = -1, term_count = f->term_count;
-    table_dirty_state_t cur_dirty_state;
+    int32_t i, field = -1, term_count = f->term_count;
+    flecs_table_column_t tc;
 
     for (i = 0; i < term_count; i ++) {
-        if (t == f->terms[i].field_index) {
-            if (monitor[t + 1] != -1) {
+        if (field == f->terms[i].field_index) {
+            if (monitor[field + 1] != -1) {
                 continue;
             }
         }
 
-        t = f->terms[i].field_index;
-        monitor[t + 1] = -1;
+        field = f->terms[i].field_index;
+        monitor[field + 1] = -1;
 
         if (f->terms[i].inout != EcsIn && 
             f->terms[i].inout != EcsInOut &&
@@ -56163,19 +56171,18 @@ bool flecs_query_get_match_monitor(
             continue; /* If term isn't read, don't monitor */
         }
 
-        int32_t column = match->columns[t];
+        int32_t column = match->columns[field];
         if (column == 0) {
             continue; /* Don't track terms that aren't matched */
         }
 
-        flecs_query_get_dirty_state(query, match, t, &cur_dirty_state);
-        if (cur_dirty_state.column == -1) {
+        flecs_query_get_column_for_term(query, match, i, &tc);
+        if (tc.column == -1) {
             continue; /* Don't track terms that aren't stored */
         }
 
-        monitor[t + 1] = 0;
+        monitor[field + 1] = 0;
     }
-
 
     /* If matched table needs entity filter, make sure to test fields that could
      * be matched by flattened parents. */
@@ -56219,33 +56226,33 @@ void flecs_query_sync_match_monitor(
         monitor[0] = dirty_state[0]; /* Did table gain/lose entities */
     }
 
-    table_dirty_state_t cur;
-    int32_t i, term_count = query->filter.term_count;
-    for (i = 0; i < term_count; i ++) {
-        int32_t t = query->filter.terms[i].field_index;
-        if (monitor[t + 1] == -1) {
-            continue;
-        }
+    ecs_filter_t *filter = &query->filter;
+    {
+        flecs_table_column_t tc;
+        int32_t t, term_count = filter->term_count;
+        for (t = 0; t < term_count; t ++) {
+            int32_t field = filter->terms[t].field_index;
+            if (monitor[field + 1] == -1) {
+                continue;
+            }
 
-        flecs_query_get_dirty_state(query, match, t, &cur);
-        if (cur.column < 0) {
-            // continue;
-            cur.column = -(cur.column + 1);
-        }
+            flecs_query_get_column_for_term(query, match, t, &tc);
 
-        monitor[t + 1] = cur.dirty_state[cur.column + 1];
+            monitor[field + 1] = flecs_table_get_dirty_state(
+                filter->world, tc.table)[tc.column + 1];
+        }
     }
 
     ecs_entity_filter_t *ef = match->entity_filter;
     if (ef && ef->flat_tree_column != -1) {
         flecs_flat_table_term_t *fields = ecs_vec_first(&ef->ft_terms);
-        int32_t field_count = ecs_vec_count(&ef->ft_terms);
-        for (i = 0; i < field_count; i ++) {
-            flecs_flat_table_term_t *field = &fields[i];
+        int32_t f, field_count = ecs_vec_count(&ef->ft_terms);
+        for (f = 0; f < field_count; f ++) {
+            flecs_flat_table_term_t *field = &fields[f];
             flecs_flat_monitor_t *tgt_mon = ecs_vec_first(&field->monitor);
-            int32_t t, tgt_count = ecs_vec_count(&field->monitor);
-            for (t = 0; t < tgt_count; t ++) {
-                tgt_mon[t].monitor = tgt_mon[t].table_state;
+            int32_t tgt, tgt_count = ecs_vec_count(&field->monitor);
+            for (tgt = 0; tgt < tgt_count; tgt ++) {
+                tgt_mon[tgt].monitor = tgt_mon[tgt].table_state;
             }
         }
     }
@@ -56284,11 +56291,12 @@ bool flecs_query_check_match_monitor_term(
         return false;
     }
 
-    table_dirty_state_t cur;
-    flecs_query_get_dirty_state(query, match, term - 1, &cur);
+    flecs_table_column_t cur;
+    flecs_query_get_column_for_term(query, match, term - 1, &cur);
     ecs_assert(cur.column != -1, ECS_INTERNAL_ERROR, NULL);
 
-    return monitor[term] != cur.dirty_state[cur.column + 1];
+    return monitor[term] != flecs_table_get_dirty_state(
+        query->filter.world, cur.table)[cur.column + 1];
 }
 
 /* Check if any term for match has changed */
@@ -57107,7 +57115,16 @@ int flecs_query_process_signature(
             "invalid usage of Filter for query");
 
         if (inout != EcsIn && inout != EcsInOutNone) {
-            query->flags |= EcsQueryHasOutColumns;
+            /* Non-this terms default to EcsIn */
+            if (ecs_term_match_this(term) || inout != EcsInOutDefault) {
+                query->flags |= EcsQueryHasOutTerms;
+            }
+
+            bool match_non_this = !ecs_term_match_this(term) || 
+                (term->src.flags & EcsUp);
+            if (match_non_this && inout != EcsInOutDefault) {
+                query->flags |= EcsQueryHasNonThisOutTerms;
+            }
         }
 
         if (src->flags & EcsCascade) {
@@ -57994,31 +58011,41 @@ void flecs_query_mark_columns_dirty(
     ecs_query_table_match_t *qm)
 {
     ecs_table_t *table = qm->table;
-    if (!table) {
-        return;
-    }
-
-    int32_t *dirty_state = table->dirty_state;
-    if (dirty_state) {
-        int32_t *storage_columns = qm->storage_columns;
-        ecs_filter_t *filter = &query->filter;
+    ecs_filter_t *filter = &query->filter;
+    if ((table && table->dirty_state) || (query->flags & EcsQueryHasNonThisOutTerms)) {
         ecs_term_t *terms = filter->terms;
         int32_t i, count = filter->term_count;
 
         for (i = 0; i < count; i ++) {
             ecs_term_t *term = &terms[i];
-            if (term->inout == EcsIn || term->inout == EcsInOutNone) {
+            ecs_inout_kind_t inout = term->inout;
+            if (inout == EcsIn || inout == EcsInOutNone) {
                 /* Don't mark readonly terms dirty */
                 continue;
             }
 
-            int32_t field = term->field_index;
-            int32_t column = storage_columns[field];
-            if (column < 0) {
+            flecs_table_column_t tc;
+            flecs_query_get_column_for_term(query, qm, i, &tc);
+
+            if (tc.column == -1) {
                 continue;
             }
 
-            dirty_state[column + 1] ++;
+            ecs_assert(tc.table != NULL, ECS_INTERNAL_ERROR, NULL);
+            int32_t *dirty_state = tc.table->dirty_state;
+            if (!dirty_state) {
+                continue;
+            }
+
+            if (table != tc.table) {
+                if (inout == EcsInOutDefault) {
+                    continue;
+                }
+            }
+
+            ecs_assert(tc.column >= 0, ECS_INTERNAL_ERROR, NULL);
+
+            dirty_state[tc.column + 1] ++;
         }
     }
 }
@@ -58040,7 +58067,7 @@ bool ecs_query_next_table(
         if (query->flags & EcsQueryHasMonitor) {
             flecs_query_sync_match_monitor(query, prev);
         }
-        if (query->flags & EcsQueryHasOutColumns) {
+        if (query->flags & EcsQueryHasOutTerms) {
             if (it->count) {
                 flecs_query_mark_columns_dirty(query, prev);
             }
@@ -58231,7 +58258,7 @@ bool ecs_query_next_instanced(
         if (flags & EcsQueryHasMonitor) {
             flecs_query_sync_match_monitor(query, prev);
         }
-        if (flags & EcsQueryHasOutColumns) {
+        if (flags & EcsQueryHasOutTerms) {
             flecs_query_mark_columns_dirty(query, prev);
         }
     }

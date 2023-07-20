@@ -447,7 +447,8 @@ extern "C" {
 #define EcsQueryHasRefs                (1u << 1u)  /* Does query have references */
 #define EcsQueryIsSubquery             (1u << 2u)  /* Is query a subquery */
 #define EcsQueryIsOrphaned             (1u << 3u)  /* Is subquery orphaned */
-#define EcsQueryHasOutColumns          (1u << 4u)  /* Does query have out columns */
+#define EcsQueryHasOutTerms            (1u << 4u)  /* Does query have out terms */
+#define EcsQueryHasNonThisOutTerms     (1u << 5u)  /* Does query have non-this out terms */
 #define EcsQueryHasMonitor             (1u << 5u)  /* Does query track changes */
 #define EcsQueryTrivialIter            (1u << 6u)  /* Does the query require special features to iterate */
 
@@ -8599,6 +8600,9 @@ int ecs_value_move_ctor(
 
 #define ecs_singleton_get(world, comp)\
     ecs_get(world, ecs_id(comp), comp)
+
+#define ecs_singleton_set_ptr(world, comp, ptr)\
+    ecs_set_ptr(world, ecs_id(comp), comp, ptr)
 
 #define ecs_singleton_set(world, comp, ...)\
     ecs_set(world, ecs_id(comp), comp, __VA_ARGS__)
