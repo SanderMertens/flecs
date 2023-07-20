@@ -56099,21 +56099,26 @@ void flecs_query_get_dirty_state(
     table_dirty_state_t *out)
 {
     ecs_world_t *world = query->filter.world;
-    ecs_entity_t subject = match->sources[term];
+    ecs_entity_t src = match->sources[term];
     ecs_table_t *table;
     int32_t column = -1;
 
-    if (!subject) {
+    if (!src) {
         table = match->table;
         column = match->storage_columns[term];
     } else {
-        table = ecs_get_table(world, subject);
-        int32_t ref_index = -match->columns[term] - 1;
-        ecs_ref_t *ref = ecs_vec_get_t(&match->refs, ecs_ref_t, ref_index);
-        if (ref->id != 0) {
-            ecs_ref_update(world, ref);
-            column = ref->tr->column;
-            column = ecs_table_type_to_storage_index(table, column);
+        const ecs_filter_t *filter = &query->filter;
+        table = ecs_get_table(world, src);
+        if (ecs_term_match_this(&filter->terms[term])) {
+            int32_t ref_index = -match->columns[term] - 1;
+            ecs_ref_t *ref = ecs_vec_get_t(&match->refs, ecs_ref_t, ref_index);
+            if (ref->id != 0) {
+                ecs_ref_update(world, ref);
+                column = ref->tr->column;
+                column = ecs_table_type_to_storage_index(table, column);
+            }
+        } else {
+            column = match->columns[term];
         }
     }
 
@@ -56156,11 +56161,6 @@ bool flecs_query_get_match_monitor(
             f->terms[i].inout != EcsInOut &&
             f->terms[i].inout != EcsInOutDefault) {
             continue; /* If term isn't read, don't monitor */
-        }
-
-        /* If term is not matched on this, don't track */
-        if (!ecs_term_match_this(&f->terms[i])) {
-            continue;
         }
 
         int32_t column = match->columns[t];
@@ -56226,10 +56226,11 @@ void flecs_query_sync_match_monitor(
         if (monitor[t + 1] == -1) {
             continue;
         }
-                
+
         flecs_query_get_dirty_state(query, match, t, &cur);
         if (cur.column < 0) {
-            continue;
+            // continue;
+            cur.column = -(cur.column + 1);
         }
 
         monitor[t + 1] = cur.dirty_state[cur.column + 1];
@@ -56315,9 +56316,10 @@ bool flecs_query_check_match_monitor(
         }
     }
 
-    bool has_flat = false;
-    ecs_world_t *world = query->filter.world;
-    int32_t i, field_count = query->filter.field_count;
+    bool has_flat = false, is_this = false;
+    const ecs_filter_t *filter = &query->filter;
+    ecs_world_t *world = filter->world;
+    int32_t i, j, field_count = filter->field_count;
     int32_t *storage_columns = match->storage_columns;
     int32_t *columns = it ? it->columns : NULL;
     if (!columns) {
@@ -56331,7 +56333,7 @@ bool flecs_query_check_match_monitor(
         }
 
         int32_t column = storage_columns[i];
-        if (column >= 0) {
+        if (columns[i] >= 0) {
             /* owned component */
             ecs_assert(dirty_state != NULL, ECS_INTERNAL_ERROR, NULL);
             if (mon != dirty_state[column + 1]) {
@@ -56351,19 +56353,46 @@ bool flecs_query_check_match_monitor(
         ecs_assert(column < 0, ECS_INTERNAL_ERROR, NULL);
         column = -column;
 
+        /* Find term index from field index, which differ when using || */
+        int32_t term_index = i;
+        if (filter->terms[i].field_index != i) {
+            for (j = i; j < filter->term_count; j ++) {
+                if (filter->terms[j].field_index == i) {
+                    term_index = j;
+                    break;
+                }
+            }
+        }
+
+        is_this = ecs_term_match_this(&filter->terms[term_index]);
+
         /* Flattened fields are encoded by adding field_count to the column
          * index of the parent component. */
-        if (it && (column > field_count)) {
+        if (is_this && it && (column > field_count)) {
             has_flat = true;
         } else {
-            int32_t ref_index = column - 1;
-            ecs_ref_t *ref = ecs_vec_get_t(refs, ecs_ref_t, ref_index);
-            if (ref->id != 0) {
-                ecs_ref_update(world, ref);
-                ecs_table_record_t *tr = ref->tr;
-                ecs_table_t *src_table = tr->hdr.table;
-                column = tr->column;
-                column = ecs_table_type_to_storage_index(src_table, column);
+            if (is_this) {
+                /* Component reached through traversal from this */
+                int32_t ref_index = column - 1;
+                ecs_ref_t *ref = ecs_vec_get_t(refs, ecs_ref_t, ref_index);
+                if (ref->id != 0) {
+                    ecs_ref_update(world, ref);
+                    ecs_table_record_t *tr = ref->tr;
+                    ecs_table_t *src_table = tr->hdr.table;
+                    column = tr->column;
+                    column = ecs_table_type_to_storage_index(src_table, column);
+                    int32_t *src_dirty_state = flecs_table_get_dirty_state(
+                        world, src_table);
+                    if (mon != src_dirty_state[column + 1]) {
+                        return true;
+                    }
+                }
+            } else {
+                /* Component from static source */
+                ecs_entity_t src = match->sources[i];
+                ecs_table_t *src_table = ecs_get_table(world, src);
+                ecs_assert(src_table != NULL, ECS_INTERNAL_ERROR, NULL);
+                column = ecs_table_type_to_storage_index(src_table, column - 1);
                 int32_t *src_dirty_state = flecs_table_get_dirty_state(
                     world, src_table);
                 if (mon != src_dirty_state[column + 1]) {

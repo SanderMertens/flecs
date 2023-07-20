@@ -1438,6 +1438,7 @@ void Query_query_changed_w_or(void);
 void Query_query_changed_or(void);
 void Query_query_changed_w_singleton(void);
 void Query_query_changed_w_only_singleton(void);
+void Query_query_changed_w_only_singleton_after_set(void);
 void Query_subquery_match_existing(void);
 void Query_subquery_match_new(void);
 void Query_subquery_inactive(void);
@@ -8104,6 +8105,10 @@ bake_test_case Query_testcases[] = {
         Query_query_changed_w_only_singleton
     },
     {
+        "query_changed_w_only_singleton_after_set",
+        Query_query_changed_w_only_singleton_after_set
+    },
+    {
         "subquery_match_existing",
         Query_subquery_match_existing
     },
@@ -12661,7 +12666,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        208,
+        209,
         Query_testcases
     },
     {
