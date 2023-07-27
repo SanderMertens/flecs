@@ -675,6 +675,8 @@ void RuleBuilder_named_rule() {
     flecs::entity qe = q.entity();
     test_assert(qe != 0);
     test_str(qe.name(), "my_query");
+
+    q.destruct();
 }
 
 void RuleBuilder_named_scoped_rule() {
@@ -696,6 +698,8 @@ void RuleBuilder_named_scoped_rule() {
     test_assert(qe != 0);
     test_str(qe.name(), "query");
     test_str(qe.path(), "::my::query");
+
+    q.destruct();
 }
 
 void RuleBuilder_is_valid() {
@@ -707,6 +711,8 @@ void RuleBuilder_is_valid() {
     flecs::log::set_level(-4);
     auto q_2 = ecs.rule_builder().expr("foo").build();
     test_assert(!q_2.is_valid());
+
+    q_1.destruct();
 }
 
 void RuleBuilder_unresolved_by_name() {
@@ -724,6 +730,8 @@ void RuleBuilder_unresolved_by_name() {
     ecs.entity("Foo");
 
     test_true(q.iter().is_true());
+
+    q.destruct();
 }
 
 void RuleBuilder_scope() {
@@ -764,4 +772,6 @@ void RuleBuilder_scope() {
     });
 
     test_int(count, 3);
+
+    r.destruct();
 }
