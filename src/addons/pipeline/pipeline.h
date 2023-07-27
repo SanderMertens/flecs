@@ -75,7 +75,7 @@ void flecs_workers_progress(
 void flecs_create_worker_threads(
     ecs_world_t *world);
 
-bool flecs_join_worker_threads(
+void flecs_join_worker_threads(
     ecs_world_t *world);
 
 void flecs_signal_workers(
