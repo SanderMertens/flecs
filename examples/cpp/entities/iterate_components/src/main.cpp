@@ -22,7 +22,7 @@ void iterate_components(flecs::entity e) {
     std::cout << e.type().str() << "\n\n";
 
     // 2. To get individual component ids, use entity::each
-    std::int32_t i = 0;
+    int32_t i = 0;
     e.each([&](flecs::id id) {
         std::cout << i++ << ": " << id.str() << "\n";
     });
