@@ -222,18 +222,6 @@ void flecs_join_worker_threads(
     ecs_assert(world->workers_running == 0, ECS_INTERNAL_ERROR, NULL);
 }
 
-/** Stop workers */
-static
-void flecs_stop_threads(
-    ecs_world_t *world)
-{
-    /* Join all existing worker threads */
-    flecs_join_worker_threads(world);
-
-    /* Deinitialize stages */
-    ecs_set_stage_count(world, 1);
-}
-
 /* -- Private functions -- */
 void flecs_workers_progress(
     ecs_world_t *world,

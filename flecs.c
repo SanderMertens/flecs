@@ -48439,7 +48439,7 @@ void flecs_workers_progress(
 void flecs_create_worker_threads(
     ecs_world_t *world);
 
-bool flecs_join_worker_threads(
+void flecs_join_worker_threads(
     ecs_world_t *world);
 
 void flecs_signal_workers(
@@ -56018,8 +56018,8 @@ void flecs_signal_workers(
     ecs_os_cond_broadcast(world->worker_cond);
     ecs_os_mutex_unlock(world->sync_mutex);
 }
- 
-bool flecs_join_worker_threads(
+
+void flecs_join_worker_threads(
     ecs_world_t *world)
 {
     ecs_poly_assert(world, ecs_world_t);
@@ -56035,12 +56035,11 @@ bool flecs_join_worker_threads(
             threads_active = true;
             break;
         }
-        stage->thread = 0;
     };
 
     /* If no threads are active, just return */
     if (!threads_active) {
-        return false;
+        return;
     }
 
     /* Make sure all threads are running, to ensure they catch the signal */
@@ -56053,7 +56052,6 @@ bool flecs_join_worker_threads(
     /* Join all threads with main */
     for (i = 1; i < count; i ++) {
         if (ecs_using_task_threads(world)) {
-            /* Join using the override provided */
             ecs_os_task_join(stages[i].thread);
         } else {
             ecs_os_thread_join(stages[i].thread);
@@ -56063,25 +56061,6 @@ bool flecs_join_worker_threads(
 
     world->flags &= ~EcsWorldQuitWorkers;
     ecs_assert(world->workers_running == 0, ECS_INTERNAL_ERROR, NULL);
-
-    return true;
-}
-
-/** Stop workers */
-static
-bool ecs_stop_threads(
-    ecs_world_t *world)
-{
-    /* Join all existing worker threads */
-    if (flecs_join_worker_threads(world))
-    {
-        /* Deinitialize stages */
-        ecs_set_stage_count(world, 1);
-
-        return true;
-    }
-
-    return false;
 }
 
 /* -- Private functions -- */
@@ -56113,21 +56092,21 @@ void flecs_set_threads_internal(
         ? ecs_os_has_task_support() 
         : ecs_os_has_threading()), 
             ECS_MISSING_OS_API, NULL);
-    
+
     int32_t stage_count = ecs_get_stage_count(world);
     bool worker_method_changed = (use_task_api != world->workers_use_task_api);
-    
-    if (stage_count != threads || worker_method_changed) {
+
+    if ((stage_count != threads) || worker_method_changed) {
         /* Stop existing threads */
         if (stage_count > 1) {
-            if (ecs_stop_threads(world)) {
-                ecs_os_cond_free(world->worker_cond);
-                ecs_os_cond_free(world->sync_cond);
-                ecs_os_mutex_free(world->sync_mutex);
-            }
+            flecs_join_worker_threads(world);
+            ecs_set_stage_count(world, 1);
+
+            ecs_os_cond_free(world->worker_cond);
+            ecs_os_cond_free(world->sync_cond);
+            ecs_os_mutex_free(world->sync_mutex);
         }
 
-        /* Adopt the desired API for worker creation & join */
         world->workers_use_task_api = use_task_api;
 
         /* Start threads if number of threads > 1 */
@@ -56146,14 +56125,14 @@ void ecs_set_threads(
     ecs_world_t *world,
     int32_t threads)
 {
-    flecs_set_threads_internal(world, threads, false /* use thread API*/);
+    flecs_set_threads_internal(world, threads, false /* use thread API */);
 }
 
 void ecs_set_task_threads(
     ecs_world_t *world,
     int32_t task_threads)
 {
-    flecs_set_threads_internal(world, task_threads, true /* use task API*/);
+    flecs_set_threads_internal(world, task_threads, true /* use task API */);
 }
 
 bool ecs_using_task_threads(

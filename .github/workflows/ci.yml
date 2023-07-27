@@ -410,11 +410,13 @@ jobs:
           scan-build --status-bugs bake
 
   analyze-sanitized-api:
-    needs: build-macos
-    runs-on: macOS-latest
+    needs: [build-linux, build-macos]
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     strategy:
       fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, macOS-latest ]
 
     steps:
       - uses: actions/checkout@v3
@@ -432,11 +434,13 @@ jobs:
           bake run test/api --cfg sanitize -- -j 8
 
   analyze-sanitized-addons:
-    needs: build-macos
-    runs-on: macOS-latest
+    needs: [build-linux, build-macos]
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     strategy:
       fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, macOS-latest ]
 
     steps:
       - uses: actions/checkout@v3
@@ -454,11 +458,13 @@ jobs:
           bake run test/addons --cfg sanitize -- -j 8
 
   analyze-sanitized-meta:
-    needs: build-macos
-    runs-on: macOS-latest
+    needs: [build-linux, build-macos]
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     strategy:
       fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, macOS-latest ]
 
     steps:
       - uses: actions/checkout@v3
@@ -476,11 +482,13 @@ jobs:
           bake run test/meta --cfg sanitize -- -j 8
 
   analyze-sanitized-collections:
-    needs: build-macos
-    runs-on: macOS-latest
+    needs: [build-linux, build-macos]
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     strategy:
       fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, macOS-latest ]
 
     steps:
       - uses: actions/checkout@v3
