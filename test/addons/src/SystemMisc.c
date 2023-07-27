@@ -977,6 +977,7 @@ void SystemMisc_rw_in_implicit_from_empty() {
     test_assert(ecs_query_next(&it) == true);
     test_assert(ecs_field_is_readonly(&it, 1) == false);
     test_assert(ecs_field_is_readonly(&it, 2) == true);
+    test_assert(ecs_query_next(&it) == false);
 
     ecs_fini(world);
 }
@@ -997,6 +998,7 @@ void SystemMisc_rw_in_implicit_from_entity() {
     test_assert(ecs_query_next(&it) == true);
     test_assert(ecs_field_is_readonly(&it, 1) == false);
     test_assert(ecs_field_is_readonly(&it, 2) == true);
+    test_assert(ecs_query_next(&it) == false);
 
     ecs_fini(world);
 }
@@ -1057,6 +1059,7 @@ void SystemMisc_rw_out_explicit_from_empty() {
     test_assert(ecs_query_next(&it) == true);
     test_assert(ecs_field_is_readonly(&it, 1) == false);
     test_assert(ecs_field_is_readonly(&it, 2) == false);
+    test_assert(ecs_query_next(&it) == false);
 
     ecs_fini(world);
 }
@@ -1077,6 +1080,7 @@ void SystemMisc_rw_out_explicit_from_entity() {
     test_assert(ecs_query_next(&it) == true);
     test_assert(ecs_field_is_readonly(&it, 1) == false);
     test_assert(ecs_field_is_readonly(&it, 2) == false);
+    test_assert(ecs_query_next(&it) == false);
 
     ecs_fini(world);
 }
