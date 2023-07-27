@@ -1449,12 +1449,9 @@ void Pipeline_multi_threaded_pipeline_change_internal(bool task_threads) {
         .multi_threaded = true
     });
 
-    if (task_threads)
-    {
+    if (task_threads) {
         ecs_set_task_threads(world, 2);
-    }
-    else
-    {
+    } else {
         ecs_set_threads(world, 2);
     }
 
