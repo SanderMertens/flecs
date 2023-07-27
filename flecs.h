@@ -551,6 +551,10 @@ extern "C" {
 /* Useful, but not reliable enough. It can incorrectly flag macro's as unused
  * in standalone builds. */
 #pragma clang diagnostic ignored "-Wunused-macros"
+#if __clang_major__ == 13
+/* clang 13 can throw this warning for a define in ctype.h */
+#pragma clang diagnostic ignored "-Wreserved-identifier"
+#endif
 #elif defined(ECS_TARGET_GNU)
 #ifndef __cplusplus
 #pragma GCC diagnostic ignored "-Wdeclaration-after-statement"
