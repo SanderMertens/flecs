@@ -261,9 +261,15 @@ void flecs_set_threads_internal(
             flecs_join_worker_threads(world);
             ecs_set_stage_count(world, 1);
 
-            ecs_os_cond_free(world->worker_cond);
-            ecs_os_cond_free(world->sync_cond);
-            ecs_os_mutex_free(world->sync_mutex);
+            if (world->worker_cond) {
+                ecs_os_cond_free(world->worker_cond);
+            }
+            if (world->sync_cond) {
+                ecs_os_cond_free(world->sync_cond);
+            }
+            if (world->sync_mutex) {
+                ecs_os_mutex_free(world->sync_mutex);
+            }
         }
 
         world->workers_use_task_api = use_task_api;
