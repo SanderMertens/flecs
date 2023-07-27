@@ -2227,6 +2227,8 @@ ecs_iter_t ecs_query_iter(
     ecs_filter_t *filter = &query->filter;
     ecs_iter_t fit;
     if (!(query->flags & EcsQueryTrivialIter)) {
+        flecs_iter_init(stage, &result, flecs_iter_cache_all);
+
         /* Check if non-This terms (like singleton terms) still match */
         if (!(filter->flags & EcsFilterMatchOnlyThis)) {
             fit = flecs_filter_iter_w_flags(ECS_CONST_CAST(ecs_world_t*, stage),
@@ -2234,11 +2236,10 @@ ecs_iter_t ecs_query_iter(
             if (!ecs_filter_next(&fit)) {
                 /* No match, so return nothing */
                 ecs_iter_fini(&fit);
+                flecs_iter_deinit(&result);
                 goto noresults;
             }
         }
-
-        flecs_iter_init(stage, &result, flecs_iter_cache_all);
 
         /* Copy the data */
         if (!(filter->flags & EcsFilterMatchOnlyThis)) {

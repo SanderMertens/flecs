@@ -71,6 +71,27 @@ void flecs_iter_init(
     INIT_CACHE(it, stack, fields, ptrs, void*, it->field_count);
 }
 
+void flecs_iter_deinit(
+    ecs_iter_t* it)
+{
+    ecs_world_t* world = it->world;
+    if (!world) {
+        return;
+    }
+
+    FINI_CACHE(it, ids, ecs_id_t, it->field_count);
+    FINI_CACHE(it, sources, ecs_entity_t, it->field_count);
+    FINI_CACHE(it, match_indices, int32_t, it->field_count);
+    FINI_CACHE(it, columns, int32_t, it->field_count);
+    FINI_CACHE(it, variables, ecs_var_t, it->variable_count);
+    FINI_CACHE(it, ptrs, void*, it->field_count);
+    flecs_stack_free_t(it->priv.entity_iter, ecs_entity_filter_iter_t);
+
+    ecs_stage_t* stage = flecs_stage_from_world(&world);
+    flecs_stack_restore_cursor(&stage->allocators.iter_stack,
+        &it->priv.cache.stack_cursor);
+}
+
 void flecs_iter_validate(
     ecs_iter_t *it)
 {
@@ -96,22 +117,7 @@ void ecs_iter_fini(
         it->fini(it);
     }
 
-    ecs_world_t *world = it->world;
-    if (!world) {
-        return;
-    }
-
-    FINI_CACHE(it, ids, ecs_id_t, it->field_count);
-    FINI_CACHE(it, sources, ecs_entity_t, it->field_count);
-    FINI_CACHE(it, match_indices, int32_t, it->field_count);
-    FINI_CACHE(it, columns, int32_t, it->field_count);
-    FINI_CACHE(it, variables, ecs_var_t, it->variable_count);
-    FINI_CACHE(it, ptrs, void*, it->field_count);
-    flecs_stack_free_t(it->priv.entity_iter, ecs_entity_filter_iter_t);
-
-    ecs_stage_t *stage = flecs_stage_from_world(&world);
-    flecs_stack_restore_cursor(&stage->allocators.iter_stack, 
-        &it->priv.cache.stack_cursor);
+    flecs_iter_deinit(it);
 }
 
 static

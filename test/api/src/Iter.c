@@ -1228,6 +1228,7 @@ void Iter_worker_iter_w_singleton() {
     test_int(p[1].y, 50);
 
     test_bool(ecs_worker_next(&wit_2), false);
+    test_bool(ecs_worker_next(&wit_1), false);
 
     ecs_fini(world);
 }

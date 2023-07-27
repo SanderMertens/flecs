@@ -11,6 +11,9 @@ void flecs_iter_init(
     ecs_iter_t *it,
     ecs_flags8_t fields);
 
+void flecs_iter_deinit(
+    ecs_iter_t* it);
+
 void flecs_iter_validate(
     ecs_iter_t *it);
 
