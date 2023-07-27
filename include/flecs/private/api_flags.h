@@ -184,8 +184,8 @@ extern "C" {
 #define EcsQueryIsOrphaned             (1u << 3u)  /* Is subquery orphaned */
 #define EcsQueryHasOutTerms            (1u << 4u)  /* Does query have out terms */
 #define EcsQueryHasNonThisOutTerms     (1u << 5u)  /* Does query have non-this out terms */
-#define EcsQueryHasMonitor             (1u << 5u)  /* Does query track changes */
-#define EcsQueryTrivialIter            (1u << 6u)  /* Does the query require special features to iterate */
+#define EcsQueryHasMonitor             (1u << 6u)  /* Does query track changes */
+#define EcsQueryTrivialIter            (1u << 7u)  /* Does the query require special features to iterate */
 
 
 ////////////////////////////////////////////////////////////////////////////////
