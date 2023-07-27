@@ -4737,9 +4737,13 @@ void Parser_eq_var_name() {
     ecs_world_t *world = ecs_mini();
 
     ecs_log_set_level(-4);
+    ecs_filter_t f = ECS_FILTER_INIT;
     test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
         .expr = "$x == \"Second\""
     }));
+
+    ecs_filter_fini(&f);
 
     ecs_fini(world);
 }

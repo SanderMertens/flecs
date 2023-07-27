@@ -893,6 +893,8 @@ void Metrics_oneof_gauge_3_entities() {
     }
     test_bool(false, ecs_filter_next(&it));
 
+    ecs_filter_fini(f);
+
     ecs_fini(world);
 }
 
@@ -965,6 +967,8 @@ void Metrics_oneof_gauge_3_entities_1_existing() {
         test_int(((double*)inst)[2], 1);
     }
     test_bool(false, ecs_filter_next(&it));
+
+    ecs_filter_fini(f);
 
     ecs_fini(world);
 }
@@ -1076,6 +1080,8 @@ void Metrics_oneof_gauge_w_remove() {
         test_bool(false, ecs_filter_next(&it));
     }
 
+    ecs_filter_fini(f);
+
     ecs_fini(world);
 }
 
@@ -1186,6 +1192,8 @@ void Metrics_oneof_gauge_w_clear() {
         test_bool(false, ecs_filter_next(&it));
     }
 
+    ecs_filter_fini(f);
+
     ecs_fini(world);
 }
 
@@ -1295,6 +1303,8 @@ void Metrics_oneof_gauge_w_delete() {
         }
         test_bool(false, ecs_filter_next(&it));
     }
+
+    ecs_filter_fini(f);
 
     ecs_fini(world);
 }
@@ -1619,6 +1629,8 @@ void Metrics_oneof_counter() {
         }
         test_bool(false, ecs_filter_next(&it));
     }
+
+    ecs_filter_fini(f);
 
     ecs_fini(world);
 }

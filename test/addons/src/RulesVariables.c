@@ -5796,6 +5796,8 @@ void RulesVariables_var_count() {
 
     test_int(ecs_rule_var_count(r), 3);
 
+    ecs_rule_fini(r);
+
     ecs_fini(world);
 }
 
@@ -5819,6 +5821,8 @@ void RulesVariables_var_name() {
     test_assert(this_var != -1);
     test_str(ecs_rule_var_name(r, this_var), "this");
 
+    ecs_rule_fini(r);
+
     ecs_fini(world);
 }
 
@@ -5841,6 +5845,8 @@ void RulesVariables_var_is_entity() {
     int this_var = ecs_rule_find_var(r, "this");
     test_assert(this_var != -1);
     test_bool(ecs_rule_var_is_entity(r, this_var), false);
+    
+    ecs_rule_fini(r);
 
     ecs_fini(world);
 }
