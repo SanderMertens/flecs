@@ -1744,3 +1744,46 @@ void Switch_add_switch_to_prefab_instance() {
 
     ecs_fini(world);
 }
+
+void Switch_get_case_w_generation() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, Union);
+
+    ecs_entity_t tgt = ecs_new_id(world);
+    ecs_delete(world, tgt);
+    tgt = ecs_new_id(world);
+    test_assert(tgt != (uint32_t)tgt);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add_pair(world, e, Rel, tgt);
+
+    ecs_entity_t t = ecs_get_target(world, e, Rel, 0);
+    test_assert(t == tgt);
+
+    ecs_fini(world);
+}
+
+void Switch_get_case_w_generation_not_alive() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, Union);
+
+    ecs_entity_t tgt = ecs_new_id(world);
+    ecs_delete(world, tgt);
+    tgt = ecs_new_id(world);
+    test_assert(tgt != (uint32_t)tgt);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add_pair(world, e, Rel, tgt);
+
+    ecs_entity_t t = ecs_get_target(world, e, Rel, 0);
+    test_assert(t == tgt);
+
+    ecs_delete(world, tgt);
+
+    t = ecs_get_target(world, e, Rel, 0);
+    test_assert(t == tgt);
+
+    ecs_fini(world);
+}

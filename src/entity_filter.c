@@ -423,7 +423,7 @@ void flecs_entity_filter_init(
             flecs_switch_term_t *el = ecs_vec_append_t(a, sw_terms, 
                 flecs_switch_term_t);
             el->signature_column_index = field;
-            el->sw_case = ECS_PAIR_SECOND(id);
+            el->sw_case = ecs_pair_second(world, id);
             el->sw_column = NULL;
             ids[field] = id;
             has_filter = true;

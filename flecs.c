@@ -5996,7 +5996,7 @@ void flecs_set_union(
             int32_t column = tr->column - table->_->sw_offset;
             ecs_switch_t *sw = &table->_->sw_columns[column];
             ecs_entity_t union_case = 0;
-            union_case = ECS_PAIR_SECOND(id);
+            union_case = ecs_pair_second(world, id);
 
             int32_t r;
             for (r = 0; r < count; r ++) {
@@ -8804,7 +8804,7 @@ bool ecs_has_id(
                 column - table->_->sw_offset];
             int32_t row = ECS_RECORD_TO_ROW(r->row);
             uint64_t value = flecs_switch_get(sw, row);
-            return value == ECS_PAIR_SECOND(id);
+            return value == ecs_pair_second(world, id);
         }
     }
     
@@ -15986,7 +15986,7 @@ void flecs_entity_filter_init(
             flecs_switch_term_t *el = ecs_vec_append_t(a, sw_terms, 
                 flecs_switch_term_t);
             el->signature_column_index = field;
-            el->sw_case = ECS_PAIR_SECOND(id);
+            el->sw_case = ecs_pair_second(world, id);
             el->sw_column = NULL;
             ids[field] = id;
             has_filter = true;

@@ -323,7 +323,9 @@
                 "delete_case_trigger_after_delete_switch",
                 "add_2",
                 "add_2_reverse",
-                "add_switch_to_prefab_instance"
+                "add_switch_to_prefab_instance",
+                "get_case_w_generation",
+                "get_case_w_generation_not_alive"
             ]
         }, {
             "id": "EnabledComponents",
@@ -1471,6 +1473,8 @@
                 "query_switch_from_nothing",
                 "query_case_from_nothing",
                 "query_case_inherited",
+                "query_case_w_generation",
+                "query_case_w_not_alive",
                 "query_disabled_from_nothing",
                 "query_only_2_or",
                 "query_only_3_or",

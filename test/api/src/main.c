@@ -305,6 +305,8 @@ void Switch_delete_case_trigger_after_delete_switch(void);
 void Switch_add_2(void);
 void Switch_add_2_reverse(void);
 void Switch_add_switch_to_prefab_instance(void);
+void Switch_get_case_w_generation(void);
+void Switch_get_case_w_generation_not_alive(void);
 
 // Testsuite 'EnabledComponents'
 void EnabledComponents_is_component_enabled(void);
@@ -1408,6 +1410,8 @@ void Query_query_for_switch_filter_term(void);
 void Query_query_switch_from_nothing(void);
 void Query_query_case_from_nothing(void);
 void Query_query_case_inherited(void);
+void Query_query_case_w_generation(void);
+void Query_query_case_w_not_alive(void);
 void Query_query_disabled_from_nothing(void);
 void Query_query_only_2_or(void);
 void Query_query_only_3_or(void);
@@ -3715,6 +3719,14 @@ bake_test_case Switch_testcases[] = {
     {
         "add_switch_to_prefab_instance",
         Switch_add_switch_to_prefab_instance
+    },
+    {
+        "get_case_w_generation",
+        Switch_get_case_w_generation
+    },
+    {
+        "get_case_w_generation_not_alive",
+        Switch_get_case_w_generation_not_alive
     }
 };
 
@@ -7993,6 +8005,14 @@ bake_test_case Query_testcases[] = {
     {
         "query_case_inherited",
         Query_query_case_inherited
+    },
+    {
+        "query_case_w_generation",
+        Query_query_case_w_generation
+    },
+    {
+        "query_case_w_not_alive",
+        Query_query_case_w_not_alive
     },
     {
         "query_disabled_from_nothing",
@@ -12562,7 +12582,7 @@ static bake_test_suite suites[] = {
         "Switch",
         NULL,
         NULL,
-        45,
+        47,
         Switch_testcases
     },
     {
@@ -12716,7 +12736,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        219,
+        221,
         Query_testcases
     },
     {

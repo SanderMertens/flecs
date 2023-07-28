@@ -1797,6 +1797,87 @@ void Query_query_for_case_new() {
     ecs_fini(world);
 }
 
+void Query_query_case_w_generation() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, Union);
+
+    ecs_entity_t tgt_1 = ecs_new_id(world);
+    ecs_delete(world, tgt_1);
+    tgt_1 = ecs_new_id(world);
+    test_assert(tgt_1 != (uint32_t)tgt_1);
+
+    ecs_entity_t tgt_2 = ecs_new_id(world);
+    ecs_delete(world, tgt_2);
+    tgt_2 = ecs_new_id(world);
+    test_assert(tgt_2 != (uint32_t)tgt_2);
+
+    ecs_query_t *q = ecs_query_new(world, "(Rel, *)");
+    test_assert(q != NULL);
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, Rel, tgt_1);
+    ecs_entity_t e2 = ecs_new_w_pair(world, Rel, tgt_2);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    {
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 2);
+        test_uint(it.entities[0], e1);
+        test_uint(it.entities[1], e2);
+        test_uint(ecs_field_id(&it, 1), ecs_pair(Rel, EcsWildcard));
+        ecs_entity_t *cases = ecs_field(&it, ecs_entity_t, 1);
+        test_assert(cases != NULL);
+        test_uint(cases[0], tgt_1);
+        test_uint(cases[1], tgt_2);
+    }
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Query_query_case_w_not_alive() {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, Union);
+
+    ecs_entity_t tgt_1 = ecs_new_id(world);
+    ecs_delete(world, tgt_1);
+    tgt_1 = ecs_new_id(world);
+    test_assert(tgt_1 != (uint32_t)tgt_1);
+
+    ecs_entity_t tgt_2 = ecs_new_id(world);
+    ecs_delete(world, tgt_2);
+    tgt_2 = ecs_new_id(world);
+    test_assert(tgt_2 != (uint32_t)tgt_2);
+
+    ecs_query_t *q = ecs_query_new(world, "(Rel, *)");
+    test_assert(q != NULL);
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, Rel, tgt_1);
+    ecs_entity_t e2 = ecs_new_w_pair(world, Rel, tgt_2);
+
+    ecs_delete(world, tgt_1);
+    ecs_delete(world, tgt_2);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    {
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 2);
+        test_uint(it.entities[0], e1);
+        test_uint(it.entities[1], e2);
+        test_uint(ecs_field_id(&it, 1), ecs_pair(Rel, EcsWildcard));
+        ecs_entity_t *cases = ecs_field(&it, ecs_entity_t, 1);
+        test_assert(cases != NULL);
+        test_uint(cases[0], tgt_1);
+        test_uint(cases[1], tgt_2);
+    }
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
 void Query_query_for_switch_filter_term() {
     ecs_world_t *world = ecs_mini();
 
