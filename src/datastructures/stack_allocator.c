@@ -91,6 +91,7 @@ void flecs_stack_free(
 ecs_stack_cursor_t flecs_stack_get_cursor(
     ecs_stack_t *stack)
 {
+    ++stack->cursor_count;
     return (ecs_stack_cursor_t){
         .cur = stack->cur, .sp = stack->cur->sp
     };
@@ -100,6 +101,8 @@ void flecs_stack_restore_cursor(
     ecs_stack_t *stack,
     const ecs_stack_cursor_t *cursor)
 {
+    ecs_assert(stack->cursor_count > 0, ECS_INTERNAL_ERROR, NULL); // count should not go negative
+    --stack->cursor_count;
     ecs_stack_page_t *cur = cursor->cur;
     if (!cur) {
         return;
@@ -115,11 +118,15 @@ void flecs_stack_restore_cursor(
 
     stack->cur = cursor->cur;
     stack->cur->sp = cursor->sp;
+    // if the cursor count is zero, stack should be empty
+    // if the cursor count is non-zero, stack should not be empty
+    ecs_assert((stack->cursor_count == 0) == (stack->cur == &stack->first && stack->cur->sp == 0), ECS_LEAK_DETECTED, NULL);
 }
 
 void flecs_stack_reset(
     ecs_stack_t *stack)
 {
+    ecs_assert(stack->cursor_count == 0, ECS_LEAK_DETECTED, NULL);
     stack->cur = &stack->first;
     stack->first.sp = 0;
 }
@@ -136,6 +143,7 @@ void flecs_stack_fini(
     ecs_stack_t *stack)
 {
     ecs_stack_page_t *next, *cur = &stack->first;
+    ecs_assert(stack->cursor_count == 0, ECS_LEAK_DETECTED, NULL);
     ecs_assert(stack->cur == &stack->first, ECS_LEAK_DETECTED, NULL);
     ecs_assert(stack->cur->sp == 0, ECS_LEAK_DETECTED, NULL);
     do {
