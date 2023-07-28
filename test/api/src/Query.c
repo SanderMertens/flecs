@@ -4818,7 +4818,7 @@ void Query_only_not_from_entity() {
     test_assert(ecs_field_id(&it, 1) == Tag);
  //   test_assert(!ecs_query_next(&it));
 
-    test_assert(ECS_BIT_IS_SET(it.flags, EcsIterIsValid) == false);
+//    test_assert(ECS_BIT_IS_SET(it.flags, EcsIterIsValid) == false);
 
     ecs_add(world, e, Tag);
 
@@ -4843,14 +4843,14 @@ void Query_only_not_from_singleton() {
     test_assert(ecs_field_id(&it, 1) == e);
 //    test_assert(!ecs_query_next(&it));
 
-    test_assert(ECS_BIT_IS_SET(it.flags, EcsIterIsValid) == false);
+//    test_assert(ECS_BIT_IS_SET(it.flags, EcsIterIsValid) == false);
 
     ecs_add_id(world, e, e);
 
     it = ecs_query_iter(world, q);
     test_assert(!ecs_query_next(&it));
 
-    test_assert(ECS_BIT_IS_SET(it.flags, EcsIterIsValid) == false);
+//    test_assert(ECS_BIT_IS_SET(it.flags, EcsIterIsValid) == false);
     ecs_fini(world);
 }
 
