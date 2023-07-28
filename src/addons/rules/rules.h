@@ -44,6 +44,7 @@ typedef enum {
     EcsRuleIdsLeft,        /* Find ids in use that match (*, T) wildcard */
     EcsRuleEach,           /* Iterate entities in table, populate entity variable */
     EcsRuleStore,          /* Store table or entity in variable */
+    EcsRuleReset,          /* Reset value of variable to wildcard (*) */
     EcsRuleUnion,          /* Combine output of multiple operations */
     EcsRuleEnd,            /* Used to denote end of EcsRuleUnion block */
     EcsRuleNot,            /* Sets iterator state after term was not matched */
@@ -185,6 +186,8 @@ typedef struct {
     ecs_rule_lbl_t lbl_or;
     ecs_rule_lbl_t lbl_none;
     ecs_rule_lbl_t lbl_prev; /* If set, use this as default value for prev */
+    ecs_write_flags_t cond_written_or; /* Cond written flags at start of or chain */
+    bool in_or; /* Whether we're in an or chain */
 } ecs_rule_compile_ctrlflow_t;
 
 /* Rule compiler state */

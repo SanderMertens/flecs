@@ -866,6 +866,12 @@ void RulesOperators_2_or_written_w_rel_tgt_same_var(void);
 void RulesOperators_3_or_written_w_tgt_var(void);
 void RulesOperators_2_or_chains(void);
 void RulesOperators_2_or_chains_written(void);
+void RulesOperators_2_or_dependent(void);
+void RulesOperators_2_or_dependent_reverse(void);
+void RulesOperators_2_or_dependent_2_vars(void);
+void RulesOperators_2_or_written_dependent(void);
+void RulesOperators_2_or_written_dependent_2_vars(void);
+void RulesOperators_2_or_w_dependent(void);
 void RulesOperators_2_not_first(void);
 void RulesOperators_2_optional_first(void);
 void RulesOperators_root_entities_empty(void);
@@ -4916,6 +4922,30 @@ bake_test_case RulesOperators_testcases[] = {
         RulesOperators_2_or_chains_written
     },
     {
+        "2_or_dependent",
+        RulesOperators_2_or_dependent
+    },
+    {
+        "2_or_dependent_reverse",
+        RulesOperators_2_or_dependent_reverse
+    },
+    {
+        "2_or_dependent_2_vars",
+        RulesOperators_2_or_dependent_2_vars
+    },
+    {
+        "2_or_written_dependent",
+        RulesOperators_2_or_written_dependent
+    },
+    {
+        "2_or_written_dependent_2_vars",
+        RulesOperators_2_or_written_dependent_2_vars
+    },
+    {
+        "2_or_w_dependent",
+        RulesOperators_2_or_w_dependent
+    },
+    {
         "2_not_first",
         RulesOperators_2_not_first
     },
@@ -7420,7 +7450,7 @@ static bake_test_suite suites[] = {
         "RulesOperators",
         NULL,
         NULL,
-        87,
+        93,
         RulesOperators_testcases
     },
     {

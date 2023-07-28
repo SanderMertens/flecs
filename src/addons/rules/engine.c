@@ -1041,6 +1041,20 @@ bool flecs_rule_store(
 }
 
 static
+bool flecs_rule_reset(
+    const ecs_rule_op_t *op,
+    bool redo,
+    const ecs_rule_run_ctx_t *ctx)
+{
+    if (!redo) {
+        return true;
+    } else {
+        flecs_rule_var_reset(op->src.var, ctx);
+        return false;
+    }
+}
+
+static
 bool flecs_rule_union(
     const ecs_rule_op_t *op,
     bool redo,
@@ -1663,6 +1677,7 @@ bool flecs_rule_run(
     case EcsRuleIdsLeft: return flecs_rule_idsleft(op, redo, ctx);
     case EcsRuleEach: return flecs_rule_each(op, redo, ctx);
     case EcsRuleStore: return flecs_rule_store(op, redo, ctx);
+    case EcsRuleReset: return flecs_rule_reset(op, redo, ctx);
     case EcsRuleUnion: return flecs_rule_union(op, redo, ctx);
     case EcsRuleEnd: return flecs_rule_end(op, redo, ctx);
     case EcsRuleNot: return flecs_rule_not(op, redo, ctx);

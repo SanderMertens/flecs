@@ -86,9 +86,6 @@ void flecs_rule_write_ctx(
         if (cond_write) {
             flecs_rule_write(var_id, &ctx->cond_written);
         }
-        if (ctx->scope != 0) {
-            
-        }
     }
 }
 
@@ -743,6 +740,14 @@ void flecs_rule_begin_cond_eval(
         cond_mask |= (1ull << src_var);
     }
 
+    /* Variables set in an OR chain are marked as conditional writes. However, 
+     * writes from previous terms in the current OR chain shouldn't be treated
+     * as variables that are conditionally set, so instead use the write mask 
+     * from before the chain started. */
+    if (ctx->ctrlflow->in_or) {
+        cond_write_state = ctx->ctrlflow->cond_written_or;
+    }
+
     /* If this term uses conditionally set variables, insert instruction that
      * jumps over the term if the variables weren't set yet. */
     if (cond_mask & cond_write_state) {
@@ -788,19 +793,57 @@ void flecs_rule_end_cond_eval(
 }
 
 static
+void flecs_rule_insert_reset_after_or(
+    ecs_rule_compile_ctx_t *ctx)
+{
+    /* Scan which variables were conditionally written in the OR chain and 
+     * reset instructions after the OR chain. If a variable is set in part one
+     * of a chain but not part two, there would be nothing writing to the
+     * variable in part two, leaving it to the previous value. To address this
+     * a reset is inserted that resets the variable value on redo. */
+    int32_t i;
+    for (i = 1; i < (8 * ECS_SIZEOF(ecs_write_flags_t)); i ++) {
+        ecs_write_flags_t prev = 1 & (ctx->ctrlflow->cond_written_or >> i);
+        ecs_write_flags_t cur = 1 & (ctx->cond_written >> i);
+
+        if (!prev && cur) {
+            ecs_rule_op_t reset_op = {0};
+            reset_op.kind = EcsRuleReset;
+            reset_op.flags |= (EcsRuleIsVar << EcsRuleSrc);
+            reset_op.src.var = flecs_itovar(i);
+            flecs_rule_op_insert(&reset_op, ctx);
+        }
+    }
+}
+
+static
 void flecs_rule_next_or(
     ecs_rule_compile_ctx_t *ctx)
 {
     ecs_rule_op_t *ops = ecs_vec_first_t(ctx->ops, ecs_rule_op_t);
     int32_t count = ecs_vec_count(ctx->ops);
-    ops[count - 1].next = FlecsRuleOrMarker;
+    ecs_rule_op_t *op = &ops[count - 1];
+
+    if (op->kind == EcsRuleNot) {
+        /* If the engine reaches a Not operation, it means that the term in the
+         * chain was negated. This can happen when part(s) of the term have
+         * conditionally set variables: if a variable was not set this will 
+         * cause the term to automatically evaluate to false.
+         * In this case, the Not operation should proceed to the next term in
+         * the chain, whereas the preceding operation should upon success skip
+         * to the end of the chain, which is what the marker is replaced with. */
+        ops[count - 2].next = FlecsRuleOrMarker;
+    } else {
+        ops[count - 1].next = FlecsRuleOrMarker;
+    }
 }
 
 static
 void flecs_rule_begin_or(
-    ecs_rule_compile_ctx_t *ctx)
+    ecs_rule_compile_ctx_t *ctx,
+    ecs_rule_lbl_t lbl_start)
 {
-    ctx->cur->lbl_or = flecs_itolbl(ecs_vec_count(ctx->ops) - 1);
+    ctx->cur->lbl_or = flecs_itolbl(lbl_start);
     flecs_rule_next_or(ctx);
 }
 
@@ -813,6 +856,7 @@ void flecs_rule_end_or(
     ecs_rule_op_t *ops = ecs_vec_first_t(ctx->ops, ecs_rule_op_t);
     int32_t i, count = ecs_vec_count(ctx->ops);
     int32_t prev_or = -2;
+
     for (i = ctx->cur->lbl_or; i < count; i ++) {
         if (ops[i].next == FlecsRuleOrMarker) {
             if (prev_or != -2) {
@@ -823,11 +867,25 @@ void flecs_rule_end_or(
         }
     }
 
-    ops[count - 1].prev = flecs_itolbl(ctx->cur->lbl_or - 1);
+    ecs_rule_op_t *op = &ops[count - 1];
+    op->prev = flecs_itolbl(ctx->cur->lbl_or - 1);
+    
+    if (op->kind == EcsRuleNot) {
+        /* If last op is a Not operation it means that this was a dependent term
+         * which should be ignored if one or more of its variables weren't set
+         * yet. In addition to setting the prev label of the Not operation, also
+         * set the prev label of the actual operation to the start of the OR
+         * chain. */
+        op[-1].prev = flecs_itolbl(ctx->cur->lbl_or - 1);
+    }
 
     /* Set prev of next instruction to before the start of the OR chain */
     ctx->cur->lbl_prev = flecs_itolbl(ctx->cur->lbl_or - 1);
     ctx->cur->lbl_or = -1;
+
+    flecs_rule_insert_reset_after_or(ctx);
+
+    ctx->ctrlflow->in_or = false;
 }
 
 static
@@ -860,6 +918,10 @@ void flecs_rule_end_union(
 
     ops[next].prev = flecs_itolbl(i);
     ops[i].next = next;
+
+    flecs_rule_insert_reset_after_or(ctx);
+
+    ctx->ctrlflow->in_or = false;
 }
 
 static
@@ -1178,10 +1240,16 @@ int flecs_rule_compile_term(
     bool first_is_var = term->first.flags & EcsIsVariable;
     bool second_is_var = term->second.flags & EcsIsVariable;
     bool src_is_var = term->src.flags & EcsIsVariable;
-    bool cond_write = term->oper == EcsOptional;
     bool builtin_pred = flecs_rule_is_builtin_pred(term);
     bool is_not = (term->oper == EcsNot) && !builtin_pred;
+    bool is_or = (term->oper == EcsOr) || (!first_term && term[-1].oper == EcsOr);
+    bool cond_write = term->oper == EcsOptional || is_or;
     ecs_rule_op_t op = {0};
+
+    if (is_or && (first_term || term[-1].oper != EcsOr)) {
+        ctx->ctrlflow->cond_written_or = ctx->cond_written;
+        ctx->ctrlflow->in_or = true;
+    }
 
     if (!term->src.id && term->src.flags & EcsIsEntity) {
         /* If the term has a 0 source, check if it's a scope open/close */
@@ -1373,6 +1441,9 @@ int flecs_rule_compile_term(
         }
     }
 
+    /* Track label before inserting operations for current */
+    ecs_rule_lbl_t lbl_start = flecs_itolbl(ecs_vec_count(ctx->ops));
+
     /* Check if this term has variables that have been conditionally written,
      * like variables written by an optional term. */
     if (ctx->cond_written) {
@@ -1433,7 +1504,7 @@ int flecs_rule_compile_term(
         } else {
             if (first_term || term[-1].oper != EcsOr) {
                 if (ctx->cur->lbl_union == -1) {
-                    flecs_rule_begin_or(ctx);
+                    flecs_rule_begin_or(ctx, lbl_start);
                 }
             } else if (term->oper == EcsOr) {
                 flecs_rule_next_or(ctx);
@@ -1467,6 +1538,8 @@ int flecs_rule_compile(
     ctx.cur->lbl_prev = -1;
     ctx.cur->lbl_not = -1;
     ctx.cur->lbl_none = -1;
+    ctx.cur->lbl_or = -1;
+    ctx.cur->lbl_union = -1;
     ecs_vec_clear(ctx.ops);
 
     /* Find all variables defined in query */
