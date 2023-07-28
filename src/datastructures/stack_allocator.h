@@ -19,7 +19,11 @@ typedef struct ecs_stack_page_t {
 typedef struct ecs_stack_t {
     ecs_stack_page_t first;
     ecs_stack_page_t *cur;
-    int16_t cursor_count;  // count of cursors that have been added to stack.
+    int32_t cursorCount;  // count of cursors that have been added to stack.
+#ifdef FLECS_DEBUG
+    ecs_vec_t cursorIds;
+    uint32_t cursorNextId;
+#endif
 } ecs_stack_t;
 
 void flecs_stack_init(

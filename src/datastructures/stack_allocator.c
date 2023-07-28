@@ -91,18 +91,50 @@ void flecs_stack_free(
 ecs_stack_cursor_t flecs_stack_get_cursor(
     ecs_stack_t *stack)
 {
-    ++stack->cursor_count;
+    ++stack->cursorCount;
+#ifdef FLECS_DEBUG
+    uint32_t cursorId = ++stack->cursorNextId;
+    *ecs_vec_append_t(NULL, &stack->cursorIds, uint32_t) = cursorId;
+#endif
     return (ecs_stack_cursor_t){
         .cur = stack->cur, .sp = stack->cur->sp
+#ifdef FLECS_DEBUG
+        , .cursorId = cursorId
+#endif
     };
 }
 
+#ifdef FLECS_DEBUG
+static bool flecs_remove_cursor_from_active_ids(
+    ecs_stack_t *stack,
+    const ecs_stack_cursor_t *cursor)
+{
+    const uint32_t cursorId = cursor->cursorId;
+    const uint32_t* const v = ecs_vec_first_t(&stack->cursorIds, uint32_t);
+    const uint32_t* p = &v[stack->cursorIds.count - 1];
+    while (p >= v)
+    {
+        if (*p == cursorId)
+        {
+            int32_t index = (int32_t)(p - v);
+            ecs_vec_remove_t(&stack->cursorIds, uint32_t, index);
+            return true;
+        }
+        --p;
+    }
+    return false;
+}
+#endif
 void flecs_stack_restore_cursor(
     ecs_stack_t *stack,
     const ecs_stack_cursor_t *cursor)
 {
-    ecs_assert(stack->cursor_count > 0, ECS_INTERNAL_ERROR, NULL); // count should not go negative
-    --stack->cursor_count;
+    ecs_assert(stack->cursorCount > 0, ECS_INTERNAL_ERROR, NULL); // count should not go negative
+    --stack->cursorCount;
+#ifdef FLECS_DEBUG
+    bool found = flecs_remove_cursor_from_active_ids(stack, cursor);
+    ecs_assert(found, ECS_INTERNAL_ERROR, NULL);
+#endif
     ecs_stack_page_t *cur = cursor->cur;
     if (!cur) {
         return;
@@ -120,13 +152,13 @@ void flecs_stack_restore_cursor(
     stack->cur->sp = cursor->sp;
     // if the cursor count is zero, stack should be empty
     // if the cursor count is non-zero, stack should not be empty
-    ecs_assert((stack->cursor_count == 0) == (stack->cur == &stack->first && stack->cur->sp == 0), ECS_LEAK_DETECTED, NULL);
+    ecs_assert((stack->cursorCount == 0) == (stack->cur == &stack->first && stack->cur->sp == 0), ECS_LEAK_DETECTED, NULL);
 }
 
 void flecs_stack_reset(
     ecs_stack_t *stack)
 {
-    ecs_assert(stack->cursor_count == 0, ECS_LEAK_DETECTED, NULL);
+    ecs_assert(stack->cursorCount == 0, ECS_LEAK_DETECTED, NULL);
     stack->cur = &stack->first;
     stack->first.sp = 0;
 }
@@ -137,13 +169,16 @@ void flecs_stack_init(
     ecs_os_zeromem(stack);
     stack->cur = &stack->first;
     stack->first.data = NULL;
+#ifdef FLECS_DEBUG
+    ecs_vec_init_t(NULL, &stack->cursorIds, uint32_t, 2);
+#endif
 }
 
 void flecs_stack_fini(
     ecs_stack_t *stack)
 {
     ecs_stack_page_t *next, *cur = &stack->first;
-    ecs_assert(stack->cursor_count == 0, ECS_LEAK_DETECTED, NULL);
+    ecs_assert(stack->cursorCount == 0, ECS_LEAK_DETECTED, NULL);
     ecs_assert(stack->cur == &stack->first, ECS_LEAK_DETECTED, NULL);
     ecs_assert(stack->cur->sp == 0, ECS_LEAK_DETECTED, NULL);
     do {
