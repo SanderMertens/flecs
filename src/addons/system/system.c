@@ -253,6 +253,8 @@ void flecs_system_init_timer(
             ecs_set_tick_source(world, entity, desc->tick_source);
         }
 #else
+        (void)world;
+        (void)entity;
         ecs_abort(ECS_UNSUPPORTED, "timer module not available");
 #endif
     }
