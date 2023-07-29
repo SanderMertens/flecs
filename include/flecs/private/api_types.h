@@ -94,14 +94,10 @@ struct ecs_ref_t {
 
 /* Cursor to stack allocator (used internally) */
 struct ecs_stack_page_t;
-
 typedef struct ecs_stack_cursor_t {
     struct ecs_stack_page_t *cur;
     int16_t sp;
-#ifdef FLECS_DEBUG
-   uint32_t cursorId;
-#endif
- } ecs_stack_cursor_t;
+} ecs_stack_cursor_t;
 
 /* Page-iterator specific data */
 typedef struct ecs_page_iter_t {

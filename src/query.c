@@ -2233,7 +2233,6 @@ ecs_iter_t ecs_query_iter(
                 &query->filter, EcsIterIgnoreThis);
             if (!ecs_filter_next(&fit)) {
                 /* No match, so return nothing */
-                ecs_iter_fini(&fit);
                 goto noresults;
             }
         }

@@ -91,17 +91,56 @@ void flecs_stack_free(
 ecs_stack_cursor_t flecs_stack_get_cursor(
     ecs_stack_t *stack)
 {
+    // Capture current stack info
+    ecs_stack_cursor_t result = { 
+        .cur = stack->cur,
+        .sp = stack->cur->sp 
+        };
+
+    ecs_stack_cursor_marker_t* marker = flecs_stack_calloc_t(stack, ecs_stack_cursor_marker_t);
+    marker->restoreTo = result;
+    if (stack->cur != result.cur)
+    {
+        // marker was allocated on new page
+        result.cur = stack->cur;
+        result.sp = stack->cur->sp - sizeof(ecs_stack_cursor_marker_t);
+        ecs_assert(result.sp >= 0, ECS_INTERNAL_ERROR, NULL);
+    }
+    marker->cursor = result;
     ++stack->cursorCount;
 #ifdef FLECS_DEBUG
-    uint32_t cursorId = ++stack->cursorNextId;
-    *ecs_vec_append_t(NULL, &stack->cursorIds, uint32_t) = cursorId;
+    marker->cursorId = ++stack->cursorLastId;
+    marker->owner = stack;
+    *ecs_vec_append_t(NULL, &stack->cursorIds, uint32_t) = marker->cursorId;
 #endif
-    return (ecs_stack_cursor_t){
-        .cur = stack->cur, .sp = stack->cur->sp
+
+    marker->prev = stack->tailMarker;
+    stack->tailMarker = marker;
+    return result;
+}
+
+ecs_stack_cursor_marker_t* flecs_stack_get_cursor_marker(
+    ecs_stack_t *stack, 
+    const ecs_stack_cursor_t *cursor)
+{
+    ecs_assert(stack, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(cursor, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(cursor->cur, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(cursor->cur->data, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_stack_cursor_marker_t* marker = (ecs_stack_cursor_marker_t*) ((char*)cursor->cur->data + cursor->sp);
 #ifdef FLECS_DEBUG
-        , .cursorId = cursorId
+    // validate this cursor belongs to this stack
+    bool found = false;
+    for (ecs_stack_page_t *page = &stack->first; !found && page; page = page->next)
+    {
+        found = (page == cursor->cur);
+    }
+    ecs_assert(found, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(marker->cursor.cur == cursor->cur, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(marker->cursor.sp == cursor->sp, ECS_INTERNAL_ERROR, NULL);
 #endif
-    };
+    return marker;
 }
 
 #ifdef FLECS_DEBUG
@@ -109,14 +148,15 @@ static bool flecs_remove_cursor_from_active_ids(
     ecs_stack_t *stack,
     const ecs_stack_cursor_t *cursor)
 {
-    const uint32_t cursorId = cursor->cursorId;
-    const uint32_t* const v = ecs_vec_first_t(&stack->cursorIds, uint32_t);
-    const uint32_t* p = &v[stack->cursorIds.count - 1];
-    while (p >= v)
+    ecs_stack_cursor_marker_t* marker = flecs_stack_get_cursor_marker(stack, cursor); 
+    const uint32_t cursorId = marker->cursorId;
+    const uint32_t* const vec = ecs_vec_first_t(&stack->cursorIds, uint32_t);
+    const uint32_t* p = &vec[stack->cursorIds.count - 1];
+    while (p >= vec)
     {
         if (*p == cursorId)
         {
-            int32_t index = (int32_t)(p - v);
+            int32_t index = (int32_t)(p - vec);
             ecs_vec_remove_t(&stack->cursorIds, uint32_t, index);
             return true;
         }
@@ -129,27 +169,43 @@ void flecs_stack_restore_cursor(
     ecs_stack_t *stack,
     const ecs_stack_cursor_t *cursor)
 {
+    if (!cursor->cur)
+    {
+        return;     // cursor not initialized
+    }
+    ecs_stack_cursor_marker_t* marker = flecs_stack_get_cursor_marker(stack, cursor); 
+    
+#ifdef FLECS_DEBUG
+    ecs_assert(stack == marker->owner, ECS_INTERNAL_ERROR, NULL);
+    bool found = flecs_remove_cursor_from_active_ids(stack, cursor);
+    ecs_assert(found, ECS_INTERNAL_ERROR, NULL); // Probably a double fini of an iterator
+#endif
     ecs_assert(stack->cursorCount > 0, ECS_INTERNAL_ERROR, NULL); // count should not go negative
     --stack->cursorCount;
-#ifdef FLECS_DEBUG
-    bool found = flecs_remove_cursor_from_active_ids(stack, cursor);
-    ecs_assert(found, ECS_INTERNAL_ERROR, NULL);
-#endif
-    ecs_stack_page_t *cur = cursor->cur;
-    if (!cur) {
+    marker->isFree = true;
+
+    // Check if the cursor is the last one on the stack
+    if (marker != stack->tailMarker)
+    {
+        // we're done here
         return;
     }
 
-    if (cur == stack->cur) {
-        if (cursor->sp > stack->cur->sp) {
-            return;
+    // This is the tail cursor
+    // Walk the prev list until we find one not yet freed
+    while (marker)
+    {
+        ecs_stack_cursor_marker_t* prev = marker->prev;
+        if (!prev || !prev->isFree)
+        {
+            break;      // marker is now the best marker to free
         }
-    } else if (cur->id > stack->cur->id) {
-        return;
+        marker = prev;
     }
+    stack->tailMarker = marker->prev;     // now pointing to tail-most cursor not yet freed
+    stack->cur = marker->restoreTo.cur;
+    stack->cur->sp = marker->restoreTo.sp;
 
-    stack->cur = cursor->cur;
-    stack->cur->sp = cursor->sp;
     // if the cursor count is zero, stack should be empty
     // if the cursor count is non-zero, stack should not be empty
     ecs_assert((stack->cursorCount == 0) == (stack->cur == &stack->first && stack->cur->sp == 0), ECS_LEAK_DETECTED, NULL);
@@ -161,6 +217,10 @@ void flecs_stack_reset(
     ecs_assert(stack->cursorCount == 0, ECS_LEAK_DETECTED, NULL);
     stack->cur = &stack->first;
     stack->first.sp = 0;
+    stack->tailMarker = NULL;
+#ifdef FLECS_DEBUG
+    ecs_vec_clear(&stack->cursorIds);
+#endif
 }
 
 void flecs_stack_init(
@@ -193,4 +253,7 @@ void flecs_stack_fini(
             ecs_os_free(cur);
         }
     } while ((cur = next));
+#ifdef FLECS_DEBUG
+    ecs_vec_fini_t(NULL, &stack->cursorIds, uint32_t);
+#endif
 }

@@ -11194,8 +11194,6 @@ void Filter_set_this_to_superset_w_self_filter_no_match() {
 
     test_assert(!ecs_filter_next(&it));
 
-    test_assert(!ecs_filter_next(&it));
-
     ecs_filter_fini(&f);
 
     ecs_fini(world);

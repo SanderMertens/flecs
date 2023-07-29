@@ -2670,7 +2670,6 @@ void Query_query_change_after_modified_out_term() {
     test_assert(ecs_query_changed(q, 0) == true);
     while (ecs_query_next(&it)) { }
     test_assert(ecs_query_changed(q, 0) == false);
-    ecs_iter_fini(&it);
 
     ecs_set(world, e, Velocity, {1, 2});
     test_assert(ecs_query_changed(q, 0) == false);

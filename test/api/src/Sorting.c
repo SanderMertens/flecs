@@ -1730,7 +1730,6 @@ void Sorting_dont_resort_after_set_unsorted_component_w_tag() {
     while (ecs_query_next(&it)) { }
     test_bool(dummy_compare_invoked, true);
     dummy_compare_invoked = false;
-    ecs_iter_fini(&it);
 
     // No changes, shouldn't sort
     it = ecs_query_iter(world, q);
