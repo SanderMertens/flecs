@@ -100,8 +100,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: hack sources.list
-        run: sudo sed -i 's|http://azure.archive.ubuntu.com/ubuntu/|https://mirror.enzu.com/ubuntu//|g' /etc/apt/sources.list
 
       - name: install compiler
         run: |
@@ -396,10 +394,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: hack sources.list
-        run: |
-          sudo sed -i 's|http://azure.archive.ubuntu.com/ubuntu/|https://mirror.enzu.com/ubuntu//|g' /etc/apt/sources.list
-          sudo apt-get update
 
       - name: install clang-build
         run: |
@@ -481,8 +475,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - name: hack sources.list
-        run: sudo sed -i 's|http://azure.archive.ubuntu.com/ubuntu/|https://mirror.enzu.com/ubuntu//|g' /etc/apt/sources.list
 
       - name: install compiler
         run: |
