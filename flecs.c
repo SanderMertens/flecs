@@ -18570,7 +18570,8 @@ void ProgressRateFilters(ecs_iter_t *it) {
         filter[i].time_elapsed += it->delta_time;
 
         if (src) {
-            const EcsTickSource *tick_src = ecs_get(it->world, src, EcsTickSource);
+            const EcsTickSource *tick_src = ecs_get(
+                it->world, src, EcsTickSource);
             if (tick_src) {
                 inc = tick_src->tick;
             } else {
@@ -33081,8 +33082,7 @@ ecs_entity_t ecs_run_intern(
     }
 
     if (tick_source) {
-        const EcsTickSource *tick = ecs_get(
-            world, tick_source, EcsTickSource);
+        const EcsTickSource *tick = ecs_get(world, tick_source, EcsTickSource);
 
         if (tick) {
             time_elapsed = tick->time_elapsed;
@@ -33269,6 +33269,35 @@ void flecs_system_fini(ecs_system_t *sys) {
     ecs_poly_free(sys, ecs_system_t);
 }
 
+static
+void flecs_system_init_timer(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const ecs_system_desc_t *desc)
+{
+    if (ECS_NEQZERO(desc->interval) || ECS_NEQZERO(desc->rate) || 
+        ECS_NEQZERO(desc->tick_source)) 
+    {
+#ifdef FLECS_TIMER
+        if (ECS_NEQZERO(desc->interval)) {
+            ecs_set_interval(world, entity, desc->interval);
+        }
+
+        if (desc->rate) {
+            ecs_entity_t tick_source = desc->tick_source;
+            if (!tick_source) {
+                tick_source = entity;
+            }
+            ecs_set_rate(world, entity, desc->rate, tick_source);
+        } else if (desc->tick_source) {
+            ecs_set_tick_source(world, entity, desc->tick_source);
+        }
+#else
+        ecs_abort(ECS_UNSUPPORTED, "timer module not available");
+#endif
+    }
+}
+
 ecs_entity_t ecs_system_init(
     ecs_world_t *world,
     const ecs_system_desc_t *desc)
@@ -33322,23 +33351,7 @@ ecs_entity_t ecs_system_init(
         system->multi_threaded = desc->multi_threaded;
         system->no_readonly = desc->no_readonly;
 
-        if (ECS_NEQZERO(desc->interval) || ECS_NEQZERO(desc->rate) || 
-            ECS_NEQZERO(desc->tick_source)) 
-        {
-#ifdef FLECS_TIMER
-            if (ECS_NEQZERO(desc->interval)) {
-                ecs_set_interval(world, entity, desc->interval);
-            }
-
-            if (desc->rate) {
-                ecs_set_rate(world, entity, desc->rate, desc->tick_source);
-            } else if (desc->tick_source) {
-                ecs_set_tick_source(world, entity, desc->tick_source);
-            }
-#else
-            ecs_abort(ECS_UNSUPPORTED, "timer module not available");
-#endif
-        }
+        flecs_system_init_timer(world, entity, desc);
 
         if (ecs_get_name(world, entity)) {
             ecs_trace("#[green]system#[reset] %s created", 
@@ -33389,22 +33402,7 @@ ecs_entity_t ecs_system_init(
             system->no_readonly = desc->no_readonly;
         }
 
-        if (ECS_NEQZERO(desc->interval) || desc->rate != 0 || 
-            desc->tick_source != 0) 
-        {
-#ifdef FLECS_TIMER
-            if (ECS_NEQZERO(desc->interval)) {
-                ecs_set_interval(world, entity, desc->interval);
-            }
-            if (desc->rate != 0) {
-                ecs_set_rate(world, entity, desc->rate, desc->tick_source);
-            } else if (desc->tick_source) {
-                ecs_set_tick_source(world, entity, desc->tick_source);
-            }
-#else
-            ecs_abort(ECS_UNSUPPORTED, "timer module not available");
-#endif
-        }
+        flecs_system_init_timer(world, entity, desc);
     }
 
     ecs_poly_modified(world, entity, ecs_system_t);

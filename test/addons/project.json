@@ -628,7 +628,8 @@
                 "custom_run_action_call_next",
                 "system_w_short_notation",
                 "update_interval_w_system_init",
-                "update_rate_w_system_init"
+                "update_rate_w_system_init",
+                "system_w_interval_rate_stop_timer"
             ]
         }, {
             "id": "RulesBasic",
@@ -1184,7 +1185,9 @@
                 "rate_entity",
                 "nested_rate_entity",
                 "nested_rate_entity_empty_src",
-                "naked_tick_entity"
+                "naked_tick_entity",
+                "stop_timer_w_rate",
+                "stop_timer_w_rate_same_src"
             ]
         }, {
             "id": "SystemCascade",

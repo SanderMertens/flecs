@@ -616,6 +616,7 @@ void SystemMisc_custom_run_action_call_next(void);
 void SystemMisc_system_w_short_notation(void);
 void SystemMisc_update_interval_w_system_init(void);
 void SystemMisc_update_rate_w_system_init(void);
+void SystemMisc_system_w_interval_rate_stop_timer(void);
 
 // Testsuite 'RulesBasic'
 void RulesBasic_1_fact_w_tag(void);
@@ -1152,6 +1153,8 @@ void Timer_rate_entity(void);
 void Timer_nested_rate_entity(void);
 void Timer_nested_rate_entity_empty_src(void);
 void Timer_naked_tick_entity(void);
+void Timer_stop_timer_w_rate(void);
+void Timer_stop_timer_w_rate_same_src(void);
 
 // Testsuite 'SystemCascade'
 void SystemCascade_cascade_depth_1(void);
@@ -3935,6 +3938,10 @@ bake_test_case SystemMisc_testcases[] = {
     {
         "update_rate_w_system_init",
         SystemMisc_update_rate_w_system_init
+    },
+    {
+        "system_w_interval_rate_stop_timer",
+        SystemMisc_system_w_interval_rate_stop_timer
     }
 };
 
@@ -6029,6 +6036,14 @@ bake_test_case Timer_testcases[] = {
     {
         "naked_tick_entity",
         Timer_naked_tick_entity
+    },
+    {
+        "stop_timer_w_rate",
+        Timer_stop_timer_w_rate
+    },
+    {
+        "stop_timer_w_rate_same_src",
+        Timer_stop_timer_w_rate_same_src
     }
 };
 
@@ -7429,7 +7444,7 @@ static bake_test_suite suites[] = {
         "SystemMisc",
         NULL,
         NULL,
-        65,
+        66,
         SystemMisc_testcases
     },
     {
@@ -7499,7 +7514,7 @@ static bake_test_suite suites[] = {
         "Timer",
         NULL,
         NULL,
-        16,
+        18,
         Timer_testcases
     },
     {

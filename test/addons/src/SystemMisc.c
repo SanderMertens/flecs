@@ -1681,3 +1681,37 @@ void SystemMisc_update_rate_w_system_init() {
 
     ecs_fini(world);
 }
+
+void SystemMisc_system_w_interval_rate_stop_timer() {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t system = ecs_system(world, {
+        .entity = ecs_entity(world, { .add = {ecs_dependson(EcsOnUpdate)} }),
+        .interval = 1.0,
+        .rate = 3.0,
+        .callback = Dummy
+    });
+
+    for (int i = 0; i < 5; i ++) {
+        ecs_progress(world, 0.5);
+        test_assert(dummy_invoked == 0);
+    }
+
+    ecs_progress(world, 0.5);
+
+    test_assert(dummy_invoked == 1);
+    dummy_invoked = 0;
+
+    ecs_stop_timer(world, system);
+
+    for (int i = 0; i < 5; i ++) {
+        ecs_progress(world, 0.5);
+        test_assert(dummy_invoked == 0);
+    }
+
+    ecs_progress(world, 0.5);
+
+    test_assert(dummy_invoked == 0);
+
+    ecs_fini(world);
+}

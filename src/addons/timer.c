@@ -69,7 +69,8 @@ void ProgressRateFilters(ecs_iter_t *it) {
         filter[i].time_elapsed += it->delta_time;
 
         if (src) {
-            const EcsTickSource *tick_src = ecs_get(it->world, src, EcsTickSource);
+            const EcsTickSource *tick_src = ecs_get(
+                it->world, src, EcsTickSource);
             if (tick_src) {
                 inc = tick_src->tick;
             } else {

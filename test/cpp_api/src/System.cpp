@@ -2196,3 +2196,11 @@ void System_range_get() {
 
     s.run();
 }
+
+void System_stop_timer() {
+    // Implement testcase
+}
+
+void System_stop_timer_w_rate() {
+    // Implement testcase
+}
