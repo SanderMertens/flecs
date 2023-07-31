@@ -1,12 +1,10 @@
-# this seems redundant as the target
-# property is set. but for apple clang
-# this seems to be needed
-
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+option(FLECS_STRICT "Stricter warning options and Werror" OFF)
 
 function(target_default_compile_options_c THIS)
 

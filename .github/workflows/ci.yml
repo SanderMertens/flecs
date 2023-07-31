@@ -154,19 +154,19 @@ jobs:
       - name: build flecs
         working-directory: cmake_build
         run: |
-          cmake ..
+          cmake -DFLECS_STRICT=ON ..
           cmake --build . -j 4
 
       - name: build c examples
         working-directory: examples/c/cmake_build
         run: |
-          cmake ..
+          cmake -DFLECS_STRICT=ON ..
           cmake --build . -j 4
 
       - name: build c++ examples
         working-directory: examples/cpp/cmake_build
         run: |
-          cmake ..
+          cmake -DFLECS_STRICT=ON ..
           cmake --build . -j 4
 
   build-cmake-windows:
@@ -196,19 +196,19 @@ jobs:
       - name: build flecs
         working-directory: cmake_build
         run: |
-          cmake ${{ matrix.toolset_option }} ..
+          cmake ${{ matrix.toolset_option }} -DFLECS_STRICT=ON ..
           cmake --build . -j 4
 
       - name: build c examples
         working-directory: examples/c/cmake_build
         run: |
-          cmake ${{ matrix.toolset_option }} ..
+          cmake ${{ matrix.toolset_option }} -DFLECS_STRICT=ON ..
           cmake --build . -j 4
 
       - name: build c++ examples
         working-directory: examples/cpp/cmake_build
         run: |
-          cmake ${{ matrix.toolset_option }} ..
+          cmake ${{ matrix.toolset_option }} -DFLECS_STRICT=ON ..
           cmake --build . -j 4
 
   build-meson:
