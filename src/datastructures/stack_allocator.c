@@ -103,7 +103,7 @@ ecs_stack_cursor_t flecs_stack_get_cursor(
     {
         // marker was allocated on new page
         result.cur = stack->cur;
-        result.sp = stack->cur->sp - (int16_t) sizeof(ecs_stack_cursor_marker_t);
+        result.sp = (int16_t) (stack->cur->sp - sizeof(ecs_stack_cursor_marker_t));
         ecs_assert(result.sp >= 0, ECS_INTERNAL_ERROR, NULL);
     }
     marker->cursor = result;
