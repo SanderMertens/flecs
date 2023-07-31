@@ -123,6 +123,7 @@ ecs_stack_cursor_marker_t* flecs_stack_get_cursor_marker(
     ecs_stack_t *stack, 
     const ecs_stack_cursor_t *cursor)
 {
+    (void)stack;    // stack is otherwise unused in non-debug builds
     ecs_assert(stack, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(cursor, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(cursor->cur, ECS_INTERNAL_ERROR, NULL);
