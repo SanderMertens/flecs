@@ -94,6 +94,7 @@ struct ecs_ref_t {
 
 /* Cursor to stack allocator (used internally) */
 struct ecs_stack_page_t;
+
 typedef struct ecs_stack_cursor_t {
     struct ecs_stack_page_t *cur;
     int16_t sp;

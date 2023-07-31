@@ -128,6 +128,8 @@ ecs_stack_cursor_marker_t* flecs_stack_get_cursor_marker(
     ecs_assert(cursor->cur, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(cursor->cur->data, ECS_INTERNAL_ERROR, NULL);
 
+    // (char*) cast is to prevent warning of pointer arithmetic on void*
+    // (void*) cast is to prevent warning of larger alignment required
     ecs_stack_cursor_marker_t* marker = (ecs_stack_cursor_marker_t*)(void*)((char*)cursor->cur->data + cursor->sp);
 #ifdef FLECS_DEBUG
     // validate this cursor belongs to this stack
