@@ -1051,6 +1051,9 @@ bool ecs_worker_next_instanced(
             if (res_index == 0) {
                 return true;
             } else {
+                // chained iterator was not yet cleaned up
+                // since it returned true from ecs_iter_next, so clean it up here.
+                ecs_iter_fini(chain_it);
                 return false;
             }
         }

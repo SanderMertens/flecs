@@ -174,12 +174,16 @@ void flecs_stack_restore_cursor(
         return;     // cursor not initialized
     }
     ecs_stack_cursor_marker_t* marker = flecs_stack_get_cursor_marker(stack, cursor); 
-    
 #ifdef FLECS_DEBUG
     ecs_assert(stack == marker->owner, ECS_INTERNAL_ERROR, NULL);
     bool found = flecs_remove_cursor_from_active_ids(stack, cursor);
-    ecs_assert(found, ECS_INTERNAL_ERROR, NULL); // Probably a double fini of an iterator
+    ecs_assert(found || marker->isFree, ECS_INTERNAL_ERROR, NULL); // Probably a double fini of an iterator
 #endif
+    if (marker->isFree)
+    {
+        return;     // already freed
+    }
+
     ecs_assert(stack->cursorCount > 0, ECS_INTERNAL_ERROR, NULL); // count should not go negative
     --stack->cursorCount;
     marker->isFree = true;
