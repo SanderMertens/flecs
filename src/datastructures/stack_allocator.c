@@ -88,24 +88,35 @@ void flecs_stack_free(
     }
 }
 
+// This is used only during initialization of cursor
+static ecs_stack_cursor_t flecs_stack_marker_address_to_cursor(
+    ecs_stack_t *stack,
+    ecs_stack_cursor_marker_t *marker)
+{
+    ecs_stack_cursor_t result = {
+        .cur = stack->cur,
+        .sp = (int16_t) ((char*)marker - (char*)stack->cur->data)
+    };
+    ecs_assert(result.sp >= 0, ECS_INTERNAL_ERROR, NULL);
+    return result;
+}
+
 ecs_stack_cursor_t flecs_stack_get_cursor(
     ecs_stack_t *stack)
 {
     // Capture current stack info
-    ecs_stack_cursor_t result = { 
+    ecs_stack_cursor_t snapshot = { 
         .cur = stack->cur,
         .sp = stack->cur->sp 
         };
 
     ecs_stack_cursor_marker_t* marker = flecs_stack_calloc_t(stack, ecs_stack_cursor_marker_t);
-    marker->restoreTo = result;
-    if (stack->cur != result.cur)
-    {
-        // marker was allocated on new page
-        result.cur = stack->cur;
-        result.sp = (int16_t) (stack->cur->sp - ECS_SIZEOF(ecs_stack_cursor_marker_t));
-        ecs_assert(result.sp >= 0, ECS_INTERNAL_ERROR, NULL);
-    }
+    marker->restoreTo = snapshot;
+
+    // padding may have been added prior to marker and marker may be on new page
+    // so always compute the cursor that will map to the marker
+    ecs_stack_cursor_t result = flecs_stack_marker_address_to_cursor(stack, marker);
+
     marker->cursor = result;
     ++stack->cursorCount;
 #ifdef FLECS_DEBUG
@@ -119,7 +130,7 @@ ecs_stack_cursor_t flecs_stack_get_cursor(
     return result;
 }
 
-ecs_stack_cursor_marker_t* flecs_stack_get_cursor_marker(
+ecs_stack_cursor_marker_t* flecs_stack_cursor_to_marker(
     ecs_stack_t *stack, 
     const ecs_stack_cursor_t *cursor)
 {
@@ -151,7 +162,7 @@ static bool flecs_remove_cursor_from_active_ids(
     ecs_stack_t *stack,
     const ecs_stack_cursor_t *cursor)
 {
-    ecs_stack_cursor_marker_t* marker = flecs_stack_get_cursor_marker(stack, cursor); 
+    ecs_stack_cursor_marker_t* marker = flecs_stack_cursor_to_marker(stack, cursor); 
     const uint32_t cursorId = marker->cursorId;
     const uint32_t* const vec = ecs_vec_first_t(&stack->cursorIds, uint32_t);
     const uint32_t* p = &vec[stack->cursorIds.count - 1];
@@ -176,7 +187,7 @@ void flecs_stack_restore_cursor(
     {
         return;     // cursor not initialized
     }
-    ecs_stack_cursor_marker_t* marker = flecs_stack_get_cursor_marker(stack, cursor); 
+    ecs_stack_cursor_marker_t* marker = flecs_stack_cursor_to_marker(stack, cursor); 
 #ifdef FLECS_DEBUG
     ecs_assert(stack == marker->owner, ECS_INTERNAL_ERROR, NULL);
     bool found = flecs_remove_cursor_from_active_ids(stack, cursor);

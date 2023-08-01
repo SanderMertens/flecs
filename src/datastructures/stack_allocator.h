@@ -39,12 +39,15 @@ typedef struct ecs_stack_t {
 #endif
 } ecs_stack_t;
 
+FLECS_DBG_API
 void flecs_stack_init(
     ecs_stack_t *stack);
 
+FLECS_DBG_API
 void flecs_stack_fini(
     ecs_stack_t *stack);
 
+FLECS_DBG_API
 void* flecs_stack_alloc(
     ecs_stack_t *stack, 
     ecs_size_t size,
@@ -56,6 +59,7 @@ void* flecs_stack_alloc(
 #define flecs_stack_alloc_n(stack, T, count)\
     flecs_stack_alloc(stack, ECS_SIZEOF(T) * count, ECS_ALIGNOF(T))
 
+FLECS_DBG_API
 void* flecs_stack_calloc(
     ecs_stack_t *stack, 
     ecs_size_t size,
@@ -67,6 +71,7 @@ void* flecs_stack_calloc(
 #define flecs_stack_calloc_n(stack, T, count)\
     flecs_stack_calloc(stack, ECS_SIZEOF(T) * count, ECS_ALIGNOF(T))
 
+FLECS_DBG_API
 void flecs_stack_free(
     void *ptr,
     ecs_size_t size);
@@ -80,13 +85,16 @@ void flecs_stack_free(
 void flecs_stack_reset(
     ecs_stack_t *stack);
 
-ecs_stack_cursor_marker_t* flecs_stack_get_cursor_marker(
+FLECS_DBG_API
+ecs_stack_cursor_marker_t* flecs_stack_cursor_to_marker(
     ecs_stack_t *stack, 
     const ecs_stack_cursor_t *cursor);
 
+FLECS_DBG_API
 ecs_stack_cursor_t flecs_stack_get_cursor(
     ecs_stack_t *stack);
 
+FLECS_DBG_API
 void flecs_stack_restore_cursor(
     ecs_stack_t *stack,
     const ecs_stack_cursor_t *cursor);

@@ -2574,6 +2574,13 @@ void Error_log_warning(void);
 void Error_log_error(void);
 void Error_last_error(void);
 
+// Testsuite 'StackAlloc'
+void StackAlloc_init_fini(void);
+void StackAlloc_round_trip_cursor_marker(void);
+void StackAlloc_nested_cursors_freed_in_order(void);
+void StackAlloc_overlapping_cursors(void);
+void StackAlloc_multiple_overlapping_cursors(void);
+
 bake_test_case Id_testcases[] = {
     {
         "0_is_wildcard",
@@ -12528,6 +12535,29 @@ bake_test_case Error_testcases[] = {
     }
 };
 
+bake_test_case StackAlloc_testcases[] = {
+    {
+        "init_fini",
+        StackAlloc_init_fini
+    },
+    {
+        "round_trip_cursor_marker",
+        StackAlloc_round_trip_cursor_marker
+    },
+    {
+        "nested_cursors_freed_in_order",
+        StackAlloc_nested_cursors_freed_in_order
+    },
+    {
+        "overlapping_cursors",
+        StackAlloc_overlapping_cursors
+    },
+    {
+        "multiple_overlapping_cursors",
+        StackAlloc_multiple_overlapping_cursors
+    }
+};
+
 static bake_test_suite suites[] = {
     {
         "Id",
@@ -12878,9 +12908,16 @@ static bake_test_suite suites[] = {
         NULL,
         12,
         Error_testcases
+    },
+    {
+        "StackAlloc",
+        NULL,
+        NULL,
+        5,
+        StackAlloc_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("api", argc, argv, suites, 50);
+    return bake_test_run("api", argc, argv, suites, 51);
 }
