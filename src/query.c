@@ -2250,7 +2250,6 @@ ecs_iter_t ecs_query_iter(
                 ecs_os_memcpy_n(result.columns, fit.columns, int32_t, field_count);
                 ecs_os_memcpy_n(result.sources, fit.sources, int32_t, field_count);
             }
-
             ecs_iter_fini(&fit);
         }
     } else {

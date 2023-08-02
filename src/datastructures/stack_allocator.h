@@ -16,21 +16,10 @@ typedef struct ecs_stack_page_t {
     uint32_t id;
 } ecs_stack_page_t;
 
-/* marker allocated on stack to hold cursor information*/
-typedef struct ecs_stack_cursor_marker_t {
-    struct ecs_stack_cursor_marker_t *prev;
-    ecs_stack_cursor_t cursor;
-    ecs_stack_cursor_t restoreTo;
-    bool isFree;
-#ifdef FLECS_DEBUG
-    struct ecs_stack_t *owner;
-#endif
-} ecs_stack_cursor_marker_t;
-
 typedef struct ecs_stack_t {
     ecs_stack_page_t first;
     ecs_stack_page_t *cur;
-    ecs_stack_cursor_marker_t *tailMarker;
+    ecs_stack_cursor_t *tailCursor;
 #ifdef FLECS_DEBUG
     int32_t cursorCount;  // count of cursors that have been added to stack.
 #endif
@@ -83,17 +72,12 @@ void flecs_stack_reset(
     ecs_stack_t *stack);
 
 FLECS_DBG_API
-ecs_stack_cursor_marker_t* flecs_stack_cursor_to_marker(
-    ecs_stack_t *stack, 
-    const ecs_stack_cursor_t *cursor);
-
-FLECS_DBG_API
-ecs_stack_cursor_t flecs_stack_get_cursor(
+ecs_stack_cursor_t* flecs_stack_get_cursor(
     ecs_stack_t *stack);
 
 FLECS_DBG_API
 void flecs_stack_restore_cursor(
     ecs_stack_t *stack,
-    const ecs_stack_cursor_t *cursor);
+    ecs_stack_cursor_t *cursor);
 
 #endif

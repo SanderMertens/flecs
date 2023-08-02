@@ -3034,10 +3034,16 @@ struct ecs_ref_t {
 
 /* Cursor to stack allocator (used internally) */
 struct ecs_stack_page_t;
+struct ecs_stack_cursor_marker_t;
 
 typedef struct ecs_stack_cursor_t {
     struct ecs_stack_page_t *cur;
+    struct ecs_stack_cursor_t *prev;
     int16_t sp;
+    bool isFree;
+#ifdef FLECS_DEBUG
+    struct ecs_stack_t *owner;
+#endif
 } ecs_stack_cursor_t;
 
 /* Page-iterator specific data */
@@ -3153,7 +3159,7 @@ typedef struct ecs_rule_iter_t {
 
 /* Inline iterator arrays to prevent allocations for small array sizes */
 typedef struct ecs_iter_cache_t {
-    ecs_stack_cursor_t stack_cursor; /* Stack cursor to restore to */
+    ecs_stack_cursor_t *stack_cursor; /* Stack cursor to restore to */
     ecs_flags8_t used;       /* For which fields is the cache used */
     ecs_flags8_t allocated;  /* Which fields are allocated */
 } ecs_iter_cache_t;

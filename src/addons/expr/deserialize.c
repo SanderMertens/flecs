@@ -41,7 +41,7 @@ typedef struct ecs_expr_value_t {
 
 typedef struct ecs_value_stack_t {
     ecs_expr_value_t values[EXPR_MAX_STACK_SIZE];
-    ecs_stack_cursor_t cursor;
+    ecs_stack_cursor_t *cursor;
     ecs_stack_t *stack;
     ecs_stage_t *stage;
     int32_t count;
@@ -1408,7 +1408,7 @@ const char* ecs_parse_expr(
         ecs_assert(ti->hooks.dtor != NULL, ECS_INTERNAL_ERROR, NULL);
         ti->hooks.dtor(stack.values[i].ptr, 1, ti);
     }
-    flecs_stack_restore_cursor(stack.stack, &stack.cursor);
+    flecs_stack_restore_cursor(stack.stack, stack.cursor);
 
     return ptr;
 }

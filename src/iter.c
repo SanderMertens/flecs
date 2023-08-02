@@ -111,7 +111,7 @@ void ecs_iter_fini(
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     flecs_stack_restore_cursor(&stage->allocators.iter_stack, 
-        &it->priv.cache.stack_cursor);
+        it->priv.cache.stack_cursor);
 }
 
 static
@@ -841,7 +841,7 @@ ecs_iter_t ecs_page_iter(
     ecs_check(it->next != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_iter_t result = *it;
-    result.priv.cache.stack_cursor.cur = NULL; /* Don't copy allocator cursor */
+    result.priv.cache.stack_cursor = NULL; /* Don't copy allocator cursor */
 
     result.priv.iter.page = (ecs_page_iter_t){
         .offset = offset,
@@ -994,7 +994,7 @@ ecs_iter_t ecs_worker_iter(
     ecs_check(index < count, ECS_INVALID_PARAMETER, NULL);
 
     ecs_iter_t result = *it;
-    result.priv.cache.stack_cursor.cur = NULL; /* Don't copy allocator cursor */
+    result.priv.cache.stack_cursor = NULL; /* Don't copy allocator cursor */
     
     result.priv.iter.worker = (ecs_worker_iter_t){
         .index = index,
