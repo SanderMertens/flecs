@@ -2097,6 +2097,7 @@ void Iter_page_iter_w_fini() {
     test_bool(true, ecs_page_next(&pit));
     test_int(pit.count, 1);
     test_int(pit.entities[0], e1);
+    
     ecs_iter_fini(&pit);
 
     ecs_filter_fini(f);

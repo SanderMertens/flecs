@@ -228,17 +228,38 @@ typedef struct ecs_stack_page_t {
     uint32_t id;
 } ecs_stack_page_t;
 
+/* marker allocated on stack to hold cursor information*/
+typedef struct ecs_stack_cursor_marker_t {
+    struct ecs_stack_cursor_marker_t *prev;
+    ecs_stack_cursor_t cursor;
+    ecs_stack_cursor_t restoreTo;
+    bool isFree;
+#ifdef FLECS_DEBUG
+    struct ecs_stack_t *owner;
+    uint32_t cursorId;
+#endif
+} ecs_stack_cursor_marker_t;
+
 typedef struct ecs_stack_t {
     ecs_stack_page_t first;
     ecs_stack_page_t *cur;
+    ecs_stack_cursor_marker_t *tailMarker;
+    int32_t cursorCount;  // count of cursors that have been added to stack.
+#ifdef FLECS_DEBUG
+    ecs_vec_t cursorIds;
+    uint32_t cursorLastId;
+#endif
 } ecs_stack_t;
 
+FLECS_DBG_API
 void flecs_stack_init(
     ecs_stack_t *stack);
 
+FLECS_DBG_API
 void flecs_stack_fini(
     ecs_stack_t *stack);
 
+FLECS_DBG_API
 void* flecs_stack_alloc(
     ecs_stack_t *stack, 
     ecs_size_t size,
@@ -250,6 +271,7 @@ void* flecs_stack_alloc(
 #define flecs_stack_alloc_n(stack, T, count)\
     flecs_stack_alloc(stack, ECS_SIZEOF(T) * count, ECS_ALIGNOF(T))
 
+FLECS_DBG_API
 void* flecs_stack_calloc(
     ecs_stack_t *stack, 
     ecs_size_t size,
@@ -261,6 +283,7 @@ void* flecs_stack_calloc(
 #define flecs_stack_calloc_n(stack, T, count)\
     flecs_stack_calloc(stack, ECS_SIZEOF(T) * count, ECS_ALIGNOF(T))
 
+FLECS_DBG_API
 void flecs_stack_free(
     void *ptr,
     ecs_size_t size);
@@ -274,9 +297,16 @@ void flecs_stack_free(
 void flecs_stack_reset(
     ecs_stack_t *stack);
 
+FLECS_DBG_API
+ecs_stack_cursor_marker_t* flecs_stack_cursor_to_marker(
+    ecs_stack_t *stack, 
+    const ecs_stack_cursor_t *cursor);
+
+FLECS_DBG_API
 ecs_stack_cursor_t flecs_stack_get_cursor(
     ecs_stack_t *stack);
 
+FLECS_DBG_API
 void flecs_stack_restore_cursor(
     ecs_stack_t *stack,
     const ecs_stack_cursor_t *cursor);
@@ -15498,40 +15528,153 @@ void flecs_stack_free(
     }
 }
 
+// This is used only during initialization of cursor
+static ecs_stack_cursor_t flecs_stack_marker_address_to_cursor(
+    ecs_stack_t *stack,
+    ecs_stack_cursor_marker_t *marker)
+{
+    ecs_stack_cursor_t result = {
+        .cur = stack->cur,
+        .sp = (int16_t) ((char*)marker - (char*)stack->cur->data)
+    };
+    ecs_assert(result.sp >= 0, ECS_INTERNAL_ERROR, NULL);
+    return result;
+}
+
 ecs_stack_cursor_t flecs_stack_get_cursor(
     ecs_stack_t *stack)
 {
-    return (ecs_stack_cursor_t){
-        .cur = stack->cur, .sp = stack->cur->sp
-    };
+    // Capture current stack info
+    ecs_stack_cursor_t snapshot = { 
+        .cur = stack->cur,
+        .sp = stack->cur->sp 
+        };
+
+    ecs_stack_cursor_marker_t* marker = flecs_stack_calloc_t(stack, ecs_stack_cursor_marker_t);
+    marker->restoreTo = snapshot;
+
+    // padding may have been added prior to marker and marker may be on new page
+    // so always compute the cursor that will map to the marker
+    ecs_stack_cursor_t result = flecs_stack_marker_address_to_cursor(stack, marker);
+
+    marker->cursor = result;
+    ++stack->cursorCount;
+#ifdef FLECS_DEBUG
+    marker->cursorId = ++stack->cursorLastId;
+    marker->owner = stack;
+    *ecs_vec_append_t(NULL, &stack->cursorIds, uint32_t) = marker->cursorId;
+#endif
+
+    marker->prev = stack->tailMarker;
+    stack->tailMarker = marker;
+    return result;
 }
 
+ecs_stack_cursor_marker_t* flecs_stack_cursor_to_marker(
+    ecs_stack_t *stack, 
+    const ecs_stack_cursor_t *cursor)
+{
+    (void)stack;    // stack is otherwise unused in non-debug builds
+    ecs_assert(stack, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(cursor, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(cursor->cur, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(cursor->cur->data, ECS_INTERNAL_ERROR, NULL);
+
+    // (char*) cast is to prevent warning of pointer arithmetic on void*
+    // (void*) cast is to prevent warning of larger alignment required
+    ecs_stack_cursor_marker_t* marker = (ecs_stack_cursor_marker_t*)(void*)((char*)cursor->cur->data + cursor->sp);
+#ifdef FLECS_DEBUG
+    // validate this cursor belongs to this stack
+    bool found = false;
+    for (ecs_stack_page_t *page = &stack->first; !found && page; page = page->next)
+    {
+        found = (page == cursor->cur);
+    }
+    ecs_assert(found, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(marker->cursor.cur == cursor->cur, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(marker->cursor.sp == cursor->sp, ECS_INTERNAL_ERROR, NULL);
+#endif
+    return marker;
+}
+
+#ifdef FLECS_DEBUG
+static bool flecs_remove_cursor_from_active_ids(
+    ecs_stack_t *stack,
+    const ecs_stack_cursor_t *cursor)
+{
+    ecs_stack_cursor_marker_t* marker = flecs_stack_cursor_to_marker(stack, cursor); 
+    const uint32_t cursorId = marker->cursorId;
+    const uint32_t* const vec = ecs_vec_first_t(&stack->cursorIds, uint32_t);
+    const uint32_t* p = &vec[stack->cursorIds.count - 1];
+    while (p >= vec)
+    {
+        if (*p == cursorId)
+        {
+            int32_t index = (int32_t)(p - vec);
+            ecs_vec_remove_t(&stack->cursorIds, uint32_t, index);
+            return true;
+        }
+        --p;
+    }
+    return false;
+}
+#endif
 void flecs_stack_restore_cursor(
     ecs_stack_t *stack,
     const ecs_stack_cursor_t *cursor)
 {
-    ecs_stack_page_t *cur = cursor->cur;
-    if (!cur) {
+    if (!cursor->cur) {
+        return;     // cursor not initialized
+    }
+
+    ecs_stack_cursor_marker_t* marker = flecs_stack_cursor_to_marker(stack, cursor); 
+#ifdef FLECS_DEBUG
+    ecs_assert(stack == marker->owner, ECS_INTERNAL_ERROR, NULL);
+    bool found = flecs_remove_cursor_from_active_ids(stack, cursor);
+    ecs_assert(found, ECS_DOUBLE_FREE, NULL);
+#endif
+
+    ecs_assert(stack->cursorCount > 0, ECS_DOUBLE_FREE, NULL);
+    --stack->cursorCount;
+    marker->isFree = true;
+
+    // Check if the cursor is the last one on the stack
+    if (marker != stack->tailMarker)
+    {
+        // we're done here
         return;
     }
 
-    if (cur == stack->cur) {
-        if (cursor->sp > stack->cur->sp) {
-            return;
+    // This is the tail cursor
+    // Walk the prev list until we find one not yet freed
+    while (marker)
+    {
+        ecs_stack_cursor_marker_t* prev = marker->prev;
+        if (!prev || !prev->isFree)
+        {
+            break;      // marker is now the best marker to free
         }
-    } else if (cur->id > stack->cur->id) {
-        return;
+        marker = prev;
     }
+    stack->tailMarker = marker->prev;     // now pointing to tail-most cursor not yet freed
+    stack->cur = marker->restoreTo.cur;
+    stack->cur->sp = marker->restoreTo.sp;
 
-    stack->cur = cursor->cur;
-    stack->cur->sp = cursor->sp;
+    // if the cursor count is zero, stack should be empty
+    // if the cursor count is non-zero, stack should not be empty
+    ecs_assert((stack->cursorCount == 0) == (stack->cur == &stack->first && stack->cur->sp == 0), ECS_LEAK_DETECTED, NULL);
 }
 
 void flecs_stack_reset(
     ecs_stack_t *stack)
 {
+    ecs_assert(stack->cursorCount == 0, ECS_LEAK_DETECTED, NULL);
     stack->cur = &stack->first;
     stack->first.sp = 0;
+    stack->tailMarker = NULL;
+#ifdef FLECS_DEBUG
+    ecs_vec_clear(&stack->cursorIds);
+#endif
 }
 
 void flecs_stack_init(
@@ -15540,12 +15683,16 @@ void flecs_stack_init(
     ecs_os_zeromem(stack);
     stack->cur = &stack->first;
     stack->first.data = NULL;
+#ifdef FLECS_DEBUG
+    ecs_vec_init_t(NULL, &stack->cursorIds, uint32_t, 2);
+#endif
 }
 
 void flecs_stack_fini(
     ecs_stack_t *stack)
 {
     ecs_stack_page_t *next, *cur = &stack->first;
+    ecs_assert(stack->cursorCount == 0, ECS_LEAK_DETECTED, NULL);
     ecs_assert(stack->cur == &stack->first, ECS_LEAK_DETECTED, NULL);
     ecs_assert(stack->cur->sp == 0, ECS_LEAK_DETECTED, NULL);
     do {
@@ -15560,6 +15707,9 @@ void flecs_stack_fini(
             ecs_os_free(cur);
         }
     } while ((cur = next));
+#ifdef FLECS_DEBUG
+    ecs_vec_fini_t(NULL, &stack->cursorIds, uint32_t);
+#endif
 }
 
 /**
@@ -16609,6 +16759,7 @@ const char* ecs_strerror(
     ECS_ERR_STR(ECS_INVALID_COMPONENT_ALIGNMENT);
     ECS_ERR_STR(ECS_NAME_IN_USE);
     ECS_ERR_STR(ECS_OUT_OF_MEMORY);
+    ECS_ERR_STR(ECS_DOUBLE_FREE);
     ECS_ERR_STR(ECS_OPERATION_FAILED);
     ECS_ERR_STR(ECS_INVALID_CONVERSION);
     ECS_ERR_STR(ECS_MODULE_UNDEFINED);
@@ -53320,7 +53471,6 @@ bool ecs_filter_next_instanced(
         ecs_iter_next_action_t next = chain_it->next;
         do {
             if (!next(chain_it)) {
-                ecs_iter_fini(it);
                 goto done;
             }
 
@@ -54513,8 +54663,6 @@ void flecs_uni_observer_trigger_existing(
             it.event_id = it.ids[0];
             callback(&it);
         }
-
-        ecs_iter_fini(&it);
     }
 }
 
@@ -57991,7 +58139,6 @@ ecs_iter_t ecs_query_iter(
                 &query->filter, EcsIterIgnoreThis);
             if (!ecs_filter_next(&fit)) {
                 /* No match, so return nothing */
-                ecs_iter_fini(&fit);
                 goto noresults;
             }
         }
@@ -60552,6 +60699,8 @@ ecs_iter_t ecs_page_iter(
     ecs_check(it->next != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_iter_t result = *it;
+    result.priv.cache.stack_cursor.cur = NULL; /* Don't copy allocator cursor */
+
     result.priv.iter.page = (ecs_page_iter_t){
         .offset = offset,
         .limit = limit,
@@ -60703,6 +60852,8 @@ ecs_iter_t ecs_worker_iter(
     ecs_check(index < count, ECS_INVALID_PARAMETER, NULL);
 
     ecs_iter_t result = *it;
+    result.priv.cache.stack_cursor.cur = NULL; /* Don't copy allocator cursor */
+    
     result.priv.iter.worker = (ecs_worker_iter_t){
         .index = index,
         .count = count
@@ -60762,6 +60913,9 @@ bool ecs_worker_next_instanced(
             if (res_index == 0) {
                 return true;
             } else {
+                // chained iterator was not yet cleaned up
+                // since it returned true from ecs_iter_next, so clean it up here.
+                ecs_iter_fini(chain_it);
                 return false;
             }
         }

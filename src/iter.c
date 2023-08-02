@@ -841,6 +841,8 @@ ecs_iter_t ecs_page_iter(
     ecs_check(it->next != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_iter_t result = *it;
+    result.priv.cache.stack_cursor.cur = NULL; /* Don't copy allocator cursor */
+
     result.priv.iter.page = (ecs_page_iter_t){
         .offset = offset,
         .limit = limit,
@@ -992,6 +994,8 @@ ecs_iter_t ecs_worker_iter(
     ecs_check(index < count, ECS_INVALID_PARAMETER, NULL);
 
     ecs_iter_t result = *it;
+    result.priv.cache.stack_cursor.cur = NULL; /* Don't copy allocator cursor */
+    
     result.priv.iter.worker = (ecs_worker_iter_t){
         .index = index,
         .count = count

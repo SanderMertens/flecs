@@ -2737,9 +2737,9 @@ void Query_query_change_check_iter() {
 
     ecs_modified(world, e2, Position);
 
+
     it = ecs_query_iter(world, q);
     test_assert(ecs_query_changed(q, 0) == true);
-    ecs_iter_fini(&it);
 
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
@@ -2786,7 +2786,6 @@ void Query_query_change_check_iter_after_skip_read() {
     test_assert(ecs_query_changed(q, &it) == true);
     ecs_query_skip(&it);
     test_bool(ecs_query_next(&it), false);
-    ecs_iter_fini(&it);
 
     test_assert(ecs_query_changed(q, 0) == true);
 
@@ -2795,7 +2794,6 @@ void Query_query_change_check_iter_after_skip_read() {
     test_assert(ecs_query_changed(q, &it) == true);
     test_bool(ecs_query_next(&it), false);
     test_assert(ecs_query_changed(q, 0) == false);
-    ecs_iter_fini(&it);
 
     ecs_fini(world);
 }
