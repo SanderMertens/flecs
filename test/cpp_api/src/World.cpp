@@ -1546,15 +1546,15 @@ void World_reset_all() {
 void World_get_tick() {
     flecs::world ecs;
 
-    test_int(ecs.tick(), 0);
+    test_int(ecs.get_info()->frame_count_total, 0);
 
     ecs.progress();
 
-    test_int(ecs.tick(), 1);
+    test_int(ecs.get_info()->frame_count_total, 1);
 
     ecs.progress();
 
-    test_int(ecs.tick(), 2);
+    test_int(ecs.get_info()->frame_count_total, 2);
 }
 
 struct Scope { };

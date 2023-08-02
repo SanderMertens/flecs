@@ -224,7 +224,7 @@ void Misc_app_run_target_fps() {
     int32_t count = 0;
     ecs.system().iter([&](flecs::iter& it) {
         count ++;
-        test_int(it.world().get_target_fps(), 10);
+        test_int(it.world().get_info()->target_fps, 10);
         it.world().quit();
     });
 
