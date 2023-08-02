@@ -230,15 +230,22 @@ typedef struct ecs_stack_page_t {
 
 typedef struct ecs_stack_t {
     ecs_stack_page_t first;
-    ecs_stack_page_t *cur;
+    ecs_stack_page_t *tail_page;
+    ecs_stack_cursor_t *tail_cursor;
+#ifdef FLECS_DEBUG
+    int32_t cursor_count;
+#endif
 } ecs_stack_t;
 
+FLECS_DBG_API
 void flecs_stack_init(
     ecs_stack_t *stack);
 
+FLECS_DBG_API
 void flecs_stack_fini(
     ecs_stack_t *stack);
 
+FLECS_DBG_API
 void* flecs_stack_alloc(
     ecs_stack_t *stack, 
     ecs_size_t size,
@@ -250,6 +257,7 @@ void* flecs_stack_alloc(
 #define flecs_stack_alloc_n(stack, T, count)\
     flecs_stack_alloc(stack, ECS_SIZEOF(T) * count, ECS_ALIGNOF(T))
 
+FLECS_DBG_API
 void* flecs_stack_calloc(
     ecs_stack_t *stack, 
     ecs_size_t size,
@@ -261,6 +269,7 @@ void* flecs_stack_calloc(
 #define flecs_stack_calloc_n(stack, T, count)\
     flecs_stack_calloc(stack, ECS_SIZEOF(T) * count, ECS_ALIGNOF(T))
 
+FLECS_DBG_API
 void flecs_stack_free(
     void *ptr,
     ecs_size_t size);
@@ -274,12 +283,14 @@ void flecs_stack_free(
 void flecs_stack_reset(
     ecs_stack_t *stack);
 
-ecs_stack_cursor_t flecs_stack_get_cursor(
+FLECS_DBG_API
+ecs_stack_cursor_t* flecs_stack_get_cursor(
     ecs_stack_t *stack);
 
+FLECS_DBG_API
 void flecs_stack_restore_cursor(
     ecs_stack_t *stack,
-    const ecs_stack_cursor_t *cursor);
+    ecs_stack_cursor_t *cursor);
 
 #endif
 
@@ -15443,7 +15454,7 @@ void* flecs_stack_alloc(
     ecs_size_t size,
     ecs_size_t align)
 {
-    ecs_stack_page_t *page = stack->cur;
+    ecs_stack_page_t *page = stack->tail_page;
     if (page == &stack->first && !page->data) {
         page->data = ecs_os_malloc(ECS_STACK_PAGE_SIZE);
         ecs_os_linc(&ecs_stack_allocator_alloc_count);
@@ -15466,7 +15477,7 @@ void* flecs_stack_alloc(
         }
         sp = 0;
         next_sp = flecs_ito(int16_t, size);
-        stack->cur = page;
+        stack->tail_page = page;
     }
 
     page->sp = next_sp;
@@ -15498,47 +15509,83 @@ void flecs_stack_free(
     }
 }
 
-ecs_stack_cursor_t flecs_stack_get_cursor(
+ecs_stack_cursor_t* flecs_stack_get_cursor(
     ecs_stack_t *stack)
 {
-    return (ecs_stack_cursor_t){
-        .cur = stack->cur, .sp = stack->cur->sp
-    };
+    ecs_stack_page_t *page = stack->tail_page;
+    int16_t sp = stack->tail_page->sp;
+    ecs_stack_cursor_t *result = flecs_stack_alloc_t(stack, ecs_stack_cursor_t);
+    result->page = page;
+    result->sp = sp;
+    result->is_free = false;
+
+#ifdef FLECS_DEBUG
+    ++ stack->cursor_count;
+    result->owner = stack;
+#endif
+
+    result->prev = stack->tail_cursor;
+    stack->tail_cursor = result;
+    return result;
 }
 
 void flecs_stack_restore_cursor(
     ecs_stack_t *stack,
-    const ecs_stack_cursor_t *cursor)
+    ecs_stack_cursor_t *cursor)
 {
-    ecs_stack_page_t *cur = cursor->cur;
-    if (!cur) {
+    if (!cursor) {
         return;
     }
 
-    if (cur == stack->cur) {
-        if (cursor->sp > stack->cur->sp) {
-            return;
+    ecs_dbg_assert(stack == cursor->owner, ECS_INVALID_OPERATION, NULL);
+    ecs_dbg_assert(stack->cursor_count > 0, ECS_DOUBLE_FREE, NULL);
+    ecs_assert(cursor->is_free == false, ECS_DOUBLE_FREE, NULL);
+
+    cursor->is_free = true;
+
+#ifdef FLECS_DEBUG    
+    -- stack->cursor_count;
+#endif
+
+    /* If cursor is not the last on the stack no memory should be freed */
+    if (cursor != stack->tail_cursor) {
+        return;
+    }
+
+    /* Iterate freed cursors to know how much memory we can free */
+    do {
+        ecs_stack_cursor_t* prev = cursor->prev;
+        if (!prev || !prev->is_free) {
+            break; /* Found active cursor, free up until this point */
         }
-    } else if (cur->id > stack->cur->id) {
-        return;
-    }
+        cursor = prev;
+    } while (cursor);
 
-    stack->cur = cursor->cur;
-    stack->cur->sp = cursor->sp;
+    stack->tail_cursor = cursor->prev;
+    stack->tail_page = cursor->page;
+    stack->tail_page->sp = cursor->sp;
+
+    /* If the cursor count is zero, stack should be empty
+     * if the cursor count is non-zero, stack should not be empty */
+    ecs_dbg_assert((stack->cursor_count == 0) == 
+        (stack->tail_page == &stack->first && stack->tail_page->sp == 0), 
+            ECS_LEAK_DETECTED, NULL);
 }
 
 void flecs_stack_reset(
     ecs_stack_t *stack)
 {
-    stack->cur = &stack->first;
+    ecs_dbg_assert(stack->cursor_count == 0, ECS_LEAK_DETECTED, NULL);
+    stack->tail_page = &stack->first;
     stack->first.sp = 0;
+    stack->tail_cursor = NULL;
 }
 
 void flecs_stack_init(
     ecs_stack_t *stack)
 {
     ecs_os_zeromem(stack);
-    stack->cur = &stack->first;
+    stack->tail_page = &stack->first;
     stack->first.data = NULL;
 }
 
@@ -15546,8 +15593,10 @@ void flecs_stack_fini(
     ecs_stack_t *stack)
 {
     ecs_stack_page_t *next, *cur = &stack->first;
-    ecs_assert(stack->cur == &stack->first, ECS_LEAK_DETECTED, NULL);
-    ecs_assert(stack->cur->sp == 0, ECS_LEAK_DETECTED, NULL);
+    ecs_dbg_assert(stack->cursor_count == 0, ECS_LEAK_DETECTED, NULL);
+    ecs_assert(stack->tail_page == &stack->first, ECS_LEAK_DETECTED, NULL);
+    ecs_assert(stack->tail_page->sp == 0, ECS_LEAK_DETECTED, NULL);
+
     do {
         next = cur->next;
         if (cur == &stack->first) {
@@ -16609,6 +16658,7 @@ const char* ecs_strerror(
     ECS_ERR_STR(ECS_INVALID_COMPONENT_ALIGNMENT);
     ECS_ERR_STR(ECS_NAME_IN_USE);
     ECS_ERR_STR(ECS_OUT_OF_MEMORY);
+    ECS_ERR_STR(ECS_DOUBLE_FREE);
     ECS_ERR_STR(ECS_OPERATION_FAILED);
     ECS_ERR_STR(ECS_INVALID_CONVERSION);
     ECS_ERR_STR(ECS_MODULE_UNDEFINED);
@@ -29489,7 +29539,7 @@ typedef struct ecs_expr_value_t {
 
 typedef struct ecs_value_stack_t {
     ecs_expr_value_t values[EXPR_MAX_STACK_SIZE];
-    ecs_stack_cursor_t cursor;
+    ecs_stack_cursor_t *cursor;
     ecs_stack_t *stack;
     ecs_stage_t *stage;
     int32_t count;
@@ -30856,7 +30906,7 @@ const char* ecs_parse_expr(
         ecs_assert(ti->hooks.dtor != NULL, ECS_INTERNAL_ERROR, NULL);
         ti->hooks.dtor(stack.values[i].ptr, 1, ti);
     }
-    flecs_stack_restore_cursor(stack.stack, &stack.cursor);
+    flecs_stack_restore_cursor(stack.stack, stack.cursor);
 
     return ptr;
 }
@@ -53320,7 +53370,6 @@ bool ecs_filter_next_instanced(
         ecs_iter_next_action_t next = chain_it->next;
         do {
             if (!next(chain_it)) {
-                ecs_iter_fini(it);
                 goto done;
             }
 
@@ -54513,8 +54562,6 @@ void flecs_uni_observer_trigger_existing(
             it.event_id = it.ids[0];
             callback(&it);
         }
-
-        ecs_iter_fini(&it);
     }
 }
 
@@ -57991,7 +58038,6 @@ ecs_iter_t ecs_query_iter(
                 &query->filter, EcsIterIgnoreThis);
             if (!ecs_filter_next(&fit)) {
                 /* No match, so return nothing */
-                ecs_iter_fini(&fit);
                 goto noresults;
             }
         }
@@ -58009,7 +58055,6 @@ ecs_iter_t ecs_query_iter(
                 ecs_os_memcpy_n(result.columns, fit.columns, int32_t, field_count);
                 ecs_os_memcpy_n(result.sources, fit.sources, int32_t, field_count);
             }
-
             ecs_iter_fini(&fit);
         }
     } else {
@@ -59822,7 +59867,7 @@ void ecs_iter_fini(
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     flecs_stack_restore_cursor(&stage->allocators.iter_stack, 
-        &it->priv.cache.stack_cursor);
+        it->priv.cache.stack_cursor);
 }
 
 static
@@ -60552,6 +60597,8 @@ ecs_iter_t ecs_page_iter(
     ecs_check(it->next != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_iter_t result = *it;
+    result.priv.cache.stack_cursor = NULL; /* Don't copy allocator cursor */
+
     result.priv.iter.page = (ecs_page_iter_t){
         .offset = offset,
         .limit = limit,
@@ -60703,6 +60750,8 @@ ecs_iter_t ecs_worker_iter(
     ecs_check(index < count, ECS_INVALID_PARAMETER, NULL);
 
     ecs_iter_t result = *it;
+    result.priv.cache.stack_cursor = NULL; /* Don't copy allocator cursor */
+    
     result.priv.iter.worker = (ecs_worker_iter_t){
         .index = index,
         .count = count
@@ -60762,6 +60811,9 @@ bool ecs_worker_next_instanced(
             if (res_index == 0) {
                 return true;
             } else {
+                // chained iterator was not yet cleaned up
+                // since it returned true from ecs_iter_next, so clean it up here.
+                ecs_iter_fini(chain_it);
                 return false;
             }
         }

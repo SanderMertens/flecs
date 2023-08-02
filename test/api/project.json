@@ -1635,7 +1635,10 @@
                 "query_next_table_w_populate_skip_first",
                 "query_next_table_w_populate_skip_last",
                 "create_query_existing_query_entity",
-                "query_for_recycled_pair"
+                "query_for_recycled_pair",
+                "query_w_singleton_w_rule_iter",
+                "query_w_singleton_nested_iter",
+                "query_w_singleton_interleaved_iter"
             ]
         }, {
             "id": "Iter",
@@ -2676,6 +2679,12 @@
                 "log_warning",
                 "log_error",
                 "last_error"
+            ]
+        }, {
+            "id": "StackAlloc",
+            "testcases": [
+                "init_fini",
+                "multiple_overlapping_cursors"
             ]
         }]
     }

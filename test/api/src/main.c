@@ -1573,6 +1573,9 @@ void Query_query_next_table_w_populate_skip_first(void);
 void Query_query_next_table_w_populate_skip_last(void);
 void Query_create_query_existing_query_entity(void);
 void Query_query_for_recycled_pair(void);
+void Query_query_w_singleton_w_rule_iter(void);
+void Query_query_w_singleton_nested_iter(void);
+void Query_query_w_singleton_interleaved_iter(void);
 
 // Testsuite 'Iter'
 void Iter_page_iter_0_0(void);
@@ -2573,6 +2576,10 @@ void Error_log_log(void);
 void Error_log_warning(void);
 void Error_log_error(void);
 void Error_last_error(void);
+
+// Testsuite 'StackAlloc'
+void StackAlloc_init_fini(void);
+void StackAlloc_multiple_overlapping_cursors(void);
 
 bake_test_case Id_testcases[] = {
     {
@@ -8657,6 +8664,18 @@ bake_test_case Query_testcases[] = {
     {
         "query_for_recycled_pair",
         Query_query_for_recycled_pair
+    },
+    {
+        "query_w_singleton_w_rule_iter",
+        Query_query_w_singleton_w_rule_iter
+    },
+    {
+        "query_w_singleton_nested_iter",
+        Query_query_w_singleton_nested_iter
+    },
+    {
+        "query_w_singleton_interleaved_iter",
+        Query_query_w_singleton_interleaved_iter
     }
 };
 
@@ -12528,6 +12547,17 @@ bake_test_case Error_testcases[] = {
     }
 };
 
+bake_test_case StackAlloc_testcases[] = {
+    {
+        "init_fini",
+        StackAlloc_init_fini
+    },
+    {
+        "multiple_overlapping_cursors",
+        StackAlloc_multiple_overlapping_cursors
+    }
+};
+
 static bake_test_suite suites[] = {
     {
         "Id",
@@ -12736,7 +12766,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        221,
+        224,
         Query_testcases
     },
     {
@@ -12878,9 +12908,16 @@ static bake_test_suite suites[] = {
         NULL,
         12,
         Error_testcases
+    },
+    {
+        "StackAlloc",
+        NULL,
+        NULL,
+        2,
+        StackAlloc_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("api", argc, argv, suites, 50);
+    return bake_test_run("api", argc, argv, suites, 51);
 }

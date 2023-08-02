@@ -1228,6 +1228,7 @@ void Iter_worker_iter_w_singleton() {
     test_int(p[1].y, 50);
 
     test_bool(ecs_worker_next(&wit_2), false);
+    test_bool(ecs_worker_next(&wit_1), false);
 
     ecs_fini(world);
 }
@@ -1666,7 +1667,7 @@ void Iter_interleaved_iter() {
     /* Bit of whitebox testing, check whether the stack cursor is restored to
      * its original position after the 2nd iterator is done */
     ecs_iter_t it_1 = ecs_filter_iter(world, f);
-    ecs_stack_cursor_t cursor = it_1.priv.cache.stack_cursor;
+    ecs_stack_cursor_t cursor = *it_1.priv.cache.stack_cursor;
     ecs_iter_t it_2 = ecs_filter_iter(world, f);
 
     test_bool(true, ecs_filter_next(&it_1));
@@ -1683,8 +1684,8 @@ void Iter_interleaved_iter() {
     test_bool(false, ecs_filter_next(&it_2));
 
     it_1 = ecs_filter_iter(world, f);
-    test_assert(it_1.priv.cache.stack_cursor.cur == cursor.cur);
-    test_assert(it_1.priv.cache.stack_cursor.sp == cursor.sp);
+    test_assert(it_1.priv.cache.stack_cursor->page == cursor.page);
+    test_assert(it_1.priv.cache.stack_cursor->sp == cursor.sp);
     ecs_iter_fini(&it_1);
 
     ecs_filter_fini(f);
@@ -1702,12 +1703,12 @@ void Iter_iter_restore_stack_iter() {
     });
 
     ecs_iter_t it = ecs_filter_iter(world, f);
-    ecs_stack_cursor_t cursor = it.priv.cache.stack_cursor;
+    ecs_stack_cursor_t cursor = *it.priv.cache.stack_cursor;
     ecs_iter_fini(&it);
 
     it = ecs_filter_iter(world, f);
-    test_assert(it.priv.cache.stack_cursor.cur == cursor.cur);
-    test_assert(it.priv.cache.stack_cursor.sp == cursor.sp);
+    test_assert(it.priv.cache.stack_cursor->page == cursor.page);
+    test_assert(it.priv.cache.stack_cursor->sp == cursor.sp);
     ecs_iter_fini(&it);
 
     ecs_filter_fini(f);
@@ -2096,6 +2097,7 @@ void Iter_page_iter_w_fini() {
     test_bool(true, ecs_page_next(&pit));
     test_int(pit.count, 1);
     test_int(pit.entities[0], e1);
+    
     ecs_iter_fini(&pit);
 
     ecs_filter_fini(f);

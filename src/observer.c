@@ -596,8 +596,6 @@ void flecs_uni_observer_trigger_existing(
             it.event_id = it.ids[0];
             callback(&it);
         }
-
-        ecs_iter_fini(&it);
     }
 }
 

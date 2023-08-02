@@ -1131,19 +1131,31 @@ void MultiThread_multithread_w_monitor_addon() {
 
 static int system_ctx = 0;
 
+static
 void System_w_ctx(ecs_iter_t *it) {
     test_assert(it->ctx == &system_ctx);
     test_assert(it->system != 0);
     test_assert(it->delta_time != 0);
     system_ctx ++;
-    ecs_iter_fini(it);
 }
 
+static
 void System_w_binding_ctx(ecs_iter_t *it) {
     test_assert(it->binding_ctx == &system_ctx);
     test_assert(it->system != 0);
     test_assert(it->delta_time != 0);
     system_ctx ++;
+}
+
+static
+void System_run_w_ctx(ecs_iter_t *it) {
+    System_w_ctx(it);
+    ecs_iter_fini(it);
+}
+
+static
+void System_run_w_binding_ctx(ecs_iter_t *it) {
+    System_w_binding_ctx(it);
     ecs_iter_fini(it);
 }
 
@@ -1192,7 +1204,7 @@ void MultiThread_get_ctx_w_run() {
 
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) } }),
-        .run = System_w_ctx,
+        .run = System_run_w_ctx,
         .multi_threaded = true,
         .ctx = &system_ctx
     });
@@ -1211,7 +1223,7 @@ void MultiThread_get_binding_ctx_w_run() {
 
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) } }),
-        .run = System_w_binding_ctx,
+        .run = System_run_w_binding_ctx,
         .multi_threaded = true,
         .binding_ctx = &system_ctx
     });

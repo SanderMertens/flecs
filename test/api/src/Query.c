@@ -2670,7 +2670,6 @@ void Query_query_change_after_modified_out_term() {
     test_assert(ecs_query_changed(q, 0) == true);
     while (ecs_query_next(&it)) { }
     test_assert(ecs_query_changed(q, 0) == false);
-    ecs_iter_fini(&it);
 
     ecs_set(world, e, Velocity, {1, 2});
     test_assert(ecs_query_changed(q, 0) == false);
@@ -2738,9 +2737,9 @@ void Query_query_change_check_iter() {
 
     ecs_modified(world, e2, Position);
 
+
     it = ecs_query_iter(world, q);
     test_assert(ecs_query_changed(q, 0) == true);
-    ecs_iter_fini(&it);
 
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
@@ -2787,7 +2786,6 @@ void Query_query_change_check_iter_after_skip_read() {
     test_assert(ecs_query_changed(q, &it) == true);
     ecs_query_skip(&it);
     test_bool(ecs_query_next(&it), false);
-    ecs_iter_fini(&it);
 
     test_assert(ecs_query_changed(q, 0) == true);
 
@@ -2796,7 +2794,6 @@ void Query_query_change_check_iter_after_skip_read() {
     test_assert(ecs_query_changed(q, &it) == true);
     test_bool(ecs_query_next(&it), false);
     test_assert(ecs_query_changed(q, 0) == false);
-    ecs_iter_fini(&it);
 
     ecs_fini(world);
 }
@@ -4816,12 +4813,14 @@ void Query_only_not_from_entity() {
     test_assert(ecs_query_next(&it));
     test_assert(ecs_field_src(&it, 1) == e);
     test_assert(ecs_field_id(&it, 1) == Tag);
+    test_assert(!ecs_query_next(&it));
 
     ecs_add(world, e, Tag);
 
     it = ecs_query_iter(world, q);
     test_assert(!ecs_query_next(&it));
 
+    test_assert(ECS_BIT_IS_SET(it.flags, EcsIterIsValid) == false);
     ecs_fini(world);
 }
 
@@ -4837,6 +4836,7 @@ void Query_only_not_from_singleton() {
     test_assert(ecs_query_next(&it));
     test_assert(ecs_field_src(&it, 1) == e);
     test_assert(ecs_field_id(&it, 1) == e);
+    test_assert(!ecs_query_next(&it));
 
     ecs_add_id(world, e, e);
 
@@ -9146,4 +9146,148 @@ void Query_query_for_recycled_pair() {
     test_bool(false, ecs_query_next(&it));
 
     ecs_fini(world);
+}
+
+void Query_query_w_singleton_w_rule_iter() {
+    ecs_world_t* ecs = ecs_init();
+
+    ECS_TAG(ecs, Tag);
+    ECS_TAG(ecs, Singleton);
+
+    ecs_query_t *q = ecs_query(ecs, {
+        .filter.terms = {
+            {Singleton, .src.id = Singleton}, {Tag}
+        }
+    });
+
+    ecs_rule_t *r = ecs_rule(ecs, {
+        .terms = {{Tag}}
+    });
+
+    ecs_singleton_add(ecs, Singleton);
+    ecs_entity_t e = ecs_new(ecs, Tag);
+
+    ecs_iter_t qit = ecs_query_iter(ecs, q);
+    test_bool(true, ecs_query_next(&qit));
+    test_int(1, qit.count);
+    test_uint(e, qit.entities[0]);
+
+    ecs_id_t id = qit.ids[0];
+    ecs_iter_t rit = ecs_rule_iter(ecs, r);
+    test_bool(true, ecs_rule_next(&rit));
+    test_int(1, rit.count);
+    test_uint(e, rit.entities[0]);
+    test_bool(false, ecs_rule_next(&rit));
+    test_assert(id == qit.ids[0]);
+    test_bool(false, ecs_query_next(&qit));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(ecs);
+}
+
+void Query_query_w_singleton_nested_iter() {
+    ecs_world_t* ecs = ecs_init();
+
+    ECS_TAG(ecs, TagA);
+    ECS_TAG(ecs, TagB);
+    ECS_TAG(ecs, Singleton);
+
+    ecs_query_t *qa = ecs_query(ecs, {
+        .filter.terms = {
+            {TagA}, {Singleton, .src.id = Singleton}
+        }
+    });
+
+    ecs_query_t *qb = ecs_query(ecs, {
+        .filter.terms = {
+            {TagB}, {Singleton, .src.id = Singleton}
+        }
+    });
+
+    ecs_singleton_add(ecs, Singleton);
+
+    ecs_entity_t ea = ecs_new(ecs, TagA);
+    ecs_entity_t eb = ecs_new(ecs, TagB);
+
+    ecs_iter_t qita = ecs_query_iter(ecs, qa);
+    ecs_iter_t qitb = ecs_query_iter(ecs, qb);
+
+    test_bool(ecs_query_next(&qita), true);
+    test_int(1, qita.count);
+    test_uint(ea, qita.entities[0]);
+
+    test_bool(ecs_query_next(&qitb), true);
+    test_int(1, qitb.count);
+    test_uint(eb, qitb.entities[0]);
+
+    test_uint(TagA, qita.ids[0]);
+    test_uint(TagB, qitb.ids[0]);
+
+    test_bool(ecs_query_next(&qita), false);
+    test_bool(ecs_query_next(&qitb), false);
+
+    ecs_fini(ecs);
+}
+
+void Query_query_w_singleton_interleaved_iter() {
+    ecs_world_t* ecs = ecs_init();
+
+    ECS_TAG(ecs, TagA);
+    ECS_TAG(ecs, TagB);
+    ECS_TAG(ecs, TagC);
+    ECS_TAG(ecs, Singleton);
+
+    ecs_query_t *qa = ecs_query(ecs, {
+        .filter.terms = {
+            {TagA}, {Singleton, .src.id = Singleton}
+        }
+    });
+
+    ecs_query_t *qb = ecs_query(ecs, {
+        .filter.terms = {
+            {TagB}, {Singleton, .src.id = Singleton}
+        }
+    });
+
+    ecs_query_t *qc = ecs_query(ecs, {
+        .filter.terms = {
+            {TagC}, {Singleton, .src.id = Singleton}
+        }
+    });
+
+    ecs_singleton_add(ecs, Singleton);
+
+    ecs_entity_t ea = ecs_new(ecs, TagA);
+    ecs_entity_t eb = ecs_new(ecs, TagB);
+    ecs_entity_t ec = ecs_new(ecs, TagC);
+
+    ecs_iter_t qita = ecs_query_iter(ecs, qa);
+    ecs_iter_t qitb = ecs_query_iter(ecs, qb);
+
+    test_bool(ecs_query_next(&qita), true);
+    test_int(1, qita.count);
+    test_uint(ea, qita.entities[0]);
+
+    test_bool(ecs_query_next(&qitb), true);
+    test_int(1, qitb.count);
+    test_uint(eb, qitb.entities[0]);
+
+    test_uint(TagA, qita.ids[0]);
+    test_uint(TagB, qitb.ids[0]);
+
+    test_bool(ecs_query_next(&qita), false);
+
+    ecs_iter_t qitc = ecs_query_iter(ecs, qc);
+    test_bool(ecs_query_next(&qitc), true);
+    test_int(1, qitc.count);
+    test_uint(ec, qitc.entities[0]);
+
+    test_uint(TagB, qitb.ids[0]);
+    test_uint(TagC, qitc.ids[0]);
+
+    test_bool(ecs_query_next(&qitb), false);
+    test_bool(ecs_query_next(&qitc), false);
+
+    ecs_fini(ecs);
 }
