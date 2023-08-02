@@ -24,7 +24,6 @@ typedef struct ecs_stack_cursor_marker_t {
     bool isFree;
 #ifdef FLECS_DEBUG
     struct ecs_stack_t *owner;
-    uint32_t cursorId;
 #endif
 } ecs_stack_cursor_marker_t;
 
@@ -32,10 +31,8 @@ typedef struct ecs_stack_t {
     ecs_stack_page_t first;
     ecs_stack_page_t *cur;
     ecs_stack_cursor_marker_t *tailMarker;
-    int32_t cursorCount;  // count of cursors that have been added to stack.
 #ifdef FLECS_DEBUG
-    ecs_vec_t cursorIds;
-    uint32_t cursorLastId;
+    int32_t cursorCount;  // count of cursors that have been added to stack.
 #endif
 } ecs_stack_t;
 
