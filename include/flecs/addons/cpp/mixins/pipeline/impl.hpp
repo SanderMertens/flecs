@@ -61,10 +61,6 @@ inline void world::run_pipeline(ecs_ftime_t delta_time) const {
     return ecs_run_pipeline(m_world, _::cpp_type<Pipeline>::id(m_world), delta_time);
 }
 
-const flecs::world_info_t* world::get_info() const {
-    return ecs_get_world_info(m_world);
-}
-
 inline void world::set_time_scale(ecs_ftime_t mul) const {
     ecs_set_time_scale(m_world, mul);
 }

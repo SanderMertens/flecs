@@ -55,11 +55,6 @@ void run_pipeline(const flecs::entity_t pip, ecs_ftime_t delta_time = 0.0) const
 template <typename Pipeline, if_not_t< is_enum<Pipeline>::value > = 0>
 void run_pipeline(ecs_ftime_t delta_time = 0.0) const;
 
-/** Get the world info.
- * @see ecs_get_world_info
- */
-const flecs::world_info_t* get_info() const;
-
 /** Set timescale.
  * @see ecs_set_time_scale
  */

@@ -19827,6 +19827,13 @@ struct world {
         ecs_run_post_frame(m_world, action, ctx);
     }
 
+    /** Get the world info.
+     * @see ecs_get_world_info
+     */
+    const flecs::world_info_t* get_info() const{
+        return ecs_get_world_info(m_world);
+    }
+
 /**
  * @file addons/cpp/mixins/id/mixin.inl
  * @brief Id world mixin.
@@ -20216,11 +20223,6 @@ void run_pipeline(const flecs::entity_t pip, ecs_ftime_t delta_time = 0.0) const
  */
 template <typename Pipeline, if_not_t< is_enum<Pipeline>::value > = 0>
 void run_pipeline(ecs_ftime_t delta_time = 0.0) const;
-
-/** Get the world info.
- * @see ecs_get_world_info
- */
-const flecs::world_info_t* get_info() const;
 
 /** Set timescale.
  * @see ecs_set_time_scale
@@ -28450,10 +28452,6 @@ inline void world::run_pipeline(const flecs::entity_t pip, ecs_ftime_t delta_tim
 template <typename Pipeline, if_not_t< is_enum<Pipeline>::value >>
 inline void world::run_pipeline(ecs_ftime_t delta_time) const {
     return ecs_run_pipeline(m_world, _::cpp_type<Pipeline>::id(m_world), delta_time);
-}
-
-const flecs::world_info_t* world::get_info() const {
-    return ecs_get_world_info(m_world);
 }
 
 inline void world::set_time_scale(ecs_ftime_t mul) const {
