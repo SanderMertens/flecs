@@ -92,15 +92,14 @@ struct ecs_ref_t {
     ecs_record_t *record;   /* Entity index record */
 };
 
-/* Cursor to stack allocator (used internally) */
+/* Cursor to stack allocator. Type is public to allow for white box testing. */
 struct ecs_stack_page_t;
-struct ecs_stack_cursor_marker_t;
 
 typedef struct ecs_stack_cursor_t {
-    struct ecs_stack_page_t *cur;
     struct ecs_stack_cursor_t *prev;
+    struct ecs_stack_page_t *page;
     int16_t sp;
-    bool isFree;
+    bool is_free;
 #ifdef FLECS_DEBUG
     struct ecs_stack_t *owner;
 #endif

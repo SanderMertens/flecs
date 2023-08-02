@@ -230,10 +230,10 @@ typedef struct ecs_stack_page_t {
 
 typedef struct ecs_stack_t {
     ecs_stack_page_t first;
-    ecs_stack_page_t *cur;
-    ecs_stack_cursor_t *tailCursor;
+    ecs_stack_page_t *tail_page;
+    ecs_stack_cursor_t *tail_cursor;
 #ifdef FLECS_DEBUG
-    int32_t cursorCount;  // count of cursors that have been added to stack.
+    int32_t cursor_count;
 #endif
 } ecs_stack_t;
 
@@ -15454,7 +15454,7 @@ void* flecs_stack_alloc(
     ecs_size_t size,
     ecs_size_t align)
 {
-    ecs_stack_page_t *page = stack->cur;
+    ecs_stack_page_t *page = stack->tail_page;
     if (page == &stack->first && !page->data) {
         page->data = ecs_os_malloc(ECS_STACK_PAGE_SIZE);
         ecs_os_linc(&ecs_stack_allocator_alloc_count);
@@ -15477,7 +15477,7 @@ void* flecs_stack_alloc(
         }
         sp = 0;
         next_sp = flecs_ito(int16_t, size);
-        stack->cur = page;
+        stack->tail_page = page;
     }
 
     page->sp = next_sp;
@@ -15512,20 +15512,20 @@ void flecs_stack_free(
 ecs_stack_cursor_t* flecs_stack_get_cursor(
     ecs_stack_t *stack)
 {
-    ecs_stack_page_t *cur = stack->cur;
-    int16_t sp = stack->cur->sp;
+    ecs_stack_page_t *page = stack->tail_page;
+    int16_t sp = stack->tail_page->sp;
     ecs_stack_cursor_t *result = flecs_stack_alloc_t(stack, ecs_stack_cursor_t);
-    result->cur = cur;
+    result->page = page;
     result->sp = sp;
-    result->isFree = false;
+    result->is_free = false;
 
 #ifdef FLECS_DEBUG
-    ++stack->cursorCount;
+    ++ stack->cursor_count;
     result->owner = stack;
 #endif
 
-    result->prev = stack->tailCursor;
-    stack->tailCursor = result;
+    result->prev = stack->tail_cursor;
+    stack->tail_cursor = result;
     return result;
 }
 
@@ -15537,55 +15537,55 @@ void flecs_stack_restore_cursor(
         return;
     }
 
-    ecs_assert(stack == cursor->owner, ECS_INVALID_OPERATION, NULL);
-    ecs_assert(cursor->isFree == false, ECS_DOUBLE_FREE, NULL);
-    ecs_assert(stack->cursorCount > 0, ECS_DOUBLE_FREE, NULL);
-#ifdef FLECS_DEBUG    
-    --stack->cursorCount;
-#endif
-    cursor->isFree = true;
+    ecs_dbg_assert(stack == cursor->owner, ECS_INVALID_OPERATION, NULL);
+    ecs_dbg_assert(stack->cursor_count > 0, ECS_DOUBLE_FREE, NULL);
+    ecs_assert(cursor->is_free == false, ECS_DOUBLE_FREE, NULL);
 
-    // Check if the cursor is the last one on the stack
-    if (cursor != stack->tailCursor)
-    {
-        // we're done here
+    cursor->is_free = true;
+
+#ifdef FLECS_DEBUG    
+    -- stack->cursor_count;
+#endif
+
+    /* If cursor is not the last on the stack no memory should be freed */
+    if (cursor != stack->tail_cursor) {
         return;
     }
 
-    // This is the tail cursor
-    // Walk the prev list until we find one not yet freed
-    while (cursor)
-    {
+    /* Iterate freed cursors to know how much memory we can free */
+    do {
         ecs_stack_cursor_t* prev = cursor->prev;
-        if (!prev || !prev->isFree)
-        {
-            break;      // marker is now the best marker to free
+        if (!prev || !prev->is_free) {
+            break; /* Found active cursor, free up until this point */
         }
         cursor = prev;
-    }
-    stack->tailCursor = cursor->prev; // now pointing to tail-most cursor not yet freed
-    stack->cur = cursor->cur;
-    stack->cur->sp = cursor->sp;
+    } while (cursor);
 
-    // if the cursor count is zero, stack should be empty
-    // if the cursor count is non-zero, stack should not be empty
-    ecs_assert((stack->cursorCount == 0) == (stack->cur == &stack->first && stack->cur->sp == 0), ECS_LEAK_DETECTED, NULL);
+    stack->tail_cursor = cursor->prev;
+    stack->tail_page = cursor->page;
+    stack->tail_page->sp = cursor->sp;
+
+    /* If the cursor count is zero, stack should be empty
+     * if the cursor count is non-zero, stack should not be empty */
+    ecs_dbg_assert((stack->cursor_count == 0) == 
+        (stack->tail_page == &stack->first && stack->tail_page->sp == 0), 
+            ECS_LEAK_DETECTED, NULL);
 }
 
 void flecs_stack_reset(
     ecs_stack_t *stack)
 {
-    ecs_assert(stack->cursorCount == 0, ECS_LEAK_DETECTED, NULL);
-    stack->cur = &stack->first;
+    ecs_dbg_assert(stack->cursor_count == 0, ECS_LEAK_DETECTED, NULL);
+    stack->tail_page = &stack->first;
     stack->first.sp = 0;
-    stack->tailCursor = NULL;
+    stack->tail_cursor = NULL;
 }
 
 void flecs_stack_init(
     ecs_stack_t *stack)
 {
     ecs_os_zeromem(stack);
-    stack->cur = &stack->first;
+    stack->tail_page = &stack->first;
     stack->first.data = NULL;
 }
 
@@ -15593,9 +15593,10 @@ void flecs_stack_fini(
     ecs_stack_t *stack)
 {
     ecs_stack_page_t *next, *cur = &stack->first;
-    ecs_assert(stack->cursorCount == 0, ECS_LEAK_DETECTED, NULL);
-    ecs_assert(stack->cur == &stack->first, ECS_LEAK_DETECTED, NULL);
-    ecs_assert(stack->cur->sp == 0, ECS_LEAK_DETECTED, NULL);
+    ecs_dbg_assert(stack->cursor_count == 0, ECS_LEAK_DETECTED, NULL);
+    ecs_assert(stack->tail_page == &stack->first, ECS_LEAK_DETECTED, NULL);
+    ecs_assert(stack->tail_page->sp == 0, ECS_LEAK_DETECTED, NULL);
+
     do {
         next = cur->next;
         if (cur == &stack->first) {

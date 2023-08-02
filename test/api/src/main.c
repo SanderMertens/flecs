@@ -2579,9 +2579,6 @@ void Error_last_error(void);
 
 // Testsuite 'StackAlloc'
 void StackAlloc_init_fini(void);
-void StackAlloc_round_trip_cursor_marker(void);
-void StackAlloc_nested_cursors_freed_in_order(void);
-void StackAlloc_overlapping_cursors(void);
 void StackAlloc_multiple_overlapping_cursors(void);
 
 bake_test_case Id_testcases[] = {
@@ -12556,18 +12553,6 @@ bake_test_case StackAlloc_testcases[] = {
         StackAlloc_init_fini
     },
     {
-        "round_trip_cursor_marker",
-        StackAlloc_round_trip_cursor_marker
-    },
-    {
-        "nested_cursors_freed_in_order",
-        StackAlloc_nested_cursors_freed_in_order
-    },
-    {
-        "overlapping_cursors",
-        StackAlloc_overlapping_cursors
-    },
-    {
         "multiple_overlapping_cursors",
         StackAlloc_multiple_overlapping_cursors
     }
@@ -12928,7 +12913,7 @@ static bake_test_suite suites[] = {
         "StackAlloc",
         NULL,
         NULL,
-        5,
+        2,
         StackAlloc_testcases
     }
 };

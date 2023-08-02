@@ -1684,7 +1684,7 @@ void Iter_interleaved_iter() {
     test_bool(false, ecs_filter_next(&it_2));
 
     it_1 = ecs_filter_iter(world, f);
-    test_assert(it_1.priv.cache.stack_cursor->cur == cursor.cur);
+    test_assert(it_1.priv.cache.stack_cursor->page == cursor.page);
     test_assert(it_1.priv.cache.stack_cursor->sp == cursor.sp);
     ecs_iter_fini(&it_1);
 
@@ -1707,7 +1707,7 @@ void Iter_iter_restore_stack_iter() {
     ecs_iter_fini(&it);
 
     it = ecs_filter_iter(world, f);
-    test_assert(it.priv.cache.stack_cursor->cur == cursor.cur);
+    test_assert(it.priv.cache.stack_cursor->page == cursor.page);
     test_assert(it.priv.cache.stack_cursor->sp == cursor.sp);
     ecs_iter_fini(&it);
 

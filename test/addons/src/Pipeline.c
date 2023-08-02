@@ -1711,7 +1711,7 @@ void Pipeline_stack_allocator_after_progress() {
     test_int(sys_a_invoked, 1);
 
     it = ecs_filter_iter(world, f);
-    test_assert(it.priv.cache.stack_cursor->cur == cursor.cur);
+    test_assert(it.priv.cache.stack_cursor->page == cursor.page);
     test_assert(it.priv.cache.stack_cursor->sp == cursor.sp);
     ecs_iter_fini(&it);
 
@@ -1742,7 +1742,7 @@ void Pipeline_stack_allocator_after_progress_w_pipeline_change() {
     test_int(sys_b_invoked, 1);
 
     it = ecs_filter_iter(world, f);
-    test_assert(it.priv.cache.stack_cursor->cur == cursor.cur);
+    test_assert(it.priv.cache.stack_cursor->page == cursor.page);
     test_assert(it.priv.cache.stack_cursor->sp == cursor.sp);
     ecs_iter_fini(&it);
 
@@ -1753,7 +1753,7 @@ void Pipeline_stack_allocator_after_progress_w_pipeline_change() {
     test_int(sys_b_invoked, 1);
 
     it = ecs_filter_iter(world, f);
-    test_assert(it.priv.cache.stack_cursor->cur == cursor.cur);
+    test_assert(it.priv.cache.stack_cursor->page == cursor.page);
     test_assert(it.priv.cache.stack_cursor->sp == cursor.sp);
     ecs_iter_fini(&it);
 

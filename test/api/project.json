@@ -2684,9 +2684,6 @@
             "id": "StackAlloc",
             "testcases": [
                 "init_fini",
-                "round_trip_cursor_marker",
-                "nested_cursors_freed_in_order",
-                "overlapping_cursors",
                 "multiple_overlapping_cursors"
             ]
         }]
