@@ -35109,6 +35109,8 @@ int flecs_json_serialize_children_alerts(
         }
     }
 
+    ecs_filter_fini(&f);
+
     return 0;
 error:
     return -1;
