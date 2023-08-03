@@ -159,6 +159,7 @@ void flecs_rest_string_param(
 
 static
 void flecs_rest_parse_json_ser_entity_params(
+    ecs_world_t *world,
     ecs_entity_to_json_desc_t *desc,
     const ecs_http_request_t *req)
 {
@@ -173,6 +174,12 @@ void flecs_rest_parse_json_ser_entity_params(
     flecs_rest_bool_param(req, "private", &desc->serialize_private);
     flecs_rest_bool_param(req, "type_info", &desc->serialize_type_info);
     flecs_rest_bool_param(req, "alerts", &desc->serialize_alerts);
+
+    char *rel = NULL;
+    flecs_rest_string_param(req, "refs", &rel);
+    if (rel) {
+        desc->serialize_refs = ecs_lookup_fullpath(world, rel);
+    }
 }
 
 static
@@ -218,7 +225,7 @@ bool flecs_rest_reply_entity(
     }
 
     ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
-    flecs_rest_parse_json_ser_entity_params(&desc, req);
+    flecs_rest_parse_json_ser_entity_params(world, &desc, req);
     if (ecs_entity_to_json_buf(world, e, &reply->body, &desc) != 0) {
         ecs_strbuf_reset(&reply->body);
         reply->code = 500;

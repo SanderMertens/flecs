@@ -2504,6 +2504,117 @@ void SerializeToJson_serialize_entity_w_severity_filter_alert() {
     ecs_fini(world);
 }
 
+void SerializeToJson_serialize_entity_refs_childof() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+
+    ecs_entity_t child_1 = ecs_new_entity(world, "child1");
+    ecs_add_pair(world, child_1, EcsChildOf, e1);
+
+    ecs_entity_t child_2 = ecs_new_entity(world, "child2");
+    ecs_add_pair(world, child_2, EcsChildOf, e1);
+
+    ecs_entity_t child_3 = ecs_new_entity(world, "child3");
+    ecs_add_pair(world, child_3, Rel, e1);
+
+    ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
+    desc.serialize_refs = EcsChildOf;
+    char *json = ecs_entity_to_json(world, e1, &desc);
+    test_assert(json != NULL);
+
+    test_str(json, "{"
+        "\"path\":\"e1\", "
+        "\"ids\":[], "
+        "\"refs\":{"
+            "\"ChildOf\":["
+                "\"e1.child1\", "
+                "\"e1.child2\""
+            "]"
+        "}"
+    "}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_serialize_entity_refs_custom() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+
+    ecs_entity_t child_1 = ecs_new_entity(world, "child1");
+    ecs_add_pair(world, child_1, Rel, e1);
+
+    ecs_entity_t child_2 = ecs_new_entity(world, "child2");
+    ecs_add_pair(world, child_2, Rel, e1);
+
+    ecs_entity_t child_3 = ecs_new_entity(world, "child3");
+    ecs_add_pair(world, child_3, EcsChildOf, e1);
+
+    ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
+    desc.serialize_refs = Rel;
+    char *json = ecs_entity_to_json(world, e1, &desc);
+    test_assert(json != NULL);
+
+    test_str(json, "{"
+        "\"path\":\"e1\", "
+        "\"ids\":[], "
+        "\"refs\":{"
+            "\"Rel\":["
+                "\"child1\", "
+                "\"child2\""
+            "]"
+        "}"
+    "}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_serialize_entity_refs_wildcard() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+
+    ecs_entity_t child_1 = ecs_new_entity(world, "child1");
+    ecs_add_pair(world, child_1, Rel, e1);
+
+    ecs_entity_t child_2 = ecs_new_entity(world, "child2");
+    ecs_add_pair(world, child_2, Rel, e1);
+
+    ecs_entity_t child_3 = ecs_new_entity(world, "child3");
+    ecs_add_pair(world, child_3, EcsChildOf, e1);
+
+    ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
+    desc.serialize_refs = EcsWildcard;
+    char *json = ecs_entity_to_json(world, e1, &desc);
+    test_assert(json != NULL);
+
+    test_str(json, "{"
+        "\"path\":\"e1\", "
+        "\"ids\":[], "
+        "\"refs\":{"
+            "\"ChildOf\":["
+                "\"e1.child3\""
+            "], "
+            "\"Rel\":["
+                "\"child1\", "
+                "\"child2\""
+            "]"
+        "}"
+    "}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
 void SerializeToJson_serialize_iterator_1_comps_empty() {
     ecs_world_t *world = ecs_init();
 
