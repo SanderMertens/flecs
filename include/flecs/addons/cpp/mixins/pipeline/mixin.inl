@@ -60,25 +60,10 @@ void run_pipeline(ecs_ftime_t delta_time = 0.0) const;
  */
 void set_time_scale(ecs_ftime_t mul) const;
 
-/** Get timescale.
- * @see ecs_get_time_scale
- */
-ecs_ftime_t get_time_scale() const;
-
-/** Get tick.
- * @return Monotonically increasing frame count.
- */
-int64_t get_tick() const;
-
 /** Set target FPS.
  * @see ecs_set_target_fps
  */
 void set_target_fps(ecs_ftime_t target_fps) const;
-
-/** Get target FPS.
- * @return Configured frames per second.
- */
-ecs_ftime_t get_target_fps() const;
 
 /** Reset simulation clock.
  * @see ecs_reset_clock

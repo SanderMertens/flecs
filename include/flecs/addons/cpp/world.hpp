@@ -182,27 +182,6 @@ struct world {
         return m_world;
     }
 
-    /** Get last delta_time.
-     */
-    ecs_ftime_t delta_time() const {
-        const ecs_world_info_t *stats = ecs_get_world_info(m_world);
-        return stats->delta_time;
-    }
-
-    /** Get current tick.
-     */
-    int64_t tick() const {
-        const ecs_world_info_t *stats = ecs_get_world_info(m_world);
-        return stats->frame_count_total;
-    }
-
-    /** Get current simulation time.
-     */
-    ecs_ftime_t time() const {
-        const ecs_world_info_t *stats = ecs_get_world_info(m_world);
-        return stats->world_time_total;
-    }
-
     /** Signal application should quit.
      * After calling this operation, the next call to progress() returns false.
      */
@@ -1006,6 +985,13 @@ struct world {
     /* Run callback after completing frame */
     void run_post_frame(ecs_fini_action_t action, void *ctx) const {
         ecs_run_post_frame(m_world, action, ctx);
+    }
+
+    /** Get the world info.
+     * @see ecs_get_world_info
+     */
+    const flecs::world_info_t* get_info() const{
+        return ecs_get_world_info(m_world);
     }
 
 #   include "mixins/id/mixin.inl"

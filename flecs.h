@@ -19023,27 +19023,6 @@ struct world {
         return m_world;
     }
 
-    /** Get last delta_time.
-     */
-    ecs_ftime_t delta_time() const {
-        const ecs_world_info_t *stats = ecs_get_world_info(m_world);
-        return stats->delta_time;
-    }
-
-    /** Get current tick.
-     */
-    int64_t tick() const {
-        const ecs_world_info_t *stats = ecs_get_world_info(m_world);
-        return stats->frame_count_total;
-    }
-
-    /** Get current simulation time.
-     */
-    ecs_ftime_t time() const {
-        const ecs_world_info_t *stats = ecs_get_world_info(m_world);
-        return stats->world_time_total;
-    }
-
     /** Signal application should quit.
      * After calling this operation, the next call to progress() returns false.
      */
@@ -19849,6 +19828,13 @@ struct world {
         ecs_run_post_frame(m_world, action, ctx);
     }
 
+    /** Get the world info.
+     * @see ecs_get_world_info
+     */
+    const flecs::world_info_t* get_info() const{
+        return ecs_get_world_info(m_world);
+    }
+
 /**
  * @file addons/cpp/mixins/id/mixin.inl
  * @brief Id world mixin.
@@ -20244,25 +20230,10 @@ void run_pipeline(ecs_ftime_t delta_time = 0.0) const;
  */
 void set_time_scale(ecs_ftime_t mul) const;
 
-/** Get timescale.
- * @see ecs_get_time_scale
- */
-ecs_ftime_t get_time_scale() const;
-
-/** Get tick.
- * @return Monotonically increasing frame count.
- */
-int64_t get_tick() const;
-
 /** Set target FPS.
  * @see ecs_set_target_fps
  */
 void set_target_fps(ecs_ftime_t target_fps) const;
-
-/** Get target FPS.
- * @return Configured frames per second.
- */
-ecs_ftime_t get_target_fps() const;
 
 /** Reset simulation clock.
  * @see ecs_reset_clock
@@ -28486,22 +28457,7 @@ inline void world::run_pipeline(ecs_ftime_t delta_time) const {
 
 inline void world::set_time_scale(ecs_ftime_t mul) const {
     ecs_set_time_scale(m_world, mul);
-}  
-
-inline ecs_ftime_t world::get_time_scale() const {
-    const ecs_world_info_t *stats = ecs_get_world_info(m_world);
-    return stats->time_scale;
 }
-
-inline int64_t world::get_tick() const {
-    const ecs_world_info_t *stats = ecs_get_world_info(m_world);
-    return stats->frame_count_total;
-}
-
-inline ecs_ftime_t world::get_target_fps() const {
-    const ecs_world_info_t *stats = ecs_get_world_info(m_world);
-    return stats->target_fps;
-} 
 
 inline void world::set_target_fps(ecs_ftime_t target_fps) const {
     ecs_set_target_fps(m_world, target_fps);
