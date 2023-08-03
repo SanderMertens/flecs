@@ -295,10 +295,15 @@ int flecs_init_type(
             return -1;
         }
         if (comp->size == size && comp->alignment != alignment) {
-            ecs_err("computed size for '%s' matches with actual type but "
-                "alignment is different (%d vs. %d)", ecs_get_name(world, type),
-                    alignment, comp->alignment);
-            return -1;
+            if (comp->alignment < alignment) {
+                ecs_err("computed size for '%s' matches with actual type but "
+                    "alignment is different (%d vs. %d)", ecs_get_name(world, type),
+                        alignment, comp->alignment);
+            } else {
+                /* If this is an existing type, the alignment can be larger but
+                 * not smaller than the computed alignment. */
+                alignment = comp->alignment;
+            }
         }
         
         meta_type->partial = comp->size != size;

@@ -120,7 +120,8 @@
                 "invalid_warning_range",
                 "overlapping_error_warning_range",
                 "overlapping_value_error_range",
-                "overlapping_value_warning_range"
+                "overlapping_value_warning_range",
+                "struct_w_16_alignment"
             ]
         }, {
             "id": "NestedStructTypes",

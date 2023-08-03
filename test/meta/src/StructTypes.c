@@ -771,3 +771,54 @@ void StructTypes_overlapping_value_warning_range() {
 
     ecs_fini(world);
 }
+
+void StructTypes_struct_w_16_alignment() {
+#ifndef _MSC_VER
+    typedef __attribute((aligned(16)))
+#else
+    typedef __declspec(align(16))
+#endif
+    struct T {
+        float x;
+        float y;
+        float z;
+        float w;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, T);
+
+    ecs_entity_t t = ecs_struct(world, {
+        .entity = ecs_id(T),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)},
+            {"z", ecs_id(ecs_f32_t)},
+            {"w", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    test_assert(t != 0);
+    test_str(ecs_get_name(world, t), "T");
+
+    meta_test_struct(world, t, T);
+    meta_test_member(world, t, T, x, ecs_id(ecs_f32_t), 1);
+    meta_test_member(world, t, T, y, ecs_id(ecs_f32_t), 1);
+    meta_test_member(world, t, T, z, ecs_id(ecs_f32_t), 1);
+    meta_test_member(world, t, T, w, ecs_id(ecs_f32_t), 1);
+
+    const EcsComponent *cptr = ecs_get(world, t, EcsComponent);
+    test_assert(cptr != NULL);
+    test_int(cptr->size, sizeof(T));
+    test_int(cptr->alignment, 16);
+
+    const EcsMetaType *mptr = ecs_get(world, t, EcsMetaType);
+    test_assert(mptr != NULL);
+    test_bool(mptr->partial, false);
+    test_bool(mptr->existing, true);
+    test_int(mptr->size, sizeof(T));
+    test_int(mptr->alignment, 16);
+
+    ecs_fini(world);
+}

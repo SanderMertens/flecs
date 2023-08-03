@@ -110,6 +110,7 @@ void StructTypes_invalid_warning_range(void);
 void StructTypes_overlapping_error_warning_range(void);
 void StructTypes_overlapping_value_error_range(void);
 void StructTypes_overlapping_value_warning_range(void);
+void StructTypes_struct_w_16_alignment(void);
 
 // Testsuite 'NestedStructTypes'
 void NestedStructTypes_1_bool(void);
@@ -1345,6 +1346,10 @@ bake_test_case StructTypes_testcases[] = {
     {
         "overlapping_value_warning_range",
         StructTypes_overlapping_value_warning_range
+    },
+    {
+        "struct_w_16_alignment",
+        StructTypes_struct_w_16_alignment
     }
 };
 
@@ -4679,7 +4684,7 @@ static bake_test_suite suites[] = {
         "StructTypes",
         NULL,
         NULL,
-        27,
+        28,
         StructTypes_testcases
     },
     {
