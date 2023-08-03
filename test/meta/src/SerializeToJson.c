@@ -2373,6 +2373,88 @@ void SerializeToJson_serialize_entity_w_2_alerts() {
     ecs_fini(world);
 }
 
+void SerializeToJson_serialize_entity_w_child_alerts() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, FlecsAlerts);
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t alert = ecs_alert(world, {
+        .entity = ecs_new_entity(world, "position_without_velocity"),
+        .filter.expr = "Position, !Velocity",
+        .message = "$this has Position but not Velocity"
+    });
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_set(world, e1, Position, {10, 20});
+
+    ecs_entity_t child_1 = ecs_new_entity(world, "child1");
+    ecs_set(world, child_1, Position, {10, 20});
+    ecs_add_pair(world, child_1, EcsChildOf, e1);
+
+    ecs_entity_t child_2 = ecs_new_entity(world, "child2");
+    ecs_set(world, child_2, Position, {10, 20});
+    ecs_add_pair(world, child_2, EcsChildOf, e1);
+
+    ecs_entity_t grandchild_1 = ecs_new_entity(world, "grandchild1");
+    ecs_set(world, grandchild_1, Position, {10, 20});
+    ecs_add_pair(world, grandchild_1, EcsChildOf, child_1);
+
+    ecs_progress(world, 1.0); /* Evaluate alert logic */
+
+    /* Give alert instances name so we don't have to test unstable entity ids */
+    ecs_entity_t e1_ai = ecs_get_alert(world, e1, alert);
+    test_assert(e1_ai != 0);
+    ecs_set_name(world, e1_ai, "e1_alert");
+
+    ecs_entity_t child1_ai = ecs_get_alert(world, child_1, alert);
+    test_assert(child1_ai != 0);
+    ecs_set_name(world, child1_ai, "child1_alert");
+
+    ecs_entity_t child2_ai = ecs_get_alert(world, child_2, alert);
+    test_assert(child2_ai != 0);
+    ecs_set_name(world, child2_ai, "child2_alert");
+
+    ecs_entity_t grandchild1_ai = ecs_get_alert(world, grandchild_1, alert);
+    test_assert(grandchild1_ai != 0);
+    ecs_set_name(world, grandchild1_ai, "grandchild1_alert");
+
+    ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
+    desc.serialize_alerts = true;
+    char *json = ecs_entity_to_json(world, e1, &desc);
+    test_assert(json != NULL);
+
+    test_str(json, "{"
+        "\"path\":\"e1\", "
+        "\"ids\":[[\"Position\"]], "
+        "\"alerts\":[{"
+            "\"alert\":\"position_without_velocity.e1_alert\", "
+            "\"message\":\"e1 has Position but not Velocity\", "
+            "\"severity\":\"Error\""
+        "}, {"
+            "\"alert\":\"position_without_velocity.child1_alert\", "
+            "\"message\":\"e1.child1 has Position but not Velocity\", "
+            "\"severity\":\"Error\", "
+            "\"path\":\"e1.child1\""
+        "}, {"
+            "\"alert\":\"position_without_velocity.grandchild1_alert\", "
+            "\"message\":\"e1.child1.grandchild1 has Position but not Velocity\", "
+            "\"severity\":\"Error\", "
+            "\"path\":\"e1.child1.grandchild1\""
+        "}, {"
+            "\"alert\":\"position_without_velocity.child2_alert\", "
+            "\"message\":\"e1.child2 has Position but not Velocity\", "
+            "\"severity\":\"Error\", "
+            "\"path\":\"e1.child2\""
+        "}]"
+    "}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
 void SerializeToJson_serialize_entity_w_severity_filter_alert() {
     ecs_world_t *world = ecs_init();
 

@@ -964,6 +964,121 @@ int flecs_json_append_base(
     return 0;
 }
 
+#ifdef FLECS_ALERTS
+static
+int flecs_json_serialize_entity_alerts(
+    const ecs_world_t *world,
+    ecs_strbuf_t *buf,
+    ecs_entity_t entity,
+    const EcsAlertsActive *alerts,
+    bool self)
+{
+    ecs_assert(alerts != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_map_iter_t it = ecs_map_iter(&alerts->alerts);
+    while (ecs_map_next(&it)) {
+        flecs_json_next(buf);
+        flecs_json_object_push(buf);
+        ecs_entity_t ai = ecs_map_value(&it);
+        char *alert_name = ecs_get_fullpath(world, ai);
+        flecs_json_memberl(buf, "alert");
+        flecs_json_string(buf, alert_name);
+        ecs_os_free(alert_name);
+
+        ecs_entity_t severity_id = ecs_get_target(
+            world, ai, ecs_id(EcsAlert), 0);
+        const char *severity = ecs_get_name(world, severity_id);
+
+        const EcsAlertInstance *alert = ecs_get(
+            world, ai, EcsAlertInstance);
+        if (alert) {
+            flecs_json_memberl(buf, "message");
+            flecs_json_string(buf, alert->message);
+            flecs_json_memberl(buf, "severity");
+            flecs_json_string(buf, severity);
+            
+            if (!self) {
+                char *path = ecs_get_fullpath(world, entity);
+                flecs_json_memberl(buf, "path");
+                flecs_json_string(buf, path);
+                ecs_os_free(path);
+            }
+        }
+        flecs_json_object_pop(buf);
+    }
+
+    return 0;
+}
+
+static
+int flecs_json_serialize_children_alerts(
+    const ecs_world_t *world,
+    ecs_strbuf_t *buf,
+    ecs_entity_t entity)
+{
+    ecs_filter_t f = ECS_FILTER_INIT;
+    ecs_filter(ECS_CONST_CAST(ecs_world_t*, world), {
+        .storage = &f,
+        .terms = {{ ecs_pair(EcsChildOf, entity) }}
+    });
+
+    ecs_iter_t it = ecs_filter_iter(world, &f);
+    while (ecs_filter_next(&it)) {
+        ecs_record_t **records = ecs_vec_first(&it.table->data.records);
+        EcsAlertsActive *alerts = ecs_table_get_id(
+            world, it.table, ecs_id(EcsAlertsActive), it.offset);
+
+        int32_t i;
+        for (i = 0; i < it.count; i ++) {
+            ecs_entity_t child = it.entities[i];
+            if (alerts) {
+                if (flecs_json_serialize_entity_alerts(
+                    world, buf, child, &alerts[i], false))
+                {
+                    goto error;
+                }
+            }
+
+            ecs_record_t *r = records[i];
+            if (r->row & EcsEntityIsTraversable) {
+                if (flecs_json_serialize_children_alerts(
+                    world, buf, child))
+                {
+                    goto error;
+                }
+            }
+        }
+    }
+
+    return 0;
+error:
+    return -1;
+}
+#endif
+
+static
+int flecs_json_serialize_alerts(
+    const ecs_world_t *world,
+    ecs_strbuf_t *buf,
+    ecs_entity_t entity)
+{
+    (void)world;
+    (void)buf;
+    (void)entity;
+
+#ifdef FLECS_ALERTS
+    flecs_json_memberl(buf, "alerts");
+    flecs_json_array_push(buf);
+    const EcsAlertsActive *alerts = ecs_get(world, entity, EcsAlertsActive);
+    if (alerts) {
+        flecs_json_serialize_entity_alerts(world, buf, entity, alerts, true);
+    }
+    flecs_json_serialize_children_alerts(world, buf, entity);
+    flecs_json_array_pop(buf);
+#endif
+    return 0;
+}
+
 int ecs_entity_to_json_buf(
     const ecs_world_t *world,
     ecs_entity_t entity,
@@ -1052,38 +1167,9 @@ int ecs_entity_to_json_buf(
     }
 
     if (desc && desc->serialize_alerts) {
-#ifdef FLECS_ALERTS
-        const EcsAlertsActive *alerts = ecs_get(world, entity, EcsAlertsActive);
-        if (alerts) {
-            flecs_json_memberl(buf, "alerts");
-            flecs_json_array_push(buf);
-            ecs_map_iter_t it = ecs_map_iter(&alerts->alerts);
-            while (ecs_map_next(&it)) {
-                flecs_json_next(buf);
-                flecs_json_object_push(buf);
-                ecs_entity_t ai = ecs_map_value(&it);
-                char *alert_name = ecs_get_fullpath(world, ai);
-                flecs_json_memberl(buf, "alert");
-                flecs_json_string(buf, alert_name);
-                ecs_os_free(alert_name);
-
-                ecs_entity_t severity_id = ecs_get_target(
-                    world, ai, ecs_id(EcsAlert), 0);
-                const char *severity = ecs_get_name(world, severity_id);
-
-                const EcsAlertInstance *alert = ecs_get(
-                    world, ai, EcsAlertInstance);
-                if (alert) {
-                    flecs_json_memberl(buf, "message");
-                    flecs_json_string(buf, alert->message);
-                    flecs_json_memberl(buf, "severity");
-                    flecs_json_string(buf, severity);
-                }
-                flecs_json_object_pop(buf);
-            }
-            flecs_json_array_pop(buf);
+        if (flecs_json_serialize_alerts(world, buf, entity)) {
+            goto error;
         }
-#endif
     }
 
     flecs_json_object_pop(buf);

@@ -678,6 +678,7 @@ void SerializeToJson_serialize_entity_w_union_property(void);
 void SerializeToJson_serialize_entity_from_core(void);
 void SerializeToJson_serialize_entity_w_1_alert(void);
 void SerializeToJson_serialize_entity_w_2_alerts(void);
+void SerializeToJson_serialize_entity_w_child_alerts(void);
 void SerializeToJson_serialize_entity_w_severity_filter_alert(void);
 void SerializeToJson_serialize_iterator_1_comps_empty(void);
 void SerializeToJson_serialize_iterator_1_comps_2_ents_same_table(void);
@@ -3565,6 +3566,10 @@ bake_test_case SerializeToJson_testcases[] = {
         SerializeToJson_serialize_entity_w_2_alerts
     },
     {
+        "serialize_entity_w_child_alerts",
+        SerializeToJson_serialize_entity_w_child_alerts
+    },
+    {
         "serialize_entity_w_severity_filter_alert",
         SerializeToJson_serialize_entity_w_severity_filter_alert
     },
@@ -4729,7 +4734,7 @@ static bake_test_suite suites[] = {
         "SerializeToJson",
         NULL,
         NULL,
-        135,
+        136,
         SerializeToJson_testcases
     },
     {
