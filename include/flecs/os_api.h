@@ -482,6 +482,16 @@ void ecs_os_strset(char **str, const char *value);
 #define ecs_os_ldec(v) (--(*v))
 #endif
 
+#ifdef ECS_TARGET_MINGW
+/* mingw bug: without this a conversion error is thrown, but isnan/isinf should
+ * accept float, double and long double. */
+#define ecs_os_isnan(val) (isnan((float)val))
+#define ecs_os_isinf(val) (isinf((float)val))
+#else
+#define ecs_os_isnan(val) (isnan(val))
+#define ecs_os_isinf(val) (isinf(val))
+#endif
+
 /* Application termination */
 #define ecs_os_abort() ecs_os_api.abort_()
 

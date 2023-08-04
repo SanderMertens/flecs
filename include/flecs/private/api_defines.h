@@ -12,7 +12,7 @@
 
 #include "api_flags.h"
 
-#if defined(_WIN32) || defined(_MSC_VER) || defined(__MING32__)
+#if defined(_WIN32) || defined(_MSC_VER)
 #define ECS_TARGET_WINDOWS
 #elif defined(__ANDROID__)
 #define ECS_TARGET_ANDROID
@@ -31,8 +31,8 @@
 #define ECS_TARGET_POSIX
 #endif
 
-#if defined(__MING32__)
-#define ECS_TARGET_POSIX
+#if defined(__MINGW32__) || defined(__MINGW64__)
+#define ECS_TARGET_MINGW
 #endif
 
 #if defined(_MSC_VER)
@@ -69,6 +69,8 @@
 
 /* Ignored warnings */
 #if defined(ECS_TARGET_CLANG)
+/* Ignore unknown options so we don't have to care about the compiler version */
+#pragma clang diagnostic ignored "-Wunknown-warning-option"
 /* Warns for double or redundant semicolons. There are legitimate cases where a
  * semicolon after an empty statement is useful, for example after a macro that
  * is replaced with a code block. With this warning enabled, semicolons would 
@@ -99,6 +101,12 @@
 /* clang 13 can throw this warning for a define in ctype.h */
 #pragma clang diagnostic ignored "-Wreserved-identifier"
 #endif
+/* Filenames aren't consistent across targets as they can use different casing 
+ * (e.g. WinSock2 vs winsock2). */
+#pragma clang diagnostic ignored "-Wnonportable-system-include-path"
+/* Enum reflection relies on testing constant values that may not be valid for
+ * the enumeration. */
+#pragma clang diagnostic ignored "-Wenum-constexpr-conversion"
 #elif defined(ECS_TARGET_GNU)
 #ifndef __cplusplus
 #pragma GCC diagnostic ignored "-Wdeclaration-after-statement"

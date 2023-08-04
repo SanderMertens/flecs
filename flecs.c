@@ -13426,7 +13426,7 @@ int flecs_strbuf_ftoa(
 	int64_t intPart;
     int64_t exp = 0;
 
-    if (isnan(f)) {
+    if (ecs_os_isnan(f)) {
         if (nan_delim) {
             ecs_strbuf_appendch(out, nan_delim);
             ecs_strbuf_appendlit(out, "NaN");
@@ -13435,7 +13435,7 @@ int flecs_strbuf_ftoa(
             return ecs_strbuf_appendlit(out, "NaN");
         }
     }
-    if (isinf(f)) {
+    if (ecs_os_isinf(f)) {
         if (nan_delim) {
             ecs_strbuf_appendch(out, nan_delim);
             ecs_strbuf_appendlit(out, "Inf");
@@ -14735,7 +14735,7 @@ void* ecs_map_get_deref_(
     ecs_map_val_t* ptr = flecs_map_bucket_get(
         flecs_map_get_bucket(map, key), key);
     if (ptr) {
-        return (void*)ptr[0];
+        return (void*)(uintptr_t)ptr[0];
     }
     return NULL;
 }
@@ -14763,7 +14763,7 @@ void* ecs_map_insert_alloc(
     ecs_map_key_t key)
 {
     void *elem = ecs_os_calloc(elem_size);
-    ecs_map_insert_ptr(map, key, elem);
+    ecs_map_insert_ptr(map, key, (uintptr_t)elem);
     return elem;
 }
 
@@ -14798,10 +14798,10 @@ void* ecs_map_ensure_alloc(
     ecs_map_val_t *val = ecs_map_ensure(map, key);
     if (!*val) {
         void *elem = ecs_os_calloc(elem_size);
-        *val = (ecs_map_val_t)elem;
+        *val = (ecs_map_val_t)(uintptr_t)elem;
         return elem;
     } else {
-        return (void*)*val;
+        return (void*)(uintptr_t)*val;
     }
 }
 
@@ -14818,7 +14818,7 @@ void ecs_map_remove_free(
 {
     ecs_map_val_t val = ecs_map_remove(map, key);
     if (val) {
-        ecs_os_free((void*)val);
+        ecs_os_free((void*)(uintptr_t)val);
     }
 }
 
@@ -20131,8 +20131,8 @@ void FlecsAlertsImport(ecs_world_t *world) {
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
-#include <WinSock2.h>
-#include <Windows.h>
+#include <winsock2.h>
+#include <windows.h>
 
 typedef struct ecs_win_thread_t {
     HANDLE thread;
@@ -38934,14 +38934,17 @@ void FlecsCoreDocImport(
 
 #ifdef FLECS_HTTP
 
+#ifdef ECS_TARGET_MSVC
+#pragma comment(lib, "Ws2_32.lib")
+#endif
+
 #if defined(ECS_TARGET_WINDOWS)
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
-#pragma comment(lib, "Ws2_32.lib")
-#include <WinSock2.h>
-#include <WS2tcpip.h>
-#include <Windows.h>
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <windows.h>
 typedef SOCKET ecs_http_socket_t;
 #else
 #include <unistd.h>
@@ -55569,7 +55572,7 @@ void flecs_log_msg(
 
     if (deltatime) {
         now = time(NULL);
-        time_t delta = 0;
+        int64_t delta = 0;
         if (ecs_os_api.log_last_timestamp_) {
             delta = now - ecs_os_api.log_last_timestamp_;
         }

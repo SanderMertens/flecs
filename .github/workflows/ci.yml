@@ -70,6 +70,60 @@ jobs:
       - name: build examples (release)
         run: bake/bake examples --strict --cfg debug
 
+  build-msys:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { sys: mingw64, cmake_arg: -G "MinGW Makefiles" }
+          - { sys: mingw32, cmake_arg: -G "MinGW Makefiles" }
+          - { sys: ucrt64,  cmake_arg: -G "MinGW Makefiles" }
+          - { sys: clang64, cmake_arg: -G "MinGW Makefiles" }
+
+    defaults:
+      run:
+        shell: msys2 {0}
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{matrix.sys}}
+          update: true
+          install: >-
+            curl
+            git
+          pacboy: >-
+            toolchain:p
+            cmake:p
+            ninja:p
+
+      - name: create cmake build folders
+        run: |
+          mkdir cmake_build
+          mkdir examples/c/cmake_build
+          mkdir examples/cpp/cmake_build
+
+      - name: build flecs
+        working-directory: cmake_build
+        run: |
+          cmake ${{ matrix.cmake_arg }} -DFLECS_STRICT=ON ..
+          cmake --build . -j 4
+
+      - name: build c examples
+        working-directory: examples/c/cmake_build
+        run: |
+          cmake ${{ matrix.cmake_arg }} -DFLECS_STRICT=ON ..
+          cmake --build . -j 4
+
+      - name: build c++ examples
+        working-directory: examples/cpp/cmake_build
+        run: |
+          cmake ${{ matrix.cmake_arg }} -DFLECS_STRICT=ON ..
+          cmake --build . -j 4
+
   build:
     needs: build-linux
     runs-on: ${{ matrix.target.os }}

@@ -468,7 +468,7 @@ extern "C" {
 #endif
 
 
-#if defined(_WIN32) || defined(_MSC_VER) || defined(__MING32__)
+#if defined(_WIN32) || defined(_MSC_VER)
 #define ECS_TARGET_WINDOWS
 #elif defined(__ANDROID__)
 #define ECS_TARGET_ANDROID
@@ -487,8 +487,8 @@ extern "C" {
 #define ECS_TARGET_POSIX
 #endif
 
-#if defined(__MING32__)
-#define ECS_TARGET_POSIX
+#if defined(__MINGW32__) || defined(__MINGW64__)
+#define ECS_TARGET_MINGW
 #endif
 
 #if defined(_MSC_VER)
@@ -525,6 +525,8 @@ extern "C" {
 
 /* Ignored warnings */
 #if defined(ECS_TARGET_CLANG)
+/* Ignore unknown options so we don't have to care about the compiler version */
+#pragma clang diagnostic ignored "-Wunknown-warning-option"
 /* Warns for double or redundant semicolons. There are legitimate cases where a
  * semicolon after an empty statement is useful, for example after a macro that
  * is replaced with a code block. With this warning enabled, semicolons would 
@@ -555,6 +557,12 @@ extern "C" {
 /* clang 13 can throw this warning for a define in ctype.h */
 #pragma clang diagnostic ignored "-Wreserved-identifier"
 #endif
+/* Filenames aren't consistent across targets as they can use different casing 
+ * (e.g. WinSock2 vs winsock2). */
+#pragma clang diagnostic ignored "-Wnonportable-system-include-path"
+/* Enum reflection relies on testing constant values that may not be valid for
+ * the enumeration. */
+#pragma clang diagnostic ignored "-Wenum-constexpr-conversion"
 #elif defined(ECS_TARGET_GNU)
 #ifndef __cplusplus
 #pragma GCC diagnostic ignored "-Wdeclaration-after-statement"
@@ -1560,17 +1568,17 @@ void ecs_map_copy(
     const ecs_map_t *src);
 
 #define ecs_map_get_ref(m, T, k) ECS_CAST(T**, ecs_map_get(m, k))
-#define ecs_map_get_deref(m, T, k) ECS_CAST(T*, ecs_map_get_deref_(m, k))
+#define ecs_map_get_deref(m, T, k) ECS_CAST(T*, (uintptr_t)ecs_map_get_deref_(m, k))
 #define ecs_map_ensure_ref(m, T, k) ECS_CAST(T**, ecs_map_ensure(m, k))
 
-#define ecs_map_insert_ptr(m, k, v) ecs_map_insert(m, k, ECS_CAST(ecs_map_val_t, v))
-#define ecs_map_insert_alloc_t(m, T, k) ECS_CAST(T*, ecs_map_insert_alloc(m, ECS_SIZEOF(T), k))
-#define ecs_map_ensure_alloc_t(m, T, k) ECS_CAST(T*, ecs_map_ensure_alloc(m, ECS_SIZEOF(T), k))
-#define ecs_map_remove_ptr(m, k) ((void*)(ecs_map_remove(m, k)))
+#define ecs_map_insert_ptr(m, k, v) ecs_map_insert(m, k, ECS_CAST(ecs_map_val_t, (uintptr_t)v))
+#define ecs_map_insert_alloc_t(m, T, k) ECS_CAST(T*, (uintptr_t)ecs_map_insert_alloc(m, ECS_SIZEOF(T), k))
+#define ecs_map_ensure_alloc_t(m, T, k) ECS_CAST(T*, (uintptr_t)ecs_map_ensure_alloc(m, ECS_SIZEOF(T), k))
+#define ecs_map_remove_ptr(m, k) ((void*)(uintptr_t)(ecs_map_remove(m, k)))
 
 #define ecs_map_key(it) ((it)->res[0])
 #define ecs_map_value(it) ((it)->res[1])
-#define ecs_map_ptr(it) ECS_CAST(void*, ecs_map_value(it))
+#define ecs_map_ptr(it) ECS_CAST(void*, (uintptr_t)ecs_map_value(it))
 #define ecs_map_ref(it, T) (ECS_CAST(T**, &((it)->res[1])))
 
 #ifdef __cplusplus
@@ -2369,6 +2377,16 @@ void ecs_os_strset(char **str, const char *value);
 #define ecs_os_linc(v) (++(*v))
 #define ecs_os_dec(v)  (--(*v))
 #define ecs_os_ldec(v) (--(*v))
+#endif
+
+#ifdef ECS_TARGET_MINGW
+/* mingw bug: without this a conversion error is thrown, but isnan/isinf should
+ * accept float, double and long double. */
+#define ecs_os_isnan(val) (isnan((float)val))
+#define ecs_os_isinf(val) (isinf((float)val))
+#else
+#define ecs_os_isnan(val) (isnan(val))
+#define ecs_os_isinf(val) (isinf(val))
 #endif
 
 /* Application termination */
