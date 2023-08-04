@@ -633,6 +633,7 @@ void QueryBuilder_cascade_w_type(void);
 void QueryBuilder_named_query(void);
 void QueryBuilder_term_w_write(void);
 void QueryBuilder_term_w_read(void);
+void QueryBuilder_iter_w_stage(void);
 
 // Testsuite 'FilterBuilder'
 void FilterBuilder_builder_assign_same_type(void);
@@ -742,6 +743,7 @@ void FilterBuilder_read_pair_component_id(void);
 void FilterBuilder_read_pair_component_name(void);
 void FilterBuilder_read_enum(void);
 void FilterBuilder_assign_after_init(void);
+void FilterBuilder_iter_w_stage(void);
 
 // Testsuite 'RuleBuilder'
 void RuleBuilder_1_type(void);
@@ -772,6 +774,7 @@ void RuleBuilder_named_scoped_rule(void);
 void RuleBuilder_is_valid(void);
 void RuleBuilder_unresolved_by_name(void);
 void RuleBuilder_scope(void);
+void RuleBuilder_iter_w_stage(void);
 
 // Testsuite 'SystemBuilder'
 void SystemBuilder_builder_assign_same_type(void);
@@ -3696,6 +3699,10 @@ bake_test_case QueryBuilder_testcases[] = {
     {
         "term_w_read",
         QueryBuilder_term_w_read
+    },
+    {
+        "iter_w_stage",
+        QueryBuilder_iter_w_stage
     }
 };
 
@@ -4127,6 +4134,10 @@ bake_test_case FilterBuilder_testcases[] = {
     {
         "assign_after_init",
         FilterBuilder_assign_after_init
+    },
+    {
+        "iter_w_stage",
+        FilterBuilder_iter_w_stage
     }
 };
 
@@ -4242,6 +4253,10 @@ bake_test_case RuleBuilder_testcases[] = {
     {
         "scope",
         RuleBuilder_scope
+    },
+    {
+        "iter_w_stage",
+        RuleBuilder_iter_w_stage
     }
 };
 
@@ -6149,21 +6164,21 @@ static bake_test_suite suites[] = {
         "QueryBuilder",
         NULL,
         NULL,
-        67,
+        68,
         QueryBuilder_testcases
     },
     {
         "FilterBuilder",
         NULL,
         NULL,
-        107,
+        108,
         FilterBuilder_testcases
     },
     {
         "RuleBuilder",
         NULL,
         NULL,
-        28,
+        29,
         RuleBuilder_testcases
     },
     {

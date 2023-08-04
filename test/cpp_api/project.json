@@ -658,7 +658,8 @@
                 "cascade_w_type",
                 "named_query",
                 "term_w_write",
-                "term_w_read"
+                "term_w_read",
+                "iter_w_stage"
             ]
         }, {
             "id": "FilterBuilder",
@@ -769,7 +770,8 @@
                 "read_pair_component_id",
                 "read_pair_component_name",
                 "read_enum",
-                "assign_after_init"
+                "assign_after_init",
+                "iter_w_stage"
             ]
         }, {
             "id": "RuleBuilder",
@@ -801,7 +803,8 @@
                 "named_scoped_rule",
                 "is_valid",
                 "unresolved_by_name",
-                "scope"
+                "scope",
+                "iter_w_stage"
             ]
         }, {
             "id": "SystemBuilder",

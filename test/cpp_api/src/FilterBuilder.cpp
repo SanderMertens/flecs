@@ -2509,3 +2509,23 @@ void FilterBuilder_assign_after_init() {
 
     test_int(count, 1);
 }
+
+void FilterBuilder_iter_w_stage() {
+    flecs::world ecs;
+
+    ecs.set_stage_count(2);
+    flecs::world stage = ecs.get_stage(1);
+
+    auto e1 = ecs.entity().add<Position>();
+
+    auto q = ecs.filter<Position>();
+
+    int32_t count = 0;
+    q.each(stage, [&](flecs::iter& it, size_t i, Position&) {
+        test_assert(it.world() == stage);
+        test_assert(it.entity(i) == e1);
+        count ++;
+    });
+
+    test_int(count, 1);
+}

@@ -28890,7 +28890,7 @@ private:
         if (!world) {
             world = m_world;
         }
-        return ecs_rule_iter(m_world, m_rule);
+        return ecs_rule_iter(world, m_rule);
     }
 
     ecs_iter_next_action_t next_action() const override {
