@@ -35133,6 +35133,10 @@ int flecs_json_serialize_alerts(
     (void)entity;
 
 #ifdef FLECS_ALERTS
+    if (!ecs_id(EcsAlertsActive)) {
+        return 0; /* Alert module not imported */
+    }
+
     flecs_json_memberl(buf, "alerts");
     flecs_json_array_push(buf);
     const EcsAlertsActive *alerts = ecs_get(world, entity, EcsAlertsActive);
@@ -51146,7 +51150,7 @@ int flecs_term_populate_from_id(
 
     ecs_entity_t term_first = flecs_term_id_get_entity(&term->first);
     if (term_first) {
-        if ((uint32_t)term_first != first) {
+        if ((uint32_t)term_first != (uint32_t)first) {
             flecs_filter_error(ctx, "mismatch between term.id and term.first");
             return -1;
         }

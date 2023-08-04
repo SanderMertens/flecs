@@ -2504,6 +2504,29 @@ void SerializeToJson_serialize_entity_w_severity_filter_alert() {
     ecs_fini(world);
 }
 
+void SerializeToJson_serialize_entity_w_alerts_not_imported() {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_new_w_pair(world, EcsChildOf, e1);
+
+    ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
+    desc.serialize_alerts = true;
+    char *json = ecs_entity_to_json(world, e1, &desc);
+    test_assert(json != NULL);
+
+    test_str(json, "{"
+        "\"path\":\"e1\", "
+        "\"ids\":[[\"Position\"]]"
+    "}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
 void SerializeToJson_serialize_entity_refs_childof() {
     ecs_world_t *world = ecs_init();
 
@@ -4958,3 +4981,4 @@ void SerializeToJson_serialize_anonymous_entities_w_offset() {
 
     ecs_fini(world);
 }
+

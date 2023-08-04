@@ -712,6 +712,7 @@
                 "serialize_entity_w_2_alerts",
                 "serialize_entity_w_child_alerts",
                 "serialize_entity_w_severity_filter_alert",
+                "serialize_entity_w_alerts_not_imported",
                 "serialize_entity_refs_childof",
                 "serialize_entity_refs_custom",
                 "serialize_entity_refs_wildcard",

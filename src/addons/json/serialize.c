@@ -1069,6 +1069,10 @@ int flecs_json_serialize_alerts(
     (void)entity;
 
 #ifdef FLECS_ALERTS
+    if (!ecs_id(EcsAlertsActive)) {
+        return 0; /* Alert module not imported */
+    }
+
     flecs_json_memberl(buf, "alerts");
     flecs_json_array_push(buf);
     const EcsAlertsActive *alerts = ecs_get(world, entity, EcsAlertsActive);
