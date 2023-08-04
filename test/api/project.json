@@ -1638,7 +1638,8 @@
                 "query_for_recycled_pair",
                 "query_w_singleton_w_rule_iter",
                 "query_w_singleton_nested_iter",
-                "query_w_singleton_interleaved_iter"
+                "query_w_singleton_interleaved_iter",
+                "recycled_component_id"
             ]
         }, {
             "id": "Iter",

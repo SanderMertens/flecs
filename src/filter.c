@@ -382,7 +382,7 @@ int flecs_term_populate_from_id(
 
     ecs_entity_t term_first = flecs_term_id_get_entity(&term->first);
     if (term_first) {
-        if ((uint32_t)term_first != first) {
+        if ((uint32_t)term_first != (uint32_t)first) {
             flecs_filter_error(ctx, "mismatch between term.id and term.first");
             return -1;
         }

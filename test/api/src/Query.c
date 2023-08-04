@@ -9291,3 +9291,40 @@ void Query_query_w_singleton_interleaved_iter() {
 
     ecs_fini(ecs);
 }
+
+void Query_recycled_component_id() {
+    ecs_world_t* ecs = ecs_init();
+
+    for (int i = 0; i < FLECS_HI_COMPONENT_ID; i ++) {
+        ecs_new_low_id(ecs);
+    }
+
+    ecs_entity_t e = ecs_new_id(ecs);
+    ecs_delete(ecs, e);
+
+    ECS_COMPONENT(ecs, Position);
+
+    ecs_query_t *q = ecs_query(ecs, {
+        .filter.terms = {
+            { .id = ecs_id(Position) }
+        }
+    });
+    test_assert(q != NULL);
+
+    ecs_entity_t e1 = ecs_set(ecs, 0, Position, {10, 20});
+    ecs_entity_t e2 = ecs_set(ecs, 0, Position, {20, 30});
+
+    ecs_iter_t it = ecs_query_iter(ecs, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 2);
+    test_uint(it.entities[0], e1);
+    test_uint(it.entities[1], e2);
+    Position *p = ecs_field(&it, Position, 1);
+    test_int(p[0].x, 10);
+    test_int(p[0].y, 20);
+    test_int(p[1].x, 20);
+    test_int(p[1].y, 30);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(ecs);
+}
