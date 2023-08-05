@@ -77,10 +77,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { sys: mingw64, cmake_arg: -G "MinGW Makefiles" }
-          - { sys: mingw32, cmake_arg: -G "MinGW Makefiles" }
-          - { sys: ucrt64,  cmake_arg: -G "MinGW Makefiles" }
-          - { sys: clang64, cmake_arg: -G "MinGW Makefiles" }
+          - { sys: mingw64 }
+          - { sys: mingw32 }
+          - { sys: ucrt64 }
+          - { sys: clang64 }
 
     defaults:
       run:
@@ -98,7 +98,6 @@ jobs:
           pacboy: >-
             toolchain:p
             cmake:p
-            ninja:p
 
       - name: create cmake build folders
         run: |
@@ -109,19 +108,19 @@ jobs:
       - name: build flecs
         working-directory: cmake_build
         run: |
-          cmake ${{ matrix.cmake_arg }} -DFLECS_STRICT=ON ..
+          cmake -G "MinGW Makefiles" -DFLECS_STRICT=ON ..
           cmake --build . -j 4
 
       - name: build c examples
         working-directory: examples/c/cmake_build
         run: |
-          cmake ${{ matrix.cmake_arg }} -DFLECS_STRICT=ON ..
+          cmake -G "MinGW Makefiles" -DFLECS_STRICT=ON ..
           cmake --build . -j 4
 
       - name: build c++ examples
         working-directory: examples/cpp/cmake_build
         run: |
-          cmake ${{ matrix.cmake_arg }} -DFLECS_STRICT=ON ..
+          cmake -G "MinGW Makefiles" -DFLECS_STRICT=ON ..
           cmake --build . -j 4
 
   build:
@@ -613,7 +612,7 @@ jobs:
           ./bake setup --local
 
       - name: build flecs
-        run: bake/bake --strict
+        run: bake/bake
 
       - name: test api
         run: bake/bake run test\api -- -j 8
@@ -629,6 +628,60 @@ jobs:
 
       - name: test c++
         run: bake/bake run test\cpp_api -- -j 8
+
+  test-msys:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { sys: mingw64 }
+          - { sys: mingw32 }
+          - { sys: ucrt64 }
+          - { sys: clang64 }
+
+    defaults:
+      run:
+        shell: msys2 {0}
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{matrix.sys}}
+          update: true
+          install: >-
+            curl
+            git
+          pacboy: >-
+            toolchain:p
+            cmake:p
+
+      - name: install bake
+        run: |
+          cp `which mingw32-make` /usr/bin/make
+          git clone https://github.com/SanderMertens/bake
+          make -C bake/build-Mingw
+          bake/bake setup
+
+      - name: build flecs
+        run: bake/bake --strict
+
+      - name: test api
+        run: bake/bake run test/api -- -j 8
+
+      - name: test addons
+        run: bake/bake run test/addons -- -j 8
+
+      - name: test meta
+        run: bake/bake run test/meta -- -j 8
+
+      - name: test collections
+        run: bake/bake run test/collections -- -j 8
+
+      - name: test c++
+        run: bake/bake run test/cpp_api -- -j 8
 
   test-sanitized-api:
     needs: [ build-linux ]

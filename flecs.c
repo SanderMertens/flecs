@@ -57178,6 +57178,7 @@ void win_cond_wait(
 static bool win_time_initialized;
 static double win_time_freq;
 static LARGE_INTEGER win_time_start;
+static ULONG win_current_resolution;
 
 static
 void win_time_setup(void) {
@@ -57208,9 +57209,6 @@ void win_sleep(
     WaitForSingleObject(timer, INFINITE);
     CloseHandle(timer);
 }
-
-static double win_time_freq;
-static ULONG win_current_resolution;
 
 static
 void win_enable_high_timer_resolution(bool enable)
