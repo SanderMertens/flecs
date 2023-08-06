@@ -1117,3 +1117,126 @@ void Meta_error_range() {
         test_assert(ranges->error.max == 2);
     }
 }
+
+void Meta_struct_member_ptr() {
+    flecs::world ecs;
+
+    struct Test {
+        int32_t x;
+    };
+    struct Test2 {
+        double y;
+    };
+    struct Nested {
+        Test a;
+        int pad; // This will be ignored
+        Test2 b[2];
+    };
+
+    auto t = ecs.component<Test>()
+        .member("x", &Test::x);
+
+    auto t2 = ecs.component<Test2>()
+        .member("y", &Test2::y);
+
+    auto n = ecs.component<Nested>()
+        .member("a", &Nested::a)
+        .member("b", &Nested::b);
+
+    { // Validate Test
+        test_assert(t != 0);
+
+        auto x = t.lookup("x");
+        test_assert(x != 0);
+        test_assert(x.has<flecs::Member>());
+        const flecs::Member *xm = x.get<flecs::Member>();
+        test_uint(xm->type, flecs::I32);
+        test_uint(xm->offset, offsetof(Test, x));
+    }
+    { // Validate Test2
+        test_assert(t2 != 0);
+
+        auto y = t2.lookup("y");
+        test_assert(y != 0);
+        test_assert(y.has<flecs::Member>());
+        const flecs::Member *ym = y.get<flecs::Member>();
+        test_uint(ym->type, flecs::F64);
+        test_uint(ym->offset, offsetof(Test2, y));
+    }
+
+    // Validate Nested
+    test_assert(n != 0);
+    {
+        auto a = n.lookup("a");
+        test_assert(a != 0);
+        test_assert(a.has<flecs::Member>());
+        const flecs::Member *am = a.get<flecs::Member>();
+        test_uint(am->type, t);
+        test_uint(am->offset, offsetof(Nested, a));
+    }
+    {
+        auto b = n.lookup("b");
+        test_assert(b != 0);
+        test_assert(b.has<flecs::Member>());
+        const flecs::Member *bm = b.get<flecs::Member>();
+        test_uint(bm->type, t2);
+        test_uint(bm->offset, offsetof(Nested, b));
+        test_uint(bm->count, 2);
+    }
+}
+
+void Meta_struct_member_ptr_packed_struct() {
+    flecs::world ecs;
+
+#if defined(__GNUC__) || defined(__clang__)
+    struct PackedStruct {
+        char a;
+        int b;
+        char pad[2];
+        double c;
+    } __attribute__((__packed__));
+#endif
+
+#if defined(_MSC_VER)
+#pragma pack(push, 1)
+    struct PackedStruct {
+        char a;
+        int b;
+        char pad[2];
+        double c;
+    };
+#pragma pack(pop)
+#endif
+
+    auto s = ecs.component<PackedStruct>()
+        .member("a", &PackedStruct::a)
+        .member("b", &PackedStruct::b)
+        .member("c", &PackedStruct::c);
+
+    test_assert(s != 0);
+
+    {
+        auto a = s.lookup("a");
+        test_assert(a != 0);
+        test_assert(a.has<flecs::Member>());
+        const flecs::Member *am = a.get<flecs::Member>();
+        test_uint(am->type, flecs::Char);
+        test_uint(am->offset, offsetof(PackedStruct, a));
+    }
+    {
+        auto b = s.lookup("b");
+        test_assert(b != 0);
+        test_assert(b.has<flecs::Member>());
+        const flecs::Member *bm = b.get<flecs::Member>();
+        test_uint(bm->type, flecs::I32);
+        test_uint(bm->offset, offsetof(PackedStruct, b));
+    }
+    {
+        auto c = s.lookup("c");
+        test_assert(c != 0);
+        test_assert(c.has<flecs::Member>());
+        const flecs::Member *cm = c.get<flecs::Member>();
+        test_uint(cm->type, flecs::F64);
+        test_uint(cm->offset, offsetof(PackedStruct, c));
+    }
+}

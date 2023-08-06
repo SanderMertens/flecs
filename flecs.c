@@ -55556,10 +55556,6 @@ int flecs_init_type(
                 ecs_err("computed size for '%s' matches with actual type but "
                     "alignment is different (%d vs. %d)", ecs_get_name(world, type),
                         alignment, comp->alignment);
-            } else {
-                /* If this is an existing type, the alignment can be larger but
-                 * not smaller than the computed alignment. */
-                alignment = comp->alignment;
             }
         }
         
@@ -55567,8 +55563,6 @@ int flecs_init_type(
     }
 
     meta_type->kind = kind;
-    meta_type->size = size;
-    meta_type->alignment = alignment;
     ecs_modified(world, type, EcsMetaType);
 
     return 0;
@@ -55714,7 +55708,7 @@ int flecs_add_member_to_struct(
             /* Get component of member type to get its size & alignment */
             const EcsComponent *mbr_comp = ecs_get(world, elem->type, EcsComponent);
             if (!mbr_comp) {
-                char *path = ecs_get_fullpath(world, member);
+                char *path = ecs_get_fullpath(world, elem->type);
                 ecs_err("member '%s' is not a type", path);
                 ecs_os_free(path);
                 return -1;
@@ -55724,7 +55718,7 @@ int flecs_add_member_to_struct(
             ecs_size_t member_alignment = mbr_comp->alignment;
 
             if (!member_size || !member_alignment) {
-                char *path = ecs_get_fullpath(world, member);
+                char *path = ecs_get_fullpath(world, elem->type);
                 ecs_err("member '%s' has 0 size/alignment");
                 ecs_os_free(path);
                 return -1;
@@ -55751,14 +55745,42 @@ int flecs_add_member_to_struct(
         }
     } else {
         /* If members have explicit offsets, we can't rely on computed 
-         * size/alignment values. Grab size of just added member instead. It
-         * doesn't matter if the size doesn't correspond to the actual struct
-         * size. The flecs_init_type function compares computed size with actual
+         * size/alignment values. Calculate size as if this is the last member
+         * instead, since this will validate if the member fits in the struct.
+         * It doesn't matter if the size is smaller than the actual struct size
+         * because flecs_init_type function compares computed size with actual
          * (component) size to determine if the type is partial. */
-        const EcsComponent *cptr = ecs_get(world, m->type, EcsComponent);
-        ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
-        size = cptr->size;
-        alignment = cptr->alignment;
+        ecs_member_t *elem = &members[i];
+
+        ecs_assert(elem->name != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(elem->type != 0, ECS_INTERNAL_ERROR, NULL);
+
+        /* Get component of member type to get its size & alignment */
+        const EcsComponent *mbr_comp = ecs_get(world, elem->type, EcsComponent);
+        if (!mbr_comp) {
+            char *path = ecs_get_fullpath(world, elem->type);
+            ecs_err("member '%s' is not a type", path);
+            ecs_os_free(path);
+            return -1;
+        }
+
+        ecs_size_t member_size = mbr_comp->size;
+        ecs_size_t member_alignment = mbr_comp->alignment;
+
+        if (!member_size || !member_alignment) {
+            char *path = ecs_get_fullpath(world, elem->type);
+            ecs_err("member '%s' has 0 size/alignment");
+            ecs_os_free(path);
+            return -1;
+        }
+
+        member_size *= elem->count;
+        elem->size = member_size;
+
+        size = elem->offset + member_size;
+
+        const EcsComponent* comp = ecs_get(world, type, EcsComponent);
+        alignment = comp->alignment;
     }
 
     if (size == 0) {

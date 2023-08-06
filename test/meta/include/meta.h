@@ -55,6 +55,10 @@ typedef struct {
     Point start, stop;
 } Line;
 
+typedef struct {
+    int32_t x, y, z;
+} Vec3;
+
 #ifdef __cplusplus
 }
 #endif

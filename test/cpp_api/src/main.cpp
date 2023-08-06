@@ -1212,6 +1212,8 @@ void Meta_enum_w_bits(void);
 void Meta_value_range(void);
 void Meta_warning_range(void);
 void Meta_error_range(void);
+void Meta_struct_member_ptr(void);
+void Meta_struct_member_ptr_packed_struct(void);
 
 // Testsuite 'Table'
 void Table_each(void);
@@ -5936,6 +5938,14 @@ bake_test_case Meta_testcases[] = {
     {
         "error_range",
         Meta_error_range
+    },
+    {
+        "struct_member_ptr",
+        Meta_struct_member_ptr
+    },
+    {
+        "struct_member_ptr_packed_struct",
+        Meta_struct_member_ptr_packed_struct
     }
 };
 
@@ -6269,7 +6279,7 @@ static bake_test_suite suites[] = {
         "Meta",
         NULL,
         NULL,
-        45,
+        47,
         Meta_testcases
     },
     {

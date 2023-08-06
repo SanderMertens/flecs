@@ -1267,7 +1267,9 @@
                 "enum_w_bits",
                 "value_range",
                 "warning_range",
-                "error_range"
+                "error_range",
+                "struct_member_ptr",
+                "struct_member_ptr_packed_struct"
             ]
         }, {
             "id": "Table",

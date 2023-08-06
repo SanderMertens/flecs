@@ -402,7 +402,7 @@ void StructTypes_partial_type() {
 
     ecs_entity_t s = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity = ecs_id(Position),
-        .members = {{ .name = "x", .type = ecs_id(ecs_f32_t) }}
+        .members = {{ .name = "x", .type = ecs_id(ecs_i32_t) }}
     });
 
     test_assert(s == ecs_id(Position));
@@ -418,7 +418,7 @@ void StructTypes_partial_type() {
     test_bool(mptr->existing, true);
 
     meta_test_struct(world, s, Position);
-    meta_test_member(world, s, Position, x, ecs_id(ecs_f32_t), 1);
+    meta_test_member(world, s, Position, x, ecs_id(ecs_i32_t), 1);
 
     ecs_fini(world);
 }
@@ -426,31 +426,31 @@ void StructTypes_partial_type() {
 void StructTypes_partial_type_custom_offset() {
     ecs_world_t *world = ecs_init();
 
-    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Vec3);
 
     ecs_entity_t s = ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity = ecs_id(Position),
+        .entity = ecs_id(Vec3),
         .members = {{ 
-            .name = "y", 
-            .type = ecs_id(ecs_f32_t), 
-            .offset = offsetof(Position, y) 
+            .name = "y",
+            .type = ecs_id(ecs_i32_t),
+            .offset = offsetof(Vec3, y)
         }}
     });
 
-    test_assert(s == ecs_id(Position));
+    test_assert(s == ecs_id(Vec3));
 
     const EcsComponent *cptr = ecs_get(world, s, EcsComponent);
     test_assert(cptr != NULL);
-    test_int(cptr->size, sizeof(Position));
-    test_int(cptr->alignment, ECS_ALIGNOF(Position));
+    test_int(cptr->size, sizeof(Vec3));
+    test_int(cptr->alignment, ECS_ALIGNOF(Vec3));
 
     const EcsMetaType *mptr = ecs_get(world, s, EcsMetaType);
     test_assert(mptr != NULL);
     test_bool(mptr->partial, true);
     test_bool(mptr->existing, true);
 
-    meta_test_struct(world, s, Position);
-    meta_test_member(world, s, Position, y, ecs_id(ecs_f32_t), 1);
+    meta_test_struct(world, s, Vec3);
+    meta_test_member(world, s, Vec3, y, ecs_id(ecs_i32_t), 1);
 
     ecs_fini(world);
 }
@@ -817,8 +817,6 @@ void StructTypes_struct_w_16_alignment() {
     test_assert(mptr != NULL);
     test_bool(mptr->partial, false);
     test_bool(mptr->existing, true);
-    test_int(mptr->size, sizeof(T));
-    test_int(mptr->alignment, 16);
 
     ecs_fini(world);
 }
