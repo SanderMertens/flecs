@@ -627,12 +627,15 @@ void Enum_set_enum_constant_w_tag() {
 }
 
 void Enum_enum_w_incorrect_size() {
-    install_test_abort();
+    /* Quaratined as test can cause compilation of test suite to fail due to new
+     * error messages introduced in clang. */
+    test_quarantine("6 Aug 2023");
+    // install_test_abort();
 
-    flecs::world ecs;
+    // flecs::world ecs;
 
-    test_expect_abort();
-    ecs.component<EnumIncorrectType>();
+    // test_expect_abort();
+    // ecs.component<EnumIncorrectType>();
 }
 
 void Enum_add_union_enum() {

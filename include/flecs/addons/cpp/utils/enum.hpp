@@ -64,16 +64,30 @@ struct enum_last {
 
 namespace _ {
 
-#ifdef ECS_TARGET_MSVC
-#define ECS_SIZE_T_STR "unsigned __int64"
-#elif defined(__clang__)
-#define ECS_SIZE_T_STR "size_t"
+#if INTPTR_MAX == INT64_MAX
+    #ifdef ECS_TARGET_MSVC
+        #define ECS_SIZE_T_STR "unsigned __int64"
+    #elif defined(__clang__)
+        #define ECS_SIZE_T_STR "size_t"
+    #else
+        #ifdef ECS_TARGET_WINDOWS
+            #define ECS_SIZE_T_STR "constexpr size_t; size_t = long long unsigned int"
+        #else
+            #define ECS_SIZE_T_STR "constexpr size_t; size_t = long unsigned int"
+        #endif
+    #endif
 #else
-#ifdef ECS_TARGET_WINDOWS
-#define ECS_SIZE_T_STR "constexpr size_t; size_t = long long unsigned int"
-#else
-#define ECS_SIZE_T_STR "constexpr size_t; size_t = long unsigned int"
-#endif
+    #ifdef ECS_TARGET_MSVC
+        #define ECS_SIZE_T_STR "unsigned __int32"
+    #elif defined(__clang__)
+        #define ECS_SIZE_T_STR "size_t"
+    #else
+        #ifdef ECS_TARGET_WINDOWS
+            #define ECS_SIZE_T_STR "constexpr size_t; size_t = unsigned int"
+        #else
+            #define ECS_SIZE_T_STR "constexpr size_t; size_t = unsigned int"
+        #endif
+    #endif
 #endif
 
 template <typename E>

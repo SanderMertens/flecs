@@ -134,7 +134,7 @@ void flecs_log_msg(
 
     if (deltatime) {
         now = time(NULL);
-        time_t delta = 0;
+        int64_t delta = 0;
         if (ecs_os_api.log_last_timestamp_) {
             delta = now - ecs_os_api.log_last_timestamp_;
         }

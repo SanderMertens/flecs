@@ -286,7 +286,7 @@ void* ecs_map_get_deref_(
     ecs_map_val_t* ptr = flecs_map_bucket_get(
         flecs_map_get_bucket(map, key), key);
     if (ptr) {
-        return (void*)ptr[0];
+        return (void*)(uintptr_t)ptr[0];
     }
     return NULL;
 }
@@ -314,7 +314,7 @@ void* ecs_map_insert_alloc(
     ecs_map_key_t key)
 {
     void *elem = ecs_os_calloc(elem_size);
-    ecs_map_insert_ptr(map, key, elem);
+    ecs_map_insert_ptr(map, key, (uintptr_t)elem);
     return elem;
 }
 
@@ -349,10 +349,10 @@ void* ecs_map_ensure_alloc(
     ecs_map_val_t *val = ecs_map_ensure(map, key);
     if (!*val) {
         void *elem = ecs_os_calloc(elem_size);
-        *val = (ecs_map_val_t)elem;
+        *val = (ecs_map_val_t)(uintptr_t)elem;
         return elem;
     } else {
-        return (void*)*val;
+        return (void*)(uintptr_t)*val;
     }
 }
 
@@ -369,7 +369,7 @@ void ecs_map_remove_free(
 {
     ecs_map_val_t val = ecs_map_remove(map, key);
     if (val) {
-        ecs_os_free((void*)val);
+        ecs_os_free((void*)(uintptr_t)val);
     }
 }
 

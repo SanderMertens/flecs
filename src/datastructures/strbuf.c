@@ -97,7 +97,7 @@ int flecs_strbuf_ftoa(
 	int64_t intPart;
     int64_t exp = 0;
 
-    if (isnan(f)) {
+    if (ecs_os_isnan(f)) {
         if (nan_delim) {
             ecs_strbuf_appendch(out, nan_delim);
             ecs_strbuf_appendlit(out, "NaN");
@@ -106,7 +106,7 @@ int flecs_strbuf_ftoa(
             return ecs_strbuf_appendlit(out, "NaN");
         }
     }
-    if (isinf(f)) {
+    if (ecs_os_isinf(f)) {
         if (nan_delim) {
             ecs_strbuf_appendch(out, nan_delim);
             ecs_strbuf_appendlit(out, "Inf");
