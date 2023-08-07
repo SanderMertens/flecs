@@ -10,25 +10,6 @@
  * @{
  */
 
-/** Add member. */
-untyped_component& member(flecs::entity_t type_id, const char *name, int32_t count = 0, size_t offset = 0) {
-    ecs_entity_desc_t desc = {};
-    desc.name = name;
-    desc.add[0] = ecs_pair(flecs::ChildOf, m_id);
-    ecs_entity_t eid = ecs_entity_init(m_world, &desc);
-    ecs_assert(eid != 0, ECS_INTERNAL_ERROR, NULL);
-
-    flecs::entity e(m_world, eid);
-
-    Member m = {};
-    m.type = type_id;
-    m.count = count;
-    m.offset = static_cast<int32_t>(offset);
-    e.set<Member>(m);
-
-    return *this;
-}
-
 /** Add member with unit. */
 untyped_component& member(flecs::entity_t type_id, flecs::entity_t unit, const char *name, int32_t count = 0, size_t offset = 0) {
     ecs_entity_desc_t desc = {};
@@ -47,6 +28,11 @@ untyped_component& member(flecs::entity_t type_id, flecs::entity_t unit, const c
     e.set<Member>(m);
 
     return *this;
+}
+
+/** Add member. */
+untyped_component& member(flecs::entity_t type_id, const char* name, int32_t count = 0, size_t offset = 0) {
+    return member(type_id, 0, name, count, offset);
 }
 
 /** Add member. */
@@ -69,6 +55,31 @@ untyped_component& member(const char *name, int32_t count = 0, size_t offset = 0
     flecs::entity_t type_id = _::cpp_type<MemberType>::id(m_world);
     flecs::entity_t unit_id = _::cpp_type<UnitType>::id(m_world);
     return member(type_id, unit_id, name, count, offset);
+}
+
+/** Add member using pointer-to-member. */
+template <typename MemberType, typename ComponentType, typename RealType = typename std::remove_extent<MemberType>::type>
+untyped_component& member(const char* name, const MemberType ComponentType::* ptr) {
+    flecs::entity_t type_id = _::cpp_type<RealType>::id(m_world);
+    size_t offset = reinterpret_cast<size_t>(&(static_cast<ComponentType*>(nullptr)->*ptr));
+    return member(type_id, name, std::extent<MemberType>::value, offset);
+}
+
+/** Add member with unit using pointer-to-member. */
+template <typename MemberType, typename ComponentType, typename RealType = typename std::remove_extent<MemberType>::type>
+untyped_component& member(flecs::entity_t unit, const char* name, const MemberType ComponentType::* ptr) {
+    flecs::entity_t type_id = _::cpp_type<RealType>::id(m_world);
+    size_t offset = reinterpret_cast<size_t>(&(static_cast<ComponentType*>(nullptr)->*ptr));
+    return member(type_id, unit, name, std::extent<MemberType>::value, offset);
+}
+
+/** Add member with unit using pointer-to-member. */
+template <typename UnitType, typename MemberType, typename ComponentType, typename RealType = typename std::remove_extent<MemberType>::type>
+untyped_component& member(const char* name, const MemberType ComponentType::* ptr) {
+    flecs::entity_t type_id = _::cpp_type<RealType>::id(m_world);
+    flecs::entity_t unit_id = _::cpp_type<UnitType>::id(m_world);
+    size_t offset = reinterpret_cast<size_t>(&(static_cast<ComponentType*>(nullptr)->*ptr));
+    return member(type_id, unit_id, name, std::extent<MemberType>::value, offset);
 }
 
 /** Add constant. */

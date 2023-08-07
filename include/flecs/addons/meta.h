@@ -154,8 +154,6 @@ typedef struct EcsMetaType {
     ecs_type_kind_t kind;
     bool existing;         /**< Did the type exist or is it populated from reflection */
     bool partial;          /**< Is the reflection data a partial type description */
-    ecs_size_t size;       /**< Computed size */
-    ecs_size_t alignment;  /**< Computed alignment */
 } EcsMetaType;
 
 /** Primitive type kinds supported by meta addon */
