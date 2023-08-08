@@ -1013,6 +1013,41 @@ void DeserializeFromJson_struct_w_2_array_type_i32_i32() {
     ecs_fini(world);
 }
 
+void DeserializeFromJson_struct_w_2_vec_type_i32_i32() {
+
+    typedef struct {
+        ecs_vec_t n_1;
+        ecs_vec_t n_2;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+    ecs_entity_t I32Vector = ecs_vector(world, {.entity = ecs_entity(world, { .name = "FloatVector" }), .type = ecs_id(ecs_i32_t)});
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"n_1", I32Vector},
+            {"n_2", I32Vector}
+        }
+    });
+
+    T value = {{ 0 }};
+    //TODO: ecs_ptr_from_json should grow vector. This puts a max limit of 6 elements before it goes out of bounds:
+    ecs_vec_init(NULL, &value.n_1, sizeof(ecs_i32_t), 6);
+    ecs_vec_init(NULL, &value.n_2, sizeof(ecs_i32_t), 6);
+
+    const char *ptr = ecs_ptr_from_json(world, t, &value, "{\"n_1\": [10, 20], \"n_2\": [30, 40]}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_vec_get_t(&value.n_1, ecs_i32_t, 0)[0], 10);
+    test_int(ecs_vec_get_t(&value.n_1, ecs_i32_t, 1)[0], 20);
+    test_int(ecs_vec_get_t(&value.n_2, ecs_i32_t, 0)[0], 30);
+    test_int(ecs_vec_get_t(&value.n_2, ecs_i32_t, 1)[0], 40);
+
+    ecs_fini(world);
+}
+
 void DeserializeFromJson_struct_w_nested_member_i32() {
     ecs_world_t *world = ecs_init();
 

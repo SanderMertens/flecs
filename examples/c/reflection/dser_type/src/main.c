@@ -19,27 +19,47 @@ int main(int argc, char *argv[]) {
         }
     });
 
+
+    // Collection in of bounds:
     {
         T value = {0};
         ecs_vec_init(NULL, &value.v1, sizeof(ecs_f64_t), 6);
         ecs_vec_init(NULL, &value.v2, sizeof(ecs_f64_t), 6);
-        char const * test = "{\"v1\": [1.123, 2.123], \"v2\": [5.123, 6.123]}\"";
-        const char *ptr = ecs_ptr_from_json(ecs, t, &value, test, NULL);
+        char const * json = "{\"v1\": [1.123456789, 2.123, 6.6], \"v2\": [5.123, 6.123]}\"";
+        const char *ptr = ecs_ptr_from_json(ecs, t, &value, json, NULL);
+        if(ptr)
+        {
+            char *expr = ecs_ptr_to_json(ecs, t, &value);
+            printf("json: %s\n", json);
+            printf("expr: %s\n", expr);
+            /*
+            json: {"v1": [1.123456789, 2.123], "v2": [5.123, 6.123]}"
+            expr: {"v1":[1.123456789, 2.123], "v2":[5.123, 6.123]}
+            */
+        }
     }
 
+
+    // Collection out of bounds when the ecs_vec_t is initilized too small
     {
         T value = {0};
-        ecs_vec_init(NULL, &value.v1, sizeof(ecs_f64_t), 6);
+        ecs_vec_init(NULL, &value.v1, sizeof(ecs_f64_t), 2);
         ecs_vec_init(NULL, &value.v2, sizeof(ecs_f64_t), 6);
-        ecs_vec_append_t(NULL, &value.v1, ecs_f64_t)[0] = 1.0001;
-        ecs_vec_append_t(NULL, &value.v1, ecs_f64_t)[0] = 2.0002;
-        ecs_vec_append_t(NULL, &value.v2, ecs_f64_t)[0] = 5.0003;
-        ecs_vec_append_t(NULL, &value.v2, ecs_f64_t)[0] = 6.0007;
-
-        char *expr = ecs_ptr_to_json(ecs, t, &value);
-        printf("expr: %s\n", expr);
-        //expr: {"v1":[1.0001, 2.0002], "v2":[5.0003, 6.0007]}
+        char const * json = "{\"v1\": [1.123456789, 2.123, 6.6], \"v2\": [5.123, 6.123]}\"";
+        const char *ptr = ecs_ptr_from_json(ecs, t, &value, json, NULL);
+        if(ptr)
+        {
+            char *expr = ecs_ptr_to_json(ecs, t, &value);
+            printf("json: %s\n", json);
+            printf("expr: %s\n", expr);
+            /*
+            json: {"v1": [1.123456789, 2.123], "v2": [5.123, 6.123]}"
+            expr: {"v1":[1.123456789, 2.123], "v2":[5.123, 6.123]}
+            error: cursor.c: 239: out of collection bounds (2)
+            */
+        }
     }
+
 
     ecs_fini(ecs);
 }

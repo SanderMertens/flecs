@@ -109,6 +109,7 @@ int32_t get_elem_count(
     const EcsOpaque *opaque = scope->opaque;
 
     if (scope->vector) {
+        //TODO: getting size from get_elem_count looks strange
         return ecs_vec_size(scope->vector);
     } else if (opaque && opaque->count) {
         return flecs_uto(int32_t, opaque->count(scope[-1].ptr));
@@ -236,6 +237,7 @@ int ecs_meta_next(
         }
 
         if (scope->elem_cur >= get_elem_count(scope)) {
+            //TODO: Should grow if scope is vector here?
             ecs_err("out of collection bounds (%d)", scope->elem_cur);
             return -1;
         }
