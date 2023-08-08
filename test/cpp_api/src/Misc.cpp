@@ -1889,3 +1889,41 @@ void Misc_alert_w_member_range_from_var() {
         test_assert(ai == 0);
     }
 }
+
+void Misc_map_api() {
+    flecs::world ecs;
+
+    ecs_map_t m;
+    ecs_map_init(&m, 0);
+    test_int(0, ecs_map_count(&m));
+
+    int32_t *v = ecs_map_insert_alloc_t(&m, int32_t, 10);
+    test_assert(v != NULL);
+
+    test_assert(ecs_map_ensure_alloc_t(&m, int32_t, 10) == v);
+    test_assert(ecs_map_get_deref(&m, int32_t, 10) == v);
+ 
+    int32_t w;
+    ecs_map_insert_ptr(&m, 20, &w);
+    test_assert(ecs_map_ensure_alloc_t(&m, int32_t, 20) == &w);
+    test_assert(ecs_map_get_deref(&m, int32_t, 20) == &w);
+    
+    test_assert(ecs_map_count(&m) == 2);
+
+    ecs_map_iter_t it = ecs_map_iter(&m);
+    test_bool(true, ecs_map_next(&it));
+    test_uint(20, ecs_map_key(&it));
+    test_assert(&w == ecs_map_ptr(&it));
+
+    test_bool(true, ecs_map_next(&it));
+    test_uint(10, ecs_map_key(&it));
+    test_assert(v == ecs_map_ptr(&it));
+    test_bool(false, ecs_map_next(&it));
+
+    test_assert(ecs_map_remove_ptr(&m, 10) == v);
+    test_assert(ecs_map_remove_ptr(&m, 20) == &w);
+
+    ecs_os_free(v);
+
+    ecs_map_fini(&m);
+}

@@ -1218,7 +1218,8 @@
                 "alert_w_severity_filter_severity_type_id_type_w_var",
                 "alert_w_severity_filter_severity_type_enum_constant_w_var",
                 "alert_for_member_range",
-                "alert_w_member_range_from_var"
+                "alert_w_member_range_from_var",
+                "map_api"
             ]
         }, {
             "id": "Meta",

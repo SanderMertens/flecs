@@ -719,6 +719,13 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 #define ECS_CONST_CAST(type, value) (const_cast<type>(value))
 #endif
 
+/* Utility macro for doing pointer casts without warnings */
+#ifndef __cplusplus
+#define ECS_PTR_CAST(type, value) ((type)(uintptr_t)(value))
+#else
+#define ECS_PTR_CAST(type, value) (reinterpret_cast<type>(value))
+#endif
+
 /* Utility macro's to do bitwise comparisons between floats without warnings */
 #define ECS_EQ(a, b) (ecs_os_memcmp(&(a), &(b), sizeof(a)) == 0)
 #define ECS_NEQ(a, b) (!ECS_EQ(a, b))
@@ -1568,17 +1575,17 @@ void ecs_map_copy(
     const ecs_map_t *src);
 
 #define ecs_map_get_ref(m, T, k) ECS_CAST(T**, ecs_map_get(m, k))
-#define ecs_map_get_deref(m, T, k) ECS_CAST(T*, (uintptr_t)ecs_map_get_deref_(m, k))
+#define ecs_map_get_deref(m, T, k) ECS_CAST(T*, ecs_map_get_deref_(m, k))
 #define ecs_map_ensure_ref(m, T, k) ECS_CAST(T**, ecs_map_ensure(m, k))
 
-#define ecs_map_insert_ptr(m, k, v) ecs_map_insert(m, k, ECS_CAST(ecs_map_val_t, (uintptr_t)v))
-#define ecs_map_insert_alloc_t(m, T, k) ECS_CAST(T*, (uintptr_t)ecs_map_insert_alloc(m, ECS_SIZEOF(T), k))
-#define ecs_map_ensure_alloc_t(m, T, k) ECS_CAST(T*, (uintptr_t)ecs_map_ensure_alloc(m, ECS_SIZEOF(T), k))
-#define ecs_map_remove_ptr(m, k) ((void*)(uintptr_t)(ecs_map_remove(m, k)))
+#define ecs_map_insert_ptr(m, k, v) ecs_map_insert(m, k, ECS_CAST(ecs_map_val_t, ECS_PTR_CAST(uintptr_t, v)))
+#define ecs_map_insert_alloc_t(m, T, k) ECS_CAST(T*, ecs_map_insert_alloc(m, ECS_SIZEOF(T), k))
+#define ecs_map_ensure_alloc_t(m, T, k) ECS_PTR_CAST(T*, (uintptr_t)ecs_map_ensure_alloc(m, ECS_SIZEOF(T), k))
+#define ecs_map_remove_ptr(m, k) (ECS_PTR_CAST(void*, ECS_CAST(uintptr_t, (ecs_map_remove(m, k)))))
 
 #define ecs_map_key(it) ((it)->res[0])
 #define ecs_map_value(it) ((it)->res[1])
-#define ecs_map_ptr(it) ECS_CAST(void*, (uintptr_t)ecs_map_value(it))
+#define ecs_map_ptr(it) ECS_PTR_CAST(void*, ECS_CAST(uintptr_t, ecs_map_value(it)))
 #define ecs_map_ref(it, T) (ECS_CAST(T**, &((it)->res[1])))
 
 #ifdef __cplusplus

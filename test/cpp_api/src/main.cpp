@@ -1165,6 +1165,7 @@ void Misc_alert_w_severity_filter_severity_type_id_type_w_var(void);
 void Misc_alert_w_severity_filter_severity_type_enum_constant_w_var(void);
 void Misc_alert_for_member_range(void);
 void Misc_alert_w_member_range_from_var(void);
+void Misc_map_api(void);
 
 // Testsuite 'Meta'
 void Meta_struct(void);
@@ -5755,6 +5756,10 @@ bake_test_case Misc_testcases[] = {
     {
         "alert_w_member_range_from_var",
         Misc_alert_w_member_range_from_var
+    },
+    {
+        "map_api",
+        Misc_map_api
     }
 };
 
@@ -6272,7 +6277,7 @@ static bake_test_suite suites[] = {
         "Misc",
         Misc_setup,
         NULL,
-        46,
+        47,
         Misc_testcases
     },
     {

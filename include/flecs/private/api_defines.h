@@ -224,6 +224,13 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 #define ECS_CONST_CAST(type, value) (const_cast<type>(value))
 #endif
 
+/* Utility macro for doing pointer casts without warnings */
+#ifndef __cplusplus
+#define ECS_PTR_CAST(type, value) ((type)(uintptr_t)(value))
+#else
+#define ECS_PTR_CAST(type, value) (reinterpret_cast<type>(value))
+#endif
+
 /* Utility macro's to do bitwise comparisons between floats without warnings */
 #define ECS_EQ(a, b) (ecs_os_memcmp(&(a), &(b), sizeof(a)) == 0)
 #define ECS_NEQ(a, b) (!ECS_EQ(a, b))
