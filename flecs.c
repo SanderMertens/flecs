@@ -38437,7 +38437,9 @@ int flecs_rest_iter_to_reply(
     ecs_http_reply_t *reply,
     ecs_iter_t *it)
 {
-    ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
+    ecs_iter_to_json_desc_t desc = {false};
+    desc.serialize_entities = true;
+    desc.serialize_variables = true;
     flecs_rest_parse_json_ser_iter_params(&desc, req);
 
     int32_t offset = 0;

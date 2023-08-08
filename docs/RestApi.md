@@ -253,17 +253,17 @@ Return at most _limit_ number of entities.
 #### term_ids
 Add top-level "ids" array with components as specified by query.
 
-**Default**: true
+**Default**: false
 
 #### ids
 Add result-specific "ids" array with components as matched. Can be different from top-level "ids" array for queries with wildcards.
 
-**Default**: true
+**Default**: false
 
 #### sources
 Add result-specific "sources" array with component source. A 0 element indicates the component is matched on the current (This) entity.
 
-**Default**: true
+**Default**: false
 
 #### variables
 Add result-specific "variables" array with values for variables, if any.
@@ -273,14 +273,14 @@ Add result-specific "variables" array with values for variables, if any.
 #### is_set
 Add result-specific "is_set" array with boolean elements indicating whether component was matched (used for optional terms).
 
-**Default**: true
+**Default**: false
 
 #### values
 Add result-specific "values" array with component values. A 0 element indicates a component that could not be serialized, which can be either
 because no reflection data was registered, because the component has no
 data, or because the query didn't request it.
 
-**Default**: true
+**Default**: false
 
 #### entities
 Add result-specific "entities" array with matched entities.
