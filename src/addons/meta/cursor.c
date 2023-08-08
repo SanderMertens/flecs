@@ -109,7 +109,7 @@ int32_t get_elem_count(
     const EcsOpaque *opaque = scope->opaque;
 
     if (scope->vector) {
-        return ecs_vec_count(scope->vector);
+        return ecs_vec_size(scope->vector);
     } else if (opaque && opaque->count) {
         return flecs_uto(int32_t, opaque->count(scope[-1].ptr));
     }
@@ -463,13 +463,11 @@ int ecs_meta_push(
 
     /* Vector push */
     case EcsOpVector: {
-        next_scope->vector = ptr;
-        if (flecs_meta_cursor_push_type(world, next_scope, op->type, NULL) != 0) {
+        const EcsVector *type_ptr = ecs_get(world, op->type, EcsVector);
+        if (flecs_meta_cursor_push_type(world, next_scope, type_ptr->type, NULL) != 0) {
             goto error;
         }
-
-        const EcsVector *type_ptr = ecs_get(world, op->type, EcsVector);
-        next_scope->type = type_ptr->type;
+        next_scope->vector = ptr;
         next_scope->is_collection = true;
         break;
     }
