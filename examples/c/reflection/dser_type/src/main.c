@@ -20,46 +20,25 @@ int main(int argc, char *argv[]) {
     });
 
 
-    // Collection in of bounds:
+
+    T value = {{ 0 }};
+    ecs_vec_init(NULL, &value.v1, sizeof(ecs_f64_t), 0);
+    ecs_vec_init(NULL, &value.v2, sizeof(ecs_f64_t), 0);
+    printf("v1: %i of %i\n", ecs_vec_count(&value.v1), ecs_vec_size(&value.v1));
+    printf("v2: %i of %i\n", ecs_vec_count(&value.v2), ecs_vec_size(&value.v2));
+    char const * json_input = "{\"v1\": [], \"v2\": [5.123, 6.123, 1, 3, 6, 7, 5, 8, 3, 7, 4]}";
+    const char *ptr = ecs_ptr_from_json(ecs, t, &value, json_input, NULL);
+    printf("v1: %i of %i\n", ecs_vec_count(&value.v1), ecs_vec_size(&value.v1));
+    printf("v2: %i of %i\n", ecs_vec_count(&value.v2), ecs_vec_size(&value.v2));
+    if(ptr)
     {
-        T value = {0};
-        ecs_vec_init(NULL, &value.v1, sizeof(ecs_f64_t), 6);
-        ecs_vec_init(NULL, &value.v2, sizeof(ecs_f64_t), 6);
-        char const * json = "{\"v1\": [1.123456789, 2.123, 6.6], \"v2\": [5.123, 6.123]}\"";
-        const char *ptr = ecs_ptr_from_json(ecs, t, &value, json, NULL);
-        if(ptr)
-        {
-            char *expr = ecs_ptr_to_json(ecs, t, &value);
-            printf("json: %s\n", json);
-            printf("expr: %s\n", expr);
-            /*
-            json: {"v1": [1.123456789, 2.123], "v2": [5.123, 6.123]}"
-            expr: {"v1":[1.123456789, 2.123], "v2":[5.123, 6.123]}
-            */
-        }
+        char *json_output = ecs_ptr_to_json(ecs, t, &value);
+        printf("json_input: %s\n", json_input);
+        //json_input: {"v1": [], "v2": [5.123, 6.123, 1, 3, 6, 7, 5, 8, 3, 7, 4]}
+        printf("json_output: %s\n", json_output);
+        //json_output: {"v1":[], "v2":[5.123, 6.123, 1, 3, 6, 7, 5, 8, 3, 7, 4]}
     }
-
-
-    // Collection out of bounds when the ecs_vec_t is initilized too small
-    {
-        T value = {0};
-        ecs_vec_init(NULL, &value.v1, sizeof(ecs_f64_t), 2);
-        ecs_vec_init(NULL, &value.v2, sizeof(ecs_f64_t), 6);
-        char const * json = "{\"v1\": [1.123456789, 2.123, 6.6], \"v2\": [5.123, 6.123]}\"";
-        const char *ptr = ecs_ptr_from_json(ecs, t, &value, json, NULL);
-        if(ptr)
-        {
-            char *expr = ecs_ptr_to_json(ecs, t, &value);
-            printf("json: %s\n", json);
-            printf("expr: %s\n", expr);
-            /*
-            json: {"v1": [1.123456789, 2.123], "v2": [5.123, 6.123]}"
-            expr: {"v1":[1.123456789, 2.123], "v2":[5.123, 6.123]}
-            error: cursor.c: 239: out of collection bounds (2)
-            */
-        }
-    }
-
+    
 
     ecs_fini(ecs);
 }

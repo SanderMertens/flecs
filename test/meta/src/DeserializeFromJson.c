@@ -1032,18 +1032,21 @@ void DeserializeFromJson_struct_w_2_vec_type_i32_i32() {
     });
 
     T value = {{ 0 }};
-    //TODO: ecs_ptr_from_json should grow vector. This puts a max limit of 6 elements before it goes out of bounds:
-    ecs_vec_init_t(NULL, &value.n_1, ecs_i32_t, 6);
-    ecs_vec_init_t(NULL, &value.n_2, ecs_i32_t, 6);
+    ecs_vec_init_t(NULL, &value.n_1, ecs_i32_t, 0);
+    ecs_vec_init_t(NULL, &value.n_2, ecs_i32_t, 0);
 
-    const char *ptr = ecs_ptr_from_json(world, t, &value, "{\"n_1\": [10, 20], \"n_2\": [30, 40]}", NULL);
+    const char *ptr = ecs_ptr_from_json(world, t, &value, "{\"n_1\": [10, 20], \"n_2\": [30, 40, 50, 60, 70]}", NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
     test_int(ecs_vec_get_t(&value.n_1, ecs_i32_t, 0)[0], 10);
     test_int(ecs_vec_get_t(&value.n_1, ecs_i32_t, 1)[0], 20);
+
     test_int(ecs_vec_get_t(&value.n_2, ecs_i32_t, 0)[0], 30);
     test_int(ecs_vec_get_t(&value.n_2, ecs_i32_t, 1)[0], 40);
+    test_int(ecs_vec_get_t(&value.n_2, ecs_i32_t, 2)[0], 50);
+    test_int(ecs_vec_get_t(&value.n_2, ecs_i32_t, 3)[0], 60);
+    test_int(ecs_vec_get_t(&value.n_2, ecs_i32_t, 4)[0], 70);
 
     ecs_vec_fini_t(NULL, &value.n_1, ecs_i32_t);
     ecs_vec_fini_t(NULL, &value.n_2, ecs_i32_t);
@@ -1070,9 +1073,8 @@ void DeserializeFromJson_struct_w_2_vec_type_i32_i32_empty() {
     });
 
     T value = {{ 0 }};
-    //TODO: ecs_ptr_from_json should grow vector. This puts a max limit of 6 elements before it goes out of bounds:
-    ecs_vec_init_t(NULL, &value.n_1, ecs_i32_t, 6);
-    ecs_vec_init_t(NULL, &value.n_2, ecs_i32_t, 6);
+    ecs_vec_init_t(NULL, &value.n_1, ecs_i32_t, 0);
+    ecs_vec_init_t(NULL, &value.n_2, ecs_i32_t, 10);
 
     const char *ptr = ecs_ptr_from_json(world, t, &value, "{\"n_1\": [], \"n_2\": []}", NULL);
     test_assert(ptr != NULL);

@@ -130,7 +130,10 @@ ecs_meta_type_op_t* flecs_meta_cursor_get_ptr(
     const EcsOpaque *opaque = scope->opaque;
 
     if (scope->vector) {
-        ecs_vec_set_min_count(NULL, scope->vector, size, scope->elem_cur + 1);
+        // ecs_meta_next wants one extra size thus adding 2:
+        ecs_vec_set_size(NULL, scope->vector, size, scope->elem_cur + 2);
+        ecs_vec_set_count(NULL, scope->vector, size, scope->elem_cur + 1);
+        //ecs_vec_set_min_count(NULL, scope->vector, size, scope->elem_cur + 1);
         scope->ptr = ecs_vec_first(scope->vector);
     } else if (opaque) {
         if (scope->is_collection) {
@@ -236,7 +239,8 @@ int ecs_meta_next(
             return 0;
         }
 
-        if (scope->elem_cur >= get_elem_count(scope)) {
+        int32_t elem_count = get_elem_count(scope);
+        if (scope->elem_cur >= elem_count) {
             //TODO: Should grow if scope is vector here?
             ecs_err("out of collection bounds (%d)", scope->elem_cur);
             return -1;
