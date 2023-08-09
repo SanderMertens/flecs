@@ -628,6 +628,14 @@ int ecs_meta_pop(
             ecs_assert(op->kind == EcsOpPop, ECS_INTERNAL_ERROR, NULL);
         } else if (op->kind == EcsOpArray || op->kind == EcsOpVector) {
             /* Collection type, nothing else to do */
+            
+            /* If no values were serialized for scope, resize 
+            * collection to 0 elements. */
+            if (scope->vector && (ecs_vec_count(scope->vector) == 0)) {
+                const ecs_world_t *world = cursor->world;
+                ecs_size_t size = get_size(world, scope);
+                ecs_vec_fini(NULL, scope->vector, size);
+            }
         } else if (op->kind == EcsOpOpaque) {
             const EcsOpaque *opaque = scope->opaque;
             if (scope->is_collection) {
