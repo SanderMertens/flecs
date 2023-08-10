@@ -1099,8 +1099,7 @@ void DeserializeFromJson_struct_w_vec_i32_and_vec_vec_i32() {
     test_int(ecs_vec_get_t(ecs_vec_get_t(&value.vv_i32, ecs_vec_t, 2), ecs_i32_t, 2)[0], 300);
     test_int(ecs_vec_get_t(ecs_vec_get_t(&value.vv_i32, ecs_vec_t, 2), ecs_i32_t, 3)[0], 400);
     
-    for(int i = 0; i < ecs_vec_count(&value.vv_i32); ++i)
-    {
+    for(int i = 0; i < ecs_vec_count(&value.vv_i32); ++i) {
         ecs_vec_fini_t(NULL, ecs_vec_get_t(&value.vv_i32, ecs_vec_t, i), ecs_i32_t);
     }
 
