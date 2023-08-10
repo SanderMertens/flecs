@@ -554,7 +554,7 @@
                 "struct_w_array_type_i32_i32",
                 "struct_w_2_array_type_i32_i32",
                 "struct_w_2_vec_type_i32_i32",
-                "struct_w_2_vec_type_i32_i32_empty",
+                "struct_w_vec_i32_and_vec_vec_i32",
                 "struct_w_12_vec_type_empty",
                 "struct_w_nested_member_i32",
                 "struct_w_2_nested_members_i32",

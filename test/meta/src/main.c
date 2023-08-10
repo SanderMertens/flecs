@@ -525,7 +525,7 @@ void DeserializeFromJson_struct_struct_i32_i32_array_3(void);
 void DeserializeFromJson_struct_w_array_type_i32_i32(void);
 void DeserializeFromJson_struct_w_2_array_type_i32_i32(void);
 void DeserializeFromJson_struct_w_2_vec_type_i32_i32(void);
-void DeserializeFromJson_struct_w_2_vec_type_i32_i32_empty(void);
+void DeserializeFromJson_struct_w_vec_i32_and_vec_vec_i32(void);
 void DeserializeFromJson_struct_w_12_vec_type_empty(void);
 void DeserializeFromJson_struct_w_nested_member_i32(void);
 void DeserializeFromJson_struct_w_2_nested_members_i32(void);
@@ -2972,8 +2972,8 @@ bake_test_case DeserializeFromJson_testcases[] = {
         DeserializeFromJson_struct_w_2_vec_type_i32_i32
     },
     {
-        "struct_w_2_vec_type_i32_i32_empty",
-        DeserializeFromJson_struct_w_2_vec_type_i32_i32_empty
+        "struct_w_vec_i32_and_vec_vec_i32",
+        DeserializeFromJson_struct_w_vec_i32_and_vec_vec_i32
     },
     {
         "struct_w_12_vec_type_empty",
