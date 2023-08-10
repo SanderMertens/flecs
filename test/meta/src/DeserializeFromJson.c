@@ -1021,13 +1021,13 @@ void DeserializeFromJson_struct_w_2_vec_type_i32_i32() {
     } T;
 
     ecs_world_t *world = ecs_init();
-    ecs_entity_t I32Vector = ecs_vector(world, {.entity = ecs_entity(world, { .name = "I32Vector" }), .type = ecs_id(ecs_i32_t)});
+    ecs_entity_t VectorI32 = ecs_vector(world, {.type = ecs_id(ecs_i32_t)});
 
     ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity = ecs_entity(world, {.name = "T"}),
         .members = {
-            {"n_1", I32Vector},
-            {"n_2", I32Vector}
+            {"n_1", VectorI32},
+            {"n_2", VectorI32}
         }
     });
 
@@ -1062,13 +1062,13 @@ void DeserializeFromJson_struct_w_2_vec_type_i32_i32_empty() {
     } T;
 
     ecs_world_t *world = ecs_init();
-    ecs_entity_t I32Vector = ecs_vector(world, {.entity = ecs_entity(world, { .name = "I32Vector" }), .type = ecs_id(ecs_i32_t)});
+    ecs_entity_t VectorI32 = ecs_vector(world, {.type = ecs_id(ecs_i32_t)});
 
     ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity = ecs_entity(world, {.name = "T"}),
         .members = {
-            {"n_1", I32Vector},
-            {"n_2", I32Vector}
+            {"n_1", VectorI32},
+            {"n_2", VectorI32}
         }
     });
 

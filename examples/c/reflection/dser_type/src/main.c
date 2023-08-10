@@ -10,8 +10,7 @@ typedef struct {
     ecs_vec_t v_i32_1; // vector<ecs_i32_t>
 } MiscellaneousVectors;
 
-void MiscellaneousVectors_print_status(MiscellaneousVectors * v)
-{
+void MiscellaneousVectors_print_status(MiscellaneousVectors * v) {
     printf("v_f64_0: %i of %i\n", ecs_vec_count(&v->v_f64_0), ecs_vec_size(&v->v_f64_0));
     printf("v_f64_1: %i of %i\n", ecs_vec_count(&v->v_f64_1), ecs_vec_size(&v->v_f64_1));
     printf("v_i32_0: %i of %i\n", ecs_vec_count(&v->v_i32_0), ecs_vec_size(&v->v_i32_0));
@@ -36,6 +35,7 @@ int main(int argc, char *argv[]) {
     });
 
     MiscellaneousVectors value;
+    // ecs_vec_t needs to be initilized before calling ecs_ptr_from_json:
     ecs_vec_init_t(NULL, &value.v_f64_0, ecs_f64_t, 0);
     ecs_vec_init_t(NULL, &value.v_f64_1, ecs_f64_t, 100);
     ecs_vec_init_t(NULL, &value.v_i32_0, ecs_i32_t, 200);

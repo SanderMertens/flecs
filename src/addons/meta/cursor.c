@@ -130,7 +130,9 @@ ecs_meta_type_op_t* flecs_meta_cursor_get_ptr(
     const EcsOpaque *opaque = scope->opaque;
 
     if (scope->vector) {
-        // ecs_meta_next wants one extra size thus adding 2:
+        /* Prepare one element in advance to return that can be set later. 
+         * ecs_meta_next checks vector capacity and wants one extra 
+         * thus adding 2 extra in ecs_vec_set_size */
         ecs_vec_set_size(NULL, scope->vector, size, scope->elem_cur + 2);
         ecs_vec_set_count(NULL, scope->vector, size, scope->elem_cur + 1);
         //ecs_vec_set_min_count(NULL, scope->vector, size, scope->elem_cur + 1);
@@ -241,7 +243,8 @@ int ecs_meta_next(
 
         int32_t elem_count = get_elem_count(scope);
         if (scope->elem_cur >= elem_count) {
-            //TODO: Should grow if scope is vector here?
+            /* The ecs_meta_set_* calls flecs_meta_cursor_get_ptr 
+             * which will resize the collection so this should never happen */
             ecs_err("out of collection bounds (%d)", scope->elem_cur);
             return -1;
         }
@@ -629,8 +632,7 @@ int ecs_meta_pop(
         } else if (op->kind == EcsOpArray || op->kind == EcsOpVector) {
             /* Collection type, nothing else to do */
             
-            /* If no values were serialized for scope, resize 
-            * collection to 0 elements. */
+            /* If no values were serialized for scope, fini vector memory */
             if (scope->vector && (ecs_vec_count(scope->vector) == 0)) {
                 const ecs_world_t *world = cursor->world;
                 ecs_size_t size = get_size(world, scope);
