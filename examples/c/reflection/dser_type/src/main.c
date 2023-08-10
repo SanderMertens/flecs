@@ -4,6 +4,7 @@
 
 
 typedef struct {
+    ecs_vec_t v_i32; // vector<ecs_i32_t>
     ecs_vec_t vv_i32; // vector<vector<ecs_i32_t>>
 } MiscellaneousVectors;
 
@@ -19,12 +20,13 @@ int main(int argc, char *argv[]) {
     ecs_entity_t t = ecs_struct_init(ecs, &(ecs_struct_desc_t){
         .entity = ecs_id(MiscellaneousVectors),
         .members = {
+            {.name = "v_i32", .type = VectorI32,},
             {.name = "vv_i32", .type = VectorVectorI32,},
         }
     });
 
     MiscellaneousVectors value;
-    char const * json_input = "{\"vv_i32\": [[1,2],[3,6]]}";
+    char const * json_input = "{\"vv_i32\": [[1,2],[3,6],[],[0]], \"v_i32\":[10, -5, 1]}";
     printf("json_input: %s\n", json_input);
     const char *ptr = ecs_ptr_from_json(ecs, t, &value, json_input, NULL);
 
@@ -39,10 +41,11 @@ int main(int argc, char *argv[]) {
         ecs_vec_fini_t(NULL, ecs_vec_get_t(&value.vv_i32, ecs_vec_t, i), ecs_i32_t);
     }
     ecs_vec_fini_t(NULL, &value.vv_i32, ecs_vec_t);
+    ecs_vec_fini_t(NULL, &value.v_i32, ecs_i32_t);
 
     ecs_fini(ecs);
 
     // Output
-    // json_input: {"vv_i32": [[1,2],[3,6]]}
-    // json_output: {"vv_i32":[[1, 2], [3, 6]]}
+    // json_input: {"vv_i32": [[1,2],[3,6],[],[0]], "v_i32":[10, -5, 1]}
+    // json_output: {"v_i32":[10, -5, 1], "vv_i32":[[1, 2], [3, 6], [], [0]]}
 }
