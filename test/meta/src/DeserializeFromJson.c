@@ -1031,9 +1031,7 @@ void DeserializeFromJson_struct_w_2_vec_type_i32_i32() {
         }
     });
 
-    T value = {{ 0 }};
-    ecs_vec_init_t(NULL, &value.n_1, ecs_i32_t, 0);
-    ecs_vec_init_t(NULL, &value.n_2, ecs_i32_t, 0);
+    T value;
 
     const char *ptr = ecs_ptr_from_json(world, t, &value, "{\"n_1\": [10, 20], \"n_2\": [30, 40, 50, 60, 70]}", NULL);
     test_assert(ptr != NULL);
