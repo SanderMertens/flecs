@@ -479,7 +479,6 @@ int ecs_meta_push(
         next_scope->vector = ptr;
         next_scope->is_collection = true;
         ecs_size_t size = get_size(world, next_scope);
-        //ecs_vec_fini(NULL, next_scope->vector, size);
         ecs_vec_init(NULL, next_scope->vector, size, 0);
         break;
     }
