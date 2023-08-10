@@ -2119,11 +2119,11 @@ void flecs_targets_mark_for_delete(
         if (flags & EcsEntityIsTarget) {
             if ((idr = flecs_id_record_get(world, ecs_pair(EcsWildcard, e)))) {
                 flecs_id_mark_for_delete(world, idr, 
-                    ECS_ID_ON_DELETE_OBJECT(idr->flags), true);
+                    ECS_ID_ON_DELETE_TARGET(idr->flags), true);
             }
             if ((idr = flecs_id_record_get(world, ecs_pair(EcsFlag, e)))) {
                 flecs_id_mark_for_delete(world, idr, 
-                    ECS_ID_ON_DELETE_OBJECT(idr->flags), true);
+                    ECS_ID_ON_DELETE_TARGET(idr->flags), true);
             }
         }
     }
@@ -2151,12 +2151,38 @@ ecs_entity_t flecs_get_delete_action(
 {
     ecs_entity_t result = action;
     if (!result && delete_target) {
+        ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
+        ecs_id_t id = idr->id;
+
         /* If action is not specified and we're deleting a relationship target,
          * derive the action from the current record */
-        ecs_table_record_t *trr = &table->_->records[tr->column];
-        ecs_id_record_t *idrr = (ecs_id_record_t*)trr->hdr.cache;
-        result = ECS_ID_ON_DELETE_OBJECT(idrr->flags);
+        int32_t i = tr->column, count = tr->count;
+        do {
+            ecs_type_t *type = &table->type;
+            ecs_table_record_t *trr = &table->_->records[i];
+            ecs_id_record_t *idrr = (ecs_id_record_t*)trr->hdr.cache;
+            result = ECS_ID_ON_DELETE_TARGET(idrr->flags);
+            if (result == EcsDelete) {
+                /* Delete takes precedence over Remove */
+                break;
+            }
+
+            if (count > 1) {
+                /* If table contains multiple pairs for target they are not
+                 * guaranteed to occupy consecutive elements in the table's type
+                 * vector, so a linear search is needed to find matches. */
+                for (++ i; i < type->count; i ++) {
+                    if (ecs_id_match(type->array[i], id)) {
+                        break;
+                    }
+                }
+
+                /* We should always have as many matching ids as tr->count */
+                ecs_assert(i < type->count, ECS_INTERNAL_ERROR, NULL);
+            }
+        } while (--count);
     }
+
     return result;
 }
 
@@ -2345,23 +2371,25 @@ bool flecs_on_delete_clear_tables(
         for (i = last - 1; i >= first; i --) {
             ecs_id_record_t *idr = ids[i].idr;
             ecs_entity_t action = ids[i].action;
- 
-            /* Empty all tables for id */
-            ecs_table_cache_iter_t it;
-            if (flecs_table_cache_iter(&idr->cache, &it)) {
-                ecs_table_record_t *tr;
-                while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
-                    ecs_table_t *table = tr->hdr.table;
 
-                    if ((action == EcsRemove) || 
-                        !(table->flags & EcsTableMarkedForDelete))
-                    {
-                        flecs_remove_from_table(world, table);
-                    } else {
-                        ecs_dbg_3(
-                            "#[red]delete#[reset] entities from table %u", 
-                            (uint32_t)table->id);
-                        flecs_table_delete_entities(world, table);
+            /* Empty all tables for id */
+            {
+                ecs_table_cache_iter_t it;
+                if (flecs_table_cache_iter(&idr->cache, &it)) {
+                    ecs_table_record_t *tr;
+                    while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
+                        ecs_table_t *table = tr->hdr.table;
+
+                        if ((action == EcsRemove) || 
+                            !(table->flags & EcsTableMarkedForDelete))
+                        {
+                            flecs_remove_from_table(world, table);
+                        } else {
+                            ecs_dbg_3(
+                                "#[red]delete#[reset] entities from table %u", 
+                                (uint32_t)table->id);
+                            flecs_table_delete_entities(world, table);
+                        }
                     }
                 }
             }
@@ -4436,7 +4464,7 @@ bool flecs_remove_invalid(
                 ecs_id_record_t *idr = flecs_id_record_get(world, 
                     ecs_pair(rel, EcsWildcard));
                 if (idr) {
-                    ecs_entity_t action = ECS_ID_ON_DELETE_OBJECT(idr->flags);
+                    ecs_entity_t action = ECS_ID_ON_DELETE_TARGET(idr->flags);
                     if (action == EcsDelete) {
                         /* Entity should be deleted, don't bother checking
                          * other ids */

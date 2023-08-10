@@ -288,7 +288,7 @@ static
 void flecs_register_on_delete_object(ecs_iter_t *it) {
     ecs_id_t id = ecs_field_id(it, 1);
     flecs_register_id_flag_for_relation(it, EcsOnDeleteTarget, 
-        ECS_ID_ON_DELETE_OBJECT_FLAG(ECS_PAIR_SECOND(id)),
+        ECS_ID_ON_DELETE_TARGET_FLAG(ECS_PAIR_SECOND(id)),
         EcsIdOnDeleteObjectMask,
         EcsEntityIsId);  
 }

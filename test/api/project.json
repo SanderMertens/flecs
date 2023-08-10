@@ -788,7 +788,9 @@
                 "nested_delete_with",
                 "deferred_delete_with_after_create_named",
                 "deferred_delete_with_childof_after_create_named",
-                "match_marked_for_deletion"
+                "match_marked_for_deletion",
+                "delete_w_low_rel_mixed_cleanup",
+                "delete_w_low_rel_mixed_cleanup_interleaved_ids"
             ]
         }, {
             "id": "Set",

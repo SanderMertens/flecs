@@ -13,25 +13,25 @@ void OnDelete_flags() {
     test_int(ECS_ID_ON_DELETE(f_delete), EcsDelete);
     test_int(ECS_ID_ON_DELETE(f_throw), EcsPanic);
 
-    test_int(ECS_ID_ON_DELETE_OBJECT(f_obj_remove), EcsRemove);
-    test_int(ECS_ID_ON_DELETE_OBJECT(f_obj_delete), EcsDelete);
-    test_int(ECS_ID_ON_DELETE_OBJECT(f_obj_throw), EcsPanic);
+    test_int(ECS_ID_ON_DELETE_TARGET(f_obj_remove), EcsRemove);
+    test_int(ECS_ID_ON_DELETE_TARGET(f_obj_delete), EcsDelete);
+    test_int(ECS_ID_ON_DELETE_TARGET(f_obj_throw), EcsPanic);
 
     test_int(ECS_ID_ON_DELETE(f_obj_remove), 0);
     test_int(ECS_ID_ON_DELETE(f_obj_delete), 0);
     test_int(ECS_ID_ON_DELETE(f_obj_throw), 0);
 
-    test_int(ECS_ID_ON_DELETE_OBJECT(f_remove), 0);
-    test_int(ECS_ID_ON_DELETE_OBJECT(f_delete), 0);
-    test_int(ECS_ID_ON_DELETE_OBJECT(f_throw), 0);
+    test_int(ECS_ID_ON_DELETE_TARGET(f_remove), 0);
+    test_int(ECS_ID_ON_DELETE_TARGET(f_delete), 0);
+    test_int(ECS_ID_ON_DELETE_TARGET(f_throw), 0);
 
     test_int(ECS_ID_ON_DELETE_FLAG(EcsRemove), f_remove);
     test_int(ECS_ID_ON_DELETE_FLAG(EcsDelete), f_delete);
     test_int(ECS_ID_ON_DELETE_FLAG(EcsPanic), f_throw);
 
-    test_int(ECS_ID_ON_DELETE_OBJECT_FLAG(EcsRemove), f_obj_remove);
-    test_int(ECS_ID_ON_DELETE_OBJECT_FLAG(EcsDelete), f_obj_delete);
-    test_int(ECS_ID_ON_DELETE_OBJECT_FLAG(EcsPanic), f_obj_throw);
+    test_int(ECS_ID_ON_DELETE_TARGET_FLAG(EcsRemove), f_obj_remove);
+    test_int(ECS_ID_ON_DELETE_TARGET_FLAG(EcsDelete), f_obj_delete);
+    test_int(ECS_ID_ON_DELETE_TARGET_FLAG(EcsPanic), f_obj_throw);
 }
 
 void OnDelete_id_default() {
@@ -3024,4 +3024,40 @@ void OnDelete_match_marked_for_deletion() {
     ecs_fini(world);
 
     test_assert(true); /* Ensure cleanup was successful */
+}
+
+void OnDelete_delete_w_low_rel_mixed_cleanup() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t rel = ecs_new_low_id(world);
+    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t child = ecs_new_id(world);
+    ecs_add_pair(world, child, EcsChildOf, parent);
+    ecs_add_pair(world, child, rel, parent);
+
+    ecs_delete(world, parent);
+
+    test_assert(!ecs_is_alive(world, parent));
+    test_assert(!ecs_is_alive(world, child));
+
+    ecs_fini(world);
+}
+
+void OnDelete_delete_w_low_rel_mixed_cleanup_interleaved_ids() {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t rel = ecs_new_low_id(world);
+    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t other = ecs_new_id(world);
+    ecs_entity_t child = ecs_new_id(world);
+    ecs_add_pair(world, child, EcsChildOf, parent);
+    ecs_add_pair(world, child, rel, other);
+    ecs_add_pair(world, child, rel, parent);
+
+    ecs_delete(world, parent);
+
+    test_assert(!ecs_is_alive(world, parent));
+    test_assert(!ecs_is_alive(world, child));
+
+    ecs_fini(world);
 }
