@@ -1,8 +1,8 @@
-#ifndef DSER_TYPE_H
-#define DSER_TYPE_H
+#ifndef BUILTIN_VECTORS_H
+#define BUILTIN_VECTORS_H
 
 /* This generated file contains includes for project dependencies */
-#include "dser_type/bake_config.h"
+#include "builtin_vectors/bake_config.h"
 
 #ifdef __cplusplus
 extern "C" {

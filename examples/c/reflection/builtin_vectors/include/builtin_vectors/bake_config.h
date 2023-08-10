@@ -14,8 +14,8 @@
  * dependencies will automatically show up in this file. Include bake_config.h
  * in your main project file. Do not edit! */
 
-#ifndef DSER_TYPE_BAKE_CONFIG_H
-#define DSER_TYPE_BAKE_CONFIG_H
+#ifndef BUILTIN_VECTORS_BAKE_CONFIG_H
+#define BUILTIN_VECTORS_BAKE_CONFIG_H
 
 /* Headers of public dependencies */
 #include <flecs.h>
