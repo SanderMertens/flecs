@@ -51352,8 +51352,10 @@ int flecs_json_serialize_entity_alerts(
         const EcsAlertInstance *alert = ecs_get(
             world, ai, EcsAlertInstance);
         if (alert) {
-            flecs_json_memberl(buf, "message");
-            flecs_json_string(buf, alert->message);
+            if (alert->message) {
+                flecs_json_memberl(buf, "message");
+                flecs_json_string(buf, alert->message);
+            }
             flecs_json_memberl(buf, "severity");
             flecs_json_string(buf, severity);
             

@@ -524,9 +524,12 @@ void DeserializeFromJson_struct_struct_i32_array_3(void);
 void DeserializeFromJson_struct_struct_i32_i32_array_3(void);
 void DeserializeFromJson_struct_w_array_type_i32_i32(void);
 void DeserializeFromJson_struct_w_2_array_type_i32_i32(void);
+<<<<<<< HEAD
 void DeserializeFromJson_struct_w_2_vec_type_i32_i32(void);
 void DeserializeFromJson_struct_w_2_vec_type_i32_i32_empty(void);
 void DeserializeFromJson_struct_w_12_vec_type_empty(void);
+=======
+>>>>>>> upstream/master
 void DeserializeFromJson_struct_w_nested_member_i32(void);
 void DeserializeFromJson_struct_w_2_nested_members_i32(void);
 void DeserializeFromJson_struct_w_nested_members_struct(void);
@@ -642,6 +645,7 @@ void SerializeToJson_array_array_i32_3(void);
 void SerializeToJson_vector_i32_3(void);
 void SerializeToJson_vector_struct_i32_i32(void);
 void SerializeToJson_vector_array_i32_3(void);
+<<<<<<< HEAD
 void SerializeToJson_serialize_entity_empty(void);
 void SerializeToJson_serialize_entity_w_name(void);
 void SerializeToJson_serialize_entity_w_name_1_tag(void);
@@ -740,6 +744,111 @@ void SerializeToJson_serialize_colors_w_offset(void);
 void SerializeToJson_serialize_anonymous_entities_w_offset(void);
 void SerializeToJson_serialize_table(void);
 void SerializeToJson_serialize_world(void);
+=======
+
+// Testsuite 'SerializeEntityToJson'
+void SerializeEntityToJson_serialize_empty(void);
+void SerializeEntityToJson_serialize_w_name(void);
+void SerializeEntityToJson_serialize_w_name_1_tag(void);
+void SerializeEntityToJson_serialize_w_name_2_tags(void);
+void SerializeEntityToJson_serialize_w_name_1_pair(void);
+void SerializeEntityToJson_serialize_w_base(void);
+void SerializeEntityToJson_serialize_w_base_override(void);
+void SerializeEntityToJson_serialize_w_2_base(void);
+void SerializeEntityToJson_serialize_w_nested_base(void);
+void SerializeEntityToJson_serialize_w_1_component(void);
+void SerializeEntityToJson_serialize_w_2_components(void);
+void SerializeEntityToJson_serialize_w_primitive_component(void);
+void SerializeEntityToJson_serialize_w_enum_component(void);
+void SerializeEntityToJson_serialize_w_struct_and_enum_component(void);
+void SerializeEntityToJson_serialize_w_invalid_enum_component(void);
+void SerializeEntityToJson_serialize_w_type_info(void);
+void SerializeEntityToJson_serialize_w_type_info_unit(void);
+void SerializeEntityToJson_serialize_w_type_info_unit_quantity(void);
+void SerializeEntityToJson_serialize_w_type_info_unit_over(void);
+void SerializeEntityToJson_serialize_wo_private(void);
+void SerializeEntityToJson_serialize_w_private(void);
+void SerializeEntityToJson_serialize_w_label(void);
+void SerializeEntityToJson_serialize_w_label_no_name(void);
+void SerializeEntityToJson_serialize_w_id_labels(void);
+void SerializeEntityToJson_serialize_w_brief(void);
+void SerializeEntityToJson_serialize_w_brief_no_brief(void);
+void SerializeEntityToJson_serialize_w_link(void);
+void SerializeEntityToJson_serialize_w_link_no_link(void);
+void SerializeEntityToJson_serialize_w_meta_ids(void);
+void SerializeEntityToJson_serialize_color(void);
+void SerializeEntityToJson_serialize_w_doc_w_quotes(void);
+void SerializeEntityToJson_serialize_union_relationship(void);
+void SerializeEntityToJson_serialize_union_relationship_w_labels(void);
+void SerializeEntityToJson_serialize_union_relationship_invalid_entity(void);
+void SerializeEntityToJson_serialize_union_relationship_invalid_entity_w_labels(void);
+void SerializeEntityToJson_serialize_w_union_property(void);
+void SerializeEntityToJson_serialize_w_union_property(void);
+void SerializeEntityToJson_serialize_from_core(void);
+void SerializeEntityToJson_serialize_w_1_alert(void);
+void SerializeEntityToJson_serialize_w_2_alerts(void);
+void SerializeEntityToJson_serialize_w_child_alerts(void);
+void SerializeEntityToJson_serialize_w_severity_filter_alert(void);
+void SerializeEntityToJson_serialize_w_alerts_not_imported(void);
+void SerializeEntityToJson_serialize_w_alerts_no_message(void);
+void SerializeEntityToJson_serialize_refs_childof(void);
+void SerializeEntityToJson_serialize_refs_custom(void);
+void SerializeEntityToJson_serialize_refs_wildcard(void);
+
+// Testsuite 'SerializeIterToJson'
+void SerializeIterToJson_serialize_1_comps_empty(void);
+void SerializeIterToJson_serialize_1_comps_2_ents_same_table(void);
+void SerializeIterToJson_serialize_1_tag_2_ents_same_table(void);
+void SerializeIterToJson_serialize_2_comps_2_ents_same_table(void);
+void SerializeIterToJson_serialize_1_tag_1_comp_2_ents_same_table(void);
+void SerializeIterToJson_serialize_1_tag_1_comp_4_ents_two_tables(void);
+void SerializeIterToJson_serialize_2_comps_1_owned_2_ents(void);
+void SerializeIterToJson_serialize_w_pair_wildcard(void);
+void SerializeIterToJson_serialize_w_var(void);
+void SerializeIterToJson_serialize_w_2_vars(void);
+void SerializeIterToJson_serialize_type_info_1_tags(void);
+void SerializeIterToJson_serialize_type_info_2_tags(void);
+void SerializeIterToJson_serialize_type_info_1_component(void);
+void SerializeIterToJson_serialize_type_info_2_components(void);
+void SerializeIterToJson_serialize_type_info_1_struct(void);
+void SerializeIterToJson_serialize_type_info_1_component_1_struct(void);
+void SerializeIterToJson_serialize_type_info_2_structs(void);
+void SerializeIterToJson_serialize_type_info_w_unit(void);
+void SerializeIterToJson_serialize_type_info_w_unit_quantity(void);
+void SerializeIterToJson_serialize_type_info_w_unit_over(void);
+void SerializeIterToJson_serialize_w_entity_label(void);
+void SerializeIterToJson_serialize_w_var_labels(void);
+void SerializeIterToJson_serialize_w_var_component(void);
+void SerializeIterToJson_serialize_w_optional_tag(void);
+void SerializeIterToJson_serialize_w_optional_component(void);
+void SerializeIterToJson_serialize_w_optional_reflected_component(void);
+void SerializeIterToJson_serialize_w_inout_filter_tag(void);
+void SerializeIterToJson_serialize_w_inout_filter_component(void);
+void SerializeIterToJson_serialize_w_inout_filter_reflected_component(void);
+void SerializeIterToJson_serialize_w_inout_out_tag(void);
+void SerializeIterToJson_serialize_w_inout_out_component(void);
+void SerializeIterToJson_serialize_w_inout_out_reflected_component(void);
+void SerializeIterToJson_serialize_component_from_var(void);
+void SerializeIterToJson_serialize_color(void);
+void SerializeIterToJson_serialize_ids(void);
+void SerializeIterToJson_serialize_ids_2_entities(void);
+void SerializeIterToJson_serialize_variable_ids(void);
+void SerializeIterToJson_serialize_variable_ids_2_entities(void);
+void SerializeIterToJson_serialize_invalid_value(void);
+void SerializeIterToJson_serialize_recycled_pair_id(void);
+void SerializeIterToJson_serialize_w_alert(void);
+void SerializeIterToJson_serialize_no_this_alert_imported(void);
+void SerializeIterToJson_serialize_paged_iterator(void);
+void SerializeIterToJson_serialize_paged_iterator_w_optional_component(void);
+void SerializeIterToJson_serialize_paged_iterator_w_optional_tag(void);
+void SerializeIterToJson_serialize_paged_iterator_w_vars(void);
+void SerializeIterToJson_serialize_w_offset(void);
+void SerializeIterToJson_serialize_labels_w_offset(void);
+void SerializeIterToJson_serialize_colors_w_offset(void);
+void SerializeIterToJson_serialize_anonymous_entities_w_offset(void);
+void SerializeIterToJson_serialize_table(void);
+void SerializeIterToJson_serialize_world(void);
+>>>>>>> upstream/master
 
 // Testsuite 'SerializeTypeInfoToJson'
 void SerializeTypeInfoToJson_bool(void);
@@ -2963,6 +3072,7 @@ bake_test_case DeserializeFromJson_testcases[] = {
         DeserializeFromJson_struct_w_2_array_type_i32_i32
     },
     {
+<<<<<<< HEAD
         "struct_w_2_vec_type_i32_i32",
         DeserializeFromJson_struct_w_2_vec_type_i32_i32
     },
@@ -2975,6 +3085,8 @@ bake_test_case DeserializeFromJson_testcases[] = {
         DeserializeFromJson_struct_w_12_vec_type_empty
     },
     {
+=======
+>>>>>>> upstream/master
         "struct_w_nested_member_i32",
         DeserializeFromJson_struct_w_nested_member_i32
     },
@@ -3428,6 +3540,7 @@ bake_test_case SerializeToJson_testcases[] = {
     {
         "vector_array_i32_3",
         SerializeToJson_vector_array_i32_3
+<<<<<<< HEAD
     },
     {
         "serialize_entity_empty",
@@ -3820,6 +3933,410 @@ bake_test_case SerializeToJson_testcases[] = {
     {
         "serialize_world",
         SerializeToJson_serialize_world
+=======
+    }
+};
+
+bake_test_case SerializeEntityToJson_testcases[] = {
+    {
+        "serialize_empty",
+        SerializeEntityToJson_serialize_empty
+    },
+    {
+        "serialize_w_name",
+        SerializeEntityToJson_serialize_w_name
+    },
+    {
+        "serialize_w_name_1_tag",
+        SerializeEntityToJson_serialize_w_name_1_tag
+    },
+    {
+        "serialize_w_name_2_tags",
+        SerializeEntityToJson_serialize_w_name_2_tags
+    },
+    {
+        "serialize_w_name_1_pair",
+        SerializeEntityToJson_serialize_w_name_1_pair
+    },
+    {
+        "serialize_w_base",
+        SerializeEntityToJson_serialize_w_base
+    },
+    {
+        "serialize_w_base_override",
+        SerializeEntityToJson_serialize_w_base_override
+    },
+    {
+        "serialize_w_2_base",
+        SerializeEntityToJson_serialize_w_2_base
+    },
+    {
+        "serialize_w_nested_base",
+        SerializeEntityToJson_serialize_w_nested_base
+    },
+    {
+        "serialize_w_1_component",
+        SerializeEntityToJson_serialize_w_1_component
+    },
+    {
+        "serialize_w_2_components",
+        SerializeEntityToJson_serialize_w_2_components
+    },
+    {
+        "serialize_w_primitive_component",
+        SerializeEntityToJson_serialize_w_primitive_component
+    },
+    {
+        "serialize_w_enum_component",
+        SerializeEntityToJson_serialize_w_enum_component
+    },
+    {
+        "serialize_w_struct_and_enum_component",
+        SerializeEntityToJson_serialize_w_struct_and_enum_component
+    },
+    {
+        "serialize_w_invalid_enum_component",
+        SerializeEntityToJson_serialize_w_invalid_enum_component
+    },
+    {
+        "serialize_w_type_info",
+        SerializeEntityToJson_serialize_w_type_info
+    },
+    {
+        "serialize_w_type_info_unit",
+        SerializeEntityToJson_serialize_w_type_info_unit
+    },
+    {
+        "serialize_w_type_info_unit_quantity",
+        SerializeEntityToJson_serialize_w_type_info_unit_quantity
+    },
+    {
+        "serialize_w_type_info_unit_over",
+        SerializeEntityToJson_serialize_w_type_info_unit_over
+    },
+    {
+        "serialize_wo_private",
+        SerializeEntityToJson_serialize_wo_private
+    },
+    {
+        "serialize_w_private",
+        SerializeEntityToJson_serialize_w_private
+    },
+    {
+        "serialize_w_label",
+        SerializeEntityToJson_serialize_w_label
+    },
+    {
+        "serialize_w_label_no_name",
+        SerializeEntityToJson_serialize_w_label_no_name
+    },
+    {
+        "serialize_w_id_labels",
+        SerializeEntityToJson_serialize_w_id_labels
+    },
+    {
+        "serialize_w_brief",
+        SerializeEntityToJson_serialize_w_brief
+    },
+    {
+        "serialize_w_brief_no_brief",
+        SerializeEntityToJson_serialize_w_brief_no_brief
+    },
+    {
+        "serialize_w_link",
+        SerializeEntityToJson_serialize_w_link
+    },
+    {
+        "serialize_w_link_no_link",
+        SerializeEntityToJson_serialize_w_link_no_link
+    },
+    {
+        "serialize_w_meta_ids",
+        SerializeEntityToJson_serialize_w_meta_ids
+    },
+    {
+        "serialize_color",
+        SerializeEntityToJson_serialize_color
+    },
+    {
+        "serialize_w_doc_w_quotes",
+        SerializeEntityToJson_serialize_w_doc_w_quotes
+    },
+    {
+        "serialize_union_relationship",
+        SerializeEntityToJson_serialize_union_relationship
+    },
+    {
+        "serialize_union_relationship_w_labels",
+        SerializeEntityToJson_serialize_union_relationship_w_labels
+    },
+    {
+        "serialize_union_relationship_invalid_entity",
+        SerializeEntityToJson_serialize_union_relationship_invalid_entity
+    },
+    {
+        "serialize_union_relationship_invalid_entity_w_labels",
+        SerializeEntityToJson_serialize_union_relationship_invalid_entity_w_labels
+    },
+    {
+        "serialize_w_union_property",
+        SerializeEntityToJson_serialize_w_union_property
+    },
+    {
+        "serialize_w_union_property",
+        SerializeEntityToJson_serialize_w_union_property
+    },
+    {
+        "serialize_from_core",
+        SerializeEntityToJson_serialize_from_core
+    },
+    {
+        "serialize_w_1_alert",
+        SerializeEntityToJson_serialize_w_1_alert
+    },
+    {
+        "serialize_w_2_alerts",
+        SerializeEntityToJson_serialize_w_2_alerts
+    },
+    {
+        "serialize_w_child_alerts",
+        SerializeEntityToJson_serialize_w_child_alerts
+    },
+    {
+        "serialize_w_severity_filter_alert",
+        SerializeEntityToJson_serialize_w_severity_filter_alert
+    },
+    {
+        "serialize_w_alerts_not_imported",
+        SerializeEntityToJson_serialize_w_alerts_not_imported
+    },
+    {
+        "serialize_w_alerts_no_message",
+        SerializeEntityToJson_serialize_w_alerts_no_message
+    },
+    {
+        "serialize_refs_childof",
+        SerializeEntityToJson_serialize_refs_childof
+    },
+    {
+        "serialize_refs_custom",
+        SerializeEntityToJson_serialize_refs_custom
+    },
+    {
+        "serialize_refs_wildcard",
+        SerializeEntityToJson_serialize_refs_wildcard
+    }
+};
+
+bake_test_case SerializeIterToJson_testcases[] = {
+    {
+        "serialize_1_comps_empty",
+        SerializeIterToJson_serialize_1_comps_empty
+    },
+    {
+        "serialize_1_comps_2_ents_same_table",
+        SerializeIterToJson_serialize_1_comps_2_ents_same_table
+    },
+    {
+        "serialize_1_tag_2_ents_same_table",
+        SerializeIterToJson_serialize_1_tag_2_ents_same_table
+    },
+    {
+        "serialize_2_comps_2_ents_same_table",
+        SerializeIterToJson_serialize_2_comps_2_ents_same_table
+    },
+    {
+        "serialize_1_tag_1_comp_2_ents_same_table",
+        SerializeIterToJson_serialize_1_tag_1_comp_2_ents_same_table
+    },
+    {
+        "serialize_1_tag_1_comp_4_ents_two_tables",
+        SerializeIterToJson_serialize_1_tag_1_comp_4_ents_two_tables
+    },
+    {
+        "serialize_2_comps_1_owned_2_ents",
+        SerializeIterToJson_serialize_2_comps_1_owned_2_ents
+    },
+    {
+        "serialize_w_pair_wildcard",
+        SerializeIterToJson_serialize_w_pair_wildcard
+    },
+    {
+        "serialize_w_var",
+        SerializeIterToJson_serialize_w_var
+    },
+    {
+        "serialize_w_2_vars",
+        SerializeIterToJson_serialize_w_2_vars
+    },
+    {
+        "serialize_type_info_1_tags",
+        SerializeIterToJson_serialize_type_info_1_tags
+    },
+    {
+        "serialize_type_info_2_tags",
+        SerializeIterToJson_serialize_type_info_2_tags
+    },
+    {
+        "serialize_type_info_1_component",
+        SerializeIterToJson_serialize_type_info_1_component
+    },
+    {
+        "serialize_type_info_2_components",
+        SerializeIterToJson_serialize_type_info_2_components
+    },
+    {
+        "serialize_type_info_1_struct",
+        SerializeIterToJson_serialize_type_info_1_struct
+    },
+    {
+        "serialize_type_info_1_component_1_struct",
+        SerializeIterToJson_serialize_type_info_1_component_1_struct
+    },
+    {
+        "serialize_type_info_2_structs",
+        SerializeIterToJson_serialize_type_info_2_structs
+    },
+    {
+        "serialize_type_info_w_unit",
+        SerializeIterToJson_serialize_type_info_w_unit
+    },
+    {
+        "serialize_type_info_w_unit_quantity",
+        SerializeIterToJson_serialize_type_info_w_unit_quantity
+    },
+    {
+        "serialize_type_info_w_unit_over",
+        SerializeIterToJson_serialize_type_info_w_unit_over
+    },
+    {
+        "serialize_w_entity_label",
+        SerializeIterToJson_serialize_w_entity_label
+    },
+    {
+        "serialize_w_var_labels",
+        SerializeIterToJson_serialize_w_var_labels
+    },
+    {
+        "serialize_w_var_component",
+        SerializeIterToJson_serialize_w_var_component
+    },
+    {
+        "serialize_w_optional_tag",
+        SerializeIterToJson_serialize_w_optional_tag
+    },
+    {
+        "serialize_w_optional_component",
+        SerializeIterToJson_serialize_w_optional_component
+    },
+    {
+        "serialize_w_optional_reflected_component",
+        SerializeIterToJson_serialize_w_optional_reflected_component
+    },
+    {
+        "serialize_w_inout_filter_tag",
+        SerializeIterToJson_serialize_w_inout_filter_tag
+    },
+    {
+        "serialize_w_inout_filter_component",
+        SerializeIterToJson_serialize_w_inout_filter_component
+    },
+    {
+        "serialize_w_inout_filter_reflected_component",
+        SerializeIterToJson_serialize_w_inout_filter_reflected_component
+    },
+    {
+        "serialize_w_inout_out_tag",
+        SerializeIterToJson_serialize_w_inout_out_tag
+    },
+    {
+        "serialize_w_inout_out_component",
+        SerializeIterToJson_serialize_w_inout_out_component
+    },
+    {
+        "serialize_w_inout_out_reflected_component",
+        SerializeIterToJson_serialize_w_inout_out_reflected_component
+    },
+    {
+        "serialize_component_from_var",
+        SerializeIterToJson_serialize_component_from_var
+    },
+    {
+        "serialize_color",
+        SerializeIterToJson_serialize_color
+    },
+    {
+        "serialize_ids",
+        SerializeIterToJson_serialize_ids
+    },
+    {
+        "serialize_ids_2_entities",
+        SerializeIterToJson_serialize_ids_2_entities
+    },
+    {
+        "serialize_variable_ids",
+        SerializeIterToJson_serialize_variable_ids
+    },
+    {
+        "serialize_variable_ids_2_entities",
+        SerializeIterToJson_serialize_variable_ids_2_entities
+    },
+    {
+        "serialize_invalid_value",
+        SerializeIterToJson_serialize_invalid_value
+    },
+    {
+        "serialize_recycled_pair_id",
+        SerializeIterToJson_serialize_recycled_pair_id
+    },
+    {
+        "serialize_w_alert",
+        SerializeIterToJson_serialize_w_alert
+    },
+    {
+        "serialize_no_this_alert_imported",
+        SerializeIterToJson_serialize_no_this_alert_imported
+    },
+    {
+        "serialize_paged_iterator",
+        SerializeIterToJson_serialize_paged_iterator
+    },
+    {
+        "serialize_paged_iterator_w_optional_component",
+        SerializeIterToJson_serialize_paged_iterator_w_optional_component
+    },
+    {
+        "serialize_paged_iterator_w_optional_tag",
+        SerializeIterToJson_serialize_paged_iterator_w_optional_tag
+    },
+    {
+        "serialize_paged_iterator_w_vars",
+        SerializeIterToJson_serialize_paged_iterator_w_vars
+    },
+    {
+        "serialize_w_offset",
+        SerializeIterToJson_serialize_w_offset
+    },
+    {
+        "serialize_labels_w_offset",
+        SerializeIterToJson_serialize_labels_w_offset
+    },
+    {
+        "serialize_colors_w_offset",
+        SerializeIterToJson_serialize_colors_w_offset
+    },
+    {
+        "serialize_anonymous_entities_w_offset",
+        SerializeIterToJson_serialize_anonymous_entities_w_offset
+    },
+    {
+        "serialize_table",
+        SerializeIterToJson_serialize_table
+    },
+    {
+        "serialize_world",
+        SerializeIterToJson_serialize_world
+>>>>>>> upstream/master
     }
 };
 
@@ -4767,17 +5284,42 @@ static bake_test_suite suites[] = {
         "DeserializeFromJson",
         NULL,
         NULL,
+<<<<<<< HEAD
         105,
+=======
+        102,
+>>>>>>> upstream/master
         DeserializeFromJson_testcases
     },
     {
         "SerializeToJson",
         NULL,
         NULL,
+<<<<<<< HEAD
         140,
         SerializeToJson_testcases
     },
     {
+=======
+        42,
+        SerializeToJson_testcases
+    },
+    {
+        "SerializeEntityToJson",
+        NULL,
+        NULL,
+        47,
+        SerializeEntityToJson_testcases
+    },
+    {
+        "SerializeIterToJson",
+        NULL,
+        NULL,
+        52,
+        SerializeIterToJson_testcases
+    },
+    {
+>>>>>>> upstream/master
         "SerializeTypeInfoToJson",
         NULL,
         NULL,
@@ -4815,5 +5357,9 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
+<<<<<<< HEAD
     return bake_test_run("meta", argc, argv, suites, 19);
+=======
+    return bake_test_run("meta", argc, argv, suites, 21);
+>>>>>>> upstream/master
 }
