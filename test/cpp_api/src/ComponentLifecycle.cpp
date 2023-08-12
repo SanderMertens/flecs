@@ -1788,3 +1788,36 @@ void ComponentLifecycle_dtor_with_relation() {
     test_int(Pod::move_invoked, 4);
     test_int(Pod::move_ctor_invoked, 1);
 }
+
+void ComponentLifecycle_register_parent_after_child_w_hooks() {
+    {
+        flecs::world ecs;
+
+        ecs.component<Pod::Child>();
+        ecs.component<Pod>();
+
+        ecs.entity().set<Pod>({});
+    }
+
+    test_int(Pod::ctor_invoked, 2);
+    test_int(Pod::dtor_invoked, 2);
+    test_int(Pod::move_invoked, 1);
+    test_int(Pod::move_ctor_invoked, 0);
+    test_int(Pod::copy_invoked, 0);
+    test_int(Pod::copy_ctor_invoked, 0);
+}
+
+void ComponentLifecycle_register_parent_after_child_w_hooks_implicit() {
+    {
+        flecs::world ecs;
+
+        ecs.entity().add<Pod::Child>().set<Pod>({});
+    }
+
+    test_int(Pod::ctor_invoked, 2);
+    test_int(Pod::dtor_invoked, 2);
+    test_int(Pod::move_invoked, 1);
+    test_int(Pod::move_ctor_invoked, 0);
+    test_int(Pod::copy_invoked, 0);
+    test_int(Pod::copy_ctor_invoked, 0);
+}

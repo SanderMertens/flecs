@@ -922,6 +922,8 @@ void ComponentLifecycle_set_override_pair_no_copy(void);
 void ComponentLifecycle_set_override_pair_w_entity_no_copy(void);
 void ComponentLifecycle_dtor_after_defer_set(void);
 void ComponentLifecycle_dtor_with_relation(void);
+void ComponentLifecycle_register_parent_after_child_w_hooks(void);
+void ComponentLifecycle_register_parent_after_child_w_hooks_implicit(void);
 
 // Testsuite 'Refs'
 void Refs_get_ref_by_ptr(void);
@@ -4828,6 +4830,14 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "dtor_with_relation",
         ComponentLifecycle_dtor_with_relation
+    },
+    {
+        "register_parent_after_child_w_hooks",
+        ComponentLifecycle_register_parent_after_child_w_hooks
+    },
+    {
+        "register_parent_after_child_w_hooks_implicit",
+        ComponentLifecycle_register_parent_after_child_w_hooks_implicit
     }
 };
 
@@ -6221,7 +6231,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        73,
+        75,
         ComponentLifecycle_testcases
     },
     {

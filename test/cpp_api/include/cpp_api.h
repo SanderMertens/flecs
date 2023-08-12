@@ -32,6 +32,8 @@ struct Self {
 
 class Pod {
 public:
+    struct Child { };
+
     Pod() {
         ctor_invoked ++;
         value = 10;

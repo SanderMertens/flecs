@@ -5518,9 +5518,9 @@ ecs_entity_t flecs_get_delete_action(
             }
 
             if (count > 1) {
-                /* If table contains multiple relationships for target they are
-                 * not guaranteed to occupy consecutive elements in the table's
-                 * type vector, so a linear search is needed to find matches. */
+                /* If table contains multiple pairs for target they are not
+                 * guaranteed to occupy consecutive elements in the table's type
+                 * vector, so a linear search is needed to find matches. */
                 for (++ i; i < type->count; i ++) {
                     if (ecs_id_match(type->array[i], id)) {
                         break;
@@ -29873,7 +29873,7 @@ ecs_entity_t ecs_cpp_component_register(
         ent = id;
     } else {
         ent = ecs_lookup_path_w_sep(world, 0, name, "::", "::", false);
-        existing = ent != 0;
+        existing = ent != 0 && ecs_has(world, ent, EcsComponent);
     }
     ecs_set_scope(world, prev_scope);
 

@@ -287,7 +287,7 @@ ecs_entity_t ecs_cpp_component_register(
         ent = id;
     } else {
         ent = ecs_lookup_path_w_sep(world, 0, name, "::", "::", false);
-        existing = ent != 0;
+        existing = ent != 0 && ecs_has(world, ent, EcsComponent);
     }
     ecs_set_scope(world, prev_scope);
 

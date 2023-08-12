@@ -959,7 +959,9 @@
                 "set_override_pair_no_copy",
                 "set_override_pair_w_entity_no_copy",
                 "dtor_after_defer_set",
-                "dtor_with_relation"
+                "dtor_with_relation",
+                "register_parent_after_child_w_hooks",
+                "register_parent_after_child_w_hooks_implicit"
             ]
         }, {
             "id": "Refs",
