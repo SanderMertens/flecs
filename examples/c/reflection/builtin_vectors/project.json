@@ -1,0 +1,9 @@
+{
+    "id": "builtin_vectors",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ]
+    }
+}

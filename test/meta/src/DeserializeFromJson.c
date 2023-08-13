@@ -1013,6 +1013,194 @@ void DeserializeFromJson_struct_w_2_array_type_i32_i32() {
     ecs_fini(world);
 }
 
+void DeserializeFromJson_struct_w_2_vec_type_i32_i32() {
+
+    typedef struct {
+        ecs_vec_t n_1;
+        ecs_vec_t n_2;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+    ecs_entity_t VectorI32 = ecs_vector(world, {.type = ecs_id(ecs_i32_t)});
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"n_1", VectorI32},
+            {"n_2", VectorI32}
+        }
+    });
+
+    T value;
+
+    const char *ptr = ecs_ptr_from_json(world, t, &value, "{\"n_1\": [10, 20], \"n_2\": [30, 40, 50, 60, 70]}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_vec_get_t(&value.n_1, ecs_i32_t, 0)[0], 10);
+    test_int(ecs_vec_get_t(&value.n_1, ecs_i32_t, 1)[0], 20);
+
+    test_int(ecs_vec_get_t(&value.n_2, ecs_i32_t, 0)[0], 30);
+    test_int(ecs_vec_get_t(&value.n_2, ecs_i32_t, 1)[0], 40);
+    test_int(ecs_vec_get_t(&value.n_2, ecs_i32_t, 2)[0], 50);
+    test_int(ecs_vec_get_t(&value.n_2, ecs_i32_t, 3)[0], 60);
+    test_int(ecs_vec_get_t(&value.n_2, ecs_i32_t, 4)[0], 70);
+
+    ecs_vec_fini_t(NULL, &value.n_1, ecs_i32_t);
+    ecs_vec_fini_t(NULL, &value.n_2, ecs_i32_t);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_struct_w_vec_i32_and_vec_vec_i32() {
+
+    typedef struct {
+        ecs_vec_t v_i32;
+        ecs_vec_t vv_i32;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+    ecs_entity_t VectorI32 = ecs_vector(world, {.type = ecs_id(ecs_i32_t)});
+    ecs_entity_t VectorVectorI32 = ecs_vector(world, {.type = VectorI32});
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"v_i32", VectorI32},
+            {"vv_i32", VectorVectorI32}
+        }
+    });
+
+    T value = {{ 0 }};
+
+    const char *ptr = ecs_ptr_from_json(world, t, &value, "{\"v_i32\": [-1, -2, -3, -4], \"vv_i32\": [[1,2],[], [10,20,30], [],[100,200,300,400]]}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_vec_count(&value.v_i32), 4);
+    test_int(ecs_vec_count(&value.vv_i32), 5);
+    test_int(ecs_vec_count(ecs_vec_get_t(&value.vv_i32, ecs_vec_t, 0)), 2);
+    test_int(ecs_vec_count(ecs_vec_get_t(&value.vv_i32, ecs_vec_t, 1)), 0);
+    test_int(ecs_vec_count(ecs_vec_get_t(&value.vv_i32, ecs_vec_t, 2)), 3);
+    test_int(ecs_vec_count(ecs_vec_get_t(&value.vv_i32, ecs_vec_t, 3)), 0);
+    test_int(ecs_vec_count(ecs_vec_get_t(&value.vv_i32, ecs_vec_t, 4)), 4);
+
+    test_int(ecs_vec_get_t(&value.v_i32, ecs_i32_t, 0)[0], -1);
+    test_int(ecs_vec_get_t(&value.v_i32, ecs_i32_t, 1)[0], -2);
+    test_int(ecs_vec_get_t(&value.v_i32, ecs_i32_t, 2)[0], -3);
+    test_int(ecs_vec_get_t(&value.v_i32, ecs_i32_t, 3)[0], -4);
+
+    test_int(ecs_vec_get_t(ecs_vec_get_t(&value.vv_i32, ecs_vec_t, 0), ecs_i32_t, 0)[0], 1);
+    test_int(ecs_vec_get_t(ecs_vec_get_t(&value.vv_i32, ecs_vec_t, 0), ecs_i32_t, 1)[0], 2);
+    
+    test_int(ecs_vec_get_t(ecs_vec_get_t(&value.vv_i32, ecs_vec_t, 2), ecs_i32_t, 0)[0], 10);
+    test_int(ecs_vec_get_t(ecs_vec_get_t(&value.vv_i32, ecs_vec_t, 2), ecs_i32_t, 1)[0], 20);
+    test_int(ecs_vec_get_t(ecs_vec_get_t(&value.vv_i32, ecs_vec_t, 2), ecs_i32_t, 2)[0], 30);
+
+    test_int(ecs_vec_get_t(ecs_vec_get_t(&value.vv_i32, ecs_vec_t, 4), ecs_i32_t, 0)[0], 100);
+    test_int(ecs_vec_get_t(ecs_vec_get_t(&value.vv_i32, ecs_vec_t, 4), ecs_i32_t, 1)[0], 200);
+    test_int(ecs_vec_get_t(ecs_vec_get_t(&value.vv_i32, ecs_vec_t, 4), ecs_i32_t, 2)[0], 300);
+    test_int(ecs_vec_get_t(ecs_vec_get_t(&value.vv_i32, ecs_vec_t, 4), ecs_i32_t, 3)[0], 400);
+    
+    for(int i = 0; i < ecs_vec_count(&value.vv_i32); ++i) {
+        ecs_vec_fini_t(NULL, ecs_vec_get_t(&value.vv_i32, ecs_vec_t, i), ecs_i32_t);
+    }
+
+    ecs_vec_fini_t(NULL, &value.v_i32, ecs_i32_t);
+    ecs_vec_fini_t(NULL, &value.vv_i32, ecs_vec_t);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_struct_w_12_vec_type_empty() {
+
+    typedef struct {
+        ecs_vec_t n_i8;
+        ecs_vec_t n_i16;
+        ecs_vec_t n_i32;
+        ecs_vec_t n_i64;
+        ecs_vec_t n_f32;
+        ecs_vec_t n_f64;
+        ecs_vec_t m_i8;
+        ecs_vec_t m_i16;
+        ecs_vec_t m_i32;
+        ecs_vec_t m_i64;
+        ecs_vec_t m_f32;
+        ecs_vec_t m_f64;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"n_i8", ecs_vector(world, {.type = ecs_id(ecs_i8_t)})},
+            {"n_i16", ecs_vector(world, {.type = ecs_id(ecs_i16_t)})},
+            {"n_i32", ecs_vector(world, {.type = ecs_id(ecs_i32_t)})},
+            {"n_i64", ecs_vector(world, {.type = ecs_id(ecs_i64_t)})},
+            {"n_f32", ecs_vector(world, {.type = ecs_id(ecs_f32_t)})},
+            {"n_f64", ecs_vector(world, {.type = ecs_id(ecs_f64_t)})},
+            {"m_i8", ecs_vector(world, {.type = ecs_id(ecs_i8_t)})},
+            {"m_i16", ecs_vector(world, {.type = ecs_id(ecs_i16_t)})},
+            {"m_i32", ecs_vector(world, {.type = ecs_id(ecs_i32_t)})},
+            {"m_i64", ecs_vector(world, {.type = ecs_id(ecs_i64_t)})},
+            {"m_f32", ecs_vector(world, {.type = ecs_id(ecs_f32_t)})},
+            {"m_f64", ecs_vector(world, {.type = ecs_id(ecs_f64_t)})}
+        }
+    });
+
+    T value;
+
+    char const * json = "{"
+    "\"n_i8\": [], \"n_i16\": [], \"n_i32\": [], \"n_i64\": [], \"n_f32\": [], \"n_f64\": [],"
+    "\"m_i8\": [], \"m_i16\": [], \"m_i32\": [], \"m_i64\": [], \"m_f32\": [], \"m_f64\": []"
+    "}";
+    const char *ptr = ecs_ptr_from_json(world, t, &value, json, NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(ecs_vec_count(&value.n_i8), 0);
+    test_int(ecs_vec_count(&value.n_i16), 0);
+    test_int(ecs_vec_count(&value.n_i32), 0);
+    test_int(ecs_vec_count(&value.n_i64), 0);
+    test_int(ecs_vec_count(&value.n_f32), 0);
+    test_int(ecs_vec_count(&value.n_f64), 0);
+    test_int(ecs_vec_count(&value.m_i8), 0);
+    test_int(ecs_vec_count(&value.m_i16), 0);
+    test_int(ecs_vec_count(&value.m_i32), 0);
+    test_int(ecs_vec_count(&value.m_i64), 0);
+    test_int(ecs_vec_count(&value.m_f32), 0);
+    test_int(ecs_vec_count(&value.m_f64), 0);
+
+    test_int(ecs_vec_size(&value.n_i8), 0);
+    test_int(ecs_vec_size(&value.n_i16), 0);
+    test_int(ecs_vec_size(&value.n_i32), 0);
+    test_int(ecs_vec_size(&value.n_i64), 0);
+    test_int(ecs_vec_size(&value.n_f32), 0);
+    test_int(ecs_vec_size(&value.n_f64), 0);
+    test_int(ecs_vec_size(&value.m_i8), 0);
+    test_int(ecs_vec_size(&value.m_i16), 0);
+    test_int(ecs_vec_size(&value.m_i32), 0);
+    test_int(ecs_vec_size(&value.m_i64), 0);
+    test_int(ecs_vec_size(&value.m_f32), 0);
+    test_int(ecs_vec_size(&value.m_f64), 0);
+
+    ecs_vec_fini_t(NULL, &value.n_i8, ecs_i8_t);
+    ecs_vec_fini_t(NULL, &value.n_i16, ecs_i16_t);
+    ecs_vec_fini_t(NULL, &value.n_i32, ecs_i32_t);
+    ecs_vec_fini_t(NULL, &value.n_i64, ecs_i64_t);
+    ecs_vec_fini_t(NULL, &value.n_f32, ecs_f32_t);
+    ecs_vec_fini_t(NULL, &value.n_f64, ecs_f64_t);
+    ecs_vec_fini_t(NULL, &value.m_i8, ecs_i8_t);
+    ecs_vec_fini_t(NULL, &value.m_i16, ecs_i16_t);
+    ecs_vec_fini_t(NULL, &value.m_i32, ecs_i32_t);
+    ecs_vec_fini_t(NULL, &value.m_i64, ecs_i64_t);
+    ecs_vec_fini_t(NULL, &value.m_f32, ecs_f32_t);
+    ecs_vec_fini_t(NULL, &value.m_f64, ecs_f64_t);
+
+    ecs_fini(world);
+}
+
 void DeserializeFromJson_struct_w_nested_member_i32() {
     ecs_world_t *world = ecs_init();
 

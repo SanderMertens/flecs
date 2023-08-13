@@ -109,7 +109,8 @@ int32_t get_elem_count(
     const EcsOpaque *opaque = scope->opaque;
 
     if (scope->vector) {
-        return ecs_vec_count(scope->vector);
+        //TODO: getting size from get_elem_count looks strange
+        return ecs_vec_size(scope->vector);
     } else if (opaque && opaque->count) {
         return flecs_uto(int32_t, opaque->count(scope[-1].ptr));
     }
@@ -129,7 +130,12 @@ ecs_meta_type_op_t* flecs_meta_cursor_get_ptr(
     const EcsOpaque *opaque = scope->opaque;
 
     if (scope->vector) {
-        ecs_vec_set_min_count(NULL, scope->vector, size, scope->elem_cur + 1);
+        /* Prepare one element in advance to return that can be set later. 
+         * ecs_meta_next checks vector capacity and wants one extra 
+         * thus adding 2 extra in ecs_vec_set_size */
+        ecs_vec_set_size(NULL, scope->vector, size, scope->elem_cur + 2);
+        ecs_vec_set_count(NULL, scope->vector, size, scope->elem_cur + 1);
+        //ecs_vec_set_min_count(NULL, scope->vector, size, scope->elem_cur + 1);
         scope->ptr = ecs_vec_first(scope->vector);
     } else if (opaque) {
         if (scope->is_collection) {
@@ -235,7 +241,10 @@ int ecs_meta_next(
             return 0;
         }
 
-        if (scope->elem_cur >= get_elem_count(scope)) {
+        int32_t elem_count = get_elem_count(scope);
+        if (scope->elem_cur >= elem_count) {
+            /* The ecs_meta_set_* calls flecs_meta_cursor_get_ptr 
+             * which will resize the collection so this should never happen */
             ecs_err("out of collection bounds (%d)", scope->elem_cur);
             return -1;
         }
@@ -463,14 +472,14 @@ int ecs_meta_push(
 
     /* Vector push */
     case EcsOpVector: {
-        next_scope->vector = ptr;
-        if (flecs_meta_cursor_push_type(world, next_scope, op->type, NULL) != 0) {
+        const EcsVector *type_ptr = ecs_get(world, op->type, EcsVector);
+        if (flecs_meta_cursor_push_type(world, next_scope, type_ptr->type, NULL) != 0) {
             goto error;
         }
-
-        const EcsVector *type_ptr = ecs_get(world, op->type, EcsVector);
-        next_scope->type = type_ptr->type;
+        next_scope->vector = ptr;
         next_scope->is_collection = true;
+        ecs_size_t size = get_size(world, next_scope);
+        ecs_vec_init(NULL, next_scope->vector, size, 0);
         break;
     }
 
@@ -624,6 +633,13 @@ int ecs_meta_pop(
             ecs_assert(op->kind == EcsOpPop, ECS_INTERNAL_ERROR, NULL);
         } else if (op->kind == EcsOpArray || op->kind == EcsOpVector) {
             /* Collection type, nothing else to do */
+            
+            /* If no values were serialized for scope, fini vector memory */
+            if (scope->vector && (ecs_vec_count(scope->vector) == 0)) {
+                const ecs_world_t *world = cursor->world;
+                ecs_size_t size = get_size(world, scope);
+                ecs_vec_fini(NULL, scope->vector, size);
+            }
         } else if (op->kind == EcsOpOpaque) {
             const EcsOpaque *opaque = scope->opaque;
             if (scope->is_collection) {
