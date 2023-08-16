@@ -860,7 +860,7 @@ The next section goes into more detail on why this improves cleanup behavior and
 To understand why some ways to organize entities work better than others, having an overview of what happens during world teardown is useful. Here is a list of the steps that happen when a world is deleted:
 
 1. **Find all root entities**
-World teardown starts by finding all root entities, which are entities that do not have the builtin `ChildOf` relationship.
+World teardown starts by finding all root entities, which are entities that do not have the builtin `ChildOf` relationship. Note that empty entities (entities without any components) are not found during this step.
 
 2. **Filter out modules, components, observers and systems**
 This ensures that components are not cleaned up before the entities that use them, and triggers, observers and systems are not cleaned up while there are still conditions under which they could be invoked.
