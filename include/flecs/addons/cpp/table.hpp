@@ -39,52 +39,100 @@ struct table {
         return ecs_table_count(m_table);
     }
 
-    /** Find index for (component) id. 
+    /** Find type index for (component) id. 
      * 
      * @param id The (component) id.
      * @return The index of the id in the table type, -1 if not found/
      */
-    int32_t search(flecs::id_t id) const {
-        return ecs_search(m_world, m_table, id, 0);
+    int32_t type_index(flecs::id_t id) const {
+        return ecs_table_get_type_index(m_world, m_table, id);
     }
 
-    /** Find index for type. 
+    /** Find type index for type. 
      * 
      * @tparam T The type.
      * @return True if the table has the type, false if not.
      */
     template <typename T>
-    int32_t search() const {
-        return search(_::cpp_type<T>::id(m_world));
+    int32_t type_index() const {
+        return type_index(_::cpp_type<T>::id(m_world));
     }
 
-    /** Find index for pair. 
+    /** Find type index for pair. 
      * @param first First element of pair.
      * @param second Second element of pair.
      * @return True if the table has the pair, false if not.
      */
-    int32_t search(flecs::entity_t first, flecs::entity_t second) const {
-        return search(ecs_pair(first, second));
+    int32_t type_index(flecs::entity_t first, flecs::entity_t second) const {
+        return type_index(ecs_pair(first, second));
     }
 
-    /** Find index for pair. 
+    /** Find type index for pair. 
      * @tparam First First element of pair.
      * @param second Second element of pair.
      * @return True if the table has the pair, false if not.
      */
     template <typename First>
-    int32_t search(flecs::entity_t second) const {
-        return search(_::cpp_type<First>::id(m_world), second);
+    int32_t type_index(flecs::entity_t second) const {
+        return type_index(_::cpp_type<First>::id(m_world), second);
     }
 
-    /** Find index for pair. 
+    /** Find type index for pair. 
      * @tparam First First element of pair.
      * @tparam Second Second element of pair.
      * @return True if the table has the pair, false if not.
      */
     template <typename First, typename Second>
-    int32_t search() const {
-        return search<First>(_::cpp_type<Second>::id(m_world));
+    int32_t type_index() const {
+        return type_index<First>(_::cpp_type<Second>::id(m_world));
+    }
+
+    /** Find column index for (component) id. 
+     * 
+     * @param id The (component) id.
+     * @return The index of the id in the table type, -1 if not found/
+     */
+    int32_t column_index(flecs::id_t id) const {
+        return ecs_table_get_column_index(m_world, m_table, id);
+    }
+
+    /** Find column index for type. 
+     * 
+     * @tparam T The type.
+     * @return True if the table has the type, false if not.
+     */
+    template <typename T>
+    int32_t column_index() const {
+        return column_index(_::cpp_type<T>::id(m_world));
+    }
+
+    /** Find column index for pair. 
+     * @param first First element of pair.
+     * @param second Second element of pair.
+     * @return True if the table has the pair, false if not.
+     */
+    int32_t column_index(flecs::entity_t first, flecs::entity_t second) const {
+        return column_index(ecs_pair(first, second));
+    }
+
+    /** Find column index for pair. 
+     * @tparam First First element of pair.
+     * @param second Second element of pair.
+     * @return True if the table has the pair, false if not.
+     */
+    template <typename First>
+    int32_t column_index(flecs::entity_t second) const {
+        return column_index(_::cpp_type<First>::id(m_world), second);
+    }
+
+    /** Find column index for pair. 
+     * @tparam First First element of pair.
+     * @tparam Second Second element of pair.
+     * @return True if the table has the pair, false if not.
+     */
+    template <typename First, typename Second>
+    int32_t column_index() const {
+        return column_index<First>(_::cpp_type<Second>::id(m_world));
     }
 
     /** Test if table has (component) id. 
@@ -93,7 +141,7 @@ struct table {
      * @return True if the table has the id, false if not.
      */
     bool has(flecs::id_t id) const {
-        return search(id) != -1;
+        return type_index(id) != -1;
     }
 
     /** Test if table has the type. 
@@ -103,7 +151,7 @@ struct table {
      */
     template <typename T>
     bool has() const {
-        return search<T>() != -1;
+        return type_index<T>() != -1;
     }
 
     /** Test if table has the pair.
@@ -113,7 +161,7 @@ struct table {
      * @return True if the table has the pair, false if not.
      */
     bool has(flecs::entity_t first, flecs::entity_t second) const {
-        return search(first, second) != -1;
+        return type_index(first, second) != -1;
     }
 
     /** Test if table has the pair.
@@ -124,7 +172,7 @@ struct table {
      */
     template <typename First>
     bool has(flecs::entity_t second) const {
-        return search<First>(second) != -1;
+        return type_index<First>(second) != -1;
     }
 
     /** Test if table has the pair.
@@ -135,16 +183,16 @@ struct table {
      */
     template <typename First, typename Second>
     bool has() const {
-        return search<First, Second>() != -1;
+        return type_index<First, Second>() != -1;
     }
 
     /** Get pointer to component array by column index. 
      * 
-     * @param index The column index.
+     * @param column_index The column index.
      * @return Pointer to the column, NULL if not a component.
      */
-    virtual void* get_by_index(int32_t index) const {
-        return ecs_table_get_column(m_table, index, 0);
+    virtual void* get_column(int32_t column_index) const {
+        return ecs_table_get_column(m_table, column_index, 0);
     }
 
     /** Get pointer to component array by component.
@@ -153,11 +201,11 @@ struct table {
      * @return Pointer to the column, NULL if not found.
      */
     void* get(flecs::id_t id) const {
-        int32_t index = search(id);
+        int32_t index = column_index(id);
         if (index == -1) {
             return NULL;
         }
-        return get_by_index(index);
+        return get_column(index);
     }
 
     /** Get pointer to component array by pair.
@@ -272,7 +320,7 @@ struct table_range : table {
      * @param index The column index.
      * @return Pointer to the column, NULL if not a component.
      */
-    void* get_by_index(int32_t index) const override {
+    void* get_column(int32_t index) const override {
         return ecs_table_get_column(m_table, index, m_offset);
     }
 

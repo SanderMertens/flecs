@@ -183,11 +183,6 @@ void flecs_table_delete_entities(
     ecs_world_t *world,
     ecs_table_t *table);
 
-ecs_vec_t *ecs_table_column_for_id(
-    const ecs_world_t *world,
-    const ecs_table_t *table,
-    ecs_id_t id);
-
 int32_t flecs_table_column_to_union_index(
     const ecs_table_t *table,
     int32_t column);

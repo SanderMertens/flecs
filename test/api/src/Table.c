@@ -54,16 +54,18 @@ void Table_get_column(void) {
 
     ecs_table_t *table = ecs_get_table(world, e1);
     test_assert(table != NULL);
-    int32_t pos_id = ecs_table_get_type_index(world, table, ecs_id(Position));
-    int32_t vel_id = ecs_table_get_type_index(world, table, ecs_id(Velocity));
+    int32_t pos_id = ecs_table_get_column_index(world, table, ecs_id(Position));
+    int32_t vel_id = ecs_table_get_column_index(world, table, ecs_id(Velocity));
 
     Position *p = ecs_table_get_column(table, pos_id, 0);
+    test_assert(p != NULL);
     test_int(p[0].x, 10);
     test_int(p[0].y, 20);
     test_int(p[1].x, 20);
     test_int(p[1].y, 30);
 
     Velocity *v = ecs_table_get_column(table, vel_id, 0);
+    test_assert(v != NULL);
     test_int(v[0].x, 1);
     test_int(v[0].y, 2);
     test_int(v[1].x, 2);
@@ -73,6 +75,8 @@ void Table_get_column(void) {
 }
 
 void Table_get_column_for_tag(void) {
+    install_test_abort();
+
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -84,11 +88,12 @@ void Table_get_column_for_tag(void) {
 
     ecs_table_t *table = ecs_get_table(world, e1);
     test_assert(table != NULL);
+
+    test_expect_abort();
     int32_t tag_id = ecs_table_get_type_index(world, table, Tag);
 
-    test_assert(ecs_table_get_column(table, tag_id, 0) == NULL);
-
-    ecs_fini(world);
+    test_expect_abort();
+    ecs_table_get_column(table, tag_id, 0);
 }
 
 void Table_get_column_for_component_after_tag(void) {
@@ -114,16 +119,21 @@ void Table_get_column_for_component_after_tag(void) {
 
     ecs_table_t *table = ecs_get_table(world, e1);
     test_assert(table != NULL);
-    int32_t pos_id = ecs_table_get_type_index(world, table, ecs_id(Position));
-    int32_t vel_id = ecs_table_get_type_index(world, table, ecs_id(Velocity));
+    int32_t pos_id = ecs_table_get_column_index(world, table, ecs_id(Position));
+    int32_t vel_id = ecs_table_get_column_index(world, table, ecs_id(Velocity));
+
+    test_assert(pos_id != -1);
+    test_assert(vel_id != -1);
 
     Position *p = ecs_table_get_column(table, pos_id, 0);
+    test_assert(p != NULL);
     test_int(p[0].x, 10);
     test_int(p[0].y, 20);
     test_int(p[1].x, 20);
     test_int(p[1].y, 30);
 
     Velocity *v = ecs_table_get_column(table, vel_id, 0);
+    test_assert(v != NULL);
     test_int(v[0].x, 1);
     test_int(v[0].y, 2);
     test_int(v[1].x, 2);
@@ -148,14 +158,16 @@ void Table_get_column_w_offset(void) {
 
     ecs_table_t *table = ecs_get_table(world, e1);
     test_assert(table != NULL);
-    int32_t pos_id = ecs_table_get_type_index(world, table, ecs_id(Position));
-    int32_t vel_id = ecs_table_get_type_index(world, table, ecs_id(Velocity));
+    int32_t pos_id = ecs_table_get_column_index(world, table, ecs_id(Position));
+    int32_t vel_id = ecs_table_get_column_index(world, table, ecs_id(Velocity));
 
     Position *p = ecs_table_get_column(table, pos_id, 1);
+    test_assert(p != NULL);
     test_int(p[0].x, 20);
     test_int(p[0].y, 30);
 
     Velocity *v = ecs_table_get_column(table, vel_id, 1);
+    test_assert(v != NULL);
     test_int(v[0].x, 2);
     test_int(v[0].y, 3);
 
@@ -357,4 +369,8 @@ void Table_get_column_size(void) {
     test_uint(0, ecs_table_get_column_size(table, 1));
 
     ecs_fini(world);
+}
+
+void Table_get_column_index(void) {
+    // Implement testcase
 }

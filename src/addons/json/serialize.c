@@ -1683,14 +1683,15 @@ void flecs_json_serialize_iter_result_entity_labels(
     }
 
 #ifdef FLECS_DOC
+    ecs_table_t *table = it->table;
     ecs_table_record_t *tr = flecs_id_record_get_table(
-        ser_idr->idr_doc_name, it->table);
+        ser_idr->idr_doc_name, table);
     if (tr == NULL) {
         return;
     }
 
     EcsDocDescription *labels = ecs_table_get_column(
-        it->table, tr->column, it->offset);
+        table, tr->storage, it->offset);
     ecs_assert(labels != NULL, ECS_INTERNAL_ERROR, NULL);
 
     flecs_json_memberl(buf, "entity_labels");
@@ -1731,7 +1732,7 @@ void flecs_json_serialize_iter_result_colors(
     }
 
     EcsDocDescription *colors = ecs_table_get_column(
-        it->table, tr->column, it->offset);
+        it->table, tr->storage, it->offset);
     ecs_assert(colors != NULL, ECS_INTERNAL_ERROR, NULL);
 
     flecs_json_memberl(buf, "colors");

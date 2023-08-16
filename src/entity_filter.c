@@ -440,7 +440,7 @@ void flecs_entity_filter_init(
             int32_t field = terms[i].field_index;
             ecs_id_t id = ids[field];
             ecs_id_t bs_id = ECS_TOGGLE | id;
-            int32_t bs_index = ecs_search(world, table, bs_id, 0);
+            int32_t bs_index = ecs_table_get_type_index(world, table, bs_id);
 
             if (bs_index != -1) {
                 flecs_bitset_term_t *bc = ecs_vec_append_t(a, bs_terms, 

@@ -460,8 +460,8 @@ struct entity_with_invoker_impl<arg_list<Args ...>> {
 
         /* Get column indices for components */
         ColumnArray columns ({
-            ecs_search_offset(real_world, table, 0, 
-                _::cpp_type<Args>().id(world), 0)...
+            ecs_table_get_column_index(real_world, table, 
+                _::cpp_type<Args>().id(world))...
         });
 
         /* Get pointers for columns for entity */
@@ -470,8 +470,6 @@ struct entity_with_invoker_impl<arg_list<Args ...>> {
             if (column == -1) {
                 return false;
             }
-
-            column = ecs_table_type_to_column_index(table, column);
 
             ptrs[i ++] = ecs_record_get_column(r, column, 0);
         }

@@ -1658,11 +1658,6 @@ void flecs_table_delete_entities(
     ecs_world_t *world,
     ecs_table_t *table);
 
-ecs_vec_t *ecs_table_column_for_id(
-    const ecs_world_t *world,
-    const ecs_table_t *table,
-    ecs_id_t id);
-
 int32_t flecs_table_column_to_union_index(
     const ecs_table_t *table,
     int32_t column);
@@ -6566,7 +6561,7 @@ void ecs_enable_id(
     ecs_table_t *table = r->table;
     int32_t index = -1;
     if (table) {
-        index = ecs_search(world, table, bs_id, 0);
+        index = ecs_table_get_type_index(world, table, bs_id);
     }
 
     if (index == -1) {
@@ -6608,7 +6603,7 @@ bool ecs_is_enabled_id(
     }
 
     ecs_entity_t bs_id = id | ECS_TOGGLE;
-    int32_t index = ecs_search(world, table, bs_id, 0);
+    int32_t index = ecs_table_get_type_index(world, table, bs_id);
     if (index == -1) {
         /* If table does not have TOGGLE column for component, component is
          * always enabled, if the entity has it */
@@ -8671,7 +8666,7 @@ void flecs_entity_filter_init(
             int32_t field = terms[i].field_index;
             ecs_id_t id = ids[field];
             ecs_id_t bs_id = ECS_TOGGLE | id;
-            int32_t bs_index = ecs_search(world, table, bs_id, 0);
+            int32_t bs_index = ecs_table_get_type_index(world, table, bs_id);
 
             if (bs_index != -1) {
                 flecs_bitset_term_t *bc = ecs_vec_append_t(a, bs_terms, 
@@ -24032,32 +24027,6 @@ void ecs_table_unlock(
     }
 }
 
-bool ecs_table_has_module(
-    ecs_table_t *table)
-{
-    return table->flags & EcsTableHasModule;
-}
-
-ecs_vec_t* ecs_table_column_for_id(
-    const ecs_world_t *world,
-    const ecs_table_t *table,
-    ecs_id_t id)
-{
-    ecs_table_record_t *tr = flecs_table_record_get(world, table, id);
-    if (tr && tr->storage != -1) {
-        return &table->data.columns[tr->storage].data;
-    }
-
-    return NULL;
-}
-
-int32_t ecs_table_count(
-    const ecs_table_t *table)
-{
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-    return flecs_table_data_count(&table->data);
-}
-
 const ecs_type_t* ecs_table_get_type(
     const ecs_table_t *table)
 {
@@ -24066,6 +24035,54 @@ const ecs_type_t* ecs_table_get_type(
     } else {
         return NULL;
     }
+}
+
+int32_t ecs_table_get_type_index(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    ecs_id_t id)
+{
+    ecs_poly_assert(world, ecs_world_t);
+    ecs_check(table != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_id_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
+
+    ecs_id_record_t *idr = flecs_id_record_get(world, id);
+    if (!idr) {
+        return -1;
+    }
+
+    ecs_table_record_t *tr = flecs_id_record_get_table(idr, table);
+    if (!tr) {
+        return -1;
+    }
+
+    return tr->column;
+error:
+    return -1;
+}
+
+int32_t ecs_table_get_column_index(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    ecs_id_t id)
+{
+    ecs_poly_assert(world, ecs_world_t);
+    ecs_check(table != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_id_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
+
+    ecs_id_record_t *idr = flecs_id_record_get(world, id);
+    if (!idr) {
+        return -1;
+    }
+
+    ecs_table_record_t *tr = flecs_id_record_get_table(idr, table);
+    if (!tr) {
+        return -1;
+    }
+
+    return tr->storage;
+error:
+    return -1;
 }
 
 int32_t ecs_table_column_count(
@@ -24100,41 +24117,43 @@ error:
     return -1;
 }
 
-int32_t flecs_table_column_to_union_index(
-    const ecs_table_t *table,
-    int32_t column)
-{
-    int32_t sw_count = table->_->sw_count;
-    if (sw_count) {
-        int32_t sw_offset = table->_->sw_offset;
-        if (column >= sw_offset && column < (sw_offset + sw_count)){
-            return column - sw_offset;
-        }
-    }
-    return -1;
-}
-
 void* ecs_table_get_column(
     const ecs_table_t *table,
     int32_t index,
     int32_t offset)
 {
     ecs_check(table != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(index < table->type.count, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(table->storage_map != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(index < table->column_count, ECS_INVALID_PARAMETER, NULL);
 
-    int32_t storage_index = table->storage_map[index];
-    if (storage_index == -1) {
-        return NULL;
-    }
-
-    ecs_column_t *column = &table->data.columns[storage_index];
+    ecs_column_t *column = &table->data.columns[index];
     void *result = column->data.array;
     if (offset) {
         result = ECS_ELEM(result, column->size, offset);
     }
 
     return result;
+error:
+    return NULL;
+}
+
+void* ecs_table_get_id(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    ecs_id_t id,
+    int32_t offset)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(table != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_id_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
+
+    world = ecs_get_world(world);
+
+    int32_t index = ecs_table_get_column_index(world, table, id);
+    if (index == -1) {
+        return NULL;
+    }
+
+    return ecs_table_get_column(table, index, offset);
 error:
     return NULL;
 }
@@ -24157,28 +24176,11 @@ error:
     return 0;
 }
 
-int32_t ecs_table_get_type_index(
-    const ecs_world_t *world,
-    const ecs_table_t *table,
-    ecs_id_t id)
+int32_t ecs_table_count(
+    const ecs_table_t *table)
 {
-    ecs_poly_assert(world, ecs_world_t);
-    ecs_check(table != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(ecs_id_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
-
-    ecs_id_record_t *idr = flecs_id_record_get(world, id);
-    if (!idr) {
-        return -1;
-    }
-
-    ecs_table_record_t *tr = flecs_id_record_get_table(idr, table);
-    if (!tr) {
-        return -1;
-    }
-
-    return tr->column;
-error:
-    return -1;
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    return flecs_table_data_count(&table->data);
 }
 
 bool ecs_table_has_id(
@@ -24187,28 +24189,6 @@ bool ecs_table_has_id(
     ecs_id_t id)
 {
     return ecs_table_get_type_index(world, table, id) != -1;
-}
-
-void* ecs_table_get_id(
-    const ecs_world_t *world,
-    const ecs_table_t *table,
-    ecs_id_t id,
-    int32_t offset)
-{
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(table != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(ecs_id_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
-
-    world = ecs_get_world(world);
-
-    int32_t index = ecs_table_get_type_index(world, table, id);
-    if (index == -1) {
-        return NULL;
-    }
-
-    return ecs_table_get_column(table, index, offset);
-error:
-    return NULL;
 }
 
 int32_t ecs_table_get_depth(
@@ -24225,6 +24205,27 @@ int32_t ecs_table_get_depth(
 
     return flecs_relation_depth(world, rel, table);
 error:
+    return -1;
+}
+
+bool ecs_table_has_flags(
+    ecs_table_t *table,
+    ecs_flags32_t flags)
+{
+    return (table->flags & flags) == flags;
+}
+
+int32_t flecs_table_column_to_union_index(
+    const ecs_table_t *table,
+    int32_t column)
+{
+    int32_t sw_count = table->_->sw_count;
+    if (sw_count) {
+        int32_t sw_offset = table->_->sw_offset;
+        if (column >= sw_offset && column < (sw_offset + sw_count)){
+            return column - sw_offset;
+        }
+    }
     return -1;
 }
 
@@ -24252,7 +24253,7 @@ void* ecs_record_get_column(
     ecs_table_t *table = r->table;
 
     ecs_check(index < table->column_count, ECS_INVALID_PARAMETER, NULL);
-    ecs_column_t *column =&table->data.columns[index];
+    ecs_column_t *column = &table->data.columns[index];
     ecs_size_t size = column->size;
 
     ecs_check(!flecs_utosize(c_size) || flecs_utosize(c_size) == size, 
@@ -27893,7 +27894,7 @@ void flecs_process_empty_queries(
     if (flecs_table_cache_iter(&idr->cache, &it)) {
         while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
             ecs_table_t *table = tr->hdr.table;
-            EcsPoly *queries = ecs_table_get_column(table, tr->column, 0);
+            EcsPoly *queries = ecs_table_get_column(table, tr->storage, 0);
             int32_t i, count = ecs_table_count(table);
 
             for (i = 0; i < count; i ++) {
@@ -33359,7 +33360,9 @@ static void UpdateCounterIdInstance(ecs_iter_t *it) {
 /** Update oneof metric */
 static void UpdateOneOfInstance(ecs_iter_t *it, bool counter) {
     ecs_world_t *world = it->real_world;
-    void *m = ecs_table_get_column(it->table, it->columns[0] - 1, it->offset);
+    ecs_table_t *table = it->table;
+    void *m = ecs_table_get_column(table, 
+        ecs_table_type_to_column_index(table, it->columns[0] - 1), it->offset);
     EcsMetricOneOfInstance *mi = ecs_field(it, EcsMetricOneOfInstance, 2);
     ecs_ftime_t dt = it->delta_time;
 
@@ -51835,14 +51838,15 @@ void flecs_json_serialize_iter_result_entity_labels(
     }
 
 #ifdef FLECS_DOC
+    ecs_table_t *table = it->table;
     ecs_table_record_t *tr = flecs_id_record_get_table(
-        ser_idr->idr_doc_name, it->table);
+        ser_idr->idr_doc_name, table);
     if (tr == NULL) {
         return;
     }
 
     EcsDocDescription *labels = ecs_table_get_column(
-        it->table, tr->column, it->offset);
+        table, tr->storage, it->offset);
     ecs_assert(labels != NULL, ECS_INTERNAL_ERROR, NULL);
 
     flecs_json_memberl(buf, "entity_labels");
@@ -51883,7 +51887,7 @@ void flecs_json_serialize_iter_result_colors(
     }
 
     EcsDocDescription *colors = ecs_table_get_column(
-        it->table, tr->column, it->offset);
+        it->table, tr->storage, it->offset);
     ecs_assert(colors != NULL, ECS_INTERNAL_ERROR, NULL);
 
     flecs_json_memberl(buf, "colors");
@@ -57703,8 +57707,8 @@ static
 EcsPoly* flecs_pipeline_term_system(
     ecs_iter_t *it)
 {
-    int32_t index = ecs_search(it->real_world, it->table, 
-        ecs_poly_id(EcsSystem), 0);
+    int32_t index = ecs_table_get_column_index(
+        it->real_world, it->table, ecs_poly_id(EcsSystem));
     ecs_assert(index != -1, ECS_INTERNAL_ERROR, NULL);
     EcsPoly *poly = ecs_table_get_column(it->table, index, it->offset);
     ecs_assert(poly != NULL, ECS_INTERNAL_ERROR, NULL);
