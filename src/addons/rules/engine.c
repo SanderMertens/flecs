@@ -1351,7 +1351,7 @@ bool flecs_rule_pred_match(
         op_ctx->range = l;
         op_ctx->index = l.offset;
         op_ctx->name_col = flecs_ito(int16_t,   
-            ecs_table_get_index(ctx->world, l.table, 
+            ecs_table_get_type_index(ctx->world, l.table, 
                 ecs_pair(ecs_id(EcsIdentifier), EcsName)));
         if (op_ctx->name_col == -1) {
             return is_neq;

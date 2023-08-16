@@ -35,7 +35,7 @@ ecs_data_t* flecs_duplicate_data(
     }
 
     ecs_data_t *result = ecs_os_calloc_t(ecs_data_t);
-    int32_t i, column_count = table->storage_count;
+    int32_t i, column_count = table->column_count;
     result->columns = flecs_wdup_n(world, ecs_column_t, column_count, 
         main_data->columns);
 
@@ -263,7 +263,7 @@ void restore_unfiltered(
 
         int32_t tcount = ecs_table_count(table);
         if (tcount) {
-            int32_t j, storage_count = table->storage_count;
+            int32_t j, storage_count = table->column_count;
             for (j = 0; j < storage_count; j ++) {
                 ecs_type_t type = {
                     .array = &table->data.columns[j].id,
@@ -324,7 +324,7 @@ void restore_filtered(
 
         /* Run OnSet systems for merged entities */
         if (new_count) {
-            int32_t j, storage_count = table->storage_count;
+            int32_t j, storage_count = table->column_count;
             for (j = 0; j < storage_count; j ++) {
                 ecs_type_t type = {
                     .array = &table->data.columns[j].id,
@@ -335,7 +335,7 @@ void restore_filtered(
             }
         }
 
-        flecs_wfree_n(world, ecs_vec_t, table->storage_count,
+        flecs_wfree_n(world, ecs_vec_t, table->column_count,
             snapshot_table->data->columns);
         ecs_os_free(snapshot_table->data);
         flecs_type_free(world, &snapshot_table->type);

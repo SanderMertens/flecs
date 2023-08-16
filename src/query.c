@@ -442,7 +442,7 @@ void flecs_query_get_column_for_term(
                 if (ref->id != 0) {
                     ecs_ref_update(world, ref);
                     column = ref->tr->column;
-                    column = ecs_table_type_to_storage_index(table, column);
+                    column = ecs_table_type_to_column_index(table, column);
                 }
             } else {
                 column = -(match->columns[field] + 1);
@@ -707,7 +707,7 @@ bool flecs_query_check_match_monitor(
                     ecs_table_record_t *tr = ref->tr;
                     ecs_table_t *src_table = tr->hdr.table;
                     column = tr->column;
-                    column = ecs_table_type_to_storage_index(src_table, column);
+                    column = ecs_table_type_to_column_index(src_table, column);
                     int32_t *src_dirty_state = flecs_table_get_dirty_state(
                         world, src_table);
                     if (mon != src_dirty_state[column + 1]) {
@@ -719,7 +719,7 @@ bool flecs_query_check_match_monitor(
                 ecs_entity_t src = match->sources[i];
                 ecs_table_t *src_table = ecs_get_table(world, src);
                 ecs_assert(src_table != NULL, ECS_INTERNAL_ERROR, NULL);
-                column = ecs_table_type_to_storage_index(src_table, column - 1);
+                column = ecs_table_type_to_column_index(src_table, column - 1);
                 int32_t *src_dirty_state = flecs_table_get_dirty_state(
                     world, src_table);
                 if (mon != src_dirty_state[column + 1]) {
@@ -900,7 +900,7 @@ void flecs_query_set_table_match(
 
             int32_t column = qm->columns[i];
             if (column > 0) {
-                qm->storage_columns[i] = ecs_table_type_to_storage_index(table,
+                qm->storage_columns[i] = ecs_table_type_to_column_index(table,
                     qm->columns[i] - 1);
             } else {
                 /* Shared field (not from table) */

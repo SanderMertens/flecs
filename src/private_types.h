@@ -190,10 +190,11 @@ struct ecs_data_t {
 struct ecs_table_t {
     uint64_t id;                     /* Table id in sparse set */
     ecs_flags32_t flags;             /* Flags for testing table properties */
-    int16_t storage_count;           /* Number of components (excluding tags) */
+    int16_t column_count;            /* Number of components (excluding tags) */
     ecs_type_t type;                 /* Identifies table type in type_index */
 
     ecs_data_t data;                 /* Component storage */
+    ecs_graph_node_t node;           /* Graph node */
     
     int32_t *dirty_state;            /* Keep track of changes in columns */
     int32_t *storage_map;            /* Map type <-> data type
@@ -205,7 +206,7 @@ struct ecs_table_t {
 };
 
 typedef struct ecs_archetype_t {
-    ecs_graph_node_t node;           /* Graph node */
+    
     ecs_table_t *table;
 } ecs_archetype_t;
 

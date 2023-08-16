@@ -369,7 +369,7 @@ int32_t flecs_relation_depth(
 
     int32_t depth_offset = 0;
     if (table->flags & EcsTableHasTarget) {
-        if (ecs_table_get_index(world, table, 
+        if (ecs_table_get_type_index(world, table, 
             ecs_pair_t(EcsTarget, r)) != -1)
         {
             ecs_id_t id;

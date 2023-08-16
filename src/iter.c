@@ -209,7 +209,7 @@ bool flecs_iter_populate_term_data(
 
         row = it->offset;
 
-        int32_t storage_column = ecs_table_type_to_storage_index(
+        int32_t storage_column = ecs_table_type_to_column_index(
             table, column - 1);
         if (storage_column == -1) {
             u_index = flecs_table_column_to_union_index(table, column - 1);

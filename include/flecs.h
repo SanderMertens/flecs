@@ -4865,6 +4865,7 @@ char* ecs_iter_str(
  */
 
 /** Get type for table.
+ * The table type is a vector that contains all component, tag and pair ids.
  *
  * @param table The table.
  * @return The type of the table.
@@ -4873,7 +4874,61 @@ FLECS_API
 const ecs_type_t* ecs_table_get_type(
     const ecs_table_t *table);
 
-/** Get column from table.
+/** Get type index for id.
+ * This operation returns the index for an id in the table's type.
+ * 
+ * @param world The world.
+ * @param table The table.
+ * @param id The id.
+ * @return The index of the id in the table type, or -1 if not found.
+ */
+FLECS_API
+int32_t ecs_table_get_type_index(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    ecs_id_t id);
+
+/** Return number of columns in table. 
+ * Similar to ecs_table_get_type(table)->count, except that the column count 
+ * only counts the number of components in a table.
+ * 
+ * @param table The table.
+ * @return The number of columns in the table.
+ */
+FLECS_API
+int32_t ecs_table_column_count(
+    const ecs_table_t *table);
+
+/** Convert type index to column index. 
+ * Tables have an array of columns for each component in the table. This array
+ * does not include elements for tags, which means that the index for a 
+ * component in the table type is not necessarily the same as the index in the
+ * column array. This operation converts from an index in the table type to an
+ * index in the column array.
+ * 
+ * @param table The table.
+ * @param index The index in the table type.
+ * @return The index in the table column array.
+ */
+FLECS_API
+int32_t ecs_table_type_to_column_index(
+    const ecs_table_t *table,
+    int32_t index);
+
+/** Convert column index to type index.
+ * Same as ecs_table_type_to_column_index, but converts from an index in the
+ * column array to an index in the table type.
+ * 
+ * @param table The table.
+ * @param index The index in the table column array.
+ * @return The index in the table type.
+ */
+FLECS_API
+int32_t ecs_table_column_to_type_index(
+    const ecs_table_t *table,
+    int32_t index);
+
+/** Get column from table by column index.
  * This operation returns the component array for the provided index.
  * 
  * @param table The table.
@@ -4886,46 +4941,6 @@ void* ecs_table_get_column(
     const ecs_table_t *table,
     int32_t index,
     int32_t offset);
-
-/** Get column size from table.
- * This operation returns the component size for the provided index.
- * 
- * @param table The table.
- * @param index The index of the column (corresponds with element in type).
- * @return The component size, or 0 if the index is not a component.
- */
-FLECS_API
-size_t ecs_table_get_column_size(
-    const ecs_table_t *table,
-    int32_t index);
-
-/** Get column index for id.
- * This operation returns the index for an id in the table's type.
- * 
- * @param world The world.
- * @param table The table.
- * @param id The id.
- * @return The index of the id in the table type, or -1 if not found.
- */
-FLECS_API
-int32_t ecs_table_get_index(
-    const ecs_world_t *world,
-    const ecs_table_t *table,
-    ecs_id_t id);
-
-/** Test if table has id.
- * Same as ecs_table_get_index(world, table, id) != -1.
- * 
- * @param world The world.
- * @param table The table.
- * @param id The id.
- * @return True if the table has the id, false if the table doesn't.
- */
-FLECS_API
-bool ecs_table_has_id(
-    const ecs_world_t *world,
-    const ecs_table_t *table,
-    ecs_id_t id);
 
 /** Get column from table by component id.
  * This operation returns the component array for the provided component  id.
@@ -4942,6 +4957,32 @@ void* ecs_table_get_id(
     ecs_id_t id,
     int32_t offset);
 
+/** Get column size from table.
+ * This operation returns the component size for the provided index.
+ * 
+ * @param table The table.
+ * @param index The index of the column (corresponds with element in type).
+ * @return The component size, or 0 if the index is not a component.
+ */
+FLECS_API
+size_t ecs_table_get_column_size(
+    const ecs_table_t *table,
+    int32_t index);
+
+/** Test if table has id.
+ * Same as ecs_table_get_type_index(world, table, id) != -1.
+ * 
+ * @param world The world.
+ * @param table The table.
+ * @param id The id.
+ * @return True if the table has the id, false if the table doesn't.
+ */
+FLECS_API
+bool ecs_table_has_id(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    ecs_id_t id);
+
 /** Return depth for table in tree for relationship rel.
  * Depth is determined by counting the number of targets encountered while 
  * traversing up the relationship tree for rel. Only acyclic relationships are
@@ -4957,18 +4998,6 @@ int32_t ecs_table_get_depth(
     const ecs_world_t *world,
     const ecs_table_t *table,
     ecs_entity_t rel);
-
-/** Convert index in table type to index in table storage type. */
-FLECS_API
-int32_t ecs_table_type_to_storage_index(
-    const ecs_table_t *table,
-    int32_t index);
-
-/** Convert index in table storage type to index in table type. */
-FLECS_API
-int32_t ecs_table_storage_to_type_index(
-    const ecs_table_t *table,
-    int32_t index);
 
 /** Returns the number of records in the table. 
  * This operation returns the number of records that have been populated through

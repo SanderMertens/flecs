@@ -528,7 +528,7 @@ void flecs_emit_forward_id(
     it->ptrs[0] = NULL;
     it->sizes[0] = 0;
 
-    int32_t storage_i = ecs_table_type_to_storage_index(tgt_table, column);
+    int32_t storage_i = ecs_table_type_to_column_index(tgt_table, column);
     if (storage_i != -1) {
         ecs_assert(idr->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_column_t *c = &tgt_table->data.columns[storage_i];
@@ -1164,7 +1164,7 @@ repeat_event:
                     if (base_column != -1) {
                         /* Base found with component */
                         ecs_table_t *base_table = base_tr->hdr.table;
-                        base_column = ecs_table_type_to_storage_index(
+                        base_column = ecs_table_type_to_column_index(
                             base_table, base_tr->column);
                         ecs_assert(base_column != -1, ECS_INTERNAL_ERROR, NULL);
                         ecs_record_t *base_r = flecs_entities_get(world, base);

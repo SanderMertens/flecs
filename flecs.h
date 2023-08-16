@@ -7661,6 +7661,17 @@ FLECS_API
 const ecs_type_t* ecs_table_get_type(
     const ecs_table_t *table);
 
+/** Return number of columns in table. 
+ * This is the same as ecs_table_get_type(table)->count, except that it excludes
+ * tags, and only counts components in a table.
+ * 
+ * @param table The table.
+ * @return The number of columns in the table.
+ */
+FLECS_API
+int32_t ecs_table_column_count(
+    const ecs_table_t *table);
+
 /** Get column from table.
  * This operation returns the component array for the provided index.
  * 
@@ -7696,13 +7707,13 @@ size_t ecs_table_get_column_size(
  * @return The index of the id in the table type, or -1 if not found.
  */
 FLECS_API
-int32_t ecs_table_get_index(
+int32_t ecs_table_get_type_index(
     const ecs_world_t *world,
     const ecs_table_t *table,
     ecs_id_t id);
 
 /** Test if table has id.
- * Same as ecs_table_get_index(world, table, id) != -1.
+ * Same as ecs_table_get_type_index(world, table, id) != -1.
  * 
  * @param world The world.
  * @param table The table.
@@ -7748,13 +7759,13 @@ int32_t ecs_table_get_depth(
 
 /** Convert index in table type to index in table storage type. */
 FLECS_API
-int32_t ecs_table_type_to_storage_index(
+int32_t ecs_table_type_to_column_index(
     const ecs_table_t *table,
     int32_t index);
 
 /** Convert index in table storage type to index in table type. */
 FLECS_API
-int32_t ecs_table_storage_to_type_index(
+int32_t ecs_table_column_to_type_index(
     const ecs_table_t *table,
     int32_t index);
 
@@ -23816,13 +23827,12 @@ struct entity_with_invoker_impl<arg_list<Args ...>> {
         return true;
     }
 
-    static bool get_ptrs(world_t *world, const ecs_record_t *r, ecs_table_t *table,
+    static 
+    bool get_ptrs(world_t *world, const ecs_record_t *r, ecs_table_t *table,
         ArrayType& ptrs) 
     {
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        ecs_table_t *storage_table = ecs_table_get_storage_table(table);
-        if (!storage_table) {
+        if (!ecs_table_column_count(table)) {
             return false;
         }
 
@@ -23831,7 +23841,7 @@ struct entity_with_invoker_impl<arg_list<Args ...>> {
 
         /* Get column indices for components */
         ColumnArray columns ({
-            ecs_search_offset(real_world, storage_table, 0, 
+            ecs_search_offset(real_world, table, 0, 
                 _::cpp_type<Args>().id(world), 0)...
         });
 
@@ -23841,6 +23851,8 @@ struct entity_with_invoker_impl<arg_list<Args ...>> {
             if (column == -1) {
                 return false;
             }
+
+            column = ecs_table_type_to_column_index(table, column);
 
             ptrs[i ++] = ecs_record_get_column(r, column, 0);
         }
