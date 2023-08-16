@@ -2411,9 +2411,9 @@ bool flecs_term_iter_next(
             }
 
             iter->cur_match = 0;
-            iter->last_column = tr->column;
-            iter->column = tr->column + 1;
-            iter->id = flecs_to_public_id(table->type.array[tr->column]);
+            iter->last_column = tr->index;
+            iter->column = tr->index + 1;
+            iter->id = flecs_to_public_id(table->type.array[tr->index]);
         }
 
         if (iter->cur == iter->set_index) {
@@ -2457,9 +2457,9 @@ bool flecs_term_iter_set_table(
         tr = ecs_table_cache_get(&idr->cache, table);
         if (tr) {
             iter->match_count = tr->count;
-            iter->last_column = tr->column;
-            iter->column = tr->column + 1;
-            iter->id = flecs_to_public_id(table->type.array[tr->column]);
+            iter->last_column = tr->index;
+            iter->column = tr->index + 1;
+            iter->id = flecs_to_public_id(table->type.array[tr->index]);
         }
     }
 

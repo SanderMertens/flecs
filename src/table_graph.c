@@ -773,7 +773,7 @@ void flecs_add_overrides_for_base(
         ecs_table_record_t *tr = flecs_id_record_get_table(
             world->idr_isa_wildcard, base_table);
         ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
-        int32_t i = tr->column, end = i + tr->count;
+        int32_t i = tr->index, end = i + tr->count;
         for (; i != end; i ++) {
             flecs_add_overrides_for_base(world, dst_type, ids[i]);
         }
@@ -800,7 +800,7 @@ void flecs_add_with_property(
     ecs_table_record_t *tr = flecs_id_record_get_table(
         idr_with_wildcard, table);
     if (tr) {
-        int32_t i = tr->column, end = i + tr->count;
+        int32_t i = tr->index, end = i + tr->count;
         ecs_id_t *ids = table->type.array;
 
         for (; i < end; i ++) {
@@ -852,7 +852,7 @@ ecs_table_t* flecs_find_table_with(
                  * a new id sequence with the existing id replaced */
                 ecs_type_t dst_type = flecs_type_copy(world, &node->type);
                 ecs_assert(dst_type.array != NULL, ECS_INTERNAL_ERROR, NULL);
-                dst_type.array[tr->column] = with;
+                dst_type.array[tr->index] = with;
                 return flecs_table_ensure(world, &dst_type, true, node);
             }
         }

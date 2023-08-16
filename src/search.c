@@ -20,7 +20,7 @@ int32_t flecs_type_search(
 {    
     ecs_table_record_t *tr = ecs_table_cache_get(&idr->cache, table);
     if (tr) {
-        int32_t r = tr->column;
+        int32_t r = tr->index;
         if (tr_out) tr_out[0] = tr;
         if (id_out) {
             if (ECS_PAIR_FIRST(search_id) == EcsUnion) {
@@ -337,7 +337,7 @@ int32_t flecs_relation_depth_walk(
         return 0;
     }
 
-    int32_t i = tr->column, end = i + tr->count;
+    int32_t i = tr->index, end = i + tr->count;
     for (; i != end; i ++) {
         ecs_entity_t o = ecs_pair_second(world, table->type.array[i]);
         ecs_assert(o != 0, ECS_INTERNAL_ERROR, NULL);

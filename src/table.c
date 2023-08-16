@@ -163,7 +163,7 @@ void flecs_table_init_columns(
 
         t2s[i] = cur;
         s2t[cur] = i;
-        tr->storage = flecs_ito(int16_t, cur);
+        tr->column = flecs_ito(int16_t, cur);
 
         columns[cur].ti = ECS_CONST_CAST(ecs_type_info_t*, ti);
         columns[cur].id = ids[i];
@@ -306,7 +306,7 @@ void flecs_table_append_to_records(
             idr, table);
     if (!tr) {
         tr = ecs_vec_append_t(&world->allocator, records, ecs_table_record_t);
-        tr->column = flecs_ito(int16_t, column);
+        tr->index = flecs_ito(int16_t, column);
         tr->count = 1;
 
         ecs_table_cache_insert(&idr->cache, table, &tr->hdr);
@@ -387,7 +387,7 @@ void flecs_table_init(
         if (idr) {
             tr = ecs_vec_append_t(a, records, ecs_table_record_t);
             tr->hdr.cache = (ecs_table_cache_t*)idr;
-            tr->column = flecs_ito(int16_t, dst_i);
+            tr->index = flecs_ito(int16_t, dst_i);
             tr->count = 1;
         }
 
@@ -402,7 +402,7 @@ void flecs_table_init(
         idr = flecs_id_record_ensure(world, dst_id);
         tr->hdr.cache = (ecs_table_cache_t*)idr;
         ecs_assert(tr->hdr.cache != NULL, ECS_INTERNAL_ERROR, NULL);
-        tr->column = flecs_ito(int16_t, dst_i);
+        tr->index = flecs_ito(int16_t, dst_i);
         tr->count = 1;
     }
 
@@ -476,7 +476,7 @@ void flecs_table_init(
 
                 tr = ecs_vec_append_t(a, records, ecs_table_record_t);
                 tr->hdr.cache = (ecs_table_cache_t*)idr;
-                tr->column = flecs_ito(int16_t, dst_i);
+                tr->index = flecs_ito(int16_t, dst_i);
                 tr->count = 0;
             }
 
@@ -502,26 +502,26 @@ void flecs_table_init(
     if (last_id >= 0) {
         tr = ecs_vec_append_t(a, records, ecs_table_record_t);
         tr->hdr.cache = (ecs_table_cache_t*)world->idr_wildcard;
-        tr->column = 0;
+        tr->index = 0;
         tr->count = flecs_ito(int16_t, last_id + 1);
     }
     if (last_pair - first_pair) {
         tr = ecs_vec_append_t(a, records, ecs_table_record_t);
         tr->hdr.cache = (ecs_table_cache_t*)world->idr_wildcard_wildcard;
-        tr->column = flecs_ito(int16_t, first_pair);
+        tr->index = flecs_ito(int16_t, first_pair);
         tr->count = flecs_ito(int16_t, last_pair - first_pair);
     }
     if (dst_count) {
         tr = ecs_vec_append_t(a, records, ecs_table_record_t);
         tr->hdr.cache = (ecs_table_cache_t*)world->idr_any;
-        tr->column = 0;
+        tr->index = 0;
         tr->count = 1;
     }
     if (dst_count && !has_childof) {
         tr = ecs_vec_append_t(a, records, ecs_table_record_t);
         childof_idr = world->idr_childof_0;
         tr->hdr.cache = (ecs_table_cache_t*)childof_idr;
-        tr->column = 0;
+        tr->index = 0;
         tr->count = 1;
     }
 
@@ -557,7 +557,7 @@ void flecs_table_init(
         table->flags |= idr->flags & EcsIdEventMask;
 
         /* Initialize column index (will be overwritten by init_storage) */
-        tr->storage = -1;
+        tr->column = -1;
 
         if (idr->flags & EcsIdAlwaysOverride) {
             table->flags |= EcsTableHasOverrides;
@@ -1125,11 +1125,11 @@ void flecs_table_mark_dirty(
         }
 
         const ecs_table_record_t *tr = flecs_id_record_get_table(idr, table);
-        if (!tr || tr->storage == -1) {
+        if (!tr || tr->column == -1) {
             return;
         }
 
-        table->dirty_state[tr->storage + 1] ++;
+        table->dirty_state[tr->column + 1] ++;
     }
 }
 
@@ -2415,7 +2415,7 @@ int32_t ecs_table_get_type_index(
         return -1;
     }
 
-    return tr->column;
+    return tr->index;
 error:
     return -1;
 }
@@ -2439,7 +2439,7 @@ int32_t ecs_table_get_column_index(
         return -1;
     }
 
-    return tr->storage;
+    return tr->column;
 error:
     return -1;
 }

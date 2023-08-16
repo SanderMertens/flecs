@@ -57,12 +57,12 @@ flecs_component_ptr_t flecs_get_component_ptr(
     ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_table_record_t *tr = flecs_table_record_get(world, table, id);
-    if (!tr || (tr->storage == -1)) {
+    if (!tr || (tr->column == -1)) {
         ecs_check(tr == NULL, ECS_NOT_A_COMPONENT, NULL);
         return (flecs_component_ptr_t){0};
     }
 
-    return flecs_get_component_w_index(table, tr->storage, row);
+    return flecs_get_component_w_index(table, tr->column, row);
 error:
     return (flecs_component_ptr_t){0};
 }
@@ -105,7 +105,7 @@ void* flecs_get_base_component(
 
     ecs_type_t type = table->type;
     ecs_id_t *ids = type.array;
-    int32_t i = tr_isa->column, end = tr_isa->count + tr_isa->column;
+    int32_t i = tr_isa->index, end = tr_isa->count + tr_isa->index;
     void *ptr = NULL;
 
     do {
@@ -122,12 +122,12 @@ void* flecs_get_base_component(
 
         const ecs_table_record_t *tr = 
             flecs_id_record_get_table(table_index, table);
-        if (!tr || tr->storage == -1) {
+        if (!tr || tr->column == -1) {
             ptr = flecs_get_base_component(world, table, id, table_index, 
                 recur_depth + 1);
         } else {
             int32_t row = ECS_RECORD_TO_ROW(r->row);
-            ptr = flecs_get_component_w_index(table, tr->storage, row).ptr;
+            ptr = flecs_get_component_w_index(table, tr->column, row).ptr;
         }
     } while (!ptr && (i < end));
 
@@ -484,7 +484,7 @@ void flecs_set_union(
             ecs_table_record_t *tr = flecs_id_record_get_table(idr, table);
             ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
             ecs_assert(table->_ != NULL, ECS_INTERNAL_ERROR, NULL);
-            int32_t column = tr->column - table->_->sw_offset;
+            int32_t column = tr->index - table->_->sw_offset;
             ecs_switch_t *sw = &table->_->sw_columns[column];
             ecs_entity_t union_case = 0;
             union_case = ecs_pair_second(world, id);
@@ -871,12 +871,12 @@ const ecs_entity_t* flecs_bulk_new(
                 world, table, id);
             ecs_assert(tr != NULL, ECS_INVALID_PARAMETER, 
                 "id is not a component");
-            ecs_assert(tr->storage != -1, ECS_INVALID_PARAMETER, 
+            ecs_assert(tr->column != -1, ECS_INVALID_PARAMETER, 
                 "id is not a component");
             ecs_assert(tr->count == 1, ECS_INVALID_PARAMETER,
                 "ids cannot be wildcards");
 
-            int32_t index = tr->storage;
+            int32_t index = tr->column;
             ecs_column_t *column = &table->data.columns[index];
             ecs_type_info_t *ti = column->ti;
             int32_t size = column->size;
@@ -1078,10 +1078,10 @@ void flecs_notify_on_set(
             const ecs_table_record_t *tr = flecs_table_record_get(world, 
                 table, id);
             ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_assert(tr->storage != -1, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(tr->column != -1, ECS_INTERNAL_ERROR, NULL);
             ecs_assert(tr->count == 1, ECS_INTERNAL_ERROR, NULL);
 
-            int32_t index = tr->storage;
+            int32_t index = tr->column;
             ecs_column_t *column = &table->data.columns[index];
             const ecs_type_info_t *ti = column->ti;
             ecs_iter_action_t on_set = ti->hooks.on_set;
@@ -2141,7 +2141,7 @@ ecs_entity_t flecs_get_delete_action(
 
         /* If action is not specified and we're deleting a relationship target,
          * derive the action from the current record */
-        int32_t i = tr->column, count = tr->count;
+        int32_t i = tr->index, count = tr->count;
         do {
             ecs_type_t *type = &table->type;
             ecs_table_record_t *trr = &table->_->records[i];
@@ -2308,7 +2308,7 @@ void flecs_remove_from_table(
             continue;
         }
 
-        t = tr->column;
+        t = tr->index;
 
         do {
             ecs_id_t id = dst_table->type.array[t];
@@ -2723,11 +2723,11 @@ const void* ecs_get_id(
     if (!tr) {
        return flecs_get_base_component(world, table, id, idr, 0);
     } else {
-        ecs_assert(tr->storage != -1, ECS_NOT_A_COMPONENT, NULL);
+        ecs_assert(tr->column != -1, ECS_NOT_A_COMPONENT, NULL);
     }
 
     int32_t row = ECS_RECORD_TO_ROW(r->row);
-    return flecs_get_component_w_index(table, tr->storage, row).ptr;
+    return flecs_get_component_w_index(table, tr->column, row).ptr;
 error:
     return NULL;
 }
@@ -2966,7 +2966,7 @@ void* ecs_ref_get_id(
         ecs_assert(tr->hdr.table == r->table, ECS_INTERNAL_ERROR, NULL);
     }
 
-    int32_t column = ecs_table_type_to_column_index(table, tr->column);
+    int32_t column = ecs_table_type_to_column_index(table, tr->index);
     ecs_assert(column != -1, ECS_INTERNAL_ERROR, NULL);
     return flecs_get_component_w_index(table, column, row).ptr;
 error:
@@ -3374,7 +3374,7 @@ ecs_entity_t ecs_get_target(
             if (tr) {
                 ecs_assert(table->_ != NULL, ECS_INTERNAL_ERROR, NULL);
                 ecs_switch_t *sw = &table->_->sw_columns[
-                    tr->column - table->_->sw_offset];
+                    tr->index - table->_->sw_offset];
                 int32_t row = ECS_RECORD_TO_ROW(r->row);
                 return flecs_switch_get(sw, row);
                 
@@ -3399,15 +3399,15 @@ ecs_entity_t ecs_get_target(
         goto look_in_base;
     }
 
-    return ecs_pair_second(world, table->type.array[tr->column + index]);
+    return ecs_pair_second(world, table->type.array[tr->index + index]);
 look_in_base:
     if (table->flags & EcsTableHasIsA) {
-        ecs_table_record_t *isa_tr = flecs_id_record_get_table(
+        ecs_table_record_t *tr_isa = flecs_id_record_get_table(
             world->idr_isa_wildcard, table);
-        ecs_assert(isa_tr != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(tr_isa != NULL, ECS_INTERNAL_ERROR, NULL);
 
         ecs_id_t *ids = table->type.array;
-        int32_t i = isa_tr->column, end = (i + isa_tr->count);
+        int32_t i = tr_isa->index, end = (i + tr_isa->count);
         for (; i < end; i ++) {
             ecs_id_t isa_pair = ids[i];
             ecs_entity_t base = ecs_pair_second(world, isa_pair);

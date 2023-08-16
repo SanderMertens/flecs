@@ -348,7 +348,7 @@ int32_t flecs_get_flattened_target(
     if (tr) {
         *src_out = ecs_record_get_entity(r);
         *tr_out = tr;
-        return tr->column;
+        return tr->index;
     }
 
     if (table->flags & EcsTableHasTarget) {
@@ -457,7 +457,7 @@ void flecs_entity_filter_init(
         const ecs_table_record_t *tr = flecs_table_record_get(world, table, 
             ecs_pair_t(EcsTarget, EcsWildcard));
         ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
-        int32_t column = tr->column;
+        int32_t column = tr->index;
         ecs_assert(column != -1, ECS_INTERNAL_ERROR, NULL);
         ecs_entity_t rel = ecs_pair_second(world, table->type.array[column]);
 

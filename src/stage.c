@@ -419,9 +419,9 @@ void* flecs_defer_set(
             const ecs_table_record_t *tr = flecs_id_record_get_table(
                 idr, table);
             if (tr) {
-                ecs_assert(tr->storage != -1, ECS_NOT_A_COMPONENT, NULL);
+                ecs_assert(tr->column != -1, ECS_NOT_A_COMPONENT, NULL);
                 /* Entity has the component */
-                ecs_vec_t *column = &table->data.columns[tr->storage].data;
+                ecs_vec_t *column = &table->data.columns[tr->column].data;
                 existing = ecs_vec_get(column, size, ECS_RECORD_TO_ROW(r->row));
             }
         }

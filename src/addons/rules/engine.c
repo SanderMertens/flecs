@@ -403,7 +403,7 @@ bool flecs_rule_select_w_id(
             return false;
         }
 
-        op_ctx->column = flecs_ito(int16_t, tr->column);
+        op_ctx->column = flecs_ito(int16_t, tr->index);
         op_ctx->remaining = flecs_ito(int16_t, tr->count - 1);
         table = tr->hdr.table;
         flecs_rule_var_set_table(op, op->src.var, table, 0, 0, ctx);
@@ -461,7 +461,7 @@ bool flecs_rule_with(
             return false;
         }
 
-        op_ctx->column = flecs_ito(int16_t, tr->column);
+        op_ctx->column = flecs_ito(int16_t, tr->index);
         op_ctx->remaining = flecs_ito(int16_t, tr->count);
     } else {
         if (--op_ctx->remaining <= 0) {
@@ -524,7 +524,7 @@ bool flecs_rule_select_id(
 
     ecs_table_t *table = tr->hdr.table;
     flecs_rule_var_set_table(op, op->src.var, table, 0, 0, ctx);
-    flecs_rule_it_set_column(it, field, tr->column);
+    flecs_rule_it_set_column(it, field, tr->index);
     return true;
 }
 
@@ -562,7 +562,7 @@ bool flecs_rule_with_id(
         return false;
     }
 
-    flecs_rule_it_set_column(it, field, tr->column);
+    flecs_rule_it_set_column(it, field, tr->index);
     return true;
 }
 

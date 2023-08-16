@@ -441,7 +441,7 @@ void flecs_query_get_column_for_term(
                 ecs_ref_t *ref = ecs_vec_get_t(&match->refs, ecs_ref_t, ref_index);
                 if (ref->id != 0) {
                     ecs_ref_update(world, ref);
-                    column = ref->tr->column;
+                    column = ref->tr->index;
                     column = ecs_table_type_to_column_index(table, column);
                 }
             } else {
@@ -706,7 +706,7 @@ bool flecs_query_check_match_monitor(
                     ecs_ref_update(world, ref);
                     ecs_table_record_t *tr = ref->tr;
                     ecs_table_t *src_table = tr->hdr.table;
-                    column = tr->column;
+                    column = tr->index;
                     column = ecs_table_type_to_column_index(src_table, column);
                     int32_t *src_dirty_state = flecs_table_get_dirty_state(
                         world, src_table);
@@ -1318,7 +1318,7 @@ void flecs_query_sort_tables(
                 const ecs_table_record_t *tr = flecs_id_record_get_table(
                     idr, table);
                 if (tr) {
-                    column = tr->storage;
+                    column = tr->column;
                 }
 
                 if (column == -1) {

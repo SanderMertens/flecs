@@ -1630,7 +1630,7 @@ void flecs_json_serialize_iter_result_parent(
         return;
     }
 
-    ecs_id_t id = table->type.array[tr->column];
+    ecs_id_t id = table->type.array[tr->index];
     ecs_entity_t parent = ecs_pair_second(world, id);
     char *path = ecs_get_fullpath(world, parent);
     flecs_json_memberl(buf, "parent");
@@ -1691,7 +1691,7 @@ void flecs_json_serialize_iter_result_entity_labels(
     }
 
     EcsDocDescription *labels = ecs_table_get_column(
-        table, tr->storage, it->offset);
+        table, tr->column, it->offset);
     ecs_assert(labels != NULL, ECS_INTERNAL_ERROR, NULL);
 
     flecs_json_memberl(buf, "entity_labels");
@@ -1732,7 +1732,7 @@ void flecs_json_serialize_iter_result_colors(
     }
 
     EcsDocDescription *colors = ecs_table_get_column(
-        it->table, tr->storage, it->offset);
+        it->table, tr->column, it->offset);
     ecs_assert(colors != NULL, ECS_INTERNAL_ERROR, NULL);
 
     flecs_json_memberl(buf, "colors");
