@@ -19,7 +19,7 @@ void meta_test_vector(
     test_assert(v->type == elem_type);
 }
 
-void VectorTypes_vector_bool() {
+void VectorTypes_vector_bool(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t v = ecs_vector_init(world, &(ecs_vector_desc_t){
@@ -35,7 +35,7 @@ void VectorTypes_vector_bool() {
     ecs_fini(world);
 }
 
-void VectorTypes_vector_i32() {
+void VectorTypes_vector_i32(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t v = ecs_vector_init(world, &(ecs_vector_desc_t){
@@ -51,7 +51,7 @@ void VectorTypes_vector_i32() {
     ecs_fini(world);
 }
 
-void VectorTypes_vector_struct() {
+void VectorTypes_vector_struct(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -76,7 +76,7 @@ void VectorTypes_vector_struct() {
     ecs_fini(world);
 }
 
-void VectorTypes_vector_w_short_notation() {
+void VectorTypes_vector_w_short_notation(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t a = ecs_vector(world, {

@@ -1,6 +1,6 @@
 #include <api.h>
 
-void Entity_init_id() {
+void Entity_init_id(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){0});
@@ -10,7 +10,7 @@ void Entity_init_id() {
     ecs_fini(world);
 }
 
-void Entity_init_id_name() {
+void Entity_init_id_name(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
@@ -27,7 +27,7 @@ void Entity_init_id_name() {
     ecs_fini(world);
 }
 
-void Entity_init_id_path() {
+void Entity_init_id_path(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
@@ -44,7 +44,7 @@ void Entity_init_id_path() {
     ecs_fini(world);
 }
 
-void Entity_init_id_add_1_comp() {
+void Entity_init_id_add_1_comp(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -58,7 +58,7 @@ void Entity_init_id_add_1_comp() {
     ecs_fini(world);
 }
 
-void Entity_init_id_add_2_comp() {
+void Entity_init_id_add_2_comp(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -74,7 +74,7 @@ void Entity_init_id_add_2_comp() {
     ecs_fini(world);
 }
 
-void Entity_init_id_w_scope() {
+void Entity_init_id_w_scope(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t scope = ecs_new_id(world);
@@ -91,7 +91,7 @@ void Entity_init_id_w_scope() {
     ecs_fini(world);
 }
 
-void Entity_init_id_name_w_scope() {
+void Entity_init_id_name_w_scope(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t scope = ecs_entity_init(world, &(ecs_entity_desc_t){
@@ -119,7 +119,7 @@ void Entity_init_id_name_w_scope() {
     ecs_fini(world);
 }
 
-void Entity_init_id_path_w_scope() {
+void Entity_init_id_path_w_scope(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t scope = ecs_entity_init(world, &(ecs_entity_desc_t){
@@ -146,7 +146,7 @@ void Entity_init_id_path_w_scope() {
     ecs_fini(world);
 }
 
-void Entity_init_id_fullpath_w_scope() {
+void Entity_init_id_fullpath_w_scope(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t scope = ecs_entity_init(world, &(ecs_entity_desc_t){
@@ -174,7 +174,7 @@ void Entity_init_id_fullpath_w_scope() {
     ecs_fini(world);
 }
 
-void Entity_init_id_fullpath_w_scope_existing() {
+void Entity_init_id_fullpath_w_scope_existing(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t scope = ecs_entity_init(world, &(ecs_entity_desc_t){
@@ -210,7 +210,7 @@ void Entity_init_id_fullpath_w_scope_existing() {
     ecs_fini(world);
 }
 
-void Entity_init_id_name_1_comp() {
+void Entity_init_id_name_1_comp(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -231,7 +231,7 @@ void Entity_init_id_name_1_comp() {
     ecs_fini(world);
 }
 
-void Entity_init_id_name_2_comp() {
+void Entity_init_id_name_2_comp(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -253,7 +253,7 @@ void Entity_init_id_name_2_comp() {
     ecs_fini(world);
 }
 
-void Entity_init_id_name_2_comp_w_scope() {
+void Entity_init_id_name_2_comp_w_scope(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -284,7 +284,7 @@ void Entity_init_id_name_2_comp_w_scope() {
     ecs_fini(world);
 }
 
-void Entity_id_add_1_comp() {
+void Entity_id_add_1_comp(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -303,7 +303,7 @@ void Entity_id_add_1_comp() {
     ecs_fini(world);
 }
 
-void Entity_id_add_2_comp() {
+void Entity_id_add_2_comp(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -324,7 +324,7 @@ void Entity_id_add_2_comp() {
     ecs_fini(world);
 }
 
-void Entity_init_id_path_w_sep() {
+void Entity_init_id_path_w_sep(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
@@ -342,7 +342,7 @@ void Entity_init_id_path_w_sep() {
     ecs_fini(world);
 }
 
-void Entity_find_id_name() {
+void Entity_find_id_name(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
@@ -360,7 +360,7 @@ void Entity_find_id_name() {
     ecs_fini(world);
 }
 
-void Entity_find_w_existing_id_name() {
+void Entity_find_w_existing_id_name(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t id = ecs_new_id(world);
@@ -382,7 +382,7 @@ void Entity_find_w_existing_id_name() {
     ecs_fini(world);
 }
 
-void Entity_find_id_name_w_scope() {
+void Entity_find_id_name_w_scope(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t scope = ecs_entity_init(world, &(ecs_entity_desc_t){
@@ -414,7 +414,7 @@ void Entity_find_id_name_w_scope() {
     ecs_fini(world);
 }
 
-void Entity_find_id_path() {
+void Entity_find_id_path(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
@@ -437,7 +437,7 @@ void Entity_find_id_path() {
     ecs_fini(world);
 }
 
-void Entity_find_id_path_w_scope() {
+void Entity_find_id_path_w_scope(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t scope = ecs_entity_init(world, &(ecs_entity_desc_t){
@@ -469,7 +469,7 @@ void Entity_find_id_path_w_scope() {
     ecs_fini(world);
 }
 
-void Entity_find_id_name_match() {
+void Entity_find_id_name_match(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
@@ -488,7 +488,7 @@ void Entity_find_id_name_match() {
     ecs_fini(world);
 }
 
-void Entity_find_id_name_match_w_scope() {
+void Entity_find_id_name_match_w_scope(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t scope = ecs_entity_init(world, &(ecs_entity_desc_t){
@@ -530,7 +530,7 @@ void Entity_find_id_name_match_w_scope() {
     ecs_fini(world);
 }
 
-void Entity_find_id_path_match() {
+void Entity_find_id_path_match(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
@@ -549,7 +549,7 @@ void Entity_find_id_path_match() {
     ecs_fini(world);
 }
 
-void Entity_find_id_path_match_w_scope() {
+void Entity_find_id_path_match_w_scope(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t scope = ecs_entity_init(world, &(ecs_entity_desc_t){
@@ -586,7 +586,7 @@ void Entity_find_id_path_match_w_scope() {
     ecs_fini(world);
 }
 
-void Entity_find_id_name_mismatch() {
+void Entity_find_id_name_mismatch(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
@@ -609,7 +609,7 @@ void Entity_find_id_name_mismatch() {
     ecs_fini(world);
 }
 
-void Entity_find_id_name_mismatch_w_scope() {
+void Entity_find_id_name_mismatch_w_scope(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t scope = ecs_entity_init(world, &(ecs_entity_desc_t){
@@ -637,7 +637,7 @@ void Entity_find_id_name_mismatch_w_scope() {
     ecs_fini(world);
 }
 
-void Entity_find_id_path_mismatch() {
+void Entity_find_id_path_mismatch(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
@@ -660,7 +660,7 @@ void Entity_find_id_path_mismatch() {
     ecs_fini(world);
 }
 
-void Entity_find_id_path_mismatch_w_scope() {
+void Entity_find_id_path_mismatch_w_scope(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t scope = ecs_entity_init(world, &(ecs_entity_desc_t){
@@ -692,7 +692,7 @@ void Entity_find_id_path_mismatch_w_scope() {
     ecs_fini(world);
 }
 
-void Entity_find_id_add_1_comp() {
+void Entity_find_id_add_1_comp(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -713,7 +713,7 @@ void Entity_find_id_add_1_comp() {
     ecs_fini(world);
 }
 
-void Entity_find_id_add_2_comp() {
+void Entity_find_id_add_2_comp(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -736,7 +736,7 @@ void Entity_find_id_add_2_comp() {
     ecs_fini(world);
 }
 
-void Entity_init_w_scope_name() {
+void Entity_init_w_scope_name(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_init(world, &(ecs_entity_desc_t){
@@ -763,7 +763,7 @@ void Entity_init_w_scope_name() {
     ecs_fini(world);
 }
 
-void Entity_init_w_core_name() {
+void Entity_init_w_core_name(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
@@ -776,7 +776,7 @@ void Entity_init_w_core_name() {
     ecs_fini(world);
 }
 
-void Entity_init_w_with() {
+void Entity_init_w_with(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -792,7 +792,7 @@ void Entity_init_w_with() {
     ecs_fini(world);
 }
 
-void Entity_init_w_with_w_name() {
+void Entity_init_w_with_w_name(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -812,7 +812,7 @@ void Entity_init_w_with_w_name() {
     ecs_fini(world);
 }
 
-void Entity_init_w_with_w_scope() {
+void Entity_init_w_with_w_scope(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -833,7 +833,7 @@ void Entity_init_w_with_w_scope() {
     ecs_fini(world);
 }
 
-void Entity_init_w_with_w_name_scope() {
+void Entity_init_w_with_w_name_scope(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -858,7 +858,7 @@ void Entity_init_w_with_w_name_scope() {
     ecs_fini(world);
 }
 
-void Entity_is_valid() {
+void Entity_is_valid(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new_id(world);
@@ -868,7 +868,7 @@ void Entity_is_valid() {
     ecs_fini(world);
 }
 
-void Entity_is_recycled_valid() {
+void Entity_is_recycled_valid(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new_id(world);
@@ -886,7 +886,7 @@ void Entity_is_recycled_valid() {
     ecs_fini(world);
 }
 
-void Entity_is_0_valid() {
+void Entity_is_0_valid(void) {
     ecs_world_t *world = ecs_mini();
 
     test_bool(ecs_is_valid(world, 0), false);
@@ -894,7 +894,7 @@ void Entity_is_0_valid() {
     ecs_fini(world);
 }
 
-void Entity_is_junk_valid() {
+void Entity_is_junk_valid(void) {
     ecs_world_t *world = ecs_mini();
 
     test_bool(ecs_is_valid(world, 1000), true);
@@ -912,7 +912,7 @@ void Entity_is_junk_valid() {
     ecs_fini(world);
 }
 
-void Entity_is_not_alive_valid() {
+void Entity_is_not_alive_valid(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new_id(world);
@@ -931,7 +931,7 @@ void Entity_is_not_alive_valid() {
     ecs_fini(world);
 }
 
-void Entity_is_nonzero_gen_valid() {
+void Entity_is_nonzero_gen_valid(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t id = ECS_GENERATION_INC(1000);
@@ -943,7 +943,7 @@ void Entity_is_nonzero_gen_valid() {
     ecs_fini(world);
 }
 
-void Entity_init_w_name_deferred() {
+void Entity_init_w_name_deferred(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_defer_begin(world);
@@ -959,7 +959,7 @@ void Entity_init_w_name_deferred() {
     ecs_fini(world);
 }
 
-void Entity_init_w_name_twice_deferred() {
+void Entity_init_w_name_twice_deferred(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_defer_begin(world);
@@ -980,7 +980,7 @@ void Entity_init_w_name_twice_deferred() {
     ecs_fini(world);
 }
 
-void Entity_init_w_nested_name_twice_deferred() {
+void Entity_init_w_nested_name_twice_deferred(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_defer_begin(world);
@@ -1005,7 +1005,7 @@ void Entity_init_w_nested_name_twice_deferred() {
     ecs_fini(world);
 }
 
-void Entity_init_w_scope_name_twice_deferred() {
+void Entity_init_w_scope_name_twice_deferred(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_defer_begin(world);
@@ -1030,7 +1030,7 @@ void Entity_init_w_scope_name_twice_deferred() {
     ecs_fini(world);
 }
 
-void Entity_init_w_childof_name_twice_deferred() {
+void Entity_init_w_childof_name_twice_deferred(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_defer_begin(world);
@@ -1064,7 +1064,7 @@ void Entity_init_w_childof_name_twice_deferred() {
     ecs_fini(world);
 }
 
-void Entity_init_w_childof_nested_name_twice_deferred() {
+void Entity_init_w_childof_nested_name_twice_deferred(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_defer_begin(world);
@@ -1104,7 +1104,7 @@ void Entity_init_w_childof_nested_name_twice_deferred() {
     ecs_fini(world);
 }
 
-void Entity_init_w_name_staged() {
+void Entity_init_w_name_staged(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_readonly_begin(world);
@@ -1123,7 +1123,7 @@ void Entity_init_w_name_staged() {
     ecs_fini(world);
 }
 
-void Entity_record_find_for_empty() {
+void Entity_record_find_for_empty(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new(world, 0);
@@ -1136,7 +1136,7 @@ void Entity_record_find_for_empty() {
     ecs_fini(world);
 }
 
-void Entity_record_find() {
+void Entity_record_find(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -1151,7 +1151,7 @@ void Entity_record_find() {
     ecs_fini(world);
 }
 
-void Entity_record_find_from_stage() {
+void Entity_record_find_from_stage(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -1172,7 +1172,7 @@ void Entity_record_find_from_stage() {
     ecs_fini(world);
 }
 
-void Entity_ensure_zero_gen() {
+void Entity_ensure_zero_gen(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t id = 1000;
@@ -1188,7 +1188,7 @@ void Entity_ensure_zero_gen() {
     ecs_fini(world);
 }
 
-void Entity_ensure_nonzero_gen() {
+void Entity_ensure_nonzero_gen(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t id = ECS_GENERATION_INC(1000);
@@ -1205,7 +1205,7 @@ void Entity_ensure_nonzero_gen() {
     ecs_fini(world);
 }
 
-void Entity_ensure_zero_gen_exists() {
+void Entity_ensure_zero_gen_exists(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new_id(world);
@@ -1222,7 +1222,7 @@ void Entity_ensure_zero_gen_exists() {
     ecs_fini(world);
 }
 
-void Entity_ensure_nonzero_gen_exists() {
+void Entity_ensure_nonzero_gen_exists(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new_id(world);
@@ -1245,7 +1245,7 @@ void Entity_ensure_nonzero_gen_exists() {
     ecs_fini(world);
 }
 
-void Entity_ensure_zero_gen_exists_alive() {
+void Entity_ensure_zero_gen_exists_alive(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -1265,7 +1265,7 @@ void Entity_ensure_zero_gen_exists_alive() {
     ecs_ensure(world, e); // not allowed, can't ensure gen 0 if gen 1 is alive
 }
 
-void Entity_ensure_nonzero_gen_exists_alive() {
+void Entity_ensure_nonzero_gen_exists_alive(void) {
     install_test_abort();
     
     ecs_world_t *world = ecs_mini();
@@ -1288,7 +1288,7 @@ void Entity_ensure_nonzero_gen_exists_alive() {
     ecs_ensure(world, e); // not allowed, can't ensure gen 2 if gen 1 is alive
 }
 
-void Entity_set_scope_w_entity_init_from_stage() {
+void Entity_set_scope_w_entity_init_from_stage(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_world_t *stage = ecs_get_stage(world, 0);
@@ -1313,7 +1313,7 @@ void Entity_set_scope_w_entity_init_from_stage() {
     ecs_fini(world);
 }
 
-void Entity_entity_init_w_scope_twice() {
+void Entity_entity_init_w_scope_twice(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t parent = ecs_set_name(world, 0, "Parent");
@@ -1339,7 +1339,7 @@ void Entity_entity_init_w_scope_twice() {
     ecs_fini(world);
 }
 
-void Entity_entity_init_w_childof_twice() {
+void Entity_entity_init_w_childof_twice(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t parent = ecs_set_name(world, 0, "Parent");
@@ -1365,7 +1365,7 @@ void Entity_entity_init_w_childof_twice() {
     ecs_fini(world);
 }
 
-void Entity_entity_init_w_childof_nested_name_twice() {
+void Entity_entity_init_w_childof_nested_name_twice(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t parent = ecs_set_name(world, 0, "Parent");
@@ -1394,7 +1394,7 @@ void Entity_entity_init_w_childof_nested_name_twice() {
     ecs_fini(world);
 }
 
-void Entity_entity_init_w_childof_and_scope() {
+void Entity_entity_init_w_childof_and_scope(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t parent_a = ecs_set_name(world, 0, "ParentA");
@@ -1418,7 +1418,7 @@ void Entity_entity_init_w_childof_and_scope() {
     ecs_fini(world);
 }
 
-void Entity_entity_init_w_childof_and_scope_and_scoped_name() {
+void Entity_entity_init_w_childof_and_scope_and_scoped_name(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t parent_a = ecs_set_name(world, 0, "ParentA");
@@ -1446,7 +1446,7 @@ void Entity_entity_init_w_childof_and_scope_and_scoped_name() {
     ecs_fini(world);
 }
 
-void Entity_entity_init_w_childof_and_no_name() {
+void Entity_entity_init_w_childof_and_no_name(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t parent = ecs_new_id(world);
@@ -1461,7 +1461,7 @@ void Entity_entity_init_w_childof_and_no_name() {
     ecs_fini(world);
 }
 
-void Entity_deferred_entity_init_w_childof_and_scope() {
+void Entity_deferred_entity_init_w_childof_and_scope(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t parent_a = ecs_set_name(world, 0, "ParentA");
@@ -1489,7 +1489,7 @@ void Entity_deferred_entity_init_w_childof_and_scope() {
     ecs_fini(world);
 }
 
-void Entity_deferred_entity_init_w_childof_and_scope_and_scoped_name() {
+void Entity_deferred_entity_init_w_childof_and_scope_and_scoped_name(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t parent_a = ecs_set_name(world, 0, "ParentA");
@@ -1521,7 +1521,7 @@ void Entity_deferred_entity_init_w_childof_and_scope_and_scoped_name() {
     ecs_fini(world);
 }
 
-void Entity_deferred_entity_init_w_childof_and_no_name() {
+void Entity_deferred_entity_init_w_childof_and_no_name(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t parent = ecs_new_id(world);
@@ -1539,7 +1539,7 @@ void Entity_deferred_entity_init_w_childof_and_no_name() {
     ecs_fini(world);
 }
 
-void Entity_entity_init_w_empty_string_name() {
+void Entity_entity_init_w_empty_string_name(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
@@ -1552,7 +1552,7 @@ void Entity_entity_init_w_empty_string_name() {
     ecs_fini(world);
 }
 
-void Entity_entity_init_w_empty_string_symbol() {
+void Entity_entity_init_w_empty_string_symbol(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
@@ -1565,7 +1565,7 @@ void Entity_entity_init_w_empty_string_symbol() {
     ecs_fini(world);
 }
 
-void Entity_set_name_w_0_twice() {
+void Entity_set_name_w_0_twice(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e1 = ecs_set_name(world, 0, "Foo");
@@ -1577,7 +1577,7 @@ void Entity_set_name_w_0_twice() {
     ecs_fini(world);
 }
 
-void Entity_new_entity_twice() {
+void Entity_new_entity_twice(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e1 = ecs_new_entity(world, "Foo");
@@ -1589,7 +1589,7 @@ void Entity_new_entity_twice() {
     ecs_fini(world);
 }
 
-void Entity_new_entity_scoped_twice() {
+void Entity_new_entity_scoped_twice(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e1 = ecs_new_entity(world, "Foo.Bar");
@@ -1605,7 +1605,7 @@ void Entity_new_entity_scoped_twice() {
     ecs_fini(world);
 }
 
-void Entity_defer_component_init() {
+void Entity_defer_component_init(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_defer_begin(world);
@@ -1630,7 +1630,7 @@ void Entity_defer_component_init() {
     ecs_fini(world);
 }
 
-void Entity_defer_component_init_w_symbol() {
+void Entity_defer_component_init_w_symbol(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_defer_begin(world);
@@ -1656,7 +1656,7 @@ void Entity_defer_component_init_w_symbol() {
     ecs_fini(world);
 }
 
-void Entity_defer_entity_init_w_symbol() {
+void Entity_defer_entity_init_w_symbol(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_defer_begin(world);
@@ -1675,7 +1675,7 @@ void Entity_defer_entity_init_w_symbol() {
     ecs_fini(world);
 }
 
-void Entity_staged_set_name_n_stages() {
+void Entity_staged_set_name_n_stages(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_set_stage_count(world, 2);
@@ -1696,7 +1696,7 @@ void Entity_staged_set_name_n_stages() {
     ecs_fini(world);
 }
 
-void Entity_staged_set_symbol_n_stages() {
+void Entity_staged_set_symbol_n_stages(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_set_stage_count(world, 2);
@@ -1719,7 +1719,7 @@ void Entity_staged_set_symbol_n_stages() {
     ecs_fini(world);
 }
 
-void Entity_entity_init_w_add_childof_no_name() {
+void Entity_entity_init_w_add_childof_no_name(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t parent = ecs_new_id(world);
@@ -1733,7 +1733,7 @@ void Entity_entity_init_w_add_childof_no_name() {
     ecs_fini(world);
 }
 
-void Entity_entity_w_short_notation() {
+void Entity_entity_w_short_notation(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_entity(world, { .name = "Foo" });
@@ -1744,7 +1744,7 @@ void Entity_entity_w_short_notation() {
 }
 
 
-void Entity_override_inherited_symbol() {
+void Entity_override_inherited_symbol(void) {
     ecs_world_t *world = ecs_mini();
     
     ecs_entity_t Foo = ecs_entity_init(world, &(ecs_entity_desc_t){
@@ -1768,7 +1768,7 @@ void Entity_override_inherited_symbol() {
     ecs_fini(world);
 }
 
-void Entity_use_low_id_for_component() {
+void Entity_use_low_id_for_component(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -1778,7 +1778,7 @@ void Entity_use_low_id_for_component() {
     ecs_fini(world);
 }
 
-void Entity_get_depth() {
+void Entity_get_depth(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e1 = ecs_new_id(world);
@@ -1794,7 +1794,7 @@ void Entity_get_depth() {
     ecs_fini(world);
 }
 
-void Entity_get_depth_non_acyclic() {
+void Entity_get_depth_non_acyclic(void) {
     install_test_abort();
     ecs_world_t *world = ecs_mini();
 
@@ -1806,7 +1806,7 @@ void Entity_get_depth_non_acyclic() {
     ecs_get_depth(world, e1, Rel);
 }
 
-void Entity_get_depth_empty() {
+void Entity_get_depth_empty(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e1 = ecs_new_id(world);
@@ -1815,7 +1815,7 @@ void Entity_get_depth_empty() {
     ecs_fini(world);
 }
 
-void Entity_get_depth_2_paths() {
+void Entity_get_depth_2_paths(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e1 = ecs_new_id(world);
@@ -1832,7 +1832,7 @@ void Entity_get_depth_2_paths() {
     ecs_fini(world);
 }
 
-void Entity_entity_init_w_empty_sep() {
+void Entity_entity_init_w_empty_sep(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t child = ecs_entity_init(world, &(ecs_entity_desc_t){
@@ -1850,7 +1850,7 @@ void Entity_entity_init_w_empty_sep() {
     ecs_fini(world);
 }
 
-void Entity_entity_init_w_empty_sep_from_scope() {
+void Entity_entity_init_w_empty_sep_from_scope(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t parent = ecs_new_entity(world, "parent");
@@ -1872,7 +1872,7 @@ void Entity_entity_init_w_empty_sep_from_scope() {
     ecs_fini(world);
 }
 
-void Entity_entity_init_w_empty_sep_w_prefix() {
+void Entity_entity_init_w_empty_sep_w_prefix(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t parent = ecs_new_entity(world, "parent");
@@ -1892,7 +1892,7 @@ void Entity_entity_init_w_empty_sep_w_prefix() {
     ecs_fini(world);
 }
 
-void Entity_set_name_w_same_ptr() {
+void Entity_set_name_w_same_ptr(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new_entity(world, "foo");
@@ -1908,7 +1908,7 @@ void Entity_set_name_w_same_ptr() {
     ecs_fini(world);
 }
 
-void Entity_set_name_w_overlapping_ptr() {
+void Entity_set_name_w_overlapping_ptr(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new_entity(world, "foo");
@@ -1924,7 +1924,7 @@ void Entity_set_name_w_overlapping_ptr() {
     ecs_fini(world);
 }
 
-void Entity_defer_set_name_w_overlapping_ptr() {
+void Entity_defer_set_name_w_overlapping_ptr(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new_entity(world, "foo");
@@ -1943,7 +1943,7 @@ void Entity_defer_set_name_w_overlapping_ptr() {
     ecs_fini(world);
 }
 
-void Entity_ensure_from_stage() {
+void Entity_ensure_from_stage(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_world_t *stage = ecs_get_stage(world, 0);
@@ -1954,7 +1954,7 @@ void Entity_ensure_from_stage() {
     ecs_fini(world);
 }
 
-void Entity_ensure_after_deleted_1_entity() {
+void Entity_ensure_after_deleted_1_entity(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e1 = ecs_new_id(world);
@@ -1969,7 +1969,7 @@ void Entity_ensure_after_deleted_1_entity() {
     ecs_fini(world);
 }
 
-void Entity_ensure_after_deleted_2_entities() {
+void Entity_ensure_after_deleted_2_entities(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e1 = ecs_new_id(world);
@@ -1990,7 +1990,7 @@ void Entity_ensure_after_deleted_2_entities() {
     ecs_fini(world);
 }
 
-void Entity_defer_entity_init_w_set_name_w_add_childof() {
+void Entity_defer_entity_init_w_set_name_w_add_childof(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new_id(world);
@@ -2008,7 +2008,7 @@ void Entity_defer_entity_init_w_set_name_w_add_childof() {
     ecs_fini(world);
 }
 
-void Entity_entity_w_digit_name() {
+void Entity_entity_w_digit_name(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_entity(world, {
@@ -2022,7 +2022,7 @@ void Entity_entity_w_digit_name() {
     ecs_fini(world);
 }
 
-void Entity_entity_w_existing_digit_name() {
+void Entity_entity_w_existing_digit_name(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_entity(world, {
@@ -2036,7 +2036,7 @@ void Entity_entity_w_existing_digit_name() {
     ecs_fini(world);
 }
 
-void Entity_entity_w_conflicting_digit_name() {
+void Entity_entity_w_conflicting_digit_name(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_log_set_level(-4);
@@ -2051,7 +2051,7 @@ void Entity_entity_w_conflicting_digit_name() {
     ecs_fini(world);
 }
 
-void Entity_set_generation_on_nonempty_entity() {
+void Entity_set_generation_on_nonempty_entity(void) {
     ecs_world_t* world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -2072,7 +2072,7 @@ void Entity_set_generation_on_nonempty_entity() {
     ecs_fini(world);
 }
 
-void Entity_set_generation_while_deferred() {
+void Entity_set_generation_while_deferred(void) {
     install_test_abort();
 
     ecs_world_t* world = ecs_mini();
@@ -2089,7 +2089,7 @@ void Observer(ecs_iter_t *it) {
     (*invoked) ++;
 }
 
-void Entity_commit_w_on_add() {
+void Entity_commit_w_on_add(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -2122,7 +2122,7 @@ void Entity_commit_w_on_add() {
     ecs_fini(world);
 }
 
-void Entity_commit_w_on_remove() {
+void Entity_commit_w_on_remove(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -2174,7 +2174,7 @@ void Observer_w_cmd(ecs_iter_t *it) {
     }
 }
 
-void Entity_commit_w_cmd_in_observer() {
+void Entity_commit_w_cmd_in_observer(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);

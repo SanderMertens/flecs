@@ -2,7 +2,7 @@
 
 static ECS_COMPONENT_DECLARE(Velocity);
 
-void SingleThreadStaging_setup() {
+void SingleThreadStaging_setup(void) {
     ecs_log_set_level(-3);
 }
 
@@ -17,7 +17,7 @@ void NewEmpty(ecs_iter_t *it) {
     }
 }
 
-void SingleThreadStaging_new_empty() {
+void SingleThreadStaging_new_empty(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -58,7 +58,7 @@ void New_w_component(ecs_iter_t *it) {
     }
 }
 
-void SingleThreadStaging_new_w_component() {
+void SingleThreadStaging_new_w_component(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -94,7 +94,7 @@ void NewEmpty_w_count(ecs_iter_t *it) {
     ctx->entity_count ++;
 }
 
-void SingleThreadStaging_new_empty_w_count() {
+void SingleThreadStaging_new_empty_w_count(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -128,7 +128,7 @@ void New_w_component_w_count(ecs_iter_t *it) {
     ctx->entity_count ++;
 }
 
-void SingleThreadStaging_new_component_w_count() {
+void SingleThreadStaging_new_component_w_count(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -169,7 +169,7 @@ void Add_to_new_empty(ecs_iter_t *it) {
     }
 }
 
-void SingleThreadStaging_add_to_new_empty() {
+void SingleThreadStaging_add_to_new_empty(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -197,7 +197,7 @@ void SingleThreadStaging_add_to_new_empty() {
     ecs_fini(world);
 }
 
-void SingleThreadStaging_2_add_to_new_empty() {
+void SingleThreadStaging_2_add_to_new_empty(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -251,7 +251,7 @@ void Add_remove_same_from_new(ecs_iter_t *it) {
     }
 }
 
-void SingleThreadStaging_add_remove_same_to_new_empty() {
+void SingleThreadStaging_add_remove_same_to_new_empty(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -278,7 +278,7 @@ void SingleThreadStaging_add_remove_same_to_new_empty() {
     ecs_fini(world);
 }
 
-void SingleThreadStaging_add_remove_2_same_to_new_empty() {
+void SingleThreadStaging_add_remove_2_same_to_new_empty(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -322,7 +322,7 @@ void Add_remove_same_from_new_w_component(ecs_iter_t *it) {
     }
 }
 
-void SingleThreadStaging_add_remove_same_to_new_w_component() {
+void SingleThreadStaging_add_remove_same_to_new_w_component(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -375,7 +375,7 @@ void Add_remove_different_from_new_empty(ecs_iter_t *it) {
     }
 }
 
-void SingleThreadStaging_2_add_1_remove_to_new_empty() {
+void SingleThreadStaging_2_add_1_remove_to_new_empty(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -406,7 +406,7 @@ void SingleThreadStaging_2_add_1_remove_to_new_empty() {
     ecs_fini(world);
 }
 
-void SingleThreadStaging_2_add_1_remove_same_to_new_empty() {
+void SingleThreadStaging_2_add_1_remove_same_to_new_empty(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -446,7 +446,7 @@ void Clone_current(ecs_iter_t *it) {
     }
 }
 
-void SingleThreadStaging_clone() {
+void SingleThreadStaging_clone(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -491,7 +491,7 @@ void Clone_current_w_value(ecs_iter_t *it) {
     }
 }
 
-void SingleThreadStaging_clone_w_value() {
+void SingleThreadStaging_clone_w_value(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -561,7 +561,7 @@ void Add_to_current(ecs_iter_t *it) {
     }
 }
 
-void SingleThreadStaging_add_to_current() {
+void SingleThreadStaging_add_to_current(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -594,7 +594,7 @@ void SingleThreadStaging_add_to_current() {
     ecs_fini(world);
 }
 
-void SingleThreadStaging_2_add_to_current() {
+void SingleThreadStaging_2_add_to_current(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -649,7 +649,7 @@ void Remove_from_current(ecs_iter_t *it) {
     }
 }
 
-void SingleThreadStaging_remove_from_current() {
+void SingleThreadStaging_remove_from_current(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -688,7 +688,7 @@ void SingleThreadStaging_remove_from_current() {
     ecs_fini(world);
 }
 
-void SingleThreadStaging_remove_2_from_current() {
+void SingleThreadStaging_remove_2_from_current(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -751,7 +751,7 @@ void Add_remove_same_from_current(ecs_iter_t *it) {
     }
 }
 
-void SingleThreadStaging_add_remove_same_to_current() {
+void SingleThreadStaging_add_remove_same_to_current(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -792,7 +792,7 @@ void SingleThreadStaging_add_remove_same_to_current() {
     ecs_fini(world);
 }
 
-void SingleThreadStaging_add_remove_same_existing_to_current() {
+void SingleThreadStaging_add_remove_same_existing_to_current(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -850,7 +850,7 @@ void Remove_add_same_from_current(ecs_iter_t *it) {
     }
 }
 
-void SingleThreadStaging_remove_add_same_to_current() {
+void SingleThreadStaging_remove_add_same_to_current(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -891,7 +891,7 @@ void SingleThreadStaging_remove_add_same_to_current() {
     ecs_fini(world);
 }
 
-void SingleThreadStaging_remove_add_same_existing_to_current() {
+void SingleThreadStaging_remove_add_same_existing_to_current(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -929,7 +929,7 @@ void SingleThreadStaging_remove_add_same_existing_to_current() {
     ecs_fini(world);
 }
 
-void SingleThreadStaging_add_remove_2_same_to_current() {
+void SingleThreadStaging_add_remove_2_same_to_current(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -972,7 +972,7 @@ void SingleThreadStaging_add_remove_2_same_to_current() {
     ecs_fini(world);
 }
 
-void SingleThreadStaging_add_remove_2_same_existing_to_current() {
+void SingleThreadStaging_add_remove_2_same_existing_to_current(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1016,7 +1016,7 @@ void SingleThreadStaging_add_remove_2_same_existing_to_current() {
     ecs_fini(world);
 }
 
-void SingleThreadStaging_remove_add_2_same_to_current() {
+void SingleThreadStaging_remove_add_2_same_to_current(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1071,7 +1071,7 @@ void AddRemoveAdd(ecs_iter_t *it) {
     }
 }
 
-void SingleThreadStaging_add_remove_add_same_to_current() {
+void SingleThreadStaging_add_remove_add_same_to_current(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1093,7 +1093,7 @@ void SingleThreadStaging_add_remove_add_same_to_current() {
     ecs_fini(world);
 }
 
-void SingleThreadStaging_remove_add_2_same_existing_to_current() {
+void SingleThreadStaging_remove_add_2_same_existing_to_current(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1155,7 +1155,7 @@ void Add_remove_different_from_current(ecs_iter_t *it) {
     }
 }
 
-void SingleThreadStaging_add_remove_different_to_current() {
+void SingleThreadStaging_add_remove_different_to_current(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1198,7 +1198,7 @@ void SingleThreadStaging_add_remove_different_to_current() {
     ecs_fini(world);
 }
 
-void SingleThreadStaging_2_add_1_remove_to_current() {
+void SingleThreadStaging_2_add_1_remove_to_current(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1264,7 +1264,7 @@ void Add_1_remove_2_different_from_current(ecs_iter_t *it) {
     }
 }
 
-void SingleThreadStaging_1_add_2_remove_to_current() {
+void SingleThreadStaging_1_add_2_remove_to_current(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1317,7 +1317,7 @@ void Delete_current(ecs_iter_t *it) {
     }
 }
 
-void SingleThreadStaging_delete_current() {
+void SingleThreadStaging_delete_current(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1354,7 +1354,7 @@ void Delete_even(ecs_iter_t *it) {
     }
 }
 
-void SingleThreadStaging_delete_even() {
+void SingleThreadStaging_delete_even(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1433,7 +1433,7 @@ void Delete_new_empty(ecs_iter_t *it) {
     }
 }
 
-void SingleThreadStaging_delete_new_empty() {
+void SingleThreadStaging_delete_new_empty(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1472,7 +1472,7 @@ void Delete_new_w_component(ecs_iter_t *it) {
     }
 }
 
-void SingleThreadStaging_delete_new_w_component() {
+void SingleThreadStaging_delete_new_w_component(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1511,7 +1511,7 @@ void Set_current(ecs_iter_t *it) {
     }
 }
 
-void SingleThreadStaging_set_current() {
+void SingleThreadStaging_set_current(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1571,7 +1571,7 @@ void Set_new_empty(ecs_iter_t *it) {
     }
 }
 
-void SingleThreadStaging_set_new_empty() {
+void SingleThreadStaging_set_new_empty(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1625,7 +1625,7 @@ void Set_new_w_component(ecs_iter_t *it) {
     }
 }
 
-void SingleThreadStaging_set_new_w_component() {
+void SingleThreadStaging_set_new_w_component(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1680,7 +1680,7 @@ void Set_existing_new_w_component(ecs_iter_t *it) {
     }
 }
 
-void SingleThreadStaging_set_existing_new_w_component() {
+void SingleThreadStaging_set_existing_new_w_component(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1736,7 +1736,7 @@ void Set_new_after_add(ecs_iter_t *it) {
     }
 }
 
-void SingleThreadStaging_set_new_after_add() {
+void SingleThreadStaging_set_new_after_add(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1793,7 +1793,7 @@ void Remove_after_set(ecs_iter_t *it) {
     }
 }
 
-void SingleThreadStaging_remove_after_set() {
+void SingleThreadStaging_remove_after_set(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1850,7 +1850,7 @@ void Delete_after_set(ecs_iter_t *it) {
     }
 }
 
-void SingleThreadStaging_delete_after_set() {
+void SingleThreadStaging_delete_after_set(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1887,7 +1887,7 @@ void SingleThreadStaging_delete_after_set() {
     ecs_fini(world);
 }
 
-void SingleThreadStaging_add_to_current_in_on_add() {
+void SingleThreadStaging_add_to_current_in_on_add(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1913,7 +1913,7 @@ void SingleThreadStaging_add_to_current_in_on_add() {
     ecs_fini(world);
 }
 
-void SingleThreadStaging_remove_from_current_in_on_add() {
+void SingleThreadStaging_remove_from_current_in_on_add(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1939,7 +1939,7 @@ void SingleThreadStaging_remove_from_current_in_on_add() {
     ecs_fini(world);
 }
 
-void SingleThreadStaging_remove_added_component_in_on_add() {
+void SingleThreadStaging_remove_added_component_in_on_add(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1981,7 +1981,7 @@ void On_PV(ecs_iter_t *it) {
     }
 }
 
-void SingleThreadStaging_match_table_created_in_progress() {
+void SingleThreadStaging_match_table_created_in_progress(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2037,7 +2037,7 @@ void On_V(ecs_iter_t *it) {
     }
 }
 
-void SingleThreadStaging_match_table_created_w_new_in_progress() {
+void SingleThreadStaging_match_table_created_w_new_in_progress(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2064,7 +2064,7 @@ void SingleThreadStaging_match_table_created_w_new_in_progress() {
     ecs_fini(world);
 }
 
-void SingleThreadStaging_match_table_created_w_new_in_on_set() {
+void SingleThreadStaging_match_table_created_w_new_in_on_set(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2106,7 +2106,7 @@ void Create_container(ecs_iter_t *it) {
     }
 }
 
-void SingleThreadStaging_merge_table_w_container_added_in_progress() {
+void SingleThreadStaging_merge_table_w_container_added_in_progress(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2132,7 +2132,7 @@ void SingleThreadStaging_merge_table_w_container_added_in_progress() {
     ecs_fini(world);
 }
 
-void SingleThreadStaging_merge_table_w_container_added_on_set() {
+void SingleThreadStaging_merge_table_w_container_added_on_set(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2185,7 +2185,7 @@ void Create_container_reverse(ecs_iter_t *it) {
     }
 }
 
-void SingleThreadStaging_merge_table_w_container_added_on_set_reverse() {
+void SingleThreadStaging_merge_table_w_container_added_on_set_reverse(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2227,7 +2227,7 @@ void Task(ecs_iter_t *it) {
     ecs_add(it->world, *e, Position);
 }
 
-void SingleThreadStaging_merge_after_tasks() {
+void SingleThreadStaging_merge_after_tasks(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2259,7 +2259,7 @@ void OverrideAfterRemove(ecs_iter_t *it) {
     }
 }
 
-void SingleThreadStaging_override_after_remove_in_progress() {
+void SingleThreadStaging_override_after_remove_in_progress(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2302,7 +2302,7 @@ void GetParentInProgress(ecs_iter_t *it) {
     }
 }
 
-void SingleThreadStaging_get_parent_in_progress() {
+void SingleThreadStaging_get_parent_in_progress(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2346,7 +2346,7 @@ void Move(ecs_iter_t *it) {
     }    
 }
 
-void SingleThreadStaging_merge_once() {
+void SingleThreadStaging_merge_once(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2388,7 +2388,7 @@ ECS_MOVE(Position, dst, src, {
     dst->y = src->y;
 })
 
-void SingleThreadStaging_clear_stage_after_merge() {
+void SingleThreadStaging_clear_stage_after_merge(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2455,7 +2455,7 @@ void MutableTest(ecs_iter_t *it) {
     }
 }
 
-void SingleThreadStaging_get_mutable() {
+void SingleThreadStaging_get_mutable(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2484,7 +2484,7 @@ void SingleThreadStaging_get_mutable() {
     ecs_fini(world);
 }
 
-void SingleThreadStaging_get_mutable_from_main() {
+void SingleThreadStaging_get_mutable_from_main(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2554,7 +2554,7 @@ void MutableTest_w_Add(ecs_iter_t *it) {
 
 typedef bool MyBool;
 
-void SingleThreadStaging_get_mutable_w_add() {
+void SingleThreadStaging_get_mutable_w_add(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2613,7 +2613,7 @@ void AddInProgress2(ecs_iter_t *it) {
     }
 }
 
-void SingleThreadStaging_on_add_after_new_type_in_progress() {
+void SingleThreadStaging_on_add_after_new_type_in_progress(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2634,7 +2634,7 @@ void SingleThreadStaging_on_add_after_new_type_in_progress() {
     ecs_fini(world);
 }
 
-void SingleThreadStaging_lock_table() {
+void SingleThreadStaging_lock_table(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_init();
@@ -2661,7 +2661,7 @@ void SingleThreadStaging_lock_table() {
     test_assert(false); // Should never get here
 }
 
-void SingleThreadStaging_recursive_lock_table() {
+void SingleThreadStaging_recursive_lock_table(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_init();
@@ -2690,7 +2690,7 @@ void SingleThreadStaging_recursive_lock_table() {
     test_assert(false); // Should never get here
 }
 
-void SingleThreadStaging_modify_after_lock() {
+void SingleThreadStaging_modify_after_lock(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2721,7 +2721,7 @@ void SingleThreadStaging_modify_after_lock() {
     ecs_fini(world);
 }
 
-void SingleThreadStaging_get_case_from_stage() {
+void SingleThreadStaging_get_case_from_stage(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_ENTITY(world, Switch, Union);
@@ -2749,7 +2749,7 @@ void SingleThreadStaging_get_case_from_stage() {
     ecs_fini(world);
 }
 
-void SingleThreadStaging_get_object_from_stage() {
+void SingleThreadStaging_get_object_from_stage(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t parent = ecs_new_id(world);
@@ -2766,7 +2766,7 @@ void SingleThreadStaging_get_object_from_stage() {
     ecs_fini(world);
 }
 
-void SingleThreadStaging_add_to_world_while_readonly() {
+void SingleThreadStaging_add_to_world_while_readonly(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -2783,7 +2783,7 @@ void SingleThreadStaging_add_to_world_while_readonly() {
     ecs_fini(world);
 }
 
-void SingleThreadStaging_add_to_world_and_stage_while_readonly() {
+void SingleThreadStaging_add_to_world_and_stage_while_readonly(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, TagA);
@@ -2805,7 +2805,7 @@ void SingleThreadStaging_add_to_world_and_stage_while_readonly() {
     ecs_fini(world);
 }
 
-void SingleThreadStaging_lookup_after_stage_count_change() {
+void SingleThreadStaging_lookup_after_stage_count_change(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_set_stage_count(world, 2);
@@ -2816,7 +2816,7 @@ void SingleThreadStaging_lookup_after_stage_count_change() {
     ecs_fini(world);
 }
 
-void SingleThreadStaging_lookup_w_scope_after_stage_count_change() {
+void SingleThreadStaging_lookup_w_scope_after_stage_count_change(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t parent = ecs_new_entity(world, "parent");
@@ -2836,7 +2836,7 @@ void SingleThreadStaging_lookup_w_scope_after_stage_count_change() {
     ecs_fini(world);
 }
 
-void SingleThreadStaging_with_after_stage_count_change() {
+void SingleThreadStaging_with_after_stage_count_change(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t tag = ecs_new_id(world);

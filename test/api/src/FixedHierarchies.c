@@ -1,6 +1,6 @@
 #include <api.h>
 
-void FixedHierarchies_make_fixed_1_lvl() {
+void FixedHierarchies_make_fixed_1_lvl(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t p = ecs_new_id(world);
@@ -30,7 +30,7 @@ void FixedHierarchies_make_fixed_1_lvl() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_make_fixed_1_lvl_w_init() {
+void FixedHierarchies_make_fixed_1_lvl_w_init(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t p = ecs_new_id(world);
@@ -60,7 +60,7 @@ void FixedHierarchies_make_fixed_1_lvl_w_init() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_make_fixed_1_lvl_w_init_comp() {
+void FixedHierarchies_make_fixed_1_lvl_w_init_comp(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -110,7 +110,7 @@ void FixedHierarchies_make_fixed_1_lvl_w_init_comp() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_make_fixed_1_lvl_w_init_comp_after_tree_fixed() {
+void FixedHierarchies_make_fixed_1_lvl_w_init_comp_after_tree_fixed(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -163,7 +163,7 @@ void FixedHierarchies_make_fixed_1_lvl_w_init_comp_after_tree_fixed() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_make_fixed_1_lvl_2_entities() {
+void FixedHierarchies_make_fixed_1_lvl_2_entities(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t p = ecs_new_id(world);
@@ -203,7 +203,7 @@ void FixedHierarchies_make_fixed_1_lvl_2_entities() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_make_fixed_1_lvl_2_tables() {
+void FixedHierarchies_make_fixed_1_lvl_2_tables(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -249,7 +249,7 @@ void FixedHierarchies_make_fixed_1_lvl_2_tables() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_make_fixed_2_lvl() {
+void FixedHierarchies_make_fixed_2_lvl(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t p = ecs_new_id(world);
@@ -288,7 +288,7 @@ void FixedHierarchies_make_fixed_2_lvl() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_make_fixed_2_lvl_2_tables() {
+void FixedHierarchies_make_fixed_2_lvl_2_tables(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -339,7 +339,7 @@ void FixedHierarchies_make_fixed_2_lvl_2_tables() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_make_fixed_3_lvl() {
+void FixedHierarchies_make_fixed_3_lvl(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t p = ecs_new_id(world);
@@ -384,7 +384,7 @@ void FixedHierarchies_make_fixed_3_lvl() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_make_fixed_3_lvl_w_name() {
+void FixedHierarchies_make_fixed_3_lvl_w_name(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t p = ecs_new_entity(world, "p");
@@ -429,7 +429,7 @@ void FixedHierarchies_make_fixed_3_lvl_w_name() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_make_fixed_3_2_lvl_w_name() {
+void FixedHierarchies_make_fixed_3_2_lvl_w_name(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t p = ecs_new_entity(world, "p");
@@ -489,7 +489,7 @@ void FixedHierarchies_make_fixed_3_2_lvl_w_name() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_make_fixed_2_lvl_nested() {
+void FixedHierarchies_make_fixed_2_lvl_nested(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t p = ecs_new_entity(world, "p");
@@ -568,7 +568,7 @@ void FixedHierarchies_make_fixed_2_lvl_nested() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_make_fixed_3_lvl_nested() {
+void FixedHierarchies_make_fixed_3_lvl_nested(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t p = ecs_new_entity(world, "p");
@@ -648,7 +648,7 @@ void FixedHierarchies_make_fixed_3_lvl_nested() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_make_fixed_1_lvl_after_delete() {
+void FixedHierarchies_make_fixed_1_lvl_after_delete(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t p = ecs_new_id(world);
@@ -677,7 +677,7 @@ void FixedHierarchies_make_fixed_1_lvl_after_delete() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_get_target_1_lvl() {
+void FixedHierarchies_get_target_1_lvl(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t p = ecs_new_id(world);
@@ -700,7 +700,7 @@ void FixedHierarchies_get_target_1_lvl() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_get_target_2_lvl() {
+void FixedHierarchies_get_target_2_lvl(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t p = ecs_new_id(world);
@@ -728,7 +728,7 @@ void FixedHierarchies_get_target_2_lvl() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_get_depth_1_lvl() {
+void FixedHierarchies_get_depth_1_lvl(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t p = ecs_new_id(world);
@@ -752,7 +752,7 @@ void FixedHierarchies_get_depth_1_lvl() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_get_depth_2_lvl() {
+void FixedHierarchies_get_depth_2_lvl(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t p = ecs_new_id(world);
@@ -781,7 +781,7 @@ void FixedHierarchies_get_depth_2_lvl() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_get_depth_after_reparent_root() {
+void FixedHierarchies_get_depth_after_reparent_root(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t p = ecs_new_id(world);
@@ -816,7 +816,7 @@ void FixedHierarchies_get_depth_after_reparent_root() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_delete_fixed_1_lvl() {
+void FixedHierarchies_delete_fixed_1_lvl(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t p = ecs_new_id(world);
@@ -839,7 +839,7 @@ void FixedHierarchies_delete_fixed_1_lvl() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_delete_fixed_2_lvl() {
+void FixedHierarchies_delete_fixed_2_lvl(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t p = ecs_new_id(world);
@@ -866,7 +866,7 @@ void FixedHierarchies_delete_fixed_2_lvl() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_delete_with_fixed_1_lvl() {
+void FixedHierarchies_delete_with_fixed_1_lvl(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t p = ecs_new_id(world);
@@ -889,7 +889,7 @@ void FixedHierarchies_delete_with_fixed_1_lvl() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_delete_with_fixed_2_lvl() {
+void FixedHierarchies_delete_with_fixed_2_lvl(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t p = ecs_new_id(world);
@@ -916,7 +916,7 @@ void FixedHierarchies_delete_with_fixed_2_lvl() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_query_w_parent_field_1_lvl() {
+void FixedHierarchies_query_w_parent_field_1_lvl(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -987,7 +987,7 @@ void FixedHierarchies_query_w_parent_field_1_lvl() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_query_w_parent_field_1_lvl_w_init() {
+void FixedHierarchies_query_w_parent_field_1_lvl_w_init(void) {
     ecs_world_t *world = ecs_init(); /* Registers metadata/ctor for TreeFixed */
 
     ECS_COMPONENT(world, Position);
@@ -1058,7 +1058,7 @@ void FixedHierarchies_query_w_parent_field_1_lvl_w_init() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_query_w_parent_field_1_lvl_w_init_comp_after_tree_fixed() {
+void FixedHierarchies_query_w_parent_field_1_lvl_w_init_comp_after_tree_fixed(void) {
     ecs_world_t *world = ecs_init(); /* Registers metadata/ctor for TreeFixed */
 
     ECS_COMPONENT(world, Position);
@@ -1131,7 +1131,7 @@ void FixedHierarchies_query_w_parent_field_1_lvl_w_init_comp_after_tree_fixed() 
     ecs_fini(world);
 }
 
-void FixedHierarchies_query_w_parent_field_2_lvl() {
+void FixedHierarchies_query_w_parent_field_2_lvl(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -1230,7 +1230,7 @@ void FixedHierarchies_query_w_parent_field_2_lvl() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_query_w_cascade_field_2_lvl() {
+void FixedHierarchies_query_w_cascade_field_2_lvl(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -1329,7 +1329,7 @@ void FixedHierarchies_query_w_cascade_field_2_lvl() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_query_w_parent_field_1_fixed_1_regular() {
+void FixedHierarchies_query_w_parent_field_1_fixed_1_regular(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -1412,7 +1412,7 @@ void FixedHierarchies_query_w_parent_field_1_fixed_1_regular() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_query_w_parent_field_only_fixed_1_lvls() {
+void FixedHierarchies_query_w_parent_field_only_fixed_1_lvls(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -1473,7 +1473,7 @@ void FixedHierarchies_query_w_parent_field_only_fixed_1_lvls() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_query_w_parent_field_fixed_1_lvls_no_match() {
+void FixedHierarchies_query_w_parent_field_fixed_1_lvls_no_match(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -1503,7 +1503,7 @@ void FixedHierarchies_query_w_parent_field_fixed_1_lvls_no_match() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_query_w_parent_field_fixed_1_lvls_2_no_match() {
+void FixedHierarchies_query_w_parent_field_fixed_1_lvls_2_no_match(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -1536,7 +1536,7 @@ void FixedHierarchies_query_w_parent_field_fixed_1_lvls_2_no_match() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_query_w_parent_field_fixed_1_lvls_no_match_match() {
+void FixedHierarchies_query_w_parent_field_fixed_1_lvls_no_match_match(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -1585,7 +1585,7 @@ void FixedHierarchies_query_w_parent_field_fixed_1_lvls_no_match_match() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_query_w_parent_field_fixed_1_lvls_match_no_match() {
+void FixedHierarchies_query_w_parent_field_fixed_1_lvls_match_no_match(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -1633,7 +1633,7 @@ void FixedHierarchies_query_w_parent_field_fixed_1_lvls_match_no_match() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_query_w_parent_field_2_fixed_2_lvls() {
+void FixedHierarchies_query_w_parent_field_2_fixed_2_lvls(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -1770,7 +1770,7 @@ void FixedHierarchies_query_w_parent_field_2_fixed_2_lvls() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_query_next_table() {
+void FixedHierarchies_query_next_table(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -1843,7 +1843,7 @@ void FixedHierarchies_query_next_table() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_query_next_table_1_elem() {
+void FixedHierarchies_query_next_table_1_elem(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -1897,7 +1897,7 @@ void FixedHierarchies_query_next_table_1_elem() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_query_next_table_1_elem_no_match() {
+void FixedHierarchies_query_next_table_1_elem_no_match(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -1929,7 +1929,7 @@ void FixedHierarchies_query_next_table_1_elem_no_match() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_query_nested_make_fixed() {
+void FixedHierarchies_query_nested_make_fixed(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -1989,7 +1989,7 @@ void FixedHierarchies_query_nested_make_fixed() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_query_nested_make_fixed_w_optional() {
+void FixedHierarchies_query_nested_make_fixed_w_optional(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -2059,7 +2059,7 @@ void FixedHierarchies_query_nested_make_fixed_w_optional() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_query_nested_make_fixed_w_optional_match_children_only() {
+void FixedHierarchies_query_nested_make_fixed_w_optional_match_children_only(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -2103,7 +2103,7 @@ void FixedHierarchies_query_nested_make_fixed_w_optional_match_children_only() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_query_nested_w_2_parents_make_fixed() {
+void FixedHierarchies_query_nested_w_2_parents_make_fixed(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -2213,7 +2213,7 @@ void FixedHierarchies_query_nested_w_2_parents_make_fixed() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_query_table_w_3_parents() {
+void FixedHierarchies_query_table_w_3_parents(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -2351,7 +2351,7 @@ void FixedHierarchies_query_table_w_3_parents() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_query_w_parent_change_detection_1st() {
+void FixedHierarchies_query_w_parent_change_detection_1st(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Velocity);
@@ -2463,7 +2463,7 @@ void FixedHierarchies_query_w_parent_change_detection_1st() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_query_w_parent_change_detection_2nd() {
+void FixedHierarchies_query_w_parent_change_detection_2nd(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Velocity);
@@ -2575,7 +2575,7 @@ void FixedHierarchies_query_w_parent_change_detection_2nd() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_query_w_parent_change_detection_iter_twice() {
+void FixedHierarchies_query_w_parent_change_detection_iter_twice(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Velocity);
@@ -2721,7 +2721,7 @@ void FixedHierarchies_query_w_parent_change_detection_iter_twice() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_query_w_parent_change_detection_iter_twice_each_parent() {
+void FixedHierarchies_query_w_parent_change_detection_iter_twice_each_parent(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Velocity);
@@ -2869,7 +2869,7 @@ void FixedHierarchies_query_w_parent_change_detection_iter_twice_each_parent() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_query_w_parent_change_detection_1st_populate_when_changed() {
+void FixedHierarchies_query_w_parent_change_detection_1st_populate_when_changed(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Velocity);
@@ -2967,7 +2967,7 @@ void FixedHierarchies_query_w_parent_change_detection_1st_populate_when_changed(
     ecs_fini(world);
 }
 
-void FixedHierarchies_query_w_parent_change_detection_2nd_populate_when_changed() {
+void FixedHierarchies_query_w_parent_change_detection_2nd_populate_when_changed(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Velocity);
@@ -3063,7 +3063,7 @@ void FixedHierarchies_query_w_parent_change_detection_2nd_populate_when_changed(
     ecs_fini(world);
 }
 
-void FixedHierarchies_query_w_parent_change_detection_iter_twice_populate_when_changed() {
+void FixedHierarchies_query_w_parent_change_detection_iter_twice_populate_when_changed(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Velocity);
@@ -3170,7 +3170,7 @@ void FixedHierarchies_query_w_parent_change_detection_iter_twice_populate_when_c
     ecs_fini(world);
 }
 
-void FixedHierarchies_query_w_parent_change_detection_iter_twice_each_parent_populate_when_changed() {
+void FixedHierarchies_query_w_parent_change_detection_iter_twice_each_parent_populate_when_changed(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Velocity);
@@ -3289,7 +3289,7 @@ void FixedHierarchies_query_w_parent_change_detection_iter_twice_each_parent_pop
     ecs_fini(world);
 }
 
-void FixedHierarchies_staged_query_w_parent_field_1_lvl() {
+void FixedHierarchies_staged_query_w_parent_field_1_lvl(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -3365,7 +3365,7 @@ void FixedHierarchies_staged_query_w_parent_field_1_lvl() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_staged_query_w_parent_field_2_lvl() {
+void FixedHierarchies_staged_query_w_parent_field_2_lvl(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -3469,7 +3469,7 @@ void FixedHierarchies_staged_query_w_parent_field_2_lvl() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_staged_query_w_parent_field_1_fixed_1_regular() {
+void FixedHierarchies_staged_query_w_parent_field_1_fixed_1_regular(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -3557,7 +3557,7 @@ void FixedHierarchies_staged_query_w_parent_field_1_fixed_1_regular() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_staged_query_w_cascade_field_2_lvl() {
+void FixedHierarchies_staged_query_w_cascade_field_2_lvl(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -3661,7 +3661,7 @@ void FixedHierarchies_staged_query_w_cascade_field_2_lvl() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_add_to_fixed() {
+void FixedHierarchies_add_to_fixed(void) {
     install_test_abort();
     ecs_world_t *world = ecs_mini();
 
@@ -3678,7 +3678,7 @@ void FixedHierarchies_add_to_fixed() {
     ecs_add(world, p_1_1, Tag);
 }
 
-void FixedHierarchies_remove_from_fixed() {
+void FixedHierarchies_remove_from_fixed(void) {
     install_test_abort();
     ecs_world_t *world = ecs_mini();
 
@@ -3696,7 +3696,7 @@ void FixedHierarchies_remove_from_fixed() {
     ecs_remove(world, p_1_1, Tag);
 }
 
-void FixedHierarchies_delete_fixed() {
+void FixedHierarchies_delete_fixed(void) {
     install_test_abort();
     ecs_world_t *world = ecs_mini();
 
@@ -3713,7 +3713,7 @@ void FixedHierarchies_delete_fixed() {
     ecs_delete(world, p_1_1);
 }
 
-void FixedHierarchies_clear_fixed() {
+void FixedHierarchies_clear_fixed(void) {
     install_test_abort();
     ecs_world_t *world = ecs_mini();
 
@@ -3730,7 +3730,7 @@ void FixedHierarchies_clear_fixed() {
     ecs_clear(world, p_1_1);
 }
 
-void FixedHierarchies_make_fixed_1_lvl_w_name() {
+void FixedHierarchies_make_fixed_1_lvl_w_name(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t p = ecs_new_id(world);
@@ -3761,7 +3761,7 @@ void FixedHierarchies_make_fixed_1_lvl_w_name() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_make_fixed_2_lvl_w_name() {
+void FixedHierarchies_make_fixed_2_lvl_w_name(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t p = ecs_new_id(world);
@@ -3800,7 +3800,7 @@ void FixedHierarchies_make_fixed_2_lvl_w_name() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_make_fixed_1_lvl_w_name_keep_name() {
+void FixedHierarchies_make_fixed_1_lvl_w_name_keep_name(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t p = ecs_new_id(world);
@@ -3833,7 +3833,7 @@ void FixedHierarchies_make_fixed_1_lvl_w_name_keep_name() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_make_fixed_2_lvl_w_name_keep_name() {
+void FixedHierarchies_make_fixed_2_lvl_w_name_keep_name(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t p = ecs_new_id(world);
@@ -3874,7 +3874,7 @@ void FixedHierarchies_make_fixed_2_lvl_w_name_keep_name() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_make_fixed_2_lvl_lose_depth() {
+void FixedHierarchies_make_fixed_2_lvl_lose_depth(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t p = ecs_new_id(world);
@@ -3915,7 +3915,7 @@ void FixedHierarchies_make_fixed_2_lvl_lose_depth() {
     ecs_fini(world);
 }
 
-void FixedHierarchies_make_fixed_3_lvl_lose_depth() {
+void FixedHierarchies_make_fixed_3_lvl_lose_depth(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t p = ecs_new_id(world);

@@ -1,6 +1,6 @@
 #include <cpp_api.h>
 
-void Switch_add_case() {
+void Switch_add_case(void) {
     flecs::world world;
 
     auto Standing = world.entity("Standing");
@@ -20,7 +20,7 @@ void Switch_add_case() {
     test_assert(!e.has(Movement, Standing));
 }
 
-void Switch_get_case() {
+void Switch_get_case(void) {
     flecs::world world;
 
     auto Standing = world.entity("Standing");
@@ -34,7 +34,7 @@ void Switch_get_case() {
     test_assert(e.target(Movement) == Standing);
 }
 
-void Switch_system_w_case() {
+void Switch_system_w_case(void) {
     flecs::world world;
 
     auto Standing = world.entity("Standing");
@@ -64,7 +64,7 @@ void Switch_system_w_case() {
     test_int(count, 2);
 }
 
-void Switch_system_w_case_builder() {
+void Switch_system_w_case_builder(void) {
     flecs::world world;
 
     auto Standing = world.entity("Standing");
@@ -94,7 +94,7 @@ void Switch_system_w_case_builder() {
     test_int(count, 2);
 }
 
-void Switch_system_w_switch() {
+void Switch_system_w_switch(void) {
     flecs::world world;
 
     auto Standing = world.entity("Standing");
@@ -132,7 +132,7 @@ struct Movement { };
 struct Standing { };
 struct Walking { };
 
-void Switch_system_w_sw_type_builder() {
+void Switch_system_w_sw_type_builder(void) {
     flecs::world world;
 
     world.component<Movement>().add(flecs::Union);
@@ -160,7 +160,7 @@ void Switch_system_w_sw_type_builder() {
     test_int(count, 2);
 }
 
-void Switch_add_case_w_type() {
+void Switch_add_case_w_type(void) {
     flecs::world world;
 
     world.component<Movement>().add(flecs::Union);
@@ -174,7 +174,7 @@ void Switch_add_case_w_type() {
     test_assert((!e.has<Movement, Standing>()));
 }
 
-void Switch_add_switch_w_type() {
+void Switch_add_switch_w_type(void) {
     flecs::world world;
 
     world.component<Movement>().add(flecs::Union);
@@ -188,7 +188,7 @@ void Switch_add_switch_w_type() {
     test_assert((!e.has<Movement, Standing>()));
 }
 
-void Switch_add_remove_switch_w_type() {
+void Switch_add_remove_switch_w_type(void) {
     flecs::world world;
 
     world.component<Movement>().add(flecs::Union);
@@ -221,7 +221,7 @@ enum Color {
     Blue
 };
 
-void Switch_switch_enum_type() {
+void Switch_switch_enum_type(void) {
     flecs::world world;
 
     world.component<Color>().add(flecs::Union);

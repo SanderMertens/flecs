@@ -13,7 +13,7 @@ void Iter(ecs_iter_t *it) {
     }
 }
 
-void System_w_Empty_2_column_1_from_id() {
+void System_w_Empty_2_column_1_from_id(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -43,7 +43,7 @@ void System_w_Empty_2_column_1_from_id() {
     ecs_fini(world);
 }
 
-void System_w_Empty_3_column_2_from_id() {
+void System_w_Empty_3_column_2_from_id(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -85,7 +85,7 @@ void CheckColumnType(ecs_iter_t *it) {
     probe_iter(it);
 }
 
-void System_w_Empty_column_type() {
+void System_w_Empty_column_type(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);

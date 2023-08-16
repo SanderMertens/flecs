@@ -3,7 +3,7 @@
 #include <limits.h>
 #include <math.h>
 
-void SerializeEntityToJson_serialize_empty() {
+void SerializeEntityToJson_serialize_empty(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t e = ecs_new_id(world);
@@ -21,7 +21,7 @@ void SerializeEntityToJson_serialize_empty() {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_w_name() {
+void SerializeEntityToJson_serialize_w_name(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t e = ecs_new_entity(world, "Foo");
@@ -34,7 +34,7 @@ void SerializeEntityToJson_serialize_w_name() {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_w_name_1_tag() {
+void SerializeEntityToJson_serialize_w_name_1_tag(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -50,7 +50,7 @@ void SerializeEntityToJson_serialize_w_name_1_tag() {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_w_name_2_tags() {
+void SerializeEntityToJson_serialize_w_name_2_tags(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, TagA);
@@ -69,7 +69,7 @@ void SerializeEntityToJson_serialize_w_name_2_tags() {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_w_name_1_pair() {
+void SerializeEntityToJson_serialize_w_name_1_pair(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Rel);
@@ -87,7 +87,7 @@ void SerializeEntityToJson_serialize_w_name_1_pair() {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_w_base() {
+void SerializeEntityToJson_serialize_w_base(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, TagA);
@@ -113,7 +113,7 @@ void SerializeEntityToJson_serialize_w_base() {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_w_base_override() {
+void SerializeEntityToJson_serialize_w_base_override(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, TagA);
@@ -144,7 +144,7 @@ void SerializeEntityToJson_serialize_w_base_override() {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_w_2_base() {
+void SerializeEntityToJson_serialize_w_2_base(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, TagA);
@@ -171,7 +171,7 @@ void SerializeEntityToJson_serialize_w_2_base() {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_w_nested_base() {
+void SerializeEntityToJson_serialize_w_nested_base(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, TagA);
@@ -198,7 +198,7 @@ void SerializeEntityToJson_serialize_w_nested_base() {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_w_1_component() {
+void SerializeEntityToJson_serialize_w_1_component(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -228,7 +228,7 @@ void SerializeEntityToJson_serialize_w_1_component() {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_w_2_components() {
+void SerializeEntityToJson_serialize_w_2_components(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -266,7 +266,7 @@ void SerializeEntityToJson_serialize_w_2_components() {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_w_primitive_component() {
+void SerializeEntityToJson_serialize_w_primitive_component(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t e = ecs_new_entity(world, "Foo");
@@ -288,7 +288,7 @@ void SerializeEntityToJson_serialize_w_primitive_component() {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_w_enum_component() {
+void SerializeEntityToJson_serialize_w_enum_component(void) {
     typedef enum {
         Red, Green, Blue
     } Color;
@@ -323,7 +323,7 @@ void SerializeEntityToJson_serialize_w_enum_component() {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_w_struct_and_enum_component() {
+void SerializeEntityToJson_serialize_w_struct_and_enum_component(void) {
     typedef enum {
         Red, Green, Blue
     } Color;
@@ -369,7 +369,7 @@ void SerializeEntityToJson_serialize_w_struct_and_enum_component() {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_w_invalid_enum_component() {
+void SerializeEntityToJson_serialize_w_invalid_enum_component(void) {
     typedef enum {
         Red, Green, Blue
     } Color;
@@ -398,7 +398,7 @@ void SerializeEntityToJson_serialize_w_invalid_enum_component() {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_w_type_info() {
+void SerializeEntityToJson_serialize_w_type_info(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -430,7 +430,7 @@ void SerializeEntityToJson_serialize_w_type_info() {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_w_type_info_unit() {
+void SerializeEntityToJson_serialize_w_type_info_unit(void) {
     typedef struct {
         ecs_i32_t value;    
     } T;
@@ -474,7 +474,7 @@ void SerializeEntityToJson_serialize_w_type_info_unit() {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_w_type_info_unit_quantity() {
+void SerializeEntityToJson_serialize_w_type_info_unit_quantity(void) {
     typedef struct {
         ecs_i32_t value;    
     } T;
@@ -524,7 +524,7 @@ void SerializeEntityToJson_serialize_w_type_info_unit_quantity() {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_w_type_info_unit_over() {
+void SerializeEntityToJson_serialize_w_type_info_unit_over(void) {
     typedef struct {
         ecs_i32_t value;    
     } T;
@@ -583,7 +583,7 @@ void SerializeEntityToJson_serialize_w_type_info_unit_over() {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_wo_private() {
+void SerializeEntityToJson_serialize_wo_private(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -604,7 +604,7 @@ void SerializeEntityToJson_serialize_wo_private() {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_w_private() {
+void SerializeEntityToJson_serialize_w_private(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -629,7 +629,7 @@ void SerializeEntityToJson_serialize_w_private() {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_w_label() {
+void SerializeEntityToJson_serialize_w_label(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -655,7 +655,7 @@ void SerializeEntityToJson_serialize_w_label() {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_w_label_no_name() {
+void SerializeEntityToJson_serialize_w_label_no_name(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -694,7 +694,7 @@ void SerializeEntityToJson_serialize_w_label_no_name() {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_w_id_labels() {
+void SerializeEntityToJson_serialize_w_id_labels(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -722,7 +722,7 @@ void SerializeEntityToJson_serialize_w_id_labels() {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_w_brief() {
+void SerializeEntityToJson_serialize_w_brief(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -748,7 +748,7 @@ void SerializeEntityToJson_serialize_w_brief() {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_w_brief_no_brief() {
+void SerializeEntityToJson_serialize_w_brief_no_brief(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -772,7 +772,7 @@ void SerializeEntityToJson_serialize_w_brief_no_brief() {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_w_link() {
+void SerializeEntityToJson_serialize_w_link(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -798,7 +798,7 @@ void SerializeEntityToJson_serialize_w_link() {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_w_link_no_link() {
+void SerializeEntityToJson_serialize_w_link_no_link(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -822,7 +822,7 @@ void SerializeEntityToJson_serialize_w_link_no_link() {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_color() {
+void SerializeEntityToJson_serialize_color(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -848,7 +848,7 @@ void SerializeEntityToJson_serialize_color() {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_union_relationship() {
+void SerializeEntityToJson_serialize_union_relationship(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_ENTITY(world, Movement, Union);
@@ -873,7 +873,7 @@ void SerializeEntityToJson_serialize_union_relationship() {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_union_relationship_invalid_entity() {
+void SerializeEntityToJson_serialize_union_relationship_invalid_entity(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_ENTITY(world, Movement, Union);
@@ -896,7 +896,7 @@ void SerializeEntityToJson_serialize_union_relationship_invalid_entity() {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_union_relationship_invalid_entity_w_labels() {
+void SerializeEntityToJson_serialize_union_relationship_invalid_entity_w_labels(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_ENTITY(world, Movement, Union);
@@ -921,7 +921,7 @@ void SerializeEntityToJson_serialize_union_relationship_invalid_entity_w_labels(
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_w_union_property() {
+void SerializeEntityToJson_serialize_w_union_property(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_ENTITY(world, Movement, Union);
@@ -941,7 +941,7 @@ void SerializeEntityToJson_serialize_w_union_property() {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_union_relationship_w_labels() {
+void SerializeEntityToJson_serialize_union_relationship_w_labels(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_ENTITY(world, Movement, Union);
@@ -970,7 +970,7 @@ void SerializeEntityToJson_serialize_union_relationship_w_labels() {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_w_meta_ids() {
+void SerializeEntityToJson_serialize_w_meta_ids(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -1015,7 +1015,7 @@ void SerializeEntityToJson_serialize_w_meta_ids() {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_w_doc_w_quotes() {
+void SerializeEntityToJson_serialize_w_doc_w_quotes(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -1051,7 +1051,7 @@ void SerializeEntityToJson_serialize_w_doc_w_quotes() {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_from_core() {
+void SerializeEntityToJson_serialize_from_core(void) {
     ecs_world_t *world = ecs_init();
 
     char *json = ecs_entity_to_json(world, EcsWorld, NULL);
@@ -1062,7 +1062,7 @@ void SerializeEntityToJson_serialize_from_core() {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_w_1_alert() {
+void SerializeEntityToJson_serialize_w_1_alert(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, FlecsAlerts);
@@ -1105,7 +1105,7 @@ void SerializeEntityToJson_serialize_w_1_alert() {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_w_2_alerts() {
+void SerializeEntityToJson_serialize_w_2_alerts(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, FlecsAlerts);
@@ -1163,7 +1163,7 @@ void SerializeEntityToJson_serialize_w_2_alerts() {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_w_child_alerts() {
+void SerializeEntityToJson_serialize_w_child_alerts(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, FlecsAlerts);
@@ -1245,7 +1245,7 @@ void SerializeEntityToJson_serialize_w_child_alerts() {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_w_severity_filter_alert() {
+void SerializeEntityToJson_serialize_w_severity_filter_alert(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, FlecsAlerts);
@@ -1294,7 +1294,7 @@ void SerializeEntityToJson_serialize_w_severity_filter_alert() {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_w_alerts_not_imported() {
+void SerializeEntityToJson_serialize_w_alerts_not_imported(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1317,7 +1317,7 @@ void SerializeEntityToJson_serialize_w_alerts_not_imported() {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_w_alerts_no_message() {
+void SerializeEntityToJson_serialize_w_alerts_no_message(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, FlecsAlerts);
@@ -1360,7 +1360,7 @@ void SerializeEntityToJson_serialize_w_alerts_no_message() {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_refs_childof() {
+void SerializeEntityToJson_serialize_refs_childof(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Rel);
@@ -1396,7 +1396,7 @@ void SerializeEntityToJson_serialize_refs_childof() {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_refs_custom() {
+void SerializeEntityToJson_serialize_refs_custom(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Rel);
@@ -1432,7 +1432,7 @@ void SerializeEntityToJson_serialize_refs_custom() {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_refs_wildcard() {
+void SerializeEntityToJson_serialize_refs_wildcard(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Rel);

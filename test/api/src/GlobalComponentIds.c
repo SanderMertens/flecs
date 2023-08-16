@@ -25,11 +25,11 @@ ecs_entity_t create_tag_entity_w_entity(ecs_world_t *world) {
     return ecs_new_w_id(world, MyTag);
 }
 
-static ecs_entity_t return_entity() {
+static ecs_entity_t return_entity(void) {
     return MyEntity;
 }
 
-void GlobalComponentIds_declare() {
+void GlobalComponentIds_declare(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT_DEFINE(world, Position);
@@ -41,7 +41,7 @@ void GlobalComponentIds_declare() {
     ecs_fini(world);
 }
 
-void GlobalComponentIds_declare_w_entity() {
+void GlobalComponentIds_declare_w_entity(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT_DEFINE(world, Position);
@@ -53,7 +53,7 @@ void GlobalComponentIds_declare_w_entity() {
     ecs_fini(world);
 }
 
-void GlobalComponentIds_declare_2_world() {    
+void GlobalComponentIds_declare_2_world(void) {    
     ecs_world_t *world_1 = ecs_mini();
 
     ECS_COMPONENT_DEFINE(world_1, Position);
@@ -75,7 +75,7 @@ void GlobalComponentIds_declare_2_world() {
     ecs_fini(world_2);
 }
 
-void GlobalComponentIds_declare_tag() {
+void GlobalComponentIds_declare_tag(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG_DEFINE(world, MyTag);
@@ -87,7 +87,7 @@ void GlobalComponentIds_declare_tag() {
     ecs_fini(world);
 }
 
-void GlobalComponentIds_declare_tag_w_entity() {
+void GlobalComponentIds_declare_tag_w_entity(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG_DEFINE(world, MyTag);
@@ -99,7 +99,7 @@ void GlobalComponentIds_declare_tag_w_entity() {
     ecs_fini(world);
 }
 
-void GlobalComponentIds_declare_entity() {
+void GlobalComponentIds_declare_entity(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT_DEFINE(world, Position);
@@ -113,7 +113,7 @@ void GlobalComponentIds_declare_entity() {
     ecs_fini(world);
 }
 
-void GlobalComponentIds_reuse_300_component_ids() {
+void GlobalComponentIds_reuse_300_component_ids(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t *ids = ecs_os_malloc_n(ecs_entity_t, 300);

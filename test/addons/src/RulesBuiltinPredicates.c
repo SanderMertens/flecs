@@ -1,6 +1,6 @@
 #include <addons.h>
 
-void RulesBuiltinPredicates_this_eq_id() {
+void RulesBuiltinPredicates_this_eq_id(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ent = ecs_new_entity(world, "ent");
@@ -25,7 +25,7 @@ void RulesBuiltinPredicates_this_eq_id() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_this_eq_name() {
+void RulesBuiltinPredicates_this_eq_name(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ent = ecs_new_entity(world, "ent");
@@ -50,7 +50,7 @@ void RulesBuiltinPredicates_this_eq_name() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_this_eq_var() {
+void RulesBuiltinPredicates_this_eq_var(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_log_set_level(-4);
@@ -63,7 +63,7 @@ void RulesBuiltinPredicates_this_eq_var() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_this_eq_id_written() {
+void RulesBuiltinPredicates_this_eq_id_written(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, RelA);
@@ -97,7 +97,7 @@ void RulesBuiltinPredicates_this_eq_id_written() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_this_eq_id_written_no_match() {
+void RulesBuiltinPredicates_this_eq_id_written_no_match(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, RelA);
@@ -128,7 +128,7 @@ void RulesBuiltinPredicates_this_eq_id_written_no_match() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_this_eq_name_written() {
+void RulesBuiltinPredicates_this_eq_name_written(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, RelA);
@@ -162,7 +162,7 @@ void RulesBuiltinPredicates_this_eq_name_written() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_this_eq_name_written_no_match() {
+void RulesBuiltinPredicates_this_eq_name_written_no_match(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, RelA);
@@ -193,7 +193,7 @@ void RulesBuiltinPredicates_this_eq_name_written_no_match() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_this_eq_var_written() {
+void RulesBuiltinPredicates_this_eq_var_written(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, RelA);
@@ -230,7 +230,7 @@ void RulesBuiltinPredicates_this_eq_var_written() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_var_eq_id() {
+void RulesBuiltinPredicates_var_eq_id(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ent = ecs_new_entity(world, "ent");
@@ -258,7 +258,7 @@ void RulesBuiltinPredicates_var_eq_id() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_var_eq_name() {
+void RulesBuiltinPredicates_var_eq_name(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ent = ecs_new_entity(world, "ent");
@@ -286,7 +286,7 @@ void RulesBuiltinPredicates_var_eq_name() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_var_eq_var() {
+void RulesBuiltinPredicates_var_eq_var(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_log_set_level(-4);
@@ -299,7 +299,7 @@ void RulesBuiltinPredicates_var_eq_var() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_var_eq_id_written() {
+void RulesBuiltinPredicates_var_eq_id_written(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, RelA);
@@ -336,7 +336,7 @@ void RulesBuiltinPredicates_var_eq_id_written() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_var_eq_id_written_no_match() {
+void RulesBuiltinPredicates_var_eq_id_written_no_match(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, RelA);
@@ -370,7 +370,7 @@ void RulesBuiltinPredicates_var_eq_id_written_no_match() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_var_eq_name_written() {
+void RulesBuiltinPredicates_var_eq_name_written(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, RelA);
@@ -407,7 +407,7 @@ void RulesBuiltinPredicates_var_eq_name_written() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_var_eq_name_written_no_match() {
+void RulesBuiltinPredicates_var_eq_name_written_no_match(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, RelA);
@@ -441,7 +441,7 @@ void RulesBuiltinPredicates_var_eq_name_written_no_match() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_var_eq_var_written() {
+void RulesBuiltinPredicates_var_eq_var_written(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, RelA);
@@ -481,7 +481,7 @@ void RulesBuiltinPredicates_var_eq_var_written() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_this_neq_id() {
+void RulesBuiltinPredicates_this_neq_id(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -527,7 +527,7 @@ void RulesBuiltinPredicates_this_neq_id() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_this_neq_name() {
+void RulesBuiltinPredicates_this_neq_name(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -573,7 +573,7 @@ void RulesBuiltinPredicates_this_neq_name() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_this_neq_var() {
+void RulesBuiltinPredicates_this_neq_var(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_log_set_level(-4);
@@ -586,7 +586,7 @@ void RulesBuiltinPredicates_this_neq_var() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_this_neq_id_written() {
+void RulesBuiltinPredicates_this_neq_id_written(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, RelA);
@@ -628,7 +628,7 @@ void RulesBuiltinPredicates_this_neq_id_written() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_this_neq_id_written_no_match() {
+void RulesBuiltinPredicates_this_neq_id_written_no_match(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, RelA);
@@ -666,7 +666,7 @@ void RulesBuiltinPredicates_this_neq_id_written_no_match() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_this_neq_name_written() {
+void RulesBuiltinPredicates_this_neq_name_written(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, RelA);
@@ -708,7 +708,7 @@ void RulesBuiltinPredicates_this_neq_name_written() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_this_neq_name_written_no_match() {
+void RulesBuiltinPredicates_this_neq_name_written_no_match(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, RelA);
@@ -746,7 +746,7 @@ void RulesBuiltinPredicates_this_neq_name_written_no_match() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_this_neq_var_written() {
+void RulesBuiltinPredicates_this_neq_var_written(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, RelA);
@@ -792,7 +792,7 @@ void RulesBuiltinPredicates_this_neq_var_written() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_var_neq_id() {
+void RulesBuiltinPredicates_var_neq_id(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -841,7 +841,7 @@ void RulesBuiltinPredicates_var_neq_id() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_var_neq_name() {
+void RulesBuiltinPredicates_var_neq_name(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -890,7 +890,7 @@ void RulesBuiltinPredicates_var_neq_name() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_var_neq_var() {
+void RulesBuiltinPredicates_var_neq_var(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_log_set_level(-4);
@@ -903,7 +903,7 @@ void RulesBuiltinPredicates_var_neq_var() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_var_neq_id_written() {
+void RulesBuiltinPredicates_var_neq_id_written(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, RelA);
@@ -948,7 +948,7 @@ void RulesBuiltinPredicates_var_neq_id_written() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_var_neq_id_written_no_match() {
+void RulesBuiltinPredicates_var_neq_id_written_no_match(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, RelA);
@@ -989,7 +989,7 @@ void RulesBuiltinPredicates_var_neq_id_written_no_match() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_var_neq_name_written() {
+void RulesBuiltinPredicates_var_neq_name_written(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, RelA);
@@ -1034,7 +1034,7 @@ void RulesBuiltinPredicates_var_neq_name_written() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_var_neq_name_written_no_match() {
+void RulesBuiltinPredicates_var_neq_name_written_no_match(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, RelA);
@@ -1075,7 +1075,7 @@ void RulesBuiltinPredicates_var_neq_name_written_no_match() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_var_neq_var_written() {
+void RulesBuiltinPredicates_var_neq_var_written(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, RelA);
@@ -1124,7 +1124,7 @@ void RulesBuiltinPredicates_var_neq_var_written() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_this_2_neq_id() {
+void RulesBuiltinPredicates_this_2_neq_id(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -1172,7 +1172,7 @@ void RulesBuiltinPredicates_this_2_neq_id() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_this_2_neq_name() {
+void RulesBuiltinPredicates_this_2_neq_name(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -1220,7 +1220,7 @@ void RulesBuiltinPredicates_this_2_neq_name() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_var_2_neq_id() {
+void RulesBuiltinPredicates_var_2_neq_id(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -1271,7 +1271,7 @@ void RulesBuiltinPredicates_var_2_neq_id() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_var_2_neq_name() {
+void RulesBuiltinPredicates_var_2_neq_name(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -1322,7 +1322,7 @@ void RulesBuiltinPredicates_var_2_neq_name() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_this_2_neq_id_written() {
+void RulesBuiltinPredicates_this_2_neq_id_written(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, RelA);
@@ -1369,7 +1369,7 @@ void RulesBuiltinPredicates_this_2_neq_id_written() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_this_2_neq_name_written() {
+void RulesBuiltinPredicates_this_2_neq_name_written(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, RelA);
@@ -1416,7 +1416,7 @@ void RulesBuiltinPredicates_this_2_neq_name_written() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_var_2_neq_id_written() {
+void RulesBuiltinPredicates_var_2_neq_id_written(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, RelA);
@@ -1472,7 +1472,7 @@ void RulesBuiltinPredicates_var_2_neq_id_written() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_var_2_neq_name_written() {
+void RulesBuiltinPredicates_var_2_neq_name_written(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, RelA);
@@ -1528,7 +1528,7 @@ void RulesBuiltinPredicates_var_2_neq_name_written() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_this_2_or_id() {
+void RulesBuiltinPredicates_this_2_or_id(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, RelA);
@@ -1565,7 +1565,7 @@ void RulesBuiltinPredicates_this_2_or_id() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_this_2_or_name() {
+void RulesBuiltinPredicates_this_2_or_name(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, RelA);
@@ -1602,7 +1602,7 @@ void RulesBuiltinPredicates_this_2_or_name() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_var_2_or_id() {
+void RulesBuiltinPredicates_var_2_or_id(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, RelA);
@@ -1641,7 +1641,7 @@ void RulesBuiltinPredicates_var_2_or_id() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_var_2_or_name() {
+void RulesBuiltinPredicates_var_2_or_name(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, RelA);
@@ -1680,7 +1680,7 @@ void RulesBuiltinPredicates_var_2_or_name() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_this_2_or_id_written() {
+void RulesBuiltinPredicates_this_2_or_id_written(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, RelA);
@@ -1726,7 +1726,7 @@ void RulesBuiltinPredicates_this_2_or_id_written() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_this_2_or_name_written() {
+void RulesBuiltinPredicates_this_2_or_name_written(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, RelA);
@@ -1772,7 +1772,7 @@ void RulesBuiltinPredicates_this_2_or_name_written() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_var_2_or_id_written() {
+void RulesBuiltinPredicates_var_2_or_id_written(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, RelA);
@@ -1821,7 +1821,7 @@ void RulesBuiltinPredicates_var_2_or_id_written() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_var_2_or_name_written() {
+void RulesBuiltinPredicates_var_2_or_name_written(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, RelA);
@@ -1870,7 +1870,7 @@ void RulesBuiltinPredicates_var_2_or_name_written() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_this_match_eq() {
+void RulesBuiltinPredicates_this_match_eq(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -1916,7 +1916,7 @@ void RulesBuiltinPredicates_this_match_eq() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_var_match_eq() {
+void RulesBuiltinPredicates_var_match_eq(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -1969,7 +1969,7 @@ void RulesBuiltinPredicates_var_match_eq() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_this_match_eq_written() {
+void RulesBuiltinPredicates_this_match_eq_written(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -2024,7 +2024,7 @@ void RulesBuiltinPredicates_this_match_eq_written() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_var_match_eq_written() {
+void RulesBuiltinPredicates_var_match_eq_written(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -2087,7 +2087,7 @@ void RulesBuiltinPredicates_var_match_eq_written() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_this_match_neq() {
+void RulesBuiltinPredicates_this_match_neq(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -2134,7 +2134,7 @@ void RulesBuiltinPredicates_this_match_neq() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_var_match_neq() {
+void RulesBuiltinPredicates_var_match_neq(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -2184,7 +2184,7 @@ void RulesBuiltinPredicates_var_match_neq() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_this_match_neq_written() {
+void RulesBuiltinPredicates_this_match_neq_written(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -2237,7 +2237,7 @@ void RulesBuiltinPredicates_this_match_neq_written() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_var_match_neq_written() {
+void RulesBuiltinPredicates_var_match_neq_written(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -2293,7 +2293,7 @@ void RulesBuiltinPredicates_var_match_neq_written() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_this_match_2_neq() {
+void RulesBuiltinPredicates_this_match_2_neq(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -2340,7 +2340,7 @@ void RulesBuiltinPredicates_this_match_2_neq() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_var_match_2_neq() {
+void RulesBuiltinPredicates_var_match_2_neq(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -2389,7 +2389,7 @@ void RulesBuiltinPredicates_var_match_2_neq() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_this_match_2_neq_written() {
+void RulesBuiltinPredicates_this_match_2_neq_written(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -2442,7 +2442,7 @@ void RulesBuiltinPredicates_this_match_2_neq_written() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_var_match_2_neq_written() {
+void RulesBuiltinPredicates_var_match_2_neq_written(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -2497,7 +2497,7 @@ void RulesBuiltinPredicates_var_match_2_neq_written() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_this_match_2_or() {
+void RulesBuiltinPredicates_this_match_2_or(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -2537,7 +2537,7 @@ void RulesBuiltinPredicates_this_match_2_or() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_this_match_2_or_written() {
+void RulesBuiltinPredicates_this_match_2_or_written(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -2585,7 +2585,7 @@ void RulesBuiltinPredicates_this_match_2_or_written() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_this_match_3_or() {
+void RulesBuiltinPredicates_this_match_3_or(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -2630,7 +2630,7 @@ void RulesBuiltinPredicates_this_match_3_or() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_this_match_3_or_written() {
+void RulesBuiltinPredicates_this_match_3_or_written(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -2684,7 +2684,7 @@ void RulesBuiltinPredicates_this_match_3_or_written() {
     ecs_fini(world);
 }
 
-void RulesBuiltinPredicates_unresolved_by_name() {
+void RulesBuiltinPredicates_unresolved_by_name(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_rule_t *r = ecs_rule(world, {

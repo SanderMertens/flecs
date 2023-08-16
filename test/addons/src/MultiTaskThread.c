@@ -3,7 +3,7 @@
 static ECS_COMPONENT_DECLARE(Position);
 static ECS_DECLARE(Tag);
 
-void MultiTaskThread_setup() {
+void MultiTaskThread_setup(void) {
     ecs_log_set_level(-3);
 }
 
@@ -31,7 +31,7 @@ ecs_world_t* init_world(void) {
     return world;
 }
 
-void MultiTaskThread_2_thread_10_entity() {
+void MultiTaskThread_2_thread_10_entity(void) {
     ecs_world_t *world = init_world();
 
     int i, ENTITIES = 10, THREADS = 2;
@@ -59,7 +59,7 @@ void MultiTaskThread_2_thread_10_entity() {
 }
 
 
-void MultiTaskThread_2_thread_1_entity() {
+void MultiTaskThread_2_thread_1_entity(void) {
     ecs_world_t *world = init_world();
 
     int i, ENTITIES = 1, THREADS = 2;
@@ -86,7 +86,7 @@ void MultiTaskThread_2_thread_1_entity() {
     ecs_fini(world);
 }
 
-void MultiTaskThread_2_thread_2_entity() {
+void MultiTaskThread_2_thread_2_entity(void) {
     ecs_world_t *world = init_world();
 
     int i, ENTITIES = 2, THREADS = 2;
@@ -113,7 +113,7 @@ void MultiTaskThread_2_thread_2_entity() {
     ecs_fini(world);
 }
 
-void MultiTaskThread_2_thread_5_entity() {
+void MultiTaskThread_2_thread_5_entity(void) {
     ecs_world_t *world = init_world();
 
     int i, ENTITIES = 5, THREADS = 2;
@@ -141,7 +141,7 @@ void MultiTaskThread_2_thread_5_entity() {
 }
 
 
-void MultiTaskThread_3_thread_10_entity() {
+void MultiTaskThread_3_thread_10_entity(void) {
     ecs_world_t *world = init_world();
 
     int i, ENTITIES = 10, THREADS = 3;
@@ -169,7 +169,7 @@ void MultiTaskThread_3_thread_10_entity() {
 }
 
 
-void MultiTaskThread_3_thread_1_entity() {
+void MultiTaskThread_3_thread_1_entity(void) {
     ecs_world_t *world = init_world();
 
     int i, ENTITIES = 1, THREADS = 3;
@@ -197,7 +197,7 @@ void MultiTaskThread_3_thread_1_entity() {
 }
 
 
-void MultiTaskThread_3_thread_2_entity() {
+void MultiTaskThread_3_thread_2_entity(void) {
     ecs_world_t *world = init_world();
 
     int i, ENTITIES = 2, THREADS = 3;
@@ -225,7 +225,7 @@ void MultiTaskThread_3_thread_2_entity() {
 }
 
 
-void MultiTaskThread_3_thread_5_entity() {
+void MultiTaskThread_3_thread_5_entity(void) {
     ecs_world_t *world = init_world();
 
     int i, ENTITIES = 5, THREADS = 3;
@@ -253,7 +253,7 @@ void MultiTaskThread_3_thread_5_entity() {
 }
 
 
-void MultiTaskThread_4_thread_10_entity() {
+void MultiTaskThread_4_thread_10_entity(void) {
     ecs_world_t *world = init_world();
 
     int i, ENTITIES = 10, THREADS = 4;
@@ -281,7 +281,7 @@ void MultiTaskThread_4_thread_10_entity() {
 }
 
 
-void MultiTaskThread_4_thread_1_entity() {
+void MultiTaskThread_4_thread_1_entity(void) {
     ecs_world_t *world = init_world();
 
     int i, ENTITIES = 1, THREADS = 4;
@@ -309,7 +309,7 @@ void MultiTaskThread_4_thread_1_entity() {
 }
 
 
-void MultiTaskThread_4_thread_2_entity() {
+void MultiTaskThread_4_thread_2_entity(void) {
     ecs_world_t *world = init_world();
 
     int i, ENTITIES = 2, THREADS = 4;
@@ -337,7 +337,7 @@ void MultiTaskThread_4_thread_2_entity() {
 }
 
 
-void MultiTaskThread_4_thread_5_entity() {
+void MultiTaskThread_4_thread_5_entity(void) {
     ecs_world_t *world = init_world();
 
     int i, ENTITIES = 5, THREADS = 4;
@@ -365,7 +365,7 @@ void MultiTaskThread_4_thread_5_entity() {
 }
 
 
-void MultiTaskThread_5_thread_10_entity() {
+void MultiTaskThread_5_thread_10_entity(void) {
     ecs_world_t *world = init_world();
 
     int i, ENTITIES = 10, THREADS = 5;
@@ -393,7 +393,7 @@ void MultiTaskThread_5_thread_10_entity() {
 }
 
 
-void MultiTaskThread_5_thread_1_entity() {
+void MultiTaskThread_5_thread_1_entity(void) {
     ecs_world_t *world = init_world();
 
     int i, ENTITIES = 1, THREADS = 5;
@@ -421,7 +421,7 @@ void MultiTaskThread_5_thread_1_entity() {
 }
 
 
-void MultiTaskThread_5_thread_2_entity() {
+void MultiTaskThread_5_thread_2_entity(void) {
     ecs_world_t *world = init_world();
 
     int i, ENTITIES = 2, THREADS = 5;
@@ -449,7 +449,7 @@ void MultiTaskThread_5_thread_2_entity() {
 }
 
 
-void MultiTaskThread_5_thread_5_entity() {
+void MultiTaskThread_5_thread_5_entity(void) {
     ecs_world_t *world = init_world();
 
     int i, ENTITIES = 5, THREADS = 5;
@@ -477,7 +477,7 @@ void MultiTaskThread_5_thread_5_entity() {
 }
 
 
-void MultiTaskThread_6_thread_10_entity() {
+void MultiTaskThread_6_thread_10_entity(void) {
     ecs_world_t *world = init_world();
 
     int i, ENTITIES = 10, THREADS = 6;
@@ -505,7 +505,7 @@ void MultiTaskThread_6_thread_10_entity() {
 }
 
 
-void MultiTaskThread_6_thread_1_entity() {
+void MultiTaskThread_6_thread_1_entity(void) {
     ecs_world_t *world = init_world();
 
     int i, ENTITIES = 1, THREADS = 6;
@@ -533,7 +533,7 @@ void MultiTaskThread_6_thread_1_entity() {
 }
 
 
-void MultiTaskThread_6_thread_2_entity() {
+void MultiTaskThread_6_thread_2_entity(void) {
     ecs_world_t *world = init_world();
 
     int i, ENTITIES = 2, THREADS = 6;
@@ -560,7 +560,7 @@ void MultiTaskThread_6_thread_2_entity() {
     ecs_fini(world);
 }
 
-void MultiTaskThread_6_thread_5_entity() {
+void MultiTaskThread_6_thread_5_entity(void) {
     ecs_world_t *world = init_world();
 
     int i, ENTITIES = 5, THREADS = 6;
@@ -587,7 +587,7 @@ void MultiTaskThread_6_thread_5_entity() {
     ecs_fini(world);
 }
 
-void MultiTaskThread_2_thread_1_entity_instanced() {
+void MultiTaskThread_2_thread_1_entity_instanced(void) {
     ecs_world_t *world = ecs_init();
     ECS_COMPONENT_DEFINE(world, Position);
 
@@ -626,7 +626,7 @@ void MultiTaskThread_2_thread_1_entity_instanced() {
     ecs_fini(world);
 }
 
-void MultiTaskThread_2_thread_5_entity_instanced() {
+void MultiTaskThread_2_thread_5_entity_instanced(void) {
     ecs_world_t *world = ecs_init();
     ECS_COMPONENT_DEFINE(world, Position);
 
@@ -665,7 +665,7 @@ void MultiTaskThread_2_thread_5_entity_instanced() {
     ecs_fini(world);
 }
 
-void MultiTaskThread_2_thread_10_entity_instanced() {
+void MultiTaskThread_2_thread_10_entity_instanced(void) {
     ecs_world_t *world = ecs_init();
     ECS_COMPONENT_DEFINE(world, Position);
 
@@ -768,7 +768,7 @@ void test_combs_100_entity(int THREADS) {
     ecs_fini(world);    
 }
 
-void MultiTaskThread_2_thread_test_combs_100_entity_w_next_worker() {
+void MultiTaskThread_2_thread_test_combs_100_entity_w_next_worker(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT_DEFINE(world, Position);
@@ -805,23 +805,23 @@ void MultiTaskThread_2_thread_test_combs_100_entity_w_next_worker() {
     ecs_fini(world); 
 }
 
-void MultiTaskThread_2_thread_test_combs_100_entity() {
+void MultiTaskThread_2_thread_test_combs_100_entity(void) {
     test_combs_100_entity(2);
 }
 
-void MultiTaskThread_3_thread_test_combs_100_entity() {
+void MultiTaskThread_3_thread_test_combs_100_entity(void) {
     test_combs_100_entity(3);
 }
 
-void MultiTaskThread_4_thread_test_combs_100_entity() {
+void MultiTaskThread_4_thread_test_combs_100_entity(void) {
     test_combs_100_entity(4);
 }
 
-void MultiTaskThread_5_thread_test_combs_100_entity() {
+void MultiTaskThread_5_thread_test_combs_100_entity(void) {
     test_combs_100_entity(5);
 }
 
-void MultiTaskThread_6_thread_test_combs_100_entity() {
+void MultiTaskThread_6_thread_test_combs_100_entity(void) {
     test_combs_100_entity(6);
 }
 
@@ -868,27 +868,27 @@ void test_combs_100_entity_2_types(int THREADS) {
     ecs_fini(world);
 }
 
-void MultiTaskThread_2_thread_test_combs_100_entity_2_types() {
+void MultiTaskThread_2_thread_test_combs_100_entity_2_types(void) {
     test_combs_100_entity_2_types(2);
 }
 
-void MultiTaskThread_3_thread_test_combs_100_entity_2_types() {
+void MultiTaskThread_3_thread_test_combs_100_entity_2_types(void) {
     test_combs_100_entity_2_types(3);
 }
 
-void MultiTaskThread_4_thread_test_combs_100_entity_2_types() {
+void MultiTaskThread_4_thread_test_combs_100_entity_2_types(void) {
     test_combs_100_entity_2_types(4);
 }
 
-void MultiTaskThread_5_thread_test_combs_100_entity_2_types() {
+void MultiTaskThread_5_thread_test_combs_100_entity_2_types(void) {
     test_combs_100_entity_2_types(5);
 }
 
-void MultiTaskThread_6_thread_test_combs_100_entity_2_types() {
+void MultiTaskThread_6_thread_test_combs_100_entity_2_types(void) {
     test_combs_100_entity_2_types(6);
 }
 
-void MultiTaskThread_change_thread_count() {
+void MultiTaskThread_change_thread_count(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT_DEFINE(world, Position);
@@ -949,7 +949,7 @@ void QuitSystem(ecs_iter_t *it) {
     ecs_quit(it->world);
 }
 
-void MultiTaskThread_multithread_quit() {
+void MultiTaskThread_multithread_quit(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT_DEFINE(world, Position);
@@ -977,7 +977,7 @@ void MtTask(ecs_iter_t *it) {
     has_ran = true;
 }
 
-void MultiTaskThread_schedule_w_tasks() {
+void MultiTaskThread_schedule_w_tasks(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_SYSTEM(world, MtTask, EcsOnUpdate, 0);
@@ -1011,7 +1011,7 @@ void PeriodicDummySystem(ecs_iter_t * it) {
     }
 }
 
-void MultiTaskThread_reactive_system() {    
+void MultiTaskThread_reactive_system(void) {    
     ecs_world_t * world = ecs_init();
 
     ECS_COMPONENT_DEFINE(world, Position);        
@@ -1035,7 +1035,7 @@ void MultiTaskThread_reactive_system() {
     ecs_fini(world);
 }
 
-void MultiTaskThread_fini_after_set_threads() {
+void MultiTaskThread_fini_after_set_threads(void) {
     ecs_world_t * world = ecs_init();
 
     ecs_set_task_threads(world, 2);
@@ -1057,7 +1057,7 @@ void SingleThreadedSystem(ecs_iter_t * it) {
     }
 }
 
-void MultiTaskThread_2_threads_single_threaded_system() {
+void MultiTaskThread_2_threads_single_threaded_system(void) {
     ecs_world_t * world = ecs_init();
 
     ECS_COMPONENT_DEFINE(world, Position);        
@@ -1096,7 +1096,7 @@ void CreateQuery(ecs_iter_t *it) {
     create_query_invoked ++;
 }
 
-void MultiTaskThread_no_staging_w_multithread() {
+void MultiTaskThread_no_staging_w_multithread(void) {
     for (int i = 0; i < 10; i ++) {
         ecs_world_t *world = ecs_init();
 
@@ -1118,7 +1118,7 @@ void MultiTaskThread_no_staging_w_multithread() {
     test_assert(true);
 }
 
-void MultiTaskThread_multithread_w_monitor_addon() {
+void MultiTaskThread_multithread_w_monitor_addon(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsMonitor);
     ecs_set_task_threads(world, 4);
@@ -1159,7 +1159,7 @@ void System_run_w_binding_ctx(ecs_iter_t *it) {
     ecs_iter_fini(it);
 }
 
-void MultiTaskThread_get_ctx() {
+void MultiTaskThread_get_ctx(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_set_task_threads(world, 2);
@@ -1178,7 +1178,7 @@ void MultiTaskThread_get_ctx() {
     ecs_fini(world);
 }
 
-void MultiTaskThread_get_binding_ctx() {
+void MultiTaskThread_get_binding_ctx(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_set_task_threads(world, 2);
@@ -1197,7 +1197,7 @@ void MultiTaskThread_get_binding_ctx() {
     ecs_fini(world);
 }
 
-void MultiTaskThread_get_ctx_w_run() {
+void MultiTaskThread_get_ctx_w_run(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_set_task_threads(world, 2);
@@ -1216,7 +1216,7 @@ void MultiTaskThread_get_ctx_w_run() {
     ecs_fini(world);
 }
 
-void MultiTaskThread_get_binding_ctx_w_run() {
+void MultiTaskThread_get_binding_ctx_w_run(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_set_task_threads(world, 2);
@@ -1244,7 +1244,7 @@ void MultiTaskThread_sys_bulk_init(ecs_iter_t *it) {
     });
 }
 
-void MultiTaskThread_bulk_new_in_no_readonly_w_multithread() {
+void MultiTaskThread_bulk_new_in_no_readonly_w_multithread(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG_DEFINE(world, Tag);
@@ -1282,7 +1282,7 @@ void MultiTaskThread_sys_bulk_init_2(ecs_iter_t *it) {
     ecs_iter_fini(&qit);
 }
 
-void MultiTaskThread_bulk_new_in_no_readonly_w_multithread_2() {
+void MultiTaskThread_bulk_new_in_no_readonly_w_multithread_2(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT_DEFINE(world, Position);
@@ -1341,7 +1341,7 @@ static void dummy(ecs_iter_t *it) {
     ecs_os_ainc(&invoked_count);
 }
 
-void MultiTaskThread_run_first_worker_on_main() {
+void MultiTaskThread_run_first_worker_on_main(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_system(world, {
@@ -1362,7 +1362,7 @@ void MultiTaskThread_run_first_worker_on_main() {
     ecs_fini(world);
 }
 
-void MultiTaskThread_run_single_thread_on_main() {
+void MultiTaskThread_run_single_thread_on_main(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_system(world, {

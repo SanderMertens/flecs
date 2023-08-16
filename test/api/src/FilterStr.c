@@ -1,6 +1,6 @@
 #include <api.h>
 
-void FilterStr_one_term() {
+void FilterStr_one_term(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -20,7 +20,7 @@ void FilterStr_one_term() {
     ecs_fini(world);
 }
 
-void FilterStr_one_term_w_inout() {
+void FilterStr_one_term_w_inout(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -43,7 +43,7 @@ void FilterStr_one_term_w_inout() {
     ecs_fini(world);
 }
 
-void FilterStr_two_terms() {
+void FilterStr_two_terms(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -67,7 +67,7 @@ void FilterStr_two_terms() {
     ecs_fini(world);
 }
 
-void FilterStr_two_terms_w_inout() {
+void FilterStr_two_terms_w_inout(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -91,7 +91,7 @@ void FilterStr_two_terms_w_inout() {
     ecs_fini(world);
 }
 
-void FilterStr_three_terms_w_or() {
+void FilterStr_three_terms_w_or(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -117,7 +117,7 @@ void FilterStr_three_terms_w_or() {
     ecs_fini(world);
 }
 
-void FilterStr_three_terms_w_or_inout() {
+void FilterStr_three_terms_w_or_inout(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -143,7 +143,7 @@ void FilterStr_three_terms_w_or_inout() {
     ecs_fini(world);
 }
 
-void FilterStr_four_terms_three_w_or_inout() {
+void FilterStr_four_terms_three_w_or_inout(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -171,7 +171,7 @@ void FilterStr_four_terms_three_w_or_inout() {
     ecs_fini(world);
 }
 
-void FilterStr_one_term_w_pair() {
+void FilterStr_one_term_w_pair(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
@@ -192,7 +192,7 @@ void FilterStr_one_term_w_pair() {
     ecs_fini(world);
 }
 
-void FilterStr_one_term_w_pair_entity_src() {
+void FilterStr_one_term_w_pair_entity_src(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
@@ -214,7 +214,7 @@ void FilterStr_one_term_w_pair_entity_src() {
     ecs_fini(world);
 }
 
-void FilterStr_one_term_w_self() {
+void FilterStr_one_term_w_self(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
@@ -234,7 +234,7 @@ void FilterStr_one_term_w_self() {
     ecs_fini(world);
 }
 
-void FilterStr_one_term_w_up() {
+void FilterStr_one_term_w_up(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
@@ -254,7 +254,7 @@ void FilterStr_one_term_w_up() {
     ecs_fini(world);
 }
 
-void FilterStr_one_term_w_0() {
+void FilterStr_one_term_w_0(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
@@ -274,7 +274,7 @@ void FilterStr_one_term_w_0() {
     ecs_fini(world);
 }
 
-void FilterStr_one_term_w_singleton() {
+void FilterStr_one_term_w_singleton(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
@@ -294,7 +294,7 @@ void FilterStr_one_term_w_singleton() {
     ecs_fini(world);
 }
 
-void FilterStr_one_term_w_final_pair() {
+void FilterStr_one_term_w_final_pair(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Foo, Final);
@@ -314,7 +314,7 @@ void FilterStr_one_term_w_final_pair() {
     ecs_fini(world);
 }
 
-void FilterStr_one_term_w_final_dont_inherit_pair() {
+void FilterStr_one_term_w_final_dont_inherit_pair(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Foo, Final, DontInherit);
@@ -334,7 +334,7 @@ void FilterStr_one_term_w_final_dont_inherit_pair() {
     ecs_fini(world);
 }
 
-void FilterStr_one_term_w_src_var() {
+void FilterStr_one_term_w_src_var(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -354,7 +354,7 @@ void FilterStr_one_term_w_src_var() {
     ecs_fini(world);
 }
 
-void FilterStr_one_term_w_first_var() {
+void FilterStr_one_term_w_first_var(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_filter_t f = ECS_FILTER_INIT;
@@ -372,7 +372,7 @@ void FilterStr_one_term_w_first_var() {
     ecs_fini(world);
 }
 
-void FilterStr_one_term_w_second_var() {
+void FilterStr_one_term_w_second_var(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
@@ -392,7 +392,7 @@ void FilterStr_one_term_w_second_var() {
     ecs_fini(world);
 }
 
-void FilterStr_one_term_w_first_var_entity_src() {
+void FilterStr_one_term_w_first_var_entity_src(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Src);
@@ -412,7 +412,7 @@ void FilterStr_one_term_w_first_var_entity_src() {
     ecs_fini(world);
 }
 
-void FilterStr_one_term_w_pair_w_0_entity() {
+void FilterStr_one_term_w_pair_w_0_entity(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
@@ -437,7 +437,7 @@ void FilterStr_one_term_w_pair_w_0_entity() {
     ecs_fini(world);
 }
 
-void FilterStr_not_term() {
+void FilterStr_not_term(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -457,7 +457,7 @@ void FilterStr_not_term() {
     ecs_fini(world);
 }
 
-void FilterStr_wildcard_term() {
+void FilterStr_wildcard_term(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -477,7 +477,7 @@ void FilterStr_wildcard_term() {
     ecs_fini(world);
 }
 
-void FilterStr_scopes() {
+void FilterStr_scopes(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);

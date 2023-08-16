@@ -1,6 +1,6 @@
 #include <cpp_api.h>
 
-void Doc_set_brief() {
+void Doc_set_brief(void) {
     flecs::world ecs;
 
     auto e = ecs.entity("Foo");
@@ -12,7 +12,7 @@ void Doc_set_brief() {
     test_str(e.doc_brief(), "A brief description");
 }
 
-void Doc_set_name() {
+void Doc_set_name(void) {
     flecs::world ecs;
 
     auto e = ecs.entity("Foo");
@@ -24,7 +24,7 @@ void Doc_set_name() {
     test_str(e.doc_name(), "A name");
 }
 
-void Doc_set_link() {
+void Doc_set_link(void) {
     flecs::world ecs;
 
     auto e = ecs.entity("Foo");
@@ -36,7 +36,7 @@ void Doc_set_link() {
     test_str(e.doc_link(), "A link");
 }
 
-void Doc_set_color() {
+void Doc_set_color(void) {
     flecs::world ecs;
 
     auto e = ecs.entity("Foo");
@@ -48,7 +48,7 @@ void Doc_set_color() {
     test_str(e.doc_color(), "A color");
 }
 
-void Doc_get_name_no_doc_name() {
+void Doc_get_name_no_doc_name(void) {
     flecs::world ecs;
 
     auto e = ecs.entity("Foo");

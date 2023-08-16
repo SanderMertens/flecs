@@ -48,7 +48,7 @@ void Iter(ecs_iter_t *it) {
     }
 }
 
-void System_w_FromSystem_2_column_1_from_system() {
+void System_w_FromSystem_2_column_1_from_system(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -95,7 +95,7 @@ void System_w_FromSystem_2_column_1_from_system() {
     ecs_fini(world);
 }
 
-void System_w_FromSystem_3_column_2_from_system() {
+void System_w_FromSystem_3_column_2_from_system(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -179,7 +179,7 @@ void Iter_reactive(ecs_iter_t *it) {
 void Dummy_1(ecs_iter_t *it) { }
 void Dummy_2(ecs_iter_t *it) { }
 
-void System_w_FromSystem_auto_add_tag() {
+void System_w_FromSystem_auto_add_tag(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Foo);

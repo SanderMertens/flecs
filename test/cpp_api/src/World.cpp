@@ -1,6 +1,6 @@
 #include <cpp_api.h>
 
-void World_multi_world_empty() {
+void World_multi_world_empty(void) {
     flecs::world *w1 = new flecs::world();
     delete w1;
     flecs::world *w2 = new flecs::world();
@@ -75,7 +75,7 @@ namespace ns {
     int namespace_module::system_invoke_count = 0;
 }
 
-void World_builtin_components() {
+void World_builtin_components(void) {
     flecs::world ecs;
 
     test_assert(ecs.component<flecs::Component>() == ecs_id(EcsComponent));
@@ -91,7 +91,7 @@ void World_builtin_components() {
     test_assert(flecs::Query == EcsQuery);
 }
 
-void World_multi_world_component() {
+void World_multi_world_component(void) {
     flecs::world w1;
     flecs::world w2;
 
@@ -115,7 +115,7 @@ namespace A {
     };
 }
 
-void World_multi_world_component_namespace() {
+void World_multi_world_component_namespace(void) {
     flecs::world *w = new flecs::world();
     auto c = w->component<A::Comp>();
     auto id_1 = c.id();
@@ -130,7 +130,7 @@ void World_multi_world_component_namespace() {
     delete w;
 }
 
-void World_multi_world_module() {
+void World_multi_world_module(void) {
     flecs::world world1;
 	world1.import<ns::namespace_module>();
 
@@ -147,7 +147,7 @@ void World_multi_world_module() {
     test_int(ns::namespace_module::system_invoke_count, 2);
 }
 
-void World_multi_world_recycled_component() {
+void World_multi_world_recycled_component(void) {
     flecs::entity c;
     {
         flecs::world ecs;
@@ -164,7 +164,7 @@ void World_multi_world_recycled_component() {
     }
 }
 
-void World_multi_world_recycled_component_different_generation() {
+void World_multi_world_recycled_component_different_generation(void) {
     flecs::entity c;
     {
         flecs::world ecs;
@@ -186,7 +186,7 @@ void World_multi_world_recycled_component_different_generation() {
     }
 }
 
-void World_type_id() {
+void World_type_id(void) {
     flecs::world ecs;
 
     auto p = ecs.component<Position>();
@@ -194,7 +194,7 @@ void World_type_id() {
     test_assert(p.id() == flecs::type_id<Position>());
 }
 
-void World_different_comp_same_name() {
+void World_different_comp_same_name(void) {
     install_test_abort();
 
     flecs::world ecs;
@@ -205,7 +205,7 @@ void World_different_comp_same_name() {
     ecs.component<Velocity>("Position");
 }
 
-void World_reregister_after_reset() {
+void World_reregister_after_reset(void) {
     flecs::world ecs;
 
     auto p1 = ecs.component<Position>("Position");
@@ -218,7 +218,7 @@ void World_reregister_after_reset() {
     test_assert(p1.id() == p2.id());
 }
 
-void World_implicit_reregister_after_reset() {
+void World_implicit_reregister_after_reset(void) {
     flecs::world ecs;
 
     ecs.entity().add<Position>();
@@ -235,7 +235,7 @@ void World_implicit_reregister_after_reset() {
     test_assert(p_id_1 == p_id_2);
 }
 
-void World_reregister_after_reset_w_namespace() {
+void World_reregister_after_reset_w_namespace(void) {
     flecs::world ecs;
 
     ecs.component<ns::FooComp>();
@@ -252,7 +252,7 @@ void World_reregister_after_reset_w_namespace() {
     test_assert(p_id_1 == p_id_2);
 }
 
-void World_reregister_namespace() {
+void World_reregister_namespace(void) {
     flecs::world ecs;
 
     ecs.component<ns::FooComp>();
@@ -266,7 +266,7 @@ void World_reregister_namespace() {
     test_assert(p_id_1 == p_id_2);
 }
 
-void World_reregister_after_reset_different_name() {
+void World_reregister_after_reset_different_name(void) {
     install_test_abort();
 
     flecs::world ecs;
@@ -281,7 +281,7 @@ void World_reregister_after_reset_different_name() {
     ecs.component<Position>("Velocity");
 }
 
-void World_register_component_w_reset_in_multithreaded() {
+void World_register_component_w_reset_in_multithreaded(void) {
     flecs::world ecs;
 
     ecs.set_threads(2);
@@ -305,7 +305,7 @@ void World_register_component_w_reset_in_multithreaded() {
 
 struct Module { };
 
-void World_register_component_w_core_name() {
+void World_register_component_w_core_name(void) {
     flecs::world ecs;
 
     flecs::entity c = ecs.component<Module>();
@@ -317,7 +317,7 @@ template <typename T>
 struct Tmp { int32_t v; };
 struct Test { };
 
-void World_register_short_template() {
+void World_register_short_template(void) {
     flecs::world ecs;
 
     auto c = ecs.component<Tmp<Test>>();
@@ -330,7 +330,7 @@ void World_register_short_template() {
     test_int(ptr->alignment, 4);
 }
 
-void World_reimport() {
+void World_reimport(void) {
     flecs::world ecs;
 
     auto m1 = ecs.import<FooModule>();
@@ -340,7 +340,7 @@ void World_reimport() {
     test_assert(m1.id() == m2.id());
 }
 
-void World_reimport_module_after_reset() {
+void World_reimport_module_after_reset(void) {
     flecs::world ecs;
 
     auto m1 = ecs.import<FooModule>();
@@ -353,7 +353,7 @@ void World_reimport_module_after_reset() {
     test_assert(m1.id() == m2.id());
 }
 
-void World_reimport_module_new_world() {
+void World_reimport_module_new_world(void) {
     flecs::entity e1;
     {
         flecs::world ecs;
@@ -370,7 +370,7 @@ void World_reimport_module_new_world() {
     }
 }
 
-void World_reimport_namespaced_module() {
+void World_reimport_namespaced_module(void) {
     flecs::world ecs;
 
     test_int(ns::namespace_module::import_count, 0);
@@ -387,7 +387,7 @@ void World_reimport_namespaced_module() {
 }
 
 
-void World_c_interop_module() {
+void World_c_interop_module(void) {
     flecs::world ecs;
 
     ecs.import<test::interop::module>();
@@ -396,7 +396,7 @@ void World_c_interop_module() {
     test_assert(e_pos.id() != 0);
 }
 
-void World_c_interop_after_reset() {
+void World_c_interop_after_reset(void) {
     flecs::world ecs;
 
     ecs.import<test::interop::module>();
@@ -409,7 +409,7 @@ void World_c_interop_after_reset() {
     ecs.import<test::interop::module>();
 }
 
-void World_implicit_register_w_new_world() {
+void World_implicit_register_w_new_world(void) {
     {
         flecs::world ecs;
 
@@ -434,7 +434,7 @@ void World_implicit_register_w_new_world() {
     }    
 }
 
-void World_implicit_register_after_reset_register_w_custom_name() {
+void World_implicit_register_after_reset_register_w_custom_name(void) {
     flecs::world ecs;
 
     flecs::entity c = ecs.component<Position>("MyPosition");
@@ -447,7 +447,7 @@ void World_implicit_register_after_reset_register_w_custom_name() {
     test_assert(e.has(c));
 }
 
-void World_register_after_reset_register_w_custom_name() {
+void World_register_after_reset_register_w_custom_name(void) {
     flecs::world ecs;
 
     flecs::entity c1 = ecs.component<Position>("MyPosition");
@@ -459,7 +459,7 @@ void World_register_after_reset_register_w_custom_name() {
     test_str(c2.name(), "MyPosition");
 }
 
-void World_register_builtin_after_reset() {
+void World_register_builtin_after_reset(void) {
     flecs::world ecs;
 
     auto c1 = ecs.component<flecs::Component>();
@@ -472,7 +472,7 @@ void World_register_builtin_after_reset() {
     test_assert(c1 == c2);
 }
 
-void World_register_meta_after_reset() {
+void World_register_meta_after_reset(void) {
     flecs::world ecs;
 
     auto c1 = ecs.component<Position>();
@@ -486,7 +486,7 @@ void World_register_meta_after_reset() {
     test_assert(c1 == c2);
 }
 
-void World_count() {
+void World_count(void) {
     flecs::world ecs;
 
     test_int(ecs.count<Position>(), 0);
@@ -501,7 +501,7 @@ void World_count() {
     test_int(ecs.count<Position>(), 6);
 }
 
-void World_count_id() {
+void World_count_id(void) {
     flecs::world ecs;
 
     auto ent = ecs.entity();
@@ -518,7 +518,7 @@ void World_count_id() {
     test_int(ecs.count(ent), 6);
 }
 
-void World_count_pair() {
+void World_count_pair(void) {
     flecs::world ecs;
 
     auto parent = ecs.entity();
@@ -535,7 +535,7 @@ void World_count_pair() {
     test_int(ecs.count(flecs::ChildOf, parent), 6);
 }
 
-void World_count_pair_type_id() {
+void World_count_pair_type_id(void) {
     flecs::world ecs;
 
     struct Rel { };
@@ -554,7 +554,7 @@ void World_count_pair_type_id() {
     test_int(ecs.count<Rel>(parent), 6);
 }
 
-void World_count_pair_id() {
+void World_count_pair_id(void) {
     flecs::world ecs;
 
     struct Rel { };
@@ -574,7 +574,7 @@ void World_count_pair_id() {
     test_int(ecs.count(rel, parent), 6);
 }
 
-void World_staged_count() {
+void World_staged_count(void) {
     flecs::world ecs;
 
     flecs::world stage = ecs.get_stage(0);
@@ -601,7 +601,7 @@ void World_staged_count() {
     test_int(stage.count<Position>(), 6);
 }
 
-void World_async_stage_add() {
+void World_async_stage_add(void) {
     flecs::world ecs;
 
     ecs.component<Position>();
@@ -615,7 +615,7 @@ void World_async_stage_add() {
     test_assert(e.has<Position>());
 }
 
-void World_with_tag() {
+void World_with_tag(void) {
     flecs::world ecs;
 
     auto Tag = ecs.entity();
@@ -648,7 +648,7 @@ void World_with_tag() {
     count ++;
 }
 
-void World_with_tag_type() {
+void World_with_tag_type(void) {
     flecs::world ecs;
 
     struct Tag { };
@@ -681,7 +681,7 @@ void World_with_tag_type() {
     count ++;
 }
 
-void World_with_relation() {
+void World_with_relation(void) {
     flecs::world ecs;
 
     auto Likes = ecs.entity();
@@ -715,7 +715,7 @@ void World_with_relation() {
     count ++;
 }
 
-void World_with_relation_type() {
+void World_with_relation_type(void) {
     flecs::world ecs;
 
     struct Likes { };
@@ -749,7 +749,7 @@ void World_with_relation_type() {
     count ++;
 }
 
-void World_with_relation_object_type() {
+void World_with_relation_object_type(void) {
     flecs::world ecs;
 
     struct Likes { };
@@ -783,7 +783,7 @@ void World_with_relation_object_type() {
     count ++;
 }
 
-void World_with_scope() {
+void World_with_scope(void) {
     flecs::world ecs;
 
     auto parent = ecs.entity("P");
@@ -838,7 +838,7 @@ void World_with_scope() {
 
 struct ParentScope { };
 
-void World_with_scope_type() {
+void World_with_scope_type(void) {
     flecs::world ecs;
 
     ecs.scope<ParentScope>([&]{
@@ -853,7 +853,7 @@ void World_with_scope_type() {
     test_assert(child == parent.lookup("Child"));
 }
 
-void World_with_scope_type_staged() {
+void World_with_scope_type_staged(void) {
     flecs::world ecs;
 
     flecs::entity e;
@@ -875,7 +875,7 @@ void World_with_scope_type_staged() {
     test_assert(child == parent.lookup("Child"));
 }
 
-void World_with_scope_no_lambda() {
+void World_with_scope_no_lambda(void) {
     flecs::world ecs;
 
     auto parent = ecs.entity("Parent");
@@ -885,7 +885,7 @@ void World_with_scope_no_lambda() {
     test_assert(ecs.get_scope() == 0);
 }
 
-void World_with_scope_type_no_lambda() {
+void World_with_scope_type_no_lambda(void) {
     flecs::world ecs;
 
     auto child = ecs.scope<ParentScope>().entity("Child");
@@ -894,7 +894,7 @@ void World_with_scope_type_no_lambda() {
     test_assert(ecs.get_scope() == 0);
 }
 
-void World_with_tag_nested() {
+void World_with_tag_nested(void) {
     flecs::world ecs;
 
     auto Tier1 = ecs.entity();
@@ -915,7 +915,7 @@ void World_with_tag_nested() {
     test_assert(Tier3.has(Tier2));
 }
 
-void World_with_scope_nested() {
+void World_with_scope_nested(void) {
     flecs::world ecs;
 
     auto parent = ecs.entity("P");
@@ -946,7 +946,7 @@ void World_with_scope_nested() {
     test_assert(gchild.has(flecs::ChildOf, child));
 }
 
-void World_recursive_lookup() {
+void World_recursive_lookup(void) {
     flecs::world ecs;
 
     auto A = ecs.entity("A");
@@ -967,7 +967,7 @@ void World_recursive_lookup() {
     });
 }
 
-void World_type_w_tag_name() {
+void World_type_w_tag_name(void) {
     flecs::world ecs;
 
     auto c = ecs.component<Tag>();
@@ -976,7 +976,7 @@ void World_type_w_tag_name() {
     test_assert(c != flecs::Tag);
 }
 
-void World_entity_w_tag_name() {
+void World_entity_w_tag_name(void) {
     flecs::world ecs;
 
     auto c = ecs.entity("Tag");
@@ -988,7 +988,7 @@ void World_entity_w_tag_name() {
 template <typename T>
 struct TemplateType { };
 
-void World_template_component_name() {
+void World_template_component_name(void) {
     flecs::world ecs;
 
     auto c = ecs.component<TemplateType<Position>>();
@@ -1002,7 +1002,7 @@ struct TemplateType { };
 struct foo { };
 }
 
-void World_template_component_w_namespace_name() {
+void World_template_component_w_namespace_name(void) {
     flecs::world ecs;
 
     auto c = ecs.component<ns::TemplateType<Position>>();
@@ -1010,7 +1010,7 @@ void World_template_component_w_namespace_name() {
     test_str(c.path().c_str(), "::ns::TemplateType<Position>");
 }
 
-void World_template_component_w_namespace_name_and_namespaced_arg() {
+void World_template_component_w_namespace_name_and_namespaced_arg(void) {
     flecs::world ecs;
 
     auto c = ecs.component<ns::TemplateType<ns::foo>>();
@@ -1024,7 +1024,7 @@ struct foo { };
 struct bar { };
 }
 
-void World_template_component_w_same_namespace_name() {
+void World_template_component_w_same_namespace_name(void) {
     flecs::world ecs;
 
     auto c = ecs.component<foo::foo<Position>>();
@@ -1032,7 +1032,7 @@ void World_template_component_w_same_namespace_name() {
     test_str(c.path().c_str(), "::foo::foo<Position>");
 }
 
-void World_template_component_w_same_namespace_name_and_namespaced_arg() {
+void World_template_component_w_same_namespace_name_and_namespaced_arg(void) {
     flecs::world ecs;
 
     auto c = ecs.component<foo::foo<foo::bar>>();
@@ -1054,7 +1054,7 @@ struct module_w_template_component {
 };
 
 
-void World_template_component_from_module_2_args() {
+void World_template_component_from_module_2_args(void) {
     flecs::world ecs;
 
     auto m = ecs.import<module_w_template_component>();
@@ -1073,7 +1073,7 @@ void World_template_component_from_module_2_args() {
     test_assert(tid == mid);
 }
 
-void World_entity_as_tag() {
+void World_entity_as_tag(void) {
     flecs::world ecs;
 
     auto e = ecs.entity<Tag>();
@@ -1092,7 +1092,7 @@ void World_entity_as_tag() {
     test_str(e.name(), "Tag");
 }
 
-void World_entity_w_name_as_tag() {
+void World_entity_w_name_as_tag(void) {
     flecs::world ecs;
 
     auto e = ecs.entity<Tag>("Foo");
@@ -1111,7 +1111,7 @@ void World_entity_w_name_as_tag() {
     test_str(e.name(), "Foo");
 }
 
-void World_entity_as_component() {
+void World_entity_as_component(void) {
     flecs::world ecs;
 
     auto e = ecs.entity<Position>();
@@ -1130,7 +1130,7 @@ void World_entity_as_component() {
     test_str(e.name(), "Position");
 }
 
-void World_entity_w_name_as_component() {
+void World_entity_w_name_as_component(void) {
     flecs::world ecs;
 
     auto e = ecs.entity<Position>("Foo");
@@ -1149,7 +1149,7 @@ void World_entity_w_name_as_component() {
     test_str(e.name(), "Foo");
 }
 
-void World_entity_as_component_2_worlds() {
+void World_entity_as_component_2_worlds(void) {
     flecs::world ecs_1;
     auto e_1 = ecs_1.entity<Position>();
     test_assert(e_1.id() != 0);
@@ -1167,7 +1167,7 @@ struct Parent {
     struct Child { };
 };
 
-void World_entity_as_namespaced_component_2_worlds() {
+void World_entity_as_namespaced_component_2_worlds(void) {
     flecs::world ecs_1;
     auto e_1 = ecs_1.entity<Parent>();
     test_assert(e_1.id() != 0);
@@ -1191,7 +1191,7 @@ void World_entity_as_namespaced_component_2_worlds() {
     test_assert(e_2_1 == ecs_2.component<Parent::Child>());
 }
 
-void World_entity_as_component_2_worlds_implicit_namespaced() {
+void World_entity_as_component_2_worlds_implicit_namespaced(void) {
     flecs::world ecs_1;
     auto e_1 = ecs_1.entity<Parent>();
     test_assert(e_1.id() != 0);
@@ -1217,7 +1217,7 @@ struct PositionDerived : Position {
     PositionDerived(float x, float y) : Position{x, y} { }
 };
 
-void World_delete_with_id() {
+void World_delete_with_id(void) {
     flecs::world ecs;
 
     flecs::id tag = ecs.entity();
@@ -1232,7 +1232,7 @@ void World_delete_with_id() {
     test_assert(!e_3.is_alive());
 }
 
-void World_delete_with_type() {
+void World_delete_with_type(void) {
     flecs::world ecs;
 
     auto e_1 = ecs.entity().add<Tag>();
@@ -1246,7 +1246,7 @@ void World_delete_with_type() {
     test_assert(!e_3.is_alive());
 }
 
-void World_delete_with_pair() {
+void World_delete_with_pair(void) {
     flecs::world ecs;
 
     flecs::id rel = ecs.entity();
@@ -1262,7 +1262,7 @@ void World_delete_with_pair() {
     test_assert(!e_3.is_alive());
 }
 
-void World_delete_with_pair_type() {
+void World_delete_with_pair_type(void) {
     flecs::world ecs;
 
     struct Rel { };
@@ -1279,7 +1279,7 @@ void World_delete_with_pair_type() {
     test_assert(!e_3.is_alive());
 }
 
-void World_delete_with_implicit() {
+void World_delete_with_implicit(void) {
     flecs::world ecs;
 
     ecs.delete_with<Tag>();
@@ -1287,7 +1287,7 @@ void World_delete_with_implicit() {
     test_assert(true);
 }
 
-void World_delete_with_pair_implicit() {
+void World_delete_with_pair_implicit(void) {
     flecs::world ecs;
 
     struct Rel { };
@@ -1298,7 +1298,7 @@ void World_delete_with_pair_implicit() {
     test_assert(true);
 }
 
-void World_remove_all_id() {
+void World_remove_all_id(void) {
     flecs::world ecs;
 
     flecs::id tag_a = ecs.entity();
@@ -1320,7 +1320,7 @@ void World_remove_all_id() {
     test_assert(e_3.has(tag_b));
 }
 
-void World_remove_all_type() {
+void World_remove_all_type(void) {
     flecs::world ecs;
 
     auto e_1 = ecs.entity().add<Position>();
@@ -1340,7 +1340,7 @@ void World_remove_all_type() {
     test_assert(e_3.has<Velocity>());
 }
 
-void World_remove_all_pair() {
+void World_remove_all_pair(void) {
     flecs::world ecs;
 
     flecs::id rel = ecs.entity();
@@ -1363,7 +1363,7 @@ void World_remove_all_pair() {
     test_assert(e_3.has(rel, obj_b));
 }
 
-void World_remove_all_pair_type() {
+void World_remove_all_pair_type(void) {
     flecs::world ecs;
 
     struct Rel { };
@@ -1389,7 +1389,7 @@ void World_remove_all_pair_type() {
     test_assert((e_3.has<Rel, ObjB>()));
 }
 
-void World_remove_all_implicit() {
+void World_remove_all_implicit(void) {
     flecs::world ecs;
 
     ecs.remove_all<Tag>();
@@ -1397,7 +1397,7 @@ void World_remove_all_implicit() {
     test_assert(true);
 }
 
-void World_remove_all_pair_implicit() {
+void World_remove_all_pair_implicit(void) {
     flecs::world ecs;
 
     struct Rel { };
@@ -1408,7 +1408,7 @@ void World_remove_all_pair_implicit() {
     test_assert(true);
 }
 
-void World_get_scope() {
+void World_get_scope(void) {
     flecs::world ecs;
 
     auto e = ecs.entity("scope");
@@ -1420,7 +1420,7 @@ void World_get_scope() {
     test_str(s.name(), "scope");
 }
 
-void World_get_scope_type() {
+void World_get_scope_type(void) {
     flecs::world ecs;
 
     ecs.set_scope<ParentScope>();
@@ -1435,7 +1435,7 @@ struct Outer
     struct Inner { };
 };
 
-void World_register_namespace_after_component() {
+void World_register_namespace_after_component(void) {
     flecs::world ecs;
     auto inn = ecs.component<Outer::Inner>();
     auto out = ecs.component<Outer>();
@@ -1450,7 +1450,7 @@ void World_register_namespace_after_component() {
     test_str(out_sym, "Outer");
 }
 
-void World_is_alive() {
+void World_is_alive(void) {
     flecs::world ecs;
 
     auto e = ecs.entity();
@@ -1463,7 +1463,7 @@ void World_is_alive() {
     test_bool(ecs.is_alive(e), false);
 }
 
-void World_is_valid() {
+void World_is_valid(void) {
     flecs::world ecs;
 
     auto e = ecs.entity();
@@ -1477,7 +1477,7 @@ void World_is_valid() {
     test_bool(ecs.is_valid(e), false);
 }
 
-void World_exists() {
+void World_exists(void) {
     flecs::world ecs;
 
     auto e = ecs.entity();
@@ -1486,7 +1486,7 @@ void World_exists() {
     test_bool(ecs.exists(1000), false);
 }
 
-void World_get_alive() {
+void World_get_alive(void) {
     flecs::world ecs;
 
     auto e_1 = ecs.entity();
@@ -1501,7 +1501,7 @@ void World_get_alive() {
     test_assert(ecs.get_alive(e_no_gen) == e_2);
 }
 
-void World_ensure() {
+void World_ensure(void) {
     flecs::world ecs;
 
     auto e_1 = ecs.entity();
@@ -1519,7 +1519,7 @@ void World_ensure() {
     test_assert(e_3.is_alive());
 }
 
-void World_reset_all() {
+void World_reset_all(void) {
     flecs::entity pos, vel;
 
     {
@@ -1543,7 +1543,7 @@ void World_reset_all() {
     }
 }
 
-void World_get_tick() {
+void World_get_tick(void) {
     flecs::world ecs;
 
     test_int(ecs.get_info()->frame_count_total, 0);
@@ -1565,7 +1565,7 @@ namespace Nested {
     struct FromScope { };
 }
 
-void World_register_from_scope() {
+void World_register_from_scope(void) {
     flecs::world ecs;
 
     ecs.set_scope<Scope>();
@@ -1575,7 +1575,7 @@ void World_register_from_scope() {
     test_assert(c.has(flecs::ChildOf, ecs.id<Scope>()));
 }
 
-void World_register_nested_from_scope() {
+void World_register_nested_from_scope(void) {
     flecs::world ecs;
 
     ecs.set_scope<Scope>();
@@ -1585,7 +1585,7 @@ void World_register_nested_from_scope() {
     test_assert(c.has(flecs::ChildOf, ecs.id<Scope>()));
 }
 
-void World_register_w_root_name() {
+void World_register_w_root_name(void) {
     flecs::world ecs;
 
     auto c = ecs.component<Scope>("::Root");
@@ -1594,7 +1594,7 @@ void World_register_w_root_name() {
     test_str(c.path().c_str(), "::Root");
 }
 
-void World_register_nested_w_root_name() {
+void World_register_nested_w_root_name(void) {
     flecs::world ecs;
 
     auto c = ecs.component<Nested::FromScope>("::Root");
@@ -1603,7 +1603,7 @@ void World_register_nested_w_root_name() {
     test_str(c.path().c_str(), "::Root");
 }
 
-void World_set_lookup_path() {
+void World_set_lookup_path(void) {
     flecs::world ecs;
 
     auto parent = ecs.entity("Parent");
@@ -1623,7 +1623,7 @@ void World_set_lookup_path() {
     ecs.set_lookup_path(old_path);
 }
 
-void World_run_post_frame() {
+void World_run_post_frame(void) {
     flecs::world ecs;
 
     int ctx = 10;
@@ -1643,7 +1643,7 @@ void World_run_post_frame() {
     test_int(ctx, 11);
 }
 
-void World_component_w_low_id() {
+void World_component_w_low_id(void) {
     flecs::world ecs;
 
     flecs::entity p = ecs.component<Position>();
@@ -1651,7 +1651,7 @@ void World_component_w_low_id() {
     test_assert(p.id() < FLECS_HI_COMPONENT_ID);
 }
 
-void World_reregister_after_reset_w_hooks_and_in_use() {
+void World_reregister_after_reset_w_hooks_and_in_use(void) {
     flecs::world ecs;
 
     ecs.component<Pod>();
@@ -1667,7 +1667,7 @@ void World_reregister_after_reset_w_hooks_and_in_use() {
     test_int(2, Pod::ctor_invoked);
 }
 
-void World_reregister_after_reset_w_hooks_and_in_use_implicit() {
+void World_reregister_after_reset_w_hooks_and_in_use_implicit(void) {
     flecs::world ecs;
 
     ecs.component<Pod>();
@@ -1691,13 +1691,13 @@ void World_get_ref() {
     test_int(12, space->v);
 }
 
-void World_get_set_log_level() {
+void World_get_set_log_level(void) {
     test_int(flecs::log::get_level(), -1);
     flecs::log::set_level(4);
     test_int(flecs::log::get_level(), 4);
 }
 
-void World_reset_world() {
+void World_reset_world(void) {
     flecs::world ecs;
     flecs::entity e = ecs.entity();
 
@@ -1706,7 +1706,7 @@ void World_reset_world() {
     test_assert(!ecs.exists(e));
 }
 
-void World_id_from_pair_type() {
+void World_id_from_pair_type(void) {
     flecs::world ecs;
 
     flecs::id id = ecs.id<flecs::pair<Position, Velocity>>();

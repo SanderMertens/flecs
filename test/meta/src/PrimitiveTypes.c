@@ -47,7 +47,7 @@ meta_test_type(EcsF64, f64)
 meta_test_type(EcsString, string)
 meta_test_type(EcsEntity, entity)
 
-void PrimitiveTypes_bool() {
+void PrimitiveTypes_bool(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t t = ecs_set(world, 0, EcsPrimitive, {.kind = EcsBool});
@@ -58,7 +58,7 @@ void PrimitiveTypes_bool() {
     ecs_fini(world);
 }
 
-void PrimitiveTypes_byte() {
+void PrimitiveTypes_byte(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t t = ecs_set(world, 0, EcsPrimitive, {.kind = EcsByte});
@@ -69,7 +69,7 @@ void PrimitiveTypes_byte() {
     ecs_fini(world);
 }
 
-void PrimitiveTypes_char() {
+void PrimitiveTypes_char(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t t = ecs_set(world, 0, EcsPrimitive, {.kind = EcsChar});
@@ -80,7 +80,7 @@ void PrimitiveTypes_char() {
     ecs_fini(world);
 }
 
-void PrimitiveTypes_i8() {
+void PrimitiveTypes_i8(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t t = ecs_set(world, 0, EcsPrimitive, {.kind = EcsI8});
@@ -91,7 +91,7 @@ void PrimitiveTypes_i8() {
     ecs_fini(world);
 }
 
-void PrimitiveTypes_i16() {
+void PrimitiveTypes_i16(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t t = ecs_set(world, 0, EcsPrimitive, {.kind = EcsI16});
@@ -102,7 +102,7 @@ void PrimitiveTypes_i16() {
     ecs_fini(world);
 }
 
-void PrimitiveTypes_i32() {
+void PrimitiveTypes_i32(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t t = ecs_set(world, 0, EcsPrimitive, {.kind = EcsI32});
@@ -113,7 +113,7 @@ void PrimitiveTypes_i32() {
     ecs_fini(world);
 }
 
-void PrimitiveTypes_i64() {
+void PrimitiveTypes_i64(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t t = ecs_set(world, 0, EcsPrimitive, {.kind = EcsI64});
@@ -124,7 +124,7 @@ void PrimitiveTypes_i64() {
     ecs_fini(world);
 }
 
-void PrimitiveTypes_iptr() {
+void PrimitiveTypes_iptr(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t t = ecs_set(world, 0, EcsPrimitive, {.kind = EcsIPtr});
@@ -135,7 +135,7 @@ void PrimitiveTypes_iptr() {
     ecs_fini(world);
 }
 
-void PrimitiveTypes_u8() {
+void PrimitiveTypes_u8(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t t = ecs_set(world, 0, EcsPrimitive, {.kind = EcsU8});
@@ -146,7 +146,7 @@ void PrimitiveTypes_u8() {
     ecs_fini(world);
 }
 
-void PrimitiveTypes_u16() {
+void PrimitiveTypes_u16(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t t = ecs_set(world, 0, EcsPrimitive, {.kind = EcsU16});
@@ -157,7 +157,7 @@ void PrimitiveTypes_u16() {
     ecs_fini(world);
 }
 
-void PrimitiveTypes_u32() {
+void PrimitiveTypes_u32(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t t = ecs_set(world, 0, EcsPrimitive, {.kind = EcsU32});
@@ -168,7 +168,7 @@ void PrimitiveTypes_u32() {
     ecs_fini(world);
 }
 
-void PrimitiveTypes_u64() {
+void PrimitiveTypes_u64(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t t = ecs_set(world, 0, EcsPrimitive, {.kind = EcsU64});
@@ -179,7 +179,7 @@ void PrimitiveTypes_u64() {
     ecs_fini(world);
 }
 
-void PrimitiveTypes_uptr() {
+void PrimitiveTypes_uptr(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t t = ecs_set(world, 0, EcsPrimitive, {.kind = EcsUPtr});
@@ -190,7 +190,7 @@ void PrimitiveTypes_uptr() {
     ecs_fini(world);
 }
 
-void PrimitiveTypes_float() {
+void PrimitiveTypes_float(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t t = ecs_set(world, 0, EcsPrimitive, {.kind = EcsF32});
@@ -201,7 +201,7 @@ void PrimitiveTypes_float() {
     ecs_fini(world);
 }
 
-void PrimitiveTypes_double() {
+void PrimitiveTypes_double(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t t = ecs_set(world, 0, EcsPrimitive, {.kind = EcsF64});
@@ -212,7 +212,7 @@ void PrimitiveTypes_double() {
     ecs_fini(world);
 }
 
-void PrimitiveTypes_string() {
+void PrimitiveTypes_string(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t t = ecs_set(world, 0, EcsPrimitive, {.kind = EcsString});
@@ -223,7 +223,7 @@ void PrimitiveTypes_string() {
     ecs_fini(world);
 }
 
-void PrimitiveTypes_entity() {
+void PrimitiveTypes_entity(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t t = ecs_set(world, 0, EcsPrimitive, {.kind = EcsEntity});
@@ -234,7 +234,7 @@ void PrimitiveTypes_entity() {
     ecs_fini(world);
 }
 
-void PrimitiveTypes_builtin_bool() {
+void PrimitiveTypes_builtin_bool(void) {
     ecs_world_t *world = ecs_init();
 
     meta_test_builtin(world, bool);
@@ -242,7 +242,7 @@ void PrimitiveTypes_builtin_bool() {
     ecs_fini(world);
 }
 
-void PrimitiveTypes_builtin_byte() {
+void PrimitiveTypes_builtin_byte(void) {
     ecs_world_t *world = ecs_init();
 
     meta_test_builtin(world, byte);
@@ -250,7 +250,7 @@ void PrimitiveTypes_builtin_byte() {
     ecs_fini(world);
 }
 
-void PrimitiveTypes_builtin_char() {
+void PrimitiveTypes_builtin_char(void) {
     ecs_world_t *world = ecs_init();
 
     meta_test_builtin(world, char);
@@ -258,7 +258,7 @@ void PrimitiveTypes_builtin_char() {
     ecs_fini(world);
 }
 
-void PrimitiveTypes_builtin_i8() {
+void PrimitiveTypes_builtin_i8(void) {
     ecs_world_t *world = ecs_init();
 
     meta_test_builtin(world, i8);
@@ -266,7 +266,7 @@ void PrimitiveTypes_builtin_i8() {
     ecs_fini(world);
 }
 
-void PrimitiveTypes_builtin_i16() {
+void PrimitiveTypes_builtin_i16(void) {
     ecs_world_t *world = ecs_init();
 
     meta_test_builtin(world, i16);
@@ -274,7 +274,7 @@ void PrimitiveTypes_builtin_i16() {
     ecs_fini(world);
 }
 
-void PrimitiveTypes_builtin_i32() {
+void PrimitiveTypes_builtin_i32(void) {
     ecs_world_t *world = ecs_init();
 
     meta_test_builtin(world, i32);
@@ -282,7 +282,7 @@ void PrimitiveTypes_builtin_i32() {
     ecs_fini(world);
 }
 
-void PrimitiveTypes_builtin_i64() {
+void PrimitiveTypes_builtin_i64(void) {
     ecs_world_t *world = ecs_init();
 
     meta_test_builtin(world, i64);
@@ -290,7 +290,7 @@ void PrimitiveTypes_builtin_i64() {
     ecs_fini(world);
 }
 
-void PrimitiveTypes_builtin_iptr() {
+void PrimitiveTypes_builtin_iptr(void) {
     ecs_world_t *world = ecs_init();
 
     meta_test_builtin(world, iptr);
@@ -298,7 +298,7 @@ void PrimitiveTypes_builtin_iptr() {
     ecs_fini(world);
 }
 
-void PrimitiveTypes_builtin_u8() {
+void PrimitiveTypes_builtin_u8(void) {
     ecs_world_t *world = ecs_init();
 
     meta_test_builtin(world, u8);
@@ -306,7 +306,7 @@ void PrimitiveTypes_builtin_u8() {
     ecs_fini(world);
 }
 
-void PrimitiveTypes_builtin_u16() {
+void PrimitiveTypes_builtin_u16(void) {
     ecs_world_t *world = ecs_init();
 
     meta_test_builtin(world, i16);
@@ -314,7 +314,7 @@ void PrimitiveTypes_builtin_u16() {
     ecs_fini(world);
 }
 
-void PrimitiveTypes_builtin_u32() {
+void PrimitiveTypes_builtin_u32(void) {
     ecs_world_t *world = ecs_init();
 
     meta_test_builtin(world, u32);
@@ -322,7 +322,7 @@ void PrimitiveTypes_builtin_u32() {
     ecs_fini(world);
 }
 
-void PrimitiveTypes_builtin_u64() {
+void PrimitiveTypes_builtin_u64(void) {
     ecs_world_t *world = ecs_init();
 
     meta_test_builtin(world, u64);
@@ -330,7 +330,7 @@ void PrimitiveTypes_builtin_u64() {
     ecs_fini(world);
 }
 
-void PrimitiveTypes_builtin_uptr() {
+void PrimitiveTypes_builtin_uptr(void) {
     ecs_world_t *world = ecs_init();
 
     meta_test_builtin(world, uptr);
@@ -338,7 +338,7 @@ void PrimitiveTypes_builtin_uptr() {
     ecs_fini(world);
 }
 
-void PrimitiveTypes_builtin_float() {
+void PrimitiveTypes_builtin_float(void) {
     ecs_world_t *world = ecs_init();
 
     meta_test_builtin(world, f32);
@@ -346,7 +346,7 @@ void PrimitiveTypes_builtin_float() {
     ecs_fini(world);
 }
 
-void PrimitiveTypes_builtin_double() {
+void PrimitiveTypes_builtin_double(void) {
     ecs_world_t *world = ecs_init();
 
     meta_test_builtin(world, f64);
@@ -354,7 +354,7 @@ void PrimitiveTypes_builtin_double() {
     ecs_fini(world);
 }
 
-void PrimitiveTypes_builtin_string() {
+void PrimitiveTypes_builtin_string(void) {
     ecs_world_t *world = ecs_init();
 
     meta_test_builtin(world, string);
@@ -362,7 +362,7 @@ void PrimitiveTypes_builtin_string() {
     ecs_fini(world);
 }
 
-void PrimitiveTypes_builtin_entity() {
+void PrimitiveTypes_builtin_entity(void) {
     ecs_world_t *world = ecs_init();
 
     meta_test_builtin(world, entity);
@@ -398,75 +398,75 @@ void PrimitiveTypes_builtin_entity() {
 \
     ecs_fini(world);
 
-void PrimitiveTypes_struct_w_bool() {
+void PrimitiveTypes_struct_w_bool(void) {
     STRUCT_W_PRIMITIVE_TEST(ecs_bool_t)
 }
 
-void PrimitiveTypes_struct_w_byte() {
+void PrimitiveTypes_struct_w_byte(void) {
     STRUCT_W_PRIMITIVE_TEST(ecs_byte_t)
 }
 
-void PrimitiveTypes_struct_w_char() {
+void PrimitiveTypes_struct_w_char(void) {
     STRUCT_W_PRIMITIVE_TEST(ecs_char_t)
 }
 
-void PrimitiveTypes_struct_w_i8() {
+void PrimitiveTypes_struct_w_i8(void) {
     STRUCT_W_PRIMITIVE_TEST(ecs_i8_t)
 }
 
-void PrimitiveTypes_struct_w_i16() {
+void PrimitiveTypes_struct_w_i16(void) {
     STRUCT_W_PRIMITIVE_TEST(ecs_i16_t)
 }
 
-void PrimitiveTypes_struct_w_i32() {
+void PrimitiveTypes_struct_w_i32(void) {
     STRUCT_W_PRIMITIVE_TEST(ecs_i32_t)
 }
 
-void PrimitiveTypes_struct_w_i64() {
+void PrimitiveTypes_struct_w_i64(void) {
     STRUCT_W_PRIMITIVE_TEST(ecs_i64_t)
 }
 
-void PrimitiveTypes_struct_w_iptr() {
+void PrimitiveTypes_struct_w_iptr(void) {
     STRUCT_W_PRIMITIVE_TEST(ecs_iptr_t)
 }
 
-void PrimitiveTypes_struct_w_u8() {
+void PrimitiveTypes_struct_w_u8(void) {
     STRUCT_W_PRIMITIVE_TEST(ecs_u8_t)
 }
 
-void PrimitiveTypes_struct_w_u16() {
+void PrimitiveTypes_struct_w_u16(void) {
     STRUCT_W_PRIMITIVE_TEST(ecs_u16_t)
 }
 
-void PrimitiveTypes_struct_w_u32() {
+void PrimitiveTypes_struct_w_u32(void) {
     STRUCT_W_PRIMITIVE_TEST(ecs_u32_t)
 }
 
-void PrimitiveTypes_struct_w_u64() {
+void PrimitiveTypes_struct_w_u64(void) {
     STRUCT_W_PRIMITIVE_TEST(ecs_u64_t)
 }
 
-void PrimitiveTypes_struct_w_uptr() {
+void PrimitiveTypes_struct_w_uptr(void) {
     STRUCT_W_PRIMITIVE_TEST(ecs_uptr_t)
 }
 
-void PrimitiveTypes_struct_w_float() {
+void PrimitiveTypes_struct_w_float(void) {
     STRUCT_W_PRIMITIVE_TEST(ecs_f32_t)
 }
 
-void PrimitiveTypes_struct_w_double() {
+void PrimitiveTypes_struct_w_double(void) {
     STRUCT_W_PRIMITIVE_TEST(ecs_f64_t)
 }
 
-void PrimitiveTypes_struct_w_string() {
+void PrimitiveTypes_struct_w_string(void) {
     STRUCT_W_PRIMITIVE_TEST(ecs_string_t)
 }
 
-void PrimitiveTypes_struct_w_entity() {
+void PrimitiveTypes_struct_w_entity(void) {
     STRUCT_W_PRIMITIVE_TEST(ecs_entity_t)
 }
 
-void PrimitiveTypes_primitive_init() {
+void PrimitiveTypes_primitive_init(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t t = ecs_primitive_init(world, &(ecs_primitive_desc_t){
@@ -488,7 +488,7 @@ void PrimitiveTypes_primitive_init() {
     ecs_fini(world);
 }
 
-void PrimitiveTypes_primitive_w_short_notation() {
+void PrimitiveTypes_primitive_w_short_notation(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t t = ecs_primitive(world, {

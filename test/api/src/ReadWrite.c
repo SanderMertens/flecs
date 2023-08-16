@@ -1,6 +1,6 @@
 #include <api.h>
 
-void ReadWrite_read() {
+void ReadWrite_read(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -22,7 +22,7 @@ void ReadWrite_read() {
     ecs_fini(world);
 }
 
-void ReadWrite_nested_read() {
+void ReadWrite_nested_read(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -48,7 +48,7 @@ void ReadWrite_nested_read() {
     ecs_fini(world);
 }
 
-void ReadWrite_write() {
+void ReadWrite_write(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -71,7 +71,7 @@ void ReadWrite_write() {
     ecs_fini(world);
 }
 
-void ReadWrite_nested_write() {
+void ReadWrite_nested_write(void) {
     install_test_abort();
     ecs_world_t *world = ecs_mini();
 
@@ -87,7 +87,7 @@ void ReadWrite_nested_write() {
     ecs_write_begin(world, e);
 }
 
-void ReadWrite_add_while_read() {
+void ReadWrite_add_while_read(void) {
     install_test_abort();
     ecs_world_t *world = ecs_mini();
 
@@ -103,7 +103,7 @@ void ReadWrite_add_while_read() {
     ecs_add(world, e, Tag);
 }
 
-void ReadWrite_add_while_write() {
+void ReadWrite_add_while_write(void) {
     install_test_abort();
     ecs_world_t *world = ecs_mini();
 
@@ -119,7 +119,7 @@ void ReadWrite_add_while_write() {
     ecs_add(world, e, Tag);
 }
 
-void ReadWrite_read_from_stage() {
+void ReadWrite_read_from_stage(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -146,7 +146,7 @@ void ReadWrite_read_from_stage() {
     ecs_fini(world);
 }
 
-void ReadWrite_write_from_stage() {
+void ReadWrite_write_from_stage(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);

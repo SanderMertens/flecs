@@ -1,7 +1,7 @@
 #include <api.h>
 #include <stdlib.h>
 
-void Stresstests_setup() {
+void Stresstests_setup(void) {
     ecs_log_set_level(-3);
 }
 
@@ -184,7 +184,7 @@ void set_entity_random_components(
     ecs_fini(world);
 }
 
-void Stresstests_create_delete_entity_random_components() {
+void Stresstests_create_delete_entity_random_components(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -204,7 +204,7 @@ void Stresstests_create_delete_entity_random_components() {
     ecs_fini(world);
 }
 
-void Stresstests_set_entity_random_components() {
+void Stresstests_set_entity_random_components(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -232,39 +232,39 @@ void Stresstests_set_entity_random_components() {
     ecs_fini(world);
 }
 
-void Stresstests_create_delete_entity_random_components_staged() {
+void Stresstests_create_delete_entity_random_components_staged(void) {
     create_delete_entity_random_components_staged(0);
 }
 
-void Stresstests_set_entity_random_components_staged() {
+void Stresstests_set_entity_random_components_staged(void) {
     set_entity_random_components(0);
 }
 
-void Stresstests_create_delete_entity_random_components_2_threads() {
+void Stresstests_create_delete_entity_random_components_2_threads(void) {
     create_delete_entity_random_components_staged(2);
 }
 
-void Stresstests_set_entity_random_components_2_threads() {
+void Stresstests_set_entity_random_components_2_threads(void) {
     set_entity_random_components(2);
 }
 
-void Stresstests_create_delete_entity_random_components_6_threads() {
+void Stresstests_create_delete_entity_random_components_6_threads(void) {
     create_delete_entity_random_components_staged(6);
 }
 
-void Stresstests_set_entity_random_components_6_threads() {
+void Stresstests_set_entity_random_components_6_threads(void) {
     set_entity_random_components(6);
 }
 
-void Stresstests_create_delete_entity_random_components_12_threads() {
+void Stresstests_create_delete_entity_random_components_12_threads(void) {
     create_delete_entity_random_components_staged(12);
 }
 
-void Stresstests_set_entity_random_components_12_threads() {
+void Stresstests_set_entity_random_components_12_threads(void) {
     set_entity_random_components(12);
 }
 
-void Stresstests_create_2m_entities_1_comp() {
+void Stresstests_create_2m_entities_1_comp(void) {
     ecs_world_t *world = ecs_init();
     
     ECS_COMPONENT(world, Position);
@@ -279,7 +279,7 @@ void Stresstests_create_2m_entities_1_comp() {
     ecs_fini(world);
 }
 
-void Stresstests_create_2m_entities_bulk_1_comp() {
+void Stresstests_create_2m_entities_bulk_1_comp(void) {
     ecs_world_t *world = ecs_init();
     
     ECS_COMPONENT(world, Position);
@@ -295,7 +295,7 @@ void Stresstests_create_2m_entities_bulk_1_comp() {
     ecs_fini(world);
 }
 
-void Stresstests_add_1k_tags() {
+void Stresstests_add_1k_tags(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t e = ecs_new(world, 0);
@@ -313,7 +313,7 @@ void Stresstests_add_1k_tags() {
     ecs_fini(world);
 }
 
-void Stresstests_create_1m_set_two_components() {
+void Stresstests_create_1m_set_two_components(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);

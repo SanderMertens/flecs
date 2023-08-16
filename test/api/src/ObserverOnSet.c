@@ -61,7 +61,7 @@ void On_PV(ecs_iter_t *it) {
     }
 }
 
-void ObserverOnSet_set_1_of_1() {
+void ObserverOnSet_set_1_of_1(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -107,7 +107,7 @@ void ObserverOnSet_set_1_of_1() {
     ecs_fini(world);
 }
 
-void ObserverOnSet_set_1_of_2() {
+void ObserverOnSet_set_1_of_2(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -157,7 +157,7 @@ void ObserverOnSet_set_1_of_2() {
     ecs_fini(world);
 }
 
-void ObserverOnSet_set_1_of_3() {
+void ObserverOnSet_set_1_of_3(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -232,7 +232,7 @@ void ObserverOnSet_set_1_of_3() {
     ecs_fini(world);
 }
 
-void ObserverOnSet_set_1_of_2_1_from_base() {
+void ObserverOnSet_set_1_of_2_1_from_base(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -265,7 +265,7 @@ void ObserverOnSet_set_1_of_2_1_from_base() {
     ecs_fini(world);
 }
 
-void ObserverOnSet_set_1_of_3_1_from_base() {
+void ObserverOnSet_set_1_of_3_1_from_base(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -321,7 +321,7 @@ void ObserverOnSet_set_1_of_3_1_from_base() {
     ecs_fini(world);
 }
 
-void ObserverOnSet_add_base() {
+void ObserverOnSet_add_base(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -351,7 +351,7 @@ void ObserverOnSet_add_base() {
     ecs_fini(world);
 }
 
-void ObserverOnSet_add_base_to_1_overridden() {
+void ObserverOnSet_add_base_to_1_overridden(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -370,7 +370,7 @@ void ObserverOnSet_add_base_to_1_overridden() {
     ecs_fini(world);
 }
 
-void ObserverOnSet_add_base_to_2_overridden() {
+void ObserverOnSet_add_base_to_2_overridden(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -391,7 +391,7 @@ void ObserverOnSet_add_base_to_2_overridden() {
     ecs_fini(world);
 }
 
-void ObserverOnSet_add_base_to_1_of_2_overridden() {
+void ObserverOnSet_add_base_to_1_of_2_overridden(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -427,7 +427,7 @@ void ObserverOnSet_add_base_to_1_of_2_overridden() {
     ecs_fini(world);
 }
 
-void ObserverOnSet_on_set_after_remove_override() {
+void ObserverOnSet_on_set_after_remove_override(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -458,7 +458,7 @@ void ObserverOnSet_on_set_after_remove_override() {
     ecs_fini(world);
 }
 
-void ObserverOnSet_no_set_after_remove_base() {
+void ObserverOnSet_no_set_after_remove_base(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -481,7 +481,7 @@ void ObserverOnSet_no_set_after_remove_base() {
     ecs_fini(world);
 }
 
-void ObserverOnSet_un_set_after_remove() {
+void ObserverOnSet_un_set_after_remove(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -499,7 +499,7 @@ void ObserverOnSet_un_set_after_remove() {
     ecs_fini(world);
 }
 
-void ObserverOnSet_un_set_after_remove_base() {
+void ObserverOnSet_un_set_after_remove_base(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -521,7 +521,7 @@ void ObserverOnSet_un_set_after_remove_base() {
     ecs_fini(world);
 }
 
-void ObserverOnSet_add_to_current_in_on_set() {
+void ObserverOnSet_add_to_current_in_on_set(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -559,7 +559,7 @@ void ObserverOnSet_add_to_current_in_on_set() {
     ecs_fini(world);
 }
 
-void ObserverOnSet_remove_from_current_in_on_set() {
+void ObserverOnSet_remove_from_current_in_on_set(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -601,7 +601,7 @@ void ObserverOnSet_remove_from_current_in_on_set() {
     ecs_fini(world);
 }
 
-void ObserverOnSet_remove_set_component_in_on_set() {
+void ObserverOnSet_remove_set_component_in_on_set(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -631,7 +631,7 @@ void ObserverOnSet_remove_set_component_in_on_set() {
     ecs_fini(world);
 }
 
-void ObserverOnSet_match_table_created_w_add_in_on_set() {
+void ObserverOnSet_match_table_created_w_add_in_on_set(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -667,7 +667,7 @@ void ObserverOnSet_match_table_created_w_add_in_on_set() {
     ecs_fini(world);
 }
 
-void ObserverOnSet_set_optional() {
+void ObserverOnSet_set_optional(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -699,7 +699,7 @@ void ObserverOnSet_set_optional() {
     ecs_fini(world);
 }
 
-void ObserverOnSet_set_from_nothing() {
+void ObserverOnSet_set_from_nothing(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -739,7 +739,7 @@ void Add0(ecs_iter_t *it) {
     }
 }
 
-void ObserverOnSet_add_0_entity_in_on_set() {
+void ObserverOnSet_add_0_entity_in_on_set(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -762,7 +762,7 @@ void Dummy(ecs_iter_t *it) {
     dummy_invoked ++;
 }
 
-void ObserverOnSet_on_set_prefab() {
+void ObserverOnSet_on_set_prefab(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);

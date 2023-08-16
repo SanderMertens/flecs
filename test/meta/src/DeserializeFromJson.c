@@ -1,6 +1,6 @@
 #include <meta.h>
 
-void DeserializeFromJson_struct_bool() {
+void DeserializeFromJson_struct_bool(void) {
     typedef struct {
         bool v;
     } T;
@@ -27,7 +27,7 @@ void DeserializeFromJson_struct_bool() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_struct_byte() {
+void DeserializeFromJson_struct_byte(void) {
     typedef struct {
         ecs_byte_t v;
     } T;
@@ -54,7 +54,7 @@ void DeserializeFromJson_struct_byte() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_struct_char() {
+void DeserializeFromJson_struct_char(void) {
     typedef struct {
         ecs_char_t v;
     } T;
@@ -81,7 +81,7 @@ void DeserializeFromJson_struct_char() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_struct_char_literal() {
+void DeserializeFromJson_struct_char_literal(void) {
     typedef struct {
         ecs_char_t v;
     } T;
@@ -108,7 +108,7 @@ void DeserializeFromJson_struct_char_literal() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_struct_i8() {
+void DeserializeFromJson_struct_i8(void) {
     typedef struct {
         ecs_i8_t v;
     } T;
@@ -135,7 +135,7 @@ void DeserializeFromJson_struct_i8() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_struct_i16() {
+void DeserializeFromJson_struct_i16(void) {
     typedef struct {
         ecs_i16_t v;
     } T;
@@ -162,7 +162,7 @@ void DeserializeFromJson_struct_i16() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_struct_i32() {
+void DeserializeFromJson_struct_i32(void) {
     typedef struct {
         ecs_i32_t v;
     } T;
@@ -189,7 +189,7 @@ void DeserializeFromJson_struct_i32() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_struct_i64() {
+void DeserializeFromJson_struct_i64(void) {
     typedef struct {
         ecs_i64_t v;
     } T;
@@ -216,7 +216,7 @@ void DeserializeFromJson_struct_i64() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_struct_iptr() {
+void DeserializeFromJson_struct_iptr(void) {
     typedef struct {
         ecs_iptr_t v;
     } T;
@@ -243,7 +243,7 @@ void DeserializeFromJson_struct_iptr() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_struct_u8() {
+void DeserializeFromJson_struct_u8(void) {
     typedef struct {
         ecs_u8_t v;
     } T;
@@ -270,7 +270,7 @@ void DeserializeFromJson_struct_u8() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_struct_u16() {
+void DeserializeFromJson_struct_u16(void) {
     typedef struct {
         ecs_u16_t v;
     } T;
@@ -297,7 +297,7 @@ void DeserializeFromJson_struct_u16() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_struct_u32() {
+void DeserializeFromJson_struct_u32(void) {
     typedef struct {
         ecs_u32_t v;
     } T;
@@ -324,7 +324,7 @@ void DeserializeFromJson_struct_u32() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_struct_u64() {
+void DeserializeFromJson_struct_u64(void) {
     typedef struct {
         ecs_u64_t v;
     } T;
@@ -351,7 +351,7 @@ void DeserializeFromJson_struct_u64() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_struct_uptr() {
+void DeserializeFromJson_struct_uptr(void) {
     typedef struct {
         ecs_uptr_t v;
     } T;
@@ -378,7 +378,7 @@ void DeserializeFromJson_struct_uptr() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_struct_float() {
+void DeserializeFromJson_struct_float(void) {
     typedef struct {
         ecs_f32_t v;
     } T;
@@ -405,7 +405,7 @@ void DeserializeFromJson_struct_float() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_struct_double() {
+void DeserializeFromJson_struct_double(void) {
     typedef struct {
         ecs_f64_t v;
     } T;
@@ -432,7 +432,7 @@ void DeserializeFromJson_struct_double() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_struct_negative_int() {
+void DeserializeFromJson_struct_negative_int(void) {
     typedef struct {
         ecs_i32_t v;
     } T;
@@ -459,7 +459,7 @@ void DeserializeFromJson_struct_negative_int() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_struct_negative_float() {
+void DeserializeFromJson_struct_negative_float(void) {
     typedef struct {
         ecs_f32_t v;
     } T;
@@ -486,7 +486,7 @@ void DeserializeFromJson_struct_negative_float() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_struct_string() {
+void DeserializeFromJson_struct_string(void) {
     typedef struct {
         char* v;
     } T;
@@ -515,7 +515,7 @@ void DeserializeFromJson_struct_string() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_struct_entity() {
+void DeserializeFromJson_struct_entity(void) {
     typedef struct {
         ecs_entity_t v;
     } T;
@@ -542,7 +542,7 @@ void DeserializeFromJson_struct_entity() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_struct_enum() {
+void DeserializeFromJson_struct_enum(void) {
     typedef enum {
         Red, Blue, Green
     } E;
@@ -601,7 +601,7 @@ void DeserializeFromJson_struct_enum() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_struct_bitmask() {
+void DeserializeFromJson_struct_bitmask(void) {
     uint32_t Lettuce = 0x1;
     uint32_t Bacon =   0x1 << 1;
     uint32_t Tomato =  0x1 << 2;
@@ -675,7 +675,7 @@ void DeserializeFromJson_struct_bitmask() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_struct_i32_i32() {
+void DeserializeFromJson_struct_i32_i32(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -705,7 +705,7 @@ void DeserializeFromJson_struct_i32_i32() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_struct_nested_i32() {
+void DeserializeFromJson_struct_nested_i32(void) {
     typedef struct {
         ecs_i32_t x;
     } N1;
@@ -741,7 +741,7 @@ void DeserializeFromJson_struct_nested_i32() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_struct_nested_i32_i32() {
+void DeserializeFromJson_struct_nested_i32_i32(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -780,7 +780,7 @@ void DeserializeFromJson_struct_nested_i32_i32() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_struct_2_nested_i32_i32() {
+void DeserializeFromJson_struct_2_nested_i32_i32(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -825,7 +825,7 @@ void DeserializeFromJson_struct_2_nested_i32_i32() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_struct_i32_array_3() {
+void DeserializeFromJson_struct_i32_array_3(void) {
     typedef struct {
         ecs_entity_t x[3];
     } T;
@@ -858,7 +858,7 @@ void DeserializeFromJson_struct_i32_array_3() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_struct_struct_i32_array_3() {
+void DeserializeFromJson_struct_struct_i32_array_3(void) {
     typedef struct {
         ecs_i32_t x;
     } N1;
@@ -896,7 +896,7 @@ void DeserializeFromJson_struct_struct_i32_array_3() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_struct_struct_i32_i32_array_3() {
+void DeserializeFromJson_struct_struct_i32_i32_array_3(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -941,7 +941,7 @@ void DeserializeFromJson_struct_struct_i32_i32_array_3() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_struct_w_array_type_i32_i32() {
+void DeserializeFromJson_struct_w_array_type_i32_i32(void) {
     typedef int32_t N1[2];
 
     typedef struct {
@@ -975,7 +975,7 @@ void DeserializeFromJson_struct_w_array_type_i32_i32() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_struct_w_2_array_type_i32_i32() {
+void DeserializeFromJson_struct_w_2_array_type_i32_i32(void) {
     typedef int32_t N1[2];
 
     typedef struct {
@@ -1013,7 +1013,7 @@ void DeserializeFromJson_struct_w_2_array_type_i32_i32() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_struct_w_nested_member_i32() {
+void DeserializeFromJson_struct_w_nested_member_i32(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Point) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -1048,7 +1048,7 @@ void DeserializeFromJson_struct_w_nested_member_i32() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_struct_w_2_nested_members_i32() {
+void DeserializeFromJson_struct_w_2_nested_members_i32(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Point) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -1087,7 +1087,7 @@ void DeserializeFromJson_struct_w_2_nested_members_i32() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_struct_w_nested_members_struct() {
+void DeserializeFromJson_struct_w_nested_members_struct(void) {
     ecs_world_t *world = ecs_init();
 
     typedef struct {
@@ -1138,7 +1138,7 @@ void DeserializeFromJson_struct_w_nested_members_struct() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_struct_w_2_nested_members_struct() {
+void DeserializeFromJson_struct_w_2_nested_members_struct(void) {
     ecs_world_t *world = ecs_init();
 
     typedef struct {
@@ -1193,7 +1193,7 @@ void DeserializeFromJson_struct_w_2_nested_members_struct() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_deser_entity_1_component_1_member() {
+void DeserializeFromJson_deser_entity_1_component_1_member(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -1219,7 +1219,7 @@ void DeserializeFromJson_deser_entity_1_component_1_member() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_deser_entity_1_component_1_member_w_spaces() {
+void DeserializeFromJson_deser_entity_1_component_1_member_w_spaces(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -1245,7 +1245,7 @@ void DeserializeFromJson_deser_entity_1_component_1_member_w_spaces() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_deser_entity_1_component_2_members() {
+void DeserializeFromJson_deser_entity_1_component_2_members(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -1272,7 +1272,7 @@ void DeserializeFromJson_deser_entity_1_component_2_members() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_deser_entity_2_components() {
+void DeserializeFromJson_deser_entity_2_components(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -1319,7 +1319,7 @@ void DeserializeFromJson_deser_entity_2_components() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_deser_entity_1_component_composite_member() {
+void DeserializeFromJson_deser_entity_1_component_composite_member(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Point) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -1358,7 +1358,7 @@ void DeserializeFromJson_deser_entity_1_component_composite_member() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_deser_entity_1_component_nested_member() {
+void DeserializeFromJson_deser_entity_1_component_nested_member(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Point) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -1397,7 +1397,7 @@ void DeserializeFromJson_deser_entity_1_component_nested_member() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_deser_entity_1_pair() {
+void DeserializeFromJson_deser_entity_1_pair(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tgt);
@@ -1426,7 +1426,7 @@ void DeserializeFromJson_deser_entity_1_pair() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_deser_entity_2_pairs() {
+void DeserializeFromJson_deser_entity_2_pairs(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tgt);
@@ -1475,7 +1475,7 @@ void DeserializeFromJson_deser_entity_2_pairs() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_deser_entity_empty() {
+void DeserializeFromJson_deser_entity_empty(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t e = ecs_new_id(world);
@@ -1485,7 +1485,7 @@ void DeserializeFromJson_deser_entity_empty() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_deser_entity_w_path() {
+void DeserializeFromJson_deser_entity_w_path(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t e = ecs_new_id(world);
@@ -1496,7 +1496,7 @@ void DeserializeFromJson_deser_entity_w_path() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_deser_entity_w_path_and_ids() {
+void DeserializeFromJson_deser_entity_w_path_and_ids(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1511,7 +1511,7 @@ void DeserializeFromJson_deser_entity_w_path_and_ids() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_deser_entity_w_path_and_ids_and_values() {
+void DeserializeFromJson_deser_entity_w_path_and_ids_and_values(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1538,7 +1538,7 @@ void DeserializeFromJson_deser_entity_w_path_and_ids_and_values() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_deser_entity_w_ids() {
+void DeserializeFromJson_deser_entity_w_ids(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1553,7 +1553,7 @@ void DeserializeFromJson_deser_entity_w_ids() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_mini() {
+void DeserializeFromJson_ser_deser_mini(void) {
     ecs_world_t *world = ecs_mini();
 
     char *json = ecs_world_to_json(world, NULL);
@@ -1566,7 +1566,7 @@ void DeserializeFromJson_ser_deser_mini() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_init() {
+void DeserializeFromJson_ser_deser_init(void) {
     ecs_world_t *world = ecs_init();
 
     char *json = ecs_world_to_json(world, NULL);
@@ -1579,7 +1579,7 @@ void DeserializeFromJson_ser_deser_init() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_mini_serialize_builtin() {
+void DeserializeFromJson_ser_deser_mini_serialize_builtin(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_world_to_json_desc_t desc = {0};
@@ -1594,7 +1594,7 @@ void DeserializeFromJson_ser_deser_mini_serialize_builtin() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_mini_serialize_modules() {
+void DeserializeFromJson_ser_deser_mini_serialize_modules(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_world_to_json_desc_t desc = {0};
@@ -1609,7 +1609,7 @@ void DeserializeFromJson_ser_deser_mini_serialize_modules() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_mini_serialize_builtin_modules() {
+void DeserializeFromJson_ser_deser_mini_serialize_builtin_modules(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_world_to_json_desc_t desc = {0};
@@ -1625,7 +1625,7 @@ void DeserializeFromJson_ser_deser_mini_serialize_builtin_modules() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_init_serialize_builtin() {
+void DeserializeFromJson_ser_deser_init_serialize_builtin(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_world_to_json_desc_t desc = {0};
@@ -1640,7 +1640,7 @@ void DeserializeFromJson_ser_deser_init_serialize_builtin() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_init_serialize_modules() {
+void DeserializeFromJson_ser_deser_init_serialize_modules(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_world_to_json_desc_t desc = {0};
@@ -1655,7 +1655,7 @@ void DeserializeFromJson_ser_deser_init_serialize_modules() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_init_serialize_builtin_modules() {
+void DeserializeFromJson_ser_deser_init_serialize_builtin_modules(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_world_to_json_desc_t desc = {0};
@@ -1671,7 +1671,7 @@ void DeserializeFromJson_ser_deser_init_serialize_builtin_modules() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_new_world() {
+void DeserializeFromJson_ser_deser_new_world(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_world_to_json_desc_t desc = {0};
@@ -1690,7 +1690,7 @@ void DeserializeFromJson_ser_deser_new_world() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_new_world_1_entity_w_tag() {
+void DeserializeFromJson_ser_deser_new_world_1_entity_w_tag(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -1717,7 +1717,7 @@ void DeserializeFromJson_ser_deser_new_world_1_entity_w_tag() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_new_world_1_entity_w_component() {
+void DeserializeFromJson_ser_deser_new_world_1_entity_w_component(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1747,7 +1747,7 @@ void DeserializeFromJson_ser_deser_new_world_1_entity_w_component() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_new_world_1_entity_w_component_meta() {
+void DeserializeFromJson_ser_deser_new_world_1_entity_w_component_meta(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1794,7 +1794,7 @@ void DeserializeFromJson_ser_deser_new_world_1_entity_w_component_meta() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_new_world_1_named_entity_w_tag() {
+void DeserializeFromJson_ser_deser_new_world_1_named_entity_w_tag(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -1823,7 +1823,7 @@ void DeserializeFromJson_ser_deser_new_world_1_named_entity_w_tag() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_new_world_1_named_entity_w_component() {
+void DeserializeFromJson_ser_deser_new_world_1_named_entity_w_component(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1856,7 +1856,7 @@ void DeserializeFromJson_ser_deser_new_world_1_named_entity_w_component() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_new_world_1_named_entity_w_component_meta() {
+void DeserializeFromJson_ser_deser_new_world_1_named_entity_w_component_meta(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1906,7 +1906,7 @@ void DeserializeFromJson_ser_deser_new_world_1_named_entity_w_component_meta() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_new_world_1_entity_w_tag_serialize_all() {
+void DeserializeFromJson_ser_deser_new_world_1_entity_w_tag_serialize_all(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -1936,7 +1936,7 @@ void DeserializeFromJson_ser_deser_new_world_1_entity_w_tag_serialize_all() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_new_world_1_entity_w_component_serialize_all() {
+void DeserializeFromJson_ser_deser_new_world_1_entity_w_component_serialize_all(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1969,7 +1969,7 @@ void DeserializeFromJson_ser_deser_new_world_1_entity_w_component_serialize_all(
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_new_world_1_entity_w_component_meta_serialize_all() {
+void DeserializeFromJson_ser_deser_new_world_1_entity_w_component_meta_serialize_all(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2019,7 +2019,7 @@ void DeserializeFromJson_ser_deser_new_world_1_entity_w_component_meta_serialize
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_new_world_1_named_entity_w_tag_serialize_all() {
+void DeserializeFromJson_ser_deser_new_world_1_named_entity_w_tag_serialize_all(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -2051,7 +2051,7 @@ void DeserializeFromJson_ser_deser_new_world_1_named_entity_w_tag_serialize_all(
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_new_world_1_named_entity_w_component_serialize_all() {
+void DeserializeFromJson_ser_deser_new_world_1_named_entity_w_component_serialize_all(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2087,7 +2087,7 @@ void DeserializeFromJson_ser_deser_new_world_1_named_entity_w_component_serializ
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_new_world_1_named_entity_w_component_meta_serialize_all() {
+void DeserializeFromJson_ser_deser_new_world_1_named_entity_w_component_meta_serialize_all(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2140,7 +2140,7 @@ void DeserializeFromJson_ser_deser_new_world_1_named_entity_w_component_meta_ser
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_new_world_3_entities_w_component_meta() {
+void DeserializeFromJson_ser_deser_new_world_3_entities_w_component_meta(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2213,7 +2213,7 @@ void DeserializeFromJson_ser_deser_new_world_3_entities_w_component_meta() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_new_world_3_entities_w_2_components_meta() {
+void DeserializeFromJson_ser_deser_new_world_3_entities_w_2_components_meta(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2326,7 +2326,7 @@ void DeserializeFromJson_ser_deser_new_world_3_entities_w_2_components_meta() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_new_world_4_entities_2_tables_w_component_meta() {
+void DeserializeFromJson_ser_deser_new_world_4_entities_2_tables_w_component_meta(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2427,7 +2427,7 @@ typedef struct EntityType {
     ecs_entity_t b;
 } EntityType;
 
-void DeserializeFromJson_ser_deser_new_world_component_w_anon_entity_member() {
+void DeserializeFromJson_ser_deser_new_world_component_w_anon_entity_member(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, EntityType);
@@ -2495,7 +2495,7 @@ void DeserializeFromJson_ser_deser_new_world_component_w_anon_entity_member() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_new_world_component_w_named_entity_member() {
+void DeserializeFromJson_ser_deser_new_world_component_w_named_entity_member(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, EntityType);
@@ -2563,7 +2563,7 @@ void DeserializeFromJson_ser_deser_new_world_component_w_named_entity_member() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_new_world_component_w_anon_and_named_entity_member() {
+void DeserializeFromJson_ser_deser_new_world_component_w_anon_and_named_entity_member(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, EntityType);
@@ -2631,7 +2631,7 @@ void DeserializeFromJson_ser_deser_new_world_component_w_anon_and_named_entity_m
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_new_world_component_w_anon_entity_with_self() {
+void DeserializeFromJson_ser_deser_new_world_component_w_anon_entity_with_self(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t e1 = ecs_new_id(world);
@@ -2665,7 +2665,7 @@ void DeserializeFromJson_ser_deser_new_world_component_w_anon_entity_with_self()
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_new_world_component_w_named_entity_with_self() {
+void DeserializeFromJson_ser_deser_new_world_component_w_named_entity_with_self(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t e1 = ecs_new_entity(world, "e1");
@@ -2696,7 +2696,7 @@ void DeserializeFromJson_ser_deser_new_world_component_w_named_entity_with_self(
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_new_world_2_entities_w_anon_parent() {
+void DeserializeFromJson_ser_deser_new_world_2_entities_w_anon_parent(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, TagA);
@@ -2745,7 +2745,7 @@ void DeserializeFromJson_ser_deser_new_world_2_entities_w_anon_parent() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_new_world_2_entities_w_named_parent() {
+void DeserializeFromJson_ser_deser_new_world_2_entities_w_named_parent(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, TagA);
@@ -2787,7 +2787,7 @@ void DeserializeFromJson_ser_deser_new_world_2_entities_w_named_parent() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_new_world_2_entities_w_anon_parent_w_cycle() {
+void DeserializeFromJson_ser_deser_new_world_2_entities_w_anon_parent_w_cycle(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, TagA);
@@ -2843,7 +2843,7 @@ void DeserializeFromJson_ser_deser_new_world_2_entities_w_anon_parent_w_cycle() 
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_new_world_2_entities_w_named_parent_w_cycle() {
+void DeserializeFromJson_ser_deser_new_world_2_entities_w_named_parent_w_cycle(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, TagA);
@@ -2891,7 +2891,7 @@ void DeserializeFromJson_ser_deser_new_world_2_entities_w_named_parent_w_cycle()
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_restore_1_entity_to_empty_table() {
+void DeserializeFromJson_ser_deser_restore_1_entity_to_empty_table(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2950,7 +2950,7 @@ void DeserializeFromJson_ser_deser_restore_1_entity_to_empty_table() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_restore_1_entity_to_non_empty_table() {
+void DeserializeFromJson_ser_deser_restore_1_entity_to_non_empty_table(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -3024,7 +3024,7 @@ void DeserializeFromJson_ser_deser_restore_1_entity_to_non_empty_table() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_restore_1_anon_entity_to_empty_table() {
+void DeserializeFromJson_ser_deser_restore_1_anon_entity_to_empty_table(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -3083,7 +3083,7 @@ void DeserializeFromJson_ser_deser_restore_1_anon_entity_to_empty_table() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_restore_1_anon_entity_to_non_empty_table() {
+void DeserializeFromJson_ser_deser_restore_1_anon_entity_to_non_empty_table(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -3157,7 +3157,7 @@ void DeserializeFromJson_ser_deser_restore_1_anon_entity_to_non_empty_table() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_restore_1_deleted_entity_to_empty_table() {
+void DeserializeFromJson_ser_deser_restore_1_deleted_entity_to_empty_table(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -3193,7 +3193,7 @@ void DeserializeFromJson_ser_deser_restore_1_deleted_entity_to_empty_table() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_restore_1_deleted_entity_to_non_empty_table() {
+void DeserializeFromJson_ser_deser_restore_1_deleted_entity_to_non_empty_table(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -3244,7 +3244,7 @@ void DeserializeFromJson_ser_deser_restore_1_deleted_entity_to_non_empty_table()
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_restore_1_deleted_anon_entity_to_empty_table() {
+void DeserializeFromJson_ser_deser_restore_1_deleted_anon_entity_to_empty_table(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -3284,7 +3284,7 @@ void DeserializeFromJson_ser_deser_restore_1_deleted_anon_entity_to_empty_table(
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_restore_1_deleted_anon_entity_to_non_empty_table() {
+void DeserializeFromJson_ser_deser_restore_1_deleted_anon_entity_to_non_empty_table(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -3342,7 +3342,7 @@ void DeserializeFromJson_ser_deser_restore_1_deleted_anon_entity_to_non_empty_ta
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_restore_1_deleted_w_ref() {
+void DeserializeFromJson_ser_deser_restore_1_deleted_w_ref(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -3401,7 +3401,7 @@ void DeserializeFromJson_ser_deser_restore_1_deleted_w_ref() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_restore_1_deleted_anon_w_ref() {
+void DeserializeFromJson_ser_deser_restore_1_deleted_anon_w_ref(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -3455,7 +3455,7 @@ void DeserializeFromJson_ser_deser_restore_1_deleted_anon_w_ref() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_restore_1_deleted_w_cycle_ref() {
+void DeserializeFromJson_ser_deser_restore_1_deleted_w_cycle_ref(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -3517,7 +3517,7 @@ void DeserializeFromJson_ser_deser_restore_1_deleted_w_cycle_ref() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_restore_1_deleted_anon_w_cycle_ref() {
+void DeserializeFromJson_ser_deser_restore_1_deleted_anon_w_cycle_ref(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -3575,7 +3575,7 @@ void DeserializeFromJson_ser_deser_restore_1_deleted_anon_w_cycle_ref() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_restore_1_deleted_w_recycled() {
+void DeserializeFromJson_ser_deser_restore_1_deleted_w_recycled(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -3651,7 +3651,7 @@ void DeserializeFromJson_ser_deser_restore_1_deleted_w_recycled() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_restore_1_deleted_anon_w_recycled() {
+void DeserializeFromJson_ser_deser_restore_1_deleted_anon_w_recycled(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -3728,7 +3728,7 @@ void OnSet_count(ecs_iter_t *it) {
     *count += it->count;
 }
 
-void DeserializeFromJson_ser_deser_on_set_3_entities() {
+void DeserializeFromJson_ser_deser_on_set_3_entities(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -3771,7 +3771,7 @@ void DeserializeFromJson_ser_deser_on_set_3_entities() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_on_set_3_entities_2_restored() {
+void DeserializeFromJson_ser_deser_on_set_3_entities_2_restored(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -3818,7 +3818,7 @@ void DeserializeFromJson_ser_deser_on_set_3_entities_2_restored() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_on_set_3_entities_1_restored() {
+void DeserializeFromJson_ser_deser_on_set_3_entities_1_restored(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -3865,7 +3865,7 @@ void DeserializeFromJson_ser_deser_on_set_3_entities_1_restored() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_3_entities_after_remove_all() {
+void DeserializeFromJson_ser_deser_3_entities_after_remove_all(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -3932,7 +3932,7 @@ void DeserializeFromJson_ser_deser_3_entities_after_remove_all() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_3_entities_after_delete_with() {
+void DeserializeFromJson_ser_deser_3_entities_after_delete_with(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -4026,7 +4026,7 @@ ECS_COPY(StringType, dst, src, {
     dst->value = ecs_os_strdup(src->value);
 })
 
-void DeserializeFromJson_ser_deser_w_hooks() {
+void DeserializeFromJson_ser_deser_w_hooks(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, StringType);
@@ -4106,7 +4106,7 @@ void DeserializeFromJson_ser_deser_w_hooks() {
     ecs_fini(world);
 }
 
-void DeserializeFromJson_ser_deser_large_data() {
+void DeserializeFromJson_ser_deser_large_data(void) {
     typedef struct {
         char* v;
     } T;

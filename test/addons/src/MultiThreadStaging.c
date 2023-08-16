@@ -1,6 +1,6 @@
 #include <addons.h>
 
-void MultiThreadStaging_setup() {
+void MultiThreadStaging_setup(void) {
     ecs_log_set_level(-3);
 }
 
@@ -22,7 +22,7 @@ void Add_to_current(ecs_iter_t *it) {
     }
 }
 
-void MultiThreadStaging_2_threads_add_to_current() {
+void MultiThreadStaging_2_threads_add_to_current(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -66,7 +66,7 @@ void MultiThreadStaging_2_threads_add_to_current() {
     ecs_fini(world);
 }
 
-void MultiThreadStaging_3_threads_add_to_current() {
+void MultiThreadStaging_3_threads_add_to_current(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -110,7 +110,7 @@ void MultiThreadStaging_3_threads_add_to_current() {
     ecs_fini(world);
 }
 
-void MultiThreadStaging_4_threads_add_to_current() {
+void MultiThreadStaging_4_threads_add_to_current(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -154,7 +154,7 @@ void MultiThreadStaging_4_threads_add_to_current() {
     ecs_fini(world);
 }
 
-void MultiThreadStaging_5_threads_add_to_current() {
+void MultiThreadStaging_5_threads_add_to_current(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -198,7 +198,7 @@ void MultiThreadStaging_5_threads_add_to_current() {
     ecs_fini(world);
 }
 
-void MultiThreadStaging_6_threads_add_to_current() {
+void MultiThreadStaging_6_threads_add_to_current(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -263,7 +263,7 @@ void AddVelocity(ecs_iter_t *it) {
     }
 }
 
-void MultiThreadStaging_2_threads_on_add() {
+void MultiThreadStaging_2_threads_on_add(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -307,7 +307,7 @@ void New_w_count(ecs_iter_t *it) {
     ecs_bulk_new(it->world, Position, 10);
 }
 
-void MultiThreadStaging_new_w_count() {
+void MultiThreadStaging_new_w_count(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -328,7 +328,7 @@ void MultiThreadStaging_new_w_count() {
     ecs_fini(world);
 }
 
-void MultiThreadStaging_custom_thread_auto_merge() {
+void MultiThreadStaging_custom_thread_auto_merge(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -379,7 +379,7 @@ void MultiThreadStaging_custom_thread_auto_merge() {
     ecs_fini(world);
 }
 
-void MultiThreadStaging_custom_thread_manual_merge() {
+void MultiThreadStaging_custom_thread_manual_merge(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -437,7 +437,7 @@ void MultiThreadStaging_custom_thread_manual_merge() {
     ecs_fini(world);
 }
 
-void MultiThreadStaging_custom_thread_partial_manual_merge() {
+void MultiThreadStaging_custom_thread_partial_manual_merge(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -500,7 +500,7 @@ void MultiThreadStaging_custom_thread_partial_manual_merge() {
     ecs_fini(world);
 }
 
-void MultiThreadStaging_set_pair_w_new_target_readonly() {
+void MultiThreadStaging_set_pair_w_new_target_readonly(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -530,7 +530,7 @@ void MultiThreadStaging_set_pair_w_new_target_readonly() {
     ecs_fini(world);
 }
 
-void MultiThreadStaging_set_pair_w_new_target_tgt_component_readonly() {
+void MultiThreadStaging_set_pair_w_new_target_tgt_component_readonly(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -560,7 +560,7 @@ void MultiThreadStaging_set_pair_w_new_target_tgt_component_readonly() {
     ecs_fini(world);
 }
 
-void MultiThreadStaging_set_pair_w_new_target_defer() {
+void MultiThreadStaging_set_pair_w_new_target_defer(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -586,7 +586,7 @@ void MultiThreadStaging_set_pair_w_new_target_defer() {
     ecs_fini(world);
 }
 
-void MultiThreadStaging_set_pair_w_new_target_tgt_component_defer() {
+void MultiThreadStaging_set_pair_w_new_target_tgt_component_defer(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);

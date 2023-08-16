@@ -1,6 +1,6 @@
 #include <addons.h>
 
-void System_w_FromParent_setup() {
+void System_w_FromParent_setup(void) {
     ecs_log_set_level(-3);
 }
 
@@ -47,7 +47,7 @@ void Iter(ecs_iter_t *it) {
     }
 }
 
-void System_w_FromParent_1_column_from_container() {
+void System_w_FromParent_1_column_from_container(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -106,7 +106,7 @@ void System_w_FromParent_1_column_from_container() {
     ecs_fini(world);
 }
 
-void System_w_FromParent_2_column_1_from_container() {
+void System_w_FromParent_2_column_1_from_container(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -229,7 +229,7 @@ void Iter_2_shared(ecs_iter_t *it) {
     }
 }
 
-void System_w_FromParent_3_column_2_from_container() {
+void System_w_FromParent_3_column_2_from_container(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -293,7 +293,7 @@ void System_w_FromParent_3_column_2_from_container() {
     ecs_fini(world);
 }
 
-void System_w_FromParent_2_column_1_from_container_w_not() {
+void System_w_FromParent_2_column_1_from_container_w_not(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -367,7 +367,7 @@ void System_w_FromParent_2_column_1_from_container_w_not() {
     ecs_fini(world);
 }
 
-void System_w_FromParent_3_column_1_from_comtainer_1_from_container_w_not() {
+void System_w_FromParent_3_column_1_from_comtainer_1_from_container_w_not(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -437,7 +437,7 @@ void System_w_FromParent_3_column_1_from_comtainer_1_from_container_w_not() {
     ecs_fini(world);
 }
 
-void System_w_FromParent_2_column_1_from_container_w_not_prefab() {
+void System_w_FromParent_2_column_1_from_container_w_not_prefab(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -491,7 +491,7 @@ void System_w_FromParent_2_column_1_from_container_w_not_prefab() {
     ecs_fini(world);
 }
 
-void System_w_FromParent_2_column_1_from_container_w_or() {
+void System_w_FromParent_2_column_1_from_container_w_or(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -574,7 +574,7 @@ void Dummy(ecs_iter_t *it) {
     }
 }
 
-void System_w_FromParent_add_component_after_match() {
+void System_w_FromParent_add_component_after_match(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -628,7 +628,7 @@ void System_w_FromParent_add_component_after_match() {
     ecs_fini(world);
 }
 
-void System_w_FromParent_add_component_after_match_and_rematch() {
+void System_w_FromParent_add_component_after_match_and_rematch(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -689,7 +689,7 @@ void System_w_FromParent_add_component_after_match_and_rematch() {
     ecs_fini(world);
 }
 
-void System_w_FromParent_add_component_after_match_and_rematch_w_entity_type_expr() {
+void System_w_FromParent_add_component_after_match_and_rematch_w_entity_type_expr(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -758,7 +758,7 @@ void SetMass(ecs_iter_t *it) {
     }
 }
 
-void System_w_FromParent_add_component_after_match_and_rematch_w_entity_type_expr_in_progress() {
+void System_w_FromParent_add_component_after_match_and_rematch_w_entity_type_expr_in_progress(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -811,7 +811,7 @@ void System_w_FromParent_add_component_after_match_and_rematch_w_entity_type_exp
     ecs_fini(world);
 }
 
-void System_w_FromParent_add_component_after_match_unmatch() {
+void System_w_FromParent_add_component_after_match_unmatch(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -854,7 +854,7 @@ void System_w_FromParent_add_component_after_match_unmatch() {
     ecs_fini(world);
 }
 
-void System_w_FromParent_add_component_after_match_unmatch_match() {
+void System_w_FromParent_add_component_after_match_unmatch_match(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -908,7 +908,7 @@ void System_w_FromParent_add_component_after_match_unmatch_match() {
     ecs_fini(world);
 }
 
-void System_w_FromParent_add_component_after_match_2_systems() {
+void System_w_FromParent_add_component_after_match_2_systems(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -980,7 +980,7 @@ void AddMass(ecs_iter_t *it) {
     }
 }
 
-void System_w_FromParent_add_component_in_progress_after_match() {
+void System_w_FromParent_add_component_in_progress_after_match(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1042,7 +1042,7 @@ void System_w_FromParent_add_component_in_progress_after_match() {
     ecs_fini(world);
 }
 
-void System_w_FromParent_adopt_after_match() {
+void System_w_FromParent_adopt_after_match(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1095,7 +1095,7 @@ void System_w_FromParent_adopt_after_match() {
     ecs_fini(world);
 }
 
-void System_w_FromParent_new_child_after_match() {
+void System_w_FromParent_new_child_after_match(void) {
         ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1161,7 +1161,7 @@ void IterSame(ecs_iter_t *it) {
     }
 }
 
-void System_w_FromParent_select_same_from_container() {
+void System_w_FromParent_select_same_from_container(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1224,7 +1224,7 @@ void System_w_FromParent_select_same_from_container() {
     ecs_fini(world);
 }
 
-void System_w_FromParent_realloc_after_match() {
+void System_w_FromParent_realloc_after_match(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);

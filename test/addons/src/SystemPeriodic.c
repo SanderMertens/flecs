@@ -38,7 +38,7 @@ void Iter(ecs_iter_t *it) {
     }
 }
 
-void SystemPeriodic_1_type_1_component() {
+void SystemPeriodic_1_type_1_component(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -84,7 +84,7 @@ void SystemPeriodic_1_type_1_component() {
     ecs_fini(world);
 }
 
-void SystemPeriodic_1_type_3_component() {
+void SystemPeriodic_1_type_3_component(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -165,7 +165,7 @@ void SystemPeriodic_1_type_3_component() {
     ecs_fini(world);
 }
 
-void SystemPeriodic_3_type_1_component() {
+void SystemPeriodic_3_type_1_component(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -217,7 +217,7 @@ void SystemPeriodic_3_type_1_component() {
     ecs_fini(world);
 }
 
-void SystemPeriodic_2_type_3_component() {
+void SystemPeriodic_2_type_3_component(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -305,7 +305,7 @@ void SystemPeriodic_2_type_3_component() {
     ecs_fini(world);
 }
 
-void SystemPeriodic_1_type_1_component_1_tag() {
+void SystemPeriodic_1_type_1_component_1_tag(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_ENTITY(world, Tag, 0);
@@ -354,7 +354,7 @@ void SystemPeriodic_1_type_1_component_1_tag() {
     ecs_fini(world);
 }
 
-void SystemPeriodic_2_type_1_component_1_tag() {
+void SystemPeriodic_2_type_1_component_1_tag(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_ENTITY(world, Tag, 0);
@@ -398,7 +398,7 @@ void SystemPeriodic_2_type_1_component_1_tag() {
 }
 
 
-void SystemPeriodic_2_type_1_and_1_not() {
+void SystemPeriodic_2_type_1_and_1_not(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -441,7 +441,7 @@ void SystemPeriodic_2_type_1_and_1_not() {
     ecs_fini(world);
 }
 
-void SystemPeriodic_2_type_2_and_1_not() {
+void SystemPeriodic_2_type_2_and_1_not(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -497,7 +497,7 @@ void SystemPeriodic_2_type_2_and_1_not() {
     ecs_fini(world);
 }
 
-void SystemPeriodic_2_type_2_and_2_not() {
+void SystemPeriodic_2_type_2_and_2_not(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -548,7 +548,7 @@ void SystemPeriodic_2_type_2_and_2_not() {
 typedef Position Position_1;
 typedef Position Position_2;
 
-void SystemPeriodic_4_type_1_and_1_or() {
+void SystemPeriodic_4_type_1_and_1_or(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -596,7 +596,7 @@ void SystemPeriodic_4_type_1_and_1_or() {
     ecs_fini(world);
 }
 
-void SystemPeriodic_4_type_1_and_1_or_of_3() {
+void SystemPeriodic_4_type_1_and_1_or_of_3(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -645,7 +645,7 @@ void SystemPeriodic_4_type_1_and_1_or_of_3() {
     ecs_fini(world);
 }
 
-void SystemPeriodic_1_type_1_and_1_or() {
+void SystemPeriodic_1_type_1_and_1_or(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -702,7 +702,7 @@ void SystemPeriodic_1_type_1_and_1_or() {
     ecs_fini(world);
 }
 
-void SystemPeriodic_2_type_1_and_1_optional() {
+void SystemPeriodic_2_type_1_and_1_optional(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -765,7 +765,7 @@ void SystemPeriodic_2_type_1_and_1_optional() {
     ecs_fini(world);
 }
 
-void SystemPeriodic_2_type_2_and_1_optional() {
+void SystemPeriodic_2_type_2_and_1_optional(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -843,7 +843,7 @@ void SystemPeriodic_2_type_2_and_1_optional() {
     ecs_fini(world);
 }
 
-void SystemPeriodic_6_type_1_and_2_optional() {
+void SystemPeriodic_6_type_1_and_2_optional(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -944,7 +944,7 @@ void SystemPeriodic_6_type_1_and_2_optional() {
 static void Dummy_1(ecs_iter_t *it) { probe_iter(it); }
 static void Dummy_2(ecs_iter_t *it) { probe_iter(it); }
 
-void SystemPeriodic_match_2_systems_w_populated_table() {
+void SystemPeriodic_match_2_systems_w_populated_table(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -991,7 +991,7 @@ void TestOptional_w_shared(ecs_iter_t *it) {
     probe_iter(it);
 }
 
-void SystemPeriodic_ensure_optional_is_unset_column() {
+void SystemPeriodic_ensure_optional_is_unset_column(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1019,7 +1019,7 @@ void SystemPeriodic_ensure_optional_is_unset_column() {
     ecs_fini(world);
 }
 
-void SystemPeriodic_ensure_optional_is_null_shared() {
+void SystemPeriodic_ensure_optional_is_null_shared(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1072,7 +1072,7 @@ void NormalSystem3(ecs_iter_t *it) {
     normal_count_3 ++;
 }
 
-void SystemPeriodic_on_period() {
+void SystemPeriodic_on_period(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1107,7 +1107,7 @@ void SystemPeriodic_on_period() {
     ecs_fini(world);
 }
 
-void SystemPeriodic_on_period_long_delta() {
+void SystemPeriodic_on_period_long_delta(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1134,7 +1134,7 @@ void SystemPeriodic_on_period_long_delta() {
     ecs_fini(world);
 }
 
-void SystemPeriodic_disabled() {
+void SystemPeriodic_disabled(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1162,7 +1162,7 @@ void SystemPeriodic_disabled() {
     ecs_fini(world);
 }
 
-void SystemPeriodic_disabled_feature() {
+void SystemPeriodic_disabled_feature(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1196,7 +1196,7 @@ void SystemPeriodic_disabled_feature() {
     ecs_fini(world);
 }
 
-void SystemPeriodic_disabled_nested_feature() {
+void SystemPeriodic_disabled_nested_feature(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1248,7 +1248,7 @@ void TwoRefs(ecs_iter_t *it) {
     probe_iter(it);
 }
 
-void SystemPeriodic_two_refs() {
+void SystemPeriodic_two_refs(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1282,7 +1282,7 @@ void SystemPeriodic_two_refs() {
     ecs_fini(world);
 }
 
-void SystemPeriodic_filter_disabled() {
+void SystemPeriodic_filter_disabled(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1307,7 +1307,7 @@ void SystemPeriodic_filter_disabled() {
     ecs_fini(world);
 }
 
-void SystemPeriodic_match_disabled() {
+void SystemPeriodic_match_disabled(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1334,7 +1334,7 @@ void SystemPeriodic_match_disabled() {
     ecs_fini(world);
 }
 
-void SystemPeriodic_match_disabled_and_enabled() {
+void SystemPeriodic_match_disabled_and_enabled(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1362,7 +1362,7 @@ void SystemPeriodic_match_disabled_and_enabled() {
     ecs_fini(world);
 }
 
-void SystemPeriodic_match_prefab() {
+void SystemPeriodic_match_prefab(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1389,7 +1389,7 @@ void SystemPeriodic_match_prefab() {
     ecs_fini(world);
 }
 
-void SystemPeriodic_match_prefab_and_normal() {
+void SystemPeriodic_match_prefab_and_normal(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1422,7 +1422,7 @@ void TestIsSharedOnNotSet(ecs_iter_t *it) {
     test_assert(ecs_field_is_self(it, 2) != false);
 }
 
-void SystemPeriodic_is_shared_on_column_not_set() {
+void SystemPeriodic_is_shared_on_column_not_set(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1438,7 +1438,7 @@ void SystemPeriodic_is_shared_on_column_not_set() {
 }
 
 
-void SystemPeriodic_owned_column() {
+void SystemPeriodic_owned_column(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1468,7 +1468,7 @@ void SystemPeriodic_owned_column() {
     ecs_fini(world);
 }
 
-void SystemPeriodic_owned_not_column() {
+void SystemPeriodic_owned_not_column(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1501,7 +1501,7 @@ void OwnedOr(ecs_iter_t *it) {
     probe_iter(it);
 }
 
-void SystemPeriodic_owned_or_column() {
+void SystemPeriodic_owned_or_column(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1537,7 +1537,7 @@ void SystemPeriodic_owned_or_column() {
     ecs_fini(world);
 }
 
-void SystemPeriodic_shared_column() {
+void SystemPeriodic_shared_column(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1567,7 +1567,7 @@ void SystemPeriodic_shared_column() {
     ecs_fini(world);
 }
 
-void SystemPeriodic_shared_not_column() {
+void SystemPeriodic_shared_not_column(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1600,7 +1600,7 @@ void SharedOr(ecs_iter_t *it) {
     probe_iter(it);
 }
 
-void SystemPeriodic_shared_or_column() {
+void SystemPeriodic_shared_or_column(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1638,7 +1638,7 @@ void SystemPeriodic_shared_or_column() {
     ecs_fini(world);
 }
 
-void SystemPeriodic_container_dont_match_inheritance() {
+void SystemPeriodic_container_dont_match_inheritance(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1667,7 +1667,7 @@ void SystemPeriodic_container_dont_match_inheritance() {
     ecs_fini(world);
 }
 
-void SystemPeriodic_cascade_dont_match_inheritance() {
+void SystemPeriodic_cascade_dont_match_inheritance(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1701,7 +1701,7 @@ void SystemPeriodic_cascade_dont_match_inheritance() {
     ecs_fini(world);
 }
 
-void SystemPeriodic_not_from_entity() {
+void SystemPeriodic_not_from_entity(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1736,7 +1736,7 @@ void TestContext(ecs_iter_t *it) {
     (*ctx) ++;
 }
 
-void SystemPeriodic_sys_context() {
+void SystemPeriodic_sys_context(void) {
     ecs_world_t *world = ecs_init();
     int32_t param = 0;
 
@@ -1754,7 +1754,7 @@ void SystemPeriodic_sys_context() {
     ecs_fini(world);
 }
 
-void SystemPeriodic_get_sys_context_from_param() {
+void SystemPeriodic_get_sys_context_from_param(void) {
     ecs_world_t *world = ecs_init();
     int32_t param = 0;
 
@@ -1785,7 +1785,7 @@ static void Dummy(ecs_iter_t *it) {
     dummy_invoked = it->entities[0];
 }
 
-void SystemPeriodic_owned_only() {
+void SystemPeriodic_owned_only(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1808,7 +1808,7 @@ static void AssertReadonly(ecs_iter_t *it) {
     test_assert( ecs_field_is_readonly(it, 1) == true);
 }
 
-void SystemPeriodic_shared_only() {
+void SystemPeriodic_shared_only(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1825,7 +1825,7 @@ void SystemPeriodic_shared_only() {
     ecs_fini(world);
 }
 
-void SystemPeriodic_is_in_readonly() {
+void SystemPeriodic_is_in_readonly(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1841,7 +1841,7 @@ void SystemPeriodic_is_in_readonly() {
     ecs_fini(world);
 }
 
-void SystemPeriodic_get_period() {
+void SystemPeriodic_get_period(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1859,7 +1859,7 @@ void TypeSystem(ecs_iter_t *it) {
     probe_iter(it);
 }
 
-void SystemPeriodic_and_type() {
+void SystemPeriodic_and_type(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1890,7 +1890,7 @@ void SystemPeriodic_and_type() {
     ecs_fini(world);
 }
 
-void SystemPeriodic_or_type() {
+void SystemPeriodic_or_type(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);

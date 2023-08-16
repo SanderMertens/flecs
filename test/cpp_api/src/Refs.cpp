@@ -1,6 +1,6 @@
 #include <cpp_api.h>
 
-void Refs_get_ref_by_ptr() {
+void Refs_get_ref_by_ptr(void) {
     flecs::world world;
 
     auto e = flecs::entity(world)
@@ -11,7 +11,7 @@ void Refs_get_ref_by_ptr() {
     test_assert(ref->y == 20);
 }
 
-void Refs_get_ref_by_method() {
+void Refs_get_ref_by_method(void) {
     flecs::world world;
 
     auto e = flecs::entity(world)
@@ -22,7 +22,7 @@ void Refs_get_ref_by_method() {
     test_assert(ref.get()->y == 20);
 }
 
-void Refs_ref_after_add() {
+void Refs_ref_after_add(void) {
     flecs::world world;
 
     auto e = flecs::entity(world)
@@ -35,7 +35,7 @@ void Refs_ref_after_add() {
     test_assert(ref->y == 20);
 }
 
-void Refs_ref_after_remove() {
+void Refs_ref_after_remove(void) {
     flecs::world world;
 
     auto e = flecs::entity(world)
@@ -49,7 +49,7 @@ void Refs_ref_after_remove() {
     test_assert(ref->y == 20);
 }
 
-void Refs_ref_after_set() {
+void Refs_ref_after_set(void) {
     flecs::world world;
 
     auto e = flecs::entity(world)
@@ -62,7 +62,7 @@ void Refs_ref_after_set() {
     test_assert(ref->y == 20);
 }
 
-void Refs_ref_before_set() {
+void Refs_ref_before_set(void) {
     flecs::world world;
 
     auto e = flecs::entity(world);
@@ -74,7 +74,7 @@ void Refs_ref_before_set() {
     test_assert(ref->y == 20);
 }
 
-void Refs_non_const_ref() {
+void Refs_non_const_ref(void) {
     flecs::world world;
 
     auto e = world.entity().set<Position>({10, 20});
@@ -84,7 +84,7 @@ void Refs_non_const_ref() {
     test_int(e.get<Position>()->x, 11);
 }
 
-void Refs_pair_ref() {
+void Refs_pair_ref(void) {
     flecs::world world;
 
     auto e = world.entity().set<Position, Tag>({10, 20});
@@ -94,7 +94,7 @@ void Refs_pair_ref() {
     test_int((e.get<Position, Tag>()->x), 11);
 }
 
-void Refs_pair_ref_w_entity() {
+void Refs_pair_ref_w_entity(void) {
     flecs::world world;
 
     auto tag = world.entity();
@@ -105,7 +105,7 @@ void Refs_pair_ref_w_entity() {
     test_int(e.get<Position>(tag)->x, 11);
 }
 
-void Refs_pair_ref_second() {
+void Refs_pair_ref_second(void) {
     flecs::world world;
 
     auto tag = world.entity();
@@ -116,7 +116,7 @@ void Refs_pair_ref_second() {
     test_int(e.get_second<Position>(tag)->x, 11);
 }
 
-void Refs_from_stage() {
+void Refs_from_stage(void) {
     flecs::world world;
     flecs::world stage = world.get_stage(0); // get default stage
     flecs::entity e = stage.entity().set<Position>({10, 20});

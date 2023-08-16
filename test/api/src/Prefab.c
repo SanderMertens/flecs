@@ -2,7 +2,7 @@
 
 static ecs_id_t NamePair;
 
-void Prefab_setup() {
+void Prefab_setup(void) {
     NamePair = ecs_pair(ecs_id(EcsIdentifier), EcsName);
 }
 
@@ -41,7 +41,7 @@ void Iter(ecs_iter_t *it) {
     }
 }
 
-void Prefab_new_w_prefab() {
+void Prefab_new_w_prefab(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -102,7 +102,7 @@ void Prefab_new_w_prefab() {
     ecs_fini(world);
 }
 
-void Prefab_new_w_count_prefab() {
+void Prefab_new_w_count_prefab(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -132,7 +132,7 @@ void Prefab_new_w_count_prefab() {
     ecs_fini(world);
 }
 
-void Prefab_new_w_type_w_prefab() {
+void Prefab_new_w_type_w_prefab(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -178,7 +178,7 @@ void Prefab_new_w_type_w_prefab() {
     ecs_fini(world);
 }
 
-void Prefab_add_prefab() {
+void Prefab_add_prefab(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -228,7 +228,7 @@ void Prefab_add_prefab() {
     ecs_fini(world);
 }
 
-void Prefab_remove_prefab_after_new() {
+void Prefab_remove_prefab_after_new(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -256,7 +256,7 @@ void Prefab_remove_prefab_after_new() {
     ecs_fini(world);
 }
 
-void Prefab_remove_prefab_after_add() {
+void Prefab_remove_prefab_after_add(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -286,7 +286,7 @@ void Prefab_remove_prefab_after_add() {
     ecs_fini(world);
 }
 
-void Prefab_override_component() {
+void Prefab_override_component(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -321,7 +321,7 @@ void Prefab_override_component() {
     ecs_fini(world);
 }
 
-void Prefab_override_remove_component() {
+void Prefab_override_remove_component(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -364,7 +364,7 @@ void Prefab_override_remove_component() {
     ecs_fini(world);
 }
 
-void Prefab_override_2_of_3_components_1_self() {
+void Prefab_override_2_of_3_components_1_self(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -437,7 +437,7 @@ void Prefab_override_2_of_3_components_1_self() {
     ecs_fini(world);
 }
 
-void Prefab_new_type_w_1_override() {
+void Prefab_new_type_w_1_override(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -483,7 +483,7 @@ void Prefab_new_type_w_1_override() {
     ecs_fini(world);
 }
 
-void Prefab_new_type_w_2_overrides() {
+void Prefab_new_type_w_2_overrides(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -529,7 +529,7 @@ void Prefab_new_type_w_2_overrides() {
     ecs_fini(world);
 }
 
-void Prefab_get_ptr_prefab() {
+void Prefab_get_ptr_prefab(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -576,7 +576,7 @@ void Prefab_w_shared(ecs_iter_t *it) {
     }
 }
 
-void Prefab_iterate_w_prefab_shared() {
+void Prefab_iterate_w_prefab_shared(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -615,7 +615,7 @@ void Prefab_iterate_w_prefab_shared() {
     ecs_fini(world);
 }
 
-void Prefab_match_entity_prefab_w_system_optional() {
+void Prefab_match_entity_prefab_w_system_optional(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -662,7 +662,7 @@ void Prefab_match_entity_prefab_w_system_optional() {
     ecs_fini(world);
 }
 
-void Prefab_prefab_in_system_expr() {
+void Prefab_prefab_in_system_expr(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -736,7 +736,7 @@ void Dummy(ecs_iter_t *it) {
     probe_iter(it);
 }
 
-void Prefab_dont_match_prefab() {
+void Prefab_dont_match_prefab(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -755,7 +755,7 @@ void Prefab_dont_match_prefab() {
     ecs_fini(world);
 }
 
-void Prefab_new_w_count_w_override() {
+void Prefab_new_w_count_w_override(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -795,7 +795,7 @@ void Prefab_new_w_count_w_override() {
     ecs_fini(world);
 }
 
-void Prefab_override_2_components_different_size() {
+void Prefab_override_2_components_different_size(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -849,7 +849,7 @@ void Prefab_override_2_components_different_size() {
     ecs_fini(world);
 }
 
-void Prefab_ignore_prefab_parent_component() {
+void Prefab_ignore_prefab_parent_component(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -887,7 +887,7 @@ void AddVelocity(ecs_iter_t *it) {
     }
 }
 
-void Prefab_match_table_created_in_progress() {
+void Prefab_match_table_created_in_progress(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -927,7 +927,7 @@ void Prefab_match_table_created_in_progress() {
     ecs_fini(world);
 }
 
-void Prefab_prefab_w_1_child() {
+void Prefab_prefab_w_1_child(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -977,7 +977,7 @@ void Prefab_prefab_w_1_child() {
     ecs_fini(world);
 }
 
-void Prefab_prefab_w_2_children() {
+void Prefab_prefab_w_2_children(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1023,7 +1023,7 @@ void Prefab_prefab_w_2_children() {
     ecs_fini(world);
 }
 
-void Prefab_prefab_w_grandchild() {
+void Prefab_prefab_w_grandchild(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1070,7 +1070,7 @@ void Prefab_prefab_w_grandchild() {
     ecs_fini(world);
 }
 
-void Prefab_prefab_tree_1_2_1() {
+void Prefab_prefab_tree_1_2_1(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1134,7 +1134,7 @@ void Prefab_prefab_tree_1_2_1() {
     ecs_fini(world);
 }
 
-void Prefab_prefab_w_base_w_child() {
+void Prefab_prefab_w_base_w_child(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1178,7 +1178,7 @@ void Prefab_prefab_w_base_w_child() {
     ecs_fini(world);  
 }
 
-void Prefab_prefab_w_child_w_base() {
+void Prefab_prefab_w_child_w_base(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1221,7 +1221,7 @@ void Prefab_prefab_w_child_w_base() {
     ecs_fini(world);  
 }
 
-void Prefab_prefab_w_child_w_base_w_children() {
+void Prefab_prefab_w_child_w_base_w_children(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1279,7 +1279,7 @@ void Prefab_prefab_w_child_w_base_w_children() {
     ecs_fini(world);
 }
 
-void Prefab_prefab_w_child_new_w_count() {
+void Prefab_prefab_w_child_new_w_count(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1317,7 +1317,7 @@ void Prefab_prefab_w_child_new_w_count() {
     ecs_fini(world);
 }
 
-void Prefab_prefab_auto_override_child_component() {
+void Prefab_prefab_auto_override_child_component(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1393,7 +1393,7 @@ void PrefabReactiveTest(ecs_iter_t *it) {
     invoked ++;
 }
 
-void Prefab_ignore_on_add() {
+void Prefab_ignore_on_add(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1407,7 +1407,7 @@ void Prefab_ignore_on_add() {
     ecs_fini(world);
 }
 
-void Prefab_ignore_on_remove() {
+void Prefab_ignore_on_remove(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1425,7 +1425,7 @@ void Prefab_ignore_on_remove() {
     ecs_fini(world);
 }
 
-void Prefab_ignore_on_set() {
+void Prefab_ignore_on_set(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1443,7 +1443,7 @@ void Prefab_ignore_on_set() {
     ecs_fini(world);
 }
 
-void Prefab_on_set_on_instance() {
+void Prefab_on_set_on_instance(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1481,7 +1481,7 @@ void InstantiateInProgress(ecs_iter_t *it) {
     }
 }
 
-void Prefab_instantiate_in_progress() {
+void Prefab_instantiate_in_progress(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1524,7 +1524,7 @@ void NewInProgress(ecs_iter_t *it) {
     }
 }
 
-void Prefab_copy_from_prefab_in_progress() {
+void Prefab_copy_from_prefab_in_progress(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1560,7 +1560,7 @@ void Prefab_copy_from_prefab_in_progress() {
     ecs_fini(world);
 }
 
-void Prefab_copy_from_prefab_first_instance_in_progress() {
+void Prefab_copy_from_prefab_first_instance_in_progress(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1591,7 +1591,7 @@ void Prefab_copy_from_prefab_first_instance_in_progress() {
     ecs_fini(world);
 }
 
-void Prefab_ref_after_realloc() {
+void Prefab_ref_after_realloc(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1629,7 +1629,7 @@ void Prefab_ref_after_realloc() {
     ecs_fini(world);
 }
 
-void Prefab_revalidate_ref_w_mixed_table_refs() {
+void Prefab_revalidate_ref_w_mixed_table_refs(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1667,7 +1667,7 @@ void Prefab_revalidate_ref_w_mixed_table_refs() {
     ecs_fini(world);
 }
 
-void Prefab_no_overwrite_on_2nd_add() {
+void Prefab_no_overwrite_on_2nd_add(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1700,7 +1700,7 @@ void AddPrefab(ecs_iter_t *it) {
     }
 }
 
-void Prefab_no_overwrite_on_2nd_add_in_progress() {
+void Prefab_no_overwrite_on_2nd_add_in_progress(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1726,7 +1726,7 @@ void Prefab_no_overwrite_on_2nd_add_in_progress() {
     ecs_fini(world);
 }
 
-void Prefab_no_instantiate_on_2nd_add() {
+void Prefab_no_instantiate_on_2nd_add(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1773,7 +1773,7 @@ void Prefab_no_instantiate_on_2nd_add() {
     ecs_fini(world);
 }
 
-void Prefab_no_instantiate_on_2nd_add_in_progress() {
+void Prefab_no_instantiate_on_2nd_add_in_progress(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1829,7 +1829,7 @@ void NewPrefab_w_count(ecs_iter_t *it) {
     memcpy(ids, new_ids, sizeof(ecs_entity_t) * 3);
 }
 
-void Prefab_nested_prefab_in_progress_w_count() {
+void Prefab_nested_prefab_in_progress_w_count(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1890,7 +1890,7 @@ void OnSetVelocity(ecs_iter_t *it) {
     }
 }
 
-void Prefab_nested_prefab_in_progress_w_count_set_after_override() {
+void Prefab_nested_prefab_in_progress_w_count_set_after_override(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1956,7 +1956,7 @@ void AddPrefabInProgress(ecs_iter_t *it) {
     }
 }
 
-void Prefab_get_ptr_from_prefab_from_new_table_in_progress() {    
+void Prefab_get_ptr_from_prefab_from_new_table_in_progress(void) {    
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1994,7 +1994,7 @@ void TestBase(ecs_iter_t *it) {
     test_int(it->count, 1);
 }
 
-void Prefab_match_base() {
+void Prefab_match_base(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2024,7 +2024,7 @@ void AddMass(ecs_iter_t *it) {
     }
 }
 
-void Prefab_match_base_after_add_in_prev_phase() {
+void Prefab_match_base_after_add_in_prev_phase(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2046,7 +2046,7 @@ void Prefab_match_base_after_add_in_prev_phase() {
     ecs_fini(world);
 }
 
-void Prefab_override_watched_prefab() {
+void Prefab_override_watched_prefab(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2076,7 +2076,7 @@ void Prefab_override_watched_prefab() {
     ecs_fini(world);
 }
 
-void Prefab_rematch_twice() {
+void Prefab_rematch_twice(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2118,7 +2118,7 @@ void AddPosition(ecs_iter_t *it) {
     ecs_add(it->world, *base, Position);
 }
 
-void Prefab_add_to_empty_base_in_system() {
+void Prefab_add_to_empty_base_in_system(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2138,7 +2138,7 @@ void Prefab_add_to_empty_base_in_system() {
     ecs_fini(world);
 }
 
-void Prefab_inherit_disabled() {
+void Prefab_inherit_disabled(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2186,7 +2186,7 @@ void CloneInOnAdd(ecs_iter_t *it)
     }
 }
 
-void Prefab_clone_after_inherit_in_on_add() {
+void Prefab_clone_after_inherit_in_on_add(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2204,7 +2204,7 @@ void Prefab_clone_after_inherit_in_on_add() {
     ecs_fini(world);
 }
 
-void Prefab_override_from_nested() {
+void Prefab_override_from_nested(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2248,7 +2248,7 @@ void OnAddEntity(ecs_iter_t *it) {
     }
 }
 
-void Prefab_create_multiple_nested_w_on_set() {
+void Prefab_create_multiple_nested_w_on_set(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2321,7 +2321,7 @@ void CreateInstances(ecs_iter_t *it) {
     new_instance_2 = ecs_new_w_pair(it->world, EcsIsA, Prefab);
 }
 
-void Prefab_create_multiple_nested_w_on_set_in_progress() {
+void Prefab_create_multiple_nested_w_on_set_in_progress(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2386,7 +2386,7 @@ void Prefab_create_multiple_nested_w_on_set_in_progress() {
     ecs_fini(world);
 }
 
-void Prefab_single_on_set_on_child_w_override() {
+void Prefab_single_on_set_on_child_w_override(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2430,7 +2430,7 @@ void Prefab_single_on_set_on_child_w_override() {
     ecs_fini(world);
 }
 
-void Prefab_auto_override() {
+void Prefab_auto_override(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2447,7 +2447,7 @@ void Prefab_auto_override() {
     ecs_fini(world);
 }
 
-void Prefab_auto_override_2() {
+void Prefab_auto_override_2(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2464,7 +2464,7 @@ void Prefab_auto_override_2() {
     ecs_fini(world);
 }
 
-void Prefab_auto_override_nested() {
+void Prefab_auto_override_nested(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2482,7 +2482,7 @@ void Prefab_auto_override_nested() {
     ecs_fini(world);
 }
 
-void Prefab_auto_override_pair() {
+void Prefab_auto_override_pair(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, TgtA);
@@ -2512,7 +2512,7 @@ void Prefab_auto_override_pair() {
     ecs_fini(world);
 }
 
-void Prefab_auto_override_pair_w_component() {
+void Prefab_auto_override_pair_w_component(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, TgtA);
@@ -2551,7 +2551,7 @@ void Prefab_auto_override_pair_w_component() {
     ecs_fini(world);
 }
 
-void Prefab_auto_override_2_pairs() {
+void Prefab_auto_override_2_pairs(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, TgtA);
@@ -2584,7 +2584,7 @@ void Prefab_auto_override_2_pairs() {
     ecs_fini(world);
 }
 
-void Prefab_auto_override_2_pairs_w_component() {
+void Prefab_auto_override_2_pairs_w_component(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, TgtA);
@@ -2627,7 +2627,7 @@ void Prefab_auto_override_2_pairs_w_component() {
     ecs_fini(world);
 }
 
-void Prefab_auto_override_2_pairs_same_obj() {
+void Prefab_auto_override_2_pairs_same_obj(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tgt);
@@ -2660,7 +2660,7 @@ void Prefab_auto_override_2_pairs_same_obj() {
     ecs_fini(world);
 }
 
-void Prefab_prefab_instanceof_hierarchy() {
+void Prefab_prefab_instanceof_hierarchy(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2695,7 +2695,7 @@ void Prefab_prefab_instanceof_hierarchy() {
     ecs_fini(world);
 }
 
-void Prefab_override_tag() {
+void Prefab_override_tag(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2715,7 +2715,7 @@ void Prefab_override_tag() {
     ecs_fini(world);
 }
 
-void Prefab_empty_prefab() {
+void Prefab_empty_prefab(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2730,7 +2730,7 @@ void Prefab_empty_prefab() {
     ecs_fini(world);
 }
 
-void Prefab_instanceof_0() {
+void Prefab_instanceof_0(void) {
     install_test_abort();
     
     ecs_world_t *world = ecs_mini();
@@ -2743,7 +2743,7 @@ void Prefab_instanceof_0() {
     ecs_fini(world);
 }
 
-void Prefab_instantiate_empty_child_table() {
+void Prefab_instantiate_empty_child_table(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_PREFAB(world, Prefab, 0);
@@ -2764,7 +2764,7 @@ void Prefab_instantiate_empty_child_table() {
     ecs_fini(world);
 }
 
-void Prefab_instantiate_emptied_child_table() {
+void Prefab_instantiate_emptied_child_table(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_PREFAB(world, Prefab, 0);
@@ -2789,7 +2789,7 @@ void Prefab_instantiate_emptied_child_table() {
     ecs_fini(world);
 }
 
-void Prefab_override_2_prefabs() {
+void Prefab_override_2_prefabs(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2822,7 +2822,7 @@ void Prefab_override_2_prefabs() {
     ecs_fini(world);
 }
 
-void Prefab_rematch_after_add_instanceof_to_parent() {
+void Prefab_rematch_after_add_instanceof_to_parent(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2853,7 +2853,7 @@ void Prefab_rematch_after_add_instanceof_to_parent() {
     ecs_fini(world);
 }
 
-void Prefab_child_of_instance() {
+void Prefab_child_of_instance(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_init();
@@ -2871,7 +2871,7 @@ void Prefab_child_of_instance() {
     ecs_fini(world);
 }
 
-void Prefab_rematch_after_prefab_delete() {
+void Prefab_rematch_after_prefab_delete(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2899,7 +2899,7 @@ void Prefab_rematch_after_prefab_delete() {
     ecs_fini(world);
 }
 
-void Prefab_add_tag_w_low_id_to_instance() {
+void Prefab_add_tag_w_low_id_to_instance(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t Tag = ecs_new_low_id(world);
@@ -2917,7 +2917,7 @@ void Prefab_add_tag_w_low_id_to_instance() {
     ecs_fini(world);
 }
 
-void Prefab_get_type_after_base_add() {
+void Prefab_get_type_after_base_add(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2933,7 +2933,7 @@ void Prefab_get_type_after_base_add() {
     ecs_fini(world);
 }
 
-void Prefab_get_type_after_recycled_base_add() {
+void Prefab_get_type_after_recycled_base_add(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2957,7 +2957,7 @@ void Prefab_get_type_after_recycled_base_add() {
     ecs_fini(world);
 }
 
-void Prefab_new_w_recycled_base() {
+void Prefab_new_w_recycled_base(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t base = ecs_new(world, 0);
@@ -2977,7 +2977,7 @@ void Prefab_new_w_recycled_base() {
     ecs_fini(world);
 }
 
-void Prefab_add_recycled_base() {
+void Prefab_add_recycled_base(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t base = ecs_new(world, 0);
@@ -2998,7 +2998,7 @@ void Prefab_add_recycled_base() {
     ecs_fini(world);
 }
 
-void Prefab_remove_recycled_base() {
+void Prefab_remove_recycled_base(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t base = ecs_new(world, 0);
@@ -3022,7 +3022,7 @@ void Prefab_remove_recycled_base() {
     ecs_fini(world);
 }
 
-void Prefab_get_from_recycled_base() {
+void Prefab_get_from_recycled_base(void) {
     ecs_world_t *world = ecs_init();
     
     ECS_COMPONENT(world, Position);
@@ -3054,7 +3054,7 @@ void Prefab_get_from_recycled_base() {
     ecs_fini(world);
 }
 
-void Prefab_override_from_recycled_base() {
+void Prefab_override_from_recycled_base(void) {
     ecs_world_t *world = ecs_init();
     
     ECS_COMPONENT(world, Position);
@@ -3087,7 +3087,7 @@ void Prefab_override_from_recycled_base() {
     ecs_fini(world);
 }
 
-void Prefab_remove_override_from_recycled_base() {
+void Prefab_remove_override_from_recycled_base(void) {
     ecs_world_t *world = ecs_init();
     
     ECS_COMPONENT(world, Position);
@@ -3119,7 +3119,7 @@ void Prefab_remove_override_from_recycled_base() {
     ecs_fini(world);
 }
 
-void Prefab_instantiate_tree_from_recycled_base() {
+void Prefab_instantiate_tree_from_recycled_base(void) {
     ecs_world_t *world = ecs_init();
     
     ECS_COMPONENT(world, Position);
@@ -3159,7 +3159,7 @@ void Prefab_instantiate_tree_from_recycled_base() {
     ecs_fini(world);
 }
 
-void Prefab_rematch_after_add_to_recycled_base() {
+void Prefab_rematch_after_add_to_recycled_base(void) {
     ecs_world_t *world = ecs_init();
     
     ECS_COMPONENT(world, Position);
@@ -3202,7 +3202,7 @@ void Prefab_rematch_after_add_to_recycled_base() {
     ecs_fini(world);
 }
 
-void Prefab_get_tag_from_2nd_base() {
+void Prefab_get_tag_from_2nd_base(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -3222,7 +3222,7 @@ void Prefab_get_tag_from_2nd_base() {
     ecs_fini(world);
 }
 
-void Prefab_get_component_from_2nd_base() {
+void Prefab_get_component_from_2nd_base(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -3245,7 +3245,7 @@ void Prefab_get_component_from_2nd_base() {
     ecs_fini(world);
 }
 
-void Prefab_get_component_from_1st_base() {
+void Prefab_get_component_from_1st_base(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -3269,7 +3269,7 @@ void Prefab_get_component_from_1st_base() {
     ecs_fini(world);
 }
 
-void Prefab_get_component_from_2nd_base_of_base() {
+void Prefab_get_component_from_2nd_base_of_base(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -3295,7 +3295,7 @@ void Prefab_get_component_from_2nd_base_of_base() {
     ecs_fini(world);
 }
 
-void Prefab_get_component_from_1st_base_of_base() {
+void Prefab_get_component_from_1st_base_of_base(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -3321,7 +3321,7 @@ void Prefab_get_component_from_1st_base_of_base() {
     ecs_fini(world);
 }
 
-void Prefab_get_component_from_2nd_base_prefab_base() {
+void Prefab_get_component_from_2nd_base_prefab_base(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -3345,7 +3345,7 @@ void Prefab_get_component_from_2nd_base_prefab_base() {
     ecs_fini(world);
 }
 
-void Prefab_get_component_from_1st_base_prefab_base() {
+void Prefab_get_component_from_1st_base_prefab_base(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -3369,7 +3369,7 @@ void Prefab_get_component_from_1st_base_prefab_base() {
     ecs_fini(world);
 }
 
-void Prefab_get_component_from_2nd_base_of_base_prefab_base() {
+void Prefab_get_component_from_2nd_base_of_base_prefab_base(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -3392,7 +3392,7 @@ void Prefab_get_component_from_2nd_base_of_base_prefab_base() {
     ecs_fini(world);
 }
 
-void Prefab_get_component_from_1st_base_of_base_prefab_base() {
+void Prefab_get_component_from_1st_base_of_base_prefab_base(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -3414,7 +3414,7 @@ void Prefab_get_component_from_1st_base_of_base_prefab_base() {
     ecs_fini(world);
 }
 
-void Prefab_fail_on_override_final() {
+void Prefab_fail_on_override_final(void) {
     install_test_abort();
     ecs_world_t *world = ecs_init();
 
@@ -3439,7 +3439,7 @@ int child_count(ecs_world_t *world, ecs_entity_t e) {
     return count;
 }
 
-void Prefab_instantiate_tree_once() {
+void Prefab_instantiate_tree_once(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_PREFAB(world, Cannon, 0);
@@ -3461,7 +3461,7 @@ void Prefab_instantiate_tree_once() {
     ecs_fini(world);
 }
 
-void Prefab_nested_prefab_w_named_children() {
+void Prefab_nested_prefab_w_named_children(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_PREFAB(world, Cannon, 0);
@@ -3487,7 +3487,7 @@ void Prefab_nested_prefab_w_named_children() {
     ecs_fini(world);
 }
 
-void Prefab_dont_copy_children_for_non_prefab_base() {
+void Prefab_dont_copy_children_for_non_prefab_base(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -3504,7 +3504,7 @@ void Prefab_dont_copy_children_for_non_prefab_base() {
     ecs_fini(world);
 }
 
-void Prefab_get_component_pair_from_base() {
+void Prefab_get_component_pair_from_base(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -3526,7 +3526,7 @@ void Prefab_get_component_pair_from_base() {
     ecs_fini(world);
 }
 
-void Prefab_get_component_pair_from_prefab_base() {
+void Prefab_get_component_pair_from_prefab_base(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -3549,7 +3549,7 @@ void Prefab_get_component_pair_from_prefab_base() {
     ecs_fini(world);
 }
 
-void Prefab_override_dont_inherit() {
+void Prefab_override_dont_inherit(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -3573,7 +3573,7 @@ void Prefab_override_dont_inherit() {
     ecs_fini(world);
 }
 
-void Prefab_prefab_w_switch() {
+void Prefab_prefab_w_switch(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
@@ -3590,7 +3590,7 @@ void Prefab_prefab_w_switch() {
     ecs_fini(world);
 }
 
-void Prefab_prefab_child_w_dont_inherit_component() {
+void Prefab_prefab_child_w_dont_inherit_component(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, TagA, DontInherit);
@@ -3614,7 +3614,7 @@ void Prefab_prefab_child_w_dont_inherit_component() {
     ecs_fini(world);
 }
 
-void Prefab_prefab_child_override() {
+void Prefab_prefab_child_override(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
@@ -3640,7 +3640,7 @@ void Prefab_prefab_child_override() {
     ecs_fini(world);
 }
 
-void Prefab_prefab_child_override_w_exclusive_pair() {
+void Prefab_prefab_child_override_w_exclusive_pair(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Rel, Exclusive);
@@ -3670,7 +3670,7 @@ void Prefab_prefab_child_override_w_exclusive_pair() {
     ecs_fini(world);
 }
 
-void Prefab_prefab_1_slot() {
+void Prefab_prefab_1_slot(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t base = ecs_new_prefab(world, "Base");
@@ -3691,7 +3691,7 @@ void Prefab_prefab_1_slot() {
     ecs_fini(world);
 }
 
-void Prefab_prefab_2_slots() {
+void Prefab_prefab_2_slots(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t base = ecs_new_prefab(world, "Base");
@@ -3722,7 +3722,7 @@ void Prefab_prefab_2_slots() {
     ecs_fini(world);
 }
 
-void Prefab_prefab_w_nested_slot() {
+void Prefab_prefab_w_nested_slot(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t base = ecs_new_prefab(world, "Base");
@@ -3754,7 +3754,7 @@ void Prefab_prefab_w_nested_slot() {
     ecs_fini(world);
 }
 
-void Prefab_prefab_w_mixed_slots() {
+void Prefab_prefab_w_mixed_slots(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t base = ecs_new_prefab(world, "Base");
@@ -3789,7 +3789,7 @@ void Prefab_prefab_w_mixed_slots() {
     ecs_fini(world);
 }
 
-void Prefab_prefab_variant_w_slot() {
+void Prefab_prefab_variant_w_slot(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t base = ecs_new_prefab(world, "Base");
@@ -3812,7 +3812,7 @@ void Prefab_prefab_variant_w_slot() {
     ecs_fini(world);
 }
 
-void Prefab_prefab_variant_w_base_slot() {
+void Prefab_prefab_variant_w_base_slot(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t base = ecs_new_prefab(world, "Base");
@@ -3836,7 +3836,7 @@ void Prefab_prefab_variant_w_base_slot() {
     ecs_fini(world);
 }
 
-void Prefab_prefab_variant_w_mixed_slots() {
+void Prefab_prefab_variant_w_mixed_slots(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t base = ecs_new_prefab(world, "Base");
@@ -3872,7 +3872,7 @@ void Prefab_prefab_variant_w_mixed_slots() {
     ecs_fini(world);
 }
 
-void Prefab_override_slot() {
+void Prefab_override_slot(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t base = ecs_new_prefab(world, "Base");
@@ -3899,7 +3899,7 @@ void Prefab_override_slot() {
     ecs_fini(world);
 }
 
-void Prefab_2_instances_w_slots_same_table() {
+void Prefab_2_instances_w_slots_same_table(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t base = ecs_new_prefab(world, "Base");
@@ -3925,7 +3925,7 @@ void Prefab_2_instances_w_slots_same_table() {
     ecs_fini(world);
 }
 
-void Prefab_slot_has_union() {
+void Prefab_slot_has_union(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t base = ecs_new_prefab(world, "Base");
@@ -3947,7 +3947,7 @@ void Prefab_slot_has_union() {
     ecs_fini(world);
 }
 
-void Prefab_slot_override() {
+void Prefab_slot_override(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t turret = ecs_new_prefab(world, "Turret");
@@ -3996,7 +3996,7 @@ void Prefab_slot_override() {
     ecs_fini(world);
 }
 
-void Prefab_base_slot_override() {
+void Prefab_base_slot_override(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t turret = ecs_new_prefab(world, "Turret");
@@ -4041,7 +4041,7 @@ void Prefab_base_slot_override() {
     ecs_fini(world);
 }
 
-void Prefab_prefab_child_w_union() {
+void Prefab_prefab_child_w_union(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Rel, Union);
@@ -4074,7 +4074,7 @@ void Prefab_prefab_child_w_union() {
     ecs_fini(world);
 }
 
-void Prefab_override_twice_w_add() {
+void Prefab_override_twice_w_add(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -4100,7 +4100,7 @@ void Prefab_override_twice_w_add() {
     ecs_fini(world);
 }
 
-void Prefab_override_twice_w_set() {
+void Prefab_override_twice_w_set(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -4134,7 +4134,7 @@ static ECS_COPY(Position, dst, src, {
     position_copy_invoked ++;
 })
 
-void Prefab_auto_override_copy_once() {
+void Prefab_auto_override_copy_once(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -4161,7 +4161,7 @@ void Prefab_auto_override_copy_once() {
     ecs_fini(world);
 }
 
-void Prefab_always_override() {
+void Prefab_always_override(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -4196,7 +4196,7 @@ void Prefab_always_override() {
     ecs_fini(world);
 }
 
-void Prefab_always_override_pair() {
+void Prefab_always_override_pair(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, RelA);
@@ -4233,7 +4233,7 @@ void Prefab_always_override_pair() {
     ecs_fini(world);
 }
 
-void Prefab_child_of_prefab_is_prefab() {
+void Prefab_child_of_prefab_is_prefab(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);

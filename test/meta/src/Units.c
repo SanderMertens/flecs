@@ -1,6 +1,6 @@
 #include <meta.h>
 
-void Units_member_w_unit() {
+void Units_member_w_unit(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t u = ecs_unit_init(world, &(ecs_unit_desc_t){
@@ -42,7 +42,7 @@ void Units_member_w_unit() {
     ecs_fini(world);
 }
 
-void Units_member_w_unit_type() {
+void Units_member_w_unit_type(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t u = ecs_primitive_init(world, &(ecs_primitive_desc_t){
@@ -91,7 +91,7 @@ void Units_member_w_unit_type() {
     ecs_fini(world);
 }
 
-void Units_cursor_get_unit() {
+void Units_cursor_get_unit(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t u = ecs_unit_init(world, &(ecs_unit_desc_t){
@@ -120,7 +120,7 @@ void Units_cursor_get_unit() {
     ecs_fini(world);
 }
 
-void Units_cursor_get_unit_type() {
+void Units_cursor_get_unit_type(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t u = ecs_primitive_init(world, &(ecs_primitive_desc_t){
@@ -153,7 +153,7 @@ void Units_cursor_get_unit_type() {
     ecs_fini(world);
 }
 
-void Units_unit_w_quantity() {
+void Units_unit_w_quantity(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t q = ecs_quantity_init(world, &(ecs_entity_desc_t){
@@ -179,7 +179,7 @@ void Units_unit_w_quantity() {
     ecs_fini(world);
 }
 
-void Units_unit_w_self_quantity() {
+void Units_unit_w_self_quantity(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t q = ecs_quantity_init(world, &(ecs_entity_desc_t){
@@ -205,7 +205,7 @@ void Units_unit_w_self_quantity() {
     ecs_fini(world);
 }
 
-void Units_unit_w_self_quantity_after_init() {
+void Units_unit_w_self_quantity_after_init(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t u = ecs_unit_init(world, &(ecs_unit_desc_t){
@@ -232,7 +232,7 @@ void Units_unit_w_self_quantity_after_init() {
     ecs_fini(world);
 }
 
-void Units_unit_w_derived() {
+void Units_unit_w_derived(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t u_1 = ecs_unit_init(world, &(ecs_unit_desc_t){
@@ -262,7 +262,7 @@ void Units_unit_w_derived() {
     ecs_fini(world);
 }
 
-void Units_unit_w_prefix() {
+void Units_unit_w_prefix(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t u_1 = ecs_unit_init(world, &(ecs_unit_desc_t){
@@ -306,7 +306,7 @@ void Units_unit_w_prefix() {
     ecs_fini(world);
 }
 
-void Units_unit_w_over() {
+void Units_unit_w_over(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t u_1 = ecs_unit_init(world, &(ecs_unit_desc_t){
@@ -348,7 +348,7 @@ void Units_unit_w_over() {
     ecs_fini(world);
 }
 
-void Units_member_w_invalid_unit() {
+void Units_member_w_invalid_unit(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t u = ecs_new_id(world); /* not a unit */
@@ -366,7 +366,7 @@ void Units_member_w_invalid_unit() {
     ecs_fini(world);
 }
 
-void Units_unit_w_invalid_quantity() {
+void Units_unit_w_invalid_quantity(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t q = ecs_new_id(world); /* not a quantity */
@@ -384,7 +384,7 @@ void Units_unit_w_invalid_quantity() {
     ecs_fini(world);
 }
 
-void Units_unit_w_invalid_derived() {
+void Units_unit_w_invalid_derived(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t u_1 = ecs_new_id(world); /* not a unit */
@@ -402,7 +402,7 @@ void Units_unit_w_invalid_derived() {
     ecs_fini(world);
 }
 
-void Units_unit_w_invalid_over() {
+void Units_unit_w_invalid_over(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t u_1 = ecs_new_id(world); /* not a unit */
@@ -427,7 +427,7 @@ void Units_unit_w_invalid_over() {
     ecs_fini(world);
 }
 
-void Units_unit_w_invalid_symbol_w_over() {
+void Units_unit_w_invalid_symbol_w_over(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t u_1 = ecs_unit_init(world, &(ecs_unit_desc_t){
@@ -455,7 +455,7 @@ void Units_unit_w_invalid_symbol_w_over() {
     ecs_fini(world);
 }
 
-void Units_unit_w_invalid_symbol_w_prefix() {
+void Units_unit_w_invalid_symbol_w_prefix(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t u_1 = ecs_unit_prefix_init(world, &(ecs_unit_prefix_desc_t){
@@ -483,7 +483,7 @@ void Units_unit_w_invalid_symbol_w_prefix() {
     ecs_fini(world);
 }
 
-void Units_unit_w_over_no_derived() {
+void Units_unit_w_over_no_derived(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t u_2 = ecs_unit_init(world, &(ecs_unit_desc_t){
@@ -504,7 +504,7 @@ void Units_unit_w_over_no_derived() {
     ecs_fini(world);
 }
 
-void Units_define_twice() {
+void Units_define_twice(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t u = ecs_unit_init(world, &(ecs_unit_desc_t){
@@ -537,7 +537,7 @@ void Units_define_twice() {
     ecs_fini(world);
 }
 
-void Units_define_twice_different_quantity() {
+void Units_define_twice_different_quantity(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t q_1 = ecs_quantity_init(world, &(ecs_entity_desc_t){
@@ -585,7 +585,7 @@ void Units_define_twice_different_quantity() {
     ecs_fini(world);
 }
 
-void Units_define_twice_remove_quantity() {
+void Units_define_twice_remove_quantity(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t q_1 = ecs_quantity_init(world, &(ecs_entity_desc_t){
@@ -627,7 +627,7 @@ void Units_define_twice_remove_quantity() {
     ecs_fini(world);
 }
 
-void Units_set_unit() {
+void Units_set_unit(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t q = ecs_entity_init(world, &(ecs_entity_desc_t){
@@ -675,7 +675,7 @@ void Units_set_unit() {
     ecs_fini(world);
 }
 
-void Units_set_unit_w_derived() {
+void Units_set_unit_w_derived(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t q = ecs_entity_init(world, &(ecs_entity_desc_t){
@@ -732,7 +732,7 @@ void Units_set_unit_w_derived() {
     ecs_fini(world);
 }
 
-void Units_set_unit_w_over() {
+void Units_set_unit_w_over(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t q = ecs_entity_init(world, &(ecs_entity_desc_t){
@@ -797,7 +797,7 @@ void Units_set_unit_w_over() {
     ecs_fini(world);
 }
 
-void Units_set_unit_w_prefix() {
+void Units_set_unit_w_prefix(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t q = ecs_entity_init(world, &(ecs_entity_desc_t){
@@ -866,7 +866,7 @@ void Units_set_unit_w_prefix() {
     ecs_fini(world);
 }
 
-void Units_builtin_units() {
+void Units_builtin_units(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, FlecsUnits);
@@ -876,7 +876,7 @@ void Units_builtin_units() {
     ecs_fini(world);
 }
 
-void Units_unit_w_short_notation() {
+void Units_unit_w_short_notation(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t u = ecs_unit(world, {
@@ -888,7 +888,7 @@ void Units_unit_w_short_notation() {
     ecs_fini(world);
 }
 
-void Units_unit_prefix_w_short_notation() {
+void Units_unit_prefix_w_short_notation(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t u = ecs_unit_prefix(world, {
@@ -900,7 +900,7 @@ void Units_unit_prefix_w_short_notation() {
     ecs_fini(world);
 }
 
-void Units_quantity_w_short_notation() {
+void Units_quantity_w_short_notation(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t u = ecs_quantity(world, {

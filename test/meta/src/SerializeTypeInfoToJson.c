@@ -1,6 +1,6 @@
 #include <meta.h>
 
-void SerializeTypeInfoToJson_bool() {
+void SerializeTypeInfoToJson_bool(void) {
     ecs_world_t *world = ecs_init();
 
     char *str = ecs_type_info_to_json(world, ecs_id(ecs_bool_t));
@@ -11,7 +11,7 @@ void SerializeTypeInfoToJson_bool() {
     ecs_fini(world);
 }
 
-void SerializeTypeInfoToJson_byte() {
+void SerializeTypeInfoToJson_byte(void) {
     ecs_world_t *world = ecs_init();
 
     char *str = ecs_type_info_to_json(world, ecs_id(ecs_byte_t));
@@ -22,7 +22,7 @@ void SerializeTypeInfoToJson_byte() {
     ecs_fini(world);
 }
 
-void SerializeTypeInfoToJson_char() {
+void SerializeTypeInfoToJson_char(void) {
     ecs_world_t *world = ecs_init();
 
     char *str = ecs_type_info_to_json(world, ecs_id(ecs_char_t));
@@ -33,7 +33,7 @@ void SerializeTypeInfoToJson_char() {
     ecs_fini(world);
 }
 
-void SerializeTypeInfoToJson_i8() {
+void SerializeTypeInfoToJson_i8(void) {
     ecs_world_t *world = ecs_init();
 
     char *str = ecs_type_info_to_json(world, ecs_id(ecs_i8_t));
@@ -44,7 +44,7 @@ void SerializeTypeInfoToJson_i8() {
     ecs_fini(world);
 }
 
-void SerializeTypeInfoToJson_i16() {
+void SerializeTypeInfoToJson_i16(void) {
     ecs_world_t *world = ecs_init();
 
     char *str = ecs_type_info_to_json(world, ecs_id(ecs_i16_t));
@@ -55,7 +55,7 @@ void SerializeTypeInfoToJson_i16() {
     ecs_fini(world);
 }
 
-void SerializeTypeInfoToJson_i32() {
+void SerializeTypeInfoToJson_i32(void) {
     ecs_world_t *world = ecs_init();
 
     char *str = ecs_type_info_to_json(world, ecs_id(ecs_i32_t));
@@ -66,7 +66,7 @@ void SerializeTypeInfoToJson_i32() {
     ecs_fini(world);
 }
 
-void SerializeTypeInfoToJson_i64() {
+void SerializeTypeInfoToJson_i64(void) {
     ecs_world_t *world = ecs_init();
 
     char *str = ecs_type_info_to_json(world, ecs_id(ecs_i64_t));
@@ -77,7 +77,7 @@ void SerializeTypeInfoToJson_i64() {
     ecs_fini(world);
 }
 
-void SerializeTypeInfoToJson_iptr() {
+void SerializeTypeInfoToJson_iptr(void) {
     ecs_world_t *world = ecs_init();
 
     char *str = ecs_type_info_to_json(world, ecs_id(ecs_iptr_t));
@@ -88,7 +88,7 @@ void SerializeTypeInfoToJson_iptr() {
     ecs_fini(world);
 }
 
-void SerializeTypeInfoToJson_u8() {
+void SerializeTypeInfoToJson_u8(void) {
     ecs_world_t *world = ecs_init();
 
     char *str = ecs_type_info_to_json(world, ecs_id(ecs_u8_t));
@@ -99,7 +99,7 @@ void SerializeTypeInfoToJson_u8() {
     ecs_fini(world);
 }
 
-void SerializeTypeInfoToJson_u16() {
+void SerializeTypeInfoToJson_u16(void) {
     ecs_world_t *world = ecs_init();
 
     char *str = ecs_type_info_to_json(world, ecs_id(ecs_u16_t));
@@ -110,7 +110,7 @@ void SerializeTypeInfoToJson_u16() {
     ecs_fini(world);
 }
 
-void SerializeTypeInfoToJson_u32() {
+void SerializeTypeInfoToJson_u32(void) {
     ecs_world_t *world = ecs_init();
 
     char *str = ecs_type_info_to_json(world, ecs_id(ecs_u32_t));
@@ -121,7 +121,7 @@ void SerializeTypeInfoToJson_u32() {
     ecs_fini(world);
 }
 
-void SerializeTypeInfoToJson_u64() {
+void SerializeTypeInfoToJson_u64(void) {
     ecs_world_t *world = ecs_init();
 
     char *str = ecs_type_info_to_json(world, ecs_id(ecs_u64_t));
@@ -132,7 +132,7 @@ void SerializeTypeInfoToJson_u64() {
     ecs_fini(world);
 }
 
-void SerializeTypeInfoToJson_uptr() {
+void SerializeTypeInfoToJson_uptr(void) {
     ecs_world_t *world = ecs_init();
 
     char *str = ecs_type_info_to_json(world, ecs_id(ecs_uptr_t));
@@ -143,7 +143,7 @@ void SerializeTypeInfoToJson_uptr() {
     ecs_fini(world);
 }
 
-void SerializeTypeInfoToJson_float() {
+void SerializeTypeInfoToJson_float(void) {
     ecs_world_t *world = ecs_init();
 
     char *str = ecs_type_info_to_json(world, ecs_id(ecs_f32_t));
@@ -154,7 +154,7 @@ void SerializeTypeInfoToJson_float() {
     ecs_fini(world);
 }
 
-void SerializeTypeInfoToJson_double() {
+void SerializeTypeInfoToJson_double(void) {
     ecs_world_t *world = ecs_init();
 
     char *str = ecs_type_info_to_json(world, ecs_id(ecs_f64_t));
@@ -165,7 +165,7 @@ void SerializeTypeInfoToJson_double() {
     ecs_fini(world);
 }
 
-void SerializeTypeInfoToJson_string() {
+void SerializeTypeInfoToJson_string(void) {
     ecs_world_t *world = ecs_init();
 
     char *str = ecs_type_info_to_json(world, ecs_id(ecs_string_t));
@@ -176,7 +176,7 @@ void SerializeTypeInfoToJson_string() {
     ecs_fini(world);
 }
 
-void SerializeTypeInfoToJson_entity() {
+void SerializeTypeInfoToJson_entity(void) {
     ecs_world_t *world = ecs_init();
 
     char *str = ecs_type_info_to_json(world, ecs_id(ecs_entity_t));
@@ -187,7 +187,7 @@ void SerializeTypeInfoToJson_entity() {
     ecs_fini(world);
 }
 
-void SerializeTypeInfoToJson_enum() {
+void SerializeTypeInfoToJson_enum(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t e = ecs_enum_init(world, &(ecs_enum_desc_t){
@@ -204,7 +204,7 @@ void SerializeTypeInfoToJson_enum() {
     ecs_fini(world);
 }
 
-void SerializeTypeInfoToJson_bitmask() {
+void SerializeTypeInfoToJson_bitmask(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t b = ecs_bitmask_init(world, &(ecs_bitmask_desc_t){
@@ -221,7 +221,7 @@ void SerializeTypeInfoToJson_bitmask() {
     ecs_fini(world);
 }
 
-void SerializeTypeInfoToJson_struct() {
+void SerializeTypeInfoToJson_struct(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -239,7 +239,7 @@ void SerializeTypeInfoToJson_struct() {
     ecs_fini(world);
 }
 
-void SerializeTypeInfoToJson_nested_struct() {
+void SerializeTypeInfoToJson_nested_struct(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -264,7 +264,7 @@ void SerializeTypeInfoToJson_nested_struct() {
     ecs_fini(world);
 }
 
-void SerializeTypeInfoToJson_array_type() {
+void SerializeTypeInfoToJson_array_type(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t at = ecs_array(world, {
@@ -280,7 +280,7 @@ void SerializeTypeInfoToJson_array_type() {
     ecs_fini(world);
 }
 
-void SerializeTypeInfoToJson_vector_type() {
+void SerializeTypeInfoToJson_vector_type(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t at = ecs_vector(world, {
@@ -295,7 +295,7 @@ void SerializeTypeInfoToJson_vector_type() {
     ecs_fini(world);
 }
 
-void SerializeTypeInfoToJson_struct_array_i32_2() {
+void SerializeTypeInfoToJson_struct_array_i32_2(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -313,7 +313,7 @@ void SerializeTypeInfoToJson_struct_array_i32_2() {
     ecs_fini(world);
 }
 
-void SerializeTypeInfoToJson_struct_array_struct_2() {
+void SerializeTypeInfoToJson_struct_array_struct_2(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t u = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -338,7 +338,7 @@ void SerializeTypeInfoToJson_struct_array_struct_2() {
     ecs_fini(world);
 }
 
-void SerializeTypeInfoToJson_struct_array_type() {
+void SerializeTypeInfoToJson_struct_array_type(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t a = ecs_array_init(world, &(ecs_array_desc_t){
@@ -361,7 +361,7 @@ void SerializeTypeInfoToJson_struct_array_type() {
     ecs_fini(world);
 }
 
-void SerializeTypeInfoToJson_struct_vector_type() {
+void SerializeTypeInfoToJson_struct_vector_type(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t a = ecs_vector_init(world, &(ecs_vector_desc_t){
@@ -388,7 +388,7 @@ int DummySerialize(const ecs_serializer_t *s, const void *ptr) {
     return 0;
 }
 
-void SerializeTypeInfoToJson_custom_primitive_type() {
+void SerializeTypeInfoToJson_custom_primitive_type(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ct = ecs_opaque(world, {
@@ -408,7 +408,7 @@ void SerializeTypeInfoToJson_custom_primitive_type() {
     ecs_fini(world);
 }
 
-void SerializeTypeInfoToJson_custom_array_type() {
+void SerializeTypeInfoToJson_custom_array_type(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t at = ecs_array(world, {
@@ -424,7 +424,7 @@ void SerializeTypeInfoToJson_custom_array_type() {
     ecs_fini(world);
 }
 
-void SerializeTypeInfoToJson_custom_vector_type() {
+void SerializeTypeInfoToJson_custom_vector_type(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ct = ecs_opaque(world, {
@@ -446,7 +446,7 @@ void SerializeTypeInfoToJson_custom_vector_type() {
     ecs_fini(world);
 }
 
-void SerializeTypeInfoToJson_custom_struct_type() {
+void SerializeTypeInfoToJson_custom_struct_type(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t s = ecs_struct(world, {
@@ -473,7 +473,7 @@ void SerializeTypeInfoToJson_custom_struct_type() {
     ecs_fini(world);
 }
 
-void SerializeTypeInfoToJson_struct_w_value_range() {
+void SerializeTypeInfoToJson_struct_w_value_range(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t s = ecs_struct(world, {
@@ -490,7 +490,7 @@ void SerializeTypeInfoToJson_struct_w_value_range() {
     ecs_fini(world);
 }
 
-void SerializeTypeInfoToJson_struct_w_error_range() {
+void SerializeTypeInfoToJson_struct_w_error_range(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t s = ecs_struct(world, {
@@ -507,7 +507,7 @@ void SerializeTypeInfoToJson_struct_w_error_range() {
     ecs_fini(world);
 }
 
-void SerializeTypeInfoToJson_struct_w_warning_range() {
+void SerializeTypeInfoToJson_struct_w_warning_range(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t s = ecs_struct(world, {
@@ -524,7 +524,7 @@ void SerializeTypeInfoToJson_struct_w_warning_range() {
     ecs_fini(world);
 }
 
-void SerializeTypeInfoToJson_struct_w_error_and_warning_range() {
+void SerializeTypeInfoToJson_struct_w_error_and_warning_range(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t s = ecs_struct(world, {

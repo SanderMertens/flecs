@@ -1,10 +1,10 @@
 #include <api.h>
 
-void New_setup() {
+void New_setup(void) {
     ecs_log_set_level(-2);
 }
 
-void New_empty() {
+void New_empty(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new(world, 0);
@@ -14,7 +14,7 @@ void New_empty() {
     ecs_fini(world);
 }
 
-void New_component() {
+void New_component(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -26,7 +26,7 @@ void New_component() {
     ecs_fini(world);
 }
 
-void New_tag() {
+void New_tag(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Tag, 0);
@@ -38,7 +38,7 @@ void New_tag() {
     ecs_fini(world);
 }
 
-void New_redefine_component() {
+void New_redefine_component(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t c = 0;
@@ -56,7 +56,7 @@ void New_redefine_component() {
     ecs_fini(world);
 }
 
-void New_recycle_id_empty() {
+void New_recycle_id_empty(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e1 = ecs_new(world, 0);
@@ -71,7 +71,7 @@ void New_recycle_id_empty() {
     ecs_fini(world);
 }
 
-void New_recycle_id_w_entity() {
+void New_recycle_id_w_entity(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t tag = ecs_new(world, 0);
@@ -88,7 +88,7 @@ void New_recycle_id_w_entity() {
     ecs_fini(world);
 }
 
-void New_recycle_empty_staged_delete() {
+void New_recycle_empty_staged_delete(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e1 = ecs_new(world, 0);
@@ -106,7 +106,7 @@ void New_recycle_empty_staged_delete() {
     ecs_fini(world);
 }
 
-void New_recycle_staged_delete() {
+void New_recycle_staged_delete(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -126,7 +126,7 @@ void New_recycle_staged_delete() {
     ecs_fini(world);
 }
 
-void New_new_id() {
+void New_new_id(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new_id(world);
@@ -136,7 +136,7 @@ void New_new_id() {
     ecs_fini(world);
 }
 
-void New_new_component_id() {
+void New_new_component_id(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new_low_id(world);
@@ -147,7 +147,7 @@ void New_new_component_id() {
     ecs_fini(world);
 }
 
-void New_new_component_id_skip_used() {
+void New_new_component_id_skip_used(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
@@ -170,7 +170,7 @@ void New_new_component_id_skip_used() {
     ecs_fini(world);
 }
 
-void New_new_component_id_skip_to_hi_id() {
+void New_new_component_id_skip_to_hi_id(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
@@ -198,7 +198,7 @@ void New_new_component_id_skip_to_hi_id() {
     ecs_fini(world);
 }
 
-void New_new_hi_component_id() {
+void New_new_hi_component_id(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new_id(world);
@@ -215,7 +215,7 @@ void New_new_hi_component_id() {
     ecs_fini(world);
 }
 
-void New_new_w_entity_0() {
+void New_new_w_entity_0(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new_w_id(world, 0);
@@ -227,7 +227,7 @@ void New_new_w_entity_0() {
 
 ECS_DECLARE(Foo);
 
-void New_create_w_explicit_id_2_worlds() {
+void New_create_w_explicit_id_2_worlds(void) {
     ecs_world_t *world_1 = ecs_mini();
     ecs_world_t *world_2 = ecs_mini();
 
@@ -252,7 +252,7 @@ void New_create_w_explicit_id_2_worlds() {
     ecs_fini(world_2);
 }
 
-void New_new_w_id_0_w_with() {
+void New_new_w_id_0_w_with(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -268,7 +268,7 @@ void New_new_w_id_0_w_with() {
     ecs_fini(world);
 }
 
-void New_new_w_id_w_with() {
+void New_new_w_id_w_with(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -286,7 +286,7 @@ void New_new_w_id_w_with() {
     ecs_fini(world);
 }
 
-void New_new_w_id_w_with_w_scope() {
+void New_new_w_id_w_with_w_scope(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -309,7 +309,7 @@ void New_new_w_id_w_with_w_scope() {
     ecs_fini(world);
 }
 
-void New_new_w_id_w_with_defer() {
+void New_new_w_id_w_with_defer(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -335,7 +335,7 @@ void New_new_w_id_w_with_defer() {
     ecs_fini(world);
 }
 
-void New_new_w_id_w_with_defer_w_scope() {
+void New_new_w_id_w_with_defer_w_scope(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -367,7 +367,7 @@ void New_new_w_id_w_with_defer_w_scope() {
     ecs_fini(world);
 }
 
-void New_new_w_type_0_w_with() {
+void New_new_w_type_0_w_with(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -383,7 +383,7 @@ void New_new_w_type_0_w_with() {
     ecs_fini(world);
 }
 
-void New_new_w_type_w_with() {
+void New_new_w_type_w_with(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -401,7 +401,7 @@ void New_new_w_type_w_with() {
     ecs_fini(world);
 }
 
-void New_new_w_type_w_with_w_scope() {
+void New_new_w_type_w_with_w_scope(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -424,7 +424,7 @@ void New_new_w_type_w_with_w_scope() {
     ecs_fini(world);
 }
 
-void New_new_w_type_w_with_defer() {
+void New_new_w_type_w_with_defer(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -450,7 +450,7 @@ void New_new_w_type_w_with_defer() {
     ecs_fini(world);
 }
 
-void New_new_w_type_w_with_defer_w_scope() {
+void New_new_w_type_w_with_defer_w_scope(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);

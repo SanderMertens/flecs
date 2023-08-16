@@ -1516,6 +1516,7 @@
                 "app_w_frame_action",
                 "app_w_default_frame_action",
                 "app_w_set_threads",
+                "app_w_set_task_threads",
                 "app_w_set_target_fps",
                 "app_w_set_frames"
             ]

@@ -5,7 +5,7 @@ struct Evt { };
 struct IdA { };
 struct IdB { };
 
-void Event_evt_1_id_entity() {
+void Event_evt_1_id_entity(void) {
     flecs::world ecs;
 
     auto evt = ecs.entity();
@@ -30,7 +30,7 @@ void Event_evt_1_id_entity() {
     test_int(count, 1);
 }
 
-void Event_evt_2_ids_entity() {
+void Event_evt_2_ids_entity(void) {
     flecs::world ecs;
 
     auto evt = ecs.entity();
@@ -65,7 +65,7 @@ void Event_evt_2_ids_entity() {
     test_int(count, 2);
 }
 
-void Event_evt_1_id_table() {
+void Event_evt_1_id_table(void) {
     flecs::world ecs;
 
     auto evt = ecs.entity();
@@ -92,7 +92,7 @@ void Event_evt_1_id_table() {
     test_int(count, 1);
 }
 
-void Event_evt_2_ids_table() {
+void Event_evt_2_ids_table(void) {
     flecs::world ecs;
 
     auto evt = ecs.entity();
@@ -128,7 +128,7 @@ void Event_evt_2_ids_table() {
     test_int(count, 2);
 }
 
-void Event_evt_type() {
+void Event_evt_type(void) {
     flecs::world ecs;
 
     auto id = ecs.entity();
@@ -152,7 +152,7 @@ void Event_evt_type() {
     test_int(count, 1);
 }
 
-void Event_evt_1_component() {
+void Event_evt_1_component(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity().add<IdA>();
@@ -175,7 +175,7 @@ void Event_evt_1_component() {
     test_int(count, 1);
 }
 
-void Event_evt_2_components() {
+void Event_evt_2_components(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity().add<IdA>().add<IdB>();
@@ -211,7 +211,7 @@ struct EvtData {
     int value;
 };
 
-void Event_evt_void_ctx() {
+void Event_evt_void_ctx(void) {
     flecs::world ecs;
 
     auto evt = ecs.entity();
@@ -240,7 +240,7 @@ void Event_evt_void_ctx() {
     test_int(count, 1);
 }
 
-void Event_evt_typed_ctx() {
+void Event_evt_typed_ctx(void) {
     flecs::world ecs;
 
     auto id = ecs.entity();
@@ -266,7 +266,7 @@ void Event_evt_typed_ctx() {
     test_int(count, 1);
 }
 
-void Event_evt_implicit_typed_ctx() {
+void Event_evt_implicit_typed_ctx(void) {
     flecs::world ecs;
 
     auto id = ecs.entity();
@@ -292,7 +292,7 @@ void Event_evt_implicit_typed_ctx() {
     test_int(count, 1);
 }
 
-void Event_evt_1_id_pair_rel_id_obj_id_entity() {
+void Event_evt_1_id_pair_rel_id_obj_id_entity(void) {
     flecs::world ecs;
 
     auto evt = ecs.entity();
@@ -318,7 +318,7 @@ void Event_evt_1_id_pair_rel_id_obj_id_entity() {
     test_int(count, 1);
 }
 
-void Event_evt_1_id_pair_rel_obj_id_entity() {
+void Event_evt_1_id_pair_rel_obj_id_entity(void) {
     flecs::world ecs;
 
     auto evt = ecs.entity();
@@ -343,7 +343,7 @@ void Event_evt_1_id_pair_rel_obj_id_entity() {
     test_int(count, 1);
 }
 
-void Event_evt_1_id_pair_rel_obj_entity() {
+void Event_evt_1_id_pair_rel_obj_entity(void) {
     flecs::world ecs;
 
     auto evt = ecs.entity();
@@ -367,7 +367,7 @@ void Event_evt_1_id_pair_rel_obj_entity() {
     test_int(count, 1);
 }
 
-void Event_emit_staged_from_world() {
+void Event_emit_staged_from_world(void) {
     flecs::world ecs;
 
     auto evt = ecs.entity();
@@ -395,7 +395,7 @@ void Event_emit_staged_from_world() {
     test_int(count, 1);
 }
 
-void Event_emit_staged_from_stage() {
+void Event_emit_staged_from_stage(void) {
     flecs::world ecs;
 
     auto evt = ecs.entity();

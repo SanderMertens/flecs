@@ -9,7 +9,7 @@ void Dummy(ecs_iter_t *it) {
     probe_iter(it);
 }
 
-void SystemMisc_invalid_not_without_id() {
+void SystemMisc_invalid_not_without_id(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_init();
@@ -21,7 +21,7 @@ void SystemMisc_invalid_not_without_id() {
     ecs_fini(world);
 }
 
-void SystemMisc_invalid_optional_without_id() {
+void SystemMisc_invalid_optional_without_id(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_init();
@@ -33,7 +33,7 @@ void SystemMisc_invalid_optional_without_id() {
     ecs_fini(world);
 }
 
-void SystemMisc_invalid_entity_without_id() {
+void SystemMisc_invalid_entity_without_id(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_init();
@@ -47,7 +47,7 @@ void SystemMisc_invalid_entity_without_id() {
     ecs_fini(world);
 }
 
-void SystemMisc_invalid_empty_without_id() {
+void SystemMisc_invalid_empty_without_id(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_init();
@@ -61,7 +61,7 @@ void SystemMisc_invalid_empty_without_id() {
     ecs_fini(world);
 }
 
-void SystemMisc_invalid_empty_element() {
+void SystemMisc_invalid_empty_element(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_init();
@@ -75,7 +75,7 @@ void SystemMisc_invalid_empty_element() {
     ecs_fini(world);
 }
 
-void SystemMisc_invalid_empty_element_w_space() {
+void SystemMisc_invalid_empty_element_w_space(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_init();
@@ -89,7 +89,7 @@ void SystemMisc_invalid_empty_element_w_space() {
     ecs_fini(world);
 }
 
-void SystemMisc_invalid_empty_or() {
+void SystemMisc_invalid_empty_or(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_init();
@@ -103,7 +103,7 @@ void SystemMisc_invalid_empty_or() {
     ecs_fini(world);
 }
 
-void SystemMisc_invalid_empty_or_w_space() {
+void SystemMisc_invalid_empty_or_w_space(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_init();
@@ -117,7 +117,7 @@ void SystemMisc_invalid_empty_or_w_space() {
     ecs_fini(world);
 }
 
-void SystemMisc_invalid_or_w_not() {
+void SystemMisc_invalid_or_w_not(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_init();
@@ -132,7 +132,7 @@ void SystemMisc_invalid_or_w_not() {
     ecs_fini(world);
 }
 
-void SystemMisc_invalid_not_w_or() {
+void SystemMisc_invalid_not_w_or(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_init();
@@ -147,7 +147,7 @@ void SystemMisc_invalid_not_w_or() {
     ecs_fini(world);
 }
 
-void SystemMisc_invalid_0_w_and() {
+void SystemMisc_invalid_0_w_and(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_init();
@@ -175,7 +175,7 @@ void SystemMisc_invalid_0_w_from_entity() {
     ecs_fini(world);
 }
 
-void SystemMisc_invalid_component_id() {
+void SystemMisc_invalid_component_id(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_init();
@@ -187,7 +187,7 @@ void SystemMisc_invalid_component_id() {
     ecs_fini(world);
 }
 
-void SystemMisc_invalid_entity_id() {
+void SystemMisc_invalid_entity_id(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_init();
@@ -201,7 +201,7 @@ void SystemMisc_invalid_entity_id() {
     ecs_fini(world);
 }
 
-void SystemMisc_invalid_null_string() {
+void SystemMisc_invalid_null_string(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_system_init(world, &(ecs_system_desc_t){
@@ -216,7 +216,7 @@ void SystemMisc_invalid_null_string() {
     ecs_fini(world);
 }
 
-void SystemMisc_invalid_empty_string() {
+void SystemMisc_invalid_empty_string(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_system_init(world, &(ecs_system_desc_t){
@@ -232,7 +232,7 @@ void SystemMisc_invalid_empty_string() {
     ecs_fini(world);
 }
 
-void SystemMisc_invalid_empty_string_w_space() {
+void SystemMisc_invalid_empty_string_w_space(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_system_init(world, &(ecs_system_desc_t){
@@ -248,7 +248,7 @@ void SystemMisc_invalid_empty_string_w_space() {
     ecs_fini(world);
 }
 
-void SystemMisc_redefine_row_system() {
+void SystemMisc_redefine_row_system(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -274,7 +274,7 @@ void IsInvoked(ecs_iter_t *it) {
     is_invoked ++;
 }
 
-void SystemMisc_system_w_or_prefab() {
+void SystemMisc_system_w_or_prefab(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -291,7 +291,7 @@ void SystemMisc_system_w_or_prefab() {
     ecs_fini(world);
 }
 
-void SystemMisc_system_w_or_disabled() {
+void SystemMisc_system_w_or_disabled(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -308,7 +308,7 @@ void SystemMisc_system_w_or_disabled() {
     ecs_fini(world);
 }
 
-void SystemMisc_system_w_or_disabled_and_prefab() {
+void SystemMisc_system_w_or_disabled_and_prefab(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -351,7 +351,7 @@ void TableColumns(ecs_iter_t *it) {
     is_invoked ++;
 }
 
-void SystemMisc_table_columns_access() {
+void SystemMisc_table_columns_access(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -373,7 +373,7 @@ void SystemMisc_table_columns_access() {
     ecs_fini(world);
 }
 
-void SystemMisc_dont_enable_after_rematch() {
+void SystemMisc_dont_enable_after_rematch(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -432,7 +432,7 @@ static void SysB(ecs_iter_t *it)
     b_entity = it->entities[0];
 }
 
-void SystemMisc_ensure_single_merge() {
+void SystemMisc_ensure_single_merge(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -458,7 +458,7 @@ static void TestTableCount(ecs_iter_t *it) {
     test_table_count_invoked ++;
 }
 
-void SystemMisc_table_count() {
+void SystemMisc_table_count(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -485,7 +485,7 @@ void SystemMisc_table_count() {
     ecs_fini(world);
 }
 
-void SystemMisc_match_system() {
+void SystemMisc_match_system(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -502,7 +502,7 @@ void SystemMisc_match_system() {
     ecs_fini(world);
 }
 
-void SystemMisc_system_initial_state() {
+void SystemMisc_system_initial_state(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -520,7 +520,7 @@ void FooSystem(ecs_iter_t *it) { }
 static
 void BarSystem(ecs_iter_t *it) { }
 
-void SystemMisc_add_own_component() {
+void SystemMisc_add_own_component(void) {
     ecs_world_t * world = ecs_init();
     
     ECS_COMPONENT(world, Position);
@@ -548,7 +548,7 @@ void ActionB(ecs_iter_t *it) {
     action_b_invoked = true;
 }
 
-void SystemMisc_change_system_action() {
+void SystemMisc_change_system_action(void) {
     ecs_world_t * world = ecs_init();
     
     ECS_COMPONENT(world, Position);
@@ -584,7 +584,7 @@ void SystemMisc_change_system_action() {
     ecs_fini(world);
 }
 
-void SystemMisc_system_readeactivate() {
+void SystemMisc_system_readeactivate(void) {
     ecs_world_t * world = ecs_init();
     
     ECS_COMPONENT(world, Position);
@@ -621,7 +621,7 @@ void Dummy1(ecs_iter_t *it) { }
 static
 void Dummy2(ecs_iter_t *it) { }
 
-void SystemMisc_system_readeactivate_w_2_systems() {
+void SystemMisc_system_readeactivate_w_2_systems(void) {
     ecs_world_t * world = ecs_init();
     
     ECS_COMPONENT(world, Position);
@@ -659,7 +659,7 @@ void SystemMisc_system_readeactivate_w_2_systems() {
     ecs_fini(world);
 }
 
-void SystemMisc_add_to_system_in_progress() {
+void SystemMisc_add_to_system_in_progress(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -684,7 +684,7 @@ void SystemMisc_add_to_system_in_progress() {
 static
 void Action(ecs_iter_t *it) { }
 
-void SystemMisc_redefine_null_signature() {
+void SystemMisc_redefine_null_signature(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t s_1 = ecs_system_init(world, &(ecs_system_desc_t){
@@ -704,7 +704,7 @@ void SystemMisc_redefine_null_signature() {
     ecs_fini(world);
 }
 
-void SystemMisc_redefine_0_signature() {
+void SystemMisc_redefine_0_signature(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t s_1 = ecs_system_init(world, &(ecs_system_desc_t){
@@ -724,7 +724,7 @@ void SystemMisc_redefine_0_signature() {
     ecs_fini(world);
 }
 
-void SystemMisc_one_named_column_of_two() {
+void SystemMisc_one_named_column_of_two(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -762,7 +762,7 @@ void SystemMisc_one_named_column_of_two() {
     ecs_fini(world);
 }
 
-void SystemMisc_two_named_columns_of_two() {
+void SystemMisc_two_named_columns_of_two(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -800,7 +800,7 @@ void SystemMisc_two_named_columns_of_two() {
     ecs_fini(world);
 }
 
-void SystemMisc_redeclare_system_explicit_id() {
+void SystemMisc_redeclare_system_explicit_id(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -823,7 +823,7 @@ void SystemMisc_redeclare_system_explicit_id() {
     ecs_fini(world);
 }
 
-void SystemMisc_redeclare_system_explicit_id_null_expr() {
+void SystemMisc_redeclare_system_explicit_id_null_expr(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -846,7 +846,7 @@ void SystemMisc_redeclare_system_explicit_id_null_expr() {
     ecs_fini(world);
 }
 
-void SystemMisc_redeclare_system_explicit_id_no_name() {
+void SystemMisc_redeclare_system_explicit_id_no_name(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -870,7 +870,7 @@ void SystemMisc_redeclare_system_explicit_id_no_name() {
     ecs_fini(world);
 }
 
-void SystemMisc_declare_different_id_same_name() {
+void SystemMisc_declare_different_id_same_name(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_init();
@@ -894,7 +894,7 @@ void SystemMisc_declare_different_id_same_name() {
     });
 }
 
-void SystemMisc_declare_different_id_same_name_w_scope() {
+void SystemMisc_declare_different_id_same_name_w_scope(void) {
     install_test_abort();
     
     ecs_world_t *world = ecs_init();
@@ -921,7 +921,7 @@ void SystemMisc_declare_different_id_same_name_w_scope() {
     });
 }
 
-void SystemMisc_rw_in_implicit_any() {
+void SystemMisc_rw_in_implicit_any(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -941,7 +941,7 @@ void SystemMisc_rw_in_implicit_any() {
     ecs_fini(world);
 }
 
-void SystemMisc_rw_in_implicit_shared() {
+void SystemMisc_rw_in_implicit_shared(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -962,7 +962,7 @@ void SystemMisc_rw_in_implicit_shared() {
     ecs_fini(world);
 }
 
-void SystemMisc_rw_in_implicit_from_empty() {
+void SystemMisc_rw_in_implicit_from_empty(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -982,7 +982,7 @@ void SystemMisc_rw_in_implicit_from_empty() {
     ecs_fini(world);
 }
 
-void SystemMisc_rw_in_implicit_from_entity() {
+void SystemMisc_rw_in_implicit_from_entity(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1003,7 +1003,7 @@ void SystemMisc_rw_in_implicit_from_entity() {
     ecs_fini(world);
 }
 
-void SystemMisc_rw_out_explicit_any() {
+void SystemMisc_rw_out_explicit_any(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1023,7 +1023,7 @@ void SystemMisc_rw_out_explicit_any() {
     ecs_fini(world);
 }
 
-void SystemMisc_rw_out_explicit_shared() {
+void SystemMisc_rw_out_explicit_shared(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1044,7 +1044,7 @@ void SystemMisc_rw_out_explicit_shared() {
     ecs_fini(world);
 }
 
-void SystemMisc_rw_out_explicit_from_empty() {
+void SystemMisc_rw_out_explicit_from_empty(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1064,7 +1064,7 @@ void SystemMisc_rw_out_explicit_from_empty() {
     ecs_fini(world);
 }
 
-void SystemMisc_rw_out_explicit_from_entity() {
+void SystemMisc_rw_out_explicit_from_entity(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1085,7 +1085,7 @@ void SystemMisc_rw_out_explicit_from_entity() {
     ecs_fini(world);
 }
 
-void SystemMisc_activate_system_for_table_w_n_pairs() {
+void SystemMisc_activate_system_for_table_w_n_pairs(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Pair);
@@ -1116,7 +1116,7 @@ void SystemMisc_activate_system_for_table_w_n_pairs() {
     ecs_fini(world);
 }
 
-void SystemMisc_get_query() {
+void SystemMisc_get_query(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1149,7 +1149,7 @@ void SystemMisc_get_query() {
     ecs_fini(world);
 }
 
-void SystemMisc_set_get_context() {
+void SystemMisc_set_get_context(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -1176,7 +1176,7 @@ void SystemMisc_set_get_context() {
     ecs_fini(world);
 }
 
-void SystemMisc_set_get_binding_context() {
+void SystemMisc_set_get_binding_context(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -1203,7 +1203,7 @@ void SystemMisc_set_get_binding_context() {
     ecs_fini(world);
 }
 
-void SystemMisc_deactivate_after_disable() {
+void SystemMisc_deactivate_after_disable(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -1228,7 +1228,7 @@ void SystemMisc_deactivate_after_disable() {
     ecs_fini(world);
 }
 
-void SystemMisc_delete_system() {
+void SystemMisc_delete_system(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -1256,7 +1256,7 @@ void SystemMisc_delete_system() {
     ecs_fini(world);
 }
 
-void SystemMisc_delete_pipeline_system() {
+void SystemMisc_delete_pipeline_system(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -1330,7 +1330,7 @@ void binding_ctx_free_2(void *ctx) {
     binding_ctx_value_2 ++;
 }
 
-void SystemMisc_delete_system_w_ctx() {
+void SystemMisc_delete_system_w_ctx(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -1365,7 +1365,7 @@ void SystemMisc_delete_system_w_ctx() {
     ecs_fini(world);
 }
 
-void SystemMisc_update_ctx() {
+void SystemMisc_update_ctx(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -1449,7 +1449,7 @@ static void Run_call_callback(ecs_iter_t *it) {
     }
 }
 
-void SystemMisc_run_custom_run_action() {
+void SystemMisc_run_custom_run_action(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, TagA);
@@ -1483,7 +1483,7 @@ void SystemMisc_run_custom_run_action() {
     ecs_fini(world);
 }
 
-void SystemMisc_run_w_offset_limit_custom_run_action() {
+void SystemMisc_run_w_offset_limit_custom_run_action(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, TagA);
@@ -1515,7 +1515,7 @@ void SystemMisc_run_w_offset_limit_custom_run_action() {
     ecs_fini(world);
 }
 
-void SystemMisc_pipeline_custom_run_action() {
+void SystemMisc_pipeline_custom_run_action(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, TagA);
@@ -1550,7 +1550,7 @@ void SystemMisc_pipeline_custom_run_action() {
     ecs_fini(world);
 }
 
-void SystemMisc_change_custom_run_action() {
+void SystemMisc_change_custom_run_action(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, TagA);
@@ -1585,7 +1585,7 @@ void SystemMisc_change_custom_run_action() {
     ecs_fini(world);
 }
 
-void SystemMisc_custom_run_action_call_next() {
+void SystemMisc_custom_run_action_call_next(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, TagA);
@@ -1620,7 +1620,7 @@ void SystemMisc_custom_run_action_call_next() {
     ecs_fini(world);
 }
 
-void SystemMisc_system_w_short_notation() {
+void SystemMisc_system_w_short_notation(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -1646,7 +1646,7 @@ void SystemMisc_system_w_short_notation() {
     ecs_fini(world);
 }
 
-void SystemMisc_update_interval_w_system_init() {
+void SystemMisc_update_interval_w_system_init(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t system = ecs_system(world, {
@@ -1665,7 +1665,7 @@ void SystemMisc_update_interval_w_system_init() {
     ecs_fini(world);
 }
 
-void SystemMisc_update_rate_w_system_init() {
+void SystemMisc_update_rate_w_system_init(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t system = ecs_system(world, {
@@ -1686,7 +1686,7 @@ void SystemMisc_update_rate_w_system_init() {
     ecs_fini(world);
 }
 
-void SystemMisc_system_w_interval_rate_stop_timer() {
+void SystemMisc_system_w_interval_rate_stop_timer(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t system = ecs_system(world, {

@@ -33,7 +33,7 @@ void Dummy(ecs_iter_t *it) {
     dummy_called = true;
 }
 
-void TriggerOnSet_set() {
+void TriggerOnSet_set(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -66,7 +66,7 @@ void TriggerOnSet_set() {
     ecs_fini(world);
 }
 
-void TriggerOnSet_set_new() {
+void TriggerOnSet_set_new(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -96,7 +96,7 @@ void TriggerOnSet_set_new() {
     ecs_fini(world);
 }
 
-void TriggerOnSet_set_again() {
+void TriggerOnSet_set_again(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -136,7 +136,7 @@ void TriggerOnSet_set_again() {
     ecs_fini(world);
 }
 
-void TriggerOnSet_clone() {
+void TriggerOnSet_clone(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -174,7 +174,7 @@ void TriggerOnSet_clone() {
     ecs_fini(world);
 }
 
-void TriggerOnSet_clone_w_value() {
+void TriggerOnSet_clone_w_value(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -261,7 +261,7 @@ void OnSet_check_order(ecs_iter_t *it) {
     set_called = true;
 }
 
-void TriggerOnSet_set_and_add_system() {
+void TriggerOnSet_set_and_add_system(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -320,7 +320,7 @@ void OnSetShared(ecs_iter_t *it) {
     }        
 }
 
-void TriggerOnSet_on_set_after_override() {
+void TriggerOnSet_on_set_after_override(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -393,7 +393,7 @@ void TriggerOnSet_on_set_after_override() {
     ecs_fini(world);
 }
 
-void TriggerOnSet_on_set_after_override_w_new() {
+void TriggerOnSet_on_set_after_override_w_new(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -429,7 +429,7 @@ void TriggerOnSet_on_set_after_override_w_new() {
     ecs_fini(world);
 }
 
-void TriggerOnSet_on_set_after_override_w_new_w_count() {
+void TriggerOnSet_on_set_after_override_w_new_w_count(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -466,7 +466,7 @@ void TriggerOnSet_on_set_after_override_w_new_w_count() {
     ecs_fini(world);
 }
 
-void TriggerOnSet_on_set_after_override_1_of_2_overridden() {
+void TriggerOnSet_on_set_after_override_1_of_2_overridden(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -503,7 +503,7 @@ void SetPosition(ecs_iter_t *it) {
     probe_iter(it);
 }
 
-void TriggerOnSet_on_set_after_snapshot_restore() {
+void TriggerOnSet_on_set_after_snapshot_restore(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -550,7 +550,7 @@ void TriggerOnSet_on_set_after_snapshot_restore() {
     ecs_fini(world);
 }
 
-void TriggerOnSet_emplace() {
+void TriggerOnSet_emplace(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -575,7 +575,7 @@ void TriggerOnSet_emplace() {
     ecs_fini(world);
 }
 
-void TriggerOnSet_un_set_tag_w_remove() {
+void TriggerOnSet_un_set_tag_w_remove(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -599,7 +599,7 @@ void TriggerOnSet_un_set_tag_w_remove() {
     ecs_fini(world);
 }
 
-void TriggerOnSet_un_set_tag_w_clear() {
+void TriggerOnSet_un_set_tag_w_clear(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -623,7 +623,7 @@ void TriggerOnSet_un_set_tag_w_clear() {
     ecs_fini(world);
 }
 
-void TriggerOnSet_un_set_tag_w_delete() {
+void TriggerOnSet_un_set_tag_w_delete(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -647,7 +647,7 @@ void TriggerOnSet_un_set_tag_w_delete() {
     ecs_fini(world);
 }
 
-void TriggerOnSet_on_set_after_remove_override() {
+void TriggerOnSet_on_set_after_remove_override(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);

@@ -116,7 +116,7 @@ ECS_STRUCT(Struct_2_nested, {
     Struct_2_i32 two;
 });
 
-void MetaUtils_struct_w_2_i32() {
+void MetaUtils_struct_w_2_i32(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_META_COMPONENT(world, Struct_2_i32);
@@ -130,7 +130,7 @@ void MetaUtils_struct_w_2_i32() {
     ecs_fini(world);
 }
 
-void MetaUtils_struct_w_2_bool() {
+void MetaUtils_struct_w_2_bool(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_META_COMPONENT(world, Struct_2_bool);
@@ -144,7 +144,7 @@ void MetaUtils_struct_w_2_bool() {
     ecs_fini(world);
 }
 
-void MetaUtils_struct_w_2_char() {
+void MetaUtils_struct_w_2_char(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_META_COMPONENT(world, Struct_2_char);
@@ -158,7 +158,7 @@ void MetaUtils_struct_w_2_char() {
     ecs_fini(world);
 }
 
-void MetaUtils_struct_w_2_string() {
+void MetaUtils_struct_w_2_string(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_META_COMPONENT(world, Struct_2_string);
@@ -172,7 +172,7 @@ void MetaUtils_struct_w_2_string() {
     ecs_fini(world);
 }
 
-void MetaUtils_struct_w_2_f32() {
+void MetaUtils_struct_w_2_f32(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_META_COMPONENT(world, Struct_2_f32);
@@ -186,7 +186,7 @@ void MetaUtils_struct_w_2_f32() {
     ecs_fini(world);
 }
 
-void MetaUtils_struct_w_2_f64() {
+void MetaUtils_struct_w_2_f64(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_META_COMPONENT(world, Struct_2_f64);
@@ -200,7 +200,7 @@ void MetaUtils_struct_w_2_f64() {
     ecs_fini(world);
 }
 
-void MetaUtils_struct_w_3_enum() {
+void MetaUtils_struct_w_3_enum(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_META_COMPONENT(world, Enum_Default);
@@ -215,7 +215,7 @@ void MetaUtils_struct_w_3_enum() {
     ecs_fini(world);
 }
 
-void MetaUtils_struct_w_3_enum_multiline() {
+void MetaUtils_struct_w_3_enum_multiline(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_META_COMPONENT(world, Enum_Default_Multiline);
@@ -230,7 +230,7 @@ void MetaUtils_struct_w_3_enum_multiline() {
     ecs_fini(world);
 }
 
-void MetaUtils_struct_w_3_enum_w_assignment() {
+void MetaUtils_struct_w_3_enum_w_assignment(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_META_COMPONENT(world, Enum_Assign);
@@ -245,7 +245,7 @@ void MetaUtils_struct_w_3_enum_w_assignment() {
     ecs_fini(world);
 }
 
-void MetaUtils_struct_w_4_bitmask() {
+void MetaUtils_struct_w_4_bitmask(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_META_COMPONENT(world, Bitmask);
@@ -260,7 +260,7 @@ void MetaUtils_struct_w_4_bitmask() {
     ecs_fini(world);
 }
 
-void MetaUtils_struct_w_3_entities() {
+void MetaUtils_struct_w_3_entities(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_META_COMPONENT(world, Struct_3_entities);
@@ -274,7 +274,7 @@ void MetaUtils_struct_w_3_entities() {
     ecs_fini(world);
 }
 
-void MetaUtils_struct_w_2_array_3_i32() {
+void MetaUtils_struct_w_2_array_3_i32(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_META_COMPONENT(world, Struct_2_array_3_i32);
@@ -288,7 +288,7 @@ void MetaUtils_struct_w_2_array_3_i32() {
     ecs_fini(world);
 }
 
-void MetaUtils_struct_w_nested() {
+void MetaUtils_struct_w_nested(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_META_COMPONENT(world, Struct_2_i32);
@@ -303,7 +303,7 @@ void MetaUtils_struct_w_nested() {
     ecs_fini(world);
 }
 
-void MetaUtils_enum_nospace() {
+void MetaUtils_enum_nospace(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_META_COMPONENT(world, Enum_Nospace);
@@ -325,7 +325,7 @@ void MetaUtils_enum_nospace() {
     ecs_fini(world);
 }
 
-void MetaUtils_struct_nospace() {
+void MetaUtils_struct_nospace(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_META_COMPONENT(world, Struct_Nospace);
@@ -344,7 +344,7 @@ void MetaUtils_struct_nospace() {
     ecs_fini(world);
 }
 
-void MetaUtils_identifier_w_underscore() {
+void MetaUtils_identifier_w_underscore(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_META_COMPONENT(world, _Struct_w_underscore);
@@ -376,7 +376,7 @@ void MetaUtils_identifier_w_underscore() {
     ecs_fini(world);
 }
 
-void MetaUtils_struct_w_ptr() {
+void MetaUtils_struct_w_ptr(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_META_COMPONENT(world, Struct_w_ptrs);
@@ -396,7 +396,7 @@ void MetaUtils_struct_w_ptr() {
     ecs_fini(world);
 }
 
-void MetaUtils_private_members() {
+void MetaUtils_private_members(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_META_COMPONENT(world, Struct_w_private);

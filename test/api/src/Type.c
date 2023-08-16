@@ -8,11 +8,11 @@ char* type_str(ecs_world_t *world, ecs_entity_t type_ent) {
     return ecs_type_str(world, t);
 }
 
-void Type_setup() {
+void Type_setup(void) {
     ecs_log_set_level(-2);
 }
 
-void Type_type_of_1_tostr() {
+void Type_type_of_1_tostr(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -28,7 +28,7 @@ void Type_type_of_1_tostr() {
     ecs_fini(world);
 }
 
-void Type_type_of_2_tostr() {
+void Type_type_of_2_tostr(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -47,7 +47,7 @@ void Type_type_of_2_tostr() {
     ecs_fini(world);
 }
 
-void Type_type_of_2_tostr_no_id() {
+void Type_type_of_2_tostr_no_id(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_ensure(world, 100);
@@ -63,7 +63,7 @@ void Type_type_of_2_tostr_no_id() {
     ecs_fini(world);
 }
 
-void Type_invalid_entity_type_expression() {
+void Type_invalid_entity_type_expression(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -80,7 +80,7 @@ void Type_invalid_entity_type_expression() {
     ecs_fini(world);
 }
 
-void Type_invalid_system_type_expression() {
+void Type_invalid_system_type_expression(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -95,7 +95,7 @@ void Type_invalid_system_type_expression() {
     ecs_fini(world);
 }
 
-void Type_get_type() {
+void Type_get_type(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -113,7 +113,7 @@ void Type_get_type() {
     ecs_fini(world);
 }
 
-void Type_get_type_from_empty() {
+void Type_get_type_from_empty(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new(world, 0);
@@ -124,7 +124,7 @@ void Type_get_type_from_empty() {
     ecs_fini(world);
 }
 
-void Type_get_type_from_0() {
+void Type_get_type_from_0(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -134,7 +134,7 @@ void Type_get_type_from_0() {
     ecs_get_type(world, 0);
 }
 
-void Type_type_to_expr_pair() {
+void Type_type_to_expr_pair(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_ensure(world, 100);
@@ -150,7 +150,7 @@ void Type_type_to_expr_pair() {
     ecs_fini(world);
 }
 
-void Type_type_to_expr_pair_w_comp() {
+void Type_type_to_expr_pair_w_comp(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -169,7 +169,7 @@ void Type_type_to_expr_pair_w_comp() {
     ecs_fini(world);
 }
 
-void Type_type_to_expr_scope() {
+void Type_type_to_expr_scope(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -192,7 +192,7 @@ void Type_type_to_expr_scope() {
     ecs_fini(world);
 }
 
-void Type_type_to_expr_pair_w_override() {
+void Type_type_to_expr_pair_w_override(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -211,7 +211,7 @@ void Type_type_to_expr_pair_w_override() {
     ecs_fini(world);
 }
 
-void Type_entity_str() {
+void Type_entity_str(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, e, 0);
@@ -223,7 +223,7 @@ void Type_entity_str() {
     ecs_fini(world);
 }
 
-void Type_entity_path_str() {
+void Type_entity_path_str(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, parent, 0);
@@ -236,7 +236,7 @@ void Type_entity_path_str() {
     ecs_fini(world);
 }
 
-void Type_entity_instanceof_str() {
+void Type_entity_instanceof_str(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Foo, 0);
@@ -250,7 +250,7 @@ void Type_entity_instanceof_str() {
     ecs_fini(world);
 }
 
-void Type_entity_childof_str() {
+void Type_entity_childof_str(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Foo, 0);
@@ -264,7 +264,7 @@ void Type_entity_childof_str() {
     ecs_fini(world);
 }
 
-void Type_entity_pair_str() {
+void Type_entity_pair_str(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Foo, 0);
@@ -279,7 +279,7 @@ void Type_entity_pair_str() {
     ecs_fini(world);
 }
 
-void Type_entity_and_str() {
+void Type_entity_and_str(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Foo, 0);
@@ -293,7 +293,7 @@ void Type_entity_and_str() {
     ecs_fini(world);
 }
 
-void Type_entity_str_small_buffer() {
+void Type_entity_str_small_buffer(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Foo, 0);
@@ -307,27 +307,27 @@ void Type_entity_str_small_buffer() {
     ecs_fini(world);
 }
 
-void Type_role_pair_str() {
+void Type_role_pair_str(void) {
     ecs_entity_t e = ECS_PAIR;
     test_str(ecs_id_flag_str(e), "PAIR");
 }
 
-void Type_role_and_str() {
+void Type_role_and_str(void) {
     ecs_entity_t e = ECS_AND;
     test_str(ecs_id_flag_str(e), "AND");
 }
 
-void Type_role_owned_str() {
+void Type_role_owned_str(void) {
     ecs_entity_t e = ECS_OVERRIDE;
     test_str(ecs_id_flag_str(e), "OVERRIDE");
 }
 
-void Type_role_disabled_str() {
+void Type_role_disabled_str(void) {
     ecs_entity_t e = ECS_TOGGLE;
     test_str(ecs_id_flag_str(e), "TOGGLE");
 }
 
-void Type_large_type_expr() {
+void Type_large_type_expr(void) {
     ecs_world_t *world = ecs_mini();
 
     int i;
@@ -368,7 +368,7 @@ void Type_large_type_expr() {
     ecs_fini(world);
 }
 
-void Type_large_type_expr_limit() {
+void Type_large_type_expr_limit(void) {
     ecs_world_t *world = ecs_mini();
 
     test_assert(FLECS_ID_DESC_MAX == 32);

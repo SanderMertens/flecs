@@ -1,10 +1,10 @@
 #include <api.h>
 
-void Get_component_setup() {
+void Get_component_setup(void) {
     ecs_log_set_level(-3);
 }
 
-void Get_component_get_empty() {
+void Get_component_get_empty(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new(world, 0);
@@ -15,7 +15,7 @@ void Get_component_get_empty() {
     ecs_fini(world);
 }
 
-void Get_component_get_1_from_1() {
+void Get_component_get_1_from_1(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -28,7 +28,7 @@ void Get_component_get_1_from_1() {
     ecs_fini(world);
 }
 
-void Get_component_get_1_from_2() {
+void Get_component_get_1_from_2(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -42,7 +42,7 @@ void Get_component_get_1_from_2() {
     ecs_fini(world);
 }
 
-void Get_component_get_2_from_2() {
+void Get_component_get_2_from_2(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -56,7 +56,7 @@ void Get_component_get_2_from_2() {
     ecs_fini(world);
 }
 
-void Get_component_get_2_from_3() {
+void Get_component_get_2_from_3(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -81,7 +81,7 @@ void Test_main_stage(ecs_iter_t *it) {
     }
 }
 
-void Get_component_get_1_from_2_in_progress_from_main_stage() {
+void Get_component_get_1_from_2_in_progress_from_main_stage(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -111,7 +111,7 @@ void Add_in_progress(ecs_iter_t *it) {
     }
 }
 
-void Get_component_get_1_from_2_add_in_progress() {
+void Get_component_get_1_from_2_add_in_progress(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -141,7 +141,7 @@ void Add_in_progress_test_main(ecs_iter_t *it) {
     }
 }
 
-void Get_component_get_both_from_2_add_in_progress() {
+void Get_component_get_both_from_2_add_in_progress(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -174,7 +174,7 @@ void Add_remove_in_progress_test_main(ecs_iter_t *it) {
     }
 }
 
-void Get_component_get_both_from_2_add_remove_in_progress() {
+void Get_component_get_both_from_2_add_remove_in_progress(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -196,7 +196,7 @@ void Get_component_get_both_from_2_add_remove_in_progress() {
     ecs_fini(world);
 }
 
-void Get_component_get_childof_component() {
+void Get_component_get_childof_component(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -210,7 +210,7 @@ void Get_component_get_childof_component() {
     ecs_get(world, ecs_pair(EcsChildOf, ecs_id(Position)), EcsComponent);
 }
 
-void Get_component_get_mut_equal_get() {
+void Get_component_get_mut_equal_get(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -225,7 +225,7 @@ void Get_component_get_mut_equal_get() {
     ecs_fini(world);
 }
 
-void Get_component_get_tag() {
+void Get_component_get_tag(void) {
     install_test_abort();
     ecs_world_t *world = ecs_mini();
 
@@ -240,7 +240,7 @@ void Get_component_get_tag() {
     ecs_fini(world);
 }
 
-void Get_component_get_pair_tag() {
+void Get_component_get_pair_tag(void) {
     install_test_abort();
     ecs_world_t *world = ecs_mini();
 

@@ -1,13 +1,13 @@
 #include <cpp_api.h>
 
-void WorldFactory_entity() {
+void WorldFactory_entity(void) {
     flecs::world ecs;
 
     auto e = ecs.entity();
     test_assert(e.id() != 0);
 }
 
-void WorldFactory_entity_w_name() {
+void WorldFactory_entity_w_name(void) {
     flecs::world ecs;
 
     auto e = ecs.entity("MyName");
@@ -15,14 +15,14 @@ void WorldFactory_entity_w_name() {
     test_str(e.name().c_str(), "MyName");
 }
 
-void WorldFactory_entity_w_id() {
+void WorldFactory_entity_w_id(void) {
     flecs::world ecs;
 
     auto e = ecs.entity(100);
     test_assert(e.id() == 100);
 }
 
-void WorldFactory_prefab() {
+void WorldFactory_prefab(void) {
     flecs::world ecs;
 
     auto e = ecs.prefab();
@@ -30,7 +30,7 @@ void WorldFactory_prefab() {
     test_assert(e.has(flecs::Prefab));
 }
 
-void WorldFactory_prefab_w_name() {
+void WorldFactory_prefab_w_name(void) {
     flecs::world ecs;
 
     auto e = ecs.prefab("MyName");
@@ -39,7 +39,7 @@ void WorldFactory_prefab_w_name() {
     test_str(e.name().c_str(), "MyName");
 }
 
-void WorldFactory_system() {
+void WorldFactory_system(void) {
     flecs::world ecs;
 
     auto s = ecs.system<Position, const Velocity>()
@@ -61,7 +61,7 @@ void WorldFactory_system() {
     test_int(p->y, 22);
 }
 
-void WorldFactory_system_w_name() {
+void WorldFactory_system_w_name(void) {
     flecs::world ecs;
 
     auto s = ecs.system<Position, const Velocity>("MySystem")
@@ -84,7 +84,7 @@ void WorldFactory_system_w_name() {
     test_int(p->y, 22);
 }
 
-void WorldFactory_system_w_expr() {
+void WorldFactory_system_w_expr(void) {
     flecs::world ecs;
 
     ecs.component<Position>();
@@ -116,7 +116,7 @@ void WorldFactory_system_w_expr() {
     test_int(p->y, 22);
 }
 
-void WorldFactory_query() {
+void WorldFactory_query(void) {
     flecs::world ecs;
 
     auto q = ecs.query<Position, const Velocity>();
@@ -135,7 +135,7 @@ void WorldFactory_query() {
     test_int(p->y, 22);
 }
 
-void WorldFactory_query_w_expr() {
+void WorldFactory_query_w_expr(void) {
     flecs::world ecs;
 
     ecs.component<Position>();
@@ -162,7 +162,7 @@ void WorldFactory_query_w_expr() {
     test_int(p->y, 22);
 }
 
-void WorldFactory_snapshot() {
+void WorldFactory_snapshot(void) {
     flecs::world ecs;
 
     ecs.component<Position>();
@@ -191,7 +191,7 @@ public:
     }
 };
 
-void WorldFactory_module() {
+void WorldFactory_module(void) {
     flecs::world ecs;
 
     ecs.import<MyModule>();

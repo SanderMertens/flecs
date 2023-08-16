@@ -64,7 +64,7 @@ int StringVec_serialize(const ecs_serializer_t *ser, const void *ptr) {
     return 0;
 }
 
-void OpaqueTypes_ser_i32_type_to_json() {
+void OpaqueTypes_ser_i32_type_to_json(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Int32);
@@ -87,7 +87,7 @@ void OpaqueTypes_ser_i32_type_to_json() {
     ecs_fini(world);
 }
 
-void OpaqueTypes_ser_string_type_to_json() {
+void OpaqueTypes_ser_string_type_to_json(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, String);
@@ -110,7 +110,7 @@ void OpaqueTypes_ser_string_type_to_json() {
     ecs_fini(world);
 }
 
-void OpaqueTypes_ser_vec_i32_type_to_json() {
+void OpaqueTypes_ser_vec_i32_type_to_json(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, IntVec);
@@ -133,7 +133,7 @@ void OpaqueTypes_ser_vec_i32_type_to_json() {
     ecs_fini(world);
 }
 
-void OpaqueTypes_ser_vec_string_type_to_json() {
+void OpaqueTypes_ser_vec_string_type_to_json(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, StringVec);
@@ -231,7 +231,7 @@ int Struct_3_member_serialize(const ecs_serializer_t *ser, const void *ptr) {
     return 0;
 }
 
-void OpaqueTypes_ser_struct_1_member() {
+void OpaqueTypes_ser_struct_1_member(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Struct_1_member);
@@ -260,7 +260,7 @@ void OpaqueTypes_ser_struct_1_member() {
     ecs_fini(world);
 }
 
-void OpaqueTypes_ser_struct_2_members() {
+void OpaqueTypes_ser_struct_2_members(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Struct_2_member);
@@ -290,7 +290,7 @@ void OpaqueTypes_ser_struct_2_members() {
     ecs_fini(world);
 }
 
-void OpaqueTypes_ser_struct_3_members() {
+void OpaqueTypes_ser_struct_3_members(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Struct_3_member);
@@ -352,7 +352,7 @@ static void Opaque_string_set(void *ptr, const char *value) {
     ((Opaque_string*)ptr)->value = ecs_os_strdup(value);
 }
 
-void OpaqueTypes_deser_bool_from_json() {
+void OpaqueTypes_deser_bool_from_json(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Opaque_bool);
@@ -378,7 +378,7 @@ void OpaqueTypes_deser_bool_from_json() {
     ecs_fini(world);
 }
 
-void OpaqueTypes_deser_char_from_json() {
+void OpaqueTypes_deser_char_from_json(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Opaque_char);
@@ -404,7 +404,7 @@ void OpaqueTypes_deser_char_from_json() {
     ecs_fini(world);
 }
 
-void OpaqueTypes_deser_int_from_json() {
+void OpaqueTypes_deser_int_from_json(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Opaque_int64_t);
@@ -430,7 +430,7 @@ void OpaqueTypes_deser_int_from_json() {
     ecs_fini(world);
 }
 
-void OpaqueTypes_deser_uint_from_json() {
+void OpaqueTypes_deser_uint_from_json(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Opaque_uint64_t);
@@ -456,7 +456,7 @@ void OpaqueTypes_deser_uint_from_json() {
     ecs_fini(world);
 }
 
-void OpaqueTypes_deser_float_from_json() {
+void OpaqueTypes_deser_float_from_json(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Opaque_double);
@@ -482,7 +482,7 @@ void OpaqueTypes_deser_float_from_json() {
     ecs_fini(world);
 }
 
-void OpaqueTypes_deser_string_from_json() {
+void OpaqueTypes_deser_string_from_json(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Opaque_string);
@@ -512,7 +512,7 @@ void OpaqueTypes_deser_string_from_json() {
     ecs_fini(world);
 }
 
-void OpaqueTypes_deser_entity_from_json() {
+void OpaqueTypes_deser_entity_from_json(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Opaque_entity);
@@ -543,7 +543,7 @@ void OpaqueTypes_deser_entity_from_json() {
     ecs_fini(world);
 }
 
-void OpaqueTypes_ser_deser_world_w_ser_opaque() {
+void OpaqueTypes_ser_deser_world_w_ser_opaque(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Int32);
@@ -585,7 +585,7 @@ void Entity_assign(void *ptr, ecs_world_t *world, ecs_entity_t value) {
     data->entity = value;
 }
 
-void OpaqueTypes_ser_deser_entity() {
+void OpaqueTypes_ser_deser_entity(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Entity);
@@ -613,7 +613,7 @@ void OpaqueTypes_ser_deser_entity() {
     ecs_fini(world);
 }
 
-void OpaqueTypes_ser_deser_0_entity() {
+void OpaqueTypes_ser_deser_0_entity(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Entity);

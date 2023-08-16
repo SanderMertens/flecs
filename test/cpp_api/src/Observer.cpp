@@ -1,6 +1,6 @@
 #include <cpp_api.h>
 
-void Observer_2_terms_on_add() {
+void Observer_2_terms_on_add(void) {
     flecs::world ecs;
 
     int32_t count = 0;
@@ -21,7 +21,7 @@ void Observer_2_terms_on_add() {
     test_int(count, 1);
 }
 
-void Observer_2_terms_on_remove() {
+void Observer_2_terms_on_remove(void) {
     flecs::world ecs;
 
     int32_t count = 0;
@@ -52,7 +52,7 @@ void Observer_2_terms_on_remove() {
     test_int(count, 1);    
 }
 
-void Observer_2_terms_on_set() {
+void Observer_2_terms_on_set(void) {
     flecs::world ecs;
 
     int32_t count = 0;
@@ -77,7 +77,7 @@ void Observer_2_terms_on_set() {
     test_int(count, 1);
 }
 
-void Observer_2_terms_un_set() {
+void Observer_2_terms_un_set(void) {
     flecs::world ecs;
 
     int32_t count = 0;
@@ -108,7 +108,7 @@ void Observer_2_terms_un_set() {
     test_int(count, 1); 
 }
 
-void Observer_10_terms() {
+void Observer_10_terms(void) {
     flecs::world ecs;
 
     int count = 0;
@@ -148,7 +148,7 @@ void Observer_10_terms() {
     test_int(count, 1);
 }
 
-void Observer_20_terms() {
+void Observer_20_terms(void) {
     flecs::world ecs;
 
     int count = 0;
@@ -208,7 +208,7 @@ void Observer_20_terms() {
     test_int(count, 1);
 }
 
-void Observer_2_entities_iter() {
+void Observer_2_entities_iter(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity();
@@ -245,7 +245,7 @@ void Observer_2_entities_iter() {
     test_assert(last == e2);
 }
 
-void Observer_2_entities_table_column() {
+void Observer_2_entities_table_column(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity();
@@ -284,7 +284,7 @@ void Observer_2_entities_table_column() {
     test_assert(last == e2);
 }
 
-void Observer_2_entities_each() {
+void Observer_2_entities_each(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity();
@@ -319,7 +319,7 @@ void Observer_2_entities_each() {
     test_assert(last == e2);
 }
 
-void Observer_create_w_no_template_args() {
+void Observer_create_w_no_template_args(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity();
@@ -338,7 +338,7 @@ void Observer_create_w_no_template_args() {
     test_int(count, 1);
 }
 
-void Observer_yield_existing() {
+void Observer_yield_existing(void) {
     flecs::world world;
 
     struct TagA { };
@@ -362,7 +362,7 @@ void Observer_yield_existing() {
     test_int(count, 6);
 }
 
-void Observer_yield_existing_2_terms() {
+void Observer_yield_existing_2_terms(void) {
     flecs::world world;
 
     struct TagA { };
@@ -388,7 +388,7 @@ void Observer_yield_existing_2_terms() {
     test_int(count, 6);
 }
 
-void Observer_default_ctor() {
+void Observer_default_ctor(void) {
     flecs::world world;
 
     struct TagA { };
@@ -408,7 +408,7 @@ void Observer_default_ctor() {
     test_int(count, 1);
 }
 
-void Observer_entity_ctor() {
+void Observer_entity_ctor(void) {
     flecs::world world;
 
     struct TagA { };
@@ -423,7 +423,7 @@ void Observer_entity_ctor() {
     test_assert(eo == o);
 }
 
-void Observer_on_add() {
+void Observer_on_add(void) {
     flecs::world world;
 
     int invoked = 0;
@@ -440,7 +440,7 @@ void Observer_on_add() {
     test_int(invoked, 1);
 }
 
-void Observer_on_remove() {
+void Observer_on_remove(void) {
     flecs::world world;
 
     int invoked = 0;
@@ -463,7 +463,7 @@ void Observer_on_remove() {
 
 struct MyTag { };
 
-void Observer_on_add_tag_action() {
+void Observer_on_add_tag_action(void) {
     flecs::world world;
 
     int invoked = 0;
@@ -480,7 +480,7 @@ void Observer_on_add_tag_action() {
     test_int(invoked, 1);
 }
 
-void Observer_on_add_tag_iter() {
+void Observer_on_add_tag_iter(void) {
     flecs::world world;
 
     int invoked = 0;
@@ -497,7 +497,7 @@ void Observer_on_add_tag_iter() {
     test_int(invoked, 1);
 }
 
-void Observer_on_add_tag_each() {
+void Observer_on_add_tag_each(void) {
     flecs::world world;
 
     int invoked = 0;
@@ -514,7 +514,7 @@ void Observer_on_add_tag_each() {
     test_int(invoked, 1);
 }
 
-void Observer_on_add_expr() {
+void Observer_on_add_expr(void) {
     flecs::world world;
 
     int invoked = 0;
@@ -536,7 +536,7 @@ void Observer_on_add_expr() {
     test_int(invoked, 1);
 }
 
-void Observer_observer_w_filter_term() {
+void Observer_observer_w_filter_term(void) {
     flecs::world world;
 
     flecs::entity TagA = world.entity();
@@ -574,7 +574,7 @@ void Observer_observer_w_filter_term() {
     test_int(invoked, 1);
 }
 
-void Observer_run_callback() {
+void Observer_run_callback(void) {
     flecs::world ecs;
 
     int32_t count = 0;
@@ -597,7 +597,7 @@ void Observer_run_callback() {
     test_int(count, 1);
 }
 
-void Observer_get_query() {
+void Observer_get_query(void) {
     flecs::world world;
 
     world.entity().set<Position>({0, 0});

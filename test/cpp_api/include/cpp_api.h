@@ -355,7 +355,7 @@ struct Struct_w_vector {
     std::vector<int> value;
 };
 
-void install_test_abort();
+void install_test_abort(void);
 
 #endif
 

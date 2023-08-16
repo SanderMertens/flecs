@@ -1,7 +1,7 @@
 #include <meta.h>
 #include <math.h>
 
-void SerializeToExpr_bool() {
+void SerializeToExpr_bool(void) {
     ecs_world_t *world = ecs_init();
 
     {
@@ -23,7 +23,7 @@ void SerializeToExpr_bool() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_byte() {
+void SerializeToExpr_byte(void) {
     ecs_world_t *world = ecs_init();
 
     {
@@ -53,7 +53,7 @@ void SerializeToExpr_byte() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_char() {
+void SerializeToExpr_char(void) {
     ecs_world_t *world = ecs_init();
 
     {
@@ -91,7 +91,7 @@ void SerializeToExpr_char() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_i8() {
+void SerializeToExpr_i8(void) {
     ecs_world_t *world = ecs_init();
 
     {
@@ -121,7 +121,7 @@ void SerializeToExpr_i8() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_i16() {
+void SerializeToExpr_i16(void) {
     ecs_world_t *world = ecs_init();
 
     {
@@ -151,7 +151,7 @@ void SerializeToExpr_i16() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_i32() {
+void SerializeToExpr_i32(void) {
     ecs_world_t *world = ecs_init();
 
     {
@@ -181,7 +181,7 @@ void SerializeToExpr_i32() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_i64() {
+void SerializeToExpr_i64(void) {
     ecs_world_t *world = ecs_init();
 
     {
@@ -211,7 +211,7 @@ void SerializeToExpr_i64() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_iptr() {
+void SerializeToExpr_iptr(void) {
     ecs_world_t *world = ecs_init();
 
     {
@@ -241,7 +241,7 @@ void SerializeToExpr_iptr() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_u8() {
+void SerializeToExpr_u8(void) {
     ecs_world_t *world = ecs_init();
 
     {
@@ -263,7 +263,7 @@ void SerializeToExpr_u8() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_u16() {
+void SerializeToExpr_u16(void) {
     ecs_world_t *world = ecs_init();
 
     {
@@ -285,7 +285,7 @@ void SerializeToExpr_u16() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_u32() {
+void SerializeToExpr_u32(void) {
     ecs_world_t *world = ecs_init();
 
     {
@@ -307,7 +307,7 @@ void SerializeToExpr_u32() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_u64() {
+void SerializeToExpr_u64(void) {
     ecs_world_t *world = ecs_init();
 
     {
@@ -329,7 +329,7 @@ void SerializeToExpr_u64() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_uptr() {
+void SerializeToExpr_uptr(void) {
     ecs_world_t *world = ecs_init();
 
     {
@@ -351,7 +351,7 @@ void SerializeToExpr_uptr() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_float() {
+void SerializeToExpr_float(void) {
     ecs_world_t *world = ecs_init();
 
     {
@@ -381,7 +381,7 @@ void SerializeToExpr_float() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_double() {
+void SerializeToExpr_double(void) {
     ecs_world_t *world = ecs_init();
 
     {
@@ -411,7 +411,7 @@ void SerializeToExpr_double() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_float_nan() {
+void SerializeToExpr_float_nan(void) {
     ecs_world_t *world = ecs_init();
 
     {
@@ -425,7 +425,7 @@ void SerializeToExpr_float_nan() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_float_inf() {
+void SerializeToExpr_float_inf(void) {
     ecs_world_t *world = ecs_init();
 
     {
@@ -447,7 +447,7 @@ void SerializeToExpr_float_inf() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_double_nan() {
+void SerializeToExpr_double_nan(void) {
     ecs_world_t *world = ecs_init();
 
     {
@@ -461,7 +461,7 @@ void SerializeToExpr_double_nan() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_double_inf() {
+void SerializeToExpr_double_inf(void) {
     ecs_world_t *world = ecs_init();
 
     {
@@ -483,7 +483,7 @@ void SerializeToExpr_double_inf() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_string() {
+void SerializeToExpr_string(void) {
     ecs_world_t *world = ecs_init();
 
     {
@@ -521,7 +521,7 @@ void SerializeToExpr_string() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_entity() {
+void SerializeToExpr_entity(void) {
     ecs_world_t *world = ecs_init();
 
     {
@@ -543,7 +543,7 @@ void SerializeToExpr_entity() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_enum() {
+void SerializeToExpr_enum(void) {
     typedef enum {
         Red, Blue, Green
     } T;
@@ -592,7 +592,7 @@ void SerializeToExpr_enum() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_bitmask() {
+void SerializeToExpr_bitmask(void) {
     uint32_t Lettuce = 0x1;
     uint32_t Bacon =   0x1 << 1;
     uint32_t Tomato =  0x1 << 2;
@@ -658,7 +658,7 @@ void SerializeToExpr_bitmask() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_struct_enum() {
+void SerializeToExpr_struct_enum(void) {
     typedef enum {
         Red, Blue, Green
     } E;
@@ -720,7 +720,7 @@ void SerializeToExpr_struct_enum() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_struct_bitmask() {
+void SerializeToExpr_struct_bitmask(void) {
     typedef struct {
         uint32_t x;
     } T;
@@ -799,7 +799,7 @@ void SerializeToExpr_struct_bitmask() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_struct_i32() {
+void SerializeToExpr_struct_i32(void) {
     typedef struct {
         int32_t x;
     } T;
@@ -822,7 +822,7 @@ void SerializeToExpr_struct_i32() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_struct_i32_i32() {
+void SerializeToExpr_struct_i32_i32(void) {
     typedef struct {
         int32_t x;
         int32_t y;
@@ -847,7 +847,7 @@ void SerializeToExpr_struct_i32_i32() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_struct_entity() {
+void SerializeToExpr_struct_entity(void) {
     typedef struct {
         ecs_entity_t e;
     } T;
@@ -870,7 +870,7 @@ void SerializeToExpr_struct_entity() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_entity_entity_after_float() {
+void SerializeToExpr_entity_entity_after_float(void) {
     typedef struct {
         int32_t v;
         ecs_entity_t e;
@@ -895,7 +895,7 @@ void SerializeToExpr_entity_entity_after_float() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_struct_nested_i32() {
+void SerializeToExpr_struct_nested_i32(void) {
     typedef struct {
         ecs_i32_t x;
     } N1;
@@ -929,7 +929,7 @@ void SerializeToExpr_struct_nested_i32() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_struct_nested_i32_i32() {
+void SerializeToExpr_struct_nested_i32_i32(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -965,7 +965,7 @@ void SerializeToExpr_struct_nested_i32_i32() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_struct_2_nested_i32_i32() {
+void SerializeToExpr_struct_2_nested_i32_i32(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -1003,7 +1003,7 @@ void SerializeToExpr_struct_2_nested_i32_i32() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_struct_i32_array_3() {
+void SerializeToExpr_struct_i32_array_3(void) {
     typedef struct {
         int32_t x[3];
     } T;
@@ -1026,7 +1026,7 @@ void SerializeToExpr_struct_i32_array_3() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_struct_struct_i32_array_3() {
+void SerializeToExpr_struct_struct_i32_array_3(void) {
     typedef struct {
         ecs_i32_t x;
     } N1;
@@ -1060,7 +1060,7 @@ void SerializeToExpr_struct_struct_i32_array_3() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_struct_struct_i32_i32_array_3() {
+void SerializeToExpr_struct_struct_i32_i32_array_3(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -1096,7 +1096,7 @@ void SerializeToExpr_struct_struct_i32_i32_array_3() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_struct_w_array_type_i32_i32() {
+void SerializeToExpr_struct_w_array_type_i32_i32(void) {
     typedef int32_t N1[2];
 
     typedef struct {
@@ -1127,7 +1127,7 @@ void SerializeToExpr_struct_w_array_type_i32_i32() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_struct_w_2_array_type_i32_i32() {
+void SerializeToExpr_struct_w_2_array_type_i32_i32(void) {
     typedef int32_t N1[2];
 
     typedef struct {
@@ -1160,7 +1160,7 @@ void SerializeToExpr_struct_w_2_array_type_i32_i32() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_struct_w_array_type_struct() {
+void SerializeToExpr_struct_w_array_type_struct(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -1210,7 +1210,7 @@ void SerializeToExpr_struct_w_array_type_struct() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_struct_w_2_array_type_struct() {
+void SerializeToExpr_struct_w_2_array_type_struct(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -1266,7 +1266,7 @@ void SerializeToExpr_struct_w_2_array_type_struct() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_struct_partial() {
+void SerializeToExpr_struct_partial(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1287,7 +1287,7 @@ void SerializeToExpr_struct_partial() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_array_i32_3() {
+void SerializeToExpr_array_i32_3(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t t = ecs_array_init(world, &(ecs_array_desc_t){
@@ -1304,7 +1304,7 @@ void SerializeToExpr_array_i32_3() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_array_struct_i32_i32() {
+void SerializeToExpr_array_struct_i32_i32(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1331,7 +1331,7 @@ void SerializeToExpr_array_struct_i32_i32() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_array_array_i32_3() {
+void SerializeToExpr_array_array_i32_3(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t a = ecs_array_init(world, &(ecs_array_desc_t){
@@ -1355,7 +1355,7 @@ void SerializeToExpr_array_array_i32_3() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_vector_i32_3() {
+void SerializeToExpr_vector_i32_3(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t t = ecs_vector_init(world, &(ecs_vector_desc_t){
@@ -1378,7 +1378,7 @@ void SerializeToExpr_vector_i32_3() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_vector_struct_i32_i32() {
+void SerializeToExpr_vector_struct_i32_i32(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1411,7 +1411,7 @@ void SerializeToExpr_vector_struct_i32_i32() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_vector_array_i32_3() {
+void SerializeToExpr_vector_array_i32_3(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t a = ecs_array_init(world, &(ecs_array_desc_t){
@@ -1453,7 +1453,7 @@ void SerializeToExpr_vector_array_i32_3() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_escape_simple_string() {
+void SerializeToExpr_escape_simple_string(void) {
     ecs_world_t *world = ecs_init();
 
     char *str = ecs_astresc('"', "Hello World");
@@ -1463,7 +1463,7 @@ void SerializeToExpr_escape_simple_string() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_escape_newline() {
+void SerializeToExpr_escape_newline(void) {
     ecs_world_t *world = ecs_init();
 
     char *str = ecs_astresc('"', "\n");
@@ -1473,7 +1473,7 @@ void SerializeToExpr_escape_newline() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_escape_2_newlines() {
+void SerializeToExpr_escape_2_newlines(void) {
     ecs_world_t *world = ecs_init();
 
     char *str = ecs_astresc('"', "\n\n");
@@ -1483,7 +1483,7 @@ void SerializeToExpr_escape_2_newlines() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_escape_string_w_trailing_newline() {
+void SerializeToExpr_escape_string_w_trailing_newline(void) {
     ecs_world_t *world = ecs_init();
 
     char *str = ecs_astresc('"', "Hello World\n");
@@ -1493,7 +1493,7 @@ void SerializeToExpr_escape_string_w_trailing_newline() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_escape_string_w_2_trailing_newlines() {
+void SerializeToExpr_escape_string_w_2_trailing_newlines(void) {
     ecs_world_t *world = ecs_init();
 
     char *str = ecs_astresc('"', "Hello World\n\n");
@@ -1503,7 +1503,7 @@ void SerializeToExpr_escape_string_w_2_trailing_newlines() {
     ecs_fini(world);
 }
 
-void SerializeToExpr_escape_string_w_delim() {
+void SerializeToExpr_escape_string_w_delim(void) {
     ecs_world_t *world = ecs_init();
 
     char *str = ecs_astresc('"', "\"Hello World\"");

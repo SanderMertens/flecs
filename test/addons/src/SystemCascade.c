@@ -21,7 +21,7 @@ void Iter(ecs_iter_t *it) {
     }
 }
 
-void SystemCascade_cascade_depth_1() {
+void SystemCascade_cascade_depth_1(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -87,7 +87,7 @@ void SystemCascade_cascade_depth_1() {
     ecs_fini(world);
 }
 
-void SystemCascade_cascade_depth_2() {
+void SystemCascade_cascade_depth_2(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -168,7 +168,7 @@ void SystemCascade_cascade_depth_2() {
     ecs_fini(world);
 }
 
-void SystemCascade_cascade_depth_2_new_syntax() {
+void SystemCascade_cascade_depth_2_new_syntax(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -267,7 +267,7 @@ void AddParent(ecs_iter_t *it) {
     }
 }
 
-void SystemCascade_add_after_match() {
+void SystemCascade_add_after_match(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -344,7 +344,7 @@ void SystemCascade_add_after_match() {
     ecs_fini(world);
 }
 
-void SystemCascade_adopt_after_match() {
+void SystemCascade_adopt_after_match(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -415,7 +415,7 @@ void SystemCascade_adopt_after_match() {
     ecs_fini(world);
 }
 
-void SystemCascade_custom_relation_cascade_depth_1() {
+void SystemCascade_custom_relation_cascade_depth_1(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -482,7 +482,7 @@ void SystemCascade_custom_relation_cascade_depth_1() {
     ecs_fini(world);
 }
 
-void SystemCascade_custom_relation_cascade_depth_2() {
+void SystemCascade_custom_relation_cascade_depth_2(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -564,7 +564,7 @@ void SystemCascade_custom_relation_cascade_depth_2() {
     ecs_fini(world);
 }
 
-void SystemCascade_custom_relation_add_after_match() {
+void SystemCascade_custom_relation_add_after_match(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -642,7 +642,7 @@ void SystemCascade_custom_relation_add_after_match() {
     ecs_fini(world);
 }
 
-void SystemCascade_custom_relation_adopt_after_match() {
+void SystemCascade_custom_relation_adopt_after_match(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);

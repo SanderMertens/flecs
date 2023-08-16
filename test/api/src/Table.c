@@ -1,6 +1,6 @@
 #include <api.h>
 
-void Table_get_index() {
+void Table_get_index(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -18,7 +18,7 @@ void Table_get_index() {
     ecs_fini(world);
 }
 
-void Table_get_index_not_in_table() {
+void Table_get_index_not_in_table(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -38,7 +38,7 @@ void Table_get_index_not_in_table() {
     ecs_fini(world);
 }
 
-void Table_get_column() {
+void Table_get_column(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -72,7 +72,7 @@ void Table_get_column() {
     ecs_fini(world);
 }
 
-void Table_get_column_for_tag() {
+void Table_get_column_for_tag(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -91,7 +91,7 @@ void Table_get_column_for_tag() {
     ecs_fini(world);
 }
 
-void Table_get_column_for_component_after_tag() {
+void Table_get_column_for_component_after_tag(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -132,7 +132,7 @@ void Table_get_column_for_component_after_tag() {
     ecs_fini(world);
 }
 
-void Table_get_column_w_offset() {
+void Table_get_column_w_offset(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -162,7 +162,7 @@ void Table_get_column_w_offset() {
     ecs_fini(world);
 }
 
-void Table_get_id() {
+void Table_get_id(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -194,7 +194,7 @@ void Table_get_id() {
     ecs_fini(world);
 }
 
-void Table_get_component() {
+void Table_get_component(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -226,7 +226,7 @@ void Table_get_component() {
     ecs_fini(world);
 }
 
-void Table_get_pair() {
+void Table_get_pair(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -259,7 +259,7 @@ void Table_get_pair() {
     ecs_fini(world);
 }
 
-void Table_get_from_stage() {
+void Table_get_from_stage(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -295,7 +295,7 @@ void Table_get_from_stage() {
     ecs_fini(world);
 }
 
-void Table_get_depth() {
+void Table_get_depth(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e1 = ecs_new_id(world);
@@ -310,7 +310,7 @@ void Table_get_depth() {
     ecs_fini(world);
 }
 
-void Table_get_depth_non_acyclic() {
+void Table_get_depth_non_acyclic(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -324,7 +324,7 @@ void Table_get_depth_non_acyclic() {
     ecs_table_get_depth(world, ecs_get_table(world, e1), Rel);
 }
 
-void Table_get_depth_2_paths() {
+void Table_get_depth_2_paths(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e1 = ecs_new_id(world);
@@ -340,7 +340,7 @@ void Table_get_depth_2_paths() {
     ecs_fini(world);
 }
 
-void Table_get_column_size() {
+void Table_get_column_size(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);

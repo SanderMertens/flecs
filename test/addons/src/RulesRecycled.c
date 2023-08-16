@@ -9,7 +9,7 @@ static ecs_entity_t recycled_id(ecs_world_t *world, const char *name) {
     return result_2;
 }
 
-void RulesRecycled_recycled_vars() {
+void RulesRecycled_recycled_vars(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -56,7 +56,7 @@ void RulesRecycled_recycled_vars() {
     ecs_fini(world);
 }
 
-void RulesRecycled_recycled_pair_vars() {
+void RulesRecycled_recycled_pair_vars(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -108,7 +108,7 @@ void RulesRecycled_recycled_pair_vars() {
     ecs_fini(world);
 }
 
-void RulesRecycled_recycled_this_ent_var() {
+void RulesRecycled_recycled_this_ent_var(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -162,7 +162,7 @@ void RulesRecycled_recycled_this_ent_var() {
     ecs_fini(world);
 }
 
-void RulesRecycled_has_recycled_id_from_pair() {
+void RulesRecycled_has_recycled_id_from_pair(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);

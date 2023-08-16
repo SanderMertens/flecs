@@ -8,7 +8,7 @@ enum Color {
     Red, Green, Blue
 };
 
-void FilterBuilder_builder_assign_same_type() {
+void FilterBuilder_builder_assign_same_type(void) {
     flecs::world ecs;
 
     flecs::filter<Position, Velocity> q = 
@@ -26,7 +26,7 @@ void FilterBuilder_builder_assign_same_type() {
     test_int(count, 1);
 }
 
-void FilterBuilder_builder_assign_to_empty() {
+void FilterBuilder_builder_assign_to_empty(void) {
     flecs::world ecs;
 
     flecs::filter<> q = ecs.filter_builder<Position, Velocity>().build();
@@ -43,7 +43,7 @@ void FilterBuilder_builder_assign_to_empty() {
     test_int(count, 1);
 }
 
-void FilterBuilder_builder_assign_from_empty() {
+void FilterBuilder_builder_assign_from_empty(void) {
     flecs::world ecs;
 
     flecs::filter<> q = ecs.filter_builder<>()
@@ -70,7 +70,7 @@ struct FilterWrapper
     flecs::filter<Components...> f_;
 };
 
-void FilterBuilder_builder_force_assign_operator() {
+void FilterBuilder_builder_force_assign_operator(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity().set<Position>({10, 20});
@@ -86,7 +86,7 @@ void FilterBuilder_builder_force_assign_operator() {
     });
 }
 
-void FilterBuilder_builder_build() {
+void FilterBuilder_builder_build(void) {
     flecs::world ecs;
 
     flecs::filter<Position, Velocity> q = 
@@ -104,7 +104,7 @@ void FilterBuilder_builder_build() {
     test_int(count, 1);
 }
 
-void FilterBuilder_builder_build_to_auto() {
+void FilterBuilder_builder_build_to_auto(void) {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Position, Velocity>().build();
@@ -121,7 +121,7 @@ void FilterBuilder_builder_build_to_auto() {
     test_int(count, 1);
 }
 
-void FilterBuilder_builder_build_n_statements() {
+void FilterBuilder_builder_build_n_statements(void) {
     flecs::world ecs;
 
     auto qb = ecs.filter_builder<>();
@@ -141,7 +141,7 @@ void FilterBuilder_builder_build_n_statements() {
     test_int(count, 1);
 }
 
-void FilterBuilder_1_type() {
+void FilterBuilder_1_type(void) {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Position>().build();
@@ -158,7 +158,7 @@ void FilterBuilder_1_type() {
     test_int(count, 1);
 }
 
-void FilterBuilder_add_1_type() {
+void FilterBuilder_add_1_type(void) {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<>()
@@ -177,7 +177,7 @@ void FilterBuilder_add_1_type() {
     test_int(count, 1);
 }
 
-void FilterBuilder_add_2_types() {
+void FilterBuilder_add_2_types(void) {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<>()
@@ -197,7 +197,7 @@ void FilterBuilder_add_2_types() {
     test_int(count, 1);
 }
 
-void FilterBuilder_add_1_type_w_1_type() {
+void FilterBuilder_add_1_type_w_1_type(void) {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Position>()
@@ -216,7 +216,7 @@ void FilterBuilder_add_1_type_w_1_type() {
     test_int(count, 1);
 }
 
-void FilterBuilder_add_2_types_w_1_type() {
+void FilterBuilder_add_2_types_w_1_type(void) {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Position>()
@@ -236,7 +236,7 @@ void FilterBuilder_add_2_types_w_1_type() {
     test_int(count, 1);
 }
 
-void FilterBuilder_add_pair() {
+void FilterBuilder_add_pair(void) {
     flecs::world ecs;
 
     auto Likes = ecs.entity();
@@ -259,7 +259,7 @@ void FilterBuilder_add_pair() {
     test_int(count, 1);
 }
 
-void FilterBuilder_add_not() {
+void FilterBuilder_add_not(void) {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Position>()
@@ -278,7 +278,7 @@ void FilterBuilder_add_not() {
     test_int(count, 1);
 }
 
-void FilterBuilder_add_or() {
+void FilterBuilder_add_or(void) {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<>()
@@ -299,7 +299,7 @@ void FilterBuilder_add_or() {
     test_int(count, 2);
 }
 
-void FilterBuilder_add_optional() {
+void FilterBuilder_add_optional(void) {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<>()
@@ -320,7 +320,7 @@ void FilterBuilder_add_optional() {
     test_int(count, 2);
 }
 
-void FilterBuilder_ptr_type() {
+void FilterBuilder_ptr_type(void) {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Position, Velocity*>().build();
@@ -338,7 +338,7 @@ void FilterBuilder_ptr_type() {
     test_int(count, 2);
 }
 
-void FilterBuilder_const_type() {
+void FilterBuilder_const_type(void) {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<const Position>().build();
@@ -355,7 +355,7 @@ void FilterBuilder_const_type() {
     test_int(count, 1);
 }
 
-void FilterBuilder_string_term() {
+void FilterBuilder_string_term(void) {
     flecs::world ecs;
 
     ecs.component<Position>();
@@ -376,7 +376,7 @@ void FilterBuilder_string_term() {
     test_int(count, 1);
 }
 
-void FilterBuilder_singleton_term() {
+void FilterBuilder_singleton_term(void) {
     flecs::world ecs;
 
     ecs.set<Other>({10});
@@ -409,7 +409,7 @@ void FilterBuilder_singleton_term() {
     test_int(count, 3);
 }
 
-void FilterBuilder_isa_superset_term() {
+void FilterBuilder_isa_superset_term(void) {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Self>()
@@ -439,7 +439,7 @@ void FilterBuilder_isa_superset_term() {
     test_int(count, 3);
 }
 
-void FilterBuilder_isa_self_superset_term() {
+void FilterBuilder_isa_self_superset_term(void) {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Self>()
@@ -480,7 +480,7 @@ void FilterBuilder_isa_self_superset_term() {
     test_int(owned_count, 2);
 }
 
-void FilterBuilder_childof_superset_term() {
+void FilterBuilder_childof_superset_term(void) {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Self>()
@@ -510,7 +510,7 @@ void FilterBuilder_childof_superset_term() {
     test_int(count, 3);
 }
 
-void FilterBuilder_childof_self_superset_term() {
+void FilterBuilder_childof_self_superset_term(void) {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Self>()
@@ -551,7 +551,7 @@ void FilterBuilder_childof_self_superset_term() {
     test_int(owned_count, 2);
 }
 
-void FilterBuilder_isa_superset_term_w_each() {
+void FilterBuilder_isa_superset_term_w_each(void) {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Self, Other>()
@@ -576,7 +576,7 @@ void FilterBuilder_isa_superset_term_w_each() {
     test_int(count, 3);
 }
 
-void FilterBuilder_isa_self_superset_term_w_each() {
+void FilterBuilder_isa_self_superset_term_w_each(void) {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Self, Other>()
@@ -603,7 +603,7 @@ void FilterBuilder_isa_self_superset_term_w_each() {
     test_int(count, 5);
 }
 
-void FilterBuilder_childof_superset_term_w_each() {
+void FilterBuilder_childof_superset_term_w_each(void) {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Self, Other>()
@@ -628,7 +628,7 @@ void FilterBuilder_childof_superset_term_w_each() {
     test_int(count, 3);
 }
 
-void FilterBuilder_childof_self_superset_term_w_each() {
+void FilterBuilder_childof_self_superset_term_w_each(void) {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Self, Other>()
@@ -655,7 +655,7 @@ void FilterBuilder_childof_self_superset_term_w_each() {
     test_int(count, 5);
 }
 
-void FilterBuilder_isa_superset_shortcut() {
+void FilterBuilder_isa_superset_shortcut(void) {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Self, Other>()
@@ -680,7 +680,7 @@ void FilterBuilder_isa_superset_shortcut() {
     test_int(count, 3);
 }
 
-void FilterBuilder_isa_superset_shortcut_w_self() {
+void FilterBuilder_isa_superset_shortcut_w_self(void) {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Self, Other>()
@@ -707,7 +707,7 @@ void FilterBuilder_isa_superset_shortcut_w_self() {
     test_int(count, 5);
 }
 
-void FilterBuilder_childof_superset_shortcut() {
+void FilterBuilder_childof_superset_shortcut(void) {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Self, Other>()
@@ -732,7 +732,7 @@ void FilterBuilder_childof_superset_shortcut() {
     test_int(count, 3);
 }
 
-void FilterBuilder_childof_superset_shortcut_w_self() {
+void FilterBuilder_childof_superset_shortcut_w_self(void) {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Self, Other>()
@@ -759,7 +759,7 @@ void FilterBuilder_childof_superset_shortcut_w_self() {
     test_int(count, 5);
 }
 
-void FilterBuilder_relation() {
+void FilterBuilder_relation(void) {
     flecs::world ecs;
 
     auto Likes = ecs.entity();
@@ -787,7 +787,7 @@ void FilterBuilder_relation() {
     test_int(count, 2);
 }
 
-void FilterBuilder_relation_w_object_wildcard() {
+void FilterBuilder_relation_w_object_wildcard(void) {
     flecs::world ecs;
 
     auto Likes = ecs.entity();
@@ -818,7 +818,7 @@ void FilterBuilder_relation_w_object_wildcard() {
     test_int(count, 4);
 }
 
-void FilterBuilder_relation_w_predicate_wildcard() {
+void FilterBuilder_relation_w_predicate_wildcard(void) {
     flecs::world ecs;
 
     auto Likes = ecs.entity();
@@ -847,7 +847,7 @@ void FilterBuilder_relation_w_predicate_wildcard() {
     test_int(count, 2);
 }
 
-void FilterBuilder_add_pair_w_rel_type() {
+void FilterBuilder_add_pair_w_rel_type(void) {
     flecs::world ecs;
 
     struct Likes { };
@@ -877,7 +877,7 @@ void FilterBuilder_add_pair_w_rel_type() {
     test_int(count, 2);
 }
 
-void FilterBuilder_template_term() {
+void FilterBuilder_template_term(void) {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Position>()
@@ -896,7 +896,7 @@ void FilterBuilder_template_term() {
     test_int(count, 1);
 }
 
-void FilterBuilder_explicit_subject_w_id() {
+void FilterBuilder_explicit_subject_w_id(void) {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<Position>()
@@ -915,7 +915,7 @@ void FilterBuilder_explicit_subject_w_id() {
     test_int(count, 1);
 }
 
-void FilterBuilder_explicit_subject_w_type() {
+void FilterBuilder_explicit_subject_w_type(void) {
     flecs::world ecs;
 
     ecs.set<Position>({10, 20});
@@ -935,7 +935,7 @@ void FilterBuilder_explicit_subject_w_type() {
     test_int(count, 1);
 }
 
-void FilterBuilder_explicit_object_w_id() {
+void FilterBuilder_explicit_object_w_id(void) {
     flecs::world ecs;
 
     auto Likes = ecs.entity("Likes");
@@ -958,7 +958,7 @@ void FilterBuilder_explicit_object_w_id() {
     test_int(count, 1);
 }
 
-void FilterBuilder_explicit_object_w_type() {
+void FilterBuilder_explicit_object_w_type(void) {
     flecs::world ecs;
 
     auto Likes = ecs.entity();
@@ -981,7 +981,7 @@ void FilterBuilder_explicit_object_w_type() {
     test_int(count, 1);
 }
 
-void FilterBuilder_explicit_term() {
+void FilterBuilder_explicit_term(void) {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<>()
@@ -1000,7 +1000,7 @@ void FilterBuilder_explicit_term() {
     test_int(count, 1);
 }
 
-void FilterBuilder_explicit_term_w_type() {
+void FilterBuilder_explicit_term_w_type(void) {
     flecs::world ecs;
 
     auto q = ecs.filter_builder<>()
@@ -1019,7 +1019,7 @@ void FilterBuilder_explicit_term_w_type() {
     test_int(count, 1);
 }
 
-void FilterBuilder_explicit_term_w_pair_type() {
+void FilterBuilder_explicit_term_w_pair_type(void) {
     flecs::world ecs;
 
     struct Likes { };
@@ -1042,7 +1042,7 @@ void FilterBuilder_explicit_term_w_pair_type() {
     test_int(count, 1);
 }
 
-void FilterBuilder_explicit_term_w_id() {
+void FilterBuilder_explicit_term_w_id(void) {
     flecs::world ecs;
 
     auto Apples = ecs.entity();
@@ -1064,7 +1064,7 @@ void FilterBuilder_explicit_term_w_id() {
     test_int(count, 1);
 }
 
-void FilterBuilder_explicit_term_w_pair_id() {
+void FilterBuilder_explicit_term_w_pair_id(void) {
     flecs::world ecs;
 
     auto Likes = ecs.entity();
@@ -1087,7 +1087,7 @@ void FilterBuilder_explicit_term_w_pair_id() {
     test_int(count, 1);
 }
 
-void FilterBuilder_1_term_to_empty() {
+void FilterBuilder_1_term_to_empty(void) {
     flecs::world ecs;
 
     auto Likes = ecs.entity();
@@ -1105,7 +1105,7 @@ void FilterBuilder_1_term_to_empty() {
     test_int(q.term(1).id(), ecs.pair(Likes, Apples));
 }
 
-void FilterBuilder_2_subsequent_args() {
+void FilterBuilder_2_subsequent_args(void) {
     flecs::world ecs;
 
     struct Rel { int foo; };
@@ -1139,7 +1139,7 @@ int filter_arg(flecs::filter<Self> f) {
     return count;
 }
 
-void FilterBuilder_filter_as_arg() {
+void FilterBuilder_filter_as_arg(void) {
     flecs::world ecs;
 
     auto f = ecs.filter<Self>();
@@ -1168,7 +1168,7 @@ int filter_move_arg(flecs::filter<Self>&& f) {
     return count;
 }
 
-void FilterBuilder_filter_as_move_arg() {
+void FilterBuilder_filter_as_move_arg(void) {
     flecs::world ecs;
 
     auto f = ecs.filter<Self>();
@@ -1190,7 +1190,7 @@ flecs::filter<Self> filter_return(flecs::world& ecs) {
     return ecs.filter<Self>();
 }
 
-void FilterBuilder_filter_as_return() {
+void FilterBuilder_filter_as_return(void) {
     flecs::world ecs;
 
     auto e = ecs.entity();
@@ -1214,7 +1214,7 @@ void FilterBuilder_filter_as_return() {
     test_int(count, 3);
 }
 
-void FilterBuilder_filter_copy() {
+void FilterBuilder_filter_copy(void) {
     flecs::world ecs;
 
     auto e = ecs.entity();
@@ -1240,7 +1240,7 @@ void FilterBuilder_filter_copy() {
     test_int(count, 3);
 }
 
-void FilterBuilder_world_each_filter_1_component() {
+void FilterBuilder_world_each_filter_1_component(void) {
     flecs::world ecs;
 
     auto e = ecs.entity();
@@ -1262,7 +1262,7 @@ void FilterBuilder_world_each_filter_1_component() {
     test_int(count, 3);
 }
 
-void FilterBuilder_world_each_filter_2_components() {
+void FilterBuilder_world_each_filter_2_components(void) {
     flecs::world ecs;
 
     auto e = ecs.entity();
@@ -1289,7 +1289,7 @@ void FilterBuilder_world_each_filter_2_components() {
     test_int(count, 3);
 }
 
-void FilterBuilder_world_each_filter_1_component_no_entity() {
+void FilterBuilder_world_each_filter_1_component_no_entity(void) {
     flecs::world ecs;
 
     ecs.entity()
@@ -1313,7 +1313,7 @@ void FilterBuilder_world_each_filter_1_component_no_entity() {
     test_int(count, 3);
 }
 
-void FilterBuilder_world_each_filter_2_components_no_entity() {
+void FilterBuilder_world_each_filter_2_components_no_entity(void) {
     flecs::world ecs;
 
     ecs.entity()
@@ -1347,7 +1347,7 @@ void FilterBuilder_world_each_filter_2_components_no_entity() {
     test_int(count, 3);
 }
 
-void FilterBuilder_10_terms() {
+void FilterBuilder_10_terms(void) {
     flecs::world ecs;
 
     auto f = ecs.filter_builder<>()
@@ -1388,7 +1388,7 @@ void FilterBuilder_10_terms() {
     test_int(count, 1);
 }
 
-void FilterBuilder_20_terms() {
+void FilterBuilder_20_terms(void) {
     flecs::world ecs;
 
     auto f = ecs.filter_builder<>()
@@ -1449,7 +1449,7 @@ void FilterBuilder_20_terms() {
     test_int(count, 1);
 }
 
-void FilterBuilder_term_after_arg() {
+void FilterBuilder_term_after_arg(void) {
     flecs::world ecs;
 
     auto e_1 = ecs.entity()
@@ -1477,7 +1477,7 @@ void FilterBuilder_term_after_arg() {
     test_int(count, 1);
 }
 
-void FilterBuilder_name_arg() {
+void FilterBuilder_name_arg(void) {
     flecs::world ecs;
 
     auto e = ecs.entity("Foo").set<Position>({10, 20});
@@ -1497,7 +1497,7 @@ void FilterBuilder_name_arg() {
     test_int(count, 1);
 }
 
-void FilterBuilder_const_in_term() {
+void FilterBuilder_const_in_term(void) {
     flecs::world ecs;
 
     ecs.entity().set<Position>({10, 20});
@@ -1520,7 +1520,7 @@ void FilterBuilder_const_in_term() {
     test_int(count, 1);
 }
 
-void FilterBuilder_const_optional() {
+void FilterBuilder_const_optional(void) {
     flecs::world ecs;
 	
 	ecs.entity().set<Position>({10, 20}).add<TagA>();
@@ -1545,7 +1545,7 @@ void FilterBuilder_const_optional() {
     test_int(set_count, 1);
 }
 
-void FilterBuilder_create_w_no_template_args() {
+void FilterBuilder_create_w_no_template_args(void) {
     flecs::world ecs;
 
     auto q = ecs.filter_builder().term<Position>().build();
@@ -1561,7 +1561,7 @@ void FilterBuilder_create_w_no_template_args() {
     test_int(count, 1);
 }
 
-void FilterBuilder_2_terms_w_expr() {
+void FilterBuilder_2_terms_w_expr(void) {
     flecs::world ecs;
 
     auto a = ecs.entity("A");
@@ -1587,7 +1587,7 @@ void FilterBuilder_2_terms_w_expr() {
     test_int(count, 1);
 }
 
-void FilterBuilder_assert_on_uninitialized_term() {
+void FilterBuilder_assert_on_uninitialized_term(void) {
     install_test_abort();
 
     flecs::world ecs;
@@ -1603,7 +1603,7 @@ void FilterBuilder_assert_on_uninitialized_term() {
         .build();
 }
 
-void FilterBuilder_operator_shortcuts() {
+void FilterBuilder_operator_shortcuts(void) {
     flecs::world ecs;
 
     flecs::entity a = ecs.entity();
@@ -1659,7 +1659,7 @@ void FilterBuilder_operator_shortcuts() {
     test_int(t.oper(), flecs::NotFrom);
 }
 
-void FilterBuilder_inout_shortcuts() {
+void FilterBuilder_inout_shortcuts(void) {
     flecs::world ecs;
 
     flecs::entity a = ecs.entity();
@@ -1691,7 +1691,7 @@ void FilterBuilder_inout_shortcuts() {
     test_int(t.inout(), flecs::InOutNone);
 }
 
-void FilterBuilder_iter_column_w_const_as_array() {
+void FilterBuilder_iter_column_w_const_as_array(void) {
     flecs::world world;
 
     auto f = world.filter<Position>();
@@ -1721,7 +1721,7 @@ void FilterBuilder_iter_column_w_const_as_array() {
     test_int(p->y, 32);
 }
 
-void FilterBuilder_iter_column_w_const_as_ptr() {
+void FilterBuilder_iter_column_w_const_as_ptr(void) {
     flecs::world world;
 
     auto f = world.filter<Position>();
@@ -1743,7 +1743,7 @@ void FilterBuilder_iter_column_w_const_as_ptr() {
     test_int(count, 2);
 }
 
-void FilterBuilder_iter_column_w_const_deref() {
+void FilterBuilder_iter_column_w_const_deref(void) {
     flecs::world world;
 
     auto f = world.filter<Position>();
@@ -1766,7 +1766,7 @@ void FilterBuilder_iter_column_w_const_deref() {
     test_int(count, 2);
 }
 
-void FilterBuilder_with_id() {
+void FilterBuilder_with_id(void) {
     flecs::world ecs;
 
     flecs::filter<> q = 
@@ -1787,7 +1787,7 @@ void FilterBuilder_with_id() {
     test_int(count, 1);
 }
 
-void FilterBuilder_with_name() {
+void FilterBuilder_with_name(void) {
     flecs::world ecs;
 
     ecs.component<Velocity>();
@@ -1810,7 +1810,7 @@ void FilterBuilder_with_name() {
     test_int(count, 1);
 }
 
-void FilterBuilder_with_component() {
+void FilterBuilder_with_component(void) {
     flecs::world ecs;
 
     flecs::filter<> q = 
@@ -1831,7 +1831,7 @@ void FilterBuilder_with_component() {
     test_int(count, 1);
 }
 
-void FilterBuilder_with_pair_id() {
+void FilterBuilder_with_pair_id(void) {
     flecs::world ecs;
 
     flecs::entity Likes = ecs.entity();
@@ -1856,7 +1856,7 @@ void FilterBuilder_with_pair_id() {
     test_int(count, 1);
 }
 
-void FilterBuilder_with_pair_name() {
+void FilterBuilder_with_pair_name(void) {
     flecs::world ecs;
 
     flecs::entity Likes = ecs.entity("Likes");
@@ -1881,7 +1881,7 @@ void FilterBuilder_with_pair_name() {
     test_int(count, 1);
 }
 
-void FilterBuilder_with_pair_components() {
+void FilterBuilder_with_pair_components(void) {
     flecs::world ecs;
 
     struct Likes { };
@@ -1906,7 +1906,7 @@ void FilterBuilder_with_pair_components() {
     test_int(count, 1);
 }
 
-void FilterBuilder_with_pair_component_id() {
+void FilterBuilder_with_pair_component_id(void) {
     flecs::world ecs;
 
     struct Likes { };
@@ -1931,7 +1931,7 @@ void FilterBuilder_with_pair_component_id() {
     test_int(count, 1);
 }
 
-void FilterBuilder_with_pair_component_name() {
+void FilterBuilder_with_pair_component_name(void) {
     flecs::world ecs;
 
     struct Likes { };
@@ -1956,7 +1956,7 @@ void FilterBuilder_with_pair_component_name() {
     test_int(count, 1);
 }
 
-void FilterBuilder_with_enum() {
+void FilterBuilder_with_enum(void) {
     flecs::world ecs;
 
     flecs::filter<> q = 
@@ -1977,7 +1977,7 @@ void FilterBuilder_with_enum() {
     test_int(count, 1);
 }
 
-void FilterBuilder_without_id() {
+void FilterBuilder_without_id(void) {
     flecs::world ecs;
 
     flecs::filter<> q = 
@@ -1998,7 +1998,7 @@ void FilterBuilder_without_id() {
     test_int(count, 1);
 }
 
-void FilterBuilder_without_name() {
+void FilterBuilder_without_name(void) {
     flecs::world ecs;
 
     ecs.component<Velocity>();
@@ -2021,7 +2021,7 @@ void FilterBuilder_without_name() {
     test_int(count, 1);
 }
 
-void FilterBuilder_without_component() {
+void FilterBuilder_without_component(void) {
     flecs::world ecs;
 
     flecs::filter<> q = 
@@ -2042,7 +2042,7 @@ void FilterBuilder_without_component() {
     test_int(count, 1);
 }
 
-void FilterBuilder_without_pair_id() {
+void FilterBuilder_without_pair_id(void) {
     flecs::world ecs;
 
     flecs::entity Likes = ecs.entity();
@@ -2067,7 +2067,7 @@ void FilterBuilder_without_pair_id() {
     test_int(count, 1);
 }
 
-void FilterBuilder_without_pair_name() {
+void FilterBuilder_without_pair_name(void) {
     flecs::world ecs;
 
     flecs::entity Likes = ecs.entity("Likes");
@@ -2092,7 +2092,7 @@ void FilterBuilder_without_pair_name() {
     test_int(count, 1);
 }
 
-void FilterBuilder_without_pair_components() {
+void FilterBuilder_without_pair_components(void) {
     flecs::world ecs;
 
     struct Likes { };
@@ -2117,7 +2117,7 @@ void FilterBuilder_without_pair_components() {
     test_int(count, 1);
 }
 
-void FilterBuilder_without_pair_component_id() {
+void FilterBuilder_without_pair_component_id(void) {
     flecs::world ecs;
 
     struct Likes { };
@@ -2142,7 +2142,7 @@ void FilterBuilder_without_pair_component_id() {
     test_int(count, 1);
 }
 
-void FilterBuilder_without_pair_component_name() {
+void FilterBuilder_without_pair_component_name(void) {
     flecs::world ecs;
 
     struct Likes { };
@@ -2167,7 +2167,7 @@ void FilterBuilder_without_pair_component_name() {
     test_int(count, 1);
 }
 
-void FilterBuilder_without_enum() {
+void FilterBuilder_without_enum(void) {
     flecs::world ecs;
 
     flecs::filter<> q = 
@@ -2188,7 +2188,7 @@ void FilterBuilder_without_enum() {
     test_int(count, 1);
 }
 
-void FilterBuilder_write_id() {
+void FilterBuilder_write_id(void) {
     flecs::world ecs;
 
     auto q = 
@@ -2202,7 +2202,7 @@ void FilterBuilder_write_id() {
     test_assert(q.term(1).get_src() == 0);
 }
 
-void FilterBuilder_write_name() {
+void FilterBuilder_write_name(void) {
     flecs::world ecs;
 
     ecs.component<Position>();
@@ -2218,7 +2218,7 @@ void FilterBuilder_write_name() {
     test_assert(q.term(1).get_src() == 0);
 }
 
-void FilterBuilder_write_component() {
+void FilterBuilder_write_component(void) {
     flecs::world ecs;
 
     ecs.component<Position>();
@@ -2234,7 +2234,7 @@ void FilterBuilder_write_component() {
     test_assert(q.term(1).get_src() == 0);
 }
 
-void FilterBuilder_write_pair_id() {
+void FilterBuilder_write_pair_id(void) {
     flecs::world ecs;
 
     flecs::entity Likes = ecs.entity();
@@ -2252,7 +2252,7 @@ void FilterBuilder_write_pair_id() {
     test_assert(q.term(1).get_src() == 0);
 }
 
-void FilterBuilder_write_pair_name() {
+void FilterBuilder_write_pair_name(void) {
     flecs::world ecs;
 
     flecs::entity Likes = ecs.entity("Likes");
@@ -2270,7 +2270,7 @@ void FilterBuilder_write_pair_name() {
     test_assert(q.term(1).get_src() == 0);
 }
 
-void FilterBuilder_write_pair_components() {
+void FilterBuilder_write_pair_components(void) {
     flecs::world ecs;
 
     struct Likes { };
@@ -2288,7 +2288,7 @@ void FilterBuilder_write_pair_components() {
     test_assert(q.term(1).get_src() == 0);
 }
 
-void FilterBuilder_write_pair_component_id() {
+void FilterBuilder_write_pair_component_id(void) {
     flecs::world ecs;
 
     struct Likes { };
@@ -2306,7 +2306,7 @@ void FilterBuilder_write_pair_component_id() {
     test_assert(q.term(1).get_src() == 0);
 }
 
-void FilterBuilder_write_pair_component_name() {
+void FilterBuilder_write_pair_component_name(void) {
     flecs::world ecs;
 
     struct Likes { };
@@ -2324,7 +2324,7 @@ void FilterBuilder_write_pair_component_name() {
     test_assert(q.term(1).get_src() == 0);
 }
 
-void FilterBuilder_write_enum() {
+void FilterBuilder_write_enum(void) {
     flecs::world ecs;
 
     flecs::filter<> q = 
@@ -2339,7 +2339,7 @@ void FilterBuilder_write_enum() {
     test_assert(q.term(1).get_src() == 0);
 }
 
-void FilterBuilder_read_id() {
+void FilterBuilder_read_id(void) {
     flecs::world ecs;
 
     auto q = 
@@ -2353,7 +2353,7 @@ void FilterBuilder_read_id() {
     test_assert(q.term(1).get_src() == 0);
 }
 
-void FilterBuilder_read_name() {
+void FilterBuilder_read_name(void) {
     flecs::world ecs;
 
     ecs.component<Position>();
@@ -2369,7 +2369,7 @@ void FilterBuilder_read_name() {
     test_assert(q.term(1).get_src() == 0);
 }
 
-void FilterBuilder_read_component() {
+void FilterBuilder_read_component(void) {
     flecs::world ecs;
 
     ecs.component<Position>();
@@ -2385,7 +2385,7 @@ void FilterBuilder_read_component() {
     test_assert(q.term(1).get_src() == 0);
 }
 
-void FilterBuilder_read_pair_id() {
+void FilterBuilder_read_pair_id(void) {
     flecs::world ecs;
 
     flecs::entity Likes = ecs.entity();
@@ -2403,7 +2403,7 @@ void FilterBuilder_read_pair_id() {
     test_assert(q.term(1).get_src() == 0);
 }
 
-void FilterBuilder_read_pair_name() {
+void FilterBuilder_read_pair_name(void) {
     flecs::world ecs;
 
     flecs::entity Likes = ecs.entity("Likes");
@@ -2421,7 +2421,7 @@ void FilterBuilder_read_pair_name() {
     test_assert(q.term(1).get_src() == 0);
 }
 
-void FilterBuilder_read_pair_components() {
+void FilterBuilder_read_pair_components(void) {
     flecs::world ecs;
 
     struct Likes { };
@@ -2439,7 +2439,7 @@ void FilterBuilder_read_pair_components() {
     test_assert(q.term(1).get_src() == 0);
 }
 
-void FilterBuilder_read_pair_component_id() {
+void FilterBuilder_read_pair_component_id(void) {
     flecs::world ecs;
 
     struct Likes { };
@@ -2457,7 +2457,7 @@ void FilterBuilder_read_pair_component_id() {
     test_assert(q.term(1).get_src() == 0);
 }
 
-void FilterBuilder_read_pair_component_name() {
+void FilterBuilder_read_pair_component_name(void) {
     flecs::world ecs;
 
     struct Likes { };
@@ -2476,7 +2476,7 @@ void FilterBuilder_read_pair_component_name() {
     test_assert(q.term(1).get_src() == 0);
 }
 
-void FilterBuilder_read_enum() {
+void FilterBuilder_read_enum(void) {
     flecs::world ecs;
 
     flecs::filter<> q = 
@@ -2491,7 +2491,7 @@ void FilterBuilder_read_enum() {
     test_assert(q.term(1).get_src() == 0);
 }
 
-void FilterBuilder_assign_after_init() {
+void FilterBuilder_assign_after_init(void) {
     flecs::world ecs;
 
     flecs::filter<> f;
@@ -2510,7 +2510,7 @@ void FilterBuilder_assign_after_init() {
     test_int(count, 1);
 }
 
-void FilterBuilder_iter_w_stage() {
+void FilterBuilder_iter_w_stage(void) {
     flecs::world ecs;
 
     ecs.set_stage_count(2);

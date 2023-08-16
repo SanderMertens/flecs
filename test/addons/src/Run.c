@@ -1,6 +1,6 @@
 #include <addons.h>
 
-void Run_setup() {
+void Run_setup(void) {
     ecs_log_set_level(-3);
 }
 
@@ -43,7 +43,7 @@ void Iter(ecs_iter_t *it) {
     }
 }
 
-void Run_run() {
+void Run_run(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -103,7 +103,7 @@ void Run_run() {
     ecs_fini(world);
 }
 
-void Run_run_w_param() {
+void Run_run_w_param(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -139,7 +139,7 @@ void Run_run_w_param() {
     ecs_fini(world);
 }
 
-void Run_run_w_offset() {
+void Run_run_w_offset(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -197,7 +197,7 @@ void Run_run_w_offset() {
     ecs_fini(world);
 }
 
-void Run_run_w_offset_skip_1_archetype() {
+void Run_run_w_offset_skip_1_archetype(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -254,7 +254,7 @@ void Run_run_w_offset_skip_1_archetype() {
     ecs_fini(world);
 }
 
-void Run_run_w_offset_skip_1_archetype_plus_one() {
+void Run_run_w_offset_skip_1_archetype_plus_one(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -310,7 +310,7 @@ void Run_run_w_offset_skip_1_archetype_plus_one() {
     ecs_fini(world);
 }
 
-void Run_run_w_offset_skip_2_archetypes() {
+void Run_run_w_offset_skip_2_archetypes(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -360,7 +360,7 @@ void Run_run_w_offset_skip_2_archetypes() {
     ecs_fini(world);
 }
 
-void Run_run_w_limit_skip_1_archetype() {
+void Run_run_w_limit_skip_1_archetype(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -419,7 +419,7 @@ void Run_run_w_limit_skip_1_archetype() {
     ecs_fini(world);
 }
 
-void Run_run_w_limit_skip_1_archetype_minus_one() {
+void Run_run_w_limit_skip_1_archetype_minus_one(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -477,7 +477,7 @@ void Run_run_w_limit_skip_1_archetype_minus_one() {
     ecs_fini(world);
 }
 
-void Run_run_w_limit_skip_2_archetypes() {
+void Run_run_w_limit_skip_2_archetypes(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -534,7 +534,7 @@ void Run_run_w_limit_skip_2_archetypes() {
     ecs_fini(world);
 }
 
-void Run_run_w_offset_1_limit_max() {
+void Run_run_w_offset_1_limit_max(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -593,7 +593,7 @@ void Run_run_w_offset_1_limit_max() {
     ecs_fini(world);
 }
 
-void Run_run_w_offset_1_limit_minus_1() {
+void Run_run_w_offset_1_limit_minus_1(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -651,7 +651,7 @@ void Run_run_w_offset_1_limit_minus_1() {
     ecs_fini(world);
 }
 
-void Run_run_w_offset_2_type_limit_max() {
+void Run_run_w_offset_2_type_limit_max(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -708,7 +708,7 @@ void Run_run_w_offset_2_type_limit_max() {
     ecs_fini(world);
 }
 
-void Run_run_w_offset_2_type_limit_minus_1() {
+void Run_run_w_offset_2_type_limit_minus_1(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -764,7 +764,7 @@ void Run_run_w_offset_2_type_limit_minus_1() {
     ecs_fini(world);
 }
 
-void Run_run_w_limit_1_all_offsets() {
+void Run_run_w_limit_1_all_offsets(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -830,7 +830,7 @@ void Run_run_w_limit_1_all_offsets() {
     ecs_fini(world);
 }
 
-void Run_run_w_offset_out_of_bounds() {
+void Run_run_w_offset_out_of_bounds(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -863,7 +863,7 @@ void Run_run_w_offset_out_of_bounds() {
     ecs_fini(world);
 }
 
-void Run_run_w_limit_out_of_bounds() {
+void Run_run_w_limit_out_of_bounds(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -918,7 +918,7 @@ void Run_run_w_limit_out_of_bounds() {
     ecs_fini(world);
 }
 
-void Run_run_no_match() {
+void Run_run_no_match(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -973,7 +973,7 @@ void TestAll(ecs_iter_t *it) {
     }
 }
 
-void Run_run_comb_10_entities_1_type() {
+void Run_run_comb_10_entities_1_type(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -999,7 +999,7 @@ void Run_run_comb_10_entities_1_type() {
     ecs_fini(world);
 }
 
-void Run_run_comb_10_entities_2_types() {
+void Run_run_comb_10_entities_2_types(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1043,7 +1043,7 @@ void Interrupt(ecs_iter_t *it) {
     }
 }
 
-void Run_run_w_interrupt() {
+void Run_run_w_interrupt(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1097,7 +1097,7 @@ void AddVelocity(ecs_iter_t *it) {
     }
 }
 
-void Run_run_staging() {
+void Run_run_staging(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);

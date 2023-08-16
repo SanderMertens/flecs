@@ -4,7 +4,7 @@ struct Pair {
     float value;
 };
 
-void Query_action() {
+void Query_action(void) {
     flecs::world world;
 
     world.component<Position>();
@@ -28,7 +28,7 @@ void Query_action() {
     test_int(p->y, 22);
 }
 
-void Query_action_const() {
+void Query_action_const(void) {
     flecs::world world;
 
     world.component<Position>();
@@ -52,7 +52,7 @@ void Query_action_const() {
     test_int(p->y, 22);
 }
 
-void Query_action_shared() {
+void Query_action_shared(void) {
     flecs::world world;
 
     world.component<Position>();
@@ -98,7 +98,7 @@ void Query_action_shared() {
     test_int(p->y, 24);  
 }
 
-void Query_action_optional() {
+void Query_action_optional(void) {
     flecs::world world;
 
     world.component<Position>();
@@ -154,7 +154,7 @@ void Query_action_optional() {
     test_int(p->y, 81);
 }
 
-void Query_each() {
+void Query_each(void) {
     flecs::world world;
 
     world.component<Position>();
@@ -176,7 +176,7 @@ void Query_each() {
     test_int(p->y, 22);
 }
 
-void Query_each_const() {
+void Query_each_const(void) {
     flecs::world world;
 
     world.component<Position>();
@@ -198,7 +198,7 @@ void Query_each_const() {
     test_int(p->y, 22);
 }
 
-void Query_each_shared() {
+void Query_each_shared(void) {
     flecs::world world;
 
     world.component<Position>();
@@ -239,7 +239,7 @@ void Query_each_shared() {
     test_int(p->y, 24); 
 }
 
-void Query_each_optional() {
+void Query_each_optional(void) {
     flecs::world world;
 
     world.component<Position>();
@@ -291,7 +291,7 @@ void Query_each_optional() {
     test_int(p->y, 81);  
 }
 
-void Query_signature() {
+void Query_signature(void) {
     flecs::world world;
 
     world.component<Position>();
@@ -318,7 +318,7 @@ void Query_signature() {
     test_int(p->y, 22);
 }
 
-void Query_signature_const() {
+void Query_signature_const(void) {
     flecs::world world;
 
     world.component<Position>();
@@ -345,7 +345,7 @@ void Query_signature_const() {
     test_int(p->y, 22);
 }
 
-void Query_signature_shared() {
+void Query_signature_shared(void) {
     flecs::world world;
 
     world.component<Position>();
@@ -392,7 +392,7 @@ void Query_signature_shared() {
     test_int(p->y, 24); 
 }
 
-void Query_signature_optional() {
+void Query_signature_optional(void) {
     flecs::world world;
 
     world.component<Position>();
@@ -452,7 +452,7 @@ void Query_signature_optional() {
     test_int(p->y, 81); 
 }
 
-void Query_subquery() {
+void Query_subquery(void) {
     flecs::world world;
 
     auto e1 = flecs::entity(world)
@@ -479,7 +479,7 @@ void Query_subquery() {
     test_int(v->y, 2);
 }
 
-void Query_subquery_w_expr() {
+void Query_subquery_w_expr(void) {
     flecs::world world;
 
     auto e1 = flecs::entity(world)
@@ -510,7 +510,7 @@ void Query_subquery_w_expr() {
     test_int(v->y, 2);
 }
 
-void Query_query_single_pair() {
+void Query_query_single_pair(void) {
     flecs::world world;
 
     flecs::entity(world).add<Pair, Position>();
@@ -535,7 +535,7 @@ void Query_query_single_pair() {
     test_int(entity_count, 1);
 }
 
-void Query_tag_w_each() {
+void Query_tag_w_each(void) {
     flecs::world world;
 
     auto q = world.query<Tag>();
@@ -548,7 +548,7 @@ void Query_tag_w_each() {
     });
 }
 
-void Query_shared_tag_w_each() {
+void Query_shared_tag_w_each(void) {
     flecs::world world;
 
     auto q = world.query<Tag>();
@@ -574,7 +574,7 @@ int compare_position(
     return (p1->x > p2->x) - (p1->x < p2->x);
 }
 
-void Query_sort_by() {
+void Query_sort_by(void) {
     flecs::world world;
 
     world.entity().set<Position>({1, 0});
@@ -597,7 +597,7 @@ void Query_sort_by() {
     });
 }
 
-void Query_changed() {
+void Query_changed(void) {
     flecs::world world;
 
     auto e = world.entity().set<Position>({1, 0});
@@ -620,7 +620,7 @@ void Query_changed() {
     test_bool(q.changed(), true);
 }
 
-void Query_orphaned() {
+void Query_orphaned(void) {
     flecs::world world;
 
     auto q = world.query<Position>();
@@ -634,7 +634,7 @@ void Query_orphaned() {
     test_assert(sq.orphaned());
 }
 
-void Query_default_ctor() {
+void Query_default_ctor(void) {
     flecs::world world;
 
     flecs::query<Position> q_var;
@@ -655,7 +655,7 @@ void Query_default_ctor() {
     test_int(count, 1);
 }
 
-void Query_expr_w_template() {
+void Query_expr_w_template(void) {
     flecs::world world;
 
     auto comp = world.component<Template<int>>();
@@ -682,7 +682,7 @@ void Query_expr_w_template() {
     test_int(count, 1);
 }
 
-void Query_query_type_w_template() {
+void Query_query_type_w_template(void) {
     flecs::world world;
 
     auto comp = world.component<Template<int>>();
@@ -708,7 +708,7 @@ void Query_query_type_w_template() {
     test_int(count, 1);
 }
 
-void Query_compare_term_id() {
+void Query_compare_term_id(void) {
     flecs::world world;
 
     int count = 0;
@@ -727,7 +727,7 @@ void Query_compare_term_id() {
     test_int(count, 1);
 }
 
-void Query_test_no_defer_each() {
+void Query_test_no_defer_each(void) {
     install_test_abort();
 
     flecs::world world;
@@ -746,7 +746,7 @@ void Query_test_no_defer_each() {
     test_assert(false); // Should never get here
 }
 
-void Query_test_no_defer_iter() {
+void Query_test_no_defer_iter(void) {
     install_test_abort();
 
     flecs::world world;
@@ -767,7 +767,7 @@ void Query_test_no_defer_iter() {
     test_assert(false); // Should never get here
 }
 
-void Query_inspect_terms() {
+void Query_inspect_terms(void) {
     flecs::world world;
 
     auto p = world.entity();
@@ -796,7 +796,7 @@ void Query_inspect_terms() {
     test_assert(t.id().second() == p);
 }
 
-void Query_inspect_terms_w_each() {
+void Query_inspect_terms_w_each(void) {
     flecs::world world;
 
     auto p = world.entity();
@@ -829,7 +829,7 @@ void Query_inspect_terms_w_each() {
 }
 
 
-void Query_comp_to_str() {
+void Query_comp_to_str(void) {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Position>()
@@ -842,7 +842,7 @@ struct Eats { int amount; };
 struct Apples { };
 struct Pears { };
 
-void Query_pair_to_str() {
+void Query_pair_to_str(void) {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Position>()
@@ -852,7 +852,7 @@ void Query_pair_to_str() {
     test_str(q.str(), "Position, Velocity, (Eats,Apples)");
 }
 
-void Query_oper_not_to_str() {
+void Query_oper_not_to_str(void) {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Position>()
@@ -861,7 +861,7 @@ void Query_oper_not_to_str() {
     test_str(q.str(), "Position, !Velocity");
 }
 
-void Query_oper_optional_to_str() {
+void Query_oper_optional_to_str(void) {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Position>()
@@ -870,7 +870,7 @@ void Query_oper_optional_to_str() {
     test_str(q.str(), "Position, ?Velocity");
 }
 
-void Query_oper_or_to_str() {
+void Query_oper_or_to_str(void) {
     flecs::world ecs;
 
     auto q = ecs.query_builder<>()
@@ -883,7 +883,7 @@ void Query_oper_or_to_str() {
 using EatsApples = flecs::pair<Eats, Apples>;
 using EatsPears = flecs::pair<Eats, Pears>;
 
-void Query_each_pair_type() {
+void Query_each_pair_type(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity()
@@ -909,7 +909,7 @@ void Query_each_pair_type() {
     test_int(v->amount, 11);
 }
 
-void Query_iter_pair_type() {
+void Query_iter_pair_type(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity()
@@ -938,7 +938,7 @@ void Query_iter_pair_type() {
     test_int(v->amount, 11);
 }
 
-void Query_term_pair_type() {
+void Query_term_pair_type(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity()
@@ -971,7 +971,7 @@ void Query_term_pair_type() {
     test_int(v->amount, 11);
 }
 
-void Query_each_no_entity_1_comp() {
+void Query_each_no_entity_1_comp(void) {
     flecs::world ecs;
 
     auto e = ecs.entity()
@@ -995,7 +995,7 @@ void Query_each_no_entity_1_comp() {
     test_int(pos->y, 4);
 }
 
-void Query_each_no_entity_2_comps() {
+void Query_each_no_entity_2_comps(void) {
     flecs::world ecs;
 
     auto e = ecs.entity()
@@ -1031,7 +1031,7 @@ void Query_each_no_entity_2_comps() {
     test_int(count, 1);
 }
 
-void Query_iter_no_comps_1_comp() {
+void Query_iter_no_comps_1_comp(void) {
     flecs::world ecs;
 
     ecs.entity().add<Position>();
@@ -1049,7 +1049,7 @@ void Query_iter_no_comps_1_comp() {
     test_int(count, 3);
 }
 
-void Query_iter_no_comps_2_comps() {
+void Query_iter_no_comps_2_comps(void) {
     flecs::world ecs;
 
     ecs.entity().add<Velocity>();
@@ -1068,7 +1068,7 @@ void Query_iter_no_comps_2_comps() {
     test_int(count, 2);
 }
 
-void Query_iter_no_comps_no_comps() {
+void Query_iter_no_comps_no_comps(void) {
     flecs::world ecs;
 
     ecs.entity().add<Velocity>();
@@ -1100,7 +1100,7 @@ struct End { };
 using BeginEvent = flecs::pair<Begin, Event>;
 using EndEvent = flecs::pair<End, Event>;
 
-void Query_each_pair_object() {
+void Query_each_pair_object(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity()
@@ -1120,7 +1120,7 @@ void Query_each_pair_object() {
     test_int(count, 1);
 }
 
-void Query_iter_pair_object() {
+void Query_iter_pair_object(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity()
@@ -1142,7 +1142,7 @@ void Query_iter_pair_object() {
     test_int(count, 1);
 }
 
-void Query_iter_query_in_system() {
+void Query_iter_query_in_system(void) {
     flecs::world ecs;
 
     ecs.entity().add<Position>().add<Velocity>();
@@ -1162,7 +1162,7 @@ void Query_iter_query_in_system() {
     test_int(count, 1);
 }
 
-void Query_iter_type() {
+void Query_iter_type(void) {
     flecs::world ecs;
 
     ecs.entity().add<Position>();
@@ -1176,7 +1176,7 @@ void Query_iter_type() {
     });
 }
 
-void Query_instanced_query_w_singleton_each() {
+void Query_instanced_query_w_singleton_each(void) {
     flecs::world ecs;
 
     ecs.set<Velocity>({1, 2});
@@ -1231,7 +1231,7 @@ void Query_instanced_query_w_singleton_each() {
     }));
 }
 
-void Query_instanced_query_w_base_each() {
+void Query_instanced_query_w_base_each(void) {
     flecs::world ecs;
 
     auto base = ecs.entity().set<Velocity>({1, 2});
@@ -1294,7 +1294,7 @@ void Query_instanced_query_w_base_each() {
     }));
 }
 
-void Query_un_instanced_query_w_singleton_each() {
+void Query_un_instanced_query_w_singleton_each(void) {
     flecs::world ecs;
 
     ecs.set<Velocity>({1, 2});
@@ -1348,7 +1348,7 @@ void Query_un_instanced_query_w_singleton_each() {
     }));
 }
 
-void Query_un_instanced_query_w_base_each() {
+void Query_un_instanced_query_w_base_each(void) {
     flecs::world ecs;
 
     auto base = ecs.entity().set<Velocity>({1, 2});
@@ -1410,7 +1410,7 @@ void Query_un_instanced_query_w_base_each() {
     }));
 }
 
-void Query_instanced_query_w_singleton_iter() {
+void Query_instanced_query_w_singleton_iter(void) {
     flecs::world ecs;
 
     ecs.set<Velocity>({1, 2});
@@ -1469,7 +1469,7 @@ void Query_instanced_query_w_singleton_iter() {
     }));
 }
 
-void Query_instanced_query_w_base_iter() {
+void Query_instanced_query_w_base_iter(void) {
     flecs::world ecs;
 
     auto base = ecs.entity().set<Velocity>({1, 2});
@@ -1542,7 +1542,7 @@ void Query_instanced_query_w_base_iter() {
     }));
 }
 
-void Query_un_instanced_query_w_singleton_iter() {
+void Query_un_instanced_query_w_singleton_iter(void) {
     flecs::world ecs;
 
     ecs.set<Velocity>({1, 2});
@@ -1600,7 +1600,7 @@ void Query_un_instanced_query_w_singleton_iter() {
     }));
 }
 
-void Query_un_instanced_query_w_base_iter() {
+void Query_un_instanced_query_w_base_iter(void) {
     flecs::world ecs;
 
     auto base = ecs.entity().set<Velocity>({1, 2});
@@ -1664,14 +1664,14 @@ void Query_un_instanced_query_w_base_iter() {
     }));
 }
 
-void Query_default_ctor_no_assign() {
+void Query_default_ctor_no_assign(void) {
     flecs::query<> q;
 
     // Make sure code compiles & works
     test_assert(true);
 }
 
-void Query_query_each_from_component() {
+void Query_query_each_from_component(void) {
     flecs::world w;
 
     w.entity().set<Position>({}).set<Velocity>({});
@@ -1694,7 +1694,7 @@ void Query_query_each_from_component() {
     test_int(count, 2);
 }
 
-void Query_query_iter_from_component() {
+void Query_query_iter_from_component(void) {
     flecs::world w;
 
     w.entity().set<Position>({}).set<Velocity>({});
@@ -1732,7 +1732,7 @@ void IterFunc(flecs::iter& it, Position* p) {
     p->y ++;
 }
 
-void Query_query_each_w_func_ptr() {
+void Query_query_each_w_func_ptr(void) {
     flecs::world w;
 
     auto e = w.entity().set<Position>({10, 20});
@@ -1748,7 +1748,7 @@ void Query_query_each_w_func_ptr() {
     test_int(ptr->y, 21);
 }
 
-void Query_query_iter_w_func_ptr() {
+void Query_query_iter_w_func_ptr(void) {
     flecs::world w;
 
     auto e = w.entity().set<Position>({10, 20});
@@ -1764,7 +1764,7 @@ void Query_query_iter_w_func_ptr() {
     test_int(ptr->y, 21);
 }
 
-void Query_query_each_w_func_no_ptr() {
+void Query_query_each_w_func_no_ptr(void) {
     flecs::world w;
 
     auto e = w.entity().set<Position>({10, 20});
@@ -1780,7 +1780,7 @@ void Query_query_each_w_func_no_ptr() {
     test_int(ptr->y, 21);
 }
 
-void Query_query_iter_w_func_no_ptr() {
+void Query_query_iter_w_func_no_ptr(void) {
     flecs::world w;
 
     auto e = w.entity().set<Position>({10, 20});
@@ -1796,7 +1796,7 @@ void Query_query_iter_w_func_no_ptr() {
     test_int(ptr->y, 21);
 }
 
-void Query_query_each_w_iter() {
+void Query_query_each_w_iter(void) {
     flecs::world w;
 
     auto e1 = w.entity(); e1.set<Self>({e1});
@@ -1826,7 +1826,7 @@ void Query_query_each_w_iter() {
     test_int(ptr->y, 31);
 }
 
-void Query_change_tracking() {
+void Query_change_tracking(void) {
     flecs::world w;
 
     auto qw = w.query<Position>();
@@ -1879,7 +1879,7 @@ void Query_change_tracking() {
     test_int(change_count, 1);
 }
 
-void Query_not_w_write() {
+void Query_not_w_write(void) {
     flecs::world ecs;
 
     struct A {};
@@ -1910,7 +1910,7 @@ void Query_not_w_write() {
     test_int(1, count);
 }
 
-void Query_get_first() {
+void Query_get_first(void) {
     flecs::world ecs;
 
     struct A {};
@@ -1926,7 +1926,7 @@ void Query_get_first() {
     test_assert(first == e1);
 }
 
-void Query_get_first_direct() {
+void Query_get_first_direct(void) {
     flecs::world ecs;
 
     struct A {};
@@ -1942,7 +1942,7 @@ void Query_get_first_direct() {
     test_assert(first == e1);
 }
 
-void Query_get_count_direct() {
+void Query_get_count_direct(void) {
     flecs::world ecs;
 
     struct A {};
@@ -1956,7 +1956,7 @@ void Query_get_count_direct() {
     test_int(3, q.count());
 }
 
-void Query_get_is_true_direct() {
+void Query_get_is_true_direct(void) {
     flecs::world ecs;
 
     struct A {};
@@ -1973,7 +1973,7 @@ void Query_get_is_true_direct() {
     test_bool(false, q_2.is_true());
 }
 
-void Query_each_w_no_this() {
+void Query_each_w_no_this(void) {
     flecs::world ecs;
 
     auto e = ecs.entity()
@@ -1998,7 +1998,7 @@ void Query_each_w_no_this() {
     test_int(count, 1);
 }
 
-void Query_each_w_iter_no_this() {
+void Query_each_w_iter_no_this(void) {
     flecs::world ecs;
 
     auto e = ecs.entity()
@@ -2025,7 +2025,7 @@ void Query_each_w_iter_no_this() {
     test_int(count, 1);
 }
 
-void Query_invalid_each_w_no_this() {
+void Query_invalid_each_w_no_this(void) {
     install_test_abort();
 
     flecs::world ecs;
@@ -2044,7 +2044,7 @@ void Query_invalid_each_w_no_this() {
     q.each([&](flecs::entity e, Position& p, Velocity& v) { });
 }
 
-void Query_named_query() {
+void Query_named_query(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity().add<Position>();
@@ -2064,7 +2064,7 @@ void Query_named_query() {
     test_str(qe.name(), "my_query");
 }
 
-void Query_named_scoped_query() {
+void Query_named_scoped_query(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity().add<Position>();
@@ -2085,7 +2085,7 @@ void Query_named_scoped_query() {
     test_str(qe.path(), "::my::query");
 }
 
-void Query_instanced_nested_query_w_iter() {
+void Query_instanced_nested_query_w_iter(void) {
     flecs::world ecs;
 
     flecs::query<> q1 = ecs.query_builder()
@@ -2114,7 +2114,7 @@ void Query_instanced_nested_query_w_iter() {
     test_int(count, 2);
 }
 
-void Query_instanced_nested_query_w_entity() {
+void Query_instanced_nested_query_w_entity(void) {
     flecs::world ecs;
 
     flecs::query<> q1 = ecs.query_builder()
@@ -2143,7 +2143,7 @@ void Query_instanced_nested_query_w_entity() {
     test_int(count, 2);
 }
 
-void Query_instanced_nested_query_w_world() {
+void Query_instanced_nested_query_w_world(void) {
     flecs::world ecs;
 
     flecs::query<> q1 = ecs.query_builder()
@@ -2172,7 +2172,7 @@ void Query_instanced_nested_query_w_world() {
     test_int(count, 2);
 }
 
-void Query_captured_query() {
+void Query_captured_query(void) {
     flecs::world ecs;
 
     flecs::query<Position> q = ecs.query<Position>();
@@ -2190,7 +2190,7 @@ void Query_captured_query() {
     }();
 }
 
-void Query_page_iter_captured_query() {
+void Query_page_iter_captured_query(void) {
     flecs::world ecs;
 
     flecs::query<Position> q = ecs.query<Position>();
@@ -2210,7 +2210,7 @@ void Query_page_iter_captured_query() {
     }();
 }
 
-void Query_worker_iter_captured_query() {
+void Query_worker_iter_captured_query(void) {
     flecs::world ecs;
 
     flecs::query<Position> q = ecs.query<Position>();
@@ -2230,7 +2230,7 @@ void Query_worker_iter_captured_query() {
     }();
 }
 
-void Query_iter_entities() {
+void Query_iter_entities(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity().set<Position>({10, 20});

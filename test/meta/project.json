@@ -505,6 +505,7 @@
                 "struct_nested_i32",
                 "struct_nested_i32_i32",
                 "struct_2_nested_i32_i32",
+                "struct_i32_array_3",
                 "struct_struct_i32_array_3",
                 "struct_struct_i32_i32_array_3",
                 "struct_w_array_type_i32_i32",

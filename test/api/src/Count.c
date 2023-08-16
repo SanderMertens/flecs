@@ -1,6 +1,6 @@
 #include <api.h>
 
-void Count_count_empty() {
+void Count_count_empty(void) {
     ecs_world_t *world = ecs_mini();
 
     test_int(ecs_count(world, 0), 0);
@@ -8,7 +8,7 @@ void Count_count_empty() {
     ecs_fini(world);
 }
 
-void Count_count_w_entity_0() {
+void Count_count_w_entity_0(void) {
     ecs_world_t *world = ecs_mini();
 
     test_int(ecs_count_id(world, 0), 0);
@@ -16,7 +16,7 @@ void Count_count_w_entity_0() {
     ecs_fini(world);
 }
 
-void Count_count_1_component() {
+void Count_count_1_component(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -29,7 +29,7 @@ void Count_count_1_component() {
     ecs_fini(world);
 }
 
-void Count_count_disabled() {
+void Count_count_disabled(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -46,7 +46,7 @@ void Count_count_disabled() {
     ecs_fini(world);
 }
 
-void Count_count_prefab() {
+void Count_count_prefab(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);

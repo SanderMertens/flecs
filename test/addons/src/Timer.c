@@ -18,7 +18,7 @@ void SystemB(ecs_iter_t *it) {
     system_b_invoked = true;
 }
 
-void Timer_timeout() {
+void Timer_timeout(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -53,7 +53,7 @@ void Timer_timeout() {
     ecs_fini(world);
 }
 
-void Timer_interval() {
+void Timer_interval(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -87,7 +87,7 @@ void Timer_interval() {
     ecs_fini(world);
 }
 
-void Timer_shared_timeout() {
+void Timer_shared_timeout(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -132,7 +132,7 @@ void Timer_shared_timeout() {
     ecs_fini(world);
 }
 
-void Timer_shared_interval() {
+void Timer_shared_interval(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -177,7 +177,7 @@ void Timer_shared_interval() {
     ecs_fini(world);
 }
 
-void Timer_start_stop_one_shot() {
+void Timer_start_stop_one_shot(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -219,7 +219,7 @@ void Timer_start_stop_one_shot() {
     ecs_fini(world);
 }
 
-void Timer_start_stop_interval() {
+void Timer_start_stop_interval(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -272,7 +272,7 @@ void Timer_start_stop_interval() {
     ecs_fini(world);
 }
 
-void Timer_rate_filter() {
+void Timer_rate_filter(void) {
    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -314,7 +314,7 @@ void SystemC(ecs_iter_t *it) {
     system_c_invoked = true;
 }
 
-void Timer_rate_filter_w_rate_filter_src() {
+void Timer_rate_filter_w_rate_filter_src(void) {
    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -355,7 +355,7 @@ void Timer_rate_filter_w_rate_filter_src() {
     ecs_fini(world);
 }
 
-void Timer_rate_filter_w_timer_src() {
+void Timer_rate_filter_w_timer_src(void) {
    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -394,7 +394,7 @@ void Timer_rate_filter_w_timer_src() {
     ecs_fini(world);
 }
 
-void Timer_rate_filter_with_empty_src() {
+void Timer_rate_filter_with_empty_src(void) {
    ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -436,7 +436,7 @@ void Timer_rate_filter_with_empty_src() {
     ecs_fini(world);
 }
 
-void Timer_one_shot_timer_entity() {
+void Timer_one_shot_timer_entity(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t timer = ecs_set_timeout(world, 0, 1.0);
@@ -463,7 +463,7 @@ void Timer_one_shot_timer_entity() {
     ecs_fini(world);
 }
 
-void Timer_interval_timer_entity() {
+void Timer_interval_timer_entity(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t timer = ecs_set_interval(world, 0, 1.0);
@@ -493,7 +493,7 @@ void Timer_interval_timer_entity() {
     ecs_fini(world);
 }
 
-void Timer_rate_entity() {
+void Timer_rate_entity(void) {
     ecs_world_t *world = ecs_init();
 
     /* Specify 0 for source. This applies the rate to the frame ticks */
@@ -526,7 +526,7 @@ void Timer_rate_entity() {
     ecs_fini(world);
 }
 
-void Timer_nested_rate_entity() {
+void Timer_nested_rate_entity(void) {
     ecs_world_t *world = ecs_init();
 
     /* Nested rate filter */
@@ -560,7 +560,7 @@ void Timer_nested_rate_entity() {
     ecs_fini(world);
 }
 
-void Timer_nested_rate_entity_empty_src() {
+void Timer_nested_rate_entity_empty_src(void) {
     ecs_world_t *world = ecs_init();
 
     /* Rate filter with source that is not a tick source */
@@ -594,7 +594,7 @@ void Timer_nested_rate_entity_empty_src() {
     ecs_fini(world);
 }
 
-void Timer_naked_tick_entity() {
+void Timer_naked_tick_entity(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t tick = ecs_set(world, 0, EcsTickSource, {0});
@@ -612,7 +612,7 @@ void Timer_naked_tick_entity() {
     ecs_fini(world);
 }
 
-void Timer_stop_timer_w_rate() {
+void Timer_stop_timer_w_rate(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t timer = ecs_set_interval(world, 0, 1.0);
@@ -670,7 +670,7 @@ void Timer_stop_timer_w_rate() {
     ecs_fini(world);
 }
 
-void Timer_stop_timer_w_rate_same_src() {
+void Timer_stop_timer_w_rate_same_src(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t timer = ecs_set_interval(world, 0, 1.0);

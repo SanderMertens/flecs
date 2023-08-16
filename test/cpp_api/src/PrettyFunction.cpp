@@ -19,12 +19,12 @@ static size_t pretty_enum() {
     return 0;
 }
 
-void PrettyFunction_component() {
+void PrettyFunction_component(void) {
     pretty_type<Position>();
     test_assert(true);
 }
 
-void PrettyFunction_enum() {
+void PrettyFunction_enum(void) {
     pretty_enum<Color, Color::Red>();
     pretty_enum<Color, (Color)3>();
     test_assert(true);

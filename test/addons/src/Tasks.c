@@ -4,7 +4,7 @@ void Task(ecs_iter_t *it) {
     probe_iter(it);
 }
 
-void Tasks_no_components() {
+void Tasks_no_components(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_SYSTEM(world, Task, EcsOnUpdate, 0);
@@ -21,7 +21,7 @@ void Tasks_no_components() {
     ecs_fini(world);
 }
 
-void Tasks_one_tag() {
+void Tasks_one_tag(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Foo);
@@ -41,7 +41,7 @@ void Tasks_one_tag() {
     ecs_fini(world);
 }
 
-void Tasks_from_system() {
+void Tasks_from_system(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -127,7 +127,7 @@ void OnStoreTask(ecs_iter_t *it) {
     phase_counter ++;
 }
 
-void Tasks_tasks_in_phases() {
+void Tasks_tasks_in_phases(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);

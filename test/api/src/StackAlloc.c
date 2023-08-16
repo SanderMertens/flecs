@@ -1,7 +1,7 @@
 #include <api.h>
 #include "../../../src/private_api.h"
 
-void StackAlloc_init_fini() {
+void StackAlloc_init_fini(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_stack_t stack = {0};
@@ -28,7 +28,7 @@ ecs_stack_cursor_t* init_some_object(ecs_stack_t* stack, int32_t* allocSizes) {
     return cursor;
 }
 
-void StackAlloc_multiple_overlapping_cursors() {
+void StackAlloc_multiple_overlapping_cursors(void) {
     ecs_world_t *world = ecs_mini();
     ecs_stack_t stack = {0};
     flecs_stack_init(&stack);

@@ -4,7 +4,7 @@ typedef struct Pair {
     float value;
 } Pair;
 
-void Pairs_add_component_pair() {
+void Pairs_add_component_pair(void) {
     flecs::world ecs;
 
     auto entity = ecs.entity()
@@ -17,7 +17,7 @@ void Pairs_add_component_pair() {
     test_str(entity.type().str().c_str(), "(Pair,Position)");
 }
 
-void Pairs_add_tag_pair() {
+void Pairs_add_tag_pair(void) {
     flecs::world ecs;
 
     ecs.component<Position>();
@@ -32,7 +32,7 @@ void Pairs_add_tag_pair() {
     test_str(entity.type().str().c_str(), "(Pair,Position)");
 }
 
-void Pairs_add_tag_pair_to_tag() {
+void Pairs_add_tag_pair_to_tag(void) {
     flecs::world ecs;
 
     auto Tag = ecs.entity("Tag");
@@ -46,7 +46,7 @@ void Pairs_add_tag_pair_to_tag() {
     test_str(entity.type().str().c_str(), "(Pair,Tag)");
 }
 
-void Pairs_remove_component_pair() {
+void Pairs_remove_component_pair(void) {
     flecs::world ecs;
 
     ecs.component<Position>();
@@ -65,7 +65,7 @@ void Pairs_remove_component_pair() {
     test_assert(!(entity.has<Position, Pair>()));
 }
 
-void Pairs_remove_tag_pair() {
+void Pairs_remove_tag_pair(void) {
     flecs::world ecs;
 
     ecs.component<Position>();
@@ -83,7 +83,7 @@ void Pairs_remove_tag_pair() {
     test_assert(!entity.has<Position>(Pair));
 }
 
-void Pairs_remove_tag_pair_to_tag() {
+void Pairs_remove_tag_pair_to_tag(void) {
     flecs::world ecs;
 
     auto Tag = ecs.entity("Tag");
@@ -100,7 +100,7 @@ void Pairs_remove_tag_pair_to_tag() {
     test_assert(!entity.has(Tag, Pair));
 }
 
-void Pairs_set_component_pair() {
+void Pairs_set_component_pair(void) {
     flecs::world ecs;
 
     auto entity = ecs.entity()
@@ -116,7 +116,7 @@ void Pairs_set_component_pair() {
     test_int(t->value, 10);
 }
 
-void Pairs_set_tag_pair() {
+void Pairs_set_tag_pair(void) {
     flecs::world ecs;
 
     auto Pair = ecs.entity("Pair");
@@ -134,7 +134,7 @@ void Pairs_set_tag_pair() {
     test_int(p->y, 20);
 }
 
-void Pairs_system_1_pair_instance() {
+void Pairs_system_1_pair_instance(void) {
     flecs::world ecs;
 
     ecs.entity()
@@ -162,7 +162,7 @@ void Pairs_system_1_pair_instance() {
     test_int(trait_value, 10);
 }
 
-void Pairs_system_2_pair_instances() {
+void Pairs_system_2_pair_instances(void) {
     flecs::world ecs;
 
     ecs.entity()
@@ -191,7 +191,7 @@ void Pairs_system_2_pair_instances() {
     test_int(trait_value, 30);
 }
 
-void Pairs_override_pair() {
+void Pairs_override_pair(void) {
     flecs::world ecs;
 
     auto base = ecs.entity()
@@ -218,7 +218,7 @@ void Pairs_override_pair() {
     test_assert(t == t_2);    
 }
 
-void Pairs_override_tag_pair() {
+void Pairs_override_tag_pair(void) {
     flecs::world ecs;
 
     auto Pair = ecs.entity();
@@ -250,7 +250,7 @@ void Pairs_override_tag_pair() {
     test_assert(t == t_2); 
 }
 
-void Pairs_get_mut_pair() {
+void Pairs_get_mut_pair(void) {
     flecs::world ecs;
 
     auto e = ecs.entity();
@@ -264,7 +264,7 @@ void Pairs_get_mut_pair() {
     test_int(t->value, 10);
 }
 
-void Pairs_get_mut_pair_existing() {
+void Pairs_get_mut_pair_existing(void) {
     flecs::world ecs;
 
     auto e = ecs.entity()
@@ -280,7 +280,7 @@ void Pairs_get_mut_pair_existing() {
     test_int(t->value, 10);
 }
 
-void Pairs_get_mut_pair_tag() {
+void Pairs_get_mut_pair_tag(void) {
     flecs::world ecs;
 
     auto Pair = ecs.entity();
@@ -298,7 +298,7 @@ void Pairs_get_mut_pair_tag() {
     test_int(p->y, 20);
 }
 
-void Pairs_get_mut_pair_tag_existing() {
+void Pairs_get_mut_pair_tag_existing(void) {
     flecs::world ecs;
 
     auto Pair = ecs.entity();
@@ -317,7 +317,7 @@ void Pairs_get_mut_pair_tag_existing() {
     test_int(p->y, 20);
 }
 
-void Pairs_get_mut_R_tag_O() {
+void Pairs_get_mut_R_tag_O(void) {
     flecs::world ecs;
 
     auto e = ecs.entity()
@@ -336,7 +336,7 @@ void Pairs_get_mut_R_tag_O() {
     test_int(t->y, 40);
 }
 
-void Pairs_get_relation_from_id() {
+void Pairs_get_relation_from_id(void) {
     flecs::world ecs;
 
     auto rel = ecs.entity();
@@ -351,7 +351,7 @@ void Pairs_get_relation_from_id() {
     test_assert(pair.first().is_valid());
 }
 
-void Pairs_get_second_from_id() {
+void Pairs_get_second_from_id(void) {
     flecs::world ecs;
 
     auto rel = ecs.entity();
@@ -366,7 +366,7 @@ void Pairs_get_second_from_id() {
     test_assert(pair.second().is_valid());
 }
 
-void Pairs_get_recycled_relation_from_id() {
+void Pairs_get_recycled_relation_from_id(void) {
     flecs::world ecs;
 
     auto rel = ecs.entity();
@@ -391,7 +391,7 @@ void Pairs_get_recycled_relation_from_id() {
     test_assert(pair.first().is_valid());
 }
 
-void Pairs_get_recycled_object_from_id() {
+void Pairs_get_recycled_object_from_id(void) {
     flecs::world ecs;
 
     auto rel = ecs.entity();
@@ -416,7 +416,7 @@ void Pairs_get_recycled_object_from_id() {
     test_assert(pair.second().is_valid());
 }
 
-void Pairs_get_rel_obj() {
+void Pairs_get_rel_obj(void) {
     flecs::world ecs;
 
     auto rel = ecs.component<Position>();
@@ -435,7 +435,7 @@ void Pairs_get_rel_obj() {
     test_int(static_cast<const Position*>(ptr)->y, 20);
 }
 
-void Pairs_get_rel_obj_id() {
+void Pairs_get_rel_obj_id(void) {
     flecs::world ecs;
 
     flecs::id rel = ecs.component<Position>();
@@ -454,7 +454,7 @@ void Pairs_get_rel_obj_id() {
     test_int(static_cast<const Position*>(ptr)->y, 20);
 }
 
-void Pairs_get_rel_obj_id_t() {
+void Pairs_get_rel_obj_id_t(void) {
     flecs::world ecs;
 
     flecs::id_t rel = ecs.component<Position>();
@@ -473,7 +473,7 @@ void Pairs_get_rel_obj_id_t() {
     test_int(static_cast<const Position*>(ptr)->y, 20);
 }
 
-void Pairs_get_R_obj() {
+void Pairs_get_R_obj(void) {
     flecs::world ecs;
 
     auto obj = ecs.entity();
@@ -490,7 +490,7 @@ void Pairs_get_R_obj() {
     test_int(ptr->y, 20);
 }
 
-void Pairs_get_R_obj_id() {
+void Pairs_get_R_obj_id(void) {
     flecs::world ecs;
 
     flecs::id obj = ecs.entity();
@@ -507,7 +507,7 @@ void Pairs_get_R_obj_id() {
     test_int(ptr->y, 20);
 }
 
-void Pairs_get_R_obj_id_t() {
+void Pairs_get_R_obj_id_t(void) {
     flecs::world ecs;
 
     flecs::id_t obj = ecs.entity();
@@ -524,7 +524,7 @@ void Pairs_get_R_obj_id_t() {
     test_int(ptr->y, 20);
 }
 
-void Pairs_get_R_O() {
+void Pairs_get_R_O(void) {
     flecs::world ecs;
 
     auto e = ecs.entity().set<Position, Tag>({10, 20});
@@ -538,7 +538,7 @@ void Pairs_get_R_O() {
     test_int(ptr->y, 20);
 }
 
-void Pairs_get_R_tag_O() {
+void Pairs_get_R_tag_O(void) {
     flecs::world ecs;
 
     auto e = ecs.entity().set<Tag, Position>({10, 20});
@@ -552,7 +552,7 @@ void Pairs_get_R_tag_O() {
     test_int(ptr->y, 20);
 }
 
-void Pairs_get_second() {
+void Pairs_get_second(void) {
     flecs::world ecs;
 
     auto rel = ecs.entity();
@@ -569,7 +569,7 @@ void Pairs_get_second() {
     test_int(ptr->y, 20);
 }
 
-void Pairs_get_second_id() {
+void Pairs_get_second_id(void) {
     flecs::world ecs;
 
     flecs::id rel = ecs.entity();
@@ -586,7 +586,7 @@ void Pairs_get_second_id() {
     test_int(ptr->y, 20);
 }
 
-void Pairs_get_second_id_t() {
+void Pairs_get_second_id_t(void) {
     flecs::world ecs;
 
     flecs::id_t rel = ecs.entity();
@@ -603,7 +603,7 @@ void Pairs_get_second_id_t() {
     test_int(ptr->y, 20);
 }
 
-void Pairs_each() {
+void Pairs_each(void) {
     flecs::world ecs;
 
     auto p_1 = ecs.entity();
@@ -630,7 +630,7 @@ void Pairs_each() {
     test_int(count, 2);
 }
 
-void Pairs_each_pair() {
+void Pairs_each_pair(void) {
     flecs::world ecs;
 
     auto pair = ecs.component<Pair>();
@@ -658,7 +658,7 @@ void Pairs_each_pair() {
     test_int(count, 2);
 }
 
-void Pairs_each_pair_by_type() {
+void Pairs_each_pair_by_type(void) {
     flecs::world ecs;
 
     auto pos = ecs.component<Position>();
@@ -685,7 +685,7 @@ void Pairs_each_pair_by_type() {
     test_int(count, 2);
 }
 
-void Pairs_each_pair_w_isa() {
+void Pairs_each_pair_w_isa(void) {
     flecs::world ecs;
 
     auto p_1 = ecs.entity();
@@ -712,7 +712,7 @@ void Pairs_each_pair_w_isa() {
     test_int(count, 2);
 }
 
-void Pairs_each_pair_w_recycled_rel() {
+void Pairs_each_pair_w_recycled_rel(void) {
     flecs::world ecs;
 
     auto e_1 = ecs.entity();
@@ -746,7 +746,7 @@ void Pairs_each_pair_w_recycled_rel() {
     test_int(count, 2);
 }
 
-void Pairs_each_pair_w_recycled_obj() {
+void Pairs_each_pair_w_recycled_obj(void) {
     flecs::world ecs;
 
     auto pair = ecs.component<Pair>();
@@ -781,7 +781,7 @@ void Pairs_each_pair_w_recycled_obj() {
     test_int(count, 2);
 }
 
-void Pairs_match_pair() {
+void Pairs_match_pair(void) {
     flecs::world ecs;
 
     auto Eats = ecs.entity();
@@ -809,7 +809,7 @@ void Pairs_match_pair() {
     test_int(count, 1);
 }
 
-void Pairs_match_pair_obj_wildcard() {
+void Pairs_match_pair_obj_wildcard(void) {
     flecs::world ecs;
 
     auto Eats = ecs.entity();
@@ -837,7 +837,7 @@ void Pairs_match_pair_obj_wildcard() {
     test_int(count, 2);
 }
 
-void Pairs_match_pair_rel_wildcard() {
+void Pairs_match_pair_rel_wildcard(void) {
     flecs::world ecs;
 
     auto Eats = ecs.entity();
@@ -865,7 +865,7 @@ void Pairs_match_pair_rel_wildcard() {
     test_int(count, 1);
 }
 
-void Pairs_match_pair_both_wildcard() {
+void Pairs_match_pair_both_wildcard(void) {
     flecs::world ecs;
 
     auto Eats = ecs.entity();
@@ -891,7 +891,7 @@ void Pairs_match_pair_both_wildcard() {
     test_int(count, 3);
 }
 
-void Pairs_has_tag_w_object() {
+void Pairs_has_tag_w_object(void) {
     flecs::world ecs;
 
     struct Likes { };
@@ -901,7 +901,7 @@ void Pairs_has_tag_w_object() {
     test_assert(e.has<Likes>(Bob));
 }
 
-void Pairs_has_second_tag() {
+void Pairs_has_second_tag(void) {
     flecs::world ecs;
 
     struct Bob { };
@@ -918,7 +918,7 @@ struct Pears { };
 using EatsApples = flecs::pair<Eats, Apples>;
 using EatsPears = flecs::pair<Eats, Pears>;
 
-void Pairs_add_pair_type() {
+void Pairs_add_pair_type(void) {
     flecs::world ecs;
 
     auto e = ecs.entity().add<EatsApples>();
@@ -926,7 +926,7 @@ void Pairs_add_pair_type() {
     test_assert((e.has<EatsApples>()));
 }
 
-void Pairs_remove_pair_type() {
+void Pairs_remove_pair_type(void) {
     flecs::world ecs;
 
     auto e = ecs.entity().add<EatsApples>();
@@ -938,7 +938,7 @@ void Pairs_remove_pair_type() {
     test_assert(!(e.has<EatsApples>()));    
 }
 
-void Pairs_set_pair_type() {
+void Pairs_set_pair_type(void) {
     flecs::world ecs;
 
     auto e = ecs.entity().set<EatsApples>({10});
@@ -951,7 +951,7 @@ void Pairs_set_pair_type() {
     test_assert((ptr == e.get<Eats, Apples>()));
 }
 
-void Pairs_has_pair_type() {
+void Pairs_has_pair_type(void) {
     flecs::world ecs;
 
     auto e = ecs.entity().add<Eats, Apples>();
@@ -959,7 +959,7 @@ void Pairs_has_pair_type() {
     test_assert((e.has<EatsApples>()));
 }
 
-void Pairs_get_1_pair_arg() {
+void Pairs_get_1_pair_arg(void) {
     flecs::world ecs;
 
     auto e = ecs.entity().set<EatsApples>({10});
@@ -971,7 +971,7 @@ void Pairs_get_1_pair_arg() {
     }), true);
 }
 
-void Pairs_get_2_pair_arg() {
+void Pairs_get_2_pair_arg(void) {
     flecs::world ecs;
 
     auto e = ecs.entity()
@@ -989,7 +989,7 @@ void Pairs_get_2_pair_arg() {
     }), true);
 }
 
-void Pairs_set_1_pair_arg() {
+void Pairs_set_1_pair_arg(void) {
     flecs::world ecs;
 
     auto e = ecs.entity()
@@ -1001,7 +1001,7 @@ void Pairs_set_1_pair_arg() {
     test_int(eats->amount, 10);
 }
 
-void Pairs_set_2_pair_arg() {
+void Pairs_set_2_pair_arg(void) {
     flecs::world ecs;
 
     auto e = ecs.entity()
@@ -1017,7 +1017,7 @@ void Pairs_set_2_pair_arg() {
     test_int(eats->amount, 20);
 }
 
-void Pairs_get_inline_pair_type() {
+void Pairs_get_inline_pair_type(void) {
     flecs::world ecs;
 
     auto e = ecs.entity().set<EatsApples>({10});
@@ -1029,7 +1029,7 @@ void Pairs_get_inline_pair_type() {
     }), true);
 }
 
-void Pairs_set_inline_pair_type() {
+void Pairs_set_inline_pair_type(void) {
     flecs::world ecs;
 
     auto e = ecs.entity()
@@ -1041,7 +1041,7 @@ void Pairs_set_inline_pair_type() {
     test_int(eats->amount, 10);
 }
 
-void Pairs_get_pair_type_object() {
+void Pairs_get_pair_type_object(void) {
     flecs::world ecs;
 
     auto e = ecs.entity().set_second<Apples, Eats>({10});
@@ -1052,7 +1052,7 @@ void Pairs_get_pair_type_object() {
     }), true);
 }
 
-void Pairs_set_pair_type_object() {
+void Pairs_set_pair_type_object(void) {
     flecs::world ecs;
 
     auto e = ecs.entity()
@@ -1074,7 +1074,7 @@ struct End { };
 using BeginEvent = flecs::pair<Begin, Event>;
 using EndEvent = flecs::pair<End, Event>;
 
-void Pairs_set_get_second_variants() {
+void Pairs_set_get_second_variants(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity().set_second<Begin, Event>({"Big Bang"});
@@ -1102,7 +1102,7 @@ void Pairs_set_get_second_variants() {
     test_str(v->value, "Big Bang");            
 }
 
-void Pairs_get_object_for_type_self() {
+void Pairs_get_object_for_type_self(void) {
     flecs::world ecs;
 
     auto base = ecs.entity().add<Tag>();
@@ -1113,7 +1113,7 @@ void Pairs_get_object_for_type_self() {
     test_assert(obj == self);
 }
 
-void Pairs_get_object_for_type_base() {
+void Pairs_get_object_for_type_base(void) {
     flecs::world ecs;
 
     auto base = ecs.entity().add<Tag>();
@@ -1124,7 +1124,7 @@ void Pairs_get_object_for_type_base() {
     test_assert(obj == base);
 }
 
-void Pairs_get_object_for_id_self() {
+void Pairs_get_object_for_id_self(void) {
     flecs::world ecs;
 
     auto tag = ecs.entity();
@@ -1136,7 +1136,7 @@ void Pairs_get_object_for_id_self() {
     test_assert(obj == self);
 }
 
-void Pairs_get_object_for_id_base() {
+void Pairs_get_object_for_id_base(void) {
     flecs::world ecs;
 
     auto tag = ecs.entity();
@@ -1148,7 +1148,7 @@ void Pairs_get_object_for_id_base() {
     test_assert(obj == base);
 }
 
-void Pairs_get_object_for_id_not_found() {
+void Pairs_get_object_for_id_not_found(void) {
     flecs::world ecs;
 
     auto tag = ecs.entity();
@@ -1159,7 +1159,7 @@ void Pairs_get_object_for_id_not_found() {
     test_assert(obj == 0);
 }
 
-void Pairs_deref_pair() {
+void Pairs_deref_pair(void) {
     flecs::world ecs;
 
     Position v = {10, 20};
@@ -1173,7 +1173,7 @@ void Pairs_deref_pair() {
     test_int(pos.y, 20);
 }
 
-void Pairs_deref_const_pair() {
+void Pairs_deref_const_pair(void) {
     flecs::world ecs;
 
     Position v = {10, 20};
@@ -1187,7 +1187,7 @@ void Pairs_deref_const_pair() {
     test_int(pos.y, 20);
 }
 
-void Pairs_deref_pair_obj() {
+void Pairs_deref_pair_obj(void) {
     flecs::world ecs;
 
     Position v = {10, 20};
@@ -1201,7 +1201,7 @@ void Pairs_deref_pair_obj() {
     test_int(pos.y, 20);
 }
 
-void Pairs_deref_const_pair_obj() {
+void Pairs_deref_const_pair_obj(void) {
     flecs::world ecs;
 
     Position v = {10, 20};
@@ -1215,7 +1215,7 @@ void Pairs_deref_const_pair_obj() {
     test_int(pos.y, 20);
 }
 
-void Pairs_set_R_existing_value() {
+void Pairs_set_R_existing_value(void) {
     flecs::world ecs;
     
     Position p{10, 20};

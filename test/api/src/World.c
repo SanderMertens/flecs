@@ -1,7 +1,7 @@
 #include <api.h>
 #include <stdlib.h>
 
-void World_setup() {
+void World_setup(void) {
     ecs_log_set_level(-3);
 }
 
@@ -20,7 +20,7 @@ void Move(ecs_iter_t *it) {
     }
 }
 
-void World_progress_w_0() {
+void World_progress_w_0(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -58,7 +58,7 @@ void World_progress_w_0() {
     ecs_fini(world);
 }
 
-void World_progress_w_t() {
+void World_progress_w_t(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -96,7 +96,7 @@ void World_progress_w_t() {
     ecs_fini(world);
 }
 
-void World_entity_range_offset() {
+void World_entity_range_offset(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_set_entity_range(world, 5000, 0);
@@ -107,7 +107,7 @@ void World_entity_range_offset() {
     ecs_fini(world);
 }
 
-void World_entity_range_offset_out_of_range() {
+void World_entity_range_offset_out_of_range(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_init();
@@ -124,7 +124,7 @@ void World_entity_range_offset_out_of_range() {
     ecs_fini(world);
 }
 
-void World_entity_range_limit_out_of_range() {
+void World_entity_range_limit_out_of_range(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_init();
@@ -141,7 +141,7 @@ void World_entity_range_limit_out_of_range() {
     ecs_fini(world);
 }
 
-void World_entity_range_out_of_range_check_disabled() {
+void World_entity_range_out_of_range_check_disabled(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -168,7 +168,7 @@ void World_entity_range_out_of_range_check_disabled() {
     ecs_fini(world);
 }
 
-void World_entity_range_check_after_delete() {
+void World_entity_range_check_after_delete(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -189,7 +189,7 @@ void World_entity_range_check_after_delete() {
     ecs_fini(world);
 }
 
-void World_entity_range_add_existing_staged() {
+void World_entity_range_add_existing_staged(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -209,7 +209,7 @@ void World_entity_range_add_existing_staged() {
     ecs_fini(world);
 }
 
-void World_entity_range_add_in_range_staged() {
+void World_entity_range_add_in_range_staged(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -238,7 +238,7 @@ void AddOutOfRange(ecs_iter_t *it) {
     }
 }
 
-void World_entity_range_add_out_of_range_staged() {
+void World_entity_range_add_out_of_range_staged(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -261,7 +261,7 @@ void World_entity_range_add_out_of_range_staged() {
     ecs_fini(world);
 }
 
-void World_get_tick() {
+void World_get_tick(void) {
     ecs_world_t *world = ecs_init();
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
@@ -298,7 +298,7 @@ void *test_realloc(void *old_ptr, ecs_size_t size) {
     return realloc(old_ptr, size);
 }
 
-void World_dim() {
+void World_dim(void) {
     ecs_os_set_api_defaults();
     ecs_os_api_t os_api = ecs_os_api;
     os_api.malloc_ = test_malloc;
@@ -421,7 +421,7 @@ void TManual(ecs_iter_t *it) {
     }
 }
 
-void World_phases() {
+void World_phases(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -453,7 +453,7 @@ void World_phases() {
     ecs_fini(world);
 }
 
-void World_phases_match_in_create() {
+void World_phases_match_in_create(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -593,7 +593,7 @@ void TMergeManual(ecs_iter_t *it) {
     }
 }
 
-void World_phases_w_merging() {
+void World_phases_w_merging(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -631,7 +631,7 @@ void TimeCheck(ecs_iter_t *it) {
     test_assert(it->delta_time > 0);
 }
 
-void World_measure_time() {
+void World_measure_time(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -649,7 +649,7 @@ void World_measure_time() {
     ecs_fini(world);
 }
 
-void World_control_fps() {
+void World_control_fps(void) {
     test_is_flaky();
 
     ecs_world_t *world = ecs_init();
@@ -708,7 +708,7 @@ void BusySystem(ecs_iter_t *it) {
     busy_wait(0.014);
 }
 
-void World_control_fps_busy_system() {
+void World_control_fps_busy_system(void) {
     test_is_flaky();
 
     ecs_world_t *world = ecs_init();
@@ -740,7 +740,7 @@ void World_control_fps_busy_system() {
     ecs_fini(world);
 }
 
-void World_control_fps_busy_app() {
+void World_control_fps_busy_app(void) {
     test_is_flaky();
 
     ecs_world_t *world = ecs_init();
@@ -772,7 +772,7 @@ void World_control_fps_busy_app() {
     ecs_fini(world);
 }
 
-void World_measure_fps_vs_actual() {
+void World_measure_fps_vs_actual(void) {
     test_is_flaky();
 
     ecs_world_t *world = ecs_init();
@@ -793,7 +793,7 @@ void World_measure_fps_vs_actual() {
     ecs_fini(world);
 }
 
-void World_measure_delta_time_vs_actual() {
+void World_measure_delta_time_vs_actual(void) {
     test_is_flaky();
 
     ecs_world_t *world = ecs_init();
@@ -825,7 +825,7 @@ void RandomSystem(ecs_iter_t *it) {
     busy_wait(rnd_time);
 }
 
-void World_control_fps_random_system() {
+void World_control_fps_random_system(void) {
     test_is_flaky();
 
     ecs_world_t *world = ecs_init();
@@ -857,7 +857,7 @@ void World_control_fps_random_system() {
     ecs_fini(world);
 }
 
-void World_control_fps_random_app() {
+void World_control_fps_random_app(void) {
     test_is_flaky();
     
     ecs_world_t *world = ecs_init();
@@ -890,7 +890,7 @@ void World_control_fps_random_app() {
     ecs_fini(world);
 }
 
-void World_quit() {
+void World_quit(void) {
     ecs_world_t *world = ecs_init();
 
     int32_t count = 0;
@@ -906,7 +906,7 @@ void World_quit() {
     ecs_fini(world);
 }
 
-void World_get_delta_time() {
+void World_get_delta_time(void) {
     ecs_world_t *world = ecs_init();
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
@@ -920,7 +920,7 @@ void World_get_delta_time() {
     ecs_fini(world);
 }
 
-void World_get_delta_time_auto() {
+void World_get_delta_time_auto(void) {
     ecs_world_t *world = ecs_init();
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
@@ -934,7 +934,7 @@ void World_get_delta_time_auto() {
     ecs_fini(world);
 }
 
-void World_recreate_world() {
+void World_recreate_world(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_fini(world) == 0);
@@ -944,7 +944,7 @@ void World_recreate_world() {
     test_assert(ecs_fini(world) == 0);
 }
 
-void World_recreate_world_w_component() {
+void World_recreate_world_w_component(void) {
     ecs_world_t *world = ecs_init();
     test_assert(world != NULL);
 
@@ -966,7 +966,7 @@ void World_recreate_world_w_component() {
     }
 }
 
-void World_no_threading() {
+void World_no_threading(void) {
     ecs_os_set_api_defaults();
     ecs_os_api_t os_api = ecs_os_api;
     os_api.mutex_new_ = NULL;
@@ -977,7 +977,7 @@ void World_no_threading() {
     ecs_fini(world);
 }
 
-void World_no_time() {
+void World_no_time(void) {
     ecs_os_set_api_defaults();
     ecs_os_api_t os_api = ecs_os_api;
     os_api.get_time_ = NULL;
@@ -988,7 +988,7 @@ void World_no_time() {
     ecs_fini(world);
 }
 
-void World_is_entity_enabled() {
+void World_is_entity_enabled(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t e = ecs_new(world, 0);
@@ -1005,7 +1005,7 @@ void ZeroTimeScale(ecs_iter_t *it) {
     zero_time_scale_invoked ++;
 }
 
-void World_system_time_scale() {
+void World_system_time_scale(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -1027,7 +1027,7 @@ void World_system_time_scale() {
     ecs_fini(world);
 }
 
-void World_ensure_empty_root() {
+void World_ensure_empty_root(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_query_t *q = ecs_query_new(world, "!(ChildOf, *)");
@@ -1048,7 +1048,7 @@ void World_ensure_empty_root() {
     ecs_fini(world);
 }
 
-void World_register_alias_twice_same_entity() {
+void World_register_alias_twice_same_entity(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t e = ecs_new_id(world);
@@ -1062,7 +1062,7 @@ void World_register_alias_twice_same_entity() {
     ecs_fini(world);
 }
 
-void World_register_alias_twice_different_entity() {
+void World_register_alias_twice_different_entity(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_init();
@@ -1076,7 +1076,7 @@ void World_register_alias_twice_different_entity() {
     ecs_set_alias(world, f, "Foo");
 }
 
-void World_redefine_component() {
+void World_redefine_component(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t c = ecs_component_init(world, &(ecs_component_desc_t){
@@ -1093,7 +1093,7 @@ void World_redefine_component() {
     ecs_fini(world);
 }
 
-void World_delete_empty_tables_after_mini() {
+void World_delete_empty_tables_after_mini(void) {
     ecs_world_t *world = ecs_mini();
 
     const ecs_world_info_t *info = ecs_get_world_info(world);
@@ -1110,7 +1110,7 @@ void World_delete_empty_tables_after_mini() {
     ecs_fini(world);
 }
 
-void World_delete_empty_tables_after_init() {
+void World_delete_empty_tables_after_init(void) {
     ecs_world_t *world = ecs_init();
 
     int32_t deleted;
@@ -1123,7 +1123,7 @@ void World_delete_empty_tables_after_init() {
     ecs_fini(world);
 }
 
-void World_delete_1000_empty_tables() {
+void World_delete_1000_empty_tables(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -1153,7 +1153,7 @@ void World_delete_1000_empty_tables() {
     ecs_fini(world);
 }
 
-void World_delete_empty_tables_for_id() {
+void World_delete_empty_tables_for_id(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -1190,7 +1190,7 @@ void World_delete_empty_tables_for_id() {
     ecs_fini(world);
 }
 
-void World_use_after_delete_empty() {
+void World_use_after_delete_empty(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -1214,7 +1214,7 @@ void World_use_after_delete_empty() {
     ecs_fini(world);
 }
 
-void World_use_after_clear_empty() {
+void World_use_after_clear_empty(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -1238,7 +1238,7 @@ void World_use_after_clear_empty() {
     ecs_fini(world);
 }
 
-void World_use_after_delete_empty_w_component() {
+void World_use_after_delete_empty_w_component(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -1275,7 +1275,7 @@ void World_use_after_delete_empty_w_component() {
     ecs_fini(world);
 }
 
-void World_use_after_clear_empty_w_component() {
+void World_use_after_clear_empty_w_component(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -1312,7 +1312,7 @@ void World_use_after_clear_empty_w_component() {
     ecs_fini(world);
 }
 
-void World_use_after_clear_empty_w_component_w_lifecycle() {
+void World_use_after_clear_empty_w_component_w_lifecycle(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -1356,7 +1356,7 @@ void World_use_after_clear_empty_w_component_w_lifecycle() {
     ecs_fini(world);
 }
 
-void World_use_after_clear_unused() {
+void World_use_after_clear_unused(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -1395,7 +1395,7 @@ void at_fini_test(
     at_fini_test_invoked = 1;
 }
 
-void World_get_mut_in_at_fini() {
+void World_get_mut_in_at_fini(void) {
     ecs_world_t* world = ecs_mini();
 
     ECS_COMPONENT_DEFINE(world, Test);
@@ -1408,7 +1408,7 @@ void World_get_mut_in_at_fini() {
     test_int(at_fini_test_invoked, 1);
 }
 
-void World_get_type_info() {
+void World_get_type_info(void) {
     ecs_world_t* world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -1422,7 +1422,7 @@ void World_get_type_info() {
     ecs_fini(world);
 }
 
-void World_get_type_info_after_delete_with() {
+void World_get_type_info_after_delete_with(void) {
     ecs_world_t* world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -1438,7 +1438,7 @@ void World_get_type_info_after_delete_with() {
     ecs_fini(world);
 }
 
-void World_get_type_info_after_reuse() {
+void World_get_type_info_after_reuse(void) {
     ecs_world_t* world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -1458,7 +1458,7 @@ void World_get_type_info_after_reuse() {
     ecs_fini(world);
 }
 
-void World_no_name_prefix_after_init() {
+void World_no_name_prefix_after_init(void) {
     ecs_world_t *world = ecs_mini();
 
     const ecs_world_info_t *info = ecs_get_world_info(world);

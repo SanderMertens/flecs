@@ -36,7 +36,7 @@ void Iter(ecs_iter_t *it) {
     }
 }
 
-void System_w_FromEntity_2_column_1_from_entity() {
+void System_w_FromEntity_2_column_1_from_entity(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -92,7 +92,7 @@ void Dummy(ecs_iter_t *it) {
     dummy_source = ecs_field_src(it, 1);
 }
 
-void System_w_FromEntity_task_from_entity() {
+void System_w_FromEntity_task_from_entity(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -116,7 +116,7 @@ void System_w_FromEntity_task_from_entity() {
     ecs_fini(world);
 }
 
-void System_w_FromEntity_task_not_from_entity() {
+void System_w_FromEntity_task_not_from_entity(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);

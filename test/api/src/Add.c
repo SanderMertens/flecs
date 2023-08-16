@@ -1,7 +1,7 @@
 #include <api.h>
 #include <stdlib.h>
 
-void Add_zero() {
+void Add_zero(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -13,7 +13,7 @@ void Add_zero() {
     ecs_add(world, e, 0);
 }
 
-void Add_component() {
+void Add_component(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -27,7 +27,7 @@ void Add_component() {
     ecs_fini(world);
 }
 
-void Add_component_again() {
+void Add_component_again(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -44,7 +44,7 @@ void Add_component_again() {
     ecs_fini(world);
 }
 
-void Add_2_components() {
+void Add_2_components(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -64,7 +64,7 @@ void Add_2_components() {
     ecs_fini(world);
 }
 
-void Add_2_components_again() {
+void Add_2_components_again(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -86,7 +86,7 @@ void Add_2_components_again() {
     ecs_fini(world);
 }
 
-void Add_2_components_overlap() {
+void Add_2_components_overlap(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -111,7 +111,7 @@ void Add_2_components_overlap() {
     ecs_fini(world);
 }
 
-void Add_component_to_nonempty() {
+void Add_component_to_nonempty(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -128,7 +128,7 @@ void Add_component_to_nonempty() {
     ecs_fini(world);
 }
 
-void Add_component_to_nonempty_again() {
+void Add_component_to_nonempty_again(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -143,7 +143,7 @@ void Add_component_to_nonempty_again() {
     ecs_fini(world);
 }
 
-void Add_component_to_nonempty_overlap() {
+void Add_component_to_nonempty_overlap(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -162,7 +162,7 @@ void Add_component_to_nonempty_overlap() {
     ecs_fini(world);
 }
 
-void Add_tag() {
+void Add_tag(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Tag, 0);
@@ -176,7 +176,7 @@ void Add_tag() {
     ecs_fini(world);
 }
 
-void Add_add_entity() {
+void Add_add_entity(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new(world, 0);
@@ -191,7 +191,7 @@ void Add_add_entity() {
     ecs_fini(world);
 }
 
-void Add_remove_entity() {
+void Add_remove_entity(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new(world, 0);
@@ -209,7 +209,7 @@ void Add_remove_entity() {
     ecs_fini(world);
 }
 
-void Add_add_0_entity() {
+void Add_add_0_entity(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -222,7 +222,7 @@ void Add_add_0_entity() {
     ecs_add_id(world, e, 0);
 }
 
-void Add_remove_0_entity() {
+void Add_remove_0_entity(void) {
     install_test_abort();
     
     ecs_world_t *world = ecs_mini();
@@ -237,7 +237,7 @@ void Add_remove_0_entity() {
     ecs_remove_id(world, e, 0);
 }
 
-void Add_invalid_add_wildcard() {
+void Add_invalid_add_wildcard(void) {
     install_test_abort();
     
     ecs_world_t *world = ecs_mini();
@@ -250,7 +250,7 @@ void Add_invalid_add_wildcard() {
     ecs_add_id(world, e, EcsWildcard);
 }
 
-void Add_invalid_add_pair_w_wildcard() {
+void Add_invalid_add_pair_w_wildcard(void) {
     install_test_abort();
     
     ecs_world_t *world = ecs_mini();
@@ -263,7 +263,7 @@ void Add_invalid_add_pair_w_wildcard() {
     ecs_add_id(world, e, ecs_pair(EcsWildcard, EcsWildcard));
 }
 
-void Add_invalid_add_pair_w_wildcard_rel() {
+void Add_invalid_add_pair_w_wildcard_rel(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -278,7 +278,7 @@ void Add_invalid_add_pair_w_wildcard_rel() {
     ecs_add_id(world, e, ecs_pair(EcsWildcard, Tag));
 }
 
-void Add_invalid_add_pair_w_wildcard_obj() {
+void Add_invalid_add_pair_w_wildcard_obj(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -293,7 +293,7 @@ void Add_invalid_add_pair_w_wildcard_obj() {
     ecs_add_id(world, e, ecs_pair(Tag, EcsWildcard));
 }
 
-void Add_invalid_add_any() {
+void Add_invalid_add_any(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -308,7 +308,7 @@ void Add_invalid_add_any() {
     ecs_add_id(world, e, EcsAny);
 }
 
-void Add_invalid_add_pair_w_any() {
+void Add_invalid_add_pair_w_any(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -323,7 +323,7 @@ void Add_invalid_add_pair_w_any() {
     ecs_add_id(world, e, ecs_pair(EcsAny, EcsAny));
 }
 
-void Add_invalid_add_pair_w_any_rel() {
+void Add_invalid_add_pair_w_any_rel(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -338,7 +338,7 @@ void Add_invalid_add_pair_w_any_rel() {
     ecs_add_id(world, e, ecs_pair(EcsAny, Tag));
 }
 
-void Add_invalid_add_pair_w_any_obj() {
+void Add_invalid_add_pair_w_any_obj(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -353,7 +353,7 @@ void Add_invalid_add_pair_w_any_obj() {
     ecs_add_id(world, e, ecs_pair(Tag, EcsAny));
 }
 
-void Add_invalid_pair_w_0() {
+void Add_invalid_pair_w_0(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -368,7 +368,7 @@ void Add_invalid_pair_w_0() {
     ecs_add_id(world, e, ecs_pair(0, 0));
 }
 
-void Add_invalid_pair_w_0_rel() {
+void Add_invalid_pair_w_0_rel(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -383,7 +383,7 @@ void Add_invalid_pair_w_0_rel() {
     ecs_add_id(world, e, ecs_pair(0, Tag));
 }
 
-void Add_invalid_pair_w_0_obj() {
+void Add_invalid_pair_w_0_obj(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -398,7 +398,7 @@ void Add_invalid_pair_w_0_obj() {
     ecs_add_id(world, e, ecs_pair(Tag, 0));
 }
 
-void Add_add_random_id() {
+void Add_add_random_id(void) {
     ecs_world_t *world = ecs_mini();
 
     for (int i = 0; i < 10; i ++) {

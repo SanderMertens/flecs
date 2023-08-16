@@ -61,7 +61,7 @@ void meta_test_constant(
     test_assert(constant_found == true);
 }
 
-void BitmaskTypes_bitmask_1_constant() {
+void BitmaskTypes_bitmask_1_constant(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t b = ecs_bitmask_init(world, &(ecs_bitmask_desc_t){
@@ -76,7 +76,7 @@ void BitmaskTypes_bitmask_1_constant() {
     ecs_fini(world);
 }
 
-void BitmaskTypes_bitmask_2_constants() {
+void BitmaskTypes_bitmask_2_constants(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t b = ecs_bitmask_init(world, &(ecs_bitmask_desc_t){
@@ -92,7 +92,7 @@ void BitmaskTypes_bitmask_2_constants() {
     ecs_fini(world);
 }
 
-void BitmaskTypes_bitmask_3_constants() {
+void BitmaskTypes_bitmask_3_constants(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t b = ecs_bitmask_init(world, &(ecs_bitmask_desc_t){
@@ -109,7 +109,7 @@ void BitmaskTypes_bitmask_3_constants() {
     ecs_fini(world);
 }
 
-void BitmaskTypes_bitmask_4_constants() {
+void BitmaskTypes_bitmask_4_constants(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t b = ecs_bitmask_init(world, &(ecs_bitmask_desc_t){
@@ -127,7 +127,7 @@ void BitmaskTypes_bitmask_4_constants() {
     ecs_fini(world);
 }
 
-void BitmaskTypes_bitmask_4_constants_manual_values() {
+void BitmaskTypes_bitmask_4_constants_manual_values(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t b = ecs_bitmask_init(world, &(ecs_bitmask_desc_t){
@@ -145,7 +145,7 @@ void BitmaskTypes_bitmask_4_constants_manual_values() {
     ecs_fini(world);
 }
 
-void BitmaskTypes_struct_w_bitmask() {
+void BitmaskTypes_struct_w_bitmask(void) {
     typedef struct {
         ecs_bool_t before;
         ecs_u32_t v;
@@ -182,7 +182,7 @@ void BitmaskTypes_struct_w_bitmask() {
     ecs_fini(world);
 }
 
-void BitmaskTypes_bitmask_w_short_notation() {
+void BitmaskTypes_bitmask_w_short_notation(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t b = ecs_bitmask(world, {

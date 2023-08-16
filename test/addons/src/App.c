@@ -7,7 +7,7 @@ static int dummy_frame_action(
     return 10;
 }
 
-void App_app_w_frame_action() {
+void App_app_w_frame_action(void) {
     ecs_world_t *world = ecs_init();
 
     test_int(ecs_app_set_frame_action(dummy_frame_action), 0);
@@ -22,7 +22,7 @@ static void Sys(ecs_iter_t *it) {
     ecs_quit(it->world);
 }
 
-void App_app_w_default_frame_action() {
+void App_app_w_default_frame_action(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_SYSTEM(world, Sys, EcsOnUpdate, 0);
@@ -38,7 +38,7 @@ void Dummy(ecs_iter_t *it) {
     ecs_quit(it->world);
 }
 
-void App_app_w_set_threads() {
+void App_app_w_set_threads(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_SYSTEM(world, Dummy, EcsOnUpdate, 0);
@@ -56,7 +56,7 @@ void App_app_w_set_threads() {
     ecs_fini(world);
 }
 
-void App_app_w_set_task_threads() {
+void App_app_w_set_task_threads(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_SYSTEM(world, Dummy, EcsOnUpdate, 0);
@@ -74,7 +74,7 @@ void App_app_w_set_task_threads() {
     ecs_fini(world);
 }
 
-void App_app_w_set_target_fps() {
+void App_app_w_set_target_fps(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_SYSTEM(world, Dummy, EcsOnUpdate, 0);
@@ -100,7 +100,7 @@ static void SysCount(ecs_iter_t *it) {
     sys_invoked ++;
 }
 
-void App_app_w_set_frames() {
+void App_app_w_set_frames(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_SYSTEM(world, SysCount, EcsOnUpdate, 0);

@@ -4,7 +4,7 @@
     test_int(value, (cur)->field - (prev)->field);\
     (prev)->field = (cur)->field
 
-void WorldInfo_get_tick() {
+void WorldInfo_get_tick(void) {
     ecs_world_t *world = ecs_init();
 
     const ecs_world_info_t *info = ecs_get_world_info(world);
@@ -19,7 +19,7 @@ void WorldInfo_get_tick() {
     ecs_fini(world);
 }
 
-void WorldInfo_table_count() {
+void WorldInfo_table_count(void) {
     ecs_world_t *world = ecs_mini();
 
     const ecs_world_info_t *cur = ecs_get_world_info(world);
@@ -40,7 +40,7 @@ void WorldInfo_table_count() {
     ecs_fini(world);
 }
 
-void WorldInfo_empty_table_count() {
+void WorldInfo_empty_table_count(void) {
     ecs_world_t *world = ecs_mini();
 
     const ecs_world_info_t *cur = ecs_get_world_info(world);
@@ -66,7 +66,7 @@ void WorldInfo_empty_table_count() {
     ecs_fini(world);
 }
 
-void WorldInfo_tag_table_count() {
+void WorldInfo_tag_table_count(void) {
     ecs_world_t *world = ecs_mini();
 
     const ecs_world_info_t *cur = ecs_get_world_info(world);
@@ -84,7 +84,7 @@ void WorldInfo_tag_table_count() {
     ecs_fini(world);
 }
 
-void WorldInfo_trivial_table_count() {
+void WorldInfo_trivial_table_count(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -124,7 +124,7 @@ void WorldInfo_trivial_table_count() {
     ecs_fini(world);
 }
 
-void WorldInfo_table_record_count() {
+void WorldInfo_table_record_count(void) {
     ecs_world_t *world = ecs_mini();
 
     const ecs_world_info_t *cur = ecs_get_world_info(world);
@@ -152,7 +152,7 @@ void WorldInfo_table_record_count() {
     ecs_fini(world);
 }
 
-void WorldInfo_table_storage_count() {
+void WorldInfo_table_storage_count(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -182,7 +182,7 @@ void WorldInfo_table_storage_count() {
     ecs_fini(world);
 }
 
-void WorldInfo_table_create_count() {
+void WorldInfo_table_create_count(void) {
     ecs_world_t *world = ecs_mini();
 
     const ecs_world_info_t *cur = ecs_get_world_info(world);
@@ -208,7 +208,7 @@ void WorldInfo_table_create_count() {
     ecs_fini(world);
 }
 
-void WorldInfo_table_delete_count() {
+void WorldInfo_table_delete_count(void) {
     ecs_world_t *world = ecs_mini();
 
     const ecs_world_info_t *cur = ecs_get_world_info(world);
@@ -237,7 +237,7 @@ void WorldInfo_table_delete_count() {
     ecs_fini(world);
 }
 
-void WorldInfo_id_count() {
+void WorldInfo_id_count(void) {
     ecs_world_t *world = ecs_mini();
 
     const ecs_world_info_t *cur = ecs_get_world_info(world);
@@ -265,7 +265,7 @@ void WorldInfo_id_count() {
     ecs_fini(world);
 }
 
-void WorldInfo_id_tag_component_count() {
+void WorldInfo_id_tag_component_count(void) {
     ecs_world_t *world = ecs_mini();
 
     const ecs_world_info_t *cur = ecs_get_world_info(world);
@@ -312,7 +312,7 @@ void WorldInfo_id_tag_component_count() {
     ecs_fini(world);
 }
 
-void WorldInfo_id_pair_count() {
+void WorldInfo_id_pair_count(void) {
     ecs_world_t *world = ecs_mini();
 
     const ecs_world_info_t *cur = ecs_get_world_info(world);
@@ -343,7 +343,7 @@ void WorldInfo_id_pair_count() {
     ecs_fini(world);
 }
 
-void WorldInfo_id_wildcard_count() {
+void WorldInfo_id_wildcard_count(void) {
     ecs_world_t *world = ecs_mini();
 
     const ecs_world_info_t *cur = ecs_get_world_info(world);

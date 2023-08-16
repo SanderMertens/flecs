@@ -365,6 +365,9 @@ void EnabledComponents_table_move_2_from_3(void);
 // Testsuite 'Remove'
 void Remove_zero(void);
 void Remove_1_of_1(void);
+void Remove_1_of_2(void);
+void Remove_2_of_2(void);
+void Remove_2_of_3(void);
 void Remove_1_of_1_again(void);
 void Remove_2_again(void);
 void Remove_2_overlap(void);
@@ -615,6 +618,7 @@ void Delete_delete_empty(void);
 void Delete_delete_nonexist(void);
 void Delete_delete_1st_of_3(void);
 void Delete_delete_2nd_of_3(void);
+void Delete_delete_3rd_of_3(void);
 void Delete_delete_2_of_3(void);
 void Delete_delete_3_of_3(void);
 void Delete_delete_w_on_remove(void);
@@ -669,6 +673,7 @@ void OnDelete_cyclic_relation_default(void);
 void OnDelete_cyclic_relation_remove(void);
 void OnDelete_cyclic_relation_remove_both(void);
 void OnDelete_cyclic_relation_delete(void);
+void OnDelete_cyclic_relation_delete_both(void);
 void OnDelete_cyclic_object_default(void);
 void OnDelete_cyclic_object_remove(void);
 void OnDelete_cyclic_object_delete(void);
@@ -779,6 +784,7 @@ void Set_get_mut_w_add_in_on_add(void);
 void Set_get_mut_w_remove_in_on_add(void);
 void Set_get_mut_w_realloc_in_on_add(void);
 void Set_emplace(void);
+void Set_emplace_2(void);
 void Set_emplace_existing(void);
 void Set_emplace_w_move(void);
 void Set_emplace_w_observer_w_add(void);
@@ -1171,6 +1177,7 @@ void Filter_children_iter(void);
 void Filter_filter_iter_1_tag(void);
 void Filter_filter_iter_2_tags(void);
 void Filter_filter_iter_2_tags_1_not(void);
+void Filter_filter_iter_3_tags_2_or(void);
 void Filter_filter_iter_only_optional(void);
 void Filter_filter_iter_only_2_or(void);
 void Filter_filter_iter_only_3_or(void);
@@ -1478,7 +1485,9 @@ void Query_orphaned_query(void);
 void Query_nested_orphaned_query(void);
 void Query_invalid_access_orphaned_query(void);
 void Query_stresstest_query_free(void);
+void Query_only_from_entity(void);
 void Query_only_not_from_entity(void);
+void Query_only_from_singleton(void);
 void Query_only_not_from_singleton(void);
 void Query_get_filter(void);
 void Query_group_by(void);
@@ -1840,6 +1849,7 @@ void Trigger_notify_propagated_twice(void);
 void Trigger_trigger_superset_wildcard(void);
 void Trigger_remove_wildcard_1_id(void);
 void Trigger_remove_wildcard_2_ids(void);
+void Trigger_on_set_w_tag(void);
 void Trigger_create_triggers_in_trigger(void);
 void Trigger_on_add_superset_w_component(void);
 void Trigger_on_set_superset_w_component(void);
@@ -2015,6 +2025,7 @@ void TriggerOnAdd_add_again_1(void);
 void TriggerOnAdd_set_again_1(void);
 void TriggerOnAdd_add_again_2(void);
 void TriggerOnAdd_override_after_add_in_on_add(void);
+void TriggerOnAdd_set_after_add_in_on_add(void);
 void TriggerOnAdd_add_again_in_progress(void);
 void TriggerOnAdd_add_in_progress_before_system_def(void);
 void TriggerOnAdd_2_systems_w_table_creation(void);
@@ -2037,6 +2048,7 @@ void TriggerOnRemove_delete(void);
 void TriggerOnRemove_delete_no_match(void);
 void TriggerOnRemove_remove_watched(void);
 void TriggerOnRemove_delete_watched(void);
+void TriggerOnRemove_on_remove_in_on_update(void);
 void TriggerOnRemove_valid_entity_after_delete(void);
 void TriggerOnRemove_remove_after_delete_trigger(void);
 void TriggerOnRemove_remove_after_delete_wildcard_id_trigger(void);
@@ -3961,6 +3973,18 @@ bake_test_case Remove_testcases[] = {
         Remove_1_of_1
     },
     {
+        "1_of_2",
+        Remove_1_of_2
+    },
+    {
+        "2_of_2",
+        Remove_2_of_2
+    },
+    {
+        "2_of_3",
+        Remove_2_of_3
+    },
+    {
         "1_of_1_again",
         Remove_1_of_1_again
     },
@@ -4905,6 +4929,10 @@ bake_test_case Delete_testcases[] = {
         Delete_delete_2nd_of_3
     },
     {
+        "delete_3rd_of_3",
+        Delete_delete_3rd_of_3
+    },
+    {
         "delete_2_of_3",
         Delete_delete_2_of_3
     },
@@ -5114,6 +5142,10 @@ bake_test_case OnDelete_testcases[] = {
     {
         "cyclic_relation_delete",
         OnDelete_cyclic_relation_delete
+    },
+    {
+        "cyclic_relation_delete_both",
+        OnDelete_cyclic_relation_delete_both
     },
     {
         "cyclic_object_default",
@@ -5549,6 +5581,10 @@ bake_test_case Set_testcases[] = {
     {
         "emplace",
         Set_emplace
+    },
+    {
+        "emplace_2",
+        Set_emplace_2
     },
     {
         "emplace_existing",
@@ -7071,6 +7107,10 @@ bake_test_case Filter_testcases[] = {
         Filter_filter_iter_2_tags_1_not
     },
     {
+        "filter_iter_3_tags_2_or",
+        Filter_filter_iter_3_tags_2_or
+    },
+    {
         "filter_iter_only_optional",
         Filter_filter_iter_only_optional
     },
@@ -8289,8 +8329,16 @@ bake_test_case Query_testcases[] = {
         Query_stresstest_query_free
     },
     {
+        "only_from_entity",
+        Query_only_from_entity
+    },
+    {
         "only_not_from_entity",
         Query_only_not_from_entity
+    },
+    {
+        "only_from_singleton",
+        Query_only_from_singleton
     },
     {
         "only_not_from_singleton",
@@ -9722,6 +9770,10 @@ bake_test_case Trigger_testcases[] = {
         Trigger_remove_wildcard_2_ids
     },
     {
+        "on_set_w_tag",
+        Trigger_on_set_w_tag
+    },
+    {
         "create_triggers_in_trigger",
         Trigger_create_triggers_in_trigger
     },
@@ -10403,6 +10455,10 @@ bake_test_case TriggerOnAdd_testcases[] = {
         TriggerOnAdd_override_after_add_in_on_add
     },
     {
+        "set_after_add_in_on_add",
+        TriggerOnAdd_set_after_add_in_on_add
+    },
+    {
         "add_again_in_progress",
         TriggerOnAdd_add_again_in_progress
     },
@@ -10484,6 +10540,10 @@ bake_test_case TriggerOnRemove_testcases[] = {
     {
         "delete_watched",
         TriggerOnRemove_delete_watched
+    },
+    {
+        "on_remove_in_on_update",
+        TriggerOnRemove_on_remove_in_on_update
     },
     {
         "valid_entity_after_delete",
@@ -12641,7 +12701,7 @@ static bake_test_suite suites[] = {
         "Remove",
         NULL,
         NULL,
-        7,
+        10,
         Remove_testcases
     },
     {
@@ -12697,21 +12757,21 @@ static bake_test_suite suites[] = {
         "Delete",
         Delete_setup,
         NULL,
-        31,
+        32,
         Delete_testcases
     },
     {
         "OnDelete",
         NULL,
         NULL,
-        109,
+        110,
         OnDelete_testcases
     },
     {
         "Set",
         NULL,
         NULL,
-        30,
+        31,
         Set_testcases
     },
     {
@@ -12767,7 +12827,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        300,
+        301,
         Filter_testcases
     },
     {
@@ -12781,7 +12841,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        225,
+        227,
         Query_testcases
     },
     {
@@ -12802,7 +12862,7 @@ static bake_test_suite suites[] = {
         "Trigger",
         NULL,
         NULL,
-        117,
+        118,
         Trigger_testcases
     },
     {
@@ -12823,14 +12883,14 @@ static bake_test_suite suites[] = {
         "TriggerOnAdd",
         TriggerOnAdd_setup,
         NULL,
-        29,
+        30,
         TriggerOnAdd_testcases
     },
     {
         "TriggerOnRemove",
         NULL,
         NULL,
-        11,
+        12,
         TriggerOnRemove_testcases
     },
     {

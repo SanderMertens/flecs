@@ -67,7 +67,7 @@ void SysF(ecs_iter_t *it) {
     sys_f_world_readonly = ecs_stage_is_readonly(it->real_world);
 }
 
-void Pipeline_system_order_same_phase() {
+void Pipeline_system_order_same_phase(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -95,7 +95,7 @@ void Pipeline_system_order_same_phase() {
     ecs_fini(world);
 }
 
-void Pipeline_system_order_same_phase_after_disable() {
+void Pipeline_system_order_same_phase_after_disable(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -128,7 +128,7 @@ void Pipeline_system_order_same_phase_after_disable() {
     ecs_fini(world);
 }
 
-void Pipeline_system_order_different_phase() {
+void Pipeline_system_order_different_phase(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -156,7 +156,7 @@ void Pipeline_system_order_different_phase() {
     ecs_fini(world);
 }
 
-void Pipeline_system_order_different_phase_after_disable() {
+void Pipeline_system_order_different_phase_after_disable(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -189,7 +189,7 @@ void Pipeline_system_order_different_phase_after_disable() {
     ecs_fini(world);
 }
 
-void Pipeline_system_order_same_phase_after_activate() {    
+void Pipeline_system_order_same_phase_after_activate(void) {    
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -224,7 +224,7 @@ void Pipeline_system_order_same_phase_after_activate() {
     ecs_fini(world);
 }
 
-void Pipeline_system_order_different_phase_after_activate() {
+void Pipeline_system_order_different_phase_after_activate(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -259,7 +259,7 @@ void Pipeline_system_order_different_phase_after_activate() {
     ecs_fini(world);
 }
 
-void Pipeline_system_order_after_new_system_lower_id() {
+void Pipeline_system_order_after_new_system_lower_id(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -296,7 +296,7 @@ void Pipeline_system_order_after_new_system_lower_id() {
     ecs_fini(world);
 }
 
-void Pipeline_system_order_after_new_system_inbetween_id() {
+void Pipeline_system_order_after_new_system_inbetween_id(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -333,7 +333,7 @@ void Pipeline_system_order_after_new_system_inbetween_id() {
     ecs_fini(world);
 }
 
-void Pipeline_system_order_after_new_system_higher_id() {
+void Pipeline_system_order_after_new_system_higher_id(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -430,7 +430,7 @@ static void SysInMain(ecs_iter_t *it) {
     }
 }
 
-void Pipeline_merge_after_staged_out() {
+void Pipeline_merge_after_staged_out(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -458,7 +458,7 @@ void Pipeline_merge_after_staged_out() {
     ecs_fini(world);
 }
 
-void Pipeline_merge_after_not_out() {
+void Pipeline_merge_after_not_out(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -486,7 +486,7 @@ void Pipeline_merge_after_not_out() {
     ecs_fini(world);
 }
 
-void Pipeline_no_merge_after_main_out() {
+void Pipeline_no_merge_after_main_out(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -514,7 +514,7 @@ void Pipeline_no_merge_after_main_out() {
     ecs_fini(world);
 }
 
-void Pipeline_merge_after_staged_in_out() {
+void Pipeline_merge_after_staged_in_out(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -544,7 +544,7 @@ void Pipeline_merge_after_staged_in_out() {
     ecs_fini(world);
 }
 
-void Pipeline_merge_after_staged_inout_main_implicit_inout() {
+void Pipeline_merge_after_staged_inout_main_implicit_inout(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -566,7 +566,7 @@ void Pipeline_merge_after_staged_inout_main_implicit_inout() {
     ecs_fini(world);
 }
 
-void Pipeline_merge_after_staged_inout_main_inout() {
+void Pipeline_merge_after_staged_inout_main_inout(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -594,7 +594,7 @@ void Pipeline_merge_after_staged_inout_main_inout() {
     ecs_fini(world);
 }
 
-void Pipeline_merge_after_staged_out_before_owned() {
+void Pipeline_merge_after_staged_out_before_owned(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -622,7 +622,7 @@ void Pipeline_merge_after_staged_out_before_owned() {
     ecs_fini(world);
 }
 
-void Pipeline_switch_pipeline() {
+void Pipeline_switch_pipeline(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -654,7 +654,7 @@ void Pipeline_switch_pipeline() {
     ecs_fini(world);
 }
 
-void Pipeline_run_pipeline() {
+void Pipeline_run_pipeline(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -692,7 +692,7 @@ void Pipeline_run_pipeline() {
     ecs_fini(world);
 }
 
-void Pipeline_get_pipeline_from_stage() {
+void Pipeline_get_pipeline_from_stage(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t pipeline = ecs_get_pipeline(world);
@@ -707,7 +707,7 @@ void Pipeline_get_pipeline_from_stage() {
     ecs_fini(world);
 }
 
-void Pipeline_3_systems_3_types() {
+void Pipeline_3_systems_3_types(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -809,7 +809,7 @@ void RandomRead_Not(ecs_iter_t *it) {
     }
 }
 
-void Pipeline_random_read_after_random_write_out_in() {
+void Pipeline_random_read_after_random_write_out_in(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -830,7 +830,7 @@ void Pipeline_random_read_after_random_write_out_in() {
     ecs_fini(world);
 }
 
-void Pipeline_random_read_after_random_write_inout_in() {
+void Pipeline_random_read_after_random_write_inout_in(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -851,7 +851,7 @@ void Pipeline_random_read_after_random_write_inout_in() {
     ecs_fini(world);
 }
 
-void Pipeline_random_read_after_random_write_out_inout() {
+void Pipeline_random_read_after_random_write_out_inout(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -872,7 +872,7 @@ void Pipeline_random_read_after_random_write_out_inout() {
     ecs_fini(world);
 }
 
-void Pipeline_random_read_after_random_write_inout_inout() {
+void Pipeline_random_read_after_random_write_inout_inout(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -893,7 +893,7 @@ void Pipeline_random_read_after_random_write_inout_inout() {
     ecs_fini(world);
 }
 
-void Pipeline_random_read_after_random_write_w_not_write() {
+void Pipeline_random_read_after_random_write_w_not_write(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -914,7 +914,7 @@ void Pipeline_random_read_after_random_write_w_not_write() {
     ecs_fini(world);
 }
 
-void Pipeline_random_read_after_random_write_w_not_read() {
+void Pipeline_random_read_after_random_write_w_not_read(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -935,7 +935,7 @@ void Pipeline_random_read_after_random_write_w_not_read() {
     ecs_fini(world);
 }
 
-void Pipeline_random_read_after_random_write_w_wildcard() {
+void Pipeline_random_read_after_random_write_w_wildcard(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -956,7 +956,7 @@ void Pipeline_random_read_after_random_write_w_wildcard() {
     ecs_fini(world);
 }
 
-void Pipeline_random_in_after_random_inout_after_random_out() {
+void Pipeline_random_in_after_random_inout_after_random_out(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -999,7 +999,7 @@ void cb_third(ecs_iter_t *it) {
     count[0] ++;
 }
 
-void Pipeline_system_reverse_order_by_phase_custom_pipeline() {
+void Pipeline_system_reverse_order_by_phase_custom_pipeline(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -1043,7 +1043,7 @@ void Pipeline_system_reverse_order_by_phase_custom_pipeline() {
     ecs_fini(world);
 }
 
-void Pipeline_stage_write_before_read() {
+void Pipeline_stage_write_before_read(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -1189,15 +1189,15 @@ void Pipeline_mixed_multithreaded_internal(bool task_threads) {
     ecs_fini(world);
 }
 
-void Pipeline_mixed_multithreaded() {
+void Pipeline_mixed_multithreaded(void) {
     Pipeline_mixed_multithreaded_internal(false);
 }
 
-void Pipeline_mixed_multithreaded_tasks() {
+void Pipeline_mixed_multithreaded_tasks(void) {
     Pipeline_mixed_multithreaded_internal(true);
 }
 
-void Pipeline_mixed_staging() {
+void Pipeline_mixed_staging(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -1322,7 +1322,7 @@ void WritePosition(ecs_iter_t *it) {
     }
 }
 
-void Pipeline_single_threaded_pipeline_change() {
+void Pipeline_single_threaded_pipeline_change(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -1498,15 +1498,15 @@ void Pipeline_multi_threaded_pipeline_change_internal(bool task_threads) {
     ecs_fini(world);
 }
 
-void Pipeline_multi_threaded_pipeline_change() {
+void Pipeline_multi_threaded_pipeline_change(void) {
     Pipeline_multi_threaded_pipeline_change_internal(false);
 }
 
-void Pipeline_multi_threaded_pipeline_change_tasks() {
+void Pipeline_multi_threaded_pipeline_change_tasks(void) {
     Pipeline_multi_threaded_pipeline_change_internal(true);
 }
 
-void Pipeline_activate_after_add() {
+void Pipeline_activate_after_add(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -1555,7 +1555,7 @@ void CreateQuery(ecs_iter_t *it) {
     q_result = ecs_query_new(it->world, "Position");
 }
 
-void Pipeline_no_staging_system_create_query() {
+void Pipeline_no_staging_system_create_query(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -1606,7 +1606,7 @@ static void match_all(ecs_iter_t *it) {
     match_all_invoked ++;
 }
 
-void Pipeline_match_all_after_pipeline_rebuild() {
+void Pipeline_match_all_after_pipeline_rebuild(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG_DEFINE(world, TagA);
@@ -1639,7 +1639,7 @@ void Pipeline_match_all_after_pipeline_rebuild() {
     ecs_fini(world);
 }
 
-void Pipeline_empty_pipeline() {
+void Pipeline_empty_pipeline(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_IMPORT(world, FlecsPipeline);
@@ -1654,7 +1654,7 @@ void Pipeline_empty_pipeline() {
     ecs_fini(world);
 }
 
-void Pipeline_custom_pipeline_w_system_macro() {
+void Pipeline_custom_pipeline_w_system_macro(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -1677,7 +1677,7 @@ void Pipeline_custom_pipeline_w_system_macro() {
     ecs_fini(world);
 }
 
-void Pipeline_pipeline_w_short_notation() {
+void Pipeline_pipeline_w_short_notation(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -1691,7 +1691,7 @@ void Pipeline_pipeline_w_short_notation() {
     ecs_fini(world);
 }
 
-void Pipeline_stack_allocator_after_progress() {
+void Pipeline_stack_allocator_after_progress(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1720,7 +1720,7 @@ void Pipeline_stack_allocator_after_progress() {
     ecs_fini(world);
 }
 
-void Pipeline_stack_allocator_after_progress_w_pipeline_change() {
+void Pipeline_stack_allocator_after_progress_w_pipeline_change(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1800,11 +1800,11 @@ void Pipeline_iter_from_world_in_singlethread_system_multitead_app_internal(bool
     ecs_fini(world);
 }
 
-void Pipeline_iter_from_world_in_singlethread_system_multitead_app() {
+void Pipeline_iter_from_world_in_singlethread_system_multitead_app(void) {
     Pipeline_iter_from_world_in_singlethread_system_multitead_app_internal(false);
 }
 
-void Pipeline_iter_from_world_in_singlethread_system_multitead_app_tasks() {
+void Pipeline_iter_from_world_in_singlethread_system_multitead_app_tasks(void) {
     Pipeline_iter_from_world_in_singlethread_system_multitead_app_internal(true);
 }
 
@@ -1820,7 +1820,7 @@ static void NoStagingSystem(ecs_iter_t *it) {
     no_staging_system_invoked ++;
 }
 
-void Pipeline_no_staging_after_inactive_system() {
+void Pipeline_no_staging_after_inactive_system(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1924,7 +1924,7 @@ static void ReadVelocity(ecs_iter_t *it) {
     ecs_os_ainc(&read_velocity_invoked);
 }
 
-void Pipeline_inactive_system_after_no_staging_system_no_defer_w_filter() {
+void Pipeline_inactive_system_after_no_staging_system_no_defer_w_filter(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT_DEFINE(world, Position);
@@ -1960,7 +1960,7 @@ void Pipeline_inactive_system_after_no_staging_system_no_defer_w_filter() {
     ecs_fini(world);
 }
 
-void Pipeline_inactive_system_after_no_staging_system_no_defer_w_filter_w_no_staging_at_end() {
+void Pipeline_inactive_system_after_no_staging_system_no_defer_w_filter_w_no_staging_at_end(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT_DEFINE(world, Position);
@@ -2004,7 +2004,7 @@ void Pipeline_inactive_system_after_no_staging_system_no_defer_w_filter_w_no_sta
     ecs_fini(world);
 }
 
-void Pipeline_inactive_system_after_2_no_staging_system_no_defer_w_filter() {
+void Pipeline_inactive_system_after_2_no_staging_system_no_defer_w_filter(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT_DEFINE(world, Position);
@@ -2113,11 +2113,11 @@ void Pipeline_inactive_multithread_system_after_no_staging_system_no_defer_inter
     ecs_fini(world);
 }
 
-void Pipeline_inactive_multithread_system_after_no_staging_system_no_defer() {
+void Pipeline_inactive_multithread_system_after_no_staging_system_no_defer(void) {
     Pipeline_inactive_multithread_system_after_no_staging_system_no_defer_internal(false);
 }
 
-void Pipeline_inactive_multithread_tasks_system_after_no_staging_system_no_defer() {
+void Pipeline_inactive_multithread_tasks_system_after_no_staging_system_no_defer(void) {
     Pipeline_inactive_multithread_system_after_no_staging_system_no_defer_internal(true);
 }
 
@@ -2177,11 +2177,11 @@ void Pipeline_inactive_multithread_system_after_no_staging_system_no_defer_w_no_
     ecs_fini(world);
 }
 
-void Pipeline_inactive_multithread_system_after_no_staging_system_no_defer_w_no_staging_at_end() {
+void Pipeline_inactive_multithread_system_after_no_staging_system_no_defer_w_no_staging_at_end(void) {
     Pipeline_inactive_multithread_system_after_no_staging_system_no_defer_w_no_staging_at_end_internal(false);
 }
 
-void Pipeline_inactive_multithread_tasks_system_after_no_staging_system_no_defer_w_no_staging_at_end() {
+void Pipeline_inactive_multithread_tasks_system_after_no_staging_system_no_defer_w_no_staging_at_end(void) {
     Pipeline_inactive_multithread_system_after_no_staging_system_no_defer_w_no_staging_at_end_internal(true);
 }
 
@@ -2234,11 +2234,11 @@ void Pipeline_multi_threaded_pipeline_change_w_only_singlethreaded_internal(bool
     ecs_fini(world);
 }
 
-void Pipeline_multi_threaded_pipeline_change_w_only_singlethreaded() {
+void Pipeline_multi_threaded_pipeline_change_w_only_singlethreaded(void) {
     Pipeline_multi_threaded_pipeline_change_w_only_singlethreaded_internal(false);
 }
 
-void Pipeline_multi_threaded_tasks_pipeline_change_w_only_singlethreaded() {
+void Pipeline_multi_threaded_tasks_pipeline_change_w_only_singlethreaded(void) {
     Pipeline_multi_threaded_pipeline_change_w_only_singlethreaded_internal(true);
 }
 
@@ -2251,7 +2251,7 @@ static void SetPosition(ecs_iter_t *it) {
     }
 }
 
-void Pipeline_sync_after_not_out_for_out() {
+void Pipeline_sync_after_not_out_for_out(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -2276,7 +2276,7 @@ void Pipeline_sync_after_not_out_for_out() {
     ecs_fini(world);
 }
 
-void Pipeline_pair_wildcard_read_after_staged_write() {
+void Pipeline_pair_wildcard_read_after_staged_write(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -2315,7 +2315,7 @@ static void AddPair(ecs_iter_t *it) {
     add_pair_invoked ++;
 }
 
-void Pipeline_pair_read_after_staged_wildcard_write() {
+void Pipeline_pair_read_after_staged_wildcard_write(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -2339,7 +2339,7 @@ void Pipeline_pair_read_after_staged_wildcard_write() {
     ecs_fini(world);
 }
 
-void Pipeline_no_sync_after_pair_wildcard_read_after_unmatching_staged_write() {
+void Pipeline_no_sync_after_pair_wildcard_read_after_unmatching_staged_write(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -2366,7 +2366,7 @@ void Pipeline_no_sync_after_pair_wildcard_read_after_unmatching_staged_write() {
     ecs_fini(world);
 }
 
-void Pipeline_no_merge_after_from_nothing_w_default_inout() {
+void Pipeline_no_merge_after_from_nothing_w_default_inout(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -2406,7 +2406,7 @@ static void sys_no_readonly(ecs_iter_t *it) {
     sys_no_readonly_invoked ++;
 }
 
-void Pipeline_on_merge_activate_system_before_merge() {
+void Pipeline_on_merge_activate_system_before_merge(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG_DEFINE(world, TagA);
@@ -2446,7 +2446,7 @@ void Pipeline_on_merge_activate_system_before_merge() {
     ecs_fini(world);
 }
 
-void Pipeline_disable_phase() {
+void Pipeline_disable_phase(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_system(world, {
@@ -2489,7 +2489,7 @@ void Pipeline_disable_phase() {
     ecs_fini(world);
 }
 
-void Pipeline_disable_parent() {
+void Pipeline_disable_parent(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t p1 = ecs_new_id(world);
@@ -2587,15 +2587,15 @@ void Pipeline_multi_threaded_no_staging_w_add_after_read_internal(bool task_thre
     ecs_fini(world);
 }
 
-void Pipeline_multi_threaded_no_staging_w_add_after_read() {
+void Pipeline_multi_threaded_no_staging_w_add_after_read(void) {
     Pipeline_multi_threaded_no_staging_w_add_after_read_internal(false);
 }
 
-void Pipeline_multi_threaded_tasks_no_staging_w_add_after_read() {
+void Pipeline_multi_threaded_tasks_no_staging_w_add_after_read(void) {
     Pipeline_multi_threaded_no_staging_w_add_after_read_internal(true);
 }
 
-void Pipeline_1_startup_system() {
+void Pipeline_1_startup_system(void) {
     ecs_world_t *world = ecs_init();
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
@@ -2628,7 +2628,7 @@ void Pipeline_1_startup_system() {
     ecs_fini(world);
 }
 
-void Pipeline_2_startup_systems() {
+void Pipeline_2_startup_systems(void) {
     ecs_world_t *world = ecs_init();
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
@@ -2669,7 +2669,7 @@ void Pipeline_2_startup_systems() {
     ecs_fini(world);
 }
 
-void Pipeline_2_startup_phases() {
+void Pipeline_2_startup_phases(void) {
     ecs_world_t *world = ecs_init();
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
@@ -2713,7 +2713,7 @@ void Pipeline_2_startup_phases() {
     ecs_fini(world);
 }
 
-void Pipeline_2_startup_systems_w_merge() {
+void Pipeline_2_startup_systems_w_merge(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2758,7 +2758,7 @@ void Pipeline_2_startup_systems_w_merge() {
     ecs_fini(world);
 }
 
-void Pipeline_inactive_last_system_merge_count() {
+void Pipeline_inactive_last_system_merge_count(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, TagA);
@@ -2803,7 +2803,7 @@ void Pipeline_inactive_last_system_merge_count() {
     ecs_fini(world);
 }
 
-void Pipeline_inactive_middle_system_merge_count() {
+void Pipeline_inactive_middle_system_merge_count(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, TagA);
@@ -2879,7 +2879,7 @@ void CreateEntity(ecs_iter_t *it) {
     ecs_new_w_id(it->world, tag);
 }
 
-void Pipeline_last_no_readonly_system_merge_count() {
+void Pipeline_last_no_readonly_system_merge_count(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, TagA);
@@ -2927,7 +2927,7 @@ void Pipeline_last_no_readonly_system_merge_count() {
     ecs_fini(world);
 }
 
-void Pipeline_2_pipelines_1_system() {
+void Pipeline_2_pipelines_1_system(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Phase1);
@@ -2972,7 +2972,7 @@ void Pipeline_2_pipelines_1_system() {
     ecs_fini(world);
 }
 
-void Pipeline_builtin_pipeline_w_self_system_term() {
+void Pipeline_builtin_pipeline_w_self_system_term(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t pipeline = ecs_get_pipeline(world);
@@ -2990,7 +2990,7 @@ void Pipeline_builtin_pipeline_w_self_system_term() {
     ecs_fini(world);
 }
 
-void Pipeline_custom_pipeline_w_self_system_term() {
+void Pipeline_custom_pipeline_w_self_system_term(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -3015,7 +3015,7 @@ void Pipeline_custom_pipeline_w_self_system_term() {
     ecs_fini(world);
 }
 
-void Pipeline_switch_from_threads_to_tasks() {
+void Pipeline_switch_from_threads_to_tasks(void) {
     ecs_world_t* world = ecs_init();
 
     ECS_COMPONENT_DEFINE(world, Position);
@@ -3051,7 +3051,7 @@ void Pipeline_switch_from_threads_to_tasks() {
     ecs_fini(world);
 }
 
-void Pipeline_switch_from_tasks_to_threads() {
+void Pipeline_switch_from_tasks_to_threads(void) {
     ecs_world_t* world = ecs_init();
 
     ECS_COMPONENT_DEFINE(world, Position);
@@ -3177,10 +3177,10 @@ void Pipeline_run_pipeline_multithreaded_internal(bool task_threads) {
     ecs_fini(world);
 }
 
-void Pipeline_run_pipeline_multithreaded() {
+void Pipeline_run_pipeline_multithreaded(void) {
     Pipeline_run_pipeline_multithreaded_internal(false);
 }
 
-void Pipeline_run_pipeline_multithreaded_tasks() {
+void Pipeline_run_pipeline_multithreaded_tasks(void) {
     Pipeline_run_pipeline_multithreaded_internal(true);
 }

@@ -1,6 +1,6 @@
 #include <api.h>
 
-void Has_zero() {
+void Has_zero(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -12,7 +12,7 @@ void Has_zero() {
     ecs_has(world, e, 0);
 }
 
-void Has_1_of_0() {
+void Has_1_of_0(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -25,7 +25,7 @@ void Has_1_of_0() {
     ecs_fini(world);
 }
 
-void Has_1_of_1() {
+void Has_1_of_1(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -38,7 +38,7 @@ void Has_1_of_1() {
     ecs_fini(world);
 }
 
-void Has_1_of_2() {
+void Has_1_of_2(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -53,7 +53,7 @@ void Has_1_of_2() {
     ecs_fini(world);
 }
 
-void Has_1_of_empty() {
+void Has_1_of_empty(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -75,7 +75,7 @@ void TestHas(ecs_iter_t *it) {
     }
 }
 
-void Has_has_in_progress() {
+void Has_has_in_progress(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -90,7 +90,7 @@ void Has_has_in_progress() {
     ecs_fini(world);
 }
 
-void Has_has_of_zero() {
+void Has_has_of_zero(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -100,7 +100,7 @@ void Has_has_of_zero() {
     ecs_has(world, 0, 0);
 }
 
-void Has_owns() {
+void Has_owns(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -122,7 +122,7 @@ void Has_owns() {
     ecs_fini(world);
 }
 
-void Has_has_entity() {
+void Has_has_entity(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new(world, 0);
@@ -138,7 +138,7 @@ void Has_has_entity() {
     ecs_fini(world);
 }
 
-void Has_has_entity_0() {
+void Has_has_entity_0(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -151,7 +151,7 @@ void Has_has_entity_0() {
     ecs_has_id(world, 0, base);
 }
 
-void Has_has_entity_0_component() {
+void Has_has_entity_0_component(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -163,7 +163,7 @@ void Has_has_entity_0_component() {
     ecs_has_id(world, e, 0);
 }
 
-void Has_has_entity_owned() {
+void Has_has_entity_owned(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new(world, 0);
@@ -195,7 +195,7 @@ void Has_has_entity_owned() {
     ecs_fini(world);
 }
 
-void Has_has_entity_owned_0() {
+void Has_has_entity_owned_0(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -208,7 +208,7 @@ void Has_has_entity_owned_0() {
     test_assert(!dummy); // should not reach this code
 }
 
-void Has_has_entity_owned_0_component() {
+void Has_has_entity_owned_0_component(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new(world, 0);
@@ -219,7 +219,7 @@ void Has_has_entity_owned_0_component() {
     ecs_fini(world);
 }
 
-void Has_has_wildcard() {
+void Has_has_wildcard(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag_1);
@@ -244,7 +244,7 @@ void Has_has_wildcard() {
     ecs_fini(world);
 }
 
-void Has_has_wildcard_pair() {
+void Has_has_wildcard_pair(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);

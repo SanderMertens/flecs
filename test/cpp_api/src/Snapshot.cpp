@@ -1,6 +1,6 @@
 #include <cpp_api.h>
 
-void Snapshot_simple_snapshot() {
+void Snapshot_simple_snapshot(void) {
     flecs::world world;
 
     auto e = flecs::entity(world)

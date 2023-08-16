@@ -1451,6 +1451,7 @@ void Modules_import_2_worlds(void);
 void App_app_w_frame_action(void);
 void App_app_w_default_frame_action(void);
 void App_app_w_set_threads(void);
+void App_app_w_set_task_threads(void);
 void App_app_w_set_target_fps(void);
 void App_app_w_set_frames(void);
 
@@ -7118,6 +7119,10 @@ bake_test_case App_testcases[] = {
         App_app_w_set_threads
     },
     {
+        "app_w_set_task_threads",
+        App_app_w_set_task_threads
+    },
+    {
         "app_w_set_target_fps",
         App_app_w_set_target_fps
     },
@@ -7626,7 +7631,7 @@ static bake_test_suite suites[] = {
         "App",
         NULL,
         NULL,
-        5,
+        6,
         App_testcases
     },
     {

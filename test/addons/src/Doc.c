@@ -1,6 +1,6 @@
 #include <addons.h>
 
-void Doc_get_set_name() {
+void Doc_get_set_name(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t e = ecs_new_id(world);
@@ -13,7 +13,7 @@ void Doc_get_set_name() {
     ecs_fini(world);
 }
 
-void Doc_get_entity_name() {
+void Doc_get_entity_name(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t e = ecs_set_name(world, 0, "Entity name");
@@ -24,7 +24,7 @@ void Doc_get_entity_name() {
     ecs_fini(world);
 }
 
-void Doc_get_set_brief() {
+void Doc_get_set_brief(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, MyTag);
@@ -37,7 +37,7 @@ void Doc_get_set_brief() {
     ecs_fini(world);
 }
 
-void Doc_get_set_detail() {
+void Doc_get_set_detail(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, MyTag);
@@ -50,7 +50,7 @@ void Doc_get_set_detail() {
     ecs_fini(world);
 }
 
-void Doc_get_set_link() {
+void Doc_get_set_link(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, MyTag);

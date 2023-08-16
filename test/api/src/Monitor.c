@@ -5,7 +5,7 @@ void OnPosition(ecs_iter_t *it) {
     probe_iter(it);
 }
 
-void Monitor_1_comp() {
+void Monitor_1_comp(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -37,7 +37,7 @@ void Monitor_1_comp() {
     ecs_fini(world);
 }
 
-void Monitor_2_comps() {
+void Monitor_2_comps(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -84,7 +84,7 @@ void Monitor_2_comps() {
     ecs_fini(world);
 }
 
-void Monitor_1_comp_1_not() {
+void Monitor_1_comp_1_not(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -128,7 +128,7 @@ void Monitor_1_comp_1_not() {
     ecs_fini(world);
 }
 
-void Monitor_1_parent() {
+void Monitor_1_parent(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -158,7 +158,7 @@ void Monitor_1_parent() {
     ecs_fini(world);
 }
 
-void Monitor_1_comp_1_parent() {
+void Monitor_1_comp_1_parent(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -221,7 +221,7 @@ void Monitor_1_comp_1_parent() {
     ecs_fini(world);
 }
 
-void Monitor_1_comp_prefab_new() {
+void Monitor_1_comp_prefab_new(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -244,7 +244,7 @@ void Monitor_1_comp_prefab_new() {
     ecs_fini(world);
 }
 
-void Monitor_1_comp_prefab_add() {
+void Monitor_1_comp_prefab_add(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -267,7 +267,7 @@ void Monitor_1_comp_prefab_add() {
     ecs_fini(world);
 }
 
-void Monitor_monitor_w_and() {
+void Monitor_monitor_w_and(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -307,7 +307,7 @@ void Monitor_monitor_w_and() {
     ecs_fini(world);
 }
 
-void Monitor_monitor_w_or() {
+void Monitor_monitor_w_or(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -344,7 +344,7 @@ void Monitor_monitor_w_or() {
     ecs_fini(world);
 }
 
-void Monitor_monitor_w_not() {
+void Monitor_monitor_w_not(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -378,7 +378,7 @@ void Monitor_monitor_w_not() {
     ecs_fini(world);
 }
 
-void Monitor_monitor_w_optional() {
+void Monitor_monitor_w_optional(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -418,7 +418,7 @@ void Monitor_monitor_w_optional() {
     ecs_fini(world);
 }
 
-void Monitor_monitor_w_superset() {
+void Monitor_monitor_w_superset(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -465,7 +465,7 @@ void Monitor_monitor_w_superset() {
     ecs_fini(world);
 }
 
-void Monitor_monitor_w_self_superset() {
+void Monitor_monitor_w_self_superset(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -525,7 +525,7 @@ void Monitor_monitor_w_self_superset() {
     ecs_fini(world);
 }
 
-void Monitor_monitor_w_wildcard() {
+void Monitor_monitor_w_wildcard(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -577,7 +577,7 @@ static void Monitor(ecs_iter_t *it) {
     probe_system_w_ctx(it, it->ctx);
 }
 
-void Monitor_monitor_at_fini() {
+void Monitor_monitor_at_fini(void) {
 	ecs_world_t *world = ecs_mini();
 
 	ECS_TAG(world, TagA);
@@ -624,7 +624,7 @@ static void CheckTable(ecs_iter_t *it) {
     ctx->invoked ++;
 }
 
-void Monitor_monitor_other_table() {
+void Monitor_monitor_other_table(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, X);
@@ -685,7 +685,7 @@ static void CheckComponent(ecs_iter_t *it) {
     ctx->invoked ++;
 }
 
-void Monitor_monitor_component() {
+void Monitor_monitor_component(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);

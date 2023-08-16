@@ -4,7 +4,7 @@ struct Pair {
     int value;
 };
 
-void ImplicitComponents_add() {
+void ImplicitComponents_add(void) {
     flecs::world world;
 
     auto e = world.entity().add<Position>();
@@ -16,7 +16,7 @@ void ImplicitComponents_add() {
     test_assert(position.id() != 0);
 }
 
-void ImplicitComponents_remove() {
+void ImplicitComponents_remove(void) {
     flecs::world world;
 
     auto e = world.entity().remove<Position>();
@@ -27,7 +27,7 @@ void ImplicitComponents_remove() {
     test_assert(position.id() != 0);
 }
 
-void ImplicitComponents_has() {
+void ImplicitComponents_has(void) {
     flecs::world world;
 
     auto e = world.entity();
@@ -37,7 +37,7 @@ void ImplicitComponents_has() {
     test_assert(position.id() != 0);
 }
 
-void ImplicitComponents_set() {
+void ImplicitComponents_set(void) {
     flecs::world world;
 
     auto e = world.entity().set<Position>({10, 20});
@@ -52,7 +52,7 @@ void ImplicitComponents_set() {
     test_assert(position.id() != 0);
 }
 
-void ImplicitComponents_get() {
+void ImplicitComponents_get(void) {
     flecs::world world;
 
     auto e = world.entity();
@@ -64,7 +64,7 @@ void ImplicitComponents_get() {
     test_assert(position.id() != 0);
 }
 
-void ImplicitComponents_add_pair() {
+void ImplicitComponents_add_pair(void) {
     flecs::world world;
 
     auto e = world.entity().add<Pair, Position>();
@@ -79,7 +79,7 @@ void ImplicitComponents_add_pair() {
     test_assert(pair.id() != 0);    
 }
 
-void ImplicitComponents_remove_pair() {
+void ImplicitComponents_remove_pair(void) {
     flecs::world world;
 
     auto e = world.entity().remove<Position, Pair>();
@@ -93,7 +93,7 @@ void ImplicitComponents_remove_pair() {
     test_assert(pair.id() != 0);   
 }
 
-void ImplicitComponents_module() {
+void ImplicitComponents_module(void) {
     flecs::world world;
 
     world.module<Position>();
@@ -102,7 +102,7 @@ void ImplicitComponents_module() {
     test_assert(position.id() != 0);
 }
 
-void ImplicitComponents_system() {
+void ImplicitComponents_system(void) {
     flecs::world world;
 
     world.system<Position, Velocity>()
@@ -116,7 +116,7 @@ void ImplicitComponents_system() {
     test_assert(velocity.id() != 0);    
 }
 
-void ImplicitComponents_system_optional() {
+void ImplicitComponents_system_optional(void) {
     flecs::world world;
 
     int rotation_count = 0;
@@ -157,7 +157,7 @@ void ImplicitComponents_system_optional() {
     test_int(mass_count, 2);
 }
 
-void ImplicitComponents_system_const() {
+void ImplicitComponents_system_const(void) {
     flecs::world world;
 
     int count = 0;
@@ -193,7 +193,7 @@ void ImplicitComponents_system_const() {
     test_int(p->y, 22);
 }
 
-void ImplicitComponents_query() {
+void ImplicitComponents_query(void) {
     flecs::world world;
 
     auto q = world.query<Position, Velocity>();
@@ -207,7 +207,7 @@ void ImplicitComponents_query() {
     test_assert(velocity.id() != 0);  
 }
 
-void ImplicitComponents_implicit_name() {
+void ImplicitComponents_implicit_name(void) {
     flecs::world world;
 
     auto pcomp = world.component<Position>();
@@ -218,7 +218,7 @@ void ImplicitComponents_implicit_name() {
     test_assert(pcomp == position);
 }
 
-void ImplicitComponents_reinit() {
+void ImplicitComponents_reinit(void) {
     flecs::world world;
 
     auto comp_1 = world.component<Position>();
@@ -242,7 +242,7 @@ namespace Foo {
     };
 }
 
-void ImplicitComponents_reinit_scoped() {
+void ImplicitComponents_reinit_scoped(void) {
     flecs::world world;
 
     auto comp_1 = world.component<Foo::Position>();
@@ -265,7 +265,7 @@ ECS_CTOR(Position, ptr, {
     position_ctor_invoked ++;
 })
 
-void ImplicitComponents_reinit_w_lifecycle() {
+void ImplicitComponents_reinit_w_lifecycle(void) {
     flecs::world world;
 
     auto comp_1 = world.component<Position>();
@@ -294,7 +294,7 @@ void ImplicitComponents_reinit_w_lifecycle() {
     test_assert(flecs::type_id<Position>() == comp_1.id());
 }
 
-void ImplicitComponents_first_use_in_system() {
+void ImplicitComponents_first_use_in_system(void) {
     flecs::world world;
 
     world.system<Position>()
@@ -313,7 +313,7 @@ namespace ns {
     struct NsTag { };
 }
 
-void ImplicitComponents_first_use_tag_in_system() {
+void ImplicitComponents_first_use_tag_in_system(void) {
     flecs::world world;
 
     world.system<Position>()
@@ -335,7 +335,7 @@ enum Color {
     Blue
 };
 
-void ImplicitComponents_first_use_enum_in_system() {
+void ImplicitComponents_first_use_enum_in_system(void) {
     flecs::world world;
 
     world.system<Position>()
@@ -355,7 +355,7 @@ void ImplicitComponents_first_use_enum_in_system() {
     test_assert(world.component<Color>().has(flecs::Exclusive));
 }
 
-void ImplicitComponents_use_const() {
+void ImplicitComponents_use_const(void) {
     flecs::world world;
 
     world.use<const Position>();
@@ -370,7 +370,7 @@ void ImplicitComponents_use_const() {
     test_int(p->y, 20);
 }
 
-void ImplicitComponents_use_const_w_stage() {
+void ImplicitComponents_use_const_w_stage(void) {
     flecs::world world;
 
     world.use<const Velocity>();
@@ -392,7 +392,7 @@ void ImplicitComponents_use_const_w_stage() {
     test_int(v->y, 2);
 }
 
-void ImplicitComponents_use_const_w_threads() {
+void ImplicitComponents_use_const_w_threads(void) {
     flecs::world world;
 
     world.use<const Velocity>();
@@ -416,7 +416,7 @@ void ImplicitComponents_use_const_w_threads() {
     test_int(v->y, 2);
 }
 
-void ImplicitComponents_implicit_base() {
+void ImplicitComponents_implicit_base(void) {
     flecs::world world;
 
     auto v = world.use<Position>();
@@ -427,7 +427,7 @@ void ImplicitComponents_implicit_base() {
     test_int(v.id(), flecs::type_id<Position&>());
 }
 
-void ImplicitComponents_implicit_const() {
+void ImplicitComponents_implicit_const(void) {
     flecs::world world;
 
     auto v = world.use<const Position>();
@@ -438,7 +438,7 @@ void ImplicitComponents_implicit_const() {
     test_int(v.id(), flecs::type_id<Position&>());
 }
 
-void ImplicitComponents_implicit_ref() {
+void ImplicitComponents_implicit_ref(void) {
     flecs::world world;
 
     auto v = world.use<Position&>();
@@ -449,7 +449,7 @@ void ImplicitComponents_implicit_ref() {
     test_int(v.id(), flecs::type_id<Position&>());
 }
 
-void ImplicitComponents_implicit_ptr() {
+void ImplicitComponents_implicit_ptr(void) {
     flecs::world world;
 
     auto v = world.use<Position*>();
@@ -460,7 +460,7 @@ void ImplicitComponents_implicit_ptr() {
     test_int(v.id(), flecs::type_id<Position&>());
 }
 
-void ImplicitComponents_implicit_const_ref() {
+void ImplicitComponents_implicit_const_ref(void) {
     flecs::world world;
 
     auto v = world.use<const Position&>();
@@ -472,7 +472,7 @@ void ImplicitComponents_implicit_const_ref() {
 }
 
 
-void ImplicitComponents_vector_elem_type() {
+void ImplicitComponents_vector_elem_type(void) {
     flecs::world world;
 
     {

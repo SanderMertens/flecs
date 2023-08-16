@@ -1,6 +1,6 @@
 #include <addons.h>
 
-void Metrics_member_gauge_1_entity() {
+void Metrics_member_gauge_1_entity(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsMetrics);
 
@@ -44,7 +44,7 @@ void Metrics_member_gauge_1_entity() {
     ecs_fini(world);
 }
 
-void Metrics_member_gauge_2_entities() {
+void Metrics_member_gauge_2_entities(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsMetrics);
 
@@ -99,7 +99,7 @@ void Metrics_member_gauge_2_entities() {
     ecs_fini(world);
 }
 
-void Metrics_member_gauge_2_entities_1_existing() {
+void Metrics_member_gauge_2_entities_1_existing(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsMetrics);
 
@@ -155,7 +155,7 @@ void Metrics_member_gauge_2_entities_1_existing() {
     ecs_fini(world);
 }
 
-void Metrics_member_gauge_2_entities_update() {
+void Metrics_member_gauge_2_entities_update(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsMetrics);
 
@@ -243,7 +243,7 @@ void Metrics_member_gauge_2_entities_update() {
     ecs_fini(world);
 }
 
-void Metrics_member_gauge_w_remove() {
+void Metrics_member_gauge_w_remove(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsMetrics);
 
@@ -322,7 +322,7 @@ void Metrics_member_gauge_w_remove() {
     ecs_fini(world);
 }
 
-void Metrics_member_gauge_w_clear() {
+void Metrics_member_gauge_w_clear(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsMetrics);
 
@@ -401,7 +401,7 @@ void Metrics_member_gauge_w_clear() {
     ecs_fini(world);
 }
 
-void Metrics_member_gauge_w_delete() {
+void Metrics_member_gauge_w_delete(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsMetrics);
 
@@ -480,7 +480,7 @@ void Metrics_member_gauge_w_delete() {
     ecs_fini(world);
 }
 
-void Metrics_id_gauge_1_entity() {
+void Metrics_id_gauge_1_entity(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsMetrics);
 
@@ -516,7 +516,7 @@ void Metrics_id_gauge_1_entity() {
     ecs_fini(world);
 }
 
-void Metrics_id_gauge_2_entities() {
+void Metrics_id_gauge_2_entities(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsMetrics);
 
@@ -563,7 +563,7 @@ void Metrics_id_gauge_2_entities() {
     ecs_fini(world);
 }
 
-void Metrics_id_gauge_2_entities_1_existing() {
+void Metrics_id_gauge_2_entities_1_existing(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsMetrics);
 
@@ -611,7 +611,7 @@ void Metrics_id_gauge_2_entities_1_existing() {
     ecs_fini(world);
 }
 
-void Metrics_id_gauge_w_remove() {
+void Metrics_id_gauge_w_remove(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsMetrics);
 
@@ -682,7 +682,7 @@ void Metrics_id_gauge_w_remove() {
     ecs_fini(world);
 }
 
-void Metrics_id_gauge_w_clear() {
+void Metrics_id_gauge_w_clear(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsMetrics);
 
@@ -753,7 +753,7 @@ void Metrics_id_gauge_w_clear() {
     ecs_fini(world);
 }
 
-void Metrics_id_gauge_w_delete() {
+void Metrics_id_gauge_w_delete(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsMetrics);
 
@@ -824,7 +824,7 @@ void Metrics_id_gauge_w_delete() {
     ecs_fini(world);
 }
 
-void Metrics_oneof_gauge_3_entities() {
+void Metrics_oneof_gauge_3_entities(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsMetrics);
 
@@ -898,7 +898,7 @@ void Metrics_oneof_gauge_3_entities() {
     ecs_fini(world);
 }
 
-void Metrics_oneof_gauge_3_entities_1_existing() {
+void Metrics_oneof_gauge_3_entities_1_existing(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsMetrics);
 
@@ -973,7 +973,7 @@ void Metrics_oneof_gauge_3_entities_1_existing() {
     ecs_fini(world);
 }
 
-void Metrics_oneof_gauge_w_remove() {
+void Metrics_oneof_gauge_w_remove(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsMetrics);
 
@@ -1085,7 +1085,7 @@ void Metrics_oneof_gauge_w_remove() {
     ecs_fini(world);
 }
 
-void Metrics_oneof_gauge_w_clear() {
+void Metrics_oneof_gauge_w_clear(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsMetrics);
 
@@ -1197,7 +1197,7 @@ void Metrics_oneof_gauge_w_clear() {
     ecs_fini(world);
 }
 
-void Metrics_oneof_gauge_w_delete() {
+void Metrics_oneof_gauge_w_delete(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsMetrics);
 
@@ -1309,7 +1309,7 @@ void Metrics_oneof_gauge_w_delete() {
     ecs_fini(world);
 }
 
-void Metrics_oneof_to_snake_case() {
+void Metrics_oneof_to_snake_case(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsMetrics);
 
@@ -1339,7 +1339,7 @@ void Metrics_oneof_to_snake_case() {
     ecs_fini(world);
 }
 
-void Metrics_member_counter() {
+void Metrics_member_counter(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsMetrics);
 
@@ -1402,7 +1402,7 @@ void Metrics_member_counter() {
     ecs_fini(world);
 }
 
-void Metrics_member_auto_counter() {
+void Metrics_member_auto_counter(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsMetrics);
 
@@ -1465,7 +1465,7 @@ void Metrics_member_auto_counter() {
     ecs_fini(world);
 }
 
-void Metrics_id_counter() {
+void Metrics_id_counter(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsMetrics);
 
@@ -1521,7 +1521,7 @@ void Metrics_id_counter() {
     ecs_fini(world);
 }
 
-void Metrics_oneof_counter() {
+void Metrics_oneof_counter(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsMetrics);
 
@@ -1635,7 +1635,7 @@ void Metrics_oneof_counter() {
     ecs_fini(world);
 }
 
-void Metrics_metric_description() {
+void Metrics_metric_description(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, FlecsMetrics);
@@ -1683,7 +1683,7 @@ void Metrics_metric_description() {
     ecs_fini(world);
 }
 
-void Metrics_id_count() {
+void Metrics_id_count(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, FlecsMetrics);
@@ -1721,7 +1721,7 @@ void Metrics_id_count() {
     ecs_fini(world);
 }
 
-void Metrics_id_target_count() {
+void Metrics_id_target_count(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, FlecsMetrics);
@@ -1776,7 +1776,7 @@ void Metrics_id_target_count() {
     ecs_fini(world);
 }
 
-void Metrics_metric_instance_has_doc_name() {
+void Metrics_metric_instance_has_doc_name(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsMetrics);
 

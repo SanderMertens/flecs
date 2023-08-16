@@ -43,7 +43,7 @@ FLECS_ENUM_LAST(StandardEnum, Blue)
 FLECS_ENUM_LAST(SparseEnum, Grey)
 FLECS_ENUM_LAST(EnumClass, EnumClass::Stone)
 
-void Enum_standard_enum_reflection() {
+void Enum_standard_enum_reflection(void) {
     flecs::world ecs;
 
     auto enum_type = flecs::enum_type<StandardEnum>(ecs);
@@ -80,7 +80,7 @@ void Enum_standard_enum_reflection() {
     test_bool(enum_type.is_valid(Blue + 1), false);
 }
 
-void Enum_sparse_enum_reflection() {
+void Enum_sparse_enum_reflection(void) {
     flecs::world ecs;
 
     auto enum_type = flecs::enum_type<SparseEnum>(ecs);
@@ -120,7 +120,7 @@ void Enum_sparse_enum_reflection() {
     test_bool(enum_type.is_valid(6), false);
 }
 
-void Enum_enum_class_reflection() {
+void Enum_enum_class_reflection(void) {
     flecs::world ecs;
 
     auto enum_type = flecs::enum_type<EnumClass>(ecs);
@@ -157,7 +157,7 @@ void Enum_enum_class_reflection() {
     test_bool(enum_type.is_valid(3), false);
 }
 
-void Enum_prefixed_enum_reflection() {
+void Enum_prefixed_enum_reflection(void) {
     flecs::world ecs;
 
     auto enum_type = flecs::enum_type<PrefixEnum>(ecs);
@@ -187,7 +187,7 @@ void Enum_prefixed_enum_reflection() {
     test_bool(enum_type.is_valid(PrefixEnum::PrefixEnumBar + 1), false);
 }
 
-void Enum_constant_with_num_reflection() {
+void Enum_constant_with_num_reflection(void) {
     flecs::world ecs;
 
     auto enum_type = flecs::enum_type<ConstantsWithNum>(ecs);
@@ -224,7 +224,7 @@ void Enum_constant_with_num_reflection() {
     test_bool(enum_type.is_valid(ConstantsWithNum::Num3 + 1), false);
 }
 
-void Enum_get_constant_id() {
+void Enum_get_constant_id(void) {
     flecs::world ecs;
 
     flecs::entity red = ecs.component<StandardEnum>().lookup("Red");
@@ -238,7 +238,7 @@ void Enum_get_constant_id() {
     test_assert(e.entity(StandardEnum::Red) == red);
 }
 
-void Enum_add_enum_constant() {
+void Enum_add_enum_constant(void) {
     flecs::world ecs;
 
     auto e = ecs.entity().add(StandardEnum::Red);
@@ -256,7 +256,7 @@ void Enum_add_enum_constant() {
     test_assert(id == ecs.pair(r, c));
 }
 
-void Enum_add_enum_class_constant() {
+void Enum_add_enum_class_constant(void) {
     flecs::world ecs;
 
     auto e = ecs.entity().add(EnumClass::Sand);
@@ -274,7 +274,7 @@ void Enum_add_enum_class_constant() {
     test_assert(id == ecs.pair(r, c));
 }
 
-void Enum_replace_enum_constants() {
+void Enum_replace_enum_constants(void) {
     flecs::world ecs;
 
     auto e = ecs.entity().add(StandardEnum::Red);
@@ -293,7 +293,7 @@ void Enum_replace_enum_constants() {
     test_assert(e.has(StandardEnum::Blue));
 }
 
-void Enum_has_enum() {
+void Enum_has_enum(void) {
     flecs::world ecs;
 
     auto e = ecs.entity();
@@ -315,7 +315,7 @@ void Enum_has_enum() {
     test_assert(e.has<StandardEnum>(c));
 }
 
-void Enum_has_enum_wildcard() {
+void Enum_has_enum_wildcard(void) {
     flecs::world ecs;
 
     auto e = ecs.entity();
@@ -326,7 +326,7 @@ void Enum_has_enum_wildcard() {
     test_assert(e.has<StandardEnum>(flecs::Wildcard));
 }
 
-void Enum_get_enum() {
+void Enum_get_enum(void) {
     flecs::world ecs;
 
     auto e = ecs.entity().add(StandardEnum::Red);
@@ -344,7 +344,7 @@ void Enum_get_enum() {
     test_assert(*v == StandardEnum::Green);
 }
 
-void Enum_remove_enum() {
+void Enum_remove_enum(void) {
     flecs::world ecs;
 
     auto e = ecs.entity().add(StandardEnum::Green);
@@ -354,7 +354,7 @@ void Enum_remove_enum() {
     test_assert(!e.has(StandardEnum::Green));
 }
 
-void Enum_remove_wildcard() {
+void Enum_remove_wildcard(void) {
     flecs::world ecs;
 
     auto e = ecs.entity().add(StandardEnum::Green);
@@ -364,7 +364,7 @@ void Enum_remove_wildcard() {
     test_assert(!e.has(StandardEnum::Green));
 }
 
-void Enum_enum_as_component() {
+void Enum_enum_as_component(void) {
     flecs::world ecs;
 
     auto e = ecs.entity();
@@ -381,7 +381,7 @@ void Enum_enum_as_component() {
     test_assert(id == ecs.component<StandardEnum>());
 }
 
-void Enum_query_enum_wildcard() {
+void Enum_query_enum_wildcard(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity().add(StandardEnum::Red);
@@ -411,7 +411,7 @@ void Enum_query_enum_wildcard() {
     test_int(count, 3);
 }
 
-void Enum_query_enum_constant() {
+void Enum_query_enum_constant(void) {
     flecs::world ecs;
 
     ecs.entity().add(StandardEnum::Red);
@@ -432,7 +432,7 @@ void Enum_query_enum_constant() {
     test_int(count, 1);
 }
 
-void Enum_enum_type_from_stage() {
+void Enum_enum_type_from_stage(void) {
     flecs::world ecs;
 
     auto stage = ecs.get_stage(0);
@@ -445,7 +445,7 @@ void Enum_enum_type_from_stage() {
     ecs.readonly_end();
 }
 
-void Enum_add_enum_from_stage() {
+void Enum_add_enum_from_stage(void) {
     flecs::world ecs;
 
     auto stage = ecs.get_stage(0);
@@ -460,7 +460,7 @@ void Enum_add_enum_from_stage() {
     test_assert(e.has(StandardEnum::Red));
 }
 
-void Enum_enum_w_2_worlds() {
+void Enum_enum_w_2_worlds(void) {
     {
         flecs::world ecs;
 
@@ -537,7 +537,7 @@ void Enum_enum_w_2_worlds() {
 
 struct MyTag { };
 
-void Enum_add_enum_constant_w_tag() {
+void Enum_add_enum_constant_w_tag(void) {
     flecs::world ecs;
 
     flecs::entity e1 = ecs.entity()
@@ -565,7 +565,7 @@ void Enum_add_enum_constant_w_tag() {
     test_assert(t3 == e_blue);
 }
 
-void Enum_remove_enum_constant_w_tag() {
+void Enum_remove_enum_constant_w_tag(void) {
     flecs::world ecs;
 
     flecs::entity e1 = ecs.entity()
@@ -598,7 +598,7 @@ void Enum_remove_enum_constant_w_tag() {
     test_assert(!e3.has<MyTag>(Blue));
 }
 
-void Enum_set_enum_constant_w_tag() {
+void Enum_set_enum_constant_w_tag(void) {
     flecs::world ecs;
 
     flecs::entity e1 = ecs.entity()
@@ -626,7 +626,7 @@ void Enum_set_enum_constant_w_tag() {
     test_int(p->y, 4);
 }
 
-void Enum_enum_w_incorrect_size() {
+void Enum_enum_w_incorrect_size(void) {
     /* Quaratined as test can cause compilation of test suite to fail due to new
      * error messages introduced in clang. */
     test_quarantine("6 Aug 2023");
@@ -638,7 +638,7 @@ void Enum_enum_w_incorrect_size() {
     // ecs.component<EnumIncorrectType>();
 }
 
-void Enum_add_union_enum() {
+void Enum_add_union_enum(void) {
     flecs::world ecs;
 
     ecs.component<StandardEnum>().add(flecs::Union);
@@ -657,7 +657,7 @@ void Enum_add_union_enum() {
     test_assert(e2.has(StandardEnum::Blue));
 }
 
-void Enum_add_2_union_enums() {
+void Enum_add_2_union_enums(void) {
     flecs::world ecs;
 
     ecs.component<StandardEnum>().add(flecs::Union);
@@ -681,7 +681,7 @@ void Enum_add_2_union_enums() {
     test_assert(e.target<AnotherEnum>() == running);
 }
 
-void Enum_add_2_union_enums_reverse() {
+void Enum_add_2_union_enums_reverse(void) {
     flecs::world ecs;
 
     ecs.component<StandardEnum>().add(flecs::Union);
@@ -705,7 +705,7 @@ void Enum_add_2_union_enums_reverse() {
     test_assert(e.target<AnotherEnum>() == running);
 }
 
-void Enum_constant_from_entity() {
+void Enum_constant_from_entity(void) {
     flecs::world ecs;
 
     flecs::entity e_red = ecs.to_entity(StandardEnum::Red);
@@ -722,7 +722,7 @@ void Enum_constant_from_entity() {
     test_assert(e_blue.to_constant<StandardEnum>() == StandardEnum::Blue);
 }
 
-void Enum_add_if() {
+void Enum_add_if(void) {
     flecs::world ecs;
 
     auto e = ecs.entity();
@@ -736,7 +736,7 @@ void Enum_add_if() {
     test_assert(!e.has<StandardEnum>(ecs.to_entity(StandardEnum::Red)));
 }
 
-void Enum_add_if_other() {
+void Enum_add_if_other(void) {
     flecs::world ecs;
 
     auto e = ecs.entity();
@@ -751,7 +751,7 @@ void Enum_add_if_other() {
     test_assert(!e.has<StandardEnum>(ecs.to_entity(StandardEnum::Red)));
 }
 
-void Enum_query_union_enum() {
+void Enum_query_union_enum(void) {
     flecs::world ecs;
 
     enum Color {
@@ -783,7 +783,7 @@ void Enum_query_union_enum() {
     });
 }
 
-void Enum_query_union_enum_invalid_query_type() {
+void Enum_query_union_enum_invalid_query_type(void) {
     install_test_abort();
 
     flecs::world ecs;
@@ -797,7 +797,7 @@ void Enum_query_union_enum_invalid_query_type() {
         .build();
 }
 
-void Enum_component_registered_as_enum() {
+void Enum_component_registered_as_enum(void) {
     flecs::world ecs;
 
     auto e = ecs.component<StandardEnum>();
@@ -848,7 +848,7 @@ void Enum_component_registered_as_enum() {
     }
 }
 
-void Enum_mixed_auto_manual_constants() {
+void Enum_mixed_auto_manual_constants(void) {
     flecs::world ecs;
 
     auto e = ecs.component<EnumWithLargeConstant>()
@@ -900,7 +900,7 @@ void Enum_mixed_auto_manual_constants() {
     }
 }
 
-void Enum_enum_class_mixed_auto_manual_constants() {
+void Enum_enum_class_mixed_auto_manual_constants(void) {
     flecs::world ecs;
 
     auto e = ecs.component<EnumClassWithLargeConstant>()

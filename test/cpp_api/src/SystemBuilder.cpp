@@ -1,6 +1,6 @@
 #include <cpp_api.h>
 
-void SystemBuilder_builder_assign_same_type() {
+void SystemBuilder_builder_assign_same_type(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity().add<Position>().add<Velocity>();
@@ -20,7 +20,7 @@ void SystemBuilder_builder_assign_same_type() {
     test_int(count, 1);
 }
 
-void SystemBuilder_builder_build_to_auto() {
+void SystemBuilder_builder_build_to_auto(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity().add<Position>().add<Velocity>();
@@ -39,7 +39,7 @@ void SystemBuilder_builder_build_to_auto() {
     test_int(count, 1);
 }
 
-void SystemBuilder_builder_build_n_statements() {
+void SystemBuilder_builder_build_n_statements(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity().add<Position>().add<Velocity>();
@@ -60,7 +60,7 @@ void SystemBuilder_builder_build_n_statements() {
     test_int(count, 1);
 }
 
-void SystemBuilder_1_type() {
+void SystemBuilder_1_type(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity().add<Position>();
@@ -79,7 +79,7 @@ void SystemBuilder_1_type() {
     test_int(count, 1);
 }
 
-void SystemBuilder_add_1_type() {
+void SystemBuilder_add_1_type(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity().add<Position>();
@@ -99,7 +99,7 @@ void SystemBuilder_add_1_type() {
     test_int(count, 1);
 }
 
-void SystemBuilder_add_2_types() {
+void SystemBuilder_add_2_types(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity().add<Position>().add<Velocity>();
@@ -120,7 +120,7 @@ void SystemBuilder_add_2_types() {
     test_int(count, 1);
 }
 
-void SystemBuilder_add_1_type_w_1_type() {
+void SystemBuilder_add_1_type_w_1_type(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity().add<Position>().add<Velocity>();
@@ -140,7 +140,7 @@ void SystemBuilder_add_1_type_w_1_type() {
     test_int(count, 1);
 }
 
-void SystemBuilder_add_2_types_w_1_type() {
+void SystemBuilder_add_2_types_w_1_type(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity().add<Position>().add<Velocity>().add<Mass>();
@@ -161,7 +161,7 @@ void SystemBuilder_add_2_types_w_1_type() {
     test_int(count, 1);
 }
 
-void SystemBuilder_add_pair() {
+void SystemBuilder_add_pair(void) {
     flecs::world ecs;
 
     auto Likes = ecs.entity();
@@ -185,7 +185,7 @@ void SystemBuilder_add_pair() {
     test_int(count, 1);
 }
 
-void SystemBuilder_add_not() {
+void SystemBuilder_add_not(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity().add<Position>();
@@ -205,7 +205,7 @@ void SystemBuilder_add_not() {
     test_int(count, 1);
 }
 
-void SystemBuilder_add_or() {
+void SystemBuilder_add_or(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity().add<Position>();
@@ -227,7 +227,7 @@ void SystemBuilder_add_or() {
     test_int(count, 2);
 }
 
-void SystemBuilder_add_optional() {
+void SystemBuilder_add_optional(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity().add<Position>();
@@ -249,7 +249,7 @@ void SystemBuilder_add_optional() {
     test_int(count, 2);
 }
 
-void SystemBuilder_ptr_type() {
+void SystemBuilder_ptr_type(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity().add<Position>();
@@ -269,7 +269,7 @@ void SystemBuilder_ptr_type() {
     test_int(count, 2);
 }
 
-void SystemBuilder_const_type() {
+void SystemBuilder_const_type(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity().add<Position>();
@@ -288,7 +288,7 @@ void SystemBuilder_const_type() {
     test_int(count, 1);
 }
 
-void SystemBuilder_string_term() {
+void SystemBuilder_string_term(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity().add<Position>();
@@ -308,7 +308,7 @@ void SystemBuilder_string_term() {
     test_int(count, 1);
 }
 
-void SystemBuilder_singleton_term() {
+void SystemBuilder_singleton_term(void) {
     flecs::world ecs;
 
     struct Entity {
@@ -349,7 +349,7 @@ void SystemBuilder_singleton_term() {
     test_int(count, 3);
 }
 
-void SystemBuilder_10_terms() {
+void SystemBuilder_10_terms(void) {
     flecs::world ecs;
 
     int count = 0;
@@ -389,7 +389,7 @@ void SystemBuilder_10_terms() {
     test_int(count, 1);
 }
 
-void SystemBuilder_20_terms() {
+void SystemBuilder_20_terms(void) {
     flecs::world ecs;
 
     int count = 0;
@@ -449,7 +449,7 @@ void SystemBuilder_20_terms() {
     test_int(count, 1);
 }
 
-void SystemBuilder_name_arg() {
+void SystemBuilder_name_arg(void) {
     flecs::world ecs;
 
     auto s = ecs.system<const Position>("MySystem")
@@ -460,7 +460,7 @@ void SystemBuilder_name_arg() {
     test_assert(s.has<Position>());
 }
 
-void SystemBuilder_create_w_no_template_args() {
+void SystemBuilder_create_w_no_template_args(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity().add<Position>();
@@ -479,7 +479,7 @@ void SystemBuilder_create_w_no_template_args() {
     test_int(count, 1);
 }
 
-void SystemBuilder_write_annotation() {
+void SystemBuilder_write_annotation(void) {
     flecs::world ecs;
 
     struct TagA { };

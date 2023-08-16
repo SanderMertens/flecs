@@ -1,6 +1,6 @@
 #include <addons.h>
 
-void Modules_setup() {
+void Modules_setup(void) {
 }
 
 /* -- Begin module code -- */
@@ -78,7 +78,7 @@ void SimpleModuleImport(
 
 /* -- End module code -- */
 
-void Modules_simple_module() {
+void Modules_simple_module(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, SimpleModule);
@@ -101,7 +101,7 @@ void AddVtoP(ecs_iter_t *it) {
     }
 }
 
-void Modules_import_module_from_system() {
+void Modules_import_module_from_system(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, SimpleModule);
@@ -118,7 +118,7 @@ void Modules_import_module_from_system() {
     ecs_fini(world);
 }
 
-void Modules_import_again() {
+void Modules_import_again(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t m1 = ECS_IMPORT(world, SimpleModule);
@@ -131,7 +131,7 @@ void Modules_import_again() {
     ecs_fini(world);
 }
 
-void Modules_scoped_component() {
+void Modules_scoped_component(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, SimpleModule);
@@ -143,7 +143,7 @@ void Modules_scoped_component() {
     ecs_fini(world);
 }
 
-void Modules_scoped_tag() {
+void Modules_scoped_tag(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, SimpleModule);
@@ -155,7 +155,7 @@ void Modules_scoped_tag() {
     ecs_fini(world);
 }
 
-void Modules_scoped_system() {
+void Modules_scoped_system(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, SimpleModule);
@@ -167,7 +167,7 @@ void Modules_scoped_system() {
     ecs_fini(world);
 }
 
-void Modules_scoped_entity() {
+void Modules_scoped_entity(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, SimpleModule);
@@ -179,7 +179,7 @@ void Modules_scoped_entity() {
     ecs_fini(world);
 }
 
-void Modules_name_prefix_component() {
+void Modules_name_prefix_component(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, SimpleModule);
@@ -191,7 +191,7 @@ void Modules_name_prefix_component() {
     ecs_fini(world);
 }
 
-void Modules_name_prefix_tag() {
+void Modules_name_prefix_tag(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, SimpleModule);
@@ -203,7 +203,7 @@ void Modules_name_prefix_tag() {
     ecs_fini(world);
 }
 
-void Modules_name_prefix_system() {
+void Modules_name_prefix_system(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, SimpleModule);
@@ -215,7 +215,7 @@ void Modules_name_prefix_system() {
     ecs_fini(world);
 }
 
-void Modules_name_prefix_entity() {
+void Modules_name_prefix_entity(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, SimpleModule);
@@ -227,7 +227,7 @@ void Modules_name_prefix_entity() {
     ecs_fini(world);
 }
 
-void Modules_name_prefix_prefab() {
+void Modules_name_prefix_prefab(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, SimpleModule);
@@ -239,7 +239,7 @@ void Modules_name_prefix_prefab() {
     ecs_fini(world);
 }
 
-void Modules_name_prefix_pipeline() {
+void Modules_name_prefix_pipeline(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, SimpleModule);
@@ -251,7 +251,7 @@ void Modules_name_prefix_pipeline() {
     ecs_fini(world);
 }
 
-void Modules_name_prefix_trigger() {
+void Modules_name_prefix_trigger(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, SimpleModule);
@@ -263,7 +263,7 @@ void Modules_name_prefix_trigger() {
     ecs_fini(world);
 }
 
-void Modules_name_prefix_underscore() {
+void Modules_name_prefix_underscore(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, SimpleModule);
@@ -275,7 +275,7 @@ void Modules_name_prefix_underscore() {
     ecs_fini(world);
 }
 
-void Modules_lookup_by_symbol() {
+void Modules_lookup_by_symbol(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, SimpleModule);
@@ -291,7 +291,7 @@ void Modules_lookup_by_symbol() {
     ecs_fini(world);
 }
 
-void Modules_nested_module() {
+void Modules_nested_module(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, SimpleModule);
@@ -306,7 +306,7 @@ void Modules_nested_module() {
     ecs_fini(world);
 }
 
-void Modules_module_tag_on_namespace() {
+void Modules_module_tag_on_namespace(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, SimpleModule);
@@ -322,7 +322,7 @@ void Modules_module_tag_on_namespace() {
     ecs_fini(world);
 }
 
-void Modules_module_tag_on_namespace_on_add() {
+void Modules_module_tag_on_namespace_on_add(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t parent = ecs_new_id(world);
@@ -338,7 +338,7 @@ void Modules_module_tag_on_namespace_on_add() {
     ecs_fini(world);
 }
 
-void Modules_module_tag_on_namespace_on_add_2_levels() {
+void Modules_module_tag_on_namespace_on_add_2_levels(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t root = ecs_new_id(world);
@@ -358,7 +358,7 @@ void Modules_module_tag_on_namespace_on_add_2_levels() {
     ecs_fini(world);
 }
 
-void Modules_import_2_worlds() {
+void Modules_import_2_worlds(void) {
     ecs_world_t *world_1 = ecs_init();
     ecs_world_t *world_2 = ecs_init();
 
@@ -387,7 +387,7 @@ void Modules_import_2_worlds() {
     ecs_fini(world_2);
 }
 
-void Modules_import_monitor_2_worlds() {
+void Modules_import_monitor_2_worlds(void) {
     ecs_world_t *world_1 = ecs_init();
     ecs_world_t *world_2 = ecs_init();
 
@@ -401,7 +401,7 @@ void Modules_import_monitor_2_worlds() {
     ecs_fini(world_2);
 }
 
-void Modules_import_monitor_after_mini() {
+void Modules_import_monitor_after_mini(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_IMPORT(world, FlecsMonitor);

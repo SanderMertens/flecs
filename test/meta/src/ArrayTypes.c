@@ -1,6 +1,6 @@
 #include <meta.h>
 
-void ArrayTypes_array_bool_1() {
+void ArrayTypes_array_bool_1(void) {
     typedef struct {
         ecs_bool_t x[1];
     } T;
@@ -23,7 +23,7 @@ void ArrayTypes_array_bool_1() {
     ecs_fini(world);
 }
 
-void ArrayTypes_array_bool_2() {
+void ArrayTypes_array_bool_2(void) {
     typedef struct {
         ecs_bool_t x[2];
     } T;
@@ -46,7 +46,7 @@ void ArrayTypes_array_bool_2() {
     ecs_fini(world);
 }
 
-void ArrayTypes_array_bool_3() {
+void ArrayTypes_array_bool_3(void) {
     typedef struct {
         ecs_bool_t x[3];
     } T;
@@ -69,7 +69,7 @@ void ArrayTypes_array_bool_3() {
     ecs_fini(world);
 }
 
-void ArrayTypes_array_bool_1_before_i32_member() {
+void ArrayTypes_array_bool_1_before_i32_member(void) {
     typedef struct {
         ecs_bool_t x[1];
         ecs_i32_t y;
@@ -95,7 +95,7 @@ void ArrayTypes_array_bool_1_before_i32_member() {
     ecs_fini(world);
 }
 
-void ArrayTypes_array_bool_2_before_i32_member() {
+void ArrayTypes_array_bool_2_before_i32_member(void) {
     typedef struct {
         ecs_bool_t x[2];
         ecs_i32_t y;
@@ -121,7 +121,7 @@ void ArrayTypes_array_bool_2_before_i32_member() {
     ecs_fini(world);
 }
 
-void ArrayTypes_array_bool_3_before_i32_member() {
+void ArrayTypes_array_bool_3_before_i32_member(void) {
     typedef struct {
         ecs_bool_t x[3];
         ecs_i32_t y;
@@ -147,7 +147,7 @@ void ArrayTypes_array_bool_3_before_i32_member() {
     ecs_fini(world);
 }
 
-void ArrayTypes_array_i32_3() {
+void ArrayTypes_array_i32_3(void) {
     typedef struct {
         ecs_i32_t x[3];
     } T;
@@ -170,7 +170,7 @@ void ArrayTypes_array_i32_3() {
     ecs_fini(world);
 }
 
-void ArrayTypes_array_i32_3_before_i32_member() {
+void ArrayTypes_array_i32_3_before_i32_member(void) {
     typedef struct {
         ecs_i32_t x[3];
         ecs_i32_t y;
@@ -196,7 +196,7 @@ void ArrayTypes_array_i32_3_before_i32_member() {
     ecs_fini(world);
 }
 
-void ArrayTypes_array_struct_bool_3() {
+void ArrayTypes_array_struct_bool_3(void) {
     typedef struct {
         ecs_bool_t x;
     } N1;
@@ -230,7 +230,7 @@ void ArrayTypes_array_struct_bool_3() {
     ecs_fini(world);
 }
 
-void ArrayTypes_array_struct_bool_3_before_i32_member() {
+void ArrayTypes_array_struct_bool_3_before_i32_member(void) {
     typedef struct {
         ecs_bool_t x;
     } N1;
@@ -267,7 +267,7 @@ void ArrayTypes_array_struct_bool_3_before_i32_member() {
     ecs_fini(world);
 }
 
-void ArrayTypes_array_struct_array_bool_3() {
+void ArrayTypes_array_struct_array_bool_3(void) {
     typedef struct {
         ecs_bool_t x[2];
     } N1;
@@ -304,7 +304,7 @@ void ArrayTypes_array_struct_array_bool_3() {
     ecs_fini(world);
 }
 
-void ArrayTypes_2_arrays_1_bool_1_i32() {
+void ArrayTypes_2_arrays_1_bool_1_i32(void) {
     typedef struct {
         ecs_bool_t x[3];
         ecs_i32_t y[2];
@@ -330,7 +330,7 @@ void ArrayTypes_2_arrays_1_bool_1_i32() {
     ecs_fini(world);
 }
 
-void ArrayTypes_2_arrays_1_i32_1_bool() {
+void ArrayTypes_2_arrays_1_i32_1_bool(void) {
     typedef struct {
         ecs_i32_t x[3];
         ecs_bool_t y[2];
@@ -356,7 +356,7 @@ void ArrayTypes_2_arrays_1_i32_1_bool() {
     ecs_fini(world);
 }
 
-void ArrayTypes_8_arrays_bool_w_padded_member() {
+void ArrayTypes_8_arrays_bool_w_padded_member(void) {
     typedef struct {
         ecs_bool_t a[1];
         ecs_i16_t p1;
@@ -409,7 +409,7 @@ void ArrayTypes_8_arrays_bool_w_padded_member() {
     ecs_fini(world);
 }
 
-void ArrayTypes_standaline_array_bool_1() {
+void ArrayTypes_standaline_array_bool_1(void) {
     typedef struct {
         ecs_bool_t x[1];
     } T;
@@ -441,7 +441,7 @@ void ArrayTypes_standaline_array_bool_1() {
     ecs_fini(world);
 }
 
-void ArrayTypes_standaline_array_bool_2() {
+void ArrayTypes_standaline_array_bool_2(void) {
     typedef struct {
         ecs_bool_t x[2];
     } T;
@@ -473,7 +473,7 @@ void ArrayTypes_standaline_array_bool_2() {
     ecs_fini(world);
 }
 
-void ArrayTypes_standaline_array_bool_3() {
+void ArrayTypes_standaline_array_bool_3(void) {
     typedef struct {
         ecs_bool_t x[3];
     } T;
@@ -505,7 +505,7 @@ void ArrayTypes_standaline_array_bool_3() {
     ecs_fini(world);
 }
 
-void ArrayTypes_array_of_standaline_array_bool_1() {
+void ArrayTypes_array_of_standaline_array_bool_1(void) {
     typedef ecs_bool_t bool_1[1];
     typedef struct {
         bool_1 x[3];
@@ -538,7 +538,7 @@ void ArrayTypes_array_of_standaline_array_bool_1() {
     ecs_fini(world);
 }
 
-void ArrayTypes_array_of_standaline_array_bool_2() {
+void ArrayTypes_array_of_standaline_array_bool_2(void) {
     typedef ecs_bool_t bool_2[2];
     typedef struct {
         bool_2 x[3];
@@ -571,7 +571,7 @@ void ArrayTypes_array_of_standaline_array_bool_2() {
     ecs_fini(world);
 }
 
-void ArrayTypes_array_of_standaline_array_bool_3() {
+void ArrayTypes_array_of_standaline_array_bool_3(void) {
     typedef ecs_bool_t bool_2[3];
     typedef struct {
         bool_2 x[4];
@@ -604,7 +604,7 @@ void ArrayTypes_array_of_standaline_array_bool_3() {
     ecs_fini(world);
 }
 
-void ArrayTypes_array_w_short_notation() {
+void ArrayTypes_array_w_short_notation(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t a = ecs_array(world, {

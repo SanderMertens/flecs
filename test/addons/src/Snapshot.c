@@ -1,6 +1,6 @@
 #include <addons.h>
 
-void Snapshot_simple_snapshot() {
+void Snapshot_simple_snapshot(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -28,7 +28,7 @@ void Snapshot_simple_snapshot() {
     ecs_fini(world);
 }
 
-void Snapshot_snapshot_after_new() {
+void Snapshot_snapshot_after_new(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -54,7 +54,7 @@ void Snapshot_snapshot_after_new() {
     ecs_fini(world);
 }
 
-void Snapshot_snapshot_after_delete() {
+void Snapshot_snapshot_after_delete(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -80,7 +80,7 @@ void Snapshot_snapshot_after_delete() {
     ecs_fini(world);
 }
 
-void Snapshot_snapshot_after_new_type() {
+void Snapshot_snapshot_after_new_type(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -105,7 +105,7 @@ void Snapshot_snapshot_after_new_type() {
     ecs_fini(world);
 }
 
-void Snapshot_snapshot_after_add() {
+void Snapshot_snapshot_after_add(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -128,7 +128,7 @@ void Snapshot_snapshot_after_add() {
     ecs_fini(world);
 }
 
-void Snapshot_snapshot_after_remove() {
+void Snapshot_snapshot_after_remove(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -153,7 +153,7 @@ void Snapshot_snapshot_after_remove() {
     ecs_fini(world);
 }
 
-void Snapshot_snapshot_w_include_filter() {
+void Snapshot_snapshot_w_include_filter(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -233,7 +233,7 @@ void Snapshot_snapshot_w_include_filter() {
     ecs_fini(world);
 }
 
-void Snapshot_snapshot_w_exclude_filter() {
+void Snapshot_snapshot_w_exclude_filter(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -313,7 +313,7 @@ void Snapshot_snapshot_w_exclude_filter() {
     ecs_fini(world);
 }
 
-void Snapshot_snapshot_w_filter_after_new() {
+void Snapshot_snapshot_w_filter_after_new(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -378,7 +378,7 @@ void Snapshot_snapshot_w_filter_after_new() {
     ecs_fini(world);
 }
 
-void Snapshot_snapshot_w_filter_after_delete() {
+void Snapshot_snapshot_w_filter_after_delete(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -431,7 +431,7 @@ void Snapshot_snapshot_w_filter_after_delete() {
     ecs_fini(world);
 }
 
-void Snapshot_snapshot_free_empty() {
+void Snapshot_snapshot_free_empty(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_snapshot_t *s = ecs_snapshot_take(world);
@@ -442,7 +442,7 @@ void Snapshot_snapshot_free_empty() {
     ecs_fini(world);
 }
 
-void Snapshot_snapshot_free() {
+void Snapshot_snapshot_free(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -459,7 +459,7 @@ void Snapshot_snapshot_free() {
     ecs_fini(world);
 }
 
-void Snapshot_snapshot_free_filtered() {
+void Snapshot_snapshot_free_filtered(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -485,7 +485,7 @@ void Snapshot_snapshot_free_filtered() {
     ecs_fini(world);
 }
 
-void Snapshot_snapshot_free_filtered_w_dtor() {
+void Snapshot_snapshot_free_filtered_w_dtor(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -538,7 +538,7 @@ void Dummy(ecs_iter_t *it) {
     invoked = true;
 }
 
-void Snapshot_snapshot_activate_table_w_filter() {
+void Snapshot_snapshot_activate_table_w_filter(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -569,7 +569,7 @@ void Snapshot_snapshot_activate_table_w_filter() {
     ecs_fini(world);
 }
 
-void Snapshot_snapshot_copy() {
+void Snapshot_snapshot_copy(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -600,7 +600,7 @@ void Snapshot_snapshot_copy() {
     ecs_fini(world);
 }
 
-void Snapshot_snapshot_get_ref_after_restore() {
+void Snapshot_snapshot_get_ref_after_restore(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -635,7 +635,7 @@ void Snapshot_snapshot_get_ref_after_restore() {
     ecs_fini(world);
 }
 
-void Snapshot_new_after_snapshot() {
+void Snapshot_new_after_snapshot(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -659,7 +659,7 @@ void Snapshot_new_after_snapshot() {
     ecs_fini(world);
 }
 
-void Snapshot_add_after_snapshot() {
+void Snapshot_add_after_snapshot(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -679,7 +679,7 @@ void Snapshot_add_after_snapshot() {
     ecs_fini(world);
 }
 
-void Snapshot_delete_after_snapshot() {
+void Snapshot_delete_after_snapshot(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -699,7 +699,7 @@ void Snapshot_delete_after_snapshot() {
     ecs_fini(world);
 }
 
-void Snapshot_new_empty_after_snapshot() {
+void Snapshot_new_empty_after_snapshot(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -719,7 +719,7 @@ void Snapshot_new_empty_after_snapshot() {
     ecs_fini(world);
 }
 
-void Snapshot_set_after_snapshot() {
+void Snapshot_set_after_snapshot(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -743,7 +743,7 @@ void Snapshot_set_after_snapshot() {
     ecs_fini(world);
 }
 
-void Snapshot_restore_recycled() {
+void Snapshot_restore_recycled(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -774,7 +774,7 @@ void SetP(ecs_iter_t *it) {
     }
 }
 
-void Snapshot_snapshot_w_new_in_onset() {
+void Snapshot_snapshot_w_new_in_onset(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -812,7 +812,7 @@ void CreateV(ecs_iter_t *it) {
     }    
 }
 
-void Snapshot_snapshot_w_new_in_onset_in_snapshot_table() {
+void Snapshot_snapshot_w_new_in_onset_in_snapshot_table(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -840,7 +840,7 @@ void Snapshot_snapshot_w_new_in_onset_in_snapshot_table() {
     ecs_fini(world);
 }
 
-void Snapshot_snapshot_from_stage() {
+void Snapshot_snapshot_from_stage(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);

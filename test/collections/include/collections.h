@@ -8,7 +8,7 @@
 extern "C" {
 #endif
 
-void install_test_abort();
+void install_test_abort(void);
 
 #ifdef __cplusplus
 }

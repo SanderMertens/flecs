@@ -61,7 +61,7 @@ void meta_test_constant(
     test_assert(constant_found == true);
 }
 
-void EnumTypes_enum_1_constant() {
+void EnumTypes_enum_1_constant(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t e = ecs_enum_init(world, &(ecs_enum_desc_t){
@@ -78,7 +78,7 @@ void EnumTypes_enum_1_constant() {
     ecs_fini(world);
 }
 
-void EnumTypes_enum_2_constants() {
+void EnumTypes_enum_2_constants(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t e = ecs_enum_init(world, &(ecs_enum_desc_t){
@@ -96,7 +96,7 @@ void EnumTypes_enum_2_constants() {
     ecs_fini(world);
 }
 
-void EnumTypes_enum_3_constants() {
+void EnumTypes_enum_3_constants(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t e = ecs_enum_init(world, &(ecs_enum_desc_t){
@@ -115,7 +115,7 @@ void EnumTypes_enum_3_constants() {
     ecs_fini(world);
 }
 
-void EnumTypes_enum_3_constants_manual_values() {
+void EnumTypes_enum_3_constants_manual_values(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t e = ecs_enum_init(world, &(ecs_enum_desc_t){
@@ -134,7 +134,7 @@ void EnumTypes_enum_3_constants_manual_values() {
     ecs_fini(world);
 }
 
-void EnumTypes_struct_w_enum() {
+void EnumTypes_struct_w_enum(void) {
     typedef struct {
         ecs_bool_t before;
         ecs_i32_t v;
@@ -171,7 +171,7 @@ void EnumTypes_struct_w_enum() {
     ecs_fini(world);
 }
 
-void EnumTypes_zero_initialized() {
+void EnumTypes_zero_initialized(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t e = ecs_enum_init(world, &(ecs_enum_desc_t){
@@ -193,7 +193,7 @@ void EnumTypes_zero_initialized() {
     ecs_fini(world);
 }
 
-void EnumTypes_enum_relation() {
+void EnumTypes_enum_relation(void) {
     ecs_world_t *world = ecs_init();
 
     enum Color {
@@ -237,7 +237,7 @@ void EnumTypes_enum_relation() {
     ecs_fini(world);
 }
 
-void EnumTypes_enum_w_short_notation() {
+void EnumTypes_enum_w_short_notation(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t e = ecs_enum(world, {

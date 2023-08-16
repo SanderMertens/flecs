@@ -1,6 +1,6 @@
 #include <meta.h>
 
-void Vars_declare_1_var() {
+void Vars_declare_1_var(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_vars_t vars = {0};
@@ -23,7 +23,7 @@ void Vars_declare_1_var() {
     ecs_fini(world);
 }
 
-void Vars_declare_2_vars() {
+void Vars_declare_2_vars(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_vars_t vars = {0};
@@ -54,7 +54,7 @@ void Vars_declare_2_vars() {
     ecs_fini(world);
 }
 
-void Vars_declare_vars_nested_scope() {
+void Vars_declare_vars_nested_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_vars_t vars = {0};
@@ -80,7 +80,7 @@ void Vars_declare_vars_nested_scope() {
     ecs_fini(world);
 }
 
-void Vars_declare_vars_2_scopes() {
+void Vars_declare_vars_2_scopes(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_vars_t vars = {0};
@@ -119,7 +119,7 @@ void Vars_declare_vars_2_scopes() {
     ecs_fini(world);
 }
 
-void Vars_redeclare_var() {
+void Vars_redeclare_var(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_vars_t vars = {0};
@@ -144,7 +144,7 @@ void Vars_redeclare_var() {
     ecs_fini(world);
 }
 
-void Vars_i32_expr_w_i32_var() {
+void Vars_i32_expr_w_i32_var(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_vars_t vars = {0};
@@ -167,7 +167,7 @@ void Vars_i32_expr_w_i32_var() {
     ecs_fini(world);
 }
 
-void Vars_i32_expr_w_f32_var() {
+void Vars_i32_expr_w_f32_var(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_vars_t vars = {0};
@@ -190,7 +190,7 @@ void Vars_i32_expr_w_f32_var() {
     ecs_fini(world);
 }
 
-void Vars_i32_expr_w_string_var() {
+void Vars_i32_expr_w_string_var(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_vars_t vars = {0};
@@ -213,7 +213,7 @@ void Vars_i32_expr_w_string_var() {
     ecs_fini(world);
 }
 
-void Vars_string_expr_w_string_var() {
+void Vars_string_expr_w_string_var(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_vars_t vars = {0};
@@ -238,7 +238,7 @@ void Vars_string_expr_w_string_var() {
     ecs_fini(world);
 }
 
-void Vars_struct_expr_w_i32_vars() {
+void Vars_struct_expr_w_i32_vars(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t point = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -270,7 +270,7 @@ void Vars_struct_expr_w_i32_vars() {
     ecs_fini(world);
 }
 
-void Vars_struct_expr_w_struct_var() {
+void Vars_struct_expr_w_struct_var(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t point = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -300,7 +300,7 @@ void Vars_struct_expr_w_struct_var() {
     ecs_fini(world);
 }
 
-void Vars_nested_struct_expr_w_struct_var() {
+void Vars_nested_struct_expr_w_struct_var(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t point = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -342,7 +342,7 @@ void Vars_nested_struct_expr_w_struct_var() {
     ecs_fini(world);
 }
 
-void Vars_declare_w_value() {
+void Vars_declare_w_value(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_vars_t vars = {0};
@@ -373,7 +373,7 @@ void Vars_declare_w_value() {
     ecs_fini(world);
 }
 
-void Vars_redeclare_in_scope() {
+void Vars_redeclare_in_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_vars_t vars = {0};
@@ -393,7 +393,7 @@ void Vars_redeclare_in_scope() {
     ecs_fini(world);
 }
 
-void Vars_init_fini_vars() {
+void Vars_init_fini_vars(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_vars_t vars = {0};

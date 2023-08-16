@@ -96,7 +96,7 @@ void test_w_chain(
     test_assert(!ecs_iter_next(it));
 }
 
-void Poly_iter_query() {
+void Poly_iter_query(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT_DEFINE(world, Position);
@@ -110,7 +110,7 @@ void Poly_iter_query() {
     ecs_fini(world);
 }
 
-void Poly_iter_query_w_filter() {
+void Poly_iter_query_w_filter(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT_DEFINE(world, Position);
@@ -124,7 +124,7 @@ void Poly_iter_query_w_filter() {
     ecs_fini(world);
 }
 
-void Poly_iter_world() {
+void Poly_iter_world(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT_DEFINE(world, Position);
@@ -168,7 +168,7 @@ void Poly_iter_world() {
     ecs_fini(world);
 }
 
-void Poly_iter_world_w_filter() {
+void Poly_iter_world_w_filter(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT_DEFINE(world, Position);
@@ -179,7 +179,7 @@ void Poly_iter_world_w_filter() {
     ecs_fini(world);
 }
 
-void Poly_iter_rule() {
+void Poly_iter_rule(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT_DEFINE(world, Position);
@@ -195,7 +195,7 @@ void Poly_iter_rule() {
     ecs_fini(world);
 }
 
-void Poly_iter_rule_w_filter() {
+void Poly_iter_rule_w_filter(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT_DEFINE(world, Position);
@@ -211,7 +211,7 @@ void Poly_iter_rule_w_filter() {
     ecs_fini(world);
 }
 
-void Poly_iter_filter() {
+void Poly_iter_filter(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT_DEFINE(world, Position);
@@ -228,7 +228,7 @@ void Poly_iter_filter() {
     ecs_fini(world);
 }
 
-void Poly_iter_filter_w_filter() {
+void Poly_iter_filter_w_filter(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT_DEFINE(world, Position);
@@ -258,7 +258,7 @@ void PolyTrigger(ecs_iter_t *it) {
     test_assert(poly->poly != NULL);
 }
 
-void Poly_on_set_poly_observer() {
+void Poly_on_set_poly_observer(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t tag = ecs_new_id(world);
@@ -288,7 +288,7 @@ void Poly_on_set_poly_observer() {
     ecs_fini(world);
 }
 
-void Poly_on_set_poly_query() {
+void Poly_on_set_poly_query(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t tag = ecs_new_id(world);
@@ -313,7 +313,7 @@ void Poly_on_set_poly_query() {
     ecs_fini(world);
 }
 
-void Poly_on_set_poly_system() {
+void Poly_on_set_poly_system(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t tag = ecs_new_id(world);
@@ -340,7 +340,7 @@ void Poly_on_set_poly_system() {
     ecs_fini(world);
 }
 
-void Poly_iter_filter_from_entity() {
+void Poly_iter_filter_from_entity(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -374,7 +374,7 @@ void Poly_iter_filter_from_entity() {
     ecs_fini(world);
 }
 
-void Poly_iter_query_from_entity() {
+void Poly_iter_query_from_entity(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -406,7 +406,7 @@ void Poly_iter_query_from_entity() {
     ecs_fini(world);
 }
 
-void Poly_iter_rule_from_entity() {
+void Poly_iter_rule_from_entity(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -438,7 +438,7 @@ void Poly_iter_rule_from_entity() {
     ecs_fini(world);
 }
 
-void Poly_free_filter_entity() {
+void Poly_free_filter_entity(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -460,7 +460,7 @@ void Poly_free_filter_entity() {
     ecs_fini(world);
 }
 
-void Poly_free_query_entity() {
+void Poly_free_query_entity(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -482,7 +482,7 @@ void Poly_free_query_entity() {
     ecs_fini(world);
 }
 
-void Poly_free_rule_entity() {
+void Poly_free_rule_entity(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);

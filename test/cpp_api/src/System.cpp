@@ -1,6 +1,6 @@
 #include <cpp_api.h>
 
-void System_iter() {
+void System_iter(void) {
     flecs::world world;
 
     auto entity = world.entity()
@@ -26,7 +26,7 @@ void System_iter() {
     test_int(v->y, 2);       
 }
 
-void System_iter_const() {
+void System_iter_const(void) {
     flecs::world world;
 
     auto entity = world.entity()
@@ -52,7 +52,7 @@ void System_iter_const() {
     test_int(v->y, 2);
 }
 
-void System_iter_shared() {
+void System_iter_shared(void) {
     flecs::world world;
 
     auto base = world.entity()
@@ -94,7 +94,7 @@ void System_iter_shared() {
     test_int(p->y, 24);   
 }
 
-void System_iter_optional() {
+void System_iter_optional(void) {
     flecs::world world;
     flecs::component<Mass>(world, "Mass");
 
@@ -148,7 +148,7 @@ void System_iter_optional() {
     test_int(p->y, 81);
 }
 
-void System_each() {
+void System_each(void) {
     flecs::world world;
 
     auto entity = world.entity()
@@ -168,7 +168,7 @@ void System_each() {
     test_int(p->y, 22);
 }
 
-void System_each_const() {
+void System_each_const(void) {
     flecs::world world;
 
     auto entity = world.entity()
@@ -188,7 +188,7 @@ void System_each_const() {
     test_int(p->y, 22);
 }
 
-void System_each_shared() {
+void System_each_shared(void) {
     flecs::world world;
 
     auto base = world.entity()
@@ -219,7 +219,7 @@ void System_each_shared() {
     test_int(p->y, 24); 
 }
 
-void System_each_optional() {
+void System_each_optional(void) {
     flecs::world world;
     flecs::component<Mass>(world, "Mass");
 
@@ -270,7 +270,7 @@ void System_each_optional() {
 }
 
 
-void System_signature() {
+void System_signature(void) {
     flecs::world world;
 
     auto entity = world.entity()
@@ -299,7 +299,7 @@ void System_signature() {
     test_int(v->y, 2); 
 }
 
-void System_signature_const() {
+void System_signature_const(void) {
     flecs::world world;
 
     auto entity = world.entity()
@@ -328,7 +328,7 @@ void System_signature_const() {
     test_int(v->y, 2); 
 }
 
-void System_signature_shared() {
+void System_signature_shared(void) {
     flecs::world world;
 
     auto base = world.entity()
@@ -371,7 +371,7 @@ void System_signature_shared() {
     test_int(p->y, 24); 
 }
 
-void System_signature_optional() {
+void System_signature_optional(void) {
     flecs::world world;
     flecs::component<Mass>(world, "Mass");
 
@@ -430,7 +430,7 @@ void System_signature_optional() {
 }
 
 
-void System_copy_name_on_create() {
+void System_copy_name_on_create(void) {
     flecs::world world;
 
     char name[6];
@@ -446,7 +446,7 @@ void System_copy_name_on_create() {
     test_assert(system_1.id() != system_2.id());
 }
 
-void System_nested_system() {
+void System_nested_system(void) {
     flecs::world world;
 
     auto system_1 = world.system<Position>("foo::bar")
@@ -463,7 +463,7 @@ void System_nested_system() {
     test_str(se.name().c_str(), "bar");
 }
 
-void System_empty_signature() {
+void System_empty_signature(void) {
     flecs::world world;
 
     int count = 0;
@@ -480,7 +480,7 @@ void System_empty_signature() {
 
 struct MyTag { };
 
-void System_iter_tag() {
+void System_iter_tag(void) {
     flecs::world world;
 
     int invoked = 0;
@@ -498,7 +498,7 @@ void System_iter_tag() {
     test_int(invoked, 1);
 }
 
-void System_each_tag() {
+void System_each_tag(void) {
     flecs::world world;
 
     int invoked = 0;
@@ -516,7 +516,7 @@ void System_each_tag() {
     test_int(invoked, 1);
 }
 
-void System_set_interval() {
+void System_set_interval(void) {
     flecs::world world;
 
     auto sys = world.system<>()
@@ -533,7 +533,7 @@ void System_set_interval() {
     test_int(i, 2.0f);
 }
 
-void System_order_by_type() {
+void System_order_by_type(void) {
     flecs::world world;
 
     world.entity().set<Position>({3, 0});
@@ -562,7 +562,7 @@ void System_order_by_type() {
     test_int(count, 5);
 }
 
-void System_order_by_id() {
+void System_order_by_id(void) {
     flecs::world world;
 
     auto pos = world.component<Position>();
@@ -596,7 +596,7 @@ void System_order_by_id() {
     test_int(count, 5);
 }
 
-void System_order_by_type_after_create() {
+void System_order_by_type_after_create(void) {
     flecs::world world;
 
     world.entity().set<Position>({3, 0});
@@ -624,7 +624,7 @@ void System_order_by_type_after_create() {
     test_int(count, 5);
 }
 
-void System_order_by_id_after_create() {
+void System_order_by_id_after_create(void) {
     flecs::world world;
 
     auto pos = world.component<Position>();
@@ -654,7 +654,7 @@ void System_order_by_id_after_create() {
     test_int(count, 5);
 }
 
-void System_get_query() {
+void System_get_query(void) {
     flecs::world world;
 
     world.entity().set<Position>({0, 0});
@@ -681,7 +681,7 @@ void System_get_query() {
     test_int(count, 3);
 }
 
-void System_add_from_each() {
+void System_add_from_each(void) {
     flecs::world world;
 
     auto e1 = world.entity().set<Position>({0, 0});
@@ -702,7 +702,7 @@ void System_add_from_each() {
     test_assert(e3.has<Velocity>());
 }
 
-void System_delete_from_each() {
+void System_delete_from_each(void) {
     flecs::world world;
 
     auto e1 = world.entity().set<Position>({0, 0});
@@ -727,7 +727,7 @@ struct Entity {
     flecs::entity e;
 };
 
-void System_add_from_each_world_handle() {
+void System_add_from_each_world_handle(void) {
     flecs::world world;
 
     auto e1 = world.entity().set<Entity>({world.entity()});
@@ -746,7 +746,7 @@ void System_add_from_each_world_handle() {
     test_assert(e3.get<Entity>()->e.has<Position>());
 }
 
-void System_new_from_each() {
+void System_new_from_each(void) {
     flecs::world world;
 
     auto e1 = world.entity().set<Position>({0, 0});
@@ -771,7 +771,7 @@ void System_new_from_each() {
     test_assert(e3.get<Entity>()->e.has<Velocity>());
 }
 
-void System_add_from_iter() {
+void System_add_from_iter(void) {
     flecs::world world;
 
     auto e1 = world.entity().set<Position>({0, 0});
@@ -793,7 +793,7 @@ void System_add_from_iter() {
     test_assert(e3.has<Velocity>());
 }
 
-void System_delete_from_iter() {
+void System_delete_from_iter(void) {
     flecs::world world;
 
     auto e1 = world.entity().set<Position>({0, 0});
@@ -816,7 +816,7 @@ void System_delete_from_iter() {
     test_assert(!e3.is_alive());
 }
 
-void System_add_from_iter_world_handle() {
+void System_add_from_iter_world_handle(void) {
     flecs::world world;
 
     auto e1 = world.entity().set<Entity>({world.entity()});
@@ -837,7 +837,7 @@ void System_add_from_iter_world_handle() {
     test_assert(e3.get<Entity>()->e.has<Position>());
 }
 
-void System_new_from_iter() {
+void System_new_from_iter(void) {
     flecs::world world;
 
     auto e1 = world.entity().set<Position>({0, 0});
@@ -864,7 +864,7 @@ void System_new_from_iter() {
     test_assert(e3.get<Entity>()->e.has<Velocity>());
 }
 
-void System_each_w_mut_children_it() {
+void System_each_w_mut_children_it(void) {
     flecs::world world;
 
     auto parent = world.entity().set<Position>({0, 0});
@@ -893,7 +893,7 @@ void System_each_w_mut_children_it() {
     test_assert(e3.has<Velocity>());
 }
 
-void System_readonly_children_iter() {
+void System_readonly_children_iter(void) {
     flecs::world world;
 
     auto parent = world.entity();
@@ -923,7 +923,7 @@ void System_readonly_children_iter() {
     test_int(count, 3);
 }
 
-void System_rate_filter() {
+void System_rate_filter(void) {
     flecs::world world;
 
     int32_t 
@@ -981,7 +981,7 @@ void System_rate_filter() {
     }    
 }
 
-void System_update_rate_filter() {
+void System_update_rate_filter(void) {
     flecs::world world;
 
     int32_t 
@@ -1031,7 +1031,7 @@ void System_update_rate_filter() {
     }      
 }
 
-void System_test_auto_defer_each() {
+void System_test_auto_defer_each(void) {
     flecs::world world;
 
     struct Value { int value; };
@@ -1062,7 +1062,7 @@ void System_test_auto_defer_each() {
     test_int(e3.get<Value>()->value, 31);
 }
 
-void System_test_auto_defer_iter() {
+void System_test_auto_defer_iter(void) {
     flecs::world world;
 
     struct Value { int value; };
@@ -1095,7 +1095,7 @@ void System_test_auto_defer_iter() {
     test_int(e3.get<Value>()->value, 31);
 }
 
-void System_custom_pipeline() {
+void System_custom_pipeline(void) {
     flecs::world world;
 
     auto PreFrame = world.entity().add(flecs::Phase);
@@ -1144,7 +1144,7 @@ void System_custom_pipeline() {
     test_int(count, 3);
 }
 
-void System_custom_pipeline_w_kind() {
+void System_custom_pipeline_w_kind(void) {
     flecs::world world;
 
     auto Tag = world.entity();
@@ -1186,7 +1186,7 @@ void System_custom_pipeline_w_kind() {
     test_int(count, 3);
 }
 
-void System_instanced_query_w_singleton_each() {
+void System_instanced_query_w_singleton_each(void) {
     flecs::world ecs;
 
     ecs.set<Velocity>({1, 2});
@@ -1242,7 +1242,7 @@ void System_instanced_query_w_singleton_each() {
     }));
 }
 
-void System_instanced_query_w_base_each() {
+void System_instanced_query_w_base_each(void) {
     flecs::world ecs;
 
     auto base = ecs.entity().set<Velocity>({1, 2});
@@ -1305,7 +1305,7 @@ void System_instanced_query_w_base_each() {
     }));
 }
 
-void System_un_instanced_query_w_singleton_each() {
+void System_un_instanced_query_w_singleton_each(void) {
     flecs::world ecs;
 
     ecs.set<Velocity>({1, 2});
@@ -1360,7 +1360,7 @@ void System_un_instanced_query_w_singleton_each() {
     }));
 }
 
-void System_un_instanced_query_w_base_each() {
+void System_un_instanced_query_w_base_each(void) {
     flecs::world ecs;
 
     auto base = ecs.entity().set<Velocity>({1, 2});
@@ -1423,7 +1423,7 @@ void System_un_instanced_query_w_base_each() {
     }));
 }
 
-void System_instanced_query_w_singleton_iter() {
+void System_instanced_query_w_singleton_iter(void) {
     flecs::world ecs;
 
     ecs.set<Velocity>({1, 2});
@@ -1483,7 +1483,7 @@ void System_instanced_query_w_singleton_iter() {
     }));
 }
 
-void System_instanced_query_w_base_iter() {
+void System_instanced_query_w_base_iter(void) {
     flecs::world ecs;
 
     auto base = ecs.entity().set<Velocity>({1, 2});
@@ -1557,7 +1557,7 @@ void System_instanced_query_w_base_iter() {
     }));
 }
 
-void System_un_instanced_query_w_singleton_iter() {
+void System_un_instanced_query_w_singleton_iter(void) {
     flecs::world ecs;
 
     ecs.set<Velocity>({1, 2});
@@ -1616,7 +1616,7 @@ void System_un_instanced_query_w_singleton_iter() {
     }));
 }
 
-void System_un_instanced_query_w_base_iter() {
+void System_un_instanced_query_w_base_iter(void) {
     flecs::world ecs;
 
     auto base = ecs.entity().set<Velocity>({1, 2});
@@ -1681,7 +1681,7 @@ void System_un_instanced_query_w_base_iter() {
     }));
 }
 
-void System_create_w_no_template_args() {
+void System_create_w_no_template_args(void) {
     flecs::world world;
 
     auto entity = world.entity()
@@ -1705,7 +1705,7 @@ struct PipelineType {};
 struct First {};
 struct Second {};
 
-void System_system_w_type_kind_type_pipeline() {
+void System_system_w_type_kind_type_pipeline(void) {
     flecs::world world;
 
     world.component<Second>()
@@ -1750,7 +1750,7 @@ void System_system_w_type_kind_type_pipeline() {
     test_int(s2_count, 1);
 }
 
-void System_default_ctor() {
+void System_default_ctor(void) {
     flecs::world world;
 
     flecs::system sys_var;
@@ -1772,7 +1772,7 @@ void System_default_ctor() {
     test_int(count, 1);
 }
 
-void System_entity_ctor() {
+void System_entity_ctor(void) {
     flecs::world world;
 
     uint32_t invoked = 0;
@@ -1788,7 +1788,7 @@ void System_entity_ctor() {
     test_int(invoked, 1);
 }
 
-void System_ensure_instanced_w_each() {
+void System_ensure_instanced_w_each(void) {
     flecs::world world;
 
     flecs::entity e1 = world.entity().set<Position>({10, 20});
@@ -1811,7 +1811,7 @@ void System_ensure_instanced_w_each() {
     test_int(count, 1);
 }
 
-void System_multithread_system_w_query_each() {
+void System_multithread_system_w_query_each(void) {
     flecs::world world;
 
     world.set_threads(2);
@@ -1838,7 +1838,7 @@ void System_multithread_system_w_query_each() {
     test_int(p->y, 22);
 }
 
-void System_multithread_system_w_query_each_w_iter() {
+void System_multithread_system_w_query_each_w_iter(void) {
     flecs::world world;
 
     world.set_threads(2);
@@ -1865,7 +1865,7 @@ void System_multithread_system_w_query_each_w_iter() {
     test_int(p->y, 22);
 }
 
-void System_multithread_system_w_query_each_w_world() {
+void System_multithread_system_w_query_each_w_world(void) {
     flecs::world world;
 
     world.set_threads(2);
@@ -1892,7 +1892,7 @@ void System_multithread_system_w_query_each_w_world() {
     test_int(p->y, 22);
 }
 
-void System_multithread_system_w_query_iter() {
+void System_multithread_system_w_query_iter(void) {
     flecs::world world;
 
     world.set_threads(2);
@@ -1921,7 +1921,7 @@ void System_multithread_system_w_query_iter() {
     test_int(p->y, 22);
 }
 
-void System_multithread_system_w_query_iter_w_iter() {
+void System_multithread_system_w_query_iter_w_iter(void) {
     flecs::world world;
 
     world.set_threads(2);
@@ -1950,7 +1950,7 @@ void System_multithread_system_w_query_iter_w_iter() {
     test_int(p->y, 22);
 }
 
-void System_multithread_system_w_query_iter_w_world() {
+void System_multithread_system_w_query_iter_w_world(void) {
     flecs::world world;
 
     world.set_threads(2);
@@ -1979,7 +1979,7 @@ void System_multithread_system_w_query_iter_w_world() {
     test_int(p->y, 22);
 }
 
-void System_run_callback() {
+void System_run_callback(void) {
     flecs::world world;
 
     auto entity = world.entity()
@@ -2010,7 +2010,7 @@ void System_run_callback() {
     test_int(v->y, 2);
 }
 
-void System_startup_system() {
+void System_startup_system(void) {
     flecs::world ecs;
 
     int32_t count_a = 0, count_b = 0;
@@ -2038,7 +2038,7 @@ void System_startup_system() {
     test_int(count_b, 2);
 }
 
-void System_interval_tick_source() {
+void System_interval_tick_source(void) {
     flecs::world ecs;
 
     flecs::timer t = ecs.timer().interval(2.1);
@@ -2070,7 +2070,7 @@ void System_interval_tick_source() {
     test_int(1, sys_b_invoked);
 }
 
-void System_rate_tick_source() {
+void System_rate_tick_source(void) {
     flecs::world ecs;
 
     flecs::timer t = ecs.timer().rate(3);
@@ -2102,7 +2102,7 @@ void System_rate_tick_source() {
     test_int(1, sys_b_invoked);
 }
 
-void System_nested_rate_tick_source() {
+void System_nested_rate_tick_source(void) {
     flecs::world ecs;
 
     flecs::timer t_3 = ecs.timer().rate(3);
@@ -2147,7 +2147,7 @@ void System_nested_rate_tick_source() {
     test_int(1, sys_b_invoked);
 }
 
-void System_table_get() {
+void System_table_get(void) {
     flecs::world ecs;
 
     flecs::entity e1 = ecs.entity().set<Position>({10, 20});
@@ -2172,7 +2172,7 @@ void System_table_get() {
     s.run();
 }
 
-void System_range_get() {
+void System_range_get(void) {
     flecs::world ecs;
 
     flecs::entity e1 = ecs.entity().set<Position>({10, 20});

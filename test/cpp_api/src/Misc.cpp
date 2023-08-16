@@ -4,11 +4,11 @@ enum Color {
     Red, Green, Blue
 };
 
-void Misc_setup() {
+void Misc_setup(void) {
     ecs_os_set_api_defaults();
 }
 
-void Misc_string_compare_w_char_ptr() {
+void Misc_string_compare_w_char_ptr(void) {
     const char *ptr_1 = "foo";
     const char *ptr_2 = "foo";
     const char *ptr_3 = "bar";
@@ -20,7 +20,7 @@ void Misc_string_compare_w_char_ptr() {
     test_assert(str != ptr_3);
 }
 
-void Misc_string_view_compare_w_char_ptr() {
+void Misc_string_view_compare_w_char_ptr(void) {
     const char *ptr_1 = "foo";
     const char *ptr_2 = "foo";
     const char *ptr_3 = "bar";
@@ -32,7 +32,7 @@ void Misc_string_view_compare_w_char_ptr() {
     test_assert(str != ptr_3);   
 }
 
-void Misc_string_compare_w_char_ptr_length_diff() {
+void Misc_string_compare_w_char_ptr_length_diff(void) {
     const char *ptr_1 = "foo";
     const char *ptr_2 = "foo";
     const char *ptr_3 = "barrr";
@@ -46,7 +46,7 @@ void Misc_string_compare_w_char_ptr_length_diff() {
     test_assert(str != ptr_4);
 }
 
-void Misc_string_compare_w_string() {
+void Misc_string_compare_w_string(void) {
     const char *ptr_1 = "foo";
     const char *ptr_2 = "bar";
 
@@ -66,7 +66,7 @@ void Misc_string_compare_w_string() {
     test_assert(str_2 != str_1);
 }
 
-void Misc_string_view_compare_w_string() {
+void Misc_string_view_compare_w_string(void) {
     const char *ptr_1 = "foo";
     const char *ptr_2 = "bar";
 
@@ -86,7 +86,7 @@ void Misc_string_view_compare_w_string() {
     test_assert(str_2 != str_1);
 }
 
-void Misc_string_compare_nullptr() {
+void Misc_string_compare_nullptr(void) {
     const char *ptr_1 = "foo";
 
     flecs::string str = flecs::string_view(ptr_1);
@@ -94,7 +94,7 @@ void Misc_string_compare_nullptr() {
     test_assert(str != nullptr);
 }
 
-void Misc_nullptr_string_compare() {
+void Misc_nullptr_string_compare(void) {
     const char *ptr = "foo";
 
     flecs::string str_1 = flecs::string_view(nullptr);
@@ -105,7 +105,7 @@ void Misc_nullptr_string_compare() {
     test_assert(str_1 != str_2);
 }
 
-void Misc_nullptr_string_compare_nullptr() {
+void Misc_nullptr_string_compare_nullptr(void) {
     const char *ptr_1 = "foo";
 
     flecs::string str = flecs::string_view(nullptr);
@@ -149,7 +149,7 @@ void Trig(ecs_iter_t *it) {
     trig_invoked_count += it->count;
 }
 
-void Misc_c_macros() {
+void Misc_c_macros(void) {
     flecs::world world;
 
     ECS_COMPONENT(world, Position);
@@ -205,7 +205,7 @@ void Misc_c_macros() {
     test_int(sys_invoked_count, 1);
 }
 
-void Misc_app_run() {
+void Misc_app_run(void) {
     flecs::world ecs;
 
     bool system_ran = false;
@@ -218,7 +218,7 @@ void Misc_app_run() {
     test_bool(system_ran, true);
 }
 
-void Misc_app_run_target_fps() {
+void Misc_app_run_target_fps(void) {
     flecs::world ecs;
 
     int32_t count = 0;
@@ -235,7 +235,7 @@ void Misc_app_run_target_fps() {
     test_int(count, 1);
 }
 
-void Misc_app_run_set_frames() {
+void Misc_app_run_set_frames(void) {
     flecs::world ecs;
 
     int32_t count = 0;
@@ -248,7 +248,7 @@ void Misc_app_run_set_frames() {
     test_int(count, 100);
 }
 
-void Misc_app_on_remove_on_fini() {
+void Misc_app_on_remove_on_fini(void) {
     flecs::world ecs;
 
     ecs.entity().set<Position>({10, 20});
@@ -267,7 +267,7 @@ void Misc_app_on_remove_on_fini() {
     test_int(invoked, 1);
 }
 
-void Misc_member_gauge_metric() {
+void Misc_member_gauge_metric(void) {
     flecs::world ecs;
 
     ecs.import<flecs::metrics>();
@@ -304,7 +304,7 @@ void Misc_member_gauge_metric() {
     test_int(count, 2);
 }
 
-void Misc_id_gauge_metric() {
+void Misc_id_gauge_metric(void) {
     flecs::world ecs;
 
     ecs.import<flecs::metrics>();
@@ -354,7 +354,7 @@ void Misc_id_gauge_metric() {
     test_int(count, 2);
 }
 
-void Misc_oneof_gauge_metric() {
+void Misc_oneof_gauge_metric(void) {
     flecs::world ecs;
 
     ecs.import<flecs::metrics>();
@@ -421,7 +421,7 @@ void Misc_oneof_gauge_metric() {
     test_int(count, 3);
 }
 
-void Misc_id_counter_metric() {
+void Misc_id_counter_metric(void) {
     flecs::world ecs;
 
     ecs.import<flecs::metrics>();
@@ -471,7 +471,7 @@ void Misc_id_counter_metric() {
     test_int(count, 2);
 }
 
-void Misc_oneof_counter_metric() {
+void Misc_oneof_counter_metric(void) {
     flecs::world ecs;
 
     ecs.import<flecs::metrics>();
@@ -539,7 +539,7 @@ void Misc_oneof_counter_metric() {
     test_int(count, 3);
 }
 
-void Misc_component_mixin_member_metric() {
+void Misc_component_mixin_member_metric(void) {
     flecs::world ecs;
 
     ecs.import<flecs::metrics>();
@@ -572,7 +572,7 @@ void Misc_component_mixin_member_metric() {
     test_int(count, 2);
 }
 
-void Misc_component_mixin_member_metric_custom_parent_entity() {
+void Misc_component_mixin_member_metric_custom_parent_entity(void) {
     flecs::world ecs;
 
     ecs.import<flecs::metrics>();
@@ -612,7 +612,7 @@ void Misc_component_mixin_member_metric_custom_parent_entity() {
     test_int(count, 2);
 }
 
-void Misc_metric_description() {
+void Misc_metric_description(void) {
     flecs::world ecs;
 
     ecs.import<flecs::metrics>();
@@ -652,7 +652,7 @@ void Misc_metric_description() {
     test_int(count, 2);
 }
 
-void Misc_component_mixin_member_metric_description() {
+void Misc_component_mixin_member_metric_description(void) {
     flecs::world ecs;
 
     ecs.import<flecs::metrics>();
@@ -688,7 +688,7 @@ void Misc_component_mixin_member_metric_description() {
     test_int(count, 2);
 }
 
-void Misc_member_metric_w_value_name() {
+void Misc_member_metric_w_value_name(void) {
     flecs::world ecs;
 
     ecs.import<flecs::metrics>();
@@ -732,7 +732,7 @@ struct FooBar {
     float value;
 };
 
-void Misc_member_metric_w_value_name_camel_case_type() {
+void Misc_member_metric_w_value_name_camel_case_type(void) {
     flecs::world ecs;
 
     ecs.import<flecs::metrics>();
@@ -772,7 +772,7 @@ void Misc_member_metric_w_value_name_camel_case_type() {
     test_int(count, 2);
 }
 
-void Misc_member_metric_w_custom_name() {
+void Misc_member_metric_w_custom_name(void) {
     flecs::world ecs;
 
     ecs.import<flecs::metrics>();
@@ -812,7 +812,7 @@ void Misc_member_metric_w_custom_name() {
     test_int(count, 2);
 }
 
-void Misc_counter_id_metric() {
+void Misc_counter_id_metric(void) {
     flecs::world ecs;
 
     ecs.import<flecs::metrics>();
@@ -843,7 +843,7 @@ void Misc_counter_id_metric() {
     }
 }
 
-void Misc_counter_target_metric() {
+void Misc_counter_target_metric(void) {
     flecs::world ecs;
 
     ecs.import<flecs::metrics>();
@@ -886,7 +886,7 @@ void Misc_counter_target_metric() {
     }
 }
 
-void Misc_alert() {
+void Misc_alert(void) {
     flecs::world ecs;
 
     ecs.import<flecs::alerts>();
@@ -934,7 +934,7 @@ void Misc_alert() {
     }
 }
 
-void Misc_alert_w_message() {
+void Misc_alert_w_message(void) {
     flecs::world ecs;
 
     ecs.import<flecs::alerts>();
@@ -985,7 +985,7 @@ void Misc_alert_w_message() {
     }
 }
 
-void Misc_alert_w_brief() {
+void Misc_alert_w_brief(void) {
     flecs::world ecs;
 
     ecs.import<flecs::alerts>();
@@ -1000,7 +1000,7 @@ void Misc_alert_w_brief() {
     test_str(a.doc_brief(), "Entity has Position");
 }
 
-void Misc_alert_doc_name() {
+void Misc_alert_doc_name(void) {
     flecs::world ecs;
 
     ecs.import<flecs::alerts>();
@@ -1015,7 +1015,7 @@ void Misc_alert_doc_name() {
     test_str(a.doc_name(), "Has Position");
 }
 
-void Misc_alert_severity_info() {
+void Misc_alert_severity_info(void) {
     flecs::world ecs;
 
     ecs.import<flecs::alerts>();
@@ -1030,7 +1030,7 @@ void Misc_alert_severity_info() {
     test_assert(a.target<flecs::alerts::Alert>() == ecs.id<flecs::alerts::Info>());
 }
 
-void Misc_alert_severity_warning() {
+void Misc_alert_severity_warning(void) {
     flecs::world ecs;
 
     ecs.import<flecs::alerts>();
@@ -1045,7 +1045,7 @@ void Misc_alert_severity_warning() {
     test_assert(a.target<flecs::alerts::Alert>() == ecs.id<flecs::alerts::Warning>());
 }
 
-void Misc_alert_severity_error() {
+void Misc_alert_severity_error(void) {
     flecs::world ecs;
 
     ecs.import<flecs::alerts>();
@@ -1060,7 +1060,7 @@ void Misc_alert_severity_error() {
     test_assert(a.target<flecs::alerts::Alert>() == ecs.id<flecs::alerts::Error>());
 }
 
-void Misc_alert_severity_implicit() {
+void Misc_alert_severity_implicit(void) {
     flecs::world ecs;
 
     ecs.import<flecs::alerts>();
@@ -1074,7 +1074,7 @@ void Misc_alert_severity_implicit() {
     test_assert(a.target<flecs::alerts::Alert>() == ecs.id<flecs::alerts::Error>());
 }
 
-void Misc_alert_w_retain_period() {
+void Misc_alert_w_retain_period(void) {
     flecs::world ecs;
 
     ecs.import<flecs::alerts>();
@@ -1129,7 +1129,7 @@ void Misc_alert_w_retain_period() {
     test_int(e2.alert_count(a), 0);
 }
 
-void Misc_alert_w_severity_filter() {
+void Misc_alert_w_severity_filter(void) {
     flecs::world ecs;
 
     ecs.import<flecs::alerts>();
@@ -1206,7 +1206,7 @@ void Misc_alert_w_severity_filter() {
     }
 }
 
-void Misc_alert_w_severity_filter_severity_type() {
+void Misc_alert_w_severity_filter_severity_type(void) {
     flecs::world ecs;
 
     ecs.import<flecs::alerts>();
@@ -1283,7 +1283,7 @@ void Misc_alert_w_severity_filter_severity_type() {
     }
 }
 
-void Misc_alert_w_severity_filter_severity_type_id_type() {
+void Misc_alert_w_severity_filter_severity_type_id_type(void) {
     flecs::world ecs;
 
     ecs.import<flecs::alerts>();
@@ -1360,7 +1360,7 @@ void Misc_alert_w_severity_filter_severity_type_id_type() {
     }
 }
 
-void Misc_alert_w_severity_filter_severity_type_enum_constant() {
+void Misc_alert_w_severity_filter_severity_type_enum_constant(void) {
     flecs::world ecs;
 
     ecs.import<flecs::alerts>();
@@ -1458,7 +1458,7 @@ void Misc_alert_w_severity_filter_severity_type_enum_constant() {
     }
 }
 
-void Misc_alert_w_severity_filter_w_var() {
+void Misc_alert_w_severity_filter_w_var(void) {
     flecs::world ecs;
 
     ecs.import<flecs::alerts>();
@@ -1537,7 +1537,7 @@ void Misc_alert_w_severity_filter_w_var() {
     }
 }
 
-void Misc_alert_w_severity_filter_severity_type_w_var() {
+void Misc_alert_w_severity_filter_severity_type_w_var(void) {
     flecs::world ecs;
 
     ecs.import<flecs::alerts>();
@@ -1616,7 +1616,7 @@ void Misc_alert_w_severity_filter_severity_type_w_var() {
     }
 }
 
-void Misc_alert_w_severity_filter_severity_type_id_type_w_var() {
+void Misc_alert_w_severity_filter_severity_type_id_type_w_var(void) {
     flecs::world ecs;
 
     ecs.import<flecs::alerts>();
@@ -1695,7 +1695,7 @@ void Misc_alert_w_severity_filter_severity_type_id_type_w_var() {
     }
 }
 
-void Misc_alert_w_severity_filter_severity_type_enum_constant_w_var() {
+void Misc_alert_w_severity_filter_severity_type_enum_constant_w_var(void) {
     flecs::world ecs;
 
     ecs.import<flecs::alerts>();
@@ -1774,7 +1774,7 @@ void Misc_alert_w_severity_filter_severity_type_enum_constant_w_var() {
     }
 }
 
-void Misc_alert_for_member_range() {
+void Misc_alert_for_member_range(void) {
     flecs::world ecs;
 
     ecs.import<flecs::alerts>();
@@ -1832,7 +1832,7 @@ void Misc_alert_for_member_range() {
     }
 }
 
-void Misc_alert_w_member_range_from_var() {
+void Misc_alert_w_member_range_from_var(void) {
     flecs::world ecs;
 
     ecs.import<flecs::alerts>();
@@ -1890,7 +1890,7 @@ void Misc_alert_w_member_range_from_var() {
     }
 }
 
-void Misc_map_api() {
+void Misc_map_api(void) {
     flecs::world ecs;
 
     ecs_map_t m;

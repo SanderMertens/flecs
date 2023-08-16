@@ -478,6 +478,7 @@ void SerializeToExpr_entity_entity_after_float(void);
 void SerializeToExpr_struct_nested_i32(void);
 void SerializeToExpr_struct_nested_i32_i32(void);
 void SerializeToExpr_struct_2_nested_i32_i32(void);
+void SerializeToExpr_struct_i32_array_3(void);
 void SerializeToExpr_struct_struct_i32_array_3(void);
 void SerializeToExpr_struct_struct_i32_i32_array_3(void);
 void SerializeToExpr_struct_w_array_type_i32_i32(void);
@@ -2786,6 +2787,10 @@ bake_test_case SerializeToExpr_testcases[] = {
         SerializeToExpr_struct_2_nested_i32_i32
     },
     {
+        "struct_i32_array_3",
+        SerializeToExpr_struct_i32_array_3
+    },
+    {
         "struct_struct_i32_array_3",
         SerializeToExpr_struct_struct_i32_array_3
     },
@@ -4760,7 +4765,7 @@ static bake_test_suite suites[] = {
         "SerializeToExpr",
         NULL,
         NULL,
-        51,
+        52,
         SerializeToExpr_testcases
     },
     {

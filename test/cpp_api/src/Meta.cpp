@@ -58,7 +58,7 @@ flecs::opaque<std::vector<T>, T> std_vector_support(flecs::world& world) {
 }
 
 
-void Meta_struct() {
+void Meta_struct(void) {
     flecs::world ecs;
 
     struct Test {
@@ -84,7 +84,7 @@ void Meta_struct() {
     test_uint(m->type, flecs::F32);
 }
 
-void Meta_nested_struct() {
+void Meta_nested_struct(void) {
     flecs::world ecs;
 
     struct Test {
@@ -109,7 +109,7 @@ void Meta_nested_struct() {
     test_uint(m->type, t);
 }
 
-void Meta_struct_w_portable_type() {
+void Meta_struct_w_portable_type(void) {
     flecs::world ecs;
 
     struct Test {
@@ -151,7 +151,7 @@ void Meta_struct_w_portable_type() {
     test_uint(m->type, flecs::Entity);
 }
 
-void Meta_units() {
+void Meta_units(void) {
     struct Test {
         int32_t meters;
         int32_t custom_unit;
@@ -189,7 +189,7 @@ void Meta_units() {
     test_uint(m->unit, custom_unit);
 }
 
-void Meta_unit_w_quantity() {
+void Meta_unit_w_quantity(void) {
     struct Test {
         int32_t m_1;
         int32_t m_2;
@@ -226,7 +226,7 @@ void Meta_unit_w_quantity() {
     test_uint(m->unit, unit_2);
 }
 
-void Meta_unit_w_prefix() {
+void Meta_unit_w_prefix(void) {
     struct Test {
         int32_t m_1;
         int32_t m_2;
@@ -249,7 +249,7 @@ void Meta_unit_w_prefix() {
     test_str(unit->symbol, "pU1");
 }
 
-void Meta_unit_w_over() {
+void Meta_unit_w_over(void) {
     struct Test {
         int32_t m_1;
         int32_t m_2;
@@ -277,7 +277,7 @@ void Meta_unit_w_over() {
     test_str(unit->symbol, "pU1/U0");
 }
 
-void Meta_partial_struct() {
+void Meta_partial_struct(void) {
     flecs::world ecs;
 
     auto c = ecs.component<Position>()
@@ -296,7 +296,7 @@ void Meta_partial_struct() {
     test_uint(x->offset, 0);
 }
 
-void Meta_partial_struct_custom_offset() {
+void Meta_partial_struct_custom_offset(void) {
     flecs::world ecs;
 
     auto c = ecs.component<Position>()
@@ -325,7 +325,7 @@ struct Sandwich {
     uint32_t toppings;
 };
 
-void Meta_bitmask() {
+void Meta_bitmask(void) {
     flecs::world ecs;
 
     // Register components with reflection data
@@ -412,7 +412,7 @@ int Vector_serialize(const flecs::serializer *ser, const std::vector<Elem> *data
     return 0;
 }
 
-void Meta_custom_i32_to_json() {
+void Meta_custom_i32_to_json(void) {
     flecs::world ecs;
 
     ecs.component<Int>().opaque(flecs::I32)
@@ -423,7 +423,7 @@ void Meta_custom_i32_to_json() {
     test_str(json, "10");
 }
 
-void Meta_custom_std_string_to_json() {
+void Meta_custom_std_string_to_json(void) {
     flecs::world ecs;
 
     ecs.component<std::string>().opaque(flecs::String)
@@ -434,7 +434,7 @@ void Meta_custom_std_string_to_json() {
     test_str(json, "\"Hello World\"");
 }
 
-void Meta_custom_std_vector_i32_to_json() {
+void Meta_custom_std_vector_i32_to_json(void) {
     flecs::world ecs;
 
     ecs.component<std::vector<int>>().opaque(ecs.vector<int>())
@@ -445,7 +445,7 @@ void Meta_custom_std_vector_i32_to_json() {
     test_str(json, "[1, 2, 3]");
 }
 
-void Meta_custom_std_vector_std_string_to_json() {
+void Meta_custom_std_vector_std_string_to_json(void) {
     flecs::world ecs;
 
     ecs.component<std::string>().opaque(flecs::String)
@@ -459,7 +459,7 @@ void Meta_custom_std_vector_std_string_to_json() {
     test_str(json, "[\"hello\", \"world\", \"foo\"]");
 }
 
-void Meta_type_w_std_vector() {
+void Meta_type_w_std_vector(void) {
     flecs::world ecs;
 
     ecs.component<std::vector<int>>().opaque(ecs.vector<int>())
@@ -473,7 +473,7 @@ void Meta_type_w_std_vector() {
     test_str(json, "{\"v\":[1, 2, 3]}");
 }
 
-void Meta_type_w_std_string() {
+void Meta_type_w_std_string(void) {
     flecs::world ecs;
 
     ecs.component<std::string>().opaque(flecs::String)
@@ -487,7 +487,7 @@ void Meta_type_w_std_string() {
     test_str(json, "{\"v\":\"hello world\"}");
 }
 
-void Meta_type_w_std_vector_std_string() {
+void Meta_type_w_std_vector_std_string(void) {
     flecs::world ecs;
 
     ecs.component<std::vector<int>>().opaque(ecs.vector<int>())
@@ -505,7 +505,7 @@ void Meta_type_w_std_vector_std_string() {
     test_str(json, "{\"v\":[1, 2, 3], \"s\":\"hello world\"}");
 }
 
-void Meta_type_w_std_string_std_vector() {
+void Meta_type_w_std_string_std_vector(void) {
     flecs::world ecs;
 
     ecs.component<std::vector<int>>().opaque(ecs.vector<int>())
@@ -523,7 +523,7 @@ void Meta_type_w_std_string_std_vector() {
     test_str(json, "{\"s\":\"hello world\", \"v\":[1, 2, 3]}");
 }
 
-void Meta_type_w_std_string_std_string() {
+void Meta_type_w_std_string_std_string(void) {
     flecs::world ecs;
 
     ecs.component<std::vector<int>>().opaque(ecs.vector<int>())
@@ -541,7 +541,7 @@ void Meta_type_w_std_string_std_string() {
     test_str(json, "{\"s1\":\"hello world\", \"s2\":\"foo bar\"}");
 }
 
-void Meta_type_w_std_vector_std_vector() {
+void Meta_type_w_std_vector_std_vector(void) {
     flecs::world ecs;
 
     ecs.component<std::vector<int>>().opaque(ecs.vector<int>())
@@ -559,7 +559,7 @@ void Meta_type_w_std_vector_std_vector() {
     test_str(json, "{\"v1\":[1, 2, 3], \"v2\":[4, 5, 6]}");
 }
 
-void Meta_type_w_std_vector_std_string_std_vector() {
+void Meta_type_w_std_vector_std_string_std_vector(void) {
     flecs::world ecs;
 
     ecs.component<std::vector<int>>().opaque(ecs.vector<int>())
@@ -578,7 +578,7 @@ void Meta_type_w_std_vector_std_string_std_vector() {
     test_str(json, "{\"v1\":[1, 2, 3], \"s\":\"hello world\", \"v2\":[4, 5, 6]}");
 }
 
-void Meta_type_w_std_vector_std_vector_std_string() {
+void Meta_type_w_std_vector_std_vector_std_string(void) {
     flecs::world ecs;
 
     ecs.component<std::vector<int>>().opaque(ecs.vector<int>())
@@ -597,7 +597,7 @@ void Meta_type_w_std_vector_std_vector_std_string() {
     test_str(json, "{\"v1\":[1, 2, 3], \"v2\":[4, 5, 6], \"s\":\"hello world\"}");
 }
 
-void Meta_primitive_type() {
+void Meta_primitive_type(void) {
     flecs::world ecs;
 
     flecs::entity t = ecs.primitive(flecs::meta::I32);
@@ -621,7 +621,7 @@ void Meta_primitive_type() {
     test_assert(pt->kind == flecs::meta::I32);
 }
 
-void Meta_array_type() {
+void Meta_array_type(void) {
     flecs::world ecs;
 
     flecs::entity t = ecs.array(flecs::I32, 3);
@@ -646,7 +646,7 @@ void Meta_array_type() {
     test_int(at->count, 3);
 }
 
-void Meta_vector_type() {
+void Meta_vector_type(void) {
     flecs::world ecs;
 
     flecs::entity t = ecs.vector(flecs::I32);
@@ -670,7 +670,7 @@ void Meta_vector_type() {
     test_assert(vt->type == ecs.id<int32_t>());
 }
 
-void Meta_i32_from_json() {
+void Meta_i32_from_json(void) {
     flecs::world ecs;
 
     int32_t v = 0;
@@ -679,7 +679,7 @@ void Meta_i32_from_json() {
     test_int(v, 10);
 }
 
-void Meta_struct_from_json() {
+void Meta_struct_from_json(void) {
     flecs::world ecs;
 
     ecs.component<Position>()
@@ -693,7 +693,7 @@ void Meta_struct_from_json() {
     test_int(v.y, 20);
 }
 
-void Meta_entity_from_json_empty() {
+void Meta_entity_from_json_empty(void) {
     flecs::world ecs;
 
     ecs.component<Position>()
@@ -706,7 +706,7 @@ void Meta_entity_from_json_empty() {
     test_str(r, "");
 }
 
-void Meta_entity_from_json_w_path() {
+void Meta_entity_from_json_w_path(void) {
     flecs::world ecs;
 
     ecs.component<Position>()
@@ -722,7 +722,7 @@ void Meta_entity_from_json_w_path() {
     test_str(e.name(), "ent");
 }
 
-void Meta_entity_from_json_w_ids() {
+void Meta_entity_from_json_w_ids(void) {
     flecs::world ecs;
 
     ecs.component<Position>()
@@ -739,7 +739,7 @@ void Meta_entity_from_json_w_ids() {
     test_assert(e.has<Position>());
 }
 
-void Meta_entity_from_json_w_values() {
+void Meta_entity_from_json_w_values(void) {
     flecs::world ecs;
 
     ecs.component<Position>()
@@ -760,7 +760,7 @@ void Meta_entity_from_json_w_values() {
     test_int(p->y, 20);
 }
 
-void Meta_ser_deser_std_string() {
+void Meta_ser_deser_std_string(void) {
     flecs::world world;
 
     world.component<std::string>()
@@ -773,7 +773,7 @@ void Meta_ser_deser_std_string() {
     test_str(world.to_json(&v).c_str(), "\"foo bar\"");
 }
 
-void Meta_ser_deser_std_vector_int() {
+void Meta_ser_deser_std_vector_int(void) {
     flecs::world world;
 
     world.component<std::vector<int>>()
@@ -786,7 +786,7 @@ void Meta_ser_deser_std_vector_int() {
     test_str(world.to_json(&v).c_str(), "[4, 5, 6]");
 }
 
-void Meta_ser_deser_std_vector_std_string() {
+void Meta_ser_deser_std_vector_std_string(void) {
     flecs::world world;
 
     world.component<std::string>()
@@ -808,7 +808,7 @@ struct CppTypes {
     std::vector<std::string> v;
 };
 
-void Meta_ser_deser_type_w_std_string_std_vector_std_string() {
+void Meta_ser_deser_type_w_std_string_std_vector_std_string(void) {
     flecs::world world;
 
     world.component<std::string>()
@@ -830,7 +830,7 @@ void Meta_ser_deser_type_w_std_string_std_vector_std_string() {
     test_str(world.to_json(&v).c_str(), "{\"s\":\"foo\", \"v\":[\"bar\"]}");
 }
 
-void Meta_ser_deser_flecs_entity() {
+void Meta_ser_deser_flecs_entity(void) {
     flecs::world world;
 
     flecs::entity e1 = world.entity("ent1");
@@ -848,7 +848,7 @@ struct CppEntity {
     flecs::entity entity;
 };
 
-void Meta_world_ser_deser_flecs_entity() {
+void Meta_world_ser_deser_flecs_entity(void) {
     flecs::world world;
 
     world.component<CppEntity>()
@@ -876,7 +876,7 @@ void Meta_world_ser_deser_flecs_entity() {
     }
 }
 
-void Meta_new_world_ser_deser_flecs_entity() {
+void Meta_new_world_ser_deser_flecs_entity(void) {
     flecs::world world;
 
     world.component<CppEntity>()
@@ -915,7 +915,7 @@ void Meta_new_world_ser_deser_flecs_entity() {
     }
 }
 
-void Meta_new_world_ser_deser_empty_flecs_entity() {
+void Meta_new_world_ser_deser_empty_flecs_entity(void) {
     flecs::world world;
 
     world.component<CppEntity>()
@@ -950,7 +950,7 @@ void Meta_new_world_ser_deser_empty_flecs_entity() {
     }
 }
 
-void Meta_opaque_vector_w_builder() {
+void Meta_opaque_vector_w_builder(void) {
     flecs::world world;
 
     world.component<std::vector<int>>().opaque<int>(world.vector<int>())
@@ -985,7 +985,7 @@ void Meta_opaque_vector_w_builder() {
     test_str(world.to_json(&v).c_str(), "[10, 20, 30]");
 }
 
-void Meta_deser_entity_w_path() {
+void Meta_deser_entity_w_path(void) {
     flecs::world world;
 
     flecs::entity ent = world.entity("ent");
@@ -1007,7 +1007,7 @@ struct EnumWithBitsStruct {
 	EnumWithBits bits = EnumWithBits::BitAll;
 };
 
-void Meta_enum_w_bits() {
+void Meta_enum_w_bits(void) {
     flecs::world ecs;
 
     flecs::log::set_level(-4);
@@ -1034,7 +1034,7 @@ void Meta_enum_w_bits() {
     test_str(s.c_str(), "");
 }
 
-void Meta_value_range() {
+void Meta_value_range(void) {
     flecs::world ecs;
 
     flecs::entity s = ecs.component<Position>()
@@ -1062,7 +1062,7 @@ void Meta_value_range() {
     }
 }
 
-void Meta_warning_range() {
+void Meta_warning_range(void) {
     flecs::world ecs;
 
     flecs::entity s = ecs.component<Position>()
@@ -1090,7 +1090,7 @@ void Meta_warning_range() {
     }
 }
 
-void Meta_error_range() {
+void Meta_error_range(void) {
     flecs::world ecs;
 
     flecs::entity s = ecs.component<Position>()
@@ -1118,7 +1118,7 @@ void Meta_error_range() {
     }
 }
 
-void Meta_struct_member_ptr() {
+void Meta_struct_member_ptr(void) {
     flecs::world ecs;
 
     struct Test {
@@ -1185,7 +1185,7 @@ void Meta_struct_member_ptr() {
     }
 }
 
-void Meta_struct_member_ptr_packed_struct() {
+void Meta_struct_member_ptr_packed_struct(void) {
     flecs::world ecs;
 
 #if defined(__GNUC__) || defined(__clang__)

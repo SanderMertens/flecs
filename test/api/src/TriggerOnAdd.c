@@ -1,6 +1,6 @@
 #include <api.h>
 
-void TriggerOnAdd_setup() {
+void TriggerOnAdd_setup(void) {
     ecs_log_set_level(-3);
 }
 
@@ -86,7 +86,7 @@ void Dummy(ecs_iter_t *it) {
     dummy_called = true;
 }
 
-void TriggerOnAdd_new_match_1_of_1() {
+void TriggerOnAdd_new_match_1_of_1(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -115,7 +115,7 @@ void TriggerOnAdd_new_match_1_of_1() {
     ecs_fini(world);
 }
 
-void TriggerOnAdd_new_match_1_of_2() {
+void TriggerOnAdd_new_match_1_of_2(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -145,7 +145,7 @@ void TriggerOnAdd_new_match_1_of_2() {
     ecs_fini(world);
 }
 
-void TriggerOnAdd_new_no_match_1() {
+void TriggerOnAdd_new_no_match_1(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -163,7 +163,7 @@ void TriggerOnAdd_new_no_match_1() {
     ecs_fini(world);
 }
 
-void TriggerOnAdd_add_match_1_of_1() {
+void TriggerOnAdd_add_match_1_of_1(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -196,7 +196,7 @@ void TriggerOnAdd_add_match_1_of_1() {
     ecs_fini(world);
 }
 
-void TriggerOnAdd_add_match_1_of_2() {
+void TriggerOnAdd_add_match_1_of_2(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -231,7 +231,7 @@ void TriggerOnAdd_add_match_1_of_2() {
     ecs_fini(world);
 }
 
-void TriggerOnAdd_add_no_match_1() {
+void TriggerOnAdd_add_no_match_1(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -253,7 +253,7 @@ void TriggerOnAdd_add_no_match_1() {
     ecs_fini(world);
 }
 
-void TriggerOnAdd_set_match_1_of_1() {
+void TriggerOnAdd_set_match_1_of_1(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -286,7 +286,7 @@ void TriggerOnAdd_set_match_1_of_1() {
     ecs_fini(world);
 }
 
-void TriggerOnAdd_set_no_match_1() {
+void TriggerOnAdd_set_no_match_1(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -308,7 +308,7 @@ void TriggerOnAdd_set_no_match_1() {
     ecs_fini(world);
 }
 
-void TriggerOnAdd_clone_match_1_of_1() {
+void TriggerOnAdd_clone_match_1_of_1(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -339,7 +339,7 @@ void TriggerOnAdd_clone_match_1_of_1() {
     ecs_fini(world);
 }
 
-void TriggerOnAdd_clone_match_1_of_2() {
+void TriggerOnAdd_clone_match_1_of_2(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -371,7 +371,7 @@ void TriggerOnAdd_clone_match_1_of_2() {
     ecs_fini(world);
 }
 
-void TriggerOnAdd_add_again_1() {
+void TriggerOnAdd_add_again_1(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -392,7 +392,7 @@ void TriggerOnAdd_add_again_1() {
     ecs_fini(world);
 }
 
-void TriggerOnAdd_set_again_1() {
+void TriggerOnAdd_set_again_1(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -413,7 +413,7 @@ void TriggerOnAdd_set_again_1() {
     ecs_fini(world);
 }
 
-void TriggerOnAdd_add_again_2() {
+void TriggerOnAdd_add_again_2(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -437,7 +437,7 @@ void TriggerOnAdd_add_again_2() {
     ecs_fini(world);
 }
 
-void TriggerOnAdd_new_w_count_match_1_of_1() {
+void TriggerOnAdd_new_w_count_match_1_of_1(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -494,7 +494,7 @@ void AddVelocity(ecs_iter_t *it) {
     }
 }
 
-void TriggerOnAdd_override_after_add_in_on_add() {
+void TriggerOnAdd_override_after_add_in_on_add(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -549,7 +549,7 @@ void OnSetPosition(ecs_iter_t *it) {
     }
 }
 
-void TriggerOnAdd_set_after_add_in_on_add() {
+void TriggerOnAdd_set_after_add_in_on_add(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -571,14 +571,14 @@ void TriggerOnAdd_set_after_add_in_on_add() {
 
     test_int(ctx.count, 0);
 
-    ecs_add(world, e, Position);
+    ecs_set(world, e, Position, {1, 2});
     test_assert( ecs_has(world, e, Position));
     test_assert( ecs_has(world, e, Velocity));
 
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.system, AddVelocity);
-    test_int(ctx.term_count, 2);
+    test_int(ctx.term_count, 1);
 
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], ecs_id(Position));
@@ -601,7 +601,7 @@ void AddAgain(ecs_iter_t *it) {
     }
 }
 
-void TriggerOnAdd_add_again_in_progress() {
+void TriggerOnAdd_add_again_in_progress(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -633,7 +633,7 @@ void AddMass(ecs_iter_t *it) {
     }
 }
 
-void TriggerOnAdd_add_in_progress_before_system_def() {
+void TriggerOnAdd_add_in_progress_before_system_def(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -681,7 +681,7 @@ void SystemB(ecs_iter_t *it) {
     }
 }
 
-void TriggerOnAdd_2_systems_w_table_creation() {
+void TriggerOnAdd_2_systems_w_table_creation(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -701,7 +701,7 @@ void NewWithPosition(ecs_iter_t *it) {
     test_assert(e != 0); 
 }
 
-void TriggerOnAdd_2_systems_w_table_creation_in_progress() {
+void TriggerOnAdd_2_systems_w_table_creation_in_progress(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -722,7 +722,7 @@ void TestContext(ecs_iter_t *it) {
     (*param) ++;
 }
 
-void TriggerOnAdd_sys_context() {
+void TriggerOnAdd_sys_context(void) {
     ecs_world_t *world = ecs_mini();
     int32_t param = 0;
 
@@ -739,7 +739,7 @@ void TriggerOnAdd_sys_context() {
     ecs_fini(world);
 }
 
-void TriggerOnAdd_get_sys_context_from_param() {
+void TriggerOnAdd_get_sys_context_from_param(void) {
     ecs_world_t *world = ecs_mini();
     int32_t param = 0;
 
@@ -762,7 +762,7 @@ void TriggerOnAdd_get_sys_context_from_param() {
     ecs_fini(world);
 }
 
-void TriggerOnAdd_remove_added_component_in_on_add_w_set() {
+void TriggerOnAdd_remove_added_component_in_on_add_w_set(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -789,7 +789,7 @@ void Add_3_to_current(ecs_iter_t *it) {
     }
 }
 
-void TriggerOnAdd_on_add_in_on_add() {
+void TriggerOnAdd_on_add_in_on_add(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -821,7 +821,7 @@ void TriggerOnAdd_on_add_in_on_add() {
     ecs_fini(world);
 }
 
-void TriggerOnAdd_on_remove_in_on_add() {
+void TriggerOnAdd_on_remove_in_on_add(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -850,7 +850,7 @@ void TriggerOnAdd_on_remove_in_on_add() {
     ecs_fini(world);
 }
 
-void TriggerOnAdd_on_set_in_on_add() {
+void TriggerOnAdd_on_set_in_on_add(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -894,7 +894,7 @@ void TriggerOnAdd_on_set_in_on_add() {
     ecs_fini(world);
 }
 
-void TriggerOnAdd_on_add_in_on_update() {
+void TriggerOnAdd_on_add_in_on_update(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -928,7 +928,7 @@ void TriggerOnAdd_on_add_in_on_update() {
     ecs_fini(world);
 }
 
-void TriggerOnAdd_emplace() {
+void TriggerOnAdd_emplace(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -950,7 +950,7 @@ void TriggerOnAdd_emplace() {
     ecs_fini(world);
 }
 
-void TriggerOnAdd_add_after_delete_trigger() {
+void TriggerOnAdd_add_after_delete_trigger(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -979,7 +979,7 @@ void TriggerOnAdd_add_after_delete_trigger() {
     ecs_fini(world);
 }
 
-void TriggerOnAdd_add_after_delete_wildcard_id_trigger() {
+void TriggerOnAdd_add_after_delete_wildcard_id_trigger(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);

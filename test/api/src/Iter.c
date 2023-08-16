@@ -1,6 +1,6 @@
 #include <api.h>
 
-void Iter_page_iter_0_0() {
+void Iter_page_iter_0_0(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Self);
@@ -73,7 +73,7 @@ void Iter_page_iter_0_0() {
     ecs_fini(world);
 }
 
-void Iter_page_iter_1_0() {
+void Iter_page_iter_1_0(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Self);
@@ -141,7 +141,7 @@ void Iter_page_iter_1_0() {
     ecs_fini(world);
 }
 
-void Iter_page_iter_0_1() {
+void Iter_page_iter_0_1(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Self);
@@ -185,7 +185,7 @@ void Iter_page_iter_0_1() {
     ecs_fini(world);
 }
 
-void Iter_page_iter_n_0() {
+void Iter_page_iter_n_0(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Self);
@@ -250,7 +250,7 @@ void Iter_page_iter_n_0() {
     ecs_fini(world);
 }
 
-void Iter_page_iter_0_n() {
+void Iter_page_iter_0_n(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Self);
@@ -295,7 +295,7 @@ void Iter_page_iter_0_n() {
     ecs_fini(world);
 }
 
-void Iter_page_iter_m_n() {
+void Iter_page_iter_m_n(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Self);
@@ -352,7 +352,7 @@ void Iter_page_iter_m_n() {
     ecs_fini(world);
 }
 
-void Iter_page_iter_skip_1_table() {
+void Iter_page_iter_skip_1_table(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Self);
@@ -409,7 +409,7 @@ void Iter_page_iter_skip_1_table() {
     ecs_fini(world);
 }
 
-void Iter_page_iter_skip_2_tables() {
+void Iter_page_iter_skip_2_tables(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Self);
@@ -455,7 +455,7 @@ void Iter_page_iter_skip_2_tables() {
     ecs_fini(world);
 }
 
-void Iter_worker_iter_1() {
+void Iter_worker_iter_1(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Self);
@@ -525,7 +525,7 @@ void Iter_worker_iter_1() {
     ecs_fini(world);
 }
 
-void Iter_worker_iter_2() {
+void Iter_worker_iter_2(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Self);
@@ -619,7 +619,7 @@ void Iter_worker_iter_2() {
     ecs_fini(world);
 }
 
-void Iter_worker_iter_3() {
+void Iter_worker_iter_3(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Self);
@@ -730,7 +730,7 @@ void Iter_worker_iter_3() {
     ecs_fini(world);
 }
 
-void Iter_worker_iter_4() {
+void Iter_worker_iter_4(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Self);
@@ -884,7 +884,7 @@ void Iter_worker_iter_4() {
     ecs_fini(world);
 }
 
-void Iter_paged_iter_w_shared_comp() {
+void Iter_paged_iter_w_shared_comp(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -979,7 +979,7 @@ void Iter_paged_iter_w_shared_comp() {
     ecs_fini(world);
 }
 
-void Iter_worker_iter_w_shared_comp() {
+void Iter_worker_iter_w_shared_comp(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Self);
@@ -1112,7 +1112,7 @@ void Iter_worker_iter_w_shared_comp() {
     ecs_fini(world);
 }
 
-void Iter_paged_iter_w_task_query() {
+void Iter_paged_iter_w_task_query(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Self);
@@ -1146,7 +1146,7 @@ void Iter_paged_iter_w_task_query() {
     ecs_fini(world);
 }
 
-void Iter_worker_iter_w_task_query() {
+void Iter_worker_iter_w_task_query(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Self);
@@ -1187,7 +1187,7 @@ void Iter_worker_iter_w_task_query() {
     ecs_fini(world);
 }
 
-void Iter_worker_iter_w_singleton() {
+void Iter_worker_iter_w_singleton(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Singleton);
@@ -1233,7 +1233,7 @@ void Iter_worker_iter_w_singleton() {
     ecs_fini(world);
 }
 
-void Iter_worker_iter_w_singleton_component() {
+void Iter_worker_iter_w_singleton_component(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -1301,7 +1301,7 @@ void Iter_worker_iter_w_singleton_component() {
     ecs_fini(world);
 }
 
-void Iter_worker_iter_w_singleton_instanced() {
+void Iter_worker_iter_w_singleton_instanced(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Singleton);
@@ -1351,7 +1351,7 @@ void Iter_worker_iter_w_singleton_instanced() {
     ecs_fini(world);
 }
 
-void Iter_worker_iter_w_singleton_component_instanced() {
+void Iter_worker_iter_w_singleton_component_instanced(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -1408,7 +1408,7 @@ void Iter_worker_iter_w_singleton_component_instanced() {
     ecs_fini(world);
 }
 
-void Iter_paged_iter_w_singleton() {
+void Iter_paged_iter_w_singleton(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Singleton);
@@ -1453,7 +1453,7 @@ void Iter_paged_iter_w_singleton() {
     ecs_fini(world);
 }
 
-void Iter_paged_iter_w_singleton_component() {
+void Iter_paged_iter_w_singleton_component(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -1517,7 +1517,7 @@ void Iter_paged_iter_w_singleton_component() {
     ecs_fini(world);
 }
 
-void Iter_paged_iter_w_singleton_instanced() {
+void Iter_paged_iter_w_singleton_instanced(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Singleton);
@@ -1567,7 +1567,7 @@ void Iter_paged_iter_w_singleton_instanced() {
     ecs_fini(world);
 }
 
-void Iter_paged_iter_w_singleton_component_instanced() {
+void Iter_paged_iter_w_singleton_component_instanced(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -1624,7 +1624,7 @@ void Iter_paged_iter_w_singleton_component_instanced() {
     ecs_fini(world);
 }
 
-void Iter_count() {
+void Iter_count(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -1650,7 +1650,7 @@ void Iter_count() {
     ecs_fini(world);
 }
 
-void Iter_interleaved_iter() {
+void Iter_interleaved_iter(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -1693,7 +1693,7 @@ void Iter_interleaved_iter() {
     ecs_fini(world);
 }
 
-void Iter_iter_restore_stack_iter() {
+void Iter_iter_restore_stack_iter(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -1716,7 +1716,7 @@ void Iter_iter_restore_stack_iter() {
     ecs_fini(world);
 }
 
-void Iter_get_first() {
+void Iter_get_first(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -1738,7 +1738,7 @@ void Iter_get_first() {
     ecs_fini(world);
 }
 
-void Iter_page_iter_w_only_tag() {
+void Iter_page_iter_w_only_tag(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -1763,7 +1763,7 @@ void Iter_page_iter_w_only_tag() {
     ecs_fini(world);
 }
 
-void Iter_worker_iter_w_only_tag() {
+void Iter_worker_iter_w_only_tag(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -1788,7 +1788,7 @@ void Iter_worker_iter_w_only_tag() {
     ecs_fini(world);
 }
 
-void Iter_page_iter_w_inout_none() {
+void Iter_page_iter_w_inout_none(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -1813,7 +1813,7 @@ void Iter_page_iter_w_inout_none() {
     ecs_fini(world);
 }
 
-void Iter_worker_iter_w_inout_none() {
+void Iter_worker_iter_w_inout_none(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -1838,7 +1838,7 @@ void Iter_worker_iter_w_inout_none() {
     ecs_fini(world);
 }
 
-void Iter_page_iter_w_ctx() {
+void Iter_page_iter_w_ctx(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -1865,7 +1865,7 @@ void Iter_page_iter_w_ctx() {
     ecs_fini(world);
 }
 
-void Iter_page_iter_w_binding_ctx() {
+void Iter_page_iter_w_binding_ctx(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -1892,7 +1892,7 @@ void Iter_page_iter_w_binding_ctx() {
     ecs_fini(world);
 }
 
-void Iter_worker_iter_w_ctx() {
+void Iter_worker_iter_w_ctx(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -1919,7 +1919,7 @@ void Iter_worker_iter_w_ctx() {
     ecs_fini(world);
 }
 
-void Iter_worker_iter_w_binding_ctx() {
+void Iter_worker_iter_w_binding_ctx(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -1946,7 +1946,7 @@ void Iter_worker_iter_w_binding_ctx() {
     ecs_fini(world);
 }
 
-void Iter_column_index_owned() {
+void Iter_column_index_owned(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -1990,7 +1990,7 @@ void Iter_column_index_owned() {
     ecs_fini(world);
 }
 
-void Iter_column_index_shared() {
+void Iter_column_index_shared(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -2036,7 +2036,7 @@ void Iter_column_index_shared() {
     ecs_fini(world);
 }
 
-void Iter_column_index_not() {
+void Iter_column_index_not(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -2078,7 +2078,7 @@ void Iter_column_index_not() {
     ecs_fini(world);
 }
 
-void Iter_page_iter_w_fini() {
+void Iter_page_iter_w_fini(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -2105,7 +2105,7 @@ void Iter_page_iter_w_fini() {
     ecs_fini(world);
 }
 
-void Iter_worker_iter_w_fini() {
+void Iter_worker_iter_w_fini(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -2131,7 +2131,7 @@ void Iter_worker_iter_w_fini() {
     ecs_fini(world);
 }
 
-void Iter_rule_page_iter_w_fini() {
+void Iter_rule_page_iter_w_fini(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -2157,7 +2157,7 @@ void Iter_rule_page_iter_w_fini() {
     ecs_fini(world);
 }
 
-void Iter_rule_worker_iter_w_fini() {
+void Iter_rule_worker_iter_w_fini(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);

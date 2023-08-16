@@ -1,6 +1,6 @@
 #include <cpp_api.h>
 
-void Table_each() {
+void Table_each(void) {
     flecs::world ecs;
 
     ecs.entity().add<Position>();
@@ -14,7 +14,7 @@ void Table_each() {
     test_assert(e2.has<Mass>());
 }
 
-void Table_each_locked() {
+void Table_each_locked(void) {
     install_test_abort();
 
     flecs::world ecs;
@@ -30,7 +30,7 @@ void Table_each_locked() {
     test_assert(false);
 }
 
-void Table_each_without_entity() {
+void Table_each_without_entity(void) {
     flecs::world ecs;
 
     ecs.entity().add<Position>();
@@ -44,7 +44,7 @@ void Table_each_without_entity() {
     test_assert(e2.has<Mass>());
 }
 
-void Table_each_without_entity_locked() {
+void Table_each_without_entity_locked(void) {
     install_test_abort();
 
     flecs::world ecs;
@@ -60,7 +60,7 @@ void Table_each_without_entity_locked() {
     test_assert(false);
 }
 
-void Table_iter() {
+void Table_iter(void) {
     flecs::world ecs;
 
     ecs.entity().add<Position>();
@@ -74,7 +74,7 @@ void Table_iter() {
     test_assert(e2.has<Mass>());
 }
 
-void Table_iter_locked() {
+void Table_iter_locked(void) {
     install_test_abort();
 
     flecs::world ecs;
@@ -90,7 +90,7 @@ void Table_iter_locked() {
     test_assert(false);
 }
 
-void Table_iter_without_components() {
+void Table_iter_without_components(void) {
     flecs::world ecs;
 
     ecs.entity().add<Position>();
@@ -104,7 +104,7 @@ void Table_iter_without_components() {
     test_assert(e2.has<Mass>());
 }
 
-void Table_iter_without_components_locked() {
+void Table_iter_without_components_locked(void) {
     install_test_abort();
 
     flecs::world ecs;
@@ -120,7 +120,7 @@ void Table_iter_without_components_locked() {
     test_assert(false);
 }
 
-void Table_multi_get() {
+void Table_multi_get(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity().add<Position>().add<Velocity>();
@@ -133,7 +133,7 @@ void Table_multi_get() {
     test_assert(e2.has<Mass>());
 }
 
-void Table_multi_get_locked() {
+void Table_multi_get_locked(void) {
     install_test_abort();
 
     flecs::world ecs;
@@ -149,7 +149,7 @@ void Table_multi_get_locked() {
     test_assert(false);
 }
 
-void Table_multi_set() {
+void Table_multi_set(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity().add<Position>().add<Velocity>();
@@ -162,7 +162,7 @@ void Table_multi_set() {
     test_assert(e2.has<Mass>());
 }
 
-void Table_multi_set_locked() {
+void Table_multi_set_locked(void) {
     install_test_abort();
 
     flecs::world ecs;
@@ -178,7 +178,7 @@ void Table_multi_set_locked() {
     test_assert(false);
 }
 
-void Table_count() {
+void Table_count(void) {
     flecs::world ecs;
 
     flecs::entity e = ecs.entity().set<Position>({10, 20});
@@ -189,7 +189,7 @@ void Table_count() {
     test_int(table.count(), 3);
 }
 
-void Table_has_id() {
+void Table_has_id(void) {
     flecs::world ecs;
     
     flecs::entity t1 = ecs.entity();
@@ -212,7 +212,7 @@ void Table_has_id() {
     test_assert(!table.has(t3));
 }
 
-void Table_has_T() {
+void Table_has_T(void) {
     flecs::world ecs;
 
     flecs::entity e = ecs.entity()
@@ -232,7 +232,7 @@ void Table_has_T() {
     test_assert(!table.has<Mass>());
 }
 
-void Table_has_pair_r_t() {
+void Table_has_pair_r_t(void) {
     flecs::world ecs;
     
     flecs::entity r = ecs.entity();
@@ -256,7 +256,7 @@ void Table_has_pair_r_t() {
     test_assert(!table.has(r, t3));
 }
 
-void Table_has_pair_R_t() {
+void Table_has_pair_R_t(void) {
     flecs::world ecs;
     
     struct R { };
@@ -280,7 +280,7 @@ void Table_has_pair_R_t() {
     test_assert(!table.has<R>(t3));
 }
 
-void Table_has_pair_R_T() {
+void Table_has_pair_R_T(void) {
     flecs::world ecs;
     
     struct R { };
@@ -304,7 +304,7 @@ void Table_has_pair_R_T() {
     test_assert((!table.has<R, T3>()));
 }
 
-void Table_get_id() {
+void Table_get_id(void) {
     flecs::world ecs;
 
     flecs::entity e = ecs.entity()
@@ -339,7 +339,7 @@ void Table_get_id() {
     test_int(v[2].y, 4);
 }
 
-void Table_get_T() {
+void Table_get_T(void) {
     flecs::world ecs;
 
     flecs::entity e = ecs.entity()
@@ -372,7 +372,7 @@ void Table_get_T() {
     test_int(v[2].y, 4);
 }
 
-void Table_get_pair_r_t() {
+void Table_get_pair_r_t(void) {
     flecs::world ecs;
 
     struct Tgt { };
@@ -409,7 +409,7 @@ void Table_get_pair_r_t() {
     test_int(v[2].y, 4);
 }
 
-void Table_get_pair_R_t() {
+void Table_get_pair_R_t(void) {
     flecs::world ecs;
 
     struct Tgt { };
@@ -446,7 +446,7 @@ void Table_get_pair_R_t() {
     test_int(v[2].y, 4);
 }
 
-void Table_get_pair_R_T() {
+void Table_get_pair_R_T(void) {
     flecs::world ecs;
 
     struct Tgt { };
@@ -483,7 +483,7 @@ void Table_get_pair_R_T() {
     test_int(v[2].y, 4);
 }
 
-void Table_range_get_id() {
+void Table_range_get_id(void) {
     flecs::world ecs;
 
     ecs.entity()
@@ -510,7 +510,7 @@ void Table_range_get_id() {
     test_int(v[0].y, 3);
 }
 
-void Table_range_get_T() {
+void Table_range_get_T(void) {
     flecs::world ecs;
 
     ecs.entity()
@@ -535,7 +535,7 @@ void Table_range_get_T() {
     test_int(v[0].y, 3);
 }
 
-void Table_range_get_pair_r_t() {
+void Table_range_get_pair_r_t(void) {
     flecs::world ecs;
 
     struct Tgt { };
@@ -564,7 +564,7 @@ void Table_range_get_pair_r_t() {
     test_int(v[0].y, 3);
 }
 
-void Table_range_get_pair_R_t() {
+void Table_range_get_pair_R_t(void) {
     flecs::world ecs;
 
     struct Tgt { };
@@ -591,7 +591,7 @@ void Table_range_get_pair_R_t() {
     test_int(v[0].y, 3);
 }
 
-void Table_range_get_pair_R_T() {
+void Table_range_get_pair_R_T(void) {
     flecs::world ecs;
 
     struct Tgt { };
@@ -618,7 +618,7 @@ void Table_range_get_pair_R_T() {
     test_int(v[0].y, 3);
 }
 
-void Table_get_depth() {
+void Table_get_depth(void) {
     flecs::world world;
 
     flecs::entity e1 = world.entity();
@@ -631,7 +631,7 @@ void Table_get_depth() {
     test_int(3, e4.table().depth(flecs::ChildOf));
 }
 
-void Table_get_depth_w_type() {
+void Table_get_depth_w_type(void) {
     flecs::world world;
 
     struct Rel { };
@@ -647,7 +647,7 @@ void Table_get_depth_w_type() {
     test_int(3, e4.table().depth<Rel>());
 }
 
-void Table_iter_type() {
+void Table_iter_type(void) {
     flecs::world ecs;
 
     auto e = ecs.entity()

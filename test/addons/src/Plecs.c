@@ -3,7 +3,7 @@
 #define HEAD
 #define LINE "\n"
 
-void Plecs_null() {
+void Plecs_null(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_plecs_from_str(world, NULL, NULL) == 0);
@@ -11,7 +11,7 @@ void Plecs_null() {
     ecs_fini(world);
 }
 
-void Plecs_empty() {
+void Plecs_empty(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_plecs_from_str(world, NULL, "") == 0);
@@ -19,7 +19,7 @@ void Plecs_empty() {
     ecs_fini(world);
 }
 
-void Plecs_space() {
+void Plecs_space(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_plecs_from_str(world, NULL, " ") == 0);
@@ -27,7 +27,7 @@ void Plecs_space() {
     ecs_fini(world);
 }
 
-void Plecs_space_newline() {
+void Plecs_space_newline(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_plecs_from_str(world, NULL, " \n \n") == 0);
@@ -35,7 +35,7 @@ void Plecs_space_newline() {
     ecs_fini(world);
 }
 
-void Plecs_two_empty_newlines() {
+void Plecs_two_empty_newlines(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_plecs_from_str(world, NULL, "\n\n") == 0);
@@ -43,7 +43,7 @@ void Plecs_two_empty_newlines() {
     ecs_fini(world);
 }
 
-void Plecs_three_empty_newlines() {
+void Plecs_three_empty_newlines(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_plecs_from_str(world, NULL, "\n\n\n") == 0);
@@ -51,7 +51,7 @@ void Plecs_three_empty_newlines() {
     ecs_fini(world);
 }
 
-void Plecs_newline_trailing_space() {
+void Plecs_newline_trailing_space(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_plecs_from_str(world, NULL, "\n ") == 0);
@@ -59,7 +59,7 @@ void Plecs_newline_trailing_space() {
     ecs_fini(world);
 }
 
-void Plecs_newline_trailing_spaces() {
+void Plecs_newline_trailing_spaces(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_plecs_from_str(world, NULL, "\n   ") == 0);
@@ -67,7 +67,7 @@ void Plecs_newline_trailing_spaces() {
     ecs_fini(world);
 }
 
-void Plecs_multiple_trailing_newlines() {
+void Plecs_multiple_trailing_newlines(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_plecs_from_str(world, NULL, "Foo\n\n\n") == 0);
@@ -80,7 +80,7 @@ void Plecs_multiple_trailing_newlines() {
     ecs_fini(world);
 }
 
-void Plecs_entity() {
+void Plecs_entity(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_plecs_from_str(world, NULL, "Foo") == 0);
@@ -93,7 +93,7 @@ void Plecs_entity() {
     ecs_fini(world);
 }
 
-void Plecs_entity_w_entity() {
+void Plecs_entity_w_entity(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_plecs_from_str(world, NULL, "Foo(Subj)") == 0);
@@ -111,7 +111,7 @@ void Plecs_entity_w_entity() {
     ecs_fini(world);
 }
 
-void Plecs_entity_w_pair() {
+void Plecs_entity_w_pair(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_plecs_from_str(world, NULL, "Rel(Subj, Obj)") == 0);
@@ -133,7 +133,7 @@ void Plecs_entity_w_pair() {
     ecs_fini(world);
 }
 
-void Plecs_2_entities() {
+void Plecs_2_entities(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_plecs_from_str(world, NULL, "Foo\nBar\n") == 0);
@@ -145,7 +145,7 @@ void Plecs_2_entities() {
     ecs_fini(world);
 }
 
-void Plecs_2_entities_w_entities() {
+void Plecs_2_entities_w_entities(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_plecs_from_str(world, NULL, "Foo(Subj_1)\nBar(Subj_2)\n") == 0);
@@ -172,7 +172,7 @@ void Plecs_2_entities_w_entities() {
     ecs_fini(world);
 }
 
-void Plecs_3_entities_w_pairs() {
+void Plecs_3_entities_w_pairs(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_plecs_from_str(world, NULL, 
@@ -215,7 +215,7 @@ void Plecs_3_entities_w_pairs() {
     ecs_fini(world);
 }
 
-void Plecs_line_comment() {
+void Plecs_line_comment(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_plecs_from_str(world, NULL, "// Foo(Bar)\n") == 0);
@@ -226,7 +226,7 @@ void Plecs_line_comment() {
     ecs_fini(world);
 }
 
-void Plecs_line_comment_before_stmt() {
+void Plecs_line_comment_before_stmt(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_plecs_from_str(world, NULL, "// Hello(World)\nFoo\n") == 0);
@@ -238,7 +238,7 @@ void Plecs_line_comment_before_stmt() {
     ecs_fini(world);
 }
 
-void Plecs_line_comment_after_stmt() {
+void Plecs_line_comment_after_stmt(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_plecs_from_str(world, NULL, "Foo\n// Hello(World)\n") == 0);
@@ -250,7 +250,7 @@ void Plecs_line_comment_after_stmt() {
     ecs_fini(world);
 }
 
-void Plecs_line_comment_between_stmt() {
+void Plecs_line_comment_between_stmt(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_plecs_from_str(world, NULL, "Foo\n// Hello(World)\nBar\n") == 0);
@@ -263,7 +263,7 @@ void Plecs_line_comment_between_stmt() {
     ecs_fini(world);
 }
 
-void Plecs_multiple_line_comment() {
+void Plecs_multiple_line_comment(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_plecs_from_str(world, NULL, "// Hello(World)\n// Boo(Baz)\nFoo") == 0);
@@ -277,7 +277,7 @@ void Plecs_multiple_line_comment() {
     ecs_fini(world);
 }
 
-void Plecs_line_comment_after_stmt_same_line() {
+void Plecs_line_comment_after_stmt_same_line(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_plecs_from_str(world, NULL, "Foo // Hello(World)\nBar\n") == 0);
@@ -290,7 +290,7 @@ void Plecs_line_comment_after_stmt_same_line() {
     ecs_fini(world);
 }
 
-void Plecs_comma_separated_pred() {
+void Plecs_comma_separated_pred(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_plecs_from_str(world, NULL, "Foo,Bar,Hello,Worlds") == 0);
@@ -303,7 +303,7 @@ void Plecs_comma_separated_pred() {
     ecs_fini(world);
 }
 
-void Plecs_comma_separated_pred_w_subj() {
+void Plecs_comma_separated_pred_w_subj(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_plecs_from_str(world, NULL, "Foo(Bar),Hello(Worlds)") == 0);
@@ -324,7 +324,7 @@ void Plecs_comma_separated_pred_w_subj() {
     ecs_fini(world);
 }
 
-void Plecs_comma_separated_pred_w_subj_obj() {
+void Plecs_comma_separated_pred_w_subj_obj(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_plecs_from_str(world, NULL, "Foo(Bar, Obj1),Hello(Worlds, Obj2)") == 0);
@@ -349,7 +349,7 @@ void Plecs_comma_separated_pred_w_subj_obj() {
     ecs_fini(world);
 }
 
-void Plecs_comma_separated_pred_trailing_comma() {
+void Plecs_comma_separated_pred_trailing_comma(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_plecs_from_str(world, NULL, "Foo,Bar,Hello,Worlds,") == 0);
@@ -362,7 +362,7 @@ void Plecs_comma_separated_pred_trailing_comma() {
     ecs_fini(world);
 }
 
-void Plecs_comma_separated_pred_trailing_comma_newline() {
+void Plecs_comma_separated_pred_trailing_comma_newline(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_plecs_from_str(world, NULL, "Foo,Bar,Hello,Worlds,\n") == 0);
@@ -375,7 +375,7 @@ void Plecs_comma_separated_pred_trailing_comma_newline() {
     ecs_fini(world);
 }
 
-void Plecs_comma_separated_pred_trailing_comma_newline_multiline() {
+void Plecs_comma_separated_pred_trailing_comma_newline_multiline(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_plecs_from_str(world, NULL, "Foo,Bar,\nHello,Worlds,") == 0);
@@ -388,7 +388,7 @@ void Plecs_comma_separated_pred_trailing_comma_newline_multiline() {
     ecs_fini(world);
 }
 
-void Plecs_hierarchy_1_child() {
+void Plecs_hierarchy_1_child(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -411,7 +411,7 @@ void Plecs_hierarchy_1_child() {
     ecs_fini(world);
 }
 
-void Plecs_hierarchy_2_children() {
+void Plecs_hierarchy_2_children(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -439,7 +439,7 @@ void Plecs_hierarchy_2_children() {
     ecs_fini(world);
 }
 
-void Plecs_hierarchy_1_child_same_line() {
+void Plecs_hierarchy_1_child_same_line(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -460,7 +460,7 @@ void Plecs_hierarchy_1_child_same_line() {
     ecs_fini(world);
 }
 
-void Plecs_hierarchy_2_children_same_line() {
+void Plecs_hierarchy_2_children_same_line(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -485,7 +485,7 @@ void Plecs_hierarchy_2_children_same_line() {
     ecs_fini(world);
 }
 
-void Plecs_entity_after_hierarchy() {
+void Plecs_entity_after_hierarchy(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -513,7 +513,7 @@ void Plecs_entity_after_hierarchy() {
     ecs_fini(world);
 }
 
-void Plecs_newline_before_scope_open() {
+void Plecs_newline_before_scope_open(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -538,7 +538,7 @@ void Plecs_newline_before_scope_open() {
     ecs_fini(world);
 }
 
-void Plecs_comment_before_scope_open() {
+void Plecs_comment_before_scope_open(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -566,7 +566,7 @@ void Plecs_comment_before_scope_open() {
     ecs_fini(world);
 }
 
-void Plecs_comment_after_newline_before_scope_open() {
+void Plecs_comment_after_newline_before_scope_open(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -595,7 +595,7 @@ void Plecs_comment_after_newline_before_scope_open() {
     ecs_fini(world);
 }
 
-void Plecs_hierarchy_2_levels() {
+void Plecs_hierarchy_2_levels(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -624,7 +624,7 @@ void Plecs_hierarchy_2_levels() {
     ecs_fini(world);
 }
 
-void Plecs_hierarchy_2_levels_2_subtrees() {
+void Plecs_hierarchy_2_levels_2_subtrees(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -665,7 +665,7 @@ void Plecs_hierarchy_2_levels_2_subtrees() {
     ecs_fini(world);
 }
 
-void Plecs_missing_end_of_scope() {
+void Plecs_missing_end_of_scope(void) {
     ecs_log_set_level(-4);
     ecs_world_t *world = ecs_init();
 
@@ -681,7 +681,7 @@ void Plecs_missing_end_of_scope() {
     ecs_fini(world);
 }
 
-void Plecs_missing_end_of_predicate_scope() {
+void Plecs_missing_end_of_predicate_scope(void) {
     ecs_log_set_level(-4);
     ecs_world_t *world = ecs_init();
 
@@ -697,7 +697,7 @@ void Plecs_missing_end_of_predicate_scope() {
     ecs_fini(world);
 }
 
-void Plecs_create_in_scope() {
+void Plecs_create_in_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Root);
@@ -727,7 +727,7 @@ void Plecs_create_in_scope() {
     ecs_fini(world);
 }
 
-void Plecs_hierarchy_w_pred_subj() {
+void Plecs_hierarchy_w_pred_subj(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -753,7 +753,7 @@ void Plecs_hierarchy_w_pred_subj() {
     ecs_fini(world);
 }
 
-void Plecs_hierarchy_custom_relation() {
+void Plecs_hierarchy_custom_relation(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -780,7 +780,7 @@ void Plecs_hierarchy_custom_relation() {
     ecs_fini(world);
 }
 
-void Plecs_hierarchy_custom_relation_2_levels() {
+void Plecs_hierarchy_custom_relation_2_levels(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -836,7 +836,7 @@ void Plecs_hierarchy_custom_relation_2_levels() {
     ecs_fini(world);
 }
 
-void Plecs_entity_after_hierarchy_custom_relation() {
+void Plecs_entity_after_hierarchy_custom_relation(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -867,7 +867,7 @@ void Plecs_entity_after_hierarchy_custom_relation() {
     ecs_fini(world);
 }
 
-void Plecs_entity_after_hierarchy_custom_relation_2_levels() {
+void Plecs_entity_after_hierarchy_custom_relation_2_levels(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -937,7 +937,7 @@ void Plecs_entity_after_hierarchy_custom_relation_2_levels() {
     ecs_fini(world);
 }
 
-void Plecs_hierarchy_custom_relation_apply_to_object() {
+void Plecs_hierarchy_custom_relation_apply_to_object(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -966,7 +966,7 @@ void Plecs_hierarchy_custom_relation_apply_to_object() {
     ecs_fini(world);
 }
 
-void Plecs_hierarchy_custom_relation_apply_to_object_2_levels() {
+void Plecs_hierarchy_custom_relation_apply_to_object_2_levels(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1002,7 +1002,7 @@ void Plecs_hierarchy_custom_relation_apply_to_object_2_levels() {
     ecs_fini(world);
 }
 
-void Plecs_pred_scope() {
+void Plecs_pred_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1024,7 +1024,7 @@ void Plecs_pred_scope() {
     ecs_fini(world);
 }
 
-void Plecs_pred_scope_2_levels() {
+void Plecs_pred_scope_2_levels(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1055,7 +1055,7 @@ void Plecs_pred_scope_2_levels() {
     ecs_fini(world);
 }
 
-void Plecs_pred_scope_inside_with() {
+void Plecs_pred_scope_inside_with(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1084,7 +1084,7 @@ void Plecs_pred_scope_inside_with() {
     ecs_fini(world);
 }
 
-void Plecs_pred_scope_nested_w_subj_scope() {
+void Plecs_pred_scope_nested_w_subj_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1114,7 +1114,7 @@ void Plecs_pred_scope_nested_w_subj_scope() {
 }
 
 
-void Plecs_with_tag() {
+void Plecs_with_tag(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1135,7 +1135,7 @@ void Plecs_with_tag() {
     ecs_fini(world);
 }
 
-void Plecs_with_tag_2_entities() {
+void Plecs_with_tag_2_entities(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1160,7 +1160,7 @@ void Plecs_with_tag_2_entities() {
     ecs_fini(world);
 }
 
-void Plecs_with_tag_same_line() {
+void Plecs_with_tag_same_line(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1179,7 +1179,7 @@ void Plecs_with_tag_same_line() {
     ecs_fini(world);
 }
 
-void Plecs_with_tag_2_entities_same_line() {
+void Plecs_with_tag_2_entities_same_line(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1201,7 +1201,7 @@ void Plecs_with_tag_2_entities_same_line() {
     ecs_fini(world);
 }
 
-void Plecs_with_tag_2_levels() {
+void Plecs_with_tag_2_levels(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1227,7 +1227,7 @@ void Plecs_with_tag_2_levels() {
     ecs_fini(world);
 }
 
-void Plecs_with_tag_2_levels_2_subtrees() {
+void Plecs_with_tag_2_levels_2_subtrees(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1273,7 +1273,7 @@ void Plecs_with_tag_2_levels_2_subtrees() {
     ecs_fini(world);
 }
 
-void Plecs_with_n_tags() {
+void Plecs_with_n_tags(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1303,7 +1303,7 @@ void Plecs_with_n_tags() {
     ecs_fini(world);
 }
 
-void Plecs_with_n_tags_2_levels() {
+void Plecs_with_n_tags_2_levels(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1399,7 +1399,7 @@ void Plecs_with_n_tags_2_levels() {
     ecs_fini(world);
 }
 
-void Plecs_with_after_scope() {
+void Plecs_with_after_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1431,7 +1431,7 @@ void Plecs_with_after_scope() {
     ecs_fini(world);
 }
 
-void Plecs_with_after_with() {
+void Plecs_with_after_with(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1463,7 +1463,7 @@ void Plecs_with_after_with() {
     ecs_fini(world);
 }
 
-void Plecs_scope_inside_with_inside_scope() {
+void Plecs_scope_inside_with_inside_scope(void) {
     ecs_world_t *world = ecs_init();
     
     const char *expr =
@@ -1507,7 +1507,7 @@ void Plecs_scope_inside_with_inside_scope() {
     ecs_fini(world);
 }
 
-void Plecs_with_inside_scope() {
+void Plecs_with_inside_scope(void) {
     ecs_world_t *world = ecs_init();
     
     const char *expr =
@@ -1536,7 +1536,7 @@ void Plecs_with_inside_scope() {
     ecs_fini(world);
 }
 
-void Plecs_assignment_w_1() {
+void Plecs_assignment_w_1(void) {
     ecs_world_t *world = ecs_init();
     
     const char *expr =
@@ -1555,7 +1555,7 @@ void Plecs_assignment_w_1() {
     ecs_fini(world);
 }
 
-void Plecs_assignment_w_2() {
+void Plecs_assignment_w_2(void) {
     ecs_world_t *world = ecs_init();
     
     const char *expr =
@@ -1577,7 +1577,7 @@ void Plecs_assignment_w_2() {
     ecs_fini(world);
 }
 
-void Plecs_assignment_w_pair() {
+void Plecs_assignment_w_pair(void) {
     ecs_world_t *world = ecs_init();
     
     const char *expr =
@@ -1599,7 +1599,7 @@ void Plecs_assignment_w_pair() {
     ecs_fini(world);
 }
 
-void Plecs_assignment_w_invalid_subject() {
+void Plecs_assignment_w_invalid_subject(void) {
     ecs_log_set_level(-4);
 
     ecs_world_t *world = ecs_init();
@@ -1612,7 +1612,7 @@ void Plecs_assignment_w_invalid_subject() {
     ecs_fini(world);
 }
 
-void Plecs_assignment_w_invalid_with() {
+void Plecs_assignment_w_invalid_with(void) {
     ecs_log_set_level(-4);
     
     ecs_world_t *world = ecs_init();
@@ -1625,7 +1625,7 @@ void Plecs_assignment_w_invalid_with() {
     ecs_fini(world);
 }
 
-void Plecs_inherit_w_colon() {    
+void Plecs_inherit_w_colon(void) {    
     ecs_world_t *world = ecs_init();
     
     const char *expr =
@@ -1644,7 +1644,7 @@ void Plecs_inherit_w_colon() {
     ecs_fini(world);
 }
 
-void Plecs_inherit_w_colon_w_scope() {
+void Plecs_inherit_w_colon_w_scope(void) {
     ecs_world_t *world = ecs_init();
     
     const char *expr =
@@ -1665,7 +1665,7 @@ void Plecs_inherit_w_colon_w_scope() {
     ecs_fini(world);
 }
 
-void Plecs_inherit_w_colon_w_assign() {
+void Plecs_inherit_w_colon_w_assign(void) {
     ecs_world_t *world = ecs_init();
     
     const char *expr =
@@ -1686,7 +1686,7 @@ void Plecs_inherit_w_colon_w_assign() {
     ecs_fini(world);
 }
 
-void Plecs_assign_component_value() {
+void Plecs_assign_component_value(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -1715,7 +1715,7 @@ void Plecs_assign_component_value() {
     ecs_fini(world);
 }
 
-void Plecs_assign_2_component_values() {
+void Plecs_assign_2_component_values(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -1763,7 +1763,7 @@ void Plecs_assign_2_component_values() {
     ecs_fini(world);
 }
 
-void Plecs_assign_component_value_in_assign_scope() {
+void Plecs_assign_component_value_in_assign_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -1795,7 +1795,7 @@ void Plecs_assign_component_value_in_assign_scope() {
     ecs_fini(world);
 }
 
-void Plecs_assign_2_component_values_in_assign_scope() {
+void Plecs_assign_2_component_values_in_assign_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -1845,7 +1845,7 @@ void Plecs_assign_2_component_values_in_assign_scope() {
     ecs_fini(world);
 }
 
-void Plecs_type_and_assign_in_plecs() {
+void Plecs_type_and_assign_in_plecs(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1875,7 +1875,7 @@ void Plecs_type_and_assign_in_plecs() {
     ecs_fini(world);
 }
 
-void Plecs_type_and_assign_in_plecs_w_2_members() {
+void Plecs_type_and_assign_in_plecs_w_2_members(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1905,7 +1905,7 @@ void Plecs_type_and_assign_in_plecs_w_2_members() {
     ecs_fini(world);
 }
 
-void Plecs_type_and_assign_in_plecs_w_3_members() {
+void Plecs_type_and_assign_in_plecs_w_3_members(void) {
     ecs_world_t *world = ecs_init();
 
     typedef struct {
@@ -1943,7 +1943,7 @@ void Plecs_type_and_assign_in_plecs_w_3_members() {
     ecs_fini(world);
 }
 
-void Plecs_type_and_assign_in_plecs_w_enum() {
+void Plecs_type_and_assign_in_plecs_w_enum(void) {
     ecs_world_t *world = ecs_init();
 
     typedef enum {
@@ -1985,7 +1985,7 @@ void Plecs_type_and_assign_in_plecs_w_enum() {
     ecs_fini(world);
 }
 
-void Plecs_type_and_assign_in_plecs_w_enum_using_meta() {
+void Plecs_type_and_assign_in_plecs_w_enum_using_meta(void) {
     ecs_world_t *world = ecs_init();
 
     typedef enum {
@@ -2037,7 +2037,7 @@ void Plecs_type_and_assign_in_plecs_w_enum_using_meta() {
     ecs_fini(world);
 }
 
-void Plecs_type_and_assign_in_plecs_w_enum_primitive_using_meta() {
+void Plecs_type_and_assign_in_plecs_w_enum_primitive_using_meta(void) {
     ecs_world_t *world = ecs_init();
 
     typedef enum {
@@ -2081,7 +2081,7 @@ void Plecs_type_and_assign_in_plecs_w_enum_primitive_using_meta() {
 }
 
 
-void Plecs_type_and_assign_in_plecs_w_enum_primitive_and_struct() {
+void Plecs_type_and_assign_in_plecs_w_enum_primitive_and_struct(void) {
     ecs_world_t *world = ecs_init();
 
     typedef enum {
@@ -2143,7 +2143,7 @@ void Plecs_type_and_assign_in_plecs_w_enum_primitive_and_struct() {
     ecs_fini(world);
 }
 
-void Plecs_type_and_assign_in_plecs_nested_member() {
+void Plecs_type_and_assign_in_plecs_nested_member(void) {
     ecs_world_t *world = ecs_init();
 
     typedef struct {
@@ -2196,7 +2196,7 @@ void Plecs_type_and_assign_in_plecs_nested_member() {
     ecs_fini(world);
 }
 
-void Plecs_dot_assign_nested_member() {
+void Plecs_dot_assign_nested_member(void) {
     ecs_world_t *world = ecs_init();
 
     typedef struct {
@@ -2249,7 +2249,7 @@ void Plecs_dot_assign_nested_member() {
     ecs_fini(world);
 }
 
-void Plecs_dot_assign_binary_expr() {
+void Plecs_dot_assign_binary_expr(void) {
     ecs_world_t *world = ecs_init();
 
     typedef struct {
@@ -2302,7 +2302,7 @@ void Plecs_dot_assign_binary_expr() {
     ecs_fini(world);
 }
 
-void Plecs_open_scope_no_parent() {
+void Plecs_open_scope_no_parent(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2332,7 +2332,7 @@ void Plecs_open_scope_no_parent() {
     ecs_fini(world);
 }
 
-void Plecs_create_subject_in_root_scope_w_resolvable_id() {
+void Plecs_create_subject_in_root_scope_w_resolvable_id(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2346,7 +2346,7 @@ void Plecs_create_subject_in_root_scope_w_resolvable_id() {
     ecs_fini(world);
 }
 
-void Plecs_create_subject_in_scope_w_resolvable_id() {
+void Plecs_create_subject_in_scope_w_resolvable_id(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2367,7 +2367,7 @@ void Plecs_create_subject_in_scope_w_resolvable_id() {
     ecs_fini(world);
 }
 
-void Plecs_create_subject_in_scope_w_resolvable_id_using() {
+void Plecs_create_subject_in_scope_w_resolvable_id_using(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2398,7 +2398,7 @@ void Plecs_create_subject_in_scope_w_resolvable_id_using() {
     ecs_fini(world);
 }
 
-void Plecs_using_scope() {
+void Plecs_using_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2432,7 +2432,7 @@ void Plecs_using_scope() {
     ecs_fini(world);
 }
 
-void Plecs_using_nested_scope() {
+void Plecs_using_nested_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2471,7 +2471,7 @@ void Plecs_using_nested_scope() {
     ecs_fini(world);
 }
 
-void Plecs_using_nested_in_scope() {
+void Plecs_using_nested_in_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2511,7 +2511,7 @@ void Plecs_using_nested_in_scope() {
     ecs_fini(world);
 }
 
-void Plecs_using_with_scope() {
+void Plecs_using_with_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2551,7 +2551,7 @@ void Plecs_using_with_scope() {
     ecs_fini(world);
 }
 
-void Plecs_using_w_entity_ref_in_value_2_members() {
+void Plecs_using_w_entity_ref_in_value_2_members(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2583,7 +2583,7 @@ void Plecs_using_w_entity_ref_in_value_2_members() {
     ecs_fini(world);
 }
 
-void Plecs_using_w_entity_ref_in_value_3_members() {
+void Plecs_using_w_entity_ref_in_value_3_members(void) {
     ecs_world_t *world = ecs_init();
 
     typedef struct {
@@ -2623,7 +2623,7 @@ void Plecs_using_w_entity_ref_in_value_3_members() {
     ecs_fini(world);
 }
 
-void Plecs_2_using_scope() {
+void Plecs_2_using_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2668,7 +2668,7 @@ void Plecs_2_using_scope() {
     ecs_fini(world);
 }
 
-void Plecs_2_using_in_different_scope() {
+void Plecs_2_using_in_different_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2744,7 +2744,7 @@ void Plecs_2_using_in_different_scope() {
     ecs_fini(world);
 }
 
-void Plecs_assignment_to_non_component() {
+void Plecs_assignment_to_non_component(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2756,7 +2756,7 @@ void Plecs_assignment_to_non_component() {
     ecs_fini(world);
 }
 
-void Plecs_struct_w_member_w_assignment_to_nothing() {
+void Plecs_struct_w_member_w_assignment_to_nothing(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2770,7 +2770,7 @@ void Plecs_struct_w_member_w_assignment_to_nothing() {
     ecs_fini(world);
 }
 
-void Plecs_struct_w_member_w_assignment_to_empty_scope() {
+void Plecs_struct_w_member_w_assignment_to_empty_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2784,7 +2784,7 @@ void Plecs_struct_w_member_w_assignment_to_empty_scope() {
     ecs_fini(world);
 }
 
-void Plecs_scope_after_assign() {
+void Plecs_scope_after_assign(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -2806,7 +2806,7 @@ void Plecs_scope_after_assign() {
     ecs_fini(world);
 }
 
-void Plecs_assign_after_inherit() {
+void Plecs_assign_after_inherit(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -2843,7 +2843,7 @@ void Plecs_assign_after_inherit() {
     ecs_fini(world);
 }
 
-void Plecs_multiple_assignments_single_line() {
+void Plecs_multiple_assignments_single_line(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -2887,7 +2887,7 @@ void Plecs_multiple_assignments_single_line() {
     ecs_fini(world);
 }
 
-void Plecs_2_stmts_in_scope_w_no_parent() {
+void Plecs_2_stmts_in_scope_w_no_parent(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2913,7 +2913,7 @@ void Plecs_2_stmts_in_scope_w_no_parent() {
     ecs_fini(world);
 }
 
-void Plecs_scope_after_assign_1_tag() {
+void Plecs_scope_after_assign_1_tag(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2927,7 +2927,7 @@ void Plecs_scope_after_assign_1_tag() {
     ecs_fini(world);
 }
 
-void Plecs_scope_after_assign_2_tags() {
+void Plecs_scope_after_assign_2_tags(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2941,7 +2941,7 @@ void Plecs_scope_after_assign_2_tags() {
     ecs_fini(world);
 }
 
-void Plecs_empty_scope_after_using() {
+void Plecs_empty_scope_after_using(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2959,7 +2959,7 @@ void Plecs_empty_scope_after_using() {
     ecs_fini(world);
 }
 
-void Plecs_invalid_nested_assignment() {
+void Plecs_invalid_nested_assignment(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2972,7 +2972,7 @@ void Plecs_invalid_nested_assignment() {
     ecs_fini(world);
 }
 
-void Plecs_invalid_partial_pair_assignment() {
+void Plecs_invalid_partial_pair_assignment(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2984,7 +2984,7 @@ void Plecs_invalid_partial_pair_assignment() {
     ecs_fini(world);
 }
 
-void Plecs_empty_assignment() {
+void Plecs_empty_assignment(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2996,7 +2996,7 @@ void Plecs_empty_assignment() {
     ecs_fini(world);
 }
 
-void Plecs_empty_assignment_before_end_of_scope() {
+void Plecs_empty_assignment_before_end_of_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3008,7 +3008,7 @@ void Plecs_empty_assignment_before_end_of_scope() {
     ecs_fini(world);
 }
 
-void Plecs_assign_tag_to_parent() {
+void Plecs_assign_tag_to_parent(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3035,7 +3035,7 @@ void Plecs_assign_tag_to_parent() {
     ecs_fini(world);
 }
 
-void Plecs_assign_component_to_parent() {
+void Plecs_assign_component_to_parent(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -3073,7 +3073,7 @@ void Plecs_assign_component_to_parent() {
     ecs_fini(world);
 }
 
-void Plecs_assign_to_parent_pair_w_new_entities_in_scope() {
+void Plecs_assign_to_parent_pair_w_new_entities_in_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3098,7 +3098,7 @@ void Plecs_assign_to_parent_pair_w_new_entities_in_scope() {
     ecs_fini(world);
 }
 
-void Plecs_assign_to_parent_pair_w_existing_entities_in_scope() {
+void Plecs_assign_to_parent_pair_w_existing_entities_in_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3124,7 +3124,7 @@ void Plecs_assign_to_parent_pair_w_existing_entities_in_scope() {
     ecs_fini(world);
 }
 
-void Plecs_default_child_component() {
+void Plecs_default_child_component(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3160,7 +3160,7 @@ void Plecs_default_child_component() {
     ecs_fini(world);
 }
 
-void Plecs_default_child_component_w_assign() {
+void Plecs_default_child_component_w_assign(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -3202,7 +3202,7 @@ void Plecs_default_child_component_w_assign() {
     ecs_fini(world);
 }
 
-void Plecs_struct_type_w_default_child_component() {
+void Plecs_struct_type_w_default_child_component(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3233,7 +3233,7 @@ void Plecs_struct_type_w_default_child_component() {
     ecs_fini(world);
 }
 
-void Plecs_struct_type_w_default_child_component_nested_member() {
+void Plecs_struct_type_w_default_child_component_nested_member(void) {
     ecs_world_t *world = ecs_init();
 
     typedef struct {
@@ -3284,7 +3284,7 @@ void Plecs_struct_type_w_default_child_component_nested_member() {
     ecs_fini(world);
 }
 
-void Plecs_enum_type_w_default_child_component() {
+void Plecs_enum_type_w_default_child_component(void) {
     ecs_world_t *world = ecs_init();
 
     typedef enum {
@@ -3317,7 +3317,7 @@ void Plecs_enum_type_w_default_child_component() {
     ecs_fini(world);
 }
 
-void Plecs_default_type_from_with() {
+void Plecs_default_type_from_with(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -3355,7 +3355,7 @@ void Plecs_default_type_from_with() {
     ecs_fini(world);
 }
 
-void Plecs_scope_w_1_subj_and_2_pairs() {
+void Plecs_scope_w_1_subj_and_2_pairs(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3384,7 +3384,7 @@ void Plecs_scope_w_1_subj_and_2_pairs() {
     ecs_fini(world);
 }
 
-void Plecs_inherit_from_multiple() {
+void Plecs_inherit_from_multiple(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3406,7 +3406,7 @@ void Plecs_inherit_from_multiple() {
     ecs_fini(world);
 }
 
-void Plecs_assign_pair_component() {
+void Plecs_assign_pair_component(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3439,7 +3439,7 @@ void Plecs_assign_pair_component() {
     ecs_fini(world);
 }
 
-void Plecs_assign_pair_component_in_scope() {
+void Plecs_assign_pair_component_in_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3484,7 +3484,7 @@ void Plecs_assign_pair_component_in_scope() {
     ecs_fini(world);
 }
 
-void Plecs_set_entity_names() {
+void Plecs_set_entity_names(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3519,7 +3519,7 @@ void Plecs_set_entity_names() {
     ecs_fini(world);
 }
 
-void Plecs_oneof() {
+void Plecs_oneof(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3548,7 +3548,7 @@ void Plecs_oneof() {
     ecs_fini(world);
 }
 
-void Plecs_invalid_oneof() {
+void Plecs_invalid_oneof(void) {
     ecs_log_set_level(-4);
     
     ecs_world_t *world = ecs_init();
@@ -3576,7 +3576,7 @@ void Plecs_invalid_oneof() {
     ecs_fini(world);
 }
 
-void Plecs_brief_annotation() {
+void Plecs_brief_annotation(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3604,7 +3604,7 @@ void Plecs_brief_annotation() {
     ecs_fini(world);
 }
 
-void Plecs_name_annotation() {
+void Plecs_name_annotation(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3632,7 +3632,7 @@ void Plecs_name_annotation() {
     ecs_fini(world);
 }
 
-void Plecs_link_annotation() {
+void Plecs_link_annotation(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3660,7 +3660,7 @@ void Plecs_link_annotation() {
     ecs_fini(world);
 }
 
-void Plecs_color_annotation() {
+void Plecs_color_annotation(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3688,7 +3688,7 @@ void Plecs_color_annotation() {
     ecs_fini(world);
 }
 
-void Plecs_multiple_annotations() {
+void Plecs_multiple_annotations(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3724,7 +3724,7 @@ void Plecs_multiple_annotations() {
     ecs_fini(world);
 }
 
-void Plecs_annotation_w_trailing_space() {
+void Plecs_annotation_w_trailing_space(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3745,7 +3745,7 @@ typedef struct String {
     char *value;
 } String;
 
-void Plecs_multiline_string() {
+void Plecs_multiline_string(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(String) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -3783,7 +3783,7 @@ void Plecs_multiline_string() {
     ecs_fini(world);
 }
 
-void Plecs_unterminated_multiline_string() {
+void Plecs_unterminated_multiline_string(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -3806,7 +3806,7 @@ void Plecs_unterminated_multiline_string() {
     ecs_fini(world);
 }
 
-void Plecs_annotate_declaration() {
+void Plecs_annotate_declaration(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3830,7 +3830,7 @@ void Plecs_annotate_declaration() {
     ecs_fini(world);
 }
 
-void Plecs_declaration_w_underscore_name() {
+void Plecs_declaration_w_underscore_name(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3850,7 +3850,7 @@ void Plecs_declaration_w_underscore_name() {
     ecs_fini(world);
 }
 
-void Plecs_anonymous_entity() {
+void Plecs_anonymous_entity(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3872,7 +3872,7 @@ void Plecs_anonymous_entity() {
     ecs_fini(world);
 }
 
-void Plecs_anonymous_entity_in_scope() {
+void Plecs_anonymous_entity_in_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3899,7 +3899,7 @@ void Plecs_anonymous_entity_in_scope() {
     ecs_fini(world);
 }
 
-void Plecs_anonymous_declaration() {
+void Plecs_anonymous_declaration(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3921,7 +3921,7 @@ void Plecs_anonymous_declaration() {
     ecs_fini(world);
 }
 
-void Plecs_const_var_int() {
+void Plecs_const_var_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -3952,7 +3952,7 @@ void Plecs_const_var_int() {
     ecs_fini(world);
 }
 
-void Plecs_const_var_float() {
+void Plecs_const_var_float(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -3983,7 +3983,7 @@ void Plecs_const_var_float() {
     ecs_fini(world);
 }
 
-void Plecs_const_var_bool() {
+void Plecs_const_var_bool(void) {
     ecs_world_t *world = ecs_init();
 
     typedef struct Bools {
@@ -4019,7 +4019,7 @@ void Plecs_const_var_bool() {
     ecs_fini(world);
 }
 
-void Plecs_const_var_string() {
+void Plecs_const_var_string(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -4055,7 +4055,7 @@ typedef struct Line {
     Position stop;
 } Line;
 
-void Plecs_const_var_struct() {
+void Plecs_const_var_struct(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -4096,7 +4096,7 @@ void Plecs_const_var_struct() {
     ecs_fini(world);
 }
 
-void Plecs_const_var_redeclare() {
+void Plecs_const_var_redeclare(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -4109,7 +4109,7 @@ void Plecs_const_var_redeclare() {
     ecs_fini(world);
 }
 
-void Plecs_const_var_scoped() {
+void Plecs_const_var_scoped(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -4165,7 +4165,7 @@ void Plecs_const_var_scoped() {
     ecs_fini(world);
 }
 
-void Plecs_assign_component_from_var() {
+void Plecs_assign_component_from_var(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -4197,7 +4197,7 @@ void Plecs_assign_component_from_var() {
     ecs_fini(world);
 }
 
-void Plecs_assign_component_from_var_in_scope() {
+void Plecs_assign_component_from_var_in_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -4231,7 +4231,7 @@ void Plecs_assign_component_from_var_in_scope() {
     ecs_fini(world);
 }
 
-void Plecs_scope_w_component_after_const_var() {
+void Plecs_scope_w_component_after_const_var(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -4262,7 +4262,7 @@ void Plecs_scope_w_component_after_const_var() {
     ecs_fini(world);
 }
 
-void Plecs_component_after_const_add_expr() {
+void Plecs_component_after_const_add_expr(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -4293,7 +4293,7 @@ void Plecs_component_after_const_add_expr() {
     ecs_fini(world);
 }
 
-void Plecs_component_after_const_sub_expr() {
+void Plecs_component_after_const_sub_expr(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -4324,7 +4324,7 @@ void Plecs_component_after_const_sub_expr() {
     ecs_fini(world);
 }
 
-void Plecs_component_after_const_mul_expr() {
+void Plecs_component_after_const_mul_expr(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -4355,7 +4355,7 @@ void Plecs_component_after_const_mul_expr() {
     ecs_fini(world);
 }
 
-void Plecs_component_after_const_div_expr() {
+void Plecs_component_after_const_div_expr(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -4386,7 +4386,7 @@ void Plecs_component_after_const_div_expr() {
     ecs_fini(world);
 }
 
-void Plecs_component_after_const_paren_expr() {
+void Plecs_component_after_const_paren_expr(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -4419,7 +4419,7 @@ void Plecs_component_after_const_paren_expr() {
     ecs_fini(world);
 }
 
-void Plecs_parse_with() {
+void Plecs_parse_with(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -4449,7 +4449,7 @@ void Plecs_parse_with() {
     ecs_fini(world);
 }
 
-void Plecs_parse_with_w_with() {
+void Plecs_parse_with_w_with(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, TagA);
@@ -4487,7 +4487,7 @@ void Plecs_parse_with_w_with() {
     ecs_fini(world);
 }
 
-void Plecs_parse_with_w_tag() {
+void Plecs_parse_with_w_tag(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, TagA);
@@ -4526,7 +4526,7 @@ void Plecs_parse_with_w_tag() {
     ecs_fini(world);
 }
 
-void Plecs_parse_with_value() {
+void Plecs_parse_with_value(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -4570,7 +4570,7 @@ void Plecs_parse_with_value() {
     ecs_fini(world);
 }
 
-void Plecs_parse_with_2_values() {
+void Plecs_parse_with_2_values(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -4635,7 +4635,7 @@ void Plecs_parse_with_2_values() {
     ecs_fini(world);
 }
 
-void Plecs_parse_with_2_nested_values() {
+void Plecs_parse_with_2_nested_values(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -4702,7 +4702,7 @@ void Plecs_parse_with_2_nested_values() {
     ecs_fini(world);
 }
 
-void Plecs_parse_with_var() {
+void Plecs_parse_with_var(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -4746,7 +4746,7 @@ void Plecs_parse_with_var() {
     ecs_fini(world);
 }
 
-void Plecs_parse_with_2_vars() {
+void Plecs_parse_with_2_vars(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -4813,7 +4813,7 @@ void Plecs_parse_with_2_vars() {
     ecs_fini(world);
 }
 
-void Plecs_parse_with_2_nested_vars() {
+void Plecs_parse_with_2_nested_vars(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -4882,7 +4882,7 @@ void Plecs_parse_with_2_nested_vars() {
     ecs_fini(world);
 }
 
-void Plecs_parse_with_var_in_scope() {
+void Plecs_parse_with_var_in_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -4931,7 +4931,7 @@ void Plecs_parse_with_var_in_scope() {
 }
 
 
-void Plecs_assign_const_w_expr() {
+void Plecs_assign_const_w_expr(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -4960,7 +4960,7 @@ void Plecs_assign_const_w_expr() {
     ecs_fini(world);
 }
 
-void Plecs_const_w_type() {
+void Plecs_const_w_type(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -4989,7 +4989,7 @@ void Plecs_const_w_type() {
     ecs_fini(world);
 }
 
-void Plecs_assembly_no_scope() {
+void Plecs_assembly_no_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -5013,7 +5013,7 @@ void Plecs_assembly_no_scope() {
     ecs_fini(world);
 }
 
-void Plecs_assembly_empty() {
+void Plecs_assembly_empty(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -5036,7 +5036,7 @@ void Plecs_assembly_empty() {
     ecs_fini(world);
 }
 
-void Plecs_assembly_no_props() {
+void Plecs_assembly_no_props(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -5060,7 +5060,7 @@ void Plecs_assembly_no_props() {
     ecs_fini(world);
 }
 
-void Plecs_assembly_prop_no_type() {
+void Plecs_assembly_prop_no_type(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -5084,7 +5084,7 @@ void Plecs_assembly_prop_no_type() {
     ecs_fini(world);
 }
 
-void Plecs_assembly_prop_no_default() {
+void Plecs_assembly_prop_no_default(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -5108,7 +5108,7 @@ void Plecs_assembly_prop_no_default() {
     ecs_fini(world);
 }
 
-void Plecs_assembly_prop() {
+void Plecs_assembly_prop(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -5140,7 +5140,7 @@ void Plecs_assembly_prop() {
     ecs_fini(world);
 }
 
-void Plecs_assembly_prop_space_colon() {
+void Plecs_assembly_prop_space_colon(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -5172,7 +5172,7 @@ void Plecs_assembly_prop_space_colon() {
     ecs_fini(world);
 }
 
-void Plecs_assembly_2_props() {
+void Plecs_assembly_2_props(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -5207,7 +5207,7 @@ void Plecs_assembly_2_props() {
     ecs_fini(world);
 }
 
-void Plecs_assembly_instance_w_default_values() {
+void Plecs_assembly_instance_w_default_values(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -5256,7 +5256,7 @@ void Plecs_assembly_instance_w_default_values() {
     ecs_fini(world);
 }
 
-void Plecs_assembly_instance_w_assign_default_values() {
+void Plecs_assembly_instance_w_assign_default_values(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -5305,7 +5305,7 @@ void Plecs_assembly_instance_w_assign_default_values() {
     ecs_fini(world);
 }
 
-void Plecs_assembly_instance_w_overridden_values() {
+void Plecs_assembly_instance_w_overridden_values(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -5354,7 +5354,7 @@ void Plecs_assembly_instance_w_overridden_values() {
     ecs_fini(world);
 }
 
-void Plecs_assembly_w_child() {
+void Plecs_assembly_w_child(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -5412,7 +5412,7 @@ void Plecs_assembly_w_child() {
     ecs_fini(world);
 }
 
-void Plecs_assembly_w_child_parse_script() {
+void Plecs_assembly_w_child_parse_script(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -5473,7 +5473,7 @@ void Plecs_assembly_w_child_parse_script() {
     ecs_fini(world);
 }
 
-void Plecs_assembly_w_child_parse_script_twice() {
+void Plecs_assembly_w_child_parse_script_twice(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -5539,7 +5539,7 @@ void Plecs_assembly_w_child_parse_script_twice() {
     ecs_fini(world);
 }
 
-void Plecs_assembly_w_child_update_after_parse() {
+void Plecs_assembly_w_child_update_after_parse(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -5619,7 +5619,7 @@ void Plecs_assembly_w_child_update_after_parse() {
     ecs_fini(world);
 }
 
-void Plecs_assembly_w_nested_child() {
+void Plecs_assembly_w_nested_child(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -5692,7 +5692,7 @@ void Plecs_assembly_w_nested_child() {
     ecs_fini(world);
 }
 
-void Plecs_assembly_w_prefab() {
+void Plecs_assembly_w_prefab(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -5785,7 +5785,7 @@ void Plecs_assembly_w_prefab() {
     ecs_fini(world);
 }
 
-void Plecs_assembly_w_prefab_tree() {
+void Plecs_assembly_w_prefab_tree(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -5891,7 +5891,7 @@ void Plecs_assembly_w_prefab_tree() {
     ecs_fini(world);
 }
 
-void Plecs_assembly_w_nested_assembly() {
+void Plecs_assembly_w_nested_assembly(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -6011,7 +6011,7 @@ void Plecs_assembly_w_nested_assembly() {
     ecs_fini(world);
 }
 
-void Plecs_instantiate_prefab_w_assembly() {
+void Plecs_instantiate_prefab_w_assembly(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -6083,7 +6083,7 @@ void Plecs_instantiate_prefab_w_assembly() {
     ecs_fini(world);
 }
 
-void Plecs_assembly_w_prefab_w_assembly() {
+void Plecs_assembly_w_prefab_w_assembly(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -6151,7 +6151,7 @@ void Plecs_assembly_w_prefab_w_assembly() {
     ecs_fini(world);
 }
 
-void Plecs_3_assemblies() {
+void Plecs_3_assemblies(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -6235,7 +6235,7 @@ void Plecs_3_assemblies() {
     ecs_fini(world);
 }
 
-void Plecs_assembly_nested_w_default_var() {
+void Plecs_assembly_nested_w_default_var(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -6315,7 +6315,7 @@ void Plecs_assembly_nested_w_default_var() {
     ecs_fini(world);
 }
 
-void Plecs_assembly_w_anonymous() {
+void Plecs_assembly_w_anonymous(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -6374,7 +6374,7 @@ void Plecs_assembly_w_anonymous() {
     ecs_fini(world);
 }
 
-void Plecs_assembly_w_anonymous_parse_again() {
+void Plecs_assembly_w_anonymous_parse_again(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -6436,7 +6436,7 @@ void Plecs_assembly_w_anonymous_parse_again() {
     ecs_fini(world);
 }
 
-void Plecs_typed_const_w_composite_type_invalid_assignment() {
+void Plecs_typed_const_w_composite_type_invalid_assignment(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_struct(world, {
@@ -6458,7 +6458,7 @@ void Plecs_typed_const_w_composite_type_invalid_assignment() {
     ecs_fini(world);
 }
 
-void Plecs_typed_const_w_composite_type() {
+void Plecs_typed_const_w_composite_type(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -6490,7 +6490,7 @@ void Plecs_typed_const_w_composite_type() {
     ecs_fini(world);
 }
 
-void Plecs_assign_var_to_typed_const_w_composite_type() {
+void Plecs_assign_var_to_typed_const_w_composite_type(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -6523,7 +6523,7 @@ void Plecs_assign_var_to_typed_const_w_composite_type() {
     ecs_fini(world);
 }
 
-void Plecs_assembly_w_composite_prop_invalid_assignment() {
+void Plecs_assembly_w_composite_prop_invalid_assignment(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -6550,7 +6550,7 @@ void Plecs_assembly_w_composite_prop_invalid_assignment() {
     ecs_fini(world);
 }
 
-void Plecs_assembly_w_composite_prop() {
+void Plecs_assembly_w_composite_prop(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -6597,7 +6597,7 @@ void Plecs_assembly_w_composite_prop() {
     ecs_fini(world);
 }
 
-void Plecs_assembly_with_with() {
+void Plecs_assembly_with_with(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -6648,7 +6648,7 @@ void Plecs_assembly_with_with() {
     ecs_fini(world);
 }
 
-void Plecs_using_wildcard() {
+void Plecs_using_wildcard(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t p1 = ecs_new_entity(world, "foo.p1");
@@ -6710,7 +6710,7 @@ void Plecs_using_wildcard() {
     ecs_fini(world);
 }
 
-void Plecs_single_line_comment_in_value() {
+void Plecs_single_line_comment_in_value(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -6744,7 +6744,7 @@ void Plecs_single_line_comment_in_value() {
     ecs_fini(world);
 }
 
-void Plecs_multi_line_comment_in_value() {
+void Plecs_multi_line_comment_in_value(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -6780,7 +6780,7 @@ void Plecs_multi_line_comment_in_value() {
     ecs_fini(world);
 }
 
-void Plecs_unterminated_multi_line_comment_in_value() {
+void Plecs_unterminated_multi_line_comment_in_value(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -6806,7 +6806,7 @@ void Plecs_unterminated_multi_line_comment_in_value() {
     ecs_fini(world);
 }
 
-void Plecs_module_stmt() {
+void Plecs_module_stmt(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -6847,7 +6847,7 @@ void Plecs_module_stmt() {
     ecs_fini(world);
 }
 
-void Plecs_nested_module_stmt() {
+void Plecs_nested_module_stmt(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -6891,7 +6891,7 @@ void Plecs_nested_module_stmt() {
     ecs_fini(world);
 }
 
-void Plecs_module_stmt_w_scope() {
+void Plecs_module_stmt_w_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -6952,7 +6952,7 @@ void Plecs_module_stmt_w_scope() {
     ecs_fini(world);
 }
 
-void Plecs_module_stmt_w_nested_scope() {
+void Plecs_module_stmt_w_nested_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -7017,7 +7017,7 @@ void Plecs_module_stmt_w_nested_scope() {
     ecs_fini(world);
 }
 
-void Plecs_module_w_assembly() {
+void Plecs_module_w_assembly(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -7070,7 +7070,7 @@ void Plecs_module_w_assembly() {
     ecs_fini(world);
 }
 
-void Plecs_module_w_nested_assembly() {
+void Plecs_module_w_nested_assembly(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -7138,7 +7138,7 @@ void Plecs_module_w_nested_assembly() {
     ecs_fini(world);
 }
 
-void Plecs_assign_singleton_tag() {
+void Plecs_assign_singleton_tag(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -7153,7 +7153,7 @@ void Plecs_assign_singleton_tag() {
     ecs_fini(world);
 }
 
-void Plecs_assign_singleton_component() {
+void Plecs_assign_singleton_component(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -7180,7 +7180,7 @@ void Plecs_assign_singleton_component() {
     ecs_fini(world);
 }
 
-void Plecs_assign_singleton_tag_w_scope() {
+void Plecs_assign_singleton_tag_w_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -7197,7 +7197,7 @@ void Plecs_assign_singleton_tag_w_scope() {
     ecs_fini(world);
 }
 
-void Plecs_assign_singleton_2_tags_w_scope() {
+void Plecs_assign_singleton_2_tags_w_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -7218,7 +7218,7 @@ void Plecs_assign_singleton_2_tags_w_scope() {
     ecs_fini(world);
 }
 
-void Plecs_assign_singleton_component_w_scope() {
+void Plecs_assign_singleton_component_w_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -7247,7 +7247,7 @@ void Plecs_assign_singleton_component_w_scope() {
     ecs_fini(world);
 }
 
-void Plecs_assign_singleton_2_components_w_scope() {
+void Plecs_assign_singleton_2_components_w_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -7289,7 +7289,7 @@ void Plecs_assign_singleton_2_components_w_scope() {
     ecs_fini(world);
 }
 
-void Plecs_with_pair_in_scope() {
+void Plecs_with_pair_in_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -7322,7 +7322,7 @@ void Plecs_with_pair_in_scope() {
     ecs_fini(world);
 }
 
-void Plecs_assembly_redeclare_prop_as_const() {
+void Plecs_assembly_redeclare_prop_as_const(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -7340,7 +7340,7 @@ void Plecs_assembly_redeclare_prop_as_const() {
     ecs_fini(world);
 }
 
-void Plecs_assembly_redeclare_prop_as_prop() {
+void Plecs_assembly_redeclare_prop_as_prop(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -7358,7 +7358,7 @@ void Plecs_assembly_redeclare_prop_as_prop() {
     ecs_fini(world);
 }
 
-void Plecs_assembly_redeclare_const_as_const() {
+void Plecs_assembly_redeclare_const_as_const(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -7376,7 +7376,7 @@ void Plecs_assembly_redeclare_const_as_const() {
     ecs_fini(world);
 }
 
-void Plecs_add_auto_override() {
+void Plecs_add_auto_override(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -7398,7 +7398,7 @@ void Plecs_add_auto_override() {
     ecs_fini(world);
 }
 
-void Plecs_add_auto_override_pair() {
+void Plecs_add_auto_override_pair(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Rel);
@@ -7421,7 +7421,7 @@ void Plecs_add_auto_override_pair() {
     ecs_fini(world);
 }
 
-void Plecs_scope_w_auto_override() {
+void Plecs_scope_w_auto_override(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -7445,7 +7445,7 @@ void Plecs_scope_w_auto_override() {
     ecs_fini(world);
 }
 
-void Plecs_scope_w_auto_override_pair() {
+void Plecs_scope_w_auto_override_pair(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Rel);

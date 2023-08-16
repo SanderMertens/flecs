@@ -1,6 +1,6 @@
 #include <api.h>
 
-void Remove_zero() {
+void Remove_zero(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -12,7 +12,7 @@ void Remove_zero() {
     ecs_remove(world, e, 0);
 }
 
-void Remove_1_of_1() {
+void Remove_1_of_1(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -26,7 +26,7 @@ void Remove_1_of_1() {
     ecs_fini(world);
 }
 
-void Remove_1_of_1_again() {
+void Remove_1_of_1_again(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -43,7 +43,7 @@ void Remove_1_of_1_again() {
     ecs_fini(world);
 }
 
-void Remove_1_of_2() {
+void Remove_1_of_2(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -58,7 +58,7 @@ void Remove_1_of_2() {
     ecs_fini(world);
 }
 
-void Remove_2_of_2() {
+void Remove_2_of_2(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -78,7 +78,7 @@ void Remove_2_of_2() {
     ecs_fini(world);
 }
 
-void Remove_2_of_3() {
+void Remove_2_of_3(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -101,7 +101,7 @@ void Remove_2_of_3() {
     ecs_fini(world);
 }
 
-void Remove_2_again() {
+void Remove_2_again(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -123,7 +123,7 @@ void Remove_2_again() {
     ecs_fini(world);
 }
 
-void Remove_2_overlap() {
+void Remove_2_overlap(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -142,7 +142,7 @@ void Remove_2_overlap() {
     ecs_fini(world);
 }
 
-void Remove_1_from_empty() {
+void Remove_1_from_empty(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -156,7 +156,7 @@ void Remove_1_from_empty() {
     ecs_fini(world);
 }
 
-void Remove_not_added() {
+void Remove_not_added(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);

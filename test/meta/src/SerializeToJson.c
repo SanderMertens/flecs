@@ -3,7 +3,7 @@
 #include <limits.h>
 #include <math.h>
 
-void SerializeToJson_struct_bool() {
+void SerializeToJson_struct_bool(void) {
     typedef struct {
         ecs_bool_t x;
     } T;
@@ -36,7 +36,7 @@ void SerializeToJson_struct_bool() {
     ecs_fini(world);
 }
 
-void SerializeToJson_struct_byte() {
+void SerializeToJson_struct_byte(void) {
     typedef struct {
         ecs_byte_t x;
     } T;
@@ -59,7 +59,7 @@ void SerializeToJson_struct_byte() {
     ecs_fini(world);
 }
 
-void SerializeToJson_struct_char() {
+void SerializeToJson_struct_char(void) {
     typedef struct {
         ecs_char_t x;
     } T;
@@ -82,7 +82,7 @@ void SerializeToJson_struct_char() {
     ecs_fini(world);
 }
 
-void SerializeToJson_struct_i8() {
+void SerializeToJson_struct_i8(void) {
     typedef struct {
         ecs_i8_t x;
     } T;
@@ -105,7 +105,7 @@ void SerializeToJson_struct_i8() {
     ecs_fini(world);
 }
 
-void SerializeToJson_struct_i16() {
+void SerializeToJson_struct_i16(void) {
     typedef struct {
         ecs_i16_t x;
     } T;
@@ -128,7 +128,7 @@ void SerializeToJson_struct_i16() {
     ecs_fini(world);
 }
 
-void SerializeToJson_struct_i32() {
+void SerializeToJson_struct_i32(void) {
     typedef struct {
         ecs_i32_t x;
     } T;
@@ -151,7 +151,7 @@ void SerializeToJson_struct_i32() {
     ecs_fini(world);
 }
 
-void SerializeToJson_struct_i64() {
+void SerializeToJson_struct_i64(void) {
     typedef struct {
         ecs_i64_t x;
     } T;
@@ -174,7 +174,7 @@ void SerializeToJson_struct_i64() {
     ecs_fini(world);
 }
 
-void SerializeToJson_struct_iptr() {
+void SerializeToJson_struct_iptr(void) {
     typedef struct {
         ecs_iptr_t x;
     } T;
@@ -197,7 +197,7 @@ void SerializeToJson_struct_iptr() {
     ecs_fini(world);
 }
 
-void SerializeToJson_struct_u8() {
+void SerializeToJson_struct_u8(void) {
     typedef struct {
         ecs_u8_t x;
     } T;
@@ -220,7 +220,7 @@ void SerializeToJson_struct_u8() {
     ecs_fini(world);
 }
 
-void SerializeToJson_struct_u16() {
+void SerializeToJson_struct_u16(void) {
     typedef struct {
         ecs_u16_t x;
     } T;
@@ -243,7 +243,7 @@ void SerializeToJson_struct_u16() {
     ecs_fini(world);
 }
 
-void SerializeToJson_struct_u32() {
+void SerializeToJson_struct_u32(void) {
     typedef struct {
         ecs_u32_t x;
     } T;
@@ -266,7 +266,7 @@ void SerializeToJson_struct_u32() {
     ecs_fini(world);
 }
 
-void SerializeToJson_struct_u64() {
+void SerializeToJson_struct_u64(void) {
     typedef struct {
         ecs_u64_t x;
     } T;
@@ -289,7 +289,7 @@ void SerializeToJson_struct_u64() {
     ecs_fini(world);
 }
 
-void SerializeToJson_struct_uptr() {
+void SerializeToJson_struct_uptr(void) {
     typedef struct {
         ecs_uptr_t x;
     } T;
@@ -312,7 +312,7 @@ void SerializeToJson_struct_uptr() {
     ecs_fini(world);
 }
 
-void SerializeToJson_struct_float() {
+void SerializeToJson_struct_float(void) {
     typedef struct {
         ecs_f32_t x;
     } T;
@@ -335,7 +335,7 @@ void SerializeToJson_struct_float() {
     ecs_fini(world);
 }
 
-void SerializeToJson_struct_float_nan() {
+void SerializeToJson_struct_float_nan(void) {
     typedef struct {
         ecs_f32_t x;
     } T;
@@ -358,7 +358,7 @@ void SerializeToJson_struct_float_nan() {
     ecs_fini(world);
 }
 
-void SerializeToJson_struct_float_inf() {
+void SerializeToJson_struct_float_inf(void) {
     typedef struct {
         ecs_f32_t x;
     } T;
@@ -390,7 +390,7 @@ void SerializeToJson_struct_float_inf() {
     ecs_fini(world);
 }
 
-void SerializeToJson_struct_double() {
+void SerializeToJson_struct_double(void) {
     typedef struct {
         ecs_f64_t x;
     } T;
@@ -413,7 +413,7 @@ void SerializeToJson_struct_double() {
     ecs_fini(world);
 }
 
-void SerializeToJson_struct_double_nan() {
+void SerializeToJson_struct_double_nan(void) {
     typedef struct {
         ecs_f64_t x;
     } T;
@@ -436,7 +436,7 @@ void SerializeToJson_struct_double_nan() {
     ecs_fini(world);
 }
 
-void SerializeToJson_struct_double_inf() {
+void SerializeToJson_struct_double_inf(void) {
     typedef struct {
         ecs_f64_t x;
     } T;
@@ -468,7 +468,7 @@ void SerializeToJson_struct_double_inf() {
     ecs_fini(world);
 }
 
-void SerializeToJson_struct_double_large() {
+void SerializeToJson_struct_double_large(void) {
     typedef struct {
         ecs_f64_t x;
     } T;
@@ -500,7 +500,7 @@ void SerializeToJson_struct_double_large() {
     ecs_fini(world);
 }
 
-void SerializeToJson_struct_double_large_e() {
+void SerializeToJson_struct_double_large_e(void) {
     typedef struct {
         ecs_f64_t x;
     } T;
@@ -523,7 +523,7 @@ void SerializeToJson_struct_double_large_e() {
     ecs_fini(world);
 }
 
-void SerializeToJson_struct_string() {
+void SerializeToJson_struct_string(void) {
     typedef struct {
         char* x;
     } T;
@@ -546,7 +546,7 @@ void SerializeToJson_struct_string() {
     ecs_fini(world);
 }
 
-void SerializeToJson_struct_entity() {
+void SerializeToJson_struct_entity(void) {
     typedef struct {
         ecs_entity_t x;
     } T;
@@ -569,7 +569,7 @@ void SerializeToJson_struct_entity() {
     ecs_fini(world);
 }
 
-void SerializeToJson_struct_entity_after_float() {
+void SerializeToJson_struct_entity_after_float(void) {
     typedef struct {
         int32_t v;
         ecs_entity_t e;
@@ -594,7 +594,7 @@ void SerializeToJson_struct_entity_after_float() {
     ecs_fini(world);
 }
 
-void SerializeToJson_struct_enum() {
+void SerializeToJson_struct_enum(void) {
     typedef enum {
         Red, Blue, Green
     } E;
@@ -656,7 +656,7 @@ void SerializeToJson_struct_enum() {
     ecs_fini(world);
 }
 
-void SerializeToJson_struct_bitmask() {
+void SerializeToJson_struct_bitmask(void) {
     typedef struct {
         uint32_t x;
     } T;
@@ -735,7 +735,7 @@ void SerializeToJson_struct_bitmask() {
     ecs_fini(world);
 }
 
-void SerializeToJson_struct_i32_i32() {
+void SerializeToJson_struct_i32_i32(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -760,7 +760,7 @@ void SerializeToJson_struct_i32_i32() {
     ecs_fini(world);
 }
 
-void SerializeToJson_struct_nested_i32() {
+void SerializeToJson_struct_nested_i32(void) {
     typedef struct {
         ecs_i32_t x;
     } N1;
@@ -794,7 +794,7 @@ void SerializeToJson_struct_nested_i32() {
     ecs_fini(world);
 }
 
-void SerializeToJson_struct_nested_i32_i32() {
+void SerializeToJson_struct_nested_i32_i32(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -830,7 +830,7 @@ void SerializeToJson_struct_nested_i32_i32() {
     ecs_fini(world);
 }
 
-void SerializeToJson_struct_2_nested_i32_i32() {
+void SerializeToJson_struct_2_nested_i32_i32(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -868,7 +868,7 @@ void SerializeToJson_struct_2_nested_i32_i32() {
     ecs_fini(world);
 }
 
-void SerializeToJson_struct_i32_array_3() {
+void SerializeToJson_struct_i32_array_3(void) {
     typedef struct {
         int32_t x[3];
     } T;
@@ -891,7 +891,7 @@ void SerializeToJson_struct_i32_array_3() {
     ecs_fini(world);
 }
 
-void SerializeToJson_struct_struct_i32_array_3() {
+void SerializeToJson_struct_struct_i32_array_3(void) {
     typedef struct {
         ecs_i32_t x;
     } N1;
@@ -925,7 +925,7 @@ void SerializeToJson_struct_struct_i32_array_3() {
     ecs_fini(world);
 }
 
-void SerializeToJson_struct_struct_i32_i32_array_3() {
+void SerializeToJson_struct_struct_i32_i32_array_3(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -961,7 +961,7 @@ void SerializeToJson_struct_struct_i32_i32_array_3() {
     ecs_fini(world);
 }
 
-void SerializeToJson_struct_w_array_type_i32_i32() {
+void SerializeToJson_struct_w_array_type_i32_i32(void) {
     typedef int32_t N1[2];
 
     typedef struct {
@@ -992,7 +992,7 @@ void SerializeToJson_struct_w_array_type_i32_i32() {
     ecs_fini(world);
 }
 
-void SerializeToJson_struct_w_2_array_type_i32_i32() {
+void SerializeToJson_struct_w_2_array_type_i32_i32(void) {
     typedef int32_t N1[2];
 
     typedef struct {
@@ -1025,7 +1025,7 @@ void SerializeToJson_struct_w_2_array_type_i32_i32() {
     ecs_fini(world);
 }
 
-void SerializeToJson_struct_partial() {
+void SerializeToJson_struct_partial(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1046,7 +1046,7 @@ void SerializeToJson_struct_partial() {
     ecs_fini(world);
 }
 
-void SerializeToJson_array_i32_3() {
+void SerializeToJson_array_i32_3(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t t = ecs_array_init(world, &(ecs_array_desc_t){
@@ -1063,7 +1063,7 @@ void SerializeToJson_array_i32_3() {
     ecs_fini(world);
 }
 
-void SerializeToJson_array_struct_i32_i32() {
+void SerializeToJson_array_struct_i32_i32(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1090,7 +1090,7 @@ void SerializeToJson_array_struct_i32_i32() {
     ecs_fini(world);
 }
 
-void SerializeToJson_array_array_i32_3() {
+void SerializeToJson_array_array_i32_3(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t a = ecs_array_init(world, &(ecs_array_desc_t){
@@ -1114,7 +1114,7 @@ void SerializeToJson_array_array_i32_3() {
     ecs_fini(world);
 }
 
-void SerializeToJson_vector_i32_3() {
+void SerializeToJson_vector_i32_3(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t t = ecs_vector_init(world, &(ecs_vector_desc_t){
@@ -1137,7 +1137,7 @@ void SerializeToJson_vector_i32_3() {
     ecs_fini(world);
 }
 
-void SerializeToJson_vector_struct_i32_i32() {
+void SerializeToJson_vector_struct_i32_i32(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1170,7 +1170,7 @@ void SerializeToJson_vector_struct_i32_i32() {
     ecs_fini(world);
 }
 
-void SerializeToJson_vector_array_i32_3() {
+void SerializeToJson_vector_array_i32_3(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t a = ecs_array_init(world, &(ecs_array_desc_t){

@@ -1,6 +1,6 @@
 #include <cpp_api.h>
 
-void Iterable_page_each() {
+void Iterable_page_each(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity(); e1.set<Self>({e1});
@@ -22,7 +22,7 @@ void Iterable_page_each() {
     test_int(count, 3);
 }
 
-void Iterable_page_iter() {
+void Iterable_page_iter(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity(); e1.set<Self>({e1});
@@ -48,7 +48,7 @@ void Iterable_page_iter() {
     test_int(count, 3);
 }
 
-void Iterable_worker_each() {
+void Iterable_worker_each(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity(); e1.set<Self>({e1});
@@ -81,7 +81,7 @@ void Iterable_worker_each() {
     test_int(count, 2);
 }
 
-void Iterable_worker_iter() {
+void Iterable_worker_iter(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity(); e1.set<Self>({e1});

@@ -1,6 +1,6 @@
 #include <cpp_api.h>
 
-void Singleton_set_get_singleton() {
+void Singleton_set_get_singleton(void) {
     flecs::world world;
 
     world.set<Position>({10, 20});
@@ -11,7 +11,7 @@ void Singleton_set_get_singleton() {
     test_int(p->y, 20);
 }
 
-void Singleton_get_mut_singleton() {
+void Singleton_get_mut_singleton(void) {
     flecs::world world;
 
     Position *p_mut = world.get_mut<Position>();
@@ -24,7 +24,7 @@ void Singleton_get_mut_singleton() {
     test_int(p->y, 20);
 }
 
-void Singleton_emplace_singleton() {
+void Singleton_emplace_singleton(void) {
     flecs::world world;
 
     world.emplace<Position>(10.0f, 20.0f);
@@ -35,7 +35,7 @@ void Singleton_emplace_singleton() {
     test_int(p->y, 20);
 }
 
-void Singleton_modified_singleton() {
+void Singleton_modified_singleton(void) {
     flecs::world world;
 
     int invoked = 0;
@@ -55,7 +55,7 @@ void Singleton_modified_singleton() {
     test_int(invoked, 1);
 }
 
-void Singleton_add_singleton() {
+void Singleton_add_singleton(void) {
     flecs::world world;
 
     int invoked = 0;
@@ -72,7 +72,7 @@ void Singleton_add_singleton() {
 }
 
 
-void Singleton_remove_singleton() {
+void Singleton_remove_singleton(void) {
     flecs::world world;
 
     int invoked = 0;
@@ -91,7 +91,7 @@ void Singleton_remove_singleton() {
     test_int(invoked, 1);
 }
 
-void Singleton_has_singleton() {
+void Singleton_has_singleton(void) {
     flecs::world world;
 
     test_assert(!world.has<Position>());
@@ -101,7 +101,7 @@ void Singleton_has_singleton() {
     test_assert(world.has<Position>());
 }
 
-void Singleton_singleton_system() {
+void Singleton_singleton_system(void) {
     flecs::world world;
 
     world.set<Position>({10, 20});
@@ -125,7 +125,7 @@ void Singleton_singleton_system() {
     test_int(p->y, 21);
 }
 
-void Singleton_get_singleton() {
+void Singleton_get_singleton(void) {
     flecs::world world;
 
     world.set<Position>({10, 20});
@@ -139,7 +139,7 @@ void Singleton_get_singleton() {
     test_int(p->y, 20);
 }
 
-void Singleton_type_id_from_world() {
+void Singleton_type_id_from_world(void) {
     flecs::world world;
 
     world.set<Position>({10, 20});
@@ -152,7 +152,7 @@ void Singleton_type_id_from_world() {
     test_assert(s.id() == flecs::type_id<Position>());
 }
 
-void Singleton_set_lambda() {
+void Singleton_set_lambda(void) {
     flecs::world world;
 
     world.set([](Position& p) {
@@ -174,7 +174,7 @@ void Singleton_set_lambda() {
     test_int(p->y, 21);
 }
 
-void Singleton_get_lambda() {
+void Singleton_get_lambda(void) {
     flecs::world world;
 
     world.set<Position>({10, 20});
@@ -189,7 +189,7 @@ void Singleton_get_lambda() {
     test_int(count, 1);
 }
 
-void Singleton_get_write_lambda() {
+void Singleton_get_write_lambda(void) {
     flecs::world world;
 
     world.set<Position>({10, 20});
@@ -210,7 +210,7 @@ void Singleton_get_write_lambda() {
     test_int(p->y, 21);
 }
 
-void Singleton_get_set_singleton_pair_R_T() {
+void Singleton_get_set_singleton_pair_R_T(void) {
     flecs::world world;
 
     world.set<Position, Tag>({10, 20});
@@ -221,7 +221,7 @@ void Singleton_get_set_singleton_pair_R_T() {
     test_int(p->y, 20);
 }
 
-void Singleton_get_set_singleton_pair_R_t() {
+void Singleton_get_set_singleton_pair_R_t(void) {
     flecs::world world;
 
     flecs::entity tgt = world.entity();
@@ -234,7 +234,7 @@ void Singleton_get_set_singleton_pair_R_t() {
     test_int(p->y, 20);
 }
 
-void Singleton_add_remove_singleton_pair_R_T() {
+void Singleton_add_remove_singleton_pair_R_T(void) {
     flecs::world world;
 
     world.add<Position, Tag>();
@@ -243,7 +243,7 @@ void Singleton_add_remove_singleton_pair_R_T() {
     test_assert(!(world.has<Position, Tag>()));
 }
 
-void Singleton_add_remove_singleton_pair_R_t() {
+void Singleton_add_remove_singleton_pair_R_t(void) {
     flecs::world world;
 
     flecs::entity tgt = world.entity();
@@ -254,7 +254,7 @@ void Singleton_add_remove_singleton_pair_R_t() {
     test_assert(!(world.has<Position>(tgt)));
 }
 
-void Singleton_add_remove_singleton_pair_r_t() {
+void Singleton_add_remove_singleton_pair_r_t(void) {
     flecs::world world;
 
     flecs::entity rel = world.entity();
@@ -266,7 +266,7 @@ void Singleton_add_remove_singleton_pair_r_t() {
     test_assert(!(world.has(rel, tgt)));
 }
 
-void Singleton_get_target() {
+void Singleton_get_target(void) {
     flecs::world world;
 
     auto Rel = world.singleton<Tag>();

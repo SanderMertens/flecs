@@ -1,6 +1,6 @@
 #include <addons.h>
 
-void SystemManual_setup() {
+void SystemManual_setup(void) {
     ecs_log_set_level(-3);
 }
 
@@ -36,7 +36,7 @@ void Iter(ecs_iter_t *it) {
     }
 }
 
-void SystemManual_1_type_1_component() {
+void SystemManual_1_type_1_component(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -99,7 +99,7 @@ void AddVelocity(ecs_iter_t *it) {
     }
 }
 
-void SystemManual_no_automerge() {
+void SystemManual_no_automerge(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -137,7 +137,7 @@ void DummySystem(ecs_iter_t *it) {
     dummy_ran ++;
 }
 
-void SystemManual_dont_run_w_unmatching_entity_query() {
+void SystemManual_dont_run_w_unmatching_entity_query(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);

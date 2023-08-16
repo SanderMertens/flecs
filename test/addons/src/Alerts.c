@@ -1,6 +1,6 @@
 #include <addons.h>
 
-void Alerts_one_active_alert() {
+void Alerts_one_active_alert(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, FlecsAlerts);
@@ -88,7 +88,7 @@ void Alerts_one_active_alert() {
     ecs_fini(world);
 }
 
-void Alerts_two_active_alerts() {
+void Alerts_two_active_alerts(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, FlecsAlerts);
@@ -244,7 +244,7 @@ void Alerts_two_active_alerts() {
     ecs_fini(world);
 }
 
-void Alerts_alert_message() {
+void Alerts_alert_message(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, FlecsAlerts);
@@ -297,7 +297,7 @@ void Alerts_alert_message() {
     ecs_fini(world);
 }
 
-void Alerts_alert_message_w_this_var() {
+void Alerts_alert_message_w_this_var(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, FlecsAlerts);
@@ -350,7 +350,7 @@ void Alerts_alert_message_w_this_var() {
     ecs_fini(world);
 }
 
-void Alerts_alert_message_w_var() {
+void Alerts_alert_message_w_var(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, FlecsAlerts);
@@ -406,7 +406,7 @@ void Alerts_alert_message_w_var() {
     ecs_fini(world);
 }
 
-void Alerts_alert_message_w_changed_var() {
+void Alerts_alert_message_w_changed_var(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, FlecsAlerts);
@@ -492,7 +492,7 @@ void Alerts_alert_message_w_changed_var() {
     ecs_fini(world);
 }
 
-void Alerts_set_brief() {
+void Alerts_set_brief(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, FlecsAlerts);
@@ -510,7 +510,7 @@ void Alerts_set_brief() {
     ecs_fini(world);
 }
 
-void Alerts_set_doc_name() {
+void Alerts_set_doc_name(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, FlecsAlerts);
@@ -528,7 +528,7 @@ void Alerts_set_doc_name() {
     ecs_fini(world);
 }
 
-void Alerts_alert_instance_has_doc_name() {
+void Alerts_alert_instance_has_doc_name(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, FlecsAlerts);
@@ -576,7 +576,7 @@ void Alerts_alert_instance_has_doc_name() {
     ecs_fini(world);
 }
 
-void Alerts_reraise_alert() {
+void Alerts_reraise_alert(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, FlecsAlerts);
@@ -661,7 +661,7 @@ void Alerts_reraise_alert() {
     ecs_fini(world);
 }
 
-void Alerts_info_severity() {
+void Alerts_info_severity(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, FlecsAlerts);
@@ -709,7 +709,7 @@ void Alerts_info_severity() {
     ecs_fini(world);
 }
 
-void Alerts_warning_severity() {
+void Alerts_warning_severity(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, FlecsAlerts);
@@ -757,7 +757,7 @@ void Alerts_warning_severity() {
     ecs_fini(world);
 }
 
-void Alerts_error_severity() {
+void Alerts_error_severity(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, FlecsAlerts);
@@ -805,7 +805,7 @@ void Alerts_error_severity() {
     ecs_fini(world);
 }
 
-void Alerts_expire_after_retain() {
+void Alerts_expire_after_retain(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, FlecsAlerts);
@@ -897,7 +897,7 @@ void Alerts_expire_after_retain() {
     ecs_fini(world);
 }
 
-void Alerts_revive_w_retain() {
+void Alerts_revive_w_retain(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, FlecsAlerts);
@@ -1006,7 +1006,7 @@ void Alerts_revive_w_retain() {
     ecs_fini(world);
 }
 
-void Alerts_severity_filter() {
+void Alerts_severity_filter(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, FlecsAlerts);
@@ -1112,7 +1112,7 @@ void Alerts_severity_filter() {
     ecs_fini(world);
 }
 
-void Alerts_two_severity_filters() {
+void Alerts_two_severity_filters(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, FlecsAlerts);
@@ -1252,7 +1252,7 @@ void Alerts_two_severity_filters() {
     ecs_fini(world);
 }
 
-void Alerts_severity_filter_w_var() {
+void Alerts_severity_filter_w_var(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, FlecsAlerts);
@@ -1363,7 +1363,7 @@ void Alerts_severity_filter_w_var() {
     ecs_fini(world);
 }
 
-void Alerts_severity_filter_w_var_change_var() {
+void Alerts_severity_filter_w_var_change_var(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, FlecsAlerts);
@@ -1476,7 +1476,7 @@ void Alerts_severity_filter_w_var_change_var() {
     ecs_fini(world);
 }
 
-void Alerts_member_range_warning() {
+void Alerts_member_range_warning(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, FlecsAlerts);
@@ -1544,7 +1544,7 @@ void Alerts_member_range_warning() {
     ecs_fini(world);
 }
 
-void Alerts_member_range_error() {
+void Alerts_member_range_error(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, FlecsAlerts);
@@ -1612,7 +1612,7 @@ void Alerts_member_range_error() {
     ecs_fini(world);
 }
 
-void Alerts_member_range_warning_error() {
+void Alerts_member_range_warning_error(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, FlecsAlerts);
@@ -1708,7 +1708,7 @@ void Alerts_member_range_warning_error() {
     ecs_fini(world);
 }
 
-void Alerts_member_range_error_w_warning_severity() {
+void Alerts_member_range_error_w_warning_severity(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, FlecsAlerts);
@@ -1777,7 +1777,7 @@ void Alerts_member_range_error_w_warning_severity() {
     ecs_fini(world);
 }
 
-void Alerts_member_range_error_w_severity_filter() {
+void Alerts_member_range_error_w_severity_filter(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, FlecsAlerts);
@@ -1872,7 +1872,7 @@ void Alerts_member_range_error_w_severity_filter() {
     ecs_fini(world);
 }
 
-void Alerts_member_range_warning_w_severity_filter() {
+void Alerts_member_range_warning_w_severity_filter(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, FlecsAlerts);
@@ -1967,7 +1967,7 @@ void Alerts_member_range_warning_w_severity_filter() {
     ecs_fini(world);
 }
 
-void Alerts_member_range_pair_id() {
+void Alerts_member_range_pair_id(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, FlecsAlerts);
@@ -2037,7 +2037,7 @@ void Alerts_member_range_pair_id() {
     ecs_fini(world);
 }
 
-void Alerts_member_range_invalid_member() {
+void Alerts_member_range_invalid_member(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, FlecsAlerts);
@@ -2064,7 +2064,7 @@ void Alerts_member_range_invalid_member() {
     ecs_fini(world);
 }
 
-void Alerts_member_range_invalid_member_child() {
+void Alerts_member_range_invalid_member_child(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, FlecsAlerts);
@@ -2092,7 +2092,7 @@ void Alerts_member_range_invalid_member_child() {
     ecs_fini(world);
 }
 
-void Alerts_member_range_invalid_type() {
+void Alerts_member_range_invalid_type(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, FlecsAlerts);
@@ -2120,7 +2120,7 @@ void Alerts_member_range_invalid_type() {
     ecs_fini(world);
 }
 
-void Alerts_member_range_invalid_member_type() {
+void Alerts_member_range_invalid_member_type(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, FlecsAlerts);
@@ -2151,7 +2151,7 @@ void Alerts_member_range_invalid_member_type() {
     ecs_fini(world);
 }
 
-void Alerts_member_range_no_range() {
+void Alerts_member_range_no_range(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, FlecsAlerts);
@@ -2177,7 +2177,7 @@ void Alerts_member_range_no_range() {
     ecs_fini(world);
 }
 
-void Alerts_member_range_alert_two_instances() {
+void Alerts_member_range_alert_two_instances(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, FlecsAlerts);
@@ -2294,7 +2294,7 @@ void Alerts_member_range_alert_two_instances() {
     ecs_fini(world);
 }
 
-void Alerts_member_range_from_var() {
+void Alerts_member_range_from_var(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, FlecsAlerts);
@@ -2364,7 +2364,7 @@ void Alerts_member_range_from_var() {
     ecs_fini(world);
 }
 
-void Alerts_member_range_from_var_after_remove() {
+void Alerts_member_range_from_var_after_remove(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, FlecsAlerts);
@@ -2434,7 +2434,7 @@ void Alerts_member_range_from_var_after_remove() {
     ecs_fini(world);
 }
 
-void Alerts_retained_alert_w_dead_source() {
+void Alerts_retained_alert_w_dead_source(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_IMPORT(world, FlecsAlerts);

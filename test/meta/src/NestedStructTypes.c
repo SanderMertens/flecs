@@ -1,6 +1,6 @@
 #include <meta.h>
 
-void NestedStructTypes_1_bool() {
+void NestedStructTypes_1_bool(void) {
     typedef struct {
         ecs_bool_t x;
     } N1;
@@ -34,7 +34,7 @@ void NestedStructTypes_1_bool() {
     ecs_fini(world);
 }
 
-void NestedStructTypes_1_int32() {
+void NestedStructTypes_1_int32(void) {
     typedef struct {
         ecs_i32_t x;
     } N1;
@@ -68,7 +68,7 @@ void NestedStructTypes_1_int32() {
     ecs_fini(world);
 }
 
-void NestedStructTypes_1_bool_w_bool_member() {
+void NestedStructTypes_1_bool_w_bool_member(void) {
     typedef struct {
         ecs_bool_t x;
     } N1;
@@ -105,7 +105,7 @@ void NestedStructTypes_1_bool_w_bool_member() {
     ecs_fini(world);
 }
 
-void NestedStructTypes_1_bool_w_int32_member() {
+void NestedStructTypes_1_bool_w_int32_member(void) {
     typedef struct {
         ecs_bool_t x;
     } N1;
@@ -142,7 +142,7 @@ void NestedStructTypes_1_bool_w_int32_member() {
     ecs_fini(world);
 }
 
-void NestedStructTypes_1_int32_w_bool_member() {
+void NestedStructTypes_1_int32_w_bool_member(void) {
     typedef struct {
         ecs_i32_t x;
     } N1;
@@ -179,7 +179,7 @@ void NestedStructTypes_1_int32_w_bool_member() {
     ecs_fini(world);
 }
 
-void NestedStructTypes_1_int32_w_int32_member() {
+void NestedStructTypes_1_int32_w_int32_member(void) {
     typedef struct {
         ecs_i32_t x;
     } N1;
@@ -216,7 +216,7 @@ void NestedStructTypes_1_int32_w_int32_member() {
     ecs_fini(world);
 }
 
-void NestedStructTypes_1_bool_2_same() {
+void NestedStructTypes_1_bool_2_same(void) {
     typedef struct {
         ecs_bool_t x;
     } N1;
@@ -253,7 +253,7 @@ void NestedStructTypes_1_bool_2_same() {
     ecs_fini(world);
 }
 
-void NestedStructTypes_1_bool_2_bool() {
+void NestedStructTypes_1_bool_2_bool(void) {
     typedef struct {
         ecs_bool_t x;
     } N1;
@@ -297,7 +297,7 @@ void NestedStructTypes_1_bool_2_bool() {
     ecs_fini(world);
 }
 
-void NestedStructTypes_1_bool_2_i32() {
+void NestedStructTypes_1_bool_2_i32(void) {
     typedef struct {
         ecs_bool_t x;
     } N1;
@@ -345,7 +345,7 @@ void NestedStructTypes_1_bool_2_i32() {
     ecs_fini(world);
 }
 
-void NestedStructTypes_1_i32_2_bool() {
+void NestedStructTypes_1_i32_2_bool(void) {
     typedef struct {
         ecs_i32_t x;
     } N1;
@@ -393,7 +393,7 @@ void NestedStructTypes_1_i32_2_bool() {
     ecs_fini(world);
 }
 
-void NestedStructTypes_1_bool_2_bool_bool() {
+void NestedStructTypes_1_bool_2_bool_bool(void) {
     typedef struct {
         ecs_bool_t x;
     } N1;
@@ -443,7 +443,7 @@ void NestedStructTypes_1_bool_2_bool_bool() {
     ecs_fini(world);
 }
 
-void NestedStructTypes_1_bool_bool_2_bool() {
+void NestedStructTypes_1_bool_bool_2_bool(void) {
     typedef struct {
         ecs_bool_t x;
         ecs_bool_t y;
@@ -493,7 +493,7 @@ void NestedStructTypes_1_bool_bool_2_bool() {
     ecs_fini(world);
 }
 
-void NestedStructTypes_1_bool_bool_2_same() {
+void NestedStructTypes_1_bool_bool_2_same(void) {
     typedef struct {
         ecs_bool_t x;
         ecs_bool_t y;
@@ -532,7 +532,7 @@ void NestedStructTypes_1_bool_bool_2_same() {
     ecs_fini(world);
 }
 
-void NestedStructTypes_1_bool_bool_2_bool_bool() {
+void NestedStructTypes_1_bool_bool_2_bool_bool(void) {
     typedef struct {
         ecs_bool_t x;
         ecs_bool_t y;
@@ -584,7 +584,7 @@ void NestedStructTypes_1_bool_bool_2_bool_bool() {
     ecs_fini(world);
 }
 
-void NestedStructTypes_1_i32_2_same() {
+void NestedStructTypes_1_i32_2_same(void) {
     typedef struct {
         ecs_i32_t x;
     } N1;
@@ -621,7 +621,7 @@ void NestedStructTypes_1_i32_2_same() {
     ecs_fini(world);
 }
 
-void NestedStructTypes_1_i32_2_i32() {
+void NestedStructTypes_1_i32_2_i32(void) {
     typedef struct {
         ecs_i32_t x;
     } N1;
@@ -669,7 +669,7 @@ void NestedStructTypes_1_i32_2_i32() {
     ecs_fini(world);
 }
 
-void NestedStructTypes_1_i32_2_i32_i32() {
+void NestedStructTypes_1_i32_2_i32_i32(void) {
     typedef struct {
         ecs_i32_t x;
     } N1;
@@ -719,7 +719,7 @@ void NestedStructTypes_1_i32_2_i32_i32() {
     ecs_fini(world);
 }
 
-void NestedStructTypes_1_i32_i32_2_i32() {
+void NestedStructTypes_1_i32_i32_2_i32(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -769,7 +769,7 @@ void NestedStructTypes_1_i32_i32_2_i32() {
     ecs_fini(world);
 }
 
-void NestedStructTypes_1_i32_i32_2_same() {
+void NestedStructTypes_1_i32_i32_2_same(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -808,7 +808,7 @@ void NestedStructTypes_1_i32_i32_2_same() {
     ecs_fini(world);
 }
 
-void NestedStructTypes_1_i32_i32_2_i32_i32() {
+void NestedStructTypes_1_i32_i32_2_i32_i32(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -860,7 +860,7 @@ void NestedStructTypes_1_i32_i32_2_i32_i32() {
     ecs_fini(world);
 }
 
-void NestedStructTypes_2_lvls_bool() {
+void NestedStructTypes_2_lvls_bool(void) {
     typedef struct {
         ecs_bool_t x;
     } NN1;
@@ -930,7 +930,7 @@ void NestedStructTypes_2_lvls_bool() {
     ecs_fini(world);
 }
 
-void NestedStructTypes_2_lvls_bool_bool() {
+void NestedStructTypes_2_lvls_bool_bool(void) {
     typedef struct {
         ecs_bool_t x;
         ecs_bool_t y;

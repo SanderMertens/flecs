@@ -18,7 +18,7 @@ int CountNoDefaultCtor::move_invoked = 0;
 int CountNoDefaultCtor::copy_ctor_invoked = 0;
 int CountNoDefaultCtor::move_ctor_invoked = 0;
 
-void ComponentLifecycle_ctor_on_add() {
+void ComponentLifecycle_ctor_on_add(void) {
     flecs::world world;
 
     world.component<Pod>();
@@ -37,7 +37,7 @@ void ComponentLifecycle_ctor_on_add() {
     test_int(pod->value, 10);
 }
 
-void ComponentLifecycle_dtor_on_remove() {
+void ComponentLifecycle_dtor_on_remove(void) {
     flecs::world world;
 
     world.component<Pod>();
@@ -55,7 +55,7 @@ void ComponentLifecycle_dtor_on_remove() {
     test_int(Pod::move_invoked, 0);
 }
 
-void ComponentLifecycle_move_on_add() {
+void ComponentLifecycle_move_on_add(void) {
     flecs::world world;
 
     world.component<Pod>();
@@ -85,7 +85,7 @@ void ComponentLifecycle_move_on_add() {
     test_int(pod->value, 10);
 }
 
-void ComponentLifecycle_move_on_remove() {
+void ComponentLifecycle_move_on_remove(void) {
     flecs::world world;
 
     world.component<Pod>();
@@ -115,7 +115,7 @@ void ComponentLifecycle_move_on_remove() {
     test_int(pod->value, 10);
 }
 
-void ComponentLifecycle_copy_on_set() {
+void ComponentLifecycle_copy_on_set(void) {
     flecs::world world;
 
     world.component<Pod>();
@@ -131,7 +131,7 @@ void ComponentLifecycle_copy_on_set() {
     test_int(Pod::move_invoked, 1);
 }
 
-void ComponentLifecycle_copy_on_override() {
+void ComponentLifecycle_copy_on_override(void) {
     flecs::world world;
 
     world.component<Pod>();
@@ -165,7 +165,7 @@ void ComponentLifecycle_copy_on_override() {
     test_int(pod->value, 10);
 }
 
-void ComponentLifecycle_struct_w_string_add() {
+void ComponentLifecycle_struct_w_string_add(void) {
     flecs::world world;
 
     auto e = world.entity().add<Struct_w_string>();
@@ -177,7 +177,7 @@ void ComponentLifecycle_struct_w_string_add() {
     test_assert(str->value == "");
 }
 
-void ComponentLifecycle_struct_w_string_remove() {
+void ComponentLifecycle_struct_w_string_remove(void) {
     flecs::world world;
 
     auto e = world.entity().add<Struct_w_string>();
@@ -188,7 +188,7 @@ void ComponentLifecycle_struct_w_string_remove() {
     test_assert(!e.has<Struct_w_string>());
 }
 
-void ComponentLifecycle_struct_w_string_set() {
+void ComponentLifecycle_struct_w_string_set(void) {
     flecs::world world;
 
     auto e = world.entity()
@@ -201,7 +201,7 @@ void ComponentLifecycle_struct_w_string_set() {
     test_assert(str->value == "Hello World");
 }
 
-void ComponentLifecycle_struct_w_string_override() {
+void ComponentLifecycle_struct_w_string_override(void) {
     flecs::world world;
 
     auto base = world.entity();
@@ -221,7 +221,7 @@ void ComponentLifecycle_struct_w_string_override() {
     test_assert(str->value == "Hello World");
 }
 
-void ComponentLifecycle_struct_w_string_add_2_remove() {
+void ComponentLifecycle_struct_w_string_add_2_remove(void) {
     flecs::world world;
 
     auto e1 = world.entity().add<Struct_w_string>();
@@ -247,7 +247,7 @@ void ComponentLifecycle_struct_w_string_add_2_remove() {
     test_assert(str2 == NULL);
 }
 
-void ComponentLifecycle_struct_w_string_set_2_remove() {
+void ComponentLifecycle_struct_w_string_set_2_remove(void) {
     flecs::world world;
 
     auto e1 = world.entity().set<Struct_w_string>({"hello"});
@@ -273,7 +273,7 @@ void ComponentLifecycle_struct_w_string_set_2_remove() {
     test_assert(str2 == NULL);
 }
 
-void ComponentLifecycle_struct_w_string_add_2_remove_w_tag() {
+void ComponentLifecycle_struct_w_string_add_2_remove_w_tag(void) {
     flecs::world world;
 
     auto e1 = world.entity().add<Tag>().add<Struct_w_string>();
@@ -299,7 +299,7 @@ void ComponentLifecycle_struct_w_string_add_2_remove_w_tag() {
     test_assert(str2 == NULL);
 }
 
-void ComponentLifecycle_struct_w_string_set_2_remove_w_tag() {
+void ComponentLifecycle_struct_w_string_set_2_remove_w_tag(void) {
     flecs::world world;
 
     auto e1 = world.entity().add<Tag>().set<Struct_w_string>({"hello"});
@@ -325,7 +325,7 @@ void ComponentLifecycle_struct_w_string_set_2_remove_w_tag() {
     test_assert(str2 == NULL);
 }
 
-void ComponentLifecycle_struct_w_vector_add() {
+void ComponentLifecycle_struct_w_vector_add(void) {
     flecs::world world;
 
     auto e = world.entity().add<Struct_w_vector>();
@@ -336,7 +336,7 @@ void ComponentLifecycle_struct_w_vector_add() {
     test_int(ptr->value.size(), 0);
 }
 
-void ComponentLifecycle_struct_w_vector_remove() {
+void ComponentLifecycle_struct_w_vector_remove(void) {
     flecs::world world;
 
     auto e = world.entity().add<Struct_w_vector>();
@@ -346,7 +346,7 @@ void ComponentLifecycle_struct_w_vector_remove() {
     test_assert(!e.has<Struct_w_vector>());
 }
 
-void ComponentLifecycle_struct_w_vector_set() {
+void ComponentLifecycle_struct_w_vector_set(void) {
     flecs::world world;
 
     auto e = world.entity().set<Struct_w_vector>({std::vector<int>{1, 2}});
@@ -359,7 +359,7 @@ void ComponentLifecycle_struct_w_vector_set() {
     test_int(ptr->value.at(1), 2);
 }
 
-void ComponentLifecycle_struct_w_vector_override() {
+void ComponentLifecycle_struct_w_vector_override(void) {
     flecs::world world;
 
     auto base = world.entity().set<Struct_w_vector>({std::vector<int>{1, 2}});
@@ -381,7 +381,7 @@ void ComponentLifecycle_struct_w_vector_override() {
     test_int(ptr->value.at(1), 2);
 }
 
-void ComponentLifecycle_struct_w_vector_add_2_remove() {
+void ComponentLifecycle_struct_w_vector_add_2_remove(void) {
     flecs::world world;
 
     auto e1 = world.entity().add<Struct_w_vector>();
@@ -407,7 +407,7 @@ void ComponentLifecycle_struct_w_vector_add_2_remove() {
     test_assert(ptr2 == NULL);
 }
 
-void ComponentLifecycle_struct_w_vector_set_2_remove() {
+void ComponentLifecycle_struct_w_vector_set_2_remove(void) {
     flecs::world world;
 
     auto e1 = world.entity().set<Struct_w_vector>({std::vector<int>{1, 2}});
@@ -439,7 +439,7 @@ void ComponentLifecycle_struct_w_vector_set_2_remove() {
     test_assert(ptr2 == NULL);
 }
 
-void ComponentLifecycle_struct_w_vector_add_2_remove_w_tag() {
+void ComponentLifecycle_struct_w_vector_add_2_remove_w_tag(void) {
     flecs::world world;
 
     auto e1 = world.entity().add<Tag>().add<Struct_w_vector>();
@@ -465,7 +465,7 @@ void ComponentLifecycle_struct_w_vector_add_2_remove_w_tag() {
     test_assert(ptr2 == NULL);
 }
 
-void ComponentLifecycle_struct_w_vector_set_2_remove_w_tag() {
+void ComponentLifecycle_struct_w_vector_set_2_remove_w_tag(void) {
     flecs::world world;
 
     auto e1 = world.entity().add<Tag>().set<Struct_w_vector>({std::vector<int>{1, 2}});
@@ -497,7 +497,7 @@ void ComponentLifecycle_struct_w_vector_set_2_remove_w_tag() {
     test_assert(ptr2 == NULL);
 }
 
-void ComponentLifecycle_get_mut_new() {
+void ComponentLifecycle_get_mut_new(void) {
     flecs::world world;
 
     world.component<Pod>();
@@ -521,7 +521,7 @@ void ComponentLifecycle_get_mut_new() {
     Pod::move_invoked = 0;    
 }
 
-void ComponentLifecycle_get_mut_existing() {
+void ComponentLifecycle_get_mut_existing(void) {
     flecs::world world;
 
     world.component<Pod>();
@@ -547,7 +547,7 @@ void ComponentLifecycle_get_mut_existing() {
     Pod::move_invoked = 0;
 }
 
-void ComponentLifecycle_implicit_component() {
+void ComponentLifecycle_implicit_component(void) {
     flecs::world world;
 
     auto e = world.entity().add<Pod>();
@@ -578,7 +578,7 @@ void ComponentLifecycle_implicit_component() {
     test_int(Pod::move_invoked, 0);
 }
 
-void ComponentLifecycle_implicit_after_query() {
+void ComponentLifecycle_implicit_after_query(void) {
     flecs::world world;
 
     world.query<Pod>();
@@ -678,7 +678,7 @@ static void try_set_default(flecs::world& ecs) {
     e.remove<T>();
 }
 
-void ComponentLifecycle_deleted_copy() {
+void ComponentLifecycle_deleted_copy(void) {
     flecs::world ecs;
 
     ecs.component<NoCopy>();
@@ -688,7 +688,7 @@ void ComponentLifecycle_deleted_copy() {
     try_set<NoCopy>(ecs);
 }
 
-void ComponentLifecycle_no_default_ctor_emplace() {
+void ComponentLifecycle_no_default_ctor_emplace(void) {
     flecs::world ecs;
 
     ecs.component<NoDefaultCtor>();
@@ -696,7 +696,7 @@ void ComponentLifecycle_no_default_ctor_emplace() {
     try_emplace<NoDefaultCtor>(ecs);
 }
 
-void ComponentLifecycle_default_init() {
+void ComponentLifecycle_default_init(void) {
     flecs::world ecs;
 
     ecs.component<DefaultInit>();
@@ -706,7 +706,7 @@ void ComponentLifecycle_default_init() {
     try_set<DefaultInit>(ecs);   
 }
 
-void ComponentLifecycle_no_default_ctor_add() {
+void ComponentLifecycle_no_default_ctor_add(void) {
     install_test_abort();
 
     flecs::world ecs;
@@ -718,7 +718,7 @@ void ComponentLifecycle_no_default_ctor_add() {
     try_add<NoDefaultCtor>(ecs);  
 }
 
-void ComponentLifecycle_no_default_ctor_add_relation() {
+void ComponentLifecycle_no_default_ctor_add_relation(void) {
     install_test_abort();
 
     flecs::world ecs;
@@ -730,7 +730,7 @@ void ComponentLifecycle_no_default_ctor_add_relation() {
     try_add_relation<NoDefaultCtor>(ecs); 
 }
 
-void ComponentLifecycle_no_default_ctor_add_second() {
+void ComponentLifecycle_no_default_ctor_add_second(void) {
     install_test_abort();
 
     flecs::world ecs;
@@ -742,7 +742,7 @@ void ComponentLifecycle_no_default_ctor_add_second() {
     try_add_second<NoDefaultCtor>(ecs);
 }
 
-void ComponentLifecycle_no_default_ctor_set() {
+void ComponentLifecycle_no_default_ctor_set(void) {
     install_test_abort();
 
     flecs::world ecs;
@@ -754,7 +754,7 @@ void ComponentLifecycle_no_default_ctor_set() {
     try_set<NoDefaultCtor>(ecs);  
 }
 
-void ComponentLifecycle_no_copy_ctor() {
+void ComponentLifecycle_no_copy_ctor(void) {
     flecs::world ecs;
 
     ecs.component<NoCopyCtor>();
@@ -764,7 +764,7 @@ void ComponentLifecycle_no_copy_ctor() {
     try_set<NoCopyCtor>(ecs); 
 }
 
-void ComponentLifecycle_no_move_ctor() {
+void ComponentLifecycle_no_move_ctor(void) {
     install_test_abort();
 
     flecs::world ecs;
@@ -774,7 +774,7 @@ void ComponentLifecycle_no_move_ctor() {
     ecs.component<NoMoveCtor>();
 }
 
-void ComponentLifecycle_no_copy_assign() {
+void ComponentLifecycle_no_copy_assign(void) {
     flecs::world ecs;
 
     ecs.component<NoCopyAssign>();
@@ -784,7 +784,7 @@ void ComponentLifecycle_no_copy_assign() {
     try_set<NoCopyAssign>(ecs);
 }
 
-void ComponentLifecycle_no_move_assign() {
+void ComponentLifecycle_no_move_assign(void) {
     install_test_abort();
 
     flecs::world ecs;
@@ -794,7 +794,7 @@ void ComponentLifecycle_no_move_assign() {
     ecs.component<NoMoveAssign>();
 }
 
-void ComponentLifecycle_no_copy() {
+void ComponentLifecycle_no_copy(void) {
     flecs::world ecs;
 
     ecs.component<NoCopy>();
@@ -804,7 +804,7 @@ void ComponentLifecycle_no_copy() {
     try_set<NoCopy>(ecs);
 }
 
-void ComponentLifecycle_no_move() {
+void ComponentLifecycle_no_move(void) {
     install_test_abort();
 
     flecs::world ecs;
@@ -814,7 +814,7 @@ void ComponentLifecycle_no_move() {
     ecs.component<NoMove>();
 }
 
-void ComponentLifecycle_no_dtor() {
+void ComponentLifecycle_no_dtor(void) {
     install_test_abort();
 
     flecs::world ecs;
@@ -824,7 +824,7 @@ void ComponentLifecycle_no_dtor() {
     ecs.component<NoDtor>();
 }
 
-void ComponentLifecycle_default_ctor_w_value_ctor() {
+void ComponentLifecycle_default_ctor_w_value_ctor(void) {
     flecs::world ecs;
 
     ecs.component<DefaultCtorValueCtor>();
@@ -836,7 +836,7 @@ void ComponentLifecycle_default_ctor_w_value_ctor() {
     try_set_default<FlecsCtorDefaultCtor>(ecs);
 }
 
-void ComponentLifecycle_no_default_ctor_move_ctor_on_set() {
+void ComponentLifecycle_no_default_ctor_move_ctor_on_set(void) {
     flecs::world ecs;
 
     ecs.component<CountNoDefaultCtor>();
@@ -867,7 +867,7 @@ void ComponentLifecycle_no_default_ctor_move_ctor_on_set() {
     test_int(CountNoDefaultCtor::move_ctor_invoked, 0);    
 }
 
-void ComponentLifecycle_emplace_w_ctor() {
+void ComponentLifecycle_emplace_w_ctor(void) {
     flecs::world ecs;
 
     auto e = ecs.entity()
@@ -884,7 +884,7 @@ void ComponentLifecycle_emplace_w_ctor() {
     test_int(Pod::dtor_invoked, 0);    
 }
 
-void ComponentLifecycle_emplace_no_default_ctor() {
+void ComponentLifecycle_emplace_no_default_ctor(void) {
     flecs::world ecs;
 
     auto e = ecs.entity()
@@ -901,7 +901,7 @@ void ComponentLifecycle_emplace_no_default_ctor() {
     test_int(CountNoDefaultCtor::dtor_invoked, 0); 
 }
 
-void ComponentLifecycle_emplace_defer_use_move_ctor() {
+void ComponentLifecycle_emplace_defer_use_move_ctor(void) {
     {
         flecs::world ecs;
 
@@ -938,7 +938,7 @@ void ComponentLifecycle_emplace_defer_use_move_ctor() {
     test_int(CountNoDefaultCtor::move_ctor_invoked, 1);
 }
 
-void ComponentLifecycle_emplace_existing() {
+void ComponentLifecycle_emplace_existing(void) {
     install_test_abort();
 
     flecs::world ecs;
@@ -957,7 +957,7 @@ void ComponentLifecycle_emplace_existing() {
     e.emplace<Pod>(20);
 }
 
-void ComponentLifecycle_emplace_singleton() {
+void ComponentLifecycle_emplace_singleton(void) {
     flecs::world ecs;
 
     ecs.emplace<Pod>(10);
@@ -996,7 +996,7 @@ int CtorDtorNonTrivial::ctor_invoked;
 int CtorDtorNonTrivial::dtor_invoked;
 int CtorDtorNonTrivial::dtor_value;
 
-void ComponentLifecycle_dtor_w_non_trivial_implicit_move() {
+void ComponentLifecycle_dtor_w_non_trivial_implicit_move(void) {
     flecs::world ecs;
 
     test_bool(std::is_trivially_move_assignable<CtorDtorNonTrivial>::value, false);
@@ -1067,7 +1067,7 @@ int CtorDtor_w_MoveAssign::dtor_invoked;
 int CtorDtor_w_MoveAssign::dtor_value;
 int CtorDtor_w_MoveAssign::move_value;
 
-void ComponentLifecycle_dtor_w_non_trivial_explicit_move() {
+void ComponentLifecycle_dtor_w_non_trivial_explicit_move(void) {
     flecs::world ecs;
 
     test_bool(std::is_trivially_move_assignable<CtorDtor_w_MoveAssign>::value, false);
@@ -1096,7 +1096,7 @@ void ComponentLifecycle_dtor_w_non_trivial_explicit_move() {
     test_int(CtorDtor_w_MoveAssign::dtor_value, 0);
 }
 
-void ComponentLifecycle_grow_no_default_ctor() {
+void ComponentLifecycle_grow_no_default_ctor(void) {
 	{
         flecs::world world;
 
@@ -1138,7 +1138,7 @@ void ComponentLifecycle_grow_no_default_ctor() {
     test_int(CountNoDefaultCtor::move_ctor_invoked, 2);
 }
 
-void ComponentLifecycle_grow_no_default_ctor_move() {
+void ComponentLifecycle_grow_no_default_ctor_move(void) {
     {
         flecs::world world;
 
@@ -1214,7 +1214,7 @@ void ComponentLifecycle_grow_no_default_ctor_move() {
     test_int(CountNoDefaultCtor::move_ctor_invoked, 0);
 }
 
-void ComponentLifecycle_grow_no_default_ctor_move_w_component() {
+void ComponentLifecycle_grow_no_default_ctor_move_w_component(void) {
     {
         flecs::world world;
 
@@ -1290,7 +1290,7 @@ void ComponentLifecycle_grow_no_default_ctor_move_w_component() {
     test_int(CountNoDefaultCtor::move_ctor_invoked, 0);
 }
 
-void ComponentLifecycle_delete_no_default_ctor() {
+void ComponentLifecycle_delete_no_default_ctor(void) {
 	{
         flecs::world world;
 
@@ -1333,7 +1333,7 @@ void ComponentLifecycle_delete_no_default_ctor() {
     test_int(CountNoDefaultCtor::move_ctor_invoked, 2);
 }
 
-void ComponentLifecycle_on_add_hook() {
+void ComponentLifecycle_on_add_hook(void) {
     int count = 0;
 
     {
@@ -1355,7 +1355,7 @@ void ComponentLifecycle_on_add_hook() {
     test_int(1, count);
 }
 
-void ComponentLifecycle_on_remove_hook() {
+void ComponentLifecycle_on_remove_hook(void) {
     int count = 0;
     
     {
@@ -1378,7 +1378,7 @@ void ComponentLifecycle_on_remove_hook() {
     test_int(2, count);
 }
 
-void ComponentLifecycle_on_set_hook() {
+void ComponentLifecycle_on_set_hook(void) {
     int count = 0;
     Position v = {0};
 
@@ -1409,7 +1409,7 @@ void ComponentLifecycle_on_set_hook() {
     test_int(2, count);
 }
 
-void ComponentLifecycle_on_add_hook_w_entity() {
+void ComponentLifecycle_on_add_hook_w_entity(void) {
     int count = 0;
     flecs::entity e_arg;
 
@@ -1435,7 +1435,7 @@ void ComponentLifecycle_on_add_hook_w_entity() {
     test_int(1, count);
 }
 
-void ComponentLifecycle_on_remove_hook_w_entity() {
+void ComponentLifecycle_on_remove_hook_w_entity(void) {
     int count = 0;
     flecs::entity e_arg;
     flecs::entity e2;
@@ -1464,7 +1464,7 @@ void ComponentLifecycle_on_remove_hook_w_entity() {
     test_assert(e_arg == e2);
 }
 
-void ComponentLifecycle_on_set_hook_w_entity() {
+void ComponentLifecycle_on_set_hook_w_entity(void) {
     int count = 0;
     Position v = {0};
     flecs::entity e_arg;
@@ -1499,7 +1499,7 @@ void ComponentLifecycle_on_set_hook_w_entity() {
     test_int(2, count);
 }
 
-void ComponentLifecycle_chained_hooks() {
+void ComponentLifecycle_chained_hooks(void) {
     flecs::world ecs;
 
     int32_t add_count = 0;
@@ -1538,7 +1538,7 @@ void ComponentLifecycle_chained_hooks() {
     test_int(1, remove_count);
 }
 
-void ComponentLifecycle_ctor_w_2_worlds() {
+void ComponentLifecycle_ctor_w_2_worlds(void) {
     {
         flecs::world ecs;
 
@@ -1560,7 +1560,7 @@ void ComponentLifecycle_ctor_w_2_worlds() {
     }
 }
 
-void ComponentLifecycle_ctor_w_2_worlds_explicit_registration() {
+void ComponentLifecycle_ctor_w_2_worlds_explicit_registration(void) {
     {
         flecs::world ecs;
 
@@ -1593,7 +1593,7 @@ struct DeferEmplaceTest {
     }
 };
 
-void ComponentLifecycle_defer_emplace() {
+void ComponentLifecycle_defer_emplace(void) {
     flecs::world ecs;
 
     flecs::entity e = ecs.entity();
@@ -1610,7 +1610,7 @@ void ComponentLifecycle_defer_emplace() {
     test_int(p->y, 20);
 }
 
-void ComponentLifecycle_emplace_w_on_add() {
+void ComponentLifecycle_emplace_w_on_add(void) {
     flecs::world ecs;
 
     flecs::entity e1 = ecs.entity();
@@ -1626,7 +1626,7 @@ void ComponentLifecycle_emplace_w_on_add() {
     test_int(on_add, 1);
 }
 
-void ComponentLifecycle_emplace_w_on_add_existing() {
+void ComponentLifecycle_emplace_w_on_add_existing(void) {
     flecs::world ecs;
 
     flecs::entity e1 = ecs.entity().add<Velocity>();
@@ -1642,7 +1642,7 @@ void ComponentLifecycle_emplace_w_on_add_existing() {
     test_int(on_add, 1);
 }
 
-void ComponentLifecycle_set_pair_no_copy() {
+void ComponentLifecycle_set_pair_no_copy(void) {
     flecs::world ecs;
 
     struct Tag { };
@@ -1655,7 +1655,7 @@ void ComponentLifecycle_set_pair_no_copy() {
     test_int(ptr->x_, 10);
 }
 
-void ComponentLifecycle_set_pair_w_entity_no_copy() {
+void ComponentLifecycle_set_pair_w_entity_no_copy(void) {
     flecs::world ecs;
 
     flecs::entity tag = ecs.entity();
@@ -1668,7 +1668,7 @@ void ComponentLifecycle_set_pair_w_entity_no_copy() {
     test_int(ptr->x_, 10);
 }
 
-void ComponentLifecycle_set_pair_second_no_copy() {
+void ComponentLifecycle_set_pair_second_no_copy(void) {
     flecs::world ecs;
 
     flecs::entity tag = ecs.entity();
@@ -1681,7 +1681,7 @@ void ComponentLifecycle_set_pair_second_no_copy() {
     test_int(ptr->x_, 10);
 }
 
-void ComponentLifecycle_set_override_no_copy() {
+void ComponentLifecycle_set_override_no_copy(void) {
     flecs::world ecs;
 
     flecs::entity e = ecs.entity()
@@ -1694,7 +1694,7 @@ void ComponentLifecycle_set_override_no_copy() {
     test_assert(e.has(flecs::Override | ecs.id<NoCopy>()));
 }
 
-void ComponentLifecycle_set_override_pair_no_copy() {
+void ComponentLifecycle_set_override_pair_no_copy(void) {
     flecs::world ecs;
 
     flecs::entity e = ecs.entity()
@@ -1707,7 +1707,7 @@ void ComponentLifecycle_set_override_pair_no_copy() {
     test_assert(e.has(flecs::Override | ecs.pair<NoCopy, Tag>()));
 }
 
-void ComponentLifecycle_set_override_pair_w_entity_no_copy() {
+void ComponentLifecycle_set_override_pair_w_entity_no_copy(void) {
     flecs::world ecs;
 
     flecs::entity tag = ecs.entity();
@@ -1722,7 +1722,7 @@ void ComponentLifecycle_set_override_pair_w_entity_no_copy() {
     test_assert(e.has(flecs::Override | ecs.pair<NoCopy>(tag)));
 }
 
-void ComponentLifecycle_dtor_after_defer_set() {
+void ComponentLifecycle_dtor_after_defer_set(void) {
     {
         flecs::world ecs;
 
@@ -1759,7 +1759,7 @@ void ComponentLifecycle_dtor_after_defer_set() {
     test_int(Pod::move_ctor_invoked, 0);
 }
 
-void ComponentLifecycle_dtor_with_relation() {
+void ComponentLifecycle_dtor_with_relation(void) {
     {
         flecs::world ecs;
 
@@ -1789,7 +1789,7 @@ void ComponentLifecycle_dtor_with_relation() {
     test_int(Pod::move_ctor_invoked, 1);
 }
 
-void ComponentLifecycle_register_parent_after_child_w_hooks() {
+void ComponentLifecycle_register_parent_after_child_w_hooks(void) {
     {
         flecs::world ecs;
 
@@ -1807,7 +1807,7 @@ void ComponentLifecycle_register_parent_after_child_w_hooks() {
     test_int(Pod::copy_ctor_invoked, 0);
 }
 
-void ComponentLifecycle_register_parent_after_child_w_hooks_implicit() {
+void ComponentLifecycle_register_parent_after_child_w_hooks_implicit(void) {
     {
         flecs::world ecs;
 

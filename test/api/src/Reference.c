@@ -1,10 +1,10 @@
 #include <api.h>
 
-void Reference_setup() {
+void Reference_setup(void) {
     ecs_log_set_level(-3);
 }
 
-void Reference_get_ref() {
+void Reference_get_ref(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -20,7 +20,7 @@ void Reference_get_ref() {
     ecs_fini(world);
 }
 
-void Reference_get_ref_after_add() {
+void Reference_get_ref_after_add(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -44,7 +44,7 @@ void Reference_get_ref_after_add() {
     ecs_fini(world);
 }
 
-void Reference_get_ref_after_remove() {
+void Reference_get_ref_after_remove(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -69,7 +69,7 @@ void Reference_get_ref_after_remove() {
     ecs_fini(world);
 }
 
-void Reference_get_ref_after_delete() {
+void Reference_get_ref_after_delete(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -93,7 +93,7 @@ void Reference_get_ref_after_delete() {
     ecs_fini(world);
 }
 
-void Reference_get_ref_after_realloc() {
+void Reference_get_ref_after_realloc(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -120,7 +120,7 @@ void Reference_get_ref_after_realloc() {
     ecs_fini(world);
 }
 
-void Reference_get_ref_staged() {
+void Reference_get_ref_staged(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -153,7 +153,7 @@ void Reference_get_ref_staged() {
     ecs_fini(world);
 }
 
-void Reference_get_ref_after_new_in_stage() {
+void Reference_get_ref_after_new_in_stage(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -188,7 +188,7 @@ void Reference_get_ref_after_new_in_stage() {
     ecs_fini(world);
 }
 
-void Reference_get_ref_monitored() {
+void Reference_get_ref_monitored(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -206,7 +206,7 @@ void Reference_get_ref_monitored() {
     ecs_fini(world);
 }
 
-void Reference_get_nonexisting() {
+void Reference_get_nonexisting(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -225,7 +225,7 @@ static ECS_MOVE(Position, dst, src, {
     ecs_os_memcpy_t(dst, src, Position);
 })
 
-void Reference_get_ref_after_realloc_w_lifecycle() {
+void Reference_get_ref_after_realloc_w_lifecycle(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -256,7 +256,7 @@ void Reference_get_ref_after_realloc_w_lifecycle() {
     ecs_fini(world);
 }
 
-void Reference_get_ref_w_low_id_tag() {
+void Reference_get_ref_w_low_id_tag(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t tag = ecs_component_init(world, &(ecs_component_desc_t){
@@ -282,7 +282,7 @@ void Reference_get_ref_w_low_id_tag() {
     ecs_fini(world);
 }
 
-void Reference_get_ref_w_low_id_tag_after_add() {
+void Reference_get_ref_w_low_id_tag_after_add(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t tag = ecs_component_init(world, &(ecs_component_desc_t){

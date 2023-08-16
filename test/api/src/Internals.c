@@ -1,6 +1,6 @@
 #include <api.h>
 
-void Internals_setup() {
+void Internals_setup(void) {
     ecs_log_set_level(-3);
 }
 
@@ -28,7 +28,7 @@ void Iter(ecs_iter_t *it) {
     }
 }
 
-void Internals_deactivate_table() {
+void Internals_deactivate_table(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -48,7 +48,7 @@ void Internals_deactivate_table() {
     ecs_fini(world);
 }
 
-void Internals_activate_table() {
+void Internals_activate_table(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -64,7 +64,7 @@ void Internals_activate_table() {
     ecs_fini(world);
 }
 
-void Internals_activate_deactivate_table() {
+void Internals_activate_deactivate_table(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -85,7 +85,7 @@ void Internals_activate_deactivate_table() {
     ecs_fini(world);
 }
 
-void Internals_activate_deactivate_reactive() {
+void Internals_activate_deactivate_reactive(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -110,7 +110,7 @@ void Internals_activate_deactivate_reactive() {
     ecs_fini(world);
 }
 
-void Internals_activate_deactivate_activate_other() {
+void Internals_activate_deactivate_activate_other(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -153,7 +153,7 @@ void ManualSystem(ecs_iter_t *it) {
     invoked ++;
 }
 
-void Internals_no_double_system_table_after_merge() {
+void Internals_no_double_system_table_after_merge(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -186,7 +186,7 @@ void Internals_no_double_system_table_after_merge() {
     ecs_fini(world);
 }
 
-void Internals_recreate_deleted_table() {
+void Internals_recreate_deleted_table(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -208,7 +208,7 @@ void Internals_recreate_deleted_table() {
     ecs_fini(world);
 }
 
-void Internals_create_65k_tables() {
+void Internals_create_65k_tables(void) {
     ecs_world_t *world = ecs_init();
 
     int32_t i;
@@ -222,7 +222,7 @@ void Internals_create_65k_tables() {
     ecs_fini(world);
 }
 
-void Internals_no_duplicate_root_table_id() {
+void Internals_no_duplicate_root_table_id(void) {
     ecs_world_t *world = ecs_init();
 
     /* This scenario triggered a bug where the first table registered in the
@@ -247,7 +247,7 @@ void Internals_no_duplicate_root_table_id() {
     ecs_fini(world);
 }
 
-void Internals_override_os_api_w_addon() {
+void Internals_override_os_api_w_addon(void) {
     ecs_os_set_api_defaults();
     ecs_os_api_t os_api = ecs_os_api;
 
@@ -262,7 +262,7 @@ void Internals_override_os_api_w_addon() {
     ecs_fini(world);
 }
 
-void Internals_records_resize_on_override() {
+void Internals_records_resize_on_override(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t TagA = ecs_new_id(world);
@@ -319,7 +319,7 @@ void Internals_records_resize_on_override() {
     ecs_fini(world);
 }
 
-void Internals_table_observed_after_add() {
+void Internals_table_observed_after_add(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -347,7 +347,7 @@ void Internals_table_observed_after_add() {
     ecs_fini(world);
 }
 
-void Internals_table_observed_after_remove() {
+void Internals_table_observed_after_remove(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -383,7 +383,7 @@ void Internals_table_observed_after_remove() {
     ecs_fini(world);
 }
 
-void Internals_table_observed_after_clear() {
+void Internals_table_observed_after_clear(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -410,7 +410,7 @@ void Internals_table_observed_after_clear() {
     ecs_fini(world);
 }
 
-void Internals_table_observed_after_delete() {
+void Internals_table_observed_after_delete(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -434,7 +434,7 @@ void Internals_table_observed_after_delete() {
     ecs_fini(world);
 }
 
-void Internals_table_observed_after_on_remove() {
+void Internals_table_observed_after_on_remove(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -470,7 +470,7 @@ void Internals_table_observed_after_on_remove() {
     ecs_fini(world);
 }
 
-void Internals_table_observed_after_entity_flag() {
+void Internals_table_observed_after_entity_flag(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -493,7 +493,7 @@ void Internals_table_observed_after_entity_flag() {
 
 }
 
-void Internals_table_create_leak_check() {
+void Internals_table_create_leak_check(void) {
     ecs_world_t *world = ecs_mini();
 
     int64_t max_block_count;

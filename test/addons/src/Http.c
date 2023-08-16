@@ -8,7 +8,7 @@ static bool OnRequest(
     return true;
 }
 
-void Http_teardown() {
+void Http_teardown(void) {
     ecs_set_os_api_impl();
 
     ecs_http_server_t *srv = ecs_http_server_init(&(ecs_http_server_desc_t){
@@ -21,7 +21,7 @@ void Http_teardown() {
     ecs_http_server_fini(srv);
 }
 
-void Http_teardown_started() {
+void Http_teardown_started(void) {
     ecs_set_os_api_impl();
 
     ecs_http_server_t *srv = ecs_http_server_init(&(ecs_http_server_desc_t){
@@ -36,7 +36,7 @@ void Http_teardown_started() {
     ecs_http_server_fini(srv);
 }
 
-void Http_teardown_stopped() {
+void Http_teardown_stopped(void) {
     ecs_set_os_api_impl();
 
     ecs_http_server_t *srv = ecs_http_server_init(&(ecs_http_server_desc_t){
@@ -52,7 +52,7 @@ void Http_teardown_stopped() {
     ecs_http_server_fini(srv);
 }
 
-void Http_stop_start() {
+void Http_stop_start(void) {
     ecs_set_os_api_impl();
 
     ecs_http_server_t *srv = ecs_http_server_init(&(ecs_http_server_desc_t){

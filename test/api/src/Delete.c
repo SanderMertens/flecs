@@ -1,10 +1,10 @@
 #include <api.h>
 
-void Delete_setup() {
+void Delete_setup(void) {
     ecs_log_set_level(-3);
 }
 
-void Delete_delete_1() {
+void Delete_delete_1(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -20,7 +20,7 @@ void Delete_delete_1() {
     ecs_fini(world);
 }
 
-void Delete_delete_1_again() {
+void Delete_delete_1_again(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -39,7 +39,7 @@ void Delete_delete_1_again() {
     ecs_fini(world);
 }
 
-void Delete_delete_recycled_tag_again() {
+void Delete_delete_recycled_tag_again(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new_id(world);
@@ -71,7 +71,7 @@ void Delete_delete_recycled_tag_again() {
     ecs_fini(world);
 }
 
-void Delete_delete_empty() {
+void Delete_delete_empty(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -86,7 +86,7 @@ void Delete_delete_empty() {
     ecs_fini(world);
 }
 
-void Delete_delete_nonexist() {
+void Delete_delete_nonexist(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_delete(world, 100);
@@ -96,7 +96,7 @@ void Delete_delete_nonexist() {
     ecs_fini(world);
 }
 
-void Delete_delete_1st_of_3() {
+void Delete_delete_1st_of_3(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -121,7 +121,7 @@ void Delete_delete_1st_of_3() {
     ecs_fini(world);
 }
 
-void Delete_delete_2nd_of_3() {
+void Delete_delete_2nd_of_3(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -147,7 +147,7 @@ void Delete_delete_2nd_of_3() {
     ecs_fini(world);
 }
 
-void Delete_delete_3rd_of_3() {
+void Delete_delete_3rd_of_3(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -173,7 +173,7 @@ void Delete_delete_3rd_of_3() {
     ecs_fini(world);
 }
 
-void Delete_delete_2_of_3() {
+void Delete_delete_2_of_3(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -200,7 +200,7 @@ void Delete_delete_2_of_3() {
     ecs_fini(world);
 }
 
-void Delete_delete_3_of_3() {
+void Delete_delete_3_of_3(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -253,7 +253,7 @@ void OnRemoveSystem(ecs_iter_t *it) {
     }
 }
 
-void Delete_delete_w_on_remove() {
+void Delete_delete_w_on_remove(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -270,7 +270,7 @@ void Delete_delete_w_on_remove() {
     ecs_fini(world);
 }
 
-void Delete_clear_1_component() {
+void Delete_clear_1_component(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -287,7 +287,7 @@ void Delete_clear_1_component() {
     ecs_fini(world);
 }
 
-void Delete_clear_2_components() {
+void Delete_clear_2_components(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -306,7 +306,7 @@ void Delete_clear_2_components() {
     ecs_fini(world);
 }
 
-void Delete_alive_after_delete() {
+void Delete_alive_after_delete(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -323,7 +323,7 @@ void Delete_alive_after_delete() {
     ecs_fini(world);
 }
 
-void Delete_alive_after_clear() {
+void Delete_alive_after_clear(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -341,7 +341,7 @@ void Delete_alive_after_clear() {
     ecs_fini(world);
 }
 
-void Delete_alive_after_staged_delete() {
+void Delete_alive_after_staged_delete(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -360,7 +360,7 @@ void Delete_alive_after_staged_delete() {
     ecs_fini(world);
 }
 
-void Delete_alive_while_staged() {
+void Delete_alive_while_staged(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -376,7 +376,7 @@ void Delete_alive_while_staged() {
     ecs_fini(world);
 }
 
-void Delete_alive_while_staged_w_delete() {
+void Delete_alive_while_staged_w_delete(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -397,7 +397,7 @@ void Delete_alive_while_staged_w_delete() {
     ecs_fini(world);
 }
 
-void Delete_alive_while_staged_w_delete_recycled_id() {
+void Delete_alive_while_staged_w_delete_recycled_id(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -422,7 +422,7 @@ void Delete_alive_while_staged_w_delete_recycled_id() {
     ecs_fini(world);
 }
 
-void Delete_alive_after_recycle() {
+void Delete_alive_after_recycle(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -444,7 +444,7 @@ void Delete_alive_after_recycle() {
     ecs_fini(world);
 }
 
-void Delete_delete_recycled() {
+void Delete_delete_recycled(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new(world, 0);
@@ -465,7 +465,7 @@ void Delete_delete_recycled() {
     ecs_fini(world);
 }
 
-void Delete_get_alive_for_alive() {
+void Delete_get_alive_for_alive(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new(world, 0);
@@ -480,7 +480,7 @@ void Delete_get_alive_for_alive() {
     ecs_fini(world);
 }
 
-void Delete_get_alive_for_recycled() {
+void Delete_get_alive_for_recycled(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new(world, 0);
@@ -500,7 +500,7 @@ void Delete_get_alive_for_recycled() {
     ecs_fini(world);
 }
 
-void Delete_get_alive_for_not_alive() {
+void Delete_get_alive_for_not_alive(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new(world, 0);
@@ -519,7 +519,7 @@ void Delete_get_alive_for_not_alive() {
     ecs_fini(world);
 }
 
-void Delete_get_alive_w_generation_for_recycled_alive() {
+void Delete_get_alive_w_generation_for_recycled_alive(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new(world, 0);
@@ -539,7 +539,7 @@ void Delete_get_alive_w_generation_for_recycled_alive() {
     ecs_fini(world);
 }
 
-void Delete_get_alive_w_generation_for_recycled_not_alive() {
+void Delete_get_alive_w_generation_for_recycled_not_alive(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new(world, 0);
@@ -559,7 +559,7 @@ void Delete_get_alive_w_generation_for_recycled_not_alive() {
     ecs_fini(world);
 }
 
-void Delete_get_alive_for_0() {
+void Delete_get_alive_for_0(void) {
     ecs_world_t *world = ecs_mini();
 
     test_assert(0 == ecs_get_alive(world, 0));
@@ -567,7 +567,7 @@ void Delete_get_alive_for_0() {
     ecs_fini(world);
 }
 
-void Delete_get_alive_for_nonexistent() {
+void Delete_get_alive_for_nonexistent(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_get_alive(world, 1000);
@@ -603,7 +603,7 @@ static ECS_MOVE(Position, dst, src, {
     move_invoked ++;
 })
 
-void Delete_move_w_dtor_move() {
+void Delete_move_w_dtor_move(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -650,7 +650,7 @@ void Delete_move_w_dtor_move() {
     ecs_fini(world);
 }
 
-void Delete_move_w_dtor_no_move() {
+void Delete_move_w_dtor_no_move(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -685,7 +685,7 @@ void Delete_move_w_dtor_no_move() {
     ecs_fini(world);
 }
 
-void Delete_move_w_no_dtor_move() {
+void Delete_move_w_no_dtor_move(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -722,7 +722,7 @@ void Delete_move_w_no_dtor_move() {
     ecs_fini(world);
 }
 
-void Delete_wrap_generation_count() {
+void Delete_wrap_generation_count(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t start = ecs_new_id(world);

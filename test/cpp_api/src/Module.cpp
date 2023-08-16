@@ -63,7 +63,7 @@ struct Module {
     }
 };
 
-void Module_import() {
+void Module_import(void) {
     flecs::world world;
     auto m = world.import<ns::SimpleModule>();
     test_assert(m.id() != 0);
@@ -76,7 +76,7 @@ void Module_import() {
     test_assert(e.has<Position>());
 }
 
-void Module_lookup_from_scope() {
+void Module_lookup_from_scope(void) {
     flecs::world world;
     world.import<ns::SimpleModule>();
 
@@ -99,7 +99,7 @@ void Module_lookup_from_scope() {
     test_assert(position_entity.id() == ns_position.id());    
 }
 
-void Module_nested_module() {
+void Module_nested_module(void) {
     flecs::world world;
     world.import<ns::SimpleModule>();
 
@@ -109,7 +109,7 @@ void Module_nested_module() {
     test_str(velocity.path().c_str(), "::ns::NestedModule::Velocity");
 }
 
-void Module_nested_type_module() {
+void Module_nested_type_module(void) {
     flecs::world world;
     world.import<ns::NestedTypeModule>();
 
@@ -140,7 +140,7 @@ void Module_nested_type_module() {
     test_int(childof_count, 1);    
 }
 
-void Module_component_redefinition_outside_module() {
+void Module_component_redefinition_outside_module(void) {
     flecs::world world;
 
     world.import<ns::SimpleModule>();
@@ -160,7 +160,7 @@ void Module_component_redefinition_outside_module() {
     test_int(childof_count, 1);
 }
 
-void Module_module_tag_on_namespace() {
+void Module_module_tag_on_namespace(void) {
     flecs::world world;
 
     auto mid = world.import<ns::NestedModule>();
@@ -187,7 +187,7 @@ public:
     }    
 };
 
-void Module_dtor_on_fini() {
+void Module_dtor_on_fini(void) {
     {
         flecs::world ecs;
 
@@ -215,7 +215,7 @@ void Module_register_w_root_name() {
     test_assert(ecs.lookup("::ns::NamedModule") == 0);
 }
 
-void Module_implicit_module() {
+void Module_implicit_module(void) {
     flecs::world ecs;
 
     auto m = ecs.import<ns::ImplicitModule>();
@@ -229,7 +229,7 @@ void Module_implicit_module() {
     test_assert(p == p_lookup);
 }
 
-void Module_module_in_namespace_w_root_name() {
+void Module_module_in_namespace_w_root_name(void) {
     flecs::world ecs;
 
     auto m = ecs.import<ns::NamedModuleInRoot>();
@@ -244,7 +244,7 @@ void Module_module_in_namespace_w_root_name() {
     test_assert(p == p_lookup);
 }
 
-void Module_module_as_entity() {
+void Module_module_as_entity(void) {
     flecs::world world;
 
     auto m = world.import<ns::SimpleModule>();
@@ -254,7 +254,7 @@ void Module_module_as_entity() {
     test_assert(m == e);
 }
 
-void Module_module_as_component() {
+void Module_module_as_component(void) {
     flecs::world world;
 
     auto m = world.import<ns::SimpleModule>();
@@ -264,7 +264,7 @@ void Module_module_as_component() {
     test_assert(m == e);
 }
 
-void Module_module_with_core_name() {
+void Module_module_with_core_name(void) {
     flecs::world world;
 
     flecs::entity m = world.import<Module>();

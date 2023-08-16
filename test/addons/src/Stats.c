@@ -4,7 +4,7 @@
     test_int(value, (cur)->field - (prev)->field);\
     (prev)->field = (cur)->field
 
-void Stats_get_world_stats() {
+void Stats_get_world_stats(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_world_stats_t stats = {0};
@@ -15,7 +15,7 @@ void Stats_get_world_stats() {
     ecs_fini(world);
 }
 
-void Stats_get_pipeline_stats_before_progress_mini_world() {
+void Stats_get_pipeline_stats_before_progress_mini_world(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_IMPORT(world, FlecsPipeline);
@@ -32,7 +32,7 @@ void Stats_get_pipeline_stats_before_progress_mini_world() {
     ecs_fini(world);
 }
 
-void Stats_get_pipeline_stats_before_progress() {
+void Stats_get_pipeline_stats_before_progress(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t pipeline = ecs_get_pipeline(world);
@@ -49,7 +49,7 @@ void Stats_get_pipeline_stats_before_progress() {
     ecs_fini(world);
 }
 
-void Stats_get_pipeline_stats_after_progress_no_systems() {
+void Stats_get_pipeline_stats_after_progress_no_systems(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t pipeline = ecs_get_pipeline(world);
@@ -73,7 +73,7 @@ void Stats_get_pipeline_stats_after_progress_no_systems() {
 static void FooSys(ecs_iter_t *it) { }
 static void BarSys(ecs_iter_t *it) { }
 
-void Stats_get_pipeline_stats_after_progress_1_system() {
+void Stats_get_pipeline_stats_after_progress_1_system(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_SYSTEM(world, FooSys, EcsOnUpdate, 0);
@@ -108,7 +108,7 @@ void Stats_get_pipeline_stats_after_progress_1_system() {
     ecs_fini(world);
 }
 
-void Stats_get_pipeline_stats_after_progress_1_inactive_system() {
+void Stats_get_pipeline_stats_after_progress_1_inactive_system(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -143,7 +143,7 @@ void Stats_get_pipeline_stats_after_progress_1_inactive_system() {
     ecs_fini(world);
 }
 
-void Stats_get_pipeline_stats_after_progress_2_systems() {
+void Stats_get_pipeline_stats_after_progress_2_systems(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_SYSTEM(world, FooSys, EcsOnUpdate, 0);
@@ -191,7 +191,7 @@ void Stats_get_pipeline_stats_after_progress_2_systems() {
     ecs_fini(world);
 }
 
-void Stats_get_pipeline_stats_after_progress_2_systems_one_merge() {
+void Stats_get_pipeline_stats_after_progress_2_systems_one_merge(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -242,7 +242,7 @@ void Stats_get_pipeline_stats_after_progress_2_systems_one_merge() {
     ecs_fini(world);
 }
 
-void Stats_get_pipeline_stats_w_task_system() {
+void Stats_get_pipeline_stats_w_task_system(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_SYSTEM(world, FooSys, EcsOnUpdate, 0);
@@ -260,7 +260,7 @@ void Stats_get_pipeline_stats_w_task_system() {
     ecs_fini(world);
 }
 
-void Stats_get_entity_count() {
+void Stats_get_entity_count(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_world_stats_t stats = {0};
@@ -286,7 +286,7 @@ void Stats_get_entity_count() {
     ecs_fini(world);
 }
 
-void Stats_get_not_alive_entity_count() {
+void Stats_get_not_alive_entity_count(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_world_stats_t stats = {0};

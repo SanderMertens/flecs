@@ -1,6 +1,6 @@
 #include <addons.h>
 
-void Rest_teardown() {
+void Rest_teardown(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_singleton_set(world, EcsRest, {27760});
@@ -10,7 +10,7 @@ void Rest_teardown() {
     test_assert(true); // Ensure teardown was successful
 }
 
-void Rest_get() {
+void Rest_get(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);

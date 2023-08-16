@@ -1,6 +1,6 @@
 #include <meta.h>
 
-void Cursor_set_bool() {
+void Cursor_set_bool(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_bool_t value = false;
@@ -13,7 +13,7 @@ void Cursor_set_bool() {
     ecs_fini(world);
 }
 
-void Cursor_set_byte() {
+void Cursor_set_byte(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_byte_t value = 10;
@@ -26,7 +26,7 @@ void Cursor_set_byte() {
     ecs_fini(world);
 }
 
-void Cursor_set_char() {
+void Cursor_set_char(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_char_t value = 10;
@@ -39,7 +39,7 @@ void Cursor_set_char() {
     ecs_fini(world);
 }
 
-void Cursor_set_i8() {
+void Cursor_set_i8(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_i8_t value = 10;
@@ -52,7 +52,7 @@ void Cursor_set_i8() {
     ecs_fini(world);
 }
 
-void Cursor_set_i16() {
+void Cursor_set_i16(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_i16_t value = 10;
@@ -65,7 +65,7 @@ void Cursor_set_i16() {
     ecs_fini(world);
 }
 
-void Cursor_set_i32() {
+void Cursor_set_i32(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_i32_t value = 10;
@@ -78,7 +78,7 @@ void Cursor_set_i32() {
     ecs_fini(world);
 }
 
-void Cursor_set_i64() {
+void Cursor_set_i64(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_i64_t value = 10;
@@ -91,7 +91,7 @@ void Cursor_set_i64() {
     ecs_fini(world);
 }
 
-void Cursor_set_iptr() {
+void Cursor_set_iptr(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_iptr_t value = 10;
@@ -104,7 +104,7 @@ void Cursor_set_iptr() {
     ecs_fini(world);
 }
 
-void Cursor_set_u8() {
+void Cursor_set_u8(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_u8_t value = 10;
@@ -117,7 +117,7 @@ void Cursor_set_u8() {
     ecs_fini(world);
 }
 
-void Cursor_set_u16() {
+void Cursor_set_u16(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_u16_t value = 10;
@@ -130,7 +130,7 @@ void Cursor_set_u16() {
     ecs_fini(world);
 }
 
-void Cursor_set_u32() {
+void Cursor_set_u32(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_u32_t value = 10;
@@ -143,7 +143,7 @@ void Cursor_set_u32() {
     ecs_fini(world);
 }
 
-void Cursor_set_u64() {
+void Cursor_set_u64(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_u64_t value = 10;
@@ -156,7 +156,7 @@ void Cursor_set_u64() {
     ecs_fini(world);
 }
 
-void Cursor_set_uptr() {
+void Cursor_set_uptr(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_uptr_t value = 10;
@@ -169,7 +169,7 @@ void Cursor_set_uptr() {
     ecs_fini(world);
 }
 
-void Cursor_set_float() {
+void Cursor_set_float(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_f32_t value = 10;
@@ -182,7 +182,7 @@ void Cursor_set_float() {
     ecs_fini(world);
 }
 
-void Cursor_set_double() {
+void Cursor_set_double(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_f64_t value = 10;
@@ -195,7 +195,7 @@ void Cursor_set_double() {
     ecs_fini(world);
 }
 
-void Cursor_set_string() {
+void Cursor_set_string(void) {
     ecs_world_t *world = ecs_init();
 
     char *value = NULL;
@@ -209,7 +209,7 @@ void Cursor_set_string() {
     ecs_fini(world);
 }
 
-void Cursor_set_string_literal() {
+void Cursor_set_string_literal(void) {
     ecs_world_t *world = ecs_init();
 
     char *value = NULL;
@@ -223,7 +223,7 @@ void Cursor_set_string_literal() {
     ecs_fini(world);
 }
 
-void Cursor_set_string_to_null() {
+void Cursor_set_string_to_null(void) {
     ecs_world_t *world = ecs_init();
 
     char *value = ecs_os_strdup("HelloWorld");
@@ -237,7 +237,7 @@ void Cursor_set_string_to_null() {
     ecs_fini(world);
 }
 
-void Cursor_set_entity() {
+void Cursor_set_entity(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t value = 0;
@@ -250,7 +250,7 @@ void Cursor_set_entity() {
     ecs_fini(world);
 }
 
-void Cursor_set_entity_to_number() {
+void Cursor_set_entity_to_number(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t value = 0;
@@ -263,7 +263,7 @@ void Cursor_set_entity_to_number() {
     ecs_fini(world);
 }
 
-void Cursor_set_entity_to_0() {
+void Cursor_set_entity_to_0(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t value = 0;
@@ -276,7 +276,7 @@ void Cursor_set_entity_to_0() {
     ecs_fini(world);
 }
 
-void Cursor_set_enum() {
+void Cursor_set_enum(void) {
     ecs_world_t *world = ecs_init();
 
     typedef enum {
@@ -301,7 +301,7 @@ void Cursor_set_enum() {
     ecs_fini(world);
 }
 
-void Cursor_set_bitmask() {
+void Cursor_set_bitmask(void) {
     ecs_world_t *world = ecs_init();
 
     uint32_t Bacon = 1;
@@ -324,7 +324,7 @@ void Cursor_set_bitmask() {
     ecs_fini(world);
 }
 
-void Cursor_set_signed_as_unsigned() {
+void Cursor_set_signed_as_unsigned(void) {
     ecs_world_t *world = ecs_init();
 
     int32_t value = 0;
@@ -337,7 +337,7 @@ void Cursor_set_signed_as_unsigned() {
     ecs_fini(world);
 }
 
-void Cursor_set_unsigned_as_signed() {
+void Cursor_set_unsigned_as_signed(void) {
     ecs_world_t *world = ecs_init();
 
     uint32_t value = 0;
@@ -350,7 +350,7 @@ void Cursor_set_unsigned_as_signed() {
     ecs_fini(world);
 }
 
-void Cursor_set_signed_as_unsigned_out_of_range() {
+void Cursor_set_signed_as_unsigned_out_of_range(void) {
     ecs_log_set_level(-4);
     ecs_world_t *world = ecs_init();
 
@@ -364,7 +364,7 @@ void Cursor_set_signed_as_unsigned_out_of_range() {
     ecs_fini(world);
 }
 
-void Cursor_set_unsigned_as_signed_out_of_range() {
+void Cursor_set_unsigned_as_signed_out_of_range(void) {
     ecs_log_set_level(-4);
     ecs_world_t *world = ecs_init();
 
@@ -378,7 +378,7 @@ void Cursor_set_unsigned_as_signed_out_of_range() {
     ecs_fini(world);
 }
 
-void Cursor_set_string_to_null_as_signed() {
+void Cursor_set_string_to_null_as_signed(void) {
     ecs_world_t *world = ecs_init();
 
     char *value = ecs_os_strdup("Hello");
@@ -391,7 +391,7 @@ void Cursor_set_string_to_null_as_signed() {
     ecs_fini(world);
 }
 
-void Cursor_set_string_to_null_as_unsigned() {
+void Cursor_set_string_to_null_as_unsigned(void) {
     ecs_world_t *world = ecs_init();
 
     char *value = ecs_os_strdup("Hello");
@@ -404,7 +404,7 @@ void Cursor_set_string_to_null_as_unsigned() {
     ecs_fini(world);
 }
 
-void Cursor_set_entity_as_signed() {
+void Cursor_set_entity_as_signed(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t value = 0;
@@ -418,7 +418,7 @@ void Cursor_set_entity_as_signed() {
     ecs_fini(world);
 }
 
-void Cursor_set_entity_as_unsigned() {
+void Cursor_set_entity_as_unsigned(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t value = 0;
@@ -432,7 +432,7 @@ void Cursor_set_entity_as_unsigned() {
     ecs_fini(world);
 }
 
-void Cursor_set_entity_as_signed_out_of_range() {
+void Cursor_set_entity_as_signed_out_of_range(void) {
     ecs_log_set_level(-4);
     ecs_world_t *world = ecs_init();
 
@@ -446,7 +446,7 @@ void Cursor_set_entity_as_signed_out_of_range() {
     ecs_fini(world);
 }
 
-void Cursor_set_str_to_bool() {
+void Cursor_set_str_to_bool(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_bool_t value = false;
@@ -464,7 +464,7 @@ void Cursor_set_str_to_bool() {
     ecs_fini(world);
 }
 
-void Cursor_set_str_to_char() {
+void Cursor_set_str_to_char(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_char_t value = false;
@@ -477,7 +477,7 @@ void Cursor_set_str_to_char() {
     ecs_fini(world);
 }
 
-void Cursor_set_str_literal_to_char() {
+void Cursor_set_str_literal_to_char(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_char_t value = false;
@@ -490,7 +490,7 @@ void Cursor_set_str_literal_to_char() {
     ecs_fini(world);
 }
 
-void Cursor_set_str_to_i8() {
+void Cursor_set_str_to_i8(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_i8_t value = 10;
@@ -503,7 +503,7 @@ void Cursor_set_str_to_i8() {
     ecs_fini(world);
 }
 
-void Cursor_set_str_to_i16() {
+void Cursor_set_str_to_i16(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_i16_t value = 10;
@@ -516,7 +516,7 @@ void Cursor_set_str_to_i16() {
     ecs_fini(world);
 }
 
-void Cursor_set_str_to_i32() {
+void Cursor_set_str_to_i32(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_i32_t value = 10;
@@ -529,7 +529,7 @@ void Cursor_set_str_to_i32() {
     ecs_fini(world);
 }
 
-void Cursor_set_str_to_i64() {
+void Cursor_set_str_to_i64(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_i64_t value = 10;
@@ -542,7 +542,7 @@ void Cursor_set_str_to_i64() {
     ecs_fini(world);
 }
 
-void Cursor_set_str_to_f32() {
+void Cursor_set_str_to_f32(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_f32_t value = 10.5;
@@ -555,7 +555,7 @@ void Cursor_set_str_to_f32() {
     ecs_fini(world);
 }
 
-void Cursor_set_str_to_f64() {
+void Cursor_set_str_to_f64(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_f64_t value = 10.5;
@@ -568,7 +568,7 @@ void Cursor_set_str_to_f64() {
     ecs_fini(world);
 }
 
-void Cursor_set_str_to_entity() {
+void Cursor_set_str_to_entity(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t value = 0;
@@ -581,7 +581,7 @@ void Cursor_set_str_to_entity() {
     ecs_fini(world);
 }
 
-void Cursor_set_str_to_invalid_bool() {
+void Cursor_set_str_to_invalid_bool(void) {
     ecs_log_set_level(-4);
 
     ecs_world_t *world = ecs_init();
@@ -596,7 +596,7 @@ void Cursor_set_str_to_invalid_bool() {
     ecs_fini(world);
 }
 
-void Cursor_set_str_to_invalid_entity() {
+void Cursor_set_str_to_invalid_entity(void) {
     ecs_log_set_level(-4);
 
     ecs_world_t *world = ecs_init();
@@ -611,7 +611,7 @@ void Cursor_set_str_to_invalid_entity() {
     ecs_fini(world);
 }
 
-void Cursor_struct_set_i32() {
+void Cursor_struct_set_i32(void) {
     typedef struct {
         ecs_i32_t x;
     } T;
@@ -638,7 +638,7 @@ void Cursor_struct_set_i32() {
     ecs_fini(world);
 }
 
-void Cursor_struct_set_i32_i32() {
+void Cursor_struct_set_i32_i32(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -671,7 +671,7 @@ void Cursor_struct_set_i32_i32() {
     ecs_fini(world);
 }
 
-void Cursor_struct_set_i32_i32_i32() {
+void Cursor_struct_set_i32_i32_i32(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -709,7 +709,7 @@ void Cursor_struct_set_i32_i32_i32() {
     ecs_fini(world);
 }
 
-void Cursor_struct_set_bool() {
+void Cursor_struct_set_bool(void) {
     typedef struct {
         ecs_bool_t x;
     } T;
@@ -736,7 +736,7 @@ void Cursor_struct_set_bool() {
     ecs_fini(world);
 }
 
-void Cursor_struct_set_bool_bool() {
+void Cursor_struct_set_bool_bool(void) {
     typedef struct {
         ecs_bool_t x;
         ecs_bool_t y;
@@ -779,7 +779,7 @@ void Cursor_struct_set_bool_bool() {
     ecs_fini(world);
 }
 
-void Cursor_struct_set_bool_bool_bool() {
+void Cursor_struct_set_bool_bool_bool(void) {
     typedef struct {
         ecs_bool_t x;
         ecs_bool_t y;
@@ -817,7 +817,7 @@ void Cursor_struct_set_bool_bool_bool() {
     ecs_fini(world);
 }
 
-void Cursor_struct_set_bool_bool_i32_bool() {
+void Cursor_struct_set_bool_bool_i32_bool(void) {
     typedef struct {
         ecs_bool_t x;
         ecs_bool_t y;
@@ -860,7 +860,7 @@ void Cursor_struct_set_bool_bool_i32_bool() {
     ecs_fini(world);
 }
 
-void Cursor_struct_nested_i32() {
+void Cursor_struct_nested_i32(void) {
     typedef struct {
         ecs_i32_t x;
     } N1;
@@ -903,7 +903,7 @@ void Cursor_struct_nested_i32() {
     ecs_fini(world);
 }
 
-void Cursor_struct_2_nested_1_i32_2_i32() {
+void Cursor_struct_2_nested_1_i32_2_i32(void) {
     typedef struct {
         ecs_i32_t x;
     } N1;
@@ -953,7 +953,7 @@ void Cursor_struct_2_nested_1_i32_2_i32() {
     ecs_fini(world);
 }
 
-void Cursor_struct_2_nested_1_i32_i32_2_i32_i32() {
+void Cursor_struct_2_nested_1_i32_i32_2_i32_i32(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -1011,7 +1011,7 @@ void Cursor_struct_2_nested_1_i32_i32_2_i32_i32() {
     ecs_fini(world);
 }
 
-void Cursor_struct_2_nested_1_i32_i32_2_i32_i32_w_padding_members() {
+void Cursor_struct_2_nested_1_i32_i32_2_i32_i32_w_padding_members(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -1085,7 +1085,7 @@ void Cursor_struct_2_nested_1_i32_i32_2_i32_i32_w_padding_members() {
     ecs_fini(world);
 }
 
-void Cursor_struct_set_array_i32_3() {
+void Cursor_struct_set_array_i32_3(void) {
     typedef struct {
         ecs_i32_t x[3];
     } T;
@@ -1121,7 +1121,7 @@ void Cursor_struct_set_array_i32_3() {
     ecs_fini(world);
 }
 
-void Cursor_struct_set_2_array_i32_3() {
+void Cursor_struct_set_2_array_i32_3(void) {
     typedef struct {
         ecs_i32_t x[3];
         ecs_i32_t y[3];
@@ -1173,7 +1173,7 @@ void Cursor_struct_set_2_array_i32_3() {
     ecs_fini(world);
 }
 
-void Cursor_struct_set_2_array_i32_3_w_padding_members() {
+void Cursor_struct_set_2_array_i32_3_w_padding_members(void) {
     typedef struct {
         ecs_bool_t p1;
         ecs_i32_t x[3];
@@ -1243,7 +1243,7 @@ void Cursor_struct_set_2_array_i32_3_w_padding_members() {
     ecs_fini(world);
 }
 
-void Cursor_struct_set_array_w_struct_i32() {
+void Cursor_struct_set_array_w_struct_i32(void) {
     typedef struct {
         ecs_i32_t x;
     } N1;
@@ -1296,7 +1296,7 @@ void Cursor_struct_set_array_w_struct_i32() {
     ecs_fini(world);
 }
 
-void Cursor_struct_set_2_array_w_struct_i32() {
+void Cursor_struct_set_2_array_w_struct_i32(void) {
     typedef struct {
         ecs_i32_t x;
     } N1;
@@ -1371,7 +1371,7 @@ void Cursor_struct_set_2_array_w_struct_i32() {
     ecs_fini(world);
 }
 
-void Cursor_struct_set_array_w_struct_w_array_i32() {
+void Cursor_struct_set_array_w_struct_w_array_i32(void) {
     typedef struct {
         ecs_i32_t x[3];
     } N1;
@@ -1454,7 +1454,7 @@ void Cursor_struct_set_array_w_struct_w_array_i32() {
     ecs_fini(world);
 }
 
-void Cursor_struct_set_2_array_w_struct_w_array_i32() {
+void Cursor_struct_set_2_array_w_struct_w_array_i32(void) {
     typedef struct {
         ecs_i32_t x[3];
     } N1;
@@ -1590,7 +1590,7 @@ void Cursor_struct_set_2_array_w_struct_w_array_i32() {
 }
 
 
-void Cursor_struct_member_i32() {
+void Cursor_struct_member_i32(void) {
     typedef struct {
         ecs_i32_t x;
     } T;
@@ -1618,7 +1618,7 @@ void Cursor_struct_member_i32() {
     ecs_fini(world);
 }
 
-void Cursor_struct_member_i32_i32() {
+void Cursor_struct_member_i32_i32(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -1651,7 +1651,7 @@ void Cursor_struct_member_i32_i32() {
     ecs_fini(world);
 }
 
-void Cursor_struct_member_i32_i32_reverse() {
+void Cursor_struct_member_i32_i32_reverse(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -1684,7 +1684,7 @@ void Cursor_struct_member_i32_i32_reverse() {
     ecs_fini(world);
 }
 
-void Cursor_struct_member_nested_i32_i32() {
+void Cursor_struct_member_nested_i32_i32(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -1730,7 +1730,7 @@ void Cursor_struct_member_nested_i32_i32() {
     ecs_fini(world);
 }
 
-void Cursor_struct_member_2_nested_i32_i32() {
+void Cursor_struct_member_2_nested_i32_i32(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -1788,7 +1788,7 @@ void Cursor_struct_member_2_nested_i32_i32() {
     ecs_fini(world);
 }
 
-void Cursor_struct_member_2_nested_i32_i32_reverse() {
+void Cursor_struct_member_2_nested_i32_i32_reverse(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -1846,7 +1846,7 @@ void Cursor_struct_member_2_nested_i32_i32_reverse() {
     ecs_fini(world);
 }
 
-void Cursor_struct_dotmember() {
+void Cursor_struct_dotmember(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -1898,7 +1898,7 @@ void Cursor_struct_dotmember() {
     ecs_fini(world);
 }
 
-void Cursor_struct_dotmember_assign_twice() {
+void Cursor_struct_dotmember_assign_twice(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -1954,7 +1954,7 @@ void Cursor_struct_dotmember_assign_twice() {
     ecs_fini(world);
 }
 
-void Cursor_struct_member_after_dotmember() {
+void Cursor_struct_member_after_dotmember(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -2009,7 +2009,7 @@ void Cursor_struct_member_after_dotmember() {
     ecs_fini(world);
 }
 
-void Cursor_struct_next_after_dotmember() {
+void Cursor_struct_next_after_dotmember(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -2064,7 +2064,7 @@ void Cursor_struct_next_after_dotmember() {
     ecs_fini(world);
 }
 
-void Cursor_struct_pop_after_dotmember() {
+void Cursor_struct_pop_after_dotmember(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -2148,7 +2148,7 @@ void Cursor_struct_pop_after_dotmember() {
     ecs_fini(world);
 }
 
-void Cursor_struct_w_array_type_i32_i32() {
+void Cursor_struct_w_array_type_i32_i32(void) {
     typedef int32_t N1[2];
 
     typedef struct {
@@ -2187,7 +2187,7 @@ void Cursor_struct_w_array_type_i32_i32() {
     ecs_fini(world);
 }
 
-void Cursor_struct_w_array_type_struct() {
+void Cursor_struct_w_array_type_struct(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -2257,7 +2257,7 @@ void Cursor_struct_w_array_type_struct() {
     ecs_fini(world);
 }
 
-void Cursor_struct_w_2_array_type_i32_i32() {
+void Cursor_struct_w_2_array_type_i32_i32(void) {
     typedef int32_t N1[2];
 
     typedef struct {
@@ -2308,7 +2308,7 @@ void Cursor_struct_w_2_array_type_i32_i32() {
     ecs_fini(world);
 }
 
-void Cursor_struct_w_2_array_type_struct() {
+void Cursor_struct_w_2_array_type_struct(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -2403,7 +2403,7 @@ void Cursor_struct_w_2_array_type_struct() {
     ecs_fini(world);
 }
 
-void Cursor_array_move_primitive() {
+void Cursor_array_move_primitive(void) {
     ecs_world_t *world = ecs_init();
 
     typedef struct {
@@ -2451,7 +2451,7 @@ void Cursor_array_move_primitive() {
     ecs_fini(world);
 }
 
-void Cursor_array_move_struct() {
+void Cursor_array_move_struct(void) {
     ecs_world_t *world = ecs_init();
 
     typedef struct {
@@ -2533,7 +2533,7 @@ void Cursor_array_move_struct() {
     ecs_fini(world);
 }
 
-void Cursor_array_move_out_of_range() {
+void Cursor_array_move_out_of_range(void) {
     ecs_world_t *world = ecs_init();
 
     typedef struct {
@@ -2595,7 +2595,7 @@ static void Opaque_entity_set(void *ptr, ecs_world_t *world, ecs_entity_t value)
     ((Opaque_entity*)ptr)->value = value;
 }
 
-void Cursor_opaque_set_bool() {
+void Cursor_opaque_set_bool(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Opaque_bool);
@@ -2617,7 +2617,7 @@ void Cursor_opaque_set_bool() {
     ecs_fini(world);
 }
 
-void Cursor_opaque_set_char() {
+void Cursor_opaque_set_char(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Opaque_char);
@@ -2639,7 +2639,7 @@ void Cursor_opaque_set_char() {
     ecs_fini(world);
 }
 
-void Cursor_opaque_set_int() {
+void Cursor_opaque_set_int(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Opaque_int64_t);
@@ -2661,7 +2661,7 @@ void Cursor_opaque_set_int() {
     ecs_fini(world);
 }
 
-void Cursor_opaque_set_uint() {
+void Cursor_opaque_set_uint(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Opaque_uint64_t);
@@ -2683,7 +2683,7 @@ void Cursor_opaque_set_uint() {
     ecs_fini(world);
 }
 
-void Cursor_opaque_set_float() {
+void Cursor_opaque_set_float(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Opaque_double);
@@ -2705,7 +2705,7 @@ void Cursor_opaque_set_float() {
     ecs_fini(world);
 }
 
-void Cursor_opaque_set_string() {
+void Cursor_opaque_set_string(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Opaque_const_string_t);
@@ -2725,7 +2725,7 @@ void Cursor_opaque_set_string() {
     ecs_fini(world);
 }
 
-void Cursor_opaque_set_entity() {
+void Cursor_opaque_set_entity(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Opaque_entity);
@@ -2781,7 +2781,7 @@ static void IntVec_resize(void *ptr, size_t size) {
     }
 }
 
-void Cursor_opaque_set_int_vec() {
+void Cursor_opaque_set_int_vec(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, IntVec);
@@ -2815,7 +2815,7 @@ void Cursor_opaque_set_int_vec() {
     ecs_fini(world);
 }
 
-void Cursor_opaque_set_int_vec_empty() {
+void Cursor_opaque_set_int_vec_empty(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, IntVec);
@@ -2840,7 +2840,7 @@ void Cursor_opaque_set_int_vec_empty() {
     ecs_fini(world);
 }
 
-void Cursor_opaque_set_int_vec_resize_smaller() {
+void Cursor_opaque_set_int_vec_resize_smaller(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, IntVec);
@@ -2885,7 +2885,7 @@ void Cursor_opaque_set_int_vec_resize_smaller() {
     ecs_fini(world);
 }
 
-void Cursor_opaque_set_int_vec_resize_larger() {
+void Cursor_opaque_set_int_vec_resize_larger(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, IntVec);
@@ -2936,7 +2936,7 @@ void Cursor_opaque_set_int_vec_resize_larger() {
     ecs_fini(world);
 }
 
-void Cursor_opaque_set_int_vec_resize_empty() {
+void Cursor_opaque_set_int_vec_resize_empty(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, IntVec);
@@ -3016,7 +3016,7 @@ static void BoxedIntVec_resize(void *ptr, size_t size) {
     }
 }
 
-void Cursor_opaque_set_opaque_int_vec() {
+void Cursor_opaque_set_opaque_int_vec(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, BoxedIntVec);
@@ -3074,7 +3074,7 @@ static void* OpaqueStruct_member(void *ptr, const char *member) {
     }
 }
 
-void Cursor_opaque_set_struct() {
+void Cursor_opaque_set_struct(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, OpaqueStruct);
@@ -3132,7 +3132,7 @@ static void* OpaqueNested_member(void *ptr, const char *member) {
     }
 }
 
-void Cursor_opaque_set_nested_struct() {
+void Cursor_opaque_set_nested_struct(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -3225,7 +3225,7 @@ static void* OpaqueNestedOpaque_member(void *ptr, const char *member) {
     }
 }
 
-void Cursor_opaque_set_nested_opaque_struct() {
+void Cursor_opaque_set_nested_opaque_struct(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, OpaqueStruct);
@@ -3324,7 +3324,7 @@ static void* OpaqueArray_ensure(void *ptr, size_t index) {
     return NULL;
 }
 
-void Cursor_opaque_set_array() {
+void Cursor_opaque_set_array(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, OpaqueArray);
@@ -3352,7 +3352,7 @@ void Cursor_opaque_set_array() {
     ecs_fini(world);
 }
 
-void Cursor_opaque_set_array_2_of_3_elems() {
+void Cursor_opaque_set_array_2_of_3_elems(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, OpaqueArray);
@@ -3378,7 +3378,7 @@ void Cursor_opaque_set_array_2_of_3_elems() {
     ecs_fini(world);
 }
 
-void Cursor_opaque_set_array_empty() {
+void Cursor_opaque_set_array_empty(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, OpaqueArray);
@@ -3401,7 +3401,7 @@ void Cursor_opaque_set_array_empty() {
     ecs_fini(world);
 }
 
-void Cursor_opaque_set_uint_to_int() {
+void Cursor_opaque_set_uint_to_int(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Opaque_int64_t);
@@ -3427,7 +3427,7 @@ void Cursor_opaque_set_uint_to_int() {
     ecs_fini(world);
 }
 
-void Cursor_opaque_set_float_to_int() {
+void Cursor_opaque_set_float_to_int(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Opaque_int64_t);
@@ -3453,7 +3453,7 @@ void Cursor_opaque_set_float_to_int() {
     ecs_fini(world);
 }
 
-void Cursor_opaque_set_int_to_uint() {
+void Cursor_opaque_set_int_to_uint(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Opaque_uint64_t);
@@ -3479,7 +3479,7 @@ void Cursor_opaque_set_int_to_uint() {
     ecs_fini(world);
 }
 
-void Cursor_opaque_set_float_to_uint() {
+void Cursor_opaque_set_float_to_uint(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Opaque_uint64_t);
@@ -3505,7 +3505,7 @@ void Cursor_opaque_set_float_to_uint() {
     ecs_fini(world);
 }
 
-void Cursor_opaque_set_int_to_float() {
+void Cursor_opaque_set_int_to_float(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Opaque_double);
@@ -3527,7 +3527,7 @@ void Cursor_opaque_set_int_to_float() {
     ecs_fini(world);
 }
 
-void Cursor_opaque_set_uint_to_float() {
+void Cursor_opaque_set_uint_to_float(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Opaque_double);
@@ -3549,7 +3549,7 @@ void Cursor_opaque_set_uint_to_float() {
     ecs_fini(world);
 }
 
-void Cursor_opaque_set_string_to_char() {
+void Cursor_opaque_set_string_to_char(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Opaque_char);
@@ -3575,7 +3575,7 @@ void Cursor_opaque_set_string_to_char() {
     ecs_fini(world);
 }
 
-void Cursor_opaque_set_int_to_char() {
+void Cursor_opaque_set_int_to_char(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Opaque_char);
@@ -3603,7 +3603,7 @@ void Cursor_opaque_set_int_to_char() {
     ecs_fini(world);
 }
 
-void Cursor_opaque_set_uint_to_char() {
+void Cursor_opaque_set_uint_to_char(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Opaque_char);
@@ -3629,7 +3629,7 @@ void Cursor_opaque_set_uint_to_char() {
     ecs_fini(world);
 }
 
-void Cursor_opaque_set_char_to_int() {
+void Cursor_opaque_set_char_to_int(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Opaque_int64_t);
@@ -3651,7 +3651,7 @@ void Cursor_opaque_set_char_to_int() {
     ecs_fini(world);
 }
 
-void Cursor_opaque_set_char_to_uint() {
+void Cursor_opaque_set_char_to_uint(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Opaque_uint64_t);
@@ -3678,7 +3678,7 @@ typedef struct {
     OpaqueStruct bar;
 } Struct_w_OpaqueStruct;
 
-void Cursor_struct_w_2_opaque_structs() {
+void Cursor_struct_w_2_opaque_structs(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, OpaqueStruct);
@@ -3735,7 +3735,7 @@ typedef struct {
     IntVec bar;
 } Struct_w_IntVec;
 
-void Cursor_struct_w_2_opaque_vectors() {
+void Cursor_struct_w_2_opaque_vectors(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, IntVec);
@@ -3800,7 +3800,7 @@ typedef struct {
     OpaqueArray bar;
 } Struct_w_OpaqueArray;
 
-void Cursor_struct_w_2_opaque_arrays() {
+void Cursor_struct_w_2_opaque_arrays(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, OpaqueArray);
@@ -3859,7 +3859,7 @@ typedef struct {
     OpaqueStruct zoo;
 } Struct_w_3_OpaqueStructs;
 
-void Cursor_struct_w_3_opaque_structs() {
+void Cursor_struct_w_3_opaque_structs(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, OpaqueStruct);
@@ -3927,7 +3927,7 @@ typedef struct {
     IntVec zoo;
 } Struct_w_3_IntVecs;
 
-void Cursor_struct_w_3_opaque_vectors() {
+void Cursor_struct_w_3_opaque_vectors(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, IntVec);
@@ -4008,7 +4008,7 @@ typedef struct {
     OpaqueArray zoo;
 } Struct_w_3_OpaqueArrays;
 
-void Cursor_struct_w_3_opaque_arrays() {
+void Cursor_struct_w_3_opaque_arrays(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, OpaqueArray);
@@ -4085,7 +4085,7 @@ static void* OpaqueStructIntVec_member(void *ptr, const char *member) {
     }
 }
 
-void Cursor_opaque_struct_w_opaque_vec() {
+void Cursor_opaque_struct_w_opaque_vec(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, IntVec);
@@ -4155,7 +4155,7 @@ static void* OpaqueStructElem_member(void *ptr, const char *member) {
     }
 }
 
-void Cursor_opaque_vec_w_opaque_elem() {
+void Cursor_opaque_vec_w_opaque_elem(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, IntVec);
@@ -4213,7 +4213,7 @@ void Cursor_opaque_vec_w_opaque_elem() {
     ecs_fini(world);
 }
 
-void Cursor_next_out_of_bounds() {
+void Cursor_next_out_of_bounds(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -4244,7 +4244,7 @@ void Cursor_next_out_of_bounds() {
     ecs_fini(world);
 }
 
-void Cursor_set_out_of_bounds() {
+void Cursor_set_out_of_bounds(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;

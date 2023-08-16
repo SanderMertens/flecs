@@ -1,6 +1,6 @@
 #include <api.h>
 
-void Set_set_empty() {
+void Set_set_empty(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -19,7 +19,7 @@ void Set_set_empty() {
     ecs_fini(world);
 }
 
-void Set_set_nonempty() {
+void Set_set_nonempty(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -40,7 +40,7 @@ void Set_set_nonempty() {
     ecs_fini(world);
 }
 
-void Set_set_non_empty_override() {
+void Set_set_non_empty_override(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -59,7 +59,7 @@ void Set_set_non_empty_override() {
     ecs_fini(world);
 }
 
-void Set_set_again() {
+void Set_set_again(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -86,7 +86,7 @@ void Set_set_again() {
     ecs_fini(world);
 }
 
-void Set_set_2() {
+void Set_set_2(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -120,7 +120,7 @@ void Set_set_2() {
     ecs_fini(world);
 }
 
-void Set_add_set() {
+void Set_add_set(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -142,7 +142,7 @@ void Set_add_set() {
     ecs_fini(world);
 }
 
-void Set_set_add() {
+void Set_set_add(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -169,7 +169,7 @@ void Set_set_add() {
     ecs_fini(world);
 }
 
-void Set_set_add_other() {
+void Set_set_add_other(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -198,7 +198,7 @@ void Set_set_add_other() {
     ecs_fini(world);
 }
 
-void Set_set_remove() {
+void Set_set_remove(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -223,7 +223,7 @@ void Set_set_remove() {
     ecs_fini(world);
 }
 
-void Set_set_remove_other() {
+void Set_set_remove_other(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -253,7 +253,7 @@ void Set_set_remove_other() {
     ecs_fini(world);
 }
 
-void Set_set_remove_twice() {
+void Set_set_remove_twice(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -286,7 +286,7 @@ void Set_set_remove_twice() {
     ecs_fini(world);
 }
 
-void Set_set_and_new() {
+void Set_set_and_new(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -303,7 +303,7 @@ void Set_set_and_new() {
     ecs_fini(world);
 }
 
-void Set_set_null() {
+void Set_set_null(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -321,7 +321,7 @@ void Set_set_null() {
     ecs_fini(world);
 }
 
-void Set_get_mut_new() {
+void Set_get_mut_new(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -337,7 +337,7 @@ void Set_get_mut_new() {
     ecs_fini(world);
 }
 
-void Set_get_mut_existing() {
+void Set_get_mut_existing(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -355,7 +355,7 @@ void Set_get_mut_existing() {
     ecs_fini(world);
 }
 
-void Set_get_mut_tag_new() {
+void Set_get_mut_tag_new(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -370,7 +370,7 @@ void Set_get_mut_tag_new() {
     ecs_get_mut_id(world, e, MyTag);
 }
 
-void Set_get_mut_tag_existing() {
+void Set_get_mut_tag_existing(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -386,7 +386,7 @@ void Set_get_mut_tag_existing() {
     ecs_get_mut_id(world, e, MyTag);
 }
 
-void Set_get_mut_tag_new_w_comp() {
+void Set_get_mut_tag_new_w_comp(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -402,7 +402,7 @@ void Set_get_mut_tag_new_w_comp() {
     ecs_get_mut_id(world, e, MyTag);
 }
 
-void Set_get_mut_tag_existing_w_comp() {
+void Set_get_mut_tag_existing_w_comp(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -420,7 +420,7 @@ void Set_get_mut_tag_existing_w_comp() {
     ecs_get_mut_id(world, e, MyTag);
 }
 
-void Set_get_mut_tag_new_w_pair() {
+void Set_get_mut_tag_new_w_pair(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -437,7 +437,7 @@ void Set_get_mut_tag_new_w_pair() {
     ecs_get_mut_id(world, e, MyTag);
 }
 
-void Set_get_mut_tag_existing_w_pair() {
+void Set_get_mut_tag_existing_w_pair(void) {
     install_test_abort();
     
     ecs_world_t *world = ecs_mini();
@@ -462,7 +462,7 @@ void OnSetPosition(ecs_iter_t *it) {
     is_invoked = true;
 }
 
-void Set_modified_w_on_set() {
+void Set_modified_w_on_set(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -483,7 +483,7 @@ void Set_modified_w_on_set() {
     ecs_fini(world);
 }
 
-void Set_modified_no_component() {
+void Set_modified_no_component(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -521,7 +521,7 @@ void OnAddRemove(ecs_iter_t *it) {
     }
 }
 
-void Set_get_mut_w_add_in_on_add() {
+void Set_get_mut_w_add_in_on_add(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT_DEFINE(world, Position);
@@ -543,7 +543,7 @@ void Set_get_mut_w_add_in_on_add() {
     ecs_fini(world);
 }
 
-void Set_get_mut_w_remove_in_on_add() {
+void Set_get_mut_w_remove_in_on_add(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -570,7 +570,7 @@ void OnAddRealloc(ecs_iter_t *it) {
     }
 }
 
-void Set_get_mut_w_realloc_in_on_add() {
+void Set_get_mut_w_realloc_in_on_add(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT_DEFINE(world, Position);
@@ -608,7 +608,7 @@ void Set_get_mut_w_realloc_in_on_add() {
     ecs_os_free(entities);
 }
 
-void Set_emplace() {
+void Set_emplace(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -624,7 +624,7 @@ void Set_emplace() {
     ecs_fini(world);
 }
 
-void Set_emplace_2() {
+void Set_emplace_2(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -646,7 +646,7 @@ void Set_emplace_2() {
     ecs_fini(world);
 }
 
-void Set_emplace_existing() {
+void Set_emplace_existing(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -661,7 +661,7 @@ void Set_emplace_existing() {
     ecs_emplace(world, e, Position);
 }
 
-void Set_emplace_w_move() {
+void Set_emplace_w_move(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -689,7 +689,7 @@ void OnAddMove(ecs_iter_t *it) {
     }
 }
 
-void Set_emplace_w_observer_w_add() {
+void Set_emplace_w_observer_w_add(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT_DEFINE(world, Position);

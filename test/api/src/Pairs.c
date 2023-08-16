@@ -29,7 +29,7 @@ void ProcessPairs(ecs_iter_t *it) {
     }
 }
 
-void Pairs_type_w_one_pair() {
+void Pairs_type_w_one_pair(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -92,7 +92,7 @@ void Pairs_type_w_one_pair() {
     ecs_fini(world);
 }
 
-void Pairs_type_w_two_pairs() {
+void Pairs_type_w_two_pairs(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -176,7 +176,7 @@ void Pairs_type_w_two_pairs() {
     ecs_fini(world);
 }
 
-void Pairs_add_pair() {
+void Pairs_add_pair(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -192,7 +192,7 @@ void Pairs_add_pair() {
     ecs_fini(world);
 }
 
-void Pairs_remove_pair() {
+void Pairs_remove_pair(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -215,7 +215,7 @@ void ProcessPairTags(ecs_iter_t *it) {
     probe_iter(it);
 }
 
-void Pairs_add_tag_pair_for_tag() {
+void Pairs_add_tag_pair_for_tag(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag1);
@@ -284,7 +284,7 @@ void ProcessValuePairs(ecs_iter_t *it) {
     }
 }
 
-void Pairs_add_tag_pair_for_component() {
+void Pairs_add_tag_pair_for_component(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -350,7 +350,7 @@ void ProcessTwoPairs(ecs_iter_t *it) {
     }
 }
 
-void Pairs_query_2_pairs() {
+void Pairs_query_2_pairs(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -414,7 +414,7 @@ void Pairs_query_2_pairs() {
     ecs_fini(world);
 }
 
-void Pairs_query_2_pairs_2_instances_per_type() {
+void Pairs_query_2_pairs_2_instances_per_type(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -477,7 +477,7 @@ void Pairs_query_2_pairs_2_instances_per_type() {
     ecs_fini(world);
 }
 
-void Pairs_override_pair() {
+void Pairs_override_pair(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -506,7 +506,7 @@ void Pairs_override_pair() {
     ecs_fini(world);
 }
 
-void Pairs_override_tag_pair() {
+void Pairs_override_tag_pair(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -542,7 +542,7 @@ void PairTrigger(ecs_iter_t *it) {
     probe_iter(it);
 }
 
-void Pairs_on_add_pair() {
+void Pairs_on_add_pair(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -589,7 +589,7 @@ void Pairs_on_add_pair() {
     ecs_fini(world);
 }
 
-void Pairs_on_add_pair_tag() {
+void Pairs_on_add_pair_tag(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -619,7 +619,7 @@ void Pairs_on_add_pair_tag() {
     ecs_fini(world);
 }
 
-void Pairs_on_remove_pair() {
+void Pairs_on_remove_pair(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -668,7 +668,7 @@ void Pairs_on_remove_pair() {
     ecs_fini(world);
 }
 
-void Pairs_on_remove_pair_tag() {
+void Pairs_on_remove_pair_tag(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -700,7 +700,7 @@ void Pairs_on_remove_pair_tag() {
     ecs_fini(world);
 }
 
-void Pairs_on_remove_pair_on_delete() {
+void Pairs_on_remove_pair_on_delete(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -752,7 +752,7 @@ void PairTriggerVelocity(ecs_iter_t *it) {
     PairTrigger(it);
 }
 
-void Pairs_on_remove_pair_tag_on_delete() {
+void Pairs_on_remove_pair_tag_on_delete(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -795,7 +795,7 @@ void Pairs_on_remove_pair_tag_on_delete() {
     ecs_fini(world);
 }
 
-void Pairs_pair_w_component_query() {
+void Pairs_pair_w_component_query(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -824,7 +824,7 @@ void Pairs_pair_w_component_query() {
     ecs_fini(world);
 }
 
-void Pairs_query_pair_or_component() {
+void Pairs_query_pair_or_component(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -851,7 +851,7 @@ void Pairs_query_pair_or_component() {
     ecs_fini(world);
 }
 
-void Pairs_query_pair_or_pair() {
+void Pairs_query_pair_or_pair(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -880,7 +880,7 @@ void Pairs_query_pair_or_pair() {
     ecs_fini(world);
 }
 
-void Pairs_query_not_pair() {
+void Pairs_query_not_pair(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -912,7 +912,7 @@ void Pairs_query_not_pair() {
     ecs_fini(world);
 }
 
-void Pairs_get_typeid_w_recycled_rel() {
+void Pairs_get_typeid_w_recycled_rel(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t o = ecs_new_id(world);
@@ -934,7 +934,7 @@ void Pairs_get_typeid_w_recycled_rel() {
     ecs_fini(world);
 }
 
-void Pairs_get_typeid_w_recycled_obj() {
+void Pairs_get_typeid_w_recycled_obj(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t r = ecs_new_id(world);
@@ -956,7 +956,7 @@ void Pairs_get_typeid_w_recycled_obj() {
     ecs_fini(world);
 }
 
-void Pairs_id_str_w_recycled_rel() {
+void Pairs_id_str_w_recycled_rel(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t o = ecs_set_name(world, 0, "o");
@@ -976,7 +976,7 @@ void Pairs_id_str_w_recycled_rel() {
     ecs_fini(world);
 }
 
-void Pairs_id_str_w_recycled_obj() {
+void Pairs_id_str_w_recycled_obj(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t r = ecs_set_name(world, 0, "r");
@@ -996,7 +996,7 @@ void Pairs_id_str_w_recycled_obj() {
     ecs_fini(world);
 }
 
-void Pairs_set_object_w_zero_sized_rel_comp() {
+void Pairs_set_object_w_zero_sized_rel_comp(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t r = ecs_set(world, 0, EcsComponent, {0});
@@ -1013,7 +1013,7 @@ void Pairs_set_object_w_zero_sized_rel_comp() {
     ecs_fini(world);
 }
 
-void Pairs_dsl_pair() {
+void Pairs_dsl_pair(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
@@ -1055,7 +1055,7 @@ void Pairs_dsl_pair() {
     ecs_fini(world);
 }
 
-void Pairs_dsl_pair_w_pred_wildcard() {
+void Pairs_dsl_pair_w_pred_wildcard(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
@@ -1102,7 +1102,7 @@ void Pairs_dsl_pair_w_pred_wildcard() {
     ecs_fini(world);
 }
 
-void Pairs_dsl_pair_w_obj_wildcard() {
+void Pairs_dsl_pair_w_obj_wildcard(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
@@ -1149,7 +1149,7 @@ void Pairs_dsl_pair_w_obj_wildcard() {
     ecs_fini(world);
 }
 
-void Pairs_dsl_pair_w_both_wildcard() {
+void Pairs_dsl_pair_w_both_wildcard(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
@@ -1209,7 +1209,7 @@ void Pairs_dsl_pair_w_both_wildcard() {
     ecs_fini(world);
 }
 
-void Pairs_dsl_pair_w_explicit_subj_this() {
+void Pairs_dsl_pair_w_explicit_subj_this(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
@@ -1251,7 +1251,7 @@ void Pairs_dsl_pair_w_explicit_subj_this() {
     ecs_fini(world);
 }
 
-void Pairs_dsl_pair_w_explicit_subj() {
+void Pairs_dsl_pair_w_explicit_subj(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
@@ -1300,7 +1300,7 @@ void Pairs_dsl_pair_w_explicit_subj() {
     ecs_fini(world);
 }
 
-void Pairs_api_pair() {
+void Pairs_api_pair(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
@@ -1342,7 +1342,7 @@ void Pairs_api_pair() {
     ecs_fini(world);
 }
 
-void Pairs_api_pair_w_pred_wildcard() {
+void Pairs_api_pair_w_pred_wildcard(void) {
    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
@@ -1389,7 +1389,7 @@ void Pairs_api_pair_w_pred_wildcard() {
     ecs_fini(world);
 }
 
-void Pairs_api_pair_w_obj_wildcard() {
+void Pairs_api_pair_w_obj_wildcard(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
@@ -1436,7 +1436,7 @@ void Pairs_api_pair_w_obj_wildcard() {
     ecs_fini(world);
 }
 
-void Pairs_api_pair_w_both_wildcard() {
+void Pairs_api_pair_w_both_wildcard(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
@@ -1496,7 +1496,7 @@ void Pairs_api_pair_w_both_wildcard() {
     ecs_fini(world);
 }
 
-void Pairs_api_pair_w_explicit_subj_this() {
+void Pairs_api_pair_w_explicit_subj_this(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
@@ -1540,7 +1540,7 @@ void Pairs_api_pair_w_explicit_subj_this() {
     ecs_fini(world);
 }
 
-void Pairs_api_pair_w_explicit_subj() {
+void Pairs_api_pair_w_explicit_subj(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
@@ -1589,7 +1589,7 @@ void Pairs_api_pair_w_explicit_subj() {
     ecs_fini(world);
 }
 
-void Pairs_typeid_from_tag() {
+void Pairs_typeid_from_tag(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t tag = ecs_new_id(world);
@@ -1601,7 +1601,7 @@ void Pairs_typeid_from_tag() {
     ecs_fini(world);
 }
 
-void Pairs_typeid_from_component() {
+void Pairs_typeid_from_component(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Rel);
@@ -1615,7 +1615,7 @@ void Pairs_typeid_from_component() {
     ecs_fini(world);
 }
 
-void Pairs_typeid_from_pair() {
+void Pairs_typeid_from_pair(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t rel_id = ecs_new_id(world);
@@ -1632,7 +1632,7 @@ void Pairs_typeid_from_pair() {
     ecs_fini(world);
 }
 
-void Pairs_typeid_from_pair_w_rel_type() {
+void Pairs_typeid_from_pair_w_rel_type(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Rel);
@@ -1651,7 +1651,7 @@ void Pairs_typeid_from_pair_w_rel_type() {
     ecs_fini(world);
 }
 
-void Pairs_typeid_from_pair_w_obj_type() {
+void Pairs_typeid_from_pair_w_obj_type(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Obj);
@@ -1670,7 +1670,7 @@ void Pairs_typeid_from_pair_w_obj_type() {
     ecs_fini(world);
 }
 
-void Pairs_typeid_from_pair_w_rel_obj_type() {
+void Pairs_typeid_from_pair_w_rel_obj_type(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Rel);
@@ -1690,7 +1690,7 @@ void Pairs_typeid_from_pair_w_rel_obj_type() {
     ecs_fini(world);
 }
 
-void Pairs_typeid_from_pair_w_rel_0_obj_type() {
+void Pairs_typeid_from_pair_w_rel_0_obj_type(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_id_t rel_id = ecs_set(world, 0, EcsComponent, {0});
@@ -1709,7 +1709,7 @@ void Pairs_typeid_from_pair_w_rel_0_obj_type() {
     ecs_fini(world);
 }
 
-void Pairs_typeid_from_pair_w_rel_obj_0_type() {
+void Pairs_typeid_from_pair_w_rel_obj_0_type(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Rel);
@@ -1728,7 +1728,7 @@ void Pairs_typeid_from_pair_w_rel_obj_0_type() {
     ecs_fini(world);
 }
 
-void Pairs_typeid_from_pair_w_rel_0_obj_0_type() {
+void Pairs_typeid_from_pair_w_rel_0_obj_0_type(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_id_t rel_id = ecs_set(world, 0, EcsComponent, {0});
@@ -1745,7 +1745,7 @@ void Pairs_typeid_from_pair_w_rel_0_obj_0_type() {
     ecs_fini(world);
 }
 
-void Pairs_typeid_from_pair_with_0_obj() {
+void Pairs_typeid_from_pair_with_0_obj(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_id_t pair_id = ecs_pair(EcsChildOf, 0);
@@ -1756,7 +1756,7 @@ void Pairs_typeid_from_pair_with_0_obj() {
     ecs_fini(world);
 }
 
-void Pairs_typeid_from_pair_w_override() {
+void Pairs_typeid_from_pair_w_override(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Rel);
@@ -1774,7 +1774,7 @@ void Pairs_typeid_from_pair_w_override() {
     ecs_fini(world);
 }
 
-void Pairs_typeid_from_pair_w_toggle() {
+void Pairs_typeid_from_pair_w_toggle(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Rel);
@@ -1792,7 +1792,7 @@ void Pairs_typeid_from_pair_w_toggle() {
     ecs_fini(world);
 }
 
-void Pairs_tag_pair_w_rel_comp() {
+void Pairs_tag_pair_w_rel_comp(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -1811,7 +1811,7 @@ void Pairs_tag_pair_w_rel_comp() {
     ecs_fini(world);
 }
 
-void Pairs_tag_pair_w_obj_comp() {
+void Pairs_tag_pair_w_obj_comp(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
@@ -1830,7 +1830,7 @@ void Pairs_tag_pair_w_obj_comp() {
     ecs_fini(world);
 }
 
-void Pairs_tag_pair_w_rel_obj_comp() {
+void Pairs_tag_pair_w_rel_obj_comp(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -1849,7 +1849,7 @@ void Pairs_tag_pair_w_rel_obj_comp() {
     ecs_fini(world);
 }
 
-void Pairs_get_tag_pair_w_rel_comp() {
+void Pairs_get_tag_pair_w_rel_comp(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -1868,7 +1868,7 @@ void Pairs_get_tag_pair_w_rel_comp() {
     ecs_get_id(world, e, pair_id);
 }
 
-void Pairs_get_tag_pair_w_obj_comp() {
+void Pairs_get_tag_pair_w_obj_comp(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -1887,7 +1887,7 @@ void Pairs_get_tag_pair_w_obj_comp() {
     ecs_get_id(world, e, pair_id);
 }
 
-void Pairs_get_tag_pair_w_rel_obj_comp() {
+void Pairs_get_tag_pair_w_rel_obj_comp(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -1906,7 +1906,7 @@ void Pairs_get_tag_pair_w_rel_obj_comp() {
     ecs_get_id(world, e, pair_id);
 }
 
-void Pairs_tag_pair_w_childof_w_comp() {
+void Pairs_tag_pair_w_childof_w_comp(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -1922,7 +1922,7 @@ void Pairs_tag_pair_w_childof_w_comp() {
     ecs_fini(world);
 }
 
-void Pairs_tag_pair_w_isa_w_comp() {
+void Pairs_tag_pair_w_isa_w_comp(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -1938,7 +1938,7 @@ void Pairs_tag_pair_w_isa_w_comp() {
     ecs_fini(world);
 }
 
-void Pairs_get_1_target() {
+void Pairs_get_1_target(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new_id(world);
@@ -1952,7 +1952,7 @@ void Pairs_get_1_target() {
     ecs_fini(world);
 }
 
-void Pairs_get_1_target_not_found() {
+void Pairs_get_1_target_not_found(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new_id(world);
@@ -1963,7 +1963,7 @@ void Pairs_get_1_target_not_found() {
     ecs_fini(world);
 }
 
-void Pairs_get_n_targets() {
+void Pairs_get_n_targets(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new_id(world);
@@ -1986,7 +1986,7 @@ void Pairs_get_n_targets() {
     ecs_fini(world);
 }
 
-void Pairs_get_target_from_base() {
+void Pairs_get_target_from_base(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t rel = ecs_new_id(world);
@@ -2000,7 +2000,7 @@ void Pairs_get_target_from_base() {
     ecs_fini(world);
 }
 
-void Pairs_get_target_from_2nd_base() {
+void Pairs_get_target_from_2nd_base(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t rel = ecs_new_id(world);
@@ -2017,7 +2017,7 @@ void Pairs_get_target_from_2nd_base() {
     ecs_fini(world);
 }
 
-void Pairs_get_target_from_base_w_pair_on_instance() {
+void Pairs_get_target_from_base_w_pair_on_instance(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t rel = ecs_new_id(world);
@@ -2034,7 +2034,7 @@ void Pairs_get_target_from_base_w_pair_on_instance() {
     ecs_fini(world);
 }
 
-void Pairs_get_childof_target_from_base() {
+void Pairs_get_childof_target_from_base(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t parent = ecs_new_id(world);
@@ -2049,7 +2049,7 @@ void Pairs_get_childof_target_from_base() {
     ecs_fini(world);
 }
 
-void Pairs_get_dontinherit_target_from_base() {
+void Pairs_get_dontinherit_target_from_base(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Rel, DontInherit);
@@ -2066,7 +2066,7 @@ void Pairs_get_dontinherit_target_from_base() {
     ecs_fini(world);
 }
 
-void Pairs_get_parent() {
+void Pairs_get_parent(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t parent = ecs_new_id(world);
@@ -2078,7 +2078,7 @@ void Pairs_get_parent() {
     ecs_fini(world);
 }
 
-void Pairs_get_parent_from_root() {
+void Pairs_get_parent_from_root(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new_id(world);
@@ -2088,7 +2088,7 @@ void Pairs_get_parent_from_root() {
     ecs_fini(world);
 }
 
-void Pairs_get_target_for_id_from_self() {
+void Pairs_get_target_for_id_from_self(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -2104,7 +2104,7 @@ void Pairs_get_target_for_id_from_self() {
     ecs_fini(world);
 }
 
-void Pairs_get_target_for_id_from_base() {
+void Pairs_get_target_for_id_from_base(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -2119,7 +2119,7 @@ void Pairs_get_target_for_id_from_base() {
     ecs_fini(world);
 }
 
-void Pairs_get_target_for_id_from_nested_base() {
+void Pairs_get_target_for_id_from_nested_base(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -2135,7 +2135,7 @@ void Pairs_get_target_for_id_from_nested_base() {
     ecs_fini(world);
 }
 
-void Pairs_get_target_for_id_not_found() {
+void Pairs_get_target_for_id_not_found(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -2150,7 +2150,7 @@ void Pairs_get_target_for_id_not_found() {
     ecs_fini(world);
 }
 
-void Pairs_get_target_for_wildcard_from_self() {
+void Pairs_get_target_for_wildcard_from_self(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
@@ -2169,7 +2169,7 @@ void Pairs_get_target_for_wildcard_from_self() {
     ecs_fini(world);
 }
 
-void Pairs_get_target_for_wildcard_from_base() {
+void Pairs_get_target_for_wildcard_from_base(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
@@ -2187,7 +2187,7 @@ void Pairs_get_target_for_wildcard_from_base() {
     ecs_fini(world);
 }
 
-void Pairs_get_target_for_wildcard_from_nested_base() {
+void Pairs_get_target_for_wildcard_from_nested_base(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
@@ -2207,7 +2207,7 @@ void Pairs_get_target_for_wildcard_from_nested_base() {
     ecs_fini(world);
 }
 
-void Pairs_ignore_childof_from_base() {
+void Pairs_ignore_childof_from_base(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
@@ -2224,7 +2224,7 @@ void Pairs_ignore_childof_from_base() {
     ecs_fini(world);
 }
 
-void Pairs_get_target_for_id_from_empty() {
+void Pairs_get_target_for_id_from_empty(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -2236,7 +2236,7 @@ void Pairs_get_target_for_id_from_empty() {
     ecs_fini(world);
 }
 
-void Pairs_get_target_for_id_from_empty_no_rel() {
+void Pairs_get_target_for_id_from_empty_no_rel(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -2248,7 +2248,7 @@ void Pairs_get_target_for_id_from_empty_no_rel() {
     ecs_fini(world);
 }
 
-void Pairs_get_target_for_id_not_empty_not_found() {
+void Pairs_get_target_for_id_not_empty_not_found(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -2261,7 +2261,7 @@ void Pairs_get_target_for_id_not_empty_not_found() {
     ecs_fini(world);
 }
 
-void Pairs_get_target_for_id_from_stage() {
+void Pairs_get_target_for_id_from_stage(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -2279,7 +2279,7 @@ void Pairs_get_target_for_id_from_stage() {
     ecs_fini(world);
 }
 
-void Pairs_get_target_for_id_no_id() {
+void Pairs_get_target_for_id_no_id(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -2295,7 +2295,7 @@ void Pairs_get_target_for_id_no_id() {
     ecs_fini(world);
 }
 
-void Pairs_add_exclusive_relation_twice() {
+void Pairs_add_exclusive_relation_twice(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Rel, Exclusive);
@@ -2314,7 +2314,7 @@ void Pairs_add_exclusive_relation_twice() {
     ecs_fini(world);
 }
 
-void Pairs_add_same_exclusive_relation_twice() {
+void Pairs_add_same_exclusive_relation_twice(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Rel, Exclusive);
@@ -2331,7 +2331,7 @@ void Pairs_add_same_exclusive_relation_twice() {
     ecs_fini(world);
 }
 
-void Pairs_set_exclusive_relation_twice() {
+void Pairs_set_exclusive_relation_twice(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -2360,11 +2360,7 @@ void Pairs_set_exclusive_relation_twice() {
     ecs_fini(world);
 }
 
-void Pairs_add_exclusive_non_trivial_edge() {
-
-}
-
-void Pairs_add_exclusive_non_empty_table() {
+void Pairs_add_exclusive_non_empty_table(void) {
     ecs_world_t *world = ecs_mini();    
 
     ECS_TAG(world, TagA);
@@ -2392,7 +2388,7 @@ void Pairs_add_exclusive_non_empty_table() {
     ecs_fini(world);
 }
 
-void Pairs_add_exclusive_non_empty_table_w_pairs() {
+void Pairs_add_exclusive_non_empty_table_w_pairs(void) {
     ecs_world_t *world = ecs_mini();    
 
     ECS_TAG(world, RelA);
@@ -2417,7 +2413,7 @@ void Pairs_add_exclusive_non_empty_table_w_pairs() {
     ecs_fini(world);
 }
 
-void Pairs_add_pair_to_entity_w_exclusive_pair() {
+void Pairs_add_pair_to_entity_w_exclusive_pair(void) {
     ecs_world_t *world = ecs_mini();    
 
     ECS_TAG(world, ObjA);
@@ -2438,7 +2434,7 @@ void Pairs_add_pair_to_entity_w_exclusive_pair() {
     ecs_fini(world);
 }
 
-void Pairs_add_pair_to_entity_w_scope() {
+void Pairs_add_pair_to_entity_w_scope(void) {
     ecs_world_t *world = ecs_mini();    
 
     ECS_TAG(world, ObjA);
@@ -2461,7 +2457,7 @@ void Pairs_add_pair_to_entity_w_scope() {
     ecs_fini(world);
 }
 
-void Pairs_add_existing_exclusive_pair_after_pair() {
+void Pairs_add_existing_exclusive_pair_after_pair(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, RelA);
@@ -2491,7 +2487,7 @@ void Pairs_add_existing_exclusive_pair_after_pair() {
     ecs_fini(world);
 }
 
-void Pairs_add_remove_exclusive_property() {
+void Pairs_add_remove_exclusive_property(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t rel = ecs_new_w_id(world, EcsExclusive);
@@ -2511,7 +2507,7 @@ void Pairs_add_remove_exclusive_property() {
     ecs_fini(world);
 }
 
-void Pairs_add_symmetric_relation() {
+void Pairs_add_symmetric_relation(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
@@ -2527,7 +2523,7 @@ void Pairs_add_symmetric_relation() {
     ecs_fini(world);
 }
 
-void Pairs_remove_symmetric_relation() {
+void Pairs_remove_symmetric_relation(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
@@ -2547,7 +2543,7 @@ void Pairs_remove_symmetric_relation() {
     ecs_fini(world);
 }
 
-void Pairs_delete_entity_w_symmetric_relation() {
+void Pairs_delete_entity_w_symmetric_relation(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
@@ -2567,7 +2563,7 @@ void Pairs_delete_entity_w_symmetric_relation() {
     ecs_fini(world);
 }
 
-void Pairs_add_symmetric_exclusive_relation() {
+void Pairs_add_symmetric_exclusive_relation(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
@@ -2590,7 +2586,7 @@ void Pairs_add_symmetric_exclusive_relation() {
     ecs_fini(world);
 }
 
-void Pairs_add_symmetric_recycled_relation() {
+void Pairs_add_symmetric_recycled_relation(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t rel = ecs_new_id(world);
@@ -2617,7 +2613,7 @@ void Pairs_add_symmetric_recycled_relation() {
     ecs_fini(world);
 }
 
-void Pairs_with() {
+void Pairs_with(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -2631,7 +2627,7 @@ void Pairs_with() {
     ecs_fini(world);
 }
 
-void Pairs_2_with() {
+void Pairs_2_with(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -2647,7 +2643,7 @@ void Pairs_2_with() {
     ecs_fini(world);
 }
 
-void Pairs_nested_with() {
+void Pairs_nested_with(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -2663,7 +2659,7 @@ void Pairs_nested_with() {
     ecs_fini(world);
 }
 
-void Pairs_with_relation() {
+void Pairs_with_relation(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Obj);
@@ -2677,7 +2673,7 @@ void Pairs_with_relation() {
     ecs_fini(world);
 }
 
-void Pairs_2_with_relation() {
+void Pairs_2_with_relation(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Obj);
@@ -2692,7 +2688,7 @@ void Pairs_2_with_relation() {
     ecs_fini(world);
 }
 
-void Pairs_nested_with_relation() {
+void Pairs_nested_with_relation(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Obj);
@@ -2708,7 +2704,7 @@ void Pairs_nested_with_relation() {
     ecs_fini(world);
 }
 
-void Pairs_with_for_existing() {
+void Pairs_with_for_existing(void) {
     install_test_abort();
     ecs_world_t *world = ecs_mini();
 
@@ -2724,7 +2720,7 @@ void Pairs_with_for_existing() {
     ecs_add_pair(world, TagB, EcsWith, TagA);
 }
 
-void Pairs_65k_relations() {
+void Pairs_65k_relations(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_set_entity_range(world, 65536, 0);
@@ -2737,7 +2733,7 @@ void Pairs_65k_relations() {
     ecs_fini(world);
 }
 
-void Pairs_remove_wildcard() {
+void Pairs_remove_wildcard(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, RelA);
@@ -2766,7 +2762,7 @@ void Pairs_remove_wildcard() {
     ecs_fini(world);
 }
 
-void Pairs_remove_relation_wildcard() {
+void Pairs_remove_relation_wildcard(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, RelA);
@@ -2795,7 +2791,7 @@ void Pairs_remove_relation_wildcard() {
     ecs_fini(world);
 }
 
-void Pairs_add_not_alive_relation() {
+void Pairs_add_not_alive_relation(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t obj = ecs_new_id(world);
@@ -2805,7 +2801,7 @@ void Pairs_add_not_alive_relation() {
     ecs_fini(world);
 }
 
-void Pairs_remove_wildcard_all() {
+void Pairs_remove_wildcard_all(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, RelA);
@@ -2834,7 +2830,7 @@ void Pairs_remove_wildcard_all() {
     ecs_fini(world);
 }
 
-void Pairs_inherit_exclusive() {    
+void Pairs_inherit_exclusive(void) {    
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Rel, Exclusive);
@@ -2854,7 +2850,7 @@ void Pairs_inherit_exclusive() {
     ecs_fini(world);
 }
 
-void Pairs_dont_inherit() {
+void Pairs_dont_inherit(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -2874,7 +2870,7 @@ void Pairs_dont_inherit() {
     ecs_fini(world);
 }
 
-void Pairs_has_wildcard_w_pair() {
+void Pairs_has_wildcard_w_pair(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
@@ -2891,7 +2887,7 @@ void Pairs_has_wildcard_w_pair() {
     ecs_fini(world);
 }
 
-void Pairs_has_pair_wildcard_w_tag() {
+void Pairs_has_pair_wildcard_w_tag(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -2905,7 +2901,7 @@ void Pairs_has_pair_wildcard_w_tag() {
     ecs_fini(world);
 }
 
-void Pairs_oneof_self() {
+void Pairs_oneof_self(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Rel, OneOf);
@@ -2922,7 +2918,7 @@ void Pairs_oneof_self() {
     ecs_fini(world);
 }
 
-void Pairs_oneof_other() {
+void Pairs_oneof_other(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Parent);
@@ -2940,7 +2936,7 @@ void Pairs_oneof_other() {
     ecs_fini(world);
 }
 
-void Pairs_oneof_self_constraint_violated() {
+void Pairs_oneof_self_constraint_violated(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -2956,7 +2952,7 @@ void Pairs_oneof_self_constraint_violated() {
     ecs_add_pair(world, e, Rel, ObjC);
 }
 
-void Pairs_oneof_other_constraint_violated() {
+void Pairs_oneof_other_constraint_violated(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -2973,7 +2969,7 @@ void Pairs_oneof_other_constraint_violated() {
     ecs_add_pair(world, e, Rel, ObjC);
 }
 
-void Pairs_oneof_other_rel_parent_constraint_violated() {
+void Pairs_oneof_other_rel_parent_constraint_violated(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();

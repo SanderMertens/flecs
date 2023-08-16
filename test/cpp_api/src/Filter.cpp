@@ -1,6 +1,6 @@
 #include <cpp_api.h>
 
-void Filter_term_each_component() {
+void Filter_term_each_component(void) {
     flecs::world ecs;
 
     auto e_1 = ecs.entity().set<Position>({1, 2});
@@ -31,7 +31,7 @@ void Filter_term_each_component() {
     test_int(count, 3);
 }
 
-void Filter_term_each_tag() {
+void Filter_term_each_tag(void) {
     flecs::world ecs;
 
     struct Foo { };
@@ -52,7 +52,7 @@ void Filter_term_each_tag() {
     test_int(count, 3);
 }
 
-void Filter_term_each_id() {
+void Filter_term_each_id(void) {
     flecs::world ecs;
 
     auto foo = ecs.entity();
@@ -73,7 +73,7 @@ void Filter_term_each_id() {
     test_int(count, 3);
 }
 
-void Filter_term_each_pair_type() {
+void Filter_term_each_pair_type(void) {
     flecs::world ecs;
 
     struct Rel { };
@@ -95,7 +95,7 @@ void Filter_term_each_pair_type() {
     test_int(count, 3);
 }
 
-void Filter_term_each_pair_id() {
+void Filter_term_each_pair_id(void) {
     flecs::world ecs;
 
     auto rel = ecs.entity();
@@ -117,7 +117,7 @@ void Filter_term_each_pair_id() {
     test_int(count, 3);
 }
 
-void Filter_term_each_pair_relation_wildcard() {
+void Filter_term_each_pair_relation_wildcard(void) {
     flecs::world ecs;
 
     auto rel_1 = ecs.entity();
@@ -140,7 +140,7 @@ void Filter_term_each_pair_relation_wildcard() {
     test_int(count, 3);
 }
 
-void Filter_term_each_pair_object_wildcard() {
+void Filter_term_each_pair_object_wildcard(void) {
     flecs::world ecs;
 
     auto rel = ecs.entity();
@@ -163,14 +163,14 @@ void Filter_term_each_pair_object_wildcard() {
     test_int(count, 3);
 }
 
-void Filter_default_ctor_no_assign() {
+void Filter_default_ctor_no_assign(void) {
     flecs::filter<> f;
     
     // Make sure code compiles & works
     test_assert(true);
 }
 
-void Filter_term_get_id() {
+void Filter_term_get_id(void) {
     flecs::world ecs;
 
     auto Foo = ecs.entity();
@@ -193,7 +193,7 @@ void Filter_term_get_id() {
     test_assert(t.id() == ecs.pair(Foo, Bar));
 }
 
-void Filter_term_get_subj() {
+void Filter_term_get_subj(void) {
     flecs::world ecs;
 
     auto Foo = ecs.entity();
@@ -217,7 +217,7 @@ void Filter_term_get_subj() {
     test_assert(t.get_src() == flecs::This);
 }
 
-void Filter_term_get_pred() {
+void Filter_term_get_pred(void) {
     flecs::world ecs;
 
     auto Foo = ecs.entity();
@@ -241,7 +241,7 @@ void Filter_term_get_pred() {
     test_assert(t.get_first() == Foo);
 }
 
-void Filter_term_get_obj() {
+void Filter_term_get_obj(void) {
     flecs::world ecs;
 
     auto Foo = ecs.entity();
@@ -265,7 +265,7 @@ void Filter_term_get_obj() {
     test_assert(t.get_second() == Bar);
 }
 
-void Filter_get_first() {
+void Filter_get_first(void) {
     flecs::world ecs;
 
     struct A {};
@@ -281,7 +281,7 @@ void Filter_get_first() {
     test_assert(first == e1);
 }
 
-void Filter_get_count_direct() {
+void Filter_get_count_direct(void) {
     flecs::world ecs;
 
     struct A {};
@@ -295,7 +295,7 @@ void Filter_get_count_direct() {
     test_int(3, q.count());
 }
 
-void Filter_get_is_true_direct() {
+void Filter_get_is_true_direct(void) {
     flecs::world ecs;
 
     struct A {};
@@ -312,7 +312,7 @@ void Filter_get_is_true_direct() {
     test_bool(false, q_2.is_true());
 }
 
-void Filter_get_first_direct() {
+void Filter_get_first_direct(void) {
     flecs::world ecs;
 
     struct A {};
@@ -328,7 +328,7 @@ void Filter_get_first_direct() {
     test_assert(first == e1);
 }
 
-void Filter_each_w_no_this() {
+void Filter_each_w_no_this(void) {
     flecs::world ecs;
 
     auto e = ecs.entity()
@@ -353,7 +353,7 @@ void Filter_each_w_no_this() {
     test_int(count, 1);
 }
 
-void Filter_each_w_iter_no_this() {
+void Filter_each_w_iter_no_this(void) {
     flecs::world ecs;
 
     auto e = ecs.entity()
@@ -380,7 +380,7 @@ void Filter_each_w_iter_no_this() {
     test_int(count, 1);
 }
 
-void Filter_invalid_each_w_no_this() {
+void Filter_invalid_each_w_no_this(void) {
     install_test_abort();
 
     flecs::world ecs;
@@ -399,7 +399,7 @@ void Filter_invalid_each_w_no_this() {
     f.each([&](flecs::entity e, Position& p, Velocity& v) { });
 }
 
-void Filter_named_filter() {
+void Filter_named_filter(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity().add<Position>();
@@ -419,7 +419,7 @@ void Filter_named_filter() {
     test_str(qe.name(), "my_query");
 }
 
-void Filter_named_scoped_filter() {
+void Filter_named_scoped_filter(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity().add<Position>();
@@ -440,7 +440,7 @@ void Filter_named_scoped_filter() {
     test_str(qe.path(), "::my::query");
 }
 
-void Filter_set_this_var() {
+void Filter_set_this_var(void) {
     flecs::world ecs;
 
     /* auto e_1 = */ ecs.entity().set<Position>({1, 2});

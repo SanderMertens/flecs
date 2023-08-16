@@ -73,7 +73,7 @@ void probe_iter(ecs_iter_t *it);
 
 void probe_has_entity(Probe *probe, ecs_entity_t e);
 
-void install_test_abort();
+void install_test_abort(void);
 
 #define ITER_MAX_ENTITIES (64)
 #define ITER_MAX_TERMS (16)

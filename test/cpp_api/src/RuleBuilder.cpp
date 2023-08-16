@@ -1,6 +1,6 @@
 #include <cpp_api.h>
 
-void RuleBuilder_1_type() {
+void RuleBuilder_1_type(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity()
@@ -23,7 +23,7 @@ void RuleBuilder_1_type() {
     r.destruct();
 }
 
-void RuleBuilder_2_types() {
+void RuleBuilder_2_types(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity()
@@ -50,7 +50,7 @@ void RuleBuilder_2_types() {
     r.destruct();
 }
 
-void RuleBuilder_id_term() {
+void RuleBuilder_id_term(void) {
     flecs::world ecs;
 
     auto Tag = ecs.entity();
@@ -75,7 +75,7 @@ void RuleBuilder_id_term() {
     r.destruct();
 }
 
-void RuleBuilder_type_term() {
+void RuleBuilder_type_term(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity()
@@ -98,7 +98,7 @@ void RuleBuilder_type_term() {
     r.destruct();
 }
 
-void RuleBuilder_id_pair_term() {
+void RuleBuilder_id_pair_term(void) {
     flecs::world ecs;
 
     auto Likes = ecs.entity();
@@ -126,7 +126,7 @@ void RuleBuilder_id_pair_term() {
     r.destruct();
 }
 
-void RuleBuilder_id_pair_wildcard_term() {
+void RuleBuilder_id_pair_wildcard_term(void) {
     flecs::world ecs;
 
     auto Likes = ecs.entity();
@@ -159,7 +159,7 @@ void RuleBuilder_id_pair_wildcard_term() {
     r.destruct();
 }
 
-void RuleBuilder_type_pair_term() {
+void RuleBuilder_type_pair_term(void) {
     flecs::world ecs;
 
     struct Likes { };
@@ -192,7 +192,7 @@ void RuleBuilder_type_pair_term() {
     r.destruct();
 }
 
-void RuleBuilder_pair_term_w_var() {
+void RuleBuilder_pair_term_w_var(void) {
     flecs::world ecs;
 
     struct Likes { };
@@ -231,7 +231,7 @@ void RuleBuilder_pair_term_w_var() {
     r.destruct();
 }
 
-void RuleBuilder_2_pair_terms_w_var() {
+void RuleBuilder_2_pair_terms_w_var(void) {
     flecs::world ecs;
 
     struct Likes { };
@@ -284,7 +284,7 @@ void RuleBuilder_2_pair_terms_w_var() {
     r.destruct();
 }
 
-void RuleBuilder_set_var() {
+void RuleBuilder_set_var(void) {
     flecs::world ecs;
 
     struct Likes { };
@@ -319,7 +319,7 @@ void RuleBuilder_set_var() {
     r.destruct();
 }
 
-void RuleBuilder_set_2_vars() {
+void RuleBuilder_set_2_vars(void) {
     flecs::world ecs;
 
     struct Likes { };
@@ -363,7 +363,7 @@ void RuleBuilder_set_2_vars() {
     r.destruct();
 }
 
-void RuleBuilder_set_var_by_name() {
+void RuleBuilder_set_var_by_name(void) {
     flecs::world ecs;
 
     struct Likes { };
@@ -393,7 +393,7 @@ void RuleBuilder_set_var_by_name() {
     r.destruct();
 }
 
-void RuleBuilder_set_2_vars_by_name() {
+void RuleBuilder_set_2_vars_by_name(void) {
     flecs::world ecs;
 
     struct Likes { };
@@ -437,7 +437,7 @@ void RuleBuilder_set_2_vars_by_name() {
     r.destruct();
 }
 
-void RuleBuilder_expr_w_var() {
+void RuleBuilder_expr_w_var(void) {
     flecs::world ecs;
 
     auto rel = ecs.entity("Rel");
@@ -463,7 +463,7 @@ void RuleBuilder_expr_w_var() {
     r.destruct();
 }
 
-void RuleBuilder_get_first() {
+void RuleBuilder_get_first(void) {
     flecs::world ecs;
 
     struct A {};
@@ -481,7 +481,7 @@ void RuleBuilder_get_first() {
     q.destruct();
 }
 
-void RuleBuilder_get_count_direct() {
+void RuleBuilder_get_count_direct(void) {
     flecs::world ecs;
 
     struct A {};
@@ -497,7 +497,7 @@ void RuleBuilder_get_count_direct() {
     q.destruct();
 }
 
-void RuleBuilder_get_is_true_direct() {
+void RuleBuilder_get_is_true_direct(void) {
     flecs::world ecs;
 
     struct A {};
@@ -517,7 +517,7 @@ void RuleBuilder_get_is_true_direct() {
     q_2.destruct();
 }
 
-void RuleBuilder_get_first_direct() {
+void RuleBuilder_get_first_direct(void) {
     flecs::world ecs;
 
     struct A {};
@@ -535,7 +535,7 @@ void RuleBuilder_get_first_direct() {
     q.destruct();
 }
 
-void RuleBuilder_var_src_w_prefixed_name() {
+void RuleBuilder_var_src_w_prefixed_name(void) {
     flecs::world ecs;
 
     struct Foo { };
@@ -557,7 +557,7 @@ void RuleBuilder_var_src_w_prefixed_name() {
     r.destruct();
 }
 
-void RuleBuilder_var_first_w_prefixed_name() {
+void RuleBuilder_var_first_w_prefixed_name(void) {
     flecs::world ecs;
 
     struct Foo { };
@@ -582,7 +582,7 @@ void RuleBuilder_var_first_w_prefixed_name() {
     r.destruct();
 }
 
-void RuleBuilder_var_second_w_prefixed_name() {
+void RuleBuilder_var_second_w_prefixed_name(void) {
     flecs::world ecs;
 
     struct Foo { };
@@ -607,7 +607,7 @@ void RuleBuilder_var_second_w_prefixed_name() {
     r.destruct();
 }
 
-void RuleBuilder_term_w_second_var_string() {
+void RuleBuilder_term_w_second_var_string(void) {
     flecs::world ecs;
 
     flecs::entity Foo = ecs.entity();
@@ -632,7 +632,7 @@ void RuleBuilder_term_w_second_var_string() {
     r.destruct();
 }
 
-void RuleBuilder_term_type_w_second_var_string() {
+void RuleBuilder_term_type_w_second_var_string(void) {
     flecs::world ecs;
 
     struct Foo { };
@@ -657,7 +657,7 @@ void RuleBuilder_term_type_w_second_var_string() {
     r.destruct();
 }
 
-void RuleBuilder_named_rule() {
+void RuleBuilder_named_rule(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity().add<Position>();
@@ -679,7 +679,7 @@ void RuleBuilder_named_rule() {
     q.destruct();
 }
 
-void RuleBuilder_named_scoped_rule() {
+void RuleBuilder_named_scoped_rule(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity().add<Position>();
@@ -702,7 +702,7 @@ void RuleBuilder_named_scoped_rule() {
     q.destruct();
 }
 
-void RuleBuilder_is_valid() {
+void RuleBuilder_is_valid(void) {
     flecs::world ecs;
 
     auto q_1 = ecs.rule<Position>();
@@ -715,7 +715,7 @@ void RuleBuilder_is_valid() {
     q_1.destruct();
 }
 
-void RuleBuilder_unresolved_by_name() {
+void RuleBuilder_unresolved_by_name(void) {
     flecs::world ecs;
 
     auto q = ecs.rule_builder()
@@ -734,7 +734,7 @@ void RuleBuilder_unresolved_by_name() {
     q.destruct();
 }
 
-void RuleBuilder_scope() {
+void RuleBuilder_scope(void) {
     flecs::world ecs;
 
     flecs::entity Root = ecs.entity();
@@ -776,7 +776,7 @@ void RuleBuilder_scope() {
     r.destruct();
 }
 
-void RuleBuilder_iter_w_stage() {
+void RuleBuilder_iter_w_stage(void) {
     flecs::world ecs;
 
     ecs.set_stage_count(2);

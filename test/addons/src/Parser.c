@@ -36,7 +36,7 @@ ecs_term_t* filter_terms(ecs_filter_t *f) {
     test_second(column, e, flgs|EcsIsVariable);\
     test_str(column.second.name, str);
 
-void Parser_resolve_this() {
+void Parser_resolve_this(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_lookup_fullpath(world, ".");
@@ -46,7 +46,7 @@ void Parser_resolve_this() {
     ecs_fini(world);
 }
 
-void Parser_resolve_wildcard() {
+void Parser_resolve_wildcard(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_lookup_fullpath(world, "*");
@@ -56,7 +56,7 @@ void Parser_resolve_wildcard() {
     ecs_fini(world);
 }
 
-void Parser_resolve_any() {
+void Parser_resolve_any(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_lookup_fullpath(world, "_");
@@ -66,7 +66,7 @@ void Parser_resolve_any() {
     ecs_fini(world);
 }
 
-void Parser_resolve_is_a() {
+void Parser_resolve_is_a(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_lookup_fullpath(world, "IsA");
@@ -76,7 +76,7 @@ void Parser_resolve_is_a() {
     ecs_fini(world);
 }
 
-void Parser_0() {
+void Parser_0(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -94,7 +94,7 @@ void Parser_0() {
     ecs_fini(world);
 }
 
-void Parser_component_implicit_subject() {
+void Parser_component_implicit_subject(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -118,7 +118,7 @@ void Parser_component_implicit_subject() {
     ecs_fini(world);
 }
 
-void Parser_component_explicit_subject() {
+void Parser_component_explicit_subject(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -143,7 +143,7 @@ void Parser_component_explicit_subject() {
     ecs_fini(world);
 }
 
-void Parser_component_explicit_subject_this() {
+void Parser_component_explicit_subject_this(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -166,7 +166,7 @@ void Parser_component_explicit_subject_this() {
     ecs_fini(world);
 }
 
-void Parser_component_explicit_subject_this_by_name() {
+void Parser_component_explicit_subject_this_by_name(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -190,7 +190,7 @@ void Parser_component_explicit_subject_this_by_name() {
     ecs_fini(world);
 }
 
-void Parser_component_explicit_subject_this_by_var_name() {
+void Parser_component_explicit_subject_this_by_var_name(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -214,7 +214,7 @@ void Parser_component_explicit_subject_this_by_var_name() {
     ecs_fini(world);
 }
 
-void Parser_component_explicit_subject_wildcard() {
+void Parser_component_explicit_subject_wildcard(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -237,7 +237,7 @@ void Parser_component_explicit_subject_wildcard() {
     ecs_fini(world);
 }
 
-void Parser_component_explicit_subject_any() {
+void Parser_component_explicit_subject_any(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -260,7 +260,7 @@ void Parser_component_explicit_subject_any() {
     ecs_fini(world);
 }
 
-void Parser_component_explicit_subject_0() {
+void Parser_component_explicit_subject_0(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -284,7 +284,7 @@ void Parser_component_explicit_subject_0() {
     ecs_fini(world);
 }
 
-void Parser_this_as_predicate() {
+void Parser_this_as_predicate(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Subj);
@@ -307,7 +307,7 @@ void Parser_this_as_predicate() {
     ecs_fini(world);
 }
 
-void Parser_this_var_as_predicate() {
+void Parser_this_var_as_predicate(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Subj);
@@ -330,7 +330,7 @@ void Parser_this_var_as_predicate() {
     ecs_fini(world);
 }
 
-void Parser_this_lowercase_var_as_predicate() {
+void Parser_this_lowercase_var_as_predicate(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Subj);
@@ -353,7 +353,7 @@ void Parser_this_lowercase_var_as_predicate() {
     ecs_fini(world);
 }
 
-void Parser_this_as_object() {
+void Parser_this_as_object(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -378,7 +378,7 @@ void Parser_this_as_object() {
     ecs_fini(world);
 }
 
-void Parser_this_var_as_object() {
+void Parser_this_var_as_object(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -403,7 +403,7 @@ void Parser_this_var_as_object() {
     ecs_fini(world);
 }
 
-void Parser_pair_implicit_subject() {
+void Parser_pair_implicit_subject(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -428,7 +428,7 @@ void Parser_pair_implicit_subject() {
     ecs_fini(world);
 }
 
-void Parser_pair_implicit_subject_wildcard_pred() {
+void Parser_pair_implicit_subject_wildcard_pred(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -453,7 +453,7 @@ void Parser_pair_implicit_subject_wildcard_pred() {
     ecs_fini(world);
 }
 
-void Parser_pair_implicit_subject_wildcard_obj() {
+void Parser_pair_implicit_subject_wildcard_obj(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -478,7 +478,7 @@ void Parser_pair_implicit_subject_wildcard_obj() {
     ecs_fini(world);
 }
 
-void Parser_pair_implicit_subject_any_pred() {
+void Parser_pair_implicit_subject_any_pred(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -503,7 +503,7 @@ void Parser_pair_implicit_subject_any_pred() {
     ecs_fini(world);
 }
 
-void Parser_pair_implicit_subject_any_obj() {
+void Parser_pair_implicit_subject_any_obj(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -528,7 +528,7 @@ void Parser_pair_implicit_subject_any_obj() {
     ecs_fini(world);
 }
 
-void Parser_pair_implicit_subject_this_pred() {
+void Parser_pair_implicit_subject_this_pred(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -553,7 +553,7 @@ void Parser_pair_implicit_subject_this_pred() {
     ecs_fini(world);
 }
 
-void Parser_pair_implicit_subject_this_obj() {
+void Parser_pair_implicit_subject_this_obj(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -578,7 +578,7 @@ void Parser_pair_implicit_subject_this_obj() {
     ecs_fini(world);
 }
 
-void Parser_pair_implicit_subject_pred_w_self() {
+void Parser_pair_implicit_subject_pred_w_self(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -603,7 +603,7 @@ void Parser_pair_implicit_subject_pred_w_self() {
     ecs_fini(world);
 }
 
-void Parser_pair_implicit_subject_obj_w_self() {
+void Parser_pair_implicit_subject_obj_w_self(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -628,7 +628,7 @@ void Parser_pair_implicit_subject_obj_w_self() {
     ecs_fini(world);
 }
 
-void Parser_pair_implicit_subject_pred_w_up() {
+void Parser_pair_implicit_subject_pred_w_up(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -653,7 +653,7 @@ void Parser_pair_implicit_subject_pred_w_up() {
     ecs_fini(world);
 }
 
-void Parser_pair_implicit_subject_obj_w_up() {
+void Parser_pair_implicit_subject_obj_w_up(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -678,7 +678,7 @@ void Parser_pair_implicit_subject_obj_w_up() {
     ecs_fini(world);
 }
 
-void Parser_pair_implicit_subject_pred_w_self_up() {
+void Parser_pair_implicit_subject_pred_w_self_up(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -703,7 +703,7 @@ void Parser_pair_implicit_subject_pred_w_self_up() {
     ecs_fini(world);
 }
 
-void Parser_pair_implicit_subject_obj_w_self_up() {
+void Parser_pair_implicit_subject_obj_w_self_up(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -728,7 +728,7 @@ void Parser_pair_implicit_subject_obj_w_self_up() {
     ecs_fini(world);
 }
 
-void Parser_pair_implicit_subject_pred_w_up_trav() {
+void Parser_pair_implicit_subject_pred_w_up_trav(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -756,7 +756,7 @@ void Parser_pair_implicit_subject_pred_w_up_trav() {
     ecs_fini(world);
 }
 
-void Parser_pair_implicit_subject_obj_w_up_trav() {
+void Parser_pair_implicit_subject_obj_w_up_trav(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -784,7 +784,7 @@ void Parser_pair_implicit_subject_obj_w_up_trav() {
     ecs_fini(world);
 }
 
-void Parser_pair_implicit_subject_pred_w_invalid_flags() {
+void Parser_pair_implicit_subject_pred_w_invalid_flags(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -800,7 +800,7 @@ void Parser_pair_implicit_subject_pred_w_invalid_flags() {
     ecs_fini(world);
 }
 
-void Parser_pair_implicit_subject_obj_w_invalid_flags() {
+void Parser_pair_implicit_subject_obj_w_invalid_flags(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -816,7 +816,7 @@ void Parser_pair_implicit_subject_obj_w_invalid_flags() {
     ecs_fini(world);
 }
 
-void Parser_pair_explicit_subject() {
+void Parser_pair_explicit_subject(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -842,7 +842,7 @@ void Parser_pair_explicit_subject() {
     ecs_fini(world);
 }
 
-void Parser_pair_explicit_subject_this() {
+void Parser_pair_explicit_subject_this(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -867,7 +867,7 @@ void Parser_pair_explicit_subject_this() {
     ecs_fini(world);
 }
 
-void Parser_pair_explicit_subject_this_by_name() {
+void Parser_pair_explicit_subject_this_by_name(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -892,7 +892,7 @@ void Parser_pair_explicit_subject_this_by_name() {
     ecs_fini(world);
 }
 
-void Parser_pair_explicit_subject_this_by_var_name() {
+void Parser_pair_explicit_subject_this_by_var_name(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -917,7 +917,7 @@ void Parser_pair_explicit_subject_this_by_var_name() {
     ecs_fini(world);
 }
 
-void Parser_pair_explicit_subject_wildcard_pred() {
+void Parser_pair_explicit_subject_wildcard_pred(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -942,7 +942,7 @@ void Parser_pair_explicit_subject_wildcard_pred() {
     ecs_fini(world);
 }
 
-void Parser_pair_explicit_subject_wildcard_subj() {
+void Parser_pair_explicit_subject_wildcard_subj(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -967,7 +967,7 @@ void Parser_pair_explicit_subject_wildcard_subj() {
     ecs_fini(world);
 }
 
-void Parser_pair_explicit_subject_wildcard_obj() {
+void Parser_pair_explicit_subject_wildcard_obj(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -992,7 +992,7 @@ void Parser_pair_explicit_subject_wildcard_obj() {
     ecs_fini(world);
 }
 
-void Parser_pair_implicit_subject_0_object() {
+void Parser_pair_implicit_subject_0_object(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_filter_t f = ECS_FILTER_INIT;
@@ -1015,7 +1015,7 @@ void Parser_pair_implicit_subject_0_object() {
     ecs_fini(world);
 }
 
-void Parser_pair_explicit_subject_0_object() {
+void Parser_pair_explicit_subject_0_object(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_filter_t f = ECS_FILTER_INIT;
@@ -1038,7 +1038,7 @@ void Parser_pair_explicit_subject_0_object() {
     ecs_fini(world);
 }
 
-void Parser_pair_explicit_subject_0() {
+void Parser_pair_explicit_subject_0(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -1063,7 +1063,7 @@ void Parser_pair_explicit_subject_0() {
     ecs_fini(world);
 }
 
-void Parser_in_component_implicit_subject() {
+void Parser_in_component_implicit_subject(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -1086,7 +1086,7 @@ void Parser_in_component_implicit_subject() {
     ecs_fini(world);
 }
 
-void Parser_in_component_explicit_subject() {
+void Parser_in_component_explicit_subject(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -1110,7 +1110,7 @@ void Parser_in_component_explicit_subject() {
     ecs_fini(world);
 }
 
-void Parser_in_pair_implicit_subject() {
+void Parser_in_pair_implicit_subject(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -1135,7 +1135,7 @@ void Parser_in_pair_implicit_subject() {
     ecs_fini(world);
 }
 
-void Parser_in_pair_explicit_subject() {
+void Parser_in_pair_explicit_subject(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -1161,7 +1161,7 @@ void Parser_in_pair_explicit_subject() {
     ecs_fini(world);
 }
 
-void Parser_inout_component_implicit_subject() {
+void Parser_inout_component_implicit_subject(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -1184,7 +1184,7 @@ void Parser_inout_component_implicit_subject() {
     ecs_fini(world);
 }
 
-void Parser_inout_component_explicit_subject() {
+void Parser_inout_component_explicit_subject(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -1208,7 +1208,7 @@ void Parser_inout_component_explicit_subject() {
     ecs_fini(world);
 }
 
-void Parser_inout_pair_implicit_subject() {
+void Parser_inout_pair_implicit_subject(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -1233,7 +1233,7 @@ void Parser_inout_pair_implicit_subject() {
     ecs_fini(world);
 }
 
-void Parser_inout_pair_explicit_subject() {
+void Parser_inout_pair_explicit_subject(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -1259,7 +1259,7 @@ void Parser_inout_pair_explicit_subject() {
     ecs_fini(world);
 }
 
-void Parser_out_component_implicit_subject() {
+void Parser_out_component_implicit_subject(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -1282,7 +1282,7 @@ void Parser_out_component_implicit_subject() {
     ecs_fini(world);
 }
 
-void Parser_out_component_explicit_subject() {
+void Parser_out_component_explicit_subject(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -1306,7 +1306,7 @@ void Parser_out_component_explicit_subject() {
     ecs_fini(world);
 }
 
-void Parser_out_pair_implicit_subject() {
+void Parser_out_pair_implicit_subject(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -1331,7 +1331,7 @@ void Parser_out_pair_implicit_subject() {
     ecs_fini(world);
 }
 
-void Parser_out_pair_explicit_subject() {
+void Parser_out_pair_explicit_subject(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -1357,7 +1357,7 @@ void Parser_out_pair_explicit_subject() {
     ecs_fini(world);
 }
 
-void Parser_inout_filter_component() {
+void Parser_inout_filter_component(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -1380,7 +1380,7 @@ void Parser_inout_filter_component() {
     ecs_fini(world);
 }
 
-void Parser_component_singleton() {
+void Parser_component_singleton(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -1403,7 +1403,7 @@ void Parser_component_singleton() {
     ecs_fini(world);
 }
 
-void Parser_this_singleton() {
+void Parser_this_singleton(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -1428,7 +1428,7 @@ void Parser_this_singleton() {
     ecs_fini(world);
 }
 
-void Parser_component_implicit_no_subject() {
+void Parser_component_implicit_no_subject(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -1451,7 +1451,7 @@ void Parser_component_implicit_no_subject() {
     ecs_fini(world);
 }
 
-void Parser_component_explicit_no_subject() {
+void Parser_component_explicit_no_subject(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -1474,7 +1474,7 @@ void Parser_component_explicit_no_subject() {
     ecs_fini(world);
 }
 
-void Parser_pair_no_subject() {
+void Parser_pair_no_subject(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -1499,7 +1499,7 @@ void Parser_pair_no_subject() {
     ecs_fini(world);
 }
 
-void Parser_variable_single_char() {
+void Parser_variable_single_char(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -1523,7 +1523,7 @@ void Parser_variable_single_char() {
     ecs_fini(world);
 }
 
-void Parser_variable_multi_char() {
+void Parser_variable_multi_char(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -1547,7 +1547,7 @@ void Parser_variable_multi_char() {
     ecs_fini(world);
 }
 
-void Parser_variable_multi_char_w_underscore() {
+void Parser_variable_multi_char_w_underscore(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -1571,7 +1571,7 @@ void Parser_variable_multi_char_w_underscore() {
     ecs_fini(world);
 }
 
-void Parser_variable_multi_char_w_number() {
+void Parser_variable_multi_char_w_number(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -1595,7 +1595,7 @@ void Parser_variable_multi_char_w_number() {
     ecs_fini(world);
 }
 
-void Parser_variable_multi_char_not_allcaps() {
+void Parser_variable_multi_char_not_allcaps(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -1619,7 +1619,7 @@ void Parser_variable_multi_char_not_allcaps() {
     ecs_fini(world);
 }
 
-void Parser_pred_var() {
+void Parser_pred_var(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -1644,7 +1644,7 @@ void Parser_pred_var() {
     ecs_fini(world);
 }
 
-void Parser_obj_var() {
+void Parser_obj_var(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -1668,7 +1668,7 @@ void Parser_obj_var() {
     ecs_fini(world);
 }
 
-void Parser_component_not() {
+void Parser_component_not(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -1691,7 +1691,7 @@ void Parser_component_not() {
     ecs_fini(world);
 }
 
-void Parser_pair_implicit_subject_not() {
+void Parser_pair_implicit_subject_not(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -1716,7 +1716,7 @@ void Parser_pair_implicit_subject_not() {
     ecs_fini(world);
 }
 
-void Parser_pair_explicit_subject_not() {
+void Parser_pair_explicit_subject_not(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -1742,7 +1742,7 @@ void Parser_pair_explicit_subject_not() {
     ecs_fini(world);
 }
 
-void Parser_2_component_not() {
+void Parser_2_component_not(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred_1);
@@ -1771,7 +1771,7 @@ void Parser_2_component_not() {
     ecs_fini(world);
 }
 
-void Parser_2_component_not_no_space() {
+void Parser_2_component_not_no_space(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred_1);
@@ -1800,7 +1800,7 @@ void Parser_2_component_not_no_space() {
     ecs_fini(world);
 }
 
-void Parser_component_optional() {
+void Parser_component_optional(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -1823,7 +1823,7 @@ void Parser_component_optional() {
     ecs_fini(world);
 }
 
-void Parser_2_component_optional() {
+void Parser_2_component_optional(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred_1);
@@ -1852,7 +1852,7 @@ void Parser_2_component_optional() {
     ecs_fini(world);
 }
 
-void Parser_2_component_optional_no_space() {
+void Parser_2_component_optional_no_space(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred_1);
@@ -1881,7 +1881,7 @@ void Parser_2_component_optional_no_space() {
     ecs_fini(world);
 }
 
-void Parser_from_and() {
+void Parser_from_and(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -1904,7 +1904,7 @@ void Parser_from_and() {
     ecs_fini(world);
 }
 
-void Parser_from_or() {
+void Parser_from_or(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -1927,7 +1927,7 @@ void Parser_from_or() {
     ecs_fini(world);
 }
 
-void Parser_from_not() {
+void Parser_from_not(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -1950,7 +1950,7 @@ void Parser_from_not() {
     ecs_fini(world);
 }
 
-void Parser_pair_implicit_subject_optional() {
+void Parser_pair_implicit_subject_optional(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -1975,7 +1975,7 @@ void Parser_pair_implicit_subject_optional() {
     ecs_fini(world);
 }
 
-void Parser_pair_explicit_subject_optional() {
+void Parser_pair_explicit_subject_optional(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -2001,7 +2001,7 @@ void Parser_pair_explicit_subject_optional() {
     ecs_fini(world);
 }
 
-void Parser_pred_implicit_subject_w_role() {
+void Parser_pred_implicit_subject_w_role(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -2025,7 +2025,7 @@ void Parser_pred_implicit_subject_w_role() {
     ecs_fini(world);    
 }
 
-void Parser_pred_explicit_subject_w_role() {
+void Parser_pred_explicit_subject_w_role(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -2049,7 +2049,7 @@ void Parser_pred_explicit_subject_w_role() {
     ecs_fini(world);    
 }
 
-void Parser_pred_no_subject_w_role() {
+void Parser_pred_no_subject_w_role(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -2073,7 +2073,7 @@ void Parser_pred_no_subject_w_role() {
     ecs_fini(world);  
 }
 
-void Parser_pair_implicit_subject_w_role() {
+void Parser_pair_implicit_subject_w_role(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -2099,7 +2099,7 @@ void Parser_pair_implicit_subject_w_role() {
     ecs_fini(world);   
 }
 
-void Parser_pair_explicit_subject_w_role() {
+void Parser_pair_explicit_subject_w_role(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -2125,7 +2125,7 @@ void Parser_pair_explicit_subject_w_role() {
     ecs_fini(world); 
 }
 
-void Parser_inout_role_pred_implicit_subject() {
+void Parser_inout_role_pred_implicit_subject(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -2149,7 +2149,7 @@ void Parser_inout_role_pred_implicit_subject() {
     ecs_fini(world);  
 }
 
-void Parser_inout_role_pred_no_subject() {
+void Parser_inout_role_pred_no_subject(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -2173,7 +2173,7 @@ void Parser_inout_role_pred_no_subject() {
     ecs_fini(world);  
 }
 
-void Parser_inout_role_pred_explicit_subject() {
+void Parser_inout_role_pred_explicit_subject(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -2197,7 +2197,7 @@ void Parser_inout_role_pred_explicit_subject() {
     ecs_fini(world);  
 }
 
-void Parser_inout_role_pair_implicit_subject() {
+void Parser_inout_role_pair_implicit_subject(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -2223,7 +2223,7 @@ void Parser_inout_role_pair_implicit_subject() {
     ecs_fini(world);  
 }
 
-void Parser_inout_role_pair_explicit_subject() {
+void Parser_inout_role_pair_explicit_subject(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -2249,7 +2249,7 @@ void Parser_inout_role_pair_explicit_subject() {
     ecs_fini(world);  
 }
 
-void Parser_2_pred_implicit_subject() {
+void Parser_2_pred_implicit_subject(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred_1);
@@ -2279,7 +2279,7 @@ void Parser_2_pred_implicit_subject() {
     ecs_fini(world); 
 }
 
-void Parser_2_pred_no_subject() {
+void Parser_2_pred_no_subject(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred_1);
@@ -2309,7 +2309,7 @@ void Parser_2_pred_no_subject() {
     ecs_fini(world); 
 }
 
-void Parser_2_pred_explicit_subject() {
+void Parser_2_pred_explicit_subject(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred_1);
@@ -2339,7 +2339,7 @@ void Parser_2_pred_explicit_subject() {
     ecs_fini(world); 
 }
 
-void Parser_2_pair_implicit_subject() {
+void Parser_2_pair_implicit_subject(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred_1);
@@ -2373,7 +2373,7 @@ void Parser_2_pair_implicit_subject() {
     ecs_fini(world); 
 }
 
-void Parser_2_pair_explicit_subject() {
+void Parser_2_pair_explicit_subject(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred_1);
@@ -2407,7 +2407,7 @@ void Parser_2_pair_explicit_subject() {
     ecs_fini(world); 
 }
 
-void Parser_2_pred_role() {
+void Parser_2_pred_role(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred_1);
@@ -2439,7 +2439,7 @@ void Parser_2_pred_role() {
     ecs_fini(world); 
 }
 
-void Parser_2_pair_implicit_subj_role() {
+void Parser_2_pair_implicit_subj_role(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred_1);
@@ -2475,7 +2475,7 @@ void Parser_2_pair_implicit_subj_role() {
     ecs_fini(world); 
 }
 
-void Parser_2_pair_explicit_subj_role() {
+void Parser_2_pair_explicit_subj_role(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred_1);
@@ -2511,7 +2511,7 @@ void Parser_2_pair_explicit_subj_role() {
     ecs_fini(world); 
 }
 
-void Parser_2_or_pred_implicit_subj() {
+void Parser_2_or_pred_implicit_subj(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred_1);
@@ -2540,7 +2540,7 @@ void Parser_2_or_pred_implicit_subj() {
     ecs_fini(world); 
 }
 
-void Parser_2_or_pred_explicit_subj() {
+void Parser_2_or_pred_explicit_subj(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred_1);
@@ -2569,7 +2569,7 @@ void Parser_2_or_pred_explicit_subj() {
     ecs_fini(world); 
 }
 
-void Parser_2_or_pair_implicit_subj() {
+void Parser_2_or_pair_implicit_subj(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred_1);
@@ -2602,7 +2602,7 @@ void Parser_2_or_pair_implicit_subj() {
     ecs_fini(world); 
 }
 
-void Parser_2_or_pair_explicit_subj() {
+void Parser_2_or_pair_explicit_subj(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred_1);
@@ -2635,7 +2635,7 @@ void Parser_2_or_pair_explicit_subj() {
     ecs_fini(world); 
 }
 
-void Parser_2_or_pred_inout() {
+void Parser_2_or_pred_inout(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred_1);
@@ -2664,7 +2664,7 @@ void Parser_2_or_pred_inout() {
     ecs_fini(world);
 }
 
-void Parser_1_digit_pred_implicit_subj() {
+void Parser_1_digit_pred_implicit_subj(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_ensure(world, 100);
@@ -2688,7 +2688,7 @@ void Parser_1_digit_pred_implicit_subj() {
     ecs_fini(world); 
 }
 
-void Parser_1_digit_pred_no_subj() {
+void Parser_1_digit_pred_no_subj(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_ensure(world, 100);
@@ -2712,7 +2712,7 @@ void Parser_1_digit_pred_no_subj() {
     ecs_fini(world); 
 }
 
-void Parser_1_digit_pred_explicit_subj() {
+void Parser_1_digit_pred_explicit_subj(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_ensure(world, 100);
@@ -2737,7 +2737,7 @@ void Parser_1_digit_pred_explicit_subj() {
     ecs_fini(world); 
 }
 
-void Parser_1_digit_pair_implicit_subj() {
+void Parser_1_digit_pair_implicit_subj(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred_1);
@@ -2766,7 +2766,7 @@ void Parser_1_digit_pair_implicit_subj() {
     ecs_fini(world); 
 }
 
-void Parser_1_digit_pair_explicit_subj() {
+void Parser_1_digit_pair_explicit_subj(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred_1);
@@ -2796,7 +2796,7 @@ void Parser_1_digit_pair_explicit_subj() {
     ecs_fini(world); 
 }
 
-void Parser_pred_implicit_subject_self() {
+void Parser_pred_implicit_subject_self(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -2820,7 +2820,7 @@ void Parser_pred_implicit_subject_self() {
     ecs_fini(world); 
 }
 
-void Parser_pred_implicit_subject_superset() {
+void Parser_pred_implicit_subject_superset(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -2844,7 +2844,7 @@ void Parser_pred_implicit_subject_superset() {
     ecs_fini(world); 
 }
 
-void Parser_pred_implicit_subject_subset() {
+void Parser_pred_implicit_subject_subset(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -2868,7 +2868,7 @@ void Parser_pred_implicit_subject_subset() {
     ecs_fini(world); 
 }
 
-void Parser_pred_implicit_subject_superset_inclusive() {
+void Parser_pred_implicit_subject_superset_inclusive(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -2892,7 +2892,7 @@ void Parser_pred_implicit_subject_superset_inclusive() {
     ecs_fini(world); 
 }
 
-void Parser_pred_implicit_subject_subset_inclusive() {
+void Parser_pred_implicit_subject_subset_inclusive(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -2916,7 +2916,7 @@ void Parser_pred_implicit_subject_subset_inclusive() {
     ecs_fini(world); 
 }
 
-void Parser_pred_implicit_subject_superset_cascade() {
+void Parser_pred_implicit_subject_superset_cascade(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -2940,7 +2940,7 @@ void Parser_pred_implicit_subject_superset_cascade() {
     ecs_fini(world); 
 }
 
-void Parser_pred_implicit_subject_subset_cascade() {
+void Parser_pred_implicit_subject_subset_cascade(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -2964,7 +2964,7 @@ void Parser_pred_implicit_subject_subset_cascade() {
     ecs_fini(world); 
 }
 
-void Parser_pred_implicit_subject_superset_inclusive_cascade() {
+void Parser_pred_implicit_subject_superset_inclusive_cascade(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -2988,7 +2988,7 @@ void Parser_pred_implicit_subject_superset_inclusive_cascade() {
     ecs_fini(world); 
 }
 
-void Parser_pred_implicit_subject_subset_inclusive_cascade() {
+void Parser_pred_implicit_subject_subset_inclusive_cascade(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -3012,7 +3012,7 @@ void Parser_pred_implicit_subject_subset_inclusive_cascade() {
     ecs_fini(world); 
 }
 
-void Parser_pred_implicit_subject_implicit_superset_cascade() {
+void Parser_pred_implicit_subject_implicit_superset_cascade(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -3036,7 +3036,7 @@ void Parser_pred_implicit_subject_implicit_superset_cascade() {
     ecs_fini(world); 
 }
 
-void Parser_pred_implicit_subject_implicit_superset_inclusive_cascade() {
+void Parser_pred_implicit_subject_implicit_superset_inclusive_cascade(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -3060,7 +3060,7 @@ void Parser_pred_implicit_subject_implicit_superset_inclusive_cascade() {
     ecs_fini(world); 
 }
 
-void Parser_pred_implicit_subject_implicit_superset_cascade_w_rel() {
+void Parser_pred_implicit_subject_implicit_superset_cascade_w_rel(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -3085,7 +3085,7 @@ void Parser_pred_implicit_subject_implicit_superset_cascade_w_rel() {
     ecs_fini(world); 
 }
 
-void Parser_pred_implicit_subject_implicit_superset_inclusive_cascade_w_rel() {
+void Parser_pred_implicit_subject_implicit_superset_inclusive_cascade_w_rel(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -3110,7 +3110,7 @@ void Parser_pred_implicit_subject_implicit_superset_inclusive_cascade_w_rel() {
     ecs_fini(world); 
 }
 
-void Parser_pred_implicit_subject_superset_childof() {
+void Parser_pred_implicit_subject_superset_childof(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -3134,7 +3134,7 @@ void Parser_pred_implicit_subject_superset_childof() {
     ecs_fini(world); 
 }
 
-void Parser_pred_implicit_subject_cascade_superset_childof() {
+void Parser_pred_implicit_subject_cascade_superset_childof(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -3158,7 +3158,7 @@ void Parser_pred_implicit_subject_cascade_superset_childof() {
     ecs_fini(world); 
 }
 
-void Parser_pred_implicit_subject_superset_cascade_childof() {
+void Parser_pred_implicit_subject_superset_cascade_childof(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -3182,7 +3182,7 @@ void Parser_pred_implicit_subject_superset_cascade_childof() {
     ecs_fini(world); 
 }
 
-void Parser_pred_implicit_subject_superset_cascade_childof_optional() {
+void Parser_pred_implicit_subject_superset_cascade_childof_optional(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -3206,7 +3206,7 @@ void Parser_pred_implicit_subject_superset_cascade_childof_optional() {
     ecs_fini(world);
 }
 
-void Parser_expr_w_symbol() {
+void Parser_expr_w_symbol(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -3237,7 +3237,7 @@ void Parser_expr_w_symbol() {
     ecs_fini(world);
 }
 
-void Parser_expr_w_newline() {
+void Parser_expr_w_newline(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_new_entity(world, "Foo");
@@ -3253,7 +3253,7 @@ void Parser_expr_w_newline() {
     ecs_fini(world);
 }
 
-void Parser_subj_entity_w_explicit_self() {
+void Parser_subj_entity_w_explicit_self(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -3278,7 +3278,7 @@ void Parser_subj_entity_w_explicit_self() {
     ecs_fini(world);
 }
 
-void Parser_subj_entity_w_explicit_self_superset() {
+void Parser_subj_entity_w_explicit_self_superset(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -3303,7 +3303,7 @@ void Parser_subj_entity_w_explicit_self_superset() {
     ecs_fini(world);
 }
 
-void Parser_subj_entity_w_explicit_superset_relation() {
+void Parser_subj_entity_w_explicit_superset_relation(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -3329,7 +3329,7 @@ void Parser_subj_entity_w_explicit_superset_relation() {
     ecs_fini(world);
 }
 
-void Parser_subj_entity_w_explicit_self_superset_relation() {
+void Parser_subj_entity_w_explicit_self_superset_relation(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -3355,7 +3355,7 @@ void Parser_subj_entity_w_explicit_self_superset_relation() {
     ecs_fini(world);
 }
 
-void Parser_obj_entity_w_explicit_self() {
+void Parser_obj_entity_w_explicit_self(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -3381,7 +3381,7 @@ void Parser_obj_entity_w_explicit_self() {
     ecs_fini(world);
 }
 
-void Parser_obj_entity_w_explicit_self_superset() {
+void Parser_obj_entity_w_explicit_self_superset(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -3407,7 +3407,7 @@ void Parser_obj_entity_w_explicit_self_superset() {
     ecs_fini(world);
 }
 
-void Parser_obj_entity_w_explicit_superset_relation() {
+void Parser_obj_entity_w_explicit_superset_relation(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -3433,7 +3433,7 @@ void Parser_obj_entity_w_explicit_superset_relation() {
     ecs_fini(world);
 }
 
-void Parser_obj_entity_w_explicit_self_superset_relation() {
+void Parser_obj_entity_w_explicit_self_superset_relation(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -3459,7 +3459,7 @@ void Parser_obj_entity_w_explicit_self_superset_relation() {
     ecs_fini(world);
 }
 
-void Parser_pred_entity_w_explicit_self() {
+void Parser_pred_entity_w_explicit_self(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -3484,7 +3484,7 @@ void Parser_pred_entity_w_explicit_self() {
     ecs_fini(world);
 }
 
-void Parser_pred_entity_w_explicit_self_superset() {
+void Parser_pred_entity_w_explicit_self_superset(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -3509,7 +3509,7 @@ void Parser_pred_entity_w_explicit_self_superset() {
     ecs_fini(world);
 }
 
-void Parser_pred_entity_w_explicit_superset_relation() {
+void Parser_pred_entity_w_explicit_superset_relation(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -3535,7 +3535,7 @@ void Parser_pred_entity_w_explicit_superset_relation() {
     ecs_fini(world);
 }
 
-void Parser_pred_entity_w_explicit_self_superset_relation() {
+void Parser_pred_entity_w_explicit_self_superset_relation(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -3561,7 +3561,7 @@ void Parser_pred_entity_w_explicit_self_superset_relation() {
     ecs_fini(world);
 }
 
-void Parser_pred_entity_no_args_w_explicit_self() {
+void Parser_pred_entity_no_args_w_explicit_self(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -3585,7 +3585,7 @@ void Parser_pred_entity_no_args_w_explicit_self() {
     ecs_fini(world);
 }
 
-void Parser_pred_entity_no_args_w_explicit_self_superset() {
+void Parser_pred_entity_no_args_w_explicit_self_superset(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -3609,7 +3609,7 @@ void Parser_pred_entity_no_args_w_explicit_self_superset() {
     ecs_fini(world);
 }
 
-void Parser_pred_entity_no_args_w_explicit_superset_relation() {
+void Parser_pred_entity_no_args_w_explicit_superset_relation(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -3634,7 +3634,7 @@ void Parser_pred_entity_no_args_w_explicit_superset_relation() {
     ecs_fini(world);
 }
 
-void Parser_pred_entity_no_args_w_explicit_self_superset_relation() {
+void Parser_pred_entity_no_args_w_explicit_self_superset_relation(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -3659,7 +3659,7 @@ void Parser_pred_entity_no_args_w_explicit_self_superset_relation() {
     ecs_fini(world);
 }
 
-void Parser_pred_entity_no_args_2_terms_w_explicit_self() {
+void Parser_pred_entity_no_args_2_terms_w_explicit_self(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -3689,7 +3689,7 @@ void Parser_pred_entity_no_args_2_terms_w_explicit_self() {
     ecs_fini(world);
 }
 
-void Parser_pred_entity_no_args_2_terms_w_explicit_self_superset() {
+void Parser_pred_entity_no_args_2_terms_w_explicit_self_superset(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -3719,7 +3719,7 @@ void Parser_pred_entity_no_args_2_terms_w_explicit_self_superset() {
     ecs_fini(world);
 }
 
-void Parser_pred_entity_no_args_2_terms_w_explicit_superset_relation() {
+void Parser_pred_entity_no_args_2_terms_w_explicit_superset_relation(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -3750,7 +3750,7 @@ void Parser_pred_entity_no_args_2_terms_w_explicit_superset_relation() {
     ecs_fini(world);
 }
 
-void Parser_pred_entity_no_args_2_terms_w_explicit_self_superset_relation() {
+void Parser_pred_entity_no_args_2_terms_w_explicit_self_superset_relation(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -3781,7 +3781,7 @@ void Parser_pred_entity_no_args_2_terms_w_explicit_self_superset_relation() {
     ecs_fini(world);
 }
 
-void Parser_newline() {
+void Parser_newline(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_filter_t f = ECS_FILTER_INIT;
@@ -3797,7 +3797,7 @@ void Parser_newline() {
     ecs_fini(world);
 }
 
-void Parser_2_newlines() {
+void Parser_2_newlines(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_filter_t f = ECS_FILTER_INIT;
@@ -3813,7 +3813,7 @@ void Parser_2_newlines() {
     ecs_fini(world);
 }
 
-void Parser_3_newlines() {
+void Parser_3_newlines(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_filter_t f = ECS_FILTER_INIT;
@@ -3829,7 +3829,7 @@ void Parser_3_newlines() {
     ecs_fini(world);
 }
 
-void Parser_space() {
+void Parser_space(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_filter_t f = ECS_FILTER_INIT;
@@ -3845,7 +3845,7 @@ void Parser_space() {
     ecs_fini(world);
 }
 
-void Parser_2_spaces() {
+void Parser_2_spaces(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_filter_t f = ECS_FILTER_INIT;
@@ -3861,7 +3861,7 @@ void Parser_2_spaces() {
     ecs_fini(world);
 }
 
-void Parser_trailing_newline() {
+void Parser_trailing_newline(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -3885,7 +3885,7 @@ void Parser_trailing_newline() {
     ecs_fini(world);
 }
 
-void Parser_2_trailing_newlines() {
+void Parser_2_trailing_newlines(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -3909,7 +3909,7 @@ void Parser_2_trailing_newlines() {
     ecs_fini(world);
 }
 
-void Parser_trailing_space() {
+void Parser_trailing_space(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -3933,7 +3933,7 @@ void Parser_trailing_space() {
     ecs_fini(world);
 }
 
-void Parser_2_trailing_spaces() {
+void Parser_2_trailing_spaces(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -3957,7 +3957,7 @@ void Parser_2_trailing_spaces() {
     ecs_fini(world);
 }
 
-void Parser_template_type() {
+void Parser_template_type(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t Pred = ecs_entity_init(world, &(ecs_entity_desc_t){
@@ -3985,7 +3985,7 @@ void Parser_template_type() {
     ecs_fini(world);
 }
 
-void Parser_predicate_w_parens() {
+void Parser_predicate_w_parens(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -4008,7 +4008,7 @@ void Parser_predicate_w_parens() {
     ecs_fini(world);
 }
 
-void Parser_not_alive_pred() {
+void Parser_not_alive_pred(void) {
     ecs_log_set_level(-4);
 
     ecs_world_t *world = ecs_mini();
@@ -4024,7 +4024,7 @@ void Parser_not_alive_pred() {
     ecs_fini(world);
 }
 
-void Parser_not_alive_subj() {
+void Parser_not_alive_subj(void) {
     ecs_log_set_level(-4);
 
     ecs_world_t *world = ecs_mini();
@@ -4042,7 +4042,7 @@ void Parser_not_alive_subj() {
     ecs_fini(world);
 }
 
-void Parser_not_alive_obj() {
+void Parser_not_alive_obj(void) {
     ecs_log_set_level(-4);
     
     ecs_world_t *world = ecs_mini();
@@ -4061,7 +4061,7 @@ void Parser_not_alive_obj() {
     ecs_fini(world);
 }
 
-void Parser_this_subj_var_kind() {
+void Parser_this_subj_var_kind(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -4090,7 +4090,7 @@ void Parser_this_subj_var_kind() {
     ecs_fini(world);
 }
 
-void Parser_this_obj_var_kind() {
+void Parser_this_obj_var_kind(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -4121,7 +4121,7 @@ void Parser_this_obj_var_kind() {
     ecs_fini(world);
 }
 
-void Parser_this_subj_obj_var_kind() {
+void Parser_this_subj_obj_var_kind(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -4151,7 +4151,7 @@ void Parser_this_subj_obj_var_kind() {
     ecs_fini(world);
 }
 
-void Parser_var_w_name() {
+void Parser_var_w_name(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -4175,7 +4175,7 @@ void Parser_var_w_name() {
     ecs_fini(world);
 }
 
-void Parser_entity_pred_no_name() {
+void Parser_entity_pred_no_name(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -4200,7 +4200,7 @@ void Parser_entity_pred_no_name() {
     ecs_fini(world);
 }
 
-void Parser_entity_subj_no_name() {
+void Parser_entity_subj_no_name(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -4226,7 +4226,7 @@ void Parser_entity_subj_no_name() {
     ecs_fini(world);
 }
 
-void Parser_entity_obj_no_name() {
+void Parser_entity_obj_no_name(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -4254,7 +4254,7 @@ void Parser_entity_obj_no_name() {
     ecs_fini(world);
 }
 
-void Parser_this_pred_no_name() {
+void Parser_this_pred_no_name(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_filter_t f = ECS_FILTER_INIT;
@@ -4277,7 +4277,7 @@ void Parser_this_pred_no_name() {
     ecs_fini(world);
 }
 
-void Parser_this_subj_no_name() {
+void Parser_this_subj_no_name(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -4303,7 +4303,7 @@ void Parser_this_subj_no_name() {
     ecs_fini(world);
 }
 
-void Parser_this_obj_no_name() {
+void Parser_this_obj_no_name(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -4330,7 +4330,7 @@ void Parser_this_obj_no_name() {
     ecs_fini(world);
 }
 
-void Parser_auto_object_variable() {
+void Parser_auto_object_variable(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -4354,7 +4354,7 @@ void Parser_auto_object_variable() {
     ecs_fini(world);
 }
 
-void Parser_auto_object_variable_w_subj() {
+void Parser_auto_object_variable_w_subj(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred);
@@ -4379,7 +4379,7 @@ void Parser_auto_object_variable_w_subj() {
     ecs_fini(world);
 }
 
-void Parser_invalid_variable_only() {
+void Parser_invalid_variable_only(void) {
     ecs_log_set_level(-4);
     
     ecs_world_t *world = ecs_mini();
@@ -4396,7 +4396,7 @@ void Parser_invalid_variable_only() {
     ecs_fini(world);
 }
 
-void Parser_oneof_self_pred_w_relative_obj() {
+void Parser_oneof_self_pred_w_relative_obj(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Rel, OneOf);
@@ -4423,7 +4423,7 @@ void Parser_oneof_self_pred_w_relative_obj() {
     ecs_fini(world);
 }
 
-void Parser_oneof_other_pred_w_relative_obj() {
+void Parser_oneof_other_pred_w_relative_obj(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Parent);
@@ -4451,7 +4451,7 @@ void Parser_oneof_other_pred_w_relative_obj() {
     ecs_fini(world);
 }
 
-void Parser_oneof_self_pred_w_invalid_obj() {
+void Parser_oneof_self_pred_w_invalid_obj(void) {
     ecs_log_set_level(-4);
     
     ecs_world_t *world = ecs_mini();
@@ -4470,7 +4470,7 @@ void Parser_oneof_self_pred_w_invalid_obj() {
     ecs_fini(world);
 }
 
-void Parser_oneof_other_pred_w_invalid_obj() {
+void Parser_oneof_other_pred_w_invalid_obj(void) {
     ecs_log_set_level(-4);
     
     ecs_world_t *world = ecs_mini();
@@ -4490,7 +4490,7 @@ void Parser_oneof_other_pred_w_invalid_obj() {
     ecs_fini(world);
 }
 
-void Parser_pair_implicit_src_missing_rel() {
+void Parser_pair_implicit_src_missing_rel(void) {
     ecs_log_set_level(-4);
 
     ecs_world_t *world = ecs_mini();
@@ -4507,7 +4507,7 @@ void Parser_pair_implicit_src_missing_rel() {
     ecs_fini(world);
 }
 
-void Parser_pair_implicit_src_missing_obj() {
+void Parser_pair_implicit_src_missing_obj(void) {
     ecs_log_set_level(-4);
 
     ecs_world_t *world = ecs_mini();
@@ -4524,7 +4524,7 @@ void Parser_pair_implicit_src_missing_obj() {
     ecs_fini(world);
 }
 
-void Parser_pair_explicit_src_missing_src() {
+void Parser_pair_explicit_src_missing_src(void) {
     ecs_log_set_level(-4);
 
     ecs_world_t *world = ecs_mini();
@@ -4541,7 +4541,7 @@ void Parser_pair_explicit_src_missing_src() {
     ecs_fini(world);
 }
 
-void Parser_pair_explicit_src_missing_obj() {
+void Parser_pair_explicit_src_missing_obj(void) {
     ecs_log_set_level(-4);
 
     ecs_world_t *world = ecs_mini();
@@ -4558,7 +4558,7 @@ void Parser_pair_explicit_src_missing_obj() {
     ecs_fini(world);
 }
 
-void Parser_eq_id() {
+void Parser_eq_id(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, First);
@@ -4572,7 +4572,7 @@ void Parser_eq_id() {
     ecs_fini(world);
 }
 
-void Parser_eq_id_var() {
+void Parser_eq_id_var(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Second);
@@ -4597,7 +4597,7 @@ void Parser_eq_id_var() {
     ecs_fini(world);
 }
 
-void Parser_eq_var_id() {
+void Parser_eq_var_id(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, First);
@@ -4610,7 +4610,7 @@ void Parser_eq_var_id() {
     ecs_fini(world);
 }
 
-void Parser_eq_var() {
+void Parser_eq_var(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, First);
@@ -4636,7 +4636,7 @@ void Parser_eq_var() {
     ecs_fini(world);
 }
 
-void Parser_neq_id() {
+void Parser_neq_id(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, First);
@@ -4650,7 +4650,7 @@ void Parser_neq_id() {
     ecs_fini(world);
 }
 
-void Parser_neq_id_var() {
+void Parser_neq_id_var(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Second);
@@ -4675,7 +4675,7 @@ void Parser_neq_id_var() {
     ecs_fini(world);
 }
 
-void Parser_neq_var_id() {
+void Parser_neq_var_id(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, First);
@@ -4688,7 +4688,7 @@ void Parser_neq_var_id() {
     ecs_fini(world);
 }
 
-void Parser_neq_var() {
+void Parser_neq_var(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_filter_t f = ECS_FILTER_INIT;
@@ -4711,7 +4711,7 @@ void Parser_neq_var() {
     ecs_fini(world);
 }
 
-void Parser_eq_name() {
+void Parser_eq_name(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_log_set_level(-4);
@@ -4722,7 +4722,7 @@ void Parser_eq_name() {
     ecs_fini(world);
 }
 
-void Parser_eq_name_var() {
+void Parser_eq_name_var(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_log_set_level(-4);
@@ -4733,7 +4733,7 @@ void Parser_eq_name_var() {
     ecs_fini(world);
 }
 
-void Parser_eq_var_name() {
+void Parser_eq_var_name(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_log_set_level(-4);
@@ -4748,7 +4748,7 @@ void Parser_eq_var_name() {
     ecs_fini(world);
 }
 
-void Parser_neq_name() {
+void Parser_neq_name(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_log_set_level(-4);
@@ -4759,7 +4759,7 @@ void Parser_neq_name() {
     ecs_fini(world);
 }
 
-void Parser_neq_name_var() {
+void Parser_neq_name_var(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_log_set_level(-4);
@@ -4770,7 +4770,7 @@ void Parser_neq_name_var() {
     ecs_fini(world);
 }
 
-void Parser_neq_var_name() {
+void Parser_neq_var_name(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_filter_t f = ECS_FILTER_INIT;
@@ -4796,7 +4796,7 @@ void Parser_neq_var_name() {
     ecs_fini(world);
 }
 
-void Parser_match_name() {
+void Parser_match_name(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_log_set_level(-4);
@@ -4807,7 +4807,7 @@ void Parser_match_name() {
     ecs_fini(world);
 }
 
-void Parser_match_name_var() {
+void Parser_match_name_var(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_log_set_level(-4);
@@ -4818,7 +4818,7 @@ void Parser_match_name_var() {
     ecs_fini(world);
 }
 
-void Parser_match_var_name() {
+void Parser_match_var_name(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_filter_t f = ECS_FILTER_INIT;
@@ -4844,7 +4844,7 @@ void Parser_match_var_name() {
     ecs_fini(world);
 }
 
-void Parser_match_var() {
+void Parser_match_var(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_log_set_level(-4);
@@ -4855,7 +4855,7 @@ void Parser_match_var() {
     ecs_fini(world);
 }
 
-void Parser_nmatch_name() {
+void Parser_nmatch_name(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_log_set_level(-4);
@@ -4866,7 +4866,7 @@ void Parser_nmatch_name() {
     ecs_fini(world);
 }
 
-void Parser_nmatch_name_var() {
+void Parser_nmatch_name_var(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_log_set_level(-4);
@@ -4877,7 +4877,7 @@ void Parser_nmatch_name_var() {
     ecs_fini(world);
 }
 
-void Parser_nmatch_var_name() {
+void Parser_nmatch_var_name(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_filter_t f = ECS_FILTER_INIT;
@@ -4903,7 +4903,7 @@ void Parser_nmatch_var_name() {
     ecs_fini(world);
 }
 
-void Parser_eq_same_var() {
+void Parser_eq_same_var(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_log_set_level(-4);
@@ -4914,7 +4914,7 @@ void Parser_eq_same_var() {
     ecs_fini(world);
 }
 
-void Parser_neq_same_var() {
+void Parser_neq_same_var(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_log_set_level(-4);
@@ -4925,7 +4925,7 @@ void Parser_neq_same_var() {
     ecs_fini(world);
 }
 
-void Parser_eq_same_var_this() {
+void Parser_eq_same_var_this(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_log_set_level(-4);
@@ -4936,7 +4936,7 @@ void Parser_eq_same_var_this() {
     ecs_fini(world);
 }
 
-void Parser_neq_same_var_this() {
+void Parser_neq_same_var_this(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_log_set_level(-4);
@@ -4947,7 +4947,7 @@ void Parser_neq_same_var_this() {
     ecs_fini(world);
 }
 
-void Parser_eq_w_optional() {
+void Parser_eq_w_optional(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
@@ -4960,7 +4960,7 @@ void Parser_eq_w_optional() {
     ecs_fini(world);
 }
 
-void Parser_neq_w_optional() {
+void Parser_neq_w_optional(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
@@ -4973,7 +4973,7 @@ void Parser_neq_w_optional() {
     ecs_fini(world);
 }
 
-void Parser_match_w_optional() {
+void Parser_match_w_optional(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_log_set_level(-4);
@@ -4984,7 +4984,7 @@ void Parser_match_w_optional() {
     ecs_fini(world);
 }
 
-void Parser_query_scope_1_term() {
+void Parser_query_scope_1_term(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -5023,7 +5023,7 @@ void Parser_query_scope_1_term() {
     ecs_fini(world);
 }
 
-void Parser_query_scope_1_term_spaces() {
+void Parser_query_scope_1_term_spaces(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -5062,7 +5062,7 @@ void Parser_query_scope_1_term_spaces() {
     ecs_fini(world);
 }
 
-void Parser_query_scope_2_terms() {
+void Parser_query_scope_2_terms(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -5107,7 +5107,7 @@ void Parser_query_scope_2_terms() {
     ecs_fini(world);
 }
 
-void Parser_query_nested_scope() {
+void Parser_query_nested_scope(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -5162,7 +5162,7 @@ void Parser_query_nested_scope() {
     ecs_fini(world);
 }
 
-void Parser_query_nested_scope_spaces() {
+void Parser_query_nested_scope_spaces(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -5217,7 +5217,7 @@ void Parser_query_nested_scope_spaces() {
     ecs_fini(world);
 }
 
-void Parser_query_scope_unbalanced() {
+void Parser_query_scope_unbalanced(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -5233,7 +5233,7 @@ void Parser_query_scope_unbalanced() {
     ecs_fini(world);
 }
 
-void Parser_query_not_scope() {
+void Parser_query_not_scope(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -5272,7 +5272,7 @@ void Parser_query_not_scope() {
     ecs_fini(world);
 }
 
-void Parser_query_empty_scope() {
+void Parser_query_empty_scope(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
@@ -5288,7 +5288,7 @@ void Parser_query_empty_scope() {
     ecs_fini(world);
 }
 
-void Parser_override_tag() {
+void Parser_override_tag(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -5313,7 +5313,7 @@ void Parser_override_tag() {
     ecs_fini(world);
 }
 
-void Parser_override_pair() {
+void Parser_override_pair(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);

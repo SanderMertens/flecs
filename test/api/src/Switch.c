@@ -1,6 +1,6 @@
 #include <api.h>
 
-void Switch_get_case_no_switch() {
+void Switch_get_case_no_switch(void) {
     ecs_world_t *world = ecs_mini();
     
     ECS_COMPONENT(world, Position);
@@ -14,7 +14,7 @@ void Switch_get_case_no_switch() {
     ecs_fini(world);
 }
 
-void Switch_get_case_set() {
+void Switch_get_case_set(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
@@ -33,7 +33,7 @@ void Switch_get_case_set() {
     ecs_fini(world);
 }
 
-void Switch_get_case_change() {
+void Switch_get_case_change(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
@@ -66,7 +66,7 @@ void Switch_get_case_change() {
     ecs_fini(world);
 }
 
-void Switch_remove_case() {
+void Switch_remove_case(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
@@ -94,7 +94,7 @@ void Switch_remove_case() {
     ecs_fini(world);
 }
 
-void Switch_remove_last() {
+void Switch_remove_last(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
@@ -121,7 +121,7 @@ void Switch_remove_last() {
     ecs_fini(world);
 }
 
-void Switch_delete_first() {
+void Switch_delete_first(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
@@ -160,7 +160,7 @@ void Switch_delete_first() {
     ecs_fini(world);
 }
 
-void Switch_delete_last() {
+void Switch_delete_last(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
@@ -199,7 +199,7 @@ void Switch_delete_last() {
     ecs_fini(world);
 }
 
-void Switch_delete_first_last() {
+void Switch_delete_first_last(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
@@ -234,7 +234,7 @@ void Switch_delete_first_last() {
     ecs_fini(world);
 }
 
-void Switch_3_entities_same_case() {
+void Switch_3_entities_same_case(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
@@ -257,7 +257,7 @@ void Switch_3_entities_same_case() {
     ecs_fini(world);
 }
 
-void Switch_2_entities_1_change_case() {
+void Switch_2_entities_1_change_case(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
@@ -278,7 +278,7 @@ void Switch_2_entities_1_change_case() {
     ecs_fini(world);
 }
 
-void Switch_3_entities_change_case() {
+void Switch_3_entities_change_case(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
@@ -327,7 +327,7 @@ void MatchSwitch(ecs_iter_t *it) {
     probe_iter(it);
 }
 
-void Switch_query_switch() {
+void Switch_query_switch(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
@@ -354,7 +354,7 @@ void Switch_query_switch() {
     ecs_fini(world);
 }
 
-void Switch_query_1_case_1_type() {
+void Switch_query_1_case_1_type(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
@@ -384,7 +384,7 @@ void Switch_query_1_case_1_type() {
     ecs_fini(world);
 }
 
-void Switch_query_1_case_2_types() {
+void Switch_query_1_case_2_types(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -431,7 +431,7 @@ void Switch_query_1_case_2_types() {
     ecs_fini(world);
 }
 
-void Switch_query_2_cases_1_type() {
+void Switch_query_2_cases_1_type(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
@@ -471,7 +471,7 @@ void Switch_query_2_cases_1_type() {
     ecs_fini(world);
 }
 
-void Switch_query_2_cases_2_types() {
+void Switch_query_2_cases_2_types(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -522,7 +522,7 @@ void Switch_query_2_cases_2_types() {
     ecs_fini(world);
 }
 
-void Switch_query_after_remove() {
+void Switch_query_after_remove(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_ENTITY(world, Movement, Union);
@@ -636,7 +636,7 @@ void SetCase(ecs_iter_t *it) {
     }
 }
 
-void Switch_add_case_in_stage() {
+void Switch_add_case_in_stage(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -661,7 +661,7 @@ void Switch_add_case_in_stage() {
     ecs_fini(world);
 }
 
-void Switch_change_case_in_stage() {
+void Switch_change_case_in_stage(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -690,7 +690,7 @@ void Switch_change_case_in_stage() {
     ecs_fini(world);
 }
 
-void Switch_change_one_case_in_stage() {
+void Switch_change_one_case_in_stage(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -732,7 +732,7 @@ void RemoveSwitch(ecs_iter_t *it) {
     }
 }
 
-void Switch_remove_switch_in_stage() {
+void Switch_remove_switch_in_stage(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -761,7 +761,7 @@ void Switch_remove_switch_in_stage() {
     ecs_fini(world);
 }
 
-void Switch_switch_no_match_for_case() {
+void Switch_switch_no_match_for_case(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -786,7 +786,7 @@ void Switch_switch_no_match_for_case() {
     ecs_fini(world);
 }
 
-void Switch_empty_entity_has_case() {
+void Switch_empty_entity_has_case(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_ENTITY(world, Movement, Union);
@@ -798,7 +798,7 @@ void Switch_empty_entity_has_case() {
     ecs_fini(world);
 }
 
-void Switch_zero_entity_has_case() {
+void Switch_zero_entity_has_case(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_init();
@@ -811,7 +811,7 @@ void Switch_zero_entity_has_case() {
     test_assert(!ecs_has_pair(world, 0, Movement, Walking));
 }
 
-void Switch_add_to_entity_w_switch() {
+void Switch_add_to_entity_w_switch(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_ENTITY(world, Movement, Union);
@@ -834,7 +834,7 @@ void Switch_add_to_entity_w_switch() {
     ecs_fini(world);
 }
 
-void Switch_add_pair_to_entity_w_switch() {
+void Switch_add_pair_to_entity_w_switch(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_ENTITY(world, Movement, Union);
@@ -866,7 +866,7 @@ int compare_position(ecs_entity_t e1, const void *ptr1, ecs_entity_t e2, const v
     return (p1->x > p2->x) - (p1->x < p2->x);
 }
 
-void Switch_sort() {
+void Switch_sort(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -911,7 +911,7 @@ void Switch_sort() {
     ecs_fini(world);
 }
 
-void Switch_recycled_tags() {
+void Switch_recycled_tags(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_ENTITY(world, Movement, Union);
@@ -945,7 +945,7 @@ void Switch_recycled_tags() {
     ecs_fini(world);
 }
 
-void Switch_query_recycled_tags() {
+void Switch_query_recycled_tags(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_ENTITY(world, Movement, Union);
@@ -984,7 +984,7 @@ void Switch_query_recycled_tags() {
     ecs_fini(world);
 }
 
-void Switch_single_case() {
+void Switch_single_case(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_ENTITY(world, Movement, Union);
@@ -1026,7 +1026,7 @@ void Switch_single_case() {
     ecs_fini(world);
 }
 
-void Switch_match_switch_on_base_instance() {
+void Switch_match_switch_on_base_instance(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_ENTITY(world, Movement, Union);
@@ -1056,7 +1056,7 @@ void Switch_match_switch_on_base_instance() {
     ecs_fini(world);
 }
 
-void Switch_switch_w_bitset_query() {
+void Switch_switch_w_bitset_query(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_ENTITY(world, Movement, Union);
@@ -1113,7 +1113,7 @@ void Switch_switch_w_bitset_query() {
     ecs_fini(world);
 }
 
-void Switch_switch_w_bitset_query_inv() {
+void Switch_switch_w_bitset_query_inv(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_ENTITY(world, Movement, Union);
@@ -1167,7 +1167,7 @@ void Switch_switch_w_bitset_query_inv() {
     ecs_fini(world);
 }
 
-void Switch_switch_w_bitset_query_2_elems() {
+void Switch_switch_w_bitset_query_2_elems(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_ENTITY(world, Movement, Union);
@@ -1237,7 +1237,7 @@ void Switch_switch_w_bitset_query_2_elems() {
     ecs_fini(world);
 }
 
-void Switch_switch_w_bitset_query_2_elems_skip() {
+void Switch_switch_w_bitset_query_2_elems_skip(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_ENTITY(world, Movement, Union);
@@ -1307,7 +1307,7 @@ void Switch_switch_w_bitset_query_2_elems_skip() {
     ecs_fini(world);
 }
 
-void Switch_switch_w_bitset_query_elems_interleaved() {
+void Switch_switch_w_bitset_query_elems_interleaved(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_ENTITY(world, Movement, Union);
@@ -1383,7 +1383,7 @@ void Switch_switch_w_bitset_query_elems_interleaved() {
     ecs_fini(world);
 }
 
-void Switch_switch_w_bitset_query_elems_interleaved_2_types() {
+void Switch_switch_w_bitset_query_elems_interleaved_2_types(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_ENTITY(world, Movement, Union);
@@ -1523,7 +1523,7 @@ void Switch_switch_w_bitset_query_elems_interleaved_2_types() {
     ecs_fini(world);
 }
 
-void Switch_has_wildcard() {
+void Switch_has_wildcard(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
@@ -1545,7 +1545,7 @@ void Switch_has_wildcard() {
     ecs_fini(world);
 }
 
-void Switch_remove_wildcard() {
+void Switch_remove_wildcard(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
@@ -1572,7 +1572,7 @@ void Switch_remove_wildcard() {
     ecs_fini(world);
 }
 
-void Switch_same_table_after_change() {
+void Switch_same_table_after_change(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
@@ -1599,7 +1599,7 @@ void Switch_same_table_after_change() {
     ecs_fini(world);
 }
 
-void Switch_component_relation() {
+void Switch_component_relation(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_ENTITY(world, Movement, Union);
@@ -1652,7 +1652,7 @@ void Trigger(ecs_iter_t *it) {
     probe_system_w_ctx(it, it->ctx);
 }
 
-void Switch_delete_case_trigger_after_delete_switch() {
+void Switch_delete_case_trigger_after_delete_switch(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
@@ -1677,7 +1677,7 @@ void Switch_delete_case_trigger_after_delete_switch() {
     ecs_fini(world);
 }
 
-void Switch_add_2() {
+void Switch_add_2(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
@@ -1702,7 +1702,7 @@ void Switch_add_2() {
     ecs_fini(world);
 }
 
-void Switch_add_2_reverse() {
+void Switch_add_2_reverse(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
@@ -1727,7 +1727,7 @@ void Switch_add_2_reverse() {
     ecs_fini(world);
 }
 
-void Switch_add_switch_to_prefab_instance() {
+void Switch_add_switch_to_prefab_instance(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
@@ -1745,7 +1745,7 @@ void Switch_add_switch_to_prefab_instance() {
     ecs_fini(world);
 }
 
-void Switch_get_case_w_generation() {
+void Switch_get_case_w_generation(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Rel, Union);
@@ -1764,7 +1764,7 @@ void Switch_get_case_w_generation() {
     ecs_fini(world);
 }
 
-void Switch_get_case_w_generation_not_alive() {
+void Switch_get_case_w_generation_not_alive(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Rel, Union);

@@ -1,6 +1,6 @@
 #include <meta.h>
 
-void Serialized_primitive_constants() {
+void Serialized_primitive_constants(void) {
     test_int(EcsBool + EcsOpPrimitive, EcsOpBool);
     test_int(EcsChar + EcsOpPrimitive, EcsOpChar);
     test_int(EcsByte + EcsOpPrimitive, EcsOpByte);
@@ -74,7 +74,7 @@ static void _test_member_op(
     _test_member_op(ops, index, kind, count, op_count, #name, type, \
         offset + offsetof(T, name))
 
-void Serialized_ops_bool() {
+void Serialized_ops_bool(void) {
     ecs_world_t *world = ecs_init();
 
     const EcsMetaTypeSerialized *s = ecs_get(
@@ -87,7 +87,7 @@ void Serialized_ops_bool() {
     ecs_fini(world);
 }
 
-void Serialized_ops_byte() {
+void Serialized_ops_byte(void) {
     ecs_world_t *world = ecs_init();
 
     const EcsMetaTypeSerialized *s = ecs_get(
@@ -100,7 +100,7 @@ void Serialized_ops_byte() {
     ecs_fini(world);
 }
 
-void Serialized_ops_char() {
+void Serialized_ops_char(void) {
     ecs_world_t *world = ecs_init();
 
     const EcsMetaTypeSerialized *s = ecs_get(
@@ -113,7 +113,7 @@ void Serialized_ops_char() {
     ecs_fini(world);
 }
 
-void Serialized_ops_i8() {
+void Serialized_ops_i8(void) {
     ecs_world_t *world = ecs_init();
 
     const EcsMetaTypeSerialized *s = ecs_get(
@@ -126,7 +126,7 @@ void Serialized_ops_i8() {
     ecs_fini(world);
 }
 
-void Serialized_ops_i16() {
+void Serialized_ops_i16(void) {
     ecs_world_t *world = ecs_init();
 
     const EcsMetaTypeSerialized *s = ecs_get(
@@ -139,7 +139,7 @@ void Serialized_ops_i16() {
     ecs_fini(world);
 }
 
-void Serialized_ops_i32() {
+void Serialized_ops_i32(void) {
     ecs_world_t *world = ecs_init();
 
     const EcsMetaTypeSerialized *s = ecs_get(
@@ -152,7 +152,7 @@ void Serialized_ops_i32() {
     ecs_fini(world);
 }
 
-void Serialized_ops_i64() {
+void Serialized_ops_i64(void) {
     ecs_world_t *world = ecs_init();
 
     const EcsMetaTypeSerialized *s = ecs_get(
@@ -165,7 +165,7 @@ void Serialized_ops_i64() {
     ecs_fini(world);
 }
 
-void Serialized_ops_iptr() {
+void Serialized_ops_iptr(void) {
     ecs_world_t *world = ecs_init();
 
     const EcsMetaTypeSerialized *s = ecs_get(
@@ -178,7 +178,7 @@ void Serialized_ops_iptr() {
     ecs_fini(world);
 }
 
-void Serialized_ops_u8() {
+void Serialized_ops_u8(void) {
     ecs_world_t *world = ecs_init();
 
     const EcsMetaTypeSerialized *s = ecs_get(
@@ -191,7 +191,7 @@ void Serialized_ops_u8() {
     ecs_fini(world);
 }
 
-void Serialized_ops_u16() {
+void Serialized_ops_u16(void) {
     ecs_world_t *world = ecs_init();
 
     const EcsMetaTypeSerialized *s = ecs_get(
@@ -204,7 +204,7 @@ void Serialized_ops_u16() {
     ecs_fini(world);
 }
 
-void Serialized_ops_u32() {
+void Serialized_ops_u32(void) {
     ecs_world_t *world = ecs_init();
 
     const EcsMetaTypeSerialized *s = ecs_get(
@@ -217,7 +217,7 @@ void Serialized_ops_u32() {
     ecs_fini(world);
 }
 
-void Serialized_ops_u64() {
+void Serialized_ops_u64(void) {
     ecs_world_t *world = ecs_init();
 
     const EcsMetaTypeSerialized *s = ecs_get(
@@ -230,7 +230,7 @@ void Serialized_ops_u64() {
     ecs_fini(world);
 }
 
-void Serialized_ops_uptr() {
+void Serialized_ops_uptr(void) {
     ecs_world_t *world = ecs_init();
 
     const EcsMetaTypeSerialized *s = ecs_get(
@@ -243,7 +243,7 @@ void Serialized_ops_uptr() {
     ecs_fini(world);
 }
 
-void Serialized_ops_float() {
+void Serialized_ops_float(void) {
     ecs_world_t *world = ecs_init();
 
     const EcsMetaTypeSerialized *s = ecs_get(
@@ -256,7 +256,7 @@ void Serialized_ops_float() {
     ecs_fini(world);
 }
 
-void Serialized_ops_double() {
+void Serialized_ops_double(void) {
     ecs_world_t *world = ecs_init();
 
     const EcsMetaTypeSerialized *s = ecs_get(
@@ -269,7 +269,7 @@ void Serialized_ops_double() {
     ecs_fini(world);
 }
 
-void Serialized_ops_string() {
+void Serialized_ops_string(void) {
     ecs_world_t *world = ecs_init();
 
     const EcsMetaTypeSerialized *s = ecs_get(
@@ -282,7 +282,7 @@ void Serialized_ops_string() {
     ecs_fini(world);
 }
 
-void Serialized_ops_entity() {
+void Serialized_ops_entity(void) {
     ecs_world_t *world = ecs_init();
 
     const EcsMetaTypeSerialized *s = ecs_get(
@@ -295,7 +295,7 @@ void Serialized_ops_entity() {
     ecs_fini(world);
 }
 
-void Serialized_ops_struct_bool() {
+void Serialized_ops_struct_bool(void) {
     typedef struct {
         ecs_bool_t x;
     } T;
@@ -321,7 +321,7 @@ void Serialized_ops_struct_bool() {
     ecs_fini(world);
 }
 
-void Serialized_ops_struct_bool_bool() {
+void Serialized_ops_struct_bool_bool(void) {
     typedef struct {
         ecs_bool_t x;
         ecs_bool_t y;
@@ -350,7 +350,7 @@ void Serialized_ops_struct_bool_bool() {
     ecs_fini(world);
 }
 
-void Serialized_ops_struct_i32() {
+void Serialized_ops_struct_i32(void) {
     typedef struct {
         ecs_i32_t x;
     } T;
@@ -376,7 +376,7 @@ void Serialized_ops_struct_i32() {
     ecs_fini(world);
 }
 
-void Serialized_ops_struct_i32_i32() {
+void Serialized_ops_struct_i32_i32(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -405,7 +405,7 @@ void Serialized_ops_struct_i32_i32() {
     ecs_fini(world);
 }
 
-void Serialized_ops_struct_i32_bool() {
+void Serialized_ops_struct_i32_bool(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_bool_t y;
@@ -434,7 +434,7 @@ void Serialized_ops_struct_i32_bool() {
     ecs_fini(world);
 }
 
-void Serialized_ops_struct_bool_i32() {
+void Serialized_ops_struct_bool_i32(void) {
     typedef struct {
         ecs_bool_t x;
         ecs_i32_t y;
@@ -463,7 +463,7 @@ void Serialized_ops_struct_bool_i32() {
     ecs_fini(world);
 }
 
-void Serialized_ops_nested_struct_1_bool() {
+void Serialized_ops_nested_struct_1_bool(void) {
     typedef struct {
         ecs_bool_t x;
     } N1;
@@ -503,7 +503,7 @@ void Serialized_ops_nested_struct_1_bool() {
     ecs_fini(world);
 }
 
-void Serialized_ops_nested_struct_1_i32() {
+void Serialized_ops_nested_struct_1_i32(void) {
     typedef struct {
         ecs_i32_t x;
     } N1;
@@ -543,7 +543,7 @@ void Serialized_ops_nested_struct_1_i32() {
     ecs_fini(world);
 }
 
-void Serialized_ops_nested_struct_1_bool_w_bool_member() {
+void Serialized_ops_nested_struct_1_bool_w_bool_member(void) {
     typedef struct {
         ecs_bool_t x;
     } N1;
@@ -586,7 +586,7 @@ void Serialized_ops_nested_struct_1_bool_w_bool_member() {
     ecs_fini(world);
 }
 
-void Serialized_ops_nested_struct_1_bool_w_i32_member() {
+void Serialized_ops_nested_struct_1_bool_w_i32_member(void) {
     typedef struct {
         ecs_bool_t x;
     } N1;
@@ -629,7 +629,7 @@ void Serialized_ops_nested_struct_1_bool_w_i32_member() {
     ecs_fini(world);
 }
 
-void Serialized_ops_nested_struct_1_bool_2_bool() {
+void Serialized_ops_nested_struct_1_bool_2_bool(void) {
     typedef struct {
         ecs_bool_t x;
     } N1;
@@ -681,7 +681,7 @@ void Serialized_ops_nested_struct_1_bool_2_bool() {
     ecs_fini(world);
 }
 
-void Serialized_ops_nested_struct_1_i32_2_bool() {
+void Serialized_ops_nested_struct_1_i32_2_bool(void) {
     typedef struct {
         ecs_i32_t x;
     } N1;
@@ -736,7 +736,7 @@ void Serialized_ops_nested_struct_1_i32_2_bool() {
     ecs_fini(world);
 }
 
-void Serialized_ops_nested_struct_1_i32_i32_2_bool_bool() {
+void Serialized_ops_nested_struct_1_i32_i32_2_bool_bool(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -797,7 +797,7 @@ void Serialized_ops_nested_struct_1_i32_i32_2_bool_bool() {
     ecs_fini(world);
 }
 
-void Serialized_ops_nested_struct_1_bool_bool_2_i32_i32() {
+void Serialized_ops_nested_struct_1_bool_bool_2_i32_i32(void) {
     typedef struct {
         ecs_bool_t x;
         ecs_bool_t y;
@@ -858,7 +858,7 @@ void Serialized_ops_nested_struct_1_bool_bool_2_i32_i32() {
     ecs_fini(world);
 }
 
-void Serialized_ops_nested_struct_1_i32_bool_2_bool_i32() {
+void Serialized_ops_nested_struct_1_i32_bool_2_bool_i32(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_bool_t y;
@@ -919,7 +919,7 @@ void Serialized_ops_nested_struct_1_i32_bool_2_bool_i32() {
     ecs_fini(world);
 }
 
-void Serialized_ops_nested_struct_1_bool_i32_2_i32_bool() {
+void Serialized_ops_nested_struct_1_bool_i32_2_i32_bool(void) {
     typedef struct {
         ecs_bool_t x;
         ecs_i32_t y;
@@ -980,7 +980,7 @@ void Serialized_ops_nested_struct_1_bool_i32_2_i32_bool() {
     ecs_fini(world);
 }
 
-void Serialized_ops_nested_2_lvls_bool() {
+void Serialized_ops_nested_2_lvls_bool(void) {
     typedef struct {
         ecs_bool_t x;
     } NN1;
@@ -1065,7 +1065,7 @@ void Serialized_ops_nested_2_lvls_bool() {
     ecs_fini(world);
 }
 
-void Serialized_ops_nested_2_lvls_bool_bool() {
+void Serialized_ops_nested_2_lvls_bool_bool(void) {
     typedef struct {
         ecs_bool_t x;
         ecs_bool_t y;
@@ -1156,7 +1156,7 @@ void Serialized_ops_nested_2_lvls_bool_bool() {
     ecs_fini(world);
 }
 
-void Serialized_ops_nested_2_lvls_i32_i32_w_member_before() {
+void Serialized_ops_nested_2_lvls_i32_i32_w_member_before(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -1259,7 +1259,7 @@ void Serialized_ops_nested_2_lvls_i32_i32_w_member_before() {
     ecs_fini(world);
 }
 
-void Serialized_ops_nested_2_lvls_1_bool_i32_2_i32_bool_w_member_before() {
+void Serialized_ops_nested_2_lvls_1_bool_i32_2_i32_bool_w_member_before(void) {
     typedef struct {
         ecs_bool_t x;
         ecs_i32_t y;
@@ -1362,7 +1362,7 @@ void Serialized_ops_nested_2_lvls_1_bool_i32_2_i32_bool_w_member_before() {
     ecs_fini(world);
 }
 
-void Serialized_ops_nested_2_lvls_1_i32_bool_2_bool_i32_w_member_before() {
+void Serialized_ops_nested_2_lvls_1_i32_bool_2_bool_i32_w_member_before(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_bool_t y;
@@ -1465,7 +1465,7 @@ void Serialized_ops_nested_2_lvls_1_i32_bool_2_bool_i32_w_member_before() {
     ecs_fini(world);
 }
 
-void Serialized_ops_struct_array_bool_1() {
+void Serialized_ops_struct_array_bool_1(void) {
     typedef struct {
         ecs_bool_t x[1];
     } T;
@@ -1491,7 +1491,7 @@ void Serialized_ops_struct_array_bool_1() {
     ecs_fini(world);
 }
 
-void Serialized_ops_struct_array_bool_2() {
+void Serialized_ops_struct_array_bool_2(void) {
     typedef struct {
         ecs_bool_t x[2];
     } T;
@@ -1517,7 +1517,7 @@ void Serialized_ops_struct_array_bool_2() {
     ecs_fini(world);
 }
 
-void Serialized_ops_struct_array_bool_3() {
+void Serialized_ops_struct_array_bool_3(void) {
     typedef struct {
         ecs_bool_t x[3];
     } T;
@@ -1543,7 +1543,7 @@ void Serialized_ops_struct_array_bool_3() {
     ecs_fini(world);
 }
 
-void Serialized_ops_struct_array_bool_1_w_i32_after() {
+void Serialized_ops_struct_array_bool_1_w_i32_after(void) {
     typedef struct {
         ecs_bool_t x[1];
         ecs_i32_t y;
@@ -1572,7 +1572,7 @@ void Serialized_ops_struct_array_bool_1_w_i32_after() {
     ecs_fini(world);
 }
 
-void Serialized_ops_struct_array_bool_2_w_i32_after() {
+void Serialized_ops_struct_array_bool_2_w_i32_after(void) {
     typedef struct {
         ecs_bool_t x[2];
         ecs_i32_t y;
@@ -1601,7 +1601,7 @@ void Serialized_ops_struct_array_bool_2_w_i32_after() {
     ecs_fini(world);
 }
 
-void Serialized_ops_struct_array_bool_3_w_i32_after() {
+void Serialized_ops_struct_array_bool_3_w_i32_after(void) {
     typedef struct {
         ecs_bool_t x[3];
         ecs_i32_t y;
@@ -1630,7 +1630,7 @@ void Serialized_ops_struct_array_bool_3_w_i32_after() {
     ecs_fini(world);
 }
 
-void Serialized_ops_struct_array_struct_bool_3_w_i32_after() {
+void Serialized_ops_struct_array_struct_bool_3_w_i32_after(void) {
     typedef struct {
         ecs_bool_t x[2];
     } N1;
@@ -1673,7 +1673,7 @@ void Serialized_ops_struct_array_struct_bool_3_w_i32_after() {
     ecs_fini(world);
 }
 
-void Serialized_ops_standalone_array_bool_1() {
+void Serialized_ops_standalone_array_bool_1(void) {
     typedef struct {
         ecs_bool_t x[1];
     } T;
@@ -1707,7 +1707,7 @@ void Serialized_ops_standalone_array_bool_1() {
     ecs_fini(world);
 }
 
-void Serialized_ops_standalone_array_bool_2() {
+void Serialized_ops_standalone_array_bool_2(void) {
     typedef struct {
         ecs_bool_t x[2];
     } T;
@@ -1741,7 +1741,7 @@ void Serialized_ops_standalone_array_bool_2() {
     ecs_fini(world);
 }
 
-void Serialized_ops_standalone_array_bool_3() {
+void Serialized_ops_standalone_array_bool_3(void) {
     typedef struct {
         ecs_bool_t x[3];
     } T;
@@ -1775,7 +1775,7 @@ void Serialized_ops_standalone_array_bool_3() {
     ecs_fini(world);
 }
 
-void Serialized_ops_standalone_array_bool_1_w_bool_after() {
+void Serialized_ops_standalone_array_bool_1_w_bool_after(void) {
     typedef struct {
         ecs_bool_t x[1];
         ecs_bool_t y;
@@ -1812,7 +1812,7 @@ void Serialized_ops_standalone_array_bool_1_w_bool_after() {
     ecs_fini(world);
 }
 
-void Serialized_ops_standalone_array_bool_2_w_bool_after() {
+void Serialized_ops_standalone_array_bool_2_w_bool_after(void) {
     typedef struct {
         ecs_bool_t x[2];
         ecs_bool_t y;
@@ -1848,7 +1848,7 @@ void Serialized_ops_standalone_array_bool_2_w_bool_after() {
     ecs_fini(world);
 }
 
-void Serialized_ops_standalone_array_bool_3_w_bool_after() {
+void Serialized_ops_standalone_array_bool_3_w_bool_after(void) {
     typedef struct {
         ecs_bool_t x[3];
         ecs_bool_t y;
@@ -1884,7 +1884,7 @@ void Serialized_ops_standalone_array_bool_3_w_bool_after() {
     ecs_fini(world);
 }
 
-void Serialized_ops_vector() {
+void Serialized_ops_vector(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t v = ecs_vector_init(world, &(ecs_vector_desc_t){
@@ -1903,7 +1903,7 @@ void Serialized_ops_vector() {
     ecs_fini(world);
 }
 
-void Serialized_ops_struct_w_vector() {
+void Serialized_ops_struct_w_vector(void) {
     typedef struct {
         ecs_vec_t v;
     } T;
@@ -1936,7 +1936,7 @@ void Serialized_ops_struct_w_vector() {
     ecs_fini(world);
 }
 
-void Serialized_ops_struct_w_vector_w_bool_before() {
+void Serialized_ops_struct_w_vector_w_bool_before(void) {
     typedef struct {
         bool x;
         ecs_vec_t v;
@@ -1972,7 +1972,7 @@ void Serialized_ops_struct_w_vector_w_bool_before() {
     ecs_fini(world);
 }
 
-void Serialized_ops_struct_w_vector_w_bool_after() {
+void Serialized_ops_struct_w_vector_w_bool_after(void) {
     typedef struct {
         ecs_vec_t v;
         bool x;
@@ -2008,7 +2008,7 @@ void Serialized_ops_struct_w_vector_w_bool_after() {
     ecs_fini(world);
 }
 
-void Serialized_ops_bitmask() {
+void Serialized_ops_bitmask(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t b = ecs_bitmask_init(world, &(ecs_bitmask_desc_t){
@@ -2028,7 +2028,7 @@ void Serialized_ops_bitmask() {
     ecs_fini(world);
 }
 
-void Serialized_ops_struct_w_bitmask() {
+void Serialized_ops_struct_w_bitmask(void) {
     typedef struct {
         bool before;
         ecs_u32_t v;
@@ -2068,7 +2068,7 @@ void Serialized_ops_struct_w_bitmask() {
     ecs_fini(world);
 }
 
-void Serialized_ops_enum() {
+void Serialized_ops_enum(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t e = ecs_enum_init(world, &(ecs_enum_desc_t){
@@ -2088,7 +2088,7 @@ void Serialized_ops_enum() {
     ecs_fini(world);
 }
 
-void Serialized_ops_struct_w_enum() {
+void Serialized_ops_struct_w_enum(void) {
     typedef struct {
         bool before;
         ecs_i32_t v;

@@ -53,7 +53,7 @@ void _meta_test_member(
     test_int(members[i].count, elem_count);
 }
 
-void StructTypes_i32() {
+void StructTypes_i32(void) {
     typedef struct {
         ecs_i32_t x;
     } T;
@@ -76,7 +76,7 @@ void StructTypes_i32() {
     ecs_fini(world);
 }
 
-void StructTypes_i32_i32() {
+void StructTypes_i32_i32(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -102,7 +102,7 @@ void StructTypes_i32_i32() {
     ecs_fini(world);
 }
 
-void StructTypes_i32_i32_i32() {
+void StructTypes_i32_i32_i32(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -131,7 +131,7 @@ void StructTypes_i32_i32_i32() {
     ecs_fini(world);
 }
 
-void StructTypes_bool_i32() {
+void StructTypes_bool_i32(void) {
     typedef struct {
         ecs_bool_t x;
         ecs_i32_t y;
@@ -157,7 +157,7 @@ void StructTypes_bool_i32() {
     ecs_fini(world);
 }
 
-void StructTypes_bool_bool_i32() {
+void StructTypes_bool_bool_i32(void) {
     typedef struct {
         ecs_bool_t x;
         ecs_bool_t y;
@@ -186,7 +186,7 @@ void StructTypes_bool_bool_i32() {
     ecs_fini(world);
 }
 
-void StructTypes_bool_i32_bool_i32() {
+void StructTypes_bool_i32_bool_i32(void) {
     typedef struct {
         ecs_bool_t x;
         ecs_i32_t y;
@@ -218,7 +218,7 @@ void StructTypes_bool_i32_bool_i32() {
     ecs_fini(world);
 }
 
-void StructTypes_i32_bool() {
+void StructTypes_i32_bool(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_bool_t y;
@@ -244,7 +244,7 @@ void StructTypes_i32_bool() {
     ecs_fini(world);
 }
 
-void StructTypes_i32_bool_bool() {
+void StructTypes_i32_bool_bool(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_bool_t y;
@@ -273,7 +273,7 @@ void StructTypes_i32_bool_bool() {
     ecs_fini(world);
 }
 
-void StructTypes_i32_bool_bool_bool() {
+void StructTypes_i32_bool_bool_bool(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_bool_t y;
@@ -305,7 +305,7 @@ void StructTypes_i32_bool_bool_bool() {
     ecs_fini(world);
 }
 
-void StructTypes_i32_i64() {
+void StructTypes_i32_i64(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i64_t y;
@@ -331,7 +331,7 @@ void StructTypes_i32_i64() {
     ecs_fini(world);
 }
 
-void StructTypes_i32_i64_i32() {
+void StructTypes_i32_i64_i32(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i64_t y;
@@ -360,7 +360,7 @@ void StructTypes_i32_i64_i32() {
     ecs_fini(world);
 }
 
-void StructTypes_incomplete_member() {
+void StructTypes_incomplete_member(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -395,7 +395,7 @@ void StructTypes_incomplete_member() {
     ecs_fini(world);
 }
 
-void StructTypes_partial_type() {
+void StructTypes_partial_type(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -423,7 +423,7 @@ void StructTypes_partial_type() {
     ecs_fini(world);
 }
 
-void StructTypes_partial_type_custom_offset() {
+void StructTypes_partial_type_custom_offset(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Vec3);
@@ -455,7 +455,7 @@ void StructTypes_partial_type_custom_offset() {
     ecs_fini(world);
 }
 
-void StructTypes_struct_w_short_notation() {
+void StructTypes_struct_w_short_notation(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -484,7 +484,7 @@ void StructTypes_struct_w_short_notation() {
     ecs_fini(world);
 }
 
-void StructTypes_value_range() {
+void StructTypes_value_range(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -525,7 +525,7 @@ void StructTypes_value_range() {
     ecs_fini(world);
 }
 
-void StructTypes_error_range() {
+void StructTypes_error_range(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -562,7 +562,7 @@ void StructTypes_error_range() {
     ecs_fini(world);
 }
 
-void StructTypes_warning_range() {
+void StructTypes_warning_range(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -599,7 +599,7 @@ void StructTypes_warning_range() {
     ecs_fini(world);
 }
 
-void StructTypes_error_and_warning_range() {
+void StructTypes_error_and_warning_range(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -636,7 +636,7 @@ void StructTypes_error_and_warning_range() {
     ecs_fini(world);
 }
 
-void StructTypes_error_range_invalid_type() {
+void StructTypes_error_range_invalid_type(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -653,7 +653,7 @@ void StructTypes_error_range_invalid_type() {
     ecs_fini(world);
 }
 
-void StructTypes_warning_range_invalid_type() {
+void StructTypes_warning_range_invalid_type(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -670,7 +670,7 @@ void StructTypes_warning_range_invalid_type() {
     ecs_fini(world);
 }
 
-void StructTypes_invalid_value_range() {
+void StructTypes_invalid_value_range(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -687,7 +687,7 @@ void StructTypes_invalid_value_range() {
     ecs_fini(world);
 }
 
-void StructTypes_invalid_error_range() {
+void StructTypes_invalid_error_range(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -704,7 +704,7 @@ void StructTypes_invalid_error_range() {
     ecs_fini(world);
 }
 
-void StructTypes_invalid_warning_range() {
+void StructTypes_invalid_warning_range(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -721,7 +721,7 @@ void StructTypes_invalid_warning_range() {
     ecs_fini(world);
 }
 
-void StructTypes_overlapping_error_warning_range() {
+void StructTypes_overlapping_error_warning_range(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -738,7 +738,7 @@ void StructTypes_overlapping_error_warning_range() {
     ecs_fini(world);
 }
 
-void StructTypes_overlapping_value_error_range() {
+void StructTypes_overlapping_value_error_range(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -755,7 +755,7 @@ void StructTypes_overlapping_value_error_range() {
     ecs_fini(world);
 }
 
-void StructTypes_overlapping_value_warning_range() {
+void StructTypes_overlapping_value_warning_range(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -772,7 +772,7 @@ void StructTypes_overlapping_value_warning_range() {
     ecs_fini(world);
 }
 
-void StructTypes_struct_w_16_alignment() {
+void StructTypes_struct_w_16_alignment(void) {
 #ifndef _MSC_VER
     typedef __attribute((aligned(16)))
 #else
