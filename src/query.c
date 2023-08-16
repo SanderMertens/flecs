@@ -441,8 +441,7 @@ void flecs_query_get_column_for_term(
                 ecs_ref_t *ref = ecs_vec_get_t(&match->refs, ecs_ref_t, ref_index);
                 if (ref->id != 0) {
                     ecs_ref_update(world, ref);
-                    column = ref->tr->index;
-                    column = ecs_table_type_to_column_index(table, column);
+                    column = ref->tr->column;
                 }
             } else {
                 column = -(match->columns[field] + 1);
@@ -1139,7 +1138,7 @@ void flecs_query_build_sorted_table_range(
             ecs_size_t size = query->filter.sizes[field];
             ecs_assert(column != 0, ECS_INTERNAL_ERROR, NULL);
             if (column >= 0) {
-                column = table->storage_map[column - 1];
+                column = table->column_map[column - 1];
                 ecs_vec_t *vec = &data->columns[column].data;
                 helper[to_sort].ptr = ecs_vec_first(vec);
                 helper[to_sort].elem_size = size;

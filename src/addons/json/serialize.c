@@ -1848,13 +1848,13 @@ int flecs_json_serialize_iter_result_columns(
     flecs_json_array_push(buf);
 
     ecs_type_t *type = &table->type;
-    int32_t *storage_map = table->storage_map;
-    ecs_assert(storage_map != NULL, ECS_INTERNAL_ERROR, NULL);
+    int32_t *column_map = table->column_map;
+    ecs_assert(column_map != NULL, ECS_INTERNAL_ERROR, NULL);
 
     for (int i = 0; i < type->count; i ++) {
         int32_t storage_column = -1;
-        if (storage_map) {
-            storage_column = storage_map[i];
+        if (column_map) {
+            storage_column = column_map[i];
         }
 
         ecs_strbuf_list_next(buf);

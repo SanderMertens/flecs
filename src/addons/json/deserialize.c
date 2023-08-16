@@ -671,7 +671,7 @@ const char* flecs_json_parse_column(
         goto error;
     }
 
-    int32_t data_column = table->storage_map[index];
+    int32_t data_column = table->column_map[index];
     if (data_column == -1) {
         char *table_str = ecs_table_str(world, table);
         ecs_parser_error(desc->name, desc->expr, json - desc->expr, 

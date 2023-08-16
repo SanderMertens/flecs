@@ -153,7 +153,7 @@ typedef struct ecs_graph_node_t {
 typedef struct ecs_table__t {
     uint64_t hash;                   /* Type hash */
     int32_t lock;                    /* Prevents modifications */
-    int32_t traversable_count;       /* Number of observed entities in table */
+    int32_t traversable_count;       /* Traversable relationship targets in table */
     uint16_t generation;             /* Used for table cleanup */
     int16_t record_count;            /* Table record count including wildcards */
     
@@ -172,8 +172,8 @@ typedef struct ecs_table__t {
 typedef struct ecs_column_t {
     ecs_vec_t data;
     ecs_id_t id;
-    ecs_size_t size;
     ecs_type_info_t *ti;
+    ecs_size_t size;
 } ecs_column_t;
 
 /** Table storage */
@@ -191,24 +191,19 @@ struct ecs_table_t {
     uint64_t id;                     /* Table id in sparse set */
     ecs_flags32_t flags;             /* Flags for testing table properties */
     int16_t column_count;            /* Number of components (excluding tags) */
-    ecs_type_t type;                 /* Identifies table type in type_index */
+    ecs_type_t type;                 /* Vector with component ids */
 
     ecs_data_t data;                 /* Component storage */
     ecs_graph_node_t node;           /* Graph node */
     
     int32_t *dirty_state;            /* Keep track of changes in columns */
-    int32_t *storage_map;            /* Map type <-> data type
-                                      *  - 0..count(T):        type -> data_type
-                                      *  - count(T)..count(S): data_type -> type
+    int32_t *column_map;             /* Map type index <-> column
+                                      *  - 0..count(T):        type index -> column
+                                      *  - count(T)..count(C): column -> type index
                                       */
 
     ecs_table__t *_;                 /* Infrequently accessed table metadata */
 };
-
-typedef struct ecs_archetype_t {
-    
-    ecs_table_t *table;
-} ecs_archetype_t;
 
 /** Must appear as first member in payload of table cache */
 typedef struct ecs_table_cache_hdr_t {

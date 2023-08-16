@@ -2723,7 +2723,7 @@ const void* ecs_get_id(
     if (!tr) {
        return flecs_get_base_component(world, table, id, idr, 0);
     } else {
-        ecs_assert(tr->column != -1, ECS_NOT_A_COMPONENT, NULL);
+        ecs_check(tr->column != -1, ECS_NOT_A_COMPONENT, NULL);
     }
 
     int32_t row = ECS_RECORD_TO_ROW(r->row);
@@ -2966,7 +2966,7 @@ void* ecs_ref_get_id(
         ecs_assert(tr->hdr.table == r->table, ECS_INTERNAL_ERROR, NULL);
     }
 
-    int32_t column = ecs_table_type_to_column_index(table, tr->index);
+    int32_t column = tr->column;
     ecs_assert(column != -1, ECS_INTERNAL_ERROR, NULL);
     return flecs_get_component_w_index(table, column, row).ptr;
 error:

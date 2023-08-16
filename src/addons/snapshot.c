@@ -215,7 +215,7 @@ void restore_unfiltered(
             if (snapshot_table->data) {
                 flecs_table_replace_data(world, table, snapshot_table->data);
             }
-        
+
         /* If the world table still exists, replace its data */
         } else if (world_table && snapshot_table) {
             ecs_assert(snapshot_table->table == world_table, 
@@ -335,7 +335,7 @@ void restore_filtered(
             }
         }
 
-        flecs_wfree_n(world, ecs_vec_t, table->column_count,
+        flecs_wfree_n(world, ecs_column_t, table->column_count,
             snapshot_table->data->columns);
         ecs_os_free(snapshot_table->data);
         flecs_type_free(world, &snapshot_table->type);

@@ -352,7 +352,7 @@ int32_t flecs_get_flattened_target(
     }
 
     if (table->flags & EcsTableHasTarget) {
-        int32_t col = table->storage_map[table->_->ft_offset];
+        int32_t col = table->column_map[table->_->ft_offset];
         ecs_assert(col != -1, ECS_INTERNAL_ERROR, NULL);
         EcsTarget *next = table->data.columns[col].data.array;
         next = ECS_ELEM_T(next, EcsTarget, ECS_RECORD_TO_ROW(r->row));
@@ -467,7 +467,7 @@ void flecs_entity_filter_init(
             }
 
             if (terms[i].src.trav == rel) {
-                ef.flat_tree_column = table->storage_map[column];
+                ef.flat_tree_column = table->column_map[column];
                 ecs_assert(ef.flat_tree_column != -1, 
                     ECS_INTERNAL_ERROR, NULL);
                 has_filter = true;

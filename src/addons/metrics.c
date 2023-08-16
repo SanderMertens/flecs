@@ -336,21 +336,21 @@ static void UpdateOneOfInstance(ecs_iter_t *it, bool counter) {
     int32_t i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_oneof_metric_ctx_t *ctx = mi[i].ctx;
-        ecs_table_t *table = mi[i].r->table;
+        ecs_table_t *mtable = mi[i].r->table;
 
         double *value = ECS_ELEM(m, ctx->size, i);
         if (!counter) {
             ecs_os_memset(value, 0, ctx->size);
         }
 
-        if (!table) {
+        if (!mtable) {
             ecs_delete(it->world, it->entities[i]);
             continue;
         }
 
         ecs_id_record_t *idr = ctx->idr;
         ecs_id_t id;
-        if (flecs_search_w_idr(world, table, idr->id, &id, idr) == -1) {
+        if (flecs_search_w_idr(world, mtable, idr->id, &id, idr) == -1) {
             ecs_delete(it->world, it->entities[i]);
             continue;
         }

@@ -1164,8 +1164,7 @@ repeat_event:
                     if (base_column != -1) {
                         /* Base found with component */
                         ecs_table_t *base_table = base_tr->hdr.table;
-                        base_column = ecs_table_type_to_column_index(
-                            base_table, base_tr->index);
+                        base_column = base_tr->column;
                         ecs_assert(base_column != -1, ECS_INTERNAL_ERROR, NULL);
                         ecs_record_t *base_r = flecs_entities_get(world, base);
                         ecs_assert(base_r != NULL, ECS_INTERNAL_ERROR, NULL);

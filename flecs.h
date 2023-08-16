@@ -25479,11 +25479,11 @@ struct table {
 
     /** Get pointer to component array by column index. 
      * 
-     * @param column_index The column index.
+     * @param index The column index.
      * @return Pointer to the column, NULL if not a component.
      */
-    virtual void* get_column(int32_t column_index) const {
-        return ecs_table_get_column(m_table, column_index, 0);
+    virtual void* get_column(int32_t index) const {
+        return ecs_table_get_column(m_table, index, 0);
     }
 
     /** Get pointer to component array by component.
@@ -25554,8 +25554,8 @@ struct table {
     }
 
     /** Get column size */
-    size_t column_size(int32_t column_index) {
-        return ecs_table_get_column_size(m_table, column_index);
+    size_t column_size(int32_t index) {
+        return ecs_table_get_column_size(m_table, index);
     }
 
     /** Get depth for given relationship.

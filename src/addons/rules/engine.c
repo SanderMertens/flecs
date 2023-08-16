@@ -1357,7 +1357,7 @@ bool flecs_rule_pred_match(
             return is_neq;
         }
         op_ctx->name_col = flecs_ito(int16_t, 
-            l.table->storage_map[op_ctx->name_col]);
+            l.table->column_map[op_ctx->name_col]);
         ecs_assert(op_ctx->name_col != -1, ECS_INTERNAL_ERROR, NULL);
     } else {
         if (op_ctx->name_col == -1) {
