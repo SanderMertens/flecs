@@ -593,6 +593,8 @@
                 "has_in_progress",
                 "has_of_zero",
                 "owns",
+                "owns_wildcard",
+                "owns_wildcard_pair",
                 "has_entity",
                 "has_entity_0",
                 "has_entity_0_component",

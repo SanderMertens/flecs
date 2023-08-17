@@ -403,7 +403,7 @@ bool flecs_rule_select_w_id(
             return false;
         }
 
-        op_ctx->column = flecs_ito(int16_t, tr->column);
+        op_ctx->column = flecs_ito(int16_t, tr->index);
         op_ctx->remaining = flecs_ito(int16_t, tr->count - 1);
         table = tr->hdr.table;
         flecs_rule_var_set_table(op, op->src.var, table, 0, 0, ctx);
@@ -461,7 +461,7 @@ bool flecs_rule_with(
             return false;
         }
 
-        op_ctx->column = flecs_ito(int16_t, tr->column);
+        op_ctx->column = flecs_ito(int16_t, tr->index);
         op_ctx->remaining = flecs_ito(int16_t, tr->count);
     } else {
         if (--op_ctx->remaining <= 0) {
@@ -524,7 +524,7 @@ bool flecs_rule_select_id(
 
     ecs_table_t *table = tr->hdr.table;
     flecs_rule_var_set_table(op, op->src.var, table, 0, 0, ctx);
-    flecs_rule_it_set_column(it, field, tr->column);
+    flecs_rule_it_set_column(it, field, tr->index);
     return true;
 }
 
@@ -562,7 +562,7 @@ bool flecs_rule_with_id(
         return false;
     }
 
-    flecs_rule_it_set_column(it, field, tr->column);
+    flecs_rule_it_set_column(it, field, tr->index);
     return true;
 }
 
@@ -1351,13 +1351,13 @@ bool flecs_rule_pred_match(
         op_ctx->range = l;
         op_ctx->index = l.offset;
         op_ctx->name_col = flecs_ito(int16_t,   
-            ecs_table_get_index(ctx->world, l.table, 
+            ecs_table_get_type_index(ctx->world, l.table, 
                 ecs_pair(ecs_id(EcsIdentifier), EcsName)));
         if (op_ctx->name_col == -1) {
             return is_neq;
         }
         op_ctx->name_col = flecs_ito(int16_t, 
-            l.table->storage_map[op_ctx->name_col]);
+            l.table->column_map[op_ctx->name_col]);
         ecs_assert(op_ctx->name_col != -1, ECS_INTERNAL_ERROR, NULL);
     } else {
         if (op_ctx->name_col == -1) {
@@ -1368,7 +1368,7 @@ bool flecs_rule_pred_match(
         l = op_ctx->range;
     }
 
-    const EcsIdentifier *names = l.table->data.columns[op_ctx->name_col].array;
+    const EcsIdentifier *names = l.table->data.columns[op_ctx->name_col].data.array;
     int32_t count = l.offset + l.count, offset = -1;
     for (; op_ctx->index < count; op_ctx->index ++) {
         const char *name = names[op_ctx->index].value;

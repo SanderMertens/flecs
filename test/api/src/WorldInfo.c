@@ -171,10 +171,10 @@ void WorldInfo_table_storage_count(void) {
     test_delta(&prev, cur, table_storage_count, 0);
 
     ecs_add(world, e, Position);
-    test_delta(&prev, cur, table_storage_count, 2);
+    test_delta(&prev, cur, table_storage_count, 1);
 
     ecs_delete(world, c_1);
-    test_delta(&prev, cur, table_storage_count, -1);
+    test_delta(&prev, cur, table_storage_count, 0);
 
     ecs_delete(world, ecs_id(Position));
     test_delta(&prev, cur, table_storage_count, -1);

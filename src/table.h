@@ -183,24 +183,9 @@ void flecs_table_delete_entities(
     ecs_world_t *world,
     ecs_table_t *table);
 
-ecs_vec_t *ecs_table_column_for_id(
-    const ecs_world_t *world,
-    const ecs_table_t *table,
-    ecs_id_t id);
-
 int32_t flecs_table_column_to_union_index(
     const ecs_table_t *table,
     int32_t column);
-
-/* Increase refcount of table (prevents deletion) */
-void flecs_table_claim(
-    ecs_world_t *world, 
-    ecs_table_t *table);
-
-/* Decreases refcount of table (may delete) */
-bool flecs_table_release(
-    ecs_world_t *world, 
-    ecs_table_t *table);
 
 /* Increase observer count of table */
 void flecs_table_traversable_add(

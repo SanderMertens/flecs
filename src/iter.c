@@ -185,10 +185,9 @@ bool flecs_iter_populate_term_data(
             table = r->table;
 
             ecs_id_t id = it->ids[t];
-            ecs_table_t *s_table = table->storage_table;
             ecs_table_record_t *tr;
 
-            if (!s_table || !(tr = flecs_table_record_get(world, s_table, id))){
+            if (!(tr = flecs_table_record_get(world, table, id)) || (tr->column == -1)) {
                 u_index = flecs_table_column_to_union_index(table, -column - 1);
                 if (u_index != -1) {
                     goto has_union;
@@ -199,7 +198,7 @@ bool flecs_iter_populate_term_data(
             /* We now have row and column, so we can get the storage for the id
              * which gives us the pointer and size */
             column = tr->column;
-            ecs_vec_t *s = &table->data.columns[column];
+            ecs_vec_t *s = &table->data.columns[column].data;
             data = ecs_vec_first(s);
             /* Fallthrough to has_data */
         }
@@ -210,7 +209,7 @@ bool flecs_iter_populate_term_data(
 
         row = it->offset;
 
-        int32_t storage_column = ecs_table_type_to_storage_index(
+        int32_t storage_column = ecs_table_type_to_column_index(
             table, column - 1);
         if (storage_column == -1) {
             u_index = flecs_table_column_to_union_index(table, column - 1);
@@ -224,7 +223,7 @@ bool flecs_iter_populate_term_data(
             goto no_data;
         }
 
-        ecs_vec_t *s = &table->data.columns[storage_column];
+        ecs_vec_t *s = &table->data.columns[storage_column].data;
         data = ecs_vec_first(s);
 
         /* Fallthrough to has_data */

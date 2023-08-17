@@ -446,13 +446,12 @@ struct entity_with_invoker_impl<arg_list<Args ...>> {
         return true;
     }
 
-    static bool get_ptrs(world_t *world, const ecs_record_t *r, ecs_table_t *table,
+    static 
+    bool get_ptrs(world_t *world, const ecs_record_t *r, ecs_table_t *table,
         ArrayType& ptrs) 
     {
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-
-        ecs_table_t *storage_table = ecs_table_get_storage_table(table);
-        if (!storage_table) {
+        if (!ecs_table_column_count(table)) {
             return false;
         }
 
@@ -461,8 +460,8 @@ struct entity_with_invoker_impl<arg_list<Args ...>> {
 
         /* Get column indices for components */
         ColumnArray columns ({
-            ecs_search_offset(real_world, storage_table, 0, 
-                _::cpp_type<Args>().id(world), 0)...
+            ecs_table_get_column_index(real_world, table, 
+                _::cpp_type<Args>().id(world))...
         });
 
         /* Get pointers for columns for entity */

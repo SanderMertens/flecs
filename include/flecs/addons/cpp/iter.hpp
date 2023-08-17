@@ -219,11 +219,6 @@ public:
 
     flecs::table_range range() const;
 
-    /** Is current type a module or does it contain module contents? */
-    bool has_module() const {
-        return ecs_table_has_module(m_iter->table);
-    }
-
     /** Access ctx. 
      * ctx contains the context pointer assigned to a system.
      */

@@ -241,8 +241,8 @@ static
 EcsPoly* flecs_pipeline_term_system(
     ecs_iter_t *it)
 {
-    int32_t index = ecs_search(it->real_world, it->table, 
-        ecs_poly_id(EcsSystem), 0);
+    int32_t index = ecs_table_get_column_index(
+        it->real_world, it->table, ecs_poly_id(EcsSystem));
     ecs_assert(index != -1, ECS_INTERNAL_ERROR, NULL);
     EcsPoly *poly = ecs_table_get_column(it->table, index, it->offset);
     ecs_assert(poly != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -281,7 +281,7 @@ bool flecs_pipeline_build(
     /* Iterate systems in pipeline, add ops for running / merging */
     while (ecs_query_next(&it)) {
         EcsPoly *poly = flecs_pipeline_term_system(&it);
-        bool is_active = ecs_table_get_index(world, it.table, EcsEmpty) == -1;
+        bool is_active = ecs_table_get_type_index(world, it.table, EcsEmpty) == -1;
 
         int32_t i;
         for (i = 0; i < it.count; i ++) {

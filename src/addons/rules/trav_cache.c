@@ -62,7 +62,7 @@ void flecs_rule_build_up_cache(
     int32_t root_column)
 {
     ecs_id_t *ids = table->type.array;
-    int32_t i = tr->column, end = i + tr->count;
+    int32_t i = tr->index, end = i + tr->count;
     bool is_root = root_column == -1;
 
     for (; i < end; i ++) {
@@ -139,7 +139,7 @@ void flecs_rule_get_up_cache(
         return;
     }
 
-    ecs_id_t id = table->type.array[tr->column];
+    ecs_id_t id = table->type.array[tr->index];
 
     if (cache->id != id || !cache->up) {
         ecs_vec_reset_t(a, &cache->entities, ecs_trav_elem_t);

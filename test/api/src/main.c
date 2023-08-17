@@ -562,6 +562,8 @@ void Has_1_of_empty(void);
 void Has_has_in_progress(void);
 void Has_has_of_zero(void);
 void Has_owns(void);
+void Has_owns_wildcard(void);
+void Has_owns_wildcard_pair(void);
 void Has_has_entity(void);
 void Has_has_entity_0(void);
 void Has_has_entity_0_component(void);
@@ -4735,6 +4737,14 @@ bake_test_case Has_testcases[] = {
     {
         "owns",
         Has_owns
+    },
+    {
+        "owns_wildcard",
+        Has_owns_wildcard
+    },
+    {
+        "owns_wildcard_pair",
+        Has_owns_wildcard_pair
     },
     {
         "has_entity",
@@ -12729,7 +12739,7 @@ static bake_test_suite suites[] = {
         "Has",
         NULL,
         NULL,
-        16,
+        18,
         Has_testcases
     },
     {

@@ -9,8 +9,9 @@
 /* Payload for id cache */
 struct ecs_table_record_t {
     ecs_table_cache_hdr_t hdr;  /* Table cache header */
-    int32_t column;             /* First column where id occurs in table */
-    int32_t count;              /* Number of times id occurs in table */
+    int16_t index;              /* First type index where id occurs in table */
+    int16_t count;              /* Number of times id occurs in table */
+    int16_t column;             /* First column index where id occurs */
 };
 
 /* Linked list of id records */

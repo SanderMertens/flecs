@@ -478,7 +478,7 @@ void flecs_bootstrap_builtin(
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_vec_t *columns = table->data.columns;
+    ecs_column_t *columns = table->data.columns;
     ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_record_t *record = flecs_entities_ensure(world, entity);
@@ -487,7 +487,7 @@ void flecs_bootstrap_builtin(
     int32_t index = flecs_table_append(world, table, entity, record, false, false);
     record->row = ECS_ROW_TO_RECORD(index, 0);
 
-    EcsComponent *component = ecs_vec_first(&columns[0]);
+    EcsComponent *component = ecs_vec_first(&columns[0].data);
     component[index].size = size;
     component[index].alignment = alignment;
 
@@ -495,7 +495,7 @@ void flecs_bootstrap_builtin(
     ecs_size_t symbol_length = ecs_os_strlen(symbol);
     ecs_size_t name_length = symbol_length - 3;
 
-    EcsIdentifier *name_col = ecs_vec_first(&columns[1]);
+    EcsIdentifier *name_col = ecs_vec_first(&columns[1].data);
     uint64_t name_hash = flecs_hash(name, name_length);
     name_col[index].value = ecs_os_strdup(name);
     name_col[index].length = name_length;
@@ -505,7 +505,7 @@ void flecs_bootstrap_builtin(
     flecs_name_index_ensure(
         table->_->name_index, entity, name, name_length, name_hash);
 
-    EcsIdentifier *symbol_col = ecs_vec_first(&columns[2]);
+    EcsIdentifier *symbol_col = ecs_vec_first(&columns[2].data);
     symbol_col[index].value = ecs_os_strdup(symbol);
     symbol_col[index].length = symbol_length;
     symbol_col[index].hash = flecs_hash(symbol, symbol_length);    
@@ -562,9 +562,9 @@ ecs_table_t* flecs_bootstrap_component_table(
     ecs_allocator_t *a = &world->allocator;
     ecs_vec_init_t(a, &data->entities, ecs_entity_t, EcsFirstUserComponentId);
     ecs_vec_init_t(a, &data->records, ecs_record_t*, EcsFirstUserComponentId);
-    ecs_vec_init_t(a, &data->columns[0], EcsComponent, EcsFirstUserComponentId);
-    ecs_vec_init_t(a, &data->columns[1], EcsIdentifier, EcsFirstUserComponentId);
-    ecs_vec_init_t(a, &data->columns[2], EcsIdentifier, EcsFirstUserComponentId);
+    ecs_vec_init_t(a, &data->columns[0].data, EcsComponent, EcsFirstUserComponentId);
+    ecs_vec_init_t(a, &data->columns[1].data, EcsIdentifier, EcsFirstUserComponentId);
+    ecs_vec_init_t(a, &data->columns[2].data, EcsIdentifier, EcsFirstUserComponentId);
     
     return result;
 }

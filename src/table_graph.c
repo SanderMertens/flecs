@@ -520,11 +520,9 @@ void flecs_init_table(
     ecs_table_t *table,
     ecs_table_t *prev)
 {
-    table->type_info = NULL;
     table->flags = 0;
     table->dirty_state = NULL;
     table->_->lock = 0;
-    table->_->refcount = 1;
     table->_->generation = 0;
 
     flecs_table_init_node(&table->node);
@@ -569,11 +567,11 @@ ecs_table_t *flecs_create_table(
     /* Update counters */
     world->info.table_count ++;
     world->info.table_record_count += result->_->record_count;
-    world->info.table_storage_count += result->storage_count;
+    world->info.table_storage_count += result->column_count;
     world->info.empty_table_count ++;
     world->info.table_create_total ++;
     
-    if (!result->storage_count) {
+    if (!result->column_count) {
         world->info.tag_table_count ++;
     } else {
         world->info.trivial_table_count += !(result->flags & EcsTableIsComplex);
@@ -775,7 +773,7 @@ void flecs_add_overrides_for_base(
         ecs_table_record_t *tr = flecs_id_record_get_table(
             world->idr_isa_wildcard, base_table);
         ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
-        int32_t i = tr->column, end = i + tr->count;
+        int32_t i = tr->index, end = i + tr->count;
         for (; i != end; i ++) {
             flecs_add_overrides_for_base(world, dst_type, ids[i]);
         }
@@ -802,7 +800,7 @@ void flecs_add_with_property(
     ecs_table_record_t *tr = flecs_id_record_get_table(
         idr_with_wildcard, table);
     if (tr) {
-        int32_t i = tr->column, end = i + tr->count;
+        int32_t i = tr->index, end = i + tr->count;
         ecs_id_t *ids = table->type.array;
 
         for (; i < end; i ++) {
@@ -854,7 +852,7 @@ ecs_table_t* flecs_find_table_with(
                  * a new id sequence with the existing id replaced */
                 ecs_type_t dst_type = flecs_type_copy(world, &node->type);
                 ecs_assert(dst_type.array != NULL, ECS_INTERNAL_ERROR, NULL);
-                dst_type.array[tr->column] = with;
+                dst_type.array[tr->index] = with;
                 return flecs_table_ensure(world, &dst_type, true, node);
             }
         }

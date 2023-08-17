@@ -79,7 +79,7 @@ static ecs_entity_t dummy_component = 0;
 static ecs_entity_t dummy_source = 0;
 
 static
-void dummy_reset() {
+void dummy_reset(void) {
     dummy_invoked = false;
     dummy_component = 0;
     dummy_source = 0;

@@ -839,13 +839,12 @@ void flecs_rest_reply_table_append_memory(
     allocated += table->data.entities.size * ECS_SIZEOF(ecs_entity_t);
     allocated += table->data.records.size * ECS_SIZEOF(ecs_record_t*);
 
-    int32_t i, storage_count = table->storage_count;
-    const ecs_type_info_t **ti = table->type_info;
-    ecs_vec_t *storages = table->data.columns;
+    int32_t i, storage_count = table->column_count;
+    ecs_column_t *columns = table->data.columns;
 
     for (i = 0; i < storage_count; i ++) {
-        used += storages[i].count * ti[i]->size;
-        allocated += storages[i].size * ti[i]->size;
+        used += columns[i].data.count * columns[i].ti->size;
+        allocated += columns[i].data.size * columns[i].ti->size;
     }
 
     ecs_strbuf_list_push(reply, "{", ",");
@@ -868,7 +867,6 @@ void flecs_rest_reply_table_append(
     ecs_strbuf_list_append(reply, "\"count\":%d", ecs_table_count(table));
     ecs_strbuf_list_append(reply, "\"memory\":");
     flecs_rest_reply_table_append_memory(reply, table);
-    ecs_strbuf_list_append(reply, "\"refcount\":%d", table->_->refcount);
     ecs_strbuf_list_pop(reply, "}");
 }
 

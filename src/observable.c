@@ -462,15 +462,12 @@ void* flecs_override(
                 continue;
             }
 
-            int32_t column = tr->column;
-            column = ecs_table_type_to_storage_index(table, column);
-            ecs_assert(column != -1, ECS_INTERNAL_ERROR, NULL);
+            int32_t index = tr->column;
+            ecs_assert(index != -1, ECS_INTERNAL_ERROR, NULL);
 
-            const ecs_type_info_t *ti = idr->type_info;
-            ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_size_t size = ti->size;
-            ecs_vec_t *vec = &table->data.columns[column];
-            return ecs_vec_get(vec, size, it->offset);
+            ecs_column_t *column = &table->data.columns[index];
+            ecs_size_t size = column->ti->size;
+            return ecs_vec_get(&column->data, size, it->offset);
         }
     }
 
@@ -531,13 +528,12 @@ void flecs_emit_forward_id(
     it->ptrs[0] = NULL;
     it->sizes[0] = 0;
 
-    int32_t storage_i = ecs_table_type_to_storage_index(tgt_table, column);
+    int32_t storage_i = ecs_table_type_to_column_index(tgt_table, column);
     if (storage_i != -1) {
         ecs_assert(idr->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_vec_t *vec = &tgt_table->data.columns[storage_i];
-        ecs_size_t size = idr->type_info->size;
-        it->ptrs[0] = ecs_vec_get(vec, size, offset);
-        it->sizes[0] = size;
+        ecs_column_t *c = &tgt_table->data.columns[storage_i];
+        it->ptrs[0] = ecs_vec_get(&c->data, c->ti->size, offset);
+        it->sizes[0] = c->ti->size;
     }
 
     ecs_table_record_t *tr = flecs_id_record_get_table(idr, table);
@@ -691,7 +687,7 @@ void flecs_emit_forward_cached_ids(
         int32_t rc_offset = ECS_RECORD_TO_ROW(rc_record->row);
         flecs_emit_forward_and_cache_id(world, er, er_onset, emit_ids,
             it, table, rc_idr, rc_elem->src,
-                rc_record, rc_record->table, rc_tr, rc_tr->column,
+                rc_record, rc_record->table, rc_tr, rc_tr->index,
                     rc_offset, reachable_ids, trav, evtx);
     }
 }
@@ -967,7 +963,7 @@ void flecs_emit_forward(
 
             int32_t offset = ECS_RECORD_TO_ROW(r->row);
             flecs_emit_forward_id(world, er, er_onset, emit_ids, it, table,
-                rc_idr, elem->src, r->table, tr->column, offset, trav, evtx);
+                rc_idr, elem->src, r->table, tr->index, offset, trav, evtx);
         }
     }
 }
@@ -1063,7 +1059,7 @@ void flecs_emit(
     const ecs_event_record_t *er_unset = flecs_event_record_get_if(observable, EcsUnSet);
 
     ecs_data_t *storage = NULL;
-    ecs_vec_t *columns = NULL;
+    ecs_column_t *columns = NULL;
     if (count) {
         storage = &table->data;
         columns = storage->columns;
@@ -1168,13 +1164,12 @@ repeat_event:
                     if (base_column != -1) {
                         /* Base found with component */
                         ecs_table_t *base_table = base_tr->hdr.table;
-                        base_column = ecs_table_type_to_storage_index(
-                            base_table, base_tr->column);
+                        base_column = base_tr->column;
                         ecs_assert(base_column != -1, ECS_INTERNAL_ERROR, NULL);
                         ecs_record_t *base_r = flecs_entities_get(world, base);
                         ecs_assert(base_r != NULL, ECS_INTERNAL_ERROR, NULL);
                         int32_t base_row = ECS_RECORD_TO_ROW(base_r->row);
-                        ecs_vec_t *base_v = &base_table->data.columns[base_column];
+                        ecs_vec_t *base_v = &base_table->data.columns[base_column].data;
                         override_ptr = ecs_vec_get(base_v, ti->size, base_row);
                     }
                 }
@@ -1213,7 +1208,7 @@ repeat_event:
             continue;
         }
 
-        int32_t column = tr->column, storage_i = -1;
+        int32_t column = tr->index, storage_i;
         it.columns[0] = column + 1;
         it.ptrs[0] = NULL;
         it.sizes[0] = 0;
@@ -1221,13 +1216,13 @@ repeat_event:
         it.ids[0] = id;
 
         if (count) {
-            storage_i = ecs_table_type_to_storage_index(table, column);
+            storage_i = tr->column;
             if (storage_i != -1) {
                 /* If this is a component, fetch pointer & size */
                 ecs_assert(idr->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
-                ecs_vec_t *vec = &columns[storage_i];
-                ecs_size_t size = idr->type_info->size;
-                void *ptr = ecs_vec_get(vec, size, offset);
+                ecs_column_t *c = &columns[storage_i];
+                ecs_size_t size = c->ti->size;
+                void *ptr = ecs_vec_get(&c->data, size, offset);
                 it.sizes[0] = size;
 
                 if (override_ptr) {
