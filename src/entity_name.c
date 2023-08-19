@@ -1,6 +1,6 @@
 /**
- * @file hierarchy.c
- * @brief API for entity paths and name lookups.
+ * @file entity_name.c
+ * @brief Functions for working with named entities.
  */
 
 #include "private_api.h"

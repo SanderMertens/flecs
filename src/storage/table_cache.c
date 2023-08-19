@@ -14,7 +14,7 @@
  * improves performance as applications don't waste time iterating empty tables.
  */
 
-#include "private_api.h"
+#include "../private_api.h"
 
 static
 void flecs_table_cache_list_remove(

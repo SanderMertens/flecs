@@ -24,7 +24,7 @@
  * tables have references to it.
  */
 
-#include "private_api.h"
+#include "../private_api.h"
 
 /* Table sanity check to detect storage issues. Only enabled in SANITIZE mode as
  * this can severly slow down many ECS operations. */

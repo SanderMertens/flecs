@@ -7,11 +7,10 @@
 #define FLECS_PRIVATE_H
 
 #include "private_types.h"
-#include "table_cache.h"
-#include "id_record.h"
+#include "storage/table_cache.h"
+#include "storage/id_index.h"
 #include "observable.h"
 #include "iter.h"
-#include "table.h"
 #include "poly.h"
 #include "stage.h"
 #include "world.h"
