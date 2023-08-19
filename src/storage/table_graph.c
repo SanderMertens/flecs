@@ -8,7 +8,7 @@
  * edge for component C that connects [A, B] to [A, B, C].
  */
 
-#include "private_api.h"
+#include "../private_api.h"
 
 /* Id sequence (type) utilities */
 

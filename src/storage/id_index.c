@@ -1,5 +1,5 @@
 /**
- * @file id_record.c
+ * @file id_index.c
  * @brief Index for looking up tables by (component) id.
  * 
  * An id record stores the administration for an in use (component) id, that is
@@ -14,7 +14,7 @@
  * getting a component array/component for an entity.
  */
 
-#include "private_api.h"
+#include "../private_api.h"
 
 static
 ecs_id_record_elem_t* flecs_id_record_elem(

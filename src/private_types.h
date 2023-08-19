@@ -17,10 +17,11 @@
 #include <stdio.h>
 
 #include "flecs.h"
-#include "datastructures/entity_index.h"
+#include "storage/entity_index.h"
 #include "datastructures/stack_allocator.h"
 #include "flecs/private/bitset.h"
 #include "flecs/private/switch_list.h"
+#include "storage/table.h"
 
 /* Used in id records to keep track of entities used with id flags */
 extern const ecs_entity_t EcsFlag;
@@ -78,132 +79,6 @@ typedef struct ecs_hashed_string_t {
     ecs_size_t length;
     uint64_t hash;
 } ecs_hashed_string_t;
-
-/* Table event type for notifying tables of world events */
-typedef enum ecs_table_eventkind_t {
-    EcsTableTriggersForId,
-    EcsTableNoTriggersForId,
-} ecs_table_eventkind_t;
-
-typedef struct ecs_table_event_t {
-    ecs_table_eventkind_t kind;
-
-    /* Query event */
-    ecs_query_t *query;
-
-    /* Component info event */
-    ecs_entity_t component;
-
-    /* Event match */
-    ecs_entity_t event;
-
-    /* If the nubmer of fields gets out of hand, this can be turned into a union
-     * but since events are very temporary objects, this works for now and makes
-     * initializing an event a bit simpler. */
-} ecs_table_event_t;
-
-/** Cache of added/removed components for non-trivial edges between tables */
-#define ECS_TABLE_DIFF_INIT { .added = {0}}
-
-typedef struct ecs_table_diff_t {
-    ecs_type_t added;                /* Components added between tables */
-    ecs_type_t removed;              /* Components removed between tables */
-} ecs_table_diff_t;
-
-/** Builder for table diff. The table diff type itself doesn't use ecs_vec_t to
- * conserve memory on table edges (a type doesn't have the size field), whereas
- * a vec for the builder is more convenient to use & has allocator support. */
-typedef struct ecs_table_diff_builder_t {
-    ecs_vec_t added;
-    ecs_vec_t removed;
-} ecs_table_diff_builder_t;
-
-/** Edge linked list (used to keep track of incoming edges) */
-typedef struct ecs_graph_edge_hdr_t {
-    struct ecs_graph_edge_hdr_t *prev;
-    struct ecs_graph_edge_hdr_t *next;
-} ecs_graph_edge_hdr_t;
-
-/** Single edge. */
-typedef struct ecs_graph_edge_t {
-    ecs_graph_edge_hdr_t hdr;
-    ecs_table_t *from;               /* Edge source table */
-    ecs_table_t *to;                 /* Edge destination table */
-    ecs_table_diff_t *diff;          /* Index into diff vector, if non trivial edge */
-    ecs_id_t id;                     /* Id associated with edge */
-} ecs_graph_edge_t;
-
-/* Edges to other tables. */
-typedef struct ecs_graph_edges_t {
-    ecs_graph_edge_t *lo;            /* Small array optimized for low edges */
-    ecs_map_t *hi;                   /* Map for hi edges (map<id, edge_t>) */
-} ecs_graph_edges_t;
-
-/* Table graph node */
-typedef struct ecs_graph_node_t {
-    /* Outgoing edges */
-    ecs_graph_edges_t add;    
-    ecs_graph_edges_t remove; 
-
-    /* Incoming edges (next = add edges, prev = remove edges) */
-    ecs_graph_edge_hdr_t refs;
-} ecs_graph_node_t;
-
-/** Infrequently accessed data not stored inline in ecs_table_t */
-typedef struct ecs_table__t {
-    uint64_t hash;                   /* Type hash */
-    int32_t lock;                    /* Prevents modifications */
-    int32_t traversable_count;       /* Traversable relationship targets in table */
-    uint16_t generation;             /* Used for table cleanup */
-    int16_t record_count;            /* Table record count including wildcards */
-    
-    struct ecs_table_record_t *records; /* Array with table records */
-    ecs_hashmap_t *name_index;       /* Cached pointer to name index */
-
-    ecs_switch_t *sw_columns;        /* Switch columns */
-    ecs_bitset_t *bs_columns;        /* Bitset columns */
-    int16_t sw_count;
-    int16_t sw_offset;
-    int16_t bs_count;
-    int16_t bs_offset;
-    int16_t ft_offset;
-} ecs_table__t;
-
-typedef struct ecs_column_t {
-    ecs_vec_t data;
-    ecs_id_t id;
-    ecs_type_info_t *ti;
-    ecs_size_t size;
-} ecs_column_t;
-
-/** Table storage */
-struct ecs_data_t {
-    ecs_vec_t entities;              /* Entity identifiers */
-    ecs_vec_t records;               /* Ptrs to records in main entity index */
-    ecs_column_t *columns;           /* Component vectors */
-};
-
-/** A table is the Flecs equivalent of an archetype. Tables store all entities
- * with a specific set of components. Tables are automatically created when an
- * entity has a set of components not previously observed before. When a new
- * table is created, it is automatically matched with existing queries */
-struct ecs_table_t {
-    uint64_t id;                     /* Table id in sparse set */
-    ecs_flags32_t flags;             /* Flags for testing table properties */
-    int16_t column_count;            /* Number of components (excluding tags) */
-    ecs_type_t type;                 /* Vector with component ids */
-
-    ecs_data_t data;                 /* Component storage */
-    ecs_graph_node_t node;           /* Graph node */
-    
-    int32_t *dirty_state;            /* Keep track of changes in columns */
-    int32_t *column_map;             /* Map type index <-> column
-                                      *  - 0..count(T):        type index -> column
-                                      *  - count(T)..count(C): column -> type index
-                                      */
-
-    ecs_table__t *_;                 /* Infrequently accessed table metadata */
-};
 
 /** Must appear as first member in payload of table cache */
 typedef struct ecs_table_cache_hdr_t {

@@ -1,10 +1,10 @@
 /**
- * @file id_record.h
+ * @file id_index.h
  * @brief Index for looking up tables by (component) id.
  */
 
-#ifndef FLECS_ID_RECORD_H
-#define FLECS_ID_RECORD_H
+#ifndef FLECS_ID_INDEX_H
+#define FLECS_ID_INDEX_H
 
 /* Payload for id cache */
 struct ecs_table_record_t {
