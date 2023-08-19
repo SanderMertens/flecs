@@ -280,4 +280,8 @@ inline flecs::scoped_world world::scope() const {
     return scoped_world(m_world, parent);
 }
 
+inline flecs::scoped_world world::scope(const char* name) const {
+  return scope(entity(name));
+}
+
 } // namespace flecs
