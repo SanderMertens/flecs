@@ -1146,7 +1146,8 @@
                 "component_w_low_id",
                 "get_set_log_level",
                 "reset_world",
-                "id_from_pair_type"
+                "id_from_pair_type",
+                "scope_w_name"
             ]
         }, {
             "id": "Singleton",

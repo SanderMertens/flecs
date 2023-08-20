@@ -503,7 +503,7 @@ extern "C" {
 
 /**
  * @file table_graph.h
- * @brief Table graph types.
+ * @brief Table graph types and functions.
  */
 
 #ifndef FLECS_TABLE_GRAPH_H

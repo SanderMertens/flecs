@@ -19784,6 +19784,8 @@ struct world {
     template <typename T>
     flecs::scoped_world scope() const;
 
+    flecs::scoped_world scope(const char* name) const;
+
     /** Delete all entities with specified id. */
     void delete_with(id_t the_id) const {
         ecs_delete_with(m_world, the_id);
@@ -30176,6 +30178,10 @@ template <typename T>
 inline flecs::scoped_world world::scope() const {
     flecs::id_t parent = _::cpp_type<T>::id(m_world);
     return scoped_world(m_world, parent);
+}
+
+inline flecs::scoped_world world::scope(const char* name) const {
+  return scope(entity(name));
 }
 
 } // namespace flecs

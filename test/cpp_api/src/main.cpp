@@ -1097,6 +1097,7 @@ void World_component_w_low_id(void);
 void World_get_set_log_level(void);
 void World_reset_world(void);
 void World_id_from_pair_type(void);
+void World_scope_w_name(void);
 
 // Testsuite 'Singleton'
 void Singleton_set_get_singleton(void);
@@ -5500,6 +5501,10 @@ bake_test_case World_testcases[] = {
     {
         "id_from_pair_type",
         World_id_from_pair_type
+    },
+    {
+        "scope_w_name",
+        World_scope_w_name
     }
 };
 
@@ -6273,7 +6278,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        97,
+        98,
         World_testcases
     },
     {

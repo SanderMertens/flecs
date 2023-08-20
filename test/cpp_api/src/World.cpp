@@ -1715,3 +1715,12 @@ void World_id_from_pair_type(void) {
     test_assert(id.second() == ecs.id<Velocity>());
 }
 
+
+void World_scope_w_name(void) {
+    flecs::world ecs;
+
+    flecs::entity parent = ecs.entity("parent");
+    flecs::entity child = ecs.scope("parent").entity();
+
+    test_assert(child.has(flecs::ChildOf, parent));
+}
