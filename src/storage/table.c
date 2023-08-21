@@ -2521,18 +2521,13 @@ error:
 
 size_t ecs_table_get_column_size(
     const ecs_table_t *table,
-    int32_t index)
+    int32_t column)
 {
     ecs_check(table != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(index < table->type.count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(column < table->column_count, ECS_INVALID_PARAMETER, NULL);
     ecs_check(table->column_map != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    int32_t storage_index = table->column_map[index];
-    if (storage_index == -1) {
-        return 0;
-    }
-
-    return flecs_ito(size_t, table->data.columns[storage_index].size);
+    return flecs_ito(size_t, table->data.columns[column].size);
 error:
     return 0;
 }
