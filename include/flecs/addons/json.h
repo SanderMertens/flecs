@@ -197,6 +197,7 @@ typedef struct ecs_entity_to_json_desc_t {
     bool serialize_brief;      /**< Serialize brief doc description */
     bool serialize_link;       /**< Serialize doc link (URL) */
     bool serialize_color;      /**< Serialize doc color */
+    bool serialize_ids;        /**< Serialize (component) ids */
     bool serialize_id_labels;  /**< Serialize labels of (component) ids */
     bool serialize_base;       /**< Serialize base components */
     bool serialize_private;    /**< Serialize private components */
@@ -208,7 +209,7 @@ typedef struct ecs_entity_to_json_desc_t {
 } ecs_entity_to_json_desc_t;
 
 #define ECS_ENTITY_TO_JSON_INIT (ecs_entity_to_json_desc_t){true, false,\
-    false, false, false, false, false, true, false, false, false, false, false, false }
+    false, false, false, false, true, false, true, false, false, false, false, false, false }
 
 /** Serialize entity into JSON string.
  * This creates a JSON object with the entity's (path) name, which components
@@ -243,7 +244,8 @@ int ecs_entity_to_json_buf(
 
 /** Used with ecs_iter_to_json. */
 typedef struct ecs_iter_to_json_desc_t {
-    bool serialize_term_ids;        /**< Serialize term (query) component ids */
+    bool serialize_term_ids;        /**< Serialize query term component ids */
+    bool serialize_term_labels;     /**< Serialize query term component id labels */
     bool serialize_ids;             /**< Serialize actual (matched) component ids */
     bool serialize_sources;         /**< Serialize sources */
     bool serialize_variables;       /**< Serialize variables */
@@ -263,6 +265,7 @@ typedef struct ecs_iter_to_json_desc_t {
 
 #define ECS_ITER_TO_JSON_INIT (ecs_iter_to_json_desc_t){\
     .serialize_term_ids =        true,  \
+    .serialize_term_labels =     false, \
     .serialize_ids =             true,  \
     .serialize_sources =         true,  \
     .serialize_variables =       true,  \

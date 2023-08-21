@@ -721,7 +721,8 @@
                 "serialize_w_alerts_no_message",
                 "serialize_refs_childof",
                 "serialize_refs_custom",
-                "serialize_refs_wildcard"
+                "serialize_refs_wildcard",
+                "serialize_no_ids"
             ]
         }, {
             "id": "SerializeIterToJson",
@@ -777,7 +778,8 @@
                 "serialize_colors_w_offset",
                 "serialize_anonymous_entities_w_offset",
                 "serialize_table",
-                "serialize_world"
+                "serialize_world",
+                "serialize_term_labels"
             ]
         }, {
             "id": "SerializeTypeInfoToJson",

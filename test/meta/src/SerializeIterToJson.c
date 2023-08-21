@@ -2346,3 +2346,32 @@ void SerializeIterToJson_serialize_anonymous_entities_w_offset(void) {
 
     ecs_fini(world);
 }
+
+void SerializeIterToJson_serialize_term_labels(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_doc_set_name(world, ecs_id(Position), "position");
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_query_t *q = ecs_query_new(world, "Position");
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    ecs_iter_to_json_desc_t desc = {0};
+    desc.serialize_term_labels = true;
+    char *json = ecs_iter_to_json(world, &it, &desc);
+    test_assert(json != NULL);
+    test_str(json, "{\"id_labels\":[[\"position\"]], \"results\":[]}");
+
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}

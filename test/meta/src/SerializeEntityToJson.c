@@ -1470,3 +1470,21 @@ void SerializeEntityToJson_serialize_refs_wildcard(void) {
 
     ecs_fini(world);
 }
+
+void SerializeEntityToJson_serialize_no_ids(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e = ecs_new_entity(world, "Foo");
+    ecs_add(world, e, Tag);
+
+    ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
+    desc.serialize_ids = false;
+    char *json = ecs_entity_to_json(world, e, &desc);
+    test_assert(json != NULL);
+    test_str(json, "{\"path\":\"Foo\"}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}

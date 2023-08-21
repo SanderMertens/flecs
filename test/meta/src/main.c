@@ -689,6 +689,7 @@ void SerializeEntityToJson_serialize_w_alerts_no_message(void);
 void SerializeEntityToJson_serialize_refs_childof(void);
 void SerializeEntityToJson_serialize_refs_custom(void);
 void SerializeEntityToJson_serialize_refs_wildcard(void);
+void SerializeEntityToJson_serialize_no_ids(void);
 
 // Testsuite 'SerializeIterToJson'
 void SerializeIterToJson_serialize_1_comps_empty(void);
@@ -743,6 +744,7 @@ void SerializeIterToJson_serialize_colors_w_offset(void);
 void SerializeIterToJson_serialize_anonymous_entities_w_offset(void);
 void SerializeIterToJson_serialize_table(void);
 void SerializeIterToJson_serialize_world(void);
+void SerializeIterToJson_serialize_term_labels(void);
 
 // Testsuite 'SerializeTypeInfoToJson'
 void SerializeTypeInfoToJson_bool(void);
@@ -3614,6 +3616,10 @@ bake_test_case SerializeEntityToJson_testcases[] = {
     {
         "serialize_refs_wildcard",
         SerializeEntityToJson_serialize_refs_wildcard
+    },
+    {
+        "serialize_no_ids",
+        SerializeEntityToJson_serialize_no_ids
     }
 };
 
@@ -3825,6 +3831,10 @@ bake_test_case SerializeIterToJson_testcases[] = {
     {
         "serialize_world",
         SerializeIterToJson_serialize_world
+    },
+    {
+        "serialize_term_labels",
+        SerializeIterToJson_serialize_term_labels
     }
 };
 
@@ -4786,14 +4796,14 @@ static bake_test_suite suites[] = {
         "SerializeEntityToJson",
         NULL,
         NULL,
-        47,
+        48,
         SerializeEntityToJson_testcases
     },
     {
         "SerializeIterToJson",
         NULL,
         NULL,
-        52,
+        53,
         SerializeIterToJson_testcases
     },
     {

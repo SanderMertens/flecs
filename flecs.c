@@ -33246,6 +33246,7 @@ void flecs_rest_parse_json_ser_entity_params(
     flecs_rest_bool_param(req, "brief", &desc->serialize_brief);
     flecs_rest_bool_param(req, "link", &desc->serialize_link);
     flecs_rest_bool_param(req, "color", &desc->serialize_color);
+    flecs_rest_bool_param(req, "ids", &desc->serialize_ids);
     flecs_rest_bool_param(req, "id_labels", &desc->serialize_id_labels);
     flecs_rest_bool_param(req, "base", &desc->serialize_base);
     flecs_rest_bool_param(req, "values", &desc->serialize_values);
@@ -33266,6 +33267,7 @@ void flecs_rest_parse_json_ser_iter_params(
     const ecs_http_request_t *req)
 {
     flecs_rest_bool_param(req, "term_ids", &desc->serialize_term_ids);
+    flecs_rest_bool_param(req, "term_labels", &desc->serialize_term_labels);
     flecs_rest_bool_param(req, "ids", &desc->serialize_ids);
     flecs_rest_bool_param(req, "sources", &desc->serialize_sources);
     flecs_rest_bool_param(req, "variables", &desc->serialize_variables);
@@ -51025,46 +51027,47 @@ int flecs_json_append_type(
         count = type->count;
     }
 
-    flecs_json_memberl(buf, "ids");
-    flecs_json_array_push(buf);
+    if (!desc || desc->serialize_ids) {
+        flecs_json_memberl(buf, "ids");
+        flecs_json_array_push(buf);
 
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t pred = 0, obj = 0, role = 0;
-        if (flecs_json_skip_id(world, ids[i], desc, ent, inst, &pred, &obj, &role, 0)) {
-            continue;
-        }
-
-        if (obj && (pred == EcsUnion)) {
-            pred = obj;
-            obj = ecs_get_target(world, ent, pred, 0);
-            if (!ecs_is_alive(world, obj)) {
-                /* Union relationships aren't automatically cleaned up, so they
-                 * can contain invalid entity ids. Don't serialize value until
-                 * relationship is valid again. */
+        for (i = 0; i < count; i ++) {
+            ecs_entity_t pred = 0, obj = 0, role = 0;
+            if (flecs_json_skip_id(world, ids[i], desc, ent, inst, &pred, &obj, &role, 0)) {
                 continue;
             }
-        }
 
-        flecs_json_next(buf);
-        flecs_json_array_push(buf);
-        flecs_json_next(buf);
-        flecs_json_path(buf, world, pred);
-        if (obj || role) {
+            if (obj && (pred == EcsUnion)) {
+                pred = obj;
+                obj = ecs_get_target(world, ent, pred, 0);
+                if (!ecs_is_alive(world, obj)) {
+                    /* Union relationships aren't automatically cleaned up, so they
+                    * can contain invalid entity ids. Don't serialize value until
+                    * relationship is valid again. */
+                    continue;
+                }
+            }
+
             flecs_json_next(buf);
-            if (obj) {
-                flecs_json_path(buf, world, obj);
-            } else {
-                flecs_json_number(buf, 0);
-            }
-            if (role) {
+            flecs_json_array_push(buf);
+            flecs_json_next(buf);
+            flecs_json_path(buf, world, pred);
+            if (obj || role) {
                 flecs_json_next(buf);
-                flecs_json_string(buf, ecs_id_flag_str(role));
+                if (obj) {
+                    flecs_json_path(buf, world, obj);
+                } else {
+                    flecs_json_number(buf, 0);
+                }
+                if (role) {
+                    flecs_json_next(buf);
+                    flecs_json_string(buf, ecs_id_flag_str(role));
+                }
             }
+            flecs_json_array_pop(buf);
         }
         flecs_json_array_pop(buf);
     }
-
-    flecs_json_array_pop(buf);
 
     if (flecs_json_append_type_labels(world, buf, ids, count, ent, inst, desc)) {
         return -1;
@@ -51466,6 +51469,43 @@ void flecs_json_serialize_iter_ids(
     for (int i = 0; i < field_count; i ++) {
         flecs_json_next(buf);
         flecs_json_serialize_id(world, it->terms[i].id, buf);
+    }
+
+    flecs_json_array_pop(buf);
+}
+
+static
+void flecs_json_serialize_iter_id_labels(
+    const ecs_world_t *world,
+    const ecs_iter_t *it, 
+    ecs_strbuf_t *buf) 
+{
+    int32_t field_count = it->field_count;
+    if (!field_count) {
+        return;
+    }
+
+    flecs_json_memberl(buf, "id_labels");
+    flecs_json_array_push(buf);
+
+    for (int i = 0; i < field_count; i ++) {
+        ecs_id_t id = it->terms[i].id;
+        ecs_entity_t pred = id, obj = 0;
+        if (ECS_IS_PAIR(id)) {
+            pred = ecs_pair_first(world, id);
+            obj = ecs_pair_second(world, id);
+        }
+        
+        flecs_json_next(buf);
+        flecs_json_array_push(buf);
+        flecs_json_next(buf);
+        flecs_json_label(buf, world, pred);
+        if (obj) {
+            flecs_json_next(buf);
+            flecs_json_label(buf, world, obj);
+        }
+
+        flecs_json_array_pop(buf);
     }
 
     flecs_json_array_pop(buf);
@@ -52166,6 +52206,10 @@ int ecs_iter_to_json_buf(
     /* Serialize component ids of the terms (usually provided by query) */
     if (!desc || desc->serialize_term_ids) {
         flecs_json_serialize_iter_ids(world, it, buf);
+    }
+
+    if (desc && desc->serialize_term_labels) {
+        flecs_json_serialize_iter_id_labels(world, it, buf);
     }
 
     /* Serialize type info if enabled */

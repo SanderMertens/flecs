@@ -168,6 +168,7 @@ void flecs_rest_parse_json_ser_entity_params(
     flecs_rest_bool_param(req, "brief", &desc->serialize_brief);
     flecs_rest_bool_param(req, "link", &desc->serialize_link);
     flecs_rest_bool_param(req, "color", &desc->serialize_color);
+    flecs_rest_bool_param(req, "ids", &desc->serialize_ids);
     flecs_rest_bool_param(req, "id_labels", &desc->serialize_id_labels);
     flecs_rest_bool_param(req, "base", &desc->serialize_base);
     flecs_rest_bool_param(req, "values", &desc->serialize_values);
@@ -188,6 +189,7 @@ void flecs_rest_parse_json_ser_iter_params(
     const ecs_http_request_t *req)
 {
     flecs_rest_bool_param(req, "term_ids", &desc->serialize_term_ids);
+    flecs_rest_bool_param(req, "term_labels", &desc->serialize_term_labels);
     flecs_rest_bool_param(req, "ids", &desc->serialize_ids);
     flecs_rest_bool_param(req, "sources", &desc->serialize_sources);
     flecs_rest_bool_param(req, "variables", &desc->serialize_variables);
