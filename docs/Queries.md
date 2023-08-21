@@ -2621,7 +2621,7 @@ The following example shows how to use sorted queries in C++:
 ```cpp
 // Use readonly term for component used for sorting
 auto q = world.query_builder<const Depth, Position>()
-  .order_by([](flecs::entity_t e1, const Depth *d1, flecs::entity_t e2, const Depth *d2) {
+  .order_by<Depth>([](flecs::entity_t e1, const Depth *d1, flecs::entity_t e2, const Depth *d2) {
     return (d1->value > d2->value) - (d1->value < d2->value);
   })
   .build();
