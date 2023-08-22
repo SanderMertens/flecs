@@ -51520,6 +51520,27 @@ void flecs_json_serialize_id(
 }
 
 static
+void flecs_json_serialize_id_label(
+    const ecs_world_t *world,
+    ecs_id_t id,
+    ecs_strbuf_t *buf) 
+{
+    ecs_entity_t pred = id, obj = 0;
+    if (ECS_IS_PAIR(id)) {
+        pred = ecs_pair_first(world, id);
+        obj = ecs_pair_second(world, id);
+    }
+
+    flecs_json_array_push(buf);
+    flecs_json_next(buf);
+    flecs_json_label(buf, world, pred);
+    if (obj) {
+        flecs_json_next(buf);
+        flecs_json_label(buf, world, obj);
+    }
+}
+
+static
 void flecs_json_serialize_iter_ids(
     const ecs_world_t *world,
     const ecs_iter_t *it, 
@@ -51556,23 +51577,8 @@ void flecs_json_serialize_iter_id_labels(
     flecs_json_array_push(buf);
 
     for (int i = 0; i < field_count; i ++) {
-        ecs_id_t id = it->terms[i].id;
-        ecs_entity_t pred = id, obj = 0;
-        if (ECS_IS_PAIR(id)) {
-            pred = ecs_pair_first(world, id);
-            obj = ecs_pair_second(world, id);
-        }
-        
         flecs_json_next(buf);
-        flecs_json_array_push(buf);
-        flecs_json_next(buf);
-        flecs_json_label(buf, world, pred);
-        if (obj) {
-            flecs_json_next(buf);
-            flecs_json_label(buf, world, obj);
-        }
-
-        flecs_json_array_pop(buf);
+        flecs_json_serialize_id_label(world, it->terms[i].id, buf);
     }
 
     flecs_json_array_pop(buf);
@@ -51674,6 +51680,23 @@ void flecs_json_serialize_iter_result_ids(
     for (int i = 0; i < it->field_count; i ++) {
         flecs_json_next(buf);
         flecs_json_serialize_id(world, ecs_field_id(it, i + 1), buf);
+    }
+
+    flecs_json_array_pop(buf);
+}
+
+static
+void flecs_json_serialize_iter_result_id_labels(
+    const ecs_world_t *world,
+    const ecs_iter_t *it,
+    ecs_strbuf_t *buf)
+{
+    flecs_json_memberl(buf, "ids");
+    flecs_json_array_push(buf);
+
+    for (int i = 0; i < it->field_count; i ++) {
+        flecs_json_next(buf);
+        flecs_json_serialize_id_label(world, ecs_field_id(it, i + 1), buf);
     }
 
     flecs_json_array_pop(buf);
@@ -52180,6 +52203,9 @@ int flecs_json_serialize_iter_result(
     } else {
         if (!desc || desc->serialize_ids) {
             flecs_json_serialize_iter_result_ids(world, it, buf);
+        }
+        if (desc && desc->serialize_id_labels) {
+            flecs_json_serialize_iter_result_id_labels(world, it, buf);
         }
     }
 

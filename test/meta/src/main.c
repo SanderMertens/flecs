@@ -745,6 +745,7 @@ void SerializeIterToJson_serialize_anonymous_entities_w_offset(void);
 void SerializeIterToJson_serialize_table(void);
 void SerializeIterToJson_serialize_world(void);
 void SerializeIterToJson_serialize_term_labels(void);
+void SerializeIterToJson_serialize_id_labels(void);
 
 // Testsuite 'SerializeTypeInfoToJson'
 void SerializeTypeInfoToJson_bool(void);
@@ -3835,6 +3836,10 @@ bake_test_case SerializeIterToJson_testcases[] = {
     {
         "serialize_term_labels",
         SerializeIterToJson_serialize_term_labels
+    },
+    {
+        "serialize_id_labels",
+        SerializeIterToJson_serialize_id_labels
     }
 };
 
@@ -4803,7 +4808,7 @@ static bake_test_suite suites[] = {
         "SerializeIterToJson",
         NULL,
         NULL,
-        53,
+        54,
         SerializeIterToJson_testcases
     },
     {

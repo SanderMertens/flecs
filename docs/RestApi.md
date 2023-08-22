@@ -255,8 +255,18 @@ Add top-level "ids" array with components as specified by query.
 
 **Default**: false
 
+#### term_labels
+Add top-level "id_labels" array with doc names of components as specified by query.
+
+**Default**: false
+
 #### ids
 Add result-specific "ids" array with components as matched. Can be different from top-level "ids" array for queries with wildcards.
+
+**Default**: false
+
+#### id_labels
+Add result-specific "id_labels" array with doc names of components as matched. Can be different from top-level "term_labels" array for queries with wildcards.
 
 **Default**: false
 

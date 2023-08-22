@@ -779,7 +779,8 @@
                 "serialize_anonymous_entities_w_offset",
                 "serialize_table",
                 "serialize_world",
-                "serialize_term_labels"
+                "serialize_term_labels",
+                "serialize_id_labels"
             ]
         }, {
             "id": "SerializeTypeInfoToJson",

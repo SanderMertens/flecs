@@ -247,6 +247,7 @@ typedef struct ecs_iter_to_json_desc_t {
     bool serialize_term_ids;        /**< Serialize query term component ids */
     bool serialize_term_labels;     /**< Serialize query term component id labels */
     bool serialize_ids;             /**< Serialize actual (matched) component ids */
+    bool serialize_id_labels;       /**< Serialize actual (matched) component id labels */
     bool serialize_sources;         /**< Serialize sources */
     bool serialize_variables;       /**< Serialize variables */
     bool serialize_is_set;          /**< Serialize is_set (for optional terms) */
@@ -267,6 +268,7 @@ typedef struct ecs_iter_to_json_desc_t {
     .serialize_term_ids =        true,  \
     .serialize_term_labels =     false, \
     .serialize_ids =             true,  \
+    .serialize_id_labels =       false,  \
     .serialize_sources =         true,  \
     .serialize_variables =       true,  \
     .serialize_is_set =          true,  \
