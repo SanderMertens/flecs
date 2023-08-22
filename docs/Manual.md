@@ -634,8 +634,6 @@ Component disabling can be used to temporarily suspend and resume a component va
 #### Limitations
 Component disabling does not work for components not matched with the entity. If a query matches with a component from a base (prefab) or parent entity and the component is disabled for that entity, the query will not take this into account. If entities with disabled components from a base or parent entity need to be skipped. a query should manually check this.
 
-Because component disabling is implemented with a type role, it cannot be used together with other type roles. This means that it is not possible to disable, for example, tags with `SWITCH` or `CASE` roles. Additionally since relationships rely on a role, it is currently not possible to disable relationships such as `(ChildOf, parent)` or `(IsA, prefab)`.
-
 Another limitation is that currently the query NOT (!) operator does not take into account disabled entities. The optional operator (?) technically works, but a query is unable to see whether a component has been set or not as both the enabled and disabled values are returned to the application in a single array.
 
 ## Tagging

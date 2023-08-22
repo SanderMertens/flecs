@@ -1147,10 +1147,12 @@ while (ecs_filter_next(&it)) {
 
   ecs_id_t vs_id = ecs_field_id(&it, 2);
   if (vs_id == ecs_id(Velocity)) {
-    Velocity *v = ecs_field(&it, Velocity, 2);
+    // We can only use ecs_field if the field type is the same for all results,
+    // but we can get the table column directly.
+    Velocity *v = ecs_table_get_id(word, it.table, ecs_id(Velocity), it.offset);
     // iterate as usual
   } else if (vs_id == ecs_id(Speed)) {
-    Speed *s = ecs_field(&it, Speed, 2);
+    Speed *s = ecs_table_get_id(word, it.table, ecs_id(Speed), it.offset);
     // iterate as usual
   }
 }
@@ -1174,10 +1176,12 @@ f.iter([&](flecs::iter& it) {
   
   flecs::id vs_id = it.id(2);
   if (vs_id == world.id<Velocity>()) {
-    auto v = it.field<Velocity>(2);
+    // We can only use ecs_field if the field type is the same for all results,
+    // but we can use range() to get the table column directly.
+    auto v = it.range().get<Velocity>();
     // iterate as usual
   } else if (vs_id == world.id<Speed>()) {
-    auto s = it.field<Speed>(2);
+    auto s = it.range().get<Speed>();
     // iterate as usual
   }
 });

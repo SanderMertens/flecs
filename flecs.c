@@ -33336,6 +33336,7 @@ void flecs_rest_parse_json_ser_iter_params(
     flecs_rest_bool_param(req, "term_ids", &desc->serialize_term_ids);
     flecs_rest_bool_param(req, "term_labels", &desc->serialize_term_labels);
     flecs_rest_bool_param(req, "ids", &desc->serialize_ids);
+    flecs_rest_bool_param(req, "id_labels", &desc->serialize_id_labels);
     flecs_rest_bool_param(req, "sources", &desc->serialize_sources);
     flecs_rest_bool_param(req, "variables", &desc->serialize_variables);
     flecs_rest_bool_param(req, "is_set", &desc->serialize_is_set);
@@ -51538,6 +51539,7 @@ void flecs_json_serialize_id_label(
         flecs_json_next(buf);
         flecs_json_label(buf, world, obj);
     }
+    flecs_json_array_pop(buf);
 }
 
 static
@@ -51691,7 +51693,7 @@ void flecs_json_serialize_iter_result_id_labels(
     const ecs_iter_t *it,
     ecs_strbuf_t *buf)
 {
-    flecs_json_memberl(buf, "ids");
+    flecs_json_memberl(buf, "id_labels");
     flecs_json_array_push(buf);
 
     for (int i = 0; i < it->field_count; i ++) {
