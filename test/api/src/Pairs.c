@@ -53,7 +53,7 @@ void Pairs_type_w_one_pair(void) {
     test_assert( ecs_has_pair(world, e2, ecs_id(Rel), ecs_id(Velocity)));
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 0);
 
@@ -125,7 +125,7 @@ void Pairs_type_w_two_pairs(void) {
     test_assert( ecs_has_pair(world, e2, ecs_id(Rel), ecs_id(Position)));
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 0);
 
@@ -236,7 +236,7 @@ void Pairs_add_tag_pair_for_tag(void) {
     test_assert( ecs_has_pair(world, e2, Rel, Tag2));
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 0);
 
@@ -306,7 +306,7 @@ void Pairs_add_tag_pair_for_component(void) {
     test_assert( ecs_has_pair(world, e2, Rel, ecs_id(Velocity)));
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 0);
 
@@ -379,7 +379,7 @@ void Pairs_query_2_pairs(void) {
 
     /* Run system */
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
     ecs_progress(world, 0);
 
     const RelA *tr_a = ecs_get_pair(world, e1, RelA, ecs_id(Position));
@@ -448,7 +448,7 @@ void Pairs_query_2_pairs_2_instances_per_type(void) {
 
     /* Run system */
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
     ecs_progress(world, 0);
 
     const RelA *tr_a = ecs_get_pair(world, e1, RelA, ecs_id(Position));
@@ -552,7 +552,7 @@ void Pairs_on_add_pair(void) {
     ECS_OBSERVER(world, PairTrigger, EcsOnAdd, (Rel, *));
 
     Probe ctx = { 0 };
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_entity_t e = ecs_new(world, 0);
     ecs_add_pair(world, e, ecs_id(Rel), ecs_id(Position));
@@ -598,7 +598,7 @@ void Pairs_on_add_pair_tag(void) {
     ECS_OBSERVER(world, PairTrigger, EcsOnAdd, (Rel, Position));
 
     Probe ctx = { 0 };
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_entity_t e = ecs_new(world, 0);
     ecs_add_pair(world, e, Rel, ecs_id(Position));
@@ -629,7 +629,7 @@ void Pairs_on_remove_pair(void) {
     ECS_OBSERVER(world, PairTrigger, EcsOnRemove, (Rel, *));
 
     Probe ctx = { 0 };
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_entity_t e = ecs_new(world, 0);
     ecs_add_pair(world, e, ecs_id(Rel), ecs_id(Position));
@@ -677,7 +677,7 @@ void Pairs_on_remove_pair_tag(void) {
     ECS_OBSERVER(world, PairTrigger, EcsOnRemove, (Rel, Position));
 
     Probe ctx = { 0 };
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_entity_t e = ecs_new(world, 0);
     ecs_add_pair(world, e, Rel, ecs_id(Position));
@@ -710,7 +710,7 @@ void Pairs_on_remove_pair_on_delete(void) {
     ECS_OBSERVER(world, PairTrigger, EcsOnRemove, (Rel, *));
 
     Probe ctx = { 0 };
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_entity_t e = ecs_new(world, 0);
     ecs_add_pair(world, e, ecs_id(Rel), ecs_id(Position));
@@ -763,7 +763,7 @@ void Pairs_on_remove_pair_tag_on_delete(void) {
     ECS_OBSERVER(world, PairTriggerVelocity, EcsOnRemove, (Rel, Velocity));
 
     Probe ctx = { 0 };
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_entity_t e = ecs_new(world, 0);
     ecs_add_pair(world, e, Rel, ecs_id(Position));

@@ -1098,6 +1098,10 @@ void World_get_set_log_level(void);
 void World_reset_world(void);
 void World_id_from_pair_type(void);
 void World_scope_w_name(void);
+void World_set_get_context(void);
+void World_set_get_binding_context(void);
+void World_set_get_context_w_free(void);
+void World_set_get_binding_context_w_free(void);
 
 // Testsuite 'Singleton'
 void Singleton_set_get_singleton(void);
@@ -5505,6 +5509,22 @@ bake_test_case World_testcases[] = {
     {
         "scope_w_name",
         World_scope_w_name
+    },
+    {
+        "set_get_context",
+        World_set_get_context
+    },
+    {
+        "set_get_binding_context",
+        World_set_get_binding_context
+    },
+    {
+        "set_get_context_w_free",
+        World_set_get_context_w_free
+    },
+    {
+        "set_get_binding_context_w_free",
+        World_set_get_binding_context_w_free
     }
 };
 
@@ -6278,7 +6298,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        98,
+        102,
         World_testcases
     },
     {

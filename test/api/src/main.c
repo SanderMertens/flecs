@@ -2274,6 +2274,10 @@ void World_get_type_info(void);
 void World_get_type_info_after_delete_with(void);
 void World_get_type_info_after_reuse(void);
 void World_no_name_prefix_after_init(void);
+void World_set_get_context(void);
+void World_set_get_binding_context(void);
+void World_set_get_context_w_free(void);
+void World_set_get_binding_context_w_free(void);
 
 // Testsuite 'WorldInfo'
 void WorldInfo_get_tick(void);
@@ -11418,6 +11422,22 @@ bake_test_case World_testcases[] = {
     {
         "no_name_prefix_after_init",
         World_no_name_prefix_after_init
+    },
+    {
+        "set_get_context",
+        World_set_get_context
+    },
+    {
+        "set_get_binding_context",
+        World_set_get_binding_context
+    },
+    {
+        "set_get_context_w_free",
+        World_set_get_context_w_free
+    },
+    {
+        "set_get_binding_context_w_free",
+        World_set_get_binding_context_w_free
     }
 };
 
@@ -12928,7 +12948,7 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        51,
+        55,
         World_testcases
     },
     {

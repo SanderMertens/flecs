@@ -10,7 +10,7 @@ void Tasks_no_components(void) {
     ECS_SYSTEM(world, Task, EcsOnUpdate, 0);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -29,7 +29,7 @@ void Tasks_one_tag(void) {
     ECS_SYSTEM(world, Task, EcsOnUpdate, Foo(Task));
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -49,7 +49,7 @@ void Tasks_from_system(void) {
     ECS_SYSTEM(world, Task, EcsOnUpdate, Position(Task));
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 

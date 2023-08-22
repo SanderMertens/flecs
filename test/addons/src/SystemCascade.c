@@ -46,7 +46,7 @@ void SystemCascade_cascade_depth_1(void) {
     ecs_add_pair(world, e4, EcsChildOf, e2);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -118,7 +118,7 @@ void SystemCascade_cascade_depth_2(void) {
     ecs_add_pair(world, e6, EcsChildOf, e4); /* depth 2 */
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -199,7 +199,7 @@ void SystemCascade_cascade_depth_2_new_syntax(void) {
     ecs_add_pair(world, e6, EcsChildOf, e4); /* depth 2 */
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -293,7 +293,7 @@ void SystemCascade_add_after_match(void) {
     ecs_add_pair(world, e4, EcsChildOf, parent); /* depth 1 */
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -367,7 +367,7 @@ void SystemCascade_adopt_after_match(void) {
     ecs_set(world, e4, Position, {1, 2});
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -441,7 +441,7 @@ void SystemCascade_custom_relation_cascade_depth_1(void) {
     ecs_add_pair(world, e4, Rel, e2);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -514,7 +514,7 @@ void SystemCascade_custom_relation_cascade_depth_2(void) {
     ecs_add_pair(world, e6, Rel, e4); /* depth 2 */
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -591,7 +591,7 @@ void SystemCascade_custom_relation_add_after_match(void) {
     ecs_add_pair(world, e4, Rel, parent); /* depth 1 */
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -666,7 +666,7 @@ void SystemCascade_custom_relation_adopt_after_match(void) {
     ecs_set(world, e4, Position, {1, 2});
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 

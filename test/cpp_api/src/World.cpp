@@ -1724,3 +1724,55 @@ void World_scope_w_name(void) {
 
     test_assert(child.has(flecs::ChildOf, parent));
 }
+
+void World_set_get_context(void) {
+    flecs::world ecs;
+
+    int ctx;
+    ecs.set_ctx(&ctx);
+    test_assert(ecs.get_ctx() == &ctx);
+    test_assert(ecs.get_binding_ctx() == nullptr);
+}
+
+void World_set_get_binding_context(void) {
+    flecs::world ecs;
+
+    int ctx;
+    ecs.set_binding_ctx(&ctx);
+    test_assert(ecs.get_binding_ctx() == &ctx);
+    test_assert(ecs.get_ctx() == nullptr);
+}
+
+static void ctx_free(void *ctx) {
+    static_cast<int*>(ctx)[0] = 10;
+}
+
+void World_set_get_context_w_free(void) {
+    int ctx = 0;
+
+    {
+        flecs::world ecs;
+
+        ecs.set_ctx(&ctx, ctx_free);
+        test_assert(ecs.get_ctx() == &ctx);
+        test_assert(ecs.get_binding_ctx() == nullptr);
+        test_int(ctx, 0);
+    }
+
+    test_int(ctx, 10);
+}
+
+void World_set_get_binding_context_w_free(void) {
+    int ctx = 0;
+
+    {
+        flecs::world ecs;
+
+        ecs.set_binding_ctx(&ctx, ctx_free);
+        test_assert(ecs.get_binding_ctx() == &ctx);
+        test_assert(ecs.get_ctx() == nullptr);
+        test_int(ctx, 0);
+    }
+
+    test_int(ctx, 10);
+}

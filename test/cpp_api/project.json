@@ -1147,7 +1147,11 @@
                 "get_set_log_level",
                 "reset_world",
                 "id_from_pair_type",
-                "scope_w_name"
+                "scope_w_name",
+                "set_get_context",
+                "set_get_binding_context",
+                "set_get_context_w_free",
+                "set_get_binding_context_w_free"
             ]
         }, {
             "id": "Singleton",

@@ -2358,7 +2358,11 @@
                 "get_type_info",
                 "get_type_info_after_delete_with",
                 "get_type_info_after_reuse",
-                "no_name_prefix_after_init"
+                "no_name_prefix_after_init",
+                "set_get_context",
+                "set_get_binding_context",
+                "set_get_context_w_free",
+                "set_get_binding_context_w_free"
             ]
         }, {
             "id": "WorldInfo",

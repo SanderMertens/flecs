@@ -64,7 +64,7 @@ void System_w_FromSystem_2_column_1_from_system(void) {
     test_int(v->y, 20);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_entity_t e = ecs_set(world, 0, Position, {0, 0});
 
@@ -118,7 +118,7 @@ void System_w_FromSystem_3_column_2_from_system(void) {
     test_int(*m, 3);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_entity_t e = ecs_set(world, 0, Position, {0, 0});
 

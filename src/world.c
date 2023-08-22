@@ -1377,8 +1377,7 @@ int ecs_fini(
      * unmodified by cleanup. */
     flecs_fini_unset_tables(world);
 
-    /* This will destroy all entities and components. After this point no more
-     * user code is executed. */
+    /* This will destroy all entities and components. */
     flecs_fini_store(world);
 
     /* Purge deferred operations from the queue. This discards operations but
@@ -1389,6 +1388,16 @@ int ecs_fini(
     /* All queries are cleaned up, so monitors should've been cleaned up too */
     ecs_assert(!ecs_map_is_init(&world->monitors.monitors), 
         ECS_INTERNAL_ERROR, NULL);
+
+    /* Cleanup world ctx and binding_ctx */
+    if (world->ctx_free) {
+        world->ctx_free(world->ctx);
+    }
+    if (world->binding_ctx_free) {
+        world->binding_ctx_free(world->binding_ctx);
+    }
+
+    /* After this point no more user code is invoked */
 
     ecs_dbg_1("#[bold]cleanup world datastructures");
     ecs_log_push_1();
@@ -1479,22 +1488,44 @@ error:
     return;
 }
 
-void* ecs_get_context(
+void* ecs_get_ctx(
     const ecs_world_t *world)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);    
     world = ecs_get_world(world);
-    return world->context;
+    return world->ctx;
 error:
     return NULL;
 }
 
-void ecs_set_context(
+void* ecs_get_binding_ctx(
+    const ecs_world_t *world)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);    
+    world = ecs_get_world(world);
+    return world->binding_ctx;
+error:
+    return NULL;
+}
+
+void ecs_set_ctx(
     ecs_world_t *world,
-    void *context)
+    void *ctx,
+    ecs_ctx_free_t ctx_free)
 {
     ecs_poly_assert(world, ecs_world_t);
-    world->context = context;
+    world->ctx = ctx;
+    world->ctx_free = ctx_free;
+}
+
+void ecs_set_binding_ctx(
+    ecs_world_t *world,
+    void *ctx,
+    ecs_ctx_free_t ctx_free)
+{
+    ecs_poly_assert(world, ecs_world_t);
+    world->binding_ctx = ctx;
+    world->binding_ctx_free = ctx_free;
 }
 
 void ecs_set_entity_range(

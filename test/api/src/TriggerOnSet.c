@@ -41,7 +41,7 @@ void TriggerOnSet_set(void) {
     ECS_OBSERVER(world, OnSet, EcsOnSet, Position);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_entity_t e = ecs_new(world, Position);
     test_int(ctx.count, 0);
@@ -74,7 +74,7 @@ void TriggerOnSet_set_new(void) {
     ECS_OBSERVER(world, OnSet, EcsOnSet, Position);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
     
@@ -104,7 +104,7 @@ void TriggerOnSet_set_again(void) {
     ECS_OBSERVER(world, OnSet, EcsOnSet, Position);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_entity_t e = ecs_new(world, Position);
     test_int(ctx.count, 0);
@@ -144,7 +144,7 @@ void TriggerOnSet_clone(void) {
     ECS_OBSERVER(world, OnSet, EcsOnSet, Position);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
     
@@ -182,7 +182,7 @@ void TriggerOnSet_clone_w_value(void) {
     ECS_OBSERVER(world, OnSet, EcsOnSet, Position);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
     
@@ -270,7 +270,7 @@ void TriggerOnSet_set_and_add_system(void) {
     ECS_OBSERVER(world, OnAdd_check_order, EcsOnAdd, Position);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_entity_t e = ecs_new(world, 0);
     test_int(ctx.count, 0);
@@ -331,7 +331,7 @@ void TriggerOnSet_on_set_after_override(void) {
     ECS_OBSERVER(world, OnSetShared, EcsOnSet, Position);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     /* instantiate prefab */
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, Prefab);
@@ -440,7 +440,7 @@ void TriggerOnSet_on_set_after_override_w_new_w_count(void) {
     ECS_OBSERVER(world, OnSet, EcsOnSet, Position);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     const ecs_entity_t *ids = ecs_bulk_new_w_id(world, ecs_pair(EcsIsA, Prefab), 3);
     test_assert(ids != NULL);
@@ -477,7 +477,7 @@ void TriggerOnSet_on_set_after_override_1_of_2_overridden(void) {
     ECS_OBSERVER(world, OnSet, EcsOnSet, Position);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, Prefab);
     test_int(ctx.count, 1);
@@ -522,7 +522,7 @@ void TriggerOnSet_on_set_after_snapshot_restore(void) {
     }
 
     Probe ctx = { 0 };
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_snapshot_t *s = ecs_snapshot_take(world);
 
@@ -656,7 +656,7 @@ void TriggerOnSet_on_set_after_remove_override(void) {
     ECS_OBSERVER(world, Trigger, EcsOnSet, Position);
 
     Probe ctx = { 0 };
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_entity_t e = ecs_new(world, Position);
     test_int(ctx.invoked, 0);

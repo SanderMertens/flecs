@@ -31,7 +31,7 @@ void World_progress_w_0(void) {
     ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_set(world, e1, Position, {0, 0});
     ecs_set(world, e1, Velocity, {1, 2});
@@ -69,7 +69,7 @@ void World_progress_w_t(void) {
     ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_set(world, e1, Position, {0, 0});
     ecs_set(world, e1, Velocity, {1, 2});
@@ -1465,4 +1465,58 @@ void World_no_name_prefix_after_init(void) {
     test_assert(info->name_prefix == NULL);
 
     ecs_fini(world);
+}
+
+void World_set_get_context(void) {
+    ecs_world_t *world = ecs_mini();
+
+    int ctx;
+    ecs_set_ctx(world, &ctx, NULL);
+    test_assert(ecs_get_ctx(world) == &ctx);
+    test_assert(ecs_get_binding_ctx(world) == NULL);
+
+    ecs_fini(world);
+}
+
+void World_set_get_binding_context(void) {
+    ecs_world_t *world = ecs_mini();
+
+    int ctx;
+    ecs_set_binding_ctx(world, &ctx, NULL);
+    test_assert(ecs_get_ctx(world) == NULL);
+    test_assert(ecs_get_binding_ctx(world) == &ctx);
+
+    ecs_fini(world);
+}
+
+static void ctx_free(void *ptr) {
+    *(int*)ptr = 10;
+}
+
+void World_set_get_context_w_free(void) {
+    ecs_world_t *world = ecs_mini();
+
+    int ctx = 0;
+    ecs_set_ctx(world, &ctx, ctx_free);
+    test_assert(ecs_get_ctx(world) == &ctx);
+    test_assert(ecs_get_binding_ctx(world) == NULL);
+    test_int(ctx, 0);
+
+    ecs_fini(world);
+
+    test_int(ctx, 10);
+}
+
+void World_set_get_binding_context_w_free(void) {
+    ecs_world_t *world = ecs_mini();
+
+    int ctx = 0;
+    ecs_set_binding_ctx(world, &ctx, ctx_free);
+    test_assert(ecs_get_ctx(world) == NULL);
+    test_assert(ecs_get_binding_ctx(world) == &ctx);
+    test_int(ctx, 0);
+
+    ecs_fini(world);
+
+    test_int(ctx, 10);
 }

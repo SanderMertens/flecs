@@ -1368,7 +1368,12 @@ struct ecs_world_t {
     ecs_world_allocators_t allocators; /* Static allocation sizes */
     ecs_allocator_t allocator;       /* Dynamic allocation sizes */
 
-    void *context;                   /* Application context */
+    void *ctx;                       /* Application context */
+    void *binding_ctx;               /* Binding-specific context */
+
+    ecs_ctx_free_t ctx_free;         /**< Callback to free ctx */
+    ecs_ctx_free_t binding_ctx_free; /**< Callback to free binding_ctx */
+
     ecs_vec_t fini_actions;          /* Callbacks to execute when world exits */
 };
 
@@ -22746,22 +22751,44 @@ error:
     return;
 }
 
-void* ecs_get_context(
+void* ecs_get_ctx(
     const ecs_world_t *world)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);    
     world = ecs_get_world(world);
-    return world->context;
+    return world->ctx;
 error:
     return NULL;
 }
 
-void ecs_set_context(
+void* ecs_get_binding_ctx(
+    const ecs_world_t *world)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);    
+    world = ecs_get_world(world);
+    return world->binding_ctx;
+error:
+    return NULL;
+}
+
+void ecs_set_ctx(
     ecs_world_t *world,
-    void *context)
+    void *ctx,
+    ecs_ctx_free_t ctx_free)
 {
     ecs_poly_assert(world, ecs_world_t);
-    world->context = context;
+    world->ctx = ctx;
+    world->ctx_free = ctx_free;
+}
+
+void ecs_set_binding_ctx(
+    ecs_world_t *world,
+    void *ctx,
+    ecs_ctx_free_t ctx_free)
+{
+    ecs_poly_assert(world, ecs_world_t);
+    world->binding_ctx = ctx;
+    world->binding_ctx_free = ctx_free;
 }
 
 void ecs_set_entity_range(

@@ -62,7 +62,7 @@ void Run_run(void) {
     ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     /* Ensure system is not run by ecs_progress */
     ecs_progress(world, 1);
@@ -113,7 +113,7 @@ void Run_run_w_param(void) {
     ECS_SYSTEM(world, Iter, 0, Position);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     /* Ensure system is not run by ecs_progress */
     ecs_progress(world, 1);
@@ -158,7 +158,7 @@ void Run_run_w_offset(void) {
     ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     /* Ensure system is not run by ecs_progress */
     ecs_progress(world, 1);
@@ -216,7 +216,7 @@ void Run_run_w_offset_skip_1_archetype(void) {
     ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     /* Ensure system is not run by ecs_progress */
     ecs_progress(world, 1);
@@ -273,7 +273,7 @@ void Run_run_w_offset_skip_1_archetype_plus_one(void) {
     ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     /* Ensure system is not run by ecs_progress */
     ecs_progress(world, 1);
@@ -329,7 +329,7 @@ void Run_run_w_offset_skip_2_archetypes(void) {
     ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     /* Ensure system is not run by ecs_progress */
     ecs_progress(world, 1);
@@ -379,7 +379,7 @@ void Run_run_w_limit_skip_1_archetype(void) {
     ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     /* Ensure system is not run by ecs_progress */
     ecs_progress(world, 1);
@@ -438,7 +438,7 @@ void Run_run_w_limit_skip_1_archetype_minus_one(void) {
     ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     /* Ensure system is not run by ecs_progress */
     ecs_progress(world, 1);
@@ -496,7 +496,7 @@ void Run_run_w_limit_skip_2_archetypes(void) {
     ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     /* Ensure system is not run by ecs_progress */
     ecs_progress(world, 1);
@@ -553,7 +553,7 @@ void Run_run_w_offset_1_limit_max(void) {
     ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     /* Ensure system is not run by ecs_progress */
     ecs_progress(world, 1);
@@ -612,7 +612,7 @@ void Run_run_w_offset_1_limit_minus_1(void) {
     ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     /* Ensure system is not run by ecs_progress */
     ecs_progress(world, 1);
@@ -670,7 +670,7 @@ void Run_run_w_offset_2_type_limit_max(void) {
     ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     /* Ensure system is not run by ecs_progress */
     ecs_progress(world, 1);
@@ -727,7 +727,7 @@ void Run_run_w_offset_2_type_limit_minus_1(void) {
     ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     /* Ensure system is not run by ecs_progress */
     ecs_progress(world, 1);
@@ -783,7 +783,7 @@ void Run_run_w_limit_1_all_offsets(void) {
     ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     /* Ensure system is not run by ecs_progress */
     ecs_progress(world, 1);
@@ -849,7 +849,7 @@ void Run_run_w_offset_out_of_bounds(void) {
     ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     /* Ensure system is not run by ecs_progress */
     ecs_progress(world, 1);
@@ -882,7 +882,7 @@ void Run_run_w_limit_out_of_bounds(void) {
     ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     /* Ensure system is not run by ecs_progress */
     ecs_progress(world, 1);
@@ -929,7 +929,7 @@ void Run_run_no_match(void) {
     ECS_SYSTEM(world, Iter, 0, Position, Velocity);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     /* Ensure system is not run by ecs_progress */
     ecs_progress(world, 1);

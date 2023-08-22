@@ -50,7 +50,7 @@ void System_w_FromEntity_2_column_1_from_entity(void) {
     ecs_set(world, e1, Mass, {5});
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 

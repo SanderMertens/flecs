@@ -70,7 +70,7 @@ void System_w_FromParent_1_column_from_container(void) {
     ecs_add_pair(world, e3, EcsChildOf, parent);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -130,7 +130,7 @@ void System_w_FromParent_2_column_1_from_container(void) {
     ecs_add_pair(world, e3, EcsChildOf, parent);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -255,7 +255,7 @@ void System_w_FromParent_3_column_2_from_container(void) {
     ecs_add_pair(world, e4, EcsChildOf, parent);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -321,7 +321,7 @@ void System_w_FromParent_2_column_1_from_container_w_not(void) {
     ecs_add_pair(world, e4, EcsChildOf, parent_1);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -399,7 +399,7 @@ void System_w_FromParent_3_column_1_from_comtainer_1_from_container_w_not(void) 
     ecs_add_pair(world, e5, EcsChildOf, parent_3);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -462,7 +462,7 @@ void System_w_FromParent_2_column_1_from_container_w_not_prefab(void) {
     ecs_set(world, e1, Position, {1, 2});
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -524,7 +524,7 @@ void System_w_FromParent_2_column_1_from_container_w_or(void) {
     ecs_add_pair(world, e4, EcsChildOf, parent_4);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -598,7 +598,7 @@ void System_w_FromParent_add_component_after_match(void) {
     ecs_set(world, parent, Mass, {2});
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -650,7 +650,7 @@ void System_w_FromParent_add_component_after_match_and_rematch(void) {
     ecs_add_pair(world, e2, EcsChildOf, parent);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     /* This will rematch tables, but not match Iter with e1 and e2 because the
      * parent does not have Mass yet */
@@ -709,7 +709,7 @@ void System_w_FromParent_add_component_after_match_and_rematch_w_entity_type_exp
     ECS_ENTITY(world, e2, Position, (ChildOf, Parent));
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     /* This will rematch tables, but not match Iter with e1 and e2 because the
      * Parent does not have Mass yet */
@@ -780,7 +780,7 @@ void System_w_FromParent_add_component_after_match_and_rematch_w_entity_type_exp
     ECS_ENTITY(world, e2, Position, (ChildOf, Parent));  
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_os_zeromem(&ctx);
     ecs_progress(world, 1);
@@ -830,7 +830,7 @@ void System_w_FromParent_add_component_after_match_unmatch(void) {
     ecs_set(world, parent, Mass, {2});
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -878,7 +878,7 @@ void System_w_FromParent_add_component_after_match_unmatch_match(void) {
     ecs_set(world, parent, Mass, {2});
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -937,7 +937,7 @@ void System_w_FromParent_add_component_after_match_2_systems(void) {
     ecs_set(world, parent, Mass, {2});
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -1012,7 +1012,7 @@ void System_w_FromParent_add_component_in_progress_after_match(void) {
     ecs_add_id(world, parent, Tag);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -1065,7 +1065,7 @@ void System_w_FromParent_adopt_after_match(void) {
     ecs_set(world, parent, Mass, {2});
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -1116,7 +1116,7 @@ void System_w_FromParent_new_child_after_match(void) {
     ecs_set(world, parent, Mass, {2});
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -1188,7 +1188,7 @@ void System_w_FromParent_select_same_from_container(void) {
     ecs_set(world, e3, Position, {30, 60});
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -1238,7 +1238,7 @@ void System_w_FromParent_realloc_after_match(void) {
     ecs_add_pair(world, e1, EcsChildOf, parent);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 

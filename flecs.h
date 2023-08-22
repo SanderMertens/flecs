@@ -4660,21 +4660,48 @@ bool ecs_stage_is_async(
  *
  * @param world The world.
  * @param ctx A pointer to a user defined structure.
+ * @param ctx_free A function that is invoked with ctx when the world is freed.
  */
 FLECS_API
-void ecs_set_context(
+void ecs_set_ctx(
     ecs_world_t *world,
-    void *ctx);
+    void *ctx,
+    ecs_ctx_free_t ctx_free);
+
+/** Set a world binding context.
+ * Same as ecs_set_ctx but for binding context. A binding context is intended
+ * specifically for language bindings to store binding specific data.
+ *
+ * @param world The world.
+ * @param ctx A pointer to a user defined structure.
+ * @param ctx_free A function that is invoked with ctx when the world is freed.
+ */
+FLECS_API
+void ecs_set_binding_ctx(
+    ecs_world_t *world,
+    void *ctx,
+    ecs_ctx_free_t ctx_free);
 
 /** Get the world context.
  * This operation retrieves a previously set world context.
  *
  * @param world The world.
- * @return The context set with ecs_set_context. If no context was set, the
+ * @return The context set with ecs_set_ctx. If no context was set, the
  *         function returns NULL.
  */
 FLECS_API
-void* ecs_get_context(
+void* ecs_get_ctx(
+    const ecs_world_t *world);
+
+/** Get the world binding context.
+ * This operation retrieves a previously set world binding context.
+ *
+ * @param world The world.
+ * @return The context set with ecs_set_binding_ctx. If no context was set, the
+ *         function returns NULL.
+ */
+FLECS_API
+void* ecs_get_binding_ctx(
     const ecs_world_t *world);
 
 /** Get world info.
@@ -19361,7 +19388,7 @@ struct world {
      * @param ctx The world context.
      */
     void set_context(void* ctx) const {
-        ecs_set_context(m_world, ctx);
+        ecs_set_ctx(m_world, ctx);
     }
 
     /** Get world context.
@@ -19369,7 +19396,7 @@ struct world {
      * @return The configured world context.
      */
     void* get_context() const {
-        return ecs_get_context(m_world);
+        return ecs_get_ctx(m_world);
     }
 
     /** Preallocate memory for number of entities.

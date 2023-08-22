@@ -388,7 +388,7 @@ void SystemMisc_dont_enable_after_rematch(void) {
     ECS_ENTITY(world, Entity, (IsA, Prefab));
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     /* System is enabled but doesn't match with any entities */
     
@@ -1095,7 +1095,7 @@ void SystemMisc_activate_system_for_table_w_n_pairs(void) {
     ECS_TAG(world, TagB);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);    
+    ecs_set_ctx(world, &ctx, NULL);    
 
     ECS_ENTITY(world, e, (Pair, TagA), (Pair, TagB));
     test_assert(e != 0);
@@ -1241,7 +1241,7 @@ void SystemMisc_delete_system(void) {
     });
     test_assert(system != 0);
 
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_entity_t e = ecs_new_id(world);
     ecs_add_id(world, e, Tag);
@@ -1284,7 +1284,7 @@ void SystemMisc_delete_pipeline_system(void) {
         .callback = Dummy
     }) != 0);
 
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_entity_t e = ecs_new_id(world);
     ecs_add_id(world, e, Tag);
@@ -1350,7 +1350,7 @@ void SystemMisc_delete_system_w_ctx(void) {
     test_assert(ecs_get_system_binding_ctx(world, system) 
         == &binding_ctx_value);
 
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_entity_t e = ecs_new_id(world);
     ecs_add_id(world, e, Tag);

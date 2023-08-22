@@ -13,7 +13,7 @@ void Monitor_1_comp(void) {
     ECS_OBSERVER(world, OnPosition, EcsOnAdd, Position);
 
     Probe ctx = { 0 };
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_entity_t e = ecs_new(world, Position);
     test_int(ctx.invoked, 1);
@@ -45,7 +45,7 @@ void Monitor_2_comps(void) {
     ECS_OBSERVER(world, OnPosition, EcsOnAdd, Position, Velocity);
 
     Probe ctx = { 0 };
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_entity_t e = ecs_new(world, Position);
     test_int(ctx.invoked, 0);
@@ -92,7 +92,7 @@ void Monitor_1_comp_1_not(void) {
     ECS_OBSERVER(world, OnPosition, EcsOnAdd, Position, !Velocity);
 
     Probe ctx = { 0 };
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_entity_t e = ecs_new(world, Position);
     test_int(ctx.invoked, 1);
@@ -136,7 +136,7 @@ void Monitor_1_parent(void) {
     ECS_OBSERVER(world, OnPosition, EcsOnAdd, Position(parent));
 
     Probe ctx = { 0 };
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_entity_t parent = ecs_new(world, Position);
     test_int(ctx.invoked, 0);
@@ -167,7 +167,7 @@ void Monitor_1_comp_1_parent(void) {
         Position, Position(up(ChildOf)));
 
     Probe ctx = { 0 };
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_entity_t parent = ecs_new(world, Position);
     test_int(ctx.invoked, 0);
@@ -229,7 +229,7 @@ void Monitor_1_comp_prefab_new(void) {
     ECS_OBSERVER(world, OnPosition, EcsOnAdd, Position);
 
     Probe ctx = { 0 };
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ECS_PREFAB(world, Prefab, Position);
 
@@ -252,7 +252,7 @@ void Monitor_1_comp_prefab_add(void) {
     ECS_OBSERVER(world, OnPosition, EcsOnAdd, Position);
 
     Probe ctx = { 0 };
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_entity_t e = ecs_new_w_id(world, EcsPrefab);
     ecs_add(world, e, Position);
@@ -276,7 +276,7 @@ void Monitor_monitor_w_and(void) {
     ECS_OBSERVER(world, OnPosition, EcsMonitor, Position, Velocity);
 
     Probe ctx = { 0 };
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
@@ -316,7 +316,7 @@ void Monitor_monitor_w_or(void) {
     ECS_OBSERVER(world, OnPosition, EcsMonitor, Position, Velocity || Mass);
 
     Probe ctx = { 0 };
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
@@ -353,7 +353,7 @@ void Monitor_monitor_w_not(void) {
     ECS_OBSERVER(world, OnPosition, EcsMonitor, Position, Mass, !Velocity);
 
     Probe ctx = { 0 };
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
@@ -387,7 +387,7 @@ void Monitor_monitor_w_optional(void) {
     ECS_OBSERVER(world, OnPosition, EcsMonitor, Position, ?Velocity);
 
     Probe ctx = { 0 };
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
@@ -427,7 +427,7 @@ void Monitor_monitor_w_superset(void) {
     ECS_OBSERVER(world, OnPosition, EcsMonitor, Position, Velocity(up));
 
     Probe ctx = { 0 };
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_entity_t base_1 = ecs_new(world, Velocity);
     test_assert(base_1 != 0);
@@ -474,7 +474,7 @@ void Monitor_monitor_w_self_superset(void) {
     ECS_OBSERVER(world, OnPosition, EcsMonitor, Position, Velocity(self|up));
 
     Probe ctx = { 0 };
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_entity_t base_1 = ecs_new(world, Velocity);
     test_assert(base_1 != 0);
@@ -535,7 +535,7 @@ void Monitor_monitor_w_wildcard(void) {
     ECS_OBSERVER(world, OnPosition, EcsMonitor, Position, (Eats, *));
 
     Probe ctx = { 0 };
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);

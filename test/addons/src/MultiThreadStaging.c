@@ -6,7 +6,7 @@ void MultiThreadStaging_setup(void) {
 
 static
 void Add_to_current(ecs_iter_t *it) {
-    IterData *ctx = ecs_get_context(it->world);
+    IterData *ctx = ecs_get_ctx(it->world);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -38,7 +38,7 @@ void MultiThreadStaging_2_threads_add_to_current(void) {
     });
 
     IterData ctx = {.component = ecs_id(Rotation)};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_entity_t ids_1[100];
     const ecs_entity_t *temp_ids_1 = ecs_bulk_new(world, Position, 100);
@@ -82,7 +82,7 @@ void MultiThreadStaging_3_threads_add_to_current(void) {
     });
 
     IterData ctx = {.component = ecs_id(Rotation)};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_entity_t ids_1[100];
     const ecs_entity_t *temp_ids_1 = ecs_bulk_new(world, Position, 100);
@@ -126,7 +126,7 @@ void MultiThreadStaging_4_threads_add_to_current(void) {
     });
 
     IterData ctx = {.component = ecs_id(Rotation)};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_entity_t ids_1[100];
     const ecs_entity_t *temp_ids_1 = ecs_bulk_new(world, Position, 100);
@@ -170,7 +170,7 @@ void MultiThreadStaging_5_threads_add_to_current(void) {
     });
 
     IterData ctx = {.component = ecs_id(Rotation)};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_entity_t ids_1[100];
     const ecs_entity_t *temp_ids_1 = ecs_bulk_new(world, Position, 100);
@@ -214,7 +214,7 @@ void MultiThreadStaging_6_threads_add_to_current(void) {
     });
 
     IterData ctx = {.component = ecs_id(Rotation)};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_entity_t ids_1[100];
     const ecs_entity_t *temp_ids_1 = ecs_bulk_new(world, Position, 100);
@@ -278,7 +278,7 @@ void MultiThreadStaging_2_threads_on_add(void) {
     });
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     const ecs_entity_t *ids = ecs_bulk_new(world, Position, 10);
     test_assert(ids != NULL);

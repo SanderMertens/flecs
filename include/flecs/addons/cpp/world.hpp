@@ -441,16 +441,34 @@ struct world {
      *
      * @param ctx The world context.
      */
-    void set_context(void* ctx) const {
-        ecs_set_context(m_world, ctx);
+    void set_ctx(void* ctx, ecs_ctx_free_t ctx_free = nullptr) const {
+        ecs_set_ctx(m_world, ctx, ctx_free);
     }
 
     /** Get world context.
      *
      * @return The configured world context.
      */
-    void* get_context() const {
-        return ecs_get_context(m_world);
+    void* get_ctx() const {
+        return ecs_get_ctx(m_world);
+    }
+
+    /** Set world binding context.
+     * Set a context value that can be accessed by anyone that has a reference
+     * to the world.
+     *
+     * @param ctx The world context.
+     */
+    void set_binding_ctx(void* ctx, ecs_ctx_free_t ctx_free = nullptr) const {
+        ecs_set_binding_ctx(m_world, ctx, ctx_free);
+    }
+
+    /** Get world binding context.
+     *
+     * @return The configured world context.
+     */
+    void* get_binding_ctx() const {
+        return ecs_get_binding_ctx(m_world);
     }
 
     /** Preallocate memory for number of entities.

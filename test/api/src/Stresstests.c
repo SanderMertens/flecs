@@ -47,7 +47,7 @@ void Delete_above_1000(ecs_iter_t *it) {
 
 static
 void Add_random(ecs_iter_t *it) {
-    IterData *ctx = ecs_get_context(it->world);
+    IterData *ctx = ecs_get_ctx(it->world);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -70,7 +70,7 @@ void Set_velocity_callback(ecs_iter_t *it) {
 
 static
 void Set_random(ecs_iter_t *it) {
-    IterData *ctx = ecs_get_context(it->world);     
+    IterData *ctx = ecs_get_ctx(it->world);     
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -116,7 +116,7 @@ void create_delete_entity_random_components_staged(
     });
 
     IterData ctx = {.component = ecs_id(Position), .component_2 = ecs_id(Velocity), .component_3 = ecs_id(Rotation)};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_bulk_new(world, Position, 500);
     bulk_new_w_type(world, Type, 500);
@@ -164,7 +164,7 @@ void set_entity_random_components(
     });
 
     IterData ctx = {.component = ecs_id(Position), .component_2 = ecs_id(Velocity), .component_3 = ecs_id(Rotation)};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     const ecs_entity_t *ids = ecs_bulk_new(world, Position, 5);
     test_assert(ids != NULL);

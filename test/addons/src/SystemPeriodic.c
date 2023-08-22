@@ -50,7 +50,7 @@ void SystemPeriodic_1_type_1_component(void) {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -98,7 +98,7 @@ void SystemPeriodic_1_type_3_component(void) {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Velocity, Mass);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -179,7 +179,7 @@ void SystemPeriodic_3_type_1_component(void) {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -232,7 +232,7 @@ void SystemPeriodic_2_type_3_component(void) {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Velocity, Mass);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -318,7 +318,7 @@ void SystemPeriodic_1_type_1_component_1_tag(void) {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Tag);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -367,7 +367,7 @@ void SystemPeriodic_2_type_1_component_1_tag(void) {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Tag);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -411,7 +411,7 @@ void SystemPeriodic_2_type_1_and_1_not(void) {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, !Velocity);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -455,7 +455,7 @@ void SystemPeriodic_2_type_2_and_1_not(void) {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Velocity, !Mass);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -512,7 +512,7 @@ void SystemPeriodic_2_type_2_and_2_not(void) {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Velocity, !Mass, !Rotation);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -566,7 +566,7 @@ void SystemPeriodic_4_type_1_and_1_or(void) {
     ecs_set(world, e4, Velocity, {0, 0});
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -615,7 +615,7 @@ void SystemPeriodic_4_type_1_and_1_or_of_3(void) {
     ecs_set(world, e4, Velocity, {0, 0});
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -658,7 +658,7 @@ void SystemPeriodic_1_type_1_and_1_or(void) {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position || Position_1, Velocity);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -715,7 +715,7 @@ void SystemPeriodic_2_type_1_and_1_optional(void) {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Velocity);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -779,7 +779,7 @@ void SystemPeriodic_2_type_2_and_1_optional(void) {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Velocity, ?Mass);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -860,7 +860,7 @@ void SystemPeriodic_6_type_1_and_2_optional(void) {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Velocity, ?Mass);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -955,7 +955,7 @@ void SystemPeriodic_match_2_systems_w_populated_table(void) {
     ECS_SYSTEM(world, Dummy_2, EcsOnUpdate, Position);
     
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -1002,7 +1002,7 @@ void SystemPeriodic_ensure_optional_is_unset_column(void) {
     ECS_SYSTEM(world, TestOptional_w_column, EcsOnUpdate, Position, ?Velocity);
     
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -1030,7 +1030,7 @@ void SystemPeriodic_ensure_optional_is_null_shared(void) {
     ECS_SYSTEM(world, TestOptional_w_shared, EcsOnUpdate, Position, ?Velocity(parent));
     
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -1261,7 +1261,7 @@ void SystemPeriodic_two_refs(void) {
     ECS_SYSTEM(world, TwoRefs, EcsOnUpdate, Position(e), Velocity(e), e(), Mass);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -1293,7 +1293,7 @@ void SystemPeriodic_filter_disabled(void) {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -1318,7 +1318,7 @@ void SystemPeriodic_match_disabled(void) {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Disabled);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -1345,7 +1345,7 @@ void SystemPeriodic_match_disabled_and_enabled(void) {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Disabled);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -1373,7 +1373,7 @@ void SystemPeriodic_match_prefab(void) {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Prefab);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -1400,7 +1400,7 @@ void SystemPeriodic_match_prefab_and_normal(void) {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Prefab);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -1452,7 +1452,7 @@ void SystemPeriodic_owned_column(void) {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Velocity(self));
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -1481,7 +1481,7 @@ void SystemPeriodic_owned_not_column(void) {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, !Velocity(self));
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -1516,7 +1516,7 @@ void SystemPeriodic_owned_or_column(void) {
     ECS_SYSTEM(world, OwnedOr, EcsOnUpdate, Position, Velocity(self) || Mass(self));
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -1551,7 +1551,7 @@ void SystemPeriodic_shared_column(void) {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Velocity(up));
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -1580,7 +1580,7 @@ void SystemPeriodic_shared_not_column(void) {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, !Velocity(up));
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -1617,7 +1617,7 @@ void SystemPeriodic_shared_or_column(void) {
     ECS_SYSTEM(world, SharedOr, EcsOnUpdate, Position, Velocity(up) || Mass(up));
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -1651,7 +1651,7 @@ void SystemPeriodic_container_dont_match_inheritance(void) {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Velocity(parent));
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -1680,7 +1680,7 @@ void SystemPeriodic_cascade_dont_match_inheritance(void) {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Velocity(parent|cascade));
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -1713,7 +1713,7 @@ void SystemPeriodic_not_from_entity(void) {
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, !Velocity(e2));
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -1730,7 +1730,7 @@ void SystemPeriodic_not_from_entity(void) {
 
 static
 void TestContext(ecs_iter_t *it) {
-    void *world_ctx = ecs_get_context(it->world);
+    void *world_ctx = ecs_get_ctx(it->world);
     test_assert(world_ctx == it->ctx);
     int32_t *ctx = it->ctx;
     (*ctx) ++;
@@ -1764,7 +1764,7 @@ void SystemPeriodic_get_sys_context_from_param(void) {
     ECS_SYSTEM(world, TestContext, EcsOnUpdate, Position);
 
     /* Set world context so system can compare if pointer is correct */
-    ecs_set_context(world, &param);
+    ecs_set_ctx(world, &param, NULL);
 
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = TestContext,
@@ -1873,7 +1873,7 @@ void SystemPeriodic_and_type(void) {
     ECS_ENTITY(world, e, Position, Velocity);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
@@ -1905,7 +1905,7 @@ void SystemPeriodic_or_type(void) {
     ecs_add(world, e3, Velocity);
 
     Probe ctx = {0};
-    ecs_set_context(world, &ctx);
+    ecs_set_ctx(world, &ctx, NULL);
 
     ecs_progress(world, 1);
 
