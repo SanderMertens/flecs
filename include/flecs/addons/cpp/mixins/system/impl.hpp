@@ -95,7 +95,7 @@ struct system final : entity
     }
 
     void* ctx() const {
-        return ecs_get_system_ctx(m_world, m_id);
+        return ecs_system_get_ctx(m_world, m_id);
     }
 
     flecs::query<> query() const {

@@ -16203,7 +16203,7 @@ error:
     return 0;
 }
 
-void* ecs_get_observer_ctx(
+void* ecs_observer_get_ctx(
     const ecs_world_t *world,
     ecs_entity_t observer)
 {
@@ -16216,7 +16216,7 @@ void* ecs_get_observer_ctx(
     }     
 }
 
-void* ecs_get_observer_binding_ctx(
+void* ecs_observer_get_binding_ctx(
     const ecs_world_t *world,
     ecs_entity_t observer)
 {
@@ -63467,7 +63467,7 @@ ecs_query_t* ecs_system_get_query(
     }
 }
 
-void* ecs_get_system_ctx(
+void* ecs_system_get_ctx(
     const ecs_world_t *world,
     ecs_entity_t system)
 {
@@ -63479,7 +63479,7 @@ void* ecs_get_system_ctx(
     }   
 }
 
-void* ecs_get_system_binding_ctx(
+void* ecs_system_get_binding_ctx(
     const ecs_world_t *world,
     ecs_entity_t system)
 {

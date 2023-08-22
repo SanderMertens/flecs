@@ -2409,14 +2409,14 @@ void Trigger_set_get_context(void) {
     });
     test_assert(t != 0);
 
-    test_assert(ecs_get_observer_ctx(world, t) == &ctx_a);
+    test_assert(ecs_observer_get_ctx(world, t) == &ctx_a);
 
     test_assert(ecs_observer_init(world, &(ecs_observer_desc_t){
         .entity = t,
         .ctx = &ctx_b
     }) == t);
 
-    test_assert(ecs_get_observer_ctx(world, t) == &ctx_b);
+    test_assert(ecs_observer_get_ctx(world, t) == &ctx_b);
 
     ecs_fini(world);
 }
@@ -2436,14 +2436,14 @@ void Trigger_set_get_binding_context(void) {
     });
     test_assert(t != 0);
 
-    test_assert(ecs_get_observer_binding_ctx(world, t) == &ctx_a);
+    test_assert(ecs_observer_get_binding_ctx(world, t) == &ctx_a);
 
     test_assert(ecs_observer_init(world, &(ecs_observer_desc_t){
         .entity = t,
         .binding_ctx = &ctx_b
     }) == t);
 
-    test_assert(ecs_get_observer_binding_ctx(world, t) == &ctx_b);
+    test_assert(ecs_observer_get_binding_ctx(world, t) == &ctx_b);
 
     ecs_fini(world);
 }
@@ -2478,8 +2478,8 @@ void Trigger_delete_trigger_w_delete_ctx(void) {
     });
     test_assert(t != 0);
 
-    test_assert(ecs_get_observer_ctx(world, t) == &ctx_value);
-    test_assert(ecs_get_observer_binding_ctx(world, t) == &binding_ctx_value);
+    test_assert(ecs_observer_get_ctx(world, t) == &ctx_value);
+    test_assert(ecs_observer_get_binding_ctx(world, t) == &binding_ctx_value);
 
     ecs_delete(world, t);
 

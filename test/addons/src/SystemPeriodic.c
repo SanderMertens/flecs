@@ -1749,7 +1749,7 @@ void SystemPeriodic_sys_context(void) {
         .ctx = &param
     });
 
-    test_assert(ecs_get_system_ctx(world, TestContext) == &param);
+    test_assert(ecs_system_get_ctx(world, TestContext) == &param);
 
     ecs_fini(world);
 }

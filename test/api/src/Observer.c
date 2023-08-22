@@ -1269,8 +1269,8 @@ void Observer_delete_observer_w_ctx(void) {
     });
     test_assert(o != 0);
 
-    test_assert(ecs_get_observer_ctx(world, o) == &ctx_value);
-    test_assert(ecs_get_observer_binding_ctx(world, o) == &binding_ctx_value);
+    test_assert(ecs_observer_get_ctx(world, o) == &ctx_value);
+    test_assert(ecs_observer_get_binding_ctx(world, o) == &binding_ctx_value);
 
     ecs_delete(world, o);
 
@@ -1296,8 +1296,8 @@ void Observer_update_ctx(void) {
     });
     test_assert(system != 0);
 
-    test_assert(ecs_get_observer_ctx(world, system) == &ctx_value);
-    test_assert(ecs_get_observer_binding_ctx(world, system) 
+    test_assert(ecs_observer_get_ctx(world, system) == &ctx_value);
+    test_assert(ecs_observer_get_binding_ctx(world, system) 
         == &binding_ctx_value);
 
     ecs_observer(world, {

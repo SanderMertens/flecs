@@ -259,7 +259,7 @@ ecs_query_t* ecs_system_get_query(
  * @return The context.
  */
 FLECS_API
-void* ecs_get_system_ctx(
+void* ecs_system_get_ctx(
     const ecs_world_t *world,
     ecs_entity_t system);
 
@@ -273,7 +273,7 @@ void* ecs_get_system_ctx(
  * @return The context.
  */
 FLECS_API
-void* ecs_get_system_binding_ctx(
+void* ecs_system_get_binding_ctx(
     const ecs_world_t *world,
     ecs_entity_t system);
 

@@ -38,7 +38,7 @@ struct observer final : entity
     }
 
     void* ctx() const {
-        return ecs_get_observer_ctx(m_world, m_id);
+        return ecs_observer_get_ctx(m_world, m_id);
     }
 
     flecs::filter<> query() const {

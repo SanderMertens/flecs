@@ -1164,14 +1164,14 @@ void SystemMisc_set_get_context(void) {
     });
     test_assert(s != 0);
 
-    test_assert(ecs_get_system_ctx(world, s) == &ctx_a);
+    test_assert(ecs_system_get_ctx(world, s) == &ctx_a);
 
     test_assert(ecs_system_init(world, &(ecs_system_desc_t){
         .entity = s,
         .ctx = &ctx_b
     }) == s);
 
-    test_assert(ecs_get_system_ctx(world, s) == &ctx_b);
+    test_assert(ecs_system_get_ctx(world, s) == &ctx_b);
 
     ecs_fini(world);
 }
@@ -1191,14 +1191,14 @@ void SystemMisc_set_get_binding_context(void) {
     });
     test_assert(s != 0);
 
-    test_assert(ecs_get_system_binding_ctx(world, s) == &ctx_a);
+    test_assert(ecs_system_get_binding_ctx(world, s) == &ctx_a);
 
     test_assert(ecs_system_init(world, &(ecs_system_desc_t){
         .entity = s,
         .binding_ctx = &ctx_b
     }) == s);
 
-    test_assert(ecs_get_system_binding_ctx(world, s) == &ctx_b);
+    test_assert(ecs_system_get_binding_ctx(world, s) == &ctx_b);
 
     ecs_fini(world);
 }
@@ -1346,8 +1346,8 @@ void SystemMisc_delete_system_w_ctx(void) {
     });
     test_assert(system != 0);
 
-    test_assert(ecs_get_system_ctx(world, system) == &ctx_value);
-    test_assert(ecs_get_system_binding_ctx(world, system) 
+    test_assert(ecs_system_get_ctx(world, system) == &ctx_value);
+    test_assert(ecs_system_get_binding_ctx(world, system) 
         == &binding_ctx_value);
 
     ecs_set_ctx(world, &ctx, NULL);
@@ -1380,8 +1380,8 @@ void SystemMisc_update_ctx(void) {
     });
     test_assert(system != 0);
 
-    test_assert(ecs_get_system_ctx(world, system) == &ctx_value);
-    test_assert(ecs_get_system_binding_ctx(world, system) 
+    test_assert(ecs_system_get_ctx(world, system) == &ctx_value);
+    test_assert(ecs_system_get_binding_ctx(world, system) 
         == &binding_ctx_value);
 
     ecs_system(world, {

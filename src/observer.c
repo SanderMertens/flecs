@@ -962,7 +962,7 @@ error:
     return 0;
 }
 
-void* ecs_get_observer_ctx(
+void* ecs_observer_get_ctx(
     const ecs_world_t *world,
     ecs_entity_t observer)
 {
@@ -975,7 +975,7 @@ void* ecs_get_observer_ctx(
     }     
 }
 
-void* ecs_get_observer_binding_ctx(
+void* ecs_observer_get_binding_ctx(
     const ecs_world_t *world,
     ecs_entity_t observer)
 {
