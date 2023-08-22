@@ -1149,10 +1149,10 @@ while (ecs_filter_next(&it)) {
   if (vs_id == ecs_id(Velocity)) {
     // We can only use ecs_field if the field type is the same for all results,
     // but we can get the table column directly.
-    Velocity *v = ecs_table_get_id(word, it.table, ecs_id(Velocity), it.offset);
+    Velocity *v = ecs_table_get_id(world, it.table, ecs_id(Velocity), it.offset);
     // iterate as usual
   } else if (vs_id == ecs_id(Speed)) {
-    Speed *s = ecs_table_get_id(word, it.table, ecs_id(Speed), it.offset);
+    Speed *s = ecs_table_get_id(world, it.table, ecs_id(Speed), it.offset);
     // iterate as usual
   }
 }
