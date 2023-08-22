@@ -1996,6 +1996,13 @@ void flecs_query_fini(
 
     flecs_query_allocators_fini(query);
 
+    if (query->ctx_free) {
+        query->ctx_free(query->ctx);
+    }
+    if (query->binding_ctx_free) {
+        query->binding_ctx_free(query->binding_ctx);
+    }
+
     ecs_poly_free(query, ecs_query_t);
 }
 
@@ -2055,6 +2062,11 @@ ecs_query_t* ecs_query_init(
     result->iterable.init = flecs_query_iter_init;
     result->dtor = (ecs_poly_dtor_t)flecs_query_fini;
     result->prev_match_count = -1;
+
+    result->ctx = desc->ctx;
+    result->binding_ctx = desc->binding_ctx;
+    result->ctx_free = desc->ctx_free;
+    result->binding_ctx_free = desc->binding_ctx_free;
 
     if (ecs_should_log_1()) {
         char *filter_expr = ecs_filter_str(world, &result->filter);
@@ -2727,4 +2739,16 @@ int32_t ecs_query_entity_count(
     }
 
     return result;
+}
+
+void* ecs_query_get_ctx(
+    const ecs_query_t *query)
+{
+    return query->ctx;
+}
+
+void* ecs_query_get_binding_ctx(
+    const ecs_query_t *query)
+{
+    return query->binding_ctx;
 }

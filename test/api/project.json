@@ -1652,7 +1652,11 @@
                 "query_w_singleton_w_rule_iter",
                 "query_w_singleton_nested_iter",
                 "query_w_singleton_interleaved_iter",
-                "recycled_component_id"
+                "recycled_component_id",
+                "set_get_context",
+                "set_get_binding_context",
+                "set_get_context_w_free",
+                "set_get_binding_context_w_free"
             ]
         }, {
             "id": "Iter",

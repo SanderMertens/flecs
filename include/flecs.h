@@ -933,6 +933,18 @@ typedef struct ecs_query_desc_t {
      * queries need to be matched with new tables.
      * Subqueries can be nested. */
     ecs_query_t *parent;
+
+    /** User context to pass to callback */
+    void *ctx;
+
+    /** Context to be used for language bindings */
+    void *binding_ctx;
+    
+    /** Callback to free ctx */
+    ecs_ctx_free_t ctx_free;
+
+    /** Callback to free binding_ctx */     
+    ecs_ctx_free_t binding_ctx_free;
 } ecs_query_desc_t;
 
 /** Used with ecs_observer_init. 
@@ -4309,6 +4321,26 @@ FLECS_API
 int32_t ecs_query_entity_count(
     const ecs_query_t *query);
 
+/** Get query ctx.
+ * Return the value set in ecs_query_desc_t::ctx.
+ * 
+ * @param query The query.
+ * @return The context.
+ */
+FLECS_API
+void* ecs_query_get_ctx(
+    const ecs_query_t *query);
+
+/** Get query binding ctx.
+ * Return the value set in ecs_query_desc_t::binding_ctx.
+ * 
+ * @param query The query.
+ * @return The context.
+ */
+FLECS_API
+void* ecs_query_get_binding_ctx(
+    const ecs_query_t *query);
+
 /** @} */
 
 /**
@@ -4415,11 +4447,25 @@ FLECS_API
 bool ecs_observer_default_run_action(
     ecs_iter_t *it);
 
+/** Get observer ctx. 
+ * Return the value set in ecs_observer_desc_t::ctx.
+ * 
+ * @param world The world.
+ * @param observer The observer.
+ * @return The context.
+ */
 FLECS_API
 void* ecs_get_observer_ctx(
     const ecs_world_t *world,
     ecs_entity_t observer);
 
+/** Get observer binding ctx.
+ * Return the value set in ecs_observer_desc_t::binding_ctx.
+ * 
+ * @param world The world.
+ * @param observer The observer.
+ * @return The context.
+ */
 FLECS_API
 void* ecs_get_observer_binding_ctx(
     const ecs_world_t *world,

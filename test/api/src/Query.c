@@ -9331,3 +9331,103 @@ void Query_recycled_component_id(void) {
 
     ecs_fini(ecs);
 }
+
+void Query_set_get_context(void) {
+    ecs_world_t* ecs = ecs_init();
+
+    ECS_COMPONENT(ecs, Position);
+
+    int ctx = 0;
+
+    ecs_query_t *q = ecs_query(ecs, {
+        .filter.terms = {
+            { .id = ecs_id(Position) }
+        },
+        .ctx = &ctx
+    });
+    test_assert(q != NULL);
+
+    test_assert(ecs_query_get_ctx(q) == &ctx);
+    test_assert(ecs_query_get_binding_ctx(q) == NULL);
+
+    ecs_fini(ecs);
+}
+
+void Query_set_get_binding_context(void) {
+    ecs_world_t* ecs = ecs_init();
+
+    ECS_COMPONENT(ecs, Position);
+
+    int ctx = 0;
+
+    ecs_query_t *q = ecs_query(ecs, {
+        .filter.terms = {
+            { .id = ecs_id(Position) }
+        },
+        .binding_ctx = &ctx
+    });
+    test_assert(q != NULL);
+
+    test_assert(ecs_query_get_binding_ctx(q) == &ctx);
+    test_assert(ecs_query_get_ctx(q) == NULL);
+
+    ecs_fini(ecs);
+}
+
+static void ctx_free(void *ptr) {
+    *(int*)ptr = 10;
+}
+
+void Query_set_get_context_w_free(void) {
+    ecs_world_t* ecs = ecs_init();
+
+    ECS_COMPONENT(ecs, Position);
+
+    int ctx = 0;
+
+    ecs_query_t *q = ecs_query(ecs, {
+        .filter.terms = {
+            { .id = ecs_id(Position) }
+        },
+        .ctx = &ctx,
+        .ctx_free = ctx_free
+    });
+    test_assert(q != NULL);
+
+    test_assert(ecs_query_get_ctx(q) == &ctx);
+    test_assert(ecs_query_get_binding_ctx(q) == NULL);
+    test_int(ctx, 0);
+
+    ecs_query_fini(q);
+
+    test_int(ctx, 10);
+
+    ecs_fini(ecs);
+}
+
+void Query_set_get_binding_context_w_free(void) {
+    ecs_world_t* ecs = ecs_init();
+
+    ECS_COMPONENT(ecs, Position);
+
+    int ctx = 0;
+
+    ecs_query_t *q = ecs_query(ecs, {
+        .filter.terms = {
+            { .id = ecs_id(Position) }
+        },
+        .binding_ctx = &ctx,
+        .binding_ctx_free = ctx_free
+    });
+    test_assert(q != NULL);
+
+    test_assert(ecs_query_get_binding_ctx(q) == &ctx);
+    test_assert(ecs_query_get_ctx(q) == NULL);
+    test_int(ctx, 0);
+
+    ecs_query_fini(q);
+
+    test_int(ctx, 10);
+
+    ecs_fini(ecs);
+}

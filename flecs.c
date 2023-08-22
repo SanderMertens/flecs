@@ -1093,6 +1093,13 @@ struct ecs_query_t {
     int32_t prev_match_count;        /* Track if sorting is needed */
     int32_t rematch_count;           /* Track which tables were added during rematch */
 
+    /* User context */
+    void *ctx;                       /* User context to pass to callback */
+    void *binding_ctx;               /* Context to be used for language bindings */
+     
+    ecs_ctx_free_t ctx_free;         /** Callback to free ctx */
+    ecs_ctx_free_t binding_ctx_free; /** Callback to free binding_ctx */
+
     /* Mixins */
     ecs_iterable_t iterable;
     ecs_poly_dtor_t dtor;
@@ -19041,6 +19048,13 @@ void flecs_query_fini(
 
     flecs_query_allocators_fini(query);
 
+    if (query->ctx_free) {
+        query->ctx_free(query->ctx);
+    }
+    if (query->binding_ctx_free) {
+        query->binding_ctx_free(query->binding_ctx);
+    }
+
     ecs_poly_free(query, ecs_query_t);
 }
 
@@ -19100,6 +19114,11 @@ ecs_query_t* ecs_query_init(
     result->iterable.init = flecs_query_iter_init;
     result->dtor = (ecs_poly_dtor_t)flecs_query_fini;
     result->prev_match_count = -1;
+
+    result->ctx = desc->ctx;
+    result->binding_ctx = desc->binding_ctx;
+    result->ctx_free = desc->ctx_free;
+    result->binding_ctx_free = desc->binding_ctx_free;
 
     if (ecs_should_log_1()) {
         char *filter_expr = ecs_filter_str(world, &result->filter);
@@ -19772,6 +19791,18 @@ int32_t ecs_query_entity_count(
     }
 
     return result;
+}
+
+void* ecs_query_get_ctx(
+    const ecs_query_t *query)
+{
+    return query->ctx;
+}
+
+void* ecs_query_get_binding_ctx(
+    const ecs_query_t *query)
+{
+    return query->binding_ctx;
 }
 
 /**
@@ -22649,8 +22680,7 @@ int ecs_fini(
      * unmodified by cleanup. */
     flecs_fini_unset_tables(world);
 
-    /* This will destroy all entities and components. After this point no more
-     * user code is executed. */
+    /* This will destroy all entities and components. */
     flecs_fini_store(world);
 
     /* Purge deferred operations from the queue. This discards operations but
@@ -22661,6 +22691,16 @@ int ecs_fini(
     /* All queries are cleaned up, so monitors should've been cleaned up too */
     ecs_assert(!ecs_map_is_init(&world->monitors.monitors), 
         ECS_INTERNAL_ERROR, NULL);
+
+    /* Cleanup world ctx and binding_ctx */
+    if (world->ctx_free) {
+        world->ctx_free(world->ctx);
+    }
+    if (world->binding_ctx_free) {
+        world->binding_ctx_free(world->binding_ctx);
+    }
+
+    /* After this point no more user code is invoked */
 
     ecs_dbg_1("#[bold]cleanup world datastructures");
     ecs_log_push_1();

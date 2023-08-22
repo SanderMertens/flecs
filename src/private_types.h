@@ -256,6 +256,13 @@ struct ecs_query_t {
     int32_t prev_match_count;        /* Track if sorting is needed */
     int32_t rematch_count;           /* Track which tables were added during rematch */
 
+    /* User context */
+    void *ctx;                       /* User context to pass to callback */
+    void *binding_ctx;               /* Context to be used for language bindings */
+     
+    ecs_ctx_free_t ctx_free;         /** Callback to free ctx */
+    ecs_ctx_free_t binding_ctx_free; /** Callback to free binding_ctx */
+
     /* Mixins */
     ecs_iterable_t iterable;
     ecs_poly_dtor_t dtor;

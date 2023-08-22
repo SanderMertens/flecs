@@ -1590,6 +1590,10 @@ void Query_query_w_singleton_w_rule_iter(void);
 void Query_query_w_singleton_nested_iter(void);
 void Query_query_w_singleton_interleaved_iter(void);
 void Query_recycled_component_id(void);
+void Query_set_get_context(void);
+void Query_set_get_binding_context(void);
+void Query_set_get_context_w_free(void);
+void Query_set_get_binding_context_w_free(void);
 
 // Testsuite 'Iter'
 void Iter_page_iter_0_0(void);
@@ -8753,6 +8757,22 @@ bake_test_case Query_testcases[] = {
     {
         "recycled_component_id",
         Query_recycled_component_id
+    },
+    {
+        "set_get_context",
+        Query_set_get_context
+    },
+    {
+        "set_get_binding_context",
+        Query_set_get_binding_context
+    },
+    {
+        "set_get_context_w_free",
+        Query_set_get_context_w_free
+    },
+    {
+        "set_get_binding_context_w_free",
+        Query_set_get_binding_context_w_free
     }
 };
 
@@ -12871,7 +12891,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        227,
+        231,
         Query_testcases
     },
     {
