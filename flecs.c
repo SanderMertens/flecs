@@ -33127,6 +33127,7 @@ void FlecsScriptImport(
     });
 
     ecs_add_id(world, ecs_id(EcsScript), EcsTag);
+    ecs_add_id(world, ecs_id(EcsScript), EcsPrivate);
 
     ecs_struct(world, {
         .entity = ecs_id(EcsScript),
@@ -42060,6 +42061,15 @@ void flecs_table_init_columns(
         columns[cur].ti = ECS_CONST_CAST(ecs_type_info_t*, ti);
         columns[cur].id = ids[i];
         columns[cur].size = ti->size;
+
+        if (ECS_IS_PAIR(ids[i])) {
+            ecs_table_record_t *wc_tr = flecs_id_record_get_table(
+                idr->parent, table);
+            if (wc_tr->index == tr->index) {
+                wc_tr->column = tr->column;
+            }
+        }
+
 #ifdef FLECS_DEBUG
         ecs_vec_init(NULL, &columns[cur].data, ti->size, 0);
 #endif
@@ -42448,7 +42458,7 @@ void flecs_table_init(
         /* Initialize event flags */
         table->flags |= idr->flags & EcsIdEventMask;
 
-        /* Initialize column index (will be overwritten by init_storage) */
+        /* Initialize column index (will be overwritten by init_columns) */
         tr->column = -1;
 
         if (idr->flags & EcsIdAlwaysOverride) {

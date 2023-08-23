@@ -2198,6 +2198,7 @@ void FlecsScriptImport(
     });
 
     ecs_add_id(world, ecs_id(EcsScript), EcsTag);
+    ecs_add_id(world, ecs_id(EcsScript), EcsPrivate);
 
     ecs_struct(world, {
         .entity = ecs_id(EcsScript),

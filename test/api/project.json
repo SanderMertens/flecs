@@ -629,7 +629,8 @@
                 "get_childof_component",
                 "get_mut_equal_get",
                 "get_tag",
-                "get_pair_tag"
+                "get_pair_tag",
+                "get_wildcard"
             ]
         }, {
             "id": "Reference",

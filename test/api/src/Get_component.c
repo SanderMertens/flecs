@@ -253,3 +253,30 @@ void Get_component_get_pair_tag(void) {
 
     ecs_fini(world);
 }
+
+void Get_component_get_wildcard(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tgt);
+
+    ecs_entity_t e = ecs_set_pair(world, 0, Position, Tgt, {10, 20});
+    test_assert(e != 0);
+    test_assert(ecs_has_pair(world, e, ecs_id(Position), Tgt));
+
+    {
+        const Position *p = ecs_get_pair(world, e, Position, Tgt);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+
+    {
+        const Position *p = ecs_get_pair(world, e, Position, EcsWildcard);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+
+    ecs_fini(world);
+}

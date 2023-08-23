@@ -595,6 +595,7 @@ void Get_component_get_childof_component(void);
 void Get_component_get_mut_equal_get(void);
 void Get_component_get_tag(void);
 void Get_component_get_pair_tag(void);
+void Get_component_get_wildcard(void);
 
 // Testsuite 'Reference'
 void Reference_setup(void);
@@ -4863,6 +4864,10 @@ bake_test_case Get_component_testcases[] = {
     {
         "get_pair_tag",
         Get_component_get_pair_tag
+    },
+    {
+        "get_wildcard",
+        Get_component_get_wildcard
     }
 };
 
@@ -12793,7 +12798,7 @@ static bake_test_suite suites[] = {
         "Get_component",
         Get_component_setup,
         NULL,
-        13,
+        14,
         Get_component_testcases
     },
     {
