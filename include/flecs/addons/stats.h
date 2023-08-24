@@ -192,14 +192,24 @@ typedef struct ecs_system_stats_t {
     int64_t first_;
     ecs_metric_t time_spent;       /**< Time spent processing a system */
     ecs_metric_t invoke_count;     /**< Number of times system is invoked */
-    ecs_metric_t active;           /**< Whether system is active (is matched with >0 entities) */
-    ecs_metric_t enabled;          /**< Whether system is enabled */
     int64_t last_;
 
     bool task;                     /**< Is system a task */
 
     ecs_query_stats_t query;
 } ecs_system_stats_t;
+
+/** Statistics for sync point */
+typedef struct ecs_sync_stats_t {
+    int64_t first_;
+    ecs_metric_t time_spent;
+    ecs_metric_t commands_enqueued;
+    int64_t last_;
+
+    int32_t system_count;
+    bool multi_threaded;
+    bool no_readonly;
+} ecs_sync_stats_t;
 
 /** Statistics for all systems in a pipeline. */
 typedef struct ecs_pipeline_stats_t {
@@ -209,6 +219,9 @@ typedef struct ecs_pipeline_stats_t {
     /** Vector with system ids of all systems in the pipeline. The systems are
      * stored in the order they are executed. Merges are represented by a 0. */
     ecs_vec_t systems;
+    
+    /** Vector with sync point stats */
+    ecs_vec_t sync_points;
 
     /** Map with system statistics. For each system in the systems vector, an
      * entry in the map exists of type ecs_system_stats_t. */

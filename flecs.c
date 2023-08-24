@@ -33877,7 +33877,7 @@ void flecs_pipeline_stats_to_json(
 {
     ecs_strbuf_list_push(reply, "[", ",");
 
-    int32_t i, count = ecs_vec_count(&stats->stats.systems);
+    int32_t i, count = ecs_vec_count(&stats->stats.systems), sync_cur = 0;
     ecs_entity_t *ids = ecs_vec_first_t(&stats->stats.systems, ecs_entity_t);
     for (i = 0; i < count; i ++) {
         ecs_entity_t id = ids[i];
@@ -33891,7 +33891,25 @@ void flecs_pipeline_stats_to_json(
         } else {
             /* Sync point */
             ecs_strbuf_list_push(reply, "{", ",");
+            ecs_sync_stats_t *sync_stats = ecs_vec_get_t(
+                &stats->stats.sync_points, ecs_sync_stats_t, sync_cur);
+
+            ecs_strbuf_list_appendlit(reply, "\"system_count\":");
+            ecs_strbuf_appendint(reply, sync_stats->system_count);
+
+            ecs_strbuf_list_appendlit(reply, "\"multi_threaded\":");
+            ecs_strbuf_appendbool(reply, sync_stats->multi_threaded);
+
+            ecs_strbuf_list_appendlit(reply, "\"no_readonly\":");
+            ecs_strbuf_appendbool(reply, sync_stats->no_readonly);
+
+            ECS_GAUGE_APPEND_T(reply, sync_stats, 
+                time_spent, stats->stats.t, "");
+            ECS_GAUGE_APPEND_T(reply, sync_stats, 
+                commands_enqueued, stats->stats.t, "");
+
             ecs_strbuf_list_pop(reply, "}");
+            sync_cur ++;
         }
     }
 
@@ -34799,6 +34817,8 @@ ecs_entity_t ecs_run_intern(
 typedef struct ecs_pipeline_op_t {
     int32_t offset;             /* Offset in systems vector */
     int32_t count;              /* Number of systems to run before next op */
+    double time_spent;          /* Time spent merging commands for sync point */
+    int64_t commands_enqueued;  /* Number of commands enqueued for sync point */
     bool multi_threaded;        /* Whether systems can be ran multi threaded */
     bool no_readonly;           /* Whether systems are staged or not */
 } ecs_pipeline_op_t;
@@ -34807,7 +34827,6 @@ struct ecs_pipeline_state_t {
     ecs_query_t *query;         /* Pipeline query */
     ecs_vec_t ops;              /* Pipeline schedule */
     ecs_vec_t systems;          /* Vector with system ids */
-
 
     ecs_entity_t last_system;   /* Last system ran by pipeline */
     ecs_id_record_t *idr_inactive; /* Cached record for quick inactive test */
@@ -35341,8 +35360,6 @@ bool ecs_system_stats_get(
 
     ECS_COUNTER_RECORD(&s->time_spent, t, ptr->time_spent);
     ECS_COUNTER_RECORD(&s->invoke_count, t, ptr->invoke_count);
-    ECS_GAUGE_RECORD(&s->active, t, !ecs_has_id(world, system, EcsEmpty));
-    ECS_GAUGE_RECORD(&s->enabled, t, !ecs_has_id(world, system, EcsDisabled));
 
     s->task = !(ptr->query->filter.flags & EcsFilterMatchThis);
 
@@ -35443,7 +35460,6 @@ bool ecs_pipeline_stats_get(
     }
     ecs_map_init_if(&s->system_stats, NULL);
 
-    /* Make sure vector is large enough to store all systems & sync points */
     if (op) {
         ecs_entity_t *systems = NULL;
         if (pip_count) {
@@ -35476,13 +35492,35 @@ bool ecs_pipeline_stats_get(
         } else {
             ecs_vec_fini_t(NULL, &s->systems, ecs_entity_t);
         }
+
+        /* Get sync point statistics */
+        int32_t i, count = ecs_vec_count(ops);
+        if (count) {
+            ecs_vec_init_if_t(&s->sync_points, ecs_sync_stats_t);
+            ecs_vec_set_count_t(NULL, &s->sync_points, ecs_sync_stats_t, count);
+            op = ecs_vec_first_t(ops, ecs_pipeline_op_t);
+
+            for (i = 0; i < count; i ++) {
+                ecs_pipeline_op_t *cur = &op[i];
+                ecs_sync_stats_t *el = ecs_vec_get_t(&s->sync_points, 
+                    ecs_sync_stats_t, i);
+
+                ECS_COUNTER_RECORD(&el->time_spent, s->t, cur->time_spent);
+                ECS_COUNTER_RECORD(&el->commands_enqueued, s->t, 
+                    cur->commands_enqueued);
+
+                el->system_count = cur->count;
+                el->multi_threaded = cur->multi_threaded;
+                el->no_readonly = cur->no_readonly;
+            }
+        }
     }
 
     /* Separately populate system stats map from build query, which includes
      * systems that aren't currently active */
     it = ecs_query_iter(stage, pq->query);
     while (ecs_query_next(&it)) {
-        int i;
+        int32_t i;
         for (i = 0; i < it.count; i ++) {
             ecs_system_stats_t *stats = ecs_map_ensure_alloc_t(&s->system_stats, 
                 ecs_system_stats_t, it.entities[i]);
@@ -35508,6 +35546,7 @@ void ecs_pipeline_stats_fini(
     }
     ecs_map_fini(&stats->system_stats);
     ecs_vec_fini_t(NULL, &stats->systems, ecs_entity_t);
+    ecs_vec_fini_t(NULL, &stats->sync_points, ecs_sync_stats_t);
 }
 
 void ecs_pipeline_stats_reduce(
@@ -35521,8 +35560,22 @@ void ecs_pipeline_stats_reduce(
     ecs_entity_t *src_systems = ecs_vec_first_t(&src->systems, ecs_entity_t);
     ecs_os_memcpy_n(dst_systems, src_systems, ecs_entity_t, system_count);
 
-    ecs_map_init_if(&dst->system_stats, NULL);
+    int32_t i, sync_count = ecs_vec_count(&src->sync_points);
+    ecs_vec_init_if_t(&dst->sync_points, ecs_sync_stats_t);
+    ecs_vec_set_count_t(NULL, &dst->sync_points, ecs_sync_stats_t, sync_count);
+    ecs_sync_stats_t *dst_syncs = ecs_vec_first_t(&dst->sync_points, ecs_sync_stats_t);
+    ecs_sync_stats_t *src_syncs = ecs_vec_first_t(&src->sync_points, ecs_sync_stats_t);
+    for (i = 0; i < sync_count; i ++) {
+        ecs_sync_stats_t *dst_el = &dst_syncs[i];
+        ecs_sync_stats_t *src_el = &src_syncs[i];
+        flecs_stats_reduce(ECS_METRIC_FIRST(dst_el), ECS_METRIC_LAST(dst_el),
+            ECS_METRIC_FIRST(src_el), dst->t, src->t);
+        dst_el->system_count = src_el->system_count;
+        dst_el->multi_threaded = src_el->multi_threaded;
+        dst_el->no_readonly = src_el->no_readonly;
+    }
 
+    ecs_map_init_if(&dst->system_stats, NULL);
     ecs_map_iter_t it = ecs_map_iter(&src->system_stats);
     
     while (ecs_map_next(&it)) {
@@ -35540,6 +35593,20 @@ void ecs_pipeline_stats_reduce_last(
     const ecs_pipeline_stats_t *src,
     int32_t count)
 {
+    int32_t i, sync_count = ecs_vec_count(&src->sync_points);
+    ecs_sync_stats_t *dst_syncs = ecs_vec_first_t(&dst->sync_points, ecs_sync_stats_t);
+    ecs_sync_stats_t *src_syncs = ecs_vec_first_t(&src->sync_points, ecs_sync_stats_t);
+
+    for (i = 0; i < sync_count; i ++) {
+        ecs_sync_stats_t *dst_el = &dst_syncs[i];
+        ecs_sync_stats_t *src_el = &src_syncs[i];
+        flecs_stats_reduce_last(ECS_METRIC_FIRST(dst_el), ECS_METRIC_LAST(dst_el),
+            ECS_METRIC_FIRST(src_el), dst->t, src->t, count);
+        dst_el->system_count = src_el->system_count;
+        dst_el->multi_threaded = src_el->multi_threaded;
+        dst_el->no_readonly = src_el->no_readonly;
+    }
+
     ecs_map_init_if(&dst->system_stats, NULL);
     ecs_map_iter_t it = ecs_map_iter(&src->system_stats);
     while (ecs_map_next(&it)) {
@@ -35555,6 +35622,15 @@ void ecs_pipeline_stats_reduce_last(
 void ecs_pipeline_stats_repeat_last(
     ecs_pipeline_stats_t *stats)
 {
+    int32_t i, sync_count = ecs_vec_count(&stats->sync_points);
+    ecs_sync_stats_t *syncs = ecs_vec_first_t(&stats->sync_points, ecs_sync_stats_t);
+
+    for (i = 0; i < sync_count; i ++) {
+        ecs_sync_stats_t *el = &syncs[i];
+        flecs_stats_repeat_last(ECS_METRIC_FIRST(el), ECS_METRIC_LAST(el),
+            (stats->t));
+    }
+
     ecs_map_iter_t it = ecs_map_iter(&stats->system_stats);
     while (ecs_map_next(&it)) {
         ecs_system_stats_t *sys = ecs_map_ptr(&it);
@@ -35568,6 +35644,22 @@ void ecs_pipeline_stats_copy_last(
     ecs_pipeline_stats_t *dst,
     const ecs_pipeline_stats_t *src)
 {
+    int32_t i, sync_count = ecs_vec_count(&src->sync_points);
+    ecs_vec_init_if_t(&dst->sync_points, ecs_sync_stats_t);
+    ecs_vec_set_min_count_zeromem_t(NULL, &dst->sync_points, ecs_sync_stats_t, sync_count);
+    ecs_sync_stats_t *dst_syncs = ecs_vec_first_t(&dst->sync_points, ecs_sync_stats_t);
+    ecs_sync_stats_t *src_syncs = ecs_vec_first_t(&src->sync_points, ecs_sync_stats_t);
+
+    for (i = 0; i < sync_count; i ++) {
+        ecs_sync_stats_t *dst_el = &dst_syncs[i];
+        ecs_sync_stats_t *src_el = &src_syncs[i];
+        flecs_stats_copy_last(ECS_METRIC_FIRST(dst_el), ECS_METRIC_LAST(dst_el),
+            ECS_METRIC_FIRST(src_el), dst->t, t_next(src->t));
+        dst_el->system_count = src_el->system_count;
+        dst_el->multi_threaded = src_el->multi_threaded;
+        dst_el->no_readonly = src_el->no_readonly;
+    }
+
     ecs_map_init_if(&dst->system_stats, NULL);
 
     ecs_map_iter_t it = ecs_map_iter(&src->system_stats);
@@ -39929,6 +40021,18 @@ bool ecs_strbuf_appendflt(
 {
     ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL); 
     return flecs_strbuf_ftoa(b, flt, 10, nan_delim);
+}
+
+bool ecs_strbuf_appendbool(
+    ecs_strbuf_t *buffer,
+    bool v)
+{
+    ecs_assert(buffer != NULL, ECS_INVALID_PARAMETER, NULL); 
+    if (v) {
+        return ecs_strbuf_appendlit(buffer, "true");
+    } else {
+        return ecs_strbuf_appendlit(buffer, "false");
+    }
 }
 
 bool ecs_strbuf_appendstr_zerocpy(
@@ -57967,6 +58071,8 @@ bool flecs_pipeline_build(
                 op->count = 0;
                 op->multi_threaded = false;
                 op->no_readonly = false;
+                op->time_spent = 0;
+                op->commands_enqueued = 0;
             }
 
             /* Don't increase count for inactive systems, as they are ignored by
@@ -58180,7 +58286,7 @@ int32_t flecs_run_pipeline_ops(
         ecs_stage_t* s = NULL;
         if (!op->no_readonly) {
             /* If system is no_readonly it operates on the actual world, not
-                * the stage. Only pass stage to system if it's readonly. */
+             * the stage. Only pass stage to system if it's readonly. */
             s = stage;
         }
 
@@ -58266,7 +58372,21 @@ void flecs_run_pipeline(
         }
 
         if (!no_readonly) {
+            ecs_time_t mt = { 0 };
+            if (measure_time) {
+                ecs_time_measure(&mt);
+            }
+
+            int32_t si;
+            for (si = 0; si < stage_count; si ++) {
+                ecs_stage_t *s = &world->stages[si];
+                pq->cur_op->commands_enqueued += ecs_vec_count(&s->commands);
+            }
+
             ecs_readonly_end(world);
+            if (measure_time) {
+                pq->cur_op->time_spent += ecs_time_measure(&mt);
+            }
         }
 
         /* Store the current state of the schedule after we synchronized the

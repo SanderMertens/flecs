@@ -346,6 +346,8 @@ bool flecs_pipeline_build(
                 op->count = 0;
                 op->multi_threaded = false;
                 op->no_readonly = false;
+                op->time_spent = 0;
+                op->commands_enqueued = 0;
             }
 
             /* Don't increase count for inactive systems, as they are ignored by
@@ -559,7 +561,7 @@ int32_t flecs_run_pipeline_ops(
         ecs_stage_t* s = NULL;
         if (!op->no_readonly) {
             /* If system is no_readonly it operates on the actual world, not
-                * the stage. Only pass stage to system if it's readonly. */
+             * the stage. Only pass stage to system if it's readonly. */
             s = stage;
         }
 
@@ -645,7 +647,21 @@ void flecs_run_pipeline(
         }
 
         if (!no_readonly) {
+            ecs_time_t mt = { 0 };
+            if (measure_time) {
+                ecs_time_measure(&mt);
+            }
+
+            int32_t si;
+            for (si = 0; si < stage_count; si ++) {
+                ecs_stage_t *s = &world->stages[si];
+                pq->cur_op->commands_enqueued += ecs_vec_count(&s->commands);
+            }
+
             ecs_readonly_end(world);
+            if (measure_time) {
+                pq->cur_op->time_spent += ecs_time_measure(&mt);
+            }
         }
 
         /* Store the current state of the schedule after we synchronized the

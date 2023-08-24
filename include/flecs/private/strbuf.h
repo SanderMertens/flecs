@@ -114,6 +114,13 @@ bool ecs_strbuf_appendflt(
     double v,
     char nan_delim);
 
+/* Append boolean to buffer.
+ * Returns false when max is reached, true when there is still space */
+FLECS_API
+bool ecs_strbuf_appendbool(
+    ecs_strbuf_t *buffer,
+    bool v);
+
 /* Append source buffer to destination buffer.
  * Returns false when max is reached, true when there is still space */
 FLECS_API

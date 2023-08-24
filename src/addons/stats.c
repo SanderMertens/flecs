@@ -480,8 +480,6 @@ bool ecs_system_stats_get(
 
     ECS_COUNTER_RECORD(&s->time_spent, t, ptr->time_spent);
     ECS_COUNTER_RECORD(&s->invoke_count, t, ptr->invoke_count);
-    ECS_GAUGE_RECORD(&s->active, t, !ecs_has_id(world, system, EcsEmpty));
-    ECS_GAUGE_RECORD(&s->enabled, t, !ecs_has_id(world, system, EcsDisabled));
 
     s->task = !(ptr->query->filter.flags & EcsFilterMatchThis);
 
@@ -582,7 +580,6 @@ bool ecs_pipeline_stats_get(
     }
     ecs_map_init_if(&s->system_stats, NULL);
 
-    /* Make sure vector is large enough to store all systems & sync points */
     if (op) {
         ecs_entity_t *systems = NULL;
         if (pip_count) {
@@ -615,13 +612,35 @@ bool ecs_pipeline_stats_get(
         } else {
             ecs_vec_fini_t(NULL, &s->systems, ecs_entity_t);
         }
+
+        /* Get sync point statistics */
+        int32_t i, count = ecs_vec_count(ops);
+        if (count) {
+            ecs_vec_init_if_t(&s->sync_points, ecs_sync_stats_t);
+            ecs_vec_set_count_t(NULL, &s->sync_points, ecs_sync_stats_t, count);
+            op = ecs_vec_first_t(ops, ecs_pipeline_op_t);
+
+            for (i = 0; i < count; i ++) {
+                ecs_pipeline_op_t *cur = &op[i];
+                ecs_sync_stats_t *el = ecs_vec_get_t(&s->sync_points, 
+                    ecs_sync_stats_t, i);
+
+                ECS_COUNTER_RECORD(&el->time_spent, s->t, cur->time_spent);
+                ECS_COUNTER_RECORD(&el->commands_enqueued, s->t, 
+                    cur->commands_enqueued);
+
+                el->system_count = cur->count;
+                el->multi_threaded = cur->multi_threaded;
+                el->no_readonly = cur->no_readonly;
+            }
+        }
     }
 
     /* Separately populate system stats map from build query, which includes
      * systems that aren't currently active */
     it = ecs_query_iter(stage, pq->query);
     while (ecs_query_next(&it)) {
-        int i;
+        int32_t i;
         for (i = 0; i < it.count; i ++) {
             ecs_system_stats_t *stats = ecs_map_ensure_alloc_t(&s->system_stats, 
                 ecs_system_stats_t, it.entities[i]);
@@ -647,6 +666,7 @@ void ecs_pipeline_stats_fini(
     }
     ecs_map_fini(&stats->system_stats);
     ecs_vec_fini_t(NULL, &stats->systems, ecs_entity_t);
+    ecs_vec_fini_t(NULL, &stats->sync_points, ecs_sync_stats_t);
 }
 
 void ecs_pipeline_stats_reduce(
@@ -660,8 +680,22 @@ void ecs_pipeline_stats_reduce(
     ecs_entity_t *src_systems = ecs_vec_first_t(&src->systems, ecs_entity_t);
     ecs_os_memcpy_n(dst_systems, src_systems, ecs_entity_t, system_count);
 
-    ecs_map_init_if(&dst->system_stats, NULL);
+    int32_t i, sync_count = ecs_vec_count(&src->sync_points);
+    ecs_vec_init_if_t(&dst->sync_points, ecs_sync_stats_t);
+    ecs_vec_set_count_t(NULL, &dst->sync_points, ecs_sync_stats_t, sync_count);
+    ecs_sync_stats_t *dst_syncs = ecs_vec_first_t(&dst->sync_points, ecs_sync_stats_t);
+    ecs_sync_stats_t *src_syncs = ecs_vec_first_t(&src->sync_points, ecs_sync_stats_t);
+    for (i = 0; i < sync_count; i ++) {
+        ecs_sync_stats_t *dst_el = &dst_syncs[i];
+        ecs_sync_stats_t *src_el = &src_syncs[i];
+        flecs_stats_reduce(ECS_METRIC_FIRST(dst_el), ECS_METRIC_LAST(dst_el),
+            ECS_METRIC_FIRST(src_el), dst->t, src->t);
+        dst_el->system_count = src_el->system_count;
+        dst_el->multi_threaded = src_el->multi_threaded;
+        dst_el->no_readonly = src_el->no_readonly;
+    }
 
+    ecs_map_init_if(&dst->system_stats, NULL);
     ecs_map_iter_t it = ecs_map_iter(&src->system_stats);
     
     while (ecs_map_next(&it)) {
@@ -679,6 +713,20 @@ void ecs_pipeline_stats_reduce_last(
     const ecs_pipeline_stats_t *src,
     int32_t count)
 {
+    int32_t i, sync_count = ecs_vec_count(&src->sync_points);
+    ecs_sync_stats_t *dst_syncs = ecs_vec_first_t(&dst->sync_points, ecs_sync_stats_t);
+    ecs_sync_stats_t *src_syncs = ecs_vec_first_t(&src->sync_points, ecs_sync_stats_t);
+
+    for (i = 0; i < sync_count; i ++) {
+        ecs_sync_stats_t *dst_el = &dst_syncs[i];
+        ecs_sync_stats_t *src_el = &src_syncs[i];
+        flecs_stats_reduce_last(ECS_METRIC_FIRST(dst_el), ECS_METRIC_LAST(dst_el),
+            ECS_METRIC_FIRST(src_el), dst->t, src->t, count);
+        dst_el->system_count = src_el->system_count;
+        dst_el->multi_threaded = src_el->multi_threaded;
+        dst_el->no_readonly = src_el->no_readonly;
+    }
+
     ecs_map_init_if(&dst->system_stats, NULL);
     ecs_map_iter_t it = ecs_map_iter(&src->system_stats);
     while (ecs_map_next(&it)) {
@@ -694,6 +742,15 @@ void ecs_pipeline_stats_reduce_last(
 void ecs_pipeline_stats_repeat_last(
     ecs_pipeline_stats_t *stats)
 {
+    int32_t i, sync_count = ecs_vec_count(&stats->sync_points);
+    ecs_sync_stats_t *syncs = ecs_vec_first_t(&stats->sync_points, ecs_sync_stats_t);
+
+    for (i = 0; i < sync_count; i ++) {
+        ecs_sync_stats_t *el = &syncs[i];
+        flecs_stats_repeat_last(ECS_METRIC_FIRST(el), ECS_METRIC_LAST(el),
+            (stats->t));
+    }
+
     ecs_map_iter_t it = ecs_map_iter(&stats->system_stats);
     while (ecs_map_next(&it)) {
         ecs_system_stats_t *sys = ecs_map_ptr(&it);
@@ -707,6 +764,22 @@ void ecs_pipeline_stats_copy_last(
     ecs_pipeline_stats_t *dst,
     const ecs_pipeline_stats_t *src)
 {
+    int32_t i, sync_count = ecs_vec_count(&src->sync_points);
+    ecs_vec_init_if_t(&dst->sync_points, ecs_sync_stats_t);
+    ecs_vec_set_min_count_zeromem_t(NULL, &dst->sync_points, ecs_sync_stats_t, sync_count);
+    ecs_sync_stats_t *dst_syncs = ecs_vec_first_t(&dst->sync_points, ecs_sync_stats_t);
+    ecs_sync_stats_t *src_syncs = ecs_vec_first_t(&src->sync_points, ecs_sync_stats_t);
+
+    for (i = 0; i < sync_count; i ++) {
+        ecs_sync_stats_t *dst_el = &dst_syncs[i];
+        ecs_sync_stats_t *src_el = &src_syncs[i];
+        flecs_stats_copy_last(ECS_METRIC_FIRST(dst_el), ECS_METRIC_LAST(dst_el),
+            ECS_METRIC_FIRST(src_el), dst->t, t_next(src->t));
+        dst_el->system_count = src_el->system_count;
+        dst_el->multi_threaded = src_el->multi_threaded;
+        dst_el->no_readonly = src_el->no_readonly;
+    }
+
     ecs_map_init_if(&dst->system_stats, NULL);
 
     ecs_map_iter_t it = ecs_map_iter(&src->system_stats);

@@ -541,6 +541,18 @@ bool ecs_strbuf_appendflt(
     return flecs_strbuf_ftoa(b, flt, 10, nan_delim);
 }
 
+bool ecs_strbuf_appendbool(
+    ecs_strbuf_t *buffer,
+    bool v)
+{
+    ecs_assert(buffer != NULL, ECS_INVALID_PARAMETER, NULL); 
+    if (v) {
+        return ecs_strbuf_appendlit(buffer, "true");
+    } else {
+        return ecs_strbuf_appendlit(buffer, "false");
+    }
+}
+
 bool ecs_strbuf_appendstr_zerocpy(
     ecs_strbuf_t *b,
     char* str)

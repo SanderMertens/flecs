@@ -13,6 +13,8 @@
 typedef struct ecs_pipeline_op_t {
     int32_t offset;             /* Offset in systems vector */
     int32_t count;              /* Number of systems to run before next op */
+    double time_spent;          /* Time spent merging commands for sync point */
+    int64_t commands_enqueued;  /* Number of commands enqueued for sync point */
     bool multi_threaded;        /* Whether systems can be ran multi threaded */
     bool no_readonly;           /* Whether systems are staged or not */
 } ecs_pipeline_op_t;
@@ -21,7 +23,6 @@ struct ecs_pipeline_state_t {
     ecs_query_t *query;         /* Pipeline query */
     ecs_vec_t ops;              /* Pipeline schedule */
     ecs_vec_t systems;          /* Vector with system ids */
-
 
     ecs_entity_t last_system;   /* Last system ran by pipeline */
     ecs_id_record_t *idr_inactive; /* Cached record for quick inactive test */

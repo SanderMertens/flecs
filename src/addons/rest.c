@@ -731,7 +731,7 @@ void flecs_pipeline_stats_to_json(
 {
     ecs_strbuf_list_push(reply, "[", ",");
 
-    int32_t i, count = ecs_vec_count(&stats->stats.systems);
+    int32_t i, count = ecs_vec_count(&stats->stats.systems), sync_cur = 0;
     ecs_entity_t *ids = ecs_vec_first_t(&stats->stats.systems, ecs_entity_t);
     for (i = 0; i < count; i ++) {
         ecs_entity_t id = ids[i];
@@ -745,7 +745,25 @@ void flecs_pipeline_stats_to_json(
         } else {
             /* Sync point */
             ecs_strbuf_list_push(reply, "{", ",");
+            ecs_sync_stats_t *sync_stats = ecs_vec_get_t(
+                &stats->stats.sync_points, ecs_sync_stats_t, sync_cur);
+
+            ecs_strbuf_list_appendlit(reply, "\"system_count\":");
+            ecs_strbuf_appendint(reply, sync_stats->system_count);
+
+            ecs_strbuf_list_appendlit(reply, "\"multi_threaded\":");
+            ecs_strbuf_appendbool(reply, sync_stats->multi_threaded);
+
+            ecs_strbuf_list_appendlit(reply, "\"no_readonly\":");
+            ecs_strbuf_appendbool(reply, sync_stats->no_readonly);
+
+            ECS_GAUGE_APPEND_T(reply, sync_stats, 
+                time_spent, stats->stats.t, "");
+            ECS_GAUGE_APPEND_T(reply, sync_stats, 
+                commands_enqueued, stats->stats.t, "");
+
             ecs_strbuf_list_pop(reply, "}");
+            sync_cur ++;
         }
     }
 
