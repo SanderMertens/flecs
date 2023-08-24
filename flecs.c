@@ -35497,7 +35497,7 @@ bool ecs_pipeline_stats_get(
         int32_t i, count = ecs_vec_count(ops);
         if (count) {
             ecs_vec_init_if_t(&s->sync_points, ecs_sync_stats_t);
-            ecs_vec_set_count_t(NULL, &s->sync_points, ecs_sync_stats_t, count);
+            ecs_vec_set_min_count_zeromem_t(NULL, &s->sync_points, ecs_sync_stats_t, count);
             op = ecs_vec_first_t(ops, ecs_pipeline_op_t);
 
             for (i = 0; i < count; i ++) {
@@ -35562,7 +35562,7 @@ void ecs_pipeline_stats_reduce(
 
     int32_t i, sync_count = ecs_vec_count(&src->sync_points);
     ecs_vec_init_if_t(&dst->sync_points, ecs_sync_stats_t);
-    ecs_vec_set_count_t(NULL, &dst->sync_points, ecs_sync_stats_t, sync_count);
+    ecs_vec_set_min_count_zeromem_t(NULL, &dst->sync_points, ecs_sync_stats_t, sync_count);
     ecs_sync_stats_t *dst_syncs = ecs_vec_first_t(&dst->sync_points, ecs_sync_stats_t);
     ecs_sync_stats_t *src_syncs = ecs_vec_first_t(&src->sync_points, ecs_sync_stats_t);
     for (i = 0; i < sync_count; i ++) {
