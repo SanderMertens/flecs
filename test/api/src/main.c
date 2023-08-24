@@ -1595,6 +1595,10 @@ void Query_set_get_context(void);
 void Query_set_get_binding_context(void);
 void Query_set_get_context_w_free(void);
 void Query_set_get_binding_context_w_free(void);
+void Query_set_this(void);
+void Query_set_this_no_match(void);
+void Query_set_this_is_true(void);
+void Query_set_this_w_wildcard(void);
 
 // Testsuite 'Iter'
 void Iter_page_iter_0_0(void);
@@ -8778,6 +8782,22 @@ bake_test_case Query_testcases[] = {
     {
         "set_get_binding_context_w_free",
         Query_set_get_binding_context_w_free
+    },
+    {
+        "set_this",
+        Query_set_this
+    },
+    {
+        "set_this_no_match",
+        Query_set_this_no_match
+    },
+    {
+        "set_this_is_true",
+        Query_set_this_is_true
+    },
+    {
+        "set_this_w_wildcard",
+        Query_set_this_w_wildcard
     }
 };
 
@@ -12896,7 +12916,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        231,
+        235,
         Query_testcases
     },
     {

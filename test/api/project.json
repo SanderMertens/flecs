@@ -1657,7 +1657,11 @@
                 "set_get_context",
                 "set_get_binding_context",
                 "set_get_context_w_free",
-                "set_get_binding_context_w_free"
+                "set_get_binding_context_w_free",
+                "set_this",
+                "set_this_no_match",
+                "set_this_is_true",
+                "set_this_w_wildcard"
             ]
         }, {
             "id": "Iter",

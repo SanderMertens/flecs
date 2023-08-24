@@ -1420,7 +1420,7 @@ void flecs_json_serialize_iter_variables(ecs_iter_t *it, ecs_strbuf_t *buf) {
     int32_t var_count = it->variable_count;
     int32_t actual_count = 0;
 
-    for (int i = 0; i < var_count; i ++) {
+    for (int i = 1; i < var_count; i ++) {
         const char *var_name = variable_names[i];
         if (flecs_json_skip_variable(var_name)) continue;
 
@@ -1552,7 +1552,7 @@ void flecs_json_serialize_iter_result_variables(
     int32_t var_count = it->variable_count;
     int32_t actual_count = 0;
 
-    for (int i = 0; i < var_count; i ++) {
+    for (int i = 1; i < var_count; i ++) {
         const char *var_name = variable_names[i];
         if (flecs_json_skip_variable(var_name)) continue;
 

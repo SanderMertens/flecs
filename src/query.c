@@ -2182,6 +2182,38 @@ const ecs_filter_t* ecs_query_get_filter(
     return &query->filter;
 }
 
+static
+void flecs_query_set_var(
+    ecs_iter_t *it)
+{
+    ecs_check(it->constrained_vars == 1, ECS_INVALID_OPERATION, 
+        "can only set $this variable for queries");
+
+    ecs_var_t *var = &it->variables[0];
+    ecs_table_t *table = var->range.table;
+    if (!table) {
+        goto nodata;
+    }
+
+    ecs_query_iter_t *qit = &it->priv.iter.query;
+    ecs_query_t *query = qit->query;
+    ecs_query_table_t *qt = ecs_table_cache_get(&query->cache, table);
+    if (!qt) {
+        goto nodata;
+    }
+
+    qit->node = qt->first;
+    qit->last = qt->last->next_match;
+    it->offset = var->range.offset;
+    it->count = var->range.count;
+    return;
+error:
+nodata:
+    it->priv.iter.query.node = NULL;
+    it->priv.iter.query.last = NULL;
+    return;
+}
+
 ecs_iter_t ecs_query_iter(
     const ecs_world_t *stage,
     ecs_query_t *query)
@@ -2230,8 +2262,10 @@ ecs_iter_t ecs_query_iter(
         .terms = query->filter.terms,
         .field_count = query->filter.field_count,
         .table_count = table_count,
+        .variable_count = 1,
         .priv.iter.query = it,
         .next = ecs_query_next,
+        .set_var = flecs_query_set_var
     };
 
     flecs_filter_apply_iter_flags(&result, &query->filter);
@@ -2266,7 +2300,8 @@ ecs_iter_t ecs_query_iter(
         }
     } else {
         /* Trivial iteration, use arrays from query cache */
-        flecs_iter_init(stage, &result, flecs_iter_cache_ptrs);
+        flecs_iter_init(stage, &result, 
+            flecs_iter_cache_ptrs|flecs_iter_cache_variables);
     }
 
     result.sizes = query->filter.sizes;
@@ -2424,15 +2459,20 @@ void flecs_query_populate_trivial(
     ecs_query_table_match_t *match)
 {;
     ecs_table_t *table = match->table;
-    int32_t count = ecs_table_count(table);
+    int32_t offset, count;
+    if (!it->constrained_vars) {
+        it->offset = offset = 0;
+        it->count = count = ecs_table_count(table);
+    } else {
+        offset = it->offset;
+        count = it->count;
+    }
 
     it->ids = match->ids;
     it->sources = match->sources;
     it->columns = match->columns;
     it->group_id = match->group_id;
     it->instance_count = 0;
-    it->offset = 0;
-    it->count = count;
     it->references = ecs_vec_first(&match->refs);
 
     if (!it->references) {
@@ -2453,15 +2493,16 @@ void flecs_query_populate_trivial(
                 }
 
                 it->ptrs[i] = ecs_vec_get(&data->columns[column].data,
-                    it->sizes[i], 0);
+                    it->sizes[i], offset);
             }
         }
 
         it->frame_offset += it->table ? ecs_table_count(it->table) : 0;
         it->table = table;
-        it->entities = ecs_vec_first(&data->entities);
+        it->entities = ecs_vec_get_t(&data->entities, ecs_entity_t, offset);
     } else {
-        flecs_iter_populate_data(it->real_world, it, table, 0, count, it->ptrs);
+        flecs_iter_populate_data(
+            it->real_world, it, table, offset, count, it->ptrs);
     }
 }
 
