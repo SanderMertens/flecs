@@ -7197,9 +7197,6 @@ bool ecs_is_valid(
         return false;
     }
     
-    /* Make sure we're not working with a stage */
-    world = ecs_get_world(world);
-    
     /* Entity identifiers should not contain flag bits */
     if (entity & ECS_ID_FLAGS_MASK) {
         return false;
