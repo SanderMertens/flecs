@@ -5546,8 +5546,23 @@ bool ecs_is_valid(
     ecs_entity_t e);
 
 /** Test whether an entity is alive.
- * An entity is alive when it has been returned by ecs_new (or similar) or if
- * it is not empty (componentts have been explicitly added to the id).
+ * Entities are alive after they are created, and become not alive when they are
+ * deleted. Operations that return alive ids are (amongst others) ecs_new_id, 
+ * ecs_new_low_id and ecs_entity_init. Ids can be made alive with the ecs_ensure 
+ * function.
+ * 
+ * After an id is deleted it can be recycled. Recycled ids are different from
+ * the original id in that they have a different generation count. This makes it
+ * possible for the API to distinguish between the two. An example:
+ * 
+ *   ecs_entity_t e1 = ecs_new_id(world);
+ *   ecs_is_alive(world, e1);             // true
+ *   ecs_delete(world, e1);
+ *   ecs_is_alive(world, e1);             // false
+ * 
+ *   ecs_entity_t e2 = ecs_new_id(world); // recycles e1
+ *   ecs_is_alive(world, e2);             // true
+ *   ecs_is_alive(world, e1);             // false
  *
  * @param world The world.
  * @param e The entity.
