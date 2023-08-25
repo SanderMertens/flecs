@@ -57341,7 +57341,7 @@ void win_sleep(
 static
 void win_enable_high_timer_resolution(bool enable)
 {
-    HMODULE hntdll = GetModuleHandle((LPCTSTR)"ntdll.dll");
+    HMODULE hntdll = GetModuleHandle(TEXT("ntdll.dll"));
     if (!hntdll) {
         return;
     }
