@@ -689,6 +689,10 @@ void SerializeEntityToJson_serialize_refs_childof(void);
 void SerializeEntityToJson_serialize_refs_custom(void);
 void SerializeEntityToJson_serialize_refs_wildcard(void);
 void SerializeEntityToJson_serialize_no_ids(void);
+void SerializeEntityToJson_serialize_matches_filter(void);
+void SerializeEntityToJson_serialize_matches_query(void);
+void SerializeEntityToJson_serialize_matches_rule(void);
+void SerializeEntityToJson_serialize_no_matches(void);
 
 // Testsuite 'SerializeIterToJson'
 void SerializeIterToJson_serialize_1_comps_empty(void);
@@ -3616,6 +3620,22 @@ bake_test_case SerializeEntityToJson_testcases[] = {
     {
         "serialize_no_ids",
         SerializeEntityToJson_serialize_no_ids
+    },
+    {
+        "serialize_matches_filter",
+        SerializeEntityToJson_serialize_matches_filter
+    },
+    {
+        "serialize_matches_query",
+        SerializeEntityToJson_serialize_matches_query
+    },
+    {
+        "serialize_matches_rule",
+        SerializeEntityToJson_serialize_matches_rule
+    },
+    {
+        "serialize_no_matches",
+        SerializeEntityToJson_serialize_no_matches
     }
 };
 
@@ -4796,7 +4816,7 @@ static bake_test_suite suites[] = {
         "SerializeEntityToJson",
         NULL,
         NULL,
-        47,
+        51,
         SerializeEntityToJson_testcases
     },
     {

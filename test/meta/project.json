@@ -721,7 +721,11 @@
                 "serialize_refs_childof",
                 "serialize_refs_custom",
                 "serialize_refs_wildcard",
-                "serialize_no_ids"
+                "serialize_no_ids",
+                "serialize_matches_filter",
+                "serialize_matches_query",
+                "serialize_matches_rule",
+                "serialize_no_matches"
             ]
         }, {
             "id": "SerializeIterToJson",

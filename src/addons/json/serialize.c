@@ -1132,6 +1132,46 @@ int flecs_json_serialize_refs(
     return 0;
 }
 
+static
+int flecs_json_serialize_matches(
+    const ecs_world_t *world,
+    ecs_strbuf_t *buf,
+    ecs_entity_t entity)
+{
+    ecs_id_record_t *idr = flecs_id_record_get(world, 
+        ecs_pair_t(EcsPoly, EcsQuery));
+
+    if (idr) {
+        ecs_table_cache_iter_t it;
+        if (idr && flecs_table_cache_iter((ecs_table_cache_t*)idr, &it)) {
+            const ecs_table_record_t *tr;
+            while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
+                ecs_table_t *table = tr->hdr.table;
+                EcsPoly *queries = ecs_table_get_column(table, tr->column, 0);
+
+                int32_t i, count = ecs_table_count(table);
+                ecs_entity_t *entities = ecs_vec_first(&table->data.entities);
+                for (i = 0; i < count; i ++) {
+                    ecs_poly_t *q = queries[i].poly;
+                    ecs_iter_t qit;
+                    ecs_iter_poly(world, q, &qit, NULL);
+                    if (!qit.variables) {
+                        ecs_iter_fini(&qit);
+                        continue;
+                    }
+                    ecs_iter_set_var(&qit, 0, entity);
+                    if (ecs_iter_is_true(&qit)) {
+                        flecs_json_next(buf);
+                        flecs_json_path(buf, world, entities[i]);
+                    }
+                }
+            }
+        }
+    }
+    
+    return 0;
+}
+
 int ecs_entity_to_json_buf(
     const ecs_world_t *world,
     ecs_entity_t entity,
@@ -1232,6 +1272,15 @@ int ecs_entity_to_json_buf(
             goto error;
         }
         flecs_json_object_pop(buf);
+    }
+
+    if (desc && desc->serialize_matches) {
+        flecs_json_memberl(buf, "matches");
+        flecs_json_array_push(buf);
+        if (flecs_json_serialize_matches(world, buf, entity)) {
+            goto error;
+        }
+        flecs_json_array_pop(buf);
     }
 
     flecs_json_object_pop(buf);

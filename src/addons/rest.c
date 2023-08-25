@@ -174,6 +174,7 @@ void flecs_rest_parse_json_ser_entity_params(
     flecs_rest_bool_param(req, "values", &desc->serialize_values);
     flecs_rest_bool_param(req, "private", &desc->serialize_private);
     flecs_rest_bool_param(req, "type_info", &desc->serialize_type_info);
+    flecs_rest_bool_param(req, "matches", &desc->serialize_matches);
     flecs_rest_bool_param(req, "alerts", &desc->serialize_alerts);
 
     char *rel = NULL;
