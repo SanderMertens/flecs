@@ -622,7 +622,7 @@ void SerializeEntityToJson_serialize_w_private(void) {
     test_assert(json != NULL);
     test_str(json, "{"
         "\"path\":\"Foo\", "
-        "\"ids\":[[\"Tag\"]]}");
+        "\"ids\":[[\"Tag\"], [\"flecs.core.Identifier\", \"flecs.core.Name\"]]}");
 
     ecs_os_free(json);
 
@@ -966,51 +966,6 @@ void SerializeEntityToJson_serialize_union_relationship_w_labels(void) {
         "]}");
 
     ecs_os_free(json);
-
-    ecs_fini(world);
-}
-
-void SerializeEntityToJson_serialize_w_meta_ids(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_TAG(world, Tag);
-
-    ecs_entity_t p = ecs_new_entity(world, "Parent");
-    ecs_entity_t e = ecs_new_entity(world, "Child");
-    ecs_add(world, e, Tag);
-    ecs_add_pair(world, e, EcsChildOf, p);
-    ecs_doc_set_name(world, e, "Doc name");
-
-    {
-        ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
-        char *json = ecs_entity_to_json(world, e, &desc);
-        test_assert(json != NULL);
-
-        test_str(json, "{"
-            "\"path\":\"Parent.Child\", "
-            "\"ids\":["
-                "[\"Tag\"]"
-            "]}");
-
-        ecs_os_free(json);
-    }
-    {
-        ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
-        desc.serialize_meta_ids = true;
-        char *json = ecs_entity_to_json(world, e, &desc);
-        test_assert(json != NULL);
-
-        test_str(json, "{"
-            "\"path\":\"Parent.Child\", "
-            "\"ids\":["
-                "[\"Tag\"], "
-                "[\"flecs.core.Identifier\", \"flecs.core.Name\"], "
-                "[\"flecs.core.ChildOf\", \"Parent\"], "
-                "[\"flecs.doc.Description\", \"flecs.core.Name\"]"
-            "]}");
-
-        ecs_os_free(json);
-    }
 
     ecs_fini(world);
 }

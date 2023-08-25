@@ -163,6 +163,8 @@ void FlecsDocImport(
     });
 
     ecs_add_id(world, ecs_id(EcsDocDescription), EcsDontInherit);
+    ecs_add_id(world, ecs_id(EcsDocDescription), EcsPrivate);
+    
 }
 
 #endif

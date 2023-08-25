@@ -592,19 +592,6 @@ bool flecs_json_skip_id(
         }
     }
 
-    if (!desc || !desc->serialize_meta_ids) {
-        if (pred == EcsIsA || pred == EcsChildOf ||
-            pred == ecs_id(EcsIdentifier)) 
-        {
-            return true;
-        }
-#ifdef FLECS_DOC
-        if (pred == ecs_id(EcsDocDescription)) {
-            return true;
-        }
-#endif
-    }
-
     if (is_base) {
         if (ecs_has_id(world, pred, EcsDontInherit)) {
             return true;

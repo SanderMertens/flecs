@@ -703,7 +703,6 @@
                 "serialize_w_brief_no_brief",
                 "serialize_w_link",
                 "serialize_w_link_no_link",
-                "serialize_w_meta_ids",
                 "serialize_color",
                 "serialize_w_doc_w_quotes",
                 "serialize_union_relationship",

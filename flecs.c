@@ -3354,6 +3354,12 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsSlotOf, EcsExclusive);
     ecs_add_id(world, EcsOneOf, EcsExclusive);
     ecs_add_id(world, EcsFlatten, EcsExclusive);
+
+    /* Private properties */
+    ecs_add_id(world, ecs_id(EcsPoly), EcsPrivate);
+    ecs_add_id(world, ecs_id(EcsIdentifier), EcsPrivate);
+    ecs_add_id(world, EcsChildOf, EcsPrivate);
+    ecs_add_id(world, EcsIsA, EcsPrivate);
     
     /* Run bootstrap functions for other parts of the code */
     flecs_bootstrap_hierarchy(world);
@@ -24699,6 +24705,8 @@ void FlecsDocImport(
     });
 
     ecs_add_id(world, ecs_id(EcsDocDescription), EcsDontInherit);
+    ecs_add_id(world, ecs_id(EcsDocDescription), EcsPrivate);
+    
 }
 
 #endif
@@ -50982,19 +50990,6 @@ bool flecs_json_skip_id(
         if (id & ECS_ID_FLAGS_MASK) {
             role = id & ECS_ID_FLAGS_MASK;
         }
-    }
-
-    if (!desc || !desc->serialize_meta_ids) {
-        if (pred == EcsIsA || pred == EcsChildOf ||
-            pred == ecs_id(EcsIdentifier)) 
-        {
-            return true;
-        }
-#ifdef FLECS_DOC
-        if (pred == ecs_id(EcsDocDescription)) {
-            return true;
-        }
-#endif
     }
 
     if (is_base) {

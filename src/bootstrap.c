@@ -928,6 +928,12 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsSlotOf, EcsExclusive);
     ecs_add_id(world, EcsOneOf, EcsExclusive);
     ecs_add_id(world, EcsFlatten, EcsExclusive);
+
+    /* Private properties */
+    ecs_add_id(world, ecs_id(EcsPoly), EcsPrivate);
+    ecs_add_id(world, ecs_id(EcsIdentifier), EcsPrivate);
+    ecs_add_id(world, EcsChildOf, EcsPrivate);
+    ecs_add_id(world, EcsIsA, EcsPrivate);
     
     /* Run bootstrap functions for other parts of the code */
     flecs_bootstrap_hierarchy(world);

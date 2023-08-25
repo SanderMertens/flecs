@@ -192,7 +192,6 @@ int ecs_type_info_to_json_buf(
 /** Used with ecs_iter_to_json. */
 typedef struct ecs_entity_to_json_desc_t {
     bool serialize_path;       /**< Serialize full pathname */
-    bool serialize_meta_ids;   /**< Serialize 'meta' ids (Name, ChildOf, etc) */
     bool serialize_label;      /**< Serialize doc name */
     bool serialize_brief;      /**< Serialize brief doc description */
     bool serialize_link;       /**< Serialize doc link (URL) */
@@ -209,7 +208,7 @@ typedef struct ecs_entity_to_json_desc_t {
 } ecs_entity_to_json_desc_t;
 
 #define ECS_ENTITY_TO_JSON_INIT (ecs_entity_to_json_desc_t){true, false,\
-    false, false, false, false, true, false, true, false, false, false, false, false, false }
+    false, false, false, true, false, true, false, false, false, false, false, false }
 
 /** Serialize entity into JSON string.
  * This creates a JSON object with the entity's (path) name, which components

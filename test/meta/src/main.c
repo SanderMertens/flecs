@@ -670,7 +670,6 @@ void SerializeEntityToJson_serialize_w_brief(void);
 void SerializeEntityToJson_serialize_w_brief_no_brief(void);
 void SerializeEntityToJson_serialize_w_link(void);
 void SerializeEntityToJson_serialize_w_link_no_link(void);
-void SerializeEntityToJson_serialize_w_meta_ids(void);
 void SerializeEntityToJson_serialize_color(void);
 void SerializeEntityToJson_serialize_w_doc_w_quotes(void);
 void SerializeEntityToJson_serialize_union_relationship(void);
@@ -3543,10 +3542,6 @@ bake_test_case SerializeEntityToJson_testcases[] = {
         SerializeEntityToJson_serialize_w_link_no_link
     },
     {
-        "serialize_w_meta_ids",
-        SerializeEntityToJson_serialize_w_meta_ids
-    },
-    {
         "serialize_color",
         SerializeEntityToJson_serialize_color
     },
@@ -4801,7 +4796,7 @@ static bake_test_suite suites[] = {
         "SerializeEntityToJson",
         NULL,
         NULL,
-        48,
+        47,
         SerializeEntityToJson_testcases
     },
     {
