@@ -3838,10 +3838,6 @@ bool ecs_is_valid(
         return false;
     }
 
-    if (entity & ECS_ID_FLAG_BIT) {
-        return ecs_entity_t_lo(entity) != 0;
-    }
-
     /* If entity doesn't exist in the world, the id is valid as long as the
      * generation is 0. Using a non-existing id with a non-zero generation
      * requires calling ecs_ensure first. */

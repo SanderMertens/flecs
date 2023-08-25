@@ -1142,9 +1142,6 @@ typedef ecs_iterable_t EcsIterable;
  * @{
  */
 
-/** Bit added to flags to differentiate between id flags and generation */
-#define ECS_ID_FLAG_BIT (1ull << 63)
-
 /** Indicates that the id is a pair. */
 FLECS_API extern const ecs_id_t ECS_PAIR;
 
