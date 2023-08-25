@@ -2733,8 +2733,7 @@ ecs_entity_t ecs_set_id(
 /** Test whether an entity is valid.
  * Entities that are valid can be used with API functions.
  *
- * An entity is valid if it is not 0 and if it is alive. If the provided id is
- * a pair, the contents of the pair will be checked for validity.
+ * An entity is valid if it is not 0 and if it is alive.
  *
  * is_valid will return true for ids that don't exist (alive or not alive). This
  * allows for using ids that have never been created by ecs_new or similar. In
