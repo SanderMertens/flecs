@@ -1618,7 +1618,7 @@ void flecs_json_serialize_iter_result_variable_labels(
     int32_t var_count = it->variable_count;
     int32_t actual_count = 0;
 
-    for (int i = 0; i < var_count; i ++) {
+    for (int i = 1; i < var_count; i ++) {
         const char *var_name = variable_names[i];
         if (flecs_json_skip_variable(var_name)) continue;
 
@@ -1647,7 +1647,7 @@ void flecs_json_serialize_iter_result_variable_ids(
     int32_t var_count = it->variable_count;
     int32_t actual_count = 0;
 
-    for (int i = 0; i < var_count; i ++) {
+    for (int i = 1; i < var_count; i ++) {
         const char *var_name = variable_names[i];
         if (flecs_json_skip_variable(var_name)) continue;
 

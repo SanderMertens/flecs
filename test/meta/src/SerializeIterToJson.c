@@ -2407,3 +2407,90 @@ void SerializeIterToJson_serialize_id_labels(void) {
 
     ecs_fini(world);
 }
+
+void SerializeIterToJson_serialize_vars_for_query(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .filter.terms[0] = {
+            .id = ecs_id(Position)
+        }
+    });
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_set(world, e1, Position, {1, 2});
+    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_set(world, e2, Position, {3, 4});
+
+    ecs_iter_to_json_desc_t desc = {0};
+    desc.serialize_entities = true;
+    desc.serialize_variables = true;
+    ecs_iter_t it = ecs_query_iter(world, q);
+    char *json = ecs_iter_to_json(world, &it, &desc);
+    test_assert(json != NULL);
+    test_str(json, "{\"results\":[{\"entities\":[\"e1\", \"e2\"]}]}");
+
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeIterToJson_serialize_var_labels_for_query(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .filter.terms[0] = {
+            .id = ecs_id(Position)
+        }
+    });
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_set(world, e1, Position, {1, 2});
+    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_set(world, e2, Position, {3, 4});
+
+    ecs_iter_to_json_desc_t desc = {0};
+    desc.serialize_entities = true;
+    desc.serialize_variable_labels = true;
+    ecs_iter_t it = ecs_query_iter(world, q);
+    char *json = ecs_iter_to_json(world, &it, &desc);
+    test_assert(json != NULL);
+    test_str(json, "{\"results\":[{\"entities\":[\"e1\", \"e2\"]}]}");
+
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeIterToJson_serialize_var_ids_for_query(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .filter.terms[0] = {
+            .id = ecs_id(Position)
+        }
+    });
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_set(world, e1, Position, {1, 2});
+    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_set(world, e2, Position, {3, 4});
+
+    ecs_iter_to_json_desc_t desc = {0};
+    desc.serialize_entities = true;
+    desc.serialize_variable_ids = true;
+    ecs_iter_t it = ecs_query_iter(world, q);
+    char *json = ecs_iter_to_json(world, &it, &desc);
+    test_assert(json != NULL);
+    test_str(json, "{\"results\":[{\"entities\":[\"e1\", \"e2\"]}]}");
+
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
