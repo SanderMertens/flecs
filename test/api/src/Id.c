@@ -174,3 +174,40 @@ void Id_pair_id_toggle_is_tag(void) {
     test_assert( ecs_id_is_tag(world, ECS_TOGGLE | ecs_pair(ecs_id(Position), o)));
     ecs_fini(world);
 }
+
+void Id_make_pair(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t r = ecs_new_id(world);
+    ecs_entity_t t = ecs_new_id(world);
+    ecs_id_t id = ecs_make_pair(r, t);
+
+    test_assert( ecs_pair_first(world, id) == r);
+    test_assert( ecs_pair_second(world, id) == t);
+
+    ecs_fini(world);
+}
+
+void Id_make_pair_of_pair(void) {
+    install_test_abort();
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t r = ecs_new_id(world);
+    ecs_entity_t t = ecs_new_id(world);
+    ecs_id_t id = ecs_make_pair(r, t);
+
+    test_expect_abort();
+    ecs_make_pair(id, t);
+}
+
+void Id_make_pair_of_pair_tgt(void) {
+    install_test_abort();
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t r = ecs_new_id(world);
+    ecs_entity_t t = ecs_new_id(world);
+    ecs_id_t id = ecs_make_pair(r, t);
+
+    test_expect_abort();
+    ecs_make_pair(r, id);
+}

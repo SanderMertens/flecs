@@ -1102,6 +1102,10 @@ void World_set_get_context(void);
 void World_set_get_binding_context(void);
 void World_set_get_context_w_free(void);
 void World_set_get_binding_context_w_free(void);
+void World_make_pair(void);
+void World_make_pair_of_pair_id(void);
+void World_make_pair_of_pair_id_tgt(void);
+void World_make_pair_of_pair_type(void);
 
 // Testsuite 'Singleton'
 void Singleton_set_get_singleton(void);
@@ -5525,6 +5529,22 @@ bake_test_case World_testcases[] = {
     {
         "set_get_binding_context_w_free",
         World_set_get_binding_context_w_free
+    },
+    {
+        "make_pair",
+        World_make_pair
+    },
+    {
+        "make_pair_of_pair_id",
+        World_make_pair_of_pair_id
+    },
+    {
+        "make_pair_of_pair_id_tgt",
+        World_make_pair_of_pair_id_tgt
+    },
+    {
+        "make_pair_of_pair_type",
+        World_make_pair_of_pair_type
     }
 };
 
@@ -6298,7 +6318,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        102,
+        106,
         World_testcases
     },
     {

@@ -1151,7 +1151,11 @@
                 "set_get_context",
                 "set_get_binding_context",
                 "set_get_context_w_free",
-                "set_get_binding_context_w_free"
+                "set_get_binding_context_w_free",
+                "make_pair",
+                "make_pair_of_pair_id",
+                "make_pair_of_pair_id_tgt",
+                "make_pair_of_pair_type"
             ]
         }, {
             "id": "Singleton",

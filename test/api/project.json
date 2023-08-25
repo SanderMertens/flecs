@@ -39,7 +39,10 @@
                 "id_w_override_is_tag",
                 "id_w_toggle_is_tag",
                 "pair_id_override_is_tag",
-                "pair_id_toggle_is_tag"
+                "pair_id_toggle_is_tag",
+                "make_pair",
+                "make_pair_of_pair",
+                "make_pair_of_pair_tgt"
             ]
         }, {
             "id": "Entity",

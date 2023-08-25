@@ -7175,6 +7175,8 @@ ecs_id_t ecs_make_pair(
     ecs_entity_t relationship,
     ecs_entity_t target)
 {
+    ecs_assert(!ECS_IS_PAIR(relationship) && !ECS_IS_PAIR(target), 
+        ECS_INVALID_PARAMETER, "cannot create nested pairs");
     return ecs_pair(relationship, target);
 }
 

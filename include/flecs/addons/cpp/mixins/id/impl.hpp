@@ -87,6 +87,9 @@ inline flecs::id world::pair() const {
 
 template <typename First>
 inline flecs::id world::pair(entity_t o) const {
+    ecs_assert(!ECS_IS_PAIR(o), ECS_INVALID_PARAMETER, 
+        "cannot create nested pairs");
+
     return flecs::id(
         m_world,
         ecs_pair(
@@ -95,6 +98,9 @@ inline flecs::id world::pair(entity_t o) const {
 }
 
 inline flecs::id world::pair(entity_t r, entity_t o) const {
+    ecs_assert(!ECS_IS_PAIR(r) && !ECS_IS_PAIR(o), ECS_INVALID_PARAMETER, 
+        "cannot create nested pairs");
+
     return flecs::id(
         m_world,
         ecs_pair(r, o));

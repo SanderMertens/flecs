@@ -1776,3 +1776,51 @@ void World_set_get_binding_context_w_free(void) {
 
     test_int(ctx, 10);
 }
+
+void World_make_pair(void) {
+    flecs::world ecs;
+
+    flecs::entity r = ecs.entity();
+    flecs::entity t = ecs.entity();
+    flecs::id id = ecs.pair(r, t);
+
+    test_assert(id.is_pair());
+    test_assert(id.first() == r);
+    test_assert(id.second() == t);
+}
+
+void World_make_pair_of_pair_id(void) {
+    install_test_abort();
+    flecs::world ecs;
+
+    flecs::entity r = ecs.entity();
+    flecs::entity t = ecs.entity();
+    flecs::id id = ecs.pair(r, t);
+
+    test_expect_abort();
+    ecs.pair(id, t);
+}
+
+void World_make_pair_of_pair_id_tgt(void) {
+    install_test_abort();
+    flecs::world ecs;
+
+    flecs::entity r = ecs.entity();
+    flecs::entity t = ecs.entity();
+    flecs::id id = ecs.pair(r, t);
+
+    test_expect_abort();
+    ecs.pair(r, id);
+}
+
+void World_make_pair_of_pair_type(void) {
+    install_test_abort();
+    flecs::world ecs;
+
+    flecs::entity t = ecs.entity();
+    flecs::id id = ecs.pair<Position>(t);
+
+    test_assert(id.is_pair());
+    test_assert(id.first() == ecs.id<Position>());
+    test_assert(id.second() == t);
+}

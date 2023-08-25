@@ -35,6 +35,9 @@ void Id_id_w_override_is_tag(void);
 void Id_id_w_toggle_is_tag(void);
 void Id_pair_id_override_is_tag(void);
 void Id_pair_id_toggle_is_tag(void);
+void Id_make_pair(void);
+void Id_make_pair_of_pair(void);
+void Id_make_pair_of_pair_tgt(void);
 
 // Testsuite 'Entity'
 void Entity_init_id(void);
@@ -2715,6 +2718,18 @@ bake_test_case Id_testcases[] = {
     {
         "pair_id_toggle_is_tag",
         Id_pair_id_toggle_is_tag
+    },
+    {
+        "make_pair",
+        Id_make_pair
+    },
+    {
+        "make_pair_of_pair",
+        Id_make_pair_of_pair
+    },
+    {
+        "make_pair_of_pair_tgt",
+        Id_make_pair_of_pair_tgt
     }
 };
 
@@ -12713,7 +12728,7 @@ static bake_test_suite suites[] = {
         "Id",
         NULL,
         NULL,
-        26,
+        29,
         Id_testcases
     },
     {
