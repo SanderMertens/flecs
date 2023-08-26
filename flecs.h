@@ -2494,59 +2494,171 @@ extern "C" {
  * @{
  */
 
-/** An id. Ids are the things that can be added to an entity. An id can be an
- * entity or pair, and can have optional id flags. */
+/** Ids are the things that can be added to an entity. 
+ * An id can be an entity or pair, and can have optional id flags. */
 typedef uint64_t ecs_id_t;
 
-/** An entity identifier. */
+/** An entity identifier.
+ * Entity ids consist out of a number unique to the entity in the lower 32 bits, 
+ * and a counter used to track entity liveliness in the upper 32 bits. When an 
+ * id is recycled, its generation count is increased. This causes recycled ids 
+ * to be very large (>4 billion), which is normal. */
 typedef ecs_id_t ecs_entity_t;
 
-/** An array with (component) ids */
+/** A type is a list of (component) ids.
+ * Types are used to communicate the "type" of an entity. In most type systems a 
+ * typeof operation returns a single type. In ECS however, an entity can have 
+ * multiple components, which is why an ECS type consists of a vector of ids.
+ * 
+ * The component ids of a type are sorted, which ensures that it doesn't matter
+ * in which order components are added to an entity. For example, if adding
+ * Position then Velocity would result in type [Position, Velocity], first 
+ * adding Velocity then Position would also result in type [Position, Velocity].
+ * 
+ * Entities are grouped together by type in the ECS storage in tables. The 
+ * storage has exactly one table per unique type that is created by the 
+ * application that stores all entities and components for that type. This is
+ * also referred to as an archetype.
+ */
 typedef struct {
     ecs_id_t *array;
     int32_t count;
 } ecs_type_t;
 
-/** A world is the container for all ECS data and supporting features. */
+/** A world is the container for all ECS data and supporting features. 
+ * Applications can have multiple worlds, though in most cases will only need
+ * one. Worlds are isolated from each other, and can have separate sets of
+ * systems, components, modules etc.
+ * 
+ * If an application has multiple worlds with overlapping components, it is 
+ * common (though not strictly required) to use the same component ids across
+ * worlds, which can be achieved by declaring a global component id variable.
+ * To do this in the C API, see the entities/fwd_component_decl example. The
+ * C++ API automatically synchronizes component ids between worlds.
+ * 
+ * Component id conflicts between worlds can occur when a world has already used
+ * an id for something else. There are a few ways to avoid this:
+ * 
+ * - Ensure to register the same components in each world, in the same order.
+ * - Create a dummy world in which all components are preregistered which 
+ *   initializes the global id variables.
+ * 
+ * In some use cases, typically when writing tests, multiple worlds are created 
+ * and deleted with different components, registered in different order. To 
+ * ensure isolation between tests, the C++ API has a `flecs::reset` function
+ * that forces the API to ignore the old component ids. */
 typedef struct ecs_world_t ecs_world_t;
 
-/** A table is where entities and components are stored */
+/** A table stores entities and components for a specific type. */
 typedef struct ecs_table_t ecs_table_t;
 
-/** A term is a single element in a query */
+/** A term is a single element in a query. */
 typedef struct ecs_term_t ecs_term_t;
 
-/** A query allows for cached iteration over ECS data */
-typedef struct ecs_query_t ecs_query_t;
-
-/** A filter allows for uncached, ad hoc iteration over ECS data */
+/** A filter is an iterable data structure that describes a query.
+ * Filters are used by the various query implementations in Flecs, like queries,
+ * observers and rules, to describe a query. Filters themselves can also be 
+ * iterated. */
 typedef struct ecs_filter_t ecs_filter_t;
 
-/** A rule implements a non-trivial filter */
+/** A query that caches its results. 
+ * Queries are the fastest mechanism for finding and iterating over entities.
+ * Queries cache results as a list of matching tables (vs. individual entities).
+ * 
+ * This has several advantages:
+ * - Matching is only performed when new tables are created, which is infrequent
+ * - Iterating a query just walks over the cache, no actual searching is needed
+ * - Iteration is table-based, which allows for direct iteration of underlying
+ *   component arrays, providing good cache locality.
+ * 
+ * While queries are the fastest mechanism to iterate entiites, they are slower
+ * to create than other mechanisms, as a result of having to build the cache 
+ * first. For this reason queries are best suited for use cases where a single
+ * query can be reused many times (like is the case for systems).
+ * 
+ * For ad-hoc queries it is recommended to use filters or rules instead, which 
+ * are slower to iterate, but much faster to create. Applications should at all
+ * times avoid frequent creation/deletion of queries. */
+typedef struct ecs_query_t ecs_query_t;
+
+/** A rule is a query with advanced graph traversal features.
+ * Rules are fast uncached queries with support for advanced graph features such
+ * as the usage of query variables. A simple example of a rule that matches all
+ * spaceship entities docked to a planet:
+ *   SpaceShip, (DockedTo, $planet), Planet($planet)
+ * 
+ * Here, the rule traverses the DockedTo relationship, and matches Planet on the
+ * target of this relationship. Through the usage of variables rules can match
+ * arbitrary patterns against entity graphs. Other features supported 
+ * exclusively by rules are:
+ * - Component inheritance
+ * - Transitivity
+ * 
+ * Rules have similar iteration performance to filters, but are slower than 
+ * queries. Rules and filters will eventually be merged into a single query
+ * implementation. Features still lacking for rules are:
+ * - Up traversal
+ * - AndFrom, OrFrom, NotFrom operators
+ */
 typedef struct ecs_rule_t ecs_rule_t;
 
-/** An observer reacts to events matching multiple filter terms */
+/** An observer is a system that is invoked when an event matches its query.
+ * Observers allow applications to respond to specific events, such as adding or
+ * removing a component. Observers are created by both specifying a query and
+ * a list of event kinds that should be listened for. An example of an observer
+ * that triggers when a Position component is added to an entity (in C++):
+ * 
+ *   world.observer<Position>()
+ *     .event(flecs::OnAdd)
+ *     .each([](Position& p) {
+ *       // called when Position is added to an entity
+ *     });
+ * 
+ * Observer queries can be as complex as filters. Observers only trigger when
+ * the source of the event matches the full observer query. For example, an 
+ * OnAdd observer for Position, Velocity will only trigger after both components
+ * have been added to the entity. */
 typedef struct ecs_observer_t ecs_observer_t;
 
-/** An observable contains lists of triggers for specific events/components */
+/** An observable produces events that can be listened for by an observer.
+ * Currently only the world is observable. In the future, queries will become
+ * observable objects as well. */
 typedef struct ecs_observable_t ecs_observable_t;
 
-/* An iterator lets an application iterate entities across tables. */
+/* Type used for iterating iterable objects. 
+ * Iterators are a common interface across iterable objects (world, filters, 
+ * rules, queries, systems, observers) to provide applications with information
+ * about the currently iterated result, and to store any state required for the 
+ * iteration. */
 typedef struct ecs_iter_t ecs_iter_t;
 
-/** Refs cache data that lets them access components faster than ecs_get. */
+/** A ref is a fast way to fetch a component for a specific entity.
+ * Refs are a faster alternative to repeatedly calling ecs_get for the same
+ * entity/component combination. When comparing the performance of getting a ref
+ * to calling ecs_get, a ref is typically 3-5x faster.
+ * 
+ * Refs achieve this performance by caching internal data structures associated
+ * with the entity and component on the ecs_ref_t object that otherwise would 
+ * have to be looked up. */
 typedef struct ecs_ref_t ecs_ref_t;
 
-/** Type hooks (callbacks) */
+/** Type hooks are callbacks associated with component lifecycle events. 
+ * Typical examples of lifecycle events are construction, destruction, copying
+ * and moving of components. */
 typedef struct ecs_type_hooks_t ecs_type_hooks_t;
 
-/** Type information */
+/** Type information.
+ * Contains information about a (component) type, such as its size and 
+ * alignment and type hooks. */
 typedef struct ecs_type_info_t ecs_type_info_t;
 
-/* Internal index that stores tables tables for a (component) id */
+/** Information about an entity, like its table and row. */
+typedef struct ecs_record_t ecs_record_t;
+
+/** Information about a (component) id, such as type info and tables with the id */
 typedef struct ecs_id_record_t ecs_id_record_t;
 
-/* Internal table storage record */
+/** Information about where in a table a specific (component) id is stored. */
 typedef struct ecs_table_record_t ecs_table_record_t;
 
 /** A poly object.
@@ -2786,7 +2898,8 @@ typedef enum ecs_oper_kind_t {
 #define EcsFilter                     (1u << 10) /**< Prevent observer from triggering on term */
 #define EcsTraverseFlags              (EcsUp|EcsDown|EcsTraverseAll|EcsSelf|EcsCascade|EcsParent)
 
-/* Term flags discovered & set during filter creation. */
+/* Term flags discovered & set during filter creation. Mostly used internally to
+ * store information relevant to queries. */
 #define EcsTermMatchAny               (1u << 0)
 #define EcsTermMatchAnySrc            (1u << 1)
 #define EcsTermSrcFirstEq             (1u << 2)
@@ -2845,7 +2958,7 @@ struct ecs_term_t {
     bool move;                  /**< Used by internals */
 };
 
-/** Use this variable to initialize user-allocated filter object */
+/** Use $this variable to initialize user-allocated filter object */
 FLECS_API extern ecs_filter_t ECS_FILTER_INIT;
 
 /** Filters alllow for ad-hoc quick filtering of entity tables. */
@@ -2994,9 +3107,6 @@ extern "C" {
 
 /** A stage enables modification while iterating and from multiple threads */
 typedef struct ecs_stage_t ecs_stage_t;
-
-/** A record stores data to map an entity id to a location in a table */
-typedef struct ecs_record_t ecs_record_t;
 
 /** Table data */
 typedef struct ecs_data_t ecs_data_t;
@@ -3777,6 +3887,48 @@ typedef struct ecs_observer_desc_t {
     int32_t term_index;
 } ecs_observer_desc_t;
 
+/** Used with ecs_emit. 
+ * 
+ * \ingroup observers
+ */
+typedef struct ecs_event_desc_t {
+    /** The event id. Only triggers for the specified event will be notified */
+    ecs_entity_t event;
+
+    /** Component ids. Only triggers with a matching component id will be
+     * notified. Observers are guaranteed to get notified once, even if they
+     * match more than one id. */
+    const ecs_type_t *ids;
+
+    /** The table for which to notify. */
+    ecs_table_t *table;
+
+    /** Optional 2nd table to notify. This can be used to communicate the
+     * previous or next table, in case an entity is moved between tables. */
+    ecs_table_t *other_table;
+
+    /** Limit notified entities to ones starting from offset (row) in table */
+    int32_t offset;
+
+    /** Limit number of notified entities to count. offset+count must be less
+     * than the total number of entities in the table. If left to 0, it will be
+     * automatically determined by doing ecs_table_count(table) - offset. */
+    int32_t count;
+
+    /** Single-entity alternative to setting table / offset / count */
+    ecs_entity_t entity;
+
+    /** Optional context. Assigned to iter param member */
+    const void *param;
+
+    /** Observable (usually the world) */
+    ecs_poly_t *observable;
+
+    /** Event flags */
+    ecs_flags32_t flags;
+} ecs_event_desc_t;
+
+
 /**
  * @defgroup misc_types Miscellaneous types
  * @brief Types used to create entities, observers, queries and more.
@@ -4051,7 +4203,7 @@ FLECS_API extern const ecs_entity_t EcsExclusive;
 FLECS_API extern const ecs_entity_t EcsAcyclic;
 
 /** Marks a relationship as traversable. Traversable relationships may be 
- * traversed with "up" queries. Traversable relatinoships are acyclic. */
+ * traversed with "up" queries. Traversable relationships are acyclic. */
 FLECS_API extern const ecs_entity_t EcsTraversable;
 
 /** Ensure that a component always is added together with another component.
@@ -4070,13 +4222,13 @@ FLECS_API extern const ecs_entity_t EcsWith;
  */
 FLECS_API extern const ecs_entity_t EcsOneOf;
 
-/** Can be added to relationship to indicate that it should never hold data, even
- * when it or the relationship target is a component. */
+/** Can be added to relationship to indicate that it should never hold data, 
+ * even when it or the relationship target is a component. */
 FLECS_API extern const ecs_entity_t EcsTag;
 
-/** Tag to indicate that relationship is stored as union. Union relationships enable
- * changing the target of a union without switching tables. Union relationships
- * are also marked as exclusive. */
+/** Tag to indicate that relationship is stored as union. Union relationships 
+ * enable changing the target of a union without switching tables. Union 
+ * relationships are also marked as exclusive. */
 FLECS_API extern const ecs_entity_t EcsUnion;
 
 /** Tag to indicate name identifier */
@@ -4107,49 +4259,45 @@ FLECS_API extern const ecs_entity_t EcsModule;
 FLECS_API extern const ecs_entity_t EcsPrivate;
 
 /** Tag added to prefab entities. Any entity with this tag is automatically
- * ignored by filters/queries, unless EcsPrefab is explicitly added. */
+ * ignored by queries, unless EcsPrefab is explicitly queried for. */
 FLECS_API extern const ecs_entity_t EcsPrefab;
 
-/** When this tag is added to an entity it is skipped by all queries/filters */
+/** When this tag is added to an entity it is skipped by queries, unless 
+ * EcsDisabled is explicitly queried for. */
 FLECS_API extern const ecs_entity_t EcsDisabled;
 
-/** Event. Triggers when an id (component, tag, pair) is added to an entity */
+/** Event that triggers when an id is added to an entity */
 FLECS_API extern const ecs_entity_t EcsOnAdd;
 
-/** Event. Triggers when an id (component, tag, pair) is removed from an entity */
+/** Event that triggers when an id is removed from an entity */
 FLECS_API extern const ecs_entity_t EcsOnRemove;
 
-/** Event. Triggers when a component is set for an entity */
+/** Event that triggers when a component is set for an entity */
 FLECS_API extern const ecs_entity_t EcsOnSet;
 
-/** Event. Triggers when a component is unset for an entity */
+/** Event that triggers when a component is unset for an entity */
 FLECS_API extern const ecs_entity_t EcsUnSet;
 
-/** Event. Exactly-once observer for when an entity matches/unmatches a filter */
+/** Event that triggers observer when an entity starts/stops matching a query */
 FLECS_API extern const ecs_entity_t EcsMonitor;
 
-/** Event. Triggers when an entity is deleted.
- * Also used as relationship for defining cleanup behavior, see: 
- * https://github.com/SanderMertens/flecs/blob/master/docs/Relationships.md#cleanup-properties
- */
-FLECS_API extern const ecs_entity_t EcsOnDelete;
-
-/** Event. Triggers when a table is created. */
+/** Event that triggers when a table is created. */
 FLECS_API extern const ecs_entity_t EcsOnTableCreate;
 
-/** Event. Triggers when a table is deleted. */
+/** Event that triggers when a table is deleted. */
 FLECS_API extern const ecs_entity_t EcsOnTableDelete;
 
-/** Event. Triggers when a table becomes empty (doesn't emit on creation). */
+/** Event that triggers when a table becomes empty (doesn't emit on creation). */
 FLECS_API extern const ecs_entity_t EcsOnTableEmpty;
 
-/** Event. Triggers when a table becomes non-empty. */
+/** Event that triggers when a table becomes non-empty. */
 FLECS_API extern const ecs_entity_t EcsOnTableFill;
 
+/** Relationship used for specifying cleanup behavior. */
+FLECS_API extern const ecs_entity_t EcsOnDelete;
+
 /** Relationship used to define what should happen when a target entity (second
- * element of a pair) is deleted. For details see: 
- * https://github.com/SanderMertens/flecs/blob/master/docs/Relationships.md#cleanup-properties
- */
+ * element of a pair) is deleted. */
 FLECS_API extern const ecs_entity_t EcsOnDeleteTarget;
 
 /** Remove cleanup policy. Must be used as target in pair with EcsOnDelete or
@@ -4164,7 +4312,11 @@ FLECS_API extern const ecs_entity_t EcsDelete;
  * EcsOnDeleteTarget. */
 FLECS_API extern const ecs_entity_t EcsPanic;
 
+/** Component that stores data for flattened relationships */
 FLECS_API extern const ecs_entity_t ecs_id(EcsTarget);
+
+/** Tag added to root entity to indicate its subtree should be flattened. Used
+ * together with assemblies. */
 FLECS_API extern const ecs_entity_t EcsFlatten;
 
 /** Used like (EcsDefaultChildComponent, Component). When added to an entity,
@@ -4210,8 +4362,14 @@ FLECS_API extern const ecs_entity_t EcsPhase;
 #define EcsFirstUserComponentId (8)
 
 /** The first user-defined entity starts from this id. Ids up to this number
- * are reserved for builtin components */
+ * are reserved for builtin entities */
 #define EcsFirstUserEntityId (FLECS_HI_COMPONENT_ID + 128)
+
+/* When visualized the reserved id ranges look like this:
+ * [1..8]: Builtin components
+ * [9..FLECS_HI_COMPONENT_ID]: Low ids reserved for application components
+ * [FLECS_HI_COMPONENT_ID + 1..EcsFirstUserEntityId]: Builtin entities
+ */
 
 /** @} */
 /** @} */
@@ -4228,18 +4386,17 @@ FLECS_API extern const ecs_entity_t EcsPhase;
  */
 
 /** Create a new world.
- * A world manages all the ECS data and supporting infrastructure. Applications 
- * must have at least one world. Entities, component and system handles are 
- * local to a world and should not be shared between worlds.
- * 
- * This operation creates a world with all builtin modules loaded. 
+ * This operation automatically imports modules from addons Flecs has been built
+ * with, except when the module specifies otherwise.
  *
  * @return A new world
  */
 FLECS_API
 ecs_world_t* ecs_init(void);
 
-/** Same as ecs_init, but with minimal set of modules loaded.
+/** Create a new world with just the core module.
+ * Same as ecs_init, but doesn't import modules from addons. This operation is
+ * faster than ecs_init and results in less memory utilization.
  *
  * @return A new tiny world
  */
@@ -4247,9 +4404,9 @@ FLECS_API
 ecs_world_t* ecs_mini(void);
 
 /** Create a new world with arguments.
- * Same as ecs_init, but allows passing in command line arguments. These can be
- * used to dynamically enable flecs features to an application. Currently these
- * arguments are not used.
+ * Same as ecs_init, but allows passing in command line arguments. Command line
+ * arguments are used to:
+ * - automatically derive the name of the application from argv[0]
  *
  * @return A new world
  */
@@ -4269,6 +4426,8 @@ int ecs_fini(
     ecs_world_t *world);
 
 /** Returns whether the world is being deleted.
+ * This operation can be used in callbacks like type hooks or observers to 
+ * detect if they are invoked while the world is being deleted.
  *
  * @param world The world.
  * @return True if being deleted, false if not.
@@ -4724,8 +4883,7 @@ void* ecs_get_binding_ctx(
 /** Get world info.
  *
  * @param world The world.
- * @return Pointer to the world info. This pointer will remain valid for as long
- *         as the world is valid.
+ * @return Pointer to the world info. Valid for as long as the world exists.
  */
 FLECS_API
 const ecs_world_info_t* ecs_get_world_info(
@@ -5059,9 +5217,8 @@ ecs_entity_t ecs_clone(
 
 /** Delete an entity.
  * This operation will delete an entity and all of its components. The entity id
- * will be recycled. Repeatedly calling ecs_delete without ecs_new or
- * ecs_new_w_id will cause a memory leak as it will cause
- * the list with ids that can be recycled to grow unbounded.
+ * will be made available for recycling. If the entity passed to ecs_delete is
+ * not alive, the operation will have no side effects.
  *
  * @param world The world.
  * @param entity The entity.
@@ -5093,7 +5250,7 @@ void ecs_delete_with(
 
 /** Add a (component) id to an entity.
  * This operation adds a single (component) id to an entity. If the entity 
- * already has the id, this operation has no side effects.
+ * already has the id, this operation will have no side effects.
  *
  * @param world The world.
  * @param entity The entity.
@@ -5107,7 +5264,7 @@ void ecs_add_id(
 
 /** Remove a (component) id from an entity.
  * This operation removes a single (component) id to an entity. If the entity 
- * does not have the id, this operation has no side effects.
+ * does not have the id, this operation will have no side effects.
  *
  * @param world The world.
  * @param entity The entity.
@@ -5148,9 +5305,7 @@ void ecs_override_id(
     ecs_id_t id);
 
 /** Clear all components.
- * This operation will clear all components from an entity but will not delete
- * the entity itself. This effectively prevents the entity id from being 
- * recycled.
+ * This operation will remove all components from an entity.
  *
  * @param world The world.
  * @param entity The entity.
@@ -5160,9 +5315,8 @@ void ecs_clear(
     ecs_world_t *world,
     ecs_entity_t entity);
 
-
-/** Remove all instances of the specified id.
- * This will remove the specified id from all entities (tables). Teh id may be
+/** Remove all instances of the specified (component) id.
+ * This will remove the specified id from all entities (tables). The id may be
  * a wildcard and/or a pair.
  * 
  * @param world The world.
@@ -5476,13 +5630,12 @@ FLECS_API
 void* ecs_emplace_id(
     ecs_world_t *world,
     ecs_entity_t entity,
-    ecs_id_t id); 
+    ecs_id_t id);
 
 /** Signal that a component has been modified.
- * This operation allows an application to signal to Flecs that a component has
- * been modified. As a result, OnSet systems will be invoked.
- *
- * This operation is commonly used together with ecs_get_mut.
+ * This operation is usually used after modifying a component value obtained by
+ * ecs_get_mut_id. The operation will mark the component as dirty, and invoke
+ * OnSet observers and hooks.
  *
  * @param world The world.
  * @param entity The entity.
@@ -5496,7 +5649,10 @@ void ecs_modified_id(
 
 /** Set the value of a component.
  * This operation allows an application to set the value of a component. The
- * operation is equivalent to calling ecs_get_mut and ecs_modified.
+ * operation is equivalent to calling ecs_get_mut_id followed by 
+ * ecs_modified_id. The operation will not modify the value of the passed in
+ * component. If the component has a copy hook registered, it will be used to
+ * copy in the component.
  *
  * If the provided entity is 0, a new entity will be created.
  *
@@ -5524,7 +5680,8 @@ ecs_entity_t ecs_set_id(
  */
 
 /** Test whether an entity is valid.
- * Entities that are valid can be used with API functions.
+ * Entities that are valid can be used with API functions. Using invalid 
+ * entities with API operations will cause the function to panic.
  *
  * An entity is valid if it is not 0 and if it is alive.
  *
@@ -5765,8 +5922,9 @@ bool ecs_has_id(
     ecs_id_t id);
 
 /** Test if an entity owns an id.
- * This operation returns true if the entity has the specified id. Other than
- * ecs_has_id this operation will not return true if the id is inherited.
+ * This operation returns true if the entity has the specified id. The operation
+ * behaves the same as ecs_has_id, except that it will return false for 
+ * components that are inherited through an IsA relationship.
  *
  * @param world The world.
  * @param entity The entity.
@@ -5781,8 +5939,8 @@ bool ecs_owns_id(
 
 /** Get the target of a relationship.
  * This will return a target (second element of a pair) of the entity for the 
- * specified relationship. The index allows for iterating through the targets, if a 
- * single entity has multiple targets for the same relationship.
+ * specified relationship. The index allows for iterating through the targets, 
+ * if a single entity has multiple targets for the same relationship.
  *
  * If the index is larger than the total number of instances the entity has for
  * the relationship, the operation will return 0.
@@ -5838,7 +5996,7 @@ ecs_entity_t ecs_get_target_for_id(
     ecs_entity_t rel,
     ecs_id_t id);
 
-/** Return depth for entity in tree for relationship rel.
+/** Return depth for entity in tree for the specified relationship.
  * Depth is determined by counting the number of targets encountered while 
  * traversing up the relationship tree for rel. Only acyclic relationships are
  * supported.
@@ -6266,6 +6424,20 @@ ecs_entity_t ecs_component_init(
     ecs_world_t *world,
     const ecs_component_desc_t *desc); 
 
+/** Get the type for an id.
+ * This function returnsthe type information for an id. The specified id can be
+ * any valid id. For the rules on how type information is determined based on
+ * id, see ecs_get_typeid.
+ * 
+ * @param world The world.
+ * @param id The id.
+ * @return The type information of the id.
+ */
+FLECS_API
+const ecs_type_info_t* ecs_get_type_info(
+    const ecs_world_t *world,
+    ecs_id_t id);
+
 /** Register hooks for component.
  * Hooks allow for the execution of user code when components are constructed,
  * copied, moved, destructed, added, removed or set. Hooks can be assigned as
@@ -6348,20 +6520,6 @@ bool ecs_id_is_union(
  */
 FLECS_API
 bool ecs_id_in_use(
-    const ecs_world_t *world,
-    ecs_id_t id);
-
-/** Get the type for an id.
- * This function returnsthe type information for an id. The specified id can be
- * any valid id. For the rules on how type information is determined based on
- * id, see ecs_get_typeid.
- * 
- * @param world The world.
- * @param id The id.
- * @return The type information of the id.
- */
-FLECS_API
-const ecs_type_info_t* ecs_get_type_info(
     const ecs_world_t *world,
     ecs_id_t id);
 
@@ -6580,10 +6738,36 @@ FLECS_API
 bool ecs_term_is_initialized(
     const ecs_term_t *term);
 
+/** Is term matched on $this variable.
+ * This operation checks whether a term is matched on the $this variable, which
+ * is the default source for queries.
+ * 
+ * A term has a $this source when:
+ * - ecs_term_t::src::id is EcsThis
+ * - ecs_term_t::src::flags is EcsIsVariable
+ * 
+ * If ecs_term_t::src is not populated, it will be automatically initialized to
+ * the $this source for the created query.
+ * 
+ * @param term The term.
+ * @return True if term matches $this, false if not.
+ */
 FLECS_API
 bool ecs_term_match_this(
     const ecs_term_t *term);
 
+/** Is term matched on 0 source.
+ * This operation checks whether a term is matched on a 0 source. A 0 source is
+ * a term that isn't matched against anything, and can be used just to pass 
+ * (component) ids to a query iterator.
+ * 
+ * A term has a 0 source when:
+ * - ecs_term_t::src::id is 0
+ * - ecs_term_t::src::flags has EcsIsEntity set
+ * 
+ * @param term The term.
+ * @return True if term has 0 source, false if not.
+ */
 FLECS_API
 bool ecs_term_match_0(
     const ecs_term_t *term);
@@ -6702,24 +6886,28 @@ int ecs_filter_finalize(
     const ecs_world_t *world,
     ecs_filter_t *filter); 
 
-/** Find index for This variable.
- * This operation looks up the index of the This variable. This index can
+/** Find index for $this variable.
+ * This operation looks up the index of the $this variable. This index can
  * be used in operations like ecs_iter_set_var and ecs_iter_get_var.
  * 
  * The operation will return -1 if the variable was not found. This happens when
- * a filter only has terms that are not matched on the This variable, like a
+ * a filter only has terms that are not matched on the $this variable, like a
  * filter that exclusively matches singleton components.
  * 
  * @param filter The rule.
- * @return The index of the This variable.
+ * @return The index of the $this variable.
  */
 FLECS_API
 int32_t ecs_filter_find_this_var(
     const ecs_filter_t *filter);
 
-/** Convert ter, to string expression.
+/** Convert term to string expression.
  * Convert term to a string expression. The resulting expression is equivalent
  * to the same term, with the exception of And & Or operators.
+ * 
+ * @param world The world.
+ * @param term The term.
+ * @return The term converted to a string.
  */
 FLECS_API
 char* ecs_term_str(
@@ -6729,6 +6917,10 @@ char* ecs_term_str(
 /** Convert filter to string expression.
  * Convert filter terms to a string expression. The resulting expression can be
  * parsed to create the same filter.
+ * 
+ * @param world The world.
+ * @param filter The filter.
+ * @return The filter converted to a string.
  */
 FLECS_API 
 char* ecs_filter_str(
@@ -6800,18 +6992,29 @@ bool ecs_filter_next(
 
 /** Same as ecs_filter_next, but always instanced.
  * See instanced property of ecs_filter_desc_t.
+ * 
+ * @param it The iterator
+ * @return True if more data is available, false if not.
  */
 FLECS_API
 bool ecs_filter_next_instanced(
     ecs_iter_t *it);
 
-/** Move resources of one filter to another. */
+/** Move resources of one filter to another. 
+ * 
+ * @param dst The destination filter.
+ * @param src The source filter.
+ */
 FLECS_API
 void ecs_filter_move(
     ecs_filter_t *dst,
     ecs_filter_t *src);
 
-/** Copy resources of one filter to another. */
+/** Copy resources of one filter to another. 
+ * 
+ * @param dst The destination filter.
+ * @param src The source filter.
+ */
 FLECS_API
 void ecs_filter_copy(
     ecs_filter_t *dst,
@@ -6880,6 +7083,7 @@ void ecs_query_fini(
  * of the query and can be used to introspect the query terms.
  *
  * @param query The query.
+ * @return The filter.
  */
 FLECS_API
 const ecs_filter_t* ecs_query_get_filter(
@@ -6932,6 +7136,9 @@ bool ecs_query_next(
 
 /** Same as ecs_query_next, but always instanced.
  * See "instanced" property of ecs_filter_desc_t.
+ * 
+ * @param iter The iterator.
+ * @returns True if more data is available, false if not.
  */
 FLECS_API
 bool ecs_query_next_instanced(
@@ -7156,43 +7363,6 @@ void* ecs_query_get_binding_ctx(
  * @{
  */
 
-typedef struct ecs_event_desc_t {
-    /** The event id. Only triggers for the specified event will be notified */
-    ecs_entity_t event;
-
-    /** Component ids. Only triggers with a matching component id will be
-     * notified. Observers are guaranteed to get notified once, even if they
-     * match more than one id. */
-    const ecs_type_t *ids;
-
-    /** The table for which to notify. */
-    ecs_table_t *table;
-
-    /** Optional 2nd table to notify. This can be used to communicate the
-     * previous or next table, in case an entity is moved between tables. */
-    ecs_table_t *other_table;
-
-    /** Limit notified entities to ones starting from offset (row) in table */
-    int32_t offset;
-
-    /** Limit number of notified entities to count. offset+count must be less
-     * than the total number of entities in the table. If left to 0, it will be
-     * automatically determined by doing ecs_table_count(table) - offset. */
-    int32_t count;
-
-    /** Single-entity alternative to setting table / offset / count */
-    ecs_entity_t entity;
-
-    /** Optional context. Assigned to iter param member */
-    const void *param;
-
-    /** Observable (usually the world) */
-    ecs_poly_t *observable;
-
-    /** Event flags */
-    ecs_flags32_t flags;
-} ecs_event_desc_t;
-
 /** Send event.
  * This sends an event to matching triggers & is the mechanism used by flecs
  * itself to send OnAdd, OnRemove, etc events.
@@ -7206,18 +7376,6 @@ typedef struct ecs_event_desc_t {
  * 
  * Triggers are invoked synchronously. It is therefore safe to use stack-based
  * data as event context, which can be set in the "param" member.
- * 
- * To send a notification for a single entity, an application should set the
- * following members in the event descriptor:
- * 
- * - table: set to the table of the entity
- * - offset: set to the row of the entity in the table
- * - count: set to 1
- * 
- * The table & row of the entity can be obtained like this:
- *   ecs_record_t *r = ecs_record_find(world, e);
- *   desc.table = r->table;
- *   desc.offset = ECS_RECORD_TO_ROW(r->row);
  * 
  * @param world The world.
  * @param desc Event parameters.
@@ -7396,11 +7554,11 @@ ecs_entity_t ecs_iter_first(
  * // Rule that matches (Eats, *)
  * ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
  *   .terms = {
- *     { .first.id = Eats, .second.name = "_Food" }
+ *     { .first.id = Eats, .second.name = "$food" }
  *   }
  * });
  * 
- * int food_var = ecs_rule_find_var(r, "Food");
+ * int food_var = ecs_rule_find_var(r, "food");
  * 
  * // Set Food to Apples, so we're only matching (Eats, Apples)
  * ecs_iter_t it = ecs_rule_iter(world, r);
@@ -7461,6 +7619,7 @@ void ecs_iter_set_var_as_range(
  * 
  * @param it The iterator.
  * @param var_id The variable index.
+ * @return The variable value.
  */
 FLECS_API
 ecs_entity_t ecs_iter_get_var(
@@ -7478,6 +7637,7 @@ ecs_entity_t ecs_iter_get_var(
  * 
  * @param it The iterator.
  * @param var_id The variable index.
+ * @return The variable value.
  */
 FLECS_API
 ecs_table_t* ecs_iter_get_var_as_table(
@@ -7495,12 +7655,12 @@ ecs_table_t* ecs_iter_get_var_as_table(
  * 
  * @param it The iterator.
  * @param var_id The variable index.
+ * @return The variable value.
  */
 FLECS_API
 ecs_table_range_t ecs_iter_get_var_as_range(
     ecs_iter_t *it,
     int32_t var_id);
-
 
 /** Returns whether variable is constrained.
  * This operation returns true for variables set by one of the ecs_iter_set_var*
@@ -7517,6 +7677,21 @@ FLECS_API
 bool ecs_iter_var_is_constrained(
     ecs_iter_t *it,
     int32_t var_id);
+
+/** Convert iterator to string.
+ * Prints the contents of an iterator to a string. Useful for debugging and/or
+ * testing the output of an iterator.
+ * 
+ * The function only converts the currently iterated data to a string. To 
+ * convert all data, the application has to manually call the next function and
+ * call ecs_iter_str on each result.
+ * 
+ * @param it The iterator.
+ * @return A string representing the contents of the iterator.
+ */
+FLECS_API
+char* ecs_iter_str(
+    const ecs_iter_t *it);
 
 /** Create a paged iterator.
  * Paged iterators limit the results to those starting from 'offset', and will
@@ -7690,8 +7865,7 @@ ecs_entity_t ecs_field_src(
     int32_t index);
 
 /** Return field type size.
- * Return type size of the data returned by field. Returns 0 if field has no 
- * data.
+ * Return type size of the field field. Returns 0 if the field has no data.
  * 
  * @param it The iterator.
  * @param index The index of the field in the iterator.
@@ -7719,22 +7893,6 @@ FLECS_API
 bool ecs_field_is_self(
     const ecs_iter_t *it,
     int32_t index);
-
-/** Convert iterator to string.
- * Prints the contents of an iterator to a string. Useful for debugging and/or
- * testing the output of an iterator.
- * 
- * The function only converts the currently iterated data to a string. To 
- * convert all data, the application has to manually call the next function and
- * call ecs_iter_str on each result.
- * 
- * @param it The iterator.
- * @return A string representing the contents of the iterator.
- */
-FLECS_API
-char* ecs_iter_str(
-    const ecs_iter_t *it);
-
 
 /** @} */
 

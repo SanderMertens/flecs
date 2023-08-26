@@ -23,9 +23,6 @@ extern "C" {
 /** A stage enables modification while iterating and from multiple threads */
 typedef struct ecs_stage_t ecs_stage_t;
 
-/** A record stores data to map an entity id to a location in a table */
-typedef struct ecs_record_t ecs_record_t;
-
 /** Table data */
 typedef struct ecs_data_t ecs_data_t;
 
