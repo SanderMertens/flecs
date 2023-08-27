@@ -1190,7 +1190,7 @@ ECS_PREFAB(world, prefab, Position, Velocity);
 To instantiate a prefab, an application can use the `IsA` relationship:
 
 ```c
-ecs_entity_t e = ecs_new_w_pair(world, (IsA, prefab));
+ecs_entity_t e = ecs_new_w_pair(world, IsA, prefab);
 ```
 
 To ensure that entities that inherit from a prefab don't also inherit the `Prefab` tag (which would cause them to not get matched with systems), the `Prefab` tag does not propagate to derived entities. This is illustrated in the following example:
@@ -1201,7 +1201,7 @@ ECS_PREFAB(world, prefab, Position);
 ecs_has(world, prefab, EcsPrefab); // true
 ecs_has(world, prefab, Position); // true
 
-ecs_entity_t e = ecs_new_w_pair(world, (IsA, prefab));
+ecs_entity_t e = ecs_new_w_pair(world, IsA, prefab);
 ecs_has(world, e, EcsPrefab); // false
 ecs_has(world, e, Position); // true
 ```
