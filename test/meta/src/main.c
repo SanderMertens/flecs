@@ -746,6 +746,8 @@ void SerializeIterToJson_serialize_labels_w_offset(void);
 void SerializeIterToJson_serialize_colors_w_offset(void);
 void SerializeIterToJson_serialize_anonymous_entities_w_offset(void);
 void SerializeIterToJson_serialize_table(void);
+void SerializeIterToJson_serialize_table_w_id_labels(void);
+void SerializeIterToJson_serialize_table_w_var_labels(void);
 void SerializeIterToJson_serialize_world(void);
 void SerializeIterToJson_serialize_term_labels(void);
 void SerializeIterToJson_serialize_id_labels(void);
@@ -3848,6 +3850,14 @@ bake_test_case SerializeIterToJson_testcases[] = {
         SerializeIterToJson_serialize_table
     },
     {
+        "serialize_table_w_id_labels",
+        SerializeIterToJson_serialize_table_w_id_labels
+    },
+    {
+        "serialize_table_w_var_labels",
+        SerializeIterToJson_serialize_table_w_var_labels
+    },
+    {
         "serialize_world",
         SerializeIterToJson_serialize_world
     },
@@ -4838,7 +4848,7 @@ static bake_test_suite suites[] = {
         "SerializeIterToJson",
         NULL,
         NULL,
-        57,
+        59,
         SerializeIterToJson_testcases
     },
     {

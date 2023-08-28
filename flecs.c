@@ -33398,7 +33398,7 @@ void flecs_rest_parse_json_ser_iter_params(
     flecs_rest_bool_param(req, "colors", &desc->serialize_colors);
     flecs_rest_bool_param(req, "duration", &desc->measure_eval_duration);
     flecs_rest_bool_param(req, "type_info", &desc->serialize_type_info);
-    flecs_rest_bool_param(req, "serialize_table", &desc->serialize_table);
+    flecs_rest_bool_param(req, "table", &desc->serialize_table);
 }
 
 static
@@ -51907,22 +51907,37 @@ static
 void flecs_json_serialize_iter_result_table_type(
     const ecs_world_t *world,
     const ecs_iter_t *it,
-    ecs_strbuf_t *buf)
+    ecs_strbuf_t *buf,
+    const ecs_iter_to_json_desc_t *desc)
 {
     if (!it->table) {
         return;
     }
 
-    flecs_json_memberl(buf, "ids");
-    flecs_json_array_push(buf);
+    if (desc->serialize_ids) {
+        flecs_json_memberl(buf, "ids");
+        flecs_json_array_push(buf);
 
-    ecs_type_t *type = &it->table->type;
-    for (int i = 0; i < type->count; i ++) {
-        flecs_json_next(buf);
-        flecs_json_serialize_id(world, type->array[i], buf);
+        ecs_type_t *type = &it->table->type;
+        for (int i = 0; i < type->count; i ++) {
+            flecs_json_next(buf);
+            flecs_json_serialize_id(world, type->array[i], buf);
+        }
+
+        flecs_json_array_pop(buf);
     }
+    if (desc->serialize_id_labels) {
+        flecs_json_memberl(buf, "id_labels");
+        flecs_json_array_push(buf);
 
-    flecs_json_array_pop(buf);
+        ecs_type_t *type = &it->table->type;
+        for (int i = 0; i < type->count; i ++) {
+            flecs_json_next(buf);
+            flecs_json_serialize_id_label(world, type->array[i], buf);
+        }
+
+        flecs_json_array_pop(buf);
+    }
 }
 
 static
@@ -52400,7 +52415,7 @@ int flecs_json_serialize_iter_result(
     /* Each result can be matched with different component ids. Add them to
      * the result so clients know with which component an entity was matched */
     if (desc && desc->serialize_table) {
-        flecs_json_serialize_iter_result_table_type(world, it, buf);
+        flecs_json_serialize_iter_result_table_type(world, it, buf, desc);
     } else {
         if (!desc || desc->serialize_ids) {
             flecs_json_serialize_iter_result_ids(world, it, buf);
@@ -52609,6 +52624,7 @@ int ecs_world_to_json_buf(
     ecs_iter_t it = ecs_filter_iter(world, &f);
     ecs_iter_to_json_desc_t json_desc = { 
         .serialize_table = true,
+        .serialize_ids = true,
         .serialize_entities = true
     };
 
