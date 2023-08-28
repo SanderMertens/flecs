@@ -2187,17 +2187,17 @@ void SerializeIterToJson_serialize_table(void) {
 
     test_str(json, "{\"results\":["
         "{"
-            "\"ids\":[[\"Position\"], [\"Foo\"], [\"flecs.core.Identifier\",\"flecs.core.Name\"]], "
+            "\"ids\":[[\"Position\"], [\"Foo\"]], "
             "\"entities\":[\"e1\"], "
-            "\"values\":[[{\"x\":10, \"y\":20}], 0, 0]"
+            "\"values\":[[{\"x\":10, \"y\":20}], 0]"
         "}, {"
-            "\"ids\":[[\"Position\"], [\"Velocity\"], [\"Foo\"], [\"Bar\"], [\"flecs.core.Identifier\",\"flecs.core.Name\"]], "
+            "\"ids\":[[\"Position\"], [\"Velocity\"], [\"Foo\"], [\"Bar\"]], "
             "\"entities\":[\"e2\"], "
-            "\"values\":[[{\"x\":20, \"y\":30}], [{\"x\":1, \"y\":1}], 0, 0, 0]"
+            "\"values\":[[{\"x\":20, \"y\":30}], [{\"x\":1, \"y\":1}], 0, 0]"
         "}, {"
-            "\"ids\":[[\"Position\"], [\"Mass\"], [\"flecs.core.Identifier\",\"flecs.core.Name\"]], "
+            "\"ids\":[[\"Position\"], [\"Mass\"]], "
             "\"entities\":[\"e3\"], "
-            "\"values\":[[{\"x\":30, \"y\":40}], [{\"value\":100}], 0]}]"
+            "\"values\":[[{\"x\":30, \"y\":40}], [{\"value\":100}]]}]"
         "}");
     
     ecs_os_free(json);
@@ -2275,17 +2275,17 @@ void SerializeIterToJson_serialize_table_w_id_labels(void) {
 
     test_str(json, "{\"results\":["
         "{"
-            "\"id_labels\":[[\"position\"], [\"Foo\"], [\"Identifier\", \"Name\"]], "
+            "\"id_labels\":[[\"position\"], [\"Foo\"]], "
             "\"entities\":[\"e1\"], "
-            "\"values\":[[{\"x\":10, \"y\":20}], 0, 0]"
+            "\"values\":[[{\"x\":10, \"y\":20}], 0]"
         "}, {"
-            "\"id_labels\":[[\"position\"], [\"velocity\"], [\"Foo\"], [\"Bar\"], [\"Identifier\", \"Name\"]], "
+            "\"id_labels\":[[\"position\"], [\"velocity\"], [\"Foo\"], [\"Bar\"]], "
             "\"entities\":[\"e2\"], "
-            "\"values\":[[{\"x\":20, \"y\":30}], [{\"x\":1, \"y\":1}], 0, 0, 0]"
+            "\"values\":[[{\"x\":20, \"y\":30}], [{\"x\":1, \"y\":1}], 0, 0]"
         "}, {"
-            "\"id_labels\":[[\"position\"], [\"mass\"], [\"Identifier\", \"Name\"]], "
+            "\"id_labels\":[[\"position\"], [\"mass\"]], "
             "\"entities\":[\"e3\"], "
-            "\"values\":[[{\"x\":30, \"y\":40}], [{\"value\":100}], 0]}]"
+            "\"values\":[[{\"x\":30, \"y\":40}], [{\"value\":100}]]}]"
         "}");
     
     ecs_os_free(json);
@@ -2363,6 +2363,106 @@ void SerializeIterToJson_serialize_table_w_var_labels(void) {
     desc.serialize_entities = true;
     desc.serialize_variable_labels = true;
     desc.serialize_ids = true;
+    char *json = ecs_iter_to_json(world, &it, &desc);
+    test_assert(json != NULL);
+
+    test_str(json, "{\"vars\":[\"p\"], \"results\":["
+        "{"
+            "\"ids\":[[\"Position\"], [\"Foo\"]], "
+            "\"var_labels\":[\"parent\"], "
+            "\"parent\":\"Parent\", "
+            "\"entities\":[\"e1\"], "
+            "\"values\":[[{\"x\":10, \"y\":20}], 0]"
+        "}, {"
+            "\"ids\":[[\"Position\"], [\"Velocity\"], [\"Foo\"], [\"Bar\"]], "
+            "\"var_labels\":[\"parent\"], "
+            "\"parent\":\"Parent\", "
+            "\"entities\":[\"e2\"], "
+            "\"values\":[[{\"x\":20, \"y\":30}], [{\"x\":1, \"y\":1}], 0, 0]"
+        "}, {"
+            "\"ids\":[[\"Position\"], [\"Mass\"]], "
+            "\"var_labels\":[\"parent\"], "
+            "\"parent\":\"Parent\", "
+            "\"entities\":[\"e3\"], "
+            "\"values\":[[{\"x\":30, \"y\":40}], [{\"value\":100}]]}]"
+        "}");
+
+    ecs_os_free(json);
+
+    ecs_rule_fini(f);
+
+    ecs_fini(world);
+}
+
+void SerializeIterToJson_serialize_table_w_private(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_id(Velocity),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_id(Mass),
+        .members = {
+            {"value", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t parent = ecs_new_entity(world, "Parent");
+    ecs_doc_set_name(world, parent, "parent");
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_entity_t e3 = ecs_new_entity(world, "e3");
+
+    ecs_add_pair(world, e1, EcsChildOf, parent);
+    ecs_add_pair(world, e2, EcsChildOf, parent);
+    ecs_add_pair(world, e3, EcsChildOf, parent);
+
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_set(world, e2, Position, {20, 30});
+    ecs_set(world, e3, Position, {30, 40});
+
+    ecs_add(world, e1, Foo);
+    ecs_add(world, e2, Foo);
+    ecs_add(world, e2, Bar);
+
+    ecs_set(world, e2, Velocity, {1, 1});
+    ecs_set(world, e3, Mass, {100});
+
+    ecs_rule_t *f = ecs_rule(world, {
+        .terms = {
+            { .id = ecs_id(Position) },
+            { .first.id = EcsChildOf, .second.name = "p", .second.flags = EcsIsVariable }
+        }
+    });
+
+    ecs_iter_t it = ecs_rule_iter(world, f);
+
+    ecs_iter_to_json_desc_t desc = {0};
+    desc.serialize_table = true;
+    desc.serialize_entities = true;
+    desc.serialize_variable_labels = true;
+    desc.serialize_ids = true;
+    desc.serialize_private = true;
     char *json = ecs_iter_to_json(world, &it, &desc);
     test_assert(json != NULL);
 

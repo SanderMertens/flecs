@@ -783,6 +783,7 @@
                 "serialize_table",
                 "serialize_table_w_id_labels",
                 "serialize_table_w_var_labels",
+                "serialize_table_w_private",
                 "serialize_world",
                 "serialize_term_labels",
                 "serialize_id_labels",

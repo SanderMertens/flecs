@@ -253,6 +253,7 @@ typedef struct ecs_iter_to_json_desc_t {
     bool serialize_variables;       /**< Serialize variables */
     bool serialize_is_set;          /**< Serialize is_set (for optional terms) */
     bool serialize_values;          /**< Serialize component values */
+    bool serialize_private;         /**< Serialize component values */
     bool serialize_entities;        /**< Serialize entities (for This terms) */
     bool serialize_entity_labels;   /**< Serialize doc name for entities */
     bool serialize_entity_ids;      /**< Serialize numerical ids for entities */

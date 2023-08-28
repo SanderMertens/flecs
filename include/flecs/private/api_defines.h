@@ -109,6 +109,8 @@
 #pragma clang diagnostic ignored "-Wenum-constexpr-conversion"
 /* Very difficult to workaround this warning in C, especially for an ECS. */
 #pragma clang diagnostic ignored "-Wunsafe-buffer-usage"
+/* This warning gets thrown when trying to cast pointer returned from dlproc */
+#pragma clang diagnostic ignored "-Wcast-function-type-strict"
 #elif defined(ECS_TARGET_GNU)
 #ifndef __cplusplus
 #pragma GCC diagnostic ignored "-Wdeclaration-after-statement"
