@@ -10673,10 +10673,7 @@ ecs_ftime_t ecs_get_interval(
     ecs_entity_t tick_source);
 
 /** Start timer.
- * This operation resets the timer and starts it with the specified timeout. The
- * entity must have the EcsTimer component (added by ecs_set_timeout and 
- * ecs_set_interval). If the entity does not have the EcsTimer component this
- * operation will assert.
+ * This operation resets the timer and starts it with the specified timeout.
  *
  * @param world The world.
  * @param tick_source The timer to start.
@@ -10687,14 +10684,24 @@ void ecs_start_timer(
     ecs_entity_t tick_source);
 
 /** Stop timer
- * This operation stops a timer from triggering. The entity must have the 
- * EcsTimer component or this operation will assert.
+ * This operation stops a timer from triggering.
  *
  * @param world The world.
  * @param tick_source The timer to stop.
  */
 FLECS_API
 void ecs_stop_timer(
+    ecs_world_t *world,
+    ecs_entity_t tick_source);
+
+/** Reset time value of timer to 0.
+ * This operation resets the timer value to 0.
+ * 
+ * @param world The world.
+ * @param tick_source The timer to reset.
+ */
+FLECS_API
+void ecs_reset_timer(
     ecs_world_t *world,
     ecs_entity_t tick_source);
 

@@ -161,7 +161,7 @@ void SystemMisc_invalid_0_w_and(void) {
     ecs_fini(world);
 }
 
-void SystemMisc_invalid_0_w_from_entity() {
+void SystemMisc_invalid_0_w_from_entity(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_init();
@@ -1695,6 +1695,8 @@ void SystemMisc_system_w_interval_rate_stop_timer(void) {
         .rate = 3.0,
         .callback = Dummy
     });
+
+    ecs_reset_timer(world, system);
 
     for (int i = 0; i < 5; i ++) {
         ecs_progress(world, 0.5);

@@ -206,6 +206,17 @@ error:
     return;
 }
 
+void ecs_reset_timer(
+    ecs_world_t *world,
+    ecs_entity_t timer)
+{
+    EcsTimer *ptr = ecs_get_mut(world, timer, EcsTimer);
+    ecs_check(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
+    ptr->time = 0;
+error:
+    return;   
+}
+
 ecs_entity_t ecs_set_rate(
     ecs_world_t *world,
     ecs_entity_t filter,

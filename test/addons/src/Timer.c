@@ -65,6 +65,7 @@ void Timer_interval(void) {
     ecs_entity_t timer = ecs_set_interval(world, SystemA, 3.0);
     test_assert(timer != 0);
     test_assert(timer == SystemA);
+    ecs_reset_timer(world, timer);
 
     test_bool(system_a_invoked, false);
     ecs_progress(world, 1.0);
@@ -144,6 +145,7 @@ void Timer_shared_interval(void) {
 
     ecs_entity_t timer = ecs_set_interval(world, 0, 3.0);
     test_assert(timer != 0);
+    ecs_reset_timer(world, timer);
 
     ecs_set_tick_source(world, SystemA, timer);
     ecs_set_tick_source(world, SystemB, timer);
@@ -231,6 +233,7 @@ void Timer_start_stop_interval(void) {
     ecs_entity_t timer = ecs_set_interval(world, SystemA, 3.0);
     test_assert(timer != 0);
     test_assert(timer == SystemA);
+    ecs_reset_timer(world, timer);
 
     test_bool(system_a_invoked, false);
     ecs_progress(world, 1.0);
@@ -363,6 +366,7 @@ void Timer_rate_filter_w_timer_src(void) {
     ECS_ENTITY(world, E1, Position);
 
     ecs_entity_t timer = ecs_set_interval(world, 0, 2.0);
+    ecs_reset_timer(world, timer);
     test_assert(timer != 0);
 
     ecs_entity_t filter = ecs_set_rate(world, SystemC, 3, timer);
@@ -467,6 +471,7 @@ void Timer_interval_timer_entity(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t timer = ecs_set_interval(world, 0, 1.0);
+    ecs_reset_timer(world, timer);
 
     int i;
     for (i = 0; i < 3; i ++) {
@@ -616,6 +621,7 @@ void Timer_stop_timer_w_rate(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t timer = ecs_set_interval(world, 0, 1.0);
+    ecs_reset_timer(world, timer);
     ecs_entity_t rate = ecs_set_rate(world, 0, 3.0, timer);
 
     for (int i = 0; i < 5; i ++) {
@@ -674,6 +680,7 @@ void Timer_stop_timer_w_rate_same_src(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t timer = ecs_set_interval(world, 0, 1.0);
+    ecs_reset_timer(world, timer);
     ecs_entity_t rate = ecs_set_rate(world, timer, 3.0, timer);
     test_assert(rate == timer);
 

@@ -575,6 +575,7 @@
                 "invalid_or_w_not",
                 "invalid_not_w_or",
                 "invalid_0_w_and",
+                "invalid_0_w_from_entity",
                 "invalid_component_id",
                 "invalid_entity_id",
                 "invalid_null_string",
