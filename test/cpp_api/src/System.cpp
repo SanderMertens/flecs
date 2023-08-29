@@ -2043,6 +2043,9 @@ void System_interval_tick_source(void) {
 
     flecs::timer t = ecs.timer().interval(2.1);
 
+    flecs::Timer *timer = t.get_mut<flecs::Timer>();
+    timer->time = 0;
+
     int32_t sys_a_invoked = 0, sys_b_invoked = 0;
 
     ecs.system()

@@ -28,6 +28,9 @@ int main(int argc, char *argv[]) {
     });
     assert(s != 0);
 
+    EcsTimer *timer = ecs_get_mut(world, s, EcsTimer);
+    timer->time = 0;
+
     ecs_entity_t e = ecs_new_id(world);
     ecs_set(world, e, Position, {10, 20});
     ecs_set(world, e, Velocity, {1, 2});

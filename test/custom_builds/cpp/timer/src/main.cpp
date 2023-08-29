@@ -12,12 +12,15 @@ struct Velocity {
 int main(int, char *[]) {
     flecs::world ecs;
 
-    ecs.system<Position, const Velocity>()
+    flecs::entity s = ecs.system<Position, const Velocity>()
         .interval(2.9f)
         .each([](Position& p, const Velocity& v) {
             p.x += v.x;
             p.y += v.y;
         });
+
+    flecs::Timer *t = s.get_mut<flecs::Timer>();
+    t->time = 0;
 
     auto e = ecs.entity()
         .set<Position>({10, 20})

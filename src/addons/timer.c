@@ -153,7 +153,8 @@ ecs_entity_t ecs_set_interval(
 
     timer = ecs_set(world, timer, EcsTimer, {
         .timeout = interval,
-        .active = true
+        .active = true,
+        .time = ((ecs_ftime_t)rand() / (ecs_ftime_t)RAND_MAX) * interval
     });
 
     ecs_system_t *system_data = ecs_poly_get(world, timer, ecs_system_t);
