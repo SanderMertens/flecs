@@ -2698,7 +2698,7 @@ FLECS_API
 void* ecs_get_mut_id(
     ecs_world_t *world,
     ecs_entity_t entity,
-    ecs_id_t id); 
+    ecs_id_t id);
 
 /** Combines get_mut + modifed in single operation. 
  * This operation is a more efficient alternative to calling ecs_get_mut_id and

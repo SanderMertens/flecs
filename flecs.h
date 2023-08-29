@@ -5495,7 +5495,7 @@ FLECS_API
 void* ecs_get_mut_id(
     ecs_world_t *world,
     ecs_entity_t entity,
-    ecs_id_t id); 
+    ecs_id_t id);
 
 /** Combines get_mut + modifed in single operation. 
  * This operation is a more efficient alternative to calling ecs_get_mut_id and
@@ -10704,6 +10704,16 @@ FLECS_API
 void ecs_reset_timer(
     ecs_world_t *world,
     ecs_entity_t tick_source);
+
+/** Enable randomizing initial time value of timers. 
+ * Intializes timers with a random time value, which can improve scheduling as
+ * systems/timers for the same interval don't all happen on the same tick.
+ * 
+ * @param world The world.
+ */
+FLECS_API
+void ecs_randomize_timers(
+    ecs_world_t *world);
 
 /** Set rate filter.
  * This operation initializes a rate filter. Rate filters sample tick sources
@@ -20740,6 +20750,11 @@ flecs::system_builder<Components...> system(Args &&... args) const;
 template <typename... Args>
 flecs::timer timer(Args &&... args) const;
 
+/** Enable randomization of initial time values for timers.
+ * @see ecs_randomize_timers
+ */
+void randomize_timers() const;
+
 #   endif
 #   ifdef FLECS_RULES
 /**
@@ -29005,6 +29020,10 @@ struct timer final : entity {
 template <typename... Args>
 inline flecs::timer world::timer(Args &&... args) const {
     return flecs::timer(m_world, FLECS_FWD(args)...);
+}
+
+inline void world::randomize_timers() const {
+    ecs_randomize_timers(m_world);
 }
 
 inline void system::interval(ecs_ftime_t interval) {

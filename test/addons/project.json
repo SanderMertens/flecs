@@ -630,7 +630,8 @@
                 "system_w_short_notation",
                 "update_interval_w_system_init",
                 "update_rate_w_system_init",
-                "system_w_interval_rate_stop_timer"
+                "system_w_interval_rate_stop_timer",
+                "system_same_interval_same_tick"
             ]
         }, {
             "id": "RulesBasic",
@@ -1188,7 +1189,8 @@
                 "nested_rate_entity_empty_src",
                 "naked_tick_entity",
                 "stop_timer_w_rate",
-                "stop_timer_w_rate_same_src"
+                "stop_timer_w_rate_same_src",
+                "randomize_timers"
             ]
         }, {
             "id": "SystemCascade",

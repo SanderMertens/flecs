@@ -48,6 +48,10 @@ inline flecs::timer world::timer(Args &&... args) const {
     return flecs::timer(m_world, FLECS_FWD(args)...);
 }
 
+inline void world::randomize_timers() const {
+    ecs_randomize_timers(m_world);
+}
+
 inline void system::interval(ecs_ftime_t interval) {
     ecs_set_interval(m_world, m_id, interval);
 }

@@ -2200,10 +2200,34 @@ void System_range_get(void) {
     s.run();
 }
 
-void System_stop_timer() {
-    // Implement testcase
-}
+void System_randomize_timers(void) {
+    flecs::world ecs;
 
-void System_stop_timer_w_rate() {
-    // Implement testcase
+    flecs::entity s1 = ecs.system()
+        .interval(1.0)
+        .iter([](flecs::iter& it) { });
+
+    {
+        const flecs::Timer *t = s1.get<flecs::Timer>();
+        test_assert(t != nullptr);
+        test_assert(t->time == 0);
+    }
+
+    ecs.randomize_timers();
+
+    flecs::entity s2 = ecs.system()
+        .interval(1.0)
+        .iter([](flecs::iter& it) { });
+
+    {
+        const flecs::Timer *t = s1.get<flecs::Timer>();
+        test_assert(t != nullptr);
+        test_assert(t->time != 0);
+    }
+
+    {
+        const flecs::Timer *t = s2.get<flecs::Timer>();
+        test_assert(t != nullptr);
+        test_assert(t->time != 0);
+    }
 }

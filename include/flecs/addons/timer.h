@@ -167,6 +167,16 @@ void ecs_reset_timer(
     ecs_world_t *world,
     ecs_entity_t tick_source);
 
+/** Enable randomizing initial time value of timers. 
+ * Intializes timers with a random time value, which can improve scheduling as
+ * systems/timers for the same interval don't all happen on the same tick.
+ * 
+ * @param world The world.
+ */
+FLECS_API
+void ecs_randomize_timers(
+    ecs_world_t *world);
+
 /** Set rate filter.
  * This operation initializes a rate filter. Rate filters sample tick sources
  * and tick at a configurable multiple. A rate filter is a tick source itself,

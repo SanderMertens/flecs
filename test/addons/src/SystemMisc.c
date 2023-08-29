@@ -1696,8 +1696,6 @@ void SystemMisc_system_w_interval_rate_stop_timer(void) {
         .callback = Dummy
     });
 
-    ecs_reset_timer(world, system);
-
     for (int i = 0; i < 5; i ++) {
         ecs_progress(world, 0.5);
         test_assert(dummy_invoked == 0);
@@ -1718,6 +1716,63 @@ void SystemMisc_system_w_interval_rate_stop_timer(void) {
     ecs_progress(world, 0.5);
 
     test_assert(dummy_invoked == 0);
+
+    ecs_fini(world);
+}
+
+static
+int32_t sys_a_invoked = false;
+
+static
+void SA(ecs_iter_t *it) {
+    sys_a_invoked = true;
+}
+
+static
+int32_t sys_b_invoked = false;
+
+static
+void SB(ecs_iter_t *it) {
+    sys_b_invoked = true;
+}
+
+static
+int32_t sys_c_invoked = false;
+
+static
+void SC(ecs_iter_t *it) {
+    sys_c_invoked = true;
+}
+
+void SystemMisc_system_same_interval_same_tick(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, { .add = {ecs_dependson(EcsOnUpdate)} }),
+        .interval = 1.0,
+        .callback = SA
+    });
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, { .add = {ecs_dependson(EcsOnUpdate)} }),
+        .interval = 1.0,
+        .callback = SB
+    });
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, { .add = {ecs_dependson(EcsOnUpdate)} }),
+        .interval = 1.0,
+        .callback = SC
+    });
+
+    while (!sys_a_invoked) {
+        test_assert(!sys_b_invoked);
+        test_assert(!sys_c_invoked);
+        ecs_progress(world, 0.0001);
+    }
+
+    test_assert(sys_b_invoked);
+    test_assert(sys_c_invoked);
 
     ecs_fini(world);
 }

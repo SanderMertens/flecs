@@ -151,11 +151,15 @@ ecs_entity_t ecs_set_interval(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    timer = ecs_set(world, timer, EcsTimer, {
-        .timeout = interval,
-        .active = true,
-        .time = ((ecs_ftime_t)rand() / (ecs_ftime_t)RAND_MAX) * interval
-    });
+    if (!timer) {
+        timer = ecs_new(world, EcsTimer);
+    }
+
+    EcsTimer *t = ecs_get_mut(world, timer, EcsTimer);
+    ecs_check(t != NULL, ECS_INVALID_PARAMETER, NULL);
+    t->timeout = interval;
+    t->active = true;
+    ecs_modified(world, timer, EcsTimer);
 
     ecs_system_t *system_data = ecs_poly_get(world, timer, ecs_system_t);
     if (system_data) {
@@ -256,6 +260,30 @@ error:
     return;
 }
 
+static
+void RandomizeTimers(ecs_iter_t *it) {
+    EcsTimer *timer = ecs_field(it, EcsTimer, 1);
+    int32_t i;
+    for (i = 0; i < it->count; i ++) {
+        timer[i].time = 
+            ((ecs_ftime_t)rand() / (ecs_ftime_t)RAND_MAX) * timer[i].timeout;
+    }
+}
+
+void ecs_randomize_timers(
+    ecs_world_t *world)
+{
+    ecs_observer(world, {
+        .entity = ecs_entity(world, { .name = "flecs.timer.RandomizeTimers" }),
+        .filter.terms = {{
+            .id = ecs_id(EcsTimer)
+        }},
+        .events = {EcsOnSet},
+        .yield_existing = true,
+        .callback = RandomizeTimers
+    });
+}
+
 void FlecsTimerImport(
     ecs_world_t *world)
 {    
@@ -267,6 +295,10 @@ void FlecsTimerImport(
 
     flecs_bootstrap_component(world, EcsTimer);
     flecs_bootstrap_component(world, EcsRateFilter);
+
+    ecs_set_hooks(world, EcsTimer, {
+        .ctor = ecs_default_ctor
+    });
 
     /* Add EcsTickSource to timers and rate filters */
     ecs_system(world, {

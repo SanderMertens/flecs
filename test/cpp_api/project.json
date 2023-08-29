@@ -477,7 +477,8 @@
                 "rate_tick_source",
                 "nested_rate_tick_source",
                 "table_get",
-                "range_get"
+                "range_get",
+                "randomize_timers"
             ]
         }, {
             "id": "Event",
