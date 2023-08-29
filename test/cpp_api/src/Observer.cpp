@@ -624,3 +624,44 @@ void Observer_get_query(void) {
 
     test_int(count, 3);
 }
+
+void Observer_on_set_w_set(void) {
+    flecs::world world;
+
+    int32_t count = 0;
+
+    world.observer<Position>()
+        .event(flecs::OnSet)
+        .each([&](flecs::entity e, Position& p) {
+            count ++;          
+        });
+
+    flecs::entity e = world.entity();
+    test_int(count, 0);
+
+    e.set<Position>({10, 20});
+    test_int(count, 1);
+}
+
+void Observer_on_set_w_defer_set(void) {
+    flecs::world world;
+
+    int32_t count = 0;
+
+    world.observer<Position>()
+        .event(flecs::OnSet)
+        .each([&](flecs::entity e, Position& p) {
+            count ++;          
+        });
+
+    flecs::entity e = world.entity();
+    test_int(count, 0);
+
+    world.defer_begin();
+    e.set<Position>({10, 20});
+
+    test_int(count, 0);
+    world.defer_end();
+
+    test_int(count, 1);
+}

@@ -6130,6 +6130,24 @@ error:
     return NULL;
 }
 
+void* ecs_get_mut_modified_id(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_is_alive(world, entity), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_id_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
+
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
+    ecs_check(flecs_defer_cmd(stage), ECS_INVALID_PARAMETER, NULL);
+
+    return flecs_defer_set(
+        world, stage, EcsOpSet, entity, id, 0, NULL, true);
+error:
+    return NULL;
+}
+
 static
 ecs_record_t* flecs_access_begin(
     ecs_world_t *stage,

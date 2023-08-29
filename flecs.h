@@ -5497,6 +5497,23 @@ void* ecs_get_mut_id(
     ecs_entity_t entity,
     ecs_id_t id); 
 
+/** Combines get_mut + modifed in single operation. 
+ * This operation is a more efficient alternative to calling ecs_get_mut_id and
+ * ecs_modified_id separately. This operation is only valid when the world is in
+ * deferred mode, which ensures that the Modified event is not emitted before
+ * the modification takes place.
+ * 
+ * @param world The world.
+ * @param entity The entity.
+ * @param id The id of the component to obtain.
+ * @return The component pointer.
+ */
+FLECS_API
+void* ecs_get_mut_modified_id(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id); 
+
 /** Begin exclusive write access to entity.
  * This operation provides safe exclusive access to the components of an entity
  * without the overhead of deferring operations.
@@ -19205,10 +19222,15 @@ template <typename T, if_t< is_flecs_constructible<T>::value > = 0>
 inline void set(world_t *world, flecs::entity_t entity, T&& value, flecs::id_t id) {
     ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
 
-    T& dst = *static_cast<T*>(ecs_get_mut_id(world, entity, id));
-    dst = FLECS_MOV(value);
+    if (!ecs_is_deferred(world)) {
+        T& dst = *static_cast<T*>(ecs_get_mut_id(world, entity, id));
+        dst = FLECS_MOV(value);
 
-    ecs_modified_id(world, entity, id);
+        ecs_modified_id(world, entity, id);
+    } else {
+        T& dst = *static_cast<T*>(ecs_get_mut_modified_id(world, entity, id));
+        dst = FLECS_MOV(value);
+    }
 }
 
 // set(const T&), T = constructible
@@ -19216,10 +19238,15 @@ template <typename T, if_t< is_flecs_constructible<T>::value > = 0>
 inline void set(world_t *world, flecs::entity_t entity, const T& value, flecs::id_t id) {
     ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
 
-    T& dst = *static_cast<T*>(ecs_get_mut_id(world, entity, id));
-    dst = value;
+    if (!ecs_is_deferred(world)) {
+        T& dst = *static_cast<T*>(ecs_get_mut_id(world, entity, id));
+        dst = FLECS_MOV(value);
 
-    ecs_modified_id(world, entity, id);
+        ecs_modified_id(world, entity, id);
+    } else {
+        T& dst = *static_cast<T*>(ecs_get_mut_modified_id(world, entity, id));
+        dst = FLECS_MOV(value);
+    }
 }
 
 // set(T&&), T = not constructible
@@ -19227,11 +19254,15 @@ template <typename T, if_not_t< is_flecs_constructible<T>::value > = 0>
 inline void set(world_t *world, flecs::entity_t entity, T&& value, flecs::id_t id) {
     ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
 
-    T& dst = *static_cast<remove_reference_t<T>*>(ecs_get_mut_id(world, entity, id));
+    if (!ecs_is_deferred(world)) {
+        T& dst = *static_cast<remove_reference_t<T>*>(ecs_get_mut_id(world, entity, id));
+        dst = FLECS_MOV(value);
 
-    dst = FLECS_MOV(value);
-
-    ecs_modified_id(world, entity, id);
+        ecs_modified_id(world, entity, id);
+    } else {
+        T& dst = *static_cast<remove_reference_t<T>*>(ecs_get_mut_modified_id(world, entity, id));
+        dst = FLECS_MOV(value);
+    }
 }
 
 // set(const T&), T = not constructible
@@ -19239,10 +19270,15 @@ template <typename T, if_not_t< is_flecs_constructible<T>::value > = 0>
 inline void set(world_t *world, flecs::entity_t entity, const T& value, flecs::id_t id) {
     ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
 
-    T& dst = *static_cast<T*>(ecs_get_mut_id(world, entity, id));
-    dst = value;
+    if (!ecs_is_deferred(world)) {
+        T& dst = *static_cast<remove_reference_t<T>*>(ecs_get_mut_id(world, entity, id));
+        dst = FLECS_MOV(value);
 
-    ecs_modified_id(world, entity, id);
+        ecs_modified_id(world, entity, id);
+    } else {
+        T& dst = *static_cast<remove_reference_t<T>*>(ecs_get_mut_modified_id(world, entity, id));
+        dst = FLECS_MOV(value);
+    }
 }
 
 // emplace for T(Args...)

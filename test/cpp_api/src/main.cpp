@@ -823,6 +823,8 @@ void Observer_on_add_expr(void);
 void Observer_observer_w_filter_term(void);
 void Observer_run_callback(void);
 void Observer_get_query(void);
+void Observer_on_set_w_set(void);
+void Observer_on_set_w_defer_set(void);
 
 // Testsuite 'Filter'
 void Filter_term_each_component(void);
@@ -4453,6 +4455,14 @@ bake_test_case Observer_testcases[] = {
     {
         "get_query",
         Observer_get_query
+    },
+    {
+        "on_set_w_set",
+        Observer_on_set_w_set
+    },
+    {
+        "on_set_w_defer_set",
+        Observer_on_set_w_defer_set
     }
 };
 
@@ -6262,7 +6272,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        23,
+        25,
         Observer_testcases
     },
     {

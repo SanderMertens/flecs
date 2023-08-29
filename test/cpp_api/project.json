@@ -856,7 +856,9 @@
                 "on_add_expr",
                 "observer_w_filter_term",
                 "run_callback",
-                "get_query"
+                "get_query",
+                "on_set_w_set",
+                "on_set_w_defer_set"
             ]
         }, {
             "id": "Filter",

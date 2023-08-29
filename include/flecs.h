@@ -2700,6 +2700,23 @@ void* ecs_get_mut_id(
     ecs_entity_t entity,
     ecs_id_t id); 
 
+/** Combines get_mut + modifed in single operation. 
+ * This operation is a more efficient alternative to calling ecs_get_mut_id and
+ * ecs_modified_id separately. This operation is only valid when the world is in
+ * deferred mode, which ensures that the Modified event is not emitted before
+ * the modification takes place.
+ * 
+ * @param world The world.
+ * @param entity The entity.
+ * @param id The id of the component to obtain.
+ * @return The component pointer.
+ */
+FLECS_API
+void* ecs_get_mut_modified_id(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id); 
+
 /** Begin exclusive write access to entity.
  * This operation provides safe exclusive access to the components of an entity
  * without the overhead of deferring operations.
