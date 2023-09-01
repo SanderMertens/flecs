@@ -88,9 +88,18 @@ If you look at the size of the flecs.c and flecs.h files you might wonder why th
 Not all addons are useful in any project. You can customize a Flecs build to only build the things you need, which reduces executable size and improves build speed. See the quickstart on how to customize a build.
 
 ## Why does the explorer not work?
-See the troubleshooting section of: https://github.com/SanderMertens/ecs_benchmark/blob/master/README.md
+Make sure that:
+- The REST API is enabled (see the [REST manual](https://www.flecs.dev/flecs/md_docs_RestApi.html))
+- You can reach the REST API by testing http://localhost:27750/entity/flecs
+- You call `ecs_progress`/`world::progress` in your main loop
 
-If it's still not working, check the output of the browser console and post it in an issue or on Discord!
+If that doesn't work, see the [README of the explorer](https://github.com/flecs-hub/explorer) for potential issues with browser security settings and how to run a local instance of the explorer.
+
+## Does the explorer collect data from my application?
+No! The https://flecs.dev/explorer page is a 100% client side application that does not talk to a backend. When you navigate to the page it will attempt to connect to http://localhost:27750 to find a running Flecs application. The data that the explorer fetches never leaves your machine.
+
+## Why can't I see component values in the explorer?
+The explorer can only display component values if the reflection data has been registered for the component. See the [C reflection examples](https://github.com/SanderMertens/flecs/tree/master/examples/c/reflection) and [C++ reflection examples](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/reflection) for more information.
 
 ## How do I detect which entities have changed?
 Flecs has builtin change detection. Additionally, you can use an `OnSet` observer to get notified of changes to component values. See the query change detection and observer examples for more information.
