@@ -792,6 +792,10 @@ void SerializeTypeInfoToJson_struct_w_value_range(void);
 void SerializeTypeInfoToJson_struct_w_error_range(void);
 void SerializeTypeInfoToJson_struct_w_warning_range(void);
 void SerializeTypeInfoToJson_struct_w_error_and_warning_range(void);
+void SerializeTypeInfoToJson_struct_nested(void);
+void SerializeTypeInfoToJson_struct_nested_2_lvls(void);
+void SerializeTypeInfoToJson_struct_nested_2_members(void);
+void SerializeTypeInfoToJson_struct_nested_3_members(void);
 
 // Testsuite 'MetaUtils'
 void MetaUtils_struct_w_2_i32(void);
@@ -807,6 +811,7 @@ void MetaUtils_struct_w_4_bitmask(void);
 void MetaUtils_struct_w_3_entities(void);
 void MetaUtils_struct_w_2_array_3_i32(void);
 void MetaUtils_struct_w_nested(void);
+void MetaUtils_struct_w_2_nested(void);
 void MetaUtils_enum_nospace(void);
 void MetaUtils_struct_nospace(void);
 void MetaUtils_identifier_w_underscore(void);
@@ -4028,6 +4033,22 @@ bake_test_case SerializeTypeInfoToJson_testcases[] = {
     {
         "struct_w_error_and_warning_range",
         SerializeTypeInfoToJson_struct_w_error_and_warning_range
+    },
+    {
+        "struct_nested",
+        SerializeTypeInfoToJson_struct_nested
+    },
+    {
+        "struct_nested_2_lvls",
+        SerializeTypeInfoToJson_struct_nested_2_lvls
+    },
+    {
+        "struct_nested_2_members",
+        SerializeTypeInfoToJson_struct_nested_2_members
+    },
+    {
+        "struct_nested_3_members",
+        SerializeTypeInfoToJson_struct_nested_3_members
     }
 };
 
@@ -4083,6 +4104,10 @@ bake_test_case MetaUtils_testcases[] = {
     {
         "struct_w_nested",
         MetaUtils_struct_w_nested
+    },
+    {
+        "struct_w_2_nested",
+        MetaUtils_struct_w_2_nested
     },
     {
         "enum_nospace",
@@ -4860,14 +4885,14 @@ static bake_test_suite suites[] = {
         "SerializeTypeInfoToJson",
         NULL,
         NULL,
-        35,
+        39,
         SerializeTypeInfoToJson_testcases
     },
     {
         "MetaUtils",
         NULL,
         NULL,
-        18,
+        19,
         MetaUtils_testcases
     },
     {

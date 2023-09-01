@@ -2715,7 +2715,7 @@ FLECS_API
 void* ecs_get_mut_modified_id(
     ecs_world_t *world,
     ecs_entity_t entity,
-    ecs_id_t id); 
+    ecs_id_t id);
 
 /** Begin exclusive write access to entity.
  * This operation provides safe exclusive access to the components of an entity

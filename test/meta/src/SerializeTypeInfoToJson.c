@@ -544,3 +544,125 @@ void SerializeTypeInfoToJson_struct_w_error_and_warning_range(void) {
 
     ecs_fini(world);
 }
+
+void SerializeTypeInfoToJson_struct_nested(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_struct(world, {
+        .members = {
+            { "x", ecs_id(ecs_i32_t) },
+            { "y", ecs_id(ecs_i32_t) }
+        }
+    });
+
+    ecs_entity_t n = ecs_struct(world, {
+        .members = {
+            { "one", s }
+        }
+    });
+
+    char *ti = ecs_type_info_to_json(world, n);
+    test_assert(ti != NULL);
+    test_str(ti, 
+        "{\"one\":{\"x\":[\"int\"], \"y\":[\"int\"]}}"
+    );
+    ecs_os_free(ti);
+
+    ecs_fini(world);
+}
+
+void SerializeTypeInfoToJson_struct_nested_2_lvls(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_struct(world, {
+        .members = {
+            { "a", ecs_id(ecs_i32_t) },
+            { "b", ecs_id(ecs_i32_t) },
+            { "c", ecs_id(ecs_i32_t) }
+        }
+    });
+
+    ecs_entity_t n_1 = ecs_struct(world, {
+        .members = {
+            { "x", s },
+            { "y", s }
+        }
+    });
+
+    ecs_entity_t n_2 = ecs_struct(world, {
+        .members = {
+            { "one", n_1 }
+        }
+    });
+
+    char *ti = ecs_type_info_to_json(world, n_2);
+    test_assert(ti != NULL);
+    test_str(ti, 
+        "{\"one\":{"
+            "\"x\":{\"a\":[\"int\"], \"b\":[\"int\"], \"c\":[\"int\"]}, "
+            "\"y\":{\"a\":[\"int\"], \"b\":[\"int\"], \"c\":[\"int\"]}"
+        "}}"
+    );
+    ecs_os_free(ti);
+
+    ecs_fini(world);
+}
+
+void SerializeTypeInfoToJson_struct_nested_2_members(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_struct(world, {
+        .members = {
+            { "x", ecs_id(ecs_i32_t) },
+            { "y", ecs_id(ecs_i32_t) }
+        }
+    });
+
+    ecs_entity_t n = ecs_struct(world, {
+        .members = {
+            { "one", s },
+            { "two", s },
+        }
+    });
+
+    char *ti = ecs_type_info_to_json(world, n);
+    test_assert(ti != NULL);
+    test_str(ti, 
+        "{\"one\":{\"x\":[\"int\"], \"y\":[\"int\"]}, \"two\":{\"x\":[\"int\"], \"y\":[\"int\"]}}"
+    );
+    ecs_os_free(ti);
+
+    ecs_fini(world);
+}
+
+void SerializeTypeInfoToJson_struct_nested_3_members(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_struct(world, {
+        .members = {
+            { "x", ecs_id(ecs_i32_t) },
+            { "y", ecs_id(ecs_i32_t) }
+        }
+    });
+
+    ecs_entity_t n = ecs_struct(world, {
+        .members = {
+            { "one", s },
+            { "two", ecs_id(ecs_i32_t) },
+            { "three", s },
+        }
+    });
+
+    char *ti = ecs_type_info_to_json(world, n);
+    test_assert(ti != NULL);
+    test_str(ti, 
+        "{"
+          "\"one\":{\"x\":[\"int\"], \"y\":[\"int\"]}, "
+          "\"two\":[\"int\"], "
+          "\"three\":{\"x\":[\"int\"], \"y\":[\"int\"]}"
+        "}"
+    );
+    ecs_os_free(ti);
+
+    ecs_fini(world);
+}

@@ -828,7 +828,11 @@
                 "struct_w_value_range",
                 "struct_w_error_range",
                 "struct_w_warning_range",
-                "struct_w_error_and_warning_range"
+                "struct_w_error_and_warning_range",
+                "struct_nested",
+                "struct_nested_2_lvls",
+                "struct_nested_2_members",
+                "struct_nested_3_members"
             ]
         }, {
             "id": "MetaUtils",
@@ -846,6 +850,7 @@
                 "struct_w_3_entities",
                 "struct_w_2_array_3_i32",
                 "struct_w_nested",
+                "struct_w_2_nested",
                 "enum_nospace",
                 "struct_nospace",
                 "identifier_w_underscore",

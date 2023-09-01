@@ -111,6 +111,10 @@ ECS_STRUCT(Struct_2_array_3_i32, {
     int32_t two[3];
 });
 
+ECS_STRUCT(Struct_nested, {
+    Struct_2_i32 one;
+});
+
 ECS_STRUCT(Struct_2_nested, {
     Struct_2_i32 one;
     Struct_2_i32 two;
@@ -289,6 +293,21 @@ void MetaUtils_struct_w_2_array_3_i32(void) {
 }
 
 void MetaUtils_struct_w_nested(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_META_COMPONENT(world, Struct_2_i32);
+    ECS_META_COMPONENT(world, Struct_nested);
+
+    Struct_nested v = {{1, 2}};
+    char *expr = ecs_ptr_to_expr(world, ecs_id(Struct_nested), &v);
+    test_assert(expr != NULL);
+    test_str(expr, "{one: {x: 1, y: 2}}");
+    ecs_os_free(expr);
+
+    ecs_fini(world);
+}
+
+void MetaUtils_struct_w_2_nested(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_META_COMPONENT(world, Struct_2_i32);
