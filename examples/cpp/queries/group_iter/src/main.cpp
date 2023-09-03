@@ -29,17 +29,6 @@ struct Soldier {};
 struct Beggar {};
 struct Mage {};
 
-uint64_t group_by_relation(flecs::world_t *ecs, flecs::table_t *table, 
-    flecs::entity_t id, void *) 
-{
-    // Use ecs_search to find the target for the relationship in the table
-    flecs::id_t match;
-    if (ecs_search(ecs, table, flecs::id(id, flecs::Wildcard), &match) != -1) {
-        return flecs::id(ecs, match).second(); // World cell is 2nd element of pair
-    }
-    return 0;
-}
-
 int main() {
     flecs::world ecs;
 
@@ -73,7 +62,7 @@ int main() {
         .add<Npc>();
 
     flecs::query<Npc> q = ecs.query_builder<Npc>()
-        .group_by<WorldCell>(group_by_relation)
+        .group_by<WorldCell>()
         .build();
 
     // Iterate all tables
