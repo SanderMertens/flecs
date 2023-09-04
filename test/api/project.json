@@ -2316,7 +2316,9 @@
                 "auto_override_copy_once",
                 "always_override",
                 "always_override_pair",
-                "child_of_prefab_is_prefab"
+                "child_of_prefab_is_prefab",
+                "override_exclusive",
+                "override_exclusive_2_lvls"
             ]
         }, {
             "id": "World",

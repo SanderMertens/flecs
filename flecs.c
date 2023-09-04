@@ -45821,13 +45821,34 @@ void flecs_add_overrides_for_base(
         int32_t i, count = base_table->type.count;
         for (i = 0; i < count; i ++) {
             ecs_id_t id = ids[i];
+            ecs_id_t to_add = 0;
             if (ECS_HAS_ID_FLAG(id, OVERRIDE)) {
-                flecs_type_add(world, dst_type, id & ~ECS_OVERRIDE);
+                to_add = id & ~ECS_OVERRIDE;
             } else {
                 ecs_table_record_t *tr = &base_table->_->records[i];
                 ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
                 if (idr->flags & EcsIdAlwaysOverride) {
-                    flecs_type_add(world, dst_type, id);
+                    to_add = id;
+                }
+            }
+            if (to_add) {
+                ecs_id_t wc = ecs_pair(ECS_PAIR_FIRST(to_add), EcsWildcard);
+                bool exclusive = false;
+                if (ECS_IS_PAIR(to_add)) {
+                    ecs_id_record_t *idr = flecs_id_record_get(world, wc);
+                    if (idr) {
+                        exclusive = (idr->flags & EcsIdExclusive) != 0;
+                    }
+                }
+                if (!exclusive) {
+                    flecs_type_add(world, dst_type, to_add);
+                } else {
+                    int32_t column = flecs_type_find(dst_type, wc);
+                    if (column == -1) {
+                        flecs_type_add(world, dst_type, to_add);
+                    } else {
+                        dst_type->array[column] = to_add;
+                    }
                 }
             }
         }

@@ -2234,6 +2234,8 @@ void Prefab_auto_override_copy_once(void);
 void Prefab_always_override(void);
 void Prefab_always_override_pair(void);
 void Prefab_child_of_prefab_is_prefab(void);
+void Prefab_override_exclusive(void);
+void Prefab_override_exclusive_2_lvls(void);
 
 // Testsuite 'World'
 void World_setup(void);
@@ -11285,6 +11287,14 @@ bake_test_case Prefab_testcases[] = {
     {
         "child_of_prefab_is_prefab",
         Prefab_child_of_prefab_is_prefab
+    },
+    {
+        "override_exclusive",
+        Prefab_override_exclusive
+    },
+    {
+        "override_exclusive_2_lvls",
+        Prefab_override_exclusive_2_lvls
     }
 };
 
@@ -13011,7 +13021,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        124,
+        126,
         Prefab_testcases
     },
     {
