@@ -15831,11 +15831,13 @@ void flecs_multi_observer_builtin_run(ecs_iter_t *it) {
 }
 
 static
-void flecs_uni_observer_trigger_existing(
+void flecs_uni_observer_yield_existing(
     ecs_world_t *world,
     ecs_observer_t *observer)
 {
     ecs_iter_action_t callback = observer->callback;
+
+    ecs_defer_begin(world);
 
     /* If yield existing is enabled, observer for each thing that matches
      * the event, if the event is iterable. */
@@ -15861,6 +15863,8 @@ void flecs_uni_observer_trigger_existing(
             callback(&it);
         }
     }
+
+    ecs_defer_end(world);
 }
 
 static
@@ -15874,6 +15878,8 @@ void flecs_multi_observer_yield_existing(
     }
 
     ecs_run_aperiodic(world, EcsAperiodicEmptyTables);
+
+    ecs_defer_begin(world);
 
     int32_t pivot_term = ecs_filter_pivot_term(world, &observer->filter);
     if (pivot_term < 0) {
@@ -15908,6 +15914,8 @@ void flecs_multi_observer_yield_existing(
             world->event_id ++;
         }
     }
+
+    ecs_defer_end(world);
 }
 
 static
@@ -15940,7 +15948,7 @@ int flecs_uni_observer_init(
     flecs_uni_observer_register(world, observer->observable, observer);
 
     if (desc->yield_existing) {
-        flecs_uni_observer_trigger_existing(world, observer);
+        flecs_uni_observer_yield_existing(world, observer);
     }
 
     return 0;

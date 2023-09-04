@@ -2054,6 +2054,8 @@
                 "notify_after_defer_batched_2_entities_in_table_w_tgt",
                 "multi_observer_table_fill_w_singleton",
                 "wildcard_propagate_w_other_table",
+                "add_in_yield_existing",
+                "add_in_yield_existing_multi",
                 "cache_test_1",
                 "cache_test_2",
                 "cache_test_3",

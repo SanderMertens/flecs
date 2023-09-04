@@ -749,3 +749,57 @@ void Observer_on_add_with_pair_singleton(void) {
     world.set<Position>(tgt, {10, 20});
     test_int(count, 1);
 }
+
+void Observer_add_in_yield_existing(void) {
+    flecs::world world;
+
+    flecs::entity e1 = world.entity().set<Position>({});
+    flecs::entity e2 = world.entity().set<Position>({});
+    flecs::entity e3 = world.entity().set<Position>({});
+
+    world.observer()
+        .with<Position>()
+        .event(flecs::OnAdd)
+        .yield_existing()
+        .each([](flecs::entity e) {
+            e.add<Velocity>();
+        });
+
+    test_assert(e1.has<Position>());
+    test_assert(e1.has<Velocity>());
+
+    test_assert(e2.has<Position>());
+    test_assert(e2.has<Velocity>());
+
+    test_assert(e3.has<Position>());
+    test_assert(e3.has<Velocity>());
+}
+
+void Observer_add_in_yield_existing_multi(void) {
+    flecs::world world;
+
+    flecs::entity e1 = world.entity().set<Position>({}).set<Mass>({});
+    flecs::entity e2 = world.entity().set<Position>({}).set<Mass>({});
+    flecs::entity e3 = world.entity().set<Position>({}).set<Mass>({});
+
+    world.observer()
+        .with<Position>()
+        .with<Mass>()
+        .event(flecs::OnAdd)
+        .yield_existing()
+        .each([](flecs::entity e) {
+            e.add<Velocity>();
+        });
+
+    test_assert(e1.has<Position>());
+    test_assert(e1.has<Mass>());
+    test_assert(e1.has<Velocity>());
+
+    test_assert(e2.has<Position>());
+    test_assert(e2.has<Mass>());
+    test_assert(e2.has<Velocity>());
+
+    test_assert(e3.has<Position>());
+    test_assert(e3.has<Mass>());
+    test_assert(e3.has<Velocity>());
+}

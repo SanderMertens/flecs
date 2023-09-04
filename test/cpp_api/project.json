@@ -863,7 +863,9 @@
                 "on_add_singleton",
                 "on_add_pair_singleton",
                 "on_add_pair_wildcard_singleton",
-                "on_add_with_pair_singleton"
+                "on_add_with_pair_singleton",
+                "add_in_yield_existing",
+                "add_in_yield_existing_multi"
             ]
         }, {
             "id": "Filter",

@@ -830,6 +830,8 @@ void Observer_on_add_singleton(void);
 void Observer_on_add_pair_singleton(void);
 void Observer_on_add_pair_wildcard_singleton(void);
 void Observer_on_add_with_pair_singleton(void);
+void Observer_add_in_yield_existing(void);
+void Observer_add_in_yield_existing_multi(void);
 
 // Testsuite 'Filter'
 void Filter_term_each_component(void);
@@ -4488,6 +4490,14 @@ bake_test_case Observer_testcases[] = {
     {
         "on_add_with_pair_singleton",
         Observer_on_add_with_pair_singleton
+    },
+    {
+        "add_in_yield_existing",
+        Observer_add_in_yield_existing
+    },
+    {
+        "add_in_yield_existing_multi",
+        Observer_add_in_yield_existing_multi
     }
 };
 
@@ -6297,7 +6307,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        29,
+        31,
         Observer_testcases
     },
     {

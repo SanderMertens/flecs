@@ -4883,3 +4883,84 @@ void Observer_multi_observer_table_fill_w_singleton(void) {
 
     ecs_fini(world);
 }
+
+ECS_COMPONENT_DECLARE(Velocity);
+
+static
+void AddVelocity(ecs_iter_t *it) {
+    for (int i = 0; i < it->count; i ++) {
+        ecs_add(it->world, it->entities[i], Velocity);
+        test_assert(!ecs_has(it->world, it->entities[i], Velocity));
+    }
+}
+
+void Observer_add_in_yield_existing(void) {
+    ecs_world_t* world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_entity_t e3 = ecs_new(world, Position);
+
+    ecs_observer(world, {
+        .filter.terms = {
+            { .id = ecs_id(Position) },
+        },
+        .callback = AddVelocity,
+        .events = { EcsOnAdd },
+        .yield_existing = true,
+    });
+
+    test_assert(ecs_has(world, e1, Position));
+    test_assert(ecs_has(world, e1, Velocity));
+
+    test_assert(ecs_has(world, e2, Position));
+    test_assert(ecs_has(world, e2, Velocity));
+
+    test_assert(ecs_has(world, e3, Position));
+    test_assert(ecs_has(world, e3, Velocity));
+
+    ecs_fini(world);
+}
+
+void Observer_add_in_yield_existing_multi(void) {
+    ecs_world_t* world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Mass);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_entity_t e3 = ecs_new(world, Position);
+
+    ecs_add(world, e1, Mass);
+    ecs_add(world, e2, Mass);
+    ecs_add(world, e3, Mass);
+
+    ecs_observer(world, {
+        .filter.terms = {
+            { .id = ecs_id(Position) },
+            { .id = ecs_id(Mass) },
+        },
+        .callback = AddVelocity,
+        .events = { EcsOnAdd },
+        .yield_existing = true,
+    });
+
+    test_assert(ecs_has(world, e1, Position));
+    test_assert(ecs_has(world, e1, Mass));
+    test_assert(ecs_has(world, e1, Velocity));
+
+    test_assert(ecs_has(world, e2, Position));
+    test_assert(ecs_has(world, e2, Mass));
+    test_assert(ecs_has(world, e2, Velocity));
+
+    test_assert(ecs_has(world, e3, Position));
+    test_assert(ecs_has(world, e3, Mass));
+    test_assert(ecs_has(world, e3, Velocity));
+
+    ecs_fini(world);
+}
