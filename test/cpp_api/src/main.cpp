@@ -826,6 +826,10 @@ void Observer_run_callback(void);
 void Observer_get_query(void);
 void Observer_on_set_w_set(void);
 void Observer_on_set_w_defer_set(void);
+void Observer_on_add_singleton(void);
+void Observer_on_add_pair_singleton(void);
+void Observer_on_add_pair_wildcard_singleton(void);
+void Observer_on_add_with_pair_singleton(void);
 
 // Testsuite 'Filter'
 void Filter_term_each_component(void);
@@ -4468,6 +4472,22 @@ bake_test_case Observer_testcases[] = {
     {
         "on_set_w_defer_set",
         Observer_on_set_w_defer_set
+    },
+    {
+        "on_add_singleton",
+        Observer_on_add_singleton
+    },
+    {
+        "on_add_pair_singleton",
+        Observer_on_add_pair_singleton
+    },
+    {
+        "on_add_pair_wildcard_singleton",
+        Observer_on_add_pair_wildcard_singleton
+    },
+    {
+        "on_add_with_pair_singleton",
+        Observer_on_add_with_pair_singleton
     }
 };
 
@@ -6277,7 +6297,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        25,
+        29,
         Observer_testcases
     },
     {

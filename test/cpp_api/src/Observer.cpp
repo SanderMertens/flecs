@@ -665,3 +665,87 @@ void Observer_on_set_w_defer_set(void) {
 
     test_int(count, 1);
 }
+
+#include <iostream>
+
+void Observer_on_add_singleton(void) {
+    flecs::world world;
+
+    int32_t count = 0;
+
+    world.observer<Position>()
+        .term_at(1).singleton()
+        .event(flecs::OnSet)
+        .each([&](Position& p) {
+            test_int(p.x, 10);
+            test_int(p.y, 20);
+            count ++;
+        });
+
+    world.set<Position>({10, 20});
+
+    test_int(count, 1);
+}
+
+void Observer_on_add_pair_singleton(void) {
+    flecs::world world;
+
+    int32_t count = 0;
+
+    flecs::entity tgt = world.entity();
+
+    world.observer<Position>()
+        .term_at(1).second(tgt).singleton()
+        .event(flecs::OnSet)
+        .each([&](Position& p) {
+            test_int(p.x, 10);
+            test_int(p.y, 20);
+            count ++;
+        });
+
+    world.set<Position>(tgt, {10, 20});
+
+    test_int(count, 1);
+}
+
+void Observer_on_add_pair_wildcard_singleton(void) {
+    flecs::world world;
+
+    int32_t count = 0;
+
+    flecs::entity tgt_1 = world.entity();
+    flecs::entity tgt_2 = world.entity();
+
+    world.observer<Position>()
+        .term_at(1).second(flecs::Wildcard).singleton()
+        .event(flecs::OnSet)
+        .each([&](Position& p) {
+            test_int(p.x, 10);
+            test_int(p.y, 20);
+            count ++;
+        });
+
+    world.set<Position>(tgt_1, {10, 20});
+    test_int(count, 1);
+
+    world.set<Position>(tgt_2, {10, 20});
+    test_int(count, 2);
+}
+
+void Observer_on_add_with_pair_singleton(void) {
+    flecs::world world;
+
+    int32_t count = 0;
+
+    flecs::entity tgt = world.entity();
+
+    world.observer()
+        .with<Position>(tgt).singleton()
+        .event(flecs::OnSet)
+        .each([&](flecs::entity) {
+            count ++;
+        });
+
+    world.set<Position>(tgt, {10, 20});
+    test_int(count, 1);
+}

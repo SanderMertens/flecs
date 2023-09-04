@@ -387,7 +387,12 @@ struct term_builder_i : term_id_builder_i<Base> {
         }
 
         ecs_assert(sid != 0, ECS_INVALID_PARAMETER, NULL);
-        m_term->src.id = sid;
+
+        if (!ECS_IS_PAIR(sid)) {
+            m_term->src.id = sid;
+        } else {
+            m_term->src.id = ecs_pair_first(world(), sid);
+        }
         return *this;
     }
 
