@@ -251,3 +251,15 @@ void EnumTypes_enum_w_short_notation(void) {
 
     ecs_fini(world);
 }
+
+void EnumTypes_constant_w_name_prefix(void) {
+    // Implement testcase
+}
+
+void EnumTypes_constant_w_type_prefix(void) {
+    // Implement testcase
+}
+
+void EnumTypes_constant_w_name_type_prefix(void) {
+    // Implement testcase
+}

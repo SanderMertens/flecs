@@ -28317,6 +28317,10 @@ int meta_parse_constants(
 
     const char *ptr = desc;
     const char *name = ecs_get_name(world, t);
+    int32_t name_len = ecs_os_strlen(name);
+    const ecs_world_info_t *info = ecs_get_world_info(world);
+    const char *name_prefix = info->name_prefix;
+    int32_t name_prefix_len = name_prefix ? ecs_os_strlen(name_prefix) : 0;
 
     meta_parse_ctx_t ctx = {
         .name = name,
@@ -28335,6 +28339,18 @@ int meta_parse_constants(
             ecs_meta_error(&ctx, ptr,
                 "bitmask requires explicit value assignment");
             goto error;
+        }
+
+        if (name_prefix) {
+            if (!ecs_os_strncmp(token.name, name_prefix, name_prefix_len)) {
+                ecs_os_memmove(token.name, token.name + name_prefix_len, 
+                    ecs_os_strlen(token.name) - name_prefix_len + 1);
+            }
+        }
+
+        if (!ecs_os_strncmp(token.name, name, name_len)) {
+            ecs_os_memmove(token.name, token.name + name_len, 
+                ecs_os_strlen(token.name) - name_len + 1);
         }
 
         ecs_entity_t c = ecs_entity(world, {
@@ -53055,6 +53071,9 @@ int json_typeinfo_ser_type_ops(
     ecs_strbuf_t *str,
     const EcsStruct *st) 
 {
+    const EcsStruct *stack[64] = {st};
+    int32_t sp = 1;
+
     for (int i = 0; i < op_count; i ++) {
         ecs_meta_type_op_t *op = &ops[i];
 
@@ -53072,13 +53091,16 @@ int json_typeinfo_ser_type_ops(
             i += op->op_count - 1;
             continue;
         }
-        
+
         switch(op->kind) {
         case EcsOpPush:
             flecs_json_object_push(str);
+            ecs_assert(sp < 63, ECS_INVALID_OPERATION, "type nesting too deep");
+            stack[sp ++] = ecs_get(world, op->type, EcsStruct);
             break;
         case EcsOpPop:
             flecs_json_object_pop(str);
+            sp --;
             break;
         case EcsOpArray:
         case EcsOpVector:
@@ -53102,7 +53124,7 @@ int json_typeinfo_ser_type_ops(
         case EcsOpEntity:
         case EcsOpString:
         case EcsOpOpaque:
-            if (json_typeinfo_ser_type_op(world, op, str, st)) {
+            if (json_typeinfo_ser_type_op(world, op, str, stack[sp - 1])) {
                 goto error;
             }
             break;

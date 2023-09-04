@@ -817,6 +817,9 @@ void MetaUtils_struct_nospace(void);
 void MetaUtils_identifier_w_underscore(void);
 void MetaUtils_struct_w_ptr(void);
 void MetaUtils_private_members(void);
+void MetaUtils_enum_constant_w_name_prefix(void);
+void MetaUtils_enum_constant_w_type_prefix(void);
+void MetaUtils_enum_constant_w_name_type_prefix(void);
 
 // Testsuite 'Vars'
 void Vars_declare_1_var(void);
@@ -4128,6 +4131,18 @@ bake_test_case MetaUtils_testcases[] = {
     {
         "private_members",
         MetaUtils_private_members
+    },
+    {
+        "enum_constant_w_name_prefix",
+        MetaUtils_enum_constant_w_name_prefix
+    },
+    {
+        "enum_constant_w_type_prefix",
+        MetaUtils_enum_constant_w_type_prefix
+    },
+    {
+        "enum_constant_w_name_type_prefix",
+        MetaUtils_enum_constant_w_name_type_prefix
     }
 };
 
@@ -4892,7 +4907,7 @@ static bake_test_suite suites[] = {
         "MetaUtils",
         NULL,
         NULL,
-        19,
+        22,
         MetaUtils_testcases
     },
     {

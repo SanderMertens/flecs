@@ -72,8 +72,26 @@ ECS_BITMASK(Bitmask, {
     Bacon = 1, Lettuce = 2, Tomato = 4, Blt = 7
 });
 
-ECS_ENUM(Enum_Nospace, {Enum_Nospace_A,Enum_Nospace_B,Enum_Nospace_C});
+ECS_ENUM(Enum_Nospace, {EnumNospace_A,EnumNospace_B,EnumNospace_C});
 ECS_STRUCT(Struct_Nospace, {float x;float y;});
+
+ECS_ENUM(TestNamePrefix, {
+    TestA,
+    TestB,
+    TestC
+});
+
+ECS_ENUM(TestTypePrefix, {
+    TestTypePrefixA,
+    TestTypePrefixB,
+    TestTypePrefixC
+});
+
+ECS_ENUM(TestNameTypePrefix, {
+    TestNameTypePrefixA,
+    TestNameTypePrefixB,
+    TestNameTypePrefixC
+});
 
 ECS_STRUCT(Struct_3_enum, {
     Enum_Default one;
@@ -332,13 +350,13 @@ void MetaUtils_enum_nospace(void) {
     test_str(ecs_get_name(world, e), "Enum_Nospace");
     test_assert(ecs_has(world, e, EcsEnum));
 
-    ecs_entity_t c_a = ecs_lookup_child(world, e, "Enum_Nospace_A");
+    ecs_entity_t c_a = ecs_lookup_child(world, e, "EnumNospace_A");
     test_assert(c_a != 0);
 
-    ecs_entity_t c_b = ecs_lookup_child(world, e, "Enum_Nospace_B");
+    ecs_entity_t c_b = ecs_lookup_child(world, e, "EnumNospace_B");
     test_assert(c_b != 0);
 
-    ecs_entity_t c_c = ecs_lookup_child(world, e, "Enum_Nospace_C");
+    ecs_entity_t c_c = ecs_lookup_child(world, e, "EnumNospace_C");
     test_assert(c_c != 0);
 
     ecs_fini(world);
@@ -434,6 +452,92 @@ void MetaUtils_private_members(void) {
     {
         ecs_entity_t m = ecs_lookup_child(world, s, "z");
         test_assert(m == 0);
+    }
+
+    ecs_fini(world);
+}
+
+void MetaUtils_enum_constant_w_name_prefix(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_set_name_prefix(world, "Test");
+
+    ECS_META_COMPONENT(world, TestNamePrefix);
+
+    test_assert(ecs_id(TestNamePrefix) != 0);
+    ecs_entity_t e = ecs_id(TestNamePrefix);
+
+    test_str(ecs_get_name(world, e), "NamePrefix");
+
+    {
+        ecs_entity_t c_a = ecs_lookup_child(world, e, "A");
+        test_assert(c_a != 0);
+    }
+
+    {
+        ecs_entity_t c_b = ecs_lookup_child(world, e, "B");
+        test_assert(c_b != 0);
+    }
+
+    {
+        ecs_entity_t c_c = ecs_lookup_child(world, e, "C");
+        test_assert(c_c != 0);
+    }
+
+    ecs_fini(world);
+}
+
+void MetaUtils_enum_constant_w_type_prefix(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_META_COMPONENT(world, TestTypePrefix);
+
+    test_assert(ecs_id(TestTypePrefix) != 0);
+    ecs_entity_t e = ecs_id(TestTypePrefix);
+
+    {
+        ecs_entity_t c_a = ecs_lookup_child(world, e, "A");
+        test_assert(c_a != 0);
+    }
+
+    {
+        ecs_entity_t c_b = ecs_lookup_child(world, e, "B");
+        test_assert(c_b != 0);
+    }
+
+    {
+        ecs_entity_t c_c = ecs_lookup_child(world, e, "C");
+        test_assert(c_c != 0);
+    }
+
+    ecs_fini(world);
+}
+
+void MetaUtils_enum_constant_w_name_type_prefix(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_set_name_prefix(world, "Test");
+
+    ECS_META_COMPONENT(world, TestNameTypePrefix);
+
+    test_assert(ecs_id(TestNameTypePrefix) != 0);
+    ecs_entity_t e = ecs_id(TestNameTypePrefix);
+
+    test_str(ecs_get_name(world, e), "NameTypePrefix");
+
+    {
+        ecs_entity_t c_a = ecs_lookup_child(world, e, "A");
+        test_assert(c_a != 0);
+    }
+
+    {
+        ecs_entity_t c_b = ecs_lookup_child(world, e, "B");
+        test_assert(c_b != 0);
+    }
+
+    {
+        ecs_entity_t c_c = ecs_lookup_child(world, e, "C");
+        test_assert(c_c != 0);
     }
 
     ecs_fini(world);

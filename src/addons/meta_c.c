@@ -729,6 +729,10 @@ int meta_parse_constants(
 
     const char *ptr = desc;
     const char *name = ecs_get_name(world, t);
+    int32_t name_len = ecs_os_strlen(name);
+    const ecs_world_info_t *info = ecs_get_world_info(world);
+    const char *name_prefix = info->name_prefix;
+    int32_t name_prefix_len = name_prefix ? ecs_os_strlen(name_prefix) : 0;
 
     meta_parse_ctx_t ctx = {
         .name = name,
@@ -747,6 +751,18 @@ int meta_parse_constants(
             ecs_meta_error(&ctx, ptr,
                 "bitmask requires explicit value assignment");
             goto error;
+        }
+
+        if (name_prefix) {
+            if (!ecs_os_strncmp(token.name, name_prefix, name_prefix_len)) {
+                ecs_os_memmove(token.name, token.name + name_prefix_len, 
+                    ecs_os_strlen(token.name) - name_prefix_len + 1);
+            }
+        }
+
+        if (!ecs_os_strncmp(token.name, name, name_len)) {
+            ecs_os_memmove(token.name, token.name + name_len, 
+                ecs_os_strlen(token.name) - name_len + 1);
         }
 
         ecs_entity_t c = ecs_entity(world, {
