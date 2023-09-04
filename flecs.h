@@ -28430,7 +28430,7 @@ flecs::entity import(world& world) {
 
 template <typename Module>
 inline flecs::entity world::module(const char *name) const {
-    flecs::id_t result = _::cpp_type<Module>::id(m_world);
+    flecs::id_t result = _::cpp_type<Module>::id(m_world, nullptr, false);
     if (name) {
         ecs_add_path_w_sep(m_world, result, 0, name, "::", "::");
     }

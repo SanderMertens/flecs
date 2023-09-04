@@ -419,6 +419,11 @@ jobs:
           bake rebuild --strict -D FLECS_NO_LOG
           bake rebuild --strict --cfg release -D FLECS_NO_LOG
 
+      - name: FLECS_DEFAULT
+        run: |
+          bake rebuild --strict
+          bake rebuild --strict --cfg release
+
       - name: custom_build tests
         run: |
           bake rebuild test/custom_builds --strict
