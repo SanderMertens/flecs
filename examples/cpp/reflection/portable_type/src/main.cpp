@@ -1,7 +1,7 @@
 #include <portable_type.h>
 #include <iostream>
 
-// The actual types of of int32_t and uintptr_t vary between platforms.
+// The actual types of int32_t and uintptr_t vary between platforms.
 struct PortableType {
     int32_t i32;
     uintptr_t intptr;

@@ -127,7 +127,7 @@ void Internals_activate_deactivate_activate_other(void) {
     ecs_delete(world, e1);
     ecs_delete(world, e2);
 
-    /* Add entities of different type type to trigger new table activation */
+    /* Add entities of different type to trigger new table activation */
     ECS_ENTITY(world, e3, Position, Velocity);
     ECS_ENTITY(world, e4, Position, Velocity);
 

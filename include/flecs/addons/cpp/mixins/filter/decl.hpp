@@ -9,7 +9,7 @@ namespace flecs {
 
 /**
  * @defgroup cpp_core_filters Filters
- * @brief Filters are are cheaper to create, but slower to iterate than flecs::query.
+ * @brief Filters are cheaper to create, but slower to iterate than flecs::query.
  * 
  * \ingroup cpp_core
  * @{

@@ -3694,7 +3694,7 @@ typedef struct ecs_bulk_desc_t {
     int32_t _canary;
 
     ecs_entity_t *entities; /**< Entities to bulk insert. Entity ids provided by
-                             * the application application must be empty (cannot
+                             * the application must be empty (cannot
                              * have components). If no entity ids are provided, the
                              * operation will create 'count' new entities. */
 
@@ -7862,7 +7862,7 @@ ecs_id_t ecs_field_id(
 
 /** Return index of matched table column.
  * This function only returns column indices for fields that have been matched
- * on the the $this variable. Fields matched on other tables will return -1.
+ * on the $this variable. Fields matched on other tables will return -1.
  * 
  * @param it The iterator.
  * @param index The index of the field in the iterator.
@@ -10596,7 +10596,7 @@ typedef struct EcsRateFilter {
  *
  * The timer is synchronous, and is incremented each frame by delta_time.
  *
- * The tick_source entity will be be a tick source after this operation. Tick
+ * The tick_source entity will be a tick source after this operation. Tick
  * sources can be read by getting the EcsTickSource component. If the tick
  * source ticked this frame, the 'tick' member will be true. When the tick 
  * source is a system, the system will tick when the timer ticks.
@@ -10622,7 +10622,7 @@ ecs_entity_t ecs_set_timeout(
  *
  * The timer is synchronous, and is incremented each frame by delta_time.
  *
- * The tick_source entity will be be a tick source after this operation. Tick
+ * The tick_source entity will be a tick source after this operation. Tick
  * sources can be read by getting the EcsTickSource component. If the tick
  * source ticked this frame, the 'tick' member will be true. When the tick 
  * source is a system, the system will tick when the timer ticks.
@@ -10643,7 +10643,7 @@ ecs_ftime_t ecs_get_timeout(
  *
  * The timer is synchronous, and is incremented each frame by delta_time.
  *
- * The tick_source entity will be be a tick source after this operation. Tick
+ * The tick_source entity will be a tick source after this operation. Tick
  * sources can be read by getting the EcsTickSource component. If the tick
  * source ticked this frame, the 'tick' member will be true. When the tick 
  * source is a system, the system will tick when the timer ticks. 
@@ -10734,7 +10734,7 @@ void ecs_randomize_timers(
  * If no tick source is provided, the rate filter will use the frame tick as
  * source, which corresponds with the number of times ecs_progress is called.
  *
- * The tick_source entity will be be a tick source after this operation. Tick
+ * The tick_source entity will be a tick source after this operation. Tick
  * sources can be read by getting the EcsTickSource component. If the tick
  * source ticked this frame, the 'tick' member will be true. When the tick 
  * source is a system, the system will tick when the timer ticks.  
@@ -16912,7 +16912,7 @@ namespace flecs {
 
 /**
  * @defgroup cpp_core_filters Filters
- * @brief Filters are are cheaper to create, but slower to iterate than flecs::query.
+ * @brief Filters are cheaper to create, but slower to iterate than flecs::query.
  * 
  * \ingroup cpp_core
  * @{

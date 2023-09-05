@@ -568,7 +568,7 @@ int main() {
 }
 ```
 
-The `ecs_new`, `ecs_add` and `ecs_remove` (not exhaustive) functions are wrapper macros around functions functions that accept a component id. The following code is equivalent to the previous example:
+The `ecs_new`, `ecs_add` and `ecs_remove` (not exhaustive) functions are wrapper macros around functions that accept a component id. The following code is equivalent to the previous example:
 
 ```c
 typedef struct Position {

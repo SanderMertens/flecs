@@ -918,7 +918,7 @@ typedef struct ecs_bulk_desc_t {
     int32_t _canary;
 
     ecs_entity_t *entities; /**< Entities to bulk insert. Entity ids provided by
-                             * the application application must be empty (cannot
+                             * the application must be empty (cannot
                              * have components). If no entity ids are provided, the
                              * operation will create 'count' new entities. */
 
@@ -5065,7 +5065,7 @@ ecs_id_t ecs_field_id(
 
 /** Return index of matched table column.
  * This function only returns column indices for fields that have been matched
- * on the the $this variable. Fields matched on other tables will return -1.
+ * on the $this variable. Fields matched on other tables will return -1.
  * 
  * @param it The iterator.
  * @param index The index of the field in the iterator.
@@ -5089,7 +5089,7 @@ ecs_entity_t ecs_field_src(
     int32_t index);
 
 /** Return field type size.
- * Return type size of the field field. Returns 0 if the field has no data.
+ * Return type size of the field. Returns 0 if the field has no data.
  * 
  * @param it The iterator.
  * @param index The index of the field in the iterator.
