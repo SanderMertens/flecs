@@ -12,7 +12,7 @@ struct Position {
 // Dummy tag to put entities in different tables
 struct Tag { };
 
-// Create a relationship to use for for the group_by function. Tables will
+// Create a relationship to use for the group_by function. Tables will
 // be assigned the relationship target as group id
 struct Group { };
 

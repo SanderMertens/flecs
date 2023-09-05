@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
     ecs_world_t *ecs = ecs_init_w_args(argc, argv);
 
     // This example shows how to annotate systems that delete entities, in a way
-    // that allows the scheduler to to correctly insert sync points. See the
+    // that allows the scheduler to correctly insert sync points. See the
     // sync_point example for more details on sync points.
     //
     // While annotating a system for a delete operation follows the same 

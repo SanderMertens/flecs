@@ -58,7 +58,7 @@ typedef struct EcsRateFilter {
  *
  * The timer is synchronous, and is incremented each frame by delta_time.
  *
- * The tick_source entity will be be a tick source after this operation. Tick
+ * The tick_source entity will be a tick source after this operation. Tick
  * sources can be read by getting the EcsTickSource component. If the tick
  * source ticked this frame, the 'tick' member will be true. When the tick 
  * source is a system, the system will tick when the timer ticks.
@@ -84,7 +84,7 @@ ecs_entity_t ecs_set_timeout(
  *
  * The timer is synchronous, and is incremented each frame by delta_time.
  *
- * The tick_source entity will be be a tick source after this operation. Tick
+ * The tick_source entity will be a tick source after this operation. Tick
  * sources can be read by getting the EcsTickSource component. If the tick
  * source ticked this frame, the 'tick' member will be true. When the tick 
  * source is a system, the system will tick when the timer ticks.
@@ -105,7 +105,7 @@ ecs_ftime_t ecs_get_timeout(
  *
  * The timer is synchronous, and is incremented each frame by delta_time.
  *
- * The tick_source entity will be be a tick source after this operation. Tick
+ * The tick_source entity will be a tick source after this operation. Tick
  * sources can be read by getting the EcsTickSource component. If the tick
  * source ticked this frame, the 'tick' member will be true. When the tick 
  * source is a system, the system will tick when the timer ticks. 
@@ -196,7 +196,7 @@ void ecs_randomize_timers(
  * If no tick source is provided, the rate filter will use the frame tick as
  * source, which corresponds with the number of times ecs_progress is called.
  *
- * The tick_source entity will be be a tick source after this operation. Tick
+ * The tick_source entity will be a tick source after this operation. Tick
  * sources can be read by getting the EcsTickSource component. If the tick
  * source ticked this frame, the 'tick' member will be true. When the tick 
  * source is a system, the system will tick when the timer ticks.  
