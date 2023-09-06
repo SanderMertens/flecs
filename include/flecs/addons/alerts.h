@@ -58,6 +58,9 @@ typedef struct EcsAlertInstance {
 
 /** Map with active alerts for entity. */
 typedef struct EcsAlertsActive {
+    int32_t info_count;
+    int32_t warning_count;
+    int32_t error_count;
     ecs_map_t alerts;
 } EcsAlertsActive;
 

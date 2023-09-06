@@ -73,6 +73,9 @@ ECS_MOVE(EcsAlert, dst, src, {
 static
 ECS_CTOR(EcsAlertsActive, ptr, {
     ecs_map_init(&ptr->alerts, NULL);
+    ptr->info_count = 0;
+    ptr->warning_count = 0;
+    ptr->error_count = 0;
 })
 
 static
@@ -84,6 +87,9 @@ static
 ECS_MOVE(EcsAlertsActive, dst, src, {
     ecs_map_fini(&dst->alerts);
     dst->alerts = src->alerts;
+    dst->info_count = src->info_count;
+    dst->warning_count = src->warning_count;
+    dst->error_count = src->error_count;
     src->alerts = (ecs_map_t){0};
 })
 
@@ -116,6 +122,15 @@ void flecs_alerts_add_alert_to_src(
         world, source, EcsAlertsActive);
     ecs_assert(active != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    ecs_entity_t severity = ecs_get_target(world, alert, ecs_id(EcsAlert), 0);
+    if (severity == EcsAlertInfo) {
+        active->info_count ++;
+    } else if (severity == EcsAlertWarning) {
+        active->warning_count ++;
+    } else if (severity == EcsAlertError) {
+        active->error_count ++;
+    }
+
     ecs_entity_t *ptr = ecs_map_ensure(&active->alerts, alert);
     ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
     ptr[0] = alert_instance;
@@ -132,6 +147,15 @@ void flecs_alerts_remove_alert_from_src(
         world, source, EcsAlertsActive);
     ecs_assert(active != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_map_remove(&active->alerts, alert);
+
+    ecs_entity_t severity = ecs_get_target(world, alert, ecs_id(EcsAlert), 0);
+    if (severity == EcsAlertInfo) {
+        active->info_count --;
+    } else if (severity == EcsAlertWarning) {
+        active->warning_count --;
+    } else if (severity == EcsAlertError) {
+        active->error_count --;
+    }
 
     if (!ecs_map_count(&active->alerts)) {
         ecs_remove(world, source, EcsAlertsActive);
@@ -687,10 +711,10 @@ void FlecsAlertsImport(ecs_world_t *world) {
     ecs_set_name_prefix(world, "Ecs");
     ECS_COMPONENT_DEFINE(world, EcsAlert);
     ecs_remove_pair(world, ecs_id(EcsAlert), ecs_id(EcsIdentifier), EcsSymbol);
+    ECS_COMPONENT_DEFINE(world, EcsAlertsActive);
 
     ecs_set_name_prefix(world, "EcsAlert");
     ECS_COMPONENT_DEFINE(world, EcsAlertInstance);
-    ECS_COMPONENT_DEFINE(world, EcsAlertsActive);
     ECS_COMPONENT_DEFINE(world, EcsAlertTimeout);
 
     ECS_TAG_DEFINE(world, EcsAlertInfo);
@@ -726,6 +750,15 @@ void FlecsAlertsImport(ecs_world_t *world) {
         .dtor = ecs_dtor(EcsAlertInstance),
         .move = ecs_move(EcsAlertInstance),
         .copy = ecs_copy(EcsAlertInstance)
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(EcsAlertsActive),
+        .members = {
+            { .name = "info_count", .type = ecs_id(ecs_i32_t) },
+            { .name = "warning_count", .type = ecs_id(ecs_i32_t) },
+            { .name = "error_count", .type = ecs_id(ecs_i32_t) }
+        }
     });
 
     ECS_SYSTEM(world, MonitorAlerts, EcsPreStore, Alert, (Poly, Query));

@@ -2519,3 +2519,69 @@ void Alerts_retained_alert_w_dead_source(void) {
 
     ecs_fini(world);
 }
+
+void Alerts_alert_counts(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, FlecsAlerts);
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_add(world, e1, Position);
+
+    ecs_entity_t alert_1 = ecs_alert(world, {
+        .entity = ecs_new_entity(world, "position_without_velocity"),
+        .filter.expr = "Position, !Velocity"
+    });
+    test_assert(alert_1 != 0);
+
+    ecs_entity_t alert_2 = ecs_alert(world, {
+        .entity = ecs_new_entity(world, "position_without_mass"),
+        .filter.expr = "Position, !Mass",
+        .severity = EcsAlertWarning
+    });
+    test_assert(alert_2 != 0);
+
+    ecs_progress(world, 1.0);
+
+    test_assert(ecs_has(world, e1, EcsAlertsActive));
+    test_int(ecs_count(world, EcsAlertInstance), 2);
+    {
+        test_assert(ecs_get_alert_count(world, e1, alert_1) == 1);
+        test_assert(ecs_get_alert_count(world, e1, alert_2) == 1);
+
+        const EcsAlertsActive *active = ecs_get(world, e1, EcsAlertsActive);
+        test_assert(active != NULL);
+        test_int(active->error_count, 1);
+        test_int(active->warning_count, 1);
+    }
+
+    ecs_add(world, e1, Velocity);
+
+    ecs_progress(world, 1.0);
+
+    test_assert(ecs_has(world, e1, EcsAlertsActive));
+    test_int(ecs_count(world, EcsAlertInstance), 1);
+    {
+        test_assert(ecs_get_alert_count(world, e1, alert_1) == 0);
+        test_assert(ecs_get_alert_count(world, e1, alert_2) == 1);
+
+        const EcsAlertsActive *active = ecs_get(world, e1, EcsAlertsActive);
+        test_assert(active != NULL);
+        test_int(active->error_count, 0);
+        test_int(active->warning_count, 1);
+    }
+
+    ecs_add(world, e1, Mass);
+
+    ecs_progress(world, 1.0);
+
+    /* Verify that alerts have cleared */
+    test_assert(!ecs_has(world, e1, EcsAlertsActive));
+    test_int(ecs_count(world, EcsAlertInstance), 0);
+
+    ecs_fini(world);
+}

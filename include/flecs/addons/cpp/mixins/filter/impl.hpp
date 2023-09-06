@@ -138,7 +138,7 @@ private:
 public:
     using filter_base::filter_base;
 
-    filter() : filter_base() { } // necessary not not confuse msvc
+    filter() : filter_base() { } // necessary not to confuse msvc
 
     filter(const filter& obj) : filter_base(obj) { }
 

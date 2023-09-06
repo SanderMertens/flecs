@@ -1605,7 +1605,8 @@
                 "member_range_alert_two_instances",
                 "member_range_from_var",
                 "member_range_from_var_after_remove",
-                "retained_alert_w_dead_source"
+                "retained_alert_w_dead_source",
+                "alert_counts"
             ]
         }]
     }

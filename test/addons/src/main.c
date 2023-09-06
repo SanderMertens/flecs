@@ -1533,6 +1533,7 @@ void Alerts_member_range_alert_two_instances(void);
 void Alerts_member_range_from_var(void);
 void Alerts_member_range_from_var_after_remove(void);
 void Alerts_retained_alert_w_dead_source(void);
+void Alerts_alert_counts(void);
 
 bake_test_case Parser_testcases[] = {
     {
@@ -7428,6 +7429,10 @@ bake_test_case Alerts_testcases[] = {
     {
         "retained_alert_w_dead_source",
         Alerts_retained_alert_w_dead_source
+    },
+    {
+        "alert_counts",
+        Alerts_alert_counts
     }
 };
 
@@ -7674,7 +7679,7 @@ static bake_test_suite suites[] = {
         "Alerts",
         NULL,
         NULL,
-        35,
+        36,
         Alerts_testcases
     }
 };

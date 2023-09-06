@@ -7886,7 +7886,7 @@ ecs_entity_t ecs_field_src(
     int32_t index);
 
 /** Return field type size.
- * Return type size of the field field. Returns 0 if the field has no data.
+ * Return type size of the field. Returns 0 if the field has no data.
  * 
  * @param it The iterator.
  * @param index The index of the field in the iterator.
@@ -12019,6 +12019,9 @@ typedef struct EcsAlertInstance {
 
 /** Map with active alerts for entity. */
 typedef struct EcsAlertsActive {
+    int32_t info_count;
+    int32_t warning_count;
+    int32_t error_count;
     ecs_map_t alerts;
 } EcsAlertsActive;
 
@@ -27541,7 +27544,7 @@ private:
 public:
     using filter_base::filter_base;
 
-    filter() : filter_base() { } // necessary not not confuse msvc
+    filter() : filter_base() { } // necessary not to confuse msvc
 
     filter(const filter& obj) : filter_base(obj) { }
 
