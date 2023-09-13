@@ -226,8 +226,16 @@ void flecs_assembly_on_set(
             var->owned = false;
         }
 
-        /* Update script with new code/properties */
+        /* Populate $this variable with instance entity */
         ecs_entity_t instance = it->entities[i];
+        ecs_value_t v = {0};
+        ecs_expr_var_t *var = ecs_vars_declare_w_value(
+            &vars, "this", &v);
+        var->value.type = ecs_id(ecs_entity_t);
+        var->value.ptr = &instance;
+        var->owned = false;
+
+        /* Update script with new code/properties */
         ecs_script_update(world, assembly, instance, script->script, &vars);
         ecs_vars_fini(&vars);
 
@@ -529,6 +537,49 @@ ecs_entity_t plecs_ensure_entity(
 }
 
 static
+ecs_entity_t plecs_ensure_term_id(
+    ecs_world_t *world,
+    plecs_state_t *state,
+    ecs_term_id_t *term_id,
+    const char *expr,
+    int64_t column,
+    ecs_entity_t pred,
+    bool is_subject)
+{
+    ecs_entity_t result = 0;
+    const char *name = term_id->name;
+    if (term_id->flags & EcsIsVariable) {
+        if (name != NULL) {
+            ecs_expr_var_t *var = ecs_vars_lookup(&state->vars, name);
+            if (!var) {
+                ecs_parser_error(name, expr, column,
+                    "unresolved variable '%s'", name);
+                return 0;
+            }
+            if (var->value.type != ecs_id(ecs_entity_t)) {
+                ecs_parser_error(name, expr, column,
+                    "variable '%s' is not an entity", name);
+                return 0;
+            }
+            result = *(ecs_entity_t*)var->value.ptr;
+            if (!result) {
+                ecs_parser_error(name, expr, column,
+                    "variable '%s' is not initialized with valid entity", name);
+                return 0;
+            }
+        } else if (term_id->id) {
+            result = term_id->id;
+        } else {
+            ecs_parser_error(name, expr, column, "invalid variable in term");
+            return 0;
+        }
+    } else {
+        result = plecs_ensure_entity(world, state, name, pred, is_subject);
+    }
+    return result;
+}
+
+static
 bool plecs_pred_is_subj(
     ecs_term_t *term,
     plecs_state_t *state)
@@ -637,19 +688,13 @@ int plecs_create_term(
     state->last_object = 0;
     state->last_assign_id = 0;
 
-    const char *pred_name = term->first.name;
     const char *subj_name = term->src.name;
-    const char *obj_name = term->second.name;
-
     if (!subj_name) {
         subj_name = plecs_set_mask_to_name(term->src.flags);
     }
-    if (!obj_name) {
-        obj_name = plecs_set_mask_to_name(term->second.flags);
-    }
 
     if (!ecs_term_id_is_set(&term->first)) {
-        ecs_parser_error(name, expr, column, "missing predicate in expression");
+        ecs_parser_error(name, expr, column, "missing term in expression");
         return -1;
     }
 
@@ -660,13 +705,17 @@ int plecs_create_term(
     }
 
     bool pred_as_subj = plecs_pred_is_subj(term, state);
-    ecs_entity_t pred = plecs_ensure_entity(world, state, pred_name, 0, pred_as_subj); 
-    ecs_entity_t subj = plecs_ensure_entity(world, state, subj_name, pred, true);
-    ecs_entity_t obj = 0;
+    ecs_entity_t subj = 0, obj = 0, pred = plecs_ensure_term_id(
+        world, state, &term->first, expr, column, 0, pred_as_subj);
+    if (!pred) {
+        return -1;
+    }
+
+    subj = plecs_ensure_entity(world, state, subj_name, pred, true);
 
     if (ecs_term_id_is_set(&term->second)) {
-        obj = plecs_ensure_entity(world, state, obj_name, pred,
-            !state->assign_stmt && !state->with_stmt);
+        obj = plecs_ensure_term_id(world, state, &term->second, expr, column, 
+            pred, !state->assign_stmt && !state->with_stmt);
         if (!obj) {
             return -1;
         }
@@ -1314,6 +1363,7 @@ const char* plecs_parse_assembly_stmt(
     }
 
     state->assembly_stmt = true;
+
     return ptr + 9;
 }
 
@@ -1466,6 +1516,7 @@ const char* plecs_parse_scope_open(
 
     ecs_entity_t scope = 0;
     ecs_entity_t default_scope_type = 0;
+    bool assembly_stmt = false;
 
     if (!state->with_stmt) {
         if (state->last_subject) {
@@ -1497,6 +1548,7 @@ const char* plecs_parse_scope_open(
         state->default_scope_type[state->sp] = default_scope_type;
 
         if (state->assembly_stmt) {
+            assembly_stmt = true;
             if (state->assembly) {
                 ecs_parser_error(name, expr, ptr - expr, 
                     "invalid nested assembly");
@@ -1517,6 +1569,16 @@ const char* plecs_parse_scope_open(
     state->with_stmt = false;
 
     ecs_vars_push(&state->vars);
+
+    /* Declare variable to hold assembly instance during instantiation */
+    if (assembly_stmt) {
+        ecs_value_t val = {0};
+        ecs_expr_var_t *var = ecs_vars_declare_w_value(
+            &state->vars, "this", &val);
+        var->value.ptr = ECS_CONST_CAST(void*, &EcsThis); /* Dummy value */
+        var->value.type = ecs_id(ecs_entity_t);
+        var->owned = false;
+    }
 
     return ptr;
 }
@@ -1555,7 +1617,6 @@ const char* plecs_parse_scope_close(
             script[assembly_len] = '\0';
             state->assembly = 0;
             state->assembly_start = NULL;
-
             if (flecs_assembly_create(world, name, expr, ptr, assembly, script, state)) {
                 return NULL;
             }

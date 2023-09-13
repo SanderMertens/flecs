@@ -7469,3 +7469,71 @@ void Plecs_scope_w_auto_override_pair(void) {
 
     ecs_fini(world);
 }
+
+void Plecs_pair_w_rel_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Tgt);
+
+    const char *expr =
+    LINE "const rel = Rel\n"
+    LINE "ent {\n"
+    LINE " - ($rel, Tgt)\n"
+    LINE "}\n"
+    LINE "\n";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t ent = ecs_lookup_fullpath(world, "ent");
+
+    test_assert(ecs_has_pair(world, ent, Rel, Tgt));
+
+    ecs_fini(world);
+}
+
+void Plecs_pair_w_tgt_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Tgt);
+
+    const char *expr =
+    LINE "const tgt = Tgt\n"
+    LINE "ent {\n"
+    LINE " - (Rel, $tgt)\n"
+    LINE "}\n"
+    LINE "\n";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t ent = ecs_lookup_fullpath(world, "ent");
+
+    test_assert(ecs_has_pair(world, ent, Rel, Tgt));
+
+    ecs_fini(world);
+}
+
+void Plecs_assembly_w_pair_w_this_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+
+    const char *expr =
+    LINE "assembly Foo {\n"
+    LINE "  prop x : flecs.meta.f32 = 10\n" // dummy prop
+    LINE " - (Rel, $this)\n"
+    LINE "}\n"
+    LINE "ent :- Foo{}\n"
+    LINE "\n";
+
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t ent = ecs_lookup_fullpath(world, "ent");
+
+    test_assert(ecs_has_id(world, ent, foo));
+    test_assert(ecs_has_pair(world, ent, Rel, ent));
+
+    ecs_fini(world);
+}

@@ -460,6 +460,9 @@ void Plecs_add_auto_override(void);
 void Plecs_add_auto_override_pair(void);
 void Plecs_scope_w_auto_override(void);
 void Plecs_scope_w_auto_override_pair(void);
+void Plecs_pair_w_rel_var(void);
+void Plecs_pair_w_tgt_var(void);
+void Plecs_assembly_w_pair_w_this_var(void);
 
 // Testsuite 'Doc'
 void Doc_get_set_name(void);
@@ -3334,6 +3337,18 @@ bake_test_case Plecs_testcases[] = {
     {
         "scope_w_auto_override_pair",
         Plecs_scope_w_auto_override_pair
+    },
+    {
+        "pair_w_rel_var",
+        Plecs_pair_w_rel_var
+    },
+    {
+        "pair_w_tgt_var",
+        Plecs_pair_w_tgt_var
+    },
+    {
+        "assembly_w_pair_w_this_var",
+        Plecs_assembly_w_pair_w_this_var
     }
 };
 
@@ -7448,7 +7463,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        224,
+        227,
         Plecs_testcases
     },
     {
