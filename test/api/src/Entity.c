@@ -2208,3 +2208,23 @@ void Entity_commit_w_cmd_in_observer(void) {
 
     ecs_fini(world);
 }
+
+void Entity_entity_init_existing_no_sep(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
+        .name = "foo",
+    });
+    test_assert(e != 0);
+    test_str(ecs_get_name(world, e), "foo");
+
+    ecs_entity_t r = ecs_entity_init(world, &(ecs_entity_desc_t){
+        .id = e,
+        .name = "foo",
+        .sep = ""
+    });
+    test_assert(r != 0);
+    test_assert(r == e);
+
+    ecs_fini(world);
+}

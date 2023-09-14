@@ -145,6 +145,7 @@ void Entity_set_generation_while_deferred(void);
 void Entity_commit_w_on_add(void);
 void Entity_commit_w_on_remove(void);
 void Entity_commit_w_cmd_in_observer(void);
+void Entity_entity_init_existing_no_sep(void);
 
 // Testsuite 'Search'
 void Search_search(void);
@@ -3157,6 +3158,10 @@ bake_test_case Entity_testcases[] = {
     {
         "commit_w_cmd_in_observer",
         Entity_commit_w_cmd_in_observer
+    },
+    {
+        "entity_init_existing_no_sep",
+        Entity_entity_init_existing_no_sep
     }
 };
 
@@ -12755,7 +12760,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        105,
+        106,
         Entity_testcases
     },
     {

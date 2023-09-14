@@ -151,7 +151,8 @@
                 "set_generation_while_deferred",
                 "commit_w_on_add",
                 "commit_w_on_remove",
-                "commit_w_cmd_in_observer"
+                "commit_w_cmd_in_observer",
+                "entity_init_existing_no_sep"
             ]
         }, {
             "id": "Search",

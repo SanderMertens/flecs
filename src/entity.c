@@ -1764,17 +1764,26 @@ ecs_entity_t ecs_entity_init(
             } else {
                 /* Relative name was provided, so make sure to compare with
                  * relative name */
-                path = ecs_get_path_w_sep(world, scope, result, sep, "");
+                if (!sep || sep[0]) {
+                    path = ecs_get_path_w_sep(world, scope, result, sep, "");
+                } else {
+                    /* Safe, only freed when sep is valid */
+                    path = ECS_CONST_CAST(char*, ecs_get_name(world, result));
+                }
             }
             if (path) {
                 if (ecs_os_strcmp(path, name)) {
                     /* Mismatching name */
                     ecs_err("existing entity '%s' is initialized with "
                         "conflicting name '%s'", path, name);
-                    ecs_os_free(path);
+                    if (!sep || sep[0]) {
+                        ecs_os_free(path);
+                    }
                     return 0;
                 }
-                ecs_os_free(path);
+                if (!sep || sep[0]) {
+                    ecs_os_free(path);
+                }
             }
         }
     }
