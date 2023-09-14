@@ -58872,7 +58872,7 @@ ecs_entity_t ecs_pipeline_init(
     const ecs_pipeline_desc_t *desc)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_assert(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_entity_t result = desc->entity;
     if (!result) {
@@ -58891,8 +58891,10 @@ ecs_entity_t ecs_pipeline_init(
         return 0;
     }
 
-    ecs_assert(query->filter.terms[0].id == EcsSystem,
-        ECS_INVALID_PARAMETER, NULL);
+    ecs_check(query->filter.terms != NULL, ECS_INVALID_PARAMETER, 
+        "pipeline query cannot be empty");
+    ecs_check(query->filter.terms[0].id == EcsSystem,
+        ECS_INVALID_PARAMETER, "pipeline must start with System term");
 
     ecs_pipeline_state_t *pq = ecs_os_calloc_t(ecs_pipeline_state_t);
     pq->query = query;
@@ -58901,6 +58903,8 @@ ecs_entity_t ecs_pipeline_init(
     ecs_set(world, result, EcsPipeline, { pq });
 
     return result;
+error:
+    return 0;
 }
 
 /* -- Module implementation -- */

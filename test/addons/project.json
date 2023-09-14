@@ -514,7 +514,7 @@
                 "random_in_after_random_inout_after_random_out",
                 "stage_write_before_read",
                 "mixed_multithreaded",
-		"mixed_multithreaded_tasks",
+		        "mixed_multithreaded_tasks",
                 "mixed_staging",
                 "no_staging_system_create_query",
                 "single_threaded_pipeline_change",
@@ -528,13 +528,13 @@
                 "stack_allocator_after_progress",
                 "stack_allocator_after_progress_w_pipeline_change",
                 "iter_from_world_in_singlethread_system_multitead_app",
-		"iter_from_world_in_singlethread_system_multitead_app_tasks",
+		        "iter_from_world_in_singlethread_system_multitead_app_tasks",
                 "no_staging_after_inactive_system",
                 "inactive_system_after_no_staging_system_no_defer_w_filter",
                 "inactive_system_after_2_no_staging_system_no_defer_w_filter",
                 "inactive_system_after_no_staging_system_no_defer_w_filter_w_no_staging_at_end",
                 "inactive_multithread_system_after_no_staging_system_no_defer",
-		"inactive_multithread_tasks_system_after_no_staging_system_no_defer",
+		        "inactive_multithread_tasks_system_after_no_staging_system_no_defer",
                 "inactive_multithread_system_after_no_staging_system_no_defer_w_no_staging_at_end",
                 "inactive_multithread_tasks_system_after_no_staging_system_no_defer_w_no_staging_at_end",
                 "multi_threaded_pipeline_change_w_only_singlethreaded",
@@ -562,7 +562,9 @@
                 "switch_from_threads_to_tasks",
                 "switch_from_tasks_to_threads",
                 "run_pipeline_multithreaded",
-                "run_pipeline_multithreaded_tasks"
+                "run_pipeline_multithreaded_tasks",
+                "pipeline_init_no_terms",
+                "pipeline_init_no_system_term"
             ]
         }, {
             "id": "SystemMisc",

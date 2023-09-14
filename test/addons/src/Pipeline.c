@@ -3184,3 +3184,25 @@ void Pipeline_run_pipeline_multithreaded(void) {
 void Pipeline_run_pipeline_multithreaded_tasks(void) {
     Pipeline_run_pipeline_multithreaded_internal(true);
 }
+
+void Pipeline_pipeline_init_no_terms(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    test_expect_abort();
+    ecs_pipeline(world, { 0 });
+}
+
+void Pipeline_pipeline_init_no_system_term(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    test_expect_abort();
+    ecs_pipeline(world, {
+        .query.filter.terms = {{ ecs_id(Position) }}
+    });
+}
