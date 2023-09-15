@@ -588,7 +588,8 @@
                 "captured_query",
                 "page_iter_captured_query",
                 "worker_iter_captured_query",
-                "iter_entities"
+                "iter_entities",
+                "iter_get_pair_w_id"
             ]
         }, {
             "id": "QueryBuilder",

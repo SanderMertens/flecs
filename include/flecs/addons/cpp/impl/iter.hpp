@@ -39,8 +39,8 @@ inline flecs::entity iter::src(int32_t index) const {
     return flecs::entity(m_iter->world, ecs_field_src(m_iter, index));
 }
 
-inline flecs::entity iter::id(int32_t index) const {
-    return flecs::entity(m_iter->world, ecs_field_id(m_iter, index));
+inline flecs::id iter::id(int32_t index) const {
+    return flecs::id(m_iter->world, ecs_field_id(m_iter, index));
 }
 
 inline flecs::id iter::pair(int32_t index) const {

@@ -304,7 +304,7 @@ public:
      *
      * @param index The field index.
      */
-    flecs::entity id(int32_t index) const;
+    flecs::id id(int32_t index) const;
 
     /** Obtain pair id matched for field.
      * This operation will fail if the id is not a pair.

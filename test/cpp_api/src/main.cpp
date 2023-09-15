@@ -565,6 +565,7 @@ void Query_captured_query(void);
 void Query_page_iter_captured_query(void);
 void Query_worker_iter_captured_query(void);
 void Query_iter_entities(void);
+void Query_iter_get_pair_w_id(void);
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_builder_assign_same_type(void);
@@ -3455,6 +3456,10 @@ bake_test_case Query_testcases[] = {
     {
         "iter_entities",
         Query_iter_entities
+    },
+    {
+        "iter_get_pair_w_id",
+        Query_iter_get_pair_w_id
     }
 };
 
@@ -6272,7 +6277,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        79,
+        80,
         Query_testcases
     },
     {

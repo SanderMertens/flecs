@@ -2247,3 +2247,27 @@ void Query_iter_entities(void) {
             test_assert(entities[2] == e3);
         });
 }
+
+void Query_iter_get_pair_w_id(void) {
+    flecs::world ecs;
+
+    flecs::entity Rel = ecs.entity();
+    flecs::entity Tgt = ecs.entity();
+    flecs::entity e = ecs.entity().add(Rel, Tgt);
+
+    flecs::query<> q = ecs.query_builder()
+        .with(Rel, flecs::Wildcard)
+        .build();
+
+    int32_t count = 0;
+
+    q.each([&](flecs::iter& it, size_t i) {
+        test_bool(true, it.id(1).is_pair());
+        test_assert(it.id(1).first() == Rel);
+        test_assert(it.id(1).second() == Tgt);
+        test_assert(e == it.entity(i));
+        count ++;
+    });
+
+    test_int(count, 1);
+}
