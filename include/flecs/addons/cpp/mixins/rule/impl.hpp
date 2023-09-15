@@ -52,6 +52,11 @@ struct rule_base {
         }
     }
 
+    template <typename Func>
+    void each_term(const Func& func) const {
+        this->filter().each_term(func);
+    }
+
     /** Move the rule. */
     void move(flecs::rule_base&& obj) {
         this->destruct();

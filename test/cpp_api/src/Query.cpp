@@ -831,7 +831,7 @@ void Query_inspect_terms_w_each(void) {
 void Query_inspect_terms_w_expr(void) {
     flecs::world ecs;
 
-    flecs::filter<> f = ecs.filter_builder()
+    flecs::query<> f = ecs.query_builder()
         .expr("(ChildOf,0)")
         .build();
 

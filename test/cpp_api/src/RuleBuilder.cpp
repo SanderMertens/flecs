@@ -801,7 +801,7 @@ void RuleBuilder_iter_w_stage(void) {
 void RuleBuilder_inspect_terms_w_expr(void) {
     flecs::world ecs;
 
-    flecs::filter<> f = ecs.filter_builder()
+    flecs::rule<> f = ecs.rule_builder()
         .expr("(ChildOf,0)")
         .build();
 
@@ -812,4 +812,6 @@ void RuleBuilder_inspect_terms_w_expr(void) {
     });
 
     test_int(count, 1);
+
+    f.destruct();
 }

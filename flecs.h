@@ -27996,14 +27996,7 @@ struct query_base {
 
     template <typename Func>
     void each_term(const Func& func) const {
-        const ecs_filter_t *f = ecs_query_get_filter(m_query);
-        ecs_assert(f != NULL, ECS_INVALID_PARAMETER, NULL);
-
-        for (int i = 0; i < f->term_count; i ++) {
-            flecs::term t(m_world, f->terms[i]);
-            func(t);
-            t.reset(); // prevent freeing resources
-        }
+        this->filter().each_term(func);
     }
 
     filter_base filter() const {
@@ -29339,6 +29332,11 @@ struct rule_base {
             m_world = nullptr;
             m_rule = nullptr;
         }
+    }
+
+    template <typename Func>
+    void each_term(const Func& func) const {
+        this->filter().each_term(func);
     }
 
     /** Move the rule. */
