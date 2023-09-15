@@ -456,3 +456,19 @@ void Filter_set_this_var(void) {
     });
     test_int(count, 1);
 }
+
+void Filter_inspect_terms_w_expr(void) {
+    flecs::world ecs;
+
+    flecs::filter<> f = ecs.filter_builder()
+        .expr("(ChildOf,0)")
+        .build();
+
+    int32_t count = 0;
+    f.each_term([&](flecs::term &term) {
+        test_assert(term.id().is_pair());
+        count ++;
+    });
+
+    test_int(count, 1);
+}

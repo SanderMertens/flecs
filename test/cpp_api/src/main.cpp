@@ -515,6 +515,7 @@ void Query_test_no_defer_each(void);
 void Query_test_no_defer_iter(void);
 void Query_inspect_terms(void);
 void Query_inspect_terms_w_each(void);
+void Query_inspect_terms_w_expr(void);
 void Query_comp_to_str(void);
 void Query_pair_to_str(void);
 void Query_oper_not_to_str(void);
@@ -777,6 +778,7 @@ void RuleBuilder_is_valid(void);
 void RuleBuilder_unresolved_by_name(void);
 void RuleBuilder_scope(void);
 void RuleBuilder_iter_w_stage(void);
+void RuleBuilder_inspect_terms_w_expr(void);
 
 // Testsuite 'SystemBuilder'
 void SystemBuilder_builder_assign_same_type(void);
@@ -857,6 +859,7 @@ void Filter_invalid_each_w_no_this(void);
 void Filter_named_filter(void);
 void Filter_named_scoped_filter(void);
 void Filter_set_this_var(void);
+void Filter_inspect_terms_w_expr(void);
 
 // Testsuite 'ComponentLifecycle'
 void ComponentLifecycle_ctor_on_add(void);
@@ -3258,6 +3261,10 @@ bake_test_case Query_testcases[] = {
         Query_inspect_terms_w_each
     },
     {
+        "inspect_terms_w_expr",
+        Query_inspect_terms_w_expr
+    },
+    {
         "comp_to_str",
         Query_comp_to_str
     },
@@ -4289,6 +4296,10 @@ bake_test_case RuleBuilder_testcases[] = {
     {
         "iter_w_stage",
         RuleBuilder_iter_w_stage
+    },
+    {
+        "inspect_terms_w_expr",
+        RuleBuilder_inspect_terms_w_expr
     }
 };
 
@@ -4594,6 +4605,10 @@ bake_test_case Filter_testcases[] = {
     {
         "set_this_var",
         Filter_set_this_var
+    },
+    {
+        "inspect_terms_w_expr",
+        Filter_inspect_terms_w_expr
     }
 };
 
@@ -6277,7 +6292,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        80,
+        81,
         Query_testcases
     },
     {
@@ -6298,7 +6313,7 @@ static bake_test_suite suites[] = {
         "RuleBuilder",
         NULL,
         NULL,
-        29,
+        30,
         RuleBuilder_testcases
     },
     {
@@ -6319,7 +6334,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        22,
+        23,
         Filter_testcases
     },
     {

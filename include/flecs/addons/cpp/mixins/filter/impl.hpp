@@ -106,6 +106,7 @@ struct filter_base {
         for (int i = 0; i < m_filter_ptr->term_count; i ++) {
             flecs::term t(m_world, m_filter_ptr->terms[i]);
             func(t);
+            t.reset(); // prevent freeing resources
         }
     }
 

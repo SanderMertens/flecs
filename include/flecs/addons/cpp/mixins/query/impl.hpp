@@ -103,6 +103,7 @@ struct query_base {
         for (int i = 0; i < f->term_count; i ++) {
             flecs::term t(m_world, f->terms[i]);
             func(t);
+            t.reset(); // prevent freeing resources
         }
     }
 

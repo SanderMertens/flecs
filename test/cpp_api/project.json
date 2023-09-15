@@ -539,6 +539,7 @@
                 "test_no_defer_iter",
                 "inspect_terms",
                 "inspect_terms_w_each",
+                "inspect_terms_w_expr",
                 "comp_to_str",
                 "pair_to_str",
                 "oper_not_to_str",
@@ -806,7 +807,8 @@
                 "is_valid",
                 "unresolved_by_name",
                 "scope",
-                "iter_w_stage"
+                "iter_w_stage",
+                "inspect_terms_w_expr"
             ]
         }, {
             "id": "SystemBuilder",
@@ -892,7 +894,8 @@
                 "invalid_each_w_no_this",
                 "named_filter",
                 "named_scoped_filter",
-                "set_this_var"
+                "set_this_var",
+                "inspect_terms_w_expr"
             ]
         }, {
             "id": "ComponentLifecycle",
