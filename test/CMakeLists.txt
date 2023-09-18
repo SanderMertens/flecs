@@ -2,6 +2,8 @@ project(flecs_tests LANGUAGES C CXX)
 
 if(NOT BAKE_DIRECTORY)
   set(BAKE_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/bake")
+else()
+  set(BAKE_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/../${BAKE_DIRECTORY}")
 endif()
 
 if(NOT IS_DIRECTORY "${BAKE_DIRECTORY}")
@@ -60,17 +62,25 @@ else()
   list(FILTER BAKE_SOURCES EXCLUDE REGEX "src/win")
 endif()
 
+message(STATUS ${BAKE_DIRECTORY})
+
 add_library(bake_base SHARED ${BAKE_SOURCES})
+
 target_include_directories(
   bake_base PUBLIC "${BAKE_DIRECTORY}/include" "${BAKE_DIRECTORY}/util/include"
                    "${BAKE_DIRECTORY}/drivers/test/include")
+
 target_compile_definitions(
   bake_base
   PUBLIC __BAKE__=1
-  PRIVATE bake_test_EXPORTS=1 UT_IMPL=1)
+  PRIVATE bake_test_EXPORTS=1 UT_IMPL=1
+  _XOPEN_SOURCE=600)
 
 if(WIN32)
   target_link_libraries(bake_base PUBLIC Dbghelp Shlwapi Ws2_32)
+endif()
+if(UNIX AND NOT APPLE)
+  target_link_libraries(bake_base PUBLIC m)
 endif()
 
 add_flecs_test("${CMAKE_CURRENT_LIST_DIR}/addons")
