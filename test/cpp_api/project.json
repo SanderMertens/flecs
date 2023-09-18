@@ -1319,6 +1319,7 @@
                 "has_pair_R_T",
                 "get_id",
                 "get_T",
+                "get_T_enum",
                 "get_pair_r_t",
                 "get_pair_R_t",
                 "get_pair_R_T",

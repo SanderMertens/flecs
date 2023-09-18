@@ -21570,7 +21570,7 @@ struct entity_view : public id {
         return m_id;
     }
 
-    /** Check is entity is valid.
+    /** Check if entity is valid.
      *
      * @return True if the entity is alive, false otherwise.
      */
@@ -21582,7 +21582,7 @@ struct entity_view : public id {
         return is_valid();
     }
 
-    /** Check is entity is alive.
+    /** Check if entity is alive.
      *
      * @return True if the entity is alive, false otherwise.
      */
@@ -25870,6 +25870,16 @@ struct table {
      * @return Pointer to the column, NULL if not found.
      */
     template <typename T, if_t< is_actual<T>::value > = 0>
+    T* get() const {
+        return static_cast<T*>(get(_::cpp_type<T>::id(m_world)));
+    }
+
+    /** Get pointer to component array by (enum) component.
+     * 
+     * @tparam T The (enum) component.
+     * @return Pointer to the column, NULL if not found.
+     */
+    template <typename T, if_t< is_enum<T>::value > = 0>
     T* get() const {
         return static_cast<T*>(get(_::cpp_type<T>::id(m_world)));
     }

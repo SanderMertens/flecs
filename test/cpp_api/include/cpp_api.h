@@ -30,6 +30,12 @@ struct Self {
     flecs::entity_view value;
 };
 
+enum Number {
+    One = 1,
+    Two = 2,
+    Three = 3
+};
+
 class Pod {
 public:
     struct Child { };
