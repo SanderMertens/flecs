@@ -228,6 +228,16 @@ struct table {
         return static_cast<T*>(get(_::cpp_type<T>::id(m_world)));
     }
 
+    /** Get pointer to component array by (enum) component.
+     * 
+     * @tparam T The (enum) component.
+     * @return Pointer to the column, NULL if not found.
+     */
+    template <typename T, if_t< is_enum<T>::value > = 0>
+    T* get() const {
+        return static_cast<T*>(get(_::cpp_type<T>::id(m_world)));
+    }
+
     /** Get pointer to component array by component.
      * 
      * @tparam T The component.

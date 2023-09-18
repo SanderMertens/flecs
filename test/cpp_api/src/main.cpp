@@ -1261,6 +1261,7 @@ void Table_has_pair_R_t(void);
 void Table_has_pair_R_T(void);
 void Table_get_id(void);
 void Table_get_T(void);
+void Table_get_T_enum(void);
 void Table_get_pair_r_t(void);
 void Table_get_pair_R_t(void);
 void Table_get_pair_R_T(void);
@@ -6156,6 +6157,10 @@ bake_test_case Table_testcases[] = {
         Table_get_T
     },
     {
+        "get_T_enum",
+        Table_get_T_enum
+    },
+    {
         "get_pair_r_t",
         Table_get_pair_r_t
     },
@@ -6411,7 +6416,7 @@ static bake_test_suite suites[] = {
         "Table",
         NULL,
         NULL,
-        31,
+        32,
         Table_testcases
     },
     {

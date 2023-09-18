@@ -51,7 +51,7 @@ struct entity_view : public id {
         return m_id;
     }
 
-    /** Check is entity is valid.
+    /** Check if entity is valid.
      *
      * @return True if the entity is alive, false otherwise.
      */
@@ -63,7 +63,7 @@ struct entity_view : public id {
         return is_valid();
     }
 
-    /** Check is entity is alive.
+    /** Check if entity is alive.
      *
      * @return True if the entity is alive, false otherwise.
      */
