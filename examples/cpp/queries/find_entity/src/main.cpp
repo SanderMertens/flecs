@@ -2,7 +2,7 @@
 #include <iostream>
 
 struct Position {
-    double x, y;
+    int x, y;
 };
 
 int main() {
@@ -16,7 +16,7 @@ int main() {
 
     // Find the entity for which Position.x is 20
     flecs::entity e = q.find([](Position& p) {
-        return p.x == 20.0;
+        return p.x == 20;
     });
 
     if (e) {
