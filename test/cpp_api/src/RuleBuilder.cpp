@@ -815,3 +815,49 @@ void RuleBuilder_inspect_terms_w_expr(void) {
 
     f.destruct();
 }
+
+void RuleBuilder_find(void) {
+    flecs::world ecs;
+
+    /* auto e1 = */ ecs.entity().set<Position>({10, 20});
+    auto e2 = ecs.entity().set<Position>({20, 30});
+
+    auto q = ecs.rule<Position>();
+
+    auto r = q.find([](Position& p) {
+        return p.x == 20;
+    });
+
+    test_assert(r == e2);
+}
+
+void RuleBuilder_find_not_found(void) {
+    flecs::world ecs;
+
+    /* auto e1 = */ ecs.entity().set<Position>({10, 20});
+    /* auto e2 = */ ecs.entity().set<Position>({20, 30});
+
+    auto q = ecs.rule<Position>();
+
+    auto r = q.find([](Position& p) {
+        return p.x == 30;
+    });
+
+    test_assert(!r);
+}
+
+void RuleBuilder_find_w_entity(void) {
+    flecs::world ecs;
+
+    /* auto e1 = */ ecs.entity().set<Position>({10, 20}).set<Velocity>({20, 30});
+    auto e2 = ecs.entity().set<Position>({20, 30}).set<Velocity>({20, 30});
+
+    auto q = ecs.rule<Position>();
+
+    auto r = q.find([](flecs::entity e, Position& p) {
+        return p.x == e.get<Velocity>()->x &&
+               p.y == e.get<Velocity>()->y;
+    });
+
+    test_assert(r == e2);
+}

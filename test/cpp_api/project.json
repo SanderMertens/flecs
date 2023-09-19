@@ -590,7 +590,10 @@
                 "page_iter_captured_query",
                 "worker_iter_captured_query",
                 "iter_entities",
-                "iter_get_pair_w_id"
+                "iter_get_pair_w_id",
+                "find",
+                "find_not_found",
+                "find_w_entity"
             ]
         }, {
             "id": "QueryBuilder",
@@ -808,7 +811,10 @@
                 "unresolved_by_name",
                 "scope",
                 "iter_w_stage",
-                "inspect_terms_w_expr"
+                "inspect_terms_w_expr",
+                "find",
+                "find_not_found",
+                "find_w_entity"                
             ]
         }, {
             "id": "SystemBuilder",
@@ -895,7 +901,10 @@
                 "named_filter",
                 "named_scoped_filter",
                 "set_this_var",
-                "inspect_terms_w_expr"
+                "inspect_terms_w_expr",
+                "find",
+                "find_not_found",
+                "find_w_entity"
             ]
         }, {
             "id": "ComponentLifecycle",

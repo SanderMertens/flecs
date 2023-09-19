@@ -567,6 +567,9 @@ void Query_page_iter_captured_query(void);
 void Query_worker_iter_captured_query(void);
 void Query_iter_entities(void);
 void Query_iter_get_pair_w_id(void);
+void Query_find(void);
+void Query_find_not_found(void);
+void Query_find_w_entity(void);
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_builder_assign_same_type(void);
@@ -779,6 +782,9 @@ void RuleBuilder_unresolved_by_name(void);
 void RuleBuilder_scope(void);
 void RuleBuilder_iter_w_stage(void);
 void RuleBuilder_inspect_terms_w_expr(void);
+void RuleBuilder_find(void);
+void RuleBuilder_find_not_found(void);
+void RuleBuilder_find_w_entity(void);
 
 // Testsuite 'SystemBuilder'
 void SystemBuilder_builder_assign_same_type(void);
@@ -860,6 +866,9 @@ void Filter_named_filter(void);
 void Filter_named_scoped_filter(void);
 void Filter_set_this_var(void);
 void Filter_inspect_terms_w_expr(void);
+void Filter_find(void);
+void Filter_find_not_found(void);
+void Filter_find_w_entity(void);
 
 // Testsuite 'ComponentLifecycle'
 void ComponentLifecycle_ctor_on_add(void);
@@ -3468,6 +3477,18 @@ bake_test_case Query_testcases[] = {
     {
         "iter_get_pair_w_id",
         Query_iter_get_pair_w_id
+    },
+    {
+        "find",
+        Query_find
+    },
+    {
+        "find_not_found",
+        Query_find_not_found
+    },
+    {
+        "find_w_entity",
+        Query_find_w_entity
     }
 };
 
@@ -4301,6 +4322,18 @@ bake_test_case RuleBuilder_testcases[] = {
     {
         "inspect_terms_w_expr",
         RuleBuilder_inspect_terms_w_expr
+    },
+    {
+        "find",
+        RuleBuilder_find
+    },
+    {
+        "find_not_found",
+        RuleBuilder_find_not_found
+    },
+    {
+        "find_w_entity",
+        RuleBuilder_find_w_entity
     }
 };
 
@@ -4610,6 +4643,18 @@ bake_test_case Filter_testcases[] = {
     {
         "inspect_terms_w_expr",
         Filter_inspect_terms_w_expr
+    },
+    {
+        "find",
+        Filter_find
+    },
+    {
+        "find_not_found",
+        Filter_find_not_found
+    },
+    {
+        "find_w_entity",
+        Filter_find_w_entity
     }
 };
 
@@ -6297,7 +6342,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        81,
+        84,
         Query_testcases
     },
     {
@@ -6318,7 +6363,7 @@ static bake_test_suite suites[] = {
         "RuleBuilder",
         NULL,
         NULL,
-        30,
+        33,
         RuleBuilder_testcases
     },
     {
@@ -6339,7 +6384,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        23,
+        26,
         Filter_testcases
     },
     {

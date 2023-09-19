@@ -24100,6 +24100,151 @@ private:
     Func m_func;
 };
 
+template <typename Func, typename ... Components>
+struct find_invoker : public invoker {
+    // If the number of arguments in the function signature is one more than the
+    // number of components in the query, an extra entity arg is required.
+    static constexpr bool PassEntity = 
+        (sizeof...(Components) + 1) == (arity<Func>::value);
+
+    // If the number of arguments in the function is two more than the number of
+    // components in the query, extra iter + index arguments are required.
+    static constexpr bool PassIter = 
+        (sizeof...(Components) + 2) == (arity<Func>::value);
+
+    static_assert(arity<Func>::value > 0, 
+        "each() must have at least one argument");
+
+    using Terms = typename term_ptrs<Components ...>::array;
+
+    template < if_not_t< is_same< decay_t<Func>, decay_t<Func>& >::value > = 0>
+    explicit find_invoker(Func&& func) noexcept 
+        : m_func(FLECS_MOV(func)) { }
+
+    explicit find_invoker(const Func& func) noexcept 
+        : m_func(func) { }
+
+    // Invoke object directly. This operation is useful when the calling
+    // function has just constructed the invoker, such as what happens when
+    // iterating a query.
+    void invoke(ecs_iter_t *iter) const {
+        term_ptrs<Components...> terms;
+
+        if (terms.populate(iter)) {
+            invoke_callback< each_ref_column >(iter, m_func, 0, terms.m_terms);
+        } else {
+            invoke_callback< each_column >(iter, m_func, 0, terms.m_terms);
+        }   
+    }
+
+    // Find invokers always use instanced iterators
+    static bool instanced() {
+        return true;
+    }
+
+private:
+    // Number of function arguments is one more than number of components, pass
+    // entity as argument.
+    template <template<typename X, typename = int> class ColumnType, 
+        typename... Args, if_t< 
+            sizeof...(Components) == sizeof...(Args) && PassEntity> = 0>
+    static flecs::entity invoke_callback(
+        ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps) 
+    {
+        ECS_TABLE_LOCK(iter->world, iter->table);
+
+        ecs_world_t *world = iter->world;
+        size_t count = static_cast<size_t>(iter->count);
+
+        ecs_assert(count > 0, ECS_INVALID_OPERATION,
+            "no entities returned, use find() without flecs::entity argument");
+
+        for (size_t i = 0; i < count; i ++) {
+            if (func(flecs::entity(world, iter->entities[i]),
+                (ColumnType< remove_reference_t<Components> >(comps, i)
+                    .get_row())...))
+            {
+                return flecs::entity(world, iter->entities[i]);
+            }
+        }
+
+        ECS_TABLE_UNLOCK(iter->world, iter->table);
+
+        return flecs::entity();
+    }
+
+    // Number of function arguments is two more than number of components, pass
+    // iter + index as argument.
+    template <template<typename X, typename = int> class ColumnType, 
+        typename... Args, int Enabled = PassIter, if_t< 
+            sizeof...(Components) == sizeof...(Args) && Enabled> = 0>
+    static flecs::entity invoke_callback(
+        ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps) 
+    {
+        size_t count = static_cast<size_t>(iter->count);
+        if (count == 0) {
+            // If query has no This terms, count can be 0. Since each does not
+            // have an entity parameter, just pass through components
+            count = 1;
+        }
+
+        flecs::iter it(iter);
+
+        ECS_TABLE_LOCK(iter->world, iter->table);
+
+        for (size_t i = 0; i < count; i ++) {
+            if (func(it, i, (ColumnType< remove_reference_t<Components> >(comps, i)
+                .get_row())...))
+            {
+                return flecs::entity(world, iter->entities[i]);
+            }
+        }
+
+        ECS_TABLE_UNLOCK(iter->world, iter->table);
+
+        return flecs::entity();
+    }
+
+    // Number of function arguments is equal to number of components, no entity
+    template <template<typename X, typename = int> class ColumnType, 
+        typename... Args, if_t< 
+            sizeof...(Components) == sizeof...(Args) && !PassEntity && !PassIter> = 0>
+    static flecs::entity invoke_callback(
+        ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps) 
+    {
+        size_t count = static_cast<size_t>(iter->count);
+        if (count == 0) {
+            // If query has no This terms, count can be 0. Since each does not
+            // have an entity parameter, just pass through components
+            count = 1;
+        }
+
+        flecs::iter it(iter);
+
+        ECS_TABLE_LOCK(iter->world, iter->table);
+
+        for (size_t i = 0; i < count; i ++) {
+            if (func( (ColumnType< remove_reference_t<Components> >(comps, i)
+                .get_row())...))
+            {
+                return flecs::entity(world, iter->entities[i]);
+            }
+        }
+
+        ECS_TABLE_UNLOCK(iter->world, iter->table);
+    }
+
+    template <template<typename X, typename = int> class ColumnType, 
+        typename... Args, if_t< sizeof...(Components) != sizeof...(Args) > = 0>
+    static flecs::entity invoke_callback(ecs_iter_t *iter, const Func& func, 
+        size_t index, Terms& columns, Args... comps) 
+    {
+        return invoke_callback<ColumnType>(
+            iter, func, index + 1, columns, comps..., columns[index]);
+    }
+
+    Func m_func;
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Utility class to invoke a system iterate action
@@ -24477,6 +24622,12 @@ struct iterable {
     template <typename Func>
     void each(flecs::entity e, Func&& func) const {
         iterate<_::each_invoker>(e.world(), FLECS_FWD(func), 
+            this->next_each_action());
+    }
+
+    template <typename Func>
+    flecs::entity find(Func&& func) const {
+        iterate<_::find_invoker>(nullptr, FLECS_FWD(func), 
             this->next_each_action());
     }
 
