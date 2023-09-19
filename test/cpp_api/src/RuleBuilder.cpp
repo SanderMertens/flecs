@@ -829,6 +829,8 @@ void RuleBuilder_find(void) {
     });
 
     test_assert(r == e2);
+
+    q.destruct();
 }
 
 void RuleBuilder_find_not_found(void) {
@@ -844,6 +846,8 @@ void RuleBuilder_find_not_found(void) {
     });
 
     test_assert(!r);
+
+    q.destruct();
 }
 
 void RuleBuilder_find_w_entity(void) {
@@ -860,4 +864,6 @@ void RuleBuilder_find_w_entity(void) {
     });
 
     test_assert(r == e2);
+
+    q.destruct();
 }
