@@ -24127,13 +24127,13 @@ struct find_invoker : public invoker {
     // Invoke object directly. This operation is useful when the calling
     // function has just constructed the invoker, such as what happens when
     // iterating a query.
-    void invoke(ecs_iter_t *iter) const {
+    flecs::entity invoke(ecs_iter_t *iter) const {
         term_ptrs<Components...> terms;
 
         if (terms.populate(iter)) {
-            invoke_callback< each_ref_column >(iter, m_func, 0, terms.m_terms);
+            return invoke_callback< each_ref_column >(iter, m_func, 0, terms.m_terms);
         } else {
-            invoke_callback< each_column >(iter, m_func, 0, terms.m_terms);
+            return invoke_callback< each_column >(iter, m_func, 0, terms.m_terms);
         }   
     }
 
@@ -24155,6 +24155,7 @@ private:
 
         ecs_world_t *world = iter->world;
         size_t count = static_cast<size_t>(iter->count);
+        flecs::entity result;
 
         ecs_assert(count > 0, ECS_INVALID_OPERATION,
             "no entities returned, use find() without flecs::entity argument");
@@ -24164,13 +24165,14 @@ private:
                 (ColumnType< remove_reference_t<Components> >(comps, i)
                     .get_row())...))
             {
-                return flecs::entity(world, iter->entities[i]);
+                result = flecs::entity(world, iter->entities[i]);
+                break;
             }
         }
 
         ECS_TABLE_UNLOCK(iter->world, iter->table);
 
-        return flecs::entity();
+        return result;
     }
 
     // Number of function arguments is two more than number of components, pass
@@ -24189,6 +24191,7 @@ private:
         }
 
         flecs::iter it(iter);
+        flecs::entity result;
 
         ECS_TABLE_LOCK(iter->world, iter->table);
 
@@ -24196,13 +24199,14 @@ private:
             if (func(it, i, (ColumnType< remove_reference_t<Components> >(comps, i)
                 .get_row())...))
             {
-                return flecs::entity(world, iter->entities[i]);
+                result = flecs::entity(iter->world, iter->entities[i]);
+                break;
             }
         }
 
         ECS_TABLE_UNLOCK(iter->world, iter->table);
 
-        return flecs::entity();
+        return result;
     }
 
     // Number of function arguments is equal to number of components, no entity
@@ -24220,6 +24224,7 @@ private:
         }
 
         flecs::iter it(iter);
+        flecs::entity result;
 
         ECS_TABLE_LOCK(iter->world, iter->table);
 
@@ -24227,11 +24232,14 @@ private:
             if (func( (ColumnType< remove_reference_t<Components> >(comps, i)
                 .get_row())...))
             {
-                return flecs::entity(world, iter->entities[i]);
+                result = flecs::entity(iter->world, iter->entities[i]);
+                break;
             }
         }
 
         ECS_TABLE_UNLOCK(iter->world, iter->table);
+
+        return result;
     }
 
     template <template<typename X, typename = int> class ColumnType, 
@@ -24627,7 +24635,7 @@ struct iterable {
 
     template <typename Func>
     flecs::entity find(Func&& func) const {
-        iterate<_::find_invoker>(nullptr, FLECS_FWD(func), 
+        return iterate_find<_::find_invoker>(nullptr, FLECS_FWD(func), 
             this->next_each_action());
     }
 
@@ -24725,6 +24733,23 @@ protected:
         while (next(&it, FLECS_FWD(args)...)) {
             Invoker<Func, Components...>(func).invoke(&it);
         }
+    }
+
+    template < template<typename Func, typename ... Comps> class Invoker, typename Func, typename NextFunc, typename ... Args>
+    flecs::entity iterate_find(flecs::world_t *stage, Func&& func, NextFunc next, Args &&... args) const {
+        ecs_iter_t it = this->get_iter(stage);
+        if (Invoker<Func, Components...>::instanced()) {
+            ECS_BIT_SET(it.flags, EcsIterIsInstanced);
+        }
+
+        flecs::entity result;
+        while (!result && next(&it, FLECS_FWD(args)...)) {
+            result = Invoker<Func, Components...>(func).invoke(&it);
+        }
+        if (result) {
+            ecs_iter_fini(&it);
+        }
+        return result;
     }
 };
 
