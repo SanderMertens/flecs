@@ -350,6 +350,13 @@ void DeserializeFromExpr_bitmask(void) {
 
     {
     uint32_t value = 0;
+    const char *ptr = ecs_parse_expr(world, "Lettuce | Bacon | Tomato | Cheese", &(ecs_value_t){t, &value}, NULL);
+    test_assert(ptr != NULL);
+    test_uint(value, Lettuce|Bacon|Tomato|Cheese);
+    }
+
+    {
+    uint32_t value = 0;
     const char *ptr = ecs_parse_expr(world, "BLT", &(ecs_value_t){t, &value}, NULL);
     test_assert(ptr != NULL);
     test_uint(value, Lettuce|Bacon|Tomato);

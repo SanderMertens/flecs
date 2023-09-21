@@ -149,7 +149,6 @@ const char *ecs_parse_expr_token(
     const char *ptr,
     char *token)
 {
-    const char *start = ptr;
     char *token_ptr = token;
 
     if (ptr[0] == '/') {
@@ -187,12 +186,11 @@ const char *ecs_parse_expr_token(
 
     while ((ptr = ecs_parse_token(name, expr, ptr, token_ptr, 0))) {
         if (ptr[0] == '|' && ptr[1] != '|') {
-            token_ptr = &token_ptr[ptr - start];
+            token_ptr = &token_ptr[ecs_os_strlen(token_ptr)];
             token_ptr[0] = '|';
             token_ptr[1] = '\0';
             token_ptr ++;
             ptr ++;
-            start = ptr;
         } else {
             break;
         }
