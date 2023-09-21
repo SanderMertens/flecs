@@ -807,3 +807,27 @@ jobs:
       - name: run tests
         run: |
           bake run test/cpp_api --cfg sanitize -- -j 8
+
+  test-cmake:
+    needs: [ build-linux ]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest ]
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: clone bake
+        run: |
+          git clone https://github.com/SanderMertens/bake
+
+      - name: build flecs & tests
+        run: |
+          cmake -DFLECS_TESTS=ON -DBAKE_DIRECTORY=bake
+          make -j 8
+
+      - name: run tests
+        run: |
+          ctest -C Debug --verbose
