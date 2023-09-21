@@ -2545,7 +2545,8 @@
                 "on_set_hook_before_on_add_for_existing_component",
                 "defer_2_sets_w_observer_same_component",
                 "defer_2_sets_w_observer_other_component",
-                "on_remove_after_deferred_clear_and_add"
+                "on_remove_after_deferred_clear_and_add",
+                "defer_delete_recycle_same_id"
             ]
         }, {
             "id": "SingleThreadStaging",

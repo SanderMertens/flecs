@@ -3407,3 +3407,42 @@ void DeferredActions_on_remove_after_deferred_clear_and_add(void) {
 
     ecs_fini(world);
 }
+
+static void Recycle(ecs_iter_t *it) {
+    ecs_new_id(it->world);
+    *(ecs_entity_t*)it->ctx = ecs_new_id(it->world);
+}
+
+void DeferredActions_defer_delete_recycle_same_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_entity_t e2 = ecs_new_id(world);
+
+    ecs_observer(world, {
+        .filter.terms = {
+            { .id = ecs_id(Foo) }
+        },
+        .events = { EcsOnAdd },
+        .callback = Recycle,
+        .ctx = &e1
+    });
+
+    ecs_defer_begin(world);
+    ecs_delete(world, parent);
+    ecs_add(world, e2, Foo);
+    ecs_add(world, e1, Bar);
+    ecs_defer_end(world);
+
+    test_assert(!ecs_is_alive(world, parent));
+    test_assert(ecs_is_alive(world, e2));
+    test_assert(ecs_is_alive(world, e1));
+    test_assert((uint32_t)e1 != e1);
+    test_assert(ecs_has(world, e2, Foo));
+
+    ecs_fini(world);
+}
