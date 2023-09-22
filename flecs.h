@@ -19778,8 +19778,10 @@ struct world {
     /** Lookup entity by name.
      * 
      * @param name Entity name.
+     * @param search_path When false, only the current scope is searched.
+     * @result The entity if found, or 0 if not found.
      */
-    flecs::entity lookup(const char *name) const;
+    flecs::entity lookup(const char *name, bool search_path = true) const;
 
     /** Set singleton component.
      */
@@ -21998,9 +22000,10 @@ struct entity_view : public id {
      * contain double colons as scope separators, for example: "Foo::Bar".
      *
      * @param path The name of the entity to lookup.
+     * @param search_path When false, only the entity's scope is searched.
      * @return The found entity, or entity::null if no entity matched.
      */
-    flecs::entity lookup(const char *path) const;
+    flecs::entity lookup(const char *path, bool search_path = false) const;
 
     /** Check if entity has the provided entity.
      *
@@ -26460,9 +26463,9 @@ inline bool entity_view::get(const Func& func) const {
     return _::entity_with_invoker<Func>::invoke_get(m_world, m_id, func);
 } 
 
-inline flecs::entity entity_view::lookup(const char *path) const {
+inline flecs::entity entity_view::lookup(const char *path, bool search_path) const {
     ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, "invalid lookup from null handle");
-    auto id = ecs_lookup_path_w_sep(m_world, m_id, path, "::", "::", false);
+    auto id = ecs_lookup_path_w_sep(m_world, m_id, path, "::", "::", search_path);
     return flecs::entity(m_world, id);
 }
 
@@ -30523,8 +30526,8 @@ inline flecs::entity world::set_scope() const {
     return set_scope( _::cpp_type<T>::id(m_world) ); 
 }
 
-inline entity world::lookup(const char *name) const {
-    auto e = ecs_lookup_path_w_sep(m_world, 0, name, "::", "::", true);
+inline entity world::lookup(const char *name, bool search_path) const {
+    auto e = ecs_lookup_path_w_sep(m_world, 0, name, "::", "::", search_path);
     return flecs::entity(*this, e);
 }
 

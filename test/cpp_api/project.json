@@ -265,7 +265,9 @@
                 "to_view_from_stage",
                 "set_alias",
                 "emplace_w_observer",
-                "scoped_world"
+                "scoped_world",
+                "entity_lookup_not_recursive",
+                "world_lookup_not_recursive"
             ]
         }, {
             "id": "Pairs",

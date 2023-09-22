@@ -479,9 +479,10 @@ struct entity_view : public id {
      * contain double colons as scope separators, for example: "Foo::Bar".
      *
      * @param path The name of the entity to lookup.
+     * @param search_path When false, only the entity's scope is searched.
      * @return The found entity, or entity::null if no entity matched.
      */
-    flecs::entity lookup(const char *path) const;
+    flecs::entity lookup(const char *path, bool search_path = false) const;
 
     /** Check if entity has the provided entity.
      *

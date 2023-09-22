@@ -258,6 +258,8 @@ void Entity_to_view_from_stage(void);
 void Entity_set_alias(void);
 void Entity_emplace_w_observer(void);
 void Entity_scoped_world(void);
+void Entity_entity_lookup_not_recursive(void);
+void Entity_world_lookup_not_recursive(void);
 
 // Testsuite 'Pairs'
 void Pairs_add_component_pair(void);
@@ -2281,6 +2283,14 @@ bake_test_case Entity_testcases[] = {
     {
         "scoped_world",
         Entity_scoped_world
+    },
+    {
+        "entity_lookup_not_recursive",
+        Entity_entity_lookup_not_recursive
+    },
+    {
+        "world_lookup_not_recursive",
+        Entity_world_lookup_not_recursive
     }
 };
 
@@ -6286,7 +6296,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        245,
+        247,
         Entity_testcases
     },
     {
