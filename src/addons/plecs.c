@@ -455,6 +455,26 @@ ecs_entity_t plecs_lookup_action(
 }
 
 static
+void plecs_apply_with_frame(
+    ecs_world_t *world,
+    plecs_state_t *state,
+    ecs_entity_t e)
+{
+    int32_t i, frame_count = state->with_frames[state->sp];
+    for (i = 0; i < frame_count; i ++) {
+        ecs_id_t id = state->with[i];
+        plecs_with_value_t *v = &state->with_value_frames[i];
+        if (v->value.type) {
+            void *ptr = ecs_get_mut_id(world, e, id);
+            ecs_value_copy(world, v->value.type, ptr, v->value.ptr);
+            ecs_modified_id(world, e, id);
+        } else {
+            ecs_add_id(world, e, id);
+        }
+    }
+}
+
+static
 ecs_entity_t plecs_ensure_entity(
     ecs_world_t *world,
     plecs_state_t *state,
@@ -784,21 +804,9 @@ int plecs_create_term(
         }
 
         state->with[state->with_frame ++] = id;
-
     } else {
-        if (subj) {
-            int32_t i, frame_count = state->with_frames[state->sp];
-            for (i = 0; i < frame_count; i ++) {
-                ecs_id_t id = state->with[i];
-                plecs_with_value_t *v = &state->with_value_frames[i];
-                if (v->value.type) {
-                    void *ptr = ecs_get_mut_id(world, subj, id);
-                    ecs_value_copy(world, v->value.type, ptr, v->value.ptr);
-                    ecs_modified_id(world, subj, id);
-                } else {
-                    ecs_add_id(world, subj, id);
-                }
-            }
+        if (subj && !state->scope_assign_stmt) {
+            plecs_apply_with_frame(world, state, subj);
         }
     }
 
@@ -1562,6 +1570,7 @@ const char* plecs_parse_scope_open(
         state->scope[state->sp] = state->scope[state->sp - 1];
         state->default_scope_type[state->sp] = 
             state->default_scope_type[state->sp - 1];
+        state->assign_to = 0;
     }
 
     state->using_frames[state->sp] = state->using_frame;

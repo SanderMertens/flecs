@@ -470,7 +470,10 @@
                 "pair_w_rel_var",
                 "pair_w_tgt_var",
                 "assembly_w_pair_w_this_var",
-                "with_value_not_a_component"
+                "with_value_not_a_component",
+                "component_in_with_scope",
+                "component_in_with_scope_in_scope",
+                "assign_after_with_in_scope"
             ]
         }, {
             "id": "Doc",
