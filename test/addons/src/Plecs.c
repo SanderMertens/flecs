@@ -7578,6 +7578,42 @@ void Plecs_component_in_with_scope(void) {
     ecs_fini(world);
 }
 
+void Plecs_component_in_with_scope_nested(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Velocity),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "with Position{10, 20} {\n"
+    LINE "  with Velocity{10, 20} {\n"
+    LINE "    - Bar\n"
+    LINE "  }\n"
+    LINE "}\n"
+    LINE "\n";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
 void Plecs_component_in_with_scope_in_scope(void) {
     ecs_world_t *world = ecs_init();
 

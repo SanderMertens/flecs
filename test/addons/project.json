@@ -472,6 +472,7 @@
                 "assembly_w_pair_w_this_var",
                 "with_value_not_a_component",
                 "component_in_with_scope",
+                "component_in_with_scope_nested",
                 "component_in_with_scope_in_scope",
                 "assign_after_with_in_scope"
             ]

@@ -1593,6 +1593,38 @@ const char* plecs_parse_scope_open(
 }
 
 static
+void plecs_free_with_frame(
+    ecs_world_t *world,
+    plecs_state_t *state)
+{
+    int32_t i, prev_with = state->with_frames[state->sp];
+    for (i = prev_with; i < state->with_frame; i ++) {
+        plecs_with_value_t *v = &state->with_value_frames[i];
+        if (!v->owned) {
+            continue;
+        }
+        if (v->value.type) {
+            ecs_value_free(world, v->value.type, v->value.ptr);
+            v->value.type = 0;
+            v->value.ptr = NULL;
+            v->owned = false;
+        }
+    }
+}
+
+static
+void plecs_free_all_with_frames(
+    ecs_world_t *world,
+    plecs_state_t *state)
+{
+    int32_t i;
+    for (i = state->sp - 1; i >= 0; i --) {
+        state->sp = i;
+        plecs_free_with_frame(world, state);
+    }    
+}
+
+static
 const char* plecs_parse_scope_close(
     ecs_world_t *world,
     const char *name,
@@ -1653,19 +1685,7 @@ const char* plecs_parse_scope_close(
         ecs_set_scope(world, id);
     }
 
-    int32_t i, prev_with = state->with_frames[state->sp];
-    for (i = prev_with; i < state->with_frame; i ++) {
-        plecs_with_value_t *v = &state->with_value_frames[i];
-        if (!v->owned) {
-            continue;
-        }
-        if (v->value.type) {
-            ecs_value_free(world, v->value.type, v->value.ptr);
-            v->value.type = 0;
-            v->value.ptr = NULL;
-            v->owned = false;
-        }
-    }
+    plecs_free_with_frame(world, state);
 
     state->with_frame = state->with_frames[state->sp];
     state->using_frame = state->using_frames[state->sp];
@@ -2070,6 +2090,7 @@ int flecs_plecs_parse(
 
     return 0;
 error:
+    plecs_free_all_with_frames(world, &state);
     ecs_vars_fini(&state.vars);
     ecs_set_scope(world, state.scope[0]);
     ecs_set_with(world, prev_with);

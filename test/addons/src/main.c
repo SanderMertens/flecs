@@ -465,6 +465,7 @@ void Plecs_pair_w_tgt_var(void);
 void Plecs_assembly_w_pair_w_this_var(void);
 void Plecs_with_value_not_a_component(void);
 void Plecs_component_in_with_scope(void);
+void Plecs_component_in_with_scope_nested(void);
 void Plecs_component_in_with_scope_in_scope(void);
 void Plecs_assign_after_with_in_scope(void);
 
@@ -3363,6 +3364,10 @@ bake_test_case Plecs_testcases[] = {
     {
         "component_in_with_scope",
         Plecs_component_in_with_scope
+    },
+    {
+        "component_in_with_scope_nested",
+        Plecs_component_in_with_scope_nested
     },
     {
         "component_in_with_scope_in_scope",
@@ -7493,7 +7498,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        231,
+        232,
         Plecs_testcases
     },
     {
