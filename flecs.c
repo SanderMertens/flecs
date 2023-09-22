@@ -32122,7 +32122,7 @@ const char* plecs_parse_assign_with_stmt(
 
     ecs_id_t id = state->with[with_frame];
     ecs_id_record_t *idr = flecs_id_record_get(world, id);
-    const ecs_type_info_t *ti = idr->type_info;
+    const ecs_type_info_t *ti = idr ? idr->type_info : NULL;
     if (!ti) {
         char *typename = ecs_id_str(world, id);
         ecs_parser_error(name, expr, ptr - expr, 

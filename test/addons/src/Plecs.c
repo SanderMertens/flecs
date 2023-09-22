@@ -7537,3 +7537,18 @@ void Plecs_assembly_w_pair_w_this_var(void) {
 
     ecs_fini(world);
 }
+
+void Plecs_with_value_not_a_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    LINE "with Foo{10} {\n"
+    LINE "  Bar\n"
+    LINE "}\n"
+    LINE "\n";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}

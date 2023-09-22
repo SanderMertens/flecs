@@ -469,7 +469,8 @@
                 "scope_w_auto_override_pair",
                 "pair_w_rel_var",
                 "pair_w_tgt_var",
-                "assembly_w_pair_w_this_var"
+                "assembly_w_pair_w_this_var",
+                "with_value_not_a_component"
             ]
         }, {
             "id": "Doc",

@@ -463,6 +463,7 @@ void Plecs_scope_w_auto_override_pair(void);
 void Plecs_pair_w_rel_var(void);
 void Plecs_pair_w_tgt_var(void);
 void Plecs_assembly_w_pair_w_this_var(void);
+void Plecs_with_value_not_a_component(void);
 
 // Testsuite 'Doc'
 void Doc_get_set_name(void);
@@ -3351,6 +3352,10 @@ bake_test_case Plecs_testcases[] = {
     {
         "assembly_w_pair_w_this_var",
         Plecs_assembly_w_pair_w_this_var
+    },
+    {
+        "with_value_not_a_component",
+        Plecs_with_value_not_a_component
     }
 };
 
@@ -7473,7 +7478,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        227,
+        228,
         Plecs_testcases
     },
     {
