@@ -15,7 +15,7 @@ void iterate_components(ecs_world_t *ecs, ecs_entity_t e) {
     ecs_os_free(type_str);
 
     // 2. To print individual ids, iterate the type array with ecs_id_str
-    ecs_id_t *type_ids = type->array;
+    const ecs_id_t *type_ids = type->array;
     int32_t i, count = type->count;
 
     for (i = 0; i < count; i ++) {

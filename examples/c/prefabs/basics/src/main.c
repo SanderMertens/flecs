@@ -15,7 +15,7 @@
 //
 // To get a private copy of a component, an instance can add it which is called 
 // an override. Overrides can be manual (by using add) or automatic (see the
-// auto_override example).
+// override example).
 //
 // If a prefab has children, adding the IsA relationship instantiates the prefab
 // children for the instance (see hierarchy example).
