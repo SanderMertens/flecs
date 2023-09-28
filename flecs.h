@@ -5680,7 +5680,7 @@ void ecs_modified_id(
  * @param world The world.
  * @param entity The entity.
  * @param id The id of the component to set.
- * @param size The size of the pointer to the value.
+ * @param size The size of the pointed-to value.
  * @param ptr The pointer to the value.
  * @return The entity. A new entity if no entity was provided.
  */
@@ -11213,7 +11213,7 @@ ecs_entity_t ecs_system_init(
  * Any system may interrupt execution by setting the interrupted_by member in
  * the ecs_iter_t value. This is particularly useful for manual systems, where
  * the value of interrupted_by is returned by this operation. This, in
- * cominbation with the param argument lets applications use manual systems
+ * combination with the param argument lets applications use manual systems
  * to lookup entities: once the entity has been found its handle is passed to
  * interrupted_by, which is then subsequently returned.
  *

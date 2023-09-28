@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
     ecs_world_t *ecs = ecs_init_w_args(argc, argv);
 
     // Register both components. Note that Color is registered first, so that
-    // when Line is registered, the type information of Color can be looked up
+    // when Car is registered, the type information of Color can be looked up
     ECS_META_COMPONENT(ecs, Color);
     ECS_META_COMPONENT(ecs, Car);
 

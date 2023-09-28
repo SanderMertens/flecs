@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
 
     ecs_entity_t SpaceShip = ecs_new_prefab(ecs, "SpaceShip");
 
-    // Attack and Damage are properties that can be shared across many 
+    // Attack and Defense are properties that can be shared across many 
     // spaceships. This saves memory, and speeds up prefab creation as we don't
     // have to copy the values of Attack and Defense to private components.
     ecs_set(ecs, SpaceShip, Attack, { 75 });
