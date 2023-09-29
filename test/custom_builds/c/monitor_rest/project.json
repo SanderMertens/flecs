@@ -1,0 +1,14 @@
+{
+    "id": "monitor_rest",
+    "type": "application",
+    "value": {
+        "public": false,
+        "use": [
+            "flecs"
+        ],
+        "standalone": true
+    },
+    "lang.c": {
+        "defines": ["FLECS_CUSTOM_BUILD", "FLECS_MONITOR", "FLECS_REST", "FLECS_LOG"]
+    }
+}

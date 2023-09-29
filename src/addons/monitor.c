@@ -328,7 +328,7 @@ void FlecsMonitorImport(
 
     ECS_COMPONENT_DEFINE(world, EcsWorldSummary);
 
-#ifdef FLECS_META
+#if defined(FLECS_META) && defined(FLECS_UNITS)
     ecs_struct(world, {
         .entity = ecs_id(EcsWorldSummary),
         .members = {

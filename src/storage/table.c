@@ -1317,7 +1317,7 @@ void flecs_table_move_bitset_columns(
 /* Grow table column. When a column needs to be reallocated this function takes
  * care of correctly invoking ctor/move/dtor hooks. */
 static
-void* flecs_table_grow_column(
+void flecs_table_grow_column(
     ecs_world_t *world,
     ecs_column_t *column,
     int32_t to_add,
@@ -1382,8 +1382,6 @@ void* flecs_table_grow_column(
     }
 
     ecs_assert(column->data.size == dst_size, ECS_INTERNAL_ERROR, NULL);
-
-    return result;
 }
 
 /* Grow all data structures in a table */
