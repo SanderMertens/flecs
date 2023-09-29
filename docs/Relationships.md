@@ -232,7 +232,7 @@ world.filter_builder()
   .term(Eats, flecs::Wildcard)
   .build()
   .each([](flecs::iter& it, size_t i) {
-    flecs::entity food = it.pair().second(); // Apples, ...
+    flecs::entity food = it.pair(1).second(); // Apples, ...
     flecs::entity e = it.entity(i);
     // Iterate as usual
   });
