@@ -2459,6 +2459,10 @@ void DeferredActions_defer_2_sets_w_observer_same_component(void);
 void DeferredActions_defer_2_sets_w_observer_other_component(void);
 void DeferredActions_on_remove_after_deferred_clear_and_add(void);
 void DeferredActions_defer_delete_recycle_same_id(void);
+void DeferredActions_observer_while_defer_suspended(void);
+void DeferredActions_on_add_hook_while_defer_suspended(void);
+void DeferredActions_on_set_hook_while_defer_suspended(void);
+void DeferredActions_on_remove_hook_while_defer_suspended(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -12164,6 +12168,22 @@ bake_test_case DeferredActions_testcases[] = {
     {
         "defer_delete_recycle_same_id",
         DeferredActions_defer_delete_recycle_same_id
+    },
+    {
+        "observer_while_defer_suspended",
+        DeferredActions_observer_while_defer_suspended
+    },
+    {
+        "on_add_hook_while_defer_suspended",
+        DeferredActions_on_add_hook_while_defer_suspended
+    },
+    {
+        "on_set_hook_while_defer_suspended",
+        DeferredActions_on_set_hook_while_defer_suspended
+    },
+    {
+        "on_remove_hook_while_defer_suspended",
+        DeferredActions_on_remove_hook_while_defer_suspended
     }
 };
 
@@ -13074,7 +13094,7 @@ static bake_test_suite suites[] = {
         "DeferredActions",
         NULL,
         NULL,
-        116,
+        120,
         DeferredActions_testcases
     },
     {
