@@ -43,12 +43,8 @@ flecs::entity import(world& world) {
     
     if (!_::cpp_type<T>::registered(world)) {
 
-        /* Module is registered with world, initialize static data */
-        if (m) {
-            _::cpp_type<T>::init(m, false);
-        
         /* Module is not yet registered, register it now */
-        } else {
+        if (!m) {
             m = _::do_import<T>(world, symbol);
         }
 

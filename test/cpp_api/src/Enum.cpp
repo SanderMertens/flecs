@@ -435,6 +435,8 @@ void Enum_query_enum_constant(void) {
 void Enum_enum_type_from_stage(void) {
     flecs::world ecs;
 
+    ecs.component<StandardEnum>();
+
     auto stage = ecs.get_stage(0);
 
     ecs.readonly_begin();
@@ -447,6 +449,8 @@ void Enum_enum_type_from_stage(void) {
 
 void Enum_add_enum_from_stage(void) {
     flecs::world ecs;
+
+    ecs.component<StandardEnum>();
 
     auto stage = ecs.get_stage(0);
 

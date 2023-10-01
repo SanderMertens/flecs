@@ -112,11 +112,18 @@ ecs_entity_t ecs_cpp_enum_constant_register(
     const char *name,
     int value);
 
-FLECS_API 
-int32_t ecs_cpp_reset_count_get(void);
+ECS_DEPRECATED(
+    "ecs_cpp_reset_count_get was deprecated, world-local component ids "
+    "are supported by default now.")
+FLECS_API int32_t ecs_cpp_reset_count_get(void);
+
+ECS_DEPRECATED(
+    "ecs_cpp_reset_count_inc was deprecated, world-local component ids "
+    "are supported by default now.")
+FLECS_API int32_t ecs_cpp_reset_count_inc(void);
 
 FLECS_API
-int32_t ecs_cpp_reset_count_inc(void);
+ecs_size_t ecs_cpp_component_id_storage_add(void);
 
 #ifdef FLECS_META
 FLECS_API

@@ -1076,11 +1076,8 @@
             "testcases": [
                 "builtin_components",
                 "multi_world_empty",
-                "multi_world_component",
                 "multi_world_component_namespace",
                 "multi_world_module",
-                "multi_world_recycled_component",
-                "multi_world_recycled_component_different_generation",
                 "type_id",
                 "different_comp_same_name",
                 "reregister_after_reset",

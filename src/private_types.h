@@ -545,6 +545,9 @@ struct ecs_world_t {
     ecs_ctx_free_t binding_ctx_free; /**< Callback to free binding_ctx */
 
     ecs_vec_t fini_actions;          /* Callbacks to execute when world exits */
+
+    /* -- Caches -- */
+    ecs_vec_t component_id_cache;    /* World local component id cache */
 };
 
 #endif

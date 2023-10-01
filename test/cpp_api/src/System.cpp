@@ -684,6 +684,8 @@ void System_get_query(void) {
 void System_add_from_each(void) {
     flecs::world world;
 
+    world.component<Velocity>();
+
     auto e1 = world.entity().set<Position>({0, 0});
     auto e2 = world.entity().set<Position>({1, 0});
     auto e3 = world.entity().set<Position>({2, 0});
@@ -730,6 +732,8 @@ struct Entity {
 void System_add_from_each_world_handle(void) {
     flecs::world world;
 
+    world.component<Position>();
+
     auto e1 = world.entity().set<Entity>({world.entity()});
     auto e2 = world.entity().set<Entity>({world.entity()});
     auto e3 = world.entity().set<Entity>({world.entity()});
@@ -748,6 +752,9 @@ void System_add_from_each_world_handle(void) {
 
 void System_new_from_each(void) {
     flecs::world world;
+
+    world.component<Entity>();
+    world.component<Velocity>();
 
     auto e1 = world.entity().set<Position>({0, 0});
     auto e2 = world.entity().set<Position>({0, 0});
@@ -773,6 +780,8 @@ void System_new_from_each(void) {
 
 void System_add_from_iter(void) {
     flecs::world world;
+
+    world.component<Velocity>();
 
     auto e1 = world.entity().set<Position>({0, 0});
     auto e2 = world.entity().set<Position>({1, 0});
@@ -819,6 +828,8 @@ void System_delete_from_iter(void) {
 void System_add_from_iter_world_handle(void) {
     flecs::world world;
 
+    world.component<Position>();
+
     auto e1 = world.entity().set<Entity>({world.entity()});
     auto e2 = world.entity().set<Entity>({world.entity()});
     auto e3 = world.entity().set<Entity>({world.entity()});
@@ -839,6 +850,9 @@ void System_add_from_iter_world_handle(void) {
 
 void System_new_from_iter(void) {
     flecs::world world;
+
+    world.component<Entity>();
+    world.component<Velocity>();
 
     auto e1 = world.entity().set<Position>({0, 0});
     auto e2 = world.entity().set<Position>({0, 0});
@@ -866,6 +880,8 @@ void System_new_from_iter(void) {
 
 void System_each_w_mut_children_it(void) {
     flecs::world world;
+
+    world.component<Velocity>();
 
     auto parent = world.entity().set<Position>({0, 0});
     auto e1 = world.entity().set<Position>({0, 0}).child_of(parent);

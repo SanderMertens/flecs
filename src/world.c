@@ -916,6 +916,8 @@ ecs_world_t *ecs_mini(void) {
     flecs_sparse_init_t(world->pending_buffer, a,
         &world->allocators.sparse_chunk, ecs_table_t*);
 
+    ecs_vec_init_t(a, &world->component_id_cache, ecs_cached_component_info_t, 0);
+
     flecs_name_index_init(&world->aliases, a);
     flecs_name_index_init(&world->symbols, a);
     ecs_vec_init_t(a, &world->fini_actions, ecs_action_elem_t, 0);
@@ -1263,6 +1265,51 @@ const ecs_type_hooks_t* ecs_get_hooks_id(
     return NULL;
 }
 
+ecs_cached_component_info_t* ecs_get_or_create_cached_component_info(
+    ecs_world_t* world,
+    ecs_component_cache_index_t component_cache_index) {
+
+    ecs_poly_assert(world, ecs_world_t);
+
+    // Uninitialized index
+    ecs_assert(component_cache_index != 0, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_vec_set_min_count_zeromem_t(
+        &world->allocator, &world->component_id_cache,
+        ecs_cached_component_info_t, component_cache_index + 1);
+
+    return ecs_vec_get_t(&world->component_id_cache,
+                         ecs_cached_component_info_t, component_cache_index);
+}
+
+const ecs_cached_component_info_t* ecs_lookup_cached_component_info(
+    const ecs_world_t* world,
+    ecs_component_cache_index_t component_cache_index) {
+
+    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    const ecs_world_t* base = ecs_get_world(world);
+    ecs_poly_assert(base, ecs_world_t);
+
+    if (component_cache_index >= ecs_vec_count(&base->component_id_cache)) {
+        return NULL;
+    }
+
+    const ecs_cached_component_info_t* info =
+        ecs_vec_get_t(&base->component_id_cache, ecs_cached_component_info_t,
+                      component_cache_index);
+
+    if (!ecs_is_cached_component_info_valid(info)) {
+        return NULL;
+    }
+
+    return info;
+}
+
+bool ecs_is_cached_component_info_valid(const ecs_cached_component_info_t* component_info) {
+    return component_info->component != 0;
+}
+
 void ecs_atfini(
     ecs_world_t *world,
     ecs_fini_action_t action,
@@ -1421,10 +1468,12 @@ int ecs_fini(
     }
 
     /* After this point no more user code is invoked */
+    ecs_allocator_t* a = &world->allocator;
 
     ecs_dbg_1("#[bold]cleanup world datastructures");
     ecs_log_push_1();
     flecs_entities_fini(world);
+    ecs_vec_fini_t(a, &world->component_id_cache, ecs_cached_component_info_t);
     flecs_sparse_fini(world->pending_tables);
     flecs_sparse_fini(world->pending_buffer);
     ecs_os_free(world->pending_tables);

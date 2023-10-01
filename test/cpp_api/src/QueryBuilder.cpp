@@ -1270,12 +1270,12 @@ void QueryBuilder_group_by_raw(void) {
 
     auto q = ecs.query_builder()
         .term<TagX>()
-        .group_by(flecs::type_id<TagX>(), group_by_first_id)
+        .group_by(ecs.id<TagX>(), group_by_first_id)
         .build();
 
     auto q_reverse = ecs.query_builder()
         .term<TagX>()
-        .group_by(flecs::type_id<TagX>(), group_by_first_id_negated)
+        .group_by(ecs.id<TagX>(), group_by_first_id_negated)
         .build();
 
     auto e3 = ecs.entity().add<TagX>().add<TagC>();
