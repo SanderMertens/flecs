@@ -42,4 +42,10 @@ int main(int, char*[]) {
     bob.each(flecs::Wildcard, pears, [](flecs::id id) {
         std::cout << "Bob " << id.first().name() << " pears\n";
     });
+
+    // Get first target of relationship
+    std::cout << "Bob eats " << bob.target<Eats>().name() << "\n";
+
+    // Get second target of relationship
+    std::cout << "Bob also eats " << bob.target<Eats>(1).name() << "\n";
 }
