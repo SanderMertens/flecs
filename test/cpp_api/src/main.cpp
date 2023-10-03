@@ -394,6 +394,7 @@ void Paths_alias_scoped_component_w_name(void);
 void Paths_alias_entity(void);
 void Paths_alias_entity_by_name(void);
 void Paths_alias_entity_by_scoped_name(void);
+void Paths_alias_entity_empty(void);
 
 // Testsuite 'System'
 void System_iter(void);
@@ -2808,6 +2809,10 @@ bake_test_case Paths_testcases[] = {
     {
         "alias_entity_by_scoped_name",
         Paths_alias_entity_by_scoped_name
+    },
+    {
+        "alias_entity_empty",
+        Paths_alias_entity_empty
     }
 };
 
@@ -6329,7 +6334,7 @@ static bake_test_suite suites[] = {
         "Paths",
         NULL,
         NULL,
-        14,
+        15,
         Paths_testcases
     },
     {
