@@ -381,6 +381,7 @@ void Cursor_opaque_struct_w_opaque_vec(void);
 void Cursor_opaque_vec_w_opaque_elem(void);
 void Cursor_next_out_of_bounds(void);
 void Cursor_set_out_of_bounds(void);
+void Cursor_get_member_id(void);
 
 // Testsuite 'DeserializeFromExpr'
 void DeserializeFromExpr_bool(void);
@@ -2427,6 +2428,10 @@ bake_test_case Cursor_testcases[] = {
     {
         "set_out_of_bounds",
         Cursor_set_out_of_bounds
+    },
+    {
+        "get_member_id",
+        Cursor_get_member_id
     }
 };
 
@@ -4851,7 +4856,7 @@ static bake_test_suite suites[] = {
         "Cursor",
         NULL,
         NULL,
-        122,
+        123,
         Cursor_testcases
     },
     {

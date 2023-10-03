@@ -463,6 +463,11 @@ void Plecs_scope_w_auto_override_pair(void);
 void Plecs_pair_w_rel_var(void);
 void Plecs_pair_w_tgt_var(void);
 void Plecs_assembly_w_pair_w_this_var(void);
+void Plecs_with_value_not_a_component(void);
+void Plecs_component_in_with_scope(void);
+void Plecs_component_in_with_scope_nested(void);
+void Plecs_component_in_with_scope_in_scope(void);
+void Plecs_assign_after_with_in_scope(void);
 
 // Testsuite 'Doc'
 void Doc_get_set_name(void);
@@ -1501,6 +1506,7 @@ void Metrics_metric_description(void);
 void Metrics_id_count(void);
 void Metrics_id_target_count(void);
 void Metrics_metric_instance_has_doc_name(void);
+void Metrics_metric_nested_member(void);
 
 // Testsuite 'Alerts'
 void Alerts_one_active_alert(void);
@@ -3351,6 +3357,26 @@ bake_test_case Plecs_testcases[] = {
     {
         "assembly_w_pair_w_this_var",
         Plecs_assembly_w_pair_w_this_var
+    },
+    {
+        "with_value_not_a_component",
+        Plecs_with_value_not_a_component
+    },
+    {
+        "component_in_with_scope",
+        Plecs_component_in_with_scope
+    },
+    {
+        "component_in_with_scope_nested",
+        Plecs_component_in_with_scope_nested
+    },
+    {
+        "component_in_with_scope_in_scope",
+        Plecs_component_in_with_scope_in_scope
+    },
+    {
+        "assign_after_with_in_scope",
+        Plecs_assign_after_with_in_scope
     }
 };
 
@@ -7311,6 +7337,10 @@ bake_test_case Metrics_testcases[] = {
     {
         "metric_instance_has_doc_name",
         Metrics_metric_instance_has_doc_name
+    },
+    {
+        "metric_nested_member",
+        Metrics_metric_nested_member
     }
 };
 
@@ -7473,7 +7503,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        227,
+        232,
         Plecs_testcases
     },
     {
@@ -7697,7 +7727,7 @@ static bake_test_suite suites[] = {
         "Metrics",
         NULL,
         NULL,
-        27,
+        28,
         Metrics_testcases
     },
     {

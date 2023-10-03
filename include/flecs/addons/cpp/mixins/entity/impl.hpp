@@ -181,9 +181,9 @@ inline bool entity_view::get(const Func& func) const {
     return _::entity_with_invoker<Func>::invoke_get(m_world, m_id, func);
 } 
 
-inline flecs::entity entity_view::lookup(const char *path) const {
+inline flecs::entity entity_view::lookup(const char *path, bool search_path) const {
     ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, "invalid lookup from null handle");
-    auto id = ecs_lookup_path_w_sep(m_world, m_id, path, "::", "::", false);
+    auto id = ecs_lookup_path_w_sep(m_world, m_id, path, "::", "::", search_path);
     return flecs::entity(m_world, id);
 }
 

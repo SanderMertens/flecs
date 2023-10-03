@@ -1838,15 +1838,14 @@ void Observer_unset_on_fini_1(void) {
 
     ecs_fini(world);
 
-    test_int(ctx.invoked, 1);
     test_int(ctx.count, 3);
     test_int(ctx.system, UnSet);
     test_int(ctx.term_count, 1);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e1);
+    test_int(ctx.e[0], e3);
     test_int(ctx.e[1], e2);
-    test_int(ctx.e[2], e3);
+    test_int(ctx.e[2], e1);
 
     test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);      
@@ -1887,9 +1886,9 @@ void Observer_unset_on_fini_2(void) {
     test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e1);
+    test_int(ctx.e[0], e3);
     test_int(ctx.e[1], e2);
-    test_int(ctx.e[2], e3);
+    test_int(ctx.e[2], e1);
 
     test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0); 
@@ -1934,15 +1933,14 @@ void Observer_unset_on_fini_3(void) {
 
     ecs_fini(world);
 
-    test_int(ctx.invoked, 1);
     test_int(ctx.count, 3);
     test_int(ctx.system, UnSet);
     test_int(ctx.term_count, 3);
     test_null(ctx.param);
 
-    test_int(ctx.e[0], e1);
+    test_int(ctx.e[0], e3);
     test_int(ctx.e[1], e2);
-    test_int(ctx.e[2], e3);
+    test_int(ctx.e[2], e1);
 
     test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0); 

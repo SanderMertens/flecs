@@ -812,6 +812,53 @@ void Misc_member_metric_w_custom_name(void) {
     test_int(count, 2);
 }
 
+void Misc_dotmember_metric(void) {
+    flecs::world ecs;
+
+    struct Point {
+        float x;
+        float y;
+    };
+
+    struct Position {
+        float dummy;
+        Point position;
+    };
+
+    ecs.import<flecs::metrics>();
+
+    ecs.component<Point>()
+        .member<float>("x")
+        .member<float>("y");
+
+    ecs.component<Position>()
+        .member<float>("dummy")
+        .member<Point>("position");
+
+    ecs.metric("metrics::position_y")
+        .kind<flecs::metrics::Gauge>()
+        .dotmember<Position>("position.y");
+
+    flecs::entity e1 = ecs.entity().set<Position>({10, {20, 30}});
+
+    ecs.progress();
+
+    int32_t count = 0;
+    ecs.filter<flecs::metrics::Source, flecs::metrics::Value>()
+        .iter([&](flecs::iter& it, flecs::metrics::Source *s, flecs::metrics::Value *i) {
+            count += it.count();
+
+            test_int(count, 1);
+            test_uint(s[0].entity, e1);
+
+            test_int(i[0].value, 30);
+
+            test_assert(it.entity(0).has<flecs::metrics::Instance>());
+        });
+
+    test_int(count, 1);
+}
+
 void Misc_counter_id_metric(void) {
     flecs::world ecs;
 

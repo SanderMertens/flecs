@@ -232,7 +232,7 @@ world.filter_builder()
   .term(Eats, flecs::Wildcard)
   .build()
   .each([](flecs::iter& it, size_t i) {
-    flecs::entity food = it.pair().second(); // Apples, ...
+    flecs::entity food = it.pair(1).second(); // Apples, ...
     flecs::entity e = it.entity(i);
     // Iterate as usual
   });
@@ -762,7 +762,7 @@ The following examples show how to use cleanup policies
 ```c
 // Remove Archer from entities when Archer is deleted
 ECS_TAG(world, Archer);
-ecs_add_pair(world, EcsOnDelete, EcsRemove);
+ecs_add_pair(world, Archer, EcsOnDelete, EcsRemove);
 
 ecs_entity_t e = ecs_new_w_id(world, Archer);
 
@@ -770,7 +770,7 @@ ecs_entity_t e = ecs_new_w_id(world, Archer);
 ecs_delete(world, Archer);
 ```
 ```cpp
-// Delete entities with Archer when Archer is deleted
+// Remove Archer from entities when Archer is deleted
 world.component<Archer>()
   .add(flecs::OnDelete, flecs::Remove);
 
@@ -784,7 +784,7 @@ world.component<Archer>().destruct();
 ```c
 // Delete entities with Archer when Archer is deleted
 ECS_TAG(world, Archer);
-ecs_add_pair(world, EcsOnDelete, EcsDelete);
+ecs_add_pair(world, Archer, EcsOnDelete, EcsDelete);
 
 ecs_entity_t e = ecs_new_w_id(world, Archer);
 
@@ -806,7 +806,7 @@ world.component<Archer>().destruct();
 ```c
 // Delete children when deleting parent
 ECS_TAG(world, ChildOf);
-ecs_add_pair(world, EcsOnDeleteTarget, EcsDelete);
+ecs_add_pair(world, ChildOf, EcsOnDeleteTarget, EcsDelete);
 
 ecs_entity_t p = ecs_new_id(world);
 ecs_entity_t e = ecs_new_w_pair(world, ChildOf, p);

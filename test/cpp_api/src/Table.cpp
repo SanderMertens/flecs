@@ -663,3 +663,22 @@ void Table_iter_type(void) {
     }
     test_int(count, 2);
 }
+
+void Table_get_T_enum(void) {
+    flecs::world ecs;
+
+    flecs::entity e = ecs.entity()
+        .set<Number>(Number::One);
+    ecs.entity()
+        .set<Number>(Number::Two);
+    ecs.entity()
+        .set<Number>(Number::Three);
+
+    flecs::table table = e.table();
+
+    Number *n = table.get<Number>();
+    test_assert(n != NULL);
+    test_int(n[0], Number::One);
+    test_int(n[1], Number::Two);
+    test_int(n[2], Number::Three);
+}

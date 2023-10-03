@@ -43,6 +43,18 @@ inline metric_builder& metric_builder::member(const char *name) {
     return member(m);
 }
 
+inline metric_builder& metric_builder::dotmember(const char *expr) {
+    m_desc.dotmember = expr;
+    return *this;
+}
+
+template <typename T>
+inline metric_builder& metric_builder::dotmember(const char *expr) {
+    m_desc.dotmember = expr;
+    m_desc.id = _::cpp_type<T>::id(m_world);
+    return *this;
+}
+
 inline metric_builder::operator flecs::entity() {
     if (!m_created) {
         m_created = true;

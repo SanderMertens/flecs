@@ -1033,6 +1033,11 @@ void flecs_invoke_hook(
     ecs_entity_t event,
     ecs_iter_action_t hook)
 {
+    int32_t defer = world->stages[0].defer;
+    if (defer < 0) {
+        world->stages[0].defer *= -1;
+    }
+
     ecs_iter_t it = { .field_count = 1};
     it.entities = entities;
     
@@ -1052,6 +1057,8 @@ void flecs_invoke_hook(
     flecs_iter_validate(&it);
     hook(&it);
     ecs_iter_fini(&it);
+
+    world->stages[0].defer = defer;
 }
 
 void flecs_notify_on_set(
@@ -4729,7 +4736,7 @@ bool flecs_defer_end(
             for (i = 0; i < count; i ++) {
                 ecs_cmd_t *cmd = &cmds[i];
                 ecs_entity_t e = cmd->entity;
-                bool is_alive = flecs_entities_is_valid(world, e);
+                bool is_alive = flecs_entities_is_alive(world, e);
 
                 /* A negative index indicates the first command for an entity */
                 if (merge_to_world && (cmd->next_for_entity < 0)) {

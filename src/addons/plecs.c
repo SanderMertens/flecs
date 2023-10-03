@@ -455,6 +455,26 @@ ecs_entity_t plecs_lookup_action(
 }
 
 static
+void plecs_apply_with_frame(
+    ecs_world_t *world,
+    plecs_state_t *state,
+    ecs_entity_t e)
+{
+    int32_t i, frame_count = state->with_frames[state->sp];
+    for (i = 0; i < frame_count; i ++) {
+        ecs_id_t id = state->with[i];
+        plecs_with_value_t *v = &state->with_value_frames[i];
+        if (v->value.type) {
+            void *ptr = ecs_get_mut_id(world, e, id);
+            ecs_value_copy(world, v->value.type, ptr, v->value.ptr);
+            ecs_modified_id(world, e, id);
+        } else {
+            ecs_add_id(world, e, id);
+        }
+    }
+}
+
+static
 ecs_entity_t plecs_ensure_entity(
     ecs_world_t *world,
     plecs_state_t *state,
@@ -784,21 +804,9 @@ int plecs_create_term(
         }
 
         state->with[state->with_frame ++] = id;
-
     } else {
-        if (subj) {
-            int32_t i, frame_count = state->with_frames[state->sp];
-            for (i = 0; i < frame_count; i ++) {
-                ecs_id_t id = state->with[i];
-                plecs_with_value_t *v = &state->with_value_frames[i];
-                if (v->value.type) {
-                    void *ptr = ecs_get_mut_id(world, subj, id);
-                    ecs_value_copy(world, v->value.type, ptr, v->value.ptr);
-                    ecs_modified_id(world, subj, id);
-                } else {
-                    ecs_add_id(world, subj, id);
-                }
-            }
+        if (subj && !state->scope_assign_stmt) {
+            plecs_apply_with_frame(world, state, subj);
         }
     }
 
@@ -1061,7 +1069,7 @@ const char* plecs_parse_assign_with_stmt(
 
     ecs_id_t id = state->with[with_frame];
     ecs_id_record_t *idr = flecs_id_record_get(world, id);
-    const ecs_type_info_t *ti = idr->type_info;
+    const ecs_type_info_t *ti = idr ? idr->type_info : NULL;
     if (!ti) {
         char *typename = ecs_id_str(world, id);
         ecs_parser_error(name, expr, ptr - expr, 
@@ -1562,6 +1570,7 @@ const char* plecs_parse_scope_open(
         state->scope[state->sp] = state->scope[state->sp - 1];
         state->default_scope_type[state->sp] = 
             state->default_scope_type[state->sp - 1];
+        state->assign_to = 0;
     }
 
     state->using_frames[state->sp] = state->using_frame;
@@ -1581,6 +1590,38 @@ const char* plecs_parse_scope_open(
     }
 
     return ptr;
+}
+
+static
+void plecs_free_with_frame(
+    ecs_world_t *world,
+    plecs_state_t *state)
+{
+    int32_t i, prev_with = state->with_frames[state->sp];
+    for (i = prev_with; i < state->with_frame; i ++) {
+        plecs_with_value_t *v = &state->with_value_frames[i];
+        if (!v->owned) {
+            continue;
+        }
+        if (v->value.type) {
+            ecs_value_free(world, v->value.type, v->value.ptr);
+            v->value.type = 0;
+            v->value.ptr = NULL;
+            v->owned = false;
+        }
+    }
+}
+
+static
+void plecs_free_all_with_frames(
+    ecs_world_t *world,
+    plecs_state_t *state)
+{
+    int32_t i;
+    for (i = state->sp - 1; i >= 0; i --) {
+        state->sp = i;
+        plecs_free_with_frame(world, state);
+    }    
 }
 
 static
@@ -1644,19 +1685,7 @@ const char* plecs_parse_scope_close(
         ecs_set_scope(world, id);
     }
 
-    int32_t i, prev_with = state->with_frames[state->sp];
-    for (i = prev_with; i < state->with_frame; i ++) {
-        plecs_with_value_t *v = &state->with_value_frames[i];
-        if (!v->owned) {
-            continue;
-        }
-        if (v->value.type) {
-            ecs_value_free(world, v->value.type, v->value.ptr);
-            v->value.type = 0;
-            v->value.ptr = NULL;
-            v->owned = false;
-        }
-    }
+    plecs_free_with_frame(world, state);
 
     state->with_frame = state->with_frames[state->sp];
     state->using_frame = state->using_frames[state->sp];
@@ -2061,6 +2090,7 @@ int flecs_plecs_parse(
 
     return 0;
 error:
+    plecs_free_all_with_frames(world, &state);
     ecs_vars_fini(&state.vars);
     ecs_set_scope(world, state.scope[0]);
     ecs_set_with(world, prev_with);

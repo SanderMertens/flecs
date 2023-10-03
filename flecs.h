@@ -5680,7 +5680,7 @@ void ecs_modified_id(
  * @param world The world.
  * @param entity The entity.
  * @param id The id of the component to set.
- * @param size The size of the pointer to the value.
+ * @param size The size of the pointed-to value.
  * @param ptr The pointer to the value.
  * @return The entity. A new entity if no entity was provided.
  */
@@ -11866,6 +11866,11 @@ typedef struct ecs_metric_desc_t {
      * at the same time as id. Cannot be combined with EcsCounterId. */
     ecs_entity_t member;
 
+    /* Member dot expression. Can be used instead of member and supports nested
+     * members. Must be set together with id and should not be set at the same 
+     * time as member. */
+    const char *dotmember;
+
     /** Tracks whether entities have the specified component id. Must not be set
      * at the same time as member. */
     ecs_id_t id;
@@ -13845,6 +13850,11 @@ ecs_entity_t ecs_meta_get_unit(
 /** Get member name of current member */
 FLECS_API
 const char* ecs_meta_get_member(
+    const ecs_meta_cursor_t *cursor);
+
+/** Get member entity of current member */
+FLECS_API
+ecs_entity_t ecs_meta_get_member_id(
     const ecs_meta_cursor_t *cursor);
 
 /* The set functions assign the field with the specified value. If the value
@@ -18287,6 +18297,11 @@ struct metric_builder {
     template <typename T>
     metric_builder& member(const char *name);
 
+    metric_builder& dotmember(const char *name);
+
+    template <typename T>
+    metric_builder& dotmember(const char *name);
+
     metric_builder& id(flecs::id_t the_id) {
         m_desc.id = the_id;
         return *this;
@@ -19778,8 +19793,10 @@ struct world {
     /** Lookup entity by name.
      * 
      * @param name Entity name.
+     * @param search_path When false, only the current scope is searched.
+     * @result The entity if found, or 0 if not found.
      */
-    flecs::entity lookup(const char *name) const;
+    flecs::entity lookup(const char *name, bool search_path = true) const;
 
     /** Set singleton component.
      */
@@ -21570,7 +21587,7 @@ struct entity_view : public id {
         return m_id;
     }
 
-    /** Check is entity is valid.
+    /** Check if entity is valid.
      *
      * @return True if the entity is alive, false otherwise.
      */
@@ -21582,7 +21599,7 @@ struct entity_view : public id {
         return is_valid();
     }
 
-    /** Check is entity is alive.
+    /** Check if entity is alive.
      *
      * @return True if the entity is alive, false otherwise.
      */
@@ -21998,9 +22015,10 @@ struct entity_view : public id {
      * contain double colons as scope separators, for example: "Foo::Bar".
      *
      * @param path The name of the entity to lookup.
+     * @param search_path When false, only the entity's scope is searched.
      * @return The found entity, or entity::null if no entity matched.
      */
-    flecs::entity lookup(const char *path) const;
+    flecs::entity lookup(const char *path, bool search_path = false) const;
 
     /** Check if entity has the provided entity.
      *
@@ -24100,6 +24118,159 @@ private:
     Func m_func;
 };
 
+template <typename Func, typename ... Components>
+struct find_invoker : public invoker {
+    // If the number of arguments in the function signature is one more than the
+    // number of components in the query, an extra entity arg is required.
+    static constexpr bool PassEntity = 
+        (sizeof...(Components) + 1) == (arity<Func>::value);
+
+    // If the number of arguments in the function is two more than the number of
+    // components in the query, extra iter + index arguments are required.
+    static constexpr bool PassIter = 
+        (sizeof...(Components) + 2) == (arity<Func>::value);
+
+    static_assert(arity<Func>::value > 0, 
+        "each() must have at least one argument");
+
+    using Terms = typename term_ptrs<Components ...>::array;
+
+    template < if_not_t< is_same< decay_t<Func>, decay_t<Func>& >::value > = 0>
+    explicit find_invoker(Func&& func) noexcept 
+        : m_func(FLECS_MOV(func)) { }
+
+    explicit find_invoker(const Func& func) noexcept 
+        : m_func(func) { }
+
+    // Invoke object directly. This operation is useful when the calling
+    // function has just constructed the invoker, such as what happens when
+    // iterating a query.
+    flecs::entity invoke(ecs_iter_t *iter) const {
+        term_ptrs<Components...> terms;
+
+        if (terms.populate(iter)) {
+            return invoke_callback< each_ref_column >(iter, m_func, 0, terms.m_terms);
+        } else {
+            return invoke_callback< each_column >(iter, m_func, 0, terms.m_terms);
+        }   
+    }
+
+    // Find invokers always use instanced iterators
+    static bool instanced() {
+        return true;
+    }
+
+private:
+    // Number of function arguments is one more than number of components, pass
+    // entity as argument.
+    template <template<typename X, typename = int> class ColumnType, 
+        typename... Args, if_t< 
+            sizeof...(Components) == sizeof...(Args) && PassEntity> = 0>
+    static flecs::entity invoke_callback(
+        ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps) 
+    {
+        ECS_TABLE_LOCK(iter->world, iter->table);
+
+        ecs_world_t *world = iter->world;
+        size_t count = static_cast<size_t>(iter->count);
+        flecs::entity result;
+
+        ecs_assert(count > 0, ECS_INVALID_OPERATION,
+            "no entities returned, use find() without flecs::entity argument");
+
+        for (size_t i = 0; i < count; i ++) {
+            if (func(flecs::entity(world, iter->entities[i]),
+                (ColumnType< remove_reference_t<Components> >(comps, i)
+                    .get_row())...))
+            {
+                result = flecs::entity(world, iter->entities[i]);
+                break;
+            }
+        }
+
+        ECS_TABLE_UNLOCK(iter->world, iter->table);
+
+        return result;
+    }
+
+    // Number of function arguments is two more than number of components, pass
+    // iter + index as argument.
+    template <template<typename X, typename = int> class ColumnType, 
+        typename... Args, int Enabled = PassIter, if_t< 
+            sizeof...(Components) == sizeof...(Args) && Enabled> = 0>
+    static flecs::entity invoke_callback(
+        ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps) 
+    {
+        size_t count = static_cast<size_t>(iter->count);
+        if (count == 0) {
+            // If query has no This terms, count can be 0. Since each does not
+            // have an entity parameter, just pass through components
+            count = 1;
+        }
+
+        flecs::iter it(iter);
+        flecs::entity result;
+
+        ECS_TABLE_LOCK(iter->world, iter->table);
+
+        for (size_t i = 0; i < count; i ++) {
+            if (func(it, i, (ColumnType< remove_reference_t<Components> >(comps, i)
+                .get_row())...))
+            {
+                result = flecs::entity(iter->world, iter->entities[i]);
+                break;
+            }
+        }
+
+        ECS_TABLE_UNLOCK(iter->world, iter->table);
+
+        return result;
+    }
+
+    // Number of function arguments is equal to number of components, no entity
+    template <template<typename X, typename = int> class ColumnType, 
+        typename... Args, if_t< 
+            sizeof...(Components) == sizeof...(Args) && !PassEntity && !PassIter> = 0>
+    static flecs::entity invoke_callback(
+        ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps) 
+    {
+        size_t count = static_cast<size_t>(iter->count);
+        if (count == 0) {
+            // If query has no This terms, count can be 0. Since each does not
+            // have an entity parameter, just pass through components
+            count = 1;
+        }
+
+        flecs::iter it(iter);
+        flecs::entity result;
+
+        ECS_TABLE_LOCK(iter->world, iter->table);
+
+        for (size_t i = 0; i < count; i ++) {
+            if (func( (ColumnType< remove_reference_t<Components> >(comps, i)
+                .get_row())...))
+            {
+                result = flecs::entity(iter->world, iter->entities[i]);
+                break;
+            }
+        }
+
+        ECS_TABLE_UNLOCK(iter->world, iter->table);
+
+        return result;
+    }
+
+    template <template<typename X, typename = int> class ColumnType, 
+        typename... Args, if_t< sizeof...(Components) != sizeof...(Args) > = 0>
+    static flecs::entity invoke_callback(ecs_iter_t *iter, const Func& func, 
+        size_t index, Terms& columns, Args... comps) 
+    {
+        return invoke_callback<ColumnType>(
+            iter, func, index + 1, columns, comps..., columns[index]);
+    }
+
+    Func m_func;
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Utility class to invoke a system iterate action
@@ -24480,6 +24651,12 @@ struct iterable {
             this->next_each_action());
     }
 
+    template <typename Func>
+    flecs::entity find(Func&& func) const {
+        return iterate_find<_::find_invoker>(nullptr, FLECS_FWD(func), 
+            this->next_each_action());
+    }
+
     /** Iter iterator.
      * The "iter" iterator accepts a function that is invoked for each matching
      * table. The following function signatures are valid:
@@ -24574,6 +24751,23 @@ protected:
         while (next(&it, FLECS_FWD(args)...)) {
             Invoker<Func, Components...>(func).invoke(&it);
         }
+    }
+
+    template < template<typename Func, typename ... Comps> class Invoker, typename Func, typename NextFunc, typename ... Args>
+    flecs::entity iterate_find(flecs::world_t *stage, Func&& func, NextFunc next, Args &&... args) const {
+        ecs_iter_t it = this->get_iter(stage);
+        if (Invoker<Func, Components...>::instanced()) {
+            ECS_BIT_SET(it.flags, EcsIterIsInstanced);
+        }
+
+        flecs::entity result;
+        while (!result && next(&it, FLECS_FWD(args)...)) {
+            result = Invoker<Func, Components...>(func).invoke(&it);
+        }
+        if (result) {
+            ecs_iter_fini(&it);
+        }
+        return result;
     }
 };
 
@@ -25874,6 +26068,16 @@ struct table {
         return static_cast<T*>(get(_::cpp_type<T>::id(m_world)));
     }
 
+    /** Get pointer to component array by (enum) component.
+     * 
+     * @tparam T The (enum) component.
+     * @return Pointer to the column, NULL if not found.
+     */
+    template <typename T, if_t< is_enum<T>::value > = 0>
+    T* get() const {
+        return static_cast<T*>(get(_::cpp_type<T>::id(m_world)));
+    }
+
     /** Get pointer to component array by component.
      * 
      * @tparam T The component.
@@ -26274,9 +26478,9 @@ inline bool entity_view::get(const Func& func) const {
     return _::entity_with_invoker<Func>::invoke_get(m_world, m_id, func);
 } 
 
-inline flecs::entity entity_view::lookup(const char *path) const {
+inline flecs::entity entity_view::lookup(const char *path, bool search_path) const {
     ecs_assert(m_id != 0, ECS_INVALID_PARAMETER, "invalid lookup from null handle");
-    auto id = ecs_lookup_path_w_sep(m_world, m_id, path, "::", "::", false);
+    auto id = ecs_lookup_path_w_sep(m_world, m_id, path, "::", "::", search_path);
     return flecs::entity(m_world, id);
 }
 
@@ -29872,6 +30076,18 @@ inline metric_builder& metric_builder::member(const char *name) {
     return member(m);
 }
 
+inline metric_builder& metric_builder::dotmember(const char *expr) {
+    m_desc.dotmember = expr;
+    return *this;
+}
+
+template <typename T>
+inline metric_builder& metric_builder::dotmember(const char *expr) {
+    m_desc.dotmember = expr;
+    m_desc.id = _::cpp_type<T>::id(m_world);
+    return *this;
+}
+
 inline metric_builder::operator flecs::entity() {
     if (!m_created) {
         m_created = true;
@@ -30337,8 +30553,8 @@ inline flecs::entity world::set_scope() const {
     return set_scope( _::cpp_type<T>::id(m_world) ); 
 }
 
-inline entity world::lookup(const char *name) const {
-    auto e = ecs_lookup_path_w_sep(m_world, 0, name, "::", "::", true);
+inline entity world::lookup(const char *name, bool search_path) const {
+    auto e = ecs_lookup_path_w_sep(m_world, 0, name, "::", "::", search_path);
     return flecs::entity(*this, e);
 }
 

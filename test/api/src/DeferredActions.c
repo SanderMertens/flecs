@@ -3407,3 +3407,168 @@ void DeferredActions_on_remove_after_deferred_clear_and_add(void) {
 
     ecs_fini(world);
 }
+
+static void Recycle(ecs_iter_t *it) {
+    ecs_new_id(it->world);
+    *(ecs_entity_t*)it->ctx = ecs_new_id(it->world);
+}
+
+void DeferredActions_defer_delete_recycle_same_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_entity_t e2 = ecs_new_id(world);
+
+    ecs_observer(world, {
+        .filter.terms = {
+            { .id = ecs_id(Foo) }
+        },
+        .events = { EcsOnAdd },
+        .callback = Recycle,
+        .ctx = &e1
+    });
+
+    ecs_defer_begin(world);
+    ecs_delete(world, parent);
+    ecs_add(world, e2, Foo);
+    ecs_add(world, e1, Bar);
+    ecs_defer_end(world);
+
+    test_assert(!ecs_is_alive(world, parent));
+    test_assert(ecs_is_alive(world, e2));
+    test_assert(ecs_is_alive(world, e1));
+    test_assert((uint32_t)e1 != e1);
+    test_assert(ecs_has(world, e2, Foo));
+
+    ecs_fini(world);
+}
+
+static ECS_COMPONENT_DECLARE(Velocity);
+
+static
+void AddWhileSuspended(ecs_iter_t *it) {
+    for (int i = 0; i < it->count; i ++) {
+        ecs_add(it->world, it->entities[i], Velocity);
+    }
+}
+
+void DeferredActions_observer_while_defer_suspended(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+
+    ecs_observer(world, {
+        .filter.terms = {
+            { .id = ecs_id(Position) }
+        },
+        .events = { EcsOnAdd },
+        .callback = AddWhileSuspended,
+    });
+
+    ecs_defer_begin(world);
+    ecs_defer_suspend(world);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(!ecs_has(world, e, Velocity));
+
+    ecs_defer_resume(world);
+    ecs_defer_end(world);
+
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_has(world, e, Velocity));
+
+    ecs_fini(world);
+}
+
+void DeferredActions_on_add_hook_while_defer_suspended(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+
+    ecs_set_hooks(world, Position, {
+        .on_add = AddWhileSuspended
+    });
+
+    ecs_defer_begin(world);
+    ecs_defer_suspend(world);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(!ecs_has(world, e, Velocity));
+
+    ecs_defer_resume(world);
+    ecs_defer_end(world);
+
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_has(world, e, Velocity));
+
+    ecs_fini(world);
+}
+
+void DeferredActions_on_set_hook_while_defer_suspended(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+
+    ecs_set_hooks(world, Position, {
+        .on_set = AddWhileSuspended
+    });
+
+    ecs_defer_begin(world);
+    ecs_defer_suspend(world);
+
+    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(!ecs_has(world, e, Velocity));
+
+    ecs_defer_resume(world);
+    ecs_defer_end(world);
+
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_has(world, e, Velocity));
+
+    ecs_fini(world);
+}
+
+void DeferredActions_on_remove_hook_while_defer_suspended(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+
+    ecs_set_hooks(world, Position, {
+        .on_remove = AddWhileSuspended
+    });
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(!ecs_has(world, e, Velocity));
+
+    ecs_defer_begin(world);
+    ecs_defer_suspend(world);
+
+    test_assert(ecs_has(world, e, Position));
+    ecs_remove(world, e, Position);
+    test_assert(!ecs_has(world, e, Position));
+    test_assert(!ecs_has(world, e, Velocity));
+
+    ecs_defer_resume(world);
+    ecs_defer_end(world);
+
+    test_assert(!ecs_has(world, e, Position));
+    test_assert(ecs_has(world, e, Velocity));
+
+    ecs_fini(world);
+}

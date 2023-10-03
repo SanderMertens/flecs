@@ -4405,6 +4405,11 @@ void flecs_invoke_hook(
     ecs_entity_t event,
     ecs_iter_action_t hook)
 {
+    int32_t defer = world->stages[0].defer;
+    if (defer < 0) {
+        world->stages[0].defer *= -1;
+    }
+
     ecs_iter_t it = { .field_count = 1};
     it.entities = entities;
     
@@ -4424,6 +4429,8 @@ void flecs_invoke_hook(
     flecs_iter_validate(&it);
     hook(&it);
     ecs_iter_fini(&it);
+
+    world->stages[0].defer = defer;
 }
 
 void flecs_notify_on_set(
@@ -8101,7 +8108,7 @@ bool flecs_defer_end(
             for (i = 0; i < count; i ++) {
                 ecs_cmd_t *cmd = &cmds[i];
                 ecs_entity_t e = cmd->entity;
-                bool is_alive = flecs_entities_is_valid(world, e);
+                bool is_alive = flecs_entities_is_alive(world, e);
 
                 /* A negative index indicates the first command for an entity */
                 if (merge_to_world && (cmd->next_for_entity < 0)) {
@@ -14904,6 +14911,12 @@ void flecs_emit(
     int32_t i, r, count = desc->count;
     ecs_flags32_t table_flags = table->flags;
 
+    /* Deferring cannot be suspended for observers */
+    int32_t defer = world->stages[0].defer;
+    if (defer < 0) {
+        world->stages[0].defer *= -1;
+    }
+
     /* Table events are emitted for internal table operations only, and do not
      * provide component data and/or entity ids. */
     bool table_event = desc->flags & EcsEventTableOnly;
@@ -15241,6 +15254,8 @@ repeat_event:
     }
 
 error:
+    world->stages[0].defer = defer;
+
     if (measure_time) {
         world->info.emit_time_total += (ecs_ftime_t)ecs_time_measure(&t);
     }
@@ -21976,21 +21991,16 @@ void flecs_clean_tables(
 }
 
 static
-void flecs_fini_roots(ecs_world_t *world) {
-    ecs_id_record_t *idr = flecs_id_record_get(world, ecs_pair(EcsChildOf, 0));
-
-    ecs_run_aperiodic(world, EcsAperiodicEmptyTables);
-
+void flecs_fini_root_tables(
+    ecs_world_t *world,
+    ecs_id_record_t *idr,
+    bool fini_targets)
+{
     ecs_table_cache_iter_t it;
+
     bool has_roots = flecs_table_cache_iter(&idr->cache, &it);
     ecs_assert(has_roots == true, ECS_INTERNAL_ERROR, NULL);
     (void)has_roots;
-
-    /* Delete root entities that are not modules. This prioritizes deleting 
-     * regular entities first, which reduces the chance of components getting
-     * destructed in random order because it got deleted before entities,
-     * thereby bypassing the OnDeleteTarget policy. */
-    flecs_defer_begin(world, &world->stages[0]);
 
     const ecs_table_record_t *tr;
     while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
@@ -22002,21 +22012,49 @@ void flecs_fini_roots(ecs_world_t *world) {
         int32_t i, count = table->data.entities.count;
         ecs_entity_t *entities = table->data.entities.array;
 
-        /* Count backwards so that we're always deleting the last entity in the
-         * table which reduces moving components around */
-        for (i = count - 1; i >= 0; i --) {
-            ecs_record_t *r = flecs_entities_get(world, entities[i]);
-            ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-
-            ecs_flags32_t flags = ECS_RECORD_TO_ROW_FLAGS(r->row);
-            if (!(flags & EcsEntityIsTarget)) {
-                continue; /* Filter out entities that aren't objects */
+        if (fini_targets) {
+            /* Only delete entities that are used as pair target. Iterate 
+             * backwards to minimize moving entities around in table. */
+            for (i = count - 1; i >= 0; i --) {
+                ecs_record_t *r = flecs_entities_get(world, entities[i]);
+                ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+                if (ECS_RECORD_TO_ROW_FLAGS(r->row) & EcsEntityIsTarget) {
+                    ecs_delete(world, entities[i]);
+                }
             }
-
-            ecs_delete(world, entities[i]);
+        } else {
+            /* Delete remaining entities that are not in use (added to another
+             * entity). This limits table moves during cleanup and delays 
+             * cleanup of tags. */
+            for (i = count - 1; i >= 0; i --) {
+                ecs_record_t *r = flecs_entities_get(world, entities[i]);
+                ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+                if (!ECS_RECORD_TO_ROW_FLAGS(r->row)) {
+                    ecs_delete(world, entities[i]);
+                }
+            }
         }
     }
+}
 
+static
+void flecs_fini_roots(
+    ecs_world_t *world) 
+{
+    ecs_id_record_t *idr = flecs_id_record_get(world, ecs_pair(EcsChildOf, 0));
+
+    ecs_run_aperiodic(world, EcsAperiodicEmptyTables);
+
+    /* Delete root entities that are not modules. This prioritizes deleting 
+     * regular entities first, which reduces the chance of components getting
+     * destructed in random order because it got deleted before entities,
+     * thereby bypassing the OnDeleteTarget policy. */
+    flecs_defer_begin(world, &world->stages[0]);
+    flecs_fini_root_tables(world, idr, true);
+    flecs_defer_end(world, &world->stages[0]);
+
+    flecs_defer_begin(world, &world->stages[0]);
+    flecs_fini_root_tables(world, idr, false);
     flecs_defer_end(world, &world->stages[0]);
 }
 
@@ -28914,33 +28952,78 @@ int flecs_member_metric_init(
     ecs_entity_t metric,
     const ecs_metric_desc_t *desc)
 {
-    const EcsMember *m = ecs_get(world, desc->member, EcsMember);
-    if (!m) {
-        char *metric_name = ecs_get_fullpath(world, metric);
-        char *member_name = ecs_get_fullpath(world, desc->member);
-        ecs_err("entity '%s' provided for metric '%s' is not a member",
-            member_name, metric_name);
-        ecs_os_free(member_name);
-        ecs_os_free(metric_name);
-        goto error;
+    ecs_entity_t type = 0, member_type = 0, member = 0;
+    uintptr_t offset = 0;
+
+    if (desc->dotmember) {
+        if (!desc->id) {
+            char *metric_name = ecs_get_fullpath(world, metric);
+            ecs_err("missing id for metric '%s' with member '%s",
+                metric_name, desc->dotmember);
+            ecs_os_free(metric_name);
+            goto error;
+        }
+
+        if (desc->member) {
+            char *metric_name = ecs_get_fullpath(world, metric);
+            ecs_err("cannot set both member and dotmember for metric '%s'",
+                metric_name);
+            ecs_os_free(metric_name);
+            goto error;
+        }
+
+        ecs_meta_cursor_t cur = ecs_meta_cursor(world, desc->id, NULL);
+        if (ecs_meta_push(&cur)) {
+            char *metric_name = ecs_get_fullpath(world, metric);
+            ecs_err("invalid type for metric '%s'", metric_name);
+            ecs_os_free(metric_name);
+            goto error;
+        }
+        if (ecs_meta_dotmember(&cur, desc->dotmember)) {
+            char *metric_name = ecs_get_fullpath(world, metric);
+            ecs_err("invalid dotmember '%s' for metric '%s'",
+                desc->dotmember, metric_name);
+            ecs_os_free(metric_name);
+            goto error;
+        }
+
+        type = desc->id;
+        member_type = ecs_meta_get_type(&cur);
+        offset = (uintptr_t)ecs_meta_get_ptr(&cur);
+        member = ecs_meta_get_member_id(&cur);
+    } else {    
+        const EcsMember *m = ecs_get(world, desc->member, EcsMember);
+        if (!m) {
+            char *metric_name = ecs_get_fullpath(world, metric);
+            char *member_name = ecs_get_fullpath(world, desc->member);
+            ecs_err("entity '%s' provided for metric '%s' is not a member",
+                member_name, metric_name);
+            ecs_os_free(member_name);
+            ecs_os_free(metric_name);
+            goto error;
+        }
+
+        type = ecs_get_parent(world, desc->member);
+        if (!type) {
+            char *metric_name = ecs_get_fullpath(world, metric);
+            char *member_name = ecs_get_fullpath(world, desc->member);
+            ecs_err("member '%s' provided for metric '%s' is not part of a type",
+                member_name, metric_name);
+            ecs_os_free(member_name);
+            ecs_os_free(metric_name);
+            goto error;
+        }
+        
+        member = desc->member;
+        member_type = m->type;
+        offset = flecs_ito(uintptr_t, m->offset);
     }
 
-    const EcsPrimitive *p = ecs_get(world, m->type, EcsPrimitive);
+    const EcsPrimitive *p = ecs_get(world, member_type, EcsPrimitive);
     if (!p) {
         char *metric_name = ecs_get_fullpath(world, metric);
         char *member_name = ecs_get_fullpath(world, desc->member);
         ecs_err("member '%s' provided for metric '%s' must have primitive type",
-            member_name, metric_name);
-        ecs_os_free(member_name);
-        ecs_os_free(metric_name);
-        goto error;
-    }
-
-    ecs_entity_t type = ecs_get_parent(world, desc->member);
-    if (!type) {
-        char *metric_name = ecs_get_fullpath(world, metric);
-        char *member_name = ecs_get_fullpath(world, desc->member);
-        ecs_err("member '%s' provided for metric '%s' is not part of a type",
             member_name, metric_name);
         ecs_os_free(member_name);
         ecs_os_free(metric_name);
@@ -28972,7 +29055,7 @@ int flecs_member_metric_init(
     ctx->metric.metric = metric;
     ctx->metric.kind = desc->kind;
     ctx->type_kind = p->kind;
-    ctx->offset = flecs_ito(uint16_t, m->offset);
+    ctx->offset = flecs_uto(uint16_t, offset);
 
     ecs_observer(world, {
         .entity = metric,
@@ -28987,7 +29070,7 @@ int flecs_member_metric_init(
         .ctx = ctx
     });
 
-    ecs_set_pair(world, metric, EcsMetricMember, desc->member, { .ctx = ctx });
+    ecs_set_pair(world, metric, EcsMetricMember, member, { .ctx = ctx });
     ecs_add_pair(world, metric, EcsMetric, desc->kind);
     ecs_add_id(world, metric, EcsMetric);
 
@@ -29185,8 +29268,8 @@ ecs_entity_t ecs_metric_init(
 #endif        
     }
 
-    if (desc->member) {
-        if (desc->id) {
+    if (desc->member || desc->dotmember) {
+        if (desc->id && desc->member) {
             ecs_err("cannot specify both member and id for metric");
             goto error;
         }
@@ -29937,7 +30020,7 @@ void FlecsMonitorImport(
 
     ECS_COMPONENT_DEFINE(world, EcsWorldSummary);
 
-#ifdef FLECS_META
+#if defined(FLECS_META) && defined(FLECS_UNITS)
     ecs_struct(world, {
         .entity = ecs_id(EcsWorldSummary),
         .members = {
@@ -31516,6 +31599,26 @@ ecs_entity_t plecs_lookup_action(
 }
 
 static
+void plecs_apply_with_frame(
+    ecs_world_t *world,
+    plecs_state_t *state,
+    ecs_entity_t e)
+{
+    int32_t i, frame_count = state->with_frames[state->sp];
+    for (i = 0; i < frame_count; i ++) {
+        ecs_id_t id = state->with[i];
+        plecs_with_value_t *v = &state->with_value_frames[i];
+        if (v->value.type) {
+            void *ptr = ecs_get_mut_id(world, e, id);
+            ecs_value_copy(world, v->value.type, ptr, v->value.ptr);
+            ecs_modified_id(world, e, id);
+        } else {
+            ecs_add_id(world, e, id);
+        }
+    }
+}
+
+static
 ecs_entity_t plecs_ensure_entity(
     ecs_world_t *world,
     plecs_state_t *state,
@@ -31845,21 +31948,9 @@ int plecs_create_term(
         }
 
         state->with[state->with_frame ++] = id;
-
     } else {
-        if (subj) {
-            int32_t i, frame_count = state->with_frames[state->sp];
-            for (i = 0; i < frame_count; i ++) {
-                ecs_id_t id = state->with[i];
-                plecs_with_value_t *v = &state->with_value_frames[i];
-                if (v->value.type) {
-                    void *ptr = ecs_get_mut_id(world, subj, id);
-                    ecs_value_copy(world, v->value.type, ptr, v->value.ptr);
-                    ecs_modified_id(world, subj, id);
-                } else {
-                    ecs_add_id(world, subj, id);
-                }
-            }
+        if (subj && !state->scope_assign_stmt) {
+            plecs_apply_with_frame(world, state, subj);
         }
     }
 
@@ -32122,7 +32213,7 @@ const char* plecs_parse_assign_with_stmt(
 
     ecs_id_t id = state->with[with_frame];
     ecs_id_record_t *idr = flecs_id_record_get(world, id);
-    const ecs_type_info_t *ti = idr->type_info;
+    const ecs_type_info_t *ti = idr ? idr->type_info : NULL;
     if (!ti) {
         char *typename = ecs_id_str(world, id);
         ecs_parser_error(name, expr, ptr - expr, 
@@ -32623,6 +32714,7 @@ const char* plecs_parse_scope_open(
         state->scope[state->sp] = state->scope[state->sp - 1];
         state->default_scope_type[state->sp] = 
             state->default_scope_type[state->sp - 1];
+        state->assign_to = 0;
     }
 
     state->using_frames[state->sp] = state->using_frame;
@@ -32642,6 +32734,38 @@ const char* plecs_parse_scope_open(
     }
 
     return ptr;
+}
+
+static
+void plecs_free_with_frame(
+    ecs_world_t *world,
+    plecs_state_t *state)
+{
+    int32_t i, prev_with = state->with_frames[state->sp];
+    for (i = prev_with; i < state->with_frame; i ++) {
+        plecs_with_value_t *v = &state->with_value_frames[i];
+        if (!v->owned) {
+            continue;
+        }
+        if (v->value.type) {
+            ecs_value_free(world, v->value.type, v->value.ptr);
+            v->value.type = 0;
+            v->value.ptr = NULL;
+            v->owned = false;
+        }
+    }
+}
+
+static
+void plecs_free_all_with_frames(
+    ecs_world_t *world,
+    plecs_state_t *state)
+{
+    int32_t i;
+    for (i = state->sp - 1; i >= 0; i --) {
+        state->sp = i;
+        plecs_free_with_frame(world, state);
+    }    
 }
 
 static
@@ -32705,19 +32829,7 @@ const char* plecs_parse_scope_close(
         ecs_set_scope(world, id);
     }
 
-    int32_t i, prev_with = state->with_frames[state->sp];
-    for (i = prev_with; i < state->with_frame; i ++) {
-        plecs_with_value_t *v = &state->with_value_frames[i];
-        if (!v->owned) {
-            continue;
-        }
-        if (v->value.type) {
-            ecs_value_free(world, v->value.type, v->value.ptr);
-            v->value.type = 0;
-            v->value.ptr = NULL;
-            v->owned = false;
-        }
-    }
+    plecs_free_with_frame(world, state);
 
     state->with_frame = state->with_frames[state->sp];
     state->using_frame = state->using_frames[state->sp];
@@ -33122,6 +33234,7 @@ int flecs_plecs_parse(
 
     return 0;
 error:
+    plecs_free_all_with_frames(world, &state);
     ecs_vars_fini(&state.vars);
     ecs_set_scope(world, state.scope[0]);
     ecs_set_with(world, prev_with);
@@ -43555,7 +43668,7 @@ void flecs_table_move_bitset_columns(
 /* Grow table column. When a column needs to be reallocated this function takes
  * care of correctly invoking ctor/move/dtor hooks. */
 static
-void* flecs_table_grow_column(
+void flecs_table_grow_column(
     ecs_world_t *world,
     ecs_column_t *column,
     int32_t to_add,
@@ -43620,8 +43733,6 @@ void* flecs_table_grow_column(
     }
 
     ecs_assert(column->data.size == dst_size, ECS_INTERNAL_ERROR, NULL);
-
-    return result;
 }
 
 /* Grow all data structures in a table */
@@ -46556,7 +46667,6 @@ const char *ecs_parse_expr_token(
     const char *ptr,
     char *token)
 {
-    const char *start = ptr;
     char *token_ptr = token;
 
     if (ptr[0] == '/') {
@@ -46594,12 +46704,11 @@ const char *ecs_parse_expr_token(
 
     while ((ptr = ecs_parse_token(name, expr, ptr, token_ptr, 0))) {
         if (ptr[0] == '|' && ptr[1] != '|') {
-            token_ptr = &token_ptr[ptr - start];
+            token_ptr = &token_ptr[ecs_os_strlen(token_ptr)];
             token_ptr[0] = '|';
             token_ptr[1] = '\0';
             token_ptr ++;
             ptr ++;
-            start = ptr;
         } else {
             break;
         }
@@ -53982,7 +54091,6 @@ ecs_meta_cursor_t ecs_meta_cursor(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(type != 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_meta_cursor_t result = {
         .world = world,
@@ -54494,6 +54602,23 @@ const char* ecs_meta_get_member(
     ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
     ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
     return op->name;
+}
+
+ecs_entity_t ecs_meta_get_member_id(
+    const ecs_meta_cursor_t *cursor)
+{
+    ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
+    ecs_entity_t type = scope->type;
+    const EcsStruct *st = ecs_get(cursor->world, type, EcsStruct);
+    if (!st) {
+        return 0;
+    }
+
+    ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
+    ecs_member_t *m = ecs_vec_get_t(
+        &st->members, ecs_member_t, op->member_index);
+
+    return m->member;
 }
 
 /* Utilities for type conversions and bounds checking */

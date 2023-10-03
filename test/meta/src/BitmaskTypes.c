@@ -196,15 +196,3 @@ void BitmaskTypes_bitmask_w_short_notation(void) {
 
     ecs_fini(world);
 }
-
-void BitmaskTypes_constant_w_name_prefix(void) {
-    // Implement testcase
-}
-
-void BitmaskTypes_constant_w_type_prefix(void) {
-    // Implement testcase
-}
-
-void BitmaskTypes_constant_w_name_type_prefix(void) {
-    // Implement testcase
-}

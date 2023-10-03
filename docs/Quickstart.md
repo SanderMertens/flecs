@@ -39,8 +39,8 @@ Download or `git clone` the [flecs repository](https://github.com/SanderMertens/
 "use": ["flecs"]
 ```
 
-### Running tests
-To run the Flecs test suite, first make sure you have [bake](https://github.com/SanderMertens/bake) installed (see the bake repository for instructions). 
+### Running tests (bake)
+First make sure you have [bake](https://github.com/SanderMertens/bake) installed (see the bake repository for instructions). 
 
 Run the following commands to run all tests (use `-j` to specify the number of threads):
 
@@ -63,6 +63,24 @@ To run tests with asan enabled, add `--cfg sanitize` to the command:
 ```bash
 bake run --cfg sanitize test/api -- -j 4
 ```
+
+#### Running tests (cmake, experimental)
+First make sure to clone [bake](https://github.com/SanderMertens/bake).
+
+Run the following commands to run all the tests:
+
+```bash
+# Generate make files for Flecs and tests
+cmake -DFLECS_TESTS=ON -DBAKE_DIRECTORY="path to cloned bake repository"
+
+# Build flecs and test suites
+cmake --build . -j 4
+
+# Run the tests
+ctest -C Debug --verbose
+```
+
+```bash
 
 ### Emscripten
 When building for emscripten, add the following command line options to the `emcc` link command:

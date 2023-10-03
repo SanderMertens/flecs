@@ -2883,7 +2883,7 @@ void ecs_modified_id(
  * @param world The world.
  * @param entity The entity.
  * @param id The id of the component to set.
- * @param size The size of the pointer to the value.
+ * @param size The size of the pointed-to value.
  * @param ptr The pointer to the value.
  * @return The entity. A new entity if no entity was provided.
  */

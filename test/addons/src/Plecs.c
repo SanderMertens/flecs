@@ -7537,3 +7537,170 @@ void Plecs_assembly_w_pair_w_this_var(void) {
 
     ecs_fini(world);
 }
+
+void Plecs_with_value_not_a_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    LINE "with Foo{10} {\n"
+    LINE "  Bar\n"
+    LINE "}\n"
+    LINE "\n";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
+void Plecs_component_in_with_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "with Position{10, 20} {\n"
+    LINE "  - Bar\n"
+    LINE "}\n"
+    LINE "\n";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
+void Plecs_component_in_with_scope_nested(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Velocity),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "with Position{10, 20} {\n"
+    LINE "  with Velocity{10, 20} {\n"
+    LINE "    - Bar\n"
+    LINE "  }\n"
+    LINE "}\n"
+    LINE "\n";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
+void Plecs_component_in_with_scope_in_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "foo {\n"
+    LINE "  - Position{10, 20}\n"
+    LINE "  with Position{30, 40} {\n"
+    LINE "    - Bar\n"
+    LINE "  }\n"
+    LINE "}\n";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "foo");
+    test_assert(foo != 0);
+    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
+    test_assert(bar != 0);
+
+    test_assert(ecs_has(world, foo, Position));
+    test_assert(ecs_has_id(world, foo, bar));
+
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Plecs_assign_after_with_in_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+    ecs_struct(world, {
+        .entity = ecs_id(Velocity),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "foo {\n"
+    LINE "  - Position{10, 20}\n"
+    LINE "  with Position{30, 40} {\n"
+    LINE "  }\n"
+    LINE "  - Velocity{1, 2}\n"
+    LINE "}\n";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "foo");
+    test_assert(foo != 0);
+
+    test_assert(ecs_has(world, foo, Position));
+    test_assert(ecs_has(world, foo, Velocity));
+
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    const Velocity *v = ecs_get(world, foo, Velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+
+    ecs_fini(world);
+}

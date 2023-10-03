@@ -258,6 +258,8 @@ void Entity_to_view_from_stage(void);
 void Entity_set_alias(void);
 void Entity_emplace_w_observer(void);
 void Entity_scoped_world(void);
+void Entity_entity_lookup_not_recursive(void);
+void Entity_world_lookup_not_recursive(void);
 
 // Testsuite 'Pairs'
 void Pairs_add_component_pair(void);
@@ -567,6 +569,9 @@ void Query_page_iter_captured_query(void);
 void Query_worker_iter_captured_query(void);
 void Query_iter_entities(void);
 void Query_iter_get_pair_w_id(void);
+void Query_find(void);
+void Query_find_not_found(void);
+void Query_find_w_entity(void);
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_builder_assign_same_type(void);
@@ -779,6 +784,9 @@ void RuleBuilder_unresolved_by_name(void);
 void RuleBuilder_scope(void);
 void RuleBuilder_iter_w_stage(void);
 void RuleBuilder_inspect_terms_w_expr(void);
+void RuleBuilder_find(void);
+void RuleBuilder_find_not_found(void);
+void RuleBuilder_find_w_entity(void);
 
 // Testsuite 'SystemBuilder'
 void SystemBuilder_builder_assign_same_type(void);
@@ -860,6 +868,9 @@ void Filter_named_filter(void);
 void Filter_named_scoped_filter(void);
 void Filter_set_this_var(void);
 void Filter_inspect_terms_w_expr(void);
+void Filter_find(void);
+void Filter_find_not_found(void);
+void Filter_find_w_entity(void);
 
 // Testsuite 'ComponentLifecycle'
 void ComponentLifecycle_ctor_on_add(void);
@@ -1168,6 +1179,7 @@ void Misc_component_mixin_member_metric_description(void);
 void Misc_member_metric_w_value_name(void);
 void Misc_member_metric_w_value_name_camel_case_type(void);
 void Misc_member_metric_w_custom_name(void);
+void Misc_dotmember_metric(void);
 void Misc_counter_id_metric(void);
 void Misc_counter_target_metric(void);
 void Misc_alert(void);
@@ -1261,6 +1273,7 @@ void Table_has_pair_R_t(void);
 void Table_has_pair_R_T(void);
 void Table_get_id(void);
 void Table_get_T(void);
+void Table_get_T_enum(void);
 void Table_get_pair_r_t(void);
 void Table_get_pair_R_t(void);
 void Table_get_pair_R_T(void);
@@ -2271,6 +2284,14 @@ bake_test_case Entity_testcases[] = {
     {
         "scoped_world",
         Entity_scoped_world
+    },
+    {
+        "entity_lookup_not_recursive",
+        Entity_entity_lookup_not_recursive
+    },
+    {
+        "world_lookup_not_recursive",
+        Entity_world_lookup_not_recursive
     }
 };
 
@@ -3467,6 +3488,18 @@ bake_test_case Query_testcases[] = {
     {
         "iter_get_pair_w_id",
         Query_iter_get_pair_w_id
+    },
+    {
+        "find",
+        Query_find
+    },
+    {
+        "find_not_found",
+        Query_find_not_found
+    },
+    {
+        "find_w_entity",
+        Query_find_w_entity
     }
 };
 
@@ -4300,6 +4333,18 @@ bake_test_case RuleBuilder_testcases[] = {
     {
         "inspect_terms_w_expr",
         RuleBuilder_inspect_terms_w_expr
+    },
+    {
+        "find",
+        RuleBuilder_find
+    },
+    {
+        "find_not_found",
+        RuleBuilder_find_not_found
+    },
+    {
+        "find_w_entity",
+        RuleBuilder_find_w_entity
     }
 };
 
@@ -4609,6 +4654,18 @@ bake_test_case Filter_testcases[] = {
     {
         "inspect_terms_w_expr",
         Filter_inspect_terms_w_expr
+    },
+    {
+        "find",
+        Filter_find
+    },
+    {
+        "find_not_found",
+        Filter_find_not_found
+    },
+    {
+        "find_w_entity",
+        Filter_find_w_entity
     }
 };
 
@@ -5794,6 +5851,10 @@ bake_test_case Misc_testcases[] = {
         Misc_member_metric_w_custom_name
     },
     {
+        "dotmember_metric",
+        Misc_dotmember_metric
+    },
+    {
         "counter_id_metric",
         Misc_counter_id_metric
     },
@@ -6156,6 +6217,10 @@ bake_test_case Table_testcases[] = {
         Table_get_T
     },
     {
+        "get_T_enum",
+        Table_get_T_enum
+    },
+    {
         "get_pair_r_t",
         Table_get_pair_r_t
     },
@@ -6236,7 +6301,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        245,
+        247,
         Entity_testcases
     },
     {
@@ -6292,7 +6357,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        81,
+        84,
         Query_testcases
     },
     {
@@ -6313,7 +6378,7 @@ static bake_test_suite suites[] = {
         "RuleBuilder",
         NULL,
         NULL,
-        30,
+        33,
         RuleBuilder_testcases
     },
     {
@@ -6334,7 +6399,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        23,
+        26,
         Filter_testcases
     },
     {
@@ -6397,7 +6462,7 @@ static bake_test_suite suites[] = {
         "Misc",
         Misc_setup,
         NULL,
-        47,
+        48,
         Misc_testcases
     },
     {
@@ -6411,7 +6476,7 @@ static bake_test_suite suites[] = {
         "Table",
         NULL,
         NULL,
-        31,
+        32,
         Table_testcases
     },
     {

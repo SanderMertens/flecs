@@ -265,7 +265,9 @@
                 "to_view_from_stage",
                 "set_alias",
                 "emplace_w_observer",
-                "scoped_world"
+                "scoped_world",
+                "entity_lookup_not_recursive",
+                "world_lookup_not_recursive"
             ]
         }, {
             "id": "Pairs",
@@ -590,7 +592,10 @@
                 "page_iter_captured_query",
                 "worker_iter_captured_query",
                 "iter_entities",
-                "iter_get_pair_w_id"
+                "iter_get_pair_w_id",
+                "find",
+                "find_not_found",
+                "find_w_entity"
             ]
         }, {
             "id": "QueryBuilder",
@@ -808,7 +813,10 @@
                 "unresolved_by_name",
                 "scope",
                 "iter_w_stage",
-                "inspect_terms_w_expr"
+                "inspect_terms_w_expr",
+                "find",
+                "find_not_found",
+                "find_w_entity"                
             ]
         }, {
             "id": "SystemBuilder",
@@ -895,7 +903,10 @@
                 "named_filter",
                 "named_scoped_filter",
                 "set_this_var",
-                "inspect_terms_w_expr"
+                "inspect_terms_w_expr",
+                "find",
+                "find_not_found",
+                "find_w_entity"
             ]
         }, {
             "id": "ComponentLifecycle",
@@ -1222,6 +1233,7 @@
                 "member_metric_w_value_name",
                 "member_metric_w_value_name_camel_case_type",
                 "member_metric_w_custom_name",
+                "dotmember_metric",
                 "counter_id_metric",
                 "counter_target_metric",
                 "alert",
@@ -1319,6 +1331,7 @@
                 "has_pair_R_T",
                 "get_id",
                 "get_T",
+                "get_T_enum",
                 "get_pair_r_t",
                 "get_pair_R_t",
                 "get_pair_R_T",
