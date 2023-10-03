@@ -232,7 +232,7 @@ void Enum_get_constant_id(void) {
     test_assert(v != NULL);
     test_assert(v[0] == StandardEnum::Red);
     test_assert(red == ecs.id(StandardEnum::Red));
-    test_str("Red", ecs.id(StandardEnum::Red).name());
+    test_str("Red", ecs.entity(StandardEnum::Red).name());
 
     auto e = flecs::enum_type<StandardEnum>(ecs);
     test_assert(e.entity(StandardEnum::Red) == red);

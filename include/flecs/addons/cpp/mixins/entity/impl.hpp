@@ -204,9 +204,9 @@ inline flecs::entity world::entity(Args &&... args) const {
 }
 
 template <typename E, if_t< is_enum<E>::value >>
-inline flecs::entity world::id(E value) const {
+inline flecs::id world::id(E value) const {
     flecs::entity_t constant = enum_type<E>(m_world).entity(value);
-    return flecs::entity(m_world, constant);
+    return flecs::id(m_world, constant);
 }
 
 template <typename E, if_t< is_enum<E>::value >>

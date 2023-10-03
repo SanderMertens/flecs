@@ -20361,7 +20361,7 @@ flecs::entity entity(Args &&... args) const;
  * \ingroup cpp_entities
  */
 template <typename E, if_t< is_enum<E>::value > = 0>
-flecs::entity id(E value) const;
+flecs::id id(E value) const;
 
 /** Convert enum constant to entity.
  * 
@@ -22925,7 +22925,7 @@ struct entity_builder : entity_view {
      */   
     template<typename T>
     Self& enable() {
-        return this->enable(_::cpp_type<T>::id());
+        return this->enable(_::cpp_type<T>::id(this->m_world));
     }
 
     /** Enable a pair.
@@ -26505,9 +26505,9 @@ inline flecs::entity world::entity(Args &&... args) const {
 }
 
 template <typename E, if_t< is_enum<E>::value >>
-inline flecs::entity world::id(E value) const {
+inline flecs::id world::id(E value) const {
     flecs::entity_t constant = enum_type<E>(m_world).entity(value);
-    return flecs::entity(m_world, constant);
+    return flecs::id(m_world, constant);
 }
 
 template <typename E, if_t< is_enum<E>::value >>
