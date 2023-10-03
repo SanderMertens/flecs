@@ -542,8 +542,34 @@ struct world {
     template <typename T>
     flecs::entity set_scope() const;
 
-    /** Set search path.
-     */
+    /**
+    * @brief Sets the search path for entity lookup operations.
+    *
+    * This function configures the search path used for looking up entities. The search path is an array of entity IDs that define the scopes within which lookup operations will search for entities.
+    *
+    * @section Best Practices
+    * - It's advisable to restore the previous search path after making temporary changes.
+    *
+    * @section Search Path Evaluation
+    * - The search path is evaluated starting from the last element of the array.
+    *
+    * @section Default Behavior
+    * - The default search path includes `flecs.core`.
+    *
+    * @section Overwriting
+    * - Providing a custom search path will overwrite the existing search path.
+    *
+    * @section Considerations
+    * - If the custom search path doesn't include `flecs.core`, operations that rely on looking up names from `flecs.core` may fail.
+    * - The search path array is not managed by the C++ runtime. Ensure the array remains valid for as long as it is used as the search path.
+    *
+    * @section Array Termination
+    * - The provided array must be terminated with a 0 element. This allows for pushing/popping elements onto/from an existing array without needing to call `ecs_set_lookup_path` again.
+    *
+    * @param search_path A 0-terminated array of entity IDs defining the new search path.
+    *
+    * @return Returns the current search path after the operation.
+    */
     flecs::entity_t* set_lookup_path(const flecs::entity_t *search_path) const {
         return ecs_set_lookup_path(m_world, search_path);
     }
@@ -706,7 +732,7 @@ struct world {
     template <typename T>
     void remove() const;
 
-    /** Adds a pair to the singleton component.
+    /** Removes the pair singleton component.
      * 
      * @tparam First The first element of the pair
      * @tparam Second The second element of the pair
@@ -714,7 +740,7 @@ struct world {
     template <typename First, typename Second>
     void remove() const;
 
-    /** Adds a pair to the singleton component.
+    /** Removes the pair singleton component.
      * 
      * @tparam First The first element of the pair
      * @param second The second element of the pair.
@@ -722,7 +748,7 @@ struct world {
     template <typename First>
     void remove(flecs::entity_t second) const;
 
-    /** Adds a pair to the singleton entity.
+    /** Removes the pair singleton component.
      * 
      * @param first The first element of the pair
      * @param second The second element of the pair
