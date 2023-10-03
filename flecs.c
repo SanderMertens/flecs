@@ -29276,13 +29276,13 @@ ecs_entity_t ecs_metric_init(
         goto error;
     }
 
-    if (kind == EcsCounterIncrement && !desc->member) {
+    if (kind == EcsCounterIncrement && !desc->member && !desc->dotmember) {
         ecs_err("CounterIncrement can only be used in combination with member");
         goto error;
     }
 
-    if (kind == EcsCounterId && desc->member) {
-        ecs_err("CounterIncrement cannot be used in combination with member");
+    if (kind == EcsCounterId && (desc->member || desc->dotmember)) {
+        ecs_err("CounterId cannot be used in combination with member");
         goto error;
     }
 
