@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.5)
 cmake_policy(SET CMP0063 NEW)
 
 project(flecs LANGUAGES C)
