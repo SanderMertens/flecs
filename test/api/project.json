@@ -2060,6 +2060,7 @@
                 "wildcard_propagate_w_other_table",
                 "add_in_yield_existing",
                 "add_in_yield_existing_multi",
+                "emit_for_parent_w_prefab_child_and_instance",
                 "cache_test_1",
                 "cache_test_2",
                 "cache_test_3",

@@ -4962,3 +4962,36 @@ void Observer_add_in_yield_existing_multi(void) {
 
     ecs_fini(world);
 }
+
+void Observer_emit_for_parent_w_prefab_child_and_instance(void) {
+    ecs_world_t* ecs = ecs_init();
+
+    ECS_COMPONENT(ecs, Position);
+
+    Probe ctx = {0};
+    ecs_observer(ecs, {
+        .filter.terms = {
+            { .id = ecs_id(Position) }
+        },
+        .events = { EcsOnSet },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_new_id(ecs);
+    ecs_entity_t p = ecs_new_w_pair(ecs, EcsChildOf, e);
+    ecs_entity_t child_1 = ecs_new_w_pair(ecs, EcsChildOf, e);
+    ecs_add_pair(ecs, child_1, EcsIsA, p);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_set(ecs, e, Position, {10, 20});
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_id(Position));
+    test_int(ctx.event, EcsOnSet);
+
+    ecs_fini(ecs);
+}

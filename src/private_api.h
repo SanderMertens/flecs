@@ -295,9 +295,6 @@ void flecs_table_hashmap_init(
     ecs_world_t *world,
     ecs_hashmap_t *hm);
 
-void flecs_dump_backtrace(
-    FILE *stream);
-
 void flecs_colorize_buf(
     char *msg,
     bool enable_colors,
