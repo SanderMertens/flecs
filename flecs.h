@@ -30567,7 +30567,7 @@ inline T* world::get_mut() const {
 template <typename T>
 inline void world::modified() const {
     flecs::entity e(m_world, _::cpp_type<T>::id(m_world));
-    return e.modified<T>();
+    e.modified<T>();
 }
 
 template <typename First, typename Second>
