@@ -1506,6 +1506,7 @@ void Metrics_metric_description(void);
 void Metrics_id_count(void);
 void Metrics_id_target_count(void);
 void Metrics_metric_instance_has_doc_name(void);
+void Metrics_metric_nested_member(void);
 
 // Testsuite 'Alerts'
 void Alerts_one_active_alert(void);
@@ -7336,6 +7337,10 @@ bake_test_case Metrics_testcases[] = {
     {
         "metric_instance_has_doc_name",
         Metrics_metric_instance_has_doc_name
+    },
+    {
+        "metric_nested_member",
+        Metrics_metric_nested_member
     }
 };
 
@@ -7722,7 +7727,7 @@ static bake_test_suite suites[] = {
         "Metrics",
         NULL,
         NULL,
-        27,
+        28,
         Metrics_testcases
     },
     {

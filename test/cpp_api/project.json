@@ -1233,6 +1233,7 @@
                 "member_metric_w_value_name",
                 "member_metric_w_value_name_camel_case_type",
                 "member_metric_w_custom_name",
+                "dotmember_metric",
                 "counter_id_metric",
                 "counter_target_metric",
                 "alert",

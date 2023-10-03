@@ -1576,7 +1576,8 @@
                 "metric_description",
                 "id_count",
                 "id_target_count",
-                "metric_instance_has_doc_name"
+                "metric_instance_has_doc_name",
+                "metric_nested_member"
             ]
         }, {
             "id": "Alerts",

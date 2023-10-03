@@ -197,7 +197,6 @@ ecs_meta_cursor_t ecs_meta_cursor(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(type != 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_meta_cursor_t result = {
         .world = world,
@@ -709,6 +708,23 @@ const char* ecs_meta_get_member(
     ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
     ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
     return op->name;
+}
+
+ecs_entity_t ecs_meta_get_member_id(
+    const ecs_meta_cursor_t *cursor)
+{
+    ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
+    ecs_entity_t type = scope->type;
+    const EcsStruct *st = ecs_get(cursor->world, type, EcsStruct);
+    if (!st) {
+        return 0;
+    }
+
+    ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
+    ecs_member_t *m = ecs_vec_get_t(
+        &st->members, ecs_member_t, op->member_index);
+
+    return m->member;
 }
 
 /* Utilities for type conversions and bounds checking */

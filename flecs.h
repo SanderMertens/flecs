@@ -11866,6 +11866,11 @@ typedef struct ecs_metric_desc_t {
      * at the same time as id. Cannot be combined with EcsCounterId. */
     ecs_entity_t member;
 
+    /* Member dot expression. Can be used instead of member and supports nested
+     * members. Must be set together with id and should not be set at the same 
+     * time as member. */
+    const char *dotmember;
+
     /** Tracks whether entities have the specified component id. Must not be set
      * at the same time as member. */
     ecs_id_t id;
@@ -13845,6 +13850,11 @@ ecs_entity_t ecs_meta_get_unit(
 /** Get member name of current member */
 FLECS_API
 const char* ecs_meta_get_member(
+    const ecs_meta_cursor_t *cursor);
+
+/** Get member entity of current member */
+FLECS_API
+ecs_entity_t ecs_meta_get_member_id(
     const ecs_meta_cursor_t *cursor);
 
 /* The set functions assign the field with the specified value. If the value
@@ -18286,6 +18296,11 @@ struct metric_builder {
 
     template <typename T>
     metric_builder& member(const char *name);
+
+    metric_builder& dotmember(const char *name);
+
+    template <typename T>
+    metric_builder& dotmember(const char *name);
 
     metric_builder& id(flecs::id_t the_id) {
         m_desc.id = the_id;
@@ -30059,6 +30074,18 @@ inline metric_builder& metric_builder::member(const char *name) {
         return *this;
     }
     return member(m);
+}
+
+inline metric_builder& metric_builder::dotmember(const char *expr) {
+    m_desc.dotmember = expr;
+    return *this;
+}
+
+template <typename T>
+inline metric_builder& metric_builder::dotmember(const char *expr) {
+    m_desc.dotmember = expr;
+    m_desc.id = _::cpp_type<T>::id(m_world);
+    return *this;
 }
 
 inline metric_builder::operator flecs::entity() {

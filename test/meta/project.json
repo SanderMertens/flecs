@@ -403,7 +403,8 @@
                 "opaque_struct_w_opaque_vec",
                 "opaque_vec_w_opaque_elem",
                 "next_out_of_bounds",
-                "set_out_of_bounds"
+                "set_out_of_bounds",
+                "get_member_id"
             ]
         }, {
             "id": "DeserializeFromExpr",

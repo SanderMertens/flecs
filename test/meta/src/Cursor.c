@@ -4273,3 +4273,35 @@ void Cursor_set_out_of_bounds(void) {
 
     ecs_fini(world);
 }
+
+void Cursor_get_member_id(void) {
+    typedef struct {
+        ecs_i32_t x;
+        ecs_i32_t y;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    test_assert(t != 0);
+
+    T value;
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+    test_ok( ecs_meta_push(&cur) );
+    test_assert(ecs_meta_get_member_id(&cur) != 0);
+    test_assert(ecs_meta_get_member_id(&cur) == ecs_lookup_fullpath(world, "T.x"));
+    test_ok( ecs_meta_next(&cur) );
+    test_assert(ecs_meta_get_member_id(&cur) != 0);
+    test_assert(ecs_meta_get_member_id(&cur) == ecs_lookup_fullpath(world, "T.y"));
+    test_ok( ecs_meta_pop(&cur) );
+
+    ecs_fini(world);
+}

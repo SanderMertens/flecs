@@ -603,6 +603,11 @@ FLECS_API
 const char* ecs_meta_get_member(
     const ecs_meta_cursor_t *cursor);
 
+/** Get member entity of current member */
+FLECS_API
+ecs_entity_t ecs_meta_get_member_id(
+    const ecs_meta_cursor_t *cursor);
+
 /* The set functions assign the field with the specified value. If the value
  * does not have the same type as the field, it will be cased to the field type.
  * If no valid conversion is available, the operation will fail. */
