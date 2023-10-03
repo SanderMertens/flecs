@@ -176,9 +176,19 @@ void Paths_alias_entity(void) {
 
     ecs.use(e, "FooAlias");
 
-    auto a = ecs.lookup("FooAlias");
+    auto original = ecs.lookup("Foo");
+    auto alias = ecs.lookup("FooAlias");
 
-    test_assert(e.id() == a.id());
+    test_assert(e.id() == alias.id());
+    test_assert(e.id() == original.id());
+
+    ecs.use(e);
+
+    original = ecs.lookup("Foo");
+    alias = ecs.lookup("FooAlias");
+
+    test_assert(e.id() == original.id());
+    test_assert(e.id() != alias.id());
 }
 
 void Paths_alias_entity_by_name(void) {

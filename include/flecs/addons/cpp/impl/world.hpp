@@ -51,9 +51,9 @@ inline void world::use(flecs::entity e, const char *alias) const {
     const char *name = alias;
     if (!name) {
         // If no name is defined, use the entity name without the scope
-        ecs_get_name(m_world, eid);
+        name = ecs_get_name(m_world, eid);
     }
-    ecs_set_alias(m_world, eid, alias);
+    ecs_set_alias(m_world, eid, name);
 }
 
 inline flecs::entity world::set_scope(const flecs::entity_t s) const {
