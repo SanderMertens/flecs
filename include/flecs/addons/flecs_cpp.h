@@ -108,7 +108,6 @@ FLECS_API
 ecs_entity_t ecs_cpp_enum_constant_register(
     ecs_world_t *world,
     ecs_entity_t parent,
-    ecs_entity_t id,
     const char *name,
     int value);
 
