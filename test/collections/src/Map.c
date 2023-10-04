@@ -112,7 +112,7 @@ void *test_realloc(void *old_ptr, ecs_size_t size) {
 }
 
 
-void Map_setup() {
+void Map_setup(void) {
     ecs_os_set_api_defaults();
     ecs_os_api_t os_api = ecs_os_api;
     os_api.malloc_ = test_malloc;
@@ -121,7 +121,7 @@ void Map_setup() {
     ecs_os_set_api(&os_api);    
 }
 
-void Map_count() {
+void Map_count(void) {
     uint64_t *keys = generate_keys(4);
     ecs_map_t map = populate_map(keys, 4);
 
@@ -131,14 +131,14 @@ void Map_count() {
     ecs_map_fini(&map);
 }
 
-void Map_count_empty() {
+void Map_count_empty(void) {
     ecs_map_t map;
     ecs_map_init(&map, NULL);
     test_int(ecs_map_count(&map), 0);
     ecs_map_fini(&map);
 }
 
-void Map_set_overwrite() {
+void Map_set_overwrite(void) {
     uint64_t *keys = generate_keys(4);
     ecs_map_t map = populate_map(keys, 4);
 
@@ -153,7 +153,7 @@ void Map_set_overwrite() {
     ecs_map_fini(&map);
 }
 
-void Map_set_rehash() {
+void Map_set_rehash(void) {
     uint64_t *keys = generate_keys(4);
     ecs_map_t map = populate_map(keys, 4);
 
@@ -187,7 +187,7 @@ void Map_set_rehash() {
     ecs_map_fini(&map);
 }
 
-void Map_get() {
+void Map_get(void) {
     uint64_t *keys = generate_keys(4);
     ecs_map_t map = populate_map(keys, 4);
 
@@ -199,7 +199,7 @@ void Map_get() {
     ecs_map_fini(&map);
 }
 
-void Map_get_all() {
+void Map_get_all(void) {
     uint64_t *keys = generate_keys(4);
     ecs_map_t map = populate_map(keys, 4);
 
@@ -223,7 +223,7 @@ void Map_get_all() {
     ecs_map_fini(&map);
 }
 
-void Map_get_empty() {
+void Map_get_empty(void) {
     ecs_map_t map;
     ecs_map_init(&map, NULL);
     uint64_t *value = ecs_map_get(&map, 1);
@@ -231,7 +231,7 @@ void Map_get_empty() {
     ecs_map_fini(&map);
 }
 
-void Map_get_unknown() {
+void Map_get_unknown(void) {
     uint64_t *keys = generate_keys(4);
     ecs_map_t map = populate_map(keys, 4);
 
@@ -242,7 +242,7 @@ void Map_get_unknown() {
     ecs_map_fini(&map);
 }
 
-void Map_get_0_from_empty() {
+void Map_get_0_from_empty(void) {
     ecs_map_t map;
     ecs_map_init(&map, NULL);
     uint64_t *value = ecs_map_get(&map, 0);
@@ -250,7 +250,7 @@ void Map_get_0_from_empty() {
     ecs_map_fini(&map);
 }
 
-void Map_get_0_from_populated() {
+void Map_get_0_from_populated(void) {
     uint64_t *keys = generate_keys(32);
     ecs_map_t map = populate_map(keys, 32);
 
@@ -261,7 +261,7 @@ void Map_get_0_from_populated() {
     ecs_map_fini(&map);
 }
 
-void Map_get_0_after_insert() {
+void Map_get_0_after_insert(void) {
     ecs_map_t map;
     ecs_map_init(&map, NULL);
     ecs_map_insert(&map, 0, 10);
@@ -271,7 +271,7 @@ void Map_get_0_after_insert() {
     ecs_map_fini(&map);
 }
 
-void Map_get_0_after_ensure() {
+void Map_get_0_after_ensure(void) {
     ecs_map_t map;
     ecs_map_init(&map, NULL);
     ecs_map_ensure(&map, 0)[0] = 10;
@@ -281,7 +281,7 @@ void Map_get_0_after_ensure() {
     ecs_map_fini(&map);
 }
 
-void Map_iter() {
+void Map_iter(void) {
     uint64_t *keys = generate_keys(4);
     ecs_map_t map = populate_map(keys, 4);
     
@@ -300,7 +300,7 @@ void Map_iter() {
     ecs_map_fini(&map);
 }
 
-void Map_iter_empty() {
+void Map_iter_empty(void) {
     ecs_map_t map;
     ecs_map_init(&map, NULL);
     ecs_map_iter_t it = ecs_map_iter(&map);
@@ -308,12 +308,12 @@ void Map_iter_empty() {
     ecs_map_fini(&map);
 }
 
-void Map_iter_null() {
+void Map_iter_null(void) {
     ecs_map_iter_t it = ecs_map_iter(NULL);
     test_assert(!ecs_map_next(&it));
 }
 
-void Map_remove() {
+void Map_remove(void) {
     uint64_t *keys = generate_keys(4);
     ecs_map_t map = populate_map(keys, 4);
 
@@ -327,7 +327,7 @@ void Map_remove() {
     ecs_map_fini(&map);
 }
 
-void Map_remove_empty() {
+void Map_remove_empty(void) {
     ecs_map_t map;
     ecs_map_init(&map, NULL);
     ecs_map_remove(&map, 3);
@@ -335,7 +335,7 @@ void Map_remove_empty() {
     ecs_map_fini(&map);
 }
 
-void Map_remove_unknown() {
+void Map_remove_unknown(void) {
     uint64_t *keys = generate_keys(4);
     ecs_map_t map = populate_map(keys, 4);
 
@@ -352,7 +352,7 @@ void Map_remove_unknown() {
     ecs_map_fini(&map);
 }
 
-void Map_remove_twice() {
+void Map_remove_twice(void) {
     uint64_t *keys = generate_keys(4);
     ecs_map_t map = populate_map(keys, 4);
 
@@ -369,7 +369,7 @@ void Map_remove_twice() {
     ecs_map_fini(&map);
 }
 
-void Map_clear_empty() {
+void Map_clear_empty(void) {
     ecs_map_t map;
     ecs_map_init(&map, NULL);
     ecs_map_clear(&map);
@@ -377,7 +377,7 @@ void Map_clear_empty() {
     ecs_map_fini(&map);
 }
 
-void Map_clear_populated() {
+void Map_clear_populated(void) {
     uint64_t *keys = generate_keys(4);
     ecs_map_t map = populate_map(keys, 4);
 
@@ -389,7 +389,7 @@ void Map_clear_populated() {
     ecs_map_fini(&map);
 }
 
-void Map_clear_empty_twice() {
+void Map_clear_empty_twice(void) {
     ecs_map_t map;
     ecs_map_init(&map, NULL);
     ecs_map_clear(&map);
@@ -399,7 +399,7 @@ void Map_clear_empty_twice() {
     ecs_map_fini(&map);
 }
 
-void Map_clear_populated_twice() {
+void Map_clear_populated_twice(void) {
     uint64_t *keys = generate_keys(4);
     ecs_map_t map = populate_map(keys, 4);
 
@@ -413,7 +413,7 @@ void Map_clear_populated_twice() {
     ecs_map_fini(&map);
 }
 
-void Map_populate_after_clear() {
+void Map_populate_after_clear(void) {
     uint64_t *keys = generate_keys(4);
     ecs_map_t map = populate_map(keys, 4);
 
@@ -430,7 +430,7 @@ void Map_populate_after_clear() {
     ecs_map_fini(&map);
 }
 
-void Map_randomized_insert() {
+void Map_randomized_insert(void) {
     uint64_t *keys = generate_random_keys(100);
 
     for (int count = 0; count < 100; count ++) {
@@ -442,7 +442,7 @@ void Map_randomized_insert() {
     ecs_os_free(keys);
 }
 
-void Map_randomized_remove() {
+void Map_randomized_remove(void) {
     uint64_t *keys = generate_random_keys(100);
 
     for (int count = 0; count < 100; count ++) {
@@ -456,7 +456,7 @@ void Map_randomized_remove() {
     ecs_os_free(keys);
 }
 
-void Map_randomized_insert_large() {
+void Map_randomized_insert_large(void) {
     uint64_t *keys = generate_random_keys(1000);
 
     for (int count = 0; count < 1000; count += 27) {
@@ -468,7 +468,7 @@ void Map_randomized_insert_large() {
     ecs_os_free(keys);
 }
 
-void Map_randomized_remove_large() {
+void Map_randomized_remove_large(void) {
     uint64_t *keys = generate_random_keys(1000);
 
     for (int count = 0; count < 1000; count += 50) {
@@ -482,7 +482,7 @@ void Map_randomized_remove_large() {
     ecs_os_free(keys);
 }
 
-void Map_randomized_after_clear() {
+void Map_randomized_after_clear(void) {
     uint64_t *keys = generate_random_keys(1000);
 
     for (int count = 0; count < 1000; count += 50) {

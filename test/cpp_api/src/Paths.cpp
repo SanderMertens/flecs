@@ -205,3 +205,31 @@ void Paths_alias_entity_by_scoped_name(void) {
     test_assert(e.id() == a.id());
     test_assert(e.id() == l.id());
 }
+
+void Paths_alias_entity_empty(void) {
+    flecs::world ecs;
+
+    auto parent = ecs.entity("parent");
+    auto child = ecs.entity("child").child_of(parent);
+
+    auto e = ecs.lookup("child");
+
+    test_assert(e.id() == 0);
+
+    ecs.use(child); // alias being nullptr
+
+    e = ecs.lookup("child");
+
+    test_assert(e.id() != 0);
+
+    ecs.use(child, "FooAlias");
+
+    e = ecs.lookup("child");
+
+    test_assert(e.id() == 0);
+
+    e = ecs.lookup("FooAlias");
+
+    test_assert(e.id() != 0);
+}
+
