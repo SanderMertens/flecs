@@ -925,7 +925,7 @@ typedef struct ecs_vec_t {
     void *array;
     int32_t count;
     int32_t size;
-#ifdef FLECS_DEBUG
+#ifdef FLECS_SANITIZE
     ecs_size_t elem_size;
 #endif
 } ecs_vec_t;
@@ -9831,6 +9831,15 @@ void ecs_parser_errorv_(
 #else
 #define ecs_dbg_assert(condition, error_code, ...)
 #endif
+
+/** Sanitize assert.
+ * Assert that is only valid in sanitized mode (ignores FLECS_KEEP_ASSERT) */
+#ifdef FLECS_SANITIZE
+#define ecs_san_assert(condition, error_code, ...) ecs_assert(condition, error_code, __VA_ARGS__)
+#else
+#define ecs_san_assert(condition, error_code, ...)
+#endif
+
 
 /* Silence dead code/unused label warnings when compiling without checks. */
 #define ecs_dummy_check\
