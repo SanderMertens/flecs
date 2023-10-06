@@ -956,6 +956,11 @@ struct entity_builder : entity_view {
 #   include "../meta/entity_builder.inl"
 #   endif
 
+#   ifdef FLECS_JSON
+#   include "../json/entity_builder.inl"
+#   endif
+
+
 protected:
     Self& to_base() {
         return *static_cast<Self*>(this);

@@ -693,6 +693,21 @@ void Meta_struct_from_json(void) {
     test_int(v.y, 20);
 }
 
+void Meta_void_from_json(void) {
+    flecs::world ecs;
+
+    flecs::entity pos = ecs.component<Position>()
+        .member<float>("x")
+        .member<float>("y");
+
+    Position v = {};
+    void *ptr = &v;
+    const char *r = ecs.from_json(pos, ptr, "{\"x\":10, \"y\":20}");
+    test_str(r, "");
+    test_int(v.x, 10);
+    test_int(v.y, 20);
+}
+
 void Meta_entity_from_json_empty(void) {
     flecs::world ecs;
 
@@ -756,6 +771,106 @@ void Meta_entity_from_json_w_values(void) {
     test_assert(e.has<Position>());
 
     const Position *p = e.get<Position>();
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Meta_set_type_json(void) {
+    flecs::world ecs;
+
+    ecs.component<Position>()
+        .member<float>("x")
+        .member<float>("y");
+
+    flecs::entity e = ecs.entity()
+        .set_json<Position>("{\"x\":10, \"y\":20}");
+
+    const Position *p = e.get<Position>();
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Meta_set_pair_R_T_json(void) {
+    flecs::world ecs;
+
+    ecs.component<Position>()
+        .member<float>("x")
+        .member<float>("y");
+
+    flecs::entity e = ecs.entity()
+        .set_json<Position, Tag>("{\"x\":10, \"y\":20}");
+
+    const Position *p = e.get<Position, Tag>();
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Meta_set_pair_R_t_json(void) {
+    flecs::world ecs;
+
+    ecs.component<Position>()
+        .member<float>("x")
+        .member<float>("y");
+
+    flecs::entity tgt = ecs.entity();
+
+    flecs::entity e = ecs.entity()
+        .set_json<Position>(tgt, "{\"x\":10, \"y\":20}");
+
+    const Position *p = e.get<Position>(tgt);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Meta_set_pair_r_T_json(void) {
+    flecs::world ecs;
+
+    flecs::entity pos = ecs.component<Position>()
+        .member<float>("x")
+        .member<float>("y");
+
+    flecs::entity e = ecs.entity()
+        .set_json_second<Tag>(pos, "{\"x\":10, \"y\":20}");
+
+    const Position *p = e.get<Position, Tag>();
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Meta_set_pair_r_t_json(void) {
+    flecs::world ecs;
+
+    flecs::entity pos = ecs.component<Position>()
+        .member<float>("x")
+        .member<float>("y");
+
+    flecs::entity tgt = ecs.entity();
+
+    flecs::entity e = ecs.entity()
+        .set_json(pos, tgt, "{\"x\":10, \"y\":20}");
+
+    const Position *p = e.get<Position>(tgt);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Meta_set_id_json(void) {
+    flecs::world ecs;
+
+    flecs::entity pos = ecs.component<Position>()
+        .member<float>("x")
+        .member<float>("y");
+
+    flecs::entity e = ecs.entity()
+        .set_json(pos, "{\"x\":10, \"y\":20}");
+
+    const Position *p = e.get<Position>();
+    test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
 }

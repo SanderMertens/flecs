@@ -38,7 +38,6 @@ flecs::string to_json() {
  * \memberof flecs::world
  * \ingroup cpp_addons_json
  */
-template <typename T>
 const char* from_json(flecs::entity_t tid, void* value, const char *json, flecs::from_json_desc_t *desc = nullptr) {
     return ecs_ptr_from_json(m_world, tid, value, json, desc);
 }

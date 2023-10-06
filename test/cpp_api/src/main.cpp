@@ -1232,10 +1232,17 @@ void Meta_array_type(void);
 void Meta_vector_type(void);
 void Meta_i32_from_json(void);
 void Meta_struct_from_json(void);
+void Meta_void_from_json(void);
 void Meta_entity_from_json_empty(void);
 void Meta_entity_from_json_w_path(void);
 void Meta_entity_from_json_w_ids(void);
 void Meta_entity_from_json_w_values(void);
+void Meta_set_type_json(void);
+void Meta_set_pair_R_T_json(void);
+void Meta_set_pair_R_t_json(void);
+void Meta_set_pair_r_T_json(void);
+void Meta_set_pair_r_t_json(void);
+void Meta_set_id_json(void);
 void Meta_ser_deser_std_string(void);
 void Meta_ser_deser_std_vector_int(void);
 void Meta_ser_deser_std_vector_std_string(void);
@@ -6059,6 +6066,10 @@ bake_test_case Meta_testcases[] = {
         Meta_struct_from_json
     },
     {
+        "void_from_json",
+        Meta_void_from_json
+    },
+    {
         "entity_from_json_empty",
         Meta_entity_from_json_empty
     },
@@ -6073,6 +6084,30 @@ bake_test_case Meta_testcases[] = {
     {
         "entity_from_json_w_values",
         Meta_entity_from_json_w_values
+    },
+    {
+        "set_type_json",
+        Meta_set_type_json
+    },
+    {
+        "set_pair_R_T_json",
+        Meta_set_pair_R_T_json
+    },
+    {
+        "set_pair_R_t_json",
+        Meta_set_pair_R_t_json
+    },
+    {
+        "set_pair_r_T_json",
+        Meta_set_pair_r_T_json
+    },
+    {
+        "set_pair_r_t_json",
+        Meta_set_pair_r_t_json
+    },
+    {
+        "set_id_json",
+        Meta_set_id_json
     },
     {
         "ser_deser_std_string",
@@ -6474,7 +6509,7 @@ static bake_test_suite suites[] = {
         "Meta",
         NULL,
         NULL,
-        47,
+        54,
         Meta_testcases
     },
     {

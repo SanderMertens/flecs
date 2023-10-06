@@ -7,4 +7,3 @@
 const char* from_json(const char *json) {
     return ecs_entity_from_json(m_world, m_id, json, nullptr);
 }
-
