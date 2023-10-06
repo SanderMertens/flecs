@@ -34,5 +34,13 @@ int main(int argc, char *argv[]) {
     printf("Bob's type: [%s]\n", type_str);
     ecs_os_free(type_str);
 
+    // Get first target of relationship
+    printf("Bob eats %s\n", 
+        ecs_get_name(ecs, ecs_get_target(ecs, bob, Eats, 0)));
+
+    // Get second target of relationship
+    printf("Bob also eats %s\n", 
+        ecs_get_name(ecs, ecs_get_target(ecs, bob, Eats, 1)));
+
     return ecs_fini(ecs);
 }

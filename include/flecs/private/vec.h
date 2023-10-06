@@ -15,7 +15,7 @@ typedef struct ecs_vec_t {
     void *array;
     int32_t count;
     int32_t size;
-#ifdef FLECS_DEBUG
+#ifdef FLECS_SANITIZE
     ecs_size_t elem_size;
 #endif
 } ecs_vec_t;

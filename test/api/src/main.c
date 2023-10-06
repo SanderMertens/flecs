@@ -748,6 +748,9 @@ void OnDelete_delete_nested_in_on_remove(void);
 void OnDelete_add_deleted_in_on_remove(void);
 void OnDelete_delete_tree_w_query(void);
 void OnDelete_fini_cleanup_order(void);
+void OnDelete_fini_cleanup_order_root_id_w_trait(void);
+void OnDelete_fini_cleanup_order_entity_after_singleton(void);
+void OnDelete_fini_cleanup_order_entity_after_component(void);
 void OnDelete_on_delete_parent_w_in_use_id_w_remove(void);
 void OnDelete_on_delete_parent_w_in_use_id_w_delete(void);
 void OnDelete_create_after_delete_with(void);
@@ -1986,6 +1989,7 @@ void Observer_multi_observer_table_fill_w_singleton(void);
 void Observer_wildcard_propagate_w_other_table(void);
 void Observer_add_in_yield_existing(void);
 void Observer_add_in_yield_existing_multi(void);
+void Observer_emit_for_parent_w_prefab_child_and_instance(void);
 void Observer_cache_test_1(void);
 void Observer_cache_test_2(void);
 void Observer_cache_test_3(void);
@@ -2456,6 +2460,10 @@ void DeferredActions_defer_2_sets_w_observer_same_component(void);
 void DeferredActions_defer_2_sets_w_observer_other_component(void);
 void DeferredActions_on_remove_after_deferred_clear_and_add(void);
 void DeferredActions_defer_delete_recycle_same_id(void);
+void DeferredActions_observer_while_defer_suspended(void);
+void DeferredActions_on_add_hook_while_defer_suspended(void);
+void DeferredActions_on_set_hook_while_defer_suspended(void);
+void DeferredActions_on_remove_hook_while_defer_suspended(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -5466,6 +5474,18 @@ bake_test_case OnDelete_testcases[] = {
     {
         "fini_cleanup_order",
         OnDelete_fini_cleanup_order
+    },
+    {
+        "fini_cleanup_order_root_id_w_trait",
+        OnDelete_fini_cleanup_order_root_id_w_trait
+    },
+    {
+        "fini_cleanup_order_entity_after_singleton",
+        OnDelete_fini_cleanup_order_entity_after_singleton
+    },
+    {
+        "fini_cleanup_order_entity_after_component",
+        OnDelete_fini_cleanup_order_entity_after_component
     },
     {
         "on_delete_parent_w_in_use_id_w_remove",
@@ -10337,6 +10357,10 @@ bake_test_case Observer_testcases[] = {
         Observer_add_in_yield_existing_multi
     },
     {
+        "emit_for_parent_w_prefab_child_and_instance",
+        Observer_emit_for_parent_w_prefab_child_and_instance
+    },
+    {
         "cache_test_1",
         Observer_cache_test_1
     },
@@ -12149,6 +12173,22 @@ bake_test_case DeferredActions_testcases[] = {
     {
         "defer_delete_recycle_same_id",
         DeferredActions_defer_delete_recycle_same_id
+    },
+    {
+        "observer_while_defer_suspended",
+        DeferredActions_observer_while_defer_suspended
+    },
+    {
+        "on_add_hook_while_defer_suspended",
+        DeferredActions_on_add_hook_while_defer_suspended
+    },
+    {
+        "on_set_hook_while_defer_suspended",
+        DeferredActions_on_set_hook_while_defer_suspended
+    },
+    {
+        "on_remove_hook_while_defer_suspended",
+        DeferredActions_on_remove_hook_while_defer_suspended
     }
 };
 
@@ -12884,7 +12924,7 @@ static bake_test_suite suites[] = {
         "OnDelete",
         NULL,
         NULL,
-        110,
+        113,
         OnDelete_testcases
     },
     {
@@ -12989,7 +13029,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        114,
+        115,
         Observer_testcases
     },
     {
@@ -13059,7 +13099,7 @@ static bake_test_suite suites[] = {
         "DeferredActions",
         NULL,
         NULL,
-        116,
+        120,
         DeferredActions_testcases
     },
     {

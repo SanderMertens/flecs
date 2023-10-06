@@ -2727,6 +2727,67 @@ void OnDelete_fini_cleanup_order(void) {
     test_int(test_alive_parent_count, 3);
 }
 
+void OnDelete_fini_cleanup_order_root_id_w_trait(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t r = ecs_new_id(world);
+    ecs_add_id(world, r, EcsExclusive);
+    ecs_entity_t t = ecs_new_id(world);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add_pair(world, e, r, t);
+
+    ecs_fini(world);
+
+    test_assert(true); // fini should not assert
+}
+
+static ECS_COMPONENT_DECLARE(Position);
+
+static int on_remove_velocity = 0;
+static void ecs_on_remove(Velocity)(ecs_iter_t *it) {
+    on_remove_velocity ++;
+    test_assert(ecs_is_alive(it->world, ecs_id(Position)));
+}
+
+void OnDelete_fini_cleanup_order_entity_after_singleton(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_set_hooks(world, Velocity, {
+        .on_remove = ecs_on_remove(Velocity)
+    });
+
+    ecs_singleton_set(world, Position, {10, 20});
+    
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add(world, e, Velocity);
+
+    ecs_fini(world);
+
+    test_int(on_remove_velocity, 1);
+}
+
+void OnDelete_fini_cleanup_order_entity_after_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_set_hooks(world, Velocity, {
+        .on_remove = ecs_on_remove(Velocity)
+    });
+    
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add(world, e, Velocity);
+
+    ecs_fini(world);
+
+    test_int(on_remove_velocity, 1);
+}
+
 void OnDelete_on_delete_parent_w_in_use_id_w_remove(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -3060,3 +3121,4 @@ void OnDelete_delete_w_low_rel_mixed_cleanup_interleaved_ids(void) {
 
     ecs_fini(world);
 }
+

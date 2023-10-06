@@ -2411,9 +2411,6 @@ void flecs_table_hashmap_init(
     ecs_world_t *world,
     ecs_hashmap_t *hm);
 
-void flecs_dump_backtrace(
-    FILE *stream);
-
 void flecs_colorize_buf(
     char *msg,
     bool enable_colors,
@@ -4405,6 +4402,11 @@ void flecs_invoke_hook(
     ecs_entity_t event,
     ecs_iter_action_t hook)
 {
+    int32_t defer = world->stages[0].defer;
+    if (defer < 0) {
+        world->stages[0].defer *= -1;
+    }
+
     ecs_iter_t it = { .field_count = 1};
     it.entities = entities;
     
@@ -4424,6 +4426,8 @@ void flecs_invoke_hook(
     flecs_iter_validate(&it);
     hook(&it);
     ecs_iter_fini(&it);
+
+    world->stages[0].defer = defer;
 }
 
 void flecs_notify_on_set(
@@ -14144,6 +14148,85 @@ void flecs_emit_propagate(
     ecs_iter_t *it,
     ecs_id_record_t *idr,
     ecs_id_record_t *tgt_idr,
+    ecs_entity_t trav,
+    ecs_event_id_record_t **iders,
+    int32_t ider_count);
+
+static
+void flecs_emit_propagate_id(
+    ecs_world_t *world,
+    ecs_iter_t *it,
+    ecs_id_record_t *idr,
+    ecs_id_record_t *cur,
+    ecs_entity_t trav,
+    ecs_event_id_record_t **iders,
+    int32_t ider_count)
+{
+    ecs_table_cache_iter_t idt;
+    if (!flecs_table_cache_all_iter(&cur->cache, &idt)) {
+        return;
+    }
+
+    const ecs_table_record_t *tr;
+    while ((tr = flecs_table_cache_next(&idt, ecs_table_record_t))) {
+        ecs_table_t *table = tr->hdr.table;
+        if (!ecs_table_count(table)) {
+            continue;
+        }
+
+        bool owned = flecs_id_record_get_table(idr, table) != NULL;
+
+        int32_t e, entity_count = ecs_table_count(table);
+        it->table = table;
+        it->other_table = NULL;
+        it->offset = 0;
+        it->count = entity_count;
+        if (entity_count) {
+            it->entities = ecs_vec_first(&table->data.entities);
+        }
+
+        /* Treat as new event as this could invoke observers again for
+         * different tables. */
+        int32_t evtx = ++ world->event_id;
+
+        int32_t ider_i;
+        for (ider_i = 0; ider_i < ider_count; ider_i ++) {
+            ecs_event_id_record_t *ider = iders[ider_i];
+            flecs_observers_invoke(world, &ider->up, it, table, trav, evtx);
+
+            if (!owned) {
+                /* Owned takes precedence */
+                flecs_observers_invoke(
+                    world, &ider->self_up, it, table, trav, evtx);
+            }
+        }
+
+        if (!table->_->traversable_count) {
+            continue;
+        }
+
+        ecs_record_t **records = ecs_vec_first(&table->data.records);
+        for (e = 0; e < entity_count; e ++) {
+            ecs_record_t *r = records[e];
+            ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_id_record_t *idr_t = r->idr;
+            if (idr_t) {
+                /* Only notify for entities that are used in pairs with
+                 * traversable relationships */
+                flecs_emit_propagate(world, it, idr, idr_t, trav,
+                    iders, ider_count);
+            }
+        }
+    }
+}
+
+static
+void flecs_emit_propagate(
+    ecs_world_t *world,
+    ecs_iter_t *it,
+    ecs_id_record_t *idr,
+    ecs_id_record_t *tgt_idr,
+    ecs_entity_t propagate_trav,
     ecs_event_id_record_t **iders,
     int32_t ider_count)
 {
@@ -14161,65 +14244,14 @@ void flecs_emit_propagate(
     while ((cur = cur->trav.next)) {
         cur->reachable.generation ++; /* Invalidate cache */
 
-        ecs_table_cache_iter_t idt;
-        if (!flecs_table_cache_all_iter(&cur->cache, &idt)) {
+        /* Get traversed relationship */
+        ecs_entity_t trav = ECS_PAIR_FIRST(cur->id);
+        if (propagate_trav && propagate_trav != trav) {
             continue;
         }
 
-        /* Get traversed relationship */
-        ecs_entity_t trav = ECS_PAIR_FIRST(cur->id);
-
-        const ecs_table_record_t *tr;
-        while ((tr = flecs_table_cache_next(&idt, ecs_table_record_t))) {
-            ecs_table_t *table = tr->hdr.table;
-            if (!ecs_table_count(table)) {
-                continue;
-            }
-
-            bool owned = flecs_id_record_get_table(idr, table) != NULL;
-
-            int32_t e, entity_count = ecs_table_count(table);
-            it->table = table;
-            it->other_table = NULL;
-            it->offset = 0;
-            it->count = entity_count;
-            if (entity_count) {
-                it->entities = ecs_vec_first(&table->data.entities);
-            }
-
-            /* Treat as new event as this could invoke observers again for
-             * different tables. */
-            int32_t evtx = ++ world->event_id;
-
-            int32_t ider_i;
-            for (ider_i = 0; ider_i < ider_count; ider_i ++) {
-                ecs_event_id_record_t *ider = iders[ider_i];
-                flecs_observers_invoke(world, &ider->up, it, table, trav, evtx);
-
-                if (!owned) {
-                    /* Owned takes precedence */
-                    flecs_observers_invoke(
-                        world, &ider->self_up, it, table, trav, evtx);
-                }
-            }
-
-            if (!table->_->traversable_count) {
-                continue;
-            }
-
-            ecs_record_t **records = ecs_vec_first(&table->data.records);
-            for (e = 0; e < entity_count; e ++) {
-                ecs_record_t *r = records[e];
-                ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-                ecs_id_record_t *idr_t = r->idr;
-                if (idr_t) {
-                    /* Only notify for entities that are used in pairs with
-                     * traversable relationships */
-                    flecs_emit_propagate(world, it, idr, idr_t,
-                        iders, ider_count);
-                }
-            }
-        }
+        flecs_emit_propagate_id(
+            world, it, idr, cur, trav, iders, ider_count);
     }
 
     ecs_log_pop_3();
@@ -14904,6 +14936,12 @@ void flecs_emit(
     int32_t i, r, count = desc->count;
     ecs_flags32_t table_flags = table->flags;
 
+    /* Deferring cannot be suspended for observers */
+    int32_t defer = world->stages[0].defer;
+    if (defer < 0) {
+        world->stages[0].defer *= -1;
+    }
+
     /* Table events are emitted for internal table operations only, and do not
      * provide component data and/or entity ids. */
     bool table_event = desc->flags & EcsEventTableOnly;
@@ -15205,7 +15243,8 @@ repeat_event:
                 /* Entity is used as target in traversable pairs, propagate */
                 ecs_entity_t e = entities[r];
                 it.sources[0] = e;
-                flecs_emit_propagate(world, &it, idr, idr_t, iders, ider_count);
+                flecs_emit_propagate(
+                    world, &it, idr, idr_t, 0, iders, ider_count);
             }
         }
 
@@ -15241,6 +15280,8 @@ repeat_event:
     }
 
 error:
+    world->stages[0].defer = defer;
+
     if (measure_time) {
         world->info.emit_time_total += (ecs_ftime_t)ecs_time_measure(&t);
     }
@@ -16383,7 +16424,7 @@ void ecs_os_fini(void) {
 #define ECS_BT_BUF_SIZE 100
 
 void flecs_dump_backtrace(
-    FILE *stream) 
+    void *stream) 
 {
     int nptrs;
     void *buffer[ECS_BT_BUF_SIZE];
@@ -16404,7 +16445,7 @@ void flecs_dump_backtrace(
 }
 #else
 void flecs_dump_backtrace(
-    FILE *stream)
+    void *stream)
 { 
     (void)stream;
 }
@@ -21976,21 +22017,16 @@ void flecs_clean_tables(
 }
 
 static
-void flecs_fini_roots(ecs_world_t *world) {
-    ecs_id_record_t *idr = flecs_id_record_get(world, ecs_pair(EcsChildOf, 0));
-
-    ecs_run_aperiodic(world, EcsAperiodicEmptyTables);
-
+void flecs_fini_root_tables(
+    ecs_world_t *world,
+    ecs_id_record_t *idr,
+    bool fini_targets)
+{
     ecs_table_cache_iter_t it;
+
     bool has_roots = flecs_table_cache_iter(&idr->cache, &it);
     ecs_assert(has_roots == true, ECS_INTERNAL_ERROR, NULL);
     (void)has_roots;
-
-    /* Delete root entities that are not modules. This prioritizes deleting 
-     * regular entities first, which reduces the chance of components getting
-     * destructed in random order because it got deleted before entities,
-     * thereby bypassing the OnDeleteTarget policy. */
-    flecs_defer_begin(world, &world->stages[0]);
 
     const ecs_table_record_t *tr;
     while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
@@ -22002,21 +22038,49 @@ void flecs_fini_roots(ecs_world_t *world) {
         int32_t i, count = table->data.entities.count;
         ecs_entity_t *entities = table->data.entities.array;
 
-        /* Count backwards so that we're always deleting the last entity in the
-         * table which reduces moving components around */
-        for (i = count - 1; i >= 0; i --) {
-            ecs_record_t *r = flecs_entities_get(world, entities[i]);
-            ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-
-            ecs_flags32_t flags = ECS_RECORD_TO_ROW_FLAGS(r->row);
-            if (!(flags & EcsEntityIsTarget)) {
-                continue; /* Filter out entities that aren't objects */
+        if (fini_targets) {
+            /* Only delete entities that are used as pair target. Iterate 
+             * backwards to minimize moving entities around in table. */
+            for (i = count - 1; i >= 0; i --) {
+                ecs_record_t *r = flecs_entities_get(world, entities[i]);
+                ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+                if (ECS_RECORD_TO_ROW_FLAGS(r->row) & EcsEntityIsTarget) {
+                    ecs_delete(world, entities[i]);
+                }
             }
-
-            ecs_delete(world, entities[i]);
+        } else {
+            /* Delete remaining entities that are not in use (added to another
+             * entity). This limits table moves during cleanup and delays 
+             * cleanup of tags. */
+            for (i = count - 1; i >= 0; i --) {
+                ecs_record_t *r = flecs_entities_get(world, entities[i]);
+                ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+                if (!ECS_RECORD_TO_ROW_FLAGS(r->row)) {
+                    ecs_delete(world, entities[i]);
+                }
+            }
         }
     }
+}
 
+static
+void flecs_fini_roots(
+    ecs_world_t *world) 
+{
+    ecs_id_record_t *idr = flecs_id_record_get(world, ecs_pair(EcsChildOf, 0));
+
+    ecs_run_aperiodic(world, EcsAperiodicEmptyTables);
+
+    /* Delete root entities that are not modules. This prioritizes deleting 
+     * regular entities first, which reduces the chance of components getting
+     * destructed in random order because it got deleted before entities,
+     * thereby bypassing the OnDeleteTarget policy. */
+    flecs_defer_begin(world, &world->stages[0]);
+    flecs_fini_root_tables(world, idr, true);
+    flecs_defer_end(world, &world->stages[0]);
+
+    flecs_defer_begin(world, &world->stages[0]);
+    flecs_fini_root_tables(world, idr, false);
     flecs_defer_end(world, &world->stages[0]);
 }
 
@@ -28914,33 +28978,78 @@ int flecs_member_metric_init(
     ecs_entity_t metric,
     const ecs_metric_desc_t *desc)
 {
-    const EcsMember *m = ecs_get(world, desc->member, EcsMember);
-    if (!m) {
-        char *metric_name = ecs_get_fullpath(world, metric);
-        char *member_name = ecs_get_fullpath(world, desc->member);
-        ecs_err("entity '%s' provided for metric '%s' is not a member",
-            member_name, metric_name);
-        ecs_os_free(member_name);
-        ecs_os_free(metric_name);
-        goto error;
+    ecs_entity_t type = 0, member_type = 0, member = 0;
+    uintptr_t offset = 0;
+
+    if (desc->dotmember) {
+        if (!desc->id) {
+            char *metric_name = ecs_get_fullpath(world, metric);
+            ecs_err("missing id for metric '%s' with member '%s",
+                metric_name, desc->dotmember);
+            ecs_os_free(metric_name);
+            goto error;
+        }
+
+        if (desc->member) {
+            char *metric_name = ecs_get_fullpath(world, metric);
+            ecs_err("cannot set both member and dotmember for metric '%s'",
+                metric_name);
+            ecs_os_free(metric_name);
+            goto error;
+        }
+
+        ecs_meta_cursor_t cur = ecs_meta_cursor(world, desc->id, NULL);
+        if (ecs_meta_push(&cur)) {
+            char *metric_name = ecs_get_fullpath(world, metric);
+            ecs_err("invalid type for metric '%s'", metric_name);
+            ecs_os_free(metric_name);
+            goto error;
+        }
+        if (ecs_meta_dotmember(&cur, desc->dotmember)) {
+            char *metric_name = ecs_get_fullpath(world, metric);
+            ecs_err("invalid dotmember '%s' for metric '%s'",
+                desc->dotmember, metric_name);
+            ecs_os_free(metric_name);
+            goto error;
+        }
+
+        type = desc->id;
+        member_type = ecs_meta_get_type(&cur);
+        offset = (uintptr_t)ecs_meta_get_ptr(&cur);
+        member = ecs_meta_get_member_id(&cur);
+    } else {    
+        const EcsMember *m = ecs_get(world, desc->member, EcsMember);
+        if (!m) {
+            char *metric_name = ecs_get_fullpath(world, metric);
+            char *member_name = ecs_get_fullpath(world, desc->member);
+            ecs_err("entity '%s' provided for metric '%s' is not a member",
+                member_name, metric_name);
+            ecs_os_free(member_name);
+            ecs_os_free(metric_name);
+            goto error;
+        }
+
+        type = ecs_get_parent(world, desc->member);
+        if (!type) {
+            char *metric_name = ecs_get_fullpath(world, metric);
+            char *member_name = ecs_get_fullpath(world, desc->member);
+            ecs_err("member '%s' provided for metric '%s' is not part of a type",
+                member_name, metric_name);
+            ecs_os_free(member_name);
+            ecs_os_free(metric_name);
+            goto error;
+        }
+        
+        member = desc->member;
+        member_type = m->type;
+        offset = flecs_ito(uintptr_t, m->offset);
     }
 
-    const EcsPrimitive *p = ecs_get(world, m->type, EcsPrimitive);
+    const EcsPrimitive *p = ecs_get(world, member_type, EcsPrimitive);
     if (!p) {
         char *metric_name = ecs_get_fullpath(world, metric);
         char *member_name = ecs_get_fullpath(world, desc->member);
         ecs_err("member '%s' provided for metric '%s' must have primitive type",
-            member_name, metric_name);
-        ecs_os_free(member_name);
-        ecs_os_free(metric_name);
-        goto error;
-    }
-
-    ecs_entity_t type = ecs_get_parent(world, desc->member);
-    if (!type) {
-        char *metric_name = ecs_get_fullpath(world, metric);
-        char *member_name = ecs_get_fullpath(world, desc->member);
-        ecs_err("member '%s' provided for metric '%s' is not part of a type",
             member_name, metric_name);
         ecs_os_free(member_name);
         ecs_os_free(metric_name);
@@ -28972,7 +29081,7 @@ int flecs_member_metric_init(
     ctx->metric.metric = metric;
     ctx->metric.kind = desc->kind;
     ctx->type_kind = p->kind;
-    ctx->offset = flecs_ito(uint16_t, m->offset);
+    ctx->offset = flecs_uto(uint16_t, offset);
 
     ecs_observer(world, {
         .entity = metric,
@@ -28987,7 +29096,7 @@ int flecs_member_metric_init(
         .ctx = ctx
     });
 
-    ecs_set_pair(world, metric, EcsMetricMember, desc->member, { .ctx = ctx });
+    ecs_set_pair(world, metric, EcsMetricMember, member, { .ctx = ctx });
     ecs_add_pair(world, metric, EcsMetric, desc->kind);
     ecs_add_id(world, metric, EcsMetric);
 
@@ -29167,13 +29276,13 @@ ecs_entity_t ecs_metric_init(
         goto error;
     }
 
-    if (kind == EcsCounterIncrement && !desc->member) {
+    if (kind == EcsCounterIncrement && !desc->member && !desc->dotmember) {
         ecs_err("CounterIncrement can only be used in combination with member");
         goto error;
     }
 
-    if (kind == EcsCounterId && desc->member) {
-        ecs_err("CounterIncrement cannot be used in combination with member");
+    if (kind == EcsCounterId && (desc->member || desc->dotmember)) {
+        ecs_err("CounterId cannot be used in combination with member");
         goto error;
     }
 
@@ -29185,8 +29294,8 @@ ecs_entity_t ecs_metric_init(
 #endif        
     }
 
-    if (desc->member) {
-        if (desc->id) {
+    if (desc->member || desc->dotmember) {
+        if (desc->id && desc->member) {
             ecs_err("cannot specify both member and id for metric");
             goto error;
         }
@@ -29937,7 +30046,7 @@ void FlecsMonitorImport(
 
     ECS_COMPONENT_DEFINE(world, EcsWorldSummary);
 
-#ifdef FLECS_META
+#if defined(FLECS_META) && defined(FLECS_UNITS)
     ecs_struct(world, {
         .entity = ecs_id(EcsWorldSummary),
         .members = {
@@ -40992,7 +41101,7 @@ ecs_vec_t* ecs_vec_init(
         }
     }
     v->size = elem_count;
-#ifdef FLECS_DEBUG
+#ifdef FLECS_SANITIZE
     v->elem_size = size;
 #endif
     return v;
@@ -41002,10 +41111,10 @@ void ecs_vec_init_if(
     ecs_vec_t *vec,
     ecs_size_t size)
 {
-    ecs_dbg_assert(!vec->elem_size || vec->elem_size == size, ECS_INVALID_PARAMETER, NULL);
+    ecs_san_assert(!vec->elem_size || vec->elem_size == size, ECS_INVALID_PARAMETER, NULL);
     (void)vec;
     (void)size;
-#ifdef FLECS_DEBUG
+#ifdef FLECS_SANITIZE
     if (!vec->elem_size) {
         ecs_assert(vec->count == 0, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(vec->size == 0, ECS_INTERNAL_ERROR, NULL);
@@ -41021,7 +41130,7 @@ void ecs_vec_fini(
     ecs_size_t size)
 {
     if (v->array) {
-        ecs_dbg_assert(!size || size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
+        ecs_san_assert(!size || size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
         if (allocator) {
             flecs_free(allocator, size * v->size, v->array);
         } else {
@@ -41041,7 +41150,7 @@ ecs_vec_t* ecs_vec_reset(
     if (!v->size) {
         ecs_vec_init(allocator, v, size, 0);
     } else {
-        ecs_dbg_assert(size == v->elem_size, ECS_INTERNAL_ERROR, NULL);
+        ecs_san_assert(size == v->elem_size, ECS_INTERNAL_ERROR, NULL);
         ecs_vec_clear(v);
     }
     return v;
@@ -41058,7 +41167,7 @@ ecs_vec_t ecs_vec_copy(
     const ecs_vec_t *v,
     ecs_size_t size)
 {
-    ecs_dbg_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
+    ecs_san_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
     void *array;
     if (allocator) {
         array = flecs_dup(allocator, size * v->size, v->array);
@@ -41069,7 +41178,7 @@ ecs_vec_t ecs_vec_copy(
         .count = v->count,
         .size = v->size,
         .array = array
-#ifdef FLECS_DEBUG
+#ifdef FLECS_SANITIZE
         , .elem_size = size
 #endif
     };
@@ -41080,7 +41189,7 @@ void ecs_vec_reclaim(
     ecs_vec_t *v,
     ecs_size_t size)
 {
-    ecs_dbg_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
+    ecs_san_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
     int32_t count = v->count;
     if (count < v->size) {
         if (count) {
@@ -41103,7 +41212,7 @@ void ecs_vec_set_size(
     ecs_size_t size,
     int32_t elem_count)
 {
-    ecs_dbg_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
+    ecs_san_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
     if (v->size != elem_count) {
         if (elem_count < v->count) {
             elem_count = v->count;
@@ -41168,7 +41277,7 @@ void ecs_vec_set_count(
     ecs_size_t size,
     int32_t elem_count)
 {
-    ecs_dbg_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
+    ecs_san_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
     if (v->count != elem_count) {
         if (v->size < elem_count) {
             ecs_vec_set_size(allocator, v, size, elem_count);
@@ -41184,7 +41293,7 @@ void* ecs_vec_grow(
     ecs_size_t size,
     int32_t elem_count)
 {
-    ecs_dbg_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
+    ecs_san_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(elem_count > 0, ECS_INTERNAL_ERROR, NULL);
     int32_t count = v->count;
     ecs_vec_set_count(allocator, v, size, count + elem_count);
@@ -41196,7 +41305,7 @@ void* ecs_vec_append(
     ecs_vec_t *v,
     ecs_size_t size)
 {
-    ecs_dbg_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
+    ecs_san_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
     int32_t count = v->count;
     if (v->size == count) {
         ecs_vec_set_size(allocator, v, size, count + 1);
@@ -41210,7 +41319,7 @@ void ecs_vec_remove(
     ecs_size_t size,
     int32_t index)
 {
-    ecs_dbg_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
+    ecs_san_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(index < v->count, ECS_OUT_OF_RANGE, NULL);
     if (index == --v->count) {
         return;
@@ -41245,7 +41354,7 @@ void* ecs_vec_get(
     ecs_size_t size,
     int32_t index)
 {
-    ecs_dbg_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
+    ecs_san_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(index < v->count, ECS_OUT_OF_RANGE, NULL);
     return ECS_ELEM(v->array, size, index);
 }
@@ -41254,7 +41363,7 @@ void* ecs_vec_last(
     const ecs_vec_t *v,
     ecs_size_t size)
 {
-    ecs_dbg_assert(!v->elem_size || size == v->elem_size, 
+    ecs_san_assert(!v->elem_size || size == v->elem_size, 
         ECS_INVALID_PARAMETER, NULL);
     return ECS_ELEM(v->array, size, v->count - 1);
 }
@@ -43585,7 +43694,7 @@ void flecs_table_move_bitset_columns(
 /* Grow table column. When a column needs to be reallocated this function takes
  * care of correctly invoking ctor/move/dtor hooks. */
 static
-void* flecs_table_grow_column(
+void flecs_table_grow_column(
     ecs_world_t *world,
     ecs_column_t *column,
     int32_t to_add,
@@ -43650,8 +43759,6 @@ void* flecs_table_grow_column(
     }
 
     ecs_assert(column->data.size == dst_size, ECS_INTERNAL_ERROR, NULL);
-
-    return result;
 }
 
 /* Grow all data structures in a table */
@@ -54010,7 +54117,6 @@ ecs_meta_cursor_t ecs_meta_cursor(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(type != 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_meta_cursor_t result = {
         .world = world,
@@ -54522,6 +54628,23 @@ const char* ecs_meta_get_member(
     ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
     ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
     return op->name;
+}
+
+ecs_entity_t ecs_meta_get_member_id(
+    const ecs_meta_cursor_t *cursor)
+{
+    ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
+    ecs_entity_t type = scope->type;
+    const EcsStruct *st = ecs_get(cursor->world, type, EcsStruct);
+    if (!st) {
+        return 0;
+    }
+
+    ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
+    ecs_member_t *m = ecs_vec_get_t(
+        &st->members, ecs_member_t, op->member_index);
+
+    return m->member;
 }
 
 /* Utilities for type conversions and bounds checking */

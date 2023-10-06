@@ -789,6 +789,9 @@
                 "add_deleted_in_on_remove",
                 "delete_tree_w_query",
                 "fini_cleanup_order",
+                "fini_cleanup_order_root_id_w_trait",
+                "fini_cleanup_order_entity_after_singleton",
+                "fini_cleanup_order_entity_after_component",
                 "on_delete_parent_w_in_use_id_w_remove",
                 "on_delete_parent_w_in_use_id_w_delete",
                 "create_after_delete_with",
@@ -2057,6 +2060,7 @@
                 "wildcard_propagate_w_other_table",
                 "add_in_yield_existing",
                 "add_in_yield_existing_multi",
+                "emit_for_parent_w_prefab_child_and_instance",
                 "cache_test_1",
                 "cache_test_2",
                 "cache_test_3",
@@ -2546,7 +2550,11 @@
                 "defer_2_sets_w_observer_same_component",
                 "defer_2_sets_w_observer_other_component",
                 "on_remove_after_deferred_clear_and_add",
-                "defer_delete_recycle_same_id"
+                "defer_delete_recycle_same_id",
+                "observer_while_defer_suspended",
+                "on_add_hook_while_defer_suspended",
+                "on_set_hook_while_defer_suspended",
+                "on_remove_hook_while_defer_suspended"
             ]
         }, {
             "id": "SingleThreadStaging",

@@ -394,6 +394,7 @@ void Paths_alias_scoped_component_w_name(void);
 void Paths_alias_entity(void);
 void Paths_alias_entity_by_name(void);
 void Paths_alias_entity_by_scoped_name(void);
+void Paths_alias_entity_empty(void);
 
 // Testsuite 'System'
 void System_iter(void);
@@ -1179,6 +1180,7 @@ void Misc_component_mixin_member_metric_description(void);
 void Misc_member_metric_w_value_name(void);
 void Misc_member_metric_w_value_name_camel_case_type(void);
 void Misc_member_metric_w_custom_name(void);
+void Misc_dotmember_metric(void);
 void Misc_counter_id_metric(void);
 void Misc_counter_target_metric(void);
 void Misc_alert(void);
@@ -2807,6 +2809,10 @@ bake_test_case Paths_testcases[] = {
     {
         "alias_entity_by_scoped_name",
         Paths_alias_entity_by_scoped_name
+    },
+    {
+        "alias_entity_empty",
+        Paths_alias_entity_empty
     }
 };
 
@@ -5850,6 +5856,10 @@ bake_test_case Misc_testcases[] = {
         Misc_member_metric_w_custom_name
     },
     {
+        "dotmember_metric",
+        Misc_dotmember_metric
+    },
+    {
         "counter_id_metric",
         Misc_counter_id_metric
     },
@@ -6324,7 +6334,7 @@ static bake_test_suite suites[] = {
         "Paths",
         NULL,
         NULL,
-        14,
+        15,
         Paths_testcases
     },
     {
@@ -6457,7 +6467,7 @@ static bake_test_suite suites[] = {
         "Misc",
         Misc_setup,
         NULL,
-        47,
+        48,
         Misc_testcases
     },
     {

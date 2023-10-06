@@ -34,6 +34,11 @@ struct metric_builder {
     template <typename T>
     metric_builder& member(const char *name);
 
+    metric_builder& dotmember(const char *name);
+
+    template <typename T>
+    metric_builder& dotmember(const char *name);
+
     metric_builder& id(flecs::id_t the_id) {
         m_desc.id = the_id;
         return *this;

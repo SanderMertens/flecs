@@ -925,7 +925,7 @@ typedef struct ecs_vec_t {
     void *array;
     int32_t count;
     int32_t size;
-#ifdef FLECS_DEBUG
+#ifdef FLECS_SANITIZE
     ecs_size_t elem_size;
 #endif
 } ecs_vec_t;
@@ -3470,6 +3470,10 @@ char* flecs_to_snake_case(
 FLECS_DBG_API
 int32_t flecs_table_observed_count(
     const ecs_table_t *table);
+
+FLECS_DBG_API
+void flecs_dump_backtrace(
+    void *stream);
 
 /** Calculate offset from address */
 #ifdef __cplusplus
@@ -9828,6 +9832,15 @@ void ecs_parser_errorv_(
 #define ecs_dbg_assert(condition, error_code, ...)
 #endif
 
+/** Sanitize assert.
+ * Assert that is only valid in sanitized mode (ignores FLECS_KEEP_ASSERT) */
+#ifdef FLECS_SANITIZE
+#define ecs_san_assert(condition, error_code, ...) ecs_assert(condition, error_code, __VA_ARGS__)
+#else
+#define ecs_san_assert(condition, error_code, ...)
+#endif
+
+
 /* Silence dead code/unused label warnings when compiling without checks. */
 #define ecs_dummy_check\
     if ((false)) {\
@@ -11866,6 +11879,11 @@ typedef struct ecs_metric_desc_t {
      * at the same time as id. Cannot be combined with EcsCounterId. */
     ecs_entity_t member;
 
+    /* Member dot expression. Can be used instead of member and supports nested
+     * members. Must be set together with id and should not be set at the same 
+     * time as member. */
+    const char *dotmember;
+
     /** Tracks whether entities have the specified component id. Must not be set
      * at the same time as member. */
     ecs_id_t id;
@@ -13845,6 +13863,11 @@ ecs_entity_t ecs_meta_get_unit(
 /** Get member name of current member */
 FLECS_API
 const char* ecs_meta_get_member(
+    const ecs_meta_cursor_t *cursor);
+
+/** Get member entity of current member */
+FLECS_API
+ecs_entity_t ecs_meta_get_member_id(
     const ecs_meta_cursor_t *cursor);
 
 /* The set functions assign the field with the specified value. If the value
@@ -18287,6 +18310,11 @@ struct metric_builder {
     template <typename T>
     metric_builder& member(const char *name);
 
+    metric_builder& dotmember(const char *name);
+
+    template <typename T>
+    metric_builder& dotmember(const char *name);
+
     metric_builder& id(flecs::id_t the_id) {
         m_desc.id = the_id;
         return *this;
@@ -19770,6 +19798,7 @@ struct world {
     flecs::entity set_scope() const;
 
     /** Set search path.
+     *  @see ecs_set_lookup_path
      */
     flecs::entity_t* set_lookup_path(const flecs::entity_t *search_path) const {
         return ecs_set_lookup_path(m_world, search_path);
@@ -19933,7 +19962,7 @@ struct world {
     template <typename T>
     void remove() const;
 
-    /** Adds a pair to the singleton component.
+    /** Removes the pair singleton component.
      * 
      * @tparam First The first element of the pair
      * @tparam Second The second element of the pair
@@ -19941,7 +19970,7 @@ struct world {
     template <typename First, typename Second>
     void remove() const;
 
-    /** Adds a pair to the singleton component.
+    /** Removes the pair singleton component.
      * 
      * @tparam First The first element of the pair
      * @param second The second element of the pair.
@@ -19949,7 +19978,7 @@ struct world {
     template <typename First>
     void remove(flecs::entity_t second) const;
 
-    /** Adds a pair to the singleton entity.
+    /** Removes the pair singleton component.
      * 
      * @param first The first element of the pair
      * @param second The second element of the pair
@@ -20342,7 +20371,7 @@ flecs::entity entity(Args &&... args) const;
  * \ingroup cpp_entities
  */
 template <typename E, if_t< is_enum<E>::value > = 0>
-flecs::entity id(E value) const;
+flecs::id id(E value) const;
 
 /** Convert enum constant to entity.
  * 
@@ -22369,6 +22398,23 @@ struct entity_builder : entity_view {
         return to_base();
     }
 
+     /** Add pair for enum constant.
+     * This operation will add a pair to the entity where the first element is
+     * the enumeration type, and the second element the enumeration constant.
+     * 
+     * The operation may be used with regular (C style) enumerations as well as
+     * enum classes.
+     * 
+     * @param value The enumeration value.
+     */
+    template <typename E, if_t< is_enum<E>::value > = 0>
+    Self& add(E value) {
+        flecs::entity_t first = _::cpp_type<E>::id(this->m_world);
+        const auto& et = enum_type<E>(this->m_world);
+        flecs::entity_t second = et.entity(value);
+        return this->add(first, second);
+    }
+
     /** Add an entity to an entity.
      * Add an entity to the entity. This is typically used for tagging.
      *
@@ -22615,6 +22661,17 @@ struct entity_builder : entity_view {
         return to_base();
     }
 
+     /** Remove pair for enum.
+     * This operation will remove any (Enum, *) pair from the entity.
+     * 
+     * @tparam E The enumeration type.
+     */
+    template <typename E, if_t< is_enum<E>::value > = 0>
+    Self& remove() {
+        flecs::entity_t first = _::cpp_type<E>::id(this->m_world);
+        return this->remove(first, flecs::Wildcard);
+    }
+
     /** Remove an entity from an entity.
      *
      * @param entity The entity to remove.
@@ -22647,7 +22704,7 @@ struct entity_builder : entity_view {
     }
 
     /** Remove a pair.
-     * This operation adds a pair to the entity.
+     * This operation removes the pair from the entity.
      *
      * @tparam First The first element of the pair
      * @param second The second element of the pair.
@@ -22669,7 +22726,7 @@ struct entity_builder : entity_view {
     }
 
     /** Remove a pair.
-     * This operation adds a pair to the entity.
+     * This operation removes the pair from the entity.
      *
      * @tparam First The first element of the pair
      * @param constant the enum constant.
@@ -22841,34 +22898,6 @@ struct entity_builder : entity_view {
         return to_base();  
     }
 
-    /** Add pair for enum constant.
-     * This operation will add a pair to the entity where the first element is
-     * the enumeration type, and the second element the enumeration constant.
-     * 
-     * The operation may be used with regular (C style) enumerations as well as
-     * enum classes.
-     * 
-     * @param value The enumeration value.
-     */
-    template <typename E, if_t< is_enum<E>::value > = 0>
-    Self& add(E value) {
-        flecs::entity_t first = _::cpp_type<E>::id(this->m_world);
-        const auto& et = enum_type<E>(this->m_world);
-        flecs::entity_t second = et.entity(value);
-        return this->add(first, second);
-    }
-
-    /** Remove pair for enum.
-     * This operation will remove any (Enum, *) pair from the entity.
-     * 
-     * @tparam E The enumeration type.
-     */
-    template <typename E, if_t< is_enum<E>::value > = 0>
-    Self& remove() {
-        flecs::entity_t first = _::cpp_type<E>::id(this->m_world);
-        return this->remove(first, flecs::Wildcard);
-    }
-
     /** Enable an entity.
      * Enabled entities are matched with systems and can be searched with
      * queries.
@@ -22906,7 +22935,7 @@ struct entity_builder : entity_view {
      */   
     template<typename T>
     Self& enable() {
-        return this->enable(_::cpp_type<T>::id());
+        return this->enable(_::cpp_type<T>::id(this->m_world));
     }
 
     /** Enable a pair.
@@ -23221,6 +23250,7 @@ struct entity_builder : entity_view {
     }
 
     /** Entities created in function will have the current entity.
+     * This operation is thread safe.
      *
      * @param func The function to call.
      */
@@ -23245,6 +23275,7 @@ struct entity_builder : entity_view {
     }
 
     /** Entities created in function will have (first, this).
+     * This operation is thread safe.
      *
      * @param first The first element of the pair.
      * @param func The function to call.
@@ -23563,7 +23594,7 @@ struct entity : entity_builder<entity>
             _::cpp_type<Second>::id(m_world))));
     }
 
-    /** Get mutable pointer for a pair.
+    /** Get mutable pointer for the first element of a pair.
      * This operation gets the value for a pair from the entity.
      *
      * @tparam First The first part of the pair.
@@ -23664,16 +23695,12 @@ struct entity : entity_builder<entity>
      */
     template <typename T>
     ref<T> get_ref() const {
-        // Ensure component is registered
-        _::cpp_type<T>::id(m_world);
-        return ref<T>(m_world, m_id);
+        return ref<T>(m_world, m_id, _::cpp_type<T>::id(m_world));
     }
 
     template <typename First, typename Second, typename P = flecs::pair<First, Second>, 
         typename A = actual_type_t<P>>
     ref<A> get_ref() const {
-        // Ensure component is registered
-        _::cpp_type<A>::id(m_world);
         return ref<A>(m_world, m_id, 
             ecs_pair(_::cpp_type<First>::id(m_world),
                 _::cpp_type<Second>::id(m_world)));
@@ -23681,16 +23708,12 @@ struct entity : entity_builder<entity>
 
     template <typename First>
     ref<First> get_ref(flecs::entity_t second) const {
-        // Ensure component is registered
-        _::cpp_type<First>::id(m_world);
         return ref<First>(m_world, m_id, 
             ecs_pair(_::cpp_type<First>::id(m_world), second));
     }
 
     template <typename Second>
     ref<Second> get_ref_second(flecs::entity_t first) const {
-        // Ensure component is registered
-        _::cpp_type<Second>::id(m_world);
         return ref<Second>(m_world, m_id, 
             ecs_pair(first, _::cpp_type<Second>::id(m_world)));
     }
@@ -26486,9 +26509,9 @@ inline flecs::entity world::entity(Args &&... args) const {
 }
 
 template <typename E, if_t< is_enum<E>::value >>
-inline flecs::entity world::id(E value) const {
+inline flecs::id world::id(E value) const {
     flecs::entity_t constant = enum_type<E>(m_world).entity(value);
-    return flecs::entity(m_world, constant);
+    return flecs::id(m_world, constant);
 }
 
 template <typename E, if_t< is_enum<E>::value >>
@@ -30061,6 +30084,18 @@ inline metric_builder& metric_builder::member(const char *name) {
     return member(m);
 }
 
+inline metric_builder& metric_builder::dotmember(const char *expr) {
+    m_desc.dotmember = expr;
+    return *this;
+}
+
+template <typename T>
+inline metric_builder& metric_builder::dotmember(const char *expr) {
+    m_desc.dotmember = expr;
+    m_desc.id = _::cpp_type<T>::id(m_world);
+    return *this;
+}
+
 inline metric_builder::operator flecs::entity() {
     if (!m_created) {
         m_created = true;
@@ -30508,9 +30543,9 @@ inline void world::use(flecs::entity e, const char *alias) const {
     const char *name = alias;
     if (!name) {
         // If no name is defined, use the entity name without the scope
-        ecs_get_name(m_world, eid);
+        name = ecs_get_name(m_world, eid);
     }
-    ecs_set_alias(m_world, eid, alias);
+    ecs_set_alias(m_world, eid, name);
 }
 
 inline flecs::entity world::set_scope(const flecs::entity_t s) const {
@@ -30540,7 +30575,7 @@ inline T* world::get_mut() const {
 template <typename T>
 inline void world::modified() const {
     flecs::entity e(m_world, _::cpp_type<T>::id(m_world));
-    return e.modified<T>();
+    e.modified<T>();
 }
 
 template <typename First, typename Second>

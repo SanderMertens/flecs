@@ -84,7 +84,7 @@ void ecs_os_fini(void) {
 #define ECS_BT_BUF_SIZE 100
 
 void flecs_dump_backtrace(
-    FILE *stream) 
+    void *stream) 
 {
     int nptrs;
     void *buffer[ECS_BT_BUF_SIZE];
@@ -105,7 +105,7 @@ void flecs_dump_backtrace(
 }
 #else
 void flecs_dump_backtrace(
-    FILE *stream)
+    void *stream)
 { 
     (void)stream;
 }
