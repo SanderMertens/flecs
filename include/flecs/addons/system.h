@@ -141,7 +141,7 @@ ecs_entity_t ecs_system_init(
  *     .entity = ecs_entity(world, {
  *       .name = "MyEntity",
  *       .add = { ecs_dependson(EcsOnUpdate) }
- *     },
+ *     }),
  *     .query.filter.terms = {
  *       { ecs_id(Position) },
  *       { ecs_id(Velocity) }
@@ -171,7 +171,7 @@ ecs_entity_t ecs_system_init(
  * Any system may interrupt execution by setting the interrupted_by member in
  * the ecs_iter_t value. This is particularly useful for manual systems, where
  * the value of interrupted_by is returned by this operation. This, in
- * cominbation with the param argument lets applications use manual systems
+ * combination with the param argument lets applications use manual systems
  * to lookup entities: once the entity has been found its handle is passed to
  * interrupted_by, which is then subsequently returned.
  *

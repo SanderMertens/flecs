@@ -11196,7 +11196,7 @@ ecs_entity_t ecs_system_init(
  *     .entity = ecs_entity(world, {
  *       .name = "MyEntity",
  *       .add = { ecs_dependson(EcsOnUpdate) }
- *     },
+ *     }),
  *     .query.filter.terms = {
  *       { ecs_id(Position) },
  *       { ecs_id(Velocity) }

@@ -4,7 +4,7 @@
 // Observers provide a mechanism for responding to builtin and user defined
 // events. They are similar to systems, in that they have the same callback
 // signature and use the same query interface to match with entities, but 
-// instead of a phase have an event kind.
+// instead of a phase they have an event kind.
 //
 // The most commonly used builtin events are:
 //  - EcsOnAdd: a component was added
