@@ -756,6 +756,7 @@ void SerializeIterToJson_serialize_id_labels(void);
 void SerializeIterToJson_serialize_vars_for_query(void);
 void SerializeIterToJson_serialize_var_labels_for_query(void);
 void SerializeIterToJson_serialize_var_ids_for_query(void);
+void SerializeIterToJson_serialize_null_doc_name(void);
 
 // Testsuite 'SerializeTypeInfoToJson'
 void SerializeTypeInfoToJson_bool(void);
@@ -3898,6 +3899,10 @@ bake_test_case SerializeIterToJson_testcases[] = {
     {
         "serialize_var_ids_for_query",
         SerializeIterToJson_serialize_var_ids_for_query
+    },
+    {
+        "serialize_null_doc_name",
+        SerializeIterToJson_serialize_null_doc_name
     }
 };
 
@@ -4898,7 +4903,7 @@ static bake_test_suite suites[] = {
         "SerializeIterToJson",
         NULL,
         NULL,
-        60,
+        61,
         SerializeIterToJson_testcases
     },
     {

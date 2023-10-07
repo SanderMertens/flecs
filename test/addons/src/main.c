@@ -475,6 +475,11 @@ void Doc_get_entity_name(void);
 void Doc_get_set_brief(void);
 void Doc_get_set_detail(void);
 void Doc_get_set_link(void);
+void Doc_set_name_nullptr(void);
+void Doc_set_brief_nullptr(void);
+void Doc_set_detail_nullptr(void);
+void Doc_set_link_nullptr(void);
+void Doc_set_color_nullptr(void);
 
 // Testsuite 'Pipeline'
 void Pipeline_system_order_same_phase(void);
@@ -3402,6 +3407,26 @@ bake_test_case Doc_testcases[] = {
     {
         "get_set_link",
         Doc_get_set_link
+    },
+    {
+        "set_name_nullptr",
+        Doc_set_name_nullptr
+    },
+    {
+        "set_brief_nullptr",
+        Doc_set_brief_nullptr
+    },
+    {
+        "set_detail_nullptr",
+        Doc_set_detail_nullptr
+    },
+    {
+        "set_link_nullptr",
+        Doc_set_link_nullptr
+    },
+    {
+        "set_color_nullptr",
+        Doc_set_color_nullptr
     }
 };
 
@@ -7520,7 +7545,7 @@ static bake_test_suite suites[] = {
         "Doc",
         NULL,
         NULL,
-        5,
+        10,
         Doc_testcases
     },
     {

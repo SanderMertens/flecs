@@ -2182,3 +2182,47 @@ void Iter_rule_worker_iter_w_fini(void) {
 
     ecs_fini(world);
 }
+
+void Iter_to_str_before_next(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_query_t *q = ecs_query_new(world, "Tag");
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    char *str = ecs_iter_str(&it);
+    test_assert(str == NULL);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Iter_to_str(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+    
+    ecs_entity_t e = ecs_new_entity(world, "foo");
+    ecs_add(world, e, Tag);
+
+    ecs_query_t *q = ecs_query_new(world, "Tag");
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    char *str = ecs_iter_str(&it);
+    test_assert(str != NULL);
+    test_str(str, 
+        "id:  Tag\n"
+        "src: 0\n"
+        "set: true\n"
+        "this:\n"
+        "    - foo\n"
+    );
+    ecs_os_free(str);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}

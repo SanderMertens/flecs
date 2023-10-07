@@ -2782,3 +2782,33 @@ void SerializeIterToJson_serialize_var_ids_for_query(void) {
 
     ecs_fini(world);
 }
+
+void SerializeIterToJson_serialize_null_doc_name(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e = ecs_new_entity(world, "foo");
+    ecs_doc_set_name(world, e, "bar");
+    ecs_doc_set_name(world, e, NULL);
+    ecs_add(world, e, Tag);
+
+    ecs_query_t *q = ecs_query(world, {
+        .filter.terms[0] = {
+            .id = Tag
+        }
+    });
+    test_assert(q != NULL);
+
+    ecs_iter_to_json_desc_t desc = {0};
+    desc.serialize_entities = true;
+    desc.serialize_entity_labels = true;
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    char *json = ecs_iter_to_json(world, &it, &desc);
+    test_assert(json != NULL);
+    test_str(json, "{\"results\":[{\"entities\":[\"foo\"]}]}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}

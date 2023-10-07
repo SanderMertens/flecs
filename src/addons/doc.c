@@ -22,37 +22,45 @@ static ECS_DTOR(EcsDocDescription, ptr, {
     ecs_os_free((char*)ptr->value);
 })
 
+static
+void flecs_doc_set(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_entity_t kind,
+    const char *value)
+{
+    if (value) {
+        ecs_set_pair(world, entity, EcsDocDescription, kind, {
+            /* Safe, value gets copied by copy hook */
+            .value = ECS_CONST_CAST(char*, value)
+        });
+    } else {
+        ecs_remove_pair(world, entity, ecs_id(EcsDocDescription), kind);
+    }
+}
+
 void ecs_doc_set_name(
     ecs_world_t *world,
     ecs_entity_t entity,
     const char *name)
 {
-    ecs_set_pair(world, entity, EcsDocDescription, EcsName, {
-        /* Safe, value gets copied by copy hook */
-        .value = ECS_CONST_CAST(char*, name)
-    });
+    flecs_doc_set(world, entity, EcsName, name);
 }
 
 void ecs_doc_set_brief(
     ecs_world_t *world,
     ecs_entity_t entity,
-    const char *description)
+    const char *brief)
 {
-    ecs_set_pair(world, entity, EcsDocDescription, EcsDocBrief, {
-        /* Safe, value gets copied by copy hook */
-        .value = ECS_CONST_CAST(char*, description)
-    });
+    flecs_doc_set(world, entity, EcsDocBrief, brief);
 }
 
 void ecs_doc_set_detail(
     ecs_world_t *world,
     ecs_entity_t entity,
-    const char *description)
+    const char *detail)
 {
-    ecs_set_pair(world, entity, EcsDocDescription, EcsDocDetail, {
-        /* Safe, value gets copied by copy hook */
-        .value = ECS_CONST_CAST(char*, description)
-    });
+    flecs_doc_set(world, entity, EcsDocDetail, detail);
 }
 
 void ecs_doc_set_link(
@@ -60,10 +68,7 @@ void ecs_doc_set_link(
     ecs_entity_t entity,
     const char *link)
 {
-    ecs_set_pair(world, entity, EcsDocDescription, EcsDocLink, {
-        /* Safe, value gets copied by copy hook */
-        .value = ECS_CONST_CAST(char*, link)
-    });
+    flecs_doc_set(world, entity, EcsDocLink, link);
 }
 
 void ecs_doc_set_color(
@@ -71,10 +76,7 @@ void ecs_doc_set_color(
     ecs_entity_t entity,
     const char *color)
 {
-    ecs_set_pair(world, entity, EcsDocDescription, EcsDocColor, {
-        /* Safe, value gets copied by copy hook */
-        .value = ECS_CONST_CAST(char*, color)
-    });
+    flecs_doc_set(world, entity, EcsDocColor, color);
 }
 
 const char* ecs_doc_get_name(

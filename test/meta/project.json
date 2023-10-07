@@ -790,7 +790,8 @@
                 "serialize_id_labels",
                 "serialize_vars_for_query",
                 "serialize_var_labels_for_query",
-                "serialize_var_ids_for_query"
+                "serialize_var_ids_for_query",
+                "serialize_null_doc_name"
             ]
         }, {
             "id": "SerializeTypeInfoToJson",

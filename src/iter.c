@@ -474,6 +474,10 @@ size_t ecs_field_size(
 char* ecs_iter_str(
     const ecs_iter_t *it)
 {
+    if (!(it->flags & EcsIterIsValid)) {
+        return NULL;
+    }
+
     ecs_world_t *world = it->world;
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
     int i;
@@ -508,7 +512,7 @@ char* ecs_iter_str(
         ecs_strbuf_list_pop(&buf, "\n");
     }
 
-    if (it->variable_count) {
+    if (it->variable_count && it->variable_names) {
         int32_t actual_count = 0;
         for (i = 0; i < it->variable_count; i ++) {
             const char *var_name = it->variable_names[i];
