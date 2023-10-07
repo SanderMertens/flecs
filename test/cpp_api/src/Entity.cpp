@@ -1767,6 +1767,8 @@ void Entity_entity_view_to_entity_stage(void) {
 
     flecs::entity_view ev = world.entity();
 
+    world.component<Position>();
+
     auto stage = world.get_stage(0);
 
     world.readonly_begin();

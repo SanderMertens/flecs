@@ -438,7 +438,6 @@ void ecs_cpp_enum_init(
 ecs_entity_t ecs_cpp_enum_constant_register(
     ecs_world_t *world,
     ecs_entity_t parent,
-    ecs_entity_t id,
     const char *name,
     int value)
 {
@@ -455,8 +454,7 @@ ecs_entity_t ecs_cpp_enum_constant_register(
     }
 
     ecs_entity_t prev = ecs_set_scope(world, parent);
-    id = ecs_entity(world, {
-        .id = id,
+    ecs_entity_t id = ecs_entity(world, {
         .name = name
     });
     ecs_assert(id != 0, ECS_INVALID_OPERATION, name);
@@ -482,14 +480,18 @@ ecs_entity_t ecs_cpp_enum_constant_register(
     return id;
 }
 
-static int32_t flecs_reset_count = 0;
-
 int32_t ecs_cpp_reset_count_get(void) {
-    return flecs_reset_count;
+    return 0; // Deprecated
 }
 
 int32_t ecs_cpp_reset_count_inc(void) {
-    return ++flecs_reset_count;
+    return 0; // Deprecated
+}
+
+static ecs_size_t flecs_component_storage_count = 0;
+
+ecs_size_t ecs_cpp_component_id_storage_add(void) {
+    return ++flecs_component_storage_count;
 }
 
 #ifdef FLECS_META

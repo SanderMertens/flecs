@@ -241,7 +241,7 @@ inline void world::each(Func&& func) const {
 template <typename T, typename Func>
 inline void world::each(Func&& func) const {
     ecs_term_t t = {};
-    t.id = _::cpp_type<T>::id();
+    t.id = _::cpp_type<T>::id(this->m_world);
     ecs_iter_t it = ecs_term_iter(m_world, &t);
 
     while (ecs_term_next(&it)) {

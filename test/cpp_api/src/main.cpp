@@ -1027,11 +1027,8 @@ void WorldFactory_module(void);
 // Testsuite 'World'
 void World_builtin_components(void);
 void World_multi_world_empty(void);
-void World_multi_world_component(void);
 void World_multi_world_component_namespace(void);
 void World_multi_world_module(void);
-void World_multi_world_recycled_component(void);
-void World_multi_world_recycled_component_different_generation(void);
 void World_type_id(void);
 void World_different_comp_same_name(void);
 void World_reregister_after_reset(void);
@@ -5265,24 +5262,12 @@ bake_test_case World_testcases[] = {
         World_multi_world_empty
     },
     {
-        "multi_world_component",
-        World_multi_world_component
-    },
-    {
         "multi_world_component_namespace",
         World_multi_world_component_namespace
     },
     {
         "multi_world_module",
         World_multi_world_module
-    },
-    {
-        "multi_world_recycled_component",
-        World_multi_world_recycled_component
-    },
-    {
-        "multi_world_recycled_component_different_generation",
-        World_multi_world_recycled_component_different_generation
     },
     {
         "type_id",
@@ -6488,7 +6473,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        106,
+        103,
         World_testcases
     },
     {

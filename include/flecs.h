@@ -432,6 +432,16 @@ typedef struct ecs_type_hooks_t ecs_type_hooks_t;
  * alignment and type hooks. */
 typedef struct ecs_type_info_t ecs_type_info_t;
 
+/** Cached Type information.
+ * Contains information about a component type, such as its id, size and alignment */
+typedef struct ecs_cached_component_info_t ecs_cached_component_info_t;
+
+/** An index to a cached component id information.
+ * Can be used to map a typed component from object-oriented language
+ * fast to a dynamically-per-world generated component id.
+ * Components are resolved by name lookup and subsequently cached. */
+typedef int32_t ecs_component_cache_index_t;
+
 /** Information about an entity, like its table and row. */
 typedef struct ecs_record_t ecs_record_t;
 
@@ -862,6 +872,16 @@ struct ecs_type_info_t {
     ecs_type_hooks_t hooks;  /**< Type hooks */
     ecs_entity_t component;  /**< Handle to component (do not set) */
     const char *name;        /**< Type name. */
+};
+
+/** Type that contains cache component information
+ *
+ * \ingroup components
+ */
+struct ecs_cached_component_info_t {
+    ecs_entity_t component;  /**< Handle to component */
+    ecs_size_t size;         /**< Size of type */
+    ecs_size_t alignment;    /**< Alignment of type */
 };
 
 #include "flecs/private/api_types.h"        /* Supporting API types */
@@ -3689,6 +3709,38 @@ FLECS_API
 const ecs_type_hooks_t* ecs_get_hooks_id(
     ecs_world_t *world,
     ecs_entity_t id);
+
+/** Get the cached information for a specific component cache index.
+ *
+ * @param world The world.
+ * @param component_cache_index The component cache index to lookup.
+ * @return The cached component info for the specific component, always returns a present entry.
+ */
+FLECS_API
+ecs_cached_component_info_t* ecs_get_or_create_cached_component_info(
+    ecs_world_t* world,
+    ecs_component_cache_index_t component_cache_index);
+
+/** Get the valid cached information for a specific component cache index.
+ *
+ * @param world The world.
+ * @param component_cache_index The component cache index to lookup.
+ * @return The valid cached component info for the specific component or NULL if invalid.
+ */
+FLECS_API
+const ecs_cached_component_info_t* ecs_lookup_cached_component_info(
+    const ecs_world_t* world,
+    ecs_component_cache_index_t component_cache_index);
+
+
+/** Test if the cached component info is valid (set)
+ *
+ * @param component_info The component cache index to lookup.
+ * @return True if the info is valid.
+ */
+FLECS_API
+bool ecs_is_cached_component_info_valid(
+    const ecs_cached_component_info_t* component_info);
 
 /** @} */
 

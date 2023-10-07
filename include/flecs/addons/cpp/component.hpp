@@ -113,6 +113,14 @@ void register_lifecycle_actions(
     ecs_set_hooks_id( world, component, &cl);
 }
 
+// Instantiates a per-instance global component cache index
+struct cpp_type_component_cache_index {
+    cpp_type_component_cache_index()
+        : index(ecs_cpp_component_id_storage_add()) {}
+
+    ecs_component_cache_index_t const index;
+};
+
 // Class that manages component ids across worlds & binaries.
 // The cpp_type class stores the component id for a C++ type in a static global
 // variable that is shared between worlds. Whenever a component is used this
@@ -125,86 +133,63 @@ void register_lifecycle_actions(
 // will register it as a component, and verify whether the input is consistent.
 template <typename T>
 struct cpp_type_impl {
-    // Initialize component identifier
-    static void init(
-        entity_t entity, 
-        bool allow_tag = true) 
-    {
-        if (s_reset_count != ecs_cpp_reset_count_get()) {
-            reset();
-        }
-
-        // If an identifier was already set, check for consistency
-        if (s_id) {
-            ecs_assert(s_id == entity, ECS_INCONSISTENT_COMPONENT_ID, 
-                type_name<T>());
-            ecs_assert(allow_tag == s_allow_tag, ECS_INVALID_PARAMETER, NULL);
-
-            // Component was already registered and data is consistent with new
-            // identifier, so nothing else to be done.
-            return;
-        }
-
-        // Component wasn't registered yet, set the values. Register component
-        // name as the fully qualified flecs path.
-        s_id = entity;
-        s_allow_tag = allow_tag;
-        s_size = sizeof(T);
-        s_alignment = alignof(T);
-        if (is_empty<T>::value && allow_tag) {
-            s_size = 0;
-            s_alignment = 0;
-        }
-
-        s_reset_count = ecs_cpp_reset_count_get();
-    }
-
     // Obtain a component identifier for explicit component registration.
-    static entity_t id_explicit(world_t *world = nullptr, 
+    static entity_t id_explicit(world_t *world,
         const char *name = nullptr, bool allow_tag = true, flecs::id_t id = 0,
-        bool is_component = true, bool *existing = nullptr)
+        bool is_component = true, bool *existing = nullptr, flecs::id_t s_id = 0)
     {
-        if (!s_id) {
-            // If no world was provided the component cannot be registered
-            ecs_assert(world != nullptr, ECS_COMPONENT_NOT_REGISTERED, name);
+        ecs_assert(world != nullptr, ECS_INTERNAL_ERROR, name);
+
+        if (const ecs_cached_component_info_t* info = ecs_lookup_cached_component_info(world, cached_component_index.index)) {
+            return info->component;
         } else {
-            ecs_assert(!id || s_id == id, ECS_INCONSISTENT_COMPONENT_ID, NULL);
-        }
+            // We assert below that the world is in a mutable state
+            ecs_world_t* const base = const_cast<ecs_world_t*>(ecs_get_world(world));
+            ecs_assert(!ecs_stage_is_readonly(base), ECS_INVALID_WHILE_READONLY, name);
 
-        // If no id has been registered yet for the component (indicating the 
-        // component has not yet been registered, or the component is used
-        // across more than one binary), or if the id does not exists in the 
-        // world (indicating a multi-world application), register it. */
-        if (!s_id || (world && !ecs_exists(world, s_id))) {
-            init(s_id ? s_id : id, allow_tag);
-
-            ecs_assert(!id || s_id == id, ECS_INTERNAL_ERROR, NULL);
-
+            // If no id has been registered yet for the component (indicating the
+            // component has not yet been registered), or if the id does not
+            // exists in the world (indicating a multi-world application),
+            // register it. */
             const char *symbol = nullptr;
             if (id) {
-                symbol = ecs_get_symbol(world, id);
+                symbol = ecs_get_symbol(base, id);
             }
             if (!symbol) {
                 symbol = symbol_name<T>();
             }
 
-            entity_t entity = ecs_cpp_component_register_explicit(
-                    world, s_id, id, name, type_name<T>(), symbol, 
-                        s_size, s_alignment, is_component, existing);
+            const bool is_tag = is_empty<T>::value && allow_tag;
 
-            s_id = entity;
+            const size_t component_size = is_tag ? 0U : size();
+            const size_t component_alignment = is_tag ? 0U : alignment();
+
+            const entity_t entity = ecs_cpp_component_register_explicit(
+                base, s_id, id, name, type_name<T>(), symbol,
+                component_size, component_alignment, is_component, existing);
+
+            // Component wasn't registered yet, set the values. Register component
+            // name as the fully qualified flecs path.
+            ecs_cached_component_info_t* inserted =
+                ecs_get_or_create_cached_component_info(base, cached_component_index.index);
+
+            ecs_assert(!!inserted, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(!ecs_is_cached_component_info_valid(inserted), ECS_INTERNAL_ERROR,
+                NULL);
+
+            inserted->component = entity;
+            inserted->size = static_cast<ecs_size_t>(component_size);
+            inserted->alignment = static_cast<ecs_size_t>(component_alignment);
+
+            ecs_assert(ecs_is_cached_component_info_valid(inserted), ECS_INTERNAL_ERROR, NULL);
 
             // If component is enum type, register constants
             #if FLECS_CPP_ENUM_REFLECTION_SUPPORT            
-            _::init_enum<T>(world, entity);
+            _::init_enum<T>(base, entity);
             #endif
+
+            return entity;
         }
-
-        // By now the identifier must be valid and known with the world.
-        ecs_assert(s_id != 0 && ecs_exists(world, s_id), 
-            ECS_INTERNAL_ERROR, NULL);
-
-        return s_id;
     }
 
     // Obtain a component identifier for implicit component registration. This
@@ -213,29 +198,31 @@ struct cpp_type_impl {
     // Additionally, implicit registration temporarily resets the scope & with
     // state of the world, so that the component is not implicitly created with
     // the scope/with of the code it happens to be first used by.
-    static id_t id(world_t *world = nullptr, const char *name = nullptr, 
+    static id_t id(world_t *world, const char *name = nullptr,
         bool allow_tag = true)
     {
-        // If no id has been registered yet, do it now.
-        if (!registered(world)) {
-            ecs_entity_t prev_scope = 0;
-            ecs_id_t prev_with = 0;
+        ecs_assert(world != nullptr, ECS_INTERNAL_ERROR, name);
 
-            if (world) {
-                prev_scope = ecs_set_scope(world, 0);
-                prev_with = ecs_set_with(world, 0);
-            }
+        if (const ecs_cached_component_info_t* info = ecs_lookup_cached_component_info(world, cached_component_index.index)) {
+            return info->component;
+        } else {
+            // If no id has been registered yet, do it now.
+            const ecs_entity_t prev_scope = ecs_set_scope(world, 0);
+            const ecs_id_t prev_with = ecs_set_with(world, 0);
 
             // This will register a component id, but will not register 
             // lifecycle callbacks.
             bool existing;
-            id_explicit(world, name, allow_tag, 0, true, &existing);
+            const entity_t id = id_explicit(world, name, allow_tag, 0, true, &existing);
+            ecs_assert(id != 0, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(ecs_lookup_cached_component_info(world, cached_component_index.index) != NULL,
+                       ECS_INTERNAL_ERROR, NULL);
 
             // Register lifecycle callbacks, but only if the component has a
             // size. Components that don't have a size are tags, and tags don't
             // require construction/destruction/copy/move's. */
             if (size() && !existing) {
-                register_lifecycle_actions<T>(world, s_id);
+                register_lifecycle_actions<T>(world, id);
             }
             
             if (prev_with) {
@@ -244,62 +231,40 @@ struct cpp_type_impl {
             if (prev_scope) {
                 ecs_set_scope(world, prev_scope);
             }
+
+            return id;
         }
-
-        // By now we should have a valid identifier
-        ecs_assert(s_id != 0, ECS_INTERNAL_ERROR, NULL);
-
-        return s_id;
     }
 
-    // Return the size of a component.
-    static size_t size() {
-        ecs_assert(s_id != 0, ECS_INTERNAL_ERROR, NULL);
-        return s_size;
-    }
-
-    // Return the alignment of a component.
-    static size_t alignment() {
-        ecs_assert(s_id != 0, ECS_INTERNAL_ERROR, NULL);
-        return s_alignment;
+    /// Looks the assigned component up in the provided world.
+    /// It can happen that the component has not been initialized yet.
+    static entity_t lookup(const world_t* world) {
+        const ecs_cached_component_info_t* info = ecs_lookup_cached_component_info(world, cached_component_index.index);
+        return info ? info->component : 0;
     }
 
     // Was the component already registered.
-    static bool registered(flecs::world_t *world) {
-        if (s_reset_count != ecs_cpp_reset_count_get()) {
-            reset();
-        }
-        if (s_id == 0) {
-            return false;
-        }
-        if (world && !ecs_exists(world, s_id)) {
-            return false;
-        }
-        return true;
+    static bool registered(const world_t* world) {
+        return !!lookup(world);
     }
 
-    // This function is only used to test cross-translation unit features. No
-    // code other than test cases should invoke this function.
-    static void reset() {
-        s_id = 0;
-        s_size = 0;
-        s_alignment = 0;
-        s_allow_tag = true;
+    // Return the size of this component.
+    static size_t size() {
+        return sizeof(T);
     }
 
-    static entity_t s_id;
-    static size_t s_size;
-    static size_t s_alignment;
-    static bool s_allow_tag;
-    static int32_t s_reset_count;
+    // Return the alignment of this component.
+    static size_t alignment() {
+        return alignof(T);
+    }
+
+    // Acquire a per instance incremental index for a world-local component index cache.
+    static cpp_type_component_cache_index cached_component_index;
 };
 
 // Global templated variables that hold component identifier and other info
-template <typename T> entity_t      cpp_type_impl<T>::s_id;
-template <typename T> size_t        cpp_type_impl<T>::s_size;
-template <typename T> size_t        cpp_type_impl<T>::s_alignment;
-template <typename T> bool          cpp_type_impl<T>::s_allow_tag( true );
-template <typename T> int32_t       cpp_type_impl<T>::s_reset_count;
+template <typename T>
+cpp_type_component_cache_index cpp_type_impl<T>::cached_component_index;
 
 // Front facing class for implicitly registering a component & obtaining 
 // static component data
@@ -375,10 +340,9 @@ struct component : untyped_component {
             implicit_name = true;
         }
 
-        if (_::cpp_type<T>::registered(world)) {
-            /* Obtain component id. Because the component is already registered,
-             * this operation does nothing besides returning the existing id */
-            id = _::cpp_type<T>::id_explicit(world, name, allow_tag, id);
+        /* Obtain a registered component id. */
+        if (const entity_t registered = _::cpp_type<T>::lookup(world)) {
+            id = registered;
 
             ecs_cpp_component_validate(world, id, n, _::symbol_name<T>(),
                 _::cpp_type<T>::size(),
@@ -412,8 +376,12 @@ struct component : untyped_component {
             id = ecs_cpp_component_register(world, id, n, _::symbol_name<T>(),
                 ECS_SIZEOF(T), ECS_ALIGNOF(T), implicit_name, &existing);
 
-            /* Initialize static component data */
-            id = _::cpp_type<T>::id_explicit(world, name, allow_tag, id);
+            if (!existing) {
+                /* Initialize static component data */
+                id = _::cpp_type<T>::id_explicit(world, name, allow_tag, id);
+            } else {
+                ecs_assert(ecs_is_valid(world, id), ECS_INTERNAL_ERROR, NULL);
+            }
 
             /* Initialize lifecycle actions (ctor, dtor, copy, move) */
             if (_::cpp_type<T>::size() && !existing) {
@@ -504,17 +472,6 @@ private:
     }
 };
 
-/** Get id currently assigned to component. If no world has registered the
- * component yet, this operation will return 0. */
-template <typename T>
-flecs::entity_t type_id() {
-    if (_::cpp_type<T>::s_reset_count == ecs_cpp_reset_count_get()) {
-        return _::cpp_type<T>::s_id;
-    } else {
-        return 0;
-    }
-}
-
 /** Reset static component ids.
  * When components are registered their component ids are stored in a static
  * type specific variable. This stored id is passed into component registration
@@ -537,9 +494,9 @@ flecs::entity_t type_id() {
  * 
  * \ingroup cpp_components
  */
-inline void reset() {
-    ecs_cpp_reset_count_inc();
-}
+ECS_DEPRECATED("reset was deprecated, world-local component ids "
+               "are supported by default now.")
+inline void reset() {}
 
 }
 

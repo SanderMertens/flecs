@@ -151,46 +151,65 @@ static const char* enum_constant_to_name() {
 
 /** Enumeration constant data */
 struct enum_constant_data {
-    flecs::entity_t id;
+    ecs_component_cache_index_t index = 0;
+    int value;
     int next;
+    char const* name;
 };
 
 /** Enumeration type data */
 struct enum_data_impl {
-    flecs::entity_t id;
-    int min;
-    int max;
+    int min = FLECS_ENUM_MAX(int);
+    int max = 0;
     enum_constant_data constants[FLECS_ENUM_MAX_COUNT];
 };
 
 /** Class that scans an enum for constants, extracts names & creates entities */
 template <typename E>
 struct enum_type {
-    static enum_data_impl data;
+    enum_data_impl data;
 
-    static enum_type<E>& get() {
+    static enum_type<E> const& get() {
         static _::enum_type<E> instance;
         return instance;
     }
 
-    flecs::entity_t entity(E value) const {
-        return data.constants[static_cast<int>(value)].id;
+    flecs::entity_t entity(flecs::world_t* world, E value) const {
+        const ecs_component_cache_index_t index = data.constants[static_cast<int>(value)].index;
+        const ecs_cached_component_info_t* info = ecs_lookup_cached_component_info(world, index);
+        return info ? info->component : 0;
     }
 
-    void init(flecs::world_t *world, flecs::entity_t id) {
+    void init(flecs::world_t *world, flecs::entity_t id) const {
 #if !FLECS_CPP_ENUM_REFLECTION_SUPPORT
         ecs_abort(ECS_UNSUPPORTED, "enum reflection requires gcc 7.5 or higher")
 #endif
 
         ecs_log_push();
         ecs_cpp_enum_init(world, id);
-        data.id = id;
-        data.min = FLECS_ENUM_MAX(int);
-        init< enum_last<E>::value >(world);
+
+        for (const enum_constant_data& constant : data.constants) {
+            if (!constant.index) {
+                continue;
+            }
+
+            ecs_cached_component_info_t* info = ecs_get_or_create_cached_component_info(world, constant.index);
+            if (ecs_is_cached_component_info_valid(info)) {
+                // Do nothing if initialized already
+                continue;
+            }
+
+            info->component = ecs_cpp_enum_constant_register(world, id, constant.name, constant.value);
+        }
+
         ecs_log_pop();
     }
 
 private:
+    enum_type() {
+        init();
+    }
+
     template <E Value>
     static constexpr int to_int() {
         return static_cast<int>(Value);
@@ -207,33 +226,32 @@ private:
     }
 
     template <E Value, flecs::if_not_t< enum_constant_is_valid<E, Value>() > = 0>
-    static void init_constant(flecs::world_t*) { }
+    void init_constant() { }
 
     template <E Value, flecs::if_t< enum_constant_is_valid<E, Value>() > = 0>
-    static void init_constant(flecs::world_t *world) {
-        int v = to_int<Value>();
-        const char *name = enum_constant_to_name<E, Value>();
-        data.constants[v].next = data.min;
+    void init_constant() {
+        int const v = to_int<Value>();
+
+        enum_constant_data &constant = data.constants[v];
+        constant.value = v;
+        constant.index = ecs_cpp_component_id_storage_add();
+        constant.next = data.min;
+        constant.name = enum_constant_to_name<E, Value>();
+
         data.min = v;
         if (!data.max) {
             data.max = v;
         }
-
-        data.constants[v].id = ecs_cpp_enum_constant_register(
-            world, data.id, data.constants[v].id, name, v);
     }
 
     template <E Value = FLECS_ENUM_MAX(E) >
-    static void init(flecs::world_t *world) {
-        init_constant<Value>(world);
+    void init() {
+        init_constant<Value>();
         if (is_not_0<Value>()) {
-            init<from_int<to_int<Value>() - is_not_0<Value>()>()>(world);
+            init<from_int<to_int<Value>() - is_not_0<Value>()>()>();
         }
     }
 };
-
-template <typename E>
-enum_data_impl enum_type<E>::data;
 
 template <typename E, if_t< is_enum<E>::value > = 0>
 inline static void init_enum(flecs::world_t *world, flecs::entity_t id) {
@@ -248,12 +266,12 @@ inline static void init_enum(flecs::world_t*, flecs::entity_t) { }
 /** Enumeration type data wrapper with world pointer */
 template <typename E>
 struct enum_data {
-    enum_data(flecs::world_t *world, _::enum_data_impl& impl) 
+    enum_data(flecs::world_t *world, _::enum_data_impl const& impl)
         : world_(world)
         , impl_(impl) { }
 
-    bool is_valid(int value) {
-        return impl_.constants[value].id != 0;
+    bool is_valid(int value) const {
+        return impl_.constants[value].index != 0;
     }
 
     int first() const {
@@ -273,7 +291,7 @@ struct enum_data {
     flecs::entity entity(E value) const;
 
     flecs::world_t *world_;
-    _::enum_data_impl& impl_;
+    _::enum_data_impl const& impl_;
 };
 
 /** Convenience function for getting enum reflection data */

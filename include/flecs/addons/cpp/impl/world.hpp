@@ -254,17 +254,23 @@ inline flecs::entity world::ensure(flecs::entity_t e) const {
 
 template <typename E>
 inline flecs::entity enum_data<E>::entity() const {
-    return flecs::entity(world_, impl_.id);
+    return flecs::entity(world_, _::cpp_type<E>::id_explicit(world_));
 }
 
 template <typename E>
 inline flecs::entity enum_data<E>::entity(int value) const {
-    return flecs::entity(world_, impl_.constants[value].id);
+    ecs_component_cache_index_t const index = impl_.constants[value].index;
+    if (index == 0) {
+        return flecs::entity();
+    }
+
+    const ecs_cached_component_info_t* info = ecs_lookup_cached_component_info(world_, index);
+    return info ? flecs::entity(world_, info->component) : flecs::entity();
 }
 
 template <typename E>
 inline flecs::entity enum_data<E>::entity(E value) const {
-    return flecs::entity(world_, impl_.constants[static_cast<int>(value)].id);
+    return entity(static_cast<int>(value));
 }
 
 /** Use provided scope for operations ran on returned world.
