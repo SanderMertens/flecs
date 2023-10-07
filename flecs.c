@@ -13072,6 +13072,10 @@ size_t ecs_field_size(
 char* ecs_iter_str(
     const ecs_iter_t *it)
 {
+    if (!(it->flags & EcsIterIsValid)) {
+        return NULL;
+    }
+
     ecs_world_t *world = it->world;
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
     int i;
@@ -13106,7 +13110,7 @@ char* ecs_iter_str(
         ecs_strbuf_list_pop(&buf, "\n");
     }
 
-    if (it->variable_count) {
+    if (it->variable_count && it->variable_names) {
         int32_t actual_count = 0;
         for (i = 0; i < it->variable_count; i ++) {
             const char *var_name = it->variable_names[i];
@@ -21779,13 +21783,15 @@ ecs_world_t* flecs_suspend_readonly(
     ecs_assert(stage_world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(state != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_world_t *world = ECS_CONST_CAST(ecs_world_t*, ecs_get_world(stage_world));
+    ecs_world_t *world = 
+        ECS_CONST_CAST(ecs_world_t*, ecs_get_world(stage_world));
     ecs_poly_assert(world, ecs_world_t);
 
     bool is_readonly = ECS_BIT_IS_SET(world->flags, EcsWorldReadonly);
-    bool is_deferred = ecs_is_deferred(world);
+    ecs_world_t *temp_world = world;
+    ecs_stage_t *stage = flecs_stage_from_world(&temp_world);
 
-    if (!is_readonly && !is_deferred) {
+    if (!is_readonly && !stage->defer) {
         state->is_readonly = false;
         state->is_deferred = false;
         return world;
@@ -21798,14 +21804,12 @@ ecs_world_t* flecs_suspend_readonly(
         (ecs_get_stage_count(world) <= 1), ECS_INVALID_WHILE_READONLY, NULL);
 
     state->is_readonly = is_readonly;
-    state->is_deferred = is_deferred;
+    state->is_deferred = stage->defer != 0;
 
     /* Silence readonly checks */
     world->flags &= ~EcsWorldReadonly;
 
     /* Hack around safety checks (this ought to look ugly) */
-    ecs_world_t *temp_world = world;
-    ecs_stage_t *stage = flecs_stage_from_world(&temp_world);
     state->defer_count = stage->defer;
     state->commands = stage->commands;
     state->defer_stack = stage->defer_stack;
@@ -53537,6 +53541,9 @@ ecs_entity_t ecs_primitive_init(
     ecs_world_t *world,
     const ecs_primitive_desc_t *desc)
 {
+    ecs_suspend_readonly_state_t rs;
+    world = flecs_suspend_readonly(world, &rs);
+
     ecs_entity_t t = desc->entity;
     if (!t) {
         t = ecs_new_low_id(world);
@@ -53544,6 +53551,7 @@ ecs_entity_t ecs_primitive_init(
 
     ecs_set(world, t, EcsPrimitive, { desc->kind });
 
+    flecs_resume_readonly(world, &rs);
     return t;
 }
 
@@ -53551,6 +53559,9 @@ ecs_entity_t ecs_enum_init(
     ecs_world_t *world,
     const ecs_enum_desc_t *desc)
 {
+    ecs_suspend_readonly_state_t rs;
+    world = flecs_suspend_readonly(world, &rs);
+
     ecs_entity_t t = desc->entity;
     if (!t) {
         t = ecs_new_low_id(world);
@@ -53580,6 +53591,7 @@ ecs_entity_t ecs_enum_init(
     }
 
     ecs_set_scope(world, old_scope);
+    flecs_resume_readonly(world, &rs);
 
     if (i == 0) {
         ecs_err("enum '%s' has no constants", ecs_get_name(world, t));
@@ -53594,6 +53606,9 @@ ecs_entity_t ecs_bitmask_init(
     ecs_world_t *world,
     const ecs_bitmask_desc_t *desc)
 {
+    ecs_suspend_readonly_state_t rs;
+    world = flecs_suspend_readonly(world, &rs);
+
     ecs_entity_t t = desc->entity;
     if (!t) {
         t = ecs_new_low_id(world);
@@ -53623,6 +53638,7 @@ ecs_entity_t ecs_bitmask_init(
     }
 
     ecs_set_scope(world, old_scope);
+    flecs_resume_readonly(world, &rs);
 
     if (i == 0) {
         ecs_err("bitmask '%s' has no constants", ecs_get_name(world, t));
@@ -53637,6 +53653,9 @@ ecs_entity_t ecs_array_init(
     ecs_world_t *world,
     const ecs_array_desc_t *desc)
 {
+    ecs_suspend_readonly_state_t rs;
+    world = flecs_suspend_readonly(world, &rs);
+
     ecs_entity_t t = desc->entity;
     if (!t) {
         t = ecs_new_low_id(world);
@@ -53647,6 +53666,8 @@ ecs_entity_t ecs_array_init(
         .count = desc->count
     });
 
+    flecs_resume_readonly(world, &rs);
+
     return t;
 }
 
@@ -53654,6 +53675,9 @@ ecs_entity_t ecs_vector_init(
     ecs_world_t *world,
     const ecs_vector_desc_t *desc)
 {
+    ecs_suspend_readonly_state_t rs;
+    world = flecs_suspend_readonly(world, &rs);
+
     ecs_entity_t t = desc->entity;
     if (!t) {
         t = ecs_new_low_id(world);
@@ -53662,6 +53686,8 @@ ecs_entity_t ecs_vector_init(
     ecs_set(world, t, EcsVector, {
         .type = desc->type
     });
+
+    flecs_resume_readonly(world, &rs);
 
     return t;
 }
@@ -53692,6 +53718,9 @@ ecs_entity_t ecs_struct_init(
     ecs_world_t *world,
     const ecs_struct_desc_t *desc)
 {
+    ecs_suspend_readonly_state_t rs;
+    world = flecs_suspend_readonly(world, &rs);
+
     ecs_entity_t t = desc->entity;
     if (!t) {
         t = ecs_new_low_id(world);
@@ -53709,8 +53738,7 @@ ecs_entity_t ecs_struct_init(
         if (!m_desc->name) {
             ecs_err("member %d of struct '%s' does not have a name", i, 
                 ecs_get_name(world, t));
-            ecs_delete(world, t);
-            return 0;
+            goto error;
         }
 
         ecs_entity_t m = ecs_entity(world, {
@@ -53806,21 +53834,20 @@ ecs_entity_t ecs_struct_init(
     }
 
     ecs_set_scope(world, old_scope);
+    flecs_resume_readonly(world, &rs);
 
     if (i == 0) {
         ecs_err("struct '%s' has no members", ecs_get_name(world, t));
-        ecs_delete(world, t);
-        return 0;
+        goto error;
     }
 
     if (!ecs_has(world, t, EcsStruct)) {
-        /* Invalid members */
-        ecs_delete(world, t);
-        return 0;
+        goto error;
     }
 
     return t;
 error:
+    flecs_resume_readonly(world, &rs);
     if (t) {
         ecs_delete(world, t);
     }
@@ -53849,6 +53876,8 @@ ecs_entity_t ecs_unit_init(
     ecs_world_t *world,
     const ecs_unit_desc_t *desc)
 {
+    ecs_poly_assert(world, ecs_world_t);
+
     ecs_entity_t t = desc->entity;
     if (!t) {
         t = ecs_new_low_id(world);
@@ -53892,6 +53921,8 @@ ecs_entity_t ecs_unit_prefix_init(
     ecs_world_t *world,
     const ecs_unit_prefix_desc_t *desc)
 {
+    ecs_poly_assert(world, ecs_world_t);
+
     ecs_entity_t t = desc->entity;
     if (!t) {
         t = ecs_new_low_id(world);
@@ -53909,6 +53940,8 @@ ecs_entity_t ecs_quantity_init(
     ecs_world_t *world,
     const ecs_entity_desc_t *desc)
 {
+    ecs_poly_assert(world, ecs_world_t);
+
     ecs_entity_t t = ecs_entity_init(world, desc);
     if (!t) {
         return 0;

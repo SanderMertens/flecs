@@ -1031,6 +1031,50 @@
                 "ser_deser_entity",
                 "ser_deser_0_entity"
             ]
+        }, {
+            "id": "Misc",
+            "testcases": [
+                "primitive_from_stage",
+                "enum_from_stage",
+                "bitmask_from_stage",
+                "struct_from_stage",
+                "array_from_stage",
+                "vector_from_stage",
+                "opaque_from_stage",
+                "unit_from_stage",
+                "unit_prefix_from_stage",
+                "quantity_from_stage",
+                "primitive_from_defer",
+                "enum_from_defer",
+                "bitmask_from_defer",
+                "array_from_defer",
+                "vector_from_defer",
+                "struct_from_defer",
+                "opaque_from_defer",
+                "unit_from_defer",
+                "unit_prefix_from_defer",
+                "quantity_from_defer",
+                "primitive_from_readonly",
+                "enum_from_readonly",
+                "bitmask_from_readonly",
+                "array_from_readonly",
+                "vector_from_readonly",
+                "struct_from_readonly",
+                "opaque_from_readonly",
+                "unit_from_readonly",
+                "unit_prefix_from_readonly",
+                "quantity_from_readonly",
+                "primitive_from_suspend_defer",
+                "enum_from_suspend_defer",
+                "bitmask_from_suspend_defer",
+                "array_from_suspend_defer",
+                "vector_from_suspend_defer",
+                "struct_from_suspend_defer",
+                "opaque_from_suspend_defer",
+                "unit_from_suspend_defer",
+                "unit_prefix_from_suspend_defer",
+                "quantity_from_suspend_defer"
+            ]
         }]
     }
 }

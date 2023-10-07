@@ -986,6 +986,48 @@ void OpaqueTypes_ser_deser_world_w_ser_opaque(void);
 void OpaqueTypes_ser_deser_entity(void);
 void OpaqueTypes_ser_deser_0_entity(void);
 
+// Testsuite 'Misc'
+void Misc_primitive_from_stage(void);
+void Misc_enum_from_stage(void);
+void Misc_bitmask_from_stage(void);
+void Misc_struct_from_stage(void);
+void Misc_array_from_stage(void);
+void Misc_vector_from_stage(void);
+void Misc_opaque_from_stage(void);
+void Misc_unit_from_stage(void);
+void Misc_unit_prefix_from_stage(void);
+void Misc_quantity_from_stage(void);
+void Misc_primitive_from_defer(void);
+void Misc_enum_from_defer(void);
+void Misc_bitmask_from_defer(void);
+void Misc_array_from_defer(void);
+void Misc_vector_from_defer(void);
+void Misc_struct_from_defer(void);
+void Misc_opaque_from_defer(void);
+void Misc_unit_from_defer(void);
+void Misc_unit_prefix_from_defer(void);
+void Misc_quantity_from_defer(void);
+void Misc_primitive_from_readonly(void);
+void Misc_enum_from_readonly(void);
+void Misc_bitmask_from_readonly(void);
+void Misc_array_from_readonly(void);
+void Misc_vector_from_readonly(void);
+void Misc_struct_from_readonly(void);
+void Misc_opaque_from_readonly(void);
+void Misc_unit_from_readonly(void);
+void Misc_unit_prefix_from_readonly(void);
+void Misc_quantity_from_readonly(void);
+void Misc_primitive_from_suspend_defer(void);
+void Misc_enum_from_suspend_defer(void);
+void Misc_bitmask_from_suspend_defer(void);
+void Misc_array_from_suspend_defer(void);
+void Misc_vector_from_suspend_defer(void);
+void Misc_struct_from_suspend_defer(void);
+void Misc_opaque_from_suspend_defer(void);
+void Misc_unit_from_suspend_defer(void);
+void Misc_unit_prefix_from_suspend_defer(void);
+void Misc_quantity_from_suspend_defer(void);
+
 bake_test_case PrimitiveTypes_testcases[] = {
     {
         "bool",
@@ -4793,6 +4835,169 @@ bake_test_case OpaqueTypes_testcases[] = {
     }
 };
 
+bake_test_case Misc_testcases[] = {
+    {
+        "primitive_from_stage",
+        Misc_primitive_from_stage
+    },
+    {
+        "enum_from_stage",
+        Misc_enum_from_stage
+    },
+    {
+        "bitmask_from_stage",
+        Misc_bitmask_from_stage
+    },
+    {
+        "struct_from_stage",
+        Misc_struct_from_stage
+    },
+    {
+        "array_from_stage",
+        Misc_array_from_stage
+    },
+    {
+        "vector_from_stage",
+        Misc_vector_from_stage
+    },
+    {
+        "opaque_from_stage",
+        Misc_opaque_from_stage
+    },
+    {
+        "unit_from_stage",
+        Misc_unit_from_stage
+    },
+    {
+        "unit_prefix_from_stage",
+        Misc_unit_prefix_from_stage
+    },
+    {
+        "quantity_from_stage",
+        Misc_quantity_from_stage
+    },
+    {
+        "primitive_from_defer",
+        Misc_primitive_from_defer
+    },
+    {
+        "enum_from_defer",
+        Misc_enum_from_defer
+    },
+    {
+        "bitmask_from_defer",
+        Misc_bitmask_from_defer
+    },
+    {
+        "array_from_defer",
+        Misc_array_from_defer
+    },
+    {
+        "vector_from_defer",
+        Misc_vector_from_defer
+    },
+    {
+        "struct_from_defer",
+        Misc_struct_from_defer
+    },
+    {
+        "opaque_from_defer",
+        Misc_opaque_from_defer
+    },
+    {
+        "unit_from_defer",
+        Misc_unit_from_defer
+    },
+    {
+        "unit_prefix_from_defer",
+        Misc_unit_prefix_from_defer
+    },
+    {
+        "quantity_from_defer",
+        Misc_quantity_from_defer
+    },
+    {
+        "primitive_from_readonly",
+        Misc_primitive_from_readonly
+    },
+    {
+        "enum_from_readonly",
+        Misc_enum_from_readonly
+    },
+    {
+        "bitmask_from_readonly",
+        Misc_bitmask_from_readonly
+    },
+    {
+        "array_from_readonly",
+        Misc_array_from_readonly
+    },
+    {
+        "vector_from_readonly",
+        Misc_vector_from_readonly
+    },
+    {
+        "struct_from_readonly",
+        Misc_struct_from_readonly
+    },
+    {
+        "opaque_from_readonly",
+        Misc_opaque_from_readonly
+    },
+    {
+        "unit_from_readonly",
+        Misc_unit_from_readonly
+    },
+    {
+        "unit_prefix_from_readonly",
+        Misc_unit_prefix_from_readonly
+    },
+    {
+        "quantity_from_readonly",
+        Misc_quantity_from_readonly
+    },
+    {
+        "primitive_from_suspend_defer",
+        Misc_primitive_from_suspend_defer
+    },
+    {
+        "enum_from_suspend_defer",
+        Misc_enum_from_suspend_defer
+    },
+    {
+        "bitmask_from_suspend_defer",
+        Misc_bitmask_from_suspend_defer
+    },
+    {
+        "array_from_suspend_defer",
+        Misc_array_from_suspend_defer
+    },
+    {
+        "vector_from_suspend_defer",
+        Misc_vector_from_suspend_defer
+    },
+    {
+        "struct_from_suspend_defer",
+        Misc_struct_from_suspend_defer
+    },
+    {
+        "opaque_from_suspend_defer",
+        Misc_opaque_from_suspend_defer
+    },
+    {
+        "unit_from_suspend_defer",
+        Misc_unit_from_suspend_defer
+    },
+    {
+        "unit_prefix_from_suspend_defer",
+        Misc_unit_prefix_from_suspend_defer
+    },
+    {
+        "quantity_from_suspend_defer",
+        Misc_quantity_from_suspend_defer
+    }
+};
+
 static bake_test_suite suites[] = {
     {
         "PrimitiveTypes",
@@ -4940,9 +5145,16 @@ static bake_test_suite suites[] = {
         NULL,
         17,
         OpaqueTypes_testcases
+    },
+    {
+        "Misc",
+        NULL,
+        NULL,
+        40,
+        Misc_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("meta", argc, argv, suites, 21);
+    return bake_test_run("meta", argc, argv, suites, 22);
 }

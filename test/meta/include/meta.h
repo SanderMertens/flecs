@@ -59,9 +59,10 @@ typedef struct {
     int32_t x, y, z;
 } Vec3;
 
+void install_test_abort(void);
+
 #ifdef __cplusplus
 }
 #endif
 
 #endif
-
