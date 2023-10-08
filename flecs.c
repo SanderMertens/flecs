@@ -53858,9 +53858,11 @@ ecs_entity_t ecs_opaque_init(
     ecs_world_t *world,
     const ecs_opaque_desc_t *desc)
 {
-    ecs_poly_assert(world, ecs_world_t);
     ecs_assert(desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(desc->type.as_type != 0, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_suspend_readonly_state_t rs;
+    world = flecs_suspend_readonly(world, &rs);
 
     ecs_entity_t t = desc->entity;
     if (!t) {
@@ -53869,6 +53871,8 @@ ecs_entity_t ecs_opaque_init(
 
     ecs_set_ptr(world, t, EcsOpaque, &desc->type);
 
+    flecs_resume_readonly(world, &rs);
+
     return t;
 }
 
@@ -53876,7 +53880,8 @@ ecs_entity_t ecs_unit_init(
     ecs_world_t *world,
     const ecs_unit_desc_t *desc)
 {
-    ecs_poly_assert(world, ecs_world_t);
+    ecs_suspend_readonly_state_t rs;
+    world = flecs_suspend_readonly(world, &rs);
 
     ecs_entity_t t = desc->entity;
     if (!t) {
@@ -53909,11 +53914,13 @@ ecs_entity_t ecs_unit_init(
 
     ecs_modified(world, t, EcsUnit);
 
+    flecs_resume_readonly(world, &rs);
     return t;
 error:
     if (t) {
         ecs_delete(world, t);
     }
+    flecs_resume_readonly(world, &rs);
     return 0;
 }
 
@@ -53921,7 +53928,8 @@ ecs_entity_t ecs_unit_prefix_init(
     ecs_world_t *world,
     const ecs_unit_prefix_desc_t *desc)
 {
-    ecs_poly_assert(world, ecs_world_t);
+    ecs_suspend_readonly_state_t rs;
+    world = flecs_suspend_readonly(world, &rs);
 
     ecs_entity_t t = desc->entity;
     if (!t) {
@@ -53933,6 +53941,8 @@ ecs_entity_t ecs_unit_prefix_init(
         .translation = desc->translation
     });
 
+    flecs_resume_readonly(world, &rs);
+
     return t;
 }
 
@@ -53940,7 +53950,8 @@ ecs_entity_t ecs_quantity_init(
     ecs_world_t *world,
     const ecs_entity_desc_t *desc)
 {
-    ecs_poly_assert(world, ecs_world_t);
+    ecs_suspend_readonly_state_t rs;
+    world = flecs_suspend_readonly(world, &rs);
 
     ecs_entity_t t = ecs_entity_init(world, desc);
     if (!t) {
@@ -53948,6 +53959,8 @@ ecs_entity_t ecs_quantity_init(
     }
 
     ecs_add_id(world, t, EcsQuantity);
+
+    flecs_resume_readonly(world, &rs);
 
     return t;
 }
