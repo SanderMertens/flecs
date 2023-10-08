@@ -1036,6 +1036,11 @@ struct world {
         return ecs_get_world_info(m_world);
     }
 
+    /** Get delta_time */
+    ecs_ftime_t delta_time() const {
+        return get_info()->delta_time;
+    }
+
 #   include "mixins/id/mixin.inl"
 #   include "mixins/component/mixin.inl"
 #   include "mixins/entity/mixin.inl"

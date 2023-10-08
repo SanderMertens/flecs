@@ -20291,6 +20291,11 @@ struct world {
         return ecs_get_world_info(m_world);
     }
 
+    /** Get delta_time */
+    ecs_ftime_t delta_time() const {
+        return get_info()->delta_time;
+    }
+
 /**
  * @file addons/cpp/mixins/id/mixin.inl
  * @brief Id world mixin.

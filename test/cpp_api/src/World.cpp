@@ -1824,3 +1824,20 @@ void World_make_pair_of_pair_type(void) {
     test_assert(id.first() == ecs.id<Position>());
     test_assert(id.second() == t);
 }
+
+void World_delta_time(void) {
+    flecs::world ecs;
+
+    float dt = 0;
+
+    ecs.entity().add<Tag>();
+
+    ecs.system<Tag>()
+        .each([&](flecs::entity e, Tag) {
+            dt = e.world().delta_time();
+        });
+
+    ecs.progress(2);
+
+    test_int(dt, 2);
+}

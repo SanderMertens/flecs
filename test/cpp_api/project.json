@@ -1180,7 +1180,8 @@
                 "make_pair",
                 "make_pair_of_pair_id",
                 "make_pair_of_pair_id_tgt",
-                "make_pair_of_pair_type"
+                "make_pair_of_pair_type",
+                "delta_time"
             ]
         }, {
             "id": "Singleton",
