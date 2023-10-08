@@ -927,3 +927,15 @@ void Enum_enum_class_mixed_auto_manual_constants(void) {
 
 
 }
+
+void Enum_enum_child_count(void) {
+    flecs::world ecs;
+
+    flecs::entity e = ecs.component<StandardEnum>();
+
+    flecs::filter<> f = ecs.filter_builder()
+        .with(flecs::ChildOf, e)
+        .build();
+
+    test_assert(f.count() == 3);
+}
