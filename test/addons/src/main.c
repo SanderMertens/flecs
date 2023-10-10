@@ -234,6 +234,11 @@ void Parser_query_not_scope(void);
 void Parser_query_empty_scope(void);
 void Parser_override_tag(void);
 void Parser_override_pair(void);
+void Parser_pair_3_args(void);
+void Parser_pair_3_args_implicit_this(void);
+void Parser_pair_4_args(void);
+void Parser_pair_4_args_implicit_this(void);
+void Parser_pair_3_args_2_terms(void);
 
 // Testsuite 'Plecs'
 void Plecs_null(void);
@@ -2453,6 +2458,26 @@ bake_test_case Parser_testcases[] = {
     {
         "override_pair",
         Parser_override_pair
+    },
+    {
+        "pair_3_args",
+        Parser_pair_3_args
+    },
+    {
+        "pair_3_args_implicit_this",
+        Parser_pair_3_args_implicit_this
+    },
+    {
+        "pair_4_args",
+        Parser_pair_4_args
+    },
+    {
+        "pair_4_args_implicit_this",
+        Parser_pair_4_args_implicit_this
+    },
+    {
+        "pair_3_args_2_terms",
+        Parser_pair_3_args_2_terms
     }
 };
 
@@ -7531,7 +7556,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        225,
+        230,
         Parser_testcases
     },
     {

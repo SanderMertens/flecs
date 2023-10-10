@@ -238,7 +238,12 @@
                 "query_not_scope",
                 "query_empty_scope",
                 "override_tag",
-                "override_pair"
+                "override_pair",
+                "pair_3_args",
+                "pair_3_args_implicit_this",
+                "pair_4_args",
+                "pair_4_args_implicit_this",
+                "pair_3_args_2_terms"
             ]
         }, {
             "id": "Plecs",

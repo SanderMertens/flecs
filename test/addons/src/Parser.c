@@ -5339,3 +5339,169 @@ void Parser_override_pair(void) {
 
     ecs_fini(world);
 }
+
+void Parser_pair_3_args(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "ChildOf($this, $parent, $grandparent)"
+    }));
+
+    test_int(filter_count(&f), 2);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_first(terms[0], EcsChildOf, EcsSelf|EcsIsEntity);
+    test_src(terms[0], EcsThis, EcsSelf|EcsIsVariable);
+    test_second_var(terms[0], 0, EcsSelf|EcsIsVariable, "parent");
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    test_first(terms[1], EcsChildOf, EcsSelf|EcsIsEntity);
+    test_src_var(terms[1], 0, EcsSelf|EcsIsVariable, "parent");
+    test_second_var(terms[1], 0, EcsSelf|EcsIsVariable, "grandparent");
+    test_int(terms[1].oper, EcsAnd);
+    test_int(terms[1].inout, EcsInOutDefault);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_pair_3_args_implicit_this(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "(ChildOf, $parent, $grandparent)"
+    }));
+
+    test_int(filter_count(&f), 2);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_first(terms[0], EcsChildOf, EcsSelf|EcsIsEntity);
+    test_src(terms[0], EcsThis, EcsSelf|EcsIsVariable);
+    test_second_var(terms[0], 0, EcsSelf|EcsIsVariable, "parent");
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    test_first(terms[1], EcsChildOf, EcsSelf|EcsIsEntity);
+    test_src_var(terms[1], 0, EcsSelf|EcsIsVariable, "parent");
+    test_second_var(terms[1], 0, EcsSelf|EcsIsVariable, "grandparent");
+    test_int(terms[1].oper, EcsAnd);
+    test_int(terms[1].inout, EcsInOutDefault);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_pair_4_args(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "ChildOf($this, $parent, $grandparent, $greatgrandparent)"
+    }));
+
+    test_int(filter_count(&f), 3);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_first(terms[0], EcsChildOf, EcsSelf|EcsIsEntity);
+    test_src(terms[0], EcsThis, EcsSelf|EcsIsVariable);
+    test_second_var(terms[0], 0, EcsSelf|EcsIsVariable, "parent");
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    test_first(terms[1], EcsChildOf, EcsSelf|EcsIsEntity);
+    test_src_var(terms[1], 0, EcsSelf|EcsIsVariable, "parent");
+    test_second_var(terms[1], 0, EcsSelf|EcsIsVariable, "grandparent");
+    test_int(terms[1].oper, EcsAnd);
+    test_int(terms[1].inout, EcsInOutDefault);
+
+    test_first(terms[2], EcsChildOf, EcsSelf|EcsIsEntity);
+    test_src_var(terms[2], 0, EcsSelf|EcsIsVariable, "grandparent");
+    test_second_var(terms[2], 0, EcsSelf|EcsIsVariable, "greatgrandparent");
+    test_int(terms[2].oper, EcsAnd);
+    test_int(terms[2].inout, EcsInOutDefault);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_pair_4_args_implicit_this(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "(ChildOf, $parent, $grandparent, $greatgrandparent)"
+    }));
+
+    test_int(filter_count(&f), 3);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_first(terms[0], EcsChildOf, EcsSelf|EcsIsEntity);
+    test_src(terms[0], EcsThis, EcsSelf|EcsIsVariable);
+    test_second_var(terms[0], 0, EcsSelf|EcsIsVariable, "parent");
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    test_first(terms[1], EcsChildOf, EcsSelf|EcsIsEntity);
+    test_src_var(terms[1], 0, EcsSelf|EcsIsVariable, "parent");
+    test_second_var(terms[1], 0, EcsSelf|EcsIsVariable, "grandparent");
+    test_int(terms[1].oper, EcsAnd);
+    test_int(terms[1].inout, EcsInOutDefault);
+
+    test_first(terms[2], EcsChildOf, EcsSelf|EcsIsEntity);
+    test_src_var(terms[2], 0, EcsSelf|EcsIsVariable, "grandparent");
+    test_second_var(terms[2], 0, EcsSelf|EcsIsVariable, "greatgrandparent");
+    test_int(terms[2].oper, EcsAnd);
+    test_int(terms[2].inout, EcsInOutDefault);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_pair_3_args_2_terms(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Tgt);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "ChildOf($this, $parent, $grandparent), Rel($this, $parent)"
+    }));
+
+    test_int(filter_count(&f), 3);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_first(terms[0], EcsChildOf, EcsSelf|EcsIsEntity);
+    test_src(terms[0], EcsThis, EcsSelf|EcsIsVariable);
+    test_second_var(terms[0], 0, EcsSelf|EcsIsVariable, "parent");
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    test_first(terms[1], EcsChildOf, EcsSelf|EcsIsEntity);
+    test_src_var(terms[1], 0, EcsSelf|EcsIsVariable, "parent");
+    test_second_var(terms[1], 0, EcsSelf|EcsIsVariable, "grandparent");
+    test_int(terms[1].oper, EcsAnd);
+    test_int(terms[1].inout, EcsInOutDefault);
+
+    test_first(terms[2], Rel, EcsSelf|EcsIsEntity);
+    test_src(terms[2], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
+    test_second_var(terms[2], 0, EcsSelf|EcsIsVariable, "parent");
+    test_int(terms[2].oper, EcsAnd);
+    test_int(terms[2].inout, EcsInOutDefault);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}

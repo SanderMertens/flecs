@@ -1432,23 +1432,50 @@ ecs_filter_t* ecs_filter_init(
         const char *name = NULL;
         const char *ptr = desc->expr;
         ecs_term_t term = {0};
+        ecs_term_id_t extra_args[ECS_PARSER_MAX_ARGS];
         int32_t expr_size = 0;
+
+        ecs_os_zeromem(extra_args);
 
         if (entity) {
             name = ecs_get_name(world, entity);
         }
 
-        while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term))){
+        while (ptr[0] && 
+            (ptr = ecs_parse_term(world, name, expr, ptr, &term, extra_args)))
+        {
             if (!ecs_term_is_initialized(&term)) {
                 break;
             }
 
-            if (expr_count == expr_size) {
-                expr_size = expr_size ? expr_size * 2 : 8;
-                expr_terms = ecs_os_realloc_n(expr_terms, ecs_term_t, expr_size);
-            }
+            int32_t arg = 0;
 
-            expr_terms[expr_count ++] = term;
+            do {
+                ecs_assert(arg <= ECS_PARSER_MAX_ARGS, ECS_INTERNAL_ERROR, NULL);
+
+                if (expr_count == expr_size) {
+                    expr_size = expr_size ? expr_size * 2 : 8;
+                    expr_terms = ecs_os_realloc_n(expr_terms, ecs_term_t, expr_size);
+                }
+
+                ecs_term_t *expr_term = &expr_terms[expr_count ++];
+                *expr_term = term;
+
+                if (arg) {
+                    expr_term->src = expr_term[-1].second;
+                    expr_term->second = extra_args[arg - 1];
+
+                    if (expr_term->first.name != NULL) {
+                        expr_term->first.name = ecs_os_strdup(
+                            expr_term->first.name);
+                    }
+                    if (expr_term->src.name != NULL) {
+                        expr_term->src.name = ecs_os_strdup(
+                            expr_term->src.name);
+                    }
+                }
+            } while (ecs_term_id_is_set(&extra_args[arg ++]));
+
             if (ptr[0] == '\n') {
                 break;
             }

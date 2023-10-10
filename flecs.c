@@ -4746,7 +4746,7 @@ ecs_table_t *flecs_traverse_from_expr(
     const char *ptr = expr;
     if (ptr) {
         ecs_term_t term = {0};
-        while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term))){
+        while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term, NULL))){
             if (!ecs_term_is_initialized(&term)) {
                 break;
             }
@@ -4809,7 +4809,7 @@ void flecs_defer_from_expr(
     const char *ptr = expr;
     if (ptr) {
         ecs_term_t term = {0};
-        while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term))){
+        while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term, NULL))) {
             if (!ecs_term_is_initialized(&term)) {
                 break;
             }
@@ -11053,23 +11053,50 @@ ecs_filter_t* ecs_filter_init(
         const char *name = NULL;
         const char *ptr = desc->expr;
         ecs_term_t term = {0};
+        ecs_term_id_t extra_args[ECS_PARSER_MAX_ARGS];
         int32_t expr_size = 0;
+
+        ecs_os_zeromem(extra_args);
 
         if (entity) {
             name = ecs_get_name(world, entity);
         }
 
-        while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term))){
+        while (ptr[0] && 
+            (ptr = ecs_parse_term(world, name, expr, ptr, &term, extra_args)))
+        {
             if (!ecs_term_is_initialized(&term)) {
                 break;
             }
 
-            if (expr_count == expr_size) {
-                expr_size = expr_size ? expr_size * 2 : 8;
-                expr_terms = ecs_os_realloc_n(expr_terms, ecs_term_t, expr_size);
-            }
+            int32_t arg = 0;
 
-            expr_terms[expr_count ++] = term;
+            do {
+                ecs_assert(arg <= ECS_PARSER_MAX_ARGS, ECS_INTERNAL_ERROR, NULL);
+
+                if (expr_count == expr_size) {
+                    expr_size = expr_size ? expr_size * 2 : 8;
+                    expr_terms = ecs_os_realloc_n(expr_terms, ecs_term_t, expr_size);
+                }
+
+                ecs_term_t *expr_term = &expr_terms[expr_count ++];
+                *expr_term = term;
+
+                if (arg) {
+                    expr_term->src = expr_term[-1].second;
+                    expr_term->second = extra_args[arg - 1];
+
+                    if (expr_term->first.name != NULL) {
+                        expr_term->first.name = ecs_os_strdup(
+                            expr_term->first.name);
+                    }
+                    if (expr_term->src.name != NULL) {
+                        expr_term->src.name = ecs_os_strdup(
+                            expr_term->src.name);
+                    }
+                }
+            } while (ecs_term_id_is_set(&extra_args[arg ++]));
+
             if (ptr[0] == '\n') {
                 break;
             }
@@ -30577,15 +30604,24 @@ const char* flecs_parse_arguments(
     int64_t column,
     const char *ptr,
     char *token,
-    ecs_term_t *term)
+    ecs_term_t *term,
+    ecs_term_id_t *extra_args)
 {
     (void)column;
 
     int32_t arg = 0;
 
+    if (extra_args) {
+        ecs_os_memset_n(extra_args, 0, ecs_term_id_t, ECS_PARSER_MAX_ARGS);
+    }
+
+    if (!term) {
+        arg = 2;
+    }
+
     do {
         if (flecs_valid_token_start_char(ptr[0])) {
-            if (arg == 2) {
+            if ((arg == ECS_PARSER_MAX_ARGS) || (!extra_args && arg == 2)) {
                 ecs_parser_error(name, expr, (ptr - expr), 
                     "too many arguments in term");
                 return NULL;
@@ -30602,6 +30638,8 @@ const char* flecs_parse_arguments(
                 term_id = &term->src;
             } else if (arg == 1) {
                 term_id = &term->second;
+            } else {
+                term_id = &extra_args[arg - 2];
             }
 
             /* If token is a colon, the token is an identifier followed by a
@@ -30643,7 +30681,9 @@ const char* flecs_parse_arguments(
             if (ptr[0] == TOK_AND) {
                 ptr = ecs_parse_ws(ptr + 1);
 
-                term->id_flags = ECS_PAIR;
+                if (term) {
+                    term->id_flags = ECS_PAIR;
+                }
 
             } else if (ptr[0] == TOK_PAREN_CLOSE) {
                 ptr = ecs_parse_ws(ptr + 1);
@@ -30689,7 +30729,8 @@ const char* flecs_parse_term(
     const ecs_world_t *world,
     const char *name,
     const char *expr,
-    ecs_term_t *term_out)
+    ecs_term_t *term_out,
+    ecs_term_id_t *extra_args)
 {
     const char *ptr = expr;
     char token[ECS_MAX_TOKEN_SIZE] = {0};
@@ -30837,7 +30878,7 @@ parse_predicate:
             ptr = ecs_parse_ws(ptr);
         } else {
             ptr = flecs_parse_arguments(
-                world, name, expr, (ptr - expr), ptr, token, &term);
+                world, name, expr, (ptr - expr), ptr, token, &term, extra_args);
         }
 
         goto parse_done;
@@ -30955,8 +30996,7 @@ parse_pair_predicate:
             }
         }
 
-        if (ptr[0] == TOK_PAREN_CLOSE) {
-            ptr ++;
+        if (ptr[0] == TOK_PAREN_CLOSE || ptr[0] == TOK_AND) {
             goto parse_pair_object;
         } else {
             flecs_parser_unexpected_char(name, expr, ptr, ptr[0]);
@@ -30981,6 +31021,17 @@ parse_pair_object:
 
     if (term.id_flags == 0) {
         term.id_flags = ECS_PAIR;
+    }
+
+    if (ptr[0] == TOK_AND) {
+        ptr = ecs_parse_ws(ptr + 1);
+        ptr = flecs_parse_arguments(
+            world, name, expr, (ptr - expr), ptr, token, NULL, extra_args);
+        if (!ptr) {
+            goto error;
+        }
+    } else {
+        ptr ++;
     }
 
     ptr = ecs_parse_ws(ptr);
@@ -31020,7 +31071,8 @@ char* ecs_parse_term(
     const char *name,
     const char *expr,
     const char *ptr,
-    ecs_term_t *term)
+    ecs_term_t *term,
+    ecs_term_id_t *extra_args)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -31056,7 +31108,7 @@ char* ecs_parse_term(
     }
 
     /* Parse next element */
-    ptr = flecs_parse_term(world, name, ptr, term);
+    ptr = flecs_parse_term(world, name, ptr, term, extra_args);
     if (!ptr) {
         goto error;
     }
@@ -32887,7 +32939,7 @@ const char *plecs_parse_plecs_term(
         decl_id = state->last_predicate;
     }
 
-    ptr = ecs_parse_term(world, name, expr, ptr, &term);
+    ptr = ecs_parse_term(world, name, expr, ptr, &term, NULL);
     if (!ptr) {
         return NULL;
     }
