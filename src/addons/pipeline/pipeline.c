@@ -285,7 +285,8 @@ bool flecs_pipeline_build(
 
         int32_t i;
         for (i = 0; i < it.count; i ++) {
-            ecs_system_t *sys = ecs_poly(poly[i].poly, ecs_system_t);
+            ecs_poly_assert(poly[i].poly, ecs_system_t);
+            ecs_system_t *sys = (ecs_system_t*)poly[i].poly;
             ecs_query_t *q = sys->query;
 
             bool needs_merge = false;
@@ -391,8 +392,8 @@ bool flecs_pipeline_build(
         for (i = 0; i < count; i ++) {
             ecs_entity_t system = systems[i];
             const EcsPoly *poly = ecs_get_pair(world, system, EcsPoly, EcsSystem);
-            ecs_assert(poly != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_system_t *sys = ecs_poly(poly->poly, ecs_system_t);
+            ecs_poly_assert(poly->poly, ecs_system_t);
+            ecs_system_t *sys = (ecs_system_t*)poly->poly;
 
 #ifdef FLECS_LOG_1
             char *path = ecs_get_fullpath(world, system);
@@ -550,8 +551,8 @@ int32_t flecs_run_pipeline_ops(
     for (; i < count; i++) {
         ecs_entity_t system = systems[i];
         const EcsPoly* poly = ecs_get_pair(world, system, EcsPoly, EcsSystem);
-        ecs_assert(poly != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_system_t* sys = ecs_poly(poly->poly, ecs_system_t);
+        ecs_poly_assert(poly->poly, ecs_system_t);
+        ecs_system_t* sys = (ecs_system_t*)poly->poly;
 
         /* Keep track of the last frame for which the system has ran, so we
         * know from where to resume the schedule in case the schedule

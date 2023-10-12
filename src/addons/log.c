@@ -326,8 +326,7 @@ void ecs_abort_(
     ecs_os_api.log_last_error_ = err;
 }
 
-bool ecs_assert_(
-    bool condition,
+void ecs_assert_log_(
     int32_t err,
     const char *cond_str,
     const char *file,
@@ -335,23 +334,19 @@ bool ecs_assert_(
     const char *fmt,
     ...)
 {
-    if (!condition) {
-        if (fmt) {
-            va_list args;
-            va_start(args, fmt);
-            char *msg = ecs_vasprintf(fmt, args);
-            va_end(args);            
-            ecs_fatal_(file, line, "assert: %s %s (%s)", 
-                cond_str, msg, ecs_strerror(err));
-            ecs_os_free(msg);
-        } else {
-            ecs_fatal_(file, line, "assert: %s %s", 
-                cond_str, ecs_strerror(err));
-        }
-        ecs_os_api.log_last_error_ = err;
+    if (fmt) {
+        va_list args;
+        va_start(args, fmt);
+        char *msg = ecs_vasprintf(fmt, args);
+        va_end(args);
+        ecs_fatal_(file, line, "assert: %s %s (%s)",
+            cond_str, msg, ecs_strerror(err));
+        ecs_os_free(msg);
+    } else {
+        ecs_fatal_(file, line, "assert: %s %s",
+            cond_str, ecs_strerror(err));
     }
-
-    return condition;
+    ecs_os_api.log_last_error_ = err;
 }
 
 void ecs_deprecated_(
@@ -484,8 +479,7 @@ void ecs_abort_(
     (void)fmt;
 }
 
-bool ecs_assert_(
-    bool condition,
+void ecs_assert_log_(
     int32_t error_code,
     const char *condition_str,
     const char *file,
@@ -493,13 +487,11 @@ bool ecs_assert_(
     const char *fmt,
     ...)
 {
-    (void)condition;
     (void)error_code;
     (void)condition_str;
     (void)file;
     (void)line;
     (void)fmt;
-    return true;
 }
 
 #endif
