@@ -187,26 +187,6 @@ ecs_poly_t* ecs_poly_get_(
     return NULL;
 }
 
-#ifndef FLECS_NDEBUG
-#define assert_object(cond, file, line, type_name)\
-    ecs_assert((cond), ECS_INVALID_PARAMETER, #cond, file, line, type_name)
-
-void* ecs_poly_assert_(
-    const ecs_poly_t *poly,
-    int32_t type,
-    const char *file,
-    int32_t line)
-{
-    assert_object(poly != NULL, file, line, 0);
-    
-    const ecs_header_t *hdr = poly;
-    const char *type_name = hdr->mixins->type_name;
-    assert_object(hdr->magic == ECS_OBJECT_MAGIC, file, line, type_name);
-    assert_object(hdr->type == type, file, line, type_name);
-    return ECS_CONST_CAST(ecs_poly_t*, poly);
-}
-#endif
-
 bool ecs_poly_is_(
     const ecs_poly_t *poly,
     int32_t type)

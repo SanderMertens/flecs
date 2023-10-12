@@ -928,7 +928,8 @@ ecs_entity_t ecs_observer_init(
                 ecs_get_name(world, entity));
         }
     } else {
-        ecs_observer_t *observer = ecs_poly(poly->poly, ecs_observer_t);
+        ecs_poly_assert(poly->poly, ecs_observer_t);
+        ecs_observer_t *observer = (ecs_observer_t*)poly->poly;
 
         if (desc->run) {
             observer->run = desc->run;

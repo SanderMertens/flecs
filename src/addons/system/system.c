@@ -322,7 +322,8 @@ ecs_entity_t ecs_system_init(
 
         ecs_defer_end(world);            
     } else {
-        ecs_system_t *system = ecs_poly(poly->poly, ecs_system_t);
+        ecs_poly_assert(poly->poly, ecs_system_t);
+        ecs_system_t *system = (ecs_system_t*)poly->poly;
 
         if (desc->run) {
             system->run = desc->run;
