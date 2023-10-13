@@ -30,7 +30,9 @@ int flecs_default_run_action(
 
     /* Ensure quit flag is set on world, which can be used to determine if
      * world needs to be cleaned up. */
+#ifndef __EMSCRIPTEN__
     ecs_quit(world);
+#endif
 
     if (result == 1) {
         return 0; /* Normal exit */

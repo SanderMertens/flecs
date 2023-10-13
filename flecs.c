@@ -16388,18 +16388,10 @@ static bool ecs_os_api_initialized = false;
 static bool ecs_os_api_initializing = false;
 static int ecs_os_api_init_count = 0;
 
-#ifndef __EMSCRIPTEN__
 ecs_os_api_t ecs_os_api = {
     .flags_ = EcsOsApiHighResolutionTimer | EcsOsApiLogWithColors,
     .log_level_ = -1 /* Disable tracing by default, but log warnings/errors */
 };
-#else
-/* Disable colors by default for emscripten */
-ecs_os_api_t ecs_os_api = {
-    .flags_ = EcsOsApiHighResolutionTimer,
-    .log_level_ = -1 /* Disable tracing by default, but log warnings/errors */
-};
-#endif
 
 int64_t ecs_os_api_malloc_count = 0;
 int64_t ecs_os_api_realloc_count = 0;
@@ -24435,7 +24427,9 @@ int flecs_default_run_action(
 
     /* Ensure quit flag is set on world, which can be used to determine if
      * world needs to be cleaned up. */
+#ifndef __EMSCRIPTEN__
     ecs_quit(world);
+#endif
 
     if (result == 1) {
         return 0; /* Normal exit */
