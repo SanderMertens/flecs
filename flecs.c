@@ -27123,8 +27123,13 @@ void flecs_journal_begin(
     char *path = NULL; 
     char *var_id = NULL; 
     if (entity) {
-        path = ecs_get_fullpath(world, entity);
-        var_id = flecs_journal_entitystr(world, entity);
+        if (kind != EcsJournalDeleteWith && kind != EcsJournalRemoveAll) {
+            path = ecs_get_fullpath(world, entity);
+            var_id = flecs_journal_entitystr(world, entity);
+        } else {
+            path = ecs_id_str(world, entity);
+            var_id = flecs_journal_idstr(world, entity);
+        }
     }
 
     if (kind == EcsJournalNew) {
@@ -60853,6 +60858,7 @@ void flecs_rule_discover_vars(
     flecs_set_var_label(&rule_vars[0], NULL);
     rule_vars[0].id = 0;
     rule_vars[0].table_id = EcsVarNone;
+    rule_vars[0].lookup = NULL;
     var_names[0] = ECS_CONST_CAST(char*, rule_vars[0].name);
     rule_vars ++;
     var_names ++;
@@ -63733,6 +63739,7 @@ bool flecs_rule_contain(
     ecs_var_id_t first_id = op->first.var;
 
     ecs_table_t *table = flecs_rule_var_get_table(src_id, ctx);
+
     ecs_entity_t e = flecs_rule_var_get_entity(first_id, ctx);
     return table == ecs_get_table(ctx->world, e);
 }
