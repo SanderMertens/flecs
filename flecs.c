@@ -59596,11 +59596,13 @@ typedef enum {
 } ecs_var_kind_t;
 
 typedef struct ecs_rule_var_t {
-    int8_t kind;           /* variable kind (EcsVarEntity or EcsVarTable)*/
+    int8_t kind;           /* variable kind (EcsVarEntity or EcsVarTable) */
     bool anonymous;        /* variable is anonymous */
     ecs_var_id_t id;       /* variable id */
     ecs_var_id_t table_id; /* id to table variable, if any */
+    ecs_var_id_t base_id;  /* id to base entity variable, for lookups */
     const char *name;      /* variable name */
+    const char *lookup;    /* Lookup string for variable */
 #ifdef FLECS_DEBUG
     const char *label;     /* for debugging */
 #endif
@@ -59627,6 +59629,7 @@ typedef enum {
     EcsRulePredNeqName,    /* Same as EcsRulePredNeq but with matching by name */
     EcsRulePredEqMatch,    /* Same as EcsRulePredEq but with fuzzy matching by name */
     EcsRulePredNeqMatch,   /* Same as EcsRulePredNeq but with fuzzy matching by name */
+    EcsRuleLookup,         /* Lookup relative to variable */
     EcsRuleSetVars,        /* Populate it.sources from variables */
     EcsRuleSetThis,        /* Populate This entity variable */
     EcsRuleSetFixed,       /* Set fixed source entity ids */
@@ -59913,6 +59916,7 @@ const char* flecs_rule_op_str(
     case EcsRulePredNeqName:  return "neq_nm  ";
     case EcsRulePredEqMatch:  return "eq_m    ";
     case EcsRulePredNeqMatch: return "neq_m   ";
+    case EcsRuleLookup:       return "lookup  ";
     case EcsRuleSetVars:      return "setvars ";
     case EcsRuleSetThis:      return "setthis ";
     case EcsRuleSetFixed:     return "setfix  ";
@@ -60142,6 +60146,13 @@ char* ecs_rule_str_w_profile(
                 ecs_strbuf_appendstr(&buf, "\"#[reset]");
                 break;
             }
+            case EcsRuleLookup: {
+                ecs_var_id_t src_id = op->src.var;
+                ecs_strbuf_appendstr(&buf, ", #[yellow]\"");
+                ecs_strbuf_appendstr(&buf, rule->vars[src_id].lookup);
+                ecs_strbuf_appendstr(&buf, "\"#[reset]");
+                break;
+            }
             default:
                 break;
             }
@@ -60289,6 +60300,7 @@ static bool flecs_rule_op_is_test[] = {
     [EcsRuleTrav] = true,
     [EcsRuleContain] = true,
     [EcsRulePairEq] = true,
+    [EcsRuleLookup] = true,
     [EcsRuleNothing] = false
 };
 
@@ -60532,6 +60544,14 @@ ecs_var_id_t flecs_rule_add_var(
     ecs_vec_t *vars,
     ecs_var_kind_t kind)
 {
+    const char *dot = NULL;
+    if (name) {
+        dot = strchr(name, '.');
+        if (dot) {
+            kind = EcsVarEntity; /* lookup variables are always entities */
+        }
+    }
+
     ecs_hashmap_t *var_index = NULL;
     ecs_var_id_t var_id = EcsVarNone;
     if (name) {
@@ -60567,28 +60587,38 @@ ecs_var_id_t flecs_rule_add_var(
     }
 
     ecs_rule_var_t *var;
+    ecs_var_id_t result;
     if (vars) {
         var = ecs_vec_append_t(NULL, vars, ecs_rule_var_t);
-        var->id = flecs_itovar(ecs_vec_count(vars));
+        result = var->id = flecs_itovar(ecs_vec_count(vars));
     } else {
-        ecs_dbg_assert(rule->var_count < rule->var_size, ECS_INTERNAL_ERROR, NULL);
+        ecs_dbg_assert(rule->var_count < rule->var_size, 
+            ECS_INTERNAL_ERROR, NULL);
         var = &rule->vars[rule->var_count];
-        var->id = flecs_itovar(rule->var_count);
+        result = var->id = flecs_itovar(rule->var_count);
         rule->var_count ++;
     }
 
     var->kind = flecs_ito(int8_t, kind);
     var->name = name;
     var->table_id = var_id;
+    var->base_id = 0;
+    var->lookup = NULL;
     flecs_set_var_label(var, NULL);
 
     if (name) {
         flecs_name_index_init_if(var_index, NULL);
         flecs_name_index_ensure(var_index, var->id, name, 0, 0);
-        var->anonymous = name ? name[0] == '_' : false;
+        var->anonymous = name[0] == '_';
+
+        /* Handle variables that require a by-name lookup, e.g. $this.wheel */
+        if (dot != NULL) {
+            ecs_assert(var->table_id == EcsVarNone, ECS_INTERNAL_ERROR, NULL);
+            var->lookup = dot + 1;
+        }
     }
 
-    return var->id;
+    return result;
 }
 
 static
@@ -60681,9 +60711,10 @@ void flecs_rule_discover_vars(
                     ecs_rule_var_t *var = ecs_vec_get_t(
                         vars, ecs_rule_var_t, (int32_t)var_id - 1);
                     ecs_assert(var != NULL, ECS_INTERNAL_ERROR, NULL);
-                    var->kind = EcsVarAny;
-
-                    anonymous_table_count ++;
+                    if (!var->lookup) {
+                        var->kind = EcsVarAny;
+                        anonymous_table_count ++;
+                    }
                 }
 
                 if (var_id != EcsVarNone) {
@@ -60754,6 +60785,45 @@ void flecs_rule_discover_vars(
 
         var_count = ecs_vec_count(vars);
     }
+
+    /* Ensure lookup variables have table and/or entity variables */
+    for (i = 0; i < var_count; i ++) {
+        ecs_rule_var_t *var = ecs_vec_get_t(vars, ecs_rule_var_t, i);
+        if (var->lookup) {
+            char *var_name = ecs_os_strdup(var->name);
+            var_name[var->lookup - var->name - 1] = '\0';
+
+            ecs_var_id_t base_table_id = flecs_rule_find_var_id(
+                rule, var_name, EcsVarTable);
+            if (base_table_id != EcsVarNone) {
+                var->table_id = base_table_id;
+            }
+
+            ecs_var_id_t base_entity_id = flecs_rule_find_var_id(
+                rule, var_name, EcsVarEntity);
+            if (base_entity_id == EcsVarNone) {
+                /* Get name from table var (must exist). We can't use allocated
+                 * name since variables don't own names. */
+                const char *base_name = NULL;
+                if (base_table_id) {
+                    ecs_rule_var_t *base_table_var = ecs_vec_get_t(
+                        vars, ecs_rule_var_t, (int32_t)base_table_id - 1);
+                    base_name = base_table_var->name;
+                } else {
+                    base_name = EcsThisName;
+                }
+
+                base_entity_id = flecs_rule_add_var(
+                    rule, base_name, vars, EcsVarEntity);
+                var = ecs_vec_get_t(vars, ecs_rule_var_t, i);
+            }
+
+            var->base_id = base_entity_id;
+
+            ecs_os_free(var_name);
+        }
+    }
+    var_count = ecs_vec_count(vars);
 
     /* Always include spot for This variable, even if rule doesn't use it */
     var_count ++;
@@ -60827,8 +60897,16 @@ ecs_var_id_t flecs_rule_most_specific_var(
 
     /* If table var is written, and entity var doesn't exist or is not written,
      * return table var */
-    ecs_assert(tvar != EcsVarNone, ECS_INTERNAL_ERROR, NULL);
-    return tvar;
+    if (tvar != EcsVarNone) {
+        return tvar;
+    } else {
+        /* Lookup variables are resolved on the spot */
+        ecs_assert(evar != EcsVarNone, ECS_INTERNAL_ERROR, name);
+        ecs_rule_var_t *var = &rule->vars[evar];
+        ecs_assert(var->lookup != NULL, ECS_INTERNAL_ERROR, NULL);
+        (void)var;
+        return evar;
+    }
 }
 
 static
@@ -61215,6 +61293,24 @@ void flecs_rule_insert_each(
 }
 
 static
+void flecs_rule_insert_lookup(
+    ecs_var_id_t base_var,
+    ecs_var_id_t evar,
+    ecs_rule_compile_ctx_t *ctx,
+    bool cond_write)
+{
+    ecs_rule_op_t lookup = {0};
+    lookup.kind = EcsRuleLookup;
+    lookup.src.var = evar;
+    lookup.first.var = base_var;
+    lookup.flags = (EcsRuleIsVar << EcsRuleSrc) | 
+                 (EcsRuleIsVar << EcsRuleFirst);
+    flecs_rule_write_ctx(evar, ctx, cond_write);
+    flecs_rule_write(evar, &lookup.written);
+    flecs_rule_op_insert(&lookup, ctx);
+}
+
+static
 void flecs_rule_insert_unconstrained_transitive(
     ecs_rule_t *rule,
     ecs_rule_op_t *op,
@@ -61335,13 +61431,14 @@ void flecs_rule_compile_term_id(
 }
 
 static
-bool flecs_rule_compile_ensure_vars(
+int flecs_rule_compile_ensure_vars(
     ecs_rule_t *rule,
     ecs_rule_op_t *op,
     ecs_rule_ref_t *ref,
     ecs_flags16_t ref_kind,
     ecs_rule_compile_ctx_t *ctx,
-    bool cond_write)
+    bool cond_write,
+    bool *written_out)
 {
     ecs_flags16_t flags = flecs_rule_ref_flags(op->flags, ref_kind);
     bool written = false;
@@ -61349,16 +61446,40 @@ bool flecs_rule_compile_ensure_vars(
     if (flags & EcsRuleIsVar) {
         ecs_var_id_t var_id = ref->var;
         ecs_rule_var_t *var = &rule->vars[var_id];
-        if (var->kind == EcsVarEntity && !flecs_rule_is_written(var_id, ctx->written)) {
+
+        if (var->kind == EcsVarEntity && 
+            !flecs_rule_is_written(var_id, ctx->written)) 
+        {
             /* If entity variable is not yet written but a table variant exists
              * that has been written, insert each operation to translate from
              * entity variable to table */
             ecs_var_id_t tvar = var->table_id;
-            if ((tvar != EcsVarNone) && flecs_rule_is_written(tvar, ctx->written)) {
-                flecs_rule_insert_each(tvar, var_id, ctx, cond_write);
+            if ((tvar != EcsVarNone) && 
+                flecs_rule_is_written(tvar, ctx->written)) 
+            {
+                if (var->lookup) {
+                    if (!flecs_rule_is_written(tvar, ctx->written)) {
+                        ecs_err("dependent variable of '$%s' is not written", 
+                            var->name);
+                        return -1;
+                    }
+
+                    if (!flecs_rule_is_written(var->base_id, ctx->written)) {
+                        flecs_rule_insert_each(
+                            tvar, var->base_id, ctx, cond_write);
+                    }
+                } else {
+                    flecs_rule_insert_each(tvar, var_id, ctx, cond_write);
+                }
 
                 /* Variable was written, just not as entity */
                 written = true;
+            } else if (var->lookup) {
+                if (!flecs_rule_is_written(var->base_id, ctx->written)) {
+                    ecs_err("dependent variable of '$%s' is not written", 
+                        var->name);
+                    return -1;
+                }
             }
         }
 
@@ -61372,7 +61493,27 @@ bool flecs_rule_compile_ensure_vars(
         written = true;
     }
 
-    return written;
+    if (written_out) {
+        *written_out = written;
+    }
+
+    return 0;
+}
+
+static
+bool flecs_rule_compile_lookup(
+    ecs_rule_t *rule,
+    ecs_var_id_t var_id,
+    ecs_rule_compile_ctx_t *ctx,
+    bool cond_write) 
+{
+    ecs_rule_var_t *var = &rule->vars[var_id];
+    if (var->lookup) {
+        flecs_rule_insert_lookup(var->base_id, var_id, ctx, cond_write);
+        return true;
+    } else {
+        return false;
+    }
 }
 
 static
@@ -61586,10 +61727,17 @@ int flecs_rule_compile_term(
     if (second_is_var) second_var = op.second.var;
 
     /* Insert each instructions for table -> entity variable if needed */
-    bool first_written = flecs_rule_compile_ensure_vars(
-        rule, &op, &op.first, EcsRuleFirst, ctx, cond_write);
-    bool second_written = flecs_rule_compile_ensure_vars(
-        rule, &op, &op.second, EcsRuleSecond, ctx, cond_write);
+    bool first_written, second_written;
+    if (flecs_rule_compile_ensure_vars(
+        rule, &op, &op.first, EcsRuleFirst, ctx, cond_write, &first_written)) 
+    {
+        goto error;    
+    }
+    if (flecs_rule_compile_ensure_vars(
+        rule, &op, &op.second, EcsRuleSecond, ctx, cond_write, &second_written))
+    {
+        goto error;
+    }
 
     /* Do src last, in case it uses the same variable as first/second */
     flecs_rule_compile_term_id(world, rule, &op, &term->src, 
@@ -61648,7 +61796,11 @@ int flecs_rule_compile_term(
         }
     }
 
-    flecs_rule_compile_ensure_vars(rule, &op, &op.src, EcsRuleSrc, ctx, cond_write);
+    if (flecs_rule_compile_ensure_vars(
+        rule, &op, &op.src, EcsRuleSrc, ctx, cond_write, NULL)) 
+    {
+        goto error;
+    }
 
     /* If source is Any (_) and first and/or second are unconstrained, insert an
      * ids instruction instead of an And */
@@ -61734,9 +61886,26 @@ int flecs_rule_compile_term(
         op.flags |= EcsRuleIsSelf;
     }
 
+    /* Insert instructions for lookup variables */
+    if (first_is_var) {
+        if (flecs_rule_compile_lookup(rule, first_var, ctx, cond_write)) {
+            write_state |= (1ull << first_var); // lookups are resolved inline
+        }
+    }
+    if (src_is_var) {
+        if (flecs_rule_compile_lookup(rule, src_var, ctx, cond_write)) {
+            write_state |= (1ull << src_var); // lookups are resolved inline
+        }
+    }
+    if (second_is_var) {
+        if (flecs_rule_compile_lookup(rule, second_var, ctx, cond_write)) {
+            write_state |= (1ull << second_var); // lookups are resolved inline
+        }
+    }
+
     if (builtin_pred) {
         if (flecs_rule_compile_builtin_pred(term, &op, write_state)) {
-            return -1;
+            goto error;
         }
     }
 
@@ -61793,6 +61962,8 @@ int flecs_rule_compile_term(
     }
 
     return 0;
+error:
+    return -1;
 }
 
 int flecs_rule_compile(
@@ -63409,6 +63580,32 @@ bool flecs_rule_pred_neq_name(
 }
 
 static
+bool flecs_rule_lookup(
+    const ecs_rule_op_t *op,
+    bool redo,
+    ecs_rule_run_ctx_t *ctx)
+{
+    if (redo) {
+        return false;
+    }
+
+    const ecs_rule_t *rule = ctx->rule;
+    ecs_entity_t first = flecs_rule_var_get_entity(op->first.var, ctx);
+    ecs_rule_var_t *var = &rule->vars[op->src.var];
+
+    ecs_entity_t result = ecs_lookup_path_w_sep(ctx->world, first, var->lookup,
+        NULL, NULL, false);
+    if (!result) {
+        flecs_rule_var_set_entity(op, op->src.var, EcsWildcard, ctx);
+        return false;
+    }
+
+    flecs_rule_var_set_entity(op, op->src.var, result, ctx);
+
+    return true;
+}
+
+static
 bool flecs_rule_setvars(
     const ecs_rule_op_t *op,
     bool redo,
@@ -63646,6 +63843,7 @@ bool flecs_rule_run(
     case EcsRulePredNeqName: return flecs_rule_pred_neq_name(op, redo, ctx);
     case EcsRulePredEqMatch: return flecs_rule_pred_eq_match(op, redo, ctx);
     case EcsRulePredNeqMatch: return flecs_rule_pred_neq_match(op, redo, ctx);
+    case EcsRuleLookup: return flecs_rule_lookup(op, redo, ctx);
     case EcsRuleSetVars: return flecs_rule_setvars(op, redo, ctx);
     case EcsRuleSetThis: return flecs_rule_setthis(op, redo, ctx);
     case EcsRuleSetFixed: return flecs_rule_setfixed(op, redo, ctx);
@@ -63772,6 +63970,10 @@ bool ecs_rule_next_instanced(
             }
             flecs_iter_populate_data(ctx.world, it, range->table, range->offset,
                 range->count, it->ptrs);
+            if (!table && range->count == 1) {
+                it->count = 1;
+                it->entities = &rit->vars[0].entity;
+            }
             return true;
         }
     } while (next >= 0);

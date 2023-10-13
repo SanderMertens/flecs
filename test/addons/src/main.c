@@ -730,6 +730,7 @@ void RulesBasic_find_this_tgt_lowercase(void);
 void RulesBasic_find_this_tgt_uppercase(void);
 void RulesBasic_get_filter(void);
 void RulesBasic_iter_empty_source(void);
+void RulesBasic_this_var_w_empty_entity(void);
 
 // Testsuite 'RulesVariables'
 void RulesVariables_1_ent_src_w_var(void);
@@ -829,6 +830,29 @@ void RulesVariables_no_this_anonymous_src(void);
 void RulesVariables_no_this_anonymous_src_w_pair(void);
 void RulesVariables_no_this_anonymous_component_src(void);
 void RulesVariables_no_this_anonymous_component_src_w_pair(void);
+void RulesVariables_lookup_from_table_this(void);
+void RulesVariables_lookup_from_entity_this(void);
+void RulesVariables_lookup_from_table(void);
+void RulesVariables_lookup_from_entity(void);
+void RulesVariables_lookup_from_not_written(void);
+void RulesVariables_lookup_from_table_this_component(void);
+void RulesVariables_lookup_from_entity_this_component(void);
+void RulesVariables_lookup_from_table_component(void);
+void RulesVariables_lookup_from_entity_component(void);
+void RulesVariables_lookup_from_table_two_children(void);
+void RulesVariables_lookup_from_entity_two_children(void);
+void RulesVariables_lookup_from_table_same_child_twice(void);
+void RulesVariables_lookup_from_entity_same_child_twice(void);
+void RulesVariables_lookup_from_table_not(void);
+void RulesVariables_lookup_from_entity_not(void);
+void RulesVariables_lookup_from_table_w_any_component(void);
+void RulesVariables_lookup_from_entity_w_any_component(void);
+void RulesVariables_lookup_as_tag(void);
+void RulesVariables_lookup_as_relationship(void);
+void RulesVariables_lookup_as_target(void);
+void RulesVariables_lookup_assign_var(void);
+void RulesVariables_lookup_eq_var(void);
+void RulesVariables_lookup_neq_var(void);
 
 // Testsuite 'RulesOperators'
 void RulesOperators_2_and_not(void);
@@ -4417,6 +4441,10 @@ bake_test_case RulesBasic_testcases[] = {
     {
         "iter_empty_source",
         RulesBasic_iter_empty_source
+    },
+    {
+        "this_var_w_empty_entity",
+        RulesBasic_this_var_w_empty_entity
     }
 };
 
@@ -4808,6 +4836,98 @@ bake_test_case RulesVariables_testcases[] = {
     {
         "no_this_anonymous_component_src_w_pair",
         RulesVariables_no_this_anonymous_component_src_w_pair
+    },
+    {
+        "lookup_from_table_this",
+        RulesVariables_lookup_from_table_this
+    },
+    {
+        "lookup_from_entity_this",
+        RulesVariables_lookup_from_entity_this
+    },
+    {
+        "lookup_from_table",
+        RulesVariables_lookup_from_table
+    },
+    {
+        "lookup_from_entity",
+        RulesVariables_lookup_from_entity
+    },
+    {
+        "lookup_from_not_written",
+        RulesVariables_lookup_from_not_written
+    },
+    {
+        "lookup_from_table_this_component",
+        RulesVariables_lookup_from_table_this_component
+    },
+    {
+        "lookup_from_entity_this_component",
+        RulesVariables_lookup_from_entity_this_component
+    },
+    {
+        "lookup_from_table_component",
+        RulesVariables_lookup_from_table_component
+    },
+    {
+        "lookup_from_entity_component",
+        RulesVariables_lookup_from_entity_component
+    },
+    {
+        "lookup_from_table_two_children",
+        RulesVariables_lookup_from_table_two_children
+    },
+    {
+        "lookup_from_entity_two_children",
+        RulesVariables_lookup_from_entity_two_children
+    },
+    {
+        "lookup_from_table_same_child_twice",
+        RulesVariables_lookup_from_table_same_child_twice
+    },
+    {
+        "lookup_from_entity_same_child_twice",
+        RulesVariables_lookup_from_entity_same_child_twice
+    },
+    {
+        "lookup_from_table_not",
+        RulesVariables_lookup_from_table_not
+    },
+    {
+        "lookup_from_entity_not",
+        RulesVariables_lookup_from_entity_not
+    },
+    {
+        "lookup_from_table_w_any_component",
+        RulesVariables_lookup_from_table_w_any_component
+    },
+    {
+        "lookup_from_entity_w_any_component",
+        RulesVariables_lookup_from_entity_w_any_component
+    },
+    {
+        "lookup_as_tag",
+        RulesVariables_lookup_as_tag
+    },
+    {
+        "lookup_as_relationship",
+        RulesVariables_lookup_as_relationship
+    },
+    {
+        "lookup_as_target",
+        RulesVariables_lookup_as_target
+    },
+    {
+        "lookup_assign_var",
+        RulesVariables_lookup_assign_var
+    },
+    {
+        "lookup_eq_var",
+        RulesVariables_lookup_eq_var
+    },
+    {
+        "lookup_neq_var",
+        RulesVariables_lookup_neq_var
     }
 };
 
@@ -7591,14 +7711,14 @@ static bake_test_suite suites[] = {
         "RulesBasic",
         NULL,
         NULL,
-        89,
+        90,
         RulesBasic_testcases
     },
     {
         "RulesVariables",
         NULL,
         NULL,
-        97,
+        120,
         RulesVariables_testcases
     },
     {

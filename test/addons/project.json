@@ -744,7 +744,8 @@
                 "find_this_tgt_lowercase",
                 "find_this_tgt_uppercase",
                 "get_filter",
-                "iter_empty_source"
+                "iter_empty_source",
+                "this_var_w_empty_entity"
             ]
         }, {
             "id": "RulesVariables",
@@ -845,7 +846,30 @@
                 "no_this_anonymous_src",
                 "no_this_anonymous_src_w_pair",
                 "no_this_anonymous_component_src",
-                "no_this_anonymous_component_src_w_pair"
+                "no_this_anonymous_component_src_w_pair",
+                "lookup_from_table_this",
+                "lookup_from_entity_this",
+                "lookup_from_table",
+                "lookup_from_entity",
+                "lookup_from_not_written",
+                "lookup_from_table_this_component",
+                "lookup_from_entity_this_component",
+                "lookup_from_table_component",
+                "lookup_from_entity_component",
+                "lookup_from_table_two_children",
+                "lookup_from_entity_two_children",
+                "lookup_from_table_same_child_twice",
+                "lookup_from_entity_same_child_twice",
+                "lookup_from_table_not",
+                "lookup_from_entity_not",
+                "lookup_from_table_w_any_component",
+                "lookup_from_entity_w_any_component",
+                "lookup_as_tag",
+                "lookup_as_relationship",
+                "lookup_as_target",
+                "lookup_assign_var",
+                "lookup_eq_var",
+                "lookup_neq_var"
             ]
         }, {
             "id": "RulesOperators",

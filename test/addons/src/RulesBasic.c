@@ -3977,3 +3977,30 @@ void RulesBasic_iter_empty_source(void) {
 
     ecs_fini(world);
 }
+
+void RulesBasic_this_var_w_empty_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t t = ecs_new_id(world);
+    ecs_entity_t e = ecs_new_w_pair(world, Rel, t);
+
+    ecs_rule_t *r = ecs_rule(world, { .expr = "Rel($x, $this)"});
+    test_assert(r != NULL);
+
+    int x_var = ecs_rule_find_var(r, "x");
+    test_assert(x_var != -1);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(true, ecs_rule_next(&it));
+    test_uint(1, it.count);
+    test_uint(t, it.entities[0]);
+    test_uint(ecs_pair(Rel, t), ecs_field_id(&it, 1));
+    test_uint(e, ecs_iter_get_var(&it, x_var));
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}

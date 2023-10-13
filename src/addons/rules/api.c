@@ -42,6 +42,7 @@ const char* flecs_rule_op_str(
     case EcsRulePredNeqName:  return "neq_nm  ";
     case EcsRulePredEqMatch:  return "eq_m    ";
     case EcsRulePredNeqMatch: return "neq_m   ";
+    case EcsRuleLookup:       return "lookup  ";
     case EcsRuleSetVars:      return "setvars ";
     case EcsRuleSetThis:      return "setthis ";
     case EcsRuleSetFixed:     return "setfix  ";
@@ -268,6 +269,13 @@ char* ecs_rule_str_w_profile(
                 int8_t term_index = op->term_index;
                 ecs_strbuf_appendstr(&buf, ", #[yellow]\"");
                 ecs_strbuf_appendstr(&buf, rule->filter.terms[term_index].second.name);
+                ecs_strbuf_appendstr(&buf, "\"#[reset]");
+                break;
+            }
+            case EcsRuleLookup: {
+                ecs_var_id_t src_id = op->src.var;
+                ecs_strbuf_appendstr(&buf, ", #[yellow]\"");
+                ecs_strbuf_appendstr(&buf, rule->vars[src_id].lookup);
                 ecs_strbuf_appendstr(&buf, "\"#[reset]");
                 break;
             }

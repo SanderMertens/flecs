@@ -23,11 +23,13 @@ typedef enum {
 } ecs_var_kind_t;
 
 typedef struct ecs_rule_var_t {
-    int8_t kind;           /* variable kind (EcsVarEntity or EcsVarTable)*/
+    int8_t kind;           /* variable kind (EcsVarEntity or EcsVarTable) */
     bool anonymous;        /* variable is anonymous */
     ecs_var_id_t id;       /* variable id */
     ecs_var_id_t table_id; /* id to table variable, if any */
+    ecs_var_id_t base_id;  /* id to base entity variable, for lookups */
     const char *name;      /* variable name */
+    const char *lookup;    /* Lookup string for variable */
 #ifdef FLECS_DEBUG
     const char *label;     /* for debugging */
 #endif
@@ -54,6 +56,7 @@ typedef enum {
     EcsRulePredNeqName,    /* Same as EcsRulePredNeq but with matching by name */
     EcsRulePredEqMatch,    /* Same as EcsRulePredEq but with fuzzy matching by name */
     EcsRulePredNeqMatch,   /* Same as EcsRulePredNeq but with fuzzy matching by name */
+    EcsRuleLookup,         /* Lookup relative to variable */
     EcsRuleSetVars,        /* Populate it.sources from variables */
     EcsRuleSetThis,        /* Populate This entity variable */
     EcsRuleSetFixed,       /* Set fixed source entity ids */
