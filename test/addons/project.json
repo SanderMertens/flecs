@@ -190,6 +190,7 @@
                 "this_obj_no_name",
                 "auto_object_variable",
                 "auto_object_variable_w_subj",
+                "auto_scoped_variable",
                 "invalid_variable_only",
                 "oneof_self_pred_w_relative_obj",
                 "oneof_other_pred_w_relative_obj",

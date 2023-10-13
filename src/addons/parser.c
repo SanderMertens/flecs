@@ -1012,7 +1012,14 @@ char* ecs_parse_term(
                 term->src.flags |= EcsIsVariable;
             }
 
-            term->second.name = ecs_os_strdup(term->first.name);
+            const char *var_name = strrchr(term->first.name, '.');
+            if (var_name) {
+                var_name ++;
+            } else {
+                var_name = term->first.name;
+            }
+
+            term->second.name = ecs_os_strdup(var_name);
             term->second.flags |= EcsIsVariable;
         }
     }

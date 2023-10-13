@@ -1792,19 +1792,16 @@ ecs_poly_t* ecs_poly_get_(
 
 /* Utilities for testing/asserting an object type */
 #ifndef FLECS_NDEBUG
-void* ecs_poly_assert_(
-    const ecs_poly_t *object,
-    int32_t type,
-    const char *file,
-    int32_t line);
-
-#define ecs_poly_assert(object, type)\
-    ecs_poly_assert_(object, type##_magic, __FILE__, __LINE__)
-
-#define ecs_poly(object, T) ((T*)ecs_poly_assert(object, T))
+#define ecs_poly_assert(object, ty)\
+    do {\
+        ecs_assert(object != NULL, ECS_INVALID_PARAMETER, NULL);\
+        const ecs_header_t *hdr = (const ecs_header_t *)object;\
+        const char *type_name = hdr->mixins->type_name;\
+        ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER, type_name);\
+        ecs_assert(hdr->type == ty##_magic, ECS_INVALID_PARAMETER, type_name);\
+    } while (0)
 #else
-#define ecs_poly_assert(object, type)
-#define ecs_poly(object, T) ((T*)object)
+#define ecs_poly_assert(object, ty)
 #endif
 
 /* Utility functions for getting a mixin from an object */
@@ -16273,7 +16270,8 @@ ecs_entity_t ecs_observer_init(
                 ecs_get_name(world, entity));
         }
     } else {
-        ecs_observer_t *observer = ecs_poly(poly->poly, ecs_observer_t);
+        ecs_poly_assert(poly->poly, ecs_observer_t);
+        ecs_observer_t *observer = (ecs_observer_t*)poly->poly;
 
         if (desc->run) {
             observer->run = desc->run;
@@ -17089,27 +17087,6 @@ ecs_poly_t* ecs_poly_get_(
     }
     return NULL;
 }
-
-#ifndef FLECS_NDEBUG
-#define assert_object(cond, file, line, type_name)\
-    ecs_assert_((cond), ECS_INVALID_PARAMETER, #cond, file, line, type_name);\
-    assert(cond)
-
-void* ecs_poly_assert_(
-    const ecs_poly_t *poly,
-    int32_t type,
-    const char *file,
-    int32_t line)
-{
-    assert_object(poly != NULL, file, line, 0);
-    
-    const ecs_header_t *hdr = poly;
-    const char *type_name = hdr->mixins->type_name;
-    assert_object(hdr->magic == ECS_OBJECT_MAGIC, file, line, type_name);
-    assert_object(hdr->type == type, file, line, type_name);
-    return ECS_CONST_CAST(ecs_poly_t*, poly);
-}
-#endif
 
 bool ecs_poly_is_(
     const ecs_poly_t *poly,
@@ -27512,8 +27489,7 @@ void ecs_abort_(
     ecs_os_api.log_last_error_ = err;
 }
 
-bool ecs_assert_(
-    bool condition,
+void ecs_assert_log_(
     int32_t err,
     const char *cond_str,
     const char *file,
@@ -27521,23 +27497,19 @@ bool ecs_assert_(
     const char *fmt,
     ...)
 {
-    if (!condition) {
-        if (fmt) {
-            va_list args;
-            va_start(args, fmt);
-            char *msg = ecs_vasprintf(fmt, args);
-            va_end(args);            
-            ecs_fatal_(file, line, "assert: %s %s (%s)", 
-                cond_str, msg, ecs_strerror(err));
-            ecs_os_free(msg);
-        } else {
-            ecs_fatal_(file, line, "assert: %s %s", 
-                cond_str, ecs_strerror(err));
-        }
-        ecs_os_api.log_last_error_ = err;
+    if (fmt) {
+        va_list args;
+        va_start(args, fmt);
+        char *msg = ecs_vasprintf(fmt, args);
+        va_end(args);
+        ecs_fatal_(file, line, "assert: %s %s (%s)",
+            cond_str, msg, ecs_strerror(err));
+        ecs_os_free(msg);
+    } else {
+        ecs_fatal_(file, line, "assert: %s %s",
+            cond_str, ecs_strerror(err));
     }
-
-    return condition;
+    ecs_os_api.log_last_error_ = err;
 }
 
 void ecs_deprecated_(
@@ -27670,8 +27642,7 @@ void ecs_abort_(
     (void)fmt;
 }
 
-bool ecs_assert_(
-    bool condition,
+void ecs_assert_log_(
     int32_t error_code,
     const char *condition_str,
     const char *file,
@@ -27679,13 +27650,11 @@ bool ecs_assert_(
     const char *fmt,
     ...)
 {
-    (void)condition;
     (void)error_code;
     (void)condition_str;
     (void)file;
     (void)line;
     (void)fmt;
-    return true;
 }
 
 #endif
@@ -31128,7 +31097,14 @@ char* ecs_parse_term(
                 term->src.flags |= EcsIsVariable;
             }
 
-            term->second.name = ecs_os_strdup(term->first.name);
+            const char *var_name = strrchr(term->first.name, '.');
+            if (var_name) {
+                var_name ++;
+            } else {
+                var_name = term->first.name;
+            }
+
+            term->second.name = ecs_os_strdup(var_name);
             term->second.flags |= EcsIsVariable;
         }
     }
@@ -58611,7 +58587,8 @@ bool flecs_pipeline_build(
 
         int32_t i;
         for (i = 0; i < it.count; i ++) {
-            ecs_system_t *sys = ecs_poly(poly[i].poly, ecs_system_t);
+            ecs_poly_assert(poly[i].poly, ecs_system_t);
+            ecs_system_t *sys = (ecs_system_t*)poly[i].poly;
             ecs_query_t *q = sys->query;
 
             bool needs_merge = false;
@@ -58717,8 +58694,8 @@ bool flecs_pipeline_build(
         for (i = 0; i < count; i ++) {
             ecs_entity_t system = systems[i];
             const EcsPoly *poly = ecs_get_pair(world, system, EcsPoly, EcsSystem);
-            ecs_assert(poly != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_system_t *sys = ecs_poly(poly->poly, ecs_system_t);
+            ecs_poly_assert(poly->poly, ecs_system_t);
+            ecs_system_t *sys = (ecs_system_t*)poly->poly;
 
 #ifdef FLECS_LOG_1
             char *path = ecs_get_fullpath(world, system);
@@ -58876,8 +58853,8 @@ int32_t flecs_run_pipeline_ops(
     for (; i < count; i++) {
         ecs_entity_t system = systems[i];
         const EcsPoly* poly = ecs_get_pair(world, system, EcsPoly, EcsSystem);
-        ecs_assert(poly != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_system_t* sys = ecs_poly(poly->poly, ecs_system_t);
+        ecs_poly_assert(poly->poly, ecs_system_t);
+        ecs_system_t* sys = (ecs_system_t*)poly->poly;
 
         /* Keep track of the last frame for which the system has ran, so we
         * know from where to resume the schedule in case the schedule
@@ -64565,7 +64542,8 @@ ecs_entity_t ecs_system_init(
 
         ecs_defer_end(world);            
     } else {
-        ecs_system_t *system = ecs_poly(poly->poly, ecs_system_t);
+        ecs_poly_assert(poly->poly, ecs_system_t);
+        ecs_system_t *system = (ecs_system_t*)poly->poly;
 
         if (desc->run) {
             system->run = desc->run;

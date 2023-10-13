@@ -4379,6 +4379,32 @@ void Parser_auto_object_variable_w_subj(void) {
     ecs_fini(world);
 }
 
+void Parser_auto_scoped_variable(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t Pred = ecs_entity(world, {
+        .name = "foo.Pred"
+    });
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "$(foo.Pred)"
+    }));
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
+    test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
+    test_second_var(terms[0], 0, EcsSelf, "Pred");
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
 void Parser_invalid_variable_only(void) {
     ecs_log_set_level(-4);
     
@@ -5505,3 +5531,4 @@ void Parser_pair_3_args_2_terms(void) {
 
     ecs_fini(world);
 }
+
