@@ -1185,6 +1185,10 @@ void Misc_member_metric_w_custom_name(void);
 void Misc_dotmember_metric(void);
 void Misc_counter_id_metric(void);
 void Misc_counter_target_metric(void);
+void Misc_member_metric_w_pair_R_T(void);
+void Misc_member_metric_w_pair_R_t(void);
+void Misc_member_metric_w_pair_r_t(void);
+void Misc_member_metric_w_pair_r_T(void);
 void Misc_alert(void);
 void Misc_alert_w_message(void);
 void Misc_alert_w_brief(void);
@@ -5885,6 +5889,22 @@ bake_test_case Misc_testcases[] = {
         Misc_counter_target_metric
     },
     {
+        "member_metric_w_pair_R_T",
+        Misc_member_metric_w_pair_R_T
+    },
+    {
+        "member_metric_w_pair_R_t",
+        Misc_member_metric_w_pair_R_t
+    },
+    {
+        "member_metric_w_pair_r_t",
+        Misc_member_metric_w_pair_r_t
+    },
+    {
+        "member_metric_w_pair_r_T",
+        Misc_member_metric_w_pair_r_T
+    },
+    {
         "alert",
         Misc_alert
     },
@@ -6512,7 +6532,7 @@ static bake_test_suite suites[] = {
         "Misc",
         Misc_setup,
         NULL,
-        48,
+        52,
         Misc_testcases
     },
     {

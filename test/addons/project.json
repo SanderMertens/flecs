@@ -1614,7 +1614,13 @@
                 "metric_instance_has_doc_name",
                 "metric_nested_member",
                 "metric_nested_member_counter",
-                "metric_nested_member_counter_increment"
+                "metric_nested_member_counter_increment",
+                "id_w_member_same_type",
+                "id_w_member_mismatching_type",
+                "pair_member_rel_type",
+                "pair_member_tgt_type",
+                "pair_dotmember_rel_type",
+                "pair_dotmember_tgt_type"
             ]
         }, {
             "id": "Alerts",

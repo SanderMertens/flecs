@@ -59,6 +59,11 @@ struct metric_builder {
         return id(_::cpp_type<First>::id(m_world), second);
     }
 
+    template <typename Second>
+    metric_builder& id_second(flecs::entity_t first) {
+        return id(first, _::cpp_type<Second>::id(m_world));
+    }
+
     template <typename First, typename Second>
     metric_builder& id() {
         return id<First>(_::cpp_type<Second>::id(m_world));

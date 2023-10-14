@@ -1544,6 +1544,12 @@ void Metrics_metric_instance_has_doc_name(void);
 void Metrics_metric_nested_member(void);
 void Metrics_metric_nested_member_counter(void);
 void Metrics_metric_nested_member_counter_increment(void);
+void Metrics_id_w_member_same_type(void);
+void Metrics_id_w_member_mismatching_type(void);
+void Metrics_pair_member_rel_type(void);
+void Metrics_pair_member_tgt_type(void);
+void Metrics_pair_dotmember_rel_type(void);
+void Metrics_pair_dotmember_tgt_type(void);
 
 // Testsuite 'Alerts'
 void Alerts_one_active_alert(void);
@@ -7526,6 +7532,30 @@ bake_test_case Metrics_testcases[] = {
     {
         "metric_nested_member_counter_increment",
         Metrics_metric_nested_member_counter_increment
+    },
+    {
+        "id_w_member_same_type",
+        Metrics_id_w_member_same_type
+    },
+    {
+        "id_w_member_mismatching_type",
+        Metrics_id_w_member_mismatching_type
+    },
+    {
+        "pair_member_rel_type",
+        Metrics_pair_member_rel_type
+    },
+    {
+        "pair_member_tgt_type",
+        Metrics_pair_member_tgt_type
+    },
+    {
+        "pair_dotmember_rel_type",
+        Metrics_pair_dotmember_rel_type
+    },
+    {
+        "pair_dotmember_tgt_type",
+        Metrics_pair_dotmember_tgt_type
     }
 };
 
@@ -7912,7 +7942,7 @@ static bake_test_suite suites[] = {
         "Metrics",
         NULL,
         NULL,
-        30,
+        36,
         Metrics_testcases
     },
     {

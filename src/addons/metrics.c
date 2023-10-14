@@ -430,7 +430,7 @@ int flecs_member_metric_init(
     ecs_entity_t metric,
     const ecs_metric_desc_t *desc)
 {
-    ecs_entity_t type = 0, member_type = 0, member = 0;
+    ecs_entity_t type = 0, member_type = 0, member = 0, id = 0;
     uintptr_t offset = 0;
 
     if (desc->dotmember) {
@@ -450,7 +450,9 @@ int flecs_member_metric_init(
             goto error;
         }
 
-        ecs_meta_cursor_t cur = ecs_meta_cursor(world, desc->id, NULL);
+        type = ecs_get_typeid(world, desc->id);
+
+        ecs_meta_cursor_t cur = ecs_meta_cursor(world, type, NULL);
         if (ecs_meta_push(&cur)) {
             char *metric_name = ecs_get_fullpath(world, metric);
             ecs_err("invalid type for metric '%s'", metric_name);
@@ -465,7 +467,7 @@ int flecs_member_metric_init(
             goto error;
         }
 
-        type = desc->id;
+        id = desc->id;
         member_type = ecs_meta_get_type(&cur);
         offset = (uintptr_t)ecs_meta_get_ptr(&cur);
         member = ecs_meta_get_member_id(&cur);
@@ -492,6 +494,22 @@ int flecs_member_metric_init(
             goto error;
         }
         
+        id = type;
+        if (desc->id) {
+            if (type != ecs_get_typeid(world, desc->id)) {
+                char *metric_name = ecs_get_fullpath(world, metric);
+                char *member_name = ecs_get_fullpath(world, desc->member);
+                char *id_name = ecs_get_fullpath(world, desc->id);
+                ecs_err("member '%s' for metric '%s' is not of type '%s'",
+                    member_name, metric_name, id_name);
+                ecs_os_free(id_name);
+                ecs_os_free(member_name);
+                ecs_os_free(metric_name);
+                goto error;
+            }
+            id = desc->id;
+        }
+
         member = desc->member;
         member_type = m->type;
         offset = flecs_ito(uintptr_t, m->offset);
@@ -539,7 +557,7 @@ int flecs_member_metric_init(
         .entity = metric,
         .events = { EcsOnAdd },
         .filter.terms[0] = {
-            .id = type,
+            .id = id,
             .src.flags = EcsSelf,
             .inout = EcsInOutNone
         },
@@ -747,10 +765,6 @@ ecs_entity_t ecs_metric_init(
     }
 
     if (desc->member || desc->dotmember) {
-        if (desc->id && desc->member) {
-            ecs_err("cannot specify both member and id for metric");
-            goto error;
-        }
         if (flecs_member_metric_init(world, result, desc)) {
             goto error;
         }
