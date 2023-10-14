@@ -18349,6 +18349,11 @@ struct metric_builder {
         return id(_::cpp_type<First>::id(m_world), second);
     }
 
+    template <typename Second>
+    metric_builder& id_second(flecs::entity_t first) {
+        return id(first, _::cpp_type<Second>::id(m_world));
+    }
+
     template <typename First, typename Second>
     metric_builder& id() {
         return id<First>(_::cpp_type<Second>::id(m_world));
@@ -30194,7 +30199,17 @@ inline metric_builder::~metric_builder() {
 }
 
 inline metric_builder& metric_builder::member(const char *name) {
-    return member(flecs::world(m_world).lookup(name));
+    flecs::entity m;
+    if (m_desc.id) {
+        flecs::entity_t type = ecs_get_typeid(m_world, m_desc.id);
+        m = flecs::entity(m_world, type).lookup(name);
+    } else {
+        m = flecs::world(m_world).lookup(name);
+    }
+    if (!m) {
+        flecs::log::err("member '%s' not found", name);
+    }
+    return member(m);
 }
 
 template <typename T>

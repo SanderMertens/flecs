@@ -1550,6 +1550,7 @@ void Metrics_pair_member_rel_type(void);
 void Metrics_pair_member_tgt_type(void);
 void Metrics_pair_dotmember_rel_type(void);
 void Metrics_pair_dotmember_tgt_type(void);
+void Metrics_pair_member_counter_increment(void);
 
 // Testsuite 'Alerts'
 void Alerts_one_active_alert(void);
@@ -7556,6 +7557,10 @@ bake_test_case Metrics_testcases[] = {
     {
         "pair_dotmember_tgt_type",
         Metrics_pair_dotmember_tgt_type
+    },
+    {
+        "pair_member_counter_increment",
+        Metrics_pair_member_counter_increment
     }
 };
 
@@ -7942,7 +7947,7 @@ static bake_test_suite suites[] = {
         "Metrics",
         NULL,
         NULL,
-        36,
+        37,
         Metrics_testcases
     },
     {

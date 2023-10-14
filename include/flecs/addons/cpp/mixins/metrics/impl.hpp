@@ -28,12 +28,17 @@ inline metric_builder::~metric_builder() {
 }
 
 inline metric_builder& metric_builder::member(const char *name) {
+    flecs::entity m;
     if (m_desc.id) {
         flecs::entity_t type = ecs_get_typeid(m_world, m_desc.id);
-        return member(flecs::entity(m_world, type).lookup(name));
+        m = flecs::entity(m_world, type).lookup(name);
     } else {
-        return member(flecs::world(m_world).lookup(name));
+        m = flecs::world(m_world).lookup(name);
     }
+    if (!m) {
+        flecs::log::err("member '%s' not found", name);
+    }
+    return member(m);
 }
 
 template <typename T>

@@ -1620,7 +1620,8 @@
                 "pair_member_rel_type",
                 "pair_member_tgt_type",
                 "pair_dotmember_rel_type",
-                "pair_dotmember_tgt_type"
+                "pair_dotmember_tgt_type",
+                "pair_member_counter_increment"
             ]
         }, {
             "id": "Alerts",
