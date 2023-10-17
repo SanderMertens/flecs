@@ -1195,6 +1195,10 @@ bool flecs_rule_pred_eq_w_range(
         /* left = unknown, right = known. Assign right-hand value to left */
         ecs_var_id_t l = first_var;
         ctx->vars[l].range = r;
+        if (r.count == 1) {
+            ctx->vars[l].entity = ecs_vec_get_t(&r.table->data.entities, 
+                ecs_entity_t, r.offset)[0];
+        }
         return true;
     } else {
         ecs_table_range_t l = flecs_rule_get_range(

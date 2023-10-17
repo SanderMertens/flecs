@@ -60891,11 +60891,6 @@ ecs_var_id_t flecs_rule_most_specific_var(
     if (tvar != EcsVarNone) {
         return tvar;
     } else {
-        /* Lookup variables are resolved on the spot */
-        ecs_assert(evar != EcsVarNone, ECS_INTERNAL_ERROR, name);
-        ecs_rule_var_t *var = &rule->vars[evar];
-        ecs_assert(var->lookup != NULL, ECS_INTERNAL_ERROR, NULL);
-        (void)var;
         return evar;
     }
 }
@@ -61650,13 +61645,6 @@ int flecs_rule_compile_term(
     bool cond_write = term->oper == EcsOptional || is_or;
     ecs_rule_op_t op = {0};
 
-    if (builtin_pred) {
-        if (term->second.id == EcsWildcard || term->second.id == EcsAny) {
-            /* Noop */
-            return 0;
-        }
-    }
-
     if (is_or && (first_term || term[-1].oper != EcsOr)) {
         ctx->ctrlflow->cond_written_or = ctx->cond_written;
         ctx->ctrlflow->in_or = true;
@@ -61677,9 +61665,16 @@ int flecs_rule_compile_term(
                 flecs_rule_end_not(&op, ctx, false);
             }
         } else {
-            /* Nothing to be done */
+            /* Noop */
         }
         return 0;
+    }
+
+    if (builtin_pred) {
+        if (term->second.id == EcsWildcard || term->second.id == EcsAny) {
+            /* Noop */
+            return 0;
+        }
     }
 
     /* Default instruction for And operators. If the source is fixed (like for
@@ -63323,6 +63318,10 @@ bool flecs_rule_pred_eq_w_range(
         /* left = unknown, right = known. Assign right-hand value to left */
         ecs_var_id_t l = first_var;
         ctx->vars[l].range = r;
+        if (r.count == 1) {
+            ctx->vars[l].entity = ecs_vec_get_t(&r.table->data.entities, 
+                ecs_entity_t, r.offset)[0];
+        }
         return true;
     } else {
         ecs_table_range_t l = flecs_rule_get_range(

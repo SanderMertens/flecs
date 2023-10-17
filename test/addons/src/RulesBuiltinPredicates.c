@@ -2838,3 +2838,28 @@ void RulesBuiltinPredicates_var_eq_any_after_write(void) {
 
     ecs_fini(world);
 }
+
+void RulesBuiltinPredicates_var_eq_after_var_0_src(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "$x(), $x == flecs"
+    });
+
+    test_assert(r != NULL);
+
+    int x_var = ecs_rule_find_var(r, "x");
+    test_assert(x_var != -1);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(EcsFlecs, ecs_iter_get_var(&it, x_var));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}

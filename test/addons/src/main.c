@@ -1125,6 +1125,7 @@ void RulesBuiltinPredicates_var_eq_wildcard(void);
 void RulesBuiltinPredicates_var_eq_any(void);
 void RulesBuiltinPredicates_var_eq_wildcard_after_write(void);
 void RulesBuiltinPredicates_var_eq_any_after_write(void);
+void RulesBuiltinPredicates_var_eq_after_var_0_src(void);
 
 // Testsuite 'RulesScopes'
 void RulesScopes_term_w_not_scope_1_term(void);
@@ -6003,6 +6004,10 @@ bake_test_case RulesBuiltinPredicates_testcases[] = {
     {
         "var_eq_any_after_write",
         RulesBuiltinPredicates_var_eq_any_after_write
+    },
+    {
+        "var_eq_after_var_0_src",
+        RulesBuiltinPredicates_var_eq_after_var_0_src
     }
 };
 
@@ -7813,7 +7818,7 @@ static bake_test_suite suites[] = {
         "RulesBuiltinPredicates",
         NULL,
         NULL,
-        69,
+        70,
         RulesBuiltinPredicates_testcases
     },
     {

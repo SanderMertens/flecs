@@ -1151,7 +1151,8 @@
                 "var_eq_wildcard",
                 "var_eq_any",
                 "var_eq_wildcard_after_write",
-                "var_eq_any_after_write"
+                "var_eq_any_after_write",
+                "var_eq_after_var_0_src"
             ]
         }, {
             "id": "RulesScopes",
