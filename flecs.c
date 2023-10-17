@@ -61650,6 +61650,13 @@ int flecs_rule_compile_term(
     bool cond_write = term->oper == EcsOptional || is_or;
     ecs_rule_op_t op = {0};
 
+    if (builtin_pred) {
+        if (term->second.id == EcsWildcard || term->second.id == EcsAny) {
+            /* Noop */
+            return 0;
+        }
+    }
+
     if (is_or && (first_term || term[-1].oper != EcsOr)) {
         ctx->ctrlflow->cond_written_or = ctx->cond_written;
         ctx->ctrlflow->in_or = true;

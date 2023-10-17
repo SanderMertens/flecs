@@ -2714,3 +2714,127 @@ void RulesBuiltinPredicates_unresolved_by_name(void) {
 
     ecs_fini(world);
 }
+
+void RulesBuiltinPredicates_var_eq_wildcard(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t tgt = ecs_new_id(world);
+    ecs_entity_t e = ecs_new_w_pair(world, Rel, tgt);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "$x == *, (Rel, $x)"
+    });
+
+    test_assert(r != NULL);
+
+    int x_var = ecs_rule_find_var(r, "x");
+    test_assert(x_var != -1);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(1, it.count);
+        test_uint(e, it.entities[0]);
+        test_uint(tgt, ecs_iter_get_var(&it, x_var));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesBuiltinPredicates_var_eq_any(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t tgt = ecs_new_id(world);
+    ecs_entity_t e = ecs_new_w_pair(world, Rel, tgt);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "$x == _, (Rel, $x)"
+    });
+
+    test_assert(r != NULL);
+
+    int x_var = ecs_rule_find_var(r, "x");
+    test_assert(x_var != -1);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(1, it.count);
+        test_uint(e, it.entities[0]);
+        test_uint(tgt, ecs_iter_get_var(&it, x_var));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesBuiltinPredicates_var_eq_wildcard_after_write(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t tgt = ecs_new_id(world);
+    ecs_entity_t e = ecs_new_w_pair(world, Rel, tgt);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "(Rel, $x), $x == *"
+    });
+
+    test_assert(r != NULL);
+
+    int x_var = ecs_rule_find_var(r, "x");
+    test_assert(x_var != -1);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(1, it.count);
+        test_uint(e, it.entities[0]);
+        test_uint(tgt, ecs_iter_get_var(&it, x_var));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesBuiltinPredicates_var_eq_any_after_write(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t tgt = ecs_new_id(world);
+    ecs_entity_t e = ecs_new_w_pair(world, Rel, tgt);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "(Rel, $x), $x == _"
+    });
+
+    test_assert(r != NULL);
+
+    int x_var = ecs_rule_find_var(r, "x");
+    test_assert(x_var != -1);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(1, it.count);
+        test_uint(e, it.entities[0]);
+        test_uint(tgt, ecs_iter_get_var(&it, x_var));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}

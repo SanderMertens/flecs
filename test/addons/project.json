@@ -1147,7 +1147,11 @@
                 "this_match_2_or_written",
                 "this_match_3_or",
                 "this_match_3_or_written",
-                "unresolved_by_name"
+                "unresolved_by_name",
+                "var_eq_wildcard",
+                "var_eq_any",
+                "var_eq_wildcard_after_write",
+                "var_eq_any_after_write"
             ]
         }, {
             "id": "RulesScopes",

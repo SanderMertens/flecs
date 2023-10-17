@@ -1121,6 +1121,10 @@ void RulesBuiltinPredicates_this_match_2_or_written(void);
 void RulesBuiltinPredicates_this_match_3_or(void);
 void RulesBuiltinPredicates_this_match_3_or_written(void);
 void RulesBuiltinPredicates_unresolved_by_name(void);
+void RulesBuiltinPredicates_var_eq_wildcard(void);
+void RulesBuiltinPredicates_var_eq_any(void);
+void RulesBuiltinPredicates_var_eq_wildcard_after_write(void);
+void RulesBuiltinPredicates_var_eq_any_after_write(void);
 
 // Testsuite 'RulesScopes'
 void RulesScopes_term_w_not_scope_1_term(void);
@@ -5983,6 +5987,22 @@ bake_test_case RulesBuiltinPredicates_testcases[] = {
     {
         "unresolved_by_name",
         RulesBuiltinPredicates_unresolved_by_name
+    },
+    {
+        "var_eq_wildcard",
+        RulesBuiltinPredicates_var_eq_wildcard
+    },
+    {
+        "var_eq_any",
+        RulesBuiltinPredicates_var_eq_any
+    },
+    {
+        "var_eq_wildcard_after_write",
+        RulesBuiltinPredicates_var_eq_wildcard_after_write
+    },
+    {
+        "var_eq_any_after_write",
+        RulesBuiltinPredicates_var_eq_any_after_write
     }
 };
 
@@ -7793,7 +7813,7 @@ static bake_test_suite suites[] = {
         "RulesBuiltinPredicates",
         NULL,
         NULL,
-        65,
+        69,
         RulesBuiltinPredicates_testcases
     },
     {
