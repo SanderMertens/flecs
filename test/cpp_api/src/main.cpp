@@ -754,6 +754,11 @@ void FilterBuilder_read_pair_component_name(void);
 void FilterBuilder_read_enum(void);
 void FilterBuilder_assign_after_init(void);
 void FilterBuilder_iter_w_stage(void);
+void FilterBuilder_with_t_inout(void);
+void FilterBuilder_with_T_inout(void);
+void FilterBuilder_with_R_T_inout(void);
+void FilterBuilder_with_R_t_inout(void);
+void FilterBuilder_with_r_t_inout(void);
 
 // Testsuite 'RuleBuilder'
 void RuleBuilder_1_type(void);
@@ -4232,6 +4237,26 @@ bake_test_case FilterBuilder_testcases[] = {
     {
         "iter_w_stage",
         FilterBuilder_iter_w_stage
+    },
+    {
+        "with_t_inout",
+        FilterBuilder_with_t_inout
+    },
+    {
+        "with_T_inout",
+        FilterBuilder_with_T_inout
+    },
+    {
+        "with_R_T_inout",
+        FilterBuilder_with_R_T_inout
+    },
+    {
+        "with_R_t_inout",
+        FilterBuilder_with_R_t_inout
+    },
+    {
+        "with_r_t_inout",
+        FilterBuilder_with_r_t_inout
     }
 };
 
@@ -6441,7 +6466,7 @@ static bake_test_suite suites[] = {
         "FilterBuilder",
         NULL,
         NULL,
-        108,
+        113,
         FilterBuilder_testcases
     },
     {

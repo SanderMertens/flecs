@@ -27501,17 +27501,17 @@ struct filter_builder_i : term_builder_i<Base> {
 
     template <typename ... Args>
     Base& with(Args&&... args) {
-        return this->term(FLECS_FWD(args)...);
+        return this->term(FLECS_FWD(args)...).inout_none();
     }
 
     template <typename T, typename ... Args>
     Base& with(Args&&... args) {
-        return this->term<T>(FLECS_FWD(args)...);
+        return this->term<T>(FLECS_FWD(args)...).inout_none();
     }
 
     template <typename First, typename Second>
     Base& with() {
-        return this->term<First, Second>();
+        return this->term<First, Second>().inout_none();
     }
 
     template <typename ... Args>

@@ -781,7 +781,12 @@
                 "read_pair_component_name",
                 "read_enum",
                 "assign_after_init",
-                "iter_w_stage"
+                "iter_w_stage",
+                "with_t_inout",
+                "with_T_inout",
+                "with_R_T_inout",
+                "with_R_t_inout",
+                "with_r_t_inout"
             ]
         }, {
             "id": "RuleBuilder",
