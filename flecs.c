@@ -33916,7 +33916,7 @@ int flecs_rest_iter_to_reply(
     ecs_http_reply_t *reply,
     ecs_iter_t *it)
 {
-    ecs_iter_to_json_desc_t desc = {false};
+    ecs_iter_to_json_desc_t desc = {0};
     desc.serialize_entities = true;
     desc.serialize_variables = true;
     flecs_rest_parse_json_ser_iter_params(&desc, req);
@@ -34333,8 +34333,6 @@ bool flecs_rest_reply_stats(
         ecs_os_linc(&ecs_rest_stats_error_count);
         return false;
     }
-
-    return true;
 }
 #else
 static
@@ -45269,7 +45267,7 @@ ecs_table_cache_hdr_t* flecs_table_cache_next_(
         next = it->next_list;
         it->next_list = NULL;
         if (!next) {
-            return false;
+            return NULL;
         }
     }
 
@@ -47056,7 +47054,6 @@ bool flecs_oper_valid_for_type(
         return false;
     default: 
         ecs_abort(ECS_INTERNAL_ERROR, NULL);
-        return false;
     }
 }
 
@@ -53498,7 +53495,6 @@ bool flecs_type_is_number(
         return false;
     default:
         ecs_abort(ECS_INVALID_PARAMETER, NULL);
-        return false;
     }
 }
 
@@ -62918,7 +62914,6 @@ bool flecs_rule_trav(
             /* This can't happen, src or second should have been resolved */
             ecs_abort(ECS_INTERNAL_ERROR, 
                 "invalid instruction sequence: unconstrained traversal");
-            return false;
         } else {
             return flecs_rule_trav_unknown_src_up_fixed_second(op, redo, ctx);
         }

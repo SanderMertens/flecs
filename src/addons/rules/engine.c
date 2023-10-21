@@ -871,7 +871,6 @@ bool flecs_rule_trav(
             /* This can't happen, src or second should have been resolved */
             ecs_abort(ECS_INTERNAL_ERROR, 
                 "invalid instruction sequence: unconstrained traversal");
-            return false;
         } else {
             return flecs_rule_trav_unknown_src_up_fixed_second(op, redo, ctx);
         }
