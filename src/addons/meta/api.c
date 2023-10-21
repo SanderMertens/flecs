@@ -40,7 +40,6 @@ bool flecs_type_is_number(
         return false;
     default:
         ecs_abort(ECS_INVALID_PARAMETER, NULL);
-        return false;
     }
 }
 

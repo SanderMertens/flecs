@@ -111,6 +111,9 @@
 #pragma clang diagnostic ignored "-Wunsafe-buffer-usage"
 /* This warning gets thrown when trying to cast pointer returned from dlproc */
 #pragma clang diagnostic ignored "-Wcast-function-type-strict"
+/* This warning can get thrown for expressions that evaluate to constants
+ * in debug/release mode. */
+#pragma clang diagnostic ignored "-Wconstant-logical-operand"
 #elif defined(ECS_TARGET_GNU)
 #ifndef __cplusplus
 #pragma GCC diagnostic ignored "-Wdeclaration-after-statement"

@@ -272,7 +272,7 @@ ecs_table_cache_hdr_t* flecs_table_cache_next_(
         next = it->next_list;
         it->next_list = NULL;
         if (!next) {
-            return false;
+            return NULL;
         }
     }
 

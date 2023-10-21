@@ -537,7 +537,6 @@ bool flecs_oper_valid_for_type(
         return false;
     default: 
         ecs_abort(ECS_INTERNAL_ERROR, NULL);
-        return false;
     }
 }
 
