@@ -484,7 +484,7 @@ void flecs_bootstrap_builtin(
     ecs_record_t *record = flecs_entities_ensure(world, entity);
     record->table = table;
 
-    int32_t index = flecs_table_append(world, table, entity, record, false, false);
+    int32_t index = flecs_table_append(world, table, entity, false, false);
     record->row = ECS_ROW_TO_RECORD(index, 0);
 
     EcsComponent *component = ecs_vec_first(&columns[0].data);
@@ -561,7 +561,6 @@ ecs_table_t* flecs_bootstrap_component_table(
     /* Preallocate enough memory for initial components */
     ecs_allocator_t *a = &world->allocator;
     ecs_vec_init_t(a, &data->entities, ecs_entity_t, EcsFirstUserComponentId);
-    ecs_vec_init_t(a, &data->records, ecs_record_t*, EcsFirstUserComponentId);
     ecs_vec_init_t(a, &data->columns[0].data, EcsComponent, EcsFirstUserComponentId);
     ecs_vec_init_t(a, &data->columns[1].data, EcsIdentifier, EcsFirstUserComponentId);
     ecs_vec_init_t(a, &data->columns[2].data, EcsIdentifier, EcsFirstUserComponentId);

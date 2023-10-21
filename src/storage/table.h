@@ -62,7 +62,6 @@ typedef struct ecs_column_t {
 /** Table data */
 struct ecs_data_t {
     ecs_vec_t entities;              /* Entity ids */
-    ecs_vec_t records;               /* Ptrs to records in entity index */
     ecs_column_t *columns;           /* Component data */
 };
 
@@ -144,7 +143,6 @@ int32_t flecs_table_append(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_entity_t entity,
-    ecs_record_t *record,
     bool construct,
     bool on_add);
 

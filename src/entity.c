@@ -619,7 +619,7 @@ ecs_record_t* flecs_new_entity(
     ecs_flags32_t evt_flags)
 {
     ecs_assert(record != NULL, ECS_INTERNAL_ERROR, NULL);
-    int32_t row = flecs_table_append(world, table, entity, record, ctor, true);
+    int32_t row = flecs_table_append(world, table, entity, ctor, true);
     record->table = table;
     record->row = ECS_ROW_TO_RECORD(row, record->row & ECS_ROW_FLAGS_MASK);
 
@@ -656,7 +656,7 @@ void flecs_move_entity(
 
     /* Append new row to destination table */
     int32_t dst_row = flecs_table_append(world, dst_table, entity, 
-        record, false, false);
+        false, false);
 
     /* Invoke remove actions for removed components */
     flecs_notify_on_remove(
@@ -845,12 +845,10 @@ const ecs_entity_t* flecs_bulk_new(
 
     /* Update entity index. */
     int i;
-    ecs_record_t **records = ecs_vec_first(&data->records);
     for (i = 0; i < count; i ++) {
         ecs_record_t *r = flecs_entities_get(world, entities[i]);
         r->table = table;
         r->row = ECS_ROW_TO_RECORD(row + i, 0);
-        records[row + i] = r;
     }
 
     flecs_defer_begin(world, &world->stages[0]);
@@ -2091,10 +2089,9 @@ void flecs_targets_mark_for_delete(
 {
     ecs_id_record_t *idr;
     ecs_entity_t *entities = ecs_vec_first(&table->data.entities);
-    ecs_record_t **records = ecs_vec_first(&table->data.records);
     int32_t i, count = ecs_vec_count(&table->data.entities);
     for (i = 0; i < count; i ++) {
-        ecs_record_t *r = records[i];
+        ecs_record_t *r = flecs_entities_get(world, entities[i]);
         if (!r) {
             continue;
         }
@@ -3609,10 +3606,10 @@ void flecs_flatten(
             bool has_tgt = table->flags & EcsTableHasTarget;
             flecs_emit_propagate_invalidate(world, table, 0, count);
 
-            ecs_record_t **records = table->data.records.array;
             ecs_entity_t *entities = table->data.entities.array;
             for (i = 0; i < count; i ++) {
-                ecs_flags32_t flags = ECS_RECORD_TO_ROW_FLAGS(records[i]->row);
+                ecs_record_t *record = flecs_entities_get(world, entities[i]);
+                ecs_flags32_t flags = ECS_RECORD_TO_ROW_FLAGS(record->row);
                 if (flags & EcsEntityIsTarget) {
                     flecs_flatten(world, root, ecs_pair(rel, entities[i]), 
                         depth + 1, desc);
@@ -3712,10 +3709,10 @@ void ecs_flatten(
             }
 
             int32_t i, count = ecs_table_count(table);
-            ecs_record_t **records = table->data.records.array;
             ecs_entity_t *entities = table->data.entities.array;
             for (i = 0; i < count; i ++) {
-                ecs_flags32_t flags = ECS_RECORD_TO_ROW_FLAGS(records[i]->row);
+                ecs_record_t *record = flecs_entities_get(world, entities[i]);
+                ecs_flags32_t flags = ECS_RECORD_TO_ROW_FLAGS(record->row);
                 if (flags & EcsEntityIsTarget) {
                     flecs_flatten(world, root, ecs_pair(rel, entities[i]), 1, 
                         &private_desc);

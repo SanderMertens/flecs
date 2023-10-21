@@ -39,10 +39,9 @@ ecs_data_t* flecs_duplicate_data(
     result->columns = flecs_wdup_n(world, ecs_column_t, column_count, 
         main_data->columns);
 
-    /* Copy entities and records */
+    /* Copy entities */
     ecs_allocator_t *a = &world->allocator;
     result->entities = ecs_vec_copy_t(a, &main_data->entities, ecs_entity_t);
-    result->records = ecs_vec_copy_t(a, &main_data->records, ecs_record_t*);
 
     /* Copy each column */
     for (i = 0; i < column_count; i ++) {

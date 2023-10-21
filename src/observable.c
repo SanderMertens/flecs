@@ -297,9 +297,9 @@ void flecs_emit_propagate_id(
             continue;
         }
 
-        ecs_record_t **records = ecs_vec_first(&table->data.records);
+        ecs_entity_t *entities = ecs_vec_first(&table->data.entities);
         for (e = 0; e < entity_count; e ++) {
-            ecs_record_t *r = records[e];
+            ecs_record_t *r = flecs_entities_get(world, entities[e]);
             ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
             ecs_id_record_t *idr_t = r->idr;
             if (idr_t) {
@@ -386,10 +386,11 @@ void flecs_emit_propagate_invalidate_tables(
             }
 
             int32_t e, entity_count = ecs_table_count(table);
-            ecs_record_t **records = ecs_vec_first(&table->data.records);
+            ecs_entity_t *entities = ecs_vec_first(&table->data.entities);
 
             for (e = 0; e < entity_count; e ++) {
-                ecs_id_record_t *idr_t = records[e]->idr;
+                ecs_record_t *r = flecs_entities_get(world, entities[e]);
+                ecs_id_record_t *idr_t = r->idr;
                 if (idr_t) {
                     /* Only notify for entities that are used in pairs with
                      * traversable relationships */
@@ -406,11 +407,11 @@ void flecs_emit_propagate_invalidate(
     int32_t offset,
     int32_t count)
 {
-    ecs_record_t **recs = ecs_vec_get_t(&table->data.records, 
-        ecs_record_t*, offset);
+    ecs_entity_t *entities = ecs_vec_get_t(&table->data.entities, 
+        ecs_entity_t, offset);
     int32_t i;
     for (i = 0; i < count; i ++) {
-        ecs_record_t *record = recs[i];
+        ecs_record_t *record = flecs_entities_get(world, entities[i]);
         if (!record) {
             /* If the event is emitted after a bulk operation, it's possible
              * that it hasn't been populated with entities yet. */
@@ -1320,10 +1321,8 @@ repeat_event:
         ecs_entity_t *entities = it.entities;
         it.entities = NULL;
 
-        ecs_record_t **recs = ecs_vec_get_t(&storage->records, 
-            ecs_record_t*, offset);
         for (r = 0; r < count; r ++) {
-            ecs_record_t *record = recs[r];
+            ecs_record_t *record = flecs_entities_get(world, entities[r]);
             if (!record) {
                 /* If the event is emitted after a bulk operation, it's possible
                  * that it hasn't been populated with entities yet. */

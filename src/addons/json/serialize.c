@@ -1014,7 +1014,6 @@ int flecs_json_serialize_children_alerts(
 
     ecs_iter_t it = ecs_filter_iter(world, &f);
     while (ecs_filter_next(&it)) {
-        ecs_record_t **records = ecs_vec_first(&it.table->data.records);
         EcsAlertsActive *alerts = ecs_table_get_id(
             world, it.table, ecs_id(EcsAlertsActive), it.offset);
 
@@ -1029,7 +1028,7 @@ int flecs_json_serialize_children_alerts(
                 }
             }
 
-            ecs_record_t *r = records[i];
+            ecs_record_t *r = flecs_entities_get(world, it.entities[i]);
             if (r->row & EcsEntityIsTraversable) {
                 if (flecs_json_serialize_children_alerts(
                     world, buf, child))

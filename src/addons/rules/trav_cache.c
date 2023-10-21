@@ -37,10 +37,9 @@ void flecs_rule_build_down_cache(
             }
 
             int32_t i, count = ecs_table_count(table);
-            ecs_record_t **records = table->data.records.array;
             ecs_entity_t *entities = table->data.entities.array;
             for (i = 0; i < count; i ++) {
-                ecs_record_t *r = records[i];
+                ecs_record_t *r = flecs_entities_get(world, entities[i]);
                 if (r->row & EcsEntityIsTraversable) {
                     flecs_rule_build_down_cache(
                         world, a, ctx, cache, trav, entities[i]);
