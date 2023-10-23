@@ -2435,7 +2435,7 @@
                 "large_type_expr_limit"
             ]
         }, {
-            "id": "DeferredActions",
+            "id": "Commands",
             "testcases": [
                 "defer_new",
                 "defer_bulk_new",

@@ -2345,127 +2345,127 @@ void Type_role_disabled_str(void);
 void Type_large_type_expr(void);
 void Type_large_type_expr_limit(void);
 
-// Testsuite 'DeferredActions'
-void DeferredActions_defer_new(void);
-void DeferredActions_defer_bulk_new(void);
-void DeferredActions_defer_add(void);
-void DeferredActions_defer_add_two(void);
-void DeferredActions_defer_remove(void);
-void DeferredActions_defer_remove_two(void);
-void DeferredActions_defer_set(void);
-void DeferredActions_defer_delete(void);
-void DeferredActions_defer_twice(void);
-void DeferredActions_defer_twice_in_progress(void);
-void DeferredActions_run_w_defer(void);
-void DeferredActions_system_in_progress_w_defer(void);
-void DeferredActions_defer_get_mut_no_modify(void);
-void DeferredActions_defer_get_mut_w_modify(void);
-void DeferredActions_defer_modify(void);
-void DeferredActions_defer_set_pair(void);
-void DeferredActions_defer_clear(void);
-void DeferredActions_defer_add_after_delete(void);
-void DeferredActions_defer_set_after_delete(void);
-void DeferredActions_defer_get_mut_after_delete(void);
-void DeferredActions_defer_get_mut_after_delete_2nd_to_last(void);
-void DeferredActions_defer_add_child_to_deleted_parent(void);
-void DeferredActions_recreate_deleted_entity_while_deferred(void);
-void DeferredActions_defer_add_to_recycled_id(void);
-void DeferredActions_defer_add_to_recycled_id_w_role(void);
-void DeferredActions_defer_add_to_recycled_relation(void);
-void DeferredActions_defer_add_to_recycled_object(void);
-void DeferredActions_defer_add_to_recycled_object_childof(void);
-void DeferredActions_defer_add_to_deleted_id(void);
-void DeferredActions_defer_add_to_deleted_id_w_role(void);
-void DeferredActions_defer_add_to_deleted_relation(void);
-void DeferredActions_defer_add_to_deleted_object(void);
-void DeferredActions_defer_add_to_deleted_object_childof(void);
-void DeferredActions_defer_delete_added_id(void);
-void DeferredActions_defer_delete_added_id_w_role(void);
-void DeferredActions_defer_delete_added_relation(void);
-void DeferredActions_defer_delete_added_object(void);
-void DeferredActions_defer_delete_added_object_childof(void);
-void DeferredActions_discard_add(void);
-void DeferredActions_discard_remove(void);
-void DeferredActions_discard_add_two(void);
-void DeferredActions_discard_remove_two(void);
-void DeferredActions_discard_child(void);
-void DeferredActions_discard_child_w_add(void);
-void DeferredActions_defer_return_value(void);
-void DeferredActions_defer_get_mut_pair(void);
-void DeferredActions_async_stage_add(void);
-void DeferredActions_async_stage_add_twice(void);
-void DeferredActions_async_stage_remove(void);
-void DeferredActions_async_stage_clear(void);
-void DeferredActions_async_stage_delete(void);
-void DeferredActions_async_stage_new(void);
-void DeferredActions_async_stage_no_get(void);
-void DeferredActions_async_stage_readonly(void);
-void DeferredActions_async_stage_is_async(void);
-void DeferredActions_register_component_while_in_progress(void);
-void DeferredActions_register_component_while_staged(void);
-void DeferredActions_register_component_while_deferred(void);
-void DeferredActions_defer_enable(void);
-void DeferredActions_defer_disable(void);
-void DeferredActions_defer_delete_with(void);
-void DeferredActions_defer_remove_all(void);
-void DeferredActions_deferred_modified_after_remove(void);
-void DeferredActions_merge_cleanup_ops_before_delete(void);
-void DeferredActions_merge_nested_cleanup_ops_before_delete(void);
-void DeferredActions_defer_suspend_resume(void);
-void DeferredActions_create_observer_while_deferred(void);
-void DeferredActions_create_query_while_deferred(void);
-void DeferredActions_update_observer_while_deferred(void);
-void DeferredActions_defer_set_large_component(void);
-void DeferredActions_defer_while_suspend_readonly(void);
-void DeferredActions_defer_while_suspend_readonly_w_existing_commands(void);
-void DeferredActions_defer_add_union_relationship(void);
-void DeferredActions_defer_add_existing_union_relationship(void);
-void DeferredActions_defer_add_union_relationship_2_ops(void);
-void DeferredActions_defer_add_existing_union_relationship_2_ops(void);
-void DeferredActions_defer_remove_after_set(void);
-void DeferredActions_defer_remove_after_set_w_observer(void);
-void DeferredActions_defer_override_after_remove(void);
-void DeferredActions_defer_override_after_remove_3_ops(void);
-void DeferredActions_flush_stage_to_deferred_world(void);
-void DeferredActions_add_in_observer_during_merge(void);
-void DeferredActions_add_in_observer_during_merge_2_commands(void);
-void DeferredActions_add_2_in_observer_while_on_remove_for_delete(void);
-void DeferredActions_add_2_in_observer_while_on_remove_for_delete_child(void);
-void DeferredActions_add_2_in_observer_while_on_remove_for_delete_recycled_id(void);
-void DeferredActions_add_2_in_observer_while_on_remove_for_deferred_delete_recycled_id(void);
-void DeferredActions_defer_add_after_clear(void);
-void DeferredActions_defer_cmd_after_modified(void);
-void DeferredActions_defer_remove_after_emplace_different_id(void);
-void DeferredActions_defer_remove_after_set_and_emplace_different_id(void);
-void DeferredActions_clear_after_add_to_nonempty(void);
-void DeferredActions_remove_after_add_to_nonempty(void);
-void DeferredActions_register_while_deferred_with_n_stages(void);
-void DeferredActions_defer_2_sets_w_multi_observer(void);
-void DeferredActions_exists_remove_set(void);
-void DeferredActions_absent_remove_set(void);
-void DeferredActions_exists_set_remove(void);
-void DeferredActions_absent_set_remove(void);
-void DeferredActions_exists_remove_get_mut(void);
-void DeferredActions_absent_remove_get_mut(void);
-void DeferredActions_exists_get_mut_remove(void);
-void DeferredActions_absent_get_mut_remove(void);
-void DeferredActions_exists_set_w_get_mut(void);
-void DeferredActions_absent_set_invoke_on_set(void);
-void DeferredActions_exists_set_invoke_on_set(void);
-void DeferredActions_defer_get_mut_no_on_set(void);
-void DeferredActions_defer_existing_get_mut_no_on_set(void);
-void DeferredActions_get_mut_override(void);
-void DeferredActions_set_override(void);
-void DeferredActions_absent_get_mut_for_entity_w_tag(void);
-void DeferredActions_on_set_hook_before_on_add_for_existing_component(void);
-void DeferredActions_defer_2_sets_w_observer_same_component(void);
-void DeferredActions_defer_2_sets_w_observer_other_component(void);
-void DeferredActions_on_remove_after_deferred_clear_and_add(void);
-void DeferredActions_defer_delete_recycle_same_id(void);
-void DeferredActions_observer_while_defer_suspended(void);
-void DeferredActions_on_add_hook_while_defer_suspended(void);
-void DeferredActions_on_set_hook_while_defer_suspended(void);
-void DeferredActions_on_remove_hook_while_defer_suspended(void);
+// Testsuite 'Commands'
+void Commands_defer_new(void);
+void Commands_defer_bulk_new(void);
+void Commands_defer_add(void);
+void Commands_defer_add_two(void);
+void Commands_defer_remove(void);
+void Commands_defer_remove_two(void);
+void Commands_defer_set(void);
+void Commands_defer_delete(void);
+void Commands_defer_twice(void);
+void Commands_defer_twice_in_progress(void);
+void Commands_run_w_defer(void);
+void Commands_system_in_progress_w_defer(void);
+void Commands_defer_get_mut_no_modify(void);
+void Commands_defer_get_mut_w_modify(void);
+void Commands_defer_modify(void);
+void Commands_defer_set_pair(void);
+void Commands_defer_clear(void);
+void Commands_defer_add_after_delete(void);
+void Commands_defer_set_after_delete(void);
+void Commands_defer_get_mut_after_delete(void);
+void Commands_defer_get_mut_after_delete_2nd_to_last(void);
+void Commands_defer_add_child_to_deleted_parent(void);
+void Commands_recreate_deleted_entity_while_deferred(void);
+void Commands_defer_add_to_recycled_id(void);
+void Commands_defer_add_to_recycled_id_w_role(void);
+void Commands_defer_add_to_recycled_relation(void);
+void Commands_defer_add_to_recycled_object(void);
+void Commands_defer_add_to_recycled_object_childof(void);
+void Commands_defer_add_to_deleted_id(void);
+void Commands_defer_add_to_deleted_id_w_role(void);
+void Commands_defer_add_to_deleted_relation(void);
+void Commands_defer_add_to_deleted_object(void);
+void Commands_defer_add_to_deleted_object_childof(void);
+void Commands_defer_delete_added_id(void);
+void Commands_defer_delete_added_id_w_role(void);
+void Commands_defer_delete_added_relation(void);
+void Commands_defer_delete_added_object(void);
+void Commands_defer_delete_added_object_childof(void);
+void Commands_discard_add(void);
+void Commands_discard_remove(void);
+void Commands_discard_add_two(void);
+void Commands_discard_remove_two(void);
+void Commands_discard_child(void);
+void Commands_discard_child_w_add(void);
+void Commands_defer_return_value(void);
+void Commands_defer_get_mut_pair(void);
+void Commands_async_stage_add(void);
+void Commands_async_stage_add_twice(void);
+void Commands_async_stage_remove(void);
+void Commands_async_stage_clear(void);
+void Commands_async_stage_delete(void);
+void Commands_async_stage_new(void);
+void Commands_async_stage_no_get(void);
+void Commands_async_stage_readonly(void);
+void Commands_async_stage_is_async(void);
+void Commands_register_component_while_in_progress(void);
+void Commands_register_component_while_staged(void);
+void Commands_register_component_while_deferred(void);
+void Commands_defer_enable(void);
+void Commands_defer_disable(void);
+void Commands_defer_delete_with(void);
+void Commands_defer_remove_all(void);
+void Commands_deferred_modified_after_remove(void);
+void Commands_merge_cleanup_ops_before_delete(void);
+void Commands_merge_nested_cleanup_ops_before_delete(void);
+void Commands_defer_suspend_resume(void);
+void Commands_create_observer_while_deferred(void);
+void Commands_create_query_while_deferred(void);
+void Commands_update_observer_while_deferred(void);
+void Commands_defer_set_large_component(void);
+void Commands_defer_while_suspend_readonly(void);
+void Commands_defer_while_suspend_readonly_w_existing_commands(void);
+void Commands_defer_add_union_relationship(void);
+void Commands_defer_add_existing_union_relationship(void);
+void Commands_defer_add_union_relationship_2_ops(void);
+void Commands_defer_add_existing_union_relationship_2_ops(void);
+void Commands_defer_remove_after_set(void);
+void Commands_defer_remove_after_set_w_observer(void);
+void Commands_defer_override_after_remove(void);
+void Commands_defer_override_after_remove_3_ops(void);
+void Commands_flush_stage_to_deferred_world(void);
+void Commands_add_in_observer_during_merge(void);
+void Commands_add_in_observer_during_merge_2_commands(void);
+void Commands_add_2_in_observer_while_on_remove_for_delete(void);
+void Commands_add_2_in_observer_while_on_remove_for_delete_child(void);
+void Commands_add_2_in_observer_while_on_remove_for_delete_recycled_id(void);
+void Commands_add_2_in_observer_while_on_remove_for_deferred_delete_recycled_id(void);
+void Commands_defer_add_after_clear(void);
+void Commands_defer_cmd_after_modified(void);
+void Commands_defer_remove_after_emplace_different_id(void);
+void Commands_defer_remove_after_set_and_emplace_different_id(void);
+void Commands_clear_after_add_to_nonempty(void);
+void Commands_remove_after_add_to_nonempty(void);
+void Commands_register_while_deferred_with_n_stages(void);
+void Commands_defer_2_sets_w_multi_observer(void);
+void Commands_exists_remove_set(void);
+void Commands_absent_remove_set(void);
+void Commands_exists_set_remove(void);
+void Commands_absent_set_remove(void);
+void Commands_exists_remove_get_mut(void);
+void Commands_absent_remove_get_mut(void);
+void Commands_exists_get_mut_remove(void);
+void Commands_absent_get_mut_remove(void);
+void Commands_exists_set_w_get_mut(void);
+void Commands_absent_set_invoke_on_set(void);
+void Commands_exists_set_invoke_on_set(void);
+void Commands_defer_get_mut_no_on_set(void);
+void Commands_defer_existing_get_mut_no_on_set(void);
+void Commands_get_mut_override(void);
+void Commands_set_override(void);
+void Commands_absent_get_mut_for_entity_w_tag(void);
+void Commands_on_set_hook_before_on_add_for_existing_component(void);
+void Commands_defer_2_sets_w_observer_same_component(void);
+void Commands_defer_2_sets_w_observer_other_component(void);
+void Commands_on_remove_after_deferred_clear_and_add(void);
+void Commands_defer_delete_recycle_same_id(void);
+void Commands_observer_while_defer_suspended(void);
+void Commands_on_add_hook_while_defer_suspended(void);
+void Commands_on_set_hook_while_defer_suspended(void);
+void Commands_on_remove_hook_while_defer_suspended(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -11719,486 +11719,486 @@ bake_test_case Type_testcases[] = {
     }
 };
 
-bake_test_case DeferredActions_testcases[] = {
+bake_test_case Commands_testcases[] = {
     {
         "defer_new",
-        DeferredActions_defer_new
+        Commands_defer_new
     },
     {
         "defer_bulk_new",
-        DeferredActions_defer_bulk_new
+        Commands_defer_bulk_new
     },
     {
         "defer_add",
-        DeferredActions_defer_add
+        Commands_defer_add
     },
     {
         "defer_add_two",
-        DeferredActions_defer_add_two
+        Commands_defer_add_two
     },
     {
         "defer_remove",
-        DeferredActions_defer_remove
+        Commands_defer_remove
     },
     {
         "defer_remove_two",
-        DeferredActions_defer_remove_two
+        Commands_defer_remove_two
     },
     {
         "defer_set",
-        DeferredActions_defer_set
+        Commands_defer_set
     },
     {
         "defer_delete",
-        DeferredActions_defer_delete
+        Commands_defer_delete
     },
     {
         "defer_twice",
-        DeferredActions_defer_twice
+        Commands_defer_twice
     },
     {
         "defer_twice_in_progress",
-        DeferredActions_defer_twice_in_progress
+        Commands_defer_twice_in_progress
     },
     {
         "run_w_defer",
-        DeferredActions_run_w_defer
+        Commands_run_w_defer
     },
     {
         "system_in_progress_w_defer",
-        DeferredActions_system_in_progress_w_defer
+        Commands_system_in_progress_w_defer
     },
     {
         "defer_get_mut_no_modify",
-        DeferredActions_defer_get_mut_no_modify
+        Commands_defer_get_mut_no_modify
     },
     {
         "defer_get_mut_w_modify",
-        DeferredActions_defer_get_mut_w_modify
+        Commands_defer_get_mut_w_modify
     },
     {
         "defer_modify",
-        DeferredActions_defer_modify
+        Commands_defer_modify
     },
     {
         "defer_set_pair",
-        DeferredActions_defer_set_pair
+        Commands_defer_set_pair
     },
     {
         "defer_clear",
-        DeferredActions_defer_clear
+        Commands_defer_clear
     },
     {
         "defer_add_after_delete",
-        DeferredActions_defer_add_after_delete
+        Commands_defer_add_after_delete
     },
     {
         "defer_set_after_delete",
-        DeferredActions_defer_set_after_delete
+        Commands_defer_set_after_delete
     },
     {
         "defer_get_mut_after_delete",
-        DeferredActions_defer_get_mut_after_delete
+        Commands_defer_get_mut_after_delete
     },
     {
         "defer_get_mut_after_delete_2nd_to_last",
-        DeferredActions_defer_get_mut_after_delete_2nd_to_last
+        Commands_defer_get_mut_after_delete_2nd_to_last
     },
     {
         "defer_add_child_to_deleted_parent",
-        DeferredActions_defer_add_child_to_deleted_parent
+        Commands_defer_add_child_to_deleted_parent
     },
     {
         "recreate_deleted_entity_while_deferred",
-        DeferredActions_recreate_deleted_entity_while_deferred
+        Commands_recreate_deleted_entity_while_deferred
     },
     {
         "defer_add_to_recycled_id",
-        DeferredActions_defer_add_to_recycled_id
+        Commands_defer_add_to_recycled_id
     },
     {
         "defer_add_to_recycled_id_w_role",
-        DeferredActions_defer_add_to_recycled_id_w_role
+        Commands_defer_add_to_recycled_id_w_role
     },
     {
         "defer_add_to_recycled_relation",
-        DeferredActions_defer_add_to_recycled_relation
+        Commands_defer_add_to_recycled_relation
     },
     {
         "defer_add_to_recycled_object",
-        DeferredActions_defer_add_to_recycled_object
+        Commands_defer_add_to_recycled_object
     },
     {
         "defer_add_to_recycled_object_childof",
-        DeferredActions_defer_add_to_recycled_object_childof
+        Commands_defer_add_to_recycled_object_childof
     },
     {
         "defer_add_to_deleted_id",
-        DeferredActions_defer_add_to_deleted_id
+        Commands_defer_add_to_deleted_id
     },
     {
         "defer_add_to_deleted_id_w_role",
-        DeferredActions_defer_add_to_deleted_id_w_role
+        Commands_defer_add_to_deleted_id_w_role
     },
     {
         "defer_add_to_deleted_relation",
-        DeferredActions_defer_add_to_deleted_relation
+        Commands_defer_add_to_deleted_relation
     },
     {
         "defer_add_to_deleted_object",
-        DeferredActions_defer_add_to_deleted_object
+        Commands_defer_add_to_deleted_object
     },
     {
         "defer_add_to_deleted_object_childof",
-        DeferredActions_defer_add_to_deleted_object_childof
+        Commands_defer_add_to_deleted_object_childof
     },
     {
         "defer_delete_added_id",
-        DeferredActions_defer_delete_added_id
+        Commands_defer_delete_added_id
     },
     {
         "defer_delete_added_id_w_role",
-        DeferredActions_defer_delete_added_id_w_role
+        Commands_defer_delete_added_id_w_role
     },
     {
         "defer_delete_added_relation",
-        DeferredActions_defer_delete_added_relation
+        Commands_defer_delete_added_relation
     },
     {
         "defer_delete_added_object",
-        DeferredActions_defer_delete_added_object
+        Commands_defer_delete_added_object
     },
     {
         "defer_delete_added_object_childof",
-        DeferredActions_defer_delete_added_object_childof
+        Commands_defer_delete_added_object_childof
     },
     {
         "discard_add",
-        DeferredActions_discard_add
+        Commands_discard_add
     },
     {
         "discard_remove",
-        DeferredActions_discard_remove
+        Commands_discard_remove
     },
     {
         "discard_add_two",
-        DeferredActions_discard_add_two
+        Commands_discard_add_two
     },
     {
         "discard_remove_two",
-        DeferredActions_discard_remove_two
+        Commands_discard_remove_two
     },
     {
         "discard_child",
-        DeferredActions_discard_child
+        Commands_discard_child
     },
     {
         "discard_child_w_add",
-        DeferredActions_discard_child_w_add
+        Commands_discard_child_w_add
     },
     {
         "defer_return_value",
-        DeferredActions_defer_return_value
+        Commands_defer_return_value
     },
     {
         "defer_get_mut_pair",
-        DeferredActions_defer_get_mut_pair
+        Commands_defer_get_mut_pair
     },
     {
         "async_stage_add",
-        DeferredActions_async_stage_add
+        Commands_async_stage_add
     },
     {
         "async_stage_add_twice",
-        DeferredActions_async_stage_add_twice
+        Commands_async_stage_add_twice
     },
     {
         "async_stage_remove",
-        DeferredActions_async_stage_remove
+        Commands_async_stage_remove
     },
     {
         "async_stage_clear",
-        DeferredActions_async_stage_clear
+        Commands_async_stage_clear
     },
     {
         "async_stage_delete",
-        DeferredActions_async_stage_delete
+        Commands_async_stage_delete
     },
     {
         "async_stage_new",
-        DeferredActions_async_stage_new
+        Commands_async_stage_new
     },
     {
         "async_stage_no_get",
-        DeferredActions_async_stage_no_get
+        Commands_async_stage_no_get
     },
     {
         "async_stage_readonly",
-        DeferredActions_async_stage_readonly
+        Commands_async_stage_readonly
     },
     {
         "async_stage_is_async",
-        DeferredActions_async_stage_is_async
+        Commands_async_stage_is_async
     },
     {
         "register_component_while_in_progress",
-        DeferredActions_register_component_while_in_progress
+        Commands_register_component_while_in_progress
     },
     {
         "register_component_while_staged",
-        DeferredActions_register_component_while_staged
+        Commands_register_component_while_staged
     },
     {
         "register_component_while_deferred",
-        DeferredActions_register_component_while_deferred
+        Commands_register_component_while_deferred
     },
     {
         "defer_enable",
-        DeferredActions_defer_enable
+        Commands_defer_enable
     },
     {
         "defer_disable",
-        DeferredActions_defer_disable
+        Commands_defer_disable
     },
     {
         "defer_delete_with",
-        DeferredActions_defer_delete_with
+        Commands_defer_delete_with
     },
     {
         "defer_remove_all",
-        DeferredActions_defer_remove_all
+        Commands_defer_remove_all
     },
     {
         "deferred_modified_after_remove",
-        DeferredActions_deferred_modified_after_remove
+        Commands_deferred_modified_after_remove
     },
     {
         "merge_cleanup_ops_before_delete",
-        DeferredActions_merge_cleanup_ops_before_delete
+        Commands_merge_cleanup_ops_before_delete
     },
     {
         "merge_nested_cleanup_ops_before_delete",
-        DeferredActions_merge_nested_cleanup_ops_before_delete
+        Commands_merge_nested_cleanup_ops_before_delete
     },
     {
         "defer_suspend_resume",
-        DeferredActions_defer_suspend_resume
+        Commands_defer_suspend_resume
     },
     {
         "create_observer_while_deferred",
-        DeferredActions_create_observer_while_deferred
+        Commands_create_observer_while_deferred
     },
     {
         "create_query_while_deferred",
-        DeferredActions_create_query_while_deferred
+        Commands_create_query_while_deferred
     },
     {
         "update_observer_while_deferred",
-        DeferredActions_update_observer_while_deferred
+        Commands_update_observer_while_deferred
     },
     {
         "defer_set_large_component",
-        DeferredActions_defer_set_large_component
+        Commands_defer_set_large_component
     },
     {
         "defer_while_suspend_readonly",
-        DeferredActions_defer_while_suspend_readonly
+        Commands_defer_while_suspend_readonly
     },
     {
         "defer_while_suspend_readonly_w_existing_commands",
-        DeferredActions_defer_while_suspend_readonly_w_existing_commands
+        Commands_defer_while_suspend_readonly_w_existing_commands
     },
     {
         "defer_add_union_relationship",
-        DeferredActions_defer_add_union_relationship
+        Commands_defer_add_union_relationship
     },
     {
         "defer_add_existing_union_relationship",
-        DeferredActions_defer_add_existing_union_relationship
+        Commands_defer_add_existing_union_relationship
     },
     {
         "defer_add_union_relationship_2_ops",
-        DeferredActions_defer_add_union_relationship_2_ops
+        Commands_defer_add_union_relationship_2_ops
     },
     {
         "defer_add_existing_union_relationship_2_ops",
-        DeferredActions_defer_add_existing_union_relationship_2_ops
+        Commands_defer_add_existing_union_relationship_2_ops
     },
     {
         "defer_remove_after_set",
-        DeferredActions_defer_remove_after_set
+        Commands_defer_remove_after_set
     },
     {
         "defer_remove_after_set_w_observer",
-        DeferredActions_defer_remove_after_set_w_observer
+        Commands_defer_remove_after_set_w_observer
     },
     {
         "defer_override_after_remove",
-        DeferredActions_defer_override_after_remove
+        Commands_defer_override_after_remove
     },
     {
         "defer_override_after_remove_3_ops",
-        DeferredActions_defer_override_after_remove_3_ops
+        Commands_defer_override_after_remove_3_ops
     },
     {
         "flush_stage_to_deferred_world",
-        DeferredActions_flush_stage_to_deferred_world
+        Commands_flush_stage_to_deferred_world
     },
     {
         "add_in_observer_during_merge",
-        DeferredActions_add_in_observer_during_merge
+        Commands_add_in_observer_during_merge
     },
     {
         "add_in_observer_during_merge_2_commands",
-        DeferredActions_add_in_observer_during_merge_2_commands
+        Commands_add_in_observer_during_merge_2_commands
     },
     {
         "add_2_in_observer_while_on_remove_for_delete",
-        DeferredActions_add_2_in_observer_while_on_remove_for_delete
+        Commands_add_2_in_observer_while_on_remove_for_delete
     },
     {
         "add_2_in_observer_while_on_remove_for_delete_child",
-        DeferredActions_add_2_in_observer_while_on_remove_for_delete_child
+        Commands_add_2_in_observer_while_on_remove_for_delete_child
     },
     {
         "add_2_in_observer_while_on_remove_for_delete_recycled_id",
-        DeferredActions_add_2_in_observer_while_on_remove_for_delete_recycled_id
+        Commands_add_2_in_observer_while_on_remove_for_delete_recycled_id
     },
     {
         "add_2_in_observer_while_on_remove_for_deferred_delete_recycled_id",
-        DeferredActions_add_2_in_observer_while_on_remove_for_deferred_delete_recycled_id
+        Commands_add_2_in_observer_while_on_remove_for_deferred_delete_recycled_id
     },
     {
         "defer_add_after_clear",
-        DeferredActions_defer_add_after_clear
+        Commands_defer_add_after_clear
     },
     {
         "defer_cmd_after_modified",
-        DeferredActions_defer_cmd_after_modified
+        Commands_defer_cmd_after_modified
     },
     {
         "defer_remove_after_emplace_different_id",
-        DeferredActions_defer_remove_after_emplace_different_id
+        Commands_defer_remove_after_emplace_different_id
     },
     {
         "defer_remove_after_set_and_emplace_different_id",
-        DeferredActions_defer_remove_after_set_and_emplace_different_id
+        Commands_defer_remove_after_set_and_emplace_different_id
     },
     {
         "clear_after_add_to_nonempty",
-        DeferredActions_clear_after_add_to_nonempty
+        Commands_clear_after_add_to_nonempty
     },
     {
         "remove_after_add_to_nonempty",
-        DeferredActions_remove_after_add_to_nonempty
+        Commands_remove_after_add_to_nonempty
     },
     {
         "register_while_deferred_with_n_stages",
-        DeferredActions_register_while_deferred_with_n_stages
+        Commands_register_while_deferred_with_n_stages
     },
     {
         "defer_2_sets_w_multi_observer",
-        DeferredActions_defer_2_sets_w_multi_observer
+        Commands_defer_2_sets_w_multi_observer
     },
     {
         "exists_remove_set",
-        DeferredActions_exists_remove_set
+        Commands_exists_remove_set
     },
     {
         "absent_remove_set",
-        DeferredActions_absent_remove_set
+        Commands_absent_remove_set
     },
     {
         "exists_set_remove",
-        DeferredActions_exists_set_remove
+        Commands_exists_set_remove
     },
     {
         "absent_set_remove",
-        DeferredActions_absent_set_remove
+        Commands_absent_set_remove
     },
     {
         "exists_remove_get_mut",
-        DeferredActions_exists_remove_get_mut
+        Commands_exists_remove_get_mut
     },
     {
         "absent_remove_get_mut",
-        DeferredActions_absent_remove_get_mut
+        Commands_absent_remove_get_mut
     },
     {
         "exists_get_mut_remove",
-        DeferredActions_exists_get_mut_remove
+        Commands_exists_get_mut_remove
     },
     {
         "absent_get_mut_remove",
-        DeferredActions_absent_get_mut_remove
+        Commands_absent_get_mut_remove
     },
     {
         "exists_set_w_get_mut",
-        DeferredActions_exists_set_w_get_mut
+        Commands_exists_set_w_get_mut
     },
     {
         "absent_set_invoke_on_set",
-        DeferredActions_absent_set_invoke_on_set
+        Commands_absent_set_invoke_on_set
     },
     {
         "exists_set_invoke_on_set",
-        DeferredActions_exists_set_invoke_on_set
+        Commands_exists_set_invoke_on_set
     },
     {
         "defer_get_mut_no_on_set",
-        DeferredActions_defer_get_mut_no_on_set
+        Commands_defer_get_mut_no_on_set
     },
     {
         "defer_existing_get_mut_no_on_set",
-        DeferredActions_defer_existing_get_mut_no_on_set
+        Commands_defer_existing_get_mut_no_on_set
     },
     {
         "get_mut_override",
-        DeferredActions_get_mut_override
+        Commands_get_mut_override
     },
     {
         "set_override",
-        DeferredActions_set_override
+        Commands_set_override
     },
     {
         "absent_get_mut_for_entity_w_tag",
-        DeferredActions_absent_get_mut_for_entity_w_tag
+        Commands_absent_get_mut_for_entity_w_tag
     },
     {
         "on_set_hook_before_on_add_for_existing_component",
-        DeferredActions_on_set_hook_before_on_add_for_existing_component
+        Commands_on_set_hook_before_on_add_for_existing_component
     },
     {
         "defer_2_sets_w_observer_same_component",
-        DeferredActions_defer_2_sets_w_observer_same_component
+        Commands_defer_2_sets_w_observer_same_component
     },
     {
         "defer_2_sets_w_observer_other_component",
-        DeferredActions_defer_2_sets_w_observer_other_component
+        Commands_defer_2_sets_w_observer_other_component
     },
     {
         "on_remove_after_deferred_clear_and_add",
-        DeferredActions_on_remove_after_deferred_clear_and_add
+        Commands_on_remove_after_deferred_clear_and_add
     },
     {
         "defer_delete_recycle_same_id",
-        DeferredActions_defer_delete_recycle_same_id
+        Commands_defer_delete_recycle_same_id
     },
     {
         "observer_while_defer_suspended",
-        DeferredActions_observer_while_defer_suspended
+        Commands_observer_while_defer_suspended
     },
     {
         "on_add_hook_while_defer_suspended",
-        DeferredActions_on_add_hook_while_defer_suspended
+        Commands_on_add_hook_while_defer_suspended
     },
     {
         "on_set_hook_while_defer_suspended",
-        DeferredActions_on_set_hook_while_defer_suspended
+        Commands_on_set_hook_while_defer_suspended
     },
     {
         "on_remove_hook_while_defer_suspended",
-        DeferredActions_on_remove_hook_while_defer_suspended
+        Commands_on_remove_hook_while_defer_suspended
     }
 };
 
@@ -13106,11 +13106,11 @@ static bake_test_suite suites[] = {
         Type_testcases
     },
     {
-        "DeferredActions",
+        "Commands",
         NULL,
         NULL,
         120,
-        DeferredActions_testcases
+        Commands_testcases
     },
     {
         "SingleThreadStaging",
