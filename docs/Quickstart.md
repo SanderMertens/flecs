@@ -115,7 +115,7 @@ Addon         | Description                                      | Define       
 [Pipeline](/flecs/group__c__addons__pipeline.html)         | Automatically schedule & multithread systems     | FLECS_PIPELINE      |
 [Timer](/flecs/group__c__addons__timer.html)               | Run systems at time intervals or at a rate       | FLECS_TIMER         |
 [Meta](/flecs/group__c__addons__meta.html)                 | Flecs reflection system                          | FLECS_META          |
-[Meta_C](/flecs/group__c__addons__meta_c.html)             | (C) Utilities for auto-inserting reflection data | FLECS_META_C        |
+[Meta_C](/flecs/group__c__addons__meta__c.html)            | (C) Utilities for auto-inserting reflection data | FLECS_META_C        |
 [Units](/flecs/group__c__addons__units.html)               | Builtin unit types                               | FLECS_UNITS         |
 [Expr](/flecs/group__c__addons__expr.html)                 | String format optimized for ECS data             | FLECS_EXPR          |
 [JSON](/flecs/group__c__addons__json.html)                 | JSON format                                      | FLECS_JSON          |
