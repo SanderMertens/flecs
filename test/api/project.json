@@ -2532,6 +2532,8 @@
                 "remove_after_add_to_nonempty",
                 "register_while_deferred_with_n_stages",
                 "defer_2_sets_w_multi_observer",
+                "defer_2_get_muts_w_multi_observer",
+                "defer_2_get_muts_no_modified_w_multi_observer",
                 "exists_remove_set",
                 "absent_remove_set",
                 "exists_set_remove",

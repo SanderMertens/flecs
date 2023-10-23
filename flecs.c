@@ -8004,10 +8004,15 @@ void flecs_cmd_batch_for_entity(
     flecs_defer_end(world, &world->stages[0]);
     flecs_table_diff_builder_clear(diff);
 
-    /* If ids were both removed and set, check if there are ids that were both
-     * set and removed. If so, skip the set command so that the id won't get
-     * re-added */
-    if (has_set && table_diff.removed.count) {
+    /* If the batch contains set commands, copy the component value from the 
+     * temporary command storage to the actual component storage before OnSet
+     * observers are invoked. This ensures that for multi-component OnSet 
+     * observers all components are assigned a valid value before the observer
+     * is invoked. 
+     * This only happens for entities that didn't have the assigned component
+     * yet, as for entities that did have the component already the value will
+     * have been assigned directly to the component storage. */
+    if (has_set) {
         cur = start;
         do {
             cmd = &cmds[cur];
@@ -8018,33 +8023,55 @@ void flecs_cmd_batch_for_entity(
             switch(cmd->kind) {
             case EcsOpSet:
             case EcsOpMut: {
-                ecs_id_record_t *idr = cmd->idr;
-                if (!idr) {
-                    idr = flecs_id_record_get(world, cmd->id);
+                flecs_component_ptr_t ptr = {0};
+                if (r->table) {
+                    ptr = flecs_get_component_ptr(world, 
+                        r->table, ECS_RECORD_TO_ROW(r->row), cmd->id);
                 }
 
-                if (!flecs_id_record_get_table(idr, table)) {
-                    /* Component was deleted */
+                /* It's possible that even though the component was set, the
+                 * command queue also contained a remove command, so before we
+                 * do anything ensure the entity actually has the component. */
+                if (ptr.ptr) {
+                    const ecs_type_info_t *ti = ptr.ti;
+                    ecs_move_t move = ti->hooks.move;
+                    if (move) {
+                        move(ptr.ptr, cmd->is._1.value, 1, ti);
+                    } else {
+                        ecs_os_memcpy(ptr.ptr, cmd->is._1.value, ti->size);
+                    }
+                    if (cmd->kind == EcsOpSet) {
+                        /* A set operation is add + copy + modified. We just did
+                         * the add the copy, so the only thing that's left is a 
+                         * modified command, which will call the OnSet 
+                         * observers. */
+                        cmd->kind = EcsOpModified;
+                    } else {
+                        /* If this was a get_mut, nothing's left to be done */
+                        cmd->kind = EcsOpSkip;
+                    }
+                } else {
+                    /* The entity no longer has the component which means that
+                     * there was a remove command for the component in the
+                     * command queue. In that case skip the command. */
                     cmd->kind = EcsOpSkip;
-                    world->info.cmd.batched_command_count --;
-                    world->info.cmd.discard_count ++;
                 }
                 break;
             }
-        case EcsOpClone:
-        case EcsOpBulkNew:
-        case EcsOpAdd:
-        case EcsOpRemove:
-        case EcsOpEmplace:
-        case EcsOpModified:
-        case EcsOpAddModified:
-        case EcsOpPath:
-        case EcsOpDelete:
-        case EcsOpClear:
-        case EcsOpOnDeleteAction:
-        case EcsOpEnable:
-        case EcsOpDisable:
-        case EcsOpSkip:
+            case EcsOpClone:
+            case EcsOpBulkNew:
+            case EcsOpAdd:
+            case EcsOpRemove:
+            case EcsOpEmplace:
+            case EcsOpModified:
+            case EcsOpAddModified:
+            case EcsOpPath:
+            case EcsOpDelete:
+            case EcsOpClear:
+            case EcsOpOnDeleteAction:
+            case EcsOpEnable:
+            case EcsOpDisable:
+            case EcsOpSkip:
                 break;
             }
         } while ((cur = next_for_entity));

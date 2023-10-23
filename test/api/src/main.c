@@ -2441,6 +2441,8 @@ void Commands_clear_after_add_to_nonempty(void);
 void Commands_remove_after_add_to_nonempty(void);
 void Commands_register_while_deferred_with_n_stages(void);
 void Commands_defer_2_sets_w_multi_observer(void);
+void Commands_defer_2_get_muts_w_multi_observer(void);
+void Commands_defer_2_get_muts_no_modified_w_multi_observer(void);
 void Commands_exists_remove_set(void);
 void Commands_absent_remove_set(void);
 void Commands_exists_set_remove(void);
@@ -12101,6 +12103,14 @@ bake_test_case Commands_testcases[] = {
         Commands_defer_2_sets_w_multi_observer
     },
     {
+        "defer_2_get_muts_w_multi_observer",
+        Commands_defer_2_get_muts_w_multi_observer
+    },
+    {
+        "defer_2_get_muts_no_modified_w_multi_observer",
+        Commands_defer_2_get_muts_no_modified_w_multi_observer
+    },
+    {
         "exists_remove_set",
         Commands_exists_remove_set
     },
@@ -13109,7 +13119,7 @@ static bake_test_suite suites[] = {
         "Commands",
         NULL,
         NULL,
-        120,
+        122,
         Commands_testcases
     },
     {

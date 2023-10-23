@@ -2823,8 +2823,6 @@ void PositionVelocityObserver(ecs_iter_t *it) {
 }
 
 void Commands_defer_2_sets_w_multi_observer(void) {
-    test_quarantine("Nov 25 2022");
-
     ecs_world_t *world = ecs_mini();
     
     ECS_COMPONENT(world, Position);
@@ -2843,7 +2841,90 @@ void Commands_defer_2_sets_w_multi_observer(void) {
     ecs_set(world, e, Velocity, {1, 2});
     ecs_defer_end(world);
 
-    test_int(position_velocity_observer_invoked, 1);
+    test_int(position_velocity_observer_invoked, 2);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+    const Velocity *v = ecs_get(world, e, Velocity);
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+
+    ecs_fini(world);
+}
+
+void Commands_defer_2_get_muts_w_multi_observer(void) {
+    ecs_world_t *world = ecs_mini();
+    
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_observer(world, {
+        .filter.terms = {{ ecs_id(Position) }, { ecs_id(Velocity) }},
+        .callback = PositionVelocityObserver,
+        .events = { EcsOnSet }
+    });
+
+    ecs_entity_t e = ecs_new_id(world);
+
+    ecs_defer_begin(world);
+    {
+        Position *p = ecs_get_mut(world, e, Position);
+        p->x = 10;
+        p->y = 20;
+        ecs_modified(world, e, Position);
+        Velocity *v = ecs_get_mut(world, e, Velocity);
+        v->x = 1;
+        v->y = 2;
+        ecs_modified(world, e, Velocity);
+    }
+    ecs_defer_end(world);
+
+    test_int(position_velocity_observer_invoked, 2);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+    const Velocity *v = ecs_get(world, e, Velocity);
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+
+    ecs_fini(world);
+}
+
+void Commands_defer_2_get_muts_no_modified_w_multi_observer(void) {
+    ecs_world_t *world = ecs_mini();
+    
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_observer(world, {
+        .filter.terms = {{ ecs_id(Position) }, { ecs_id(Velocity) }},
+        .callback = PositionVelocityObserver,
+        .events = { EcsOnSet }
+    });
+
+    ecs_entity_t e = ecs_new_id(world);
+
+    ecs_defer_begin(world);
+    {
+        Position *p = ecs_get_mut(world, e, Position);
+        p->x = 10;
+        p->y = 20;
+        Velocity *v = ecs_get_mut(world, e, Velocity);
+        v->x = 1;
+        v->y = 2;
+    }
+    ecs_defer_end(world);
+
+    test_int(position_velocity_observer_invoked, 0);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+    const Velocity *v = ecs_get(world, e, Velocity);
+    test_int(v->x, 1);
+    test_int(v->y, 2);
 
     ecs_fini(world);
 }
