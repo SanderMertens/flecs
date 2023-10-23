@@ -15736,7 +15736,7 @@ template <typename T, typename U = int>
 struct cpp_type;
 
 template <typename Func, typename ... Components>
-struct each_invoker;
+struct each_delegate;
 
 } // namespace _
 } // namespace flecs
@@ -21788,7 +21788,7 @@ struct entity_view : public id {
         if (ecs_filter_init(m_world, &desc) != nullptr) {
             ecs_iter_t it = ecs_filter_iter(m_world, &f);
             while (ecs_filter_next(&it)) {
-                _::each_invoker<Func>(FLECS_MOV(func)).invoke(&it);
+                _::each_delegate<Func>(FLECS_MOV(func)).invoke(&it);
             }
 
             ecs_filter_fini(&f);
@@ -23925,8 +23925,8 @@ const char* from_json(const char *json) {
 /** @} */
 
 /**
- * @file addons/cpp/invoker.hpp
- * @brief Utilities for invoking each/iter callbacks.
+ * @file addons/cpp/delegate.hpp
+ * @brief Wrappers around C++ functions that provide callbacks for C APIs.
  */
 
 #pragma once
@@ -23992,7 +23992,7 @@ private:
     }  
 };    
 
-struct invoker { };
+struct delegate { };
 
 // Template that figures out from the template parameters of a query/system
 // how to pass the value to the each callback
@@ -24096,7 +24096,7 @@ struct each_ref_column : public each_column<T> {
 };
 
 template <typename Func, typename ... Components>
-struct each_invoker : public invoker {
+struct each_delegate : public delegate {
     // If the number of arguments in the function signature is one more than the
     // number of components in the query, an extra entity arg is required.
     static constexpr bool PassEntity = 
@@ -24113,14 +24113,14 @@ struct each_invoker : public invoker {
     using Terms = typename term_ptrs<Components ...>::array;
 
     template < if_not_t< is_same< decay_t<Func>, decay_t<Func>& >::value > = 0>
-    explicit each_invoker(Func&& func) noexcept 
+    explicit each_delegate(Func&& func) noexcept 
         : m_func(FLECS_MOV(func)) { }
 
-    explicit each_invoker(const Func& func) noexcept 
+    explicit each_delegate(const Func& func) noexcept 
         : m_func(func) { }
 
     // Invoke object directly. This operation is useful when the calling
-    // function has just constructed the invoker, such as what happens when
+    // function has just constructed the delegate, such as what happens when
     // iterating a query.
     void invoke(ecs_iter_t *iter) const {
         term_ptrs<Components...> terms;
@@ -24134,7 +24134,7 @@ struct each_invoker : public invoker {
 
     // Static function that can be used as callback for systems/triggers
     static void run(ecs_iter_t *iter) {
-        auto self = static_cast<const each_invoker*>(iter->binding_ctx);
+        auto self = static_cast<const each_delegate*>(iter->binding_ctx);
         ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
         self->invoke(iter);
     }
@@ -24163,7 +24163,7 @@ struct each_invoker : public invoker {
         run(iter);
     }
 
-    // Each invokers always use instanced iterators
+    // Each delegates always use instanced iterators
     static bool instanced() {
         return true;
     }
@@ -24260,7 +24260,7 @@ private:
 };
 
 template <typename Func, typename ... Components>
-struct find_invoker : public invoker {
+struct find_delegate : public delegate {
     // If the number of arguments in the function signature is one more than the
     // number of components in the query, an extra entity arg is required.
     static constexpr bool PassEntity = 
@@ -24277,14 +24277,14 @@ struct find_invoker : public invoker {
     using Terms = typename term_ptrs<Components ...>::array;
 
     template < if_not_t< is_same< decay_t<Func>, decay_t<Func>& >::value > = 0>
-    explicit find_invoker(Func&& func) noexcept 
+    explicit find_delegate(Func&& func) noexcept 
         : m_func(FLECS_MOV(func)) { }
 
-    explicit find_invoker(const Func& func) noexcept 
+    explicit find_delegate(const Func& func) noexcept 
         : m_func(func) { }
 
     // Invoke object directly. This operation is useful when the calling
-    // function has just constructed the invoker, such as what happens when
+    // function has just constructed the delegate, such as what happens when
     // iterating a query.
     flecs::entity invoke(ecs_iter_t *iter) const {
         term_ptrs<Components...> terms;
@@ -24296,7 +24296,7 @@ struct find_invoker : public invoker {
         }   
     }
 
-    // Find invokers always use instanced iterators
+    // Find delegates always use instanced iterators
     static bool instanced() {
         return true;
     }
@@ -24418,7 +24418,7 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename Func, typename ... Components>
-struct iter_invoker : invoker {
+struct iter_delegate : delegate {
 private:
     static constexpr bool IterOnly = arity<Func>::value == 1;
 
@@ -24426,14 +24426,14 @@ private:
 
 public:
     template < if_not_t< is_same< decay_t<Func>, decay_t<Func>& >::value > = 0>
-    explicit iter_invoker(Func&& func) noexcept 
+    explicit iter_delegate(Func&& func) noexcept 
         : m_func(FLECS_MOV(func)) { }
 
-    explicit iter_invoker(const Func& func) noexcept 
+    explicit iter_delegate(const Func& func) noexcept 
         : m_func(func) { }
 
     // Invoke object directly. This operation is useful when the calling
-    // function has just constructed the invoker, such as what happens when
+    // function has just constructed the delegate, such as what happens when
     // iterating a query.
     void invoke(ecs_iter_t *iter) const {
         term_ptrs<Components...> terms;
@@ -24443,12 +24443,12 @@ public:
 
     // Static function that can be used as callback for systems/triggers
     static void run(ecs_iter_t *iter) {
-        auto self = static_cast<const iter_invoker*>(iter->binding_ctx);
+        auto self = static_cast<const iter_delegate*>(iter->binding_ctx);
         ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
         self->invoke(iter);
     }
 
-    // Instancing needs to be enabled explicitly for iter invokers
+    // Instancing needs to be enabled explicitly for iter delegates
     static bool instanced() {
         return false;
     }
@@ -24503,10 +24503,10 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 template<typename ... Args>
-struct entity_with_invoker_impl;
+struct entity_with_delegate_impl;
 
 template<typename ... Args>
-struct entity_with_invoker_impl<arg_list<Args ...>> {
+struct entity_with_delegate_impl<arg_list<Args ...>> {
     using ColumnArray = flecs::array<int32_t, sizeof...(Args)>;
     using ArrayType = flecs::array<void*, sizeof...(Args)>;
     using DummyArray = flecs::array<int, sizeof...(Args)>;
@@ -24725,13 +24725,13 @@ private:
 };
 
 template <typename Func, typename U = int>
-struct entity_with_invoker {
+struct entity_with_delegate {
     static_assert(function_traits<Func>::value, "type is not callable");
 };
 
 template <typename Func>
-struct entity_with_invoker<Func, if_t< is_callable<Func>::value > >
-    : entity_with_invoker_impl< arg_list_t<Func> >
+struct entity_with_delegate<Func, if_t< is_callable<Func>::value > >
+    : entity_with_delegate_impl< arg_list_t<Func> >
 {
     static_assert(function_traits<Func>::arity > 0,
         "function must have at least one argument");
@@ -24776,25 +24776,25 @@ struct iterable {
 
     template <typename Func>
     void each(flecs::world_t *world, Func&& func) const {
-        iterate<_::each_invoker>(world, FLECS_FWD(func), 
+        iterate<_::each_delegate>(world, FLECS_FWD(func), 
             this->next_each_action());
     }
 
     template <typename Func>
     void each(flecs::iter& it, Func&& func) const {
-        iterate<_::each_invoker>(it.world(), FLECS_FWD(func),
+        iterate<_::each_delegate>(it.world(), FLECS_FWD(func),
             this->next_each_action());
     }
 
     template <typename Func>
     void each(flecs::entity e, Func&& func) const {
-        iterate<_::each_invoker>(e.world(), FLECS_FWD(func), 
+        iterate<_::each_delegate>(e.world(), FLECS_FWD(func), 
             this->next_each_action());
     }
 
     template <typename Func>
     flecs::entity find(Func&& func) const {
-        return iterate_find<_::find_invoker>(nullptr, FLECS_FWD(func), 
+        return iterate_find<_::find_delegate>(nullptr, FLECS_FWD(func), 
             this->next_each_action());
     }
 
@@ -24811,25 +24811,25 @@ struct iterable {
      */
     template <typename Func>
     void iter(Func&& func) const { 
-        iterate<_::iter_invoker>(nullptr, FLECS_FWD(func), 
+        iterate<_::iter_delegate>(nullptr, FLECS_FWD(func), 
             this->next_action());
     }
 
     template <typename Func>
     void iter(flecs::world_t *world, Func&& func) const {
-        iterate<_::iter_invoker>(world, FLECS_FWD(func), 
+        iterate<_::iter_delegate>(world, FLECS_FWD(func), 
             this->next_action());
     }
 
     template <typename Func>
     void iter(flecs::iter& it, Func&& func) const {
-        iterate<_::iter_invoker>(it.world(), FLECS_FWD(func),
+        iterate<_::iter_delegate>(it.world(), FLECS_FWD(func),
             this->next_action());
     }
 
     template <typename Func>
     void iter(flecs::entity e, Func&& func) const {
-        iterate<_::iter_invoker>(e.world(), FLECS_FWD(func), 
+        iterate<_::iter_delegate>(e.world(), FLECS_FWD(func), 
             this->next_action());
     }
 
@@ -25748,7 +25748,7 @@ struct component : untyped_component {
     /** Register on_add hook. */
     template <typename Func>
     component<T>& on_add(Func&& func) {
-        using Invoker = typename _::each_invoker<
+        using Invoker = typename _::each_delegate<
             typename std::decay<Func>::type, T>;
         flecs::type_hooks_t h = get_hooks();
         ecs_assert(h.on_add == nullptr, ECS_INVALID_OPERATION, 
@@ -25765,7 +25765,7 @@ struct component : untyped_component {
     /** Register on_remove hook. */
     template <typename Func>
     component<T>& on_remove(Func&& func) {
-        using Invoker = typename _::each_invoker<
+        using Invoker = typename _::each_delegate<
             typename std::decay<Func>::type, T>;
         flecs::type_hooks_t h = get_hooks();
         ecs_assert(h.on_remove == nullptr, ECS_INVALID_OPERATION, 
@@ -25782,7 +25782,7 @@ struct component : untyped_component {
     /** Register on_set hook. */
     template <typename Func>
     component<T>& on_set(Func&& func) {
-        using Invoker = typename _::each_invoker<
+        using Invoker = typename _::each_delegate<
             typename std::decay<Func>::type, T>;
         flecs::type_hooks_t h = get_hooks();
         ecs_assert(h.on_set == nullptr, ECS_INVALID_OPERATION, 
@@ -26453,7 +26453,7 @@ flecs::entity ref<T>::entity() const {
 template <typename Self>
 template <typename Func, if_t< is_callable<Func>::value > >
 inline Self& entity_builder<Self>::set(const Func& func) {
-    _::entity_with_invoker<Func>::invoke_get_mut(
+    _::entity_with_delegate<Func>::invoke_get_mut(
         this->m_world, this->m_id, func);
     return to_base();
 }
@@ -26616,7 +26616,7 @@ inline void entity_view::each(const flecs::entity_view& rel, const Func& func) c
 
 template <typename Func, if_t< is_callable<Func>::value > >
 inline bool entity_view::get(const Func& func) const {
-    return _::entity_with_invoker<Func>::invoke_get(m_world, m_id, func);
+    return _::entity_with_delegate<Func>::invoke_get(m_world, m_id, func);
 } 
 
 inline flecs::entity entity_view::lookup(const char *path, bool search_path) const {
@@ -27940,12 +27940,12 @@ namespace _ {
 
 // Each with entity parameter
 template<typename Func, typename ... Args>
-struct filter_invoker_w_ent;
+struct filter_delegate_w_ent;
 
 template<typename Func, typename E, typename ... Args>
-struct filter_invoker_w_ent<Func, arg_list<E, Args ...> >
+struct filter_delegate_w_ent<Func, arg_list<E, Args ...> >
 {
-    filter_invoker_w_ent(const flecs::world& world, Func&& func) {
+    filter_delegate_w_ent(const flecs::world& world, Func&& func) {
         auto f = world.filter<Args ...>();
         f.each(FLECS_MOV(func));
     }
@@ -27953,12 +27953,12 @@ struct filter_invoker_w_ent<Func, arg_list<E, Args ...> >
 
 // Each without entity parameter
 template<typename Func, typename ... Args>
-struct filter_invoker_no_ent;
+struct filter_delegate_no_ent;
 
 template<typename Func, typename ... Args>
-struct filter_invoker_no_ent<Func, arg_list<Args ...> >
+struct filter_delegate_no_ent<Func, arg_list<Args ...> >
 {
-    filter_invoker_no_ent(const flecs::world& world, Func&& func) {
+    filter_delegate_no_ent(const flecs::world& world, Func&& func) {
         auto f = world.filter<Args ...>();
         f.each(FLECS_MOV(func));
     }
@@ -27966,19 +27966,19 @@ struct filter_invoker_no_ent<Func, arg_list<Args ...> >
 
 // Switch between function with & without entity parameter
 template<typename Func, typename T = int>
-struct filter_invoker;
+struct filter_delegate;
 
 template <typename Func>
-struct filter_invoker<Func, if_t<is_same<first_arg_t<Func>, flecs::entity>::value> > {
-    filter_invoker(const flecs::world& world, Func&& func) {
-        filter_invoker_w_ent<Func, arg_list_t<Func>>(world, FLECS_MOV(func));
+struct filter_delegate<Func, if_t<is_same<first_arg_t<Func>, flecs::entity>::value> > {
+    filter_delegate(const flecs::world& world, Func&& func) {
+        filter_delegate_w_ent<Func, arg_list_t<Func>>(world, FLECS_MOV(func));
     }
 };
 
 template <typename Func>
-struct filter_invoker<Func, if_not_t<is_same<first_arg_t<Func>, flecs::entity>::value> > {
-    filter_invoker(const flecs::world& world, Func&& func) {
-        filter_invoker_no_ent<Func, arg_list_t<Func>>(world, FLECS_MOV(func));
+struct filter_delegate<Func, if_not_t<is_same<first_arg_t<Func>, flecs::entity>::value> > {
+    filter_delegate(const flecs::world& world, Func&& func) {
+        filter_delegate_no_ent<Func, arg_list_t<Func>>(world, FLECS_MOV(func));
     }
 };
 
@@ -27986,7 +27986,7 @@ struct filter_invoker<Func, if_not_t<is_same<first_arg_t<Func>, flecs::entity>::
 
 template <typename Func>
 inline void world::each(Func&& func) const {
-    _::filter_invoker<Func> f_invoker(*this, FLECS_MOV(func));
+    _::filter_delegate<Func> f_delegate(*this, FLECS_MOV(func));
 }
 
 template <typename T, typename Func>
@@ -27996,7 +27996,7 @@ inline void world::each(Func&& func) const {
     ecs_iter_t it = ecs_term_iter(m_world, &t);
 
     while (ecs_term_next(&it)) {
-        _::each_invoker<Func, T>(func).invoke(&it);
+        _::each_delegate<Func, T>(func).invoke(&it);
     }
 }
 
@@ -28007,7 +28007,7 @@ inline void world::each(flecs::id_t term_id, Func&& func) const {
     ecs_iter_t it = ecs_term_iter(m_world, &t);
 
     while (ecs_term_next(&it)) {
-        _::each_invoker<Func>(func).invoke(&it);
+        _::each_delegate<Func>(func).invoke(&it);
     }
 }
 
@@ -28481,7 +28481,7 @@ public:
      * template parameters and anything provided by the signature method. */
     template <typename Func>
     T iter(Func&& func) {
-        using Invoker = typename _::iter_invoker<
+        using Invoker = typename _::iter_delegate<
             typename std::decay<Func>::type, Components...>;
         return build<Invoker>(FLECS_FWD(func));
     }
@@ -28490,7 +28490,7 @@ public:
      * single entity */
     template <typename Func>
     T each(Func&& func) {
-        using Invoker = typename _::each_invoker<
+        using Invoker = typename _::each_delegate<
             typename std::decay<Func>::type, Components...>;
         m_instanced = true;
         return build<Invoker>(FLECS_FWD(func));
@@ -30863,14 +30863,14 @@ inline flecs::entity world::target(
 template <typename Func, if_t< is_callable<Func>::value > >
 inline void world::get(const Func& func) const {
     static_assert(arity<Func>::value == 1, "singleton component must be the only argument");
-    _::entity_with_invoker<Func>::invoke_get(
+    _::entity_with_delegate<Func>::invoke_get(
         this->m_world, this->singleton<first_arg_t<Func>>(), func);
 }
 
 template <typename Func, if_t< is_callable<Func>::value > >
 inline void world::set(const Func& func) const {
     static_assert(arity<Func>::value == 1, "singleton component must be the only argument");
-    _::entity_with_invoker<Func>::invoke_get_mut(
+    _::entity_with_delegate<Func>::invoke_get_mut(
         this->m_world, this->singleton<first_arg_t<Func>>(), func);
 }
 

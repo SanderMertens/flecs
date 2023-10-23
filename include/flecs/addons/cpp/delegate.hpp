@@ -1,6 +1,6 @@
 /**
- * @file addons/cpp/invoker.hpp
- * @brief Utilities for invoking each/iter callbacks.
+ * @file addons/cpp/delegate.hpp
+ * @brief Wrappers around C++ functions that provide callbacks for C APIs.
  */
 
 #pragma once
@@ -66,7 +66,7 @@ private:
     }  
 };    
 
-struct invoker { };
+struct delegate { };
 
 // Template that figures out from the template parameters of a query/system
 // how to pass the value to the each callback
@@ -170,7 +170,7 @@ struct each_ref_column : public each_column<T> {
 };
 
 template <typename Func, typename ... Components>
-struct each_invoker : public invoker {
+struct each_delegate : public delegate {
     // If the number of arguments in the function signature is one more than the
     // number of components in the query, an extra entity arg is required.
     static constexpr bool PassEntity = 
@@ -187,14 +187,14 @@ struct each_invoker : public invoker {
     using Terms = typename term_ptrs<Components ...>::array;
 
     template < if_not_t< is_same< decay_t<Func>, decay_t<Func>& >::value > = 0>
-    explicit each_invoker(Func&& func) noexcept 
+    explicit each_delegate(Func&& func) noexcept 
         : m_func(FLECS_MOV(func)) { }
 
-    explicit each_invoker(const Func& func) noexcept 
+    explicit each_delegate(const Func& func) noexcept 
         : m_func(func) { }
 
     // Invoke object directly. This operation is useful when the calling
-    // function has just constructed the invoker, such as what happens when
+    // function has just constructed the delegate, such as what happens when
     // iterating a query.
     void invoke(ecs_iter_t *iter) const {
         term_ptrs<Components...> terms;
@@ -208,7 +208,7 @@ struct each_invoker : public invoker {
 
     // Static function that can be used as callback for systems/triggers
     static void run(ecs_iter_t *iter) {
-        auto self = static_cast<const each_invoker*>(iter->binding_ctx);
+        auto self = static_cast<const each_delegate*>(iter->binding_ctx);
         ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
         self->invoke(iter);
     }
@@ -237,7 +237,7 @@ struct each_invoker : public invoker {
         run(iter);
     }
 
-    // Each invokers always use instanced iterators
+    // Each delegates always use instanced iterators
     static bool instanced() {
         return true;
     }
@@ -334,7 +334,7 @@ private:
 };
 
 template <typename Func, typename ... Components>
-struct find_invoker : public invoker {
+struct find_delegate : public delegate {
     // If the number of arguments in the function signature is one more than the
     // number of components in the query, an extra entity arg is required.
     static constexpr bool PassEntity = 
@@ -351,14 +351,14 @@ struct find_invoker : public invoker {
     using Terms = typename term_ptrs<Components ...>::array;
 
     template < if_not_t< is_same< decay_t<Func>, decay_t<Func>& >::value > = 0>
-    explicit find_invoker(Func&& func) noexcept 
+    explicit find_delegate(Func&& func) noexcept 
         : m_func(FLECS_MOV(func)) { }
 
-    explicit find_invoker(const Func& func) noexcept 
+    explicit find_delegate(const Func& func) noexcept 
         : m_func(func) { }
 
     // Invoke object directly. This operation is useful when the calling
-    // function has just constructed the invoker, such as what happens when
+    // function has just constructed the delegate, such as what happens when
     // iterating a query.
     flecs::entity invoke(ecs_iter_t *iter) const {
         term_ptrs<Components...> terms;
@@ -370,7 +370,7 @@ struct find_invoker : public invoker {
         }   
     }
 
-    // Find invokers always use instanced iterators
+    // Find delegates always use instanced iterators
     static bool instanced() {
         return true;
     }
@@ -492,7 +492,7 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename Func, typename ... Components>
-struct iter_invoker : invoker {
+struct iter_delegate : delegate {
 private:
     static constexpr bool IterOnly = arity<Func>::value == 1;
 
@@ -500,14 +500,14 @@ private:
 
 public:
     template < if_not_t< is_same< decay_t<Func>, decay_t<Func>& >::value > = 0>
-    explicit iter_invoker(Func&& func) noexcept 
+    explicit iter_delegate(Func&& func) noexcept 
         : m_func(FLECS_MOV(func)) { }
 
-    explicit iter_invoker(const Func& func) noexcept 
+    explicit iter_delegate(const Func& func) noexcept 
         : m_func(func) { }
 
     // Invoke object directly. This operation is useful when the calling
-    // function has just constructed the invoker, such as what happens when
+    // function has just constructed the delegate, such as what happens when
     // iterating a query.
     void invoke(ecs_iter_t *iter) const {
         term_ptrs<Components...> terms;
@@ -517,12 +517,12 @@ public:
 
     // Static function that can be used as callback for systems/triggers
     static void run(ecs_iter_t *iter) {
-        auto self = static_cast<const iter_invoker*>(iter->binding_ctx);
+        auto self = static_cast<const iter_delegate*>(iter->binding_ctx);
         ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
         self->invoke(iter);
     }
 
-    // Instancing needs to be enabled explicitly for iter invokers
+    // Instancing needs to be enabled explicitly for iter delegates
     static bool instanced() {
         return false;
     }
@@ -577,10 +577,10 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 template<typename ... Args>
-struct entity_with_invoker_impl;
+struct entity_with_delegate_impl;
 
 template<typename ... Args>
-struct entity_with_invoker_impl<arg_list<Args ...>> {
+struct entity_with_delegate_impl<arg_list<Args ...>> {
     using ColumnArray = flecs::array<int32_t, sizeof...(Args)>;
     using ArrayType = flecs::array<void*, sizeof...(Args)>;
     using DummyArray = flecs::array<int, sizeof...(Args)>;
@@ -799,13 +799,13 @@ private:
 };
 
 template <typename Func, typename U = int>
-struct entity_with_invoker {
+struct entity_with_delegate {
     static_assert(function_traits<Func>::value, "type is not callable");
 };
 
 template <typename Func>
-struct entity_with_invoker<Func, if_t< is_callable<Func>::value > >
-    : entity_with_invoker_impl< arg_list_t<Func> >
+struct entity_with_delegate<Func, if_t< is_callable<Func>::value > >
+    : entity_with_delegate_impl< arg_list_t<Func> >
 {
     static_assert(function_traits<Func>::arity > 0,
         "function must have at least one argument");

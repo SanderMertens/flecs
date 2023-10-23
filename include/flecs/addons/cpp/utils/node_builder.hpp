@@ -34,7 +34,7 @@ public:
      * template parameters and anything provided by the signature method. */
     template <typename Func>
     T iter(Func&& func) {
-        using Invoker = typename _::iter_invoker<
+        using Invoker = typename _::iter_delegate<
             typename std::decay<Func>::type, Components...>;
         return build<Invoker>(FLECS_FWD(func));
     }
@@ -43,7 +43,7 @@ public:
      * single entity */
     template <typename Func>
     T each(Func&& func) {
-        using Invoker = typename _::each_invoker<
+        using Invoker = typename _::each_delegate<
             typename std::decay<Func>::type, Components...>;
         m_instanced = true;
         return build<Invoker>(FLECS_FWD(func));

@@ -212,7 +212,7 @@ struct entity_view : public id {
         if (ecs_filter_init(m_world, &desc) != nullptr) {
             ecs_iter_t it = ecs_filter_iter(m_world, &f);
             while (ecs_filter_next(&it)) {
-                _::each_invoker<Func>(FLECS_MOV(func)).invoke(&it);
+                _::each_delegate<Func>(FLECS_MOV(func)).invoke(&it);
             }
 
             ecs_filter_fini(&f);

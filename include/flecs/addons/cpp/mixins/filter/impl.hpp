@@ -189,12 +189,12 @@ namespace _ {
 
 // Each with entity parameter
 template<typename Func, typename ... Args>
-struct filter_invoker_w_ent;
+struct filter_delegate_w_ent;
 
 template<typename Func, typename E, typename ... Args>
-struct filter_invoker_w_ent<Func, arg_list<E, Args ...> >
+struct filter_delegate_w_ent<Func, arg_list<E, Args ...> >
 {
-    filter_invoker_w_ent(const flecs::world& world, Func&& func) {
+    filter_delegate_w_ent(const flecs::world& world, Func&& func) {
         auto f = world.filter<Args ...>();
         f.each(FLECS_MOV(func));
     }
@@ -202,12 +202,12 @@ struct filter_invoker_w_ent<Func, arg_list<E, Args ...> >
 
 // Each without entity parameter
 template<typename Func, typename ... Args>
-struct filter_invoker_no_ent;
+struct filter_delegate_no_ent;
 
 template<typename Func, typename ... Args>
-struct filter_invoker_no_ent<Func, arg_list<Args ...> >
+struct filter_delegate_no_ent<Func, arg_list<Args ...> >
 {
-    filter_invoker_no_ent(const flecs::world& world, Func&& func) {
+    filter_delegate_no_ent(const flecs::world& world, Func&& func) {
         auto f = world.filter<Args ...>();
         f.each(FLECS_MOV(func));
     }
@@ -215,19 +215,19 @@ struct filter_invoker_no_ent<Func, arg_list<Args ...> >
 
 // Switch between function with & without entity parameter
 template<typename Func, typename T = int>
-struct filter_invoker;
+struct filter_delegate;
 
 template <typename Func>
-struct filter_invoker<Func, if_t<is_same<first_arg_t<Func>, flecs::entity>::value> > {
-    filter_invoker(const flecs::world& world, Func&& func) {
-        filter_invoker_w_ent<Func, arg_list_t<Func>>(world, FLECS_MOV(func));
+struct filter_delegate<Func, if_t<is_same<first_arg_t<Func>, flecs::entity>::value> > {
+    filter_delegate(const flecs::world& world, Func&& func) {
+        filter_delegate_w_ent<Func, arg_list_t<Func>>(world, FLECS_MOV(func));
     }
 };
 
 template <typename Func>
-struct filter_invoker<Func, if_not_t<is_same<first_arg_t<Func>, flecs::entity>::value> > {
-    filter_invoker(const flecs::world& world, Func&& func) {
-        filter_invoker_no_ent<Func, arg_list_t<Func>>(world, FLECS_MOV(func));
+struct filter_delegate<Func, if_not_t<is_same<first_arg_t<Func>, flecs::entity>::value> > {
+    filter_delegate(const flecs::world& world, Func&& func) {
+        filter_delegate_no_ent<Func, arg_list_t<Func>>(world, FLECS_MOV(func));
     }
 };
 
@@ -235,7 +235,7 @@ struct filter_invoker<Func, if_not_t<is_same<first_arg_t<Func>, flecs::entity>::
 
 template <typename Func>
 inline void world::each(Func&& func) const {
-    _::filter_invoker<Func> f_invoker(*this, FLECS_MOV(func));
+    _::filter_delegate<Func> f_delegate(*this, FLECS_MOV(func));
 }
 
 template <typename T, typename Func>
@@ -245,7 +245,7 @@ inline void world::each(Func&& func) const {
     ecs_iter_t it = ecs_term_iter(m_world, &t);
 
     while (ecs_term_next(&it)) {
-        _::each_invoker<Func, T>(func).invoke(&it);
+        _::each_delegate<Func, T>(func).invoke(&it);
     }
 }
 
@@ -256,7 +256,7 @@ inline void world::each(flecs::id_t term_id, Func&& func) const {
     ecs_iter_t it = ecs_term_iter(m_world, &t);
 
     while (ecs_term_next(&it)) {
-        _::each_invoker<Func>(func).invoke(&it);
+        _::each_delegate<Func>(func).invoke(&it);
     }
 }
 

@@ -35,7 +35,7 @@ template <typename T, typename U = int>
 struct cpp_type;
 
 template <typename Func, typename ... Components>
-struct each_invoker;
+struct each_delegate;
 
 } // namespace _
 } // namespace flecs
@@ -103,7 +103,7 @@ struct each_invoker;
 #include "world.hpp"
 #include "iter.hpp"
 #include "entity.hpp"
-#include "invoker.hpp"
+#include "delegate.hpp"
 #include "utils/iterable.hpp"
 #include "component.hpp"
 #include "type.hpp"

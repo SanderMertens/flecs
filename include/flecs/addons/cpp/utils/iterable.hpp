@@ -33,25 +33,25 @@ struct iterable {
 
     template <typename Func>
     void each(flecs::world_t *world, Func&& func) const {
-        iterate<_::each_invoker>(world, FLECS_FWD(func), 
+        iterate<_::each_delegate>(world, FLECS_FWD(func), 
             this->next_each_action());
     }
 
     template <typename Func>
     void each(flecs::iter& it, Func&& func) const {
-        iterate<_::each_invoker>(it.world(), FLECS_FWD(func),
+        iterate<_::each_delegate>(it.world(), FLECS_FWD(func),
             this->next_each_action());
     }
 
     template <typename Func>
     void each(flecs::entity e, Func&& func) const {
-        iterate<_::each_invoker>(e.world(), FLECS_FWD(func), 
+        iterate<_::each_delegate>(e.world(), FLECS_FWD(func), 
             this->next_each_action());
     }
 
     template <typename Func>
     flecs::entity find(Func&& func) const {
-        return iterate_find<_::find_invoker>(nullptr, FLECS_FWD(func), 
+        return iterate_find<_::find_delegate>(nullptr, FLECS_FWD(func), 
             this->next_each_action());
     }
 
@@ -68,25 +68,25 @@ struct iterable {
      */
     template <typename Func>
     void iter(Func&& func) const { 
-        iterate<_::iter_invoker>(nullptr, FLECS_FWD(func), 
+        iterate<_::iter_delegate>(nullptr, FLECS_FWD(func), 
             this->next_action());
     }
 
     template <typename Func>
     void iter(flecs::world_t *world, Func&& func) const {
-        iterate<_::iter_invoker>(world, FLECS_FWD(func), 
+        iterate<_::iter_delegate>(world, FLECS_FWD(func), 
             this->next_action());
     }
 
     template <typename Func>
     void iter(flecs::iter& it, Func&& func) const {
-        iterate<_::iter_invoker>(it.world(), FLECS_FWD(func),
+        iterate<_::iter_delegate>(it.world(), FLECS_FWD(func),
             this->next_action());
     }
 
     template <typename Func>
     void iter(flecs::entity e, Func&& func) const {
-        iterate<_::iter_invoker>(e.world(), FLECS_FWD(func), 
+        iterate<_::iter_delegate>(e.world(), FLECS_FWD(func), 
             this->next_action());
     }
 
