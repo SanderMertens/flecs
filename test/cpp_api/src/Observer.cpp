@@ -803,3 +803,16 @@ void Observer_add_in_yield_existing_multi(void) {
     test_assert(e3.has<Mass>());
     test_assert(e3.has<Velocity>());
 }
+
+void Observer_name_from_root(void) {
+    flecs::world ecs;
+
+    flecs::entity sys = ecs.observer<Position>("::ns::MySystem")
+        .event(flecs::OnSet)
+        .each([](Position& p) { });
+
+    test_str(sys.name(), "MySystem");
+
+    flecs::entity ns = ecs.entity("::ns");
+    test_assert(ns == sys.parent());
+}

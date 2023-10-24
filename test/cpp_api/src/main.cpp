@@ -817,6 +817,7 @@ void SystemBuilder_20_terms(void);
 void SystemBuilder_name_arg(void);
 void SystemBuilder_create_w_no_template_args(void);
 void SystemBuilder_write_annotation(void);
+void SystemBuilder_name_from_root(void);
 
 // Testsuite 'Observer'
 void Observer_2_terms_on_add(void);
@@ -850,6 +851,7 @@ void Observer_on_add_pair_wildcard_singleton(void);
 void Observer_on_add_with_pair_singleton(void);
 void Observer_add_in_yield_existing(void);
 void Observer_add_in_yield_existing_multi(void);
+void Observer_name_from_root(void);
 
 // Testsuite 'Filter'
 void Filter_term_each_component(void);
@@ -4479,6 +4481,10 @@ bake_test_case SystemBuilder_testcases[] = {
     {
         "write_annotation",
         SystemBuilder_write_annotation
+    },
+    {
+        "name_from_root",
+        SystemBuilder_name_from_root
     }
 };
 
@@ -4606,6 +4612,10 @@ bake_test_case Observer_testcases[] = {
     {
         "add_in_yield_existing_multi",
         Observer_add_in_yield_existing_multi
+    },
+    {
+        "name_from_root",
+        Observer_name_from_root
     }
 };
 
@@ -6480,14 +6490,14 @@ static bake_test_suite suites[] = {
         "SystemBuilder",
         NULL,
         NULL,
-        21,
+        22,
         SystemBuilder_testcases
     },
     {
         "Observer",
         NULL,
         NULL,
-        31,
+        32,
         Observer_testcases
     },
     {

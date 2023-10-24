@@ -514,3 +514,15 @@ void SystemBuilder_write_annotation(void) {
 
     test_assert(e1.has<TagB>());
 }
+
+void SystemBuilder_name_from_root(void) {
+    flecs::world ecs;
+
+    flecs::entity sys = ecs.system("::ns::MySystem")
+        .each([](flecs::entity e) { });
+
+    test_str(sys.name(), "MySystem");
+
+    flecs::entity ns = ecs.entity("::ns");
+    test_assert(ns == sys.parent());
+}

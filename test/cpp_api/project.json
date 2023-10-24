@@ -848,7 +848,8 @@
                 "20_terms",
                 "name_arg",
                 "create_w_no_template_args",
-                "write_annotation"
+                "write_annotation",
+                "name_from_root"
             ]  
         }, {
             "id": "Observer",
@@ -883,7 +884,8 @@
                 "on_add_pair_wildcard_singleton",
                 "on_add_with_pair_singleton",
                 "add_in_yield_existing",
-                "add_in_yield_existing_multi"
+                "add_in_yield_existing_multi",
+                "name_from_root"
             ]
         }, {
             "id": "Filter",

@@ -26,6 +26,7 @@ public:
         ecs_entity_desc_t entity_desc = {};
         entity_desc.name = name;
         entity_desc.sep = "::";
+        entity_desc.root_sep = "::";
         m_desc.entity = ecs_entity_init(m_world, &entity_desc);
     }
 
