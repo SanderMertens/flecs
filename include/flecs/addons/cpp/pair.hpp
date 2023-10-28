@@ -74,25 +74,26 @@ private:
 template <typename First, typename Second, if_t<is_empty<First>::value> = 0>
 using pair_object = pair<First, Second>;
 
+template <typename T>
+using raw_type_t = remove_pointer_t<remove_reference_t<T>>;
 
 /** Test if type is a pair. */
 template <typename T>
 struct is_pair {
-    static constexpr bool value = is_base_of<_::pair_base, remove_reference_t<T> >::value;
+    static constexpr bool value = is_base_of<_::pair_base, raw_type_t<T> >::value;
 };
-
 
 /** Get pair::first from pair while preserving cv qualifiers. */
 template <typename P>
-using pair_first_t = transcribe_cv_t<remove_reference_t<P>, typename remove_reference_t<P>::first>;
+using pair_first_t = transcribe_cv_t<remove_reference_t<P>, typename raw_type_t<P>::first>;
 
 /** Get pair::second from pair while preserving cv qualifiers. */
 template <typename P>
-using pair_second_t = transcribe_cv_t<remove_reference_t<P>, typename remove_reference_t<P>::second>;
+using pair_second_t = transcribe_cv_t<remove_reference_t<P>, typename raw_type_t<P>::second>;
 
-/** Get pair::type type from pair while preserving cv qualifiers. */
+/** Get pair::type type from pair while preserving cv qualifiers and pointer type. */
 template <typename P>
-using pair_type_t = transcribe_cv_t<remove_reference_t<P>, typename remove_reference_t<P>::type>;
+using pair_type_t = transcribe_cvp_t<remove_reference_t<P>, typename raw_type_t<P>::type>;
 
 /** Get actual type from a regular type or pair. */
 template <typename T, typename U = int>
