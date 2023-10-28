@@ -139,7 +139,7 @@ struct each_column<T, if_t< is_pointer<T>::value &&
     each_column(const _::term_ptr& term, size_t row) 
         : each_column_base(term, row) { }
 
-    T get_row() {
+    actual_type_t<T> get_row() {
         if (this->m_term.ptr) {
             return &static_cast<actual_type_t<T>>(this->m_term.ptr)[this->m_row];
         } else {

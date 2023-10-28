@@ -162,7 +162,7 @@
                 "with_scope_nested",
                 "with_scope_nested_same_name_as_parent",
                 "scope_after_builder_method",
-                "scope_before_builder_method",                
+                "scope_before_builder_method",
                 "no_recursive_lookup",
                 "defer_new_w_name",
                 "defer_new_w_nested_name",
@@ -277,7 +277,7 @@
                 "add_tag_pair_to_tag",
                 "remove_component_pair",
                 "remove_tag_pair",
-                "remove_tag_pair_to_tag",                
+                "remove_tag_pair_to_tag",
                 "set_component_pair",
                 "set_tag_pair",
                 "system_1_pair_instance",
@@ -482,7 +482,8 @@
                 "nested_rate_tick_source",
                 "table_get",
                 "range_get",
-                "randomize_timers"
+                "randomize_timers",
+                "optional_pair_term"
             ]
         }, {
             "id": "Event",
@@ -823,7 +824,7 @@
                 "inspect_terms_w_expr",
                 "find",
                 "find_not_found",
-                "find_w_entity"                
+                "find_w_entity"
             ]
         }, {
             "id": "SystemBuilder",
@@ -850,7 +851,7 @@
                 "create_w_no_template_args",
                 "write_annotation",
                 "name_from_root"
-            ]  
+            ]
         }, {
             "id": "Observer",
             "testcases": [

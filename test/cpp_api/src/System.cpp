@@ -23,7 +23,7 @@ void System_iter(void) {
 
     const Velocity *v = entity.get<Velocity>();
     test_int(v->x, 1);
-    test_int(v->y, 2);       
+    test_int(v->y, 2);
 }
 
 void System_iter_const(void) {
@@ -79,7 +79,7 @@ void System_iter_shared(void) {
                 for (auto i : it) {
                     p[i].x += v[i].x;
                     p[i].y += v[i].y;
-                }                
+                }
             }
         });
 
@@ -91,7 +91,7 @@ void System_iter_shared(void) {
 
     p = e2.get<Position>();
     test_int(p->x, 13);
-    test_int(p->y, 24);   
+    test_int(p->y, 24);
 }
 
 void System_iter_optional(void) {
@@ -106,7 +106,7 @@ void System_iter_optional(void) {
     auto e2 = world.entity()
         .set<Position>({30, 40})
         .set<Velocity>({3, 4})
-        .set<Mass>({1});        
+        .set<Mass>({1});
 
     auto e3 = world.entity()
         .set<Position>({50, 60});
@@ -216,7 +216,7 @@ void System_each_shared(void) {
 
     p = e2.get<Position>();
     test_int(p->x, 13);
-    test_int(p->y, 24); 
+    test_int(p->y, 24);
 }
 
 void System_each_optional(void) {
@@ -231,7 +231,7 @@ void System_each_optional(void) {
     auto e2 = world.entity()
         .set<Position>({30, 40})
         .set<Velocity>({3, 4})
-        .set<Mass>({1});        
+        .set<Mass>({1});
 
     auto e3 = world.entity()
         .set<Position>({50, 60});
@@ -296,7 +296,7 @@ void System_signature(void) {
 
     const Velocity *v = entity.get<Velocity>();
     test_int(v->x, 1);
-    test_int(v->y, 2); 
+    test_int(v->y, 2);
 }
 
 void System_signature_const(void) {
@@ -325,7 +325,7 @@ void System_signature_const(void) {
 
     const Velocity *v = entity.get<Velocity>();
     test_int(v->x, 1);
-    test_int(v->y, 2); 
+    test_int(v->y, 2);
 }
 
 void System_signature_shared(void) {
@@ -356,7 +356,7 @@ void System_signature_shared(void) {
                 for (auto i : it) {
                     p[i].x += v[i].x;
                     p[i].y += v[i].y;
-                }                
+                }
             }
         });
 
@@ -368,7 +368,7 @@ void System_signature_shared(void) {
 
     p = e2.get<Position>();
     test_int(p->x, 13);
-    test_int(p->y, 24); 
+    test_int(p->y, 24);
 }
 
 void System_signature_optional(void) {
@@ -383,7 +383,7 @@ void System_signature_optional(void) {
     auto e2 = world.entity()
         .set<Position>({30, 40})
         .set<Velocity>({3, 4})
-        .set<Mass>({1});        
+        .set<Mass>({1});
 
     auto e3 = world.entity()
         .set<Position>({50, 60});
@@ -406,7 +406,7 @@ void System_signature_optional(void) {
                 for (auto i : it) {
                     p[i].x ++;
                     p[i].y ++;
-                }            
+                }
             }
         });
 
@@ -475,7 +475,7 @@ void System_empty_signature(void) {
 
     world.progress();
 
-    test_int(count, 1); 
+    test_int(count, 1);
 }
 
 struct MyTag { };
@@ -547,7 +547,7 @@ void System_order_by_type(void) {
 
     auto sys = world.system<const Position>()
         .order_by<Position>(
-            [](flecs::entity_t e1, const Position *p1, 
+            [](flecs::entity_t e1, const Position *p1,
                flecs::entity_t e2, const Position *p2) {
                 return (p1->x > p2->x) - (p1->x < p2->x);
             })
@@ -577,12 +577,12 @@ void System_order_by_id(void) {
     int32_t count = 0;
 
     auto sys = world.system<const Position>()
-        .order_by(pos, [](flecs::entity_t e1, const void *p1, 
-                          flecs::entity_t e2, const void *p2) 
+        .order_by(pos, [](flecs::entity_t e1, const void *p1,
+                          flecs::entity_t e2, const void *p2)
             {
-                return (static_cast<const Position*>(p1)->x > 
-                            static_cast<const Position*>(p2)->x) - 
-                       (static_cast<const Position*>(p1)->x < 
+                return (static_cast<const Position*>(p1)->x >
+                            static_cast<const Position*>(p2)->x) -
+                       (static_cast<const Position*>(p1)->x <
                             static_cast<const Position*>(p2)->x);
             })
         .each([&](flecs::entity e, const Position& p) {
@@ -609,7 +609,7 @@ void System_order_by_type_after_create(void) {
     int32_t count = 0;
 
     auto sys = world.system<const Position>()
-        .order_by<Position>([](flecs::entity_t e1, const Position *p1, 
+        .order_by<Position>([](flecs::entity_t e1, const Position *p1,
             flecs::entity_t e2, const Position *p2) {
             return (p1->x > p2->x) - (p1->x < p2->x);
         })
@@ -640,7 +640,7 @@ void System_order_by_id_after_create(void) {
 
     auto sys = world.system<const Position>()
         .order_by(pos, [](flecs::entity_t e1, const void *p1, flecs::entity_t e2, const void *p2) {
-            return (static_cast<const Position*>(p1)->x > static_cast<const Position*>(p2)->x) - 
+            return (static_cast<const Position*>(p1)->x > static_cast<const Position*>(p2)->x) -
                 (static_cast<const Position*>(p1)->x < static_cast<const Position*>(p2)->x);
         })
         .each([&](flecs::entity e, const Position& p) {
@@ -911,9 +911,9 @@ void System_readonly_children_iter(void) {
                     // Dummy code to ensure we can access the entity
                     const Position *p = child.get<Position>();
                     test_int(p->x, 1);
-                    test_int(p->y, 0);    
+                    test_int(p->y, 0);
 
-                    count ++;                
+                    count ++;
                 });
             }
         });
@@ -926,10 +926,10 @@ void System_readonly_children_iter(void) {
 void System_rate_filter(void) {
     flecs::world world;
 
-    int32_t 
-    root_count = 0, root_mult = 1, 
-    l1_a_count = 0, l1_a_mult = 1, 
-    l1_b_count = 0, l1_b_mult = 2, 
+    int32_t
+    root_count = 0, root_mult = 1,
+    l1_a_count = 0, l1_a_mult = 1,
+    l1_b_count = 0, l1_b_mult = 2,
     l1_c_count = 0, l1_c_mult = 3,
     l2_a_count = 0, l2_a_mult = 2,
     l2_b_count = 0, l2_b_mult = 4,
@@ -944,7 +944,7 @@ void System_rate_filter(void) {
         .rate(root, 1)
         .iter([&](flecs::iter& it) {
             l1_a_count ++;
-        });  
+        });
 
     auto l1_b = world.system<>("l1_b")
         .rate(root, 2)
@@ -956,7 +956,7 @@ void System_rate_filter(void) {
         .rate(root, 3)
         .iter([&](flecs::iter& it) {
             l1_c_count ++;
-        });        
+        });
 
     world.system<>("l2_a")
         .rate(l1_a, 2)
@@ -978,15 +978,15 @@ void System_rate_filter(void) {
         test_int(l1_c_count, frame_count / l1_c_mult);
         test_int(l2_a_count, frame_count / l2_a_mult);
         test_int(l2_b_count, frame_count / l2_b_mult);
-    }    
+    }
 }
 
 void System_update_rate_filter(void) {
     flecs::world world;
 
-    int32_t 
-    root_count = 0, root_mult = 1, 
-    l1_count = 0, l1_mult = 2, 
+    int32_t
+    root_count = 0, root_mult = 1,
+    l1_count = 0, l1_mult = 2,
     l2_count = 0, l2_mult = 6,
     frame_count = 0;
 
@@ -999,13 +999,13 @@ void System_update_rate_filter(void) {
         .rate(root, 2)
         .iter([&](flecs::iter& it) {
             l1_count ++;
-        });  
+        });
 
     world.system<>("l2")
         .rate(l1, 3)
         .iter([&](flecs::iter& it) {
             l2_count ++;
-        }); 
+        });
 
     for (int i = 0; i < 12; i ++) {
         world.progress(); frame_count ++;
@@ -1028,7 +1028,7 @@ void System_update_rate_filter(void) {
         test_int(root_count, frame_count / root_mult);
         test_int(l1_count, frame_count / l1_mult);
         test_int(l2_count, frame_count / l2_mult);
-    }      
+    }
 }
 
 void System_test_auto_defer_each(void) {
@@ -1452,7 +1452,7 @@ void System_instanced_query_w_singleton_iter(void) {
                 count ++;
             }
         });
-    
+
     s.run();
 
     test_int(count, 5);
@@ -1745,7 +1745,7 @@ void System_system_w_type_kind_type_pipeline(void) {
         });
 
     world.progress();
-    
+
     test_int(s1_count, 1);
     test_int(s2_count, 1);
 }
@@ -2230,4 +2230,37 @@ void System_randomize_timers(void) {
         test_assert(t != nullptr);
         test_assert(t->time != 0);
     }
+}
+
+void System_optional_pair_term(void) {
+    flecs::world ecs;
+
+    ecs.entity()
+        .add<TagA>()
+        .emplace<Position, Tag>(1.0f, 2.0f);
+    ecs.entity()
+        .add<TagA>();
+
+    int32_t with_pair = 0, without_pair = 0;
+
+    ecs.system<flecs::pair<Position, Tag>*>()
+        .with<TagA>()
+        .each([&](flecs::entity e, Position* p)
+        {
+            if (p)
+            {
+                with_pair++;
+                test_flt(1.0f, p->x);
+                test_flt(2.0f, p->y);
+            }
+            else
+            {
+                without_pair++;
+            }
+        });
+
+    ecs.progress(1.0);
+
+    test_int(1, with_pair);
+    test_int(1, without_pair);
 }
