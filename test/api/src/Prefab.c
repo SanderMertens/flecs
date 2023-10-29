@@ -4294,3 +4294,32 @@ void Prefab_override_exclusive_2_lvls(void) {
 
     ecs_fini(ecs);
 }
+
+static
+ecs_entity_t make_prefabs(ecs_world_t *ecs) {
+    ecs_entity_t root = ecs_new_w_id(ecs, EcsPrefab);
+    ecs_entity_t parent = ecs_new_w_pair(ecs, EcsChildOf, root);
+    ecs_new_w_pair(ecs, EcsChildOf, parent);
+    return root;
+}
+
+void Prefab_hierarchy_w_recycled_id(void) {
+    ecs_world_t* ecs = ecs_mini();
+
+    {
+        ecs_entity_t p = make_prefabs(ecs);
+        test_assert(p != 0);
+        ecs_entity_t i = ecs_new_w_pair(ecs, EcsIsA, p);
+        test_assert(i != 0);
+        ecs_delete(ecs, i);
+    }
+
+    {
+        ecs_entity_t p = make_prefabs(ecs);
+        test_assert(p != 0);
+        ecs_entity_t i = ecs_new_w_pair(ecs, EcsIsA, p);
+        test_assert(i != 0);
+    }
+
+    ecs_fini(ecs);
+}

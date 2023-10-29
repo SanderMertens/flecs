@@ -2243,6 +2243,7 @@ void Prefab_always_override_pair(void);
 void Prefab_child_of_prefab_is_prefab(void);
 void Prefab_override_exclusive(void);
 void Prefab_override_exclusive_2_lvls(void);
+void Prefab_hierarchy_w_recycled_id(void);
 
 // Testsuite 'World'
 void World_setup(void);
@@ -11337,6 +11338,10 @@ bake_test_case Prefab_testcases[] = {
     {
         "override_exclusive_2_lvls",
         Prefab_override_exclusive_2_lvls
+    },
+    {
+        "hierarchy_w_recycled_id",
+        Prefab_hierarchy_w_recycled_id
     }
 };
 
@@ -13091,7 +13096,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        126,
+        127,
         Prefab_testcases
     },
     {

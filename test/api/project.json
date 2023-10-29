@@ -2325,7 +2325,8 @@
                 "always_override_pair",
                 "child_of_prefab_is_prefab",
                 "override_exclusive",
-                "override_exclusive_2_lvls"
+                "override_exclusive_2_lvls",
+                "hierarchy_w_recycled_id"
             ]
         }, {
             "id": "World",

@@ -319,7 +319,8 @@ void flecs_instantiate_children(
         /* Keep track of the element that creates the ChildOf relationship with
          * the prefab parent. We need to replace this element to make sure the
          * created children point to the instance and not the prefab */ 
-        if (ECS_HAS_RELATION(id, EcsChildOf) && (ECS_PAIR_SECOND(id) == base)) {
+        if (ECS_HAS_RELATION(id, EcsChildOf) && 
+           (ECS_PAIR_SECOND(id) == (uint32_t)base)) {
             childof_base_index = pos;
         }
 
