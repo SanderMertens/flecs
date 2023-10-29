@@ -598,7 +598,8 @@
                 "iter_get_pair_w_id",
                 "find",
                 "find_not_found",
-                "find_w_entity"
+                "find_w_entity",
+                "optional_pair_term"
             ]
         }, {
             "id": "QueryBuilder",
@@ -916,7 +917,8 @@
                 "inspect_terms_w_expr",
                 "find",
                 "find_not_found",
-                "find_w_entity"
+                "find_w_entity",
+                "optional_pair_term"
             ]
         }, {
             "id": "ComponentLifecycle",

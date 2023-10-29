@@ -575,6 +575,7 @@ void Query_iter_get_pair_w_id(void);
 void Query_find(void);
 void Query_find_not_found(void);
 void Query_find_w_entity(void);
+void Query_optional_pair_term(void);
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_builder_assign_same_type(void);
@@ -881,6 +882,7 @@ void Filter_inspect_terms_w_expr(void);
 void Filter_find(void);
 void Filter_find_not_found(void);
 void Filter_find_w_entity(void);
+void Filter_optional_pair_term(void);
 
 // Testsuite 'ComponentLifecycle'
 void ComponentLifecycle_ctor_on_add(void);
@@ -3534,6 +3536,10 @@ bake_test_case Query_testcases[] = {
     {
         "find_w_entity",
         Query_find_w_entity
+    },
+    {
+        "optional_pair_term",
+        Query_optional_pair_term
     }
 };
 
@@ -4728,6 +4734,10 @@ bake_test_case Filter_testcases[] = {
     {
         "find_w_entity",
         Filter_find_w_entity
+    },
+    {
+        "optional_pair_term",
+        Filter_optional_pair_term
     }
 };
 
@@ -6467,7 +6477,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        84,
+        85,
         Query_testcases
     },
     {
@@ -6509,7 +6519,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        26,
+        27,
         Filter_testcases
     },
     {

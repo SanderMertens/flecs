@@ -16010,6 +16010,12 @@ using transcribe_volatile_t = conditional_t<is_volatile<Src>::value, Dst volatil
 template<class Src, class Dst>
 using transcribe_cv_t = transcribe_const_t< Src, transcribe_volatile_t< Src, Dst> >;
 
+template<class Src, class Dst>
+using transcribe_pointer_t = conditional_t<is_pointer<Src>::value, Dst*, Dst>;
+
+template<class Src, class Dst>
+using transcribe_cvp_t = transcribe_cv_t< Src, transcribe_pointer_t< Src, Dst> >;
+
 
 // More convenience templates. The if_*_t templates use int as default type
 // instead of void. This enables writing code that's a bit less cluttered when
@@ -18761,25 +18767,26 @@ private:
 template <typename First, typename Second, if_t<is_empty<First>::value> = 0>
 using pair_object = pair<First, Second>;
 
+template <typename T>
+using raw_type_t = remove_pointer_t<remove_reference_t<T>>;
 
 /** Test if type is a pair. */
 template <typename T>
 struct is_pair {
-    static constexpr bool value = is_base_of<_::pair_base, remove_reference_t<T> >::value;
+    static constexpr bool value = is_base_of<_::pair_base, raw_type_t<T> >::value;
 };
-
 
 /** Get pair::first from pair while preserving cv qualifiers. */
 template <typename P>
-using pair_first_t = transcribe_cv_t<remove_reference_t<P>, typename remove_reference_t<P>::first>;
+using pair_first_t = transcribe_cv_t<remove_reference_t<P>, typename raw_type_t<P>::first>;
 
 /** Get pair::second from pair while preserving cv qualifiers. */
 template <typename P>
-using pair_second_t = transcribe_cv_t<remove_reference_t<P>, typename remove_reference_t<P>::second>;
+using pair_second_t = transcribe_cv_t<remove_reference_t<P>, typename raw_type_t<P>::second>;
 
-/** Get pair::type type from pair while preserving cv qualifiers. */
+/** Get pair::type type from pair while preserving cv qualifiers and pointer type. */
 template <typename P>
-using pair_type_t = transcribe_cv_t<remove_reference_t<P>, typename remove_reference_t<P>::type>;
+using pair_type_t = transcribe_cvp_t<remove_reference_t<P>, typename raw_type_t<P>::type>;
 
 /** Get actual type from a regular type or pair. */
 template <typename T, typename U = int>
@@ -24065,7 +24072,7 @@ struct each_column<T, if_t< is_pointer<T>::value &&
     each_column(const _::term_ptr& term, size_t row) 
         : each_column_base(term, row) { }
 
-    T get_row() {
+    actual_type_t<T> get_row() {
         if (this->m_term.ptr) {
             return &static_cast<actual_type_t<T>>(this->m_term.ptr)[this->m_row];
         } else {

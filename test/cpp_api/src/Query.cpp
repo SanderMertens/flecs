@@ -2332,3 +2332,34 @@ void Query_find_w_entity(void) {
 
     test_assert(r == e2);
 }
+
+void Query_optional_pair_term(void) {
+    flecs::world ecs;
+
+    ecs.entity()
+        .add<TagA>()
+        .emplace<Position, Tag>(1.0f, 2.0f);
+    ecs.entity()
+        .add<TagA>();
+
+    int32_t with_pair = 0, without_pair = 0;
+
+    auto f = ecs.query_builder<flecs::pair<Position, Tag>*>()
+        .with<TagA>()
+        .build();
+        
+    f.each([&](flecs::entity e, Position* p) {
+        if (p) {
+            with_pair++;
+            test_flt(1.0f, p->x);
+            test_flt(2.0f, p->y);
+        } else {
+            without_pair++;
+        }
+    });
+
+    ecs.progress(1.0);
+
+    test_int(1, with_pair);
+    test_int(1, without_pair);
+}
