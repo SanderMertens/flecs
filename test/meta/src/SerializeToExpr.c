@@ -326,6 +326,14 @@ void SerializeToExpr_u64(void) {
     ecs_os_free(expr);
     }
 
+    {
+    ecs_u64_t value = 2366700781656087864;
+    char *expr = ecs_ptr_to_expr(world, ecs_id(ecs_u64_t), &value);
+    test_assert(expr != NULL);
+    test_str(expr, "2366700781656087864");
+    ecs_os_free(expr);
+    }
+
     ecs_fini(world);
 }
 

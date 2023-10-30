@@ -1303,11 +1303,11 @@ int ecs_meta_set_string(
         break;
     case EcsOpI64:
     case EcsOpU64:
-        set_T(ecs_i64_t, ptr, atol(value));
+        set_T(ecs_i64_t, ptr, atoll(value));
         break;
     case EcsOpIPtr:
     case EcsOpUPtr:
-        set_T(ecs_iptr_t, ptr, atol(value));
+        set_T(ecs_iptr_t, ptr, atoll(value));
         break;
     case EcsOpF32:
         set_T(ecs_f32_t, ptr, atof(value));

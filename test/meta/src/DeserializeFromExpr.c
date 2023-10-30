@@ -162,12 +162,29 @@ void DeserializeFromExpr_u32(void) {
 void DeserializeFromExpr_u64(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_u64_t value = 0;
+    {
+        ecs_u64_t value = 0;
+        const char *ptr = ecs_parse_expr(
+            world, "0", &ecs_value(ecs_u64_t, &value), NULL);
+        test_assert(ptr != NULL);
+        test_int(value, 0);
+    }
 
-    const char *ptr = ecs_parse_expr(world, "10", &ecs_value(ecs_u64_t, &value), NULL);
-    test_assert(ptr != NULL);
+    {
+        ecs_u64_t value = 0;
+        const char *ptr = ecs_parse_expr(
+            world, "10", &ecs_value(ecs_u64_t, &value), NULL);
+        test_assert(ptr != NULL);
+        test_int(value, 10);
+    }
 
-    test_int(value, 10);
+    {
+        ecs_u64_t value = 0;
+        const char *ptr = ecs_parse_expr(
+            world, "2366700781656087864", &ecs_value(ecs_u64_t, &value), NULL);
+        test_assert(ptr != NULL);
+        test_int(value, 2366700781656087864);
+    }
 
     ecs_fini(world);
 }
