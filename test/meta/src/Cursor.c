@@ -146,12 +146,19 @@ void Cursor_set_u32(void) {
 void Cursor_set_u64(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_u64_t value = 10;
+    {
+        ecs_u64_t value = 10;
+        ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_u64_t), &value);
+        test_ok( ecs_meta_set_uint(&cur, 20) );
+        test_uint(value, 20);
+    }
 
-    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_u64_t), &value);
-    test_ok( ecs_meta_set_uint(&cur, 20) );
-
-    test_uint(value, 20);
+    {
+        ecs_u64_t value = 10;
+        ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_u64_t), &value);
+        test_ok( ecs_meta_set_uint(&cur, 2366700781656087864) );
+        test_uint(value, 2366700781656087864);
+    }
 
     ecs_fini(world);
 }
@@ -532,12 +539,39 @@ void Cursor_set_str_to_i32(void) {
 void Cursor_set_str_to_i64(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_i64_t value = 10;
+    {
+        ecs_i64_t value = 10;
+        ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_i64_t), &value);
+        test_ok( ecs_meta_set_string(&cur, "20") );
+        test_int(value, 20);
+    }
 
-    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_i64_t), &value);
-    test_ok( ecs_meta_set_string(&cur, "20") );
+    {
+        ecs_i64_t value = 10;
+        ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_i64_t), &value);
+        test_ok( ecs_meta_set_string(&cur, "2366700781656087864") );
+        test_int(value, 2366700781656087864);
+    }
 
-    test_int(value, 20);
+    ecs_fini(world);
+}
+
+void Cursor_set_str_to_u64(void) {
+    ecs_world_t *world = ecs_init();
+
+    {
+        ecs_u64_t value = 10;
+        ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_u64_t), &value);
+        test_ok( ecs_meta_set_string(&cur, "20") );
+        test_uint(value, 20);
+    }
+
+    {
+        ecs_u64_t value = 10;
+        ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_u64_t), &value);
+        test_ok( ecs_meta_set_string(&cur, "2366700781656087864") );
+        test_uint(value, 2366700781656087864);
+    }
 
     ecs_fini(world);
 }

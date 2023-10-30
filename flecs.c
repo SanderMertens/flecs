@@ -49165,6 +49165,7 @@ typedef enum ecs_json_token_t {
     JsonTrue,
     JsonFalse,
     JsonNull,
+    JsonLargeInt,
     JsonLargeString,
     JsonInvalid
 } ecs_json_token_t;
@@ -49417,6 +49418,11 @@ const char* ecs_ptr_from_json(
         } else if (token_kind == JsonNumber) {
             double number = atof(token);
             if (ecs_meta_set_float(&cur, number) != 0) {
+                goto error;
+            }
+        } else if (token_kind == JsonLargeInt) {
+            int64_t number = flecs_ito(int64_t, atoll(token));
+            if (ecs_meta_set_int(&cur, number) != 0) {
                 goto error;
             }
         } else if (token_kind == JsonNull) {
@@ -50317,6 +50323,7 @@ const char* flecs_json_token_str(
     case JsonColon: return ":";
     case JsonComma: return ",";
     case JsonNumber: return "number";
+    case JsonLargeInt: return "large integer";
     case JsonLargeString:
     case JsonString: return "string";
     case JsonTrue: return "true";
@@ -50387,7 +50394,17 @@ const char* flecs_json_parse(
         }
     } else if (isdigit(ch) || (ch == '-')) {
         token_kind[0] = JsonNumber;
-        return ecs_parse_digit(json, token);
+        const char *result = ecs_parse_digit(json, token);
+        
+        /* Cheap initial check if parsed token could represent large int */
+        if (result - json > 15) {
+            /* Less cheap secondary check to see if number is integer */
+            if (!strchr(token, '.')) {
+                token_kind[0] = JsonLargeInt;
+            }
+        }
+
+        return result;
     } else if (isalpha(ch)) {
         if (!ecs_os_strncmp(json, "null", 4)) {
             token_kind[0] = JsonNull;
@@ -55260,11 +55277,11 @@ int ecs_meta_set_string(
         break;
     case EcsOpI64:
     case EcsOpU64:
-        set_T(ecs_i64_t, ptr, atol(value));
+        set_T(ecs_i64_t, ptr, atoll(value));
         break;
     case EcsOpIPtr:
     case EcsOpUPtr:
-        set_T(ecs_iptr_t, ptr, atol(value));
+        set_T(ecs_iptr_t, ptr, atoll(value));
         break;
     case EcsOpF32:
         set_T(ecs_f32_t, ptr, atof(value));

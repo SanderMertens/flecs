@@ -20,6 +20,7 @@ typedef enum ecs_json_token_t {
     JsonTrue,
     JsonFalse,
     JsonNull,
+    JsonLargeInt,
     JsonLargeString,
     JsonInvalid
 } ecs_json_token_t;

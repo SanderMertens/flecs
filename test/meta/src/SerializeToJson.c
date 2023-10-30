@@ -280,11 +280,29 @@ void SerializeToJson_struct_u64(void) {
         }
     });
 
-    T value = {10};
-    char *expr = ecs_ptr_to_json(world, t, &value);
-    test_assert(expr != NULL);
-    test_str(expr, "{\"x\":10}");
-    ecs_os_free(expr);
+    {
+        T value = {0};
+        char *expr = ecs_ptr_to_json(world, t, &value);
+        test_assert(expr != NULL);
+        test_str(expr, "{\"x\":0}");
+        ecs_os_free(expr);
+    }
+
+    {
+        T value = {10};
+        char *expr = ecs_ptr_to_json(world, t, &value);
+        test_assert(expr != NULL);
+        test_str(expr, "{\"x\":10}");
+        ecs_os_free(expr);
+    }
+
+    {
+        T value = {2366700781656087864};
+        char *expr = ecs_ptr_to_json(world, t, &value);
+        test_assert(expr != NULL);
+        test_str(expr, "{\"x\":2366700781656087864}");
+        ecs_os_free(expr);
+    }
 
     ecs_fini(world);
 }

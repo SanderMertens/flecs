@@ -298,6 +298,7 @@ void Cursor_set_str_to_i8(void);
 void Cursor_set_str_to_i16(void);
 void Cursor_set_str_to_i32(void);
 void Cursor_set_str_to_i64(void);
+void Cursor_set_str_to_u64(void);
 void Cursor_set_str_to_f32(void);
 void Cursor_set_str_to_f64(void);
 void Cursor_set_str_to_entity(void);
@@ -2139,6 +2140,10 @@ bake_test_case Cursor_testcases[] = {
     {
         "set_str_to_i64",
         Cursor_set_str_to_i64
+    },
+    {
+        "set_str_to_u64",
+        Cursor_set_str_to_u64
     },
     {
         "set_str_to_f32",
@@ -5066,7 +5071,7 @@ static bake_test_suite suites[] = {
         "Cursor",
         NULL,
         NULL,
-        123,
+        124,
         Cursor_testcases
     },
     {

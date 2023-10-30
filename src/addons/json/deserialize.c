@@ -144,6 +144,11 @@ const char* ecs_ptr_from_json(
             if (ecs_meta_set_float(&cur, number) != 0) {
                 goto error;
             }
+        } else if (token_kind == JsonLargeInt) {
+            int64_t number = flecs_ito(int64_t, atoll(token));
+            if (ecs_meta_set_int(&cur, number) != 0) {
+                goto error;
+            }
         } else if (token_kind == JsonNull) {
             if (ecs_meta_set_null(&cur) != 0) {
                 goto error;

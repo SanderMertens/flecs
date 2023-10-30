@@ -321,6 +321,7 @@
                 "set_str_to_i16",
                 "set_str_to_i32",
                 "set_str_to_i64",
+                "set_str_to_u64",
                 "set_str_to_f32",
                 "set_str_to_f64",
                 "set_str_to_entity",

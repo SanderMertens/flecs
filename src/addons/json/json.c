@@ -20,6 +20,7 @@ const char* flecs_json_token_str(
     case JsonColon: return ":";
     case JsonComma: return ",";
     case JsonNumber: return "number";
+    case JsonLargeInt: return "large integer";
     case JsonLargeString:
     case JsonString: return "string";
     case JsonTrue: return "true";
@@ -90,7 +91,17 @@ const char* flecs_json_parse(
         }
     } else if (isdigit(ch) || (ch == '-')) {
         token_kind[0] = JsonNumber;
-        return ecs_parse_digit(json, token);
+        const char *result = ecs_parse_digit(json, token);
+        
+        /* Cheap initial check if parsed token could represent large int */
+        if (result - json > 15) {
+            /* Less cheap secondary check to see if number is integer */
+            if (!strchr(token, '.')) {
+                token_kind[0] = JsonLargeInt;
+            }
+        }
+
+        return result;
     } else if (isalpha(ch)) {
         if (!ecs_os_strncmp(json, "null", 4)) {
             token_kind[0] = JsonNull;
