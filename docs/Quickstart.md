@@ -80,8 +80,6 @@ cmake --build . -j 4
 ctest -C Debug --verbose
 ```
 
-```bash
-
 ### Emscripten
 When building for emscripten, add the following command line options to the `emcc` link command:
 ```bash 
