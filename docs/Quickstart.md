@@ -84,6 +84,7 @@ ctest -C Debug --verbose
 When building for emscripten, add the following command line options to the `emcc` link command:
 ```bash 
 -s ALLOW_MEMORY_GROWTH=1 
+-s STACK_SIZE=1mb
 -s EXPORTED_RUNTIME_METHODS=cwrap 
 -s MODULARIZE=1 
 -s EXPORT_NAME="my_app"
