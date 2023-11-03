@@ -20,13 +20,11 @@ struct String {
 
     String(const String& obj) {
         flecs::log::trace("Copy");
-        ecs_os_free(value);
         value = ecs_os_strdup(obj.value);
     }
 
     String(String&& obj) {
         flecs::log::trace("Move");
-        ecs_os_free(value);
         value = obj.value;
         obj.value = nullptr;
     }
