@@ -12,7 +12,12 @@
 extern "C" {
 #endif
 
+#ifdef __cplusplus
+/* Fixes missing field initializer warning on g++ */
+#define ECS_STRBUF_INIT (ecs_strbuf_t){}
+#else
 #define ECS_STRBUF_INIT (ecs_strbuf_t){0}
+#endif
 #define ECS_STRBUF_ELEMENT_SIZE (511)
 #define ECS_STRBUF_MAX_LIST_DEPTH (32)
 
