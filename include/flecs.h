@@ -84,7 +84,9 @@
  * running tests or when debugging issues. This will severely slow down code.
  */
 #ifdef FLECS_SANITIZE
+#ifndef FLECS_DEBUG
 #define FLECS_DEBUG /* If sanitized mode is enabled, so is debug mode */
+#endif
 #endif
 
 /* Tip: if you see weird behavior that you think might be a bug, make sure to

@@ -1,0 +1,13 @@
+{
+    "id": "define_debug_and_sanitize",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "public": false
+    },
+    "lang.c": {
+        "defines": ["FLECS_DEBUG", "FLECS_SANITIZE"]
+    }
+}
