@@ -2248,7 +2248,7 @@ flecs::filter<Position, Mass> f = world.filter_builder<Position, Mass>()
   .build();
 
 f.iter([](flecs::iter& it, Position *p, Mass *v) {
-  if (it.is_self()) {
+  if (it.is_self(2)) {
     // Mass is matched on self, access as array
     for (auto i : it) {
       p[i].x += 1.0 / m[i].value;
