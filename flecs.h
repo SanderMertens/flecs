@@ -2905,12 +2905,13 @@ typedef enum ecs_oper_kind_t {
 #define EcsDown                       (1u << 3)  /**< Match by traversing downwards (derived, cannot be set) */
 #define EcsTraverseAll                (1u << 4)  /**< Match all entities encountered through traversal */
 #define EcsCascade                    (1u << 5)  /**< Sort results breadth first */
-#define EcsParent                     (1u << 6)  /**< Short for up(ChildOf) */
-#define EcsIsVariable                 (1u << 7)  /**< Term id is a variable */
-#define EcsIsEntity                   (1u << 8)  /**< Term id is an entity */
-#define EcsIsName                     (1u << 9)  /**< Term id is a name (don't attempt to lookup as entity) */
-#define EcsFilter                     (1u << 10) /**< Prevent observer from triggering on term */
-#define EcsTraverseFlags              (EcsUp|EcsDown|EcsTraverseAll|EcsSelf|EcsCascade|EcsParent)
+#define EcsDesc                       (1u << 6)  /**< Iterate groups in descending order  */
+#define EcsParent                     (1u << 7)  /**< Short for up(ChildOf) */
+#define EcsIsVariable                 (1u << 8)  /**< Term id is a variable */
+#define EcsIsEntity                   (1u << 9)  /**< Term id is an entity */
+#define EcsIsName                     (1u << 10) /**< Term id is a name (don't attempt to lookup as entity) */
+#define EcsFilter                     (1u << 11) /**< Prevent observer from triggering on term */
+#define EcsTraverseFlags              (EcsUp|EcsDown|EcsTraverseAll|EcsSelf|EcsCascade|EcsDesc|EcsParent)
 
 /* Term flags discovered & set during filter creation. Mostly used internally to
  * store information relevant to queries. */
@@ -15842,6 +15843,7 @@ static const uint32_t Self = EcsSelf;
 static const uint32_t Up = EcsUp;
 static const uint32_t Down = EcsDown;
 static const uint32_t Cascade = EcsCascade;
+static const uint32_t Desc = EcsDesc;
 static const uint32_t Parent = EcsParent;
 static const uint32_t IsVariable = EcsIsVariable;
 static const uint32_t IsEntity = EcsIsEntity;
@@ -26860,6 +26862,13 @@ struct term_id_builder_i {
     template <typename Trav>
     Base& cascade() {
         return this->cascade(_::cpp_type<Trav>::id(this->world_v()));
+    }
+
+    /* Use with cascade to iterate results in descending (bottom -> top) order */
+    Base& desc() {
+        this->assert_term_id();
+        m_term_id->flags |= flecs::Desc;
+        return *this;
     }
 
     /* The parent flag is short for up(flecs::ChildOf) */

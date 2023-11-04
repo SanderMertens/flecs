@@ -63,6 +63,13 @@ struct term_id_builder_i {
         return this->cascade(_::cpp_type<Trav>::id(this->world_v()));
     }
 
+    /* Use with cascade to iterate results in descending (bottom -> top) order */
+    Base& desc() {
+        this->assert_term_id();
+        m_term_id->flags |= flecs::Desc;
+        return *this;
+    }
+
     /* The parent flag is short for up(flecs::ChildOf) */
     Base& parent() {
         this->assert_term_id();

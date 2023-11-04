@@ -33,6 +33,7 @@
 #define TOK_DOWN "down"
 #define TOK_CASCADE "cascade"
 #define TOK_PARENT "parent"
+#define TOK_DESC "desc"
 
 #define TOK_OVERRIDE "OVERRIDE"
 #define TOK_ROLE_AND "AND"
@@ -377,6 +378,8 @@ uint8_t flecs_parse_set_token(
         return EcsDown;
     } else if (!ecs_os_strcmp(token, TOK_CASCADE)) {
         return EcsCascade;
+    } else if (!ecs_os_strcmp(token, TOK_DESC)) {
+        return EcsDesc;
     } else if (!ecs_os_strcmp(token, TOK_PARENT)) {
         return EcsParent;
     } else {
@@ -543,6 +546,7 @@ const char* flecs_parse_arguments(
 
             /* Check for term flags */
             } else if (!ecs_os_strcmp(token, TOK_CASCADE) ||
+                !ecs_os_strcmp(token, TOK_DESC) ||
                 !ecs_os_strcmp(token, TOK_SELF) || 
                 !ecs_os_strcmp(token, TOK_UP) || 
                 !ecs_os_strcmp(token, TOK_DOWN) || 

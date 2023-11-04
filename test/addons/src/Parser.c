@@ -5532,3 +5532,26 @@ void Parser_pair_3_args_2_terms(void) {
     ecs_fini(world);
 }
 
+void Parser_cascade_desc(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Pred);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "Pred(cascade|desc)"
+    }));
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_first(terms[0], Pred, EcsSelf|EcsIsEntity);
+    test_src(terms[0], EcsThis, EcsUp|EcsCascade|EcsDesc|EcsIsVariable);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+    test_int(terms[0].src.trav, EcsIsA);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}

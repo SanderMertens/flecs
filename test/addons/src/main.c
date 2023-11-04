@@ -240,6 +240,7 @@ void Parser_pair_3_args_implicit_this(void);
 void Parser_pair_4_args(void);
 void Parser_pair_4_args_implicit_this(void);
 void Parser_pair_3_args_2_terms(void);
+void Parser_cascade_desc(void);
 
 // Testsuite 'Plecs'
 void Plecs_null(void);
@@ -2519,6 +2520,10 @@ bake_test_case Parser_testcases[] = {
     {
         "pair_3_args_2_terms",
         Parser_pair_3_args_2_terms
+    },
+    {
+        "cascade_desc",
+        Parser_cascade_desc
     }
 };
 
@@ -7741,7 +7746,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        231,
+        232,
         Parser_testcases
     },
     {

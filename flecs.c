@@ -1086,7 +1086,7 @@ struct ecs_query_t {
     /* Monitor generation */
     int32_t monitor_generation;
 
-    int32_t cascade_by;              /* Identify cascade column */
+    int32_t cascade_by;              /* Identify cascade term */
     int32_t match_count;             /* How often have tables been (un)matched */
     int32_t prev_match_count;        /* Track if sorting is needed */
     int32_t rematch_count;           /* Track which tables were added during rematch */
@@ -17273,12 +17273,26 @@ ecs_query_table_match_t* flecs_query_find_group_insertion_node(
     ecs_map_iter_t it = ecs_map_iter(&query->groups);
     ecs_query_table_list_t *list, *closest_list = NULL;
     uint64_t id, closest_id = 0;
+    
+    bool desc = false;
+
+    if (query->cascade_by) {
+        desc = (query->filter.terms[
+            query->cascade_by - 1].src.flags & EcsDesc) != 0;
+    }
 
     /* Find closest smaller group id */
     while (ecs_map_next(&it)) {
         id = ecs_map_key(&it);
-        if (id >= group_id) {
-            continue;
+
+        if (!desc) {
+            if (id >= group_id) {
+                continue;
+            }
+        } else {
+            if (id <= group_id) {
+                continue;
+            }
         }
 
         list = ecs_map_ptr(&it);
@@ -17287,7 +17301,14 @@ ecs_query_table_match_t* flecs_query_find_group_insertion_node(
             continue;
         }
 
-        if (!closest_list || ((group_id - id) < (group_id - closest_id))) {
+        bool comp;
+        if (!desc) {
+            comp = ((group_id - id) < (group_id - closest_id));
+        } else {
+            comp = ((group_id - id) > (group_id - closest_id));
+        }
+
+        if (!closest_list || comp) {
             closest_id = id;
             closest_list = list;
         }
@@ -30153,6 +30174,7 @@ void FlecsMonitorImport(
 #define TOK_DOWN "down"
 #define TOK_CASCADE "cascade"
 #define TOK_PARENT "parent"
+#define TOK_DESC "desc"
 
 #define TOK_OVERRIDE "OVERRIDE"
 #define TOK_ROLE_AND "AND"
@@ -30497,6 +30519,8 @@ uint8_t flecs_parse_set_token(
         return EcsDown;
     } else if (!ecs_os_strcmp(token, TOK_CASCADE)) {
         return EcsCascade;
+    } else if (!ecs_os_strcmp(token, TOK_DESC)) {
+        return EcsDesc;
     } else if (!ecs_os_strcmp(token, TOK_PARENT)) {
         return EcsParent;
     } else {
@@ -30663,6 +30687,7 @@ const char* flecs_parse_arguments(
 
             /* Check for term flags */
             } else if (!ecs_os_strcmp(token, TOK_CASCADE) ||
+                !ecs_os_strcmp(token, TOK_DESC) ||
                 !ecs_os_strcmp(token, TOK_SELF) || 
                 !ecs_os_strcmp(token, TOK_UP) || 
                 !ecs_os_strcmp(token, TOK_DOWN) || 

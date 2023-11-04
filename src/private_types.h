@@ -251,7 +251,7 @@ struct ecs_query_t {
     /* Monitor generation */
     int32_t monitor_generation;
 
-    int32_t cascade_by;              /* Identify cascade column */
+    int32_t cascade_by;              /* Identify cascade term */
     int32_t match_count;             /* How often have tables been (un)matched */
     int32_t prev_match_count;        /* Track if sorting is needed */
     int32_t rematch_count;           /* Track which tables were added during rematch */

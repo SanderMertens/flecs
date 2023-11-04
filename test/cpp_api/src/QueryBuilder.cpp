@@ -1819,6 +1819,59 @@ void QueryBuilder_cascade(void) {
     test_int(count, 3);
 }
 
+void QueryBuilder_cascade_desc(void) {
+    flecs::world ecs;
+
+    auto Tag = ecs.entity();
+    auto Foo = ecs.entity();
+    auto Bar = ecs.entity();
+
+    auto e0 = ecs.entity().add(Tag);
+    auto e1 = ecs.entity().is_a(e0);
+    auto e2 = ecs.entity().is_a(e1);
+    auto e3 = ecs.entity().is_a(e2);
+
+    auto q = ecs.query_builder()
+        .term(Tag).cascade().desc()
+        .build();
+
+    e1.add(Bar);
+    e2.add(Foo);
+
+    bool e1_found = false;
+    bool e2_found = false;
+    bool e3_found = false;
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+
+        if (e == e1) {
+            test_bool(e1_found, false);
+            test_bool(e2_found, true);
+            test_bool(e3_found, true);
+            e1_found = true;
+        }
+        if (e == e2) {
+            test_bool(e1_found, false);
+            test_bool(e2_found, false);
+            test_bool(e3_found, true);
+            e2_found = true;
+        }
+        if (e == e3) {
+            test_bool(e1_found, false);
+            test_bool(e2_found, false);
+            test_bool(e3_found, false);
+            e3_found = true;
+        }
+    });
+
+    test_bool(e1_found, true);
+    test_bool(e2_found, true);
+    test_bool(e3_found, true);
+    test_int(count, 3);
+}
+
 void QueryBuilder_cascade_w_relationship(void) {
     flecs::world ecs;
 
