@@ -642,6 +642,7 @@ void QueryBuilder_cascade(void);
 void QueryBuilder_cascade_w_relationship(void);
 void QueryBuilder_up_w_type(void);
 void QueryBuilder_cascade_w_type(void);
+void QueryBuilder_cascade_desc(void);
 void QueryBuilder_named_query(void);
 void QueryBuilder_term_w_write(void);
 void QueryBuilder_term_w_read(void);
@@ -3801,6 +3802,10 @@ bake_test_case QueryBuilder_testcases[] = {
         QueryBuilder_cascade_w_type
     },
     {
+        "cascade_desc",
+        QueryBuilder_cascade_desc
+    },
+    {
         "named_query",
         QueryBuilder_named_query
     },
@@ -6484,7 +6489,7 @@ static bake_test_suite suites[] = {
         "QueryBuilder",
         NULL,
         NULL,
-        68,
+        69,
         QueryBuilder_testcases
     },
     {

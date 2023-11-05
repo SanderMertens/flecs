@@ -119,12 +119,26 @@ ecs_query_table_match_t* flecs_query_find_group_insertion_node(
     ecs_map_iter_t it = ecs_map_iter(&query->groups);
     ecs_query_table_list_t *list, *closest_list = NULL;
     uint64_t id, closest_id = 0;
+    
+    bool desc = false;
+
+    if (query->cascade_by) {
+        desc = (query->filter.terms[
+            query->cascade_by - 1].src.flags & EcsDesc) != 0;
+    }
 
     /* Find closest smaller group id */
     while (ecs_map_next(&it)) {
         id = ecs_map_key(&it);
-        if (id >= group_id) {
-            continue;
+
+        if (!desc) {
+            if (id >= group_id) {
+                continue;
+            }
+        } else {
+            if (id <= group_id) {
+                continue;
+            }
         }
 
         list = ecs_map_ptr(&it);
@@ -133,7 +147,14 @@ ecs_query_table_match_t* flecs_query_find_group_insertion_node(
             continue;
         }
 
-        if (!closest_list || ((group_id - id) < (group_id - closest_id))) {
+        bool comp;
+        if (!desc) {
+            comp = ((group_id - id) < (group_id - closest_id));
+        } else {
+            comp = ((group_id - id) > (group_id - closest_id));
+        }
+
+        if (!closest_list || comp) {
             closest_id = id;
             closest_list = list;
         }

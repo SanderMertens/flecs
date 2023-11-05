@@ -91,6 +91,7 @@ static const uint32_t Self = EcsSelf;
 static const uint32_t Up = EcsUp;
 static const uint32_t Down = EcsDown;
 static const uint32_t Cascade = EcsCascade;
+static const uint32_t Desc = EcsDesc;
 static const uint32_t Parent = EcsParent;
 static const uint32_t IsVariable = EcsIsVariable;
 static const uint32_t IsEntity = EcsIsEntity;

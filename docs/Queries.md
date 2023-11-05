@@ -1803,6 +1803,7 @@ Traversal behavior can be customized with the following bitflags, in addition to
 | Down     | `down`         | `EcsDown`     | `flecs::Down`     | Match by traversing downwards (derived, cannot be set) |
 | Parent   | `parent`       | `EcsParent`   | `flecs::Parent`   | Short for up(ChildOf) |
 | Cascade  | `cascade`      | `EcsCascade`  | `flecs::Cascade`  | Same as Up, but iterate in breadth-first order |
+| Desc     | `desc`         | `EcsDesc`     | `flecs::Desc`     | Combine with Cascade to iterate hierarchy bottom to top |
 
 If just `Self` is set a query will only match components on the matched entity (no traversal). If just `Up` is set, a query will only match components that can be reached by following the relationship and ignore components from the matched entity. If both `Self` and `Up` are set, the query will first look on the matched entity, and if it does not have the component the query will continue searching by traverse the relationship.
 

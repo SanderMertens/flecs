@@ -673,12 +673,13 @@ typedef enum ecs_oper_kind_t {
 #define EcsDown                       (1u << 3)  /**< Match by traversing downwards (derived, cannot be set) */
 #define EcsTraverseAll                (1u << 4)  /**< Match all entities encountered through traversal */
 #define EcsCascade                    (1u << 5)  /**< Sort results breadth first */
-#define EcsParent                     (1u << 6)  /**< Short for up(ChildOf) */
-#define EcsIsVariable                 (1u << 7)  /**< Term id is a variable */
-#define EcsIsEntity                   (1u << 8)  /**< Term id is an entity */
-#define EcsIsName                     (1u << 9)  /**< Term id is a name (don't attempt to lookup as entity) */
-#define EcsFilter                     (1u << 10) /**< Prevent observer from triggering on term */
-#define EcsTraverseFlags              (EcsUp|EcsDown|EcsTraverseAll|EcsSelf|EcsCascade|EcsParent)
+#define EcsDesc                       (1u << 6)  /**< Iterate groups in descending order  */
+#define EcsParent                     (1u << 7)  /**< Short for up(ChildOf) */
+#define EcsIsVariable                 (1u << 8)  /**< Term id is a variable */
+#define EcsIsEntity                   (1u << 9)  /**< Term id is an entity */
+#define EcsIsName                     (1u << 10) /**< Term id is a name (don't attempt to lookup as entity) */
+#define EcsFilter                     (1u << 11) /**< Prevent observer from triggering on term */
+#define EcsTraverseFlags              (EcsUp|EcsDown|EcsTraverseAll|EcsSelf|EcsCascade|EcsDesc|EcsParent)
 
 /* Term flags discovered & set during filter creation. Mostly used internally to
  * store information relevant to queries. */

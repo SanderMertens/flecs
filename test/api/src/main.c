@@ -1535,6 +1535,8 @@ void Query_existing_custom_rel_cascade(void);
 void Query_new_custom_rel_cascade(void);
 void Query_cascade_w_2_depths(void);
 void Query_cascade_w_3_depths(void);
+void Query_cascade_w_2_depths_desc(void);
+void Query_cascade_w_3_depths_desc(void);
 void Query_not_pair_relation_wildcard(void);
 void Query_not_pair_object_wildcard(void);
 void Query_two_pair_wildcards_one_not(void);
@@ -1567,6 +1569,9 @@ void Query_childof_rematch_2_lvls(void);
 void Query_cascade_rematch_2_lvls(void);
 void Query_cascade_rematch_2_lvls_2_relations(void);
 void Query_cascade_topological(void);
+void Query_cascade_desc_rematch_2_lvls(void);
+void Query_cascade_desc_rematch_2_lvls_2_relations(void);
+void Query_cascade_desc_topological(void);
 void Query_childof_rematch_from_isa(void);
 void Query_rematch_optional_ref(void);
 void Query_rematch_optional_ref_w_2_refs(void);
@@ -8566,6 +8571,14 @@ bake_test_case Query_testcases[] = {
         Query_cascade_w_3_depths
     },
     {
+        "cascade_w_2_depths_desc",
+        Query_cascade_w_2_depths_desc
+    },
+    {
+        "cascade_w_3_depths_desc",
+        Query_cascade_w_3_depths_desc
+    },
+    {
         "not_pair_relation_wildcard",
         Query_not_pair_relation_wildcard
     },
@@ -8692,6 +8705,18 @@ bake_test_case Query_testcases[] = {
     {
         "cascade_topological",
         Query_cascade_topological
+    },
+    {
+        "cascade_desc_rematch_2_lvls",
+        Query_cascade_desc_rematch_2_lvls
+    },
+    {
+        "cascade_desc_rematch_2_lvls_2_relations",
+        Query_cascade_desc_rematch_2_lvls_2_relations
+    },
+    {
+        "cascade_desc_topological",
+        Query_cascade_desc_topological
     },
     {
         "childof_rematch_from_isa",
@@ -13026,7 +13051,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        235,
+        240,
         Query_testcases
     },
     {

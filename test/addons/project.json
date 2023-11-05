@@ -244,7 +244,8 @@
                 "pair_3_args_implicit_this",
                 "pair_4_args",
                 "pair_4_args_implicit_this",
-                "pair_3_args_2_terms"
+                "pair_3_args_2_terms",
+                "cascade_desc"
             ]
         }, {
             "id": "Plecs",

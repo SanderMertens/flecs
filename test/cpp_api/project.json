@@ -668,6 +668,7 @@
                 "cascade_w_relationship",
                 "up_w_type",
                 "cascade_w_type",
+                "cascade_desc",
                 "named_query",
                 "term_w_write",
                 "term_w_read",
