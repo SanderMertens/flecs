@@ -184,6 +184,9 @@ void Event_emit_staged_from_stage(void);
 void Event_emit_staged_from_world_observer(void);
 void Event_emit_staged_from_stage_observer(void);
 void Event_emit_for_entity(void);
+void Event_emit_custom_for_any(void);
+void Event_emit_custom_implicit_any(void);
+void Event_emit_custom_empty_type(void);
 
 // Testsuite 'New'
 void New_setup(void);
@@ -3325,6 +3328,18 @@ bake_test_case Event_testcases[] = {
     {
         "emit_for_entity",
         Event_emit_for_entity
+    },
+    {
+        "emit_custom_for_any",
+        Event_emit_custom_for_any
+    },
+    {
+        "emit_custom_implicit_any",
+        Event_emit_custom_implicit_any
+    },
+    {
+        "emit_custom_empty_type",
+        Event_emit_custom_empty_type
     }
 };
 
@@ -12879,7 +12894,7 @@ static bake_test_suite suites[] = {
         "Event",
         NULL,
         NULL,
-        11,
+        14,
         Event_testcases
     },
     {

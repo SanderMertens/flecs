@@ -483,6 +483,9 @@ void Event_evt_1_id_pair_rel_obj_id_entity(void);
 void Event_evt_1_id_pair_rel_obj_entity(void);
 void Event_emit_staged_from_world(void);
 void Event_emit_staged_from_stage(void);
+void Event_emit_custom_for_any(void);
+void Event_entity_emit_event_id(void);
+void Event_entity_emit_event_type(void);
 
 // Testsuite 'Iterable'
 void Iterable_page_each(void);
@@ -3179,6 +3182,18 @@ bake_test_case Event_testcases[] = {
     {
         "emit_staged_from_stage",
         Event_emit_staged_from_stage
+    },
+    {
+        "emit_custom_for_any",
+        Event_emit_custom_for_any
+    },
+    {
+        "entity_emit_event_id",
+        Event_entity_emit_event_id
+    },
+    {
+        "entity_emit_event_type",
+        Event_entity_emit_event_type
     }
 };
 
@@ -6468,7 +6483,7 @@ static bake_test_suite suites[] = {
         "Event",
         NULL,
         NULL,
-        15,
+        18,
         Event_testcases
     },
     {

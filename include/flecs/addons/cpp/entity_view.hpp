@@ -744,6 +744,7 @@ struct entity_view : public id {
 #   endif
 
 #   include "mixins/enum/entity_view.inl"
+#   include "mixins/event/entity_view.inl"
 
 private:
     flecs::entity set_stage(world_t *stage);

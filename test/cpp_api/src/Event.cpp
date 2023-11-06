@@ -422,3 +422,87 @@ void Event_emit_staged_from_stage(void) {
 
     test_int(count, 1);
 }
+
+void Event_emit_custom_for_any(void) {
+    flecs::world ecs;
+
+    int count_a = 0;
+    int count_b = 0;
+
+    flecs::entity e1 = ecs.entity().add<Tag>();
+    flecs::entity e2 = ecs.entity().add<Tag>();
+
+    ecs.observer()
+        .event<Evt>()
+        .with(flecs::Any).src(e1)
+        .each([&](flecs::entity e) {
+            test_assert(e == 0);
+            count_a ++;
+        });
+
+    ecs.observer()
+        .event<Evt>()
+        .with(flecs::Any).src(e2)
+        .each([&](flecs::entity e) {
+            test_assert(e == 0);
+            count_b ++;
+        });
+
+    ecs.event<Evt>()
+        .id(flecs::Any)
+        .entity(e1)
+        .emit();
+
+    test_int(count_a, 1);
+    test_int(count_b, 0);
+
+    ecs.event<Evt>()
+        .id(flecs::Any)
+        .entity(e2)
+        .emit();
+
+    test_int(count_a, 1);
+    test_int(count_b, 1);
+}
+
+void Event_entity_emit_event_id(void) {
+    flecs::world ecs;
+
+    flecs::entity evt = ecs.entity();
+
+    flecs::entity e = ecs.entity()
+        .add<Tag>();
+
+    int32_t count = 0;
+    e.observe(evt, [&](flecs::iter& it) {
+        count ++;
+        test_assert(it.event() == evt);
+        test_assert(it.src(1) == e);
+    });
+
+    test_int(count, 0);
+
+    e.emit(evt);
+
+    test_int(count, 1);
+}
+
+void Event_entity_emit_event_type(void) {
+    flecs::world ecs;
+
+    flecs::entity e = ecs.entity()
+        .add<Tag>();
+
+    int32_t count = 0;
+    e.observe<Evt>([&](flecs::iter& it) {
+        count ++;
+        test_assert(it.event() == ecs.id<Evt>());
+        test_assert(it.src(1) == e);
+    });
+
+    test_int(count, 0);
+
+    e.emit<Evt>();
+
+    test_int(count, 1);
+}

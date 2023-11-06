@@ -194,7 +194,10 @@
                 "emit_staged_from_stage",
                 "emit_staged_from_world_observer",
                 "emit_staged_from_stage_observer",
-                "emit_for_entity"
+                "emit_for_entity",
+                "emit_custom_for_any",
+                "emit_custom_implicit_any",
+                "emit_custom_empty_type"
             ]
         }, {
             "id": "New",

@@ -17073,15 +17073,7 @@ struct event_builder_base {
 
     /** Set entity for which to emit event */
     Base& entity(flecs::entity_t e) {
-        ecs_record_t *r = ecs_record_find(m_world, e);
-        
-        /* Can't emit for empty entity */
-        ecs_assert(r != nullptr, ECS_INVALID_PARAMETER, nullptr);
-        ecs_assert(r->table != nullptr, ECS_INVALID_PARAMETER, nullptr);
-
-        m_desc.table = r->table;
-        m_desc.offset = ECS_RECORD_TO_ROW(r->row);
-        m_desc.count = 1;
+        m_desc.entity = e;
         return *this;
     }
 
@@ -17100,8 +17092,6 @@ struct event_builder_base {
     }
 
     void emit() {
-        ecs_assert(m_ids.count != 0, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(m_desc.table != nullptr, ECS_INVALID_PARAMETER, NULL);
         m_ids.array = m_ids_array;
         m_desc.ids = &m_ids;
         m_desc.observable = const_cast<flecs::world_t*>(ecs_get_world(m_world));
@@ -22400,6 +22390,35 @@ template <typename E>
 E to_constant() const;
 
 
+/**
+ * @file addons/cpp/mixins/event/entity_builder.hpp
+ * @brief Event entity mixin.
+ */
+
+/** Emit event for entity
+ * 
+ * \memberof flecs::entity_view
+ * 
+ * @param evt The event to emit.
+ */
+void emit(flecs::entity_t evt) {
+    flecs::world(m_world)
+        .event(evt)
+        .entity(m_id)
+        .emit();
+}
+
+/** Emit event for entity
+ * 
+ * \memberof flecs::entity_view
+ * 
+ * @tparam Evt The event to emit.
+ */
+template <typename Evt>
+void emit() {
+    this->emit(_::cpp_type<Evt>::id(m_world));
+}
+
 
 private:
     flecs::entity set_stage(world_t *stage);
@@ -23621,6 +23640,35 @@ Self& set_json_second(
 }
 
 #   endif
+
+/**
+ * @file addons/cpp/mixins/event/entity_builder.hpp
+ * @brief Event entity mixin.
+ */
+
+/** Observe event on entity
+ * 
+ * \memberof flecs::entity_builder
+ * 
+ * @param evt The event id.
+ * @param callback The observer callback.
+ * @return Event builder.
+ */
+template <typename Func>
+Self& observe(flecs::entity_t evt, Func&& callback);
+
+/** Observe event on entity
+ * 
+ * \memberof flecs::entity_builder
+ * 
+ * @tparam Evt The event type.
+ * @param callback The observer callback.
+ * @return Event builder.
+ */
+template <typename Evt, typename Func>
+Self& observe(Func&& callback);
+
+
 
 
 protected:
@@ -28046,30 +28094,6 @@ inline filter_base::operator flecs::filter<> () const {
 }
 
 /**
- * @file addons/cpp/mixins/event/impl.hpp
- * @brief Event implementation.
- */
-
-#pragma once
-
-
-namespace flecs 
-{
-
-// Mixin implementation
-
-inline flecs::event_builder world::event(flecs::entity_t evt) const {
-    return flecs::event_builder(m_world, evt);
-}
-
-template <typename E>
-inline flecs::event_builder_typed<E> world::event() const {
-    return flecs::event_builder_typed<E>(m_world, _::cpp_type<E>().id(m_world));
-}
-
-} // namespace flecs
-
-/**
  * @file addons/cpp/mixins/query/impl.hpp
  * @brief Query implementation.
  */
@@ -28694,6 +28718,48 @@ inline observer world::observer(flecs::entity e) const {
 template <typename... Comps, typename... Args>
 inline observer_builder<Comps...> world::observer(Args &&... args) const {
     return flecs::observer_builder<Comps...>(m_world, FLECS_FWD(args)...);
+}
+
+} // namespace flecs
+
+/**
+ * @file addons/cpp/mixins/event/impl.hpp
+ * @brief Event implementation.
+ */
+
+#pragma once
+
+
+namespace flecs 
+{
+
+// Mixin implementation
+
+inline flecs::event_builder world::event(flecs::entity_t evt) const {
+    return flecs::event_builder(m_world, evt);
+}
+
+template <typename E>
+inline flecs::event_builder_typed<E> world::event() const {
+    return flecs::event_builder_typed<E>(m_world, _::cpp_type<E>().id(m_world));
+}
+
+template <typename Self>
+template <typename Func>
+inline Self& entity_builder<Self>::observe(flecs::entity_t evt, Func&& f) {
+    flecs::world(m_world).observer()
+      .event(evt)
+      .with(flecs::Any).src(m_id)
+      .iter(f)
+      .child_of(m_id);
+
+    return to_base();
+}
+
+template <typename Self>
+template <typename Evt, typename Func>
+inline Self& entity_builder<Self>::observe(Func&& f) {
+    return this->observe(_::cpp_type<Evt>::id(m_world), f);
 }
 
 } // namespace flecs

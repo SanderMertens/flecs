@@ -442,3 +442,140 @@ void Event_emit_for_entity(void) {
 
     ecs_fini(world);
 }
+
+static int ObserverA_invoked = false;
+static void ObserverA(ecs_iter_t *it) {
+    ObserverA_invoked ++;
+}
+
+static int ObserverB_invoked = false;
+static void ObserverB(ecs_iter_t *it) {
+    ObserverB_invoked ++;
+}
+
+void Event_emit_custom_for_any(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t MyEvent = ecs_new_id(world);
+
+    ecs_entity_t e1 = ecs_new(world, Tag);
+    ecs_entity_t e2 = ecs_new(world, Tag);
+
+    ecs_observer(world, {
+        .filter.terms = {{ .id = EcsAny, .src.id = e1 }},
+        .events = {MyEvent},
+        .callback = ObserverA
+    });
+
+    ecs_observer(world, {
+        .filter.terms = {{ .id = EcsAny, .src.id = e2 }},
+        .events = {MyEvent},
+        .callback = ObserverB
+    });
+
+    ecs_emit(world, &(ecs_event_desc_t) {
+        .ids = &(ecs_type_t){ .count = 1, .array = (ecs_id_t[]){ EcsAny } },
+        .entity = e1,
+        .event = MyEvent
+    });
+
+    test_int(ObserverA_invoked, 1);
+    test_int(ObserverB_invoked, 0);
+    
+    ecs_emit(world, &(ecs_event_desc_t) {
+        .ids = &(ecs_type_t){ .count = 1, .array = (ecs_id_t[]){ EcsAny } },
+        .entity = e2,
+        .event = MyEvent
+    });
+
+    test_int(ObserverA_invoked, 1);
+    test_int(ObserverB_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Event_emit_custom_implicit_any(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t MyEvent = ecs_new_id(world);
+
+    ecs_entity_t e1 = ecs_new(world, Tag);
+    ecs_entity_t e2 = ecs_new(world, Tag);
+
+    ecs_observer(world, {
+        .filter.terms = {{ .id = EcsAny, .src.id = e1 }},
+        .events = {MyEvent},
+        .callback = ObserverA
+    });
+
+    ecs_observer(world, {
+        .filter.terms = {{ .id = EcsAny, .src.id = e2 }},
+        .events = {MyEvent},
+        .callback = ObserverB
+    });
+
+    ecs_emit(world, &(ecs_event_desc_t) {
+        .entity = e1,
+        .event = MyEvent
+    });
+
+    test_int(ObserverA_invoked, 1);
+    test_int(ObserverB_invoked, 0);
+    
+    ecs_emit(world, &(ecs_event_desc_t) {
+        .entity = e2,
+        .event = MyEvent
+    });
+
+    test_int(ObserverA_invoked, 1);
+    test_int(ObserverB_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Event_emit_custom_empty_type(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t MyEvent = ecs_new_id(world);
+
+    ecs_entity_t e1 = ecs_new(world, Tag);
+    ecs_entity_t e2 = ecs_new(world, Tag);
+
+    ecs_observer(world, {
+        .filter.terms = {{ .id = EcsAny, .src.id = e1 }},
+        .events = {MyEvent},
+        .callback = ObserverA
+    });
+
+    ecs_observer(world, {
+        .filter.terms = {{ .id = EcsAny, .src.id = e2 }},
+        .events = {MyEvent},
+        .callback = ObserverB
+    });
+
+    ecs_emit(world, &(ecs_event_desc_t) {
+        .ids = &(ecs_type_t){ .count = 0 },
+        .entity = e1,
+        .event = MyEvent
+    });
+
+    test_int(ObserverA_invoked, 1);
+    test_int(ObserverB_invoked, 0);
+    
+    ecs_emit(world, &(ecs_event_desc_t) {
+        .ids = &(ecs_type_t){ .count = 0 },
+        .entity = e2,
+        .event = MyEvent
+    });
+
+    test_int(ObserverA_invoked, 1);
+    test_int(ObserverB_invoked, 1);
+
+    ecs_fini(world);
+}

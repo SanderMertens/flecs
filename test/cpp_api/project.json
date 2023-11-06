@@ -502,7 +502,10 @@
                 "evt_1_id_pair_rel_obj_id_entity",
                 "evt_1_id_pair_rel_obj_entity",
                 "emit_staged_from_world",
-                "emit_staged_from_stage"
+                "emit_staged_from_stage",
+                "emit_custom_for_any",
+                "entity_emit_event_id",
+                "entity_emit_event_type"
             ]
         }, {
             "id": "Iterable",

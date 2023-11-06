@@ -197,25 +197,30 @@ int32_t flecs_event_observers_get(
 
     /* Populate array with observer sets matching the id */
     int32_t count = 0;
-    iders[0] = flecs_event_id_record_get_if(er, EcsAny);
-    count += iders[count] != 0;
+
+    if (id != EcsAny) {
+        iders[0] = flecs_event_id_record_get_if(er, EcsAny);
+        count += iders[count] != 0;
+    }
 
     iders[count] = flecs_event_id_record_get_if(er, id);
     count += iders[count] != 0;
 
-    if (ECS_IS_PAIR(id)) {
-        ecs_id_t id_fwc = ecs_pair(EcsWildcard, ECS_PAIR_SECOND(id));
-        ecs_id_t id_swc = ecs_pair(ECS_PAIR_FIRST(id), EcsWildcard);
-        ecs_id_t id_pwc = ecs_pair(EcsWildcard, EcsWildcard);
-        iders[count] = flecs_event_id_record_get_if(er, id_fwc);
-        count += iders[count] != 0;
-        iders[count] = flecs_event_id_record_get_if(er, id_swc);
-        count += iders[count] != 0;
-        iders[count] = flecs_event_id_record_get_if(er, id_pwc);
-        count += iders[count] != 0;
-    } else {
-        iders[count] = flecs_event_id_record_get_if(er, EcsWildcard);
-        count += iders[count] != 0;
+    if (id != EcsAny) {
+        if (ECS_IS_PAIR(id)) {
+            ecs_id_t id_fwc = ecs_pair(EcsWildcard, ECS_PAIR_SECOND(id));
+            ecs_id_t id_swc = ecs_pair(ECS_PAIR_FIRST(id), EcsWildcard);
+            ecs_id_t id_pwc = ecs_pair(EcsWildcard, EcsWildcard);
+            iders[count] = flecs_event_id_record_get_if(er, id_fwc);
+            count += iders[count] != 0;
+            iders[count] = flecs_event_id_record_get_if(er, id_swc);
+            count += iders[count] != 0;
+            iders[count] = flecs_event_id_record_get_if(er, id_pwc);
+            count += iders[count] != 0;
+        } else {
+            iders[count] = flecs_event_id_record_get_if(er, EcsWildcard);
+            count += iders[count] != 0;
+        }
     }
 
     return count;
@@ -1400,6 +1405,13 @@ void ecs_emit(
     }
     if (!desc->observable) {
         desc->observable = world;
+    }
+    ecs_type_t default_ids = (ecs_type_t){ 
+        .count = 1, 
+        .array = (ecs_id_t[]){ EcsAny }
+    };
+    if (!desc->ids || !desc->ids->count) {
+        desc->ids = &default_ids;
     }
     flecs_emit(world, stage, desc);
 }

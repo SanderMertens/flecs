@@ -76,15 +76,7 @@ struct event_builder_base {
 
     /** Set entity for which to emit event */
     Base& entity(flecs::entity_t e) {
-        ecs_record_t *r = ecs_record_find(m_world, e);
-        
-        /* Can't emit for empty entity */
-        ecs_assert(r != nullptr, ECS_INVALID_PARAMETER, nullptr);
-        ecs_assert(r->table != nullptr, ECS_INVALID_PARAMETER, nullptr);
-
-        m_desc.table = r->table;
-        m_desc.offset = ECS_RECORD_TO_ROW(r->row);
-        m_desc.count = 1;
+        m_desc.entity = e;
         return *this;
     }
 
@@ -103,8 +95,6 @@ struct event_builder_base {
     }
 
     void emit() {
-        ecs_assert(m_ids.count != 0, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(m_desc.table != nullptr, ECS_INVALID_PARAMETER, NULL);
         m_ids.array = m_ids_array;
         m_desc.ids = &m_ids;
         m_desc.observable = const_cast<flecs::world_t*>(ecs_get_world(m_world));
