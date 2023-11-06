@@ -365,6 +365,15 @@ void DeserializeFromJson_struct_u64(void) {
         test_uint(value.v, 2366700781656087864);
     }
 
+    {
+        T value = {0};
+        const char *ptr = ecs_ptr_from_json(
+            world, t, &value, "{\"v\": \"2366700781656087864\"}", NULL);
+        test_assert(ptr != NULL);
+        test_assert(ptr[0] == '\0');
+        test_uint(value.v, 2366700781656087864);
+    }
+
     ecs_fini(world);
 }
 

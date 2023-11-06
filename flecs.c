@@ -51080,6 +51080,22 @@ int json_ser_type_op(
     const void *ptr,
     ecs_strbuf_t *str) 
 {
+    void *vptr = ECS_OFFSET(ptr, op->offset);
+    bool large_int = false;
+    if (op->kind == EcsOpI64) {
+        if (*(int64_t*)vptr >= 2147483648) {
+            large_int = true;
+        }
+    } else if (op->kind == EcsOpU64) {
+        if (*(uint64_t*)vptr >= 2147483648) {
+            large_int = true;
+        }
+    }
+
+    if (large_int) {
+        ecs_strbuf_appendch(str, '"');
+    }
+
     switch(op->kind) {
     case EcsOpPush:
     case EcsOpPop:
@@ -51088,39 +51104,39 @@ int json_ser_type_op(
         break;
     case EcsOpF32:
         ecs_strbuf_appendflt(str, 
-            (ecs_f64_t)*(const ecs_f32_t*)ECS_OFFSET(ptr, op->offset), '"');
+            (ecs_f64_t)*(const ecs_f32_t*)vptr, '"');
         break;
     case EcsOpF64:
         ecs_strbuf_appendflt(str, 
-            *(ecs_f64_t*)ECS_OFFSET(ptr, op->offset), '"');
+            *(ecs_f64_t*)vptr, '"');
         break;
     case EcsOpEnum:
-        if (json_ser_enum(world, op, ECS_OFFSET(ptr, op->offset), str)) {
+        if (json_ser_enum(world, op, vptr, str)) {
             goto error;
         }
         break;
     case EcsOpBitmask:
-        if (json_ser_bitmask(world, op, ECS_OFFSET(ptr, op->offset), str)) {
+        if (json_ser_bitmask(world, op, vptr, str)) {
             goto error;
         }
         break;
     case EcsOpArray:
-        if (json_ser_array(world, op, ECS_OFFSET(ptr, op->offset), str)) {
+        if (json_ser_array(world, op, vptr, str)) {
             goto error;
         }
         break;
     case EcsOpVector:
-        if (json_ser_vector(world, op, ECS_OFFSET(ptr, op->offset), str)) {
+        if (json_ser_vector(world, op, vptr, str)) {
             goto error;
         }
         break;
     case EcsOpOpaque:
-        if (json_ser_custom_type(world, op, ECS_OFFSET(ptr, op->offset), str)) {
+        if (json_ser_custom_type(world, op, vptr, str)) {
             goto error;
         }
         break;
     case EcsOpEntity: {
-        ecs_entity_t e = *(const ecs_entity_t*)ECS_OFFSET(ptr, op->offset);
+        ecs_entity_t e = *(const ecs_entity_t*)vptr;
         if (!e) {
             ecs_strbuf_appendch(str, '0');
         } else {
@@ -51128,17 +51144,18 @@ int json_ser_type_op(
         }
         break;
     }
+
+    case EcsOpU64:
+    case EcsOpI64:
     case EcsOpBool:
     case EcsOpChar:
     case EcsOpByte:
     case EcsOpU8:
     case EcsOpU16:
     case EcsOpU32:
-    case EcsOpU64:
     case EcsOpI8:
     case EcsOpI16:
     case EcsOpI32:
-    case EcsOpI64:
     case EcsOpUPtr:
     case EcsOpIPtr:
     case EcsOpString:
@@ -51149,10 +51166,15 @@ int json_ser_type_op(
             ecs_throw(ECS_INTERNAL_ERROR, NULL);
         }
         break;
+
     case EcsOpPrimitive:
     case EcsOpScope:
     default:
         ecs_throw(ECS_INTERNAL_ERROR, NULL);
+    }
+
+    if (large_int) {
+        ecs_strbuf_appendch(str, '"');
     }
 
     return 0;
