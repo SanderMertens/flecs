@@ -960,6 +960,7 @@ struct entity_builder : entity_view {
 #   include "../json/entity_builder.inl"
 #   endif
 
+#   include "../event/entity_builder.inl"
 
 protected:
     Self& to_base() {

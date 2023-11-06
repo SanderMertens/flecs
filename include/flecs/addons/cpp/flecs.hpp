@@ -115,9 +115,9 @@ struct each_delegate;
 #include "mixins/component/impl.hpp"
 #include "mixins/term/impl.hpp"
 #include "mixins/filter/impl.hpp"
-#include "mixins/event/impl.hpp"
 #include "mixins/query/impl.hpp"
 #include "mixins/observer/impl.hpp"
+#include "mixins/event/impl.hpp"
 #include "mixins/enum/impl.hpp"
 #ifdef FLECS_MODULE
 #include "mixins/module/impl.hpp"
