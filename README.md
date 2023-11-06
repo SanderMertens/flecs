@@ -199,7 +199,6 @@ The following language bindings have been developed with Flecs! Note that these 
 - C#:
   - [flecs-hub/flecs-cs](https://github.com/flecs-hub/flecs-cs)
   - [BeanCheeseBurrito/Flecs.NET](https://github.com/BeanCheeseBurrito/Flecs.NET)
-  - [copygirl/gaemstone.ECS](https://git.mcft.net/copygirl/gaemstone.ECS)
 - Rust:
   - [flecs-rs](https://github.com/jazzay/flecs-rs)
   - [flecs-polyglot](https://github.com/flecs-hub/flecs-polyglot)
