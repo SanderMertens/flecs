@@ -765,6 +765,8 @@ void OnDelete_deferred_delete_with_childof_after_create_named(void);
 void OnDelete_match_marked_for_deletion(void);
 void OnDelete_delete_w_low_rel_mixed_cleanup(void);
 void OnDelete_delete_w_low_rel_mixed_cleanup_interleaved_ids(void);
+void OnDelete_fini_query_w_singleton_in_scope_no_module(void);
+void OnDelete_fini_query_w_singleton_in_module(void);
 
 // Testsuite 'Set'
 void Set_set_empty(void);
@@ -5552,6 +5554,14 @@ bake_test_case OnDelete_testcases[] = {
     {
         "delete_w_low_rel_mixed_cleanup_interleaved_ids",
         OnDelete_delete_w_low_rel_mixed_cleanup_interleaved_ids
+    },
+    {
+        "fini_query_w_singleton_in_scope_no_module",
+        OnDelete_fini_query_w_singleton_in_scope_no_module
+    },
+    {
+        "fini_query_w_singleton_in_module",
+        OnDelete_fini_query_w_singleton_in_module
     }
 };
 
@@ -12974,7 +12984,7 @@ static bake_test_suite suites[] = {
         "OnDelete",
         NULL,
         NULL,
-        113,
+        115,
         OnDelete_testcases
     },
     {

@@ -1968,7 +1968,12 @@ bool flecs_term_match_table(
             oper = EcsOptional;
         }
 
-        match_table = ecs_get_table(world, src_id);
+        if (ecs_is_alive(world, src_id)) {
+            match_table = ecs_get_table(world, src_id);
+        } else {
+            match_table = NULL;
+        }
+
         if (match_table) {
         } else if (oper != EcsOptional) {
             return false;
@@ -2026,6 +2031,7 @@ bool flecs_term_match_table(
         result = true;
     }
 
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     if ((column == -1) && (src->flags & EcsUp) && (table->flags & EcsTableHasTarget)) {
         ecs_assert(table->_ != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_id_t rel = ECS_PAIR_SECOND(table->type.array[table->_->ft_offset]);
@@ -2115,7 +2121,11 @@ bool flecs_filter_match_table(
         }
 
         if (!ecs_term_match_this(term)) {
-            match_table = ecs_get_table(world, src_id);
+            if (ecs_is_alive(world, src_id)) {
+                match_table = ecs_get_table(world, src_id);
+            } else {
+                match_table = NULL;
+            }
         } else {
             if (ECS_BIT_IS_SET(iter_flags, EcsIterIgnoreThis)) {
                 continue;
