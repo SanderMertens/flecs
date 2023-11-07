@@ -139,28 +139,28 @@ protected:
     virtual ecs_iter_next_action_t next_action() const = 0;
     virtual ecs_iter_next_action_t next_each_action() const = 0;
 
-    template < template<typename Func, typename ... Comps> class Invoker, typename Func, typename NextFunc, typename ... Args>
+    template < template<typename Func, typename ... Comps> class Delegate, typename Func, typename NextFunc, typename ... Args>
     void iterate(flecs::world_t *stage, Func&& func, NextFunc next, Args &&... args) const {
         ecs_iter_t it = this->get_iter(stage);
-        if (Invoker<Func, Components...>::instanced()) {
+        if (Delegate<Func, Components...>::instanced()) {
             ECS_BIT_SET(it.flags, EcsIterIsInstanced);
         }
 
         while (next(&it, FLECS_FWD(args)...)) {
-            Invoker<Func, Components...>(func).invoke(&it);
+            Delegate<Func, Components...>(func).invoke(&it);
         }
     }
 
-    template < template<typename Func, typename ... Comps> class Invoker, typename Func, typename NextFunc, typename ... Args>
+    template < template<typename Func, typename ... Comps> class Delegate, typename Func, typename NextFunc, typename ... Args>
     flecs::entity iterate_find(flecs::world_t *stage, Func&& func, NextFunc next, Args &&... args) const {
         ecs_iter_t it = this->get_iter(stage);
-        if (Invoker<Func, Components...>::instanced()) {
+        if (Delegate<Func, Components...>::instanced()) {
             ECS_BIT_SET(it.flags, EcsIterIsInstanced);
         }
 
         flecs::entity result;
         while (!result && next(&it, FLECS_FWD(args)...)) {
-            result = Invoker<Func, Components...>(func).invoke(&it);
+            result = Delegate<Func, Components...>(func).invoke(&it);
         }
         if (result) {
             ecs_iter_fini(&it);

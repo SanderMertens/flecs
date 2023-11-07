@@ -121,6 +121,13 @@
 #endif
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
 #pragma GCC diagnostic ignored "-Wunused-macros"
+/* This warning gets thrown *sometimes* when not all members for a struct are
+ * provided in an initializer. Flecs heavily relies on descriptor structs that
+ * only require partly initialization, so this warning isn't useful.
+ * It doesn't introduce any safety issues (fields are guaranteed to be 0 
+ * initialized), and later versions of gcc (>=11) seem to no longer throw this 
+ * warning. */
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 #endif
 
 /* Standard library dependencies */

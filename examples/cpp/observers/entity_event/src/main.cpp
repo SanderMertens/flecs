@@ -1,5 +1,5 @@
-#include <entity_event.h>
 #include <iostream>
+#include <entity_event.h>
 
 // Entity events are events that are emitted and observed for a specific entity.
 // They are a thin wrapper around regular observers, which match against queries
@@ -10,8 +10,13 @@
 // - The entity on which to emit the event
 // - The event to emit
 
-// The event to emit.
-struct OnClick { };
+// An event without payload
+struct Click { };
+
+// An event with payload
+struct Resize {
+    double width, height;
+};
 
 int main(int, char *[]) {
     flecs::world ecs;
@@ -19,16 +24,32 @@ int main(int, char *[]) {
     // Create a widget entity
     flecs::entity widget = ecs.entity("MyWidget");
 
-    // Observe the OnClick event on the widget entity
-    widget.observe<OnClick>([](flecs::iter& it) {
-        // The event source can be obtained with it.src(1). This allows the same
-        // event function to be used for different entities.
-        std::cout << "clicked on " << it.src(1).path() << "!\n";
+    // Observe the Click event on the widget entity.
+    widget.observe<Click>([]() {
+        std::cout << "clicked!\n";
     });
 
-    // Emit the OnClick event for the widget
-    widget.emit<OnClick>();
+    // Observers can have an entity argument that holds the event source.
+    // This allows the same function to be reused for different entities.
+    widget.observe<Click>([](flecs::entity src) {
+        std::cout << "clicked on " << src.path() << "!\n";
+    });
+
+    // Observe the Resize event. Events with payload are passed as arguments
+    // to the observer callback.
+    widget.observe([](Resize& p) {
+        std::cout << "resized to {" 
+                  << p.width << ", " << p.height << "}!\n"; 
+    });
+
+    // Emit the Click event
+    widget.emit<Click>();
+
+    // Emit the Resize event
+    widget.emit<Resize>({100, 200});
 
     // Output
+    //   clicked!
     //   clicked on ::MyWidget!
+    //   resized to {100, 200}!
 }

@@ -25,4 +25,14 @@ Self& observe(flecs::entity_t evt, Func&& callback);
 template <typename Evt, typename Func>
 Self& observe(Func&& callback);
 
+/** Observe event on entity
+ * 
+ * \memberof flecs::entity_builder
+ *
+ * @param callback The observer callback.
+ * @return Event builder.
+ */
+template <typename Func>
+Self& observe(Func&& callback);
+
 

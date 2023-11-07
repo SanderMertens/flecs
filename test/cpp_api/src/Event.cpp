@@ -474,10 +474,9 @@ void Event_entity_emit_event_id(void) {
         .add<Tag>();
 
     int32_t count = 0;
-    e.observe(evt, [&](flecs::iter& it) {
+    e.observe(evt, [&](flecs::entity src) {
         count ++;
-        test_assert(it.event() == evt);
-        test_assert(it.src(1) == e);
+        test_assert(src == e);
     });
 
     test_int(count, 0);
@@ -494,15 +493,134 @@ void Event_entity_emit_event_type(void) {
         .add<Tag>();
 
     int32_t count = 0;
-    e.observe<Evt>([&](flecs::iter& it) {
+    e.observe<Evt>([&](flecs::entity src) {
         count ++;
-        test_assert(it.event() == ecs.id<Evt>());
-        test_assert(it.src(1) == e);
+        test_assert(src == e);
     });
 
     test_int(count, 0);
 
     e.emit<Evt>();
+
+    test_int(count, 1);
+}
+
+void Event_entity_emit_event_w_payload(void) {
+    flecs::world ecs;
+
+    flecs::entity e = ecs.entity()
+        .add<Tag>();
+
+    int32_t count = 0;
+    e.observe<Position>([&](flecs::entity src, Position& p) {
+        count ++;
+        test_assert(src == e);
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+    });
+
+    test_int(count, 0);
+
+    e.emit<Position>({10, 20});
+
+    test_int(count, 1);
+}
+
+void Event_entity_emit_event_id_no_src(void) {
+    flecs::world ecs;
+
+    flecs::entity evt = ecs.entity();
+
+    flecs::entity e = ecs.entity()
+        .add<Tag>();
+
+    int32_t count = 0;
+    e.observe(evt, [&]() {
+        count ++;
+    });
+
+    test_int(count, 0);
+
+    e.emit(evt);
+
+    test_int(count, 1);
+}
+
+void Event_entity_emit_event_type_no_src(void) {
+    flecs::world ecs;
+
+    flecs::entity e = ecs.entity()
+        .add<Tag>();
+
+    int32_t count = 0;
+    e.observe<Evt>([&]() {
+        count ++;
+    });
+
+    test_int(count, 0);
+
+    e.emit<Evt>();
+
+    test_int(count, 1);
+}
+
+void Event_entity_emit_event_w_payload_no_src(void) {
+    flecs::world ecs;
+
+    flecs::entity e = ecs.entity()
+        .add<Tag>();
+
+    int32_t count = 0;
+    e.observe<Position>([&](Position& p) {
+        count ++;
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+    });
+
+    test_int(count, 0);
+
+    e.emit<Position>({10, 20});
+
+    test_int(count, 1);
+}
+
+void Event_entity_emit_event_w_payload_derived_event_type(void) {
+    flecs::world ecs;
+
+    flecs::entity e = ecs.entity()
+        .add<Tag>();
+
+    int32_t count = 0;
+    e.observe([&](flecs::entity src, Position& p) {
+        count ++;
+        test_assert(src == e);
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+    });
+
+    test_int(count, 0);
+
+    e.emit<Position>({10, 20});
+
+    test_int(count, 1);
+}
+
+void Event_entity_emit_event_w_payload_derived_event_type_no_src(void) {
+    flecs::world ecs;
+
+    flecs::entity e = ecs.entity()
+        .add<Tag>();
+
+    int32_t count = 0;
+    e.observe([&](Position& p) {
+        count ++;
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+    });
+
+    test_int(count, 0);
+
+    e.emit<Position>({10, 20});
 
     test_int(count, 1);
 }

@@ -573,6 +573,76 @@ private:
 
 
 ////////////////////////////////////////////////////////////////////////////////
+//// Utility class to invoke an entity observer delegate
+////////////////////////////////////////////////////////////////////////////////
+
+template <typename Func>
+struct entity_observer_delegate : delegate {
+    explicit entity_observer_delegate(Func&& func) noexcept 
+        : m_func(FLECS_MOV(func)) { }
+
+    // Static function that can be used as callback for systems/triggers
+    static void run(ecs_iter_t *iter) {
+        invoke<Func>(iter);
+    }
+private:
+    template <typename F, if_t<arity<F>::value == 1> = 0>
+    static void invoke(ecs_iter_t *iter) {
+        auto self = static_cast<const entity_observer_delegate*>(iter->binding_ctx);
+        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
+        self->m_func(flecs::entity(iter->world, ecs_field_src(iter, 1)));
+    }
+
+    template <typename F, if_t<arity<F>::value == 0> = 0>
+    static void invoke(ecs_iter_t *iter) {
+        auto self = static_cast<const entity_observer_delegate*>(iter->binding_ctx);
+        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
+        self->m_func();
+    }
+
+    Func m_func;
+};
+
+template <typename Func, typename Event>
+struct entity_payload_observer_delegate : delegate {
+    explicit entity_payload_observer_delegate(Func&& func) noexcept 
+        : m_func(FLECS_MOV(func)) { }
+
+    // Static function that can be used as callback for systems/triggers
+    static void run(ecs_iter_t *iter) {
+        invoke<Func>(iter);
+    }
+
+private:
+    template <typename F, if_t<arity<F>::value == 1> = 0>
+    static void invoke(ecs_iter_t *iter) {
+        auto self = static_cast<const entity_payload_observer_delegate*>(
+            iter->binding_ctx);
+        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(iter->param != nullptr, ECS_INVALID_OPERATION, 
+            "entity observer invoked without payload");
+
+        Event *data = static_cast<Event*>(iter->param);
+        self->m_func(*data);
+    }
+
+    template <typename F, if_t<arity<F>::value == 2> = 0>
+    static void invoke(ecs_iter_t *iter) {
+        auto self = static_cast<const entity_payload_observer_delegate*>(
+            iter->binding_ctx);
+        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(iter->param != nullptr, ECS_INVALID_OPERATION, 
+            "entity observer invoked without payload");
+
+        Event *data = static_cast<Event*>(iter->param);
+        self->m_func(flecs::entity(iter->world, ecs_field_src(iter, 1)), *data);
+    }
+
+    Func m_func;
+};
+
+
+////////////////////////////////////////////////////////////////////////////////
 //// Utility to invoke callback on entity if it has components in signature
 ////////////////////////////////////////////////////////////////////////////////
 

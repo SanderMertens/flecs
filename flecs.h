@@ -579,6 +579,13 @@ extern "C" {
 #endif
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
 #pragma GCC diagnostic ignored "-Wunused-macros"
+/* This warning gets thrown *sometimes* when not all members for a struct are
+ * provided in an initializer. Flecs heavily relies on descriptor structs that
+ * only require partly initialization, so this warning isn't useful.
+ * It doesn't introduce any safety issues (fields are guaranteed to be 0 
+ * initialized), and later versions of gcc (>=11) seem to no longer throw this 
+ * warning. */
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 #endif
 
 /* Standard library dependencies */
@@ -16768,7 +16775,7 @@ using return_type_t = typename _::function_traits<T>::return_type;
 template <typename T>
 using arg_list_t = typename _::function_traits<T>::args;
 
-
+// First arg
 template<typename Func, typename ... Args>
 struct first_arg_impl;
 
@@ -16784,6 +16791,23 @@ struct first_arg {
 
 template <typename Func>
 using first_arg_t = typename first_arg<Func>::type;
+
+// Last arg
+template<typename Func, typename ... Args>
+struct second_arg_impl;
+
+template<typename Func, typename First, typename T, typename ... Args>
+struct second_arg_impl<Func, _::arg_list<First, T, Args ...> > {
+    using type = T;
+};
+
+template<typename Func>
+struct second_arg {
+    using type = typename second_arg_impl<Func, arg_list_t<Func>>::type;
+};
+
+template <typename Func>
+using second_arg_t = typename second_arg<Func>::type;
 
 } // flecs
 
@@ -17133,6 +17157,31 @@ public:
 
 }
 
+
+namespace flecs {
+namespace _ {
+
+// Utility to derive event type from function
+template  <typename Func, typename U = int>
+struct event_from_func;
+
+// Specialization for observer callbacks with a single argument
+template  <typename Func>
+struct event_from_func<Func, if_t< arity<Func>::value == 1>> {
+    using type = decay_t<first_arg_t<Func>>;
+};
+
+// Specialization for observer callbacks with an initial entity src argument
+template  <typename Func>
+struct event_from_func<Func, if_t< arity<Func>::value == 2>> {
+    using type = decay_t<second_arg_t<Func>>;
+};
+
+template <typename Func>
+using event_from_func_t = typename event_from_func<Func>::type;
+
+}
+}
 
 /**
  * @file addons/cpp/mixins/query/decl.hpp
@@ -22395,7 +22444,7 @@ E to_constant() const;
  * @brief Event entity mixin.
  */
 
-/** Emit event for entity
+/** Emit event for entity.
  * 
  * \memberof flecs::entity_view
  * 
@@ -22408,16 +22457,40 @@ void emit(flecs::entity_t evt) {
         .emit();
 }
 
-/** Emit event for entity
+/** Emit event for entity.
+ * 
+ * \memberof flecs::entity_view
+ * 
+ * @param evt The event to emit.
+ */
+void emit(flecs::entity evt);
+
+/** Emit event for entity.
  * 
  * \memberof flecs::entity_view
  * 
  * @tparam Evt The event to emit.
  */
-template <typename Evt>
+template <typename Evt, if_t<is_empty<Evt>::value> = 0>
 void emit() {
     this->emit(_::cpp_type<Evt>::id(m_world));
 }
+
+/** Emit event with payload for entity.
+ * 
+ * \memberof flecs::entity_view
+ * 
+ * @tparam Evt The event to emit.
+ */
+template <typename Evt, if_not_t<is_empty<Evt>::value> = 0>
+void emit(const Evt& payload) {
+    flecs::world(m_world)
+        .event(_::cpp_type<Evt>::id(m_world))
+        .entity(m_id)
+        .ctx(&payload)
+        .emit();
+}
+
 
 
 private:
@@ -23668,6 +23741,16 @@ Self& observe(flecs::entity_t evt, Func&& callback);
 template <typename Evt, typename Func>
 Self& observe(Func&& callback);
 
+/** Observe event on entity
+ * 
+ * \memberof flecs::entity_builder
+ *
+ * @param callback The observer callback.
+ * @return Event builder.
+ */
+template <typename Func>
+Self& observe(Func&& callback);
+
 
 
 
@@ -24563,6 +24646,76 @@ private:
 
 
 ////////////////////////////////////////////////////////////////////////////////
+//// Utility class to invoke an entity observer delegate
+////////////////////////////////////////////////////////////////////////////////
+
+template <typename Func>
+struct entity_observer_delegate : delegate {
+    explicit entity_observer_delegate(Func&& func) noexcept 
+        : m_func(FLECS_MOV(func)) { }
+
+    // Static function that can be used as callback for systems/triggers
+    static void run(ecs_iter_t *iter) {
+        invoke<Func>(iter);
+    }
+private:
+    template <typename F, if_t<arity<F>::value == 1> = 0>
+    static void invoke(ecs_iter_t *iter) {
+        auto self = static_cast<const entity_observer_delegate*>(iter->binding_ctx);
+        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
+        self->m_func(flecs::entity(iter->world, ecs_field_src(iter, 1)));
+    }
+
+    template <typename F, if_t<arity<F>::value == 0> = 0>
+    static void invoke(ecs_iter_t *iter) {
+        auto self = static_cast<const entity_observer_delegate*>(iter->binding_ctx);
+        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
+        self->m_func();
+    }
+
+    Func m_func;
+};
+
+template <typename Func, typename Event>
+struct entity_payload_observer_delegate : delegate {
+    explicit entity_payload_observer_delegate(Func&& func) noexcept 
+        : m_func(FLECS_MOV(func)) { }
+
+    // Static function that can be used as callback for systems/triggers
+    static void run(ecs_iter_t *iter) {
+        invoke<Func>(iter);
+    }
+
+private:
+    template <typename F, if_t<arity<F>::value == 1> = 0>
+    static void invoke(ecs_iter_t *iter) {
+        auto self = static_cast<const entity_payload_observer_delegate*>(
+            iter->binding_ctx);
+        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(iter->param != nullptr, ECS_INVALID_OPERATION, 
+            "entity observer invoked without payload");
+
+        Event *data = static_cast<Event*>(iter->param);
+        self->m_func(*data);
+    }
+
+    template <typename F, if_t<arity<F>::value == 2> = 0>
+    static void invoke(ecs_iter_t *iter) {
+        auto self = static_cast<const entity_payload_observer_delegate*>(
+            iter->binding_ctx);
+        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(iter->param != nullptr, ECS_INVALID_OPERATION, 
+            "entity observer invoked without payload");
+
+        Event *data = static_cast<Event*>(iter->param);
+        self->m_func(flecs::entity(iter->world, ecs_field_src(iter, 1)), *data);
+    }
+
+    Func m_func;
+};
+
+
+////////////////////////////////////////////////////////////////////////////////
 //// Utility to invoke callback on entity if it has components in signature
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -24946,28 +25099,28 @@ protected:
     virtual ecs_iter_next_action_t next_action() const = 0;
     virtual ecs_iter_next_action_t next_each_action() const = 0;
 
-    template < template<typename Func, typename ... Comps> class Invoker, typename Func, typename NextFunc, typename ... Args>
+    template < template<typename Func, typename ... Comps> class Delegate, typename Func, typename NextFunc, typename ... Args>
     void iterate(flecs::world_t *stage, Func&& func, NextFunc next, Args &&... args) const {
         ecs_iter_t it = this->get_iter(stage);
-        if (Invoker<Func, Components...>::instanced()) {
+        if (Delegate<Func, Components...>::instanced()) {
             ECS_BIT_SET(it.flags, EcsIterIsInstanced);
         }
 
         while (next(&it, FLECS_FWD(args)...)) {
-            Invoker<Func, Components...>(func).invoke(&it);
+            Delegate<Func, Components...>(func).invoke(&it);
         }
     }
 
-    template < template<typename Func, typename ... Comps> class Invoker, typename Func, typename NextFunc, typename ... Args>
+    template < template<typename Func, typename ... Comps> class Delegate, typename Func, typename NextFunc, typename ... Args>
     flecs::entity iterate_find(flecs::world_t *stage, Func&& func, NextFunc next, Args &&... args) const {
         ecs_iter_t it = this->get_iter(stage);
-        if (Invoker<Func, Components...>::instanced()) {
+        if (Delegate<Func, Components...>::instanced()) {
             ECS_BIT_SET(it.flags, EcsIterIsInstanced);
         }
 
         flecs::entity result;
         while (!result && next(&it, FLECS_FWD(args)...)) {
-            result = Invoker<Func, Components...>(func).invoke(&it);
+            result = Delegate<Func, Components...>(func).invoke(&it);
         }
         if (result) {
             ecs_iter_fini(&it);
@@ -25812,16 +25965,16 @@ struct component : untyped_component {
     /** Register on_add hook. */
     template <typename Func>
     component<T>& on_add(Func&& func) {
-        using Invoker = typename _::each_delegate<
+        using Delegate = typename _::each_delegate<
             typename std::decay<Func>::type, T>;
         flecs::type_hooks_t h = get_hooks();
         ecs_assert(h.on_add == nullptr, ECS_INVALID_OPERATION, 
             "on_add hook is already set");
         BindingCtx *ctx = get_binding_ctx(h);
-        h.on_add = Invoker::run_add;
-        ctx->on_add = FLECS_NEW(Invoker)(FLECS_FWD(func));
+        h.on_add = Delegate::run_add;
+        ctx->on_add = FLECS_NEW(Delegate)(FLECS_FWD(func));
         ctx->free_on_add = reinterpret_cast<ecs_ctx_free_t>(
-            _::free_obj<Invoker>);
+            _::free_obj<Delegate>);
         ecs_set_hooks_id(m_world, m_id, &h);
         return *this;
     }
@@ -25829,16 +25982,16 @@ struct component : untyped_component {
     /** Register on_remove hook. */
     template <typename Func>
     component<T>& on_remove(Func&& func) {
-        using Invoker = typename _::each_delegate<
+        using Delegate = typename _::each_delegate<
             typename std::decay<Func>::type, T>;
         flecs::type_hooks_t h = get_hooks();
         ecs_assert(h.on_remove == nullptr, ECS_INVALID_OPERATION, 
             "on_remove hook is already set");
         BindingCtx *ctx = get_binding_ctx(h);
-        h.on_remove = Invoker::run_remove;
-        ctx->on_remove = FLECS_NEW(Invoker)(FLECS_FWD(func));
+        h.on_remove = Delegate::run_remove;
+        ctx->on_remove = FLECS_NEW(Delegate)(FLECS_FWD(func));
         ctx->free_on_remove = reinterpret_cast<ecs_ctx_free_t>(
-            _::free_obj<Invoker>);
+            _::free_obj<Delegate>);
         ecs_set_hooks_id(m_world, m_id, &h);
         return *this;
     }
@@ -25846,16 +25999,16 @@ struct component : untyped_component {
     /** Register on_set hook. */
     template <typename Func>
     component<T>& on_set(Func&& func) {
-        using Invoker = typename _::each_delegate<
+        using Delegate = typename _::each_delegate<
             typename std::decay<Func>::type, T>;
         flecs::type_hooks_t h = get_hooks();
         ecs_assert(h.on_set == nullptr, ECS_INVALID_OPERATION, 
             "on_set hook is already set");
         BindingCtx *ctx = get_binding_ctx(h);
-        h.on_set = Invoker::run_set;
-        ctx->on_set = FLECS_NEW(Invoker)(FLECS_FWD(func));
+        h.on_set = Delegate::run_set;
+        ctx->on_set = FLECS_NEW(Delegate)(FLECS_FWD(func));
         ctx->free_on_set = reinterpret_cast<ecs_ctx_free_t>(
-            _::free_obj<Invoker>);
+            _::free_obj<Delegate>);
         ecs_set_hooks_id(m_world, m_id, &h);
         return *this;
     }
@@ -28529,19 +28682,19 @@ public:
      * template parameters and anything provided by the signature method. */
     template <typename Func>
     T iter(Func&& func) {
-        using Invoker = typename _::iter_delegate<
+        using Delegate = typename _::iter_delegate<
             typename std::decay<Func>::type, Components...>;
-        return build<Invoker>(FLECS_FWD(func));
+        return build<Delegate>(FLECS_FWD(func));
     }
 
     /* Each is similar to action, but accepts a function that operates on a
      * single entity */
     template <typename Func>
     T each(Func&& func) {
-        using Invoker = typename _::each_delegate<
+        using Delegate = typename _::each_delegate<
             typename std::decay<Func>::type, Components...>;
         m_instanced = true;
-        return build<Invoker>(FLECS_FWD(func));
+        return build<Delegate>(FLECS_FWD(func));
     }
 
 protected:
@@ -28551,13 +28704,13 @@ protected:
     bool m_instanced;
 
 private:
-    template <typename Invoker, typename Func>
+    template <typename Delegate, typename Func>
     T build(Func&& func) {
-        auto ctx = FLECS_NEW(Invoker)(FLECS_FWD(func));
-        m_desc.callback = Invoker::run;
+        auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
+        m_desc.callback = Delegate::run;
         m_desc.binding_ctx = ctx;
         m_desc.binding_ctx_free = reinterpret_cast<
-            ecs_ctx_free_t>(_::free_obj<Invoker>);
+            ecs_ctx_free_t>(_::free_obj<Delegate>);
         
         return T(m_world, &m_desc, m_instanced);
     }
@@ -28744,14 +28897,63 @@ inline flecs::event_builder_typed<E> world::event() const {
     return flecs::event_builder_typed<E>(m_world, _::cpp_type<E>().id(m_world));
 }
 
+namespace _ {
+    inline void entity_observer_create(
+        flecs::world_t *world,
+        flecs::entity_t event,
+        flecs::entity_t entity,
+        ecs_iter_action_t callback,
+        void *binding_ctx,
+        ecs_ctx_free_t binding_ctx_free) 
+    {
+        ecs_observer_desc_t desc = {};
+        desc.events[0] = event;
+        desc.filter.terms[0].id = EcsAny;
+        desc.filter.terms[0].src.id = entity;
+        desc.callback = callback;
+        desc.binding_ctx = binding_ctx;
+        desc.binding_ctx_free = binding_ctx_free;
+
+        flecs::entity_t o = ecs_observer_init(world, &desc);
+        ecs_add_pair(world, o, EcsChildOf, entity);
+    }
+
+    template <typename Func>
+    struct entity_observer_factory {
+        template <typename Evt, if_t<is_empty<Evt>::value> = 0>
+        static void create(
+            flecs::world_t *world,
+            flecs::entity_t entity,
+            Func&& f)
+        {
+            using Delegate = _::entity_observer_delegate<Func>;
+            auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(f));
+            entity_observer_create(world, _::cpp_type<Evt>::id(world), entity, Delegate::run, ctx, 
+                reinterpret_cast<ecs_ctx_free_t>(_::free_obj<Delegate>));
+        }
+
+        template <typename Evt, if_not_t<is_empty<Evt>::value> = 0>
+        static void create(
+            flecs::world_t *world,
+            flecs::entity_t entity,
+            Func&& f)
+        {
+            using Delegate = _::entity_payload_observer_delegate<Func, Evt>;
+            auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(f));
+            entity_observer_create(world, _::cpp_type<Evt>::id(world), entity, Delegate::run, ctx, 
+                reinterpret_cast<ecs_ctx_free_t>(_::free_obj<Delegate>));
+        }
+    };
+}
+
 template <typename Self>
 template <typename Func>
 inline Self& entity_builder<Self>::observe(flecs::entity_t evt, Func&& f) {
-    flecs::world(m_world).observer()
-      .event(evt)
-      .with(flecs::Any).src(m_id)
-      .iter(f)
-      .child_of(m_id);
+    using Delegate = _::entity_observer_delegate<Func>;
+    auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(f));
+
+    _::entity_observer_create(m_world, evt, m_id, Delegate::run, ctx,
+        reinterpret_cast<ecs_ctx_free_t>(_::free_obj<Delegate>));
 
     return to_base();
 }
@@ -28759,7 +28961,19 @@ inline Self& entity_builder<Self>::observe(flecs::entity_t evt, Func&& f) {
 template <typename Self>
 template <typename Evt, typename Func>
 inline Self& entity_builder<Self>::observe(Func&& f) {
-    return this->observe(_::cpp_type<Evt>::id(m_world), f);
+    _::entity_observer_factory<Func>::template create<Evt>(
+        m_world, m_id, FLECS_FWD(f));
+    return to_base();
+}
+
+template <typename Self>
+template <typename Func>
+inline Self& entity_builder<Self>::observe(Func&& f) {
+    return this->observe<_::event_from_func_t<Func>>(FLECS_FWD(f));
+}
+
+inline void entity_view::emit(flecs::entity evt) {
+    this->emit(evt.id());
 }
 
 } // namespace flecs
