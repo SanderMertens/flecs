@@ -29,7 +29,7 @@
 using namespace flecs;
 
 // Factory module
-struct factory {
+struct factories {
   // Maximum number of resources a recipe can depend on
   static constexpr int MaxInputs = 3;
 
@@ -108,7 +108,7 @@ struct factory {
   };
 
   // Module import function
-  factory(world& world) {
+  factories(world& world) {
     // Units improve visualization of component values in the explorer.
     world.import<flecs::units>();
 
@@ -258,8 +258,8 @@ private:
       }
 
       // For each recipe requirement, make sure a correct input is connected
-      int i = 0; 
-      for (; i < MaxInputs; i ++) {
+      bool satisfied = true;
+      for (int i = 0; i < MaxInputs; i ++) {
         entity resource = world.entity(r.items[i].resource);
         entity input = world.entity(config.inputs[i]);
         if (!resource) {
@@ -271,19 +271,21 @@ private:
         }
 
         if (resource && !input) {
+          satisfied = false;
           break;
         }
 
         if (!input.has<Stores>(resource)) {
           std::cout << factory.path() << ": input doesn't provide resource " 
             << recipe.path() << "\n";
+          satisfied = false;
           break;
         }
       }
 
       // If we got through all requirements without issues, factory is ready
       // to start collecting resources
-      if (i == MaxInputs) {
+      if (satisfied) {
         factory.add(FactoryState::WaitingForResources);
 
         // Initialize supply component
@@ -328,7 +330,7 @@ private:
 int main(int argc, char *argv[]) {
   flecs::world world(argc, argv);
 
-  world.import<factory>();
+  world.import<factories>();
 
   ecs_plecs_from_file(world, "resources.flecs");
   ecs_plecs_from_file(world, "scene.flecs");

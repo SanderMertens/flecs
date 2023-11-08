@@ -1,4 +1,4 @@
-using factory
+using factories
 using resources
 
 // Resource depots
@@ -29,7 +29,7 @@ depot {
 }
 
 // Factories
-factories {
+factory {
   with Factory{ recipe: Gear, inputs: [depot.iron], output: depot.gear } {
     gear_1
     gear_2

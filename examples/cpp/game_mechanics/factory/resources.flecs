@@ -1,4 +1,4 @@
-using factory
+using factories
 
 resources {
   // Ore stacks can contain 50 items
