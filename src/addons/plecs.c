@@ -1872,6 +1872,7 @@ term_expr:
         goto error;
     }
 
+
     const char *tptr = ecs_parse_ws(ptr);
     if (flecs_isident(tptr[0])) {
         if (state->decl_stmt) {
@@ -1895,7 +1896,7 @@ next_term:
     } else if (ptr[0] == ',') {
         ptr = plecs_parse_fluff(ptr + 1);
         goto term_expr;
-    } else if (ptr[0] == '{') {
+    } else if (ptr[0] == '{' || ptr[0] == '[') {
         if (state->assign_stmt) {
             goto assign_expr;
         } else if (state->with_stmt && !isspace(ptr[-1])) {
@@ -1934,7 +1935,7 @@ assign_stmt:
     ptr = plecs_parse_fluff(ptr);
 
     /* Assignment without a preceding component */
-    if (ptr[0] == '{') {
+    if (ptr[0] == '{' || ptr[0] == '[') {
         goto assign_expr;
     }
 

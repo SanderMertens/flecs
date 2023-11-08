@@ -1355,3 +1355,17 @@ void Meta_struct_member_ptr_packed_struct(void) {
         test_uint(cm->offset, offsetof(PackedStruct, c));
     }
 }
+
+void Meta_component_as_array(void) {
+    flecs::world ecs;
+
+    flecs::entity c = ecs.component<Position>()
+        .array<float>(2);
+
+    test_assert(c.has<flecs::Array>());
+
+    const flecs::Array *ptr = c.get<flecs::Array>();
+    test_assert(ptr != nullptr);
+    test_assert(ptr->type == ecs.id<float>());
+    test_int(ptr->count, 2);
+}

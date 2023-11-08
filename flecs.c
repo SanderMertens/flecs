@@ -30522,6 +30522,7 @@ const char* flecs_parse_annotation(
     ptr = ecs_parse_ws(ptr);
 
     if (ptr[0] != TOK_BRACKET_CLOSE) {
+        printf("errr\n");
         ecs_parser_error(name, sig, column, "expected ]");
         return NULL;
     }
@@ -31108,6 +31109,8 @@ bool flecs_is_valid_end_of_term(
         (ptr[0] == '/') ||        /* comment (in plecs) */
         (ptr[0] == '{') ||        /* scope (in plecs) */
         (ptr[0] == '}') ||
+        (ptr[0] == '[') ||        /* collection scope (in plecs) */
+        (ptr[0] == ']') ||
         (ptr[0] == ':') ||        /* inheritance (in plecs) */
         (ptr[0] == '='))          /* assignment (in plecs) */
     {
@@ -33157,6 +33160,7 @@ term_expr:
         goto error;
     }
 
+
     const char *tptr = ecs_parse_ws(ptr);
     if (flecs_isident(tptr[0])) {
         if (state->decl_stmt) {
@@ -33180,7 +33184,7 @@ next_term:
     } else if (ptr[0] == ',') {
         ptr = plecs_parse_fluff(ptr + 1);
         goto term_expr;
-    } else if (ptr[0] == '{') {
+    } else if (ptr[0] == '{' || ptr[0] == '[') {
         if (state->assign_stmt) {
             goto assign_expr;
         } else if (state->with_stmt && !isspace(ptr[-1])) {
@@ -33219,7 +33223,7 @@ assign_stmt:
     ptr = plecs_parse_fluff(ptr);
 
     /* Assignment without a preceding component */
-    if (ptr[0] == '{') {
+    if (ptr[0] == '{' || ptr[0] == '[') {
         goto assign_expr;
     }
 
@@ -47739,7 +47743,7 @@ const char* flecs_parse_expr(
             }
 
             if (!ecs_meta_is_collection(&cur)) {
-                ecs_parser_error(name, expr, ptr - expr, "expected '{'");
+                ecs_parser_error(name, expr, ptr - expr, "unexpected '['");
                 return NULL;
             }
         }
@@ -54419,7 +54423,7 @@ int ecs_meta_push(
 
     if (cursor->depth == 0) {
         if (!cursor->is_primitive_scope) {
-            if (op->kind > EcsOpScope) {
+            if ((op->kind > EcsOpScope) && (op->count <= 1)) {
                 cursor->is_primitive_scope = true;
                 return 0;
             }
@@ -54705,9 +54709,6 @@ int ecs_meta_pop(
              * a complex or collection type */
             ecs_assert(false, ECS_INTERNAL_ERROR, NULL);
         }
-    } else {
-        /* Make sure that this was an inline array */
-        ecs_assert(next_scope->op_count > 1, ECS_INTERNAL_ERROR, NULL);
     }
 
     return 0;

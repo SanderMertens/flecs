@@ -7704,3 +7704,31 @@ void Plecs_assign_after_with_in_scope(void) {
 
     ecs_fini(world);
 }
+
+void Plecs_array_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_array(world, {
+        .entity = ecs_id(Position),
+        .type = ecs_id(ecs_f32_t),
+        .count = 2
+    });
+
+    const char *expr =
+    LINE "foo :- Position[10, 20]\n";
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "foo");
+    test_assert(foo != 0);
+
+    test_assert(ecs_has(world, foo, Position));
+
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}

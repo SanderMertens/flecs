@@ -2437,6 +2437,91 @@ void Cursor_struct_w_2_array_type_struct(void) {
     ecs_fini(world);
 }
 
+void Cursor_array_i32_3(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        int32_t a[3];
+    } T;
+
+    ecs_entity_t t = ecs_array_init(world, &(ecs_array_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .type = ecs_id(ecs_i32_t),
+        .count = 3
+    });
+
+    T value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+    test_int(0, ecs_meta_push(&cur));
+
+    test_int(0, ecs_meta_set_int(&cur, 10));
+    test_int(0, ecs_meta_next(&cur));
+    test_int(0, ecs_meta_set_int(&cur, 20));
+    test_int(0, ecs_meta_next(&cur));
+    test_int(0, ecs_meta_set_int(&cur, 30));
+
+    test_int(value.a[0], 10);
+    test_int(value.a[1], 20);
+    test_int(value.a[2], 30);
+
+    test_int(0, ecs_meta_pop(&cur));
+
+    ecs_fini(world);
+}
+
+void Cursor_array_struct_3(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        int32_t x, y;
+    } N;
+
+    typedef struct {
+        N a[2];
+    } T;
+
+    ecs_entity_t n = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "N"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t t = ecs_array_init(world, &(ecs_array_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .type = n,
+        .count = 2
+    });
+
+    T value = {0};
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
+    test_int(0, ecs_meta_push(&cur));
+        test_int(0, ecs_meta_push(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 10));
+            test_int(0, ecs_meta_next(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 20));
+        test_int(0, ecs_meta_pop(&cur));
+
+        test_int(0, ecs_meta_next(&cur));
+
+        test_int(0, ecs_meta_push(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 30));
+            test_int(0, ecs_meta_next(&cur));
+            test_int(0, ecs_meta_set_int(&cur, 40));
+        test_int(0, ecs_meta_pop(&cur));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_int(value.a[0].x, 10);
+    test_int(value.a[0].y, 20);
+    test_int(value.a[1].x, 30);
+    test_int(value.a[1].y, 40);
+
+    ecs_fini(world);
+}
+
 void Cursor_array_move_primitive(void) {
     ecs_world_t *world = ecs_init();
 

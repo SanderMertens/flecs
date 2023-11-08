@@ -1340,7 +1340,8 @@
                 "warning_range",
                 "error_range",
                 "struct_member_ptr",
-                "struct_member_ptr_packed_struct"
+                "struct_member_ptr_packed_struct",
+                "component_as_array"
             ]
         }, {
             "id": "Table",

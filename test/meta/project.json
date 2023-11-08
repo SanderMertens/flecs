@@ -360,6 +360,8 @@
                 "struct_w_array_type_struct",
                 "struct_w_2_array_type_i32_i32",
                 "struct_w_2_array_type_struct",
+                "array_i32_3",
+                "array_struct_3",
                 "array_move_primitive",
                 "array_move_struct",
                 "array_move_out_of_range",

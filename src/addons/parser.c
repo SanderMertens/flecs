@@ -359,6 +359,7 @@ const char* flecs_parse_annotation(
     ptr = ecs_parse_ws(ptr);
 
     if (ptr[0] != TOK_BRACKET_CLOSE) {
+        printf("errr\n");
         ecs_parser_error(name, sig, column, "expected ]");
         return NULL;
     }
@@ -945,6 +946,8 @@ bool flecs_is_valid_end_of_term(
         (ptr[0] == '/') ||        /* comment (in plecs) */
         (ptr[0] == '{') ||        /* scope (in plecs) */
         (ptr[0] == '}') ||
+        (ptr[0] == '[') ||        /* collection scope (in plecs) */
+        (ptr[0] == ']') ||
         (ptr[0] == ':') ||        /* inheritance (in plecs) */
         (ptr[0] == '='))          /* assignment (in plecs) */
     {

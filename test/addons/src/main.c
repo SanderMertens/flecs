@@ -475,6 +475,7 @@ void Plecs_component_in_with_scope(void);
 void Plecs_component_in_with_scope_nested(void);
 void Plecs_component_in_with_scope_in_scope(void);
 void Plecs_assign_after_with_in_scope(void);
+void Plecs_array_component(void);
 
 // Testsuite 'Doc'
 void Doc_get_set_name(void);
@@ -3455,6 +3456,10 @@ bake_test_case Plecs_testcases[] = {
     {
         "assign_after_with_in_scope",
         Plecs_assign_after_with_in_scope
+    },
+    {
+        "array_component",
+        Plecs_array_component
     }
 };
 
@@ -7753,7 +7758,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        232,
+        233,
         Plecs_testcases
     },
     {

@@ -1147,7 +1147,7 @@ const char* flecs_parse_expr(
             }
 
             if (!ecs_meta_is_collection(&cur)) {
-                ecs_parser_error(name, expr, ptr - expr, "expected '{'");
+                ecs_parser_error(name, expr, ptr - expr, "unexpected '['");
                 return NULL;
             }
         }

@@ -116,6 +116,17 @@ untyped_component& bit(const char *name, uint32_t value) {
     return *this;
 }
 
+/** Register array metadata for component */
+template <typename Elem>
+untyped_component& array(int32_t elem_count) {
+    ecs_array_desc_t desc = {};
+    desc.entity = m_id;
+    desc.type = _::cpp_type<Elem>::id(m_world);
+    desc.count = elem_count;
+    ecs_array_init(m_world, &desc);
+    return *this;
+}
+
 /** Add member value range */
 untyped_component& range(double min, double max) {
     const flecs::member_t *m = ecs_cpp_last_member(m_world, m_id);

@@ -1285,6 +1285,7 @@ void Meta_warning_range(void);
 void Meta_error_range(void);
 void Meta_struct_member_ptr(void);
 void Meta_struct_member_ptr_packed_struct(void);
+void Meta_component_as_array(void);
 
 // Testsuite 'Table'
 void Table_each(void);
@@ -6302,6 +6303,10 @@ bake_test_case Meta_testcases[] = {
     {
         "struct_member_ptr_packed_struct",
         Meta_struct_member_ptr_packed_struct
+    },
+    {
+        "component_as_array",
+        Meta_component_as_array
     }
 };
 
@@ -6639,7 +6644,7 @@ static bake_test_suite suites[] = {
         "Meta",
         NULL,
         NULL,
-        54,
+        55,
         Meta_testcases
     },
     {

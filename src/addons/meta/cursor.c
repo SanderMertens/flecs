@@ -376,7 +376,7 @@ int ecs_meta_push(
 
     if (cursor->depth == 0) {
         if (!cursor->is_primitive_scope) {
-            if (op->kind > EcsOpScope) {
+            if ((op->kind > EcsOpScope) && (op->count <= 1)) {
                 cursor->is_primitive_scope = true;
                 return 0;
             }
@@ -662,9 +662,6 @@ int ecs_meta_pop(
              * a complex or collection type */
             ecs_assert(false, ECS_INTERNAL_ERROR, NULL);
         }
-    } else {
-        /* Make sure that this was an inline array */
-        ecs_assert(next_scope->op_count > 1, ECS_INTERNAL_ERROR, NULL);
     }
 
     return 0;
