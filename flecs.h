@@ -19289,6 +19289,8 @@ namespace flecs
  */
 template <typename T>
 struct ref {
+    ref() : m_world(nullptr), m_ref{} { }
+
     ref(world_t *world, entity_t entity, flecs::id_t id = 0)
         : m_ref()
     {

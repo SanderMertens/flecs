@@ -124,3 +124,16 @@ void Refs_from_stage(void) {
     test_int(ref->x, 10);
     test_int(ref->y, 20);
 }
+
+void Refs_default_ctor(void) {
+    flecs::world world;
+
+    // Make sure default ctor works
+    flecs::ref<Position> p;
+
+    flecs::entity e = world.entity().set<Position>({10, 20});
+
+    p = e.get_ref<Position>();
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
