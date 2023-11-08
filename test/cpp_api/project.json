@@ -1023,7 +1023,8 @@
                 "pair_ref_w_entity",
                 "pair_ref_second",
                 "from_stage",
-                "default_ctor"
+                "default_ctor",
+                "try_get"
             ]
         }, {
             "id": "Module",

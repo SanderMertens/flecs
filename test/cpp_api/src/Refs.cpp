@@ -137,3 +137,11 @@ void Refs_default_ctor(void) {
     test_int(p->x, 10);
     test_int(p->y, 20);
 }
+
+void Refs_try_get(void) {
+    flecs::world world;
+
+    flecs::ref<Position> p;
+
+    test_assert(p.try_get() == nullptr);
+}

@@ -19321,6 +19321,14 @@ struct ref {
             m_world, &m_ref, this->m_ref.id));
     }
 
+    T* try_get() {
+        if (!m_world || !m_ref.entity) {
+            return nullptr;
+        }
+
+        return get();
+    }
+
     flecs::entity entity() const;
 
 private:

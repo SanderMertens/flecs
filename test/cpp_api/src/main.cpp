@@ -984,6 +984,7 @@ void Refs_pair_ref_w_entity(void);
 void Refs_pair_ref_second(void);
 void Refs_from_stage(void);
 void Refs_default_ctor(void);
+void Refs_try_get(void);
 
 // Testsuite 'Module'
 void Module_import(void);
@@ -5144,6 +5145,10 @@ bake_test_case Refs_testcases[] = {
     {
         "default_ctor",
         Refs_default_ctor
+    },
+    {
+        "try_get",
+        Refs_try_get
     }
 };
 
@@ -6593,7 +6598,7 @@ static bake_test_suite suites[] = {
         "Refs",
         NULL,
         NULL,
-        12,
+        13,
         Refs_testcases
     },
     {
