@@ -505,7 +505,13 @@
                 "emit_staged_from_stage",
                 "emit_custom_for_any",
                 "entity_emit_event_id",
-                "entity_emit_event_type"
+                "entity_emit_event_type",
+                "entity_emit_event_w_payload",
+                "entity_emit_event_id_no_src",
+                "entity_emit_event_type_no_src",
+                "entity_emit_event_w_payload_no_src",
+                "entity_emit_event_w_payload_derived_event_type",
+                "entity_emit_event_w_payload_derived_event_type_no_src"
             ]
         }, {
             "id": "Iterable",

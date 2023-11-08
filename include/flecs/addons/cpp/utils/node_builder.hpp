@@ -35,19 +35,19 @@ public:
      * template parameters and anything provided by the signature method. */
     template <typename Func>
     T iter(Func&& func) {
-        using Invoker = typename _::iter_delegate<
+        using Delegate = typename _::iter_delegate<
             typename std::decay<Func>::type, Components...>;
-        return build<Invoker>(FLECS_FWD(func));
+        return build<Delegate>(FLECS_FWD(func));
     }
 
     /* Each is similar to action, but accepts a function that operates on a
      * single entity */
     template <typename Func>
     T each(Func&& func) {
-        using Invoker = typename _::each_delegate<
+        using Delegate = typename _::each_delegate<
             typename std::decay<Func>::type, Components...>;
         m_instanced = true;
-        return build<Invoker>(FLECS_FWD(func));
+        return build<Delegate>(FLECS_FWD(func));
     }
 
 protected:
@@ -57,13 +57,13 @@ protected:
     bool m_instanced;
 
 private:
-    template <typename Invoker, typename Func>
+    template <typename Delegate, typename Func>
     T build(Func&& func) {
-        auto ctx = FLECS_NEW(Invoker)(FLECS_FWD(func));
-        m_desc.callback = Invoker::run;
+        auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
+        m_desc.callback = Delegate::run;
         m_desc.binding_ctx = ctx;
         m_desc.binding_ctx_free = reinterpret_cast<
-            ecs_ctx_free_t>(_::free_obj<Invoker>);
+            ecs_ctx_free_t>(_::free_obj<Delegate>);
         
         return T(m_world, &m_desc, m_instanced);
     }
