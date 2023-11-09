@@ -656,7 +656,7 @@ void flecs_run_pipeline(
             int32_t si;
             for (si = 0; si < stage_count; si ++) {
                 ecs_stage_t *s = &world->stages[si];
-                pq->cur_op->commands_enqueued += ecs_vec_count(&s->commands);
+                pq->cur_op->commands_enqueued += ecs_vec_count(&s->cmd->queue);
             }
 
             ecs_readonly_end(world);
