@@ -4741,22 +4741,15 @@ bool flecs_defer_end(
         }
 
         ecs_stage_t *dst_stage = flecs_stage_from_world(&world);
-        if (ecs_vec_count(&stage->commands)) {
-            ecs_vec_t commands = stage->commands;
-            stage->commands.array = NULL;
-            stage->commands.count = 0;
-            stage->commands.size = 0;
-
-            ecs_cmd_t *cmds = ecs_vec_first(&commands);
-            int32_t i, count = ecs_vec_count(&commands);
-            ecs_vec_init_t(NULL, &stage->commands, ecs_cmd_t, 0);
-
-            ecs_stack_t stack = stage->defer_stack;
-            flecs_stack_init(&stage->defer_stack);
+        ecs_commands_t *commands = stage->cmd;
+        ecs_vec_t *queue = &commands->queue;
+        if (ecs_vec_count(queue)) {
+            ecs_cmd_t *cmds = ecs_vec_first(queue);
+            int32_t i, count = ecs_vec_count(queue);
 
             ecs_table_diff_builder_t diff;
             flecs_table_diff_builder_init(world, &diff);
-            flecs_sparse_clear(&stage->cmd_entries);
+            flecs_commands_push(stage);
 
             for (i = 0; i < count; i ++) {
                 ecs_cmd_t *cmd = &cmds[i];
@@ -4771,6 +4764,11 @@ bool flecs_defer_end(
                     } else {
                         world->info.cmd.discard_count ++;
                     }
+                }
+
+                /* Invalidate entry */
+                if (cmd->entry) {
+                    cmd->entry->first = -1;
                 }
 
                 /* If entity is no longer alive, this could be because the queue
@@ -4883,16 +4881,9 @@ bool flecs_defer_end(
                 }
             }
 
-            ecs_vec_fini_t(&stage->allocator, &stage->commands, ecs_cmd_t);
-
-            /* Restore defer queue */
-            ecs_vec_clear(&commands);
-            stage->commands = commands;
-
-            /* Restore stack */
-            flecs_stack_fini(&stage->defer_stack);
-            stage->defer_stack = stack;
-            flecs_stack_reset(&stage->defer_stack);
+            flecs_stack_reset(&commands->stack);
+            ecs_vec_clear(queue);
+            flecs_commands_pop(stage);
 
             flecs_table_diff_builder_fini(world, &diff);
         }
@@ -4912,7 +4903,7 @@ bool flecs_defer_purge(
     ecs_check(stage != NULL, ECS_INVALID_PARAMETER, NULL);
 
     if (!--stage->defer) {
-        ecs_vec_t commands = stage->commands;
+        ecs_vec_t commands = stage->cmd->queue;
 
         if (ecs_vec_count(&commands)) {
             ecs_cmd_t *cmds = ecs_vec_first(&commands);
@@ -4921,11 +4912,11 @@ bool flecs_defer_purge(
                 flecs_discard_cmd(world, &cmds[i]);
             }
 
-            ecs_vec_fini_t(&stage->allocator, &stage->commands, ecs_cmd_t);
+            ecs_vec_fini_t(&stage->allocator, &stage->cmd->queue, ecs_cmd_t);
 
             ecs_vec_clear(&commands);
-            flecs_stack_reset(&stage->defer_stack);
-            flecs_sparse_clear(&stage->cmd_entries);
+            flecs_stack_reset(&stage->cmd->stack);
+            flecs_sparse_clear(&stage->cmd->entries);
         }
 
         return true;

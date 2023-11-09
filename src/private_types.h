@@ -27,6 +27,7 @@
 extern const ecs_entity_t EcsFlag;
 
 #define ECS_MAX_JOBS_PER_WORKER (16)
+#define ECS_MAX_DEFER_STACK (8)
 
 /* Magic number for a flecs object */
 #define ECS_OBJECT_MAGIC (0x6563736f)
@@ -335,6 +336,12 @@ typedef enum ecs_cmd_kind_t {
     EcsOpSkip
 } ecs_cmd_kind_t;
 
+/* Entity specific metadata for command in queue */
+typedef struct ecs_cmd_entry_t {
+    int32_t first;
+    int32_t last;                    /* If -1, a delete command was inserted */
+} ecs_cmd_entry_t;
+
 typedef struct ecs_cmd_1_t {
     void *value;                     /* Component value (used by set / get_mut) */
     ecs_size_t size;                 /* Size of value */
@@ -351,6 +358,7 @@ typedef struct ecs_cmd_t {
     int32_t next_for_entity;         /* Next operation for entity */    
     ecs_id_t id;                     /* (Component) id */
     ecs_id_record_t *idr;            /* Id record (only for set/mut/emplace) */
+    ecs_cmd_entry_t *entry;
     ecs_entity_t entity;             /* Entity id */
 
     union {
@@ -359,11 +367,12 @@ typedef struct ecs_cmd_t {
     } is;
 } ecs_cmd_t;
 
-/* Entity specific metadata for command in defer queue */
-typedef struct ecs_cmd_entry_t {
-    int32_t first;
-    int32_t last;                    /* If -1, a delete command was inserted */
-} ecs_cmd_entry_t;
+/* Data structures that store the command queue */
+typedef struct ecs_commands_t {
+    ecs_vec_t queue;
+    ecs_stack_t stack;          /* Temp memory used by deferred commands */
+    ecs_sparse_t entries;       /* <entity, op_entry_t> - command batching */
+} ecs_commands_t;
 
 /** A stage is a context that allows for safely using the API from multiple 
  * threads. Stage pointers can be passed to the world argument of API 
@@ -375,11 +384,13 @@ struct ecs_stage_t {
     /* Unique id that identifies the stage */
     int32_t id;
 
-    /* Deferred command queue */
+    /* Zero if not deferred, positive if deferred, negative if suspended */
     int32_t defer;
-    ecs_vec_t commands;
-    ecs_stack_t defer_stack;         /* Temp memory used by deferred commands */
-    ecs_sparse_t cmd_entries;        /* <entity, op_entry_t> - command combining */
+
+    /* Command queue stack, for nested execution */
+    ecs_commands_t *cmd;
+    ecs_commands_t cmd_stack[ECS_MAX_DEFER_STACK];
+    int32_t cmd_sp;
 
     /* Thread context */
     ecs_world_t *thread_ctx;         /* Points to stage when a thread stage */

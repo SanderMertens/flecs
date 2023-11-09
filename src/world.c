@@ -382,13 +382,13 @@ ecs_world_t* flecs_suspend_readonly(
 
     /* Hack around safety checks (this ought to look ugly) */
     state->defer_count = stage->defer;
-    state->commands = stage->commands;
-    state->defer_stack = stage->defer_stack;
-    flecs_stack_init(&stage->defer_stack);
+    state->commands = stage->cmd->queue;
+    state->defer_stack = stage->cmd->stack;
+    flecs_stack_init(&stage->cmd->stack);
     state->scope = stage->scope;
     state->with = stage->with;
     stage->defer = 0;
-    ecs_vec_init_t(NULL, &stage->commands, ecs_cmd_t, 0);
+    ecs_vec_init_t(NULL, &stage->cmd->queue, ecs_cmd_t, 0);
     
     return world;
 }
@@ -411,10 +411,10 @@ void flecs_resume_readonly(
         /* Restore readonly state / defer count */
         ECS_BIT_COND(world->flags, EcsWorldReadonly, state->is_readonly);
         stage->defer = state->defer_count;
-        ecs_vec_fini_t(&stage->allocator, &stage->commands, ecs_cmd_t);
-        stage->commands = state->commands;
-        flecs_stack_fini(&stage->defer_stack);
-        stage->defer_stack = state->defer_stack;
+        ecs_vec_fini_t(&stage->allocator, &stage->cmd->queue, ecs_cmd_t);
+        stage->cmd->queue = state->commands;
+        flecs_stack_fini(&stage->cmd->stack);
+        stage->cmd->stack = state->defer_stack;
         stage->scope = state->scope;
         stage->with = state->with;
     }

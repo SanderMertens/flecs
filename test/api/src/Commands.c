@@ -1469,7 +1469,7 @@ void Commands_defer_return_value(void) {
 
     ecs_fini(world);
 }
- 
+
 void Commands_defer_get_mut_pair(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -2269,8 +2269,6 @@ void Commands_defer_while_suspend_readonly_w_existing_commands(void) {
 
     test_int(3, ecs_count(world, Position));
 
-    ecs_log_set_level(-1);
-
     ecs_fini(world);
 }
 
@@ -2520,6 +2518,8 @@ void Commands_add_in_observer_during_merge_2_commands(void) {
 
     ecs_entity_t e = ecs_new_id(world);
 
+    ecs_log_set_level(0);
+
     ecs_defer_begin(world);
     ecs_add(world, e, TagA);
     ecs_add(world, e, TagB);
@@ -2536,6 +2536,8 @@ void Commands_add_in_observer_during_merge_2_commands(void) {
     test_assert(ptr != NULL);
     test_int(ptr->x, 10);
     test_int(ptr->y, 20);
+
+    ecs_log_set_level(-1);
 
     ecs_fini(world);
 }
