@@ -1168,6 +1168,7 @@ typedef enum ecs_cmd_kind_t {
     EcsCmdOnDeleteAction,
     EcsCmdEnable,
     EcsCmdDisable,
+    EcsCmdEvent,
     EcsCmdSkip
 } ecs_cmd_kind_t;
 
@@ -1925,6 +1926,11 @@ bool flecs_defer_end(
 bool flecs_defer_purge(
     ecs_world_t *world,
     ecs_stage_t *stage);
+
+void flecs_enqueue(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_event_desc_t *desc);
 
 void flecs_commands_push(
     ecs_stage_t *stage);
@@ -7821,18 +7827,41 @@ void flecs_dtor_value(
 }
 
 static
+void flecs_free_cmd_event(
+    ecs_world_t *world,
+    ecs_event_desc_t *desc)
+{
+    if (desc->ids) {
+        flecs_stack_free_n(desc->ids->array, ecs_id_t, desc->ids->count);
+    }
+
+    /* Safe const cast, command makes a copy of type object */
+    flecs_stack_free_t(ECS_CONST_CAST(ecs_type_t*, desc->ids), 
+        ecs_type_t);
+
+    if (desc->param) {
+        flecs_dtor_value(world, desc->event, 
+            /* Safe const cast, command makes copy of value */
+            ECS_CONST_CAST(void*, desc->param), 1);
+    }
+}
+
+static
 void flecs_discard_cmd(
     ecs_world_t *world,
     ecs_cmd_t *cmd)
 {
-    if (cmd->kind != EcsCmdBulkNew) {
+    if (cmd->kind == EcsCmdBulkNew) {
+        ecs_os_free(cmd->is._n.entities);
+    } else if (cmd->kind == EcsCmdEvent) {
+        flecs_free_cmd_event(world, cmd->is._1.value);
+    } else {
+        ecs_assert(cmd->kind != EcsCmdEvent, ECS_INTERNAL_ERROR, NULL);
         void *value = cmd->is._1.value;
         if (value) {
             flecs_dtor_value(world, cmd->id, value, 1);
             flecs_stack_free(value, cmd->is._1.size);
         }
-    } else {
-        ecs_os_free(cmd->is._n.entities);
     }
 }
 
@@ -8004,6 +8033,7 @@ void flecs_cmd_batch_for_entity(
         case EcsCmdOnDeleteAction:
         case EcsCmdEnable:
         case EcsCmdDisable:
+        case EcsCmdEvent:
         case EcsCmdSkip:
             break;
         }
@@ -8089,6 +8119,7 @@ void flecs_cmd_batch_for_entity(
             case EcsCmdOnDeleteAction:
             case EcsCmdEnable:
             case EcsCmdDisable:
+            case EcsCmdEvent:
             case EcsCmdSkip:
                 break;
             }
@@ -8252,6 +8283,13 @@ bool flecs_defer_end(
                     ecs_os_free(cmd->is._1.value);
                     cmd->is._1.value = NULL;
                     break;
+                case EcsCmdEvent: {
+                    ecs_event_desc_t *desc = cmd->is._1.value;
+                    ecs_assert(desc != NULL, ECS_INTERNAL_ERROR, NULL);
+                    ecs_emit((ecs_world_t*)stage, desc);
+                    flecs_free_cmd_event(world, desc);
+                    break;
+                }
                 case EcsCmdSkip:
                     break;
                 }
@@ -15365,6 +15403,10 @@ void ecs_emit(
     ecs_event_desc_t *desc)
 {
     ecs_world_t *world = ECS_CONST_CAST(ecs_world_t*, ecs_get_world(stage));
+    ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!(desc->param && desc->const_param), ECS_INVALID_PARAMETER, 
+        "cannot set param and const_param at the same time");
+
     if (desc->entity) {
         ecs_assert(desc->table == NULL, ECS_INVALID_PARAMETER, NULL);
         ecs_assert(desc->offset == 0, ECS_INVALID_PARAMETER, NULL);
@@ -15379,17 +15421,45 @@ void ecs_emit(
         desc->offset = ECS_RECORD_TO_ROW(r->row);
         desc->count = 1;
     }
+
     if (!desc->observable) {
         desc->observable = world;
     }
+
     ecs_type_t default_ids = (ecs_type_t){ 
         .count = 1, 
         .array = (ecs_id_t[]){ EcsAny }
     };
+
     if (!desc->ids || !desc->ids->count) {
         desc->ids = &default_ids;
     }
+
+    if (desc->const_param) {
+        desc->param = ECS_CONST_CAST(void*, desc->const_param);
+        desc->const_param = NULL;
+    }
+
     flecs_emit(world, stage, desc);
+
+    if (desc->ids == &default_ids) {
+        desc->ids = NULL;
+    }
+error:
+    return;
+}
+
+void ecs_enqueue(
+    ecs_world_t *world,
+    ecs_event_desc_t *desc)
+{
+    ecs_check(ecs_is_deferred(world), ECS_INVALID_PARAMETER, 
+        "can't enqueue if not in deferred mode");
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
+
+    flecs_enqueue(world, stage, desc);
+error:
+    return;
 }
 
 /**
@@ -20934,6 +21004,65 @@ void* flecs_defer_set(
     return cmd_value;
 error:
     return NULL;
+}
+
+void flecs_enqueue(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_event_desc_t *desc)
+{
+    ecs_cmd_t *cmd = flecs_cmd_new(stage, desc->entity, false, false);
+    if (!cmd) {
+        return; /* Entity was deleted */
+    }
+
+    cmd->kind = EcsCmdEvent;
+    cmd->entity = desc->entity;
+
+    ecs_stack_t *stack = &stage->cmd->stack;
+    ecs_event_desc_t *desc_cmd = flecs_stack_alloc_t(stack, ecs_event_desc_t);
+    ecs_os_memcpy_t(desc_cmd, desc, ecs_event_desc_t);
+
+    if (desc->ids && desc->ids->count != 0) {
+        ecs_type_t *type_cmd = flecs_stack_alloc_t(stack, ecs_type_t);
+        int32_t id_count = desc->ids->count;
+        type_cmd->count = id_count;
+        type_cmd->array = flecs_stack_alloc_n(stack, ecs_id_t, id_count);
+        ecs_os_memcpy_n(type_cmd->array, desc->ids->array, ecs_id_t, id_count);
+        desc_cmd->ids = type_cmd;
+    } else {
+        desc_cmd->ids = NULL;
+    }
+
+    cmd->is._1.value = desc_cmd;
+
+    if (desc->param || desc->const_param) {
+        ecs_assert(!(desc->const_param && desc->param), ECS_INVALID_PARAMETER, 
+            "cannot set param and const_param at the same time");
+
+        const ecs_type_info_t *ti = ecs_get_type_info(world, desc->event);
+        ecs_assert(ti != NULL, ECS_INVALID_PARAMETER, 
+            "can only enqueue events with data for events that are components");
+
+        void *param_cmd = flecs_stack_alloc(stack, ti->size, ti->alignment);
+        ecs_assert(param_cmd != NULL, ECS_INTERNAL_ERROR, NULL);
+        if (desc->param) {
+            if (ti->hooks.move_ctor) {
+                ti->hooks.move_ctor(param_cmd, desc->param, 1, ti);
+            } else {
+                ecs_os_memcpy(param_cmd, desc->param, ti->size);
+            }
+        } else {
+            if (ti->hooks.copy_ctor) {
+                ti->hooks.copy_ctor(param_cmd, desc->const_param, 1, ti);
+            } else {
+                ecs_os_memcpy(param_cmd, desc->const_param, ti->size);
+            }
+        }
+
+        desc_cmd->param = param_cmd;
+        desc_cmd->const_param = NULL;
+    }
 }
 
 void flecs_stage_merge_post_frame(

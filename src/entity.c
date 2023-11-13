@@ -4441,18 +4441,41 @@ void flecs_dtor_value(
 }
 
 static
+void flecs_free_cmd_event(
+    ecs_world_t *world,
+    ecs_event_desc_t *desc)
+{
+    if (desc->ids) {
+        flecs_stack_free_n(desc->ids->array, ecs_id_t, desc->ids->count);
+    }
+
+    /* Safe const cast, command makes a copy of type object */
+    flecs_stack_free_t(ECS_CONST_CAST(ecs_type_t*, desc->ids), 
+        ecs_type_t);
+
+    if (desc->param) {
+        flecs_dtor_value(world, desc->event, 
+            /* Safe const cast, command makes copy of value */
+            ECS_CONST_CAST(void*, desc->param), 1);
+    }
+}
+
+static
 void flecs_discard_cmd(
     ecs_world_t *world,
     ecs_cmd_t *cmd)
 {
-    if (cmd->kind != EcsCmdBulkNew) {
+    if (cmd->kind == EcsCmdBulkNew) {
+        ecs_os_free(cmd->is._n.entities);
+    } else if (cmd->kind == EcsCmdEvent) {
+        flecs_free_cmd_event(world, cmd->is._1.value);
+    } else {
+        ecs_assert(cmd->kind != EcsCmdEvent, ECS_INTERNAL_ERROR, NULL);
         void *value = cmd->is._1.value;
         if (value) {
             flecs_dtor_value(world, cmd->id, value, 1);
             flecs_stack_free(value, cmd->is._1.size);
         }
-    } else {
-        ecs_os_free(cmd->is._n.entities);
     }
 }
 
@@ -4624,6 +4647,7 @@ void flecs_cmd_batch_for_entity(
         case EcsCmdOnDeleteAction:
         case EcsCmdEnable:
         case EcsCmdDisable:
+        case EcsCmdEvent:
         case EcsCmdSkip:
             break;
         }
@@ -4709,6 +4733,7 @@ void flecs_cmd_batch_for_entity(
             case EcsCmdOnDeleteAction:
             case EcsCmdEnable:
             case EcsCmdDisable:
+            case EcsCmdEvent:
             case EcsCmdSkip:
                 break;
             }
@@ -4872,6 +4897,13 @@ bool flecs_defer_end(
                     ecs_os_free(cmd->is._1.value);
                     cmd->is._1.value = NULL;
                     break;
+                case EcsCmdEvent: {
+                    ecs_event_desc_t *desc = cmd->is._1.value;
+                    ecs_assert(desc != NULL, ECS_INTERNAL_ERROR, NULL);
+                    ecs_emit((ecs_world_t*)stage, desc);
+                    flecs_free_cmd_event(world, desc);
+                    break;
+                }
                 case EcsCmdSkip:
                     break;
                 }

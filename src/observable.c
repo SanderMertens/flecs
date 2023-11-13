@@ -1389,6 +1389,10 @@ void ecs_emit(
     ecs_event_desc_t *desc)
 {
     ecs_world_t *world = ECS_CONST_CAST(ecs_world_t*, ecs_get_world(stage));
+    ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!(desc->param && desc->const_param), ECS_INVALID_PARAMETER, 
+        "cannot set param and const_param at the same time");
+
     if (desc->entity) {
         ecs_assert(desc->table == NULL, ECS_INVALID_PARAMETER, NULL);
         ecs_assert(desc->offset == 0, ECS_INVALID_PARAMETER, NULL);
@@ -1403,15 +1407,43 @@ void ecs_emit(
         desc->offset = ECS_RECORD_TO_ROW(r->row);
         desc->count = 1;
     }
+
     if (!desc->observable) {
         desc->observable = world;
     }
+
     ecs_type_t default_ids = (ecs_type_t){ 
         .count = 1, 
         .array = (ecs_id_t[]){ EcsAny }
     };
+
     if (!desc->ids || !desc->ids->count) {
         desc->ids = &default_ids;
     }
+
+    if (desc->const_param) {
+        desc->param = ECS_CONST_CAST(void*, desc->const_param);
+        desc->const_param = NULL;
+    }
+
     flecs_emit(world, stage, desc);
+
+    if (desc->ids == &default_ids) {
+        desc->ids = NULL;
+    }
+error:
+    return;
+}
+
+void ecs_enqueue(
+    ecs_world_t *world,
+    ecs_event_desc_t *desc)
+{
+    ecs_check(ecs_is_deferred(world), ECS_INVALID_PARAMETER, 
+        "can't enqueue if not in deferred mode");
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
+
+    flecs_enqueue(world, stage, desc);
+error:
+    return;
 }

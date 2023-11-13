@@ -90,6 +90,12 @@ struct event_builder_base {
 
     /* Set event data */
     Base& ctx(const E* ptr) {
+        m_desc.const_param = ptr;
+        return *this;
+    }
+
+    /* Set event data */
+    Base& ctx(E* ptr) {
         m_desc.param = ptr;
         return *this;
     }
@@ -99,6 +105,13 @@ struct event_builder_base {
         m_desc.ids = &m_ids;
         m_desc.observable = const_cast<flecs::world_t*>(ecs_get_world(m_world));
         ecs_emit(m_world, &m_desc);
+    }
+
+    void enqueue() {
+        m_ids.array = m_ids_array;
+        m_desc.ids = &m_ids;
+        m_desc.observable = const_cast<flecs::world_t*>(ecs_get_world(m_world));
+        ecs_enqueue(m_world, &m_desc);
     }
 
 protected:
@@ -127,6 +140,12 @@ public:
 
     /* Set event data */
     Class& ctx(const E& ptr) {
+        this->m_desc.const_param = &ptr;
+        return *this;
+    }
+
+    /* Set event data */
+    Class& ctx(E&& ptr) {
         this->m_desc.param = &ptr;
         return *this;
     }

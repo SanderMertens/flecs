@@ -511,7 +511,11 @@
                 "entity_emit_event_type_no_src",
                 "entity_emit_event_w_payload_no_src",
                 "entity_emit_event_w_payload_derived_event_type",
-                "entity_emit_event_w_payload_derived_event_type_no_src"
+                "entity_emit_event_w_payload_derived_event_type_no_src",
+                "enqueue_event",
+                "enqueue_entity_event",
+                "enqueue_event_w_payload",
+                "enqueue_entity_event_w_payload"
             ]
         }, {
             "id": "Iterable",

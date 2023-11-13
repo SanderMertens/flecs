@@ -545,6 +545,65 @@ error:
     return NULL;
 }
 
+void flecs_enqueue(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_event_desc_t *desc)
+{
+    ecs_cmd_t *cmd = flecs_cmd_new(stage, desc->entity, false, false);
+    if (!cmd) {
+        return; /* Entity was deleted */
+    }
+
+    cmd->kind = EcsCmdEvent;
+    cmd->entity = desc->entity;
+
+    ecs_stack_t *stack = &stage->cmd->stack;
+    ecs_event_desc_t *desc_cmd = flecs_stack_alloc_t(stack, ecs_event_desc_t);
+    ecs_os_memcpy_t(desc_cmd, desc, ecs_event_desc_t);
+
+    if (desc->ids && desc->ids->count != 0) {
+        ecs_type_t *type_cmd = flecs_stack_alloc_t(stack, ecs_type_t);
+        int32_t id_count = desc->ids->count;
+        type_cmd->count = id_count;
+        type_cmd->array = flecs_stack_alloc_n(stack, ecs_id_t, id_count);
+        ecs_os_memcpy_n(type_cmd->array, desc->ids->array, ecs_id_t, id_count);
+        desc_cmd->ids = type_cmd;
+    } else {
+        desc_cmd->ids = NULL;
+    }
+
+    cmd->is._1.value = desc_cmd;
+
+    if (desc->param || desc->const_param) {
+        ecs_assert(!(desc->const_param && desc->param), ECS_INVALID_PARAMETER, 
+            "cannot set param and const_param at the same time");
+
+        const ecs_type_info_t *ti = ecs_get_type_info(world, desc->event);
+        ecs_assert(ti != NULL, ECS_INVALID_PARAMETER, 
+            "can only enqueue events with data for events that are components");
+
+        void *param_cmd = flecs_stack_alloc(stack, ti->size, ti->alignment);
+        ecs_assert(param_cmd != NULL, ECS_INTERNAL_ERROR, NULL);
+        if (desc->param) {
+            if (ti->hooks.move_ctor) {
+                ti->hooks.move_ctor(param_cmd, desc->param, 1, ti);
+            } else {
+                ecs_os_memcpy(param_cmd, desc->param, ti->size);
+            }
+        } else {
+            if (ti->hooks.copy_ctor) {
+                ti->hooks.copy_ctor(param_cmd, desc->const_param, 1, ti);
+            } else {
+                ecs_os_memcpy(param_cmd, desc->const_param, ti->size);
+            }
+        }
+
+        desc_cmd->param = param_cmd;
+        desc_cmd->const_param = NULL;
+    }
+}
+
 void flecs_stage_merge_post_frame(
     ecs_world_t *world,
     ecs_stage_t *stage)
