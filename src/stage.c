@@ -187,7 +187,7 @@ bool flecs_defer_modified(
     if (flecs_defer_cmd(stage)) {
         ecs_cmd_t *cmd = flecs_cmd_new(stage, entity, false, true);
         if (cmd) {
-            cmd->kind = EcsOpModified;
+            cmd->kind = EcsCmdModified;
             cmd->id = id;
             cmd->entity = entity;
         }
@@ -205,7 +205,7 @@ bool flecs_defer_clone(
     if (flecs_defer_cmd(stage)) {
         ecs_cmd_t *cmd = flecs_cmd_new(stage, entity, false, false);
         if (cmd) {
-            cmd->kind = EcsOpClone;
+            cmd->kind = EcsCmdClone;
             cmd->id = src;
             cmd->entity = entity;
             cmd->is._1.clone_value = clone_value;
@@ -224,7 +224,7 @@ bool flecs_defer_path(
     if (stage->defer > 0) {
         ecs_cmd_t *cmd = flecs_cmd_new(stage, entity, false, false);
         if (cmd) {
-            cmd->kind = EcsOpPath;
+            cmd->kind = EcsCmdPath;
             cmd->entity = entity;
             cmd->id = parent;
             cmd->is._1.value = ecs_os_strdup(name);
@@ -241,7 +241,7 @@ bool flecs_defer_delete(
     if (flecs_defer_cmd(stage)) {
         ecs_cmd_t *cmd = flecs_cmd_new(stage, entity, true, false);
         if (cmd) {
-            cmd->kind = EcsOpDelete;
+            cmd->kind = EcsCmdDelete;
             cmd->entity = entity;
         }
         return true;
@@ -256,7 +256,7 @@ bool flecs_defer_clear(
     if (flecs_defer_cmd(stage)) {
         ecs_cmd_t *cmd = flecs_cmd_new(stage, entity, false, true);
         if (cmd) {
-            cmd->kind = EcsOpClear;
+            cmd->kind = EcsCmdClear;
             cmd->entity = entity;
         }
         return true;
@@ -271,7 +271,7 @@ bool flecs_defer_on_delete_action(
 {
     if (flecs_defer_cmd(stage)) {
         ecs_cmd_t *cmd = flecs_cmd_alloc(stage);
-        cmd->kind = EcsOpOnDeleteAction;
+        cmd->kind = EcsCmdOnDeleteAction;
         cmd->id = id;
         cmd->entity = action;
         return true;
@@ -288,7 +288,7 @@ bool flecs_defer_enable(
     if (flecs_defer_cmd(stage)) {
         ecs_cmd_t *cmd = flecs_cmd_new(stage, entity, false, false);
         if (cmd) {
-            cmd->kind = enable ? EcsOpEnable : EcsOpDisable;
+            cmd->kind = enable ? EcsCmdEnable : EcsCmdDisable;
             cmd->entity = entity;
             cmd->id = id;
         }
@@ -318,7 +318,7 @@ bool flecs_defer_bulk_new(
         /* Store data in op */
         ecs_cmd_t *cmd = flecs_cmd_alloc(stage);
         if (cmd) {
-            cmd->kind = EcsOpBulkNew;
+            cmd->kind = EcsCmdBulkNew;
             cmd->id = id;
             cmd->is._n.entities = ids;
             cmd->is._n.count = count;
@@ -338,7 +338,7 @@ bool flecs_defer_add(
         ecs_assert(id != 0, ECS_INTERNAL_ERROR, NULL);
         ecs_cmd_t *cmd = flecs_cmd_new(stage, entity, false, true);
         if (cmd) {
-            cmd->kind = EcsOpAdd;
+            cmd->kind = EcsCmdAdd;
             cmd->id = id;
             cmd->entity = entity;
         }
@@ -356,7 +356,7 @@ bool flecs_defer_remove(
         ecs_assert(id != 0, ECS_INTERNAL_ERROR, NULL);
         ecs_cmd_t *cmd = flecs_cmd_new(stage, entity, false, true);
         if (cmd) {
-            cmd->kind = EcsOpRemove;
+            cmd->kind = EcsCmdRemove;
             cmd->id = id;
             cmd->entity = entity;
         }
@@ -380,7 +380,7 @@ void* flecs_defer_set(
         if (need_value) {
             /* Entity is deleted by a previous command, but we still need to 
              * return a temporary storage to the application. */
-            cmd_kind = EcsOpSkip;
+            cmd_kind = EcsCmdSkip;
         } else {
             /* No value needs to be returned, we can drop the command */
             return NULL;
@@ -441,7 +441,7 @@ void* flecs_defer_set(
 
     /* Get existing value from storage */
     void *cmd_value = existing;
-    bool emplace = cmd_kind == EcsOpEmplace;
+    bool emplace = cmd_kind == EcsCmdEmplace;
 
     /* If the component does not yet exist, create a temporary value. This is
      * necessary so we can store a component value in the deferred command,
@@ -531,10 +531,10 @@ void* flecs_defer_set(
         /* If component already exists, still insert an Add command to ensure
          * that any preceding remove commands won't remove the component. If the
          * operation is a set, also insert a Modified command. */
-        if (cmd_kind == EcsOpSet) {
-            cmd->kind = EcsOpAddModified; 
+        if (cmd_kind == EcsCmdSet) {
+            cmd->kind = EcsCmdAddModified; 
         } else {
-            cmd->kind = EcsOpAdd;
+            cmd->kind = EcsCmdAdd;
         }
         cmd->id = id;
         cmd->entity = entity;

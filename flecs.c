@@ -1153,22 +1153,22 @@ typedef struct ecs_stage_allocators_t {
 
 /** Types for deferred operations */
 typedef enum ecs_cmd_kind_t {
-    EcsOpClone,
-    EcsOpBulkNew,
-    EcsOpAdd,
-    EcsOpRemove,   
-    EcsOpSet,
-    EcsOpEmplace,
-    EcsOpMut,
-    EcsOpModified,
-    EcsOpAddModified,
-    EcsOpPath,
-    EcsOpDelete,
-    EcsOpClear,
-    EcsOpOnDeleteAction,
-    EcsOpEnable,
-    EcsOpDisable,
-    EcsOpSkip
+    EcsCmdClone,
+    EcsCmdBulkNew,
+    EcsCmdAdd,
+    EcsCmdRemove,   
+    EcsCmdSet,
+    EcsCmdEmplace,
+    EcsCmdMut,
+    EcsCmdModified,
+    EcsCmdAddModified,
+    EcsCmdPath,
+    EcsCmdDelete,
+    EcsCmdClear,
+    EcsCmdOnDeleteAction,
+    EcsCmdEnable,
+    EcsCmdDisable,
+    EcsCmdSkip
 } ecs_cmd_kind_t;
 
 /* Entity specific metadata for command in queue */
@@ -6138,7 +6138,7 @@ void* ecs_get_mut_id(
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     if (flecs_defer_cmd(stage)) {
         return flecs_defer_set(
-            world, stage, EcsOpMut, entity, id, 0, NULL, true);
+            world, stage, EcsCmdMut, entity, id, 0, NULL, true);
     }
 
     ecs_record_t *r = flecs_entities_get(world, entity);
@@ -6165,7 +6165,7 @@ void* ecs_get_mut_modified_id(
     ecs_check(flecs_defer_cmd(stage), ECS_INVALID_PARAMETER, NULL);
 
     return flecs_defer_set(
-        world, stage, EcsOpSet, entity, id, 0, NULL, true);
+        world, stage, EcsCmdSet, entity, id, 0, NULL, true);
 error:
     return NULL;
 }
@@ -6399,7 +6399,7 @@ void* ecs_emplace_id(
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
     if (flecs_defer_cmd(stage)) {
-        return flecs_defer_set(world, stage, EcsOpEmplace, entity, id, 0, NULL, 
+        return flecs_defer_set(world, stage, EcsCmdEmplace, entity, id, 0, NULL, 
             true);
     }
 
@@ -6489,7 +6489,7 @@ void flecs_copy_ptr_w_id(
     void *ptr)
 {
     if (flecs_defer_cmd(stage)) {
-        flecs_defer_set(world, stage, EcsOpSet, entity, id, 
+        flecs_defer_set(world, stage, EcsCmdSet, entity, id, 
             flecs_utosize(size), ptr, false);
         return;
     }
@@ -6547,7 +6547,7 @@ void flecs_move_ptr_w_id(
     const ecs_type_info_t *ti = dst.ti;
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_move_t move;
-    if (cmd_kind != EcsOpEmplace) {
+    if (cmd_kind != EcsCmdEmplace) {
         /* ctor will have happened by get_mut */
         move = ti->hooks.move_dtor;
     } else {
@@ -6561,7 +6561,7 @@ void flecs_move_ptr_w_id(
 
     flecs_table_mark_dirty(world, r->table, id);
 
-    if (cmd_kind == EcsOpSet) {
+    if (cmd_kind == EcsCmdSet) {
         ecs_table_t *table = r->table;
         if (table->flags & EcsTableHasOnSet || ti->hooks.on_set) {
             ecs_type_t ids = { .array = &id, .count = 1 };
@@ -7825,7 +7825,7 @@ void flecs_discard_cmd(
     ecs_world_t *world,
     ecs_cmd_t *cmd)
 {
-    if (cmd->kind != EcsOpBulkNew) {
+    if (cmd->kind != EcsCmdBulkNew) {
         void *value = cmd->is._1.value;
         if (value) {
             flecs_dtor_value(world, cmd->id, value, 1);
@@ -7927,13 +7927,13 @@ void flecs_cmd_batch_for_entity(
             if (flecs_remove_invalid(world, id, &id)) {
                 if (!id) {
                     /* Entity should remain alive but id should not be added */
-                    cmd->kind = EcsOpSkip;
+                    cmd->kind = EcsCmdSkip;
                     continue;
                 }
                 /* Entity should remain alive and id is still valid */
             } else {
                 /* Id was no longer valid and had a Delete policy */
-                cmd->kind = EcsOpSkip;
+                cmd->kind = EcsCmdSkip;
                 ecs_delete(world, entity);
                 flecs_table_diff_builder_clear(diff);
                 return;
@@ -7942,16 +7942,16 @@ void flecs_cmd_batch_for_entity(
 
         ecs_cmd_kind_t kind = cmd->kind;
         switch(kind) {
-        case EcsOpAddModified:
+        case EcsCmdAddModified:
             /* Add is batched, but keep Modified */
-            cmd->kind = EcsOpModified;
+            cmd->kind = EcsCmdModified;
 
             /* fall through */
-        case EcsOpAdd:
+        case EcsCmdAdd:
             table = flecs_find_table_add(world, table, id, diff);
             world->info.cmd.batched_command_count ++;
             break;
-        case EcsOpModified:
+        case EcsCmdModified:
             if (start_table) {
                 /* If a modified was inserted for an existing component, the value
                  * of the component could have been changed. If this is the case,
@@ -7973,21 +7973,21 @@ void flecs_cmd_batch_for_entity(
                 }
             }
             break;
-        case EcsOpSet:
-        case EcsOpMut:
+        case EcsCmdSet:
+        case EcsCmdMut:
             table = flecs_find_table_add(world, table, id, diff);
             world->info.cmd.batched_command_count ++;
             has_set = true;
             break;
-        case EcsOpEmplace:
+        case EcsCmdEmplace:
             /* Don't add for emplace, as this requires a special call to ensure
              * the constructor is not invoked for the component */
             break;
-        case EcsOpRemove:
+        case EcsCmdRemove:
             table = flecs_find_table_remove(world, table, id, diff);
             world->info.cmd.batched_command_count ++;
             break;
-        case EcsOpClear:
+        case EcsCmdClear:
             if (table) {
                 ecs_id_t *ids = ecs_vec_grow_t(&world->allocator, 
                     &diff->removed, ecs_id_t, table->type.count);
@@ -7997,21 +7997,21 @@ void flecs_cmd_batch_for_entity(
             table = &world->store.root;
             world->info.cmd.batched_command_count ++;
             break;
-        case EcsOpClone:
-        case EcsOpBulkNew:
-        case EcsOpPath:
-        case EcsOpDelete:
-        case EcsOpOnDeleteAction:
-        case EcsOpEnable:
-        case EcsOpDisable:
-        case EcsOpSkip:
+        case EcsCmdClone:
+        case EcsCmdBulkNew:
+        case EcsCmdPath:
+        case EcsCmdDelete:
+        case EcsCmdOnDeleteAction:
+        case EcsCmdEnable:
+        case EcsCmdDisable:
+        case EcsCmdSkip:
             break;
         }
 
         /* Add, remove and clear operations can be skipped since they have no
          * side effects besides adding/removing components */
-        if (kind == EcsOpAdd || kind == EcsOpRemove || kind == EcsOpClear) {
-            cmd->kind = EcsOpSkip;
+        if (kind == EcsCmdAdd || kind == EcsCmdRemove || kind == EcsCmdClear) {
+            cmd->kind = EcsCmdSkip;
         }
     } while ((cur = next_for_entity));
 
@@ -8039,8 +8039,8 @@ void flecs_cmd_batch_for_entity(
                 next_for_entity *= -1;
             }
             switch(cmd->kind) {
-            case EcsOpSet:
-            case EcsOpMut: {
+            case EcsCmdSet:
+            case EcsCmdMut: {
                 flecs_component_ptr_t ptr = {0};
                 if (r->table) {
                     ptr = flecs_get_component_ptr(world, 
@@ -8058,38 +8058,38 @@ void flecs_cmd_batch_for_entity(
                     } else {
                         ecs_os_memcpy(ptr.ptr, cmd->is._1.value, ti->size);
                     }
-                    if (cmd->kind == EcsOpSet) {
+                    if (cmd->kind == EcsCmdSet) {
                         /* A set operation is add + copy + modified. We just did
                          * the add the copy, so the only thing that's left is a 
                          * modified command, which will call the OnSet 
                          * observers. */
-                        cmd->kind = EcsOpModified;
+                        cmd->kind = EcsCmdModified;
                     } else {
                         /* If this was a get_mut, nothing's left to be done */
-                        cmd->kind = EcsOpSkip;
+                        cmd->kind = EcsCmdSkip;
                     }
                 } else {
                     /* The entity no longer has the component which means that
                      * there was a remove command for the component in the
                      * command queue. In that case skip the command. */
-                    cmd->kind = EcsOpSkip;
+                    cmd->kind = EcsCmdSkip;
                 }
                 break;
             }
-            case EcsOpClone:
-            case EcsOpBulkNew:
-            case EcsOpAdd:
-            case EcsOpRemove:
-            case EcsOpEmplace:
-            case EcsOpModified:
-            case EcsOpAddModified:
-            case EcsOpPath:
-            case EcsOpDelete:
-            case EcsOpClear:
-            case EcsOpOnDeleteAction:
-            case EcsOpEnable:
-            case EcsOpDisable:
-            case EcsOpSkip:
+            case EcsCmdClone:
+            case EcsCmdBulkNew:
+            case EcsCmdAdd:
+            case EcsCmdRemove:
+            case EcsCmdEmplace:
+            case EcsCmdModified:
+            case EcsCmdAddModified:
+            case EcsCmdPath:
+            case EcsCmdDelete:
+            case EcsCmdClear:
+            case EcsCmdOnDeleteAction:
+            case EcsCmdEnable:
+            case EcsCmdDisable:
+            case EcsCmdSkip:
                 break;
             }
         } while ((cur = next_for_entity));
@@ -8155,7 +8155,7 @@ bool flecs_defer_end(
                  * contained both a delete and a subsequent add/remove/set which
                  * should be ignored. */
                 ecs_cmd_kind_t kind = cmd->kind;
-                if ((kind != EcsOpPath) && ((kind == EcsOpSkip) || (e && !is_alive))) {
+                if ((kind != EcsCmdPath) && ((kind == EcsCmdSkip) || (e && !is_alive))) {
                     world->info.cmd.discard_count ++;
                     flecs_discard_cmd(world, cmd);
                     continue;
@@ -8164,7 +8164,7 @@ bool flecs_defer_end(
                 ecs_id_t id = cmd->id;
 
                 switch(kind) {
-                case EcsOpAdd:
+                case EcsCmdAdd:
                     ecs_assert(id != 0, ECS_INTERNAL_ERROR, NULL);
                     if (flecs_remove_invalid(world, id, &id)) {
                         if (id) {
@@ -8178,20 +8178,20 @@ bool flecs_defer_end(
                         ecs_delete(world, e);
                     }
                     break;
-                case EcsOpRemove:
+                case EcsCmdRemove:
                     flecs_remove_id(world, e, id);
                     world->info.cmd.remove_count ++;
                     break;
-                case EcsOpClone:
+                case EcsCmdClone:
                     ecs_clone(world, e, id, cmd->is._1.clone_value);
                     break;
-                case EcsOpSet:
+                case EcsCmdSet:
                     flecs_move_ptr_w_id(world, dst_stage, e, 
                         cmd->id, flecs_itosize(cmd->is._1.size), 
                         cmd->is._1.value, kind);
                     world->info.cmd.set_count ++;
                     break;
-                case EcsOpEmplace:
+                case EcsCmdEmplace:
                     if (merge_to_world) {
                         ecs_emplace_id(world, e, id);
                     }
@@ -8200,50 +8200,50 @@ bool flecs_defer_end(
                         cmd->is._1.value, kind);
                     world->info.cmd.get_mut_count ++;
                     break;
-                case EcsOpMut:
+                case EcsCmdMut:
                     flecs_move_ptr_w_id(world, dst_stage, e, 
                         cmd->id, flecs_itosize(cmd->is._1.size), 
                         cmd->is._1.value, kind);
                     world->info.cmd.get_mut_count ++;
                     break;
-                case EcsOpModified:
+                case EcsCmdModified:
                     flecs_modified_id_if(world, e, id);
                     world->info.cmd.modified_count ++;
                     break;
-                case EcsOpAddModified:
+                case EcsCmdAddModified:
                     flecs_add_id(world, e, id);
                     flecs_modified_id_if(world, e, id);
                     world->info.cmd.add_count ++;
                     world->info.cmd.modified_count ++;
                     break;
-                case EcsOpDelete: {
+                case EcsCmdDelete: {
                     ecs_delete(world, e);
                     world->info.cmd.delete_count ++;
                     break;
                 }
-                case EcsOpClear:
+                case EcsCmdClear:
                     ecs_clear(world, e);
                     world->info.cmd.clear_count ++;
                     break;
-                case EcsOpOnDeleteAction:
+                case EcsCmdOnDeleteAction:
                     ecs_defer_begin(world);
                     flecs_on_delete(world, id, e, false);
                     ecs_defer_end(world);
                     world->info.cmd.other_count ++;
                     break;
-                case EcsOpEnable:
+                case EcsCmdEnable:
                     ecs_enable_id(world, e, id, true);
                     world->info.cmd.other_count ++;
                     break;
-                case EcsOpDisable:
+                case EcsCmdDisable:
                     ecs_enable_id(world, e, id, false);
                     world->info.cmd.other_count ++;
                     break;
-                case EcsOpBulkNew:
+                case EcsCmdBulkNew:
                     flecs_flush_bulk_new(world, cmd);
                     world->info.cmd.other_count ++;
                     continue;
-                case EcsOpPath:
+                case EcsCmdPath:
                     ecs_ensure(world, e);
                     if (cmd->id) {
                         ecs_add_pair(world, e, EcsChildOf, cmd->id);
@@ -8252,7 +8252,7 @@ bool flecs_defer_end(
                     ecs_os_free(cmd->is._1.value);
                     cmd->is._1.value = NULL;
                     break;
-                case EcsOpSkip:
+                case EcsCmdSkip:
                     break;
                 }
 
@@ -20578,7 +20578,7 @@ bool flecs_defer_modified(
     if (flecs_defer_cmd(stage)) {
         ecs_cmd_t *cmd = flecs_cmd_new(stage, entity, false, true);
         if (cmd) {
-            cmd->kind = EcsOpModified;
+            cmd->kind = EcsCmdModified;
             cmd->id = id;
             cmd->entity = entity;
         }
@@ -20596,7 +20596,7 @@ bool flecs_defer_clone(
     if (flecs_defer_cmd(stage)) {
         ecs_cmd_t *cmd = flecs_cmd_new(stage, entity, false, false);
         if (cmd) {
-            cmd->kind = EcsOpClone;
+            cmd->kind = EcsCmdClone;
             cmd->id = src;
             cmd->entity = entity;
             cmd->is._1.clone_value = clone_value;
@@ -20615,7 +20615,7 @@ bool flecs_defer_path(
     if (stage->defer > 0) {
         ecs_cmd_t *cmd = flecs_cmd_new(stage, entity, false, false);
         if (cmd) {
-            cmd->kind = EcsOpPath;
+            cmd->kind = EcsCmdPath;
             cmd->entity = entity;
             cmd->id = parent;
             cmd->is._1.value = ecs_os_strdup(name);
@@ -20632,7 +20632,7 @@ bool flecs_defer_delete(
     if (flecs_defer_cmd(stage)) {
         ecs_cmd_t *cmd = flecs_cmd_new(stage, entity, true, false);
         if (cmd) {
-            cmd->kind = EcsOpDelete;
+            cmd->kind = EcsCmdDelete;
             cmd->entity = entity;
         }
         return true;
@@ -20647,7 +20647,7 @@ bool flecs_defer_clear(
     if (flecs_defer_cmd(stage)) {
         ecs_cmd_t *cmd = flecs_cmd_new(stage, entity, false, true);
         if (cmd) {
-            cmd->kind = EcsOpClear;
+            cmd->kind = EcsCmdClear;
             cmd->entity = entity;
         }
         return true;
@@ -20662,7 +20662,7 @@ bool flecs_defer_on_delete_action(
 {
     if (flecs_defer_cmd(stage)) {
         ecs_cmd_t *cmd = flecs_cmd_alloc(stage);
-        cmd->kind = EcsOpOnDeleteAction;
+        cmd->kind = EcsCmdOnDeleteAction;
         cmd->id = id;
         cmd->entity = action;
         return true;
@@ -20679,7 +20679,7 @@ bool flecs_defer_enable(
     if (flecs_defer_cmd(stage)) {
         ecs_cmd_t *cmd = flecs_cmd_new(stage, entity, false, false);
         if (cmd) {
-            cmd->kind = enable ? EcsOpEnable : EcsOpDisable;
+            cmd->kind = enable ? EcsCmdEnable : EcsCmdDisable;
             cmd->entity = entity;
             cmd->id = id;
         }
@@ -20709,7 +20709,7 @@ bool flecs_defer_bulk_new(
         /* Store data in op */
         ecs_cmd_t *cmd = flecs_cmd_alloc(stage);
         if (cmd) {
-            cmd->kind = EcsOpBulkNew;
+            cmd->kind = EcsCmdBulkNew;
             cmd->id = id;
             cmd->is._n.entities = ids;
             cmd->is._n.count = count;
@@ -20729,7 +20729,7 @@ bool flecs_defer_add(
         ecs_assert(id != 0, ECS_INTERNAL_ERROR, NULL);
         ecs_cmd_t *cmd = flecs_cmd_new(stage, entity, false, true);
         if (cmd) {
-            cmd->kind = EcsOpAdd;
+            cmd->kind = EcsCmdAdd;
             cmd->id = id;
             cmd->entity = entity;
         }
@@ -20747,7 +20747,7 @@ bool flecs_defer_remove(
         ecs_assert(id != 0, ECS_INTERNAL_ERROR, NULL);
         ecs_cmd_t *cmd = flecs_cmd_new(stage, entity, false, true);
         if (cmd) {
-            cmd->kind = EcsOpRemove;
+            cmd->kind = EcsCmdRemove;
             cmd->id = id;
             cmd->entity = entity;
         }
@@ -20771,7 +20771,7 @@ void* flecs_defer_set(
         if (need_value) {
             /* Entity is deleted by a previous command, but we still need to 
              * return a temporary storage to the application. */
-            cmd_kind = EcsOpSkip;
+            cmd_kind = EcsCmdSkip;
         } else {
             /* No value needs to be returned, we can drop the command */
             return NULL;
@@ -20832,7 +20832,7 @@ void* flecs_defer_set(
 
     /* Get existing value from storage */
     void *cmd_value = existing;
-    bool emplace = cmd_kind == EcsOpEmplace;
+    bool emplace = cmd_kind == EcsCmdEmplace;
 
     /* If the component does not yet exist, create a temporary value. This is
      * necessary so we can store a component value in the deferred command,
@@ -20922,10 +20922,10 @@ void* flecs_defer_set(
         /* If component already exists, still insert an Add command to ensure
          * that any preceding remove commands won't remove the component. If the
          * operation is a set, also insert a Modified command. */
-        if (cmd_kind == EcsOpSet) {
-            cmd->kind = EcsOpAddModified; 
+        if (cmd_kind == EcsCmdSet) {
+            cmd->kind = EcsCmdAddModified; 
         } else {
-            cmd->kind = EcsOpAdd;
+            cmd->kind = EcsCmdAdd;
         }
         cmd->id = id;
         cmd->entity = entity;
