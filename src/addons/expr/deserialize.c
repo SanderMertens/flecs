@@ -156,12 +156,14 @@ const char *ecs_parse_expr_token(
         if (ptr[1] == '/') {
             // Single line comment
             for (ptr = &ptr[2]; (ch = ptr[0]) && (ch != '\n'); ptr ++) {}
-            return ptr;
+            token[0] = 0;
+            return ecs_parse_ws_eol(ptr);
         } else if (ptr[1] == '*') {
             // Multi line comment
             for (ptr = &ptr[2]; (ch = ptr[0]); ptr ++) {
                 if (ch == '*' && ptr[1] == '/') {
-                    return ptr + 2;
+                    token[0] = 0;
+                    return ecs_parse_ws_eol(ptr + 2);
                 }
             }
 
@@ -1087,6 +1089,11 @@ const char* flecs_parse_expr(
          * lvalue for a binary expression */
         bool is_lvalue = false;
         bool newline = false;
+
+        if (!token[0]) {
+            /* Comment */
+            continue;
+        }
 
         if (!ecs_os_strcmp(token, "(")) {
             ecs_value_t temp_result, *out;

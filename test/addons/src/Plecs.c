@@ -6744,6 +6744,40 @@ void Plecs_single_line_comment_in_value(void) {
     ecs_fini(world);
 }
 
+void Plecs_single_line_comment_in_value_after_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "e :- Position{\n"
+    LINE "  // foo\n"
+    LINE "  x: 10\n"
+    LINE "  y: 20\n"
+    LINE "}";
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    test_assert(e != 0);
+
+    test_assert(ecs_has(world, e, Position));
+
+    const Position *ptr = ecs_get(world, e, Position);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+
+    ecs_fini(world);
+}
+
 void Plecs_multi_line_comment_in_value(void) {
     ecs_world_t *world = ecs_init();
 
@@ -6763,6 +6797,42 @@ void Plecs_multi_line_comment_in_value(void) {
     LINE "  /*\n"
     LINE "   * foo\n"
     LINE "   */\n"
+    LINE "  y: 20\n"
+    LINE "}";
+    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+
+    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    test_assert(e != 0);
+
+    test_assert(ecs_has(world, e, Position));
+
+    const Position *ptr = ecs_get(world, e, Position);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+
+    ecs_fini(world);
+}
+
+void Plecs_multi_line_comment_in_value_after_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "e :- Position{\n"
+    LINE "  /*\n"
+    LINE "   * foo\n"
+    LINE "   */\n"
+    LINE "  x: 10\n"
     LINE "  y: 20\n"
     LINE "}";
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);

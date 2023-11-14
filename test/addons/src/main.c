@@ -445,7 +445,9 @@ void Plecs_assembly_w_composite_prop(void);
 void Plecs_assembly_with_with(void);
 void Plecs_using_wildcard(void);
 void Plecs_single_line_comment_in_value(void);
+void Plecs_single_line_comment_in_value_after_scope(void);
 void Plecs_multi_line_comment_in_value(void);
+void Plecs_multi_line_comment_in_value_after_scope(void);
 void Plecs_unterminated_multi_line_comment_in_value(void);
 void Plecs_module_stmt(void);
 void Plecs_nested_module_stmt(void);
@@ -3338,8 +3340,16 @@ bake_test_case Plecs_testcases[] = {
         Plecs_single_line_comment_in_value
     },
     {
+        "single_line_comment_in_value_after_scope",
+        Plecs_single_line_comment_in_value_after_scope
+    },
+    {
         "multi_line_comment_in_value",
         Plecs_multi_line_comment_in_value
+    },
+    {
+        "multi_line_comment_in_value_after_scope",
+        Plecs_multi_line_comment_in_value_after_scope
     },
     {
         "unterminated_multi_line_comment_in_value",
@@ -7758,7 +7768,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        233,
+        235,
         Plecs_testcases
     },
     {
