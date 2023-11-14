@@ -1052,7 +1052,7 @@ void Event_enqueue_event_not_alive_w_data_move(void) {
     ecs_defer_end(world);
 
     test_int(ctx.invoked, 0);
-    test_int(dtor_position, 0); /* event wasn't enqueued */
+    test_int(dtor_position, 1);
 
     ecs_fini(world);
 }
@@ -1096,8 +1096,8 @@ void Event_enqueue_event_not_alive_w_data_copy(void) {
     ecs_defer_end(world);
 
     test_int(ctx.invoked, 0);
-    test_int(copy_position, 0); /* event wasn't enqueued */
-    test_int(dtor_position, 0); /* event wasn't enqueued */
+    test_int(copy_position, 1);
+    test_int(dtor_position, 1);
 
     ecs_fini(world);
 }

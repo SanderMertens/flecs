@@ -2757,8 +2757,7 @@ void* ecs_get_mut_id(
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     if (flecs_defer_cmd(stage)) {
-        return flecs_defer_set(
-            world, stage, EcsCmdMut, entity, id, 0, NULL, true);
+        return flecs_defer_set(world, stage, EcsCmdMut, entity, id, 0, NULL);
     }
 
     ecs_record_t *r = flecs_entities_get(world, entity);
@@ -2784,8 +2783,7 @@ void* ecs_get_mut_modified_id(
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     ecs_check(flecs_defer_cmd(stage), ECS_INVALID_PARAMETER, NULL);
 
-    return flecs_defer_set(
-        world, stage, EcsCmdSet, entity, id, 0, NULL, true);
+    return flecs_defer_set(world, stage, EcsCmdSet, entity, id, 0, NULL);
 error:
     return NULL;
 }
@@ -3019,8 +3017,7 @@ void* ecs_emplace_id(
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
     if (flecs_defer_cmd(stage)) {
-        return flecs_defer_set(world, stage, EcsCmdEmplace, entity, id, 0, NULL, 
-            true);
+        return flecs_defer_set(world, stage, EcsCmdEmplace, entity, id, 0, NULL);
     }
 
     ecs_record_t *r = flecs_entities_get(world, entity);
@@ -3110,7 +3107,7 @@ void flecs_copy_ptr_w_id(
 {
     if (flecs_defer_cmd(stage)) {
         flecs_defer_set(world, stage, EcsCmdSet, entity, id, 
-            flecs_utosize(size), ptr, false);
+            flecs_utosize(size), ptr);
         return;
     }
 
@@ -3156,7 +3153,7 @@ void flecs_move_ptr_w_id(
 {
     if (flecs_defer_cmd(stage)) {
         flecs_defer_set(world, stage, cmd_kind, entity, id, 
-            flecs_utosize(size), ptr, false);
+            flecs_utosize(size), ptr);
         return;
     }
 
@@ -4768,6 +4765,7 @@ bool flecs_defer_end(
         ecs_stage_t *dst_stage = flecs_stage_from_world(&world);
         ecs_commands_t *commands = stage->cmd;
         ecs_vec_t *queue = &commands->queue;
+
         if (ecs_vec_count(queue)) {
             ecs_cmd_t *cmds = ecs_vec_first(queue);
             int32_t i, count = ecs_vec_count(queue);

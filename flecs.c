@@ -1916,8 +1916,7 @@ void* flecs_defer_set(
     ecs_entity_t entity,
     ecs_entity_t component,
     ecs_size_t size,
-    void *value,
-    bool need_value);
+    void *value);
 
 bool flecs_defer_end(
     ecs_world_t *world,
@@ -6143,8 +6142,7 @@ void* ecs_get_mut_id(
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     if (flecs_defer_cmd(stage)) {
-        return flecs_defer_set(
-            world, stage, EcsCmdMut, entity, id, 0, NULL, true);
+        return flecs_defer_set(world, stage, EcsCmdMut, entity, id, 0, NULL);
     }
 
     ecs_record_t *r = flecs_entities_get(world, entity);
@@ -6170,8 +6168,7 @@ void* ecs_get_mut_modified_id(
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     ecs_check(flecs_defer_cmd(stage), ECS_INVALID_PARAMETER, NULL);
 
-    return flecs_defer_set(
-        world, stage, EcsCmdSet, entity, id, 0, NULL, true);
+    return flecs_defer_set(world, stage, EcsCmdSet, entity, id, 0, NULL);
 error:
     return NULL;
 }
@@ -6405,8 +6402,7 @@ void* ecs_emplace_id(
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
     if (flecs_defer_cmd(stage)) {
-        return flecs_defer_set(world, stage, EcsCmdEmplace, entity, id, 0, NULL, 
-            true);
+        return flecs_defer_set(world, stage, EcsCmdEmplace, entity, id, 0, NULL);
     }
 
     ecs_record_t *r = flecs_entities_get(world, entity);
@@ -6496,7 +6492,7 @@ void flecs_copy_ptr_w_id(
 {
     if (flecs_defer_cmd(stage)) {
         flecs_defer_set(world, stage, EcsCmdSet, entity, id, 
-            flecs_utosize(size), ptr, false);
+            flecs_utosize(size), ptr);
         return;
     }
 
@@ -6542,7 +6538,7 @@ void flecs_move_ptr_w_id(
 {
     if (flecs_defer_cmd(stage)) {
         flecs_defer_set(world, stage, cmd_kind, entity, id, 
-            flecs_utosize(size), ptr, false);
+            flecs_utosize(size), ptr);
         return;
     }
 
@@ -8154,6 +8150,7 @@ bool flecs_defer_end(
         ecs_stage_t *dst_stage = flecs_stage_from_world(&world);
         ecs_commands_t *commands = stage->cmd;
         ecs_vec_t *queue = &commands->queue;
+
         if (ecs_vec_count(queue)) {
             ecs_cmd_t *cmds = ecs_vec_first(queue);
             int32_t i, count = ecs_vec_count(queue);
@@ -20479,72 +20476,54 @@ int32_t flecs_relation_depth(
 
 
 static
-ecs_cmd_t* flecs_cmd_alloc(
+ecs_cmd_t* flecs_cmd_new(
     ecs_stage_t *stage)
 {
     ecs_cmd_t *cmd = ecs_vec_append_t(&stage->allocator, &stage->cmd->queue, 
         ecs_cmd_t);
-    ecs_os_zeromem(cmd);
+    cmd->is._1.value = NULL;
+    cmd->next_for_entity = 0;
+    cmd->entry = NULL;
     return cmd;
 }
 
 static
-ecs_cmd_t* flecs_cmd_new(
+ecs_cmd_t* flecs_cmd_new_batched(
     ecs_stage_t *stage, 
-    ecs_entity_t e, 
-    bool is_delete,
-    bool can_batch) 
+    ecs_entity_t e)
 {
-    if (e) {
-        ecs_vec_t *cmds = &stage->cmd->queue;
-        ecs_cmd_entry_t *first_entry = NULL;
-        ecs_cmd_entry_t *entry = flecs_sparse_try_t(
-            &stage->cmd->entries, ecs_cmd_entry_t, e);
+    ecs_vec_t *cmds = &stage->cmd->queue;
+    ecs_cmd_entry_t *entry = flecs_sparse_get_any_t(
+        &stage->cmd->entries, ecs_cmd_entry_t, e);
 
-        int32_t cur = ecs_vec_count(cmds);
-        if (entry) {
-            if (entry->first == -1) {
-                /* Existing but invalidated entry */
-                entry->first = cur;
-                first_entry = entry;
-            } else {
-                int32_t last = entry->last;
-                if (entry->last == -1) {
-                    /* Entity was deleted, don't insert command */
-                    return NULL;
-                }
-
-                if (can_batch) {
-                    ecs_cmd_t *arr = ecs_vec_first_t(cmds, ecs_cmd_t);
-                    ecs_assert(arr[last].entity == e, ECS_INTERNAL_ERROR, NULL);
-                    ecs_cmd_t *last_op = &arr[last];
-                    last_op->next_for_entity = cur;
-                    if (last == entry->first) {
-                        /* Flip sign bit so flush logic can tell which command
-                        * is the first for an entity */
-                        last_op->next_for_entity *= -1;
-                    }
-                }
-            }
-        } else if (can_batch || is_delete) {
-            first_entry = entry = flecs_sparse_ensure_fast_t(
-                &stage->cmd->entries, ecs_cmd_entry_t, e);
+    int32_t cur = ecs_vec_count(cmds);
+    ecs_cmd_t *cmd = flecs_cmd_new(stage);
+    if (entry) {
+        if (entry->first == -1) {
+            /* Existing but invalidated entry */
             entry->first = cur;
+            cmd->entry = entry;
+        } else {
+            int32_t last = entry->last;
+            ecs_cmd_t *arr = ecs_vec_first_t(cmds, ecs_cmd_t);
+            ecs_assert(arr[last].entity == e, ECS_INTERNAL_ERROR, NULL);
+            ecs_cmd_t *last_op = &arr[last];
+            last_op->next_for_entity = cur;
+            if (last == entry->first) {
+                /* Flip sign bit so flush logic can tell which command
+                 * is the first for an entity */
+                last_op->next_for_entity *= -1;
+            }
         }
-        if (can_batch) {
-            entry->last = cur;
-        }
-        if (is_delete) {
-            /* Prevent insertion of more commands for entity */
-            entry->last = -1;
-        }
-
-        ecs_cmd_t *cmd = flecs_cmd_alloc(stage);
-        cmd->entry = first_entry;
-        return cmd;
+    } else {
+        cmd->entry = entry = flecs_sparse_ensure_fast_t(
+            &stage->cmd->entries, ecs_cmd_entry_t, e);
+        entry->first = cur;
     }
 
-    return flecs_cmd_alloc(stage);
+    entry->last = cur;
+
+    return cmd;
 }
 
 static
@@ -20646,7 +20625,7 @@ bool flecs_defer_modified(
     ecs_id_t id)
 {
     if (flecs_defer_cmd(stage)) {
-        ecs_cmd_t *cmd = flecs_cmd_new(stage, entity, false, true);
+        ecs_cmd_t *cmd = flecs_cmd_new_batched(stage, entity);
         if (cmd) {
             cmd->kind = EcsCmdModified;
             cmd->id = id;
@@ -20664,13 +20643,11 @@ bool flecs_defer_clone(
     bool clone_value)
 {   
     if (flecs_defer_cmd(stage)) {
-        ecs_cmd_t *cmd = flecs_cmd_new(stage, entity, false, false);
-        if (cmd) {
-            cmd->kind = EcsCmdClone;
-            cmd->id = src;
-            cmd->entity = entity;
-            cmd->is._1.clone_value = clone_value;
-        }
+        ecs_cmd_t *cmd = flecs_cmd_new(stage);
+        cmd->kind = EcsCmdClone;
+        cmd->id = src;
+        cmd->entity = entity;
+        cmd->is._1.clone_value = clone_value;
         return true;
     }
     return false;   
@@ -20683,13 +20660,11 @@ bool flecs_defer_path(
     const char *name)
 {
     if (stage->defer > 0) {
-        ecs_cmd_t *cmd = flecs_cmd_new(stage, entity, false, false);
-        if (cmd) {
-            cmd->kind = EcsCmdPath;
-            cmd->entity = entity;
-            cmd->id = parent;
-            cmd->is._1.value = ecs_os_strdup(name);
-        }
+        ecs_cmd_t *cmd = flecs_cmd_new(stage);
+        cmd->kind = EcsCmdPath;
+        cmd->entity = entity;
+        cmd->id = parent;
+        cmd->is._1.value = ecs_os_strdup(name);
         return true;
     }
     return false;
@@ -20700,11 +20675,9 @@ bool flecs_defer_delete(
     ecs_entity_t entity)
 {
     if (flecs_defer_cmd(stage)) {
-        ecs_cmd_t *cmd = flecs_cmd_new(stage, entity, true, false);
-        if (cmd) {
-            cmd->kind = EcsCmdDelete;
-            cmd->entity = entity;
-        }
+        ecs_cmd_t *cmd = flecs_cmd_new(stage);
+        cmd->kind = EcsCmdDelete;
+        cmd->entity = entity;
         return true;
     }
     return false;
@@ -20715,11 +20688,9 @@ bool flecs_defer_clear(
     ecs_entity_t entity)
 {
     if (flecs_defer_cmd(stage)) {
-        ecs_cmd_t *cmd = flecs_cmd_new(stage, entity, false, true);
-        if (cmd) {
-            cmd->kind = EcsCmdClear;
-            cmd->entity = entity;
-        }
+        ecs_cmd_t *cmd = flecs_cmd_new_batched(stage, entity);
+        cmd->kind = EcsCmdClear;
+        cmd->entity = entity;
         return true;
     }
     return false;
@@ -20731,7 +20702,7 @@ bool flecs_defer_on_delete_action(
     ecs_entity_t action)
 {
     if (flecs_defer_cmd(stage)) {
-        ecs_cmd_t *cmd = flecs_cmd_alloc(stage);
+        ecs_cmd_t *cmd = flecs_cmd_new(stage);
         cmd->kind = EcsCmdOnDeleteAction;
         cmd->id = id;
         cmd->entity = action;
@@ -20747,12 +20718,10 @@ bool flecs_defer_enable(
     bool enable)
 {
     if (flecs_defer_cmd(stage)) {
-        ecs_cmd_t *cmd = flecs_cmd_new(stage, entity, false, false);
-        if (cmd) {
-            cmd->kind = enable ? EcsCmdEnable : EcsCmdDisable;
-            cmd->entity = entity;
-            cmd->id = id;
-        }
+        ecs_cmd_t *cmd = flecs_cmd_new(stage);
+        cmd->kind = enable ? EcsCmdEnable : EcsCmdDisable;
+        cmd->entity = entity;
+        cmd->id = id;
         return true;
     }
     return false;
@@ -20777,14 +20746,12 @@ bool flecs_defer_bulk_new(
         *ids_out = ids;
 
         /* Store data in op */
-        ecs_cmd_t *cmd = flecs_cmd_alloc(stage);
-        if (cmd) {
-            cmd->kind = EcsCmdBulkNew;
-            cmd->id = id;
-            cmd->is._n.entities = ids;
-            cmd->is._n.count = count;
-        }
-
+        ecs_cmd_t *cmd = flecs_cmd_new(stage);
+        cmd->kind = EcsCmdBulkNew;
+        cmd->id = id;
+        cmd->is._n.entities = ids;
+        cmd->is._n.count = count;
+        cmd->entity = 0;
         return true;
     }
     return false;
@@ -20797,12 +20764,10 @@ bool flecs_defer_add(
 {
     if (flecs_defer_cmd(stage)) {
         ecs_assert(id != 0, ECS_INTERNAL_ERROR, NULL);
-        ecs_cmd_t *cmd = flecs_cmd_new(stage, entity, false, true);
-        if (cmd) {
-            cmd->kind = EcsCmdAdd;
-            cmd->id = id;
-            cmd->entity = entity;
-        }
+        ecs_cmd_t *cmd = flecs_cmd_new_batched(stage, entity);
+        cmd->kind = EcsCmdAdd;
+        cmd->id = id;
+        cmd->entity = entity;
         return true;
     }
     return false;
@@ -20815,12 +20780,10 @@ bool flecs_defer_remove(
 {
     if (flecs_defer_cmd(stage)) {
         ecs_assert(id != 0, ECS_INTERNAL_ERROR, NULL);
-        ecs_cmd_t *cmd = flecs_cmd_new(stage, entity, false, true);
-        if (cmd) {
-            cmd->kind = EcsCmdRemove;
-            cmd->id = id;
-            cmd->entity = entity;
-        }
+        ecs_cmd_t *cmd = flecs_cmd_new_batched(stage, entity); 
+        cmd->kind = EcsCmdRemove;
+        cmd->id = id;
+        cmd->entity = entity;
         return true;
     }
     return false;
@@ -20833,20 +20796,9 @@ void* flecs_defer_set(
     ecs_entity_t entity,
     ecs_id_t id,
     ecs_size_t size,
-    void *value,
-    bool need_value)
+    void *value)
 {
-    ecs_cmd_t *cmd = flecs_cmd_new(stage, entity, false, true);
-    if (!cmd) {
-        if (need_value) {
-            /* Entity is deleted by a previous command, but we still need to 
-             * return a temporary storage to the application. */
-            cmd_kind = EcsCmdSkip;
-        } else {
-            /* No value needs to be returned, we can drop the command */
-            return NULL;
-        }
-    }
+    ecs_cmd_t *cmd = flecs_cmd_new_batched(stage, entity);
 
     /* Find type info for id */
     const ecs_type_info_t *ti = NULL;
@@ -20977,7 +20929,7 @@ void* flecs_defer_set(
              * already deleted. */
             return cmd_value;
         }
-        cmd = flecs_cmd_alloc(stage);
+        cmd = flecs_cmd_new(stage);
     }
 
     if (!existing) {
@@ -21011,11 +20963,7 @@ void flecs_enqueue(
     ecs_stage_t *stage,
     ecs_event_desc_t *desc)
 {
-    ecs_cmd_t *cmd = flecs_cmd_new(stage, desc->entity, false, false);
-    if (!cmd) {
-        return; /* Entity was deleted */
-    }
-
+    ecs_cmd_t *cmd = flecs_cmd_new(stage);
     cmd->kind = EcsCmdEvent;
     cmd->entity = desc->entity;
 
