@@ -1,0 +1,1 @@
+option('build_example', description : 'build the helloworld example', type : 'feature', value : 'auto')
