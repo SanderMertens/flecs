@@ -1797,6 +1797,8 @@ void Pairs_oneof_other(void);
 void Pairs_oneof_self_constraint_violated(void);
 void Pairs_oneof_other_constraint_violated(void);
 void Pairs_oneof_other_rel_parent_constraint_violated(void);
+void Pairs_set_w_recycled_rel(void);
+void Pairs_set_w_recycled_tgt(void);
 
 // Testsuite 'Trigger'
 void Trigger_on_add_trigger_before_table(void);
@@ -9629,6 +9631,14 @@ bake_test_case Pairs_testcases[] = {
     {
         "oneof_other_rel_parent_constraint_violated",
         Pairs_oneof_other_rel_parent_constraint_violated
+    },
+    {
+        "set_w_recycled_rel",
+        Pairs_set_w_recycled_rel
+    },
+    {
+        "set_w_recycled_tgt",
+        Pairs_set_w_recycled_tgt
     }
 };
 
@@ -13175,7 +13185,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        115,
+        117,
         Pairs_testcases
     },
     {

@@ -4091,6 +4091,7 @@ ecs_entity_t ecs_get_typeid(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     const ecs_type_info_t *ti = ecs_get_type_info(world, id);
     if (ti) {
+        ecs_assert(ti->component != 0, ECS_INTERNAL_ERROR, NULL);
         return ti->component;
     }
 error:

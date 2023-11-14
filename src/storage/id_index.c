@@ -156,6 +156,7 @@ ecs_id_record_t* flecs_id_record_new(
     if (is_pair) {
         // rel = ecs_pair_first(world, id);
         rel = ECS_PAIR_FIRST(id);
+        rel = flecs_entities_get_generation(world, rel);
         ecs_assert(rel != 0, ECS_INTERNAL_ERROR, NULL);
 
         /* Relationship object can be 0, as tables without a ChildOf 
@@ -165,7 +166,7 @@ ecs_id_record_t* flecs_id_record_new(
 #ifdef FLECS_DEBUG
         /* Check constraints */
         if (tgt) {
-            tgt = ecs_get_alive(world, tgt);
+            tgt = flecs_entities_get_generation(world, tgt);
             ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);
         }
         if (tgt && !ecs_id_is_wildcard(tgt)) {

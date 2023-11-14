@@ -368,6 +368,8 @@ void Plecs_scope_w_1_subj_and_2_pairs(void);
 void Plecs_inherit_from_multiple(void);
 void Plecs_assign_pair_component(void);
 void Plecs_assign_pair_component_in_scope(void);
+void Plecs_assign_pair_component_in_script(void);
+void Plecs_assign_pair_component_in_script_update(void);
 void Plecs_set_entity_names(void);
 void Plecs_oneof(void);
 void Plecs_invalid_oneof(void);
@@ -3030,6 +3032,14 @@ bake_test_case Plecs_testcases[] = {
     {
         "assign_pair_component_in_scope",
         Plecs_assign_pair_component_in_scope
+    },
+    {
+        "assign_pair_component_in_script",
+        Plecs_assign_pair_component_in_script
+    },
+    {
+        "assign_pair_component_in_script_update",
+        Plecs_assign_pair_component_in_script_update
     },
     {
         "set_entity_names",
@@ -7768,7 +7778,7 @@ static bake_test_suite suites[] = {
         "Plecs",
         NULL,
         NULL,
-        235,
+        237,
         Plecs_testcases
     },
     {

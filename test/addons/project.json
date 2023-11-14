@@ -375,6 +375,8 @@
                 "inherit_from_multiple",
                 "assign_pair_component",
                 "assign_pair_component_in_scope",
+                "assign_pair_component_in_script",
+                "assign_pair_component_in_script_update",
                 "set_entity_names",
                 "oneof",
                 "invalid_oneof",

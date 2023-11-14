@@ -7476,6 +7476,7 @@ ecs_entity_t ecs_get_typeid(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     const ecs_type_info_t *ti = ecs_get_type_info(world, id);
     if (ti) {
+        ecs_assert(ti->component != 0, ECS_INTERNAL_ERROR, NULL);
         return ti->component;
     }
 error:
@@ -42173,6 +42174,7 @@ ecs_id_record_t* flecs_id_record_new(
     if (is_pair) {
         // rel = ecs_pair_first(world, id);
         rel = ECS_PAIR_FIRST(id);
+        rel = flecs_entities_get_generation(world, rel);
         ecs_assert(rel != 0, ECS_INTERNAL_ERROR, NULL);
 
         /* Relationship object can be 0, as tables without a ChildOf 
@@ -42182,7 +42184,7 @@ ecs_id_record_t* flecs_id_record_new(
 #ifdef FLECS_DEBUG
         /* Check constraints */
         if (tgt) {
-            tgt = ecs_get_alive(world, tgt);
+            tgt = flecs_entities_get_generation(world, tgt);
             ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);
         }
         if (tgt && !ecs_id_is_wildcard(tgt)) {

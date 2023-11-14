@@ -3406,6 +3406,13 @@ void Plecs_inherit_from_multiple(void) {
     ecs_fini(world);
 }
 
+// using flecs.meta
+// Struct(Position) {
+//   x :- {f32}
+//   y :- {f32}
+// }
+// Foo :- (Position, Bar){x: 10, y: 20}
+
 void Plecs_assign_pair_component(void) {
     ecs_world_t *world = ecs_init();
 
@@ -3480,6 +3487,82 @@ void Plecs_assign_pair_component_in_scope(void) {
     test_assert(ptr != NULL);
     test_int(ptr->x, 20);
     test_int(ptr->y, 30);
+
+    ecs_fini(world);
+}
+
+void Plecs_assign_pair_component_in_script(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE
+    LINE "Struct(Position) {"
+    LINE "  x :- {f32}"
+    LINE "  y :- {f32}"
+    LINE "}"
+    LINE
+    LINE "Foo :- (Position, Bar){x: 10, y: 20}";
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .str = expr
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
+    ecs_entity_t ecs_id(Position) = ecs_lookup_fullpath(world, "Position");
+
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(ecs_id(Position) != 0);
+
+    test_assert( ecs_has_pair(world, foo, ecs_id(Position), bar));
+
+    const Position *ptr = ecs_get_pair(world, foo, Position, bar);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+
+    ecs_fini(world);
+}
+
+void Plecs_assign_pair_component_in_script_update(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE
+    LINE "Struct(Position) {"
+    LINE "  x :- {f32}"
+    LINE "  y :- {f32}"
+    LINE "}"
+    LINE
+    LINE "Foo :- (Position, Bar){x: 10, y: 20}";
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .str = expr
+    });
+    test_assert(s != 0);
+
+    test_assert(ecs_script_update(world, s, 0, expr, NULL) == 0);
+
+    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
+    ecs_entity_t ecs_id(Position) = ecs_lookup_fullpath(world, "Position");
+
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(ecs_id(Position) != 0);
+
+    test_assert( ecs_has_pair(world, foo, ecs_id(Position), bar));
+
+    const Position *ptr = ecs_get_pair(world, foo, Position, bar);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
 
     ecs_fini(world);
 }

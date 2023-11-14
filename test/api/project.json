@@ -1863,7 +1863,9 @@
                 "oneof_other",
                 "oneof_self_constraint_violated",
                 "oneof_other_constraint_violated",
-                "oneof_other_rel_parent_constraint_violated"
+                "oneof_other_rel_parent_constraint_violated",
+                "set_w_recycled_rel",
+                "set_w_recycled_tgt"
             ]
         }, {
            "id": "Trigger",
