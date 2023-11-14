@@ -1123,10 +1123,10 @@ typedef struct ecs_observer_desc_t {
  * \ingroup observers
  */
 typedef struct ecs_event_desc_t {
-    /** The event id. Only triggers for the specified event will be notified */
+    /** The event id. Only observers for the specified event will be notified */
     ecs_entity_t event;
 
-    /** Component ids. Only triggers with a matching component id will be
+    /** Component ids. Only observers with a matching component id will be
      * notified. Observers are guaranteed to get notified once, even if they
      * match more than one id. */
     const ecs_type_t *ids;
@@ -1149,8 +1149,16 @@ typedef struct ecs_event_desc_t {
     /** Single-entity alternative to setting table / offset / count */
     ecs_entity_t entity;
 
-    /** Optional context. Assigned to iter param member */
-    const void *param;
+    /** Optional context.
+     * The type of the param must be the event, where the event is a component.
+     * When an event is enqueued, the value of param is coped to a temporary
+     * storage of the event type. */
+    void *param;
+
+    /* Same as param, but with the guarantee that the value won't be modified. 
+     * When an event with a const parameter is enqueued, the value of the param
+     * is copied to a temporary storage of the event type. */
+    const void *const_param;
 
     /** Observable (usually the world) */
     ecs_poly_t *observable;
@@ -4609,6 +4617,11 @@ void* ecs_query_get_binding_ctx(
  */
 FLECS_API
 void ecs_emit( 
+    ecs_world_t *world,
+    ecs_event_desc_t *desc);
+
+FLECS_API
+void ecs_enqueue(
     ecs_world_t *world,
     ecs_event_desc_t *desc);
 

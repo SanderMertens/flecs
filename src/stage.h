@@ -99,6 +99,11 @@ bool flecs_defer_purge(
     ecs_world_t *world,
     ecs_stage_t *stage);
 
+void flecs_enqueue(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_event_desc_t *desc);
+
 void flecs_commands_push(
     ecs_stage_t *stage);
 

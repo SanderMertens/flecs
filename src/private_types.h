@@ -333,6 +333,7 @@ typedef enum ecs_cmd_kind_t {
     EcsCmdOnDeleteAction,
     EcsCmdEnable,
     EcsCmdDisable,
+    EcsCmdEvent,
     EcsCmdSkip
 } ecs_cmd_kind_t;
 

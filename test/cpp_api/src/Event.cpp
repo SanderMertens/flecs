@@ -624,3 +624,116 @@ void Event_entity_emit_event_w_payload_derived_event_type_no_src(void) {
 
     test_int(count, 1);
 }
+
+void Event_enqueue_event(void) {
+    flecs::world ecs;
+    
+    int32_t count = 0;
+
+    flecs::entity evt = ecs.entity();
+    flecs::entity id_a = ecs.entity();
+    flecs::entity e1 = ecs.entity().add(id_a);
+
+    ecs.observer()
+        .event(evt)
+        .term(id_a)
+        .each([&](flecs::entity e) {
+            test_assert(e == e1);
+            count ++;
+        });
+
+    ecs.defer_begin();
+
+    ecs.event(evt)
+        .id(id_a)
+        .entity(e1)
+        .enqueue();
+
+    test_int(count, 0);
+
+    ecs.defer_end();
+
+    test_int(count, 1);
+}
+
+void Event_enqueue_entity_event(void) {
+    flecs::world ecs;
+    
+    int32_t count = 0;
+
+    flecs::entity evt = ecs.entity();
+    flecs::entity id_a = ecs.entity();
+    flecs::entity e1 = ecs.entity().add(id_a);
+
+    e1.observe(evt, [&]() {
+        count ++;
+    });
+
+    ecs.defer_begin();
+
+    e1.enqueue(evt);
+
+    test_int(count, 0);
+
+    ecs.defer_end();
+
+    test_int(count, 1);
+}
+
+void Event_enqueue_event_w_payload(void) {
+    flecs::world ecs;
+    
+    int32_t count = 0;
+
+    flecs::entity id_a = ecs.entity();
+    flecs::entity e1 = ecs.entity().add(id_a);
+
+    ecs.observer()
+        .event<Position>()
+        .term(id_a)
+        .each([&](flecs::iter& it, size_t i) {
+            test_assert(it.entity(i) == e1);
+            test_int(it.param<Position>()->x, 10);
+            test_int(it.param<Position>()->y, 20);
+            count ++;
+        });
+
+    ecs.defer_begin();
+
+    ecs.event<Position>()
+        .id(id_a)
+        .entity(e1)
+        .ctx(Position{10, 20})
+        .enqueue();
+
+    test_int(count, 0);
+
+    ecs.defer_end();
+
+    test_int(count, 1);
+}
+
+void Event_enqueue_entity_event_w_payload(void) {
+    flecs::world ecs;
+    
+    int32_t count = 0;
+
+    flecs::entity id_a = ecs.entity();
+    flecs::entity e1 = ecs.entity().add(id_a);
+
+    e1.observe<Position>([&](Position& p) {
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+        count ++;
+    });
+
+    ecs.defer_begin();
+
+    e1.enqueue<Position>({10, 20});
+
+    test_int(count, 0);
+
+    ecs.defer_end();
+
+    test_int(count, 1);
+}

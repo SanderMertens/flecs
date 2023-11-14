@@ -100,4 +100,8 @@ inline void entity_view::emit(flecs::entity evt) {
     this->emit(evt.id());
 }
 
+inline void entity_view::enqueue(flecs::entity evt) {
+    this->enqueue(evt.id());
+}
+
 } // namespace flecs

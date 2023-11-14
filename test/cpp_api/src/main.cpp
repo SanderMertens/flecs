@@ -492,6 +492,10 @@ void Event_entity_emit_event_type_no_src(void);
 void Event_entity_emit_event_w_payload_no_src(void);
 void Event_entity_emit_event_w_payload_derived_event_type(void);
 void Event_entity_emit_event_w_payload_derived_event_type_no_src(void);
+void Event_enqueue_event(void);
+void Event_enqueue_entity_event(void);
+void Event_enqueue_event_w_payload(void);
+void Event_enqueue_entity_event_w_payload(void);
 
 // Testsuite 'Iterable'
 void Iterable_page_each(void);
@@ -3227,6 +3231,22 @@ bake_test_case Event_testcases[] = {
     {
         "entity_emit_event_w_payload_derived_event_type_no_src",
         Event_entity_emit_event_w_payload_derived_event_type_no_src
+    },
+    {
+        "enqueue_event",
+        Event_enqueue_event
+    },
+    {
+        "enqueue_entity_event",
+        Event_enqueue_entity_event
+    },
+    {
+        "enqueue_event_w_payload",
+        Event_enqueue_event_w_payload
+    },
+    {
+        "enqueue_entity_event_w_payload",
+        Event_enqueue_entity_event_w_payload
     }
 };
 
@@ -6528,7 +6548,7 @@ static bake_test_suite suites[] = {
         "Event",
         NULL,
         NULL,
-        24,
+        28,
         Event_testcases
     },
     {

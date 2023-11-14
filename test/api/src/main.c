@@ -187,6 +187,23 @@ void Event_emit_for_entity(void);
 void Event_emit_custom_for_any(void);
 void Event_emit_custom_implicit_any(void);
 void Event_emit_custom_empty_type(void);
+void Event_emit_w_param(void);
+void Event_emit_w_const_param(void);
+void Event_enqueue_event_1_id(void);
+void Event_enqueue_event_2_ids(void);
+void Event_enqueue_event_w_data(void);
+void Event_enqueue_event_w_data_move(void);
+void Event_enqueue_event_w_data_copy(void);
+void Event_enqueue_event_w_const_data_no_copy(void);
+void Event_enqueue_event_not_alive(void);
+void Event_enqueue_event_not_alive_w_data_move(void);
+void Event_enqueue_event_not_alive_w_data_copy(void);
+void Event_enqueue_event_not_alive_after_delete_during_merge(void);
+void Event_enqueue_event_not_alive_w_data_move_after_delete_during_merge(void);
+void Event_enqueue_event_not_alive_w_data_copy_after_delete_during_merge(void);
+void Event_enqueue_event_not_deferred(void);
+void Event_enqueue_event_not_deferred_to_async(void);
+void Event_enqueue_custom_implicit_any(void);
 
 // Testsuite 'New'
 void New_setup(void);
@@ -3340,6 +3357,74 @@ bake_test_case Event_testcases[] = {
     {
         "emit_custom_empty_type",
         Event_emit_custom_empty_type
+    },
+    {
+        "emit_w_param",
+        Event_emit_w_param
+    },
+    {
+        "emit_w_const_param",
+        Event_emit_w_const_param
+    },
+    {
+        "enqueue_event_1_id",
+        Event_enqueue_event_1_id
+    },
+    {
+        "enqueue_event_2_ids",
+        Event_enqueue_event_2_ids
+    },
+    {
+        "enqueue_event_w_data",
+        Event_enqueue_event_w_data
+    },
+    {
+        "enqueue_event_w_data_move",
+        Event_enqueue_event_w_data_move
+    },
+    {
+        "enqueue_event_w_data_copy",
+        Event_enqueue_event_w_data_copy
+    },
+    {
+        "enqueue_event_w_const_data_no_copy",
+        Event_enqueue_event_w_const_data_no_copy
+    },
+    {
+        "enqueue_event_not_alive",
+        Event_enqueue_event_not_alive
+    },
+    {
+        "enqueue_event_not_alive_w_data_move",
+        Event_enqueue_event_not_alive_w_data_move
+    },
+    {
+        "enqueue_event_not_alive_w_data_copy",
+        Event_enqueue_event_not_alive_w_data_copy
+    },
+    {
+        "enqueue_event_not_alive_after_delete_during_merge",
+        Event_enqueue_event_not_alive_after_delete_during_merge
+    },
+    {
+        "enqueue_event_not_alive_w_data_move_after_delete_during_merge",
+        Event_enqueue_event_not_alive_w_data_move_after_delete_during_merge
+    },
+    {
+        "enqueue_event_not_alive_w_data_copy_after_delete_during_merge",
+        Event_enqueue_event_not_alive_w_data_copy_after_delete_during_merge
+    },
+    {
+        "enqueue_event_not_deferred",
+        Event_enqueue_event_not_deferred
+    },
+    {
+        "enqueue_event_not_deferred_to_async",
+        Event_enqueue_event_not_deferred_to_async
+    },
+    {
+        "enqueue_custom_implicit_any",
+        Event_enqueue_custom_implicit_any
     }
 };
 
@@ -12894,7 +12979,7 @@ static bake_test_suite suites[] = {
         "Event",
         NULL,
         NULL,
-        14,
+        31,
         Event_testcases
     },
     {
