@@ -428,8 +428,7 @@ struct component : untyped_component {
     /** Register on_add hook. */
     template <typename Func>
     component<T>& on_add(Func&& func) {
-        using Delegate = typename _::each_delegate<
-            typename std::decay<Func>::type, T>;
+        using Delegate = typename _::each_delegate<typename std::decay<Func>::type, T>;
         flecs::type_hooks_t h = get_hooks();
         ecs_assert(h.on_add == nullptr, ECS_INVALID_OPERATION, 
             "on_add hook is already set");

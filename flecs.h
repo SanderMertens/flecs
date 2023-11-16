@@ -2307,6 +2307,10 @@ void ecs_os_set_api_defaults(void);
 #define ecs_os_memcpy_n(ptr1, ptr2, T, count) ecs_os_memcpy(ptr1, ptr2, ECS_SIZEOF(T) * count)
 #define ecs_os_memcmp_t(ptr1, ptr2, T) ecs_os_memcmp(ptr1, ptr2, ECS_SIZEOF(T))
 
+#define ecs_os_memmove_t(ptr1, ptr2, T) ecs_os_memmove(ptr1, ptr2, ECS_SIZEOF(T))
+#define ecs_os_memmove_n(ptr1, ptr2, T, count) ecs_os_memmove(ptr1, ptr2, ECS_SIZEOF(T) * count)
+#define ecs_os_memmove_t(ptr1, ptr2, T) ecs_os_memmove(ptr1, ptr2, ECS_SIZEOF(T))
+
 #define ecs_os_strcmp(str1, str2) strcmp(str1, str2)
 #define ecs_os_memset_t(ptr, value, T) ecs_os_memset(ptr, value, ECS_SIZEOF(T))
 #define ecs_os_memset_n(ptr, value, T, count) ecs_os_memset(ptr, value, ECS_SIZEOF(T) * count)
@@ -24330,6 +24334,16 @@ struct each_delegate : public delegate {
         self->invoke(iter);
     }
 
+    // Create instance of delegate
+    static each_delegate* make(const Func& func) {
+        return FLECS_NEW(each_delegate)(func);
+    }
+
+    // Function that can be used as callback to free delegate
+    static void free(void *obj) {
+        _::free_obj<each_delegate>(static_cast<each_delegate*>(obj));
+    }
+
     // Static function to call for component on_add hook
     static void run_add(ecs_iter_t *iter) {
         component_binding_ctx *ctx = reinterpret_cast<component_binding_ctx*>(
@@ -24999,6 +25013,10 @@ struct entity_with_delegate<Func, if_t< is_callable<Func>::value > >
 };
 
 } // namespace _
+
+// Experimental: allows using the each delegate for use cases outside of flecs
+template <typename Func, typename ... Args>
+using delegate = _::each_delegate<typename std::decay<Func>::type, Args...>;
 
 } // namespace flecs
 
@@ -26020,8 +26038,7 @@ struct component : untyped_component {
     /** Register on_add hook. */
     template <typename Func>
     component<T>& on_add(Func&& func) {
-        using Delegate = typename _::each_delegate<
-            typename std::decay<Func>::type, T>;
+        using Delegate = typename _::each_delegate<typename std::decay<Func>::type, T>;
         flecs::type_hooks_t h = get_hooks();
         ecs_assert(h.on_add == nullptr, ECS_INVALID_OPERATION, 
             "on_add hook is already set");
