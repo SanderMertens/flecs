@@ -500,9 +500,10 @@ void Internals_table_create_leak_check(void) {
 
     ecs_entity_t tag = ecs_new_id(world);
     ecs_entity_t e = ecs_new_w_id(world, tag);
+    ecs_delete(world, tag);
+
     max_block_count = ecs_block_allocator_alloc_count - 
         ecs_block_allocator_free_count;
-    ecs_delete(world, tag);
 
     for (int i = 0; i < 25000; i ++) {
         tag = ecs_new_id(world);

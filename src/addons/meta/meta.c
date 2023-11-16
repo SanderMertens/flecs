@@ -763,6 +763,9 @@ void flecs_set_primitive(ecs_iter_t *it) {
         case EcsEntity:
             init_type_t(world, e, EcsPrimitiveType, ecs_entity_t);
             break;
+        case EcsId:
+            init_type_t(world, e, EcsPrimitiveType, ecs_id_t);
+            break;
         }
     }
 }
@@ -1324,6 +1327,7 @@ void FlecsMetaImport(
     ECS_PRIMITIVE(world, f64, EcsF64);
     ECS_PRIMITIVE(world, string, EcsString);
     ECS_PRIMITIVE(world, entity, EcsEntity);
+    ECS_PRIMITIVE(world, id, EcsId);
 
     #undef ECS_PRIMITIVE
 
@@ -1391,7 +1395,8 @@ void FlecsMetaImport(
             { .name = "UPtr "},
             { .name = "IPtr" }, 
             { .name = "String" }, 
-            { .name = "Entity" }
+            { .name = "Entity" },
+            { .name = "Id" }
         }
     });
 

@@ -108,6 +108,16 @@ struct opaque {
         return *this;
     }
 
+    /** Assign (component) id value */
+    opaque& assign_id(
+        void (*func)(T *dst, ecs_world_t *world, ecs_id_t id))
+    {
+        this->desc.type.assign_id = 
+            reinterpret_cast<decltype(
+                this->desc.type.assign_id)>(func);
+        return *this;
+    }
+
     /** Assign null value */
     opaque& assign_null(void (*func)(T *dst)) {
         this->desc.type.assign_null = 

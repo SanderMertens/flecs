@@ -48,6 +48,9 @@ int json_typeinfo_ser_primitive(
     case EcsEntity:
         flecs_json_string(str, "entity");
         break;
+    case EcsId:
+        flecs_json_string(str, "id");
+        break;
     default:
         return -1;
     }
@@ -248,6 +251,7 @@ int json_typeinfo_ser_type_op(
     case EcsOpUPtr:
     case EcsOpIPtr:
     case EcsOpEntity:
+    case EcsOpId:
     case EcsOpString:
         if (json_typeinfo_ser_primitive( 
             flecs_json_op_to_primitive_kind(op->kind), str))
@@ -360,6 +364,7 @@ int json_typeinfo_ser_type_ops(
         case EcsOpUPtr:
         case EcsOpIPtr:
         case EcsOpEntity:
+        case EcsOpId:
         case EcsOpString:
         case EcsOpOpaque:
             if (json_typeinfo_ser_type_op(world, op, str, stack[sp - 1])) {

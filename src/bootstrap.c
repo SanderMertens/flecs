@@ -913,6 +913,8 @@ void flecs_bootstrap(
 
     /* DontInherit components */
     ecs_add_id(world, EcsPrefab, EcsDontInherit);
+    ecs_add_id(world, ecs_id(EcsComponent), EcsDontInherit);
+    ecs_add_id(world, EcsOnDelete, EcsDontInherit);
 
     /* Acyclic/Traversable components */
     ecs_add_id(world, EcsIsA, EcsTraversable);

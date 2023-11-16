@@ -3353,6 +3353,8 @@ void flecs_bootstrap(
 
     /* DontInherit components */
     ecs_add_id(world, EcsPrefab, EcsDontInherit);
+    ecs_add_id(world, ecs_id(EcsComponent), EcsDontInherit);
+    ecs_add_id(world, EcsOnDelete, EcsDontInherit);
 
     /* Acyclic/Traversable components */
     ecs_add_id(world, EcsIsA, EcsTraversable);
@@ -7438,6 +7440,7 @@ const ecs_type_info_t* ecs_get_type_info(
     ecs_id_t id)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(id != 0, ECS_INVALID_PARAMETER, NULL);
 
     world = ecs_get_world(world);
 
@@ -21776,33 +21779,34 @@ const ecs_entity_t ecs_id(ecs_f32_t) =              FLECS_HI_COMPONENT_ID + 93;
 const ecs_entity_t ecs_id(ecs_f64_t) =              FLECS_HI_COMPONENT_ID + 94;
 const ecs_entity_t ecs_id(ecs_string_t) =           FLECS_HI_COMPONENT_ID + 95;
 const ecs_entity_t ecs_id(ecs_entity_t) =           FLECS_HI_COMPONENT_ID + 96;
+const ecs_entity_t ecs_id(ecs_id_t) =               FLECS_HI_COMPONENT_ID + 97;
 
 /** Meta module component ids */
-const ecs_entity_t ecs_id(EcsMetaType) =            FLECS_HI_COMPONENT_ID + 97;
-const ecs_entity_t ecs_id(EcsMetaTypeSerialized) =  FLECS_HI_COMPONENT_ID + 98;
-const ecs_entity_t ecs_id(EcsPrimitive) =           FLECS_HI_COMPONENT_ID + 99;
-const ecs_entity_t ecs_id(EcsEnum) =                FLECS_HI_COMPONENT_ID + 100;
-const ecs_entity_t ecs_id(EcsBitmask) =             FLECS_HI_COMPONENT_ID + 101;
-const ecs_entity_t ecs_id(EcsMember) =              FLECS_HI_COMPONENT_ID + 102;
-const ecs_entity_t ecs_id(EcsMemberRanges) =        FLECS_HI_COMPONENT_ID + 103;
-const ecs_entity_t ecs_id(EcsStruct) =              FLECS_HI_COMPONENT_ID + 104;
-const ecs_entity_t ecs_id(EcsArray) =               FLECS_HI_COMPONENT_ID + 105;
-const ecs_entity_t ecs_id(EcsVector) =              FLECS_HI_COMPONENT_ID + 106;
-const ecs_entity_t ecs_id(EcsOpaque) =              FLECS_HI_COMPONENT_ID + 107;
-const ecs_entity_t ecs_id(EcsUnit) =                FLECS_HI_COMPONENT_ID + 108;
-const ecs_entity_t ecs_id(EcsUnitPrefix) =          FLECS_HI_COMPONENT_ID + 109;
-const ecs_entity_t EcsConstant =                    FLECS_HI_COMPONENT_ID + 110;
-const ecs_entity_t EcsQuantity =                    FLECS_HI_COMPONENT_ID + 111;
+const ecs_entity_t ecs_id(EcsMetaType) =            FLECS_HI_COMPONENT_ID + 98;
+const ecs_entity_t ecs_id(EcsMetaTypeSerialized) =  FLECS_HI_COMPONENT_ID + 99;
+const ecs_entity_t ecs_id(EcsPrimitive) =           FLECS_HI_COMPONENT_ID + 100;
+const ecs_entity_t ecs_id(EcsEnum) =                FLECS_HI_COMPONENT_ID + 101;
+const ecs_entity_t ecs_id(EcsBitmask) =             FLECS_HI_COMPONENT_ID + 102;
+const ecs_entity_t ecs_id(EcsMember) =              FLECS_HI_COMPONENT_ID + 103;
+const ecs_entity_t ecs_id(EcsMemberRanges) =        FLECS_HI_COMPONENT_ID + 104;
+const ecs_entity_t ecs_id(EcsStruct) =              FLECS_HI_COMPONENT_ID + 105;
+const ecs_entity_t ecs_id(EcsArray) =               FLECS_HI_COMPONENT_ID + 106;
+const ecs_entity_t ecs_id(EcsVector) =              FLECS_HI_COMPONENT_ID + 107;
+const ecs_entity_t ecs_id(EcsOpaque) =              FLECS_HI_COMPONENT_ID + 108;
+const ecs_entity_t ecs_id(EcsUnit) =                FLECS_HI_COMPONENT_ID + 109;
+const ecs_entity_t ecs_id(EcsUnitPrefix) =          FLECS_HI_COMPONENT_ID + 110;
+const ecs_entity_t EcsConstant =                    FLECS_HI_COMPONENT_ID + 111;
+const ecs_entity_t EcsQuantity =                    FLECS_HI_COMPONENT_ID + 112;
 
 /* Doc module components */
-const ecs_entity_t ecs_id(EcsDocDescription) =      FLECS_HI_COMPONENT_ID + 112;
-const ecs_entity_t EcsDocBrief =                    FLECS_HI_COMPONENT_ID + 113;
-const ecs_entity_t EcsDocDetail =                   FLECS_HI_COMPONENT_ID + 114;
-const ecs_entity_t EcsDocLink =                     FLECS_HI_COMPONENT_ID + 115;
-const ecs_entity_t EcsDocColor =                    FLECS_HI_COMPONENT_ID + 116;
+const ecs_entity_t ecs_id(EcsDocDescription) =      FLECS_HI_COMPONENT_ID + 113;
+const ecs_entity_t EcsDocBrief =                    FLECS_HI_COMPONENT_ID + 114;
+const ecs_entity_t EcsDocDetail =                   FLECS_HI_COMPONENT_ID + 115;
+const ecs_entity_t EcsDocLink =                     FLECS_HI_COMPONENT_ID + 116;
+const ecs_entity_t EcsDocColor =                    FLECS_HI_COMPONENT_ID + 117;
 
 /* REST module components */
-const ecs_entity_t ecs_id(EcsRest) =                FLECS_HI_COMPONENT_ID + 117;
+const ecs_entity_t ecs_id(EcsRest) =                FLECS_HI_COMPONENT_ID + 118;
 
 /* Default lookup path */
 static ecs_entity_t ecs_default_lookup_path[2] = { 0, 0 };
@@ -24030,6 +24034,7 @@ ecs_entity_t flecs_alert_out_of_range_kind(
     case EcsIPtr:
     case EcsString:
     case EcsEntity:
+    case EcsId:
         return 0;
     }
 
@@ -28558,6 +28563,9 @@ ecs_entity_t meta_lookup(
 
         } else if (!ecs_os_strcmp(typename, "ecs_entity_t")) {
             type = ecs_id(ecs_entity_t);
+
+        } else if (!ecs_os_strcmp(typename, "ecs_id_t")) {
+            type = ecs_id(ecs_id_t);
 
         } else if (!ecs_os_strcmp(typename, "char*")) {
             type = ecs_id(ecs_string_t);
@@ -47107,6 +47115,7 @@ ecs_entity_t flecs_largest_type(
     case EcsIPtr:   return ecs_id(ecs_i64_t);
     case EcsString: return ecs_id(ecs_string_t);
     case EcsEntity: return ecs_id(ecs_entity_t);
+    case EcsId:     return ecs_id(ecs_id_t);
     default: ecs_throw(ECS_INTERNAL_ERROR, NULL);
     }
 error:
@@ -48183,6 +48192,15 @@ int flecs_expr_ser_primitive(
         }
         break;
     }
+    case EcsId: {
+        ecs_id_t id = *(const ecs_id_t*)base;
+        if (!id) {
+            ecs_strbuf_appendch(str, '0');
+        } else {
+            ecs_id_str_buf(world, id, str);
+        }
+        break;
+    }
     default:
         ecs_err("invalid primitive kind");
         return -1;
@@ -48412,6 +48430,7 @@ int flecs_expr_ser_type_op(
     case EcsOpUPtr:
     case EcsOpIPtr:
     case EcsOpEntity:
+    case EcsOpId:
     case EcsOpString:
     case EcsOpOpaque:
         if (flecs_expr_ser_primitive(world, flecs_expr_op_to_primitive_kind(op->kind), 
@@ -48496,6 +48515,7 @@ int flecs_expr_ser_type_ops(
         case EcsOpUPtr:
         case EcsOpIPtr:
         case EcsOpEntity:
+        case EcsOpId:
         case EcsOpString:
         case EcsOpOpaque:
             if (flecs_expr_ser_type_op(world, op, base, str, is_expr)) {
@@ -51203,6 +51223,15 @@ int json_ser_type_op(
         }
         break;
     }
+    case EcsOpId: {
+        ecs_id_t id = *(const ecs_id_t*)vptr;
+        if (!id) {
+            ecs_strbuf_appendch(str, '0');
+        } else {
+            flecs_json_id(str, world, id);
+        }
+        break;
+    }
 
     case EcsOpU64:
     case EcsOpI64:
@@ -51304,6 +51333,7 @@ int json_ser_type_ops(
         case EcsOpUPtr:
         case EcsOpIPtr:
         case EcsOpEntity:
+        case EcsOpId:
         case EcsOpString:
         case EcsOpOpaque:
             if (json_ser_type_op(world, op, base, str)) {
@@ -53196,6 +53226,9 @@ int json_typeinfo_ser_primitive(
     case EcsEntity:
         flecs_json_string(str, "entity");
         break;
+    case EcsId:
+        flecs_json_string(str, "id");
+        break;
     default:
         return -1;
     }
@@ -53396,6 +53429,7 @@ int json_typeinfo_ser_type_op(
     case EcsOpUPtr:
     case EcsOpIPtr:
     case EcsOpEntity:
+    case EcsOpId:
     case EcsOpString:
         if (json_typeinfo_ser_primitive( 
             flecs_json_op_to_primitive_kind(op->kind), str))
@@ -53508,6 +53542,7 @@ int json_typeinfo_ser_type_ops(
         case EcsOpUPtr:
         case EcsOpIPtr:
         case EcsOpEntity:
+        case EcsOpId:
         case EcsOpString:
         case EcsOpOpaque:
             if (json_typeinfo_ser_type_op(world, op, str, stack[sp - 1])) {
@@ -53643,6 +53678,7 @@ bool flecs_type_is_number(
     case EcsIPtr:
     case EcsString:
     case EcsEntity:
+    case EcsId:
         return false;
     default:
         ecs_abort(ECS_INVALID_PARAMETER, NULL);
@@ -54087,6 +54123,8 @@ ecs_entity_t ecs_quantity_init(
 #include <ctype.h>
 
 #ifdef FLECS_META
+#ifdef FLECS_PARSER
+#endif
 
 static
 const char* flecs_meta_op_kind_str(
@@ -54119,6 +54157,7 @@ const char* flecs_meta_op_kind_str(
     case EcsOpIPtr: return "IPtr";
     case EcsOpString: return "String";
     case EcsOpEntity: return "Entity";
+    case EcsOpId: return "Id";
     case EcsOpScope: return "Scope";
     default: return "<< invalid kind >>";
     }
@@ -54655,7 +54694,8 @@ int ecs_meta_push(
     case EcsOpUPtr:
     case EcsOpIPtr:
     case EcsOpString:
-    case EcsOpEntity: {
+    case EcsOpEntity:
+    case EcsOpId: {
         char *path = ecs_get_fullpath(world, scope->type);
         ecs_err("invalid push for type '%s'", path);
         ecs_os_free(path);
@@ -54825,6 +54865,7 @@ static struct {
         ((sizeof(void*) == 4) ? INT32_MAX : INT64_MAX)
     },
     [EcsOpEntity]  = {0,          INT64_MAX},
+    [EcsOpId]      = {0,          INT64_MAX},
     [EcsOpEnum]    = {INT32_MIN,  INT32_MAX},
     [EcsOpBitmask] = {0,          INT32_MAX}
 };
@@ -54846,6 +54887,7 @@ static struct {
     [EcsOpUPtr]    = {0, ((sizeof(void*) == 4) ? UINT32_MAX : UINT64_MAX)},
     [EcsOpIPtr]    = {0, ((sizeof(void*) == 4) ? INT32_MAX : INT64_MAX)},
     [EcsOpEntity]  = {0,          UINT64_MAX},
+    [EcsOpId]      = {0,          UINT64_MAX},
     [EcsOpEnum]    = {0,          INT32_MAX},
     [EcsOpBitmask] = {0,          UINT32_MAX}
 };
@@ -54870,6 +54912,7 @@ static struct {
         ((sizeof(void*) == 4) ? INT32_MAX : (double)INT64_MAX)
     },
     [EcsOpEntity]  = {0,          (double)UINT64_MAX},
+    [EcsOpId]      = {0,          (double)UINT64_MAX},
     [EcsOpEnum]    = {INT32_MIN,  INT32_MAX},
     [EcsOpBitmask] = {0,          UINT32_MAX}
 };
@@ -54913,6 +54956,7 @@ case kind:\
     case_T_checked(EcsOpU64,  ecs_u64_t,  dst, src, bounds);\
     case_T_checked(EcsOpUPtr, ecs_uptr_t, dst, src, bounds);\
     case_T_checked(EcsOpEntity, ecs_u64_t, dst, src, bounds);\
+    case_T_checked(EcsOpId, ecs_u64_t, dst, src, bounds);\
     case_T_checked(EcsOpBitmask, ecs_u32_t, dst, src, bounds)
 
 #define cases_T_bool(dst, src)\
@@ -55018,6 +55062,7 @@ int ecs_meta_set_char(
     case EcsOpUPtr:
     case EcsOpString:
     case EcsOpEntity:
+    case EcsOpId:
         flecs_meta_conversion_error(cursor, op, "char");
         return -1;
     default:
@@ -55222,8 +55267,8 @@ int ecs_meta_set_value(
         case EcsUPtr: return ecs_meta_set_uint(cursor, *(uintptr_t*)value->ptr);
         case EcsIPtr: return ecs_meta_set_int(cursor, *(intptr_t*)value->ptr);
         case EcsString: return ecs_meta_set_string(cursor, *(char**)value->ptr);
-        case EcsEntity: return ecs_meta_set_entity(cursor, 
-            *(ecs_entity_t*)value->ptr);
+        case EcsEntity: return ecs_meta_set_entity(cursor, *(ecs_entity_t*)value->ptr);
+        case EcsId: return ecs_meta_set_id(cursor, *(ecs_id_t*)value->ptr);
         default:
             ecs_throw(ECS_INTERNAL_ERROR, "invalid type kind");
             goto error;
@@ -55434,6 +55479,26 @@ int ecs_meta_set_string(
         set_T(ecs_entity_t, ptr, e);
         break;
     }
+    case EcsOpId: {
+        ecs_id_t id = 0;
+#ifdef FLECS_PARSER
+        ecs_term_t term = {0};
+        if (ecs_parse_term(cursor->world, NULL, value, value, &term, NULL)) {
+            if (ecs_term_finalize(cursor->world, &term)) {
+                ecs_term_fini(&term);
+                goto error;
+            }
+            id = term.id;
+            ecs_term_fini(&term);
+        } else {
+            ecs_term_fini(&term);
+            goto error;
+        }
+#endif
+        set_T(ecs_id_t, ptr, id);
+
+        break;
+    }
     case EcsOpPop:
         ecs_err("excess element '%s' in scope", value);
         goto error;
@@ -55519,6 +55584,7 @@ int ecs_meta_set_string_literal(
     case EcsOpIPtr:
     case EcsOpString:
     case EcsOpEntity:
+    case EcsOpId:
         len -= 2;
 
         char *result = ecs_os_malloc(len + 1);
@@ -55554,6 +55620,9 @@ int ecs_meta_set_entity(
     case EcsOpEntity:
         set_T(ecs_entity_t, ptr, value);
         break;
+    case EcsOpId:
+        set_T(ecs_id_t, ptr, value); /* entities are valid ids */
+        break;
     case EcsOpOpaque: {
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
         if (opaque && opaque->assign_entity) {
@@ -55588,6 +55657,64 @@ int ecs_meta_set_entity(
     case EcsOpIPtr:
     case EcsOpString:
         flecs_meta_conversion_error(cursor, op, "entity");
+        goto error;
+    default:
+        ecs_throw(ECS_INVALID_PARAMETER, "invalid operation");
+        break;
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
+int ecs_meta_set_id(
+    ecs_meta_cursor_t *cursor,
+    ecs_entity_t value)
+{
+    ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
+    ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
+    void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
+
+    switch(op->kind) {
+    case EcsOpId:
+        set_T(ecs_id_t, ptr, value);
+        break;
+    case EcsOpOpaque: {
+        const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
+        if (opaque && opaque->assign_id) {
+            opaque->assign_id(ptr, 
+                ECS_CONST_CAST(ecs_world_t*, cursor->world), value);
+            break;
+        }
+    }
+    /* fall through */
+    case EcsOpArray:
+    case EcsOpVector:
+    case EcsOpPush:
+    case EcsOpPop:
+    case EcsOpScope:
+    case EcsOpEnum:
+    case EcsOpBitmask:
+    case EcsOpPrimitive:
+    case EcsOpBool:
+    case EcsOpChar:
+    case EcsOpByte:
+    case EcsOpU8:
+    case EcsOpU16:
+    case EcsOpU32:
+    case EcsOpU64:
+    case EcsOpI8:
+    case EcsOpI16:
+    case EcsOpI32:
+    case EcsOpI64:
+    case EcsOpF32:
+    case EcsOpF64:
+    case EcsOpUPtr:
+    case EcsOpIPtr:
+    case EcsOpString:
+    case EcsOpEntity:
+        flecs_meta_conversion_error(cursor, op, "id");
         goto error;
     default:
         ecs_throw(ECS_INVALID_PARAMETER, "invalid operation");
@@ -55642,6 +55769,7 @@ int ecs_meta_set_null(
     case EcsOpUPtr:
     case EcsOpIPtr:
     case EcsOpEntity:
+    case EcsOpId:
         flecs_meta_conversion_error(cursor, op, "null");
         goto error;
     default:
@@ -55680,6 +55808,7 @@ bool ecs_meta_get_bool(
     case EcsOpEnum: return *(ecs_i32_t*)ptr != 0;
     case EcsOpBitmask: return *(ecs_u32_t*)ptr != 0;
     case EcsOpEntity: return *(ecs_entity_t*)ptr != 0;
+    case EcsOpId: return *(ecs_id_t*)ptr != 0;
     case EcsOpArray:
     case EcsOpVector:
     case EcsOpOpaque:
@@ -55732,6 +55861,7 @@ char ecs_meta_get_char(
     case EcsOpIPtr:
     case EcsOpString:
     case EcsOpEntity:
+    case EcsOpId:
         ecs_throw(ECS_INVALID_PARAMETER, "invalid element for char");
         break;
     }
@@ -55768,6 +55898,10 @@ int64_t ecs_meta_get_int(
     case EcsOpEntity:
         ecs_throw(ECS_INVALID_PARAMETER,
             "invalid conversion from entity to int");
+        break;
+    case EcsOpId:
+        ecs_throw(ECS_INVALID_PARAMETER,
+            "invalid conversion from id to int");
         break;
     case EcsOpArray:
     case EcsOpVector:
@@ -55812,6 +55946,7 @@ uint64_t ecs_meta_get_uint(
     case EcsOpEnum: return flecs_ito(uint64_t, *(const ecs_i32_t*)ptr);
     case EcsOpBitmask: return *(const ecs_u32_t*)ptr;
     case EcsOpEntity: return *(const ecs_entity_t*)ptr;
+    case EcsOpId: return *(const ecs_id_t*)ptr;
     case EcsOpArray:
     case EcsOpVector:
     case EcsOpOpaque:
@@ -55856,6 +55991,10 @@ double flecs_meta_to_float(
     case EcsOpEntity:
         ecs_throw(ECS_INVALID_PARAMETER,
             "invalid conversion from entity to float");
+        break;
+    case EcsOpId:
+        ecs_throw(ECS_INVALID_PARAMETER,
+            "invalid conversion from id to float");
         break;
     case EcsOpArray:
     case EcsOpVector:
@@ -55916,6 +56055,7 @@ const char* ecs_meta_get_string(
     case EcsOpUPtr:
     case EcsOpIPtr:
     case EcsOpEntity:
+    case EcsOpId:
     default:
         ecs_throw(ECS_INVALID_PARAMETER, "invalid element for string");
         break;
@@ -55932,6 +56072,48 @@ ecs_entity_t ecs_meta_get_entity(
     void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
     switch(op->kind) {
     case EcsOpEntity: return *(ecs_entity_t*)ptr;
+    case EcsOpArray:
+    case EcsOpVector:
+    case EcsOpOpaque:
+    case EcsOpPush:
+    case EcsOpPop:
+    case EcsOpScope:
+    case EcsOpEnum:
+    case EcsOpBitmask:
+    case EcsOpPrimitive:
+    case EcsOpChar:
+    case EcsOpBool:
+    case EcsOpByte:
+    case EcsOpU8:
+    case EcsOpU16:
+    case EcsOpU32:
+    case EcsOpU64:
+    case EcsOpI8:
+    case EcsOpI16:
+    case EcsOpI32:
+    case EcsOpI64:
+    case EcsOpF32:
+    case EcsOpF64:
+    case EcsOpUPtr:
+    case EcsOpIPtr:
+    case EcsOpString:
+    case EcsOpId:
+        ecs_throw(ECS_INVALID_PARAMETER, "invalid element for entity");
+        break;
+    }
+error:
+    return 0;
+}
+
+ecs_entity_t ecs_meta_get_id(
+    const ecs_meta_cursor_t *cursor)
+{
+    ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
+    ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
+    void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
+    switch(op->kind) {
+    case EcsOpEntity: return *(ecs_id_t*)ptr; /* Entities are valid ids */
+    case EcsOpId: return *(ecs_id_t*)ptr;
     case EcsOpArray:
     case EcsOpVector:
     case EcsOpOpaque:
@@ -56738,6 +56920,9 @@ void flecs_set_primitive(ecs_iter_t *it) {
         case EcsEntity:
             init_type_t(world, e, EcsPrimitiveType, ecs_entity_t);
             break;
+        case EcsId:
+            init_type_t(world, e, EcsPrimitiveType, ecs_id_t);
+            break;
         }
     }
 }
@@ -57299,6 +57484,7 @@ void FlecsMetaImport(
     ECS_PRIMITIVE(world, f64, EcsF64);
     ECS_PRIMITIVE(world, string, EcsString);
     ECS_PRIMITIVE(world, entity, EcsEntity);
+    ECS_PRIMITIVE(world, id, EcsId);
 
     #undef ECS_PRIMITIVE
 
@@ -57366,7 +57552,8 @@ void FlecsMetaImport(
             { .name = "UPtr "},
             { .name = "IPtr" }, 
             { .name = "String" }, 
-            { .name = "Entity" }
+            { .name = "Entity" },
+            { .name = "Id" }
         }
     });
 

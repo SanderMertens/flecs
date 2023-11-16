@@ -365,6 +365,15 @@ int json_ser_type_op(
         }
         break;
     }
+    case EcsOpId: {
+        ecs_id_t id = *(const ecs_id_t*)vptr;
+        if (!id) {
+            ecs_strbuf_appendch(str, '0');
+        } else {
+            flecs_json_id(str, world, id);
+        }
+        break;
+    }
 
     case EcsOpU64:
     case EcsOpI64:
@@ -466,6 +475,7 @@ int json_ser_type_ops(
         case EcsOpUPtr:
         case EcsOpIPtr:
         case EcsOpEntity:
+        case EcsOpId:
         case EcsOpString:
         case EcsOpOpaque:
             if (json_ser_type_op(world, op, base, str)) {

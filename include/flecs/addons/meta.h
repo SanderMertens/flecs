@@ -136,6 +136,7 @@ FLECS_API extern const ecs_entity_t ecs_id(ecs_f32_t);
 FLECS_API extern const ecs_entity_t ecs_id(ecs_f64_t);
 FLECS_API extern const ecs_entity_t ecs_id(ecs_string_t);
 FLECS_API extern const ecs_entity_t ecs_id(ecs_entity_t);
+FLECS_API extern const ecs_entity_t ecs_id(ecs_id_t);
 
 /** Type kinds supported by meta addon */
 typedef enum ecs_type_kind_t {
@@ -175,7 +176,8 @@ typedef enum ecs_primitive_kind_t {
     EcsIPtr,
     EcsString,
     EcsEntity,
-    EcsPrimitiveKindLast = EcsEntity
+    EcsId,
+    EcsPrimitiveKindLast = EcsId
 } ecs_primitive_kind_t;
 
 /** Component added to primitive types */
@@ -394,6 +396,12 @@ typedef struct EcsOpaque {
         ecs_world_t *world,
         ecs_entity_t entity);
 
+    /** Assign (component) id value */
+    void (*assign_id)(
+        void *dst,
+        ecs_world_t *world,
+        ecs_id_t id);
+
     /** Assign null value */
     void (*assign_null)(
         void *dst);
@@ -484,7 +492,8 @@ typedef enum ecs_meta_type_op_kind_t {
     EcsOpIPtr,
     EcsOpString,
     EcsOpEntity,
-    EcsMetaTypeOpKindLast = EcsOpEntity
+    EcsOpId,
+    EcsMetaTypeOpKindLast = EcsOpId
 } ecs_meta_type_op_kind_t;
 
 typedef struct ecs_meta_type_op_t {
@@ -660,6 +669,18 @@ int ecs_meta_set_entity(
     ecs_meta_cursor_t *cursor,
     ecs_entity_t value);
 
+/** Set field with (component) id value */
+FLECS_API
+int ecs_meta_set_id(
+    ecs_meta_cursor_t *cursor,
+    ecs_id_t value);
+
+/** Set field with (component) id value */
+FLECS_API
+int ecs_meta_set_component(
+    ecs_meta_cursor_t *cursor,
+    ecs_id_t value);
+
 /** Set field with null value */
 FLECS_API
 int ecs_meta_set_null(
@@ -710,6 +731,11 @@ const char* ecs_meta_get_string(
  * This operation does not perform conversions. */
 FLECS_API
 ecs_entity_t ecs_meta_get_entity(
+    const ecs_meta_cursor_t *cursor);
+
+/** Get field value as (component) id. 
+ * This operation can convert from an entity. */
+ecs_id_t ecs_meta_get_id(
     const ecs_meta_cursor_t *cursor);
 
 /** Convert pointer of primitive kind to float. */

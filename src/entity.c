@@ -4053,6 +4053,7 @@ const ecs_type_info_t* ecs_get_type_info(
     ecs_id_t id)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(id != 0, ECS_INVALID_PARAMETER, NULL);
 
     world = ecs_get_world(world);
 
