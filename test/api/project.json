@@ -1042,7 +1042,9 @@
                 "on_remove_hook_check_offset",
                 "on_set_hook_check_offset",
                 "on_set_hook_on_override",
-                "on_set_hook_on_auto_override"
+                "on_set_hook_on_auto_override",
+                "batched_set_new_component_w_lifecycle",
+                "batched_get_mut_new_component_w_lifecycle"
             ]
         }, {
             "id": "Sorting",

@@ -4697,6 +4697,11 @@ void flecs_cmd_batch_for_entity(
                     ecs_move_t move = ti->hooks.move;
                     if (move) {
                         move(ptr.ptr, cmd->is._1.value, 1, ti);
+                        ecs_xtor_t dtor = ti->hooks.dtor;
+                        if (dtor) {
+                            dtor(cmd->is._1.value, 1, ti);
+                            cmd->is._1.value = NULL;
+                        }
                     } else {
                         ecs_os_memcpy(ptr.ptr, cmd->is._1.value, ti->size);
                     }

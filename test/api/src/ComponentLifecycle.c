@@ -3098,3 +3098,85 @@ void ComponentLifecycle_on_set_hook_on_auto_override(void) {
 
     ecs_fini(world);
 }
+
+void ComponentLifecycle_batched_set_new_component_w_lifecycle(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = ecs_ctor(Position),
+        .move = ecs_move(Position),
+        .copy = ecs_copy(Position),
+        .dtor = ecs_dtor(Position)
+    });
+
+    ecs_defer_begin(world);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_set(world, e, Position, {10, 20});
+    ecs_add(world, e, Tag); // to hit command batching
+
+    test_int(ctor_position, 1);
+    test_int(move_position, 0);
+    test_int(copy_position, 1);
+    test_int(dtor_position, 0);
+
+    ecs_defer_end(world);
+
+    test_int(ctor_position, 2);
+    test_int(move_position, 1);
+    test_int(copy_position, 1);
+    test_int(dtor_position, 1);
+
+    ecs_delete(world, e);
+
+    test_int(ctor_position, 2);
+    test_int(move_position, 1);
+    test_int(copy_position, 1);
+    test_int(dtor_position, 2);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_batched_get_mut_new_component_w_lifecycle(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = ecs_ctor(Position),
+        .move = ecs_move(Position),
+        .copy = ecs_copy(Position),
+        .dtor = ecs_dtor(Position)
+    });
+
+    ecs_defer_begin(world);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_get_mut(world, e, Position);
+    ecs_add(world, e, Tag); // to hit command batching
+
+    test_int(ctor_position, 1);
+    test_int(move_position, 0);
+    test_int(copy_position, 0);
+    test_int(dtor_position, 0);
+
+    ecs_defer_end(world);
+
+    test_int(ctor_position, 2);
+    test_int(move_position, 1);
+    test_int(copy_position, 0);
+    test_int(dtor_position, 1);
+
+    ecs_delete(world, e);
+
+    test_int(ctor_position, 2);
+    test_int(move_position, 1);
+    test_int(copy_position, 0);
+    test_int(dtor_position, 2);
+
+    ecs_fini(world);
+}

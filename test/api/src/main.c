@@ -990,6 +990,8 @@ void ComponentLifecycle_on_remove_hook_check_offset(void);
 void ComponentLifecycle_on_set_hook_check_offset(void);
 void ComponentLifecycle_on_set_hook_on_override(void);
 void ComponentLifecycle_on_set_hook_on_auto_override(void);
+void ComponentLifecycle_batched_set_new_component_w_lifecycle(void);
+void ComponentLifecycle_batched_get_mut_new_component_w_lifecycle(void);
 
 // Testsuite 'Sorting'
 void Sorting_sort_by_component(void);
@@ -6438,6 +6440,14 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "on_set_hook_on_auto_override",
         ComponentLifecycle_on_set_hook_on_auto_override
+    },
+    {
+        "batched_set_new_component_w_lifecycle",
+        ComponentLifecycle_batched_set_new_component_w_lifecycle
+    },
+    {
+        "batched_get_mut_new_component_w_lifecycle",
+        ComponentLifecycle_batched_get_mut_new_component_w_lifecycle
     }
 };
 
@@ -13136,7 +13146,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        85,
+        87,
         ComponentLifecycle_testcases
     },
     {
