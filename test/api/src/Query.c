@@ -9838,3 +9838,108 @@ void Query_set_this_w_wildcard(void) {
 
     ecs_fini(ecs);
 }
+
+void Query_singleton_w_inout_none(void) {
+    ecs_world_t *ecs = ecs_mini();
+
+    ECS_COMPONENT(ecs, Position);
+    ECS_COMPONENT(ecs, Velocity);
+    
+    ecs_singleton_set(ecs, Position, {10, 20});
+
+    ecs_entity_t e = ecs_set(ecs, 0, Velocity, {20, 30});
+
+    ecs_query_t *q = ecs_query(ecs, {
+        .filter.terms = {
+            { .id = ecs_id(Position), .src.id = EcsVariable },
+            { .id = ecs_id(Velocity), .inout = EcsInOutNone },
+        }
+    });
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(ecs, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    Position *p = ecs_field(&it, Position, 1);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+    test_assert(ecs_field(&it, Velocity, 2) == NULL);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(ecs);
+}
+
+void Query_singleton_w_inout_none_or(void) {
+    ecs_world_t *ecs = ecs_mini();
+
+    ECS_COMPONENT(ecs, Position);
+    ECS_COMPONENT(ecs, Velocity);
+    ECS_COMPONENT(ecs, Mass);
+
+    ecs_singleton_set(ecs, Position, {10, 20});
+
+    ecs_entity_t e = ecs_set(ecs, 0, Velocity, {20, 30});
+
+    ecs_query_t *q = ecs_query(ecs, {
+        .filter.terms = {
+            { .id = ecs_id(Position), .src.id = EcsVariable },
+            { .id = ecs_id(Velocity), .inout = EcsInOutNone, .oper = EcsOr },
+            { .id = ecs_id(Mass), .inout = EcsInOutNone },
+        }
+    });
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(ecs, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    Position *p = ecs_field(&it, Position, 1);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+    test_assert(ecs_field(&it, Velocity, 2) == NULL);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(ecs);
+}
+
+void Query_component_w_inout_none_or(void) {
+    ecs_world_t *ecs = ecs_mini();
+
+    ECS_COMPONENT(ecs, Position);
+    ECS_COMPONENT(ecs, Velocity);
+    ECS_COMPONENT(ecs, Mass);
+
+    ecs_entity_t e = ecs_set(ecs, 0, Velocity, {20, 30});
+    ecs_set(ecs, e, Position, {10, 20});
+
+    ecs_query_t *q = ecs_query(ecs, {
+        .filter.terms = {
+            { .id = ecs_id(Position) },
+            { .id = ecs_id(Velocity), .inout = EcsInOutNone, .oper = EcsOr },
+            { .id = ecs_id(Mass), .inout = EcsInOutNone },
+        }
+    });
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(ecs, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    Position *p = ecs_field(&it, Position, 1);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+    test_assert(ecs_field(&it, Velocity, 2) == NULL);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(ecs);
+}

@@ -1635,6 +1635,9 @@ void Query_set_this(void);
 void Query_set_this_no_match(void);
 void Query_set_this_is_true(void);
 void Query_set_this_w_wildcard(void);
+void Query_singleton_w_inout_none(void);
+void Query_singleton_w_inout_none_or(void);
+void Query_component_w_inout_none_or(void);
 
 // Testsuite 'Iter'
 void Iter_page_iter_0_0(void);
@@ -8995,6 +8998,18 @@ bake_test_case Query_testcases[] = {
     {
         "set_this_w_wildcard",
         Query_set_this_w_wildcard
+    },
+    {
+        "singleton_w_inout_none",
+        Query_singleton_w_inout_none
+    },
+    {
+        "singleton_w_inout_none_or",
+        Query_singleton_w_inout_none_or
+    },
+    {
+        "component_w_inout_none_or",
+        Query_component_w_inout_none_or
     }
 };
 
@@ -13181,7 +13196,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        240,
+        243,
         Query_testcases
     },
     {

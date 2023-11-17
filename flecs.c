@@ -10818,6 +10818,7 @@ int ecs_filter_finalize(
 
     f->flags |= EcsFilterMatchOnlyThis;
     for (i = 0; i < term_count; i ++) {
+        bool filter_term = false;
         ecs_term_t *term = &terms[i];
         ctx.term_index = i;
         if (flecs_term_finalize(world, term, &ctx)) {
@@ -10836,16 +10837,6 @@ int ecs_filter_finalize(
             }
         } else {
             field_count ++;
-        }
-
-        if (term->oper == EcsOr || (i && term[-1].oper == EcsOr)) {
-            ecs_term_t *first = flecs_filter_or_other_type(f, i);
-            if (first) {
-                filter_terms ++;
-                if (first == &term[-1]) {
-                    filter_terms ++;
-                }
-            }
         }
 
         term->field_index = field_count - 1;
@@ -10871,19 +10862,6 @@ int ecs_filter_finalize(
             term->inout = EcsInOutNone;
         }
 
-        if (term->inout == EcsInOutNone) {
-            filter_terms ++;
-        } else if (term->idr) {
-            if (!term->idr->type_info && !(term->idr->flags & EcsIdUnion)) {
-                filter_terms ++;
-            }
-        } else if (ecs_id_is_tag(world, term->id)) {
-            if (!ecs_id_is_union(world, term->id)) {
-                /* Union ids aren't filters because they return their target
-                 * as component value with type ecs_entity_t */
-                filter_terms ++;
-            }
-        }
         if ((term->id == EcsWildcard) || (term->id == 
             ecs_pair(EcsWildcard, EcsWildcard))) 
         {
@@ -10893,6 +10871,35 @@ int ecs_filter_finalize(
             if (term->inout == EcsInOutDefault) {
                 term->inout = EcsInOutNone;
             }
+        }
+
+        if (term->inout == EcsInOutNone) {
+            filter_term = true;
+        } else if (term->idr) {
+            if (!term->idr->type_info && !(term->idr->flags & EcsIdUnion)) {
+                filter_term = true;
+            }
+        } else if (ecs_id_is_tag(world, term->id)) {
+            if (!ecs_id_is_union(world, term->id)) {
+                /* Union ids aren't filters because they return their target
+                 * as component value with type ecs_entity_t */
+                filter_term = true;
+            }
+        }
+        if (!filter_term) {
+            if (term->oper == EcsOr || (i && term[-1].oper == EcsOr)) {
+                ecs_term_t *first = flecs_filter_or_other_type(f, i);
+                if (first) {
+                    if (first == &term[-1]) {
+                        filter_terms ++;
+                    }
+                    filter_term = true;
+                }
+            }
+        }
+
+        if (filter_term) {
+            filter_terms ++;
         }
 
         if (term->oper != EcsNot || !ecs_term_match_this(term)) {
@@ -10991,7 +10998,8 @@ int ecs_filter_finalize(
         f->sizes = NULL;
     }
 
-    if (filter_terms >= term_count) {
+    ecs_assert(filter_terms <= term_count, ECS_INTERNAL_ERROR, NULL);
+    if (filter_terms == term_count) {
         ECS_BIT_SET(f->flags, EcsFilterNoData);
     }
 

@@ -1697,7 +1697,10 @@
                 "set_this",
                 "set_this_no_match",
                 "set_this_is_true",
-                "set_this_w_wildcard"
+                "set_this_w_wildcard",
+                "singleton_w_inout_none",
+                "singleton_w_inout_none_or",
+                "component_w_inout_none_or"
             ]
         }, {
             "id": "Iter",
