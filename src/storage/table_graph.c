@@ -566,16 +566,8 @@ ecs_table_t *flecs_create_table(
 
     /* Update counters */
     world->info.table_count ++;
-    world->info.table_record_count += result->_->record_count;
-    world->info.table_storage_count += result->column_count;
     world->info.empty_table_count ++;
     world->info.table_create_total ++;
-    
-    if (!result->column_count) {
-        world->info.tag_table_count ++;
-    } else {
-        world->info.trivial_table_count += !(result->flags & EcsTableIsComplex);
-    }
 
     ecs_log_pop_2();
 

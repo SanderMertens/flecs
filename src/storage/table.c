@@ -1025,15 +1025,7 @@ void flecs_table_free(
 
     /* Update counters */
     world->info.table_count --;
-    world->info.table_record_count -= table->_->record_count;
-    world->info.table_storage_count -= table->column_count;
     world->info.table_delete_total ++;
-
-    if (!table->column_count) {
-        world->info.tag_table_count --;
-    } else {
-        world->info.trivial_table_count -= !(table->flags & EcsTableIsComplex);
-    }
 
     flecs_free_t(&world->allocator, ecs_table__t, table->_);
 
