@@ -2341,16 +2341,10 @@ void World_set_get_binding_context_w_free(void);
 void WorldInfo_get_tick(void);
 void WorldInfo_table_count(void);
 void WorldInfo_empty_table_count(void);
-void WorldInfo_tag_table_count(void);
-void WorldInfo_trivial_table_count(void);
-void WorldInfo_table_record_count(void);
-void WorldInfo_table_storage_count(void);
 void WorldInfo_table_create_count(void);
 void WorldInfo_table_delete_count(void);
-void WorldInfo_id_count(void);
 void WorldInfo_id_tag_component_count(void);
 void WorldInfo_id_pair_count(void);
-void WorldInfo_id_wildcard_count(void);
 
 // Testsuite 'Type'
 void Type_setup(void);
@@ -11752,22 +11746,6 @@ bake_test_case WorldInfo_testcases[] = {
         WorldInfo_empty_table_count
     },
     {
-        "tag_table_count",
-        WorldInfo_tag_table_count
-    },
-    {
-        "trivial_table_count",
-        WorldInfo_trivial_table_count
-    },
-    {
-        "table_record_count",
-        WorldInfo_table_record_count
-    },
-    {
-        "table_storage_count",
-        WorldInfo_table_storage_count
-    },
-    {
         "table_create_count",
         WorldInfo_table_create_count
     },
@@ -11776,20 +11754,12 @@ bake_test_case WorldInfo_testcases[] = {
         WorldInfo_table_delete_count
     },
     {
-        "id_count",
-        WorldInfo_id_count
-    },
-    {
         "id_tag_component_count",
         WorldInfo_id_tag_component_count
     },
     {
         "id_pair_count",
         WorldInfo_id_pair_count
-    },
-    {
-        "id_wildcard_count",
-        WorldInfo_id_wildcard_count
     }
 };
 
@@ -13280,7 +13250,7 @@ static bake_test_suite suites[] = {
         "WorldInfo",
         NULL,
         NULL,
-        13,
+        7,
         WorldInfo_testcases
     },
     {

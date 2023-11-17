@@ -2428,16 +2428,10 @@
                 "get_tick",
                 "table_count",
                 "empty_table_count",
-                "tag_table_count",
-                "trivial_table_count",
-                "table_record_count",
-                "table_storage_count",
                 "table_create_count",
                 "table_delete_count",
-                "id_count",
                 "id_tag_component_count",
-                "id_pair_count",
-                "id_wildcard_count"
+                "id_pair_count"
             ]
         }, {
             "id": "Type",
