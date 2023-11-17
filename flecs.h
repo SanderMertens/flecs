@@ -10523,23 +10523,6 @@ typedef struct {
     void *impl;
 } EcsRest;
 
-/* Global statistics */
-extern int64_t ecs_rest_request_count;
-extern int64_t ecs_rest_entity_count;
-extern int64_t ecs_rest_entity_error_count;
-extern int64_t ecs_rest_query_count;
-extern int64_t ecs_rest_query_error_count;
-extern int64_t ecs_rest_query_name_count;
-extern int64_t ecs_rest_query_name_error_count;
-extern int64_t ecs_rest_query_name_from_cache_count;
-extern int64_t ecs_rest_enable_count;
-extern int64_t ecs_rest_enable_error_count;
-extern int64_t ecs_rest_delete_count;
-extern int64_t ecs_rest_delete_error_count;
-extern int64_t ecs_rest_world_stats_count;
-extern int64_t ecs_rest_pipeline_stats_count;
-extern int64_t ecs_rest_stats_error_count;
-
 /** Create HTTP server for REST API. 
  * This allows for the creation of a REST server that can be managed by the
  * application without using Flecs systems.

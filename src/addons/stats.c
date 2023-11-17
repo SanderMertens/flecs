@@ -332,22 +332,6 @@ void ecs_world_stats_get(
     ECS_COUNTER_RECORD(&s->memory.stack_free_count, t, ecs_stack_allocator_free_count);
     ECS_GAUGE_RECORD(&s->memory.stack_outstanding_alloc_count, t, outstanding_allocs);
 
-#ifdef FLECS_REST
-    ECS_COUNTER_RECORD(&s->rest.request_count, t, ecs_rest_request_count);
-    ECS_COUNTER_RECORD(&s->rest.entity_count, t, ecs_rest_entity_count);
-    ECS_COUNTER_RECORD(&s->rest.entity_error_count, t, ecs_rest_entity_error_count);
-    ECS_COUNTER_RECORD(&s->rest.query_count, t, ecs_rest_query_count);
-    ECS_COUNTER_RECORD(&s->rest.query_error_count, t, ecs_rest_query_error_count);
-    ECS_COUNTER_RECORD(&s->rest.query_name_count, t, ecs_rest_query_name_count);
-    ECS_COUNTER_RECORD(&s->rest.query_name_error_count, t, ecs_rest_query_name_error_count);
-    ECS_COUNTER_RECORD(&s->rest.query_name_from_cache_count, t, ecs_rest_query_name_from_cache_count);
-    ECS_COUNTER_RECORD(&s->rest.enable_count, t, ecs_rest_enable_count);
-    ECS_COUNTER_RECORD(&s->rest.enable_error_count, t, ecs_rest_enable_error_count);
-    ECS_COUNTER_RECORD(&s->rest.world_stats_count, t, ecs_rest_world_stats_count);
-    ECS_COUNTER_RECORD(&s->rest.pipeline_stats_count, t, ecs_rest_pipeline_stats_count);
-    ECS_COUNTER_RECORD(&s->rest.stats_error_count, t, ecs_rest_stats_error_count);
-#endif
-
 #ifdef FLECS_HTTP
     ECS_COUNTER_RECORD(&s->http.request_received_count, t, ecs_http_request_received_count);
     ECS_COUNTER_RECORD(&s->http.request_invalid_count, t, ecs_http_request_invalid_count);
