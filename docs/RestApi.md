@@ -132,7 +132,7 @@ This section describes the endpoints of the REST API.
 ```
 GET /entity/<path>
 ```
-The entity endpoint requests data from an entity. The path is the entity path or name of the entity to query for. The reply is formatted according to the [JSON serializer Entity](JsonFormat.md#entity) type.
+The entity endpoint requests data from an entity. The path is the entity path or name of the entity to query for. The reply is formatted according to the [JSON serializer Entity](https://www.flecs.dev/flecs/md_docs_JsonFormat.html#autotoc_md405) type.
 
 The following parameters can be provided to the endpoint:
 
