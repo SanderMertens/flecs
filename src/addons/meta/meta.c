@@ -462,7 +462,7 @@ int flecs_add_member_to_struct(
 
             if (!member_size || !member_alignment) {
                 char *path = ecs_get_fullpath(world, elem->type);
-                ecs_err("member '%s' has 0 size/alignment");
+                ecs_err("member '%s' has 0 size/alignment", path);
                 ecs_os_free(path);
                 return -1;
             }
@@ -512,7 +512,7 @@ int flecs_add_member_to_struct(
 
         if (!member_size || !member_alignment) {
             char *path = ecs_get_fullpath(world, elem->type);
-            ecs_err("member '%s' has 0 size/alignment");
+            ecs_err("member '%s' has 0 size/alignment", path);
             ecs_os_free(path);
             return -1;
         }
