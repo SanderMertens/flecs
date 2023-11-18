@@ -26,6 +26,7 @@ void PrimitiveTypes_float(void);
 void PrimitiveTypes_double(void);
 void PrimitiveTypes_string(void);
 void PrimitiveTypes_entity(void);
+void PrimitiveTypes_id(void);
 void PrimitiveTypes_builtin_bool(void);
 void PrimitiveTypes_builtin_byte(void);
 void PrimitiveTypes_builtin_char(void);
@@ -43,6 +44,7 @@ void PrimitiveTypes_builtin_float(void);
 void PrimitiveTypes_builtin_double(void);
 void PrimitiveTypes_builtin_string(void);
 void PrimitiveTypes_builtin_entity(void);
+void PrimitiveTypes_builtin_id(void);
 void PrimitiveTypes_struct_w_bool(void);
 void PrimitiveTypes_struct_w_byte(void);
 void PrimitiveTypes_struct_w_char(void);
@@ -60,6 +62,7 @@ void PrimitiveTypes_struct_w_float(void);
 void PrimitiveTypes_struct_w_double(void);
 void PrimitiveTypes_struct_w_string(void);
 void PrimitiveTypes_struct_w_entity(void);
+void PrimitiveTypes_struct_w_id(void);
 void PrimitiveTypes_primitive_init(void);
 void PrimitiveTypes_primitive_w_short_notation(void);
 
@@ -215,6 +218,7 @@ void Serialized_ops_float(void);
 void Serialized_ops_double(void);
 void Serialized_ops_string(void);
 void Serialized_ops_entity(void);
+void Serialized_ops_id(void);
 void Serialized_ops_struct_bool(void);
 void Serialized_ops_struct_bool_bool(void);
 void Serialized_ops_struct_i32(void);
@@ -280,6 +284,9 @@ void Cursor_set_string_to_null(void);
 void Cursor_set_entity(void);
 void Cursor_set_entity_to_number(void);
 void Cursor_set_entity_to_0(void);
+void Cursor_set_id(void);
+void Cursor_set_id_to_number(void);
+void Cursor_set_id_to_0(void);
 void Cursor_set_enum(void);
 void Cursor_set_bitmask(void);
 void Cursor_set_signed_as_unsigned(void);
@@ -291,6 +298,9 @@ void Cursor_set_string_to_null_as_unsigned(void);
 void Cursor_set_entity_as_signed(void);
 void Cursor_set_entity_as_unsigned(void);
 void Cursor_set_entity_as_signed_out_of_range(void);
+void Cursor_set_id_as_signed(void);
+void Cursor_set_id_as_unsigned(void);
+void Cursor_set_id_as_signed_out_of_range(void);
 void Cursor_set_str_to_bool(void);
 void Cursor_set_str_to_char(void);
 void Cursor_set_str_literal_to_char(void);
@@ -302,8 +312,10 @@ void Cursor_set_str_to_u64(void);
 void Cursor_set_str_to_f32(void);
 void Cursor_set_str_to_f64(void);
 void Cursor_set_str_to_entity(void);
+void Cursor_set_str_to_id(void);
 void Cursor_set_str_to_invalid_bool(void);
 void Cursor_set_str_to_invalid_entity(void);
+void Cursor_set_str_to_invalid_id(void);
 void Cursor_struct_set_i32(void);
 void Cursor_struct_set_i32_i32(void);
 void Cursor_struct_set_i32_i32_i32(void);
@@ -349,6 +361,7 @@ void Cursor_opaque_set_uint(void);
 void Cursor_opaque_set_float(void);
 void Cursor_opaque_set_string(void);
 void Cursor_opaque_set_entity(void);
+void Cursor_opaque_set_id(void);
 void Cursor_opaque_set_int_vec(void);
 void Cursor_opaque_set_int_vec_empty(void);
 void Cursor_opaque_set_int_vec_resize_smaller(void);
@@ -407,6 +420,7 @@ void DeserializeFromExpr_negative_int(void);
 void DeserializeFromExpr_negative_float(void);
 void DeserializeFromExpr_string(void);
 void DeserializeFromExpr_entity(void);
+void DeserializeFromExpr_id(void);
 void DeserializeFromExpr_enum(void);
 void DeserializeFromExpr_bitmask(void);
 void DeserializeFromExpr_struct_enum(void);
@@ -415,6 +429,7 @@ void DeserializeFromExpr_struct_i32(void);
 void DeserializeFromExpr_struct_i32_neg(void);
 void DeserializeFromExpr_struct_i32_i32(void);
 void DeserializeFromExpr_struct_entity(void);
+void DeserializeFromExpr_struct_id(void);
 void DeserializeFromExpr_struct_nested_i32(void);
 void DeserializeFromExpr_struct_nested_i32_i32(void);
 void DeserializeFromExpr_struct_2_nested_i32_i32(void);
@@ -461,6 +476,7 @@ void SerializeToExpr_float(void);
 void SerializeToExpr_double(void);
 void SerializeToExpr_string(void);
 void SerializeToExpr_entity(void);
+void SerializeToExpr_id(void);
 void SerializeToExpr_enum(void);
 void SerializeToExpr_bitmask(void);
 void SerializeToExpr_float_nan(void);
@@ -472,6 +488,7 @@ void SerializeToExpr_struct_bitmask(void);
 void SerializeToExpr_struct_i32(void);
 void SerializeToExpr_struct_i32_i32(void);
 void SerializeToExpr_struct_entity(void);
+void SerializeToExpr_struct_id(void);
 void SerializeToExpr_array_i32_3(void);
 void SerializeToExpr_array_struct_i32_i32(void);
 void SerializeToExpr_array_array_i32_3(void);
@@ -518,6 +535,7 @@ void DeserializeFromJson_struct_negative_int(void);
 void DeserializeFromJson_struct_negative_float(void);
 void DeserializeFromJson_struct_string(void);
 void DeserializeFromJson_struct_entity(void);
+void DeserializeFromJson_struct_id(void);
 void DeserializeFromJson_struct_enum(void);
 void DeserializeFromJson_struct_bitmask(void);
 void DeserializeFromJson_struct_i32_i32(void);
@@ -620,6 +638,7 @@ void SerializeToJson_struct_double(void);
 void SerializeToJson_struct_string(void);
 void SerializeToJson_struct_entity(void);
 void SerializeToJson_struct_entity_after_float(void);
+void SerializeToJson_struct_id(void);
 void SerializeToJson_struct_float_nan(void);
 void SerializeToJson_struct_float_inf(void);
 void SerializeToJson_struct_double_nan(void);
@@ -779,6 +798,7 @@ void SerializeTypeInfoToJson_float(void);
 void SerializeTypeInfoToJson_double(void);
 void SerializeTypeInfoToJson_string(void);
 void SerializeTypeInfoToJson_entity(void);
+void SerializeTypeInfoToJson_id(void);
 void SerializeTypeInfoToJson_enum(void);
 void SerializeTypeInfoToJson_bitmask(void);
 void SerializeTypeInfoToJson_struct(void);
@@ -951,6 +971,7 @@ void DeserExprOperators_var_chain_func(void);
 void DeserExprOperators_interpolate_string_w_i32_var(void);
 void DeserExprOperators_interpolate_string_w_string_var(void);
 void DeserExprOperators_interpolate_string_w_entity_var(void);
+void DeserExprOperators_interpolate_string_w_id_var(void);
 void DeserExprOperators_interpolate_string_w_var_not_found(void);
 void DeserExprOperators_interpolate_string_w_entity_var_0(void);
 void DeserExprOperators_interpolate_string_w_var_special_chars(void);
@@ -1101,6 +1122,10 @@ bake_test_case PrimitiveTypes_testcases[] = {
         PrimitiveTypes_entity
     },
     {
+        "id",
+        PrimitiveTypes_id
+    },
+    {
         "builtin_bool",
         PrimitiveTypes_builtin_bool
     },
@@ -1169,6 +1194,10 @@ bake_test_case PrimitiveTypes_testcases[] = {
         PrimitiveTypes_builtin_entity
     },
     {
+        "builtin_id",
+        PrimitiveTypes_builtin_id
+    },
+    {
         "struct_w_bool",
         PrimitiveTypes_struct_w_bool
     },
@@ -1235,6 +1264,10 @@ bake_test_case PrimitiveTypes_testcases[] = {
     {
         "struct_w_entity",
         PrimitiveTypes_struct_w_entity
+    },
+    {
+        "struct_w_id",
+        PrimitiveTypes_struct_w_id
     },
     {
         "primitive_init",
@@ -1817,6 +1850,10 @@ bake_test_case Serialized_testcases[] = {
         Serialized_ops_entity
     },
     {
+        "ops_id",
+        Serialized_ops_id
+    },
+    {
         "ops_struct_bool",
         Serialized_ops_struct_bool
     },
@@ -2072,6 +2109,18 @@ bake_test_case Cursor_testcases[] = {
         Cursor_set_entity_to_0
     },
     {
+        "set_id",
+        Cursor_set_id
+    },
+    {
+        "set_id_to_number",
+        Cursor_set_id_to_number
+    },
+    {
+        "set_id_to_0",
+        Cursor_set_id_to_0
+    },
+    {
         "set_enum",
         Cursor_set_enum
     },
@@ -2114,6 +2163,18 @@ bake_test_case Cursor_testcases[] = {
     {
         "set_entity_as_signed_out_of_range",
         Cursor_set_entity_as_signed_out_of_range
+    },
+    {
+        "set_id_as_signed",
+        Cursor_set_id_as_signed
+    },
+    {
+        "set_id_as_unsigned",
+        Cursor_set_id_as_unsigned
+    },
+    {
+        "set_id_as_signed_out_of_range",
+        Cursor_set_id_as_signed_out_of_range
     },
     {
         "set_str_to_bool",
@@ -2160,12 +2221,20 @@ bake_test_case Cursor_testcases[] = {
         Cursor_set_str_to_entity
     },
     {
+        "set_str_to_id",
+        Cursor_set_str_to_id
+    },
+    {
         "set_str_to_invalid_bool",
         Cursor_set_str_to_invalid_bool
     },
     {
         "set_str_to_invalid_entity",
         Cursor_set_str_to_invalid_entity
+    },
+    {
+        "set_str_to_invalid_id",
+        Cursor_set_str_to_invalid_id
     },
     {
         "struct_set_i32",
@@ -2346,6 +2415,10 @@ bake_test_case Cursor_testcases[] = {
     {
         "opaque_set_entity",
         Cursor_opaque_set_entity
+    },
+    {
+        "opaque_set_id",
+        Cursor_opaque_set_id
     },
     {
         "opaque_set_int_vec",
@@ -2575,6 +2648,10 @@ bake_test_case DeserializeFromExpr_testcases[] = {
         DeserializeFromExpr_entity
     },
     {
+        "id",
+        DeserializeFromExpr_id
+    },
+    {
         "enum",
         DeserializeFromExpr_enum
     },
@@ -2605,6 +2682,10 @@ bake_test_case DeserializeFromExpr_testcases[] = {
     {
         "struct_entity",
         DeserializeFromExpr_struct_entity
+    },
+    {
+        "struct_id",
+        DeserializeFromExpr_struct_id
     },
     {
         "struct_nested_i32",
@@ -2786,6 +2867,10 @@ bake_test_case SerializeToExpr_testcases[] = {
         SerializeToExpr_entity
     },
     {
+        "id",
+        SerializeToExpr_id
+    },
+    {
         "enum",
         SerializeToExpr_enum
     },
@@ -2828,6 +2913,10 @@ bake_test_case SerializeToExpr_testcases[] = {
     {
         "struct_entity",
         SerializeToExpr_struct_entity
+    },
+    {
+        "struct_id",
+        SerializeToExpr_struct_id
     },
     {
         "array_i32_3",
@@ -3007,6 +3096,10 @@ bake_test_case DeserializeFromJson_testcases[] = {
     {
         "struct_entity",
         DeserializeFromJson_struct_entity
+    },
+    {
+        "struct_id",
+        DeserializeFromJson_struct_id
     },
     {
         "struct_enum",
@@ -3410,6 +3503,10 @@ bake_test_case SerializeToJson_testcases[] = {
     {
         "struct_entity_after_float",
         SerializeToJson_struct_entity_after_float
+    },
+    {
+        "struct_id",
+        SerializeToJson_struct_id
     },
     {
         "struct_float_nan",
@@ -4031,6 +4128,10 @@ bake_test_case SerializeTypeInfoToJson_testcases[] = {
     {
         "entity",
         SerializeTypeInfoToJson_entity
+    },
+    {
+        "id",
+        SerializeTypeInfoToJson_id
     },
     {
         "enum",
@@ -4706,6 +4807,10 @@ bake_test_case DeserExprOperators_testcases[] = {
         DeserExprOperators_interpolate_string_w_entity_var
     },
     {
+        "interpolate_string_w_id_var",
+        DeserExprOperators_interpolate_string_w_id_var
+    },
+    {
         "interpolate_string_w_var_not_found",
         DeserExprOperators_interpolate_string_w_var_not_found
     },
@@ -5018,7 +5123,7 @@ static bake_test_suite suites[] = {
         "PrimitiveTypes",
         NULL,
         NULL,
-        53,
+        56,
         PrimitiveTypes_testcases
     },
     {
@@ -5074,42 +5179,42 @@ static bake_test_suite suites[] = {
         "Serialized",
         NULL,
         NULL,
-        60,
+        61,
         Serialized_testcases
     },
     {
         "Cursor",
         NULL,
         NULL,
-        126,
+        135,
         Cursor_testcases
     },
     {
         "DeserializeFromExpr",
         NULL,
         NULL,
-        55,
+        57,
         DeserializeFromExpr_testcases
     },
     {
         "SerializeToExpr",
         NULL,
         NULL,
-        52,
+        54,
         SerializeToExpr_testcases
     },
     {
         "DeserializeFromJson",
         NULL,
         NULL,
-        102,
+        103,
         DeserializeFromJson_testcases
     },
     {
         "SerializeToJson",
         NULL,
         NULL,
-        42,
+        43,
         SerializeToJson_testcases
     },
     {
@@ -5130,7 +5235,7 @@ static bake_test_suite suites[] = {
         "SerializeTypeInfoToJson",
         NULL,
         NULL,
-        39,
+        40,
         SerializeTypeInfoToJson_testcases
     },
     {
@@ -5151,7 +5256,7 @@ static bake_test_suite suites[] = {
         "DeserExprOperators",
         NULL,
         NULL,
-        125,
+        126,
         DeserExprOperators_testcases
     },
     {

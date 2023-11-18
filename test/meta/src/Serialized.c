@@ -295,6 +295,19 @@ void Serialized_ops_entity(void) {
     ecs_fini(world);
 }
 
+void Serialized_ops_id(void) {
+    ecs_world_t *world = ecs_init();
+
+    const EcsMetaTypeSerialized *s = ecs_get(
+        world, ecs_id(ecs_id_t), EcsMetaTypeSerialized);
+    test_assert(s != NULL);
+    test_int(ecs_vec_count(&s->ops), 1);
+
+    test_op(&s->ops, 0, EcsOpPrimitive + EcsId, 1, 1, ecs_id(ecs_id_t));
+
+    ecs_fini(world);
+}
+
 void Serialized_ops_struct_bool(void) {
     typedef struct {
         ecs_bool_t x;

@@ -110,6 +110,11 @@ struct cursor {
         return ecs_meta_set_entity(&m_cursor, value);
     }
 
+    /** Set (component) id value */
+    int set_id(flecs::id_t value) {
+        return ecs_meta_set_id(&m_cursor, value);
+    }
+
     /** Set null value */
     int set_null() {
         return ecs_meta_set_null(&m_cursor);

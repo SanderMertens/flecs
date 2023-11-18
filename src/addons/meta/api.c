@@ -37,6 +37,7 @@ bool flecs_type_is_number(
     case EcsIPtr:
     case EcsString:
     case EcsEntity:
+    case EcsId:
         return false;
     default:
         ecs_abort(ECS_INVALID_PARAMETER, NULL);

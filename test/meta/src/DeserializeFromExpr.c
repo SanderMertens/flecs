@@ -284,6 +284,21 @@ void DeserializeFromExpr_entity(void) {
     ecs_fini(world);
 }
 
+void DeserializeFromExpr_id(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_id_t value = 0;
+    const char *ptr = ecs_parse_expr(world, "flecs.core", &ecs_value(ecs_id_t, &value), NULL);
+    test_assert(ptr != NULL);
+    test_uint(value, EcsFlecsCore);
+
+    ptr = ecs_parse_expr(world, "0", &ecs_value(ecs_id_t, &value), NULL);
+    test_assert(ptr != NULL);
+    test_uint(value, 0);
+
+    ecs_fini(world);
+}
+
 void DeserializeFromExpr_enum(void) {
     typedef enum {
         Red, Blue, Green
@@ -618,6 +633,31 @@ void DeserializeFromExpr_struct_entity(void) {
         .entity = ecs_entity(world, {.name = "T"}),
         .members = {
             {"entity", ecs_id(ecs_entity_t)}
+        }
+    });
+
+    T value = {0};
+
+    const char *ptr = ecs_parse_expr(world, "{flecs.core}", &(ecs_value_t){t, &value}, NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value.entity, EcsFlecsCore);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromExpr_struct_id(void) {
+    typedef struct {
+        ecs_id_t entity;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"entity", ecs_id(ecs_id_t)}
         }
     });
 

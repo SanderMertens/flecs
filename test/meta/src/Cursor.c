@@ -283,6 +283,45 @@ void Cursor_set_entity_to_0(void) {
     ecs_fini(world);
 }
 
+void Cursor_set_id(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_id_t value = 0;
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_id_t), &value);
+    test_ok( ecs_meta_set_uint(&cur, 500) );
+
+    test_uint(value, 500);
+
+    ecs_fini(world);
+}
+
+void Cursor_set_id_to_number(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_id_t value = 0;
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_id_t), &value);
+    test_ok( ecs_meta_set_uint(&cur, 500) );
+
+    test_uint(value, 500);
+
+    ecs_fini(world);
+}
+
+void Cursor_set_id_to_0(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_id_t value = 0;
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_id_t), &value);
+    test_ok( ecs_meta_set_uint(&cur, 0) );
+
+    test_uint(value, 0);
+
+    ecs_fini(world);
+}
+
 void Cursor_set_enum(void) {
     ecs_world_t *world = ecs_init();
 
@@ -453,6 +492,48 @@ void Cursor_set_entity_as_signed_out_of_range(void) {
     ecs_fini(world);
 }
 
+void Cursor_set_id_as_signed(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_id_t value = 0;
+    ecs_id_t e = ecs_new_id(world);
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_id_t), &value);
+    test_ok( ecs_meta_set_int(&cur, (int64_t)e) );
+
+    test_uint(value, e);
+
+    ecs_fini(world);
+}
+
+void Cursor_set_id_as_unsigned(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_id_t value = 0;
+    ecs_id_t e = ecs_new_id(world);
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_id_t), &value);
+    test_ok( ecs_meta_set_uint(&cur, e) );
+
+    test_uint(value, e);
+
+    ecs_fini(world);
+}
+
+void Cursor_set_id_as_signed_out_of_range(void) {
+    ecs_log_set_level(-4);
+    ecs_world_t *world = ecs_init();
+
+    ecs_id_t value = 0;
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_id_t), &value);
+    test_fail( ecs_meta_set_int(&cur, -10) );
+
+    test_uint(value, 0);
+
+    ecs_fini(world);
+}
+
 void Cursor_set_str_to_bool(void) {
     ecs_world_t *world = ecs_init();
 
@@ -615,6 +696,19 @@ void Cursor_set_str_to_entity(void) {
     ecs_fini(world);
 }
 
+void Cursor_set_str_to_id(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_id_t value = 0;
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_id_t), &value);
+    test_ok( ecs_meta_set_string(&cur, "flecs.core") );
+
+    test_uint(value, EcsFlecsCore);
+
+    ecs_fini(world);
+}
+
 void Cursor_set_str_to_invalid_bool(void) {
     ecs_log_set_level(-4);
 
@@ -638,6 +732,21 @@ void Cursor_set_str_to_invalid_entity(void) {
     ecs_entity_t value = 0;
 
     ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_entity_t), &value);
+    test_fail( ecs_meta_set_string(&cur, "flops.core") );
+
+    test_uint(value, 0);
+
+    ecs_fini(world);
+}
+
+void Cursor_set_str_to_invalid_id(void) {
+    ecs_log_set_level(-4);
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_id_t value = 0;
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_id_t), &value);
     test_fail( ecs_meta_set_string(&cur, "flops.core") );
 
     test_uint(value, 0);
@@ -2710,8 +2819,16 @@ typedef struct {
     ecs_entity_t value;
 } Opaque_entity;
 
+typedef struct {
+    ecs_id_t value;
+} Opaque_id;
+
 static void Opaque_entity_set(void *ptr, ecs_world_t *world, ecs_entity_t value) {
     ((Opaque_entity*)ptr)->value = value;
+}
+
+static void Opaque_id_set(void *ptr, ecs_world_t *world, ecs_id_t value) {
+    ((Opaque_id*)ptr)->value = value;
 }
 
 void Cursor_opaque_set_bool(void) {
@@ -2863,6 +2980,30 @@ void Cursor_opaque_set_entity(void) {
     test_int(0, ecs_meta_set_entity(&cur, e1));
     test_uint(v.value, e1);
     test_int(0, ecs_meta_set_entity(&cur, e2));
+    test_uint(v.value, e2);
+
+    ecs_fini(world);
+}
+
+void Cursor_opaque_set_id(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Opaque_id);
+
+    ecs_opaque(world, {
+        .entity = ecs_id(Opaque_id),
+        .type.as_type = ecs_id(ecs_id_t),
+        .type.assign_id = Opaque_id_set
+    });
+
+    Opaque_id v = { 0 };
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e2 = ecs_new_id(world);
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(Opaque_id), &v);
+    test_int(0, ecs_meta_set_id(&cur, e1));
+    test_uint(v.value, e1);
+    test_int(0, ecs_meta_set_id(&cur, e2));
     test_uint(v.value, e2);
 
     ecs_fini(world);

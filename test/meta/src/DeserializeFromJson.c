@@ -568,6 +568,33 @@ void DeserializeFromJson_struct_entity(void) {
     ecs_fini(world);
 }
 
+void DeserializeFromJson_struct_id(void) {
+    typedef struct {
+        ecs_id_t v;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"v", ecs_id(ecs_id_t)}
+        }
+    });
+
+    test_assert(t != 0);
+
+    T value = {0};
+
+    const char *ptr = ecs_ptr_from_json(world, t, &value, "{\"v\": \"flecs.core\"}", NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_uint(value.v, EcsFlecsCore);
+
+    ecs_fini(world);
+}
+
 void DeserializeFromJson_struct_enum(void) {
     typedef enum {
         Red, Blue, Green

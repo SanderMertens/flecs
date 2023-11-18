@@ -2088,6 +2088,27 @@ void DeserExprOperators_interpolate_string_w_entity_var(void) {
     ecs_fini(world);
 }
 
+void DeserExprOperators_interpolate_string_w_id_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_vars_t vars = {0};
+    ecs_vars_init(world, &vars);
+
+    ecs_expr_var_t *v = ecs_vars_declare(
+        &vars, "foo", ecs_id(ecs_id_t));
+    test_assert(v != NULL);
+    *(ecs_id_t*)v->value.ptr = ecs_id(ecs_i32_t);
+
+    char *result = ecs_interpolate_string(world, "$foo", &vars);
+    test_assert(result != NULL);
+    test_str(result, "flecs.meta.i32");
+    ecs_os_free(result);
+
+    ecs_vars_fini(&vars);
+
+    ecs_fini(world);
+}
+
 void DeserExprOperators_interpolate_string_w_var_not_found(void) {
     ecs_world_t *world = ecs_init();
 

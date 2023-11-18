@@ -2307,6 +2307,10 @@ void ecs_os_set_api_defaults(void);
 #define ecs_os_memcpy_n(ptr1, ptr2, T, count) ecs_os_memcpy(ptr1, ptr2, ECS_SIZEOF(T) * count)
 #define ecs_os_memcmp_t(ptr1, ptr2, T) ecs_os_memcmp(ptr1, ptr2, ECS_SIZEOF(T))
 
+#define ecs_os_memmove_t(ptr1, ptr2, T) ecs_os_memmove(ptr1, ptr2, ECS_SIZEOF(T))
+#define ecs_os_memmove_n(ptr1, ptr2, T, count) ecs_os_memmove(ptr1, ptr2, ECS_SIZEOF(T) * count)
+#define ecs_os_memmove_t(ptr1, ptr2, T) ecs_os_memmove(ptr1, ptr2, ECS_SIZEOF(T))
+
 #define ecs_os_strcmp(str1, str2) strcmp(str1, str2)
 #define ecs_os_memset_t(ptr, value, T) ecs_os_memset(ptr, value, ECS_SIZEOF(T))
 #define ecs_os_memset_n(ptr, value, T, count) ecs_os_memset(ptr, value, ECS_SIZEOF(T) * count)
@@ -13384,6 +13388,7 @@ FLECS_API extern const ecs_entity_t ecs_id(ecs_f32_t);
 FLECS_API extern const ecs_entity_t ecs_id(ecs_f64_t);
 FLECS_API extern const ecs_entity_t ecs_id(ecs_string_t);
 FLECS_API extern const ecs_entity_t ecs_id(ecs_entity_t);
+FLECS_API extern const ecs_entity_t ecs_id(ecs_id_t);
 
 /** Type kinds supported by meta addon */
 typedef enum ecs_type_kind_t {
@@ -13423,7 +13428,8 @@ typedef enum ecs_primitive_kind_t {
     EcsIPtr,
     EcsString,
     EcsEntity,
-    EcsPrimitiveKindLast = EcsEntity
+    EcsId,
+    EcsPrimitiveKindLast = EcsId
 } ecs_primitive_kind_t;
 
 /** Component added to primitive types */
@@ -13642,6 +13648,12 @@ typedef struct EcsOpaque {
         ecs_world_t *world,
         ecs_entity_t entity);
 
+    /** Assign (component) id value */
+    void (*assign_id)(
+        void *dst,
+        ecs_world_t *world,
+        ecs_id_t id);
+
     /** Assign null value */
     void (*assign_null)(
         void *dst);
@@ -13732,7 +13744,8 @@ typedef enum ecs_meta_type_op_kind_t {
     EcsOpIPtr,
     EcsOpString,
     EcsOpEntity,
-    EcsMetaTypeOpKindLast = EcsOpEntity
+    EcsOpId,
+    EcsMetaTypeOpKindLast = EcsOpId
 } ecs_meta_type_op_kind_t;
 
 typedef struct ecs_meta_type_op_t {
@@ -13908,6 +13921,18 @@ int ecs_meta_set_entity(
     ecs_meta_cursor_t *cursor,
     ecs_entity_t value);
 
+/** Set field with (component) id value */
+FLECS_API
+int ecs_meta_set_id(
+    ecs_meta_cursor_t *cursor,
+    ecs_id_t value);
+
+/** Set field with (component) id value */
+FLECS_API
+int ecs_meta_set_component(
+    ecs_meta_cursor_t *cursor,
+    ecs_id_t value);
+
 /** Set field with null value */
 FLECS_API
 int ecs_meta_set_null(
@@ -13958,6 +13983,11 @@ const char* ecs_meta_get_string(
  * This operation does not perform conversions. */
 FLECS_API
 ecs_entity_t ecs_meta_get_entity(
+    const ecs_meta_cursor_t *cursor);
+
+/** Get field value as (component) id. 
+ * This operation can convert from an entity. */
+ecs_id_t ecs_meta_get_id(
     const ecs_meta_cursor_t *cursor);
 
 /** Convert pointer of primitive kind to float. */
@@ -17705,6 +17735,11 @@ struct cursor {
         return ecs_meta_set_entity(&m_cursor, value);
     }
 
+    /** Set (component) id value */
+    int set_id(flecs::id_t value) {
+        return ecs_meta_set_id(&m_cursor, value);
+    }
+
     /** Set null value */
     int set_null() {
         return ecs_meta_set_null(&m_cursor);
@@ -17858,6 +17893,16 @@ struct opaque {
         this->desc.type.assign_entity = 
             reinterpret_cast<decltype(
                 this->desc.type.assign_entity)>(func);
+        return *this;
+    }
+
+    /** Assign (component) id value */
+    opaque& assign_id(
+        void (*func)(T *dst, ecs_world_t *world, ecs_id_t id))
+    {
+        this->desc.type.assign_id = 
+            reinterpret_cast<decltype(
+                this->desc.type.assign_id)>(func);
         return *this;
     }
 
@@ -24330,6 +24375,16 @@ struct each_delegate : public delegate {
         self->invoke(iter);
     }
 
+    // Create instance of delegate
+    static each_delegate* make(const Func& func) {
+        return FLECS_NEW(each_delegate)(func);
+    }
+
+    // Function that can be used as callback to free delegate
+    static void free(void *obj) {
+        _::free_obj<each_delegate>(static_cast<each_delegate*>(obj));
+    }
+
     // Static function to call for component on_add hook
     static void run_add(ecs_iter_t *iter) {
         component_binding_ctx *ctx = reinterpret_cast<component_binding_ctx*>(
@@ -24999,6 +25054,10 @@ struct entity_with_delegate<Func, if_t< is_callable<Func>::value > >
 };
 
 } // namespace _
+
+// Experimental: allows using the each delegate for use cases outside of flecs
+template <typename Func, typename ... Args>
+using delegate = _::each_delegate<typename std::decay<Func>::type, Args...>;
 
 } // namespace flecs
 
@@ -26020,8 +26079,7 @@ struct component : untyped_component {
     /** Register on_add hook. */
     template <typename Func>
     component<T>& on_add(Func&& func) {
-        using Delegate = typename _::each_delegate<
-            typename std::decay<Func>::type, T>;
+        using Delegate = typename _::each_delegate<typename std::decay<Func>::type, T>;
         flecs::type_hooks_t h = get_hooks();
         ecs_assert(h.on_add == nullptr, ECS_INVALID_OPERATION, 
             "on_add hook is already set");

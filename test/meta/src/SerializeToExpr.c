@@ -551,6 +551,36 @@ void SerializeToExpr_entity(void) {
     ecs_fini(world);
 }
 
+void SerializeToExpr_id(void) {
+    ecs_world_t *world = ecs_init();
+
+    {
+    ecs_id_t value = 0;
+    char *expr = ecs_ptr_to_expr(world, ecs_id(ecs_id_t), &value);
+    test_assert(expr != NULL);
+    test_str(expr, "0");
+    ecs_os_free(expr);
+    }
+
+    {
+    ecs_id_t value = EcsFlecsCore;
+    char *expr = ecs_ptr_to_expr(world, ecs_id(ecs_id_t), &value);
+    test_assert(expr != NULL);
+    test_str(expr, "flecs.core");
+    ecs_os_free(expr);
+    }
+
+    {
+    ecs_id_t value = ecs_pair(EcsChildOf, EcsFlecsCore);
+    char *expr = ecs_ptr_to_expr(world, ecs_id(ecs_id_t), &value);
+    test_assert(expr != NULL);
+    test_str(expr, "(ChildOf,flecs.core)");
+    ecs_os_free(expr);
+    }
+
+    ecs_fini(world);
+}
+
 void SerializeToExpr_enum(void) {
     typedef enum {
         Red, Blue, Green
@@ -866,6 +896,29 @@ void SerializeToExpr_struct_entity(void) {
         .entity = ecs_entity(world, {.name = "T"}),
         .members = {
             {"e", ecs_id(ecs_entity_t)}
+        }
+    });
+
+    T value = {EcsFlecsCore};
+    char *expr = ecs_ptr_to_expr(world, t, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "{e: flecs.core}");
+    ecs_os_free(expr);
+
+    ecs_fini(world);
+}
+
+void SerializeToExpr_struct_id(void) {
+    typedef struct {
+        ecs_id_t e;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"e", ecs_id(ecs_id_t)}
         }
     });
 

@@ -46,6 +46,7 @@ meta_test_type(EcsF32, f32)
 meta_test_type(EcsF64, f64)
 meta_test_type(EcsString, string)
 meta_test_type(EcsEntity, entity)
+meta_test_type(EcsId, id)
 
 void PrimitiveTypes_bool(void) {
     ecs_world_t *world = ecs_init();
@@ -234,6 +235,17 @@ void PrimitiveTypes_entity(void) {
     ecs_fini(world);
 }
 
+void PrimitiveTypes_id(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_set(world, 0, EcsPrimitive, {.kind = EcsId});
+    test_assert(t != 0);
+
+    meta_test_id(world, t);
+
+    ecs_fini(world);
+}
+
 void PrimitiveTypes_builtin_bool(void) {
     ecs_world_t *world = ecs_init();
 
@@ -370,6 +382,14 @@ void PrimitiveTypes_builtin_entity(void) {
     ecs_fini(world);
 }
 
+void PrimitiveTypes_builtin_id(void) {
+    ecs_world_t *world = ecs_init();
+
+    meta_test_builtin(world, id);
+
+    ecs_fini(world);
+}
+
 #define STRUCT_W_PRIMITIVE_TEST(PrimitiveType)\
     typedef struct {\
         ecs_bool_t before;\
@@ -466,6 +486,10 @@ void PrimitiveTypes_struct_w_entity(void) {
     STRUCT_W_PRIMITIVE_TEST(ecs_entity_t)
 }
 
+void PrimitiveTypes_struct_w_id(void) {
+    STRUCT_W_PRIMITIVE_TEST(ecs_id_t)
+}
+
 void PrimitiveTypes_primitive_init(void) {
     ecs_world_t *world = ecs_init();
 
@@ -509,3 +533,4 @@ void PrimitiveTypes_primitive_w_short_notation(void) {
 
     ecs_fini(world);
 }
+

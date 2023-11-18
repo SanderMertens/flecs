@@ -141,6 +141,15 @@ int flecs_expr_ser_primitive(
         }
         break;
     }
+    case EcsId: {
+        ecs_id_t id = *(const ecs_id_t*)base;
+        if (!id) {
+            ecs_strbuf_appendch(str, '0');
+        } else {
+            ecs_id_str_buf(world, id, str);
+        }
+        break;
+    }
     default:
         ecs_err("invalid primitive kind");
         return -1;
@@ -370,6 +379,7 @@ int flecs_expr_ser_type_op(
     case EcsOpUPtr:
     case EcsOpIPtr:
     case EcsOpEntity:
+    case EcsOpId:
     case EcsOpString:
     case EcsOpOpaque:
         if (flecs_expr_ser_primitive(world, flecs_expr_op_to_primitive_kind(op->kind), 
@@ -454,6 +464,7 @@ int flecs_expr_ser_type_ops(
         case EcsOpUPtr:
         case EcsOpIPtr:
         case EcsOpEntity:
+        case EcsOpId:
         case EcsOpString:
         case EcsOpOpaque:
             if (flecs_expr_ser_type_op(world, op, base, str, is_expr)) {
