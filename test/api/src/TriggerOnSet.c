@@ -503,53 +503,6 @@ void SetPosition(ecs_iter_t *it) {
     probe_iter(it);
 }
 
-void TriggerOnSet_on_set_after_snapshot_restore(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-    ECS_OBSERVER(world, SetPosition, EcsOnSet, Position);
-
-    const ecs_entity_t *ids = ecs_bulk_new(world, Position, 10);
-    test_assert(ids != NULL);
-
-    ecs_entity_t id_arr[10];
-    memcpy(id_arr, ids, sizeof(ecs_entity_t) * 10);
-
-    int32_t i;
-    for (i = 0; i < 10; i ++) {
-        test_assert(ecs_has(world, ids[i], Position));
-        ecs_set(world, ids[i], Position, {i, i * 2});
-    }
-
-    Probe ctx = { 0 };
-    ecs_set_ctx(world, &ctx, NULL);
-
-    ecs_snapshot_t *s = ecs_snapshot_take(world);
-
-    test_int(ctx.invoked, 0);
-
-    /* Delete one entity, so we have more confidence we're triggering on the 
-     * right entities */
-    ecs_delete(world, id_arr[0]);
-    
-    test_int(ctx.invoked, 0);
-
-    ecs_snapshot_restore(world, s);
-
-    test_int(ctx.count, 10);
-    test_int(ctx.invoked, 1);
-    test_int(ctx.system, SetPosition);
-    test_int(ctx.term_count, 1);
-    test_int(ctx.c[0][0], ecs_id(Position));
-    test_null(ctx.param);
-    
-    for (i = 0; i < 10; i ++) {
-        test_int(ctx.e[i], id_arr[i]);
-    }
-
-    ecs_fini(world);
-}
-
 void TriggerOnSet_emplace(void) {
     ecs_world_t *world = ecs_mini();
 

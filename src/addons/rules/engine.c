@@ -137,7 +137,7 @@ ecs_entity_t flecs_rule_var_get_entity(
 
     ecs_assert(var->range.count == 1, ECS_INTERNAL_ERROR, NULL);
     ecs_table_t *table = var->range.table;
-    ecs_entity_t *entities = table->data.entities.array;
+    ecs_entity_t *entities = flecs_table_entities_array(table);
     var->entity = entities[var->range.offset];
     return var->entity;
 }
@@ -627,7 +627,7 @@ bool flecs_rule_trav_fixed_src_reflexive(
     ecs_entity_t second)
 {
     ecs_table_t *table = range->table;
-    ecs_entity_t *entities = table->data.entities.array;
+    ecs_entity_t *entities = flecs_table_entities_array(table);
     int32_t count = range->count;
     if (!count) {
         count = ecs_table_count(table);
@@ -796,8 +796,7 @@ bool flecs_rule_trav_yield_reflexive_src(
         return false;
     }
 
-    ecs_entity_t entity = ecs_vec_get_t(
-        &range->table->data.entities, ecs_entity_t, trav_ctx->index)[0];
+    ecs_entity_t entity = flecs_table_entities_array(range->table)[trav_ctx->index];
     flecs_rule_set_trav_match(op, -1, trav, entity, ctx);
 
     /* Hijack existing variable to return one result at a time */
@@ -1001,7 +1000,7 @@ bool flecs_rule_each(
         if (end) {
             end += range.offset;
         } else {
-            end = table->data.entities.count;
+            end = ecs_table_count(table);
         }
         row = ++ op_ctx->row;
         if (op_ctx->row >= end) {
@@ -1011,7 +1010,7 @@ bool flecs_rule_each(
 
     ecs_assert(row < ecs_table_count(table), ECS_INTERNAL_ERROR, NULL);
 
-    ecs_entity_t *entities = table->data.entities.array;
+    ecs_entity_t *entities = flecs_table_entities_array(table);
     ecs_entity_t e;
     do {
         e = entities[row ++];
@@ -1195,8 +1194,7 @@ bool flecs_rule_pred_eq_w_range(
         ecs_var_id_t l = first_var;
         ctx->vars[l].range = r;
         if (r.count == 1) {
-            ctx->vars[l].entity = ecs_vec_get_t(&r.table->data.entities, 
-                ecs_entity_t, r.offset)[0];
+            ctx->vars[l].entity = flecs_table_entities_array(r.table)[0];
         }
         return true;
     } else {
@@ -1371,7 +1369,7 @@ bool flecs_rule_pred_match(
         l = op_ctx->range;
     }
 
-    const EcsIdentifier *names = l.table->data.columns[op_ctx->name_col].data.array;
+    const EcsIdentifier *names = flecs_table_column(l.table, op_ctx->name_col)->data.array;
     int32_t count = l.offset + l.count, offset = -1;
     for (; op_ctx->index < count; op_ctx->index ++) {
         const char *name = names[op_ctx->index].value;

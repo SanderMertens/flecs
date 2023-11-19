@@ -20,7 +20,6 @@
 #include "storage/entity_index.h"
 #include "datastructures/stack_allocator.h"
 #include "flecs/private/bitset.h"
-#include "flecs/private/switch_list.h"
 #include "storage/table.h"
 
 /* Used in id records to keep track of entities used with id flags */
@@ -103,13 +102,6 @@ typedef struct ecs_table_cache_t {
     ecs_table_cache_list_t empty_tables;
 } ecs_table_cache_t;
 
-/* Sparse query term */
-typedef struct flecs_switch_term_t {
-    ecs_switch_t *sw_column;
-    ecs_entity_t sw_case; 
-    int32_t signature_column_index;
-} flecs_switch_term_t;
-
 /* Bitset query term */
 typedef struct flecs_bitset_term_t {
     ecs_bitset_t *bs_column;
@@ -131,7 +123,6 @@ typedef struct flecs_flat_table_term_t {
 /* Entity filter. This filters the entities of a matched table, for example when
  * it has disabled components or union relationships (switch). */
 typedef struct ecs_entity_filter_t {
-    ecs_vec_t sw_terms;              /* Terms with switch (union) entity filter */
     ecs_vec_t bs_terms;              /* Terms with bitset (toggle) entity filter */
     ecs_vec_t ft_terms;              /* Terms with components from flattened tree */
     int32_t flat_tree_column;
@@ -449,6 +440,9 @@ typedef struct ecs_store_t {
 
     /* Table lookup by hash */
     ecs_hashmap_t table_map;         /* hashmap<ecs_type_t, ecs_table_t*> */
+
+    /* Table data lookup by hash */
+    ecs_hashmap_t table_data_map;    /* hashmap<ecs_type_t, ecs_table_data_t*> */
 
     /* Root table */
     ecs_table_t root;

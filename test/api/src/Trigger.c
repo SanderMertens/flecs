@@ -4857,39 +4857,3 @@ void Trigger_on_set_superset_after_filter_observer_w_on_add_2(void) {
 
     ecs_fini(world);
 }
-
-void Trigger_propagate_w_union_pair(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_TAG(world, Tag);
-    ECS_TAG(world, RelX);
-    ECS_ENTITY(world, RelY, Union);
-
-    ecs_entity_t base = ecs_new_id(world);
-    ecs_entity_t tgt = ecs_new_id(world);
-    ecs_new_w_pair(world, EcsIsA, base);
-
-    Probe ctx = {0};
-    ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0] = {
-            .id = Tag,
-            .src.flags = EcsUp
-        },
-        .events = {EcsOnAdd},
-        .callback = Trigger,
-        .ctx = &ctx
-    });
-    test_int(ctx.invoked, 0);
-    
-    ecs_add_id(world, base, Tag);
-    test_int(ctx.invoked, 1);
-
-    ecs_os_zeromem(&ctx);
-    ecs_add_pair(world, base, RelX, tgt);
-    test_int(ctx.invoked, 0);
-
-    ecs_add_pair(world, base, RelY, tgt);
-    test_int(ctx.invoked, 0);
-
-    ecs_fini(world);
-}

@@ -47,7 +47,6 @@ const ecs_entity_t EcsFinal =                       FLECS_HI_COMPONENT_ID + 17;
 const ecs_entity_t EcsDontInherit =                 FLECS_HI_COMPONENT_ID + 18;
 const ecs_entity_t EcsAlwaysOverride =              FLECS_HI_COMPONENT_ID + 19;
 const ecs_entity_t EcsTag =                         FLECS_HI_COMPONENT_ID + 20;
-const ecs_entity_t EcsUnion =                       FLECS_HI_COMPONENT_ID + 21;
 const ecs_entity_t EcsExclusive =                   FLECS_HI_COMPONENT_ID + 22;
 const ecs_entity_t EcsAcyclic =                     FLECS_HI_COMPONENT_ID + 23;
 const ecs_entity_t EcsTraversable =                 FLECS_HI_COMPONENT_ID + 24;
@@ -556,6 +555,9 @@ void flecs_init_store(
     /* Initialize table map */
     flecs_table_hashmap_init(world, &world->store.table_map);
 
+    /* Initialize table data map */
+    flecs_table_hashmap_init(world, &world->store.table_data_map);
+
     /* Initialize one root table per stage */
     flecs_init_root_table(world);
 }
@@ -576,14 +578,6 @@ void flecs_clean_tables(
         ecs_table_t *t = flecs_sparse_get_dense_t(&world->store.tables, 
             ecs_table_t, i);
         flecs_table_free(world, t);
-    }
-
-    /* Free table types separately so that if application destructors rely on
-     * a type it's still valid. */
-    for (i = 1; i < count; i ++) {
-        ecs_table_t *t = flecs_sparse_get_dense_t(&world->store.tables, 
-            ecs_table_t, i);
-        flecs_table_free_type(world, t);
     }
 
     /* Clear the root table */
@@ -611,8 +605,8 @@ void flecs_fini_root_tables(
             continue; /* Filter out modules */
         }
 
-        int32_t i, count = table->data.entities.count;
-        ecs_entity_t *entities = table->data.entities.array;
+        int32_t i, count = ecs_table_count(table);
+        ecs_entity_t *entities = flecs_table_entities_array(table);
 
         if (fini_targets) {
             /* Only delete entities that are used as pair target. Iterate 
@@ -667,6 +661,7 @@ void flecs_fini_store(ecs_world_t *world) {
     flecs_table_free(world, &world->store.root);
     flecs_entities_clear(world);
     flecs_hashmap_fini(&world->store.table_map);
+    flecs_hashmap_fini(&world->store.table_data_map);
 
     ecs_allocator_t *a = &world->allocator;
     ecs_vec_fini_t(a, &world->store.records, ecs_table_record_t);
@@ -1307,11 +1302,14 @@ void flecs_fini_unset_tables(
     ecs_world_t *world)
 {
     ecs_sparse_t *tables = &world->store.tables;
-    int32_t i, count = flecs_sparse_count(tables);
+    int32_t i, table_count = flecs_sparse_count(tables);
 
-    for (i = 0; i < count; i ++) {
+    for (i = 1; i < table_count; i ++) {
         ecs_table_t *table = flecs_sparse_get_dense_t(tables, ecs_table_t, i);
-        flecs_table_remove_actions(world, table);
+        int32_t count = ecs_table_count(table);
+        if (count) {
+            flecs_notify_on_remove(world, table, NULL, 0, count, &table->type);
+        }
     }
 }
 
@@ -1608,7 +1606,7 @@ void ecs_set_entity_generation(
     ecs_record_t *r = flecs_entities_get(world, entity_with_generation);
     if (r && r->table) {
         int32_t row = ECS_RECORD_TO_ROW(r->row);
-        ecs_entity_t *entities = r->table->data.entities.array;
+        ecs_entity_t *entities = flecs_table_entities_array(r->table);
         entities[row] = entity_with_generation;
     }
 }
@@ -1939,7 +1937,7 @@ void flecs_process_empty_queries(
 
             for (i = 0; i < count; i ++) {
                 ecs_query_t *query = queries[i].poly;
-                ecs_entity_t *entities = table->data.entities.array;
+                ecs_entity_t *entities = flecs_table_entities_array(table);
                 if (!ecs_query_table_count(query)) {
                     ecs_add_id(world, entities[i], EcsEmpty);
                 }
@@ -1948,6 +1946,23 @@ void flecs_process_empty_queries(
     }
 
     flecs_defer_end(world, &world->stages[0]);
+}
+
+static
+bool flecs_table_records_update_empty(
+    ecs_table_t *table)
+{
+    bool result = false;
+    bool is_empty = ecs_table_count(table) == 0;
+
+    int32_t i, count = table->_->record_count;
+    for (i = 0; i < count; i ++) {
+        ecs_table_record_t *tr = &table->_->records[i];
+        ecs_table_cache_t *cache = tr->hdr.cache;
+        result |= ecs_table_cache_set_empty(cache, table, is_empty);
+    }
+
+    return result;
 }
 
 /** Walk over tables that had a state change which requires bookkeeping */

@@ -62,9 +62,6 @@ struct each_delegate;
 #ifdef FLECS_TIMER
 #include "mixins/timer/decl.hpp"
 #endif
-#ifdef FLECS_SNAPSHOT
-#include "mixins/snapshot/decl.hpp"
-#endif
 #ifdef FLECS_DOC
 #include "mixins/doc/decl.hpp"
 #endif

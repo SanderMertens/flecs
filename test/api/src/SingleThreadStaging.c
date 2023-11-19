@@ -2721,34 +2721,6 @@ void SingleThreadStaging_modify_after_lock(void) {
     ecs_fini(world);
 }
 
-void SingleThreadStaging_get_case_from_stage(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_ENTITY(world, Switch, Union);
-    ECS_TAG(world, CaseOne);
-    ECS_TAG(world, CaseTwo);
-
-    ecs_entity_t e = ecs_new_w_pair(world, Switch, CaseOne);
-
-    ecs_frame_begin(world, 1);
-
-    ecs_readonly_begin(world);
-
-    ecs_world_t *stage = ecs_get_stage(world, 0);
-
-    ecs_entity_t c = ecs_get_target(world, e, Switch, 0);
-    test_assert(c == CaseOne);
-
-    c = ecs_get_target(stage, e, Switch, 0);
-    test_assert(c == CaseOne);
-
-    ecs_readonly_end(world);
-
-    ecs_frame_end(world);
-
-    ecs_fini(world);
-}
-
 void SingleThreadStaging_get_object_from_stage(void) {
     ecs_world_t *world = ecs_init();
 

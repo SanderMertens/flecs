@@ -405,7 +405,7 @@ void ecs_iter_to_vars(
             } else {
                 ecs_table_range_t *range = &query_var->range;
                 if (range->count == 1) {
-                    ecs_entity_t *entities = range->table->data.entities.array;
+                    ecs_entity_t *entities = flecs_table_entities_array(range->table);
                     e_ptr = &entities[range->offset];
                 }
             }

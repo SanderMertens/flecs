@@ -150,13 +150,6 @@ void flecs_query_notify(
     ecs_query_t *query,
     ecs_query_event_t *event);
 
-ecs_id_t flecs_to_public_id(
-    ecs_id_t id);
-
-ecs_id_t flecs_from_public_id(
-    ecs_world_t *world,
-    ecs_id_t id);
-
 void flecs_filter_apply_iter_flags(
     ecs_iter_t *it,
     const ecs_filter_t *filter);
@@ -228,8 +221,7 @@ void flecs_entity_filter_init(
     ecs_entity_filter_t **entity_filter,
     const ecs_filter_t *filter,
     const ecs_table_t *table,
-    ecs_id_t *ids,
-    int32_t *columns);
+    ecs_id_t *ids);
 
 void flecs_entity_filter_fini(
     ecs_world_t *world,
@@ -246,9 +238,8 @@ uint64_t flecs_hash(
     const void *data,
     ecs_size_t length);
 
-uint64_t flecs_wyhash(
-    const void *data,
-    ecs_size_t length);
+#define flecs_hash_n(data, T, length)\
+    flecs_hash(data, ECS_SIZEOF(T) * length)
 
 /* Get next power of 2 */
 int32_t flecs_next_pow_of_2(
@@ -306,7 +297,6 @@ bool flecs_isident(
 int32_t flecs_search_w_idr(
     const ecs_world_t *world,
     const ecs_table_t *table,
-    ecs_id_t id,
     ecs_id_t *id_out,
     ecs_id_record_t *idr);
 

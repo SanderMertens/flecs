@@ -221,6 +221,31 @@ void* ecs_vec_grow(
     return ECS_ELEM(v->array, size, count);
 }
 
+void ecs_vec_merge(
+    struct ecs_allocator_t *allocator,
+    ecs_vec_t *dst,
+    ecs_vec_t *src,
+    ecs_size_t size)
+{
+    int32_t dst_count = dst->count;
+
+    if (!dst_count) {
+        ecs_vec_fini(allocator, dst, size);
+        *dst = *src;
+        src->array = NULL;
+        src->count = 0;
+        src->size = 0;
+    } else {
+        int32_t src_count = src->count;
+        ecs_vec_set_count(allocator, dst, size, dst_count + src_count);
+
+        void *dst_ptr = ECS_ELEM(dst->array, size, dst_count);
+        void *src_ptr = src->array;
+        ecs_os_memcpy(dst_ptr, src_ptr, size * src_count);
+        ecs_vec_fini(allocator, src, size);
+    }
+}
+
 void* ecs_vec_append(
     ecs_allocator_t *allocator,
     ecs_vec_t *v,

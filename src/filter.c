@@ -724,7 +724,7 @@ int flecs_term_finalize(
         first_id = term->first.id;
     }
 
-    term->idr = flecs_query_id_record_get(world, term->id);
+    term->idr = flecs_id_record_get(world, term->id);
     ecs_flags32_t id_flags = term->idr ? term->idr->flags : 0;
 
     if (first_id) {
@@ -842,32 +842,6 @@ int flecs_term_finalize(
     }
 
     return 0;
-}
-
-ecs_id_t flecs_to_public_id(
-    ecs_id_t id)
-{
-    if (ECS_PAIR_FIRST(id) == EcsUnion) {
-        return ecs_pair(ECS_PAIR_SECOND(id), EcsWildcard);
-    } else {
-        return id;
-    }
-}
-
-ecs_id_t flecs_from_public_id(
-    ecs_world_t *world,
-    ecs_id_t id)
-{
-    if (ECS_HAS_ID_FLAG(id, PAIR)) {
-        ecs_entity_t first = ECS_PAIR_FIRST(id);
-        ecs_id_record_t *idr = flecs_id_record_ensure(world, 
-            ecs_pair(first, EcsWildcard));
-        if (idr->flags & EcsIdUnion) {
-            return ecs_pair(EcsUnion, first);
-        }
-    }
-
-    return id;
 }
 
 bool ecs_identifier_is_0(
@@ -1187,15 +1161,11 @@ int ecs_filter_finalize(
         if (term->inout == EcsInOutNone) {
             filter_term = true;
         } else if (term->idr) {
-            if (!term->idr->type_info && !(term->idr->flags & EcsIdUnion)) {
+            if (!term->idr->type_info) {
                 filter_term = true;
             }
         } else if (ecs_id_is_tag(world, term->id)) {
-            if (!ecs_id_is_union(world, term->id)) {
-                /* Union ids aren't filters because they return their target
-                 * as component value with type ecs_entity_t */
-                filter_term = true;
-            }
+            filter_term = true;
         }
         if (!filter_term) {
             if (term->oper == EcsOr || (i && term[-1].oper == EcsOr)) {
@@ -1280,28 +1250,14 @@ int ecs_filter_finalize(
 
             if (idr) {
                 if (!ECS_IS_PAIR(idr->id) || ECS_PAIR_FIRST(idr->id) != EcsWildcard) {
-                    if (idr->flags & EcsIdUnion) {
-                        f->sizes[field] = ECS_SIZEOF(ecs_entity_t);
-                    } else if (idr->type_info) {
+                    if (idr->type_info) {
                         f->sizes[field] = idr->type_info->size;
                     }
                 }
             } else {
-                bool is_union = false;
-                if (ECS_IS_PAIR(term->id)) {
-                    ecs_entity_t first = ecs_pair_first(world, term->id);
-                    if (ecs_has_id(world, first, EcsUnion)) {
-                        is_union = true;
-                    }
-                }
-                if (is_union) {
-                    f->sizes[field] = ECS_SIZEOF(ecs_entity_t);
-                } else {
-                    const ecs_type_info_t *ti = ecs_get_type_info(
-                        world, term->id);
-                    if (ti) {
-                        f->sizes[field] = ti->size;
-                    }
+                const ecs_type_info_t *ti = ecs_get_type_info(world, term->id);
+                if (ti) {
+                    f->sizes[field] = ti->size;
                 }
             }
         }
@@ -2245,7 +2201,7 @@ void term_iter_init(
     if (src->flags & EcsSelf) {
         iter->self_index = term->idr;
         if (!iter->self_index) {
-            iter->self_index = flecs_query_id_record_get(world, term->id);
+            iter->self_index = flecs_id_record_get(world, term->id);
         }
     }
 
@@ -2458,7 +2414,7 @@ bool flecs_term_iter_next(
             iter->cur_match = 0;
             iter->last_column = tr->index;
             iter->column = tr->index + 1;
-            iter->id = flecs_to_public_id(table->type.array[tr->index]);
+            iter->id = table->type.array[tr->index];
         }
 
         if (iter->cur == iter->set_index) {
@@ -2504,7 +2460,7 @@ bool flecs_term_iter_set_table(
             iter->match_count = tr->count;
             iter->last_column = tr->index;
             iter->column = tr->index + 1;
-            iter->id = flecs_to_public_id(table->type.array[tr->index]);
+            iter->id = table->type.array[tr->index];
         }
     }
 
@@ -2629,7 +2585,7 @@ int32_t ecs_filter_pivot_term(
             continue;
         }
 
-        ecs_id_record_t *idr = flecs_query_id_record_get(world, id);
+        ecs_id_record_t *idr = flecs_id_record_get(world, id);
         if (!idr) {
             /* If one of the terms does not match with any data, iterator 
              * should not return anything */

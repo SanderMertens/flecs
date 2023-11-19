@@ -664,7 +664,7 @@ const char* flecs_json_parse_column(
     ecs_vec_t *records,
     const ecs_from_json_desc_t *desc)
 {
-    if (!table->column_count) {
+    if (!ecs_table_column_count(table)) {
         ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
             "table has no components");
         goto error;
@@ -688,7 +688,7 @@ const char* flecs_json_parse_column(
     }
 
     ecs_json_token_t token_kind = 0;
-    ecs_column_t *column = &table->data.columns[data_column];
+    ecs_column_t *column = flecs_table_column(table, data_column);
     ecs_type_info_t *ti = column->ti;
     ecs_size_t size = ti->size;
     ecs_entity_t type = ti->component;

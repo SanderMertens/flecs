@@ -665,7 +665,7 @@ int flecs_uni_observer_init(
     if (!observer->last_event_id) {
         observer->last_event_id = &observer->last_event_id_storage;
     }
-    observer->register_id = flecs_from_public_id(world, term->id);
+    observer->register_id = term->id;
     term->field_index = desc->term_index;
 
     if (ecs_id_is_tag(world, term->id)) {

@@ -11,130 +11,6 @@
 
 #include "private_api.h"
 
-static
-int flecs_entity_filter_find_smallest_term(
-    ecs_table_t *table,
-    ecs_entity_filter_iter_t *iter)
-{
-    ecs_assert(table->_ != NULL, ECS_INTERNAL_ERROR, NULL);
-    flecs_switch_term_t *sw_terms = ecs_vec_first(&iter->entity_filter->sw_terms);
-    int32_t i, count = ecs_vec_count(&iter->entity_filter->sw_terms);
-    int32_t min = INT_MAX, index = 0;
-
-    for (i = 0; i < count; i ++) {
-        /* The array with sparse queries for the matched table */
-        flecs_switch_term_t *sparse_column = &sw_terms[i];
-
-        /* Pointer to the switch column struct of the table */
-        ecs_switch_t *sw = sparse_column->sw_column;
-
-        /* If the sparse column pointer hadn't been retrieved yet, do it now */
-        if (!sw) {
-            /* Get the table column index from the signature column index */
-            int32_t table_column_index = iter->columns[
-                sparse_column->signature_column_index];
-
-            /* Translate the table column index to switch column index */
-            table_column_index -= table->_->sw_offset;
-            ecs_assert(table_column_index >= 1, ECS_INTERNAL_ERROR, NULL);
-
-            /* Get the sparse column */
-            sw = sparse_column->sw_column = 
-                &table->_->sw_columns[table_column_index - 1];
-        }
-
-        /* Find the smallest column */
-        int32_t case_count = flecs_switch_case_count(sw, sparse_column->sw_case);
-        if (case_count < min) {
-            min = case_count;
-            index = i + 1;
-        }
-    }
-
-    return index;
-}
-
-static
-int flecs_entity_filter_switch_next(
-    ecs_table_t *table,
-    ecs_entity_filter_iter_t *iter,
-    bool filter)
-{
-    bool first_iteration = false;
-    int32_t switch_smallest;
-
-    if (!(switch_smallest = iter->sw_smallest)) {
-        switch_smallest = iter->sw_smallest = 
-            flecs_entity_filter_find_smallest_term(table, iter);
-        first_iteration = true;
-    }
-
-    switch_smallest -= 1;
-
-    flecs_switch_term_t *columns = ecs_vec_first(&iter->entity_filter->sw_terms);
-    flecs_switch_term_t *column = &columns[switch_smallest];
-    ecs_switch_t *sw, *sw_smallest = column->sw_column;
-    ecs_entity_t case_smallest = column->sw_case;
-
-    /* Find next entity to iterate in sparse column */
-    int32_t first, sparse_first = iter->sw_offset;
-
-    if (!filter) {
-        if (first_iteration) {
-            first = flecs_switch_first(sw_smallest, case_smallest);
-        } else {
-            first = flecs_switch_next(sw_smallest, sparse_first);
-        }
-    } else {
-        int32_t cur_first = iter->range.offset, cur_count = iter->range.count;
-        first = cur_first;
-        while (flecs_switch_get(sw_smallest, first) != case_smallest) {
-            first ++;
-            if (first >= (cur_first + cur_count)) {
-                first = -1;
-                break;
-            }
-        }
-    }
-
-    if (first == -1) {
-        goto done;
-    }
-
-    /* Check if entity matches with other sparse columns, if any */
-    int32_t i, count = ecs_vec_count(&iter->entity_filter->sw_terms);
-    do {
-        for (i = 0; i < count; i ++) {
-            if (i == switch_smallest) {
-                /* Already validated this one */
-                continue;
-            }
-
-            column = &columns[i];
-            sw = column->sw_column;
-
-            if (flecs_switch_get(sw, first) != column->sw_case) {
-                first = flecs_switch_next(sw_smallest, first);
-                if (first == -1) {
-                    goto done;
-                }
-            }
-        }
-    } while (i != count);
-
-    iter->range.offset = iter->sw_offset = first;
-    iter->range.count = 1;
-
-    return 0;
-done:
-    /* Iterated all elements in the sparse list, we should move to the
-     * next matched table. */
-    iter->sw_smallest = 0;
-    iter->sw_offset = 0;
-
-    return -1;
-}
-
 #define BS_MAX ((uint64_t)0xFFFFFFFFFFFFFFFF)
 
 static
@@ -190,7 +66,7 @@ int flecs_entity_filter_bitset_next(
 
     int32_t i, count = ecs_vec_count(&iter->entity_filter->bs_terms);
     flecs_bitset_term_t *terms = ecs_vec_first(&iter->entity_filter->bs_terms);
-    int32_t bs_offset = table->_->bs_offset;
+    int32_t bs_offset = table->data->bs_offset;
     int32_t first = iter->bs_offset;
     int32_t last = 0;
 
@@ -201,7 +77,7 @@ int flecs_entity_filter_bitset_next(
         if (!bs) {
             int32_t index = column->column_index;
             ecs_assert((index - bs_offset >= 0), ECS_INTERNAL_ERROR, NULL);
-            bs = &table->_->bs_columns[index - bs_offset];
+            bs = &flecs_table_data(table)->bitsets[index - bs_offset].data;
             terms[i].bs_column = bs;
         }
         
@@ -354,7 +230,7 @@ int32_t flecs_get_flattened_target(
     if (table->flags & EcsTableHasTarget) {
         int32_t col = table->column_map[table->_->ft_offset];
         ecs_assert(col != -1, ECS_INTERNAL_ERROR, NULL);
-        EcsTarget *next = table->data.columns[col].data.array;
+        EcsTarget *next = flecs_table_column(table, col)->data.array;
         next = ECS_ELEM_T(next, EcsTarget, ECS_RECORD_TO_ROW(r->row));
         return flecs_get_flattened_target(
             world, next, rel, id, src_out, tr_out);
@@ -369,27 +245,22 @@ void flecs_entity_filter_init(
     ecs_entity_filter_t **entity_filter,
     const ecs_filter_t *filter,
     const ecs_table_t *table,
-    ecs_id_t *ids,
-    int32_t *columns)
+    ecs_id_t *ids)
 {
     ecs_poly_assert(world, ecs_world_t);
     ecs_assert(entity_filter != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(filter != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ids != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_allocator_t *a = &world->allocator;
     ecs_entity_filter_t ef;
     ecs_os_zeromem(&ef);
-    ecs_vec_t *sw_terms = &ef.sw_terms;
     ecs_vec_t *bs_terms = &ef.bs_terms;
     ecs_vec_t *ft_terms = &ef.ft_terms;
     if (*entity_filter) {
-        ef.sw_terms = (*entity_filter)->sw_terms;
         ef.bs_terms = (*entity_filter)->bs_terms;
         ef.ft_terms = (*entity_filter)->ft_terms;
     }
-    ecs_vec_reset_t(a, sw_terms, flecs_switch_term_t);
     ecs_vec_reset_t(a, bs_terms, flecs_bitset_term_t);
     ecs_vec_reset_t(a, ft_terms, flecs_flat_table_term_t);
     ecs_term_t *terms = filter->terms;
@@ -397,40 +268,7 @@ void flecs_entity_filter_init(
     bool has_filter = false;
     ef.flat_tree_column = -1;
 
-    /* Look for union fields */
-    if (table->flags & EcsTableHasUnion) {
-        for (i = 0; i < term_count; i ++) {
-            if (ecs_term_match_0(&terms[i])) {
-                continue;
-            }
-
-            ecs_id_t id = terms[i].id;
-            if (ECS_HAS_ID_FLAG(id, PAIR) && ECS_PAIR_SECOND(id) == EcsWildcard) {
-                continue;
-            }
-            
-            int32_t field = terms[i].field_index;
-            int32_t column = columns[field];
-            if (column <= 0) {
-                continue;
-            }
-
-            ecs_id_t table_id = table->type.array[column - 1];
-            if (ECS_PAIR_FIRST(table_id) != EcsUnion) {
-                continue;
-            }
-
-            flecs_switch_term_t *el = ecs_vec_append_t(a, sw_terms, 
-                flecs_switch_term_t);
-            el->signature_column_index = field;
-            el->sw_case = ecs_pair_second(world, id);
-            el->sw_column = NULL;
-            ids[field] = id;
-            has_filter = true;
-        }
-    }
-
-    /* Look for disabled fields */
+    /* Look for toggle fields */
     if (table->flags & EcsTableHasToggle) {
         for (i = 0; i < term_count; i ++) {
             if (ecs_term_match_0(&terms[i])) {
@@ -506,7 +344,6 @@ void flecs_entity_filter_fini(
         ecs_vec_fini_t(NULL, &fields[i].monitor, flecs_flat_monitor_t);
     }
 
-    ecs_vec_fini_t(a, &ef->sw_terms, flecs_switch_term_t);
     ecs_vec_fini_t(a, &ef->bs_terms, flecs_bitset_term_t);
     ecs_vec_fini_t(a, &ef->ft_terms, flecs_flat_table_term_t);
     ecs_os_free(ef);
@@ -516,7 +353,6 @@ int flecs_entity_filter_next(
     ecs_entity_filter_iter_t *it)
 {
     ecs_table_t *table = it->range.table;
-    flecs_switch_term_t *sw_terms = ecs_vec_first(&it->entity_filter->sw_terms);
     flecs_bitset_term_t *bs_terms = ecs_vec_first(&it->entity_filter->bs_terms);
     ecs_entity_filter_t *ef = it->entity_filter;
     int32_t flat_tree_column = ef->flat_tree_column;
@@ -539,30 +375,11 @@ int flecs_entity_filter_next(
             }
         }
 
-        if (sw_terms) {
-            if (flecs_entity_filter_switch_next(table, it, found) == -1) {
-                /* No more elements in sparse column */
-                if (found) {
-                    /* Try again */
-                    result = EcsIterNext;
-                    found = false;
-                } else {
-                    /* Nothing found */
-                    it->bs_offset = 0;
-                    break;
-                }
-            } else {
-                result = EcsIterYield;
-                found = true;
-                it->bs_offset = range->offset + range->count;
-            }
-        }
-
         if (flat_tree_column != -1) {
             bool first_for_table = it->prev != table;
             ecs_iter_t *iter = it->it;
             ecs_world_t *world = iter->real_world;
-            EcsTarget *ft = table->data.columns[flat_tree_column].data.array;
+            EcsTarget *ft = flecs_table_column(table, flat_tree_column)->data.array;
             int32_t ft_offset;
             int32_t ft_count;
 

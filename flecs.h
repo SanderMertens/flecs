@@ -149,7 +149,6 @@
 #define FLECS_PARSER        /**< String parser for queries */
 #define FLECS_PLECS         /**< ECS data definition format */
 #define FLECS_RULES         /**< Constraint solver for advanced queries */
-#define FLECS_SNAPSHOT      /**< Snapshot & restore ECS data */
 #define FLECS_STATS         /**< Access runtime statistics */
 #define FLECS_MONITOR       /**< Track runtime statistics periodically */
 #define FLECS_METRICS       /**< Expose component data as statistics */
@@ -227,7 +226,7 @@
  * When enabled, Flecs will use the OS allocator provided in the OS API directly
  * instead of the builtin block allocator. This can decrease memory utilization
  * as memory will be freed more often, at the cost of decreased performance. */
-// #define FLECS_USE_OS_ALLOC
+#define FLECS_USE_OS_ALLOC
 
 /** \def FLECS_ID_DESC_MAX
  * Maximum number of ids to add ecs_entity_desc_t / ecs_bulk_desc_t */
@@ -333,7 +332,6 @@ extern "C" {
 #define EcsIdTraversable               (1u << 8)
 #define EcsIdTag                       (1u << 9)
 #define EcsIdWith                      (1u << 10)
-#define EcsIdUnion                     (1u << 11)
 #define EcsIdAlwaysOverride            (1u << 12)
 
 #define EcsIdHasOnAdd                  (1u << 16) /* Same values as table flags */
@@ -417,7 +415,6 @@ extern "C" {
 #define EcsTableHasDtors               (1u << 10u)
 #define EcsTableHasCopy                (1u << 11u)
 #define EcsTableHasMove                (1u << 12u)
-#define EcsTableHasUnion               (1u << 13u)
 #define EcsTableHasToggle              (1u << 14u)
 #define EcsTableHasOverrides           (1u << 15u)
 
@@ -437,8 +434,8 @@ extern "C" {
 
 /* Composite table flags */
 #define EcsTableHasLifecycle        (EcsTableHasCtors | EcsTableHasDtors)
-#define EcsTableIsComplex           (EcsTableHasLifecycle | EcsTableHasUnion | EcsTableHasToggle)
-#define EcsTableHasAddActions       (EcsTableHasIsA | EcsTableHasUnion | EcsTableHasCtors | EcsTableHasOnAdd | EcsTableHasOnSet)
+#define EcsTableIsComplex           (EcsTableHasLifecycle | EcsTableHasToggle)
+#define EcsTableHasAddActions       (EcsTableHasIsA | EcsTableHasCtors | EcsTableHasOnAdd | EcsTableHasOnSet)
 #define EcsTableHasRemoveActions    (EcsTableHasIsA | EcsTableHasDtors | EcsTableHasOnRemove | EcsTableHasUnSet)
 
 
@@ -1081,6 +1078,16 @@ void* ecs_vec_grow(
 
 #define ecs_vec_grow_t(allocator, vec, T, elem_count) \
     ecs_vec_grow(allocator, vec, ECS_SIZEOF(T), elem_count)
+
+FLECS_API
+void ecs_vec_merge(
+    struct ecs_allocator_t *allocator,
+    ecs_vec_t *dst,
+    ecs_vec_t *src,
+    ecs_size_t size);
+
+#define ecs_vec_merge_t(allocator, dst, src, T) \
+    ecs_vec_merge(allocator, dst, src, ECS_SIZEOF(T))
 
 FLECS_API
 int32_t ecs_vec_count(
@@ -3135,7 +3142,7 @@ extern "C" {
 typedef struct ecs_stage_t ecs_stage_t;
 
 /** Table data */
-typedef struct ecs_data_t ecs_data_t;
+typedef struct ecs_table_data_t ecs_table_data_t;
 
 /* Switch list */
 typedef struct ecs_switch_t ecs_switch_t;
@@ -4257,11 +4264,6 @@ FLECS_API extern const ecs_entity_t EcsOneOf;
 /** Can be added to relationship to indicate that it should never hold data, 
  * even when it or the relationship target is a component. */
 FLECS_API extern const ecs_entity_t EcsTag;
-
-/** Tag to indicate that relationship is stored as union. Union relationships 
- * enable changing the target of a union without switching tables. Union 
- * relationships are also marked as exclusive. */
-FLECS_API extern const ecs_entity_t EcsUnion;
 
 /** Tag to indicate name identifier */
 FLECS_API extern const ecs_entity_t EcsName;
@@ -6539,23 +6541,6 @@ const ecs_type_hooks_t* ecs_get_hooks_id(
  */
 FLECS_API
 bool ecs_id_is_tag(
-    const ecs_world_t *world,
-    ecs_id_t id);
-
-/** Return whether represents a union.
- * This operation returns whether the specified type represents a union. Only
- * pair ids can be unions.
- * 
- * An id represents a union when:
- * - The first element of the pair is EcsUnion/flecs::Union
- * - The first element of the pair has EcsUnion/flecs::Union
- *
- * @param world The world.
- * @param id The id.
- * @return Whether the provided id represents a union.
- */
-FLECS_API
-bool ecs_id_is_union(
     const ecs_world_t *world,
     ecs_id_t id);
 
@@ -15144,120 +15129,6 @@ const char* ecs_rule_parse_vars(
 
 #endif
 
-#ifdef FLECS_SNAPSHOT
-#ifdef FLECS_NO_SNAPSHOT
-#error "FLECS_NO_SNAPSHOT failed: SNAPSHOT is required by other addons"
-#endif
-/**
- * @file addons/snapshot.h
- * @brief Snapshot addon.
- *
- * A snapshot records the state of a world in a way so that it can be restored
- * later. Snapshots work with POD components and non-POD components, provided
- * that the appropriate lifecycle actions are registered for non-POD components.
- *
- * A snapshot is tightly coupled to a world. It is not possible to restore a
- * snapshot from world A into world B.
- */
-
-#ifdef FLECS_SNAPSHOT
-
-/**
- * @defgroup c_addons_snapshot Snapshot
- * @brief Save & restore world.
- * 
- * \ingroup c_addons
- * @{
- */
-
-#ifndef FLECS_SNAPSHOT_H
-#define FLECS_SNAPSHOT_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/** A snapshot stores the state of a world in a particular point in time. */
-typedef struct ecs_snapshot_t ecs_snapshot_t;
-
-/** Create a snapshot.
- * This operation makes a copy of the current state of the world.
- *
- * @param world The world to snapshot.
- * @return The snapshot.
- */
-FLECS_API
-ecs_snapshot_t* ecs_snapshot_take(
-    ecs_world_t *world);
-
-/** Create a filtered snapshot.
- * This operation is the same as ecs_snapshot_take, but accepts an iterator so
- * an application can control what is stored by the snapshot. 
- *
- * @param iter An iterator to the data to be stored by the snapshot.
- * @return The snapshot.
- */
-FLECS_API
-ecs_snapshot_t* ecs_snapshot_take_w_iter(
-    ecs_iter_t *iter);
-
-/** Restore a snapshot.
- * This operation restores the world to the state it was in when the specified
- * snapshot was taken. A snapshot can only be used once for restoring, as its
- * data replaces the data that is currently in the world.
- * This operation also resets the last issued entity handle, so any calls to
- * ecs_new may return entity ids that have been issued before restoring the 
- * snapshot.
- *
- * The world in which the snapshot is restored must be the same as the world in
- * which the snapshot is taken.
- *
- * @param world The world to restore the snapshot to.
- * @param snapshot The snapshot to restore. 
- */
-FLECS_API
-void ecs_snapshot_restore(
-    ecs_world_t *world,
-    ecs_snapshot_t *snapshot);
-
-/** Obtain iterator to snapshot data.
- *
- * @param snapshot The snapshot to iterate over.
- * @return Iterator to snapshot data. */
-FLECS_API
-ecs_iter_t ecs_snapshot_iter(
-    ecs_snapshot_t *snapshot);
-
-/** Progress snapshot iterator.
- * 
- * @param iter The snapshot iterator.
- * @return True if more data is available, otherwise false.
- */
-FLECS_API
-bool ecs_snapshot_next(
-    ecs_iter_t *iter);
-
-/** Free snapshot resources.
- * This frees resources associated with a snapshot without restoring it.
- *
- * @param snapshot The snapshot to free. 
- */
-FLECS_API
-void ecs_snapshot_free(
-    ecs_snapshot_t *snapshot);
-    
-#ifdef __cplusplus
-}
-#endif
-
-#endif
-
-/** @} */
-
-#endif
-
-#endif
-
 #ifdef FLECS_PARSER
 #ifdef FLECS_NO_PARSER
 #error "FLECS_NO_PARSER failed: PARSER is required by other addons"
@@ -15869,7 +15740,6 @@ static const flecs::entity_t Final = EcsFinal;
 static const flecs::entity_t DontInherit = EcsDontInherit;
 static const flecs::entity_t AlwaysOverride = EcsAlwaysOverride;
 static const flecs::entity_t Tag = EcsTag;
-static const flecs::entity_t Union = EcsUnion;
 static const flecs::entity_t Exclusive = EcsExclusive;
 static const flecs::entity_t Acyclic = EcsAcyclic;
 static const flecs::entity_t Traversable = EcsTraversable;
@@ -17363,33 +17233,6 @@ void timer_init(flecs::world& world);
 
 } // namespace _
 } // namespace flecs
-
-#endif
-#ifdef FLECS_SNAPSHOT
-/**
- * @file addons/cpp/mixins/snapshot/decl.hpp
- * @brief Snapshot module declarations.
- */
-
-#pragma once
-
-namespace flecs {
-
-/**
- * @defgroup cpp_addons_snapshots Snapshots
- * @brief Save & restore world.
- * 
- * \ingroup cpp_addons
- * @{
- */
-
-using snapshot_t = ecs_snapshot_t;
-
-struct snapshot;
-
-/** @} */
-
-}
 
 #endif
 #ifdef FLECS_DOC
@@ -20844,23 +20687,7 @@ bool using_task_threads() const;
 
 #   endif
 #   ifdef FLECS_SNAPSHOT
-/**
- * @file addons/cpp/mixins/snapshot/mixin.inl
- * @brief Snapshot world mixin.
- */
-
-/**
- * \memberof flecs::world
- * \ingroup cpp_addons_snapshot
- */
-
-/** Create a snapshot.
- */
-template <typename... Args>
-flecs::snapshot snapshot(Args &&... args) const;
-
-/** @} */
-
+#   include "mixins/snapshot/mixin.inl"
 #   endif
 #   ifdef FLECS_SYSTEM
 /**
@@ -26894,14 +26721,7 @@ inline void entity_view::each(const Func& func) const {
     for (int i = 0; i < count; i ++) {
         ecs_id_t id = ids[i];
         flecs::id ent(m_world, id);
-        func(ent); 
-
-        // Union object is not stored in type, so handle separately
-        if (ECS_PAIR_FIRST(id) == EcsUnion) {
-            ent = flecs::id(m_world, ECS_PAIR_SECOND(id),
-                ecs_get_target(m_world, m_id, ECS_PAIR_SECOND(id), 0));
-            func(ent);
-        }
+        func(ent);
     }
 }
 
@@ -27096,22 +26916,6 @@ namespace _ {
         void populate(const Builder& b) {
             size_t i = 0;
             for (auto id : ids) {
-                if (!(id & ECS_ID_FLAGS_MASK)) {
-                    const flecs::type_info_t *ti = ecs_get_type_info(m_world, id);
-                    if (ti) {
-                        // Union relationships always return a value of type
-                        // flecs::entity_t which holds the target id of the 
-                        // union relationship.
-                        // If a union component with a non-zero size (like an 
-                        // enum) is added to the query signature, the each/iter
-                        // functions would accept a parameter of the component
-                        // type instead of flecs::entity_t, which would cause
-                        // an assert.
-                        ecs_assert(!ti->size || !ecs_has_id(m_world, id, flecs::Union),
-                            ECS_INVALID_PARAMETER,
-                            "use term() method to add union relationship");
-                    }
-                }
                 b->term(id).inout(inout[i]).oper(oper[i]);
                 i ++;
             }
@@ -29839,97 +29643,7 @@ inline void timer_init(flecs::world& world) {
 
 #endif
 #ifdef FLECS_SNAPSHOT
-/**
- * @file addons/cpp/mixins/snapshot/impl.hpp
- * @brief Snapshot module implementation.
- */
-
-#pragma once
-
-namespace flecs {
-
-struct snapshot final {
-    explicit snapshot(const world& world)
-        : m_world( world )
-        , m_snapshot( nullptr ) { }
-
-    snapshot(const snapshot& obj) 
-        : m_world( obj.m_world )
-    { 
-        ecs_iter_t it = ecs_snapshot_iter(obj.m_snapshot);
-        m_snapshot = ecs_snapshot_take_w_iter(&it);
-    }
-
-    snapshot(snapshot&& obj) 
-        : m_world(obj.m_world)
-        , m_snapshot(obj.m_snapshot)
-    {
-        obj.m_snapshot = nullptr;
-    }
-
-    snapshot& operator=(const snapshot& obj) {
-        ecs_assert(m_world.c_ptr() == obj.m_world.c_ptr(), ECS_INVALID_PARAMETER, NULL);
-        ecs_iter_t it = ecs_snapshot_iter(obj.m_snapshot);
-        m_snapshot = ecs_snapshot_take_w_iter(&it);        
-        return *this;
-    }
-
-    snapshot& operator=(snapshot&& obj) {
-        ecs_assert(m_world.c_ptr() == obj.m_world.c_ptr(), ECS_INVALID_PARAMETER, NULL);
-        m_snapshot = obj.m_snapshot;
-        obj.m_snapshot = nullptr;
-        return *this;
-    }
-
-    void take() {
-        if (m_snapshot) {
-            ecs_snapshot_free(m_snapshot);
-        }
-
-        m_snapshot = ecs_snapshot_take(m_world.c_ptr());
-    }
-
-    template <typename F>
-    void take(const F& f) {
-        if (m_snapshot) {
-            ecs_snapshot_free(m_snapshot);
-        }
-
-        ecs_iter_t it = ecs_filter_iter(m_world, f.c_ptr());
-
-        m_snapshot = ecs_snapshot_take_w_iter(&it);
-    }    
-
-    void restore() {
-        if (m_snapshot) {
-            ecs_snapshot_restore(m_world.c_ptr(), m_snapshot);
-            m_snapshot = nullptr;
-        }
-    }
-
-    ~snapshot() {
-        if (m_snapshot) {
-            ecs_snapshot_free(m_snapshot);
-        }
-    }
-
-    snapshot_t* c_ptr() const {
-        return m_snapshot;
-    }
-
-private:
-    const world& m_world;
-    snapshot_t *m_snapshot;
-};
-
-// Snapshot mixin implementation
-template <typename... Args>
-inline flecs::snapshot world::snapshot(Args &&... args) const {
-    return flecs::snapshot(*this, FLECS_FWD(args)...);
-}
-
-}
-
+#include "mixins/snapshot/impl.hpp"
 #endif
 #ifdef FLECS_DOC
 /**

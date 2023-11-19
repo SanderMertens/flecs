@@ -6,6 +6,8 @@
 #ifndef FLECS_TABLE_GRAPH_H
 #define FLECS_TABLE_GRAPH_H
 
+#include "type.h"
+
 /** Cache of added/removed components for non-trivial edges between tables */
 #define ECS_TABLE_DIFF_INIT { .added = {0}}
 
@@ -66,6 +68,11 @@ ecs_table_t *flecs_table_traverse_remove(
     ecs_table_t *table,
     ecs_id_t *id_ptr,
     ecs_table_diff_t *diff);
+
+/** Find or create table for a set of components */
+ecs_table_t* flecs_table_find_or_create(
+    ecs_world_t *world,
+    ecs_type_t *type);
 
 /* Cleanup incoming and outgoing edges for table */
 void flecs_table_clear_edges(

@@ -172,9 +172,7 @@ void flecs_assert_relation_unused(
     }
 
     bool in_use = ecs_id_in_use(world, ecs_pair(rel, EcsWildcard));
-    if (property != EcsUnion) {
-        in_use |= ecs_id_in_use(world, rel);
-    }
+    in_use |= ecs_id_in_use(world, rel);
     if (in_use) {
         char *r_str = ecs_get_fullpath(world, rel);
         char *p_str = ecs_get_fullpath(world, property);
@@ -347,19 +345,6 @@ void flecs_register_with(ecs_iter_t *it) {
 }
 
 static
-void flecs_register_union(ecs_iter_t *it) {
-    flecs_register_id_flag_for_relation(it, EcsUnion, EcsIdUnion, 0, 0);
-}
-
-static
-void flecs_register_slot_of(ecs_iter_t *it) {
-    int i, count = it->count;
-    for (i = 0; i < count; i ++) {
-        ecs_add_id(it->world, it->entities[i], EcsUnion);
-    }
-}
-
-static
 void flecs_on_symmetric_add_remove(ecs_iter_t *it) {
     ecs_entity_t pair = ecs_field_id(it, 1);
 
@@ -478,18 +463,23 @@ void flecs_bootstrap_builtin(
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_column_t *columns = table->data.columns;
+    ecs_column_t *columns = flecs_table_columns(table);
     ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_record_t *record = flecs_entities_ensure(world, entity);
     record->table = table;
 
-    int32_t index = flecs_table_append(world, table, entity, false, false);
+    int32_t index = flecs_table_append(world, table, entity, -1, false, false);
     record->row = ECS_ROW_TO_RECORD(index, 0);
 
+    int32_t row = ecs_vec_get_t(&table->rows, int32_t, index)[0];
+    ecs_assert(row == index, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_vec_get_t(&table->entities, ecs_entity_t, index)[0] == entity,
+        ECS_INTERNAL_ERROR, NULL);
+
     EcsComponent *component = ecs_vec_first(&columns[0].data);
-    component[index].size = size;
-    component[index].alignment = alignment;
+    component[row].size = size;
+    component[row].alignment = alignment;
 
     const char *name = &symbol[3]; /* Strip 'Ecs' */
     ecs_size_t symbol_length = ecs_os_strlen(symbol);
@@ -497,20 +487,20 @@ void flecs_bootstrap_builtin(
 
     EcsIdentifier *name_col = ecs_vec_first(&columns[1].data);
     uint64_t name_hash = flecs_hash(name, name_length);
-    name_col[index].value = ecs_os_strdup(name);
-    name_col[index].length = name_length;
-    name_col[index].hash = name_hash;
-    name_col[index].index_hash = 0;
-    name_col[index].index = table->_->name_index;
+    name_col[row].value = ecs_os_strdup(name);
+    name_col[row].length = name_length;
+    name_col[row].hash = name_hash;
+    name_col[row].index_hash = 0;
+    name_col[row].index = table->_->name_index;
     flecs_name_index_ensure(
         table->_->name_index, entity, name, name_length, name_hash);
 
     EcsIdentifier *symbol_col = ecs_vec_first(&columns[2].data);
-    symbol_col[index].value = ecs_os_strdup(symbol);
-    symbol_col[index].length = symbol_length;
-    symbol_col[index].hash = flecs_hash(symbol, symbol_length);    
-    symbol_col[index].index_hash = 0;
-    symbol_col[index].index = NULL;
+    symbol_col[row].value = ecs_os_strdup(symbol);
+    symbol_col[row].length = symbol_length;
+    symbol_col[row].hash = flecs_hash(symbol, symbol_length);    
+    symbol_col[row].index_hash = 0;
+    symbol_col[row].index = NULL;
 }
 
 /** Initialize component table. This table is manually constructed to bootstrap
@@ -555,11 +545,14 @@ ecs_table_t* flecs_bootstrap_component_table(
         .count = 6
     };
 
+    ecs_allocator_t *a = &world->allocator;
+
     ecs_table_t *result = flecs_table_find_or_create(world, &array);
-    ecs_data_t *data = &result->data;
+    ecs_vec_init_t(a, &result->entities, ecs_entity_t, EcsFirstUserComponentId);
+    ecs_vec_init_t(a, &result->rows, int32_t, EcsFirstUserComponentId);
 
     /* Preallocate enough memory for initial components */
-    ecs_allocator_t *a = &world->allocator;
+    ecs_table_data_t *data = flecs_table_data(result);
     ecs_vec_init_t(a, &data->entities, ecs_entity_t, EcsFirstUserComponentId);
     ecs_vec_init_t(a, &data->columns[0].data, EcsComponent, EcsFirstUserComponentId);
     ecs_vec_init_t(a, &data->columns[1].data, EcsIdentifier, EcsFirstUserComponentId);
@@ -581,9 +574,9 @@ void flecs_bootstrap_entity(
     
     ecs_ensure(world, id);
     ecs_add_pair(world, id, EcsChildOf, parent);
+
     ecs_set_name(world, id, name);
     ecs_set_symbol(world, id, symbol);
-
     ecs_assert(ecs_get_name(world, id) != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (!parent || parent == EcsFlecsCore) {
@@ -672,10 +665,10 @@ void flecs_bootstrap(
     /* Make EcsOnAdd, EcsOnSet events iterable to enable .yield_existing */
     ecs_set(world, EcsOnAdd, EcsIterable, { .init = flecs_on_event_iterable_init });
     ecs_set(world, EcsOnSet, EcsIterable, { .init = flecs_on_event_iterable_init });
-    
+
     /* Register observer for tag property before adding EcsTag */
     ecs_observer(world, {
-        .entity = ecs_entity(world, {.add = { ecs_childof(EcsFlecsInternals)}}),
+        .entity = ecs_entity(world, { .add = { ecs_childof(EcsFlecsInternals)}}),
         .filter.terms[0] = { .id = EcsTag, .src.flags = EcsSelf },
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = flecs_register_tag,
@@ -735,7 +728,6 @@ void flecs_bootstrap(
     flecs_bootstrap_tag(world, EcsDontInherit);
     flecs_bootstrap_tag(world, EcsAlwaysOverride);
     flecs_bootstrap_tag(world, EcsTag);
-    flecs_bootstrap_tag(world, EcsUnion);
     flecs_bootstrap_tag(world, EcsExclusive);
     flecs_bootstrap_tag(world, EcsAcyclic);
     flecs_bootstrap_tag(world, EcsTraversable);
@@ -781,7 +773,6 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsDependsOn, EcsTag);
     ecs_add_id(world, EcsFlatten, EcsTag);
     ecs_add_id(world, EcsDefaultChildComponent, EcsTag);
-    ecs_add_id(world, EcsUnion, EcsTag);
     ecs_add_id(world, EcsFlag, EcsTag);
     ecs_add_id(world, EcsWith, EcsTag);
 
@@ -875,23 +866,6 @@ void flecs_bootstrap(
         },
         .events = {EcsOnAdd},
         .callback = flecs_register_with
-    });
-
-    ecs_observer(world, {
-        .filter.terms = {{ .id = EcsUnion, .src.flags = EcsSelf }, match_prefab },
-        .events = {EcsOnAdd},
-        .callback = flecs_register_union
-    });
-
-    /* Entities used as slot are marked as exclusive to ensure a slot can always
-     * only point to a single entity. */
-    ecs_observer(world, {
-        .filter.terms = {
-            { .id = ecs_pair(EcsSlotOf, EcsWildcard), .src.flags = EcsSelf },
-            match_prefab
-        },
-        .events = {EcsOnAdd},
-        .callback = flecs_register_slot_of
     });
 
     /* Define observer to make sure that adding a module to a child entity also

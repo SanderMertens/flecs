@@ -168,9 +168,6 @@ void Search_search_relation_inherit_from_parent(void);
 void Search_search_relation_dont_inherit(void);
 void Search_search_relation_dont_inherit_from_parent(void);
 void Search_search_relation_exclusive(void);
-void Search_search_relation_union(void);
-void Search_search_relation_union_wildcard(void);
-void Search_search_relation_union_pair(void);
 
 // Testsuite 'Event'
 void Event_table_1_id_w_trigger(void);
@@ -282,55 +279,6 @@ void Add_invalid_pair_w_0(void);
 void Add_invalid_pair_w_0_rel(void);
 void Add_invalid_pair_w_0_obj(void);
 void Add_add_random_id(void);
-
-// Testsuite 'Switch'
-void Switch_get_case_no_switch(void);
-void Switch_get_case_set(void);
-void Switch_get_case_change(void);
-void Switch_remove_case(void);
-void Switch_remove_last(void);
-void Switch_delete_first(void);
-void Switch_delete_last(void);
-void Switch_delete_first_last(void);
-void Switch_3_entities_same_case(void);
-void Switch_2_entities_1_change_case(void);
-void Switch_3_entities_change_case(void);
-void Switch_query_switch(void);
-void Switch_query_1_case_1_type(void);
-void Switch_query_1_case_2_types(void);
-void Switch_query_2_cases_1_type(void);
-void Switch_query_2_cases_2_types(void);
-void Switch_query_after_remove(void);
-void Switch_add_case_in_stage(void);
-void Switch_change_case_in_stage(void);
-void Switch_change_one_case_in_stage(void);
-void Switch_remove_switch_in_stage(void);
-void Switch_switch_no_match_for_case(void);
-void Switch_empty_entity_has_case(void);
-void Switch_zero_entity_has_case(void);
-void Switch_add_to_entity_w_switch(void);
-void Switch_add_pair_to_entity_w_switch(void);
-void Switch_sort(void);
-void Switch_recycled_tags(void);
-void Switch_query_recycled_tags(void);
-void Switch_single_case(void);
-void Switch_match_switch_on_base_instance(void);
-void Switch_switch_w_bitset_query(void);
-void Switch_switch_w_bitset_query_inv(void);
-void Switch_switch_w_bitset_query_2_elems(void);
-void Switch_switch_w_bitset_query_2_elems_skip(void);
-void Switch_switch_w_bitset_query_elems_interleaved(void);
-void Switch_switch_w_bitset_query_elems_interleaved_2_types(void);
-void Switch_has_wildcard(void);
-void Switch_remove_wildcard(void);
-void Switch_same_table_after_change(void);
-void Switch_component_relation(void);
-void Switch_delete_case_trigger_after_delete_switch(void);
-void Switch_add_2(void);
-void Switch_add_2_reverse(void);
-void Switch_add_switch_to_prefab_instance(void);
-void Switch_get_case_w_generation(void);
-void Switch_get_case_w_generation_not_alive(void);
 
 // Testsuite 'EnabledComponents'
 void EnabledComponents_is_component_enabled(void);
@@ -757,9 +705,7 @@ void OnDelete_remove_childof_wildcard(void);
 void OnDelete_delete_child_of_delete_with(void);
 void OnDelete_deep_clean_64(void);
 void OnDelete_deep_clean_256(void);
-void OnDelete_id_w_switch(void);
 void OnDelete_id_w_disabled(void);
-void OnDelete_id_to_no_switch(void);
 void OnDelete_id_to_no_disabled(void);
 void OnDelete_remove_on_delete_action(void);
 void OnDelete_delete_with_w_relation(void);
@@ -913,9 +859,6 @@ void ComponentLifecycle_copy_on_set(void);
 void ComponentLifecycle_copy_on_override(void);
 void ComponentLifecycle_copy_on_clone(void);
 void ComponentLifecycle_no_copy_on_move(void);
-void ComponentLifecycle_ctor_copy_on_snapshot(void);
-void ComponentLifecycle_copy_on_snapshot(void);
-void ComponentLifecycle_dtor_on_restore(void);
 void ComponentLifecycle_ctor_on_tag(void);
 void ComponentLifecycle_dtor_on_tag(void);
 void ComponentLifecycle_copy_on_tag(void);
@@ -1307,9 +1250,6 @@ void Filter_filter_iter_w_2_terms_1_filter(void);
 void Filter_filter_iter_w_3_terms_2_filter(void);
 void Filter_filter_iter_2_terms_filter_all(void);
 void Filter_filter_iter_2_terms_filter_all_w_out(void);
-void Filter_filter_iter_switch_term_filter(void);
-void Filter_filter_iter_2_terms_switch_term_filter(void);
-void Filter_filter_iter_switch_superset(void);
 void Filter_filter_instanced_w_singleton(void);
 void Filter_filter_instanced_w_base(void);
 void Filter_filter_no_instancing_w_singleton(void);
@@ -1329,10 +1269,6 @@ void Filter_filter_lt_cache_size_terms_no_alloc(void);
 void Filter_move_self(void);
 void Filter_match_empty_tables(void);
 void Filter_match_empty_tables_w_no_empty_tables(void);
-void Filter_match_switch_w_switch(void);
-void Filter_match_switch_w_case(void);
-void Filter_match_switch_w_case_2_terms(void);
-void Filter_match_case_no_case(void);
 void Filter_and_term(void);
 void Filter_or_term(void);
 void Filter_iter_while_creating_components(void);
@@ -1445,16 +1381,6 @@ void Query_query_w_from_singleton(void);
 void Query_query_w_from_entity_match_after(void);
 void Query_query_w_from_singleton_match_after(void);
 void Query_query_w_from_nothing(void);
-void Query_query_w_existing_switch_and_case(void);
-void Query_query_w_new_switch_and_case(void);
-void Query_query_for_case_existing(void);
-void Query_query_for_case_new(void);
-void Query_query_for_switch_filter_term(void);
-void Query_query_switch_from_nothing(void);
-void Query_query_case_from_nothing(void);
-void Query_query_case_inherited(void);
-void Query_query_case_w_generation(void);
-void Query_query_case_w_not_alive(void);
 void Query_query_disabled_from_nothing(void);
 void Query_query_only_2_or(void);
 void Query_query_only_3_or(void);
@@ -1923,7 +1849,6 @@ void Trigger_on_set_superset_after_filter_observer(void);
 void Trigger_on_set_superset_after_filter_observer_w_on_add(void);
 void Trigger_on_set_superset_after_filter_observer_w_on_add_isa_after_set(void);
 void Trigger_on_set_superset_after_filter_observer_w_on_add_2(void);
-void Trigger_propagate_w_union_pair(void);
 
 // Testsuite 'Observer'
 void Observer_2_terms_w_on_add(void);
@@ -2123,7 +2048,6 @@ void TriggerOnSet_on_set_after_override(void);
 void TriggerOnSet_on_set_after_override_w_new(void);
 void TriggerOnSet_on_set_after_override_w_new_w_count(void);
 void TriggerOnSet_on_set_after_override_1_of_2_overridden(void);
-void TriggerOnSet_on_set_after_snapshot_restore(void);
 void TriggerOnSet_on_set_after_remove_override(void);
 void TriggerOnSet_emplace(void);
 void TriggerOnSet_un_set_tag_w_remove(void);
@@ -2252,7 +2176,6 @@ void Prefab_dont_copy_children_for_non_prefab_base(void);
 void Prefab_get_component_pair_from_base(void);
 void Prefab_get_component_pair_from_prefab_base(void);
 void Prefab_override_dont_inherit(void);
-void Prefab_prefab_w_switch(void);
 void Prefab_prefab_child_w_dont_inherit_component(void);
 void Prefab_prefab_child_override(void);
 void Prefab_prefab_child_override_w_exclusive_pair(void);
@@ -2268,7 +2191,6 @@ void Prefab_2_instances_w_slots_same_table(void);
 void Prefab_slot_has_union(void);
 void Prefab_slot_override(void);
 void Prefab_base_slot_override(void);
-void Prefab_prefab_child_w_union(void);
 void Prefab_override_twice_w_add(void);
 void Prefab_override_twice_w_set(void);
 void Prefab_auto_override_copy_once(void);
@@ -2447,10 +2369,6 @@ void Commands_update_observer_while_deferred(void);
 void Commands_defer_set_large_component(void);
 void Commands_defer_while_suspend_readonly(void);
 void Commands_defer_while_suspend_readonly_w_existing_commands(void);
-void Commands_defer_add_union_relationship(void);
-void Commands_defer_add_existing_union_relationship(void);
-void Commands_defer_add_union_relationship_2_ops(void);
-void Commands_defer_add_existing_union_relationship_2_ops(void);
 void Commands_defer_remove_after_set(void);
 void Commands_defer_remove_after_set_w_observer(void);
 void Commands_defer_override_after_remove(void);
@@ -2561,7 +2479,6 @@ void SingleThreadStaging_on_add_after_new_type_in_progress(void);
 void SingleThreadStaging_lock_table(void);
 void SingleThreadStaging_recursive_lock_table(void);
 void SingleThreadStaging_modify_after_lock(void);
-void SingleThreadStaging_get_case_from_stage(void);
 void SingleThreadStaging_get_object_from_stage(void);
 void SingleThreadStaging_add_to_world_while_readonly(void);
 void SingleThreadStaging_add_to_world_and_stage_while_readonly(void);
@@ -3287,18 +3204,6 @@ bake_test_case Search_testcases[] = {
     {
         "search_relation_exclusive",
         Search_search_relation_exclusive
-    },
-    {
-        "search_relation_union",
-        Search_search_relation_union
-    },
-    {
-        "search_relation_union_wildcard",
-        Search_search_relation_union_wildcard
-    },
-    {
-        "search_relation_union_pair",
-        Search_search_relation_union_pair
     }
 };
 
@@ -3719,197 +3624,6 @@ bake_test_case Add_testcases[] = {
     {
         "add_random_id",
         Add_add_random_id
-    }
-};
-
-bake_test_case Switch_testcases[] = {
-    {
-        "get_case_no_switch",
-        Switch_get_case_no_switch
-    },
-    {
-        "get_case_set",
-        Switch_get_case_set
-    },
-    {
-        "get_case_change",
-        Switch_get_case_change
-    },
-    {
-        "remove_case",
-        Switch_remove_case
-    },
-    {
-        "remove_last",
-        Switch_remove_last
-    },
-    {
-        "delete_first",
-        Switch_delete_first
-    },
-    {
-        "delete_last",
-        Switch_delete_last
-    },
-    {
-        "delete_first_last",
-        Switch_delete_first_last
-    },
-    {
-        "3_entities_same_case",
-        Switch_3_entities_same_case
-    },
-    {
-        "2_entities_1_change_case",
-        Switch_2_entities_1_change_case
-    },
-    {
-        "3_entities_change_case",
-        Switch_3_entities_change_case
-    },
-    {
-        "query_switch",
-        Switch_query_switch
-    },
-    {
-        "query_1_case_1_type",
-        Switch_query_1_case_1_type
-    },
-    {
-        "query_1_case_2_types",
-        Switch_query_1_case_2_types
-    },
-    {
-        "query_2_cases_1_type",
-        Switch_query_2_cases_1_type
-    },
-    {
-        "query_2_cases_2_types",
-        Switch_query_2_cases_2_types
-    },
-    {
-        "query_after_remove",
-        Switch_query_after_remove
-    },
-    {
-        "add_case_in_stage",
-        Switch_add_case_in_stage
-    },
-    {
-        "change_case_in_stage",
-        Switch_change_case_in_stage
-    },
-    {
-        "change_one_case_in_stage",
-        Switch_change_one_case_in_stage
-    },
-    {
-        "remove_switch_in_stage",
-        Switch_remove_switch_in_stage
-    },
-    {
-        "switch_no_match_for_case",
-        Switch_switch_no_match_for_case
-    },
-    {
-        "empty_entity_has_case",
-        Switch_empty_entity_has_case
-    },
-    {
-        "zero_entity_has_case",
-        Switch_zero_entity_has_case
-    },
-    {
-        "add_to_entity_w_switch",
-        Switch_add_to_entity_w_switch
-    },
-    {
-        "add_pair_to_entity_w_switch",
-        Switch_add_pair_to_entity_w_switch
-    },
-    {
-        "sort",
-        Switch_sort
-    },
-    {
-        "recycled_tags",
-        Switch_recycled_tags
-    },
-    {
-        "query_recycled_tags",
-        Switch_query_recycled_tags
-    },
-    {
-        "single_case",
-        Switch_single_case
-    },
-    {
-        "match_switch_on_base_instance",
-        Switch_match_switch_on_base_instance
-    },
-    {
-        "switch_w_bitset_query",
-        Switch_switch_w_bitset_query
-    },
-    {
-        "switch_w_bitset_query_inv",
-        Switch_switch_w_bitset_query_inv
-    },
-    {
-        "switch_w_bitset_query_2_elems",
-        Switch_switch_w_bitset_query_2_elems
-    },
-    {
-        "switch_w_bitset_query_2_elems_skip",
-        Switch_switch_w_bitset_query_2_elems_skip
-    },
-    {
-        "switch_w_bitset_query_elems_interleaved",
-        Switch_switch_w_bitset_query_elems_interleaved
-    },
-    {
-        "switch_w_bitset_query_elems_interleaved_2_types",
-        Switch_switch_w_bitset_query_elems_interleaved_2_types
-    },
-    {
-        "has_wildcard",
-        Switch_has_wildcard
-    },
-    {
-        "remove_wildcard",
-        Switch_remove_wildcard
-    },
-    {
-        "same_table_after_change",
-        Switch_same_table_after_change
-    },
-    {
-        "component_relation",
-        Switch_component_relation
-    },
-    {
-        "delete_case_trigger_after_delete_switch",
-        Switch_delete_case_trigger_after_delete_switch
-    },
-    {
-        "add_2",
-        Switch_add_2
-    },
-    {
-        "add_2_reverse",
-        Switch_add_2_reverse
-    },
-    {
-        "add_switch_to_prefab_instance",
-        Switch_add_switch_to_prefab_instance
-    },
-    {
-        "get_case_w_generation",
-        Switch_get_case_w_generation
-    },
-    {
-        "get_case_w_generation_not_alive",
-        Switch_get_case_w_generation_not_alive
     }
 };
 
@@ -5545,16 +5259,8 @@ bake_test_case OnDelete_testcases[] = {
         OnDelete_deep_clean_256
     },
     {
-        "id_w_switch",
-        OnDelete_id_w_switch
-    },
-    {
         "id_w_disabled",
         OnDelete_id_w_disabled
-    },
-    {
-        "id_to_no_switch",
-        OnDelete_id_to_no_switch
     },
     {
         "id_to_no_disabled",
@@ -6129,18 +5835,6 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "no_copy_on_move",
         ComponentLifecycle_no_copy_on_move
-    },
-    {
-        "ctor_copy_on_snapshot",
-        ComponentLifecycle_ctor_copy_on_snapshot
-    },
-    {
-        "copy_on_snapshot",
-        ComponentLifecycle_copy_on_snapshot
-    },
-    {
-        "dtor_on_restore",
-        ComponentLifecycle_dtor_on_restore
     },
     {
         "ctor_on_tag",
@@ -7692,18 +7386,6 @@ bake_test_case Filter_testcases[] = {
         Filter_filter_iter_2_terms_filter_all_w_out
     },
     {
-        "filter_iter_switch_term_filter",
-        Filter_filter_iter_switch_term_filter
-    },
-    {
-        "filter_iter_2_terms_switch_term_filter",
-        Filter_filter_iter_2_terms_switch_term_filter
-    },
-    {
-        "filter_iter_switch_superset",
-        Filter_filter_iter_switch_superset
-    },
-    {
         "filter_instanced_w_singleton",
         Filter_filter_instanced_w_singleton
     },
@@ -7778,22 +7460,6 @@ bake_test_case Filter_testcases[] = {
     {
         "match_empty_tables_w_no_empty_tables",
         Filter_match_empty_tables_w_no_empty_tables
-    },
-    {
-        "match_switch_w_switch",
-        Filter_match_switch_w_switch
-    },
-    {
-        "match_switch_w_case",
-        Filter_match_switch_w_case
-    },
-    {
-        "match_switch_w_case_2_terms",
-        Filter_match_switch_w_case_2_terms
-    },
-    {
-        "match_case_no_case",
-        Filter_match_case_no_case
     },
     {
         "and_term",
@@ -8232,46 +7898,6 @@ bake_test_case Query_testcases[] = {
     {
         "query_w_from_nothing",
         Query_query_w_from_nothing
-    },
-    {
-        "query_w_existing_switch_and_case",
-        Query_query_w_existing_switch_and_case
-    },
-    {
-        "query_w_new_switch_and_case",
-        Query_query_w_new_switch_and_case
-    },
-    {
-        "query_for_case_existing",
-        Query_query_for_case_existing
-    },
-    {
-        "query_for_case_new",
-        Query_query_for_case_new
-    },
-    {
-        "query_for_switch_filter_term",
-        Query_query_for_switch_filter_term
-    },
-    {
-        "query_switch_from_nothing",
-        Query_query_switch_from_nothing
-    },
-    {
-        "query_case_from_nothing",
-        Query_query_case_from_nothing
-    },
-    {
-        "query_case_inherited",
-        Query_query_case_inherited
-    },
-    {
-        "query_case_w_generation",
-        Query_query_case_w_generation
-    },
-    {
-        "query_case_w_not_alive",
-        Query_query_case_w_not_alive
     },
     {
         "query_disabled_from_nothing",
@@ -10129,10 +9755,6 @@ bake_test_case Trigger_testcases[] = {
     {
         "on_set_superset_after_filter_observer_w_on_add_2",
         Trigger_on_set_superset_after_filter_observer_w_on_add_2
-    },
-    {
-        "propagate_w_union_pair",
-        Trigger_propagate_w_union_pair
     }
 };
 
@@ -10902,10 +10524,6 @@ bake_test_case TriggerOnSet_testcases[] = {
         TriggerOnSet_on_set_after_override_1_of_2_overridden
     },
     {
-        "on_set_after_snapshot_restore",
-        TriggerOnSet_on_set_after_snapshot_restore
-    },
-    {
         "on_set_after_remove_override",
         TriggerOnSet_on_set_after_remove_override
     },
@@ -11404,10 +11022,6 @@ bake_test_case Prefab_testcases[] = {
         Prefab_override_dont_inherit
     },
     {
-        "prefab_w_switch",
-        Prefab_prefab_w_switch
-    },
-    {
         "prefab_child_w_dont_inherit_component",
         Prefab_prefab_child_w_dont_inherit_component
     },
@@ -11466,10 +11080,6 @@ bake_test_case Prefab_testcases[] = {
     {
         "base_slot_override",
         Prefab_base_slot_override
-    },
-    {
-        "prefab_child_w_union",
-        Prefab_prefab_child_w_union
     },
     {
         "override_twice_w_add",
@@ -12156,22 +11766,6 @@ bake_test_case Commands_testcases[] = {
         Commands_defer_while_suspend_readonly_w_existing_commands
     },
     {
-        "defer_add_union_relationship",
-        Commands_defer_add_union_relationship
-    },
-    {
-        "defer_add_existing_union_relationship",
-        Commands_defer_add_existing_union_relationship
-    },
-    {
-        "defer_add_union_relationship_2_ops",
-        Commands_defer_add_union_relationship_2_ops
-    },
-    {
-        "defer_add_existing_union_relationship_2_ops",
-        Commands_defer_add_existing_union_relationship_2_ops
-    },
-    {
         "defer_remove_after_set",
         Commands_defer_remove_after_set
     },
@@ -12603,10 +12197,6 @@ bake_test_case SingleThreadStaging_testcases[] = {
         SingleThreadStaging_modify_after_lock
     },
     {
-        "get_case_from_stage",
-        SingleThreadStaging_get_case_from_stage
-    },
-    {
         "get_object_from_stage",
         SingleThreadStaging_get_object_from_stage
     },
@@ -12977,7 +12567,7 @@ static bake_test_suite suites[] = {
         "Search",
         NULL,
         NULL,
-        23,
+        20,
         Search_testcases
     },
     {
@@ -13007,13 +12597,6 @@ static bake_test_suite suites[] = {
         NULL,
         26,
         Add_testcases
-    },
-    {
-        "Switch",
-        NULL,
-        NULL,
-        47,
-        Switch_testcases
     },
     {
         "EnabledComponents",
@@ -13089,7 +12672,7 @@ static bake_test_suite suites[] = {
         "OnDelete",
         NULL,
         NULL,
-        115,
+        113,
         OnDelete_testcases
     },
     {
@@ -13131,7 +12714,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        87,
+        84,
         ComponentLifecycle_testcases
     },
     {
@@ -13152,7 +12735,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        301,
+        294,
         Filter_testcases
     },
     {
@@ -13166,7 +12749,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        243,
+        233,
         Query_testcases
     },
     {
@@ -13187,7 +12770,7 @@ static bake_test_suite suites[] = {
         "Trigger",
         NULL,
         NULL,
-        118,
+        117,
         Trigger_testcases
     },
     {
@@ -13222,7 +12805,7 @@ static bake_test_suite suites[] = {
         "TriggerOnSet",
         NULL,
         NULL,
-        16,
+        15,
         TriggerOnSet_testcases
     },
     {
@@ -13236,7 +12819,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        127,
+        125,
         Prefab_testcases
     },
     {
@@ -13264,14 +12847,14 @@ static bake_test_suite suites[] = {
         "Commands",
         NULL,
         NULL,
-        122,
+        118,
         Commands_testcases
     },
     {
         "SingleThreadStaging",
         SingleThreadStaging_setup,
         NULL,
-        68,
+        67,
         SingleThreadStaging_testcases
     },
     {
@@ -13319,5 +12902,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("api", argc, argv, suites, 51);
+    return bake_test_run("api", argc, argv, suites, 50);
 }

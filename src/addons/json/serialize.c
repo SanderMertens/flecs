@@ -679,17 +679,6 @@ int flecs_json_append_type_labels(
             continue;
         }
 
-        if (obj && (pred == EcsUnion)) {
-            pred = obj;
-            obj = ecs_get_target(world, ent, pred, 0);
-            if (!ecs_is_alive(world, obj)) {
-                /* Union relationships aren't automatically cleaned up, so they
-                 * can contain invalid entity ids. Don't serialize value until
-                 * relationship is valid again. */
-                continue;
-            }
-        }
-
         if (desc && desc->serialize_id_labels) {
             flecs_json_next(buf);
 
@@ -893,36 +882,31 @@ int flecs_json_append_type(
                 continue;
             }
 
-            if (obj && (pred == EcsUnion)) {
-                pred = obj;
-                obj = ecs_get_target(world, ent, pred, 0);
-                if (!ecs_is_alive(world, obj)) {
-                    /* Union relationships aren't automatically cleaned up, so they
-                    * can contain invalid entity ids. Don't serialize value until
-                    * relationship is valid again. */
-                    continue;
-                }
-            }
-
             flecs_json_next(buf);
             flecs_json_array_push(buf);
             flecs_json_next(buf);
             flecs_json_path(buf, world, pred);
             if (obj || role) {
                 flecs_json_next(buf);
-                if (obj) {
-                    flecs_json_path(buf, world, obj);
-                } else {
-                    flecs_json_number(buf, 0);
-                }
-                if (role) {
+                flecs_json_array_push(buf);
+                flecs_json_next(buf);
+                flecs_json_path(buf, world, pred);
+                if (obj || role) {
                     flecs_json_next(buf);
-                    flecs_json_string(buf, ecs_id_flag_str(role));
+                    if (obj) {
+                        flecs_json_path(buf, world, obj);
+                    } else {
+                        flecs_json_number(buf, 0);
+                    }
+                    if (role) {
+                        flecs_json_next(buf);
+                        flecs_json_string(buf, ecs_id_flag_str(role));
+                    }
                 }
+                flecs_json_array_pop(buf);
             }
             flecs_json_array_pop(buf);
         }
-        flecs_json_array_pop(buf);
     }
 
     if (flecs_json_append_type_labels(world, buf, ids, count, ent, inst, desc)) {
@@ -1125,7 +1109,7 @@ int flecs_json_serialize_refs_idr(
         while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
             ecs_table_t *table = tr->hdr.table;
             int32_t i, count = ecs_table_count(table);
-            ecs_entity_t *entities = ecs_vec_first(&table->data.entities);
+            ecs_entity_t *entities = flecs_table_entities_array(table);
             for (i = 0; i < count; i ++) {
                 ecs_entity_t e = entities[i];
                 flecs_json_next(buf);
@@ -1181,7 +1165,7 @@ int flecs_json_serialize_matches(
                 EcsPoly *queries = ecs_table_get_column(table, tr->column, 0);
 
                 int32_t i, count = ecs_table_count(table);
-                ecs_entity_t *entities = ecs_vec_first(&table->data.entities);
+                ecs_entity_t *entities = flecs_table_entities_array(table);
                 for (i = 0; i < count; i ++) {
                     ecs_poly_t *q = queries[i].poly;
                     ecs_iter_t qit;
@@ -2005,7 +1989,7 @@ int flecs_json_serialize_iter_result_columns(
     const ecs_iter_to_json_desc_t *desc)
 {
     ecs_table_t *table = it->table;
-    if (!table || !table->column_count) {
+    if (!table || !ecs_table_column_count(table)) {
         return 0;
     }
 
@@ -2040,7 +2024,7 @@ int flecs_json_serialize_iter_result_columns(
             continue;
         }
 
-        ecs_entity_t typeid = table->data.columns[storage_column].ti->component;
+        ecs_entity_t typeid = flecs_table_column(table, storage_column)->ti->component;
         if (!typeid) {
             ecs_strbuf_appendch(buf, '0');
             continue;
@@ -2059,7 +2043,7 @@ int flecs_json_serialize_iter_result_columns(
             continue;
         }
 
-        void *ptr = ecs_vec_first(&table->data.columns[storage_column].data);
+        void *ptr = ecs_vec_first(&flecs_table_column(table, storage_column)->data);
         if (array_to_json_buf_w_type_data(world, ptr, it->count, buf, comp, ser)) {
             return -1;
         }

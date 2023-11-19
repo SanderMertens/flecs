@@ -125,7 +125,7 @@ bool flecs_iter_populate_term_data(
     bool is_shared = false;
     ecs_table_t *table;
     void *data;
-    int32_t row, u_index;
+    int32_t row;
 
     if (!column) {
         /* Term has no data. This includes terms that have Not operators. */
@@ -188,17 +188,13 @@ bool flecs_iter_populate_term_data(
             ecs_table_record_t *tr;
 
             if (!(tr = flecs_table_record_get(world, table, id)) || (tr->column == -1)) {
-                u_index = flecs_table_column_to_union_index(table, -column - 1);
-                if (u_index != -1) {
-                    goto has_union;
-                }
                 goto no_data;
             }
 
             /* We now have row and column, so we can get the storage for the id
              * which gives us the pointer and size */
             column = tr->column;
-            ecs_vec_t *s = &table->data.columns[column].data;
+            ecs_vec_t *s = &flecs_table_column(table, column)->data;
             data = ecs_vec_first(s);
             /* Fallthrough to has_data */
         }
@@ -212,10 +208,6 @@ bool flecs_iter_populate_term_data(
         int32_t storage_column = ecs_table_type_to_column_index(
             table, column - 1);
         if (storage_column == -1) {
-            u_index = flecs_table_column_to_union_index(table, column - 1);
-            if (u_index != -1) {
-                goto has_union;
-            }
             goto no_data;
         }
 
@@ -223,24 +215,14 @@ bool flecs_iter_populate_term_data(
             goto no_data;
         }
 
-        ecs_vec_t *s = &table->data.columns[storage_column].data;
+        ecs_vec_t *s = &flecs_table_column(table, storage_column)->data;
         data = ecs_vec_first(s);
 
         /* Fallthrough to has_data */
     }
 
-has_data:
     if (ptr_out) ptr_out[0] = ECS_ELEM(data, size, row);
     return is_shared;
-
-has_union: {
-        /* Edge case: if column is a switch we should return the vector with case
-         * identifiers. Will be replaced in the future with pluggable storage */
-        ecs_assert(table->_ != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_switch_t *sw = &table->_->sw_columns[u_index];
-        data = ecs_vec_first(flecs_switch_values(sw));
-        goto has_data;
-    }
 
 no_data:
     if (ptr_out) ptr_out[0] = NULL;
@@ -267,8 +249,7 @@ void flecs_iter_populate_data(
         ecs_assert(count != 0 || !ecs_table_count(table) || (it->flags & EcsIterTableOnly), 
             ECS_INTERNAL_ERROR, NULL);
         if (count) {
-            it->entities = ecs_vec_get_t(
-                &table->data.entities, ecs_entity_t, offset);
+            it->entities = &flecs_table_entities_array(table)[offset];
         } else {
             it->entities = NULL;
         }
@@ -646,8 +627,7 @@ ecs_entity_t ecs_iter_get_var(
             if ((var->range.count == 1) || (ecs_table_count(table) == 1)) {
                 ecs_assert(ecs_table_count(table) > var->range.offset,
                     ECS_INTERNAL_ERROR, NULL);
-                e = ecs_vec_get_t(&table->data.entities, ecs_entity_t,
-                    var->range.offset)[0];
+                e = flecs_table_entities_array(table)[var->range.offset];
             }
         }
     } else {
@@ -808,8 +788,7 @@ void ecs_iter_set_var_as_range(
 
     if (range->count == 1) {
         ecs_table_t *table = range->table;
-        var->entity = ecs_vec_get_t(
-            &table->data.entities, ecs_entity_t, range->offset)[0];
+        var->entity = flecs_table_entities_array(table)[range->offset];
     } else {
         var->entity = 0;
     }

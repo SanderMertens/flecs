@@ -147,7 +147,6 @@
 #define FLECS_PARSER        /**< String parser for queries */
 #define FLECS_PLECS         /**< ECS data definition format */
 #define FLECS_RULES         /**< Constraint solver for advanced queries */
-#define FLECS_SNAPSHOT      /**< Snapshot & restore ECS data */
 #define FLECS_STATS         /**< Access runtime statistics */
 #define FLECS_MONITOR       /**< Track runtime statistics periodically */
 #define FLECS_METRICS       /**< Expose component data as statistics */
@@ -225,7 +224,7 @@
  * When enabled, Flecs will use the OS allocator provided in the OS API directly
  * instead of the builtin block allocator. This can decrease memory utilization
  * as memory will be freed more often, at the cost of decreased performance. */
-// #define FLECS_USE_OS_ALLOC
+#define FLECS_USE_OS_ALLOC
 
 /** \def FLECS_ID_DESC_MAX
  * Maximum number of ids to add ecs_entity_desc_t / ecs_bulk_desc_t */
@@ -1437,11 +1436,6 @@ FLECS_API extern const ecs_entity_t EcsOneOf;
 /** Can be added to relationship to indicate that it should never hold data, 
  * even when it or the relationship target is a component. */
 FLECS_API extern const ecs_entity_t EcsTag;
-
-/** Tag to indicate that relationship is stored as union. Union relationships 
- * enable changing the target of a union without switching tables. Union 
- * relationships are also marked as exclusive. */
-FLECS_API extern const ecs_entity_t EcsUnion;
 
 /** Tag to indicate name identifier */
 FLECS_API extern const ecs_entity_t EcsName;
@@ -3719,23 +3713,6 @@ const ecs_type_hooks_t* ecs_get_hooks_id(
  */
 FLECS_API
 bool ecs_id_is_tag(
-    const ecs_world_t *world,
-    ecs_id_t id);
-
-/** Return whether represents a union.
- * This operation returns whether the specified type represents a union. Only
- * pair ids can be unions.
- * 
- * An id represents a union when:
- * - The first element of the pair is EcsUnion/flecs::Union
- * - The first element of the pair has EcsUnion/flecs::Union
- *
- * @param world The world.
- * @param id The id.
- * @return Whether the provided id represents a union.
- */
-FLECS_API
-bool ecs_id_is_union(
     const ecs_world_t *world,
     ecs_id_t id);
 

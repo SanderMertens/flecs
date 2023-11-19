@@ -161,6 +161,16 @@ void* ecs_vec_grow(
     ecs_vec_grow(allocator, vec, ECS_SIZEOF(T), elem_count)
 
 FLECS_API
+void ecs_vec_merge(
+    struct ecs_allocator_t *allocator,
+    ecs_vec_t *dst,
+    ecs_vec_t *src,
+    ecs_size_t size);
+
+#define ecs_vec_merge_t(allocator, dst, src, T) \
+    ecs_vec_merge(allocator, dst, src, ECS_SIZEOF(T))
+
+FLECS_API
 int32_t ecs_vec_count(
     const ecs_vec_t *vec);
 

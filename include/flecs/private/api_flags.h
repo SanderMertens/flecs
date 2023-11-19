@@ -66,7 +66,6 @@ extern "C" {
 #define EcsIdTraversable               (1u << 8)
 #define EcsIdTag                       (1u << 9)
 #define EcsIdWith                      (1u << 10)
-#define EcsIdUnion                     (1u << 11)
 #define EcsIdAlwaysOverride            (1u << 12)
 
 #define EcsIdHasOnAdd                  (1u << 16) /* Same values as table flags */
@@ -150,7 +149,6 @@ extern "C" {
 #define EcsTableHasDtors               (1u << 10u)
 #define EcsTableHasCopy                (1u << 11u)
 #define EcsTableHasMove                (1u << 12u)
-#define EcsTableHasUnion               (1u << 13u)
 #define EcsTableHasToggle              (1u << 14u)
 #define EcsTableHasOverrides           (1u << 15u)
 
@@ -170,8 +168,8 @@ extern "C" {
 
 /* Composite table flags */
 #define EcsTableHasLifecycle        (EcsTableHasCtors | EcsTableHasDtors)
-#define EcsTableIsComplex           (EcsTableHasLifecycle | EcsTableHasUnion | EcsTableHasToggle)
-#define EcsTableHasAddActions       (EcsTableHasIsA | EcsTableHasUnion | EcsTableHasCtors | EcsTableHasOnAdd | EcsTableHasOnSet)
+#define EcsTableIsComplex           (EcsTableHasLifecycle | EcsTableHasToggle)
+#define EcsTableHasAddActions       (EcsTableHasIsA | EcsTableHasCtors | EcsTableHasOnAdd | EcsTableHasOnSet)
 #define EcsTableHasRemoveActions    (EcsTableHasIsA | EcsTableHasDtors | EcsTableHasOnRemove | EcsTableHasUnSet)
 
 

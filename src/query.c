@@ -929,12 +929,9 @@ void flecs_query_set_table_match(
         }
 
         flecs_entity_filter_init(world, &qm->entity_filter, filter, 
-            table, qm->ids, qm->columns);
+            table, qm->ids);
 
         if (qm->entity_filter) {
-            query->flags &= ~EcsQueryTrivialIter;
-        }
-        if (table->flags & EcsTableHasUnion) {
             query->flags &= ~EcsQueryTrivialIter;
         }
     }
@@ -1058,23 +1055,18 @@ void flecs_query_sort_table(
     ecs_order_by_action_t compare,
     ecs_sort_table_action_t sort)
 {
-    ecs_data_t *data = &table->data;
-    if (!ecs_vec_count(&data->entities)) {
+    int32_t count = ecs_table_count(table);
+    if (!count || count < 2) {
         /* Nothing to sort */
         return;
     }
 
-    int32_t count = flecs_table_data_count(data);
-    if (count < 2) {
-        return;
-    }
-
-    ecs_entity_t *entities = ecs_vec_first(&data->entities);
+    ecs_entity_t *entities = flecs_table_entities_array(table);
 
     void *ptr = NULL;
     int32_t size = 0;
     if (column_index != -1) {
-        ecs_column_t *column = &data->columns[column_index];
+        ecs_column_t *column = flecs_table_column(table, column_index);
         ecs_type_info_t *ti = column->ti;
         size = ti->size;
         ptr = ecs_vec_first(&column->data);
@@ -1148,7 +1140,6 @@ void flecs_query_build_sorted_table_range(
     ecs_query_table_match_t *cur, *end = list->last->next;
     for (cur = list->first; cur != end; cur = cur->next) {
         ecs_table_t *table = cur->table;
-        ecs_data_t *data = &table->data;
 
         ecs_assert(ecs_table_count(table) != 0, ECS_INTERNAL_ERROR, NULL);
 
@@ -1160,7 +1151,7 @@ void flecs_query_build_sorted_table_range(
             ecs_assert(column != 0, ECS_INTERNAL_ERROR, NULL);
             if (column >= 0) {
                 column = table->column_map[column - 1];
-                ecs_vec_t *vec = &data->columns[column].data;
+                ecs_vec_t *vec = &flecs_table_column(table, column)->data;
                 helper[to_sort].ptr = ecs_vec_first(vec);
                 helper[to_sort].elem_size = size;
                 helper[to_sort].shared = false;
@@ -1194,7 +1185,7 @@ void flecs_query_build_sorted_table_range(
         }
 
         helper[to_sort].match = cur;
-        helper[to_sort].entities = ecs_vec_first(&data->entities);
+        helper[to_sort].entities = flecs_table_entities_array(table);
         helper[to_sort].row = 0;
         helper[to_sort].count = ecs_table_count(table);
         to_sort ++;      
@@ -2397,7 +2388,7 @@ void flecs_query_mark_columns_dirty(
 {
     ecs_table_t *table = qm->table;
     ecs_filter_t *filter = &query->filter;
-    if ((table && table->dirty_state) || (query->flags & EcsQueryHasNonThisOutTerms)) {
+    if ((table && flecs_table_data(table)->dirty_state) || (query->flags & EcsQueryHasNonThisOutTerms)) {
         ecs_term_t *terms = filter->terms;
         int32_t i, count = filter->term_count;
 
@@ -2417,7 +2408,7 @@ void flecs_query_mark_columns_dirty(
             }
 
             ecs_assert(tc.table != NULL, ECS_INTERNAL_ERROR, NULL);
-            int32_t *dirty_state = tc.table->dirty_state;
+            int32_t *dirty_state = flecs_table_data(tc.table)->dirty_state;
             if (!dirty_state) {
                 continue;
             }
@@ -2497,7 +2488,6 @@ void flecs_query_populate_trivial(
     it->references = ecs_vec_first(&match->refs);
 
     if (!it->references) {
-        ecs_data_t *data = &table->data;
         if (!(it->flags & EcsIterNoData)) {
             int32_t i;
             for (i = 0; i < it->field_count; i ++) {
@@ -2513,14 +2503,14 @@ void flecs_query_populate_trivial(
                     continue;
                 }
 
-                it->ptrs[i] = ecs_vec_get(&data->columns[column].data,
-                    it->sizes[i], offset);
+                it->ptrs[i] = ecs_vec_get(&flecs_table_column(table, 
+                    column)->data, it->sizes[i], offset);
             }
         }
 
         it->frame_offset += it->table ? ecs_table_count(it->table) : 0;
         it->table = table;
-        it->entities = ecs_vec_get_t(&data->entities, ecs_entity_t, offset);
+        it->entities = &flecs_table_entities_array(table)[offset];
     } else {
         flecs_iter_populate_data(
             it->real_world, it, table, offset, count, it->ptrs);
