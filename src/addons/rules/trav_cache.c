@@ -96,7 +96,7 @@ void flecs_rule_trav_cache_fini(
     ecs_vec_fini_t(a, &cache->entities, ecs_trav_elem_t);
 }
 
-void flecs_rule_get_down_cache(
+void flecs_rule_get_trav_down_cache(
     const ecs_rule_run_ctx_t *ctx,
     ecs_trav_cache_t *cache,
     ecs_entity_t trav,
@@ -112,7 +112,7 @@ void flecs_rule_get_down_cache(
     }
 }
 
-void flecs_rule_get_up_cache(
+void flecs_rule_get_trav_up_cache(
     const ecs_rule_run_ctx_t *ctx,
     ecs_trav_cache_t *cache,
     ecs_entity_t trav,

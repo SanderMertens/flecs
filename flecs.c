@@ -855,6 +855,12 @@ void flecs_table_traversable_add(
     ecs_table_t *table,
     int32_t value);
 
+ecs_vec_t* flecs_table_entities(
+    ecs_table_t *table);
+
+ecs_entity_t* flecs_table_entities_array(
+    ecs_table_t *table);
+
 #endif
 
 
@@ -2454,6 +2460,12 @@ int32_t flecs_search_relation_w_idr(
     ecs_id_t *id_out,
     struct ecs_table_record_t **tr_out,
     ecs_id_record_t *idr);
+
+bool flecs_type_can_inherit_id(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    const ecs_id_record_t *idr,
+    ecs_id_t id);
 
 #endif
 
@@ -20145,7 +20157,6 @@ int32_t flecs_type_offset_search(
     return -1;
 }
 
-static
 bool flecs_type_can_inherit_id(
     const ecs_world_t *world,
     const ecs_table_t *table,
@@ -43467,6 +43478,18 @@ void flecs_table_fini_data(
     table->flags &= ~EcsTableHasTraversable;
 }
 
+ecs_vec_t* flecs_table_entities(
+    ecs_table_t *table)
+{
+    return &table->data.entities;
+}
+
+ecs_entity_t* flecs_table_entities_array(
+    ecs_table_t *table)
+{
+    return ecs_vec_first(flecs_table_entities(table));
+}
+
 /* Cleanup, no OnRemove, don't update entity index, don't deactivate table */
 void flecs_table_clear_data(
     ecs_world_t *world,
@@ -59857,8 +59880,10 @@ typedef struct ecs_rule_var_t {
 typedef enum {
     EcsRuleAnd,            /* And operator: find or match id against variable source */
     EcsRuleAndId,          /* And operator for fixed id (no wildcards/variables) */
-    EcsRuleWith,           /* Match id against fixed or variable source */
     EcsRuleAndAny,         /* And operator with support for matching Any src/id */
+    EcsRuleUp,             /* up traversal */
+    EcsRuleSelfUp,         /* self|up traversal */
+    EcsRuleWith,           /* Match id against fixed or variable source */
     EcsRuleTrav,           /* Support for transitive/reflexive queries */
     EcsRuleIdsRight,       /* Find ids in use that match (R, *) wildcard */
     EcsRuleIdsLeft,        /* Find ids in use that match (*, T) wildcard */
@@ -59928,7 +59953,48 @@ typedef struct {
     int16_t remaining;
 } ecs_rule_and_ctx_t;
 
-/* Cache for storing results of downward traversal */
+/* Down traversal cache (for resolving up queries w/unknown source) */
+typedef struct {
+    ecs_table_t *table;
+    bool leaf; /* Table owns and inherits id (for Up queries without Self) */
+} ecs_trav_down_elem_t;
+
+typedef struct {
+    ecs_vec_t elems;      /* vector<ecs_trav_down_elem_t> */
+    bool ready;
+} ecs_trav_down_t;
+
+typedef struct {
+    ecs_entity_t src;
+    ecs_id_t id;
+    int32_t column;
+    bool ready;
+} ecs_trav_up_t;
+
+typedef struct {
+    ecs_map_t src;        /* map<entity, trav_down_t> or map<table_id, trav_up_t> */
+    ecs_id_t with;
+    ecs_flags32_t dir;
+} ecs_trav_up_cache_t;
+
+/* And up context */
+typedef struct {
+    ecs_rule_and_ctx_t and;
+    ecs_table_t *table;
+    int32_t row;
+    int32_t end;
+    ecs_entity_t trav;
+    ecs_id_t with;
+    ecs_id_t matched;
+    ecs_id_record_t *idr_with;
+    ecs_id_record_t *idr_trav;
+    ecs_trav_down_t *down;
+    int32_t cache_elem;
+    ecs_trav_up_cache_t cache;
+} ecs_rule_up_ctx_t;
+
+/* Cache for storing results of upward/downward "all" traversal. This type of 
+ * traversal iterates and caches the entire tree. */
 typedef struct {
     ecs_entity_t entity;
     ecs_id_record_t *idr;
@@ -59988,6 +60054,7 @@ typedef struct {
 typedef struct ecs_rule_op_ctx_t {
     union {
         ecs_rule_and_ctx_t and;
+        ecs_rule_up_ctx_t up;
         ecs_rule_trav_ctx_t trav;
         ecs_rule_ids_ctx_t ids;
         ecs_rule_eq_ctx_t eq;
@@ -60037,6 +60104,7 @@ typedef struct {
     ecs_world_t *world;           /* Reference to world */
     const ecs_rule_t *rule;       /* Reference to rule */
     const ecs_rule_var_t *rule_vars; /* Reference to rule variable array */
+    ecs_flags32_t *source_set;    /* Whether ecs_iter_t::sources is written by instruction */
 } ecs_rule_run_ctx_t;
 
 typedef struct {
@@ -60102,15 +60170,19 @@ int flecs_rule_compile(
 ecs_allocator_t* flecs_rule_get_allocator(
     const ecs_iter_t *it);
 
+
+/* Traversal cache for transitive queries. Finds all reachable entities by
+ * following a relationship */
+
 /* Find all entities when traversing downwards */
-void flecs_rule_get_down_cache(
+void flecs_rule_get_trav_down_cache(
     const ecs_rule_run_ctx_t *ctx,
     ecs_trav_cache_t *cache,
     ecs_entity_t trav,
     ecs_entity_t entity);
 
 /* Find all entities when traversing upwards */
-void flecs_rule_get_up_cache(
+void flecs_rule_get_trav_up_cache(
     const ecs_rule_run_ctx_t *ctx,
     ecs_trav_cache_t *cache,
     ecs_entity_t trav,
@@ -60120,6 +60192,38 @@ void flecs_rule_get_up_cache(
 void flecs_rule_trav_cache_fini(
     ecs_allocator_t *a,
     ecs_trav_cache_t *cache);
+
+
+/* Traversal caches for up traversal. Enables searching upwards until an entity
+ * with the queried for id has been found. */
+
+/* Traverse downwards from starting entity to find all tables for which the 
+ * specified entity is the source of the queried for id ('with'). */
+ecs_trav_down_t* flecs_rule_get_down_cache(
+    const ecs_rule_run_ctx_t *ctx,
+    ecs_trav_up_cache_t *cache,
+    ecs_entity_t trav,
+    ecs_entity_t entity,
+    ecs_id_record_t *idr_with,
+    bool self);
+
+/* Free down traversal cache */
+void flecs_rule_down_cache_fini(
+    ecs_allocator_t *a,
+    ecs_trav_up_cache_t *cache);
+
+ecs_trav_up_t* flecs_rule_get_up_cache(
+    const ecs_rule_run_ctx_t *ctx,
+    ecs_trav_up_cache_t *cache,
+    ecs_table_t *table,
+    ecs_id_t with,
+    ecs_entity_t trav,
+    ecs_id_record_t *idr_with,
+    ecs_id_record_t *idr_trav);
+
+/* Free up traversal cache */
+void flecs_rule_up_cache_fini(
+    ecs_trav_up_cache_t *cache);
 
 #endif
 
@@ -60144,7 +60248,9 @@ const char* flecs_rule_op_str(
     switch(kind) {
     case EcsRuleAnd:          return "and     ";
     case EcsRuleAndId:        return "and_id  ";
-    case EcsRuleAndAny:       return "andany  ";
+    case EcsRuleAndAny:       return "and_any ";
+    case EcsRuleUp:           return "up      ";
+    case EcsRuleSelfUp:       return "selfup  ";
     case EcsRuleWith:         return "with    ";
     case EcsRuleTrav:         return "trav    ";
     case EcsRuleIdsRight:     return "idsr    ";
@@ -60527,7 +60633,7 @@ error:
 
 #endif
 
- /**
+/**
  * @file addons/rules/compile.c
  * @brief Compile rule program from filter.
  */
@@ -60541,6 +60647,8 @@ static bool flecs_rule_op_is_test[] = {
     [EcsRuleAnd] = true,
     [EcsRuleAndAny] = true,
     [EcsRuleAndId] = true,
+    [EcsRuleUp] = true,
+    [EcsRuleSelfUp] = true,
     [EcsRuleWith] = true,
     [EcsRuleTrav] = true,
     [EcsRuleContain] = true,
@@ -61946,6 +62054,10 @@ int flecs_rule_compile_term(
     } else {
         if (term->flags & (EcsTermMatchAny|EcsTermMatchAnySrc)) {
             op.kind = EcsRuleAndAny;
+        } else if ((term->src.flags & EcsTraverseFlags) == EcsUp) {
+            op.kind = EcsRuleUp;
+        } else if ((term->src.flags & EcsTraverseFlags) == (EcsSelf|EcsUp)) {
+            op.kind = EcsRuleSelfUp;
         }
     }
 
@@ -62407,6 +62519,24 @@ ecs_rule_op_ctx_t* flecs_op_ctx_(
 #define flecs_op_ctx(ctx, op_kind) (&flecs_op_ctx_(ctx)->is.op_kind)
 
 static
+void flecs_reset_source_set_flag(
+    const ecs_rule_run_ctx_t *ctx,
+    int32_t field_index)
+{
+    ecs_assert(field_index != -1, ECS_INTERNAL_ERROR, NULL);
+    (*ctx->source_set) &= ~(1u << field_index);
+}
+
+static
+void flecs_set_source_set_flag(
+    const ecs_rule_run_ctx_t *ctx,
+    int32_t field_index)
+{
+    ecs_assert(field_index != -1, ECS_INTERNAL_ERROR, NULL);
+    (*ctx->source_set) |= (1u << field_index);
+}
+
+static
 ecs_table_range_t flecs_range_from_entity(
     ecs_entity_t e,
     const ecs_rule_run_ctx_t *ctx)
@@ -62583,7 +62713,7 @@ void flecs_rule_set_vars(
         if (op->written & (1ull << var)) {
             if (ECS_IS_PAIR(id)) {
                 flecs_rule_var_set_entity(
-                    op, var, ecs_pair_first(ctx->world, id), ctx);
+                    op, var, ecs_get_alive(ctx->world, ECS_PAIR_FIRST(id)), ctx);
             } else {
                 flecs_rule_var_set_entity(op, var, id, ctx);
             }
@@ -62593,7 +62723,7 @@ void flecs_rule_set_vars(
         ecs_var_id_t var = op->second.var;
         if (op->written & (1ull << var)) {
             flecs_rule_var_set_entity(
-                op, var, ecs_pair_second(ctx->world, id), ctx);
+                op, var, ecs_get_alive(ctx->world, ECS_PAIR_SECOND(id)), ctx);
         }
     }
 }
@@ -62959,6 +63089,232 @@ bool flecs_rule_and_id(
 }
 
 static
+bool flecs_rule_up_select(
+    const ecs_rule_op_t *op,
+    bool redo,
+    const ecs_rule_run_ctx_t *ctx,
+    bool self)
+{
+    ecs_rule_up_ctx_t *op_ctx = flecs_op_ctx(ctx, up);
+    ecs_world_t *world = ctx->world;
+    ecs_iter_t *it = ctx->it;
+    bool redo_select = redo;
+
+    if (!redo) {
+        const ecs_filter_t *filter = &ctx->rule->filter;
+        op_ctx->trav = filter->terms[op->term_index].src.trav;
+        op_ctx->with = flecs_rule_op_get_id(op, ctx);
+        op_ctx->idr_with = flecs_id_record_get(ctx->world, op_ctx->with);
+        if (!op_ctx->idr_with) {
+            return false;
+        }
+
+        if (!self) {
+            op_ctx->idr_trav = flecs_id_record_get(ctx->world, op_ctx->trav);
+            if (!op_ctx->idr_trav) {
+                return false;
+            }
+        }
+
+        op_ctx->down = NULL;
+        op_ctx->cache_elem = 0;
+    }
+
+    ecs_trav_down_t *down = op_ctx->down;
+
+    do {
+        while (!down) {
+            ecs_table_t *table = op_ctx->table;
+            if (!table) {
+                ecs_table_range_t range;
+                it->sources[op->field_index] = 0;
+                do {
+                    if (!flecs_rule_select(op, redo_select, ctx)) {
+                        return false;
+                    }
+
+                    redo_select = true;
+
+                    range = flecs_rule_get_range(
+                        op, &op->src, EcsRuleSrc, ctx);
+                } while (!self && range.table->_->traversable_count == 0);
+
+                if (!range.count) {
+                    range.count = ecs_table_count(range.table);
+                }
+
+                table = op_ctx->table = range.table;
+                op_ctx->row = range.offset;
+                op_ctx->end = range.offset + range.count;
+                op_ctx->matched = it->ids[op->field_index];
+
+                if (self) {
+                    flecs_reset_source_set_flag(ctx, op->field_index);
+                    op_ctx->row --;
+                    return true;
+                }
+
+                int32_t column = it->columns[op->field_index];
+                it->columns[op->field_index] = column * -1;
+
+                redo_select = true;
+            } else {
+                op_ctx->row ++;
+            }
+
+            int32_t row;
+            ecs_entity_t entity = 0;
+            ecs_entity_t *entities = flecs_table_entities_array(table);
+            for (row = op_ctx->row; row < op_ctx->end; row ++) {
+                entity = entities[row];
+                ecs_record_t *record = flecs_entities_get(world, entity);
+                if (record->row & EcsEntityIsTraversable) {
+                    it->sources[op->field_index] = entity;
+                    break;
+                }
+            }
+            if (row == op_ctx->end) {
+                op_ctx->table = NULL;
+                continue;
+            }
+
+            down = op_ctx->down = flecs_rule_get_down_cache(ctx, &op_ctx->cache, 
+                op_ctx->trav, entity, op_ctx->idr_with, self);
+            op_ctx->cache_elem = -1;
+        }
+
+        if ((++ op_ctx->cache_elem) >= ecs_vec_count(&down->elems)) {
+            down = NULL;
+            continue;
+        }
+
+        ecs_trav_down_elem_t *elem = ecs_vec_get_t(
+            &down->elems, ecs_trav_down_elem_t, op_ctx->cache_elem);
+        flecs_rule_var_set_table(op, op->src.var, elem->table, 0, 0, ctx);
+        flecs_rule_set_vars(op, op_ctx->matched, ctx);
+
+        if (it->columns[op->field_index] > 0) {
+            it->columns[op->field_index] = -it->columns[op->field_index];
+        }
+
+        break;
+    } while (true);
+
+    flecs_set_source_set_flag(ctx, op->field_index);
+
+    return true;
+}
+
+static
+bool flecs_rule_up_with(
+    const ecs_rule_op_t *op,
+    bool redo,
+    const ecs_rule_run_ctx_t *ctx)
+{
+    ecs_rule_up_ctx_t *op_ctx = flecs_op_ctx(ctx, up);
+    ecs_iter_t *it = ctx->it;
+
+    if (!redo) {
+        const ecs_filter_t *filter = &ctx->rule->filter;
+        op_ctx->trav = filter->terms[op->term_index].src.trav;
+        op_ctx->with = flecs_rule_op_get_id(op, ctx);
+        op_ctx->idr_with = flecs_id_record_get(ctx->world, op_ctx->with);
+
+        if (!op_ctx->idr_with) {
+            return false;
+        }
+
+        op_ctx->idr_trav = flecs_id_record_get(ctx->world, 
+            ecs_pair(op_ctx->trav, EcsWildcard));
+        if (!op_ctx->idr_trav) {
+            return false;
+        }
+
+        ecs_table_range_t range = flecs_rule_get_range(
+            op, &op->src, EcsRuleSrc, ctx);
+        if (!range.table) {
+            return false;
+        }
+
+        ecs_trav_up_t *up = flecs_rule_get_up_cache(ctx, &op_ctx->cache, 
+            range.table, op_ctx->with, op_ctx->trav, op_ctx->idr_with,
+            op_ctx->idr_trav);
+
+        if (!up) {
+            return false;
+        }
+
+        it->sources[op->field_index] = flecs_entities_get_generation(
+            ctx->world, up->src);
+        it->columns[op->field_index] = -(up->column + 1);
+        it->ids[op->field_index] = up->id;
+        flecs_rule_set_vars(op, up->id, ctx);
+        flecs_set_source_set_flag(ctx, op->field_index);
+        return true;
+    } else {
+        return false;
+    }
+}
+
+static
+bool flecs_rule_self_up_with(
+    const ecs_rule_op_t *op,
+    bool redo,
+    const ecs_rule_run_ctx_t *ctx)
+{
+    if (!redo) {
+        if (flecs_rule_with(op, redo, ctx)) {
+            ecs_rule_up_ctx_t *op_ctx = flecs_op_ctx(ctx, up);
+            op_ctx->trav = 0;
+            if (flecs_rule_ref_flags(op->flags, EcsRuleSrc) & EcsRuleIsVar) {
+                ecs_iter_t *it = ctx->it;
+                it->sources[op->field_index] = 0;
+            }
+            return true;
+        }
+
+        flecs_reset_source_set_flag(ctx, op->field_index);
+
+        return flecs_rule_up_with(op, redo, ctx);
+    } else {
+        ecs_rule_up_ctx_t *op_ctx = flecs_op_ctx(ctx, up);
+        if (op_ctx->trav == 0) {
+            return flecs_rule_with(op, redo, ctx);
+        }
+    }
+
+    return false;
+}
+
+static
+bool flecs_rule_up(
+    const ecs_rule_op_t *op,
+    bool redo,
+    const ecs_rule_run_ctx_t *ctx)
+{
+    uint64_t written = ctx->written[ctx->op_index];
+    if (flecs_ref_is_written(op, &op->src, EcsRuleSrc, written)) {
+        return flecs_rule_up_with(op, redo, ctx);
+    } else {
+        return flecs_rule_up_select(op, redo, ctx, false);
+    }
+}
+
+static
+bool flecs_rule_self_up(
+    const ecs_rule_op_t *op,
+    bool redo,
+    const ecs_rule_run_ctx_t *ctx)
+{
+    uint64_t written = ctx->written[ctx->op_index];
+    if (flecs_ref_is_written(op, &op->src, EcsRuleSrc, written)) {
+        return flecs_rule_self_up_with(op, redo, ctx);
+    } else {
+        return flecs_rule_up_select(op, redo, ctx, true);
+    }
+}
+
+static
 bool flecs_rule_and_any(
     const ecs_rule_op_t *op,
     bool redo,
@@ -63115,7 +63471,7 @@ bool flecs_rule_trav_unknown_src_up_fixed_second(
         }
 
         /* Entity is traversable, which means it could have a subtree */
-        flecs_rule_get_down_cache(ctx, &trav_ctx->cache, trav, second);
+        flecs_rule_get_trav_down_cache(ctx, &trav_ctx->cache, trav, second);
         trav_ctx->index = 0;
 
         if (op->match_flags & EcsTermReflexive) {
@@ -63206,7 +63562,7 @@ bool flecs_rule_trav_fixed_src_up_unknown_second(
     ecs_rule_trav_ctx_t *trav_ctx = flecs_op_ctx(ctx, trav);
 
     if (!redo) {
-        flecs_rule_get_up_cache(ctx, &trav_ctx->cache, trav, table);
+        flecs_rule_get_trav_up_cache(ctx, &trav_ctx->cache, trav, table);
         trav_ctx->index = 0;
         if (op->match_flags & EcsTermReflexive) {
             trav_ctx->yield_reflexive = true;
@@ -63874,14 +64230,18 @@ bool flecs_rule_setvars(
     }
 
     int32_t i;
+    ecs_flags32_t source_set = *ctx->source_set;
     for (i = 0; i < filter->field_count; i ++) {
         ecs_var_id_t var_id = src_vars[i];
         if (!var_id) {
             continue;
         }
 
-        it->sources[i] = flecs_rule_var_get_entity(var_id, ctx);
+        if (source_set & (1u << i)) {
+            continue;
+        }
 
+        it->sources[i] = flecs_rule_var_get_entity(var_id, ctx);
         int32_t column = it->columns[i];
         if (column > 0) {
             it->columns[i] = -column;
@@ -64079,6 +64439,8 @@ bool flecs_rule_run(
     case EcsRuleAnd: return flecs_rule_and(op, redo, ctx);
     case EcsRuleAndId: return flecs_rule_and_id(op, redo, ctx);
     case EcsRuleAndAny: return flecs_rule_and_any(op, redo, ctx);
+    case EcsRuleUp: return flecs_rule_up(op, redo, ctx);
+    case EcsRuleSelfUp: return flecs_rule_self_up(op, redo, ctx);
     case EcsRuleWith: return flecs_rule_with(op, redo, ctx);
     case EcsRuleTrav: return flecs_rule_trav(op, redo, ctx);
     case EcsRuleIdsRight: return flecs_rule_idsright(op, redo, ctx);
@@ -64181,6 +64543,7 @@ bool ecs_rule_next_instanced(
     ctx.prev_index = -1;
     ctx.jump = -1;
     ctx.op_ctx = rit->op_ctx;
+    ctx.source_set = &rit->source_set;
     const ecs_rule_op_t *ops = rit->ops;
 
     if (!(it->flags & EcsIterIsValid)) {
@@ -64252,6 +64615,16 @@ void flecs_rule_iter_fini_ctx(
         case EcsRuleTrav:
             flecs_rule_trav_cache_fini(a, &ctx[i].is.trav.cache);
             break;
+        case EcsRuleUp:
+        case EcsRuleSelfUp: {
+            ecs_trav_up_cache_t *cache = &ctx[i].is.up.cache;
+            if (cache->dir == EcsDown) {
+                flecs_rule_down_cache_fini(a, cache);
+            } else {
+                flecs_rule_up_cache_fini(cache);
+            }
+            break;
+        }
         default:
             break;
         }
@@ -64317,6 +64690,7 @@ ecs_iter_t ecs_rule_iter(
     rit->rule = rule;
     rit->rule_vars = rule->vars;
     rit->ops = rule->ops;
+    rit->source_set = 0;
     if (var_count) {
         rit->vars = flecs_iter_calloc_n(&it, ecs_var_t, var_count);
     }
@@ -64440,7 +64814,7 @@ void flecs_rule_trav_cache_fini(
     ecs_vec_fini_t(a, &cache->entities, ecs_trav_elem_t);
 }
 
-void flecs_rule_get_down_cache(
+void flecs_rule_get_trav_down_cache(
     const ecs_rule_run_ctx_t *ctx,
     ecs_trav_cache_t *cache,
     ecs_entity_t trav,
@@ -64456,7 +64830,7 @@ void flecs_rule_get_down_cache(
     }
 }
 
-void flecs_rule_get_up_cache(
+void flecs_rule_get_trav_up_cache(
     const ecs_rule_run_ctx_t *ctx,
     ecs_trav_cache_t *cache,
     ecs_entity_t trav,
@@ -64490,6 +64864,467 @@ void flecs_rule_get_up_cache(
         cache->id = id;
         cache->up = true;
     }
+}
+
+#endif
+
+
+#ifdef FLECS_RULES
+
+static
+void flecs_trav_entity_down_isa(
+    ecs_world_t *world,
+    ecs_allocator_t *a,
+    ecs_trav_up_cache_t *cache,
+    ecs_trav_down_t *dst,
+    ecs_entity_t trav,
+    ecs_entity_t entity,
+    ecs_id_record_t *idr_with,
+    bool self);
+
+static
+ecs_trav_down_t* flecs_trav_entity_down(
+    ecs_world_t *world,
+    ecs_allocator_t *a,
+    ecs_trav_up_cache_t *cache,
+    ecs_trav_down_t *dst,
+    ecs_entity_t trav,
+    ecs_entity_t entity,
+    ecs_id_record_t *idr_trav,
+    ecs_id_record_t *idr_with,
+    bool self);
+
+static
+ecs_trav_down_t* flecs_trav_down_ensure(
+    const ecs_rule_run_ctx_t *ctx,
+    ecs_trav_up_cache_t *cache,
+    ecs_entity_t entity)
+{
+    ecs_trav_down_t **trav = ecs_map_ensure_ref(
+        &cache->src, ecs_trav_down_t, entity);
+    if (!trav[0]) {
+        trav[0] = flecs_iter_calloc_t(ctx->it, ecs_trav_down_t);
+        ecs_vec_init_t(NULL, &trav[0]->elems, ecs_trav_down_elem_t, 0);
+    }
+
+    return trav[0];
+}
+
+static
+ecs_trav_down_t* flecs_trav_table_down(
+    ecs_world_t *world,
+    ecs_allocator_t *a,
+    ecs_trav_up_cache_t *cache,
+    ecs_trav_down_t *dst,
+    ecs_entity_t trav,
+    const ecs_table_t *table,
+    ecs_id_record_t *idr_with,
+    bool self)
+{
+    ecs_assert(table->id != 0, ECS_INTERNAL_ERROR, NULL);
+
+    if (!table->_->traversable_count) {
+        return dst;
+    }
+
+    ecs_assert(idr_with != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_entity_t *entities = ecs_vec_first(&table->data.entities);
+    int32_t i, count = ecs_table_count(table);
+    for (i = 0; i < count; i ++) {
+        ecs_entity_t entity = entities[i];
+        ecs_record_t *record = flecs_entities_get(world, entity);
+        if (!record) {
+            continue;
+        }
+
+        uint32_t flags = ECS_RECORD_TO_ROW_FLAGS(record->row);
+        if (flags & EcsEntityIsTraversable) {
+            ecs_id_record_t *idr_trav = flecs_id_record_get(world, 
+                ecs_pair(trav, entity));
+            if (!idr_trav) {
+                continue;
+            }
+
+            flecs_trav_entity_down(world, a, cache, dst, 
+                trav, entity, idr_trav, idr_with, self);
+        }
+    }
+
+    return dst;
+}
+
+static
+void flecs_trav_entity_down_isa(
+    ecs_world_t *world,
+    ecs_allocator_t *a,
+    ecs_trav_up_cache_t *cache,
+    ecs_trav_down_t *dst,
+    ecs_entity_t trav,
+    ecs_entity_t entity,
+    ecs_id_record_t *idr_with,
+    bool self)
+{
+    if (trav == EcsIsA || !world->idr_isa_wildcard) {
+        return;
+    }
+
+    ecs_id_record_t *idr_isa = flecs_id_record_get(
+        world, ecs_pair(EcsIsA, entity));
+    if (!idr_isa) {
+        return;
+    }
+
+    ecs_table_cache_iter_t it;
+    if (flecs_table_cache_all_iter(&idr_isa->cache, &it)) {
+        ecs_table_record_t *tr;
+        while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
+            ecs_table_t *table = tr->hdr.table;
+            if (!table->_->traversable_count) {
+                continue;
+            }
+
+            ecs_entity_t *entities = ecs_vec_first(&table->data.entities);
+            int32_t i, count = ecs_table_count(table);
+            for (i = 0; i < count; i ++) {
+                ecs_entity_t e = entities[i];
+                ecs_record_t *record = flecs_entities_get(world, e);
+                if (!record) {
+                    continue;
+                }
+
+                uint32_t flags = ECS_RECORD_TO_ROW_FLAGS(record->row);
+                if (flags & EcsEntityIsTraversable) {
+                    ecs_id_record_t *idr_trav = flecs_id_record_get(world, 
+                        ecs_pair(trav, e));
+                    flecs_trav_entity_down(world, a, cache, dst, trav, e,
+                        idr_trav, idr_with, self);
+                }
+            }
+        }
+    }
+}
+
+static
+ecs_trav_down_t* flecs_trav_entity_down(
+    ecs_world_t *world,
+    ecs_allocator_t *a,
+    ecs_trav_up_cache_t *cache,
+    ecs_trav_down_t *dst,
+    ecs_entity_t trav,
+    ecs_entity_t entity,
+    ecs_id_record_t *idr_trav,
+    ecs_id_record_t *idr_with,
+    bool self)
+{
+    ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(idr_with != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    flecs_trav_entity_down_isa(
+        world, a, cache, dst, trav, entity, idr_with, self);
+
+    int32_t first = ecs_vec_count(&dst->elems);
+
+    ecs_table_cache_iter_t it;
+    if (flecs_table_cache_iter(&idr_trav->cache, &it)) {
+        ecs_table_record_t *tr; 
+        while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
+            ecs_assert(tr->count == 1, ECS_INTERNAL_ERROR, NULL);
+            ecs_table_t *table = tr->hdr.table;
+            bool leaf = false;
+
+            if (flecs_id_record_get_table(idr_with, table) != NULL) {
+                if (self) {
+                    continue;
+                }
+                leaf = true;
+            }
+
+            /* If table is not the first instance of (trav, *), don't add it
+             * to the cache. */
+            int32_t index = tr->index;
+            if (index) {
+                ecs_id_t id = table->type.array[index - 1];
+                if (ECS_IS_PAIR(id) && ECS_PAIR_FIRST(id) == trav) {
+                    if (ecs_search_relation(world, table, 0, idr_with->id, 
+                        EcsIsA, EcsUp, NULL, NULL, &tr) != index)
+                    {
+                        /* First relationship through which the id is 
+                         * reachable is not the current one, so skip. */
+                        continue;
+                    }
+                }
+            }
+
+            ecs_trav_down_elem_t *elem = ecs_vec_append_t(
+                a, &dst->elems, ecs_trav_down_elem_t);
+            elem->table = table;
+            elem->leaf = leaf;
+        }
+    }
+
+    /* Breadth first walk */
+    int32_t t, last = ecs_vec_count(&dst->elems);
+    for (t = first; t < last; t ++) {
+        ecs_trav_down_elem_t *elem = ecs_vec_get_t(
+            &dst->elems, ecs_trav_down_elem_t, t);
+        if (!elem->leaf) {
+            flecs_trav_table_down(world, a, cache, dst, trav,
+                elem->table, idr_with, self);
+        }
+    }
+
+    return dst;
+}
+
+ecs_trav_down_t* flecs_rule_get_down_cache(
+    const ecs_rule_run_ctx_t *ctx,
+    ecs_trav_up_cache_t *cache,
+    ecs_entity_t trav,
+    ecs_entity_t e,
+    ecs_id_record_t *idr_with,
+    bool self)
+{
+    ecs_world_t *world = ctx->it->real_world;
+    ecs_assert(!(cache->dir & EcsUp), ECS_INTERNAL_ERROR, NULL);
+    cache->dir = EcsDown;
+
+    ecs_allocator_t *a = flecs_rule_get_allocator(ctx->it);
+    ecs_map_init_if(&cache->src, a);
+
+    ecs_trav_down_t *result = flecs_trav_down_ensure(ctx, cache, e);
+    if (result->ready) {
+        return result;
+    }
+
+    ecs_id_record_t *idr_trav = flecs_id_record_get(world, ecs_pair(trav, e));
+    if (!idr_trav) {
+        if (trav != EcsIsA) {
+            flecs_trav_entity_down_isa(
+                world, a, cache, result, trav, e, idr_with, self);
+        }
+        result->ready = true;
+        return result;
+    }
+
+    ecs_vec_init_t(a, &result->elems, ecs_trav_down_elem_t, 0);
+    flecs_trav_entity_down(
+        world, a, cache, result, trav, e, idr_trav, idr_with, self);
+    result->ready = true;
+
+    return result;
+}
+
+void flecs_rule_down_cache_fini(
+    ecs_allocator_t *a,
+    ecs_trav_up_cache_t *cache)
+{
+    ecs_map_iter_t it = ecs_map_iter(&cache->src);
+    while (ecs_map_next(&it)) {
+        ecs_trav_down_t *t = ecs_map_ptr(&it);
+        ecs_vec_fini_t(a, &t->elems, ecs_trav_down_elem_t);
+    }
+    ecs_map_fini(&cache->src);
+}
+
+#endif
+
+
+#ifdef FLECS_RULES
+
+static
+ecs_trav_up_t* flecs_trav_up_ensure(
+    const ecs_rule_run_ctx_t *ctx,
+    ecs_trav_up_cache_t *cache,
+    uint64_t table_id)
+{
+    ecs_trav_up_t **trav = ecs_map_ensure_ref(
+        &cache->src, ecs_trav_up_t, table_id);
+    if (!trav[0]) {
+        trav[0] = flecs_iter_calloc_t(ctx->it, ecs_trav_up_t);
+    }
+
+    return trav[0];
+}
+
+static
+int32_t flecs_trav_type_search(
+    ecs_trav_up_t *up,
+    const ecs_table_t *table,
+    ecs_id_record_t *idr_with,
+    ecs_type_t *type)
+{    
+    ecs_table_record_t *tr = ecs_table_cache_get(&idr_with->cache, table);
+    if (tr) {
+        up->id = type->array[tr->index];
+        return up->column = tr->index;
+    }
+
+    return -1;
+}
+
+static
+int32_t flecs_trav_type_offset_search(
+    ecs_trav_up_t *up,
+    int32_t offset,
+    ecs_id_t with,
+    ecs_type_t *type)
+{
+    ecs_assert(offset > 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(with != 0, ECS_INVALID_PARAMETER, NULL);
+
+    while (offset < type->count) {
+        ecs_id_t type_id = type->array[offset ++];
+        if (ecs_id_match(type_id, with)) {
+            up->id = flecs_to_public_id(type_id);
+            return up->column = offset - 1;
+        }
+    }
+
+    return -1;
+}
+
+static
+ecs_trav_up_t* flecs_trav_table_up(
+    const ecs_rule_run_ctx_t *ctx,
+    ecs_allocator_t *a,
+    ecs_trav_up_cache_t *cache,
+    const ecs_world_t *world,
+    ecs_entity_t src,
+    ecs_id_t with,
+    ecs_id_t rel,
+    ecs_id_record_t *idr_with,
+    ecs_id_record_t *idr_trav)
+{
+    ecs_trav_up_t *up = flecs_trav_up_ensure(ctx, cache, src);
+    if (up->ready) {
+        return up;
+    }
+
+    ecs_record_t *src_record = flecs_entities_get_any(world, src);
+    ecs_table_t *table = src_record->table;
+    if (!table) {
+        goto not_found;
+    }
+
+    ecs_type_t type = table->type;
+    if (flecs_trav_type_search(up, table, idr_with, &type) >= 0) {
+        up->src = src;
+        goto found;
+    }
+
+    ecs_flags32_t flags = table->flags;
+    if ((flags & EcsTableHasPairs) && rel) {
+        bool is_a = idr_trav == world->idr_isa_wildcard;
+        if (is_a) {
+            if (!(flags & EcsTableHasIsA)) {
+                goto not_found;
+            }
+
+            if (!flecs_type_can_inherit_id(world, table, idr_with, with)) {
+                goto not_found;
+            }
+        }
+
+        ecs_trav_up_t up_pair = {0};
+        int32_t r_column = flecs_trav_type_search(
+                &up_pair, table, idr_trav, &type);
+
+        while (r_column != -1) {
+            ecs_entity_t tgt = ECS_PAIR_SECOND(up_pair.id);
+            ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);
+
+            ecs_trav_up_t *up_parent = flecs_trav_table_up(ctx, a, cache,
+                world, tgt, with, rel, idr_with, idr_trav);
+            if (up_parent->column != -1) {
+                up->src = up_parent->src;
+                up->column = up_parent->column;
+                up->id = up_parent->id;
+                goto found;
+            }
+
+            r_column = flecs_trav_type_offset_search(
+                &up_pair, r_column + 1, rel, &type);
+        }
+
+        if (!is_a) {
+            idr_trav = world->idr_isa_wildcard;
+            r_column = flecs_trav_type_search(
+                    &up_pair, table, idr_trav, &type);
+
+            while (r_column != -1) {
+                ecs_entity_t tgt = ECS_PAIR_SECOND(up_pair.id);
+                ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);
+
+                ecs_trav_up_t *up_parent = flecs_trav_table_up(ctx, a, cache,
+                    world, tgt, with, rel, idr_with, idr_trav);
+                if (up_parent->column != -1) {
+                    up->src = up_parent->src;
+                    up->column = up_parent->column;
+                    up->id = up_parent->id;
+                    goto found;
+                }
+
+                r_column = flecs_trav_type_offset_search(
+                    &up_pair, r_column + 1, rel, &type);
+            }
+        }
+    }
+
+not_found:
+    up->column = -1;
+found:
+    up->ready = true;
+    return up;
+}
+
+ecs_trav_up_t* flecs_rule_get_up_cache(
+    const ecs_rule_run_ctx_t *ctx,
+    ecs_trav_up_cache_t *cache,
+    ecs_table_t *table,
+    ecs_id_t with,
+    ecs_entity_t trav,
+    ecs_id_record_t *idr_with,
+    ecs_id_record_t *idr_trav)
+{
+    if (cache->with && cache->with != with) {
+        flecs_rule_up_cache_fini(cache);
+    }
+
+    ecs_world_t *world = ctx->it->real_world;
+    ecs_allocator_t *a = flecs_rule_get_allocator(ctx->it);
+    ecs_map_init_if(&cache->src, a);
+
+    ecs_assert(!(cache->dir & EcsDown), ECS_INTERNAL_ERROR, NULL);
+    cache->dir = EcsUp;
+    cache->with = with;
+
+    ecs_assert(idr_with != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(idr_trav != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_table_record_t *tr = ecs_table_cache_get(&idr_trav->cache, table);
+    if (!tr) {
+        return NULL; /* Table doesn't have the relationship */
+    }
+
+    int32_t i = tr->index, end = i + tr->count;
+    for (; i < end; i ++) {
+        ecs_id_t id = table->type.array[i];
+        ecs_entity_t tgt = ECS_PAIR_SECOND(id);
+        ecs_trav_up_t *result = flecs_trav_table_up(ctx, a, cache, world, tgt,
+            with, ecs_pair(trav, EcsWildcard), idr_with, idr_trav);
+        ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
+        if (result->src != 0) {
+            return result;
+        }
+    }
+
+    return NULL;
+}
+
+void flecs_rule_up_cache_fini(
+    ecs_trav_up_cache_t *cache)
+{
+    ecs_map_fini(&cache->src);
 }
 
 #endif

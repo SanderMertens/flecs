@@ -61,7 +61,6 @@ int32_t flecs_type_offset_search(
     return -1;
 }
 
-static
 bool flecs_type_can_inherit_id(
     const ecs_world_t *world,
     const ecs_table_t *table,
