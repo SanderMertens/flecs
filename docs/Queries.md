@@ -1777,7 +1777,7 @@ Player, Position, Input($)
 ```
 
 ### Relationship Traversal
-> *Supported by: filters, cached queries, rules(!)*
+> *Supported by: filters, cached queries, rules*
 
 Relationship traversal enables a query to search for a component by traversing a relationship. One of the most common examples of where this is useful is a Transform system, which matches `Position` on an entity and the entity's parent. To find the `Position` component on a parent entity, a query traverses the `ChildOf` relationship upwards:
 
@@ -1840,9 +1840,7 @@ To ensure fast table-based iteration an application can enable [instancing](#ins
 This list is an overview of current relationship traversal limitations:
 
 - The `Down` flag is currently reserved for internal purposes and should not be set when creating a query.
-- The `Cascade` flag only works for cached queries.
-- Rule queries currently only traverse when this is implicitly required (by transitive relationships, inheritance), but ignores flags set at query creation time.
-- Rule queries do not yet support all forms of implicit traversal (most notably the one used by prefabs)
+- The `Cascade` and `Desc` flag only works for cached queries.
 - Traversal flags can currently only be specified for the term source.
 - Union relationships are not supported for traversal.
 
