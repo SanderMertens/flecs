@@ -1044,7 +1044,8 @@
                 "module_in_namespace_w_root_name",
                 "module_as_entity",
                 "module_as_component",
-                "module_with_core_name"
+                "module_with_core_name",
+                "import_addons_two_worlds"
             ]
         }, {
             "id": "ImplicitComponents",

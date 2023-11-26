@@ -276,3 +276,16 @@ void Module_module_with_core_name(void) {
     test_str(pos.path().c_str(), "::Module::Position");
     test_assert(pos == world.id<Position>());
 }
+
+void Module_import_addons_two_worlds(void) {
+    flecs::world a;
+    auto m1 = a.import<flecs::monitor>();
+    auto u1 = a.import<flecs::units>();
+
+    flecs::world b;
+    auto m2 = b.import<flecs::monitor>();
+    auto u2 = b.import<flecs::units>();
+
+    test_assert(m1 == m2);
+    test_assert(u1 == u2);
+}

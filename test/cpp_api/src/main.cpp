@@ -1003,6 +1003,7 @@ void Module_module_in_namespace_w_root_name(void);
 void Module_module_as_entity(void);
 void Module_module_as_component(void);
 void Module_module_with_core_name(void);
+void Module_import_addons_two_worlds(void);
 
 // Testsuite 'ImplicitComponents'
 void ImplicitComponents_add(void);
@@ -5220,6 +5221,10 @@ bake_test_case Module_testcases[] = {
     {
         "module_with_core_name",
         Module_module_with_core_name
+    },
+    {
+        "import_addons_two_worlds",
+        Module_import_addons_two_worlds
     }
 };
 
@@ -6625,7 +6630,7 @@ static bake_test_suite suites[] = {
         "Module",
         NULL,
         NULL,
-        12,
+        13,
         Module_testcases
     },
     {

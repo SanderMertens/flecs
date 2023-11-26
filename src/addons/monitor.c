@@ -317,6 +317,9 @@ void FlecsMonitorImport(
 #ifdef FLECS_META
     ECS_IMPORT(world, FlecsMeta);
 #endif
+#ifdef FLECS_UNITS
+    ECS_IMPORT(world, FlecsUnits);
+#endif
 
     ecs_set_name_prefix(world, "Ecs");
 
