@@ -39,8 +39,10 @@ typedef struct ecs_rule_var_t {
 typedef enum {
     EcsRuleAnd,            /* And operator: find or match id against variable source */
     EcsRuleAndId,          /* And operator for fixed id (no wildcards/variables) */
-    EcsRuleWith,           /* Match id against fixed or variable source */
     EcsRuleAndAny,         /* And operator with support for matching Any src/id */
+    EcsRuleUp,             /* up traversal */
+    EcsRuleSelfUp,         /* self|up traversal */
+    EcsRuleWith,           /* Match id against fixed or variable source */
     EcsRuleTrav,           /* Support for transitive/reflexive queries */
     EcsRuleIdsRight,       /* Find ids in use that match (R, *) wildcard */
     EcsRuleIdsLeft,        /* Find ids in use that match (*, T) wildcard */
@@ -110,7 +112,48 @@ typedef struct {
     int16_t remaining;
 } ecs_rule_and_ctx_t;
 
-/* Cache for storing results of downward traversal */
+/* Down traversal cache (for resolving up queries w/unknown source) */
+typedef struct {
+    ecs_table_t *table;
+    bool leaf; /* Table owns and inherits id (for Up queries without Self) */
+} ecs_trav_down_elem_t;
+
+typedef struct {
+    ecs_vec_t elems;      /* vector<ecs_trav_down_elem_t> */
+    bool ready;
+} ecs_trav_down_t;
+
+typedef struct {
+    ecs_entity_t src;
+    ecs_id_t id;
+    int32_t column;
+    bool ready;
+} ecs_trav_up_t;
+
+typedef struct {
+    ecs_map_t src;        /* map<entity, trav_down_t> or map<table_id, trav_up_t> */
+    ecs_id_t with;
+    ecs_flags32_t dir;
+} ecs_trav_up_cache_t;
+
+/* And up context */
+typedef struct {
+    ecs_rule_and_ctx_t and;
+    ecs_table_t *table;
+    int32_t row;
+    int32_t end;
+    ecs_entity_t trav;
+    ecs_id_t with;
+    ecs_id_t matched;
+    ecs_id_record_t *idr_with;
+    ecs_id_record_t *idr_trav;
+    ecs_trav_down_t *down;
+    int32_t cache_elem;
+    ecs_trav_up_cache_t cache;
+} ecs_rule_up_ctx_t;
+
+/* Cache for storing results of upward/downward "all" traversal. This type of 
+ * traversal iterates and caches the entire tree. */
 typedef struct {
     ecs_entity_t entity;
     ecs_id_record_t *idr;
@@ -170,6 +213,7 @@ typedef struct {
 typedef struct ecs_rule_op_ctx_t {
     union {
         ecs_rule_and_ctx_t and;
+        ecs_rule_up_ctx_t up;
         ecs_rule_trav_ctx_t trav;
         ecs_rule_ids_ctx_t ids;
         ecs_rule_eq_ctx_t eq;
@@ -219,6 +263,7 @@ typedef struct {
     ecs_world_t *world;           /* Reference to world */
     const ecs_rule_t *rule;       /* Reference to rule */
     const ecs_rule_var_t *rule_vars; /* Reference to rule variable array */
+    ecs_flags32_t *source_set;    /* Whether ecs_iter_t::sources is written by instruction */
 } ecs_rule_run_ctx_t;
 
 typedef struct {
@@ -284,15 +329,19 @@ int flecs_rule_compile(
 ecs_allocator_t* flecs_rule_get_allocator(
     const ecs_iter_t *it);
 
+
+/* Traversal cache for transitive queries. Finds all reachable entities by
+ * following a relationship */
+
 /* Find all entities when traversing downwards */
-void flecs_rule_get_down_cache(
+void flecs_rule_get_trav_down_cache(
     const ecs_rule_run_ctx_t *ctx,
     ecs_trav_cache_t *cache,
     ecs_entity_t trav,
     ecs_entity_t entity);
 
 /* Find all entities when traversing upwards */
-void flecs_rule_get_up_cache(
+void flecs_rule_get_trav_up_cache(
     const ecs_rule_run_ctx_t *ctx,
     ecs_trav_cache_t *cache,
     ecs_entity_t trav,
@@ -302,5 +351,37 @@ void flecs_rule_get_up_cache(
 void flecs_rule_trav_cache_fini(
     ecs_allocator_t *a,
     ecs_trav_cache_t *cache);
+
+
+/* Traversal caches for up traversal. Enables searching upwards until an entity
+ * with the queried for id has been found. */
+
+/* Traverse downwards from starting entity to find all tables for which the 
+ * specified entity is the source of the queried for id ('with'). */
+ecs_trav_down_t* flecs_rule_get_down_cache(
+    const ecs_rule_run_ctx_t *ctx,
+    ecs_trav_up_cache_t *cache,
+    ecs_entity_t trav,
+    ecs_entity_t entity,
+    ecs_id_record_t *idr_with,
+    bool self);
+
+/* Free down traversal cache */
+void flecs_rule_down_cache_fini(
+    ecs_allocator_t *a,
+    ecs_trav_up_cache_t *cache);
+
+ecs_trav_up_t* flecs_rule_get_up_cache(
+    const ecs_rule_run_ctx_t *ctx,
+    ecs_trav_up_cache_t *cache,
+    ecs_table_t *table,
+    ecs_id_t with,
+    ecs_entity_t trav,
+    ecs_id_record_t *idr_with,
+    ecs_id_record_t *idr_trav);
+
+/* Free up traversal cache */
+void flecs_rule_up_cache_fini(
+    ecs_trav_up_cache_t *cache);
 
 #endif

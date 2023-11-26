@@ -1,4 +1,4 @@
- /**
+/**
  * @file addons/rules/compile.c
  * @brief Compile rule program from filter.
  */
@@ -13,6 +13,8 @@ static bool flecs_rule_op_is_test[] = {
     [EcsRuleAnd] = true,
     [EcsRuleAndAny] = true,
     [EcsRuleAndId] = true,
+    [EcsRuleUp] = true,
+    [EcsRuleSelfUp] = true,
     [EcsRuleWith] = true,
     [EcsRuleTrav] = true,
     [EcsRuleContain] = true,
@@ -1418,6 +1420,10 @@ int flecs_rule_compile_term(
     } else {
         if (term->flags & (EcsTermMatchAny|EcsTermMatchAnySrc)) {
             op.kind = EcsRuleAndAny;
+        } else if ((term->src.flags & EcsTraverseFlags) == EcsUp) {
+            op.kind = EcsRuleUp;
+        } else if ((term->src.flags & EcsTraverseFlags) == (EcsSelf|EcsUp)) {
+            op.kind = EcsRuleSelfUp;
         }
     }
 

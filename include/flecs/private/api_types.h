@@ -192,6 +192,7 @@ typedef struct ecs_rule_iter_t {
     const struct ecs_rule_op_t *ops;
     struct ecs_rule_op_ctx_t *op_ctx;    /* Operation-specific state */
     uint64_t *written;
+    ecs_flags32_t source_set;
 
 #ifdef FLECS_DEBUG
     ecs_rule_op_profile_t *profile;

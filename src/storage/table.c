@@ -926,6 +926,18 @@ void flecs_table_fini_data(
     table->flags &= ~EcsTableHasTraversable;
 }
 
+ecs_vec_t* flecs_table_entities(
+    ecs_table_t *table)
+{
+    return &table->data.entities;
+}
+
+ecs_entity_t* flecs_table_entities_array(
+    ecs_table_t *table)
+{
+    return ecs_vec_first(flecs_table_entities(table));
+}
+
 /* Cleanup, no OnRemove, don't update entity index, don't deactivate table */
 void flecs_table_clear_data(
     ecs_world_t *world,

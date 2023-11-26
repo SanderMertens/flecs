@@ -256,4 +256,10 @@ void flecs_table_traversable_add(
     ecs_table_t *table,
     int32_t value);
 
+ecs_vec_t* flecs_table_entities(
+    ecs_table_t *table);
+
+ecs_entity_t* flecs_table_entities_array(
+    ecs_table_t *table);
+
 #endif
