@@ -672,25 +672,30 @@ bool flecs_rule_up_select(
                 op_ctx->row ++;
             }
 
-            int32_t row;
-            ecs_entity_t entity = 0;
-            ecs_entity_t *entities = flecs_table_entities_array(table);
-            for (row = op_ctx->row; row < op_ctx->end; row ++) {
-                entity = entities[row];
-                ecs_record_t *record = flecs_entities_get(world, entity);
-                if (record->row & EcsEntityIsTraversable) {
-                    it->sources[op->field_index] = entity;
-                    break;
-                }
-            }
-            if (row == op_ctx->end) {
+            if (table->_->traversable_count == 0) {
                 op_ctx->table = NULL;
                 continue;
-            }
+            } else {
+                int32_t row;
+                ecs_entity_t entity = 0;
+                ecs_entity_t *entities = flecs_table_entities_array(table);
+                for (row = op_ctx->row; row < op_ctx->end; row ++) {
+                    entity = entities[row];
+                    ecs_record_t *record = flecs_entities_get(world, entity);
+                    if (record->row & EcsEntityIsTraversable) {
+                        it->sources[op->field_index] = entity;
+                        break;
+                    }
+                }
+                if (row == op_ctx->end) {
+                    op_ctx->table = NULL;
+                    continue;
+                }
 
-            down = op_ctx->down = flecs_rule_get_down_cache(ctx, &op_ctx->cache, 
-                op_ctx->trav, entity, op_ctx->idr_with, self);
-            op_ctx->cache_elem = -1;
+                down = op_ctx->down = flecs_rule_get_down_cache(ctx, &op_ctx->cache, 
+                    op_ctx->trav, entity, op_ctx->idr_with, self);
+                op_ctx->cache_elem = -1;
+            }
         }
 
         if ((++ op_ctx->cache_elem) >= ecs_vec_count(&down->elems)) {
