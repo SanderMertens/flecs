@@ -4995,3 +4995,29 @@ void Observer_emit_for_parent_w_prefab_child_and_instance(void) {
 
     ecs_fini(ecs);
 }
+
+static
+void Observer_w_run_aperiodic(ecs_iter_t *it) {
+    test_int(it->count, 1);
+    ecs_run_aperiodic(it->world, 0);
+}
+
+void Observer_cache_test_16(void) {
+    ecs_world_t* ecs = ecs_init();
+
+    ECS_TAG(ecs, Foo);
+
+    ECS_OBSERVER(ecs, Observer_w_run_aperiodic, EcsOnAdd, Foo);
+
+    ecs_entity_t p1 = ecs_new_id(ecs);
+    ecs_entity_t e1 = ecs_new_w_pair(ecs, EcsIsA, p1);
+
+    ecs_run_aperiodic(ecs, 0);
+    
+    ecs_entity_t e2 = ecs_new_id(ecs);
+    ecs_add_pair(ecs, e2, EcsIsA, p1);
+    ecs_add_pair(ecs, e2, EcsChildOf, e1);
+    ecs_add(ecs, e1, Foo);
+
+    ecs_fini(ecs);
+}

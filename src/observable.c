@@ -992,7 +992,6 @@ void flecs_emit_forward(
             ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
             ecs_assert(flecs_entities_get(world, elem->src) == r,
                 ECS_INTERNAL_ERROR, NULL);
-
             ecs_dbg_assert(r->table == elem->table, ECS_INTERNAL_ERROR, NULL);
 
             int32_t offset = ECS_RECORD_TO_ROW(r->row);
@@ -1121,9 +1120,6 @@ void flecs_emit(
      * get notified of any new reachable components though the relationship. */
     bool can_forward = event != EcsOnSet;
 
-    /* Set if event has been propagated */
-    bool propagated = false;
-
     /* Does table has observed entities */
     bool has_observed = table_flags & EcsTableHasTraversable;
 
@@ -1134,6 +1130,10 @@ void flecs_emit(
 
     ecs_event_id_record_t *iders[5] = {0};
     int32_t unset_count = 0;
+
+    if (count && can_forward && has_observed) {
+        flecs_emit_propagate_invalidate(world, table, offset, count);
+    }
 
 repeat_event:
     /* This is the core event logic, which is executed for each event. By 
@@ -1315,10 +1315,6 @@ repeat_event:
             continue;
         }
 
-        /* If event is propagated, we don't have to manually invalidate entities
-         * lower in the tree(s). */
-        propagated = true;
-
         /* The table->traversable_count value indicates if the table contains any
          * entities that are used as targets of traversable relationships. If the
          * entity/entities for which the event was generated is used as such a
@@ -1350,10 +1346,6 @@ repeat_event:
         it.count = count;
         it.offset = offset;
         it.sources[0] = 0;
-    }
-
-    if (count && can_forward && has_observed && !propagated) {
-        flecs_emit_propagate_invalidate(world, table, offset, count);
     }
 
     can_override = false; /* Don't override twice */
