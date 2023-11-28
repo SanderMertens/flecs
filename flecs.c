@@ -4439,8 +4439,6 @@ void flecs_invoke_hook(
 
     ecs_iter_t it = { .field_count = 1};
     it.entities = entities;
-
-    // ecs_assert(ecs_is_deferred(world), ECS_INTERNAL_ERROR, NULL);
     
     flecs_iter_init(world, &it, flecs_iter_cache_all);
     it.world = world;
@@ -7934,6 +7932,51 @@ bool flecs_remove_invalid(
 }
 
 static
+ecs_table_t* flecs_cmd_batch_add_diff(
+    ecs_world_t *world,
+    ecs_table_t *dst,
+    ecs_table_t *cur,
+    ecs_table_t *prev)
+{
+    int32_t p = 0, p_count = prev->type.count;
+    int32_t c = 0, c_count = cur->type.count;
+    ecs_id_t *p_ids = prev->type.array;
+    ecs_id_t *c_ids = cur->type.array;
+
+    for (; c < c_count;) {
+        ecs_id_t c_id = c_ids[c];
+        ecs_id_t p_id = p_ids[p];
+
+        if (p_id < c_id) {
+            /* Previous id no longer exists in new table, so it was removed */
+            dst = ecs_table_remove_id(world, dst, p_id);
+        }
+        if (c_id < p_id) {
+            /* Current id didn't exist in previous table, so it was added */
+            dst = ecs_table_add_id(world, dst, c_id);
+        }
+
+        c += c_id <= p_id;
+        p += p_id <= c_id;
+        if (p == p_count) {
+            break;
+        }
+    }
+
+    /* Remainder */
+    for (; p < p_count; p ++) {
+        ecs_id_t p_id = p_ids[p];
+        dst = ecs_table_remove_id(world, dst, p_id);
+    }
+    for (; c < c_count; c ++) {
+        ecs_id_t c_id = c_ids[c];
+        dst = ecs_table_add_id(world, dst, c_id);
+    }
+
+    return dst;
+}
+
+static
 void flecs_cmd_batch_for_entity(
     ecs_world_t *world,
     ecs_table_diff_builder_t *diff,
@@ -8012,6 +8055,7 @@ void flecs_cmd_batch_for_entity(
                     const ecs_type_info_t *ti = ptr.ti;
                     ecs_iter_action_t on_set;
                     if ((on_set = ti->hooks.on_set)) {
+                        ecs_table_t *prev_table = r->table;
                         ecs_defer_begin(world);
                         flecs_invoke_hook(world, start_table, 1, row, &entity,
                             ptr.ptr, cmd->id, ptr.ti, EcsOnSet, on_set);
@@ -8020,6 +8064,14 @@ void flecs_cmd_batch_for_entity(
                         /* Don't run on_set hook twice, but make sure to still
                          * invoke observers. */
                         cmd->kind = EcsCmdModifiedNoHook;
+
+                        /* If entity changed tables in hook, add difference to
+                         * destination table, so we don't lose the side effects
+                         * of the hook. */
+                        if (r->table != prev_table) {
+                            table = flecs_cmd_batch_add_diff(
+                                world, table, r->table, prev_table);
+                        }
                     }
                 }
             }

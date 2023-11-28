@@ -3658,13 +3658,16 @@ void Commands_on_remove_hook_while_defer_suspended(void) {
 
 static int on_set_is_deferred_invoked = 0;
 static int dummy_observer_invoked = 0;
+static ECS_TAG_DECLARE(Foo);
+static ECS_TAG_DECLARE(Bar);
 
 static
 void OnSetIsDeferred(ecs_iter_t *it) {
     on_set_is_deferred_invoked ++;
     test_int(it->count, 1);
     ecs_table_t *t = ecs_get_table(it->world, it->entities[0]);
-    ecs_remove(it->world, it->entities[0], Position);
+    ecs_add(it->world, it->entities[0], Bar);
+    ecs_remove(it->world, it->entities[0], Foo);
     test_assert(t == ecs_get_table(it->world, it->entities[0]));
 }
 
@@ -3677,6 +3680,8 @@ void Commands_on_set_hook_batched_is_deferred(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT_DEFINE(world, Position);
+    ECS_TAG_DEFINE(world, Foo);
+    ECS_TAG_DEFINE(world, Bar);
     ECS_TAG(world, Tag);
 
     ecs_set_hooks(world, Position, {
@@ -3685,7 +3690,7 @@ void Commands_on_set_hook_batched_is_deferred(void) {
 
     ECS_OBSERVER(world, DummyObserver, EcsOnSet, Position);
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new(world, Bar);
     ecs_add(world, e, Position);
 
     test_int(on_set_is_deferred_invoked, 0);
@@ -3698,8 +3703,13 @@ void Commands_on_set_hook_batched_is_deferred(void) {
     test_int(dummy_observer_invoked, 0);
     ecs_defer_end(world);
 
-    test_int(dummy_observer_invoked, 1);
     test_int(on_set_is_deferred_invoked, 1);
+    test_int(dummy_observer_invoked, 1);
+
+    test_assert(ecs_has(world, e, Tag));
+    test_assert(ecs_has(world, e, Position));
+    test_assert(!ecs_has(world, e, Foo));
+    test_assert(ecs_has(world, e, Bar));
 
     ecs_fini(world);
 }
