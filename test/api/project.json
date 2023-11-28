@@ -2588,7 +2588,8 @@
                 "observer_while_defer_suspended",
                 "on_add_hook_while_defer_suspended",
                 "on_set_hook_while_defer_suspended",
-                "on_remove_hook_while_defer_suspended"
+                "on_remove_hook_while_defer_suspended",
+                "on_set_hook_batched_is_deferred"
             ]
         }, {
             "id": "SingleThreadStaging",

@@ -1167,6 +1167,7 @@ typedef enum ecs_cmd_kind_t {
     EcsCmdEmplace,
     EcsCmdMut,
     EcsCmdModified,
+    EcsCmdModifiedNoHook,
     EcsCmdAddModified,
     EcsCmdPath,
     EcsCmdDelete,
@@ -4438,6 +4439,8 @@ void flecs_invoke_hook(
 
     ecs_iter_t it = { .field_count = 1};
     it.entities = entities;
+
+    // ecs_assert(ecs_is_deferred(world), ECS_INTERNAL_ERROR, NULL);
     
     flecs_iter_init(world, &it, flecs_iter_cache_all);
     it.world = world;
@@ -6435,7 +6438,8 @@ static
 void flecs_modified_id_if(
     ecs_world_t *world,
     ecs_entity_t entity,
-    ecs_id_t id)
+    ecs_id_t id,
+    bool owned)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_is_alive(world, entity), ECS_INVALID_PARAMETER, NULL);
@@ -6455,7 +6459,7 @@ void flecs_modified_id_if(
     }
 
     ecs_type_t ids = { .array = &id, .count = 1 };
-    flecs_notify_on_set(world, table, ECS_RECORD_TO_ROW(r->row), 1, &ids, true);
+    flecs_notify_on_set(world, table, ECS_RECORD_TO_ROW(r->row), 1, &ids, owned);
 
     flecs_table_mark_dirty(world, table, id);
     flecs_defer_end(world, stage);
@@ -8008,8 +8012,14 @@ void flecs_cmd_batch_for_entity(
                     const ecs_type_info_t *ti = ptr.ti;
                     ecs_iter_action_t on_set;
                     if ((on_set = ti->hooks.on_set)) {
+                        ecs_defer_begin(world);
                         flecs_invoke_hook(world, start_table, 1, row, &entity,
                             ptr.ptr, cmd->id, ptr.ti, EcsOnSet, on_set);
+                        ecs_defer_end(world);
+
+                        /* Don't run on_set hook twice, but make sure to still
+                         * invoke observers. */
+                        cmd->kind = EcsCmdModifiedNoHook;
                     }
                 }
             }
@@ -8047,6 +8057,7 @@ void flecs_cmd_batch_for_entity(
         case EcsCmdDisable:
         case EcsCmdEvent:
         case EcsCmdSkip:
+        case EcsCmdModifiedNoHook:
             break;
         }
 
@@ -8129,6 +8140,7 @@ void flecs_cmd_batch_for_entity(
             case EcsCmdRemove:
             case EcsCmdEmplace:
             case EcsCmdModified:
+            case EcsCmdModifiedNoHook:
             case EcsCmdAddModified:
             case EcsCmdPath:
             case EcsCmdDelete:
@@ -8256,12 +8268,16 @@ bool flecs_defer_end(
                     world->info.cmd.get_mut_count ++;
                     break;
                 case EcsCmdModified:
-                    flecs_modified_id_if(world, e, id);
+                    flecs_modified_id_if(world, e, id, true);
+                    world->info.cmd.modified_count ++;
+                    break;
+                case EcsCmdModifiedNoHook:
+                    flecs_modified_id_if(world, e, id, false);
                     world->info.cmd.modified_count ++;
                     break;
                 case EcsCmdAddModified:
                     flecs_add_id(world, e, id);
-                    flecs_modified_id_if(world, e, id);
+                    flecs_modified_id_if(world, e, id, true);
                     world->info.cmd.add_count ++;
                     world->info.cmd.modified_count ++;
                     break;

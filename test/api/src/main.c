@@ -2498,6 +2498,7 @@ void Commands_observer_while_defer_suspended(void);
 void Commands_on_add_hook_while_defer_suspended(void);
 void Commands_on_set_hook_while_defer_suspended(void);
 void Commands_on_remove_hook_while_defer_suspended(void);
+void Commands_on_set_hook_batched_is_deferred(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -12359,6 +12360,10 @@ bake_test_case Commands_testcases[] = {
     {
         "on_remove_hook_while_defer_suspended",
         Commands_on_remove_hook_while_defer_suspended
+    },
+    {
+        "on_set_hook_batched_is_deferred",
+        Commands_on_set_hook_batched_is_deferred
     }
 };
 
@@ -13269,7 +13274,7 @@ static bake_test_suite suites[] = {
         "Commands",
         NULL,
         NULL,
-        122,
+        123,
         Commands_testcases
     },
     {

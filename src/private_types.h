@@ -326,6 +326,7 @@ typedef enum ecs_cmd_kind_t {
     EcsCmdEmplace,
     EcsCmdMut,
     EcsCmdModified,
+    EcsCmdModifiedNoHook,
     EcsCmdAddModified,
     EcsCmdPath,
     EcsCmdDelete,
