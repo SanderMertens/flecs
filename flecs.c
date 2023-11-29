@@ -26731,7 +26731,7 @@ void http_recv_connection(
                         ecs_http_reply_t reply;
                         reply.body = ECS_STRBUF_INIT;
                         reply.code = 200;
-                        reply.content_type = NULL;
+                        reply.content_type = "application/json";
                         reply.headers = ECS_STRBUF_INIT;
                         reply.status = "OK";
                         ecs_strbuf_appendstrn(&reply.body, 
