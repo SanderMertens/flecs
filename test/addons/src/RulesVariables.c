@@ -7379,3 +7379,212 @@ void RulesVariables_lookup_neq_var(void) {
 
     ecs_fini(world);
 }
+
+void RulesVariables_check_vars_this(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Foo"
+    });
+
+    test_assert(r != NULL);
+    test_int(1, ecs_rule_var_count(r));
+    test_str("this", ecs_rule_var_name(r, 0));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_check_vars_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Foo($x)"
+    });
+
+    test_assert(r != NULL);
+    test_int(2, ecs_rule_var_count(r));
+    test_str("this", ecs_rule_var_name(r, 0));
+    test_str("x", ecs_rule_var_name(r, 1));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_check_vars_wildcard(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "*"
+    });
+
+    test_assert(r != NULL);
+    test_int(1, ecs_rule_var_count(r));
+    test_str("this", ecs_rule_var_name(r, 0));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_check_vars_any(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "_"
+    });
+
+    test_assert(r != NULL);
+    test_int(1, ecs_rule_var_count(r));
+    test_str("this", ecs_rule_var_name(r, 0));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_check_vars_var_as_tgt(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Foo($this), ChildOf($this, $x)"
+    });
+
+    test_assert(r != NULL);
+    test_int(2, ecs_rule_var_count(r));
+    test_str("this", ecs_rule_var_name(r, 0));
+    test_str("x", ecs_rule_var_name(r, 1));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_check_vars_this_as_tgt(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Foo($this), ChildOf($x, $this)"
+    });
+
+    test_assert(r != NULL);
+    test_int(3, ecs_rule_var_count(r));
+    test_str("this", ecs_rule_var_name(r, 0)); // table
+    test_str("x", ecs_rule_var_name(r, 1));
+    test_str("this", ecs_rule_var_name(r, 2)); // entity
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_check_vars_this_w_lookup_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Foo($this), ChildOf($x, $this.var)"
+    });
+
+    test_assert(r != NULL);
+    test_int(4, ecs_rule_var_count(r));
+    test_str("this", ecs_rule_var_name(r, 0));
+    test_str("x", ecs_rule_var_name(r, 1));
+    test_str("this.var", ecs_rule_var_name(r, 2));
+    test_str("this", ecs_rule_var_name(r, 3));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_check_vars_var_w_lookup_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Foo($y), ChildOf($x, $y.var)"
+    });
+
+    test_assert(r != NULL);
+    test_int(4, ecs_rule_var_count(r));
+    test_str("this", ecs_rule_var_name(r, 0));
+    test_str("y", ecs_rule_var_name(r, 1));
+    test_str("x", ecs_rule_var_name(r, 2));
+    test_str("y.var", ecs_rule_var_name(r, 3));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_check_vars_anonymous_var_as_tgt(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Foo($this), ChildOf($this, $_x)"
+    });
+
+    test_assert(r != NULL);
+    test_int(2, ecs_rule_var_count(r));
+    test_str("this", ecs_rule_var_name(r, 0));
+    test_str("_x", ecs_rule_var_name(r, 1));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_check_vars_wildcard_as_tgt(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Foo($this), ChildOf($this, *)"
+    });
+
+    test_assert(r != NULL);
+    test_int(1, ecs_rule_var_count(r));
+    test_str("this", ecs_rule_var_name(r, 0));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_check_vars_any_as_tgt(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Foo($this), ChildOf($this, _)"
+    });
+
+    test_assert(r != NULL);
+    test_int(1, ecs_rule_var_count(r));
+    test_str("this", ecs_rule_var_name(r, 0));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}

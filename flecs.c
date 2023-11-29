@@ -61061,7 +61061,7 @@ void flecs_rule_discover_vars(
     ecs_vec_reset_t(NULL, vars, ecs_rule_var_t);
 
     ecs_term_t *terms = rule->filter.terms;
-    int32_t i, anonymous_count = 0, count = rule->filter.term_count;
+    int32_t a, i, anonymous_count = 0, count = rule->filter.term_count;
     int32_t anonymous_table_count = 0, scope = 0, scoped_var_index = 0;
     bool table_this = false, entity_before_table_this = false;
 
@@ -61183,24 +61183,8 @@ void flecs_rule_discover_vars(
     }
 
     int32_t var_count = ecs_vec_count(vars);
-
-    /* Add non-This table variables */
-    if (anonymous_table_count) {
-        anonymous_table_count = 0;
-        for (i = 0; i < var_count; i ++) {
-            ecs_rule_var_t *var = ecs_vec_get_t(vars, ecs_rule_var_t, i);
-            if (var->kind == EcsVarAny) {
-                var->kind = EcsVarEntity;
-
-                ecs_var_id_t var_id = flecs_rule_add_var(
-                    rule, var->name, vars, EcsVarTable);
-                ecs_vec_get_t(vars, ecs_rule_var_t, i)->table_id = var_id;
-                anonymous_table_count ++;
-            }
-        }
-
-        var_count = ecs_vec_count(vars);
-    }
+    ecs_var_id_t placeholder = EcsVarNone - 1;
+    bool replace_placeholders = false;
 
     /* Ensure lookup variables have table and/or entity variables */
     for (i = 0; i < var_count; i ++) {
@@ -61213,6 +61197,27 @@ void flecs_rule_discover_vars(
                 rule, var_name, EcsVarTable);
             if (base_table_id != EcsVarNone) {
                 var->table_id = base_table_id;
+            } else if (anonymous_table_count) {
+                /* Scan for implicit anonymous table variables that haven't been
+                 * inserted yet (happens after this step). Doing this here vs.
+                 * ensures that anonymous variables are appended at the end of
+                 * the variable array, while also ensuring that variable ids are
+                 * stable (no swapping of table var ids that are in use). */
+                for (a = 0; a < var_count; a ++) {
+                    ecs_rule_var_t *avar = ecs_vec_get_t(
+                        vars, ecs_rule_var_t, a);
+                    if (avar->kind == EcsVarAny) {
+                        if (!ecs_os_strcmp(avar->name, var_name)) {
+                            base_table_id = (ecs_var_id_t)(a + 1);
+                            break;
+                        }
+                    }
+                }
+                if (base_table_id != EcsVarNone) {
+                    /* Set marker so we can set the new table id afterwards */
+                    var->table_id = placeholder;
+                    replace_placeholders = true;
+                }
             }
 
             ecs_var_id_t base_entity_id = flecs_rule_find_var_id(
@@ -61240,6 +61245,43 @@ void flecs_rule_discover_vars(
         }
     }
     var_count = ecs_vec_count(vars);
+
+    /* Add non-This table variables */
+    if (anonymous_table_count) {
+        anonymous_table_count = 0;
+        for (i = 0; i < var_count; i ++) {
+            ecs_rule_var_t *var = ecs_vec_get_t(vars, ecs_rule_var_t, i);
+            if (var->kind == EcsVarAny) {
+                var->kind = EcsVarEntity;
+
+                ecs_var_id_t var_id = flecs_rule_add_var(
+                    rule, var->name, vars, EcsVarTable);
+                ecs_vec_get_t(vars, ecs_rule_var_t, i)->table_id = var_id;
+                anonymous_table_count ++;
+            }
+        }
+
+        var_count = ecs_vec_count(vars);
+    }
+
+    /* If any forward references to newly added anonymous tables exist, replace
+     * them with the actual table variable ids. */
+    if (replace_placeholders) {
+        for (i = 0; i < var_count; i ++) {
+            ecs_rule_var_t *var = ecs_vec_get_t(vars, ecs_rule_var_t, i);
+            if (var->table_id == placeholder) {
+                char *var_name = ecs_os_strdup(var->name);
+                var_name[var->lookup - var->name - 1] = '\0';
+
+                var->table_id = flecs_rule_find_var_id(
+                    rule, var_name, EcsVarTable);
+                ecs_assert(var->table_id != EcsVarNone, 
+                    ECS_INTERNAL_ERROR, NULL);
+
+                ecs_os_free(var_name);
+            }
+        }
+    }
 
     /* Always include spot for This variable, even if rule doesn't use it */
     var_count ++;
@@ -61285,6 +61327,14 @@ void flecs_rule_discover_vars(
 
     /* Hide anonymous table variables from application */
     rule->var_pub_count -= anonymous_table_count;
+
+    /* Sanity check to make sure that the public part of the variable array only
+     * contains entity variables. */
+#ifdef FLECS_DEBUG
+    for (i = 1 /* first element = $this */; i < rule->var_pub_count; i ++) {
+        ecs_assert(rule->vars[i].kind == EcsVarEntity, ECS_INTERNAL_ERROR, NULL);
+    }
+#endif
 }
 
 static

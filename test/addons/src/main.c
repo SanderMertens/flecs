@@ -860,6 +860,17 @@ void RulesVariables_lookup_as_target(void);
 void RulesVariables_lookup_assign_var(void);
 void RulesVariables_lookup_eq_var(void);
 void RulesVariables_lookup_neq_var(void);
+void RulesVariables_check_vars_this(void);
+void RulesVariables_check_vars_var(void);
+void RulesVariables_check_vars_wildcard(void);
+void RulesVariables_check_vars_any(void);
+void RulesVariables_check_vars_var_as_tgt(void);
+void RulesVariables_check_vars_this_as_tgt(void);
+void RulesVariables_check_vars_anonymous_var_as_tgt(void);
+void RulesVariables_check_vars_wildcard_as_tgt(void);
+void RulesVariables_check_vars_any_as_tgt(void);
+void RulesVariables_check_vars_this_w_lookup_var(void);
+void RulesVariables_check_vars_var_w_lookup_var(void);
 
 // Testsuite 'RulesOperators'
 void RulesOperators_2_and_not(void);
@@ -5056,6 +5067,50 @@ bake_test_case RulesVariables_testcases[] = {
     {
         "lookup_neq_var",
         RulesVariables_lookup_neq_var
+    },
+    {
+        "check_vars_this",
+        RulesVariables_check_vars_this
+    },
+    {
+        "check_vars_var",
+        RulesVariables_check_vars_var
+    },
+    {
+        "check_vars_wildcard",
+        RulesVariables_check_vars_wildcard
+    },
+    {
+        "check_vars_any",
+        RulesVariables_check_vars_any
+    },
+    {
+        "check_vars_var_as_tgt",
+        RulesVariables_check_vars_var_as_tgt
+    },
+    {
+        "check_vars_this_as_tgt",
+        RulesVariables_check_vars_this_as_tgt
+    },
+    {
+        "check_vars_anonymous_var_as_tgt",
+        RulesVariables_check_vars_anonymous_var_as_tgt
+    },
+    {
+        "check_vars_wildcard_as_tgt",
+        RulesVariables_check_vars_wildcard_as_tgt
+    },
+    {
+        "check_vars_any_as_tgt",
+        RulesVariables_check_vars_any_as_tgt
+    },
+    {
+        "check_vars_this_w_lookup_var",
+        RulesVariables_check_vars_this_w_lookup_var
+    },
+    {
+        "check_vars_var_w_lookup_var",
+        RulesVariables_check_vars_var_w_lookup_var
     }
 };
 
@@ -8213,7 +8268,7 @@ static bake_test_suite suites[] = {
         "RulesVariables",
         NULL,
         NULL,
-        120,
+        131,
         RulesVariables_testcases
     },
     {
