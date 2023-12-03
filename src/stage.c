@@ -525,6 +525,7 @@ void flecs_enqueue(
     }
 
     cmd->is._1.value = desc_cmd;
+    cmd->is._1.size = ECS_SIZEOF(ecs_event_desc_t);
 
     if (desc->param || desc->const_param) {
         ecs_assert(!(desc->const_param && desc->param), ECS_INVALID_PARAMETER, 

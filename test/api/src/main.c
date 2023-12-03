@@ -204,6 +204,7 @@ void Event_enqueue_event_not_alive_w_data_copy_after_delete_during_merge(void);
 void Event_enqueue_event_not_deferred(void);
 void Event_enqueue_event_not_deferred_to_async(void);
 void Event_enqueue_custom_implicit_any(void);
+void Event_enqueue_custom_after_large_cmd(void);
 
 // Testsuite 'New'
 void New_setup(void);
@@ -3428,6 +3429,10 @@ bake_test_case Event_testcases[] = {
     {
         "enqueue_custom_implicit_any",
         Event_enqueue_custom_implicit_any
+    },
+    {
+        "enqueue_custom_after_large_cmd",
+        Event_enqueue_custom_after_large_cmd
     }
 };
 
@@ -12994,7 +12999,7 @@ static bake_test_suite suites[] = {
         "Event",
         NULL,
         NULL,
-        31,
+        32,
         Event_testcases
     },
     {

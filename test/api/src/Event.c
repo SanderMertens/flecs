@@ -1385,3 +1385,35 @@ void Event_enqueue_custom_implicit_any(void) {
 
     ecs_fini(world);
 }
+
+typedef struct LargeType {
+    char value[8888];
+} LargeType;
+
+void Event_enqueue_custom_after_large_cmd(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, LargeType);
+    ECS_COMPONENT(world, Position);
+
+    ecs_defer_begin(world);
+    ecs_entity_t e = ecs_set(world, 0, LargeType, {{0}});
+    ecs_defer_end(world);
+    test_assert(ecs_has(world, e, LargeType));
+
+    printf("\n\n");
+
+    ecs_defer_begin(world);
+    Position p = {10, 20};
+    ecs_enqueue(world, &(ecs_event_desc_t) {
+        .entity = e,
+        .ids = &(ecs_type_t){ .count = 1, .array = (ecs_id_t[]){ ecs_id(LargeType) }},
+        .event = ecs_id(Position),
+        .param = &p,
+    });
+    ecs_defer_end(world);
+
+    printf("\n\n");
+
+    ecs_fini(world);
+}
