@@ -1390,18 +1390,28 @@ typedef struct LargeType {
     char value[8888];
 } LargeType;
 
+static int on_position_invoked = 0;
+
+static
+void OnPosition(ecs_iter_t *it) {
+    Position *p = it->param;
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+    on_position_invoked ++;
+}
+
 void Event_enqueue_custom_after_large_cmd(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, LargeType);
     ECS_COMPONENT(world, Position);
 
+    ECS_OBSERVER(world, OnPosition, ecs_id(Position), LargeType);
+
     ecs_defer_begin(world);
     ecs_entity_t e = ecs_set(world, 0, LargeType, {{0}});
     ecs_defer_end(world);
     test_assert(ecs_has(world, e, LargeType));
-
-    printf("\n\n");
 
     ecs_defer_begin(world);
     Position p = {10, 20};
@@ -1411,9 +1421,10 @@ void Event_enqueue_custom_after_large_cmd(void) {
         .event = ecs_id(Position),
         .param = &p,
     });
-    ecs_defer_end(world);
 
-    printf("\n\n");
+    test_int(on_position_invoked, 0);
+    ecs_defer_end(world);
+    test_int(on_position_invoked, 1);
 
     ecs_fini(world);
 }
