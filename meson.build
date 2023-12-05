@@ -113,14 +113,18 @@ flecs_dep = declare_dependency(
     include_directories : flecs_inc
 )
 
-helloworld_inc = include_directories('examples/c/hello_world/include')
+opt_helloworld = get_option('build_example').disable_auto_if(meson.is_subproject())
 
-helloworld_exe = executable('helloworld',
-    'examples/c/hello_world/src/main.c',
-    include_directories : helloworld_inc,
-    implicit_include_directories : false,
-    dependencies : flecs_dep
+if opt_helloworld.allowed()
+    helloworld_inc = include_directories('examples/c/hello_world/include')
+
+    helloworld_exe = executable('helloworld',
+        'examples/c/hello_world/src/main.c',
+        include_directories : helloworld_inc,
+        implicit_include_directories : false,
+        dependencies : flecs_dep
 )
+endif
 
 if meson.version().version_compare('>= 0.54.0')
     meson.override_dependency('flecs', flecs_dep)
