@@ -5087,6 +5087,8 @@ void RulesOperators_2_or_w_both(void) {
     test_bool(false, ecs_rule_next(&it));
 
     ecs_rule_fini(r);
+
+    ecs_fini(world);
 }
 
 void RulesOperators_3_or_w_both(void) {
@@ -5163,6 +5165,8 @@ void RulesOperators_3_or_w_both(void) {
     test_bool(false, ecs_rule_next(&it));
 
     ecs_rule_fini(r);
+
+    ecs_fini(world);
 }
 
 void RulesOperators_2_not_first(void) {

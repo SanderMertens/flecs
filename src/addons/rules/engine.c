@@ -1924,7 +1924,7 @@ bool flecs_rule_or(
     ecs_rule_or_ctx_t *op_ctx = flecs_op_ctx(ctx, or);
 
     if (!redo) {
-        op_ctx->first = ctx->op_index + 1;
+        op_ctx->first = flecs_itolbl(ctx->op_index + 1);
         op_ctx->cur = op_ctx->first;
     }
 
