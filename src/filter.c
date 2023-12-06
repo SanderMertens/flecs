@@ -2290,7 +2290,7 @@ ecs_iter_t ecs_term_iter(
      * they don't get overwritten by flecs_iter_validate.
      *
      * Note: the reason the term iterator doesn't use the iterator cache itself
-     * (which could easily accomodate a single term) is that the filter iterator
+     * (which could easily accommodate a single term) is that the filter iterator
      * is built on top of the term iterator. The private cache of the term
      * iterator keeps the filter iterator code simple, as it doesn't need to
      * worry about the term iter overwriting the iterator fields. */

@@ -493,7 +493,7 @@ Sync points are moments during the frame where all commands are flushed to the s
 
 Because Flecs can't see inside the implementation of a system, pipelines can't know for which components a system could insert commands. This means that by default a pipeline assumes that systems insert no commands / that it is OK for commands to be merged at the end of the frame. To get commands to merge sooner, systems must be annotated with the components they write.
 
-A pipeline tracks on a per-component basis whether commands could have been inserted for it, and when a component is being read. When a pipeline sees a read for a component for which commmands could have been inserted, a sync point is inserted before the system that reads. This ensures that sync points are only inserted when necessary:
+A pipeline tracks on a per-component basis whether commands could have been inserted for it, and when a component is being read. When a pipeline sees a read for a component for which commands could have been inserted, a sync point is inserted before the system that reads. This ensures that sync points are only inserted when necessary:
 
 - Multiple systems that enqueue commands can run before a sync point, possibly combining commands for multiple reads
 - When a system is inactive (e.g. it doesn't match any entities) or is disabled, it will be ignored for sync point insertion

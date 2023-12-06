@@ -81,13 +81,13 @@ typedef struct ecs_system_desc_t {
     /** Rate at which the system should run */
     int32_t rate;
 
-    /** External tick soutce that determines when system ticks */
+    /** External tick source that determines when system ticks */
     ecs_entity_t tick_source;
 
     /** If true, system will be ran on multiple threads */
     bool multi_threaded;
 
-    /** If true, system will have access to actuall world. Cannot be true at the
+    /** If true, system will have access to the actual world. Cannot be true at the
      * same time as multi_threaded. */
     bool no_readonly;
 } ecs_system_desc_t;

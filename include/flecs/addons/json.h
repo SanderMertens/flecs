@@ -289,7 +289,7 @@ typedef struct ecs_iter_to_json_desc_t {
 
 /** Serialize iterator into JSON string.
  * This operation will iterate the contents of the iterator and serialize them
- * to JSON. The function acccepts iterators from any source.
+ * to JSON. The function accepts iterators from any source.
  * 
  * @param world The world.
  * @param iter The iterator to serialize to JSON.

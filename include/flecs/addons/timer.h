@@ -99,7 +99,7 @@ ecs_ftime_t ecs_get_timeout(
     ecs_entity_t tick_source);
 
 /** Set timer interval.
- * This operation will continously invoke systems associated with the timer 
+ * This operation will continuously invoke systems associated with the timer
  * after the interval period expires. If the entity contains an existing timer,
  * the interval value will be reset.
  *
@@ -168,7 +168,7 @@ void ecs_reset_timer(
     ecs_entity_t tick_source);
 
 /** Enable randomizing initial time value of timers. 
- * Intializes timers with a random time value, which can improve scheduling as
+ * Initializes timers with a random time value, which can improve scheduling as
  * systems/timers for the same interval don't all happen on the same tick.
  * 
  * @param world The world.

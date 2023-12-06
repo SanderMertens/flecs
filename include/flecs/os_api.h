@@ -238,7 +238,7 @@ typedef struct ecs_os_api_t {
     ecs_os_api_thread_new_t task_new_;
     ecs_os_api_thread_join_t task_join_;
 
-    /* Atomic incremenet / decrement */
+    /* Atomic increment / decrement */
     ecs_os_api_ainc_t ainc_;
     ecs_os_api_ainc_t adec_;
     ecs_os_api_lainc_t lainc_;

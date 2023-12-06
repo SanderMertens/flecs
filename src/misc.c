@@ -1,6 +1,6 @@
 /**
  * @file misc.c
- * @brief Miscallaneous functions.
+ * @brief Miscellaneous functions.
  */
 
 #include "private_api.h"
