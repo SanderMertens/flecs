@@ -49,8 +49,8 @@ typedef enum {
     EcsRuleEach,           /* Iterate entities in table, populate entity variable */
     EcsRuleStore,          /* Store table or entity in variable */
     EcsRuleReset,          /* Reset value of variable to wildcard (*) */
-    EcsRuleUnion,          /* Combine output of multiple operations */
-    EcsRuleEnd,            /* Used to denote end of EcsRuleUnion block */
+    EcsRuleOr,          /* Combine output of multiple operations */
+    EcsRuleEnd,            /* Used to denote end of EcsRuleOr block */
     EcsRuleNot,            /* Sets iterator state after term was not matched */
     EcsRulePredEq,         /* Test if variable is equal to, or assign to if not set */
     EcsRulePredNeq,        /* Test if variable is not equal to */
@@ -200,15 +200,16 @@ typedef struct {
     ecs_id_record_t *cur;
 } ecs_rule_ids_ctx_t;
 
-/* Ctrlflow context (used with Union) */
-typedef struct {
-    ecs_rule_lbl_t lbl;
-} ecs_rule_ctrlflow_ctx_t;
-
 /* Condition context */
 typedef struct {
     bool cond;
 } ecs_rule_cond_ctx_t;
+
+/* Or context */
+typedef struct {
+    ecs_rule_lbl_t first;
+    ecs_rule_lbl_t cur;
+} ecs_rule_or_ctx_t;
 
 typedef struct ecs_rule_op_ctx_t {
     union {
@@ -219,8 +220,8 @@ typedef struct ecs_rule_op_ctx_t {
         ecs_rule_eq_ctx_t eq;
         ecs_rule_each_ctx_t each;
         ecs_rule_setthis_ctx_t setthis;
-        ecs_rule_ctrlflow_ctx_t ctrlflow;
         ecs_rule_cond_ctx_t cond;
+        ecs_rule_or_ctx_t or;
     } is;
 } ecs_rule_op_ctx_t;
 
@@ -255,7 +256,6 @@ typedef struct {
 typedef struct {
     uint64_t *written;            /* Bitset to check which variables have been written */
     ecs_rule_lbl_t op_index;      /* Currently evaluated operation */
-    ecs_rule_lbl_t prev_index;    /* Previously evaluated operation */
     ecs_rule_lbl_t jump;          /* Set by control flow operations to jump to operation */
     ecs_var_t *vars;              /* Variable storage */
     ecs_iter_t *it;               /* Iterator */

@@ -7,6 +7,12 @@
 
 #ifdef FLECS_RULES
 
+static
+bool flecs_rule_dispatch(
+    const ecs_rule_op_t *op,
+    bool redo,
+    ecs_rule_run_ctx_t *ctx);
+
 ecs_allocator_t* flecs_rule_get_allocator(
     const ecs_iter_t *it)
 {
@@ -1303,43 +1309,6 @@ bool flecs_rule_reset(
 }
 
 static
-bool flecs_rule_union(
-    const ecs_rule_op_t *op,
-    bool redo,
-    ecs_rule_run_ctx_t *ctx)
-{
-    if (!redo) {
-        ctx->jump = flecs_itolbl(ctx->op_index + 1);
-        return true;
-    } else {
-        ecs_rule_lbl_t next = flecs_itolbl(ctx->prev_index + 1);
-        if (next == op->next) {
-            return false;
-        }
-        ctx->jump = next;
-        return true;
-    }
-}
-
-static
-bool flecs_rule_end(
-    const ecs_rule_op_t *op,
-    bool redo,
-    ecs_rule_run_ctx_t *ctx)
-{
-    (void)op;
-
-    ecs_rule_ctrlflow_ctx_t *op_ctx = flecs_op_ctx(ctx, ctrlflow);
-    if (!redo) {
-        op_ctx->lbl = ctx->prev_index;
-        return true;
-    } else {
-        ctx->jump = op_ctx->lbl;
-        return true;
-    }
-}
-
-static
 bool flecs_rule_not(
     const ecs_rule_op_t *op,
     bool redo,
@@ -1945,7 +1914,83 @@ bool flecs_rule_jmp_not_set(
 }
 
 static
-bool flecs_rule_run(
+bool flecs_rule_or(
+    const ecs_rule_op_t *op,
+    bool redo,
+    ecs_rule_run_ctx_t *ctx)
+{
+    ecs_iter_t *it = ctx->it;
+    ecs_rule_iter_t *rit = &it->priv.iter.rule;
+    ecs_rule_or_ctx_t *op_ctx = flecs_op_ctx(ctx, or);
+
+    if (!redo) {
+        op_ctx->first = ctx->op_index + 1;
+        op_ctx->cur = op_ctx->first;
+    }
+
+    const ecs_rule_op_t *cur = &rit->ops[op_ctx->cur];
+    bool result = false;
+
+    /* Evaluate operations in OR chain one by one. */
+
+    do {
+        ctx->op_index = op_ctx->cur;
+        ctx->written[op_ctx->cur] = op->written;
+
+        result = flecs_rule_dispatch(cur, redo, ctx);
+        if (result) {
+            ctx->written[op_ctx->cur] |= cur->written;
+
+            /* If a previous operation in the OR chain returned a result for the
+             * same matched source, skip it so we don't yield for each matching
+             * element in the chain. */
+            ecs_rule_lbl_t prev_index;
+            for (prev_index = op_ctx->first; prev_index < op_ctx->cur; 
+                prev_index ++) 
+            {
+                const ecs_rule_op_t *prev = &rit->ops[prev_index];
+                ctx->op_index = prev_index;
+                ctx->written[prev_index] = ctx->written[op_ctx->cur];
+                if (flecs_rule_dispatch(prev, false, ctx)) {
+                    break;
+                }
+            }
+
+            if (prev_index != op_ctx->cur) {
+                /* Duplicate match was found, redo search */
+                redo = true;
+                continue;
+            }
+            break;
+        }
+
+        /* No result was found, go to next operation in chain */
+        op_ctx->cur ++;
+        cur = &rit->ops[op_ctx->cur];
+        redo = false;
+    } while (cur->kind != EcsRuleEnd);
+
+    return result;
+}
+
+static
+bool flecs_rule_end(
+    const ecs_rule_op_t *op,
+    bool redo,
+    ecs_rule_run_ctx_t *ctx)
+{
+    (void)op;
+    (void)ctx;
+
+    if (!redo) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+static
+bool flecs_rule_dispatch(
     const ecs_rule_op_t *op,
     bool redo,
     ecs_rule_run_ctx_t *ctx)
@@ -1963,7 +2008,7 @@ bool flecs_rule_run(
     case EcsRuleEach: return flecs_rule_each(op, redo, ctx);
     case EcsRuleStore: return flecs_rule_store(op, redo, ctx);
     case EcsRuleReset: return flecs_rule_reset(op, redo, ctx);
-    case EcsRuleUnion: return flecs_rule_union(op, redo, ctx);
+    case EcsRuleOr: return flecs_rule_or(op, redo, ctx);
     case EcsRuleEnd: return flecs_rule_end(op, redo, ctx);
     case EcsRuleNot: return flecs_rule_not(op, redo, ctx);
     case EcsRulePredEq: return flecs_rule_pred_eq(op, redo, ctx);
@@ -2045,7 +2090,6 @@ bool ecs_rule_next_instanced(
     ecs_assert(it->next == ecs_rule_next, ECS_INVALID_PARAMETER, NULL);
 
     ecs_rule_iter_t *rit = &it->priv.iter.rule;
-    bool redo = it->flags & EcsIterIsValid;
     ecs_rule_lbl_t next;
 
     ecs_rule_run_ctx_t ctx;
@@ -2055,29 +2099,30 @@ bool ecs_rule_next_instanced(
     ctx.vars = rit->vars;
     ctx.rule_vars = rit->rule_vars;
     ctx.written = rit->written;
-    ctx.prev_index = -1;
     ctx.jump = -1;
     ctx.op_ctx = rit->op_ctx;
     ctx.source_set = &rit->source_set;
     const ecs_rule_op_t *ops = rit->ops;
 
+    bool redo = true;
     if (!(it->flags & EcsIterIsValid)) {
         if (!ctx.rule) {
             goto done;
         }
         flecs_rule_iter_init(&ctx);
+        redo = false;
     }
 
     do {
         ctx.op_index = rit->op;
         const ecs_rule_op_t *op = &ops[ctx.op_index];
 
-#ifdef FLECS_DEBUG
+        #ifdef FLECS_DEBUG
         rit->profile[ctx.op_index].count[redo] ++;
-#endif
+        #endif
 
-        bool result = flecs_rule_run(op, redo, &ctx);
-        ctx.prev_index = ctx.op_index;
+        bool result = flecs_rule_dispatch(op, redo, &ctx);
+        ecs_rule_lbl_t prev_index = ctx.op_index;
 
         next = (&op->prev)[result];
         if (ctx.jump != -1) {
@@ -2089,7 +2134,7 @@ bool ecs_rule_next_instanced(
             ctx.written[next] |= ctx.written[ctx.op_index] | op->written;
         }
 
-        redo = next < ctx.prev_index;
+        redo = next < prev_index;
         rit->op = next;
 
         if (op->kind == EcsRuleYield) {
@@ -2098,8 +2143,8 @@ bool ecs_rule_next_instanced(
             if (table && !range->count) {
                 range->count = ecs_table_count(table);
             }
-            flecs_iter_populate_data(ctx.world, it, range->table, range->offset,
-                range->count, it->ptrs);
+            flecs_iter_populate_data(ctx.world, it, range->table, 
+                range->offset, range->count, it->ptrs);
             if (!table && range->count == 1) {
                 it->count = 1;
                 it->entities = &rit->vars[0].entity;

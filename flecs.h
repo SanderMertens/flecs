@@ -3309,7 +3309,6 @@ typedef struct ecs_rule_iter_t {
     ecs_rule_op_profile_t *profile;
 #endif
 
-    bool redo;
     int16_t op;
     int16_t sp;
 } ecs_rule_iter_t;

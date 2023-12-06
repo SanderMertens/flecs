@@ -35,7 +35,7 @@ const char* flecs_rule_op_str(
     case EcsRuleEach:         return "each    ";
     case EcsRuleStore:        return "store   ";
     case EcsRuleReset:        return "reset   ";
-    case EcsRuleUnion:        return "union   ";
+    case EcsRuleOr:           return "or      ";
     case EcsRuleEnd:          return "end     ";
     case EcsRuleNot:          return "not     ";
     case EcsRulePredEq:       return "eq      ";
@@ -242,7 +242,7 @@ char* ecs_rule_str_w_profile(
     
         hidden_chars = flecs_rule_op_ref_str(rule, &op->src, src_flags, &buf);
 
-        if (op->kind == EcsRuleUnion) {
+        if (op->kind == EcsRuleOr) {
             indent ++;
         }
 

@@ -1008,7 +1008,7 @@ void flecs_rule_begin_union(
     ecs_rule_compile_ctx_t *ctx)
 {
     ecs_rule_op_t op = {0};
-    op.kind = EcsRuleUnion;
+    op.kind = EcsRuleOr;
     ctx->cur->lbl_union = flecs_rule_op_insert(&op, ctx);
 }
 
@@ -1025,11 +1025,7 @@ void flecs_rule_end_union(
     
     ecs_rule_op_t *ops = ecs_vec_first_t(ctx->ops, ecs_rule_op_t);
     int32_t i = ecs_vec_count(ctx->ops) - 2;
-    for (; i >= 0 && (ops[i].kind != EcsRuleUnion); i --) {
-        if (ops[i].next == FlecsRuleOrMarker) {
-            ops[i].next = next;
-        }
-    }
+    for (; i >= 0 && (ops[i].kind != EcsRuleOr); i --) { }
 
     ops[next].prev = flecs_itolbl(i);
     ops[i].next = next;

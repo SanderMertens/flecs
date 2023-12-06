@@ -956,6 +956,8 @@
                 "2_or_written_dependent",
                 "2_or_written_dependent_2_vars",
                 "2_or_w_dependent",
+                "2_or_w_both",
+                "3_or_w_both",
                 "2_not_first",
                 "2_optional_first",
                 "root_entities_empty",
