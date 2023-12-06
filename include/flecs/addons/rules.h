@@ -3,7 +3,7 @@
  * @brief Rule query engine addon.
  * 
  * Rules are advanced queries that in addition to the capabilities of regular
- * queries and filters have the folllowing features:
+ * queries and filters have the following features:
  * 
  * - query for all components of an entity (vs. all entities for a component)
  * - query for all relationship pairs of an entity
@@ -137,7 +137,7 @@ const char* ecs_rule_var_name(
  * Internally the rule engine has entity variables and table variables. When
  * iterating through rule variables (by using ecs_rule_variable_count) only
  * the values for entity variables are accessible. This operation enables an
- * appliction to check if a variable is an entity variable.
+ * application to check if a variable is an entity variable.
  * 
  * @param rule The rule.
  * @param var_id The variable id.
@@ -194,7 +194,7 @@ char* ecs_rule_str(
 
 /** Convert rule to string with profile.
  * To use this you must set the EcsIterProfile flag on an iterator before 
- * starting uteration:
+ * starting iteration:
  *   it.flags |= EcsIterProfile 
  *
  * @param rule The rule.
@@ -207,7 +207,7 @@ char* ecs_rule_str_w_profile(
 
 /** Populate variables from key-value string.
  * Convenience function to set rule variables from a key-value string separated
- * by comma's. The string must have the followig format:
+ * by comma's. The string must have the following format:
  *   var_a: value, var_b: value
  * 
  * The key-value list may optionally be enclosed in parenthesis.

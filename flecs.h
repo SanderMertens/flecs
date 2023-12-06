@@ -2170,7 +2170,7 @@ typedef struct ecs_os_api_t {
     ecs_os_api_thread_new_t task_new_;
     ecs_os_api_thread_join_t task_join_;
 
-    /* Atomic incremenet / decrement */
+    /* Atomic increment / decrement */
     ecs_os_api_ainc_t ainc_;
     ecs_os_api_ainc_t adec_;
     ecs_os_api_lainc_t lainc_;
@@ -5137,7 +5137,7 @@ ecs_entity_t ecs_new_low_id(
 
 /** Create new entity with (component) id.
  * This operation creates a new entity with an optional (component) id. When 0
- * is passed to the id paramter, no component is added to the new entity.
+ * is passed to the id parameter, no component is added to the new entity.
  * 
  * @param world The world.
  * @param id The component id to initialize the new entity with.
@@ -10663,7 +10663,7 @@ ecs_ftime_t ecs_get_timeout(
     ecs_entity_t tick_source);
 
 /** Set timer interval.
- * This operation will continously invoke systems associated with the timer 
+ * This operation will continuously invoke systems associated with the timer
  * after the interval period expires. If the entity contains an existing timer,
  * the interval value will be reset.
  *
@@ -10732,7 +10732,7 @@ void ecs_reset_timer(
     ecs_entity_t tick_source);
 
 /** Enable randomizing initial time value of timers. 
- * Intializes timers with a random time value, which can improve scheduling as
+ * Initializes timers with a random time value, which can improve scheduling as
  * systems/timers for the same interval don't all happen on the same tick.
  * 
  * @param world The world.
@@ -11149,14 +11149,14 @@ typedef struct ecs_system_desc_t {
     /** Rate at which the system should run */
     int32_t rate;
 
-    /** External tick soutce that determines when system ticks */
+    /** External tick source that determines when system ticks */
     ecs_entity_t tick_source;
 
     /** If true, system will be ran on multiple threads */
     bool multi_threaded;
 
-    /** If true, system will have access to actuall world. Cannot be true at the
-     * same time as multi_threaded. */
+    /** If true, system will have access to the actual world. Cannot be true at
+     * the same time as multi_threaded. */
     bool no_readonly;
 } ecs_system_desc_t;
 
@@ -12812,7 +12812,7 @@ typedef struct ecs_iter_to_json_desc_t {
 
 /** Serialize iterator into JSON string.
  * This operation will iterate the contents of the iterator and serialize them
- * to JSON. The function acccepts iterators from any source.
+ * to JSON. The function accepts iterators from any source.
  * 
  * @param world The world.
  * @param iter The iterator to serialize to JSON.
@@ -14276,7 +14276,7 @@ extern "C" {
  * 
  * @param out The string to write the character to.
  * @param in The input character.
- * @param delimiter The delimiiter used (for example '"')
+ * @param delimiter The delimiter used (for example '"')
  * @return Pointer to the character after the last one written.
  */
 FLECS_API
@@ -14302,7 +14302,7 @@ const char* ecs_chrparse(
  * argument for 'out', and use the returned size to allocate a string that is
  * large enough.
  * 
- * @param out Pointer to output string (msut be).
+ * @param out Pointer to output string (must be).
  * @param size Maximum number of characters written to output.
  * @param delimiter The delimiter used (for example '"').
  * @param in The input string.
@@ -14677,7 +14677,7 @@ int ecs_meta_from_desc(
 
 /* Private API */
 
-/* Utilities to switch beteen IMPL, DECLARE and EXTERN variants */
+/* Utilities to switch between IMPL, DECLARE and EXTERN variants */
 #define ECS_META_IMPL_CALL_INNER(base, impl, name, type_desc)\
     base ## impl(name, type_desc)
 
@@ -14913,7 +14913,7 @@ void FlecsScriptImport(
  * @brief Rule query engine addon.
  * 
  * Rules are advanced queries that in addition to the capabilities of regular
- * queries and filters have the folllowing features:
+ * queries and filters have the following features:
  * 
  * - query for all components of an entity (vs. all entities for a component)
  * - query for all relationship pairs of an entity
@@ -15047,7 +15047,7 @@ const char* ecs_rule_var_name(
  * Internally the rule engine has entity variables and table variables. When
  * iterating through rule variables (by using ecs_rule_variable_count) only
  * the values for entity variables are accessible. This operation enables an
- * appliction to check if a variable is an entity variable.
+ * application to check if a variable is an entity variable.
  * 
  * @param rule The rule.
  * @param var_id The variable id.
@@ -15104,7 +15104,7 @@ char* ecs_rule_str(
 
 /** Convert rule to string with profile.
  * To use this you must set the EcsIterProfile flag on an iterator before 
- * starting uteration:
+ * starting iteration:
  *   it.flags |= EcsIterProfile 
  *
  * @param rule The rule.
@@ -15117,7 +15117,7 @@ char* ecs_rule_str_w_profile(
 
 /** Populate variables from key-value string.
  * Convenience function to set rule variables from a key-value string separated
- * by comma's. The string must have the followig format:
+ * by comma's. The string must have the following format:
  *   var_a: value, var_b: value
  * 
  * The key-value list may optionally be enclosed in parenthesis.

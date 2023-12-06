@@ -6,6 +6,8 @@
 #ifndef FLECS_VEC_H
 #define FLECS_VEC_H
 
+#include "flecs/private/api_defines.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif

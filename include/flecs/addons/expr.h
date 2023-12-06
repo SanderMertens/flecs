@@ -58,7 +58,7 @@ extern "C" {
  * 
  * @param out The string to write the character to.
  * @param in The input character.
- * @param delimiter The delimiiter used (for example '"')
+ * @param delimiter The delimiter used (for example '"')
  * @return Pointer to the character after the last one written.
  */
 FLECS_API
@@ -84,7 +84,7 @@ const char* ecs_chrparse(
  * argument for 'out', and use the returned size to allocate a string that is
  * large enough.
  * 
- * @param out Pointer to output string (msut be).
+ * @param out Pointer to output string (must be).
  * @param size Maximum number of characters written to output.
  * @param delimiter The delimiter used (for example '"').
  * @param in The input string.

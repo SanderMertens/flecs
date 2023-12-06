@@ -26,7 +26,7 @@ typedef struct ecs_table_event_t {
     /* Event match */
     ecs_entity_t event;
 
-    /* If the nubmer of fields gets out of hand, this can be turned into a union
+    /* If the number of fields gets out of hand, this can be turned into a union
      * but since events are very temporary objects, this works for now and makes
      * initializing an event a bit simpler. */
 } ecs_table_event_t;
