@@ -799,31 +799,22 @@ Note that even though the module name is specified with uppercase, the name is s
 A module in C++ is defined as a class where the module contents are defined in the constructor. The above Vehicles module would look like this in C++:
 
 ```cpp
-/* In C++ it is more convenient to define tags as empty structs */
+/* In C++ tags can be defined as empty structs */
 struct Moving { };
 
 /* Module implementation */
-class vehicles {
-public:
+struct vehicles {
     vehicles(flecs::world& world) {
-        flecs::module<Vehicles>(world, "vehicles");
+        world.component<Car>();
+        world.component<Bus>();
+        world.component<MotorCycle>();
+        world.component<Moving>();
 
-        m_car = flecs::component<Car>(world, "Car");
-        m_bus = flecs::component<Bus>(world, "Bus");
-        m_motor_cycle = flecs::component<MotorCycle>(world, "MotorCycle");
-
-        m_moving = flecs::component<Moving>(world, "Moving");
-        m_move = flecs::system<Car, Moving>(world, "Move")
-            .each([](flecs::entity e, Car &car, Moving&) {
+        world.system<Car, Moving>("Move")
+            .each([](flecs::entity e, Car& car, Moving) {
                 /* System implementation */
             });
     }
-
-    flecs::entity m_car;
-    flecs::entity m_bus;
-    flecs::entity m_motor_cycle;
-    flecs::entity m_moving;
-    flecs::entity m_move;
 }
 ```
 
@@ -831,7 +822,7 @@ An application can import the module in C++ like this:
 
 ```cpp
 flecs::world world;
-flecs::import<vehicles>(world);
+world.import<vehicles>();
 ```
 
 ## Hierarchies
