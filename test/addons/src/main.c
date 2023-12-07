@@ -737,6 +737,14 @@ void RulesBasic_find_this_tgt_lowercase(void);
 void RulesBasic_find_this_tgt_uppercase(void);
 void RulesBasic_get_filter(void);
 void RulesBasic_iter_empty_source(void);
+void RulesBasic_iter_empty_source_2_terms(void);
+void RulesBasic_iter_empty_source_wildcard(void);
+void RulesBasic_iter_empty_source_pair(void);
+void RulesBasic_iter_empty_source_pair_wildcard(void);
+void RulesBasic_iter_empty_source_2_terms_pair(void);
+void RulesBasic_iter_empty_source_2_terms_mixed(void);
+void RulesBasic_iter_empty_source_2_terms_mixed_pair(void);
+void RulesBasic_iter_empty_source_2_terms_mixed_pair_wildcard(void);
 void RulesBasic_this_var_w_empty_entity(void);
 
 // Testsuite 'RulesVariables'
@@ -4584,6 +4592,38 @@ bake_test_case RulesBasic_testcases[] = {
         RulesBasic_iter_empty_source
     },
     {
+        "iter_empty_source_2_terms",
+        RulesBasic_iter_empty_source_2_terms
+    },
+    {
+        "iter_empty_source_wildcard",
+        RulesBasic_iter_empty_source_wildcard
+    },
+    {
+        "iter_empty_source_pair",
+        RulesBasic_iter_empty_source_pair
+    },
+    {
+        "iter_empty_source_pair_wildcard",
+        RulesBasic_iter_empty_source_pair_wildcard
+    },
+    {
+        "iter_empty_source_2_terms_pair",
+        RulesBasic_iter_empty_source_2_terms_pair
+    },
+    {
+        "iter_empty_source_2_terms_mixed",
+        RulesBasic_iter_empty_source_2_terms_mixed
+    },
+    {
+        "iter_empty_source_2_terms_mixed_pair",
+        RulesBasic_iter_empty_source_2_terms_mixed_pair
+    },
+    {
+        "iter_empty_source_2_terms_mixed_pair_wildcard",
+        RulesBasic_iter_empty_source_2_terms_mixed_pair_wildcard
+    },
+    {
         "this_var_w_empty_entity",
         RulesBasic_this_var_w_empty_entity
     }
@@ -8271,7 +8311,7 @@ static bake_test_suite suites[] = {
         "RulesBasic",
         NULL,
         NULL,
-        90,
+        98,
         RulesBasic_testcases
     },
     {

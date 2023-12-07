@@ -1777,7 +1777,9 @@ int flecs_rule_compile(
      * insertion of simpler instructions later on. */
     for (i = 0; i < count; i ++) {
         ecs_term_t *term = &terms[i];
-        if (flecs_rule_term_fixed_id(filter, term)) {
+        if (flecs_rule_term_fixed_id(filter, term) || 
+           (term->src.flags & EcsIsEntity && !term->src.id)) 
+        {
             ecs_rule_op_t set_ids = {0};
             set_ids.kind = EcsRuleSetIds;
             flecs_rule_op_insert(&set_ids, &ctx);

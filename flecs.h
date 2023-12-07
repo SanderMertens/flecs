@@ -928,6 +928,7 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 #ifndef FLECS_VEC_H
 #define FLECS_VEC_H
 
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -11155,8 +11156,8 @@ typedef struct ecs_system_desc_t {
     /** If true, system will be ran on multiple threads */
     bool multi_threaded;
 
-    /** If true, system will have access to the actual world. Cannot be true at
-     * the same time as multi_threaded. */
+    /** If true, system will have access to the actual world. Cannot be true at the
+     * same time as multi_threaded. */
     bool no_readonly;
 } ecs_system_desc_t;
 
