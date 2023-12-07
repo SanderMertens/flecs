@@ -1421,6 +1421,13 @@ int flecs_rule_compile_term(
     bool cond_write = term->oper == EcsOptional || is_or;
     ecs_rule_op_t op = {0};
 
+    /* !_ (don't match anything) terms always return nothing. */
+    if (is_not && term->id == EcsAny) {
+        op.kind = EcsRuleNothing;
+        flecs_rule_op_insert(&op, ctx);
+        return 0;
+    }
+
     if (is_or && (first_term || term[-1].oper != EcsOr)) {
         ctx->ctrlflow->cond_written_or = ctx->cond_written;
         ctx->ctrlflow->in_or = true;

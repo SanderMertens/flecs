@@ -2115,13 +2115,13 @@ void RulesBasic_this_src_w_any(void) {
     ECS_TAG(world, Rel);
     ECS_TAG(world, Tgt);
 
-    ecs_rule_t *f = ecs_rule(world, {
+    ecs_rule_t *r = ecs_rule(world, {
         .expr = "_"
     });
 
     ecs_entity_t e1 = ecs_new_w_pair(world, Rel, Tgt);
 
-    ecs_iter_t it = ecs_rule_iter(world, f);
+    ecs_iter_t it = ecs_rule_iter(world, r);
     ecs_entity_t prev = 0;
     int32_t count = 0, e1_matched = 0;
     while (ecs_rule_next(&it)) {
@@ -2137,7 +2137,22 @@ void RulesBasic_this_src_w_any(void) {
     test_assert(count > 0);
     test_int(e1_matched, 1);
 
-    ecs_rule_fini(f);
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_not_any(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "!_"
+    });
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
 
     ecs_fini(world);
 }
