@@ -695,6 +695,7 @@ void RulesBasic_this_src_w_pair_rel_wildcard(void);
 void RulesBasic_this_src_w_pair_tgt_wildcard(void);
 void RulesBasic_this_src_w_pair_rel_tgt_wildcard(void);
 void RulesBasic_this_src_w_any(void);
+void RulesBasic_this_src_w_any_written(void);
 void RulesBasic_this_src_w_pair_rel_any(void);
 void RulesBasic_this_src_w_pair_tgt_any(void);
 void RulesBasic_this_src_w_pair_rel_tgt_any(void);
@@ -4422,6 +4423,10 @@ bake_test_case RulesBasic_testcases[] = {
     {
         "this_src_w_any",
         RulesBasic_this_src_w_any
+    },
+    {
+        "this_src_w_any_written",
+        RulesBasic_this_src_w_any_written
     },
     {
         "this_src_w_pair_rel_any",
@@ -8311,7 +8316,7 @@ static bake_test_suite suites[] = {
         "RulesBasic",
         NULL,
         NULL,
-        98,
+        99,
         RulesBasic_testcases
     },
     {

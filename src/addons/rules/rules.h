@@ -40,6 +40,7 @@ typedef enum {
     EcsRuleAnd,            /* And operator: find or match id against variable source */
     EcsRuleAndId,          /* And operator for fixed id (no wildcards/variables) */
     EcsRuleAndAny,         /* And operator with support for matching Any src/id */
+    EcsRuleSelectAny,      /* Dedicated instruction for _ queries where the src is unknown */
     EcsRuleUp,             /* up traversal */
     EcsRuleSelfUp,         /* self|up traversal */
     EcsRuleWith,           /* Match id against fixed or variable source */

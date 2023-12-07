@@ -300,7 +300,7 @@ ecs_id_t flecs_rule_op_get_id_w_written(
     if (flags_2nd & (EcsRuleIsVar | EcsRuleIsEntity)) {
         return ecs_pair(first, second);
     } else {
-        return ecs_get_alive(ctx->world, first);
+        return flecs_entities_get_generation(ctx->world, first);
     }
 }
 
@@ -833,6 +833,15 @@ bool flecs_rule_self_up(
     } else {
         return flecs_rule_up_select(op, redo, ctx, true);
     }
+}
+
+static
+bool flecs_rule_select_any(
+    const ecs_rule_op_t *op,
+    bool redo,
+    const ecs_rule_run_ctx_t *ctx)
+{
+    return flecs_rule_select_w_id(op, redo, ctx, EcsAny);
 }
 
 static
@@ -1999,6 +2008,7 @@ bool flecs_rule_dispatch(
     case EcsRuleAnd: return flecs_rule_and(op, redo, ctx);
     case EcsRuleAndId: return flecs_rule_and_id(op, redo, ctx);
     case EcsRuleAndAny: return flecs_rule_and_any(op, redo, ctx);
+    case EcsRuleSelectAny: return flecs_rule_select_any(op, redo, ctx);
     case EcsRuleUp: return flecs_rule_up(op, redo, ctx);
     case EcsRuleSelfUp: return flecs_rule_self_up(op, redo, ctx);
     case EcsRuleWith: return flecs_rule_with(op, redo, ctx);

@@ -12,6 +12,7 @@
 static bool flecs_rule_op_is_test[] = {
     [EcsRuleAnd] = true,
     [EcsRuleAndAny] = true,
+    [EcsRuleSelectAny] = true,
     [EcsRuleAndId] = true,
     [EcsRuleUp] = true,
     [EcsRuleSelfUp] = true,
@@ -1589,6 +1590,15 @@ int flecs_rule_compile_term(
             op.src.entity = 0;
             op.flags &= (ecs_flags8_t)~(EcsRuleIsVar << EcsRuleSrc); /* ids has no src */
             op.flags &= (ecs_flags8_t)~(EcsRuleIsEntity << EcsRuleSrc);
+        }
+    /* If source variable is not written and we're querying just for Any, insert
+     * a dedicated instruction that uses the Any record in the id index. Any 
+     * queries that are evaluated against written sources can use Wildcard 
+     * records, which is what the AndAny instruction does. */
+    } else if (!src_written && term->id == EcsAny && op.kind == EcsRuleAndAny) {
+        /* Lookup variables ($var.child_name) are always written */
+        if (!rule->vars[src_var].lookup) {
+            op.kind = EcsRuleSelectAny; /* Uses Any (_) id record */
         }
     }
 

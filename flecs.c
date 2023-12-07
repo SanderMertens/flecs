@@ -59945,6 +59945,7 @@ typedef enum {
     EcsRuleAnd,            /* And operator: find or match id against variable source */
     EcsRuleAndId,          /* And operator for fixed id (no wildcards/variables) */
     EcsRuleAndAny,         /* And operator with support for matching Any src/id */
+    EcsRuleSelectAny,      /* Dedicated instruction for _ queries where the src is unknown */
     EcsRuleUp,             /* up traversal */
     EcsRuleSelfUp,         /* self|up traversal */
     EcsRuleWith,           /* Match id against fixed or variable source */
@@ -60313,6 +60314,7 @@ const char* flecs_rule_op_str(
     case EcsRuleAnd:          return "and     ";
     case EcsRuleAndId:        return "and_id  ";
     case EcsRuleAndAny:       return "and_any ";
+    case EcsRuleSelectAny:    return "any     ";
     case EcsRuleUp:           return "up      ";
     case EcsRuleSelfUp:       return "selfup  ";
     case EcsRuleWith:         return "with    ";
@@ -60710,6 +60712,7 @@ error:
 static bool flecs_rule_op_is_test[] = {
     [EcsRuleAnd] = true,
     [EcsRuleAndAny] = true,
+    [EcsRuleSelectAny] = true,
     [EcsRuleAndId] = true,
     [EcsRuleUp] = true,
     [EcsRuleSelfUp] = true,
@@ -62288,6 +62291,15 @@ int flecs_rule_compile_term(
             op.flags &= (ecs_flags8_t)~(EcsRuleIsVar << EcsRuleSrc); /* ids has no src */
             op.flags &= (ecs_flags8_t)~(EcsRuleIsEntity << EcsRuleSrc);
         }
+    /* If source variable is not written and we're querying just for Any, insert
+     * a dedicated instruction that uses the Any record in the id index. Any 
+     * queries that are evaluated against written sources can use Wildcard 
+     * records, which is what the AndAny instruction does. */
+    } else if (!src_written && term->id == EcsAny && op.kind == EcsRuleAndAny) {
+        /* Lookup variables ($var.child_name) are always written */
+        if (!rule->vars[src_var].lookup) {
+            op.kind = EcsRuleSelectAny; /* Uses Any (_) id record */
+        }
     }
 
     /* If this is a transitive term and both the target and source are unknown,
@@ -62902,7 +62914,7 @@ ecs_id_t flecs_rule_op_get_id_w_written(
     if (flags_2nd & (EcsRuleIsVar | EcsRuleIsEntity)) {
         return ecs_pair(first, second);
     } else {
-        return ecs_get_alive(ctx->world, first);
+        return flecs_entities_get_generation(ctx->world, first);
     }
 }
 
@@ -63435,6 +63447,15 @@ bool flecs_rule_self_up(
     } else {
         return flecs_rule_up_select(op, redo, ctx, true);
     }
+}
+
+static
+bool flecs_rule_select_any(
+    const ecs_rule_op_t *op,
+    bool redo,
+    const ecs_rule_run_ctx_t *ctx)
+{
+    return flecs_rule_select_w_id(op, redo, ctx, EcsAny);
 }
 
 static
@@ -64601,6 +64622,7 @@ bool flecs_rule_dispatch(
     case EcsRuleAnd: return flecs_rule_and(op, redo, ctx);
     case EcsRuleAndId: return flecs_rule_and_id(op, redo, ctx);
     case EcsRuleAndAny: return flecs_rule_and_any(op, redo, ctx);
+    case EcsRuleSelectAny: return flecs_rule_select_any(op, redo, ctx);
     case EcsRuleUp: return flecs_rule_up(op, redo, ctx);
     case EcsRuleSelfUp: return flecs_rule_self_up(op, redo, ctx);
     case EcsRuleWith: return flecs_rule_with(op, redo, ctx);

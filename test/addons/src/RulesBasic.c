@@ -2110,6 +2110,39 @@ void RulesBasic_this_src_w_pair_rel_tgt_wildcard(void) {
 }
 
 void RulesBasic_this_src_w_any(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Tgt);
+
+    ecs_rule_t *f = ecs_rule(world, {
+        .expr = "_"
+    });
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, Rel, Tgt);
+
+    ecs_iter_t it = ecs_rule_iter(world, f);
+    ecs_entity_t prev = 0;
+    int32_t count = 0, e1_matched = 0;
+    while (ecs_rule_next(&it)) {
+        test_assert(it.count > 0);
+        test_assert(!prev || prev != it.entities[0]);
+        prev = it.entities[0];
+        if (it.entities[0] == e1) {
+            e1_matched ++;
+        }
+        count ++;
+    }
+
+    test_assert(count > 0);
+    test_int(e1_matched, 1);
+
+    ecs_rule_fini(f);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_this_src_w_any_written(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, RelA);
