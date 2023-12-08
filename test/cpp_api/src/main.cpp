@@ -6499,6 +6499,13 @@ bake_test_case Doc_testcases[] = {
     }
 };
 
+bake_test_case Hooks_testcases[] = {
+    {
+        "hook_noexcept",
+        Hooks_hook_noexcept
+    }
+}
+
 static bake_test_suite suites[] = {
     {
         "PrettyFunction",
@@ -6695,9 +6702,16 @@ static bake_test_suite suites[] = {
         NULL,
         5,
         Doc_testcases
+    },
+    {
+        "Hooks",
+        NULL,
+        NULL,
+        1,
+        Hooks_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("cpp_api", argc, argv, suites, 28);
+    return bake_test_run("cpp_api", argc, argv, suites, 29);
 }

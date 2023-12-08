@@ -361,6 +361,8 @@ struct Struct_w_vector {
     std::vector<int> value;
 };
 
+void Hooks_on_add(flecs::entity e, Position& p) noexcept;
+
 void install_test_abort(void);
 
 #endif
