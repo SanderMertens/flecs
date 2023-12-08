@@ -10,7 +10,7 @@ jobs:
       fail-fast: false
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       
       - name: install bake
         run: |
@@ -29,7 +29,7 @@ jobs:
       fail-fast: false
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       
       - name: install bake
         run: |
@@ -48,7 +48,7 @@ jobs:
       fail-fast: false
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ilammy/msvc-dev-cmd@v1
       - name: install bake
         run: |
@@ -87,7 +87,7 @@ jobs:
         shell: msys2 {0}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: msys2/setup-msys2@v2
         with:
           msystem: ${{matrix.sys}}
@@ -152,7 +152,7 @@ jobs:
       CXX: ${{ matrix.target.cxx }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: install compiler
         run: |
@@ -196,7 +196,7 @@ jobs:
         os: [ ubuntu-latest, macOS-latest ]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: create cmake build folders
         run: |
@@ -239,7 +239,7 @@ jobs:
             toolset_option: -T"ClangCl"
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: create cmake build folders
         run: |
           mkdir cmake_build
@@ -272,7 +272,7 @@ jobs:
       fail-fast: false
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: install meson
         run: |
@@ -297,7 +297,7 @@ jobs:
         compiler: [ gcc, clang ]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Install bake
         run: |
           git clone https://github.com/SanderMertens/bake
@@ -439,7 +439,7 @@ jobs:
         compiler: [ gcc, clang ]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: build flecs
         run: ${{ matrix.compiler }} flecs.c --shared -fPIC -pedantic -Wall -Wextra -Wno-unused-parameter -Werror -Wshadow -Wconversion -Wno-missing-field-initializers
 
@@ -451,7 +451,7 @@ jobs:
       fail-fast: false
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: install clang-build
         run: |
@@ -477,7 +477,7 @@ jobs:
         os: [ ubuntu-latest, macOS-latest ]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: compiler version
         run: |
@@ -532,7 +532,7 @@ jobs:
       CXX: ${{ matrix.target.cxx }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: install compiler
         run: |
@@ -576,7 +576,7 @@ jobs:
       CXX: clang++
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: maxim-lobanov/setup-xcode@v1
         with:
@@ -606,7 +606,7 @@ jobs:
       fail-fast: false
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ilammy/msvc-dev-cmd@v1
       - name: install bake
         run: |
@@ -651,7 +651,7 @@ jobs:
         shell: msys2 {0}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: msys2/setup-msys2@v2
         with:
           msystem: ${{matrix.sys}}
@@ -698,7 +698,7 @@ jobs:
         os: [ ubuntu-latest ]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: install bake
         run: |
           git clone https://github.com/SanderMertens/bake
@@ -722,7 +722,7 @@ jobs:
         os: [ ubuntu-latest ]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: install bake
         run: |
           git clone https://github.com/SanderMertens/bake
@@ -746,7 +746,7 @@ jobs:
         os: [ ubuntu-latest ]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: install bake
         run: |
           git clone https://github.com/SanderMertens/bake
@@ -770,7 +770,7 @@ jobs:
         os: [ ubuntu-latest ]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: install bake
         run: |
           git clone https://github.com/SanderMertens/bake
@@ -794,7 +794,7 @@ jobs:
         os: [ ubuntu-latest ]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: install bake
         run: |
           git clone https://github.com/SanderMertens/bake
@@ -818,7 +818,7 @@ jobs:
         os: [ ubuntu-latest, macOS-latest ]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: clone bake
         run: |
           git clone https://github.com/SanderMertens/bake
