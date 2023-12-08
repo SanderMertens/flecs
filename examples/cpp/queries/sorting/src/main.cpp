@@ -5,7 +5,7 @@ struct Position {
     double x, y;
 };
 
-// Order by x member of Position */
+// Order by x member of Position
 int compare_position(
     flecs::entity_t e1,
     const Position *p1,
