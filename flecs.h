@@ -25611,7 +25611,7 @@ struct cpp_type_impl {
         // If no id has been registered yet for the component (indicating the 
         // component has not yet been registered, or the component is used
         // across more than one binary), or if the id does not exists in the 
-        // world (indicating a multi-world application), register it. */
+        // world (indicating a multi-world application), register it.
         if (!s_id || (world && !ecs_exists(world, s_id))) {
             init(s_id ? s_id : id, allow_tag);
 
@@ -25670,7 +25670,7 @@ struct cpp_type_impl {
 
             // Register lifecycle callbacks, but only if the component has a
             // size. Components that don't have a size are tags, and tags don't
-            // require construction/destruction/copy/move's. */
+            // require construction/destruction/copy/move's.
             if (size() && !existing) {
                 register_lifecycle_actions<T>(world, s_id);
             }
