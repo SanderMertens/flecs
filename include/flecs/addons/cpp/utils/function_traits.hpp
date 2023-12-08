@@ -76,6 +76,10 @@ template <typename ClassType, typename ReturnType, typename... Args>
 struct function_traits_impl<ReturnType(ClassType::*)(Args...) const volatile&&>
     : function_traits_defs<ReturnType, Args...> {};
 
+template <typename ReturnType, typename... Args>
+struct function_traits_impl<ReturnType(__cdecl *)(Args...) noexcept>
+    : function_traits_defs<ReturnType, Args...> {};
+
 // Primary template for function_traits_no_cv. If T is not a function, the
 // compiler will attempt to instantiate this template and fail, because its base
 // is undefined.
