@@ -53995,7 +53995,7 @@ ecs_entity_t ecs_struct_init(
             ranges = ecs_get_mut(world, m, EcsMemberRanges);
             if (range->min > range->max) {
                 char *member_name = ecs_get_fullpath(world, m);
-                ecs_err("member '%s' has an invalid value range [%d..%d]",
+                ecs_err("member '%s' has an invalid value range [%f..%f]",
                     member_name, range->min, range->max);
                 ecs_os_free(member_name);
                 goto error;
@@ -54006,7 +54006,7 @@ ecs_entity_t ecs_struct_init(
         if (ECS_NEQ(error->min, error->max)) {
             if (error->min > error->max) {
                 char *member_name = ecs_get_fullpath(world, m);
-                ecs_err("member '%s' has an invalid error range [%d..%d]",
+                ecs_err("member '%s' has an invalid error range [%f..%f]",
                     member_name, error->min, error->max);
                 ecs_os_free(member_name);
                 goto error;
@@ -54028,7 +54028,7 @@ ecs_entity_t ecs_struct_init(
         if (ECS_NEQ(warning->min, warning->max)) {
             if (warning->min > warning->max) {
                 char *member_name = ecs_get_fullpath(world, m);
-                ecs_err("member '%s' has an invalid warning range [%d..%d]",
+                ecs_err("member '%s' has an invalid warning range [%f..%f]",
                     member_name, warning->min, warning->max);
                 ecs_os_free(member_name);
                 goto error;
