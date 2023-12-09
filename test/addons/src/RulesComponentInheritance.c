@@ -2214,43 +2214,44 @@ void RulesComponentInheritance_1_this_src_not_written(void) {
             ecs_iter_t it = ecs_rule_iter(world, r);
             test_bool(true, ecs_rule_next(&it));
             test_uint(1, it.count);
-            test_uint(Tag, ecs_field_id(&it, 1));
-            test_uint(MeleeUnit, ecs_field_id(&it, 2));
-            test_uint(0, ecs_field_src(&it, 1));
-            test_uint(0, ecs_field_src(&it, 2));
-            test_bool(true, ecs_field_is_set(&it, 1));
-            test_bool(false, ecs_field_is_set(&it, 2));
             test_uint(e1, it.entities[0]);
-
-            test_bool(true, ecs_rule_next(&it));
-            test_uint(1, it.count);
             test_uint(Tag, ecs_field_id(&it, 1));
+
             test_uint(MeleeUnit, ecs_field_id(&it, 2));
             test_uint(0, ecs_field_src(&it, 1));
             test_uint(0, ecs_field_src(&it, 2));
             test_bool(true, ecs_field_is_set(&it, 1));
             test_bool(false, ecs_field_is_set(&it, 2));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
             test_uint(e3, it.entities[0]);
-
-            test_bool(true, ecs_rule_next(&it));
-            test_uint(1, it.count);
             test_uint(Tag, ecs_field_id(&it, 1));
             test_uint(MeleeUnit, ecs_field_id(&it, 2));
             test_uint(0, ecs_field_src(&it, 1));
             test_uint(0, ecs_field_src(&it, 2));
             test_bool(true, ecs_field_is_set(&it, 1));
             test_bool(false, ecs_field_is_set(&it, 2));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
             test_uint(e5, it.entities[0]);
-
-            test_bool(true, ecs_rule_next(&it));
-            test_uint(1, it.count);
             test_uint(Tag, ecs_field_id(&it, 1));
             test_uint(MeleeUnit, ecs_field_id(&it, 2));
             test_uint(0, ecs_field_src(&it, 1));
             test_uint(0, ecs_field_src(&it, 2));
             test_bool(true, ecs_field_is_set(&it, 1));
             test_bool(false, ecs_field_is_set(&it, 2));
+
+            test_bool(true, ecs_rule_next(&it));
+            test_uint(1, it.count);
             test_uint(e6, it.entities[0]);
+            test_uint(Tag, ecs_field_id(&it, 1));
+            test_uint(MeleeUnit, ecs_field_id(&it, 2));
+            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 2));
+            test_bool(true, ecs_field_is_set(&it, 1));
+            test_bool(false, ecs_field_is_set(&it, 2));
 
             test_bool(false, ecs_rule_next(&it));
         }

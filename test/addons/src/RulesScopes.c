@@ -279,6 +279,7 @@ void RulesScopes_term_w_not_scope_2_terms_w_not_w_var(void) {
 
     ECS_TAG(world, Root);
     ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
 
     ecs_entity_t parent_0 = ecs_new(world, Root);
     {
@@ -286,6 +287,9 @@ void RulesScopes_term_w_not_scope_2_terms_w_not_w_var(void) {
         ecs_set(world, child_1, Position, {10, 20});
         ecs_entity_t child_2 = ecs_new_w_pair(world, EcsChildOf, parent_0);
         ecs_set(world, child_2, Position, {10, 20});
+        ecs_entity_t child_3 = ecs_new_w_pair(world, EcsChildOf, parent_0);
+        ecs_set(world, child_3, Position, {10, 20});
+        ecs_add(world, child_3, Foo);
     }
 
     ecs_entity_t parent_1 = ecs_new(world, Root);
@@ -297,7 +301,8 @@ void RulesScopes_term_w_not_scope_2_terms_w_not_w_var(void) {
 
     ecs_entity_t parent_2 = ecs_new(world, Root);
     {
-        ecs_new_w_pair(world, EcsChildOf, parent_2);
+        ecs_entity_t child_1 = ecs_new_w_pair(world, EcsChildOf, parent_2);
+        ecs_add(world, child_1, Foo);
         ecs_new_w_pair(world, EcsChildOf, parent_2);
     }
 
@@ -310,10 +315,10 @@ void RulesScopes_term_w_not_scope_2_terms_w_not_w_var(void) {
         ecs_iter_t it = ecs_rule_iter(world, r);
         test_bool(true, ecs_rule_next(&it));
         test_uint(1, it.count);
+        test_uint(parent_0, it.entities[0]);
         test_uint(Root, ecs_field_id(&it, 1));
         test_uint(0, ecs_field_src(&it, 1));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_uint(parent_0, it.entities[0]);
         test_bool(false, ecs_rule_next(&it));
     }
 

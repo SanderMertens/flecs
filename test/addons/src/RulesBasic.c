@@ -4280,3 +4280,666 @@ void RulesBasic_this_var_w_empty_entity(void) {
 
     ecs_fini(world);
 }
+
+void RulesBasic_match_disabled(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t e_1 = ecs_new(world, TagA);
+    ecs_entity_t e_2 = ecs_new(world, TagA);
+    ecs_add_id(world, e_2, EcsDisabled);
+    ecs_entity_t e_3 = ecs_new(world, TagA);
+    ecs_add_id(world, e_3, EcsPrefab);
+
+    ecs_rule_t *r_1 = ecs_rule(world, {
+        .expr = "TagA"
+    });
+
+    ecs_rule_t *r_2 = ecs_rule(world, {
+        .expr = "TagA, ?Disabled"
+    });
+
+    test_assert(r_1 != NULL);
+    test_assert(r_2 != NULL);
+
+    test_bool(ecs_rule_get_filter(r_1)->flags & EcsFilterMatchDisabled, false);
+    test_bool(ecs_rule_get_filter(r_2)->flags & EcsFilterMatchDisabled, true);
+
+    ecs_iter_t it = ecs_rule_iter(world, r_1);
+    test_assert(ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_1);
+    test_int(ecs_field_id(&it, 1), TagA);
+    test_assert(!ecs_rule_next(&it));
+
+    it = ecs_rule_iter(world, r_2);
+
+    test_assert(ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_1);
+    test_int(ecs_field_id(&it, 1), TagA);
+
+    test_assert(ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_2);
+    test_int(ecs_field_id(&it, 1), TagA);
+
+    test_assert(!ecs_rule_next(&it));
+
+    ecs_rule_fini(r_1);
+    ecs_rule_fini(r_2);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_match_prefab(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t e_1 = ecs_new(world, TagA);
+    ecs_entity_t e_2 = ecs_new(world, TagA);
+    ecs_add_id(world, e_2, EcsDisabled);
+    ecs_entity_t e_3 = ecs_new(world, TagA);
+    ecs_add_id(world, e_3, EcsPrefab);
+
+    ecs_rule_t *r_1 = ecs_rule(world, {
+        .expr = "TagA"
+    });
+
+    ecs_rule_t *r_2 = ecs_rule(world, {
+        .expr = "TagA, ?Prefab"
+    });
+
+    test_assert(r_1 != NULL);
+    test_assert(r_2 != NULL);
+
+    test_bool(ecs_rule_get_filter(r_1)->flags & EcsFilterMatchPrefab, false);
+    test_bool(ecs_rule_get_filter(r_2)->flags & EcsFilterMatchPrefab, true);
+
+    ecs_iter_t it = ecs_rule_iter(world, r_1);
+    test_assert(ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_1);
+    test_int(ecs_field_id(&it, 1), TagA);
+    test_assert(!ecs_rule_next(&it));
+
+    it = ecs_rule_iter(world, r_2);
+
+    test_assert(ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_1);
+    test_int(ecs_field_id(&it, 1), TagA);
+
+    test_assert(ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_3);
+    test_int(ecs_field_id(&it, 1), TagA);
+
+    test_assert(!ecs_rule_next(&it));
+
+    ecs_rule_fini(r_1);
+    ecs_rule_fini(r_2);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_match_disabled_prefab(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t e_1 = ecs_new(world, TagA);
+    ecs_entity_t e_2 = ecs_new(world, TagA);
+    ecs_add_id(world, e_2, EcsDisabled);
+    ecs_entity_t e_3 = ecs_new(world, TagA);
+    ecs_add_id(world, e_3, EcsPrefab);
+    ecs_entity_t e_4 = ecs_new(world, TagA);
+    ecs_add_id(world, e_4, EcsPrefab);
+    ecs_add_id(world, e_4, EcsDisabled);
+
+    ecs_rule_t *r_1 = ecs_rule(world, {
+        .expr = "TagA"
+    });
+
+    ecs_rule_t *r_2 = ecs_rule(world, {
+        .expr = "TagA, ?Disabled"
+    });
+
+    ecs_rule_t *r_3 = ecs_rule(world, {
+        .expr = "TagA, ?Prefab"
+    });
+
+    ecs_rule_t *r_4 = ecs_rule(world, {
+        .expr = "TagA, ?Prefab, ?Disabled"
+    });
+
+    test_assert(r_1 != NULL);
+    test_assert(r_2 != NULL);
+    test_assert(r_3 != NULL);
+    test_assert(r_4 != NULL);
+
+    test_bool(ecs_rule_get_filter(r_1)->flags & EcsFilterMatchDisabled, false);
+    test_bool(ecs_rule_get_filter(r_2)->flags & EcsFilterMatchDisabled, true);
+    test_bool(ecs_rule_get_filter(r_3)->flags & EcsFilterMatchDisabled, false);
+    test_bool(ecs_rule_get_filter(r_4)->flags & EcsFilterMatchDisabled, true);
+
+    test_bool(ecs_rule_get_filter(r_1)->flags & EcsFilterMatchPrefab, false);
+    test_bool(ecs_rule_get_filter(r_2)->flags & EcsFilterMatchPrefab, false);
+    test_bool(ecs_rule_get_filter(r_3)->flags & EcsFilterMatchPrefab, true);
+    test_bool(ecs_rule_get_filter(r_4)->flags & EcsFilterMatchPrefab, true);
+
+    ecs_iter_t it = ecs_rule_iter(world, r_1);
+    test_assert(ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_1);
+    test_int(ecs_field_id(&it, 1), TagA);
+    test_assert(!ecs_rule_next(&it));
+
+    {
+        it = ecs_rule_iter(world, r_2);
+        test_assert(ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_int(it.entities[0], e_1);
+        test_int(ecs_field_id(&it, 1), TagA);
+
+        test_assert(ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_int(it.entities[0], e_2);
+        test_int(ecs_field_id(&it, 1), TagA);
+        test_assert(!ecs_rule_next(&it));
+    }
+
+    {
+        it = ecs_rule_iter(world, r_3);
+        test_assert(ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_int(it.entities[0], e_1);
+        test_int(ecs_field_id(&it, 1), TagA);
+
+        test_assert(ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_int(it.entities[0], e_3);
+        test_int(ecs_field_id(&it, 1), TagA);
+        test_assert(!ecs_rule_next(&it));
+    }
+
+    {
+        it = ecs_rule_iter(world, r_4);
+        test_assert(ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_int(it.entities[0], e_1);
+        test_int(ecs_field_id(&it, 1), TagA);
+
+        test_assert(ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_int(it.entities[0], e_2);
+        test_int(ecs_field_id(&it, 1), TagA);
+
+        test_assert(ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_int(it.entities[0], e_3);
+        test_int(ecs_field_id(&it, 1), TagA);
+
+        test_assert(ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_int(it.entities[0], e_4);
+        test_int(ecs_field_id(&it, 1), TagA);
+
+        test_assert(!ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(r_1);
+    ecs_rule_fini(r_2);
+    ecs_rule_fini(r_3);
+    ecs_rule_fini(r_4);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_match_disabled_this_tgt(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t e_1 = ecs_new(world, TagA);
+    ecs_entity_t e_2 = ecs_new(world, TagA);
+    ecs_add_id(world, e_2, EcsDisabled);
+    ecs_entity_t e_3 = ecs_new(world, TagA);
+    ecs_add_id(world, e_3, EcsPrefab);
+
+    ecs_new_w_pair(world, EcsChildOf, e_1);
+    ecs_new_w_pair(world, EcsChildOf, e_2);
+    ecs_new_w_pair(world, EcsChildOf, e_3);
+
+    ecs_rule_t *r_1 = ecs_rule(world, {
+        .expr = "TagA, ChildOf($child, $this)"
+    });
+
+    ecs_rule_t *r_2 = ecs_rule(world, {
+        .expr = "TagA, ChildOf($child, $this), ?Disabled"
+    });
+
+    test_assert(r_1 != NULL);
+    test_assert(r_2 != NULL);
+
+    test_bool(ecs_rule_get_filter(r_1)->flags & EcsFilterMatchDisabled, false);
+    test_bool(ecs_rule_get_filter(r_2)->flags & EcsFilterMatchDisabled, true);
+
+    ecs_iter_t it = ecs_rule_iter(world, r_1);
+    test_assert(ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_1);
+    test_int(ecs_field_id(&it, 1), TagA);
+    test_assert(!ecs_rule_next(&it));
+
+    it = ecs_rule_iter(world, r_2);
+
+    test_assert(ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_1);
+    test_int(ecs_field_id(&it, 1), TagA);
+
+    test_assert(ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_2);
+    test_int(ecs_field_id(&it, 1), TagA);
+
+    test_assert(!ecs_rule_next(&it));
+
+    ecs_rule_fini(r_1);
+    ecs_rule_fini(r_2);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_match_prefab_this_tgt(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t e_1 = ecs_new(world, TagA);
+    ecs_entity_t e_2 = ecs_new(world, TagA);
+    ecs_add_id(world, e_2, EcsDisabled);
+    ecs_entity_t e_3 = ecs_new(world, TagA);
+    ecs_add_id(world, e_3, EcsPrefab);
+
+    ecs_new_w_pair(world, EcsChildOf, e_1);
+    ecs_new_w_pair(world, EcsChildOf, e_2);
+    ecs_new_w_pair(world, EcsChildOf, e_3);
+
+    ecs_rule_t *r_1 = ecs_rule(world, {
+        .expr = "TagA, ChildOf($child, $this)"
+    });
+
+    ecs_rule_t *r_2 = ecs_rule(world, {
+        .expr = "TagA, ChildOf($child, $this), ?Prefab"
+    });
+
+    test_assert(r_1 != NULL);
+    test_assert(r_2 != NULL);
+
+    test_bool(ecs_rule_get_filter(r_1)->flags & EcsFilterMatchPrefab, false);
+    test_bool(ecs_rule_get_filter(r_2)->flags & EcsFilterMatchPrefab, true);
+
+    ecs_iter_t it = ecs_rule_iter(world, r_1);
+    test_assert(ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_1);
+    test_int(ecs_field_id(&it, 1), TagA);
+    test_assert(!ecs_rule_next(&it));
+
+    it = ecs_rule_iter(world, r_2);
+
+    test_assert(ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_1);
+    test_int(ecs_field_id(&it, 1), TagA);
+
+    test_assert(ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_3);
+    test_int(ecs_field_id(&it, 1), TagA);
+    test_assert(!ecs_rule_next(&it));
+
+    ecs_rule_fini(r_1);
+    ecs_rule_fini(r_2);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_match_disabled_prefab_this_tgt(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t e_1 = ecs_new(world, TagA);
+    ecs_entity_t e_2 = ecs_new(world, TagA);
+    ecs_add_id(world, e_2, EcsDisabled);
+    ecs_entity_t e_3 = ecs_new(world, TagA);
+    ecs_add_id(world, e_3, EcsPrefab);
+    ecs_entity_t e_4 = ecs_new(world, TagA);
+    ecs_add_id(world, e_4, EcsPrefab);
+    ecs_add_id(world, e_4, EcsDisabled);
+
+    ecs_new_w_pair(world, EcsChildOf, e_1);
+    ecs_new_w_pair(world, EcsChildOf, e_2);
+    ecs_new_w_pair(world, EcsChildOf, e_3);
+    ecs_new_w_pair(world, EcsChildOf, e_4);
+
+    ecs_rule_t *r_1 = ecs_rule(world, {
+        .expr = "TagA, ChildOf($child, $this)"
+    });
+
+    ecs_rule_t *r_2 = ecs_rule(world, {
+        .expr = "TagA, ChildOf($child, $this), ?Disabled"
+    });
+
+    ecs_rule_t *r_3 = ecs_rule(world, {
+        .expr = "TagA, ChildOf($child, $this), ?Prefab"
+    });
+
+    ecs_rule_t *r_4 = ecs_rule(world, {
+        .expr = "TagA, ChildOf($child, $this), ?Prefab, ?Disabled"
+    });
+
+    test_assert(r_1 != NULL);
+    test_assert(r_2 != NULL);
+    test_assert(r_3 != NULL);
+    test_assert(r_4 != NULL);
+
+    test_bool(ecs_rule_get_filter(r_1)->flags & EcsFilterMatchDisabled, false);
+    test_bool(ecs_rule_get_filter(r_2)->flags & EcsFilterMatchDisabled, true);
+    test_bool(ecs_rule_get_filter(r_3)->flags & EcsFilterMatchDisabled, false);
+    test_bool(ecs_rule_get_filter(r_4)->flags & EcsFilterMatchDisabled, true);
+
+    test_bool(ecs_rule_get_filter(r_1)->flags & EcsFilterMatchPrefab, false);
+    test_bool(ecs_rule_get_filter(r_2)->flags & EcsFilterMatchPrefab, false);
+    test_bool(ecs_rule_get_filter(r_3)->flags & EcsFilterMatchPrefab, true);
+    test_bool(ecs_rule_get_filter(r_4)->flags & EcsFilterMatchPrefab, true);
+
+    ecs_iter_t it = ecs_rule_iter(world, r_1);
+    test_assert(ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_1);
+    test_int(ecs_field_id(&it, 1), TagA);
+    test_assert(!ecs_rule_next(&it));
+
+    {
+        it = ecs_rule_iter(world, r_2);
+        test_assert(ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_int(it.entities[0], e_1);
+        test_int(ecs_field_id(&it, 1), TagA);
+
+        test_assert(ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_int(it.entities[0], e_2);
+        test_int(ecs_field_id(&it, 1), TagA);
+        test_assert(!ecs_rule_next(&it));
+    }
+
+    {
+        it = ecs_rule_iter(world, r_3);
+        test_assert(ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_int(it.entities[0], e_1);
+        test_int(ecs_field_id(&it, 1), TagA);
+
+        test_assert(ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_int(it.entities[0], e_3);
+        test_int(ecs_field_id(&it, 1), TagA);
+        test_assert(!ecs_rule_next(&it));
+    }
+
+    {
+        it = ecs_rule_iter(world, r_4);
+        test_assert(ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_int(it.entities[0], e_1);
+        test_int(ecs_field_id(&it, 1), TagA);
+
+        test_assert(ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_int(it.entities[0], e_2);
+        test_int(ecs_field_id(&it, 1), TagA);
+
+        test_assert(ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_int(it.entities[0], e_3);
+        test_int(ecs_field_id(&it, 1), TagA);
+
+        test_assert(ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_int(it.entities[0], e_4);
+        test_int(ecs_field_id(&it, 1), TagA);
+
+        test_assert(!ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(r_1);
+    ecs_rule_fini(r_2);
+    ecs_rule_fini(r_3);
+    ecs_rule_fini(r_4);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_match_self_disabled(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t e_1 = ecs_new(world, TagA);
+    ecs_entity_t e_2 = ecs_new(world, TagA);
+    ecs_add_id(world, e_2, EcsDisabled);
+    ecs_entity_t e_3 = ecs_new(world, TagA);
+    ecs_add_id(world, e_3, EcsPrefab);
+
+    ecs_rule_t *r_1 = ecs_rule(world, {
+        .expr = "TagA(self)"
+    });
+
+    ecs_rule_t *r_2 = ecs_rule(world, {
+        .expr = "TagA(self), ?Disabled(self)"
+    });
+
+    test_assert(r_1 != NULL);
+    test_assert(r_2 != NULL);
+
+    test_bool(ecs_rule_get_filter(r_1)->flags & EcsFilterMatchDisabled, false);
+    test_bool(ecs_rule_get_filter(r_2)->flags & EcsFilterMatchDisabled, true);
+
+    ecs_iter_t it = ecs_rule_iter(world, r_1);
+    test_assert(ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_1);
+    test_int(ecs_field_id(&it, 1), TagA);
+    test_assert(!ecs_rule_next(&it));
+
+    it = ecs_rule_iter(world, r_2);
+
+    test_assert(ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_1);
+    test_int(ecs_field_id(&it, 1), TagA);
+
+    test_assert(ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_2);
+    test_int(ecs_field_id(&it, 1), TagA);
+
+    test_assert(!ecs_rule_next(&it));
+
+    ecs_rule_fini(r_1);
+    ecs_rule_fini(r_2);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_match_self_prefab(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t e_1 = ecs_new(world, TagA);
+    ecs_entity_t e_2 = ecs_new(world, TagA);
+    ecs_add_id(world, e_2, EcsDisabled);
+    ecs_entity_t e_3 = ecs_new(world, TagA);
+    ecs_add_id(world, e_3, EcsPrefab);
+
+    ecs_rule_t *r_1 = ecs_rule(world, {
+        .expr = "TagA(self)"
+    });
+
+    ecs_rule_t *r_2 = ecs_rule(world, {
+        .expr = "TagA(self), ?Prefab(self)"
+    });
+
+    test_assert(r_1 != NULL);
+    test_assert(r_2 != NULL);
+
+    test_bool(ecs_rule_get_filter(r_1)->flags & EcsFilterMatchPrefab, false);
+    test_bool(ecs_rule_get_filter(r_2)->flags & EcsFilterMatchPrefab, true);
+
+    ecs_iter_t it = ecs_rule_iter(world, r_1);
+    test_assert(ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_1);
+    test_int(ecs_field_id(&it, 1), TagA);
+    test_assert(!ecs_rule_next(&it));
+
+    it = ecs_rule_iter(world, r_2);
+
+    test_assert(ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_1);
+    test_int(ecs_field_id(&it, 1), TagA);
+
+    test_assert(ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_3);
+    test_int(ecs_field_id(&it, 1), TagA);
+
+    test_assert(!ecs_rule_next(&it));
+
+    ecs_rule_fini(r_1);
+    ecs_rule_fini(r_2);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_match_self_disabled_prefab(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t e_1 = ecs_new(world, TagA);
+    ecs_entity_t e_2 = ecs_new(world, TagA);
+    ecs_add_id(world, e_2, EcsDisabled);
+    ecs_entity_t e_3 = ecs_new(world, TagA);
+    ecs_add_id(world, e_3, EcsPrefab);
+    ecs_entity_t e_4 = ecs_new(world, TagA);
+    ecs_add_id(world, e_4, EcsPrefab);
+    ecs_add_id(world, e_4, EcsDisabled);
+
+    ecs_rule_t *r_1 = ecs_rule(world, {
+        .expr = "TagA(self)"
+    });
+
+    ecs_rule_t *r_2 = ecs_rule(world, {
+        .expr = "TagA(self), ?Disabled(self)"
+    });
+
+    ecs_rule_t *r_3 = ecs_rule(world, {
+        .expr = "TagA(self), ?Prefab(self)"
+    });
+
+    ecs_rule_t *r_4 = ecs_rule(world, {
+        .expr = "TagA(self), ?Prefab(self), ?Disabled(self)"
+    });
+
+    test_assert(r_1 != NULL);
+    test_assert(r_2 != NULL);
+    test_assert(r_3 != NULL);
+    test_assert(r_4 != NULL);
+
+    test_bool(ecs_rule_get_filter(r_1)->flags & EcsFilterMatchDisabled, false);
+    test_bool(ecs_rule_get_filter(r_2)->flags & EcsFilterMatchDisabled, true);
+    test_bool(ecs_rule_get_filter(r_3)->flags & EcsFilterMatchDisabled, false);
+    test_bool(ecs_rule_get_filter(r_4)->flags & EcsFilterMatchDisabled, true);
+
+    test_bool(ecs_rule_get_filter(r_1)->flags & EcsFilterMatchPrefab, false);
+    test_bool(ecs_rule_get_filter(r_2)->flags & EcsFilterMatchPrefab, false);
+    test_bool(ecs_rule_get_filter(r_3)->flags & EcsFilterMatchPrefab, true);
+    test_bool(ecs_rule_get_filter(r_4)->flags & EcsFilterMatchPrefab, true);
+
+    ecs_iter_t it = ecs_rule_iter(world, r_1);
+    test_assert(ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_int(it.entities[0], e_1);
+    test_int(ecs_field_id(&it, 1), TagA);
+    test_assert(!ecs_rule_next(&it));
+
+    {
+        it = ecs_rule_iter(world, r_2);
+        test_assert(ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_int(it.entities[0], e_1);
+        test_int(ecs_field_id(&it, 1), TagA);
+
+        test_assert(ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_int(it.entities[0], e_2);
+        test_int(ecs_field_id(&it, 1), TagA);
+        test_assert(!ecs_rule_next(&it));
+    }
+
+    {
+        it = ecs_rule_iter(world, r_3);
+        test_assert(ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_int(it.entities[0], e_1);
+        test_int(ecs_field_id(&it, 1), TagA);
+
+        test_assert(ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_int(it.entities[0], e_3);
+        test_int(ecs_field_id(&it, 1), TagA);
+        test_assert(!ecs_rule_next(&it));
+    }
+
+    {
+        it = ecs_rule_iter(world, r_4);
+        test_assert(ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_int(it.entities[0], e_1);
+        test_int(ecs_field_id(&it, 1), TagA);
+
+        test_assert(ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_int(it.entities[0], e_2);
+        test_int(ecs_field_id(&it, 1), TagA);
+
+        test_assert(ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_int(it.entities[0], e_3);
+        test_int(ecs_field_id(&it, 1), TagA);
+
+        test_assert(ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_int(it.entities[0], e_4);
+        test_int(ecs_field_id(&it, 1), TagA);
+
+        test_assert(!ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(r_1);
+    ecs_rule_fini(r_2);
+    ecs_rule_fini(r_3);
+    ecs_rule_fini(r_4);
+
+    ecs_fini(world);
+}

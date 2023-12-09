@@ -762,7 +762,16 @@
                 "iter_empty_source_2_terms_mixed",
                 "iter_empty_source_2_terms_mixed_pair",
                 "iter_empty_source_2_terms_mixed_pair_wildcard",
-                "this_var_w_empty_entity"
+                "this_var_w_empty_entity",
+                "match_disabled",
+                "match_prefab",
+                "match_disabled_prefab",
+                "match_disabled_this_tgt",
+                "match_prefab_this_tgt",
+                "match_disabled_prefab_this_tgt",
+                "match_self_disabled",
+                "match_self_prefab",
+                "match_self_disabled_prefab"
             ]
         }, {
             "id": "RulesVariables",
