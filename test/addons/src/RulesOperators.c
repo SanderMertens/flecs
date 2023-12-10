@@ -1693,6 +1693,7 @@ void RulesOperators_2_and_optional_pair_rel_tgt_same_var(void) {
 
         test_bool(true, ecs_rule_next(&it));
         test_uint(1, it.count);
+        test_uint(e1, it.entities[0]);
         test_uint(RelA, ecs_field_id(&it, 1));
         test_uint(ecs_pair(EcsWildcard, EcsWildcard), ecs_field_id(&it, 2));
         test_uint(0, ecs_field_src(&it, 1));
@@ -1700,10 +1701,10 @@ void RulesOperators_2_and_optional_pair_rel_tgt_same_var(void) {
         test_bool(true, ecs_field_is_set(&it, 1));
         test_bool(false, ecs_field_is_set(&it, 2));
         test_uint(EcsWildcard, ecs_iter_get_var(&it, x_var));
-        test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_rule_next(&it));
         test_uint(1, it.count);
+        test_uint(e2, it.entities[0]);
         test_uint(RelA, ecs_field_id(&it, 1));
         test_uint(ecs_pair(TgtA, TgtA), ecs_field_id(&it, 2));
         test_uint(0, ecs_field_src(&it, 1));
@@ -1711,10 +1712,10 @@ void RulesOperators_2_and_optional_pair_rel_tgt_same_var(void) {
         test_bool(true, ecs_field_is_set(&it, 1));
         test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(TgtA, ecs_iter_get_var(&it, x_var));
-        test_uint(e2, it.entities[0]);
 
         test_bool(true, ecs_rule_next(&it));
         test_uint(1, it.count);
+        test_uint(e3, it.entities[0]);
         test_uint(RelA, ecs_field_id(&it, 1));
         test_uint(ecs_pair(RelA, RelA), ecs_field_id(&it, 2));
         test_uint(0, ecs_field_src(&it, 1));
@@ -1722,10 +1723,10 @@ void RulesOperators_2_and_optional_pair_rel_tgt_same_var(void) {
         test_bool(true, ecs_field_is_set(&it, 1));
         test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(RelA, ecs_iter_get_var(&it, x_var));
-        test_uint(e3, it.entities[0]);
 
         test_bool(true, ecs_rule_next(&it));
         test_uint(1, it.count);
+        test_uint(e3, it.entities[0]);
         test_uint(RelA, ecs_field_id(&it, 1));
         test_uint(ecs_pair(TgtA, TgtA), ecs_field_id(&it, 2));
         test_uint(0, ecs_field_src(&it, 1));
@@ -1733,7 +1734,6 @@ void RulesOperators_2_and_optional_pair_rel_tgt_same_var(void) {
         test_bool(true, ecs_field_is_set(&it, 1));
         test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(TgtA, ecs_iter_get_var(&it, x_var));
-        test_uint(e3, it.entities[0]);
 
         test_bool(false, ecs_rule_next(&it));
     }
@@ -3077,6 +3077,7 @@ void RulesOperators_3_and_optional_dependent_optional_pair_rel(void) {
         ecs_iter_t it = ecs_rule_iter(world, r);
         test_bool(true, ecs_rule_next(&it));
         test_uint(1, it.count);
+        test_uint(e1, it.entities[0]);
         test_uint(RelA, ecs_field_id(&it, 1));
         test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
         test_uint(ecs_pair(RelA, TgtB), ecs_field_id(&it, 3));
@@ -3087,10 +3088,10 @@ void RulesOperators_3_and_optional_dependent_optional_pair_rel(void) {
         test_bool(true, ecs_field_is_set(&it, 2));
         test_bool(false, ecs_field_is_set(&it, 3));
         test_uint(RelA, ecs_iter_get_var(&it, x_var));
-        test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_rule_next(&it));
         test_uint(1, it.count);
+        test_uint(e2, it.entities[0]);
         test_uint(RelA, ecs_field_id(&it, 1));
         test_uint(ecs_pair(EcsWildcard, TgtA), ecs_field_id(&it, 2));
         test_uint(ecs_pair(EcsWildcard, TgtB), ecs_field_id(&it, 3));
@@ -3101,24 +3102,10 @@ void RulesOperators_3_and_optional_dependent_optional_pair_rel(void) {
         test_bool(false, ecs_field_is_set(&it, 2));
         test_bool(false, ecs_field_is_set(&it, 3));
         test_uint(EcsWildcard, ecs_iter_get_var(&it, x_var));
-        test_uint(e2, it.entities[0]);
 
         test_bool(true, ecs_rule_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
-        test_uint(ecs_pair(RelA, TgtB), ecs_field_id(&it, 3));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(0, ecs_field_src(&it, 3));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 3));
-        test_uint(RelA, ecs_iter_get_var(&it, x_var));
         test_uint(e3, it.entities[0]);
-
-        test_bool(true, ecs_rule_next(&it));
-        test_uint(1, it.count);
         test_uint(RelA, ecs_field_id(&it, 1));
         test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
         test_uint(ecs_pair(RelA, TgtB), ecs_field_id(&it, 3));
@@ -3129,10 +3116,24 @@ void RulesOperators_3_and_optional_dependent_optional_pair_rel(void) {
         test_bool(true, ecs_field_is_set(&it, 2));
         test_bool(true, ecs_field_is_set(&it, 3));
         test_uint(RelA, ecs_iter_get_var(&it, x_var));
-        test_uint(e4, it.entities[0]);
 
         test_bool(true, ecs_rule_next(&it));
         test_uint(1, it.count);
+        test_uint(e4, it.entities[0]);
+        test_uint(RelA, ecs_field_id(&it, 1));
+        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
+        test_uint(ecs_pair(RelA, TgtB), ecs_field_id(&it, 3));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_uint(0, ecs_field_src(&it, 3));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 3));
+        test_uint(RelA, ecs_iter_get_var(&it, x_var));
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(1, it.count);
+        test_uint(e4, it.entities[0]);
         test_uint(RelA, ecs_field_id(&it, 1));
         test_uint(ecs_pair(RelB, TgtA), ecs_field_id(&it, 2));
         test_uint(ecs_pair(RelB, TgtB), ecs_field_id(&it, 3));
@@ -3143,7 +3144,6 @@ void RulesOperators_3_and_optional_dependent_optional_pair_rel(void) {
         test_bool(true, ecs_field_is_set(&it, 2));
         test_bool(true, ecs_field_is_set(&it, 3));
         test_uint(RelB, ecs_iter_get_var(&it, x_var));
-        test_uint(e4, it.entities[0]);
 
         test_bool(false, ecs_rule_next(&it));
     }
@@ -3577,6 +3577,7 @@ void RulesOperators_3_and_optional_dependent_not_pair_src(void) {
         ecs_iter_t it = ecs_rule_iter(world, r);
         test_bool(true, ecs_rule_next(&it));
         test_uint(1, it.count);
+        test_uint(e1, it.entities[0]);
         test_uint(RelA, ecs_field_id(&it, 1));
         test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 2));
         test_uint(Tag, ecs_field_id(&it, 3));
@@ -3587,7 +3588,6 @@ void RulesOperators_3_and_optional_dependent_not_pair_src(void) {
         test_bool(false, ecs_field_is_set(&it, 2));
         test_bool(false, ecs_field_is_set(&it, 3));
         test_uint(EcsWildcard, ecs_iter_get_var(&it, x_var));
-        test_uint(e1, it.entities[0]);
 
         test_bool(false, ecs_rule_next(&it));
     }
@@ -3598,6 +3598,7 @@ void RulesOperators_3_and_optional_dependent_not_pair_src(void) {
         ecs_iter_t it = ecs_rule_iter(world, r);
         test_bool(true, ecs_rule_next(&it));
         test_uint(1, it.count);
+        test_uint(e1, it.entities[0]);
         test_uint(RelA, ecs_field_id(&it, 1));
         test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 2));
         test_uint(Tag, ecs_field_id(&it, 3));
@@ -3608,10 +3609,10 @@ void RulesOperators_3_and_optional_dependent_not_pair_src(void) {
         test_bool(false, ecs_field_is_set(&it, 2));
         test_bool(false, ecs_field_is_set(&it, 3));
         test_uint(EcsWildcard, ecs_iter_get_var(&it, x_var));
-        test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_rule_next(&it));
         test_uint(1, it.count);
+        test_uint(e2, it.entities[0]);
         test_uint(RelA, ecs_field_id(&it, 1));
         test_uint(ecs_pair(RelA, t1), ecs_field_id(&it, 2));
         test_uint(Tag, ecs_field_id(&it, 3));
@@ -3622,7 +3623,6 @@ void RulesOperators_3_and_optional_dependent_not_pair_src(void) {
         test_bool(true, ecs_field_is_set(&it, 2));
         test_bool(false, ecs_field_is_set(&it, 3));
         test_uint(t1, ecs_iter_get_var(&it, x_var));
-        test_uint(e2, it.entities[0]);
 
         test_bool(false, ecs_rule_next(&it));
     }
@@ -3633,6 +3633,7 @@ void RulesOperators_3_and_optional_dependent_not_pair_src(void) {
         ecs_iter_t it = ecs_rule_iter(world, r);
         test_bool(true, ecs_rule_next(&it));
         test_uint(1, it.count);
+        test_uint(e1, it.entities[0]);
         test_uint(RelA, ecs_field_id(&it, 1));
         test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 2));
         test_uint(Tag, ecs_field_id(&it, 3));
@@ -3643,10 +3644,10 @@ void RulesOperators_3_and_optional_dependent_not_pair_src(void) {
         test_bool(false, ecs_field_is_set(&it, 2));
         test_bool(false, ecs_field_is_set(&it, 3));
         test_uint(EcsWildcard, ecs_iter_get_var(&it, x_var));
-        test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_rule_next(&it));
         test_uint(1, it.count);
+        test_uint(e2, it.entities[0]);
         test_uint(RelA, ecs_field_id(&it, 1));
         test_uint(ecs_pair(RelA, t1), ecs_field_id(&it, 2));
         test_uint(Tag, ecs_field_id(&it, 3));
@@ -3657,7 +3658,6 @@ void RulesOperators_3_and_optional_dependent_not_pair_src(void) {
         test_bool(true, ecs_field_is_set(&it, 2));
         test_bool(false, ecs_field_is_set(&it, 3));
         test_uint(t1, ecs_iter_get_var(&it, x_var));
-        test_uint(e2, it.entities[0]);
 
         test_bool(false, ecs_rule_next(&it));
     }
@@ -3668,6 +3668,8 @@ void RulesOperators_3_and_optional_dependent_not_pair_src(void) {
         ecs_iter_t it = ecs_rule_iter(world, r);
         test_bool(true, ecs_rule_next(&it));
         test_uint(2, it.count);
+        test_uint(e1, it.entities[0]);
+        test_uint(e3, it.entities[1]);
         test_uint(RelA, ecs_field_id(&it, 1));
         test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 2));
         test_uint(Tag, ecs_field_id(&it, 3));
@@ -3678,11 +3680,10 @@ void RulesOperators_3_and_optional_dependent_not_pair_src(void) {
         test_bool(false, ecs_field_is_set(&it, 2));
         test_bool(false, ecs_field_is_set(&it, 3));
         test_uint(EcsWildcard, ecs_iter_get_var(&it, x_var));
-        test_uint(e1, it.entities[0]);
-        test_uint(e3, it.entities[1]);
 
         test_bool(true, ecs_rule_next(&it));
         test_uint(1, it.count);
+        test_uint(e2, it.entities[0]);
         test_uint(RelA, ecs_field_id(&it, 1));
         test_uint(ecs_pair(RelA, t1), ecs_field_id(&it, 2));
         test_uint(Tag, ecs_field_id(&it, 3));
@@ -3693,7 +3694,6 @@ void RulesOperators_3_and_optional_dependent_not_pair_src(void) {
         test_bool(true, ecs_field_is_set(&it, 2));
         test_bool(false, ecs_field_is_set(&it, 3));
         test_uint(t1, ecs_iter_get_var(&it, x_var));
-        test_uint(e2, it.entities[0]);
 
         test_bool(false, ecs_rule_next(&it));
     }
@@ -4555,35 +4555,35 @@ void RulesOperators_2_or_chains(void) {
         ecs_iter_t it = ecs_rule_iter(world, r);
         test_bool(true, ecs_rule_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(RelC, ecs_field_id(&it, 2));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
         test_uint(e3, it.entities[0]);
+        test_uint(RelA, ecs_field_id(&it, 1));
+        test_uint(RelC, ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 1));
 
         test_bool(true, ecs_rule_next(&it));
         test_uint(1, it.count);
+        test_uint(e4, it.entities[0]);
         test_uint(RelA, ecs_field_id(&it, 1));
         test_uint(RelD, ecs_field_id(&it, 2));
         test_uint(0, ecs_field_src(&it, 1));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_uint(e4, it.entities[0]);
 
         test_bool(true, ecs_rule_next(&it));
         test_uint(1, it.count);
+        test_uint(e5, it.entities[0]);
         test_uint(RelB, ecs_field_id(&it, 1));
         test_uint(RelC, ecs_field_id(&it, 2));
         test_uint(0, ecs_field_src(&it, 1));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_uint(e5, it.entities[0]);
 
         test_bool(true, ecs_rule_next(&it));
         test_uint(1, it.count);
+        test_uint(e6, it.entities[0]);
         test_uint(RelB, ecs_field_id(&it, 1));
         test_uint(RelD, ecs_field_id(&it, 2));
         test_uint(0, ecs_field_src(&it, 1));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_uint(e6, it.entities[0]);
 
         test_bool(false, ecs_rule_next(&it));
     }

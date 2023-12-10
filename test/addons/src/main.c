@@ -748,6 +748,15 @@ void RulesBasic_iter_empty_source_2_terms_mixed(void);
 void RulesBasic_iter_empty_source_2_terms_mixed_pair(void);
 void RulesBasic_iter_empty_source_2_terms_mixed_pair_wildcard(void);
 void RulesBasic_this_var_w_empty_entity(void);
+void RulesBasic_match_disabled(void);
+void RulesBasic_match_prefab(void);
+void RulesBasic_match_disabled_prefab(void);
+void RulesBasic_match_disabled_this_tgt(void);
+void RulesBasic_match_prefab_this_tgt(void);
+void RulesBasic_match_disabled_prefab_this_tgt(void);
+void RulesBasic_match_self_disabled(void);
+void RulesBasic_match_self_prefab(void);
+void RulesBasic_match_self_disabled_prefab(void);
 
 // Testsuite 'RulesVariables'
 void RulesVariables_1_ent_src_w_var(void);
@@ -4636,6 +4645,42 @@ bake_test_case RulesBasic_testcases[] = {
     {
         "this_var_w_empty_entity",
         RulesBasic_this_var_w_empty_entity
+    },
+    {
+        "match_disabled",
+        RulesBasic_match_disabled
+    },
+    {
+        "match_prefab",
+        RulesBasic_match_prefab
+    },
+    {
+        "match_disabled_prefab",
+        RulesBasic_match_disabled_prefab
+    },
+    {
+        "match_disabled_this_tgt",
+        RulesBasic_match_disabled_this_tgt
+    },
+    {
+        "match_prefab_this_tgt",
+        RulesBasic_match_prefab_this_tgt
+    },
+    {
+        "match_disabled_prefab_this_tgt",
+        RulesBasic_match_disabled_prefab_this_tgt
+    },
+    {
+        "match_self_disabled",
+        RulesBasic_match_self_disabled
+    },
+    {
+        "match_self_prefab",
+        RulesBasic_match_self_prefab
+    },
+    {
+        "match_self_disabled_prefab",
+        RulesBasic_match_self_disabled_prefab
     }
 };
 
@@ -8321,7 +8366,7 @@ static bake_test_suite suites[] = {
         "RulesBasic",
         NULL,
         NULL,
-        100,
+        109,
         RulesBasic_testcases
     },
     {

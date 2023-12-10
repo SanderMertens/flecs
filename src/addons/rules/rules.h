@@ -50,7 +50,9 @@ typedef enum {
     EcsRuleEach,           /* Iterate entities in table, populate entity variable */
     EcsRuleStore,          /* Store table or entity in variable */
     EcsRuleReset,          /* Reset value of variable to wildcard (*) */
-    EcsRuleOr,          /* Combine output of multiple operations */
+    EcsRuleOr,             /* Or operator */
+    EcsRuleOptional,       /* Optional operator */
+    EcsRuleIf,             /* Conditional execution */
     EcsRuleEnd,            /* Used to denote end of EcsRuleOr block */
     EcsRuleNot,            /* Sets iterator state after term was not matched */
     EcsRulePredEq,         /* Test if variable is equal to, or assign to if not set */
@@ -64,11 +66,9 @@ typedef enum {
     EcsRuleSetThis,        /* Populate This entity variable */
     EcsRuleSetFixed,       /* Set fixed source entity ids */
     EcsRuleSetIds,         /* Set fixed (component) ids */
+    EcsRuleSetId,          /* Set id if not set */
     EcsRuleContain,        /* Test if table contains entity */
     EcsRulePairEq,         /* Test if both elements of pair are the same */
-    EcsRuleSetCond,        /* Set conditional value for EcsRuleJmpCondFalse */
-    EcsRuleJmpCondFalse,   /* Jump if condition is false */
-    EcsRuleJmpNotSet,      /* Jump if variable(s) is not set */
     EcsRuleYield,          /* Yield result back to application */
     EcsRuleNothing         /* Must be last */
 } ecs_rule_op_kind_t;
@@ -208,9 +208,9 @@ typedef struct {
 
 /* Or context */
 typedef struct {
-    ecs_rule_lbl_t first;
-    ecs_rule_lbl_t cur;
-} ecs_rule_or_ctx_t;
+    ecs_rule_lbl_t op_index;
+    ecs_id_t field_id;
+} ecs_rule_ctrl_ctx_t;
 
 typedef struct ecs_rule_op_ctx_t {
     union {
@@ -222,19 +222,15 @@ typedef struct ecs_rule_op_ctx_t {
         ecs_rule_each_ctx_t each;
         ecs_rule_setthis_ctx_t setthis;
         ecs_rule_cond_ctx_t cond;
-        ecs_rule_or_ctx_t or;
+        ecs_rule_ctrl_ctx_t ctrl;
     } is;
 } ecs_rule_op_ctx_t;
 
 typedef struct {
     /* Labels used for control flow */
-    ecs_rule_lbl_t lbl_union;
-    ecs_rule_lbl_t lbl_not;
-    ecs_rule_lbl_t lbl_option;
+    ecs_rule_lbl_t lbl_query; /* Used to find the op that does the actual searching */
+    ecs_rule_lbl_t lbl_begin;
     ecs_rule_lbl_t lbl_cond_eval;
-    ecs_rule_lbl_t lbl_or;
-    ecs_rule_lbl_t lbl_none;
-    ecs_rule_lbl_t lbl_prev; /* If set, use this as default value for prev */
     ecs_write_flags_t cond_written_or; /* Cond written flags at start of or chain */
     bool in_or; /* Whether we're in an or chain */
 } ecs_rule_compile_ctrlflow_t;
@@ -257,7 +253,6 @@ typedef struct {
 typedef struct {
     uint64_t *written;            /* Bitset to check which variables have been written */
     ecs_rule_lbl_t op_index;      /* Currently evaluated operation */
-    ecs_rule_lbl_t jump;          /* Set by control flow operations to jump to operation */
     ecs_var_t *vars;              /* Variable storage */
     ecs_iter_t *it;               /* Iterator */
     ecs_rule_op_ctx_t *op_ctx;    /* Operation context (stack) */
@@ -265,6 +260,7 @@ typedef struct {
     const ecs_rule_t *rule;       /* Reference to rule */
     const ecs_rule_var_t *rule_vars; /* Reference to rule variable array */
     ecs_flags32_t *source_set;    /* Whether ecs_iter_t::sources is written by instruction */
+    ecs_rule_iter_t *rit;
 } ecs_rule_run_ctx_t;
 
 typedef struct {
@@ -384,5 +380,9 @@ ecs_trav_up_t* flecs_rule_get_up_cache(
 /* Free up traversal cache */
 void flecs_rule_up_cache_fini(
     ecs_trav_up_cache_t *cache);
+
+/* Convert instruction kind to string */
+const char* flecs_rule_op_str(
+    uint16_t kind);
 
 #endif
