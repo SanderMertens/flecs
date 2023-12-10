@@ -375,6 +375,8 @@ extern "C" {
 #define EcsIterMatchVar                (1u << 8u)  
 #define EcsIterHasCondSet              (1u << 10u) /* Does iterator have conditionally set fields */
 #define EcsIterProfile                 (1u << 11u) /* Profile iterator performance */
+#define EcsIterTrivialSearch           (1u << 12u) /* Trivial iterator mode */
+#define EcsIterTrivialTest             (1u << 13u) /* Trivial test mode (constrained $this) */
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Event flags (used by ecs_event_decs_t::flags)
@@ -400,6 +402,8 @@ extern "C" {
 #define EcsFilterUnresolvedByName      (1u << 11u) /* Use by-name matching for unresolved entity identifiers */
 #define EcsFilterHasPred               (1u << 12u) /* Filter has equality predicates */
 #define EcsFilterHasScopes             (1u << 13u) /* Filter has query scopes */
+#define EcsFilterIsTrivial             (1u << 14u) /* Trivial filter */
+#define EcsFilterMatchOnlySelf         (1u << 15u) /* Filter has no up traversal */
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Table flags (used by ecs_table_t::flags)
