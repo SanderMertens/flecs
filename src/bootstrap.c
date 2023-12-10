@@ -943,5 +943,8 @@ void flecs_bootstrap(
 
     ecs_set_name_prefix(world, NULL);
 
+    ecs_assert(world->idr_childof_wildcard != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(world->idr_isa_wildcard != NULL, ECS_INTERNAL_ERROR, NULL);
+
     ecs_log_pop();
 }

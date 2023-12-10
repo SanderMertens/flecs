@@ -201,16 +201,17 @@ typedef struct {
     ecs_id_record_t *cur;
 } ecs_rule_ids_ctx_t;
 
-/* Condition context */
-typedef struct {
-    bool cond;
-} ecs_rule_cond_ctx_t;
-
-/* Or context */
+/* Control flow context */
 typedef struct {
     ecs_rule_lbl_t op_index;
     ecs_id_t field_id;
 } ecs_rule_ctrl_ctx_t;
+
+/* Trivial context */
+typedef struct {
+    ecs_table_cache_iter_t it;
+    const ecs_table_record_t *tr;
+} ecs_rule_trivial_ctx_t;
 
 typedef struct ecs_rule_op_ctx_t {
     union {
@@ -221,8 +222,8 @@ typedef struct ecs_rule_op_ctx_t {
         ecs_rule_eq_ctx_t eq;
         ecs_rule_each_ctx_t each;
         ecs_rule_setthis_ctx_t setthis;
-        ecs_rule_cond_ctx_t cond;
         ecs_rule_ctrl_ctx_t ctrl;
+        ecs_rule_trivial_ctx_t trivial;
     } is;
 } ecs_rule_op_ctx_t;
 
@@ -349,7 +350,6 @@ void flecs_rule_trav_cache_fini(
     ecs_allocator_t *a,
     ecs_trav_cache_t *cache);
 
-
 /* Traversal caches for up traversal. Enables searching upwards until an entity
  * with the queried for id has been found. */
 
@@ -384,5 +384,17 @@ void flecs_rule_up_cache_fini(
 /* Convert instruction kind to string */
 const char* flecs_rule_op_str(
     uint16_t kind);
+
+/* Iterator for trivial queries. */
+bool flecs_rule_trivial_search(
+    const ecs_rule_t *rule,
+    ecs_rule_run_ctx_t *ctx,
+    bool first);
+
+/* Trivial test for constrained $this. */
+bool flecs_rule_trivial_test(
+    const ecs_rule_t *rule,
+    ecs_rule_run_ctx_t *ctx,
+    bool first);
 
 #endif

@@ -2191,30 +2191,43 @@ static
 void flecs_rule_iter_init(
     ecs_rule_run_ctx_t *ctx)
 {
+    ecs_assert(ctx->written != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_iter_t *it = ctx->it;
-    if (ctx->written) {
-        const ecs_rule_t *rule = ctx->rule;
-        ecs_flags64_t it_written = it->constrained_vars;
-        ctx->written[0] = it_written;
-        if (it_written && ctx->rule->src_vars) {
-            /* If variables were constrained, check if there are any table
-             * variables that have a constrained entity variable. */
-            ecs_var_t *vars = ctx->vars;
-            int32_t i, count = rule->filter.field_count;
-            for (i = 0; i < count; i ++) {
-                ecs_var_id_t var_id = rule->src_vars[i];
-                ecs_rule_var_t *var = &rule->vars[var_id];
 
-                if (!(it_written & (1ull << var_id)) || 
-                    (var->kind == EcsVarTable) || (var->table_id == EcsVarNone)) 
-                {
-                    continue;
-                }
+    const ecs_rule_t *rule = ctx->rule;
+    ecs_flags64_t it_written = it->constrained_vars;
+    ctx->written[0] = it_written;
+    if (it_written && ctx->rule->src_vars) {
+        /* If variables were constrained, check if there are any table
+         * variables that have a constrained entity variable. */
+        ecs_var_t *vars = ctx->vars;
+        int32_t i, count = rule->filter.field_count;
+        for (i = 0; i < count; i ++) {
+            ecs_var_id_t var_id = rule->src_vars[i];
+            ecs_rule_var_t *var = &rule->vars[var_id];
 
-                /* Initialize table variable with constrained entity variable */
-                ecs_var_t *tvar = &vars[var->table_id];
-                tvar->range = flecs_range_from_entity(vars[var_id].entity, ctx);
-                ctx->written[0] |= (1ull << var->table_id); /* Mark as written */
+            if (!(it_written & (1ull << var_id)) || 
+                (var->kind == EcsVarTable) || (var->table_id == EcsVarNone)) 
+            {
+                continue;
+            }
+
+            /* Initialize table variable with constrained entity variable */
+            ecs_var_t *tvar = &vars[var->table_id];
+            tvar->range = flecs_range_from_entity(vars[var_id].entity, ctx);
+            ctx->written[0] |= (1ull << var->table_id); /* Mark as written */
+        }
+    }
+
+    ecs_flags32_t flags = rule->filter.flags;
+    if (flags & EcsFilterIsTrivial) {
+        if ((flags & EcsFilterMatchOnlySelf) || 
+            !flecs_table_cache_count(&ctx->world->idr_isa_wildcard->cache)) 
+        {
+            if (it_written) {
+                it->flags |= EcsIterTrivialTest;
+            } else {
+                it->flags |= EcsIterTrivialSearch;
             }
         }
     }
@@ -2243,11 +2256,21 @@ bool ecs_rule_next_instanced(
 
     bool redo = true;
     if (!(it->flags & EcsIterIsValid)) {
-        if (!ctx.rule) {
-            goto done;
-        }
+        ecs_assert(ctx.rule != NULL, ECS_INVALID_PARAMETER, NULL);
         flecs_rule_iter_init(&ctx);
         redo = false;
+    }
+
+    if (it->flags & EcsIterTrivialSearch) {
+        if (!flecs_rule_trivial_search(ctx.rule, &ctx, !redo)) {
+            goto done;
+        }
+        return true;
+    } else if (it->flags & EcsIterTrivialTest) {
+        if (!flecs_rule_trivial_test(ctx.rule, &ctx, !redo)) {
+            goto done;
+        }
+        return true;
     }
 
     if (flecs_rule_run_until(redo, &ctx, ops, -1, rit->op, EcsRuleYield)) {

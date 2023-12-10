@@ -1128,6 +1128,7 @@ int ecs_filter_finalize(
     ctx.filter = f;
 
     f->flags |= EcsFilterMatchOnlyThis;
+
     for (i = 0; i < term_count; i ++) {
         bool filter_term = false;
         ecs_term_t *term = &terms[i];
@@ -1307,6 +1308,43 @@ int ecs_filter_finalize(
         }
     } else {
         f->sizes = NULL;
+    }
+
+    /* Check if this is a trivial filter */
+    if ((f->flags & EcsFilterMatchOnlyThis)) {
+        if (!(f->flags & 
+            (EcsFilterHasPred|EcsFilterMatchDisabled|EcsFilterMatchPrefab))) 
+        {
+            ECS_BIT_SET(f->flags, EcsFilterMatchOnlySelf);
+
+            for (i = 0; i < term_count; i ++) {
+                ecs_term_t *term = &terms[i];
+                if (term->oper != EcsAnd) {
+                    break;
+                }
+                if (ecs_id_is_wildcard(term->id)) {
+                    break;
+                }
+                if (term->src.trav && term->src.trav != EcsIsA) {
+                    break;
+                }
+                if (term->first.trav && term->first.trav != EcsIsA) {
+                    break;
+                }
+                if (term->second.trav && term->second.trav != EcsIsA) {
+                    break;
+                }
+                if (!(term->src.flags & EcsSelf)) {
+                    break;
+                }
+                if (term->src.flags & EcsUp) {
+                    ECS_BIT_CLEAR(f->flags, EcsFilterMatchOnlySelf);
+                }
+            }
+            if (term_count && (i == term_count)) {
+                ECS_BIT_SET(f->flags, EcsFilterIsTrivial);
+            }
+        }
     }
 
     ecs_assert(filter_terms <= term_count, ECS_INTERNAL_ERROR, NULL);
