@@ -425,8 +425,14 @@ bool flecs_rule_select_w_id(
             }
         }
 
-        if (!flecs_table_cache_iter(&idr->cache, &op_ctx->it)) {
-            return false;
+        if (ctx->rule->filter.flags & EcsFilterMatchEmptyTables) {
+            if (!flecs_table_cache_all_iter(&idr->cache, &op_ctx->it)) {
+                return false;
+            }
+        } else {
+            if (!flecs_table_cache_iter(&idr->cache, &op_ctx->it)) {
+                return false;
+            }
         }
     }
 
@@ -550,8 +556,14 @@ bool flecs_rule_select_id(
             }
         }
 
-        if (!flecs_table_cache_iter(&idr->cache, &op_ctx->it)) {
-            return false;
+        if (ctx->rule->filter.flags & EcsFilterMatchEmptyTables) {
+            if (!flecs_table_cache_all_iter(&idr->cache, &op_ctx->it)) {
+                return false;
+            }
+        } else {
+            if (!flecs_table_cache_iter(&idr->cache, &op_ctx->it)) {
+                return false;
+            }
         }
     }
 
@@ -2225,9 +2237,19 @@ void flecs_rule_iter_init(
             !flecs_table_cache_count(&ctx->world->idr_isa_wildcard->cache)) 
         {
             if (it_written) {
-                it->flags |= EcsIterTrivialTest;
+                it->offset = ctx->vars[0].range.offset;
+                it->count = ctx->vars[0].range.count;
+                if (!it->count) {
+                    ecs_assert(!it->offset, ECS_INVALID_PARAMETER, NULL);
+                    it->count = ecs_table_count(ctx->vars[0].range.table);
+                    it->flags |= EcsIterTrivialTest;
+                }                    
             } else {
-                it->flags |= EcsIterTrivialSearch;
+                if (flags & EcsFilterNoData) {
+                    it->flags |= EcsIterTrivialSearchNoData;
+                } else {
+                    it->flags |= EcsIterTrivialSearch;
+                }
             }
         }
     }
@@ -2263,6 +2285,11 @@ bool ecs_rule_next_instanced(
 
     if (it->flags & EcsIterTrivialSearch) {
         if (!flecs_rule_trivial_search(ctx.rule, &ctx, !redo)) {
+            goto done;
+        }
+        return true;
+    } else if (it->flags & EcsIterTrivialSearchNoData) {
+        if (!flecs_rule_trivial_search_nodata(ctx.rule, &ctx, !redo)) {
             goto done;
         }
         return true;
@@ -2417,7 +2444,7 @@ ecs_iter_t ecs_rule_iter(
     rit->profile = flecs_iter_calloc_n(&it, ecs_rule_op_profile_t, op_count);
 #endif
 
-    for (i = 0; i < var_count; i ++) {
+    for (i = 1; i < var_count; i ++) {
         rit->vars[i].entity = EcsWildcard;
     }
 

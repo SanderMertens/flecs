@@ -4382,6 +4382,313 @@ void RulesVariables_1_set_src_this_w_pair_set_rel_tgt(void) {
     ecs_fini(world);
 }
 
+void RulesVariables_1_set_src_this_to_empty_table(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t e1 = ecs_new(world, TagA);
+    ecs_add(world, e1, TagB);
+    ecs_table_t *t1 = ecs_get_table(world, e1);
+    ecs_remove(world, e1, TagB);
+
+    ecs_rule_t *f = ecs_rule(world, {
+        .terms = {{ TagA }}
+    });
+
+    int this_var_id = ecs_rule_find_var(f, "this");
+    test_assert(this_var_id != -1);
+
+    ecs_iter_t it = ecs_rule_iter(world, f);
+    ecs_iter_set_var_as_table(&it, this_var_id, t1);
+
+    test_assert(ecs_rule_next(&it));
+    test_int(it.count, 0);
+    test_assert(it.table == t1);
+    test_uint(ecs_field_id(&it, 1), TagA);
+    test_uint(ecs_field_size(&it, 1), 0);
+    ecs_table_t* this_var = ecs_iter_get_var_as_table(&it, this_var_id);
+    test_assert(this_var != NULL);
+    test_assert(this_var == t1);
+
+    test_assert(!ecs_rule_next(&it));
+
+    ecs_rule_fini(f);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_1_set_src_this_to_empty_table_w_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_add(world, e1, TagA);
+    ecs_table_t *t1 = ecs_get_table(world, e1);
+    ecs_remove(world, e1, TagA);
+
+    ecs_rule_t *f = ecs_rule(world, {
+        .terms = {{ ecs_id(Position) }}
+    });
+
+    int this_var_id = ecs_rule_find_var(f, "this");
+    test_assert(this_var_id != -1);
+
+    ecs_iter_t it = ecs_rule_iter(world, f);
+    ecs_iter_set_var_as_table(&it, this_var_id, t1);
+
+    test_assert(ecs_rule_next(&it));
+    test_int(it.count, 0);
+    test_assert(it.table == t1);
+    test_uint(ecs_field_id(&it, 1), ecs_id(Position));
+    test_uint(ecs_field_size(&it, 1), sizeof(Position));
+    test_assert(ecs_field(&it, Position, 1) == NULL);
+    ecs_table_t* this_var = ecs_iter_get_var_as_table(&it, this_var_id);
+    test_assert(this_var != NULL);
+    test_assert(this_var == t1);
+
+    test_assert(!ecs_rule_next(&it));
+
+    ecs_rule_fini(f);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_1_set_src_this_to_entiy_in_table(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_rule_t *f = ecs_rule(world, {
+        .terms[0].id = ecs_id(Position)
+    });
+
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, f);
+        ecs_iter_set_var(&it, 0, e1);
+        test_bool(true, ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e1);
+        Position *p = ecs_field(&it, Position, 1);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, f);
+        ecs_iter_set_var(&it, 0, e2);
+        test_bool(true, ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        Position *p = ecs_field(&it, Position, 1);
+        test_assert(p != NULL);
+        test_int(p->x, 20);
+        test_int(p->y, 30);
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(f);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_1_src_this_var_as_entity(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+
+    ecs_entity_t e1 = ecs_new(world, TagA);
+    ecs_entity_t e2 = ecs_new(world, TagA);
+    ecs_entity_t e3 = ecs_new(world, TagA);
+    ecs_entity_t e4 = ecs_new(world, TagA);
+    ecs_add(world, e2, TagB);
+    ecs_add(world, e3, TagC);
+    ecs_add(world, e4, TagC);
+
+    ecs_rule_t *f = ecs_rule(world, {
+        .terms = {{ TagA }}
+    });
+
+    int this_var_id = ecs_rule_find_var(f, "this");
+    test_assert(this_var_id != -1);
+
+    ecs_iter_t it = ecs_rule_iter(world, f);
+
+    test_assert(ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e1);
+    ecs_entity_t this_var = ecs_iter_get_var(&it, this_var_id);
+    test_assert(this_var != 0);
+    test_assert(this_var == e1);
+
+    test_assert(ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e2);
+    this_var = ecs_iter_get_var(&it, this_var_id);
+    test_assert(this_var != 0);
+    test_assert(this_var == e2);
+
+    test_assert(ecs_rule_next(&it));
+    test_int(it.count, 2);
+    test_uint(it.entities[0], e3);
+    test_uint(it.entities[1], e4);
+    this_var = ecs_iter_get_var(&it, this_var_id);
+    test_assert(this_var == 0); /* more than one entity matches */
+
+    test_assert(!ecs_rule_next(&it));
+
+    ecs_rule_fini(f);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_1_src_this_var_as_table(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+
+    ecs_entity_t e1 = ecs_new(world, TagA);
+    ecs_entity_t e2 = ecs_new(world, TagA);
+    ecs_entity_t e3 = ecs_new(world, TagA);
+    ecs_entity_t e4 = ecs_new(world, TagA);
+    ecs_add(world, e2, TagB);
+    ecs_add(world, e3, TagC);
+    ecs_add(world, e4, TagC);
+
+    ecs_table_t *t1 = ecs_get_table(world, e1);
+    test_assert(t1 != NULL);
+
+    ecs_table_t *t2 = ecs_get_table(world, e2);
+    test_assert(t2 != NULL);
+    test_assert(t2 != t1);
+
+    ecs_table_t *t3 = ecs_get_table(world, e3);
+    test_assert(t3 != NULL);
+    test_assert(t3 != t1);
+    test_assert(t3 != t2);
+    test_assert(t3 == ecs_get_table(world, e4));
+
+    ecs_rule_t *f = ecs_rule(world, {
+        .terms = {{ TagA }}
+    });
+
+    int this_var_id = ecs_rule_find_var(f, "this");
+    test_assert(this_var_id != -1);
+
+    ecs_iter_t it = ecs_rule_iter(world, f);
+
+    test_assert(ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e1);
+    ecs_table_t *this_var = ecs_iter_get_var_as_table(&it, this_var_id);
+    test_assert(this_var != NULL);
+    test_assert(this_var == t1);
+
+    test_assert(ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e2);
+    this_var = ecs_iter_get_var_as_table(&it, this_var_id);
+    test_assert(this_var != NULL);
+    test_assert(this_var == t2);
+
+    test_assert(ecs_rule_next(&it));
+    test_int(it.count, 2);
+    test_uint(it.entities[0], e3);
+    test_uint(it.entities[1], e4);
+    this_var = ecs_iter_get_var_as_table(&it, this_var_id);
+    test_assert(this_var != NULL);
+    test_assert(this_var == t3);
+
+    test_assert(!ecs_rule_next(&it));
+
+    ecs_rule_fini(f);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_1_src_this_var_as_table_range(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+
+    ecs_entity_t e1 = ecs_new(world, TagA);
+    ecs_entity_t e2 = ecs_new(world, TagA);
+    ecs_entity_t e3 = ecs_new(world, TagA);
+    ecs_entity_t e4 = ecs_new(world, TagA);
+    ecs_add(world, e2, TagB);
+    ecs_add(world, e3, TagC);
+    ecs_add(world, e4, TagC);
+
+    ecs_table_t *t1 = ecs_get_table(world, e1);
+    test_assert(t1 != NULL);
+
+    ecs_table_t *t2 = ecs_get_table(world, e2);
+    test_assert(t2 != NULL);
+    test_assert(t2 != t1);
+
+    ecs_table_t *t3 = ecs_get_table(world, e3);
+    test_assert(t3 != NULL);
+    test_assert(t3 != t1);
+    test_assert(t3 != t2);
+    test_assert(t3 == ecs_get_table(world, e4));
+
+    ecs_rule_t *f = ecs_rule(world, {
+        .terms = {{ TagA }}
+    });
+
+    int this_var_id = ecs_rule_find_var(f, "this");
+    test_assert(this_var_id != -1);
+
+    ecs_iter_t it = ecs_rule_iter(world, f);
+    test_assert(ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e1);
+    ecs_table_range_t this_var = ecs_iter_get_var_as_range(&it, this_var_id);
+    test_assert(this_var.table != NULL);
+    test_assert(this_var.table == t1);
+    test_assert(this_var.offset == 0);
+    test_assert(this_var.count == 1);
+
+    test_assert(ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e2);
+    this_var = ecs_iter_get_var_as_range(&it, this_var_id);
+    test_assert(this_var.table != NULL);
+    test_assert(this_var.table == t2);
+    test_assert(this_var.offset == 0);
+    test_assert(this_var.count == 1);
+
+    test_assert(ecs_rule_next(&it));
+    test_int(it.count, 2);
+    test_uint(it.entities[0], e3);
+    test_uint(it.entities[1], e4);
+    this_var = ecs_iter_get_var_as_range(&it, this_var_id);
+    test_assert(this_var.table != NULL);
+    test_assert(this_var.table == t3);
+    test_assert(this_var.offset == 0);
+    test_assert(this_var.count == 2);
+
+    test_assert(!ecs_rule_next(&it));
+
+    ecs_rule_fini(f);
+
+    ecs_fini(world);
+}
+
 void RulesVariables_2_join_by_rel_var(void) {
     ecs_world_t *world = ecs_init();
 

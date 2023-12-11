@@ -757,6 +757,18 @@ void RulesBasic_match_disabled_prefab_this_tgt(void);
 void RulesBasic_match_self_disabled(void);
 void RulesBasic_match_self_prefab(void);
 void RulesBasic_match_self_disabled_prefab(void);
+void RulesBasic_inout_none_first_term(void);
+void RulesBasic_inout_none_second_term(void);
+void RulesBasic_no_data_rule(void);
+void RulesBasic_frame_offset(void);
+void RulesBasic_frame_offset_no_data(void);
+void RulesBasic_match_empty_tables(void);
+void RulesBasic_match_empty_tables_no_data(void);
+void RulesBasic_match_empty_tables_w_not(void);
+void RulesBasic_match_empty_tables_w_wildcard(void);
+void RulesBasic_match_empty_tables_w_no_empty_tables(void);
+void RulesBasic_oneof_wildcard(void);
+void RulesBasic_oneof_any(void);
 
 // Testsuite 'RulesVariables'
 void RulesVariables_1_ent_src_w_var(void);
@@ -820,6 +832,12 @@ void RulesVariables_1_set_src_this_w_pair(void);
 void RulesVariables_1_set_src_this_w_pair_set_rel(void);
 void RulesVariables_1_set_src_this_w_pair_set_tgt(void);
 void RulesVariables_1_set_src_this_w_pair_set_rel_tgt(void);
+void RulesVariables_1_set_src_this_to_empty_table(void);
+void RulesVariables_1_set_src_this_to_empty_table_w_component(void);
+void RulesVariables_1_set_src_this_to_entiy_in_table(void);
+void RulesVariables_1_src_this_var_as_entity(void);
+void RulesVariables_1_src_this_var_as_table(void);
+void RulesVariables_1_src_this_var_as_table_range(void);
 void RulesVariables_2_join_by_rel_var(void);
 void RulesVariables_2_join_by_pair_rel_var(void);
 void RulesVariables_2_join_by_pair_tgt_var(void);
@@ -4681,6 +4699,54 @@ bake_test_case RulesBasic_testcases[] = {
     {
         "match_self_disabled_prefab",
         RulesBasic_match_self_disabled_prefab
+    },
+    {
+        "inout_none_first_term",
+        RulesBasic_inout_none_first_term
+    },
+    {
+        "inout_none_second_term",
+        RulesBasic_inout_none_second_term
+    },
+    {
+        "no_data_rule",
+        RulesBasic_no_data_rule
+    },
+    {
+        "frame_offset",
+        RulesBasic_frame_offset
+    },
+    {
+        "frame_offset_no_data",
+        RulesBasic_frame_offset_no_data
+    },
+    {
+        "match_empty_tables",
+        RulesBasic_match_empty_tables
+    },
+    {
+        "match_empty_tables_no_data",
+        RulesBasic_match_empty_tables_no_data
+    },
+    {
+        "match_empty_tables_w_not",
+        RulesBasic_match_empty_tables_w_not
+    },
+    {
+        "match_empty_tables_w_wildcard",
+        RulesBasic_match_empty_tables_w_wildcard
+    },
+    {
+        "match_empty_tables_w_no_empty_tables",
+        RulesBasic_match_empty_tables_w_no_empty_tables
+    },
+    {
+        "oneof_wildcard",
+        RulesBasic_oneof_wildcard
+    },
+    {
+        "oneof_any",
+        RulesBasic_oneof_any
     }
 };
 
@@ -4928,6 +4994,30 @@ bake_test_case RulesVariables_testcases[] = {
     {
         "1_set_src_this_w_pair_set_rel_tgt",
         RulesVariables_1_set_src_this_w_pair_set_rel_tgt
+    },
+    {
+        "1_set_src_this_to_empty_table",
+        RulesVariables_1_set_src_this_to_empty_table
+    },
+    {
+        "1_set_src_this_to_empty_table_w_component",
+        RulesVariables_1_set_src_this_to_empty_table_w_component
+    },
+    {
+        "1_set_src_this_to_entiy_in_table",
+        RulesVariables_1_set_src_this_to_entiy_in_table
+    },
+    {
+        "1_src_this_var_as_entity",
+        RulesVariables_1_src_this_var_as_entity
+    },
+    {
+        "1_src_this_var_as_table",
+        RulesVariables_1_src_this_var_as_table
+    },
+    {
+        "1_src_this_var_as_table_range",
+        RulesVariables_1_src_this_var_as_table_range
     },
     {
         "2_join_by_rel_var",
@@ -8366,14 +8456,14 @@ static bake_test_suite suites[] = {
         "RulesBasic",
         NULL,
         NULL,
-        109,
+        121,
         RulesBasic_testcases
     },
     {
         "RulesVariables",
         NULL,
         NULL,
-        131,
+        137,
         RulesVariables_testcases
     },
     {

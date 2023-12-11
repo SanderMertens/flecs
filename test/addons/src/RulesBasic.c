@@ -4943,3 +4943,585 @@ void RulesBasic_match_self_disabled_prefab(void) {
 
     ecs_fini(world);
 }
+
+void RulesBasic_inout_none_first_term(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .terms = {
+            { .id = ecs_id(Position), .inout = EcsInOutNone },
+            { .id = ecs_id(Velocity) }
+        }
+    });
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_set(world, e1, Velocity, {1, 2});
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    {
+        Position *p = ecs_field(&it, Position, 1);
+        test_assert(p == NULL);
+    }
+    {
+        Velocity *v = ecs_field(&it, Velocity, 2);
+        test_assert(v != NULL);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+    }
+
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_inout_none_second_term(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .terms = {
+            { .id = ecs_id(Position) },
+            { .id = ecs_id(Velocity), .inout = EcsInOutNone }
+        }
+    });
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_set(world, e1, Velocity, {1, 2});
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    {
+        Position *p = ecs_field(&it, Position, 1);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+    {
+        Velocity *v = ecs_field(&it, Velocity, 2);
+        test_assert(v == NULL);
+    }
+
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_no_data_rule(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .terms = {
+            { .id = ecs_id(Position) },
+            { .id = ecs_id(Velocity) }
+        },
+        .flags = EcsFilterNoData
+    });
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_set(world, e1, Velocity, {1, 2});
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    {
+        Position *p = ecs_field(&it, Position, 1);
+        test_assert(p == NULL);
+    }
+    {
+        Velocity *v = ecs_field(&it, Velocity, 2);
+        test_assert(v == NULL);
+    }
+
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_frame_offset(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+
+    ecs_rule_t *f = ecs_rule(world, {
+        .terms = {
+            { .id = ecs_id(Position), }
+        },
+    });
+
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_entity_t e3 = ecs_new(world, Position);
+    ecs_entity_t e4 = ecs_new(world, Position);
+    ecs_entity_t e5 = ecs_new(world, Position);
+
+    ecs_add(world, e3, TagB);
+    ecs_add(world, e4, TagB);
+    ecs_add(world, e5, TagC);
+
+    ecs_iter_t it = ecs_rule_iter(world, f);
+
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 2);
+    test_int(it.frame_offset, 0);
+    test_assert(it.entities != NULL);
+    test_assert(it.entities[0] == e1);
+    test_assert(it.entities[1] == e2);
+    test_assert(it.ids[0] == ecs_id(Position));
+
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 2);
+    test_int(it.frame_offset, 2);
+    test_assert(it.entities != NULL);
+    test_assert(it.entities[0] == e3);
+    test_assert(it.entities[1] == e4);
+    test_assert(it.ids[0] == ecs_id(Position));
+
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.frame_offset, 4);
+    test_assert(it.entities != NULL);
+    test_assert(it.entities[0] == e5);
+    test_assert(it.ids[0] == ecs_id(Position));
+
+    test_bool(ecs_rule_next(&it), false);
+
+    ecs_rule_fini(f);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_frame_offset_no_data(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+
+    ecs_rule_t *f = ecs_rule(world, {
+        .terms = {
+            { .id = TagA, }
+        },
+    });
+
+    ecs_entity_t e1 = ecs_new(world, TagA);
+    ecs_entity_t e2 = ecs_new(world, TagA);
+    ecs_entity_t e3 = ecs_new(world, TagA);
+    ecs_entity_t e4 = ecs_new(world, TagA);
+    ecs_entity_t e5 = ecs_new(world, TagA);
+
+    ecs_add(world, e3, TagB);
+    ecs_add(world, e4, TagB);
+    ecs_add(world, e5, TagC);
+
+    ecs_iter_t it = ecs_rule_iter(world, f);
+
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 2);
+    test_int(it.frame_offset, 0);
+    test_assert(it.entities != NULL);
+    test_assert(it.entities[0] == e1);
+    test_assert(it.entities[1] == e2);
+    test_assert(it.ids[0] == TagA);
+
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 2);
+    test_int(it.frame_offset, 2);
+    test_assert(it.entities != NULL);
+    test_assert(it.entities[0] == e3);
+    test_assert(it.entities[1] == e4);
+    test_assert(it.ids[0] == TagA);
+
+    test_bool(ecs_rule_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.frame_offset, 4);
+    test_assert(it.entities != NULL);
+    test_assert(it.entities[0] == e5);
+    test_assert(it.ids[0] == TagA);
+
+    test_bool(ecs_rule_next(&it), false);
+
+    ecs_rule_fini(f);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_match_empty_tables(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_entity_t e3 = ecs_new(world, Position);
+    ecs_entity_t e4 = ecs_new(world, Position);
+
+    ecs_add(world, e2, TagA);
+    ecs_add(world, e3, TagB);
+    ecs_add(world, e4, TagC);
+
+    ecs_table_t *t1 = ecs_get_table(world, e1);
+    ecs_table_t *t2 = ecs_get_table(world, e2);
+    ecs_table_t *t3 = ecs_get_table(world, e3);
+    ecs_table_t *t4 = ecs_get_table(world, e4);
+
+    ecs_delete(world, e1);
+    ecs_delete(world, e2);
+
+    ecs_rule_t *f = ecs_rule(world, {
+        .terms = {{ ecs_id(Position) }},
+        .flags = EcsFilterMatchEmptyTables
+    });
+
+    ecs_iter_t it = ecs_rule_iter(world, f);
+    
+    test_bool( ecs_rule_next(&it), true);
+    test_assert(it.table == t1);
+    test_int(it.count, 0);
+    test_uint(ecs_field_id(&it, 1), ecs_id(Position));
+    test_uint(ecs_field_size(&it, 1), sizeof(Position));
+
+    test_bool( ecs_rule_next(&it), true);
+    test_assert(it.table == t2);
+    test_int(it.count, 0);
+    test_uint(ecs_field_id(&it, 1), ecs_id(Position));
+    test_uint(ecs_field_size(&it, 1), sizeof(Position));
+
+    test_bool( ecs_rule_next(&it), true);
+    test_assert(it.table == t3);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e3);
+    test_uint(ecs_field_id(&it, 1), ecs_id(Position));
+    test_uint(ecs_field_size(&it, 1), sizeof(Position));
+
+    test_bool( ecs_rule_next(&it), true);
+    test_assert(it.table == t4);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e4);
+    test_uint(ecs_field_id(&it, 1), ecs_id(Position));
+    test_uint(ecs_field_size(&it, 1), sizeof(Position));
+
+    test_bool( ecs_rule_next(&it), false);
+
+    ecs_rule_fini(f);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_match_empty_tables_no_data(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+
+    ecs_entity_t e1 = ecs_new(world, Foo);
+    ecs_entity_t e2 = ecs_new(world, Foo);
+    ecs_entity_t e3 = ecs_new(world, Foo);
+    ecs_entity_t e4 = ecs_new(world, Foo);
+
+    ecs_add(world, e2, TagA);
+    ecs_add(world, e3, TagB);
+    ecs_add(world, e4, TagC);
+
+    ecs_table_t *t1 = ecs_get_table(world, e1);
+    ecs_table_t *t2 = ecs_get_table(world, e2);
+    ecs_table_t *t3 = ecs_get_table(world, e3);
+    ecs_table_t *t4 = ecs_get_table(world, e4);
+
+    ecs_delete(world, e1);
+    ecs_delete(world, e2);
+
+    ecs_rule_t *f = ecs_rule(world, {
+        .terms = {{ Foo }},
+        .flags = EcsFilterMatchEmptyTables
+    });
+
+    ecs_iter_t it = ecs_rule_iter(world, f);
+    
+    test_bool( ecs_rule_next(&it), true);
+    test_assert(it.table == t1);
+    test_int(it.count, 0);
+    test_uint(ecs_field_id(&it, 1), Foo);
+
+    test_bool( ecs_rule_next(&it), true);
+    test_assert(it.table == t2);
+    test_int(it.count, 0);
+    test_uint(ecs_field_id(&it, 1), Foo);
+
+    test_bool( ecs_rule_next(&it), true);
+    test_assert(it.table == t3);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e3);
+    test_uint(ecs_field_id(&it, 1), Foo);
+
+    test_bool( ecs_rule_next(&it), true);
+    test_assert(it.table == t4);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e4);
+    test_uint(ecs_field_id(&it, 1), Foo);
+
+    test_bool( ecs_rule_next(&it), false);
+
+    ecs_rule_fini(f);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_match_empty_tables_w_not(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+
+    ecs_entity_t e1 = ecs_new(world, Foo);
+    ecs_entity_t e2 = ecs_new(world, Foo);
+    ecs_entity_t e3 = ecs_new(world, Foo);
+    ecs_entity_t e4 = ecs_new(world, Foo);
+
+    ecs_add(world, e2, TagA);
+    ecs_add(world, e3, TagB);
+    ecs_add(world, e4, TagC);
+
+    ecs_table_t *t1 = ecs_get_table(world, e1);
+    ecs_get_table(world, e2);
+    ecs_table_t *t3 = ecs_get_table(world, e3);
+    ecs_table_t *t4 = ecs_get_table(world, e4);
+
+    ecs_delete(world, e1);
+    ecs_delete(world, e2);
+
+    ecs_rule_t *f = ecs_rule(world, {
+        .terms = {{ Foo }, { TagA, .oper = EcsNot }},
+        .flags = EcsFilterMatchEmptyTables
+    });
+
+    ecs_iter_t it = ecs_rule_iter(world, f);
+    
+    test_bool( ecs_rule_next(&it), true);
+    test_assert(it.table == t1);
+    test_int(it.count, 0);
+    test_uint(ecs_field_id(&it, 1), Foo);
+
+    test_bool( ecs_rule_next(&it), true);
+    test_assert(it.table == t3);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e3);
+    test_uint(ecs_field_id(&it, 1), Foo);
+
+    test_bool( ecs_rule_next(&it), true);
+    test_assert(it.table == t4);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e4);
+    test_uint(ecs_field_id(&it, 1), Foo);
+
+    test_bool( ecs_rule_next(&it), false);
+
+    ecs_rule_fini(f);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_match_empty_tables_w_wildcard(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, TgtC);
+    ECS_TAG(world, TgtD);
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, Rel, TgtA);
+    ecs_entity_t e2 = ecs_new_w_pair(world, Rel, TgtB);
+    ecs_entity_t e3 = ecs_new_w_pair(world, Rel, TgtC);
+    ecs_entity_t e4 = ecs_new_w_pair(world, Rel, TgtD);
+
+    ecs_table_t *t1 = ecs_get_table(world, e1);
+    ecs_table_t *t2 = ecs_get_table(world, e2);
+    ecs_table_t *t3 = ecs_get_table(world, e3);
+    ecs_table_t *t4 = ecs_get_table(world, e4);
+
+    ecs_delete(world, e1);
+    ecs_delete(world, e2);
+
+    ecs_rule_t *f = ecs_rule(world, {
+        .terms = {{ ecs_pair(Rel, EcsWildcard) }},
+        .flags = EcsFilterMatchEmptyTables
+    });
+
+    ecs_iter_t it = ecs_rule_iter(world, f);
+
+    test_bool( ecs_rule_next(&it), true);
+    test_assert(it.table == t1);
+    test_int(it.count, 0);
+    test_uint(ecs_field_id(&it, 1), ecs_pair(Rel, TgtA));
+
+    test_bool( ecs_rule_next(&it), true);
+    test_assert(it.table == t2);
+    test_int(it.count, 0);
+    test_uint(ecs_field_id(&it, 1), ecs_pair(Rel, TgtB));
+
+    test_bool( ecs_rule_next(&it), true);
+    test_assert(it.table == t3);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e3);
+    test_uint(ecs_field_id(&it, 1), ecs_pair(Rel, TgtC));
+
+    test_bool( ecs_rule_next(&it), true);
+    test_assert(it.table == t4);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e4);
+    test_uint(ecs_field_id(&it, 1), ecs_pair(Rel, TgtD));
+
+    test_bool( ecs_rule_next(&it), false);
+
+    ecs_rule_fini(f);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_match_empty_tables_w_no_empty_tables(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_rule_t *f = ecs_rule(world, {
+        .terms = {
+            { Foo }
+        },
+        .flags = EcsFilterMatchEmptyTables
+    });
+
+    ecs_entity_t e1 = ecs_new(world, Foo);
+    ecs_entity_t e2 = ecs_new(world, Foo);
+    ecs_add(world, e2, Bar);
+
+    ecs_iter_t it = ecs_rule_iter(world, f);
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e2, it.entities[0]);
+
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(f);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_oneof_wildcard(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Parent);
+    ECS_ENTITY(world, Rel, (OneOf, Parent));
+    ECS_ENTITY(world, ObjA, (ChildOf, Parent));
+    ECS_ENTITY(world, ObjB, (ChildOf, Parent));
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, Rel, ObjA);
+    test_assert( ecs_has_pair(world, e1, Rel, ObjA));
+    ecs_entity_t e2 = ecs_new_w_pair(world, Rel, ObjB);
+    test_assert( ecs_has_pair(world, e2, Rel, ObjB));
+
+    ecs_rule_t *f = ecs_rule(world, {
+        .terms = {{
+            .id = ecs_pair(Rel, EcsWildcard)
+        }}
+    });
+
+    ecs_iter_t it = ecs_rule_iter(world, f);
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(ecs_pair(Rel, ObjA), ecs_field_id(&it, 1));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e2, it.entities[0]);
+    test_uint(ecs_pair(Rel, ObjB), ecs_field_id(&it, 1));
+
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(f);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_oneof_any(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Parent);
+    ECS_ENTITY(world, Rel, (OneOf, Parent));
+    ECS_ENTITY(world, ObjA, (ChildOf, Parent));
+    ECS_ENTITY(world, ObjB, (ChildOf, Parent));
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, Rel, ObjA);
+    test_assert( ecs_has_pair(world, e1, Rel, ObjA));
+    ecs_entity_t e2 = ecs_new_w_pair(world, Rel, ObjB);
+    test_assert( ecs_has_pair(world, e2, Rel, ObjB));
+
+    ecs_rule_t *f = ecs_rule(world, {
+        .terms = {{
+            .id = ecs_pair(Rel, EcsAny)
+        }}
+    });
+
+    ecs_iter_t it = ecs_rule_iter(world, f);
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(ecs_pair(Rel, EcsWildcard), ecs_field_id(&it, 1));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e2, it.entities[0]);
+    test_uint(ecs_pair(Rel, EcsWildcard), ecs_field_id(&it, 1));
+
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(f);
+
+    ecs_fini(world);
+}

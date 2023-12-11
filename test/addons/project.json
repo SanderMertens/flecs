@@ -771,7 +771,19 @@
                 "match_disabled_prefab_this_tgt",
                 "match_self_disabled",
                 "match_self_prefab",
-                "match_self_disabled_prefab"
+                "match_self_disabled_prefab",
+                "inout_none_first_term",
+                "inout_none_second_term",
+                "no_data_rule",
+                "frame_offset",
+                "frame_offset_no_data",
+                "match_empty_tables",
+                "match_empty_tables_no_data",
+                "match_empty_tables_w_not",
+                "match_empty_tables_w_wildcard",
+                "match_empty_tables_w_no_empty_tables",
+                "oneof_wildcard",
+                "oneof_any"
             ]
         }, {
             "id": "RulesVariables",
@@ -837,6 +849,12 @@
                 "1_set_src_this_w_pair_set_rel",
                 "1_set_src_this_w_pair_set_tgt",
                 "1_set_src_this_w_pair_set_rel_tgt",
+                "1_set_src_this_to_empty_table",
+                "1_set_src_this_to_empty_table_w_component",
+                "1_set_src_this_to_entiy_in_table",
+                "1_src_this_var_as_entity",
+                "1_src_this_var_as_table",
+                "1_src_this_var_as_table_range",
                 "2_join_by_rel_var",
                 "2_join_by_pair_rel_var",
                 "2_join_by_pair_tgt_var",

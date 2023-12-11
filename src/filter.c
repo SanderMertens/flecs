@@ -1310,6 +1310,13 @@ int ecs_filter_finalize(
         f->sizes = NULL;
     }
 
+    ecs_assert(filter_terms <= term_count, ECS_INTERNAL_ERROR, NULL);
+    if (filter_terms == term_count) {
+        ECS_BIT_SET(f->flags, EcsFilterNoData);
+    }
+
+    ECS_BIT_COND(f->flags, EcsFilterHasCondSet, cond_set);
+
     /* Check if this is a trivial filter */
     if ((f->flags & EcsFilterMatchOnlyThis)) {
         if (!(f->flags & 
@@ -1340,19 +1347,17 @@ int ecs_filter_finalize(
                 if (term->src.flags & EcsUp) {
                     ECS_BIT_CLEAR(f->flags, EcsFilterMatchOnlySelf);
                 }
+                if (!(f->flags & EcsFilterNoData)) {
+                    if (term->inout == EcsInOutNone) {
+                        break;
+                    }
+                }
             }
             if (term_count && (i == term_count)) {
                 ECS_BIT_SET(f->flags, EcsFilterIsTrivial);
             }
         }
     }
-
-    ecs_assert(filter_terms <= term_count, ECS_INTERNAL_ERROR, NULL);
-    if (filter_terms == term_count) {
-        ECS_BIT_SET(f->flags, EcsFilterNoData);
-    }
-
-    ECS_BIT_COND(f->flags, EcsFilterHasCondSet, cond_set);
 
     return 0;
 }

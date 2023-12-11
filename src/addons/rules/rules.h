@@ -391,6 +391,12 @@ bool flecs_rule_trivial_search(
     ecs_rule_run_ctx_t *ctx,
     bool first);
 
+/* Iterator for trivial queries. */
+bool flecs_rule_trivial_search_nodata(
+    const ecs_rule_t *rule,
+    ecs_rule_run_ctx_t *ctx,
+    bool first);
+
 /* Trivial test for constrained $this. */
 bool flecs_rule_trivial_test(
     const ecs_rule_t *rule,

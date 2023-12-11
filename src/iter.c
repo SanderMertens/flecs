@@ -642,6 +642,9 @@ ecs_entity_t ecs_iter_get_var(
     ecs_entity_t e = var->entity;
     if (!e) {
         ecs_table_t *table = var->range.table;
+        if (!table && !var_id) {
+            table = it->table;
+        }
         if (table) {
             if ((var->range.count == 1) || (ecs_table_count(table) == 1)) {
                 ecs_assert(ecs_table_count(table) > var->range.offset,
@@ -669,6 +672,10 @@ ecs_table_t* ecs_iter_get_var_as_table(
 
     ecs_var_t *var = &it->variables[var_id];
     ecs_table_t *table = var->range.table;
+    if (!table && !var_id) {
+        table = it->table;
+    }
+
     if (!table) {
         /* If table is not set, try to get table from entity */
         ecs_entity_t e = var->entity;
@@ -713,6 +720,10 @@ ecs_table_range_t ecs_iter_get_var_as_range(
 
     ecs_var_t *var = &it->variables[var_id];
     ecs_table_t *table = var->range.table;
+    if (!table && !var_id) {
+        table = it->table;
+    }
+   
     if (!table) {
         ecs_entity_t e = var->entity;
         if (e) {

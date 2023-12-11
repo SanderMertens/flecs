@@ -376,8 +376,8 @@ extern "C" {
 #define EcsIterHasCondSet              (1u << 10u) /* Does iterator have conditionally set fields */
 #define EcsIterProfile                 (1u << 11u) /* Profile iterator performance */
 #define EcsIterTrivialSearch           (1u << 12u) /* Trivial iterator mode */
-#define EcsIterTrivialTest             (1u << 13u) /* Trivial test mode (constrained $this) */
-
+#define EcsIterTrivialSearchNoData     (1u << 13u) /* Trivial iterator w/no data */
+#define EcsIterTrivialTest             (1u << 14u) /* Trivial test mode (constrained $this) */
 ////////////////////////////////////////////////////////////////////////////////
 //// Event flags (used by ecs_event_decs_t::flags)
 ////////////////////////////////////////////////////////////////////////////////
