@@ -7269,3 +7269,934 @@ void RulesTraversal_not_up_disabled(void) {
     
     ecs_fini(world);
 }
+
+void RulesTraversal_up_2_rel_instances(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+    ECS_TAG(world, Rel);
+
+    ecs_add_id(world, Rel, EcsTraversable);
+
+    ecs_entity_t b1 = ecs_new(world, TagA);
+    ecs_entity_t b2 = ecs_new(world, TagA);
+    ecs_add(world, b1, TagB);
+    ecs_add(world, b2, TagB);
+    ecs_add(world, b1, TagC);
+    ecs_add(world, b2, TagC);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add_pair(world, e, Rel, b1);
+    ecs_add_pair(world, e, Rel, b2);
+
+    ecs_rule_t *f = ecs_rule(world, {
+        .terms = {
+            {TagC, .src.flags = EcsUp, .src.trav = Rel }
+        }
+    });
+
+    ecs_iter_t it = ecs_rule_iter(world, f);
+    test_bool(true, ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e);
+    test_uint(it.sources[0], b1);
+    test_uint(it.ids[0], TagC);
+
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(f);
+
+    ecs_fini(world);
+}
+
+void RulesTraversal_up_2_rel_instances_match_2nd(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+    ECS_TAG(world, Rel);
+
+    ecs_add_id(world, Rel, EcsTraversable);
+
+    ecs_entity_t b1 = ecs_new(world, TagA);
+    ecs_entity_t b2 = ecs_new(world, TagA);
+    ecs_add(world, b1, TagB);
+    ecs_add(world, b2, TagB);
+    ecs_add(world, b2, TagC);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add_pair(world, e, Rel, b1);
+    ecs_add_pair(world, e, Rel, b2);
+
+    ecs_rule_t *f = ecs_rule(world, {
+        .terms = {
+            { TagC, .src.flags = EcsUp, .src.trav = Rel }
+        }
+    });
+
+    ecs_iter_t it = ecs_rule_iter(world, f);
+    test_bool(true, ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e);
+    test_uint(it.sources[0], b2);
+    test_uint(it.ids[0], TagC);
+
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(f);
+
+    ecs_fini(world);
+}
+
+void RulesTraversal_up_only_w_owned(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, R, EcsTraversable);
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e_0 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e_1 = ecs_set(world, 0, Position, {30, 40});
+    ecs_entity_t e_2 = ecs_set(world, 0, Position, {50, 60});
+    ecs_entity_t e_3 = ecs_set(world, 0, Position, {70, 80});
+
+    ecs_add_pair(world, e_3, R, e_2);
+    ecs_add_pair(world, e_2, R, e_1);
+    ecs_add_pair(world, e_1, R, e_0);
+
+    ecs_rule_t *f = ecs_rule(world, {
+        .expr = "Position(up(R))"
+    });
+
+    ecs_iter_t it = ecs_rule_iter(world, f);
+    test_bool(true, ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e_1);
+    test_uint(it.sources[0], e_0);
+    Position *p = ecs_field(&it, Position, 1);
+    test_int(p[0].x, 10);
+    test_int(p[0].y, 20);
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e_3);
+    test_uint(it.sources[0], e_2);
+    p = ecs_field(&it, Position, 1);
+    test_int(p[0].x, 50);
+    test_int(p[0].y, 60);
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e_2);
+    test_uint(it.sources[0], e_1);
+    p = ecs_field(&it, Position, 1);
+    test_int(p[0].x, 30);
+    test_int(p[0].y, 40);
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(f);
+
+    ecs_fini(world);
+}
+
+void RulesTraversal_this_self_cascade_childof(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Foo(self|cascade(ChildOf))"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_entity_t p0 = ecs_new_id(world);
+    ecs_entity_t p1 = ecs_new(world, Foo);
+    ecs_entity_t p2 = ecs_new(world, Foo);
+    ecs_entity_t p3 = ecs_new(world, Foo);
+    ecs_add(world, p3, Bar);
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsChildOf, p1);
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsChildOf, p1);
+    ecs_add(world, e2, Bar);
+
+    ecs_entity_t e3 = ecs_new_w_pair(world, EcsChildOf, p2);
+    ecs_entity_t e4 = ecs_new_w_pair(world, EcsChildOf, p2);
+    ecs_add(world, e4, Bar);
+
+    ecs_entity_t e5 = ecs_new_w_pair(world, EcsChildOf, e2);
+    ecs_entity_t e6 = ecs_new_w_pair(world, EcsChildOf, e2);
+    ecs_add(world, e6, Bar);
+
+    ecs_entity_t e7 = ecs_new_w_pair(world, EcsChildOf, p3);
+
+    ecs_new_w_pair(world, EcsChildOf, p0);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(true, ecs_rule_next(&it));
+    test_int(2, it.count);
+    test_uint(p1, it.entities[0]);
+    test_uint(p2, it.entities[1]);
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 1));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 1));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e2, it.entities[0]);
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 1));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e5, it.entities[0]);
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 1));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e6, it.entities[0]);
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 1));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e3, it.entities[0]);
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 1));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e4, it.entities[0]);
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 1));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(p3, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 1));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e7, it.entities[0]);
+    test_uint(p3, ecs_field_src(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 1));
+
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesTraversal_this_cascade_childof(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Foo(cascade(ChildOf))"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_entity_t p0 = ecs_new_id(world);
+    ecs_entity_t p1 = ecs_new(world, Foo);
+    ecs_entity_t p2 = ecs_new(world, Foo);
+    ecs_entity_t p3 = ecs_new(world, Foo);
+    ecs_add(world, p3, Bar);
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsChildOf, p1);
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsChildOf, p1);
+    ecs_add(world, e2, Bar);
+
+    ecs_entity_t e3 = ecs_new_w_pair(world, EcsChildOf, p2);
+    ecs_entity_t e4 = ecs_new_w_pair(world, EcsChildOf, p2);
+    ecs_add(world, e4, Bar);
+
+    ecs_entity_t e5 = ecs_new_w_pair(world, EcsChildOf, e2);
+    ecs_entity_t e6 = ecs_new_w_pair(world, EcsChildOf, e2);
+    ecs_add(world, e6, Bar);
+
+    ecs_entity_t e7 = ecs_new_w_pair(world, EcsChildOf, p3);
+
+    ecs_new_w_pair(world, EcsChildOf, p0);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 1));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e2, it.entities[0]);
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 1));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e5, it.entities[0]);
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 1));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e6, it.entities[0]);
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 1));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e3, it.entities[0]);
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 1));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e4, it.entities[0]);
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 1));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e7, it.entities[0]);
+    test_uint(p3, ecs_field_src(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 1));
+
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesTraversal_this_written_self_cascade_childof(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+    ECS_TAG(world, Tag);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Tag(self), Foo(self|cascade(ChildOf))"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_set_with(world, Tag);
+    ecs_entity_t p0 = ecs_new_id(world);
+    ecs_entity_t p1 = ecs_new(world, Foo);
+    ecs_entity_t p2 = ecs_new(world, Foo);
+    ecs_entity_t p3 = ecs_new(world, Foo);
+    ecs_add(world, p3, Bar);
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsChildOf, p1);
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsChildOf, p1);
+    ecs_add(world, e2, Bar);
+
+    ecs_entity_t e3 = ecs_new_w_pair(world, EcsChildOf, p2);
+    ecs_entity_t e4 = ecs_new_w_pair(world, EcsChildOf, p2);
+    ecs_add(world, e4, Bar);
+
+    ecs_entity_t e5 = ecs_new_w_pair(world, EcsChildOf, e2);
+    ecs_entity_t e6 = ecs_new_w_pair(world, EcsChildOf, e2);
+    ecs_add(world, e6, Bar);
+
+    ecs_entity_t e7 = ecs_new_w_pair(world, EcsChildOf, p3);
+
+    ecs_new_w_pair(world, EcsChildOf, p0);
+    ecs_set_with(world, 0);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(true, ecs_rule_next(&it));
+    test_int(2, it.count);
+    test_uint(p1, it.entities[0]);
+    test_uint(p2, it.entities[1]);
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(0, ecs_field_src(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 2));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(p3, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(0, ecs_field_src(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 2));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 2));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e2, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 2));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e3, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 2));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e4, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 2));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e5, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 2));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e6, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 2));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e7, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(p3, ecs_field_src(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 2));
+
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesTraversal_this_written_cascade_childof(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+    ECS_TAG(world, Tag);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Tag(self), Foo(cascade(ChildOf))"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_set_with(world, Tag);
+    ecs_entity_t p0 = ecs_new_id(world);
+    ecs_entity_t p1 = ecs_new(world, Foo);
+    ecs_entity_t p2 = ecs_new(world, Foo);
+    ecs_entity_t p3 = ecs_new(world, Foo);
+    ecs_add(world, p3, Bar);
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsChildOf, p1);
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsChildOf, p1);
+    ecs_add(world, e2, Bar);
+
+    ecs_entity_t e3 = ecs_new_w_pair(world, EcsChildOf, p2);
+    ecs_entity_t e4 = ecs_new_w_pair(world, EcsChildOf, p2);
+    ecs_add(world, e4, Bar);
+
+    ecs_entity_t e5 = ecs_new_w_pair(world, EcsChildOf, e2);
+    ecs_entity_t e6 = ecs_new_w_pair(world, EcsChildOf, e2);
+    ecs_add(world, e6, Bar);
+
+    ecs_entity_t e7 = ecs_new_w_pair(world, EcsChildOf, p3);
+
+    ecs_new_w_pair(world, EcsChildOf, p0);
+    ecs_set_with(world, 0);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 2));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e2, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 2));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e3, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 2));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e4, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 2));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e5, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 2));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e6, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 2));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e7, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(p3, ecs_field_src(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 2));
+
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesTraversal_this_self_cascade_childof_w_parent_flag(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Foo(self|cascade|parent)"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_entity_t p0 = ecs_new_id(world);
+    ecs_entity_t p1 = ecs_new(world, Foo);
+    ecs_entity_t p2 = ecs_new(world, Foo);
+    ecs_entity_t p3 = ecs_new(world, Foo);
+    ecs_add(world, p3, Bar);
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsChildOf, p1);
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsChildOf, p1);
+    ecs_add(world, e2, Bar);
+
+    ecs_entity_t e3 = ecs_new_w_pair(world, EcsChildOf, p2);
+    ecs_entity_t e4 = ecs_new_w_pair(world, EcsChildOf, p2);
+    ecs_add(world, e4, Bar);
+
+    ecs_entity_t e5 = ecs_new_w_pair(world, EcsChildOf, e2);
+    ecs_entity_t e6 = ecs_new_w_pair(world, EcsChildOf, e2);
+    ecs_add(world, e6, Bar);
+
+    ecs_entity_t e7 = ecs_new_w_pair(world, EcsChildOf, p3);
+
+    ecs_new_w_pair(world, EcsChildOf, p0);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(true, ecs_rule_next(&it));
+    test_int(2, it.count);
+    test_uint(p1, it.entities[0]);
+    test_uint(p2, it.entities[1]);
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 1));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 1));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e2, it.entities[0]);
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 1));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e5, it.entities[0]);
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 1));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e6, it.entities[0]);
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 1));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e3, it.entities[0]);
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 1));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e4, it.entities[0]);
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 1));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(p3, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 1));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e7, it.entities[0]);
+    test_uint(p3, ecs_field_src(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 1));
+
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesTraversal_this_cascade_childof_w_parent_flag(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Foo(cascade|parent)"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_entity_t p0 = ecs_new_id(world);
+    ecs_entity_t p1 = ecs_new(world, Foo);
+    ecs_entity_t p2 = ecs_new(world, Foo);
+    ecs_entity_t p3 = ecs_new(world, Foo);
+    ecs_add(world, p3, Bar);
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsChildOf, p1);
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsChildOf, p1);
+    ecs_add(world, e2, Bar);
+
+    ecs_entity_t e3 = ecs_new_w_pair(world, EcsChildOf, p2);
+    ecs_entity_t e4 = ecs_new_w_pair(world, EcsChildOf, p2);
+    ecs_add(world, e4, Bar);
+
+    ecs_entity_t e5 = ecs_new_w_pair(world, EcsChildOf, e2);
+    ecs_entity_t e6 = ecs_new_w_pair(world, EcsChildOf, e2);
+    ecs_add(world, e6, Bar);
+
+    ecs_entity_t e7 = ecs_new_w_pair(world, EcsChildOf, p3);
+
+    ecs_new_w_pair(world, EcsChildOf, p0);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 1));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e2, it.entities[0]);
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 1));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e5, it.entities[0]);
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 1));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e6, it.entities[0]);
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 1));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e3, it.entities[0]);
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 1));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e4, it.entities[0]);
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 1));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e7, it.entities[0]);
+    test_uint(p3, ecs_field_src(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 1));
+
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesTraversal_this_written_self_cascade_childof_w_parent_flag(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+    ECS_TAG(world, Tag);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Tag(self), Foo(self|cascade|parent)"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_set_with(world, Tag);
+    ecs_entity_t p0 = ecs_new_id(world);
+    ecs_entity_t p1 = ecs_new(world, Foo);
+    ecs_entity_t p2 = ecs_new(world, Foo);
+    ecs_entity_t p3 = ecs_new(world, Foo);
+    ecs_add(world, p3, Bar);
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsChildOf, p1);
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsChildOf, p1);
+    ecs_add(world, e2, Bar);
+
+    ecs_entity_t e3 = ecs_new_w_pair(world, EcsChildOf, p2);
+    ecs_entity_t e4 = ecs_new_w_pair(world, EcsChildOf, p2);
+    ecs_add(world, e4, Bar);
+
+    ecs_entity_t e5 = ecs_new_w_pair(world, EcsChildOf, e2);
+    ecs_entity_t e6 = ecs_new_w_pair(world, EcsChildOf, e2);
+    ecs_add(world, e6, Bar);
+
+    ecs_entity_t e7 = ecs_new_w_pair(world, EcsChildOf, p3);
+
+    ecs_new_w_pair(world, EcsChildOf, p0);
+    ecs_set_with(world, 0);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(true, ecs_rule_next(&it));
+    test_int(2, it.count);
+    test_uint(p1, it.entities[0]);
+    test_uint(p2, it.entities[1]);
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(0, ecs_field_src(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 2));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(p3, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(0, ecs_field_src(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 2));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 2));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e2, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 2));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e3, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 2));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e4, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 2));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e5, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 2));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e6, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 2));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e7, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(p3, ecs_field_src(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 2));
+
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesTraversal_this_written_cascade_childof_w_parent_flag(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+    ECS_TAG(world, Tag);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Tag(self), Foo(cascade|parent)"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_set_with(world, Tag);
+    ecs_entity_t p0 = ecs_new_id(world);
+    ecs_entity_t p1 = ecs_new(world, Foo);
+    ecs_entity_t p2 = ecs_new(world, Foo);
+    ecs_entity_t p3 = ecs_new(world, Foo);
+    ecs_add(world, p3, Bar);
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsChildOf, p1);
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsChildOf, p1);
+    ecs_add(world, e2, Bar);
+
+    ecs_entity_t e3 = ecs_new_w_pair(world, EcsChildOf, p2);
+    ecs_entity_t e4 = ecs_new_w_pair(world, EcsChildOf, p2);
+    ecs_add(world, e4, Bar);
+
+    ecs_entity_t e5 = ecs_new_w_pair(world, EcsChildOf, e2);
+    ecs_entity_t e6 = ecs_new_w_pair(world, EcsChildOf, e2);
+    ecs_add(world, e6, Bar);
+
+    ecs_entity_t e7 = ecs_new_w_pair(world, EcsChildOf, p3);
+
+    ecs_new_w_pair(world, EcsChildOf, p0);
+    ecs_set_with(world, 0);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 2));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e2, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 2));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e3, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 2));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e4, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 2));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e5, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 2));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e6, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 2));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e7, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(p3, ecs_field_src(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 2));
+
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}

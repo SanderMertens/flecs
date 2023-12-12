@@ -62157,11 +62157,13 @@ int flecs_rule_compile_term(
         ecs_assert(ecs_term_id_is_set(&term->second), ECS_INTERNAL_ERROR, NULL);
         op.kind = EcsRuleTrav;
     } else {
+        /* Ignore cascade & parent flags */
+        ecs_flags32_t trav_flags = EcsTraverseFlags & ~(EcsCascade|EcsParent);
         if (term->flags & (EcsTermMatchAny|EcsTermMatchAnySrc)) {
             op.kind = EcsRuleAndAny;
-        } else if ((term->src.flags & EcsTraverseFlags) == EcsUp) {
+        } else if ((term->src.flags & trav_flags) == EcsUp) {
             op.kind = EcsRuleUp;
-        } else if ((term->src.flags & EcsTraverseFlags) == (EcsSelf|EcsUp)) {
+        } else if ((term->src.flags & trav_flags) == (EcsSelf|EcsUp)) {
             op.kind = EcsRuleSelfUp;
         }
     }
@@ -63450,7 +63452,11 @@ bool flecs_rule_self_up_with(
             op_ctx->trav = 0;
             if (flecs_rule_ref_flags(op->flags, EcsRuleSrc) & EcsRuleIsVar) {
                 ecs_iter_t *it = ctx->it;
+                int32_t column = it->columns[op->field_index];
                 it->sources[op->field_index] = 0;
+                if (column < 0) {
+                    it->columns[op->field_index] = (column * -1);
+                }
             }
             return true;
         }
@@ -65411,15 +65417,17 @@ ecs_trav_down_t* flecs_trav_entity_down(
                 leaf = true;
             }
 
-            /* If table is not the first instance of (trav, *), don't add it
+            /* If record is not the first instance of (trav, *), don't add it
              * to the cache. */
             int32_t index = tr->index;
             if (index) {
                 ecs_id_t id = table->type.array[index - 1];
                 if (ECS_IS_PAIR(id) && ECS_PAIR_FIRST(id) == trav) {
-                    if (ecs_search_relation(world, table, 0, idr_with->id, 
-                        EcsIsA, EcsUp, NULL, NULL, &tr) != index)
-                    {
+                    int32_t col = ecs_search_relation(world, table, 0, 
+                        idr_with->id, trav, EcsUp, NULL, NULL, &tr);
+                    ecs_assert(col >= 0, ECS_INTERNAL_ERROR, NULL);
+
+                    if (col != index) {
                         /* First relationship through which the id is 
                          * reachable is not the current one, so skip. */
                         continue;

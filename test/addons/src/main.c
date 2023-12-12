@@ -769,6 +769,10 @@ void RulesBasic_match_empty_tables_w_wildcard(void);
 void RulesBasic_match_empty_tables_w_no_empty_tables(void);
 void RulesBasic_oneof_wildcard(void);
 void RulesBasic_oneof_any(void);
+void RulesBasic_instanced_w_singleton(void);
+void RulesBasic_instanced_w_base(void);
+void RulesBasic_not_instanced_w_singleton(void);
+void RulesBasic_not_instanced_w_base(void);
 
 // Testsuite 'RulesVariables'
 void RulesVariables_1_ent_src_w_var(void);
@@ -1277,6 +1281,17 @@ void RulesTraversal_this_self_up_childof_pair_for_var_written_n_targets(void);
 void RulesTraversal_this_written_self_up_childof_pair_for_var_written_n_targets(void);
 void RulesTraversal_self_up_2_levels(void);
 void RulesTraversal_not_up_disabled(void);
+void RulesTraversal_up_2_rel_instances(void);
+void RulesTraversal_up_2_rel_instances_match_2nd(void);
+void RulesTraversal_up_only_w_owned(void);
+void RulesTraversal_this_self_cascade_childof(void);
+void RulesTraversal_this_cascade_childof(void);
+void RulesTraversal_this_written_self_cascade_childof(void);
+void RulesTraversal_this_written_cascade_childof(void);
+void RulesTraversal_this_self_cascade_childof_w_parent_flag(void);
+void RulesTraversal_this_cascade_childof_w_parent_flag(void);
+void RulesTraversal_this_written_self_cascade_childof_w_parent_flag(void);
+void RulesTraversal_this_written_cascade_childof_w_parent_flag(void);
 
 // Testsuite 'SystemPeriodic'
 void SystemPeriodic_1_type_1_component(void);
@@ -4749,6 +4764,22 @@ bake_test_case RulesBasic_testcases[] = {
     {
         "oneof_any",
         RulesBasic_oneof_any
+    },
+    {
+        "instanced_w_singleton",
+        RulesBasic_instanced_w_singleton
+    },
+    {
+        "instanced_w_base",
+        RulesBasic_instanced_w_base
+    },
+    {
+        "not_instanced_w_singleton",
+        RulesBasic_not_instanced_w_singleton
+    },
+    {
+        "not_instanced_w_base",
+        RulesBasic_not_instanced_w_base
     }
 };
 
@@ -6741,6 +6772,50 @@ bake_test_case RulesTraversal_testcases[] = {
     {
         "not_up_disabled",
         RulesTraversal_not_up_disabled
+    },
+    {
+        "up_2_rel_instances",
+        RulesTraversal_up_2_rel_instances
+    },
+    {
+        "up_2_rel_instances_match_2nd",
+        RulesTraversal_up_2_rel_instances_match_2nd
+    },
+    {
+        "up_only_w_owned",
+        RulesTraversal_up_only_w_owned
+    },
+    {
+        "this_self_cascade_childof",
+        RulesTraversal_this_self_cascade_childof
+    },
+    {
+        "this_cascade_childof",
+        RulesTraversal_this_cascade_childof
+    },
+    {
+        "this_written_self_cascade_childof",
+        RulesTraversal_this_written_self_cascade_childof
+    },
+    {
+        "this_written_cascade_childof",
+        RulesTraversal_this_written_cascade_childof
+    },
+    {
+        "this_self_cascade_childof_w_parent_flag",
+        RulesTraversal_this_self_cascade_childof_w_parent_flag
+    },
+    {
+        "this_cascade_childof_w_parent_flag",
+        RulesTraversal_this_cascade_childof_w_parent_flag
+    },
+    {
+        "this_written_self_cascade_childof_w_parent_flag",
+        RulesTraversal_this_written_self_cascade_childof_w_parent_flag
+    },
+    {
+        "this_written_cascade_childof_w_parent_flag",
+        RulesTraversal_this_written_cascade_childof_w_parent_flag
     }
 };
 
@@ -8466,7 +8541,7 @@ static bake_test_suite suites[] = {
         "RulesBasic",
         NULL,
         NULL,
-        121,
+        125,
         RulesBasic_testcases
     },
     {
@@ -8522,7 +8597,7 @@ static bake_test_suite suites[] = {
         "RulesTraversal",
         NULL,
         NULL,
-        81,
+        92,
         RulesTraversal_testcases
     },
     {

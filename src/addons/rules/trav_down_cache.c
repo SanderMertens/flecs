@@ -171,15 +171,17 @@ ecs_trav_down_t* flecs_trav_entity_down(
                 leaf = true;
             }
 
-            /* If table is not the first instance of (trav, *), don't add it
+            /* If record is not the first instance of (trav, *), don't add it
              * to the cache. */
             int32_t index = tr->index;
             if (index) {
                 ecs_id_t id = table->type.array[index - 1];
                 if (ECS_IS_PAIR(id) && ECS_PAIR_FIRST(id) == trav) {
-                    if (ecs_search_relation(world, table, 0, idr_with->id, 
-                        EcsIsA, EcsUp, NULL, NULL, &tr) != index)
-                    {
+                    int32_t col = ecs_search_relation(world, table, 0, 
+                        idr_with->id, trav, EcsUp, NULL, NULL, &tr);
+                    ecs_assert(col >= 0, ECS_INTERNAL_ERROR, NULL);
+
+                    if (col != index) {
                         /* First relationship through which the id is 
                          * reachable is not the current one, so skip. */
                         continue;

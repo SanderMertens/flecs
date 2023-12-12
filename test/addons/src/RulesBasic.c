@@ -5525,3 +5525,468 @@ void RulesBasic_oneof_any(void) {
 
     ecs_fini(world);
 }
+
+void RulesBasic_instanced_w_singleton(void) {
+    ecs_world_t *world = ecs_mini();
+    
+    ECS_TAG(world, Tag);
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_singleton_set(world, Velocity, {1, 2});
+
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_entity_t e3 = ecs_set(world, 0, Position, {30, 40});
+
+    ecs_entity_t e4 = ecs_set(world, 0, Position, {40, 50});
+    ecs_entity_t e5 = ecs_set(world, 0, Position, {50, 60});
+
+    ecs_add(world, e4, Tag);
+    ecs_add(world, e5, Tag);
+
+    ecs_rule_t *f = ecs_rule(world, {
+        .expr = "Position, Velocity($)",
+        .instanced = true
+    });
+
+    ecs_iter_t it = ecs_rule_iter(world, f);
+    test_assert(ecs_rule_next(&it));
+    {
+        Position *p = ecs_field(&it, Position, 1);
+        Velocity *v = ecs_field(&it, Velocity, 2);
+        test_int(it.count, 3);
+        test_int(it.entities[0], e1);
+        test_int(it.entities[1], e2);
+        test_int(it.entities[2], e3);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+        test_int(p[0].x, 10);
+        test_int(p[0].y, 20);
+        test_int(p[1].x, 20);
+        test_int(p[1].y, 30);
+        test_int(p[2].x, 30);
+        test_int(p[2].y, 40);
+    }
+
+    test_assert(ecs_rule_next(&it));
+    {
+        Position *p = ecs_field(&it, Position, 1);
+        Velocity *v = ecs_field(&it, Velocity, 2);
+        test_int(it.count, 2);
+        test_int(it.entities[0], e4);
+        test_int(it.entities[1], e5);
+        test_int(p[0].x, 40);
+        test_int(p[0].y, 50);
+        test_int(p[1].x, 50);
+        test_int(p[1].y, 60);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+    }
+
+    test_assert(!ecs_rule_next(&it));
+
+    ecs_rule_fini(f);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_instanced_w_base(void) {
+    ecs_world_t *world = ecs_mini();
+    
+    ECS_TAG(world, Tag);
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t base_1 = ecs_set(world, 0, Velocity, {1, 2});
+    ecs_entity_t base_2 = ecs_set(world, 0, Position, {80, 90});
+
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_entity_t e3 = ecs_set(world, 0, Position, {30, 40});
+
+    ecs_entity_t e4 = ecs_set(world, 0, Position, {40, 50});
+    ecs_entity_t e5 = ecs_set(world, 0, Position, {50, 60});
+    ecs_add(world, e4, Tag);
+    ecs_add(world, e5, Tag);
+
+    ecs_add_pair(world, e1, EcsIsA, base_1);
+    ecs_add_pair(world, e2, EcsIsA, base_1);
+    ecs_add_pair(world, e3, EcsIsA, base_1);
+    ecs_add_pair(world, e4, EcsIsA, base_1);
+    ecs_add_pair(world, e5, EcsIsA, base_1);
+
+    ecs_entity_t e6 = ecs_set(world, 0, Position, {60, 70});
+    ecs_entity_t e7 = ecs_set(world, 0, Position, {70, 80});
+    ecs_set(world, e6, Velocity, {2, 3});
+    ecs_set(world, e7, Velocity, {4, 5});
+
+    ecs_entity_t e8 = ecs_set(world, 0, Velocity, {6, 7});
+    ecs_entity_t e9 = ecs_set(world, 0, Velocity, {8, 9});
+    ecs_add_pair(world, e8, EcsIsA, base_2);
+    ecs_add_pair(world, e9, EcsIsA, base_2);
+
+    ecs_rule_t *f = ecs_rule(world, {
+        .expr = "Position, Velocity",
+        .instanced = true
+    });
+
+    ecs_iter_t it = ecs_rule_iter(world, f);
+
+    test_assert(ecs_rule_next(&it));
+    {
+        test_bool(ecs_field_is_self(&it, 1), false);
+        test_bool(ecs_field_is_self(&it, 2), true);
+
+        Position *p = ecs_field(&it, Position, 1);
+        Velocity *v = ecs_field(&it, Velocity, 2);
+        test_int(it.count, 2);
+        test_int(it.entities[0], e8);
+        test_int(it.entities[1], e9);
+        test_int(p->x, 80);
+        test_int(p->y, 90);
+        test_int(v[0].x, 6);
+        test_int(v[0].y, 7);
+        test_int(v[1].x, 8);
+        test_int(v[1].y, 9);
+    }
+
+    test_assert(ecs_rule_next(&it));
+    {
+        test_bool(ecs_field_is_self(&it, 1), true);
+        test_bool(ecs_field_is_self(&it, 2), false);
+
+        Position *p = ecs_field(&it, Position, 1);
+        Velocity *v = ecs_field(&it, Velocity, 2);
+
+        test_int(it.count, 3);
+        test_int(it.entities[0], e1);
+        test_int(it.entities[1], e2);
+        test_int(it.entities[2], e3);
+        test_int(p[0].x, 10);
+        test_int(p[0].y, 20);
+        test_int(p[1].x, 20);
+        test_int(p[1].y, 30);
+        test_int(p[2].x, 30);
+        test_int(p[2].y, 40);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+    }
+
+    test_assert(ecs_rule_next(&it));
+    {
+        test_bool(ecs_field_is_self(&it, 1), true);
+        test_bool(ecs_field_is_self(&it, 2), false);
+
+        Position *p = ecs_field(&it, Position, 1);
+        Velocity *v = ecs_field(&it, Velocity, 2);
+        test_int(it.count, 2);
+        test_int(it.entities[0], e4);
+        test_int(it.entities[1], e5);
+        test_int(p[0].x, 40);
+        test_int(p[0].y, 50);
+        test_int(p[1].x, 50);
+        test_int(p[1].y, 60);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+    }
+
+    test_assert(ecs_rule_next(&it));
+    {
+        test_bool(ecs_field_is_self(&it, 1), true);
+        test_bool(ecs_field_is_self(&it, 2), true);
+
+        Position *p = ecs_field(&it, Position, 1);
+        Velocity *v = ecs_field(&it, Velocity, 2);
+        test_int(it.count, 2);
+        test_int(it.entities[0], e6);
+        test_int(p[0].x, 60);
+        test_int(p[0].y, 70);
+        test_int(v[0].x, 2);
+        test_int(v[0].y, 3);
+
+        test_int(it.entities[1], e7);
+        test_int(p[1].x, 70);
+        test_int(p[1].y, 80);
+        test_int(v[1].x, 4);
+        test_int(v[1].y, 5);
+    }
+
+    test_assert(!ecs_rule_next(&it));
+
+    ecs_rule_fini(f);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_not_instanced_w_singleton(void) {
+    ecs_world_t *world = ecs_mini();
+    
+    ECS_TAG(world, Tag);
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_singleton_set(world, Velocity, {1, 2});
+
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_entity_t e3 = ecs_set(world, 0, Position, {30, 40});
+
+    ecs_entity_t e4 = ecs_set(world, 0, Position, {40, 50});
+    ecs_entity_t e5 = ecs_set(world, 0, Position, {50, 60});
+
+    ecs_add(world, e4, Tag);
+    ecs_add(world, e5, Tag);
+
+    ecs_rule_t *f = ecs_rule(world, {
+        .expr = "Position, Velocity($)"
+    });
+
+    ecs_iter_t it = ecs_rule_iter(world, f);
+    test_assert(ecs_rule_next(&it));
+    {
+        Position *p = ecs_field(&it, Position, 1);
+        Velocity *v = ecs_field(&it, Velocity, 2);
+        test_int(it.count, 1);
+        test_int(it.entities[0], e1);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+        test_int(p[0].x, 10);
+        test_int(p[0].y, 20);
+    }
+
+    test_assert(ecs_rule_next(&it));
+    {
+        Position *p = ecs_field(&it, Position, 1);
+        Velocity *v = ecs_field(&it, Velocity, 2);
+        test_int(it.count, 1);
+        test_int(it.entities[0], e2);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+        test_int(p[0].x, 20);
+        test_int(p[0].y, 30);
+    }
+
+    test_assert(ecs_rule_next(&it));
+    {
+        Position *p = ecs_field(&it, Position, 1);
+        Velocity *v = ecs_field(&it, Velocity, 2);
+        test_int(it.count, 1);
+        test_int(it.entities[0], e3);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+        test_int(p[0].x, 30);
+        test_int(p[0].y, 40);
+    }
+
+    test_assert(ecs_rule_next(&it));
+    {
+        Position *p = ecs_field(&it, Position, 1);
+        Velocity *v = ecs_field(&it, Velocity, 2);
+        test_int(it.count, 1);
+        test_int(it.entities[0], e4);
+        test_int(p[0].x, 40);
+        test_int(p[0].y, 50);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+    }
+
+    test_assert(ecs_rule_next(&it));
+    {
+        Position *p = ecs_field(&it, Position, 1);
+        Velocity *v = ecs_field(&it, Velocity, 2);
+        test_int(it.count, 1);
+        test_int(it.entities[0], e5);
+        test_int(p[0].x, 50);
+        test_int(p[0].y, 60);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+    }
+
+    test_assert(!ecs_rule_next(&it));
+
+    ecs_rule_fini(f);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_not_instanced_w_base(void) {
+    ecs_world_t *world = ecs_mini();
+    
+    ECS_TAG(world, Tag);
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t base_1 = ecs_set(world, 0, Velocity, {1, 2});
+    ecs_entity_t base_2 = ecs_set(world, 0, Position, {80, 90});
+
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_entity_t e3 = ecs_set(world, 0, Position, {30, 40});
+
+    ecs_entity_t e4 = ecs_set(world, 0, Position, {40, 50});
+    ecs_entity_t e5 = ecs_set(world, 0, Position, {50, 60});
+    ecs_add(world, e4, Tag);
+    ecs_add(world, e5, Tag);
+
+    ecs_add_pair(world, e1, EcsIsA, base_1);
+    ecs_add_pair(world, e2, EcsIsA, base_1);
+    ecs_add_pair(world, e3, EcsIsA, base_1);
+    ecs_add_pair(world, e4, EcsIsA, base_1);
+    ecs_add_pair(world, e5, EcsIsA, base_1);
+
+    ecs_entity_t e6 = ecs_set(world, 0, Position, {60, 70});
+    ecs_entity_t e7 = ecs_set(world, 0, Position, {70, 80});
+    ecs_set(world, e6, Velocity, {2, 3});
+    ecs_set(world, e7, Velocity, {4, 5});
+
+    ecs_entity_t e8 = ecs_set(world, 0, Velocity, {6, 7});
+    ecs_entity_t e9 = ecs_set(world, 0, Velocity, {8, 9});
+    ecs_add_pair(world, e8, EcsIsA, base_2);
+    ecs_add_pair(world, e9, EcsIsA, base_2);
+
+    ecs_rule_t *f = ecs_rule(world, {
+        .expr = "Position, Velocity"
+    });
+
+    ecs_iter_t it = ecs_rule_iter(world, f);
+
+    test_assert(ecs_rule_next(&it));
+    {
+        test_bool(ecs_field_is_self(&it, 1), false);
+        test_bool(ecs_field_is_self(&it, 2), true);
+
+        Position *p = ecs_field(&it, Position, 1);
+        Velocity *v = ecs_field(&it, Velocity, 2);
+        test_int(it.count, 1);
+        test_int(it.entities[0], e8);
+        test_int(p->x, 80);
+        test_int(p->y, 90);
+        test_int(v[0].x, 6);
+        test_int(v[0].y, 7);
+    }
+
+    test_assert(ecs_rule_next(&it));
+    {
+        test_bool(ecs_field_is_self(&it, 1), false);
+        test_bool(ecs_field_is_self(&it, 2), true);
+
+        Position *p = ecs_field(&it, Position, 1);
+        Velocity *v = ecs_field(&it, Velocity, 2);
+        test_int(it.count, 1);
+        test_int(it.entities[0], e9);
+        test_int(p->x, 80);
+        test_int(p->y, 90);
+        test_int(v[0].x, 8);
+        test_int(v[0].y, 9);
+    }
+
+    test_assert(ecs_rule_next(&it));
+    {
+        test_bool(ecs_field_is_self(&it, 1), true);
+        test_bool(ecs_field_is_self(&it, 2), false);
+
+        Position *p = ecs_field(&it, Position, 1);
+        Velocity *v = ecs_field(&it, Velocity, 2);
+
+        test_int(it.count, 1);
+        test_int(it.entities[0], e1);
+        test_int(p[0].x, 10);
+        test_int(p[0].y, 20);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+    }
+
+    test_assert(ecs_rule_next(&it));
+    {
+        test_bool(ecs_field_is_self(&it, 1), true);
+        test_bool(ecs_field_is_self(&it, 2), false);
+
+        Position *p = ecs_field(&it, Position, 1);
+        Velocity *v = ecs_field(&it, Velocity, 2);
+
+        test_int(it.count, 1);
+        test_int(it.entities[0], e2);
+        test_int(p[0].x, 20);
+        test_int(p[0].y, 30);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+    }
+
+    test_assert(ecs_rule_next(&it));
+    {
+        test_bool(ecs_field_is_self(&it, 1), true);
+        test_bool(ecs_field_is_self(&it, 2), false);
+
+        Position *p = ecs_field(&it, Position, 1);
+        Velocity *v = ecs_field(&it, Velocity, 2);
+
+        test_int(it.count, 1);
+        test_int(it.entities[0], e3);
+        test_int(p[0].x, 30);
+        test_int(p[0].y, 40);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+    }
+
+    test_assert(ecs_rule_next(&it));
+    {
+        test_bool(ecs_field_is_self(&it, 1), true);
+        test_bool(ecs_field_is_self(&it, 2), false);
+
+        Position *p = ecs_field(&it, Position, 1);
+        Velocity *v = ecs_field(&it, Velocity, 2);
+        test_int(it.count, 1);
+        test_int(it.entities[0], e4);
+        test_int(p[0].x, 40);
+        test_int(p[0].y, 50);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+    }
+
+    test_assert(ecs_rule_next(&it));
+    {
+        test_bool(ecs_field_is_self(&it, 1), true);
+        test_bool(ecs_field_is_self(&it, 2), false);
+
+        Position *p = ecs_field(&it, Position, 1);
+        Velocity *v = ecs_field(&it, Velocity, 2);
+        test_int(it.count, 1);
+        test_int(it.entities[0], e5);
+        test_int(p[0].x, 50);
+        test_int(p[0].y, 60);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+    }
+
+    test_assert(ecs_rule_next(&it));
+    {
+        test_bool(ecs_field_is_self(&it, 1), true);
+        test_bool(ecs_field_is_self(&it, 2), true);
+
+        Position *p = ecs_field(&it, Position, 1);
+        Velocity *v = ecs_field(&it, Velocity, 2);
+        test_int(it.count, 2);
+        test_int(it.entities[0], e6);
+        test_int(p[0].x, 60);
+        test_int(p[0].y, 70);
+        test_int(v[0].x, 2);
+        test_int(v[0].y, 3);
+
+        test_int(it.entities[1], e7);
+        test_int(p[1].x, 70);
+        test_int(p[1].y, 80);
+        test_int(v[1].x, 4);
+        test_int(v[1].y, 5);
+    }
+
+    test_assert(!ecs_rule_next(&it));
+
+    ecs_rule_fini(f);
+
+    ecs_fini(world);
+}

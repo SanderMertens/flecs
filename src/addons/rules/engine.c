@@ -851,7 +851,11 @@ bool flecs_rule_self_up_with(
             op_ctx->trav = 0;
             if (flecs_rule_ref_flags(op->flags, EcsRuleSrc) & EcsRuleIsVar) {
                 ecs_iter_t *it = ctx->it;
+                int32_t column = it->columns[op->field_index];
                 it->sources[op->field_index] = 0;
+                if (column < 0) {
+                    it->columns[op->field_index] = (column * -1);
+                }
             }
             return true;
         }

@@ -1381,11 +1381,13 @@ int flecs_rule_compile_term(
         ecs_assert(ecs_term_id_is_set(&term->second), ECS_INTERNAL_ERROR, NULL);
         op.kind = EcsRuleTrav;
     } else {
+        /* Ignore cascade & parent flags */
+        ecs_flags32_t trav_flags = EcsTraverseFlags & ~(EcsCascade|EcsParent);
         if (term->flags & (EcsTermMatchAny|EcsTermMatchAnySrc)) {
             op.kind = EcsRuleAndAny;
-        } else if ((term->src.flags & EcsTraverseFlags) == EcsUp) {
+        } else if ((term->src.flags & trav_flags) == EcsUp) {
             op.kind = EcsRuleUp;
-        } else if ((term->src.flags & EcsTraverseFlags) == (EcsSelf|EcsUp)) {
+        } else if ((term->src.flags & trav_flags) == (EcsSelf|EcsUp)) {
             op.kind = EcsRuleSelfUp;
         }
     }

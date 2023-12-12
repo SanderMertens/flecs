@@ -783,7 +783,11 @@
                 "match_empty_tables_w_wildcard",
                 "match_empty_tables_w_no_empty_tables",
                 "oneof_wildcard",
-                "oneof_any"
+                "oneof_any",
+                "instanced_w_singleton",
+                "instanced_w_base",
+                "not_instanced_w_singleton",
+                "not_instanced_w_base"
             ]
         }, {
             "id": "RulesVariables",
@@ -1307,7 +1311,18 @@
                 "this_self_up_childof_pair_for_var_written_n_targets",
                 "this_written_self_up_childof_pair_for_var_written_n_targets",
                 "self_up_2_levels",
-                "not_up_disabled"
+                "not_up_disabled",
+                "up_2_rel_instances",
+                "up_2_rel_instances_match_2nd",
+                "up_only_w_owned",
+                "this_self_cascade_childof",
+                "this_cascade_childof",
+                "this_written_self_cascade_childof",
+                "this_written_cascade_childof",
+                "this_self_cascade_childof_w_parent_flag",
+                "this_cascade_childof_w_parent_flag",
+                "this_written_self_cascade_childof_w_parent_flag",
+                "this_written_cascade_childof_w_parent_flag"
             ]
         }, {
             "id": "SystemPeriodic",
