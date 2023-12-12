@@ -245,6 +245,9 @@
                 "pair_4_args",
                 "pair_4_args_implicit_this",
                 "pair_3_args_2_terms",
+                "pair_3_args_this_tgt",
+                "pair_3_args_2_terms_this_tgt",
+                "pair_3_args_2_terms_this_tgt_implicit_this",
                 "cascade_desc"
             ]
         }, {

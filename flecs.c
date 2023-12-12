@@ -11305,6 +11305,8 @@ ecs_filter_t* ecs_filter_init(
             if (ptr[0] == '\n') {
                 break;
             }
+
+            ecs_os_zeromem(extra_args);
         }
 
         if (!ptr) {
