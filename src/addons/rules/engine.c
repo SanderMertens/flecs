@@ -406,11 +406,22 @@ void flecs_rule_set_trav_match(
 }
 
 static
+bool flecs_rule_table_filter(
+    ecs_table_t *table,
+    ecs_rule_lbl_t other,
+    ecs_flags32_t filter_mask)
+{
+    uint32_t filter = flecs_ito(uint32_t, other);
+    return (table->flags & filter_mask & filter) != 0;
+}
+
+static
 bool flecs_rule_select_w_id(
     const ecs_rule_op_t *op,
     bool redo,
     const ecs_rule_run_ctx_t *ctx,
-    ecs_id_t id)
+    ecs_id_t id,
+    ecs_flags32_t filter_mask)
 {
     ecs_rule_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and);
     ecs_id_record_t *idr = op_ctx->idr;
@@ -455,8 +466,7 @@ repeat:
         op_ctx->remaining --;
     }
 
-    uint32_t filter = flecs_ito(uint32_t, op->other);
-    if (table->flags & filter) {
+    if (flecs_rule_table_filter(table, op->other, filter_mask)) {
         goto repeat;
     }
 
@@ -474,7 +484,8 @@ bool flecs_rule_select(
     if (!redo) {
         id = flecs_rule_op_get_id(op, ctx);
     }
-    return flecs_rule_select_w_id(op, redo, ctx, id);
+    return flecs_rule_select_w_id(op, redo, ctx, id, 
+        (EcsTableIsPrefab|EcsTableIsDisabled));
 }
 
 static
@@ -575,8 +586,9 @@ repeat: {}
     }
 
     ecs_table_t *table = tr->hdr.table;
-    uint32_t filter = flecs_ito(uint32_t, op->other);
-    if (table->flags & filter) {
+    if (flecs_rule_table_filter(table, op->other, 
+        (EcsTableIsPrefab|EcsTableIsDisabled))) 
+    {
         goto repeat;
     }
 
@@ -678,7 +690,9 @@ bool flecs_rule_up_select(
                 ecs_table_range_t range;
                 it->sources[op->field_index] = 0;
                 do {
-                    if (!flecs_rule_select(op, redo_select, ctx)) {
+                    if (!flecs_rule_select_w_id(op, redo_select, ctx, 
+                        op_ctx->with, 0))
+                    {
                         return false;
                     }
 
@@ -699,9 +713,13 @@ bool flecs_rule_up_select(
                 op_ctx->matched = it->ids[op->field_index];
 
                 if (self) {
-                    flecs_reset_source_set_flag(ctx, op->field_index);
-                    op_ctx->row --;
-                    return true;
+                    if (!flecs_rule_table_filter(table, op->other, 
+                        (EcsTableIsPrefab|EcsTableIsDisabled)))
+                    {
+                        flecs_reset_source_set_flag(ctx, op->field_index);
+                        op_ctx->row --;
+                        return true;
+                    }
                 }
 
                 int32_t column = it->columns[op->field_index];
@@ -719,6 +737,7 @@ bool flecs_rule_up_select(
                 int32_t row;
                 ecs_entity_t entity = 0;
                 ecs_entity_t *entities = flecs_table_entities_array(table);
+
                 for (row = op_ctx->row; row < op_ctx->end; row ++) {
                     entity = entities[row];
                     ecs_record_t *record = flecs_entities_get(world, entity);
@@ -727,6 +746,7 @@ bool flecs_rule_up_select(
                         break;
                     }
                 }
+
                 if (row == op_ctx->end) {
                     op_ctx->table = NULL;
                     continue;
@@ -738,6 +758,7 @@ bool flecs_rule_up_select(
             }
         }
 
+next_elem:
         if ((++ op_ctx->cache_elem) >= ecs_vec_count(&down->elems)) {
             down = NULL;
             continue;
@@ -745,8 +766,15 @@ bool flecs_rule_up_select(
 
         ecs_trav_down_elem_t *elem = ecs_vec_get_t(
             &down->elems, ecs_trav_down_elem_t, op_ctx->cache_elem);
+
         flecs_rule_var_set_table(op, op->src.var, elem->table, 0, 0, ctx);
         flecs_rule_set_vars(op, op_ctx->matched, ctx);
+
+        if (flecs_rule_table_filter(elem->table, op->other, 
+            (EcsTableIsPrefab|EcsTableIsDisabled)))
+        {
+            goto next_elem;
+        }
 
         if (it->columns[op->field_index] > 0) {
             it->columns[op->field_index] = -it->columns[op->field_index];
@@ -875,7 +903,8 @@ bool flecs_rule_select_any(
     bool redo,
     const ecs_rule_run_ctx_t *ctx)
 {
-    return flecs_rule_select_w_id(op, redo, ctx, EcsAny);
+    return flecs_rule_select_w_id(op, redo, ctx, EcsAny, 
+        (EcsTableIsPrefab|EcsTableIsDisabled));
 }
 
 static
@@ -1062,7 +1091,9 @@ bool flecs_rule_trav_unknown_src_up_fixed_second(
     for (; trav_ctx->index < count; trav_ctx->index ++) {
         ecs_trav_elem_t *el = &elems[trav_ctx->index];
         trav_ctx->and.idr = el->idr; /* prevents lookup by select */
-        if (flecs_rule_select_w_id(op, redo, ctx, ecs_pair(trav, el->entity))) {
+        if (flecs_rule_select_w_id(op, redo, ctx, ecs_pair(trav, el->entity),
+            (EcsTableIsPrefab|EcsTableIsDisabled))) 
+        {
             return true;
         }
         

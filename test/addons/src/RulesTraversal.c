@@ -7200,3 +7200,72 @@ void RulesTraversal_this_written_self_up_childof_pair_for_var_written_n_targets(
 
     ecs_fini(world);
 }
+
+void RulesTraversal_self_up_2_levels(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_set(world, base, Position, {10, 20});
+
+    ecs_entity_t base_2 = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_pair(world, base_2, EcsIsA, base);
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base_2);
+
+    ecs_rule_t *f = ecs_rule(world, {
+        .terms[0] = { .id = ecs_id(Position) }
+    });
+
+    ecs_iter_t it = ecs_rule_iter(world, f);
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(inst, it.entities[0]);
+    test_uint(base, it.sources[0]);
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    Position *p = ecs_field(&it, Position, 1);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(f);
+
+    ecs_fini(world);
+}
+
+void RulesTraversal_not_up_disabled(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_rule_t *f = ecs_rule(world, {
+        .terms = {
+            { TagA },
+            { .id = EcsDisabled, .src.flags = EcsUp, .src.trav = EcsChildOf, .oper = EcsNot }
+        }
+    });
+    test_assert(f != NULL);
+
+    ecs_entity_t parent = ecs_new_w_id(world, EcsDisabled);
+
+    ecs_entity_t e1 = ecs_new(world, TagA);
+    ecs_entity_t e2 = ecs_new(world, TagA);
+    ecs_add_id(world, e2, EcsDisabled);
+    ecs_entity_t e3 = ecs_new(world, TagA);
+    ecs_add_pair(world, e3, EcsChildOf, parent);
+    
+    ecs_iter_t it = ecs_rule_iter(world, f);
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(TagA, it.ids[0]);
+    test_uint(0, it.sources[0]);
+
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(f);
+    
+    ecs_fini(world);
+}

@@ -1275,6 +1275,8 @@ void RulesTraversal_this_up_childof_pair_for_var_written(void);
 void RulesTraversal_this_written_self_up_childof_pair_for_var_written(void);
 void RulesTraversal_this_self_up_childof_pair_for_var_written_n_targets(void);
 void RulesTraversal_this_written_self_up_childof_pair_for_var_written_n_targets(void);
+void RulesTraversal_self_up_2_levels(void);
+void RulesTraversal_not_up_disabled(void);
 
 // Testsuite 'SystemPeriodic'
 void SystemPeriodic_1_type_1_component(void);
@@ -6731,6 +6733,14 @@ bake_test_case RulesTraversal_testcases[] = {
     {
         "this_written_self_up_childof_pair_for_var_written_n_targets",
         RulesTraversal_this_written_self_up_childof_pair_for_var_written_n_targets
+    },
+    {
+        "self_up_2_levels",
+        RulesTraversal_self_up_2_levels
+    },
+    {
+        "not_up_disabled",
+        RulesTraversal_not_up_disabled
     }
 };
 
@@ -8512,7 +8522,7 @@ static bake_test_suite suites[] = {
         "RulesTraversal",
         NULL,
         NULL,
-        79,
+        81,
         RulesTraversal_testcases
     },
     {
