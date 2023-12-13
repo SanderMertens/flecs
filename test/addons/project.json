@@ -790,7 +790,12 @@
                 "instanced_w_singleton",
                 "instanced_w_base",
                 "not_instanced_w_singleton",
-                "not_instanced_w_base"
+                "not_instanced_w_base",
+                "unknown_before_known",
+                "unknown_before_known_after_or",
+                "unknown_before_known_after_not",
+                "unknown_before_known_after_optional",
+                "unknown_before_known_after_scope"
             ]
         }, {
             "id": "RulesVariables",

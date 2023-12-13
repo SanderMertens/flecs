@@ -61119,6 +61119,19 @@ ecs_var_id_t flecs_rule_add_var_for_term_id(
     return flecs_rule_add_var(rule, name, vars, kind);
 }
 
+/* This function walks over terms to discover which variables are used in the
+ * query. It needs to provide the following functionality:
+ * - create table vars for all variables used as source
+ * - create entity vars for all variables not used as source
+ * - create entity vars for all non-$this vars
+ * - create anonymous vars to store the content of wildcards
+ * - create anonymous vars to store result of lookups (for $var.child_name)
+ * - create anonymous vars for resolving component inheritance
+ * - create array that stores the source variable for each field
+ * - ensure table vars for non-$this variables are anonymous
+ * - ensure variables created inside scopes are anonymous
+ * - place anonymous variables after public variables in vars array
+ */
 static
 void flecs_rule_discover_vars(
     ecs_stage_t *stage,
@@ -61187,7 +61200,9 @@ void flecs_rule_discover_vars(
                 if (var_id == EcsVarNone || var_id == first_var_id) {
                     var_id = flecs_rule_add_var(
                         rule, var_name, vars, EcsVarEntity);
+                }
 
+                if (var_id != EcsVarNone) {
                     /* Mark variable as one for which we need to create a table
                      * variable. Don't create table variable now, so that we can
                      * store it in the non-public part of the variable array. */
@@ -61198,10 +61213,8 @@ void flecs_rule_discover_vars(
                         var->kind = EcsVarAny;
                         anonymous_table_count ++;
                     }
-                }
 
-                if (var_id != EcsVarNone) {
-                    /* Track of which variable ids are used as field source */
+                    /* Track which variable ids are used as field source */
                     if (!rule->src_vars) {
                         rule->src_vars = ecs_os_calloc_n(ecs_var_id_t,
                             rule->filter.field_count);
@@ -61415,18 +61428,18 @@ ecs_var_id_t flecs_rule_most_specific_var(
         return flecs_rule_find_var_id(rule, name, kind);
     }
 
-    ecs_var_id_t tvar = flecs_rule_find_var_id(rule, name, EcsVarTable);
-    if ((tvar != EcsVarNone) && !flecs_rule_is_written(tvar, ctx->written)) {
-        /* If variable of any kind is requested and variable hasn't been written
-         * yet, write to table variable */
-        return tvar;
-    }
-
     ecs_var_id_t evar = flecs_rule_find_var_id(rule, name, EcsVarEntity);
     if ((evar != EcsVarNone) && flecs_rule_is_written(evar, ctx->written)) {
         /* If entity variable is available and written to, it contains the most
          * specific result and should be used. */
         return evar;
+    }
+
+    ecs_var_id_t tvar = flecs_rule_find_var_id(rule, name, EcsVarTable);
+    if ((tvar != EcsVarNone) && !flecs_rule_is_written(tvar, ctx->written)) {
+        /* If variable of any kind is requested and variable hasn't been written
+         * yet, write to table variable */
+        return tvar;
     }
 
     /* If table var is written, and entity var doesn't exist or is not written,
@@ -61896,8 +61909,8 @@ void flecs_rule_insert_contains(
         contains.kind = EcsRuleContain;
         contains.src.var = src_var;
         contains.first.var = other_var;
-        contains.flags |=(EcsRuleIsVar << EcsRuleSrc) | 
-                            (EcsRuleIsVar << EcsRuleFirst);
+        contains.flags |= (EcsRuleIsVar << EcsRuleSrc) | 
+                          (EcsRuleIsVar << EcsRuleFirst);
         flecs_rule_op_insert(&contains, ctx);
     }
 }
@@ -62081,19 +62094,29 @@ void flecs_rule_compile_pop(
 }
 
 static
+bool flecs_rule_term_is_or(
+    const ecs_filter_t *filter,
+    const ecs_term_t *term)
+{
+    bool first_term = term == filter->terms;
+    return (term->oper == EcsOr) || (!first_term && term[-1].oper == EcsOr);
+}
+
+static
 int flecs_rule_compile_term(
     ecs_world_t *world,
     ecs_rule_t *rule,
     ecs_term_t *term,
     ecs_rule_compile_ctx_t *ctx)
 {
-    bool first_term = term == rule->filter.terms;
+    ecs_filter_t *filter = &rule->filter;
+    bool first_term = term == filter->terms;
     bool first_is_var = term->first.flags & EcsIsVariable;
     bool second_is_var = term->second.flags & EcsIsVariable;
     bool src_is_var = term->src.flags & EcsIsVariable;
     bool builtin_pred = flecs_rule_is_builtin_pred(term);
     bool is_not = (term->oper == EcsNot) && !builtin_pred;
-    bool is_or = (term->oper == EcsOr) || (!first_term && term[-1].oper == EcsOr);
+    bool is_or = flecs_rule_term_is_or(filter, term);
     bool first_or = false, last_or = false;
     bool cond_write = term->oper == EcsOptional || is_or;
     ecs_rule_op_t op = {0};
@@ -62152,7 +62175,7 @@ int flecs_rule_compile_term(
      * just matches against a source (vs. finding a source). */
     op.kind = src_is_var ? EcsRuleAnd : EcsRuleWith;
     op.field_index = flecs_ito(int8_t, term->field_index);
-    op.term_index = flecs_ito(int8_t, term - rule->filter.terms);
+    op.term_index = flecs_ito(int8_t, term - filter->terms);
 
     /* If rule is transitive, use Trav(ersal) instruction */
     if (term->flags & EcsTermTransitive) {
@@ -62172,7 +62195,7 @@ int flecs_rule_compile_term(
 
     /* If term has fixed id, insert simpler instruction that skips dealing with
      * wildcard terms and variables */
-    if (flecs_rule_term_fixed_id(&rule->filter, term)) {
+    if (flecs_rule_term_fixed_id(filter, term)) {
         if (op.kind == EcsRuleAnd) {
             op.kind = EcsRuleAndId;
         }
@@ -62195,6 +62218,11 @@ int flecs_rule_compile_term(
     if (first_is_var) first_var = op.first.var;
     if (second_is_var) second_var = op.second.var;
 
+    flecs_rule_compile_term_id(world, rule, &op, &term->src, 
+        &op.src, EcsRuleSrc, EcsVarAny, ctx, true);
+    if (src_is_var) src_var = op.src.var;
+    bool src_written = flecs_rule_is_written(src_var, ctx->written);
+
     /* Insert each instructions for table -> entity variable if needed */
     bool first_written, second_written;
     if (flecs_rule_compile_ensure_vars(
@@ -62207,12 +62235,6 @@ int flecs_rule_compile_term(
     {
         goto error;
     }
-
-    /* Do src last, in case it uses the same variable as first/second */
-    flecs_rule_compile_term_id(world, rule, &op, &term->src, 
-        &op.src, EcsRuleSrc, EcsVarAny, ctx, true);
-    if (src_is_var) src_var = op.src.var;
-    bool src_written = flecs_rule_is_written(src_var, ctx->written);
 
     /* If the query starts with a Not or Optional term, insert an operation that
      * matches all entities. */
@@ -62368,7 +62390,7 @@ int flecs_rule_compile_term(
      * filtering out disabled/prefab entities is the default and this check is
      * cheap to perform on table flags, it's worth special casing. */
     if (!src_written && src_var == 0) {
-        ecs_flags32_t filter_flags = rule->filter.flags;
+        ecs_flags32_t filter_flags = filter->flags;
         if (!(filter_flags & EcsFilterMatchDisabled) || 
             !(filter_flags & EcsFilterMatchPrefab)) 
         {
@@ -62440,6 +62462,86 @@ error:
     return -1;
 }
 
+static
+bool flecs_rule_term_is_unknown(
+    ecs_rule_t *rule, 
+    ecs_term_t *term, 
+    ecs_rule_compile_ctx_t *ctx) 
+{
+    ecs_rule_op_t dummy = {0};
+    flecs_rule_compile_term_id(NULL, rule, &dummy, &term->first, 
+        &dummy.first, EcsRuleFirst, EcsVarEntity, ctx, false);
+    flecs_rule_compile_term_id(NULL, rule, &dummy, &term->second, 
+        &dummy.second, EcsRuleSecond, EcsVarEntity, ctx, false);
+    flecs_rule_compile_term_id(NULL, rule, &dummy, &term->second, 
+        &dummy.src, EcsRuleSrc, EcsVarAny, ctx, false);
+
+    bool has_vars = dummy.flags & 
+        ((EcsRuleIsVar << EcsRuleFirst) |
+         (EcsRuleIsVar << EcsRuleSecond) |
+         (EcsRuleIsVar << EcsRuleSrc));
+    if (!has_vars) {
+        /* If term has no variables (typically terms with a static src) there
+         * can't be anything that's unknown. */
+        return false;
+    }
+
+    if (dummy.flags & (EcsRuleIsVar << EcsRuleFirst)) {
+        if (ctx->written & (1 << dummy.first.var)) {
+            return false;
+        }
+    }
+    if (dummy.flags & (EcsRuleIsVar << EcsRuleSecond)) {
+        if (ctx->written & (1 << dummy.second.var)) {
+            return false;
+        }
+    }
+    if (dummy.flags & (EcsRuleIsVar << EcsRuleSrc)) {
+        if (ctx->written & (1 << dummy.src.var)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+static
+int32_t flecs_rule_term_next_known(
+    ecs_rule_t *rule, 
+    ecs_rule_compile_ctx_t *ctx,
+    int32_t offset,
+    ecs_flags64_t compiled) 
+{
+    ecs_filter_t *filter = &rule->filter;
+    ecs_term_t *terms = filter->terms;
+    int32_t i, count = filter->term_count;
+
+    for (i = offset; i < count; i ++) {
+        ecs_term_t *term = &terms[i];
+        if (compiled & (1 << i)) {
+            continue;
+        }
+
+        /* Only evaluate And terms */
+        if (term->oper != EcsAnd || flecs_rule_term_is_or(&rule->filter, term)){
+            continue;
+        }
+
+        /* Don't reorder terms before/after scopes */
+        if (term->first.id == EcsScopeOpen || term->first.id == EcsScopeClose) {
+            return -1;
+        }
+
+        if (flecs_rule_term_is_unknown(rule, term, ctx)) {
+            continue;
+        }
+
+        return i;
+    }
+
+    return -1;
+}
+
 int flecs_rule_compile(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -62486,11 +62588,42 @@ int flecs_rule_compile(
     }
 
     /* Compile query terms to instructions */
+    ecs_flags64_t compiled = 0;
     for (i = 0; i < count; i ++) {
         ecs_term_t *term = &terms[i];
+        int32_t compile = i;
+
+        if (compiled & (1 << i)) {
+            continue; /* Already compiled */
+        }
+
+        bool can_reorder = true;
+        if (term->oper != EcsAnd || flecs_rule_term_is_or(&rule->filter, term)){
+            can_reorder = false;
+        }
+
+        /* If variables have been written, but this term has no known variables,
+         * first try to resolve terms that have known variables. This can 
+         * significantly reduce the search space. 
+         * Only perform this optimization after at least one variable has been
+         * written to, as all terms are unknown otherwise. */
+        if (can_reorder && ctx.written && 
+            flecs_rule_term_is_unknown(rule, term, &ctx)) 
+        {
+            int32_t term_index = flecs_rule_term_next_known(
+                rule, &ctx, i + 1, compiled);
+            if (term_index != -1) {
+                term = &rule->filter.terms[term_index];
+                compile = term_index;
+                i --; /* Repeat current term */
+            }
+        }
+
         if (flecs_rule_compile_term(world, rule, term, &ctx)) {
             return -1;
         }
+
+        compiled |= (1 << compile);
     }
 
     ecs_var_id_t this_id = flecs_rule_find_var_id(rule, "This", EcsVarEntity);

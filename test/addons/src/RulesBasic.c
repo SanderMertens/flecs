@@ -5990,3 +5990,213 @@ void RulesBasic_not_instanced_w_base(void) {
 
     ecs_fini(world);
 }
+
+void RulesBasic_unknown_before_known(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Foo, ChildOf($gc, $c), ChildOf($c, $this)"
+    });
+
+    test_assert(r != NULL);
+
+    int c_var = ecs_rule_find_var(r, "c");
+    test_assert(c_var != -1);
+    int gc_var = ecs_rule_find_var(r, "gc");
+    test_assert(gc_var != -1);
+
+    ecs_entity_t p = ecs_new(world, Foo);
+    ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
+    /* ecs_entity_t c2 = */ ecs_new_w_pair(world, EcsChildOf, p);
+    ecs_entity_t gc = ecs_new_w_pair(world, EcsChildOf, c);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(p, it.entities[0]);
+    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(ecs_pair(EcsChildOf, c), ecs_field_id(&it, 2));
+    test_uint(ecs_pair(EcsChildOf, p), ecs_field_id(&it, 3));
+    test_uint(c, ecs_iter_get_var(&it, c_var));
+    test_uint(gc, ecs_iter_get_var(&it, gc_var));
+    test_assert(!ecs_rule_next(&it));
+    
+    ecs_fini(world);
+}
+
+void RulesBasic_unknown_before_known_after_or(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Foo, ChildOf($gc, $c), Foo($gc) || Bar($gc), ChildOf($c, $this)"
+    });
+
+    test_assert(r != NULL);
+
+    int c_var = ecs_rule_find_var(r, "c");
+    test_assert(c_var != -1);
+    int gc_var = ecs_rule_find_var(r, "gc");
+    test_assert(gc_var != -1);
+
+    ecs_entity_t p = ecs_new(world, Foo);
+    ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
+    /* ecs_entity_t c2 = */ ecs_new_w_pair(world, EcsChildOf, p);
+    ecs_entity_t gc1 = ecs_new_w_pair(world, EcsChildOf, c);
+    ecs_add(world, gc1, Foo);
+    ecs_entity_t gc2 = ecs_new_w_pair(world, EcsChildOf, c);
+    ecs_add(world, gc2, Bar);
+    /* ecs_entity_t gc3 = */ ecs_new_w_pair(world, EcsChildOf, c);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(p, it.entities[0]);
+    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(ecs_pair(EcsChildOf, c), ecs_field_id(&it, 2));
+    test_uint(ecs_pair(EcsChildOf, p), ecs_field_id(&it, 4));
+    test_uint(c, ecs_iter_get_var(&it, c_var));
+    test_uint(gc1, ecs_iter_get_var(&it, gc_var));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(p, it.entities[0]);
+    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(ecs_pair(EcsChildOf, c), ecs_field_id(&it, 2));
+    test_uint(ecs_pair(EcsChildOf, p), ecs_field_id(&it, 4));
+    test_uint(c, ecs_iter_get_var(&it, c_var));
+    test_uint(gc2, ecs_iter_get_var(&it, gc_var));
+    test_assert(!ecs_rule_next(&it));
+    
+    ecs_fini(world);
+}
+
+void RulesBasic_unknown_before_known_after_not(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Foo, ChildOf($gc, $c), !Foo($gc), ChildOf($c, $this)"
+    });
+
+    test_assert(r != NULL);
+
+    int c_var = ecs_rule_find_var(r, "c");
+    test_assert(c_var != -1);
+    int gc_var = ecs_rule_find_var(r, "gc");
+    test_assert(gc_var != -1);
+
+    ecs_entity_t p = ecs_new(world, Foo);
+    ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
+    /* ecs_entity_t c2 = */ ecs_new_w_pair(world, EcsChildOf, p);
+    ecs_entity_t gc1 = ecs_new_w_pair(world, EcsChildOf, c);
+    ecs_entity_t gc2 = ecs_new_w_pair(world, EcsChildOf, c);
+    ecs_add(world, gc2, Foo);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(p, it.entities[0]);
+    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(ecs_pair(EcsChildOf, c), ecs_field_id(&it, 2));
+    test_uint(Foo, ecs_field_id(&it, 3));
+    test_uint(ecs_pair(EcsChildOf, p), ecs_field_id(&it, 4));
+    test_uint(c, ecs_iter_get_var(&it, c_var));
+    test_uint(gc1, ecs_iter_get_var(&it, gc_var));
+    test_assert(!ecs_rule_next(&it));
+    
+    ecs_fini(world);
+}
+
+void RulesBasic_unknown_before_known_after_optional(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Foo, ChildOf($gc, $c), ?Foo($gc), ChildOf($c, $this)"
+    });
+
+    test_assert(r != NULL);
+
+    int c_var = ecs_rule_find_var(r, "c");
+    test_assert(c_var != -1);
+    int gc_var = ecs_rule_find_var(r, "gc");
+    test_assert(gc_var != -1);
+
+    ecs_entity_t p = ecs_new(world, Foo);
+    ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
+    /* ecs_entity_t c2 = */ ecs_new_w_pair(world, EcsChildOf, p);
+    ecs_entity_t gc1 = ecs_new_w_pair(world, EcsChildOf, c);
+    ecs_entity_t gc2 = ecs_new_w_pair(world, EcsChildOf, c);
+    ecs_add(world, gc2, Foo);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(p, it.entities[0]);
+    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(ecs_pair(EcsChildOf, c), ecs_field_id(&it, 2));
+    test_uint(Foo, ecs_field_id(&it, 3));
+    test_uint(ecs_pair(EcsChildOf, p), ecs_field_id(&it, 4));
+    test_bool(false, ecs_field_is_set(&it, 3));
+    test_uint(c, ecs_iter_get_var(&it, c_var));
+    test_uint(gc1, ecs_iter_get_var(&it, gc_var));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(p, it.entities[0]);
+    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(ecs_pair(EcsChildOf, c), ecs_field_id(&it, 2));
+    test_uint(Foo, ecs_field_id(&it, 3));
+    test_uint(ecs_pair(EcsChildOf, p), ecs_field_id(&it, 4));
+    test_bool(true, ecs_field_is_set(&it, 3));
+    test_uint(c, ecs_iter_get_var(&it, c_var));
+    test_uint(gc2, ecs_iter_get_var(&it, gc_var));
+    test_assert(!ecs_rule_next(&it));
+    
+    ecs_fini(world);
+}
+
+void RulesBasic_unknown_before_known_after_scope(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Foo, ChildOf($gc, $c), !{Foo($gc) || Bar($gc)}, ChildOf($c, $this)"
+    });
+
+    test_assert(r != NULL);
+
+    int c_var = ecs_rule_find_var(r, "c");
+    test_assert(c_var != -1);
+    int gc_var = ecs_rule_find_var(r, "gc");
+    test_assert(gc_var != -1);
+
+    ecs_entity_t p = ecs_new(world, Foo);
+    ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
+    /* ecs_entity_t c2 = */ ecs_new_w_pair(world, EcsChildOf, p);
+    ecs_entity_t gc1 = ecs_new_w_pair(world, EcsChildOf, c);
+    ecs_entity_t gc2 = ecs_new_w_pair(world, EcsChildOf, c);
+    ecs_add(world, gc2, Foo);
+    ecs_entity_t gc3 = ecs_new_w_pair(world, EcsChildOf, c);
+    ecs_add(world, gc3, Bar);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(p, it.entities[0]);
+    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(c, ecs_iter_get_var(&it, c_var));
+    test_uint(gc1, ecs_iter_get_var(&it, gc_var));
+    test_assert(!ecs_rule_next(&it));
+    
+    ecs_fini(world);
+}

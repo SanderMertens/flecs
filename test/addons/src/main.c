@@ -776,6 +776,11 @@ void RulesBasic_instanced_w_singleton(void);
 void RulesBasic_instanced_w_base(void);
 void RulesBasic_not_instanced_w_singleton(void);
 void RulesBasic_not_instanced_w_base(void);
+void RulesBasic_unknown_before_known(void);
+void RulesBasic_unknown_before_known_after_or(void);
+void RulesBasic_unknown_before_known_after_not(void);
+void RulesBasic_unknown_before_known_after_optional(void);
+void RulesBasic_unknown_before_known_after_scope(void);
 
 // Testsuite 'RulesVariables'
 void RulesVariables_1_ent_src_w_var(void);
@@ -4795,6 +4800,26 @@ bake_test_case RulesBasic_testcases[] = {
     {
         "not_instanced_w_base",
         RulesBasic_not_instanced_w_base
+    },
+    {
+        "unknown_before_known",
+        RulesBasic_unknown_before_known
+    },
+    {
+        "unknown_before_known_after_or",
+        RulesBasic_unknown_before_known_after_or
+    },
+    {
+        "unknown_before_known_after_not",
+        RulesBasic_unknown_before_known_after_not
+    },
+    {
+        "unknown_before_known_after_optional",
+        RulesBasic_unknown_before_known_after_optional
+    },
+    {
+        "unknown_before_known_after_scope",
+        RulesBasic_unknown_before_known_after_scope
     }
 };
 
@@ -8556,7 +8581,7 @@ static bake_test_suite suites[] = {
         "RulesBasic",
         NULL,
         NULL,
-        125,
+        130,
         RulesBasic_testcases
     },
     {
