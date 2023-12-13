@@ -795,7 +795,9 @@
                 "unknown_before_known_after_or",
                 "unknown_before_known_after_not",
                 "unknown_before_known_after_optional",
-                "unknown_before_known_after_scope"
+                "unknown_before_known_after_scope",
+                "reordered_plan_1",
+                "reordered_plan_2"
             ]
         }, {
             "id": "RulesVariables",

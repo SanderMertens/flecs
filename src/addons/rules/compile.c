@@ -1685,6 +1685,24 @@ error:
 }
 
 static
+bool flecs_rule_var_is_unknown(
+    ecs_rule_t *rule,
+    ecs_var_id_t var_id,
+    ecs_rule_compile_ctx_t *ctx)
+{
+    ecs_rule_var_t *vars = rule->vars;
+    if (ctx->written & (1ull << var_id)) {
+        return false;
+    } else {
+        ecs_var_id_t table_var = vars[var_id].table_id;
+        if (table_var != EcsVarNone) {
+            return flecs_rule_var_is_unknown(rule, table_var, ctx);
+        }
+    }
+    return true;
+}
+
+static
 bool flecs_rule_term_is_unknown(
     ecs_rule_t *rule, 
     ecs_term_t *term, 
@@ -1695,7 +1713,7 @@ bool flecs_rule_term_is_unknown(
         &dummy.first, EcsRuleFirst, EcsVarEntity, ctx, false);
     flecs_rule_compile_term_id(NULL, rule, &dummy, &term->second, 
         &dummy.second, EcsRuleSecond, EcsVarEntity, ctx, false);
-    flecs_rule_compile_term_id(NULL, rule, &dummy, &term->second, 
+    flecs_rule_compile_term_id(NULL, rule, &dummy, &term->src, 
         &dummy.src, EcsRuleSrc, EcsVarAny, ctx, false);
 
     bool has_vars = dummy.flags & 
@@ -1709,17 +1727,17 @@ bool flecs_rule_term_is_unknown(
     }
 
     if (dummy.flags & (EcsRuleIsVar << EcsRuleFirst)) {
-        if (ctx->written & (1 << dummy.first.var)) {
+        if (!flecs_rule_var_is_unknown(rule, dummy.first.var, ctx)) {
             return false;
         }
     }
     if (dummy.flags & (EcsRuleIsVar << EcsRuleSecond)) {
-        if (ctx->written & (1 << dummy.second.var)) {
+        if (!flecs_rule_var_is_unknown(rule, dummy.second.var, ctx)) {
             return false;
         }
     }
     if (dummy.flags & (EcsRuleIsVar << EcsRuleSrc)) {
-        if (ctx->written & (1 << dummy.src.var)) {
+        if (!flecs_rule_var_is_unknown(rule, dummy.src.var, ctx)) {
             return false;
         }
     }
@@ -1740,7 +1758,7 @@ int32_t flecs_rule_term_next_known(
 
     for (i = offset; i < count; i ++) {
         ecs_term_t *term = &terms[i];
-        if (compiled & (1 << i)) {
+        if (compiled & (1ull << i)) {
             continue;
         }
 
@@ -1815,7 +1833,7 @@ int flecs_rule_compile(
         ecs_term_t *term = &terms[i];
         int32_t compile = i;
 
-        if (compiled & (1 << i)) {
+        if (compiled & (1ull << i)) {
             continue; /* Already compiled */
         }
 
@@ -1845,7 +1863,7 @@ int flecs_rule_compile(
             return -1;
         }
 
-        compiled |= (1 << compile);
+        compiled |= (1ull << compile);
     }
 
     ecs_var_id_t this_id = flecs_rule_find_var_id(rule, "This", EcsVarEntity);

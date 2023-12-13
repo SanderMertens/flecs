@@ -295,7 +295,7 @@ char* ecs_rule_str_w_profile(
 
 #ifdef FLECS_LOG    
     char *str = ecs_strbuf_get(&buf);
-    flecs_colorize_buf(str, true, &buf);
+    flecs_colorize_buf(str, ecs_os_api.flags_ & EcsOsApiLogWithColors, &buf);
     ecs_os_free(str);
 #endif
     return ecs_strbuf_get(&buf);

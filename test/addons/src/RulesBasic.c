@@ -6022,6 +6022,8 @@ void RulesBasic_unknown_before_known(void) {
     test_uint(c, ecs_iter_get_var(&it, c_var));
     test_uint(gc, ecs_iter_get_var(&it, gc_var));
     test_assert(!ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
     
     ecs_fini(world);
 }
@@ -6072,6 +6074,8 @@ void RulesBasic_unknown_before_known_after_or(void) {
     test_uint(gc2, ecs_iter_get_var(&it, gc_var));
     test_assert(!ecs_rule_next(&it));
     
+    ecs_rule_fini(r);
+    
     ecs_fini(world);
 }
 
@@ -6109,6 +6113,8 @@ void RulesBasic_unknown_before_known_after_not(void) {
     test_uint(c, ecs_iter_get_var(&it, c_var));
     test_uint(gc1, ecs_iter_get_var(&it, gc_var));
     test_assert(!ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
     
     ecs_fini(world);
 }
@@ -6159,6 +6165,8 @@ void RulesBasic_unknown_before_known_after_optional(void) {
     test_uint(c, ecs_iter_get_var(&it, c_var));
     test_uint(gc2, ecs_iter_get_var(&it, gc_var));
     test_assert(!ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
     
     ecs_fini(world);
 }
@@ -6197,6 +6205,75 @@ void RulesBasic_unknown_before_known_after_scope(void) {
     test_uint(c, ecs_iter_get_var(&it, c_var));
     test_uint(gc1, ecs_iter_get_var(&it, gc_var));
     test_assert(!ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
     
+    ecs_fini(world);
+}
+
+void RulesBasic_reordered_plan_1(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Foo, ChildOf($this, $p, $gp, $ggp), Bar($ggp)"
+    });
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  setids      "
+    LINE " 1. [ 0,  2]  selfup      $[this]           (Foo)"
+    LINE " 2. [ 1,  3]  and         $[this]           (ChildOf, $p)"
+    LINE " 3. [ 2,  4]  and         $p                (ChildOf, $gp)"
+    LINE " 4. [ 3,  5]  and         $gp               (ChildOf, $ggp)"
+    LINE " 5. [ 4,  6]  selfup      $ggp              (Bar)"
+    LINE " 6. [ 5,  7]  setvars     "
+    LINE " 7. [ 6,  8]  yield       "
+    LINE "";
+    char *plan = ecs_rule_str(r);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_reordered_plan_2(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Foo($ggp), ChildOf($this, $p, $gp, $ggp), Bar($this)"
+    });
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  setids      "
+    LINE " 1. [ 0,  2]  selfup      $[ggp]            (Foo)"
+    LINE " 2. [ 1,  3]  each        $ggp              ($[ggp])"
+    LINE " 3. [ 2,  4]  and         $[gp]             (ChildOf, $ggp)"
+    LINE " 4. [ 3,  5]  each        $gp               ($[gp])"
+    LINE " 5. [ 4,  6]  and         $[p]              (ChildOf, $gp)"
+    LINE " 6. [ 5,  7]  each        $p                ($[p])"
+    LINE " 7. [ 6,  8]  and         $[this]           (ChildOf, $p)"
+    LINE " 8. [ 7,  9]  selfup      $[this]           (Bar)"
+    LINE " 9. [ 8, 10]  setvars     "
+    LINE "10. [ 9, 11]  yield       "
+    LINE "";
+    char *plan = ecs_rule_str(r);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_rule_fini(r);
+
     ecs_fini(world);
 }

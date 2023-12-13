@@ -781,6 +781,8 @@ void RulesBasic_unknown_before_known_after_or(void);
 void RulesBasic_unknown_before_known_after_not(void);
 void RulesBasic_unknown_before_known_after_optional(void);
 void RulesBasic_unknown_before_known_after_scope(void);
+void RulesBasic_reordered_plan_1(void);
+void RulesBasic_reordered_plan_2(void);
 
 // Testsuite 'RulesVariables'
 void RulesVariables_1_ent_src_w_var(void);
@@ -4820,6 +4822,14 @@ bake_test_case RulesBasic_testcases[] = {
     {
         "unknown_before_known_after_scope",
         RulesBasic_unknown_before_known_after_scope
+    },
+    {
+        "reordered_plan_1",
+        RulesBasic_reordered_plan_1
+    },
+    {
+        "reordered_plan_2",
+        RulesBasic_reordered_plan_2
     }
 };
 
@@ -8581,7 +8591,7 @@ static bake_test_suite suites[] = {
         "RulesBasic",
         NULL,
         NULL,
-        130,
+        132,
         RulesBasic_testcases
     },
     {
