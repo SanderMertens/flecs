@@ -461,11 +461,11 @@ ecs_add_id(world, Move, EcsDisabled);
 s.add(flecs::Disabled);
 ```
 
-Note that this applies both to builtin pipelines and custom pipelines, as entiites with the `Disabled` tag are ignored by default by queries.
+Note that this applies both to builtin pipelines and custom pipelines, as entities with the `Disabled` tag are ignored by default by queries.
 
 Phases can also be disabled when using the builtin pipeline, which excludes all systems that depend on the phase. Note that is transitive, if `PhaseB` depends on `PhaseA` and `PhaseA` is disabled, systems that depend on both `PhaseA` and `PhaseB` will be excluded from the pipeline. For this reason, the builtin phases don't directly depend on each other, so that disabling `EcsOnUpdate` does not exclude systems that depend on `EcsPostUpdate`.
 
-When the parent of a system is disabled, it will also be excluded from the builin pipeline. This makes it possible to disable all systems in a module with a single operation.
+When the parent of a system is disabled, it will also be excluded from the builtin pipeline. This makes it possible to disable all systems in a module with a single operation.
 
 ## Staging
 When calling `progress()` the world enters a readonly state in which all ECS operations like `add`, `remove`, `set` etc. are enqueued as commands (called "staging"). This makes sure that it is safe for systems to iterate component arrays while enqueueing operations. Without staging, component storage arrays could be reallocated to a different memory location, which could cause system code to crash. Additionally, enqueueing operations makes it safe for multiple threads to iterate the same world without taking locks as thread gets its own command queue.
@@ -789,7 +789,7 @@ tick_source.stop();
 tick_source.start();
 ```
 
-An additional advantage of using shared interval/rate filter between systems is that it guarantees that systems are ran at the same tick. When a system is disabled, its interval/rate filters aren't updated, which means that when the system is reenabled again it would be out of sync with other systems that had the same interval/rate. specified. When using a shared tick source however the system is guaranteed to run at the same tick as other systems with the same tick source, even after the system is reenabled.
+An additional advantage of using shared interval/rate filter between systems is that it guarantees that systems are ran at the same tick. When a system is disabled, its interval/rate filters aren't updated, which means that when the system is reenabled again it would be out of sync with other systems that had the same interval/rate specified. When using a shared tick source however the system is guaranteed to run at the same tick as other systems with the same tick source, even after the system is reenabled.
 
 ### Nested tick sources
 One tick source can be used as the input of another (rate) tick source. The rate tick source will run at each Nth tick of the input tick source. This can be used to create nested tick sources, like in the following example:

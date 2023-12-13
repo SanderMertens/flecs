@@ -35,7 +35,7 @@ Flecs and EnTT both are ECS libraries, but other than that they are different in
 - Entity destruct are faster in Flecs (especially for worlds/registries with lots of components)
 - Iterating a single entity's components are faster in Flecs
 
-When doing a benchmark comparison don't rely on someone elses numbers, always test for your own use case!
+When doing a benchmark comparison don't rely on someone else's numbers, always test for your own use case!
 
 ## Is Flecs used for commercial projects?
 Yes, Flecs is used commercially (see the README).

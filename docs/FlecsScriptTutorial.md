@@ -18,7 +18,7 @@ The page should look similar to this:
 
 The panel on the left is the entity treeview, which shows all of the entities in our scene. The center view is the canvas, which shows us the renderable entities of our scene (more on that later). Finally, the pane on the right is the editor, where we can write flecs scripts.
 
-At any point in time you can disable panels by clicing on the "x" in the top-right corner. Panels can be brought back by pressing on their button in the menu bar on the left.
+At any point in time you can disable panels by clicking on the "x" in the top-right corner. Panels can be brought back by pressing on their button in the menu bar on the left.
 
 One other important thing is the link button in the top-right of the screen. You can use that button to obtain a link to your content, which is a good way to save progress, or to share what you've created with other people.
 
@@ -628,7 +628,7 @@ Note how we left out `Position3`, as this will be set by the `Grid` component. W
   }
 ```
 
-Let's disect what this code does:
+Let's dissect what this code does:
 - Create a `pillars` entity
 - Create it at position `y: $height/2` so pillars don't sink into the ground
 - With `$pillar_count` pillars on the x axis
@@ -647,7 +647,7 @@ And increase the `width` of the fence to `60`:
   prop width : f32 = 60
 ```
 
-We now get a number of pilars that matches the fence length:
+We now get a number of pillars that matches the fence length:
 
 [![a fence with multiple pillars](img/script_tutorial/tut_playground_grid.png)](https://www.flecs.dev/explorer/?local=true&wasm=https://www.flecs.dev/explorer/playground.js&script=using%20flecs.components.*%0Ausing%20flecs.meta%0Ausing%20flecs.game%0A%0Aconst%20PI%20%3D%203.1415926%0A%0Aplane%20%7B%0A%20%20-%20Position3%7B%7D%0A%20%20-%20Rotation3%7B%24PI%20%2F%202%7D%0A%20%20-%20Rectangle%7B10000%2C%2010000%7D%0A%20%20-%20Rgb%7B0.9%2C%200.9%2C%200.9%7D%0A%7D%0A%0Aassembly%20Fence%20%7B%0A%20%20prop%20width%20%3A%20f32%20%3D%2060%0A%20%20prop%20height%20%3A%20f32%20%3D%2010%0A%20%20prop%20color%20%3A%20Rgb%20%3D%20%7B0.15%2C%200.1%2C%200.05%7D%0A%20%20%0A%20%20const%20pillar_width%20%3D%202%0A%20%20const%20pillar_spacing%20%3D%2010%0A%20%20const%20pillar_count%20%3D%20%24width%20%2F%20%24pillar_spacing%0A%20%20const%20pillar_box%20%3A%20Box%20%3D%20%7B%0A%20%20%20%20%24pillar_width%2C%20%0A%20%20%20%20%24height%2C%20%0A%20%20%20%20%24pillar_width%0A%20%20%7D%0A%20%20%0A%20%20Prefab%20Pillar%20%7B%0A%20%20%20%20-%20%24color%0A%20%20%20%20-%20%24pillar_box%0A%20%20%7D%0A%20%20%20%20%0A%20%20pillars%20%7B%0A%20%20%20%20-%20Position3%7By%3A%20%24height%2F2%7D%0A%20%20%20%20-%20Grid%7B%0A%20%20%20%20%20%20x.count%3A%20%24pillar_count%0A%20%20%20%20%20%20x.spacing%3A%20%24pillar_spacing%0A%20%20%20%20%20%20prefab%3A%20Pillar%20%20%20%20%0A%20%20%20%20%7D%0A%20%20%7D%20%20%0A%20%20%0A%20%20const%20bar_sep%20%3D%204%0A%20%20const%20bar_height%20%3D%202%0A%20%20const%20bar_depth%20%3D%20%24pillar_width%2F2%0A%20%20const%20bar_box%20%3A%20Box%20%3D%20%7B%0A%20%20%20%20%24width%2C%20%0A%20%20%20%20%24bar_height%2C%20%0A%20%20%20%20%24bar_depth%0A%20%20%7D%0A%20%20%0A%20%20with%20%24color%2C%20%24bar_box%20%7B%0A%20%20%20%20top_bar%20%7B%0A%20%20%20%20%20%20-%20Position3%7By%3A%20%24height%2F2%20%2B%20%24bar_sep%2F2%7D%0A%20%20%20%20%7D%0A%20%20%20%20bottom_bar%20%7B%0A%20%20%20%20%20%20-%20Position3%7By%3A%20%24height%2F2%20-%20%24bar_sep%2F2%7D%0A%20%20%20%20%7D%0A%20%20%7D%0A%7D%20%2F%2F%20Prefab%20Fence%0A%0Afence%20%3A-%20Fence%7B%7D%0A)
 
@@ -665,12 +665,12 @@ We can do the same thing for the bars. I'll skip right to the result since it in
 
 [![a fence with multiple pillars and bars](img/script_tutorial/tut_playground_grids.png)](https://www.flecs.dev/explorer/?local=true&wasm=https://www.flecs.dev/explorer/playground.js&script=using%20flecs.components.*%0Ausing%20flecs.meta%0Ausing%20flecs.game%0A%0Aconst%20PI%20%3D%203.1415926%0A%0A%2F%2F%20The%20ground%20plane%0Aplane%20%7B%0A%20%20-%20Position3%7B%7D%0A%20%20-%20Rotation3%7B%24PI%2F2%7D%0A%20%20-%20Rectangle%7B10000%2C%2010000%7D%0A%20%20-%20Rgb%7B0.9%2C%200.9%2C%200.9%7D%0A%7D%0A%0Aassembly%20Fence%20%7B%0A%20%20%2F%2F%20Fence%20parameters%0A%20%20prop%20width%20%3A%20f32%20%3D%2040%0A%20%20prop%20height%20%3A%20f32%20%3D%2020%0A%20%20const%20color%20%3A%20Rgb%20%3D%20%7B0.15%2C%200.1%2C%200.05%7D%0A%0A%20%20%2F%2F%20Pillar%20parameters%0A%20%20const%20pillar_width%20%3D%202%0A%20%20const%20pillar_spacing%20%3D%2010%0A%20%20const%20pillar_count%20%3D%20%24width%20%2F%20%24pillar_spacing%0A%20%20const%20p_grid_spacing%20%3D%20%24width%20%2F%20(%24pillar_count%20-%201)%0A%20%0A%20%20%2F%2F%20Bar%20parameters%0A%20%20const%20bar_spacing%20%3D%203%0A%20%20const%20bar_height%20%3D%202%0A%20%20const%20bar_depth%20%3D%20%24pillar_width%20%2F%202%0A%20%20const%20bar_count%20%3D%20%24height%20%2F%20%24bar_spacing%0A%20%20const%20b_grid_spacing%20%3D%20%24height%20%2F%20%24bar_count%0A%20%20%20%0A%20%20with%20Prefab%2C%20%24color%20%7B%0A%20%20%20%20Pillar%20%3A-%20Box%20%7B%0A%20%20%20%20%20%20%24pillar_width%2C%20%24height%2C%20%24pillar_width%0A%20%20%20%20%7D%0A%20%20%20%20Bar%20%3A-%20Box%20%7B%24width%2C%20%24bar_height%2C%20%24bar_depth%7D%0A%20%20%7D%20%20%20%20%0A%20%20%0A%20%20%2F%2F%20Pillars%0A%20%20pillars%20%7B%0A%20%20%20%20-%20Position3%7By%3A%20%24height%2F2%7D%0A%20%20%20%20-%20Grid%7B%0A%20%20%20%20%20%20x.count%3A%20%24pillar_count%2C%0A%20%20%20%20%20%20x.spacing%3A%20%24p_grid_spacing%0A%20%20%20%20%20%20prefab%3A%20Pillar%20%20%20%20%0A%20%20%20%20%7D%0A%20%20%7D%0A%0A%20%20%2F%2F%20Bars%0A%20%20bars%20%7B%0A%20%20%20%20-%20Position3%7By%3A%20%24height%2F2%7D%0A%20%20%20%20-%20Grid%7B%0A%20%20%20%20%20%20y.count%3A%20%24bar_count%2C%0A%20%20%20%20%20%20y.spacing%3A%20%24b_grid_spacing%0A%20%20%20%20%20%20prefab%3A%20Bar%20%20%20%20%0A%20%20%20%20%7D%0A%20%20%7D%0A%7D%20%2F%2F%20assembly%20Fence%0A%0Afence%20%3A-%20Fence%7B%7D)
 
-The values got tweaked a bit to get a more easthetically pleasing result when scaling up. Feel free to tune the variables to values that produce something you like!
+The values got tweaked a bit to get a more aesthetically pleasing result when scaling up. Feel free to tune the variables to values that produce something you like!
 
 We're almost done! There is only one thing left, which is to combine the fence assembly in a nested assembly so we can create an enclosing.
 
 ## Nested Assemblies
-Now that we have our Fence assembly ready to go, we can build a higher level assemblies which reuses existing the `Fence` assembly. One typical thing we could do is instantate a `Fence` four times, so that it creates an enclosed space.
+Now that we have our Fence assembly ready to go, we can build a higher level assemblies which reuses existing the `Fence` assembly. One typical thing we could do is instantiate a `Fence` four times, so that it creates an enclosed space.
 
 The code for this doesn't introduce anything beyond what we've already learned. Let's first setup a new assembly at the bottom of our script.
 Inside the assembly, lets create `width` and `depth` properties, so we can define a rectangular area. Let's also add a `color` and `height` property that we can passthrough to our `Fence` assembly.
