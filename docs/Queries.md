@@ -1407,7 +1407,7 @@ The `AndFrom`, `OrFrom` and `NotFrom` operators are especially useful when combi
 
 Component lists can be organized recursively by adding an id to an entity with the `AND` and `OR` id flags.
 
-Fields for terms that use the `AndFrom`, `OrFrom` or `NotFrom` operators never provide data. Access modifiers for these operators default to `InOutNone`. When a the `AndFrom`, `OrFrom` or `NotFrom` operator is combined with an access modifier other than `InOutDefault` or `InOutNone` query creation will fail.
+Fields for terms that use the `AndFrom`, `OrFrom` or `NotFrom` operators never provide data. Access modifiers for these operators default to `InOutNone`. When a `AndFrom`, `OrFrom` or `NotFrom` operator is combined with an access modifier other than `InOutDefault` or `InOutNone` query creation will fail.
 
 The following sections show how to use the operators in the different language bindings. The code examples use filter queries, but also apply to queries and rules.
 
