@@ -25,6 +25,7 @@ const char* flecs_rule_op_str(
     case EcsRuleAnd:           return "and     ";
     case EcsRuleAndId:         return "and_id  ";
     case EcsRuleAndAny:        return "and_any ";
+    case EcsRuleAndExclusive:  return "and_ex  ";
     case EcsRuleSelectAny:     return "any     ";
     case EcsRuleUp:            return "up      ";
     case EcsRuleSelfUp:        return "selfup  ";

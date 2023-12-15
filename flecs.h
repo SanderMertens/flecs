@@ -378,6 +378,8 @@ extern "C" {
 #define EcsIterTrivialSearch           (1u << 12u) /* Trivial iterator mode */
 #define EcsIterTrivialSearchNoData     (1u << 13u) /* Trivial iterator w/no data */
 #define EcsIterTrivialTest             (1u << 14u) /* Trivial test mode (constrained $this) */
+#define EcsIterTrivialSearchWildcard   (1u << 15u) /* Trivial search with wildcard ids */
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Event flags (used by ecs_event_decs_t::flags)
 ////////////////////////////////////////////////////////////////////////////////
@@ -404,6 +406,7 @@ extern "C" {
 #define EcsFilterHasScopes             (1u << 13u) /* Filter has query scopes */
 #define EcsFilterIsTrivial             (1u << 14u) /* Trivial filter */
 #define EcsFilterMatchOnlySelf         (1u << 15u) /* Filter has no up traversal */
+#define EcsFilterHasWildcards          (1u << 16u) /* Filter has no up traversal */
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Table flags (used by ecs_table_t::flags)

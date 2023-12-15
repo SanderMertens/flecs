@@ -40,6 +40,7 @@ typedef enum {
     EcsRuleAnd,            /* And operator: find or match id against variable source */
     EcsRuleAndId,          /* And operator for fixed id (no wildcards/variables) */
     EcsRuleAndAny,         /* And operator with support for matching Any src/id */
+    EcsRuleAndExclusive,   /* And operator for exclusive pairs (* with at most one match) */
     EcsRuleSelectAny,      /* Dedicated instruction for _ queries where the src is unknown */
     EcsRuleUp,             /* up traversal */
     EcsRuleSelfUp,         /* self|up traversal */
@@ -393,6 +394,12 @@ bool flecs_rule_trivial_search(
 
 /* Iterator for trivial queries. */
 bool flecs_rule_trivial_search_nodata(
+    const ecs_rule_t *rule,
+    ecs_rule_run_ctx_t *ctx,
+    bool first);
+
+/* Iterator for trivial queries with wildcard matching. */
+bool flecs_rule_trivial_search_w_wildcards(
     const ecs_rule_t *rule,
     ecs_rule_run_ctx_t *ctx,
     bool first);

@@ -10928,6 +10928,10 @@ int ecs_filter_finalize(
 
         term->field_index = field_count - 1;
 
+        if (ecs_id_is_wildcard(term->id)) {
+            f->flags |= EcsFilterHasWildcards;
+        }
+
         if (ecs_term_match_this(term)) {
             ECS_BIT_SET(f->flags, EcsFilterMatchThis);
         } else {
@@ -11101,25 +11105,36 @@ int ecs_filter_finalize(
 
             for (i = 0; i < term_count; i ++) {
                 ecs_term_t *term = &terms[i];
+                ecs_term_id_t *first = &term->first;
+                ecs_term_id_t *second = &term->second;
+                ecs_term_id_t *src = &term->src;
                 if (term->oper != EcsAnd) {
                     break;
                 }
                 if (ecs_id_is_wildcard(term->id)) {
+                    if (!(term->idr && term->idr->flags & EcsIdExclusive)) {
+                        break;
+                    }
+                    if ((first->name && (first->flags & EcsIsVariable)) ||
+                        (second->name && (second->flags & EcsIsVariable))) 
+                    {
+                        break;
+                    }
+                }
+
+                if (src->trav && src->trav != EcsIsA) {
                     break;
                 }
-                if (term->src.trav && term->src.trav != EcsIsA) {
+                if (first->trav && first->trav != EcsIsA) {
                     break;
                 }
-                if (term->first.trav && term->first.trav != EcsIsA) {
+                if (second->trav && second->trav != EcsIsA) {
                     break;
                 }
-                if (term->second.trav && term->second.trav != EcsIsA) {
+                if (!(src->flags & EcsSelf)) {
                     break;
                 }
-                if (!(term->src.flags & EcsSelf)) {
-                    break;
-                }
-                if (term->src.flags & EcsUp) {
+                if (src->flags & EcsUp) {
                     ECS_BIT_CLEAR(f->flags, EcsFilterMatchOnlySelf);
                 }
                 if (!(f->flags & EcsFilterNoData)) {
@@ -60004,6 +60019,7 @@ typedef enum {
     EcsRuleAnd,            /* And operator: find or match id against variable source */
     EcsRuleAndId,          /* And operator for fixed id (no wildcards/variables) */
     EcsRuleAndAny,         /* And operator with support for matching Any src/id */
+    EcsRuleAndExclusive,   /* And operator for exclusive pairs (* with at most one match) */
     EcsRuleSelectAny,      /* Dedicated instruction for _ queries where the src is unknown */
     EcsRuleUp,             /* up traversal */
     EcsRuleSelfUp,         /* self|up traversal */
@@ -60361,6 +60377,12 @@ bool flecs_rule_trivial_search_nodata(
     ecs_rule_run_ctx_t *ctx,
     bool first);
 
+/* Iterator for trivial queries with wildcard matching. */
+bool flecs_rule_trivial_search_w_wildcards(
+    const ecs_rule_t *rule,
+    ecs_rule_run_ctx_t *ctx,
+    bool first);
+
 /* Trivial test for constrained $this. */
 bool flecs_rule_trivial_test(
     const ecs_rule_t *rule,
@@ -60390,6 +60412,7 @@ const char* flecs_rule_op_str(
     case EcsRuleAnd:           return "and     ";
     case EcsRuleAndId:         return "and_id  ";
     case EcsRuleAndAny:        return "and_any ";
+    case EcsRuleAndExclusive:  return "and_ex  ";
     case EcsRuleSelectAny:     return "any     ";
     case EcsRuleUp:            return "up      ";
     case EcsRuleSelfUp:        return "selfup  ";
@@ -65034,7 +65057,9 @@ void flecs_rule_iter_init(
                     it->flags |= EcsIterTrivialTest;
                 }                    
             } else {
-                if (flags & EcsFilterNoData) {
+                if (flags & EcsFilterHasWildcards) {
+                    it->flags |= EcsIterTrivialSearchWildcard;
+                } else if (flags & EcsFilterNoData) {
                     it->flags |= EcsIterTrivialSearchNoData;
                 } else {
                     it->flags |= EcsIterTrivialSearch;
@@ -65084,6 +65109,11 @@ bool ecs_rule_next_instanced(
         return true;
     } else if (it->flags & EcsIterTrivialTest) {
         if (!flecs_rule_trivial_test(ctx.rule, &ctx, !redo)) {
+            goto done;
+        }
+        return true;
+    } else if (it->flags & EcsIterTrivialSearchWildcard) {
+        if (!flecs_rule_trivial_search_w_wildcards(ctx.rule, &ctx, !redo)) {
             goto done;
         }
         return true;
@@ -66027,6 +66057,25 @@ bool flecs_rule_trivial_search(
     } while (true);
 
     return true;
+}
+
+bool flecs_rule_trivial_search_w_wildcards(
+    const ecs_rule_t *rule,
+    ecs_rule_run_ctx_t *ctx,
+    bool first)
+{
+    bool result = flecs_rule_trivial_search(rule, ctx, first);
+    if (result) {
+        const ecs_filter_t *filter = &rule->filter;
+        int32_t t, count = filter->term_count;
+        ecs_iter_t *it = ctx->it;
+        ecs_table_t *table = it->table;
+        for (t = 0; t < count; t ++) {
+            it->ids[t] = table->type.array[it->columns[t] - 1];
+        }
+    }
+
+    return result;
 }
 
 bool flecs_rule_trivial_search_nodata(

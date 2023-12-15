@@ -2280,7 +2280,9 @@ void flecs_rule_iter_init(
                     it->flags |= EcsIterTrivialTest;
                 }                    
             } else {
-                if (flags & EcsFilterNoData) {
+                if (flags & EcsFilterHasWildcards) {
+                    it->flags |= EcsIterTrivialSearchWildcard;
+                } else if (flags & EcsFilterNoData) {
                     it->flags |= EcsIterTrivialSearchNoData;
                 } else {
                     it->flags |= EcsIterTrivialSearch;
@@ -2330,6 +2332,11 @@ bool ecs_rule_next_instanced(
         return true;
     } else if (it->flags & EcsIterTrivialTest) {
         if (!flecs_rule_trivial_test(ctx.rule, &ctx, !redo)) {
+            goto done;
+        }
+        return true;
+    } else if (it->flags & EcsIterTrivialSearchWildcard) {
+        if (!flecs_rule_trivial_search_w_wildcards(ctx.rule, &ctx, !redo)) {
             goto done;
         }
         return true;

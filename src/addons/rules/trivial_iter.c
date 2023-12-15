@@ -167,6 +167,25 @@ bool flecs_rule_trivial_search(
     return true;
 }
 
+bool flecs_rule_trivial_search_w_wildcards(
+    const ecs_rule_t *rule,
+    ecs_rule_run_ctx_t *ctx,
+    bool first)
+{
+    bool result = flecs_rule_trivial_search(rule, ctx, first);
+    if (result) {
+        const ecs_filter_t *filter = &rule->filter;
+        int32_t t, count = filter->term_count;
+        ecs_iter_t *it = ctx->it;
+        ecs_table_t *table = it->table;
+        for (t = 0; t < count; t ++) {
+            it->ids[t] = table->type.array[it->columns[t] - 1];
+        }
+    }
+
+    return result;
+}
+
 bool flecs_rule_trivial_search_nodata(
     const ecs_rule_t *rule,
     ecs_rule_run_ctx_t *ctx,

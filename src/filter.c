@@ -1153,6 +1153,10 @@ int ecs_filter_finalize(
 
         term->field_index = field_count - 1;
 
+        if (ecs_id_is_wildcard(term->id)) {
+            f->flags |= EcsFilterHasWildcards;
+        }
+
         if (ecs_term_match_this(term)) {
             ECS_BIT_SET(f->flags, EcsFilterMatchThis);
         } else {
@@ -1326,25 +1330,36 @@ int ecs_filter_finalize(
 
             for (i = 0; i < term_count; i ++) {
                 ecs_term_t *term = &terms[i];
+                ecs_term_id_t *first = &term->first;
+                ecs_term_id_t *second = &term->second;
+                ecs_term_id_t *src = &term->src;
                 if (term->oper != EcsAnd) {
                     break;
                 }
                 if (ecs_id_is_wildcard(term->id)) {
+                    if (!(term->idr && term->idr->flags & EcsIdExclusive)) {
+                        break;
+                    }
+                    if ((first->name && (first->flags & EcsIsVariable)) ||
+                        (second->name && (second->flags & EcsIsVariable))) 
+                    {
+                        break;
+                    }
+                }
+
+                if (src->trav && src->trav != EcsIsA) {
                     break;
                 }
-                if (term->src.trav && term->src.trav != EcsIsA) {
+                if (first->trav && first->trav != EcsIsA) {
                     break;
                 }
-                if (term->first.trav && term->first.trav != EcsIsA) {
+                if (second->trav && second->trav != EcsIsA) {
                     break;
                 }
-                if (term->second.trav && term->second.trav != EcsIsA) {
+                if (!(src->flags & EcsSelf)) {
                     break;
                 }
-                if (!(term->src.flags & EcsSelf)) {
-                    break;
-                }
-                if (term->src.flags & EcsUp) {
+                if (src->flags & EcsUp) {
                     ECS_BIT_CLEAR(f->flags, EcsFilterMatchOnlySelf);
                 }
                 if (!(f->flags & EcsFilterNoData)) {
