@@ -1420,6 +1420,10 @@ int flecs_rule_compile_term(
     if (flecs_rule_term_fixed_id(filter, term)) {
         if (op.kind == EcsRuleAnd) {
             op.kind = EcsRuleAndId;
+        } else if (op.kind == EcsRuleSelfUp) {
+            op.kind = EcsRuleSelfUpId;
+        } else if (op.kind == EcsRuleUp) {
+            op.kind = EcsRuleUpId;
         }
     }
 

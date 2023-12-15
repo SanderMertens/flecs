@@ -45,7 +45,9 @@ typedef enum {
     EcsRuleTrivWildcard,   /* Trivial search with (exclusive) wildcard ids */
     EcsRuleSelectAny,      /* Dedicated instruction for _ queries where the src is unknown */
     EcsRuleUp,             /* Up traversal */
+    EcsRuleUpId,           /* Up traversal for fixed id (like AndId) */
     EcsRuleSelfUp,         /* Self|up traversal */
+    EcsRuleSelfUpId,       /* Self|up traversal for fixed id (like AndId) */
     EcsRuleWith,           /* Match id against fixed or variable source */
     EcsRuleTrav,           /* Support for transitive/reflexive queries */
     EcsRuleIdsRight,       /* Find ids in use that match (R, *) wildcard */

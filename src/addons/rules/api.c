@@ -30,7 +30,9 @@ const char* flecs_rule_op_str(
     case EcsRuleTrivWildcard:  return "trivwc  ";
     case EcsRuleSelectAny:     return "any     ";
     case EcsRuleUp:            return "up      ";
+    case EcsRuleUpId:          return "upid    ";
     case EcsRuleSelfUp:        return "selfup  ";
+    case EcsRuleSelfUpId:      return "selfupid";
     case EcsRuleWith:          return "with    ";
     case EcsRuleTrav:          return "trav    ";
     case EcsRuleIdsRight:      return "idsr    ";

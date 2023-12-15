@@ -550,7 +550,8 @@ static
 bool flecs_rule_select_id(
     const ecs_rule_op_t *op,
     bool redo,
-    const ecs_rule_run_ctx_t *ctx)
+    const ecs_rule_run_ctx_t *ctx,
+    ecs_flags32_t table_filter)
 {
     ecs_rule_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and);
     ecs_iter_t *it = ctx->it;
@@ -586,9 +587,7 @@ repeat: {}
     }
 
     ecs_table_t *table = tr->hdr.table;
-    if (flecs_rule_table_filter(table, op->other, 
-        (EcsTableIsPrefab|EcsTableIsDisabled))) 
-    {
+    if (flecs_rule_table_filter(table, op->other, table_filter)) {
         goto repeat;
     }
 
@@ -645,7 +644,8 @@ bool flecs_rule_and_id(
     if (written & (1ull << op->src.var)) {
         return flecs_rule_with_id(op, redo, ctx);
     } else {
-        return flecs_rule_select_id(op, redo, ctx);
+        return flecs_rule_select_id(op, redo, ctx, 
+            (EcsTableIsPrefab|EcsTableIsDisabled));
     }
 }
 
@@ -654,27 +654,37 @@ bool flecs_rule_up_select(
     const ecs_rule_op_t *op,
     bool redo,
     const ecs_rule_run_ctx_t *ctx,
-    bool self)
+    bool self,
+    bool id_only)
 {
     ecs_rule_up_ctx_t *op_ctx = flecs_op_ctx(ctx, up);
     ecs_world_t *world = ctx->world;
     ecs_iter_t *it = ctx->it;
     bool redo_select = redo;
+    const ecs_filter_t *filter = &ctx->rule->filter;
+
+    /* Early out if traversal relationship doesn't exist */
+    op_ctx->trav = filter->terms[op->term_index].src.trav;
+    if (!op_ctx->idr_trav) {
+        op_ctx->idr_trav = flecs_id_record_get(ctx->world, 
+            ecs_pair(op_ctx->trav, EcsWildcard));
+    }
+    if (!op_ctx->idr_trav || !flecs_table_cache_count(&op_ctx->idr_trav->cache)){
+        if (!self) {
+            return false;
+        } else if (id_only) {
+            return flecs_rule_select_id(op, redo, ctx,
+                (EcsTableIsPrefab|EcsTableIsDisabled));
+        } else {
+            return flecs_rule_select(op, redo, ctx);
+        }
+    }
 
     if (!redo) {
-        const ecs_filter_t *filter = &ctx->rule->filter;
-        op_ctx->trav = filter->terms[op->term_index].src.trav;
         op_ctx->with = flecs_rule_op_get_id(op, ctx);
         op_ctx->idr_with = flecs_id_record_get(ctx->world, op_ctx->with);
         if (!op_ctx->idr_with) {
             return false;
-        }
-
-        if (!self) {
-            op_ctx->idr_trav = flecs_id_record_get(ctx->world, op_ctx->trav);
-            if (!op_ctx->idr_trav) {
-                return false;
-            }
         }
 
         op_ctx->down = NULL;
@@ -690,9 +700,14 @@ bool flecs_rule_up_select(
                 ecs_table_range_t range;
                 it->sources[op->field_index] = 0;
                 do {
-                    if (!flecs_rule_select_w_id(op, redo_select, ctx, 
-                        op_ctx->with, 0))
-                    {
+                    bool result;
+                    if (id_only) {
+                        result = flecs_rule_select_id(op, redo_select, ctx, 0);
+                    } else {
+                        result = flecs_rule_select_w_id(op, redo_select, ctx, 
+                            op_ctx->with, 0);
+                    }
+                    if (!result) {
                         return false;
                     }
 
@@ -794,22 +809,26 @@ bool flecs_rule_up_with(
     bool redo,
     const ecs_rule_run_ctx_t *ctx)
 {
+    const ecs_filter_t *filter = &ctx->rule->filter;
     ecs_rule_up_ctx_t *op_ctx = flecs_op_ctx(ctx, up);
     ecs_iter_t *it = ctx->it;
 
+    /* Early out if traversal relationship doesn't exist */
+    op_ctx->trav = filter->terms[op->term_index].src.trav;
+    if (!op_ctx->idr_trav) {
+        op_ctx->idr_trav = flecs_id_record_get(ctx->world, 
+            ecs_pair(op_ctx->trav, EcsWildcard));
+    }
+    if (!op_ctx->idr_trav || !flecs_table_cache_count(&op_ctx->idr_trav->cache)){
+        return false;
+    }
+
     if (!redo) {
-        const ecs_filter_t *filter = &ctx->rule->filter;
         op_ctx->trav = filter->terms[op->term_index].src.trav;
         op_ctx->with = flecs_rule_op_get_id(op, ctx);
         op_ctx->idr_with = flecs_id_record_get(ctx->world, op_ctx->with);
 
         if (!op_ctx->idr_with) {
-            return false;
-        }
-
-        op_ctx->idr_trav = flecs_id_record_get(ctx->world, 
-            ecs_pair(op_ctx->trav, EcsWildcard));
-        if (!op_ctx->idr_trav) {
             return false;
         }
 
@@ -843,10 +862,17 @@ static
 bool flecs_rule_self_up_with(
     const ecs_rule_op_t *op,
     bool redo,
-    const ecs_rule_run_ctx_t *ctx)
+    const ecs_rule_run_ctx_t *ctx,
+    bool id_only)
 {
     if (!redo) {
-        if (flecs_rule_with(op, redo, ctx)) {
+        bool result;
+        if (id_only) {
+            result = flecs_rule_with_id(op, redo, ctx);
+        } else {
+            result = flecs_rule_with(op, redo, ctx);
+        }
+        if (result) {
             ecs_rule_up_ctx_t *op_ctx = flecs_op_ctx(ctx, up);
             op_ctx->trav = 0;
             if (flecs_rule_ref_flags(op->flags, EcsRuleSrc) & EcsRuleIsVar) {
@@ -883,7 +909,7 @@ bool flecs_rule_up(
     if (flecs_ref_is_written(op, &op->src, EcsRuleSrc, written)) {
         return flecs_rule_up_with(op, redo, ctx);
     } else {
-        return flecs_rule_up_select(op, redo, ctx, false);
+        return flecs_rule_up_select(op, redo, ctx, false, false);
     }
 }
 
@@ -895,9 +921,37 @@ bool flecs_rule_self_up(
 {
     uint64_t written = ctx->written[ctx->op_index];
     if (flecs_ref_is_written(op, &op->src, EcsRuleSrc, written)) {
-        return flecs_rule_self_up_with(op, redo, ctx);
+        return flecs_rule_self_up_with(op, redo, ctx, false);
     } else {
-        return flecs_rule_up_select(op, redo, ctx, true);
+        return flecs_rule_up_select(op, redo, ctx, true, false);
+    }
+}
+
+static
+bool flecs_rule_up_id(
+    const ecs_rule_op_t *op,
+    bool redo,
+    const ecs_rule_run_ctx_t *ctx)
+{
+    uint64_t written = ctx->written[ctx->op_index];
+    if (flecs_ref_is_written(op, &op->src, EcsRuleSrc, written)) {
+        return flecs_rule_up_with(op, redo, ctx);
+    } else {
+        return flecs_rule_up_select(op, redo, ctx, false, true);
+    }
+}
+
+static
+bool flecs_rule_self_up_id(
+    const ecs_rule_op_t *op,
+    bool redo,
+    const ecs_rule_run_ctx_t *ctx)
+{
+    uint64_t written = ctx->written[ctx->op_index];
+    if (flecs_ref_is_written(op, &op->src, EcsRuleSrc, written)) {
+        return flecs_rule_self_up_with(op, redo, ctx, true);
+    } else {
+        return flecs_rule_up_select(op, redo, ctx, true, true);
     }
 }
 
@@ -2264,7 +2318,9 @@ bool flecs_rule_dispatch(
     case EcsRuleTrivWildcard: return flecs_rule_triv_wildcard(op, redo, ctx);
     case EcsRuleSelectAny: return flecs_rule_select_any(op, redo, ctx);
     case EcsRuleUp: return flecs_rule_up(op, redo, ctx);
+    case EcsRuleUpId: return flecs_rule_up_id(op, redo, ctx);
     case EcsRuleSelfUp: return flecs_rule_self_up(op, redo, ctx);
+    case EcsRuleSelfUpId: return flecs_rule_self_up_id(op, redo, ctx);
     case EcsRuleWith: return flecs_rule_with(op, redo, ctx);
     case EcsRuleTrav: return flecs_rule_trav(op, redo, ctx);
     case EcsRuleIdsRight: return flecs_rule_idsright(op, redo, ctx);
