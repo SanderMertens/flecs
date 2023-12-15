@@ -714,14 +714,14 @@ int flecs_term_finalize(
     if (term->oper == EcsNot && term->id == ecs_pair(EcsChildOf, EcsAny)) {
         term->oper = EcsAnd;
         term->id = ecs_pair(EcsChildOf, 0);
-        term->second.id = 0;
-        term->second.flags |= EcsIsEntity;
-        term->second.flags &= ~EcsIsVariable;
+        second->id = 0;
+        second->flags |= EcsIsEntity;
+        second->flags &= ~EcsIsVariable;
     }
 
     ecs_entity_t first_id = 0;
-    if (term->first.flags & EcsIsEntity) {
-        first_id = term->first.id;
+    if (first->flags & EcsIsEntity) {
+        first_id = first->id;
     }
 
     term->idr = flecs_query_id_record_get(world, term->id);
@@ -835,6 +835,42 @@ int flecs_term_finalize(
                 "invalid inout value for AndFrom/OrFrom/NotFrom term");
             return -1;
         }
+    }
+
+    /* Is term trivial */
+    bool trivial_term = true;
+    if (term->oper != EcsAnd) {
+        trivial_term = false;
+    }
+    if (ecs_id_is_wildcard(term->id)) {
+        if (!(term->idr && term->idr->flags & EcsIdExclusive)) {
+            trivial_term = false;
+        }
+        if (first->flags & EcsIsVariable) {
+            if (!ecs_id_is_wildcard(first->id) || first->id == EcsAny) {
+                trivial_term = false;
+            }
+        }
+        if (second->flags & EcsIsVariable) {
+            if (!ecs_id_is_wildcard(second->id) || second->id == EcsAny) {
+                trivial_term = false;
+            }
+        }
+    }
+    if (src->trav && src->trav != EcsIsA) {
+        trivial_term = false;
+    }
+    if (first->trav && first->trav != EcsIsA) {
+        trivial_term = false;
+    }
+    if (second->trav && second->trav != EcsIsA) {
+        trivial_term = false;
+    }
+    if (!(src->flags & EcsSelf)) {
+        trivial_term = false;
+    }
+    if (trivial_term) {
+        ECS_BIT_SET(term->flags, EcsTermIsTrivial);
     }
 
     if (flecs_term_verify(world, term, ctx)) {
@@ -1195,13 +1231,21 @@ int ecs_filter_finalize(
             if (!term->idr->type_info && !(term->idr->flags & EcsIdUnion)) {
                 filter_term = true;
             }
-        } else if (ecs_id_is_tag(world, term->id)) {
-            if (!ecs_id_is_union(world, term->id)) {
-                /* Union ids aren't filters because they return their target
-                 * as component value with type ecs_entity_t */
+        } else if (!ecs_id_is_union(world, term->id)) {
+            /* Union ids aren't filters because they return their target
+             * as component value with type ecs_entity_t */
+            if (ecs_id_is_tag(world, term->id)) {
                 filter_term = true;
+            } else if (ECS_PAIR_SECOND(term->id) == EcsWildcard) {
+                /* If the second element of a pair is a wildcard and the first
+                 * element is not a type, we can't know in advance what the
+                 * type of the term is, so it can't provide data. */
+                if (!ecs_get_type_info(world, ecs_pair_first(world, term->id))) {
+                    filter_term = true;
+                }
             }
         }
+    
         if (!filter_term) {
             if (term->oper == EcsOr || (i && term[-1].oper == EcsOr)) {
                 ecs_term_t *first = flecs_filter_or_other_type(f, i);
@@ -1216,6 +1260,7 @@ int ecs_filter_finalize(
 
         if (filter_term) {
             filter_terms ++;
+            term->flags |= EcsTermNoData;
         }
 
         if (term->oper != EcsNot || !ecs_term_match_this(term)) {
@@ -1330,38 +1375,16 @@ int ecs_filter_finalize(
 
             for (i = 0; i < term_count; i ++) {
                 ecs_term_t *term = &terms[i];
-                ecs_term_id_t *first = &term->first;
-                ecs_term_id_t *second = &term->second;
                 ecs_term_id_t *src = &term->src;
-                if (term->oper != EcsAnd) {
-                    break;
-                }
-                if (ecs_id_is_wildcard(term->id)) {
-                    if (!(term->idr && term->idr->flags & EcsIdExclusive)) {
-                        break;
-                    }
-                    if ((first->name && (first->flags & EcsIsVariable)) ||
-                        (second->name && (second->flags & EcsIsVariable))) 
-                    {
-                        break;
-                    }
-                }
 
-                if (src->trav && src->trav != EcsIsA) {
-                    break;
-                }
-                if (first->trav && first->trav != EcsIsA) {
-                    break;
-                }
-                if (second->trav && second->trav != EcsIsA) {
-                    break;
-                }
-                if (!(src->flags & EcsSelf)) {
-                    break;
-                }
                 if (src->flags & EcsUp) {
                     ECS_BIT_CLEAR(f->flags, EcsFilterMatchOnlySelf);
                 }
+
+                if (!(term->flags & EcsTermIsTrivial)) {
+                    break;
+                }
+
                 if (!(f->flags & EcsFilterNoData)) {
                     if (term->inout == EcsInOutNone) {
                         break;

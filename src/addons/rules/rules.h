@@ -40,10 +40,12 @@ typedef enum {
     EcsRuleAnd,            /* And operator: find or match id against variable source */
     EcsRuleAndId,          /* And operator for fixed id (no wildcards/variables) */
     EcsRuleAndAny,         /* And operator with support for matching Any src/id */
-    EcsRuleAndExclusive,   /* And operator for exclusive pairs (* with at most one match) */
+    EcsRuleTriv,           /* Trivial search */
+    EcsRuleTrivData,       /* Trivial search with setting data fields */
+    EcsRuleTrivWildcard,   /* Trivial search with (exclusive) wildcard ids */
     EcsRuleSelectAny,      /* Dedicated instruction for _ queries where the src is unknown */
-    EcsRuleUp,             /* up traversal */
-    EcsRuleSelfUp,         /* self|up traversal */
+    EcsRuleUp,             /* Up traversal */
+    EcsRuleSelfUp,         /* Self|up traversal */
     EcsRuleWith,           /* Match id against fixed or variable source */
     EcsRuleTrav,           /* Support for transitive/reflexive queries */
     EcsRuleIdsRight,       /* Find ids in use that match (R, *) wildcard */
@@ -54,8 +56,8 @@ typedef enum {
     EcsRuleOr,             /* Or operator */
     EcsRuleOptional,       /* Optional operator */
     EcsRuleIf,             /* Conditional execution */
-    EcsRuleEnd,            /* Used to denote end of EcsRuleOr block */
     EcsRuleNot,            /* Sets iterator state after term was not matched */
+    EcsRuleEnd,            /* End of control flow block */
     EcsRulePredEq,         /* Test if variable is equal to, or assign to if not set */
     EcsRulePredNeq,        /* Test if variable is not equal to */
     EcsRulePredEqName,     /* Same as EcsRulePredEq but with matching by name */
@@ -70,6 +72,8 @@ typedef enum {
     EcsRuleSetId,          /* Set id if not set */
     EcsRuleContain,        /* Test if table contains entity */
     EcsRulePairEq,         /* Test if both elements of pair are the same */
+    EcsRulePopulate,       /* Populate any data fields */
+    EcsRulePopulateSelf,   /* Populate only self (owned) data fields */
     EcsRuleYield,          /* Yield result back to application */
     EcsRuleNothing         /* Must be last */
 } ecs_rule_op_kind_t;
@@ -389,25 +393,31 @@ const char* flecs_rule_op_str(
 /* Iterator for trivial queries. */
 bool flecs_rule_trivial_search(
     const ecs_rule_t *rule,
-    ecs_rule_run_ctx_t *ctx,
-    bool first);
+    const ecs_rule_run_ctx_t *ctx,
+    ecs_rule_trivial_ctx_t *op_ctx,
+    bool first,
+    int32_t until);
 
 /* Iterator for trivial queries. */
 bool flecs_rule_trivial_search_nodata(
     const ecs_rule_t *rule,
-    ecs_rule_run_ctx_t *ctx,
-    bool first);
+    const ecs_rule_run_ctx_t *ctx,
+    ecs_rule_trivial_ctx_t *op_ctx,
+    bool first,
+    int32_t until);
 
 /* Iterator for trivial queries with wildcard matching. */
 bool flecs_rule_trivial_search_w_wildcards(
     const ecs_rule_t *rule,
-    ecs_rule_run_ctx_t *ctx,
-    bool first);
+    const ecs_rule_run_ctx_t *ctx,
+    ecs_rule_trivial_ctx_t *op_ctx,
+    bool first,
+    int32_t until);
 
 /* Trivial test for constrained $this. */
 bool flecs_rule_trivial_test(
     const ecs_rule_t *rule,
-    ecs_rule_run_ctx_t *ctx,
+    const ecs_rule_run_ctx_t *ctx,
     bool first);
 
 #endif

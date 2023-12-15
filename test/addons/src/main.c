@@ -783,6 +783,18 @@ void RulesBasic_unknown_before_known_after_optional(void);
 void RulesBasic_unknown_before_known_after_scope(void);
 void RulesBasic_reordered_plan_1(void);
 void RulesBasic_reordered_plan_2(void);
+void RulesBasic_1_trivial_plan(void);
+void RulesBasic_2_trivial_plan(void);
+void RulesBasic_1_trivial_plan_component(void);
+void RulesBasic_2_trivial_plan_component(void);
+void RulesBasic_3_trivial_plan_w_pair(void);
+void RulesBasic_3_trivial_plan_w_wildcard(void);
+void RulesBasic_3_trivial_plan_w_any(void);
+void RulesBasic_3_trivial_plan_w_pair_component(void);
+void RulesBasic_3_trivial_plan_w_wildcard_component(void);
+void RulesBasic_3_trivial_plan_w_any_component(void);
+void RulesBasic_1_trivial_component_w_none(void);
+void RulesBasic_2_trivial_component_w_none(void);
 
 // Testsuite 'RulesVariables'
 void RulesVariables_1_ent_src_w_var(void);
@@ -922,6 +934,18 @@ void RulesVariables_check_vars_wildcard_as_tgt(void);
 void RulesVariables_check_vars_any_as_tgt(void);
 void RulesVariables_check_vars_this_w_lookup_var(void);
 void RulesVariables_check_vars_var_w_lookup_var(void);
+void RulesVariables_1_trivial_1_var(void);
+void RulesVariables_2_trivial_1_var(void);
+void RulesVariables_1_trivial_1_var_component(void);
+void RulesVariables_2_trivial_1_var_component(void);
+void RulesVariables_1_trivial_1_wildcard(void);
+void RulesVariables_2_trivial_1_wildcard(void);
+void RulesVariables_1_trivial_1_wildcard_component(void);
+void RulesVariables_2_trivial_1_wildcard_component(void);
+void RulesVariables_1_trivial_1_any(void);
+void RulesVariables_2_trivial_1_any(void);
+void RulesVariables_1_trivial_1_any_component(void);
+void RulesVariables_2_trivial_1_any_component(void);
 
 // Testsuite 'RulesOperators'
 void RulesOperators_2_and_not(void);
@@ -4830,6 +4854,54 @@ bake_test_case RulesBasic_testcases[] = {
     {
         "reordered_plan_2",
         RulesBasic_reordered_plan_2
+    },
+    {
+        "1_trivial_plan",
+        RulesBasic_1_trivial_plan
+    },
+    {
+        "2_trivial_plan",
+        RulesBasic_2_trivial_plan
+    },
+    {
+        "1_trivial_plan_component",
+        RulesBasic_1_trivial_plan_component
+    },
+    {
+        "2_trivial_plan_component",
+        RulesBasic_2_trivial_plan_component
+    },
+    {
+        "3_trivial_plan_w_pair",
+        RulesBasic_3_trivial_plan_w_pair
+    },
+    {
+        "3_trivial_plan_w_wildcard",
+        RulesBasic_3_trivial_plan_w_wildcard
+    },
+    {
+        "3_trivial_plan_w_any",
+        RulesBasic_3_trivial_plan_w_any
+    },
+    {
+        "3_trivial_plan_w_pair_component",
+        RulesBasic_3_trivial_plan_w_pair_component
+    },
+    {
+        "3_trivial_plan_w_wildcard_component",
+        RulesBasic_3_trivial_plan_w_wildcard_component
+    },
+    {
+        "3_trivial_plan_w_any_component",
+        RulesBasic_3_trivial_plan_w_any_component
+    },
+    {
+        "1_trivial_component_w_none",
+        RulesBasic_1_trivial_component_w_none
+    },
+    {
+        "2_trivial_component_w_none",
+        RulesBasic_2_trivial_component_w_none
     }
 };
 
@@ -5381,6 +5453,54 @@ bake_test_case RulesVariables_testcases[] = {
     {
         "check_vars_var_w_lookup_var",
         RulesVariables_check_vars_var_w_lookup_var
+    },
+    {
+        "1_trivial_1_var",
+        RulesVariables_1_trivial_1_var
+    },
+    {
+        "2_trivial_1_var",
+        RulesVariables_2_trivial_1_var
+    },
+    {
+        "1_trivial_1_var_component",
+        RulesVariables_1_trivial_1_var_component
+    },
+    {
+        "2_trivial_1_var_component",
+        RulesVariables_2_trivial_1_var_component
+    },
+    {
+        "1_trivial_1_wildcard",
+        RulesVariables_1_trivial_1_wildcard
+    },
+    {
+        "2_trivial_1_wildcard",
+        RulesVariables_2_trivial_1_wildcard
+    },
+    {
+        "1_trivial_1_wildcard_component",
+        RulesVariables_1_trivial_1_wildcard_component
+    },
+    {
+        "2_trivial_1_wildcard_component",
+        RulesVariables_2_trivial_1_wildcard_component
+    },
+    {
+        "1_trivial_1_any",
+        RulesVariables_1_trivial_1_any
+    },
+    {
+        "2_trivial_1_any",
+        RulesVariables_2_trivial_1_any
+    },
+    {
+        "1_trivial_1_any_component",
+        RulesVariables_1_trivial_1_any_component
+    },
+    {
+        "2_trivial_1_any_component",
+        RulesVariables_2_trivial_1_any_component
     }
 };
 
@@ -8591,14 +8711,14 @@ static bake_test_suite suites[] = {
         "RulesBasic",
         NULL,
         NULL,
-        132,
+        144,
         RulesBasic_testcases
     },
     {
         "RulesVariables",
         NULL,
         NULL,
-        137,
+        149,
         RulesVariables_testcases
     },
     {

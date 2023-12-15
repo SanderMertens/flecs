@@ -690,6 +690,8 @@ typedef enum ecs_oper_kind_t {
 #define EcsTermTransitive             (1u << 4)
 #define EcsTermReflexive              (1u << 5)
 #define EcsTermIdInherited            (1u << 6)
+#define EcsTermIsTrivial              (1u << 7)
+#define EcsTermNoData                 (1u << 8)
 
 /* Term flags used for term iteration */
 #define EcsTermMatchDisabled          (1u << 7)

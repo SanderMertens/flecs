@@ -7895,3 +7895,430 @@ void RulesVariables_check_vars_any_as_tgt(void) {
 
     ecs_fini(world);
 }
+
+void RulesVariables_1_trivial_1_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Foo(self), ChildOf($this, $x)"
+    });
+
+    test_assert(r != NULL);
+
+    int x_var = ecs_rule_find_var(r, "x");
+    test_assert(x_var != -1);
+
+    ecs_entity_t p = ecs_new_id(world);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p);
+    ecs_add(world, e, Foo);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(ecs_pair(EcsChildOf, p), ecs_field_id(&it, 2));
+    test_uint(p, ecs_iter_get_var(&it, x_var));
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_2_trivial_1_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Foo(self), Bar(self), ChildOf($this, $x)"
+    });
+
+    test_assert(r != NULL);
+
+    int x_var = ecs_rule_find_var(r, "x");
+    test_assert(x_var != -1);
+
+    ecs_entity_t p = ecs_new_id(world);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p);
+    ecs_add(world, e, Foo);
+    ecs_add(world, e, Bar);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(Bar, ecs_field_id(&it, 2));
+    test_uint(ecs_pair(EcsChildOf, p), ecs_field_id(&it, 3));
+    test_uint(p, ecs_iter_get_var(&it, x_var));
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_1_trivial_1_var_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Position(self), ChildOf($this, $x)"
+    });
+
+    test_assert(r != NULL);
+
+    int x_var = ecs_rule_find_var(r, "x");
+    test_assert(x_var != -1);
+
+    ecs_entity_t p = ecs_new_id(world);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p);
+    ecs_set(world, e, Position, {10, 20});
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_pair(EcsChildOf, p), ecs_field_id(&it, 2));
+    {
+        Position *p = ecs_field(&it, Position, 1);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+    test_uint(p, ecs_iter_get_var(&it, x_var));
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_2_trivial_1_var_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Position(self), Velocity(self), ChildOf($this, $x)"
+    });
+
+    test_assert(r != NULL);
+
+    int x_var = ecs_rule_find_var(r, "x");
+    test_assert(x_var != -1);
+
+    ecs_entity_t p = ecs_new_id(world);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p);
+    ecs_set(world, e, Position, {10, 20});
+    ecs_set(world, e, Velocity, {1, 2});
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_uint(ecs_pair(EcsChildOf, p), ecs_field_id(&it, 3));
+    {
+        Position *p = ecs_field(&it, Position, 1);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+    test_assert(ecs_field(&it, Velocity, 2) != NULL);
+    {
+        Velocity *v = ecs_field(&it, Velocity, 2);
+        test_assert(v != NULL);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+    }
+    test_uint(p, ecs_iter_get_var(&it, x_var));
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_1_trivial_1_wildcard(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Foo(self), ChildOf($this, *)"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_entity_t p = ecs_new_id(world);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p);
+    ecs_add(world, e, Foo);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(ecs_pair(EcsChildOf, p), ecs_field_id(&it, 2));
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_2_trivial_1_wildcard(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Foo(self), Bar(self), ChildOf($this, *)"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_entity_t p = ecs_new_id(world);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p);
+    ecs_add(world, e, Foo);
+    ecs_add(world, e, Bar);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(Bar, ecs_field_id(&it, 2));
+    test_uint(ecs_pair(EcsChildOf, p), ecs_field_id(&it, 3));
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_1_trivial_1_wildcard_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Position(self), ChildOf($this, *)"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_entity_t p = ecs_new_id(world);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p);
+    ecs_set(world, e, Position, {10, 20});
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_pair(EcsChildOf, p), ecs_field_id(&it, 2));
+    {
+        Position *p = ecs_field(&it, Position, 1);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_2_trivial_1_wildcard_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Position(self), Velocity(self), ChildOf($this, *)"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_entity_t p = ecs_new_id(world);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p);
+    ecs_set(world, e, Position, {10, 20});
+    ecs_set(world, e, Velocity, {1, 2});
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_uint(ecs_pair(EcsChildOf, p), ecs_field_id(&it, 3));
+    {
+        Position *p = ecs_field(&it, Position, 1);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+    test_assert(ecs_field(&it, Velocity, 2) != NULL);
+    {
+        Velocity *v = ecs_field(&it, Velocity, 2);
+        test_assert(v != NULL);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+    }
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_1_trivial_1_any(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Foo(self), ChildOf($this, _)"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_entity_t p = ecs_new_id(world);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p);
+    ecs_add(world, e, Foo);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(ecs_pair(EcsChildOf, EcsWildcard), ecs_field_id(&it, 2));
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_2_trivial_1_any(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Foo(self), Bar(self), ChildOf($this, _)"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_entity_t p = ecs_new_id(world);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p);
+    ecs_add(world, e, Foo);
+    ecs_add(world, e, Bar);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(Bar, ecs_field_id(&it, 2));
+    test_uint(ecs_pair(EcsChildOf, EcsWildcard), ecs_field_id(&it, 3));
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_1_trivial_1_any_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Position(self), ChildOf($this, _)"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_entity_t p = ecs_new_id(world);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p);
+    ecs_set(world, e, Position, {10, 20});
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_pair(EcsChildOf, EcsWildcard), ecs_field_id(&it, 2));
+    {
+        Position *p = ecs_field(&it, Position, 1);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_2_trivial_1_any_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Position(self), Velocity(self), ChildOf($this, _)"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_entity_t p = ecs_new_id(world);
+    ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p);
+    ecs_set(world, e, Position, {10, 20});
+    ecs_set(world, e, Velocity, {1, 2});
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_uint(ecs_pair(EcsChildOf, EcsWildcard), ecs_field_id(&it, 3));
+    {
+        Position *p = ecs_field(&it, Position, 1);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+    test_assert(ecs_field(&it, Velocity, 2) != NULL);
+    {
+        Velocity *v = ecs_field(&it, Velocity, 2);
+        test_assert(v != NULL);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+    }
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}

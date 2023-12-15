@@ -10,7 +10,6 @@
 static
 bool flecs_rule_trivial_init(
     ecs_world_t *world,
-    ecs_iter_t *it,
     const ecs_filter_t *filter)
 {
     int32_t t, count = filter->term_count;
@@ -18,16 +17,10 @@ bool flecs_rule_trivial_init(
 
     for (t = 0; t < count; t ++) {
         ecs_term_t *term = &terms[t];
-        it->ids[t] = term->id;
-    }
-
-    it->fini = NULL; /* Trivial queries don't need cleanup */
-
-    for (t = 0; t < count; t ++) {
-        ecs_term_t *term = &terms[t];
         if (!term->idr) {
             term->idr = flecs_id_record_get(world, term->id);
             if (!term->idr) {
+                /* Id doesn't exist, so query can't match */
                 return false;
             }
         }
@@ -38,7 +31,7 @@ bool flecs_rule_trivial_init(
 
 bool flecs_rule_trivial_test(
     const ecs_rule_t *rule,
-    ecs_rule_run_ctx_t *ctx,
+    const ecs_rule_run_ctx_t *ctx,
     bool first)
 {
     if (first) {
@@ -47,7 +40,7 @@ bool flecs_rule_trivial_test(
         ecs_term_t *terms = filter->terms;
         ecs_iter_t *it = ctx->it;
 
-        if (!flecs_rule_trivial_init(ctx->world, it, filter)) {
+        if (!flecs_rule_trivial_init(ctx->world, filter)) {
             return false;
         }
 
@@ -79,15 +72,14 @@ bool flecs_rule_trivial_test(
 
 static
 bool flecs_rule_trivial_search_init(
-    ecs_rule_run_ctx_t *ctx,
+    const ecs_rule_run_ctx_t *ctx,
     ecs_rule_trivial_ctx_t *op_ctx,
-    ecs_iter_t *it,
     const ecs_filter_t *filter,
     bool first)
 {
     if (first) {
         ecs_term_t *terms = filter->terms;
-        if (!flecs_rule_trivial_init(ctx->world, it, filter)) {
+        if (!flecs_rule_trivial_init(ctx->world, filter)) {
             return false;
         }
 
@@ -100,27 +92,24 @@ bool flecs_rule_trivial_search_init(
                 return false;
             }
         }
-
-        it->offset = 0;
     }
-
-    it->frame_offset += it->count;
 
     return true;
 }
 
 bool flecs_rule_trivial_search(
     const ecs_rule_t *rule,
-    ecs_rule_run_ctx_t *ctx,
-    bool first)
+    const ecs_rule_run_ctx_t *ctx,
+    ecs_rule_trivial_ctx_t *op_ctx,
+    bool first,
+    int32_t term_count)
 {
-    ecs_rule_trivial_ctx_t *op_ctx = &ctx->op_ctx[0].is.trivial;
     const ecs_filter_t *filter = &rule->filter;
-    int32_t t, count = filter->term_count;
+    int32_t t;
     ecs_term_t *terms = filter->terms;
     ecs_iter_t *it = ctx->it;
 
-    if (!flecs_rule_trivial_search_init(ctx, op_ctx, it, filter, first)) {
+    if (!flecs_rule_trivial_search_init(ctx, op_ctx, filter, first)) {
         return false;
     }
 
@@ -136,7 +125,7 @@ bool flecs_rule_trivial_search(
             continue;
         }
 
-        for (t = 1; t < count; t ++) {
+        for (t = 1; t < term_count; t ++) {
             ecs_term_t *term = &terms[t];
             const ecs_table_record_t *tr_with = flecs_id_record_get_table(
                 term->idr, table);
@@ -151,10 +140,10 @@ bool flecs_rule_trivial_search(
             }
         }
 
-        if (t == count) {
-            it->table = table;
-            it->count = ecs_table_count(table);
-            it->entities = flecs_table_entities_array(table);
+        if (t == term_count) {
+            ctx->vars[0].range.table = table;
+            ctx->vars[0].range.count = 0;
+            ctx->vars[0].range.offset = 0;
             it->columns[0] = tr->index + 1;
             if (tr->column != -1) {
                 it->ptrs[0] = ecs_vec_first(
@@ -169,16 +158,17 @@ bool flecs_rule_trivial_search(
 
 bool flecs_rule_trivial_search_w_wildcards(
     const ecs_rule_t *rule,
-    ecs_rule_run_ctx_t *ctx,
-    bool first)
+    const ecs_rule_run_ctx_t *ctx,
+    ecs_rule_trivial_ctx_t *op_ctx,
+    bool first,
+    int32_t term_count)
 {
-    bool result = flecs_rule_trivial_search(rule, ctx, first);
+    bool result = flecs_rule_trivial_search(rule, ctx, op_ctx, first, term_count);
     if (result) {
-        const ecs_filter_t *filter = &rule->filter;
-        int32_t t, count = filter->term_count;
         ecs_iter_t *it = ctx->it;
-        ecs_table_t *table = it->table;
-        for (t = 0; t < count; t ++) {
+        ecs_table_t *table = ctx->vars[0].range.table;
+        int32_t t;
+        for (t = 0; t < term_count; t ++) {
             it->ids[t] = table->type.array[it->columns[t] - 1];
         }
     }
@@ -188,16 +178,17 @@ bool flecs_rule_trivial_search_w_wildcards(
 
 bool flecs_rule_trivial_search_nodata(
     const ecs_rule_t *rule,
-    ecs_rule_run_ctx_t *ctx,
-    bool first)
+    const ecs_rule_run_ctx_t *ctx,
+    ecs_rule_trivial_ctx_t *op_ctx,
+    bool first,
+    int32_t term_count)
 {
-    ecs_rule_trivial_ctx_t *op_ctx = &ctx->op_ctx[0].is.trivial;
     const ecs_filter_t *filter = &rule->filter;
-    int32_t t, count = filter->term_count;
+    int32_t t;
     ecs_term_t *terms = filter->terms;
     ecs_iter_t *it = ctx->it;
 
-    if (!flecs_rule_trivial_search_init(ctx, op_ctx, it, filter, first)) {
+    if (!flecs_rule_trivial_search_init(ctx, op_ctx, filter, first)) {
         return false;
     }
 
@@ -213,7 +204,7 @@ bool flecs_rule_trivial_search_nodata(
             continue;
         }
 
-        for (t = 1; t < count; t ++) {
+        for (t = 1; t < term_count; t ++) {
             ecs_term_t *term = &terms[t];
             const ecs_table_record_t *tr_with = flecs_id_record_get_table(
                 term->idr, table);
@@ -224,10 +215,10 @@ bool flecs_rule_trivial_search_nodata(
             it->columns[t] = tr_with->index + 1;
         }
 
-        if (t == count) {
-            it->table = table;
-            it->count = ecs_table_count(table);
-            it->entities = flecs_table_entities_array(table);
+        if (t == term_count) {
+            ctx->vars[0].range.table = table;
+            ctx->vars[0].range.count = 0;
+            ctx->vars[0].range.offset = 0;
             it->columns[0] = tr->index + 1;
             break;
         }

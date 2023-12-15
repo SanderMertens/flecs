@@ -950,6 +950,42 @@ bool flecs_rule_and_any(
 }
 
 static
+bool flecs_rule_triv(
+    const ecs_rule_op_t *op,
+    bool redo,
+    const ecs_rule_run_ctx_t *ctx)
+{
+    ecs_rule_trivial_ctx_t *op_ctx = flecs_op_ctx(ctx, trivial);
+    int32_t until = flecs_ito(int32_t, op->other);
+    ctx->written[ctx->op_index] |= 1ull;
+    return flecs_rule_trivial_search_nodata(ctx->rule, ctx, op_ctx, !redo, until);
+}
+
+static
+bool flecs_rule_triv_data(
+    const ecs_rule_op_t *op,
+    bool redo,
+    const ecs_rule_run_ctx_t *ctx)
+{
+    ecs_rule_trivial_ctx_t *op_ctx = flecs_op_ctx(ctx, trivial);
+    int32_t until = flecs_ito(int32_t, op->other);
+    ctx->written[ctx->op_index] |= 1ull;
+    return flecs_rule_trivial_search(ctx->rule, ctx, op_ctx, !redo, until);
+}
+
+static
+bool flecs_rule_triv_wildcard(
+    const ecs_rule_op_t *op,
+    bool redo,
+    const ecs_rule_run_ctx_t *ctx)
+{
+    ecs_rule_trivial_ctx_t *op_ctx = flecs_op_ctx(ctx, trivial);
+    int32_t until = flecs_ito(int32_t, op->other);
+    ctx->written[ctx->op_index] |= 1ull;
+    return flecs_rule_trivial_search_w_wildcards(ctx->rule, ctx, op_ctx, !redo, until);
+}
+
+static
 bool flecs_rule_trav_fixed_src_reflexive(
     const ecs_rule_op_t *op,
     const ecs_rule_run_ctx_t *ctx,
@@ -2146,6 +2182,74 @@ bool flecs_rule_end(
 }
 
 static
+bool flecs_rule_populate(
+    const ecs_rule_op_t *op,
+    bool redo,
+    ecs_rule_run_ctx_t *ctx)
+{
+    (void)op;
+    if (!redo) {
+        ecs_iter_t *it = ctx->it;
+        ecs_table_range_t *range = &ctx->vars[0].range;
+        ecs_table_t *table = range->table;
+
+        if (table && !range->count) {
+            range->count = ecs_table_count(table);
+        }
+
+        it->frame_offset -= it->count;
+        flecs_iter_populate_data(ctx->world, it, range->table, 
+            range->offset, range->count, it->ptrs);
+        if (!table && range->count == 1) {
+            it->count = 1;
+            it->entities = &ctx->vars[0].entity;
+        }
+
+        return true;
+    } else {
+        return false;
+    }
+}
+
+static
+bool flecs_rule_populate_self(
+    const ecs_rule_op_t *op,
+    bool redo,
+    ecs_rule_run_ctx_t *ctx)
+{
+    (void)op;
+    if (!redo) {
+        const ecs_rule_t *rule = ctx->rule;
+        const ecs_filter_t *filter = &rule->filter;
+        int32_t i, field_count = filter->field_count;
+        ecs_iter_t *it = ctx->it;
+
+        ecs_table_range_t *range = &ctx->vars[0].range;
+        ecs_table_t *table = range->table;
+        if (!table->column_map) {
+            return true;
+        }
+
+        for (i = 0; i < field_count; i ++) {
+            int32_t index = it->columns[i];
+            ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL); /* Only owned */
+            if (!index) {
+                continue;
+            }
+
+            int32_t column = table->column_map[index - 1];
+            if (column != -1) {
+                it->ptrs[i] = table->data.columns[column].data.array;
+            }
+        }
+
+        return true;
+    } else {
+        return false;
+    }
+}
+
+static
 bool flecs_rule_dispatch(
     const ecs_rule_op_t *op,
     bool redo,
@@ -2155,6 +2259,9 @@ bool flecs_rule_dispatch(
     case EcsRuleAnd: return flecs_rule_and(op, redo, ctx);
     case EcsRuleAndId: return flecs_rule_and_id(op, redo, ctx);
     case EcsRuleAndAny: return flecs_rule_and_any(op, redo, ctx);
+    case EcsRuleTriv: return flecs_rule_triv(op, redo, ctx);
+    case EcsRuleTrivData: return flecs_rule_triv_data(op, redo, ctx);
+    case EcsRuleTrivWildcard: return flecs_rule_triv_wildcard(op, redo, ctx);
     case EcsRuleSelectAny: return flecs_rule_select_any(op, redo, ctx);
     case EcsRuleUp: return flecs_rule_up(op, redo, ctx);
     case EcsRuleSelfUp: return flecs_rule_self_up(op, redo, ctx);
@@ -2184,6 +2291,8 @@ bool flecs_rule_dispatch(
     case EcsRuleSetId: return flecs_rule_setid(op, redo, ctx);
     case EcsRuleContain: return flecs_rule_contain(op, redo, ctx);
     case EcsRulePairEq: return flecs_rule_pair_eq(op, redo, ctx);
+    case EcsRulePopulate: return flecs_rule_populate(op, redo, ctx);
+    case EcsRulePopulateSelf: return flecs_rule_populate_self(op, redo, ctx);
     case EcsRuleYield: return false;
     case EcsRuleNothing: return false;
     }
@@ -2266,31 +2375,6 @@ void flecs_rule_iter_init(
         }
     }
 
-    ecs_flags32_t flags = rule->filter.flags;
-    if (flags & EcsFilterIsTrivial) {
-        if ((flags & EcsFilterMatchOnlySelf) || 
-            !flecs_table_cache_count(&ctx->world->idr_isa_wildcard->cache)) 
-        {
-            if (it_written) {
-                it->offset = ctx->vars[0].range.offset;
-                it->count = ctx->vars[0].range.count;
-                if (!it->count) {
-                    ecs_assert(!it->offset, ECS_INVALID_PARAMETER, NULL);
-                    it->count = ecs_table_count(ctx->vars[0].range.table);
-                    it->flags |= EcsIterTrivialTest;
-                }                    
-            } else {
-                if (flags & EcsFilterHasWildcards) {
-                    it->flags |= EcsIterTrivialSearchWildcard;
-                } else if (flags & EcsFilterNoData) {
-                    it->flags |= EcsIterTrivialSearchNoData;
-                } else {
-                    it->flags |= EcsIterTrivialSearch;
-                }
-            }
-        }
-    }
-
     flecs_iter_validate(it);
 }
 
@@ -2318,50 +2402,34 @@ bool ecs_rule_next_instanced(
         ecs_assert(ctx.rule != NULL, ECS_INVALID_PARAMETER, NULL);
         flecs_rule_iter_init(&ctx);
         redo = false;
-    }
-
-    if (it->flags & EcsIterTrivialSearch) {
-        if (!flecs_rule_trivial_search(ctx.rule, &ctx, !redo)) {
-            goto done;
-        }
-        return true;
-    } else if (it->flags & EcsIterTrivialSearchNoData) {
-        if (!flecs_rule_trivial_search_nodata(ctx.rule, &ctx, !redo)) {
-            goto done;
-        }
-        return true;
-    } else if (it->flags & EcsIterTrivialTest) {
-        if (!flecs_rule_trivial_test(ctx.rule, &ctx, !redo)) {
-            goto done;
-        }
-        return true;
-    } else if (it->flags & EcsIterTrivialSearchWildcard) {
-        if (!flecs_rule_trivial_search_w_wildcards(ctx.rule, &ctx, !redo)) {
-            goto done;
-        }
-        return true;
+    } else {
+        it->frame_offset += it->count;
     }
 
     if (flecs_rule_run_until(redo, &ctx, ops, -1, rit->op, EcsRuleYield)) {
         ecs_assert(ops[ctx.op_index].kind == EcsRuleYield, 
             ECS_INTERNAL_ERROR, NULL);
-        ecs_table_range_t *range = &rit->vars[0].range;
+        ecs_table_range_t *range = &ctx.vars[0].range;
         ecs_table_t *table = range->table;
-        if (table && !range->count) {
-            range->count = ecs_table_count(table);
-        }
-        flecs_iter_populate_data(ctx.world, it, range->table, 
-            range->offset, range->count, it->ptrs);
-        if (!table && range->count == 1) {
+        int32_t count = range->count;
+        if (table) {
+            if (!count) {
+                count = ecs_table_count(table);
+            }
+            it->table = table;
+            it->offset = range->offset;
+            it->count = count;
+            it->entities = ECS_ELEM_T(
+                table->data.entities.array, ecs_entity_t, it->offset);
+        } else if (count == 1) {
             it->count = 1;
-            it->entities = &rit->vars[0].entity;
+            it->entities = &ctx.vars[0].entity;
         }
 
         rit->op = flecs_itolbl(ctx.op_index - 1);
         return true;
     }
 
-done:
     ecs_iter_fini(it);
     return false;
 }

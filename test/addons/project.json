@@ -797,7 +797,19 @@
                 "unknown_before_known_after_optional",
                 "unknown_before_known_after_scope",
                 "reordered_plan_1",
-                "reordered_plan_2"
+                "reordered_plan_2",
+                "1_trivial_plan",
+                "2_trivial_plan",
+                "1_trivial_plan_component",
+                "2_trivial_plan_component",
+                "3_trivial_plan_w_pair",
+                "3_trivial_plan_w_wildcard",
+                "3_trivial_plan_w_any",
+                "3_trivial_plan_w_pair_component",
+                "3_trivial_plan_w_wildcard_component",
+                "3_trivial_plan_w_any_component",
+                "1_trivial_component_w_none",
+                "2_trivial_component_w_none"
             ]
         }, {
             "id": "RulesVariables",
@@ -938,7 +950,19 @@
                 "check_vars_wildcard_as_tgt",
                 "check_vars_any_as_tgt",
                 "check_vars_this_w_lookup_var",
-                "check_vars_var_w_lookup_var"
+                "check_vars_var_w_lookup_var",
+                "1_trivial_1_var",
+                "2_trivial_1_var",
+                "1_trivial_1_var_component",
+                "2_trivial_1_var_component",
+                "1_trivial_1_wildcard",
+                "2_trivial_1_wildcard",
+                "1_trivial_1_wildcard_component",
+                "2_trivial_1_wildcard_component",
+                "1_trivial_1_any",
+                "2_trivial_1_any",
+                "1_trivial_1_any_component",
+                "2_trivial_1_any_component"
             ]
         }, {
             "id": "RulesOperators",
