@@ -1974,7 +1974,6 @@ int flecs_json_serialize_iter_result_values(
         /* If term is not set, append empty array. This indicates that the term
          * could have had data but doesn't */
         if (!ecs_field_is_set(it, i + 1)) {
-            ecs_assert(ptr == NULL, ECS_INTERNAL_ERROR, NULL);
             flecs_json_array_push(buf);
             flecs_json_array_pop(buf);
             continue;

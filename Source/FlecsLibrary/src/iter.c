@@ -308,8 +308,8 @@ bool flecs_iter_next_row(
             int t, field_count = it->field_count;
 
             for (t = 0; t < field_count; t ++) {
-                int32_t column = it->columns[t];
-                if (column >= 0) {
+                ecs_entity_t src = it->sources[t];
+                if (!src) {
                     void *ptr = it->ptrs[t];
                     if (ptr) {
                         it->ptrs[t] = ECS_OFFSET(ptr, it->sizes[t]);

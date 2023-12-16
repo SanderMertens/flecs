@@ -355,7 +355,7 @@ ecs_var_id_t flecs_rule_add_var_for_term_id(
  * - place anonymous variables after public variables in vars array
  */
 static
-void flecs_rule_discover_vars(
+int flecs_rule_discover_vars(
     ecs_stage_t *stage,
     ecs_rule_t *rule)
 {
@@ -434,6 +434,20 @@ void flecs_rule_discover_vars(
                     if (!var->lookup) {
                         var->kind = EcsVarAny;
                         anonymous_table_count ++;
+                    }
+
+                    if (!(term->flags & EcsTermNoData)) {
+                        /* Can't have an anonymous variable as source of a term
+                         * that returns a component. We need to return each
+                         * instance of the component, whereas anonymous 
+                         * variables are not guaranteed to be resolved to 
+                         * individual entities. */
+                        if (var->anonymous) {
+                            ecs_err(
+                                "can't use anonymous variable '%s' as source of "
+                                "data term", var->name);
+                            goto error;
+                        }
                     }
 
                     /* Track which variable ids are used as field source */
@@ -637,6 +651,10 @@ void flecs_rule_discover_vars(
         ecs_assert(rule->vars[i].kind == EcsVarEntity, ECS_INTERNAL_ERROR, NULL);
     }
 #endif
+
+    return 0;
+error:
+    return -1;
 }
 
 static
@@ -1420,6 +1438,10 @@ int flecs_rule_compile_term(
     if (flecs_rule_term_fixed_id(filter, term)) {
         if (op.kind == EcsRuleAnd) {
             op.kind = EcsRuleAndId;
+        } else if (op.kind == EcsRuleSelfUp) {
+            op.kind = EcsRuleSelfUpId;
+        } else if (op.kind == EcsRuleUp) {
+            op.kind = EcsRuleUpId;
         }
     }
 
@@ -1702,6 +1724,8 @@ bool flecs_rule_var_is_unknown(
     return true;
 }
 
+/* Returns whether term is unkown. A term is unknown when it has variable 
+ * elements (first, second, src) that are all unknown. */
 static
 bool flecs_rule_term_is_unknown(
     ecs_rule_t *rule, 
@@ -1745,6 +1769,9 @@ bool flecs_rule_term_is_unknown(
     return true;
 }
 
+/* Find the next known term from specified offset. This function is used to find
+ * a term that can be evaluated before a term that is unknown. Evaluating known
+ * before unknown terms can significantly decrease the search space. */
 static
 int32_t flecs_rule_term_next_known(
     ecs_rule_t *rule, 
@@ -1782,6 +1809,137 @@ int32_t flecs_rule_term_next_known(
     return -1;
 }
 
+/* If the first part of a query contains more than one trivial term, insert a
+ * special instruction which batch-evaluates multiple terms. */
+static
+int32_t flecs_rule_insert_trivial_search(
+    ecs_rule_t *rule,
+    ecs_rule_compile_ctx_t *ctx)
+{
+    ecs_filter_t *filter = &rule->filter;
+    ecs_term_t *terms = filter->terms;
+    int32_t i, term_count = filter->term_count;
+
+    /* Find trivial terms, which can be handled in single instruction */
+    int32_t trivial_wildcard_terms = 0;
+    int32_t trivial_data_terms = 0;
+    for (i = 0; i < term_count; i ++) {
+        ecs_term_t *term = &terms[i];
+        if (!(term->flags & EcsTermIsTrivial)) {
+            break;
+        }
+
+        /* We can only add trivial terms to plan if they no up traversal */
+        if ((term->src.flags & EcsTraverseFlags) != EcsSelf) {
+            break;
+        }
+
+        if (ecs_id_is_wildcard(term->id)) {
+            trivial_wildcard_terms ++;
+        }
+
+        if (!(term->flags & EcsTermNoData)) {
+            trivial_data_terms ++;
+        }
+    }
+
+    int32_t trivial_terms = i;
+    if (trivial_terms >= 2) {
+        /* If there's more than 1 trivial term, batch them in trivial search */
+        ecs_rule_op_t trivial = {0};
+        if (trivial_wildcard_terms) {
+            trivial.kind = EcsRuleTrivWildcard;
+        } else {
+            if (trivial_data_terms) {
+                /* Check to see if there are remaining data terms. If there are,
+                 * we'll have to insert an instruction later that populates all
+                 * fields, so don't do double work here. */
+                for (i = trivial_terms; i < term_count; i ++) {
+                    ecs_term_t *term = &terms[i];
+                    if (!(term->flags & EcsTermIsTrivial)) {
+                        break;
+                    }
+                }
+                if (trivial_terms == term_count || i != term_count) {
+                    /* Nobody else is going to set the data fields, so we should
+                     * do it here. */
+                    trivial.kind = EcsRuleTrivData;
+                }
+            }
+            if (!trivial.kind) {
+                trivial.kind = EcsRuleTriv;
+            }
+        }
+
+        /* Store on the operation how many trivial terms should be evaluated */
+        trivial.other = (ecs_rule_lbl_t)trivial_terms;
+        flecs_rule_op_insert(&trivial, ctx);
+    } else {
+        /* If fewer than 1 trivial term, there's no point in batching them */
+        trivial_terms = 0;
+    }
+
+    return trivial_terms;
+}
+
+/* Insert instruction to populate data fields. */
+static
+void flecs_rule_insert_populate(
+    ecs_rule_t *rule,
+    ecs_rule_compile_ctx_t *ctx,
+    int32_t trivial_terms)
+{
+    ecs_filter_t *filter = &rule->filter;
+    int32_t i, term_count = filter->term_count;
+
+    /* Insert instruction that populates data. This instruction does not
+     * have to be inserted if the filter provides no data, or if all terms
+     * of the filter are trivial, in which case the trivial search operation
+     * also sets the data. */
+    if (!(filter->flags & EcsFilterNoData) && (trivial_terms != term_count)) {
+        int32_t data_fields = 0;
+        bool only_self = true;
+
+        /* There are two instructions for setting data fields, a fast one 
+         * that only supports owned fields, and one that supports any kind
+         * of field. Loop through (remaining) terms to check which one we
+         * need to use. */
+        for (i = trivial_terms; i < term_count; i ++) {
+            ecs_term_t *term = &filter->terms[i];
+            if (term->flags & EcsTermNoData) {
+                /* Don't care about terms that have no data */
+                continue;
+            }
+
+            data_fields ++;
+
+            if (!ecs_term_match_this(term)) {
+                break;
+            }
+
+            if (term->src.flags & EcsUp) {
+                break;
+            }
+        }
+
+        if (i != filter->term_count) {
+            only_self = false; /* Needs the more complex operation */
+        }
+
+        if (data_fields) {
+            if (only_self) {
+                ecs_rule_op_t nothing = {0};
+                nothing.kind = EcsRulePopulateSelf;
+                flecs_rule_op_insert(&nothing, ctx);
+            } else {
+                ecs_rule_op_t nothing = {0};
+                nothing.kind = EcsRulePopulate;
+                flecs_rule_op_insert(&nothing, ctx);
+            }
+        }
+    }
+}
+
 int flecs_rule_compile(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -1798,11 +1956,13 @@ int flecs_rule_compile(
     ecs_vec_clear(ctx.ops);
 
     /* Find all variables defined in query */
-    flecs_rule_discover_vars(stage, rule);
+    if (flecs_rule_discover_vars(stage, rule)) {
+        return -1;
+    }
 
     /* If rule contains fixed source terms, insert operation to set sources */
-    int32_t i, count = filter->term_count;
-    for (i = 0; i < count; i ++) {
+    int32_t i, term_count = filter->term_count;
+    for (i = 0; i < term_count; i ++) {
         ecs_term_t *term = &terms[i];
         if (term->src.flags & EcsIsEntity) {
             ecs_rule_op_t set_fixed = {0};
@@ -1815,7 +1975,7 @@ int flecs_rule_compile(
     /* If the rule contains terms with fixed ids (no wildcards, variables), 
      * insert instruction that initializes ecs_iter_t::ids. This allows for the
      * insertion of simpler instructions later on. */
-    for (i = 0; i < count; i ++) {
+    for (i = 0; i < term_count; i ++) {
         ecs_term_t *term = &terms[i];
         if (flecs_rule_term_fixed_id(filter, term) || 
            (term->src.flags & EcsIsEntity && !term->src.id)) 
@@ -1827,9 +1987,12 @@ int flecs_rule_compile(
         }
     }
 
-    /* Compile query terms to instructions */
+    /* Insert trivial term search if query allows for it */
+    int32_t trivial_terms = flecs_rule_insert_trivial_search(rule, &ctx);
+
+    /* Compile remaining query terms to instructions */
     ecs_flags64_t compiled = 0;
-    for (i = 0; i < count; i ++) {
+    for (i = trivial_terms; i < term_count; i ++) {
         ecs_term_t *term = &terms[i];
         int32_t compile = i;
 
@@ -1951,11 +2114,14 @@ int flecs_rule_compile(
     }
 
     /* If filter is empty, insert Nothing instruction */
-    if (!rule->filter.term_count) {
+    if (!term_count) {
         ecs_rule_op_t nothing = {0};
         nothing.kind = EcsRuleNothing;
         flecs_rule_op_insert(&nothing, &ctx);
     } else {
+        /* Insert instruction to populate data fields */
+        flecs_rule_insert_populate(rule, &ctx, trivial_terms);
+
         /* Insert yield. If program reaches this operation, a result was found */
         ecs_rule_op_t yield = {0};
         yield.kind = EcsRuleYield;

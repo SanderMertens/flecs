@@ -140,6 +140,8 @@ extern "C" {
 #define EcsFilterIsTrivial             (1u << 14u) /* Trivial filter */
 #define EcsFilterMatchOnlySelf         (1u << 15u) /* Filter has no up traversal */
 #define EcsFilterHasWildcards          (1u << 16u) /* Filter has no up traversal */
+#define EcsFilterOwnsStorage           (1u << 17u) /* Is ecs_filter_t object owned by filter */
+#define EcsFilterOwnsTermsStorage      (1u << 18u) /* Is terms array owned by filter */
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Table flags (used by ecs_table_t::flags)

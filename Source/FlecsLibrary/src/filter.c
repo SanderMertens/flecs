@@ -714,14 +714,14 @@ int flecs_term_finalize(
     if (term->oper == EcsNot && term->id == ecs_pair(EcsChildOf, EcsAny)) {
         term->oper = EcsAnd;
         term->id = ecs_pair(EcsChildOf, 0);
-        term->second.id = 0;
-        term->second.flags |= EcsIsEntity;
-        term->second.flags &= ~EcsIsVariable;
+        second->id = 0;
+        second->flags |= EcsIsEntity;
+        second->flags &= ~EcsIsVariable;
     }
 
     ecs_entity_t first_id = 0;
-    if (term->first.flags & EcsIsEntity) {
-        first_id = term->first.id;
+    if (first->flags & EcsIsEntity) {
+        first_id = first->id;
     }
 
     term->idr = flecs_query_id_record_get(world, term->id);
@@ -835,6 +835,42 @@ int flecs_term_finalize(
                 "invalid inout value for AndFrom/OrFrom/NotFrom term");
             return -1;
         }
+    }
+
+    /* Is term trivial */
+    bool trivial_term = true;
+    if (term->oper != EcsAnd) {
+        trivial_term = false;
+    }
+    if (ecs_id_is_wildcard(term->id)) {
+        if (!(term->idr && term->idr->flags & EcsIdExclusive)) {
+            trivial_term = false;
+        }
+        if (first->flags & EcsIsVariable) {
+            if (!ecs_id_is_wildcard(first->id) || first->id == EcsAny) {
+                trivial_term = false;
+            }
+        }
+        if (second->flags & EcsIsVariable) {
+            if (!ecs_id_is_wildcard(second->id) || second->id == EcsAny) {
+                trivial_term = false;
+            }
+        }
+    }
+    if (src->trav && src->trav != EcsIsA) {
+        trivial_term = false;
+    }
+    if (first->trav && first->trav != EcsIsA) {
+        trivial_term = false;
+    }
+    if (second->trav && second->trav != EcsIsA) {
+        trivial_term = false;
+    }
+    if (!(src->flags & EcsSelf)) {
+        trivial_term = false;
+    }
+    if (trivial_term) {
+        ECS_BIT_SET(term->flags, EcsTermIsTrivial);
     }
 
     if (flecs_term_verify(world, term, ctx)) {
@@ -1195,13 +1231,21 @@ int ecs_filter_finalize(
             if (!term->idr->type_info && !(term->idr->flags & EcsIdUnion)) {
                 filter_term = true;
             }
-        } else if (ecs_id_is_tag(world, term->id)) {
-            if (!ecs_id_is_union(world, term->id)) {
-                /* Union ids aren't filters because they return their target
-                 * as component value with type ecs_entity_t */
+        } else if (!ecs_id_is_union(world, term->id)) {
+            /* Union ids aren't filters because they return their target
+             * as component value with type ecs_entity_t */
+            if (ecs_id_is_tag(world, term->id)) {
                 filter_term = true;
+            } else if (ECS_PAIR_SECOND(term->id) == EcsWildcard) {
+                /* If the second element of a pair is a wildcard and the first
+                 * element is not a type, we can't know in advance what the
+                 * type of the term is, so it can't provide data. */
+                if (!ecs_get_type_info(world, ecs_pair_first(world, term->id))) {
+                    filter_term = true;
+                }
             }
         }
+    
         if (!filter_term) {
             if (term->oper == EcsOr || (i && term[-1].oper == EcsOr)) {
                 ecs_term_t *first = flecs_filter_or_other_type(f, i);
@@ -1216,6 +1260,9 @@ int ecs_filter_finalize(
 
         if (filter_term) {
             filter_terms ++;
+            term->flags |= EcsTermNoData;
+        } else {
+            f->data_fields |= (1llu << term->field_index);
         }
 
         if (term->oper != EcsNot || !ecs_term_match_this(term)) {
@@ -1268,7 +1315,7 @@ int ecs_filter_finalize(
         return -1;
     }
 
-    f->field_count = field_count;
+    f->field_count = flecs_ito(int8_t, field_count);
 
     if (field_count) {
         for (i = 0; i < term_count; i ++) {
@@ -1330,38 +1377,16 @@ int ecs_filter_finalize(
 
             for (i = 0; i < term_count; i ++) {
                 ecs_term_t *term = &terms[i];
-                ecs_term_id_t *first = &term->first;
-                ecs_term_id_t *second = &term->second;
                 ecs_term_id_t *src = &term->src;
-                if (term->oper != EcsAnd) {
-                    break;
-                }
-                if (ecs_id_is_wildcard(term->id)) {
-                    if (!(term->idr && term->idr->flags & EcsIdExclusive)) {
-                        break;
-                    }
-                    if ((first->name && (first->flags & EcsIsVariable)) ||
-                        (second->name && (second->flags & EcsIsVariable))) 
-                    {
-                        break;
-                    }
-                }
 
-                if (src->trav && src->trav != EcsIsA) {
-                    break;
-                }
-                if (first->trav && first->trav != EcsIsA) {
-                    break;
-                }
-                if (second->trav && second->trav != EcsIsA) {
-                    break;
-                }
-                if (!(src->flags & EcsSelf)) {
-                    break;
-                }
                 if (src->flags & EcsUp) {
                     ECS_BIT_CLEAR(f->flags, EcsFilterMatchOnlySelf);
                 }
+
+                if (!(term->flags & EcsTermIsTrivial)) {
+                    break;
+                }
+
                 if (!(f->flags & EcsFilterNoData)) {
                     if (term->inout == EcsInOutNone) {
                         break;
@@ -1416,7 +1441,7 @@ void flecs_filter_fini(
             ecs_term_fini(&filter->terms[i]);
         }
 
-        if (filter->terms_owned) {
+        if (filter->flags & EcsFilterOwnsTermsStorage) {
             /* Memory allocated for both terms & sizes */
             ecs_os_free(filter->terms);
         } else {
@@ -1426,7 +1451,7 @@ void flecs_filter_fini(
 
     filter->terms = NULL;
 
-    if (filter->owned) {
+    if (filter->flags & EcsFilterOwnsStorage) {
         ecs_os_free(filter);
     }
 }
@@ -1434,7 +1459,7 @@ void flecs_filter_fini(
 void ecs_filter_fini(
     ecs_filter_t *filter) 
 {
-    if (filter->owned && filter->entity) {
+    if ((filter->flags & EcsFilterOwnsStorage) && filter->entity) {
         /* If filter is associated with entity, use poly dtor path */
         ecs_delete(filter->world, filter->entity);
     } else {
@@ -1464,10 +1489,10 @@ ecs_filter_t* ecs_filter_init(
         ecs_poly_init(f, ecs_filter_t);
     } else {
         f = ecs_poly_new(ecs_filter_t);
-        f->owned = true;
+        f->flags |= EcsFilterOwnsStorage;
     }
     if (!storage_terms) {
-        f->terms_owned = true;
+        f->flags |= EcsFilterOwnsTermsStorage;
     }
 
     ECS_BIT_COND(f->flags, EcsFilterIsInstanced, desc->instanced);
@@ -1552,8 +1577,8 @@ ecs_filter_t* ecs_filter_init(
         if (!ptr) {
             /* Set terms in filter object to make sur they get cleaned up */
             f->terms = expr_terms;
-            f->term_count = expr_count;
-            f->terms_owned = true;
+            f->term_count = flecs_ito(int8_t, expr_count);
+            f->flags |= EcsFilterOwnsTermsStorage;
             goto error;
         }
 #else
@@ -1569,15 +1594,16 @@ ecs_filter_t* ecs_filter_init(
     if (term_count || expr_count) {
         /* Allocate storage for terms and sizes array */
         if (!storage_terms) {
-            ecs_assert(f->terms_owned == true, ECS_INTERNAL_ERROR, NULL);
-            f->term_count = term_count + expr_count;
+            ecs_assert(f->flags & EcsFilterOwnsTermsStorage, 
+                ECS_INTERNAL_ERROR, NULL);
+            f->term_count = flecs_ito(int8_t, term_count + expr_count);
             ecs_size_t terms_size = ECS_SIZEOF(ecs_term_t) * f->term_count;
             ecs_size_t sizes_size = ECS_SIZEOF(int32_t) * f->term_count;
             f->terms = ecs_os_calloc(terms_size + sizes_size);
             f->sizes = ECS_OFFSET(f->terms, terms_size);
         } else {
             f->terms = storage_terms;
-            f->term_count = storage_count;
+            f->term_count = flecs_ito(int8_t, storage_count);
             f->sizes = ecs_os_calloc_n(ecs_size_t, term_count);
         }
 
@@ -1612,7 +1638,7 @@ ecs_filter_t* ecs_filter_init(
     f->dtor = (ecs_poly_dtor_t)flecs_filter_fini;
     f->entity = entity;
 
-    if (entity && f->owned) {
+    if (entity && (f->flags & EcsFilterOwnsStorage)) {
         EcsPoly *poly = ecs_poly_bind(world, entity, ecs_filter_t);
         poly->poly = f;
         ecs_poly_modified(world, entity, ecs_filter_t);
@@ -1640,7 +1666,7 @@ void ecs_filter_copy(
         ecs_size_t sizes_size = ECS_SIZEOF(int32_t) * term_count;
         dst->terms = ecs_os_malloc(terms_size + sizes_size);
         dst->sizes = ECS_OFFSET(dst->terms, terms_size);
-        dst->terms_owned = true;
+        dst->flags |= EcsFilterOwnsTermsStorage;
         ecs_os_memcpy_n(dst->sizes, src->sizes, int32_t, term_count);
 
         for (i = 0; i < term_count; i ++) {
@@ -1661,10 +1687,10 @@ void ecs_filter_move(
 
     if (src) {
         *dst = *src;
-        if (src->terms_owned) {
+        if (src->flags & EcsFilterOwnsTermsStorage) {
             dst->terms = src->terms;
             dst->sizes = src->sizes;
-            dst->terms_owned = true;
+            dst->flags |= EcsFilterOwnsTermsStorage;
         } else {
             ecs_filter_copy(dst, src);
         }
