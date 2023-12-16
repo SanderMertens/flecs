@@ -420,6 +420,14 @@ bool flecs_rule_trivial_search_w_wildcards(
 bool flecs_rule_trivial_test(
     const ecs_rule_t *rule,
     const ecs_rule_run_ctx_t *ctx,
-    bool first);
+    bool first,
+    int32_t term_count);
+
+/* Trivial test for constrained $this with wildcard matching. */
+bool flecs_rule_trivial_test_w_wildcards(
+    const ecs_rule_t *rule,
+    const ecs_rule_run_ctx_t *ctx,
+    bool first,
+    int32_t term_count);
 
 #endif

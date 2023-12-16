@@ -1262,7 +1262,7 @@ int ecs_filter_finalize(
             filter_terms ++;
             term->flags |= EcsTermNoData;
         } else {
-            f->data_fields |= (1u << term->field_index);
+            f->data_fields |= (1llu << term->field_index);
         }
 
         if (term->oper != EcsNot || !ecs_term_match_this(term)) {

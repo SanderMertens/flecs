@@ -4581,6 +4581,788 @@ void RulesVariables_1_set_src_this_to_entiy_in_table_self(void) {
     ecs_fini(world);
 }
 
+void RulesVariables_2_set_src_this(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_rule_t *f = ecs_rule(world, {
+        .terms[0] = { .id = Foo },
+        .terms[1] = { .id = Bar },
+    });
+
+    ecs_entity_t prefab = ecs_new(world, Bar);
+
+    ecs_entity_t e1 = ecs_new(world, Foo);
+    ecs_add(world, e1, Bar);
+
+    ecs_entity_t e2 = ecs_new(world, Foo);
+    ecs_add(world, e2, Bar);
+
+    ecs_entity_t e3 = ecs_new(world, Foo);
+    ecs_add_pair(world, e3, EcsIsA, prefab);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, f);
+        ecs_iter_set_var(&it, 0, e1);
+        test_bool(true, ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e1);
+        test_uint(Foo, ecs_field_id(&it, 1));
+        test_uint(Bar, ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, f);
+        ecs_iter_set_var(&it, 0, e2);
+        test_bool(true, ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_uint(Foo, ecs_field_id(&it, 1));
+        test_uint(Bar, ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, f);
+        ecs_iter_set_var(&it, 0, e3);
+        test_bool(true, ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e3);
+        test_uint(Foo, ecs_field_id(&it, 1));
+        test_uint(Bar, ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(prefab, ecs_field_src(&it, 2));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(f);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_2_set_src_this_self(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_rule_t *f = ecs_rule(world, {
+        .terms[0] = { .id = Foo, .src.flags = EcsSelf },
+        .terms[1] = { .id = Bar, .src.flags = EcsSelf },
+    });
+
+    ecs_entity_t prefab = ecs_new(world, Bar);
+
+    ecs_entity_t e1 = ecs_new(world, Foo);
+    ecs_add(world, e1, Bar);
+
+    ecs_entity_t e2 = ecs_new(world, Foo);
+    ecs_add(world, e2, Bar);
+
+    ecs_entity_t e3 = ecs_new(world, Foo);
+    ecs_add_pair(world, e3, EcsIsA, prefab);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, f);
+        ecs_iter_set_var(&it, 0, e1);
+        test_bool(true, ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e1);
+        test_uint(Foo, ecs_field_id(&it, 1));
+        test_uint(Bar, ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, f);
+        ecs_iter_set_var(&it, 0, e2);
+        test_bool(true, ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_uint(Foo, ecs_field_id(&it, 1));
+        test_uint(Bar, ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, f);
+        ecs_iter_set_var(&it, 0, e3);
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(f);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_2_set_src_this_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_rule_t *f = ecs_rule(world, {
+        .terms[0] = { .id = ecs_id(Position) },
+        .terms[1] = { .id = ecs_id(Velocity) },
+    });
+
+    ecs_entity_t prefab = ecs_set(world, 0, Velocity, {3, 4});
+
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_set(world, e1, Velocity, {1, 2});
+
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_set(world, e2, Velocity, {2, 3});
+
+    ecs_entity_t e3 = ecs_set(world, 0, Position, {30, 40});
+    ecs_add_pair(world, e3, EcsIsA, prefab);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, f);
+        ecs_iter_set_var(&it, 0, e1);
+        test_bool(true, ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e1);
+        Position *p = ecs_field(&it, Position, 1);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        Velocity *v = ecs_field(&it, Velocity, 2);
+        test_assert(v != NULL);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, f);
+        ecs_iter_set_var(&it, 0, e2);
+        test_bool(true, ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        Position *p = ecs_field(&it, Position, 1);
+        test_assert(p != NULL);
+        test_int(p->x, 20);
+        test_int(p->y, 30);
+        Velocity *v = ecs_field(&it, Velocity, 2);
+        test_assert(v != NULL);
+        test_int(v->x, 2);
+        test_int(v->y, 3);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, f);
+        ecs_iter_set_var(&it, 0, e3);
+        test_bool(true, ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e3);
+        Position *p = ecs_field(&it, Position, 1);
+        test_assert(p != NULL);
+        test_int(p->x, 30);
+        test_int(p->y, 40);
+        Velocity *v = ecs_field(&it, Velocity, 2);
+        test_assert(v != NULL);
+        test_int(v->x, 3);
+        test_int(v->y, 4);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(prefab, ecs_field_src(&it, 2));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(f);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_2_set_src_this_self_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_rule_t *f = ecs_rule(world, {
+        .terms[0] = { .id = ecs_id(Position), .src.flags = EcsSelf },
+        .terms[1] = { .id = ecs_id(Velocity), .src.flags = EcsSelf },
+    });
+
+    ecs_entity_t prefab = ecs_set(world, 0, Velocity, {4, 5});
+
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_set(world, e1, Velocity, {1, 2});
+
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_set(world, e2, Velocity, {2, 3});
+
+    ecs_entity_t e3 = ecs_set(world, 0, Position, {40, 50});
+    ecs_add_pair(world, e3, EcsIsA, prefab);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, f);
+        ecs_iter_set_var(&it, 0, e1);
+        test_bool(true, ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e1);
+        Position *p = ecs_field(&it, Position, 1);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        Velocity *v = ecs_field(&it, Velocity, 2);
+        test_assert(v != NULL);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, f);
+        ecs_iter_set_var(&it, 0, e2);
+        test_bool(true, ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        Position *p = ecs_field(&it, Position, 1);
+        test_assert(p != NULL);
+        test_int(p->x, 20);
+        test_int(p->y, 30);
+        Velocity *v = ecs_field(&it, Velocity, 2);
+        test_assert(v != NULL);
+        test_int(v->x, 2);
+        test_int(v->y, 3);
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, f);
+        ecs_iter_set_var(&it, 0, e3);
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(f);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_2_set_src_this_w_up(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+    ECS_TAG(world, Hello);
+
+    ecs_rule_t *f = ecs_rule(world, {
+        .terms[0] = { .id = Foo },
+        .terms[1] = { .id = Bar },
+        .terms[2] = { .id = Hello, .src.flags = EcsUp, .src.trav = EcsChildOf },
+    });
+
+    ecs_entity_t prefab = ecs_new(world, Bar);
+    ecs_entity_t parent = ecs_new(world, Hello);
+
+    ecs_entity_t e1 = ecs_new(world, Foo);
+    ecs_add(world, e1, Bar);
+    ecs_add_pair(world, e1, EcsChildOf, parent);
+
+    ecs_entity_t e2 = ecs_new(world, Foo);
+    ecs_add(world, e2, Bar);
+    ecs_add_pair(world, e2, EcsChildOf, parent);
+
+    ecs_entity_t e3 = ecs_new(world, Foo);
+    ecs_add_pair(world, e3, EcsIsA, prefab);
+    ecs_add_pair(world, e3, EcsChildOf, parent);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, f);
+        ecs_iter_set_var(&it, 0, e1);
+        test_bool(true, ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e1);
+        test_uint(Foo, ecs_field_id(&it, 1));
+        test_uint(Bar, ecs_field_id(&it, 2));
+        test_uint(Hello, ecs_field_id(&it, 3));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_uint(parent, ecs_field_src(&it, 3));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, f);
+        ecs_iter_set_var(&it, 0, e2);
+        test_bool(true, ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_uint(Foo, ecs_field_id(&it, 1));
+        test_uint(Bar, ecs_field_id(&it, 2));
+        test_uint(Hello, ecs_field_id(&it, 3));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_uint(parent, ecs_field_src(&it, 3));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, f);
+        ecs_iter_set_var(&it, 0, e3);
+        test_bool(true, ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e3);
+        test_uint(Foo, ecs_field_id(&it, 1));
+        test_uint(Bar, ecs_field_id(&it, 2));
+        test_uint(Hello, ecs_field_id(&it, 3));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(prefab, ecs_field_src(&it, 2));
+        test_uint(parent, ecs_field_src(&it, 3));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(f);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_2_set_src_this_self_w_up(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+    ECS_TAG(world, Hello);
+
+    ecs_rule_t *f = ecs_rule(world, {
+        .terms[0] = { .id = Foo, .src.flags = EcsSelf },
+        .terms[1] = { .id = Bar, .src.flags = EcsSelf },
+        .terms[2] = { .id = Hello, .src.flags = EcsUp, .src.trav = EcsChildOf },
+    });
+
+    ecs_entity_t prefab = ecs_new(world, Bar);
+    ecs_entity_t parent = ecs_new(world, Hello);
+
+    ecs_entity_t e1 = ecs_new(world, Foo);
+    ecs_add(world, e1, Bar);
+    ecs_add_pair(world, e1, EcsChildOf, parent);
+
+    ecs_entity_t e2 = ecs_new(world, Foo);
+    ecs_add(world, e2, Bar);
+    ecs_add_pair(world, e2, EcsChildOf, parent);
+
+    ecs_entity_t e3 = ecs_new(world, Foo);
+    ecs_add_pair(world, e3, EcsIsA, prefab);
+    ecs_add_pair(world, e3, EcsChildOf, parent);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, f);
+        ecs_iter_set_var(&it, 0, e1);
+        test_bool(true, ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e1);
+        test_uint(Foo, ecs_field_id(&it, 1));
+        test_uint(Bar, ecs_field_id(&it, 2));
+        test_uint(Hello, ecs_field_id(&it, 3));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_uint(parent, ecs_field_src(&it, 3));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, f);
+        ecs_iter_set_var(&it, 0, e2);
+        test_bool(true, ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_uint(Foo, ecs_field_id(&it, 1));
+        test_uint(Bar, ecs_field_id(&it, 2));
+        test_uint(Hello, ecs_field_id(&it, 3));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_uint(parent, ecs_field_src(&it, 3));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, f);
+        ecs_iter_set_var(&it, 0, e3);
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(f);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_2_set_src_this_component_w_up(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ecs_rule_t *f = ecs_rule(world, {
+        .terms[0] = { .id = ecs_id(Position) },
+        .terms[1] = { .id = ecs_id(Velocity) },
+        .terms[2] = { .id = ecs_id(Mass), .src.flags = EcsUp, .src.trav = EcsChildOf },
+    });
+
+    ecs_entity_t prefab = ecs_set(world, 0, Velocity, {3, 4});
+    ecs_entity_t parent = ecs_set(world, 0, Mass, {60});
+
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_set(world, e1, Velocity, {1, 2});
+    ecs_add_pair(world, e1, EcsChildOf, parent);
+
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_set(world, e2, Velocity, {2, 3});
+    ecs_add_pair(world, e2, EcsChildOf, parent);
+
+    ecs_entity_t e3 = ecs_set(world, 0, Position, {30, 40});
+    ecs_add_pair(world, e3, EcsIsA, prefab);
+    ecs_add_pair(world, e3, EcsChildOf, parent);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, f);
+        ecs_iter_set_var(&it, 0, e1);
+        test_bool(true, ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e1);
+        Position *p = ecs_field(&it, Position, 1);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        Velocity *v = ecs_field(&it, Velocity, 2);
+        test_assert(v != NULL);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+        Mass *m = ecs_field(&it, Mass, 3);
+        test_assert(m != NULL);
+        test_int(m[0], 60);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+        test_uint(ecs_id(Mass), ecs_field_id(&it, 3));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_uint(parent, ecs_field_src(&it, 3));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, f);
+        ecs_iter_set_var(&it, 0, e2);
+        test_bool(true, ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        Position *p = ecs_field(&it, Position, 1);
+        test_assert(p != NULL);
+        test_int(p->x, 20);
+        test_int(p->y, 30);
+        Velocity *v = ecs_field(&it, Velocity, 2);
+        test_assert(v != NULL);
+        test_int(v->x, 2);
+        test_int(v->y, 3);
+        Mass *m = ecs_field(&it, Mass, 3);
+        test_assert(m != NULL);
+        test_int(m[0], 60);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+        test_uint(ecs_id(Mass), ecs_field_id(&it, 3));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_uint(parent, ecs_field_src(&it, 3));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, f);
+        ecs_iter_set_var(&it, 0, e3);
+        test_bool(true, ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e3);
+        Position *p = ecs_field(&it, Position, 1);
+        test_assert(p != NULL);
+        test_int(p->x, 30);
+        test_int(p->y, 40);
+        Velocity *v = ecs_field(&it, Velocity, 2);
+        test_assert(v != NULL);
+        test_int(v->x, 3);
+        test_int(v->y, 4);
+        Mass *m = ecs_field(&it, Mass, 3);
+        test_assert(m != NULL);
+        test_int(m[0], 60);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+        test_uint(ecs_id(Mass), ecs_field_id(&it, 3));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(prefab, ecs_field_src(&it, 2));
+        test_uint(parent, ecs_field_src(&it, 3));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(f);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_2_set_src_this_self_component_w_up(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ecs_rule_t *f = ecs_rule(world, {
+        .terms[0] = { .id = ecs_id(Position), .src.flags = EcsSelf },
+        .terms[1] = { .id = ecs_id(Velocity), .src.flags = EcsSelf },
+        .terms[2] = { .id = ecs_id(Mass), .src.flags = EcsUp, .src.trav = EcsChildOf },
+    });
+
+    ecs_entity_t prefab = ecs_set(world, 0, Velocity, {3, 4});
+    ecs_entity_t parent = ecs_set(world, 0, Mass, {60});
+
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_set(world, e1, Velocity, {1, 2});
+    ecs_add_pair(world, e1, EcsChildOf, parent);
+
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_set(world, e2, Velocity, {2, 3});
+    ecs_add_pair(world, e2, EcsChildOf, parent);
+
+    ecs_entity_t e3 = ecs_set(world, 0, Position, {30, 40});
+    ecs_add_pair(world, e3, EcsIsA, prefab);
+    ecs_add_pair(world, e3, EcsChildOf, parent);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, f);
+        ecs_iter_set_var(&it, 0, e1);
+        test_bool(true, ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e1);
+        Position *p = ecs_field(&it, Position, 1);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        Velocity *v = ecs_field(&it, Velocity, 2);
+        test_assert(v != NULL);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+        Mass *m = ecs_field(&it, Mass, 3);
+        test_assert(m != NULL);
+        test_int(m[0], 60);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+        test_uint(ecs_id(Mass), ecs_field_id(&it, 3));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_uint(parent, ecs_field_src(&it, 3));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, f);
+        ecs_iter_set_var(&it, 0, e2);
+        test_bool(true, ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        Position *p = ecs_field(&it, Position, 1);
+        test_assert(p != NULL);
+        test_int(p->x, 20);
+        test_int(p->y, 30);
+        Velocity *v = ecs_field(&it, Velocity, 2);
+        test_assert(v != NULL);
+        test_int(v->x, 2);
+        test_int(v->y, 3);
+        Mass *m = ecs_field(&it, Mass, 3);
+        test_assert(m != NULL);
+        test_int(m[0], 60);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+        test_uint(ecs_id(Mass), ecs_field_id(&it, 3));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_uint(parent, ecs_field_src(&it, 3));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, f);
+        ecs_iter_set_var(&it, 0, e3);
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(f);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_2_set_src_this_w_exclusive_wildcard(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+    ECS_TAG(world, Hello);
+
+    ecs_rule_t *f = ecs_rule(world, {
+        .terms[0] = { .id = Foo },
+        .terms[1] = { .id = Bar },
+        .terms[2] = { .id = ecs_pair(EcsChildOf, EcsWildcard) },
+    });
+
+    ecs_entity_t prefab = ecs_new(world, Bar);
+    ecs_entity_t parent = ecs_new(world, Hello);
+
+    ecs_entity_t e1 = ecs_new(world, Foo);
+    ecs_add(world, e1, Bar);
+    ecs_add_pair(world, e1, EcsChildOf, parent);
+
+    ecs_entity_t e2 = ecs_new(world, Foo);
+    ecs_add(world, e2, Bar);
+    ecs_add_pair(world, e2, EcsChildOf, parent);
+
+    ecs_entity_t e3 = ecs_new(world, Foo);
+    ecs_add_pair(world, e3, EcsIsA, prefab);
+    ecs_add_pair(world, e3, EcsChildOf, parent);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, f);
+        ecs_iter_set_var(&it, 0, e1);
+        test_bool(true, ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e1);
+        test_uint(Foo, ecs_field_id(&it, 1));
+        test_uint(Bar, ecs_field_id(&it, 2));
+        test_uint(ecs_pair(EcsChildOf, parent), ecs_field_id(&it, 3));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_uint(0, ecs_field_src(&it, 3));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, f);
+        ecs_iter_set_var(&it, 0, e2);
+        test_bool(true, ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_uint(Foo, ecs_field_id(&it, 1));
+        test_uint(Bar, ecs_field_id(&it, 2));
+        test_uint(ecs_pair(EcsChildOf, parent), ecs_field_id(&it, 3));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_uint(0, ecs_field_src(&it, 3));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, f);
+        ecs_iter_set_var(&it, 0, e3);
+        test_bool(true, ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e3);
+        test_uint(Foo, ecs_field_id(&it, 1));
+        test_uint(Bar, ecs_field_id(&it, 2));
+        test_uint(ecs_pair(EcsChildOf, parent), ecs_field_id(&it, 3));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(prefab, ecs_field_src(&it, 2));
+        test_uint(0, ecs_field_src(&it, 3));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(f);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_2_set_src_this_self_w_exclusive_wildcard(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+    ECS_TAG(world, Hello);
+
+    ecs_rule_t *f = ecs_rule(world, {
+        .terms[0] = { .id = Foo, .src.flags = EcsSelf },
+        .terms[1] = { .id = ecs_pair(EcsChildOf, EcsWildcard), .src.flags = EcsSelf },
+        .terms[2] = { .id = Bar, .src.flags = EcsUp },
+    });
+
+    ecs_entity_t prefab = ecs_new(world, Bar);
+    ecs_entity_t parent = ecs_new(world, Hello);
+
+    ecs_entity_t e1 = ecs_new(world, Foo);
+    ecs_add_pair(world, e1, EcsIsA, prefab);
+    ecs_add_pair(world, e1, EcsChildOf, parent);
+
+    ecs_entity_t e2 = ecs_new(world, Foo);
+    ecs_add_pair(world, e2, EcsIsA, prefab);
+    ecs_add_pair(world, e2, EcsChildOf, parent);
+
+    ecs_entity_t e3 = ecs_new(world, Foo);
+    ecs_add(world, e3, Bar);
+    ecs_add_pair(world, e3, EcsChildOf, parent);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, f);
+        ecs_iter_set_var(&it, 0, e1);
+        test_bool(true, ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e1);
+        test_uint(Foo, ecs_field_id(&it, 1));
+        test_uint(ecs_pair(EcsChildOf, parent), ecs_field_id(&it, 2));
+        test_uint(Bar, ecs_field_id(&it, 3));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_uint(prefab, ecs_field_src(&it, 3));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, f);
+        ecs_iter_set_var(&it, 0, e2);
+        test_bool(true, ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_uint(Foo, ecs_field_id(&it, 1));
+        test_uint(ecs_pair(EcsChildOf, parent), ecs_field_id(&it, 2));
+        test_uint(Bar, ecs_field_id(&it, 3));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_uint(prefab, ecs_field_src(&it, 3));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, f);
+        ecs_iter_set_var(&it, 0, e3);
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(f);
+
+    ecs_fini(world);
+}
+
 void RulesVariables_1_src_this_var_as_entity(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -6326,23 +7108,11 @@ void RulesVariables_no_this_anonymous_component_src_w_pair(void) {
     test_assert(e != 0);
     ecs_add_pair(world, e, EcsChildOf, parent);
 
+    ecs_log_set_level(-4);
     ecs_rule_t *r = ecs_rule(world, {
         .expr = "Position($_x), ChildOf($_x, $Parent)"
     });
-    test_assert(r != NULL);
-
-    int parent_var = ecs_rule_find_var(r, "Parent");
-    test_assert(parent_var != -1);
-
-    ecs_iter_t it = ecs_rule_iter(world, r);
-    test_bool(ecs_rule_next(&it), true);
-    test_uint(0, it.count);
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
-    test_uint(ecs_pair(EcsChildOf, parent), ecs_field_id(&it, 2));
-    test_uint(parent, ecs_iter_get_var(&it, parent_var));
-    test_bool(ecs_rule_next(&it), false);
-
-    ecs_rule_fini(r);
+    test_assert(r == NULL);
 
     ecs_fini(world);
 }

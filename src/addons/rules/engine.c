@@ -997,8 +997,13 @@ bool flecs_rule_triv(
 {
     ecs_rule_trivial_ctx_t *op_ctx = flecs_op_ctx(ctx, trivial);
     int32_t until = flecs_ito(int32_t, op->other);
+    uint64_t written = ctx->written[ctx->op_index];
     ctx->written[ctx->op_index] |= 1ull;
-    return flecs_rule_trivial_search_nodata(ctx->rule, ctx, op_ctx, !redo, until);
+    if (written & 1ull) {
+        return flecs_rule_trivial_test(ctx->rule, ctx, !redo, until);
+    } else {
+        return flecs_rule_trivial_search_nodata(ctx->rule, ctx, op_ctx, !redo, until);
+    }
 }
 
 static
@@ -1009,8 +1014,13 @@ bool flecs_rule_triv_data(
 {
     ecs_rule_trivial_ctx_t *op_ctx = flecs_op_ctx(ctx, trivial);
     int32_t until = flecs_ito(int32_t, op->other);
+    uint64_t written = ctx->written[ctx->op_index];
     ctx->written[ctx->op_index] |= 1ull;
-    return flecs_rule_trivial_search(ctx->rule, ctx, op_ctx, !redo, until);
+    if (written & 1ull) {
+        return flecs_rule_trivial_test(ctx->rule, ctx, !redo, until);
+    } else {
+        return flecs_rule_trivial_search(ctx->rule, ctx, op_ctx, !redo, until);
+    }
 }
 
 static
@@ -1021,8 +1031,13 @@ bool flecs_rule_triv_wildcard(
 {
     ecs_rule_trivial_ctx_t *op_ctx = flecs_op_ctx(ctx, trivial);
     int32_t until = flecs_ito(int32_t, op->other);
+    uint64_t written = ctx->written[ctx->op_index];
     ctx->written[ctx->op_index] |= 1ull;
-    return flecs_rule_trivial_search_w_wildcards(ctx->rule, ctx, op_ctx, !redo, until);
+    if (written & 1ull) {
+        return flecs_rule_trivial_test_w_wildcards(ctx->rule, ctx, !redo, until);
+    } else {
+        return flecs_rule_trivial_search_w_wildcards(ctx->rule, ctx, op_ctx, !redo, until);
+    }
 }
 
 static
@@ -2467,6 +2482,36 @@ void flecs_rule_iter_init(
         }
     }
 
+    ecs_flags32_t flags = rule->filter.flags;
+    if (flags & EcsFilterIsTrivial) {
+        if ((flags & EcsFilterMatchOnlySelf) || 
+            !flecs_table_cache_count(&ctx->world->idr_isa_wildcard->cache)) 
+        {
+            if (it_written) {
+                it->offset = ctx->vars[0].range.offset;
+                it->count = ctx->vars[0].range.count;
+                if (!it->count) {
+                    ecs_assert(!it->offset, ECS_INVALID_PARAMETER, NULL);
+                    it->count = ecs_table_count(ctx->vars[0].range.table);
+                }
+
+                it->flags |= EcsIterTrivialTest;
+                flecs_rule_setids(&rule->ops[0], false, ctx);
+            } else {
+                if (flags & EcsFilterHasWildcards) {
+                    it->flags |= EcsIterTrivialSearchWildcard;
+                    flecs_rule_setids(&rule->ops[0], false, ctx);
+                } else if (flags & EcsFilterNoData) {
+                    it->flags |= EcsIterTrivialSearchNoData;
+                    flecs_rule_setids(&rule->ops[0], false, ctx);
+                } else {
+                    it->flags |= EcsIterTrivialSearch;
+                    flecs_rule_setids(&rule->ops[0], false, ctx);
+                }
+            }
+        }
+    }
+
     flecs_iter_validate(it);
 }
 
@@ -2498,6 +2543,46 @@ bool ecs_rule_next_instanced(
         it->frame_offset += it->count;
     }
 
+    /* Specialized iterator modes for trivial queries */
+    if (it->flags & EcsIterTrivialSearch) {
+        ecs_rule_trivial_ctx_t *op_ctx = &ctx.op_ctx[0].is.trivial;
+        int32_t fields = ctx.rule->filter.term_count;
+        if (!flecs_rule_trivial_search(ctx.rule, &ctx, op_ctx, !redo, fields)) {
+            goto done;
+        }
+        it->table = ctx.vars[0].range.table;
+        it->count = ecs_table_count(it->table);
+        it->entities = flecs_table_entities_array(it->table);
+        return true;
+    } else if (it->flags & EcsIterTrivialSearchNoData) {
+        ecs_rule_trivial_ctx_t *op_ctx = &ctx.op_ctx[0].is.trivial;
+        int32_t fields = ctx.rule->filter.term_count;
+        if (!flecs_rule_trivial_search_nodata(ctx.rule, &ctx, op_ctx, !redo, fields)) {
+            goto done;
+        }
+        it->table = ctx.vars[0].range.table;
+        it->count = ecs_table_count(it->table);
+        it->entities = flecs_table_entities_array(it->table);
+        return true;
+    } else if (it->flags & EcsIterTrivialTest) {
+        int32_t fields = ctx.rule->filter.term_count;
+        if (!flecs_rule_trivial_test(ctx.rule, &ctx, !redo, fields)) {
+            goto done;
+        }
+        return true;
+    } else if (it->flags & EcsIterTrivialSearchWildcard) {
+        ecs_rule_trivial_ctx_t *op_ctx = &ctx.op_ctx[0].is.trivial;
+        int32_t fields = ctx.rule->filter.term_count;
+        if (!flecs_rule_trivial_search_w_wildcards(ctx.rule, &ctx, op_ctx, !redo, fields)) {
+            goto done;
+        }
+        it->table = ctx.vars[0].range.table;
+        it->count = ecs_table_count(it->table);
+        it->entities = flecs_table_entities_array(it->table);
+        return true;
+    }
+
+    /* Default iterator mode */
     if (flecs_rule_run_until(redo, &ctx, ops, -1, rit->op, EcsRuleYield)) {
         ecs_assert(ops[ctx.op_index].kind == EcsRuleYield, 
             ECS_INTERNAL_ERROR, NULL);
@@ -2522,6 +2607,7 @@ bool ecs_rule_next_instanced(
         return true;
     }
 
+done:
     ecs_iter_fini(it);
     return false;
 }
@@ -2559,7 +2645,9 @@ void flecs_rule_iter_fini_ctx(
             flecs_rule_trav_cache_fini(a, &ctx[i].is.trav.cache);
             break;
         case EcsRuleUp:
-        case EcsRuleSelfUp: {
+        case EcsRuleSelfUp:
+        case EcsRuleUpId:
+        case EcsRuleSelfUpId: {
             ecs_trav_up_cache_t *cache = &ctx[i].is.up.cache;
             if (cache->dir == EcsDown) {
                 flecs_rule_down_cache_fini(a, cache);

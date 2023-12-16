@@ -355,7 +355,7 @@ ecs_var_id_t flecs_rule_add_var_for_term_id(
  * - place anonymous variables after public variables in vars array
  */
 static
-void flecs_rule_discover_vars(
+int flecs_rule_discover_vars(
     ecs_stage_t *stage,
     ecs_rule_t *rule)
 {
@@ -434,6 +434,20 @@ void flecs_rule_discover_vars(
                     if (!var->lookup) {
                         var->kind = EcsVarAny;
                         anonymous_table_count ++;
+                    }
+
+                    if (!(term->flags & EcsTermNoData)) {
+                        /* Can't have an anonymous variable as source of a term
+                         * that returns a component. We need to return each
+                         * instance of the component, whereas anonymous 
+                         * variables are not guaranteed to be resolved to 
+                         * individual entities. */
+                        if (var->anonymous) {
+                            ecs_err(
+                                "can't use anonymous variable '%s' as source of "
+                                "data term", var->name);
+                            goto error;
+                        }
                     }
 
                     /* Track which variable ids are used as field source */
@@ -637,6 +651,10 @@ void flecs_rule_discover_vars(
         ecs_assert(rule->vars[i].kind == EcsVarEntity, ECS_INTERNAL_ERROR, NULL);
     }
 #endif
+
+    return 0;
+error:
+    return -1;
 }
 
 static
@@ -1938,7 +1956,9 @@ int flecs_rule_compile(
     ecs_vec_clear(ctx.ops);
 
     /* Find all variables defined in query */
-    flecs_rule_discover_vars(stage, rule);
+    if (flecs_rule_discover_vars(stage, rule)) {
+        return -1;
+    }
 
     /* If rule contains fixed source terms, insert operation to set sources */
     int32_t i, term_count = filter->term_count;

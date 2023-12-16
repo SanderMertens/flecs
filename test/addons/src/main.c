@@ -864,6 +864,16 @@ void RulesVariables_1_set_src_this_to_empty_table_w_component(void);
 void RulesVariables_1_set_src_this_to_empty_table_w_component_self(void);
 void RulesVariables_1_set_src_this_to_entiy_in_table(void);
 void RulesVariables_1_set_src_this_to_entiy_in_table_self(void);
+void RulesVariables_2_set_src_this(void);
+void RulesVariables_2_set_src_this_self(void);
+void RulesVariables_2_set_src_this_component(void);
+void RulesVariables_2_set_src_this_self_component(void);
+void RulesVariables_2_set_src_this_w_up(void);
+void RulesVariables_2_set_src_this_self_w_up(void);
+void RulesVariables_2_set_src_this_component_w_up(void);
+void RulesVariables_2_set_src_this_self_component_w_up(void);
+void RulesVariables_2_set_src_this_w_exclusive_wildcard(void);
+void RulesVariables_2_set_src_this_self_w_exclusive_wildcard(void);
 void RulesVariables_1_src_this_var_as_entity(void);
 void RulesVariables_1_src_this_var_as_table(void);
 void RulesVariables_1_src_this_var_as_table_range(void);
@@ -5178,6 +5188,46 @@ bake_test_case RulesVariables_testcases[] = {
         RulesVariables_1_set_src_this_to_entiy_in_table_self
     },
     {
+        "2_set_src_this",
+        RulesVariables_2_set_src_this
+    },
+    {
+        "2_set_src_this_self",
+        RulesVariables_2_set_src_this_self
+    },
+    {
+        "2_set_src_this_component",
+        RulesVariables_2_set_src_this_component
+    },
+    {
+        "2_set_src_this_self_component",
+        RulesVariables_2_set_src_this_self_component
+    },
+    {
+        "2_set_src_this_w_up",
+        RulesVariables_2_set_src_this_w_up
+    },
+    {
+        "2_set_src_this_self_w_up",
+        RulesVariables_2_set_src_this_self_w_up
+    },
+    {
+        "2_set_src_this_component_w_up",
+        RulesVariables_2_set_src_this_component_w_up
+    },
+    {
+        "2_set_src_this_self_component_w_up",
+        RulesVariables_2_set_src_this_self_component_w_up
+    },
+    {
+        "2_set_src_this_w_exclusive_wildcard",
+        RulesVariables_2_set_src_this_w_exclusive_wildcard
+    },
+    {
+        "2_set_src_this_self_w_exclusive_wildcard",
+        RulesVariables_2_set_src_this_self_w_exclusive_wildcard
+    },
+    {
         "1_src_this_var_as_entity",
         RulesVariables_1_src_this_var_as_entity
     },
@@ -8733,7 +8783,7 @@ static bake_test_suite suites[] = {
         "RulesVariables",
         NULL,
         NULL,
-        151,
+        161,
         RulesVariables_testcases
     },
     {
