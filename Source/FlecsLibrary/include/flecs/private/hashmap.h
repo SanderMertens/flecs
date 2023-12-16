@@ -136,7 +136,7 @@ void* flecs_hashmap_next_(
     ecs_size_t value_size);
 
 #define flecs_hashmap_next(map, V)\
-    (V*)flecs_hashmap_next_(map, 0, NULL, ECS_SIZEOF(V))
+    (V*)flecs_hashmap_next_(map, 0, nullptr, ECS_SIZEOF(V))
 
 #define flecs_hashmap_next_w_key(map, K, key, V)\
     (V*)flecs_hashmap_next_(map, ECS_SIZEOF(K), key, ECS_SIZEOF(V))

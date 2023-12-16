@@ -28,7 +28,7 @@ struct query_base {
         m_query = ecs_query_init(world, desc);
 
         if (!m_query) {
-            ecs_abort(ECS_INVALID_PARAMETER, NULL);
+            ecs_abort(ECS_INVALID_PARAMETER, nullptr);
         }
 
         if (desc->filter.terms_buffer) {
@@ -50,7 +50,7 @@ struct query_base {
      * @return true if entities changed, otherwise false.
      */
     bool changed() const {
-        return ecs_query_changed(m_query, 0);
+        return ecs_query_changed(m_query, nullptr);
     }
 
     /** Returns whether query is orphaned.
@@ -83,7 +83,7 @@ struct query_base {
         if (gi) {
             return gi->ctx;
         } else {
-            return NULL;
+            return nullptr;
         }
     }
 
@@ -106,7 +106,7 @@ struct query_base {
 
     flecs::term term(int32_t index) const {
         const ecs_filter_t *f = ecs_query_get_filter(m_query);
-        ecs_assert(f != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(f != nullptr, ECS_INVALID_PARAMETER, nullptr);
         return flecs::term(m_world, f->terms[index]);
     }
 

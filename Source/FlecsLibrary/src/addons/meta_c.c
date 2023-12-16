@@ -84,7 +84,7 @@ const char* skip_scope(const char *ptr, meta_parse_ctx_t *ctx) {
 
     return ptr;
 error:
-    return NULL;
+    return nullptr;
 }
 
 static
@@ -99,11 +99,11 @@ const char* parse_c_digit(
         goto error;
     }
 
-    *value_out = strtol(token, NULL, 0);
+    *value_out = strtol(token, nullptr, 0);
 
     return ecs_parse_ws_eol(ptr);
 error:
-    return NULL;
+    return nullptr;
 }
 
 static
@@ -113,9 +113,9 @@ const char* parse_c_identifier(
     char *params,
     meta_parse_ctx_t *ctx) 
 {
-    ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(buff != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(ctx != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ptr != nullptr, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(buff != nullptr, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(ctx != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
     char *bptr = buff, ch;
 
@@ -163,7 +163,7 @@ const char* parse_c_identifier(
 
     return ptr;
 error:
-    return NULL;
+    return nullptr;
 }
 
 static
@@ -199,12 +199,12 @@ const char * meta_open_scope(
                 "stray characters after struct definition");
             goto error;
         }
-        return NULL;
+        return nullptr;
     }
 
     return ptr;
 error:
-    return NULL;
+    return nullptr;
 }
 
 static
@@ -215,20 +215,20 @@ const char* meta_parse_constant(
 {    
     ptr = meta_open_scope(ptr, ctx);
     if (!ptr) {
-        return NULL;
+        return nullptr;
     }
 
     token->is_value_set = false;
 
     /* Parse token, constant identifier */
-    ptr = parse_c_identifier(ptr, token->name, NULL, ctx);
+    ptr = parse_c_identifier(ptr, token->name, nullptr, ctx);
     if (!ptr) {
-        return NULL;
+        return nullptr;
     }
 
     ptr = ecs_parse_ws_eol(ptr);
     if (!ptr) {
-        return NULL;
+        return nullptr;
     }
 
     /* Explicit value assignment */
@@ -251,7 +251,7 @@ const char* meta_parse_constant(
         return ptr;
     }
 error:
-    return NULL;
+    return nullptr;
 }
 
 static
@@ -295,7 +295,7 @@ const char* meta_parse_type(
 done:
     return ptr;
 error:
-    return NULL;
+    return nullptr;
 }
 
 static
@@ -306,7 +306,7 @@ const char* meta_parse_member(
 {
     ptr = meta_open_scope(ptr, ctx);
     if (!ptr) {
-        return NULL;
+        return nullptr;
     }
 
     token->count = 1;
@@ -324,7 +324,7 @@ const char* meta_parse_member(
     }
 
     /* Next token is the identifier */
-    ptr = parse_c_identifier(ptr, token->name, NULL, ctx);
+    ptr = parse_c_identifier(ptr, token->name, nullptr, ctx);
     if (!ptr) {
         goto error;
     }
@@ -374,7 +374,7 @@ const char* meta_parse_member(
 
     return ptr + 1;
 error:
-    return NULL;
+    return nullptr;
 }
 
 static
@@ -483,7 +483,7 @@ ecs_entity_t meta_lookup_array(
         e = ecs_new_id(world);
     }
 
-    ecs_check(params.count <= INT32_MAX, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(params.count <= INT32_MAX, ECS_INVALID_PARAMETER, nullptr);
 
     return ecs_set(world, e, EcsArray, { element_type, (int32_t)params.count });
 error:
@@ -558,13 +558,13 @@ ecs_entity_t meta_lookup_bitmask(
 
     ecs_entity_t bitmask_type = meta_lookup(
         world, &params.type, params_decl, 1, &param_ctx);
-    ecs_check(bitmask_type != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(bitmask_type != 0, ECS_INVALID_PARAMETER, nullptr);
 
 #ifndef FLECS_NDEBUG
     /* Make sure this is a bitmask type */
     const EcsMetaType *type_ptr = ecs_get(world, bitmask_type, EcsMetaType);
-    ecs_check(type_ptr != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(type_ptr->kind == EcsBitmaskType, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(type_ptr != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(type_ptr->kind == EcsBitmaskType, ECS_INVALID_PARAMETER, nullptr);
 #endif
 
     return bitmask_type;
@@ -580,10 +580,10 @@ ecs_entity_t meta_lookup(
     int64_t count,
     meta_parse_ctx_t *ctx)
 {
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(token != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(ctx != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(world != nullptr, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(token != nullptr, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(ptr != nullptr, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(ctx != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
     const char *typename = token->type;
     ecs_entity_t type = 0;
@@ -663,7 +663,7 @@ ecs_entity_t meta_lookup(
     }
 
     if (count != 1) {
-        ecs_check(count <= INT32_MAX, ECS_INVALID_PARAMETER, NULL);
+        ecs_check(count <= INT32_MAX, ECS_INVALID_PARAMETER, nullptr);
 
         type = ecs_set(world, 0, EcsArray, {type, (int32_t)count});
     }
@@ -700,7 +700,7 @@ int meta_parse_struct(
             .name = token.name
         });
 
-        ecs_entity_t type = meta_lookup(
+        const ecs_entity_t type = meta_lookup(
             world, &token.type, ptr, 1, &ctx);
         if (!type) {
             goto error;
@@ -708,8 +708,8 @@ int meta_parse_struct(
 
         ecs_set(world, m, EcsMember, {
             .type = type, 
-            .count = (ecs_size_t)token.count
-        });
+            .count = static_cast<ecs_size_t>(token.count)
+            });
     }
 
     ecs_set_scope(world, old_scope);
@@ -726,9 +726,9 @@ int meta_parse_constants(
     const char *desc,
     bool is_bitmask)
 {
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(t != 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(desc != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(world != nullptr, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(t != 0, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(desc != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
     const char *ptr = desc;
     const char *name = ecs_get_name(world, t);

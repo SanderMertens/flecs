@@ -10,7 +10,7 @@ namespace flecs {
 template <typename E>
 inline E entity_view::to_constant() const {
     const E* ptr = this->get<E>();
-    ecs_assert(ptr != NULL, ECS_INVALID_PARAMETER, "entity is not a constant");
+    ecs_assert(ptr != nullptr, ECS_INVALID_PARAMETER, "entity is not a constant");
     return ptr[0];
 }
 

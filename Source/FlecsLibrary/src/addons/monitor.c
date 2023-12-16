@@ -77,7 +77,7 @@ void MonitorStats(ecs_iter_t *it) {
 
     ecs_world_stats_t last_world = {0};
     ecs_pipeline_stats_t last_pipeline = {0};
-    void *last = NULL;
+    void *last = nullptr;
 
     if (!dif) {
         /* Copy last value so we can pass it to reduce_last */
@@ -152,7 +152,7 @@ void AggregateStats(ecs_iter_t *it) {
 
     ecs_world_stats_t last_world = {0};
     ecs_pipeline_stats_t last_pipeline = {0};
-    void *last = NULL;
+    void *last = nullptr;
 
     if (dst_hdr->reduce_count != 0) {
         /* Copy last value so we can pass it to reduce_last */
@@ -274,11 +274,11 @@ void flecs_stats_monitor_import(
 
     ecs_set_scope(world, prev);
 
-    ecs_set_id(world, EcsWorld, ecs_pair(kind, EcsPeriod1s), size, NULL);
-    ecs_set_id(world, EcsWorld, ecs_pair(kind, EcsPeriod1m), size, NULL);
-    ecs_set_id(world, EcsWorld, ecs_pair(kind, EcsPeriod1h), size, NULL);
-    ecs_set_id(world, EcsWorld, ecs_pair(kind, EcsPeriod1d), size, NULL);
-    ecs_set_id(world, EcsWorld, ecs_pair(kind, EcsPeriod1w), size, NULL);
+    ecs_set_id(world, EcsWorld, ecs_pair(kind, EcsPeriod1s), size, nullptr);
+    ecs_set_id(world, EcsWorld, ecs_pair(kind, EcsPeriod1m), size, nullptr);
+    ecs_set_id(world, EcsWorld, ecs_pair(kind, EcsPeriod1h), size, nullptr);
+    ecs_set_id(world, EcsWorld, ecs_pair(kind, EcsPeriod1d), size, nullptr);
+    ecs_set_id(world, EcsWorld, ecs_pair(kind, EcsPeriod1w), size, nullptr);
 }
 
 static

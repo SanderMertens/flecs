@@ -73,7 +73,7 @@ void* flecs_worker(void *arg) {
 
     ecs_dbg_2("worker %d: stop", stage->id);
 
-    return NULL;
+    return nullptr;
 }
 
 /* Start threads */
@@ -85,10 +85,10 @@ void flecs_create_worker_threads(
 
     for (int32_t i = 1; i < stages; i ++) {
         ecs_stage_t *stage = (ecs_stage_t*)ecs_get_stage(world, i);
-        ecs_assert(stage != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(stage != nullptr, ECS_INTERNAL_ERROR, nullptr);
         ecs_poly_assert(stage, ecs_stage_t);
 
-        ecs_assert(stage->thread == 0, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(stage->thread == 0, ECS_INTERNAL_ERROR, nullptr);
         if (ecs_using_task_threads(world)) {
             /* workers are using tasks in an external task manager provided to 
              * the OS API */
@@ -97,7 +97,7 @@ void flecs_create_worker_threads(
             /* workers are using long-running os threads */
             stage->thread = ecs_os_thread_new(flecs_worker, stage);
         }
-        ecs_assert(stage->thread != 0, ECS_OPERATION_FAILED, NULL);
+        ecs_assert(stage->thread != 0, ECS_OPERATION_FAILED, nullptr);
     }
 }
 
@@ -108,7 +108,7 @@ void flecs_start_workers(
 {
     ecs_set_stage_count(world, threads);
 
-    ecs_assert(ecs_get_stage_count(world) == threads, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_get_stage_count(world) == threads, ECS_INTERNAL_ERROR, nullptr);
 
     if (!ecs_using_task_threads(world)) {
         flecs_create_worker_threads(world);
@@ -155,7 +155,7 @@ void flecs_wait_for_sync(
 
     /* We shouldn't have been signalled unless all workers are waiting on sync */
     ecs_assert(world->workers_waiting == (stage_count - 1), 
-        ECS_INTERNAL_ERROR, NULL);
+        ECS_INTERNAL_ERROR, nullptr);
 
     world->workers_waiting = 0;
     ecs_os_mutex_unlock(world->sync_mutex);
@@ -219,7 +219,7 @@ void flecs_join_worker_threads(
     }
 
     world->flags &= ~EcsWorldQuitWorkers;
-    ecs_assert(world->workers_running == 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(world->workers_running == 0, ECS_INTERNAL_ERROR, nullptr);
 }
 
 /* -- Private functions -- */
@@ -229,14 +229,14 @@ void flecs_workers_progress(
     ecs_ftime_t delta_time)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_assert(!ecs_is_deferred(world), ECS_INVALID_OPERATION, NULL);
+    ecs_assert(!ecs_is_deferred(world), ECS_INVALID_OPERATION, nullptr);
 
     /* Make sure workers are running and ready */
     flecs_wait_for_workers(world);
 
     /* Run pipeline on main thread */
     ecs_world_t *stage = ecs_get_stage(world, 0);
-    ecs_entity_t old_scope = ecs_set_scope((ecs_world_t*)stage, 0);
+    const ecs_entity_t old_scope = ecs_set_scope((ecs_world_t*)stage, 0);
     flecs_run_pipeline(stage, pq, delta_time);
     ecs_set_scope((ecs_world_t*)stage, old_scope);
 }
@@ -250,7 +250,7 @@ void flecs_set_threads_internal(
     ecs_assert(threads <= 1 || (use_task_api 
         ? ecs_os_has_task_support() 
         : ecs_os_has_threading()), 
-            ECS_MISSING_OS_API, NULL);
+            ECS_MISSING_OS_API, nullptr);
 
     int32_t stage_count = ecs_get_stage_count(world);
     bool worker_method_changed = (use_task_api != world->workers_use_task_api);

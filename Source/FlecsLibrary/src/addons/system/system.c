@@ -148,7 +148,7 @@ ecs_entity_t ecs_run_w_filter(
 {
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     ecs_system_t *system_data = ecs_poly_get(world, system, ecs_system_t);
-    ecs_assert(system_data != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(system_data != nullptr, ECS_INVALID_PARAMETER, nullptr);
     return ecs_run_intern(world, stage, system, system_data, 0, 0, delta_time, 
         offset, limit, param);
 }
@@ -163,7 +163,7 @@ ecs_entity_t ecs_run_worker(
 {
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     ecs_system_t *system_data = ecs_poly_get(world, system, ecs_system_t);
-    ecs_assert(system_data != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(system_data != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
     return ecs_run_intern(
         world, stage, system, system_data, stage_index, stage_count, 
@@ -187,7 +187,7 @@ ecs_query_t* ecs_system_get_query(
     if (s) {
         return s->query;
     } else {
-        return NULL;
+        return nullptr;
     }
 }
 
@@ -199,7 +199,7 @@ void* ecs_system_get_ctx(
     if (s) {
         return s->ctx;
     } else {
-        return NULL;
+        return nullptr;
     }   
 }
 
@@ -211,7 +211,7 @@ void* ecs_system_get_binding_ctx(
     if (s) {
         return s->binding_ctx;
     } else {
-        return NULL;
+        return nullptr;
     }   
 }
 
@@ -265,10 +265,10 @@ ecs_entity_t ecs_system_init(
     const ecs_system_desc_t *desc)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, nullptr);
     ecs_assert(!(world->flags & EcsWorldReadonly), 
-        ECS_INVALID_WHILE_READONLY, NULL);
+        ECS_INVALID_WHILE_READONLY, nullptr);
 
     ecs_entity_t entity = desc->entity;
     if (!entity) {
@@ -277,7 +277,7 @@ ecs_entity_t ecs_system_init(
     EcsPoly *poly = ecs_poly_bind(world, entity, ecs_system_t);
     if (!poly->poly) {
         ecs_system_t *system = ecs_poly_new(ecs_system_t);
-        ecs_assert(system != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(system != nullptr, ECS_INTERNAL_ERROR, nullptr);
         
         poly->poly = system;
         system->world = world;

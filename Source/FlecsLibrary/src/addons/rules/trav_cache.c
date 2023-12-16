@@ -30,7 +30,7 @@ void flecs_rule_build_down_cache(
     if (flecs_table_cache_iter(&idr->cache, &it)) {
         ecs_table_record_t *tr; 
         while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
-            ecs_assert(tr->count == 1, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(tr->count == 1, ECS_INTERNAL_ERROR, nullptr);
             ecs_table_t *table = tr->hdr.table;
             if (!table->_->traversable_count) {
                 continue;
@@ -74,7 +74,7 @@ void flecs_rule_build_up_cache(
             ecs_trav_elem_t);
         el->entity = second;
         el->column = root_column;
-        el->idr = NULL;
+        el->idr = nullptr;
 
         ecs_record_t *r = flecs_entities_get_any(world, second);
         if (r->table) {
@@ -118,7 +118,7 @@ void flecs_rule_get_trav_up_cache(
     ecs_entity_t trav,
     ecs_table_t *table)
 {
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(table != nullptr, ECS_INTERNAL_ERROR, nullptr);
     ecs_world_t *world = ctx->it->real_world;
     ecs_allocator_t *a = flecs_rule_get_allocator(ctx->it);
 

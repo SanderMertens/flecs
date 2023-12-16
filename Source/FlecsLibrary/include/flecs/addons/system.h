@@ -121,7 +121,7 @@ ecs_entity_t ecs_system_init(
         desc.callback = id_; \
         ecs_id(id_) = ecs_system_init(world, &desc); \
     } \
-    ecs_assert(ecs_id(id_) != 0, ECS_INVALID_PARAMETER, NULL)
+    ecs_assert(ecs_id(id_) != 0, ECS_INVALID_PARAMETER, nullptr)
 
 /** Declare & define a system.
  * 

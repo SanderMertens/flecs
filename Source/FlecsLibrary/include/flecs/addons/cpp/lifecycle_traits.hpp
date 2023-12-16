@@ -47,7 +47,7 @@ inline void ecs_move_ctor_illegal(
 template <typename T>
 void ctor_impl(void *ptr, int32_t count, const ecs_type_info_t *info) {
     (void)info; ecs_assert(info->size == ECS_SIZEOF(T),
-        ECS_INTERNAL_ERROR, NULL);
+        ECS_INTERNAL_ERROR, nullptr);
     T *arr = static_cast<T*>(ptr);
     for (int i = 0; i < count; i ++) {
         FLECS_PLACEMENT_NEW(&arr[i], T);
@@ -58,7 +58,7 @@ void ctor_impl(void *ptr, int32_t count, const ecs_type_info_t *info) {
 template <typename T>
 void dtor_impl(void *ptr, int32_t count, const ecs_type_info_t *info) {
     (void)info; ecs_assert(info->size == ECS_SIZEOF(T), 
-        ECS_INTERNAL_ERROR, NULL);
+        ECS_INTERNAL_ERROR, nullptr);
     T *arr = static_cast<T*>(ptr);
     for (int i = 0; i < count; i ++) {
         arr[i].~T();
@@ -71,7 +71,7 @@ void copy_impl(void *dst_ptr, const void *src_ptr, int32_t count,
     const ecs_type_info_t *info)
 {
     (void)info; ecs_assert(info->size == ECS_SIZEOF(T), 
-        ECS_INTERNAL_ERROR, NULL);
+        ECS_INTERNAL_ERROR, nullptr);
     T *dst_arr = static_cast<T*>(dst_ptr);
     const T *src_arr = static_cast<const T*>(src_ptr);
     for (int i = 0; i < count; i ++) {
@@ -85,7 +85,7 @@ void move_impl(void *dst_ptr, void *src_ptr, int32_t count,
     const ecs_type_info_t *info)
 {
     (void)info; ecs_assert(info->size == ECS_SIZEOF(T), 
-        ECS_INTERNAL_ERROR, NULL);
+        ECS_INTERNAL_ERROR, nullptr);
     T *dst_arr = static_cast<T*>(dst_ptr);
     T *src_arr = static_cast<T*>(src_ptr);
     for (int i = 0; i < count; i ++) {
@@ -99,7 +99,7 @@ void copy_ctor_impl(void *dst_ptr, const void *src_ptr, int32_t count,
     const ecs_type_info_t *info)
 {
     (void)info; ecs_assert(info->size == ECS_SIZEOF(T), 
-        ECS_INTERNAL_ERROR, NULL);
+        ECS_INTERNAL_ERROR, nullptr);
     T *dst_arr = static_cast<T*>(dst_ptr);
     const T *src_arr = static_cast<const T*>(src_ptr);
     for (int i = 0; i < count; i ++) {
@@ -113,7 +113,7 @@ void move_ctor_impl(void *dst_ptr, void *src_ptr, int32_t count,
     const ecs_type_info_t *info)
 {
     (void)info; ecs_assert(info->size == ECS_SIZEOF(T), 
-        ECS_INTERNAL_ERROR, NULL);
+        ECS_INTERNAL_ERROR, nullptr);
     T *dst_arr = static_cast<T*>(dst_ptr);
     T *src_arr = static_cast<T*>(src_ptr);
     for (int i = 0; i < count; i ++) {
@@ -128,7 +128,7 @@ void ctor_move_dtor_impl(void *dst_ptr, void *src_ptr, int32_t count,
     const ecs_type_info_t *info)
 {
     (void)info; ecs_assert(info->size == ECS_SIZEOF(T), 
-        ECS_INTERNAL_ERROR, NULL);
+        ECS_INTERNAL_ERROR, nullptr);
     T *dst_arr = static_cast<T*>(dst_ptr);
     T *src_arr = static_cast<T*>(src_ptr);
     for (int i = 0; i < count; i ++) {
@@ -145,7 +145,7 @@ void move_dtor_impl(void *dst_ptr, void *src_ptr, int32_t count,
     const ecs_type_info_t *info)
 {
     (void)info; ecs_assert(info->size == ECS_SIZEOF(T), 
-        ECS_INTERNAL_ERROR, NULL);
+        ECS_INTERNAL_ERROR, nullptr);
     T *dst_arr = static_cast<T*>(dst_ptr);
     T *src_arr = static_cast<T*>(src_ptr);
     for (int i = 0; i < count; i ++) {
@@ -165,7 +165,7 @@ void move_dtor_impl(void *dst_ptr, void *src_ptr, int32_t count,
     const ecs_type_info_t *info)
 {
     (void)info; ecs_assert(info->size == ECS_SIZEOF(T), 
-        ECS_INTERNAL_ERROR, NULL);
+        ECS_INTERNAL_ERROR, nullptr);
     T *dst_arr = static_cast<T*>(dst_ptr);
     T *src_arr = static_cast<T*>(src_ptr);
     for (int i = 0; i < count; i ++) {

@@ -253,7 +253,7 @@ struct entity_view : public id {
     template <typename T, if_t< is_actual<T>::value > = 0>
     const T* get() const {
         auto comp_id = _::cpp_type<T>::id(m_world);
-        ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, nullptr);
         return static_cast<const T*>(ecs_get_id(m_world, m_id, comp_id));
     }
 
@@ -269,7 +269,7 @@ struct entity_view : public id {
         if_t< flecs::is_pair<T>::value > = 0>
     const A* get() const {
         auto comp_id = _::cpp_type<T>::id(m_world);
-        ecs_assert(_::cpp_type<A>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(_::cpp_type<A>::size() != 0, ECS_INVALID_PARAMETER, nullptr);
         return static_cast<const A*>(ecs_get_id(m_world, m_id, comp_id));
     }
 
@@ -294,7 +294,7 @@ struct entity_view : public id {
     template<typename First, typename Second, if_not_t< is_enum<Second>::value> = 0>
     const First* get(Second second) const {
         auto comp_id = _::cpp_type<First>::id(m_world);
-        ecs_assert(_::cpp_type<First>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(_::cpp_type<First>::size() != 0, ECS_INVALID_PARAMETER, nullptr);
         return static_cast<const First*>(
             ecs_get_id(m_world, m_id, ecs_pair(comp_id, second)));
     }
@@ -386,7 +386,7 @@ struct entity_view : public id {
     template<typename Second>
     const Second* get_second(flecs::entity_t first) const {
         auto second = _::cpp_type<Second>::id(m_world);
-        ecs_assert(_::cpp_type<Second>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(_::cpp_type<Second>::size() != 0, ECS_INVALID_PARAMETER, nullptr);
         return static_cast<const Second*>(
             ecs_get_id(m_world, m_id, ecs_pair(first, second)));
     }

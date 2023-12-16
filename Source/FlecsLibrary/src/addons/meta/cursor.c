@@ -53,10 +53,10 @@ static
 ecs_meta_scope_t* flecs_meta_cursor_get_scope(
     const ecs_meta_cursor_t *cursor)
 {
-    ecs_check(cursor != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(cursor != nullptr, ECS_INVALID_PARAMETER, nullptr);
     return ECS_CONST_CAST(ecs_meta_scope_t*, &cursor->scope[cursor->depth]);
 error:
-    return NULL;
+    return nullptr;
 }
 
 /* Restore scope, if dotmember was used */
@@ -65,8 +65,8 @@ ecs_meta_scope_t* flecs_meta_cursor_restore_scope(
     ecs_meta_cursor_t *cursor,
     const ecs_meta_scope_t* scope)
 {
-    ecs_check(cursor != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(scope != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(cursor != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(scope != nullptr, ECS_INVALID_PARAMETER, nullptr);
     if (scope->prev_depth) {
         cursor->depth = scope->prev_depth;
     }
@@ -79,7 +79,7 @@ static
 ecs_meta_type_op_t* flecs_meta_cursor_get_op(
     ecs_meta_scope_t *scope)
 {
-    ecs_assert(scope->ops != NULL, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(scope->ops != nullptr, ECS_INVALID_OPERATION, nullptr);
     return &scope->ops[scope->op_cur];
 }
 
@@ -92,7 +92,7 @@ const EcsComponent* get_ecs_component(
     const EcsComponent *comp = scope->comp;
     if (!comp) {
         comp = scope->comp = ecs_get(world, scope->type, EcsComponent);
-        ecs_assert(comp != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(comp != nullptr, ECS_INTERNAL_ERROR, nullptr);
     }
     return comp;
 }
@@ -133,7 +133,7 @@ ecs_meta_type_op_t* flecs_meta_cursor_get_ptr(
     const EcsOpaque *opaque = scope->opaque;
 
     if (scope->vector) {
-        ecs_vec_set_min_count(NULL, scope->vector, size, scope->elem_cur + 1);
+        ecs_vec_set_min_count(nullptr, scope->vector, size, scope->elem_cur + 1);
         scope->ptr = ecs_vec_first(scope->vector);
     } else if (opaque) {
         if (scope->is_collection) {
@@ -141,27 +141,27 @@ ecs_meta_type_op_t* flecs_meta_cursor_get_ptr(
                 char *str = ecs_get_fullpath(world, scope->type);
                 ecs_err("missing ensure_element for opaque type %s", str);
                 ecs_os_free(str);
-                return NULL;
+                return nullptr;
             }
             scope->is_empty_scope = false;
 
             void *opaque_ptr = opaque->ensure_element(
                 scope->ptr, flecs_ito(size_t, scope->elem_cur));
-            ecs_assert(opaque_ptr != NULL, ECS_INVALID_OPERATION, 
-                "ensure_element returned NULL");
+            ecs_assert(opaque_ptr != nullptr, ECS_INVALID_OPERATION, 
+                "ensure_element returned nullptr");
             return opaque_ptr;
         } else if (op->name) {
             if (!opaque->ensure_member) {
                 char *str = ecs_get_fullpath(world, scope->type);
                 ecs_err("missing ensure_member for opaque type %s", str);
                 ecs_os_free(str);
-                return NULL;
+                return nullptr;
             }
-            ecs_assert(scope->ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(scope->ptr != nullptr, ECS_INTERNAL_ERROR, nullptr);
             return opaque->ensure_member(scope->ptr, op->name);
         } else {
             ecs_err("invalid operation for opaque type");
-            return NULL;
+            return nullptr;
         }
     }
 
@@ -177,7 +177,7 @@ int flecs_meta_cursor_push_type(
 {
     const EcsMetaTypeSerialized *ser = ecs_get(
         world, type, EcsMetaTypeSerialized);
-    if (ser == NULL) {
+    if (ser == nullptr) {
         char *str = ecs_id_str(world, type);
         ecs_err("cannot open scope for entity '%s' which is not a type", str);
         ecs_os_free(str);
@@ -199,8 +199,8 @@ ecs_meta_cursor_t ecs_meta_cursor(
     ecs_entity_t type,
     void *ptr)
 {
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(type != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(type != 0, ECS_INVALID_PARAMETER, nullptr);
 
     ecs_meta_cursor_t result = {
         .world = world,
@@ -213,7 +213,7 @@ ecs_meta_cursor_t ecs_meta_cursor(
 
     return result;
 error:
-    return (ecs_meta_cursor_t){ 0 };
+    return (ecs_meta_cursor_t){ nullptr };
 }
 
 void* ecs_meta_get_ptr(
@@ -331,9 +331,9 @@ int ecs_meta_dotmember(
 
     char token[ECS_MAX_TOKEN_SIZE];
     const char *ptr = name;
-    while ((ptr = ecs_parse_token(NULL, NULL, ptr, token, '.'))) {
+    while ((ptr = ecs_parse_token(nullptr, nullptr, ptr, token, '.'))) {
         if (ptr[0] != '.' && ptr[0]) {
-            ecs_parser_error(NULL, name, ptr - name, 
+            ecs_parser_error(nullptr, name, ptr - name, 
                 "expected '.' or end of string");
             goto error;
         }
@@ -390,7 +390,7 @@ int ecs_meta_push(
     void *ptr = flecs_meta_cursor_get_ptr(world, scope);
     cursor->depth ++;
     ecs_check(cursor->depth < ECS_META_MAX_SCOPE_DEPTH,
-        ECS_INVALID_PARAMETER, NULL);
+        ECS_INVALID_PARAMETER, nullptr);
 
     ecs_meta_scope_t *next_scope = flecs_meta_cursor_get_scope(cursor);
 
@@ -467,7 +467,7 @@ int ecs_meta_push(
     /* Vector push */
     case EcsOpVector: {
         next_scope->vector = ptr;
-        if (flecs_meta_cursor_push_type(world, next_scope, op->type, NULL) != 0) {
+        if (flecs_meta_cursor_push_type(world, next_scope, op->type, nullptr) != 0) {
             goto error;
         }
 
@@ -496,7 +496,7 @@ int ecs_meta_push(
 
             /* Push the element type of the vector type */
             if (flecs_meta_cursor_push_type(
-                world, next_scope, vt->type, NULL) != 0) 
+                world, next_scope, vt->type, nullptr) != 0) 
             {
                 goto error;
             }
@@ -516,7 +516,7 @@ int ecs_meta_push(
 
             /* Push the element type of the array type */
             if (flecs_meta_cursor_push_type(
-                world, next_scope, at->type, NULL) != 0) 
+                world, next_scope, at->type, nullptr) != 0) 
             {
                 goto error;
             }
@@ -534,7 +534,7 @@ int ecs_meta_push(
              * member types, which is necessary for nested opaque types, and 
              * allows for error checking. */
             if (flecs_meta_cursor_push_type(
-                world, next_scope, as_type, NULL) != 0) 
+                world, next_scope, as_type, nullptr) != 0) 
             {
                 goto error;
             }
@@ -625,7 +625,7 @@ int ecs_meta_pop(
 
             /* push + op_count should point to the operation after pop */
             op = flecs_meta_cursor_get_op(next_scope);
-            ecs_assert(op->kind == EcsOpPop, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(op->kind == EcsOpPop, ECS_INTERNAL_ERROR, nullptr);
         } else if (op->kind == EcsOpArray || op->kind == EcsOpVector) {
             /* Collection type, nothing else to do */
         } else if (op->kind == EcsOpOpaque) {
@@ -633,14 +633,14 @@ int ecs_meta_pop(
             if (scope->is_collection) {
                 const EcsMetaType *mtype = ecs_get(cursor->world, 
                     opaque->as_type, EcsMetaType);
-                ecs_assert(mtype != NULL, ECS_INTERNAL_ERROR, NULL);
+                ecs_assert(mtype != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
                 /* When popping a opaque collection type, call resize to make 
                  * sure the vector isn't larger than the number of elements we
                  * deserialized. 
                  * If the opaque type represents an array, don't call resize. */
                 if (mtype->kind != EcsArrayType) {
-                    ecs_assert(opaque != NULL, ECS_INTERNAL_ERROR, NULL);
+                    ecs_assert(opaque != nullptr, ECS_INTERNAL_ERROR, nullptr);
                     if (!opaque->resize) {
                         char *str = ecs_get_fullpath(cursor->world, scope->type);
                         ecs_err("missing resize for opaque type %s", str);
@@ -650,7 +650,7 @@ int ecs_meta_pop(
                     if (scope->is_empty_scope) {
                         /* If no values were serialized for scope, resize 
                         * collection to 0 elements. */
-                        ecs_assert(!scope->elem_cur, ECS_INTERNAL_ERROR, NULL);
+                        ecs_assert(!scope->elem_cur, ECS_INTERNAL_ERROR, nullptr);
                         opaque->resize(scope->ptr, 0);
                     } else {
                         /* Otherwise resize collection to the index of the last
@@ -665,7 +665,7 @@ int ecs_meta_pop(
         } else {
             /* should not have been able to push if the previous scope was not
              * a complex or collection type */
-            ecs_assert(false, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(false, ECS_INTERNAL_ERROR, nullptr);
         }
     }
 
@@ -786,18 +786,18 @@ static struct {
     [EcsOpU8]      = {0,          UINT8_MAX},
     [EcsOpU16]     = {0,          UINT16_MAX},
     [EcsOpU32]     = {0,          UINT32_MAX},
-    [EcsOpU64]     = {0,          (double)UINT64_MAX},
+    [EcsOpU64]     = {0,          static_cast<double>(UINT64_MAX)},
     [EcsOpI8]      = {INT8_MIN,   INT8_MAX},
     [EcsOpI16]     = {INT16_MIN,  INT16_MAX},
     [EcsOpI32]     = {INT32_MIN,  INT32_MAX},
-    [EcsOpI64]     = {INT64_MIN,  (double)INT64_MAX},
-    [EcsOpUPtr]    = {0, ((sizeof(void*) == 4) ? UINT32_MAX : (double)UINT64_MAX)},
+    [EcsOpI64]     = {INT64_MIN,  static_cast<double>(INT64_MAX)},
+    [EcsOpUPtr]    = {0, ((sizeof(void*) == 4) ? UINT32_MAX : static_cast<double>(UINT64_MAX))},
     [EcsOpIPtr]    = {
-        ((sizeof(void*) == 4) ? INT32_MIN : (double)INT64_MIN), 
-        ((sizeof(void*) == 4) ? INT32_MAX : (double)INT64_MAX)
+        ((sizeof(void*) == 4) ? INT32_MIN : static_cast<double>(INT64_MIN)), 
+        ((sizeof(void*) == 4) ? INT32_MAX : static_cast<double>(INT64_MAX))
     },
-    [EcsOpEntity]  = {0,          (double)UINT64_MAX},
-    [EcsOpId]      = {0,          (double)UINT64_MAX},
+    [EcsOpEntity]  = {0,          static_cast<double>(UINT64_MAX)},
+    [EcsOpId]      = {0,          static_cast<double>(UINT64_MAX)},
     [EcsOpEnum]    = {INT32_MIN,  INT32_MAX},
     [EcsOpBitmask] = {0,          UINT32_MAX}
 };
@@ -917,12 +917,12 @@ int ecs_meta_set_char(
     cases_T_signed(ptr, value, ecs_meta_bounds_signed);
     case EcsOpOpaque: {
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
-        ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, NULL);
+        ecs_assert(opaque != nullptr, ECS_INVALID_OPERATION, nullptr);
         if (opaque->assign_char) { /* preferred operation */
             opaque->assign_char(ptr, value);
             break;
         } else if (opaque->assign_uint) {
-            opaque->assign_uint(ptr, (uint64_t)value);
+            opaque->assign_uint(ptr, static_cast<uint64_t>(value));
             break;
         } else if (opaque->assign_int) {
             opaque->assign_int(ptr, value);
@@ -974,12 +974,12 @@ int ecs_meta_set_int(
     cases_T_float(ptr, value);
     case EcsOpOpaque: {
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
-        ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, NULL);
+        ecs_assert(opaque != nullptr, ECS_INVALID_OPERATION, nullptr);
         if (opaque->assign_int) { /* preferred operation */
             opaque->assign_int(ptr, value);
             break;
         } else if (opaque->assign_float) { /* most expressive */
-            opaque->assign_float(ptr, (double)value);
+            opaque->assign_float(ptr, static_cast<double>(value));
             break;
         } else if (opaque->assign_uint && (value > 0)) {
             opaque->assign_uint(ptr, flecs_ito(uint64_t, value));
@@ -1025,12 +1025,12 @@ int ecs_meta_set_uint(
     cases_T_float(ptr, value);
     case EcsOpOpaque: {
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
-        ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, NULL);
+        ecs_assert(opaque != nullptr, ECS_INVALID_OPERATION, nullptr);
         if (opaque->assign_uint) { /* preferred operation */
             opaque->assign_uint(ptr, value);
             break;
         } else if (opaque->assign_float) { /* most expressive */
-            opaque->assign_float(ptr, (double)value);
+            opaque->assign_float(ptr, static_cast<double>(value));
             break;
         } else if (opaque->assign_int && (value < INT64_MAX)) {
             opaque->assign_int(ptr, flecs_uto(int64_t, value));
@@ -1081,22 +1081,22 @@ int ecs_meta_set_float(
     cases_T_float(ptr, value);
     case EcsOpOpaque: {
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
-        ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, NULL);
+        ecs_assert(opaque != nullptr, ECS_INVALID_OPERATION, nullptr);
         if (opaque->assign_float) { /* preferred operation */
             opaque->assign_float(ptr, value);
             break;
         } else if (opaque->assign_int && /* most expressive */
-            (value <= (double)INT64_MAX) && (value >= (double)INT64_MIN)) 
+            (value <= static_cast<double>(INT64_MAX)) && (value >= static_cast<double>(INT64_MIN))) 
         {
-            opaque->assign_int(ptr, (int64_t)value);
+            opaque->assign_int(ptr, static_cast<int64_t>(value));
             break;
         } else if (opaque->assign_uint && (value >= 0)) {
-            opaque->assign_uint(ptr, (uint64_t)value);
+            opaque->assign_uint(ptr, static_cast<uint64_t>(value));
             break;
         } else if (opaque->assign_entity && (value >= 0)) {
             opaque->assign_entity(
                 ptr, ECS_CONST_CAST(ecs_world_t*, cursor->world), 
-                    (ecs_entity_t)value);
+                    static_cast<ecs_entity_t>(value));
             break;
         }
     }
@@ -1123,9 +1123,9 @@ int ecs_meta_set_value(
     ecs_meta_cursor_t *cursor,
     const ecs_value_t *value)
 {
-    ecs_check(value != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(value != nullptr, ECS_INVALID_PARAMETER, nullptr);
     ecs_entity_t type = value->type;
-    ecs_check(type != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(type != 0, ECS_INVALID_PARAMETER, nullptr);
     const EcsMetaType *mt = ecs_get(cursor->world, type, EcsMetaType);
     if (!mt) {
         ecs_err("type of value does not have reflection data");
@@ -1134,34 +1134,34 @@ int ecs_meta_set_value(
 
     if (mt->kind == EcsPrimitiveType) {
         const EcsPrimitive *prim = ecs_get(cursor->world, type, EcsPrimitive);
-        ecs_check(prim != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_check(prim != nullptr, ECS_INTERNAL_ERROR, nullptr);
         switch(prim->kind) {
-        case EcsBool: return ecs_meta_set_bool(cursor, *(bool*)value->ptr);
-        case EcsChar: return ecs_meta_set_char(cursor, *(char*)value->ptr);
-        case EcsByte: return ecs_meta_set_uint(cursor, *(uint8_t*)value->ptr);
-        case EcsU8:   return ecs_meta_set_uint(cursor, *(uint8_t*)value->ptr);
-        case EcsU16:  return ecs_meta_set_uint(cursor, *(uint16_t*)value->ptr);
-        case EcsU32:  return ecs_meta_set_uint(cursor, *(uint32_t*)value->ptr);
-        case EcsU64:  return ecs_meta_set_uint(cursor, *(uint64_t*)value->ptr);
-        case EcsI8:   return ecs_meta_set_int(cursor, *(int8_t*)value->ptr);
-        case EcsI16:  return ecs_meta_set_int(cursor, *(int16_t*)value->ptr);
-        case EcsI32:  return ecs_meta_set_int(cursor, *(int32_t*)value->ptr);
-        case EcsI64:  return ecs_meta_set_int(cursor, *(int64_t*)value->ptr);
-        case EcsF32:  return ecs_meta_set_float(cursor, (double)*(float*)value->ptr);
-        case EcsF64:  return ecs_meta_set_float(cursor, *(double*)value->ptr);
-        case EcsUPtr: return ecs_meta_set_uint(cursor, *(uintptr_t*)value->ptr);
-        case EcsIPtr: return ecs_meta_set_int(cursor, *(intptr_t*)value->ptr);
-        case EcsString: return ecs_meta_set_string(cursor, *(char**)value->ptr);
-        case EcsEntity: return ecs_meta_set_entity(cursor, *(ecs_entity_t*)value->ptr);
-        case EcsId: return ecs_meta_set_id(cursor, *(ecs_id_t*)value->ptr);
+        case EcsBool: return ecs_meta_set_bool(cursor, *static_cast<bool*>(value->ptr));
+        case EcsChar: return ecs_meta_set_char(cursor, *static_cast<char*>(value->ptr));
+        case EcsByte: return ecs_meta_set_uint(cursor, *static_cast<uint8_t*>(value->ptr));
+        case EcsU8:   return ecs_meta_set_uint(cursor, *static_cast<uint8_t*>(value->ptr));
+        case EcsU16:  return ecs_meta_set_uint(cursor, *static_cast<uint16_t*>(value->ptr));
+        case EcsU32:  return ecs_meta_set_uint(cursor, *static_cast<uint32_t*>(value->ptr));
+        case EcsU64:  return ecs_meta_set_uint(cursor, *static_cast<uint64_t*>(value->ptr));
+        case EcsI8:   return ecs_meta_set_int(cursor, *static_cast<int8_t*>(value->ptr));
+        case EcsI16:  return ecs_meta_set_int(cursor, *static_cast<int16_t*>(value->ptr));
+        case EcsI32:  return ecs_meta_set_int(cursor, *static_cast<int32_t*>(value->ptr));
+        case EcsI64:  return ecs_meta_set_int(cursor, *static_cast<int64_t*>(value->ptr));
+        case EcsF32:  return ecs_meta_set_float(cursor, (double)*static_cast<float*>(value->ptr));
+        case EcsF64:  return ecs_meta_set_float(cursor, *static_cast<double*>(value->ptr));
+        case EcsUPtr: return ecs_meta_set_uint(cursor, *static_cast<uintptr_t*>(value->ptr));
+        case EcsIPtr: return ecs_meta_set_int(cursor, *static_cast<intptr_t*>(value->ptr));
+        case EcsString: return ecs_meta_set_string(cursor, *static_cast<char**>(value->ptr));
+        case EcsEntity: return ecs_meta_set_entity(cursor, *static_cast<ecs_entity_t*>(value->ptr));
+        case EcsId: return ecs_meta_set_id(cursor, *static_cast<ecs_id_t*>(value->ptr));
         default:
             ecs_throw(ECS_INTERNAL_ERROR, "invalid type kind");
             goto error;
         }
     } else if (mt->kind == EcsEnumType) {
-        return ecs_meta_set_int(cursor, *(int32_t*)value->ptr);
+        return ecs_meta_set_int(cursor, *static_cast<int32_t*>(value->ptr));
     } else if (mt->kind == EcsBitmaskType) {
-        return ecs_meta_set_int(cursor, *(uint32_t*)value->ptr);
+        return ecs_meta_set_int(cursor, *static_cast<uint32_t*>(value->ptr));
     } else {
         ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
         ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
@@ -1186,7 +1186,7 @@ int flecs_meta_add_bitmask_constant(
     void *out,
     const char *value)
 {
-    ecs_assert(op->type != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(op->type != 0, ECS_INTERNAL_ERROR, nullptr);
 
     if (!ecs_os_strcmp(value, "0")) {
         return 0;
@@ -1202,14 +1202,14 @@ int flecs_meta_add_bitmask_constant(
 
     const ecs_u32_t *v = ecs_get_pair_object(
         cursor->world, c, EcsConstant, ecs_u32_t);
-    if (v == NULL) {
+    if (v == nullptr) {
         char *path = ecs_get_fullpath(cursor->world, op->type);
         ecs_err("'%s' is not an bitmask constant for type '%s'", value, path);
         ecs_os_free(path);
         return -1;
     }
 
-    *(ecs_u32_t*)out |= v[0];
+    *static_cast<ecs_u32_t*>(out) |= v[0];
 
     return 0;
 }
@@ -1225,7 +1225,7 @@ int flecs_meta_parse_bitmask(
 
     const char *prev = value, *ptr = value;
 
-    *(ecs_u32_t*)out = 0;
+    *static_cast<ecs_u32_t*>(out) = 0;
 
     while ((ptr = strchr(ptr, '|'))) {
         ecs_os_memcpy(token, prev, ptr - prev);
@@ -1323,14 +1323,14 @@ int ecs_meta_set_string(
         set_T(ecs_f64_t, ptr, atof(value));
         break;
     case EcsOpString: {
-        ecs_assert(*(ecs_string_t*)ptr != value, ECS_INVALID_PARAMETER, NULL);
-        ecs_os_free(*(ecs_string_t*)ptr);
+        ecs_assert(*(ecs_string_t*)ptr != value, ECS_INVALID_PARAMETER, nullptr);
+        ecs_os_free(*static_cast<ecs_string_t*>(ptr));
         char *result = ecs_os_strdup(value);
         set_T(ecs_string_t, ptr, result);
         break;
     }
     case EcsOpEnum: {
-        ecs_assert(op->type != 0, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(op->type != 0, ECS_INTERNAL_ERROR, nullptr);
         ecs_entity_t c = ecs_lookup_child(cursor->world, op->type, value);
         if (!c) {
             char *path = ecs_get_fullpath(cursor->world, op->type);
@@ -1341,7 +1341,7 @@ int ecs_meta_set_string(
 
         const ecs_i32_t *v = ecs_get_pair_object(
             cursor->world, c, EcsConstant, ecs_i32_t);
-        if (v == NULL) {
+        if (v == nullptr) {
             char *path = ecs_get_fullpath(cursor->world, op->type);
             ecs_err("'%s' is not an enum constant for type '%s'", value, path);
             ecs_os_free(path);
@@ -1368,7 +1368,7 @@ int ecs_meta_set_string(
         ecs_id_t id = 0;
 #ifdef FLECS_PARSER
         ecs_term_t term = {0};
-        if (ecs_parse_term(cursor->world, NULL, value, value, &term, NULL)) {
+        if (ecs_parse_term(cursor->world, nullptr, value, value, &term, nullptr)) {
             if (ecs_term_finalize(cursor->world, &term)) {
                 ecs_term_fini(&term);
                 goto error;
@@ -1389,7 +1389,7 @@ int ecs_meta_set_string(
         goto error;
     case EcsOpOpaque: {
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
-        ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, NULL);
+        ecs_assert(opaque != nullptr, ECS_INVALID_OPERATION, nullptr);
         if (opaque->assign_string) { /* preferred */
             opaque->assign_string(ptr, value);
             break;
@@ -1619,8 +1619,8 @@ int ecs_meta_set_null(
     void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
     switch (op->kind) {
     case EcsOpString:
-        ecs_os_free(*(char**)ptr);
-        set_T(ecs_string_t, ptr, NULL);
+        ecs_os_free(*static_cast<char**>(ptr));
+        set_T(ecs_string_t, ptr, nullptr);
         break;
     case EcsOpOpaque: {
         const EcsOpaque *ot = ecs_get(cursor->world, op->type, EcsOpaque);
@@ -1674,26 +1674,26 @@ bool ecs_meta_get_bool(
     ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
     void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
     switch(op->kind) {
-    case EcsOpBool: return *(ecs_bool_t*)ptr;
-    case EcsOpI8:   return *(ecs_i8_t*)ptr != 0;
-    case EcsOpU8:   return *(ecs_u8_t*)ptr != 0;
-    case EcsOpChar: return *(ecs_char_t*)ptr != 0;
-    case EcsOpByte: return *(ecs_u8_t*)ptr != 0;
-    case EcsOpI16:  return *(ecs_i16_t*)ptr != 0;
-    case EcsOpU16:  return *(ecs_u16_t*)ptr != 0;
-    case EcsOpI32:  return *(ecs_i32_t*)ptr != 0;
-    case EcsOpU32:  return *(ecs_u32_t*)ptr != 0;
-    case EcsOpI64:  return *(ecs_i64_t*)ptr != 0;
-    case EcsOpU64:  return *(ecs_u64_t*)ptr != 0;
-    case EcsOpIPtr: return *(ecs_iptr_t*)ptr != 0;
-    case EcsOpUPtr: return *(ecs_uptr_t*)ptr != 0;
+    case EcsOpBool: return *static_cast<ecs_bool_t*>(ptr);
+    case EcsOpI8:   return *static_cast<ecs_i8_t*>(ptr) != 0;
+    case EcsOpU8:   return *static_cast<ecs_u8_t*>(ptr) != 0;
+    case EcsOpChar: return *static_cast<ecs_char_t*>(ptr) != 0;
+    case EcsOpByte: return *static_cast<ecs_u8_t*>(ptr) != 0;
+    case EcsOpI16:  return *static_cast<ecs_i16_t*>(ptr) != 0;
+    case EcsOpU16:  return *static_cast<ecs_u16_t*>(ptr) != 0;
+    case EcsOpI32:  return *static_cast<ecs_i32_t*>(ptr) != 0;
+    case EcsOpU32:  return *static_cast<ecs_u32_t*>(ptr) != 0;
+    case EcsOpI64:  return *static_cast<ecs_i64_t*>(ptr) != 0;
+    case EcsOpU64:  return *static_cast<ecs_u64_t*>(ptr) != 0;
+    case EcsOpIPtr: return *static_cast<ecs_iptr_t*>(ptr) != 0;
+    case EcsOpUPtr: return *static_cast<ecs_uptr_t*>(ptr) != 0;
     case EcsOpF32:  return ECS_NEQZERO(*(ecs_f32_t*)ptr);
     case EcsOpF64:  return ECS_NEQZERO(*(ecs_f64_t*)ptr);
-    case EcsOpString: return *(const char**)ptr != NULL;
-    case EcsOpEnum: return *(ecs_i32_t*)ptr != 0;
-    case EcsOpBitmask: return *(ecs_u32_t*)ptr != 0;
-    case EcsOpEntity: return *(ecs_entity_t*)ptr != 0;
-    case EcsOpId: return *(ecs_id_t*)ptr != 0;
+    case EcsOpString: return *static_cast<const char**>(ptr) != nullptr;
+    case EcsOpEnum: return *static_cast<ecs_i32_t*>(ptr) != 0;
+    case EcsOpBitmask: return *static_cast<ecs_u32_t*>(ptr) != 0;
+    case EcsOpEntity: return *static_cast<ecs_entity_t*>(ptr) != 0;
+    case EcsOpId: return *static_cast<ecs_id_t*>(ptr) != 0;
     case EcsOpArray:
     case EcsOpVector:
     case EcsOpOpaque:
@@ -1720,7 +1720,7 @@ char ecs_meta_get_char(
     void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
     switch(op->kind) {
     case EcsOpChar: 
-        return *(ecs_char_t*)ptr != 0;
+        return *static_cast<ecs_char_t*>(ptr) != 0;
     case EcsOpArray:
     case EcsOpVector:
     case EcsOpOpaque:
@@ -1762,24 +1762,24 @@ int64_t ecs_meta_get_int(
     ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
     void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
     switch(op->kind) {
-    case EcsOpBool: return *(const ecs_bool_t*)ptr;
-    case EcsOpI8:   return *(const ecs_i8_t*)ptr;
-    case EcsOpU8:   return *(const ecs_u8_t*)ptr;
-    case EcsOpChar: return *(const ecs_char_t*)ptr;
-    case EcsOpByte: return *(const ecs_u8_t*)ptr;
-    case EcsOpI16:  return *(const ecs_i16_t*)ptr;
-    case EcsOpU16:  return *(const ecs_u16_t*)ptr;
-    case EcsOpI32:  return *(const ecs_i32_t*)ptr;
-    case EcsOpU32:  return *(const ecs_u32_t*)ptr;
-    case EcsOpI64:  return *(const ecs_i64_t*)ptr;
-    case EcsOpU64:  return flecs_uto(int64_t, *(const ecs_u64_t*)ptr);
-    case EcsOpIPtr: return *(const ecs_iptr_t*)ptr;
-    case EcsOpUPtr: return flecs_uto(int64_t, *(const ecs_uptr_t*)ptr);
-    case EcsOpF32:  return (int64_t)*(const ecs_f32_t*)ptr;
-    case EcsOpF64:  return (int64_t)*(const ecs_f64_t*)ptr;
-    case EcsOpString: return atoi(*(const char**)ptr);
-    case EcsOpEnum: return *(const ecs_i32_t*)ptr;
-    case EcsOpBitmask: return *(const ecs_u32_t*)ptr;
+    case EcsOpBool: return *static_cast<const ecs_bool_t*>(ptr);
+    case EcsOpI8:   return *static_cast<const ecs_i8_t*>(ptr);
+    case EcsOpU8:   return *static_cast<const ecs_u8_t*>(ptr);
+    case EcsOpChar: return *static_cast<const ecs_char_t*>(ptr);
+    case EcsOpByte: return *static_cast<const ecs_u8_t*>(ptr);
+    case EcsOpI16:  return *static_cast<const ecs_i16_t*>(ptr);
+    case EcsOpU16:  return *static_cast<const ecs_u16_t*>(ptr);
+    case EcsOpI32:  return *static_cast<const ecs_i32_t*>(ptr);
+    case EcsOpU32:  return *static_cast<const ecs_u32_t*>(ptr);
+    case EcsOpI64:  return *static_cast<const ecs_i64_t*>(ptr);
+    case EcsOpU64:  return flecs_uto(int64_t, *static_cast<const ecs_u64_t*>(ptr));
+    case EcsOpIPtr: return *static_cast<const ecs_iptr_t*>(ptr);
+    case EcsOpUPtr: return flecs_uto(int64_t, *static_cast<const ecs_uptr_t*>(ptr));
+    case EcsOpF32:  return (int64_t)*static_cast<const ecs_f32_t*>(ptr);
+    case EcsOpF64:  return static_cast<int64_t>(*(const ecs_f64_t*)ptr);
+    case EcsOpString: return atoi(*static_cast<const char**>(ptr));
+    case EcsOpEnum: return *static_cast<const ecs_i32_t*>(ptr);
+    case EcsOpBitmask: return *static_cast<const ecs_u32_t*>(ptr);
     case EcsOpEntity:
         ecs_throw(ECS_INVALID_PARAMETER,
             "invalid conversion from entity to int");
@@ -1812,26 +1812,26 @@ uint64_t ecs_meta_get_uint(
     ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
     void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
     switch(op->kind) {
-    case EcsOpBool: return *(ecs_bool_t*)ptr;
-    case EcsOpI8:   return flecs_ito(uint64_t, *(const ecs_i8_t*)ptr);
-    case EcsOpU8:   return *(ecs_u8_t*)ptr;
-    case EcsOpChar: return flecs_ito(uint64_t, *(const ecs_char_t*)ptr);
-    case EcsOpByte: return flecs_ito(uint64_t, *(const ecs_u8_t*)ptr);
-    case EcsOpI16:  return flecs_ito(uint64_t, *(const ecs_i16_t*)ptr);
-    case EcsOpU16:  return *(ecs_u16_t*)ptr;
-    case EcsOpI32:  return flecs_ito(uint64_t, *(const ecs_i32_t*)ptr);
-    case EcsOpU32:  return *(ecs_u32_t*)ptr;
-    case EcsOpI64:  return flecs_ito(uint64_t, *(const ecs_i64_t*)ptr);
-    case EcsOpU64:  return *(ecs_u64_t*)ptr;
-    case EcsOpIPtr: return flecs_ito(uint64_t, *(const ecs_i64_t*)ptr);
-    case EcsOpUPtr: return *(ecs_uptr_t*)ptr;
-    case EcsOpF32:  return flecs_ito(uint64_t, *(const ecs_f32_t*)ptr);
-    case EcsOpF64:  return flecs_ito(uint64_t, *(const ecs_f64_t*)ptr);
-    case EcsOpString: return flecs_ito(uint64_t, atoi(*(const char**)ptr));
-    case EcsOpEnum: return flecs_ito(uint64_t, *(const ecs_i32_t*)ptr);
-    case EcsOpBitmask: return *(const ecs_u32_t*)ptr;
-    case EcsOpEntity: return *(const ecs_entity_t*)ptr;
-    case EcsOpId: return *(const ecs_id_t*)ptr;
+    case EcsOpBool: return *static_cast<ecs_bool_t*>(ptr);
+    case EcsOpI8:   return flecs_ito(uint64_t, *static_cast<const ecs_i8_t*>(ptr));
+    case EcsOpU8:   return *static_cast<ecs_u8_t*>(ptr);
+    case EcsOpChar: return flecs_ito(uint64_t, *static_cast<const ecs_char_t*>(ptr));
+    case EcsOpByte: return flecs_ito(uint64_t, *static_cast<const ecs_u8_t*>(ptr));
+    case EcsOpI16:  return flecs_ito(uint64_t, *static_cast<const ecs_i16_t*>(ptr));
+    case EcsOpU16:  return *static_cast<ecs_u16_t*>(ptr);
+    case EcsOpI32:  return flecs_ito(uint64_t, *static_cast<const ecs_i32_t*>(ptr));
+    case EcsOpU32:  return *static_cast<ecs_u32_t*>(ptr);
+    case EcsOpI64:  return flecs_ito(uint64_t, *static_cast<const ecs_i64_t*>(ptr));
+    case EcsOpU64:  return *static_cast<ecs_u64_t*>(ptr);
+    case EcsOpIPtr: return flecs_ito(uint64_t, *static_cast<const ecs_i64_t*>(ptr));
+    case EcsOpUPtr: return *static_cast<ecs_uptr_t*>(ptr);
+    case EcsOpF32:  return flecs_ito(uint64_t, *static_cast<const ecs_f32_t*>(ptr));
+    case EcsOpF64:  return flecs_ito(uint64_t, *static_cast<const ecs_f64_t*>(ptr));
+    case EcsOpString: return flecs_ito(uint64_t, atoi(*static_cast<const char**>(ptr)));
+    case EcsOpEnum: return flecs_ito(uint64_t, *static_cast<const ecs_i32_t*>(ptr));
+    case EcsOpBitmask: return *static_cast<const ecs_u32_t*>(ptr);
+    case EcsOpEntity: return *static_cast<const ecs_entity_t*>(ptr);
+    case EcsOpId: return *static_cast<const ecs_id_t*>(ptr);
     case EcsOpArray:
     case EcsOpVector:
     case EcsOpOpaque:
@@ -1855,24 +1855,24 @@ double flecs_meta_to_float(
     const void *ptr)
 {
     switch(kind) {
-    case EcsOpBool: return *(const ecs_bool_t*)ptr;
-    case EcsOpI8:   return *(const ecs_i8_t*)ptr;
-    case EcsOpU8:   return *(const ecs_u8_t*)ptr;
-    case EcsOpChar: return *(const ecs_char_t*)ptr;
-    case EcsOpByte: return *(const ecs_u8_t*)ptr;
-    case EcsOpI16:  return *(const ecs_i16_t*)ptr;
-    case EcsOpU16:  return *(const ecs_u16_t*)ptr;
-    case EcsOpI32:  return *(const ecs_i32_t*)ptr;
-    case EcsOpU32:  return *(const ecs_u32_t*)ptr;
-    case EcsOpI64:  return (double)*(const ecs_i64_t*)ptr;
-    case EcsOpU64:  return (double)*(const ecs_u64_t*)ptr;
-    case EcsOpIPtr: return (double)*(const ecs_iptr_t*)ptr;
-    case EcsOpUPtr: return (double)*(const ecs_uptr_t*)ptr;
-    case EcsOpF32:  return (double)*(const ecs_f32_t*)ptr;
-    case EcsOpF64:  return *(const ecs_f64_t*)ptr;
+    case EcsOpBool: return *static_cast<const ecs_bool_t*>(ptr);
+    case EcsOpI8:   return *static_cast<const ecs_i8_t*>(ptr);
+    case EcsOpU8:   return *static_cast<const ecs_u8_t*>(ptr);
+    case EcsOpChar: return *static_cast<const ecs_char_t*>(ptr);
+    case EcsOpByte: return *static_cast<const ecs_u8_t*>(ptr);
+    case EcsOpI16:  return *static_cast<const ecs_i16_t*>(ptr);
+    case EcsOpU16:  return *static_cast<const ecs_u16_t*>(ptr);
+    case EcsOpI32:  return *static_cast<const ecs_i32_t*>(ptr);
+    case EcsOpU32:  return *static_cast<const ecs_u32_t*>(ptr);
+    case EcsOpI64:  return static_cast<double>(*(const ecs_i64_t*)ptr);
+    case EcsOpU64:  return static_cast<double>(*(const ecs_u64_t*)ptr);
+    case EcsOpIPtr: return static_cast<double>(*(const ecs_iptr_t*)ptr);
+    case EcsOpUPtr: return static_cast<double>(*(const ecs_uptr_t*)ptr);
+    case EcsOpF32:  return (double)*static_cast<const ecs_f32_t*>(ptr);
+    case EcsOpF64:  return *static_cast<const ecs_f64_t*>(ptr);
     case EcsOpString: return atof(*ECS_CONST_CAST(const char**, ptr));
-    case EcsOpEnum: return *(const ecs_i32_t*)ptr;
-    case EcsOpBitmask: return *(const ecs_u32_t*)ptr;
+    case EcsOpEnum: return *static_cast<const ecs_i32_t*>(ptr);
+    case EcsOpBitmask: return *static_cast<const ecs_u32_t*>(ptr);
     case EcsOpEntity:
         ecs_throw(ECS_INVALID_PARAMETER,
             "invalid conversion from entity to float");
@@ -1914,7 +1914,7 @@ const char* ecs_meta_get_string(
     ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
     void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
     switch(op->kind) {
-    case EcsOpString: return *(const char**)ptr;
+    case EcsOpString: return *static_cast<const char**>(ptr);
     case EcsOpArray:
     case EcsOpVector:
     case EcsOpOpaque:
@@ -1946,7 +1946,7 @@ const char* ecs_meta_get_string(
         break;
     }
 error:
-    return 0;
+    return nullptr;
 }
 
 ecs_entity_t ecs_meta_get_entity(
@@ -1956,7 +1956,7 @@ ecs_entity_t ecs_meta_get_entity(
     ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
     void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
     switch(op->kind) {
-    case EcsOpEntity: return *(ecs_entity_t*)ptr;
+    case EcsOpEntity: return *static_cast<ecs_entity_t*>(ptr);
     case EcsOpArray:
     case EcsOpVector:
     case EcsOpOpaque:
@@ -1997,8 +1997,8 @@ ecs_entity_t ecs_meta_get_id(
     ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
     void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
     switch(op->kind) {
-    case EcsOpEntity: return *(ecs_id_t*)ptr; /* Entities are valid ids */
-    case EcsOpId: return *(ecs_id_t*)ptr;
+    case EcsOpEntity: return *static_cast<ecs_id_t*>(ptr); /* Entities are valid ids */
+    case EcsOpId: return *static_cast<ecs_id_t*>(ptr);
     case EcsOpArray:
     case EcsOpVector:
     case EcsOpOpaque:

@@ -124,7 +124,7 @@ int json_typeinfo_ser_array_type(
     ecs_strbuf_t *str)
 {
     const EcsArray *arr = ecs_get(world, type, EcsArray);
-    ecs_assert(arr != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(arr != nullptr, ECS_INTERNAL_ERROR, nullptr);
     if (json_typeinfo_ser_array(world, arr->type, arr->count, str)) {
         goto error;
     }
@@ -141,7 +141,7 @@ int json_typeinfo_ser_vector(
     ecs_strbuf_t *str)
 {
     const EcsVector *arr = ecs_get(world, type, EcsVector);
-    ecs_assert(arr != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(arr != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
     ecs_strbuf_list_appendstr(str, "\"vector\"");
 
@@ -207,7 +207,7 @@ int json_typeinfo_ser_type_op(
     if (op->kind == EcsOpOpaque) {
         const EcsOpaque *ct = ecs_get(world, op->type, 
             EcsOpaque);
-        ecs_assert(ct != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(ct != nullptr, ECS_INTERNAL_ERROR, nullptr);
         return json_typeinfo_ser_type(world, ct->as_type, str);
     }
 
@@ -217,7 +217,7 @@ int json_typeinfo_ser_type_op(
     case EcsOpPush:
     case EcsOpPop:
         /* Should not be parsed as single op */
-        ecs_throw(ECS_INVALID_PARAMETER, NULL);
+        ecs_throw(ECS_INVALID_PARAMETER, nullptr);
         break;
     case EcsOpEnum:
         json_typeinfo_ser_enum(world, op->type, str);
@@ -233,7 +233,7 @@ int json_typeinfo_ser_type_op(
         break;
     case EcsOpOpaque:
         /* Can't happen, already handled above */
-        ecs_throw(ECS_INTERNAL_ERROR, NULL);
+        ecs_throw(ECS_INTERNAL_ERROR, nullptr);
         break;
     case EcsOpBool:
     case EcsOpChar:
@@ -256,19 +256,19 @@ int json_typeinfo_ser_type_op(
         if (json_typeinfo_ser_primitive( 
             flecs_json_op_to_primitive_kind(op->kind), str))
         {
-            ecs_throw(ECS_INTERNAL_ERROR, NULL);
+            ecs_throw(ECS_INTERNAL_ERROR, nullptr);
         }
         break;
     case EcsOpScope:
     case EcsOpPrimitive:
     default:
-        ecs_throw(ECS_INTERNAL_ERROR, NULL);
+        ecs_throw(ECS_INTERNAL_ERROR, nullptr);
     }
 
     if (st) {
         ecs_member_t *m = ecs_vec_get_t(
             &st->members, ecs_member_t, op->member_index);
-        ecs_assert(m != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(m != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
         bool value_range = ECS_NEQ(m->range.min, m->range.max);
         bool error_range = ECS_NEQ(m->error_range.min, m->error_range.max);
@@ -374,7 +374,7 @@ int json_typeinfo_ser_type_ops(
         case EcsOpPrimitive:
         case EcsOpScope:
         default:
-            ecs_throw(ECS_INTERNAL_ERROR, NULL);
+            ecs_throw(ECS_INTERNAL_ERROR, nullptr);
         }
     }
 
@@ -404,7 +404,7 @@ int json_typeinfo_ser_type(
 
     const EcsStruct *st = ecs_get(world, type, EcsStruct);
     ecs_meta_type_op_t *ops = ecs_vec_first_t(&ser->ops, ecs_meta_type_op_t);
-    int32_t count = ecs_vec_count(&ser->ops);
+    const int32_t count = ecs_vec_count(&ser->ops);
 
     return json_typeinfo_ser_type_ops(world, ops, count, buf, st);
 }
@@ -425,7 +425,7 @@ char* ecs_type_info_to_json(
 
     if (ecs_type_info_to_json_buf(world, type, &str) != 0) {
         ecs_strbuf_reset(&str);
-        return NULL;
+        return nullptr;
     }
 
     return ecs_strbuf_get(&str);

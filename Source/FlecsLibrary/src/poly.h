@@ -72,7 +72,7 @@ ecs_poly_t* ecs_poly_get_(
 #ifndef FLECS_NDEBUG
 #define ecs_poly_assert(object, ty)\
     do {\
-        ecs_assert(object != NULL, ECS_INVALID_PARAMETER, NULL);\
+        ecs_assert(object != nullptr, ECS_INVALID_PARAMETER, nullptr);\
         const ecs_header_t *hdr = (const ecs_header_t *)object;\
         const char *type_name = hdr->mixins->type_name;\
         ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER, type_name);\

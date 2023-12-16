@@ -36,8 +36,8 @@ struct untyped_column {
      * @return Reference to element.
      */
     void* operator[](size_t index) const {
-        ecs_assert(index < m_count, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
-        ecs_assert(!m_is_shared, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(index < m_count, ECS_COLUMN_INDEX_OUT_OF_RANGE, nullptr);
+        ecs_assert(!m_is_shared, ECS_INVALID_PARAMETER, nullptr);
         return ECS_OFFSET(m_array, m_size * index);
     }
 
@@ -84,9 +84,9 @@ struct column {
      * @return Reference to element.
      */
     T& operator[](size_t index) const {
-        ecs_assert(index < m_count, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
-        ecs_assert(!index || !m_is_shared, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(m_array != nullptr, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
+        ecs_assert(index < m_count, ECS_COLUMN_INDEX_OUT_OF_RANGE, nullptr);
+        ecs_assert(!index || !m_is_shared, ECS_INVALID_PARAMETER, nullptr);
+        ecs_assert(m_array != nullptr, ECS_COLUMN_INDEX_OUT_OF_RANGE, nullptr);
         return m_array[index];
     }
   
@@ -96,7 +96,7 @@ struct column {
      * @return Reference to the first element.
      */
     T& operator*() const {
-      ecs_assert(m_array != nullptr, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
+      ecs_assert(m_array != nullptr, ECS_COLUMN_INDEX_OUT_OF_RANGE, nullptr);
       return *m_array;
     }
 
@@ -106,7 +106,7 @@ struct column {
      * @return Pointer to the first element.
      */
     T* operator->() const {
-        ecs_assert(m_array != nullptr, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
+        ecs_assert(m_array != nullptr, ECS_COLUMN_INDEX_OUT_OF_RANGE, nullptr);
         return m_array;
     }
 
@@ -355,7 +355,7 @@ public:
             std::is_const<T>::value == false, void>::type* = nullptr>
     flecs::column<A> field(int32_t index) const {
         ecs_assert(!ecs_field_is_readonly(m_iter, index), 
-            ECS_ACCESS_VIOLATION, NULL);
+            ECS_ACCESS_VIOLATION, nullptr);
         return get_field<A>(index);
     }
 
@@ -425,7 +425,7 @@ private:
         ecs_entity_t term_id = ecs_field_id(m_iter, index);
         ecs_assert(ECS_HAS_ID_FLAG(term_id, PAIR) ||
             term_id == _::cpp_type<T>::id(m_iter->world), 
-            ECS_COLUMN_TYPE_MISMATCH, NULL);
+            ECS_COLUMN_TYPE_MISMATCH, nullptr);
 #endif
 
         size_t count;

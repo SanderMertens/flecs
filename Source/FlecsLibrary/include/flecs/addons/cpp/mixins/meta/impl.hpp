@@ -66,7 +66,7 @@ inline void init(flecs::world& world) {
     if (!flecs::is_same<i32_t, iptr_t>() && !flecs::is_same<i64_t, iptr_t>()) {
         flecs::_::cpp_type<iptr_t>::init(flecs::Iptr, true);
         ecs_assert(flecs::type_id<iptr_t>() == flecs::Iptr, 
-            ECS_INTERNAL_ERROR, NULL);
+            ECS_INTERNAL_ERROR, nullptr);
         // Remove symbol to prevent validation errors, as it doesn't match with 
         // the typename
         ecs_remove_pair(world, flecs::Iptr, ecs_id(EcsIdentifier), EcsSymbol);
@@ -75,7 +75,7 @@ inline void init(flecs::world& world) {
     if (!flecs::is_same<u32_t, uptr_t>() && !flecs::is_same<u64_t, uptr_t>()) {
         flecs::_::cpp_type<uptr_t>::init(flecs::Uptr, true);
         ecs_assert(flecs::type_id<uptr_t>() == flecs::Uptr, 
-            ECS_INTERNAL_ERROR, NULL);
+            ECS_INTERNAL_ERROR, nullptr);
         // Remove symbol to prevent validation errors, as it doesn't match with 
         // the typename
         ecs_remove_pair(world, flecs::Uptr, ecs_id(EcsIdentifier), EcsSymbol);
@@ -111,7 +111,7 @@ inline flecs::entity world::primitive(flecs::meta::primitive_kind_t kind) {
     ecs_primitive_desc_t desc = {};
     desc.kind = kind;
     flecs::entity_t eid = ecs_primitive_init(m_world, &desc);
-    ecs_assert(eid != 0, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(eid != 0, ECS_INVALID_OPERATION, nullptr);
     return flecs::entity(m_world, eid);
 }
 
@@ -121,7 +121,7 @@ inline flecs::entity world::array(flecs::entity_t elem_id, int32_t array_count) 
     desc.type = elem_id;
     desc.count = array_count;
     flecs::entity_t eid = ecs_array_init(m_world, &desc);
-    ecs_assert(eid != 0, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(eid != 0, ECS_INVALID_OPERATION, nullptr);
     return flecs::entity(m_world, eid);
 }
 
@@ -135,7 +135,7 @@ inline flecs::entity world::vector(flecs::entity_t elem_id) {
     ecs_vector_desc_t desc = {};
     desc.type = elem_id;
     flecs::entity_t eid = ecs_vector_init(m_world, &desc);
-    ecs_assert(eid != 0, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(eid != 0, ECS_INVALID_OPERATION, nullptr);
     return flecs::entity(m_world, eid);
 }
 

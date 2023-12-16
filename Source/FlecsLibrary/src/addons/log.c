@@ -14,8 +14,8 @@ void flecs_colorize_buf(
     bool enable_colors,
     ecs_strbuf_t *buf)
 {
-    ecs_assert(msg != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(buf != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(msg != nullptr, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(buf != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
     char *ptr, ch, prev = '\0';
     bool isNum = false;
@@ -222,7 +222,7 @@ void ecs_log_pop_(
 {
     if (level <= ecs_os_api.log_level_) {
         ecs_os_api.log_indent_ --;
-        ecs_assert(ecs_os_api.log_indent_ >= 0, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(ecs_os_api.log_indent_ >= 0, ECS_INTERNAL_ERROR, nullptr);
     }
 }
 
@@ -235,7 +235,7 @@ void ecs_parser_errorv_(
 {
     if (column_arg > 65536) {
         /* Limit column size, which prevents the code from throwing up when the
-         * function is called with (expr - ptr), and expr is NULL. */
+         * function is called with (expr - ptr), and expr is nullptr. */
         column_arg = 0;
     }
     int32_t column = flecs_itoi32(column_arg);

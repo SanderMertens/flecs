@@ -89,7 +89,7 @@ struct term final : term_builder_i<term> {
     }
 
     term& operator=(const term& t) {
-        ecs_assert(m_world == t.m_world, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(m_world == t.m_world, ECS_INVALID_PARAMETER, nullptr);
         ecs_term_fini(&value);
         value = ecs_term_copy(&t.value);
         this->set_term(&value);
@@ -97,7 +97,7 @@ struct term final : term_builder_i<term> {
     }
 
     term& operator=(term&& t) {
-        ecs_assert(m_world == t.m_world, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(m_world == t.m_world, ECS_INVALID_PARAMETER, nullptr);
         ecs_term_fini(&value);
         value = t.value;
         this->set_term(&value);

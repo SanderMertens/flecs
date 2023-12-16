@@ -11,7 +11,7 @@ int ecs_value_init_w_type_info(
     void *ptr)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_check(ti != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ti != nullptr, ECS_INVALID_PARAMETER, nullptr);
     (void)world;
 
     ecs_xtor_t ctor;
@@ -33,7 +33,7 @@ int ecs_value_init(
 {
     ecs_poly_assert(world, ecs_world_t);
     const ecs_type_info_t *ti = ecs_get_type_info(world, type);
-    ecs_check(ti != NULL, ECS_INVALID_PARAMETER, "entity is not a type");
+    ecs_check(ti != nullptr, ECS_INVALID_PARAMETER, "entity is not a type");
     return ecs_value_init_w_type_info(world, ti, ptr);
 error:
     return -1;
@@ -44,7 +44,7 @@ void* ecs_value_new_w_type_info(
     const ecs_type_info_t *ti)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_check(ti != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ti != nullptr, ECS_INVALID_PARAMETER, nullptr);
     (void)world;
 
     void *result = flecs_alloc(&world->allocator, ti->size);
@@ -55,7 +55,7 @@ void* ecs_value_new_w_type_info(
 
     return result;
 error:
-    return NULL;
+    return nullptr;
 }
 
 void* ecs_value_new(
@@ -64,11 +64,11 @@ void* ecs_value_new(
 {
     ecs_poly_assert(world, ecs_world_t);
     const ecs_type_info_t *ti = ecs_get_type_info(world, type);
-    ecs_check(ti != NULL, ECS_INVALID_PARAMETER, "entity is not a type");
+    ecs_check(ti != nullptr, ECS_INVALID_PARAMETER, "entity is not a type");
 
     return ecs_value_new_w_type_info(world, ti);
 error:
-    return NULL;
+    return nullptr;
 }
 
 int ecs_value_fini_w_type_info(
@@ -77,7 +77,7 @@ int ecs_value_fini_w_type_info(
     void *ptr)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_check(ti != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ti != nullptr, ECS_INVALID_PARAMETER, nullptr);
     (void)world;
 
     ecs_xtor_t dtor;
@@ -98,7 +98,7 @@ int ecs_value_fini(
     ecs_poly_assert(world, ecs_world_t);
     (void)world;
     const ecs_type_info_t *ti = ecs_get_type_info(world, type);
-    ecs_check(ti != NULL, ECS_INVALID_PARAMETER, "entity is not a type");
+    ecs_check(ti != nullptr, ECS_INVALID_PARAMETER, "entity is not a type");
     return ecs_value_fini_w_type_info(world, ti, ptr);
 error:
     return -1;
@@ -111,7 +111,7 @@ int ecs_value_free(
 {
     ecs_poly_assert(world, ecs_world_t);
     const ecs_type_info_t *ti = ecs_get_type_info(world, type);
-    ecs_check(ti != NULL, ECS_INVALID_PARAMETER, "entity is not a type");
+    ecs_check(ti != nullptr, ECS_INVALID_PARAMETER, "entity is not a type");
     if (ecs_value_fini_w_type_info(world, ti, ptr) != 0) {
         goto error;
     }
@@ -130,7 +130,7 @@ int ecs_value_copy_w_type_info(
     const void *src)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_check(ti != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ti != nullptr, ECS_INVALID_PARAMETER, nullptr);
     (void)world;
 
     ecs_copy_t copy;
@@ -153,7 +153,7 @@ int ecs_value_copy(
 {
     ecs_poly_assert(world, ecs_world_t);
     const ecs_type_info_t *ti = ecs_get_type_info(world, type);
-    ecs_check(ti != NULL, ECS_INVALID_PARAMETER, "entity is not a type");
+    ecs_check(ti != nullptr, ECS_INVALID_PARAMETER, "entity is not a type");
     return ecs_value_copy_w_type_info(world, ti, dst, src);
 error:
     return -1;
@@ -166,7 +166,7 @@ int ecs_value_move_w_type_info(
     void *src)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_check(ti != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ti != nullptr, ECS_INVALID_PARAMETER, nullptr);
     (void)world;
 
     ecs_move_t move;
@@ -189,7 +189,7 @@ int ecs_value_move(
 {
     ecs_poly_assert(world, ecs_world_t);
     const ecs_type_info_t *ti = ecs_get_type_info(world, type);
-    ecs_check(ti != NULL, ECS_INVALID_PARAMETER, "entity is not a type");
+    ecs_check(ti != nullptr, ECS_INVALID_PARAMETER, "entity is not a type");
     return ecs_value_move_w_type_info(world, ti, dst, src);
 error:
     return -1;
@@ -202,7 +202,7 @@ int ecs_value_move_ctor_w_type_info(
     void *src)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_check(ti != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ti != nullptr, ECS_INVALID_PARAMETER, nullptr);
     (void)world;
 
     ecs_move_t move;
@@ -225,7 +225,7 @@ int ecs_value_move_ctor(
 {
     ecs_poly_assert(world, ecs_world_t);
     const ecs_type_info_t *ti = ecs_get_type_info(world, type);
-    ecs_check(ti != NULL, ECS_INVALID_PARAMETER, "entity is not a type");
+    ecs_check(ti != nullptr, ECS_INVALID_PARAMETER, "entity is not a type");
     return ecs_value_move_w_type_info(world, ti, dst, src);
 error:
     return -1;

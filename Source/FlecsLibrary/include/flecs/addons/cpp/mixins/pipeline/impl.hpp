@@ -11,13 +11,13 @@ namespace flecs {
 
 template <typename ... Components>
 struct pipeline : entity {
-    pipeline(world_t *world, ecs_pipeline_desc_t *desc) 
+    pipeline(world_t *world, const ecs_pipeline_desc_t *desc) 
         : entity(world)
     {
         m_id = ecs_pipeline_init(world, desc);
 
         if (!m_id) {
-            ecs_abort(ECS_INVALID_PARAMETER, NULL);
+            ecs_abort(ECS_INVALID_PARAMETER, nullptr);
         }
 
         if (desc->query.filter.terms_buffer) {
@@ -36,7 +36,7 @@ inline flecs::pipeline_builder<> world::pipeline() const {
 }
 
 inline void world::set_pipeline(const flecs::entity pip) const {
-    return ecs_set_pipeline(m_world, pip);
+    return ecs_set_pipeline(m_world, pip.id());
 }
 
 template <typename Pipeline>

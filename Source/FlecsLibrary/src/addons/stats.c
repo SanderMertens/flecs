@@ -102,8 +102,8 @@ void ecs_metric_reduce(
     int32_t t_dst,
     int32_t t_src)
 {
-    ecs_check(dst != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(src != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(dst != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(src != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
     bool min_set = false;
     dst->gauge.avg[t_dst] = 0;
@@ -137,7 +137,7 @@ void ecs_metric_reduce_last(
     int32_t prev,
     int32_t count)
 {
-    ecs_check(m != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(m != nullptr, ECS_INVALID_PARAMETER, nullptr);
     int32_t t = t_next(prev);
 
     if (m->gauge.min[t] < m->gauge.min[prev]) {
@@ -167,8 +167,8 @@ void ecs_metric_copy(
     int32_t dst,
     int32_t src)
 {
-    ecs_check(m != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(dst != src, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(m != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(dst != src, ECS_INVALID_PARAMETER, nullptr);
 
     m->gauge.avg[dst] = m->gauge.avg[src];
     m->gauge.min[dst] = m->gauge.min[src];
@@ -246,8 +246,8 @@ void ecs_world_stats_get(
     const ecs_world_t *world,
     ecs_world_stats_t *s)
 {
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(s != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(s != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
     world = ecs_get_world(world);
 
@@ -379,9 +379,9 @@ void ecs_query_stats_get(
     const ecs_query_t *query,
     ecs_query_stats_t *s)
 {
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(query != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(s != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(query != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(s != nullptr, ECS_INVALID_PARAMETER, nullptr);
     (void)world;
 
     int32_t t = s->t = t_next(s->t);
@@ -442,9 +442,9 @@ bool ecs_system_stats_get(
     ecs_entity_t system,
     ecs_system_stats_t *s)
 {
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(s != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(system != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(s != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(system != 0, ECS_INVALID_PARAMETER, nullptr);
 
     world = ecs_get_world(world);
 
@@ -514,9 +514,9 @@ bool ecs_pipeline_stats_get(
     ecs_entity_t pipeline,
     ecs_pipeline_stats_t *s)
 {
-    ecs_check(stage != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(s != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(pipeline != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(stage != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(s != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(pipeline != 0, ECS_INVALID_PARAMETER, nullptr);
 
     const ecs_world_t *world = ecs_get_world(stage);
     const EcsPipeline *pqc = ecs_get(world, pipeline, EcsPipeline);
@@ -524,14 +524,14 @@ bool ecs_pipeline_stats_get(
         return false;
     }
     ecs_pipeline_state_t *pq = pqc->state;
-    ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(pq != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
     int32_t sys_count = 0, active_sys_count = 0;
 
     /* Count number of active systems */
     ecs_iter_t it = ecs_query_iter(stage, pq->query);
     while (ecs_query_next(&it)) {
-        if (flecs_id_record_get_table(pq->idr_inactive, it.table) != NULL) {
+        if (flecs_id_record_get_table(pq->idr_inactive, it.table) != nullptr) {
             continue;
         }
         active_sys_count += it.count;
@@ -556,13 +556,13 @@ bool ecs_pipeline_stats_get(
     if (ecs_map_is_init(&s->system_stats) && !sys_count) {
         ecs_map_fini(&s->system_stats);
     }
-    ecs_map_init_if(&s->system_stats, NULL);
+    ecs_map_init_if(&s->system_stats, nullptr);
 
     if (op) {
-        ecs_entity_t *systems = NULL;
+        ecs_entity_t *systems = nullptr;
         if (pip_count) {
             ecs_vec_init_if_t(&s->systems, ecs_entity_t);
-            ecs_vec_set_count_t(NULL, &s->systems, ecs_entity_t, pip_count);
+            ecs_vec_set_count_t(nullptr, &s->systems, ecs_entity_t, pip_count);
             systems = ecs_vec_first_t(&s->systems, ecs_entity_t);
 
             /* Populate systems vector, keep track of sync points */
@@ -570,7 +570,7 @@ bool ecs_pipeline_stats_get(
             
             int32_t i, i_system = 0, ran_since_merge = 0;
             while (ecs_query_next(&it)) {
-                if (flecs_id_record_get_table(pq->idr_inactive, it.table) != NULL) {
+                if (flecs_id_record_get_table(pq->idr_inactive, it.table) != nullptr) {
                     continue;
                 }
 
@@ -586,16 +586,16 @@ bool ecs_pipeline_stats_get(
             }
 
             systems[i_system ++] = 0; /* Last merge */
-            ecs_assert(pip_count == i_system, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(pip_count == i_system, ECS_INTERNAL_ERROR, nullptr);
         } else {
-            ecs_vec_fini_t(NULL, &s->systems, ecs_entity_t);
+            ecs_vec_fini_t(nullptr, &s->systems, ecs_entity_t);
         }
 
         /* Get sync point statistics */
         int32_t i, count = ecs_vec_count(ops);
         if (count) {
             ecs_vec_init_if_t(&s->sync_points, ecs_sync_stats_t);
-            ecs_vec_set_min_count_zeromem_t(NULL, &s->sync_points, ecs_sync_stats_t, count);
+            ecs_vec_set_min_count_zeromem_t(nullptr, &s->sync_points, ecs_sync_stats_t, count);
             op = ecs_vec_first_t(ops, ecs_pipeline_op_t);
 
             for (i = 0; i < count; i ++) {
@@ -643,8 +643,8 @@ void ecs_pipeline_stats_fini(
         ecs_os_free(elem);
     }
     ecs_map_fini(&stats->system_stats);
-    ecs_vec_fini_t(NULL, &stats->systems, ecs_entity_t);
-    ecs_vec_fini_t(NULL, &stats->sync_points, ecs_sync_stats_t);
+    ecs_vec_fini_t(nullptr, &stats->systems, ecs_entity_t);
+    ecs_vec_fini_t(nullptr, &stats->sync_points, ecs_sync_stats_t);
 }
 
 void ecs_pipeline_stats_reduce(
@@ -653,14 +653,14 @@ void ecs_pipeline_stats_reduce(
 {
     int32_t system_count = ecs_vec_count(&src->systems);
     ecs_vec_init_if_t(&dst->systems, ecs_entity_t);
-    ecs_vec_set_count_t(NULL, &dst->systems, ecs_entity_t, system_count);
+    ecs_vec_set_count_t(nullptr, &dst->systems, ecs_entity_t, system_count);
     ecs_entity_t *dst_systems = ecs_vec_first_t(&dst->systems, ecs_entity_t);
     ecs_entity_t *src_systems = ecs_vec_first_t(&src->systems, ecs_entity_t);
     ecs_os_memcpy_n(dst_systems, src_systems, ecs_entity_t, system_count);
 
     int32_t i, sync_count = ecs_vec_count(&src->sync_points);
     ecs_vec_init_if_t(&dst->sync_points, ecs_sync_stats_t);
-    ecs_vec_set_min_count_zeromem_t(NULL, &dst->sync_points, ecs_sync_stats_t, sync_count);
+    ecs_vec_set_min_count_zeromem_t(nullptr, &dst->sync_points, ecs_sync_stats_t, sync_count);
     ecs_sync_stats_t *dst_syncs = ecs_vec_first_t(&dst->sync_points, ecs_sync_stats_t);
     ecs_sync_stats_t *src_syncs = ecs_vec_first_t(&src->sync_points, ecs_sync_stats_t);
     for (i = 0; i < sync_count; i ++) {
@@ -673,7 +673,7 @@ void ecs_pipeline_stats_reduce(
         dst_el->no_readonly = src_el->no_readonly;
     }
 
-    ecs_map_init_if(&dst->system_stats, NULL);
+    ecs_map_init_if(&dst->system_stats, nullptr);
     ecs_map_iter_t it = ecs_map_iter(&src->system_stats);
     
     while (ecs_map_next(&it)) {
@@ -705,7 +705,7 @@ void ecs_pipeline_stats_reduce_last(
         dst_el->no_readonly = src_el->no_readonly;
     }
 
-    ecs_map_init_if(&dst->system_stats, NULL);
+    ecs_map_init_if(&dst->system_stats, nullptr);
     ecs_map_iter_t it = ecs_map_iter(&src->system_stats);
     while (ecs_map_next(&it)) {
         ecs_system_stats_t *sys_src = ecs_map_ptr(&it);
@@ -744,7 +744,7 @@ void ecs_pipeline_stats_copy_last(
 {
     int32_t i, sync_count = ecs_vec_count(&src->sync_points);
     ecs_vec_init_if_t(&dst->sync_points, ecs_sync_stats_t);
-    ecs_vec_set_min_count_zeromem_t(NULL, &dst->sync_points, ecs_sync_stats_t, sync_count);
+    ecs_vec_set_min_count_zeromem_t(nullptr, &dst->sync_points, ecs_sync_stats_t, sync_count);
     ecs_sync_stats_t *dst_syncs = ecs_vec_first_t(&dst->sync_points, ecs_sync_stats_t);
     ecs_sync_stats_t *src_syncs = ecs_vec_first_t(&src->sync_points, ecs_sync_stats_t);
 
@@ -758,7 +758,7 @@ void ecs_pipeline_stats_copy_last(
         dst_el->no_readonly = src_el->no_readonly;
     }
 
-    ecs_map_init_if(&dst->system_stats, NULL);
+    ecs_map_init_if(&dst->system_stats, nullptr);
 
     ecs_map_iter_t it = ecs_map_iter(&src->system_stats);
     while (ecs_map_next(&it)) {
@@ -778,8 +778,8 @@ void ecs_world_stats_log(
 {
     int32_t t = s->t;
 
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(s != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(s != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
     world = ecs_get_world(world);    
     

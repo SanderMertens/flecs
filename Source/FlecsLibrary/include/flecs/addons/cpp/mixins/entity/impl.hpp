@@ -28,7 +28,7 @@ const T* entity_view::get() const {
     if (c) {
         // Get constant value from constant entity
         const T* v = static_cast<const T*>(ecs_get_id(m_world, c, r));
-        ecs_assert(v != NULL, ECS_INTERNAL_ERROR, 
+        ecs_assert(v != nullptr, ECS_INTERNAL_ERROR, 
             "missing enum constant value");
         return v;
     } else {
@@ -160,7 +160,7 @@ inline void entity_view::each(flecs::id_t pred, flecs::id_t obj, const Func& fun
     int32_t cur = 0;
     id_t *ids = type->array;
     
-    while (-1 != (cur = ecs_search_offset(real_world, table, cur, pattern, 0)))
+    while (-1 != (cur = ecs_search_offset(real_world, table, cur, pattern, nullptr)))
     {
         flecs::id ent(m_world, ids[cur]);
         func(ent);

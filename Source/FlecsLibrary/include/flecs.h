@@ -886,7 +886,7 @@ typedef struct ecs_entity_desc_t {
                            * with the existing entity. */
 
     const char *sep;      /**< Optional custom separator for hierarchical names.
-                           * Leave to NULL for default ('.') separator. Set to
+                           * Leave to nullptr for default ('.') separator. Set to
                            * an empty string to prevent tokenization of name. */
 
     const char *root_sep; /**< Optional, used for identifiers relative to root */
@@ -931,8 +931,8 @@ typedef struct ecs_bulk_desc_t {
     void **data;       /**< Array with component data to insert. Each element in 
                         * the array must correspond with an element in the ids
                         * array. If an element in the ids array is a tag, the
-                        * data array must contain a NULL. An element may be
-                        * set to NULL for a component, in which case the
+                        * data array must contain a nullptr. An element may be
+                        * set to nullptr for a component, in which case the
                         * component will not be set by the operation. */
 
     ecs_table_t *table; /**< Table to insert the entities into. Should not be set
@@ -1007,7 +1007,7 @@ typedef struct ecs_query_desc_t {
     ecs_entity_t order_by_component;
 
     /** Callback used for ordering query results. If order_by_id is 0, the 
-     * pointer provided to the callback will be NULL. If the callback is not
+     * pointer provided to the callback will be nullptr. If the callback is not
      * set, results will not be ordered. */
     ecs_order_by_action_t order_by;
 
@@ -1086,7 +1086,7 @@ typedef struct ecs_observer_desc_t {
     /** Callback to invoke on an event, invoked when the observer matches. */
     ecs_iter_action_t callback;
 
-    /** Callback invoked on an event. When left to NULL the default runner
+    /** Callback invoked on an event. When left to nullptr the default runner
      * is used which matches the event with the observer's filter, and calls
      * 'callback' when it matches. 
      * A reason to override the run function is to improve performance, if there
@@ -2074,7 +2074,7 @@ void ecs_set_binding_ctx(
  *
  * @param world The world.
  * @return The context set with ecs_set_ctx. If no context was set, the
- *         function returns NULL.
+ *         function returns nullptr.
  */
 FLECS_API
 void* ecs_get_ctx(
@@ -2085,7 +2085,7 @@ void* ecs_get_ctx(
  *
  * @param world The world.
  * @return The context set with ecs_set_binding_ctx. If no context was set, the
- *         function returns NULL.
+ *         function returns nullptr.
  */
 FLECS_API
 void* ecs_get_binding_ctx(
@@ -2634,7 +2634,7 @@ bool ecs_is_enabled_id(
  * @param world The world.
  * @param entity The entity.
  * @param id The id of the component to get.
- * @return The component pointer, NULL if the entity does not have the component.
+ * @return The component pointer, nullptr if the entity does not have the component.
  */
 FLECS_API
 const void* ecs_get_id(
@@ -2664,7 +2664,7 @@ ecs_ref_t ecs_ref_init_id(
  * @param world The world.
  * @param ref The ref.
  * @param id The component id.
- * @return The component pointer, NULL if the entity does not have the component.
+ * @return The component pointer, nullptr if the entity does not have the component.
  */
 FLECS_API
 void* ecs_ref_get_id(
@@ -2807,7 +2807,7 @@ ecs_entity_t ecs_record_get_entity(
  * @param world The world.
  * @param record Record to the entity.
  * @param id The (component) id.
- * @return Pointer to component, or NULL if entity does not have the component.
+ * @return Pointer to component, or nullptr if entity does not have the component.
  */
 FLECS_API
 const void* ecs_record_get_id(
@@ -2821,7 +2821,7 @@ const void* ecs_record_get_id(
  * @param world The world.
  * @param record Record to the entity.
  * @param id The (component) id.
- * @return Pointer to component, or NULL if entity does not have the component.
+ * @return Pointer to component, or nullptr if entity does not have the component.
  */
 FLECS_API
 void* ecs_record_get_mut_id(
@@ -3076,7 +3076,7 @@ bool ecs_exists(
  *
  * @param world The world.
  * @param entity The entity.
- * @return The type of the entity, NULL if the entity has no components.
+ * @return The type of the entity, nullptr if the entity has no components.
  */
 FLECS_API
 const ecs_type_t* ecs_get_type(
@@ -3087,7 +3087,7 @@ const ecs_type_t* ecs_get_type(
  *
  * @param world The world.
  * @param entity The entity.
- * @return The table of the entity, NULL if the entity has no components/tags.
+ * @return The table of the entity, nullptr if the entity has no components/tags.
  */
 FLECS_API
 ecs_table_t* ecs_get_table(
@@ -3308,7 +3308,7 @@ int32_t ecs_count_id(
  *
  * @param world The world.
  * @param entity The entity.
- * @return The type of the entity, NULL if the entity has no name.
+ * @return The type of the entity, nullptr if the entity has no name.
  */
 FLECS_API
 const char* ecs_get_name(
@@ -3320,7 +3320,7 @@ const char* ecs_get_name(
  *
  * @param world The world.
  * @param entity The entity.
- * @return The type of the entity, NULL if the entity has no name.
+ * @return The type of the entity, nullptr if the entity has no name.
  */
 FLECS_API
 const char* ecs_get_symbol(
@@ -3687,7 +3687,7 @@ void ecs_set_hooks_id(
  * 
  * @param world The world.
  * @param id The component id for which to retrieve the hooks.
- * @return The hooks for the component, or NULL if not registered.
+ * @return The hooks for the component, or nullptr if not registered.
  */
 FLECS_API
 const ecs_type_hooks_t* ecs_get_hooks_id(
@@ -3840,7 +3840,7 @@ ecs_flags32_t ecs_id_get_flags(
  * This operation converts a id flag to a string.
  * 
  * @param id_flags The id flag.
- * @return The id flag string, or NULL if no valid id is provided.
+ * @return The id flag string, or nullptr if no valid id is provided.
  */
 FLECS_API
 const char* ecs_id_flag_str(
@@ -4080,7 +4080,7 @@ void ecs_term_fini(
  *
  * @param world The world.
  * @param desc Properties for the filter to create.
- * @return The filter if successful, NULL if not successful.
+ * @return The filter if successful, nullptr if not successful.
  */
 FLECS_API
 ecs_filter_t * ecs_filter_init(
@@ -4493,7 +4493,7 @@ void ecs_query_set_group(
  * 
  * @param query The query.
  * @param group_id The group for which to obtain the context.
- * @return The group context, NULL if the group doesn't exist.
+ * @return The group context, nullptr if the group doesn't exist.
  */
 FLECS_API
 void* ecs_query_get_group_ctx(
@@ -4506,7 +4506,7 @@ void* ecs_query_get_group_ctx(
  * 
  * @param query The query.
  * @param group_id The group for which to obtain the group info.
- * @return The group info, NULL if the group doesn't exist.
+ * @return The group info, nullptr if the group doesn't exist.
  */
 FLECS_API
 const ecs_query_group_info_t* ecs_query_get_group_info(
@@ -5220,7 +5220,7 @@ int32_t ecs_table_column_to_type_index(
  * @param table The table.
  * @param index The column index.
  * @param offset The index of the first row to return (0 for entire column).
- * @return The component array, or NULL if the index is not a component.
+ * @return The component array, or nullptr if the index is not a component.
  */
 FLECS_API
 void* ecs_table_get_column(
@@ -5234,7 +5234,7 @@ void* ecs_table_get_column(
  * @param table The table.
  * @param id The component id for the column.
  * @param offset The index of the first row to return (0 for entire column).
- * @return The component array, or NULL if the index is not a component.
+ * @return The component array, or nullptr if the index is not a component.
  */
 FLECS_API
 void* ecs_table_get_id(
@@ -5476,7 +5476,7 @@ int32_t ecs_search(
  * used in the next iteration as offset:
  * 
  * int32_t index = -1;
- * while ((index = ecs_search_offset(world, table, offset, id, NULL))) {
+ * while ((index = ecs_search_offset(world, table, offset, id, nullptr))) {
  *   // do stuff
  * }
  * 
@@ -5521,9 +5521,9 @@ int32_t ecs_search_offset(
  *   EcsIsA,           // the relationship to traverse
  *   0,                // start at depth 0 (the table itself)
  *   0,                // no depth limit
- *   NULL,             // (optional) entity on which component was found
- *   NULL,             // see above
- *   NULL);            // internal type with information about matched id
+ *   nullptr,             // (optional) entity on which component was found
+ *   nullptr,             // see above
+ *   nullptr);            // internal type with information about matched id
  * 
  * The operation searches depth first. If a table type has 2 IsA relationships, the
  * operation will first search the IsA tree of the first relationship.
@@ -5592,7 +5592,7 @@ int ecs_value_init_w_type_info(
  * 
  * @param world The world.
  * @param type The type of the value to create.
- * @return Pointer to type if success, NULL if failed.
+ * @return Pointer to type if success, nullptr if failed.
  */
 FLECS_API
 void* ecs_value_new(
@@ -5603,7 +5603,7 @@ void* ecs_value_new(
  * 
  * @param world The world.
  * @param ti The type info of the type to create.
- * @return Pointer to type if success, NULL if failed.
+ * @return Pointer to type if success, nullptr if failed.
  */
 void* ecs_value_new_w_type_info(
     ecs_world_t *world,

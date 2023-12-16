@@ -136,7 +136,7 @@ public:
         flecs::entity_t id = _::cpp_type<T>::id(world_v());
         flecs::entity_t mid = ecs_lookup_path_w_sep(
             world_v(), id, m, "::", "::", false);
-        ecs_assert(m != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(m != 0, ECS_INVALID_PARAMETER, nullptr);
         m_desc->var = v;
         return this->member(mid);
     }

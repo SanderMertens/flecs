@@ -26,7 +26,7 @@ inline flecs::world iter::world() const {
 
 inline flecs::entity iter::entity(size_t row) const {
     ecs_assert(row < static_cast<size_t>(m_iter->count), 
-        ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
+        ECS_COLUMN_INDEX_OUT_OF_RANGE, nullptr);
     return flecs::entity(m_iter->world, m_iter->entities[row]);
 }
 
@@ -45,7 +45,7 @@ inline flecs::id iter::id(int32_t index) const {
 
 inline flecs::id iter::pair(int32_t index) const {
     flecs::id_t id = ecs_field_id(m_iter, index);
-    ecs_check(ECS_HAS_ID_FLAG(id, PAIR), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ECS_HAS_ID_FLAG(id, PAIR), ECS_INVALID_PARAMETER, nullptr);
     return flecs::id(m_iter->world, id);
 error:
     return flecs::id();

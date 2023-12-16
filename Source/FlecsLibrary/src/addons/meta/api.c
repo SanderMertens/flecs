@@ -40,7 +40,7 @@ bool flecs_type_is_number(
     case EcsId:
         return false;
     default:
-        ecs_abort(ECS_INVALID_PARAMETER, NULL);
+        ecs_abort(ECS_INVALID_PARAMETER, nullptr);
     }
 }
 
@@ -259,7 +259,7 @@ ecs_entity_t ecs_struct_init(
             .unit = m_desc->unit
         });
 
-        EcsMemberRanges *ranges = NULL;
+        EcsMemberRanges *ranges = nullptr;
         const ecs_member_value_range_t *range = &m_desc->range;
         const ecs_member_value_range_t *error = &m_desc->error_range;
         const ecs_member_value_range_t *warning = &m_desc->warning_range;
@@ -365,8 +365,8 @@ ecs_entity_t ecs_opaque_init(
     ecs_world_t *world,
     const ecs_opaque_desc_t *desc)
 {
-    ecs_assert(desc != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(desc->type.as_type != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(desc != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_assert(desc->type.as_type != 0, ECS_INVALID_PARAMETER, nullptr);
 
     ecs_suspend_readonly_state_t rs;
     world = flecs_suspend_readonly(world, &rs);

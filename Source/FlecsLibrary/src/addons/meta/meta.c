@@ -17,12 +17,12 @@ static ECS_COPY(ecs_string_t, dst, src, {
 static ECS_MOVE(ecs_string_t, dst, src, {
     ecs_os_free(*(ecs_string_t*)dst);
     *(ecs_string_t*)dst = *(ecs_string_t*)src;
-    *(ecs_string_t*)src = NULL;
+    *(ecs_string_t*)src = nullptr;
 })
 
 static ECS_DTOR(ecs_string_t, ptr, { 
     ecs_os_free(*(ecs_string_t*)ptr);
-    *(ecs_string_t*)ptr = NULL;
+    *(ecs_string_t*)ptr = nullptr;
 })
 
 
@@ -41,13 +41,13 @@ void ecs_meta_dtor_serialized(
         }
     }
 
-    ecs_vec_fini_t(NULL, &ptr->ops, ecs_meta_type_op_t);
+    ecs_vec_fini_t(nullptr, &ptr->ops, ecs_meta_type_op_t);
 }
 
 static ECS_COPY(EcsMetaTypeSerialized, dst, src, {
     ecs_meta_dtor_serialized(dst);
 
-    dst->ops = ecs_vec_copy_t(NULL, &src->ops, ecs_meta_type_op_t);
+    dst->ops = ecs_vec_copy_t(nullptr, &src->ops, ecs_meta_type_op_t);
 
     int32_t o, count = ecs_vec_count(&dst->ops);
     ecs_meta_type_op_t *ops = ecs_vec_first_t(&dst->ops, ecs_meta_type_op_t);
@@ -81,13 +81,13 @@ static void flecs_struct_dtor(
     for (i = 0; i < count; i ++) {
         ecs_os_free(ECS_CONST_CAST(char*, members[i].name));
     }
-    ecs_vec_fini_t(NULL, &ptr->members, ecs_member_t);
+    ecs_vec_fini_t(nullptr, &ptr->members, ecs_member_t);
 }
 
 static ECS_COPY(EcsStruct, dst, src, {
     flecs_struct_dtor(dst);
 
-    dst->members = ecs_vec_copy_t(NULL, &src->members, ecs_member_t);
+    dst->members = ecs_vec_copy_t(nullptr, &src->members, ecs_member_t);
 
     ecs_member_t *members = ecs_vec_first_t(&dst->members, ecs_member_t);
     int32_t m, count = ecs_vec_count(&dst->members);
@@ -193,7 +193,7 @@ static ECS_MOVE(EcsUnit, dst, src, {
     dst->prefix = src->prefix;
     dst->translation = src->translation;
 
-    src->symbol = NULL;
+    src->symbol = nullptr;
     src->base = 0;
     src->over = 0;
     src->prefix = 0;
@@ -222,7 +222,7 @@ static ECS_MOVE(EcsUnitPrefix, dst, src, {
     dst->symbol = src->symbol;
     dst->translation = src->translation;
 
-    src->symbol = NULL;
+    src->symbol = nullptr;
     src->translation = (ecs_unit_translation_t){0};
 })
 
@@ -254,8 +254,8 @@ int flecs_init_type(
     ecs_size_t size,
     ecs_size_t alignment)
 {
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(type != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(world != nullptr, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(type != 0, ECS_INTERNAL_ERROR, nullptr);
 
     EcsMetaType *meta_type = ecs_get_mut(world, type, EcsMetaType);
     if (meta_type->kind == 0) {
@@ -356,10 +356,10 @@ int flecs_add_member_to_struct(
     EcsMember *m,
     EcsMemberRanges *ranges)
 {
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(type != 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(member != 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(m != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(world != nullptr, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(type != 0, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(member != 0, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(m != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
     const char *name = ecs_get_name(world, member);
     if (!name) {
@@ -406,7 +406,7 @@ int flecs_add_member_to_struct(
     }
 
     EcsStruct *s = ecs_get_mut(world, type, EcsStruct);
-    ecs_assert(s != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(s != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
     /* First check if member is already added to struct */
     ecs_member_t *members = ecs_vec_first_t(&s->members, ecs_member_t);
@@ -422,8 +422,8 @@ int flecs_add_member_to_struct(
     /* If member wasn't added yet, add a new element to vector */
     if (i == count) {
         ecs_vec_init_if_t(&s->members, ecs_member_t);
-        ecs_member_t *elem = ecs_vec_append_t(NULL, &s->members, ecs_member_t);
-        elem->name = NULL;
+        ecs_member_t *elem = ecs_vec_append_t(nullptr, &s->members, ecs_member_t);
+        elem->name = nullptr;
         flecs_set_struct_member(elem, member, name, m->type, 
             m->count, m->offset, unit, ranges);
 
@@ -445,8 +445,8 @@ int flecs_add_member_to_struct(
         for (i = 0; i < count; i ++) {
             ecs_member_t *elem = &members[i];
 
-            ecs_assert(elem->name != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_assert(elem->type != 0, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(elem->name != nullptr, ECS_INTERNAL_ERROR, nullptr);
+            ecs_assert(elem->type != 0, ECS_INTERNAL_ERROR, nullptr);
 
             /* Get component of member type to get its size & alignment */
             const EcsComponent *mbr_comp = ecs_get(world, elem->type, EcsComponent);
@@ -495,8 +495,8 @@ int flecs_add_member_to_struct(
          * (component) size to determine if the type is partial. */
         ecs_member_t *elem = &members[i];
 
-        ecs_assert(elem->name != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(elem->type != 0, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(elem->name != nullptr, ECS_INTERNAL_ERROR, nullptr);
+        ecs_assert(elem->type != 0, ECS_INTERNAL_ERROR, nullptr);
 
         /* Get component of member type to get its size & alignment */
         const EcsComponent *mbr_comp = ecs_get(world, elem->type, EcsComponent);
@@ -549,7 +549,7 @@ int flecs_add_member_to_struct(
     /* If current struct is also a member, assign to itself */
     if (ecs_has(world, type, EcsMember)) {
         EcsMember *type_mbr = ecs_get_mut(world, type, EcsMember);
-        ecs_assert(type_mbr != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(type_mbr != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
         type_mbr->type = type;
         type_mbr->count = 1;
@@ -592,7 +592,7 @@ int flecs_add_constant_to_enum(
 
         const int32_t *value_ptr = ecs_get_pair_object(
             world, e, EcsConstant, ecs_i32_t);
-        ecs_assert(value_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(value_ptr != nullptr, ECS_INTERNAL_ERROR, nullptr);
         value = *value_ptr;
         value_set = true;
     }
@@ -625,7 +625,7 @@ int flecs_add_constant_to_enum(
 
     ecs_i32_t *cptr = ecs_get_mut_pair_object(
         world, e, EcsConstant, ecs_i32_t);
-    ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(cptr != nullptr, ECS_INTERNAL_ERROR, nullptr);
     cptr[0] = value;
 
     cptr = ecs_get_mut_id(world, e, type);
@@ -665,7 +665,7 @@ int flecs_add_constant_to_bitmask(
 
         const uint32_t *value_ptr = ecs_get_pair_object(
             world, e, EcsConstant, ecs_u32_t);
-        ecs_assert(value_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(value_ptr != nullptr, ECS_INTERNAL_ERROR, nullptr);
         value = *value_ptr;
     } else {
         value = 1u << (ecs_u32_t)ecs_map_count(&ptr->constants);
@@ -694,7 +694,7 @@ int flecs_add_constant_to_bitmask(
 
     ecs_u32_t *cptr = ecs_get_mut_pair_object(
         world, e, EcsConstant, ecs_u32_t);
-    ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(cptr != nullptr, ECS_INTERNAL_ERROR, nullptr);
     cptr[0] = value;
 
     cptr = ecs_get_mut_id(world, e, type);
@@ -787,7 +787,7 @@ void flecs_set_member(ecs_iter_t *it) {
         }
 
         flecs_add_member_to_struct(world, parent, e, &member[i], 
-            ranges ? &ranges[i] : NULL);
+            ranges ? &ranges[i] : nullptr);
     }
 }
 
@@ -952,7 +952,7 @@ bool flecs_unit_validate(
     ecs_entity_t t,
     EcsUnit *data)
 {
-    char *derived_symbol = NULL;
+    char *derived_symbol = nullptr;
     const char *symbol = data->symbol;
 
     ecs_entity_t base = data->base;
@@ -1013,7 +1013,7 @@ bool flecs_unit_validate(
         ecs_strbuf_t sbuf = ECS_STRBUF_INIT;
         if (prefix) {
             const EcsUnitPrefix *ptr = ecs_get(world, prefix, EcsUnitPrefix);
-            ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(ptr != nullptr, ECS_INTERNAL_ERROR, nullptr);
             if (ptr->symbol) {
                 ecs_strbuf_appendstr(&sbuf, ptr->symbol);
                 must_match = true;
@@ -1021,14 +1021,14 @@ bool flecs_unit_validate(
         }
 
         const EcsUnit *uptr = ecs_get(world, base, EcsUnit);
-        ecs_assert(uptr != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(uptr != nullptr, ECS_INTERNAL_ERROR, nullptr);
         if (uptr->symbol) {
             ecs_strbuf_appendstr(&sbuf, uptr->symbol);
         }
 
         if (over) {
             uptr = ecs_get(world, over, EcsUnit);
-            ecs_assert(uptr != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(uptr != nullptr, ECS_INTERNAL_ERROR, nullptr);
             if (uptr->symbol) {
                 ecs_strbuf_appendch(&sbuf, '/');
                 ecs_strbuf_appendstr(&sbuf, uptr->symbol);
@@ -1039,7 +1039,7 @@ bool flecs_unit_validate(
         derived_symbol = ecs_strbuf_get(&sbuf);
         if (derived_symbol && !ecs_os_strlen(derived_symbol)) {
             ecs_os_free(derived_symbol);
-            derived_symbol = NULL;
+            derived_symbol = nullptr;
         }
 
         if (derived_symbol && symbol && ecs_os_strcmp(symbol, derived_symbol)) {

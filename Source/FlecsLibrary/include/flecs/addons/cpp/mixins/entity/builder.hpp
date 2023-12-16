@@ -663,7 +663,7 @@ struct entity_builder : entity_view {
             this->m_world, comp, EcsComponent);
 
         /* Can't set if it's not a component */
-        ecs_assert(cptr != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(cptr != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
         return set_ptr(comp, cptr->size, ptr);
     }

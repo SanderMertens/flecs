@@ -35,7 +35,7 @@ ecs_trav_down_t* flecs_trav_down_ensure(
         &cache->src, ecs_trav_down_t, entity);
     if (!trav[0]) {
         trav[0] = flecs_iter_calloc_t(ctx->it, ecs_trav_down_t);
-        ecs_vec_init_t(NULL, &trav[0]->elems, ecs_trav_down_elem_t, 0);
+        ecs_vec_init_t(nullptr, &trav[0]->elems, ecs_trav_down_elem_t, 0);
     }
 
     return trav[0];
@@ -52,13 +52,13 @@ ecs_trav_down_t* flecs_trav_table_down(
     ecs_id_record_t *idr_with,
     bool self)
 {
-    ecs_assert(table->id != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(table->id != 0, ECS_INTERNAL_ERROR, nullptr);
 
     if (!table->_->traversable_count) {
         return dst;
     }
 
-    ecs_assert(idr_with != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(idr_with != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
     ecs_entity_t *entities = ecs_vec_first(&table->data.entities);
     int32_t i, count = ecs_table_count(table);
@@ -148,8 +148,8 @@ ecs_trav_down_t* flecs_trav_entity_down(
     ecs_id_record_t *idr_with,
     bool self)
 {
-    ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(idr_with != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(dst != nullptr, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(idr_with != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
     flecs_trav_entity_down_isa(
         world, a, cache, dst, trav, entity, idr_with, self);
@@ -160,11 +160,11 @@ ecs_trav_down_t* flecs_trav_entity_down(
     if (flecs_table_cache_iter(&idr_trav->cache, &it)) {
         ecs_table_record_t *tr; 
         while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
-            ecs_assert(tr->count == 1, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(tr->count == 1, ECS_INTERNAL_ERROR, nullptr);
             ecs_table_t *table = tr->hdr.table;
             bool leaf = false;
 
-            if (flecs_id_record_get_table(idr_with, table) != NULL) {
+            if (flecs_id_record_get_table(idr_with, table) != nullptr) {
                 if (self) {
                     continue;
                 }
@@ -178,8 +178,8 @@ ecs_trav_down_t* flecs_trav_entity_down(
                 ecs_id_t id = table->type.array[index - 1];
                 if (ECS_IS_PAIR(id) && ECS_PAIR_FIRST(id) == trav) {
                     int32_t col = ecs_search_relation(world, table, 0, 
-                        idr_with->id, trav, EcsUp, NULL, NULL, &tr);
-                    ecs_assert(col >= 0, ECS_INTERNAL_ERROR, NULL);
+                        idr_with->id, trav, EcsUp, nullptr, nullptr, &tr);
+                    ecs_assert(col >= 0, ECS_INTERNAL_ERROR, nullptr);
 
                     if (col != index) {
                         /* First relationship through which the id is 
@@ -219,7 +219,7 @@ ecs_trav_down_t* flecs_rule_get_down_cache(
     bool self)
 {
     ecs_world_t *world = ctx->it->real_world;
-    ecs_assert(!(cache->dir & EcsUp), ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!(cache->dir & EcsUp), ECS_INTERNAL_ERROR, nullptr);
     cache->dir = EcsDown;
 
     ecs_allocator_t *a = flecs_rule_get_allocator(ctx->it);

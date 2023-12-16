@@ -35,7 +35,7 @@ int flecs_expr_ser_type_op(
 
 static
 ecs_primitive_kind_t flecs_expr_op_to_primitive_kind(ecs_meta_type_op_kind_t kind) {
-    return kind - EcsOpPrimitive;
+    return static_cast<ecs_primitive_kind_t>(kind - EcsOpPrimitive);
 }
 
 /* Serialize a primitive value */
@@ -49,7 +49,7 @@ int flecs_expr_ser_primitive(
 {
     switch(kind) {
     case EcsBool:
-        if (*(const bool*)base) {
+        if (*static_cast<const bool*>(base)) {
             ecs_strbuf_appendlit(str, "true");
         } else {
             ecs_strbuf_appendlit(str, "false");
@@ -57,9 +57,9 @@ int flecs_expr_ser_primitive(
         break;
     case EcsChar: {
         char chbuf[3];
-        char ch = *(const char*)base;
+        char ch = *static_cast<const char*>(base);
         if (ch) {
-            ecs_chresc(chbuf, *(const char*)base, '"');
+            ecs_chresc(chbuf, *static_cast<const char*>(base), '"');
             if (is_expr) ecs_strbuf_appendch(str, '"');
             ecs_strbuf_appendstr(str, chbuf);
             if (is_expr) ecs_strbuf_appendch(str, '"');
@@ -113,7 +113,7 @@ int flecs_expr_ser_primitive(
             if (!is_expr) {
                 ecs_strbuf_appendstr(str, value);
             } else {
-                ecs_size_t length = ecs_stresc(NULL, 0, '"', value);
+                ecs_size_t length = ecs_stresc(nullptr, 0, '"', value);
                 if (length == ecs_os_strlen(value)) {
                     ecs_strbuf_appendch(str, '"');
                     ecs_strbuf_appendstrn(str, value, length);
@@ -137,7 +137,7 @@ int flecs_expr_ser_primitive(
         if (!e) {
             ecs_strbuf_appendch(str, '0');
         } else {
-            ecs_get_path_w_sep_buf(world, 0, e, ".", NULL, str);
+            ecs_get_path_w_sep_buf(world, 0, e, ".", nullptr, str);
         }
         break;
     }
@@ -167,7 +167,7 @@ int flecs_expr_ser_enum(
     ecs_strbuf_t *str) 
 {
     const EcsEnum *enum_type = ecs_get(world, op->type, EcsEnum);
-    ecs_check(enum_type != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(enum_type != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
     int32_t val = *(const int32_t*)base;
     
@@ -198,7 +198,7 @@ int flecs_expr_ser_bitmask(
     ecs_strbuf_t *str) 
 {
     const EcsBitmask *bitmask_type = ecs_get(world, op->type, EcsBitmask);
-    ecs_check(bitmask_type != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(bitmask_type != nullptr, ECS_INVALID_PARAMETER, nullptr);
     uint32_t value = *(const uint32_t*)ptr;
 
     ecs_strbuf_list_push(str, "", "|");
@@ -281,10 +281,10 @@ int expr_ser_type_elements(
 {
     const EcsMetaTypeSerialized *ser = ecs_get(
         world, type, EcsMetaTypeSerialized);
-    ecs_assert(ser != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ser != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
     const EcsComponent *comp = ecs_get(world, type, EcsComponent);
-    ecs_assert(comp != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(comp != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
     ecs_meta_type_op_t *ops = ecs_vec_first_t(&ser->ops, ecs_meta_type_op_t);
     int32_t op_count = ecs_vec_count(&ser->ops);
@@ -301,7 +301,7 @@ int expr_ser_array(
     ecs_strbuf_t *str) 
 {
     const EcsArray *a = ecs_get(world, op->type, EcsArray);
-    ecs_assert(a != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(a != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
     return expr_ser_type_elements(
         world, a->type, ptr, a->count, str, true);
@@ -317,7 +317,7 @@ int expr_ser_vector(
 {
     const ecs_vec_t *value = base;
     const EcsVector *v = ecs_get(world, op->type, EcsVector);
-    ecs_assert(v != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(v != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
     int32_t count = ecs_vec_count(value);
     void *array = ecs_vec_first(value);
@@ -339,7 +339,7 @@ int flecs_expr_ser_type_op(
     case EcsOpPush:
     case EcsOpPop:
         /* Should not be parsed as single op */
-        ecs_throw(ECS_INVALID_PARAMETER, NULL);
+        ecs_throw(ECS_INVALID_PARAMETER, nullptr);
         break;
     case EcsOpEnum:
         if (flecs_expr_ser_enum(world, op, ECS_OFFSET(ptr, op->offset), str)) {
@@ -503,7 +503,7 @@ int ecs_ptr_to_expr_buf(
 {
     const EcsMetaTypeSerialized *ser = ecs_get(
         world, type, EcsMetaTypeSerialized);
-    if (ser == NULL) {
+    if (ser == nullptr) {
         char *path = ecs_get_fullpath(world, type);
         ecs_err("cannot serialize value for type '%s'", path);
         ecs_os_free(path);
@@ -528,7 +528,7 @@ char* ecs_ptr_to_expr(
 
     if (ecs_ptr_to_expr_buf(world, type, ptr, &str) != 0) {
         ecs_strbuf_reset(&str);
-        return NULL;
+        return nullptr;
     }
 
     return ecs_strbuf_get(&str);
@@ -542,7 +542,7 @@ int ecs_ptr_to_str_buf(
 {
     const EcsMetaTypeSerialized *ser = ecs_get(
         world, type, EcsMetaTypeSerialized);
-    if (ser == NULL) {
+    if (ser == nullptr) {
         char *path = ecs_get_fullpath(world, type);
         ecs_err("cannot serialize value for type '%s'", path);
         ecs_os_free(path);
@@ -567,7 +567,7 @@ char* ecs_ptr_to_str(
 
     if (ecs_ptr_to_str_buf(world, type, ptr, &str) != 0) {
         ecs_strbuf_reset(&str);
-        return NULL;
+        return nullptr;
     }
 
     return ecs_strbuf_get(&str);

@@ -34,7 +34,7 @@ struct ref {
             id = _::cpp_type<T>::id(world);
         }
 
-        ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, nullptr);
 
         m_ref = ecs_ref_init_id(m_world, entity, id);
     }
@@ -43,7 +43,7 @@ struct ref {
         T* result = static_cast<T*>(ecs_ref_get_id(
             m_world, &m_ref, this->m_ref.id));
 
-        ecs_assert(result != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(result != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
         return result;
     }

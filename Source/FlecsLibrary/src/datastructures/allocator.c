@@ -26,7 +26,7 @@ void flecs_allocator_init(
 {
     flecs_ballocator_init_n(&a->chunks, ecs_block_allocator_t,
         FLECS_SPARSE_PAGE_SIZE);
-    flecs_sparse_init_t(&a->sizes, NULL, &a->chunks, ecs_block_allocator_t);
+    flecs_sparse_init_t(&a->sizes, nullptr, &a->chunks, ecs_block_allocator_t);
 }
 
 void flecs_allocator_fini(
@@ -46,13 +46,13 @@ ecs_block_allocator_t* flecs_allocator_get(
     ecs_allocator_t *a, 
     ecs_size_t size)
 {
-    ecs_assert(size >= 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(size >= 0, ECS_INTERNAL_ERROR, nullptr);
     if (!size) {
-        return NULL;
+        return nullptr;
     }
 
-    ecs_assert(a != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(size <= flecs_allocator_size(size), ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(a != nullptr, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(size <= flecs_allocator_size(size), ECS_INTERNAL_ERROR, nullptr);
     size = flecs_allocator_size(size);
     ecs_size_t hash = flecs_allocator_size_hash(size);
     ecs_block_allocator_t *result = flecs_sparse_get_any_t(&a->sizes, 
@@ -64,7 +64,7 @@ ecs_block_allocator_t* flecs_allocator_get(
         flecs_ballocator_init(result, size);
     }
 
-    ecs_assert(result->data_size == size, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(result->data_size == size, ECS_INTERNAL_ERROR, nullptr);
 
     return result;
 }
@@ -98,6 +98,6 @@ void* flecs_dup(
         ecs_os_memcpy(dst, src, size);
         return dst;
     } else {
-        return NULL;
+        return nullptr;
     }
 }

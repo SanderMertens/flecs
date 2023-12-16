@@ -22,7 +22,7 @@ void ProgressTimers(ecs_iter_t *it) {
     EcsTimer *timer = ecs_field(it, EcsTimer, 1);
     EcsTickSource *tick_source = ecs_field(it, EcsTickSource, 2);
 
-    ecs_assert(timer != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(timer != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -112,7 +112,7 @@ ecs_entity_t ecs_set_timeout(
     ecs_entity_t timer,
     ecs_ftime_t timeout)
 {
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
     timer = ecs_set(world, timer, EcsTimer, {
         .timeout = timeout,
@@ -133,8 +133,8 @@ ecs_ftime_t ecs_get_timeout(
     const ecs_world_t *world,
     ecs_entity_t timer)
 {
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(timer != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(timer != 0, ECS_INVALID_PARAMETER, nullptr);
 
     const EcsTimer *value = ecs_get(world, timer, EcsTimer);
     if (value) {
@@ -149,14 +149,14 @@ ecs_entity_t ecs_set_interval(
     ecs_entity_t timer,
     ecs_ftime_t interval)
 {
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
     if (!timer) {
         timer = ecs_new(world, EcsTimer);
     }
 
     EcsTimer *t = ecs_get_mut(world, timer, EcsTimer);
-    ecs_check(t != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(t != nullptr, ECS_INVALID_PARAMETER, nullptr);
     t->timeout = interval;
     t->active = true;
     ecs_modified(world, timer, EcsTimer);
@@ -173,7 +173,7 @@ ecs_ftime_t ecs_get_interval(
     const ecs_world_t *world,
     ecs_entity_t timer)
 {
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
     if (!timer) {
         return 0;
@@ -192,7 +192,7 @@ void ecs_start_timer(
     ecs_entity_t timer)
 {
     EcsTimer *ptr = ecs_get_mut(world, timer, EcsTimer);
-    ecs_check(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ptr != nullptr, ECS_INVALID_PARAMETER, nullptr);
     ptr->active = true;
     ptr->time = 0;
 error:
@@ -204,7 +204,7 @@ void ecs_stop_timer(
     ecs_entity_t timer)
 {
     EcsTimer *ptr = ecs_get_mut(world, timer, EcsTimer);
-    ecs_check(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ptr != nullptr, ECS_INVALID_PARAMETER, nullptr);
     ptr->active = false;
 error:
     return;
@@ -215,7 +215,7 @@ void ecs_reset_timer(
     ecs_entity_t timer)
 {
     EcsTimer *ptr = ecs_get_mut(world, timer, EcsTimer);
-    ecs_check(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ptr != nullptr, ECS_INVALID_PARAMETER, nullptr);
     ptr->time = 0;
 error:
     return;   
@@ -227,7 +227,7 @@ ecs_entity_t ecs_set_rate(
     int32_t rate,
     ecs_entity_t source)
 {
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
     filter = ecs_set(world, filter, EcsRateFilter, {
         .rate = rate,
@@ -248,12 +248,12 @@ void ecs_set_tick_source(
     ecs_entity_t system,
     ecs_entity_t tick_source)
 {
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(system != 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(tick_source != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(system != 0, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(tick_source != 0, ECS_INVALID_PARAMETER, nullptr);
 
     ecs_system_t *system_data = ecs_poly_get(world, system, ecs_system_t);
-    ecs_check(system_data != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(system_data != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
     system_data->tick_source = tick_source;
 error:

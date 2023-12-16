@@ -10,7 +10,7 @@ uint64_t flecs_name_index_hash(
     const void *ptr)
 {
     const ecs_hashed_string_t *str = ptr;
-    ecs_assert(str->hash != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(str->hash != 0, ECS_INTERNAL_ERROR, nullptr);
     return str->hash;
 }
 
@@ -53,7 +53,7 @@ void flecs_name_index_init_if(
 bool flecs_name_index_is_init(
     const ecs_hashmap_t *hm)
 {
-    return hm->compare != NULL;
+    return hm->compare != nullptr;
 }
 
 ecs_hashmap_t* flecs_name_index_new(
@@ -98,13 +98,13 @@ ecs_hashed_string_t flecs_get_hashed_string(
     if (!length) {
         length = ecs_os_strlen(name);
     } else {
-        ecs_assert(length == ecs_os_strlen(name), ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(length == ecs_os_strlen(name), ECS_INTERNAL_ERROR, nullptr);
     }
 
     if (!hash) {
         hash = flecs_hash(name, length);
     } else {
-        ecs_assert(hash == flecs_hash(name, length), ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(hash == flecs_hash(name, length), ECS_INTERNAL_ERROR, nullptr);
     }
 
     return (ecs_hashed_string_t) {
@@ -123,7 +123,7 @@ const uint64_t* flecs_name_index_find_ptr(
     ecs_hashed_string_t hs = flecs_get_hashed_string(name, length, hash);
     ecs_hm_bucket_t *b = flecs_hashmap_get_bucket(map, hs.hash);
     if (!b) {
-        return NULL;
+        return nullptr;
     }
 
     ecs_hashed_string_t *keys = ecs_vec_first(&b->keys);
@@ -131,7 +131,7 @@ const uint64_t* flecs_name_index_find_ptr(
 
     for (i = 0; i < count; i ++) {
         ecs_hashed_string_t *key = &keys[i];
-        ecs_assert(key->hash == hs.hash, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(key->hash == hs.hash, ECS_INTERNAL_ERROR, nullptr);
 
         if (hs.length != key->length) {
             continue;
@@ -139,12 +139,12 @@ const uint64_t* flecs_name_index_find_ptr(
 
         if (!ecs_os_strcmp(name, key->value)) {
             uint64_t *e = ecs_vec_get_t(&b->values, uint64_t, i);
-            ecs_assert(e != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(e != nullptr, ECS_INTERNAL_ERROR, nullptr);
             return e;
         }
     }
 
-    return NULL;
+    return nullptr;
 }
 
 uint64_t flecs_name_index_find(
@@ -199,15 +199,15 @@ void flecs_name_index_update_name(
                 &b->keys, ecs_hashed_string_t, i);
             key->value = ECS_CONST_CAST(char*, name);
             ecs_assert(ecs_os_strlen(name) == key->length,
-                ECS_INTERNAL_ERROR, NULL);
+                ECS_INTERNAL_ERROR, nullptr);
             ecs_assert(flecs_hash(name, key->length) == key->hash,
-                ECS_INTERNAL_ERROR, NULL);
+                ECS_INTERNAL_ERROR, nullptr);
             return;
         }
     }
 
     /* Record must already have been in the index */
-    ecs_abort(ECS_INTERNAL_ERROR, NULL);
+    ecs_abort(ECS_INTERNAL_ERROR, nullptr);
 }
 
 void flecs_name_index_ensure(
@@ -217,7 +217,7 @@ void flecs_name_index_ensure(
     ecs_size_t length,
     uint64_t hash)
 {
-    ecs_check(name != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(name != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
     ecs_hashed_string_t key = flecs_get_hashed_string(name, length, hash);
     

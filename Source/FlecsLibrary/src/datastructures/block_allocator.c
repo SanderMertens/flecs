@@ -20,7 +20,7 @@ ecs_block_allocator_chunk_header_t* flecs_balloc_block(
     ecs_block_allocator_t *allocator)
 {
     if (!allocator->chunk_size) {
-        return NULL;
+        return nullptr;
     }
 
     ecs_block_allocator_block_t *block = 
@@ -32,11 +32,11 @@ ecs_block_allocator_chunk_header_t* flecs_balloc_block(
     block->memory = first_chunk;
     if (!allocator->block_tail) {
         ecs_assert(!allocator->block_head, ECS_INTERNAL_ERROR, 0);
-        block->next = NULL;
+        block->next = nullptr;
         allocator->block_head = block;
         allocator->block_tail = block;
     } else {
-        block->next = NULL;
+        block->next = nullptr;
         allocator->block_tail->next = block;
         allocator->block_tail = block;
     }
@@ -50,7 +50,7 @@ ecs_block_allocator_chunk_header_t* flecs_balloc_block(
 
     ecs_os_linc(&ecs_block_allocator_alloc_count);
 
-    chunk->next = NULL;
+    chunk->next = nullptr;
     return first_chunk;
 }
 
@@ -58,8 +58,8 @@ void flecs_ballocator_init(
     ecs_block_allocator_t *ba,
     ecs_size_t size)
 {
-    ecs_assert(ba != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ba != nullptr, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(size != 0, ECS_INTERNAL_ERROR, nullptr);
     ba->data_size = size;
 #ifdef FLECS_SANITIZE
     size += ECS_SIZEOF(int64_t);
@@ -67,9 +67,9 @@ void flecs_ballocator_init(
     ba->chunk_size = ECS_ALIGN(size, 16);
     ba->chunks_per_block = ECS_MAX(4096 / ba->chunk_size, 1);
     ba->block_size = ba->chunks_per_block * ba->chunk_size;
-    ba->head = NULL;
-    ba->block_head = NULL;
-    ba->block_tail = NULL;
+    ba->head = nullptr;
+    ba->block_head = nullptr;
+    ba->block_tail = nullptr;
 }
 
 ecs_block_allocator_t* flecs_ballocator_new(
@@ -83,7 +83,7 @@ ecs_block_allocator_t* flecs_ballocator_new(
 void flecs_ballocator_fini(
     ecs_block_allocator_t *ba)
 {
-    ecs_assert(ba != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ba != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
 #ifdef FLECS_SANITIZE
     ecs_assert(ba->alloc_count == 0, ECS_LEAK_DETECTED, 
@@ -97,7 +97,7 @@ void flecs_ballocator_fini(
         ecs_os_linc(&ecs_block_allocator_free_count);
         block = next;
     }
-    ba->block_head = NULL;
+    ba->block_head = nullptr;
 }
 
 void flecs_ballocator_free(
@@ -115,7 +115,7 @@ void* flecs_balloc(
     result = ecs_os_malloc(ba->data_size);
 #else
 
-    if (!ba) return NULL;
+    if (!ba) return nullptr;
 
     if (!ba->head) {
         ba->head = flecs_balloc_block(ba);
@@ -146,7 +146,7 @@ void* flecs_bcalloc(
     return ecs_os_calloc(ba->data_size);
 #endif
 
-    if (!ba) return NULL;
+    if (!ba) return nullptr;
     void *result = flecs_balloc(ba);
     ecs_os_memset(result, 0, ba->data_size);
     return result;
@@ -162,10 +162,10 @@ void flecs_bfree(
 #endif
 
     if (!ba) {
-        ecs_assert(memory == NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(memory == nullptr, ECS_INTERNAL_ERROR, nullptr);
         return;
     }
-    if (memory == NULL) {
+    if (memory == nullptr) {
         return;
     }
 
@@ -175,7 +175,7 @@ void flecs_bfree(
         ecs_err("chunk %p returned to wrong allocator "
             "(chunk = %ub, allocator = %ub)",
                 memory, *(int64_t*)memory, ba->chunk_size);
-        ecs_abort(ECS_INTERNAL_ERROR, NULL);
+        ecs_abort(ECS_INTERNAL_ERROR, nullptr);
     }
 
     ba->alloc_count --;
@@ -230,7 +230,7 @@ void* flecs_bdup(
     if (memory && ba->chunk_size) {
         return ecs_os_memdup(memory, ba->data_size);
     } else {
-        return NULL;
+        return nullptr;
     }
 #endif
 

@@ -12,7 +12,7 @@
  *
  * CONTRIBUTORS:
  * Martin Pulec - bug fixes, warning fixes, IPv6 support
- * Daniel Barry - bug fix (ifa_addr != NULL)
+ * Daniel Barry - bug fix (ifa_addr != nullptr)
  * 
  * Released under the BSD 2-clause license:
  * Redistribution and use in source and binary forms, with or without 
@@ -238,7 +238,7 @@ ecs_size_t http_send(
     ecs_size_t size, 
     int flags)
 {
-    ecs_assert(size >= 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(size >= 0, ECS_INTERNAL_ERROR, nullptr);
 #ifdef ECS_TARGET_POSIX
     ssize_t send_bytes = send(sock, buf, flecs_itosize(size), 
         flags | MSG_NOSIGNAL);
@@ -340,9 +340,9 @@ int http_getnameinfo(
     ecs_size_t port_len,
     int flags)
 {
-    ecs_assert(addr_len > 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(host_len > 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(port_len > 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(addr_len > 0, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(host_len > 0, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(port_len > 0, ECS_INTERNAL_ERROR, nullptr);
 #if defined(ECS_TARGET_WINDOWS)
     return getnameinfo(addr, addr_len, host, 
         flecs_ito(uint32_t, host_len), port, flecs_ito(uint32_t, port_len), 
@@ -360,7 +360,7 @@ int http_bind(
     const struct sockaddr* addr,
     ecs_size_t addr_len)
 {
-    ecs_assert(addr_len > 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(addr_len > 0, ECS_INTERNAL_ERROR, nullptr);
 #if defined(ECS_TARGET_WINDOWS)
     return bind(sock, addr, addr_len);
 #else
@@ -389,7 +389,7 @@ static
 void http_close(
     ecs_http_socket_t *sock)
 {
-    ecs_assert(sock != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(sock != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
 #if defined(ECS_TARGET_WINDOWS)
     closesocket(*sock);
@@ -415,16 +415,16 @@ ecs_http_socket_t http_accept(
 
 static
 void http_reply_fini(ecs_http_reply_t* reply) {
-    ecs_assert(reply != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(reply != nullptr, ECS_INTERNAL_ERROR, nullptr);
     ecs_os_free(reply->body.content);
 }
 
 static
 void http_request_fini(ecs_http_request_impl_t *req) {
-    ecs_assert(req != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(req->pub.conn != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(req->pub.conn->server != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(req->pub.conn->id == req->conn_id, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(req != nullptr, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(req->pub.conn != nullptr, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(req->pub.conn->server != nullptr, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(req->pub.conn->id == req->conn_id, ECS_INTERNAL_ERROR, nullptr);
     ecs_os_free(req->res);
     flecs_sparse_remove_t(&req->pub.conn->server->requests, 
         ecs_http_request_impl_t, req->pub.id);
@@ -432,8 +432,8 @@ void http_request_fini(ecs_http_request_impl_t *req) {
 
 static
 void http_connection_free(ecs_http_connection_impl_t *conn) {
-    ecs_assert(conn != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(conn->pub.id != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(conn != nullptr, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(conn->pub.id != 0, ECS_INTERNAL_ERROR, nullptr);
     uint64_t conn_id = conn->pub.id;
 
     if (http_socket_is_valid(conn->sock)) {
@@ -560,7 +560,7 @@ ecs_http_request_entry_t* http_find_request_entry(
             return entry;
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 static
@@ -606,7 +606,7 @@ char* http_decode_request(
 
     char *res = ecs_strbuf_get(&frag->buf);
     if (!res) {
-        return NULL;
+        return nullptr;
     }
 
     req->pub.method = frag->method;
@@ -679,7 +679,7 @@ ecs_http_request_entry_t* http_enqueue_request(
     }
 
     ecs_os_mutex_unlock(srv->lock);
-    return NULL;
+    return nullptr;
 }
 
 static
@@ -858,12 +858,12 @@ ecs_http_send_request_t* http_send_queue_post(
     ecs_http_send_queue_t *sq = &srv->send_queue;
     int32_t next = (sq->head + 1) % ECS_HTTP_SEND_QUEUE_MAX;
     if (next == sq->tail) {
-        return NULL;
+        return nullptr;
     }
 
     /* Don't enqueue new requests if server is shutting down */
     if (!srv->should_run) {
-        return NULL;
+        return nullptr;
     }
 
     /* Return element at end of the queue */
@@ -879,7 +879,7 @@ ecs_http_send_request_t* http_send_queue_get(
     ecs_os_mutex_lock(srv->lock);
     ecs_http_send_queue_t *sq = &srv->send_queue;
     if (sq->tail == sq->head) {
-        return NULL;
+        return nullptr;
     }
 
     int32_t next = (sq->tail + 1) % ECS_HTTP_SEND_QUEUE_MAX;
@@ -946,7 +946,7 @@ void* http_server_send_queue(void* arg) {
             ecs_os_free(headers);
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 static
@@ -1001,7 +1001,7 @@ void http_send_reply(
 
     /* Use asynchronous send queue for outgoing data so send operations won't
      * hold up main thread */
-    ecs_http_send_request_t *req = NULL;
+    ecs_http_send_request_t *req = nullptr;
 
     if (!preflight) {
         req = http_send_queue_post(conn->pub.server);
@@ -1037,7 +1037,7 @@ void http_send_reply(
     req->content_length = content_length;
 
     /* Take ownership of values */
-    reply->body.content = NULL;
+    reply->body.content = nullptr;
     conn->sock = HTTP_SOCKET_INVALID;
 }
 
@@ -1068,7 +1068,7 @@ void http_recv_connection(
                     ecs_http_reply_t reply;
                     reply.body = ECS_STRBUF_INIT;
                     reply.code = 200;
-                    reply.content_type = NULL;
+                    reply.content_type = nullptr;
                     reply.headers = ECS_STRBUF_INIT;
                     reply.status = "OK";
                     http_send_reply(conn, &reply, true);
@@ -1179,7 +1179,7 @@ void http_accept_connections(
     char addr_port[20];
 
     ecs_http_socket_t sock = HTTP_SOCKET_INVALID;
-    ecs_assert(srv->sock == HTTP_SOCKET_INVALID, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(srv->sock == HTTP_SOCKET_INVALID, ECS_INTERNAL_ERROR, nullptr);
 
     if (http_getnameinfo(
         addr, addr_len, addr_host, ECS_SIZEOF(addr_host), addr_port, 
@@ -1290,7 +1290,7 @@ void* http_server_thread(void* arg) {
     }
 
     http_accept_connections(srv, (struct sockaddr*)&addr, ECS_SIZEOF(addr));
-    return NULL;
+    return nullptr;
 }
 
 static
@@ -1429,7 +1429,7 @@ const char* ecs_http_get_header(
             return req->headers[i].value;
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 const char* ecs_http_get_param(
@@ -1441,7 +1441,7 @@ const char* ecs_http_get_param(
             return req->params[i].value;
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 ecs_http_server_t* ecs_http_server_init(
@@ -1466,8 +1466,8 @@ ecs_http_server_t* ecs_http_server_init(
         srv->send_queue.wait_ms = 1;
     }
 
-    flecs_sparse_init_t(&srv->connections, NULL, NULL, ecs_http_connection_impl_t);
-    flecs_sparse_init_t(&srv->requests, NULL, NULL, ecs_http_request_impl_t);
+    flecs_sparse_init_t(&srv->connections, nullptr, nullptr, ecs_http_connection_impl_t);
+    flecs_sparse_init_t(&srv->requests, nullptr, nullptr, ecs_http_request_impl_t);
 
     /* Start at id 1 */
     flecs_sparse_new_id(&srv->connections);
@@ -1476,7 +1476,7 @@ ecs_http_server_t* ecs_http_server_init(
     /* Initialize request cache */
     flecs_hashmap_init(&srv->request_cache, 
         ecs_http_request_key_t, ecs_http_request_entry_t,
-        http_request_key_hash, http_request_key_compare, NULL);
+        http_request_key_hash, http_request_key_compare, nullptr);
 
 #ifndef ECS_TARGET_WINDOWS
     /* Ignore pipe signal. SIGPIPE can occur when a message is sent to a client
@@ -1486,7 +1486,7 @@ ecs_http_server_t* ecs_http_server_init(
 
     return srv;
 error:
-    return NULL;
+    return nullptr;
 }
 
 void ecs_http_server_fini(
@@ -1505,10 +1505,10 @@ void ecs_http_server_fini(
 int ecs_http_server_start(
     ecs_http_server_t *srv)
 {
-    ecs_check(srv != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(srv->initialized, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(!srv->should_run, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(!srv->thread, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(srv != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(srv->initialized, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(!srv->should_run, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(!srv->thread, ECS_INVALID_PARAMETER, nullptr);
 
     srv->should_run = true;
 
@@ -1532,9 +1532,9 @@ error:
 void ecs_http_server_stop(
     ecs_http_server_t* srv) 
 {
-    ecs_check(srv != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(srv->initialized, ECS_INVALID_OPERATION, NULL);
-    ecs_check(srv->should_run, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(srv != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(srv->initialized, ECS_INVALID_OPERATION, nullptr);
+    ecs_check(srv->should_run, ECS_INVALID_PARAMETER, nullptr);
 
     /* Stop server thread */
     ecs_dbg("http: shutting down server thread");
@@ -1565,9 +1565,9 @@ void ecs_http_server_stop(
     }
 
     ecs_assert(flecs_sparse_count(&srv->connections) == 1, 
-        ECS_INTERNAL_ERROR, NULL);
+        ECS_INTERNAL_ERROR, nullptr);
     ecs_assert(flecs_sparse_count(&srv->requests) == 1,
-        ECS_INTERNAL_ERROR, NULL);
+        ECS_INTERNAL_ERROR, nullptr);
 
     srv->thread = 0;
 error:
@@ -1578,9 +1578,9 @@ void ecs_http_server_dequeue(
     ecs_http_server_t* srv,
     ecs_ftime_t delta_time)
 {
-    ecs_check(srv != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(srv->initialized, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(srv->should_run, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(srv != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(srv->initialized, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(srv->should_run, ECS_INVALID_PARAMETER, nullptr);
     
     srv->dequeue_timeout += (double)delta_time;
     srv->stats_timeout += (double)delta_time;

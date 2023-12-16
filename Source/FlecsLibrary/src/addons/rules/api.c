@@ -124,7 +124,7 @@ ecs_rule_t* ecs_rule_init(
     ecs_filter_desc_t desc = *const_desc;
     desc.storage = &result->filter; /* Use storage of rule */
     result->filter = ECS_FILTER_INIT;
-    if (ecs_filter_init(world, &desc) == NULL) {
+    if (ecs_filter_init(world, &desc) == nullptr) {
         goto error;
     }
 
@@ -147,7 +147,7 @@ ecs_rule_t* ecs_rule_init(
     return result;
 error:
     ecs_rule_fini(result);
-    return NULL;
+    return nullptr;
 }
 
 static
@@ -159,7 +159,7 @@ int32_t flecs_rule_op_ref_str(
 {
     int32_t color_chars = 0;
     if (flags & EcsRuleIsVar) {
-        ecs_assert(ref->var < rule->var_count, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(ref->var < rule->var_count, ECS_INTERNAL_ERROR, nullptr);
         ecs_rule_var_t *var = &rule->vars[ref->var];
         ecs_strbuf_appendlit(buf, "#[green]$#[reset]");
         if (var->kind == EcsVarTable) {
@@ -311,7 +311,7 @@ char* ecs_rule_str_w_profile(
 char* ecs_rule_str(
     const ecs_rule_t *rule)
 {
-    return ecs_rule_str_w_profile(rule, NULL);
+    return ecs_rule_str_w_profile(rule, nullptr);
 }
 
 const ecs_filter_t* ecs_rule_get_filter(
@@ -326,13 +326,13 @@ const char* ecs_rule_parse_vars(
     const char *expr)
 {
     ecs_poly_assert(rule, ecs_rule_t);
-    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(expr != NULL, ECS_INVALID_PARAMETER, NULL)
+    ecs_check(it != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(expr != nullptr, ECS_INVALID_PARAMETER, nullptr)
     char token[ECS_MAX_TOKEN_SIZE];
     const char *ptr = expr;
     bool paren = false;
 
-    const char *name = NULL;
+    const char *name = nullptr;
     if (rule->filter.entity) {
         name = ecs_get_name(rule->filter.world, rule->filter.entity);
     }
@@ -354,34 +354,34 @@ const char* ecs_rule_parse_vars(
         ptr = ecs_parse_ws_eol(ptr);
         ptr = ecs_parse_identifier(name, expr, ptr, token);
         if (!ptr) {
-            return NULL;
+            return nullptr;
         }
 
         int var = ecs_rule_find_var(rule, token);
         if (var == -1) {
             ecs_parser_error(name, expr, (ptr - expr), 
                 "unknown variable '%s'", token);
-            return NULL;
+            return nullptr;
         }
 
         ptr = ecs_parse_ws_eol(ptr);
         if (ptr[0] != ':') {
             ecs_parser_error(name, expr, (ptr - expr), 
                 "missing ':'");
-            return NULL;
+            return nullptr;
         }
 
         ptr = ecs_parse_ws_eol(ptr + 1);
         ptr = ecs_parse_identifier(name, expr, ptr, token);
         if (!ptr) {
-            return NULL;
+            return nullptr;
         }
 
         ecs_entity_t val = ecs_lookup_fullpath(rule->filter.world, token);
         if (!val) {
             ecs_parser_error(name, expr, (ptr - expr), 
                 "unresolved entity '%s'", token);
-            return NULL;
+            return nullptr;
         }
 
         ecs_iter_set_var(it, var, val);
@@ -391,7 +391,7 @@ const char* ecs_rule_parse_vars(
             if (!paren) {
                 ecs_parser_error(name, expr, (ptr - expr), 
                     "unexpected closing parenthesis");
-                return NULL;
+                return nullptr;
             }
 
             ptr ++;
@@ -402,19 +402,19 @@ const char* ecs_rule_parse_vars(
             if (paren) {
                 ecs_parser_error(name, expr, (ptr - expr), 
                     "missing closing parenthesis");
-                return NULL;
+                return nullptr;
             }
             break;
         } else {
             ecs_parser_error(name, expr, (ptr - expr), 
                 "expected , or end of string");
-            return NULL;
+            return nullptr;
         }
     } while (true);
 
     return ptr;
 error:
-    return NULL;
+    return nullptr;
 }
 
 #endif

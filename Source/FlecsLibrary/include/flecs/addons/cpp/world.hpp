@@ -13,7 +13,7 @@ namespace flecs
 // set(T&&), T = constructible
 template <typename T, if_t< is_flecs_constructible<T>::value > = 0>
 inline void set(world_t *world, flecs::entity_t entity, T&& value, flecs::id_t id) {
-    ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, nullptr);
 
     if (!ecs_is_deferred(world)) {
         T& dst = *static_cast<T*>(ecs_get_mut_id(world, entity, id));
@@ -29,7 +29,7 @@ inline void set(world_t *world, flecs::entity_t entity, T&& value, flecs::id_t i
 // set(const T&), T = constructible
 template <typename T, if_t< is_flecs_constructible<T>::value > = 0>
 inline void set(world_t *world, flecs::entity_t entity, const T& value, flecs::id_t id) {
-    ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, nullptr);
 
     if (!ecs_is_deferred(world)) {
         T& dst = *static_cast<T*>(ecs_get_mut_id(world, entity, id));
@@ -45,7 +45,7 @@ inline void set(world_t *world, flecs::entity_t entity, const T& value, flecs::i
 // set(T&&), T = not constructible
 template <typename T, if_not_t< is_flecs_constructible<T>::value > = 0>
 inline void set(world_t *world, flecs::entity_t entity, T&& value, flecs::id_t id) {
-    ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, nullptr);
 
     if (!ecs_is_deferred(world)) {
         T& dst = *static_cast<remove_reference_t<T>*>(ecs_get_mut_id(world, entity, id));
@@ -61,7 +61,7 @@ inline void set(world_t *world, flecs::entity_t entity, T&& value, flecs::id_t i
 // set(const T&), T = not constructible
 template <typename T, if_not_t< is_flecs_constructible<T>::value > = 0>
 inline void set(world_t *world, flecs::entity_t entity, const T& value, flecs::id_t id) {
-    ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, nullptr);
 
     if (!ecs_is_deferred(world)) {
         T& dst = *static_cast<remove_reference_t<T>*>(ecs_get_mut_id(world, entity, id));
@@ -79,7 +79,7 @@ template <typename T, typename ... Args, if_t<
     std::is_constructible<actual_type_t<T>, Args...>::value ||
     std::is_default_constructible<actual_type_t<T>>::value > = 0>
 inline void emplace(world_t *world, flecs::entity_t entity, flecs::id_t id, Args&&... args) {
-    ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, nullptr);
     T& dst = *static_cast<T*>(ecs_emplace_id(world, entity, id));
     
     FLECS_PLACEMENT_NEW(&dst, T{FLECS_FWD(args)...});
@@ -190,7 +190,7 @@ struct world {
     /** Deletes and recreates the world. */
     void reset() {
         // Can only reset the world if we own the world object.
-        ecs_assert(this->m_owned, ECS_INVALID_OPERATION, NULL);
+        ecs_assert(this->m_owned, ECS_INVALID_OPERATION, nullptr);
         ecs_fini(m_world);
         m_world = ecs_init();
     }
@@ -355,7 +355,7 @@ struct world {
         ecs_assert(
             ecs_poly_is(m_world, ecs_world_t) || 
             ecs_poly_is(m_world, ecs_stage_t),
-                ECS_INVALID_PARAMETER, NULL);
+                ECS_INVALID_PARAMETER, nullptr);
         return ecs_poly_is(m_world, ecs_stage_t);
     }
 

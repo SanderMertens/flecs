@@ -77,15 +77,15 @@ void* assert_mixin(
     const ecs_poly_t *poly,
     ecs_mixin_kind_t kind)
 {
-    ecs_assert(poly != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(kind < EcsMixinMax, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(poly != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_assert(kind < EcsMixinMax, ECS_INVALID_PARAMETER, nullptr);
     
     const ecs_header_t *hdr = poly;
-    ecs_assert(hdr != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(hdr != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER, nullptr);
 
     const ecs_mixins_t *mixins = hdr->mixins;
-    ecs_assert(mixins != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(mixins != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
     ecs_size_t offset = mixins->elems[kind];
     ecs_assert(offset != 0, ECS_INVALID_PARAMETER, 
@@ -103,7 +103,7 @@ void* ecs_poly_init_(
     ecs_size_t size,
     ecs_mixins_t *mixins)
 {
-    ecs_assert(poly != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(poly != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
     ecs_header_t *hdr = poly;
     ecs_os_memset(poly, 0, size);
@@ -119,14 +119,14 @@ void ecs_poly_fini_(
     ecs_poly_t *poly,
     int32_t type)
 {
-    ecs_assert(poly != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(poly != nullptr, ECS_INVALID_PARAMETER, nullptr);
     (void)type;
 
     ecs_header_t *hdr = poly;
 
     /* Don't deinit poly that wasn't initialized */
-    ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(hdr->type == type, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER, nullptr);
+    ecs_assert(hdr->type == type, ECS_INVALID_PARAMETER, nullptr);
     hdr->magic = 0;
 }
 
@@ -184,17 +184,17 @@ ecs_poly_t* ecs_poly_get_(
     if (p) {
         return p->poly;
     }
-    return NULL;
+    return nullptr;
 }
 
 bool ecs_poly_is_(
     const ecs_poly_t *poly,
     int32_t type)
 {
-    ecs_assert(poly != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(poly != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
     const ecs_header_t *hdr = poly;
-    ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER, nullptr);
     return hdr->type == type;    
 }
 

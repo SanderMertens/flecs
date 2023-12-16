@@ -242,7 +242,7 @@ void flecs_strbuf_grow(
     e->super.buffer_embedded = true;
     e->super.buf = e->buf;
     e->super.pos = 0;
-    e->super.next = NULL;
+    e->super.next = nullptr;
 }
 
 /* Add an extra dynamic element */
@@ -261,7 +261,7 @@ void flecs_strbuf_grow_str(
     b->elementCount ++;
     e->super.buffer_embedded = false;
     e->super.pos = size ? size : (int32_t)ecs_os_strlen(str);
-    e->super.next = NULL;
+    e->super.next = nullptr;
     e->super.buf = ECS_CONST_CAST(char*, str);
     e->alloc_str = alloc_str;
 }
@@ -308,7 +308,7 @@ void flecs_strbuf_init(
     /* Initialize buffer structure only once */
     if (!b->elementCount) {
         b->size = 0;
-        b->firstElement.super.next = NULL;
+        b->firstElement.super.next = nullptr;
         b->firstElement.super.pos = 0;
         b->firstElement.super.buffer_embedded = true;
         b->firstElement.super.buf = b->firstElement.buf;
@@ -350,7 +350,7 @@ bool flecs_strbuf_vappend(
     memRequired = vsnprintf(
         flecs_strbuf_ptr(b), (size_t)(max_copy + 1), str, args);
 
-    ecs_assert(memRequired != -1, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(memRequired != -1, ECS_INTERNAL_ERROR, nullptr);
 
     if (memRequired <= memLeftInElement) {
         /* Element was large enough to fit string */
@@ -483,8 +483,8 @@ bool ecs_strbuf_vappend(
     const char* fmt,
     va_list args)
 {
-    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(fmt != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(b != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_assert(fmt != nullptr, ECS_INVALID_PARAMETER, nullptr);
     return flecs_strbuf_vappend(b, fmt, args);
 }
 
@@ -493,8 +493,8 @@ bool ecs_strbuf_append(
     const char* fmt,
     ...)
 {
-    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(fmt != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(b != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_assert(fmt != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
     va_list args;
     va_start(args, fmt);
@@ -509,8 +509,8 @@ bool ecs_strbuf_appendstrn(
     const char* str,
     int32_t len)
 {
-    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(str != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(b != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_assert(str != nullptr, ECS_INVALID_PARAMETER, nullptr);
     return flecs_strbuf_appendstr(b, str, len);
 }
 
@@ -518,7 +518,7 @@ bool ecs_strbuf_appendch(
     ecs_strbuf_t *b,
     char ch)
 {
-    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL); 
+    ecs_assert(b != nullptr, ECS_INVALID_PARAMETER, nullptr); 
     return flecs_strbuf_appendch(b, ch);
 }
 
@@ -526,7 +526,7 @@ bool ecs_strbuf_appendint(
     ecs_strbuf_t *b,
     int64_t v)
 {
-    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL); 
+    ecs_assert(b != nullptr, ECS_INVALID_PARAMETER, nullptr); 
     char numbuf[32];
     char *ptr = flecs_strbuf_itoa(numbuf, v);
     return ecs_strbuf_appendstrn(b, numbuf, flecs_ito(int32_t, ptr - numbuf));
@@ -537,7 +537,7 @@ bool ecs_strbuf_appendflt(
     double flt,
     char nan_delim)
 {
-    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL); 
+    ecs_assert(b != nullptr, ECS_INVALID_PARAMETER, nullptr); 
     return flecs_strbuf_ftoa(b, flt, 10, nan_delim);
 }
 
@@ -545,7 +545,7 @@ bool ecs_strbuf_appendbool(
     ecs_strbuf_t *buffer,
     bool v)
 {
-    ecs_assert(buffer != NULL, ECS_INVALID_PARAMETER, NULL); 
+    ecs_assert(buffer != nullptr, ECS_INVALID_PARAMETER, nullptr); 
     if (v) {
         return ecs_strbuf_appendlit(buffer, "true");
     } else {
@@ -557,8 +557,8 @@ bool ecs_strbuf_appendstr_zerocpy(
     ecs_strbuf_t *b,
     char* str)
 {
-    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(str != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(b != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_assert(str != nullptr, ECS_INVALID_PARAMETER, nullptr);
     flecs_strbuf_init(b);
     flecs_strbuf_grow_str(b, str, str, 0);
     return true;
@@ -569,8 +569,8 @@ bool ecs_strbuf_appendstr_zerocpyn(
     char *str,
     int32_t n)
 {
-    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(str != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(b != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_assert(str != nullptr, ECS_INVALID_PARAMETER, nullptr);
     flecs_strbuf_init(b);
     flecs_strbuf_grow_str(b, str, str, n);
     return true;
@@ -580,11 +580,11 @@ bool ecs_strbuf_appendstr_zerocpy_const(
     ecs_strbuf_t *b,
     const char* str)
 {
-    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(str != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(b != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_assert(str != nullptr, ECS_INVALID_PARAMETER, nullptr);
     /* Removes const modifier, but logic prevents changing / delete string */
     flecs_strbuf_init(b);
-    flecs_strbuf_grow_str(b, str, NULL, 0);
+    flecs_strbuf_grow_str(b, str, nullptr, 0);
     return true;
 }
 
@@ -593,11 +593,11 @@ bool ecs_strbuf_appendstr_zerocpyn_const(
     const char *str,
     int32_t n)
 {
-    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(str != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(b != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_assert(str != nullptr, ECS_INVALID_PARAMETER, nullptr);
     /* Removes const modifier, but logic prevents changing / delete string */
     flecs_strbuf_init(b);
-    flecs_strbuf_grow_str(b, str, NULL, n);
+    flecs_strbuf_grow_str(b, str, nullptr, n);
     return true;
 }
 
@@ -605,8 +605,8 @@ bool ecs_strbuf_appendstr(
     ecs_strbuf_t *b,
     const char* str)
 {
-    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(str != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(b != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_assert(str != nullptr, ECS_INVALID_PARAMETER, nullptr);
     return flecs_strbuf_appendstr(b, str, ecs_os_strlen(str));
 }
 
@@ -639,15 +639,15 @@ bool ecs_strbuf_mergebuff(
 char* ecs_strbuf_get(
     ecs_strbuf_t *b) 
 {
-    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(b != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
-    char* result = NULL;
+    char* result = nullptr;
     if (b->elementCount) {
         if (b->buf) {
             b->buf[b->current->pos] = '\0';
             result = ecs_os_strdup(b->buf);
         } else {
-            void *next = NULL;
+            void *next = nullptr;
             int32_t len = b->size + b->current->pos + 1;
             ecs_strbuf_element *e = (ecs_strbuf_element*)&b->firstElement;
 
@@ -670,7 +670,7 @@ char* ecs_strbuf_get(
             b->length = len;
         }
     } else {
-        result = NULL;
+        result = nullptr;
     }
 
     b->elementCount = 0;
@@ -683,10 +683,10 @@ char* ecs_strbuf_get(
 char *ecs_strbuf_get_small(
     ecs_strbuf_t *b)
 {
-    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(b != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
     int32_t written = ecs_strbuf_written(b);
-    ecs_assert(written <= ECS_STRBUF_ELEMENT_SIZE, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(written <= ECS_STRBUF_ELEMENT_SIZE, ECS_INVALID_OPERATION, nullptr);
     char *buf = b->firstElement.buf;
     buf[written] = '\0';
     return buf;
@@ -695,10 +695,10 @@ char *ecs_strbuf_get_small(
 void ecs_strbuf_reset(
     ecs_strbuf_t *b) 
 {
-    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(b != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
     if (b->elementCount && !b->buf) {
-        void *next = NULL;
+        void *next = nullptr;
         ecs_strbuf_element *e = (ecs_strbuf_element*)&b->firstElement;
         do {
             next = e->next;
@@ -716,13 +716,13 @@ void ecs_strbuf_list_push(
     const char *list_open,
     const char *separator)
 {
-    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(list_open != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(separator != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(b->list_sp >= 0, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(b != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_assert(list_open != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_assert(separator != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_assert(b->list_sp >= 0, ECS_INVALID_OPERATION, nullptr);
     b->list_sp ++;
     ecs_assert(b->list_sp < ECS_STRBUF_MAX_LIST_DEPTH, 
-        ECS_INVALID_OPERATION, NULL);
+        ECS_INVALID_OPERATION, nullptr);
 
     b->list_stack[b->list_sp].count = 0;
     b->list_stack[b->list_sp].separator = separator;
@@ -741,9 +741,9 @@ void ecs_strbuf_list_pop(
     ecs_strbuf_t *b,
     const char *list_close)
 {
-    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(list_close != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(b->list_sp > 0, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(b != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_assert(list_close != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_assert(b->list_sp > 0, ECS_INVALID_OPERATION, nullptr);
 
     b->list_sp --;
     
@@ -760,7 +760,7 @@ void ecs_strbuf_list_pop(
 void ecs_strbuf_list_next(
     ecs_strbuf_t *b)
 {
-    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(b != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
     int32_t list_sp = b->list_sp;
     if (b->list_stack[list_sp].count != 0) {
@@ -778,7 +778,7 @@ bool ecs_strbuf_list_appendch(
     ecs_strbuf_t *b,
     char ch)
 {
-    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(b != nullptr, ECS_INVALID_PARAMETER, nullptr);
     ecs_strbuf_list_next(b);
     return flecs_strbuf_appendch(b, ch);
 }
@@ -788,8 +788,8 @@ bool ecs_strbuf_list_append(
     const char *fmt,
     ...)
 {
-    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(fmt != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(b != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_assert(fmt != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
     ecs_strbuf_list_next(b);
 
@@ -805,8 +805,8 @@ bool ecs_strbuf_list_appendstr(
     ecs_strbuf_t *b,
     const char *str)
 {
-    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(str != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(b != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_assert(str != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
     ecs_strbuf_list_next(b);
     return ecs_strbuf_appendstr(b, str);
@@ -817,8 +817,8 @@ bool ecs_strbuf_list_appendstrn(
     const char *str,
     int32_t n)
 {
-    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(str != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(b != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_assert(str != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
     ecs_strbuf_list_next(b);
     return ecs_strbuf_appendstrn(b, str, n);
@@ -827,7 +827,7 @@ bool ecs_strbuf_list_appendstrn(
 int32_t ecs_strbuf_written(
     const ecs_strbuf_t *b)
 {
-    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(b != nullptr, ECS_INVALID_PARAMETER, nullptr);
     if (b->current) {
         return b->size + b->current->pos;
     } else {

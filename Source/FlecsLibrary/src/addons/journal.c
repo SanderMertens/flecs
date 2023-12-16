@@ -64,8 +64,8 @@ void flecs_journal_begin(
         return;
     }
 
-    char *path = NULL; 
-    char *var_id = NULL; 
+    char *path = nullptr; 
+    char *var_id = nullptr; 
     if (entity) {
         if (kind != EcsJournalDeleteWith && kind != EcsJournalRemoveAll) {
             path = ecs_get_fullpath(world, entity);
@@ -129,7 +129,7 @@ void flecs_journal_begin(
 
 void flecs_journal_end(void) {
     flecs_journal_sp --;
-    ecs_assert(flecs_journal_sp >= 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(flecs_journal_sp >= 0, ECS_INTERNAL_ERROR, nullptr);
     ecs_log_pop();
 }
 

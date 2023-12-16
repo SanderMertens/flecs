@@ -123,7 +123,7 @@ const char* ecs_chrparse(
 
     return result;
 error:
-    return NULL;
+    return nullptr;
 }
 
 ecs_size_t ecs_stresc(
@@ -140,7 +140,7 @@ ecs_size_t ecs_stresc(
             buff, ch, delimiter) - buff)) <= n) 
         {
             /* If size != 0, an out buffer must be provided. */
-            ecs_check(out != NULL, ECS_INVALID_PARAMETER, NULL);
+            ecs_check(out != nullptr, ECS_INVALID_PARAMETER, nullptr);
             *bptr++ = buff[0];
             if ((ch = buff[1])) {
                 *bptr = ch;
@@ -166,10 +166,10 @@ char* ecs_astresc(
     const char *in)
 {
     if (!in) {
-        return NULL;
+        return nullptr;
     }
 
-    ecs_size_t len = ecs_stresc(NULL, 0, delimiter, in);
+    ecs_size_t len = ecs_stresc(nullptr, 0, delimiter, in);
     char *out = ecs_os_malloc_n(char, len + 1);
     ecs_stresc(out, len, delimiter, in);
     out[len] = '\0';
@@ -205,7 +205,7 @@ const char* flecs_parse_var_name(
 
     return ptr;
 error:
-    return NULL;
+    return nullptr;
 }
 
 static
@@ -247,7 +247,7 @@ const char* flecs_parse_interpolated_str(
 
     return ptr;
 error:
-    return NULL;
+    return nullptr;
 }
 
 char* ecs_interpolate_string(
@@ -285,14 +285,14 @@ char* ecs_interpolate_string(
         if (ch == '$') {
             ptr = flecs_parse_var_name(ptr + 1, token);
             if (!ptr) {
-                ecs_parser_error(NULL, str, ptr - str, 
+                ecs_parser_error(nullptr, str, ptr - str, 
                     "invalid variable name '%s'", ptr);
                 goto error;
             }
 
             ecs_expr_var_t *var = ecs_vars_lookup(vars, token);
             if (!var) {
-                ecs_parser_error(NULL, str, ptr - str, 
+                ecs_parser_error(nullptr, str, ptr - str, 
                     "unresolved variable '%s'", token);
                 goto error;
             }
@@ -307,7 +307,7 @@ char* ecs_interpolate_string(
         } else if (ch == '{') {
             ptr = flecs_parse_interpolated_str(ptr + 1, token);
             if (!ptr) {
-                ecs_parser_error(NULL, str, ptr - str, 
+                ecs_parser_error(nullptr, str, ptr - str, 
                     "invalid interpolated expression");
                 goto error;
             }
@@ -336,7 +336,7 @@ char* ecs_interpolate_string(
 
     return ecs_strbuf_get(&result);
 error:
-    return NULL;
+    return nullptr;
 }
 
 void ecs_iter_to_vars(
@@ -344,9 +344,9 @@ void ecs_iter_to_vars(
     ecs_vars_t *vars,
     int offset)
 {
-    ecs_check(vars != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(!offset || offset < it->count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(vars != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(it != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(!offset || offset < it->count, ECS_INVALID_PARAMETER, nullptr);
 
     /* Set variable for $this */
     if (it->count) {
@@ -388,7 +388,7 @@ void ecs_iter_to_vars(
                 var->owned = false;
             } else {
                 ecs_check(var->value.type == it->ids[i], 
-                    ECS_INVALID_PARAMETER, NULL);
+                    ECS_INVALID_PARAMETER, nullptr);
                 var->value.ptr = ptr;
             }
         }
@@ -396,16 +396,16 @@ void ecs_iter_to_vars(
 
     /* Set variables for query variables */
     {
-        int32_t i, var_count = it->variable_count;
-        for (i = 1 /* skip this variable */ ; i < var_count; i ++) {
-            ecs_entity_t *e_ptr = NULL;
+        const int32_t var_count = it->variable_count;
+        for (int32_t i = 1 /* skip this variable */ /* skip this variable */ ; i < var_count; i ++) {
+            ecs_entity_t *e_ptr = nullptr;
             ecs_var_t *query_var = &it->variables[i];
             if (query_var->entity) {
                 e_ptr = &query_var->entity;
             } else {
-                ecs_table_range_t *range = &query_var->range;
+                const ecs_table_range_t *range = &query_var->range;
                 if (range->count == 1) {
-                    ecs_entity_t *entities = range->table->data.entities.array;
+                    ecs_entity_t *entities = static_cast<ecs_entity_t*>(range->table->data.entities.array);
                     e_ptr = &entities[range->offset];
                 }
             }
@@ -420,7 +420,7 @@ void ecs_iter_to_vars(
                 var->owned = false;
             } else {
                 ecs_check(var->value.type == ecs_id(ecs_entity_t), 
-                    ECS_INVALID_PARAMETER, NULL);
+                    ECS_INVALID_PARAMETER, nullptr);
                 var->value.ptr = e_ptr;
             }
         }

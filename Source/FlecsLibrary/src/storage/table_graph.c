@@ -164,7 +164,7 @@ int flecs_type_new_filtered(
     ecs_id_t *dst_array = dst->array;
     ecs_id_t *src_array = src->array;
     if (at) {
-        ecs_assert(dst_array != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(dst_array != nullptr, ECS_INTERNAL_ERROR, nullptr);
         ecs_os_memcpy_n(dst_array, src_array, ecs_id_t, at);
     }
 
@@ -201,7 +201,7 @@ int flecs_type_new_without(
 
     int32_t src_count = src->count;
     if (src_count == 1) {
-        dst->array = NULL;
+        dst->array = nullptr;
         dst->count = 0;
         return 0;
     }
@@ -220,7 +220,7 @@ int flecs_type_new_without(
     int32_t dst_count = src_count - count;
     dst->count = dst_count;
     if (!dst_count) {
-        dst->array = NULL;
+        dst->array = nullptr;
         return 0;
     }
 
@@ -247,7 +247,7 @@ ecs_type_t flecs_type_copy(
 {
     int32_t src_count = src->count;
     if (!src_count) {
-        return (ecs_type_t){ 0 };
+        return (ecs_type_t){ nullptr };
     }
 
     ecs_id_t *ids = flecs_walloc_n(world, ecs_id_t, src_count);
@@ -320,7 +320,7 @@ void flecs_table_diff_build_type(
     int32_t offset)
 {
     int32_t count = vec->count - offset;
-    ecs_assert(count >= 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(count >= 0, ECS_INTERNAL_ERROR, nullptr);
     if (count) {
         type->array = flecs_wdup_n(world, ecs_id_t, count, 
             ECS_ELEM_T(vec->array, ecs_id_t, offset));
@@ -440,8 +440,8 @@ void flecs_table_disconnect_edge(
     ecs_id_t id,
     ecs_graph_edge_t *edge)
 {
-    ecs_assert(edge != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(edge->id == id, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(edge != nullptr, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(edge->id == id, ECS_INTERNAL_ERROR, nullptr);
     (void)id;
 
     /* Remove backref from destination table */
@@ -476,8 +476,8 @@ void flecs_table_remove_edge(
     ecs_id_t id,
     ecs_graph_edge_t *edge)
 {
-    ecs_assert(edges != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(edges->hi != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(edges != nullptr, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(edges->hi != nullptr, ECS_INTERNAL_ERROR, nullptr);
     flecs_table_disconnect_edge(world, id, edge);
     ecs_map_remove(edges->hi, id);
 }
@@ -486,8 +486,8 @@ static
 void flecs_table_init_edges(
     ecs_graph_edges_t *edges)
 {
-    edges->lo = NULL;
-    edges->hi = NULL;
+    edges->lo = nullptr;
+    edges->hi = nullptr;
 }
 
 static
@@ -521,7 +521,7 @@ void flecs_init_table(
     ecs_table_t *prev)
 {
     table->flags = 0;
-    table->dirty_state = NULL;
+    table->dirty_state = nullptr;
     table->_->lock = 0;
     table->_->generation = 0;
 
@@ -538,9 +538,9 @@ ecs_table_t *flecs_create_table(
     ecs_table_t *prev)
 {
     ecs_table_t *result = flecs_sparse_add_t(&world->store.tables, ecs_table_t);
-    ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(result != nullptr, ECS_INTERNAL_ERROR, nullptr);
     result->_ = flecs_calloc_t(&world->allocator, ecs_table__t);
-    ecs_assert(result->_ != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(result->_ != nullptr, ECS_INTERNAL_ERROR, nullptr);
     
     result->id = flecs_sparse_last_id(&world->store.tables);
     result->type = *type;
@@ -600,7 +600,7 @@ ecs_table_t* flecs_table_ensure(
 
     /* If we get here, table needs to be created which is only allowed when the
      * application is not currently in progress */
-    ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INTERNAL_ERROR, nullptr);
 
     /* If we get here, the table has not been found, so create it. */
     if (own_type) {
@@ -725,8 +725,8 @@ void flecs_compute_table_diff(
     edge->diff = diff;
     flecs_table_diff_build(world, builder, diff, added_offset, removed_offset);
 
-    ecs_assert(diff->added.count == added_count, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(diff->removed.count == removed_count, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(diff->added.count == added_count, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(diff->removed.count == removed_count, ECS_INTERNAL_ERROR, nullptr);
 }
 
 static
@@ -736,7 +736,7 @@ void flecs_add_overrides_for_base(
     ecs_id_t pair)
 {
     ecs_entity_t base = ecs_pair_second(world, pair);
-    ecs_assert(base != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(base != 0, ECS_INTERNAL_ERROR, nullptr);
     ecs_table_t *base_table = ecs_get_table(world, base);
     if (!base_table) {
         return;
@@ -785,7 +785,7 @@ void flecs_add_overrides_for_base(
     if (flags & EcsTableHasIsA) {
         ecs_table_record_t *tr = flecs_id_record_get_table(
             world->idr_isa_wildcard, base_table);
-        ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(tr != nullptr, ECS_INTERNAL_ERROR, nullptr);
         int32_t i = tr->index, end = i + tr->count;
         for (; i != end; i ++) {
             flecs_add_overrides_for_base(world, dst_type, ids[i]);
@@ -818,7 +818,7 @@ void flecs_add_with_property(
 
         for (; i < end; i ++) {
             ecs_id_t id = ids[i];
-            ecs_assert(ECS_PAIR_FIRST(id) == EcsWith, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(ECS_PAIR_FIRST(id) == EcsWith, ECS_INTERNAL_ERROR, nullptr);
             ecs_id_t ra = ECS_PAIR_SECOND(id);
             ecs_id_t a = ra;
             if (o) {
@@ -840,7 +840,7 @@ ecs_table_t* flecs_find_table_with(
 {    
     ecs_ensure_id(world, with);
 
-    ecs_id_record_t *idr = NULL;
+    ecs_id_record_t *idr = nullptr;
     ecs_entity_t r = 0, o = 0;
 
     if (ECS_IS_PAIR(with)) {
@@ -864,7 +864,7 @@ ecs_table_t* flecs_find_table_with(
                 /* Table already has an instance of the relationship, create
                  * a new id sequence with the existing id replaced */
                 ecs_type_t dst_type = flecs_type_copy(world, &node->type);
-                ecs_assert(dst_type.array != NULL, ECS_INTERNAL_ERROR, NULL);
+                ecs_assert(dst_type.array != nullptr, ECS_INTERNAL_ERROR, nullptr);
                 dst_type.array[tr->index] = with;
                 return flecs_table_ensure(world, &dst_type, true, node);
             }
@@ -909,7 +909,7 @@ ecs_table_t* flecs_find_table_without(
 {
     if (ECS_IS_PAIR(without)) {
         ecs_entity_t r = 0;
-        ecs_id_record_t *idr = NULL;
+        ecs_id_record_t *idr = nullptr;
         r = ECS_PAIR_FIRST(without);
         idr = flecs_id_record_get(world, ecs_pair(r, EcsWildcard));
         if (idr && idr->flags & EcsIdUnion) {
@@ -934,11 +934,11 @@ void flecs_table_init_edge(
     ecs_id_t id,
     ecs_table_t *to)
 {
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(edge != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(edge->id == 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(edge->hdr.next == NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(edge->hdr.prev == NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(table != nullptr, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(edge != nullptr, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(edge->id == 0, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(edge->hdr.next == nullptr, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(edge->hdr.prev == nullptr, ECS_INTERNAL_ERROR, nullptr);
     
     edge->from = table;
     edge->to = to;
@@ -1038,8 +1038,8 @@ ecs_table_t* flecs_table_traverse_remove(
     node = node ? node : &world->store.root;
 
     /* Removing 0 from an entity is not valid */
-    ecs_check(id_ptr != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(id_ptr[0] != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(id_ptr != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(id_ptr[0] != 0, ECS_INVALID_PARAMETER, nullptr);
 
     ecs_id_t id = id_ptr[0];
     ecs_graph_edge_t *edge = flecs_table_ensure_edge(world, &node->node.remove, id);
@@ -1047,8 +1047,8 @@ ecs_table_t* flecs_table_traverse_remove(
 
     if (!to) {
         to = flecs_create_edge_for_remove(world, node, edge, id);
-        ecs_assert(to != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(edge->to != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(to != nullptr, ECS_INTERNAL_ERROR, nullptr);
+        ecs_assert(edge->to != nullptr, ECS_INTERNAL_ERROR, nullptr);
     }
 
     if (node != to) {
@@ -1063,7 +1063,7 @@ ecs_table_t* flecs_table_traverse_remove(
 
     return to;
 error:
-    return NULL;
+    return nullptr;
 }
 
 ecs_table_t* flecs_table_traverse_add(
@@ -1073,13 +1073,13 @@ ecs_table_t* flecs_table_traverse_add(
     ecs_table_diff_t *diff)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_assert(diff != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(diff != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
     node = node ? node : &world->store.root;
 
     /* Adding 0 to an entity is not valid */
-    ecs_check(id_ptr != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(id_ptr[0] != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(id_ptr != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(id_ptr[0] != 0, ECS_INVALID_PARAMETER, nullptr);
 
     ecs_id_t id = id_ptr[0];
     ecs_graph_edge_t *edge = flecs_table_ensure_edge(world, &node->node.add, id);
@@ -1087,8 +1087,8 @@ ecs_table_t* flecs_table_traverse_add(
 
     if (!to) {
         to = flecs_create_edge_for_add(world, node, edge, id);
-        ecs_assert(to != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(edge->to != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(to != nullptr, ECS_INTERNAL_ERROR, nullptr);
+        ecs_assert(edge->to != nullptr, ECS_INTERNAL_ERROR, nullptr);
     }
 
     if (node != to || edge->diff) {
@@ -1103,7 +1103,7 @@ ecs_table_t* flecs_table_traverse_add(
 
     return to;
 error:
-    return NULL;
+    return nullptr;
 }
 
 ecs_table_t* flecs_table_find_or_create(
@@ -1111,7 +1111,7 @@ ecs_table_t* flecs_table_find_or_create(
     ecs_type_t *type)
 {
     ecs_poly_assert(world, ecs_world_t);
-    return flecs_table_ensure(world, type, false, NULL);
+    return flecs_table_ensure(world, type, false, nullptr);
 }
 
 void flecs_init_root_table(
@@ -1119,13 +1119,13 @@ void flecs_init_root_table(
 {
     ecs_poly_assert(world, ecs_world_t);
 
-    world->store.root.type = (ecs_type_t){0};
+    world->store.root.type = (ecs_type_t){nullptr};
     world->store.root._ = flecs_calloc_t(&world->allocator, ecs_table__t);
-    flecs_init_table(world, &world->store.root, NULL);
+    flecs_init_table(world, &world->store.root, nullptr);
 
     /* Ensure table indices start at 1, as 0 is reserved for the root */
     uint64_t new_id = flecs_sparse_new_id(&world->store.tables);
-    ecs_assert(new_id == 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(new_id == 0, ECS_INTERNAL_ERROR, nullptr);
     (void)new_id;
 }
 
@@ -1149,21 +1149,21 @@ void flecs_table_clear_edges(
     /* Cleanup outgoing edges */
     it = ecs_map_iter(add_hi);
     while (ecs_map_next(&it)) {
-        flecs_table_disconnect_edge(world, ecs_map_key(&it), ecs_map_ptr(&it));
+        flecs_table_disconnect_edge(world, ecs_map_key(&it), static_cast<ecs_graph_edge_t*>(ecs_map_ptr(&it)));
     }
 
     it = ecs_map_iter(remove_hi);
     while (ecs_map_next(&it)) {
-        flecs_table_disconnect_edge(world, ecs_map_key(&it), ecs_map_ptr(&it));
+        flecs_table_disconnect_edge(world, ecs_map_key(&it), static_cast<ecs_graph_edge_t*>(ecs_map_ptr(&it)));
     }
 
     /* Cleanup incoming add edges */
     ecs_graph_edge_hdr_t *next, *cur = node_refs->next;
     if (cur) {
         do {
-            ecs_graph_edge_t *edge = (ecs_graph_edge_t*)cur;
-            ecs_assert(edge->to == table, ECS_INTERNAL_ERROR, NULL);
-            ecs_assert(edge->from != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_graph_edge_t *edge = reinterpret_cast<ecs_graph_edge_t*>(cur);
+            ecs_assert(edge->to == table, ECS_INTERNAL_ERROR, nullptr);
+            ecs_assert(edge->from != nullptr, ECS_INTERNAL_ERROR, nullptr);
             next = cur->next;
             flecs_table_remove_edge(world, &edge->from->node.add, edge->id, edge);
         } while ((cur = next));
@@ -1174,8 +1174,8 @@ void flecs_table_clear_edges(
     if (cur) {
         do {
             ecs_graph_edge_t *edge = (ecs_graph_edge_t*)cur;
-            ecs_assert(edge->to == table, ECS_INTERNAL_ERROR, NULL);
-            ecs_assert(edge->from != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(edge->to == table, ECS_INTERNAL_ERROR, nullptr);
+            ecs_assert(edge->from != nullptr, ECS_INTERNAL_ERROR, nullptr);
             next = cur->prev;
             flecs_table_remove_edge(world, &edge->from->node.remove, edge->id, edge);
         } while ((cur = next));
@@ -1192,10 +1192,10 @@ void flecs_table_clear_edges(
     ecs_map_fini(remove_hi);
     flecs_free_t(&world->allocator, ecs_map_t, add_hi);
     flecs_free_t(&world->allocator, ecs_map_t, remove_hi);
-    table_node->add.lo = NULL;
-    table_node->remove.lo = NULL;
-    table_node->add.hi = NULL;
-    table_node->remove.hi = NULL;
+    table_node->add.lo = nullptr;
+    table_node->remove.lo = nullptr;
+    table_node->add.hi = nullptr;
+    table_node->remove.hi = nullptr;
 
     ecs_log_pop_1();
 }
@@ -1228,5 +1228,5 @@ ecs_table_t* ecs_table_find(
         .array = ECS_CONST_CAST(ecs_id_t*, ids),
         .count = id_count
     };
-    return flecs_table_ensure(world, &type, false, NULL);
+    return flecs_table_ensure(world, &type, false, nullptr);
 }

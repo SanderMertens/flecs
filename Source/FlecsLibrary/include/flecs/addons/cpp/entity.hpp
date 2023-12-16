@@ -91,7 +91,7 @@ struct entity : entity_builder<entity>
     template <typename T>
     T* get_mut() const {
         auto comp_id = _::cpp_type<T>::id(m_world);
-        ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, nullptr);
         return static_cast<T*>(ecs_get_mut_id(m_world, m_id, comp_id));
     }
 
@@ -131,7 +131,7 @@ struct entity : entity_builder<entity>
     template <typename First>
     First* get_mut(entity_t second) const {
         auto comp_id = _::cpp_type<First>::id(m_world);
-        ecs_assert(_::cpp_type<First>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(_::cpp_type<First>::size() != 0, ECS_INVALID_PARAMETER, nullptr);
         return static_cast<First*>(
             ecs_get_mut_id(m_world, m_id, ecs_pair(comp_id, second)));
     }
@@ -157,7 +157,7 @@ struct entity : entity_builder<entity>
     template <typename Second>
     Second* get_mut_second(entity_t first) const {
         auto second = _::cpp_type<Second>::id(m_world);
-        ecs_assert(_::cpp_type<Second>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(_::cpp_type<Second>::size() != 0, ECS_INVALID_PARAMETER, nullptr);
         return static_cast<Second*>(
             ecs_get_mut_id(m_world, m_id, ecs_pair(first, second)));
     }           
@@ -169,7 +169,7 @@ struct entity : entity_builder<entity>
     template <typename T>
     void modified() const {
         auto comp_id = _::cpp_type<T>::id(m_world);
-        ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, nullptr);
         this->modified(comp_id);
     } 
 
@@ -191,7 +191,7 @@ struct entity : entity_builder<entity>
     template <typename First>
     void modified(entity_t second) const {
         auto first = _::cpp_type<First>::id(m_world);
-        ecs_assert(_::cpp_type<First>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(_::cpp_type<First>::size() != 0, ECS_INVALID_PARAMETER, nullptr);
         this->modified(first, second);
     }
 

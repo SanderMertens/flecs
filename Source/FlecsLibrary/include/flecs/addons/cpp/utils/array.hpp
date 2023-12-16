@@ -96,16 +96,16 @@ template <typename T, size_t Size>
 struct array<T, Size, enable_if_t<Size == 0>> final {
     array() {};
     array(const T* (&elems)) { (void)elems; }
-    T operator[](size_t index) { ecs_os_abort(); (void)index; return T(); }
+    T operator[](const size_t index) { ecs_os_abort(); (void)index; return T(); }
     array_iterator<T> begin() { return array_iterator<T>(nullptr, 0); }
     array_iterator<T> end() { return array_iterator<T>(nullptr, 0); }
 
-    size_t size() {
+    CONSTEXPR size_t size() {
         return 0;
     }
 
-    T* ptr() {
-        return NULL;
+    CONSTEXPR T* ptr() {
+        return nullptr;
     }
 };
 

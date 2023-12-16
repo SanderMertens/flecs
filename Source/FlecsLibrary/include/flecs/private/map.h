@@ -53,8 +53,8 @@ typedef struct ecs_map_params_t {
  *   _ptr:    access ecs_map_val_t as void*
  *   _ref:    access ecs_map_val_t* as T**
  *   _deref:  dereferences a _ref
- *   _alloc:  if _ptr is NULL, alloc
- *   _free:   if _ptr is not NULL, free
+ *   _alloc:  if _ptr is nullptr, alloc
+ *   _free:   if _ptr is not nullptr, free
  */
 
 FLECS_API
@@ -94,7 +94,7 @@ FLECS_API
 void ecs_map_fini(
     ecs_map_t *map);
 
-/** Get element for key, returns NULL if they key doesn't exist. */
+/** Get element for key, returns nullptr if they key doesn't exist. */
 FLECS_API
 ecs_map_val_t* ecs_map_get(
     const ecs_map_t *map,
@@ -112,7 +112,7 @@ ecs_map_val_t* ecs_map_ensure(
     ecs_map_t *map,
     ecs_map_key_t key);
 
-/** Get or insert pointer element for key, allocate if the pointer is NULL */
+/** Get or insert pointer element for key, allocate if the pointer is nullptr */
 FLECS_API
 void* ecs_map_ensure_alloc(
     ecs_map_t *map,
@@ -139,7 +139,7 @@ ecs_map_val_t ecs_map_remove(
     ecs_map_t *map,
     ecs_map_key_t key);
 
-/* Remove pointer element, free if not NULL */
+/* Remove pointer element, free if not nullptr */
 FLECS_API
 void ecs_map_remove_free(
     ecs_map_t *map,

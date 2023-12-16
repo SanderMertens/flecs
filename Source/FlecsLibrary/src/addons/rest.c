@@ -28,8 +28,8 @@ static ECS_COPY(EcsRest, dst, src, {
 
 static ECS_MOVE(EcsRest, dst, src, {
     *dst = *src;
-    src->ipaddr = NULL;
-    src->impl = NULL;
+    src->ipaddr = nullptr;
+    src->impl = nullptr;
 })
 
 static ECS_DTOR(EcsRest, ptr, { 
@@ -75,7 +75,7 @@ void flecs_rest_capture_log(
 static
 char* flecs_rest_get_captured_log(void) {
     char *result = rest_last_err;
-    rest_last_err = NULL;
+    rest_last_err = nullptr;
     return result;
 }
 
@@ -162,7 +162,7 @@ void flecs_rest_parse_json_ser_entity_params(
     flecs_rest_bool_param(req, "matches", &desc->serialize_matches);
     flecs_rest_bool_param(req, "alerts", &desc->serialize_alerts);
 
-    char *rel = NULL;
+    char *rel = nullptr;
     flecs_rest_string_param(req, "refs", &rel);
     if (rel) {
         desc->serialize_refs = ecs_lookup_fullpath(world, rel);
@@ -203,7 +203,7 @@ bool flecs_rest_reply_entity(
     ecs_dbg_2("rest: request entity '%s'", path);
 
     ecs_entity_t e = ecs_lookup_path_w_sep(
-        world, 0, path, "/", NULL, false);
+        world, 0, path, "/", nullptr, false);
     if (!e) {
         ecs_dbg_2("rest: entity '%s' not found", path);
         flecs_reply_error(reply, "entity '%s' not found", path);
@@ -229,7 +229,7 @@ bool flecs_rest_reply_world(
     ecs_http_reply_t *reply)
 {
     (void)req;
-    if (ecs_world_to_json_buf(world, &reply->body, NULL) != 0) {
+    if (ecs_world_to_json_buf(world, &reply->body, nullptr) != 0) {
         ecs_strbuf_reset(&reply->body);
         reply->code = 500;
         reply->status = "Internal server error";
@@ -245,7 +245,7 @@ ecs_entity_t flecs_rest_entity_from_path(
     const char *path)
 {
     ecs_entity_t e = ecs_lookup_path_w_sep(
-        world, 0, path, "/", NULL, false);
+        world, 0, path, "/", nullptr, false);
     if (!e) {
         flecs_reply_error(reply, "entity '%s' not found", path);
         reply->code = 404;
@@ -266,10 +266,10 @@ bool flecs_rest_set(
     }
 
     const char *data = ecs_http_get_param(req, "data");
-    ecs_from_json_desc_t desc = {0};
+    ecs_from_json_desc_t desc = {nullptr};
     desc.expr = data;
     desc.name = path;
-    if (ecs_entity_from_json(world, e, data, &desc) == NULL) {
+    if (ecs_entity_from_json(world, e, data, &desc) == nullptr) {
         flecs_reply_error(reply, "invalid request");
         reply->code = 400;
         return true;
@@ -424,7 +424,7 @@ bool flecs_rest_reply_existing_query(
     }
 
     ecs_iter_t it;
-    ecs_iter_poly(world, poly->poly, &it, NULL);
+    ecs_iter_poly(world, poly->poly, &it, nullptr);
 
     ecs_dbg_2("rest: request query '%s'", q);
     bool prev_color = ecs_log_enable_colors(false);
@@ -439,7 +439,7 @@ bool flecs_rest_reply_existing_query(
             reply->code = 400;
             return true;
         }
-        if (ecs_rule_parse_vars(poly->poly, &it, vars) == NULL) {
+        if (ecs_rule_parse_vars(poly->poly, &it, vars) == nullptr) {
             flecs_rest_reply_set_captured_log(reply);
             return true;
         }
@@ -660,7 +660,7 @@ void flecs_system_stats_to_json(
 {
     ecs_strbuf_list_push(reply, "{", ",");
     ecs_strbuf_list_appendlit(reply, "\"name\":\"");
-    ecs_get_path_w_sep_buf(world, 0, system, ".", NULL, reply);
+    ecs_get_path_w_sep_buf(world, 0, system, ".", nullptr, reply);
     ecs_strbuf_appendch(reply, '"');
 
     if (!stats->task) {
@@ -725,7 +725,7 @@ bool flecs_rest_reply_stats(
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply)
 {
-    char *period_str = NULL;
+    char *period_str = nullptr;
     flecs_rest_string_param(req, "period", &period_str);
     char *category = &req->path[6];
 
@@ -861,7 +861,7 @@ bool flecs_rest_reply(
     ecs_rest_ctx_t *impl = ctx;
     ecs_world_t *world = impl->world;
 
-    if (req->path == NULL) {
+    if (req->path == nullptr) {
         ecs_dbg("rest: bad request (missing path)");
         flecs_reply_error(reply, "bad request (missing path)");
         reply->code = 400;
@@ -921,7 +921,7 @@ ecs_http_server_t* ecs_rest_server_init(
     const ecs_http_server_desc_t *desc)
 {
     ecs_rest_ctx_t *srv_ctx = ecs_os_calloc_t(ecs_rest_ctx_t);
-    ecs_http_server_desc_t private_desc = {0};
+    ecs_http_server_desc_t private_desc = {nullptr};
     if (desc) {
         private_desc = *desc;
     }
@@ -931,7 +931,7 @@ ecs_http_server_t* ecs_rest_server_init(
     ecs_http_server_t *srv = ecs_http_server_init(&private_desc);
     if (!srv) {
         ecs_os_free(srv_ctx);
-        return NULL;
+        return nullptr;
     }
 
     srv_ctx->world = world;

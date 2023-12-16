@@ -20,7 +20,7 @@
 
 /* -- Identifier Component -- */
 static ECS_DTOR(EcsIdentifier, ptr, {
-    ecs_os_strset(&ptr->value, NULL);
+    ecs_os_strset(&ptr->value, nullptr);
 })
 
 static ECS_COPY(EcsIdentifier, dst, src, {
@@ -32,14 +32,14 @@ static ECS_COPY(EcsIdentifier, dst, src, {
 })
 
 static ECS_MOVE(EcsIdentifier, dst, src, {
-    ecs_os_strset(&dst->value, NULL);
+    ecs_os_strset(&dst->value, nullptr);
     dst->value = src->value;
     dst->hash = src->hash;
     dst->length = src->length;
     dst->index_hash = src->index_hash;
     dst->index = src->index;
 
-    src->value = NULL;
+    src->value = nullptr;
     src->hash = 0;
     src->index_hash = 0;
     src->index = 0;
@@ -55,16 +55,16 @@ void ecs_on_set(EcsIdentifier)(ecs_iter_t *it) {
     ecs_id_t evt_id = it->event_id;
     ecs_entity_t kind = ECS_PAIR_SECOND(evt_id); /* Name, Symbol, Alias */
     ecs_id_t pair = ecs_childof(0);
-    ecs_hashmap_t *index = NULL;
+    ecs_hashmap_t *index = nullptr;
 
     if (kind == EcsSymbol) {
         index = &world->symbols;
     } else if (kind == EcsAlias) {
         index = &world->aliases;
     } else if (kind == EcsName) {
-        ecs_assert(it->table != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(it->table != nullptr, ECS_INTERNAL_ERROR, nullptr);
         ecs_search(world, it->table, ecs_childof(EcsWildcard), &pair);
-        ecs_assert(pair != 0, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(pair != 0, ECS_INTERNAL_ERROR, nullptr);
 
         if (evt == EcsOnSet) {
             index = flecs_id_name_index_ensure(world, pair);
@@ -84,7 +84,7 @@ void ecs_on_set(EcsIdentifier)(ecs_iter_t *it) {
         if (cur->index && cur->index != index) {
             /* If index doesn't match up, the value must have been copied from
              * another entity, so reset index & cached index hash */
-            cur->index = NULL;
+            cur->index = nullptr;
             cur->index_hash = 0;
         }
 
@@ -94,7 +94,7 @@ void ecs_on_set(EcsIdentifier)(ecs_iter_t *it) {
         } else {
             len = cur->length = 0;
             hash = cur->hash = 0;
-            cur->index = NULL;
+            cur->index = nullptr;
         }
 
         if (index) {
@@ -131,18 +131,18 @@ static ECS_COPY(EcsPoly, dst, src, {
 static ECS_MOVE(EcsPoly, dst, src, {
     if (dst->poly && (dst->poly != src->poly)) {
         ecs_poly_dtor_t *dtor = ecs_get_dtor(dst->poly);
-        ecs_assert(dtor != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(dtor != nullptr, ECS_INTERNAL_ERROR, nullptr);
         dtor[0](dst->poly);
     }
 
     dst->poly = src->poly;
-    src->poly = NULL;
+    src->poly = nullptr;
 })
 
 static ECS_DTOR(EcsPoly, ptr, {
     if (ptr->poly) {
         ecs_poly_dtor_t *dtor = ecs_get_dtor(ptr->poly);
-        ecs_assert(dtor != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(dtor != nullptr, ECS_INTERNAL_ERROR, nullptr);
         dtor[0](ptr->poly);
     }
 })
@@ -263,7 +263,7 @@ void flecs_register_final(ecs_iter_t *it) {
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
-        if (flecs_id_record_get(world, ecs_pair(EcsIsA, e)) != NULL) {
+        if (flecs_id_record_get(world, ecs_pair(EcsIsA, e)) != nullptr) {
             char *e_str = ecs_get_fullpath(world, e);
             ecs_throw(ECS_ID_IN_USE,
                 "cannot change property 'Final' for '%s': already inherited from",
@@ -303,7 +303,7 @@ static
 void flecs_register_tag(ecs_iter_t *it) {
     flecs_register_id_flag_for_relation(it, EcsTag, EcsIdTag, ~EcsIdTag, 0);
 
-    /* Ensure that all id records for tag have type info set to NULL */
+    /* Ensure that all id records for tag have type info set to nullptr */
     ecs_world_t *world = it->real_world;
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -312,12 +312,12 @@ void flecs_register_tag(ecs_iter_t *it) {
         if (it->event == EcsOnAdd) {
             ecs_id_record_t *idr = flecs_id_record_get(world, 
                 ecs_pair(e, EcsWildcard));
-            ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(idr != nullptr, ECS_INTERNAL_ERROR, nullptr);
             do {
-                if (idr->type_info != NULL) {
+                if (idr->type_info != nullptr) {
                     flecs_assert_relation_unused(world, e, EcsTag);
                 }
-                idr->type_info = NULL;
+                idr->type_info = nullptr;
             } while ((idr = idr->first.next));
         }
     }
@@ -424,7 +424,8 @@ void flecs_on_component(ecs_iter_t *it) {
 
         if (it->event == EcsOnSet) {
             if (flecs_type_info_init_id(
-                world, e, c[i].size, c[i].alignment, NULL))
+                world, e, c[i].size, c[i].alignment,
+                nullptr))
             {
                 flecs_assert_relation_unused(world, e, ecs_id(EcsComponent));
             }
@@ -476,10 +477,10 @@ void flecs_bootstrap_builtin(
     ecs_size_t size,
     ecs_size_t alignment)
 {
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(table != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
     ecs_column_t *columns = table->data.columns;
-    ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(columns != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
     ecs_record_t *record = flecs_entities_ensure(world, entity);
     record->table = table;
@@ -510,7 +511,7 @@ void flecs_bootstrap_builtin(
     symbol_col[index].length = symbol_length;
     symbol_col[index].hash = flecs_hash(symbol, symbol_length);    
     symbol_col[index].index_hash = 0;
-    symbol_col[index].index = NULL;
+    symbol_col[index].index = nullptr;
 }
 
 /** Initialize component table. This table is manually constructed to bootstrap
@@ -584,11 +585,11 @@ void flecs_bootstrap_entity(
     ecs_set_name(world, id, name);
     ecs_set_symbol(world, id, symbol);
 
-    ecs_assert(ecs_get_name(world, id) != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_get_name(world, id) != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
     if (!parent || parent == EcsFlecsCore) {
         ecs_assert(ecs_lookup_fullpath(world, name) == id, 
-            ECS_INTERNAL_ERROR, NULL);
+            ECS_INTERNAL_ERROR, nullptr);
     }
 }
 
@@ -654,7 +655,7 @@ void flecs_bootstrap(
      * entities associated with builtin components, until they get moved to 
      * other tables once properties are added (see below) */
     ecs_table_t *table = flecs_bootstrap_component_table(world);
-    assert(table != NULL);
+    assert(table != nullptr);
 
     /* Bootstrap builtin components */
     flecs_bootstrap_builtin_t(world, table, EcsIdentifier);
@@ -714,9 +715,9 @@ void flecs_bootstrap(
 
     /* Self check */
     ecs_record_t *r = flecs_entities_get(world, EcsFlecs);
-    ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(r->table != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(r->row & EcsEntityIsTraversable, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(r != nullptr, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(r->table != nullptr, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(r->row & EcsEntityIsTraversable, ECS_INTERNAL_ERROR, nullptr);
     (void)r;
 
     /* Initialize builtin entities */
@@ -941,10 +942,10 @@ void flecs_bootstrap(
 
     ecs_set_scope(world, 0);
 
-    ecs_set_name_prefix(world, NULL);
+    ecs_set_name_prefix(world, nullptr);
 
-    ecs_assert(world->idr_childof_wildcard != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(world->idr_isa_wildcard != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(world->idr_childof_wildcard != nullptr, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(world->idr_isa_wildcard != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
     ecs_log_pop();
 }

@@ -98,7 +98,7 @@ int ecs_app_run(
     if (desc->enable_rest) {
 #ifdef FLECS_REST
 #ifdef ECS_TARGET_EM
-        flecs_wasm_rest_server = ecs_rest_server_init(world, NULL);
+        flecs_wasm_rest_server = ecs_rest_server_init(world, nullptr);
 #else
         ecs_set(world, EcsWorld, EcsRest, {.port = desc->port });
 #endif

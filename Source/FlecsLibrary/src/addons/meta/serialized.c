@@ -21,20 +21,20 @@ ecs_meta_type_op_kind_t flecs_meta_primitive_to_op_kind(ecs_primitive_kind_t kin
 static
 ecs_size_t flecs_meta_type_size(ecs_world_t *world, ecs_entity_t type) {
     const EcsComponent *comp = ecs_get(world, type, EcsComponent);
-    ecs_assert(comp != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(comp != nullptr, ECS_INTERNAL_ERROR, nullptr);
     return comp->size;
 }
 
 static
 ecs_meta_type_op_t* flecs_meta_ops_add(ecs_vec_t *ops, ecs_meta_type_op_kind_t kind) {
-    ecs_meta_type_op_t *op = ecs_vec_append_t(NULL, ops, ecs_meta_type_op_t);
+    ecs_meta_type_op_t *op = ecs_vec_append_t(nullptr, ops, ecs_meta_type_op_t);
     op->kind = kind;
     op->offset = 0;
     op->count = 1;
     op->op_count = 1;
     op->size = 0;
-    op->name = NULL;
-    op->members = NULL;
+    op->name = nullptr;
+    op->members = nullptr;
     op->type = 0;
     op->member_index = 0;
     return op;
@@ -43,7 +43,7 @@ ecs_meta_type_op_t* flecs_meta_ops_add(ecs_vec_t *ops, ecs_meta_type_op_kind_t k
 static
 ecs_meta_type_op_t* flecs_meta_ops_get(ecs_vec_t *ops, int32_t index) {
     ecs_meta_type_op_t* op = ecs_vec_get_t(ops, ecs_meta_type_op_t, index);
-    ecs_assert(op != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(op != nullptr, ECS_INTERNAL_ERROR, nullptr);
     return op;
 }
 
@@ -173,7 +173,7 @@ int flecs_meta_serialize_struct(
     ecs_vec_t *ops)
 {
     const EcsStruct *ptr = ecs_get(world, type, EcsStruct);
-    ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ptr != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
     int32_t cur, first = ecs_vec_count(ops);
     ecs_meta_type_op_t *op = flecs_meta_ops_add(ops, EcsOpPush);
@@ -184,7 +184,7 @@ int flecs_meta_serialize_struct(
     ecs_member_t *members = ecs_vec_first(&ptr->members);
     int32_t i, count = ecs_vec_count(&ptr->members);
 
-    ecs_hashmap_t *member_index = NULL;
+    ecs_hashmap_t *member_index = nullptr;
     if (count) {        
         op->members = member_index = flecs_name_index_new(
             world, &world->allocator);
@@ -279,7 +279,7 @@ void ecs_meta_type_serialized_init(
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
         ecs_vec_t ops;
-        ecs_vec_init_t(NULL, &ops, ecs_meta_type_op_t, 0);
+        ecs_vec_init_t(nullptr, &ops, ecs_meta_type_op_t, 0);
         flecs_meta_serialize_component(world, e, &ops);
 
         EcsMetaTypeSerialized *ptr = ecs_get_mut(

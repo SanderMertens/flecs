@@ -69,7 +69,7 @@ void ecs_cpp_trim_type_name(
      * if this is a template type on msvc. */
     if (len > ECS_STRUCT_LEN) {
         char *ptr = typeName;
-        while ((ptr = strstr(ptr + 1, ECS_STRUCT_PREFIX)) != 0) {
+        while ((ptr = strstr(ptr + 1, ECS_STRUCT_PREFIX)) != nullptr) {
             /* Make sure we're not matched with part of a longer identifier
              * that contains 'struct' */
             if (ptr[-1] == '<' || ptr[-1] == ',' || isspace(ptr[-1])) {
@@ -126,7 +126,7 @@ const char* flecs_cpp_func_rchr(
 {
     const char *r = strrchr(func_name, ch);
     if ((r - func_name) >= (func_name_len - flecs_uto(ecs_size_t, func_back_len))) {
-        return NULL;
+        return nullptr;
     }
     return r;
 }
@@ -155,7 +155,7 @@ char* ecs_cpp_get_constant_name(
         func_name, f_len, fb_len, ':'));
     start = flecs_cpp_func_max(start, flecs_cpp_func_rchr(
         func_name, f_len, fb_len, ','));
-    ecs_assert(start != NULL, ECS_INVALID_PARAMETER, func_name);
+    ecs_assert(start != nullptr, ECS_INVALID_PARAMETER, func_name);
     start ++;
     
     ecs_size_t len = flecs_uto(ecs_size_t, 
@@ -180,13 +180,13 @@ const char* ecs_cpp_trim_module(
         return type_name;
     }
 
-    char *path = ecs_get_path_w_sep(world, 0, scope, "::", NULL);
+    char *path = ecs_get_path_w_sep(world, 0, scope, "::", nullptr);
     if (path) {
         const char *ptr = strrchr(type_name, ':');
-        ecs_assert(ptr != type_name, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(ptr != type_name, ECS_INTERNAL_ERROR, nullptr);
         if (ptr) {
             ptr --;
-            ecs_assert(ptr[0] == ':', ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(ptr[0] == ':', ECS_INTERNAL_ERROR, nullptr);
             ecs_size_t name_path_len = (ecs_size_t)(ptr - type_name);
             if (name_path_len <= ecs_os_strlen(path)) {
                 if (!ecs_os_strncmp(type_name, path, name_path_len)) {
@@ -211,11 +211,11 @@ void ecs_cpp_component_validate(
     bool implicit_name)
 {
     /* If entity has a name check if it matches */
-    if (ecs_is_valid(world, id) && ecs_get_name(world, id) != NULL) {
+    if (ecs_is_valid(world, id) && ecs_get_name(world, id) != nullptr) {
         if (!implicit_name && id >= EcsFirstUserComponentId) {
 #ifndef FLECS_NDEBUG
             char *path = ecs_get_path_w_sep(
-                world, 0, id, "::", NULL);
+                world, 0, id, "::", nullptr);
             if (ecs_os_strcmp(path, name)) {
                 ecs_abort(ECS_INCONSISTENT_NAME,
                     "component '%s' already registered with name '%s'",
@@ -261,7 +261,7 @@ void ecs_cpp_component_validate(
         .type.alignment = flecs_uto(int32_t, alignment)
     });
     (void)ent;
-    ecs_assert(ent == id, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ent == id, ECS_INTERNAL_ERROR, nullptr);
 }
 
 ecs_entity_t ecs_cpp_component_register(
@@ -295,7 +295,7 @@ ecs_entity_t ecs_cpp_component_register(
      * we are trying to register under this name is the same */
     if (ent) {
         const EcsComponent *component = ecs_get(world, ent, EcsComponent);
-        if (component != NULL) {
+        if (component != nullptr) {
             const char *sym = ecs_get_symbol(world, ent);
             if (sym && ecs_os_strcmp(sym, symbol)) {
                 /* Application is trying to register a type with an entity that
@@ -323,7 +323,7 @@ ecs_entity_t ecs_cpp_component_register(
                         "component with name '%s' is already registered for"\
                         " type '%s' (trying to register for type '%s')",
                             name, sym, symbol);
-                    ecs_abort(ECS_NAME_IN_USE, NULL);
+                    ecs_abort(ECS_NAME_IN_USE, nullptr);
                 }
                 ecs_os_free(type_path);
             } else if (!sym) {
@@ -357,7 +357,7 @@ ecs_entity_t ecs_cpp_component_register_explicit(
     bool is_component,
     bool *existing_out)
 {
-    char *existing_name = NULL;
+    char *existing_name = nullptr;
     if (existing_out) *existing_out = false;
 
     // If an explicit id is provided, it is possible that the symbol and
@@ -395,14 +395,14 @@ ecs_entity_t ecs_cpp_component_register_explicit(
             .symbol = symbol,
             .use_low_id = true
         });
-        ecs_assert(entity != 0, ECS_INVALID_OPERATION, NULL);
+        ecs_assert(entity != 0, ECS_INVALID_OPERATION, nullptr);
 
         entity = ecs_component_init(world, &(ecs_component_desc_t){
             .entity = entity,
             .type.size = flecs_uto(int32_t, size),
             .type.alignment = flecs_uto(int32_t, alignment)
         });
-        ecs_assert(entity != 0, ECS_INVALID_OPERATION, NULL);
+        ecs_assert(entity != 0, ECS_INVALID_OPERATION, nullptr);
     } else {
         entity = ecs_entity(world, {
             .id = s_id,
@@ -414,8 +414,8 @@ ecs_entity_t ecs_cpp_component_register_explicit(
         });
     }
 
-    ecs_assert(entity != 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(!s_id || s_id == entity, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(entity != 0, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(!s_id || s_id == entity, ECS_INTERNAL_ERROR, nullptr);
     ecs_os_free(existing_name);
 
     return entity;
@@ -464,7 +464,7 @@ ecs_entity_t ecs_cpp_enum_constant_register(
 
     #ifdef FLECS_DEBUG
     const EcsComponent *cptr = ecs_get(world, parent, EcsComponent);
-    ecs_assert(cptr != NULL, ECS_INVALID_PARAMETER, "enum is not a component");
+    ecs_assert(cptr != nullptr, ECS_INVALID_PARAMETER, "enum is not a component");
     ecs_assert(cptr->size == ECS_SIZEOF(int32_t), ECS_UNSUPPORTED,
         "enum component must have 32bit size");
     #endif
@@ -502,12 +502,12 @@ const ecs_member_t* ecs_cpp_last_member(
         char *type_str = ecs_get_fullpath(world, type);
         ecs_err("entity '%s' is not a struct", type_str);
         ecs_os_free(type_str);
-        return 0;
+        return nullptr;
     }
 
     ecs_member_t *m = ecs_vec_get_t(&st->members, ecs_member_t, 
         ecs_vec_count(&st->members) - 1);
-    ecs_assert(m != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(m != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
     return m;
 }

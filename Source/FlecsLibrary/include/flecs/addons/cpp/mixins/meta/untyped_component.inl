@@ -16,7 +16,7 @@ untyped_component& member(flecs::entity_t type_id, flecs::entity_t unit, const c
     desc.name = name;
     desc.add[0] = ecs_pair(flecs::ChildOf, m_id);
     ecs_entity_t eid = ecs_entity_init(m_world, &desc);
-    ecs_assert(eid != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(eid != 0, ECS_INTERNAL_ERROR, nullptr);
 
     flecs::entity e(m_world, eid);
 
@@ -90,7 +90,7 @@ untyped_component& constant(const char *name, int32_t value) {
     desc.name = name;
     desc.add[0] = ecs_pair(flecs::ChildOf, m_id);
     ecs_entity_t eid = ecs_entity_init(m_world, &desc);
-    ecs_assert(eid != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(eid != 0, ECS_INTERNAL_ERROR, nullptr);
 
     ecs_set_id(m_world, eid, 
         ecs_pair(flecs::Constant, flecs::I32), sizeof(int32_t),
@@ -107,7 +107,7 @@ untyped_component& bit(const char *name, uint32_t value) {
     desc.name = name;
     desc.add[0] = ecs_pair(flecs::ChildOf, m_id);
     ecs_entity_t eid = ecs_entity_init(m_world, &desc);
-    ecs_assert(eid != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(eid != 0, ECS_INTERNAL_ERROR, nullptr);
 
     ecs_set_id(m_world, eid, 
         ecs_pair(flecs::Constant, flecs::U32), sizeof(uint32_t),

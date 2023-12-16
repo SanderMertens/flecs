@@ -41,7 +41,7 @@ void ecs_vars_init(
     ecs_world_t *world,
     ecs_vars_t *vars)
 {
-    flecs_expr_var_scope_init(world, &vars->root, NULL);
+    flecs_expr_var_scope_init(world, &vars->root, nullptr);
     vars->world = world;
     vars->cur = &vars->root;
 }
@@ -74,7 +74,7 @@ int ecs_vars_pop(
     ecs_vars_t *vars)
 {
     ecs_expr_var_scope_t *scope = vars->cur;
-    ecs_check(scope != &vars->root, ECS_INVALID_OPERATION, NULL);
+    ecs_check(scope != &vars->root, ECS_INVALID_OPERATION, nullptr);
     vars->cur = scope->parent;
     flecs_expr_var_scope_fini(vars->world, scope);
     flecs_free_t(&vars->world->allocator, ecs_expr_var_scope_t, scope);
@@ -88,9 +88,9 @@ ecs_expr_var_t* ecs_vars_declare(
     const char *name,
     ecs_entity_t type)
 {
-    ecs_assert(vars != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(name != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(type != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(vars != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_assert(name != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_assert(type != 0, ECS_INVALID_PARAMETER, nullptr);
     ecs_expr_var_scope_t *scope = vars->cur;
     ecs_hashmap_t *var_index = &scope->var_index;
 
@@ -114,7 +114,7 @@ ecs_expr_var_t* ecs_vars_declare(
         flecs_ito(uint64_t, ecs_vec_count(&scope->vars)), var->name, 0, 0);
     return var;
 error:
-    return NULL;
+    return nullptr;
 }
 
 ecs_expr_var_t* ecs_vars_declare_w_value(
@@ -122,9 +122,9 @@ ecs_expr_var_t* ecs_vars_declare_w_value(
     const char *name,
     ecs_value_t *value)
 {
-    ecs_assert(vars != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(name != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(value != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(vars != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_assert(name != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_assert(value != nullptr, ECS_INVALID_PARAMETER, nullptr);
     ecs_expr_var_scope_t *scope = vars->cur;
     ecs_hashmap_t *var_index = &scope->var_index;
 
@@ -139,26 +139,26 @@ ecs_expr_var_t* ecs_vars_declare_w_value(
     var->value = *value;
     var->name = flecs_strdup(&vars->world->allocator, name);
     var->owned = true;
-    value->ptr = NULL; /* Take ownership, prevent double free */
+    value->ptr = nullptr; /* Take ownership, prevent double free */
 
     flecs_name_index_ensure(var_index, 
         flecs_ito(uint64_t, ecs_vec_count(&scope->vars)), var->name, 0, 0);
     return var;
 error:
-    return NULL;
+    return nullptr;
 }
 
 static
 ecs_expr_var_t* flecs_vars_scope_lookup(
-    ecs_expr_var_scope_t *scope,
+    const ecs_expr_var_scope_t *scope,
     const char *name)
 {
-    uint64_t var_id = flecs_name_index_find(&scope->var_index, name, 0, 0);
+    const uint64_t var_id = flecs_name_index_find(&scope->var_index, name, 0, 0);
     if (var_id == 0) {
         if (scope->parent) {
             return flecs_vars_scope_lookup(scope->parent, name);
         }
-        return NULL;
+        return nullptr;
     }
 
     return ecs_vec_get_t(&scope->vars, ecs_expr_var_t, 

@@ -40,14 +40,14 @@ inline flecs::entity world::use(const char *alias) const {
 
 inline flecs::entity world::use(const char *name, const char *alias) const {
     entity_t e = ecs_lookup_path_w_sep(m_world, 0, name, "::", "::", true);
-    ecs_assert(e != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(e != 0, ECS_INVALID_PARAMETER, nullptr);
 
     ecs_set_alias(m_world, e, alias);
     return flecs::entity(m_world, e);
 }
 
 inline void world::use(flecs::entity e, const char *alias) const {
-    entity_t eid = e.id();
+    const entity_t eid = e.id();
     const char *name = alias;
     if (!name) {
         // If no name is defined, use the entity name without the scope
@@ -69,20 +69,20 @@ inline flecs::entity world::set_scope() const {
     return set_scope( _::cpp_type<T>::id(m_world) ); 
 }
 
-inline entity world::lookup(const char *name, bool search_path) const {
-    auto e = ecs_lookup_path_w_sep(m_world, 0, name, "::", "::", search_path);
+inline entity world::lookup(const char *name, const bool search_path) const {
+    const ecs_entity_t e = ecs_lookup_path_w_sep(m_world, 0, name, "::", "::", search_path);
     return flecs::entity(*this, e);
 }
 
 template <typename T>
 inline T* world::get_mut() const {
-    flecs::entity e(m_world, _::cpp_type<T>::id(m_world));
+    const flecs::entity e(m_world, _::cpp_type<T>::id(m_world));
     return e.get_mut<T>();
 }
 
 template <typename T>
 inline void world::modified() const {
-    flecs::entity e(m_world, _::cpp_type<T>::id(m_world));
+    const flecs::entity e(m_world, _::cpp_type<T>::id(m_world));
     e.modified<T>();
 }
 
@@ -100,7 +100,7 @@ inline void world::set(Second second, First&& value) const {
 
 template <typename T>
 inline ref<T> world::get_ref() const {
-    flecs::entity e(m_world, _::cpp_type<T>::id(m_world));
+    const flecs::entity e(m_world, _::cpp_type<T>::id(m_world));
     return e.get_ref<T>();
 }
 

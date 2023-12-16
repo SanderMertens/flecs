@@ -27,14 +27,14 @@ struct snapshot final {
     }
 
     snapshot& operator=(const snapshot& obj) {
-        ecs_assert(m_world.c_ptr() == obj.m_world.c_ptr(), ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(m_world.c_ptr() == obj.m_world.c_ptr(), ECS_INVALID_PARAMETER, nullptr);
         ecs_iter_t it = ecs_snapshot_iter(obj.m_snapshot);
         m_snapshot = ecs_snapshot_take_w_iter(&it);        
         return *this;
     }
 
     snapshot& operator=(snapshot&& obj) {
-        ecs_assert(m_world.c_ptr() == obj.m_world.c_ptr(), ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(m_world.c_ptr() == obj.m_world.c_ptr(), ECS_INVALID_PARAMETER, nullptr);
         m_snapshot = obj.m_snapshot;
         obj.m_snapshot = nullptr;
         return *this;

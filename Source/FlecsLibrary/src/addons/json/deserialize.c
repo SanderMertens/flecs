@@ -33,7 +33,7 @@ const char* flecs_json_parse_path(
 
     return json;
 error:
-    return NULL;
+    return nullptr;
 }
 
 const char* ecs_ptr_from_json(
@@ -48,12 +48,12 @@ const char* ecs_ptr_from_json(
     char *token = token_buffer;
     int depth = 0;
 
-    const char *name = NULL;
-    const char *expr = NULL;
+    const char *name = nullptr;
+    const char *expr = nullptr;
 
     ecs_meta_cursor_t cur = ecs_meta_cursor(world, type, ptr);
     if (cur.valid == false) {
-        return NULL;
+        return nullptr;
     }
 
     if (desc) {
@@ -83,14 +83,14 @@ const char* ecs_ptr_from_json(
 
             if (ecs_meta_is_collection(&cur)) {
                 ecs_parser_error(name, expr, json - expr, "expected '['");
-                return NULL;
+                return nullptr;
             }
         } else if (token_kind == JsonObjectClose) {
             depth --;
 
             if (ecs_meta_is_collection(&cur)) {
                 ecs_parser_error(name, expr, json - expr, "expected ']'");
-                return NULL;
+                return nullptr;
             }
 
             if (ecs_meta_pop(&cur) != 0) {
@@ -104,14 +104,14 @@ const char* ecs_ptr_from_json(
 
             if (!ecs_meta_is_collection(&cur)) {
                 ecs_parser_error(name, expr, json - expr, "expected '{'");
-                return NULL;
+                return nullptr;
             }
         } else if (token_kind == JsonArrayClose) {
             depth --;
 
             if (!ecs_meta_is_collection(&cur)) {
                 ecs_parser_error(name, expr, json - expr, "expected '}'");
-                return NULL;
+                return nullptr;
             }
 
             if (ecs_meta_pop(&cur) != 0) {
@@ -177,7 +177,7 @@ const char* ecs_ptr_from_json(
 
     return json;
 error:
-    return NULL;
+    return nullptr;
 }
 
 const char* ecs_entity_from_json(
@@ -189,9 +189,9 @@ const char* ecs_entity_from_json(
     ecs_json_token_t token_kind = 0;
     char token[ECS_MAX_TOKEN_SIZE];
 
-    ecs_from_json_desc_t desc = {0};
+    ecs_from_json_desc_t desc = {nullptr};
 
-    const char *name = NULL, *expr = json, *ids = NULL, *values = NULL, *lah;
+    const char *name = nullptr, *expr = json, *ids = nullptr, *values = nullptr, *lah;
     if (desc_param) {
         desc = *desc_param;
     }
@@ -212,7 +212,7 @@ const char* ecs_entity_from_json(
 
     json = flecs_json_expect_member(json, token, &desc);
     if (!json) {
-        return NULL;
+        return nullptr;
     }
 
     if (!ecs_os_strcmp(token, "path")) {
@@ -253,7 +253,7 @@ const char* ecs_entity_from_json(
 
     json = flecs_json_skip_array(json, token, &desc);
     if (!json) {
-        return NULL;
+        return nullptr;
     }
 
     json = flecs_json_parse(json, &token_kind, token);
@@ -395,7 +395,7 @@ const char* ecs_entity_from_json(
 
     return flecs_json_expect(json, JsonObjectClose, token, &desc);
 error:
-    return NULL;
+    return nullptr;
 }
 
 static
@@ -435,7 +435,7 @@ void flecs_json_mark_reserved(
     ecs_entity_t e)
 {
     ecs_entity_t *reserved = ecs_map_ensure(anonymous_ids, e);
-    ecs_assert(reserved[0] == 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(reserved[0] == 0, ECS_INTERNAL_ERROR, nullptr);
     reserved[0] = 0;
 }
 
@@ -500,7 +500,7 @@ ecs_entity_t flecs_json_ensure_entity(
 
         e = deser_id[0];
     } else {
-        e = ecs_lookup_path_w_sep(world, 0, name, ".", NULL, false);
+        e = ecs_lookup_path_w_sep(world, 0, name, ".", nullptr, false);
         if (!e) {
             e = ecs_entity(world, { .name = name });
             flecs_json_mark_reserved(anonymous_ids, e);
@@ -518,7 +518,7 @@ ecs_table_t* flecs_json_parse_table(
     const ecs_from_json_desc_t *desc)
 {
     ecs_json_token_t token_kind = 0;
-    ecs_table_t *table = NULL;
+    ecs_table_t *table = nullptr;
 
     do {
         ecs_id_t id = 0;
@@ -582,7 +582,7 @@ ecs_table_t* flecs_json_parse_table(
 
     return table;
 error:
-    return NULL;
+    return nullptr;
 }
 
 static
@@ -613,15 +613,15 @@ int flecs_json_parse_entities(
 
         ecs_entity_t e = flecs_json_lookup(world, parent, name_token, desc);
         ecs_record_t *r = flecs_entities_try(world, e);
-        ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(r != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
         if (r->table != table) {
             bool cleared = false;
             if (r->table) {
-                ecs_commit(world, e, r, r->table, NULL, &r->table->type);
+                ecs_commit(world, e, r, r->table, nullptr, &r->table->type);
                 cleared = true;
             }
-            ecs_commit(world, e, r, table, &table->type, NULL);
+            ecs_commit(world, e, r, table, &table->type, nullptr);
             if (cleared) {
                 char *entity_name = strrchr(name_token, '.');
                 if (entity_name) {
@@ -635,7 +635,7 @@ int flecs_json_parse_entities(
             }
         }
 
-        ecs_assert(table == r->table, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(table == r->table, ECS_INTERNAL_ERROR, nullptr);
         ecs_record_t** elem = ecs_vec_append_t(a, records, ecs_record_t*);
         *elem = r;
 
@@ -700,7 +700,7 @@ const char* flecs_json_parse_column(
         int32_t row = ECS_RECORD_TO_ROW(r->row);
 
         void *ptr = ecs_vec_get(&column->data, size, row);
-        ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(ptr != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
         json = ecs_ptr_from_json(world, type, ptr, json, desc);
         if (!json) {
@@ -720,7 +720,7 @@ const char* flecs_json_parse_column(
 
     return json;
 error:
-    return NULL;
+    return nullptr;
 }
 
 static
@@ -803,7 +803,7 @@ const char* flecs_json_parse_values(
 
     return json;
 error:
-    return NULL;
+    return nullptr;
 }
 
 static
@@ -817,7 +817,7 @@ const char* flecs_json_parse_result(
     const ecs_from_json_desc_t *desc)
 {
     ecs_json_token_t token_kind = 0;
-    const char *ids = NULL, *values = NULL, *entities = NULL;
+    const char *ids = nullptr, *values = nullptr, *entities = nullptr;
 
     json = flecs_json_expect(json, JsonObjectOpen, token, desc);
     if (!json) {
@@ -936,7 +936,7 @@ const char* flecs_json_parse_result(
 
     return json;
 error:
-    return NULL;
+    return nullptr;
 }
 
 const char* ecs_world_from_json(
@@ -947,7 +947,7 @@ const char* ecs_world_from_json(
     ecs_json_token_t token_kind;
     char token[ECS_MAX_TOKEN_SIZE];
 
-    ecs_from_json_desc_t desc = {0};
+    ecs_from_json_desc_t desc = {nullptr};
     ecs_allocator_t *a = &world->allocator;
     ecs_vec_t records;
     ecs_vec_t columns_set;
@@ -956,7 +956,7 @@ const char* ecs_world_from_json(
     ecs_vec_init_t(a, &columns_set, ecs_id_t, 0);
     ecs_map_init(&anonymous_ids, a);
 
-    const char *name = NULL, *expr = json, *lah;
+    const char *name = nullptr, *expr = json, *lah;
     if (desc_arg) {
         desc = *desc_arg;
     }
@@ -1021,7 +1021,7 @@ error:
     ecs_vec_fini_t(a, &columns_set, ecs_id_t);
     ecs_map_fini(&anonymous_ids);
 
-    return NULL;
+    return nullptr;
 }
 
 #endif

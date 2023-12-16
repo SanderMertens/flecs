@@ -16,7 +16,7 @@ int flecs_entity_filter_find_smallest_term(
     ecs_table_t *table,
     ecs_entity_filter_iter_t *iter)
 {
-    ecs_assert(table->_ != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(table->_ != nullptr, ECS_INTERNAL_ERROR, nullptr);
     flecs_switch_term_t *sw_terms = ecs_vec_first(&iter->entity_filter->sw_terms);
     int32_t i, count = ecs_vec_count(&iter->entity_filter->sw_terms);
     int32_t min = INT_MAX, index = 0;
@@ -36,7 +36,7 @@ int flecs_entity_filter_find_smallest_term(
 
             /* Translate the table column index to switch column index */
             table_column_index -= table->_->sw_offset;
-            ecs_assert(table_column_index >= 1, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(table_column_index >= 1, ECS_INTERNAL_ERROR, nullptr);
 
             /* Get the sparse column */
             sw = sparse_column->sw_column = 
@@ -200,7 +200,7 @@ int flecs_entity_filter_bitset_next(
 
         if (!bs) {
             int32_t index = column->column_index;
-            ecs_assert((index - bs_offset >= 0), ECS_INTERNAL_ERROR, NULL);
+            ecs_assert((index - bs_offset >= 0), ECS_INTERNAL_ERROR, nullptr);
             bs = &table->_->bs_columns[index - bs_offset];
             terms[i].bs_column = bs;
         }
@@ -236,7 +236,7 @@ int flecs_entity_filter_bitset_next(
             bs_start ++;
 
             /* Block was not empty, so bs_start must be smaller than 64 */
-            ecs_assert(bs_start < 64, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(bs_start < 64, ECS_INTERNAL_ERROR, nullptr);
         }
 
         /* Step 3: Find number of contiguous enabled elements after start */
@@ -263,7 +263,7 @@ int flecs_entity_filter_bitset_next(
         }
 
         /* Block was not 100% occupied, so bs_start must be smaller than 64 */
-        ecs_assert(bs_end < 64, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(bs_end < 64, ECS_INTERNAL_ERROR, nullptr);
 
         /* Step 5: translate to element start/end and make sure that each column
          * range is a subset of the previous one. */
@@ -337,7 +337,7 @@ int32_t flecs_get_flattened_target(
     }
 
     ecs_record_t *r = cur->target;
-    ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(r != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
     ecs_table_t *table = r->table;
     if (!table) {
@@ -353,7 +353,7 @@ int32_t flecs_get_flattened_target(
 
     if (table->flags & EcsTableHasTarget) {
         int32_t col = table->column_map[table->_->ft_offset];
-        ecs_assert(col != -1, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(col != -1, ECS_INTERNAL_ERROR, nullptr);
         EcsTarget *next = table->data.columns[col].data.array;
         next = ECS_ELEM_T(next, EcsTarget, ECS_RECORD_TO_ROW(r->row));
         return flecs_get_flattened_target(
@@ -361,7 +361,8 @@ int32_t flecs_get_flattened_target(
     }
 
     return ecs_search_relation(
-        world, table, 0, id, rel, EcsSelf|EcsUp, src_out, NULL, tr_out);
+        world, table, 0, id, rel, EcsSelf|EcsUp, src_out,
+        nullptr, tr_out);
 }
 
 void flecs_entity_filter_init(
@@ -373,11 +374,11 @@ void flecs_entity_filter_init(
     int32_t *columns)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_assert(entity_filter != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(filter != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(ids != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(entity_filter != nullptr, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(filter != nullptr, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(table != nullptr, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(ids != nullptr, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(columns != nullptr, ECS_INTERNAL_ERROR, nullptr);
     ecs_allocator_t *a = &world->allocator;
     ecs_entity_filter_t ef;
     ecs_os_zeromem(&ef);
@@ -424,7 +425,7 @@ void flecs_entity_filter_init(
                 flecs_switch_term_t);
             el->signature_column_index = field;
             el->sw_case = ecs_pair_second(world, id);
-            el->sw_column = NULL;
+            el->sw_column = nullptr;
             ids[field] = id;
             has_filter = true;
         }
@@ -446,7 +447,7 @@ void flecs_entity_filter_init(
                 flecs_bitset_term_t *bc = ecs_vec_append_t(a, bs_terms, 
                     flecs_bitset_term_t);
                 bc->column_index = bs_index;
-                bc->bs_column = NULL;
+                bc->bs_column = nullptr;
                 has_filter = true;
             }
         }
@@ -456,9 +457,9 @@ void flecs_entity_filter_init(
     if (table->flags & EcsTableHasTarget) {
         const ecs_table_record_t *tr = flecs_table_record_get(world, table, 
             ecs_pair_t(EcsTarget, EcsWildcard));
-        ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(tr != nullptr, ECS_INTERNAL_ERROR, nullptr);
         int32_t column = tr->index;
-        ecs_assert(column != -1, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(column != -1, ECS_INTERNAL_ERROR, nullptr);
         ecs_entity_t rel = ecs_pair_second(world, table->type.array[column]);
 
         for (i = 0; i < term_count; i ++) {
@@ -469,7 +470,7 @@ void flecs_entity_filter_init(
             if (terms[i].src.trav == rel) {
                 ef.flat_tree_column = table->column_map[column];
                 ecs_assert(ef.flat_tree_column != -1, 
-                    ECS_INTERNAL_ERROR, NULL);
+                    ECS_INTERNAL_ERROR, nullptr);
                 has_filter = true;
                 
                 flecs_flat_table_term_t *term = ecs_vec_append_t(
@@ -485,7 +486,7 @@ void flecs_entity_filter_init(
         if (!*entity_filter) {
             *entity_filter = ecs_os_malloc_t(ecs_entity_filter_t);
         }
-        ecs_assert(*entity_filter != NULL, ECS_OUT_OF_MEMORY, NULL);
+        ecs_assert(*entity_filter != nullptr, ECS_OUT_OF_MEMORY, nullptr);
         **entity_filter = ef;
     }
 }
@@ -503,7 +504,7 @@ void flecs_entity_filter_fini(
     flecs_flat_table_term_t *fields = ecs_vec_first(&ef->ft_terms);
     int32_t i, term_count = ecs_vec_count(&ef->ft_terms);
     for (i = 0; i < term_count; i ++) {
-        ecs_vec_fini_t(NULL, &fields[i].monitor, flecs_flat_monitor_t);
+        ecs_vec_fini_t(nullptr, &fields[i].monitor, flecs_flat_monitor_t);
     }
 
     ecs_vec_fini_t(a, &ef->sw_terms, flecs_switch_term_t);
@@ -576,7 +577,7 @@ int flecs_entity_filter_next(
             }
 
             ecs_assert(ft_offset < ecs_table_count(table), 
-                ECS_INTERNAL_ERROR, NULL);
+                ECS_INTERNAL_ERROR, nullptr);
 
             EcsTarget *cur = &ft[ft_offset];
             ft_count = cur->count;
@@ -599,24 +600,24 @@ int flecs_entity_filter_next(
                     iter->sources[field_index] = tgt;
                     iter->columns[field_index] = /* encode flattened field */
                         -(iter->field_count + tgt_col + 1);
-                    ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
+                    ecs_assert(tr != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
                     /* Keep track of maximum value encountered in target table
                      * dirty state so this doesn't have to be recomputed when
                      * synchronizing the query monitor. */
-                    ecs_vec_set_min_count_zeromem_t(NULL, &field->monitor, 
+                    ecs_vec_set_min_count_zeromem_t(nullptr, &field->monitor, 
                         flecs_flat_monitor_t, it->target_count);
                     ecs_table_t *tgt_table = tr->hdr.table;
                     int32_t *ds = flecs_table_get_dirty_state(world, tgt_table);
-                    ecs_assert(ds != NULL, ECS_INTERNAL_ERROR, NULL);
+                    ecs_assert(ds != nullptr, ECS_INTERNAL_ERROR, nullptr);
                     ecs_vec_get_t(&field->monitor, flecs_flat_monitor_t, 
                         it->target_count - 1)->table_state = ds[tgt_col + 1];
                 } else {
                     if (field->term->oper == EcsOptional) {
                         iter->columns[field_index] = 0;
-                        iter->ptrs[field_index] = NULL;
+                        iter->ptrs[field_index] = nullptr;
                     } else {
-                        it->prev = NULL;
+                        it->prev = nullptr;
                         break;
                     }
                 }

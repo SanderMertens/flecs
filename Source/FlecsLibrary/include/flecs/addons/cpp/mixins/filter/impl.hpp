@@ -32,8 +32,8 @@ struct filter_base {
     {
         desc->storage = &m_filter;
 
-        if (ecs_filter_init(world, desc) == NULL) {
-            ecs_abort(ECS_INVALID_PARAMETER, NULL);
+        if (ecs_filter_init(world, desc) == nullptr) {
+            ecs_abort(ECS_INVALID_PARAMETER, nullptr);
         }
 
         if (desc->terms_buffer) {

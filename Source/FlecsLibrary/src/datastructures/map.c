@@ -48,7 +48,7 @@ int32_t flecs_map_get_bucket_index(
     uint16_t bucket_shift,
     ecs_map_key_t key) 
 {
-    ecs_assert(bucket_shift != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(bucket_shift != 0, ECS_INTERNAL_ERROR, nullptr);
     return (int32_t)((11400714819323198485ull * key) >> bucket_shift);
 }
 
@@ -58,9 +58,9 @@ ecs_bucket_t* flecs_map_get_bucket(
     const ecs_map_t *map,
     ecs_map_key_t key)
 {
-    ecs_assert(map != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(map != nullptr, ECS_INVALID_PARAMETER, nullptr);
     int32_t bucket_id = flecs_map_get_bucket_index(map->bucket_shift, key);
-    ecs_assert(bucket_id < map->bucket_count, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(bucket_id < map->bucket_count, ECS_INTERNAL_ERROR, nullptr);
     return &map->buckets[bucket_id];
 }
 
@@ -129,7 +129,7 @@ ecs_map_val_t* flecs_map_bucket_get(
             return &entry->value;
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 /* Grow number of buckets */
@@ -142,7 +142,7 @@ void flecs_map_rehash(
     if (count < 2) {
         count = 2;
     }
-    ecs_assert(count > map->bucket_count, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(count > map->bucket_count, ECS_INTERNAL_ERROR, nullptr);
     
     int32_t old_count = map->bucket_count;
     ecs_bucket_t *buckets = map->buckets, *b, *end = ECS_BUCKET_END(buckets, old_count);
@@ -261,7 +261,7 @@ void ecs_map_fini(
 
     if (ea && !map->shared_allocator) {
         flecs_ballocator_free(ea);
-        map->entry_allocator = NULL;
+        map->entry_allocator = nullptr;
     }
     if (a) {
         flecs_free_n(a, ecs_bucket_t, map->bucket_count, map->buckets);
@@ -288,7 +288,7 @@ void* ecs_map_get_deref_(
     if (ptr) {
         return (void*)(uintptr_t)ptr[0];
     }
-    return NULL;
+    return nullptr;
 }
 
 void ecs_map_insert(
@@ -296,7 +296,7 @@ void ecs_map_insert(
     ecs_map_key_t key,
     ecs_map_val_t value)
 {
-    ecs_assert(ecs_map_get(map, key) == NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_map_get(map, key) == nullptr, ECS_INVALID_PARAMETER, nullptr);
     int32_t map_count = ++map->count;
     int32_t tgt_bucket_count = flecs_map_get_bucket_count(map_count);
     int32_t bucket_count = map->bucket_count;
@@ -376,7 +376,7 @@ void ecs_map_remove_free(
 void ecs_map_clear(
     ecs_map_t *map)
 {
-    ecs_assert(map != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(map != nullptr, ECS_INVALID_PARAMETER, nullptr);
     int32_t i, count = map->bucket_count;
     for (i = 0; i < count; i ++) {
         flecs_map_bucket_clear(map->entry_allocator, &map->buckets[i]);
@@ -386,7 +386,7 @@ void ecs_map_clear(
     } else {
         ecs_os_free(map->buckets);
     }
-    map->buckets = NULL;
+    map->buckets = nullptr;
     map->bucket_count = 0;
     map->count = 0;
     flecs_map_rehash(map, 2);
@@ -398,11 +398,11 @@ ecs_map_iter_t ecs_map_iter(
     if (ecs_map_is_init(map)) {
         return (ecs_map_iter_t){
             .map = map,
-            .bucket = NULL,
-            .entry = NULL
+            .bucket = nullptr,
+            .entry = nullptr
         };
     } else {
-        return (ecs_map_iter_t){ 0 };
+        return (ecs_map_iter_t){ nullptr };
     }
 }
 
@@ -415,7 +415,7 @@ bool ecs_map_next(
         return false;
     }
 
-    ecs_bucket_entry_t *entry = NULL;
+    ecs_bucket_entry_t *entry = nullptr;
     if (!iter->bucket) {
         for (iter->bucket = map->buckets; 
             iter->bucket != end;
@@ -429,7 +429,7 @@ bool ecs_map_next(
         if (iter->bucket == end) {
             return false;
         }
-    } else if ((entry = iter->entry) == NULL) {
+    } else if ((entry = iter->entry) == nullptr) {
         do {
             ++iter->bucket;
             if (iter->bucket == end) {
@@ -439,7 +439,7 @@ bool ecs_map_next(
         entry = iter->bucket->first;
     }
 
-    ecs_assert(entry != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(entry != nullptr, ECS_INTERNAL_ERROR, nullptr);
     iter->entry = entry->next;
     iter->res = &entry->key;
 
@@ -451,7 +451,7 @@ void ecs_map_copy(
     const ecs_map_t *src)
 {
     if (ecs_map_is_init(dst)) {
-        ecs_assert(ecs_map_count(dst) == 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(ecs_map_count(dst) == 0, ECS_INVALID_PARAMETER, nullptr);
         ecs_map_fini(dst);
     }
     

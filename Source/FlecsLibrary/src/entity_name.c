@@ -18,17 +18,17 @@ bool flecs_path_append(
     ecs_strbuf_t *buf)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_assert(sep[0] != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(sep[0] != 0, ECS_INVALID_PARAMETER, nullptr);
 
     ecs_entity_t cur = 0;
-    const char *name = NULL;
+    const char *name = nullptr;
     ecs_size_t name_len = 0;
 
     if (child && ecs_is_alive(world, child)) {
         cur = ecs_get_target(world, child, EcsChildOf, 0);
         if (cur) {
-            ecs_assert(cur != child, ECS_CYCLE_DETECTED, NULL);
-            if (cur != parent && (cur != EcsFlecsCore || prefix != NULL)) {
+            ecs_assert(cur != child, ECS_CYCLE_DETECTED, nullptr);
+            if (cur != parent && (cur != EcsFlecsCore || prefix != nullptr)) {
                 flecs_path_append(world, parent, cur, sep, prefix, buf);
                 if (!sep[1]) {
                     ecs_strbuf_appendch(buf, sep[0]);
@@ -64,7 +64,7 @@ bool flecs_path_append(
 bool flecs_name_is_id(
     const char *name)
 {
-    ecs_assert(name != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(name != nullptr, ECS_INTERNAL_ERROR, nullptr);
     
     if (!isdigit(name[0])) {
         return false;
@@ -87,7 +87,7 @@ ecs_entity_t flecs_name_to_id(
     const char *name)
 {
     int64_t result = atoll(name);
-    ecs_assert(result >= 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(result >= 0, ECS_INTERNAL_ERROR, nullptr);
     ecs_entity_t alive = ecs_get_alive(world, (ecs_entity_t)result);
     if (alive) {
         return alive;
@@ -166,10 +166,10 @@ const char* flecs_path_elem(
     if (count) {
         return ptr;
     } else {
-        return NULL;
+        return nullptr;
     }
 error:
-    return NULL;
+    return nullptr;
 }
 
 static
@@ -247,8 +247,8 @@ void ecs_get_path_w_sep_buf(
     const char *prefix,
     ecs_strbuf_t *buf)
 {
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(buf != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(buf != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
     world = ecs_get_world(world);
 
@@ -292,7 +292,7 @@ ecs_entity_t ecs_lookup_child(
     ecs_entity_t parent,
     const char *name)
 {
-    ecs_check(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_check(world != nullptr, ECS_INTERNAL_ERROR, nullptr);
     world = ecs_get_world(world);
 
     if (flecs_name_is_id(name)) {
@@ -324,7 +324,7 @@ ecs_entity_t ecs_lookup(
         return 0;
     }
 
-    ecs_check(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_check(world != nullptr, ECS_INTERNAL_ERROR, nullptr);
     world = ecs_get_world(world);
 
     ecs_entity_t e = flecs_get_builtin(name);
@@ -356,7 +356,7 @@ ecs_entity_t ecs_lookup_symbol(
         return 0;
     }
 
-    ecs_check(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_check(world != nullptr, ECS_INTERNAL_ERROR, nullptr);
     world = ecs_get_world(world);
 
     ecs_entity_t e = flecs_name_index_find(&world->symbols, name, 0, 0);
@@ -365,7 +365,7 @@ ecs_entity_t ecs_lookup_symbol(
     }
 
     if (lookup_as_path) {
-        return ecs_lookup_path_w_sep(world, 0, name, ".", NULL, recursive);
+        return ecs_lookup_path_w_sep(world, 0, name, ".", nullptr, recursive);
     }
 
 error:
@@ -384,7 +384,7 @@ ecs_entity_t ecs_lookup_path_w_sep(
         return 0;
     }
 
-    ecs_check(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_check(world != nullptr, ECS_INTERNAL_ERROR, nullptr);
     const ecs_world_t *stage = world;
     world = ecs_get_world(world);
 
@@ -430,7 +430,7 @@ retry:
             ecs_os_memcpy(elem, ptr_start, len);
         } else {
             if (size == ECS_NAME_BUFFER_LENGTH) {
-                elem = NULL;
+                elem = nullptr;
             }
 
             elem = ecs_os_realloc(elem, len + 1);
@@ -480,7 +480,7 @@ ecs_entity_t ecs_set_scope(
     ecs_world_t *world,
     ecs_entity_t scope)
 {
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != nullptr, ECS_INVALID_PARAMETER, nullptr);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
     ecs_entity_t cur = stage->scope;
@@ -494,7 +494,7 @@ error:
 ecs_entity_t ecs_get_scope(
     const ecs_world_t *world)
 {
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != nullptr, ECS_INVALID_PARAMETER, nullptr);
     const ecs_stage_t *stage = flecs_stage_from_readonly_world(world);
     return stage->scope;
 error:
@@ -505,7 +505,7 @@ ecs_entity_t* ecs_set_lookup_path(
     ecs_world_t *world,
     const ecs_entity_t *lookup_path)
 {
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != nullptr, ECS_INVALID_PARAMETER, nullptr);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
     /* Safe: application owns lookup path */
@@ -514,18 +514,18 @@ ecs_entity_t* ecs_set_lookup_path(
 
     return cur;
 error:
-    return NULL;
+    return nullptr;
 }
 
 ecs_entity_t* ecs_get_lookup_path(
     const ecs_world_t *world)
 {
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != nullptr, ECS_INVALID_PARAMETER, nullptr);
     const ecs_stage_t *stage = flecs_stage_from_readonly_world(world);
     /* Safe: application owns lookup path */
     return ECS_CONST_CAST(ecs_entity_t*, stage->lookup_path);
 error:
-    return NULL;
+    return nullptr;
 }
 
 const char* ecs_set_name_prefix(
@@ -547,10 +547,10 @@ void flecs_add_path(
     const char *name)
 {
     ecs_suspend_readonly_state_t srs;
-    ecs_world_t *real_world = NULL;
+    ecs_world_t *real_world = nullptr;
     if (defer_suspend) {
         real_world = flecs_suspend_readonly(world, &srs);
-        ecs_assert(real_world != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(real_world != nullptr, ECS_INTERNAL_ERROR, nullptr);
     }
 
     if (parent) {
@@ -561,7 +561,7 @@ void flecs_add_path(
 
     if (defer_suspend) {
         flecs_resume_readonly(real_world, &srs);
-        flecs_defer_path((ecs_stage_t*)world, parent, entity, name);
+        flecs_defer_path(reinterpret_cast<ecs_stage_t*>(world), parent, entity, name);
     }
 }
 
@@ -573,7 +573,7 @@ ecs_entity_t ecs_add_path_w_sep(
     const char *sep,
     const char *prefix)
 {
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
     if (!sep) {
         sep = ".";
@@ -606,7 +606,7 @@ ecs_entity_t ecs_add_path_w_sep(
     bool suspend_defer = ecs_poly_is(world, ecs_stage_t) && 
         (ecs_get_stage_count(world) <= 1);
     ecs_entity_t cur = parent;
-    char *name = NULL;
+    char *name = nullptr;
 
     if (sep[0]) {
         while ((ptr = flecs_path_elem(ptr, sep, &len))) {
@@ -614,7 +614,7 @@ ecs_entity_t ecs_add_path_w_sep(
                 ecs_os_memcpy(elem, ptr_start, len);
             } else {
                 if (size == ECS_NAME_BUFFER_LENGTH) {
-                    elem = NULL;
+                    elem = nullptr;
                 }
 
                 elem = ecs_os_realloc(elem, len + 1);
@@ -635,7 +635,7 @@ ecs_entity_t ecs_add_path_w_sep(
 
                 /* If this is the last entity in the path, use the provided id */
                 bool last_elem = false;
-                if (!flecs_path_elem(ptr, sep, NULL)) {
+                if (!flecs_path_elem(ptr, sep, nullptr)) {
                     e = entity;
                     last_elem = true;
                 }

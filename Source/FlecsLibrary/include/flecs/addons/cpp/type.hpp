@@ -48,8 +48,8 @@ struct type {
 
     /** Get id at specified index in type */
     flecs::id get(int32_t index) const {
-        ecs_assert(m_type != NULL, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(m_type->count > index, ECS_OUT_OF_RANGE, NULL);
+        ecs_assert(m_type != nullptr, ECS_INVALID_PARAMETER, nullptr);
+        ecs_assert(m_type->count > index, ECS_OUT_OF_RANGE, nullptr);
         if (!m_type) {
             return flecs::id();
         }

@@ -37,7 +37,7 @@ ecs_entity_t ecs_import(
     const char *module_name)
 {
     ecs_check(!(world->flags & EcsWorldReadonly), 
-        ECS_INVALID_WHILE_READONLY, NULL);
+        ECS_INVALID_WHILE_READONLY, nullptr);
 
     ecs_entity_t old_scope = ecs_set_scope(world, 0);
     const char *old_name_prefix = world->info.name_prefix;
@@ -85,7 +85,7 @@ ecs_entity_t ecs_import_from_library(
     const char *library_name,
     const char *module_name)
 {
-    ecs_check(library_name != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(library_name != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
     char *import_func = ECS_CONST_CAST(char*, module_name);
     char *module = ECS_CONST_CAST(char*, module_name);
@@ -101,7 +101,7 @@ ecs_entity_t ecs_import_from_library(
      * the main module from the library */
     if (!import_func) {
         import_func = ecs_os_malloc(ecs_os_strlen(library_name) + ECS_SIZEOF("Import"));
-        ecs_assert(import_func != NULL, ECS_OUT_OF_MEMORY, NULL);
+        ecs_assert(import_func != nullptr, ECS_OUT_OF_MEMORY, nullptr);
         
         const char *ptr;
         char ch, *bptr = import_func;
@@ -124,7 +124,7 @@ ecs_entity_t ecs_import_from_library(
         *bptr = '\0';
 
         module = ecs_os_strdup(import_func);
-        ecs_assert(module != NULL, ECS_OUT_OF_MEMORY, NULL);
+        ecs_assert(module != nullptr, ECS_OUT_OF_MEMORY, nullptr);
 
         ecs_os_strcat(bptr, "Import");
     }
@@ -194,10 +194,10 @@ ecs_entity_t ecs_module_init(
     const char *c_name,
     const ecs_component_desc_t *desc)
 {
-    ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc != nullptr, ECS_INVALID_PARAMETER, nullptr);
     ecs_poly_assert(world, ecs_world_t);
 
-    ecs_entity_t old_scope = ecs_set_scope(world, 0);
+    const ecs_entity_t old_scope = ecs_set_scope(world, 0);
 
     ecs_entity_t e = desc->entity;
     if (!e) {
@@ -220,8 +220,8 @@ ecs_entity_t ecs_module_init(
 
     if (desc->type.size) {
         ecs_entity_t result = ecs_component_init(world, &private_desc);
-        ecs_assert(result != 0, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(result == e, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(result != 0, ECS_INTERNAL_ERROR, nullptr);
+        ecs_assert(result == e, ECS_INTERNAL_ERROR, nullptr);
         (void)result;
     }
 

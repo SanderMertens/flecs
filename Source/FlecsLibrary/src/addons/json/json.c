@@ -28,7 +28,7 @@ const char* flecs_json_token_str(
     case JsonNull: return "null";
     case JsonInvalid: return "invalid";
     default:
-        ecs_throw(ECS_INTERNAL_ERROR, NULL);
+        ecs_throw(ECS_INTERNAL_ERROR, nullptr);
     }
 error:
     return "<<invalid token kind>>";
@@ -84,7 +84,7 @@ const char* flecs_json_parse(
 
         if (!ch) {
             token_kind[0] = JsonInvalid;
-            return NULL;
+            return nullptr;
         } else {
             token_kind[0] = JsonString;
             return json;
@@ -118,13 +118,13 @@ const char* flecs_json_parse(
 
         if (isalpha(json[0]) || isdigit(json[0])) {
             token_kind[0] = JsonInvalid;
-            return NULL;
+            return nullptr;
         }
 
         return json;
     } else {
         token_kind[0] = JsonInvalid;
-        return NULL;
+        return nullptr;
     }
 }
 
@@ -133,7 +133,7 @@ const char* flecs_json_parse_large_string(
     ecs_strbuf_t *buf)
 {
     if (json[0] != '"') {
-        return NULL; /* can only parse strings */
+        return nullptr; /* can only parse strings */
     }
 
     char ch, ch_out;
@@ -149,7 +149,7 @@ const char* flecs_json_parse_large_string(
     }
 
     if (!ch) {
-        return NULL;
+        return nullptr;
     } else {
         return json;
     }
@@ -165,11 +165,11 @@ const char* flecs_json_expect(
     json = flecs_json_parse(json, &kind, token);
     if (kind == JsonInvalid) {
         ecs_parser_error(desc->name, desc->expr, json - desc->expr, "invalid json");
-        return NULL;
+        return nullptr;
     } else if (kind != token_kind) {
         ecs_parser_error(desc->name, desc->expr, json - desc->expr, "expected %s",
             flecs_json_token_str(token_kind));
-        return NULL;
+        return nullptr;
     }
     return json;
 }
@@ -181,11 +181,11 @@ const char* flecs_json_expect_member(
 {
     json = flecs_json_expect(json, JsonString, token, desc);
     if (!json) {
-        return NULL;
+        return nullptr;
     }
     json = flecs_json_expect(json, JsonColon, token, desc);
     if (!json) {
-        return NULL;
+        return nullptr;
     }
     return json;
 }
@@ -198,12 +198,12 @@ const char* flecs_json_expect_member_name(
 {
     json = flecs_json_expect_member(json, token, desc);
     if (!json) {
-        return NULL;
+        return nullptr;
     }
     if (ecs_os_strcmp(token, member_name)) {
         ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
             "expected member '%s'", member_name);
-        return NULL;
+        return nullptr;
     }
     return json;
 }
@@ -225,12 +225,12 @@ const char* flecs_json_skip_object(
         } else if (token_kind == JsonArrayClose) {
             ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
                 "expected }");
-            return NULL;
+            return nullptr;
         }
     }
 
     ecs_parser_error(desc->name, desc->expr, json - desc->expr, "expected }");
-    return NULL;
+    return nullptr;
 }
 
 const char* flecs_json_skip_array(
@@ -248,14 +248,14 @@ const char* flecs_json_skip_array(
         } else if (token_kind == JsonObjectClose) {
             ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
                 "expected ]");
-            return NULL;
+            return nullptr;
         } else if (token_kind == JsonArrayClose) {
             return json;
         }
     }
 
     ecs_parser_error(desc->name, desc->expr, json - desc->expr, "expected ]");
-    return NULL;
+    return nullptr;
 }
 
 void flecs_json_next(
@@ -331,7 +331,7 @@ void flecs_json_string_escape(
     ecs_strbuf_t *buf,
     const char *value)
 {
-    ecs_size_t length = ecs_stresc(NULL, 0, '"', value);
+    ecs_size_t length = ecs_stresc(nullptr, 0, '"', value);
     if (length == ecs_os_strlen(value)) {
         ecs_strbuf_appendch(buf, '"');
         ecs_strbuf_appendstrn(buf, value, length);
@@ -378,7 +378,7 @@ void flecs_json_label(
     const ecs_world_t *world,
     ecs_entity_t e)
 {
-    const char *lbl = NULL;
+    const char *lbl = nullptr;
 #ifdef FLECS_DOC
     lbl = ecs_doc_get_name(world, e);
 #else
@@ -402,7 +402,7 @@ void flecs_json_color(
     (void)world;
     (void)e;
 
-    const char *color = NULL;
+    const char *color = nullptr;
 #ifdef FLECS_DOC
     color = ecs_doc_get_color(world, e);
 #endif

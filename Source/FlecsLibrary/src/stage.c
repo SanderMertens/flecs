@@ -23,9 +23,9 @@ ecs_cmd_t* flecs_cmd_new(
 {
     ecs_cmd_t *cmd = ecs_vec_append_t(&stage->allocator, &stage->cmd->queue, 
         ecs_cmd_t);
-    cmd->is._1.value = NULL;
+    cmd->is._1.value = nullptr;
     cmd->next_for_entity = 0;
-    cmd->entry = NULL;
+    cmd->entry = nullptr;
     return cmd;
 }
 
@@ -48,7 +48,7 @@ ecs_cmd_t* flecs_cmd_new_batched(
         } else {
             int32_t last = entry->last;
             ecs_cmd_t *arr = ecs_vec_first_t(cmds, ecs_cmd_t);
-            ecs_assert(arr[last].entity == e, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(arr[last].entity == e, ECS_INTERNAL_ERROR, nullptr);
             ecs_cmd_t *last_op = &arr[last];
             last_op->next_for_entity = cur;
             if (last == entry->first) {
@@ -305,7 +305,7 @@ bool flecs_defer_add(
     ecs_id_t id)
 {
     if (flecs_defer_cmd(stage)) {
-        ecs_assert(id != 0, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(id != 0, ECS_INTERNAL_ERROR, nullptr);
         ecs_cmd_t *cmd = flecs_cmd_new_batched(stage, entity);
         cmd->kind = EcsCmdAdd;
         cmd->id = id;
@@ -321,7 +321,7 @@ bool flecs_defer_remove(
     ecs_id_t id)
 {
     if (flecs_defer_cmd(stage)) {
-        ecs_assert(id != 0, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(id != 0, ECS_INTERNAL_ERROR, nullptr);
         ecs_cmd_t *cmd = flecs_cmd_new_batched(stage, entity); 
         cmd->kind = EcsCmdRemove;
         cmd->id = id;
@@ -343,19 +343,19 @@ void* flecs_defer_set(
     ecs_cmd_t *cmd = flecs_cmd_new_batched(stage, entity);
 
     /* Find type info for id */
-    const ecs_type_info_t *ti = NULL;
+    const ecs_type_info_t *ti = nullptr;
     ecs_id_record_t *idr = flecs_id_record_get(world, id);
     if (!idr) {
         /* If idr doesn't exist yet, create it but only if the 
          * application is not multithreaded. */
         if (stage->async || (world->flags & EcsWorldMultiThreaded)) {
             ti = ecs_get_type_info(world, id);
-            ecs_assert(ti != NULL, ECS_INVALID_PARAMETER, NULL);
+            ecs_assert(ti != nullptr, ECS_INVALID_PARAMETER, nullptr);
         } else {
             /* When not in multi threaded mode, it's safe to find or 
              * create the id record. */
             idr = flecs_id_record_ensure(world, id);
-            ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(idr != nullptr, ECS_INTERNAL_ERROR, nullptr);
             
             /* Get type_info from id record. We could have called 
              * ecs_get_type_info directly, but since this function can be
@@ -368,16 +368,16 @@ void* flecs_defer_set(
     }
 
     /* If the id isn't associated with a type, we can't set anything */
-    ecs_check(ti != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ti != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
     /* Make sure the size of the value equals the type size */
-    ecs_assert(!size || size == ti->size, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!size || size == ti->size, ECS_INVALID_PARAMETER, nullptr);
     size = ti->size;
 
     /* Find existing component. Make sure it's owned, so that we won't use the
      * component of a prefab. */
-    void *existing = NULL;
-    ecs_table_t *table = NULL;
+    void *existing = nullptr;
+    ecs_table_t *table = nullptr;
     if (idr) {
         /* Entity can only have existing component if id record exists */
         ecs_record_t *r = flecs_entities_get(world, entity);
@@ -386,7 +386,7 @@ void* flecs_defer_set(
             const ecs_table_record_t *tr = flecs_id_record_get_table(
                 idr, table);
             if (tr) {
-                ecs_assert(tr->column != -1, ECS_NOT_A_COMPONENT, NULL);
+                ecs_assert(tr->column != -1, ECS_NOT_A_COMPONENT, nullptr);
                 /* Entity has the component */
                 ecs_vec_t *column = &table->data.columns[tr->column].data;
                 existing = ecs_vec_get(column, size, ECS_RECORD_TO_ROW(r->row));
@@ -430,7 +430,7 @@ void* flecs_defer_set(
             /* If the command is not an emplace, construct the temp storage */
 
             /* Check if entity inherits component */
-            void *base = NULL;
+            void *base = nullptr;
             if (table && (table->flags & EcsTableHasIsA)) {
                 base = flecs_get_base_component(world, table, id, idr, 0);
             }
@@ -462,7 +462,7 @@ void* flecs_defer_set(
     }
 
     if (!cmd) {
-        /* If cmd is NULL, entity was already deleted. Check if we need to
+        /* If cmd is nullptr, entity was already deleted. Check if we need to
          * insert a command into the queue. */
         if (!ti->hooks.dtor) {
             /* If temporary memory does not need to be destructed, it'll get 
@@ -497,7 +497,7 @@ void* flecs_defer_set(
 
     return cmd_value;
 error:
-    return NULL;
+    return nullptr;
 }
 
 void flecs_enqueue(
@@ -521,7 +521,7 @@ void flecs_enqueue(
         ecs_os_memcpy_n(type_cmd->array, desc->ids->array, ecs_id_t, id_count);
         desc_cmd->ids = type_cmd;
     } else {
-        desc_cmd->ids = NULL;
+        desc_cmd->ids = nullptr;
     }
 
     cmd->is._1.value = desc_cmd;
@@ -532,11 +532,11 @@ void flecs_enqueue(
             "cannot set param and const_param at the same time");
 
         const ecs_type_info_t *ti = ecs_get_type_info(world, desc->event);
-        ecs_assert(ti != NULL, ECS_INVALID_PARAMETER, 
+        ecs_assert(ti != nullptr, ECS_INVALID_PARAMETER, 
             "can only enqueue events with data for events that are components");
 
         void *param_cmd = flecs_stack_alloc(stack, ti->size, ti->alignment);
-        ecs_assert(param_cmd != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(param_cmd != nullptr, ECS_INTERNAL_ERROR, nullptr);
         if (desc->param) {
             if (ti->hooks.move_ctor) {
                 ti->hooks.move_ctor(param_cmd, desc->param, 1, ti);
@@ -552,7 +552,7 @@ void flecs_enqueue(
         }
 
         desc_cmd->param = param_cmd;
-        desc_cmd->const_param = NULL;
+        desc_cmd->const_param = nullptr;
     }
 }
 
@@ -587,7 +587,7 @@ void flecs_commands_fini(
     ecs_commands_t *cmd)
 {
     /* Make sure stage has no unmerged data */
-    ecs_assert(ecs_vec_count(&stage->cmd->queue) == 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_vec_count(&stage->cmd->queue) == 0, ECS_INTERNAL_ERROR, nullptr);
 
     flecs_stack_fini(&cmd->stack);
     ecs_vec_fini_t(&stage->allocator, &cmd->queue, ecs_cmd_t);
@@ -598,7 +598,7 @@ void flecs_commands_push(
     ecs_stage_t *stage)
 {
     int32_t sp = ++ stage->cmd_sp;
-    ecs_assert(sp < ECS_MAX_DEFER_STACK, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(sp < ECS_MAX_DEFER_STACK, ECS_INTERNAL_ERROR, nullptr);
     stage->cmd = &stage->cmd_stack[sp];
 }
 
@@ -606,7 +606,7 @@ void flecs_commands_pop(
     ecs_stage_t *stage)
 {
     int32_t sp = -- stage->cmd_sp;
-    ecs_assert(sp >= 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(sp >= 0, ECS_INTERNAL_ERROR, nullptr);
     stage->cmd = &stage->cmd_stack[sp];
 }
 
@@ -652,8 +652,8 @@ void flecs_stage_fini(
     ecs_allocator_t *a = &stage->allocator;
     
     ecs_vec_fini_t(a, &stage->post_frame_actions, ecs_action_elem_t);
-    ecs_vec_fini(NULL, &stage->variables, 0);
-    ecs_vec_fini(NULL, &stage->operations, 0);
+    ecs_vec_fini(nullptr, &stage->variables, 0);
+    ecs_vec_fini(nullptr, &stage->operations, 0);
 
     int32_t i;
     for (i = 0; i < ECS_MAX_DEFER_STACK; i ++) {
@@ -674,10 +674,10 @@ void ecs_set_stage_count(
 
     /* World must have at least one default stage */
     ecs_assert(stage_count >= 1 || (world->flags & EcsWorldFini), 
-        ECS_INTERNAL_ERROR, NULL);
+        ECS_INTERNAL_ERROR, nullptr);
 
     bool auto_merge = true;
-    const ecs_entity_t *lookup_path = NULL;
+    const ecs_entity_t *lookup_path = nullptr;
     ecs_entity_t scope = 0;
     ecs_entity_t with = 0;
     if (world->stage_count >= 1) {
@@ -696,7 +696,7 @@ void ecs_set_stage_count(
              * create the stages. ecs_set_threads and ecs_set_stage_count should not
              * be mixed. */
             ecs_poly_assert(&stages[i], ecs_stage_t);
-            ecs_check(stages[i].thread == 0, ECS_INVALID_OPERATION, NULL);
+            ecs_check(stages[i].thread == 0, ECS_INVALID_OPERATION, nullptr);
             flecs_stage_fini(world, &stages[i]);
         }
 
@@ -717,8 +717,8 @@ void ecs_set_stage_count(
             stage->thread = 0;
         }
     } else {
-        /* Set to NULL to prevent double frees */
-        world->stages = NULL;
+        /* Set to nullptr to prevent double frees */
+        world->stages = nullptr;
     }
 
     /* Regardless of whether the stage was just initialized or not, when the
@@ -746,7 +746,7 @@ int32_t ecs_get_stage_count(
 int32_t ecs_get_stage_id(
     const ecs_world_t *world)
 {
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
     if (ecs_poly_is(world, ecs_stage_t)) {
         ecs_stage_t *stage = ECS_CONST_CAST(ecs_stage_t*, world);
@@ -756,7 +756,7 @@ int32_t ecs_get_stage_id(
     } else if (ecs_poly_is(world, ecs_world_t)) {
         return 0;
     } else {
-        ecs_throw(ECS_INTERNAL_ERROR, NULL);
+        ecs_throw(ECS_INTERNAL_ERROR, nullptr);
     }
 error:
     return 0;
@@ -767,10 +767,10 @@ ecs_world_t* ecs_get_stage(
     int32_t stage_id)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_check(world->stage_count > stage_id, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world->stage_count > stage_id, ECS_INVALID_PARAMETER, nullptr);
     return (ecs_world_t*)&world->stages[stage_id];
 error:
-    return NULL;
+    return nullptr;
 }
 
 bool ecs_readonly_begin(
@@ -813,7 +813,7 @@ void ecs_readonly_end(
     ecs_world_t *world)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_check(world->flags & EcsWorldReadonly, ECS_INVALID_OPERATION, NULL);
+    ecs_check(world->flags & EcsWorldReadonly, ECS_INVALID_OPERATION, nullptr);
 
     /* After this it is safe again to mutate the world directly */
     ECS_BIT_CLEAR(world->flags, EcsWorldReadonly);
@@ -829,9 +829,9 @@ error:
 void ecs_merge(
     ecs_world_t *world)
 {
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != nullptr, ECS_INVALID_PARAMETER, nullptr);
     ecs_check(ecs_poly_is(world, ecs_world_t) || 
-               ecs_poly_is(world, ecs_stage_t), ECS_INVALID_PARAMETER, NULL);
+               ecs_poly_is(world, ecs_stage_t), ECS_INVALID_PARAMETER, nullptr);
     flecs_stage_manual_merge(world);
 error:
     return;
@@ -908,7 +908,7 @@ void ecs_async_stage_free(
 {
     ecs_poly_assert(world, ecs_stage_t);
     ecs_stage_t *stage = (ecs_stage_t*)world;
-    ecs_check(stage->async == true, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(stage->async == true, ECS_INVALID_PARAMETER, nullptr);
     flecs_stage_fini(stage->world, stage);
     ecs_os_free(stage);
 error:
@@ -932,7 +932,7 @@ bool ecs_stage_is_async(
 bool ecs_is_deferred(
     const ecs_world_t *world)
 {
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != nullptr, ECS_INVALID_PARAMETER, nullptr);
     const ecs_stage_t *stage = flecs_stage_from_readonly_world(world);
     return stage->defer > 0;
 error:

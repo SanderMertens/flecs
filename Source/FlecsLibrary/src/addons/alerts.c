@@ -35,28 +35,28 @@ ECS_COMPONENT_DECLARE(EcsAlertTimeout);
 static
 ECS_CTOR(EcsAlert, ptr, {
     ecs_os_zeromem(ptr);
-    ecs_map_init(&ptr->instances, NULL);
-    ecs_vec_init_t(NULL, &ptr->severity_filters, ecs_alert_severity_filter_t, 0);
+    ecs_map_init(&ptr->instances, nullptr);
+    ecs_vec_init_t(nullptr, &ptr->severity_filters, ecs_alert_severity_filter_t, 0);
 })
 
 static
 ECS_DTOR(EcsAlert, ptr, {
     ecs_os_free(ptr->message);
     ecs_map_fini(&ptr->instances);
-    ecs_vec_fini_t(NULL, &ptr->severity_filters, ecs_alert_severity_filter_t);
+    ecs_vec_fini_t(nullptr, &ptr->severity_filters, ecs_alert_severity_filter_t);
 })
 
 static
 ECS_MOVE(EcsAlert, dst, src, {
     ecs_os_free(dst->message);
     dst->message = src->message;
-    src->message = NULL;
+    src->message = nullptr;
 
     ecs_map_fini(&dst->instances);
     dst->instances = src->instances;
     src->instances = (ecs_map_t){0};
 
-    ecs_vec_fini_t(NULL, &dst->severity_filters, ecs_alert_severity_filter_t);
+    ecs_vec_fini_t(nullptr, &dst->severity_filters, ecs_alert_severity_filter_t);
     dst->severity_filters = src->severity_filters;
     src->severity_filters = (ecs_vec_t){0};
 
@@ -72,7 +72,7 @@ ECS_MOVE(EcsAlert, dst, src, {
 
 static
 ECS_CTOR(EcsAlertsActive, ptr, {
-    ecs_map_init(&ptr->alerts, NULL);
+    ecs_map_init(&ptr->alerts, nullptr);
     ptr->info_count = 0;
     ptr->warning_count = 0;
     ptr->error_count = 0;
@@ -102,7 +102,7 @@ static
 ECS_MOVE(EcsAlertInstance, dst, src, {
     ecs_os_free(dst->message);
     dst->message = src->message;
-    src->message = NULL;
+    src->message = nullptr;
 })
 
 static
@@ -120,7 +120,7 @@ void flecs_alerts_add_alert_to_src(
 {
     EcsAlertsActive *active = ecs_get_mut(
         world, source, EcsAlertsActive);
-    ecs_assert(active != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(active != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
     ecs_entity_t severity = ecs_get_target(world, alert, ecs_id(EcsAlert), 0);
     if (severity == EcsAlertInfo) {
@@ -132,7 +132,7 @@ void flecs_alerts_add_alert_to_src(
     }
 
     ecs_entity_t *ptr = ecs_map_ensure(&active->alerts, alert);
-    ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ptr != nullptr, ECS_INTERNAL_ERROR, nullptr);
     ptr[0] = alert_instance;
     ecs_modified(world, source, EcsAlertsActive);
 }
@@ -145,7 +145,7 @@ void flecs_alerts_remove_alert_from_src(
 {
     EcsAlertsActive *active = ecs_get_mut(
         world, source, EcsAlertsActive);
-    ecs_assert(active != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(active != nullptr, ECS_INTERNAL_ERROR, nullptr);
     ecs_map_remove(&active->alerts, alert);
 
     ecs_entity_t severity = ecs_get_target(world, alert, ecs_id(EcsAlert), 0);
@@ -251,7 +251,7 @@ void MonitorAlerts(ecs_iter_t *it) {
         ecs_poly_assert(rule, ecs_rule_t);
 
         ecs_id_t member_id = alert[i].id;
-        const EcsMemberRanges *ranges = NULL;
+        const EcsMemberRanges *ranges = nullptr;
         if (member_id) {
             ranges = ecs_ref_get(world, &alert[i].ranges, EcsMemberRanges);
         }
@@ -267,7 +267,7 @@ void MonitorAlerts(ecs_iter_t *it) {
                 severity = default_severity;
             }
 
-            const void *member_data = NULL;
+            const void *member_data = nullptr;
             ecs_entity_t member_src = 0;
             if (ranges) {
                 if (alert[i].var_id) {
@@ -308,11 +308,11 @@ void MonitorAlerts(ecs_iter_t *it) {
                 }
 
                 ecs_entity_t *aptr = ecs_map_ensure(&alert[i].instances, e);
-                ecs_assert(aptr != NULL, ECS_INTERNAL_ERROR, NULL);
+                ecs_assert(aptr != nullptr, ECS_INTERNAL_ERROR, nullptr);
                 if (!aptr[0]) {
                     /* Alert does not yet exist for entity */
                     ecs_entity_t ai = ecs_new_w_pair(world, EcsChildOf, a);
-                    ecs_set(world, ai, EcsAlertInstance, { .message = NULL });
+                    ecs_set(world, ai, EcsAlertInstance, { .message = nullptr });
                     ecs_set(world, ai, EcsMetricSource, { .entity = e });
                     ecs_set(world, ai, EcsMetricValue, { .value = 0 });
                     ecs_add_pair(world, ai, ecs_id(EcsAlert), src_severity);
@@ -358,23 +358,23 @@ void MonitorAlertInstances(ecs_iter_t *it) {
         return;
     }
     ecs_entity_t parent = ecs_pair_second(world, childof_pair);
-    ecs_assert(parent != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(parent != 0, ECS_INTERNAL_ERROR, nullptr);
     ecs_assert(ecs_has(world, parent, EcsAlert), ECS_INVALID_OPERATION,
         "alert entity does not have Alert component");
     EcsAlert *alert = ecs_get_mut(world, parent, EcsAlert);
     const EcsPoly *poly = ecs_get_pair(world, parent, EcsPoly, EcsQuery);
-    ecs_assert(poly != NULL, ECS_INVALID_OPERATION, 
+    ecs_assert(poly != nullptr, ECS_INVALID_OPERATION, 
         "alert entity does not have (Poly, Query) component");
     ecs_rule_t *rule = poly->poly;
     ecs_poly_assert(rule, ecs_rule_t);
 
     ecs_id_t member_id = alert->id;
-    const EcsMemberRanges *ranges = NULL;
+    const EcsMemberRanges *ranges = nullptr;
     if (member_id) {
         ranges = ecs_ref_get(world, &alert->ranges, EcsMemberRanges);
     }
 
-    ecs_vars_t vars = {0};
+    ecs_vars_t vars = {nullptr};
     ecs_vars_init(world, &vars);
 
     int32_t i, count = it->count;
@@ -491,10 +491,10 @@ ecs_entity_t ecs_alert_init(
     const ecs_alert_desc_t *desc)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, nullptr);
     ecs_check(!desc->filter.entity || desc->entity == desc->filter.entity, 
-        ECS_INVALID_PARAMETER, NULL);
+        ECS_INVALID_PARAMETER, nullptr);
 
     ecs_entity_t result = desc->entity;
     if (!result) {
@@ -519,7 +519,7 @@ ecs_entity_t ecs_alert_init(
 
     /* Initialize Alert component which identifiers entity as alert */
     EcsAlert *alert = ecs_get_mut(world, result, EcsAlert);
-    ecs_assert(alert != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(alert != nullptr, ECS_INTERNAL_ERROR, nullptr);
     alert->message = ecs_os_strdup(desc->message);
     alert->retain_period = desc->retain_period;
 
@@ -531,7 +531,7 @@ ecs_entity_t ecs_alert_init(
                 ecs_err("severity filter must have severity");
                 goto error;
             }
-            ecs_alert_severity_filter_t *sf = ecs_vec_append_t(NULL, 
+            ecs_alert_severity_filter_t *sf = ecs_vec_append_t(nullptr, 
                 &alert->severity_filters, ecs_alert_severity_filter_t);
             *sf = desc->severity_filters[i];
             if (sf->var) {
@@ -554,13 +554,13 @@ ecs_entity_t ecs_alert_init(
                 ecs_err("ecs_alert_desc_t::member is not a member");
                 goto error;
             }
-            ecs_check(alert->id != 0, ECS_INVALID_PARAMETER, NULL);
+            ecs_check(alert->id != 0, ECS_INVALID_PARAMETER, nullptr);
         } else {
             alert->id = desc->id;
         }
 
         ecs_id_record_t *idr = flecs_id_record_ensure(world, alert->id);
-        ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(idr != nullptr, ECS_INTERNAL_ERROR, nullptr);
         if (!idr->type_info) {
             ecs_err("ecs_alert_desc_t::id must be a component");
             goto error;
@@ -658,9 +658,9 @@ int32_t ecs_get_alert_count(
     ecs_entity_t alert)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_check(entity != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(entity != 0, ECS_INVALID_PARAMETER, nullptr);
     ecs_check(!alert || ecs_has(world, alert, EcsAlert), 
-        ECS_INVALID_PARAMETER, NULL);
+        ECS_INVALID_PARAMETER, nullptr);
 
     const EcsAlertsActive *active = ecs_get(world, entity, EcsAlertsActive);
     if (!active) {
@@ -668,7 +668,7 @@ int32_t ecs_get_alert_count(
     }
 
     if (alert) {
-        return ecs_map_get(&active->alerts, alert) != NULL;
+        return ecs_map_get(&active->alerts, alert) != nullptr;
     }
 
     return ecs_map_count(&active->alerts);
@@ -682,8 +682,8 @@ ecs_entity_t ecs_get_alert(
     ecs_entity_t alert)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_check(entity != 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(alert != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(entity != 0, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(alert != 0, ECS_INVALID_PARAMETER, nullptr);
 
     const EcsAlertsActive *active = ecs_get(world, entity, EcsAlertsActive);
     if (!active) {

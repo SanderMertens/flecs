@@ -40,7 +40,7 @@
         desc.add_expr = #__VA_ARGS__; \
         id_ = ecs_entity_init(world, &desc); \
         ecs_id(id_) = id_; \
-        ecs_assert(id_ != 0, ECS_INVALID_PARAMETER, NULL); \
+        ecs_assert(id_ != 0, ECS_INVALID_PARAMETER, nullptr); \
     } \
     (void)id_; \
     (void)ecs_id(id_)
@@ -110,7 +110,7 @@
         desc.type.alignment = ECS_ALIGNOF(id_); \
         ecs_id(id_) = ecs_component_init(world, &desc);\
     }\
-    ecs_assert(ecs_id(id_) != 0, ECS_INVALID_PARAMETER, NULL)
+    ecs_assert(ecs_id(id_) != 0, ECS_INVALID_PARAMETER, nullptr)
 
 /** Declare & define a component.
  *
@@ -141,7 +141,7 @@
         desc.filter.expr = #__VA_ARGS__;\
         desc.events[0] = kind;\
         ecs_id(id_) = ecs_observer_init(world, &desc);\
-        ecs_assert(ecs_id(id_) != 0, ECS_INVALID_PARAMETER, NULL);\
+        ecs_assert(ecs_id(id_) != 0, ECS_INVALID_PARAMETER, nullptr);\
     }
 
 /** Declare & define an observer.
@@ -476,31 +476,31 @@
  */
 
 #define ecs_lookup_path(world, parent, path)\
-    ecs_lookup_path_w_sep(world, parent, path, ".", NULL, true)
+    ecs_lookup_path_w_sep(world, parent, path, ".", nullptr, true)
 
 #define ecs_lookup_fullpath(world, path)\
-    ecs_lookup_path_w_sep(world, 0, path, ".", NULL, true)
+    ecs_lookup_path_w_sep(world, 0, path, ".", nullptr, true)
 
 #define ecs_get_path(world, parent, child)\
-    ecs_get_path_w_sep(world, parent, child, ".", NULL)
+    ecs_get_path_w_sep(world, parent, child, ".", nullptr)
 
 #define ecs_get_fullpath(world, child)\
-    ecs_get_path_w_sep(world, 0, child, ".", NULL)
+    ecs_get_path_w_sep(world, 0, child, ".", nullptr)
 
 #define ecs_get_fullpath_buf(world, child, buf)\
-    ecs_get_path_w_sep_buf(world, 0, child, ".", NULL, buf)
+    ecs_get_path_w_sep_buf(world, 0, child, ".", nullptr, buf)
 
 #define ecs_new_from_path(world, parent, path)\
-    ecs_new_from_path_w_sep(world, parent, path, ".", NULL)
+    ecs_new_from_path_w_sep(world, parent, path, ".", nullptr)
 
 #define ecs_new_from_fullpath(world, path)\
-    ecs_new_from_path_w_sep(world, 0, path, ".", NULL)
+    ecs_new_from_path_w_sep(world, 0, path, ".", nullptr)
 
 #define ecs_add_path(world, entity, parent, path)\
-    ecs_add_path_w_sep(world, entity, parent, path, ".", NULL)
+    ecs_add_path_w_sep(world, entity, parent, path, ".", nullptr)
 
 #define ecs_add_fullpath(world, entity, path)\
-    ecs_add_path_w_sep(world, entity, 0, path, ".", NULL)
+    ecs_add_path_w_sep(world, entity, 0, path, ".", nullptr)
 
 /** @} */
 
@@ -519,7 +519,7 @@
 
 /** Declare a constructor.
  * Example:
- *   ECS_CTOR(MyType, ptr, { ptr->value = NULL; });
+ *   ECS_CTOR(MyType, ptr, { ptr->value = nullptr; });
  */
 #define ECS_CTOR(type, var, ...)\
     ECS_XTOR_IMPL(type, ctor, var, __VA_ARGS__)

@@ -209,7 +209,7 @@ struct each_delegate : public delegate {
     // Static function that can be used as callback for systems/triggers
     static void run(ecs_iter_t *iter) {
         auto self = static_cast<const each_delegate*>(iter->binding_ctx);
-        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, nullptr);
         self->invoke(iter);
     }
 
@@ -528,7 +528,7 @@ public:
     // Static function that can be used as callback for systems/triggers
     static void run(ecs_iter_t *iter) {
         auto self = static_cast<const iter_delegate*>(iter->binding_ctx);
-        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, nullptr);
         self->invoke(iter);
     }
 
@@ -599,14 +599,14 @@ private:
     template <typename F, if_t<arity<F>::value == 1> = 0>
     static void invoke(ecs_iter_t *iter) {
         auto self = static_cast<const entity_observer_delegate*>(iter->binding_ctx);
-        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, nullptr);
         self->m_func(flecs::entity(iter->world, ecs_field_src(iter, 1)));
     }
 
     template <typename F, if_t<arity<F>::value == 0> = 0>
     static void invoke(ecs_iter_t *iter) {
         auto self = static_cast<const entity_observer_delegate*>(iter->binding_ctx);
-        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, nullptr);
         self->m_func();
     }
 
@@ -628,7 +628,7 @@ private:
     static void invoke(ecs_iter_t *iter) {
         auto self = static_cast<const entity_payload_observer_delegate*>(
             iter->binding_ctx);
-        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, nullptr);
         ecs_assert(iter->param != nullptr, ECS_INVALID_OPERATION, 
             "entity observer invoked without payload");
 
@@ -640,7 +640,7 @@ private:
     static void invoke(ecs_iter_t *iter) {
         auto self = static_cast<const entity_payload_observer_delegate*>(
             iter->binding_ctx);
-        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, nullptr);
         ecs_assert(iter->param != nullptr, ECS_INVALID_OPERATION, 
             "entity observer invoked without payload");
 
@@ -683,7 +683,7 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
     bool get_ptrs(world_t *world, const ecs_record_t *r, ecs_table_t *table,
         ArrayType& ptrs) 
     {
-        ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(table != nullptr, ECS_INTERNAL_ERROR, nullptr);
         if (!ecs_table_column_count(table)) {
             return false;
         }
@@ -794,7 +794,7 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
         flecs::world w(world);
 
         ArrayType ptrs;
-        ecs_table_t *table = NULL;
+        ecs_table_t *table = nullptr;
 
         // When not deferred take the fast path.
         if (!w.is_deferred()) {
@@ -804,7 +804,7 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
             // Make sure the object is not a stage. Operations on a stage are
             // only allowed when the stage is in deferred mode, which is when
             // the world is in readonly mode.
-            ecs_assert(!w.is_stage(), ECS_INVALID_PARAMETER, NULL);
+            ecs_assert(!w.is_stage(), ECS_INVALID_PARAMETER, nullptr);
 
             // Find table for entity
             ecs_record_t *r = ecs_record_find(world, id);
@@ -830,12 +830,12 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
                 ecs_type_t ids;
                 ids.array = added.ptr();
                 ids.count = static_cast<ecs_size_t>(elem);
-                ecs_commit(world, id, r, next, &ids, NULL);
+                ecs_commit(world, id, r, next, &ids, nullptr);
                 table = next;
             }
 
             if (!get_ptrs(w, r, table, ptrs)) {
-                ecs_abort(ECS_INTERNAL_ERROR, NULL);
+                ecs_abort(ECS_INTERNAL_ERROR, nullptr);
             }
 
             ECS_TABLE_LOCK(world, table);

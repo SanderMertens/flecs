@@ -113,7 +113,7 @@ static ECS_DTOR(EcsMetricMember, ptr, {
 
 static ECS_MOVE(EcsMetricMember, dst, src, {
     *dst = *src;
-    src->ctx = NULL;
+    src->ctx = nullptr;
 })
 
 static ECS_DTOR(EcsMetricId, ptr, {
@@ -122,7 +122,7 @@ static ECS_DTOR(EcsMetricId, ptr, {
 
 static ECS_MOVE(EcsMetricId, dst, src, {
     *dst = *src;
-    src->ctx = NULL;
+    src->ctx = nullptr;
 })
 
 static ECS_DTOR(EcsMetricOneOf, ptr, {
@@ -134,7 +134,7 @@ static ECS_DTOR(EcsMetricOneOf, ptr, {
 
 static ECS_MOVE(EcsMetricOneOf, dst, src, {
     *dst = *src;
-    src->ctx = NULL;
+    src->ctx = nullptr;
 })
 
 static ECS_DTOR(EcsMetricCountTargets, ptr, {
@@ -146,7 +146,7 @@ static ECS_DTOR(EcsMetricCountTargets, ptr, {
 
 static ECS_MOVE(EcsMetricCountTargets, dst, src, {
     *dst = *src;
-    src->ctx = NULL;
+    src->ctx = nullptr;
 })
 
 /** Observer used for creating new instances of member metric */
@@ -304,7 +304,7 @@ static void UpdateIdInstance(ecs_iter_t *it, bool counter) {
 
         ecs_id_metric_ctx_t *ctx = mi[i].ctx;
         ecs_id_record_t *idr = ctx->idr;
-        if (flecs_search_w_idr(world, table, idr->id, NULL, idr) != -1) {
+        if (flecs_search_w_idr(world, table, idr->id, nullptr, idr) != -1) {
             if (!counter) {
                 m[i].value = 1.0;
             } else {
@@ -452,7 +452,7 @@ int flecs_member_metric_init(
 
         type = ecs_get_typeid(world, desc->id);
 
-        ecs_meta_cursor_t cur = ecs_meta_cursor(world, type, NULL);
+        ecs_meta_cursor_t cur = ecs_meta_cursor(world, type, nullptr);
         if (ecs_meta_push(&cur)) {
             char *metric_name = ecs_get_fullpath(world, metric);
             ecs_err("invalid type for metric '%s'", metric_name);
@@ -586,7 +586,7 @@ int flecs_id_metric_init(
     ctx->metric.metric = metric;
     ctx->metric.kind = desc->kind;
     ctx->idr = flecs_id_record_ensure(world, desc->id);
-    ecs_check(ctx->idr != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ctx->idr != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
     ecs_observer(world, {
         .entity = metric,
@@ -622,8 +622,8 @@ int flecs_oneof_metric_init(
     ctx->metric.metric = metric;
     ctx->metric.kind = desc->kind;
     ctx->idr = flecs_id_record_ensure(world, desc->id);
-    ecs_check(ctx->idr != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_map_init(&ctx->target_offset, NULL);
+    ecs_check(ctx->idr != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_map_init(&ctx->target_offset, nullptr);
 
     /* Add member for each child of oneof to metric, so it can be used as metric
      * instance type that holds values for all targets */
@@ -695,8 +695,8 @@ int flecs_count_id_targets_metric_init(
     ctx->metric.metric = metric;
     ctx->metric.kind = desc->kind;
     ctx->idr = flecs_id_record_ensure(world, desc->id);
-    ecs_check(ctx->idr != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_map_init(&ctx->targets, NULL);
+    ecs_check(ctx->idr != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_map_init(&ctx->targets, nullptr);
 
     ecs_set(world, metric, EcsMetricCountTargets, { .ctx = ctx });
     ecs_add_pair(world, metric, EcsMetric, desc->kind);
@@ -722,8 +722,8 @@ ecs_entity_t ecs_metric_init(
     ecs_world_t *world,
     const ecs_metric_desc_t *desc)
 {
-    ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, nullptr);
     ecs_poly_assert(world, ecs_world_t);
 
     ecs_entity_t result = desc->entity;

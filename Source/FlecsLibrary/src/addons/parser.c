@@ -84,8 +84,8 @@ const char* ecs_parse_digit(
     char ch = ptr[0];
 
     if (!isdigit(ch) && ch != '-') {
-        ecs_parser_error(NULL, NULL, 0, "invalid start of number '%s'", ptr);
-        return NULL;
+        ecs_parser_error(nullptr, nullptr, 0, "invalid start of number '%s'", ptr);
+        return nullptr;
     }
 
     tptr[0] = ch;
@@ -183,7 +183,7 @@ const char* ecs_parse_token(
             ecs_parser_error(name, expr, column, 
                 "invalid start of token '%s'", ptr);
         }
-        return NULL;
+        return nullptr;
     }
 
     tptr[0] = ch;
@@ -225,7 +225,7 @@ const char* ecs_parse_token(
     if (tmpl_nesting != 0) {
         ecs_parser_error(name, expr, column, 
             "identifier '%s' has mismatching < > pairs", ptr);
-        return NULL;
+        return nullptr;
     }
 
     const char *next_ptr = ecs_parse_ws(ptr);
@@ -248,7 +248,7 @@ const char* ecs_parse_identifier(
     if (!flecs_valid_identifier_start_char(ptr[0]) && (ptr[0] != '"')) {
         ecs_parser_error(name, expr, (ptr - expr), 
             "expected start of identifier");
-        return NULL;
+        return nullptr;
     }
 
     ptr = ecs_parse_token(name, expr, ptr, token_out, 0);
@@ -281,7 +281,7 @@ int flecs_parse_identifier(
     ecs_size_t len = ecs_os_strlen(name);
     if (out->flags & EcsIsName) {
         if (name[len - 1] != TOK_EXPR_STRING) {
-            ecs_parser_error(NULL, token, 0, "missing '\"' at end of string");
+            ecs_parser_error(nullptr, token, 0, "missing '\"' at end of string");
             return -1;
         } else {
             name[len - 1] = '\0';
@@ -323,7 +323,7 @@ ecs_oper_kind_t flecs_parse_operator(
     } else if (ch == TOK_NOT) {
         return EcsNot;
     } else {
-        ecs_throw(ECS_INTERNAL_ERROR, NULL);
+        ecs_throw(ECS_INTERNAL_ERROR, nullptr);
     }
 error:
     return 0;
@@ -341,7 +341,7 @@ const char* flecs_parse_annotation(
 
     ptr = ecs_parse_identifier(name, sig, ptr, token);
     if (!ptr) {
-        return NULL;
+        return nullptr;
     }
 
     if (!ecs_os_strcmp(token, TOK_IN)) {
@@ -361,7 +361,7 @@ const char* flecs_parse_annotation(
     if (ptr[0] != TOK_BRACKET_CLOSE) {
         printf("errr\n");
         ecs_parser_error(name, sig, column, "expected ]");
-        return NULL;
+        return nullptr;
     }
 
     return ptr + 1;
@@ -404,7 +404,7 @@ const char* flecs_parse_term_flags(
         token = token_buf;
         ptr = ecs_parse_identifier(name, expr, ptr, token);
         if (!ptr) {
-            return NULL;
+            return nullptr;
         }
     }
 
@@ -413,13 +413,13 @@ const char* flecs_parse_term_flags(
         if (!tok) {
             ecs_parser_error(name, expr, column, 
                 "invalid set token '%s'", token);
-            return NULL;
+            return nullptr;
         }
 
         if (id->flags & tok) {
             ecs_parser_error(name, expr, column, 
                 "duplicate set token '%s'", token);
-            return NULL;            
+            return nullptr;            
         }
         
         id->flags |= tok;
@@ -431,14 +431,14 @@ const char* flecs_parse_term_flags(
             if (!isdigit(ptr[0]) && flecs_valid_token_start_char(ptr[0])) {
                 ptr = ecs_parse_identifier(name, expr, ptr, token);
                 if (!ptr) {
-                    return NULL;
+                    return nullptr;
                 }         
 
                 id->trav = ecs_lookup_fullpath(world, token);
                 if (!id->trav) {
                     ecs_parser_error(name, expr, column, 
                         "unresolved identifier '%s'", token);
-                    return NULL;
+                    return nullptr;
                 }
 
                 if (ptr[0] == TOK_AND) {
@@ -446,20 +446,20 @@ const char* flecs_parse_term_flags(
                 } else if (ptr[0] != TOK_PAREN_CLOSE) {
                     ecs_parser_error(name, expr, column, 
                         "expected ',' or ')'");
-                    return NULL;
+                    return nullptr;
                 }
             }
 
             if (ptr[0] != TOK_PAREN_CLOSE) {
                 ecs_parser_error(name, expr, column, "expected ')', got '%c'",
                     ptr[0]);
-                return NULL;                
+                return nullptr;                
             } else {
                 ptr = ecs_parse_ws(ptr + 1);
                 if (ptr[0] != tok_end && ptr[0] != TOK_AND && ptr[0] != 0) {
                     ecs_parser_error(name, expr, column, 
                         "expected end of set expr");
-                    return NULL;
+                    return nullptr;
                 }
             }
         }
@@ -470,7 +470,7 @@ const char* flecs_parse_term_flags(
             if (flecs_valid_token_start_char(ptr[0])) {
                 ptr = ecs_parse_identifier(name, expr, ptr, token);
                 if (!ptr) {
-                    return NULL;
+                    return nullptr;
                 }
             }
 
@@ -511,15 +511,15 @@ const char* flecs_parse_arguments(
             if ((arg == ECS_PARSER_MAX_ARGS) || (!extra_args && arg == 2)) {
                 ecs_parser_error(name, expr, (ptr - expr), 
                     "too many arguments in term");
-                return NULL;
+                return nullptr;
             }
 
             ptr = ecs_parse_identifier(name, expr, ptr, token);
             if (!ptr) {
-                return NULL;
+                return nullptr;
             }
 
-            ecs_term_id_t *term_id = NULL;
+            ecs_term_id_t *term_id = nullptr;
 
             if (arg == 0) {
                 term_id = &term->src;
@@ -535,14 +535,14 @@ const char* flecs_parse_arguments(
                 if (flecs_parse_identifier(token, term_id)) {
                     ecs_parser_error(name, expr, (ptr - expr), 
                         "invalid identifier '%s'", token);
-                    return NULL;
+                    return nullptr;
                 }
 
                 ptr = ecs_parse_ws(ptr + 1);
                 ptr = flecs_parse_term_flags(world, name, expr, (ptr - expr), ptr,
-                    NULL, term_id, TOK_PAREN_CLOSE);
+                    nullptr, term_id, TOK_PAREN_CLOSE);
                 if (!ptr) {
-                    return NULL;
+                    return nullptr;
                 }
 
             /* Check for term flags */
@@ -556,14 +556,14 @@ const char* flecs_parse_arguments(
                 ptr = flecs_parse_term_flags(world, name, expr, (ptr - expr), ptr, 
                     token, term_id, TOK_PAREN_CLOSE);
                 if (!ptr) {
-                    return NULL;
+                    return nullptr;
                 }
 
             /* Regular identifier */
             } else if (flecs_parse_identifier(token, term_id)) {
                 ecs_parser_error(name, expr, (ptr - expr), 
                     "invalid identifier '%s'", token);
-                return NULL;
+                return nullptr;
             }
 
             if (ptr[0] == TOK_AND) {
@@ -580,13 +580,13 @@ const char* flecs_parse_arguments(
             } else {
                 ecs_parser_error(name, expr, (ptr - expr), 
                     "expected ',' or ')'");
-                return NULL;
+                return nullptr;
             }
 
         } else {
             ecs_parser_error(name, expr, (ptr - expr), 
                 "expected identifier or set expression");
-            return NULL;
+            return nullptr;
         }
 
         arg ++;
@@ -725,7 +725,7 @@ parse_predicate:
     /* Set expression */
     if (ptr[0] == TOK_COLON) {
         ptr = ecs_parse_ws(ptr + 1);
-        ptr = flecs_parse_term_flags(world, name, expr, (ptr - expr), ptr, NULL, 
+        ptr = flecs_parse_term_flags(world, name, expr, (ptr - expr), ptr, nullptr, 
             &term.first, TOK_COLON);
         if (!ptr) {
             goto error;
@@ -835,7 +835,7 @@ parse_pair:
     if (ptr[0] == TOK_COLON) {
         ptr = ecs_parse_ws(ptr + 1);
         ptr = flecs_parse_term_flags(world, name, expr, (ptr - expr), ptr,
-            NULL, &term.first, TOK_PAREN_CLOSE);
+            nullptr, &term.first, TOK_PAREN_CLOSE);
         if (!ptr) {
             goto error;
         }
@@ -878,7 +878,7 @@ parse_pair_predicate:
         if (ptr[0] == TOK_COLON) {
             ptr = ecs_parse_ws(ptr + 1);
             ptr = flecs_parse_term_flags(world, name, expr, (ptr - expr), ptr,
-                NULL, &term.second, TOK_PAREN_CLOSE);
+                nullptr, &term.second, TOK_PAREN_CLOSE);
             if (!ptr) {
                 goto error;
             }
@@ -914,7 +914,7 @@ parse_pair_object:
     if (ptr[0] == TOK_AND) {
         ptr = ecs_parse_ws(ptr + 1);
         ptr = flecs_parse_arguments(
-            world, name, expr, (ptr - expr), ptr, token, NULL, extra_args);
+            world, name, expr, (ptr - expr), ptr, token, nullptr, extra_args);
         if (!ptr) {
             goto error;
         }
@@ -932,7 +932,7 @@ parse_done:
 error:
     ecs_term_fini(&term);
     *term_out = (ecs_term_t){0};
-    return NULL;
+    return nullptr;
 }
 
 static
@@ -964,9 +964,9 @@ char* ecs_parse_term(
     ecs_term_t *term,
     ecs_term_id_t *extra_args)
 {
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(term != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(ptr != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(term != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
     ecs_term_id_t *src = &term->src;
 
@@ -1015,7 +1015,7 @@ char* ecs_parse_term(
                 term->src = term->second;       
             } else {
                 term->src.id = EcsThis;
-                term->src.name = NULL;
+                term->src.name = nullptr;
                 term->src.flags |= EcsIsVariable;
             }
 
@@ -1073,7 +1073,7 @@ char* ecs_parse_term(
         src->id = 0;
         /* Safe, parser owns string */
         ecs_os_free(ECS_CONST_CAST(char*, term->first.name));
-        term->first.name = NULL;
+        term->first.name = nullptr;
     }
 
     /* Cannot combine EcsIsEntity/0 with operators other than AND */
@@ -1120,7 +1120,7 @@ error:
     if (term) {
         ecs_term_fini(term);
     }
-    return NULL;
+    return nullptr;
 }
 
 #endif

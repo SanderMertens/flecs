@@ -31,7 +31,7 @@ void flecs_bitset_init(
 {
     bs->size = 0;
     bs->count = 0;
-    bs->data = NULL;
+    bs->data = nullptr;
 }
 
 void flecs_bitset_ensure(
@@ -48,7 +48,7 @@ void flecs_bitset_fini(
     ecs_bitset_t *bs)
 {
     ecs_os_free(bs->data);
-    bs->data = NULL;
+    bs->data = nullptr;
     bs->count = 0;
 }
 
@@ -65,7 +65,7 @@ void flecs_bitset_set(
     int32_t elem,
     bool value)
 {
-    ecs_check(elem < bs->count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(elem < bs->count, ECS_INVALID_PARAMETER, nullptr);
     uint32_t hi = ((uint32_t)elem) >> 6;
     uint32_t lo = ((uint32_t)elem) & 0x3F;
     uint64_t v = bs->data[hi];
@@ -78,7 +78,7 @@ bool flecs_bitset_get(
     const ecs_bitset_t *bs,
     int32_t elem)
 {
-    ecs_check(elem < bs->count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(elem < bs->count, ECS_INVALID_PARAMETER, nullptr);
     return !!(bs->data[elem >> 6] & ((uint64_t)1 << ((uint64_t)elem & 0x3F)));
 error:
     return false;
@@ -94,7 +94,7 @@ void flecs_bitset_remove(
     ecs_bitset_t *bs,
     int32_t elem)
 {
-    ecs_check(elem < bs->count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(elem < bs->count, ECS_INVALID_PARAMETER, nullptr);
     int32_t last = bs->count - 1;
     bool last_value = flecs_bitset_get(bs, last);
     flecs_bitset_set(bs, elem, last_value);
@@ -109,8 +109,8 @@ void flecs_bitset_swap(
     int32_t elem_a,
     int32_t elem_b)
 {
-    ecs_check(elem_a < bs->count, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(elem_b < bs->count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(elem_a < bs->count, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(elem_b < bs->count, ECS_INVALID_PARAMETER, nullptr);
 
     bool a = flecs_bitset_get(bs, elem_a);
     bool b = flecs_bitset_get(bs, elem_b);

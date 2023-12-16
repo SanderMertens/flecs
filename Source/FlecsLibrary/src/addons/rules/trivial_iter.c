@@ -46,7 +46,7 @@ bool flecs_rule_trivial_test(
         }
 
         ecs_table_t *table = ctx->vars[0].range.table;
-        ecs_assert(table != NULL, ECS_INVALID_OPERATION, NULL);
+        ecs_assert(table != nullptr, ECS_INVALID_OPERATION, nullptr);
 
         for (t = 0; t < term_count; t ++) {
             ecs_term_t *term = &terms[t];

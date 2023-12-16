@@ -318,7 +318,7 @@ const ecs_stage_t* flecs_stage_from_readonly_world(
     ecs_assert(ecs_poly_is(world, ecs_world_t) ||
                ecs_poly_is(world, ecs_stage_t),
                ECS_INTERNAL_ERROR,
-               NULL);
+               nullptr);
 
     if (ecs_poly_is(world, ecs_world_t)) {
         return &world->stages[0];
@@ -327,7 +327,7 @@ const ecs_stage_t* flecs_stage_from_readonly_world(
         return ECS_CONST_CAST(ecs_stage_t*, world);
     }
     
-    return NULL;    
+    return nullptr;    
 }
 
 ecs_stage_t* flecs_stage_from_world(
@@ -338,7 +338,7 @@ ecs_stage_t* flecs_stage_from_world(
     ecs_assert(ecs_poly_is(world, ecs_world_t) ||
                ecs_poly_is(world, ecs_stage_t),
                ECS_INTERNAL_ERROR,
-               NULL);
+               nullptr);
 
     if (ecs_poly_is(world, ecs_world_t)) {
         return &world->stages[0];
@@ -352,8 +352,8 @@ ecs_world_t* flecs_suspend_readonly(
     const ecs_world_t *stage_world,
     ecs_suspend_readonly_state_t *state)
 {
-    ecs_assert(stage_world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(state != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(stage_world != nullptr, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(state != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
     ecs_world_t *world = 
         ECS_CONST_CAST(ecs_world_t*, ecs_get_world(stage_world));
@@ -373,7 +373,7 @@ ecs_world_t* flecs_suspend_readonly(
 
     /* Cannot suspend when running with multiple threads */
     ecs_assert(!(world->flags & EcsWorldReadonly) ||
-        (ecs_get_stage_count(world) <= 1), ECS_INVALID_WHILE_READONLY, NULL);
+        (ecs_get_stage_count(world) <= 1), ECS_INVALID_WHILE_READONLY, nullptr);
 
     state->is_readonly = is_readonly;
     state->is_deferred = stage->defer != 0;
@@ -389,7 +389,7 @@ ecs_world_t* flecs_suspend_readonly(
     state->scope = stage->scope;
     state->with = stage->with;
     stage->defer = 0;
-    ecs_vec_init_t(NULL, &stage->cmd->queue, ecs_cmd_t, 0);
+    ecs_vec_init_t(nullptr, &stage->cmd->queue, ecs_cmd_t, 0);
     
     return world;
 }
@@ -399,7 +399,7 @@ void flecs_resume_readonly(
     ecs_suspend_readonly_state_t *state)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_assert(state != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(state != nullptr, ECS_INTERNAL_ERROR, nullptr);
     
     ecs_world_t *temp_world = world;
     ecs_stage_t *stage = flecs_stage_from_world(&temp_world);
@@ -482,9 +482,9 @@ void flecs_monitor_register(
     ecs_entity_t id,
     ecs_query_t *query)
 {
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(id != 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(query != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(world != nullptr, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(id != 0, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(query != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
     ecs_map_t *monitors = &world->monitors.monitors;
     ecs_map_init_if(monitors, &world->allocator);
@@ -500,9 +500,9 @@ void flecs_monitor_unregister(
     ecs_entity_t id,
     ecs_query_t *query)
 {
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(id != 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(query != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(world != nullptr, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(id != 0, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(query != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
     ecs_map_t *monitors = &world->monitors.monitors;
     if (!ecs_map_is_init(monitors)) {
@@ -601,7 +601,7 @@ void flecs_fini_root_tables(
     ecs_table_cache_iter_t it;
 
     bool has_roots = flecs_table_cache_iter(&idr->cache, &it);
-    ecs_assert(has_roots == true, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(has_roots == true, ECS_INTERNAL_ERROR, nullptr);
     (void)has_roots;
 
     const ecs_table_record_t *tr;
@@ -619,7 +619,7 @@ void flecs_fini_root_tables(
              * backwards to minimize moving entities around in table. */
             for (i = count - 1; i >= 0; i --) {
                 ecs_record_t *r = flecs_entities_get(world, entities[i]);
-                ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+                ecs_assert(r != nullptr, ECS_INTERNAL_ERROR, nullptr);
                 if (ECS_RECORD_TO_ROW_FLAGS(r->row) & EcsEntityIsTarget) {
                     ecs_delete(world, entities[i]);
                 }
@@ -630,7 +630,7 @@ void flecs_fini_root_tables(
              * cleanup of tags. */
             for (i = count - 1; i >= 0; i --) {
                 ecs_record_t *r = flecs_entities_get(world, entities[i]);
-                ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+                ecs_assert(r != nullptr, ECS_INTERNAL_ERROR, nullptr);
                 if (!ECS_RECORD_TO_ROW_FLAGS(r->row)) {
                     ecs_delete(world, entities[i]);
                 }
@@ -860,7 +860,7 @@ ecs_world_t *ecs_mini(void) {
     ecs_trace("tracing enabled, call ecs_log_set_level(-1) to disable");
 
     if (!ecs_os_has_heap()) {
-        ecs_abort(ECS_MISSING_OS_API, NULL);
+        ecs_abort(ECS_MISSING_OS_API, nullptr);
     }
 
     if (!ecs_os_has_threading()) {
@@ -894,7 +894,7 @@ ecs_world_t *ecs_mini(void) {
 #endif
 
     ecs_world_t *world = ecs_os_calloc_t(ecs_world_t);
-    ecs_assert(world != NULL, ECS_OUT_OF_MEMORY, NULL);
+    ecs_assert(world != nullptr, ECS_OUT_OF_MEMORY, nullptr);
     ecs_poly_init(world, ecs_world_t);
 
     world->flags |= EcsWorldInit;
@@ -1010,7 +1010,7 @@ ecs_world_t* ecs_init_w_args(
 void ecs_quit(
     ecs_world_t *world)
 {
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != nullptr, ECS_INVALID_PARAMETER, nullptr);
     flecs_stage_from_world(&world);
     world->flags |= EcsWorldQuit;
 error:
@@ -1020,7 +1020,7 @@ error:
 bool ecs_should_quit(
     const ecs_world_t *world)
 {
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != nullptr, ECS_INVALID_PARAMETER, nullptr);
     world = ecs_get_world(world);
     return ECS_BIT_IS_SET(world->flags, EcsWorldQuit);
 error:
@@ -1142,7 +1142,7 @@ void ecs_set_hooks_id(
     ecs_entity_t component,
     const ecs_type_hooks_t *h)
 {
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
     flecs_stage_from_world(&world);
 
@@ -1153,19 +1153,19 @@ void ecs_set_hooks_id(
         ECS_ALREADY_IN_USE, ecs_get_name(world, component));
 
     ecs_type_info_t *ti = flecs_type_info_ensure(world, component);
-    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ti != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
     ecs_check(!ti->component || ti->component == component, 
-        ECS_INCONSISTENT_COMPONENT_ACTION, NULL);
+        ECS_INCONSISTENT_COMPONENT_ACTION, nullptr);
 
     if (!ti->size) {
         const EcsComponent *component_ptr = ecs_get(
             world, component, EcsComponent);
 
         /* Cannot register lifecycle actions for things that aren't a component */
-        ecs_check(component_ptr != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_check(component_ptr != nullptr, ECS_INVALID_PARAMETER, nullptr);
         /* Cannot register lifecycle actions for components with size 0 */
-        ecs_check(component_ptr->size != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_check(component_ptr->size != 0, ECS_INVALID_PARAMETER, nullptr);
 
         ti->size = component_ptr->size;
         ti->alignment = component_ptr->alignment;
@@ -1261,7 +1261,7 @@ const ecs_type_hooks_t* ecs_get_hooks_id(
     if (ti) {
         return &ti->hooks;
     }
-    return NULL;
+    return nullptr;
 }
 
 void ecs_atfini(
@@ -1270,11 +1270,11 @@ void ecs_atfini(
     void *ctx)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_check(action != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(action != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
-    ecs_action_elem_t *elem = ecs_vec_append_t(NULL, &world->fini_actions,
+    ecs_action_elem_t *elem = ecs_vec_append_t(nullptr, &world->fini_actions,
         ecs_action_elem_t);
-    ecs_assert(elem != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(elem != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
     elem->action = action;
     elem->ctx = ctx;
@@ -1287,13 +1287,13 @@ void ecs_run_post_frame(
     ecs_fini_action_t action,
     void *ctx)
 {
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(action != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(action != nullptr, ECS_INVALID_PARAMETER, nullptr);
     
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     ecs_action_elem_t *elem = ecs_vec_append_t(&stage->allocator, 
         &stage->post_frame_actions, ecs_action_elem_t);
-    ecs_assert(elem != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(elem != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
     elem->action = action;
     elem->ctx = ctx; 
@@ -1326,7 +1326,7 @@ void flecs_fini_actions(
         elems[i].action(world, elems[i].ctx);
     }
 
-    ecs_vec_fini_t(NULL, &world->fini_actions, ecs_action_elem_t);
+    ecs_vec_fini_t(nullptr, &world->fini_actions, ecs_action_elem_t);
 }
 
 /* Cleanup remaining type info elements */
@@ -1364,8 +1364,8 @@ int ecs_fini(
     ecs_world_t *world)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, NULL);
-    ecs_assert(!(world->flags & EcsWorldFini), ECS_INVALID_OPERATION, NULL);
+    ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, nullptr);
+    ecs_assert(!(world->flags & EcsWorldFini), ECS_INVALID_OPERATION, nullptr);
     ecs_assert(world->stages[0].defer == 0, ECS_INVALID_OPERATION, 
         "call defer_end before destroying world");
 
@@ -1411,7 +1411,7 @@ int ecs_fini(
 
     /* All queries are cleaned up, so monitors should've been cleaned up too */
     ecs_assert(!ecs_map_is_init(&world->monitors.monitors), 
-        ECS_INTERNAL_ERROR, NULL);
+        ECS_INTERNAL_ERROR, nullptr);
 
     /* Cleanup world ctx and binding_ctx */
     if (world->ctx_free) {
@@ -1453,7 +1453,7 @@ int ecs_fini(
 bool ecs_is_fini(
     const ecs_world_t *world)
 {
-    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(world != nullptr, ECS_INVALID_PARAMETER, nullptr);
     world = ecs_get_world(world);
     return ECS_BIT_IS_SET(world->flags, EcsWorldFini);
 }
@@ -1479,7 +1479,7 @@ void ecs_measure_frame_time(
     bool enable)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_check(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
+    ecs_check(ecs_os_has_time(), ECS_MISSING_OS_API, nullptr);
 
     if (ECS_EQZERO(world->info.target_fps) || enable) {
         ECS_BIT_COND(world->flags, EcsWorldMeasureFrameTime, enable);
@@ -1493,7 +1493,7 @@ void ecs_measure_system_time(
     bool enable)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_check(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
+    ecs_check(ecs_os_has_time(), ECS_MISSING_OS_API, nullptr);
     ECS_BIT_COND(world->flags, EcsWorldMeasureSystemTime, enable);
 error:
     return;
@@ -1504,7 +1504,7 @@ void ecs_set_target_fps(
     ecs_ftime_t fps)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_check(ecs_os_has_time(), ECS_MISSING_OS_API, NULL);
+    ecs_check(ecs_os_has_time(), ECS_MISSING_OS_API, nullptr);
 
     ecs_measure_frame_time(world, true);
     world->info.target_fps = fps;
@@ -1515,21 +1515,21 @@ error:
 void* ecs_get_ctx(
     const ecs_world_t *world)
 {
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);    
+    ecs_check(world != nullptr, ECS_INVALID_PARAMETER, nullptr);    
     world = ecs_get_world(world);
     return world->ctx;
 error:
-    return NULL;
+    return nullptr;
 }
 
 void* ecs_get_binding_ctx(
     const ecs_world_t *world)
 {
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);    
+    ecs_check(world != nullptr, ECS_INVALID_PARAMETER, nullptr);    
     world = ecs_get_world(world);
     return world->binding_ctx;
 error:
-    return NULL;
+    return nullptr;
 }
 
 void ecs_set_ctx(
@@ -1558,9 +1558,9 @@ void ecs_set_entity_range(
     ecs_entity_t id_end)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_check(!id_end || id_end > id_start, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!id_end || id_end > id_start, ECS_INVALID_PARAMETER, nullptr);
     ecs_check(!id_end || id_end > flecs_entities_max_id(world), 
-        ECS_INVALID_PARAMETER, NULL);
+        ECS_INVALID_PARAMETER, nullptr);
 
     uint32_t start = (uint32_t)id_start;
     uint32_t end = (uint32_t)id_end;
@@ -1588,7 +1588,7 @@ bool ecs_enable_range_check(
 ecs_entity_t ecs_get_max_id(
     const ecs_world_t *world)
 {
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(world != nullptr, ECS_INVALID_PARAMETER, nullptr);
     world = ecs_get_world(world);
     return flecs_entities_max_id(world);
 error:
@@ -1600,8 +1600,8 @@ void ecs_set_entity_generation(
     ecs_entity_t entity_with_generation)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, NULL);
-    ecs_assert(!(ecs_is_deferred(world)), ECS_INVALID_OPERATION, NULL);
+    ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, nullptr);
+    ecs_assert(!(ecs_is_deferred(world)), ECS_INVALID_OPERATION, nullptr);
 
     flecs_entities_set_generation(world, entity_with_generation);
 
@@ -1619,8 +1619,8 @@ const ecs_type_info_t* flecs_type_info_get(
 {
     ecs_poly_assert(world, ecs_world_t);   
 
-    ecs_assert(component != 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(!(component & ECS_ID_FLAGS_MASK), ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(component != 0, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(!(component & ECS_ID_FLAGS_MASK), ECS_INTERNAL_ERROR, nullptr);
 
     return flecs_sparse_try_t(&world->type_info, ecs_type_info_t, component);
 }
@@ -1630,14 +1630,14 @@ ecs_type_info_t* flecs_type_info_ensure(
     ecs_entity_t component)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_assert(component != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(component != 0, ECS_INTERNAL_ERROR, nullptr);
 
     const ecs_type_info_t *ti = flecs_type_info_get(world, component);
-    ecs_type_info_t *ti_mut = NULL;
+    ecs_type_info_t *ti_mut = nullptr;
     if (!ti) {
         ti_mut = flecs_sparse_ensure_t(
             &world->type_info, ecs_type_info_t, component);
-        ecs_assert(ti_mut != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(ti_mut != nullptr, ECS_INTERNAL_ERROR, nullptr);
         ti_mut->component = component;
     } else {
         ti_mut = ECS_CONST_CAST(ecs_type_info_t*, ti);
@@ -1669,15 +1669,15 @@ bool flecs_type_info_init_id(
 
     flecs_entities_ensure(world, component);
 
-    ecs_type_info_t *ti = NULL;
+    ecs_type_info_t *ti = nullptr;
     if (!size || !alignment) {
         ecs_assert(size == 0 && alignment == 0, 
-            ECS_INVALID_COMPONENT_SIZE, NULL);
-        ecs_assert(li == NULL, ECS_INCONSISTENT_COMPONENT_ACTION, NULL);
+            ECS_INVALID_COMPONENT_SIZE, nullptr);
+        ecs_assert(li == nullptr, ECS_INCONSISTENT_COMPONENT_ACTION, nullptr);
         flecs_sparse_remove_t(&world->type_info, ecs_type_info_t, component);
     } else {
         ti = flecs_type_info_ensure(world, component);
-        ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(ti != nullptr, ECS_INTERNAL_ERROR, nullptr);
         changed |= ti->size != size;
         changed |= ti->alignment != alignment;
         ti->size = size;
@@ -1696,13 +1696,13 @@ bool flecs_type_info_init_id(
     idr = flecs_id_record_ensure(world, ecs_pair(component, EcsWildcard));
     do {
         if (is_tag) {
-            changed |= flecs_id_record_set_type_info(world, idr, NULL);
+            changed |= flecs_id_record_set_type_info(world, idr, nullptr);
         } else if (ti) {
             changed |= flecs_id_record_set_type_info(world, idr, ti);
-        } else if ((idr->type_info != NULL) && 
+        } else if ((idr->type_info != nullptr) && 
             (idr->type_info->component == component))
         {
-            changed |= flecs_id_record_set_type_info(world, idr, NULL);
+            changed |= flecs_id_record_set_type_info(world, idr, nullptr);
         }
     } while ((idr = idr->first.next));
 
@@ -1717,7 +1717,7 @@ bool flecs_type_info_init_id(
 
     /* Type info of (*, component) should always point to component */
     ecs_assert(flecs_id_record_get(world, ecs_pair(EcsWildcard, component))->
-        type_info == ti, ECS_INTERNAL_ERROR, NULL);
+        type_info == ti, ECS_INTERNAL_ERROR, nullptr);
 
     return changed;
 }
@@ -1734,7 +1734,7 @@ void flecs_type_info_fini(
     if (ti->name) {
         /* Safe to cast away const, world has ownership over string */
         ecs_os_free(ECS_CONST_CAST(char*, ti->name));
-        ti->name = NULL;
+        ti->name = nullptr;
     }
 }
 
@@ -1854,7 +1854,7 @@ ecs_ftime_t ecs_frame_begin(
     ecs_ftime_t user_delta_time)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_check(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, NULL);
+    ecs_check(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, nullptr);
     ecs_check(ECS_NEQZERO(user_delta_time) || ecs_os_has_time(), 
         ECS_MISSING_OS_API, "get_time");
 
@@ -1881,7 +1881,7 @@ void ecs_frame_end(
     ecs_world_t *world)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_check(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, NULL);
+    ecs_check(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, nullptr);
 
     world->info.frame_count_total ++;
     
@@ -1960,14 +1960,14 @@ void flecs_process_pending_tables(
      * ensure that when this function is called there are no pending events. */
     if (world_r->flags & EcsWorldReadonly) {
         ecs_assert(flecs_sparse_count(world_r->pending_tables) == 0,
-            ECS_INTERNAL_ERROR, NULL);
+            ECS_INTERNAL_ERROR, nullptr);
         return;
     }
 
     /* Safe to cast, world is not readonly */
     ecs_world_t *world = ECS_CONST_CAST(ecs_world_t*, world_r);
     
-    /* If pending buffer is NULL there already is a stackframe that's iterating
+    /* If pending buffer is nullptr there already is a stackframe that's iterating
      * the table list. This can happen when an observer for a table event results
      * in a mutation that causes another table to change state. A typical 
      * example of this is a system that becomes active/inactive as the result of
@@ -1992,7 +1992,7 @@ void flecs_process_pending_tables(
     do {
         ecs_sparse_t *pending_tables = world->pending_tables;
         world->pending_tables = world->pending_buffer;
-        world->pending_buffer = NULL;
+        world->pending_buffer = nullptr;
 
         /* Make sure that any ECS operations that occur while delivering the
          * events does not cause inconsistencies, like sending an Empty 
@@ -2054,8 +2054,8 @@ void flecs_table_set_empty(
     ecs_table_t *table)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(table != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
     if (ecs_table_count(table)) {
         table->_->generation = 0;
@@ -2136,7 +2136,7 @@ int32_t ecs_delete_empty_tables(
             }
 
             ecs_table_t *table = tr->hdr.table;
-            ecs_assert(ecs_table_count(table) == 0, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(ecs_table_count(table) == 0, ECS_INTERNAL_ERROR, nullptr);
 
             if (table->type.count < min_id_count) {
                 continue;

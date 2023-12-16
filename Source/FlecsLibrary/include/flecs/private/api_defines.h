@@ -166,10 +166,6 @@ extern "C" {
 #include <stdbool.h>
 #endif
 
-#ifndef NULL
-#define NULL ((void*)0)
-#endif
-
 /* The API uses the native bool type in C++, or a custom one in C */
 #if !defined(__cplusplus) && !defined(__bool_true_false_are_defined)
 #undef bool

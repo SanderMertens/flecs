@@ -189,7 +189,7 @@ struct table {
     /** Get pointer to component array by column index. 
      * 
      * @param index The column index.
-     * @return Pointer to the column, NULL if not a component.
+     * @return Pointer to the column, nullptr if not a component.
      */
     virtual void* get_column(int32_t index) const {
         return ecs_table_get_column(m_table, index, 0);
@@ -198,12 +198,12 @@ struct table {
     /** Get pointer to component array by component.
      * 
      * @param id The component id.
-     * @return Pointer to the column, NULL if not found.
+     * @return Pointer to the column, nullptr if not found.
      */
     void* get(flecs::id_t id) const {
         int32_t index = column_index(id);
         if (index == -1) {
-            return NULL;
+            return nullptr;
         }
         return get_column(index);
     }
@@ -212,7 +212,7 @@ struct table {
      * 
      * @param first The first element of the pair.
      * @param second The second element of the pair.
-     * @return Pointer to the column, NULL if not found.
+     * @return Pointer to the column, nullptr if not found.
      */
     void* get(flecs::entity_t first, flecs::entity_t second) const {
         return get(ecs_pair(first, second));
@@ -221,7 +221,7 @@ struct table {
     /** Get pointer to component array by component.
      * 
      * @tparam T The component.
-     * @return Pointer to the column, NULL if not found.
+     * @return Pointer to the column, nullptr if not found.
      */
     template <typename T, if_t< is_actual<T>::value > = 0>
     T* get() const {
@@ -231,7 +231,7 @@ struct table {
     /** Get pointer to component array by (enum) component.
      * 
      * @tparam T The (enum) component.
-     * @return Pointer to the column, NULL if not found.
+     * @return Pointer to the column, nullptr if not found.
      */
     template <typename T, if_t< is_enum<T>::value > = 0>
     T* get() const {
@@ -241,7 +241,7 @@ struct table {
     /** Get pointer to component array by component.
      * 
      * @tparam T The component.
-     * @return Pointer to the column, NULL if not found.
+     * @return Pointer to the column, nullptr if not found.
      */
     template <typename T, typename A = actual_type_t<T>,
         if_t< flecs::is_pair<T>::value > = 0>
@@ -253,7 +253,7 @@ struct table {
      * 
      * @tparam First The first element of the pair.
      * @param second The second element of the pair.
-     * @return Pointer to the column, NULL if not found.
+     * @return Pointer to the column, nullptr if not found.
      */
     template <typename First>
     First* get(flecs::entity_t second) const {
@@ -264,7 +264,7 @@ struct table {
      * 
      * @tparam First The first element of the pair.
      * @tparam Second The second element of the pair.
-     * @return Pointer to the column, NULL if not found.
+     * @return Pointer to the column, nullptr if not found.
      */
     template <typename First, typename Second, typename P = flecs::pair<First, Second>, 
         typename A = actual_type_t<P>, if_not_t< flecs::is_pair<First>::value> = 0>
@@ -328,7 +328,7 @@ struct table_range : table {
     /** Get pointer to component array by column index. 
      * 
      * @param index The column index.
-     * @return Pointer to the column, NULL if not a component.
+     * @return Pointer to the column, nullptr if not a component.
      */
     void* get_column(int32_t index) const override {
         return ecs_table_get_column(m_table, index, m_offset);

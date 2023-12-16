@@ -40,8 +40,8 @@ int32_t flecs_trav_type_offset_search(
     ecs_id_t with,
     ecs_type_t *type)
 {
-    ecs_assert(offset > 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(with != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(offset > 0, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(with != 0, ECS_INVALID_PARAMETER, nullptr);
 
     while (offset < type->count) {
         ecs_id_t type_id = type->array[offset ++];
@@ -102,7 +102,7 @@ ecs_trav_up_t* flecs_trav_table_up(
 
         while (r_column != -1) {
             ecs_entity_t tgt = ECS_PAIR_SECOND(up_pair.id);
-            ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, nullptr);
 
             ecs_trav_up_t *up_parent = flecs_trav_table_up(ctx, a, cache,
                 world, tgt, with, rel, idr_with, idr_trav);
@@ -124,7 +124,7 @@ ecs_trav_up_t* flecs_trav_table_up(
 
             while (r_column != -1) {
                 ecs_entity_t tgt = ECS_PAIR_SECOND(up_pair.id);
-                ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);
+                ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, nullptr);
 
                 ecs_trav_up_t *up_parent = flecs_trav_table_up(ctx, a, cache,
                     world, tgt, with, rel, idr_with, idr_trav);
@@ -165,15 +165,15 @@ ecs_trav_up_t* flecs_rule_get_up_cache(
     ecs_allocator_t *a = flecs_rule_get_allocator(ctx->it);
     ecs_map_init_if(&cache->src, a);
 
-    ecs_assert(!(cache->dir & EcsDown), ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(!(cache->dir & EcsDown), ECS_INTERNAL_ERROR, nullptr);
     cache->dir = EcsUp;
     cache->with = with;
 
-    ecs_assert(idr_with != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(idr_trav != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(idr_with != nullptr, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(idr_trav != nullptr, ECS_INTERNAL_ERROR, nullptr);
     ecs_table_record_t *tr = ecs_table_cache_get(&idr_trav->cache, table);
     if (!tr) {
-        return NULL; /* Table doesn't have the relationship */
+        return nullptr; /* Table doesn't have the relationship */
     }
 
     int32_t i = tr->index, end = i + tr->count;
@@ -182,13 +182,13 @@ ecs_trav_up_t* flecs_rule_get_up_cache(
         ecs_entity_t tgt = ECS_PAIR_SECOND(id);
         ecs_trav_up_t *result = flecs_trav_table_up(ctx, a, cache, world, tgt,
             with, ecs_pair(trav, EcsWildcard), idr_with, idr_trav);
-        ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(result != nullptr, ECS_INTERNAL_ERROR, nullptr);
         if (result->src != 0) {
             return result;
         }
     }
 
-    return NULL;
+    return nullptr;
 }
 
 void flecs_rule_up_cache_fini(

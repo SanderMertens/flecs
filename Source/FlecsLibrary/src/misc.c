@@ -107,11 +107,11 @@ void* ecs_os_memdup(
     ecs_size_t size) 
 {
     if (!src) {
-        return NULL;
+        return nullptr;
     }
         
     void *dst = ecs_os_malloc(size);
-    ecs_assert(dst != NULL, ECS_OUT_OF_MEMORY, NULL);
+    ecs_assert(dst != nullptr, ECS_OUT_OF_MEMORY, nullptr);
     ecs_os_memcpy(dst, src, size);  
     return dst;  
 }
@@ -131,7 +131,7 @@ uint64_t flecs_string_hash(
     const void *ptr)
 {
     const ecs_hashed_string_t *str = ptr;
-    ecs_assert(str->hash != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(str->hash != 0, ECS_INTERNAL_ERROR, nullptr);
     return str->hash;
 }
 
@@ -140,7 +140,7 @@ char* ecs_vasprintf(
     va_list args)
 {
     ecs_size_t size = 0;
-    char *result  = NULL;
+    char *result  = nullptr;
     va_list tmpa;
 
     va_copy(tmpa, args);
@@ -150,13 +150,13 @@ char* ecs_vasprintf(
     va_end(tmpa);
 
     if ((int32_t)size < 0) { 
-        return NULL; 
+        return nullptr; 
     }
 
     result = (char *) ecs_os_malloc(size + 1);
 
     if (!result) { 
-        return NULL; 
+        return nullptr; 
     }
 
     ecs_os_vsprintf(result, fmt, args);

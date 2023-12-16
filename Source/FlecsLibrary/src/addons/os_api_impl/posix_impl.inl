@@ -27,7 +27,7 @@ ecs_os_thread_t posix_thread_new(
 {
     pthread_t *thread = ecs_os_malloc(sizeof(pthread_t));
 
-    if (pthread_create (thread, NULL, callback, arg) != 0) {
+    if (pthread_create (thread, nullptr, callback, arg) != 0) {
         ecs_os_abort();
     }
 
@@ -134,7 +134,7 @@ int64_t posix_ladec(
 static
 ecs_os_mutex_t posix_mutex_new(void) {
     pthread_mutex_t *mutex = ecs_os_malloc(sizeof(pthread_mutex_t));
-    if (pthread_mutex_init(mutex, NULL)) {
+    if (pthread_mutex_init(mutex, nullptr)) {
         abort();
     }
     return (ecs_os_mutex_t)(uintptr_t)mutex;
@@ -172,7 +172,7 @@ void posix_mutex_unlock(
 static
 ecs_os_cond_t posix_cond_new(void) {
     pthread_cond_t *cond = ecs_os_malloc(sizeof(pthread_cond_t));
-    if (pthread_cond_init(cond, NULL)) {
+    if (pthread_cond_init(cond, nullptr)) {
         abort();
     }
     return (ecs_os_cond_t)(uintptr_t)cond;
@@ -254,12 +254,12 @@ void posix_sleep(
     int32_t nanosec) 
 {
     struct timespec sleepTime;
-    ecs_assert(sec >= 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(nanosec >= 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(sec >= 0, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(nanosec >= 0, ECS_INTERNAL_ERROR, nullptr);
 
     sleepTime.tv_sec = sec;
     sleepTime.tv_nsec = nanosec;
-    if (nanosleep(&sleepTime, NULL)) {
+    if (nanosleep(&sleepTime, nullptr)) {
         ecs_err("nanosleep failed");
     }
 }
@@ -278,7 +278,7 @@ int64_t posix_int64_muldiv(int64_t value, int64_t numer, int64_t denom) {
 
 static
 uint64_t posix_time_now(void) {
-    ecs_assert(posix_time_initialized != 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(posix_time_initialized != 0, ECS_INTERNAL_ERROR, nullptr);
 
     uint64_t now;
 

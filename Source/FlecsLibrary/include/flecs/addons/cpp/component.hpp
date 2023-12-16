@@ -138,7 +138,7 @@ struct cpp_type_impl {
         if (s_id) {
             ecs_assert(s_id == entity, ECS_INCONSISTENT_COMPONENT_ID, 
                 type_name<T>());
-            ecs_assert(allow_tag == s_allow_tag, ECS_INVALID_PARAMETER, NULL);
+            ecs_assert(allow_tag == s_allow_tag, ECS_INVALID_PARAMETER, nullptr);
 
             // Component was already registered and data is consistent with new
             // identifier, so nothing else to be done.
@@ -168,7 +168,7 @@ struct cpp_type_impl {
             // If no world was provided the component cannot be registered
             ecs_assert(world != nullptr, ECS_COMPONENT_NOT_REGISTERED, name);
         } else {
-            ecs_assert(!id || s_id == id, ECS_INCONSISTENT_COMPONENT_ID, NULL);
+            ecs_assert(!id || s_id == id, ECS_INCONSISTENT_COMPONENT_ID, nullptr);
         }
 
         // If no id has been registered yet for the component (indicating the 
@@ -178,7 +178,7 @@ struct cpp_type_impl {
         if (!s_id || (world && !ecs_exists(world, s_id))) {
             init(s_id ? s_id : id, allow_tag);
 
-            ecs_assert(!id || s_id == id, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(!id || s_id == id, ECS_INTERNAL_ERROR, nullptr);
 
             const char *symbol = nullptr;
             if (id) {
@@ -202,7 +202,7 @@ struct cpp_type_impl {
 
         // By now the identifier must be valid and known with the world.
         ecs_assert(s_id != 0 && ecs_exists(world, s_id), 
-            ECS_INTERNAL_ERROR, NULL);
+            ECS_INTERNAL_ERROR, nullptr);
 
         return s_id;
     }
@@ -247,20 +247,20 @@ struct cpp_type_impl {
         }
 
         // By now we should have a valid identifier
-        ecs_assert(s_id != 0, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(s_id != 0, ECS_INTERNAL_ERROR, nullptr);
 
         return s_id;
     }
 
     // Return the size of a component.
     static size_t size() {
-        ecs_assert(s_id != 0, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(s_id != 0, ECS_INTERNAL_ERROR, nullptr);
         return s_size;
     }
 
     // Return the alignment of a component.
     static size_t alignment() {
-        ecs_assert(s_id != 0, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(s_id != 0, ECS_INTERNAL_ERROR, nullptr);
         return s_alignment;
     }
 
@@ -390,8 +390,8 @@ struct component : untyped_component {
             if (implicit_name && (ecs_get_scope(world) != 0)) {
                 /* If the type is a template type, make sure to ignore ':'
                  * inside the template parameter list. */
-                const char *start = strchr(n, '<'), *last_elem = NULL;
-                if (start) {
+                const char*last_elem = nullptr;
+                if (const char *start = strchr(n, '<')) {
                     const char *ptr = start;
                     while (ptr[0] && (ptr[0] != ':') && (ptr > n)) {
                         ptr --;

@@ -137,7 +137,7 @@ protected:
 
 private:
     void assert_term_id() {
-        ecs_assert(m_term_id != NULL, ECS_INVALID_PARAMETER, 
+        ecs_assert(m_term_id != nullptr, ECS_INVALID_PARAMETER, 
             "no active term (call .term() first)");
     }
 
@@ -204,7 +204,7 @@ struct term_builder_i : term_id_builder_i<Base> {
     /* Select src identifier, initialize it with name. If name starts with a $
      * the name is interpreted as a variable. */
     Base& src(const char *name) {
-        ecs_assert(name != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(name != nullptr, ECS_INVALID_PARAMETER, nullptr);
         this->src();
         if (name[0] == '$') {
             this->var(&name[1]);
@@ -231,7 +231,7 @@ struct term_builder_i : term_id_builder_i<Base> {
     /* Select first identifier, initialize it with name. If name starts with a $
      * the name is interpreted as a variable. */
     Base& first(const char *name) {
-        ecs_assert(name != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(name != nullptr, ECS_INVALID_PARAMETER, nullptr);
         this->first();
         if (name[0] == '$') {
             this->var(&name[1]);
@@ -258,7 +258,7 @@ struct term_builder_i : term_id_builder_i<Base> {
     /* Select second identifier, initialize it with name. If name starts with a $
      * the name is interpreted as a variable. */
     Base& second(const char *name) {
-        ecs_assert(name != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(name != nullptr, ECS_INVALID_PARAMETER, nullptr);
         this->second();
         if (name[0] == '$') {
             this->var(&name[1]);
@@ -393,7 +393,7 @@ struct term_builder_i : term_id_builder_i<Base> {
             sid = m_term->first.id;
         }
 
-        ecs_assert(sid != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(sid != 0, ECS_INVALID_PARAMETER, nullptr);
 
         if (!ECS_IS_PAIR(sid)) {
             m_term->src.id = sid;
@@ -425,7 +425,7 @@ protected:
 
 private:
     void assert_term() {
-        ecs_assert(m_term != NULL, ECS_INVALID_PARAMETER, 
+        ecs_assert(m_term != nullptr, ECS_INVALID_PARAMETER, 
             "no active term (call .term() first)");
     }
 

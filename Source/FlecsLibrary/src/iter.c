@@ -51,7 +51,7 @@ void flecs_iter_init(
     ecs_flags8_t fields)
 {
     ecs_assert(!ECS_BIT_IS_SET(it->flags, EcsIterIsValid), 
-        ECS_INTERNAL_ERROR, NULL);
+        ECS_INTERNAL_ERROR, nullptr);
 
     ecs_stage_t *stage = flecs_stage_from_world(
         ECS_CONST_CAST(ecs_world_t**, &world));
@@ -137,7 +137,7 @@ bool flecs_iter_populate_term_data(
         goto no_data;
     }
 
-    ecs_assert(it->sizes != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(it->sizes != nullptr, ECS_INTERNAL_ERROR, nullptr);
     int32_t size = it->sizes[t];
     if (!size) {
         goto no_data;
@@ -160,7 +160,7 @@ bool flecs_iter_populate_term_data(
                     if (ref->id) {
                         ptr_out[0] = (void*)ecs_ref_get_id(world, ref, ref->id);
                     } else {
-                        ptr_out[0] = NULL;
+                        ptr_out[0] = nullptr;
                     }
                 }
 
@@ -174,12 +174,12 @@ bool flecs_iter_populate_term_data(
             return true;
         } else {
             ecs_entity_t subj = it->sources[t];
-            ecs_assert(subj != 0, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(subj != 0, ECS_INTERNAL_ERROR, nullptr);
 
             /* Don't use ecs_get_id directly. Instead, go directly to the
              * storage so that we can get both the pointer and size */
             ecs_record_t *r = flecs_entities_get(world, subj);
-            ecs_assert(r != NULL && r->table != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(r != nullptr && r->table != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
             row = ECS_RECORD_TO_ROW(r->row);
             table = r->table;
@@ -205,7 +205,7 @@ bool flecs_iter_populate_term_data(
     } else {
         /* Data is from This, use table from iterator */
         table = it->table;
-        ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(table != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
         row = it->offset;
 
@@ -236,14 +236,14 @@ has_data:
 has_union: {
         /* Edge case: if column is a switch we should return the vector with case
          * identifiers. Will be replaced in the future with pluggable storage */
-        ecs_assert(table->_ != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(table->_ != nullptr, ECS_INTERNAL_ERROR, nullptr);
         ecs_switch_t *sw = &table->_->sw_columns[u_index];
         data = ecs_vec_first(flecs_switch_values(sw));
         goto has_data;
     }
 
 no_data:
-    if (ptr_out) ptr_out[0] = NULL;
+    if (ptr_out) ptr_out[0] = nullptr;
     return false;
 }
 
@@ -265,12 +265,12 @@ void flecs_iter_populate_data(
     it->count = count;
     if (table) {
         ecs_assert(count != 0 || !ecs_table_count(table) || (it->flags & EcsIterTableOnly), 
-            ECS_INTERNAL_ERROR, NULL);
+            ECS_INTERNAL_ERROR, nullptr);
         if (count) {
             it->entities = ecs_vec_get_t(
                 &table->data.entities, ecs_entity_t, offset);
         } else {
-            it->entities = NULL;
+            it->entities = nullptr;
         }
     }
 
@@ -295,7 +295,7 @@ void flecs_iter_populate_data(
 bool flecs_iter_next_row(
     ecs_iter_t *it)
 {
-    ecs_assert(it != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(it != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
     bool is_instanced = ECS_BIT_IS_SET(it->flags, EcsIterIsInstanced);
     if (!is_instanced) {
@@ -304,7 +304,7 @@ bool flecs_iter_next_row(
         int32_t offset = it->offset;
 
         if (instance_count > count && offset < (instance_count - 1)) {
-            ecs_assert(count == 1, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(count == 1, ECS_INTERNAL_ERROR, nullptr);
             int t, field_count = it->field_count;
 
             for (t = 0; t < field_count; t ++) {
@@ -350,25 +350,25 @@ void* ecs_field_w_size(
     size_t size,
     int32_t index)
 {
-    ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(index >= 1, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER, nullptr);
+    ecs_assert(index >= 1, ECS_INVALID_PARAMETER, nullptr);
 
     ecs_check(!size || ecs_field_size(it, index) == size ||
         (!ecs_field_size(it, index) && (!it->ptrs[index - 1])),
-            ECS_INVALID_PARAMETER, NULL);
+            ECS_INVALID_PARAMETER, nullptr);
     (void)size;
 
     return it->ptrs[index - 1];
 error:
-    return NULL;
+    return nullptr;
 }
 
 bool ecs_field_is_readonly(
     const ecs_iter_t *it,
     int32_t index)
 {
-    ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(index >= 1, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER, nullptr);
+    ecs_assert(index >= 1, ECS_INVALID_PARAMETER, nullptr);
     ecs_term_t *term = &it->terms[index - 1];
 
     if (term->inout == EcsIn) {
@@ -391,8 +391,8 @@ bool ecs_field_is_writeonly(
     const ecs_iter_t *it,
     int32_t index)
 {
-    ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(index >= 1, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER, nullptr);
+    ecs_assert(index >= 1, ECS_INVALID_PARAMETER, nullptr);
     ecs_term_t *term = &it->terms[index - 1];
     return term->inout == EcsOut;
 error:
@@ -403,8 +403,8 @@ bool ecs_field_is_set(
     const ecs_iter_t *it,
     int32_t index)
 {
-    ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(index >= 1, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER, nullptr);
+    ecs_assert(index >= 1, ECS_INVALID_PARAMETER, nullptr);
     int32_t column = it->columns[index - 1];
     if (!column) {
         return false;
@@ -426,15 +426,15 @@ bool ecs_field_is_self(
     const ecs_iter_t *it,
     int32_t index)
 {
-    ecs_assert(index >= 1, ECS_INVALID_PARAMETER, NULL);
-    return it->sources == NULL || it->sources[index - 1] == 0;
+    ecs_assert(index >= 1, ECS_INVALID_PARAMETER, nullptr);
+    return it->sources == nullptr || it->sources[index - 1] == 0;
 }
 
 ecs_id_t ecs_field_id(
     const ecs_iter_t *it,
     int32_t index)
 {
-    ecs_assert(index >= 1, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(index >= 1, ECS_INVALID_PARAMETER, nullptr);
     return it->ids[index - 1];
 }
 
@@ -442,7 +442,7 @@ int32_t ecs_field_column_index(
     const ecs_iter_t *it,
     int32_t index)
 {
-    ecs_assert(index >= 1, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(index >= 1, ECS_INVALID_PARAMETER, nullptr);
     int32_t result = it->columns[index - 1];
     if (result <= 0) {
         return -1;
@@ -455,7 +455,7 @@ ecs_entity_t ecs_field_src(
     const ecs_iter_t *it,
     int32_t index)
 {
-    ecs_assert(index >= 1, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(index >= 1, ECS_INVALID_PARAMETER, nullptr);
     if (it->sources) {
         return it->sources[index - 1];
     } else {
@@ -467,7 +467,7 @@ size_t ecs_field_size(
     const ecs_iter_t *it,
     int32_t index)
 {
-    ecs_assert(index >= 1, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(index >= 1, ECS_INVALID_PARAMETER, nullptr);
     return (size_t)it->sizes[index - 1];
 }
 
@@ -475,7 +475,7 @@ char* ecs_iter_str(
     const ecs_iter_t *it)
 {
     if (!(it->flags & EcsIterIsValid)) {
-        return NULL;
+        return nullptr;
     }
 
     ecs_world_t *world = it->world;
@@ -570,8 +570,8 @@ void ecs_iter_poly(
 bool ecs_iter_next(
     ecs_iter_t *iter)
 {
-    ecs_check(iter != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(iter->next != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(iter != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(iter->next != nullptr, ECS_INVALID_PARAMETER, nullptr);
     return iter->next(iter);
 error:
     return false;
@@ -580,7 +580,7 @@ error:
 int32_t ecs_iter_count(
     ecs_iter_t *it)
 {
-    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
     ECS_BIT_SET(it->flags, EcsIterNoData);
     ECS_BIT_SET(it->flags, EcsIterIsInstanced);
@@ -597,7 +597,7 @@ error:
 ecs_entity_t ecs_iter_first(
     ecs_iter_t *it)
 {
-    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
     ECS_BIT_SET(it->flags, EcsIterNoData);
     ECS_BIT_SET(it->flags, EcsIterIsInstanced);
@@ -616,7 +616,7 @@ error:
 bool ecs_iter_is_true(
     ecs_iter_t *it)
 {
-    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
     ECS_BIT_SET(it->flags, EcsIterNoData);
     ECS_BIT_SET(it->flags, EcsIterIsInstanced);
@@ -634,9 +634,9 @@ ecs_entity_t ecs_iter_get_var(
     ecs_iter_t *it,
     int32_t var_id)
 {
-    ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(it->variables != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(it->variables != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
     ecs_var_t *var = &it->variables[var_id];
     ecs_entity_t e = var->entity;
@@ -648,13 +648,13 @@ ecs_entity_t ecs_iter_get_var(
         if (table) {
             if ((var->range.count == 1) || (ecs_table_count(table) == 1)) {
                 ecs_assert(ecs_table_count(table) > var->range.offset,
-                    ECS_INTERNAL_ERROR, NULL);
+                    ECS_INTERNAL_ERROR, nullptr);
                 e = ecs_vec_get_t(&table->data.entities, ecs_entity_t,
                     var->range.offset)[0];
             }
         }
     } else {
-        ecs_assert(ecs_is_valid(it->real_world, e), ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(ecs_is_valid(it->real_world, e), ECS_INTERNAL_ERROR, nullptr);
     }
 
     return e;
@@ -666,9 +666,9 @@ ecs_table_t* ecs_iter_get_var_as_table(
     ecs_iter_t *it,
     int32_t var_id)
 {
-    ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(it->variables != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(it->variables != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
     ecs_var_t *var = &it->variables[var_id];
     ecs_table_t *table = var->range.table;
@@ -686,7 +686,7 @@ ecs_table_t* ecs_iter_get_var_as_table(
                 if (ecs_table_count(table) != 1) {
                     /* If table contains more than the entity, make sure not to
                      * return a partial table. */
-                    return NULL;
+                    return nullptr;
                 }
             }
         }
@@ -695,7 +695,7 @@ ecs_table_t* ecs_iter_get_var_as_table(
     if (table) {
         if (var->range.offset) {
             /* Don't return whole table if only partial table is matched */
-            return NULL;
+            return nullptr;
         }
 
         if (!var->range.count || ecs_table_count(table) == var->range.count) {
@@ -705,18 +705,18 @@ ecs_table_t* ecs_iter_get_var_as_table(
     }
 
 error:
-    return NULL;
+    return nullptr;
 }
 
 ecs_table_range_t ecs_iter_get_var_as_range(
     ecs_iter_t *it,
     int32_t var_id)
 {
-    ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(it->variables != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(it->variables != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
-    ecs_table_range_t result = { 0 };
+    ecs_table_range_t result = { nullptr };
 
     ecs_var_t *var = &it->variables[var_id];
     ecs_table_t *table = var->range.table;
@@ -745,7 +745,7 @@ ecs_table_range_t ecs_iter_get_var_as_range(
 
     return result;
 error:
-    return (ecs_table_range_t){0};
+    return (ecs_table_range_t){nullptr};
 }
 
 void ecs_iter_set_var(
@@ -753,14 +753,14 @@ void ecs_iter_set_var(
     int32_t var_id,
     ecs_entity_t entity)
 {
-    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(var_id < FLECS_VARIABLE_COUNT_MAX, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(entity != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(var_id < FLECS_VARIABLE_COUNT_MAX, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(entity != 0, ECS_INVALID_PARAMETER, nullptr);
     /* Can't set variable while iterating */
-    ecs_check(!(it->flags & EcsIterIsValid), ECS_INVALID_PARAMETER, NULL);
-    ecs_check(it->variables != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_check(!(it->flags & EcsIterIsValid), ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(it->variables != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
     ecs_var_t *var = &it->variables[var_id];
     var->entity = entity;
@@ -771,7 +771,7 @@ void ecs_iter_set_var(
         var->range.offset = ECS_RECORD_TO_ROW(r->row);
         var->range.count = 1;
     } else {
-        var->range.table = NULL;
+        var->range.table = nullptr;
         var->range.offset = 0;
         var->range.count = 0;
     }
@@ -800,19 +800,19 @@ void ecs_iter_set_var_as_range(
     int32_t var_id,
     const ecs_table_range_t *range)
 {
-    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(var_id < FLECS_VARIABLE_COUNT_MAX, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(range != 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(range->table != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(var_id < FLECS_VARIABLE_COUNT_MAX, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(range != 0, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(range->table != nullptr, ECS_INVALID_PARAMETER, nullptr);
     ecs_check(!range->offset || range->offset < ecs_table_count(range->table), 
-        ECS_INVALID_PARAMETER, NULL);
+        ECS_INVALID_PARAMETER, nullptr);
     ecs_check((range->offset + range->count) <= ecs_table_count(range->table), 
-        ECS_INVALID_PARAMETER, NULL);
+        ECS_INVALID_PARAMETER, nullptr);
 
     /* Can't set variable while iterating */
-    ecs_check(!(it->flags & EcsIterIsValid), ECS_INVALID_OPERATION, NULL);
+    ecs_check(!(it->flags & EcsIterIsValid), ECS_INVALID_OPERATION, nullptr);
 
     ecs_var_t *var = &it->variables[var_id];
     var->range = *range;
@@ -842,12 +842,12 @@ static
 void ecs_chained_iter_fini(
     ecs_iter_t *it)
 {
-    ecs_assert(it != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(it->chain_it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(it != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_assert(it->chain_it != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
     ecs_iter_fini(it->chain_it);
 
-    it->chain_it = NULL;
+    it->chain_it = nullptr;
 }
 
 ecs_iter_t ecs_page_iter(
@@ -855,11 +855,11 @@ ecs_iter_t ecs_page_iter(
     int32_t offset,
     int32_t limit)
 {
-    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(it->next != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(it->next != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
     ecs_iter_t result = *it;
-    result.priv.cache.stack_cursor = NULL; /* Don't copy allocator cursor */
+    result.priv.cache.stack_cursor = nullptr; /* Don't copy allocator cursor */
 
     result.priv.iter.page = (ecs_page_iter_t){
         .offset = offset,
@@ -872,7 +872,7 @@ ecs_iter_t ecs_page_iter(
 
     return result;
 error:
-    return (ecs_iter_t){ 0 };
+    return (ecs_iter_t){ nullptr };
 }
 
 static
@@ -904,9 +904,9 @@ static
 bool ecs_page_next_instanced(
     ecs_iter_t *it)
 {
-    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(it->chain_it != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(it->next == ecs_page_next, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(it->chain_it != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(it->next == ecs_page_next, ECS_INVALID_PARAMETER, nullptr);
 
     ecs_iter_t *chain_it = it->chain_it;
     bool instanced = ECS_BIT_IS_SET(it->flags, EcsIterIsInstanced);
@@ -985,9 +985,9 @@ error:
 bool ecs_page_next(
     ecs_iter_t *it)
 {
-    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(it->next == ecs_page_next, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(it->chain_it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(it->next == ecs_page_next, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(it->chain_it != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
     ECS_BIT_SET(it->chain_it->flags, EcsIterIsInstanced);
 
@@ -1005,14 +1005,14 @@ ecs_iter_t ecs_worker_iter(
     int32_t index,
     int32_t count)
 {
-    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(it->next != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(count > 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(index >= 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(index < count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(it->next != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(count > 0, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(index < count, ECS_INVALID_PARAMETER, nullptr);
 
     ecs_iter_t result = *it;
-    result.priv.cache.stack_cursor = NULL; /* Don't copy allocator cursor */
+    result.priv.cache.stack_cursor = nullptr; /* Don't copy allocator cursor */
     
     result.priv.iter.worker = (ecs_worker_iter_t){
         .index = index,
@@ -1024,16 +1024,16 @@ ecs_iter_t ecs_worker_iter(
 
     return result;
 error:
-    return (ecs_iter_t){ 0 };
+    return (ecs_iter_t){ nullptr };
 }
 
 static
 bool ecs_worker_next_instanced(
     ecs_iter_t *it)
 {
-    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(it->chain_it != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(it->next == ecs_worker_next, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(it->chain_it != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(it->next == ecs_worker_next, ECS_INVALID_PARAMETER, nullptr);
 
     bool instanced = ECS_BIT_IS_SET(it->flags, EcsIterIsInstanced);
 
@@ -1069,7 +1069,7 @@ bool ecs_worker_next_instanced(
             }
         }
 
-        if (!per_worker && it->table == NULL) {
+        if (!per_worker && it->table == nullptr) {
             if (res_index == 0) {
                 return true;
             } else {
@@ -1101,9 +1101,9 @@ error:
 bool ecs_worker_next(
     ecs_iter_t *it)
 {
-    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(it->next == ecs_worker_next, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(it->chain_it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(it->next == ecs_worker_next, ECS_INVALID_PARAMETER, nullptr);
+    ecs_check(it->chain_it != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
     ECS_BIT_SET(it->chain_it->flags, EcsIterIsInstanced);
 

@@ -85,7 +85,7 @@ int flecs_plecs_parse(
 
 static void flecs_dtor_script(EcsScript *ptr) {
     ecs_os_free(ptr->script);
-    ecs_vec_fini_t(NULL, &ptr->using_, ecs_entity_t);
+    ecs_vec_fini_t(nullptr, &ptr->using_, ecs_entity_t);
 
     int i, count = ptr->prop_defaults.count;
     ecs_value_t *values = ptr->prop_defaults.array;
@@ -93,7 +93,7 @@ static void flecs_dtor_script(EcsScript *ptr) {
         ecs_value_free(ptr->world, values[i].type, values[i].ptr);
     }
 
-    ecs_vec_fini_t(NULL, &ptr->prop_defaults, ecs_value_t);
+    ecs_vec_fini_t(nullptr, &ptr->prop_defaults, ecs_value_t);
 }
 
 static
@@ -105,8 +105,8 @@ ECS_MOVE(EcsScript, dst, src, {
     dst->world = src->world;
     ecs_os_zeromem(&src->using_);
     ecs_os_zeromem(&src->prop_defaults);
-    src->script = NULL;
-    src->world = NULL;
+    src->script = nullptr;
+    src->world = nullptr;
 })
 
 static
@@ -203,7 +203,7 @@ void flecs_assembly_on_set(
     int32_t i, m;
     for (i = 0; i < it->count; i ++) {
         /* Create variables to hold assembly properties */
-        ecs_vars_t vars = {0};
+        ecs_vars_t vars = {nullptr};
         ecs_vars_init(world, &vars);
 
         /* Populate properties from assembly members */
@@ -214,7 +214,7 @@ void flecs_assembly_on_set(
             ecs_value_t v = {0}; /* Prevent allocating value */
             ecs_expr_var_t *var = ecs_vars_declare_w_value(
                 &vars, member->name, &v);
-            if (var == NULL) {
+            if (var == nullptr) {
                 ecs_err("could not create prop '%s' for assembly '%s'", 
                     member->name, name);
                 break;
@@ -240,7 +240,7 @@ void flecs_assembly_on_set(
         ecs_vars_fini(&vars);
 
         if (ecs_record_has_id(world, r, EcsFlatten)) {
-            ecs_flatten(it->real_world, ecs_childof(instance), NULL);
+            ecs_flatten(it->real_world, ecs_childof(instance), nullptr);
         }
 
         data = ECS_OFFSET(data, ct->size);
@@ -274,7 +274,7 @@ int flecs_assembly_init_defaults(
     int32_t i, count = st->members.count;
     const ecs_member_t *members = st->members.array;
 
-    ecs_vec_init_t(NULL, &script->prop_defaults, ecs_value_t, count);
+    ecs_vec_init_t(nullptr, &script->prop_defaults, ecs_value_t, count);
 
     for (i = 0; i < count; i ++) {
         const ecs_member_t *member = &members[i];
@@ -297,7 +297,7 @@ int flecs_assembly_init_defaults(
             return -1;
         }
 
-        ecs_value_t *pv = ecs_vec_append_t(NULL, 
+        ecs_value_t *pv = ecs_vec_append_t(nullptr, 
             &script->prop_defaults, ecs_value_t);
         pv->type = member->type;
         pv->ptr = var->value.ptr;
@@ -334,16 +334,16 @@ int flecs_assembly_create(
     flecs_dtor_script(script);
     script->world = world;
     script->script = script_code;
-    ecs_vec_reset_t(NULL, &script->using_, ecs_entity_t);
+    ecs_vec_reset_t(nullptr, &script->using_, ecs_entity_t);
 
     ecs_entity_t scope = ecs_get_scope(world);
     if (scope && (scope = ecs_get_target(world, scope, EcsChildOf, 0))) {
-        ecs_vec_append_t(NULL, &script->using_, ecs_entity_t)[0] = scope;
+        ecs_vec_append_t(nullptr, &script->using_, ecs_entity_t)[0] = scope;
     }
 
     int i, count = state->using_frame;
     for (i = 0; i < count; i ++) {
-        ecs_vec_append_t(NULL, &script->using_, ecs_entity_t)[0] = 
+        ecs_vec_append_t(nullptr, &script->using_, ecs_entity_t)[0] = 
             state->using[i];
     }
 
@@ -424,13 +424,13 @@ ecs_entity_t plecs_lookup(
             }
             if (oneof) {
                 return ecs_lookup_path_w_sep(
-                    world, oneof, path, NULL, NULL, false);
+                    world, oneof, path, nullptr, nullptr, false);
             }
         }
         int using_scope = state->using_frame - 1;
         for (; using_scope >= 0; using_scope--) {
             e = ecs_lookup_path_w_sep(
-                world, state->using[using_scope], path, NULL, NULL, false);
+                world, state->using[using_scope], path, nullptr, nullptr, false);
             if (e) {
                 break;
             }
@@ -438,7 +438,7 @@ ecs_entity_t plecs_lookup(
     }
 
     if (!e) {
-        e = ecs_lookup_path_w_sep(world, 0, path, NULL, NULL, !is_subject);
+        e = ecs_lookup_path_w_sep(world, 0, path, nullptr, nullptr, !is_subject);
     }
 
     return e;
@@ -490,7 +490,7 @@ ecs_entity_t plecs_ensure_entity(
     bool is_anonymous = !ecs_os_strcmp(path, "_");
     bool is_new = false;
     if (is_anonymous) {
-        path = NULL;
+        path = nullptr;
         e = ecs_new_id(world);
         is_new = true;
     }
@@ -520,7 +520,7 @@ ecs_entity_t plecs_ensure_entity(
         }
 
         e = ecs_add_path(world, e, 0, path);
-        ecs_assert(e != 0, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(e != 0, ECS_INTERNAL_ERROR, nullptr);
 
         if (prev_scope) {
             ecs_set_scope(world, prev_scope);
@@ -569,7 +569,7 @@ ecs_entity_t plecs_ensure_term_id(
     ecs_entity_t result = 0;
     const char *name = term_id->name;
     if (term_id->flags & EcsIsVariable) {
-        if (name != NULL) {
+        if (name != nullptr) {
             ecs_expr_var_t *var = ecs_vars_lookup(&state->vars, name);
             if (!var) {
                 ecs_parser_error(name, expr, column,
@@ -604,10 +604,10 @@ bool plecs_pred_is_subj(
     ecs_term_t *term,
     plecs_state_t *state)
 {
-    if (term->src.name != NULL) {
+    if (term->src.name != nullptr) {
         return false;
     }
-    if (term->second.name != NULL) {
+    if (term->second.name != nullptr) {
         return false;
     }
     if (ecs_term_match_0(term)) {
@@ -646,7 +646,7 @@ const char* plecs_set_mask_to_name(
     } else if (flags == EcsParent) {
         return "parent";
     }
-    return NULL;
+    return nullptr;
 }
 
 static
@@ -794,7 +794,7 @@ int plecs_create_term(
     /* If this is a with clause (the list of entities between 'with' and scope
      * open), add subject to the array of with frames */
     if (state->with_stmt) {
-        ecs_assert(pred != 0, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(pred != 0, ECS_INTERNAL_ERROR, nullptr);
         ecs_id_t id;
 
         if (obj) {
@@ -840,13 +840,13 @@ const char* plecs_parse_inherit_stmt(
     if (state->isa_stmt) {
         ecs_parser_error(name, expr, ptr - expr, 
             "cannot nest inheritance");
-        return NULL;
+        return nullptr;
     }
 
     if (!state->last_subject) {
         ecs_parser_error(name, expr, ptr - expr, 
             "missing entity to assign inheritance to");
-        return NULL;
+        return nullptr;
     }
     
     state->isa_stmt = true;
@@ -911,7 +911,7 @@ const char* plecs_parse_assign_var_expr(
     state->var_is_prop = false;
     return ptr;
 error:
-    return NULL;
+    return nullptr;
 }
 
 static
@@ -932,14 +932,14 @@ const char* plecs_parse_assign_expr(
     if (!state->assign_stmt) {
         ecs_parser_error(name, expr, ptr - expr,
             "unexpected value outside of assignment statement");
-        return NULL;
+        return nullptr;
     }
 
     ecs_id_t assign_id = state->last_assign_id;
     if (!assign_id) {
         ecs_parser_error(name, expr, ptr - expr,
             "missing type for assignment statement");
-        return NULL;
+        return nullptr;
     }
 
     ecs_entity_t assign_to = state->assign_to;
@@ -950,7 +950,7 @@ const char* plecs_parse_assign_expr(
     if (!assign_to) {
         ecs_parser_error(name, expr, ptr - expr, 
             "missing entity to assign to");
-        return NULL;
+        return nullptr;
     }
 
     ecs_entity_t type = ecs_get_typeid(world, assign_id);
@@ -959,7 +959,7 @@ const char* plecs_parse_assign_expr(
         ecs_parser_error(name, expr, ptr - expr, 
             "invalid assignment, '%s' is not a type", id_str);
         ecs_os_free(id_str);
-        return NULL;
+        return nullptr;
     }
 
     if (assign_to == EcsVariable) {
@@ -977,7 +977,7 @@ const char* plecs_parse_assign_expr(
             .vars = &state->vars
         });
     if (!ptr) {
-        return NULL;
+        return nullptr;
     }
 
     ecs_modified_id(world, assign_to, assign_id);
@@ -1002,7 +1002,7 @@ const char* plecs_parse_assign_stmt(
         if (!state->last_subject) {
             ecs_parser_error(name, expr, ptr - expr, 
                 "missing entity to assign to");
-            return NULL;
+            return nullptr;
         }
         state->assign_to = state->last_subject;
     }
@@ -1010,7 +1010,7 @@ const char* plecs_parse_assign_stmt(
     if (state->assign_stmt) {
         ecs_parser_error(name, expr, ptr - expr, 
             "invalid assign statement in assign statement");
-        return NULL;
+        return nullptr;
     }
 
     state->assign_stmt = true;
@@ -1043,7 +1043,7 @@ const char* plecs_parse_assign_stmt(
         if (!type) {
             ecs_parser_error(name, expr, ptr - expr, 
                 "missing type for assignment");
-            return NULL;
+            return nullptr;
         }
 
         state->last_assign_id = type;
@@ -1064,18 +1064,18 @@ const char* plecs_parse_assign_with_stmt(
     if (with_frame < 0) {
         ecs_parser_error(name, expr, ptr - expr, 
             "missing type in with value");
-        return NULL;
+        return nullptr;
     }
 
     ecs_id_t id = state->with[with_frame];
     ecs_id_record_t *idr = flecs_id_record_get(world, id);
-    const ecs_type_info_t *ti = idr ? idr->type_info : NULL;
+    const ecs_type_info_t *ti = idr ? idr->type_info : nullptr;
     if (!ti) {
         char *typename = ecs_id_str(world, id);
         ecs_parser_error(name, expr, ptr - expr, 
             "id '%s' in with value is not a type", typename);
         ecs_os_free(typename);
-        return NULL;
+        return nullptr;
     }
 
     plecs_with_value_t *v = &state->with_value_frames[with_frame];
@@ -1087,7 +1087,7 @@ const char* plecs_parse_assign_with_stmt(
         ecs_parser_error(name, expr, ptr - expr, 
             "failed to create value for '%s'", typename);
         ecs_os_free(typename);
-        return NULL;
+        return nullptr;
     }
 
     ptr = ecs_parse_expr(world, ptr, &v->value,
@@ -1099,7 +1099,7 @@ const char* plecs_parse_assign_with_stmt(
             .vars = &state->vars
         });
     if (!ptr) {
-        return NULL;
+        return nullptr;
     }
 
     return ptr;
@@ -1112,8 +1112,8 @@ const char* plecs_parse_assign_with_var(
     const char *ptr,
     plecs_state_t *state)
 {
-    ecs_assert(ptr[0] == '$', ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(state->with_stmt, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ptr[0] == '$', ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(state->with_stmt, ECS_INTERNAL_ERROR, nullptr);
 
     char var_name[ECS_MAX_TOKEN_SIZE];
     const char *tmp = ptr;
@@ -1121,17 +1121,17 @@ const char* plecs_parse_assign_with_var(
     if (!ptr) {
         ecs_parser_error(name, expr, tmp - expr, 
             "unresolved variable '%s'", var_name);
-        return NULL;
+        return nullptr;
     }
 
-    ecs_expr_var_t *var = ecs_vars_lookup(&state->vars, var_name);
+    const ecs_expr_var_t *var = ecs_vars_lookup(&state->vars, var_name);
     if (!var) {
         ecs_parser_error(name, expr, ptr - expr, 
             "unresolved variable '%s'", var_name);
-        return NULL;
+        return nullptr;
     }
 
-    int32_t with_frame = state->with_frame;
+    const int32_t with_frame = state->with_frame;
     state->with[with_frame] = var->value.type;
     state->with_value_frames[with_frame].value = var->value;
     state->with_value_frames[with_frame].owned = false;
@@ -1148,28 +1148,28 @@ const char* plecs_parse_var_as_component(
     const char *ptr,
     plecs_state_t *state)
 {
-    ecs_assert(ptr[0] == '$', ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(!state->var_stmt, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ptr[0] == '$', ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(!state->var_stmt, ECS_INTERNAL_ERROR, nullptr);
     char var_name[ECS_MAX_TOKEN_SIZE];
     const char *tmp = ptr;
     ptr = ecs_parse_token(name, expr, ptr + 1, var_name, 0);
     if (!ptr) {
         ecs_parser_error(name, expr, tmp - expr, 
             "unresolved variable '%s'", var_name);
-        return NULL;
+        return nullptr;
     }
 
     ecs_expr_var_t *var = ecs_vars_lookup(&state->vars, var_name);
     if (!var) {
         ecs_parser_error(name, expr, ptr - expr, 
             "unresolved variable '%s'", var_name);
-        return NULL;
+        return nullptr;
     }
 
     if (!state->assign_to) {
         ecs_parser_error(name, expr, ptr - expr, 
             "missing lvalue for variable assignment '%s'", var_name);
-        return NULL;
+        return nullptr;
     }
 
     /* Use type of variable as component */
@@ -1186,7 +1186,7 @@ const char* plecs_parse_var_as_component(
             "failed to obtain component for type '%s' of variable '%s'",    
                 type_name, var_name);
         ecs_os_free(type_name);
-        return NULL;
+        return nullptr;
     }
 
     if (ecs_value_copy(world, type, dst, var->value.ptr)) {
@@ -1195,7 +1195,7 @@ const char* plecs_parse_var_as_component(
             "failed to copy value for variable '%s' of type '%s'",    
                 var_name, type_name);
         ecs_os_free(type_name);
-        return NULL;
+        return nullptr;
     }
 
     ecs_modified_id(world, assign_to, type);
@@ -1228,7 +1228,7 @@ const char* plecs_parse_using_stmt(
     if (state->isa_stmt || state->assign_stmt) {
         ecs_parser_error(name, expr, ptr - expr, 
             "invalid usage of using keyword");
-        return NULL;
+        return nullptr;
     }
 
     char using_path[ECS_MAX_TOKEN_SIZE];
@@ -1237,14 +1237,14 @@ const char* plecs_parse_using_stmt(
     if (!ptr) {
         ecs_parser_error(name, expr, tmp - expr, 
             "expected identifier for using statement");
-        return NULL;
+        return nullptr;
     }
 
     ecs_size_t len = ecs_os_strlen(using_path);
     if (!len) {
         ecs_parser_error(name, expr, tmp - expr, 
             "missing identifier for using statement");
-        return NULL;
+        return nullptr;
     }
 
     /* Lookahead as * is not matched by parse_token */
@@ -1262,7 +1262,7 @@ const char* plecs_parse_using_stmt(
         if (!scope) {
             ecs_parser_error(name, expr, ptr - expr,
                 "unresolved identifier '%s' in using statement", using_path);
-            return NULL;
+            return nullptr;
         }
 
         /* Add each child of the scope to using stack */
@@ -1279,7 +1279,7 @@ const char* plecs_parse_using_stmt(
         if (!scope) {
             ecs_parser_error(name, expr, ptr - expr,
                 "unresolved identifier '%s' in using statement", using_path);
-            return NULL;
+            return nullptr;
         }
 
         plecs_push_using(scope, state);
@@ -1301,7 +1301,7 @@ const char* plecs_parse_module_stmt(
     if (expr_start != ptr) {
         ecs_parser_error(name, expr, ptr - expr, 
             "module must be first statement of script");
-        return NULL;
+        return nullptr;
     }
 
     char module_path[ECS_MAX_TOKEN_SIZE];
@@ -1310,14 +1310,14 @@ const char* plecs_parse_module_stmt(
     if (!ptr) {
         ecs_parser_error(name, expr, tmp - expr, 
             "expected identifier for module statement");
-        return NULL;
+        return nullptr;
     }
 
     ecs_component_desc_t desc = {0};
     desc.entity = ecs_entity(world, { .name = module_path });
-    ecs_entity_t module = ecs_module_init(world, NULL, &desc);
+    ecs_entity_t module = ecs_module_init(world, nullptr, &desc);
     if (!module) {
-        return NULL;
+        return nullptr;
     }
 
     state->is_module = true;
@@ -1337,13 +1337,13 @@ const char* plecs_parse_with_stmt(
     if (state->isa_stmt) {
         ecs_parser_error(name, expr, ptr - expr, 
             "invalid with after inheritance");
-        return NULL;
+        return nullptr;
     }
 
     if (state->assign_stmt) {
         ecs_parser_error(name, expr, ptr - expr, 
             "invalid with in assign_stmt");
-        return NULL;
+        return nullptr;
     }
 
     /* Add following expressions to with list */
@@ -1361,13 +1361,13 @@ const char* plecs_parse_assembly_stmt(
     if (state->isa_stmt) {
         ecs_parser_error(name, expr, ptr - expr, 
             "invalid with after inheritance");
-        return NULL;
+        return nullptr;
     }
 
     if (state->assign_stmt) {
         ecs_parser_error(name, expr, ptr - expr, 
             "invalid with in assign_stmt");
-        return NULL;
+        return nullptr;
     }
 
     state->assembly_stmt = true;
@@ -1390,14 +1390,14 @@ const char* plecs_parse_var_type(
     if (!ptr) {
         ecs_parser_error(name, expr, tmp - expr, 
             "expected type for prop declaration");
-        return NULL;
+        return nullptr;
     }
 
     ecs_entity_t prop_type = plecs_lookup(world, prop_type_name, state, 0, false);
     if (!prop_type) {
         ecs_parser_error(name, expr, ptr - expr, 
             "unresolved property type '%s'", prop_type_name);
-        return NULL;
+        return nullptr;
     }
 
     *type_out = prop_type;
@@ -1415,7 +1415,7 @@ const char* plecs_parse_const_stmt(
 {
     ptr = ecs_parse_token(name, expr, ptr + 5, state->var_name, 0);
     if (!ptr) {
-        return NULL;
+        return nullptr;
     }
 
     ptr = ecs_parse_ws(ptr);
@@ -1424,7 +1424,7 @@ const char* plecs_parse_const_stmt(
         ptr = plecs_parse_var_type(
             world, name, expr, ptr, state, &state->last_assign_id);
         if (!ptr) {
-            return NULL;
+            return nullptr;
         }
 
         ptr = ecs_parse_ws(ptr);
@@ -1433,7 +1433,7 @@ const char* plecs_parse_const_stmt(
     if (ptr[0] != '=') {
         ecs_parser_error(name, expr, ptr - expr, 
             "expected '=' after const declaration");
-        return NULL;
+        return nullptr;
     }
 
     state->var_stmt = true;
@@ -1451,7 +1451,7 @@ const char* plecs_parse_prop_stmt(
     char prop_name[ECS_MAX_TOKEN_SIZE];
     ptr = ecs_parse_token(name, expr, ptr + 5, prop_name, 0);
     if (!ptr) {
-        return NULL;
+        return nullptr;
     }
 
     ptr = ecs_parse_ws(ptr);
@@ -1459,20 +1459,20 @@ const char* plecs_parse_prop_stmt(
     if (ptr[0] != ':') {
         ecs_parser_error(name, expr, ptr - expr, 
             "expected ':' after prop declaration");
-        return NULL;
+        return nullptr;
     }
 
     ecs_entity_t prop_type;
     ptr = plecs_parse_var_type(world, name, expr, ptr, state, &prop_type);
     if (!ptr) {
-        return NULL;
+        return nullptr;
     }
 
     ecs_entity_t assembly = state->assembly;
     if (!assembly) {
         ecs_parser_error(name, expr, ptr - expr, 
             "unexpected prop '%s' outside of assembly", prop_name);
-        return NULL;
+        return nullptr;
     }
 
     if (!state->assembly_instance) {
@@ -1482,7 +1482,7 @@ const char* plecs_parse_prop_stmt(
         });
 
         if (!prop_member) {
-            return NULL;
+            return nullptr;
         }
 
         ecs_set(world, prop_member, EcsMember, {
@@ -1493,7 +1493,7 @@ const char* plecs_parse_prop_stmt(
     if (ptr[0] != '=') {
         ecs_parser_error(name, expr, ptr - expr, 
             "expected '=' after prop type");
-        return NULL;
+        return nullptr;
     }
 
     ecs_os_strcpy(state->var_name, prop_name);
@@ -1517,7 +1517,7 @@ const char* plecs_parse_scope_open(
     if (state->assign_stmt) {
         ecs_parser_error(name, expr, ptr - expr, 
             "invalid scope in assign_stmt");
-        return NULL;
+        return nullptr;
     }
 
     state->sp ++;
@@ -1560,7 +1560,7 @@ const char* plecs_parse_scope_open(
             if (state->assembly) {
                 ecs_parser_error(name, expr, ptr - expr, 
                     "invalid nested assembly");
-                return NULL;
+                return nullptr;
             }
             state->assembly = scope;
             state->assembly_stmt = false;
@@ -1606,7 +1606,7 @@ void plecs_free_with_frame(
         if (v->value.type) {
             ecs_value_free(world, v->value.type, v->value.ptr);
             v->value.type = 0;
-            v->value.ptr = NULL;
+            v->value.ptr = nullptr;
             v->owned = false;
         }
     }
@@ -1635,13 +1635,13 @@ const char* plecs_parse_scope_close(
     if (state->isa_stmt) {
         ecs_parser_error(name, expr, ptr - expr, 
             "invalid '}' after inheritance statement");
-        return NULL;
+        return nullptr;
     }
 
     if (state->assign_stmt) {
         ecs_parser_error(name, expr, ptr - expr, 
             "unfinished assignment before }");
-        return NULL;
+        return nullptr;
     }
 
     ecs_entity_t cur = state->scope[state->sp], assembly = state->assembly;
@@ -1657,13 +1657,13 @@ const char* plecs_parse_scope_close(
             ecs_os_memcpy(script, state->assembly_start, assembly_len);
             script[assembly_len] = '\0';
             state->assembly = 0;
-            state->assembly_start = NULL;
+            state->assembly_start = nullptr;
             if (flecs_assembly_create(world, name, expr, ptr, assembly, script, state)) {
-                return NULL;
+                return nullptr;
             }
         } else {
             ecs_parser_error(name, expr, ptr - expr, "empty assembly");
-            return NULL;
+            return nullptr;
         }
     }
 
@@ -1673,7 +1673,7 @@ const char* plecs_parse_scope_close(
 
     if (state->sp < 0) {
         ecs_parser_error(name, expr, ptr - expr, "invalid } without a {");
-        return NULL;
+        return nullptr;
     }
 
     ecs_id_t id = state->scope[state->sp];
@@ -1711,9 +1711,9 @@ const char *plecs_parse_plecs_term(
         decl_id = state->last_predicate;
     }
 
-    ptr = ecs_parse_term(world, name, expr, ptr, &term, NULL);
+    ptr = ecs_parse_term(world, name, expr, ptr, &term, nullptr);
     if (!ptr) {
-        return NULL;
+        return nullptr;
     }
 
     if (flecs_isident(ptr[0])) {
@@ -1722,12 +1722,12 @@ const char *plecs_parse_plecs_term(
 
     if (!ecs_term_is_initialized(&term)) {
         ecs_parser_error(name, expr, ptr - expr, "expected identifier");
-        return NULL; /* No term found */
+        return nullptr; /* No term found */
     }
 
     if (plecs_create_term(world, &term, name, expr, (ptr - expr), state)) {
         ecs_term_fini(&term);
-        return NULL; /* Failed to create term */
+        return nullptr; /* Failed to create term */
     }
 
     if (decl_id && state->last_subject) {
@@ -1752,7 +1752,7 @@ const char* plecs_parse_annotation(
         if(state->annot_count >= STACK_MAX_SIZE) {
             ecs_parser_error(name, expr, ptr - expr, 
                 "max number of annotations reached");
-            return NULL;
+            return nullptr;
         }
 
         char ch;
@@ -1863,7 +1863,7 @@ term_expr:
         if (state->with_stmt) {
             ptr = plecs_parse_assign_with_var(name, expr, ptr, state);
             if (!ptr) {
-                return NULL;
+                return nullptr;
             }
         } else if (!state->var_stmt) {
             goto assign_var_as_component;
@@ -1943,7 +1943,7 @@ assign_stmt:
     goto term_expr;
 
 assign_expr:
-    ptr = plecs_parse_assign_expr(world, name, expr, ptr, state, NULL);
+    ptr = plecs_parse_assign_expr(world, name, expr, ptr, state, nullptr);
     if (!ptr) goto error;
 
     ptr = plecs_parse_fluff(ptr);
@@ -1954,7 +1954,7 @@ assign_expr:
         if (state->var_stmt) {
             ecs_expr_var_t *var = ecs_vars_lookup(&state->vars, state->var_name);
             if (var && var->value.type == ecs_id(ecs_entity_t)) {
-                ecs_assert(var->value.ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+                ecs_assert(var->value.ptr != nullptr, ECS_INTERNAL_ERROR, nullptr);
                 /* The code contained an entity{...} variable assignment, use
                  * the assigned entity id as type for parsing the expression */
                 state->last_assign_id = *(ecs_entity_t*)var->value.ptr;
@@ -1994,7 +1994,7 @@ scope_close:
 done:
     return ptr;
 error:
-    return NULL;
+    return nullptr;
 }
 
 static
@@ -2008,7 +2008,7 @@ int flecs_plecs_parse(
 {
     const char *ptr = expr;
     ecs_term_t term = {0};
-    plecs_state_t state = {0};
+    plecs_state_t state = {nullptr};
 
     if (!expr) {
         return 0;
@@ -2104,7 +2104,7 @@ int ecs_plecs_from_str(
     const char *name,
     const char *expr)
 {
-    return flecs_plecs_parse(world, name, expr, NULL, 0, 0);
+    return flecs_plecs_parse(world, name, expr, nullptr, 0, 0);
 }
 
 static
@@ -2112,7 +2112,7 @@ char* flecs_load_from_file(
     const char *filename)
 {
     FILE* file;
-    char* content = NULL;
+    char* content = nullptr;
     int32_t bytes;
     size_t size;
 
@@ -2137,7 +2137,7 @@ char* flecs_load_from_file(
     if (!(size = fread(content, 1, size, file)) && bytes) {
         ecs_err("%s: read zero bytes instead of %d", filename, size);
         ecs_os_free(content);
-        content = NULL;
+        content = nullptr;
         goto error;
     } else {
         content[size] = '\0';
@@ -2148,7 +2148,7 @@ char* flecs_load_from_file(
     return content;
 error:
     ecs_os_free(content);
-    return NULL;
+    return nullptr;
 }
 
 int ecs_plecs_from_file(
@@ -2192,17 +2192,17 @@ int ecs_script_update(
     const char *script,
     ecs_vars_t *vars)
 {
-    ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(script != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(world != nullptr, ECS_INTERNAL_ERROR, nullptr);
+    ecs_assert(script != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
     int result = 0;
     bool is_defer = ecs_is_deferred(world);
     ecs_suspend_readonly_state_t srs;
-    ecs_world_t *real_world = NULL;
+    ecs_world_t *real_world = nullptr;
     if (is_defer) {
-        ecs_assert(ecs_poly_is(world, ecs_world_t), ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(ecs_poly_is(world, ecs_world_t), ECS_INTERNAL_ERROR, nullptr);
         real_world = flecs_suspend_readonly(world, &srs);
-        ecs_assert(real_world != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(real_world != nullptr, ECS_INTERNAL_ERROR, nullptr);
     }
 
     ecs_script_clear(world, e, instance);
@@ -2231,15 +2231,15 @@ ecs_entity_t ecs_script_init(
     ecs_world_t *world,
     const ecs_script_desc_t *desc)
 {
-    const char *script = NULL;
+    const char *script = nullptr;
     ecs_entity_t e = desc->entity;
     
-    ecs_check(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_check(desc != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_check(world != nullptr, ECS_INTERNAL_ERROR, nullptr);
+    ecs_check(desc != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
     if (!e) {
         if (desc->filename) {
-            e = ecs_new_from_path_w_sep(world, 0, desc->filename, "/", NULL);
+            e = ecs_new_from_path_w_sep(world, 0, desc->filename, "/", nullptr);
         } else {
             e = ecs_new_id(world);
         }
@@ -2253,7 +2253,7 @@ ecs_entity_t ecs_script_init(
         }
     }
 
-    if (ecs_script_update(world, e, 0, script, NULL)) {
+    if (ecs_script_update(world, e, 0, script, nullptr)) {
         goto error;
     }
 

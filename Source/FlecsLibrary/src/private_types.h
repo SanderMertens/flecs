@@ -69,7 +69,7 @@ extern ecs_mixins_t ecs_trigger_t_mixins;
 extern ecs_mixins_t ecs_observer_t_mixins;
 
 /* Types that have no mixins */
-#define ecs_table_t_mixins (&(ecs_mixins_t){ NULL })
+#define ecs_table_t_mixins (&(ecs_mixins_t){ nullptr })
 
 /* Scope for flecs internals, like observers used for builtin features */
 extern const ecs_entity_t EcsFlecsInternals;

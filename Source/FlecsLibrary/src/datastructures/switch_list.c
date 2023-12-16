@@ -33,13 +33,13 @@ void flecs_switch_verify_nodes(
 
     int32_t prev = -1, elem = hdr->element, count = 0;
     while (elem != -1) {
-        ecs_assert(prev == nodes[elem].prev, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(prev == nodes[elem].prev, ECS_INTERNAL_ERROR, nullptr);
         prev = elem;
         elem = nodes[elem].next;
         count ++;
     }
 
-    ecs_assert(count == hdr->count, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(count == hdr->count, ECS_INTERNAL_ERROR, nullptr);
 }
 #else
 #define flecs_switch_verify_nodes(hdr, nodes)
@@ -51,7 +51,7 @@ ecs_switch_header_t* flecs_switch_get_header(
     uint64_t value)
 {
     if (value == 0) {
-        return NULL;
+        return nullptr;
     }
     return (ecs_switch_header_t*)ecs_map_get(&sw->hdrs, value);
 }
@@ -78,17 +78,17 @@ void flecs_switch_remove_node(
     ecs_switch_node_t *node,
     int32_t element)
 {
-    ecs_assert(&nodes[element] == node, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(&nodes[element] == node, ECS_INTERNAL_ERROR, nullptr);
 
     /* Update previous node/header */
     if (hdr->element == element) {
-        ecs_assert(node->prev == -1, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(node->prev == -1, ECS_INVALID_PARAMETER, nullptr);
         /* If this is the first node, update the header */
         hdr->element = node->next;
     } else {
         /* If this is not the first node, update the previous node to the 
          * removed node's next ptr */
-        ecs_assert(node->prev != -1, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(node->prev != -1, ECS_INVALID_PARAMETER, nullptr);
         ecs_switch_node_t *prev_node = &nodes[node->prev];
         prev_node->next = node->next;
     }
@@ -96,7 +96,7 @@ void flecs_switch_remove_node(
     /* Update next node */
     int32_t next = node->next;
     if (next != -1) {
-        ecs_assert(next >= 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(next >= 0, ECS_INVALID_PARAMETER, nullptr);
         /* If this is not the last node, update the next node to point to the
          * removed node's prev ptr */
         ecs_switch_node_t *next_node = &nodes[next];
@@ -105,7 +105,7 @@ void flecs_switch_remove_node(
 
     /* Decrease count of current header */
     hdr->count --;
-    ecs_assert(hdr->count >= 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(hdr->count >= 0, ECS_INTERNAL_ERROR, nullptr);
 }
 
 void flecs_switch_init(
@@ -184,7 +184,7 @@ int32_t flecs_switch_count(
     ecs_switch_t *sw)
 {
     ecs_assert(ecs_vec_count(&sw->values) == ecs_vec_count(&sw->nodes),
-        ECS_INTERNAL_ERROR, NULL);
+        ECS_INTERNAL_ERROR, nullptr);
     return ecs_vec_count(&sw->values);
 }
 
@@ -213,10 +213,10 @@ void flecs_switch_set(
     int32_t element,
     uint64_t value)
 {
-    ecs_assert(sw != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(element < ecs_vec_count(&sw->nodes), ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(element < ecs_vec_count(&sw->values), ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(element >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(sw != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_assert(element < ecs_vec_count(&sw->nodes), ECS_INVALID_PARAMETER, nullptr);
+    ecs_assert(element < ecs_vec_count(&sw->values), ECS_INVALID_PARAMETER, nullptr);
+    ecs_assert(element >= 0, ECS_INVALID_PARAMETER, nullptr);
 
     uint64_t *values = ecs_vec_first(&sw->values);
     uint64_t cur_value = values[element];
@@ -235,9 +235,9 @@ void flecs_switch_set(
     flecs_switch_verify_nodes(cur_hdr, nodes);
     flecs_switch_verify_nodes(dst_hdr, nodes);
 
-    /* If value is not 0, and dst_hdr is NULL, then this is not a valid value
+    /* If value is not 0, and dst_hdr is nullptr, then this is not a valid value
      * for this switch */
-    ecs_assert(dst_hdr != NULL || !value, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(dst_hdr != nullptr || !value, ECS_INVALID_PARAMETER, nullptr);
 
     if (cur_hdr) {
         flecs_switch_remove_node(cur_hdr, nodes, node, element);
@@ -253,7 +253,7 @@ void flecs_switch_set(
         /* Also update the dst header */
         int32_t first = dst_hdr->element;
         if (first != -1) {
-            ecs_assert(first >= 0, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(first >= 0, ECS_INTERNAL_ERROR, nullptr);
             ecs_switch_node_t *first_node = &nodes[first];
             first_node->prev = element;
         }
@@ -267,9 +267,9 @@ void flecs_switch_remove(
     ecs_switch_t *sw,
     int32_t elem)
 {
-    ecs_assert(sw != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(elem < ecs_vec_count(&sw->nodes), ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(elem >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(sw != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_assert(elem < ecs_vec_count(&sw->nodes), ECS_INVALID_PARAMETER, nullptr);
+    ecs_assert(elem >= 0, ECS_INVALID_PARAMETER, nullptr);
 
     uint64_t *values = ecs_vec_first(&sw->values);
     uint64_t value = values[elem];
@@ -279,7 +279,7 @@ void flecs_switch_remove(
     /* If node is currently assigned to a case, remove it from the list */
     if (value != 0) {
         ecs_switch_header_t *hdr = flecs_switch_get_header(sw, value);
-        ecs_assert(hdr != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(hdr != nullptr, ECS_INTERNAL_ERROR, nullptr);
 
         flecs_switch_verify_nodes(hdr, nodes);
         flecs_switch_remove_node(hdr, nodes, node, elem);
@@ -301,7 +301,7 @@ void flecs_switch_remove(
             ecs_switch_header_t *hdr = flecs_switch_get_header(sw, values[last_elem]);
             if (hdr && hdr->element != -1) {
                 ecs_assert(hdr->element == last_elem, 
-                    ECS_INTERNAL_ERROR, NULL);
+                    ECS_INTERNAL_ERROR, nullptr);
                 hdr->element = elem;
             }
         }
@@ -316,10 +316,10 @@ uint64_t flecs_switch_get(
     const ecs_switch_t *sw,
     int32_t element)
 {
-    ecs_assert(sw != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(element < ecs_vec_count(&sw->nodes), ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(element < ecs_vec_count(&sw->values), ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(element >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(sw != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_assert(element < ecs_vec_count(&sw->nodes), ECS_INVALID_PARAMETER, nullptr);
+    ecs_assert(element < ecs_vec_count(&sw->values), ECS_INVALID_PARAMETER, nullptr);
+    ecs_assert(element >= 0, ECS_INVALID_PARAMETER, nullptr);
 
     uint64_t *values = ecs_vec_first(&sw->values);
     return values[element];
@@ -359,7 +359,7 @@ int32_t flecs_switch_first(
     const ecs_switch_t *sw,
     uint64_t value)
 {
-    ecs_assert(sw != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(sw != nullptr, ECS_INVALID_PARAMETER, nullptr);
     
     ecs_switch_header_t *hdr = flecs_switch_get_header(sw, value);
     if (!hdr) {
@@ -373,9 +373,9 @@ int32_t flecs_switch_next(
     const ecs_switch_t *sw,
     int32_t element)
 {
-    ecs_assert(sw != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(element < ecs_vec_count(&sw->nodes), ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(element >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(sw != nullptr, ECS_INVALID_PARAMETER, nullptr);
+    ecs_assert(element < ecs_vec_count(&sw->nodes), ECS_INVALID_PARAMETER, nullptr);
+    ecs_assert(element >= 0, ECS_INVALID_PARAMETER, nullptr);
 
     ecs_switch_node_t *nodes = ecs_vec_first(&sw->nodes);
 

@@ -13,9 +13,9 @@ static ECS_COPY(EcsDocDescription, dst, src, {
 })
 
 static ECS_MOVE(EcsDocDescription, dst, src, {
-    ecs_os_free((char*)dst->value);
+    ecs_os_free(dst->value);
     dst->value = src->value;
-    src->value = NULL;
+    src->value = nullptr;
 })
 
 static ECS_DTOR(EcsDocDescription, ptr, { 
@@ -83,9 +83,8 @@ const char* ecs_doc_get_name(
     const ecs_world_t *world,
     ecs_entity_t entity)
 {
-    const EcsDocDescription *ptr = ecs_get_pair(
-        world, entity, EcsDocDescription, EcsName);
-    if (ptr) {
+    if (const EcsDocDescription *ptr = ecs_get_pair(
+        world, entity, EcsDocDescription, EcsName)) {
         return ptr->value;
     } else {
         return ecs_get_name(world, entity);
@@ -101,7 +100,7 @@ const char* ecs_doc_get_brief(
     if (ptr) {
         return ptr->value;
     } else {
-        return NULL;
+        return nullptr;
     }
 }
 
@@ -114,7 +113,7 @@ const char* ecs_doc_get_detail(
     if (ptr) {
         return ptr->value;
     } else {
-        return NULL;
+        return nullptr;
     }
 }
 
@@ -127,7 +126,7 @@ const char* ecs_doc_get_link(
     if (ptr) {
         return ptr->value;
     } else {
-        return NULL;
+        return nullptr;
     }
 }
 
@@ -140,7 +139,7 @@ const char* ecs_doc_get_color(
     if (ptr) {
         return ptr->value;
     } else {
-        return NULL;
+        return nullptr;
     }
 }
 

@@ -31,7 +31,7 @@ ecs_os_thread_t win_thread_new(
     thread->arg= arg;
     thread->callback = callback;
     thread->thread = CreateThread(
-        NULL, 0, (LPTHREAD_START_ROUTINE)flecs_win_thread, thread, 0, NULL);
+        nullptr, 0, (LPTHREAD_START_ROUTINE)flecs_win_thread, thread, 0, nullptr);
     return (ecs_os_thread_t)(uintptr_t)thread;
 }
 
@@ -45,7 +45,7 @@ void* win_thread_join(
         ecs_err("win_thread_join: WaitForSingleObject failed");
     }
     ecs_os_free(thread);
-    return NULL;
+    return nullptr;
 }
 
 static
@@ -170,21 +170,21 @@ void win_time_setup(void) {
     LARGE_INTEGER freq;
     QueryPerformanceFrequency(&freq);
     QueryPerformanceCounter(&win_time_start);
-    win_time_freq = (double)freq.QuadPart / 1000000000.0;
+    win_time_freq = static_cast<double>(freq.QuadPart) / 1000000000.0;
 }
 
 static
 void win_sleep(
-    int32_t sec, 
-    int32_t nanosec) 
+    int32_t sec,
+    const int32_t nanosec) 
 {
     HANDLE timer;
     LARGE_INTEGER ft;
 
-    ft.QuadPart = -((int64_t)sec * 10000000 + (int64_t)nanosec / 100);
+    ft.QuadPart = -(static_cast<int64_t>(sec) * 10000000 + static_cast<int64_t>(nanosec) / 100);
 
-    timer = CreateWaitableTimer(NULL, TRUE, NULL);
-    SetWaitableTimer(timer, &ft, 0, NULL, NULL, 0);
+    timer = CreateWaitableTimer(nullptr, TRUE, nullptr);
+    SetWaitableTimer(timer, &ft, 0, nullptr, nullptr, 0);
     WaitForSingleObject(timer, INFINITE);
     CloseHandle(timer);
 }
