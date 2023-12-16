@@ -10,7 +10,13 @@ public class FlecsLibrary : ModuleRules
         PublicIncludePaths.AddRange(
             new string[] {
                 ModuleDirectory,
-                Path.Join(ModuleDirectory, "include")
+                ModuleDirectory + "/include",
+            }
+        );
+        
+        PrivateIncludePaths.AddRange(
+            new string[] {
+                ModuleDirectory + "/src",
             }
         );
 
