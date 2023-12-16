@@ -40,10 +40,14 @@ typedef enum {
     EcsRuleAnd,            /* And operator: find or match id against variable source */
     EcsRuleAndId,          /* And operator for fixed id (no wildcards/variables) */
     EcsRuleAndAny,         /* And operator with support for matching Any src/id */
-    EcsRuleAndExclusive,   /* And operator for exclusive pairs (* with at most one match) */
+    EcsRuleTriv,           /* Trivial search */
+    EcsRuleTrivData,       /* Trivial search with setting data fields */
+    EcsRuleTrivWildcard,   /* Trivial search with (exclusive) wildcard ids */
     EcsRuleSelectAny,      /* Dedicated instruction for _ queries where the src is unknown */
-    EcsRuleUp,             /* up traversal */
-    EcsRuleSelfUp,         /* self|up traversal */
+    EcsRuleUp,             /* Up traversal */
+    EcsRuleUpId,           /* Up traversal for fixed id (like AndId) */
+    EcsRuleSelfUp,         /* Self|up traversal */
+    EcsRuleSelfUpId,       /* Self|up traversal for fixed id (like AndId) */
     EcsRuleWith,           /* Match id against fixed or variable source */
     EcsRuleTrav,           /* Support for transitive/reflexive queries */
     EcsRuleIdsRight,       /* Find ids in use that match (R, *) wildcard */
@@ -54,8 +58,8 @@ typedef enum {
     EcsRuleOr,             /* Or operator */
     EcsRuleOptional,       /* Optional operator */
     EcsRuleIf,             /* Conditional execution */
-    EcsRuleEnd,            /* Used to denote end of EcsRuleOr block */
     EcsRuleNot,            /* Sets iterator state after term was not matched */
+    EcsRuleEnd,            /* End of control flow block */
     EcsRulePredEq,         /* Test if variable is equal to, or assign to if not set */
     EcsRulePredNeq,        /* Test if variable is not equal to */
     EcsRulePredEqName,     /* Same as EcsRulePredEq but with matching by name */
@@ -70,6 +74,8 @@ typedef enum {
     EcsRuleSetId,          /* Set id if not set */
     EcsRuleContain,        /* Test if table contains entity */
     EcsRulePairEq,         /* Test if both elements of pair are the same */
+    EcsRulePopulate,       /* Populate any data fields */
+    EcsRulePopulateSelf,   /* Populate only self (owned) data fields */
     EcsRuleYield,          /* Yield result back to application */
     EcsRuleNothing         /* Must be last */
 } ecs_rule_op_kind_t;
@@ -283,8 +289,8 @@ struct ecs_rule_t {
     ecs_hashmap_t evar_index;     /* Name index for entity variables */
     ecs_rule_var_cache_t vars_cache; /* For trivial rules with only This variables */
     char **var_names;             /* Array with variable names for iterator */
+    
     ecs_var_id_t *src_vars;       /* Array with ids to source variables for fields */
-
     ecs_rule_op_t *ops;           /* Operations */
     int32_t op_count;             /* Number of operations */
 
@@ -389,25 +395,39 @@ const char* flecs_rule_op_str(
 /* Iterator for trivial queries. */
 bool flecs_rule_trivial_search(
     const ecs_rule_t *rule,
-    ecs_rule_run_ctx_t *ctx,
-    bool first);
+    const ecs_rule_run_ctx_t *ctx,
+    ecs_rule_trivial_ctx_t *op_ctx,
+    bool first,
+    int32_t until);
 
 /* Iterator for trivial queries. */
 bool flecs_rule_trivial_search_nodata(
     const ecs_rule_t *rule,
-    ecs_rule_run_ctx_t *ctx,
-    bool first);
+    const ecs_rule_run_ctx_t *ctx,
+    ecs_rule_trivial_ctx_t *op_ctx,
+    bool first,
+    int32_t until);
 
 /* Iterator for trivial queries with wildcard matching. */
 bool flecs_rule_trivial_search_w_wildcards(
     const ecs_rule_t *rule,
-    ecs_rule_run_ctx_t *ctx,
-    bool first);
+    const ecs_rule_run_ctx_t *ctx,
+    ecs_rule_trivial_ctx_t *op_ctx,
+    bool first,
+    int32_t until);
 
 /* Trivial test for constrained $this. */
 bool flecs_rule_trivial_test(
     const ecs_rule_t *rule,
-    ecs_rule_run_ctx_t *ctx,
-    bool first);
+    const ecs_rule_run_ctx_t *ctx,
+    bool first,
+    int32_t term_count);
+
+/* Trivial test for constrained $this with wildcard matching. */
+bool flecs_rule_trivial_test_w_wildcards(
+    const ecs_rule_t *rule,
+    const ecs_rule_run_ctx_t *ctx,
+    bool first,
+    int32_t term_count);
 
 #endif

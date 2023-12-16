@@ -23,12 +23,16 @@ const char* flecs_rule_op_str(
 {
     switch(kind) {
     case EcsRuleAnd:           return "and     ";
-    case EcsRuleAndId:         return "and_id  ";
-    case EcsRuleAndAny:        return "and_any ";
-    case EcsRuleAndExclusive:  return "and_ex  ";
+    case EcsRuleAndId:         return "andid   ";
+    case EcsRuleAndAny:        return "andany  ";
+    case EcsRuleTriv:          return "triv    ";
+    case EcsRuleTrivData:      return "trivpop ";
+    case EcsRuleTrivWildcard:  return "trivwc  ";
     case EcsRuleSelectAny:     return "any     ";
     case EcsRuleUp:            return "up      ";
+    case EcsRuleUpId:          return "upid    ";
     case EcsRuleSelfUp:        return "selfup  ";
+    case EcsRuleSelfUpId:      return "selfupid";
     case EcsRuleWith:          return "with    ";
     case EcsRuleTrav:          return "trav    ";
     case EcsRuleIdsRight:      return "idsr    ";
@@ -55,6 +59,8 @@ const char* flecs_rule_op_str(
     case EcsRuleSetId:         return "setid   ";
     case EcsRuleContain:       return "contain ";
     case EcsRulePairEq:        return "pair_eq ";
+    case EcsRulePopulate:      return "pop     ";
+    case EcsRulePopulateSelf:  return "popself ";
     case EcsRuleYield:         return "yield   ";
     case EcsRuleNothing:       return "nothing ";
     default:                   return "!invalid";

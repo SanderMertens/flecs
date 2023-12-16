@@ -5452,6 +5452,72 @@ void RulesBasic_match_empty_tables_w_no_empty_tables(void) {
     ecs_fini(world);
 }
 
+void RulesBasic_match_empty_tables_trivial(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_entity_t e3 = ecs_new(world, Position);
+    ecs_entity_t e4 = ecs_new(world, Position);
+
+    ecs_add(world, e2, TagA);
+    ecs_add(world, e3, TagB);
+    ecs_add(world, e4, TagC);
+
+    ecs_table_t *t1 = ecs_get_table(world, e1);
+    ecs_table_t *t2 = ecs_get_table(world, e2);
+    ecs_table_t *t3 = ecs_get_table(world, e3);
+    ecs_table_t *t4 = ecs_get_table(world, e4);
+
+    ecs_delete(world, e1);
+    ecs_delete(world, e2);
+
+    ecs_rule_t *f = ecs_rule(world, {
+        .terms = {{ ecs_id(Position), .src.flags = EcsSelf }},
+        .flags = EcsFilterMatchEmptyTables
+    });
+
+    ecs_iter_t it = ecs_rule_iter(world, f);
+    
+    test_bool( ecs_rule_next(&it), true);
+    test_assert(it.table == t1);
+    test_int(it.count, 0);
+    test_uint(ecs_field_id(&it, 1), ecs_id(Position));
+    test_uint(ecs_field_size(&it, 1), sizeof(Position));
+
+    test_bool( ecs_rule_next(&it), true);
+    test_assert(it.table == t2);
+    test_int(it.count, 0);
+    test_uint(ecs_field_id(&it, 1), ecs_id(Position));
+    test_uint(ecs_field_size(&it, 1), sizeof(Position));
+
+    test_bool( ecs_rule_next(&it), true);
+    test_assert(it.table == t3);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e3);
+    test_uint(ecs_field_id(&it, 1), ecs_id(Position));
+    test_uint(ecs_field_size(&it, 1), sizeof(Position));
+
+    test_bool( ecs_rule_next(&it), true);
+    test_assert(it.table == t4);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e4);
+    test_uint(ecs_field_id(&it, 1), ecs_id(Position));
+    test_uint(ecs_field_size(&it, 1), sizeof(Position));
+
+    test_bool( ecs_rule_next(&it), false);
+
+    ecs_rule_fini(f);
+
+    ecs_fini(world);
+}
+
 void RulesBasic_oneof_wildcard(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -5756,6 +5822,8 @@ void RulesBasic_not_instanced_w_singleton(void) {
         test_int(v->y, 2);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_src(&it, 2));
     }
 
     test_assert(ecs_rule_next(&it));
@@ -5768,6 +5836,8 @@ void RulesBasic_not_instanced_w_singleton(void) {
         test_int(v->y, 2);
         test_int(p[0].x, 20);
         test_int(p[0].y, 30);
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_src(&it, 2));
     }
 
     test_assert(ecs_rule_next(&it));
@@ -5780,6 +5850,8 @@ void RulesBasic_not_instanced_w_singleton(void) {
         test_int(v->y, 2);
         test_int(p[0].x, 30);
         test_int(p[0].y, 40);
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_src(&it, 2));
     }
 
     test_assert(ecs_rule_next(&it));
@@ -5792,6 +5864,8 @@ void RulesBasic_not_instanced_w_singleton(void) {
         test_int(p[0].y, 50);
         test_int(v->x, 1);
         test_int(v->y, 2);
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_src(&it, 2));
     }
 
     test_assert(ecs_rule_next(&it));
@@ -5804,6 +5878,8 @@ void RulesBasic_not_instanced_w_singleton(void) {
         test_int(p[0].y, 60);
         test_int(v->x, 1);
         test_int(v->y, 2);
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_src(&it, 2));
     }
 
     test_assert(!ecs_rule_next(&it));
@@ -6225,11 +6301,11 @@ void RulesBasic_reordered_plan_1(void) {
 
     const char *expect = 
     HEAD " 0. [-1,  1]  setids      "
-    LINE " 1. [ 0,  2]  selfup      $[this]           (Foo)"
+    LINE " 1. [ 0,  2]  selfupid    $[this]           (Foo)"
     LINE " 2. [ 1,  3]  and         $[this]           (ChildOf, $p)"
     LINE " 3. [ 2,  4]  and         $p                (ChildOf, $gp)"
     LINE " 4. [ 3,  5]  and         $gp               (ChildOf, $ggp)"
-    LINE " 5. [ 4,  6]  selfup      $ggp              (Bar)"
+    LINE " 5. [ 4,  6]  selfupid    $ggp              (Bar)"
     LINE " 6. [ 5,  7]  setvars     "
     LINE " 7. [ 6,  8]  yield       "
     LINE "";
@@ -6257,14 +6333,14 @@ void RulesBasic_reordered_plan_2(void) {
 
     const char *expect = 
     HEAD " 0. [-1,  1]  setids      "
-    LINE " 1. [ 0,  2]  selfup      $[ggp]            (Foo)"
+    LINE " 1. [ 0,  2]  selfupid    $[ggp]            (Foo)"
     LINE " 2. [ 1,  3]  each        $ggp              ($[ggp])"
     LINE " 3. [ 2,  4]  and         $[gp]             (ChildOf, $ggp)"
     LINE " 4. [ 3,  5]  each        $gp               ($[gp])"
     LINE " 5. [ 4,  6]  and         $[p]              (ChildOf, $gp)"
     LINE " 6. [ 5,  7]  each        $p                ($[p])"
     LINE " 7. [ 6,  8]  and         $[this]           (ChildOf, $p)"
-    LINE " 8. [ 7,  9]  selfup      $[this]           (Bar)"
+    LINE " 8. [ 7,  9]  selfupid    $[this]           (Bar)"
     LINE " 9. [ 8, 10]  setvars     "
     LINE "10. [ 9, 11]  yield       "
     LINE "";
@@ -6277,3 +6353,346 @@ void RulesBasic_reordered_plan_2(void) {
 
     ecs_fini(world);
 }
+
+void RulesBasic_1_trivial_plan(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Foo(self)"
+    });
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  setids      " 
+    LINE " 1. [ 0,  2]  andid       $[this]           (Foo)"
+    LINE " 2. [ 1,  3]  yield       "
+    LINE "";
+    char *plan = ecs_rule_str(r);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_2_trivial_plan(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Foo(self), Bar(self)"
+    });
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  setids      " 
+    LINE " 1. [ 0,  2]  triv        "
+    LINE " 2. [ 1,  3]  yield       "
+    LINE "";
+    char *plan = ecs_rule_str(r);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_1_trivial_plan_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Position(self)"
+    });
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  setids      " 
+    LINE " 1. [ 0,  2]  andid       $[this]           (Position)"
+    LINE " 2. [ 1,  3]  popself     "
+    LINE " 3. [ 2,  4]  yield       "
+    LINE "";
+    char *plan = ecs_rule_str(r);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_2_trivial_plan_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Position(self), Velocity(self)"
+    });
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  setids      " 
+    LINE " 1. [ 0,  2]  trivpop     "
+    LINE " 2. [ 1,  3]  yield       "
+    LINE "";
+    char *plan = ecs_rule_str(r);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_3_trivial_plan_w_pair(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_new_entity(world, "p");
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Foo(self), Bar(self), ChildOf(self, p)"
+    });
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  setids      " 
+    LINE " 1. [ 0,  2]  triv        "
+    LINE " 2. [ 1,  3]  yield       "
+    LINE "";
+    char *plan = ecs_rule_str(r);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_3_trivial_plan_w_wildcard(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_new_entity(world, "p");
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Foo(self), Bar(self), ChildOf(self, *)"
+    });
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  setids      " 
+    LINE " 1. [ 0,  2]  trivwc      "
+    LINE " 2. [ 1,  3]  yield       "
+    LINE "";
+    char *plan = ecs_rule_str(r);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_3_trivial_plan_w_any(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_new_entity(world, "p");
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Foo(self), Bar(self), ChildOf(self, _)"
+    });
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  setids      " 
+    LINE " 1. [ 0,  2]  triv        "
+    LINE " 2. [ 1,  3]  andany      $[this]           (ChildOf, $_'1)"
+    LINE " 3. [ 2,  4]  yield       "
+    LINE "";
+    char *plan = ecs_rule_str(r);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_3_trivial_plan_w_pair_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_new_entity(world, "p");
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Position(self), Velocity(self), ChildOf(self, p)"
+    });
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  setids      " 
+    LINE " 1. [ 0,  2]  trivpop     "
+    LINE " 2. [ 1,  3]  yield       "
+    LINE "";
+    char *plan = ecs_rule_str(r);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_3_trivial_plan_w_wildcard_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_new_entity(world, "p");
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Position(self), Velocity(self), ChildOf(self, *)"
+    });
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  setids      " 
+    LINE " 1. [ 0,  2]  trivwc      "
+    LINE " 2. [ 1,  3]  yield       "
+    LINE "";
+    char *plan = ecs_rule_str(r);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_3_trivial_plan_w_any_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_new_entity(world, "p");
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Position(self), Velocity(self), ChildOf(self, _)"
+    });
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  setids      " 
+    LINE " 1. [ 0,  2]  trivpop     "
+    LINE " 2. [ 1,  3]  andany      $[this]           (ChildOf, $_'1)"
+    LINE " 3. [ 2,  4]  yield       "
+    LINE "";
+    char *plan = ecs_rule_str(r);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_1_trivial_component_w_none(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_new_entity(world, "p");
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "[none] Position(self)"
+    });
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  setids      " 
+    LINE " 1. [ 0,  2]  andid       $[this]           (Position)"
+    LINE " 2. [ 1,  3]  yield       "
+    LINE "";
+    char *plan = ecs_rule_str(r);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_2_trivial_component_w_none(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_new_entity(world, "p");
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "[none] Position(self), [none] Velocity(self)"
+    });
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  setids      " 
+    LINE " 1. [ 0,  2]  triv        "
+    LINE " 2. [ 1,  3]  yield       "
+    LINE "";
+    char *plan = ecs_rule_str(r);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
