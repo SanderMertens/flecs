@@ -2812,3 +2812,127 @@ void SerializeIterToJson_serialize_null_doc_name(void) {
 
     ecs_fini(world);
 }
+
+void SerializeIterToJson_serialize_rule_w_optional(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_entity_t e1 = ecs_new(world, Foo);
+    ecs_set_name(world, e1, "e1");
+    ecs_entity_t e2 = ecs_new(world, Foo);
+    ecs_set_name(world, e2, "e2");
+    ecs_add(world, e2, Bar);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
+        .expr = "Foo, ?Bar"
+    });
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+
+    char *json = ecs_iter_to_json(world, &it, NULL);
+    test_str(json, 
+    "{"
+        "\"ids\":[[\"Foo\"], [\"Bar\"]], "
+        "\"results\":[{"
+            "\"ids\":[[\"Foo\"], [\"Bar\"]], "
+            "\"sources\":[0, 0], "
+            "\"is_set\":[true, false], "
+            "\"entities\":["
+                "\"e1\""
+            "]"
+        "}, {"
+            "\"ids\":[[\"Foo\"], [\"Bar\"]], "
+            "\"sources\":[0, 0], "
+            "\"is_set\":[true, true], "
+            "\"entities\":["
+                "\"e2\""
+            "]"
+        "}]"
+    "}");
+
+    ecs_os_free(json);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void SerializeIterToJson_serialize_rule_w_optional_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, Foo);
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_id(Velocity),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_set_name(world, e1, "e1");
+
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {30, 40});
+    ecs_set_name(world, e2, "e2");
+    ecs_set(world, e2, Velocity, {1, 2});
+
+    ecs_entity_t e3 = ecs_set(world, 0, Position, {50, 60});
+    ecs_set_name(world, e3, "e3");
+    ecs_add(world, e3, Foo);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
+        .expr = "Position, ?Velocity"
+    });
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+
+    char *json = ecs_iter_to_json(world, &it, NULL);
+    test_str(json, 
+    "{"
+        "\"ids\":[[\"Position\"], [\"Velocity\"]], "
+        "\"results\":[{"
+            "\"ids\":[[\"Position\"], [\"Velocity\"]], "
+            "\"sources\":[0, 0], "
+            "\"is_set\":[true, false], "
+            "\"entities\":["
+                "\"e1\""
+            "], "
+            "\"values\":[[{\"x\":10, \"y\":20}], []]"
+        "}, {"
+            "\"ids\":[[\"Position\"], [\"Velocity\"]], "
+            "\"sources\":[0, 0], "
+            "\"is_set\":[true, true], "
+            "\"entities\":["
+                "\"e2\""
+            "], "
+            "\"values\":[[{\"x\":30, \"y\":40}], [{\"x\":1, \"y\":2}]]"
+        "}, {"
+            "\"ids\":[[\"Position\"], [\"Velocity\"]], "
+            "\"sources\":[0, 0], "
+            "\"is_set\":[true, false], "
+            "\"entities\":["
+                "\"e3\""
+            "], "
+            "\"values\":[[{\"x\":50, \"y\":60}], []]"
+        "}]"
+    "}");
+
+    ecs_os_free(json);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}

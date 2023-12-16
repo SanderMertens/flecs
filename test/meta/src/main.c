@@ -779,6 +779,8 @@ void SerializeIterToJson_serialize_vars_for_query(void);
 void SerializeIterToJson_serialize_var_labels_for_query(void);
 void SerializeIterToJson_serialize_var_ids_for_query(void);
 void SerializeIterToJson_serialize_null_doc_name(void);
+void SerializeIterToJson_serialize_rule_w_optional(void);
+void SerializeIterToJson_serialize_rule_w_optional_component(void);
 
 // Testsuite 'SerializeTypeInfoToJson'
 void SerializeTypeInfoToJson_bool(void);
@@ -4057,6 +4059,14 @@ bake_test_case SerializeIterToJson_testcases[] = {
     {
         "serialize_null_doc_name",
         SerializeIterToJson_serialize_null_doc_name
+    },
+    {
+        "serialize_rule_w_optional",
+        SerializeIterToJson_serialize_rule_w_optional
+    },
+    {
+        "serialize_rule_w_optional_component",
+        SerializeIterToJson_serialize_rule_w_optional_component
     }
 };
 
@@ -5228,7 +5238,7 @@ static bake_test_suite suites[] = {
         "SerializeIterToJson",
         NULL,
         NULL,
-        61,
+        63,
         SerializeIterToJson_testcases
     },
     {
