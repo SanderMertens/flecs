@@ -1,4 +1,5 @@
-﻿using UnrealBuildTool;
+﻿using System.IO;
+using UnrealBuildTool;
 
 public class FlecsLibrary : ModuleRules
 {
@@ -8,14 +9,15 @@ public class FlecsLibrary : ModuleRules
         
         PublicIncludePaths.AddRange(
             new string[] {
-                ModuleDirectory
+                ModuleDirectory,
+                Path.Join(ModuleDirectory, "include")
             }
         );
 
         PublicDependencyModuleNames.AddRange(
             new string[]
             {
-                "Core",
+                "Core"
             }
         );
 
