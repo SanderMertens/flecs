@@ -289,8 +289,8 @@ struct ecs_rule_t {
     ecs_hashmap_t evar_index;     /* Name index for entity variables */
     ecs_rule_var_cache_t vars_cache; /* For trivial rules with only This variables */
     char **var_names;             /* Array with variable names for iterator */
+    
     ecs_var_id_t *src_vars;       /* Array with ids to source variables for fields */
-
     ecs_rule_op_t *ops;           /* Operations */
     int32_t op_count;             /* Number of operations */
 

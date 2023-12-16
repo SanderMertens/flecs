@@ -770,6 +770,7 @@ void RulesBasic_match_empty_tables_no_data(void);
 void RulesBasic_match_empty_tables_w_not(void);
 void RulesBasic_match_empty_tables_w_wildcard(void);
 void RulesBasic_match_empty_tables_w_no_empty_tables(void);
+void RulesBasic_match_empty_tables_trivial(void);
 void RulesBasic_oneof_wildcard(void);
 void RulesBasic_oneof_any(void);
 void RulesBasic_instanced_w_singleton(void);
@@ -860,7 +861,9 @@ void RulesVariables_1_set_src_this_w_pair_set_tgt(void);
 void RulesVariables_1_set_src_this_w_pair_set_rel_tgt(void);
 void RulesVariables_1_set_src_this_to_empty_table(void);
 void RulesVariables_1_set_src_this_to_empty_table_w_component(void);
+void RulesVariables_1_set_src_this_to_empty_table_w_component_self(void);
 void RulesVariables_1_set_src_this_to_entiy_in_table(void);
+void RulesVariables_1_set_src_this_to_entiy_in_table_self(void);
 void RulesVariables_1_src_this_var_as_entity(void);
 void RulesVariables_1_src_this_var_as_table(void);
 void RulesVariables_1_src_this_var_as_table_range(void);
@@ -4804,6 +4807,10 @@ bake_test_case RulesBasic_testcases[] = {
         RulesBasic_match_empty_tables_w_no_empty_tables
     },
     {
+        "match_empty_tables_trivial",
+        RulesBasic_match_empty_tables_trivial
+    },
+    {
         "oneof_wildcard",
         RulesBasic_oneof_wildcard
     },
@@ -5159,8 +5166,16 @@ bake_test_case RulesVariables_testcases[] = {
         RulesVariables_1_set_src_this_to_empty_table_w_component
     },
     {
+        "1_set_src_this_to_empty_table_w_component_self",
+        RulesVariables_1_set_src_this_to_empty_table_w_component_self
+    },
+    {
         "1_set_src_this_to_entiy_in_table",
         RulesVariables_1_set_src_this_to_entiy_in_table
+    },
+    {
+        "1_set_src_this_to_entiy_in_table_self",
+        RulesVariables_1_set_src_this_to_entiy_in_table_self
     },
     {
         "1_src_this_var_as_entity",
@@ -8711,14 +8726,14 @@ static bake_test_suite suites[] = {
         "RulesBasic",
         NULL,
         NULL,
-        144,
+        145,
         RulesBasic_testcases
     },
     {
         "RulesVariables",
         NULL,
         NULL,
-        149,
+        151,
         RulesVariables_testcases
     },
     {

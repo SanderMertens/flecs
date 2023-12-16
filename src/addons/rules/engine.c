@@ -2244,19 +2244,55 @@ bool flecs_rule_populate(
     (void)op;
     if (!redo) {
         ecs_iter_t *it = ctx->it;
+        if (it->flags & EcsIterNoData) {
+            return true;
+        }
+
+        ECS_BIT_CLEAR(it->flags, EcsIterHasShared);
+
+        const ecs_rule_t *rule = ctx->rule;
+        const ecs_filter_t *filter = &rule->filter;
+        int32_t i, field_count = filter->field_count;
+        ecs_flags32_t data_fields = filter->data_fields;
         ecs_table_range_t *range = &ctx->vars[0].range;
         ecs_table_t *table = range->table;
-
         if (table && !range->count) {
             range->count = ecs_table_count(table);
         }
 
-        it->frame_offset -= it->count;
-        flecs_iter_populate_data(ctx->world, it, range->table, 
-            range->offset, range->count, it->ptrs);
-        if (!table && range->count == 1) {
-            it->count = 1;
-            it->entities = &ctx->vars[0].entity;
+        for (i = 0; i < field_count; i ++) {
+            if (!(data_fields & (1llu << i))) {
+                continue;
+            }
+
+            int32_t index = it->columns[i];
+            if (index > 0) {
+                if (range->count && table->column_map) {
+                    int32_t column = table->column_map[index - 1];
+                    if (column != -1) {
+                        it->ptrs[i] = ECS_ELEM(
+                            table->data.columns[column].data.array,
+                            it->sizes[i],
+                            range->offset);
+                        continue;
+                    }
+                }
+            } else if (index < 0) {
+                ecs_entity_t src = it->sources[i];
+                ecs_record_t *r = flecs_entities_get(ctx->world, src);
+                ecs_table_t *src_table = r->table;
+                if (src_table->column_map) {
+                    int32_t column = src_table->column_map[-index - 1];
+                    if (column != -1) {
+                        it->ptrs[i] = ecs_vec_get(
+                            &src_table->data.columns[column].data,
+                            it->sizes[i],
+                            ECS_RECORD_TO_ROW(r->row));
+                        ECS_BIT_SET(it->flags, EcsIterHasShared);
+                        continue;
+                    }
+                }
+            }
         }
 
         return true;
@@ -2276,6 +2312,7 @@ bool flecs_rule_populate_self(
         const ecs_rule_t *rule = ctx->rule;
         const ecs_filter_t *filter = &rule->filter;
         int32_t i, field_count = filter->field_count;
+        ecs_flags32_t data_fields = filter->data_fields;
         ecs_iter_t *it = ctx->it;
 
         ecs_table_range_t *range = &ctx->vars[0].range;
@@ -2284,7 +2321,15 @@ bool flecs_rule_populate_self(
             return true;
         }
 
+        if (!ecs_table_count(table)) {
+            return true;
+        }
+
         for (i = 0; i < field_count; i ++) {
+            if (!(data_fields & (1llu << i))) {
+                continue;
+            }
+
             int32_t index = it->columns[i];
             ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL); /* Only owned */
             if (!index) {
@@ -2293,7 +2338,10 @@ bool flecs_rule_populate_self(
 
             int32_t column = table->column_map[index - 1];
             if (column != -1) {
-                it->ptrs[i] = table->data.columns[column].data.array;
+                it->ptrs[i] = ECS_ELEM(
+                    table->data.columns[column].data.array,
+                    it->sizes[i],
+                    range->offset);
             }
         }
 

@@ -4457,6 +4457,44 @@ void RulesVariables_1_set_src_this_to_empty_table_w_component(void) {
     ecs_fini(world);
 }
 
+void RulesVariables_1_set_src_this_to_empty_table_w_component_self(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_add(world, e1, TagA);
+    ecs_table_t *t1 = ecs_get_table(world, e1);
+    ecs_remove(world, e1, TagA);
+
+    ecs_rule_t *f = ecs_rule(world, {
+        .terms = {{ ecs_id(Position), .src.flags = EcsSelf }}
+    });
+
+    int this_var_id = ecs_rule_find_var(f, "this");
+    test_assert(this_var_id != -1);
+
+    ecs_iter_t it = ecs_rule_iter(world, f);
+    ecs_iter_set_var_as_table(&it, this_var_id, t1);
+
+    test_assert(ecs_rule_next(&it));
+    test_int(it.count, 0);
+    test_assert(it.table == t1);
+    test_uint(ecs_field_id(&it, 1), ecs_id(Position));
+    test_uint(ecs_field_size(&it, 1), sizeof(Position));
+    test_assert(ecs_field(&it, Position, 1) == NULL);
+    ecs_table_t* this_var = ecs_iter_get_var_as_table(&it, this_var_id);
+    test_assert(this_var != NULL);
+    test_assert(this_var == t1);
+
+    test_assert(!ecs_rule_next(&it));
+
+    ecs_rule_fini(f);
+
+    ecs_fini(world);
+}
+
 void RulesVariables_1_set_src_this_to_entiy_in_table(void) {
     ecs_world_t *world = ecs_init();
 
@@ -4464,6 +4502,49 @@ void RulesVariables_1_set_src_this_to_entiy_in_table(void) {
 
     ecs_rule_t *f = ecs_rule(world, {
         .terms[0].id = ecs_id(Position)
+    });
+
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, f);
+        ecs_iter_set_var(&it, 0, e1);
+        test_bool(true, ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e1);
+        Position *p = ecs_field(&it, Position, 1);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, f);
+        ecs_iter_set_var(&it, 0, e2);
+        test_bool(true, ecs_rule_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        Position *p = ecs_field(&it, Position, 1);
+        test_assert(p != NULL);
+        test_int(p->x, 20);
+        test_int(p->y, 30);
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(f);
+
+    ecs_fini(world);
+}
+
+void RulesVariables_1_set_src_this_to_entiy_in_table_self(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_rule_t *f = ecs_rule(world, {
+        .terms[0] = { .id = ecs_id(Position), .src.flags = EcsSelf }
     });
 
     ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
@@ -6221,7 +6302,7 @@ void RulesVariables_no_this_anonymous_component_src(void) {
     test_assert(e != 0);
 
     ecs_rule_t *r = ecs_rule(world, {
-        .expr = "Position($_x)"
+        .expr = "Position($x)"
     });
     test_assert(r != NULL);
 

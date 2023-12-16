@@ -5452,6 +5452,72 @@ void RulesBasic_match_empty_tables_w_no_empty_tables(void) {
     ecs_fini(world);
 }
 
+void RulesBasic_match_empty_tables_trivial(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_entity_t e3 = ecs_new(world, Position);
+    ecs_entity_t e4 = ecs_new(world, Position);
+
+    ecs_add(world, e2, TagA);
+    ecs_add(world, e3, TagB);
+    ecs_add(world, e4, TagC);
+
+    ecs_table_t *t1 = ecs_get_table(world, e1);
+    ecs_table_t *t2 = ecs_get_table(world, e2);
+    ecs_table_t *t3 = ecs_get_table(world, e3);
+    ecs_table_t *t4 = ecs_get_table(world, e4);
+
+    ecs_delete(world, e1);
+    ecs_delete(world, e2);
+
+    ecs_rule_t *f = ecs_rule(world, {
+        .terms = {{ ecs_id(Position), .src.flags = EcsSelf }},
+        .flags = EcsFilterMatchEmptyTables
+    });
+
+    ecs_iter_t it = ecs_rule_iter(world, f);
+    
+    test_bool( ecs_rule_next(&it), true);
+    test_assert(it.table == t1);
+    test_int(it.count, 0);
+    test_uint(ecs_field_id(&it, 1), ecs_id(Position));
+    test_uint(ecs_field_size(&it, 1), sizeof(Position));
+
+    test_bool( ecs_rule_next(&it), true);
+    test_assert(it.table == t2);
+    test_int(it.count, 0);
+    test_uint(ecs_field_id(&it, 1), ecs_id(Position));
+    test_uint(ecs_field_size(&it, 1), sizeof(Position));
+
+    test_bool( ecs_rule_next(&it), true);
+    test_assert(it.table == t3);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e3);
+    test_uint(ecs_field_id(&it, 1), ecs_id(Position));
+    test_uint(ecs_field_size(&it, 1), sizeof(Position));
+
+    test_bool( ecs_rule_next(&it), true);
+    test_assert(it.table == t4);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e4);
+    test_uint(ecs_field_id(&it, 1), ecs_id(Position));
+    test_uint(ecs_field_size(&it, 1), sizeof(Position));
+
+    test_bool( ecs_rule_next(&it), false);
+
+    ecs_rule_fini(f);
+
+    ecs_fini(world);
+}
+
 void RulesBasic_oneof_wildcard(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -6619,3 +6685,4 @@ void RulesBasic_2_trivial_component_w_none(void) {
 
     ecs_fini(world);
 }
+
