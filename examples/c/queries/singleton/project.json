@@ -1,9 +1,0 @@
-{
-    "id": "singleton",
-    "type": "application",
-    "value": {
-        "use": [
-            "flecs"
-        ]
-    }
-}

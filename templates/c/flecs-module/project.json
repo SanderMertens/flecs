@@ -1,7 +1,0 @@
-{
-    "id": "flecs.module",
-    "type": "template",
-    "value": {
-        "use": ["flecs"]
-    }
-}
