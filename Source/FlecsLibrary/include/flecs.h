@@ -8,6 +8,8 @@
 #ifndef FLECS_H
 #define FLECS_H
 
+#include "SolidMacros/Macros.h"
+
 /**
  * @defgroup c C API
  * 
@@ -33,14 +35,14 @@
  * Customizable precision for floating point operations */
 #ifndef ecs_float_t
 #define ecs_float_t float
-#endif
+#endif // ecs_float_t
 
 /** \def ecs_ftime_t
  * Customizable precision for scalar time values. Change to double precision for 
  * processes that can run for a long time (e.g. longer than a day). */
 #ifndef ecs_ftime_t
 #define ecs_ftime_t ecs_float_t
-#endif
+#endif // ecs_ftime_t
 
 /** \def FLECS_LEGACY
  * Define when building for C89 
@@ -235,19 +237,19 @@
 
 /** \def FLECS_TERM_DESC_MAX 
  * Maximum number of terms in ecs_filter_desc_t */
-#define FLECS_TERM_DESC_MAX (16)
+INLINE static CONSTEXPR int32 FLECS_TERM_DESC_MAX = 16;
 
 /** \def FLECS_EVENT_DESC_MAX
  * Maximum number of events in ecs_observer_desc_t */
-#define FLECS_EVENT_DESC_MAX (8)
+INLINE static CONSTEXPR int32 FLECS_EVENT_DESC_MAX = 8;
 
 /** \def FLECS_VARIABLE_COUNT_MAX
  * Maximum number of query variables per query */
-#define FLECS_VARIABLE_COUNT_MAX (64)
+INLINE static CONSTEXPR int32 FLECS_VARIABLE_COUNT_MAX = 64;
 
 /** \def FLECS_QUERY_SCOPE_NESTING_MAX 
  * Maximum nesting depth of query scopes */
-#define FLECS_QUERY_SCOPE_NESTING_MAX (8)
+INLINE static CONSTEXPR int32 FLECS_QUERY_SCOPE_NESTING_MAX = 8;
 
 /** @} */
 
@@ -278,14 +280,14 @@ extern "C" {
 
 /** Ids are the things that can be added to an entity. 
  * An id can be an entity or pair, and can have optional id flags. */
-typedef uint64_t ecs_id_t;
+using ecs_id_t = uint64_t;
 
 /** An entity identifier.
  * Entity ids consist out of a number unique to the entity in the lower 32 bits, 
  * and a counter used to track entity liveliness in the upper 32 bits. When an 
  * id is recycled, its generation count is increased. This causes recycled ids 
  * to be very large (>4 billion), which is normal. */
-typedef ecs_id_t ecs_entity_t;
+using ecs_entity_t = ecs_id_t;
 
 /** A type is a list of (component) ids.
  * Types are used to communicate the "type" of an entity. In most type systems a 
@@ -329,19 +331,19 @@ typedef struct {
  * and deleted with different components, registered in different order. To 
  * ensure isolation between tests, the C++ API has a `flecs::reset` function
  * that forces the API to ignore the old component ids. */
-typedef struct ecs_world_t ecs_world_t;
+using ecs_world_t = struct ecs_world_t;
 
 /** A table stores entities and components for a specific type. */
-typedef struct ecs_table_t ecs_table_t;
+using ecs_table_t = struct ecs_table_t;
 
 /** A term is a single element in a query. */
-typedef struct ecs_term_t ecs_term_t;
+using ecs_term_t = struct ecs_term_t;
 
 /** A filter is an iterable data structure that describes a query.
  * Filters are used by the various query implementations in Flecs, like queries,
  * observers and rules, to describe a query. Filters themselves can also be 
  * iterated. */
-typedef struct ecs_filter_t ecs_filter_t;
+using ecs_filter_t = struct ecs_filter_t;
 
 /** A query that caches its results. 
  * Queries are the fastest mechanism for finding and iterating over entities.
@@ -361,7 +363,7 @@ typedef struct ecs_filter_t ecs_filter_t;
  * For ad-hoc queries it is recommended to use filters or rules instead, which 
  * are slower to iterate, but much faster to create. Applications should at all
  * times avoid frequent creation/deletion of queries. */
-typedef struct ecs_query_t ecs_query_t;
+using ecs_query_t = struct ecs_query_t;
 
 /** A rule is a query with advanced graph traversal features.
  * Rules are fast uncached queries with support for advanced graph features such
@@ -382,7 +384,7 @@ typedef struct ecs_query_t ecs_query_t;
  * - Up traversal
  * - AndFrom, OrFrom, NotFrom operators
  */
-typedef struct ecs_rule_t ecs_rule_t;
+using ecs_rule_t = struct ecs_rule_t;
 
 /** An observer is a system that is invoked when an event matches its query.
  * Observers allow applications to respond to specific events, such as adding or
@@ -400,19 +402,19 @@ typedef struct ecs_rule_t ecs_rule_t;
  * the source of the event matches the full observer query. For example, an 
  * OnAdd observer for Position, Velocity will only trigger after both components
  * have been added to the entity. */
-typedef struct ecs_observer_t ecs_observer_t;
+using ecs_observer_t = struct ecs_observer_t;
 
 /** An observable produces events that can be listened for by an observer.
  * Currently only the world is observable. In the future, queries will become
  * observable objects as well. */
-typedef struct ecs_observable_t ecs_observable_t;
+using ecs_observable_t = struct ecs_observable_t;
 
 /* Type used for iterating iterable objects. 
  * Iterators are a common interface across iterable objects (world, filters, 
  * rules, queries, systems, observers) to provide applications with information
  * about the currently iterated result, and to store any state required for the 
  * iteration. */
-typedef struct ecs_iter_t ecs_iter_t;
+using ecs_iter_t = struct ecs_iter_t;
 
 /** A ref is a fast way to fetch a component for a specific entity.
  * Refs are a faster alternative to repeatedly calling ecs_get for the same
@@ -422,26 +424,26 @@ typedef struct ecs_iter_t ecs_iter_t;
  * Refs achieve this performance by caching internal data structures associated
  * with the entity and component on the ecs_ref_t object that otherwise would 
  * have to be looked up. */
-typedef struct ecs_ref_t ecs_ref_t;
+using ecs_ref_t = struct ecs_ref_t;
 
 /** Type hooks are callbacks associated with component lifecycle events. 
  * Typical examples of lifecycle events are construction, destruction, copying
  * and moving of components. */
-typedef struct ecs_type_hooks_t ecs_type_hooks_t;
+using ecs_type_hooks_t = struct ecs_type_hooks_t;
 
 /** Type information.
  * Contains information about a (component) type, such as its size and 
  * alignment and type hooks. */
-typedef struct ecs_type_info_t ecs_type_info_t;
+using ecs_type_info_t = struct ecs_type_info_t;
 
 /** Information about an entity, like its table and row. */
-typedef struct ecs_record_t ecs_record_t;
+using ecs_record_t = struct ecs_record_t;
 
 /** Information about a (component) id, such as type info and tables with the id */
-typedef struct ecs_id_record_t ecs_id_record_t;
+using ecs_id_record_t = struct ecs_id_record_t;
 
 /** Information about where in a table a specific (component) id is stored. */
-typedef struct ecs_table_record_t ecs_table_record_t;
+using ecs_table_record_t = struct ecs_table_record_t;
 
 /** A poly object.
  * A poly (short for polymorph) object is an object that has a variable list of
@@ -465,10 +467,10 @@ typedef struct ecs_table_record_t ecs_table_record_t;
  * (in some ways it's like a mini-ECS). Additionally, each poly object has a
  * header that enables the API to do sanity checking on the input arguments.
  */
-typedef void ecs_poly_t;
+using ecs_poly_t = void;
 
 /** Type that stores poly mixins */
-typedef struct ecs_mixins_t ecs_mixins_t;
+using ecs_mixins_t = struct ecs_mixins_t;
 
 /** Header for ecs_poly_t objects. */
 typedef struct ecs_header_t {
@@ -494,8 +496,8 @@ typedef struct ecs_header_t {
  * 
  * @param it The iterator to be iterated by the runnable.
  */
-typedef void (*ecs_run_action_t)(
-    ecs_iter_t *it);
+using ecs_run_action_t = void(*)(
+ ecs_iter_t *it);
 
 /** Function prototype for iterables.
  * A system may invoke a callback multiple times, typically once for each
@@ -503,8 +505,8 @@ typedef void (*ecs_run_action_t)(
  * 
  * @param it The iterator containing the data for the current match.
  */
-typedef void (*ecs_iter_action_t)(
-    ecs_iter_t *it);
+using ecs_iter_action_t = void(*)(
+ ecs_iter_t *it);
 
 /** Function prototype for creating an iterator from a poly.
  * Used to create iterators from poly objects with the iterable mixin. When a
@@ -517,11 +519,11 @@ typedef void (*ecs_iter_action_t)(
  * @param it The iterator to create (out parameter)
  * @param filter Optional term to filter results.
  */
-typedef void (*ecs_iter_init_action_t)(
-    const ecs_world_t *world,
-    const ecs_poly_t *iterable,
-    ecs_iter_t *it,
-    ecs_term_t *filter);
+using ecs_iter_init_action_t = void(*)(
+ const ecs_world_t *world,
+ const ecs_poly_t *iterable,
+ ecs_iter_t *it,
+ ecs_term_t *filter);
 
 /** Function prototype for iterating an iterator.
  * Stored inside initialized iterators. This allows an application to * iterate 
@@ -530,100 +532,100 @@ typedef void (*ecs_iter_init_action_t)(
  * @param it The iterator to iterate.
  * @return True if iterator has no more results, false if it does.
  */
-typedef bool (*ecs_iter_next_action_t)(
-    ecs_iter_t *it);  
+using ecs_iter_next_action_t = bool(*)(
+ ecs_iter_t *it);  
 
 /** Function prototype for freeing an iterator.
  * Free iterator resources.
  * 
  * @param it The iterator to free.
  */
-typedef void (*ecs_iter_fini_action_t)(
-    ecs_iter_t *it); 
+using ecs_iter_fini_action_t = void(*)(
+ ecs_iter_t *it); 
 
 /** Callback used for comparing components */
-typedef int (*ecs_order_by_action_t)(
-    ecs_entity_t e1,
-    const void *ptr1,
-    ecs_entity_t e2,
-    const void *ptr2);
+using ecs_order_by_action_t = int(*)(
+ ecs_entity_t e1,
+ const void *ptr1,
+ ecs_entity_t e2,
+ const void *ptr2);
 
 /** Callback used for sorting the entire table of components */
-typedef void (*ecs_sort_table_action_t)(
-    ecs_world_t* world,
-    ecs_table_t* table,
-    ecs_entity_t* entities,
-    void* ptr,
-    int32_t size,
-    int32_t lo,
-    int32_t hi,
-    ecs_order_by_action_t order_by);
+using ecs_sort_table_action_t = void(*)(
+ ecs_world_t* world,
+ ecs_table_t* table,
+ ecs_entity_t* entities,
+ void* ptr,
+ int32_t size,
+ int32_t lo,
+ int32_t hi,
+ ecs_order_by_action_t order_by);
 
 /** Callback used for grouping tables in a query */
-typedef uint64_t (*ecs_group_by_action_t)(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_id_t group_id,
-    void *ctx);
+using ecs_group_by_action_t = uint64_t(*)(
+ ecs_world_t *world,
+ ecs_table_t *table,
+ ecs_id_t group_id,
+ void *ctx);
 
 /* Callback invoked when a query creates a new group. */
-typedef void* (*ecs_group_create_action_t)(
-    ecs_world_t *world,
-    uint64_t group_id,
-    void *group_by_ctx); /* from ecs_query_desc_t */
+using ecs_group_create_action_t = void* (*)(
+ ecs_world_t *world,
+ uint64_t group_id,
+ void *group_by_ctx); /* from ecs_query_desc_t */
 
 /* Callback invoked when a query deletes an existing group. */
-typedef void (*ecs_group_delete_action_t)(
-    ecs_world_t *world,
-    uint64_t group_id,
-    void *group_ctx,     /* return value from ecs_group_create_action_t */
-    void *group_by_ctx); /* from ecs_query_desc_t */
+using ecs_group_delete_action_t = void(*)(
+ ecs_world_t *world,
+ uint64_t group_id,
+ void *group_ctx,     /* return value from ecs_group_create_action_t */
+ void *group_by_ctx); /* from ecs_query_desc_t */
 
 /** Initialization action for modules */
-typedef void (*ecs_module_action_t)(
-    ecs_world_t *world);    
+using ecs_module_action_t = void(*)(
+ ecs_world_t *world);    
 
 /** Action callback on world exit */
-typedef void (*ecs_fini_action_t)(
-    ecs_world_t *world,
-    void *ctx);
+using ecs_fini_action_t = void(*)(
+ ecs_world_t *world,
+ void *ctx);
 
 /** Function to cleanup context data */
-typedef void (*ecs_ctx_free_t)(
-    void *ctx);
+using ecs_ctx_free_t = void(*)(
+ void *ctx);
 
 /** Callback used for sorting values */
-typedef int (*ecs_compare_action_t)(
-    const void *ptr1,
-    const void *ptr2);
+using ecs_compare_action_t = int(*)(
+ const void *ptr1,
+ const void *ptr2);
 
 /** Callback used for hashing values */
-typedef uint64_t (*ecs_hash_value_action_t)(
-    const void *ptr); 
+using ecs_hash_value_action_t = uint64_t(*)(
+ const void *ptr); 
 
 /** Constructor/destructor callback */
-typedef void (*ecs_xtor_t)(
-    void *ptr,
-    int32_t count,
-    const ecs_type_info_t *type_info);
+using ecs_xtor_t = void(*)(
+ void *ptr,
+ int32_t count,
+ const ecs_type_info_t *type_info);
 
 /** Copy is invoked when a component is copied into another component. */
-typedef void (*ecs_copy_t)(
-    void *dst_ptr,
-    const void *src_ptr,
-    int32_t count,
-    const ecs_type_info_t *type_info);
+using ecs_copy_t = void(*)(
+ void *dst_ptr,
+ const void *src_ptr,
+ int32_t count,
+ const ecs_type_info_t *type_info);
 
 /** Move is invoked when a component is moved to another component. */
-typedef void (*ecs_move_t)(
-    void *dst_ptr,
-    void *src_ptr,
-    int32_t count,
-    const ecs_type_info_t *type_info);
+using ecs_move_t = void(*)(
+ void *dst_ptr,
+ void *src_ptr,
+ int32_t count,
+ const ecs_type_info_t *type_info);
 
 /* Destructor function for poly objects */
-typedef void (*ecs_poly_dtor_t)(
-    ecs_poly_t *poly);
+using ecs_poly_dtor_t = void(*)(
+ ecs_poly_t *poly);
 
 /** @} */
 
@@ -635,9 +637,9 @@ typedef void (*ecs_poly_dtor_t)(
 
 /** Iterable mixin.
  * Allows its container to be iterated. */
-typedef struct ecs_iterable_t {
-    ecs_iter_init_action_t init; /**< Callback that creates iterator. */
-} ecs_iterable_t;
+using ecs_iterable_t = struct ecs_iterable_t {
+ ecs_iter_init_action_t init; /**< Callback that creates iterator. */
+};
 
 /** @} */
 
@@ -668,34 +670,34 @@ typedef enum ecs_oper_kind_t {
 } ecs_oper_kind_t;
 
 /* Term id flags  */
-#define EcsSelf                       (1u << 1)  /**< Match on self */
-#define EcsUp                         (1u << 2)  /**< Match by traversing upwards */
-#define EcsDown                       (1u << 3)  /**< Match by traversing downwards (derived, cannot be set) */
-#define EcsTraverseAll                (1u << 4)  /**< Match all entities encountered through traversal */
-#define EcsCascade                    (1u << 5)  /**< Sort results breadth first */
-#define EcsDesc                       (1u << 6)  /**< Iterate groups in descending order  */
-#define EcsParent                     (1u << 7)  /**< Short for up(ChildOf) */
-#define EcsIsVariable                 (1u << 8)  /**< Term id is a variable */
-#define EcsIsEntity                   (1u << 9)  /**< Term id is an entity */
-#define EcsIsName                     (1u << 10) /**< Term id is a name (don't attempt to lookup as entity) */
-#define EcsFilter                     (1u << 11) /**< Prevent observer from triggering on term */
-#define EcsTraverseFlags              (EcsUp|EcsDown|EcsTraverseAll|EcsSelf|EcsCascade|EcsDesc|EcsParent)
+INLINE static CONSTEXPR uint32 EcsSelf = (1u << 1);  /**< Match on self */
+INLINE static CONSTEXPR uint32 EcsUp = (1u << 2);    /**< Match by traversing upwards */
+INLINE static CONSTEXPR uint32 EcsDown = (1u << 3);  /**< Match by traversing downwards (derived, cannot be set) */
+INLINE static CONSTEXPR uint32 EcsTraverseAll = (1u << 4); /**< Match all entities encountered through traversal */
+INLINE static CONSTEXPR uint32 EcsCascade = (1u << 5); /**< Sort results breadth first */
+INLINE static CONSTEXPR uint32 EcsDesc = (1u << 6);  /**< Iterate components in descending order  */
+INLINE static CONSTEXPR uint32 EcsParent = (1u << 7);/**< Short for up(ChildOf) */
+INLINE static CONSTEXPR uint32 EcsIsVariable = (1u << 8); /**< Term id is a variable */
+INLINE static CONSTEXPR uint32 EcsIsEntity = (1u << 9); /**< Term id is an entity */
+INLINE static CONSTEXPR uint32 EcsIsName = (1u << 10); /**< Term id is a name (don't attempt to lookup as entity) */
+INLINE static CONSTEXPR uint32 EcsFilter = (1u << 11); /**< Prevent observer from triggering on term */
+INLINE static CONSTEXPR uint32 EcsTraverseFlags = (EcsUp|EcsDown|EcsTraverseAll|EcsSelf|EcsCascade|EcsDesc|EcsParent);
 
 /* Term flags discovered & set during filter creation. Mostly used internally to
  * store information relevant to queries. */
-#define EcsTermMatchAny               (1u << 0)
-#define EcsTermMatchAnySrc            (1u << 1)
-#define EcsTermSrcFirstEq             (1u << 2)
-#define EcsTermSrcSecondEq            (1u << 3)
-#define EcsTermTransitive             (1u << 4)
-#define EcsTermReflexive              (1u << 5)
-#define EcsTermIdInherited            (1u << 6)
-#define EcsTermIsTrivial              (1u << 7)
-#define EcsTermNoData                 (1u << 8)
+INLINE static CONSTEXPR uint32 EcsTermMatchAny = (1u << 0);
+INLINE static CONSTEXPR uint32 EcsTermMatchAnySrc = (1u << 1);
+INLINE static CONSTEXPR uint32 EcsTermSrcFirstEq = (1u << 2);
+INLINE static CONSTEXPR uint32 EcsTermSrcSecondEq = (1u << 3);
+INLINE static CONSTEXPR uint32 EcsTermTransitive = (1u << 4);
+INLINE static CONSTEXPR uint32 EcsTermReflexive = (1u << 5);
+INLINE static CONSTEXPR uint32 EcsTermIdInherited = (1u << 6);
+INLINE static CONSTEXPR uint32 EcsTermIsTrivial = (1u << 7);
+INLINE static CONSTEXPR uint32 EcsTermNoData = (1u << 8);
 
 /* Term flags used for term iteration */
-#define EcsTermMatchDisabled          (1u << 7)
-#define EcsTermMatchPrefab            (1u << 8)
+INLINE static CONSTEXPR uint32 EcsTermMatchDisabled = (1u << 7);
+INLINE static CONSTEXPR uint32 EcsTermMatchPrefab = (1u << 8);
 
 /** Type that describes a single identifier in a term */
 typedef struct ecs_term_id_t {
