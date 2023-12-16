@@ -1315,7 +1315,7 @@ int ecs_filter_finalize(
         return -1;
     }
 
-    f->field_count = field_count;
+    f->field_count = flecs_ito(int8_t, field_count);
 
     if (field_count) {
         for (i = 0; i < term_count; i ++) {
@@ -1577,7 +1577,7 @@ ecs_filter_t* ecs_filter_init(
         if (!ptr) {
             /* Set terms in filter object to make sur they get cleaned up */
             f->terms = expr_terms;
-            f->term_count = expr_count;
+            f->term_count = flecs_ito(int8_t, expr_count);
             f->flags |= EcsFilterOwnsTermsStorage;
             goto error;
         }
@@ -1596,14 +1596,14 @@ ecs_filter_t* ecs_filter_init(
         if (!storage_terms) {
             ecs_assert(f->flags & EcsFilterOwnsTermsStorage, 
                 ECS_INTERNAL_ERROR, NULL);
-            f->term_count = term_count + expr_count;
+            f->term_count = flecs_ito(int8_t, term_count + expr_count);
             ecs_size_t terms_size = ECS_SIZEOF(ecs_term_t) * f->term_count;
             ecs_size_t sizes_size = ECS_SIZEOF(int32_t) * f->term_count;
             f->terms = ecs_os_calloc(terms_size + sizes_size);
             f->sizes = ECS_OFFSET(f->terms, terms_size);
         } else {
             f->terms = storage_terms;
-            f->term_count = storage_count;
+            f->term_count = flecs_ito(int8_t, storage_count);
             f->sizes = ecs_os_calloc_n(ecs_size_t, term_count);
         }
 

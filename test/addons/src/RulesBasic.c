@@ -5822,6 +5822,8 @@ void RulesBasic_not_instanced_w_singleton(void) {
         test_int(v->y, 2);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_src(&it, 2));
     }
 
     test_assert(ecs_rule_next(&it));
@@ -5834,6 +5836,8 @@ void RulesBasic_not_instanced_w_singleton(void) {
         test_int(v->y, 2);
         test_int(p[0].x, 20);
         test_int(p[0].y, 30);
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_src(&it, 2));
     }
 
     test_assert(ecs_rule_next(&it));
@@ -5846,6 +5850,8 @@ void RulesBasic_not_instanced_w_singleton(void) {
         test_int(v->y, 2);
         test_int(p[0].x, 30);
         test_int(p[0].y, 40);
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_src(&it, 2));
     }
 
     test_assert(ecs_rule_next(&it));
@@ -5858,6 +5864,8 @@ void RulesBasic_not_instanced_w_singleton(void) {
         test_int(p[0].y, 50);
         test_int(v->x, 1);
         test_int(v->y, 2);
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_src(&it, 2));
     }
 
     test_assert(ecs_rule_next(&it));
@@ -5870,6 +5878,8 @@ void RulesBasic_not_instanced_w_singleton(void) {
         test_int(p[0].y, 60);
         test_int(v->x, 1);
         test_int(v->y, 2);
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_src(&it, 2));
     }
 
     test_assert(!ecs_rule_next(&it));

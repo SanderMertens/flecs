@@ -347,9 +347,6 @@ void flecs_rule_it_set_column(
     ecs_assert(column >= 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(field_index >= 0, ECS_INTERNAL_ERROR, NULL);
     it->columns[field_index] = column + 1;
-    if (it->sources[field_index] != 0) {
-        it->columns[field_index] *= -1;
-    }
 }
 
 static
@@ -737,9 +734,6 @@ bool flecs_rule_up_select(
                     }
                 }
 
-                int32_t column = it->columns[op->field_index];
-                it->columns[op->field_index] = column * -1;
-
                 redo_select = true;
             } else {
                 op_ctx->row ++;
@@ -789,10 +783,6 @@ next_elem:
             (EcsTableIsPrefab|EcsTableIsDisabled)))
         {
             goto next_elem;
-        }
-
-        if (it->columns[op->field_index] > 0) {
-            it->columns[op->field_index] = -it->columns[op->field_index];
         }
 
         break;
@@ -848,7 +838,7 @@ bool flecs_rule_up_with(
 
         it->sources[op->field_index] = flecs_entities_get_generation(
             ctx->world, up->src);
-        it->columns[op->field_index] = -(up->column + 1);
+        it->columns[op->field_index] = up->column + 1;
         it->ids[op->field_index] = up->id;
         flecs_rule_set_vars(op, up->id, ctx);
         flecs_set_source_set_flag(ctx, op->field_index);
@@ -877,11 +867,7 @@ bool flecs_rule_self_up_with(
             op_ctx->trav = 0;
             if (flecs_rule_ref_flags(op->flags, EcsRuleSrc) & EcsRuleIsVar) {
                 ecs_iter_t *it = ctx->it;
-                int32_t column = it->columns[op->field_index];
                 it->sources[op->field_index] = 0;
-                if (column < 0) {
-                    it->columns[op->field_index] = (column * -1);
-                }
             }
             return true;
         }
@@ -1897,10 +1883,6 @@ bool flecs_rule_setvars(
         }
 
         it->sources[i] = flecs_rule_var_get_entity(var_id, ctx);
-        int32_t column = it->columns[i];
-        if (column > 0) {
-            it->columns[i] = -column;
-        }
     }
 
     return true;
@@ -2253,7 +2235,7 @@ bool flecs_rule_populate(
         const ecs_rule_t *rule = ctx->rule;
         const ecs_filter_t *filter = &rule->filter;
         int32_t i, field_count = filter->field_count;
-        ecs_flags32_t data_fields = filter->data_fields;
+        ecs_flags64_t data_fields = filter->data_fields;
         ecs_table_range_t *range = &ctx->vars[0].range;
         ecs_table_t *table = range->table;
         if (table && !range->count) {
@@ -2266,7 +2248,14 @@ bool flecs_rule_populate(
             }
 
             int32_t index = it->columns[i];
-            if (index > 0) {
+            ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
+            if (!index) {
+                continue;
+            }
+    
+            ecs_entity_t src = it->sources[i];
+            if (!src) {
+                ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
                 if (range->count && table->column_map) {
                     int32_t column = table->column_map[index - 1];
                     if (column != -1) {
@@ -2277,12 +2266,11 @@ bool flecs_rule_populate(
                         continue;
                     }
                 }
-            } else if (index < 0) {
-                ecs_entity_t src = it->sources[i];
+            } else {
                 ecs_record_t *r = flecs_entities_get(ctx->world, src);
                 ecs_table_t *src_table = r->table;
                 if (src_table->column_map) {
-                    int32_t column = src_table->column_map[-index - 1];
+                    int32_t column = src_table->column_map[index - 1];
                     if (column != -1) {
                         it->ptrs[i] = ecs_vec_get(
                             &src_table->data.columns[column].data,
@@ -2312,7 +2300,7 @@ bool flecs_rule_populate_self(
         const ecs_rule_t *rule = ctx->rule;
         const ecs_filter_t *filter = &rule->filter;
         int32_t i, field_count = filter->field_count;
-        ecs_flags32_t data_fields = filter->data_fields;
+        ecs_flags64_t data_fields = filter->data_fields;
         ecs_iter_t *it = ctx->it;
 
         ecs_table_range_t *range = &ctx->vars[0].range;
