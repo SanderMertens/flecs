@@ -10,7 +10,7 @@ public class UnrealFlecs : ModuleRules
 		
 		PublicIncludePaths.AddRange(
 			new string[] {
-				// ... add public include paths required here ...
+				ModuleDirectory
 			}
 			);
 				
