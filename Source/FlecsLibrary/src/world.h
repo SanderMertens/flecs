@@ -112,7 +112,7 @@ ecs_world_t* flecs_suspend_readonly(
 
 void flecs_resume_readonly(
     ecs_world_t *world,
-    ecs_suspend_readonly_state_t *state);
+    const ecs_suspend_readonly_state_t *state);
 
 /* Convenience macro's for world allocator */
 #define flecs_walloc(world, size)\

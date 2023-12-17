@@ -3,9 +3,9 @@
 static
 ecs_entity_index_page_t* flecs_entity_index_ensure_page(
     ecs_entity_index_t *index,
-    uint32_t id)
+    const uint32_t id)
 {
-    int32_t page_index = (int32_t)(id >> FLECS_ENTITY_PAGE_BITS);
+    const int32_t page_index = static_cast<int32_t>(id >> FLECS_ENTITY_PAGE_BITS);
     if (page_index >= ecs_vec_count(&index->pages)) {
         ecs_vec_set_min_count_zeromem_t(index->allocator, &index->pages, 
             ecs_entity_index_page_t*, page_index + 1);
@@ -15,7 +15,7 @@ ecs_entity_index_page_t* flecs_entity_index_ensure_page(
         ecs_entity_index_page_t*, page_index);
     ecs_entity_index_page_t *page = *page_ptr;
     if (!page) {
-        page = *page_ptr = flecs_bcalloc(&index->page_allocator);
+        page = *page_ptr = static_cast<ecs_entity_index_page_t*>(flecs_bcalloc(&index->page_allocator));
         ecs_assert(page != nullptr, ECS_OUT_OF_MEMORY, nullptr);
     }
 
@@ -54,8 +54,8 @@ ecs_record_t* flecs_entity_index_get_any(
     const ecs_entity_index_t *index,
     uint64_t entity)
 {
-    uint32_t id = (uint32_t)entity;
-    int32_t page_index = (int32_t)(id >> FLECS_ENTITY_PAGE_BITS);
+    const uint32_t id = static_cast<uint32_t>(entity);
+    const int32_t page_index = static_cast<int32_t>(id >> FLECS_ENTITY_PAGE_BITS);
     ecs_entity_index_page_t *page = ecs_vec_get_t(&index->pages, 
         ecs_entity_index_page_t*, page_index)[0];
     ecs_record_t *r = &page->records[id & FLECS_ENTITY_PAGE_MASK];
@@ -78,8 +78,8 @@ ecs_record_t* flecs_entity_index_try_get_any(
     const ecs_entity_index_t *index,
     uint64_t entity)
 {
-    uint32_t id = (uint32_t)entity;
-    int32_t page_index = (int32_t)(id >> FLECS_ENTITY_PAGE_BITS);
+    const uint32_t id = static_cast<uint32_t>(entity);
+    const int32_t page_index = static_cast<int32_t>(id >> FLECS_ENTITY_PAGE_BITS);
     if (page_index >= ecs_vec_count(&index->pages)) {
         return nullptr;
     }
@@ -118,7 +118,7 @@ ecs_record_t* flecs_entity_index_ensure(
     ecs_entity_index_t *index,
     uint64_t entity)
 {
-    uint32_t id = (uint32_t)entity;
+    const uint32_t id = static_cast<uint32_t>(entity);
     ecs_entity_index_page_t *page = flecs_entity_index_ensure_page(index, id);
     ecs_assert(page != nullptr, ECS_INTERNAL_ERROR, nullptr);
     ecs_record_t *r = &page->records[id & FLECS_ENTITY_PAGE_MASK];
@@ -142,8 +142,8 @@ ecs_record_t* flecs_entity_index_ensure(
     ecs_assert(dense != 0, ECS_INTERNAL_ERROR, nullptr);
 
     /* Entity is not alive, swap with first not alive element */
-    uint64_t *ids = ecs_vec_first(&index->dense);
-    uint64_t e_swap = ids[index->alive_count];
+    uint64_t *ids = static_cast<uint64_t*>(ecs_vec_first(&index->dense));
+    const uint64_t e_swap = ids[index->alive_count];
     ecs_record_t *r_swap = flecs_entity_index_get_any(index, e_swap);
     ecs_assert(r_swap->dense == index->alive_count, 
         ECS_INTERNAL_ERROR, nullptr);
@@ -169,10 +169,10 @@ void flecs_entity_index_remove(
         return;
     }
 
-    int32_t dense = r->dense;
-    int32_t i_swap = -- index->alive_count;
+    const int32_t dense = r->dense;
+    const int32_t i_swap = -- index->alive_count;
     uint64_t *e_swap_ptr = ecs_vec_get_t(&index->dense, uint64_t, i_swap);
-    uint64_t e_swap = e_swap_ptr[0];
+    const uint64_t e_swap = e_swap_ptr[0];
     ecs_record_t *r_swap = flecs_entity_index_get_any(index, e_swap);
     ecs_assert(r_swap->dense == i_swap, ECS_INTERNAL_ERROR, nullptr);
 
@@ -188,11 +188,10 @@ void flecs_entity_index_remove(
 }
 
 void flecs_entity_index_set_generation(
-    ecs_entity_index_t *index,
+    const ecs_entity_index_t *index,
     uint64_t entity)
 {
-    ecs_record_t *r = flecs_entity_index_try_get_any(index, entity);
-    if (r) {
+    if (const ecs_record_t *r = flecs_entity_index_try_get_any(index, entity)) LIKELY_ATTRIBUTE {
         ecs_vec_get_t(&index->dense, uint64_t, r->dense)[0] = entity;
     }
 }

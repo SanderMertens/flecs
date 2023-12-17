@@ -344,7 +344,7 @@ ecs_stage_t* flecs_stage_from_world(
         return &world->stages[0];
     }
 
-    *world_ptr = ((ecs_stage_t*)world)->world;
+    *world_ptr = reinterpret_cast<ecs_stage_t*>(world)->world;
     return ECS_CONST_CAST(ecs_stage_t*, world);
 }
 
@@ -396,7 +396,7 @@ ecs_world_t* flecs_suspend_readonly(
 
 void flecs_resume_readonly(
     ecs_world_t *world,
-    ecs_suspend_readonly_state_t *state)
+    const ecs_suspend_readonly_state_t *state)
 {
     ecs_poly_assert(world, ecs_world_t);
     ecs_assert(state != nullptr, ECS_INTERNAL_ERROR, nullptr);
@@ -439,16 +439,16 @@ void flecs_eval_component_monitor(
 
     ecs_map_iter_t it = ecs_map_iter(&world->monitors.monitors);
     while (ecs_map_next(&it)) {
-        ecs_monitor_t *m = ecs_map_ptr(&it);
+        ecs_monitor_t *m = static_cast<ecs_monitor_t*>(ecs_map_ptr(&it));
         if (!m->is_dirty) {
             continue;
         }
 
         m->is_dirty = false;
 
-        int32_t i, count = ecs_vec_count(&m->queries);
-        ecs_query_t **elems = ecs_vec_first(&m->queries);
-        for (i = 0; i < count; i ++) {
+        const int32_t count = ecs_vec_count(&m->queries);
+        ecs_query_t **elems = static_cast<ecs_query_t**>(ecs_vec_first(&m->queries));
+        for (int32_t i = 0; i < count; i ++) {
             ecs_query_t *q = elems[i];
             flecs_query_notify(world, q, &(ecs_query_event_t) {
                 .kind = EcsQueryTableRematch
@@ -461,13 +461,12 @@ void flecs_monitor_mark_dirty(
     ecs_world_t *world,
     ecs_entity_t id)
 {
-    ecs_map_t *monitors = &world->monitors.monitors;
+    const ecs_map_t *monitors = &world->monitors.monitors;
 
     /* Only flag if there are actually monitors registered, so that we
      * don't waste cycles evaluating monitors if there's no interest */
     if (ecs_map_is_init(monitors)) {
-        ecs_monitor_t *m = ecs_map_get_deref(monitors, ecs_monitor_t, id);
-        if (m) {
+        if (ecs_monitor_t *m = ecs_map_get_deref(monitors, ecs_monitor_t, id)) {
             if (!world->monitors.is_dirty) {
                 world->monitor_generation ++;
             }
@@ -514,9 +513,9 @@ void flecs_monitor_unregister(
         return;
     }
 
-    int32_t i, count = ecs_vec_count(&m->queries);
-    ecs_query_t **queries = ecs_vec_first(&m->queries);
-    for (i = 0; i < count; i ++) {
+    int32_t count = ecs_vec_count(&m->queries);
+    ecs_query_t **queries = static_cast<ecs_query_t**>(ecs_vec_first(&m->queries));
+    for (int32_t i = 0; i < count; i ++) {
         if (queries[i] == query) {
             ecs_vec_remove_t(&m->queries, ecs_query_t*, i);
             count --;
@@ -564,11 +563,12 @@ static
 void flecs_clean_tables(
     ecs_world_t *world)
 {
-    int32_t i, count = flecs_sparse_count(&world->store.tables);
+    int32_t i;
+    const int32_t count = flecs_sparse_count(&world->store.tables);
 
     /* Ensure that first table in sparse set has id 0. This is a dummy table
      * that only exists so that there is no table with id 0 */
-    ecs_table_t *first = flecs_sparse_get_dense_t(&world->store.tables, 
+    const ecs_table_t *first = flecs_sparse_get_dense_t(&world->store.tables, 
         ecs_table_t, 0);
     (void)first;
 
@@ -600,7 +600,7 @@ void flecs_fini_root_tables(
 {
     ecs_table_cache_iter_t it;
 
-    bool has_roots = flecs_table_cache_iter(&idr->cache, &it);
+    const bool has_roots = flecs_table_cache_iter(&idr->cache, &it);
     ecs_assert(has_roots == true, ECS_INTERNAL_ERROR, nullptr);
     (void)has_roots;
 
@@ -612,7 +612,7 @@ void flecs_fini_root_tables(
         }
 
         int32_t i, count = table->data.entities.count;
-        ecs_entity_t *entities = table->data.entities.array;
+        ecs_entity_t *entities = static_cast<ecs_entity_t*>(table->data.entities.array);
 
         if (fini_targets) {
             /* Only delete entities that are used as pair target. Iterate 

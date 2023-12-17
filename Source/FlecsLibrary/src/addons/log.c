@@ -379,7 +379,7 @@ bool ecs_should_log(int32_t level) {
 
 #define ECS_ERR_STR(code) case code: return &(#code[4])
 
-const char* ecs_strerror(
+CONSTEXPR const char* ecs_strerror(
     int32_t error_code)
 {
     switch (error_code) {
@@ -417,6 +417,7 @@ const char* ecs_strerror(
     ECS_ERR_STR(ECS_CONSTRAINT_VIOLATED);
     ECS_ERR_STR(ECS_LOCKED_STORAGE);
     ECS_ERR_STR(ECS_ID_IN_USE);
+default: ;
     }
 
     return "unknown error code";

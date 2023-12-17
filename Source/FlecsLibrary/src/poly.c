@@ -80,14 +80,14 @@ void* assert_mixin(
     ecs_assert(poly != nullptr, ECS_INVALID_PARAMETER, nullptr);
     ecs_assert(kind < EcsMixinMax, ECS_INVALID_PARAMETER, nullptr);
     
-    const ecs_header_t *hdr = poly;
+    const ecs_header_t *hdr = static_cast<const ecs_header_t*>(poly);
     ecs_assert(hdr != nullptr, ECS_INVALID_PARAMETER, nullptr);
     ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER, nullptr);
 
     const ecs_mixins_t *mixins = hdr->mixins;
     ecs_assert(mixins != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
-    ecs_size_t offset = mixins->elems[kind];
+    const ecs_size_t offset = mixins->elems[kind];
     ecs_assert(offset != 0, ECS_INVALID_PARAMETER, 
         "mixin %s not available for type %s",
             mixin_kind_str[kind], mixins ? mixins->type_name : "unknown");
@@ -105,7 +105,7 @@ void* ecs_poly_init_(
 {
     ecs_assert(poly != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
-    ecs_header_t *hdr = poly;
+    ecs_header_t *hdr = static_cast<ecs_header_t*>(poly);
     ecs_os_memset(poly, 0, size);
 
     hdr->magic = ECS_OBJECT_MAGIC;
@@ -122,7 +122,7 @@ void ecs_poly_fini_(
     ecs_assert(poly != nullptr, ECS_INVALID_PARAMETER, nullptr);
     (void)type;
 
-    ecs_header_t *hdr = poly;
+    ecs_header_t *hdr = static_cast<ecs_header_t*>(poly);
 
     /* Don't deinit poly that wasn't initialized */
     ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER, nullptr);
@@ -193,7 +193,7 @@ bool ecs_poly_is_(
 {
     ecs_assert(poly != nullptr, ECS_INVALID_PARAMETER, nullptr);
 
-    const ecs_header_t *hdr = poly;
+    const ecs_header_t *hdr = static_cast<const ecs_header_t*>(poly);
     ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER, nullptr);
     return hdr->type == type;    
 }
@@ -201,32 +201,32 @@ bool ecs_poly_is_(
 ecs_iterable_t* ecs_get_iterable(
     const ecs_poly_t *poly)
 {
-    return (ecs_iterable_t*)assert_mixin(poly, EcsMixinIterable);
+    return static_cast<ecs_iterable_t*>(assert_mixin(poly, EcsMixinIterable));
 }
 
 ecs_observable_t* ecs_get_observable(
     const ecs_poly_t *poly)
 {
-    return (ecs_observable_t*)assert_mixin(poly, EcsMixinObservable);
+    return static_cast<ecs_observable_t*>(assert_mixin(poly, EcsMixinObservable));
 }
 
 const ecs_world_t* ecs_get_world(
     const ecs_poly_t *poly)
 {
-    if (((const ecs_header_t*)poly)->type == ecs_world_t_magic) {
-        return poly;
+    if (static_cast<const ecs_header_t*>(poly)->type == ecs_world_t_magic) {
+        return static_cast<const ecs_world_t*>(poly);
     }
-    return *(ecs_world_t**)assert_mixin(poly, EcsMixinWorld);
+    return *static_cast<ecs_world_t**>(assert_mixin(poly, EcsMixinWorld));
 }
 
 ecs_entity_t ecs_get_entity(
     const ecs_poly_t *poly)
 {
-    return *(ecs_entity_t*)assert_mixin(poly, EcsMixinEntity);
+    return *static_cast<ecs_entity_t*>(assert_mixin(poly, EcsMixinEntity));
 }
 
 ecs_poly_dtor_t* ecs_get_dtor(
     const ecs_poly_t *poly)
 {
-    return (ecs_poly_dtor_t*)assert_mixin(poly, EcsMixinDtor);
+    return static_cast<ecs_poly_dtor_t*>(assert_mixin(poly, EcsMixinDtor));
 }

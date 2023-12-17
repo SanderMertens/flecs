@@ -10,6 +10,8 @@
 USTRUCT(BlueprintType)
 struct FFlecsEntityHandle
 {
+	GENERATED_BODY()
+	
 	OPTIONAL_FORCEINLINE NO_DISCARD friend uint32 GetTypeHash(const FFlecsEntityHandle& InHandle)
 	{
 		return GetTypeHash(InHandle.Entity.id());

@@ -32,7 +32,7 @@
 extern "C" {
 #endif
 
-#define ECS_ALERT_MAX_SEVERITY_FILTERS (4)
+INLINE static CONSTEXPR int32 ECS_ALERT_MAX_SEVERITY_FILTERS = 4;
 
 /* Module id */
 FLECS_API extern ECS_COMPONENT_DECLARE(FlecsAlerts);

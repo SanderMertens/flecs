@@ -22,7 +22,8 @@ ecs_id_record_elem_t* flecs_id_record_elem(
     ecs_id_record_elem_t *list,
     ecs_id_record_t *idr)
 {
-    return ECS_OFFSET(idr, (uintptr_t)list - (uintptr_t)head);
+    return static_cast<ecs_id_record_elem_t*>(ECS_OFFSET(idr,
+        reinterpret_cast<uintptr_t>(list) - reinterpret_cast<uintptr_t>(head)));
 }
 
 static
@@ -570,11 +571,10 @@ void flecs_fini_id_records(
     while (ecs_map_count(&world->id_index_hi) > 0) {
         ecs_map_iter_t it = ecs_map_iter(&world->id_index_hi);
         ecs_map_next(&it);
-        flecs_id_record_release(world, ecs_map_ptr(&it));
+        flecs_id_record_release(world, static_cast<ecs_id_record_t*>(ecs_map_ptr(&it)));
     }
 
-    int32_t i;
-    for (i = 0; i < FLECS_HI_ID_RECORD_ID; i ++) {
+    for (int32_t i = 0; i < FLECS_HI_ID_RECORD_ID; i ++) {
         ecs_id_record_t *idr = &world->id_index_lo[i];
         if (idr->id) {
             flecs_id_record_release(world, idr);

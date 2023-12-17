@@ -8,8 +8,8 @@
 #ifndef FLECS_ENTITY_INDEX_H
 #define FLECS_ENTITY_INDEX_H
 
-#define FLECS_ENTITY_PAGE_SIZE (1 << FLECS_ENTITY_PAGE_BITS)
-#define FLECS_ENTITY_PAGE_MASK (FLECS_ENTITY_PAGE_SIZE - 1)
+INLINE static CONSTEXPR uint32 FLECS_ENTITY_PAGE_SIZE = (1 << FLECS_ENTITY_PAGE_BITS);
+INLINE static CONSTEXPR uint32 FLECS_ENTITY_PAGE_MASK = (FLECS_ENTITY_PAGE_SIZE - 1);
 
 typedef struct ecs_entity_index_page_t {
     ecs_record_t records[FLECS_ENTITY_PAGE_SIZE];
@@ -65,7 +65,7 @@ void flecs_entity_index_remove(
 
 /* Set generation of entity */
 void flecs_entity_index_set_generation(
-    ecs_entity_index_t *index,
+    const ecs_entity_index_t *index,
     uint64_t entity);
 
 /* Get current generation of entity */
