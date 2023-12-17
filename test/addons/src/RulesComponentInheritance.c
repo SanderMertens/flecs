@@ -1235,6 +1235,292 @@ void RulesComponentInheritance_1_var_3_lvl_written(void) {
     ecs_fini(world);
 }
 
+void RulesComponentInheritance_1_ent_1_lvl_self(void) {
+    ecs_world_t *world = ecs_init();
+
+    populate_facts(world);
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_add(world, e1, Warlock);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Warrior(e1:self)"
+    });
+
+    test_assert(r != NULL);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(Warlock, ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(e1, ecs_field_src(&it, 1));
+
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesComponentInheritance_1_this_1_lvl_self(void) {
+    ecs_world_t *world = ecs_init();
+
+    populate_facts(world);
+
+    ecs_entity_t e1 = ecs_new(world, Warlock);
+    /* ecs_entity_t e2 = */ ecs_new(world, Wizard);
+    ecs_entity_t e3 = ecs_new(world, Warrior);
+    /* ecs_entity_t e4 = */ ecs_new(world, Archer);
+    ecs_entity_t e5 = ecs_new(world, MeleeUnit);
+    /* ecs_entity_t e6 = */ ecs_new(world, RangedUnit);
+    /* ecs_entity_t e7 = */ ecs_new(world, Unit);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "MeleeUnit(self)"
+    });
+
+    test_assert(r != NULL);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(1, it.count);
+        test_uint(MeleeUnit, ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(e5, it.entities[0]);
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(1, it.count);
+        test_uint(Warrior, ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(e3, it.entities[0]);
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(1, it.count);
+        test_uint(Warlock, ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(e1, it.entities[0]);
+
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesComponentInheritance_1_this_1_lvl_written_self(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    populate_facts(world);
+
+    ecs_entity_t e1 = ecs_new(world, Tag);
+    ecs_entity_t e2 = ecs_new(world, Tag);
+    ecs_entity_t e3 = ecs_new(world, Tag);
+    ecs_entity_t e4 = ecs_new(world, Tag);
+    ecs_entity_t e5 = ecs_new(world, Tag);
+    ecs_entity_t e6 = ecs_new(world, Tag);
+    ecs_entity_t e7 = ecs_new(world, Tag);
+
+    ecs_add(world, e1, Warlock);
+    ecs_add(world, e2, Wizard);
+    ecs_add(world, e3, Warrior);
+    ecs_add(world, e4, Archer);
+    ecs_add(world, e5, MeleeUnit);
+    ecs_add(world, e6, RangedUnit);
+    ecs_add(world, e7, Unit);
+
+    /* entities that don't match query */
+    ecs_new(world, Unit);
+    ecs_new(world, MeleeUnit);
+    ecs_new(world, Warrior);
+    ecs_new(world, Warlock);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Tag(self), MeleeUnit(self)"
+    });
+
+    test_assert(r != NULL);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(1, it.count);
+        test_uint(Tag, ecs_field_id(&it, 1));
+        test_uint(Warlock, ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 2));
+        test_uint(e1, it.entities[0]);
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(1, it.count);
+        test_uint(Tag, ecs_field_id(&it, 1));
+        test_uint(Warrior, ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 2));
+        test_uint(e3, it.entities[0]);
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(1, it.count);
+        test_uint(Tag, ecs_field_id(&it, 1));
+        test_uint(MeleeUnit, ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 2));
+        test_uint(e5, it.entities[0]);
+
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesComponentInheritance_1_var_1_lvl_self(void) {
+    ecs_world_t *world = ecs_init();
+
+    populate_facts(world);
+
+    ecs_entity_t e1 = ecs_new(world, Warlock);
+    /* ecs_entity_t e2 = */ ecs_new(world, Wizard);
+    ecs_entity_t e3 = ecs_new(world, Warrior);
+    /* ecs_entity_t e4 = */ ecs_new(world, Archer);
+    ecs_entity_t e5 = ecs_new(world, MeleeUnit);
+    /* ecs_entity_t e6 = */ ecs_new(world, RangedUnit);
+    /* ecs_entity_t e7 = */ ecs_new(world, Unit);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "MeleeUnit($x:self)"
+    });
+
+    test_assert(r != NULL);
+
+    int x_var = ecs_rule_find_var(r, "x");
+    test_assert(x_var != -1);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(MeleeUnit, ecs_field_id(&it, 1));
+        test_uint(e5, ecs_field_src(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(e5, ecs_iter_get_var(&it, x_var));
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(Warrior, ecs_field_id(&it, 1));
+        test_uint(e3, ecs_field_src(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(e3, ecs_iter_get_var(&it, x_var));
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(Warlock, ecs_field_id(&it, 1));
+        test_uint(e1, ecs_field_src(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(e1, ecs_iter_get_var(&it, x_var));
+
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesComponentInheritance_1_var_1_lvl_written_self(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    populate_facts(world);
+
+    ecs_entity_t e1 = ecs_new(world, Tag);
+    ecs_entity_t e2 = ecs_new(world, Tag);
+    ecs_entity_t e3 = ecs_new(world, Tag);
+    ecs_entity_t e4 = ecs_new(world, Tag);
+    ecs_entity_t e5 = ecs_new(world, Tag);
+    ecs_entity_t e6 = ecs_new(world, Tag);
+    ecs_entity_t e7 = ecs_new(world, Tag);
+
+    ecs_add(world, e1, Warlock);
+    ecs_add(world, e2, Wizard);
+    ecs_add(world, e3, Warrior);
+    ecs_add(world, e4, Archer);
+    ecs_add(world, e5, MeleeUnit);
+    ecs_add(world, e6, RangedUnit);
+    ecs_add(world, e7, Unit);
+
+    /* entities that don't match query */
+    ecs_new(world, Unit);
+    ecs_new(world, MeleeUnit);
+    ecs_new(world, Warrior);
+    ecs_new(world, Warlock);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Tag($x), MeleeUnit($x)"
+    });
+
+    test_assert(r != NULL);
+
+    int x_var = ecs_rule_find_var(r, "x");
+    test_assert(x_var != -1);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(Tag, ecs_field_id(&it, 1));
+        test_uint(Warlock, ecs_field_id(&it, 2));
+        test_uint(e1, ecs_field_src(&it, 1));
+        test_uint(e1, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 2));
+        test_uint(e1, ecs_iter_get_var(&it, x_var));
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(Tag, ecs_field_id(&it, 1));
+        test_uint(Warrior, ecs_field_id(&it, 2));
+        test_uint(e3, ecs_field_src(&it, 1));
+        test_uint(e3, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 2));
+        test_uint(e3, ecs_iter_get_var(&it, x_var));
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(Tag, ecs_field_id(&it, 1));
+        test_uint(MeleeUnit, ecs_field_id(&it, 2));
+        test_uint(e5, ecs_field_src(&it, 1));
+        test_uint(e5, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 2));
+        test_uint(e5, ecs_iter_get_var(&it, x_var));
+
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
 void RulesComponentInheritance_1_ent_src_not(void) {
     ecs_world_t *world = ecs_init();
 

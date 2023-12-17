@@ -857,6 +857,10 @@ int flecs_term_finalize(
             }
         }
     }
+
+    if (term->flags & EcsTermIdInherited) {
+        trivial_term = false;
+    }
     if (src->trav && src->trav != EcsIsA) {
         trivial_term = false;
     }

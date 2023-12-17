@@ -1144,6 +1144,11 @@ void RulesComponentInheritance_1_var_0_lvl_written(void);
 void RulesComponentInheritance_1_var_1_lvl_written(void);
 void RulesComponentInheritance_1_var_2_lvl_written(void);
 void RulesComponentInheritance_1_var_3_lvl_written(void);
+void RulesComponentInheritance_1_ent_1_lvl_self(void);
+void RulesComponentInheritance_1_this_1_lvl_self(void);
+void RulesComponentInheritance_1_this_1_lvl_written_self(void);
+void RulesComponentInheritance_1_var_1_lvl_self(void);
+void RulesComponentInheritance_1_var_1_lvl_written_self(void);
 void RulesComponentInheritance_1_ent_src_not(void);
 void RulesComponentInheritance_1_this_src_not(void);
 void RulesComponentInheritance_1_var_src_not(void);
@@ -6293,6 +6298,26 @@ bake_test_case RulesComponentInheritance_testcases[] = {
         RulesComponentInheritance_1_var_3_lvl_written
     },
     {
+        "1_ent_1_lvl_self",
+        RulesComponentInheritance_1_ent_1_lvl_self
+    },
+    {
+        "1_this_1_lvl_self",
+        RulesComponentInheritance_1_this_1_lvl_self
+    },
+    {
+        "1_this_1_lvl_written_self",
+        RulesComponentInheritance_1_this_1_lvl_written_self
+    },
+    {
+        "1_var_1_lvl_self",
+        RulesComponentInheritance_1_var_1_lvl_self
+    },
+    {
+        "1_var_1_lvl_written_self",
+        RulesComponentInheritance_1_var_1_lvl_written_self
+    },
+    {
         "1_ent_src_not",
         RulesComponentInheritance_1_ent_src_not
     },
@@ -8804,7 +8829,7 @@ static bake_test_suite suites[] = {
         "RulesComponentInheritance",
         NULL,
         NULL,
-        31,
+        36,
         RulesComponentInheritance_testcases
     },
     {
