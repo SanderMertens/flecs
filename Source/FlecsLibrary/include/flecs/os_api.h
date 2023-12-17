@@ -48,134 +48,168 @@ extern int64_t ecs_os_api_calloc_count;
 extern int64_t ecs_os_api_free_count;
 
 /* Use handle types that _at least_ can store pointers */
-using ecs_os_thread_t = uintptr_t;
-using ecs_os_cond_t = uintptr_t;
-using ecs_os_mutex_t = uintptr_t;
-using ecs_os_dl_t = uintptr_t;
-using ecs_os_sock_t = uintptr_t;
+typedef uintptr_t ecs_os_thread_t;
+typedef uintptr_t ecs_os_cond_t;
+typedef uintptr_t ecs_os_mutex_t;
+typedef uintptr_t ecs_os_dl_t;
+typedef uintptr_t ecs_os_sock_t;
 
 /* 64 bit thread id */
-using ecs_os_thread_id_t = uint64_t;
+typedef uint64_t ecs_os_thread_id_t;
 
 /* Generic function pointer type */
-using ecs_os_proc_t = void(*)(void);
+typedef void (*ecs_os_proc_t)(void);
 
 /* OS API init */
-using ecs_os_api_init_t = void(*)(void);
+typedef 
+void (*ecs_os_api_init_t)(void);
 
 /* OS API deinit */
-using ecs_os_api_fini_t = void(*)(void);
+typedef 
+void (*ecs_os_api_fini_t)(void);
 
 /* Memory management */
-using ecs_os_api_malloc_t = void* (*)(
+typedef 
+void* (*ecs_os_api_malloc_t)(
     ecs_size_t size);
 
-using ecs_os_api_free_t = void(*)(
+typedef 
+void (*ecs_os_api_free_t)(
     void *ptr);
 
-using ecs_os_api_realloc_t = void* (*)(
+typedef
+void* (*ecs_os_api_realloc_t)(
     void *ptr, 
     ecs_size_t size);
 
-using ecs_os_api_calloc_t = void* (*)(
+typedef
+void* (*ecs_os_api_calloc_t)(
     ecs_size_t size);
 
-using ecs_os_api_strdup_t = char* (*)(
+typedef
+char* (*ecs_os_api_strdup_t)(
     const char *str);
 
 /* Threads */
-using ecs_os_thread_callback_t = void* (*)(
+typedef
+void* (*ecs_os_thread_callback_t)(
     void*);
 
-using ecs_os_api_thread_new_t = ecs_os_thread_t(*)(
+typedef
+ecs_os_thread_t (*ecs_os_api_thread_new_t)(
     ecs_os_thread_callback_t callback,
     void *param);
 
-using ecs_os_api_thread_join_t = void* (*)(
+typedef
+void* (*ecs_os_api_thread_join_t)(
     ecs_os_thread_t thread);
 
-using ecs_os_api_thread_self_t = ecs_os_thread_id_t(*)(void);
+typedef
+ecs_os_thread_id_t (*ecs_os_api_thread_self_t)(void);
 
 /* Tasks */
-using ecs_os_api_task_new_t = ecs_os_thread_t(*)(
+typedef
+ecs_os_thread_t (*ecs_os_api_task_new_t)(
     ecs_os_thread_callback_t callback,
     void *param);
 
-using ecs_os_api_task_join_t = void* (*)(
+typedef
+void* (*ecs_os_api_task_join_t)(
     ecs_os_thread_t thread);
 
 /* Atomic increment / decrement */
-using ecs_os_api_ainc_t = int32_t(*)(
+typedef
+int32_t (*ecs_os_api_ainc_t)(
     int32_t *value);
 
-using ecs_os_api_lainc_t = int64_t(*)(
+typedef
+int64_t (*ecs_os_api_lainc_t)(
     int64_t *value);
 
 /* Mutex */
-using ecs_os_api_mutex_new_t = ecs_os_mutex_t(*)(
+typedef
+ecs_os_mutex_t (*ecs_os_api_mutex_new_t)(
     void);
 
-using ecs_os_api_mutex_lock_t = void(*)(
+typedef
+void (*ecs_os_api_mutex_lock_t)(
     ecs_os_mutex_t mutex);
 
-using ecs_os_api_mutex_unlock_t = void(*)(
+typedef
+void (*ecs_os_api_mutex_unlock_t)(
     ecs_os_mutex_t mutex);
 
-using ecs_os_api_mutex_free_t = void(*)(
+typedef
+void (*ecs_os_api_mutex_free_t)(
     ecs_os_mutex_t mutex);
 
 /* Condition variable */
-using ecs_os_api_cond_new_t = ecs_os_cond_t(*)(
+typedef
+ecs_os_cond_t (*ecs_os_api_cond_new_t)(
     void);
 
-using ecs_os_api_cond_free_t = void(*)(
+typedef
+void (*ecs_os_api_cond_free_t)(
     ecs_os_cond_t cond);
 
-using ecs_os_api_cond_signal_t = void(*)(
+typedef
+void (*ecs_os_api_cond_signal_t)(
     ecs_os_cond_t cond);
 
-using ecs_os_api_cond_broadcast_t = void(*)(
+typedef
+void (*ecs_os_api_cond_broadcast_t)(
     ecs_os_cond_t cond);
 
-using ecs_os_api_cond_wait_t = void(*)(
+typedef
+void (*ecs_os_api_cond_wait_t)(
     ecs_os_cond_t cond,
     ecs_os_mutex_t mutex);
 
-using ecs_os_api_sleep_t = void(*)(
+typedef 
+void (*ecs_os_api_sleep_t)(
     int32_t sec,
     int32_t nanosec);
 
-using ecs_os_api_enable_high_timer_resolution_t = void(*)(
+typedef 
+void (*ecs_os_api_enable_high_timer_resolution_t)(
     bool enable);
 
-using ecs_os_api_get_time_t = void(*)(
+typedef
+void (*ecs_os_api_get_time_t)(
     ecs_time_t *time_out);
 
-using ecs_os_api_now_t = uint64_t(*)(void);
+typedef
+uint64_t (*ecs_os_api_now_t)(void);
 
 /* Logging */
-using ecs_os_api_log_t = void(*)(
-    int32_t level,    /* Logging level */
-    const char *file, /* File where message was logged */
-    int32_t line,     /* Line it was logged */
+typedef
+void (*ecs_os_api_log_t)(
+    int32_t level,     /* Logging level */
+    const char *file,  /* File where message was logged */
+    int32_t line,      /* Line it was logged */
     const char *msg);
 
 /* Application termination */
-using ecs_os_api_abort_t = void(*)(
+typedef
+void (*ecs_os_api_abort_t)(
     void);
 
 /* Dynamic libraries */
-using ecs_os_api_dlopen_t = ecs_os_dl_t(*)(
+typedef
+ecs_os_dl_t (*ecs_os_api_dlopen_t)(
     const char *libname);
 
-using ecs_os_api_dlproc_t = ecs_os_proc_t(*)(
+typedef
+ecs_os_proc_t (*ecs_os_api_dlproc_t)(
     ecs_os_dl_t lib,
     const char *procname);
 
-using ecs_os_api_dlclose_t = void(*)(
+typedef
+void (*ecs_os_api_dlclose_t)(
     ecs_os_dl_t lib);
 
-using ecs_os_api_module_to_path_t = char* (*)(
+typedef
+char* (*ecs_os_api_module_to_path_t)(
     const char *module_id);
 
 /* Prefix members of struct with 'ecs_' as some system headers may define 
