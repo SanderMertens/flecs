@@ -15,72 +15,74 @@ extern "C" {
 //// World flags
 ////////////////////////////////////////////////////////////////////////////////
 
-INLINE static CONSTEXPR uint32 EcsWorldQuitWorkers = 1u << 0;
-INLINE static CONSTEXPR uint32 EcsWorldReadonly = 1u << 1;
-INLINE static CONSTEXPR uint32 EcsWorldInit = 1u << 2;
-INLINE static CONSTEXPR uint32 EcsWorldQuit = 1u << 3;
-INLINE static CONSTEXPR uint32 EcsWorldFini = 1u << 4;
-INLINE static CONSTEXPR uint32 EcsWorldMeasureFrameTime = 1u << 5;
-INLINE static CONSTEXPR uint32 EcsWorldMeasureSystemTime = 1u << 6;
-INLINE static CONSTEXPR uint32 EcsWorldMultiThreaded = 1u << 7;
+#define EcsWorldQuitWorkers           (1u << 0)
+#define EcsWorldReadonly              (1u << 1)
+#define EcsWorldInit                  (1u << 2)
+#define EcsWorldQuit                  (1u << 3)
+#define EcsWorldFini                  (1u << 4)
+#define EcsWorldMeasureFrameTime      (1u << 5)
+#define EcsWorldMeasureSystemTime     (1u << 6)
+#define EcsWorldMultiThreaded         (1u << 7)
 
 
 ////////////////////////////////////////////////////////////////////////////////
 //// OS API flags
 ////////////////////////////////////////////////////////////////////////////////
 
-INLINE static CONSTEXPR uint32 EcsOsApiHighResolutionTimer = 1u << 0;
-INLINE static CONSTEXPR uint32 EcsOsApiLogWithColors = 1u << 1;
-INLINE static CONSTEXPR uint32 EcsOsApiLogWithTimeStamp = 1u << 2;
-INLINE static CONSTEXPR uint32 EcsOsApiLogWithTimeDelta = 1u << 3;
+#define EcsOsApiHighResolutionTimer   (1u << 0)
+#define EcsOsApiLogWithColors         (1u << 1)
+#define EcsOsApiLogWithTimeStamp      (1u << 2)
+#define EcsOsApiLogWithTimeDelta      (1u << 3)
 
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Entity flags (set in upper bits of ecs_record_t::row)
 ////////////////////////////////////////////////////////////////////////////////
 
-INLINE static CONSTEXPR uint32 EcsEntityIsId = 1u << 31;
-INLINE static CONSTEXPR uint32 EcsEntityIsTarget = 1u << 30;
-INLINE static CONSTEXPR uint32 EcsEntityIsTraversable = 1u << 29;
+#define EcsEntityIsId                 (1u << 31)
+#define EcsEntityIsTarget             (1u << 30)
+#define EcsEntityIsTraversable        (1u << 29)
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Id flags (used by ecs_id_record_t::flags)
 ////////////////////////////////////////////////////////////////////////////////
 
-INLINE static CONSTEXPR uint32 EcsIdOnDeleteRemove = 1u << 0;
-INLINE static CONSTEXPR uint32 EcsIdOnDeleteDelete = 1u << 1;
-INLINE static CONSTEXPR uint32 EcsIdOnDeletePanic = 1u << 2;
+#define EcsIdOnDeleteRemove            (1u << 0)
+#define EcsIdOnDeleteDelete            (1u << 1)
+#define EcsIdOnDeletePanic             (1u << 2)
+#define EcsIdOnDeleteMask\
+    (EcsIdOnDeletePanic|EcsIdOnDeleteRemove|EcsIdOnDeleteDelete)
 
-INLINE static CONSTEXPR uint32 EcsIdOnDeleteMask = EcsIdOnDeletePanic | EcsIdOnDeleteRemove | EcsIdOnDeleteDelete;
+#define EcsIdOnDeleteObjectRemove      (1u << 3)
+#define EcsIdOnDeleteObjectDelete      (1u << 4)
+#define EcsIdOnDeleteObjectPanic       (1u << 5)
+#define EcsIdOnDeleteObjectMask\
+    (EcsIdOnDeleteObjectPanic|EcsIdOnDeleteObjectRemove|\
+        EcsIdOnDeleteObjectDelete)
 
-INLINE static CONSTEXPR uint32 EcsIdOnDeleteObjectRemove = 1u << 3;
-INLINE static CONSTEXPR uint32 EcsIdOnDeleteObjectDelete = 1u << 4;
-INLINE static CONSTEXPR uint32 EcsIdOnDeleteObjectPanic = 1u << 5;
-INLINE static CONSTEXPR uint32 EcsIdOnDeleteObjectMask = EcsIdOnDeleteObjectPanic
-        | EcsIdOnDeleteObjectRemove | EcsIdOnDeleteObjectDelete;
+#define EcsIdExclusive                 (1u << 6)
+#define EcsIdDontInherit               (1u << 7)
+#define EcsIdTraversable               (1u << 8)
+#define EcsIdTag                       (1u << 9)
+#define EcsIdWith                      (1u << 10)
+#define EcsIdUnion                     (1u << 11)
+#define EcsIdAlwaysOverride            (1u << 12)
 
-INLINE static CONSTEXPR uint32 EcsIdExclusive = 1u << 6;
-INLINE static CONSTEXPR uint32 EcsIdDontInherit = 1u << 7;
-INLINE static CONSTEXPR uint32 EcsIdTraversable = 1u << 8;
-INLINE static CONSTEXPR uint32 EcsIdTag = 1u << 9;
-INLINE static CONSTEXPR uint32 EcsIdWith = 1u << 10;
-INLINE static CONSTEXPR uint32 EcsIdUnion = 1u << 11;
-INLINE static CONSTEXPR uint32 EcsIdAlwaysOverride = 1u << 12;
+#define EcsIdHasOnAdd                  (1u << 16) /* Same values as table flags */
+#define EcsIdHasOnRemove               (1u << 17) 
+#define EcsIdHasOnSet                  (1u << 18)
+#define EcsIdHasUnSet                  (1u << 19)
+#define EcsIdHasOnTableFill            (1u << 20)
+#define EcsIdHasOnTableEmpty           (1u << 21)
+#define EcsIdHasOnTableCreate          (1u << 22)
+#define EcsIdHasOnTableDelete          (1u << 23)
+#define EcsIdEventMask\
+    (EcsIdHasOnAdd|EcsIdHasOnRemove|EcsIdHasOnSet|EcsIdHasUnSet|\
+        EcsIdHasOnTableFill|EcsIdHasOnTableEmpty|EcsIdHasOnTableCreate|\
+            EcsIdHasOnTableDelete)
 
-INLINE static CONSTEXPR uint32 EcsIdHasOnAdd = 1u << 16;
-INLINE static CONSTEXPR uint32 EcsIdHasOnRemove = 1u << 17;
-INLINE static CONSTEXPR uint32 EcsIdHasOnSet = 1u << 18;
-INLINE static CONSTEXPR uint32 EcsIdHasUnSet = 1u << 19;
-INLINE static CONSTEXPR uint32 EcsIdHasOnTableFill = 1u << 20;
-INLINE static CONSTEXPR uint32 EcsIdHasOnTableEmpty = 1u << 21;
-INLINE static CONSTEXPR uint32 EcsIdHasOnTableCreate = 1u << 22;
-INLINE static CONSTEXPR uint32 EcsIdHasOnTableDelete = 1u << 23;
-INLINE static CONSTEXPR uint32 EcsIdEventMask
-	= EcsIdHasOnAdd | EcsIdHasOnRemove | EcsIdHasOnSet | EcsIdHasUnSet
-		| EcsIdHasOnTableFill | EcsIdHasOnTableEmpty | EcsIdHasOnTableCreate | EcsIdHasOnTableDelete;
-
-INLINE static CONSTEXPR uint32 EcsIdMarkedForDelete = 1u << 30;
-
+#define EcsIdMarkedForDelete           (1u << 30)
 
 /* Utilities for converting from flags to delete policies and vice versa */
 #define ECS_ID_ON_DELETE(flags) \

@@ -118,9 +118,9 @@ void flecs_log_msg(
         stream = stderr;
     }
 
-    const bool use_colors = ecs_os_api.flags_ & EcsOsApiLogWithColors;
-    const bool timestamp = ecs_os_api.flags_ & EcsOsApiLogWithTimeStamp;
-    const bool deltatime = ecs_os_api.flags_ & EcsOsApiLogWithTimeDelta;
+    bool use_colors = ecs_os_api.flags_ & EcsOsApiLogWithColors;
+    bool timestamp = ecs_os_api.flags_ & EcsOsApiLogWithTimeStamp;
+    bool deltatime = ecs_os_api.flags_ & EcsOsApiLogWithTimeDelta;
 
     time_t now = 0;
 

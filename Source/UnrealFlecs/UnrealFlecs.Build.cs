@@ -26,8 +26,7 @@ public class UnrealFlecs : ModuleRules
 			new string[]
 			{
 				"Core",
-				"FlecsLibrary",
-				"SolidMacros"
+				"FlecsLibrary"
 			}
 			);
 			
@@ -39,6 +38,7 @@ public class UnrealFlecs : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
+				"SolidMacros"
 			}
 			);
 		
