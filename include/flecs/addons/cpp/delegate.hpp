@@ -734,8 +734,8 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
         }
 
         ArrayType ptrs;
-        bool has_components;
-        if ((has_components = get_ptrs(world, r, table, ptrs))) {
+        bool has_components = get_ptrs(world, r, table, ptrs);
+        if (has_components) {
             invoke_callback(func, 0, ptrs);
         }
 
@@ -757,8 +757,8 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
         }
 
         ArrayType ptrs;
-        bool has_components;
-        if ((has_components = get_ptrs(world, r, table, ptrs))) {
+        bool has_components = get_ptrs(world, r, table, ptrs);
+        if (has_components) {
             invoke_callback(func, 0, ptrs);
         }
 
