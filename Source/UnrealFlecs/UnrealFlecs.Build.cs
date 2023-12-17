@@ -26,7 +26,7 @@ public class UnrealFlecs : ModuleRules
 			new string[]
 			{
 				"Core",
-				"FlecsLibrary"
+				// ... add other public dependencies that you statically link with here ...
 			}
 			);
 			
@@ -38,7 +38,7 @@ public class UnrealFlecs : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
-				"SolidMacros"
+				// ... add private dependencies that you statically link with here ...	
 			}
 			);
 		
