@@ -2412,6 +2412,10 @@ const ecs_entity_t* ecs_bulk_new_w_id(
  * This operation clones the components of one entity into another entity. If
  * no destination entity is provided, a new entity will be created. Component
  * values are not copied unless copy_value is true.
+ * 
+ * If the source entity has a name, it will not be copied to the destination
+ * entity. This is to prevent having two entities with the same name under the
+ * same parent, which is not allowed.
  *
  * @param world The world.
  * @param dst The entity to copy the components to.

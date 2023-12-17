@@ -903,6 +903,7 @@ void Clone_tag(void);
 void Clone_tag_w_value(void);
 void Clone_1_tag_1_component(void);
 void Clone_1_tag_1_component_w_value(void);
+void Clone_clone_w_name(void);
 
 // Testsuite 'ComponentLifecycle'
 void ComponentLifecycle_setup(void);
@@ -6101,6 +6102,10 @@ bake_test_case Clone_testcases[] = {
     {
         "1_tag_1_component_w_value",
         Clone_1_tag_1_component_w_value
+    },
+    {
+        "clone_w_name",
+        Clone_clone_w_name
     }
 };
 
@@ -13139,7 +13144,7 @@ static bake_test_suite suites[] = {
         "Clone",
         NULL,
         NULL,
-        14,
+        15,
         Clone_testcases
     },
     {

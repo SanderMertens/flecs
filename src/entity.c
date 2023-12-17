@@ -2682,22 +2682,28 @@ ecs_entity_t ecs_clone(
         goto done;
     }
 
-    ecs_type_t src_type = src_table->type;
-    ecs_table_diff_t diff = { .added = src_type };
+    ecs_table_t *dst_table = src_table;
+    if (src_table->flags & EcsTableHasName) {
+        dst_table = ecs_table_remove_id(world, src_table, 
+            ecs_pair_t(EcsIdentifier, EcsName));
+    }
+
+    ecs_type_t dst_type = dst_table->type;
+    ecs_table_diff_t diff = { .added = dst_type };
     ecs_record_t *dst_r = flecs_entities_get(world, dst);
-    flecs_new_entity(world, dst, dst_r, src_table, &diff, true, true);
+    flecs_new_entity(world, dst, dst_r, dst_table, &diff, true, true);
     int32_t row = ECS_RECORD_TO_ROW(dst_r->row);
 
     if (copy_value) {
-        flecs_table_move(world, dst, src, src_table,
+        flecs_table_move(world, dst, src, dst_table,
             row, src_table, ECS_RECORD_TO_ROW(src_r->row), true);
-        int32_t i, count = src_table->column_count;
+        int32_t i, count = dst_table->column_count;
         for (i = 0; i < count; i ++) {
             ecs_type_t type = {
-                .array = &src_table->data.columns[i].id,
+                .array = &dst_table->data.columns[i].id,
                 .count = 1
             };
-            flecs_notify_on_set(world, src_table, row, 1, &type, true);
+            flecs_notify_on_set(world, dst_table, row, 1, &type, true);
         }
     }
 
