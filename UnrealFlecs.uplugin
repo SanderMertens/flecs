@@ -21,14 +21,8 @@
 		},
 		{
 			"Name": "FlecsLibrary",
-			"Type": "Runtime",
+			"Type": "Default",
 			"LoadingPhase": "PreDefault"
-		}
-	],
-	"Plugins": [
-		{
-			"Name": "SolidMacros",
-			"Enabled": true
 		}
 	]
 }

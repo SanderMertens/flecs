@@ -70,10 +70,9 @@ bool flecs_name_is_id(
         return false;
     }
 
-    ecs_size_t i;
-    const ecs_size_t length = ecs_os_strlen(name);
+    ecs_size_t i, length = ecs_os_strlen(name);
     for (i = 1; i < length; i ++) {
-        const char ch = name[i];
+        char ch = name[i];
 
         if (!isdigit(ch)) {
             break;
@@ -87,17 +86,18 @@ ecs_entity_t flecs_name_to_id(
     const ecs_world_t *world,
     const char *name)
 {
-    const int64_t result = atoll(name);
+    int64_t result = atoll(name);
     ecs_assert(result >= 0, ECS_INTERNAL_ERROR, nullptr);
-    if (const ecs_entity_t alive = ecs_get_alive(world, static_cast<ecs_entity_t>(result))) {
+    ecs_entity_t alive = ecs_get_alive(world, (ecs_entity_t)result);
+    if (alive) {
         return alive;
+    } else {
+        if ((uint32_t)result == (uint64_t)result) {
+            return (ecs_entity_t)result;
+        } else {
+            return 0;
+        }
     }
-    
-    if (static_cast<uint32_t>(result) == static_cast<uint64_t>(result)) {
-        return static_cast<ecs_entity_t>(result);
-    }
-        
-    return 0;
 }
 
 static
@@ -122,7 +122,7 @@ bool flecs_is_sep(
     const char **ptr,
     const char *sep)
 {
-    const ecs_size_t len = ecs_os_strlen(sep);
+    ecs_size_t len = ecs_os_strlen(sep);
 
     if (!ecs_os_strncmp(*ptr, sep, len)) {
         *ptr += len;
@@ -215,8 +215,9 @@ void flecs_on_set_symbol(ecs_iter_t *it) {
     EcsIdentifier *n = ecs_field(it, EcsIdentifier, 1);
     ecs_world_t *world = it->world;
 
-    for (int i = 0; i < it->count; i ++) {
-        const ecs_entity_t e = it->entities[i];
+    int i;
+    for (i = 0; i < it->count; i ++) {
+        ecs_entity_t e = it->entities[i];
         flecs_name_index_ensure(
             &world->symbols, e, n[i].value, n[i].length, n[i].hash);
     }
@@ -295,7 +296,7 @@ ecs_entity_t ecs_lookup_child(
     world = ecs_get_world(world);
 
     if (flecs_name_is_id(name)) {
-        const ecs_entity_t result = flecs_name_to_id(world, name);
+        ecs_entity_t result = flecs_name_to_id(world, name);
         if (result && ecs_is_alive(world, result)) {
             if (parent && !ecs_has_pair(world, result, EcsChildOf, parent)) {
                 return 0;
@@ -304,8 +305,9 @@ ecs_entity_t ecs_lookup_child(
         }
     }
 
-    const ecs_id_t pair = ecs_childof(parent);
-    if (const ecs_hashmap_t *index = flecs_id_name_index_get(world, pair)) {
+    ecs_id_t pair = ecs_childof(parent);
+    ecs_hashmap_t *index = flecs_id_name_index_get(world, pair);
+    if (index) {
         return flecs_name_index_find(index, name, 0, 0);
     } else {
         return 0;
@@ -357,7 +359,8 @@ ecs_entity_t ecs_lookup_symbol(
     ecs_check(world != nullptr, ECS_INTERNAL_ERROR, nullptr);
     world = ecs_get_world(world);
 
-    if (const ecs_entity_t e = flecs_name_index_find(&world->symbols, name, 0, 0)) {
+    ecs_entity_t e = flecs_name_index_find(&world->symbols, name, 0, 0);
+    if (e) {
         return e;
     }
 
@@ -430,7 +433,7 @@ retry:
                 elem = nullptr;
             }
 
-            elem = static_cast<char*>(ecs_os_realloc(elem, len + 1));
+            elem = ecs_os_realloc(elem, len + 1);
             ecs_os_memcpy(elem, ptr_start, len);
             size = len + 1;
         }
@@ -480,7 +483,7 @@ ecs_entity_t ecs_set_scope(
     ecs_check(world != nullptr, ECS_INVALID_PARAMETER, nullptr);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
-    const ecs_entity_t cur = stage->scope;
+    ecs_entity_t cur = stage->scope;
     stage->scope = scope;
 
     return cur;
@@ -588,7 +591,7 @@ ecs_entity_t ecs_add_path_w_sep(
         return entity;
     }
 
-    const bool root_path = flecs_is_root_path(path, prefix);
+    bool root_path = flecs_is_root_path(path, prefix);
     parent = flecs_get_parent_from_path(world, parent, &path, prefix, !entity);
 
     char buff[ECS_NAME_BUFFER_LENGTH];
@@ -600,7 +603,7 @@ ecs_entity_t ecs_add_path_w_sep(
     /* If we're in deferred/readonly mode suspend it, so that the name index is
      * immediately updated. Without this, we could create multiple entities for
      * the same name in a single command queue. */
-    const bool suspend_defer = ecs_poly_is(world, ecs_stage_t) && 
+    bool suspend_defer = ecs_poly_is(world, ecs_stage_t) && 
         (ecs_get_stage_count(world) <= 1);
     ecs_entity_t cur = parent;
     char *name = nullptr;
@@ -614,7 +617,7 @@ ecs_entity_t ecs_add_path_w_sep(
                     elem = nullptr;
                 }
 
-                elem = static_cast<char*>(ecs_os_realloc(elem, len + 1));
+                elem = ecs_os_realloc(elem, len + 1);
                 ecs_os_memcpy(elem, ptr_start, len);
                 size = len + 1;          
             }

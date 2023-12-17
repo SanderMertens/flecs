@@ -19,14 +19,16 @@ extern "C" {
 /** This is the largest possible component id. Components for the most part
  * occupy the same id range as entities, however they are not allowed to overlap
  * with (8) bits reserved for id flags. */
-static CONSTEXPR uint32_t ECS_MAX_COMPONENT_ID = ~static_cast<uint32_t>((ECS_ID_FLAGS_MASK >> 32));
+#define ECS_MAX_COMPONENT_ID (~((uint32_t)(ECS_ID_FLAGS_MASK >> 32)))
 
 /** The maximum number of nested function calls before the core will throw a
  * cycle detected error */
-static CONSTEXPR uint32_t ECS_MAX_RECURSION = 512;
+#define ECS_MAX_RECURSION (512)
 
 /** Maximum length of a parser token (used by parser-related addons) */
-static CONSTEXPR uint32_t ECS_MAX_TOKEN_SIZE = 256;
+#define ECS_MAX_TOKEN_SIZE (256)
+
+s
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Global type handles
@@ -83,29 +85,15 @@ void flecs_dump_backtrace(
 #define ECS_OFFSET_T(o, T) ECS_OFFSET(o, ECS_SIZEOF(T))
 
 #define ECS_ELEM(ptr, size, index) ECS_OFFSET(ptr, (size) * (index))
-    
 #define ECS_ELEM_T(o, T, index) ECS_ELEM(o, ECS_SIZEOF(T), index)
 
-OPTIONAL_FORCEINLINE CONSTEXPR void ECS_BIT_SET(uint32_t& flags, const uint32_t bit) NOEXCEPT
-{
-    flags |= bit;
-}
-
-OPTIONAL_FORCEINLINE CONSTEXPR void ECS_BIT_CLEAR(uint32_t& flags, const uint32_t bit) NOEXCEPT
-{
-    flags &= ~bit;
-}
-
-template <typename CondType>
-OPTIONAL_FORCEINLINE CONSTEXPR void ECS_BIT_COND(uint32_t& flags, const uint32_t bit, CondType cond) NOEXCEPT
-{
-    return cond ? ECS_BIT_SET(flags, bit) : ECS_BIT_CLEAR(flags, bit);
-}
-
-OPTIONAL_FORCEINLINE CONSTEXPR NO_DISCARD bool ECS_BIT_IS_SET(const uint32_t flags, const uint32_t bit) NOEXCEPT
-{
-    return (flags & bit) != 0;
-}
+/** Enable/disable bitsets */
+#define ECS_BIT_SET(flags, bit) (flags) |= (bit)
+#define ECS_BIT_CLEAR(flags, bit) (flags) &= ~(bit) 
+#define ECS_BIT_COND(flags, bit, cond) ((cond) \
+    ? (ECS_BIT_SET(flags, bit)) \
+    : (ECS_BIT_CLEAR(flags, bit)))
+#define ECS_BIT_IS_SET(flags, bit) ((flags) & (bit))
 
 #ifdef __cplusplus
 }

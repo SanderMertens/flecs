@@ -26,11 +26,11 @@
 /* Used in id records to keep track of entities used with id flags */
 extern const ecs_entity_t EcsFlag;
 
-INLINE static CONSTEXPR int32_t ECS_MAX_JOBS_PER_WORKER = 16;
-INLINE static CONSTEXPR int32_t ECS_MAX_DEFER_STACK = 8;
+#define ECS_MAX_JOBS_PER_WORKER (16)
+#define ECS_MAX_DEFER_STACK (8)
 
 /* Magic number for a flecs object */
-INLINE static CONSTEXPR int32_t ECS_OBJECT_MAGIC = 0x6563736f;
+#define ECS_OBJECT_MAGIC (0x6563736f)
 
 /* Tags associated with poly for (Poly, tag) components */
 #define ecs_world_t_tag     invalid

@@ -32,9 +32,9 @@ void flecs_observable_fini(
     ecs_assert(!ecs_map_is_init(&observable->un_set.event_ids), 
         ECS_INTERNAL_ERROR, nullptr);
 
-    const ecs_sparse_t *events = &observable->events;
-    const int32_t count = flecs_sparse_count(events);
-    for (int32_t i = 0; i < count; i ++) {
+    ecs_sparse_t *events = &observable->events;
+    int32_t i, count = flecs_sparse_count(events);
+    for (i = 0; i < count; i ++) {
         ecs_event_record_t *er = 
             flecs_sparse_get_dense_t(events, ecs_event_record_t, i);
         ecs_assert(er != nullptr, ECS_INTERNAL_ERROR, nullptr);

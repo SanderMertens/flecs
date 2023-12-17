@@ -630,7 +630,7 @@ void flecs_run_pipeline(
         }
 
         ecs_time_t st = { 0 };
-        const bool measure_time = world->flags & EcsWorldMeasureSystemTime;
+        bool measure_time = world->flags & EcsWorldMeasureSystemTime;
         if (measure_time) {
             ecs_time_measure(&st);
         }
@@ -640,7 +640,7 @@ void flecs_run_pipeline(
 
         if (measure_time) {
             /* Don't include merge time in system time */
-            world->info.system_time_total += static_cast<float>(ecs_time_measure(&st));
+            world->info.system_time_total += (ecs_ftime_t)ecs_time_measure(&st);
         }
 
         if (op_multi_threaded) {
@@ -653,7 +653,8 @@ void flecs_run_pipeline(
                 ecs_time_measure(&mt);
             }
 
-            for (int32_t si = 0; si < stage_count; ++si) {
+            int32_t si;
+            for (si = 0; si < stage_count; si ++) {
                 ecs_stage_t *s = &world->stages[si];
                 pq->cur_op->commands_enqueued += ecs_vec_count(&s->cmd->queue);
             }
@@ -676,8 +677,8 @@ static
 void flecs_run_startup_systems(
     ecs_world_t *world)
 {
-    const ecs_id_record_t *idr = flecs_id_record_get(world, 
-                                                     ecs_dependson(EcsOnStart));
+    ecs_id_record_t *idr = flecs_id_record_get(world, 
+        ecs_dependson(EcsOnStart));
     if (!idr || !flecs_table_cache_count(&idr->cache)) {
         /* Don't bother creating startup pipeline if no systems exist */
         return;
@@ -685,7 +686,7 @@ void flecs_run_startup_systems(
 
     ecs_dbg_2("#[bold]startup#[reset]");
     ecs_log_push_2();
-    const int32_t stage_count = world->stage_count;
+    int32_t stage_count = world->stage_count;
     world->stage_count = 1; /* Prevents running startup systems on workers */
 
     /* Creating a pipeline is relatively expensive, but this only happens 
