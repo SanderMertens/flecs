@@ -27,9 +27,19 @@ ecs_os_thread_t posix_thread_new(
 {
     pthread_t *thread = ecs_os_malloc(sizeof(pthread_t));
 
-    if (pthread_create (thread, NULL, callback, arg) != 0) {
+    /* Opt out of Quality of Service and set a high priority 
+     * to prevent preemption by system services. */
+    pthread_attr_t attr;
+    pthread_attr_init (&attr);
+    pthread_attr_setschedpolicy(&attr, SCHED_RR);    
+    struct sched_param param = {.sched_priority = 45};
+    pthread_attr_setschedparam(&attr, &param);
+    
+    if (pthread_create(thread, &attr, callback, arg) != 0) {
         ecs_os_abort();
     }
+
+    pthread_attr_destroy(&attr);
 
     return (ecs_os_thread_t)(uintptr_t)thread;
 }
