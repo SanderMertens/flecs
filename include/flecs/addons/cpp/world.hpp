@@ -932,6 +932,12 @@ struct world {
         delete_with(_::cpp_type<First>::id(m_world), _::cpp_type<Second>::id(m_world));
     }
 
+    /** Delete all entities with specified pair. */
+    template <typename First>
+    void delete_with(entity_t second) const {
+        delete_with(_::cpp_type<First>::id(m_world), second);
+    }
+
     /** Remove all instances of specified id. */
     void remove_all(id_t the_id) const {
         ecs_remove_all(m_world, the_id);
@@ -952,6 +958,12 @@ struct world {
     template <typename First, typename Second>
     void remove_all() const {
         remove_all(_::cpp_type<First>::id(m_world), _::cpp_type<Second>::id(m_world));
+    }
+
+    /** Remove all instances of specified pair. */
+    template <typename First>
+    void remove_all(entity_t second) const {
+        remove_all(_::cpp_type<First>::id(m_world), second);
     }
 
     /** Defer all operations called in function. If the world is already in
