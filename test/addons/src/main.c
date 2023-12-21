@@ -246,6 +246,12 @@ void Parser_pair_3_args_this_tgt(void);
 void Parser_pair_3_args_2_terms_this_tgt(void);
 void Parser_pair_3_args_2_terms_this_tgt_implicit_this(void);
 void Parser_cascade_desc(void);
+void Parser_newline_after_inout(void);
+void Parser_newline_after_term_open(void);
+void Parser_newline_after_term_src(void);
+void Parser_newline_after_term_src_pair(void);
+void Parser_newline_after_term_pair_comma(void);
+void Parser_newline_after_term_pair_second(void);
 
 // Testsuite 'Plecs'
 void Plecs_null(void);
@@ -2751,6 +2757,30 @@ bake_test_case Parser_testcases[] = {
     {
         "cascade_desc",
         Parser_cascade_desc
+    },
+    {
+        "newline_after_inout",
+        Parser_newline_after_inout
+    },
+    {
+        "newline_after_term_open",
+        Parser_newline_after_term_open
+    },
+    {
+        "newline_after_term_src",
+        Parser_newline_after_term_src
+    },
+    {
+        "newline_after_term_src_pair",
+        Parser_newline_after_term_src_pair
+    },
+    {
+        "newline_after_term_pair_comma",
+        Parser_newline_after_term_pair_comma
+    },
+    {
+        "newline_after_term_pair_second",
+        Parser_newline_after_term_pair_second
     }
 };
 
@@ -8776,7 +8806,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        237,
+        243,
         Parser_testcases
     },
     {

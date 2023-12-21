@@ -250,7 +250,13 @@
                 "pair_3_args_this_tgt",
                 "pair_3_args_2_terms_this_tgt",
                 "pair_3_args_2_terms_this_tgt_implicit_this",
-                "cascade_desc"
+                "cascade_desc",
+                "newline_after_inout",
+                "newline_after_term_open",
+                "newline_after_term_src",
+                "newline_after_term_src_pair",
+                "newline_after_term_pair_comma",
+                "newline_after_term_pair_second"
             ]
         }, {
             "id": "Plecs",

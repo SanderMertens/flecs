@@ -518,8 +518,9 @@ const char* flecs_parse_arguments(
                 return NULL;
             }
 
-            ecs_term_id_t *term_id = NULL;
+            ptr = ecs_parse_ws_eol(ptr);
 
+            ecs_term_id_t *term_id = NULL;
             if (arg == 0) {
                 term_id = &term->src;
             } else if (arg == 1) {
@@ -537,7 +538,7 @@ const char* flecs_parse_arguments(
                     return NULL;
                 }
 
-                ptr = ecs_parse_ws(ptr + 1);
+                ptr = ecs_parse_ws_eol(ptr + 1);
                 ptr = flecs_parse_term_flags(world, name, expr, (ptr - expr), ptr,
                     NULL, term_id, TOK_PAREN_CLOSE);
                 if (!ptr) {
@@ -566,7 +567,7 @@ const char* flecs_parse_arguments(
             }
 
             if (ptr[0] == TOK_AND) {
-                ptr = ecs_parse_ws(ptr + 1);
+                ptr = ecs_parse_ws_eol(ptr + 1);
 
                 if (term) {
                     term->id_flags = ECS_PAIR;
@@ -631,7 +632,7 @@ const char* flecs_parse_term(
         if (!ptr) {
             goto error;
         }
-        ptr = ecs_parse_ws(ptr);
+        ptr = ecs_parse_ws_eol(ptr);
     }
 
     if (flecs_valid_operator_char(ptr[0])) {
@@ -757,7 +758,7 @@ parse_predicate:
     }
 
     if (ptr[0] == TOK_PAREN_OPEN) {
-        ptr ++;
+        ptr = ecs_parse_ws_eol(ptr + 1);
         if (ptr[0] == TOK_PAREN_CLOSE) {
             term.src.flags = EcsIsEntity;
             term.src.id = 0;
