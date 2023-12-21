@@ -1711,7 +1711,7 @@ const char *plecs_parse_plecs_term(
         decl_id = state->last_predicate;
     }
 
-    ptr = ecs_parse_term(world, name, expr, ptr, &term, NULL);
+    ptr = ecs_parse_term(world, name, expr, ptr, &term, NULL, false);
     if (!ptr) {
         return NULL;
     }

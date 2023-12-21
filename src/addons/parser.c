@@ -359,7 +359,6 @@ const char* flecs_parse_annotation(
     ptr = ecs_parse_ws(ptr);
 
     if (ptr[0] != TOK_BRACKET_CLOSE) {
-        printf("errr\n");
         ecs_parser_error(name, sig, column, "expected ]");
         return NULL;
     }
@@ -962,7 +961,8 @@ char* ecs_parse_term(
     const char *expr,
     const char *ptr,
     ecs_term_t *term,
-    ecs_term_id_t *extra_args)
+    ecs_term_id_t *extra_args,
+    bool allow_newline)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -1113,7 +1113,11 @@ char* ecs_parse_term(
         term->id_flags = 0;
     }
 
-    ptr = ecs_parse_ws(ptr);
+    if (allow_newline) {
+        ptr = ecs_parse_ws_eol(ptr);
+    } else {
+        ptr = ecs_parse_ws(ptr);
+    }
 
     return ECS_CONST_CAST(char*, ptr);
 error:

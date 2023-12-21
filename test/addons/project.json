@@ -238,6 +238,8 @@
                 "query_scope_unbalanced",
                 "query_not_scope",
                 "query_empty_scope",
+                "query_scope_newline_after_open",
+                "query_scope_newline_after_close",
                 "override_tag",
                 "override_pair",
                 "pair_3_args",

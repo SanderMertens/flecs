@@ -5314,6 +5314,84 @@ void Parser_query_empty_scope(void) {
     ecs_fini(world);
 }
 
+void Parser_query_scope_newline_after_open(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "TagA, {\nTagB}"
+    }));
+    test_int(filter_count(&f), 4);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_first(terms[0], TagA, EcsSelf|EcsIsEntity);
+    test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    test_first(terms[1], EcsScopeOpen, EcsSelf|EcsIsEntity);
+    test_src(terms[1], 0, EcsIsEntity);
+    test_int(terms[1].oper, EcsAnd);
+    test_int(terms[1].inout, EcsInOutNone);
+
+    test_first(terms[2], TagB, EcsSelf|EcsIsEntity);
+    test_src(terms[2], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
+    test_int(terms[2].oper, EcsAnd);
+    test_int(terms[2].inout, EcsInOutDefault);
+
+    test_first(terms[3], EcsScopeClose, EcsSelf|EcsIsEntity);
+    test_src(terms[3], 0, EcsIsEntity);
+    test_int(terms[3].oper, EcsAnd);
+    test_int(terms[3].inout, EcsInOutNone);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_query_scope_newline_after_close(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "TagA, {TagB\n}"
+    }));
+    test_int(filter_count(&f), 4);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_first(terms[0], TagA, EcsSelf|EcsIsEntity);
+    test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    test_first(terms[1], EcsScopeOpen, EcsSelf|EcsIsEntity);
+    test_src(terms[1], 0, EcsIsEntity);
+    test_int(terms[1].oper, EcsAnd);
+    test_int(terms[1].inout, EcsInOutNone);
+
+    test_first(terms[2], TagB, EcsSelf|EcsIsEntity);
+    test_src(terms[2], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
+    test_int(terms[2].oper, EcsAnd);
+    test_int(terms[2].inout, EcsInOutDefault);
+
+    test_first(terms[3], EcsScopeClose, EcsSelf|EcsIsEntity);
+    test_src(terms[3], 0, EcsIsEntity);
+    test_int(terms[3].oper, EcsAnd);
+    test_int(terms[3].inout, EcsInOutNone);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
 void Parser_override_tag(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -5659,3 +5737,4 @@ void Parser_pair_3_args_2_terms_this_tgt_implicit_this(void) {
 
     ecs_fini(world);
 }
+

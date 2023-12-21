@@ -233,6 +233,8 @@ void Parser_query_nested_scope_spaces(void);
 void Parser_query_scope_unbalanced(void);
 void Parser_query_not_scope(void);
 void Parser_query_empty_scope(void);
+void Parser_query_scope_newline_after_open(void);
+void Parser_query_scope_newline_after_close(void);
 void Parser_override_tag(void);
 void Parser_override_pair(void);
 void Parser_pair_3_args(void);
@@ -2697,6 +2699,14 @@ bake_test_case Parser_testcases[] = {
     {
         "query_empty_scope",
         Parser_query_empty_scope
+    },
+    {
+        "query_scope_newline_after_open",
+        Parser_query_scope_newline_after_open
+    },
+    {
+        "query_scope_newline_after_close",
+        Parser_query_scope_newline_after_close
     },
     {
         "override_tag",
@@ -8766,7 +8776,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        235,
+        237,
         Parser_testcases
     },
     {

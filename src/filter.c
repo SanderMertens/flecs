@@ -1537,7 +1537,7 @@ ecs_filter_t* ecs_filter_init(
         }
 
         while (ptr[0] && 
-            (ptr = ecs_parse_term(world, name, expr, ptr, &term, extra_args)))
+            (ptr = ecs_parse_term(world, name, expr, ptr, &term, extra_args, true)))
         {
             if (!ecs_term_is_initialized(&term)) {
                 break;

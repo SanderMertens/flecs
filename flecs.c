@@ -4779,7 +4779,7 @@ ecs_table_t *flecs_traverse_from_expr(
     const char *ptr = expr;
     if (ptr) {
         ecs_term_t term = {0};
-        while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term, NULL))){
+        while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term, NULL, false))){
             if (!ecs_term_is_initialized(&term)) {
                 break;
             }
@@ -4842,7 +4842,7 @@ void flecs_defer_from_expr(
     const char *ptr = expr;
     if (ptr) {
         ecs_term_t term = {0};
-        while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term, NULL))) {
+        while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term, NULL, false))) {
             if (!ecs_term_is_initialized(&term)) {
                 break;
             }
@@ -11318,7 +11318,7 @@ ecs_filter_t* ecs_filter_init(
         }
 
         while (ptr[0] && 
-            (ptr = ecs_parse_term(world, name, expr, ptr, &term, extra_args)))
+            (ptr = ecs_parse_term(world, name, expr, ptr, &term, extra_args, true)))
         {
             if (!ecs_term_is_initialized(&term)) {
                 break;
@@ -30869,7 +30869,6 @@ const char* flecs_parse_annotation(
     ptr = ecs_parse_ws(ptr);
 
     if (ptr[0] != TOK_BRACKET_CLOSE) {
-        printf("errr\n");
         ecs_parser_error(name, sig, column, "expected ]");
         return NULL;
     }
@@ -31472,7 +31471,8 @@ char* ecs_parse_term(
     const char *expr,
     const char *ptr,
     ecs_term_t *term,
-    ecs_term_id_t *extra_args)
+    ecs_term_id_t *extra_args,
+    bool allow_newline)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -31623,7 +31623,11 @@ char* ecs_parse_term(
         term->id_flags = 0;
     }
 
-    ptr = ecs_parse_ws(ptr);
+    if (allow_newline) {
+        ptr = ecs_parse_ws_eol(ptr);
+    } else {
+        ptr = ecs_parse_ws(ptr);
+    }
 
     return ECS_CONST_CAST(char*, ptr);
 error:
@@ -33346,7 +33350,7 @@ const char *plecs_parse_plecs_term(
         decl_id = state->last_predicate;
     }
 
-    ptr = ecs_parse_term(world, name, expr, ptr, &term, NULL);
+    ptr = ecs_parse_term(world, name, expr, ptr, &term, NULL, false);
     if (!ptr) {
         return NULL;
     }
@@ -55679,7 +55683,7 @@ int ecs_meta_set_string(
         ecs_id_t id = 0;
 #ifdef FLECS_PARSER
         ecs_term_t term = {0};
-        if (ecs_parse_term(cursor->world, NULL, value, value, &term, NULL)) {
+        if (ecs_parse_term(cursor->world, NULL, value, value, &term, NULL, false)) {
             if (ecs_term_finalize(cursor->world, &term)) {
                 ecs_term_fini(&term);
                 goto error;
