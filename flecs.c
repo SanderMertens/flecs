@@ -4779,7 +4779,9 @@ ecs_table_t *flecs_traverse_from_expr(
     const char *ptr = expr;
     if (ptr) {
         ecs_term_t term = {0};
-        while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term, NULL, false))){
+        while (ptr[0] && (ptr = ecs_parse_term(
+            world, name, expr, ptr, &term, NULL, NULL, false)))
+        {
             if (!ecs_term_is_initialized(&term)) {
                 break;
             }
@@ -4842,7 +4844,9 @@ void flecs_defer_from_expr(
     const char *ptr = expr;
     if (ptr) {
         ecs_term_t term = {0};
-        while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term, NULL, false))) {
+        while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term, 
+            NULL, NULL, false))) 
+        {
             if (!ecs_term_is_initialized(&term)) {
                 break;
             }
@@ -11309,6 +11313,7 @@ ecs_filter_t* ecs_filter_init(
         const char *ptr = desc->expr;
         ecs_term_t term = {0};
         ecs_term_id_t extra_args[ECS_PARSER_MAX_ARGS];
+        ecs_oper_kind_t extra_oper = 0;
         int32_t expr_size = 0;
 
         ecs_os_zeromem(extra_args);
@@ -11317,8 +11322,8 @@ ecs_filter_t* ecs_filter_init(
             name = ecs_get_name(world, entity);
         }
 
-        while (ptr[0] && 
-            (ptr = ecs_parse_term(world, name, expr, ptr, &term, extra_args, true)))
+        while (ptr[0] && (ptr = ecs_parse_term(
+            world, name, expr, ptr, &term, &extra_oper, extra_args, true)))
         {
             if (!ecs_term_is_initialized(&term)) {
                 break;
@@ -11338,9 +11343,14 @@ ecs_filter_t* ecs_filter_init(
                 *expr_term = term;
 
                 if (arg) {
-                    expr_term->src = expr_term[-1].second;
-                    expr_term->second = extra_args[arg - 1];
-
+                    if (extra_oper == EcsAnd) {
+                        expr_term->src = expr_term[-1].second;
+                        expr_term->second = extra_args[arg - 1];
+                    } else if (extra_oper == EcsOr) {
+                        expr_term->src = expr_term[-1].src;
+                        expr_term->second = extra_args[arg - 1];
+                        expr_term[-1].oper = EcsOr;
+                    }
                     if (expr_term->first.name != NULL) {
                         expr_term->first.name = ecs_os_strdup(
                             expr_term->first.name);
@@ -31001,6 +31011,7 @@ const char* flecs_parse_arguments(
     const char *ptr,
     char *token,
     ecs_term_t *term,
+    ecs_oper_kind_t *extra_oper,
     ecs_term_id_t *extra_args)
 {
     (void)column;
@@ -31077,6 +31088,11 @@ const char* flecs_parse_arguments(
             }
 
             if (ptr[0] == TOK_AND) {
+                if (extra_oper && *extra_oper != EcsAnd) {
+                    ecs_parser_error(name, expr, (ptr - expr), 
+                        "cannot mix ',' and '||' in term arguments");
+                    return NULL;
+                }
                 ptr = ecs_parse_ws_eol(ptr + 1);
 
                 if (term) {
@@ -31087,6 +31103,19 @@ const char* flecs_parse_arguments(
                 ptr = ecs_parse_ws(ptr + 1);
                 break;
 
+            } else if (extra_oper && ptr[0] == TOK_OR[0] && ptr[1] == TOK_OR[1]){
+                if (arg >= 2 && *extra_oper != EcsOr) {
+                    ecs_parser_error(name, expr, (ptr - expr), 
+                        "cannot mix ',' and '||' in term arguments");
+                    return NULL;
+                }
+
+                *extra_oper = EcsOr;
+                ptr = ecs_parse_ws_eol(ptr + 2);
+
+                if (term) {
+                    term->id_flags = ECS_PAIR;
+                }
             } else {
                 ecs_parser_error(name, expr, (ptr - expr), 
                     "expected ',' or ')'");
@@ -31128,6 +31157,7 @@ const char* flecs_parse_term(
     const char *name,
     const char *expr,
     ecs_term_t *term_out,
+    ecs_oper_kind_t *extra_oper,
     ecs_term_id_t *extra_args)
 {
     const char *ptr = expr;
@@ -31275,8 +31305,8 @@ parse_predicate:
             ptr ++;
             ptr = ecs_parse_ws(ptr);
         } else {
-            ptr = flecs_parse_arguments(
-                world, name, expr, (ptr - expr), ptr, token, &term, extra_args);
+            ptr = flecs_parse_arguments(world, name, expr, (ptr - expr), ptr, 
+                token, &term, extra_oper, extra_args);
         }
 
         goto parse_done;
@@ -31394,7 +31424,7 @@ parse_pair_predicate:
             }
         }
 
-        if (ptr[0] == TOK_PAREN_CLOSE || ptr[0] == TOK_AND) {
+        if (ptr[0] == TOK_PAREN_CLOSE || ptr[0] == TOK_AND || ptr[0] == TOK_OR[0]) {
             goto parse_pair_object;
         } else {
             flecs_parser_unexpected_char(name, expr, ptr, ptr[0]);
@@ -31423,8 +31453,16 @@ parse_pair_object:
 
     if (ptr[0] == TOK_AND) {
         ptr = ecs_parse_ws(ptr + 1);
-        ptr = flecs_parse_arguments(
-            world, name, expr, (ptr - expr), ptr, token, NULL, extra_args);
+        ptr = flecs_parse_arguments(world, name, expr, (ptr - expr), ptr, token, 
+            NULL, extra_oper, extra_args);
+        if (!ptr) {
+            goto error;
+        }
+    } else if (extra_oper && ptr[0] == TOK_OR[0] && ptr[1] == TOK_OR[1]) {
+        ptr = ecs_parse_ws_eol(ptr + 2);
+        *extra_oper = EcsOr;
+        ptr = flecs_parse_arguments(world, name, expr, (ptr - expr), ptr, token, 
+            NULL, extra_oper, extra_args);
         if (!ptr) {
             goto error;
         }
@@ -31472,12 +31510,17 @@ char* ecs_parse_term(
     const char *expr,
     const char *ptr,
     ecs_term_t *term,
+    ecs_oper_kind_t *extra_oper,
     ecs_term_id_t *extra_args,
     bool allow_newline)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(term != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    if (extra_oper) {
+        *extra_oper = EcsAnd;
+    }
 
     ecs_term_id_t *src = &term->src;
 
@@ -31509,7 +31552,7 @@ char* ecs_parse_term(
     }
 
     /* Parse next element */
-    ptr = flecs_parse_term(world, name, ptr, term, extra_args);
+    ptr = flecs_parse_term(world, name, ptr, term, extra_oper, extra_args);
     if (!ptr) {
         goto error;
     }
@@ -33351,7 +33394,7 @@ const char *plecs_parse_plecs_term(
         decl_id = state->last_predicate;
     }
 
-    ptr = ecs_parse_term(world, name, expr, ptr, &term, NULL, false);
+    ptr = ecs_parse_term(world, name, expr, ptr, &term, NULL, NULL, false);
     if (!ptr) {
         return NULL;
     }
@@ -55684,7 +55727,9 @@ int ecs_meta_set_string(
         ecs_id_t id = 0;
 #ifdef FLECS_PARSER
         ecs_term_t term = {0};
-        if (ecs_parse_term(cursor->world, NULL, value, value, &term, NULL, false)) {
+        if (ecs_parse_term(
+            cursor->world, NULL, value, value, &term, NULL, NULL, false)) 
+        {
             if (ecs_term_finalize(cursor->world, &term)) {
                 ecs_term_fini(&term);
                 goto error;

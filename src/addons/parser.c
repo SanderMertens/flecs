@@ -491,6 +491,7 @@ const char* flecs_parse_arguments(
     const char *ptr,
     char *token,
     ecs_term_t *term,
+    ecs_oper_kind_t *extra_oper,
     ecs_term_id_t *extra_args)
 {
     (void)column;
@@ -567,6 +568,11 @@ const char* flecs_parse_arguments(
             }
 
             if (ptr[0] == TOK_AND) {
+                if (extra_oper && *extra_oper != EcsAnd) {
+                    ecs_parser_error(name, expr, (ptr - expr), 
+                        "cannot mix ',' and '||' in term arguments");
+                    return NULL;
+                }
                 ptr = ecs_parse_ws_eol(ptr + 1);
 
                 if (term) {
@@ -577,6 +583,19 @@ const char* flecs_parse_arguments(
                 ptr = ecs_parse_ws(ptr + 1);
                 break;
 
+            } else if (extra_oper && ptr[0] == TOK_OR[0] && ptr[1] == TOK_OR[1]){
+                if (arg >= 2 && *extra_oper != EcsOr) {
+                    ecs_parser_error(name, expr, (ptr - expr), 
+                        "cannot mix ',' and '||' in term arguments");
+                    return NULL;
+                }
+
+                *extra_oper = EcsOr;
+                ptr = ecs_parse_ws_eol(ptr + 2);
+
+                if (term) {
+                    term->id_flags = ECS_PAIR;
+                }
             } else {
                 ecs_parser_error(name, expr, (ptr - expr), 
                     "expected ',' or ')'");
@@ -618,6 +637,7 @@ const char* flecs_parse_term(
     const char *name,
     const char *expr,
     ecs_term_t *term_out,
+    ecs_oper_kind_t *extra_oper,
     ecs_term_id_t *extra_args)
 {
     const char *ptr = expr;
@@ -765,8 +785,8 @@ parse_predicate:
             ptr ++;
             ptr = ecs_parse_ws(ptr);
         } else {
-            ptr = flecs_parse_arguments(
-                world, name, expr, (ptr - expr), ptr, token, &term, extra_args);
+            ptr = flecs_parse_arguments(world, name, expr, (ptr - expr), ptr, 
+                token, &term, extra_oper, extra_args);
         }
 
         goto parse_done;
@@ -884,7 +904,7 @@ parse_pair_predicate:
             }
         }
 
-        if (ptr[0] == TOK_PAREN_CLOSE || ptr[0] == TOK_AND) {
+        if (ptr[0] == TOK_PAREN_CLOSE || ptr[0] == TOK_AND || ptr[0] == TOK_OR[0]) {
             goto parse_pair_object;
         } else {
             flecs_parser_unexpected_char(name, expr, ptr, ptr[0]);
@@ -913,8 +933,16 @@ parse_pair_object:
 
     if (ptr[0] == TOK_AND) {
         ptr = ecs_parse_ws(ptr + 1);
-        ptr = flecs_parse_arguments(
-            world, name, expr, (ptr - expr), ptr, token, NULL, extra_args);
+        ptr = flecs_parse_arguments(world, name, expr, (ptr - expr), ptr, token, 
+            NULL, extra_oper, extra_args);
+        if (!ptr) {
+            goto error;
+        }
+    } else if (extra_oper && ptr[0] == TOK_OR[0] && ptr[1] == TOK_OR[1]) {
+        ptr = ecs_parse_ws_eol(ptr + 2);
+        *extra_oper = EcsOr;
+        ptr = flecs_parse_arguments(world, name, expr, (ptr - expr), ptr, token, 
+            NULL, extra_oper, extra_args);
         if (!ptr) {
             goto error;
         }
@@ -962,12 +990,17 @@ char* ecs_parse_term(
     const char *expr,
     const char *ptr,
     ecs_term_t *term,
+    ecs_oper_kind_t *extra_oper,
     ecs_term_id_t *extra_args,
     bool allow_newline)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(term != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    if (extra_oper) {
+        *extra_oper = EcsAnd;
+    }
 
     ecs_term_id_t *src = &term->src;
 
@@ -999,7 +1032,7 @@ char* ecs_parse_term(
     }
 
     /* Parse next element */
-    ptr = flecs_parse_term(world, name, ptr, term, extra_args);
+    ptr = flecs_parse_term(world, name, ptr, term, extra_oper, extra_args);
     if (!ptr) {
         goto error;
     }

@@ -245,6 +245,12 @@ void Parser_pair_3_args_2_terms(void);
 void Parser_pair_3_args_this_tgt(void);
 void Parser_pair_3_args_2_terms_this_tgt(void);
 void Parser_pair_3_args_2_terms_this_tgt_implicit_this(void);
+void Parser_pair_3_or_args(void);
+void Parser_pair_3_or_args_implicit_this(void);
+void Parser_pair_4_or_args(void);
+void Parser_pair_4_or_args_implicit_this(void);
+void Parser_pair_or_before_and_oper(void);
+void Parser_pair_and_before_or_oper(void);
 void Parser_cascade_desc(void);
 void Parser_newline_after_inout(void);
 void Parser_newline_after_term_open(void);
@@ -2753,6 +2759,30 @@ bake_test_case Parser_testcases[] = {
     {
         "pair_3_args_2_terms_this_tgt_implicit_this",
         Parser_pair_3_args_2_terms_this_tgt_implicit_this
+    },
+    {
+        "pair_3_or_args",
+        Parser_pair_3_or_args
+    },
+    {
+        "pair_3_or_args_implicit_this",
+        Parser_pair_3_or_args_implicit_this
+    },
+    {
+        "pair_4_or_args",
+        Parser_pair_4_or_args
+    },
+    {
+        "pair_4_or_args_implicit_this",
+        Parser_pair_4_or_args_implicit_this
+    },
+    {
+        "pair_or_before_and_oper",
+        Parser_pair_or_before_and_oper
+    },
+    {
+        "pair_and_before_or_oper",
+        Parser_pair_and_before_or_oper
     },
     {
         "cascade_desc",
@@ -8806,7 +8836,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        243,
+        249,
         Parser_testcases
     },
     {

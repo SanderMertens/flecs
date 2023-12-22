@@ -1376,7 +1376,9 @@ ecs_table_t *flecs_traverse_from_expr(
     const char *ptr = expr;
     if (ptr) {
         ecs_term_t term = {0};
-        while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term, NULL, false))){
+        while (ptr[0] && (ptr = ecs_parse_term(
+            world, name, expr, ptr, &term, NULL, NULL, false)))
+        {
             if (!ecs_term_is_initialized(&term)) {
                 break;
             }
@@ -1439,7 +1441,9 @@ void flecs_defer_from_expr(
     const char *ptr = expr;
     if (ptr) {
         ecs_term_t term = {0};
-        while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term, NULL, false))) {
+        while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term, 
+            NULL, NULL, false))) 
+        {
             if (!ecs_term_is_initialized(&term)) {
                 break;
             }

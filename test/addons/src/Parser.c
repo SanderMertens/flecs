@@ -5738,6 +5738,182 @@ void Parser_pair_3_args_2_terms_this_tgt_implicit_this(void) {
     ecs_fini(world);
 }
 
+void Parser_pair_3_or_args(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "ChildOf($this, Foo || Bar)"
+    }));
+
+    test_int(filter_count(&f), 2);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_first(terms[0], EcsChildOf, EcsSelf|EcsIsEntity);
+    test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
+    test_second(terms[0], Foo, EcsSelf|EcsIsEntity);
+    test_int(terms[0].oper, EcsOr);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    test_first(terms[1], EcsChildOf, EcsSelf|EcsIsEntity);
+    test_src(terms[1], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
+    test_second(terms[1], Bar, EcsSelf|EcsIsEntity);
+    test_int(terms[1].oper, EcsAnd);
+    test_int(terms[1].inout, EcsInOutDefault);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_pair_3_or_args_implicit_this(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "(ChildOf, Foo || Bar)"
+    }));
+
+    test_int(filter_count(&f), 2);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_first(terms[0], EcsChildOf, EcsSelf|EcsIsEntity);
+    test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
+    test_second(terms[0], Foo, EcsSelf|EcsIsEntity);
+    test_int(terms[0].oper, EcsOr);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    test_first(terms[1], EcsChildOf, EcsSelf|EcsIsEntity);
+    test_src(terms[1], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
+    test_second(terms[1], Bar, EcsSelf|EcsIsEntity);
+    test_int(terms[1].oper, EcsAnd);
+    test_int(terms[1].inout, EcsInOutDefault);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_pair_4_or_args(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+    ECS_TAG(world, Hello);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "ChildOf($this, Foo || Bar || Hello)"
+    }));
+
+    test_int(filter_count(&f), 3);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_first(terms[0], EcsChildOf, EcsSelf|EcsIsEntity);
+    test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
+    test_second(terms[0], Foo, EcsSelf|EcsIsEntity);
+    test_int(terms[0].oper, EcsOr);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    test_first(terms[1], EcsChildOf, EcsSelf|EcsIsEntity);
+    test_src(terms[1], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
+    test_second(terms[1], Bar, EcsSelf|EcsIsEntity);
+    test_int(terms[1].oper, EcsOr);
+    test_int(terms[1].inout, EcsInOutDefault);
+
+    test_first(terms[2], EcsChildOf, EcsSelf|EcsIsEntity);
+    test_src(terms[2], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
+    test_second(terms[2], Hello, EcsSelf|EcsIsEntity);
+    test_int(terms[2].oper, EcsAnd);
+    test_int(terms[2].inout, EcsInOutDefault);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_pair_4_or_args_implicit_this(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+    ECS_TAG(world, Hello);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "(ChildOf, Foo || Bar || Hello)"
+    }));
+
+    test_int(filter_count(&f), 3);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_first(terms[0], EcsChildOf, EcsSelf|EcsIsEntity);
+    test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
+    test_second(terms[0], Foo, EcsSelf|EcsIsEntity);
+    test_int(terms[0].oper, EcsOr);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    test_first(terms[1], EcsChildOf, EcsSelf|EcsIsEntity);
+    test_src(terms[1], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
+    test_second(terms[1], Bar, EcsSelf|EcsIsEntity);
+    test_int(terms[1].oper, EcsOr);
+    test_int(terms[1].inout, EcsInOutDefault);
+
+    test_first(terms[2], EcsChildOf, EcsSelf|EcsIsEntity);
+    test_src(terms[2], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
+    test_second(terms[2], Hello, EcsSelf|EcsIsEntity);
+    test_int(terms[2].oper, EcsAnd);
+    test_int(terms[2].inout, EcsInOutDefault);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Parser_pair_or_before_and_oper(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+    ECS_TAG(world, Hello);
+
+    ecs_log_set_level(-4);
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL == ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "ChildOf($this, Foo || Bar, Hello)"
+    }));
+
+    ecs_fini(world);
+}
+
+void Parser_pair_and_before_or_oper(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+    ECS_TAG(world, Hello);
+
+    ecs_log_set_level(-4);
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL == ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "ChildOf($this, Foo, Bar || Hello)"
+    }));
+
+    ecs_fini(world);
+}
+
 void Parser_newline_after_inout(void) {
     ecs_world_t *world = ecs_mini();
 

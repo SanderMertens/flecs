@@ -118,6 +118,7 @@ char* ecs_parse_term(
     const char *expr,
     const char *ptr,
     ecs_term_t *term_out,
+    ecs_oper_kind_t *extra_oper,
     ecs_term_id_t *extra_args,
     bool allow_newline);
 

@@ -1528,6 +1528,7 @@ ecs_filter_t* ecs_filter_init(
         const char *ptr = desc->expr;
         ecs_term_t term = {0};
         ecs_term_id_t extra_args[ECS_PARSER_MAX_ARGS];
+        ecs_oper_kind_t extra_oper = 0;
         int32_t expr_size = 0;
 
         ecs_os_zeromem(extra_args);
@@ -1536,8 +1537,8 @@ ecs_filter_t* ecs_filter_init(
             name = ecs_get_name(world, entity);
         }
 
-        while (ptr[0] && 
-            (ptr = ecs_parse_term(world, name, expr, ptr, &term, extra_args, true)))
+        while (ptr[0] && (ptr = ecs_parse_term(
+            world, name, expr, ptr, &term, &extra_oper, extra_args, true)))
         {
             if (!ecs_term_is_initialized(&term)) {
                 break;
@@ -1557,9 +1558,14 @@ ecs_filter_t* ecs_filter_init(
                 *expr_term = term;
 
                 if (arg) {
-                    expr_term->src = expr_term[-1].second;
-                    expr_term->second = extra_args[arg - 1];
-
+                    if (extra_oper == EcsAnd) {
+                        expr_term->src = expr_term[-1].second;
+                        expr_term->second = extra_args[arg - 1];
+                    } else if (extra_oper == EcsOr) {
+                        expr_term->src = expr_term[-1].src;
+                        expr_term->second = extra_args[arg - 1];
+                        expr_term[-1].oper = EcsOr;
+                    }
                     if (expr_term->first.name != NULL) {
                         expr_term->first.name = ecs_os_strdup(
                             expr_term->first.name);
