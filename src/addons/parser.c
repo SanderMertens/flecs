@@ -496,7 +496,7 @@ const char* flecs_parse_arguments(
 {
     (void)column;
 
-    int32_t arg = 0;
+    int32_t i, arg = 0;
 
     if (extra_args) {
         ecs_os_memset_n(extra_args, 0, ecs_term_id_t, ECS_PARSER_MAX_ARGS);
@@ -511,12 +511,12 @@ const char* flecs_parse_arguments(
             if ((arg == ECS_PARSER_MAX_ARGS) || (!extra_args && arg == 2)) {
                 ecs_parser_error(name, expr, (ptr - expr), 
                     "too many arguments in term");
-                return NULL;
+                goto error;
             }
 
             ptr = ecs_parse_identifier(name, expr, ptr, token);
             if (!ptr) {
-                return NULL;
+                goto error;
             }
 
             ptr = ecs_parse_ws_eol(ptr);
@@ -536,14 +536,14 @@ const char* flecs_parse_arguments(
                 if (flecs_parse_identifier(token, term_id)) {
                     ecs_parser_error(name, expr, (ptr - expr), 
                         "invalid identifier '%s'", token);
-                    return NULL;
+                    goto error;
                 }
 
                 ptr = ecs_parse_ws_eol(ptr + 1);
                 ptr = flecs_parse_term_flags(world, name, expr, (ptr - expr), ptr,
                     NULL, term_id, TOK_PAREN_CLOSE);
                 if (!ptr) {
-                    return NULL;
+                    goto error;
                 }
 
             /* Check for term flags */
@@ -557,21 +557,21 @@ const char* flecs_parse_arguments(
                 ptr = flecs_parse_term_flags(world, name, expr, (ptr - expr), ptr, 
                     token, term_id, TOK_PAREN_CLOSE);
                 if (!ptr) {
-                    return NULL;
+                    goto error;
                 }
 
             /* Regular identifier */
             } else if (flecs_parse_identifier(token, term_id)) {
                 ecs_parser_error(name, expr, (ptr - expr), 
                     "invalid identifier '%s'", token);
-                return NULL;
+                goto error;
             }
 
             if (ptr[0] == TOK_AND) {
                 if (extra_oper && *extra_oper != EcsAnd) {
                     ecs_parser_error(name, expr, (ptr - expr), 
                         "cannot mix ',' and '||' in term arguments");
-                    return NULL;
+                    goto error;
                 }
                 ptr = ecs_parse_ws_eol(ptr + 1);
 
@@ -587,7 +587,7 @@ const char* flecs_parse_arguments(
                 if (arg >= 2 && *extra_oper != EcsOr) {
                     ecs_parser_error(name, expr, (ptr - expr), 
                         "cannot mix ',' and '||' in term arguments");
-                    return NULL;
+                    goto error;
                 }
 
                 *extra_oper = EcsOr;
@@ -599,13 +599,13 @@ const char* flecs_parse_arguments(
             } else {
                 ecs_parser_error(name, expr, (ptr - expr), 
                     "expected ',' or ')'");
-                return NULL;
+                goto error;
             }
 
         } else {
             ecs_parser_error(name, expr, (ptr - expr), 
                 "expected identifier or set expression");
-            return NULL;
+            goto error;
         }
 
         arg ++;
@@ -613,6 +613,24 @@ const char* flecs_parse_arguments(
     } while (true);
 
     return ptr;
+error:
+    if (term && term->src.name) {
+        ecs_os_free(ECS_CONST_CAST(char*, term->src.name));
+        term->src.name = NULL;
+    }
+    if (term && term->second.name) {
+        ecs_os_free(ECS_CONST_CAST(char*, term->second.name));
+        term->second.name = NULL;
+    }
+    if (extra_args) {
+        for (i = 2; i < arg + 1; i ++) {
+            if (extra_args[i - 2].name) {
+                ecs_os_free(ECS_CONST_CAST(char*, extra_args[i - 2].name));
+                extra_args[i - 2].name = NULL;
+            }
+        }
+    }
+    return NULL;
 }
 
 static
