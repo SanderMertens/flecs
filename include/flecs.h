@@ -140,6 +140,16 @@
  */
 // #define FLECS_CUSTOM_BUILD
 
+/** \def FLECS_CPP_NO_AUTO_REGISTRATION
+ * When set, the C++ API will require that components are registered before they
+ * are used. This is useful in multithreaded applications, where components need
+ * to be registered beforehand, and to catch issues in projects where component 
+ * registration is mandatory. Disabling automatic component registration also
+ * slightly improves performance.
+ * The C API is not affected by this feature.
+ */
+// #define FLECS_CPP_NO_AUTO_REGISTRATION
+
 #ifndef FLECS_CUSTOM_BUILD
 // #define FLECS_C          /**< C API convenience macros, always enabled */
 #define FLECS_CPP           /**< C++ API */

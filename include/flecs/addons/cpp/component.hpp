@@ -217,6 +217,7 @@ struct cpp_type_impl {
         bool allow_tag = true)
     {
         // If no id has been registered yet, do it now.
+#ifndef FLECS_CPP_NO_AUTO_REGISTRATION
         if (!registered(world)) {
             ecs_entity_t prev_scope = 0;
             ecs_id_t prev_with = 0;
@@ -245,6 +246,15 @@ struct cpp_type_impl {
                 ecs_set_scope(world, prev_scope);
             }
         }
+#else
+        (void)world;
+        (void)name;
+        (void)allow_tag;
+
+        ecs_assert(registered(world), ECS_INVALID_OPERATION, 
+            "component '%s' was not registered before use",
+            type_name<T>());
+#endif
 
         // By now we should have a valid identifier
         ecs_assert(s_id != 0, ECS_INTERNAL_ERROR, NULL);

@@ -142,6 +142,16 @@
  */
 // #define FLECS_CUSTOM_BUILD
 
+/** \def FLECS_CPP_NO_AUTO_REGISTRATION
+ * When set, the C++ API will require that components are registered before they
+ * are used. This is useful in multithreaded applications, where components need
+ * to be registered beforehand, and to catch issues in projects where component 
+ * registration is mandatory. Disabling automatic component registration also
+ * slightly improves performance.
+ * The C API is not affected by this feature.
+ */
+// #define FLECS_CPP_NO_AUTO_REGISTRATION
+
 #ifndef FLECS_CUSTOM_BUILD
 // #define FLECS_C          /**< C API convenience macros, always enabled */
 #define FLECS_CPP           /**< C++ API */
@@ -25680,6 +25690,7 @@ struct cpp_type_impl {
         bool allow_tag = true)
     {
         // If no id has been registered yet, do it now.
+#ifndef FLECS_CPP_NO_AUTO_REGISTRATION
         if (!registered(world)) {
             ecs_entity_t prev_scope = 0;
             ecs_id_t prev_with = 0;
@@ -25708,6 +25719,15 @@ struct cpp_type_impl {
                 ecs_set_scope(world, prev_scope);
             }
         }
+#else
+        (void)world;
+        (void)name;
+        (void)allow_tag;
+
+        ecs_assert(registered(world), ECS_INVALID_OPERATION, 
+            "component '%s' was not registered before use",
+            type_name<T>());
+#endif
 
         // By now we should have a valid identifier
         ecs_assert(s_id != 0, ECS_INTERNAL_ERROR, NULL);
