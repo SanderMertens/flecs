@@ -1133,6 +1133,7 @@
                 "reregister_after_reset_w_hooks_and_in_use_implicit",
                 "register_component_w_reset_in_multithreaded",
                 "register_component_w_core_name",
+                "register_nested_component_in_module",
                 "count",
                 "count_id",
                 "count_pair",

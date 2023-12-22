@@ -1083,6 +1083,7 @@ void World_reregister_after_reset_w_hooks_and_in_use(void);
 void World_reregister_after_reset_w_hooks_and_in_use_implicit(void);
 void World_register_component_w_reset_in_multithreaded(void);
 void World_register_component_w_core_name(void);
+void World_register_nested_component_in_module(void);
 void World_count(void);
 void World_count_id(void);
 void World_count_pair(void);
@@ -5523,6 +5524,10 @@ bake_test_case World_testcases[] = {
         World_register_component_w_core_name
     },
     {
+        "register_nested_component_in_module",
+        World_register_nested_component_in_module
+    },
+    {
         "count",
         World_count
     },
@@ -6658,7 +6663,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        107,
+        108,
         World_testcases
     },
     {

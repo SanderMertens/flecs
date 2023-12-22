@@ -75,6 +75,17 @@ namespace ns {
     int namespace_module::system_invoke_count = 0;
 }
 
+struct nested_component_module {
+    struct Foo {
+        struct Bar { };
+    };
+
+    nested_component_module(flecs::world& ecs) {
+        ecs.component<Foo>();
+        ecs.component<Foo::Bar>();
+    }
+};
+
 void World_builtin_components(void) {
     flecs::world ecs;
 
@@ -1840,4 +1851,19 @@ void World_delta_time(void) {
     ecs.progress(2);
 
     test_int(dt, 2);
+}
+
+void World_register_nested_component_in_module(void) {
+    flecs::world ecs;
+
+    ecs.import<nested_component_module>();
+
+    test_assert(flecs::type_id<nested_component_module::Foo>() != 0);
+    test_assert(flecs::type_id<nested_component_module::Foo::Bar>() != 0);
+
+    flecs::entity foo = ecs.component<nested_component_module::Foo>();
+    flecs::entity bar = ecs.component<nested_component_module::Foo::Bar>();
+
+    test_str(foo.path().c_str(), "::nested_component_module::Foo");
+    test_str(bar.path().c_str(), "::nested_component_module::Foo::Bar");
 }

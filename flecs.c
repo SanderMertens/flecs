@@ -25438,17 +25438,21 @@ const char* ecs_cpp_trim_module(
 
     char *path = ecs_get_path_w_sep(world, 0, scope, "::", NULL);
     if (path) {
-        const char *ptr = strrchr(type_name, ':');
-        ecs_assert(ptr != type_name, ECS_INTERNAL_ERROR, NULL);
-        if (ptr) {
-            ptr --;
-            ecs_assert(ptr[0] == ':', ECS_INTERNAL_ERROR, NULL);
-            ecs_size_t name_path_len = (ecs_size_t)(ptr - type_name);
-            if (name_path_len <= ecs_os_strlen(path)) {
-                if (!ecs_os_strncmp(type_name, path, name_path_len)) {
-                    type_name = &type_name[name_path_len + 2];
-                }
+        ecs_size_t len = ecs_os_strlen(path);
+        if (!ecs_os_strncmp(path, type_name, len)) {
+            // Type is a child of current parent, trim name of parent
+            type_name += len;
+            ecs_assert(type_name[0], ECS_INVALID_PARAMETER, NULL);
+            ecs_assert(type_name[0] == ':', ECS_INVALID_PARAMETER, NULL);
+            ecs_assert(type_name[1] == ':', ECS_INVALID_PARAMETER, NULL);
+            type_name += 2;
+        } else {
+            // Type is not a child of current parent, trim entire path
+            char *ptr = strrchr(type_name, ':');
+            if (ptr) {
+                type_name = ptr + 1;
             }
+
         }
     }
     ecs_os_free(path);
@@ -25631,7 +25635,7 @@ ecs_entity_t ecs_cpp_component_register_explicit(
             } else {
                 // If type is not yet known, derive from type name
                 name = ecs_cpp_trim_module(world, type_name);
-            }            
+            }
         }
     } else {
         // If an explicit id is provided but it has no name, inherit

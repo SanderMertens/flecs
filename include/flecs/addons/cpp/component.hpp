@@ -399,8 +399,6 @@ struct component : untyped_component {
                     if (ptr[0] == ':') {
                         last_elem = ptr;
                     }
-                } else {
-                    last_elem = strrchr(n, ':');
                 }
                 if (last_elem) {
                     name = last_elem + 1;
