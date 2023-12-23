@@ -762,14 +762,17 @@ void flecs_rule_begin_block_cond_eval(
 
     if (flecs_rule_ref_flags(op->flags, EcsRuleFirst) == EcsRuleIsVar) {
         first_var = op->first.var;
+        ecs_assert(first_var != EcsVarNone, ECS_INTERNAL_ERROR, NULL);
         cond_mask |= (1ull << first_var);
     }
     if (flecs_rule_ref_flags(op->flags, EcsRuleSecond) == EcsRuleIsVar) {
         second_var = op->second.var;
+        ecs_assert(second_var != EcsVarNone, ECS_INTERNAL_ERROR, NULL);
         cond_mask |= (1ull << second_var);
     }
     if (flecs_rule_ref_flags(op->flags, EcsRuleSrc) == EcsRuleIsVar) {
         src_var = op->src.var;
+        ecs_assert(src_var != EcsVarNone, ECS_INTERNAL_ERROR, NULL);
         cond_mask |= (1ull << src_var);
     }
 
@@ -837,13 +840,33 @@ void flecs_rule_end_block_cond_eval(
 static
 void flecs_rule_begin_block_or(
     ecs_rule_op_t *op,
+    ecs_term_t *term,
     ecs_rule_compile_ctx_t *ctx)
 {
     ecs_rule_op_t *or_op = flecs_rule_begin_block(EcsRuleNot, ctx);
     or_op->kind = EcsRuleOr;
-    if (op->flags & (EcsRuleIsVar << EcsRuleSrc)) {
-        or_op->flags = (EcsRuleIsVar << EcsRuleSrc);
-        or_op->src = op->src;
+
+    /* Set the source of the evaluate terms as source of the Or instruction. 
+     * This lets the engine determine whether the variable has already been
+     * written. When the source is not yet written, an OR operation needs to
+     * take the union of all the terms in the OR chain. When the variable is
+     * known, it will return after the first matching term.
+     * 
+     * In case a term in the OR expression is an equality predicate which 
+     * compares the left hand side with a variable, the variable acts as an 
+     * alias, so we can always assume that it's written. */
+    bool add_src = true;
+    if (term->first.id == EcsPredEq && term->second.flags & EcsIsVariable) {
+        if (!(flecs_rule_is_written(op->src.var, ctx->written))) {
+            add_src = false;
+        }
+    }
+
+    if (add_src) {
+        if (op->flags & (EcsRuleIsVar << EcsRuleSrc)) {
+            or_op->flags = (EcsRuleIsVar << EcsRuleSrc);
+            or_op->src = op->src;
+        }
     }
 }
 
@@ -856,7 +879,7 @@ void flecs_rule_end_block_or(
     ecs_rule_lbl_t end = flecs_rule_op_insert(&op, ctx);
     
     ecs_rule_op_t *ops = ecs_vec_first_t(ctx->ops, ecs_rule_op_t);
-    int32_t i, prev_or = -2;
+    int32_t i, j, prev_or = -2;
     for (i = ctx->cur->lbl_begin + 1; i < end; i ++) {
         if (ops[i].next == FlecsRuleOrMarker) {
             if (prev_or != -2) {
@@ -864,6 +887,19 @@ void flecs_rule_end_block_or(
             }
             ops[i].next = flecs_itolbl(end);
             prev_or = i;
+        } else {
+            /* Combine operation with next OR marker. This supports OR chains 
+             * with terms that require multiple operations to test. */
+            for (j = i + 1; j < end; j ++) {
+                if (ops[j].next == FlecsRuleOrMarker) {
+                    if (j == (end - 1)) {
+                        ops[i].prev = ctx->cur->lbl_begin;
+                    } else {
+                        ops[i].prev = flecs_itolbl(j + 1);
+                    }
+                    break;
+                }
+            }
         }
     }
 
@@ -1105,10 +1141,6 @@ int flecs_rule_compile_ensure_vars(
         }
 
         written |= flecs_rule_is_written(var_id, ctx->written);
-
-        /* After evaluating a term, a used variable is always written */
-        flecs_rule_write(var_id, &op->written);
-        flecs_rule_write_ctx(var_id, ctx, cond_write);
     } else {
         /* If it's not a variable, it's always written */
         written = true;
@@ -1206,6 +1238,7 @@ bool flecs_rule_term_fixed_id(
 
 static
 int flecs_rule_compile_builtin_pred(
+    ecs_rule_t *rule,
     ecs_term_t *term,
     ecs_rule_op_t *op,
     ecs_write_flags_t write_state)
@@ -1237,7 +1270,8 @@ int flecs_rule_compile_builtin_pred(
     if (flags_2nd & EcsRuleIsVar) {
         if (!(write_state & (1ull << op->second.var))) {
             ecs_err("uninitialized variable '%s' on right-hand side of "
-                "equality operator", term->second.name);
+                "equality operator", 
+                    ecs_rule_var_name(rule, op->second.var));
             return -1;
         }
     }
@@ -1448,7 +1482,6 @@ int flecs_rule_compile_term(
     /* Save write state at start of term so we can use it to reliably track
      * variables got written by this term. */
     ecs_write_flags_t cond_write_state = ctx->cond_written;
-    ecs_write_flags_t write_state = ctx->written;
 
     /* Resolve component inheritance if necessary */
     ecs_var_id_t first_var = EcsVarNone, second_var = EcsVarNone, src_var = EcsVarNone;
@@ -1584,7 +1617,7 @@ int flecs_rule_compile_term(
     } else if (term->oper == EcsOptional) {
         flecs_rule_begin_block(EcsRuleOptional, ctx);
     } else if (first_or) {
-        flecs_rule_begin_block_or(&op, ctx);
+        flecs_rule_begin_block_or(&op, term, ctx);
     }
 
     /* If term has component inheritance enabled, insert instruction to walk
@@ -1606,6 +1639,7 @@ int flecs_rule_compile_term(
     }
 
     /* Insert instructions for lookup variables */
+    ecs_write_flags_t write_state = ctx->written;
     if (first_is_var) {
         if (flecs_rule_compile_lookup(rule, first_var, ctx, cond_write)) {
             write_state |= (1ull << first_var); // lookups are resolved inline
@@ -1623,7 +1657,7 @@ int flecs_rule_compile_term(
     }
 
     if (builtin_pred) {
-        if (flecs_rule_compile_builtin_pred(term, &op, write_state)) {
+        if (flecs_rule_compile_builtin_pred(rule, term, &op, write_state)) {
             goto error;
         }
     }
@@ -1650,7 +1684,21 @@ int flecs_rule_compile_term(
         }
     }
 
+    /* After evaluating a term, a used variable is always written */
+    if (src_is_var) {
+        flecs_rule_write(src_var, &op.written);
+        flecs_rule_write_ctx(op.src.var, ctx, cond_write);
+    }
+    if (first_is_var) {
+        flecs_rule_write(first_var, &op.written);
+        flecs_rule_write_ctx(first_var, ctx, cond_write);
+    }
+    if (second_is_var) {
+        flecs_rule_write(second_var, &op.written);
+        flecs_rule_write_ctx(second_var, ctx, cond_write);
+    }
     flecs_rule_op_insert(&op, ctx);
+
     ctx->cur->lbl_query = flecs_itolbl(ecs_vec_count(ctx->ops) - 1);
     if (is_or) {
         ecs_rule_op_t *op_ptr = ecs_vec_get_t(ctx->ops, ecs_rule_op_t, 
@@ -1683,7 +1731,7 @@ int flecs_rule_compile_term(
     }
 
     /* Handle closing of conditional evaluation */
-    if (ctx->cond_written && (first_is_var || second_is_var || src_is_var)) {
+    if (ctx->cur->lbl_cond_eval && (first_is_var || second_is_var || src_is_var)) {
         if (!is_or || last_or) {
             flecs_rule_end_block_cond_eval(ctx);
         }

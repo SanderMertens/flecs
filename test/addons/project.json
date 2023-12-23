@@ -1225,6 +1225,7 @@
                 "var_eq_name_written",
                 "var_eq_name_written_no_match",
                 "var_eq_var_written",
+                "var_eq_this",
                 "this_neq_id",
                 "this_neq_name",
                 "this_neq_var",
@@ -1241,6 +1242,7 @@
                 "var_neq_name_written",
                 "var_neq_name_written_no_match",
                 "var_neq_var_written",
+                "var_neq_this",
                 "this_2_neq_id",
                 "this_2_neq_name",
                 "var_2_neq_id",
@@ -1278,7 +1280,10 @@
                 "var_eq_any",
                 "var_eq_wildcard_after_write",
                 "var_eq_any_after_write",
-                "var_eq_after_var_0_src"
+                "var_eq_after_var_0_src",
+                "2_or_w_eq_this",
+                "2_or_w_eq_lookup_var",
+                "3_or_w_eq_lookup_var"
             ]
         }, {
             "id": "RulesScopes",
