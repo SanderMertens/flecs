@@ -6462,6 +6462,32 @@ void RulesBasic_2_trivial_plan_component(void) {
     ecs_fini(world);
 }
 
+void RulesBasic_2_trivial_plan_w_wildcard(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Foo(self), ChildOf(self, *)"
+    });
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  setids      " 
+    LINE " 1. [ 0,  2]  trivwc      "
+    LINE " 2. [ 1,  3]  yield       "
+    LINE "";
+    char *plan = ecs_rule_str(r);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
 void RulesBasic_3_trivial_plan_w_pair(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -6696,3 +6722,267 @@ void RulesBasic_2_trivial_component_w_none(void) {
     ecs_fini(world);
 }
 
+void RulesBasic_2_trivial_mixed_2_tables(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Mass);
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t ent = ecs_new_entity(world, "ent");
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Foo(self), Bar(self), Mass(ent:self)",
+        .instanced = true
+    });
+
+    test_assert(r != NULL);
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_add(world, e1, Foo);
+    ecs_add(world, e1, Bar);
+
+    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_add(world, e2, Foo);
+    ecs_add(world, e2, Bar);
+
+    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_add(world, e3, Foo);
+    ecs_add(world, e3, Bar);
+    ecs_add(world, e3, Tag);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_set(world, ent, Mass, {100});
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(2, it.count);
+        test_uint(e1, it.entities[0]);
+        test_uint(e2, it.entities[1]);
+
+        test_uint(Foo, ecs_field_id(&it, 1));
+        test_uint(Bar, ecs_field_id(&it, 2));
+        test_uint(ecs_id(Mass), ecs_field_id(&it, 3));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_uint(ent, ecs_field_src(&it, 3));
+
+        {
+            Mass *m = ecs_field(&it, Mass, 3);
+            test_assert(m != NULL);
+            test_int(*m, 100);
+        }
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(1, it.count);
+        test_uint(e3, it.entities[0]);
+
+        test_uint(Foo, ecs_field_id(&it, 1));
+        test_uint(Bar, ecs_field_id(&it, 2));
+        test_uint(ecs_id(Mass), ecs_field_id(&it, 3));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_uint(ent, ecs_field_src(&it, 3));
+
+        {
+            Mass *m = ecs_field(&it, Mass, 3);
+            test_assert(m != NULL);
+            test_int(*m, 100);
+        }
+
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_2_trivial_mixed_2_tables_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t ent = ecs_new_entity(world, "ent");
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Position(self), Velocity(self), Mass(ent:self)",
+        .instanced = true
+    });
+
+    test_assert(r != NULL);
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_set(world, e1, Velocity, {1, 2});
+
+    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_set(world, e2, Position, {20, 30});
+    ecs_set(world, e2, Velocity, {2, 3});
+
+    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_set(world, e3, Position, {30, 40});
+    ecs_set(world, e3, Velocity, {3, 4});
+    ecs_add(world, e3, Tag);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_set(world, ent, Mass, {100});
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(2, it.count);
+        test_uint(e1, it.entities[0]);
+        test_uint(e2, it.entities[1]);
+
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+        test_uint(ecs_id(Mass), ecs_field_id(&it, 3));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_uint(ent, ecs_field_src(&it, 3));
+
+        {
+            Position *p = ecs_field(&it, Position, 1);
+            test_assert(p != NULL);
+            test_int(p[0].x, 10); test_int(p[0].y, 20);
+            test_int(p[1].x, 20); test_int(p[1].y, 30);
+
+            Velocity *v = ecs_field(&it, Velocity, 2);
+            test_assert(v != NULL);
+            test_int(v[0].x, 1); test_int(v[0].y, 2);
+            test_int(v[1].x, 2); test_int(v[1].y, 3);
+
+            Mass *m = ecs_field(&it, Mass, 3);
+            test_assert(m != NULL);
+            test_int(*m, 100);
+        }
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(1, it.count);
+        test_uint(e3, it.entities[0]);
+
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+        test_uint(ecs_id(Mass), ecs_field_id(&it, 3));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_uint(ent, ecs_field_src(&it, 3));
+
+        {
+            Position *p = ecs_field(&it, Position, 1);
+            test_assert(p != NULL);
+            test_int(p[0].x, 30); test_int(p[0].y, 40);
+
+            Velocity *v = ecs_field(&it, Velocity, 2);
+            test_assert(v != NULL);
+            test_int(v[0].x, 3); test_int(v[0].y, 4);
+
+            Mass *m = ecs_field(&it, Mass, 3);
+            test_assert(m != NULL);
+            test_int(*m, 100);
+        }
+
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_2_trivial_mixed_2_tables_wildcard(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Mass);
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t ent = ecs_new_entity(world, "ent");
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Foo(self), ChildOf(self, *), Mass(ent:self)",
+        .instanced = true
+    });
+
+    test_assert(r != NULL);
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_add(world, e1, Foo);
+    ecs_add_pair(world, e1, EcsChildOf, TgtA);
+
+    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_add(world, e2, Foo);
+    ecs_add_pair(world, e2, EcsChildOf, TgtA);
+
+    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_add(world, e3, Foo);
+    ecs_add_pair(world, e3, EcsChildOf, TgtA);
+    ecs_add(world, e3, Tag);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_set(world, ent, Mass, {100});
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(2, it.count);
+        test_uint(e1, it.entities[0]);
+        test_uint(e2, it.entities[1]);
+
+        test_uint(Foo, ecs_field_id(&it, 1));
+        test_uint(ecs_pair(EcsChildOf, TgtA), ecs_field_id(&it, 2));
+        test_uint(ecs_id(Mass), ecs_field_id(&it, 3));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_uint(ent, ecs_field_src(&it, 3));
+
+        {
+            Mass *m = ecs_field(&it, Mass, 3);
+            test_assert(m != NULL);
+            test_int(*m, 100);
+        }
+
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(1, it.count);
+        test_uint(e3, it.entities[0]);
+
+        test_uint(Foo, ecs_field_id(&it, 1));
+        test_uint(ecs_pair(EcsChildOf, TgtA), ecs_field_id(&it, 2));
+        test_uint(ecs_id(Mass), ecs_field_id(&it, 3));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_uint(ent, ecs_field_src(&it, 3));
+
+        {
+            Mass *m = ecs_field(&it, Mass, 3);
+            test_assert(m != NULL);
+            test_int(*m, 100);
+        }
+
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}

@@ -802,6 +802,7 @@ void RulesBasic_1_trivial_plan(void);
 void RulesBasic_2_trivial_plan(void);
 void RulesBasic_1_trivial_plan_component(void);
 void RulesBasic_2_trivial_plan_component(void);
+void RulesBasic_2_trivial_plan_w_wildcard(void);
 void RulesBasic_3_trivial_plan_w_pair(void);
 void RulesBasic_3_trivial_plan_w_wildcard(void);
 void RulesBasic_3_trivial_plan_w_any(void);
@@ -810,6 +811,9 @@ void RulesBasic_3_trivial_plan_w_wildcard_component(void);
 void RulesBasic_3_trivial_plan_w_any_component(void);
 void RulesBasic_1_trivial_component_w_none(void);
 void RulesBasic_2_trivial_component_w_none(void);
+void RulesBasic_2_trivial_mixed_2_tables(void);
+void RulesBasic_2_trivial_mixed_2_tables_component(void);
+void RulesBasic_2_trivial_mixed_2_tables_wildcard(void);
 
 // Testsuite 'RulesVariables'
 void RulesVariables_1_ent_src_w_var(void);
@@ -4969,6 +4973,10 @@ bake_test_case RulesBasic_testcases[] = {
         RulesBasic_2_trivial_plan_component
     },
     {
+        "2_trivial_plan_w_wildcard",
+        RulesBasic_2_trivial_plan_w_wildcard
+    },
+    {
         "3_trivial_plan_w_pair",
         RulesBasic_3_trivial_plan_w_pair
     },
@@ -4999,6 +5007,18 @@ bake_test_case RulesBasic_testcases[] = {
     {
         "2_trivial_component_w_none",
         RulesBasic_2_trivial_component_w_none
+    },
+    {
+        "2_trivial_mixed_2_tables",
+        RulesBasic_2_trivial_mixed_2_tables
+    },
+    {
+        "2_trivial_mixed_2_tables_component",
+        RulesBasic_2_trivial_mixed_2_tables_component
+    },
+    {
+        "2_trivial_mixed_2_tables_wildcard",
+        RulesBasic_2_trivial_mixed_2_tables_wildcard
     }
 };
 
@@ -8896,7 +8916,7 @@ static bake_test_suite suites[] = {
         "RulesBasic",
         NULL,
         NULL,
-        145,
+        149,
         RulesBasic_testcases
     },
     {

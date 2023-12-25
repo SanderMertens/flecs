@@ -10642,7 +10642,9 @@ int flecs_term_finalize(
             }
         }
     }
-
+    if (!ecs_term_match_this(term)) {
+        trivial_term = false;
+    }
     if (term->flags & EcsTermIdInherited) {
         trivial_term = false;
     }
@@ -64122,7 +64124,7 @@ bool flecs_rule_triv(
     ecs_rule_trivial_ctx_t *op_ctx = flecs_op_ctx(ctx, trivial);
     int32_t until = flecs_ito(int32_t, op->other);
     uint64_t written = ctx->written[ctx->op_index];
-    ctx->written[ctx->op_index] |= 1ull;
+    ctx->written[ctx->op_index + 1] |= 1ull;
     if (written & 1ull) {
         return flecs_rule_trivial_test(ctx->rule, ctx, !redo, until);
     } else {
@@ -64139,7 +64141,7 @@ bool flecs_rule_triv_data(
     ecs_rule_trivial_ctx_t *op_ctx = flecs_op_ctx(ctx, trivial);
     int32_t until = flecs_ito(int32_t, op->other);
     uint64_t written = ctx->written[ctx->op_index];
-    ctx->written[ctx->op_index] |= 1ull;
+    ctx->written[ctx->op_index + 1] |= 1ull;
     if (written & 1ull) {
         return flecs_rule_trivial_test(ctx->rule, ctx, !redo, until);
     } else {
@@ -64156,7 +64158,7 @@ bool flecs_rule_triv_wildcard(
     ecs_rule_trivial_ctx_t *op_ctx = flecs_op_ctx(ctx, trivial);
     int32_t until = flecs_ito(int32_t, op->other);
     uint64_t written = ctx->written[ctx->op_index];
-    ctx->written[ctx->op_index] |= 1ull;
+    ctx->written[ctx->op_index + 1] |= 1ull;
     if (written & 1ull) {
         return flecs_rule_trivial_test_w_wildcards(ctx->rule, ctx, !redo, until);
     } else {

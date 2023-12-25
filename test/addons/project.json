@@ -817,6 +817,7 @@
                 "2_trivial_plan",
                 "1_trivial_plan_component",
                 "2_trivial_plan_component",
+                "2_trivial_plan_w_wildcard",
                 "3_trivial_plan_w_pair",
                 "3_trivial_plan_w_wildcard",
                 "3_trivial_plan_w_any",
@@ -824,7 +825,10 @@
                 "3_trivial_plan_w_wildcard_component",
                 "3_trivial_plan_w_any_component",
                 "1_trivial_component_w_none",
-                "2_trivial_component_w_none"
+                "2_trivial_component_w_none",
+                "2_trivial_mixed_2_tables",
+                "2_trivial_mixed_2_tables_component",
+                "2_trivial_mixed_2_tables_wildcard"
             ]
         }, {
             "id": "RulesVariables",

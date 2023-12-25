@@ -857,7 +857,9 @@ int flecs_term_finalize(
             }
         }
     }
-
+    if (!ecs_term_match_this(term)) {
+        trivial_term = false;
+    }
     if (term->flags & EcsTermIdInherited) {
         trivial_term = false;
     }
