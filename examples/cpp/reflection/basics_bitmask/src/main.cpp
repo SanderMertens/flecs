@@ -23,11 +23,11 @@ int main(int, char *[]) {
     ecs.component<Sandwich>()
         .member<Toppings>("toppings");
 
-    // Create entity with Position as usual
+    // Create entity with Sandwich as usual
     flecs::entity e = ecs.entity()
         .set<Sandwich>({Toppings::Bacon | Toppings::Lettuce});
 
-    // Convert position component to flecs expression string
+    // Convert Sandwich component to flecs expression string
     const Sandwich *ptr = e.get<Sandwich>();
     std::cout << ecs.to_expr(ptr).c_str() << "\n"; // {toppings: Lettuce|Bacon}
 }

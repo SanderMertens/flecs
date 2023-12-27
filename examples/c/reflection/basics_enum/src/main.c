@@ -35,11 +35,11 @@ int main(int argc, char *argv[]) {
         }
     });
 
-    // Create entity with Position as usual
+    // Create entity with TypeWithEnum as usual
     ecs_entity_t ent = ecs_new_id(ecs);
     ecs_set(ecs, ent, TypeWithEnum, {Green});
 
-    // Convert position component to flecs expression string
+    // Convert TypeWithEnum component to flecs expression string
     const TypeWithEnum *ptr = ecs_get(ecs, ent, TypeWithEnum);
     char *str = ecs_ptr_to_expr(ecs, ecs_id(TypeWithEnum), ptr);
     printf("%s\n", str); // {color: Green}

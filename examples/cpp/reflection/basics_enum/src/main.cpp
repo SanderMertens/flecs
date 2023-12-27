@@ -23,11 +23,11 @@ int main(int, char *[]) {
     ecs.component<TypeWithEnum>()
         .member<Color>("color");
 
-    // Create entity with Position as usual
+    // Create entity with TypeWithEnum as usual
     flecs::entity e = ecs.entity()
         .set<TypeWithEnum>({Green});
 
-    // Convert position component to flecs expression string
+    // Convert TypeWithEnum component to flecs expression string
     const TypeWithEnum *ptr = e.get<TypeWithEnum>();
     std::cout << ecs.to_expr(ptr).c_str() << "\n"; // {color: Green}
 }
