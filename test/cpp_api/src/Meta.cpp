@@ -337,11 +337,11 @@ void Meta_bitmask(void) {
     ecs.component<Sandwich>()
         .member<Toppings>("toppings");
 
-    // Create entity with Position as usual
+    // Create entity with Sandwich as usual
     auto e = ecs.entity()
         .set<Sandwich>({Toppings::Bacon | Toppings::Lettuce});
 
-    // Convert position component to flecs expression string
+    // Convert Sandwidth component to flecs expression string
     const Sandwich *ptr = e.get<Sandwich>();
     test_str(ecs.to_expr(ptr).c_str(), "{toppings: Lettuce|Bacon}");
 }
