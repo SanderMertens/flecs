@@ -2616,7 +2616,7 @@ typedef struct ecs_filter_t ecs_filter_t;
  * - Iteration is table-based, which allows for direct iteration of underlying
  *   component arrays, providing good cache locality.
  * 
- * While queries are the fastest mechanism to iterate entiites, they are slower
+ * While queries are the fastest mechanism to iterate entities, they are slower
  * to create than other mechanisms, as a result of having to build the cache 
  * first. For this reason queries are best suited for use cases where a single
  * query can be reused many times (like is the case for systems).
