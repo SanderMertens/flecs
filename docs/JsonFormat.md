@@ -5,7 +5,7 @@ This document provides an overview of the JSON serializer format. For an overvie
 This section describes value kinds that are used by the JSON serializers.
 
 ### Name
-A name field returns the name of an entity as returned by `ecs_get_name` or `flecs::entity::name`. 
+A name field returns the name of an entity as returned by `ecs_get_name` or `flecs::entity::name`.
 
 **Example**:
 ```json
@@ -279,7 +279,7 @@ Array with ids for each term.
 Type: Array(string), optional
 
 #### "variables
-Array with variable names (see [query variables](https://www.flecs.dev/flecs/md_docs_Queries.html/#variables)).
+Array with variable names (see [query variables](Queries.md#variables)).
 
 Type: Array(string), optional
 
