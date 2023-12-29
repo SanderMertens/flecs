@@ -1380,6 +1380,7 @@ HTML_EXTRA_FILES       = docs/cfg/doxygen-awesome-darkmode-toggle.js \
                          docs/cfg/doxygen-awesome-fragment-copy-button.js \
                          docs/cfg/doxygen-awesome-paragraph-link.js \
                          docs/cfg/doxygen-awesome-interactive-toc.js \
+                         docs/cfg/doxygen-awesome-tabs.js \
                          docs/img/logo_small_dark.png
 
 # The HTML_COLORSTYLE tag can be used to specify if the generated HTML output
