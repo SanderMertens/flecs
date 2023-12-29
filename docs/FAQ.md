@@ -123,7 +123,7 @@ Not all addons are useful in any project. You can customize a Flecs build to onl
 
 ## Why does the explorer not work?
 Make sure that:
-- The REST API is enabled (see the [REST manual](https://www.flecs.dev/flecs/md_docs_RestApi.html))
+- The REST API is enabled (see the [REST manual](RestApi.md))
 - You can reach the REST API by testing http://localhost:27750/entity/flecs
 - You call `ecs_progress`/`world::progress` in your main loop
 
