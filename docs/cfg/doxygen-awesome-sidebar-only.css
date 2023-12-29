@@ -5,7 +5,7 @@ https://github.com/jothepro/doxygen-awesome-css
 
 MIT License
 
-Copyright (c) 2021 jothepro
+Copyright (c) 2021 - 2023 jothepro
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -81,6 +81,7 @@ html {
     .ui-resizable-handle {
         cursor: default;
         width: 1px !important;
+        background: var(--separator-color);
         box-shadow: 0 calc(-2 * var(--top-height)) 0 0 var(--separator-color);
     }
 
@@ -93,7 +94,7 @@ html {
     }
 
     #doc-content {
-        height: calc(100vh) !important;
+        height: calc(100vh - 31px) !important;
         padding-bottom: calc(3 * var(--spacing-large));
         padding-top: calc(var(--top-height) - 80px);
         box-sizing: border-box;
