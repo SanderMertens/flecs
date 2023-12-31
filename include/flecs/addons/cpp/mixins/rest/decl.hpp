@@ -9,9 +9,9 @@ namespace flecs {
 
 /**
  * @defgroup cpp_addons_rest Rest
- * @brief REST API for querying and mutating entities.
- * 
- * \ingroup cpp_addons
+ * @ingroup cpp_addons
+ * REST API for querying and mutating entities.
+ *
  * @{
  */
 

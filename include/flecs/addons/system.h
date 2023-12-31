@@ -11,9 +11,9 @@
 
 /**
  * @defgroup c_addons_system System
- * @brief Systems are a query + function that can be ran manually or by a pipeline.
- * 
- * \ingroup c_addons
+ * @ingroup c_addons
+ * Systems are a query + function that can be ran manually or by a pipeline.
+ *
  * @{
  */
 
@@ -44,16 +44,16 @@ typedef struct ecs_system_desc_t {
     /** System query parameters */
     ecs_query_desc_t query;
 
-    /** Callback that is invoked when a system is ran. 
-     * When left to NULL, the default system runner is used, which calls the 
-     * "callback" action for each result returned from the system's query. 
-     * 
+    /** Callback that is invoked when a system is ran.
+     * When left to NULL, the default system runner is used, which calls the
+     * "callback" action for each result returned from the system's query.
+     *
      * It should not be assumed that the input iterator can always be iterated
      * with ecs_query_next. When a system is multithreaded and/or paged, the
      * iterator can be either a worker or paged iterator. Future use cases may
      * introduce additional inputs for a system, such as rules and filters. The
      * correct function to use for iteration is ecs_iter_next.
-     * 
+     *
      * An implementation can test whether the iterator is a query iterator by
      * testing whether the it->next value is equal to ecs_query_next. */
     ecs_run_action_t run;
@@ -104,7 +104,7 @@ ecs_entity_t ecs_system_init(
 #define ECS_SYSTEM_DECLARE(id) ecs_entity_t ecs_id(id)
 
 /** Define a forward declared system.
- * 
+ *
  * Example:
  *   ECS_SYSTEM_DEFINE(world, Move, EcsOnUpdate, Position, Velocity);
  */
@@ -124,7 +124,7 @@ ecs_entity_t ecs_system_init(
     ecs_assert(ecs_id(id_) != 0, ECS_INVALID_PARAMETER, NULL)
 
 /** Declare & define a system.
- * 
+ *
  * Example:
  *   ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
  */
@@ -189,7 +189,7 @@ ecs_entity_t ecs_run(
     void *param);
 
 /** Same as ecs_run, but subdivides entities across number of provided stages.
- * 
+ *
  * @param world The world.
  * @param system The system to run.
  * @param stage_current The id of the current stage.
@@ -210,17 +210,17 @@ ecs_entity_t ecs_run_worker(
 /** Run system with offset/limit and type filter.
  * This operation is the same as ecs_run, but filters the entities that will be
  * iterated by the system.
- * 
+ *
  * Entities can be filtered in two ways. Offset and limit control the range of
  * entities that is iterated over. The range is applied to all entities matched
  * with the system, thus may cover multiple archetypes.
- * 
+ *
  * The type filter controls which entity types the system will evaluate. Only
  * types that contain all components in the type filter will be iterated over. A
  * type filter is only evaluated once per table, which makes filtering cheap if
  * the number of entities is large and the number of tables is small, but not as
  * cheap as filtering in the system signature.
- * 
+ *
  * @param world The world.
  * @param system The system to invoke.
  * @param delta_time The time passed since the last system invocation.
@@ -238,7 +238,7 @@ ecs_entity_t ecs_run_w_filter(
 
 /** Get the query object for a system.
  * Systems use queries under the hood. This enables an application to get access
- * to the underlying query object of a system. This can be useful when, for 
+ * to the underlying query object of a system. This can be useful when, for
  * example, an application needs to enable sorting for a system.
  *
  * @param world The world.
@@ -264,8 +264,8 @@ void* ecs_system_get_ctx(
     ecs_entity_t system);
 
 /** Get system binding context.
- * The binding context is a context typically used to attach any language 
- * binding specific data that is needed when invoking a callback that is 
+ * The binding context is a context typically used to attach any language
+ * binding specific data that is needed when invoking a callback that is
  * implemented in another language.
  *
  * @param world The world.

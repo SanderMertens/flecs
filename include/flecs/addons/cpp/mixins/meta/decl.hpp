@@ -9,9 +9,9 @@ namespace flecs {
 
 /**
  * @defgroup cpp_addons_meta Meta
- * @brief Flecs reflection framework.
- * 
- * \ingroup cpp_addons
+ * @ingroup cpp_addons
+ * Flecs reflection framework.
+ *
  * @{
  */
 

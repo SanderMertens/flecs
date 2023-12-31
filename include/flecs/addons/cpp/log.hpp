@@ -10,9 +10,9 @@ namespace log {
 
 /**
  * @defgroup cpp_log Logging
- * @brief Logging functions.
- * 
- * \ingroup cpp_addons
+ * @ingroup cpp_addons
+ * Logging functions.
+ *
  * @{
  */
 

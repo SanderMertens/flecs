@@ -8,15 +8,16 @@
 
 /**
  * @defgroup flecs_c Macro API
- * @brief Convenience macro's for C API
- * 
- * \ingroup c
+ * @ingroup c
+ * Convenience macro's for C API
+ *
  * @{
  */
 
 /**
  * @defgroup flecs_c_creation Creation macro's
- * @brief Convenience macro's for creating entities, components and observers
+ * Convenience macro's for creating entities, components and observers
+ *
  * @{
  */
 
@@ -28,7 +29,7 @@
 #define ECS_ENTITY_DECLARE ECS_DECLARE
 
 /** Define a forward declared entity.
- * 
+ *
  * Example:
  *   ECS_ENTITY_DEFINE(world, MyEntity, Position, Velocity);
  */
@@ -59,7 +60,7 @@
 #define ECS_TAG_DECLARE ECS_DECLARE
 
 /** Define a forward declared tag.
- * 
+ *
  * Example:
  *   ECS_TAG_DEFINE(world, MyTag);
  */
@@ -76,7 +77,7 @@
 #define ECS_PREFAB_DECLARE ECS_DECLARE
 
 /** Define a forward declared prefab.
- * 
+ *
  * Example:
  *   ECS_PREFAB_DEFINE(world, MyPrefab, Position, Velocity);
  */
@@ -93,7 +94,7 @@
 #define ECS_COMPONENT_DECLARE(id)         ecs_entity_t ecs_id(id)
 
 /** Define a forward declared component.
- * 
+ *
  * Example:
  *   ECS_COMPONENT_DEFINE(world, Position);
  */
@@ -126,7 +127,7 @@
 #define ECS_OBSERVER_DECLARE(id)         ecs_entity_t ecs_id(id)
 
 /** Define a forward declared observer.
- * 
+ *
  * Example:
  *   ECS_OBSERVER_DEFINE(world, AddPosition, EcsOnAdd, Position);
  */
@@ -229,7 +230,8 @@
 
 /**
  * @defgroup flecs_c_type_safe Type Safe API
- * @brief Macro's that wrap around core functions to provide a "type safe" API in C
+ * Macro's that wrap around core functions to provide a "type safe" API in C
+ *
  * @{
  */
 
@@ -617,8 +619,8 @@
 
 /**
  * @defgroup flecs_c_table_sorting Table sorting
- * @brief Convenience macro's for sorting tables.
- * 
+ * Convenience macro's for sorting tables.
+ *
  * @{
  */
 #define ecs_sort_table(id) ecs_id(id##_sort_table)
@@ -731,8 +733,8 @@
 
 /**
  * @defgroup flecs_c_misc Misc
- * @brief Misc convenience macro's.
- * 
+ * Misc convenience macro's.
+ *
  * @{
  */
 

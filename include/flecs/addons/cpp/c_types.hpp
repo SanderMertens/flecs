@@ -9,9 +9,9 @@ namespace flecs {
 
 /**
  * @defgroup cpp_globals API Types & Globals
- * @brief Types & constants bridged from C API.
- * 
- * \ingroup cpp_core
+ * @ingroup cpp_core
+ * Types & constants bridged from C API.
+ *
  * @{
  */
 
@@ -56,7 +56,7 @@ static const flecs::entity_t Override = ECS_OVERRIDE;
 static const flecs::entity_t Toggle = ECS_TOGGLE;
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Builtin components and tags 
+//// Builtin components and tags
 ////////////////////////////////////////////////////////////////////////////////
 
 /* Builtin components */

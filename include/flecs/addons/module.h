@@ -2,7 +2,7 @@
  * @file addons/module.h
  * @brief Module addon.
  *
- * The module addon allows for creating and importing modules. Flecs modules 
+ * The module addon allows for creating and importing modules. Flecs modules
  * enable applications to organize components and systems into reusable units of
  * code that can easily be across projects.
  */
@@ -11,9 +11,9 @@
 
 /**
  * @defgroup c_addons_module Module
- * @brief Modules organize components, systems and more in reusable units of code.
- * 
- * \ingroup c_addons
+ * @ingroup c_addons
+ * Modules organize components, systems and more in reusable units of code.
+ *
  * @{
  */
 
@@ -31,9 +31,9 @@ extern "C" {
  * will be translated from PascalCase to an entity path (pascal.case) before the
  * lookup occurs.
  *
- * Module contents will be stored as children of the module entity. This 
+ * Module contents will be stored as children of the module entity. This
  * prevents modules from accidentally defining conflicting identifiers. This is
- * enforced by setting the scope before and after loading the module to the 
+ * enforced by setting the scope before and after loading the module to the
  * module entity id.
  *
  * A more convenient way to import a module is by using the ECS_IMPORT macro.

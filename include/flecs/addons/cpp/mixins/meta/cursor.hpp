@@ -9,14 +9,14 @@ namespace flecs {
 
 /**
  * @defgroup cpp_addons_meta Meta
- * @brief Flecs reflection framework.
- * 
- * \ingroup cpp_addons
+ * @ingroup cpp_addons
+ * Flecs reflection framework.
+ *
  * @{
  */
 
 /** Class for reading/writing dynamic values.
- * 
+ *
  * \ingroup cpp_addons_meta
  */
 struct cursor {

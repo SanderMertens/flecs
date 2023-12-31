@@ -7,31 +7,31 @@
 
 /**
  * @defgroup cpp_iterator Iterators
- * @brief Iterator operations.
- * 
- * \ingroup cpp_core
+ * @ingroup cpp_core
+ * Iterator operations.
+ *
  * @{
  */
 
-namespace flecs 
+namespace flecs
 {
 
 /** Unsafe wrapper class around a column.
  * This class can be used when a system does not know the type of a column at
  * compile time.
- * 
+ *
  * \ingroup cpp_iterator
  */
 struct untyped_column {
     untyped_column(void* array, size_t size, size_t count, bool is_shared = false)
         : m_array(array)
         , m_size(size)
-        , m_count(count) 
+        , m_count(count)
         , m_is_shared(is_shared) {}
 
     /** Return element in component array.
      * This operator may only be used if the column is not shared.
-     * 
+     *
      * @param index Index of element.
      * @return Reference to element.
      */
@@ -45,18 +45,18 @@ protected:
     void* m_array;
     size_t m_size;
     size_t m_count;
-    bool m_is_shared;        
+    bool m_is_shared;
 };
 
 /** Wrapper class around a column.
- * 
+ *
  * @tparam T component type of the column.
- * 
+ *
  * \ingroup cpp_iterator
  */
 template <typename T>
 struct column {
-    static_assert(std::is_empty<T>::value == false, 
+    static_assert(std::is_empty<T>::value == false,
         "invalid type for column, cannot iterate empty type");
 
     /** Create column from component array.
@@ -67,7 +67,7 @@ struct column {
      */
     column(T* array, size_t count, bool is_shared = false)
         : m_array(array)
-        , m_count(count) 
+        , m_count(count)
         , m_is_shared(is_shared) {}
 
     /** Create column from iterator.
@@ -79,7 +79,7 @@ struct column {
 
     /** Return element in component array.
      * This operator may only be used if the column is not shared.
-     * 
+     *
      * @param index Index of element.
      * @return Reference to element.
      */
@@ -89,7 +89,7 @@ struct column {
         ecs_assert(m_array != nullptr, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
         return m_array[index];
     }
-  
+
     /** Return first element of component array.
      * This operator is typically used when the column is shared.
      *
@@ -102,7 +102,7 @@ struct column {
 
     /** Return first element of component array.
      * This operator is typically used when the column is shared.
-     * 
+     *
      * @return Pointer to the first element.
      */
     T* operator->() const {
@@ -163,20 +163,20 @@ namespace flecs
 ////////////////////////////////////////////////////////////////////////////////
 
 /** Class for iterating over query results.
- * 
+ *
  * \ingroup cpp_iterator
  */
 struct iter {
 private:
     using row_iterator = _::range_iterator<size_t>;
-    
+
 public:
     /** Construct iterator from C iterator object.
      * This operation is typically not invoked directly by the user.
      *
      * @param it Pointer to C iterator.
      */
-    iter(ecs_iter_t *it) : m_iter(it) { 
+    iter(ecs_iter_t *it) : m_iter(it) {
         m_begin = 0;
         m_end = static_cast<std::size_t>(it->count);
     }
@@ -219,14 +219,14 @@ public:
 
     flecs::table_range range() const;
 
-    /** Access ctx. 
+    /** Access ctx.
      * ctx contains the context pointer assigned to a system.
      */
     void* ctx() {
         return m_iter->ctx;
     }
 
-    /** Access ctx. 
+    /** Access ctx.
      * ctx contains the context pointer assigned to a system.
      */
     template <typename T>
@@ -234,14 +234,14 @@ public:
         return static_cast<T*>(m_iter->ctx);
     }
 
-    /** Access param. 
+    /** Access param.
      * param contains the pointer passed to the param argument of system::run
      */
     void* param() {
         return m_iter->param;
     }
 
-    /** Access param. 
+    /** Access param.
      * param contains the pointer passed to the param argument of system::run
      */
     template <typename T>
@@ -257,7 +257,7 @@ public:
     flecs::entity entity(size_t row) const;
 
     /** Returns whether field is matched on self.
-     * 
+     *
      * @param index The field index.
      */
     bool is_self(int32_t index) const {
@@ -265,7 +265,7 @@ public:
     }
 
     /** Returns whether field is set.
-     * 
+     *
      * @param index The field index.
      */
     bool is_set(int32_t index) const {
@@ -297,7 +297,7 @@ public:
     /** Obtain field source (0 if This).
      *
      * @param index The field index.
-     */    
+     */
     flecs::entity src(int32_t index) const;
 
     /** Obtain id matched for field.
@@ -308,7 +308,7 @@ public:
 
     /** Obtain pair id matched for field.
      * This operation will fail if the id is not a pair.
-     * 
+     *
      * @param index The field index.
      */
     flecs::id pair(int32_t index) const;
@@ -316,7 +316,7 @@ public:
     /** Obtain column index for field.
      *
      * @param index The field index.
-     */    
+     */
     int32_t column_index(int32_t index) const {
         return ecs_field_column_index(m_iter, index);
     }
@@ -343,7 +343,7 @@ public:
     }
 
     /** Get read/write access to field data.
-     * If the matched id for the specified field does not match with the provided 
+     * If the matched id for the specified field does not match with the provided
      * type or if the field is readonly, the function will assert.
      *
      * @tparam T Type of the field.
@@ -354,7 +354,7 @@ public:
         typename std::enable_if<
             std::is_const<T>::value == false, void>::type* = nullptr>
     flecs::column<A> field(int32_t index) const {
-        ecs_assert(!ecs_field_is_readonly(m_iter, index), 
+        ecs_assert(!ecs_field_is_readonly(m_iter, index),
             ECS_ACCESS_VIOLATION, NULL);
         return get_field<A>(index);
     }
@@ -363,7 +363,7 @@ public:
      * Unchecked access is required when a system does not know the type of a
      * field at compile time.
      *
-     * @param index The field index. 
+     * @param index The field index.
      */
     flecs::untyped_column field(int32_t index) const {
         return get_unchecked_field(index);
@@ -390,9 +390,9 @@ public:
 
     /** Skip current table.
      * This indicates to the query that the data in the current table is not
-     * modified. By default, iterating a table with a query will mark the 
+     * modified. By default, iterating a table with a query will mark the
      * iterated components as dirty if they are annotated with InOut or Out.
-     * 
+     *
      * When this operation is invoked, the components of the current table will
      * not be marked dirty. */
     void skip() {
@@ -424,7 +424,7 @@ private:
 #ifndef FLECS_NDEBUG
         ecs_entity_t term_id = ecs_field_id(m_iter, index);
         ecs_assert(ECS_HAS_ID_FLAG(term_id, PAIR) ||
-            term_id == _::cpp_type<T>::id(m_iter->world), 
+            term_id == _::cpp_type<T>::id(m_iter->world),
             ECS_COLUMN_TYPE_MISMATCH, NULL);
 #endif
 
@@ -441,9 +441,9 @@ private:
              * entities. */
             count = static_cast<size_t>(m_iter->count);
         }
-        
+
         return flecs::column<A>(
-            static_cast<T*>(ecs_field_w_size(m_iter, sizeof(A), index)), 
+            static_cast<T*>(ecs_field_w_size(m_iter, sizeof(A), index)),
             count, is_shared);
     }
 
@@ -465,7 +465,7 @@ private:
 
         return flecs::untyped_column(
             ecs_field_w_size(m_iter, 0, index), size, count, is_shared);
-    }     
+    }
 
     flecs::iter_t *m_iter;
     std::size_t m_begin;

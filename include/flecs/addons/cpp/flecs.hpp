@@ -13,7 +13,7 @@
  * @{
  */
 
-namespace flecs 
+namespace flecs
 {
 
 struct world;
@@ -29,7 +29,7 @@ struct untyped_component;
 template <typename T>
 struct component;
 
-namespace _ 
+namespace _
 {
 template <typename T, typename U = int>
 struct cpp_type;
@@ -167,16 +167,16 @@ struct each_delegate;
 
 /**
  * @defgroup cpp_core Core
- * @brief Core ECS functionality (entities, storage, queries)
- * 
+ * Core ECS functionality (entities, storage, queries)
+ *
  * @{
  * @}
  */
 
 /**
  * @defgroup cpp_addons Addons
- * @brief C++ APIs for addons.
- * 
+ * C++ APIs for addons.
+ *
  * @{
  * @}
  */

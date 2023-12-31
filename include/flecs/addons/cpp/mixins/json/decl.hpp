@@ -9,9 +9,9 @@ namespace flecs {
 
 /**
  * @defgroup cpp_addons_json Json
- * @brief Functions for serializing to/from JSON.
- * 
- * \ingroup cpp_addons
+ * @ingroup cpp_addons
+ * Functions for serializing to/from JSON.
+ *
  * @{
  */
 

@@ -7,9 +7,9 @@
 
 /**
  * @defgroup c_addons_meta_c Meta Utilities
- * @brief Macro utilities to automatically insert reflection data.
- * 
- * \ingroup c_addons
+ * @ingroup c_addons
+ * Macro utilities to automatically insert reflection data.
+ *
  * @{
  */
 

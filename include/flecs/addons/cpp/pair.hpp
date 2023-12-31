@@ -8,15 +8,15 @@
 namespace flecs {
 
 namespace _ {
-    struct pair_base { };   
+    struct pair_base { };
 } // _
 
 
 /**
  * @defgroup cpp_pair_type Pair type
- * @brief Compile time utilities for working with relationship pairs.
- * 
- * \ingroup cpp_core
+ * @ingroup cpp_core
+ * Compile time utilities for working with relationship pairs.
+ *
  * @{
  */
 
@@ -24,16 +24,16 @@ namespace _ {
  * The pair type can be used to represent a pair at compile time, and is able
  * to automatically derive the storage type associated with the pair, accessible
  * through pair::type.
- * 
+ *
  * The storage type is derived using the following rules:
  * - if pair::first is non-empty, the storage type is pair::first
  * - if pair::first is empty and pair::second is non-empty, the storage type is pair::second
- * 
+ *
  * The pair type can hold a temporary value so that it can be used in the
  * signatures of queries
  */
 template <typename First, typename Second>
-struct pair : _::pair_base { 
+struct pair : _::pair_base {
     using type = conditional_t<!is_empty<First>::value || is_empty<Second>::value, First, Second>;
     using first = First;
     using second = Second;
@@ -43,13 +43,13 @@ struct pair : _::pair_base {
     // This allows the class to be used as a temporary object
     pair(const type& v) : ref_(const_cast<type&>(v)) { }
 
-    operator type&() { 
+    operator type&() {
         return ref_;
     }
 
-    operator const type&() const { 
+    operator const type&() const {
         return ref_;
-    }    
+    }
 
     type* operator->() {
         return &ref_;
@@ -66,7 +66,7 @@ struct pair : _::pair_base {
     const type& operator*() const {
         return ref_;
     }
-    
+
 private:
     type& ref_;
 };
@@ -136,7 +136,7 @@ using base_arg_type_t = typename base_arg_type<T>::type;
 // Test if type is the same as its actual type
 template <typename T>
 struct is_actual {
-    static constexpr bool value = 
+    static constexpr bool value =
         std::is_same<T, actual_type_t<T> >::value && !is_enum<T>::value;
 };
 

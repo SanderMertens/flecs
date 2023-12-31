@@ -10,9 +10,9 @@
 
 /**
  * @defgroup c_addons_stats Stats
- * @brief Collection of statistics for world, queries, systems and pipelines.
- * 
- * \ingroup c_addons
+ * @ingroup c_addons
+ * Collection of statistics for world, queries, systems and pipelines.
+ *
  * @{
  */
 
@@ -155,13 +155,13 @@ typedef struct ecs_world_stats_t {
 /** Statistics for a single query (use ecs_query_stats_get) */
 typedef struct ecs_query_stats_t {
     int64_t first_;
-    ecs_metric_t matched_table_count;       /**< Matched non-empty tables */    
+    ecs_metric_t matched_table_count;       /**< Matched non-empty tables */
     ecs_metric_t matched_empty_table_count; /**< Matched empty tables */
     ecs_metric_t matched_entity_count;      /**< Number of matched entities */
     int64_t last_;
 
     /** Current position in ringbuffer */
-    int32_t t; 
+    int32_t t;
 } ecs_query_stats_t;
 
 /** Statistics for a single system (use ecs_system_stats_get) */
@@ -196,7 +196,7 @@ typedef struct ecs_pipeline_stats_t {
     /** Vector with system ids of all systems in the pipeline. The systems are
      * stored in the order they are executed. Merges are represented by a 0. */
     ecs_vec_t systems;
-    
+
     /** Vector with sync point stats */
     ecs_vec_t sync_points;
 
@@ -217,13 +217,13 @@ typedef struct ecs_pipeline_stats_t {
  * @param world The world.
  * @param stats Out parameter for statistics.
  */
-FLECS_API 
+FLECS_API
 void ecs_world_stats_get(
     const ecs_world_t *world,
     ecs_world_stats_t *stats);
 
 /** Reduce source measurement window into single destination measurement. */
-FLECS_API 
+FLECS_API
 void ecs_world_stats_reduce(
     ecs_world_stats_t *dst,
     const ecs_world_stats_t *src);
@@ -246,7 +246,7 @@ void ecs_world_stats_copy_last(
     ecs_world_stats_t *dst,
     const ecs_world_stats_t *src);
 
-FLECS_API 
+FLECS_API
 void ecs_world_stats_log(
     const ecs_world_t *world,
     const ecs_world_stats_t *stats);
@@ -258,14 +258,14 @@ void ecs_world_stats_log(
  * @param query The query.
  * @param stats Out parameter for statistics.
  */
-FLECS_API 
+FLECS_API
 void ecs_query_stats_get(
     const ecs_world_t *world,
     const ecs_query_t *query,
     ecs_query_stats_t *stats);
 
 /** Reduce source measurement window into single destination measurement. */
-FLECS_API 
+FLECS_API
 void ecs_query_stats_reduce(
     ecs_query_stats_t *dst,
     const ecs_query_stats_t *src);
@@ -297,14 +297,14 @@ void ecs_query_stats_copy_last(
  * @param stats Out parameter for statistics.
  * @return true if success, false if not a system.
  */
-FLECS_API 
+FLECS_API
 bool ecs_system_stats_get(
     const ecs_world_t *world,
     ecs_entity_t system,
     ecs_system_stats_t *stats);
 
 /** Reduce source measurement window into single destination measurement */
-FLECS_API 
+FLECS_API
 void ecs_system_stats_reduce(
     ecs_system_stats_t *dst,
     const ecs_system_stats_t *src);
@@ -337,14 +337,14 @@ void ecs_system_stats_copy_last(
  * @param stats Out parameter for statistics.
  * @return true if success, false if not a pipeline.
  */
-FLECS_API 
+FLECS_API
 bool ecs_pipeline_stats_get(
     ecs_world_t *world,
     ecs_entity_t pipeline,
     ecs_pipeline_stats_t *stats);
 
 /** Free pipeline stats.
- * 
+ *
  * @param stats The stats to free.
  */
 FLECS_API
@@ -352,7 +352,7 @@ void ecs_pipeline_stats_fini(
     ecs_pipeline_stats_t *stats);
 
 /** Reduce source measurement window into single destination measurement */
-FLECS_API 
+FLECS_API
 void ecs_pipeline_stats_reduce(
     ecs_pipeline_stats_t *dst,
     const ecs_pipeline_stats_t *src);
@@ -372,7 +372,7 @@ void ecs_pipeline_stats_repeat_last(
 /** Copy last measurement to destination.
  * This operation copies the last measurement into the destination. It does not
  * modify the cursor.
- * 
+ *
  * @param dst The metrics.
  * @param src The metrics to copy.
  */
@@ -384,7 +384,7 @@ void ecs_pipeline_stats_copy_last(
 #endif
 
 /** Reduce all measurements from a window into a single measurement. */
-FLECS_API 
+FLECS_API
 void ecs_metric_reduce(
     ecs_metric_t *dst,
     const ecs_metric_t *src,
