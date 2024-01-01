@@ -30,7 +30,8 @@ ecs_data_t* flecs_duplicate_data(
     ecs_table_t *table,
     ecs_data_t *main_data)
 {
-    if (!ecs_table_count(table)) {
+    int32_t count = ecs_table_count(table);
+    if (!count) {
         return NULL;
     }
 
@@ -41,7 +42,7 @@ ecs_data_t* flecs_duplicate_data(
 
     /* Copy entities */
     ecs_allocator_t *a = &world->allocator;
-    result->entities = ecs_vec_copy_t(a, &main_data->entities, ecs_entity_t);
+    result->entities = ecs_vec_copy_shrink_t(a, &main_data->entities, ecs_entity_t);
 
     /* Copy each column */
     for (i = 0; i < column_count; i ++) {
@@ -51,11 +52,10 @@ ecs_data_t* flecs_duplicate_data(
         int32_t size = ti->size;
         ecs_copy_t copy = ti->hooks.copy_ctor;
         if (copy) {
-            int32_t count = ecs_vec_count(&column->data);
             void *src_ptr = ecs_vec_first(&column->data);
 
-            ecs_vec_t dst = {0};
-            ecs_vec_init_if(&dst, size);
+            ecs_vec_t dst;
+            ecs_vec_init(a, &dst, size, count);
             ecs_vec_set_count(a, &dst, size, count);
             void *dst_ptr = ecs_vec_first(&dst);
 
@@ -63,7 +63,7 @@ ecs_data_t* flecs_duplicate_data(
 
             column->data = dst;
         } else {
-            column->data = ecs_vec_copy(a, &column->data, size);
+            column->data = ecs_vec_copy_shrink(a, &column->data, size);
         }
     }
 
