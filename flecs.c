@@ -35124,7 +35124,7 @@ ecs_data_t* flecs_duplicate_data(
 
     ecs_data_t *result = ecs_os_calloc_t(ecs_data_t);
     int32_t i, column_count = table->column_count;
-    result->columns = flecs_wdup_n(world, ecs_column_t, column_count, 
+    result->columns = flecs_wdup_n(world, ecs_column_t, column_count,
         main_data->columns);
 
     /* Copy entities */
@@ -35137,19 +35137,18 @@ ecs_data_t* flecs_duplicate_data(
         ecs_type_info_t *ti = column->ti;
         ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
         int32_t size = ti->size;
-        ecs_copy_t copy = ti->hooks.copy;
+        ecs_copy_t copy = ti->hooks.copy_ctor;
         if (copy) {
-            ecs_vec_t dst = ecs_vec_copy(a, &column->data, size);
             int32_t count = ecs_vec_count(&column->data);
-            void *dst_ptr = ecs_vec_first(&dst);
             void *src_ptr = ecs_vec_first(&column->data);
 
-            ecs_xtor_t ctor = ti->hooks.ctor;
-            if (ctor) {
-                ctor(dst_ptr, count, ti);
-            }
+            ecs_vec_t dst = {0};
+            ecs_vec_init_if(&dst, size);
+            ecs_vec_set_count(a, &dst, size, count);
+            void *dst_ptr = ecs_vec_first(&dst);
 
             copy(dst_ptr, src_ptr, count, ti);
+
             column->data = dst;
         } else {
             column->data = ecs_vec_copy(a, &column->data, size);
