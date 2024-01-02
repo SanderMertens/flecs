@@ -34,8 +34,8 @@ void flecs_name_index_init(
     ecs_hashmap_t *hm,
     ecs_allocator_t *allocator) 
 {
-    flecs_hashmap_init_(hm, 
-        ECS_SIZEOF(ecs_hashed_string_t), ECS_SIZEOF(uint64_t), 
+    flecs_hashmap_init(hm, 
+        ecs_hashed_string_t, uint64_t, 
         flecs_name_index_hash, 
         flecs_name_index_compare,
         allocator);

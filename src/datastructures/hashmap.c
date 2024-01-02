@@ -30,13 +30,17 @@ int32_t flecs_hashmap_find_key(
 void flecs_hashmap_init_(
     ecs_hashmap_t *map,
     ecs_size_t key_size,
+    ecs_size_t key_alignment,
     ecs_size_t value_size,
+    ecs_size_t value_alignment,
     ecs_hash_value_action_t hash,
     ecs_compare_action_t compare,
     ecs_allocator_t *allocator)
 {
     map->key_size = key_size;
+    map->key_alignment = key_alignment;
     map->value_size = value_size;
+    map->value_alignment = value_alignment;
     map->hash = hash;
     map->compare = compare;
     flecs_ballocator_init_t(&map->bucket_allocator, ecs_hm_bucket_t);
@@ -68,7 +72,7 @@ void flecs_hashmap_copy(
 {
     ecs_assert(dst != src, ECS_INVALID_PARAMETER, NULL);
 
-    flecs_hashmap_init_(dst, src->key_size, src->value_size, src->hash, 
+    flecs_hashmap_init_(dst, src->key_size, src->key_alignment, src->value_size, src->value_alignment, src->hash, 
         src->compare, src->impl.allocator);
     ecs_map_copy(&dst->impl, &src->impl);
 
@@ -79,8 +83,8 @@ void flecs_hashmap_copy(
         ecs_hm_bucket_t *src_bucket = bucket_ptr[0];
         ecs_hm_bucket_t *dst_bucket = flecs_balloc(&dst->bucket_allocator);
         bucket_ptr[0] = dst_bucket;
-        dst_bucket->keys = ecs_vec_copy(a, &src_bucket->keys, dst->key_size);
-        dst_bucket->values = ecs_vec_copy(a, &src_bucket->values, dst->value_size);
+        dst_bucket->keys = ecs_vec_copy(a, &src_bucket->keys, dst->key_size, dst->key_alignment);
+        dst_bucket->values = ecs_vec_copy(a, &src_bucket->values, dst->value_size, dst->value_alignment);
     }
 }
 
@@ -112,10 +116,12 @@ flecs_hashmap_result_t flecs_hashmap_ensure_(
     ecs_hashmap_t *map,
     ecs_size_t key_size,
     const void *key,
-    ecs_size_t value_size)
+    ecs_size_t value_size,
+    ecs_size_t value_alignment)
 {
     ecs_assert(map->key_size == key_size, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(map->value_size == value_size, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(map->value_alignment == value_alignment, ECS_INVALID_PARAMETER, NULL);
 
     uint64_t hash = map->hash(key);
     ecs_hm_bucket_t **r = ecs_map_ensure_ref(&map->impl, ecs_hm_bucket_t, hash);
@@ -129,17 +135,17 @@ flecs_hashmap_result_t flecs_hashmap_ensure_(
     ecs_vec_t *keys = &bucket->keys;
     ecs_vec_t *values = &bucket->values;
     if (!keys->array) {
-        keys = ecs_vec_init(a, &bucket->keys, key_size, 1);
-        values = ecs_vec_init(a, &bucket->values, value_size, 1);
-        key_ptr = ecs_vec_append(a, keys, key_size);        
-        value_ptr = ecs_vec_append(a, values, value_size);
+        keys = ecs_vec_init(a, &bucket->keys, key_size, map->key_alignment, 1);
+        values = ecs_vec_init(a, &bucket->values, value_size, value_alignment, 1);
+        key_ptr = ecs_vec_append(a, keys, key_size, map->key_alignment);
+        value_ptr = ecs_vec_append(a, values, value_size, value_alignment);
         ecs_os_memcpy(key_ptr, key, key_size);
         ecs_os_memset(value_ptr, 0, value_size);
     } else {
         int32_t index = flecs_hashmap_find_key(map, keys, key_size, key);
         if (index == -1) {
-            key_ptr = ecs_vec_append(a, keys, key_size);        
-            value_ptr = ecs_vec_append(a, values, value_size);
+            key_ptr = ecs_vec_append(a, keys, key_size, map->key_alignment);        
+            value_ptr = ecs_vec_append(a, values, value_size, value_alignment);
             ecs_os_memcpy(key_ptr, key, key_size);
             ecs_os_memset(value_ptr, 0, value_size);
         } else {
@@ -160,7 +166,7 @@ void flecs_hashmap_set_(
     ecs_size_t value_size,
     const void *value)
 {
-    void *value_ptr = flecs_hashmap_ensure_(map, key_size, key, value_size).value;
+    void *value_ptr = flecs_hashmap_ensure_(map, key_size, key, value_size, map->value_alignment).value;
     ecs_assert(value_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_os_memcpy(value_ptr, value, value_size);
 }

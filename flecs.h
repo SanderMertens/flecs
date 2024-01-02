@@ -959,6 +959,7 @@ typedef struct ecs_vec_t {
     int32_t size;
 #ifdef FLECS_SANITIZE
     ecs_size_t elem_size;
+    ecs_size_t elem_alignment;
 #endif
 } ecs_vec_t;
 
@@ -967,18 +968,20 @@ ecs_vec_t* ecs_vec_init(
     struct ecs_allocator_t *allocator,
     ecs_vec_t *vec,
     ecs_size_t size,
+    ecs_size_t alignment,
     int32_t elem_count);
 
 #define ecs_vec_init_t(allocator, vec, T, elem_count) \
-    ecs_vec_init(allocator, vec, ECS_SIZEOF(T), elem_count)
+    ecs_vec_init(allocator, vec, ECS_SIZEOF(T), ECS_ALIGNOF(T), elem_count)
 
 FLECS_API
 void ecs_vec_init_if(
     ecs_vec_t *vec,
-    ecs_size_t size);
+    ecs_size_t size,
+    ecs_size_t alignment);
 
 #define ecs_vec_init_if_t(vec, T) \
-    ecs_vec_init_if(vec, ECS_SIZEOF(T))
+    ecs_vec_init_if(vec, ECS_SIZEOF(T), ECS_ALIGNOF(T))
 
 FLECS_API
 void ecs_vec_fini(
@@ -993,10 +996,11 @@ FLECS_API
 ecs_vec_t* ecs_vec_reset(
     struct ecs_allocator_t *allocator,
     ecs_vec_t *vec,
-    ecs_size_t size);
+    ecs_size_t size,
+    ecs_size_t alignment);
 
 #define ecs_vec_reset_t(allocator, vec, T) \
-    ecs_vec_reset(allocator, vec, ECS_SIZEOF(T))
+    ecs_vec_reset(allocator, vec, ECS_SIZEOF(T), ECS_ALIGNOF(T))
 
 FLECS_API
 void ecs_vec_clear(
@@ -1006,10 +1010,11 @@ FLECS_API
 void* ecs_vec_append(
     struct ecs_allocator_t *allocator,
     ecs_vec_t *vec,
-    ecs_size_t size);
+    ecs_size_t size,
+    ecs_size_t alignment);
 
 #define ecs_vec_append_t(allocator, vec, T) \
-    ECS_CAST(T*, ecs_vec_append(allocator, vec, ECS_SIZEOF(T)))
+    ECS_CAST(T*, ecs_vec_append(allocator, vec, ECS_SIZEOF(T), ECS_ALIGNOF(T)))
 
 FLECS_API
 void ecs_vec_remove(
@@ -1028,79 +1033,87 @@ FLECS_API
 ecs_vec_t ecs_vec_copy(
     struct ecs_allocator_t *allocator,
     const ecs_vec_t *vec,
-    ecs_size_t size);
+    ecs_size_t size,
+    ecs_size_t alignment);
 
 #define ecs_vec_copy_t(allocator, vec, T) \
-    ecs_vec_copy(allocator, vec, ECS_SIZEOF(T))
+    ecs_vec_copy(allocator, vec, ECS_SIZEOF(T), ECS_ALIGNOF(T))
 
 FLECS_API
 void ecs_vec_reclaim(
     struct ecs_allocator_t *allocator,
     ecs_vec_t *vec,
-    ecs_size_t size);
+    ecs_size_t size,
+    ecs_size_t alignment);
 
 #define ecs_vec_reclaim_t(allocator, vec, T) \
-    ecs_vec_reclaim(allocator, vec, ECS_SIZEOF(T))
+    ecs_vec_reclaim(allocator, vec, ECS_SIZEOF(T), ECS_ALIGNOF(T))
 
 FLECS_API
 void ecs_vec_set_size(
     struct ecs_allocator_t *allocator,
     ecs_vec_t *vec,
     ecs_size_t size,
+    ecs_size_t alignment,
     int32_t elem_count);
 
 #define ecs_vec_set_size_t(allocator, vec, T, elem_count) \
-    ecs_vec_set_size(allocator, vec, ECS_SIZEOF(T), elem_count)
+    ecs_vec_set_size(allocator, vec, ECS_SIZEOF(T), ECS_ALIGNOF(T), elem_count)
 
 FLECS_API
 void ecs_vec_set_min_size(
     struct ecs_allocator_t *allocator,
     ecs_vec_t *vec,
     ecs_size_t size,
+    ecs_size_t alignment,
     int32_t elem_count);
 
 #define ecs_vec_set_min_size_t(allocator, vec, T, elem_count) \
-    ecs_vec_set_min_size(allocator, vec, ECS_SIZEOF(T), elem_count)
+    ecs_vec_set_min_size(allocator, vec, ECS_SIZEOF(T), ECS_ALIGNOF(T), elem_count)
 
 FLECS_API
 void ecs_vec_set_min_count(
     struct ecs_allocator_t *allocator,
     ecs_vec_t *vec,
     ecs_size_t size,
+    ecs_size_t alignment,
     int32_t elem_count);
 
 #define ecs_vec_set_min_count_t(allocator, vec, T, elem_count) \
-    ecs_vec_set_min_count(allocator, vec, ECS_SIZEOF(T), elem_count)
+    ecs_vec_set_min_count(allocator, vec, ECS_SIZEOF(T), ECS_ALIGNOF(T), elem_count)
 
 FLECS_API
 void ecs_vec_set_min_count_zeromem(
     struct ecs_allocator_t *allocator,
     ecs_vec_t *vec,
     ecs_size_t size,
+    ecs_size_t alignment,
     int32_t elem_count);
 
 #define ecs_vec_set_min_count_zeromem_t(allocator, vec, T, elem_count) \
-    ecs_vec_set_min_count_zeromem(allocator, vec, ECS_SIZEOF(T), elem_count)
+    ecs_vec_set_min_count_zeromem(allocator, vec, ECS_SIZEOF(T), ECS_ALIGNOF(T), elem_count)
 
 FLECS_API
 void ecs_vec_set_count(
     struct ecs_allocator_t *allocator,
     ecs_vec_t *vec,
     ecs_size_t size,
+    ecs_size_t alignment,
     int32_t elem_count);
 
 #define ecs_vec_set_count_t(allocator, vec, T, elem_count) \
-    ecs_vec_set_count(allocator, vec, ECS_SIZEOF(T), elem_count)
+    ecs_vec_set_count(allocator, vec, ECS_SIZEOF(T), ECS_ALIGNOF(T), elem_count)
 
 FLECS_API
 void* ecs_vec_grow(
     struct ecs_allocator_t *allocator,
     ecs_vec_t *vec,
     ecs_size_t size,
+    ecs_size_t alignment,
     int32_t elem_count);
 
 #define ecs_vec_grow_t(allocator, vec, T, elem_count) \
-    ecs_vec_grow(allocator, vec, ECS_SIZEOF(T), elem_count)
+    ecs_vec_grow(allocator, vec, ECS_SIZEOF(T), ECS_ALIGNOF(T), elem_count)
 
 FLECS_API
 int32_t ecs_vec_count(
@@ -1138,7 +1151,7 @@ void* ecs_vec_last(
 }
 #endif
 
-#endif 
+#endif
 
 /**
  * @file sparse.h
@@ -3563,7 +3576,9 @@ typedef struct {
     ecs_hash_value_action_t hash;
     ecs_compare_action_t compare;
     ecs_size_t key_size;
+    ecs_size_t key_alignment;
     ecs_size_t value_size;
+    ecs_size_t value_alignment;
     ecs_block_allocator_t *hashmap_allocator;
     ecs_block_allocator_t bucket_allocator;
     ecs_map_t impl;
@@ -3585,13 +3600,15 @@ FLECS_DBG_API
 void flecs_hashmap_init_(
     ecs_hashmap_t *hm,
     ecs_size_t key_size,
+    ecs_size_t key_alignment,
     ecs_size_t value_size,
+    ecs_size_t value_alignment,
     ecs_hash_value_action_t hash,
     ecs_compare_action_t compare,
     ecs_allocator_t *allocator);
 
 #define flecs_hashmap_init(hm, K, V, hash, compare, allocator)\
-    flecs_hashmap_init_(hm, ECS_SIZEOF(K), ECS_SIZEOF(V), hash, compare, allocator)
+    flecs_hashmap_init_(hm, ECS_SIZEOF(K), ECS_ALIGNOF(K), ECS_SIZEOF(V), ECS_ALIGNOF(V), hash, compare, allocator)
 
 FLECS_DBG_API
 void flecs_hashmap_fini(
@@ -3612,10 +3629,11 @@ flecs_hashmap_result_t flecs_hashmap_ensure_(
     ecs_hashmap_t *map,
     ecs_size_t key_size,
     const void *key,
-    ecs_size_t value_size);
+    ecs_size_t value_size,
+    ecs_size_t value_alignment);
 
 #define flecs_hashmap_ensure(map, key, V)\
-    flecs_hashmap_ensure_(map, ECS_SIZEOF(*key), key, ECS_SIZEOF(V))
+    flecs_hashmap_ensure_(map, ECS_SIZEOF(*key), key, ECS_SIZEOF(V), ECS_ALIGNOF(V))
 
 FLECS_DBG_API
 void flecs_hashmap_set_(

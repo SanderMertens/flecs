@@ -21,7 +21,9 @@ typedef struct {
     ecs_hash_value_action_t hash;
     ecs_compare_action_t compare;
     ecs_size_t key_size;
+    ecs_size_t key_alignment;
     ecs_size_t value_size;
+    ecs_size_t value_alignment;
     ecs_block_allocator_t *hashmap_allocator;
     ecs_block_allocator_t bucket_allocator;
     ecs_map_t impl;
@@ -43,13 +45,15 @@ FLECS_DBG_API
 void flecs_hashmap_init_(
     ecs_hashmap_t *hm,
     ecs_size_t key_size,
+    ecs_size_t key_alignment,
     ecs_size_t value_size,
+    ecs_size_t value_alignment,
     ecs_hash_value_action_t hash,
     ecs_compare_action_t compare,
     ecs_allocator_t *allocator);
 
 #define flecs_hashmap_init(hm, K, V, hash, compare, allocator)\
-    flecs_hashmap_init_(hm, ECS_SIZEOF(K), ECS_SIZEOF(V), hash, compare, allocator)
+    flecs_hashmap_init_(hm, ECS_SIZEOF(K), ECS_ALIGNOF(K), ECS_SIZEOF(V), ECS_ALIGNOF(V), hash, compare, allocator)
 
 FLECS_DBG_API
 void flecs_hashmap_fini(
@@ -70,10 +74,11 @@ flecs_hashmap_result_t flecs_hashmap_ensure_(
     ecs_hashmap_t *map,
     ecs_size_t key_size,
     const void *key,
-    ecs_size_t value_size);
+    ecs_size_t value_size,
+    ecs_size_t value_alignment);
 
 #define flecs_hashmap_ensure(map, key, V)\
-    flecs_hashmap_ensure_(map, ECS_SIZEOF(*key), key, ECS_SIZEOF(V))
+    flecs_hashmap_ensure_(map, ECS_SIZEOF(*key), key, ECS_SIZEOF(V), ECS_ALIGNOF(V))
 
 FLECS_DBG_API
 void flecs_hashmap_set_(

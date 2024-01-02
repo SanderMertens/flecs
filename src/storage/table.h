@@ -38,7 +38,7 @@ typedef struct ecs_table__t {
     int32_t traversable_count;       /* Traversable relationship targets in table */
     uint16_t generation;             /* Used for table cleanup */
     int16_t record_count;            /* Table record count including wildcards */
-    
+
     struct ecs_table_record_t *records; /* Array with table records */
     ecs_hashmap_t *name_index;       /* Cached pointer to name index */
 
@@ -57,6 +57,7 @@ typedef struct ecs_column_t {
     ecs_id_t id;                     /* Component id */
     ecs_type_info_t *ti;             /* Component type info */
     ecs_size_t size;                 /* Component size */
+    ecs_size_t alignment;            /* Component alignment */
 } ecs_column_t;
 
 /** Table data */
@@ -77,7 +78,7 @@ struct ecs_table_t {
 
     ecs_data_t data;                 /* Component storage */
     ecs_graph_node_t node;           /* Graph node */
-    
+
     int32_t *dirty_state;            /* Keep track of changes in columns */
     int32_t *column_map;             /* Map type index <-> column
                                       *  - 0..count(T):        type index -> column
@@ -111,7 +112,7 @@ ecs_table_t* flecs_table_find_or_create(
 /* Initialize columns for data */
 void flecs_table_init_data(
     ecs_world_t *world,
-    ecs_table_t *table); 
+    ecs_table_t *table);
 
 /* Clear all entities from a table. */
 void flecs_table_clear_entities(
@@ -132,7 +133,7 @@ void flecs_table_clear_entities_silent(
 void flecs_table_clear_data(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_data_t *data);    
+    ecs_data_t *data);
 
 /* Return number of entities in data */
 int32_t flecs_table_data_count(
@@ -206,13 +207,13 @@ void flecs_table_remove_actions(
 /* Free table */
 void flecs_table_free(
     ecs_world_t *world,
-    ecs_table_t *table); 
+    ecs_table_t *table);
 
 /* Free table */
 void flecs_table_free_type(
     ecs_world_t *world,
-    ecs_table_t *table);     
-    
+    ecs_table_t *table);
+
 /* Replace data */
 void flecs_table_replace_data(
     ecs_world_t *world,

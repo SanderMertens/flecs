@@ -9,9 +9,12 @@ ecs_vec_t* ecs_vec_init(
     ecs_allocator_t *allocator,
     ecs_vec_t *v,
     ecs_size_t size,
+    ecs_size_t alignment,
     int32_t elem_count)
 {
     ecs_assert(size != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(alignment != 0, ECS_INVALID_PARAMETER, NULL);
+    (void)alignment;
     v->array = NULL;
     v->count = 0;
     if (elem_count) {
@@ -24,23 +27,28 @@ ecs_vec_t* ecs_vec_init(
     v->size = elem_count;
 #ifdef FLECS_SANITIZE
     v->elem_size = size;
+    v->elem_alignment = alignment;
 #endif
     return v;
 }
 
 void ecs_vec_init_if(
     ecs_vec_t *vec,
-    ecs_size_t size)
+    ecs_size_t size,
+    ecs_size_t alignment)
 {
     ecs_san_assert(!vec->elem_size || vec->elem_size == size, ECS_INVALID_PARAMETER, NULL);
+    ecs_san_assert(!vec->elem_alignment || vec->elem_alignment == alignment, ECS_INVALID_PARAMETER, NULL);
     (void)vec;
     (void)size;
+    (void)alignment;
 #ifdef FLECS_SANITIZE
     if (!vec->elem_size) {
         ecs_assert(vec->count == 0, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(vec->size == 0, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(vec->array == NULL, ECS_INTERNAL_ERROR, NULL);
         vec->elem_size = size;
+        vec->elem_alignment = alignment;
     }
 #endif
 }
@@ -66,12 +74,14 @@ void ecs_vec_fini(
 ecs_vec_t* ecs_vec_reset(
     ecs_allocator_t *allocator,
     ecs_vec_t *v,
-    ecs_size_t size)
+    ecs_size_t size,
+    ecs_size_t alignment)
 {
     if (!v->size) {
-        ecs_vec_init(allocator, v, size, 0);
+        ecs_vec_init(allocator, v, size, alignment, 0);
     } else {
         ecs_san_assert(size == v->elem_size, ECS_INTERNAL_ERROR, NULL);
+        ecs_san_assert(alignment == v->elem_alignment, ECS_INTERNAL_ERROR, NULL);
         ecs_vec_clear(v);
     }
     return v;
@@ -86,9 +96,12 @@ void ecs_vec_clear(
 ecs_vec_t ecs_vec_copy(
     ecs_allocator_t *allocator,
     const ecs_vec_t *v,
-    ecs_size_t size)
+    ecs_size_t size,
+    ecs_size_t alignment)
 {
     ecs_san_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
+    ecs_san_assert(alignment == v->elem_alignment, ECS_INVALID_PARAMETER, NULL);
+    (void)alignment;
     void *array;
     if (allocator) {
         array = flecs_dup(allocator, size * v->size, v->array);
@@ -101,6 +114,7 @@ ecs_vec_t ecs_vec_copy(
         .array = array
 #ifdef FLECS_SANITIZE
         , .elem_size = size
+        , .elem_alignment = alignment
 #endif
     };
 }
@@ -108,9 +122,12 @@ ecs_vec_t ecs_vec_copy(
 void ecs_vec_reclaim(
     ecs_allocator_t *allocator,
     ecs_vec_t *v,
-    ecs_size_t size)
+    ecs_size_t size,
+    ecs_size_t alignment)
 {
     ecs_san_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
+    ecs_san_assert(alignment == v->elem_alignment, ECS_INVALID_PARAMETER, NULL);
+    (void)alignment;
     int32_t count = v->count;
     if (count < v->size) {
         if (count) {
@@ -131,9 +148,12 @@ void ecs_vec_set_size(
     ecs_allocator_t *allocator,
     ecs_vec_t *v,
     ecs_size_t size,
+    ecs_size_t alignment,
     int32_t elem_count)
 {
     ecs_san_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
+    ecs_san_assert(alignment == v->elem_alignment, ECS_INVALID_PARAMETER, NULL);
+    (void)alignment;
     if (v->size != elem_count) {
         if (elem_count < v->count) {
             elem_count = v->count;
@@ -159,10 +179,11 @@ void ecs_vec_set_min_size(
     struct ecs_allocator_t *allocator,
     ecs_vec_t *vec,
     ecs_size_t size,
+    ecs_size_t alignment,
     int32_t elem_count)
 {
     if (elem_count > vec->size) {
-        ecs_vec_set_size(allocator, vec, size, elem_count);
+        ecs_vec_set_size(allocator, vec, size, alignment, elem_count);
     }
 }
 
@@ -170,9 +191,10 @@ void ecs_vec_set_min_count(
     struct ecs_allocator_t *allocator,
     ecs_vec_t *vec,
     ecs_size_t size,
+    ecs_size_t alignment,
     int32_t elem_count)
 {
-    ecs_vec_set_min_size(allocator, vec, size, elem_count);
+    ecs_vec_set_min_size(allocator, vec, size, alignment, elem_count);
     if (vec->count < elem_count) {
         vec->count = elem_count;
     }
@@ -182,12 +204,13 @@ void ecs_vec_set_min_count_zeromem(
     struct ecs_allocator_t *allocator,
     ecs_vec_t *vec,
     ecs_size_t size,
+    ecs_size_t alignment,
     int32_t elem_count)
 {
     int32_t count = vec->count;
     if (count < elem_count) {
-        ecs_vec_set_min_count(allocator, vec, size, elem_count);
-        ecs_os_memset(ECS_ELEM(vec->array, size, count), 0, 
+        ecs_vec_set_min_count(allocator, vec, size, alignment, elem_count);
+        ecs_os_memset(ECS_ELEM(vec->array, size, count), 0,
             size * (elem_count - count));
     }
 }
@@ -196,12 +219,14 @@ void ecs_vec_set_count(
     ecs_allocator_t *allocator,
     ecs_vec_t *v,
     ecs_size_t size,
+    ecs_size_t alignment,
     int32_t elem_count)
 {
     ecs_san_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
+    ecs_san_assert(alignment == v->elem_alignment, ECS_INVALID_PARAMETER, NULL);
     if (v->count != elem_count) {
         if (v->size < elem_count) {
-            ecs_vec_set_size(allocator, v, size, elem_count);
+            ecs_vec_set_size(allocator, v, size, alignment, elem_count);
         }
 
         v->count = elem_count;
@@ -212,24 +237,28 @@ void* ecs_vec_grow(
     ecs_allocator_t *allocator,
     ecs_vec_t *v,
     ecs_size_t size,
+    ecs_size_t alignment,
     int32_t elem_count)
 {
     ecs_san_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
+    ecs_san_assert(alignment == v->elem_alignment, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(elem_count > 0, ECS_INTERNAL_ERROR, NULL);
     int32_t count = v->count;
-    ecs_vec_set_count(allocator, v, size, count + elem_count);
+    ecs_vec_set_count(allocator, v, size, alignment, count + elem_count);
     return ECS_ELEM(v->array, size, count);
 }
 
 void* ecs_vec_append(
     ecs_allocator_t *allocator,
     ecs_vec_t *v,
-    ecs_size_t size)
+    ecs_size_t size,
+    ecs_size_t alignment)
 {
     ecs_san_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
+    ecs_san_assert(alignment == v->elem_alignment, ECS_INVALID_PARAMETER, NULL);
     int32_t count = v->count;
     if (v->size == count) {
-        ecs_vec_set_size(allocator, v, size, count + 1);
+        ecs_vec_set_size(allocator, v, size, alignment, count + 1);
     }
     v->count = count + 1;
     return ECS_ELEM(v->array, size, count);
@@ -284,7 +313,7 @@ void* ecs_vec_last(
     const ecs_vec_t *v,
     ecs_size_t size)
 {
-    ecs_san_assert(!v->elem_size || size == v->elem_size, 
+    ecs_san_assert(!v->elem_size || size == v->elem_size,
         ECS_INVALID_PARAMETER, NULL);
     return ECS_ELEM(v->array, size, v->count - 1);
 }

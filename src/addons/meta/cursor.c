@@ -129,11 +129,13 @@ ecs_meta_type_op_t* flecs_meta_cursor_get_ptr(
     ecs_meta_scope_t *scope)
 {
     ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
-    ecs_size_t size = get_size(world, scope);
+    const EcsComponent* comp = get_ecs_component(world, scope);
+    ecs_size_t size = comp->size;
+    ecs_size_t alignment = comp->alignment;
     const EcsOpaque *opaque = scope->opaque;
 
     if (scope->vector) {
-        ecs_vec_set_min_count(NULL, scope->vector, size, scope->elem_cur + 1);
+        ecs_vec_set_min_count(NULL, scope->vector, size, alignment, scope->elem_cur + 1);
         scope->ptr = ecs_vec_first(scope->vector);
     } else if (opaque) {
         if (scope->is_collection) {
@@ -147,7 +149,7 @@ ecs_meta_type_op_t* flecs_meta_cursor_get_ptr(
 
             void *opaque_ptr = opaque->ensure_element(
                 scope->ptr, flecs_ito(size_t, scope->elem_cur));
-            ecs_assert(opaque_ptr != NULL, ECS_INVALID_OPERATION, 
+            ecs_assert(opaque_ptr != NULL, ECS_INVALID_OPERATION,
                 "ensure_element returned NULL");
             return opaque_ptr;
         } else if (op->name) {
@@ -219,7 +221,7 @@ error:
 void* ecs_meta_get_ptr(
     ecs_meta_cursor_t *cursor)
 {
-    return flecs_meta_cursor_get_ptr(cursor->world, 
+    return flecs_meta_cursor_get_ptr(cursor->world,
         flecs_meta_cursor_get_scope(cursor));
 }
 
@@ -272,7 +274,7 @@ int ecs_meta_elem(
         ecs_err("out of collection bounds (%d)", scope->elem_cur);
         return -1;
     }
-    
+
     return 0;
 }
 
@@ -333,7 +335,7 @@ int ecs_meta_dotmember(
     const char *ptr = name;
     while ((ptr = ecs_parse_token(NULL, NULL, ptr, token, '.'))) {
         if (ptr[0] != '.' && ptr[0]) {
-            ecs_parser_error(NULL, name, ptr - name, 
+            ecs_parser_error(NULL, name, ptr - name,
                 "expected '.' or end of string");
             goto error;
         }
@@ -347,7 +349,7 @@ int ecs_meta_dotmember(
         }
 
         if (!ptr[0]) {
-            break;   
+            break;
         }
 
         ptr ++; /* Skip . */
@@ -425,7 +427,7 @@ int ecs_meta_push(
              * element instead of the next operation. This ensures that we won't
              * use flattened offsets for nested members. */
             if (flecs_meta_cursor_push_type(
-                world, next_scope, op->type, ptr) != 0) 
+                world, next_scope, op->type, ptr) != 0)
             {
                 goto error;
             }
@@ -496,7 +498,7 @@ int ecs_meta_push(
 
             /* Push the element type of the vector type */
             if (flecs_meta_cursor_push_type(
-                world, next_scope, vt->type, NULL) != 0) 
+                world, next_scope, vt->type, NULL) != 0)
             {
                 goto error;
             }
@@ -516,7 +518,7 @@ int ecs_meta_push(
 
             /* Push the element type of the array type */
             if (flecs_meta_cursor_push_type(
-                world, next_scope, at->type, NULL) != 0) 
+                world, next_scope, at->type, NULL) != 0)
             {
                 goto error;
             }
@@ -529,12 +531,12 @@ int ecs_meta_push(
 
         /* Opaque struct support */
         case EcsStructType:
-            /* Push struct type that represents the opaque type. This ensures 
-             * that the deserializer retains information about members and 
-             * member types, which is necessary for nested opaque types, and 
+            /* Push struct type that represents the opaque type. This ensures
+             * that the deserializer retains information about members and
+             * member types, which is necessary for nested opaque types, and
              * allows for error checking. */
             if (flecs_meta_cursor_push_type(
-                world, next_scope, as_type, NULL) != 0) 
+                world, next_scope, as_type, NULL) != 0)
             {
                 goto error;
             }
@@ -544,7 +546,7 @@ int ecs_meta_push(
             next_scope->ops = &next_scope->ops[1];
             next_scope->op_count --;
             break;
-        
+
         case EcsPrimitiveType:
         case EcsEnumType:
         case EcsBitmaskType:
@@ -631,13 +633,13 @@ int ecs_meta_pop(
         } else if (op->kind == EcsOpOpaque) {
             const EcsOpaque *opaque = scope->opaque;
             if (scope->is_collection) {
-                const EcsMetaType *mtype = ecs_get(cursor->world, 
+                const EcsMetaType *mtype = ecs_get(cursor->world,
                     opaque->as_type, EcsMetaType);
                 ecs_assert(mtype != NULL, ECS_INTERNAL_ERROR, NULL);
 
-                /* When popping a opaque collection type, call resize to make 
+                /* When popping a opaque collection type, call resize to make
                  * sure the vector isn't larger than the number of elements we
-                 * deserialized. 
+                 * deserialized.
                  * If the opaque type represents an array, don't call resize. */
                 if (mtype->kind != EcsArrayType) {
                     ecs_assert(opaque != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -648,14 +650,14 @@ int ecs_meta_pop(
                         return -1;
                     }
                     if (scope->is_empty_scope) {
-                        /* If no values were serialized for scope, resize 
+                        /* If no values were serialized for scope, resize
                         * collection to 0 elements. */
                         ecs_assert(!scope->elem_cur, ECS_INTERNAL_ERROR, NULL);
                         opaque->resize(scope->ptr, 0);
                     } else {
                         /* Otherwise resize collection to the index of the last
                         * deserialized element + 1 */
-                        opaque->resize(scope->ptr, 
+                        opaque->resize(scope->ptr,
                             flecs_ito(size_t, scope->elem_cur + 1));
                     }
                 }
@@ -746,7 +748,7 @@ static struct {
     [EcsOpI64]     = {INT64_MIN,  INT64_MAX},
     [EcsOpUPtr]    = {0, ((sizeof(void*) == 4) ? UINT32_MAX : INT64_MAX)},
     [EcsOpIPtr]    = {
-        ((sizeof(void*) == 4) ? INT32_MIN : INT64_MIN), 
+        ((sizeof(void*) == 4) ? INT32_MIN : INT64_MIN),
         ((sizeof(void*) == 4) ? INT32_MAX : INT64_MAX)
     },
     [EcsOpEntity]  = {0,          INT64_MAX},
@@ -793,7 +795,7 @@ static struct {
     [EcsOpI64]     = {INT64_MIN,  (double)INT64_MAX},
     [EcsOpUPtr]    = {0, ((sizeof(void*) == 4) ? UINT32_MAX : (double)UINT64_MAX)},
     [EcsOpIPtr]    = {
-        ((sizeof(void*) == 4) ? INT32_MIN : (double)INT64_MIN), 
+        ((sizeof(void*) == 4) ? INT32_MIN : (double)INT64_MIN),
         ((sizeof(void*) == 4) ? INT32_MAX : (double)INT64_MAX)
     },
     [EcsOpEntity]  = {0,          (double)UINT64_MAX},
@@ -1086,7 +1088,7 @@ int ecs_meta_set_float(
             opaque->assign_float(ptr, value);
             break;
         } else if (opaque->assign_int && /* most expressive */
-            (value <= (double)INT64_MAX) && (value >= (double)INT64_MIN)) 
+            (value <= (double)INT64_MAX) && (value >= (double)INT64_MIN))
         {
             opaque->assign_int(ptr, (int64_t)value);
             break;
@@ -1095,7 +1097,7 @@ int ecs_meta_set_float(
             break;
         } else if (opaque->assign_entity && (value >= 0)) {
             opaque->assign_entity(
-                ptr, ECS_CONST_CAST(ecs_world_t*, cursor->world), 
+                ptr, ECS_CONST_CAST(ecs_world_t*, cursor->world),
                     (ecs_entity_t)value);
             break;
         }
@@ -1369,7 +1371,7 @@ int ecs_meta_set_string(
 #ifdef FLECS_PARSER
         ecs_term_t term = {0};
         if (ecs_parse_term(
-            cursor->world, NULL, value, value, &term, NULL, NULL, false)) 
+            cursor->world, NULL, value, value, &term, NULL, NULL, false))
         {
             if (ecs_term_finalize(cursor->world, &term)) {
                 ecs_term_fini(&term);
@@ -1403,7 +1405,7 @@ int ecs_meta_set_string(
             if (flecs_meta_cursor_lookup(cursor, value, &e)) {
                 goto error;
             }
-            opaque->assign_entity(ptr, 
+            opaque->assign_entity(ptr,
                 ECS_CONST_CAST(ecs_world_t*, cursor->world), e);
             break;
         }
@@ -1513,7 +1515,7 @@ int ecs_meta_set_entity(
     case EcsOpOpaque: {
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
         if (opaque && opaque->assign_entity) {
-            opaque->assign_entity(ptr, 
+            opaque->assign_entity(ptr,
                 ECS_CONST_CAST(ecs_world_t*, cursor->world), value);
             break;
         }
@@ -1570,7 +1572,7 @@ int ecs_meta_set_id(
     case EcsOpOpaque: {
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
         if (opaque && opaque->assign_id) {
-            opaque->assign_id(ptr, 
+            opaque->assign_id(ptr,
                 ECS_CONST_CAST(ecs_world_t*, cursor->world), value);
             break;
         }
@@ -1721,7 +1723,7 @@ char ecs_meta_get_char(
     ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
     void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
     switch(op->kind) {
-    case EcsOpChar: 
+    case EcsOpChar:
         return *(ecs_char_t*)ptr != 0;
     case EcsOpArray:
     case EcsOpVector:
