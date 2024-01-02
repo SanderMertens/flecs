@@ -21321,8 +21321,8 @@ void flecs_stage_fini(
     ecs_allocator_t *a = &stage->allocator;
     
     ecs_vec_fini_t(a, &stage->post_frame_actions, ecs_action_elem_t);
-    ecs_vec_fini(NULL, &stage->variables, 0);
-    ecs_vec_fini(NULL, &stage->operations, 0);
+    ecs_vec_fini(NULL, &stage->variables, 0, 0);
+    ecs_vec_fini(NULL, &stage->operations, 0, 0);
 
     int32_t i;
     for (i = 0; i < ECS_MAX_DEFER_STACK; i ++) {
@@ -38506,8 +38506,8 @@ void flecs_hashmap_fini(
 
     while (ecs_map_next(&it)) {
         ecs_hm_bucket_t *bucket = ecs_map_ptr(&it);
-        ecs_vec_fini(a, &bucket->keys, map->key_size);
-        ecs_vec_fini(a, &bucket->values, map->value_size);
+        ecs_vec_fini(a, &bucket->keys, map->key_size, map->key_alignment);
+        ecs_vec_fini(a, &bucket->values, map->value_size, map->value_alignment);
 #ifdef FLECS_SANITIZE        
         flecs_bfree(&map->bucket_allocator, bucket);
 #endif
@@ -38641,8 +38641,8 @@ void flecs_hm_bucket_remove(
 
     if (!ecs_vec_count(&bucket->keys)) {
         ecs_allocator_t *a = map->impl.allocator;
-        ecs_vec_fini(a, &bucket->keys, map->key_size);
-        ecs_vec_fini(a, &bucket->values, map->value_size);
+        ecs_vec_fini(a, &bucket->keys, map->key_size, map->key_alignment);
+        ecs_vec_fini(a, &bucket->values, map->value_size, map->value_alignment);
         ecs_hm_bucket_t *b = ecs_map_remove_ptr(&map->impl, hash);
         ecs_assert(bucket == b, ECS_INTERNAL_ERROR, NULL); (void)b;
         flecs_bfree(&map->bucket_allocator, bucket);
@@ -41547,17 +41547,18 @@ ecs_vec_t* ecs_vec_init(
 {
     ecs_assert(size != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(alignment != 0, ECS_INVALID_PARAMETER, NULL);
-    (void)alignment;
     v->array = NULL;
     v->count = 0;
+    v->size = elem_count;
+    v->mem = NULL;
     if (elem_count) {
         if (allocator) {
-            v->array = flecs_alloc(allocator, size * elem_count);
+            v->mem = flecs_alloc(allocator, size * elem_count + alignment);
         } else {
-            v->array = ecs_os_malloc(size * elem_count);
+            v->mem = ecs_os_malloc(size * elem_count + alignment);
         }
+        v->array = ECS_ALIGN_PTR(v->mem, alignment);
     }
-    v->size = elem_count;
 #ifdef FLECS_SANITIZE
     v->elem_size = size;
     v->elem_alignment = alignment;
@@ -41577,9 +41578,10 @@ void ecs_vec_init_if(
     (void)alignment;
 #ifdef FLECS_SANITIZE
     if (!vec->elem_size) {
+        ecs_assert(vec->array == NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(vec->count == 0, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(vec->size == 0, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(vec->array == NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(vec->mem == NULL, ECS_INTERNAL_ERROR, NULL);
         vec->elem_size = size;
         vec->elem_alignment = alignment;
     }
@@ -41589,18 +41591,21 @@ void ecs_vec_init_if(
 void ecs_vec_fini(
     ecs_allocator_t *allocator,
     ecs_vec_t *v,
-    ecs_size_t size)
+    ecs_size_t size,
+    ecs_size_t alignment)
 {
     if (v->array) {
         ecs_san_assert(!size || size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
+        ecs_san_assert(!alignment || alignment == v->elem_alignment, ECS_INVALID_PARAMETER, NULL);
         if (allocator) {
-            flecs_free(allocator, size * v->size, v->array);
+            flecs_free(allocator, size * v->size + alignment, v->mem);
         } else {
-            ecs_os_free(v->array);
+            ecs_os_free(v->mem);
         }
         v->array = NULL;
         v->count = 0;
         v->size = 0;
+        v->mem = NULL;
     }
 }
 
@@ -41635,16 +41640,23 @@ ecs_vec_t ecs_vec_copy(
     ecs_san_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
     ecs_san_assert(alignment == v->elem_alignment, ECS_INVALID_PARAMETER, NULL);
     (void)alignment;
-    void *array;
-    if (allocator) {
-        array = flecs_dup(allocator, size * v->size, v->array);
-    } else {
-        array = ecs_os_memdup(v->array, size * v->size);
+    void *mem = NULL;
+    void *array = NULL;
+    if (v->mem) {
+        if (allocator) {
+            mem = flecs_alloc(allocator, size * v->size + alignment);
+        } else {
+            mem = ecs_os_malloc(size * v->size + alignment);
+        }
+        array = ECS_ALIGN_PTR(mem, alignment);
+        
+        ecs_os_memcpy(array, v->array, size * v->size);
     }
     return (ecs_vec_t) {
+        .array = array,
         .count = v->count,
         .size = v->size,
-        .array = array
+        .mem = mem
 #ifdef FLECS_SANITIZE
         , .elem_size = size
         , .elem_alignment = alignment
@@ -41664,15 +41676,25 @@ void ecs_vec_reclaim(
     int32_t count = v->count;
     if (count < v->size) {
         if (count) {
+            size_t old_offset = (uintptr_t)(v->array) - (uintptr_t)(v->mem);
+
             if (allocator) {
-                v->array = flecs_realloc(
-                    allocator, size * count, size * v->size, v->array);
+                v->mem = flecs_realloc(
+                    allocator, size * count + alignment, v->mem ? size * v->size + alignment : 0, v->mem);
             } else {
-                v->array = ecs_os_realloc(v->array, size * count);
+                v->mem = ecs_os_realloc(v->mem, size * count + alignment);
             }
+            v->array = ECS_ALIGN_PTR(v->mem, alignment);
+
+            // Shift memory if the alignment of the allocated memory is different
+            size_t new_offset = (uintptr_t)(v->array) - (uintptr_t)(v->mem);
+            if (old_offset != new_offset) {
+                ecs_os_memmove(v->array, ECS_OFFSET(v->mem, old_offset), size * count);
+            }
+
             v->size = count;
         } else {
-            ecs_vec_fini(allocator, v, size);
+            ecs_vec_fini(allocator, v, size, alignment);
         }
     }
 }
@@ -41697,12 +41719,22 @@ void ecs_vec_set_size(
             elem_count = 2;
         }
         if (elem_count != v->size) {
+            size_t old_offset = (uintptr_t)(v->array) - (uintptr_t)(v->mem);
+
             if (allocator) {
-                v->array = flecs_realloc(
-                    allocator, size * elem_count, size * v->size, v->array);
+                v->mem = flecs_realloc(
+                    allocator, size * elem_count + alignment, v->mem ? size * v->size + alignment : 0, v->mem);
             } else {
-                v->array = ecs_os_realloc(v->array, size * elem_count);
+                v->mem = ecs_os_realloc(v->mem, size * elem_count + alignment);
             }
+            v->array = ECS_ALIGN_PTR(v->mem, alignment);
+
+            // Shift memory if the alignment of the allocated memory is different
+            size_t new_offset = (uintptr_t)(v->array) - (uintptr_t)(v->mem);
+            if (old_offset != new_offset) {
+                ecs_os_memmove(v->array, ECS_OFFSET(v->mem, old_offset), size * elem_count);
+            }
+
             v->size = elem_count;
         }
     }
@@ -43725,7 +43757,7 @@ void flecs_table_fini_data(
             ecs_assert(columns[c].data.count == data->entities.count,
                 ECS_INTERNAL_ERROR, NULL);
             ecs_vec_fini(&world->allocator,
-                &columns[c].data, columns[c].size);
+                &columns[c].data, columns[c].size, columns[c].alignment);
         }
         flecs_wfree_n(world, ecs_column_t, column_count, columns);
         data->columns = NULL;
@@ -44178,7 +44210,7 @@ void flecs_table_grow_column(
         }
 
         /* Free old vector */
-        ecs_vec_fini(&world->allocator, &column->data, size);
+        ecs_vec_fini(&world->allocator, &column->data, size, alignment);
 
         column->data = dst;
     } else {
@@ -44878,7 +44910,7 @@ void flecs_table_merge_vec(
     int32_t dst_count = dst->count;
 
     if (!dst_count) {
-        ecs_vec_fini(&world->allocator, dst, size);
+        ecs_vec_fini(&world->allocator, dst, size, alignment);
         *dst = *src;
         src->array = NULL;
         src->count = 0;
@@ -44897,7 +44929,7 @@ void flecs_table_merge_vec(
         void *src_ptr = src->array;
         ecs_os_memcpy(dst_ptr, src_ptr, size * src_count);
 
-        ecs_vec_fini(&world->allocator, src, size);
+        ecs_vec_fini(&world->allocator, src, size, alignment);
     }
 }
 
@@ -44910,10 +44942,11 @@ void flecs_table_merge_column(
     int32_t column_size)
 {
     ecs_size_t size = dst->size;
+    ecs_size_t alignment = dst->alignment;
     int32_t dst_count = dst->data.count;
 
     if (!dst_count) {
-        ecs_vec_fini(&world->allocator, &dst->data, size);
+        ecs_vec_fini(&world->allocator, &dst->data, size, alignment);
         *dst = *src;
         src->data.array = NULL;
         src->data.count = 0;
@@ -44938,7 +44971,7 @@ void flecs_table_merge_column(
             ecs_os_memcpy(dst_ptr, src_ptr, size * src_count);
         }
 
-        ecs_vec_fini(&world->allocator, &src->data, size);
+        ecs_vec_fini(&world->allocator, &src->data, size, alignment);
     }
 }
 
@@ -44994,7 +45027,7 @@ void flecs_table_merge_data(
         } else if (dst_id > src_id) {
             /* Old column does not occur in new table, destruct */
             flecs_table_invoke_dtor(src_column, 0, src_count);
-            ecs_vec_fini(a, &src_column->data, src_column->size);
+            ecs_vec_fini(a, &src_column->data, src_column->size, src_column->alignment);
             i_old ++;
         }
     }
@@ -45017,7 +45050,7 @@ void flecs_table_merge_data(
     for (; i_old < src_column_count; i_old ++) {
         ecs_column_t *column = &src_columns[i_old];
         flecs_table_invoke_dtor(column, 0, src_count);
-        ecs_vec_fini(a, &column->data, column->size);
+        ecs_vec_fini(a, &column->data, column->size, column->alignment);
     }
 
     /* Mark entity column as dirty */

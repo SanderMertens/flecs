@@ -652,8 +652,8 @@ void flecs_stage_fini(
     ecs_allocator_t *a = &stage->allocator;
     
     ecs_vec_fini_t(a, &stage->post_frame_actions, ecs_action_elem_t);
-    ecs_vec_fini(NULL, &stage->variables, 0);
-    ecs_vec_fini(NULL, &stage->operations, 0);
+    ecs_vec_fini(NULL, &stage->variables, 0, 0);
+    ecs_vec_fini(NULL, &stage->operations, 0, 0);
 
     int32_t i;
     for (i = 0; i < ECS_MAX_DEFER_STACK; i ++) {

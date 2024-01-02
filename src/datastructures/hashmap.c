@@ -55,8 +55,8 @@ void flecs_hashmap_fini(
 
     while (ecs_map_next(&it)) {
         ecs_hm_bucket_t *bucket = ecs_map_ptr(&it);
-        ecs_vec_fini(a, &bucket->keys, map->key_size);
-        ecs_vec_fini(a, &bucket->values, map->value_size);
+        ecs_vec_fini(a, &bucket->keys, map->key_size, map->key_alignment);
+        ecs_vec_fini(a, &bucket->values, map->value_size, map->value_alignment);
 #ifdef FLECS_SANITIZE        
         flecs_bfree(&map->bucket_allocator, bucket);
 #endif
@@ -190,8 +190,8 @@ void flecs_hm_bucket_remove(
 
     if (!ecs_vec_count(&bucket->keys)) {
         ecs_allocator_t *a = map->impl.allocator;
-        ecs_vec_fini(a, &bucket->keys, map->key_size);
-        ecs_vec_fini(a, &bucket->values, map->value_size);
+        ecs_vec_fini(a, &bucket->keys, map->key_size, map->key_alignment);
+        ecs_vec_fini(a, &bucket->values, map->value_size, map->value_alignment);
         ecs_hm_bucket_t *b = ecs_map_remove_ptr(&map->impl, hash);
         ecs_assert(bucket == b, ECS_INTERNAL_ERROR, NULL); (void)b;
         flecs_bfree(&map->bucket_allocator, bucket);

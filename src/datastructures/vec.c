@@ -14,17 +14,18 @@ ecs_vec_t* ecs_vec_init(
 {
     ecs_assert(size != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(alignment != 0, ECS_INVALID_PARAMETER, NULL);
-    (void)alignment;
     v->array = NULL;
     v->count = 0;
+    v->size = elem_count;
+    v->mem = NULL;
     if (elem_count) {
         if (allocator) {
-            v->array = flecs_alloc(allocator, size * elem_count);
+            v->mem = flecs_alloc(allocator, size * elem_count + alignment);
         } else {
-            v->array = ecs_os_malloc(size * elem_count);
+            v->mem = ecs_os_malloc(size * elem_count + alignment);
         }
+        v->array = ECS_ALIGN_PTR(v->mem, alignment);
     }
-    v->size = elem_count;
 #ifdef FLECS_SANITIZE
     v->elem_size = size;
     v->elem_alignment = alignment;
@@ -44,9 +45,10 @@ void ecs_vec_init_if(
     (void)alignment;
 #ifdef FLECS_SANITIZE
     if (!vec->elem_size) {
+        ecs_assert(vec->array == NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(vec->count == 0, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(vec->size == 0, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(vec->array == NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(vec->mem == NULL, ECS_INTERNAL_ERROR, NULL);
         vec->elem_size = size;
         vec->elem_alignment = alignment;
     }
@@ -56,18 +58,21 @@ void ecs_vec_init_if(
 void ecs_vec_fini(
     ecs_allocator_t *allocator,
     ecs_vec_t *v,
-    ecs_size_t size)
+    ecs_size_t size,
+    ecs_size_t alignment)
 {
     if (v->array) {
         ecs_san_assert(!size || size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
+        ecs_san_assert(!alignment || alignment == v->elem_alignment, ECS_INVALID_PARAMETER, NULL);
         if (allocator) {
-            flecs_free(allocator, size * v->size, v->array);
+            flecs_free(allocator, size * v->size + alignment, v->mem);
         } else {
-            ecs_os_free(v->array);
+            ecs_os_free(v->mem);
         }
         v->array = NULL;
         v->count = 0;
         v->size = 0;
+        v->mem = NULL;
     }
 }
 
@@ -102,16 +107,23 @@ ecs_vec_t ecs_vec_copy(
     ecs_san_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
     ecs_san_assert(alignment == v->elem_alignment, ECS_INVALID_PARAMETER, NULL);
     (void)alignment;
-    void *array;
-    if (allocator) {
-        array = flecs_dup(allocator, size * v->size, v->array);
-    } else {
-        array = ecs_os_memdup(v->array, size * v->size);
+    void *mem = NULL;
+    void *array = NULL;
+    if (v->mem) {
+        if (allocator) {
+            mem = flecs_alloc(allocator, size * v->size + alignment);
+        } else {
+            mem = ecs_os_malloc(size * v->size + alignment);
+        }
+        array = ECS_ALIGN_PTR(mem, alignment);
+        
+        ecs_os_memcpy(array, v->array, size * v->size);
     }
     return (ecs_vec_t) {
+        .array = array,
         .count = v->count,
         .size = v->size,
-        .array = array
+        .mem = mem
 #ifdef FLECS_SANITIZE
         , .elem_size = size
         , .elem_alignment = alignment
@@ -131,15 +143,25 @@ void ecs_vec_reclaim(
     int32_t count = v->count;
     if (count < v->size) {
         if (count) {
+            size_t old_offset = (uintptr_t)(v->array) - (uintptr_t)(v->mem);
+
             if (allocator) {
-                v->array = flecs_realloc(
-                    allocator, size * count, size * v->size, v->array);
+                v->mem = flecs_realloc(
+                    allocator, size * count + alignment, v->mem ? size * v->size + alignment : 0, v->mem);
             } else {
-                v->array = ecs_os_realloc(v->array, size * count);
+                v->mem = ecs_os_realloc(v->mem, size * count + alignment);
             }
+            v->array = ECS_ALIGN_PTR(v->mem, alignment);
+
+            // Shift memory if the alignment of the allocated memory is different
+            size_t new_offset = (uintptr_t)(v->array) - (uintptr_t)(v->mem);
+            if (old_offset != new_offset) {
+                ecs_os_memmove(v->array, ECS_OFFSET(v->mem, old_offset), size * count);
+            }
+
             v->size = count;
         } else {
-            ecs_vec_fini(allocator, v, size);
+            ecs_vec_fini(allocator, v, size, alignment);
         }
     }
 }
@@ -164,12 +186,22 @@ void ecs_vec_set_size(
             elem_count = 2;
         }
         if (elem_count != v->size) {
+            size_t old_offset = (uintptr_t)(v->array) - (uintptr_t)(v->mem);
+
             if (allocator) {
-                v->array = flecs_realloc(
-                    allocator, size * elem_count, size * v->size, v->array);
+                v->mem = flecs_realloc(
+                    allocator, size * elem_count + alignment, v->mem ? size * v->size + alignment : 0, v->mem);
             } else {
-                v->array = ecs_os_realloc(v->array, size * elem_count);
+                v->mem = ecs_os_realloc(v->mem, size * elem_count + alignment);
             }
+            v->array = ECS_ALIGN_PTR(v->mem, alignment);
+
+            // Shift memory if the alignment of the allocated memory is different
+            size_t new_offset = (uintptr_t)(v->array) - (uintptr_t)(v->mem);
+            if (old_offset != new_offset) {
+                ecs_os_memmove(v->array, ECS_OFFSET(v->mem, old_offset), size * elem_count);
+            }
+
             v->size = elem_count;
         }
     }

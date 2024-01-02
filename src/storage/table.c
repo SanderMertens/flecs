@@ -890,7 +890,7 @@ void flecs_table_fini_data(
             ecs_assert(columns[c].data.count == data->entities.count,
                 ECS_INTERNAL_ERROR, NULL);
             ecs_vec_fini(&world->allocator,
-                &columns[c].data, columns[c].size);
+                &columns[c].data, columns[c].size, columns[c].alignment);
         }
         flecs_wfree_n(world, ecs_column_t, column_count, columns);
         data->columns = NULL;
@@ -1343,7 +1343,7 @@ void flecs_table_grow_column(
         }
 
         /* Free old vector */
-        ecs_vec_fini(&world->allocator, &column->data, size);
+        ecs_vec_fini(&world->allocator, &column->data, size, alignment);
 
         column->data = dst;
     } else {
@@ -2043,7 +2043,7 @@ void flecs_table_merge_vec(
     int32_t dst_count = dst->count;
 
     if (!dst_count) {
-        ecs_vec_fini(&world->allocator, dst, size);
+        ecs_vec_fini(&world->allocator, dst, size, alignment);
         *dst = *src;
         src->array = NULL;
         src->count = 0;
@@ -2062,7 +2062,7 @@ void flecs_table_merge_vec(
         void *src_ptr = src->array;
         ecs_os_memcpy(dst_ptr, src_ptr, size * src_count);
 
-        ecs_vec_fini(&world->allocator, src, size);
+        ecs_vec_fini(&world->allocator, src, size, alignment);
     }
 }
 
@@ -2075,10 +2075,11 @@ void flecs_table_merge_column(
     int32_t column_size)
 {
     ecs_size_t size = dst->size;
+    ecs_size_t alignment = dst->alignment;
     int32_t dst_count = dst->data.count;
 
     if (!dst_count) {
-        ecs_vec_fini(&world->allocator, &dst->data, size);
+        ecs_vec_fini(&world->allocator, &dst->data, size, alignment);
         *dst = *src;
         src->data.array = NULL;
         src->data.count = 0;
@@ -2103,7 +2104,7 @@ void flecs_table_merge_column(
             ecs_os_memcpy(dst_ptr, src_ptr, size * src_count);
         }
 
-        ecs_vec_fini(&world->allocator, &src->data, size);
+        ecs_vec_fini(&world->allocator, &src->data, size, alignment);
     }
 }
 
@@ -2159,7 +2160,7 @@ void flecs_table_merge_data(
         } else if (dst_id > src_id) {
             /* Old column does not occur in new table, destruct */
             flecs_table_invoke_dtor(src_column, 0, src_count);
-            ecs_vec_fini(a, &src_column->data, src_column->size);
+            ecs_vec_fini(a, &src_column->data, src_column->size, src_column->alignment);
             i_old ++;
         }
     }
@@ -2182,7 +2183,7 @@ void flecs_table_merge_data(
     for (; i_old < src_column_count; i_old ++) {
         ecs_column_t *column = &src_columns[i_old];
         flecs_table_invoke_dtor(column, 0, src_count);
-        ecs_vec_fini(a, &column->data, column->size);
+        ecs_vec_fini(a, &column->data, column->size, column->alignment);
     }
 
     /* Mark entity column as dirty */

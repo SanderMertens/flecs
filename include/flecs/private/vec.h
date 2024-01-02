@@ -17,6 +17,7 @@ typedef struct ecs_vec_t {
     void *array;
     int32_t count;
     int32_t size;
+    void *mem;
 #ifdef FLECS_SANITIZE
     ecs_size_t elem_size;
     ecs_size_t elem_alignment;
@@ -47,10 +48,11 @@ FLECS_API
 void ecs_vec_fini(
     struct ecs_allocator_t *allocator,
     ecs_vec_t *vec,
-    ecs_size_t size);
+    ecs_size_t size,
+    ecs_size_t alignment);
 
 #define ecs_vec_fini_t(allocator, vec, T) \
-    ecs_vec_fini(allocator, vec, ECS_SIZEOF(T))
+    ecs_vec_fini(allocator, vec, ECS_SIZEOF(T), ECS_ALIGNOF(T))
 
 FLECS_API
 ecs_vec_t* ecs_vec_reset(

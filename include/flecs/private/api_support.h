@@ -82,6 +82,12 @@ void flecs_dump_backtrace(
 #endif
 #define ECS_OFFSET_T(o, T) ECS_OFFSET(o, ECS_SIZEOF(T))
 
+#ifdef __cplusplus
+#define ECS_ALIGN_PTR(ptr, alignment) reinterpret_cast<void*>((reinterpret_cast<uintptr_t>(ptr) + reinterpret_cast<uintptr_t>((alignment) - 1)) & ~reinterpret_cast<uintptr_t>((alignment) - 1))
+#else
+#define ECS_ALIGN_PTR(ptr, alignment) (void*)(((uintptr_t)(ptr) + (uintptr_t)((alignment) - 1)) & ~(uintptr_t)((alignment) - 1))
+#endif
+
 #define ECS_ELEM(ptr, size, index) ECS_OFFSET(ptr, (size) * (index))
 #define ECS_ELEM_T(o, T, index) ECS_ELEM(o, ECS_SIZEOF(T), index)
 
