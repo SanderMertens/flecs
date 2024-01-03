@@ -128,7 +128,9 @@ int flecs_meta_serialize_array_component(
         return -1; /* Should never happen, will trigger internal error */
     }
 
-    flecs_meta_serialize_type(world, ptr->type, 0, ops);
+    if (flecs_meta_serialize_type(world, ptr->type, 0, ops) != 0) {
+        return -1;
+    }
 
     ecs_meta_type_op_t *first = ecs_vec_first(ops);
     first->count = ptr->count;
@@ -194,8 +196,9 @@ int flecs_meta_serialize_struct(
         ecs_member_t *member = &members[i];
 
         cur = ecs_vec_count(ops);
-        flecs_meta_serialize_type(world, 
-            member->type, offset + member->offset, ops);
+        if (flecs_meta_serialize_type(world, member->type, offset + member->offset, ops) != 0) {
+            continue;
+        }
 
         op = flecs_meta_ops_get(ops, cur);
         if (!op->type) {
