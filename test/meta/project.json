@@ -281,7 +281,8 @@
                 "ops_bitmask",
                 "ops_struct_w_bitmask",
                 "ops_enum",
-                "ops_struct_w_enum"
+                "ops_struct_w_enum",
+                "ops_missing_metatype"
             ]
         }, {
             "id": "Cursor",

@@ -2140,3 +2140,33 @@ void Serialized_ops_struct_w_enum(void) {
 
     ecs_fini(world);
 }
+
+void Serialized_ops_missing_metatype(void) {
+    typedef struct {
+        ecs_u64_t a;
+    } X;
+    typedef struct {
+        X x;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, X);
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"x", ecs_id(X)}
+        }
+    });
+    test_assert(t != 0);
+
+    const EcsMetaTypeSerialized *s = ecs_get(world, t, EcsMetaTypeSerialized);
+    test_assert(s != NULL);
+    test_int(ecs_vec_count(&s->ops), 2);
+    
+    test_op(&s->ops, 0, EcsOpPush, 1, 2, t);
+    test_op(&s->ops, 1, EcsOpPop, 1, 1, 0);
+
+    ecs_fini(world);
+}

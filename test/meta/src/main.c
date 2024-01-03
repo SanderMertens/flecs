@@ -261,6 +261,7 @@ void Serialized_ops_bitmask(void);
 void Serialized_ops_struct_w_bitmask(void);
 void Serialized_ops_enum(void);
 void Serialized_ops_struct_w_enum(void);
+void Serialized_ops_missing_metatype(void);
 
 // Testsuite 'Cursor'
 void Cursor_set_bool(void);
@@ -2022,6 +2023,10 @@ bake_test_case Serialized_testcases[] = {
     {
         "ops_struct_w_enum",
         Serialized_ops_struct_w_enum
+    },
+    {
+        "ops_missing_metatype",
+        Serialized_ops_missing_metatype
     }
 };
 
@@ -5189,7 +5194,7 @@ static bake_test_suite suites[] = {
         "Serialized",
         NULL,
         NULL,
-        61,
+        62,
         Serialized_testcases
     },
     {
