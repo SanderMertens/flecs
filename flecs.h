@@ -16327,6 +16327,14 @@ struct string {
         m_const_str = nullptr;
     }
 
+    bool contains(const char *substr) {
+        if (m_const_str) {
+            return strstr(m_const_str, substr) != nullptr;
+        } else {
+            return false;
+        }
+    }
+
 protected:
     // Must be constructed through string_view. This allows for using the string
     // class for both owned and non-owned strings, which can reduce allocations
