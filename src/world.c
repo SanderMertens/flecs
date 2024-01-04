@@ -1423,7 +1423,7 @@ int ecs_fini(
 
     /* After this point no more user code is invoked */
 
-    ecs_dbg_1("#[bold]cleanup world datastructures");
+    ecs_dbg_1("#[bold]cleanup world data structures");
     ecs_log_push_1();
     flecs_entities_fini(world);
     flecs_sparse_fini(world->pending_tables);
@@ -1980,7 +1980,7 @@ void flecs_process_pending_tables(
      * single sparse set, but that would've complicated (and slowed down) the
      * iteration. Additionally, by using a double buffer approach we can still
      * keep most of the original ordering of events intact, which is desirable
-     * as it means that the ordering of tables in the internal datastructures is
+     * as it means that the ordering of tables in the internal data structures is
      * more predictable. */
     int32_t i, count = flecs_sparse_count(world->pending_tables);
     if (!count) {

@@ -450,7 +450,7 @@ void MultiThreadStaging_custom_thread_partial_manual_merge(void) {
     ecs_world_t *ctx_1 = ecs_get_stage(world, 0);
     ecs_world_t *ctx_2 = ecs_get_stage(world, 1);
 
-    /* Only disable automerging for ctx_2 */
+    /* Only disable auto-merging for ctx_2 */
     ecs_set_automerge(ctx_2, false);
 
     ecs_frame_begin(world, 0);

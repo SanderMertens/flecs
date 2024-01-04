@@ -143,7 +143,7 @@ struct each_column<T, if_t< is_pointer<T>::value &&
         if (this->m_term.ptr) {
             return &static_cast<actual_type_t<T>>(this->m_term.ptr)[this->m_row];
         } else {
-            // optional argument doesn't hava a value
+            // optional argument doesn't have a value
             return nullptr;
         }
     }

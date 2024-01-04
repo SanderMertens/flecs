@@ -32,13 +32,13 @@ typedef struct ecs_sparse_t {
 /** Initialize sparse set */
 FLECS_DBG_API
 void flecs_sparse_init(
-    ecs_sparse_t *sparse,
+    ecs_sparse_t *result,
     struct ecs_allocator_t *allocator,
     struct ecs_block_allocator_t *page_allocator,
-    ecs_size_t elem_size);
+    ecs_size_t size);
 
-#define flecs_sparse_init_t(sparse, allocator, page_allocator, T)\
-    flecs_sparse_init(sparse, allocator, page_allocator, ECS_SIZEOF(T))
+#define flecs_sparse_init_t(result, allocator, page_allocator, T)\
+    flecs_sparse_init(result, allocator, page_allocator, ECS_SIZEOF(T))
 
 FLECS_DBG_API
 void flecs_sparse_fini(

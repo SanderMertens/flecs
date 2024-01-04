@@ -277,7 +277,7 @@ struct world {
     /** End staging.
      * Leaves staging mode. After this operation the world may be directly mutated
      * again. By default this operation also merges data back into the world, unless
-     * automerging was disabled explicitly.
+     * auto-merging was disabled explicitly.
      *
      * This function should only be ran from the main thread.
      */
@@ -359,21 +359,21 @@ struct world {
         return ecs_poly_is(m_world, ecs_stage_t);
     }
 
-    /** Enable/disable automerging for world or stage.
-     * When automerging is enabled, staged data will automatically be merged
+    /** Enable/disable auto-merging for world or stage.
+     * When auto-merging is enabled, staged data will automatically be merged
      * with the world when staging ends. This happens at the end of progress(),
      * at a sync point or when readonly_end() is called.
      *
      * Applications can exercise more control over when data from a stage is
-     * merged by disabling automerging. This requires an application to
+     * merged by disabling auto-merging. This requires an application to
      * explicitly call merge() on the stage.
      *
      * When this function is invoked on the world, it sets all current stages to
      * the provided value and sets the default for new stages. When this
-     * function is invoked on a stage, automerging is only set for that specific
+     * function is invoked on a stage, auto-merging is only set for that specific
      * stage.
      *
-     * @param automerge Whether to enable or disable automerging.
+     * @param automerge Whether to enable or disable auto-merging.
      */
     void set_automerge(bool automerge) const {
         ecs_set_automerge(m_world, automerge);

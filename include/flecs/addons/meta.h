@@ -874,7 +874,7 @@ typedef struct ecs_unit_desc_t {
 
     /** Prefix indicating order of magnitude relative to the derived unit. If set
      * together with "translation", the values must match. If translation is not
-     * set, setting prefix will autopopulate it.
+     * set, setting prefix will auto-populate it.
      * Additionally, setting the prefix will enforce that the symbol (if set)
      * is consistent with the prefix symbol + symbol of the derived unit. If the
      * symbol is not set, it will be auto populated. */

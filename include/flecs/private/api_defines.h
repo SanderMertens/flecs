@@ -150,7 +150,7 @@ extern "C" {
 #endif
 
 /* Some symbols are only exported when building in debug build, to enable
- * whitebox testing of internal datastructures */
+ * white-box testing of internal data structures */
 #ifndef FLECS_NDEBUG
 #define FLECS_DBG_API FLECS_API
 #else

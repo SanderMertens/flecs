@@ -667,7 +667,7 @@ extern "C" {
 #endif
 
 /* Some symbols are only exported when building in debug build, to enable
- * whitebox testing of internal datastructures */
+ * white-box testing of internal data structures */
 #ifndef FLECS_NDEBUG
 #define FLECS_DBG_API FLECS_API
 #else
@@ -1174,13 +1174,13 @@ typedef struct ecs_sparse_t {
 /** Initialize sparse set */
 FLECS_DBG_API
 void flecs_sparse_init(
-    ecs_sparse_t *sparse,
+    ecs_sparse_t *result,
     struct ecs_allocator_t *allocator,
     struct ecs_block_allocator_t *page_allocator,
-    ecs_size_t elem_size);
+    ecs_size_t size);
 
-#define flecs_sparse_init_t(sparse, allocator, page_allocator, T)\
-    flecs_sparse_init(sparse, allocator, page_allocator, ECS_SIZEOF(T))
+#define flecs_sparse_init_t(result, allocator, page_allocator, T)\
+    flecs_sparse_init(result, allocator, page_allocator, ECS_SIZEOF(T))
 
 FLECS_DBG_API
 void flecs_sparse_fini(
@@ -3015,7 +3015,7 @@ struct ecs_term_t {
 /** Use $this variable to initialize user-allocated filter object */
 FLECS_API extern ecs_filter_t ECS_FILTER_INIT;
 
-/** Filters alllow for ad-hoc quick filtering of entity tables. */
+/** Filters allow for ad-hoc quick filtering of entity tables. */
 struct ecs_filter_t {
     ecs_header_t hdr;
 
@@ -4217,7 +4217,7 @@ FLECS_API extern const ecs_entity_t EcsVariable;
  */
 FLECS_API extern const ecs_entity_t EcsTransitive;
 
-/** Marks a relatoinship as reflexive.
+/** Marks a relationship as reflexive.
  * Behavior:
  *   R(X, X) == true
  */
@@ -4752,21 +4752,21 @@ FLECS_API
 void ecs_defer_resume(
     ecs_world_t *world);
 
-/** Enable/disable automerging for world or stage.
- * When automerging is enabled, staged data will automatically be merged with
+/** Enable/disable auto-merging for world or stage.
+ * When auto-merging is enabled, staged data will automatically be merged with
  * the world when staging ends. This happens at the end of progress(), at a
  * sync point or when readonly_end() is called.
  *
  * Applications can exercise more control over when data from a stage is merged
- * by disabling automerging. This requires an application to explicitly call
+ * by disabling auto-merging. This requires an application to explicitly call
  * merge() on the stage.
  *
  * When this function is invoked on the world, it sets all current stages to
  * the provided value and sets the default for new stages. When this function is
- * invoked on a stage, automerging is only set for that specific stage.
+ * invoked on a stage, auto-merging is only set for that specific stage.
  *
  * @param world The world.
- * @param automerge Whether to enable or disable automerging.
+ * @param automerge Whether to enable or disable auto-merging.
  */
 FLECS_API
 void ecs_set_automerge(
@@ -4821,7 +4821,7 @@ int32_t ecs_get_stage_id(
  * existing world in a thread-specific context, which the API knows how to
  * unwrap. The reason the stage is returned as an ecs_world_t is so that it
  * can be passed transparently to the existing API functions, vs. having to
- * create a dediated API for threading.
+ * create a dedicated API for threading.
  *
  * @param world The world.
  * @param stage_id The index of the stage to retrieve.
@@ -4964,11 +4964,11 @@ void ecs_dim(
     ecs_world_t *world,
     int32_t entity_count);
 
-/** Set a range for issueing new entity ids.
+/** Set a range for issuing new entity ids.
  * This function constrains the entity identifiers returned by ecs_new to the
  * specified range. This operation can be used to ensure that multiple processes
  * can run in the same simulation without requiring a central service that
- * coordinates issueing identifiers.
+ * coordinates issuing identifiers.
  *
  * If id_end is set to 0, the range is infinite. If id_end is set to a non-zero
  * value, it has to be larger than id_start. If id_end is set and ecs_new is
@@ -5227,7 +5227,7 @@ ecs_entity_t ecs_entity_init(
  * each component that has been set.
  *
  * If no entity ids are provided by the application, the returned array of ids
- * points to an internal datastructure which changes when new entities are
+ * points to an internal data structure which changes when new entities are
  * created/deleted.
  *
  * If as a result of the operation triggers are invoked that deletes
@@ -6517,7 +6517,7 @@ ecs_entity_t ecs_component_init(
     const ecs_component_desc_t *desc);
 
 /** Get the type for an id.
- * This function returnsthe type information for an id. The specified id can be
+ * This function returns the type information for an id. The specified id can be
  * any valid id. For the rules on how type information is determined based on
  * id, see ecs_get_typeid.
  *
@@ -7130,14 +7130,14 @@ void ecs_filter_copy(
  *
  * Queries should be created once, and reused multiple times. While iterating a
  * query is a cheap operation, creating and deleting a query is expensive. The
- * reason for this is that queries are "prematched", which means that a query
+ * reason for this is that queries are "pre-matched", which means that a query
  * stores state about which entities (or rather, tables) match with the query.
  * Building up this state happens during query creation.
  *
  * Once a query is created, matching only happens when new tables are created.
  * In most applications this is an infrequent process, since it only occurs when
  * a new combination of components is introduced. While matching is expensive,
- * it is importent to note that matching does not happen on a per-entity basis,
+ * it is important to note that matching does not happen on a per-entity basis,
  * but on a per-table basis. This means that the average time spent on matching
  * per frame should rapidly approach zero over the lifetime of an application.
  *
@@ -8317,7 +8317,7 @@ void* ecs_record_get_column(
     size_t c_size);
 
 /** Search for component id in table type.
- * This operation returns the index of first occurrance of the id in the table
+ * This operation returns the index of first occurrence of the id in the table
  * type. The id may be a wildcard.
  *
  * When id_out is provided, the function will assign it with the found id. The
@@ -8398,7 +8398,7 @@ int32_t ecs_search_offset(
  * The operation searches depth first. If a table type has 2 IsA relationships, the
  * operation will first search the IsA tree of the first relationship.
  *
- * When choosing betwen ecs_search, ecs_search_offset and ecs_search_relation,
+ * When choosing between ecs_search, ecs_search_offset and ecs_search_relation,
  * the simpler the function the better its performance.
  *
  * @param world The world.
@@ -11279,7 +11279,7 @@ ecs_entity_t ecs_system_init(
  * invoke logic on a set of entities, as manual systems are only matched to
  * tables at creation time or after creation time, when a new table is created.
  *
- * Manual systems are useful to evaluate lists of prematched entities at
+ * Manual systems are useful to evaluate lists of pre-matched entities at
  * application defined times. Because none of the matching logic is evaluated
  * before the system is invoked, manual systems are much more efficient than
  * manually obtaining a list of entities and retrieving their components.
@@ -11567,7 +11567,7 @@ typedef struct ecs_world_stats_t {
 
     int64_t last_;
 
-    /** Current position in ringbuffer */
+    /** Current position in ring buffer */
     int32_t t;
 } ecs_world_stats_t;
 
@@ -11579,7 +11579,7 @@ typedef struct ecs_query_stats_t {
     ecs_metric_t matched_entity_count;      /**< Number of matched entities */
     int64_t last_;
 
-    /** Current position in ringbuffer */
+    /** Current position in ring buffer */
     int32_t t;
 } ecs_query_stats_t;
 
@@ -11623,7 +11623,7 @@ typedef struct ecs_pipeline_stats_t {
      * entry in the map exists of type ecs_system_stats_t. */
     ecs_map_t system_stats;
 
-    /** Current position in ringbuffer */
+    /** Current position in ring buffer */
     int32_t t;
 
     int32_t system_count;        /**< Number of systems in pipeline */
@@ -14162,7 +14162,7 @@ typedef struct ecs_unit_desc_t {
 
     /** Prefix indicating order of magnitude relative to the derived unit. If set
      * together with "translation", the values must match. If translation is not
-     * set, setting prefix will autopopulate it.
+     * set, setting prefix will auto-populate it.
      * Additionally, setting the prefix will enforce that the symbol (if set)
      * is consistent with the prefix symbol + symbol of the derived unit. If the
      * symbol is not set, it will be auto populated. */
@@ -16492,7 +16492,7 @@ constexpr bool enum_constant_is_valid() {
 #elif defined(ECS_TARGET_GNU)
 template <typename E, E C>
 constexpr bool enum_constant_is_valid() {
-    return (ECS_FUNC_NAME[ECS_FUNC_NAME_FRONT(constepxr bool, enum_constant_is_valid) +
+    return (ECS_FUNC_NAME[ECS_FUNC_NAME_FRONT(constexpr bool, enum_constant_is_valid) +
         enum_type_len<E>() + 8 /* ', E C = ' */] != '(');
 }
 #else
@@ -19086,7 +19086,7 @@ void ctor_move_dtor_impl(void *dst_ptr, void *src_ptr, int32_t count,
     }
 }
 
-// Move assign + dtor (non-trivial move assigmnment)
+// Move assign + dtor (non-trivial move assignment)
 // Typically used when moving a component to a deleted component
 template <typename T, if_not_t<
     std::is_trivially_move_assignable<T>::value > = 0>
@@ -19106,7 +19106,7 @@ void move_dtor_impl(void *dst_ptr, void *src_ptr, int32_t count,
     }
 }
 
-// Move assign + dtor (trivial move assigmnment)
+// Move assign + dtor (trivial move assignment)
 // Typically used when moving a component to a deleted component
 template <typename T, if_t<
     std::is_trivially_move_assignable<T>::value > = 0>
@@ -19683,7 +19683,7 @@ struct world {
     /** End staging.
      * Leaves staging mode. After this operation the world may be directly mutated
      * again. By default this operation also merges data back into the world, unless
-     * automerging was disabled explicitly.
+     * auto-merging was disabled explicitly.
      *
      * This function should only be ran from the main thread.
      */
@@ -19765,21 +19765,21 @@ struct world {
         return ecs_poly_is(m_world, ecs_stage_t);
     }
 
-    /** Enable/disable automerging for world or stage.
-     * When automerging is enabled, staged data will automatically be merged
+    /** Enable/disable auto-merging for world or stage.
+     * When auto-merging is enabled, staged data will automatically be merged
      * with the world when staging ends. This happens at the end of progress(),
      * at a sync point or when readonly_end() is called.
      *
      * Applications can exercise more control over when data from a stage is
-     * merged by disabling automerging. This requires an application to
+     * merged by disabling auto-merging. This requires an application to
      * explicitly call merge() on the stage.
      *
      * When this function is invoked on the world, it sets all current stages to
      * the provided value and sets the default for new stages. When this
-     * function is invoked on a stage, automerging is only set for that specific
+     * function is invoked on a stage, auto-merging is only set for that specific
      * stage.
      *
-     * @param automerge Whether to enable or disable automerging.
+     * @param automerge Whether to enable or disable auto-merging.
      */
     void set_automerge(bool automerge) const {
         ecs_set_automerge(m_world, automerge);
@@ -21510,7 +21510,7 @@ public:
         return ecs_field_is_readonly(m_iter, index);
     }
 
-    /** Number of fields in iteator.
+    /** Number of fields in iterator.
      */
     int32_t field_count() const {
         return m_iter->field_count;
@@ -24349,7 +24349,7 @@ struct each_column<T, if_t< is_pointer<T>::value &&
         if (this->m_term.ptr) {
             return &static_cast<actual_type_t<T>>(this->m_term.ptr)[this->m_row];
         } else {
-            // optional argument doesn't hava a value
+            // optional argument doesn't have a value
             return nullptr;
         }
     }
@@ -27259,7 +27259,7 @@ struct term_id_builder_i {
         return *this;
     }
 
-    /* Specify value of identifier by id. Amost the same as id(entity), but this
+    /* Specify value of identifier by id. Almost the same as id(entity), but this
      * operation explicitly sets the flecs::IsEntity flag. This forces the id to 
      * be interpreted as entity, whereas not setting the flag would implicitly
      * convert ids for builtin variables such as flecs::This to a variable.
@@ -30869,7 +30869,7 @@ public:
     /** Add severity filter */
     Base& severity_filter(flecs::entity_t kind, flecs::id_t with, const char *var = nullptr) {
         ecs_assert(severity_filter_count < ECS_ALERT_MAX_SEVERITY_FILTERS, 
-            ECS_INVALID_PARAMETER, "Maxium number of severity filters reached");
+            ECS_INVALID_PARAMETER, "Maximum number of severity filters reached");
 
         ecs_alert_severity_filter_t *filter = 
             &m_desc->severity_filters[severity_filter_count ++];

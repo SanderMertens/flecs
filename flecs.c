@@ -1505,7 +1505,7 @@ typedef struct ecs_reachable_cache_t {
     ecs_vec_t ids; /* vec<reachable_elem_t> */
 } ecs_reachable_cache_t;
 
-/* Payload for id index which contains all datastructures for an id. */
+/* Payload for id index which contains all data structures for an id. */
 struct ecs_id_record_t {
     /* Cache with all tables that contain the id. Must be first member. */
     ecs_table_cache_t cache; /* table_cache<ecs_table_record_t> */
@@ -7384,7 +7384,7 @@ void ecs_ensure(
      * allows the sparse set to not do this check, which is more efficient. */
     flecs_entities_set_generation(world, entity);
 
-    /* Ensure id exists. The underlying datastructure will verify that the
+    /* Ensure id exists. The underlying data structure will verify that the
      * generation count matches the provided one. */
     flecs_entities_ensure(world, entity);
 error:
@@ -23263,7 +23263,7 @@ int ecs_fini(
 
     /* After this point no more user code is invoked */
 
-    ecs_dbg_1("#[bold]cleanup world datastructures");
+    ecs_dbg_1("#[bold]cleanup world data structures");
     ecs_log_push_1();
     flecs_entities_fini(world);
     flecs_sparse_fini(world->pending_tables);
@@ -23820,7 +23820,7 @@ void flecs_process_pending_tables(
      * single sparse set, but that would've complicated (and slowed down) the
      * iteration. Additionally, by using a double buffer approach we can still
      * keep most of the original ordering of events intact, which is desirable
-     * as it means that the ordering of tables in the internal datastructures is
+     * as it means that the ordering of tables in the internal data structures is
      * more predictable. */
     int32_t i, count = flecs_sparse_count(world->pending_tables);
     if (!count) {
@@ -41145,13 +41145,13 @@ int32_t ecs_strbuf_written(
  * @file datastructures/switch_list.c
  * @brief Interleaved linked list for storing mutually exclusive values.
  * 
- * Datastructure that stores N interleaved linked lists in an array. 
+ * Data structure that stores N interleaved linked lists in an array.
  * This allows for efficient storage of elements with mutually exclusive values.
  * Each linked list has a header element which points to the index in the array
  * that stores the first node of the list. Each list node points to the next
  * array element.
  *
- * The datastructure allows for efficient storage and retrieval for values with
+ * The data structure allows for efficient storage and retrieval for values with
  * mutually exclusive values, such as enumeration values. The linked list allows
  * an application to obtain all elements for a given (enumeration) value without
  * having to search.
