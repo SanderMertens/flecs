@@ -762,7 +762,7 @@ struct ecs_term_t {
 /** Use $this variable to initialize user-allocated filter object */
 FLECS_API extern ecs_filter_t ECS_FILTER_INIT;
 
-/** Filters alllow for ad-hoc quick filtering of entity tables. */
+/** Filters allow for ad-hoc quick filtering of entity tables. */
 struct ecs_filter_t {
     ecs_header_t hdr;
 
@@ -1387,7 +1387,7 @@ FLECS_API extern const ecs_entity_t EcsVariable;
  */
 FLECS_API extern const ecs_entity_t EcsTransitive;
 
-/** Marks a relatoinship as reflexive.
+/** Marks a relationship as reflexive.
  * Behavior:
  *   R(X, X) == true
  */
@@ -1922,21 +1922,21 @@ FLECS_API
 void ecs_defer_resume(
     ecs_world_t *world);
 
-/** Enable/disable automerging for world or stage.
- * When automerging is enabled, staged data will automatically be merged with
+/** Enable/disable auto-merging for world or stage.
+ * When auto-merging is enabled, staged data will automatically be merged with
  * the world when staging ends. This happens at the end of progress(), at a
  * sync point or when readonly_end() is called.
  *
  * Applications can exercise more control over when data from a stage is merged
- * by disabling automerging. This requires an application to explicitly call
+ * by disabling auto-merging. This requires an application to explicitly call
  * merge() on the stage.
  *
  * When this function is invoked on the world, it sets all current stages to
  * the provided value and sets the default for new stages. When this function is
- * invoked on a stage, automerging is only set for that specific stage.
+ * invoked on a stage, auto-merging is only set for that specific stage.
  *
  * @param world The world.
- * @param automerge Whether to enable or disable automerging.
+ * @param automerge Whether to enable or disable auto-merging.
  */
 FLECS_API
 void ecs_set_automerge(
@@ -1991,7 +1991,7 @@ int32_t ecs_get_stage_id(
  * existing world in a thread-specific context, which the API knows how to
  * unwrap. The reason the stage is returned as an ecs_world_t is so that it
  * can be passed transparently to the existing API functions, vs. having to
- * create a dediated API for threading.
+ * create a dedicated API for threading.
  *
  * @param world The world.
  * @param stage_id The index of the stage to retrieve.
@@ -2134,11 +2134,11 @@ void ecs_dim(
     ecs_world_t *world,
     int32_t entity_count);
 
-/** Set a range for issueing new entity ids.
+/** Set a range for issuing new entity ids.
  * This function constrains the entity identifiers returned by ecs_new to the
  * specified range. This operation can be used to ensure that multiple processes
  * can run in the same simulation without requiring a central service that
- * coordinates issueing identifiers.
+ * coordinates issuing identifiers.
  *
  * If id_end is set to 0, the range is infinite. If id_end is set to a non-zero
  * value, it has to be larger than id_start. If id_end is set and ecs_new is
@@ -2397,7 +2397,7 @@ ecs_entity_t ecs_entity_init(
  * each component that has been set.
  *
  * If no entity ids are provided by the application, the returned array of ids
- * points to an internal datastructure which changes when new entities are
+ * points to an internal data structure which changes when new entities are
  * created/deleted.
  *
  * If as a result of the operation triggers are invoked that deletes
@@ -3687,7 +3687,7 @@ ecs_entity_t ecs_component_init(
     const ecs_component_desc_t *desc);
 
 /** Get the type for an id.
- * This function returnsthe type information for an id. The specified id can be
+ * This function returns the type information for an id. The specified id can be
  * any valid id. For the rules on how type information is determined based on
  * id, see ecs_get_typeid.
  *
@@ -4300,14 +4300,14 @@ void ecs_filter_copy(
  *
  * Queries should be created once, and reused multiple times. While iterating a
  * query is a cheap operation, creating and deleting a query is expensive. The
- * reason for this is that queries are "prematched", which means that a query
+ * reason for this is that queries are "pre-matched", which means that a query
  * stores state about which entities (or rather, tables) match with the query.
  * Building up this state happens during query creation.
  *
  * Once a query is created, matching only happens when new tables are created.
  * In most applications this is an infrequent process, since it only occurs when
  * a new combination of components is introduced. While matching is expensive,
- * it is importent to note that matching does not happen on a per-entity basis,
+ * it is important to note that matching does not happen on a per-entity basis,
  * but on a per-table basis. This means that the average time spent on matching
  * per frame should rapidly approach zero over the lifetime of an application.
  *
@@ -5487,7 +5487,7 @@ void* ecs_record_get_column(
     size_t c_size);
 
 /** Search for component id in table type.
- * This operation returns the index of first occurrance of the id in the table
+ * This operation returns the index of first occurrence of the id in the table
  * type. The id may be a wildcard.
  *
  * When id_out is provided, the function will assign it with the found id. The
@@ -5568,7 +5568,7 @@ int32_t ecs_search_offset(
  * The operation searches depth first. If a table type has 2 IsA relationships, the
  * operation will first search the IsA tree of the first relationship.
  *
- * When choosing betwen ecs_search, ecs_search_offset and ecs_search_relation,
+ * When choosing between ecs_search, ecs_search_offset and ecs_search_relation,
  * the simpler the function the better its performance.
  *
  * @param world The world.

@@ -92,7 +92,7 @@ struct term_id_builder_i {
         return *this;
     }
 
-    /* Specify value of identifier by id. Amost the same as id(entity), but this
+    /* Specify value of identifier by id. Almost the same as id(entity), but this
      * operation explicitly sets the flecs::IsEntity flag. This forces the id to 
      * be interpreted as entity, whereas not setting the flag would implicitly
      * convert ids for builtin variables such as flecs::This to a variable.

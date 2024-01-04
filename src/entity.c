@@ -3981,7 +3981,7 @@ void ecs_ensure(
      * allows the sparse set to not do this check, which is more efficient. */
     flecs_entities_set_generation(world, entity);
 
-    /* Ensure id exists. The underlying datastructure will verify that the
+    /* Ensure id exists. The underlying data structure will verify that the
      * generation count matches the provided one. */
     flecs_entities_ensure(world, entity);
 error:

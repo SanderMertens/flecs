@@ -280,7 +280,7 @@ public:
         return ecs_field_is_readonly(m_iter, index);
     }
 
-    /** Number of fields in iteator.
+    /** Number of fields in iterator.
      */
     int32_t field_count() const {
         return m_iter->field_count;

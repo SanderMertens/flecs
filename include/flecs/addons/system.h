@@ -159,7 +159,7 @@ ecs_entity_t ecs_system_init(
  * invoke logic on a set of entities, as manual systems are only matched to
  * tables at creation time or after creation time, when a new table is created.
  *
- * Manual systems are useful to evaluate lists of prematched entities at
+ * Manual systems are useful to evaluate lists of pre-matched entities at
  * application defined times. Because none of the matching logic is evaluated
  * before the system is invoked, manual systems are much more efficient than
  * manually obtaining a list of entities and retrieving their components.

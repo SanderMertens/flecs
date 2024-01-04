@@ -2,13 +2,13 @@
  * @file datastructures/switch_list.c
  * @brief Interleaved linked list for storing mutually exclusive values.
  * 
- * Datastructure that stores N interleaved linked lists in an array. 
+ * Data structure that stores N interleaved linked lists in an array.
  * This allows for efficient storage of elements with mutually exclusive values.
  * Each linked list has a header element which points to the index in the array
  * that stores the first node of the list. Each list node points to the next
  * array element.
  *
- * The datastructure allows for efficient storage and retrieval for values with
+ * The data structure allows for efficient storage and retrieval for values with
  * mutually exclusive values, such as enumeration values. The linked list allows
  * an application to obtain all elements for a given (enumeration) value without
  * having to search.

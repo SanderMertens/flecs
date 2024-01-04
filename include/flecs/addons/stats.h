@@ -148,7 +148,7 @@ typedef struct ecs_world_stats_t {
 
     int64_t last_;
 
-    /** Current position in ringbuffer */
+    /** Current position in ring buffer */
     int32_t t;
 } ecs_world_stats_t;
 
@@ -160,7 +160,7 @@ typedef struct ecs_query_stats_t {
     ecs_metric_t matched_entity_count;      /**< Number of matched entities */
     int64_t last_;
 
-    /** Current position in ringbuffer */
+    /** Current position in ring buffer */
     int32_t t;
 } ecs_query_stats_t;
 
@@ -204,7 +204,7 @@ typedef struct ecs_pipeline_stats_t {
      * entry in the map exists of type ecs_system_stats_t. */
     ecs_map_t system_stats;
 
-    /** Current position in ringbuffer */
+    /** Current position in ring buffer */
     int32_t t;
 
     int32_t system_count;        /**< Number of systems in pipeline */
