@@ -8285,7 +8285,7 @@ void ecs_table_swap_rows(
  *
  * The application must explicitly provide the difference in components between
  * tables as the added/removed parameters. This can usually be derived directly
- * from the result of ecs_table_add_id and esc_table_remove_id. These arrays are
+ * from the result of ecs_table_add_id and ecs_table_remove_id. These arrays are
  * required to properly execute OnAdd/OnRemove triggers.
  *
  * @param world The world.
