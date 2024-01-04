@@ -14,9 +14,9 @@
 
 /**
  * @defgroup c_addons_snapshot Snapshot
+ * @ingroup c_addons
  * @brief Save & restore world.
- * 
- * \ingroup c_addons
+ *
  * @{
  */
 
@@ -42,7 +42,7 @@ ecs_snapshot_t* ecs_snapshot_take(
 
 /** Create a filtered snapshot.
  * This operation is the same as ecs_snapshot_take, but accepts an iterator so
- * an application can control what is stored by the snapshot. 
+ * an application can control what is stored by the snapshot.
  *
  * @param iter An iterator to the data to be stored by the snapshot.
  * @return The snapshot.
@@ -56,14 +56,14 @@ ecs_snapshot_t* ecs_snapshot_take_w_iter(
  * snapshot was taken. A snapshot can only be used once for restoring, as its
  * data replaces the data that is currently in the world.
  * This operation also resets the last issued entity handle, so any calls to
- * ecs_new may return entity ids that have been issued before restoring the 
+ * ecs_new may return entity ids that have been issued before restoring the
  * snapshot.
  *
  * The world in which the snapshot is restored must be the same as the world in
  * which the snapshot is taken.
  *
  * @param world The world to restore the snapshot to.
- * @param snapshot The snapshot to restore. 
+ * @param snapshot The snapshot to restore.
  */
 FLECS_API
 void ecs_snapshot_restore(
@@ -79,7 +79,7 @@ ecs_iter_t ecs_snapshot_iter(
     ecs_snapshot_t *snapshot);
 
 /** Progress snapshot iterator.
- * 
+ *
  * @param iter The snapshot iterator.
  * @return True if more data is available, otherwise false.
  */
@@ -90,12 +90,12 @@ bool ecs_snapshot_next(
 /** Free snapshot resources.
  * This frees resources associated with a snapshot without restoring it.
  *
- * @param snapshot The snapshot to free. 
+ * @param snapshot The snapshot to free.
  */
 FLECS_API
 void ecs_snapshot_free(
     ecs_snapshot_t *snapshot);
-    
+
 #ifdef __cplusplus
 }
 #endif

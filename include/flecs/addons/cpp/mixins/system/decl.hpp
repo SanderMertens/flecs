@@ -9,9 +9,9 @@ namespace flecs {
 
 /**
  * @defgroup cpp_addons_systems Systems
- * @brief Systems are a query + function that can be ran manually or by a pipeline.
- * 
- * \ingroup cpp_addons
+ * @ingroup cpp_addons
+ * Systems are a query + function that can be ran manually or by a pipeline.
+ *
  * @{
  */
 

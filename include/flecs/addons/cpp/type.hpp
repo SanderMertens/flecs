@@ -9,9 +9,9 @@ namespace flecs {
 
 /**
  * @defgroup cpp_types Types
+ * @ingroup cpp_core
  * @brief Type operations.
- * 
- * \ingroup cpp_core
+ *
  * @{
  */
 
@@ -55,7 +55,7 @@ struct type {
         }
         return flecs::id(m_world, m_type->array[index]);
     }
-    
+
     flecs::id_t* begin() const {
         return m_type->array;
     }

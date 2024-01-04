@@ -10,9 +10,9 @@
 
 /**
  * @defgroup c_addons_parser Parser
- * @brief Query DSL parser and parsing utilities.
- * 
- * \ingroup c_addons
+ * @ingroup c_addons
+ * Query DSL parser and parsing utilities.
+ *
  * @{
  */
 
@@ -28,7 +28,7 @@ extern "C" {
 
 /** Skip whitespace characters.
  * This function skips whitespace characters. Does not skip newlines.
- * 
+ *
  * @param ptr Pointer to (potential) whitespaces to skip.
  * @return Pointer to the next non-whitespace character.
  */
@@ -38,7 +38,7 @@ const char* ecs_parse_ws(
 
 /** Skip whitespace and newline characters.
  * This function skips whitespace characters.
- * 
+ *
  * @param ptr Pointer to (potential) whitespaces to skip.
  * @return Pointer to the next non-whitespace character.
  */
@@ -56,7 +56,7 @@ const char* ecs_parse_identifier(
 /** Parse digit.
  * This function will parse until the first non-digit character is found. The
  * provided expression must contain at least one digit character.
- * 
+ *
  * @param ptr The expression to parse.
  * @param token The output buffer.
  * @return Pointer to the first non-digit character.
@@ -68,7 +68,7 @@ const char* ecs_parse_digit(
 
 /** Parse a single token.
  * This function can be used as simple tokenizer by other parsers.
- * 
+ *
  * @param name of program (used for logging).
  * @param expr pointer to token to parse.
  * @param ptr pointer to first character to parse.
@@ -87,7 +87,7 @@ const char* ecs_parse_token(
  * This operation parses a single term in an expression and returns a pointer
  * to the next term expression.
  *
- * If the returned pointer points to the 0-terminator, the expression is fully 
+ * If the returned pointer points to the 0-terminator, the expression is fully
  * parsed. The function would typically be called in a while loop:
  *
  * const char *ptr = expr;

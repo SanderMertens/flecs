@@ -5,38 +5,38 @@
  * The meta addon enables reflecting on component data. Types are stored as
  * entities, with components that store the reflection data. A type has at least
  * two components:
- * 
+ *
  * - EcsComponent: core component, contains size & alignment
  * - EcsMetaType:  component that indicates what kind of type the entity is
  *
  * Additionally the type may have an additional component that contains the
  * reflection data for the type. For example, structs have these components:
- * 
+ *
  * - EcsComponent
  * - EcsMetaType
  * - EcsStruct
- * 
- * Structs can be populated by adding child entities with the EcsMember 
- * component. Adding a child with a Member component to an entity will 
+ *
+ * Structs can be populated by adding child entities with the EcsMember
+ * component. Adding a child with a Member component to an entity will
  * automatically add the EcsStruct component to the parent.
- * 
+ *
  * Enums/bitmasks can be populated by adding child entities with the Constant
  * tag. By default constants are automatically assigned values when they are
  * added to the enum/bitmask. The parent entity must have the EcsEnum or
  * EcsBitmask component before adding the constants.
- * 
+ *
  * To create enum constants with a manual value, set (Constant, i32) to the
  * desired value. To create bitmask constants with a manual value, set
  * (Constant, u32) to the desired value. Constants with manual values should not
  * conflict with other constants.
- * 
+ *
  * The _init APIs are convenience wrappers around creating the entities and
  * components for the types.
- * 
- * When a type is created it automatically receives the EcsComponent and 
+ *
+ * When a type is created it automatically receives the EcsComponent and
  * EcsMetaType components. The former means that the resulting type can be
  * used as a regular component:
- * 
+ *
  * // Create Position type
  * ecs_entity_t pos = ecs_struct_init(world, &(ecs_struct_desc_t){
  *  .entity.name = "Position",
@@ -48,7 +48,7 @@
  *
  * // Create entity with Position component
  * ecs_entity_t e = ecs_new_w_id(world, pos);
- * 
+ *
  * Type entities do not have to be named.
  */
 
@@ -56,9 +56,9 @@
 
 /**
  * @defgroup c_addons_meta Meta
- * @brief Flecs reflection framework.
- * 
- * \ingroup c_addons
+ * @ingroup c_addons
+ * Flecs reflection framework.
+ *
  * @{
  */
 
@@ -80,7 +80,7 @@ extern "C" {
 /** Primitive type definitions.
  * These typedefs allow the builtin primitives to be used as regular components:
  *   ecs_set(world, e, ecs_i32_t, {10});
- * 
+ *
  * Or a more useful example (create an enum constant with a manual value):
  *   ecs_set_pair_object(world, e, EcsConstant, ecs_i32_t, {10});
  */
@@ -220,16 +220,16 @@ typedef struct ecs_member_t {
      * type entity is also a unit */
     ecs_entity_t unit;
 
-    /** Numerical range that specifies which values member can assume. This 
+    /** Numerical range that specifies which values member can assume. This
      * range may be used by UI elements such as a progress bar or slider. The
      * value of a member should not exceed this range. */
     ecs_member_value_range_t range;
 
-    /** Numerical range outside of which the value represents an error. This 
+    /** Numerical range outside of which the value represents an error. This
      * range may be used by UI elements to style a value. */
     ecs_member_value_range_t error_range;
 
-    /** Numerical range outside of which the value represents an warning. This 
+    /** Numerical range outside of which the value represents an warning. This
      * range may be used by UI elements to style a value. */
     ecs_member_value_range_t warning_range;
 
@@ -330,7 +330,7 @@ typedef struct ecs_serializer_t {
 
     /* Serialize value */
     int value(ecs_entity_t type, const void *value) const;
-    
+
     /* Serialize value */
     template <typename T>
     int value(const T& value) const;
@@ -354,7 +354,7 @@ typedef struct EcsOpaque {
     ecs_entity_t as_type;              /**< Type that describes the serialized output */
     ecs_meta_serialize_t serialize;    /**< Serialize action */
 
-    /* Deserializer interface 
+    /* Deserializer interface
      * Only override the callbacks that are valid for the opaque type. If a
      * deserializer attempts to assign a value type that is not supported by the
      * interface, a conversion error is thrown.
@@ -362,32 +362,32 @@ typedef struct EcsOpaque {
 
     /** Assign bool value */
     void (*assign_bool)(
-        void *dst, 
+        void *dst,
         bool value);
 
     /** Assign char value */
     void (*assign_char)(
-        void *dst, 
+        void *dst,
         char value);
 
     /** Assign int value */
     void (*assign_int)(
-        void *dst, 
+        void *dst,
         int64_t value);
 
     /** Assign unsigned int value */
     void (*assign_uint)(
-        void *dst, 
+        void *dst,
         uint64_t value);
 
     /** Assign float value */
     void (*assign_float)(
-        void *dst, 
+        void *dst,
         double value);
 
     /** Assign string value */
     void (*assign_string)(
-        void *dst, 
+        void *dst,
         const char *value);
 
     /** Assign entity value */
@@ -412,21 +412,21 @@ typedef struct EcsOpaque {
 
     /** Ensure & get collection element */
     void* (*ensure_element)(
-        void *dst, 
+        void *dst,
         size_t elem);
 
     /** Ensure & get element */
     void* (*ensure_member)(
-        void *dst, 
+        void *dst,
         const char *member);
 
     /** Return number of elements */
     size_t (*count)(
         const void *dst);
-    
+
     /** Resize to number of elements */
     void (*resize)(
-        void *dst, 
+        void *dst,
         size_t count);
 } EcsOpaque;
 
@@ -435,9 +435,9 @@ typedef struct EcsOpaque {
 
 /* Helper type to describe translation between two units. Note that this
  * is not intended as a generic approach to unit conversions (e.g. from celsius
- * to fahrenheit) but to translate between units that derive from the same base 
- * (e.g. meters to kilometers). 
- * 
+ * to fahrenheit) but to translate between units that derive from the same base
+ * (e.g. meters to kilometers).
+ *
  * Note that power is applied to the factor. When describing a translation of
  * 1000, either use {factor = 1000, power = 1} or {factor = 1, power = 3}. */
 typedef struct ecs_unit_translation_t {
@@ -527,7 +527,7 @@ typedef struct ecs_meta_scope_t {
     void *ptr;                /**< Pointer to the value being iterated */
 
     const EcsComponent *comp; /**< Pointer to component, in case size/alignment is needed */
-    const EcsOpaque *opaque;  /**< Opaque type interface */ 
+    const EcsOpaque *opaque;  /**< Opaque type interface */
     ecs_vec_t *vector;        /**< Current vector, in case a vector is iterated */
     ecs_hashmap_t *members;   /**< string -> member index */
     bool is_collection;       /**< Is the scope iterating elements? */
@@ -719,7 +719,7 @@ FLECS_API
 double ecs_meta_get_float(
     const ecs_meta_cursor_t *cursor);
 
-/** Get field value as string. 
+/** Get field value as string.
  * This operation does not perform conversions. If the field is not a string,
  * this operation will fail.
  */
@@ -727,13 +727,13 @@ FLECS_API
 const char* ecs_meta_get_string(
     const ecs_meta_cursor_t *cursor);
 
-/** Get field value as entity. 
+/** Get field value as entity.
  * This operation does not perform conversions. */
 FLECS_API
 ecs_entity_t ecs_meta_get_entity(
     const ecs_meta_cursor_t *cursor);
 
-/** Get field value as (component) id. 
+/** Get field value as (component) id.
  * This operation can convert from an entity. */
 ecs_id_t ecs_meta_get_id(
     const ecs_meta_cursor_t *cursor);
@@ -835,15 +835,15 @@ typedef struct ecs_opaque_desc_t {
  * that can be described with meta primitives. Typical examples are STL types
  * such as std::string or std::vector, types with a nontrivial layout, and types
  * that only expose getter/setter methods.
- * 
+ *
  * An opaque type is a combination of a serialization function, and a handle to
  * a meta type which describes the structure of the serialized output. For
  * example, an opaque type for std::string would have a serializer function that
  * accesses .c_str(), and with type ecs_string_t.
- * 
- * The serializer callback accepts a serializer object and a pointer to the 
+ *
+ * The serializer callback accepts a serializer object and a pointer to the
  * value of the opaque type to be serialized. The serializer has two methods:
- * 
+ *
  * - value, which serializes a value (such as .c_str())
  * - member, which specifies a member to be serialized (in the case of a struct)
  */

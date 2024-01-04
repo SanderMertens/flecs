@@ -1,7 +1,7 @@
 /**
  * @file addons/plecs.h
  * @brief Flecs script module.
- * 
+ *
  * For script, see examples/plecs.
  */
 
@@ -9,9 +9,9 @@
 
 /**
  * @defgroup c_addons_plecs Flecs script
- * @brief Data definition format for loading entity data.
- * 
- * \ingroup c_addons
+ * @ingroup c_addons
+ * Data definition format for loading entity data.
+ *
  * @{
  */
 
@@ -84,9 +84,9 @@ typedef struct ecs_script_desc_t {
  * A managed script tracks which entities it creates, and keeps those entities
  * synchronized when the contents of the script are updated. When the script is
  * updated, entities that are no longer in the new version will be deleted.
- * 
+ *
  * This feature is experimental.
- * 
+ *
  * @param world The world.
  * @param desc Script descriptor.
  */
@@ -98,8 +98,8 @@ ecs_entity_t ecs_script_init(
 #define ecs_script(world, ...)\
     ecs_script_init(world, &(ecs_script_desc_t) __VA_ARGS__)
 
-/** Update script with new code. 
- * 
+/** Update script with new code.
+ *
  * @param world The world.
  * @param script The script entity.
  * @param instance An assembly instance (optional).

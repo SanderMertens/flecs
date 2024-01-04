@@ -11,9 +11,9 @@ namespace flecs {
 
 /**
  * @defgroup cpp_addons_meta Meta
- * @brief Flecs reflection framework.
- * 
- * \ingroup cpp_addons
+ * @ingroup cpp_addons
+ * Flecs reflection framework.
+ *
  * @{
  */
 
@@ -44,7 +44,7 @@ struct opaque {
 
     /** Serialize function */
     opaque& serialize(flecs::serialize<T> func) {
-        this->desc.type.serialize = 
+        this->desc.type.serialize =
             reinterpret_cast<decltype(
                 this->desc.type.serialize)>(func);
         return *this;
@@ -52,7 +52,7 @@ struct opaque {
 
     /** Assign bool value */
     opaque& assign_bool(void (*func)(T *dst, bool value)) {
-        this->desc.type.assign_bool = 
+        this->desc.type.assign_bool =
             reinterpret_cast<decltype(
                 this->desc.type.assign_bool)>(func);
         return *this;
@@ -60,7 +60,7 @@ struct opaque {
 
     /** Assign char value */
     opaque& assign_char(void (*func)(T *dst, char value)) {
-        this->desc.type.assign_char = 
+        this->desc.type.assign_char =
             reinterpret_cast<decltype(
                 this->desc.type.assign_char)>(func);
         return *this;
@@ -68,7 +68,7 @@ struct opaque {
 
     /** Assign int value */
     opaque& assign_int(void (*func)(T *dst, int64_t value)) {
-        this->desc.type.assign_int = 
+        this->desc.type.assign_int =
             reinterpret_cast<decltype(
                 this->desc.type.assign_int)>(func);
         return *this;
@@ -76,7 +76,7 @@ struct opaque {
 
     /** Assign unsigned int value */
     opaque& assign_uint(void (*func)(T *dst, uint64_t value)) {
-        this->desc.type.assign_uint = 
+        this->desc.type.assign_uint =
             reinterpret_cast<decltype(
                 this->desc.type.assign_uint)>(func);
         return *this;
@@ -84,7 +84,7 @@ struct opaque {
 
     /** Assign float value */
     opaque& assign_float(void (*func)(T *dst, double value)) {
-        this->desc.type.assign_float = 
+        this->desc.type.assign_float =
             reinterpret_cast<decltype(
                 this->desc.type.assign_float)>(func);
         return *this;
@@ -92,7 +92,7 @@ struct opaque {
 
     /** Assign string value */
     opaque& assign_string(void (*func)(T *dst, const char *value)) {
-        this->desc.type.assign_string = 
+        this->desc.type.assign_string =
             reinterpret_cast<decltype(
                 this->desc.type.assign_string)>(func);
         return *this;
@@ -100,9 +100,9 @@ struct opaque {
 
     /** Assign entity value */
     opaque& assign_entity(
-        void (*func)(T *dst, ecs_world_t *world, ecs_entity_t entity)) 
+        void (*func)(T *dst, ecs_world_t *world, ecs_entity_t entity))
     {
-        this->desc.type.assign_entity = 
+        this->desc.type.assign_entity =
             reinterpret_cast<decltype(
                 this->desc.type.assign_entity)>(func);
         return *this;
@@ -112,7 +112,7 @@ struct opaque {
     opaque& assign_id(
         void (*func)(T *dst, ecs_world_t *world, ecs_id_t id))
     {
-        this->desc.type.assign_id = 
+        this->desc.type.assign_id =
             reinterpret_cast<decltype(
                 this->desc.type.assign_id)>(func);
         return *this;
@@ -120,7 +120,7 @@ struct opaque {
 
     /** Assign null value */
     opaque& assign_null(void (*func)(T *dst)) {
-        this->desc.type.assign_null = 
+        this->desc.type.assign_null =
             reinterpret_cast<decltype(
                 this->desc.type.assign_null)>(func);
         return *this;
@@ -128,7 +128,7 @@ struct opaque {
 
     /** Clear collection elements */
     opaque& clear(void (*func)(T *dst)) {
-        this->desc.type.clear = 
+        this->desc.type.clear =
             reinterpret_cast<decltype(
                 this->desc.type.clear)>(func);
         return *this;
@@ -136,7 +136,7 @@ struct opaque {
 
     /** Ensure & get collection element */
     opaque& ensure_element(ElemType* (*func)(T *dst, size_t elem)) {
-        this->desc.type.ensure_element = 
+        this->desc.type.ensure_element =
             reinterpret_cast<decltype(
                 this->desc.type.ensure_element)>(func);
         return *this;
@@ -144,7 +144,7 @@ struct opaque {
 
     /** Ensure & get element */
     opaque& ensure_member(void* (*func)(T *dst, const char *member)) {
-        this->desc.type.ensure_member = 
+        this->desc.type.ensure_member =
             reinterpret_cast<decltype(
                 this->desc.type.ensure_member)>(func);
         return *this;
@@ -152,15 +152,15 @@ struct opaque {
 
     /** Return number of elements */
     opaque& count(size_t (*func)(const T *dst)) {
-        this->desc.type.count = 
+        this->desc.type.count =
             reinterpret_cast<decltype(
                 this->desc.type.count)>(func);
         return *this;
     }
-    
+
     /** Resize to number of elements */
     opaque& resize(void (*func)(T *dst, size_t count)) {
-        this->desc.type.resize = 
+        this->desc.type.resize =
             reinterpret_cast<decltype(
                 this->desc.type.resize)>(func);
         return *this;

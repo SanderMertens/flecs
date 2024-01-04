@@ -75,16 +75,16 @@ inline void set(world_t *world, flecs::entity_t entity, const T& value, flecs::i
 }
 
 // emplace for T(Args...)
-template <typename T, typename ... Args, if_t< 
+template <typename T, typename ... Args, if_t<
     std::is_constructible<actual_type_t<T>, Args...>::value ||
     std::is_default_constructible<actual_type_t<T>>::value > = 0>
 inline void emplace(world_t *world, flecs::entity_t entity, flecs::id_t id, Args&&... args) {
     ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
     T& dst = *static_cast<T*>(ecs_emplace_id(world, entity, id));
-    
+
     FLECS_PLACEMENT_NEW(&dst, T{FLECS_FWD(args)...});
 
-    ecs_modified_id(world, entity, id);    
+    ecs_modified_id(world, entity, id);
 }
 
 // set(T&&)
@@ -102,7 +102,7 @@ inline void set(world_t *world, entity_t entity, const A& value) {
 }
 
 /** Return id without generation.
- * 
+ *
  * @see ecs_strip_generation
  */
 inline flecs::id_t strip_generation(flecs::entity_t e) {
@@ -119,9 +119,9 @@ struct scoped_world;
 
 /**
  * @defgroup cpp_world World
- * @brief World operations.
- * 
- * \ingroup cpp_core
+ * @ingroup cpp_core
+ * World operations.
+ *
  * @{
  */
 
@@ -132,7 +132,7 @@ struct scoped_world;
 struct world {
     /** Create world.
      */
-    explicit world() 
+    explicit world()
         : m_world( ecs_init() )
         , m_owned( true ) { init_builtin_components(); }
 
@@ -147,10 +147,10 @@ struct world {
     /** Create world from C world.
      */
     explicit world(world_t *w)
-        : m_world( w ) 
+        : m_world( w )
         , m_owned( false ) { }
 
-    /** Not allowed to copy a world. May only take a reference. 
+    /** Not allowed to copy a world. May only take a reference.
      */
     world(const world& obj) = delete;
 
@@ -177,13 +177,13 @@ struct world {
         obj.m_owned = false;
         return *this;
     }
-    
-    ~world() { 
+
+    ~world() {
         if (m_owned && ecs_stage_is_async(m_world)) {
             ecs_async_stage_free(m_world);
         } else
         if (m_owned && m_world) {
-            ecs_fini(m_world); 
+            ecs_fini(m_world);
         }
     }
 
@@ -223,14 +223,14 @@ struct world {
     /** Begin frame.
      * When an application does not use progress() to control the main loop, it
      * can still use Flecs features such as FPS limiting and time measurements.
-     * This operation needs to be invoked whenever a new frame is about to get 
+     * This operation needs to be invoked whenever a new frame is about to get
      * processed.
      *
      * Calls to frame_begin must always be followed by frame_end.
      *
-     * The function accepts a delta_time parameter, which will get passed to 
-     * systems. This value is also used to compute the amount of time the 
-     * function needs to sleep to ensure it does not exceed the target_fps, when 
+     * The function accepts a delta_time parameter, which will get passed to
+     * systems. This value is also used to compute the amount of time the
+     * function needs to sleep to ensure it does not exceed the target_fps, when
      * it is set. When 0 is provided for delta_time, the time will be measured.
      *
      * This function should only be ran from the main thread.
@@ -242,7 +242,7 @@ struct world {
         return ecs_frame_begin(m_world, delta_time);
     }
 
-    /** End frame. 
+    /** End frame.
      * This operation must be called at the end of the frame, and always after
      * ecs_frame_begin.
      *
@@ -257,7 +257,7 @@ struct world {
      * can still use Flecs features such as the defer queue. When an application
      * needs to stage changes, it needs to call this function after ecs_frame_begin.
      * A call to ecs_readonly_begin must be followed by a call to ecs_readonly_end.
-     * 
+     *
      * When staging is enabled, modifications to entities are stored to a stage.
      * This ensures that arrays are not modified while iterating. Modifications are
      * merged back to the "main stage" when ecs_readonly_end is invoked.
@@ -285,7 +285,7 @@ struct world {
         ecs_readonly_end(m_world);
     }
 
-    /** Defer operations until end of frame. 
+    /** Defer operations until end of frame.
      * When this operation is invoked while iterating, operations inbetween the
      * defer_begin and defer_end operations are executed at the end of the frame.
      *
@@ -295,7 +295,7 @@ struct world {
         return ecs_defer_begin(m_world);
     }
 
-    /** End block of operations to defer. 
+    /** End block of operations to defer.
      * See defer_begin.
      *
      * This operation is thread safe.
@@ -316,10 +316,10 @@ struct world {
      * multiple threads, where each thread gets its own queue, and commands are
      * merged when threads are synchronized.
      *
-     * Note that set_threads() already creates the appropriate number of stages. 
-     * The set_stage_count() operation is useful for applications that want to manage 
+     * Note that set_threads() already creates the appropriate number of stages.
+     * The set_stage_count() operation is useful for applications that want to manage
      * their own stages and/or threads.
-     * 
+     *
      * @param stages The number of stages.
      */
     void set_stage_count(int32_t stages) const {
@@ -348,30 +348,30 @@ struct world {
     /** Test if is a stage.
      * If this function returns false, it is guaranteed that this is a valid
      * world object.
-     * 
+     *
      * @return True if the world is a stage, false if not.
      */
     bool is_stage() const {
         ecs_assert(
-            ecs_poly_is(m_world, ecs_world_t) || 
+            ecs_poly_is(m_world, ecs_world_t) ||
             ecs_poly_is(m_world, ecs_stage_t),
                 ECS_INVALID_PARAMETER, NULL);
         return ecs_poly_is(m_world, ecs_stage_t);
     }
 
     /** Enable/disable automerging for world or stage.
-     * When automerging is enabled, staged data will automatically be merged 
-     * with the world when staging ends. This happens at the end of progress(), 
+     * When automerging is enabled, staged data will automatically be merged
+     * with the world when staging ends. This happens at the end of progress(),
      * at a sync point or when readonly_end() is called.
      *
-     * Applications can exercise more control over when data from a stage is 
-     * merged by disabling automerging. This requires an application to 
+     * Applications can exercise more control over when data from a stage is
+     * merged by disabling automerging. This requires an application to
      * explicitly call merge() on the stage.
      *
      * When this function is invoked on the world, it sets all current stages to
-     * the provided value and sets the default for new stages. When this 
-     * function is invoked on a stage, automerging is only set for that specific 
-     * stage. 
+     * the provided value and sets the default for new stages. When this
+     * function is invoked on a stage, automerging is only set for that specific
+     * stage.
      *
      * @param automerge Whether to enable or disable automerging.
      */
@@ -392,18 +392,18 @@ struct world {
     }
 
     /** Get stage-specific world pointer.
-     * Flecs threads can safely invoke the API as long as they have a private 
+     * Flecs threads can safely invoke the API as long as they have a private
      * context to write to, also referred to as the stage. This function returns a
      * pointer to a stage, disguised as a world pointer.
      *
      * Note that this function does not(!) create a new world. It simply wraps the
      * existing world in a thread-specific context, which the API knows how to
      * unwrap. The reason the stage is returned as an ecs_world_t is so that it
-     * can be passed transparently to the existing API functions, vs. having to 
+     * can be passed transparently to the existing API functions, vs. having to
      * create a dediated API for threading.
      *
      * @param stage_id The index of the stage to retrieve.
-     * @return A thread-specific pointer to the world. 
+     * @return A thread-specific pointer to the world.
      */
     flecs::world get_stage(int32_t stage_id) const {
         return flecs::world(ecs_get_stage(m_world, stage_id));
@@ -416,13 +416,13 @@ struct world {
      *
      * Asynchronous stages are never merged automatically, and must therefore be
      * manually merged with the ecs_merge function. It is not necessary to call
-     * defer_begin or defer_end before and after enqueuing commands, as an 
+     * defer_begin or defer_end before and after enqueuing commands, as an
      * asynchronous stage unconditionally defers operations.
      *
      * The application must ensure that no commands are added to the stage while the
      * stage is being merged.
      *
-     * An asynchronous stage must be cleaned up by ecs_async_stage_free. 
+     * An asynchronous stage must be cleaned up by ecs_async_stage_free.
      *
      * @return The stage.
      */
@@ -550,7 +550,7 @@ struct world {
     }
 
     /** Lookup entity by name.
-     * 
+     *
      * @param name Entity name.
      * @param search_path When false, only the current scope is searched.
      * @result The entity if found, or 0 if not found.
@@ -568,13 +568,13 @@ struct world {
      */
     template <typename T, if_t< !is_callable<T>::value > = 0>
     void set(T&& value) const {
-        flecs::set<T>(m_world, _::cpp_type<T>::id(m_world), 
+        flecs::set<T>(m_world, _::cpp_type<T>::id(m_world),
             FLECS_FWD(value));
     }
 
     /** Set singleton pair.
      */
-    template <typename First, typename Second, typename P = flecs::pair<First, Second>, 
+    template <typename First, typename Second, typename P = flecs::pair<First, Second>,
         typename A = actual_type_t<P>, if_not_t< flecs::is_pair<First>::value> = 0>
     void set(const A& value) const {
         flecs::set<P>(m_world, _::cpp_type<First>::id(m_world), value);
@@ -582,7 +582,7 @@ struct world {
 
     /** Set singleton pair.
      */
-    template <typename First, typename Second, typename P = flecs::pair<First, Second>, 
+    template <typename First, typename Second, typename P = flecs::pair<First, Second>,
         typename A = actual_type_t<P>, if_not_t< flecs::is_pair<First>::value> = 0>
     void set(A&& value) const {
         flecs::set<P>(m_world, _::cpp_type<First>::id(m_world), FLECS_FWD(value));
@@ -608,7 +608,7 @@ struct world {
         flecs::id_t component_id = _::cpp_type<T>::id(m_world);
         flecs::emplace<T>(m_world, component_id, component_id,
             FLECS_FWD(args)...);
-    }        
+    }
 
     /** Get mut singleton component.
      */
@@ -632,7 +632,7 @@ struct world {
 
     /** Get singleton pair.
      */
-    template <typename First, typename Second, typename P = flecs::pair<First, Second>, 
+    template <typename First, typename Second, typename P = flecs::pair<First, Second>,
         typename A = actual_type_t<P>>
     const A* get() const;
 
@@ -640,7 +640,7 @@ struct world {
      */
     template <typename First, typename Second>
     const First* get(Second second) const;
-    
+
     /** Get singleton component inside a callback.
      */
     template <typename Func, if_t< is_callable<Func>::value > = 0 >
@@ -652,7 +652,7 @@ struct world {
     bool has() const;
 
     /** Test if world has the provided pair.
-     * 
+     *
      * @tparam First The first element of the pair
      * @tparam Second The second element of the pair
      */
@@ -660,7 +660,7 @@ struct world {
     bool has() const;
 
     /** Test if world has the provided pair.
-     * 
+     *
      * @tparam First The first element of the pair
      * @param second The second element of the pair.
      */
@@ -668,7 +668,7 @@ struct world {
     bool has(flecs::id_t second) const;
 
     /** Test if world has the provided pair.
-     * 
+     *
      * @param first The first element of the pair
      * @param second The second element of the pair
      */
@@ -680,7 +680,7 @@ struct world {
     void add() const;
 
     /** Adds a pair to the singleton component.
-     * 
+     *
      * @tparam First The first element of the pair
      * @tparam Second The second element of the pair
      */
@@ -688,7 +688,7 @@ struct world {
     void add() const;
 
     /** Adds a pair to the singleton component.
-     * 
+     *
      * @tparam First The first element of the pair
      * @param second The second element of the pair.
      */
@@ -696,7 +696,7 @@ struct world {
     void add(flecs::entity_t second) const;
 
     /** Adds a pair to the singleton entity.
-     * 
+     *
      * @param first The first element of the pair
      * @param second The second element of the pair
      */
@@ -708,7 +708,7 @@ struct world {
     void remove() const;
 
     /** Removes the pair singleton component.
-     * 
+     *
      * @tparam First The first element of the pair
      * @tparam Second The second element of the pair
      */
@@ -716,7 +716,7 @@ struct world {
     void remove() const;
 
     /** Removes the pair singleton component.
-     * 
+     *
      * @tparam First The first element of the pair
      * @param second The second element of the pair.
      */
@@ -724,13 +724,13 @@ struct world {
     void remove(flecs::entity_t second) const;
 
     /** Removes the pair singleton component.
-     * 
+     *
      * @param first The first element of the pair
      * @param second The second element of the pair
      */
     void remove(flecs::entity_t first, flecs::entity_t second) const;
 
-    /** Iterate entities in root of world 
+    /** Iterate entities in root of world
      * Accepts a callback with the following signature:
      *  void(*)(flecs::entity e);
      */
@@ -788,14 +788,14 @@ struct world {
      * @param name Name of the entity.
      * @param alias Alias for the entity.
      */
-    flecs::entity use(const char *name, const char *alias = nullptr) const;    
+    flecs::entity use(const char *name, const char *alias = nullptr) const;
 
     /** Create alias for entity.
      *
      * @param entity Entity for which to create the alias.
      * @param alias Alias for the entity.
      */
-    void use(flecs::entity entity, const char *alias = nullptr) const;   
+    void use(flecs::entity entity, const char *alias = nullptr) const;
 
     /** Count entities matching a component.
      *
@@ -840,7 +840,7 @@ struct world {
      */
     template <typename First, typename Second>
     int count() const {
-        return count( 
+        return count(
             _::cpp_type<First>::id(m_world),
             _::cpp_type<Second>::id(m_world));
     }
@@ -851,7 +851,7 @@ struct world {
     void with(id_t with_id, const Func& func) const {
         ecs_id_t prev = ecs_set_with(m_world, with_id);
         func();
-        ecs_set_with(m_world, prev);    
+        ecs_set_with(m_world, prev);
     }
 
     /** All entities created in function are created with type.
@@ -873,7 +873,7 @@ struct world {
     template <typename First, typename Func>
     void with(id_t second, const Func& func) const {
         with(ecs_pair(this->id<First>(), second), func);
-    } 
+    }
 
     /** All entities created in function are created with pair.
      */
@@ -891,7 +891,7 @@ struct world {
         func();
         ecs_set_scope(m_world, prev);
     }
-    
+
     /** Same as scope(parent, func), but with T as parent.
      */
     template <typename T, typename Func>
@@ -977,7 +977,7 @@ struct world {
     }
 
     /** Suspend deferring operations.
-     * 
+     *
      * @see ecs_defer_suspend
      */
     void defer_suspend() const {
@@ -985,7 +985,7 @@ struct world {
     }
 
     /** Resume deferring operations.
-     * 
+     *
      * @see ecs_defer_suspend
      */
     void defer_resume() const {
@@ -993,7 +993,7 @@ struct world {
     }
 
     /** Check if entity id exists in the world.
-     * 
+     *
      * @see ecs_exists
      */
     bool exists(flecs::entity_t e) const {
@@ -1010,7 +1010,7 @@ struct world {
 
     /** Check if entity id is valid.
      * Invalid entities cannot be used with API functions.
-     * 
+     *
      * @see ecs_is_valid
      */
     bool is_valid(flecs::entity_t e) const {
@@ -1019,7 +1019,7 @@ struct world {
 
     /** Get alive entity for id.
      * Returns the entity with the current generation.
-     * 
+     *
      * @see ecs_get_alive
      */
     flecs::entity get_alive(flecs::entity_t e) const;
@@ -1028,9 +1028,9 @@ struct world {
  *  ecs_ensure. */
 #ifndef ensure
     /** Ensures that entity with provided generation is alive.
-     * Ths operation will fail if an entity exists with the same id and a 
+     * Ths operation will fail if an entity exists with the same id and a
      * different, non-zero generation.
-     * 
+     *
      * @see ecs_ensure
      */
     flecs::entity ensure(flecs::entity_t e) const;
@@ -1112,7 +1112,7 @@ public:
  */
 struct scoped_world : world {
     scoped_world(
-        flecs::world_t *w, 
+        flecs::world_t *w,
         flecs::entity_t s) : world(nullptr)
     {
         m_prev_scope = ecs_set_scope(w, s);

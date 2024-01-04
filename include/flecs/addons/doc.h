@@ -23,9 +23,9 @@ extern "C" {
 
 /**
  * @defgroup c_addons_doc Doc
- * @brief Utilities for documenting entities, components and systems.
- * 
- * \ingroup c_addons
+ * @ingroup c_addons
+ * Utilities for documenting entities, components and systems.
+ *
  * @{
  */
 
@@ -42,7 +42,7 @@ typedef struct EcsDocDescription {
 /** Add human-readable name to entity.
  * Contrary to entity names, human readable names do not have to be unique and
  * can contain special characters used in the query language like '*'.
- * 
+ *
  * @param world The world.
  * @param entity The entity to which to add the name.
  * @param name The name to add.
@@ -54,7 +54,7 @@ void ecs_doc_set_name(
     const char *name);
 
 /** Add brief description to entity.
- * 
+ *
  * @param world The world.
  * @param entity The entity to which to add the description.
  * @param description The description to add.
@@ -66,7 +66,7 @@ void ecs_doc_set_brief(
     const char *description);
 
 /** Add detailed description to entity.
- * 
+ *
  * @param world The world.
  * @param entity The entity to which to add the description.
  * @param description The description to add.
@@ -78,7 +78,7 @@ void ecs_doc_set_detail(
     const char *description);
 
 /** Add link to external documentation to entity.
- * 
+ *
  * @param world The world.
  * @param entity The entity to which to add the link.
  * @param link The link to add.
@@ -91,7 +91,7 @@ void ecs_doc_set_link(
 
 /** Add color to entity.
  * UIs can use color as hint to improve visualizing entities.
- * 
+ *
  * @param world The world.
  * @param entity The entity to which to add the link.
  * @param color The color to add.
@@ -105,12 +105,12 @@ void ecs_doc_set_color(
 /** Get human readable name from entity.
  * If entity does not have an explicit human readable name, this operation will
  * return the entity name.
- * 
+ *
  * To test if an entity has a human readable name, use:
  *   ecs_has_pair(world, e, ecs_id(EcsDescription), EcsName);
  * Or in C++:
  *   e.has<flecs::Description>(flecs::Name);
- * 
+ *
  * @param world The world.
  * @param entity The entity from which to get the name.
  * @return The name.
@@ -121,7 +121,7 @@ const char* ecs_doc_get_name(
     ecs_entity_t entity);
 
 /** Get brief description from entity.
- * 
+ *
  * @param world The world.
  * @param entity The entity from which to get the description.
  * @return The description.
@@ -132,7 +132,7 @@ const char* ecs_doc_get_brief(
     ecs_entity_t entity);
 
 /** Get detailed description from entity.
- * 
+ *
  * @param world The world.
  * @param entity The entity from which to get the description.
  * @return The description.
@@ -143,7 +143,7 @@ const char* ecs_doc_get_detail(
     ecs_entity_t entity);
 
 /** Get link to external documentation from entity.
- * 
+ *
  * @param world The world.
  * @param entity The entity from which to get the link.
  * @return The link.
@@ -154,7 +154,7 @@ const char* ecs_doc_get_link(
     ecs_entity_t entity);
 
 /** Get color from entity.
- * 
+ *
  * @param world The world.
  * @param entity The entity from which to get the link.
  * @return The color.

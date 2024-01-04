@@ -30,21 +30,26 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
-        
+
+      - name: Install Dependencies
+        run: |
+          sudo apt install --yes graphviz
+          wget https://github.com/doxygen/doxygen/releases/download/Release_1_10_0/doxygen-1.10.0.linux.bin.tar.gz
+          tar -xzf ./doxygen-1.10.0.linux.bin.tar.gz
+
       - name: Doxygen
-        uses: mattnotmitt/doxygen-action@v1.9.5
-        with:
-          doxyfile-path: 'docs/cfg/Doxyfile'
-        
+        run: |
+          ./doxygen-1.10.0/bin/doxygen docs/cfg/Doxyfile
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
         with:
           # Upload entire repository
           path: 'docs/html'
-          
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v3

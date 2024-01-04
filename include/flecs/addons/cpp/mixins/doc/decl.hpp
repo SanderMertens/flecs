@@ -10,9 +10,9 @@ namespace doc {
 
 /**
  * @defgroup cpp_addons_doc Doc
- * @brief Utilities for documenting entities, components and systems.
- * 
- * \ingroup cpp_addons
+ * @ingroup cpp_addons
+ * Utilities for documenting entities, components and systems.
+ *
  * @{
  */
 

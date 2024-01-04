@@ -24953,7 +24953,7 @@ int ecs_app_set_frame_action(
 
 #ifdef FLECS_COREDOC
 
-#define URL_ROOT "https://www.flecs.dev/flecs/md_docs_Relationships.html/"
+#define URL_ROOT "https://www.flecs.dev/flecs/md_docs_2Relationships.html"
 
 void FlecsCoreDocImport(
     ecs_world_t *world)

@@ -88,3 +88,10 @@ code {
 html.light-mode #projectlogo img {
   content: url(logo_small_dark.png);
 }
+
+#nav-tree a:hover {
+    background: none !important;
+}
+#nav-tree a:hover > span.arrow {
+    background: none !important;
+}

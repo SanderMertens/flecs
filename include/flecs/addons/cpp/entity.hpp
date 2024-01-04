@@ -1,7 +1,7 @@
 /**
  * @file addons/cpp/entity.hpp
  * @brief Entity class.
- * 
+ *
  * This class provides read/write access to entities.
  */
 
@@ -12,9 +12,9 @@
 
 /**
  * @defgroup cpp_entities Entities
- * @brief Entity operations.
- * 
- * \ingroup cpp_core
+ * @ingroup cpp_core
+ * Entity operations.
+ *
  * @{
  */
 
@@ -23,7 +23,7 @@ namespace flecs
 
 /** Entity.
  * Class with read/write operations for entities.
- * 
+ *
  * \ingroup cpp_entities
 */
 struct entity : entity_builder<entity>
@@ -34,8 +34,8 @@ struct entity : entity_builder<entity>
      *
      * @param world The world in which to create the entity.
      */
-    explicit entity(world_t *world) 
-        : entity_builder() 
+    explicit entity(world_t *world)
+        : entity_builder()
     {
         m_world = world;
         m_id = ecs_new(world, 0);
@@ -60,9 +60,9 @@ struct entity : entity_builder<entity>
      * @param world The world in which to create the entity.
      * @param name The entity name.
      */
-    explicit entity(world_t *world, const char *name) 
+    explicit entity(world_t *world, const char *name)
         : entity_builder()
-    { 
+    {
         m_world = world;
 
         ecs_entity_desc_t desc = {};
@@ -72,11 +72,11 @@ struct entity : entity_builder<entity>
         m_id = ecs_entity_init(world, &desc);
     }
 
-    /** Conversion from flecs::entity_t to flecs::entity. 
-     * 
+    /** Conversion from flecs::entity_t to flecs::entity.
+     *
      * @param id The entity_t value to convert.
      */
-    explicit entity(entity_t id) 
+    explicit entity(entity_t id)
         : entity_builder( nullptr, id ) { }
 
     /** Get mutable component value.
@@ -114,7 +114,7 @@ struct entity : entity_builder<entity>
      * @tparam First The first part of the pair.
      * @tparam Second the second part of the pair.
      */
-    template <typename First, typename Second, typename P = pair<First, Second>, 
+    template <typename First, typename Second, typename P = pair<First, Second>,
         typename A = actual_type_t<P>, if_not_t< flecs::is_pair<First>::value> = 0>
     A* get_mut() const {
         return static_cast<A*>(ecs_get_mut_id(m_world, m_id, ecs_pair(
@@ -138,7 +138,7 @@ struct entity : entity_builder<entity>
 
     /** Get mutable pointer for a pair (untyped).
      * This operation gets the value for a pair from the entity. If neither the
-     * first nor second element of the pair is a component, the operation will 
+     * first nor second element of the pair is a component, the operation will
      * fail.
      *
      * @param first The first element of the pair.
@@ -160,7 +160,7 @@ struct entity : entity_builder<entity>
         ecs_assert(_::cpp_type<Second>::size() != 0, ECS_INVALID_PARAMETER, NULL);
         return static_cast<Second*>(
             ecs_get_mut_id(m_world, m_id, ecs_pair(first, second)));
-    }           
+    }
 
     /** Signal that component was modified.
      *
@@ -171,7 +171,7 @@ struct entity : entity_builder<entity>
         auto comp_id = _::cpp_type<T>::id(m_world);
         ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
         this->modified(comp_id);
-    } 
+    }
 
     /** Signal that the first element of a pair was modified.
      *
@@ -226,23 +226,23 @@ struct entity : entity_builder<entity>
         return ref<T>(m_world, m_id, _::cpp_type<T>::id(m_world));
     }
 
-    template <typename First, typename Second, typename P = flecs::pair<First, Second>, 
+    template <typename First, typename Second, typename P = flecs::pair<First, Second>,
         typename A = actual_type_t<P>>
     ref<A> get_ref() const {
-        return ref<A>(m_world, m_id, 
+        return ref<A>(m_world, m_id,
             ecs_pair(_::cpp_type<First>::id(m_world),
                 _::cpp_type<Second>::id(m_world)));
     }
 
     template <typename First>
     ref<First> get_ref(flecs::entity_t second) const {
-        return ref<First>(m_world, m_id, 
+        return ref<First>(m_world, m_id,
             ecs_pair(_::cpp_type<First>::id(m_world), second));
     }
 
     template <typename Second>
     ref<Second> get_ref_second(flecs::entity_t first) const {
-        return ref<Second>(m_world, m_id, 
+        return ref<Second>(m_world, m_id,
             ecs_pair(first, _::cpp_type<Second>::id(m_world)));
     }
 
@@ -272,7 +272,7 @@ struct entity : entity_builder<entity>
     /** Return entity as entity_view.
      * This returns an entity_view instance for the entity which is a readonly
      * version of the entity class.
-     * 
+     *
      * This is similar to a regular upcast, except that this method ensures that
      * the entity_view instance is instantiated with a world vs. a stage, which
      * a regular upcast does not guarantee.

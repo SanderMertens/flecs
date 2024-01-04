@@ -10,9 +10,9 @@ namespace flecs
 
 /**
  * @defgroup cpp_ref Refs
- * @brief Refs are a fast mechanism for referring to a specific entity/component.
- * 
- * \ingroup cpp_core
+ * @ingroup cpp_core
+ * Refs are a fast mechanism for referring to a specific entity/component.
+ *
  * @{
  */
 

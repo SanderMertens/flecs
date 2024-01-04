@@ -10,9 +10,9 @@ struct units {
 
 /**
  * @defgroup cpp_addons_units Units
- * @brief Common unit annotations for reflection framework.
- * 
- * \ingroup cpp_addons
+ * @ingroup cpp_addons
+ * Common unit annotations for reflection framework.
+ *
  * @{
  */
 
@@ -20,9 +20,9 @@ struct Prefixes { };
 
 /**
  * @defgroup cpp_addons_units_prefixes Prefixes
- * @brief Prefixes to indicate unit count (e.g. Kilo, Mega)
- * 
- * \ingroup cpp_addons_units
+ * @ingroup cpp_addons_units
+ * Prefixes to indicate unit count (e.g. Kilo, Mega)
+ *
  * @{
  */
 
@@ -59,9 +59,9 @@ struct Yobi { };
 
 /**
  * @defgroup cpp_addons_units_quantities Quantities
- * @brief Quantities that group units (e.g. Length)
- * 
- * \ingroup cpp_addons_units
+ * @ingroup cpp_addons_units
+ * Quantities that group units (e.g. Length)
+ *
  * @{
  */
 
@@ -87,8 +87,7 @@ struct Uri { };
 struct duration {
 /**
  * @defgroup cpp_addons_units_duration Duration
- * 
- * \ingroup cpp_addons_units
+ * @ingroup cpp_addons_units
  * @{
  */
 
@@ -107,8 +106,7 @@ struct Days { };
 struct angle {
 /**
  * @defgroup cpp_addons_units_angle Angle
- * 
- * \ingroup cpp_addons_units
+ * @ingroup cpp_addons_units
  * @{
  */
 
@@ -122,8 +120,7 @@ struct Degrees { };
 struct time {
 /**
  * @defgroup cpp_addons_units_time Time
- * 
- * \ingroup cpp_addons_units
+ * @ingroup cpp_addons_units
  * @{
  */
 
@@ -136,8 +133,7 @@ struct Date { };
 struct mass {
 /**
  * @defgroup cpp_addons_units_mass Mass
- * 
- * \ingroup cpp_addons_units
+ * @ingroup cpp_addons_units
  * @{
  */
 
@@ -151,8 +147,7 @@ struct KiloGrams { };
 struct electric_current {
 /**
  * @defgroup cpp_addons_units_electric_current Electric Current
- * 
- * \ingroup cpp_addons_units
+ * @ingroup cpp_addons_units
  * @{
  */
 
@@ -165,8 +160,7 @@ struct Ampere { };
 struct amount {
 /**
  * @defgroup cpp_addons_units_amount Amount
- * 
- * \ingroup cpp_addons_units
+ * @ingroup cpp_addons_units
  * @{
  */
 
@@ -179,8 +173,7 @@ struct Mole { };
 struct luminous_intensity {
 /**
  * @defgroup cpp_addons_units_luminous_intensity Luminous Intensity
- * 
- * \ingroup cpp_addons_units
+ * @ingroup cpp_addons_units
  * @{
  */
 
@@ -193,8 +186,7 @@ struct Candela { };
 struct force {
 /**
  * @defgroup cpp_addons_units_force Force
- * 
- * \ingroup cpp_addons_units
+ * @ingroup cpp_addons_units
  * @{
  */
 
@@ -207,8 +199,7 @@ struct Newton { };
 struct length {
 /**
  * @defgroup cpp_addons_units_length Length
- * 
- * \ingroup cpp_addons_units
+ * @ingroup cpp_addons_units
  * @{
  */
 
@@ -229,8 +220,7 @@ struct Pixels { };
 struct pressure {
 /**
  * @defgroup cpp_addons_units_pressure Pressure
- * 
- * \ingroup cpp_addons_units
+ * @ingroup cpp_addons_units
  * @{
  */
 
@@ -244,8 +234,7 @@ struct Bar { };
 struct speed {
 /**
  * @defgroup cpp_addons_units_speed Speed
- * 
- * \ingroup cpp_addons_units
+ * @ingroup cpp_addons_units
  * @{
  */
 
@@ -261,8 +250,7 @@ struct MilesPerHour { };
 struct temperature {
 /**
  * @defgroup cpp_addons_units_temperature Temperature
- * 
- * \ingroup cpp_addons_units
+ * @ingroup cpp_addons_units
  * @{
  */
 
@@ -277,8 +265,7 @@ struct Fahrenheit { };
 struct data {
 /**
  * @defgroup cpp_addons_units_data Data
- * 
- * \ingroup cpp_addons_units
+ * @ingroup cpp_addons_units
  * @{
  */
 
@@ -300,8 +287,7 @@ struct GibiBytes { };
 struct datarate {
 /**
  * @defgroup cpp_addons_units_datarate Data Rate
- * 
- * \ingroup cpp_addons_units
+ * @ingroup cpp_addons_units
  * @{
  */
 
@@ -321,8 +307,7 @@ struct GigaBytesPerSecond { };
 struct frequency {
 /**
  * @defgroup cpp_addons_units_frequency Frequency
- * 
- * \ingroup cpp_addons_units
+ * @ingroup cpp_addons_units
  * @{
  */
 
@@ -338,8 +323,7 @@ struct GigaHertz { };
 struct uri {
 /**
  * @defgroup cpp_addons_units_uri Uri
- * 
- * \ingroup cpp_addons_units
+ * @ingroup cpp_addons_units
  * @{
  */
 

@@ -5,27 +5,27 @@
  * Parse expression strings into component values. The notation is similar to
  * JSON but with a smaller footprint, native support for (large) integer types,
  * character types, enumerations, bitmasks and entity identifiers.
- * 
+ *
  * Examples:
- * 
+ *
  * Member names:
  *   {x: 10, y: 20}
- * 
+ *
  * No member names (uses member ordering):
  *   {10, 20}
- * 
+ *
  * Enum values:
  *   {color: Red}
- * 
+ *
  * Bitmask values:
  *   {toppings: Lettuce|Tomato}
- * 
+ *
  * Collections:
  *   {points: [10, 20, 30]}
- * 
+ *
  * Nested objects:
  *   {start: {x: 10, y: 20}, stop: {x: 30, y: 40}}
- * 
+ *
  */
 
 #ifdef FLECS_EXPR
@@ -47,15 +47,15 @@ extern "C" {
 
 /**
  * @defgroup c_addons_expr Expr
- * @brief Serialize/deserialize values to string.
- * 
- * \ingroup c_addons
+ * @ingroup c_addons
+ * Serialize/deserialize values to string.
+ *
  * @{
  */
 
 /** Write an escaped character.
  * Write a character to an output string, insert escape character if necessary.
- * 
+ *
  * @param out The string to write the character to.
  * @param in The input character.
  * @param delimiter The delimiter used (for example '"')
@@ -63,19 +63,19 @@ extern "C" {
  */
 FLECS_API
 char* ecs_chresc(
-    char *out, 
-    char in, 
+    char *out,
+    char in,
     char delimiter);
 
 /** Parse an escaped character.
  * Parse a character with a potential escape sequence.
- * 
+ *
  * @param in Pointer to character in input string.
  * @param out Output string.
  * @return Pointer to the character after the last one read.
- */ 
+ */
 const char* ecs_chrparse(
-    const char *in, 
+    const char *in,
     char *out);
 
 /** Write an escaped string.
@@ -83,7 +83,7 @@ const char* ecs_chrparse(
  * To determine the size of the output string, call the operation with a NULL
  * argument for 'out', and use the returned size to allocate a string that is
  * large enough.
- * 
+ *
  * @param out Pointer to output string (must be).
  * @param size Maximum number of characters written to output.
  * @param delimiter The delimiter used (for example '"').
@@ -92,22 +92,22 @@ const char* ecs_chrparse(
  */
 FLECS_API
 ecs_size_t ecs_stresc(
-    char *out, 
-    ecs_size_t size, 
-    char delimiter, 
+    char *out,
+    ecs_size_t size,
+    char delimiter,
     const char *in);
 
 /** Return escaped string.
  * Return escaped version of input string. Same as ecs_stresc, but returns an
  * allocated string of the right size.
- * 
+ *
  * @param delimiter The delimiter used (for example '"').
  * @param in The input string.
  * @return Escaped string.
  */
 FLECS_API
 char* ecs_astresc(
-    char delimiter, 
+    char delimiter,
     const char *in);
 
 /** Storage for parser variables. Variables make it possible to parameterize
@@ -159,7 +159,7 @@ ecs_expr_var_t* ecs_vars_declare(
     ecs_entity_t type);
 
 /** Declare variable in current scope from value.
- * This operation takes ownership of the value. The value pointer must be 
+ * This operation takes ownership of the value. The value pointer must be
  * allocated with ecs_value_new.
  */
 FLECS_API
@@ -179,8 +179,8 @@ typedef struct ecs_parse_expr_desc_t {
     const char *name;
     const char *expr;
     ecs_entity_t (*lookup_action)(
-        const ecs_world_t*, 
-        const char *value, 
+        const ecs_world_t*,
+        const char *value,
         void *ctx);
     void *lookup_ctx;
     ecs_vars_t *vars;
@@ -189,11 +189,11 @@ typedef struct ecs_parse_expr_desc_t {
 /** Parse expression into value.
  * This operation parses a flecs expression into the provided pointer. The
  * memory pointed to must be large enough to contain a value of the used type.
- * 
- * If no type and pointer are provided for the value argument, the operation 
- * will discover the type from the expression and allocate storage for the 
+ *
+ * If no type and pointer are provided for the value argument, the operation
+ * will discover the type from the expression and allocate storage for the
  * value. The allocated value must be freed with ecs_value_free.
- * 
+ *
  * @param world The world.
  * @param ptr The pointer to the expression to parse.
  * @param value The value containing type & pointer to write to.
@@ -208,9 +208,9 @@ const char* ecs_parse_expr(
     const ecs_parse_expr_desc_t *desc);
 
 /** Serialize value into expression string.
- * This operation serializes a value of the provided type to a string. The 
+ * This operation serializes a value of the provided type to a string. The
  * memory pointed to must be large enough to contain a value of the used type.
- * 
+ *
  * @param world The world.
  * @param type The type of the value to serialize.
  * @param data The value to serialize.
@@ -224,7 +224,7 @@ char* ecs_ptr_to_expr(
 
 /** Serialize value into expression buffer.
  * Same as ecs_ptr_to_expr, but serializes to an ecs_strbuf_t instance.
- * 
+ *
  * @param world The world.
  * @param type The type of the value to serialize.
  * @param data The value to serialize.
@@ -238,12 +238,12 @@ int ecs_ptr_to_expr_buf(
     const void *data,
     ecs_strbuf_t *buf);
 
-/** Similar as ecs_ptr_to_expr, but serializes values to string. 
+/** Similar as ecs_ptr_to_expr, but serializes values to string.
  * Whereas the output of ecs_ptr_to_expr is a valid expression, the output of
  * ecs_ptr_to_str is a string representation of the value. In most cases the
  * output of the two operations is the same, but there are some differences:
  * - Strings are not quoted
- * 
+ *
  * @param world The world.
  * @param type The type of the value to serialize.
  * @param data The value to serialize.
@@ -257,7 +257,7 @@ char* ecs_ptr_to_str(
 
 /** Serialize value into string buffer.
  * Same as ecs_ptr_to_str, but serializes to an ecs_strbuf_t instance.
- * 
+ *
  * @param world The world.
  * @param type The type of the value to serialize.
  * @param data The value to serialize.
@@ -275,7 +275,7 @@ int ecs_ptr_to_str_buf(
  * Serializes a primitive value to an ecs_strbuf_t instance. This operation can
  * be reused by other serializers to avoid having to write boilerplate code that
  * serializes primitive values to a string.
- * 
+ *
  * @param world The world.
  * @param kind The kind of primitive value.
  * @param data The value ot serialize
@@ -286,13 +286,13 @@ FLECS_API
 int ecs_primitive_to_expr_buf(
     const ecs_world_t *world,
     ecs_primitive_kind_t kind,
-    const void *data, 
+    const void *data,
     ecs_strbuf_t *buf);
 
 /** Parse expression token.
  * Expression tokens can contain more characters (such as '|') than tokens
  * parsed by the query (term) parser.
- * 
+ *
  * @param name The name of the expression (used for debug logs).
  * @param expr The full expression (used for debug logs).
  * @param ptr The pointer to the expression to parse.
@@ -311,9 +311,9 @@ const char *ecs_parse_expr_token(
  * their evaluated result. Supported expression formats are:
  *  - $variable_name
  *  - {expression}
- * 
+ *
  * The $, { and } characters can be escaped with a backslash (\).
- * 
+ *
  * @param world The world.
  * @param str The string to evaluate.
  * @param vars The variables to use for evaluation.
@@ -324,34 +324,34 @@ char* ecs_interpolate_string(
     const char *str,
     const ecs_vars_t *vars);
 
-/** Convert iterator to vars 
+/** Convert iterator to vars
  * This operation converts an iterator to a variable array. This allows for
- * using iterator results in expressions. The operation only converts a 
+ * using iterator results in expressions. The operation only converts a
  * single result at a time, and does not progress the iterator.
- * 
+ *
  * Iterator fields with data will be made available as variables with as name
  * the field index (e.g. "$1"). The operation does not check if reflection data
  * is registered for a field type. If no reflection data is registered for the
  * type, using the field variable in expressions will fail.
- * 
- * Field variables will only contain single elements, even if the iterator 
+ *
+ * Field variables will only contain single elements, even if the iterator
  * returns component arrays. The offset parameter can be used to specify which
  * element in the component arrays to return. The offset parameter must be
  * smaller than it->count.
- * 
+ *
  * The operation will create a variable for query variables that contain a
  * single entity.
- * 
+ *
  * The operation will attempt to use existing variables. If a variable does not
  * yet exist, the operation will create it. If an existing variable exists with
  * a mismatching type, the operation will fail.
- * 
+ *
  * Accessing variables after progressing the iterator or after the iterator is
  * destroyed will result in undefined behavior.
- * 
+ *
  * If vars contains a variable that is not present in the iterator, the variable
  * will not be modified.
- * 
+ *
  * @param it The iterator to convert to variables.
  * @param vars The variables to write to.
  * @param offset The offset to the current element.

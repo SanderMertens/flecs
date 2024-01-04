@@ -10,9 +10,9 @@
 
 /**
  * @defgroup c_addons_monitor Monitor
- * @brief The monitor addon periodically tracks statistics for the world and systems.
- * 
- * \ingroup c_addons
+ * @ingroup c_addons
+ * The monitor addon periodically tracks statistics for the world and systems.
+ *
  * @{
  */
 
@@ -48,7 +48,7 @@ typedef struct {
 } EcsStatsHeader;
 
 typedef struct {
-    EcsStatsHeader hdr; 
+    EcsStatsHeader hdr;
     ecs_world_stats_t stats;
 } EcsWorldStats;
 

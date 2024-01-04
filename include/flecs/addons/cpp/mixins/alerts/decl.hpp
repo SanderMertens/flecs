@@ -9,9 +9,9 @@ namespace flecs {
 
 /**
  * @defgroup cpp_addons_alerts Alerts
- * @brief Alert implementation.
- * 
- * \ingroup cpp_addons
+ * @ingroup cpp_addons
+ * Alert implementation.
+ *
  * @{
  */
 
