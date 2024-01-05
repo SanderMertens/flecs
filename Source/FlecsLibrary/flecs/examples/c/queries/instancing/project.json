@@ -1,0 +1,10 @@
+{
+    "id": "instancing",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "public": false
+    }
+}

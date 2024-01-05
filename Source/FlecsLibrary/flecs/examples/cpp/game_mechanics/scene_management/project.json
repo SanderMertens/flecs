@@ -1,0 +1,11 @@
+{
+    "id": "scene_management",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "public": false,
+        "language": "c++"
+    }
+}

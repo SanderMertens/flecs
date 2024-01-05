@@ -1,0 +1,11 @@
+{
+    "id": "world_ser_deser",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "language": "c++",
+        "public": false
+    }
+}

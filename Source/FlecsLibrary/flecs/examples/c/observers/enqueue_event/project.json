@@ -1,0 +1,9 @@
+{
+    "id": "enqueue_event",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ]
+    }
+}

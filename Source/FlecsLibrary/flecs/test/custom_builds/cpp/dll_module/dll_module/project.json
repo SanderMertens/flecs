@@ -1,0 +1,10 @@
+{
+    "id": "dll_module",
+    "type": "package",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "language": "c++"
+    }
+}

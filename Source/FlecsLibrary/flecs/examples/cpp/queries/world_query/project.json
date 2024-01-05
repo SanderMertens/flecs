@@ -1,0 +1,11 @@
+{
+    "id": "world_query",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "language": "c++",
+        "public": false
+    }
+}

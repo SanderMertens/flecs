@@ -1,0 +1,11 @@
+{
+    "id": "ser_std_string",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "language": "c++",
+        "public": false
+    }
+}

@@ -1,0 +1,10 @@
+{
+    "id": "sorting",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "public": false
+    }
+}

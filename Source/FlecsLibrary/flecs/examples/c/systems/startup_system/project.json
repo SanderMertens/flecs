@@ -1,0 +1,10 @@
+{
+    "id": "startup_system",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "public": false
+    }
+}

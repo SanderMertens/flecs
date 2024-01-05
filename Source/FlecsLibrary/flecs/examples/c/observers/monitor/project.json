@@ -1,0 +1,10 @@
+{
+    "id": "monitor",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "public": false
+    }
+}

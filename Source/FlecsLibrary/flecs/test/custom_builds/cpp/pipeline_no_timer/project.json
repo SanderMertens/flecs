@@ -1,0 +1,25 @@
+{
+    "id": "pipeline_no_timer",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "public": false,
+        "standalone": true,
+        "language": "c++"
+    },
+    "lang.cpp": {
+        "defines": [
+            "FLECS_CUSTOM_BUILD", 
+            "FLECS_STATS", 
+            "FLECS_CPP", 
+            "FLECS_MODULE", 
+            "FLECS_SYSTEM",
+            "FLECS_PIPELINE", 
+            "FLECS_EXPR", 
+            "FLECS_PARSER", 
+            "FLECS_LOG"
+        ]
+    }
+}

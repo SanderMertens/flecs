@@ -1,0 +1,11 @@
+{
+    "id": "basics",
+    "type": "application",
+    "value": {
+        "description": "A simple hello world flecs application",
+        "use": [
+            "flecs"
+        ],
+        "public": false
+    }
+}

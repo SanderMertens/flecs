@@ -1,0 +1,10 @@
+{
+    "id": "custom_phases_no_builtin",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "public": false
+    }
+}

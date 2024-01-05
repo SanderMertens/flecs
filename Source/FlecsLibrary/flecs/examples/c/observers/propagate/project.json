@@ -1,0 +1,10 @@
+{
+    "id": "propagate",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "public": false
+    }
+}
