@@ -737,3 +737,52 @@ void Event_enqueue_entity_event_w_payload(void) {
 
     test_int(count, 1);
 }
+
+void Event_enqueue_entity_from_readonly_world(void) {
+    flecs::world ecs;
+    
+    int32_t count = 0;
+
+    flecs::entity evt = ecs.entity();
+    flecs::entity id_a = ecs.entity();
+    flecs::entity e1 = ecs.entity().add(id_a);
+
+    e1.observe(evt, [&]() {
+        count ++;
+    });
+
+    ecs.readonly_begin();
+
+    e1.enqueue(evt);
+
+    test_int(count, 0);
+
+    ecs.readonly_end();
+
+    test_int(count, 1);
+}
+
+void Event_enqueue_entity_w_payload_from_readonly_world(void) {
+    flecs::world ecs;
+    
+    int32_t count = 0;
+
+    flecs::entity id_a = ecs.entity();
+    flecs::entity e1 = ecs.entity().add(id_a);
+
+    e1.observe<Position>([&](Position& p) {
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+        count ++;
+    });
+
+    ecs.readonly_begin();
+
+    e1.enqueue<Position>({10, 20});
+
+    test_int(count, 0);
+
+    ecs.readonly_end();
+
+    test_int(count, 1);
+}

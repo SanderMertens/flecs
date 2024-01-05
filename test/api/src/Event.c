@@ -1428,3 +1428,41 @@ void Event_enqueue_custom_after_large_cmd(void) {
 
     ecs_fini(world);
 }
+
+void Event_enqueue_on_readonly_world(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t evt = ecs_new_id(world);
+    ecs_entity_t id = ecs_new_id(world);
+    ecs_entity_t e = ecs_new_w_id(world, id);
+
+    Probe ctx = {0};
+
+    ecs_entity_t s = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .filter.terms[0].id = id,
+        .events = {evt},
+        .callback = system_callback,
+        .ctx = &ctx
+    });
+
+    ecs_readonly_begin(world);
+
+    ecs_enqueue(world, &(ecs_event_desc_t){
+        .event = evt,
+        .ids = &(ecs_type_t){.count = 1, .array = (ecs_id_t[]){ id }},
+        .entity = e
+    });
+
+    test_int(ctx.invoked, 0);
+
+    ecs_readonly_end(world);
+
+    test_int(ctx.invoked, 1);
+    test_assert(ctx.system == s);
+    test_assert(ctx.event == evt);
+    test_assert(ctx.event_id == id);
+    test_int(ctx.count, 1);
+    test_assert(ctx.e[0] == e);
+
+    ecs_fini(world);
+}
