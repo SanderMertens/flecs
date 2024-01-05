@@ -5,18 +5,24 @@ public class FlecsLibrary : ModuleRules
 {
     public FlecsLibrary(ReadOnlyTargetRules Target) : base(Target)
     {
-        PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
+        PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+
+        Type = ModuleType.External;
+        CppStandard = CppStandardVersion.Latest;
+        CStandard = CStandardVersion.Latest;
+        
+        AppendStringToPublicDefinition("flecs_EXPORTS", "0");
         
         PublicIncludePaths.AddRange(
             new string[] {
                 ModuleDirectory,
-                ModuleDirectory + "/include",
+                ModuleDirectory + "/include"
             }
         );
         
         PrivateIncludePaths.AddRange(
             new string[] {
-                ModuleDirectory + "/src",
+                
             }
         );
 
