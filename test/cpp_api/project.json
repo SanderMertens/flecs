@@ -483,7 +483,8 @@
                 "table_get",
                 "range_get",
                 "randomize_timers",
-                "optional_pair_term"
+                "optional_pair_term",
+                "singleton_tick_source"
             ]
         }, {
             "id": "Event",

@@ -8,6 +8,10 @@
  * \ingroup cpp_addons_timer
  */
 
+/** Find or register a singleton timer. */
+template <typename T>
+flecs::timer timer() const;
+
 /** Find or register a timer. */
 template <typename... Args>
 flecs::timer timer(Args &&... args) const;

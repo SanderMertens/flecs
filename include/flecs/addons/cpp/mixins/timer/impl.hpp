@@ -43,6 +43,11 @@ struct timer final : entity {
     }
 };
 
+template <typename T>
+inline flecs::timer world::timer() const {
+    return flecs::timer(m_world, _::cpp_type<T>::id(m_world));
+}
+
 template <typename... Args>
 inline flecs::timer world::timer(Args &&... args) const {
     return flecs::timer(m_world, FLECS_FWD(args)...);
@@ -78,6 +83,11 @@ inline void system::start() {
 
 inline void system::stop() {
     ecs_stop_timer(m_world, m_id);
+}
+
+template<typename T>
+inline void system::set_tick_source() {
+    ecs_set_tick_source(m_world, m_id, _::cpp_type<T>::id(m_world));
 }
 
 inline void system::set_tick_source(flecs::entity e) {

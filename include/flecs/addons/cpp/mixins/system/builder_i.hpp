@@ -110,6 +110,17 @@ public:
     /** Set tick source.
      * This operation sets a shared tick source for the system.
      *
+     * @tparam T The type associated with the singleton tick source to use for the system.
+     */
+    template<typename T>
+    Base& tick_source() {
+        m_desc->tick_source = _::cpp_type<T>::id(world_v());
+        return *this;
+    }
+
+    /** Set tick source.
+     * This operation sets a shared tick source for the system.
+     *
      * @param tick_source The tick source to use for the system.
      */
     Base& tick_source(flecs::entity_t tick_source) {

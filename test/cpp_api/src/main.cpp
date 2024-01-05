@@ -466,6 +466,7 @@ void System_table_get(void);
 void System_range_get(void);
 void System_randomize_timers(void);
 void System_optional_pair_term(void);
+void System_singleton_tick_source(void);
 
 // Testsuite 'Event'
 void Event_evt_1_id_entity(void);
@@ -3134,6 +3135,10 @@ bake_test_case System_testcases[] = {
     {
         "optional_pair_term",
         System_optional_pair_term
+    },
+    {
+        "singleton_tick_source",
+        System_singleton_tick_source
     }
 };
 
@@ -6551,7 +6556,7 @@ static bake_test_suite suites[] = {
         "System",
         NULL,
         NULL,
-        68,
+        69,
         System_testcases
     },
     {
