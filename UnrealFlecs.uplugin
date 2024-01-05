@@ -13,6 +13,7 @@
 	"IsBetaVersion": true,
 	"IsExperimentalVersion": false,
 	"Installed": false,
+	"CanBeUsedWithUnrealHeaderTool": false,
 	"Modules": [
 		{
 			"Name": "UnrealFlecs",
@@ -22,7 +23,7 @@
 		{
 			"Name": "FlecsLibrary",
 			"Type": "Default",
-			"LoadingPhase": "PreDefault"
+			"LoadingPhase": "Default"
 		}
 	]
 }

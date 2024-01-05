@@ -7,7 +7,13 @@ public class FlecsLibrary : ModuleRules
     {
         Type = ModuleType.External;
 
-        PublicIncludePaths.Add(Path.Combine(ModuleDirectory, "flecs", "include"));
+        PublicIncludePaths.AddRange(
+            new string[] {
+            ModuleDirectory,
+            ModuleDirectory + "/flecs/include"
+            }
+        );
+        
         AppendStringToPublicDefinition("flecs_EXPORTS", "0");
         
         PublicIncludePaths.AddRange(
