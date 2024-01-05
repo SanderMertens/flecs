@@ -12571,7 +12571,8 @@ ecs_iter_t flecs_filter_iter_w_flags(
         .terms = filter ? filter->terms : NULL,
         .next = ecs_filter_next,
         .flags = flags,
-        .sizes = filter->sizes
+        .sizes = filter->sizes,
+        .system = filter->entity
     };
 
     ecs_filter_iter_t *iter = &it.priv.iter.filter;
@@ -12649,7 +12650,8 @@ ecs_iter_t ecs_filter_chain_iter(
         .real_world = chain_it->real_world,
         .chain_it = ECS_CONST_CAST(ecs_iter_t*, chain_it),
         .next = ecs_filter_next,
-        .sizes = filter->sizes
+        .sizes = filter->sizes,
+        .system = filter->entity
     };
 
     flecs_iter_init(chain_it->world, &it, flecs_iter_cache_all);
@@ -19748,7 +19750,8 @@ ecs_iter_t ecs_query_iter(
         .variable_count = 1,
         .priv.iter.query = it,
         .next = ecs_query_next,
-        .set_var = flecs_query_set_var
+        .set_var = flecs_query_set_var,
+        .system = query->filter.entity
     };
 
     flecs_filter_apply_iter_flags(&result, &query->filter);
@@ -65839,6 +65842,7 @@ ecs_iter_t ecs_rule_iter(
     it.fini = flecs_rule_iter_fini;
     it.field_count = rule->filter.field_count;
     it.sizes = rule->filter.sizes;
+    it.system = rule->filter.entity;
     flecs_filter_apply_iter_flags(&it, &rule->filter);
 
     flecs_iter_init(world, &it, 

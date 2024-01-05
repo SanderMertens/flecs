@@ -2710,6 +2710,7 @@ ecs_iter_t ecs_rule_iter(
     it.fini = flecs_rule_iter_fini;
     it.field_count = rule->filter.field_count;
     it.sizes = rule->filter.sizes;
+    it.system = rule->filter.entity;
     flecs_filter_apply_iter_flags(&it, &rule->filter);
 
     flecs_iter_init(world, &it, 

@@ -2286,7 +2286,8 @@ ecs_iter_t ecs_query_iter(
         .variable_count = 1,
         .priv.iter.query = it,
         .next = ecs_query_next,
-        .set_var = flecs_query_set_var
+        .set_var = flecs_query_set_var,
+        .system = query->filter.entity
     };
 
     flecs_filter_apply_iter_flags(&result, &query->filter);
