@@ -2264,3 +2264,26 @@ void System_optional_pair_term(void) {
     test_int(1, with_pair);
     test_int(1, without_pair);
 }
+
+void System_singleton_tick_source(void) {
+    flecs::world ecs;
+
+    ecs.timer<TagA>().timeout(1.5);
+
+    int32_t sys_invoked = 0;
+
+    ecs.system()
+        .tick_source<TagA>()
+        .iter([&](flecs::iter& it) {
+            sys_invoked ++;
+        });
+
+    ecs.progress(1.0);
+    test_int(0, sys_invoked);
+
+    ecs.progress(1.0);
+    test_int(1, sys_invoked);
+
+    ecs.progress(2.0);
+    test_int(1, sys_invoked);
+}
