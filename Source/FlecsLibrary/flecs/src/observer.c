@@ -189,7 +189,7 @@ void flecs_unregister_observer_for_id(
         ecs_event_id_record_t *idt = flecs_event_id_record_get(er, term_id);
         ecs_assert(idt != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        ecs_map_t *id_observers = ECS_OFFSET(idt, offset);
+        ecs_map_t *id_observers = static_cast<ecs_map_t*>(ECS_OFFSET(idt, offset));
         ecs_map_remove(id_observers, observer->filter.entity);
         if (!ecs_map_count(id_observers)) {
             ecs_map_fini(id_observers);
@@ -330,11 +330,11 @@ void flecs_observer_invoke(
 
 static
 void flecs_default_uni_observer_run_callback(ecs_iter_t *it) {
-    ecs_observer_t *o = it->ctx;
+    ecs_observer_t *o = static_cast<ecs_observer_t*>(it->ctx);
     it->ctx = o->ctx;
     it->callback = o->callback;
 
-    if (ecs_should_log_3()) {
+    if constexpr (ecs_should_log_3()) {
         char *path = ecs_get_fullpath(it->world, it->system);
         ecs_dbg_3("observer %s", path);
         ecs_os_free(path);
@@ -417,7 +417,7 @@ void flecs_observers_invoke(
 
 static
 bool flecs_multi_observer_invoke(ecs_iter_t *it) {
-    ecs_observer_t *o = it->ctx;
+    ecs_observer_t *o = static_cast<ecs_observer_t*>(it->ctx);
     ecs_world_t *world = it->real_world;
 
     if (o->last_event_id[0] == world->event_id) {
@@ -520,7 +520,7 @@ done:
 }
 
 bool ecs_observer_default_run_action(ecs_iter_t *it) {
-    ecs_observer_t *o = it->ctx;
+    ecs_observer_t *o = static_cast<ecs_observer_t*>(it->ctx);
     if (o->is_multi) {
         return flecs_multi_observer_invoke(it);
     } else {
@@ -553,7 +553,7 @@ bool flecs_default_observer_next_callback(ecs_iter_t *it) {
 /* Run action for children of multi observer */
 static
 void flecs_multi_observer_builtin_run(ecs_iter_t *it) {
-    ecs_observer_t *observer = it->ctx;
+    ecs_observer_t *observer = static_cast<ecs_observer_t*>(it->ctx);
     ecs_run_action_t run = observer->run;
 
     if (run) {

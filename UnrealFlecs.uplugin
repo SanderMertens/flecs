@@ -16,13 +16,13 @@
 	"CanBeUsedWithUnrealHeaderTool": false,
 	"Modules": [
 		{
-			"Name": "UnrealFlecs",
-			"Type": "Runtime",
+			"Name": "FlecsLibrary",
+			"Type": "Default",
 			"LoadingPhase": "Default"
 		},
 		{
-			"Name": "FlecsLibrary",
-			"Type": "Default",
+			"Name": "UnrealFlecs",
+			"Type": "Runtime",
 			"LoadingPhase": "Default"
 		}
 	]

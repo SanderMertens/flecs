@@ -22,7 +22,7 @@ ecs_id_record_elem_t* flecs_id_record_elem(
     ecs_id_record_elem_t *list,
     ecs_id_record_t *idr)
 {
-    return ECS_OFFSET(idr, (uintptr_t)list - (uintptr_t)head);
+    return static_cast<ecs_id_record_elem_t*>(ECS_OFFSET(idr, (uintptr_t)list - (uintptr_t)head));
 }
 
 static

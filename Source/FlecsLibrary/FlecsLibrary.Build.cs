@@ -1,25 +1,20 @@
-﻿using System.IO;
+﻿
 using UnrealBuildTool;
 
 public class FlecsLibrary : ModuleRules
 {
     public FlecsLibrary(ReadOnlyTargetRules Target) : base(Target)
     {
+        PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
+        
         Type = ModuleType.External;
-
-        PublicIncludePaths.AddRange(
-            new string[] {
-            ModuleDirectory,
-            ModuleDirectory + "/flecs/include"
-            }
-        );
         
         AppendStringToPublicDefinition("flecs_EXPORTS", "0");
         
         PublicIncludePaths.AddRange(
             new string[] {
                 ModuleDirectory,
-                ModuleDirectory + "/include"
+                ModuleDirectory + "/flecs/include"
             }
         );
         

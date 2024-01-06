@@ -336,8 +336,8 @@ void ecs_os_api_free(void *ptr) {
 static
 char* ecs_os_api_strdup(const char *str) {
     if (str) {
-        int len = ecs_os_strlen(str);
-        char *result = ecs_os_malloc(len + 1);
+        const int len = ecs_os_strlen(str);
+        char *result = static_cast<char*>(ecs_os_malloc(len + 1));
         ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
         ecs_os_strcpy(result, str);
         return result;
@@ -356,8 +356,8 @@ void ecs_os_strset(char **str, const char *value) {
 static
 char *module_file_base(const char *module, char sep) {
     char *base = ecs_os_strdup(module);
-    ecs_size_t i, len = ecs_os_strlen(base);
-    for (i = 0; i < len; i ++) {
+    ecs_size_t len = ecs_os_strlen(base);
+    for (ecs_size_t i = 0; i < len; i ++) {
         if (base[i] == '.') {
             base[i] = sep;
         }
