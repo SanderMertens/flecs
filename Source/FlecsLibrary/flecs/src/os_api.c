@@ -140,7 +140,7 @@ void flecs_log_msg(
                 fputs(" ", stream);
             }
             char time_buf[20];
-            ecs_os_sprintf(time_buf, "%u", (uint32_t)delta);
+            ecs_os_sprintf(time_buf, "%u", static_cast<uint32_t>(delta));
             fputs("+", stream);
             fputs(time_buf, stream);
             fputs(" ", stream);
@@ -154,7 +154,7 @@ void flecs_log_msg(
             now = time(NULL);
         }
         char time_buf[20];
-        ecs_os_sprintf(time_buf, "%u", (uint32_t)now);
+        ecs_os_sprintf(time_buf, "%u", static_cast<uint32_t>(now));
         fputs(time_buf, stream);
         fputs(" ", stream);
     }

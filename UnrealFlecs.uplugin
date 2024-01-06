@@ -25,5 +25,11 @@
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
 		}
+	],
+	"Plugins": [
+		{
+			"Name": "SolidMacros",
+			"Enabled": true
+		}
 	]
 }

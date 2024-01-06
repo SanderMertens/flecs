@@ -26,7 +26,8 @@ public class UnrealFlecs : ModuleRules
 			new string[]
 			{
 				"Core",
-				"FlecsLibrary"
+				"FlecsLibrary",
+				"SolidMacros"
 			}
 			);
 			
