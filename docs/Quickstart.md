@@ -110,7 +110,7 @@ Addon         | Description                                      | Define       
 --------------|--------------------------------------------------|---------------------|
 [Cpp](/flecs/group__cpp.html)                              | C++11 API                                        | FLECS_CPP           |
 [Module](/flecs/group__c__addons__module.html)             | Organize game logic into reusable modules        | FLECS_MODULE        |
-[System](flecs/group__c__addons__system.html)              | Create & run systems                             | FLECS_SYSTEM        |
+[System](/flecs/group__c__addons__system.html)             | Create & run systems                             | FLECS_SYSTEM        |
 [Pipeline](/flecs/group__c__addons__pipeline.html)         | Automatically schedule & multithread systems     | FLECS_PIPELINE      |
 [Timer](/flecs/group__c__addons__timer.html)               | Run systems at time intervals or at a rate       | FLECS_TIMER         |
 [Meta](/flecs/group__c__addons__meta.html)                 | Flecs reflection system                          | FLECS_META          |
