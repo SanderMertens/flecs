@@ -140,7 +140,10 @@ struct entity_view : public id {
 
     /** Iterate (component) ids of an entity.
      * The function parameter must match the following signature:
-     *   void(*)(flecs::id id)
+     *
+     * @code
+     * void(*)(flecs::id id)
+     * @endcode
      *
      * @param func The function invoked for each id.
      */
@@ -149,7 +152,10 @@ struct entity_view : public id {
 
     /** Iterate matching pair ids of an entity.
      * The function parameter must match the following signature:
-     *   void(*)(flecs::id id)
+     *
+     * @code
+     * void(*)(flecs::id id)
+     * @endcode
      *
      * @param func The function invoked for each id.
      */
@@ -158,7 +164,10 @@ struct entity_view : public id {
 
     /** Iterate targets for a given relationship.
      * The function parameter must match the following signature:
-     *   void(*)(flecs::entity target)
+     *
+     * @code
+     * void(*)(flecs::entity target)
+     * @endcode
      *
      * @param rel The relationship for which to iterate the targets.
      * @param func The function invoked for each target.
@@ -168,7 +177,10 @@ struct entity_view : public id {
 
     /** Iterate targets for a given relationship.
      * The function parameter must match the following signature:
-     *   void(*)(flecs::entity target)
+     *
+     * @code
+     * void(*)(flecs::entity target)
+     * @endcode
      *
      * @tparam First The relationship for which to iterate the targets.
      * @param func The function invoked for each target.     
@@ -180,7 +192,10 @@ struct entity_view : public id {
 
     /** Iterate children for entity.
      * The function parameter must match the following signature:
-     *   void(*)(flecs::entity target)
+     *
+     * @code
+     * void(*)(flecs::entity target)
+     * @endcode
      *
      * @param rel The relationship to follow.
      * @param func The function invoked for each child.     
@@ -221,7 +236,10 @@ struct entity_view : public id {
 
     /** Iterate children for entity.
      * The function parameter must match the following signature:
-     *   void(*)(flecs::entity target)
+     *
+     * @code
+     * void(*)(flecs::entity target)
+     * @endcode
      *
      * @tparam Rel The relationship to follow.
      * @param func The function invoked for each child.     
@@ -233,7 +251,10 @@ struct entity_view : public id {
 
     /** Iterate children for entity.
      * The function parameter must match the following signature:
-     *   void(*)(flecs::entity target)
+     *
+     * @code
+     * void(*)(flecs::entity target)
+     * @endcode
      * 
      * This operation follows the ChildOf relationship.
      *
@@ -354,13 +375,16 @@ struct entity_view : public id {
      * function will write-lock the table (see ecs_write_begin).
      * 
      * Example:
-     *   e.get([](Position& p, Velocity& v) { // write lock
-     *     p.x += v.x;
-     *   });
+     *
+     * @code
+     * e.get([](Position& p, Velocity& v) { // write lock
+     *   p.x += v.x;
+     * });
      * 
-     *   e.get([](const Position& p) {        // read lock
-     *     std::cout << p.x << std::endl;
-     *   });
+     * e.get([](const Position& p) {        // read lock
+     *   std::cout << p.x << std::endl;
+     * });
+     * @endcode
      *
      * @param func The callback to invoke.
      * @return True if the entity has all components, false if not.
@@ -433,8 +457,10 @@ struct entity_view : public id {
      * This operation can be used to lookup, for example, which prefab is providing
      * a component by specifying the IsA pair:
      * 
-     *   // Is Position provided by the entity or one of its base entities?
-     *   ecs_get_target_for_id(world, entity, EcsIsA, ecs_id(Position))
+     * @code
+     * // Is Position provided by the entity or one of its base entities?
+     * ecs_get_target_for_id(world, entity, EcsIsA, ecs_id(Position))
+     * @endcode
      * 
      * @param relationship The relationship to follow.
      * @param id The id to lookup.

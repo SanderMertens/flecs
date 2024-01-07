@@ -107,9 +107,16 @@ void ecs_doc_set_color(
  * return the entity name.
  *
  * To test if an entity has a human readable name, use:
- *   ecs_has_pair(world, e, ecs_id(EcsDescription), EcsName);
+ *
+ * @code
+ * ecs_has_pair(world, e, ecs_id(EcsDescription), EcsName);
+ * @endcode
+ *
  * Or in C++:
- *   e.has<flecs::Description>(flecs::Name);
+ *
+ * @code
+ * e.has<flecs::Description>(flecs::Name);
+ * @endcode
  *
  * @param world The world.
  * @param entity The entity from which to get the name.

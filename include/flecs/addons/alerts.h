@@ -88,8 +88,9 @@ typedef struct ecs_alert_desc_t {
      * the template expressions is as specified by ecs_interpolate_string.
      *
      * Examples:
-     *   "$this has Position but not Velocity"
-     *   "$this has a parent entity $parent without Position"
+     *
+     *     "$this has Position but not Velocity"
+     *     "$this has a parent entity $parent without Position"
      */
     const char *message;
 

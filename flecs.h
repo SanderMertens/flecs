@@ -138,7 +138,11 @@
  * Note that addons can have dependencies on each other. Addons will
  * automatically enable their dependencies. To see the list of addons that was
  * compiled in a build, enable tracing before creating the world by doing:
- *   ecs_log_set_level(0);
+ *
+ * @code
+ * ecs_log_set_level(0);
+ * @endcode
+ *
  * which outputs the full list of addons Flecs was compiled with.
  */
 // #define FLECS_CUSTOM_BUILD
@@ -2633,7 +2637,8 @@ typedef struct ecs_query_t ecs_query_t;
  * Rules are fast uncached queries with support for advanced graph features such
  * as the usage of query variables. A simple example of a rule that matches all
  * spaceship entities docked to a planet:
- *   SpaceShip, (DockedTo, $planet), Planet($planet)
+ *
+ *     SpaceShip, (DockedTo, $planet), Planet($planet)
  *
  * Here, the rule traverses the DockedTo relationship, and matches Planet on the
  * target of this relationship. Through the usage of variables rules can match
@@ -2656,11 +2661,13 @@ typedef struct ecs_rule_t ecs_rule_t;
  * a list of event kinds that should be listened for. An example of an observer
  * that triggers when a Position component is added to an entity (in C++):
  *
- *   world.observer<Position>()
- *     .event(flecs::OnAdd)
- *     .each([](Position& p) {
- *       // called when Position is added to an entity
- *     });
+ * @code
+ * world.observer<Position>()
+ *   .event(flecs::OnAdd)
+ *   .each([](Position& p) {
+ *     // called when Position is added to an entity
+ *   });
+ * @endcode
  *
  * Observer queries can be as complex as filters. Observers only trigger when
  * the source of the event matches the full observer query. For example, an
@@ -4657,12 +4664,14 @@ void ecs_set_target_fps(
  * mutating ECS operations. Failing to do so will throw a readonly assert. A
  * world typically has more than one stage when using threads. An example:
  *
+ * @code
  * ecs_set_stage_count(world, 2);
  * ecs_stage_t *stage = ecs_get_stage(world, 1);
  *
  * ecs_readonly_begin(world);
  * ecs_add(world, e, Tag); // readonly assert
  * ecs_add(stage, e, Tag); // OK
+ * @endcode
  *
  * @param world The world
  * @return Whether world is in readonly mode.
@@ -5088,7 +5097,10 @@ ecs_entity_t ecs_get_entity(
 
 /** Test if pointer is of specified type.
  * Usage:
- *   ecs_poly_is(ptr, ecs_world_t)
+ *
+ * @code
+ * ecs_poly_is(ptr, ecs_world_t)
+ * @endcode
  *
  * This operation only works for poly types.
  *
@@ -5361,7 +5373,10 @@ void ecs_remove_id(
  * inherited (reachable through an IsA relationship).
  *
  * This operation is equivalent to doing:
- *   ecs_add_id(world, entity, ECS_OVERRIDE | id);
+ *
+ * @code
+ * ecs_add_id(world, entity, ECS_OVERRIDE | id);
+ * @endcode
  *
  * @param world The world.
  * @param entity The entity.
@@ -5801,14 +5816,16 @@ bool ecs_is_valid(
  * the original id in that they have a different generation count. This makes it
  * possible for the API to distinguish between the two. An example:
  *
- *   ecs_entity_t e1 = ecs_new_id(world);
- *   ecs_is_alive(world, e1);             // true
- *   ecs_delete(world, e1);
- *   ecs_is_alive(world, e1);             // false
+ * @code
+ * ecs_entity_t e1 = ecs_new_id(world);
+ * ecs_is_alive(world, e1);             // true
+ * ecs_delete(world, e1);
+ * ecs_is_alive(world, e1);             // false
  *
- *   ecs_entity_t e2 = ecs_new_id(world); // recycles e1
- *   ecs_is_alive(world, e2);             // true
- *   ecs_is_alive(world, e1);             // false
+ * ecs_entity_t e2 = ecs_new_id(world); // recycles e1
+ * ecs_is_alive(world, e2);             // true
+ * ecs_is_alive(world, e1);             // false
+ * @endcode
  *
  * @param world The world.
  * @param e The entity.
@@ -6050,7 +6067,10 @@ ecs_entity_t ecs_get_target(
 
 /** Get parent (target of ChildOf relationship) for entity.
  * This operation is the same as calling:
- *   ecs_get_target(world, entity, EcsChildOf, 0);
+ *
+ * @code
+ * ecs_get_target(world, entity, EcsChildOf, 0);
+ * @endcode
  *
  * @param world The world.
  * @param entity The entity.
@@ -6070,8 +6090,10 @@ ecs_entity_t ecs_get_parent(
  * This operation can be used to lookup, for example, which prefab is providing
  * a component by specifying the IsA relationship:
  *
- *   // Is Position provided by the entity or one of its base entities?
- *   ecs_get_target_for_id(world, entity, EcsIsA, ecs_id(Position))
+ * @code
+ * // Is Position provided by the entity or one of its base entities?
+ * ecs_get_target_for_id(world, entity, EcsIsA, ecs_id(Position))
+ * @endcode
  *
  * @param world The world.
  * @param entity The entity.
@@ -6933,12 +6955,16 @@ void ecs_term_fini(
  * When a filter is copied by value, make sure to use "ecs_filter_move" to
  * ensure that the terms pointer still points to the inline array:
  *
- *   ecs_filter_move(&dst_filter, &src_filter)
+ * @code
+ * ecs_filter_move(&dst_filter, &src_filter)
+ * @endcode
  *
  * Alternatively, the ecs_filter_move function can be called with both arguments
  * set to the same filter, to ensure the pointer is valid:
  *
- *   ecs_filter_move(&f, &f)
+ * @code
+ * ecs_filter_move(&f, &f)
+ * @endcode
  *
  * It is possible to create a filter without allocating any memory, by setting
  * the .storage member in ecs_filter_desc_t. See the documentation for the
@@ -7653,6 +7679,7 @@ ecs_entity_t ecs_iter_first(
  *
  * Example:
  *
+ * @code
  * // Rule that matches (Eats, *)
  * ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
  *   .terms = {
@@ -7671,6 +7698,7 @@ ecs_entity_t ecs_iter_first(
  *     // iterate as usual
  *   }
  * }
+ * @endcode
  *
  * The variable must be initialized after creating the iterator and before the
  * first call to next.
@@ -8345,10 +8373,12 @@ int32_t ecs_search(
  * This operation is typically called in a loop where the resulting index is
  * used in the next iteration as offset:
  *
+ * @code
  * int32_t index = -1;
  * while ((index = ecs_search_offset(world, table, offset, id, NULL))) {
  *   // do stuff
  * }
+ * @endcode
  *
  * Depending on how the operation is used it is either linear or constant time.
  * When the id has the form (id) or (rel, *) and the operation is invoked as
@@ -8383,6 +8413,7 @@ int32_t ecs_search_offset(
  * prefab (using the IsA relationship) of that table, it could use the operation
  * like this:
  *
+ * @code
  * int32_t index = ecs_search_relation(
  *   world,            // the world
  *   table,            // the table
@@ -8394,6 +8425,7 @@ int32_t ecs_search_offset(
  *   NULL,             // (optional) entity on which component was found
  *   NULL,             // see above
  *   NULL);            // internal type with information about matched id
+ * @endcode
  *
  * The operation searches depth first. If a table type has 2 IsA relationships, the
  * operation will first search the IsA tree of the first relationship.
@@ -8649,7 +8681,10 @@ int ecs_value_move_ctor(
 /** Define a forward declared entity.
  *
  * Example:
- *   ECS_ENTITY_DEFINE(world, MyEntity, Position, Velocity);
+ *
+ * @code
+ * ECS_ENTITY_DEFINE(world, MyEntity, Position, Velocity);
+ * @endcode
  */
 #define ECS_ENTITY_DEFINE(world, id_, ...) \
     { \
@@ -8667,7 +8702,10 @@ int ecs_value_move_ctor(
 /** Declare & define an entity.
  *
  * Example:
- *   ECS_ENTITY(world, MyEntity, Position, Velocity);
+ *
+ * @code
+ * ECS_ENTITY(world, MyEntity, Position, Velocity);
+ * @endcode
  */
 #define ECS_ENTITY(world, id, ...) \
     ecs_entity_t ecs_id(id); \
@@ -8680,14 +8718,20 @@ int ecs_value_move_ctor(
 /** Define a forward declared tag.
  *
  * Example:
- *   ECS_TAG_DEFINE(world, MyTag);
+ *
+ * @code
+ * ECS_TAG_DEFINE(world, MyTag);
+ * @endcode
  */
 #define ECS_TAG_DEFINE(world, id) ECS_ENTITY_DEFINE(world, id, 0)
 
 /** Declare & define a tag.
  *
  * Example:
- *   ECS_TAG(world, MyTag);
+ *
+ * @code
+ * ECS_TAG(world, MyTag);
+ * @endcode
  */
 #define ECS_TAG(world, id) ECS_ENTITY(world, id, 0)
 
@@ -8697,14 +8741,20 @@ int ecs_value_move_ctor(
 /** Define a forward declared prefab.
  *
  * Example:
- *   ECS_PREFAB_DEFINE(world, MyPrefab, Position, Velocity);
+ *
+ * @code
+ * ECS_PREFAB_DEFINE(world, MyPrefab, Position, Velocity);
+ * @endcode
  */
 #define ECS_PREFAB_DEFINE(world, id, ...) ECS_ENTITY_DEFINE(world, id, Prefab, __VA_ARGS__)
 
 /** Declare & define a prefab.
  *
  * Example:
- *   ECS_PREFAB(world, MyPrefab, Position, Velocity);
+ *
+ * @code
+ * ECS_PREFAB(world, MyPrefab, Position, Velocity);
+ * @endcode
  */
 #define ECS_PREFAB(world, id, ...) ECS_ENTITY(world, id, Prefab, __VA_ARGS__)
 
@@ -8714,7 +8764,10 @@ int ecs_value_move_ctor(
 /** Define a forward declared component.
  *
  * Example:
- *   ECS_COMPONENT_DEFINE(world, Position);
+ *
+ * @code
+ * ECS_COMPONENT_DEFINE(world, Position);
+ * @endcode
  */
 #define ECS_COMPONENT_DEFINE(world, id_) \
     {\
@@ -8734,7 +8787,10 @@ int ecs_value_move_ctor(
 /** Declare & define a component.
  *
  * Example:
- *   ECS_COMPONENT(world, Position);
+ *
+ * @code
+ * ECS_COMPONENT(world, Position);
+ * @endcode
  */
 #define ECS_COMPONENT(world, id)\
     ecs_entity_t ecs_id(id) = 0;\
@@ -8747,7 +8803,10 @@ int ecs_value_move_ctor(
 /** Define a forward declared observer.
  *
  * Example:
- *   ECS_OBSERVER_DEFINE(world, AddPosition, EcsOnAdd, Position);
+ *
+ * @code
+ * ECS_OBSERVER_DEFINE(world, AddPosition, EcsOnAdd, Position);
+ * @endcode
  */
 #define ECS_OBSERVER_DEFINE(world, id_, kind, ...)\
     {\
@@ -8766,7 +8825,10 @@ int ecs_value_move_ctor(
 /** Declare & define an observer.
  *
  * Example:
- *   ECS_OBSERVER(world, AddPosition, EcsOnAdd, Position);
+ *
+ * @code
+ * ECS_OBSERVER(world, AddPosition, EcsOnAdd, Position);
+ * @endcode
  */
 #define ECS_OBSERVER(world, id, kind, ...)\
     ecs_entity_t ecs_id(id) = 0; \
@@ -8778,9 +8840,12 @@ int ecs_value_move_ctor(
 /** Shorthand for creating an entity with ecs_entity_init.
  *
  * Example:
- *   ecs_entity(world, {
- *     .name = "MyEntity"
- *   });
+ *
+ * @code
+ * ecs_entity(world, {
+ *   .name = "MyEntity"
+ * });
+ * @endcode
  */
 #define ecs_entity(world, ...)\
     ecs_entity_init(world, &(ecs_entity_desc_t) __VA_ARGS__ )
@@ -8788,10 +8853,13 @@ int ecs_value_move_ctor(
 /** Shorthand for creating a component with ecs_component_init.
  *
  * Example:
- *   ecs_component(world, {
- *     .type.size = 4,
- *     .type.alignment = 4
- *   });
+ *
+ * @code
+ * ecs_component(world, {
+ *   .type.size = 4,
+ *   .type.alignment = 4
+ * });
+ * @endcode
  */
 #define ecs_component(world, ...)\
     ecs_component_init(world, &(ecs_component_desc_t) __VA_ARGS__ )
@@ -8799,7 +8867,10 @@ int ecs_value_move_ctor(
 /** Shorthand for creating a component from a type.
  *
  * Example:
- *   ecs_component_t(world, Position);
+ *
+ * @code
+ * ecs_component_t(world, Position);
+ * @endcode
  */
 #define ecs_component_t(world, T)\
     ecs_component_init(world, &(ecs_component_desc_t) { \
@@ -8815,9 +8886,12 @@ int ecs_value_move_ctor(
 /** Shorthand for creating a filter with ecs_filter_init.
  *
  * Example:
- *   ecs_filter(world, {
- *     .terms = {{ ecs_id(Position) }}
- *   });
+ *
+ * @code
+ * ecs_filter(world, {
+ *   .terms = {{ ecs_id(Position) }}
+ * });
+ * @endcode
  */
 #define ecs_filter(world, ...)\
     ecs_filter_init(world, &(ecs_filter_desc_t) __VA_ARGS__ )
@@ -8825,9 +8899,12 @@ int ecs_value_move_ctor(
 /** Shorthand for creating a query with ecs_query_init.
  *
  * Example:
- *   ecs_query(world, {
- *     .filter.terms = {{ ecs_id(Position) }}
- *   });
+ *
+ * @code
+ * ecs_query(world, {
+ *   .filter.terms = {{ ecs_id(Position) }}
+ * });
+ * @endcode
  */
 #define ecs_query(world, ...)\
     ecs_query_init(world, &(ecs_query_desc_t) __VA_ARGS__ )
@@ -8835,11 +8912,14 @@ int ecs_value_move_ctor(
 /** Shorthand for creating an observer with ecs_observer_init.
  *
  * Example:
- *   ecs_observer(world, {
- *     .filter.terms = {{ ecs_id(Position) }},
- *     .events = { EcsOnAdd },
- *     .callback = AddPosition
- *   });
+ *
+ * @code
+ * ecs_observer(world, {
+ *   .filter.terms = {{ ecs_id(Position) }},
+ *   .events = { EcsOnAdd },
+ *   .callback = AddPosition
+ * });
+ * @endcode
  */
 #define ecs_observer(world, ...)\
     ecs_observer_init(world, &(ecs_observer_desc_t) __VA_ARGS__ )
@@ -9139,35 +9219,50 @@ int ecs_value_move_ctor(
 
 /** Declare a constructor.
  * Example:
- *   ECS_CTOR(MyType, ptr, { ptr->value = NULL; });
+ *
+ * @code
+ * ECS_CTOR(MyType, ptr, { ptr->value = NULL; });
+ * @endcode
  */
 #define ECS_CTOR(type, var, ...)\
     ECS_XTOR_IMPL(type, ctor, var, __VA_ARGS__)
 
 /** Declare a destructor.
  * Example:
- *   ECS_DTOR(MyType, ptr, { free(ptr->value); });
+ *
+ * @code
+ * ECS_DTOR(MyType, ptr, { free(ptr->value); });
+ * @endcode
  */
 #define ECS_DTOR(type, var, ...)\
     ECS_XTOR_IMPL(type, dtor, var, __VA_ARGS__)
 
 /** Declare a copy action.
  * Example:
- *   ECS_COPY(MyType, dst, src, { dst->value = strdup(src->value); });
+ *
+ * @code
+ * ECS_COPY(MyType, dst, src, { dst->value = strdup(src->value); });
+ * @endcode
  */
 #define ECS_COPY(type, dst_var, src_var, ...)\
     ECS_COPY_IMPL(type, dst_var, src_var, __VA_ARGS__)
 
 /** Declare a move action.
  * Example:
- *   ECS_MOVE(MyType, dst, src, { dst->value = src->value; src->value = 0; });
+ *
+ * @code
+ * ECS_MOVE(MyType, dst, src, { dst->value = src->value; src->value = 0; });
+ * @endcode
  */
 #define ECS_MOVE(type, dst_var, src_var, ...)\
     ECS_MOVE_IMPL(type, dst_var, src_var, __VA_ARGS__)
 
 /** Declare component hooks.
  * Example:
- *   ECS_ON_SET(MyType, ptr, { printf("%d\n", ptr->value); });
+ *
+ * @code
+ * ECS_ON_SET(MyType, ptr, { printf("%d\n", ptr->value); });
+ * @endcode
  */
 #define ECS_ON_ADD(type, ptr, ...)\
     ECS_HOOK_IMPL(type, ecs_on_add(type), ptr, __VA_ARGS__)
@@ -9262,8 +9357,11 @@ int ecs_value_move_ctor(
  *   int32_t hi
  *   ecs_order_by_action_t order_by - Pointer to the original comparison function. You are not supposed to use it.
  * Example:
- *   int CompareMyType(ecs_entity_t e1, const void* ptr1, ecs_entity_t e2, const void* ptr2) { const MyType* p1 = ptr1; const MyType* p2 = ptr2; return p1->value - p2->value; }
- *   ECS_SORT_TABLE_WITH_COMPARE(MyType, MyCustomCompare, CompareMyType)
+ *
+ * @code
+ * int CompareMyType(ecs_entity_t e1, const void* ptr1, ecs_entity_t e2, const void* ptr2) { const MyType* p1 = ptr1; const MyType* p2 = ptr2; return p1->value - p2->value; }
+ * ECS_SORT_TABLE_WITH_COMPARE(MyType, MyCustomCompare, CompareMyType)
+ * @endcode
  */
 #define ECS_SORT_TABLE_WITH_COMPARE(id, op_name, compare_fn, ...) \
     static int32_t ECS_CONCAT(op_name, _partition)( \
@@ -9329,8 +9427,11 @@ int ecs_value_move_ctor(
  * Variadic arguments are prepended before generated functions, use it to declare static
  *   or exported functions.
  * Example:
- *   ECS_COMPARE(MyType, { const MyType* p1 = ptr1; const MyType* p2 = ptr2; return p1->value - p2->value; });
- *   ECS_SORT_TABLE(MyType)
+ *
+ * @code
+ * ECS_COMPARE(MyType, { const MyType* p1 = ptr1; const MyType* p2 = ptr2; return p1->value - p2->value; });
+ * ECS_SORT_TABLE(MyType)
+ * @endcode
  */
 #define ECS_SORT_TABLE(id, ...) \
     ECS_SORT_TABLE_WITH_COMPARE(id, ecs_sort_table(id), ecs_compare(id), __VA_ARGS__)
@@ -9340,7 +9441,10 @@ int ecs_value_move_ctor(
  *   ecs_entity_t e1, const void* ptr1,
  *   ecs_entity_t e2, const void* ptr2
  * Example:
- *   ECS_COMPARE(MyType, { const MyType* p1 = ptr1; const MyType* p2 = ptr2; return p1->value - p2->value; });
+ *
+ * @code
+ * ECS_COMPARE(MyType, { const MyType* p1 = ptr1; const MyType* p2 = ptr2; return p1->value - p2->value; });
+ * @endcode
  */
 #define ECS_COMPARE(id, ...) \
     int ecs_compare(id)(ecs_entity_t e1, const void* ptr1, ecs_entity_t e2, const void* ptr2) { \
@@ -10034,7 +10138,7 @@ bool ecs_log_enable_timestamp(
  * log, when this amount is non-zero. The format is a '+' character followed by
  * the number of seconds:
  *
- *   +1 trace: log message
+ *     +1 trace: log message
  *
  * @param enabled Whether to enable tracing with timestamps.
  * @return Previous timestamp setting.
@@ -10450,7 +10554,8 @@ void ecs_http_server_stop(
 
 /** Emulate a request.
  * The request string must be a valid HTTP request. A minimal example:
- *   GET /entity/flecs/core/World?label=true HTTP/1.1
+ *
+ *     GET /entity/flecs/core/World?label=true HTTP/1.1
  *
  * @param srv The server.
  * @param req The request.
@@ -11226,7 +11331,10 @@ ecs_entity_t ecs_system_init(
 /** Define a forward declared system.
  *
  * Example:
- *   ECS_SYSTEM_DEFINE(world, Move, EcsOnUpdate, Position, Velocity);
+ *
+ * @code
+ * ECS_SYSTEM_DEFINE(world, Move, EcsOnUpdate, Position, Velocity);
+ * @endcode
  */
 #define ECS_SYSTEM_DEFINE(world, id_, phase, ...) \
     { \
@@ -11246,7 +11354,10 @@ ecs_entity_t ecs_system_init(
 /** Declare & define a system.
  *
  * Example:
- *   ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
+ *
+ * @code
+ * ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
+ * @endcode
  */
 #define ECS_SYSTEM(world, id, phase, ...) \
     ecs_entity_t ecs_id(id) = 0; ECS_SYSTEM_DEFINE(world, id, phase, __VA_ARGS__);\
@@ -11257,17 +11368,20 @@ ecs_entity_t ecs_system_init(
 /** Shorthand for creating a system with ecs_system_init.
  *
  * Example:
- *   ecs_system(world, {
- *     .entity = ecs_entity(world, {
- *       .name = "MyEntity",
- *       .add = { ecs_dependson(EcsOnUpdate) }
- *     }),
- *     .query.filter.terms = {
- *       { ecs_id(Position) },
- *       { ecs_id(Velocity) }
- *     },
- *     .callback = Move
- *   });
+ *
+ * @code
+ * ecs_system(world, {
+ *   .entity = ecs_entity(world, {
+ *     .name = "MyEntity",
+ *     .add = { ecs_dependson(EcsOnUpdate) }
+ *   }),
+ *   .query.filter.terms = {
+ *     { ecs_id(Position) },
+ *     { ecs_id(Velocity) }
+ *   },
+ *   .callback = Move
+ * });
+ * @endcode
  */
 #define ecs_system(world, ...)\
     ecs_system_init(world, &(ecs_system_desc_t) __VA_ARGS__ )
@@ -11990,10 +12104,13 @@ ecs_entity_t ecs_metric_init(
 /** Shorthand for creating a metric with ecs_metric_init.
  *
  * Example:
- *   ecs_metric(world, {
- *     .member = ecs_lookup_fullpath(world, "Position.x")
- *     .kind = EcsGauge
- *   });
+ *
+ * @code
+ * ecs_metric(world, {
+ *   .member = ecs_lookup_fullpath(world, "Position.x")
+ *   .kind = EcsGauge
+ * });
+ * @endcode
  */
 #define ecs_metric(world, ...)\
     ecs_metric_init(world, &(ecs_metric_desc_t) __VA_ARGS__ )
@@ -12109,8 +12226,9 @@ typedef struct ecs_alert_desc_t {
      * the template expressions is as specified by ecs_interpolate_string.
      *
      * Examples:
-     *   "$this has Position but not Velocity"
-     *   "$this has a parent entity $parent without Position"
+     *
+     *     "$this has Position but not Velocity"
+     *     "$this has a parent entity $parent without Position"
      */
     const char *message;
 
@@ -12495,9 +12613,16 @@ void ecs_doc_set_color(
  * return the entity name.
  *
  * To test if an entity has a human readable name, use:
- *   ecs_has_pair(world, e, ecs_id(EcsDescription), EcsName);
+ *
+ * @code
+ * ecs_has_pair(world, e, ecs_id(EcsDescription), EcsName);
+ * @endcode
+ *
  * Or in C++:
- *   e.has<flecs::Description>(flecs::Name);
+ *
+ * @code
+ * e.has<flecs::Description>(flecs::Name);
+ * @endcode
  *
  * @param world The world.
  * @param entity The entity from which to get the name.
@@ -12901,6 +13026,7 @@ typedef struct ecs_world_to_json_desc_t {
  * This operation iterates the contents of the world to JSON. The operation is
  * equivalent to the following code:
  *
+ * @code
  * ecs_filter_t *f = ecs_filter(world, {
  *   .terms = {{ .id = EcsAny }}
  * });
@@ -12908,6 +13034,7 @@ typedef struct ecs_world_to_json_desc_t {
  * ecs_iter_t it = ecs_filter_init(world, &f);
  * ecs_iter_to_json_desc_t desc = { .serialize_table = true };
  * ecs_iter_to_json(world, iter, &desc);
+ * @endcode
  *
  * @param world The world to serialize.
  * @return A JSON string with the serialized iterator data, or NULL if failed.
@@ -12959,10 +13086,16 @@ int ecs_world_to_json_buf(
  * the addon is included in the build. To import the module, do:
  *
  * In C:
- *   ECS_IMPORT(world, FlecsUnits);
+ *
+ * @code
+ * ECS_IMPORT(world, FlecsUnits);
+ * @endcode
  *
  * In C++:
- *   world.import<flecs::units>();
+ *
+ * @code
+ * world.import<flecs::units>();
+ * @endcode
  *
  * As a result this module behaves just like an application-defined module,
  * which means that the ids generated for the entities inside the module are not
@@ -13325,6 +13458,7 @@ void FlecsUnitsImport(
  * EcsMetaType components. The former means that the resulting type can be
  * used as a regular component:
  *
+ * @code
  * // Create Position type
  * ecs_entity_t pos = ecs_struct_init(world, &(ecs_struct_desc_t){
  *  .entity.name = "Position",
@@ -13336,6 +13470,7 @@ void FlecsUnitsImport(
  *
  * // Create entity with Position component
  * ecs_entity_t e = ecs_new_w_id(world, pos);
+ * @endcode
  *
  * Type entities do not have to be named.
  */
@@ -13367,10 +13502,16 @@ extern "C" {
 
 /** Primitive type definitions.
  * These typedefs allow the builtin primitives to be used as regular components:
- *   ecs_set(world, e, ecs_i32_t, {10});
+ *
+ * @code
+ * ecs_set(world, e, ecs_i32_t, {10});
+ * @endcode
  *
  * Or a more useful example (create an enum constant with a manual value):
- *   ecs_set_pair_object(world, e, EcsConstant, ecs_i32_t, {10});
+ *
+ * @code
+ * ecs_set_pair_object(world, e, EcsConstant, ecs_i32_t, {10});
+ * @endcode
  */
 typedef bool ecs_bool_t;
 typedef char ecs_char_t;
@@ -14263,22 +14404,28 @@ void FlecsMetaImport(
  * Examples:
  *
  * Member names:
- *   {x: 10, y: 20}
+ *
+ *     {x: 10, y: 20}
  *
  * No member names (uses member ordering):
- *   {10, 20}
+ *
+ *     {10, 20}
  *
  * Enum values:
- *   {color: Red}
+ *
+ *     {color: Red}
  *
  * Bitmask values:
- *   {toppings: Lettuce|Tomato}
+ *
+ *     {toppings: Lettuce|Tomato}
  *
  * Collections:
- *   {points: [10, 20, 30]}
+ *
+ *     {points: [10, 20, 30]}
  *
  * Nested objects:
- *   {start: {x: 10, y: 20}, stop: {x: 30, y: 40}}
+ *
+ *     {start: {x: 10, y: 20}, stop: {x: 30, y: 40}}
  *
  */
 
@@ -15390,8 +15537,10 @@ const char* ecs_parse_token(
  * If the returned pointer points to the 0-terminator, the expression is fully
  * parsed. The function would typically be called in a while loop:
  *
+ * @code
  * const char *ptr = expr;
  * while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term))) { }
+ * @endcode
  *
  * The operation does not attempt to find entity ids from the names in the
  * expression. Use the ecs_term_resolve_ids function to resolve the identifiers
@@ -15592,7 +15741,9 @@ ecs_entity_t ecs_module_init(
  * This macro provides a convenient way to load a module with the world. It can
  * be used like this:
  *
+ * @code
  * ECS_IMPORT(world, FlecsSystemsPhysics);
+ * @endcode
  */
 #define ECS_IMPORT(world, id) ecs_import_c(world, id##Import, #id)
 
@@ -20138,7 +20289,10 @@ struct world {
 
     /** Iterate entities in root of world
      * Accepts a callback with the following signature:
-     *  void(*)(flecs::entity e);
+     *
+     * @code
+     * void(*)(flecs::entity e);
+     * @endcode
      */
     template <typename Func>
     void children(Func&& f) const;
@@ -20661,8 +20815,16 @@ flecs::filter_builder<Comps...> filter_builder(Args &&... args) const;
 
 /** Iterate over all entities with components in argument list of function.
  * The function parameter must match the following signature:
- *   void(*)(T&, U&, ...) or
- *   void(*)(flecs::entity, T&, U&, ...)
+ *
+ * @code
+ * void(*)(T&, U&, ...)
+ * @endcode
+ *
+ * or:
+ *
+ * @code
+ * void(*)(flecs::entity, T&, U&, ...)
+ * @endcode
  * 
  */
 template <typename Func>
@@ -20670,8 +20832,16 @@ void each(Func&& func) const;
 
 /** Iterate over all entities with provided component.
  * The function parameter must match the following signature:
- *   void(*)(T&) or
- *   void(*)(flecs::entity, T&)
+ *
+ * @code
+ * void(*)(T&)
+ * @endcode
+ *
+ * or:
+ *
+ * @code
+ * void(*)(flecs::entity, T&)
+ * @endcode
  * 
  */
 template <typename T, typename Func>
@@ -21861,7 +22031,10 @@ struct entity_view : public id {
 
     /** Iterate (component) ids of an entity.
      * The function parameter must match the following signature:
-     *   void(*)(flecs::id id)
+     *
+     * @code
+     * void(*)(flecs::id id)
+     * @endcode
      *
      * @param func The function invoked for each id.
      */
@@ -21870,7 +22043,10 @@ struct entity_view : public id {
 
     /** Iterate matching pair ids of an entity.
      * The function parameter must match the following signature:
-     *   void(*)(flecs::id id)
+     *
+     * @code
+     * void(*)(flecs::id id)
+     * @endcode
      *
      * @param func The function invoked for each id.
      */
@@ -21879,7 +22055,10 @@ struct entity_view : public id {
 
     /** Iterate targets for a given relationship.
      * The function parameter must match the following signature:
-     *   void(*)(flecs::entity target)
+     *
+     * @code
+     * void(*)(flecs::entity target)
+     * @endcode
      *
      * @param rel The relationship for which to iterate the targets.
      * @param func The function invoked for each target.
@@ -21889,7 +22068,10 @@ struct entity_view : public id {
 
     /** Iterate targets for a given relationship.
      * The function parameter must match the following signature:
-     *   void(*)(flecs::entity target)
+     *
+     * @code
+     * void(*)(flecs::entity target)
+     * @endcode
      *
      * @tparam First The relationship for which to iterate the targets.
      * @param func The function invoked for each target.     
@@ -21901,7 +22083,10 @@ struct entity_view : public id {
 
     /** Iterate children for entity.
      * The function parameter must match the following signature:
-     *   void(*)(flecs::entity target)
+     *
+     * @code
+     * void(*)(flecs::entity target)
+     * @endcode
      *
      * @param rel The relationship to follow.
      * @param func The function invoked for each child.     
@@ -21942,7 +22127,10 @@ struct entity_view : public id {
 
     /** Iterate children for entity.
      * The function parameter must match the following signature:
-     *   void(*)(flecs::entity target)
+     *
+     * @code
+     * void(*)(flecs::entity target)
+     * @endcode
      *
      * @tparam Rel The relationship to follow.
      * @param func The function invoked for each child.     
@@ -21954,7 +22142,10 @@ struct entity_view : public id {
 
     /** Iterate children for entity.
      * The function parameter must match the following signature:
-     *   void(*)(flecs::entity target)
+     *
+     * @code
+     * void(*)(flecs::entity target)
+     * @endcode
      * 
      * This operation follows the ChildOf relationship.
      *
@@ -22075,13 +22266,16 @@ struct entity_view : public id {
      * function will write-lock the table (see ecs_write_begin).
      * 
      * Example:
-     *   e.get([](Position& p, Velocity& v) { // write lock
-     *     p.x += v.x;
-     *   });
+     *
+     * @code
+     * e.get([](Position& p, Velocity& v) { // write lock
+     *   p.x += v.x;
+     * });
      * 
-     *   e.get([](const Position& p) {        // read lock
-     *     std::cout << p.x << std::endl;
-     *   });
+     * e.get([](const Position& p) {        // read lock
+     *   std::cout << p.x << std::endl;
+     * });
+     * @endcode
      *
      * @param func The callback to invoke.
      * @return True if the entity has all components, false if not.
@@ -22154,8 +22348,10 @@ struct entity_view : public id {
      * This operation can be used to lookup, for example, which prefab is providing
      * a component by specifying the IsA pair:
      * 
-     *   // Is Position provided by the entity or one of its base entities?
-     *   ecs_get_target_for_id(world, entity, EcsIsA, ecs_id(Position))
+     * @code
+     * // Is Position provided by the entity or one of its base entities?
+     * ecs_get_target_for_id(world, entity, EcsIsA, ecs_id(Position))
+     * @endcode
      * 
      * @param relationship The relationship to follow.
      * @param id The id to lookup.
@@ -23474,8 +23670,11 @@ struct entity_builder : entity_view {
      * destructor on the value passed into the function.
      *
      * Emplace attempts the following signatures to construct the component:
-     *  T{Args...}
-     *  T{flecs::entity, Args...}
+     *
+     * @code
+     * T{Args...}
+     * T{flecs::entity, Args...}
+     * @endcode
      *
      * If the second signature matches, emplace will pass in the current entity 
      * as argument to the constructor, which is useful if the component needs

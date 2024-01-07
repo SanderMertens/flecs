@@ -489,7 +489,7 @@ bool ecs_log_enable_timestamp(
  * log, when this amount is non-zero. The format is a '+' character followed by
  * the number of seconds:
  *
- *   +1 trace: log message
+ *     +1 trace: log message
  *
  * @param enabled Whether to enable tracing with timestamps.
  * @return Previous timestamp setting.

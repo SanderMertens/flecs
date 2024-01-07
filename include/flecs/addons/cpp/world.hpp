@@ -732,7 +732,10 @@ struct world {
 
     /** Iterate entities in root of world
      * Accepts a callback with the following signature:
-     *  void(*)(flecs::entity e);
+     *
+     * @code
+     * void(*)(flecs::entity e);
+     * @endcode
      */
     template <typename Func>
     void children(Func&& f) const;
