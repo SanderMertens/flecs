@@ -538,7 +538,7 @@ typedef void (*ecs_iter_init_action_t)(
     ecs_term_t *filter);
 
 /** Function prototype for iterating an iterator.
- * Stored inside initialized iterators. This allows an application to * iterate
+ * Stored inside initialized iterators. This allows an application to iterate
  * an iterator without needing to know what created it.
  *
  * @param it The iterator to iterate.
