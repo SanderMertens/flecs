@@ -111,7 +111,9 @@ ecs_entity_t ecs_module_init(
  * This macro provides a convenient way to load a module with the world. It can
  * be used like this:
  *
+ * @code
  * ECS_IMPORT(world, FlecsSystemsPhysics);
+ * @endcode
  */
 #define ECS_IMPORT(world, id) ecs_import_c(world, id##Import, #id)
 

@@ -834,8 +834,11 @@ struct entity_builder : entity_view {
      * destructor on the value passed into the function.
      *
      * Emplace attempts the following signatures to construct the component:
-     *  T{Args...}
-     *  T{flecs::entity, Args...}
+     *
+     * @code
+     * T{Args...}
+     * T{flecs::entity, Args...}
+     * @endcode
      *
      * If the second signature matches, emplace will pass in the current entity 
      * as argument to the constructor, which is useful if the component needs

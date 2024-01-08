@@ -179,7 +179,8 @@ void ecs_http_server_stop(
 
 /** Emulate a request.
  * The request string must be a valid HTTP request. A minimal example:
- *   GET /entity/flecs/core/World?label=true HTTP/1.1
+ *
+ *     GET /entity/flecs/core/World?label=true HTTP/1.1
  *
  * @param srv The server.
  * @param req The request.

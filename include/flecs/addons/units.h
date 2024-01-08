@@ -6,10 +6,16 @@
  * the addon is included in the build. To import the module, do:
  *
  * In C:
- *   ECS_IMPORT(world, FlecsUnits);
+ *
+ * @code
+ * ECS_IMPORT(world, FlecsUnits);
+ * @endcode
  *
  * In C++:
- *   world.import<flecs::units>();
+ *
+ * @code
+ * world.import<flecs::units>();
+ * @endcode
  *
  * As a result this module behaves just like an application-defined module,
  * which means that the ids generated for the entities inside the module are not

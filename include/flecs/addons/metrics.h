@@ -148,10 +148,13 @@ ecs_entity_t ecs_metric_init(
 /** Shorthand for creating a metric with ecs_metric_init.
  *
  * Example:
- *   ecs_metric(world, {
- *     .member = ecs_lookup_fullpath(world, "Position.x")
- *     .kind = EcsGauge
- *   });
+ *
+ * @code
+ * ecs_metric(world, {
+ *   .member = ecs_lookup_fullpath(world, "Position.x")
+ *   .kind = EcsGauge
+ * });
+ * @endcode
  */
 #define ecs_metric(world, ...)\
     ecs_metric_init(world, &(ecs_metric_desc_t) __VA_ARGS__ )

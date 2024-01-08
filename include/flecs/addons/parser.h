@@ -90,8 +90,10 @@ const char* ecs_parse_token(
  * If the returned pointer points to the 0-terminator, the expression is fully
  * parsed. The function would typically be called in a while loop:
  *
+ * @code
  * const char *ptr = expr;
  * while (ptr[0] && (ptr = ecs_parse_term(world, name, expr, ptr, &term))) { }
+ * @endcode
  *
  * The operation does not attempt to find entity ids from the names in the
  * expression. Use the ecs_term_resolve_ids function to resolve the identifiers

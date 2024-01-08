@@ -136,7 +136,11 @@
  * Note that addons can have dependencies on each other. Addons will
  * automatically enable their dependencies. To see the list of addons that was
  * compiled in a build, enable tracing before creating the world by doing:
- *   ecs_log_set_level(0);
+ *
+ * @code
+ * ecs_log_set_level(0);
+ * @endcode
+ *
  * which outputs the full list of addons Flecs was compiled with.
  */
 // #define FLECS_CUSTOM_BUILD
@@ -380,7 +384,8 @@ typedef struct ecs_query_t ecs_query_t;
  * Rules are fast uncached queries with support for advanced graph features such
  * as the usage of query variables. A simple example of a rule that matches all
  * spaceship entities docked to a planet:
- *   SpaceShip, (DockedTo, $planet), Planet($planet)
+ *
+ *     SpaceShip, (DockedTo, $planet), Planet($planet)
  *
  * Here, the rule traverses the DockedTo relationship, and matches Planet on the
  * target of this relationship. Through the usage of variables rules can match
@@ -403,11 +408,13 @@ typedef struct ecs_rule_t ecs_rule_t;
  * a list of event kinds that should be listened for. An example of an observer
  * that triggers when a Position component is added to an entity (in C++):
  *
- *   world.observer<Position>()
- *     .event(flecs::OnAdd)
- *     .each([](Position& p) {
- *       // called when Position is added to an entity
- *     });
+ * @code
+ * world.observer<Position>()
+ *   .event(flecs::OnAdd)
+ *   .each([](Position& p) {
+ *     // called when Position is added to an entity
+ *   });
+ * @endcode
  *
  * Observer queries can be as complex as filters. Observers only trigger when
  * the source of the event matches the full observer query. For example, an
@@ -1827,12 +1834,14 @@ void ecs_set_target_fps(
  * mutating ECS operations. Failing to do so will throw a readonly assert. A
  * world typically has more than one stage when using threads. An example:
  *
+ * @code
  * ecs_set_stage_count(world, 2);
  * ecs_stage_t *stage = ecs_get_stage(world, 1);
  *
  * ecs_readonly_begin(world);
  * ecs_add(world, e, Tag); // readonly assert
  * ecs_add(stage, e, Tag); // OK
+ * @endcode
  *
  * @param world The world
  * @return Whether world is in readonly mode.
@@ -2258,7 +2267,10 @@ ecs_entity_t ecs_get_entity(
 
 /** Test if pointer is of specified type.
  * Usage:
- *   ecs_poly_is(ptr, ecs_world_t)
+ *
+ * @code
+ * ecs_poly_is(ptr, ecs_world_t)
+ * @endcode
  *
  * This operation only works for poly types.
  *
@@ -2531,7 +2543,10 @@ void ecs_remove_id(
  * inherited (reachable through an IsA relationship).
  *
  * This operation is equivalent to doing:
- *   ecs_add_id(world, entity, ECS_OVERRIDE | id);
+ *
+ * @code
+ * ecs_add_id(world, entity, ECS_OVERRIDE | id);
+ * @endcode
  *
  * @param world The world.
  * @param entity The entity.
@@ -2971,14 +2986,16 @@ bool ecs_is_valid(
  * the original id in that they have a different generation count. This makes it
  * possible for the API to distinguish between the two. An example:
  *
- *   ecs_entity_t e1 = ecs_new_id(world);
- *   ecs_is_alive(world, e1);             // true
- *   ecs_delete(world, e1);
- *   ecs_is_alive(world, e1);             // false
+ * @code
+ * ecs_entity_t e1 = ecs_new_id(world);
+ * ecs_is_alive(world, e1);             // true
+ * ecs_delete(world, e1);
+ * ecs_is_alive(world, e1);             // false
  *
- *   ecs_entity_t e2 = ecs_new_id(world); // recycles e1
- *   ecs_is_alive(world, e2);             // true
- *   ecs_is_alive(world, e1);             // false
+ * ecs_entity_t e2 = ecs_new_id(world); // recycles e1
+ * ecs_is_alive(world, e2);             // true
+ * ecs_is_alive(world, e1);             // false
+ * @endcode
  *
  * @param world The world.
  * @param e The entity.
@@ -3220,7 +3237,10 @@ ecs_entity_t ecs_get_target(
 
 /** Get parent (target of ChildOf relationship) for entity.
  * This operation is the same as calling:
- *   ecs_get_target(world, entity, EcsChildOf, 0);
+ *
+ * @code
+ * ecs_get_target(world, entity, EcsChildOf, 0);
+ * @endcode
  *
  * @param world The world.
  * @param entity The entity.
@@ -3240,8 +3260,10 @@ ecs_entity_t ecs_get_parent(
  * This operation can be used to lookup, for example, which prefab is providing
  * a component by specifying the IsA relationship:
  *
- *   // Is Position provided by the entity or one of its base entities?
- *   ecs_get_target_for_id(world, entity, EcsIsA, ecs_id(Position))
+ * @code
+ * // Is Position provided by the entity or one of its base entities?
+ * ecs_get_target_for_id(world, entity, EcsIsA, ecs_id(Position))
+ * @endcode
  *
  * @param world The world.
  * @param entity The entity.
@@ -4103,12 +4125,16 @@ void ecs_term_fini(
  * When a filter is copied by value, make sure to use "ecs_filter_move" to
  * ensure that the terms pointer still points to the inline array:
  *
- *   ecs_filter_move(&dst_filter, &src_filter)
+ * @code
+ * ecs_filter_move(&dst_filter, &src_filter)
+ * @endcode
  *
  * Alternatively, the ecs_filter_move function can be called with both arguments
  * set to the same filter, to ensure the pointer is valid:
  *
- *   ecs_filter_move(&f, &f)
+ * @code
+ * ecs_filter_move(&f, &f)
+ * @endcode
  *
  * It is possible to create a filter without allocating any memory, by setting
  * the .storage member in ecs_filter_desc_t. See the documentation for the
@@ -4823,6 +4849,7 @@ ecs_entity_t ecs_iter_first(
  *
  * Example:
  *
+ * @code
  * // Rule that matches (Eats, *)
  * ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
  *   .terms = {
@@ -4841,6 +4868,7 @@ ecs_entity_t ecs_iter_first(
  *     // iterate as usual
  *   }
  * }
+ * @endcode
  *
  * The variable must be initialized after creating the iterator and before the
  * first call to next.
@@ -5515,10 +5543,12 @@ int32_t ecs_search(
  * This operation is typically called in a loop where the resulting index is
  * used in the next iteration as offset:
  *
+ * @code
  * int32_t index = -1;
  * while ((index = ecs_search_offset(world, table, offset, id, NULL))) {
  *   // do stuff
  * }
+ * @endcode
  *
  * Depending on how the operation is used it is either linear or constant time.
  * When the id has the form (id) or (rel, *) and the operation is invoked as
@@ -5553,6 +5583,7 @@ int32_t ecs_search_offset(
  * prefab (using the IsA relationship) of that table, it could use the operation
  * like this:
  *
+ * @code
  * int32_t index = ecs_search_relation(
  *   world,            // the world
  *   table,            // the table
@@ -5564,6 +5595,7 @@ int32_t ecs_search_offset(
  *   NULL,             // (optional) entity on which component was found
  *   NULL,             // see above
  *   NULL);            // internal type with information about matched id
+ * @endcode
  *
  * The operation searches depth first. If a table type has 2 IsA relationships, the
  * operation will first search the IsA tree of the first relationship.

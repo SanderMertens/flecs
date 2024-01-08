@@ -9,22 +9,28 @@
  * Examples:
  *
  * Member names:
- *   {x: 10, y: 20}
+ *
+ *     {x: 10, y: 20}
  *
  * No member names (uses member ordering):
- *   {10, 20}
+ *
+ *     {10, 20}
  *
  * Enum values:
- *   {color: Red}
+ *
+ *     {color: Red}
  *
  * Bitmask values:
- *   {toppings: Lettuce|Tomato}
+ *
+ *     {toppings: Lettuce|Tomato}
  *
  * Collections:
- *   {points: [10, 20, 30]}
+ *
+ *     {points: [10, 20, 30]}
  *
  * Nested objects:
- *   {start: {x: 10, y: 20}, stop: {x: 30, y: 40}}
+ *
+ *     {start: {x: 10, y: 20}, stop: {x: 30, y: 40}}
  *
  */
 

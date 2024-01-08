@@ -37,6 +37,7 @@
  * EcsMetaType components. The former means that the resulting type can be
  * used as a regular component:
  *
+ * @code
  * // Create Position type
  * ecs_entity_t pos = ecs_struct_init(world, &(ecs_struct_desc_t){
  *  .entity.name = "Position",
@@ -48,6 +49,7 @@
  *
  * // Create entity with Position component
  * ecs_entity_t e = ecs_new_w_id(world, pos);
+ * @endcode
  *
  * Type entities do not have to be named.
  */
@@ -79,10 +81,16 @@ extern "C" {
 
 /** Primitive type definitions.
  * These typedefs allow the builtin primitives to be used as regular components:
- *   ecs_set(world, e, ecs_i32_t, {10});
+ *
+ * @code
+ * ecs_set(world, e, ecs_i32_t, {10});
+ * @endcode
  *
  * Or a more useful example (create an enum constant with a manual value):
- *   ecs_set_pair_object(world, e, EcsConstant, ecs_i32_t, {10});
+ *
+ * @code
+ * ecs_set_pair_object(world, e, EcsConstant, ecs_i32_t, {10});
+ * @endcode
  */
 typedef bool ecs_bool_t;
 typedef char ecs_char_t;

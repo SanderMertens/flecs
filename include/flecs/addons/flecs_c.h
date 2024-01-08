@@ -31,7 +31,10 @@
 /** Define a forward declared entity.
  *
  * Example:
- *   ECS_ENTITY_DEFINE(world, MyEntity, Position, Velocity);
+ *
+ * @code
+ * ECS_ENTITY_DEFINE(world, MyEntity, Position, Velocity);
+ * @endcode
  */
 #define ECS_ENTITY_DEFINE(world, id_, ...) \
     { \
@@ -49,7 +52,10 @@
 /** Declare & define an entity.
  *
  * Example:
- *   ECS_ENTITY(world, MyEntity, Position, Velocity);
+ *
+ * @code
+ * ECS_ENTITY(world, MyEntity, Position, Velocity);
+ * @endcode
  */
 #define ECS_ENTITY(world, id, ...) \
     ecs_entity_t ecs_id(id); \
@@ -62,14 +68,20 @@
 /** Define a forward declared tag.
  *
  * Example:
- *   ECS_TAG_DEFINE(world, MyTag);
+ *
+ * @code
+ * ECS_TAG_DEFINE(world, MyTag);
+ * @endcode
  */
 #define ECS_TAG_DEFINE(world, id) ECS_ENTITY_DEFINE(world, id, 0)
 
 /** Declare & define a tag.
  *
  * Example:
- *   ECS_TAG(world, MyTag);
+ *
+ * @code
+ * ECS_TAG(world, MyTag);
+ * @endcode
  */
 #define ECS_TAG(world, id) ECS_ENTITY(world, id, 0)
 
@@ -79,14 +91,20 @@
 /** Define a forward declared prefab.
  *
  * Example:
- *   ECS_PREFAB_DEFINE(world, MyPrefab, Position, Velocity);
+ *
+ * @code
+ * ECS_PREFAB_DEFINE(world, MyPrefab, Position, Velocity);
+ * @endcode
  */
 #define ECS_PREFAB_DEFINE(world, id, ...) ECS_ENTITY_DEFINE(world, id, Prefab, __VA_ARGS__)
 
 /** Declare & define a prefab.
  *
  * Example:
- *   ECS_PREFAB(world, MyPrefab, Position, Velocity);
+ *
+ * @code
+ * ECS_PREFAB(world, MyPrefab, Position, Velocity);
+ * @endcode
  */
 #define ECS_PREFAB(world, id, ...) ECS_ENTITY(world, id, Prefab, __VA_ARGS__)
 
@@ -96,7 +114,10 @@
 /** Define a forward declared component.
  *
  * Example:
- *   ECS_COMPONENT_DEFINE(world, Position);
+ *
+ * @code
+ * ECS_COMPONENT_DEFINE(world, Position);
+ * @endcode
  */
 #define ECS_COMPONENT_DEFINE(world, id_) \
     {\
@@ -116,7 +137,10 @@
 /** Declare & define a component.
  *
  * Example:
- *   ECS_COMPONENT(world, Position);
+ *
+ * @code
+ * ECS_COMPONENT(world, Position);
+ * @endcode
  */
 #define ECS_COMPONENT(world, id)\
     ecs_entity_t ecs_id(id) = 0;\
@@ -129,7 +153,10 @@
 /** Define a forward declared observer.
  *
  * Example:
- *   ECS_OBSERVER_DEFINE(world, AddPosition, EcsOnAdd, Position);
+ *
+ * @code
+ * ECS_OBSERVER_DEFINE(world, AddPosition, EcsOnAdd, Position);
+ * @endcode
  */
 #define ECS_OBSERVER_DEFINE(world, id_, kind, ...)\
     {\
@@ -148,7 +175,10 @@
 /** Declare & define an observer.
  *
  * Example:
- *   ECS_OBSERVER(world, AddPosition, EcsOnAdd, Position);
+ *
+ * @code
+ * ECS_OBSERVER(world, AddPosition, EcsOnAdd, Position);
+ * @endcode
  */
 #define ECS_OBSERVER(world, id, kind, ...)\
     ecs_entity_t ecs_id(id) = 0; \
@@ -160,9 +190,12 @@
 /** Shorthand for creating an entity with ecs_entity_init.
  *
  * Example:
- *   ecs_entity(world, {
- *     .name = "MyEntity"
- *   });
+ *
+ * @code
+ * ecs_entity(world, {
+ *   .name = "MyEntity"
+ * });
+ * @endcode
  */
 #define ecs_entity(world, ...)\
     ecs_entity_init(world, &(ecs_entity_desc_t) __VA_ARGS__ )
@@ -170,10 +203,13 @@
 /** Shorthand for creating a component with ecs_component_init.
  *
  * Example:
- *   ecs_component(world, {
- *     .type.size = 4,
- *     .type.alignment = 4
- *   });
+ *
+ * @code
+ * ecs_component(world, {
+ *   .type.size = 4,
+ *   .type.alignment = 4
+ * });
+ * @endcode
  */
 #define ecs_component(world, ...)\
     ecs_component_init(world, &(ecs_component_desc_t) __VA_ARGS__ )
@@ -181,7 +217,10 @@
 /** Shorthand for creating a component from a type.
  *
  * Example:
- *   ecs_component_t(world, Position);
+ *
+ * @code
+ * ecs_component_t(world, Position);
+ * @endcode
  */
 #define ecs_component_t(world, T)\
     ecs_component_init(world, &(ecs_component_desc_t) { \
@@ -197,9 +236,12 @@
 /** Shorthand for creating a filter with ecs_filter_init.
  *
  * Example:
- *   ecs_filter(world, {
- *     .terms = {{ ecs_id(Position) }}
- *   });
+ *
+ * @code
+ * ecs_filter(world, {
+ *   .terms = {{ ecs_id(Position) }}
+ * });
+ * @endcode
  */
 #define ecs_filter(world, ...)\
     ecs_filter_init(world, &(ecs_filter_desc_t) __VA_ARGS__ )
@@ -207,9 +249,12 @@
 /** Shorthand for creating a query with ecs_query_init.
  *
  * Example:
- *   ecs_query(world, {
- *     .filter.terms = {{ ecs_id(Position) }}
- *   });
+ *
+ * @code
+ * ecs_query(world, {
+ *   .filter.terms = {{ ecs_id(Position) }}
+ * });
+ * @endcode
  */
 #define ecs_query(world, ...)\
     ecs_query_init(world, &(ecs_query_desc_t) __VA_ARGS__ )
@@ -217,11 +262,14 @@
 /** Shorthand for creating an observer with ecs_observer_init.
  *
  * Example:
- *   ecs_observer(world, {
- *     .filter.terms = {{ ecs_id(Position) }},
- *     .events = { EcsOnAdd },
- *     .callback = AddPosition
- *   });
+ *
+ * @code
+ * ecs_observer(world, {
+ *   .filter.terms = {{ ecs_id(Position) }},
+ *   .events = { EcsOnAdd },
+ *   .callback = AddPosition
+ * });
+ * @endcode
  */
 #define ecs_observer(world, ...)\
     ecs_observer_init(world, &(ecs_observer_desc_t) __VA_ARGS__ )
@@ -521,35 +569,50 @@
 
 /** Declare a constructor.
  * Example:
- *   ECS_CTOR(MyType, ptr, { ptr->value = NULL; });
+ *
+ * @code
+ * ECS_CTOR(MyType, ptr, { ptr->value = NULL; });
+ * @endcode
  */
 #define ECS_CTOR(type, var, ...)\
     ECS_XTOR_IMPL(type, ctor, var, __VA_ARGS__)
 
 /** Declare a destructor.
  * Example:
- *   ECS_DTOR(MyType, ptr, { free(ptr->value); });
+ *
+ * @code
+ * ECS_DTOR(MyType, ptr, { free(ptr->value); });
+ * @endcode
  */
 #define ECS_DTOR(type, var, ...)\
     ECS_XTOR_IMPL(type, dtor, var, __VA_ARGS__)
 
 /** Declare a copy action.
  * Example:
- *   ECS_COPY(MyType, dst, src, { dst->value = strdup(src->value); });
+ *
+ * @code
+ * ECS_COPY(MyType, dst, src, { dst->value = strdup(src->value); });
+ * @endcode
  */
 #define ECS_COPY(type, dst_var, src_var, ...)\
     ECS_COPY_IMPL(type, dst_var, src_var, __VA_ARGS__)
 
 /** Declare a move action.
  * Example:
- *   ECS_MOVE(MyType, dst, src, { dst->value = src->value; src->value = 0; });
+ *
+ * @code
+ * ECS_MOVE(MyType, dst, src, { dst->value = src->value; src->value = 0; });
+ * @endcode
  */
 #define ECS_MOVE(type, dst_var, src_var, ...)\
     ECS_MOVE_IMPL(type, dst_var, src_var, __VA_ARGS__)
 
 /** Declare component hooks.
  * Example:
- *   ECS_ON_SET(MyType, ptr, { printf("%d\n", ptr->value); });
+ *
+ * @code
+ * ECS_ON_SET(MyType, ptr, { printf("%d\n", ptr->value); });
+ * @endcode
  */
 #define ECS_ON_ADD(type, ptr, ...)\
     ECS_HOOK_IMPL(type, ecs_on_add(type), ptr, __VA_ARGS__)
@@ -644,8 +707,11 @@
  *   int32_t hi
  *   ecs_order_by_action_t order_by - Pointer to the original comparison function. You are not supposed to use it.
  * Example:
- *   int CompareMyType(ecs_entity_t e1, const void* ptr1, ecs_entity_t e2, const void* ptr2) { const MyType* p1 = ptr1; const MyType* p2 = ptr2; return p1->value - p2->value; }
- *   ECS_SORT_TABLE_WITH_COMPARE(MyType, MyCustomCompare, CompareMyType)
+ *
+ * @code
+ * int CompareMyType(ecs_entity_t e1, const void* ptr1, ecs_entity_t e2, const void* ptr2) { const MyType* p1 = ptr1; const MyType* p2 = ptr2; return p1->value - p2->value; }
+ * ECS_SORT_TABLE_WITH_COMPARE(MyType, MyCustomCompare, CompareMyType)
+ * @endcode
  */
 #define ECS_SORT_TABLE_WITH_COMPARE(id, op_name, compare_fn, ...) \
     static int32_t ECS_CONCAT(op_name, _partition)( \
@@ -711,8 +777,11 @@
  * Variadic arguments are prepended before generated functions, use it to declare static
  *   or exported functions.
  * Example:
- *   ECS_COMPARE(MyType, { const MyType* p1 = ptr1; const MyType* p2 = ptr2; return p1->value - p2->value; });
- *   ECS_SORT_TABLE(MyType)
+ *
+ * @code
+ * ECS_COMPARE(MyType, { const MyType* p1 = ptr1; const MyType* p2 = ptr2; return p1->value - p2->value; });
+ * ECS_SORT_TABLE(MyType)
+ * @endcode
  */
 #define ECS_SORT_TABLE(id, ...) \
     ECS_SORT_TABLE_WITH_COMPARE(id, ecs_sort_table(id), ecs_compare(id), __VA_ARGS__)
@@ -722,7 +791,10 @@
  *   ecs_entity_t e1, const void* ptr1,
  *   ecs_entity_t e2, const void* ptr2
  * Example:
- *   ECS_COMPARE(MyType, { const MyType* p1 = ptr1; const MyType* p2 = ptr2; return p1->value - p2->value; });
+ *
+ * @code
+ * ECS_COMPARE(MyType, { const MyType* p1 = ptr1; const MyType* p2 = ptr2; return p1->value - p2->value; });
+ * @endcode
  */
 #define ECS_COMPARE(id, ...) \
     int ecs_compare(id)(ecs_entity_t e1, const void* ptr1, ecs_entity_t e2, const void* ptr2) { \
