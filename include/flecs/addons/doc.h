@@ -176,7 +176,7 @@ FLECS_API
 void FlecsDocImport(
     ecs_world_t *world);
 
-/* @} */
+/** @} */
 
 #ifdef __cplusplus
 }
