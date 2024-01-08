@@ -187,7 +187,7 @@
     (void)ecs_id(id);\
     (void)id
 
-/** Shorthand for creating an entity with ecs_entity_init.
+/** Shorthand for creating an entity with ecs_entity_init().
  *
  * Example:
  *
@@ -200,7 +200,7 @@
 #define ecs_entity(world, ...)\
     ecs_entity_init(world, &(ecs_entity_desc_t) __VA_ARGS__ )
 
-/** Shorthand for creating a component with ecs_component_init.
+/** Shorthand for creating a component with ecs_component_init().
  *
  * Example:
  *
@@ -233,7 +233,7 @@
         .type.alignment = ECS_ALIGNOF(T) \
     })
 
-/** Shorthand for creating a filter with ecs_filter_init.
+/** Shorthand for creating a filter with ecs_filter_init().
  *
  * Example:
  *
@@ -246,7 +246,7 @@
 #define ecs_filter(world, ...)\
     ecs_filter_init(world, &(ecs_filter_desc_t) __VA_ARGS__ )
 
-/** Shorthand for creating a query with ecs_query_init.
+/** Shorthand for creating a query with ecs_query_init().
  *
  * Example:
  *
@@ -259,7 +259,7 @@
 #define ecs_query(world, ...)\
     ecs_query_init(world, &(ecs_query_desc_t) __VA_ARGS__ )
 
-/** Shorthand for creating an observer with ecs_observer_init.
+/** Shorthand for creating an observer with ecs_observer_init().
  *
  * Example:
  *

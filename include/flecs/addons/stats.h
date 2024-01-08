@@ -152,7 +152,7 @@ typedef struct ecs_world_stats_t {
     int32_t t;
 } ecs_world_stats_t;
 
-/** Statistics for a single query (use ecs_query_stats_get) */
+/** Statistics for a single query (use ecs_query_stats_get()) */
 typedef struct ecs_query_stats_t {
     int64_t first_;
     ecs_metric_t matched_table_count;       /**< Matched non-empty tables */
@@ -164,7 +164,7 @@ typedef struct ecs_query_stats_t {
     int32_t t;
 } ecs_query_stats_t;
 
-/** Statistics for a single system (use ecs_system_stats_get) */
+/** Statistics for a single system (use ecs_system_stats_get()) */
 typedef struct ecs_system_stats_t {
     int64_t first_;
     ecs_metric_t time_spent;       /**< Time spent processing a system */

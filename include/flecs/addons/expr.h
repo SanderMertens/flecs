@@ -104,7 +104,7 @@ ecs_size_t ecs_stresc(
     const char *in);
 
 /** Return escaped string.
- * Return escaped version of input string. Same as ecs_stresc, but returns an
+ * Return escaped version of input string. Same as ecs_stresc(), but returns an
  * allocated string of the right size.
  *
  * @param delimiter The delimiter used (for example '"').
@@ -166,7 +166,7 @@ ecs_expr_var_t* ecs_vars_declare(
 
 /** Declare variable in current scope from value.
  * This operation takes ownership of the value. The value pointer must be
- * allocated with ecs_value_new.
+ * allocated with ecs_value_new().
  */
 FLECS_API
 ecs_expr_var_t* ecs_vars_declare_w_value(
@@ -180,7 +180,7 @@ ecs_expr_var_t* ecs_vars_lookup(
     const ecs_vars_t *vars,
     const char *name);
 
-/** Used with ecs_parse_expr. */
+/** Used with ecs_parse_expr(). */
 typedef struct ecs_parse_expr_desc_t {
     const char *name;
     const char *expr;
@@ -198,7 +198,7 @@ typedef struct ecs_parse_expr_desc_t {
  *
  * If no type and pointer are provided for the value argument, the operation
  * will discover the type from the expression and allocate storage for the
- * value. The allocated value must be freed with ecs_value_free.
+ * value. The allocated value must be freed with ecs_value_free().
  *
  * @param world The world.
  * @param ptr The pointer to the expression to parse.
@@ -229,7 +229,7 @@ char* ecs_ptr_to_expr(
     const void *data);
 
 /** Serialize value into expression buffer.
- * Same as ecs_ptr_to_expr, but serializes to an ecs_strbuf_t instance.
+ * Same as ecs_ptr_to_expr(), but serializes to an ecs_strbuf_t instance.
  *
  * @param world The world.
  * @param type The type of the value to serialize.
@@ -244,9 +244,9 @@ int ecs_ptr_to_expr_buf(
     const void *data,
     ecs_strbuf_t *buf);
 
-/** Similar as ecs_ptr_to_expr, but serializes values to string.
- * Whereas the output of ecs_ptr_to_expr is a valid expression, the output of
- * ecs_ptr_to_str is a string representation of the value. In most cases the
+/** Similar as ecs_ptr_to_expr(), but serializes values to string.
+ * Whereas the output of ecs_ptr_to_expr() is a valid expression, the output of
+ * ecs_ptr_to_str() is a string representation of the value. In most cases the
  * output of the two operations is the same, but there are some differences:
  * - Strings are not quoted
  *
@@ -262,7 +262,7 @@ char* ecs_ptr_to_str(
     const void *data);
 
 /** Serialize value into string buffer.
- * Same as ecs_ptr_to_str, but serializes to an ecs_strbuf_t instance.
+ * Same as ecs_ptr_to_str(), but serializes to an ecs_strbuf_t instance.
  *
  * @param world The world.
  * @param type The type of the value to serialize.

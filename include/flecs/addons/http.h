@@ -9,7 +9,7 @@
  *
  * Each server instance creates a single thread used for receiving requests.
  * Receiving requests are enqueued and handled when the application calls
- * ecs_http_server_dequeue. This increases latency of request handling vs.
+ * ecs_http_server_dequeue(). This increases latency of request handling vs.
  * responding directly in the receive thread, but is better suited for
  * retrieving data from ECS applications, as requests can be processed by an ECS
  * system without having to lock the world.
@@ -119,7 +119,7 @@ typedef bool (*ecs_http_reply_action_t)(
     ecs_http_reply_t *reply,
     void *ctx);
 
-/** Used with ecs_http_server_init. */
+/** Used with ecs_http_server_init(). */
 typedef struct {
     ecs_http_reply_action_t callback; /**< Function called for each request  */
     void *ctx;                        /**< Passed to callback (optional) */
@@ -129,7 +129,7 @@ typedef struct {
 } ecs_http_server_desc_t;
 
 /** Create server.
- * Use ecs_http_server_start to start receiving requests.
+ * Use ecs_http_server_start() to start receiving requests.
  *
  * @param desc Server configuration parameters.
  * @return The new server, or NULL if creation failed.
@@ -194,7 +194,7 @@ int ecs_http_server_http_request(
     ecs_size_t len,
     ecs_http_reply_t *reply_out);
 
-/** Convenience wrapper around ecs_http_server_request. */
+/** Convenience wrapper around ecs_http_server_request(). */
 FLECS_API
 int ecs_http_server_request(
     ecs_http_server_t* srv,

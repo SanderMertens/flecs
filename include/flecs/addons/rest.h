@@ -70,7 +70,7 @@ ecs_http_server_t* ecs_rest_server_init(
     const ecs_http_server_desc_t *desc);
 
 /** Cleanup REST HTTP server.
- * The server must have been created with ecs_rest_server_init.
+ * The server must have been created with ecs_rest_server_init().
  */
 FLECS_API
 void ecs_rest_server_fini(

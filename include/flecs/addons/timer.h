@@ -54,7 +54,7 @@ typedef struct EcsRateFilter {
  * This operation executes any systems associated with the timer after the
  * specified timeout value. If the entity contains an existing timer, the
  * timeout value will be reset. The timer can be started and stopped with
- * ecs_start_timer and ecs_stop_timer.
+ * ecs_start_timer() and ecs_stop_timer().
  *
  * The timer is synchronous, and is incremented each frame by delta_time.
  *
@@ -75,11 +75,11 @@ ecs_entity_t ecs_set_timeout(
     ecs_ftime_t timeout);
 
 /** Get current timeout value for the specified timer.
- * This operation returns the value set by ecs_set_timeout. If no timer is
+ * This operation returns the value set by ecs_set_timeout(). If no timer is
  * active for this entity, the operation returns 0.
  *
  * After the timeout expires the EcsTimer component is removed from the entity.
- * This means that if ecs_get_timeout is invoked after the timer is expired, the
+ * This means that if ecs_get_timeout() is invoked after the timer is expired, the
  * operation will return 0.
  *
  * The timer is synchronous, and is incremented each frame by delta_time.
@@ -122,7 +122,7 @@ ecs_entity_t ecs_set_interval(
     ecs_ftime_t interval);
 
 /** Get current interval value for the specified timer.
- * This operation returns the value set by ecs_set_interval. If the entity is
+ * This operation returns the value set by ecs_set_interval(). If the entity is
  * not a timer, the operation will return 0.
  *
  * @param world The world.
@@ -194,7 +194,7 @@ void ecs_randomize_timers(
  * at the exact same time as its source.
  *
  * If no tick source is provided, the rate filter will use the frame tick as
- * source, which corresponds with the number of times ecs_progress is called.
+ * source, which corresponds with the number of times ecs_progress() is called.
  *
  * The tick_source entity will be a tick source after this operation. Tick
  * sources can be read by getting the EcsTickSource component. If the tick

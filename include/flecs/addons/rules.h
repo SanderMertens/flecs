@@ -71,7 +71,7 @@ extern "C" {
  * Different terms with the same variable name are automatically correlated by
  * the query engine.
  *
- * A rule needs to be explicitly deleted with ecs_rule_fini.
+ * A rule needs to be explicitly deleted with ecs_rule_fini().
  *
  * @param world The world.
  * @param desc The descriptor (see ecs_filter_desc_t)
@@ -111,7 +111,7 @@ int32_t ecs_rule_var_count(
 
 /** Find variable index.
  * This operation looks up the index of a variable in the rule. This index can
- * be used in operations like ecs_iter_set_var and ecs_iter_get_var.
+ * be used in operations like ecs_iter_set_var() and ecs_iter_get_var().
  *
  * @param rule The rule.
  * @param name The variable name.
@@ -135,7 +135,7 @@ const char* ecs_rule_var_name(
 
 /** Test if variable is an entity.
  * Internally the rule engine has entity variables and table variables. When
- * iterating through rule variables (by using ecs_rule_variable_count) only
+ * iterating through rule variables (by using ecs_rule_variable_count()) only
  * the values for entity variables are accessible. This operation enables an
  * application to check if a variable is an entity variable.
  *
@@ -150,7 +150,7 @@ bool ecs_rule_var_is_entity(
 /** Iterate a rule.
  * Note that rule iterators may allocate memory, and that unless the iterator
  * is iterated until completion, it may still hold resources. When stopping
- * iteration before ecs_rule_next has returned false, use ecs_iter_fini to
+ * iteration before ecs_rule_next() has returned false, use ecs_iter_fini() to
  * cleanup any remaining resources.
  *
  * @param world The world.
@@ -183,7 +183,7 @@ bool ecs_rule_next_instanced(
  * This will convert the rule program to a string which can aid in debugging
  * the behavior of a rule.
  *
- * The returned string must be freed with ecs_os_free.
+ * The returned string must be freed with ecs_os_free().
  *
  * @param rule The rule.
  * @return The string

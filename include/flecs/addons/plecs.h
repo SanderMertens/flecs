@@ -62,7 +62,7 @@ int ecs_plecs_from_str(
 /** Parse plecs file.
  * This parses a plecs file and instantiates the entities in the world. This
  * operation is equivalent to loading the file contents and passing it to
- * ecs_plecs_from_str.
+ * ecs_plecs_from_str().
  *
  * @param world The world.
  * @param filename The plecs file name.
@@ -73,7 +73,7 @@ int ecs_plecs_from_file(
     ecs_world_t *world,
     const char *filename);
 
-/** Used with ecs_script_init */
+/** Used with ecs_script_init() */
 typedef struct ecs_script_desc_t {
     ecs_entity_t entity;      /* Set to customize entity handle associated with script */
     const char *filename;     /* Set to load script from file */
