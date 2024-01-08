@@ -37,7 +37,7 @@ FLECS_API
 void FlecsCoreDocImport(
     ecs_world_t *world);
 
-/* @} */
+/** @} */
 
 #ifdef __cplusplus
 }

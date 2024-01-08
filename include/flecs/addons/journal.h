@@ -65,12 +65,11 @@ void flecs_journal_end(void);
 #ifdef __cplusplus
 }
 #endif // __cplusplus
+/** @} */
 #endif // FLECS_JOURNAL_H
 #else
 #define flecs_journal_begin(...)
 #define flecs_journal_end(...)
 #define flecs_journal(...)
-
-/** @} */
 
 #endif // FLECS_JOURNAL
