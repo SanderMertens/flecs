@@ -145,7 +145,7 @@ ecs_entity_t ecs_metric_init(
     ecs_world_t *world,
     const ecs_metric_desc_t *desc);
 
-/** Shorthand for creating a metric with ecs_metric_init.
+/** Shorthand for creating a metric with ecs_metric_init().
  *
  * Example:
  *

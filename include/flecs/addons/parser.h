@@ -96,12 +96,12 @@ const char* ecs_parse_token(
  * @endcode
  *
  * The operation does not attempt to find entity ids from the names in the
- * expression. Use the ecs_term_resolve_ids function to resolve the identifiers
+ * expression. Use the ecs_term_resolve_ids() function to resolve the identifiers
  * in the parsed term.
  *
  * The returned term will in most cases contain allocated resources, which
  * should freed (or used) by the application. To free the resources for a term,
- * use the ecs_term_free function.
+ * use the ecs_term_free() function.
  *
  * The parser accepts expressions in the legacy string format.
  *

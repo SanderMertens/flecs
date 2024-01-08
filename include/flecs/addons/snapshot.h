@@ -41,7 +41,7 @@ ecs_snapshot_t* ecs_snapshot_take(
     ecs_world_t *world);
 
 /** Create a filtered snapshot.
- * This operation is the same as ecs_snapshot_take, but accepts an iterator so
+ * This operation is the same as ecs_snapshot_take(), but accepts an iterator so
  * an application can control what is stored by the snapshot.
  *
  * @param iter An iterator to the data to be stored by the snapshot.
@@ -56,7 +56,7 @@ ecs_snapshot_t* ecs_snapshot_take_w_iter(
  * snapshot was taken. A snapshot can only be used once for restoring, as its
  * data replaces the data that is currently in the world.
  * This operation also resets the last issued entity handle, so any calls to
- * ecs_new may return entity ids that have been issued before restoring the
+ * ecs_new() may return entity ids that have been issued before restoring the
  * snapshot.
  *
  * The world in which the snapshot is restored must be the same as the world in

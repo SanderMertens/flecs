@@ -13,7 +13,7 @@
  * from the build to reduce the impact on performance. By default all debug
  * tracing is enabled for debug builds, tracing is enabled at release builds.
  *
- * Applications can change the logging level at runtime with ecs_log_set_level,
+ * Applications can change the logging level at runtime with ecs_log_set_level(),
  * but what is actually logged depends on what is compiled (when compiled
  * without debug tracing, setting the runtime level to debug won't have an
  * effect).

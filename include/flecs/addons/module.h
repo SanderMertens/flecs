@@ -49,7 +49,7 @@ ecs_entity_t ecs_import(
     ecs_module_action_t module,
     const char *module_name);
 
-/** Same as ecs_import, but with name to scope conversion.
+/** Same as ecs_import(), but with name to scope conversion.
  * PascalCase names are automatically converted to scoped names.
  *
  * @param world The world.
@@ -64,7 +64,7 @@ ecs_entity_t ecs_import_c(
     const char *module_name_c);
 
 /** Import a module from a library.
- * Similar to ecs_import, except that this operation will attempt to load the
+ * Similar to ecs_import(), except that this operation will attempt to load the
  * module from a dynamic library.
  *
  * A library may contain multiple modules, which is why both a library name and
@@ -107,7 +107,7 @@ ecs_entity_t ecs_module_init(
     ecs_entity_t ecs_id(id) = 0; ECS_MODULE_DEFINE(world, id)\
     (void)ecs_id(id)
 
-/** Wrapper around ecs_import.
+/** Wrapper around ecs_import().
  * This macro provides a convenient way to load a module with the world. It can
  * be used like this:
  *

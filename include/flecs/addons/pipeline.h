@@ -10,7 +10,7 @@
  * The module defines a number of builtin tags (EcsPreUpdate, EcsOnUpdate,
  * EcsPostUpdate etc.) that are registered with the builtin pipeline. The
  * builtin pipeline is ran by default when calling ecs_progress(). An
- * application can set a custom pipeline with the ecs_set_pipeline function.
+ * application can set a custom pipeline with the ecs_set_pipeline() function.
  */
 
 #ifdef FLECS_PIPELINE
@@ -67,7 +67,7 @@ extern "C" {
 
 #endif
 
-/* Pipeline descriptor (used with ecs_pipeline_init) */
+/* Pipeline descriptor (used with ecs_pipeline_init()) */
 typedef struct ecs_pipeline_desc_t {
     /* Existing entity to associate with pipeline (optional) */
     ecs_entity_t entity;
@@ -85,7 +85,7 @@ ecs_entity_t ecs_pipeline_init(
     const ecs_pipeline_desc_t *desc);
 
 /** Set a custom pipeline.
- * This operation sets the pipeline to run when ecs_progress is invoked.
+ * This operation sets the pipeline to run when ecs_progress() is invoked.
  *
  * @param world The world.
  * @param pipeline The pipeline to set.
@@ -114,14 +114,14 @@ ecs_entity_t ecs_get_pipeline(
  * update entity values proportional to the elapsed time since their last
  * invocation.
  *
- * When an application passes 0 to delta_time, ecs_progress will automatically
+ * When an application passes 0 to delta_time, ecs_progress() will automatically
  * measure the time passed since the last frame. If an application does not uses
  * time management, it should pass a non-zero value for delta_time (1.0 is
  * recommended). That way, no time will be wasted measuring the time.
  *
  * @param world The world to progress.
  * @param delta_time The time passed since the last frame.
- * @return false if ecs_quit has been called, true otherwise.
+ * @return false if ecs_quit() has been called, true otherwise.
  */
 FLECS_API
 bool ecs_progress(
@@ -179,15 +179,15 @@ void ecs_run_pipeline(
  * will cause systems to evenly distribute matched entities across threads. The
  * operation may be called multiple times to reconfigure the number of threads
  * used, but never while running a system / pipeline.
- * Calling ecs_set_threads will also end the use of task threads setup with
- * ecs_set_task_threads and vice-versa */
+ * Calling ecs_set_threads() will also end the use of task threads setup with
+ * ecs_set_task_threads() and vice-versa */
 FLECS_API
 void ecs_set_threads(
     ecs_world_t *world,
     int32_t threads);
 
 /** Set number of worker task threads.
- * ecs_set_task_threads is similar to ecs_set_threads, except threads are treated
+ * ecs_set_task_threads() is similar to ecs_set_threads(), except threads are treated
  * as short-lived tasks and will be created and joined around each update of the world.
  * Creation and joining of these tasks will use the os_api_t tasks APIs rather than the
  * the standard thread API functions, although they may be the same if desired.
@@ -196,8 +196,8 @@ void ecs_set_threads(
  * to create tasks for your job system and then wait on their conclusion.
  * The operation may be called multiple times to reconfigure the number of task threads
  * used, but never while running a system / pipeline.
- * Calling ecs_set_task_threads will also end the use of threads setup with
- * ecs_set_threads and vice-versa */
+ * Calling ecs_set_task_threads() will also end the use of threads setup with
+ * ecs_set_threads() and vice-versa */
 
 FLECS_API
 void ecs_set_task_threads(
