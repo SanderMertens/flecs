@@ -4649,7 +4649,7 @@ void* ecs_query_get_binding_ctx(
 /** @} */
 
 /**
- * @defgroup observer Observers
+ * @defgroup observers Observers
  * Functions for working with events and observers.
  *
  * @{
