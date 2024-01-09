@@ -194,7 +194,7 @@ int ecs_http_server_http_request(
     ecs_size_t len,
     ecs_http_reply_t *reply_out);
 
-/** Convenience wrapper around ecs_http_server_request(). */
+/** Convenience wrapper around ecs_http_server_http_request(). */
 FLECS_API
 int ecs_http_server_request(
     ecs_http_server_t* srv,

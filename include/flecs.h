@@ -5412,7 +5412,7 @@ ecs_table_t* ecs_table_remove_id(
     ecs_table_t *table,
     ecs_id_t id);
 
-/** Lock or unlock table.
+/** Lock a table.
  * When a table is locked, modifications to it will throw an assert. When the
  * table is locked recursively, it will take an equal amount of unlock
  * operations to actually unlock the table.

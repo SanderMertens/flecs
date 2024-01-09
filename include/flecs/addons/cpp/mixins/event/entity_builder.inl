@@ -1,5 +1,5 @@
 /**
- * @file addons/cpp/mixins/event/entity_builder.hpp
+ * @file addons/cpp/mixins/event/entity_builder.inl
  * @brief Event entity mixin.
  */
 
