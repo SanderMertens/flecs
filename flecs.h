@@ -8242,7 +8242,7 @@ ecs_table_t* ecs_table_remove_id(
     ecs_table_t *table,
     ecs_id_t id);
 
-/** Lock or unlock table.
+/** Lock a table.
  * When a table is locked, modifications to it will throw an assert. When the
  * table is locked recursively, it will take an equal amount of unlock
  * operations to actually unlock the table.
@@ -10569,7 +10569,7 @@ int ecs_http_server_http_request(
     ecs_size_t len,
     ecs_http_reply_t *reply_out);
 
-/** Convenience wrapper around ecs_http_server_request(). */
+/** Convenience wrapper around ecs_http_server_http_request(). */
 FLECS_API
 int ecs_http_server_request(
     ecs_http_server_t* srv,
@@ -12813,7 +12813,7 @@ char* ecs_array_to_json(
     int32_t count);
 
 /** Serialize array into JSON string buffer.
- * Same as ecs_array_to_json_buf(), but serializes to an ecs_strbuf_t instance.
+ * Same as ecs_array_to_json(), but serializes to an ecs_strbuf_t instance.
  *
  * @param world The world.
  * @param type The type of the value to serialize.
@@ -22726,7 +22726,7 @@ E to_constant() const;
 
 
 /**
- * @file addons/cpp/mixins/event/entity_builder.hpp
+ * @file addons/cpp/mixins/event/entity_view.inl
  * @brief Event entity mixin.
  */
 
@@ -24051,7 +24051,7 @@ Self& set_json_second(
 #   endif
 
 /**
- * @file addons/cpp/mixins/event/entity_builder.hpp
+ * @file addons/cpp/mixins/event/entity_builder.inl
  * @brief Event entity mixin.
  */
 

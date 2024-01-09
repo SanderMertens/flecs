@@ -113,7 +113,7 @@ char* ecs_array_to_json(
     int32_t count);
 
 /** Serialize array into JSON string buffer.
- * Same as ecs_array_to_json_buf(), but serializes to an ecs_strbuf_t instance.
+ * Same as ecs_array_to_json(), but serializes to an ecs_strbuf_t instance.
  *
  * @param world The world.
  * @param type The type of the value to serialize.
