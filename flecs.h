@@ -5687,7 +5687,7 @@ ecs_entity_t ecs_record_get_entity(
  */
 FLECS_API
 const void* ecs_record_get_id(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     const ecs_record_t *record,
     ecs_id_t id);
 

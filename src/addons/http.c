@@ -1299,6 +1299,10 @@ void http_do_request(
     ecs_http_reply_t *reply,
     const ecs_http_request_impl_t *req)
 {
+    ecs_check(srv != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(srv->callback != NULL, ECS_INVALID_OPERATION, 
+        "missing request handler for server");
+
     if (srv->callback(ECS_CONST_CAST(ecs_http_request_t*, req), reply, 
         srv->ctx) == false) 
     {
@@ -1312,6 +1316,8 @@ void http_do_request(
             ecs_os_linc(&ecs_http_request_handled_ok_count);
         }
     }
+error:
+    return;
 }
 
 static
@@ -1649,16 +1655,25 @@ int ecs_http_server_request(
     const char *req,
     ecs_http_reply_t *reply_out)
 {
-    ecs_strbuf_t reqbuf = ECS_STRBUF_INIT;
-    ecs_strbuf_appendstr_zerocpy_const(&reqbuf, method);
-    ecs_strbuf_appendlit(&reqbuf, " ");
-    ecs_strbuf_appendstr_zerocpy_const(&reqbuf, req);
-    ecs_strbuf_appendlit(&reqbuf, " HTTP/1.1\r\n\r\n");
-    int32_t len = ecs_strbuf_written(&reqbuf);
-    char *reqstr = ecs_strbuf_get(&reqbuf);
-    int result = ecs_http_server_http_request(srv, reqstr, len, reply_out);
-    ecs_os_free(reqstr);
-    return result;
+    const char *http_ver = " HTTP/1.1\r\n\r\n";
+    int32_t method_len = ecs_os_strlen(method);
+    int32_t req_len = ecs_os_strlen(req);
+    int32_t http_ver_len = ecs_os_strlen(req);
+
+    int32_t len = method_len + req_len + http_ver_len + 1;
+    if (method_len + req_len + http_ver_len >= 1024) {
+        ecs_err("HTTP request too long");
+        return -1;
+    }
+
+    char reqstr[1024];
+    char *ptr = reqstr;
+    ecs_os_strncpy(ptr, method, method_len); ptr += method_len;
+    ptr[0] = ' '; ptr ++;
+    ecs_os_strncpy(ptr, req, req_len); ptr += req_len;
+    ecs_os_strncpy(ptr, http_ver, http_ver_len);
+
+    return ecs_http_server_http_request(srv, reqstr, len, reply_out);
 }
 
 void* ecs_http_server_ctx(
