@@ -23,9 +23,6 @@
  * @param parent Parent entity of the metric (optional).
  * @param brief Description for metric (optional).
  * @param name Name of metric (optional).
- * 
- * \ingroup cpp_addons_metrics
- * \memberof flecs::world
  */
 template <typename Kind>
 untyped_component& metric(

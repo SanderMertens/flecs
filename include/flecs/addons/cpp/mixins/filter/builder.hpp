@@ -18,7 +18,7 @@ namespace _ {
 
 /** Filter builder.
  * 
- * \ingroup cpp_filters
+ * \ingroup cpp_core_filters
  */
 template <typename ... Components>
 struct filter_builder final : _::filter_builder_base<Components...> {

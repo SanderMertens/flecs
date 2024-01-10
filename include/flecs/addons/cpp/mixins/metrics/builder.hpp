@@ -10,7 +10,7 @@
 namespace flecs {
 
 /**
- * \ingroup cpp_addon_metrics
+ * \ingroup cpp_addons_metrics
  * @{
  */
 

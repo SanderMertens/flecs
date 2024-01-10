@@ -149,7 +149,7 @@ private:
 /** Term builder interface. 
  * A term is a single element of a query expression. 
  * 
- * \ingroup cpp_addons_filter
+ * \ingroup cpp_core_filters
  */
 template<typename Base>
 struct term_builder_i : term_id_builder_i<Base> {
