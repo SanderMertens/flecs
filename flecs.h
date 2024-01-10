@@ -12615,13 +12615,13 @@ void ecs_doc_set_color(
  * To test if an entity has a human readable name, use:
  *
  * @code
- * ecs_has_pair(world, e, ecs_id(EcsDescription), EcsName);
+ * ecs_has_pair(world, e, ecs_id(EcsDocDescription), EcsName);
  * @endcode
  *
  * Or in C++:
  *
  * @code
- * e.has<flecs::Description>(flecs::Name);
+ * e.has<flecs::doc::Description>(flecs::Name);
  * @endcode
  *
  * @param world The world.
