@@ -74,16 +74,28 @@ void Strbuf_append_list(void);
 void Strbuf_append_nested_list(void);
 void Strbuf_large_str(void);
 void Strbuf_empty_str(void);
-void Strbuf_append_zerocopy(void);
-void Strbuf_append_zerocopy_only(void);
-void Strbuf_append_zerocopy_const(void);
 void Strbuf_reset(void);
 void Strbuf_merge(void);
-void Strbuf_app_buffer(void);
+void Strbuf_merge_empty(void);
 void Strbuf_append_char(void);
 void Strbuf_append_511_chars(void);
 void Strbuf_append_512_chars(void);
 void Strbuf_append_513_chars(void);
+void Strbuf_append_1023_chars(void);
+void Strbuf_append_1024_chars(void);
+void Strbuf_append_1025_chars(void);
+void Strbuf_append_2047_chars(void);
+void Strbuf_append_2048_chars(void);
+void Strbuf_append_2049_chars(void);
+void Strbuf_append_511_str(void);
+void Strbuf_append_512_str(void);
+void Strbuf_append_513_str(void);
+void Strbuf_append_1023_str(void);
+void Strbuf_append_1024_str(void);
+void Strbuf_append_1025_str(void);
+void Strbuf_append_2047_str(void);
+void Strbuf_append_2048_str(void);
+void Strbuf_append_2049_str(void);
 void Strbuf_append_flt(void);
 void Strbuf_append_nan(void);
 void Strbuf_append_inf(void);
@@ -330,18 +342,6 @@ bake_test_case Strbuf_testcases[] = {
         Strbuf_empty_str
     },
     {
-        "append_zerocopy",
-        Strbuf_append_zerocopy
-    },
-    {
-        "append_zerocopy_only",
-        Strbuf_append_zerocopy_only
-    },
-    {
-        "append_zerocopy_const",
-        Strbuf_append_zerocopy_const
-    },
-    {
         "reset",
         Strbuf_reset
     },
@@ -350,8 +350,8 @@ bake_test_case Strbuf_testcases[] = {
         Strbuf_merge
     },
     {
-        "app_buffer",
-        Strbuf_app_buffer
+        "merge_empty",
+        Strbuf_merge_empty
     },
     {
         "append_char",
@@ -368,6 +368,66 @@ bake_test_case Strbuf_testcases[] = {
     {
         "append_513_chars",
         Strbuf_append_513_chars
+    },
+    {
+        "append_1023_chars",
+        Strbuf_append_1023_chars
+    },
+    {
+        "append_1024_chars",
+        Strbuf_append_1024_chars
+    },
+    {
+        "append_1025_chars",
+        Strbuf_append_1025_chars
+    },
+    {
+        "append_2047_chars",
+        Strbuf_append_2047_chars
+    },
+    {
+        "append_2048_chars",
+        Strbuf_append_2048_chars
+    },
+    {
+        "append_2049_chars",
+        Strbuf_append_2049_chars
+    },
+    {
+        "append_511_str",
+        Strbuf_append_511_str
+    },
+    {
+        "append_512_str",
+        Strbuf_append_512_str
+    },
+    {
+        "append_513_str",
+        Strbuf_append_513_str
+    },
+    {
+        "append_1023_str",
+        Strbuf_append_1023_str
+    },
+    {
+        "append_1024_str",
+        Strbuf_append_1024_str
+    },
+    {
+        "append_1025_str",
+        Strbuf_append_1025_str
+    },
+    {
+        "append_2047_str",
+        Strbuf_append_2047_str
+    },
+    {
+        "append_2048_str",
+        Strbuf_append_2048_str
+    },
+    {
+        "append_2049_str",
+        Strbuf_append_2049_str
     },
     {
         "append_flt",
@@ -391,6 +451,7 @@ bake_test_case Strbuf_testcases[] = {
     }
 };
 
+
 static bake_test_suite suites[] = {
     {
         "Map",
@@ -410,7 +471,7 @@ static bake_test_suite suites[] = {
         "Strbuf",
         Strbuf_setup,
         NULL,
-        23,
+        35,
         Strbuf_testcases
     }
 };

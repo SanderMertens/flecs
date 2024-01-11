@@ -6290,7 +6290,7 @@ error:
 }
 
 const void* ecs_record_get_id(
-    ecs_world_t *stage,
+    const ecs_world_t *stage,
     const ecs_record_t *r,
     ecs_id_t id)
 {
@@ -25878,12 +25878,6 @@ typedef int ecs_http_socket_t;
 /* Total number of outstanding send requests */
 #define ECS_HTTP_SEND_QUEUE_MAX (256)
 
-/* Cache invalidation timeout (s) */
-#define ECS_HTTP_CACHE_TIMEOUT ((ecs_ftime_t)1.0)
-
-/* Cache entry purge timeout (s) */
-#define ECS_HTTP_CACHE_PURGE_TIMEOUT ((ecs_ftime_t)10.0)
-
 /* Global statistics */
 int64_t ecs_http_request_received_count = 0;
 int64_t ecs_http_request_invalid_count = 0;
@@ -25934,6 +25928,9 @@ struct ecs_http_server_t {
 
     ecs_http_reply_action_t callback;
     void *ctx;
+
+    ecs_ftime_t cache_timeout;
+    ecs_ftime_t cache_purge_timeout;
 
     ecs_sparse_t connections; /* sparse<http_connection_t> */
     ecs_sparse_t requests; /* sparse<http_request_t> */
@@ -26337,7 +26334,7 @@ ecs_http_request_entry_t* http_find_request_entry(
 
     if (entry) {
         ecs_ftime_t tf = (ecs_ftime_t)ecs_time_measure(&t);
-        if ((tf - entry->time) < ECS_HTTP_CACHE_TIMEOUT) {
+        if ((tf - entry->time) < srv->cache_timeout) {
             return entry;
         }
     }
@@ -26385,6 +26382,7 @@ char* http_decode_request(
 {
     ecs_os_zeromem(req);
 
+    ecs_size_t req_len = frag->buf.length;
     char *res = ecs_strbuf_get(&frag->buf);
     if (!res) {
         return NULL;
@@ -26414,6 +26412,9 @@ char* http_decode_request(
     req->pub.param_count = frag->param_count;
     req->res = res;
     req->req_len = frag->header_offsets[0];
+    if (!req->req_len) {
+        req->req_len = req_len;
+    }
 
     return res;
 }
@@ -26475,16 +26476,16 @@ bool http_parse_request(
         switch (frag->state) {
         case HttpFragStateBegin:
             ecs_os_memset_t(frag, 0, ecs_http_fragment_t);
-            frag->buf.max = ECS_HTTP_METHOD_LEN_MAX;
             frag->state = HttpFragStateMethod;
             frag->header_buf_ptr = frag->header_buf;
-            
+
             /* fall through */
         case HttpFragStateMethod:
             if (c == ' ') {
                 http_parse_method(frag);
+                ecs_strbuf_reset(&frag->buf);
                 frag->state = HttpFragStatePath;
-                frag->buf.max = ECS_HTTP_REQUEST_LEN_MAX;
+                frag->buf.content = NULL;
             } else {
                 ecs_strbuf_appendch(&frag->buf, c);
             }
@@ -26777,8 +26778,8 @@ void http_send_reply(
     bool preflight) 
 {
     ecs_strbuf_t hdrs = ECS_STRBUF_INIT;
+    int32_t content_length = reply->body.length;
     char *content = ecs_strbuf_get(&reply->body);
-    int32_t content_length = reply->body.length - 1;
 
     /* Use asynchronous send queue for outgoing data so send operations won't
      * hold up main thread */
@@ -26794,8 +26795,8 @@ void http_send_reply(
 
     http_append_send_headers(&hdrs, reply->code, reply->status, 
         reply->content_type, &reply->headers, content_length, preflight);
-    char *headers = ecs_strbuf_get(&hdrs);
     ecs_size_t headers_length = ecs_strbuf_written(&hdrs);
+    char *headers = ecs_strbuf_get(&hdrs);
 
     if (!req) {
         ecs_size_t written = http_send(conn->sock, headers, headers_length, 0);
@@ -27080,6 +27081,10 @@ void http_do_request(
     ecs_http_reply_t *reply,
     const ecs_http_request_impl_t *req)
 {
+    ecs_check(srv != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(srv->callback != NULL, ECS_INVALID_OPERATION, 
+        "missing request handler for server");
+
     if (srv->callback(ECS_CONST_CAST(ecs_http_request_t*, req), reply, 
         srv->ctx) == false) 
     {
@@ -27093,6 +27098,8 @@ void http_do_request(
             ecs_os_linc(&ecs_http_request_handled_ok_count);
         }
     }
+error:
+    return;
 }
 
 static
@@ -27147,7 +27154,7 @@ void http_purge_request_cache(
         ecs_http_request_entry_t *entries = ecs_vec_first(&bucket->values);
         for (i = count - 1; i >= 0; i --) {
             ecs_http_request_entry_t *entry = &entries[i];
-            if (fini || ((time - entry->time) > ECS_HTTP_CACHE_PURGE_TIMEOUT)) {
+            if (fini || ((time - entry->time) > srv->cache_purge_timeout)) {
                 ecs_http_request_key_t *key = &keys[i];
                 /* Safe, code owns the value */
                 ecs_os_free(ECS_CONST_CAST(char*, key->array));
@@ -27237,6 +27244,15 @@ ecs_http_server_t* ecs_http_server_init(
 
     srv->should_run = false;
     srv->initialized = true;
+
+    srv->cache_timeout = desc->cache_timeout;
+    srv->cache_purge_timeout = desc->cache_purge_timeout;
+
+    if (!ECS_EQZERO(srv->cache_timeout) && 
+         ECS_EQZERO(srv->cache_purge_timeout)) 
+    {
+        srv->cache_purge_timeout = srv->cache_timeout * 10;
+    }
 
     srv->callback = desc->callback;
     srv->ctx = desc->ctx;
@@ -27418,8 +27434,27 @@ int ecs_http_server_http_request(
         return -1;
     }
 
-    http_do_request(srv, reply_out, &request);
+    ecs_http_request_entry_t *entry = 
+        http_find_request_entry(srv, request.res, request.req_len);
+    if (entry) {
+        reply_out->body = ECS_STRBUF_INIT;
+        reply_out->code = 200;
+        reply_out->content_type = "application/json";
+        reply_out->headers = ECS_STRBUF_INIT;
+        reply_out->status = "OK";
+        ecs_strbuf_appendstrn(&reply_out->body, 
+            entry->content, entry->content_length);
+    } else {
+        http_do_request(srv, reply_out, &request);
+
+        if (request.pub.method == EcsHttpGet) {
+            http_insert_request_entry(srv, &request, reply_out);
+        }
+    }
+
     ecs_os_free(res);
+
+    http_purge_request_cache(srv, false);
 
     return (reply_out->code >= 400) ? -1 : 0;
 }
@@ -27430,16 +27465,26 @@ int ecs_http_server_request(
     const char *req,
     ecs_http_reply_t *reply_out)
 {
-    ecs_strbuf_t reqbuf = ECS_STRBUF_INIT;
-    ecs_strbuf_appendstr_zerocpy_const(&reqbuf, method);
-    ecs_strbuf_appendlit(&reqbuf, " ");
-    ecs_strbuf_appendstr_zerocpy_const(&reqbuf, req);
-    ecs_strbuf_appendlit(&reqbuf, " HTTP/1.1\r\n\r\n");
-    int32_t len = ecs_strbuf_written(&reqbuf);
-    char *reqstr = ecs_strbuf_get(&reqbuf);
-    int result = ecs_http_server_http_request(srv, reqstr, len, reply_out);
-    ecs_os_free(reqstr);
-    return result;
+    const char *http_ver = " HTTP/1.1\r\n\r\n";
+    int32_t method_len = ecs_os_strlen(method);
+    int32_t req_len = ecs_os_strlen(req);
+    int32_t http_ver_len = ecs_os_strlen(http_ver);
+
+    int32_t len = method_len + req_len + http_ver_len + 1;
+    if (method_len + req_len + http_ver_len >= 1024) {
+        ecs_err("HTTP request too long");
+        return -1;
+    }
+
+    char reqstr[1024];
+    char *ptr = reqstr;
+    ecs_os_memcpy(ptr, method, method_len); ptr += method_len;
+    ptr[0] = ' '; ptr ++;
+    ecs_os_memcpy(ptr, req, req_len); ptr += req_len;
+    ecs_os_memcpy(ptr, http_ver, http_ver_len); ptr += http_ver_len;
+    ptr[0] = '\n';
+
+    return ecs_http_server_http_request(srv, reqstr, len, reply_out);
 }
 
 void* ecs_http_server_ctx(
@@ -34981,7 +35026,8 @@ void flecs_on_set_rest(ecs_iter_t *it) {
         ecs_http_server_t *srv = ecs_rest_server_init(it->real_world,
             &(ecs_http_server_desc_t){ 
                 .ipaddr = rest[i].ipaddr, 
-                .port = rest[i].port 
+                .port = rest[i].port,
+                .cache_timeout = 1.0
             });
 
         if (!srv) {
@@ -40394,7 +40440,7 @@ char* flecs_strbuf_itoa(
 }
 
 static
-int flecs_strbuf_ftoa(
+void flecs_strbuf_ftoa(
     ecs_strbuf_t *out, 
     double f, 
     int precision,
@@ -40410,18 +40456,22 @@ int flecs_strbuf_ftoa(
         if (nan_delim) {
             ecs_strbuf_appendch(out, nan_delim);
             ecs_strbuf_appendlit(out, "NaN");
-            return ecs_strbuf_appendch(out, nan_delim);
+            ecs_strbuf_appendch(out, nan_delim);
+            return;
         } else {
-            return ecs_strbuf_appendlit(out, "NaN");
+            ecs_strbuf_appendlit(out, "NaN");
+            return;
         }
     }
     if (ecs_os_isinf(f)) {
         if (nan_delim) {
             ecs_strbuf_appendch(out, nan_delim);
             ecs_strbuf_appendlit(out, "Inf");
-            return ecs_strbuf_appendch(out, nan_delim);
+            ecs_strbuf_appendch(out, nan_delim);
+            return;
         } else {
-            return ecs_strbuf_appendlit(out, "Inf");
+            ecs_strbuf_appendlit(out, "Inf");
+            return;
         }
     }
 
@@ -40522,7 +40572,6 @@ int flecs_strbuf_ftoa(
             ptr = p1;
         }
 
-
         ptr[0] = 'e';
         ptr = flecs_strbuf_itoa(ptr + 1, exp);
 
@@ -40534,7 +40583,7 @@ int flecs_strbuf_ftoa(
         ptr[0] = '\0';
     }
     
-    return ecs_strbuf_appendstrn(out, buf, (int32_t)(ptr - buf));
+    ecs_strbuf_appendstrn(out, buf, (int32_t)(ptr - buf));
 }
 
 /* Add an extra element to the buffer */
@@ -40542,262 +40591,114 @@ static
 void flecs_strbuf_grow(
     ecs_strbuf_t *b)
 {
-    /* Allocate new element */
-    ecs_strbuf_element_embedded *e = ecs_os_malloc_t(ecs_strbuf_element_embedded);
-    b->size += b->current->pos;
-    b->current->next = (ecs_strbuf_element*)e;
-    b->current = (ecs_strbuf_element*)e;
-    b->elementCount ++;
-    e->super.buffer_embedded = true;
-    e->super.buf = e->buf;
-    e->super.pos = 0;
-    e->super.next = NULL;
-}
-
-/* Add an extra dynamic element */
-static
-void flecs_strbuf_grow_str(
-    ecs_strbuf_t *b,
-    const char *str,
-    char *alloc_str,
-    int32_t size)
-{
-    /* Allocate new element */
-    ecs_strbuf_element_str *e = ecs_os_malloc_t(ecs_strbuf_element_str);
-    b->size += b->current->pos;
-    b->current->next = (ecs_strbuf_element*)e;
-    b->current = (ecs_strbuf_element*)e;
-    b->elementCount ++;
-    e->super.buffer_embedded = false;
-    e->super.pos = size ? size : (int32_t)ecs_os_strlen(str);
-    e->super.next = NULL;
-    e->super.buf = ECS_CONST_CAST(char*, str);
-    e->alloc_str = alloc_str;
+    if (!b->content) {
+        b->content = b->small_string;
+        b->size = ECS_STRBUF_SMALL_STRING_SIZE;
+    } else if (b->content == b->small_string) {
+        b->size *= 2;
+        b->content = ecs_os_malloc_n(char, b->size);
+        ecs_os_memcpy(b->content, b->small_string, b->length);
+    } else {
+        b->size *= 2;
+        if (b->size < 16) b->size = 16;
+        b->content = ecs_os_realloc_n(b->content, char, b->size);
+    }
 }
 
 static
 char* flecs_strbuf_ptr(
     ecs_strbuf_t *b)
 {
-    if (b->buf) {
-        return &b->buf[b->current->pos];
-    } else {
-        return &b->current->buf[b->current->pos];
-    }
-}
-
-/* Compute the amount of space left in the current element */
-static
-int32_t flecs_strbuf_memLeftInCurrentElement(
-    ecs_strbuf_t *b)
-{
-    if (b->current->buffer_embedded) {
-        return ECS_STRBUF_ELEMENT_SIZE - b->current->pos;
-    } else {
-        return 0;
-    }
-}
-
-/* Compute the amount of space left */
-static
-int32_t flecs_strbuf_memLeft(
-    ecs_strbuf_t *b)
-{
-    if (b->max) {
-        return b->max - b->size - b->current->pos;
-    } else {
-        return INT_MAX;
-    }
-}
-
-static
-void flecs_strbuf_init(
-    ecs_strbuf_t *b)
-{
-    /* Initialize buffer structure only once */
-    if (!b->elementCount) {
-        b->size = 0;
-        b->firstElement.super.next = NULL;
-        b->firstElement.super.pos = 0;
-        b->firstElement.super.buffer_embedded = true;
-        b->firstElement.super.buf = b->firstElement.buf;
-        b->elementCount ++;
-        b->current = (ecs_strbuf_element*)&b->firstElement;
-    }
+    ecs_assert(b->content != NULL, ECS_INTERNAL_ERROR, NULL);
+    return &b->content[b->length];
 }
 
 /* Append a format string to a buffer */
 static
-bool flecs_strbuf_vappend(
+void flecs_strbuf_vappend(
     ecs_strbuf_t *b,
     const char* str,
     va_list args)
 {
-    bool result = true;
     va_list arg_cpy;
 
     if (!str) {
-        return result;
-    }
-
-    flecs_strbuf_init(b);
-
-    int32_t memLeftInElement = flecs_strbuf_memLeftInCurrentElement(b);
-    int32_t memLeft = flecs_strbuf_memLeft(b);
-
-    if (!memLeft) {
-        return false;
+        return;
     }
 
     /* Compute the memory required to add the string to the buffer. If user
      * provided buffer, use space left in buffer, otherwise use space left in
      * current element. */
-    int32_t max_copy = b->buf ? memLeft : memLeftInElement;
-    int32_t memRequired;
+    int32_t mem_left = b->size - b->length;
+    int32_t mem_required;
 
     va_copy(arg_cpy, args);
-    memRequired = vsnprintf(
-        flecs_strbuf_ptr(b), (size_t)(max_copy + 1), str, args);
 
-    ecs_assert(memRequired != -1, ECS_INTERNAL_ERROR, NULL);
-
-    if (memRequired <= memLeftInElement) {
-        /* Element was large enough to fit string */
-        b->current->pos += memRequired;
-    } else if ((memRequired - memLeftInElement) < memLeft) {
-        /* If string is a format string, a new buffer of size memRequired is
-         * needed to re-evaluate the format string and only use the part that
-         * wasn't already copied to the previous element */
-        if (memRequired <= ECS_STRBUF_ELEMENT_SIZE) {
-            /* Resulting string fits in standard-size buffer. Note that the
-             * entire string needs to fit, not just the remainder, as the
-             * format string cannot be partially evaluated */
-            flecs_strbuf_grow(b);
-
-            /* Copy entire string to new buffer */
-            ecs_os_vsprintf(flecs_strbuf_ptr(b), str, arg_cpy);
-
-            /* Ignore the part of the string that was copied into the
-             * previous buffer. The string copied into the new buffer could
-             * be memmoved so that only the remainder is left, but that is
-             * most likely more expensive than just keeping the entire
-             * string. */
-
-            /* Update position in buffer */
-            b->current->pos += memRequired;
-        } else {
-            /* Resulting string does not fit in standard-size buffer.
-             * Allocate a new buffer that can hold the entire string. */
-            char *dst = ecs_os_malloc(memRequired + 1);
-            ecs_os_vsprintf(dst, str, arg_cpy);
-            flecs_strbuf_grow_str(b, dst, dst, memRequired);
-        }
+    if (b->content) {
+        mem_required = vsnprintf(
+            flecs_strbuf_ptr(b), 
+                flecs_itosize(mem_left), str, args);
+    } else {
+        mem_required = vsnprintf(NULL, 0, str, args);
+        mem_left = 0;
     }
 
-    va_end(arg_cpy);
+    ecs_assert(mem_required != -1, ECS_INTERNAL_ERROR, NULL);
 
-    return flecs_strbuf_memLeft(b) > 0;
+    if ((mem_required + 1) >= mem_left) {
+        while ((mem_required + 1) >= mem_left) {
+            flecs_strbuf_grow(b);
+            mem_left = b->size - b->length;
+        }
+        vsnprintf(flecs_strbuf_ptr(b), 
+            flecs_itosize(mem_required + 1), str, arg_cpy);
+    }
+
+    b->length += mem_required;
+
+    va_end(arg_cpy);
 }
 
 static
-bool flecs_strbuf_appendstr(
+void flecs_strbuf_appendstr(
     ecs_strbuf_t *b,
     const char* str,
     int n)
 {
-    flecs_strbuf_init(b);
-
-    int32_t memLeftInElement = flecs_strbuf_memLeftInCurrentElement(b);
-    int32_t memLeft = flecs_strbuf_memLeft(b);
-    if (memLeft <= 0) {
-        return false;
+    int32_t mem_left = b->size - b->length;
+    while (n >= mem_left) {
+        flecs_strbuf_grow(b);
+        mem_left = b->size - b->length;
     }
 
-    /* Never write more than what the buffer can store */
-    if (n > memLeft) {
-        n = memLeft;
-    }
-
-    if (n <= memLeftInElement) {
-        /* Element was large enough to fit string */
-        ecs_os_strncpy(flecs_strbuf_ptr(b), str, n);
-        b->current->pos += n;
-    } else if ((n - memLeftInElement) < memLeft) {
-        ecs_os_strncpy(flecs_strbuf_ptr(b), str, memLeftInElement);
-
-        /* Element was not large enough, but buffer still has space */
-        b->current->pos += memLeftInElement;
-        n -= memLeftInElement;
-
-        /* Current element was too small, copy remainder into new element */
-        if (n < ECS_STRBUF_ELEMENT_SIZE) {
-            /* A standard-size buffer is large enough for the new string */
-            flecs_strbuf_grow(b);
-
-            /* Copy the remainder to the new buffer */
-            if (n) {
-                /* If a max number of characters to write is set, only a
-                 * subset of the string should be copied to the buffer */
-                ecs_os_strncpy(
-                    flecs_strbuf_ptr(b),
-                    str + memLeftInElement,
-                    (size_t)n);
-            } else {
-                ecs_os_strcpy(flecs_strbuf_ptr(b), str + memLeftInElement);
-            }
-
-            /* Update to number of characters copied to new buffer */
-            b->current->pos += n;
-        } else {
-            /* String doesn't fit in a single element, strdup */
-            char *remainder = ecs_os_strdup(str + memLeftInElement);
-            flecs_strbuf_grow_str(b, remainder, remainder, n);
-        }
-    } else {
-        /* Buffer max has been reached */
-        return false;
-    }
-
-    return flecs_strbuf_memLeft(b) > 0;
+    ecs_os_memcpy(flecs_strbuf_ptr(b), str, n);
+    b->length += n;
 }
 
 static
-bool flecs_strbuf_appendch(
+void flecs_strbuf_appendch(
     ecs_strbuf_t *b,
     char ch)
 {
-    flecs_strbuf_init(b);
-
-    int32_t memLeftInElement = flecs_strbuf_memLeftInCurrentElement(b);
-    int32_t memLeft = flecs_strbuf_memLeft(b);
-    if (memLeft <= 0) {
-        return false;
-    }
-
-    if (memLeftInElement) {
-        /* Element was large enough to fit string */
-        flecs_strbuf_ptr(b)[0] = ch;
-        b->current->pos ++;
-    } else {
+    if (b->size == b->length) {
         flecs_strbuf_grow(b);
-        flecs_strbuf_ptr(b)[0] = ch;
-        b->current->pos ++;
     }
 
-    return flecs_strbuf_memLeft(b) > 0;
+    flecs_strbuf_ptr(b)[0] = ch;
+    b->length ++;
 }
 
-bool ecs_strbuf_vappend(
+void ecs_strbuf_vappend(
     ecs_strbuf_t *b,
     const char* fmt,
     va_list args)
 {
     ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(fmt != NULL, ECS_INVALID_PARAMETER, NULL);
-    return flecs_strbuf_vappend(b, fmt, args);
+    flecs_strbuf_vappend(b, fmt, args);
 }
 
-bool ecs_strbuf_append(
+void ecs_strbuf_append(
     ecs_strbuf_t *b,
     const char* fmt,
     ...)
@@ -40807,216 +40708,120 @@ bool ecs_strbuf_append(
 
     va_list args;
     va_start(args, fmt);
-    bool result = flecs_strbuf_vappend(b, fmt, args);
+    flecs_strbuf_vappend(b, fmt, args);
     va_end(args);
-
-    return result;
 }
 
-bool ecs_strbuf_appendstrn(
+void ecs_strbuf_appendstrn(
     ecs_strbuf_t *b,
     const char* str,
     int32_t len)
 {
     ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(str != NULL, ECS_INVALID_PARAMETER, NULL);
-    return flecs_strbuf_appendstr(b, str, len);
+    flecs_strbuf_appendstr(b, str, len);
 }
 
-bool ecs_strbuf_appendch(
+void ecs_strbuf_appendch(
     ecs_strbuf_t *b,
     char ch)
 {
     ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL); 
-    return flecs_strbuf_appendch(b, ch);
+    flecs_strbuf_appendch(b, ch);
 }
 
-bool ecs_strbuf_appendint(
+void ecs_strbuf_appendint(
     ecs_strbuf_t *b,
     int64_t v)
 {
     ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL); 
     char numbuf[32];
     char *ptr = flecs_strbuf_itoa(numbuf, v);
-    return ecs_strbuf_appendstrn(b, numbuf, flecs_ito(int32_t, ptr - numbuf));
+    ecs_strbuf_appendstrn(b, numbuf, flecs_ito(int32_t, ptr - numbuf));
 }
 
-bool ecs_strbuf_appendflt(
+void ecs_strbuf_appendflt(
     ecs_strbuf_t *b,
     double flt,
     char nan_delim)
 {
     ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL); 
-    return flecs_strbuf_ftoa(b, flt, 10, nan_delim);
+    flecs_strbuf_ftoa(b, flt, 10, nan_delim);
 }
 
-bool ecs_strbuf_appendbool(
+void ecs_strbuf_appendbool(
     ecs_strbuf_t *buffer,
     bool v)
 {
     ecs_assert(buffer != NULL, ECS_INVALID_PARAMETER, NULL); 
     if (v) {
-        return ecs_strbuf_appendlit(buffer, "true");
+        ecs_strbuf_appendlit(buffer, "true");
     } else {
-        return ecs_strbuf_appendlit(buffer, "false");
+        ecs_strbuf_appendlit(buffer, "false");
     }
 }
 
-bool ecs_strbuf_appendstr_zerocpy(
-    ecs_strbuf_t *b,
-    char* str)
-{
-    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(str != NULL, ECS_INVALID_PARAMETER, NULL);
-    flecs_strbuf_init(b);
-    flecs_strbuf_grow_str(b, str, str, 0);
-    return true;
-}
-
-bool ecs_strbuf_appendstr_zerocpyn(
-    ecs_strbuf_t *b,
-    char *str,
-    int32_t n)
-{
-    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(str != NULL, ECS_INVALID_PARAMETER, NULL);
-    flecs_strbuf_init(b);
-    flecs_strbuf_grow_str(b, str, str, n);
-    return true;
-}
-
-bool ecs_strbuf_appendstr_zerocpy_const(
+void ecs_strbuf_appendstr(
     ecs_strbuf_t *b,
     const char* str)
 {
     ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(str != NULL, ECS_INVALID_PARAMETER, NULL);
-    /* Removes const modifier, but logic prevents changing / delete string */
-    flecs_strbuf_init(b);
-    flecs_strbuf_grow_str(b, str, NULL, 0);
-    return true;
+    flecs_strbuf_appendstr(b, str, ecs_os_strlen(str));
 }
 
-bool ecs_strbuf_appendstr_zerocpyn_const(
+void ecs_strbuf_mergebuff(
     ecs_strbuf_t *b,
-    const char *str,
-    int32_t n)
+    ecs_strbuf_t *src)
 {
-    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(str != NULL, ECS_INVALID_PARAMETER, NULL);
-    /* Removes const modifier, but logic prevents changing / delete string */
-    flecs_strbuf_init(b);
-    flecs_strbuf_grow_str(b, str, NULL, n);
-    return true;
-}
-
-bool ecs_strbuf_appendstr(
-    ecs_strbuf_t *b,
-    const char* str)
-{
-    ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(str != NULL, ECS_INVALID_PARAMETER, NULL);
-    return flecs_strbuf_appendstr(b, str, ecs_os_strlen(str));
-}
-
-bool ecs_strbuf_mergebuff(
-    ecs_strbuf_t *dst_buffer,
-    ecs_strbuf_t *src_buffer)
-{
-    if (src_buffer->elementCount) {
-        if (src_buffer->buf) {
-            return ecs_strbuf_appendstrn(
-                dst_buffer, src_buffer->buf, src_buffer->length);
-        } else {
-            ecs_strbuf_element *e = (ecs_strbuf_element*)&src_buffer->firstElement;
-
-            /* Copy first element as it is inlined in the src buffer */
-            ecs_strbuf_appendstrn(dst_buffer, e->buf, e->pos);
-
-            while ((e = e->next)) {
-                dst_buffer->current->next = ecs_os_malloc(sizeof(ecs_strbuf_element));
-                *dst_buffer->current->next = *e;
-            }
-        }
-
-        *src_buffer = ECS_STRBUF_INIT;
+    if (src->content) {
+        ecs_strbuf_appendstr(b, src->content);
     }
-
-    return true;
+    ecs_strbuf_reset(src);
 }
 
 char* ecs_strbuf_get(
     ecs_strbuf_t *b) 
 {
     ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    char* result = NULL;
-    if (b->elementCount) {
-        if (b->buf) {
-            b->buf[b->current->pos] = '\0';
-            result = ecs_os_strdup(b->buf);
-        } else {
-            void *next = NULL;
-            int32_t len = b->size + b->current->pos + 1;
-            ecs_strbuf_element *e = (ecs_strbuf_element*)&b->firstElement;
-
-            result = ecs_os_malloc(len);
-            char* ptr = result;
-
-            do {
-                ecs_os_memcpy(ptr, e->buf, e->pos);
-                ptr += e->pos;
-                next = e->next;
-                if (e != &b->firstElement.super) {
-                    if (!e->buffer_embedded) {
-                        ecs_os_free(((ecs_strbuf_element_str*)e)->alloc_str);
-                    }
-                    ecs_os_free(e);
-                }
-            } while ((e = next));
-
-            result[len - 1] = '\0';
-            b->length = len;
-        }
-    } else {
-        result = NULL;
+    char *result = b->content;
+    if (!result) {
+        return NULL;
     }
 
-    b->elementCount = 0;
+    ecs_strbuf_appendch(b, '\0');
+    result = b->content;
 
-    b->content = result;
+    if (result == b->small_string) {
+        result = ecs_os_memdup_n(result, char, b->length + 1);
+    }
 
+    b->length = 0;
+    b->content = NULL;
+    b->size = 0;
+    b->list_sp = 0;
     return result;
 }
 
-char *ecs_strbuf_get_small(
+char* ecs_strbuf_get_small(
     ecs_strbuf_t *b)
 {
     ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    int32_t written = ecs_strbuf_written(b);
-    ecs_assert(written <= ECS_STRBUF_ELEMENT_SIZE, ECS_INVALID_OPERATION, NULL);
-    char *buf = b->firstElement.buf;
-    buf[written] = '\0';
-    return buf;
+    char *result = b->content;
+    result[b->length] = '\0';
+    b->length = 0;
+    b->content = NULL;
+    b->size = 0;
+    return result;
 }
 
 void ecs_strbuf_reset(
     ecs_strbuf_t *b) 
 {
     ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    if (b->elementCount && !b->buf) {
-        void *next = NULL;
-        ecs_strbuf_element *e = (ecs_strbuf_element*)&b->firstElement;
-        do {
-            next = e->next;
-            if (e != (ecs_strbuf_element*)&b->firstElement) {
-                ecs_os_free(e);
-            }
-        } while ((e = next));
+    if (b->content && b->content != b->small_string) {
+        ecs_os_free(b->content);
     }
-
     *b = ECS_STRBUF_INIT;
 }
 
@@ -41083,16 +40888,16 @@ void ecs_strbuf_list_next(
     b->list_stack[list_sp].count ++;
 }
 
-bool ecs_strbuf_list_appendch(
+void ecs_strbuf_list_appendch(
     ecs_strbuf_t *b,
     char ch)
 {
     ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_strbuf_list_next(b);
-    return flecs_strbuf_appendch(b, ch);
+    flecs_strbuf_appendch(b, ch);
 }
 
-bool ecs_strbuf_list_append(
+void ecs_strbuf_list_append(
     ecs_strbuf_t *b,
     const char *fmt,
     ...)
@@ -41104,13 +40909,11 @@ bool ecs_strbuf_list_append(
 
     va_list args;
     va_start(args, fmt);
-    bool result = flecs_strbuf_vappend(b, fmt, args);
+    flecs_strbuf_vappend(b, fmt, args);
     va_end(args);
-
-    return result;
 }
 
-bool ecs_strbuf_list_appendstr(
+void ecs_strbuf_list_appendstr(
     ecs_strbuf_t *b,
     const char *str)
 {
@@ -41118,10 +40921,10 @@ bool ecs_strbuf_list_appendstr(
     ecs_assert(str != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_strbuf_list_next(b);
-    return ecs_strbuf_appendstr(b, str);
+    ecs_strbuf_appendstr(b, str);
 }
 
-bool ecs_strbuf_list_appendstrn(
+void ecs_strbuf_list_appendstrn(
     ecs_strbuf_t *b,
     const char *str,
     int32_t n)
@@ -41130,18 +40933,14 @@ bool ecs_strbuf_list_appendstrn(
     ecs_assert(str != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_strbuf_list_next(b);
-    return ecs_strbuf_appendstrn(b, str, n);
+    ecs_strbuf_appendstrn(b, str, n);
 }
 
 int32_t ecs_strbuf_written(
     const ecs_strbuf_t *b)
 {
     ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
-    if (b->current) {
-        return b->size + b->current->pos;
-    } else {
-        return 0;
-    }
+    return b->length;
 }
 
 /**
@@ -48447,7 +48246,8 @@ int flecs_expr_ser_primitive(
                     out[0] = '"';
                     out[length + 1] = '"';
                     out[length + 2] = '\0';
-                    ecs_strbuf_appendstr_zerocpy(str, out);
+                    ecs_strbuf_appendstr(str, out);
+                    ecs_os_free(out);
                 }
             }
         } else {
@@ -51021,7 +50821,8 @@ void flecs_json_string_escape(
         out[0] = '"';
         out[length + 1] = '"';
         out[length + 2] = '\0';
-        ecs_strbuf_appendstr_zerocpy(buf, out);
+        ecs_strbuf_appendstr(buf, out);
+        ecs_os_free(out);
     }
 }
 
@@ -60728,6 +60529,7 @@ char* ecs_rule_str_w_profile(
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
     ecs_rule_op_t *ops = rule->ops;
     int32_t i, count = rule->op_count, indent = 0;
+
     for (i = 0; i < count; i ++) {
         ecs_rule_op_t *op = &ops[i];
         ecs_flags16_t flags = op->flags;

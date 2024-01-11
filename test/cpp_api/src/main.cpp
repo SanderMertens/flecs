@@ -497,6 +497,8 @@ void Event_enqueue_event(void);
 void Event_enqueue_entity_event(void);
 void Event_enqueue_event_w_payload(void);
 void Event_enqueue_entity_event_w_payload(void);
+void Event_enqueue_entity_from_readonly_world(void);
+void Event_enqueue_entity_w_payload_from_readonly_world(void);
 
 // Testsuite 'Iterable'
 void Iterable_page_each(void);
@@ -3254,6 +3256,14 @@ bake_test_case Event_testcases[] = {
     {
         "enqueue_entity_event_w_payload",
         Event_enqueue_entity_event_w_payload
+    },
+    {
+        "enqueue_entity_from_readonly_world",
+        Event_enqueue_entity_from_readonly_world
+    },
+    {
+        "enqueue_entity_w_payload_from_readonly_world",
+        Event_enqueue_entity_w_payload_from_readonly_world
     }
 };
 
@@ -6509,6 +6519,7 @@ bake_test_case Doc_testcases[] = {
     }
 };
 
+
 static bake_test_suite suites[] = {
     {
         "PrettyFunction",
@@ -6563,7 +6574,7 @@ static bake_test_suite suites[] = {
         "Event",
         NULL,
         NULL,
-        28,
+        30,
         Event_testcases
     },
     {

@@ -2887,7 +2887,7 @@ error:
 }
 
 const void* ecs_record_get_id(
-    ecs_world_t *stage,
+    const ecs_world_t *stage,
     const ecs_record_t *r,
     ecs_id_t id)
 {

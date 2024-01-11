@@ -97,12 +97,6 @@ typedef int ecs_http_socket_t;
 /* Total number of outstanding send requests */
 #define ECS_HTTP_SEND_QUEUE_MAX (256)
 
-/* Cache invalidation timeout (s) */
-#define ECS_HTTP_CACHE_TIMEOUT ((ecs_ftime_t)1.0)
-
-/* Cache entry purge timeout (s) */
-#define ECS_HTTP_CACHE_PURGE_TIMEOUT ((ecs_ftime_t)10.0)
-
 /* Global statistics */
 int64_t ecs_http_request_received_count = 0;
 int64_t ecs_http_request_invalid_count = 0;
@@ -153,6 +147,9 @@ struct ecs_http_server_t {
 
     ecs_http_reply_action_t callback;
     void *ctx;
+
+    ecs_ftime_t cache_timeout;
+    ecs_ftime_t cache_purge_timeout;
 
     ecs_sparse_t connections; /* sparse<http_connection_t> */
     ecs_sparse_t requests; /* sparse<http_request_t> */
@@ -556,7 +553,7 @@ ecs_http_request_entry_t* http_find_request_entry(
 
     if (entry) {
         ecs_ftime_t tf = (ecs_ftime_t)ecs_time_measure(&t);
-        if ((tf - entry->time) < ECS_HTTP_CACHE_TIMEOUT) {
+        if ((tf - entry->time) < srv->cache_timeout) {
             return entry;
         }
     }
@@ -604,6 +601,7 @@ char* http_decode_request(
 {
     ecs_os_zeromem(req);
 
+    ecs_size_t req_len = frag->buf.length;
     char *res = ecs_strbuf_get(&frag->buf);
     if (!res) {
         return NULL;
@@ -633,6 +631,9 @@ char* http_decode_request(
     req->pub.param_count = frag->param_count;
     req->res = res;
     req->req_len = frag->header_offsets[0];
+    if (!req->req_len) {
+        req->req_len = req_len;
+    }
 
     return res;
 }
@@ -694,16 +695,16 @@ bool http_parse_request(
         switch (frag->state) {
         case HttpFragStateBegin:
             ecs_os_memset_t(frag, 0, ecs_http_fragment_t);
-            frag->buf.max = ECS_HTTP_METHOD_LEN_MAX;
             frag->state = HttpFragStateMethod;
             frag->header_buf_ptr = frag->header_buf;
-            
+
             /* fall through */
         case HttpFragStateMethod:
             if (c == ' ') {
                 http_parse_method(frag);
+                ecs_strbuf_reset(&frag->buf);
                 frag->state = HttpFragStatePath;
-                frag->buf.max = ECS_HTTP_REQUEST_LEN_MAX;
+                frag->buf.content = NULL;
             } else {
                 ecs_strbuf_appendch(&frag->buf, c);
             }
@@ -996,8 +997,8 @@ void http_send_reply(
     bool preflight) 
 {
     ecs_strbuf_t hdrs = ECS_STRBUF_INIT;
+    int32_t content_length = reply->body.length;
     char *content = ecs_strbuf_get(&reply->body);
-    int32_t content_length = reply->body.length - 1;
 
     /* Use asynchronous send queue for outgoing data so send operations won't
      * hold up main thread */
@@ -1013,8 +1014,8 @@ void http_send_reply(
 
     http_append_send_headers(&hdrs, reply->code, reply->status, 
         reply->content_type, &reply->headers, content_length, preflight);
-    char *headers = ecs_strbuf_get(&hdrs);
     ecs_size_t headers_length = ecs_strbuf_written(&hdrs);
+    char *headers = ecs_strbuf_get(&hdrs);
 
     if (!req) {
         ecs_size_t written = http_send(conn->sock, headers, headers_length, 0);
@@ -1299,6 +1300,10 @@ void http_do_request(
     ecs_http_reply_t *reply,
     const ecs_http_request_impl_t *req)
 {
+    ecs_check(srv != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(srv->callback != NULL, ECS_INVALID_OPERATION, 
+        "missing request handler for server");
+
     if (srv->callback(ECS_CONST_CAST(ecs_http_request_t*, req), reply, 
         srv->ctx) == false) 
     {
@@ -1312,6 +1317,8 @@ void http_do_request(
             ecs_os_linc(&ecs_http_request_handled_ok_count);
         }
     }
+error:
+    return;
 }
 
 static
@@ -1366,7 +1373,7 @@ void http_purge_request_cache(
         ecs_http_request_entry_t *entries = ecs_vec_first(&bucket->values);
         for (i = count - 1; i >= 0; i --) {
             ecs_http_request_entry_t *entry = &entries[i];
-            if (fini || ((time - entry->time) > ECS_HTTP_CACHE_PURGE_TIMEOUT)) {
+            if (fini || ((time - entry->time) > srv->cache_purge_timeout)) {
                 ecs_http_request_key_t *key = &keys[i];
                 /* Safe, code owns the value */
                 ecs_os_free(ECS_CONST_CAST(char*, key->array));
@@ -1456,6 +1463,15 @@ ecs_http_server_t* ecs_http_server_init(
 
     srv->should_run = false;
     srv->initialized = true;
+
+    srv->cache_timeout = desc->cache_timeout;
+    srv->cache_purge_timeout = desc->cache_purge_timeout;
+
+    if (!ECS_EQZERO(srv->cache_timeout) && 
+         ECS_EQZERO(srv->cache_purge_timeout)) 
+    {
+        srv->cache_purge_timeout = srv->cache_timeout * 10;
+    }
 
     srv->callback = desc->callback;
     srv->ctx = desc->ctx;
@@ -1637,8 +1653,27 @@ int ecs_http_server_http_request(
         return -1;
     }
 
-    http_do_request(srv, reply_out, &request);
+    ecs_http_request_entry_t *entry = 
+        http_find_request_entry(srv, request.res, request.req_len);
+    if (entry) {
+        reply_out->body = ECS_STRBUF_INIT;
+        reply_out->code = 200;
+        reply_out->content_type = "application/json";
+        reply_out->headers = ECS_STRBUF_INIT;
+        reply_out->status = "OK";
+        ecs_strbuf_appendstrn(&reply_out->body, 
+            entry->content, entry->content_length);
+    } else {
+        http_do_request(srv, reply_out, &request);
+
+        if (request.pub.method == EcsHttpGet) {
+            http_insert_request_entry(srv, &request, reply_out);
+        }
+    }
+
     ecs_os_free(res);
+
+    http_purge_request_cache(srv, false);
 
     return (reply_out->code >= 400) ? -1 : 0;
 }
@@ -1649,16 +1684,26 @@ int ecs_http_server_request(
     const char *req,
     ecs_http_reply_t *reply_out)
 {
-    ecs_strbuf_t reqbuf = ECS_STRBUF_INIT;
-    ecs_strbuf_appendstr_zerocpy_const(&reqbuf, method);
-    ecs_strbuf_appendlit(&reqbuf, " ");
-    ecs_strbuf_appendstr_zerocpy_const(&reqbuf, req);
-    ecs_strbuf_appendlit(&reqbuf, " HTTP/1.1\r\n\r\n");
-    int32_t len = ecs_strbuf_written(&reqbuf);
-    char *reqstr = ecs_strbuf_get(&reqbuf);
-    int result = ecs_http_server_http_request(srv, reqstr, len, reply_out);
-    ecs_os_free(reqstr);
-    return result;
+    const char *http_ver = " HTTP/1.1\r\n\r\n";
+    int32_t method_len = ecs_os_strlen(method);
+    int32_t req_len = ecs_os_strlen(req);
+    int32_t http_ver_len = ecs_os_strlen(http_ver);
+
+    int32_t len = method_len + req_len + http_ver_len + 1;
+    if (method_len + req_len + http_ver_len >= 1024) {
+        ecs_err("HTTP request too long");
+        return -1;
+    }
+
+    char reqstr[1024];
+    char *ptr = reqstr;
+    ecs_os_memcpy(ptr, method, method_len); ptr += method_len;
+    ptr[0] = ' '; ptr ++;
+    ecs_os_memcpy(ptr, req, req_len); ptr += req_len;
+    ecs_os_memcpy(ptr, http_ver, http_ver_len); ptr += http_ver_len;
+    ptr[0] = '\n';
+
+    return ecs_http_server_http_request(srv, reqstr, len, reply_out);
 }
 
 void* ecs_http_server_ctx(

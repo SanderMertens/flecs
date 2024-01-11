@@ -206,6 +206,7 @@ char* ecs_rule_str_w_profile(
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
     ecs_rule_op_t *ops = rule->ops;
     int32_t i, count = rule->op_count, indent = 0;
+
     for (i = 0; i < count; i ++) {
         ecs_rule_op_t *op = &ops[i];
         ecs_flags16_t flags = op->flags;
