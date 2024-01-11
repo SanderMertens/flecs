@@ -12,7 +12,7 @@ namespace flecs
 
 /** Filter builder interface.
  * 
- * \ingroup cpp_filters
+ * \ingroup cpp_core_filters
  */
 template<typename Base, typename ... Components>
 struct filter_builder_i : term_builder_i<Base> {

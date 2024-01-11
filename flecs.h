@@ -18571,7 +18571,7 @@ struct monitor {
 namespace flecs {
 
 /**
- * \ingroup cpp_addon_metrics
+ * \ingroup cpp_addons_metrics
  * @{
  */
 
@@ -18667,6 +18667,15 @@ protected:
 
 namespace flecs {
 
+/**
+ * @defgroup cpp_addons_metrics Metrics
+ * @ingroup cpp_addons
+ * The metrics module extracts metrics from components and makes them available
+ * through a unified component interface.
+ *
+ * @{
+ */
+
 struct metrics {
     using Value = EcsMetricValue;
     using Source = EcsMetricSource;
@@ -18680,6 +18689,8 @@ struct metrics {
 
     metrics(flecs::world& world);
 };
+
+/** @} */
 
 }
 
@@ -26232,9 +26243,6 @@ untyped_component& error_range(double min, double max) {
  * @param parent Parent entity of the metric (optional).
  * @param brief Description for metric (optional).
  * @param name Name of metric (optional).
- * 
- * \ingroup cpp_addons_metrics
- * \memberof flecs::world
  */
 template <typename Kind>
 untyped_component& metric(
@@ -27519,7 +27527,7 @@ private:
 /** Term builder interface. 
  * A term is a single element of a query expression. 
  * 
- * \ingroup cpp_addons_filter
+ * \ingroup cpp_core_filters
  */
 template<typename Base>
 struct term_builder_i : term_id_builder_i<Base> {
@@ -28063,7 +28071,7 @@ namespace flecs
 
 /** Filter builder interface.
  * 
- * \ingroup cpp_filters
+ * \ingroup cpp_core_filters
  */
 template<typename Base, typename ... Components>
 struct filter_builder_i : term_builder_i<Base> {
@@ -28324,7 +28332,7 @@ namespace _ {
 
 /** Filter builder.
  * 
- * \ingroup cpp_filters
+ * \ingroup cpp_core_filters
  */
 template <typename ... Components>
 struct filter_builder final : _::filter_builder_base<Components...> {
