@@ -1816,7 +1816,8 @@
             "id": "Rest",
             "testcases": [
                 "teardown",
-                "get"
+                "get",
+                "get_cached"
             ]
         }, {
             "id": "Metrics",

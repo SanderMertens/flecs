@@ -76,6 +76,7 @@ void Strbuf_large_str(void);
 void Strbuf_empty_str(void);
 void Strbuf_reset(void);
 void Strbuf_merge(void);
+void Strbuf_merge_empty(void);
 void Strbuf_append_char(void);
 void Strbuf_append_511_chars(void);
 void Strbuf_append_512_chars(void);
@@ -349,6 +350,10 @@ bake_test_case Strbuf_testcases[] = {
         Strbuf_merge
     },
     {
+        "merge_empty",
+        Strbuf_merge_empty
+    },
+    {
         "append_char",
         Strbuf_append_char
     },
@@ -446,6 +451,7 @@ bake_test_case Strbuf_testcases[] = {
     }
 };
 
+
 static bake_test_suite suites[] = {
     {
         "Map",
@@ -465,7 +471,7 @@ static bake_test_suite suites[] = {
         "Strbuf",
         Strbuf_setup,
         NULL,
-        34,
+        35,
         Strbuf_testcases
     }
 };

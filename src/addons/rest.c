@@ -962,7 +962,8 @@ void flecs_on_set_rest(ecs_iter_t *it) {
         ecs_http_server_t *srv = ecs_rest_server_init(it->real_world,
             &(ecs_http_server_desc_t){ 
                 .ipaddr = rest[i].ipaddr, 
-                .port = rest[i].port 
+                .port = rest[i].port,
+                .cache_timeout = 1.0
             });
 
         if (!srv) {

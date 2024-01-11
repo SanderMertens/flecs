@@ -419,7 +419,9 @@ void ecs_strbuf_mergebuff(
     ecs_strbuf_t *b,
     ecs_strbuf_t *src)
 {
-    ecs_strbuf_appendstr(b, src->content);
+    if (src->content) {
+        ecs_strbuf_appendstr(b, src->content);
+    }
     ecs_strbuf_reset(src);
 }
 

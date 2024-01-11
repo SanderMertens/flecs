@@ -85,6 +85,7 @@
                 "empty_str",
                 "reset",
                 "merge",
+                "merge_empty",
                 "append_char",
                 "append_511_chars",
                 "append_512_chars",

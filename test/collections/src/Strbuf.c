@@ -133,6 +133,22 @@ void Strbuf_merge(void) {
     test_assert(str == NULL);
 }
 
+void Strbuf_merge_empty(void) {
+    ecs_strbuf_t b1 = ECS_STRBUF_INIT;
+    ecs_strbuf_appendstr(&b1, "Foo");
+    ecs_strbuf_appendstr(&b1, "Bar");
+
+    ecs_strbuf_t b2 = ECS_STRBUF_INIT;
+    ecs_strbuf_mergebuff(&b1, &b2);
+
+    char *str = ecs_strbuf_get(&b1);
+    test_str(str, "FooBar");
+    ecs_os_free(str);
+
+    str = ecs_strbuf_get(&b2);
+    test_assert(str == NULL);
+}
+
 void Strbuf_append_char(void) {
     ecs_strbuf_t b = ECS_STRBUF_INIT;
     ecs_strbuf_appendch(&b, 'a');
