@@ -2145,14 +2145,12 @@ void Serialized_ops_missing_metatype(void) {
     typedef struct {
         ecs_u64_t a;
     } X;
-    typedef struct {
-        X x;
-    } T;
 
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, X);
 
+    ecs_log_set_level(-4);
     ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity = ecs_entity(world, {.name = "T"}),
         .members = {

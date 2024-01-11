@@ -124,7 +124,8 @@ int flecs_expr_ser_primitive(
                     out[0] = '"';
                     out[length + 1] = '"';
                     out[length + 2] = '\0';
-                    ecs_strbuf_appendstr_zerocpy(str, out);
+                    ecs_strbuf_appendstr(str, out);
+                    ecs_os_free(out);
                 }
             }
         } else {

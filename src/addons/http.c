@@ -694,16 +694,16 @@ bool http_parse_request(
         switch (frag->state) {
         case HttpFragStateBegin:
             ecs_os_memset_t(frag, 0, ecs_http_fragment_t);
-            frag->buf.max = ECS_HTTP_METHOD_LEN_MAX;
             frag->state = HttpFragStateMethod;
             frag->header_buf_ptr = frag->header_buf;
-            
+
             /* fall through */
         case HttpFragStateMethod:
             if (c == ' ') {
                 http_parse_method(frag);
+                ecs_strbuf_reset(&frag->buf);
                 frag->state = HttpFragStatePath;
-                frag->buf.max = ECS_HTTP_REQUEST_LEN_MAX;
+                frag->buf.content = NULL;
             } else {
                 ecs_strbuf_appendch(&frag->buf, c);
             }
@@ -1658,7 +1658,7 @@ int ecs_http_server_request(
     const char *http_ver = " HTTP/1.1\r\n\r\n";
     int32_t method_len = ecs_os_strlen(method);
     int32_t req_len = ecs_os_strlen(req);
-    int32_t http_ver_len = ecs_os_strlen(req);
+    int32_t http_ver_len = ecs_os_strlen(http_ver);
 
     int32_t len = method_len + req_len + http_ver_len + 1;
     if (method_len + req_len + http_ver_len >= 1024) {
@@ -1668,10 +1668,11 @@ int ecs_http_server_request(
 
     char reqstr[1024];
     char *ptr = reqstr;
-    ecs_os_strncpy(ptr, method, method_len); ptr += method_len;
+    ecs_os_memcpy(ptr, method, method_len); ptr += method_len;
     ptr[0] = ' '; ptr ++;
-    ecs_os_strncpy(ptr, req, req_len); ptr += req_len;
-    ecs_os_strncpy(ptr, http_ver, http_ver_len);
+    ecs_os_memcpy(ptr, req, req_len); ptr += req_len;
+    ecs_os_memcpy(ptr, http_ver, http_ver_len); ptr += http_ver_len;
+    ptr[0] = '\n';
 
     return ecs_http_server_http_request(srv, reqstr, len, reply_out);
 }
