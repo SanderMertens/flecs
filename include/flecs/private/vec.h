@@ -94,6 +94,15 @@ ecs_vec_t ecs_vec_copy(
     ecs_vec_copy(allocator, vec, ECS_SIZEOF(T))
 
 FLECS_API
+ecs_vec_t ecs_vec_copy_shrink(
+    struct ecs_allocator_t *allocator,
+    const ecs_vec_t *vec,
+    ecs_size_t size);
+
+#define ecs_vec_copy_shrink_t(allocator, vec, T) \
+    ecs_vec_copy_shrink(allocator, vec, ECS_SIZEOF(T))
+
+FLECS_API
 void ecs_vec_reclaim(
     struct ecs_allocator_t *allocator,
     ecs_vec_t *vec,
@@ -198,4 +207,4 @@ void* ecs_vec_last(
 }
 #endif
 
-#endif 
+#endif
