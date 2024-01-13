@@ -120,39 +120,34 @@ int main(int argc, char *argv[]) {
 ## Projects using Flecs
 If you have a project you'd like to share, let me know on [Discord](https://discord.gg/BEzP5Rgrrp)!
 
-### Tempest Rising
-https://store.steampowered.com/app/1486920/Tempest_Rising/
+### [Tempest Rising](https://store.steampowered.com/app/1486920/Tempest_Rising/)
 [![Tempest Rising](docs/img/projects/tempest_rising.png)](https://store.steampowered.com/app/1486920/Tempest_Rising/)
 
-### Territory Control
-https://store.steampowered.com/app/690290/Territory_Control_2/
+### [Territory Control](https://store.steampowered.com/app/690290/Territory_Control_2/)
 [![image](docs/img/projects/territory_control.jpeg)](https://store.steampowered.com/app/690290/Territory_Control_2/)
 
-### The Forge
-https://github.com/ConfettiFX/The-Forge
+### [The Forge](https://github.com/ConfettiFX/The-Forge)
 [![image](docs/img/projects/the_forge.jpg)](https://github.com/ConfettiFX/The-Forge)
 
-### Sol Survivor
-https://nicok.itch.io/sol-survivor-demo
+### [Extermination Shock](https://store.steampowered.com/app/2510820/Extermination_Shock/)
+[![image](docs/img/projects/extermination_shock.jpeg)](https://store.steampowered.com/app/2510820/Extermination_Shock/)
+
+### [Sol Survivor](https://nicok.itch.io/sol-survivor-demo)
 [![image](docs/img/projects/sol_survivor.png)](https://nicok.itch.io/sol-survivor-demo)
 
-### Equilibrium Engine
-https://github.com/clibequilibrium/EquilibriumEngine
+### [Equilibrium Engine](https://github.com/clibequilibrium/EquilibriumEngine)
 [![image](docs/img/projects/equilibrium_engine.png)](https://github.com/clibequilibrium/EquilibriumEngine)
 
-### Gravitas
-https://thepunkcollective.itch.io/gravitas
+### [Gravitas](https://thepunkcollective.itch.io/gravitas)
 [![image](docs/img/projects/gravitas.png)](https://thepunkcollective.itch.io/gravitas)
 
-### After Sun
-https://github.com/foxnne/aftersun
+### [After Sun](https://github.com/foxnne/aftersun)
 [![image](docs/img/projects/after_sun.png)](https://github.com/foxnne/aftersun)
 
-### Tower defense (open source demo)
+### Flecs Demo's
 https://www.flecs.dev/tower_defense/etc ([repository](https://github.com/SanderMertens/tower_defense))
 ![image](docs/img/projects/tower_defense.png)
 
-### Procedural City (open source demo)
 https://www.flecs.dev/city ([repository](https://github.com/flecs-hub/city))
 ![image](docs/img/projects/city.png)
 
