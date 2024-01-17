@@ -11,7 +11,7 @@ namespace flecs {
 
 /** Query builder interface.
  * 
- * \ingroup cpp_core_queries
+ * @ingroup cpp_core_queries
  */
 template<typename Base, typename ... Components>
 struct query_builder_i : filter_builder_i<Base, Components ...> {

@@ -18,7 +18,7 @@ namespace _ {
 
 /** Observer builder.
  * 
- * \ingroup cpp_observers
+ * @ingroup cpp_observers
  */
 template <typename ... Components>
 struct observer_builder final : _::observer_builder_base<Components...> {

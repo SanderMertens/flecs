@@ -4,8 +4,8 @@
  */
 
 /**
- * \memberof flecs::world
- * \ingroup cpp_addons_timer
+ * @memberof flecs::world
+ * @ingroup cpp_addons_timer
  */
 
 /** Find or register a singleton timer. */

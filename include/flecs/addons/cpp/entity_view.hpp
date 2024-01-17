@@ -13,7 +13,7 @@
 #pragma once
 
 /**
- * \ingroup cpp_entities
+ * @ingroup cpp_entities
  * @{
  */
 
@@ -23,7 +23,7 @@ namespace flecs
 /** Entity view.
  * Class with read operations for entities. Base for flecs::entity.
  * 
- * \ingroup cpp_entities
+ * @ingroup cpp_entities
  */
 struct entity_view : public id {
 

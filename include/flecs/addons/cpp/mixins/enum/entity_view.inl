@@ -5,8 +5,8 @@
 
 /** Convert entity to enum constant.
  * 
- * \memberof flecs::entity_view
- * \ingroup cpp_entities
+ * @memberof flecs::entity_view
+ * @ingroup cpp_entities
  */
 template <typename E>
 E to_constant() const;

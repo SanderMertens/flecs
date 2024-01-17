@@ -4,8 +4,8 @@
  */
 
 /**
- * \memberof flecs::world
- * \ingroup cpp_core_filters
+ * @memberof flecs::world
+ * @ingroup cpp_core_filters
  */
 
 /** Create a term.

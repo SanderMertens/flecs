@@ -12,7 +12,7 @@ namespace flecs
 
 /** System builder interface.
  * 
- * \ingroup cpp_addons_systems
+ * @ingroup cpp_addons_systems
  */
 template<typename Base, typename ... Components>
 struct system_builder_i : query_builder_i<Base, Components ...> {

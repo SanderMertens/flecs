@@ -24,7 +24,7 @@ namespace flecs
 /** Entity.
  * Class with read/write operations for entities.
  *
- * \ingroup cpp_entities
+ * @ingroup cpp_entities
 */
 struct entity : entity_builder<entity>
 {

@@ -4,8 +4,8 @@
  */
 
 /**
- * \memberof flecs::world
- * \ingroup cpp_addons_meta
+ * @memberof flecs::world
+ * @ingroup cpp_addons_meta
  * 
  * @{
  */

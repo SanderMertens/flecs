@@ -32,30 +32,30 @@
  * @{
  */
 
-/** \def ecs_float_t
+/** @def ecs_float_t
  * Customizable precision for floating point operations */
 #ifndef ecs_float_t
 #define ecs_float_t float
 #endif
 
-/** \def ecs_ftime_t
+/** @def ecs_ftime_t
  * Customizable precision for scalar time values. Change to double precision for
  * processes that can run for a long time (e.g. longer than a day). */
 #ifndef ecs_ftime_t
 #define ecs_ftime_t ecs_float_t
 #endif
 
-/** \def FLECS_LEGACY
+/** @def FLECS_LEGACY
  * Define when building for C89
  */
 // #define FLECS_LEGACY
 
-/** \def FLECS_NO_DEPRECATED_WARNINGS
+/** @def FLECS_NO_DEPRECATED_WARNINGS
  * disables deprecated warnings
  */
 #define FLECS_NO_DEPRECATED_WARNINGS
 
-/** \def FLECS_ACCURATE_COUNTERS
+/** @def FLECS_ACCURATE_COUNTERS
  * Define to ensure that global counters used for statistics (such as the
  * allocation counters in the OS API) are accurate in multithreaded
  * applications, at the cost of increased overhead.
@@ -70,7 +70,7 @@
 #error "invalid configuration: cannot both define FLECS_DEBUG and NDEBUG"
 #endif
 
-/** \def FLECS_DEBUG
+/** @def FLECS_DEBUG
  * Used for input parameter checking and cheap sanity checks. There are lots of
  * asserts in every part of the code, so this will slow down applications.
  */
@@ -82,7 +82,7 @@
 #endif
 #endif
 
-/** \def FLECS_SANITIZE
+/** @def FLECS_SANITIZE
  * Enables expensive checks that can detect issues early. Recommended for
  * running tests or when debugging issues. This will severely slow down code.
  */
@@ -96,7 +96,7 @@
  * test with the FLECS_DEBUG or FLECS_SANITIZE flags enabled. There's a good
  * chance that this gives you more information about the issue! */
 
-/** \def FLECS_SOFT_ASSERT
+/** @def FLECS_SOFT_ASSERT
  * Define to not abort for recoverable errors, like invalid parameters. An error
  * is still thrown to the console. This is recommended for when running inside a
  * third party runtime, such as the Unreal editor.
@@ -111,14 +111,14 @@
  */
 // #define FLECS_SOFT_ASSERT
 
-/** \def FLECS_KEEP_ASSERT
+/** @def FLECS_KEEP_ASSERT
  * By default asserts are disabled in release mode, when either FLECS_NDEBUG or
  * NDEBUG is defined. Defining FLECS_KEEP_ASSERT ensures that asserts are not
  * disabled. This define can be combined with FLECS_SOFT_ASSERT.
  */
 // #define FLECS_KEEP_ASSERT
 
-/** \def FLECS_CUSTOM_BUILD
+/** @def FLECS_CUSTOM_BUILD
  * This macro lets you customize which addons to build flecs with.
  * Without any addons Flecs is just a minimal ECS storage, but addons add
  * features such as systems, scheduling and reflection. If an addon is disabled,
@@ -147,7 +147,7 @@
  */
 // #define FLECS_CUSTOM_BUILD
 
-/** \def FLECS_CPP_NO_AUTO_REGISTRATION
+/** @def FLECS_CPP_NO_AUTO_REGISTRATION
  * When set, the C++ API will require that components are registered before they
  * are used. This is useful in multithreaded applications, where components need
  * to be registered beforehand, and to catch issues in projects where component
@@ -187,7 +187,7 @@
 // #define FLECS_JOURNAL    /**< Journaling addon (disabled by default) */
 #endif // ifndef FLECS_CUSTOM_BUILD
 
-/** \def FLECS_LOW_FOOTPRINT
+/** @def FLECS_LOW_FOOTPRINT
  * Set a number of constants to values that decrease memory footprint, at the
  * cost of decreased performance. */
 // #define FLECS_LOW_FOOTPRINT
@@ -199,7 +199,7 @@
 #define FLECS_USE_OS_ALLOC
 #endif
 
-/** \def FLECS_HI_COMPONENT_ID
+/** @def FLECS_HI_COMPONENT_ID
  * This constant can be used to balance between performance and memory
  * utilization. The constant is used in two ways:
  * - Entity ids 0..FLECS_HI_COMPONENT_ID are reserved for component ids.
@@ -213,7 +213,7 @@
 #define FLECS_HI_COMPONENT_ID (256)
 #endif
 
-/** \def FLECS_HI_ID_RECORD_ID
+/** @def FLECS_HI_ID_RECORD_ID
  * This constant can be used to balance between performance and memory
  * utilization. The constant is used to determine the size of the id record
  * lookup array. Id values that fall outside of this range use a regular map
@@ -223,7 +223,7 @@
 #define FLECS_HI_ID_RECORD_ID (1024)
 #endif
 
-/** \def FLECS_SPARSE_PAGE_BITS
+/** @def FLECS_SPARSE_PAGE_BITS
  * This constant is used to determine the number of bits of an id that is used
  * to determine the page index when used with a sparse set. The number of bits
  * determines the page size, which is (1 << bits).
@@ -232,37 +232,37 @@
 #define FLECS_SPARSE_PAGE_BITS (12)
 #endif
 
-/** \def FLECS_ENTITY_PAGE_BITS
+/** @def FLECS_ENTITY_PAGE_BITS
  * Same as FLECS_SPARSE_PAGE_BITS, but for the entity index. */
 #ifndef FLECS_ENTITY_PAGE_BITS
 #define FLECS_ENTITY_PAGE_BITS (12)
 #endif
 
-/** \def FLECS_USE_OS_ALLOC
+/** @def FLECS_USE_OS_ALLOC
  * When enabled, Flecs will use the OS allocator provided in the OS API directly
  * instead of the builtin block allocator. This can decrease memory utilization
  * as memory will be freed more often, at the cost of decreased performance. */
 // #define FLECS_USE_OS_ALLOC
 
-/** \def FLECS_ID_DESC_MAX
+/** @def FLECS_ID_DESC_MAX
  * Maximum number of ids to add ecs_entity_desc_t / ecs_bulk_desc_t */
 #ifndef FLECS_ID_DESC_MAX
 #define FLECS_ID_DESC_MAX (32)
 #endif
 
-/** \def FLECS_TERM_DESC_MAX
+/** @def FLECS_TERM_DESC_MAX
  * Maximum number of terms in ecs_filter_desc_t */
 #define FLECS_TERM_DESC_MAX (16)
 
-/** \def FLECS_EVENT_DESC_MAX
+/** @def FLECS_EVENT_DESC_MAX
  * Maximum number of events in ecs_observer_desc_t */
 #define FLECS_EVENT_DESC_MAX (8)
 
-/** \def FLECS_VARIABLE_COUNT_MAX
+/** @def FLECS_VARIABLE_COUNT_MAX
  * Maximum number of query variables per query */
 #define FLECS_VARIABLE_COUNT_MAX (64)
 
-/** \def FLECS_QUERY_SCOPE_NESTING_MAX
+/** @def FLECS_QUERY_SCOPE_NESTING_MAX
  * Maximum nesting depth of query scopes */
 #define FLECS_QUERY_SCOPE_NESTING_MAX (8)
 
@@ -3026,7 +3026,7 @@ struct ecs_observer_t {
 
 /** Type that contains component lifecycle callbacks.
  *
- * \ingroup components
+ * @ingroup components
  */
 struct ecs_type_hooks_t {
     ecs_xtor_t ctor;            /**< ctor */
@@ -3075,7 +3075,7 @@ struct ecs_type_hooks_t {
 
 /** Type that contains component information (passed to ctors/dtors/...)
  *
- * \ingroup components
+ * @ingroup components
  */
 struct ecs_type_info_t {
     ecs_size_t size;         /**< Size of type */
@@ -3648,7 +3648,7 @@ void* flecs_hashmap_next_(
 
 /** Used with ecs_entity_init().
  *
- * \ingroup entities
+ * @ingroup entities
  */
 typedef struct ecs_entity_desc_t {
     int32_t _canary;
@@ -3689,7 +3689,7 @@ typedef struct ecs_entity_desc_t {
 
 /** Used with ecs_bulk_init().
  *
- * \ingroup entities
+ * @ingroup entities
  */
 typedef struct ecs_bulk_desc_t {
     int32_t _canary;
@@ -3719,7 +3719,7 @@ typedef struct ecs_bulk_desc_t {
 
 /** Used with ecs_component_init().
  *
- * \ingroup components
+ * @ingroup components
  */
 typedef struct ecs_component_desc_t {
     int32_t _canary;
@@ -3733,7 +3733,7 @@ typedef struct ecs_component_desc_t {
 
 /** Used with ecs_filter_init().
  *
- * \ingroup filters
+ * @ingroup filters
  */
 typedef struct ecs_filter_desc_t {
     int32_t _canary;
@@ -3770,7 +3770,7 @@ typedef struct ecs_filter_desc_t {
 
 /** Used with ecs_query_init().
  *
- * \ingroup queries
+ * @ingroup queries
  */
 typedef struct ecs_query_desc_t {
     int32_t _canary;
@@ -3839,7 +3839,7 @@ typedef struct ecs_query_desc_t {
 
 /** Used with ecs_observer_init().
  *
- * \ingroup observers
+ * @ingroup observers
  */
 typedef struct ecs_observer_desc_t {
     int32_t _canary;
@@ -3894,7 +3894,7 @@ typedef struct ecs_observer_desc_t {
 
 /** Used with ecs_emit().
  *
- * \ingroup observers
+ * @ingroup observers
  */
 typedef struct ecs_event_desc_t {
     /** The event id. Only observers for the specified event will be notified */
@@ -17113,7 +17113,7 @@ protected:
 namespace flecs {
 
 /**
- * \ingroup cpp_core_filters
+ * @ingroup cpp_core_filters
  */
 
 struct term;
@@ -17171,7 +17171,7 @@ struct filter_builder;
 namespace flecs {
 
 /**
- * \ingroup cpp_addons_event
+ * @ingroup cpp_addons_event
  * @{
  */
 
@@ -17784,7 +17784,7 @@ namespace flecs {
 
 /** Class for reading/writing dynamic values.
  *
- * \ingroup cpp_addons_meta
+ * @ingroup cpp_addons_meta
  */
 struct cursor {
     cursor(flecs::world_t *world, flecs::entity_t type_id, void *ptr) {
@@ -18516,7 +18516,7 @@ struct monitor {
 namespace flecs {
 
 /**
- * \ingroup cpp_addons_metrics
+ * @ingroup cpp_addons_metrics
  * @{
  */
 
@@ -20576,35 +20576,35 @@ struct world {
 
 /** Get id from a type.
  * 
- * \memberof flecs::world
+ * @memberof flecs::world
  */
 template <typename T>
 flecs::id id() const;
 
 /** Id factory.
  * 
- * \memberof flecs::world
+ * @memberof flecs::world
  */
 template <typename ... Args>
 flecs::id id(Args&&... args) const;
 
 /** Get pair id from relationship, object.
  * 
- * \memberof flecs::world
+ * @memberof flecs::world
  */
 template <typename First, typename Second>
 flecs::id pair() const;
 
 /** Get pair id from relationship, object.
  * 
- * \memberof flecs::world
+ * @memberof flecs::world
  */
 template <typename First>
 flecs::id pair(entity_t o) const;
 
 /** Get pair id from relationship, object.
  * 
- * \memberof flecs::world
+ * @memberof flecs::world
  */
 flecs::id pair(entity_t r, entity_t o) const;
 
@@ -20615,8 +20615,8 @@ flecs::id pair(entity_t r, entity_t o) const;
 
 /** Find or register component.
  * 
- * \ingroup cpp_components
- * \memberof flecs::world
+ * @ingroup cpp_components
+ * @memberof flecs::world
  */
 template <typename T, typename... Args>
 flecs::component<T> component(Args &&... args) const;
@@ -20624,8 +20624,8 @@ flecs::component<T> component(Args &&... args) const;
 /** Find or register untyped component.
  * Method available on flecs::world class.
  * 
- * \ingroup cpp_components
- * \memberof flecs::world
+ * @ingroup cpp_components
+ * @memberof flecs::world
  */
 template <typename... Args>
 flecs::untyped_component component(Args &&... args) const;
@@ -20637,48 +20637,48 @@ flecs::untyped_component component(Args &&... args) const;
 
 /** Create an entity.
  * 
- * \memberof flecs::world
- * \ingroup cpp_entities
+ * @memberof flecs::world
+ * @ingroup cpp_entities
  */
 template <typename... Args>
 flecs::entity entity(Args &&... args) const;
 
 /** Convert enum constant to entity.
  * 
- * \memberof flecs::world
- * \ingroup cpp_entities
+ * @memberof flecs::world
+ * @ingroup cpp_entities
  */
 template <typename E, if_t< is_enum<E>::value > = 0>
 flecs::id id(E value) const;
 
 /** Convert enum constant to entity.
  * 
- * \memberof flecs::world
- * \ingroup cpp_entities
+ * @memberof flecs::world
+ * @ingroup cpp_entities
  */
 template <typename E, if_t< is_enum<E>::value > = 0>
 flecs::entity entity(E value) const;
 
 /** Create a prefab.
  * 
- * \memberof flecs::world
- * \ingroup cpp_entities
+ * @memberof flecs::world
+ * @ingroup cpp_entities
  */
 template <typename... Args>
 flecs::entity prefab(Args &&... args) const;
 
 /** Create an entity that's associated with a type.
  * 
- * \memberof flecs::world
- * \ingroup cpp_entities
+ * @memberof flecs::world
+ * @ingroup cpp_entities
  */
 template <typename T>
 flecs::entity entity(const char *name = nullptr) const;
 
 /** Create a prefab that's associated with a type.
  * 
- * \memberof flecs::world
- * \ingroup cpp_entities
+ * @memberof flecs::world
+ * @ingroup cpp_entities
  */
 template <typename T>
 flecs::entity prefab(const char *name = nullptr) const;
@@ -20698,7 +20698,7 @@ flecs::entity prefab(const char *name = nullptr) const;
 
 /** Create a new event.
  *
- * \memberof flecs::world
+ * @memberof flecs::world
  *
  * @param evt The event id.
  * @return Event builder.
@@ -20707,7 +20707,7 @@ flecs::event_builder event(flecs::entity_t evt) const;
 
 /** Create a new event.
  *
- * \memberof flecs::world
+ * @memberof flecs::world
  *
  * @tparam E The event type.
  * @return Event builder.
@@ -20723,8 +20723,8 @@ flecs::event_builder_typed<E> event() const;
  */
 
 /**
- * \memberof flecs::world
- * \ingroup cpp_core_filters
+ * @memberof flecs::world
+ * @ingroup cpp_core_filters
  */
 
 /** Create a term.
@@ -20751,8 +20751,8 @@ flecs::term term() const;
  */
 
 /**
- * \memberof flecs::world
- * \ingroup cpp_core_filters
+ * @memberof flecs::world
+ * @ingroup cpp_core_filters
  */
 
 /** Create a filter.
@@ -20816,8 +20816,8 @@ void each(flecs::id_t term_id, Func&& func) const;
 
 /** Observer builder.
  * 
- * \memberof flecs::world
- * \ingroup cpp_observers
+ * @memberof flecs::world
+ * @ingroup cpp_observers
  */
 
 /** Upcast entity to an observer.
@@ -20845,8 +20845,8 @@ flecs::observer_builder<Components...> observer(Args &&... args) const;
  */
 
 /**
- * \memberof flecs::world
- * \ingroup cpp_core_queries
+ * @memberof flecs::world
+ * @ingroup cpp_core_queries
  */
 
 /** Create a query.
@@ -20876,8 +20876,8 @@ flecs::query_builder<Comps...> query_builder(Args &&... args) const;
 
 /** Convert enum constant to entity.
  * 
- * \memberof flecs::world
- * \ingroup cpp_entities
+ * @memberof flecs::world
+ * @ingroup cpp_entities
  */
 template <typename E, if_t< is_enum<E>::value > = 0>
 flecs::entity to_entity(E constant) const;
@@ -20890,8 +20890,8 @@ flecs::entity to_entity(E constant) const;
  */
 
 /** 
- * \memberof flecs::world
- * \ingroup cpp_addons_modules
+ * @memberof flecs::world
+ * @ingroup cpp_addons_modules
  * 
  * @{
  */
@@ -20924,8 +20924,8 @@ flecs::entity import();
  */
 
 /**
- * \memberof flecs::world
- * \ingroup cpp_pipelines
+ * @memberof flecs::world
+ * @ingroup cpp_pipelines
  */
 
 /** Create a new pipeline.
@@ -21020,8 +21020,8 @@ bool using_task_threads() const;
  */
 
 /**
- * \memberof flecs::world
- * \ingroup cpp_addons_snapshot
+ * @memberof flecs::world
+ * @ingroup cpp_addons_snapshot
  */
 
 /** Create a snapshot.
@@ -21039,8 +21039,8 @@ flecs::snapshot snapshot(Args &&... args) const;
  */
 
 /** 
- * \memberof flecs::world
- * \ingroup cpp_addons_system
+ * @memberof flecs::world
+ * @ingroup cpp_addons_system
 */
 
 /** Upcast entity to a system.
@@ -21070,8 +21070,8 @@ flecs::system_builder<Components...> system(Args &&... args) const;
  */
 
 /**
- * \memberof flecs::world
- * \ingroup cpp_addons_timer
+ * @memberof flecs::world
+ * @ingroup cpp_addons_timer
  */
 
 /** Find or register a singleton timer. */
@@ -21095,8 +21095,8 @@ void randomize_timers() const;
  */
 
 /**
- * \memberof flecs::world
- * \ingroup cpp_addons_rules
+ * @memberof flecs::world
+ * @ingroup cpp_addons_rules
  */
 
 /** Create a rule.
@@ -21158,8 +21158,8 @@ int plecs_from_file(const char *filename) const {
  */
 
 /**
- * \memberof flecs::world
- * \ingroup cpp_addons_meta
+ * @memberof flecs::world
+ * @ingroup cpp_addons_meta
  * 
  * @{
  */
@@ -21217,8 +21217,8 @@ flecs::entity vector();
 
 /** Serialize untyped value to JSON.
  * 
- * \memberof flecs::world
- * \ingroup cpp_addons_json
+ * @memberof flecs::world
+ * @ingroup cpp_addons_json
  */
 flecs::string to_json(flecs::entity_t tid, const void* value) {
     char *json = ecs_ptr_to_json(m_world, tid, value);
@@ -21227,8 +21227,8 @@ flecs::string to_json(flecs::entity_t tid, const void* value) {
 
 /** Serialize value to JSON.
  * 
- * \memberof flecs::world
- * \ingroup cpp_addons_json
+ * @memberof flecs::world
+ * @ingroup cpp_addons_json
  */
 template <typename T>
 flecs::string to_json(const T* value) {
@@ -21238,8 +21238,8 @@ flecs::string to_json(const T* value) {
 
 /** Serialize world to JSON.
  * 
- * \memberof flecs::world
- * \ingroup cpp_addons_json
+ * @memberof flecs::world
+ * @ingroup cpp_addons_json
  */
 flecs::string to_json() {
     return flecs::string( ecs_world_to_json(m_world, nullptr) );
@@ -21247,8 +21247,8 @@ flecs::string to_json() {
 
 /** Deserialize value from JSON.
  * 
- * \memberof flecs::world
- * \ingroup cpp_addons_json
+ * @memberof flecs::world
+ * @ingroup cpp_addons_json
  */
 const char* from_json(flecs::entity_t tid, void* value, const char *json, flecs::from_json_desc_t *desc = nullptr) {
     return ecs_ptr_from_json(m_world, tid, value, json, desc);
@@ -21256,8 +21256,8 @@ const char* from_json(flecs::entity_t tid, void* value, const char *json, flecs:
 
 /** Deserialize value from JSON.
  * 
- * \memberof flecs::world
- * \ingroup cpp_addons_json
+ * @memberof flecs::world
+ * @ingroup cpp_addons_json
  */
 template <typename T>
 const char* from_json(T* value, const char *json, flecs::from_json_desc_t *desc = nullptr) {
@@ -21267,8 +21267,8 @@ const char* from_json(T* value, const char *json, flecs::from_json_desc_t *desc 
 
 /** Deserialize JSON into world.
  * 
- * \memberof flecs::world
- * \ingroup cpp_addons_json
+ * @memberof flecs::world
+ * @ingroup cpp_addons_json
  */
 const char* from_json(const char *json, flecs::from_json_desc_t *desc = nullptr) {
     return ecs_world_from_json(m_world, json, desc);
@@ -21287,8 +21287,8 @@ const char* from_json(const char *json, flecs::from_json_desc_t *desc = nullptr)
  * as it provides hooks to modules for overtaking the main loop which is 
  * required for frameworks like emscripten.
  * 
- * \ingroup cpp_addons_app
- * \memberof flecs::world
+ * @ingroup cpp_addons_app
+ * @memberof flecs::world
  */
 flecs::app_builder app() {
     m_owned = false; // App takes ownership of world
@@ -21302,8 +21302,8 @@ flecs::app_builder app() {
 
 /** Create metric.
  * 
- * \ingroup cpp_addons_metrics
- * \memberof flecs::world
+ * @ingroup cpp_addons_metrics
+ * @memberof flecs::world
  */
 template <typename... Args>
 flecs::metric_builder metric(Args &&... args) const;
@@ -21313,8 +21313,8 @@ flecs::metric_builder metric(Args &&... args) const;
 
 /** Create alert.
  * 
- * \ingroup cpp_addons_alerts
- * \memberof flecs::world
+ * @ingroup cpp_addons_alerts
+ * @memberof flecs::world
  */
 template <typename... Comps, typename... Args>
 flecs::alert_builder<Comps...> alert(Args &&... args) const;
@@ -21380,7 +21380,7 @@ namespace flecs
  * This class can be used when a system does not know the type of a column at
  * compile time.
  *
- * \ingroup cpp_iterator
+ * @ingroup cpp_iterator
  */
 struct untyped_column {
     untyped_column(void* array, size_t size, size_t count, bool is_shared = false)
@@ -21412,7 +21412,7 @@ protected:
  *
  * @tparam T component type of the column.
  *
- * \ingroup cpp_iterator
+ * @ingroup cpp_iterator
  */
 template <typename T>
 struct column {
@@ -21524,7 +21524,7 @@ namespace flecs
 
 /** Class for iterating over query results.
  *
- * \ingroup cpp_iterator
+ * @ingroup cpp_iterator
  */
 struct iter {
 private:
@@ -21860,7 +21860,7 @@ private:
 #pragma once
 
 /**
- * \ingroup cpp_entities
+ * @ingroup cpp_entities
  * @{
  */
 
@@ -21870,7 +21870,7 @@ namespace flecs
 /** Entity view.
  * Class with read operations for entities. Base for flecs::entity.
  * 
- * \ingroup cpp_entities
+ * @ingroup cpp_entities
  */
 struct entity_view : public id {
 
@@ -22614,8 +22614,8 @@ struct entity_view : public id {
 
 /** Serialize entity to JSON.
  * 
- * \memberof flecs::entity_view
- * \ingroup cpp_addons_json
+ * @memberof flecs::entity_view
+ * @ingroup cpp_addons_json
  */
 flecs::string to_json(const flecs::entity_to_json_desc_t *desc = nullptr) {
     char *json = ecs_entity_to_json(m_world, m_id, desc);
@@ -22658,8 +22658,8 @@ const char* doc_color() {
 
 /** Return number of alerts for entity.
  * 
- * \memberof flecs::entity_view
- * \ingroup cpp_addons_alerts
+ * @memberof flecs::entity_view
+ * @ingroup cpp_addons_alerts
  */
 int32_t alert_count(flecs::entity_t alert = 0) const {
     return ecs_get_alert_count(m_world, m_id, alert);
@@ -22674,8 +22674,8 @@ int32_t alert_count(flecs::entity_t alert = 0) const {
 
 /** Convert entity to enum constant.
  * 
- * \memberof flecs::entity_view
- * \ingroup cpp_entities
+ * @memberof flecs::entity_view
+ * @ingroup cpp_entities
  */
 template <typename E>
 E to_constant() const;
@@ -22688,7 +22688,7 @@ E to_constant() const;
 
 /** Emit event for entity.
  * 
- * \memberof flecs::entity_view
+ * @memberof flecs::entity_view
  * 
  * @param evt The event to emit.
  */
@@ -22701,7 +22701,7 @@ void emit(flecs::entity_t evt) {
 
 /** Emit event for entity.
  * 
- * \memberof flecs::entity_view
+ * @memberof flecs::entity_view
  * 
  * @param evt The event to emit.
  */
@@ -22709,7 +22709,7 @@ void emit(flecs::entity evt);
 
 /** Emit event for entity.
  * 
- * \memberof flecs::entity_view
+ * @memberof flecs::entity_view
  * 
  * @tparam Evt The event to emit.
  */
@@ -22720,7 +22720,7 @@ void emit() {
 
 /** Emit event with payload for entity.
  * 
- * \memberof flecs::entity_view
+ * @memberof flecs::entity_view
  * 
  * @tparam Evt The event to emit.
  */
@@ -22736,7 +22736,7 @@ void emit(const Evt& payload) {
 
 /** Enqueue event for entity.
  * 
- * \memberof flecs::entity_view
+ * @memberof flecs::entity_view
  * 
  * @param evt The event to enqueue.
  */
@@ -22749,7 +22749,7 @@ void enqueue(flecs::entity_t evt) {
 
 /** Enqueue event for entity.
  * 
- * \memberof flecs::entity_view
+ * @memberof flecs::entity_view
  * 
  * @param evt The event to enqueue.
  */
@@ -22757,7 +22757,7 @@ void enqueue(flecs::entity evt);
 
 /** Enqueue event for entity.
  * 
- * \memberof flecs::entity_view
+ * @memberof flecs::entity_view
  * 
  * @tparam Evt The event to enqueue.
  */
@@ -22768,7 +22768,7 @@ void enqueue() {
 
 /** Enqueue event with payload for entity.
  * 
- * \memberof flecs::entity_view
+ * @memberof flecs::entity_view
  * 
  * @tparam Evt The event to enqueue.
  */
@@ -22801,7 +22801,7 @@ namespace flecs
 {
 
 /** Entity builder. 
- * \ingroup cpp_entities
+ * @ingroup cpp_entities
  */
 template <typename Self>
 struct entity_builder : entity_view {
@@ -23752,8 +23752,8 @@ struct entity_builder : entity_view {
 /** Set doc name.
  * This adds (flecs.doc.Description, flecs.Name) to the entity.
  * 
- * \memberof flecs::entity_builder
- * \ingroup cpp_addons_doc
+ * @memberof flecs::entity_builder
+ * @ingroup cpp_addons_doc
  */
 Self& set_doc_name(const char *name) {
     ecs_doc_set_name(m_world, m_id, name);
@@ -23763,8 +23763,8 @@ Self& set_doc_name(const char *name) {
 /** Set doc brief.
  * This adds (flecs.doc.Description, flecs.doc.Brief) to the entity.
  * 
- * \memberof flecs::entity_builder
- * \ingroup cpp_addons_doc
+ * @memberof flecs::entity_builder
+ * @ingroup cpp_addons_doc
  */
 Self& set_doc_brief(const char *brief) {
     ecs_doc_set_brief(m_world, m_id, brief);
@@ -23774,8 +23774,8 @@ Self& set_doc_brief(const char *brief) {
 /** Set doc detailed description.
  * This adds (flecs.doc.Description, flecs.doc.Detail) to the entity.
  * 
- * \memberof flecs::entity_builder
- * \ingroup cpp_addons_doc
+ * @memberof flecs::entity_builder
+ * @ingroup cpp_addons_doc
  */
 Self& set_doc_detail(const char *detail) {
     ecs_doc_set_detail(m_world, m_id, detail);
@@ -23785,8 +23785,8 @@ Self& set_doc_detail(const char *detail) {
 /** Set doc link.
  * This adds (flecs.doc.Description, flecs.doc.Link) to the entity.
  * 
- * \memberof flecs::entity_builder
- * \ingroup cpp_addons_doc
+ * @memberof flecs::entity_builder
+ * @ingroup cpp_addons_doc
  */
 Self& set_doc_link(const char *link) {
     ecs_doc_set_link(m_world, m_id, link);
@@ -23796,8 +23796,8 @@ Self& set_doc_link(const char *link) {
 /** Set doc color.
  * This adds (flecs.doc.Description, flecs.doc.Color) to the entity.
  * 
- * \memberof flecs::entity_builder
- * \ingroup cpp_addons_doc
+ * @memberof flecs::entity_builder
+ * @ingroup cpp_addons_doc
  */
 Self& set_doc_color(const char *link) {
     ecs_doc_set_color(m_world, m_id, link);
@@ -23813,8 +23813,8 @@ Self& set_doc_color(const char *link) {
  */
 
 /**
- * \memberof flecs::entity_view
- * \ingroup cpp_addons_meta
+ * @memberof flecs::entity_view
+ * @ingroup cpp_addons_meta
  * 
  * @{
  */
@@ -23907,8 +23907,8 @@ Self& quantity() {
 
 /** Set component from JSON.
  * 
- * \memberof flecs::entity_builder
- * \ingroup cpp_addons_json
+ * @memberof flecs::entity_builder
+ * @ingroup cpp_addons_json
  */
 Self& set_json(
     flecs::id_t e, 
@@ -23931,8 +23931,8 @@ Self& set_json(
 
 /** Set pair from JSON.
  * 
- * \memberof flecs::entity_builder
- * \ingroup cpp_addons_json
+ * @memberof flecs::entity_builder
+ * @ingroup cpp_addons_json
  */
 Self& set_json(
     flecs::entity_t r, 
@@ -23945,8 +23945,8 @@ Self& set_json(
 
 /** Set component from JSON.
  * 
- * \memberof flecs::entity_builder
- * \ingroup cpp_addons_json
+ * @memberof flecs::entity_builder
+ * @ingroup cpp_addons_json
  */
 template <typename T>
 Self& set_json(
@@ -23958,8 +23958,8 @@ Self& set_json(
 
 /** Set pair from JSON.
  * 
- * \memberof flecs::entity_builder
- * \ingroup cpp_addons_json
+ * @memberof flecs::entity_builder
+ * @ingroup cpp_addons_json
  */
 template <typename R, typename T>
 Self& set_json(
@@ -23974,8 +23974,8 @@ Self& set_json(
 
 /** Set pair from JSON.
  * 
- * \memberof flecs::entity_builder
- * \ingroup cpp_addons_json
+ * @memberof flecs::entity_builder
+ * @ingroup cpp_addons_json
  */
 template <typename R>
 Self& set_json(
@@ -23990,8 +23990,8 @@ Self& set_json(
 
 /** Set pair from JSON.
  * 
- * \memberof flecs::entity_builder
- * \ingroup cpp_addons_json
+ * @memberof flecs::entity_builder
+ * @ingroup cpp_addons_json
  */
 template <typename T>
 Self& set_json_second(
@@ -24013,7 +24013,7 @@ Self& set_json_second(
 
 /** Observe event on entity
  * 
- * \memberof flecs::entity_builder
+ * @memberof flecs::entity_builder
  * 
  * @param evt The event id.
  * @param callback The observer callback.
@@ -24024,7 +24024,7 @@ Self& observe(flecs::entity_t evt, Func&& callback);
 
 /** Observe event on entity
  * 
- * \memberof flecs::entity_builder
+ * @memberof flecs::entity_builder
  * 
  * @tparam Evt The event type.
  * @param callback The observer callback.
@@ -24035,7 +24035,7 @@ Self& observe(Func&& callback);
 
 /** Observe event on entity
  * 
- * \memberof flecs::entity_builder
+ * @memberof flecs::entity_builder
  *
  * @param callback The observer callback.
  * @return Event builder.
@@ -24069,7 +24069,7 @@ namespace flecs
 /** Entity.
  * Class with read/write operations for entities.
  *
- * \ingroup cpp_entities
+ * @ingroup cpp_entities
 */
 struct entity : entity_builder<entity>
 {
@@ -24349,8 +24349,8 @@ struct entity : entity_builder<entity>
 
 /** Deserialize entity to JSON.
  * 
- * \memberof flecs::entity
- * \ingroup cpp_addons_json
+ * @memberof flecs::entity
+ * @ingroup cpp_addons_json
  */
 const char* from_json(const char *json) {
     return ecs_entity_from_json(m_world, m_id, json, nullptr);
@@ -25458,8 +25458,8 @@ struct iter_iterable final : iterable<Components...> {
  */
 
 /**
- * \memberof flecs::iter
- * \ingroup cpp_addons_rules
+ * @memberof flecs::iter
+ * @ingroup cpp_addons_rules
  */
 
 iter_iterable<Components...>& set_var(const char *name, flecs::entity_t value) {
@@ -25481,8 +25481,8 @@ iter_iterable<Components...>& set_var(const char *name, flecs::entity_t value) {
 
 /** Serialize iterator result to JSON.
  * 
- * \memberof flecs::iter
- * \ingroup cpp_addons_json
+ * @memberof flecs::iter
+ * @ingroup cpp_addons_json
  */
 flecs::string to_json(flecs::iter_to_json_desc_t *desc = nullptr) {
     char *json = ecs_iter_to_json(m_it.real_world, &m_it, desc);
@@ -25975,7 +25975,7 @@ struct cpp_type<T, if_t< is_pair<T>::value >>
 /** Untyped component class.
  * Generic base class for flecs::component.
  *
- * \ingroup cpp_components
+ * @ingroup cpp_components
  */
 struct untyped_component : entity {
     using entity::entity;
@@ -25987,8 +25987,8 @@ struct untyped_component : entity {
  */
 
 /**
- * \memberof flecs::component
- * \ingroup cpp_addons_meta
+ * @memberof flecs::component
+ * @ingroup cpp_addons_meta
  * 
  * @{
  */
@@ -26169,8 +26169,8 @@ untyped_component& error_range(double min, double max) {
  */
 
 /**
- * \memberof flecs::component
- * \ingroup cpp_addons_metrics
+ * @memberof flecs::component
+ * @ingroup cpp_addons_metrics
  * 
  * @{
  */
@@ -26203,7 +26203,7 @@ untyped_component& metric(
 /** Component class.
  * Class used to register components and component metadata.
  *
- * \ingroup cpp_components
+ * @ingroup cpp_components
  */
 template <typename T>
 struct component : untyped_component {
@@ -26428,7 +26428,7 @@ flecs::entity_t type_id() {
  * variables. It only ensures that the next time a component id is requested, a
  * new id will be generated.
  *
- * \ingroup cpp_components
+ * @ingroup cpp_components
  */
 inline void reset() {
     ecs_cpp_reset_count_inc();
@@ -27338,7 +27338,7 @@ namespace flecs
  * descriptions can reference entities by id, name or by variable, which means
  * the entity will be resolved when the term is evaluated.
  * 
- * \ingroup cpp_core_filters
+ * @ingroup cpp_core_filters
  */
 template<typename Base>
 struct term_id_builder_i {
@@ -27472,7 +27472,7 @@ private:
 /** Term builder interface. 
  * A term is a single element of a query expression. 
  * 
- * \ingroup cpp_core_filters
+ * @ingroup cpp_core_filters
  */
 template<typename Base>
 struct term_builder_i : term_id_builder_i<Base> {
@@ -27764,7 +27764,7 @@ namespace flecs {
 
 /** Class that describes a term.
  * 
- * \ingroup cpp_core_filters
+ * @ingroup cpp_core_filters
  */
 struct term final : term_builder_i<term> {
     term()
@@ -28016,7 +28016,7 @@ namespace flecs
 
 /** Filter builder interface.
  * 
- * \ingroup cpp_core_filters
+ * @ingroup cpp_core_filters
  */
 template<typename Base, typename ... Components>
 struct filter_builder_i : term_builder_i<Base> {
@@ -28277,7 +28277,7 @@ namespace _ {
 
 /** Filter builder.
  * 
- * \ingroup cpp_core_filters
+ * @ingroup cpp_core_filters
  */
 template <typename ... Components>
 struct filter_builder final : _::filter_builder_base<Components...> {
@@ -28593,7 +28593,7 @@ namespace flecs {
 
 /** Query builder interface.
  * 
- * \ingroup cpp_core_queries
+ * @ingroup cpp_core_queries
  */
 template<typename Base, typename ... Components>
 struct query_builder_i : filter_builder_i<Base, Components ...> {
@@ -28751,7 +28751,7 @@ namespace _ {
 
 /** Query builder.
  * 
- * \ingroup cpp_core_queries
+ * @ingroup cpp_core_queries
  */
 template <typename ... Components>
 struct query_builder final : _::query_builder_base<Components...> {
@@ -29054,7 +29054,7 @@ namespace flecs {
 
 /** Observer builder interface.
  * 
- * \ingroup cpp_observers
+ * @ingroup cpp_observers
  */
 template<typename Base, typename ... Components>
 struct observer_builder_i : filter_builder_i<Base, Components ...> {
@@ -29129,7 +29129,7 @@ namespace _ {
 
 /** Observer builder.
  * 
- * \ingroup cpp_observers
+ * @ingroup cpp_observers
  */
 template <typename ... Components>
 struct observer_builder final : _::observer_builder_base<Components...> {
@@ -29448,7 +29448,7 @@ namespace flecs
 
 /** System builder interface.
  * 
- * \ingroup cpp_addons_systems
+ * @ingroup cpp_addons_systems
  */
 template<typename Base, typename ... Components>
 struct system_builder_i : query_builder_i<Base, Components ...> {
@@ -29602,7 +29602,7 @@ namespace _ {
 
 /** System builder.
  * 
- * \ingroup cpp_addons_systems
+ * @ingroup cpp_addons_systems
  */
 template <typename ... Components>
 struct system_builder final : _::system_builder_base<Components...> {
@@ -29737,8 +29737,8 @@ struct system final : entity
  */
 
 /**
- * \memberof flecs::system
- * \ingroup cpp_addons_timer
+ * @memberof flecs::system
+ * @ingroup cpp_addons_timer
  */
 
 /** Set interval.
@@ -29840,7 +29840,7 @@ namespace flecs {
 
 /** Pipeline builder interface.
  * 
- * \ingroup cpp_pipelines
+ * @ingroup cpp_pipelines
  */
 template<typename Base>
 struct pipeline_builder_i : query_builder_i<Base> {
@@ -29865,7 +29865,7 @@ namespace _ {
 
 /** Pipeline builder.
  * 
- * \ingroup cpp_pipelines
+ * @ingroup cpp_pipelines
  */
 template <typename ... Components>
 struct pipeline_builder final : _::pipeline_builder_base<Components...> {
@@ -30269,7 +30269,7 @@ namespace _ {
 
 /** Rule builder.
  * 
- * \ingroup cpp_addons_rules
+ * @ingroup cpp_addons_rules
  */
 template <typename ... Components>
 struct rule_builder final : _::rule_builder_base<Components...> {
@@ -30979,7 +30979,7 @@ namespace flecs {
 
 /** Alert builder interface.
  * 
- * \ingroup cpp_addons_alerts
+ * @ingroup cpp_addons_alerts
  */
 template<typename Base, typename ... Components>
 struct alert_builder_i : filter_builder_i<Base, Components ...> {
@@ -31140,7 +31140,7 @@ namespace _ {
 
 /** Alert builder.
  * 
- * \ingroup cpp_addons_alerts
+ * @ingroup cpp_addons_alerts
  */
 template <typename ... Components>
 struct alert_builder final : _::alert_builder_base<Components...> {
