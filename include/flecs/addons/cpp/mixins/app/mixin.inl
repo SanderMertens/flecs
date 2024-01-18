@@ -9,8 +9,8 @@
  * as it provides hooks to modules for overtaking the main loop which is 
  * required for frameworks like emscripten.
  * 
- * \ingroup cpp_addons_app
- * \memberof flecs::world
+ * @ingroup cpp_addons_app
+ * @memberof flecs::world
  */
 flecs::app_builder app() {
     m_owned = false; // App takes ownership of world

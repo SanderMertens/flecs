@@ -4,8 +4,8 @@
  */
 
 /**
- * \memberof flecs::component
- * \ingroup cpp_addons_metrics
+ * @memberof flecs::component
+ * @ingroup cpp_addons_metrics
  * 
  * @{
  */

@@ -336,7 +336,7 @@ struct cpp_type<T, if_t< is_pair<T>::value >>
 /** Untyped component class.
  * Generic base class for flecs::component.
  *
- * \ingroup cpp_components
+ * @ingroup cpp_components
  */
 struct untyped_component : entity {
     using entity::entity;
@@ -352,7 +352,7 @@ struct untyped_component : entity {
 /** Component class.
  * Class used to register components and component metadata.
  *
- * \ingroup cpp_components
+ * @ingroup cpp_components
  */
 template <typename T>
 struct component : untyped_component {
@@ -542,7 +542,7 @@ flecs::entity_t type_id() {
  * variables. It only ensures that the next time a component id is requested, a
  * new id will be generated.
  *
- * \ingroup cpp_components
+ * @ingroup cpp_components
  */
 inline void reset() {
     ecs_cpp_reset_count_inc();

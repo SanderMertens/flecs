@@ -30,30 +30,30 @@
  * @{
  */
 
-/** \def ecs_float_t
+/** @def ecs_float_t
  * Customizable precision for floating point operations */
 #ifndef ecs_float_t
 #define ecs_float_t float
 #endif
 
-/** \def ecs_ftime_t
+/** @def ecs_ftime_t
  * Customizable precision for scalar time values. Change to double precision for
  * processes that can run for a long time (e.g. longer than a day). */
 #ifndef ecs_ftime_t
 #define ecs_ftime_t ecs_float_t
 #endif
 
-/** \def FLECS_LEGACY
+/** @def FLECS_LEGACY
  * Define when building for C89
  */
 // #define FLECS_LEGACY
 
-/** \def FLECS_NO_DEPRECATED_WARNINGS
+/** @def FLECS_NO_DEPRECATED_WARNINGS
  * disables deprecated warnings
  */
 #define FLECS_NO_DEPRECATED_WARNINGS
 
-/** \def FLECS_ACCURATE_COUNTERS
+/** @def FLECS_ACCURATE_COUNTERS
  * Define to ensure that global counters used for statistics (such as the
  * allocation counters in the OS API) are accurate in multithreaded
  * applications, at the cost of increased overhead.
@@ -68,7 +68,7 @@
 #error "invalid configuration: cannot both define FLECS_DEBUG and NDEBUG"
 #endif
 
-/** \def FLECS_DEBUG
+/** @def FLECS_DEBUG
  * Used for input parameter checking and cheap sanity checks. There are lots of
  * asserts in every part of the code, so this will slow down applications.
  */
@@ -80,7 +80,7 @@
 #endif
 #endif
 
-/** \def FLECS_SANITIZE
+/** @def FLECS_SANITIZE
  * Enables expensive checks that can detect issues early. Recommended for
  * running tests or when debugging issues. This will severely slow down code.
  */
@@ -94,7 +94,7 @@
  * test with the FLECS_DEBUG or FLECS_SANITIZE flags enabled. There's a good
  * chance that this gives you more information about the issue! */
 
-/** \def FLECS_SOFT_ASSERT
+/** @def FLECS_SOFT_ASSERT
  * Define to not abort for recoverable errors, like invalid parameters. An error
  * is still thrown to the console. This is recommended for when running inside a
  * third party runtime, such as the Unreal editor.
@@ -109,14 +109,14 @@
  */
 // #define FLECS_SOFT_ASSERT
 
-/** \def FLECS_KEEP_ASSERT
+/** @def FLECS_KEEP_ASSERT
  * By default asserts are disabled in release mode, when either FLECS_NDEBUG or
  * NDEBUG is defined. Defining FLECS_KEEP_ASSERT ensures that asserts are not
  * disabled. This define can be combined with FLECS_SOFT_ASSERT.
  */
 // #define FLECS_KEEP_ASSERT
 
-/** \def FLECS_CUSTOM_BUILD
+/** @def FLECS_CUSTOM_BUILD
  * This macro lets you customize which addons to build flecs with.
  * Without any addons Flecs is just a minimal ECS storage, but addons add
  * features such as systems, scheduling and reflection. If an addon is disabled,
@@ -145,7 +145,7 @@
  */
 // #define FLECS_CUSTOM_BUILD
 
-/** \def FLECS_CPP_NO_AUTO_REGISTRATION
+/** @def FLECS_CPP_NO_AUTO_REGISTRATION
  * When set, the C++ API will require that components are registered before they
  * are used. This is useful in multithreaded applications, where components need
  * to be registered beforehand, and to catch issues in projects where component
@@ -185,7 +185,7 @@
 // #define FLECS_JOURNAL    /**< Journaling addon (disabled by default) */
 #endif // ifndef FLECS_CUSTOM_BUILD
 
-/** \def FLECS_LOW_FOOTPRINT
+/** @def FLECS_LOW_FOOTPRINT
  * Set a number of constants to values that decrease memory footprint, at the
  * cost of decreased performance. */
 // #define FLECS_LOW_FOOTPRINT
@@ -197,7 +197,7 @@
 #define FLECS_USE_OS_ALLOC
 #endif
 
-/** \def FLECS_HI_COMPONENT_ID
+/** @def FLECS_HI_COMPONENT_ID
  * This constant can be used to balance between performance and memory
  * utilization. The constant is used in two ways:
  * - Entity ids 0..FLECS_HI_COMPONENT_ID are reserved for component ids.
@@ -211,7 +211,7 @@
 #define FLECS_HI_COMPONENT_ID (256)
 #endif
 
-/** \def FLECS_HI_ID_RECORD_ID
+/** @def FLECS_HI_ID_RECORD_ID
  * This constant can be used to balance between performance and memory
  * utilization. The constant is used to determine the size of the id record
  * lookup array. Id values that fall outside of this range use a regular map
@@ -221,7 +221,7 @@
 #define FLECS_HI_ID_RECORD_ID (1024)
 #endif
 
-/** \def FLECS_SPARSE_PAGE_BITS
+/** @def FLECS_SPARSE_PAGE_BITS
  * This constant is used to determine the number of bits of an id that is used
  * to determine the page index when used with a sparse set. The number of bits
  * determines the page size, which is (1 << bits).
@@ -230,37 +230,37 @@
 #define FLECS_SPARSE_PAGE_BITS (12)
 #endif
 
-/** \def FLECS_ENTITY_PAGE_BITS
+/** @def FLECS_ENTITY_PAGE_BITS
  * Same as FLECS_SPARSE_PAGE_BITS, but for the entity index. */
 #ifndef FLECS_ENTITY_PAGE_BITS
 #define FLECS_ENTITY_PAGE_BITS (12)
 #endif
 
-/** \def FLECS_USE_OS_ALLOC
+/** @def FLECS_USE_OS_ALLOC
  * When enabled, Flecs will use the OS allocator provided in the OS API directly
  * instead of the builtin block allocator. This can decrease memory utilization
  * as memory will be freed more often, at the cost of decreased performance. */
 // #define FLECS_USE_OS_ALLOC
 
-/** \def FLECS_ID_DESC_MAX
+/** @def FLECS_ID_DESC_MAX
  * Maximum number of ids to add ecs_entity_desc_t / ecs_bulk_desc_t */
 #ifndef FLECS_ID_DESC_MAX
 #define FLECS_ID_DESC_MAX (32)
 #endif
 
-/** \def FLECS_TERM_DESC_MAX
+/** @def FLECS_TERM_DESC_MAX
  * Maximum number of terms in ecs_filter_desc_t */
 #define FLECS_TERM_DESC_MAX (16)
 
-/** \def FLECS_EVENT_DESC_MAX
+/** @def FLECS_EVENT_DESC_MAX
  * Maximum number of events in ecs_observer_desc_t */
 #define FLECS_EVENT_DESC_MAX (8)
 
-/** \def FLECS_VARIABLE_COUNT_MAX
+/** @def FLECS_VARIABLE_COUNT_MAX
  * Maximum number of query variables per query */
 #define FLECS_VARIABLE_COUNT_MAX (64)
 
-/** \def FLECS_QUERY_SCOPE_NESTING_MAX
+/** @def FLECS_QUERY_SCOPE_NESTING_MAX
  * Maximum nesting depth of query scopes */
 #define FLECS_QUERY_SCOPE_NESTING_MAX (8)
 
@@ -830,7 +830,7 @@ struct ecs_observer_t {
 
 /** Type that contains component lifecycle callbacks.
  *
- * \ingroup components
+ * @ingroup components
  */
 struct ecs_type_hooks_t {
     ecs_xtor_t ctor;            /**< ctor */
@@ -879,7 +879,7 @@ struct ecs_type_hooks_t {
 
 /** Type that contains component information (passed to ctors/dtors/...)
  *
- * \ingroup components
+ * @ingroup components
  */
 struct ecs_type_info_t {
     ecs_size_t size;         /**< Size of type */
@@ -896,7 +896,7 @@ struct ecs_type_info_t {
 
 /** Used with ecs_entity_init().
  *
- * \ingroup entities
+ * @ingroup entities
  */
 typedef struct ecs_entity_desc_t {
     int32_t _canary;
@@ -937,7 +937,7 @@ typedef struct ecs_entity_desc_t {
 
 /** Used with ecs_bulk_init().
  *
- * \ingroup entities
+ * @ingroup entities
  */
 typedef struct ecs_bulk_desc_t {
     int32_t _canary;
@@ -967,7 +967,7 @@ typedef struct ecs_bulk_desc_t {
 
 /** Used with ecs_component_init().
  *
- * \ingroup components
+ * @ingroup components
  */
 typedef struct ecs_component_desc_t {
     int32_t _canary;
@@ -981,7 +981,7 @@ typedef struct ecs_component_desc_t {
 
 /** Used with ecs_filter_init().
  *
- * \ingroup filters
+ * @ingroup filters
  */
 typedef struct ecs_filter_desc_t {
     int32_t _canary;
@@ -1018,7 +1018,7 @@ typedef struct ecs_filter_desc_t {
 
 /** Used with ecs_query_init().
  *
- * \ingroup queries
+ * @ingroup queries
  */
 typedef struct ecs_query_desc_t {
     int32_t _canary;
@@ -1087,7 +1087,7 @@ typedef struct ecs_query_desc_t {
 
 /** Used with ecs_observer_init().
  *
- * \ingroup observers
+ * @ingroup observers
  */
 typedef struct ecs_observer_desc_t {
     int32_t _canary;
@@ -1142,7 +1142,7 @@ typedef struct ecs_observer_desc_t {
 
 /** Used with ecs_emit().
  *
- * \ingroup observers
+ * @ingroup observers
  */
 typedef struct ecs_event_desc_t {
     /** The event id. Only observers for the specified event will be notified */

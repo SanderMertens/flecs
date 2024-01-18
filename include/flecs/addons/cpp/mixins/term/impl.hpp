@@ -11,7 +11,7 @@ namespace flecs {
 
 /** Class that describes a term.
  * 
- * \ingroup cpp_core_filters
+ * @ingroup cpp_core_filters
  */
 struct term final : term_builder_i<term> {
     term()

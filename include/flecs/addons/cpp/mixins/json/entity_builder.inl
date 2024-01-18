@@ -5,8 +5,8 @@
 
 /** Set component from JSON.
  * 
- * \memberof flecs::entity_builder
- * \ingroup cpp_addons_json
+ * @memberof flecs::entity_builder
+ * @ingroup cpp_addons_json
  */
 Self& set_json(
     flecs::id_t e, 
@@ -29,8 +29,8 @@ Self& set_json(
 
 /** Set pair from JSON.
  * 
- * \memberof flecs::entity_builder
- * \ingroup cpp_addons_json
+ * @memberof flecs::entity_builder
+ * @ingroup cpp_addons_json
  */
 Self& set_json(
     flecs::entity_t r, 
@@ -43,8 +43,8 @@ Self& set_json(
 
 /** Set component from JSON.
  * 
- * \memberof flecs::entity_builder
- * \ingroup cpp_addons_json
+ * @memberof flecs::entity_builder
+ * @ingroup cpp_addons_json
  */
 template <typename T>
 Self& set_json(
@@ -56,8 +56,8 @@ Self& set_json(
 
 /** Set pair from JSON.
  * 
- * \memberof flecs::entity_builder
- * \ingroup cpp_addons_json
+ * @memberof flecs::entity_builder
+ * @ingroup cpp_addons_json
  */
 template <typename R, typename T>
 Self& set_json(
@@ -72,8 +72,8 @@ Self& set_json(
 
 /** Set pair from JSON.
  * 
- * \memberof flecs::entity_builder
- * \ingroup cpp_addons_json
+ * @memberof flecs::entity_builder
+ * @ingroup cpp_addons_json
  */
 template <typename R>
 Self& set_json(
@@ -88,8 +88,8 @@ Self& set_json(
 
 /** Set pair from JSON.
  * 
- * \memberof flecs::entity_builder
- * \ingroup cpp_addons_json
+ * @memberof flecs::entity_builder
+ * @ingroup cpp_addons_json
  */
 template <typename T>
 Self& set_json_second(

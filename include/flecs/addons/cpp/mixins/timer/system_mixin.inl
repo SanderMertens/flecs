@@ -4,8 +4,8 @@
  */
 
 /**
- * \memberof flecs::system
- * \ingroup cpp_addons_timer
+ * @memberof flecs::system
+ * @ingroup cpp_addons_timer
  */
 
 /** Set interval.

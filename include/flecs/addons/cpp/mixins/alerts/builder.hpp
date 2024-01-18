@@ -18,7 +18,7 @@ namespace _ {
 
 /** Alert builder.
  * 
- * \ingroup cpp_addons_alerts
+ * @ingroup cpp_addons_alerts
  */
 template <typename ... Components>
 struct alert_builder final : _::alert_builder_base<Components...> {

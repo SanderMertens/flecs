@@ -20,7 +20,7 @@ namespace flecs
  * This class can be used when a system does not know the type of a column at
  * compile time.
  *
- * \ingroup cpp_iterator
+ * @ingroup cpp_iterator
  */
 struct untyped_column {
     untyped_column(void* array, size_t size, size_t count, bool is_shared = false)
@@ -52,7 +52,7 @@ protected:
  *
  * @tparam T component type of the column.
  *
- * \ingroup cpp_iterator
+ * @ingroup cpp_iterator
  */
 template <typename T>
 struct column {
@@ -164,7 +164,7 @@ namespace flecs
 
 /** Class for iterating over query results.
  *
- * \ingroup cpp_iterator
+ * @ingroup cpp_iterator
  */
 struct iter {
 private:

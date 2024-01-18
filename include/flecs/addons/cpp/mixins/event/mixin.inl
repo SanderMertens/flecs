@@ -13,7 +13,7 @@
 
 /** Create a new event.
  *
- * \memberof flecs::world
+ * @memberof flecs::world
  *
  * @param evt The event id.
  * @return Event builder.
@@ -22,7 +22,7 @@ flecs::event_builder event(flecs::entity_t evt) const;
 
 /** Create a new event.
  *
- * \memberof flecs::world
+ * @memberof flecs::world
  *
  * @tparam E The event type.
  * @return Event builder.

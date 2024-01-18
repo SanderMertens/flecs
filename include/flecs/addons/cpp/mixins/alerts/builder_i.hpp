@@ -11,7 +11,7 @@ namespace flecs {
 
 /** Alert builder interface.
  * 
- * \ingroup cpp_addons_alerts
+ * @ingroup cpp_addons_alerts
  */
 template<typename Base, typename ... Components>
 struct alert_builder_i : filter_builder_i<Base, Components ...> {

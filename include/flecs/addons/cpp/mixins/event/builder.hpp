@@ -10,7 +10,7 @@
 namespace flecs {
 
 /**
- * \ingroup cpp_addons_event
+ * @ingroup cpp_addons_event
  * @{
  */
 

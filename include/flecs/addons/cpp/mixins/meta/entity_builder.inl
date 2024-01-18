@@ -4,8 +4,8 @@
  */
 
 /**
- * \memberof flecs::entity_view
- * \ingroup cpp_addons_meta
+ * @memberof flecs::entity_view
+ * @ingroup cpp_addons_meta
  * 
  * @{
  */

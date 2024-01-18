@@ -5,7 +5,7 @@
 
 /** Emit event for entity.
  * 
- * \memberof flecs::entity_view
+ * @memberof flecs::entity_view
  * 
  * @param evt The event to emit.
  */
@@ -18,7 +18,7 @@ void emit(flecs::entity_t evt) {
 
 /** Emit event for entity.
  * 
- * \memberof flecs::entity_view
+ * @memberof flecs::entity_view
  * 
  * @param evt The event to emit.
  */
@@ -26,7 +26,7 @@ void emit(flecs::entity evt);
 
 /** Emit event for entity.
  * 
- * \memberof flecs::entity_view
+ * @memberof flecs::entity_view
  * 
  * @tparam Evt The event to emit.
  */
@@ -37,7 +37,7 @@ void emit() {
 
 /** Emit event with payload for entity.
  * 
- * \memberof flecs::entity_view
+ * @memberof flecs::entity_view
  * 
  * @tparam Evt The event to emit.
  */
@@ -53,7 +53,7 @@ void emit(const Evt& payload) {
 
 /** Enqueue event for entity.
  * 
- * \memberof flecs::entity_view
+ * @memberof flecs::entity_view
  * 
  * @param evt The event to enqueue.
  */
@@ -66,7 +66,7 @@ void enqueue(flecs::entity_t evt) {
 
 /** Enqueue event for entity.
  * 
- * \memberof flecs::entity_view
+ * @memberof flecs::entity_view
  * 
  * @param evt The event to enqueue.
  */
@@ -74,7 +74,7 @@ void enqueue(flecs::entity evt);
 
 /** Enqueue event for entity.
  * 
- * \memberof flecs::entity_view
+ * @memberof flecs::entity_view
  * 
  * @tparam Evt The event to enqueue.
  */
@@ -85,7 +85,7 @@ void enqueue() {
 
 /** Enqueue event with payload for entity.
  * 
- * \memberof flecs::entity_view
+ * @memberof flecs::entity_view
  * 
  * @tparam Evt The event to enqueue.
  */

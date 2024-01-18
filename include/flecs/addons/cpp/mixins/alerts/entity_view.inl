@@ -5,8 +5,8 @@
 
 /** Return number of alerts for entity.
  * 
- * \memberof flecs::entity_view
- * \ingroup cpp_addons_alerts
+ * @memberof flecs::entity_view
+ * @ingroup cpp_addons_alerts
  */
 int32_t alert_count(flecs::entity_t alert = 0) const {
     return ecs_get_alert_count(m_world, m_id, alert);

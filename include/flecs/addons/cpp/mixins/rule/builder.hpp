@@ -17,7 +17,7 @@ namespace _ {
 
 /** Rule builder.
  * 
- * \ingroup cpp_addons_rules
+ * @ingroup cpp_addons_rules
  */
 template <typename ... Components>
 struct rule_builder final : _::rule_builder_base<Components...> {

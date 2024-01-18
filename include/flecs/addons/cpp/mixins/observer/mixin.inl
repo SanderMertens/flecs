@@ -5,8 +5,8 @@
 
 /** Observer builder.
  * 
- * \memberof flecs::world
- * \ingroup cpp_observers
+ * @memberof flecs::world
+ * @ingroup cpp_observers
  */
 
 /** Upcast entity to an observer.

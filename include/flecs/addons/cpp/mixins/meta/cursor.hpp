@@ -17,7 +17,7 @@ namespace flecs {
 
 /** Class for reading/writing dynamic values.
  *
- * \ingroup cpp_addons_meta
+ * @ingroup cpp_addons_meta
  */
 struct cursor {
     cursor(flecs::world_t *world, flecs::entity_t type_id, void *ptr) {
