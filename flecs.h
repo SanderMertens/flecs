@@ -22617,7 +22617,7 @@ struct entity_view : public id {
  * \memberof flecs::entity_view
  * \ingroup cpp_addons_json
  */
-flecs::string to_json(const flecs::entity_to_json_desc_t *desc = nullptr) {
+flecs::string to_json(const flecs::entity_to_json_desc_t *desc = nullptr) const {
     char *json = ecs_entity_to_json(m_world, m_id, desc);
     return flecs::string(json);
 }
@@ -22629,23 +22629,23 @@ flecs::string to_json(const flecs::entity_to_json_desc_t *desc = nullptr) {
  * @brief Doc entity view mixin.
  */
 
-const char* doc_name() {
+const char* doc_name() const {
     return ecs_doc_get_name(m_world, m_id);
 }
 
-const char* doc_brief() {
+const char* doc_brief() const {
     return ecs_doc_get_brief(m_world, m_id);
 }
 
-const char* doc_detail() {
+const char* doc_detail() const {
     return ecs_doc_get_detail(m_world, m_id);
 }
 
-const char* doc_link() {
+const char* doc_link() const {
     return ecs_doc_get_link(m_world, m_id);
 }
 
-const char* doc_color() {
+const char* doc_color() const {
     return ecs_doc_get_color(m_world, m_id);
 }
 
