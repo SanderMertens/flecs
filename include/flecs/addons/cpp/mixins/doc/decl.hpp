@@ -31,7 +31,9 @@ static const flecs::entity_t Link = EcsDocLink;
 /** flecs.doc.Color component */
 static const flecs::entity_t Color = EcsDocColor;
 
+/** @private */
 namespace _ {
+/** @private */
 void init(flecs::world& world);
 }
 
