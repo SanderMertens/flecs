@@ -46,6 +46,10 @@ typedef struct EcsDocDescription {
  * @param world The world.
  * @param entity The entity to which to add the name.
  * @param name The name to add.
+ *
+ * @see ecs_doc_get_name()
+ * @see flecs::doc::set_name()
+ * @see flecs::entity_builder::set_doc_name()
  */
 FLECS_API
 void ecs_doc_set_name(
@@ -58,6 +62,10 @@ void ecs_doc_set_name(
  * @param world The world.
  * @param entity The entity to which to add the description.
  * @param description The description to add.
+ *
+ * @see ecs_doc_get_brief()
+ * @see flecs::doc::set_brief()
+ * @see flecs::entity_builder::set_doc_brief()
  */
 FLECS_API
 void ecs_doc_set_brief(
@@ -70,6 +78,10 @@ void ecs_doc_set_brief(
  * @param world The world.
  * @param entity The entity to which to add the description.
  * @param description The description to add.
+ *
+ * @see ecs_doc_get_detail()
+ * @see flecs::doc::set_detail()
+ * @see flecs::entity_builder::set_doc_detail()
  */
 FLECS_API
 void ecs_doc_set_detail(
@@ -82,6 +94,10 @@ void ecs_doc_set_detail(
  * @param world The world.
  * @param entity The entity to which to add the link.
  * @param link The link to add.
+ *
+ * @see ecs_doc_get_link()
+ * @see flecs::doc::set_link()
+ * @see flecs::entity_builder::set_doc_link()
  */
 FLECS_API
 void ecs_doc_set_link(
@@ -95,6 +111,10 @@ void ecs_doc_set_link(
  * @param world The world.
  * @param entity The entity to which to add the link.
  * @param color The color to add.
+ *
+ * @see ecs_doc_get_color()
+ * @see flecs::doc::set_color()
+ * @see flecs::entity_builder::set_doc_color()
  */
 FLECS_API
 void ecs_doc_set_color(
@@ -121,6 +141,10 @@ void ecs_doc_set_color(
  * @param world The world.
  * @param entity The entity from which to get the name.
  * @return The name.
+ *
+ * @see ecs_doc_set_name()
+ * @see flecs::doc::get_name()
+ * @see flecs::entity_view::get_doc_name()
  */
 FLECS_API
 const char* ecs_doc_get_name(
@@ -132,6 +156,10 @@ const char* ecs_doc_get_name(
  * @param world The world.
  * @param entity The entity from which to get the description.
  * @return The description.
+ *
+ * @see ecs_doc_set_brief()
+ * @see flecs::doc::get_brief()
+ * @see flecs::entity_view::get_doc_brief()
  */
 FLECS_API
 const char* ecs_doc_get_brief(
@@ -143,6 +171,10 @@ const char* ecs_doc_get_brief(
  * @param world The world.
  * @param entity The entity from which to get the description.
  * @return The description.
+ *
+ * @see ecs_doc_set_detail()
+ * @see flecs::doc::get_detail()
+ * @see flecs::entity_view::get_doc_detail()
  */
 FLECS_API
 const char* ecs_doc_get_detail(
@@ -154,6 +186,10 @@ const char* ecs_doc_get_detail(
  * @param world The world.
  * @param entity The entity from which to get the link.
  * @return The link.
+ *
+ * @see ecs_doc_set_link()
+ * @see flecs::doc::get_link()
+ * @see flecs::entity_view::get_doc_link()
  */
 FLECS_API
 const char* ecs_doc_get_link(
@@ -163,8 +199,12 @@ const char* ecs_doc_get_link(
 /** Get color from entity.
  *
  * @param world The world.
- * @param entity The entity from which to get the link.
+ * @param entity The entity from which to get the color.
  * @return The color.
+ *
+ * @see ecs_doc_set_color()
+ * @see flecs::doc::get_color()
+ * @see flecs::entity_view::get_doc_color()
  */
 FLECS_API
 const char* ecs_doc_get_color(

@@ -12497,6 +12497,10 @@ typedef struct EcsDocDescription {
  * @param world The world.
  * @param entity The entity to which to add the name.
  * @param name The name to add.
+ *
+ * @see ecs_doc_get_name()
+ * @see flecs::doc::set_name()
+ * @see flecs::entity_builder::set_doc_name()
  */
 FLECS_API
 void ecs_doc_set_name(
@@ -12509,6 +12513,10 @@ void ecs_doc_set_name(
  * @param world The world.
  * @param entity The entity to which to add the description.
  * @param description The description to add.
+ *
+ * @see ecs_doc_get_brief()
+ * @see flecs::doc::set_brief()
+ * @see flecs::entity_builder::set_doc_brief()
  */
 FLECS_API
 void ecs_doc_set_brief(
@@ -12521,6 +12529,10 @@ void ecs_doc_set_brief(
  * @param world The world.
  * @param entity The entity to which to add the description.
  * @param description The description to add.
+ *
+ * @see ecs_doc_get_detail()
+ * @see flecs::doc::set_detail()
+ * @see flecs::entity_builder::set_doc_detail()
  */
 FLECS_API
 void ecs_doc_set_detail(
@@ -12533,6 +12545,10 @@ void ecs_doc_set_detail(
  * @param world The world.
  * @param entity The entity to which to add the link.
  * @param link The link to add.
+ *
+ * @see ecs_doc_get_link()
+ * @see flecs::doc::set_link()
+ * @see flecs::entity_builder::set_doc_link()
  */
 FLECS_API
 void ecs_doc_set_link(
@@ -12546,6 +12562,10 @@ void ecs_doc_set_link(
  * @param world The world.
  * @param entity The entity to which to add the link.
  * @param color The color to add.
+ *
+ * @see ecs_doc_get_color()
+ * @see flecs::doc::set_color()
+ * @see flecs::entity_builder::set_doc_color()
  */
 FLECS_API
 void ecs_doc_set_color(
@@ -12572,6 +12592,10 @@ void ecs_doc_set_color(
  * @param world The world.
  * @param entity The entity from which to get the name.
  * @return The name.
+ *
+ * @see ecs_doc_set_name()
+ * @see flecs::doc::get_name()
+ * @see flecs::entity_view::get_doc_name()
  */
 FLECS_API
 const char* ecs_doc_get_name(
@@ -12583,6 +12607,10 @@ const char* ecs_doc_get_name(
  * @param world The world.
  * @param entity The entity from which to get the description.
  * @return The description.
+ *
+ * @see ecs_doc_set_brief()
+ * @see flecs::doc::get_brief()
+ * @see flecs::entity_view::get_doc_brief()
  */
 FLECS_API
 const char* ecs_doc_get_brief(
@@ -12594,6 +12622,10 @@ const char* ecs_doc_get_brief(
  * @param world The world.
  * @param entity The entity from which to get the description.
  * @return The description.
+ *
+ * @see ecs_doc_set_detail()
+ * @see flecs::doc::get_detail()
+ * @see flecs::entity_view::get_doc_detail()
  */
 FLECS_API
 const char* ecs_doc_get_detail(
@@ -12605,6 +12637,10 @@ const char* ecs_doc_get_detail(
  * @param world The world.
  * @param entity The entity from which to get the link.
  * @return The link.
+ *
+ * @see ecs_doc_set_link()
+ * @see flecs::doc::get_link()
+ * @see flecs::entity_view::get_doc_link()
  */
 FLECS_API
 const char* ecs_doc_get_link(
@@ -12614,8 +12650,12 @@ const char* ecs_doc_get_link(
 /** Get color from entity.
  *
  * @param world The world.
- * @param entity The entity from which to get the link.
+ * @param entity The entity from which to get the color.
  * @return The color.
+ *
+ * @see ecs_doc_set_color()
+ * @see flecs::doc::get_color()
+ * @see flecs::entity_view::get_doc_color()
  */
 FLECS_API
 const char* ecs_doc_get_color(
@@ -17568,7 +17608,9 @@ static const flecs::entity_t Link = EcsDocLink;
 /** flecs.doc.Color component */
 static const flecs::entity_t Color = EcsDocColor;
 
+/** @private */
 namespace _ {
+/** @private */
 void init(flecs::world& world);
 }
 
@@ -22629,22 +22671,67 @@ flecs::string to_json(const flecs::entity_to_json_desc_t *desc = nullptr) const 
  * @brief Doc entity view mixin.
  */
 
+/** Get human readable name.
+ *
+ * @see ecs_doc_get_name()
+ * @see flecs::doc::get_name()
+ * @see flecs::entity_builder::set_doc_name()
+ *
+ * @memberof flecs::entity_view
+ * @ingroup cpp_addons_doc
+ */
 const char* doc_name() const {
     return ecs_doc_get_name(m_world, m_id);
 }
 
+/** Get brief description.
+ *
+ * @see ecs_doc_get_brief()
+ * @see flecs::doc::get_brief()
+ * @see flecs::entity_builder::set_doc_brief()
+ *
+ * @memberof flecs::entity_view
+ * @ingroup cpp_addons_doc
+ */
 const char* doc_brief() const {
     return ecs_doc_get_brief(m_world, m_id);
 }
 
+/** Get detailed description.
+ *
+ * @see ecs_doc_get_detail()
+ * @see flecs::doc::get_detail()
+ * @see flecs::entity_builder::set_doc_detail()
+ *
+ * @memberof flecs::entity_view
+ * @ingroup cpp_addons_doc
+ */
 const char* doc_detail() const {
     return ecs_doc_get_detail(m_world, m_id);
 }
 
+/** Get link to external documentation.
+ *
+ * @see ecs_doc_get_link()
+ * @see flecs::doc::get_link()
+ * @see flecs::entity_builder::set_doc_link()
+ *
+ * @memberof flecs::entity_view
+ * @ingroup cpp_addons_doc
+ */
 const char* doc_link() const {
     return ecs_doc_get_link(m_world, m_id);
 }
 
+/** Get color.
+ *
+ * @see ecs_doc_get_color()
+ * @see flecs::doc::get_color()
+ * @see flecs::entity_builder::set_doc_color()
+ *
+ * @memberof flecs::entity_view
+ * @ingroup cpp_addons_doc
+ */
 const char* doc_color() const {
     return ecs_doc_get_color(m_world, m_id);
 }
@@ -23749,9 +23836,13 @@ struct entity_builder : entity_view {
  * @brief Doc entity builder mixin.
  */
 
-/** Set doc name.
- * This adds (flecs.doc.Description, flecs.Name) to the entity.
- * 
+/** Set human readable name.
+ * This adds `(flecs.doc.Description, flecs.Name)` to the entity.
+ *
+ * @see ecs_doc_set_name()
+ * @see flecs::doc::set_name()
+ * @see flecs::entity_view::doc_name()
+ *
  * @memberof flecs::entity_builder
  * @ingroup cpp_addons_doc
  */
@@ -23760,9 +23851,13 @@ Self& set_doc_name(const char *name) {
     return to_base();
 }
 
-/** Set doc brief.
- * This adds (flecs.doc.Description, flecs.doc.Brief) to the entity.
- * 
+/** Set brief description.
+ * This adds `(flecs.doc.Description, flecs.doc.Brief)` to the entity.
+ *
+ * @see ecs_doc_set_brief()
+ * @see flecs::doc::set_brief()
+ * @see flecs::entity_view::doc_brief()
+ *
  * @memberof flecs::entity_builder
  * @ingroup cpp_addons_doc
  */
@@ -23771,9 +23866,13 @@ Self& set_doc_brief(const char *brief) {
     return to_base();
 }
 
-/** Set doc detailed description.
- * This adds (flecs.doc.Description, flecs.doc.Detail) to the entity.
- * 
+/** Set detailed description.
+ * This adds `(flecs.doc.Description, flecs.doc.Detail)` to the entity.
+ *
+ * @see ecs_doc_set_detail()
+ * @see flecs::doc::set_detail()
+ * @see flecs::entity_view::doc_detail()
+ *
  * @memberof flecs::entity_builder
  * @ingroup cpp_addons_doc
  */
@@ -23782,9 +23881,13 @@ Self& set_doc_detail(const char *detail) {
     return to_base();
 }
 
-/** Set doc link.
- * This adds (flecs.doc.Description, flecs.doc.Link) to the entity.
- * 
+/** Set link to external documentation.
+ * This adds `(flecs.doc.Description, flecs.doc.Link)` to the entity.
+ *
+ * @see ecs_doc_set_link()
+ * @see flecs::doc::set_link()
+ * @see flecs::entity_view::doc_link()
+ *
  * @memberof flecs::entity_builder
  * @ingroup cpp_addons_doc
  */
@@ -23794,8 +23897,12 @@ Self& set_doc_link(const char *link) {
 }
 
 /** Set doc color.
- * This adds (flecs.doc.Description, flecs.doc.Color) to the entity.
- * 
+ * This adds `(flecs.doc.Description, flecs.doc.Color)` to the entity.
+ *
+ * @see ecs_doc_set_color()
+ * @see flecs::doc::set_color()
+ * @see flecs::entity_view::doc_color()
+ *
  * @memberof flecs::entity_builder
  * @ingroup cpp_addons_doc
  */
@@ -30177,48 +30284,130 @@ inline flecs::snapshot world::snapshot(Args &&... args) const {
 namespace flecs {
 namespace doc {
 
+/** Get human readable name for an entity.
+ *
+ * @see ecs_doc_get_name()
+ * @see flecs::doc::set_name()
+ * @see flecs::entity_view::doc_name()
+ *
+ * @ingroup cpp_addons_doc
+ */
 inline const char* get_name(const flecs::entity_view& e) {
     return ecs_doc_get_name(e.world(), e);
 }
 
+/** Get brief description for an entity.
+ *
+ * @see ecs_doc_get_brief()
+ * @see flecs::doc::set_brief()
+ * @see flecs::entity_view::doc_brief()
+ *
+ * @ingroup cpp_addons_doc
+ */
 inline const char* get_brief(const flecs::entity_view& e) {
     return ecs_doc_get_brief(e.world(), e);
 }
 
+/** Get detailed description for an entity.
+ *
+ * @see ecs_doc_get_detail()
+ * @see flecs::doc::set_detail()
+ * @see flecs::entity_view::doc_detail()
+ *
+ * @ingroup cpp_addons_doc
+ */
 inline const char* get_detail(const flecs::entity_view& e) {
     return ecs_doc_get_detail(e.world(), e);
 }
 
+/** Get link to external documentation for an entity.
+ *
+ * @see ecs_doc_get_link()
+ * @see flecs::doc::set_link()
+ * @see flecs::entity_view::doc_link()
+ *
+ * @ingroup cpp_addons_doc
+ */
 inline const char* get_link(const flecs::entity_view& e) {
     return ecs_doc_get_link(e.world(), e);
 }
 
+/** Get color for an entity.
+ *
+ * @see ecs_doc_get_color()
+ * @see flecs::doc::set_color()
+ * @see flecs::entity_view::doc_color()
+ *
+ * @ingroup cpp_addons_doc
+ */
 inline const char* get_color(const flecs::entity_view& e) {
     return ecs_doc_get_color(e.world(), e);
 }
 
+/** Set human readable name for an entity.
+ *
+ * @see ecs_doc_set_name()
+ * @see flecs::doc::get_name()
+ * @see flecs::entity_builder::set_doc_name()
+ *
+ * @ingroup cpp_addons_doc
+ */
 inline void set_name(flecs::entity& e, const char *name) {
     ecs_doc_set_name(e.world(), e, name);
 }
 
+/** Set brief description for an entity.
+ *
+ * @see ecs_doc_set_brief()
+ * @see flecs::doc::get_brief()
+ * @see flecs::entity_builder::set_doc_brief()
+ *
+ * @ingroup cpp_addons_doc
+ */
 inline void set_brief(flecs::entity& e, const char *description) {
     ecs_doc_set_brief(e.world(), e, description);
 }
 
+/** Set detailed description for an entity.
+ *
+ * @see ecs_doc_set_detail()
+ * @see flecs::doc::get_detail()
+ * @see flecs::entity_builder::set_doc_detail()
+ *
+ * @ingroup cpp_addons_doc
+ */
 inline void set_detail(flecs::entity& e, const char *description) {
     ecs_doc_set_detail(e.world(), e, description);
 }
 
+/** Set link to external documentation for an entity.
+ *
+ * @see ecs_doc_set_link()
+ * @see flecs::doc::get_link()
+ * @see flecs::entity_builder::set_doc_link()
+ *
+ * @ingroup cpp_addons_doc
+ */
 inline void set_link(flecs::entity& e, const char *link) {
     ecs_doc_set_link(e.world(), e, link);
 }
 
+/** Set color for an entity.
+ *
+ * @see ecs_doc_set_color()
+ * @see flecs::doc::get_color()
+ * @see flecs::entity_builder::set_doc_color()
+ *
+ * @ingroup cpp_addons_doc
+ */
 inline void set_color(flecs::entity& e, const char *color) {
     ecs_doc_set_color(e.world(), e, color);
 }
 
+/** @private */
 namespace _ {
 
+/** @private */
 inline void init(flecs::world& world) {
     world.component<doc::Description>("flecs::doc::Description");
 }

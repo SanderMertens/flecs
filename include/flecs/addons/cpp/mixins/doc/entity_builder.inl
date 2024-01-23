@@ -3,9 +3,13 @@
  * @brief Doc entity builder mixin.
  */
 
-/** Set doc name.
- * This adds (flecs.doc.Description, flecs.Name) to the entity.
- * 
+/** Set human readable name.
+ * This adds `(flecs.doc.Description, flecs.Name)` to the entity.
+ *
+ * @see ecs_doc_set_name()
+ * @see flecs::doc::set_name()
+ * @see flecs::entity_view::doc_name()
+ *
  * @memberof flecs::entity_builder
  * @ingroup cpp_addons_doc
  */
@@ -14,9 +18,13 @@ Self& set_doc_name(const char *name) {
     return to_base();
 }
 
-/** Set doc brief.
- * This adds (flecs.doc.Description, flecs.doc.Brief) to the entity.
- * 
+/** Set brief description.
+ * This adds `(flecs.doc.Description, flecs.doc.Brief)` to the entity.
+ *
+ * @see ecs_doc_set_brief()
+ * @see flecs::doc::set_brief()
+ * @see flecs::entity_view::doc_brief()
+ *
  * @memberof flecs::entity_builder
  * @ingroup cpp_addons_doc
  */
@@ -25,9 +33,13 @@ Self& set_doc_brief(const char *brief) {
     return to_base();
 }
 
-/** Set doc detailed description.
- * This adds (flecs.doc.Description, flecs.doc.Detail) to the entity.
- * 
+/** Set detailed description.
+ * This adds `(flecs.doc.Description, flecs.doc.Detail)` to the entity.
+ *
+ * @see ecs_doc_set_detail()
+ * @see flecs::doc::set_detail()
+ * @see flecs::entity_view::doc_detail()
+ *
  * @memberof flecs::entity_builder
  * @ingroup cpp_addons_doc
  */
@@ -36,9 +48,13 @@ Self& set_doc_detail(const char *detail) {
     return to_base();
 }
 
-/** Set doc link.
- * This adds (flecs.doc.Description, flecs.doc.Link) to the entity.
- * 
+/** Set link to external documentation.
+ * This adds `(flecs.doc.Description, flecs.doc.Link)` to the entity.
+ *
+ * @see ecs_doc_set_link()
+ * @see flecs::doc::set_link()
+ * @see flecs::entity_view::doc_link()
+ *
  * @memberof flecs::entity_builder
  * @ingroup cpp_addons_doc
  */
@@ -48,8 +64,12 @@ Self& set_doc_link(const char *link) {
 }
 
 /** Set doc color.
- * This adds (flecs.doc.Description, flecs.doc.Color) to the entity.
- * 
+ * This adds `(flecs.doc.Description, flecs.doc.Color)` to the entity.
+ *
+ * @see ecs_doc_set_color()
+ * @see flecs::doc::set_color()
+ * @see flecs::entity_view::doc_color()
+ *
  * @memberof flecs::entity_builder
  * @ingroup cpp_addons_doc
  */
