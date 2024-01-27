@@ -1456,7 +1456,13 @@
                 "one_term_w_pair_w_0_entity",
                 "not_term",
                 "wildcard_term",
-                "scopes"
+                "scopes",
+                "pred_eq",
+                "pred_neq",
+                "pred_eq_name",
+                "pred_neq_name",
+                "pred_eq_m",
+                "pred_neq_m"
             ]
         }, {
             "id": "Query",

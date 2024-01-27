@@ -11587,6 +11587,54 @@ void flecs_term_str_w_strbuf(
         return;
     }
 
+    if (((term->first.id == EcsPredEq) || (term->first.id == EcsPredMatch)) && 
+        (term->first.flags & EcsIsEntity)) 
+    {
+        ecs_strbuf_appendlit(buf, "$");
+        if (term->src.id == EcsThis && term->src.flags & EcsIsVariable) {
+            ecs_strbuf_appendlit(buf, "this");
+        } else if (term->src.flags & EcsIsVariable) {
+            ecs_strbuf_appendstr(buf, term->src.name);
+        } else {
+            /* Shouldn't happen */
+        }
+
+        if (term->first.id == EcsPredEq) {
+            if (term->oper == EcsNot) {
+                ecs_strbuf_appendlit(buf, " != ");
+            } else {
+                ecs_strbuf_appendlit(buf, " == ");
+            }
+        } else if (term->first.id == EcsPredMatch) {
+            ecs_strbuf_appendlit(buf, " ~= ");
+        }
+
+        if (term->second.flags & EcsIsEntity) {
+            if (term->second.id != 0) {
+                ecs_get_path_w_sep_buf(
+                    world, 0, term->second.id, ".", NULL, buf);
+            }
+        } else {
+            if (term->second.flags & EcsIsVariable) {
+                ecs_strbuf_appendlit(buf, "$");
+                if (term->second.name) {
+                    ecs_strbuf_appendstr(buf, term->second.name);
+                } else if (term->second.id == EcsThis) {
+                    ecs_strbuf_appendlit(buf, "this");
+                }
+            } else if (term->second.flags & EcsIsName) {
+                ecs_strbuf_appendlit(buf, "\"");
+                if (term->first.id == EcsPredMatch && term->oper == EcsNot) {
+                    ecs_strbuf_appendlit(buf, "!");
+                }
+                ecs_strbuf_appendstr(buf, term->second.name);
+                ecs_strbuf_appendlit(buf, "\"");
+            }
+        }
+
+        return;
+    }
+
     if (!t || !(term[-1].oper == EcsOr)) {
         if (term->inout == EcsIn) {
             ecs_strbuf_appendlit(buf, "[in] ");

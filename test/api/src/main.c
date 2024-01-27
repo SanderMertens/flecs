@@ -1396,6 +1396,12 @@ void FilterStr_one_term_w_pair_w_0_entity(void);
 void FilterStr_not_term(void);
 void FilterStr_wildcard_term(void);
 void FilterStr_scopes(void);
+void FilterStr_pred_eq(void);
+void FilterStr_pred_neq(void);
+void FilterStr_pred_eq_name(void);
+void FilterStr_pred_neq_name(void);
+void FilterStr_pred_eq_m(void);
+void FilterStr_pred_neq_m(void);
 
 // Testsuite 'Query'
 void Query_simple_query_existing_table(void);
@@ -8046,6 +8052,30 @@ bake_test_case FilterStr_testcases[] = {
     {
         "scopes",
         FilterStr_scopes
+    },
+    {
+        "pred_eq",
+        FilterStr_pred_eq
+    },
+    {
+        "pred_neq",
+        FilterStr_pred_neq
+    },
+    {
+        "pred_eq_name",
+        FilterStr_pred_eq_name
+    },
+    {
+        "pred_neq_name",
+        FilterStr_pred_neq_name
+    },
+    {
+        "pred_eq_m",
+        FilterStr_pred_eq_m
+    },
+    {
+        "pred_neq_m",
+        FilterStr_pred_neq_m
     }
 };
 
@@ -13185,7 +13215,7 @@ static bake_test_suite suites[] = {
         "FilterStr",
         NULL,
         NULL,
-        23,
+        29,
         FilterStr_testcases
     },
     {
