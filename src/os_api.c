@@ -111,11 +111,9 @@ void flecs_log_msg(
     int32_t line,  
     const char *msg)
 {
-    FILE *stream;
-    if (level >= 0) {
+    FILE *stream = ecs_os_api.log_out_;
+    if (!stream) {
         stream = stdout;
-    } else {
-        stream = stderr;
     }
 
     bool use_colors = ecs_os_api.flags_ & EcsOsApiLogWithColors;

@@ -1923,6 +1923,7 @@ int32_t ecs_strbuf_written(
 
 #include <stdarg.h>
 #include <errno.h>
+#include <stdio.h>
 
 #if defined(ECS_TARGET_WINDOWS)
 #include <malloc.h>
@@ -2200,6 +2201,9 @@ typedef struct ecs_os_api_t {
 
     /* OS API flags */
     ecs_flags32_t flags_;
+
+    /* File used for logging output (hint, log_ decides where to write) */
+    FILE *log_out_;
 } ecs_os_api_t;
 
 FLECS_API
