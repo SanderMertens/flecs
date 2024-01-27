@@ -214,6 +214,7 @@ const char* flecs_query_op_str(
     case EcsRuleMemberEq:      return "membereq  ";
     case EcsRuleMemberNeq:     return "memberneq ";
     case EcsRuleToggle:        return "toggle    ";
+    case EcsRuleToggleOption:  return "togglopt  ";
     case EcsRuleLookup:        return "lookup    ";
     case EcsRuleSetVars:       return "setvars   ";
     case EcsRuleSetThis:       return "setthis   ";
@@ -360,7 +361,10 @@ char* ecs_query_str_w_profile(
             continue;
         }
 
-        if (!first_flags && !second_flags && (op->kind != EcsRuleToggle)) {
+        bool is_toggle = op->kind == EcsRuleToggle || 
+            op->kind == EcsRuleToggleOption;
+
+        if (!first_flags && !second_flags && !is_toggle) {
             ecs_strbuf_appendstr(&buf, "\n");
             continue;
         }
@@ -370,7 +374,7 @@ char* ecs_query_str_w_profile(
             ecs_strbuf_appendch(&buf, ' ');
         }
 
-        if (op->kind == EcsRuleToggle) {
+        if (is_toggle) {
             if (op->first.entity) {
                 flecs_query_str_append_bitset(&buf, op->first.entity);
             }

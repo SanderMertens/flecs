@@ -1403,10 +1403,8 @@ void Toggle_this_pair_skip_initial(void);
 void Toggle_this_tag(void);
 void Toggle_this_tag_pair(void);
 void Toggle_this_tag_pair_wildcard(void);
-void Toggle_this_enabled_shared_self_up(void);
-void Toggle_this_disabled_shared_self_up(void);
-void Toggle_this_enabled_shared_up(void);
-void Toggle_this_disabled_shared_up(void);
+void Toggle_this_toggle_shared_self_up(void);
+void Toggle_this_toggle_shared_up(void);
 void Toggle_this_64_mod_1(void);
 void Toggle_this_64_mod_2(void);
 void Toggle_this_64_mod_3(void);
@@ -7084,20 +7082,12 @@ bake_test_case Toggle_testcases[] = {
         Toggle_this_tag_pair_wildcard
     },
     {
-        "this_enabled_shared_self_up",
-        Toggle_this_enabled_shared_self_up
+        "this_toggle_shared_self_up",
+        Toggle_this_toggle_shared_self_up
     },
     {
-        "this_disabled_shared_self_up",
-        Toggle_this_disabled_shared_self_up
-    },
-    {
-        "this_enabled_shared_up",
-        Toggle_this_enabled_shared_up
-    },
-    {
-        "this_disabled_shared_up",
-        Toggle_this_disabled_shared_up
+        "this_toggle_shared_up",
+        Toggle_this_toggle_shared_up
     },
     {
         "this_64_mod_1",
@@ -8093,7 +8083,7 @@ static bake_test_suite suites[] = {
         "Toggle",
         Toggle_setup,
         NULL,
-        151,
+        149,
         Toggle_testcases,
         1,
         Toggle_params

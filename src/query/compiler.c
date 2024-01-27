@@ -753,9 +753,6 @@ int flecs_query_insert_toggle(
     ecs_query_t *q = &impl->pub;
     int32_t i, j, term_count = q->term_count;
     ecs_term_t *terms = q->terms;
-    ecs_flags64_t and_toggles = 0;
-    ecs_flags64_t not_toggles = 0;
-    ecs_flags64_t optional_toggles = 0;
     ecs_flags64_t fields_done = 0;
 
     for (i = 0; i < term_count; i ++) {
@@ -769,6 +766,10 @@ int flecs_query_insert_toggle(
             flecs_query_compile_term_ref(NULL, impl, &cur, &term->src, 
                 &cur.src, EcsRuleSrc, EcsVarAny, ctx, false);
 
+            ecs_flags64_t and_toggles = 0;
+            ecs_flags64_t not_toggles = 0;
+            ecs_flags64_t optional_toggles = 0;
+
             for (j = i; j < term_count; j ++) {
                 if (fields_done & (1llu << j)) {
                     continue;
@@ -781,7 +782,9 @@ int flecs_query_insert_toggle(
                 ecs_query_op_t next = {0};
                 flecs_query_compile_term_ref(NULL, impl, &next, &term->src,
                     &next.src, EcsRuleSrc, EcsVarAny, ctx, false);
-                if (next.src.entity != cur.src.entity || next.flags != cur.flags) {
+                if (next.src.entity != cur.src.entity || 
+                    next.flags != cur.flags) 
+                {
                     continue;
                 }
 
@@ -797,19 +800,46 @@ int flecs_query_insert_toggle(
                 fields_done |= (1llu << j);
             }
 
-            if (and_toggles || not_toggles || optional_toggles) {
+            if (and_toggles || not_toggles) {
                 ecs_query_op_t op = {0};
                 op.kind = EcsRuleToggle;
                 op.src = cur.src;
                 op.flags = cur.flags;
 
+                if (op.flags & (EcsRuleIsVar << EcsRuleSrc)) {
+                    flecs_query_write(op.src.var, &op.written);
+                }
+
                 /* Encode fields:
                  * - first.entity is the fields that match enabled bits
                  * - second.entity is the fields that match disabled bits
                  */
-                op.first.entity = and_toggles | optional_toggles;
-                op.second.entity = not_toggles | optional_toggles;
+                op.first.entity = and_toggles;
+                op.second.entity = not_toggles;
                 flecs_query_op_insert(&op, ctx);
+            }
+
+            /* Insert separate instructions for optional terms. To make sure
+             * entities are returned in batches where fields are never partially 
+             * set or unset, the result must be split up into batches that have 
+             * the exact same toggle masks. Instead of complicating the toggle 
+             * instruction with code to scan for blocks that have the same bits 
+             * set, separate instructions let the query engine backtrack to get 
+             * the right results. */
+            if (optional_toggles) {
+                for (j = i; j < term_count; j ++) {
+                    uint64_t field_bit = 1ull << j;
+                    if (!(optional_toggles & field_bit)) {
+                        continue;
+                    }
+
+                    ecs_query_op_t op = {0};
+                    op.kind = EcsRuleToggleOption;
+                    op.src = cur.src;
+                    op.first.entity = field_bit;
+                    op.flags = cur.flags;
+                    flecs_query_op_insert(&op, ctx);
+                }
             }
         }
     }
