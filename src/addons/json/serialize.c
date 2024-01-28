@@ -7,19 +7,6 @@
 
 #ifdef FLECS_JSON
 
-/* Cached id records during serialization */
-typedef struct ecs_json_ser_idr_t {
-    ecs_id_record_t *idr_doc_name;
-    ecs_id_record_t *idr_doc_color;
-} ecs_json_ser_idr_t;
-
-static
-int json_ser_type(
-    const ecs_world_t *world,
-    const ecs_vec_t *ser, 
-    const void *base, 
-    ecs_strbuf_t *str);
-
 static
 int json_ser_type_ops(
     const ecs_world_t *world,
@@ -493,7 +480,6 @@ error:
 }
 
 /* Iterate over the type ops of a type */
-static
 int json_ser_type(
     const ecs_world_t *world,
     const ecs_vec_t *v_ops,
@@ -1336,7 +1322,6 @@ char* ecs_entity_to_json(
     return ecs_strbuf_get(&buf);
 }
 
-static
 bool flecs_json_skip_variable(
     const char *name)
 {
@@ -1834,22 +1819,22 @@ static
 void flecs_json_serialize_iter_result_entity_labels(
     const ecs_iter_t *it,
     ecs_strbuf_t *buf,
-    const ecs_json_ser_idr_t *ser_idr)
+    const ecs_json_ser_ctx_t *ser_ctx)
 {
     (void)buf;
-    (void)ser_idr;
+    (void)ser_ctx;
     if (!it->count) {
         return;
     }
 
-    if (!ser_idr->idr_doc_name) {
+    if (!ser_ctx->idr_doc_name) {
         return;
     }
 
 #ifdef FLECS_DOC
     ecs_table_t *table = it->table;
     ecs_table_record_t *tr = flecs_id_record_get_table(
-        ser_idr->idr_doc_name, table);
+        ser_ctx->idr_doc_name, table);
     if (tr == NULL) {
         return;
     }
@@ -1875,22 +1860,22 @@ static
 void flecs_json_serialize_iter_result_colors(
     const ecs_iter_t *it,
     ecs_strbuf_t *buf,
-    const ecs_json_ser_idr_t *ser_idr) 
+    const ecs_json_ser_ctx_t *ser_ctx) 
 {
     (void)buf;
-    (void)ser_idr;
+    (void)ser_ctx;
 
     if (!it->count) {
         return;
     }
 
 #ifdef FLECS_DOC
-    if (!ser_idr->idr_doc_color) {
+    if (!ser_ctx->idr_doc_color) {
         return;
     }
 
     ecs_table_record_t *tr = flecs_id_record_get_table(
-        ser_idr->idr_doc_color, it->table);
+        ser_ctx->idr_doc_color, it->table);
     if (tr == NULL) {
         return;
     }
@@ -2075,94 +2060,100 @@ int flecs_json_serialize_iter_result(
     const ecs_iter_t *it, 
     ecs_strbuf_t *buf,
     const ecs_iter_to_json_desc_t *desc,
-    const ecs_json_ser_idr_t *ser_idr) 
-{
-    flecs_json_next(buf);
-    flecs_json_object_push(buf);
-
-    /* Each result can be matched with different component ids. Add them to
-     * the result so clients know with which component an entity was matched */
-    if (desc && desc->serialize_table) {
-        flecs_json_serialize_iter_result_table_type(world, it, buf, desc);
-    } else {
-        if (!desc || desc->serialize_ids) {
-            flecs_json_serialize_iter_result_ids(world, it, buf);
-        }
-        if (desc && desc->serialize_id_labels) {
-            flecs_json_serialize_iter_result_id_labels(world, it, buf);
-        }
-    }
-
-    /* Include information on which entity the term is matched with */
-    if (!desc || (desc->serialize_sources && !desc->serialize_table)) {
-        flecs_json_serialize_iter_result_sources(world, it, buf);
-    }
-
-    /* Write variable values for current result */
-    if (!desc || desc->serialize_variables) {
-        flecs_json_serialize_iter_result_variables(world, it, buf);
-    }
-
-    /* Write labels for variables */
-    if (desc && desc->serialize_variable_labels) {
-        flecs_json_serialize_iter_result_variable_labels(world, it, buf);
-    }
-
-    /* Write ids for variables */
-    if (desc && desc->serialize_variable_ids) {
-        flecs_json_serialize_iter_result_variable_ids(it, buf);
-    }
-
-    /* Include information on which terms are set, to support optional terms */
-    if (!desc || (desc->serialize_is_set && !desc->serialize_table)) {
-        flecs_json_serialize_iter_result_is_set(it, buf);
-    }
-
-    /* Write entity ids for current result (for queries with This terms) */
-    if (!desc || desc->serialize_entities) {
-        flecs_json_serialize_iter_result_entities(world, it, buf);
-    }
-
-    /* Write ids for entities */
-    if (desc && desc->serialize_entity_ids) {
-        flecs_json_serialize_iter_result_entity_ids(it, buf);
-    }
-
-    /* Write labels for entities */
-    if (desc && desc->serialize_entity_labels) {
-        flecs_json_serialize_iter_result_entity_labels(it, buf, ser_idr);
-    }
-
-    /* Write colors for entities */
-    if (desc && desc->serialize_colors) {
-        flecs_json_serialize_iter_result_colors(it, buf, ser_idr);
-    }
-
-    /* Serialize component values */
-    if (desc && desc->serialize_table) {
-        if (flecs_json_serialize_iter_result_columns(world, it, buf, desc)) {
+    ecs_json_ser_ctx_t *ser_ctx) 
+{    
+    if (desc && desc->serialize_rows) {
+        if (flecs_json_serialize_iter_result_rows(world, it, buf, desc, ser_ctx)) {
             return -1;
         }
     } else {
-        if (!desc || desc->serialize_values) {
-            if (flecs_json_serialize_iter_result_values(world, it, buf)) {
-                return -1;
+        flecs_json_next(buf);
+        flecs_json_object_push(buf);
+
+        /* Each result can be matched with different component ids. Add them to
+        * the result so clients know with which component an entity was matched */
+        if (desc && desc->serialize_table) {
+            flecs_json_serialize_iter_result_table_type(world, it, buf, desc);
+        } else {
+            if (!desc || desc->serialize_ids) {
+                flecs_json_serialize_iter_result_ids(world, it, buf);
+            }
+            if (desc && desc->serialize_id_labels) {
+                flecs_json_serialize_iter_result_id_labels(world, it, buf);
             }
         }
-    }
 
-    /* Add "alerts": true member if table has entities with active alerts */
-#ifdef FLECS_ALERTS
-    if (it->table && (ecs_id(EcsAlertsActive) != 0)) {
-        /* Only add field if alerts addon is imported */
-        if (ecs_table_has_id(world, it->table, ecs_id(EcsAlertsActive))) {
-            flecs_json_memberl(buf, "alerts");
-            flecs_json_true(buf);
+        /* Include information on which entity the term is matched with */
+        if (!desc || (desc->serialize_sources && !desc->serialize_table)) {
+            flecs_json_serialize_iter_result_sources(world, it, buf);
         }
-    }
+
+        /* Write variable values for current result */
+        if (!desc || desc->serialize_variables) {
+            flecs_json_serialize_iter_result_variables(world, it, buf);
+        }
+
+        /* Write labels for variables */
+        if (desc && desc->serialize_variable_labels) {
+            flecs_json_serialize_iter_result_variable_labels(world, it, buf);
+        }
+
+        /* Write ids for variables */
+        if (desc && desc->serialize_variable_ids) {
+            flecs_json_serialize_iter_result_variable_ids(it, buf);
+        }
+
+        /* Include information on which terms are set, to support optional terms */
+        if (!desc || (desc->serialize_is_set && !desc->serialize_table)) {
+            flecs_json_serialize_iter_result_is_set(it, buf);
+        }
+
+        /* Write entity ids for current result (for queries with This terms) */
+        if (!desc || desc->serialize_entities) {
+            flecs_json_serialize_iter_result_entities(world, it, buf);
+        }
+
+        /* Write ids for entities */
+        if (desc && desc->serialize_entity_ids) {
+            flecs_json_serialize_iter_result_entity_ids(it, buf);
+        }
+
+        /* Write labels for entities */
+        if (desc && desc->serialize_entity_labels) {
+            flecs_json_serialize_iter_result_entity_labels(it, buf, ser_ctx);
+        }
+
+        /* Write colors for entities */
+        if (desc && desc->serialize_colors) {
+            flecs_json_serialize_iter_result_colors(it, buf, ser_ctx);
+        }
+
+        /* Serialize component values */
+        if (desc && desc->serialize_table) {
+            if (flecs_json_serialize_iter_result_columns(world, it, buf, desc)) {
+                return -1;
+            }
+        } else {
+            if (!desc || desc->serialize_values) {
+                if (flecs_json_serialize_iter_result_values(world, it, buf)) {
+                    return -1;
+                }
+            }
+        }
+
+        /* Add "alerts": true member if table has entities with active alerts */
+#ifdef FLECS_ALERTS
+        if (it->table && (ecs_id(EcsAlertsActive) != 0)) {
+            /* Only add field if alerts addon is imported */
+            if (ecs_table_has_id(world, it->table, ecs_id(EcsAlertsActive))) {
+                flecs_json_memberl(buf, "alerts");
+                flecs_json_true(buf);
+            }
+        }
 #endif
 
-    flecs_json_object_pop(buf);
+        flecs_json_object_pop(buf);
+    }
 
     return 0;
 }
@@ -2181,21 +2172,23 @@ int ecs_iter_to_json_buf(
     flecs_json_object_push(buf);
 
     /* Serialize component ids of the terms (usually provided by query) */
-    if (!desc || desc->serialize_term_ids) {
-        flecs_json_serialize_iter_ids(world, it, buf);
-    }
+    if (!desc || !desc->serialize_rows) {
+        if (!desc || desc->serialize_term_ids) {
+            flecs_json_serialize_iter_ids(world, it, buf);
+        }
 
-    if (desc && desc->serialize_term_labels) {
-        flecs_json_serialize_iter_id_labels(world, it, buf);
+        if (desc && desc->serialize_term_labels) {
+            flecs_json_serialize_iter_id_labels(world, it, buf);
+        }
+
+        /* Serialize variable names, if iterator has any */
+        flecs_json_serialize_iter_variables(it, buf);
     }
 
     /* Serialize type info if enabled */
     if (desc && desc->serialize_type_info) {
         flecs_json_serialize_type_info(world, it, buf);
     }
-
-    /* Serialize variable names, if iterator has any */
-    flecs_json_serialize_iter_variables(it, buf);
 
     /* Serialize results */
     flecs_json_memberl(buf, "results");
@@ -2211,20 +2204,28 @@ int ecs_iter_to_json_buf(
     }
 
     /* Cache id record for flecs.doc ids */
-    ecs_json_ser_idr_t ser_idr = {NULL, NULL};
+    ecs_json_ser_ctx_t ser_ctx;
+    ecs_os_zeromem(&ser_ctx);
 #ifdef FLECS_DOC
-    ser_idr.idr_doc_name = flecs_id_record_get(world, 
+    ser_ctx.idr_doc_name = flecs_id_record_get(world, 
         ecs_pair_t(EcsDocDescription, EcsName));
-    ser_idr.idr_doc_color = flecs_id_record_get(world, 
+    ser_ctx.idr_doc_color = flecs_id_record_get(world, 
         ecs_pair_t(EcsDocDescription, EcsDocColor));
 #endif
 
     ecs_iter_next_action_t next = it->next;
     while (next(it)) {
-        if (flecs_json_serialize_iter_result(world, it, buf, desc, &ser_idr)) {
+        if (flecs_json_serialize_iter_result(world, it, buf, desc, &ser_ctx)) {
             ecs_strbuf_reset(buf);
             ecs_iter_fini(it);
             return -1;
+        }
+    }
+
+    int32_t f, field_count = it->field_count;
+    if (desc && (desc->serialize_rows || desc->serialize_values)) {
+        for (f = 0; f < field_count; f ++) {
+            ecs_os_free(ser_ctx.value_ctx[f].id_label);
         }
     }
 

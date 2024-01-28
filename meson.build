@@ -31,6 +31,7 @@ flecs_src = files(
     'src/addons/journal.c',
     'src/addons/json/deserialize.c',
     'src/addons/json/serialize.c',
+    'src/addons/json/serialize_iter_rows.c',
     'src/addons/json/serialize_type_info.c',
     'src/addons/json/json.c',
     'src/addons/log.c',

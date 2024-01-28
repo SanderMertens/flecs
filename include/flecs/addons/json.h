@@ -264,6 +264,7 @@ typedef struct ecs_iter_to_json_desc_t {
     bool measure_eval_duration;     /**< Serialize evaluation duration */
     bool serialize_type_info;       /**< Serialize type information */
     bool serialize_table;           /**< Serialize entire table vs. matched components */
+    bool serialize_rows;            /**< Use row-based serialization, with entities in separate elements */
 } ecs_iter_to_json_desc_t;
 
 #define ECS_ITER_TO_JSON_INIT (ecs_iter_to_json_desc_t){\
@@ -284,7 +285,8 @@ typedef struct ecs_iter_to_json_desc_t {
     .serialize_colors =          false, \
     .measure_eval_duration =     false, \
     .serialize_type_info =       false, \
-    .serialize_table =           false  \
+    .serialize_table =           false,  \
+    .serialize_rows =            false  \
 }
 
 /** Serialize iterator into JSON string.

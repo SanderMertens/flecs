@@ -1297,6 +1297,7 @@ int ecs_filter_finalize(
             f->flags |= EcsFilterHasScopes;
             scope_nesting ++;
         }
+
         if (term->first.id == EcsScopeClose) {
             if (i && terms[i - 1].first.id == EcsScopeOpen) {
                 flecs_filter_error(&ctx, "invalid empty scope");
