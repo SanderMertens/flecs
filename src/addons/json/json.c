@@ -374,8 +374,8 @@ void flecs_json_path(
     ecs_strbuf_appendch(buf, '"');
 }
 
-void flecs_json_label(
-    ecs_strbuf_t *buf,
+static
+const char* flecs_json_entity_label(
     const ecs_world_t *world,
     ecs_entity_t e)
 {
@@ -385,7 +385,15 @@ void flecs_json_label(
 #else
     lbl = ecs_get_name(world, e);
 #endif
+    return lbl;
+}
 
+void flecs_json_label(
+    ecs_strbuf_t *buf,
+    const ecs_world_t *world,
+    ecs_entity_t e)
+{
+    const char *lbl = flecs_json_entity_label(world, e);
     if (lbl) {
         ecs_strbuf_appendch(buf, '"');
         ecs_strbuf_appendstr(buf, lbl);
@@ -441,6 +449,37 @@ void flecs_json_id(
     }
 
     ecs_strbuf_appendch(buf, ']');
+}
+
+void flecs_json_id_member(
+    ecs_strbuf_t *buf,
+    const ecs_world_t *world,
+    ecs_id_t id)
+{
+    if (ECS_IS_PAIR(id)) {
+        ecs_strbuf_appendch(buf, '(');
+        ecs_entity_t first = ecs_pair_first(world, id);
+        ecs_entity_t second = ecs_pair_second(world, id);
+        {
+            const char *lbl = flecs_json_entity_label(world, first);
+            if (lbl) {
+                ecs_strbuf_appendstr(buf, lbl);
+            }
+        }
+        ecs_strbuf_appendch(buf, ',');
+        {
+            const char *lbl = flecs_json_entity_label(world, second);
+            if (lbl) {
+                ecs_strbuf_appendstr(buf, lbl);
+            }
+        }
+        ecs_strbuf_appendch(buf, ')');
+    } else {
+        const char *lbl = flecs_json_entity_label(world, id & ECS_COMPONENT_MASK);
+        if (lbl) {
+            ecs_strbuf_appendstr(buf, lbl);
+        }
+    }
 }
 
 ecs_primitive_kind_t flecs_json_op_to_primitive_kind(

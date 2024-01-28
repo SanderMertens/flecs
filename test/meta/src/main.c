@@ -783,6 +783,62 @@ void SerializeIterToJson_serialize_null_doc_name(void);
 void SerializeIterToJson_serialize_rule_w_optional(void);
 void SerializeIterToJson_serialize_rule_w_optional_component(void);
 
+// Testsuite 'SerializeIterToRowJson'
+void SerializeIterToRowJson_serialize_this_w_1_tag(void);
+void SerializeIterToRowJson_serialize_this_w_1_tag_w_parent(void);
+void SerializeIterToRowJson_serialize_this_w_1_tag_no_name(void);
+void SerializeIterToRowJson_serialize_this_w_1_tag_doc_name(void);
+void SerializeIterToRowJson_serialize_this_w_2_tag(void);
+void SerializeIterToRowJson_serialize_this_w_1_component(void);
+void SerializeIterToRowJson_serialize_this_w_2_component(void);
+void SerializeIterToRowJson_serialize_this_w_2_component_1_shared(void);
+void SerializeIterToRowJson_serialize_this_w_1_pair(void);
+void SerializeIterToRowJson_serialize_this_w_2_pair(void);
+void SerializeIterToRowJson_serialize_this_w_1_pair_component(void);
+void SerializeIterToRowJson_serialize_this_w_1_var(void);
+void SerializeIterToRowJson_serialize_this_w_2_var(void);
+void SerializeIterToRowJson_serialize_this_w_2_var_doc_name(void);
+void SerializeIterToRowJson_serialize_this_w_1_tag_component_pair_var(void);
+void SerializeIterToRowJson_serialize_this_w_2_tag_component_pair_var(void);
+void SerializeIterToRowJson_serialize_var_w_1_tag(void);
+void SerializeIterToRowJson_serialize_var_w_1_component(void);
+void SerializeIterToRowJson_serialize_var_w_1_pair(void);
+void SerializeIterToRowJson_serialize_var_w_1_var(void);
+void SerializeIterToRowJson_serialize_var_w_2_component_1_shared(void);
+void SerializeIterToRowJson_serialize_var_w_1_tag_component_pair_var(void);
+void SerializeIterToRowJson_serialize_var_w_2_tag_component_pair_var(void);
+void SerializeIterToRowJson_serialize_fixed_w_1_tag(void);
+void SerializeIterToRowJson_serialize_fixed_w_1_component(void);
+void SerializeIterToRowJson_serialize_fixed_w_1_pair(void);
+void SerializeIterToRowJson_serialize_fixed_w_1_var(void);
+void SerializeIterToRowJson_serialize_fixed_w_2_component_1_shared(void);
+void SerializeIterToRowJson_serialize_fixed_w_1_tag_component_pair_var(void);
+void SerializeIterToRowJson_serialize_fixed_w_2_tag_component_pair_var(void);
+void SerializeIterToRowJson_serialize_not(void);
+void SerializeIterToRowJson_serialize_not_pair_wildcard(void);
+void SerializeIterToRowJson_serialize_not_pair_var(void);
+void SerializeIterToRowJson_serialize_not_pair_var_constrained(void);
+void SerializeIterToRowJson_serialize_optional(void);
+void SerializeIterToRowJson_serialize_optional_pair_wildcard(void);
+void SerializeIterToRowJson_serialize_optional_pair_var(void);
+void SerializeIterToRowJson_serialize_optional_pair_var_constrained(void);
+void SerializeIterToRowJson_serialize_or(void);
+void SerializeIterToRowJson_serialize_scope(void);
+void SerializeIterToRowJson_serialize_eq(void);
+void SerializeIterToRowJson_serialize_neq(void);
+void SerializeIterToRowJson_serialize_eq_m(void);
+void SerializeIterToRowJson_serialize_table(void);
+void SerializeIterToRowJson_serialize_table_w_eq(void);
+void SerializeIterToRowJson_serialize_table_w_neq(void);
+void SerializeIterToRowJson_serialize_table_w_2_pair_targets(void);
+void SerializeIterToRowJson_serialize_table_w_2_pair_targets_2_rel(void);
+void SerializeIterToRowJson_serialize_table_w_3_pair_targets(void);
+void SerializeIterToRowJson_serialize_table_w_3_pair_targets_2_rel(void);
+void SerializeIterToRowJson_serialize_everything(void);
+void SerializeIterToRowJson_serialize_everything_table(void);
+void SerializeIterToRowJson_serialize_everything_table_w_private(void);
+void SerializeIterToRowJson_serialize_w_type_info(void);
+
 // Testsuite 'SerializeTypeInfoToJson'
 void SerializeTypeInfoToJson_bool(void);
 void SerializeTypeInfoToJson_byte(void);
@@ -4075,6 +4131,225 @@ bake_test_case SerializeIterToJson_testcases[] = {
     }
 };
 
+bake_test_case SerializeIterToRowJson_testcases[] = {
+    {
+        "serialize_this_w_1_tag",
+        SerializeIterToRowJson_serialize_this_w_1_tag
+    },
+    {
+        "serialize_this_w_1_tag_w_parent",
+        SerializeIterToRowJson_serialize_this_w_1_tag_w_parent
+    },
+    {
+        "serialize_this_w_1_tag_no_name",
+        SerializeIterToRowJson_serialize_this_w_1_tag_no_name
+    },
+    {
+        "serialize_this_w_1_tag_doc_name",
+        SerializeIterToRowJson_serialize_this_w_1_tag_doc_name
+    },
+    {
+        "serialize_this_w_2_tag",
+        SerializeIterToRowJson_serialize_this_w_2_tag
+    },
+    {
+        "serialize_this_w_1_component",
+        SerializeIterToRowJson_serialize_this_w_1_component
+    },
+    {
+        "serialize_this_w_2_component",
+        SerializeIterToRowJson_serialize_this_w_2_component
+    },
+    {
+        "serialize_this_w_2_component_1_shared",
+        SerializeIterToRowJson_serialize_this_w_2_component_1_shared
+    },
+    {
+        "serialize_this_w_1_pair",
+        SerializeIterToRowJson_serialize_this_w_1_pair
+    },
+    {
+        "serialize_this_w_2_pair",
+        SerializeIterToRowJson_serialize_this_w_2_pair
+    },
+    {
+        "serialize_this_w_1_pair_component",
+        SerializeIterToRowJson_serialize_this_w_1_pair_component
+    },
+    {
+        "serialize_this_w_1_var",
+        SerializeIterToRowJson_serialize_this_w_1_var
+    },
+    {
+        "serialize_this_w_2_var",
+        SerializeIterToRowJson_serialize_this_w_2_var
+    },
+    {
+        "serialize_this_w_2_var_doc_name",
+        SerializeIterToRowJson_serialize_this_w_2_var_doc_name
+    },
+    {
+        "serialize_this_w_1_tag_component_pair_var",
+        SerializeIterToRowJson_serialize_this_w_1_tag_component_pair_var
+    },
+    {
+        "serialize_this_w_2_tag_component_pair_var",
+        SerializeIterToRowJson_serialize_this_w_2_tag_component_pair_var
+    },
+    {
+        "serialize_var_w_1_tag",
+        SerializeIterToRowJson_serialize_var_w_1_tag
+    },
+    {
+        "serialize_var_w_1_component",
+        SerializeIterToRowJson_serialize_var_w_1_component
+    },
+    {
+        "serialize_var_w_1_pair",
+        SerializeIterToRowJson_serialize_var_w_1_pair
+    },
+    {
+        "serialize_var_w_1_var",
+        SerializeIterToRowJson_serialize_var_w_1_var
+    },
+    {
+        "serialize_var_w_2_component_1_shared",
+        SerializeIterToRowJson_serialize_var_w_2_component_1_shared
+    },
+    {
+        "serialize_var_w_1_tag_component_pair_var",
+        SerializeIterToRowJson_serialize_var_w_1_tag_component_pair_var
+    },
+    {
+        "serialize_var_w_2_tag_component_pair_var",
+        SerializeIterToRowJson_serialize_var_w_2_tag_component_pair_var
+    },
+    {
+        "serialize_fixed_w_1_tag",
+        SerializeIterToRowJson_serialize_fixed_w_1_tag
+    },
+    {
+        "serialize_fixed_w_1_component",
+        SerializeIterToRowJson_serialize_fixed_w_1_component
+    },
+    {
+        "serialize_fixed_w_1_pair",
+        SerializeIterToRowJson_serialize_fixed_w_1_pair
+    },
+    {
+        "serialize_fixed_w_1_var",
+        SerializeIterToRowJson_serialize_fixed_w_1_var
+    },
+    {
+        "serialize_fixed_w_2_component_1_shared",
+        SerializeIterToRowJson_serialize_fixed_w_2_component_1_shared
+    },
+    {
+        "serialize_fixed_w_1_tag_component_pair_var",
+        SerializeIterToRowJson_serialize_fixed_w_1_tag_component_pair_var
+    },
+    {
+        "serialize_fixed_w_2_tag_component_pair_var",
+        SerializeIterToRowJson_serialize_fixed_w_2_tag_component_pair_var
+    },
+    {
+        "serialize_not",
+        SerializeIterToRowJson_serialize_not
+    },
+    {
+        "serialize_not_pair_wildcard",
+        SerializeIterToRowJson_serialize_not_pair_wildcard
+    },
+    {
+        "serialize_not_pair_var",
+        SerializeIterToRowJson_serialize_not_pair_var
+    },
+    {
+        "serialize_not_pair_var_constrained",
+        SerializeIterToRowJson_serialize_not_pair_var_constrained
+    },
+    {
+        "serialize_optional",
+        SerializeIterToRowJson_serialize_optional
+    },
+    {
+        "serialize_optional_pair_wildcard",
+        SerializeIterToRowJson_serialize_optional_pair_wildcard
+    },
+    {
+        "serialize_optional_pair_var",
+        SerializeIterToRowJson_serialize_optional_pair_var
+    },
+    {
+        "serialize_optional_pair_var_constrained",
+        SerializeIterToRowJson_serialize_optional_pair_var_constrained
+    },
+    {
+        "serialize_or",
+        SerializeIterToRowJson_serialize_or
+    },
+    {
+        "serialize_scope",
+        SerializeIterToRowJson_serialize_scope
+    },
+    {
+        "serialize_eq",
+        SerializeIterToRowJson_serialize_eq
+    },
+    {
+        "serialize_neq",
+        SerializeIterToRowJson_serialize_neq
+    },
+    {
+        "serialize_eq_m",
+        SerializeIterToRowJson_serialize_eq_m
+    },
+    {
+        "serialize_table",
+        SerializeIterToRowJson_serialize_table
+    },
+    {
+        "serialize_table_w_eq",
+        SerializeIterToRowJson_serialize_table_w_eq
+    },
+    {
+        "serialize_table_w_neq",
+        SerializeIterToRowJson_serialize_table_w_neq
+    },
+    {
+        "serialize_table_w_2_pair_targets",
+        SerializeIterToRowJson_serialize_table_w_2_pair_targets
+    },
+    {
+        "serialize_table_w_2_pair_targets_2_rel",
+        SerializeIterToRowJson_serialize_table_w_2_pair_targets_2_rel
+    },
+    {
+        "serialize_table_w_3_pair_targets",
+        SerializeIterToRowJson_serialize_table_w_3_pair_targets
+    },
+    {
+        "serialize_table_w_3_pair_targets_2_rel",
+        SerializeIterToRowJson_serialize_table_w_3_pair_targets_2_rel
+    },
+    {
+        "serialize_everything",
+        SerializeIterToRowJson_serialize_everything
+    },
+    {
+        "serialize_everything_table",
+        SerializeIterToRowJson_serialize_everything_table
+    },
+    {
+        "serialize_everything_table_w_private",
+        SerializeIterToRowJson_serialize_everything_table_w_private
+    },
+    {
+        "serialize_w_type_info",
+        SerializeIterToRowJson_serialize_w_type_info
+    }
+};
+
 bake_test_case SerializeTypeInfoToJson_testcases[] = {
     {
         "bool",
@@ -5133,6 +5408,7 @@ bake_test_case Misc_testcases[] = {
     }
 };
 
+
 static bake_test_suite suites[] = {
     {
         "PrimitiveTypes",
@@ -5247,6 +5523,13 @@ static bake_test_suite suites[] = {
         SerializeIterToJson_testcases
     },
     {
+        "SerializeIterToRowJson",
+        NULL,
+        NULL,
+        54,
+        SerializeIterToRowJson_testcases
+    },
+    {
         "SerializeTypeInfoToJson",
         NULL,
         NULL,
@@ -5291,5 +5574,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("meta", argc, argv, suites, 22);
+    return bake_test_run("meta", argc, argv, suites, 23);
 }
