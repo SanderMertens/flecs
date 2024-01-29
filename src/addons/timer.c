@@ -288,8 +288,12 @@ void FlecsTimerImport(
     ecs_world_t *world)
 {    
     ECS_MODULE(world, FlecsTimer);
-
     ECS_IMPORT(world, FlecsPipeline);
+#ifdef FLECS_COREDOC
+    ECS_IMPORT(world, FlecsDoc);
+    ecs_doc_set_brief(world, ecs_id(FlecsTimer), 
+        "Module that implements system timers (used by .interval)");
+#endif
 
     ecs_set_name_prefix(world, "Ecs");
 

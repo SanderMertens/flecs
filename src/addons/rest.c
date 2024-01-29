@@ -1039,6 +1039,11 @@ void FlecsRestImport(
 #ifdef FLECS_PLECS
     ECS_IMPORT(world, FlecsScript);
 #endif
+#ifdef FLECS_COREDOC
+    ECS_IMPORT(world, FlecsDoc);
+    ecs_doc_set_brief(world, ecs_id(FlecsRest), 
+        "Module that implements Flecs REST API");
+#endif
 
     ecs_set_name_prefix(world, "Ecs");
 

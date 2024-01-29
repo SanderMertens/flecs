@@ -379,6 +379,11 @@ void FlecsSystemImport(
     ecs_world_t *world)
 {
     ECS_MODULE(world, FlecsSystem);
+#ifdef FLECS_COREDOC
+    ECS_IMPORT(world, FlecsDoc);
+    ecs_doc_set_brief(world, ecs_id(FlecsSystem), 
+        "Module that implements Flecs systems");
+#endif
 
     ecs_set_name_prefix(world, "Ecs");
 

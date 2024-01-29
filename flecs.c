@@ -25041,61 +25041,74 @@ void FlecsCoreDocImport(
     /* Initialize documentation data for core components */
     ecs_doc_set_brief(world, EcsFlecs, "Flecs root module");
     ecs_doc_set_link(world, EcsFlecs, "https://github.com/SanderMertens/flecs");
-
-    ecs_doc_set_brief(world, EcsFlecsCore, "Flecs module with builtin components");
+    ecs_doc_set_brief(world, EcsFlecsCore, "Module with builtin components");
+    ecs_doc_set_brief(world, EcsFlecsInternals, "Module with internal entities");
 
     ecs_doc_set_brief(world, EcsWorld, "Entity associated with world");
 
-    ecs_doc_set_brief(world, ecs_id(EcsComponent), "Component that is added to all components");
+    ecs_doc_set_brief(world, ecs_id(EcsComponent), "Component that is added to components");
     ecs_doc_set_brief(world, EcsModule, "Tag that is added to modules");
     ecs_doc_set_brief(world, EcsPrefab, "Tag that is added to prefabs");
     ecs_doc_set_brief(world, EcsDisabled, "Tag that is added to disabled entities");
+    ecs_doc_set_brief(world, EcsPrivate, "Tag that is added to private components");
+    ecs_doc_set_brief(world, EcsFlag, "Internal tag for tracking ids with special id flags");
+    ecs_doc_set_brief(world, ecs_id(EcsIterable), "Internal component to make (query) entities iterable");
+    ecs_doc_set_brief(world, ecs_id(EcsPoly), "Internal component that stores pointer to poly objects");
+    
+    ecs_doc_set_brief(world, ecs_id(EcsTarget), "Internal component that stores information for flattened trees");
+    ecs_doc_set_brief(world, EcsFlatten, "Tag that when added to assembly automatically flattens tree");
 
     ecs_doc_set_brief(world, ecs_id(EcsIdentifier), "Component used for entity names");
-    ecs_doc_set_brief(world, EcsName, "Tag used with EcsIdentifier to signal entity name");
-    ecs_doc_set_brief(world, EcsSymbol, "Tag used with EcsIdentifier to signal entity symbol");
+    ecs_doc_set_brief(world, EcsName, "Tag used with EcsIdentifier to store entity name");
+    ecs_doc_set_brief(world, EcsSymbol, "Tag used with EcsIdentifier to store entity symbol");
+    ecs_doc_set_brief(world, EcsAlias, "Tag used with EcsIdentifier to store entity alias");
+    
+    ecs_doc_set_brief(world, EcsQuery, "Tag added to query entities");
+    ecs_doc_set_brief(world, EcsObserver, "Tag added to observer entities");
 
-    ecs_doc_set_brief(world, EcsTransitive, "Transitive relationship property");
-    ecs_doc_set_brief(world, EcsReflexive, "Reflexive relationship property");
-    ecs_doc_set_brief(world, EcsFinal, "Final relationship property");
-    ecs_doc_set_brief(world, EcsDontInherit, "DontInherit relationship property");
-    ecs_doc_set_brief(world, EcsTag, "Tag relationship property");
-    ecs_doc_set_brief(world, EcsAcyclic, "Acyclic relationship property");
-    ecs_doc_set_brief(world, EcsTraversable, "Traversable relationship property");
-    ecs_doc_set_brief(world, EcsExclusive, "Exclusive relationship property");
-    ecs_doc_set_brief(world, EcsSymmetric, "Symmetric relationship property");
-    ecs_doc_set_brief(world, EcsWith, "With relationship property");
-    ecs_doc_set_brief(world, EcsOnDelete, "OnDelete relationship cleanup property");
-    ecs_doc_set_brief(world, EcsOnDeleteTarget, "OnDeleteTarget relationship cleanup property");
+    ecs_doc_set_brief(world, EcsTransitive, "Trait that enables transitive evaluation of relationships");
+    ecs_doc_set_brief(world, EcsReflexive, "Trait that enables reflexive evaluation of relationships");
+    ecs_doc_set_brief(world, EcsFinal, "Trait that indicates an entity cannot be inherited from");
+    ecs_doc_set_brief(world, EcsDontInherit, "Trait that indicates it should not be inherited");
+    ecs_doc_set_brief(world, EcsTag, "Trait that ensures a pair cannot contain a value");
+    ecs_doc_set_brief(world, EcsAcyclic, "Trait that indicates a relationship is acyclic");
+    ecs_doc_set_brief(world, EcsTraversable, "Trait that indicates a relationship is traversable");
+    ecs_doc_set_brief(world, EcsExclusive, "Trait that ensures a relationship can only have one target");
+    ecs_doc_set_brief(world, EcsSymmetric, "Trait that causes a relationship to be two-way");
+    ecs_doc_set_brief(world, EcsWith, "Trait for adding additional components when a component is added");
+    ecs_doc_set_brief(world, EcsAlwaysOverride, "Trait that indicates a component should always be overridden");
+    ecs_doc_set_brief(world, EcsUnion, "Trait for creating a non-fragmenting relationship");
+    ecs_doc_set_brief(world, EcsOneOf, "Trait that enforces target of relationship is a child of <specified>");
+    ecs_doc_set_brief(world, EcsOnDelete, "Cleanup trait for specifying what happens when component is deleted");
+    ecs_doc_set_brief(world, EcsOnDeleteTarget, "Cleanup trait for specifying what happens when pair target is deleted");
+    ecs_doc_set_brief(world, EcsRemove, "Cleanup action used with OnDelete/OnDeleteTarget");
+    ecs_doc_set_brief(world, EcsDelete, "Cleanup action used with OnDelete/OnDeleteTarget");
+    ecs_doc_set_brief(world, EcsPanic, "Cleanup action used with OnDelete/OnDeleteTarget");
     ecs_doc_set_brief(world, EcsDefaultChildComponent, "Sets default component hint for children of entity");
-    ecs_doc_set_brief(world, EcsRemove, "Remove relationship cleanup property");
-    ecs_doc_set_brief(world, EcsDelete, "Delete relationship cleanup property");
-    ecs_doc_set_brief(world, EcsPanic, "Panic relationship cleanup property");
-    ecs_doc_set_brief(world, EcsIsA, "Builtin IsA relationship");
-    ecs_doc_set_brief(world, EcsChildOf, "Builtin ChildOf relationship");
-    ecs_doc_set_brief(world, EcsDependsOn, "Builtin DependsOn relationship");
-    ecs_doc_set_brief(world, EcsOnAdd, "Builtin OnAdd event");
-    ecs_doc_set_brief(world, EcsOnRemove, "Builtin OnRemove event");
-    ecs_doc_set_brief(world, EcsOnSet, "Builtin OnSet event");
-    ecs_doc_set_brief(world, EcsUnSet, "Builtin UnSet event");
+    ecs_doc_set_brief(world, EcsIsA, "Relationship used for expressing inheritance");
+    ecs_doc_set_brief(world, EcsChildOf, "Relationship used for expressing hierarchies");
+    ecs_doc_set_brief(world, EcsDependsOn, "Relationship used for expressing dependencies");
+    ecs_doc_set_brief(world, EcsSlotOf, "Relationship used for expressing prefab slots");
+    ecs_doc_set_brief(world, EcsOnAdd, "Event emitted when component is added");
+    ecs_doc_set_brief(world, EcsOnRemove, "Event emitted when component is removed");
+    ecs_doc_set_brief(world, EcsOnSet, "Event emitted when component is set");
+    ecs_doc_set_brief(world, EcsUnSet, "Event emitted when component is unset");
+    ecs_doc_set_brief(world, EcsMonitor, "Marker used to create monitor observers");
+    ecs_doc_set_brief(world, EcsOnTableFill, "Event emitted when table becomes non-empty");
+    ecs_doc_set_brief(world, EcsOnTableEmpty, "Event emitted when table becomes empty");
+    ecs_doc_set_brief(world, EcsOnTableCreate, "Event emitted when table is created");
+    ecs_doc_set_brief(world, EcsOnTableDelete, "Event emitted when table is deleted");
 
-    ecs_doc_set_link(world, EcsTransitive, URL_ROOT "#transitive-property");
-    ecs_doc_set_link(world, EcsReflexive, URL_ROOT "#reflexive-property");
-    ecs_doc_set_link(world, EcsFinal, URL_ROOT "#final-property");
-    ecs_doc_set_link(world, EcsDontInherit, URL_ROOT "#dontinherit-property");
-    ecs_doc_set_link(world, EcsTag, URL_ROOT "#tag-property");
-    ecs_doc_set_link(world, EcsAcyclic, URL_ROOT "#acyclic-property");
-    ecs_doc_set_link(world, EcsTraversable, URL_ROOT "#traversable-property");
-    ecs_doc_set_link(world, EcsExclusive, URL_ROOT "#exclusive-property");
-    ecs_doc_set_link(world, EcsSymmetric, URL_ROOT "#symmetric-property");
-    ecs_doc_set_link(world, EcsWith, URL_ROOT "#with-property");
-    ecs_doc_set_link(world, EcsOnDelete, URL_ROOT "#cleanup-properties");
-    ecs_doc_set_link(world, EcsOnDeleteTarget, URL_ROOT "#cleanup-properties");
-    ecs_doc_set_link(world, EcsRemove, URL_ROOT "#cleanup-properties");
-    ecs_doc_set_link(world, EcsDelete, URL_ROOT "#cleanup-properties");
-    ecs_doc_set_link(world, EcsPanic, URL_ROOT "#cleanup-properties");
-    ecs_doc_set_link(world, EcsIsA, URL_ROOT "#the-isa-relationship");
-    ecs_doc_set_link(world, EcsChildOf, URL_ROOT "#the-childof-relationship"); 
+    ecs_doc_set_brief(world, EcsThis, "Query marker to express $this variable");
+    ecs_doc_set_brief(world, EcsWildcard, "Query marker to express match all wildcard");
+    ecs_doc_set_brief(world, EcsAny, "Query marker to express match at least one wildcard");
+
+    ecs_doc_set_brief(world, EcsPredEq, "Query marker to express == operator");
+    ecs_doc_set_brief(world, EcsPredMatch, "Query marker to express ~= operator");
+    ecs_doc_set_brief(world, EcsPredLookup, "Query marker to express by-name lookup");
+    ecs_doc_set_brief(world, EcsScopeOpen, "Query marker to express scope open");
+    ecs_doc_set_brief(world, EcsScopeClose, "Query marker to express scope close");
+    ecs_doc_set_brief(world, EcsEmpty, "Tag used to indicate a query has no results");
     
     /* Initialize documentation for meta components */
     ecs_entity_t meta = ecs_lookup_fullpath(world, "flecs.meta");
@@ -30578,6 +30591,11 @@ void FlecsMonitorImport(
 #ifdef FLECS_UNITS
     ECS_IMPORT(world, FlecsUnits);
 #endif
+#ifdef FLECS_COREDOC
+    ECS_IMPORT(world, FlecsDoc);
+    ecs_doc_set_brief(world, ecs_id(FlecsMonitor), 
+        "Module that automatically monitors statistics for the world & systems");
+#endif
 
     ecs_set_name_prefix(world, "Ecs");
 
@@ -34087,6 +34105,11 @@ void FlecsScriptImport(
 {
     ECS_MODULE(world, FlecsScript);
     ECS_IMPORT(world, FlecsMeta);
+#ifdef FLECS_COREDOC
+    ECS_IMPORT(world, FlecsDoc);
+    ecs_doc_set_brief(world, ecs_id(FlecsScript), 
+        "Module with components for managing Flecs scripts");
+#endif
 
     ecs_set_name_prefix(world, "Ecs");
     ECS_COMPONENT_DEFINE(world, EcsScript);
@@ -35155,6 +35178,11 @@ void FlecsRestImport(
     ECS_IMPORT(world, FlecsPipeline);
 #ifdef FLECS_PLECS
     ECS_IMPORT(world, FlecsScript);
+#endif
+#ifdef FLECS_COREDOC
+    ECS_IMPORT(world, FlecsDoc);
+    ecs_doc_set_brief(world, ecs_id(FlecsRest), 
+        "Module that implements Flecs REST API");
 #endif
 
     ecs_set_name_prefix(world, "Ecs");
@@ -36911,8 +36939,12 @@ void FlecsTimerImport(
     ecs_world_t *world)
 {    
     ECS_MODULE(world, FlecsTimer);
-
     ECS_IMPORT(world, FlecsPipeline);
+#ifdef FLECS_COREDOC
+    ECS_IMPORT(world, FlecsDoc);
+    ecs_doc_set_brief(world, ecs_id(FlecsTimer), 
+        "Module that implements system timers (used by .interval)");
+#endif
 
     ecs_set_name_prefix(world, "Ecs");
 
@@ -36980,6 +37012,12 @@ void FlecsUnitsImport(
     ecs_world_t *world)
 {
     ECS_MODULE(world, FlecsUnits);
+
+#ifdef FLECS_COREDOC
+    ECS_IMPORT(world, FlecsDoc);
+    ecs_doc_set_brief(world, ecs_id(FlecsUnits), 
+        "Module with (amongst others) SI units for annotating component members");
+#endif
 
     ecs_set_name_prefix(world, "Ecs");
 
@@ -60280,7 +60318,11 @@ void FlecsPipelineImport(
 {
     ECS_MODULE(world, FlecsPipeline);
     ECS_IMPORT(world, FlecsSystem);
-
+#ifdef FLECS_COREDOC
+    ECS_IMPORT(world, FlecsDoc);
+    ecs_doc_set_brief(world, ecs_id(FlecsPipeline), 
+        "Module that schedules and runs systems");
+#endif
     ecs_set_name_prefix(world, "Ecs");
 
     flecs_bootstrap_component(world, EcsPipeline);
@@ -67685,6 +67727,11 @@ void FlecsSystemImport(
     ecs_world_t *world)
 {
     ECS_MODULE(world, FlecsSystem);
+#ifdef FLECS_COREDOC
+    ECS_IMPORT(world, FlecsDoc);
+    ecs_doc_set_brief(world, ecs_id(FlecsSystem), 
+        "Module that implements Flecs systems");
+#endif
 
     ecs_set_name_prefix(world, "Ecs");
 

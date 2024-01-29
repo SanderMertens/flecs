@@ -320,6 +320,11 @@ void FlecsMonitorImport(
 #ifdef FLECS_UNITS
     ECS_IMPORT(world, FlecsUnits);
 #endif
+#ifdef FLECS_COREDOC
+    ECS_IMPORT(world, FlecsDoc);
+    ecs_doc_set_brief(world, ecs_id(FlecsMonitor), 
+        "Module that automatically monitors statistics for the world & systems");
+#endif
 
     ecs_set_name_prefix(world, "Ecs");
 
