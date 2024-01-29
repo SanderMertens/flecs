@@ -1439,7 +1439,11 @@ bool flecs_rule_each(
     ecs_entity_t *entities = table->data.entities.array;
     ecs_entity_t e;
     do {
+        if (row == ecs_table_count(table)) {
+            return false;
+        }
         e = entities[row ++];
+        ecs_assert(e != 0, ECS_INTERNAL_ERROR, NULL);
     
         /* Exclude entities that are used as markers by rule engine */
     } while ((e == EcsWildcard) || (e == EcsAny) || 
