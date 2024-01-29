@@ -17160,6 +17160,8 @@ namespace flecs {
 
 /**
  * @ingroup cpp_core_filters
+ *
+ * @{
  */
 
 struct term;
@@ -20773,6 +20775,8 @@ flecs::event_builder_typed<E> event() const;
 /**
  * @memberof flecs::world
  * @ingroup cpp_core_filters
+ *
+ * @{
  */
 
 /** Create a term.
@@ -20801,6 +20805,8 @@ flecs::term term() const;
 /**
  * @memberof flecs::world
  * @ingroup cpp_core_filters
+ *
+ * @{
  */
 
 /** Create a filter.
@@ -20866,6 +20872,8 @@ void each(flecs::id_t term_id, Func&& func) const;
  * 
  * @memberof flecs::world
  * @ingroup cpp_observers
+ *
+ * @{
  */
 
 /** Upcast entity to an observer.
@@ -20895,6 +20903,8 @@ flecs::observer_builder<Components...> observer(Args &&... args) const;
 /**
  * @memberof flecs::world
  * @ingroup cpp_core_queries
+ *
+ * @{
  */
 
 /** Create a query.
@@ -20974,6 +20984,8 @@ flecs::entity import();
 /**
  * @memberof flecs::world
  * @ingroup cpp_pipelines
+ *
+ * @{
  */
 
 /** Create a new pipeline.
@@ -21069,7 +21081,9 @@ bool using_task_threads() const;
 
 /**
  * @memberof flecs::world
- * @ingroup cpp_addons_snapshot
+ * @ingroup cpp_addons_snapshots
+ *
+ * @{
  */
 
 /** Create a snapshot.
@@ -21088,7 +21102,9 @@ flecs::snapshot snapshot(Args &&... args) const;
 
 /** 
  * @memberof flecs::world
- * @ingroup cpp_addons_system
+ * @ingroup cpp_addons_systems
+ *
+ * @{
 */
 
 /** Upcast entity to a system.
@@ -21145,6 +21161,8 @@ void randomize_timers() const;
 /**
  * @memberof flecs::world
  * @ingroup cpp_addons_rules
+ *
+ * @{
  */
 
 /** Create a rule.
@@ -21329,14 +21347,18 @@ const char* from_json(const char *json, flecs::from_json_desc_t *desc = nullptr)
  * @brief App world addon mixin.
  */
 
+/**
+ * @ingroup cpp_addons_app
+ * @memberof flecs::world
+ *
+ * @{
+ */
+
 /** Return app builder.
  * The app builder is a convenience wrapper around a loop that runs 
  * world::progress. An app allows for writing platform agnostic code,
  * as it provides hooks to modules for overtaking the main loop which is 
  * required for frameworks like emscripten.
- * 
- * @ingroup cpp_addons_app
- * @memberof flecs::world
  */
 flecs::app_builder app() {
     m_owned = false; // App takes ownership of world
@@ -25573,6 +25595,8 @@ struct iter_iterable final : iterable<Components...> {
 /**
  * @memberof flecs::iter
  * @ingroup cpp_addons_rules
+ *
+ * @{
  */
 
 iter_iterable<Components...>& set_var(const char *name, flecs::entity_t value) {
@@ -29700,8 +29724,6 @@ private:
     ecs_system_desc_t *m_desc;
 };
 
-/** @} */
-
 }
 
 
@@ -29852,6 +29874,8 @@ struct system final : entity
 /**
  * @memberof flecs::system
  * @ingroup cpp_addons_timer
+ *
+ * @{
  */
 
 /** Set interval.

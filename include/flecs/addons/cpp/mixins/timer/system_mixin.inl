@@ -6,6 +6,8 @@
 /**
  * @memberof flecs::system
  * @ingroup cpp_addons_timer
+ *
+ * @{
  */
 
 /** Set interval.

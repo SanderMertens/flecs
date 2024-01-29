@@ -5,7 +5,9 @@
 
 /**
  * @memberof flecs::world
- * @ingroup cpp_addons_snapshot
+ * @ingroup cpp_addons_snapshots
+ *
+ * @{
  */
 
 /** Create a snapshot.
