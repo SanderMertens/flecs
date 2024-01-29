@@ -1239,6 +1239,7 @@ void RulesBuiltinPredicates_var_2_or_name_written(void);
 void RulesBuiltinPredicates_this_match_eq(void);
 void RulesBuiltinPredicates_var_match_eq(void);
 void RulesBuiltinPredicates_this_match_eq_written(void);
+void RulesBuiltinPredicates_this_match_eq_written_self(void);
 void RulesBuiltinPredicates_var_match_eq_written(void);
 void RulesBuiltinPredicates_this_match_neq(void);
 void RulesBuiltinPredicates_var_match_neq(void);
@@ -6692,6 +6693,10 @@ bake_test_case RulesBuiltinPredicates_testcases[] = {
         RulesBuiltinPredicates_this_match_eq_written
     },
     {
+        "this_match_eq_written_self",
+        RulesBuiltinPredicates_this_match_eq_written_self
+    },
+    {
         "var_match_eq_written",
         RulesBuiltinPredicates_var_match_eq_written
     },
@@ -8964,7 +8969,7 @@ static bake_test_suite suites[] = {
         "RulesBuiltinPredicates",
         NULL,
         NULL,
-        75,
+        76,
         RulesBuiltinPredicates_testcases
     },
     {

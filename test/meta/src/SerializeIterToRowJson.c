@@ -722,6 +722,8 @@ void SerializeIterToRowJson_serialize_this_w_1_tag_component_pair_var(void) {
 
     test_str(json, expect);
 
+    printf("%s\n", json);
+
     ecs_os_free(json);
 
     ecs_rule_fini(q);

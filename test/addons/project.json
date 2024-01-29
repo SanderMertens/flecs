@@ -1266,6 +1266,7 @@
                 "this_match_eq",
                 "var_match_eq",
                 "this_match_eq_written",
+                "this_match_eq_written_self",
                 "var_match_eq_written",
                 "this_match_neq",
                 "var_match_neq",

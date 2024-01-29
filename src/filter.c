@@ -875,6 +875,12 @@ int flecs_term_finalize(
     if (!(src->flags & EcsSelf)) {
         trivial_term = false;
     }
+    if (((term->first.id == EcsPredEq) || (term->first.id == EcsPredMatch)) && 
+        (term->first.flags & EcsIsEntity)) 
+    {
+        trivial_term = false;
+    }
+
     if (trivial_term) {
         ECS_BIT_SET(term->flags, EcsTermIsTrivial);
     }
