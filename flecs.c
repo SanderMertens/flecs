@@ -51024,9 +51024,7 @@ void flecs_json_label(
 {
     const char *lbl = flecs_json_entity_label(world, e);
     if (lbl) {
-        ecs_strbuf_appendch(buf, '"');
-        ecs_strbuf_appendstr(buf, lbl);
-        ecs_strbuf_appendch(buf, '"');
+        flecs_json_string_escape(buf, lbl);
     } else {
         ecs_strbuf_appendch(buf, '0');
     }
@@ -52969,7 +52967,7 @@ void flecs_json_serialize_iter_result_entity_labels(
     int i;
     for (i = 0; i < it->count; i ++) {
         flecs_json_next(buf);
-        flecs_json_string(buf, labels[i].value);
+        flecs_json_string_escape(buf, labels[i].value);
     }
 
     flecs_json_array_pop(buf);

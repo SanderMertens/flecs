@@ -395,9 +395,7 @@ void flecs_json_label(
 {
     const char *lbl = flecs_json_entity_label(world, e);
     if (lbl) {
-        ecs_strbuf_appendch(buf, '"');
-        ecs_strbuf_appendstr(buf, lbl);
-        ecs_strbuf_appendch(buf, '"');
+        flecs_json_string_escape(buf, lbl);
     } else {
         ecs_strbuf_appendch(buf, '0');
     }

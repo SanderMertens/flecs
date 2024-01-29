@@ -740,6 +740,7 @@ void SerializeIterToJson_serialize_type_info_w_unit(void);
 void SerializeIterToJson_serialize_type_info_w_unit_quantity(void);
 void SerializeIterToJson_serialize_type_info_w_unit_over(void);
 void SerializeIterToJson_serialize_w_entity_label(void);
+void SerializeIterToJson_serialize_w_entity_label_w_str(void);
 void SerializeIterToJson_serialize_w_var_labels(void);
 void SerializeIterToJson_serialize_w_var_component(void);
 void SerializeIterToJson_serialize_w_optional_tag(void);
@@ -776,6 +777,7 @@ void SerializeIterToJson_serialize_table_w_private(void);
 void SerializeIterToJson_serialize_world(void);
 void SerializeIterToJson_serialize_term_labels(void);
 void SerializeIterToJson_serialize_id_labels(void);
+void SerializeIterToJson_serialize_id_labels_w_str(void);
 void SerializeIterToJson_serialize_vars_for_query(void);
 void SerializeIterToJson_serialize_var_labels_for_query(void);
 void SerializeIterToJson_serialize_var_ids_for_query(void);
@@ -3962,6 +3964,10 @@ bake_test_case SerializeIterToJson_testcases[] = {
         SerializeIterToJson_serialize_w_entity_label
     },
     {
+        "serialize_w_entity_label_w_str",
+        SerializeIterToJson_serialize_w_entity_label_w_str
+    },
+    {
         "serialize_w_var_labels",
         SerializeIterToJson_serialize_w_var_labels
     },
@@ -4104,6 +4110,10 @@ bake_test_case SerializeIterToJson_testcases[] = {
     {
         "serialize_id_labels",
         SerializeIterToJson_serialize_id_labels
+    },
+    {
+        "serialize_id_labels_w_str",
+        SerializeIterToJson_serialize_id_labels_w_str
     },
     {
         "serialize_vars_for_query",
@@ -5519,7 +5529,7 @@ static bake_test_suite suites[] = {
         "SerializeIterToJson",
         NULL,
         NULL,
-        63,
+        65,
         SerializeIterToJson_testcases
     },
     {

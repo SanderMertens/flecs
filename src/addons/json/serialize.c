@@ -1849,7 +1849,7 @@ void flecs_json_serialize_iter_result_entity_labels(
     int i;
     for (i = 0; i < it->count; i ++) {
         flecs_json_next(buf);
-        flecs_json_string(buf, labels[i].value);
+        flecs_json_string_escape(buf, labels[i].value);
     }
 
     flecs_json_array_pop(buf);

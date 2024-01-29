@@ -1051,6 +1051,51 @@ void SerializeIterToJson_serialize_w_entity_label(void) {
     ecs_fini(world);
 }
 
+void SerializeIterToJson_serialize_w_entity_label_w_str(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e1 = ecs_new_entity(world, "foo_bar");
+    ecs_entity_t e2 = ecs_new_entity(world, "hello_world");
+    ecs_doc_set_name(world, e2, "Hello \"World\"");
+
+    ecs_add(world, e1, Tag);
+    ecs_add(world, e2, Tag);
+
+    ecs_query_t *q = ecs_query_new(world, "Tag");
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
+    desc.serialize_entity_labels = true;
+    char *json = ecs_iter_to_json(world, &it, &desc);
+
+    test_str(json, 
+    "{"
+        "\"ids\":[[\"Tag\"]], "
+        "\"results\":[{"
+            "\"ids\":[[\"Tag\"]], "
+            "\"sources\":[0], "
+            "\"entities\":["
+                "\"foo_bar\""
+            "]"
+        "}, {"
+            "\"ids\":[[\"Tag\"]], "
+            "\"sources\":[0], "
+            "\"entities\":["
+                "\"hello_world\""
+            "], "
+            "\"entity_labels\":["
+                "\"Hello \\\"World\\\"\""
+            "]"
+        "}]"
+    "}");
+
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
 void SerializeIterToJson_serialize_w_var_labels(void) {
     ecs_world_t *world = ecs_init();
 
@@ -2690,6 +2735,38 @@ void SerializeIterToJson_serialize_id_labels(void) {
     char *json = ecs_iter_to_json(world, &it, &desc);
     test_assert(json != NULL);
     test_str(json, "{\"results\":[{\"id_labels\":[[\"position\"]]}]}");
+
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeIterToJson_serialize_id_labels_w_str(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_doc_set_name(world, ecs_id(Position), "\"position\"");
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_new_entity(world, "ent");
+    ecs_set(world, e, Position, {1, 2});
+
+    ecs_query_t *q = ecs_query_new(world, "Position");
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    ecs_iter_to_json_desc_t desc = {0};
+    desc.serialize_id_labels = true;
+    char *json = ecs_iter_to_json(world, &it, &desc);
+    test_assert(json != NULL);
+    test_str(json, "{\"results\":[{\"id_labels\":[[\"\\\"position\\\"\"]]}]}");
 
     ecs_os_free(json);
 
