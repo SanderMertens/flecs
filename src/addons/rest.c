@@ -361,6 +361,7 @@ void flecs_rest_reply_set_captured_log(
 {
     char *err = flecs_rest_get_captured_log();
     if (err) {
+        printf("ERROR!\n");
         char *escaped_err = ecs_astresc('"', err);
         flecs_reply_error(reply, escaped_err);
         reply->code = 400;
@@ -389,7 +390,6 @@ int flecs_rest_iter_to_reply(
 
     if (offset < 0 || limit < 0) {
         flecs_reply_error(reply, "invalid offset/limit parameter");
-        reply->code = 400;
         return -1;
     }
 

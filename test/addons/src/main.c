@@ -1748,6 +1748,7 @@ void Http_stop_start(void);
 void Rest_teardown(void);
 void Rest_get(void);
 void Rest_get_cached(void);
+void Rest_get_cached_invalid(void);
 
 // Testsuite 'Metrics'
 void Metrics_member_gauge_1_entity(void);
@@ -8585,6 +8586,10 @@ bake_test_case Rest_testcases[] = {
     {
         "get_cached",
         Rest_get_cached
+    },
+    {
+        "get_cached_invalid",
+        Rest_get_cached_invalid
     }
 };
 
@@ -9123,7 +9128,7 @@ static bake_test_suite suites[] = {
         "Rest",
         NULL,
         NULL,
-        3,
+        4,
         Rest_testcases
     },
     {

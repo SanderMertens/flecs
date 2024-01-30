@@ -1818,7 +1818,8 @@
             "testcases": [
                 "teardown",
                 "get",
-                "get_cached"
+                "get_cached",
+                "get_cached_invalid"
             ]
         }, {
             "id": "Metrics",

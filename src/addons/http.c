@@ -133,6 +133,7 @@ typedef struct ecs_http_request_key_t {
 typedef struct ecs_http_request_entry_t {
     char *content;
     int32_t content_length;
+    int code;
     ecs_ftime_t time;
 } ecs_http_request_entry_t;
 
@@ -590,6 +591,7 @@ void http_insert_request_entry(
     entry->time = (ecs_ftime_t)ecs_time_measure(&t);
     entry->content_length = ecs_strbuf_written(&reply->body);
     entry->content = ecs_strbuf_get(&reply->body);
+    entry->code = reply->code;
     ecs_strbuf_appendstrn(&reply->body, 
             entry->content, entry->content_length);
 }
@@ -1080,7 +1082,7 @@ void http_recv_connection(
                     if (entry) {
                         ecs_http_reply_t reply;
                         reply.body = ECS_STRBUF_INIT;
-                        reply.code = 200;
+                        reply.code = entry->code;
                         reply.content_type = "application/json";
                         reply.headers = ECS_STRBUF_INIT;
                         reply.status = "OK";
@@ -1657,7 +1659,7 @@ int ecs_http_server_http_request(
         http_find_request_entry(srv, request.res, request.req_len);
     if (entry) {
         reply_out->body = ECS_STRBUF_INIT;
-        reply_out->code = 200;
+        reply_out->code = entry->code;
         reply_out->content_type = "application/json";
         reply_out->headers = ECS_STRBUF_INIT;
         reply_out->status = "OK";
