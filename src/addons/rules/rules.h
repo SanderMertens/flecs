@@ -50,6 +50,7 @@ typedef enum {
     EcsRuleSelfUpId,       /* Self|up traversal for fixed id (like AndId) */
     EcsRuleWith,           /* Match id against fixed or variable source */
     EcsRuleTrav,           /* Support for transitive/reflexive queries */
+    EcsRuleIds,            /* Test for existence of ids matching wildcard */
     EcsRuleIdsRight,       /* Find ids in use that match (R, *) wildcard */
     EcsRuleIdsLeft,        /* Find ids in use that match (*, T) wildcard */
     EcsRuleEach,           /* Iterate entities in table, populate entity variable */

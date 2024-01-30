@@ -736,6 +736,8 @@ void RulesBasic_1_any_src_w_pair_tgt_var(void);
 void RulesBasic_1_any_src_w_pair_rel_var(void);
 void RulesBasic_1_any_src_w_pair_tgt_this(void);
 void RulesBasic_1_any_src_w_pair_rel_this(void);
+void RulesBasic_1_any_src_any_tgt_w_rel_fixed(void);
+void RulesBasic_1_any_src_any_rel_w_tgt_fixed(void);
 void RulesBasic_not_any(void);
 void RulesBasic_rule_w_iter_next(void);
 void RulesBasic_empty_rule(void);
@@ -4710,6 +4712,14 @@ bake_test_case RulesBasic_testcases[] = {
     {
         "1_any_src_w_pair_rel_this",
         RulesBasic_1_any_src_w_pair_rel_this
+    },
+    {
+        "1_any_src_any_tgt_w_rel_fixed",
+        RulesBasic_1_any_src_any_tgt_w_rel_fixed
+    },
+    {
+        "1_any_src_any_rel_w_tgt_fixed",
+        RulesBasic_1_any_src_any_rel_w_tgt_fixed
     },
     {
         "not_any",
@@ -8932,7 +8942,7 @@ static bake_test_suite suites[] = {
         "RulesBasic",
         NULL,
         NULL,
-        149,
+        151,
         RulesBasic_testcases
     },
     {

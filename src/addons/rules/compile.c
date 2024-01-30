@@ -1571,10 +1571,18 @@ int flecs_rule_compile_term(
         if (!first_written || !second_written) {
             if (!first_written) {
                 /* If first is unknown, traverse left: <- (*, t) */
-                op.kind = EcsRuleIdsLeft;
+                if (term->first.id == EcsAny) {
+                    op.kind = EcsRuleIds;
+                } else {
+                    op.kind = EcsRuleIdsLeft;
+                }
             } else {
                 /* If second is wildcard, traverse right: (r, *) -> */
-                op.kind = EcsRuleIdsRight;
+                if (term->second.id == EcsAny) {
+                    op.kind = EcsRuleIds;
+                } else {
+                    op.kind = EcsRuleIdsRight;
+                }
             }
             op.src.entity = 0;
             op.flags &= (ecs_flags8_t)~(EcsRuleIsVar << EcsRuleSrc); /* ids has no src */

@@ -35,6 +35,7 @@ const char* flecs_rule_op_str(
     case EcsRuleSelfUpId:      return "selfupid";
     case EcsRuleWith:          return "with    ";
     case EcsRuleTrav:          return "trav    ";
+    case EcsRuleIds:           return "ids     ";
     case EcsRuleIdsRight:      return "idsr    ";
     case EcsRuleIdsLeft:       return "idsl    ";
     case EcsRuleEach:          return "each    ";

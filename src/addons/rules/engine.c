@@ -1309,6 +1309,48 @@ bool flecs_rule_trav(
 }
 
 static
+bool flecs_rule_ids(
+    const ecs_rule_op_t *op,
+    bool redo,
+    const ecs_rule_run_ctx_t *ctx)
+{
+    if (redo) {
+        return false;
+    }
+
+    ecs_rule_ids_ctx_t *op_ctx = flecs_op_ctx(ctx, ids);
+    ecs_id_record_t *cur;
+
+    {
+        ecs_id_t id = flecs_rule_op_get_id(op, ctx);
+        if (!ecs_id_is_wildcard(id)) {
+            /* If id is not a wildcard, we can directly return it. This can 
+            * happen if a variable was constrained by an iterator. */
+            op_ctx->cur = NULL;
+            flecs_rule_set_vars(op, id, ctx);
+            return true;
+        }
+
+        cur = flecs_id_record_get(ctx->world, id);
+        if (!cur) {
+            return false;
+        }
+    }
+
+    flecs_rule_set_vars(op, cur->id, ctx);
+
+    if (op->field_index != -1) {
+        ecs_iter_t *it = ctx->it;
+        ecs_id_t id = flecs_rule_op_get_id_w_written(op, op->written, ctx);
+        it->ids[op->field_index] = id;
+        it->sources[op->field_index] = EcsWildcard;
+        it->columns[op->field_index] = -1; /* Mark field as set */
+    }
+
+    return true;
+}
+
+static
 bool flecs_rule_idsright(
     const ecs_rule_op_t *op,
     bool redo,
@@ -1351,6 +1393,8 @@ bool flecs_rule_idsright(
         ecs_iter_t *it = ctx->it;
         ecs_id_t id = flecs_rule_op_get_id_w_written(op, op->written, ctx);
         it->ids[op->field_index] = id;
+        it->sources[op->field_index] = EcsWildcard;
+        it->columns[op->field_index] = -1; /* Mark field as set */
     }
 
     return true;
@@ -1399,6 +1443,8 @@ bool flecs_rule_idsleft(
         ecs_iter_t *it = ctx->it;
         ecs_id_t id = flecs_rule_op_get_id_w_written(op, op->written, ctx);
         it->ids[op->field_index] = id;
+        it->sources[op->field_index] = EcsWildcard;
+        it->columns[op->field_index] = -1; /* Mark field as set */
     }
 
     return true;
@@ -2378,6 +2424,7 @@ bool flecs_rule_dispatch(
     case EcsRuleSelfUpId: return flecs_rule_self_up_id(op, redo, ctx);
     case EcsRuleWith: return flecs_rule_with(op, redo, ctx);
     case EcsRuleTrav: return flecs_rule_trav(op, redo, ctx);
+    case EcsRuleIds: return flecs_rule_ids(op, redo, ctx);
     case EcsRuleIdsRight: return flecs_rule_idsright(op, redo, ctx);
     case EcsRuleIdsLeft: return flecs_rule_idsleft(op, redo, ctx);
     case EcsRuleEach: return flecs_rule_each(op, redo, ctx);
