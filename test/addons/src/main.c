@@ -729,6 +729,8 @@ void RulesBasic_1_wildcard_src_w_pair_rel_var(void);
 void RulesBasic_1_wildcard_src_w_pair_tgt_this(void);
 void RulesBasic_1_wildcard_src_w_pair_rel_this(void);
 void RulesBasic_1_any_src(void);
+void RulesBasic_1_any_src_component(void);
+void RulesBasic_1_any_src_component_w_this_component(void);
 void RulesBasic_1_any_src_w_pair(void);
 void RulesBasic_2_any_src(void);
 void RulesBasic_2_any_src_w_pair(void);
@@ -738,6 +740,7 @@ void RulesBasic_1_any_src_w_pair_tgt_this(void);
 void RulesBasic_1_any_src_w_pair_rel_this(void);
 void RulesBasic_1_any_src_any_tgt_w_rel_fixed(void);
 void RulesBasic_1_any_src_any_rel_w_tgt_fixed(void);
+void RulesBasic_1_any_src_w_childof_pair_any_tgt(void);
 void RulesBasic_not_any(void);
 void RulesBasic_rule_w_iter_next(void);
 void RulesBasic_empty_rule(void);
@@ -816,6 +819,9 @@ void RulesBasic_2_trivial_component_w_none(void);
 void RulesBasic_2_trivial_mixed_2_tables(void);
 void RulesBasic_2_trivial_mixed_2_tables_component(void);
 void RulesBasic_2_trivial_mixed_2_tables_wildcard(void);
+void RulesBasic_1_plan_any_src(void);
+void RulesBasic_1_plan_not_any_src(void);
+void RulesBasic_1_plan_optional_any_src(void);
 
 // Testsuite 'RulesVariables'
 void RulesVariables_1_ent_src_w_var(void);
@@ -998,6 +1004,11 @@ void RulesOperators_2_and_not_pair_rel_src_tgt_same_var_written(void);
 void RulesOperators_2_and_not_pair_any_rel(void);
 void RulesOperators_2_and_not_pair_any_tgt(void);
 void RulesOperators_2_and_not_pair_any_src(void);
+void RulesOperators_1_not_any_src_fixed_first(void);
+void RulesOperators_1_not_any_src_any_tgt_fixed_first(void);
+void RulesOperators_1_not_any_src_any_first_fixed_tgt(void);
+void RulesOperators_1_not_any_src_any_childof_pair_any_tgt(void);
+void RulesOperators_1_not_any_src_any_isa_pair_any_tgt(void);
 void RulesOperators_2_and_optional(void);
 void RulesOperators_3_and_optional_optional(void);
 void RulesOperators_2_and_optional_pair_rel_wildcard(void);
@@ -1027,6 +1038,11 @@ void RulesOperators_3_and_optional_dependent_optional_pair_src(void);
 void RulesOperators_3_and_optional_dependent_not_pair_rel(void);
 void RulesOperators_3_and_optional_dependent_not_pair_tgt(void);
 void RulesOperators_3_and_optional_dependent_not_pair_src(void);
+void RulesOperators_1_optional_any_src_fixed_first(void);
+void RulesOperators_1_optional_any_src_any_tgt_fixed_first(void);
+void RulesOperators_1_optional_any_src_any_first_fixed_tgt(void);
+void RulesOperators_1_optional_any_src_any_childof_pair_any_tgt(void);
+void RulesOperators_1_optional_any_src_any_isa_pair_any_tgt(void);
 void RulesOperators_2_or(void);
 void RulesOperators_3_or(void);
 void RulesOperators_2_or_written(void);
@@ -4686,6 +4702,14 @@ bake_test_case RulesBasic_testcases[] = {
         RulesBasic_1_any_src
     },
     {
+        "1_any_src_component",
+        RulesBasic_1_any_src_component
+    },
+    {
+        "1_any_src_component_w_this_component",
+        RulesBasic_1_any_src_component_w_this_component
+    },
+    {
         "1_any_src_w_pair",
         RulesBasic_1_any_src_w_pair
     },
@@ -4720,6 +4744,10 @@ bake_test_case RulesBasic_testcases[] = {
     {
         "1_any_src_any_rel_w_tgt_fixed",
         RulesBasic_1_any_src_any_rel_w_tgt_fixed
+    },
+    {
+        "1_any_src_w_childof_pair_any_tgt",
+        RulesBasic_1_any_src_w_childof_pair_any_tgt
     },
     {
         "not_any",
@@ -5032,6 +5060,18 @@ bake_test_case RulesBasic_testcases[] = {
     {
         "2_trivial_mixed_2_tables_wildcard",
         RulesBasic_2_trivial_mixed_2_tables_wildcard
+    },
+    {
+        "1_plan_any_src",
+        RulesBasic_1_plan_any_src
+    },
+    {
+        "1_plan_not_any_src",
+        RulesBasic_1_plan_not_any_src
+    },
+    {
+        "1_plan_optional_any_src",
+        RulesBasic_1_plan_optional_any_src
     }
 };
 
@@ -5752,6 +5792,26 @@ bake_test_case RulesOperators_testcases[] = {
         RulesOperators_2_and_not_pair_any_src
     },
     {
+        "1_not_any_src_fixed_first",
+        RulesOperators_1_not_any_src_fixed_first
+    },
+    {
+        "1_not_any_src_any_tgt_fixed_first",
+        RulesOperators_1_not_any_src_any_tgt_fixed_first
+    },
+    {
+        "1_not_any_src_any_first_fixed_tgt",
+        RulesOperators_1_not_any_src_any_first_fixed_tgt
+    },
+    {
+        "1_not_any_src_any_childof_pair_any_tgt",
+        RulesOperators_1_not_any_src_any_childof_pair_any_tgt
+    },
+    {
+        "1_not_any_src_any_isa_pair_any_tgt",
+        RulesOperators_1_not_any_src_any_isa_pair_any_tgt
+    },
+    {
         "2_and_optional",
         RulesOperators_2_and_optional
     },
@@ -5866,6 +5926,26 @@ bake_test_case RulesOperators_testcases[] = {
     {
         "3_and_optional_dependent_not_pair_src",
         RulesOperators_3_and_optional_dependent_not_pair_src
+    },
+    {
+        "1_optional_any_src_fixed_first",
+        RulesOperators_1_optional_any_src_fixed_first
+    },
+    {
+        "1_optional_any_src_any_tgt_fixed_first",
+        RulesOperators_1_optional_any_src_any_tgt_fixed_first
+    },
+    {
+        "1_optional_any_src_any_first_fixed_tgt",
+        RulesOperators_1_optional_any_src_any_first_fixed_tgt
+    },
+    {
+        "1_optional_any_src_any_childof_pair_any_tgt",
+        RulesOperators_1_optional_any_src_any_childof_pair_any_tgt
+    },
+    {
+        "1_optional_any_src_any_isa_pair_any_tgt",
+        RulesOperators_1_optional_any_src_any_isa_pair_any_tgt
     },
     {
         "2_or",
@@ -8942,7 +9022,7 @@ static bake_test_suite suites[] = {
         "RulesBasic",
         NULL,
         NULL,
-        151,
+        157,
         RulesBasic_testcases
     },
     {
@@ -8956,7 +9036,7 @@ static bake_test_suite suites[] = {
         "RulesOperators",
         NULL,
         NULL,
-        95,
+        105,
         RulesOperators_testcases
     },
     {

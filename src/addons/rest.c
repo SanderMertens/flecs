@@ -361,7 +361,6 @@ void flecs_rest_reply_set_captured_log(
 {
     char *err = flecs_rest_get_captured_log();
     if (err) {
-        printf("ERROR!\n");
         char *escaped_err = ecs_astresc('"', err);
         flecs_reply_error(reply, escaped_err);
         reply->code = 400;

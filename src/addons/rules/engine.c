@@ -1318,21 +1318,12 @@ bool flecs_rule_ids(
         return false;
     }
 
-    ecs_rule_ids_ctx_t *op_ctx = flecs_op_ctx(ctx, ids);
     ecs_id_record_t *cur;
+    ecs_id_t id = flecs_rule_op_get_id(op, ctx);
 
     {
-        ecs_id_t id = flecs_rule_op_get_id(op, ctx);
-        if (!ecs_id_is_wildcard(id)) {
-            /* If id is not a wildcard, we can directly return it. This can 
-            * happen if a variable was constrained by an iterator. */
-            op_ctx->cur = NULL;
-            flecs_rule_set_vars(op, id, ctx);
-            return true;
-        }
-
         cur = flecs_id_record_get(ctx->world, id);
-        if (!cur) {
+        if (!cur || !cur->cache.tables.count) {
             return false;
         }
     }
@@ -1341,7 +1332,6 @@ bool flecs_rule_ids(
 
     if (op->field_index != -1) {
         ecs_iter_t *it = ctx->it;
-        ecs_id_t id = flecs_rule_op_get_id_w_written(op, op->written, ctx);
         it->ids[op->field_index] = id;
         it->sources[op->field_index] = EcsWildcard;
         it->columns[op->field_index] = -1; /* Mark field as set */

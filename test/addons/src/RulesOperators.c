@@ -1114,6 +1114,208 @@ void RulesOperators_2_and_not_pair_any_src(void) {
     ecs_fini(world);
 }
 
+void RulesOperators_1_not_any_src_fixed_first(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "!RelA(_)"
+    });
+
+    test_assert(r != NULL);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(RelA, ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_bool(false, ecs_field_is_set(&it, 1));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_new(world, RelA);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_new(world, RelA);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesOperators_1_not_any_src_any_tgt_fixed_first(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "!RelA(_, _)"
+    });
+
+    test_assert(r != NULL);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_bool(false, ecs_field_is_set(&it, 1));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_new_w_pair(world, TgtA, RelA);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_bool(false, ecs_field_is_set(&it, 1));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_new_w_pair(world, RelA, TgtA);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_new_w_pair(world, RelA, TgtB);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesOperators_1_not_any_src_any_first_fixed_tgt(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
+    ECS_TAG(world, TgtA);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "!_(_, TgtA)"
+    });
+
+    test_assert(r != NULL);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(ecs_pair(EcsWildcard, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_bool(false, ecs_field_is_set(&it, 1));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_new_w_pair(world, TgtA, RelA);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(ecs_pair(EcsWildcard, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_bool(false, ecs_field_is_set(&it, 1));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_new_w_pair(world, RelA, TgtA);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_new_w_pair(world, RelB, TgtA);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesOperators_1_not_any_src_any_childof_pair_any_tgt(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "!ChildOf(_, _)"
+    });
+
+    test_assert(r != NULL);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesOperators_1_not_any_src_any_isa_pair_any_tgt(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TgtA);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "!IsA(_, _)"
+    });
+
+    test_assert(r != NULL);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(ecs_pair(EcsIsA, EcsWildcard), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_bool(false, ecs_field_is_set(&it, 1));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_new_w_pair(world, EcsIsA, TgtA);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
 void RulesOperators_2_and_optional(void) {
     ecs_world_t *world = ecs_init();
 
@@ -2449,7 +2651,7 @@ void RulesOperators_2_and_optional_pair_any_src(void) {
         test_uint(ecs_pair(Tag, TgtB), ecs_field_id(&it, 1));
         test_uint(ecs_pair(RelA, TgtB), ecs_field_id(&it, 2));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
+        test_uint(EcsWildcard, ecs_field_src(&it, 2));
         test_bool(true, ecs_field_is_set(&it, 1));
         test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(TgtB, ecs_iter_get_var(&it, x_var));
@@ -2460,7 +2662,7 @@ void RulesOperators_2_and_optional_pair_any_src(void) {
         test_uint(ecs_pair(Tag, TgtC), ecs_field_id(&it, 1));
         test_uint(ecs_pair(RelA, TgtC), ecs_field_id(&it, 2));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
+        test_uint(EcsWildcard, ecs_field_src(&it, 2));
         test_bool(true, ecs_field_is_set(&it, 1));
         test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(TgtC, ecs_iter_get_var(&it, x_var));
@@ -3695,6 +3897,248 @@ void RulesOperators_3_and_optional_dependent_not_pair_src(void) {
         test_bool(false, ecs_field_is_set(&it, 3));
         test_uint(t1, ecs_iter_get_var(&it, x_var));
 
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesOperators_1_optional_any_src_fixed_first(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "?RelA(_)"
+    });
+
+    test_assert(r != NULL);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(RelA, ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_bool(false, ecs_field_is_set(&it, 1));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_new(world, RelA);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(RelA, ecs_field_id(&it, 1));
+        test_uint(EcsWildcard, ecs_field_src(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_new(world, RelA);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(RelA, ecs_field_id(&it, 1));
+        test_uint(EcsWildcard, ecs_field_src(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesOperators_1_optional_any_src_any_tgt_fixed_first(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "?RelA(_, _)"
+    });
+
+    test_assert(r != NULL);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_bool(false, ecs_field_is_set(&it, 1));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_new_w_pair(world, TgtA, RelA);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_bool(false, ecs_field_is_set(&it, 1));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_new_w_pair(world, RelA, TgtA);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 1));
+        test_uint(EcsWildcard, ecs_field_src(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_new_w_pair(world, RelA, TgtB);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 1));
+        test_uint(EcsWildcard, ecs_field_src(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesOperators_1_optional_any_src_any_first_fixed_tgt(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
+    ECS_TAG(world, TgtA);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "?_(_, TgtA)"
+    });
+
+    test_assert(r != NULL);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(ecs_pair(EcsWildcard, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_bool(false, ecs_field_is_set(&it, 1));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_new_w_pair(world, TgtA, RelA);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(ecs_pair(EcsWildcard, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_bool(false, ecs_field_is_set(&it, 1));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_new_w_pair(world, RelA, TgtA);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(ecs_pair(EcsWildcard, TgtA), ecs_field_id(&it, 1));
+        test_uint(EcsWildcard, ecs_field_src(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_new_w_pair(world, RelB, TgtA);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(ecs_pair(EcsWildcard, TgtA), ecs_field_id(&it, 1));
+        test_uint(EcsWildcard, ecs_field_src(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesOperators_1_optional_any_src_any_childof_pair_any_tgt(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "?ChildOf(_, _)"
+    });
+
+    test_assert(r != NULL);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(ecs_pair(EcsChildOf, EcsWildcard), ecs_field_id(&it, 1));
+        test_uint(EcsWildcard, ecs_field_src(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesOperators_1_optional_any_src_any_isa_pair_any_tgt(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TgtA);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "?IsA(_, _)"
+    });
+
+    test_assert(r != NULL);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(ecs_pair(EcsIsA, EcsWildcard), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_bool(false, ecs_field_is_set(&it, 1));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_new_w_pair(world, EcsIsA, TgtA);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(ecs_pair(EcsIsA, EcsWildcard), ecs_field_id(&it, 1));
+        test_uint(EcsWildcard, ecs_field_src(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 1));
         test_bool(false, ecs_rule_next(&it));
     }
 

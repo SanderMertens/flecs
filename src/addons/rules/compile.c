@@ -1515,7 +1515,7 @@ int flecs_rule_compile_term(
 
     /* If the query starts with a Not or Optional term, insert an operation that
      * matches all entities. */
-    if (first_term && src_is_var && !src_written) {
+    if (first_term && src_is_var && !src_written && term->src.id != EcsAny) {
         bool pred_match = builtin_pred && term->first.id == EcsPredMatch;
         if (term->oper == EcsNot || term->oper == EcsOptional || pred_match) {
             ecs_rule_op_t match_any = {0};
@@ -1567,20 +1567,17 @@ int flecs_rule_compile_term(
     /* If source is Any (_) and first and/or second are unconstrained, insert an
      * ids instruction instead of an And */
     if (term->flags & EcsTermMatchAnySrc) {
+        op.kind = EcsRuleIds;
         /* Use up-to-date written values after potentially inserting each */
         if (!first_written || !second_written) {
             if (!first_written) {
                 /* If first is unknown, traverse left: <- (*, t) */
-                if (term->first.id == EcsAny) {
-                    op.kind = EcsRuleIds;
-                } else {
+                if (term->first.id != EcsAny) {
                     op.kind = EcsRuleIdsLeft;
                 }
             } else {
                 /* If second is wildcard, traverse right: (r, *) -> */
-                if (term->second.id == EcsAny) {
-                    op.kind = EcsRuleIds;
-                } else {
+                if (term->second.id != EcsAny) {
                     op.kind = EcsRuleIdsRight;
                 }
             }

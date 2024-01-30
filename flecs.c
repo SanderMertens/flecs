@@ -10497,11 +10497,14 @@ int flecs_term_finalize(
     /* If term queries for !(ChildOf, _), translate it to the builtin 
      * (ChildOf, 0) index which is a cheaper way to find root entities */
     if (term->oper == EcsNot && term->id == ecs_pair(EcsChildOf, EcsAny)) {
-        term->oper = EcsAnd;
-        term->id = ecs_pair(EcsChildOf, 0);
-        second->id = 0;
-        second->flags |= EcsIsEntity;
-        second->flags &= ~EcsIsVariable;
+        /* Only if the source is not EcsAny */
+        if (!(term->src.id == EcsAny && (term->src.flags & EcsIsVariable))) {
+            term->oper = EcsAnd;
+            term->id = ecs_pair(EcsChildOf, 0);
+            second->id = 0;
+            second->flags |= EcsIsEntity;
+            second->flags &= ~EcsIsVariable;
+        }
     }
 
     ecs_entity_t first_id = 0;
@@ -34503,7 +34506,6 @@ void flecs_rest_reply_set_captured_log(
 {
     char *err = flecs_rest_get_captured_log();
     if (err) {
-        printf("ERROR!\n");
         char *escaped_err = ecs_astresc('"', err);
         flecs_reply_error(reply, escaped_err);
         reply->code = 400;
@@ -63060,7 +63062,7 @@ int flecs_rule_compile_term(
 
     /* If the query starts with a Not or Optional term, insert an operation that
      * matches all entities. */
-    if (first_term && src_is_var && !src_written) {
+    if (first_term && src_is_var && !src_written && term->src.id != EcsAny) {
         bool pred_match = builtin_pred && term->first.id == EcsPredMatch;
         if (term->oper == EcsNot || term->oper == EcsOptional || pred_match) {
             ecs_rule_op_t match_any = {0};
@@ -63112,20 +63114,17 @@ int flecs_rule_compile_term(
     /* If source is Any (_) and first and/or second are unconstrained, insert an
      * ids instruction instead of an And */
     if (term->flags & EcsTermMatchAnySrc) {
+        op.kind = EcsRuleIds;
         /* Use up-to-date written values after potentially inserting each */
         if (!first_written || !second_written) {
             if (!first_written) {
                 /* If first is unknown, traverse left: <- (*, t) */
-                if (term->first.id == EcsAny) {
-                    op.kind = EcsRuleIds;
-                } else {
+                if (term->first.id != EcsAny) {
                     op.kind = EcsRuleIdsLeft;
                 }
             } else {
                 /* If second is wildcard, traverse right: (r, *) -> */
-                if (term->second.id == EcsAny) {
-                    op.kind = EcsRuleIds;
-                } else {
+                if (term->second.id != EcsAny) {
                     op.kind = EcsRuleIdsRight;
                 }
             }
@@ -65061,21 +65060,12 @@ bool flecs_rule_ids(
         return false;
     }
 
-    ecs_rule_ids_ctx_t *op_ctx = flecs_op_ctx(ctx, ids);
     ecs_id_record_t *cur;
+    ecs_id_t id = flecs_rule_op_get_id(op, ctx);
 
     {
-        ecs_id_t id = flecs_rule_op_get_id(op, ctx);
-        if (!ecs_id_is_wildcard(id)) {
-            /* If id is not a wildcard, we can directly return it. This can 
-            * happen if a variable was constrained by an iterator. */
-            op_ctx->cur = NULL;
-            flecs_rule_set_vars(op, id, ctx);
-            return true;
-        }
-
         cur = flecs_id_record_get(ctx->world, id);
-        if (!cur) {
+        if (!cur || !cur->cache.tables.count) {
             return false;
         }
     }
@@ -65084,7 +65074,6 @@ bool flecs_rule_ids(
 
     if (op->field_index != -1) {
         ecs_iter_t *it = ctx->it;
-        ecs_id_t id = flecs_rule_op_get_id_w_written(op, op->written, ctx);
         it->ids[op->field_index] = id;
         it->sources[op->field_index] = EcsWildcard;
         it->columns[op->field_index] = -1; /* Mark field as set */

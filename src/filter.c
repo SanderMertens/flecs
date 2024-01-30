@@ -712,11 +712,14 @@ int flecs_term_finalize(
     /* If term queries for !(ChildOf, _), translate it to the builtin 
      * (ChildOf, 0) index which is a cheaper way to find root entities */
     if (term->oper == EcsNot && term->id == ecs_pair(EcsChildOf, EcsAny)) {
-        term->oper = EcsAnd;
-        term->id = ecs_pair(EcsChildOf, 0);
-        second->id = 0;
-        second->flags |= EcsIsEntity;
-        second->flags &= ~EcsIsVariable;
+        /* Only if the source is not EcsAny */
+        if (!(term->src.id == EcsAny && (term->src.flags & EcsIsVariable))) {
+            term->oper = EcsAnd;
+            term->id = ecs_pair(EcsChildOf, 0);
+            second->id = 0;
+            second->flags |= EcsIsEntity;
+            second->flags &= ~EcsIsVariable;
+        }
     }
 
     ecs_entity_t first_id = 0;

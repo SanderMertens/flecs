@@ -3080,6 +3080,97 @@ void RulesBasic_1_any_src(void) {
         test_bool(true, ecs_rule_next(&it));
         test_uint(0, it.count);
         test_uint(RelA, ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(EcsWildcard, ecs_field_src(&it, 1));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_1_any_src_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Position(_)"
+    });
+
+    test_assert(r != NULL);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_add_id(world, e1, Tag);
+    ecs_new(world, Position);
+    ecs_new(world, Position);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(EcsWildcard, ecs_field_src(&it, 1));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_assert(NULL == ecs_field(&it, Position, 1));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_1_any_src_component_w_this_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, Tag);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Position(_), Velocity"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_entity_t e = ecs_set(world, 0, Velocity, {10, 20});
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_add_id(world, e1, Tag);
+    ecs_new(world, Position);
+    ecs_new(world, Position);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(1, it.count);
+        test_uint(e, it.entities[0]);
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 2));
+        test_uint(EcsWildcard, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+        test_assert(NULL == ecs_field(&it, Position, 1));
+        {
+            Velocity *v = ecs_field(&it, Velocity, 2);
+            test_assert(v != NULL);
+            test_int(v->x, 10);
+            test_int(v->y, 20);
+        }
         test_bool(false, ecs_rule_next(&it));
     }
 
@@ -3540,6 +3631,33 @@ void RulesBasic_1_any_src_any_rel_w_tgt_fixed(void) {
         test_bool(true, ecs_rule_next(&it));
         test_uint(0, it.count);
         test_uint(ecs_pair(EcsWildcard, TgtA), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(false, ecs_rule_next(&it));
+    }
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_1_any_src_w_childof_pair_any_tgt(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "ChildOf(_, _)"
+    });
+
+    test_assert(r != NULL);
+
+    {
+        ecs_iter_t it = ecs_rule_iter(world, r);
+        test_bool(true, ecs_rule_next(&it));
+        test_uint(0, it.count);
+        test_uint(ecs_pair(EcsChildOf, EcsWildcard), ecs_field_id(&it, 1));
         test_bool(true, ecs_field_is_set(&it, 1));
         test_bool(false, ecs_rule_next(&it));
     }
@@ -6776,6 +6894,95 @@ void RulesBasic_3_trivial_plan_w_any_component(void) {
     HEAD " 0. [-1,  1]  setids      " 
     LINE " 1. [ 0,  2]  trivpop     "
     LINE " 2. [ 1,  3]  andany      $[this]           (ChildOf, $_'1)"
+    LINE " 3. [ 2,  4]  yield       "
+    LINE "";
+    char *plan = ecs_rule_str(r);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+
+void RulesBasic_1_plan_any_src(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, Tag);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "RelA(_)"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  ids         $[_'1]            (RelA)"
+    LINE " 1. [ 0,  2]  yield       "
+    LINE "";
+    char *plan = ecs_rule_str(r);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_1_plan_not_any_src(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, Tag);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "!RelA(_)"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  2]  not         "
+    LINE " 1. [ 0,  2]   ids        $[_'1]            (RelA)"
+    LINE " 2. [ 0,  3]  end         $[_'1]            (RelA)"
+    LINE " 3. [ 2,  4]  yield       "
+    LINE "";
+    char *plan = ecs_rule_str(r);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
+
+void RulesBasic_1_plan_optional_any_src(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, Tag);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "?RelA(_)"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  2]  option      "
+    LINE " 1. [ 0,  2]   ids        $[_'1]            (RelA)"
+    LINE " 2. [ 0,  3]  end         $[_'1]            (RelA)"
     LINE " 3. [ 2,  4]  yield       "
     LINE "";
     char *plan = ecs_rule_str(r);
