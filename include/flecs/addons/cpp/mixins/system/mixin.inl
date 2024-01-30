@@ -5,7 +5,9 @@
 
 /** 
  * @memberof flecs::world
- * @ingroup cpp_addons_system
+ * @ingroup cpp_addons_systems
+ *
+ * @{
 */
 
 /** Upcast entity to a system.

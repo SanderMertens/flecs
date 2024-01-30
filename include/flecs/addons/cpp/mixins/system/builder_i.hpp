@@ -151,6 +151,4 @@ private:
     ecs_system_desc_t *m_desc;
 };
 
-/** @} */
-
 }

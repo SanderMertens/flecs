@@ -6,6 +6,8 @@
 /**
  * @memberof flecs::world
  * @ingroup cpp_core_queries
+ *
+ * @{
  */
 
 /** Create a query.

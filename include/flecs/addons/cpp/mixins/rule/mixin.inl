@@ -6,6 +6,8 @@
 /**
  * @memberof flecs::world
  * @ingroup cpp_addons_rules
+ *
+ * @{
  */
 
 /** Create a rule.
