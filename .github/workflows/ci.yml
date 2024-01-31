@@ -193,7 +193,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest, macOS-latest ]
+        os: [ ubuntu-latest, macOS-latest, macOS-14 ]
 
     steps:
       - uses: actions/checkout@v4
@@ -474,7 +474,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest, macOS-latest ]
+        os: [ ubuntu-latest, macOS-latest, macOS-14 ]
 
     steps:
       - uses: actions/checkout@v4
@@ -570,6 +570,7 @@ jobs:
           - { version: macOS-11, xcode: '13.0' }
           - { version: macOS-12, xcode: '13.1' }
           - { version: macOS-12, xcode: '14.0' }
+          - { version: macOS-14, xcode: '15.2' }
 
     env:
       CC: clang
@@ -815,7 +816,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest, macOS-latest ]
+        os: [ ubuntu-latest, macOS-latest, macOS-14 ]
 
     steps:
       - uses: actions/checkout@v4
