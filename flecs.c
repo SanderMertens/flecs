@@ -65105,15 +65105,15 @@ bool flecs_rule_idsright(
         if (!cur) {
             return false;
         }
-
-        cur = op_ctx->cur = cur->first.next;
     } else {
         if (!op_ctx->cur) {
             return false;
         }
-
-        cur = op_ctx->cur = op_ctx->cur->first.next;
     }
+
+    do {
+        cur = op_ctx->cur = op_ctx->cur->first.next;
+    } while (cur && !cur->cache.tables.count); /* Skip empty ids */
 
     if (!cur) {
         return false;
@@ -65155,15 +65155,15 @@ bool flecs_rule_idsleft(
         if (!cur) {
             return false;
         }
-
-        cur = op_ctx->cur = cur->second.next;
     } else {
         if (!op_ctx->cur) {
             return false;
         }
-
-        cur = op_ctx->cur = op_ctx->cur->second.next;
     }
+
+    do {
+        cur = op_ctx->cur = op_ctx->cur->second.next;
+    } while (cur && !cur->cache.tables.count); /* Skip empty ids */
 
     if (!cur) {
         return false;
