@@ -166,7 +166,11 @@ void FlecsDocImport(
 
     ecs_add_id(world, ecs_id(EcsDocDescription), EcsDontInherit);
     ecs_add_id(world, ecs_id(EcsDocDescription), EcsPrivate);
-    
+
+    ecs_doc_set_brief(world, EcsDocBrief, "Brief description");
+    ecs_doc_set_brief(world, EcsDocDetail, "Detailed description");
+    ecs_doc_set_brief(world, EcsDocLink, "Link to additional documentation");
+    ecs_doc_set_brief(world, EcsDocColor, "Color hint for entity");   
 }
 
 #endif
