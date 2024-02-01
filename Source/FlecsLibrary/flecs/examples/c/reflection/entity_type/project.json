@@ -1,9 +1,0 @@
-{
-    "id": "entity_type",
-    "type": "application",
-    "value": {
-        "use": [
-            "flecs"
-        ]
-    }
-}

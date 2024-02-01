@@ -1,9 +1,0 @@
-{
-    "id": "setting_variables",
-    "type": "application",
-    "value": {
-        "use": [
-            "flecs"
-        ]
-    }
-}
