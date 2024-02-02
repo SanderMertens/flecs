@@ -31,7 +31,7 @@ struct string {
         }
     }
 
-    string(string&& str) {
+    string(string&& str) noexcept {
         ecs_os_free(m_str);
         m_str = str.m_str;
         m_const_str = str.m_const_str;
@@ -43,7 +43,7 @@ struct string {
         return m_const_str;
     }
 
-    string& operator=(string&& str) {
+    string& operator=(string&& str) noexcept {
         ecs_os_free(m_str);
         m_str = str.m_str;
         m_const_str = str.m_const_str;

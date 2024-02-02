@@ -64,7 +64,7 @@ struct filter_base {
         return *this; 
     }
 
-    filter_base(filter_base&& obj) {
+    filter_base(filter_base&& obj) noexcept {
         this->m_world = obj.m_world;
         if (obj.m_filter_ptr) {
             this->m_filter_ptr = &this->m_filter;
@@ -74,7 +74,7 @@ struct filter_base {
         ecs_filter_move(&m_filter, &obj.m_filter);
     }
 
-    filter_base& operator=(filter_base&& obj) {
+    filter_base& operator=(filter_base&& obj) noexcept {
         this->m_world = obj.m_world;
         if (obj.m_filter_ptr) {
             this->m_filter_ptr = &this->m_filter;
@@ -148,9 +148,9 @@ public:
         return *this;
     }
 
-    filter(filter&& obj) : filter_base(FLECS_MOV(obj)) { }
+    filter(filter&& obj) noexcept : filter_base(FLECS_MOV(obj)) { }
 
-    filter& operator=(filter&& obj) {
+    filter& operator=(filter&& obj) noexcept {
         filter_base::operator=(FLECS_FWD(obj));
         return *this;
     }
