@@ -8,6 +8,8 @@ public class FlecsLibrary : ModuleRules
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
         
         Type = ModuleType.External;
+        CStandard = CStandardVersion.C99;
+        CppStandard = CppStandardVersion.Cpp17;
         
         AppendStringToPublicDefinition("flecs_EXPORTS", "0");
         
@@ -28,7 +30,6 @@ public class FlecsLibrary : ModuleRules
             new string[]
             {
                 "Core",
-                "SolidMacros"
             }
         );
 
