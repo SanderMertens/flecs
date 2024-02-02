@@ -1,0 +1,10 @@
+{
+    "id": "basics_bitmask",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "public": false
+    }
+}

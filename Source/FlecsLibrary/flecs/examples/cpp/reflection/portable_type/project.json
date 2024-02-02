@@ -1,0 +1,10 @@
+{
+    "id": "portable_type",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "language": "c++"
+    }
+}

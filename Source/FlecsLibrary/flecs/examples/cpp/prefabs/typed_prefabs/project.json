@@ -1,0 +1,10 @@
+{
+    "id": "typed_prefabs",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "language": "c++"
+    }
+}

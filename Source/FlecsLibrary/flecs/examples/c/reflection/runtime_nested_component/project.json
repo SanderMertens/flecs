@@ -1,0 +1,10 @@
+{
+    "id": "runtime_nested_component",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "public": false
+    }
+}

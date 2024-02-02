@@ -1,0 +1,36 @@
+// To see what the result of parsing this file looks like, copy the code and
+// paste it into the editor at https://flecs.dev/explorer
+//
+// To load this file yourself, call ecs_plecs_from_file("with.flecs");
+
+// Sometimes you want to add the same component to a lot of entities. To avoid
+// repeating yourself, you can use the "with" keyword:
+with Planet {
+  // With statements can be nested, which adds to the list of components to add
+  with InnerPlanet {
+    Mercury
+    Venus
+    Earth {
+      // A with scope contains regular statements so we can do anything we can
+      // do normally, like assign components and open scopes.
+      - SupportsLife
+    }
+    Mars
+  }
+  with OuterPlanet {
+    Jupiter
+    Saturn
+    Neptune
+    Uranus
+  }
+}
+
+// A with statement may be placed inside of a scope
+Jupiter {
+  with Moon {
+    Io
+    Europa
+    Ganymede
+    Callisto
+  }
+}

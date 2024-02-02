@@ -1,0 +1,10 @@
+{
+    "id": "explorer",
+    "type": "application",
+    "value": {
+        "public": false,
+        "use": [
+            "flecs"
+        ]
+    }
+}

@@ -1,0 +1,10 @@
+{
+    "id": "ser_opaque_string",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "public": false
+    }
+}

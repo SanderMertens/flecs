@@ -1,0 +1,14 @@
+{
+    "id": "gnu2x",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "standalone": true,
+        "public": false
+    },
+    "lang.c": {
+        "c-standard": "gnu2x"
+    }
+}

@@ -1,0 +1,11 @@
+{
+    "id": "simple_module",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "language": "c++",
+        "public": false
+    }
+}

@@ -1,0 +1,9 @@
+{
+    "id": "ser_opaque_vector",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ]
+    }
+}

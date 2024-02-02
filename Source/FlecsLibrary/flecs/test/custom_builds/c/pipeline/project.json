@@ -1,0 +1,14 @@
+{
+    "id": "pipeline",
+    "type": "application",
+    "value": {
+        "public": false,
+        "use": [
+            "flecs"
+        ],
+        "standalone": true
+    },
+    "lang.c": {
+        "defines": ["FLECS_CUSTOM_BUILD", "FLECS_PIPELINE"]
+    }
+}

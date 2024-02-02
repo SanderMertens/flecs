@@ -1,0 +1,8 @@
+{
+    "id": "flecs",
+    "type": "template",
+    "value": {
+        "use": ["flecs"],
+        "language": "c++"
+    }
+}

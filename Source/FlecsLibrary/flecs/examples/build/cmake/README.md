@@ -1,0 +1,1 @@
+For this to work, flecs needs to be a subdirectory of the example.

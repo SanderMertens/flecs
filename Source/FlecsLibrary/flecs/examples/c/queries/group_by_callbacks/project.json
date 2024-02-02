@@ -1,0 +1,10 @@
+{
+    "id": "group_by_callbacks",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "public": false
+    }
+}

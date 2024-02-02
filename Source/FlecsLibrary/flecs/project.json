@@ -1,0 +1,27 @@
+{
+    "id":"flecs",
+    "type":"package",
+    "value": {
+        "author": "Sander Mertens",
+        "description": "Entity Component System written in C99/C++11",
+        "amalgamate": true
+    },
+    "dependee": {
+        "lang.c": {
+            "${cfg sanitize}": {
+                "defines": ["FLECS_SANITIZE"]
+            }
+        }
+    },
+    "lang.c": {
+        "${os linux}": {
+            "lib": ["rt", "pthread"]
+        },
+        "${os windows}": {
+            "lib": ["ws2_32"]
+        },
+        "${cfg sanitize}": {
+            "defines": ["FLECS_SANITIZE"]
+        }
+    }
+}

@@ -1,0 +1,53 @@
+using factories
+
+resources {
+  // Ore stacks can contain 50 items
+  with StackCount{50} {
+    // Raw materials can't be produced
+    Copper
+    Iron
+    Aluminium
+
+    Steel {
+      - Requires[{Iron, 1}]
+      - TimeToProduce{2}
+      - StackCount{50}
+    }
+  }
+
+  Gear {
+    - Requires[{Iron, 1}]
+    - TimeToProduce{1}
+    - StackCount{100}
+  }
+
+  Circuit {
+    - Requires[{Iron, 1}, {Copper, 3}]
+    - TimeToProduce{2}
+    - StackCount{100}
+  }
+
+  SolarPanel {
+    - Requires[{Copper, 5}, {Circuit, 15}, {Steel, 5}]
+    - TimeToProduce{10}
+    - StackCount{20}
+  }
+
+  HullMaterial {
+    - Requires[{Aluminium, 10}, {Copper, 5}, {Steel, 20}]
+    - TimeToProduce{10}
+    - StackCount{20}
+  }
+
+  Radar {
+    - Requires[{Gear, 5}, {Circuit, 5}, {Iron, 10}]
+    - TimeToProduce{20}
+    - StackCount{1}
+  }
+
+  Satellite {
+    - Requires[{HullMaterial, 10}, {SolarPanel, 5}, {Radar, 1}]
+    - TimeToProduce{30}
+    - StackCount{1}
+  }
+}

@@ -1,0 +1,10 @@
+{
+    "id": "override",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "public": false
+    }
+}

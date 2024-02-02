@@ -1,0 +1,15 @@
+{
+    "id": "no_auto_registration",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "public": false,
+        "standalone": true,
+        "language": "c++"
+    },
+    "lang.cpp": {
+        "defines": ["FLECS_CPP_NO_AUTO_REGISTRATION"]
+    }
+}

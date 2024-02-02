@@ -1,0 +1,10 @@
+{
+    "id": "entity_event",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "public": false
+    }
+}
