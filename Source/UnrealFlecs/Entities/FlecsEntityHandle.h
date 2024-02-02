@@ -16,15 +16,16 @@ public:
 	FFlecsEntityHandle() = default;
 	FFlecsEntityHandle(const flecs::entity& InEntity) : Entity(InEntity) {}
 	
-	flecs::entity GetEntity() const { return Entity; }
+	FORCEINLINE flecs::entity GetEntity() const { return Entity; }
 	
-	operator flecs::entity() const { return GetEntity(); }
-	operator flecs::id_t() const { return GetEntity().id(); }
+	FORCEINLINE operator flecs::entity() const { return GetEntity(); }
+	FORCEINLINE operator flecs::id_t() const { return GetEntity().id(); }
 	
-	bool IsValid() const { return GetEntity().is_valid(); }
-	bool IsAlive() const { return GetEntity().is_alive(); }
+	FORCEINLINE bool IsValid() const { return GetEntity().is_valid(); }
+	FORCEINLINE bool IsAlive() const { return GetEntity().is_alive(); }
 
-	bool HasTag(const FFlecsEntityHandle& Tag) const { return GetEntity().has(Tag); }
+	FORCEINLINE bool Has(const FFlecsEntityHandle& InEntity) const { return GetEntity().has(InEntity); }
+	
 
 	bool operator==(const FFlecsEntityHandle& Other) const
 	{
@@ -45,6 +46,9 @@ public:
 	{
 		return GetEntity() != Other;
 	}
+
+	FORCEINLINE flecs::entity* operator->() { return &Entity; }
+	FORCEINLINE const flecs::entity* operator->() const { return &Entity; }
 	
 private:
 	flecs::entity Entity;
