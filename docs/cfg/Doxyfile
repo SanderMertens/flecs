@@ -1366,6 +1366,7 @@ HTML_STYLESHEET        =
 HTML_EXTRA_STYLESHEET  = docs/cfg/doxygen-awesome.css \
                          docs/cfg/doxygen-awesome-sidebar-only.css \
                          docs/cfg/doxygen-awesome-sidebar-only-darkmode-toggle.css \
+                         docs/cfg/flecs-snippet-tabs.css \
                          docs/cfg/custom.css
 
 # The HTML_EXTRA_FILES tag can be used to specify one or more extra images or

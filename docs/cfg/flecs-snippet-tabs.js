@@ -1,80 +1,102 @@
-/**
-
-Doxygen Awesome
-https://github.com/jothepro/doxygen-awesome-css
-
-MIT License
-
-Copyright (c) 2023 jothepro
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-*/
-
 // Heavily modified version of DoxygenAwesomeTabs
 // https://github.com/jothepro/doxygen-awesome-css
-// doxygen-awesome-tabs.js
 class FlecsSnippetTabs {
     static init() {
         window.addEventListener("load", () => {
-            document.querySelectorAll(".tabbed:not(:empty)").forEach((tabbed, tabbedIndex) => {
-                let tabLinkList = [];
-                tabbed.querySelectorAll("li").forEach((tab, tabIndex) => {
+            let changeTab = (tabName) => {
+                // Save active tab to local storage
+                let activeTabHistory = JSON.parse(localStorage.getItem("activeTabHistory"));
+                if (activeTabHistory) {
+                    // Remove if already exists and wasn't the last one
+                    let index = activeTabHistory.indexOf(tabName);
+                    if (index < activeTabHistory.length - 1) {
+                        if (index > -1) {
+                            activeTabHistory.splice(index, 1);
+                        }
+                        activeTabHistory.push(tabName);
+                        localStorage.setItem("activeTabHistory", JSON.stringify(activeTabHistory));
+                    }
+                } else {
+                    // Create if doesn't exist
+                    localStorage.setItem("activeTabHistory", JSON.stringify([tabName]));
+                }
+
+                // TODO: Don't switch tabs if this tabbed doesn't have the tab
+                document.querySelectorAll(".flecs-snippet-tabs:not(:empty)").forEach((tabbed, tabbedIndex) => {
+                    // Find the last active tab that exists in this group of tabs
+                    let lastActiveIndex = -1;
+                    let tabButtonId = "tab_button_" + tabbedIndex + "_0"; // Default to first tab
+                    tabbed.querySelectorAll(".tab-button").forEach((tabLink) => {
+                        let index = activeTabHistory.indexOf(tabLink.textContent);
+                        if (index > -1 && index > lastActiveIndex) {
+                            lastActiveIndex = index;
+                            tabButtonId = tabLink.id;
+                        }
+                    });
+
+                    // Update active tab link
+                    tabbed.querySelectorAll(".tab-button").forEach((tabLink) => {
+                        if (tabLink.id == tabButtonId) {
+                            tabLink.classList.add("active");
+                        } else {
+                            tabLink.classList.remove("active");
+                        }
+                    });
+
+                    let tabId = tabButtonId.replace("tab_button_", "tab_");
+
+                    // Update active tab
+                    tabbed.querySelectorAll(".flecs-snippet-tabs:not(:empty) > ul > li").forEach((tab, tabIndex) => {
+                        if (tab.id == tabId) {
+                            tab.classList.add("selected");
+                        } else {
+                            tab.classList.remove("selected");
+                        }
+                    });
+                });
+            };
+
+            document.querySelectorAll(".flecs-snippet-tabs:not(:empty)").forEach((tabbed, tabbedIndex) => {
+                let tabsOverview = document.createElement("div");
+                tabsOverview.classList.add("flecs-snippet-tabs-overview");
+
+                tabbed.querySelectorAll(".flecs-snippet-tabs:not(:empty) > ul > li").forEach((tab, tabIndex) => {
+                    tab.classList.add("flecs-snippet-tabs-tab");
                     tab.id = "tab_" + tabbedIndex + "_" + tabIndex;
 
                     let header = tab.querySelector(".tab-title");
+                    if (!header) {
+                        console.error("Tabbed element doesn't have a header", tab);
+                        return;
+                    }
                     header.title = header.textContent;
 
                     let tabLink = document.createElement("button");
+                    tabLink.id = "tab_button_" + tabbedIndex + "_" + tabIndex;
                     tabLink.classList.add("tab-button");
                     tabLink.appendChild(header);
-                    tabLink.addEventListener("click", () => {
-                        tabbed.querySelectorAll("li").forEach((tab) => {
-                            tab.classList.remove("selected");
-                        });
-                        tabLinkList.forEach((tabLink) => {
-                            tabLink.classList.remove("active");
-                        });
-                        tab.classList.add("selected");
-                        tabLink.classList.add("active");
-                    });
+                    tabLink.addEventListener("click", () => changeTab(header.textContent));
 
-                    tabLinkList.push(tabLink);
+                    tabsOverview.appendChild(tabLink);
 
-                    if(tabIndex == 0) {
+                    if (tabIndex == 0) {
                         tab.classList.add("selected");
                         tabLink.classList.add("active");
                     }
                 });
 
-                let tabsOverview = document.createElement("div");
-                tabsOverview.classList.add("tabs-overview");
-                tabLinkList.forEach((tabLink) => {
-                    tabsOverview.appendChild(tabLink);
-                });
-
                 let tabsOverviewContainer = document.createElement("div");
-                tabsOverviewContainer.classList.add("tabs-overview-container");
+                tabsOverviewContainer.classList.add("flecs-snippet-tabs-overview-container");
                 tabsOverviewContainer.appendChild(tabsOverview);
 
-                tabbed.before(tabsOverviewContainer);
+                tabbed.prepend(tabsOverviewContainer);
             });
+
+            // Restore active tab from local storage
+            let activeTabHistory = JSON.parse(localStorage.getItem("activeTabHistory"));
+            if (activeTabHistory) {
+                changeTab(activeTabHistory[activeTabHistory.length - 1]);
+            }
         });
     }
 }
