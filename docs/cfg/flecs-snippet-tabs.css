@@ -1,0 +1,109 @@
+.flecs-snippet-tabs > ul {
+    padding-inline-start: 0px;
+    margin: 0;
+    padding: 0;
+}
+
+.flecs-snippet-tabs-tab {
+    display: none;
+}
+
+.flecs-snippet-tabs-tab.selected {
+    display: block;
+}
+
+.flecs-snippet-tabs-tab p.startli:first-child {
+    display: none;
+}
+
+.flecs-snippet-tabs-tab .doxygen-awesome-fragment-wrapper:first-of-type .fragment {
+    margin-top: 0;
+}
+
+.flecs-snippet-tabs-overview-container {
+    overflow-x: auto;
+    display: block;
+    overflow-y: visible;
+}
+
+.flecs-snippet-tabs-overview {
+    border-bottom: 1px solid var(--separator-color);
+    display: flex;
+    flex-direction: row;
+}
+
+@media screen and (max-width: 767px) {
+    .flecs-snippet-tabs-overview-container {
+        margin: 0 calc(0px - var(--spacing-large));
+    }
+    .flecs-snippet-tabs-overview {
+        padding: 0 var(--spacing-large)
+    }
+}
+
+.flecs-snippet-tabs-overview button.tab-button {
+    color: var(--page-foreground-color);
+    margin: 0;
+    border: none;
+    background: transparent;
+    padding: calc(var(--spacing-large) / 2) 0;
+    display: inline-block;
+    font-size: var(--page-font-size);
+    cursor: pointer;
+    box-shadow: 0 1px 0 0 var(--separator-color);
+    position: relative;
+    
+    -webkit-tap-highlight-color: transparent;
+}
+
+.flecs-snippet-tabs-overview button.tab-button .tab-title::before {
+    display: block;
+    content: attr(title);
+    font-weight: 600;
+    height: 0;
+    overflow: hidden;
+    visibility: hidden;
+}
+
+.flecs-snippet-tabs-overview button.tab-button .tab-title {
+    float: left;
+    white-space: nowrap;
+    font-weight: normal;
+    padding: calc(var(--spacing-large) / 2) var(--spacing-large);
+    border-radius: var(--border-radius-medium);
+    transition: background-color var(--animation-duration) ease-in-out, font-weight var(--animation-duration) ease-in-out;
+}
+
+.flecs-snippet-tabs-overview button.tab-button:not(:last-child) .tab-title {
+    box-shadow: 8px 0 0 -7px var(--separator-color);
+}
+
+.flecs-snippet-tabs-overview button.tab-button:hover .tab-title {
+    background: var(--separator-color);
+    box-shadow: none;
+}
+
+.flecs-snippet-tabs-overview button.tab-button.active .tab-title {
+    font-weight: 600;
+}
+
+.flecs-snippet-tabs-overview button.tab-button::after {
+    content: '';
+    display: block;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    height: 0;
+    width: 0%;
+    margin: 0 auto;
+    border-radius: var(--border-radius-small) var(--border-radius-small) 0 0;
+    background-color: var(--primary-color);
+    transition: width var(--animation-duration) ease-in-out, height var(--animation-duration) ease-in-out;
+}
+
+.flecs-snippet-tabs-overview button.tab-button.active::after {
+    width: 100%;
+    box-sizing: border-box;
+    height: 3px;
+}
