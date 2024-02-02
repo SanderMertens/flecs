@@ -2,7 +2,9 @@
 Systems are queries + a function that can be ran manually or get scheduled as part of a pipeline. To use systems, applications must build Flecs with the `FLECS_SYSTEM` addon (enabled by default).
 
 An example of a simple system:
-
+<div class="tabbed">
+<ul>
+<li><b class="tab-title">C</b>
 ```c
 // System implementation
 void Move(ecs_iter_t *it) {
@@ -20,15 +22,6 @@ void Move(ecs_iter_t *it) {
 // System declaration
 ECS_SYSTEM(world, Move, EcsOnUpdate, Position, [in] Velocity);
 ```
-```cpp
-// System declaration
-flecs::system sys = world.system<Position, const Velocity>("Move")
-    .each([](Position& p, const Velocity &v) {
-        // Each is invoked for each entity
-        p.x += v.x;
-        p.y += v.y;
-    });
-```
 
 In C, a system can also be created with the `ecs_system_init` function / `ecs_system` shorthand which provides more flexibility. The same system can be created like this:
 
@@ -45,24 +38,54 @@ ecs_entity_t ecs_id(Move) = ecs_system(world, {
     .callback = Move
 })
 ```
+</li>
+<li><b class="tab-title">C++</b>
+```cpp
+// System declaration
+flecs::system sys = world.system<Position, const Velocity>("Move")
+    .each([](Position& p, const Velocity &v) {
+        // Each is invoked for each entity
+        p.x += v.x;
+        p.y += v.y;
+    });
+```
+</li>
+</ul>
+</div>
 
 To manually run a system, do:
-
+<div class="tabbed">
+<ul>
+<li><b class="tab-title">C</b>
 ```c
 ecs_run(world, ecs_id(Move), 0.0 /* delta_time */, NULL /* param */)
 ```
+</li>
+<li><b class="tab-title">C++</b>
 ```cpp
+flecs::system sys = ...;
 sys.run();
 ```
+</li>
+</ul>
+</div>
 
 By default systems are registered for a pipeline which orders systems by their "phase" (`EcsOnUpdate`). To run all systems in a pipeline, do:
-
+<div class="tabbed">
+<ul>
+<li><b class="tab-title">C</b>
 ```c
 ecs_progress(world, 0 /* delta_time */);
 ```
+</li>
+<li><b class="tab-title">C++</b>
 ```cpp
+flecs::world world = ...;
 world.progress();
 ```
+</li>
+</ul>
+</div>
 
 To run systems as part of a pipeline, applications must build Flecs with the `FLECS_PIPELINE` addon (enabled by default). To prevent a system from being registered as part of a pipeline, specify 0 as phase:
 
