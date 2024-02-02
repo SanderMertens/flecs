@@ -5,8 +5,10 @@
 #include <unordered_map>
 
 #include "CoreMinimal.h"
+#include "flecs.h"
 #include "FlecsWorld.h"
 #include "FlecsWorldSettings.h"
+#include "SolidMacros/Standard/Hashing.h"
 #include "Subsystems/WorldSubsystem.h"
 #include "FlecsWorldSubsystem.generated.h"
 
@@ -18,14 +20,14 @@ class UNREALFLECS_API UFlecsWorldSubsystem final : public UTickableWorldSubsyste
 	GENERATED_BODY()
 
 public:
-	FORCEINLINE void Initialize(FSubsystemCollectionBase& Collection) final
+	void Initialize(FSubsystemCollectionBase& Collection) override
 	{
 		Super::Initialize(Collection);
 
 		CreateWorld(DEFAULT_FLECS_WORLD_NAME, FFlecsWorldSettings());
 	}
 
-	FORCEINLINE void Deinitialize() final
+	void Deinitialize() override
 	{
 		Super::Deinitialize();
 
@@ -33,7 +35,7 @@ public:
 	}
 	
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	FORCEINLINE FFlecsWorld& CreateWorld(const FName& Name, const FFlecsWorldSettings& Settings)
+	FFlecsWorld& CreateWorld(const FName& Name, const FFlecsWorldSettings& Settings)
 	{
 		flecs::world NewWorld = flecs::world();
 		FFlecsWorld World(NewWorld);
@@ -50,40 +52,40 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs", BlueprintPure = false)
-	FORCEINLINE void SetAutoMerge(const FName& Name, const bool bAutoMerge) const
+	void SetAutoMerge(const FName& Name, const bool bAutoMerge) const
 	{
 		GetFlecsWorld(Name)->set_automerge(bAutoMerge);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	FORCEINLINE FFlecsWorld& GetFlecsWorld(const FName& Name) const
+	FFlecsWorld& GetFlecsWorld(const FName& Name) const
 	{
 		return *WorldNameMap.at(Name);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs", Meta = (WorldContext = "WorldContextObject"))
-	static FORCEINLINE FFlecsWorld& GetWorldStatic(UObject* WorldContextObject, const FName& Name)
+	static FFlecsWorld& GetWorldStatic(UObject* WorldContextObject, const FName& Name)
 	{
 		return GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull)
 		              ->GetSubsystem<UFlecsWorldSubsystem>()->GetFlecsWorld(Name);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs", Meta = (WorldContext = "WorldContextObject"))
-	static FORCEINLINE FFlecsWorld& GetDefaultWorld(const UObject* WorldContextObject)
+	static FFlecsWorld& GetDefaultWorld(const UObject* WorldContextObject)
 	{
 		return GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull)
 		              ->GetSubsystem<UFlecsWorldSubsystem>()->GetFlecsWorld(DEFAULT_FLECS_WORLD_NAME);
 	}
 	
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	FORCEINLINE void DestroyWorldByName(const FName& Name)
+	void DestroyWorldByName(const FName& Name)
 	{
 		WorldNameMap.at(Name)->GetWorld().init_builtin_components();
 		WorldNameMap.erase(Name);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	FORCEINLINE void DestroyWorld(FFlecsWorld& World)
+	void DestroyWorld(FFlecsWorld& World)
 	{
 		const FFlecsWorld* WorldPtr = WorldNameMap.at(*World->get<FName>());
 		WorldNameMap.erase(*World->get<FName>());
@@ -98,7 +100,7 @@ public:
 		}
 	}
 	
-	FORCEINLINE NO_DISCARD bool DoesSupportWorldType(const EWorldType::Type WorldType) const override
+	bool DoesSupportWorldType(const EWorldType::Type WorldType) const override
 	{
 		return WorldType == EWorldType::Game || WorldType == EWorldType::PIE;
 	}

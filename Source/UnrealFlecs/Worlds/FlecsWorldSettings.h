@@ -11,18 +11,18 @@ struct FFlecsWorldSettings
     GENERATED_BODY()
     
 public:
-    FORCEINLINE FFlecsWorldSettings() = default;
-    FORCEINLINE explicit FFlecsWorldSettings(const bool bInAutoMerge)
+    FFlecsWorldSettings() = default;
+    explicit FFlecsWorldSettings(const bool bInAutoMerge)
         : bAutoMerge(bInAutoMerge)
     {
     }
 
-    FORCEINLINE NO_DISCARD bool operator==(const FFlecsWorldSettings& Other) const
+    bool operator==(const FFlecsWorldSettings& Other) const
     {
         return bAutoMerge == Other.bAutoMerge;
     }
 
-    FORCEINLINE NO_DISCARD bool operator!=(const FFlecsWorldSettings& Other) const
+    bool operator!=(const FFlecsWorldSettings& Other) const
     {
         return !(*this == Other);
     }

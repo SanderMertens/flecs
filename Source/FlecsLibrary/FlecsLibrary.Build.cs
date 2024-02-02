@@ -1,4 +1,5 @@
 ﻿
+using System.IO;
 using UnrealBuildTool;
 
 public class FlecsLibrary : ModuleRules
@@ -7,24 +8,20 @@ public class FlecsLibrary : ModuleRules
     {
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
         
-        Type = ModuleType.External;
         CStandard = CStandardVersion.C99;
-        CppStandard = CppStandardVersion.Cpp17;
-        
-        AppendStringToPublicDefinition("flecs_EXPORTS", "0");
-        AppendStringToPublicDefinition("HAVE_EXECINFO", "0");
         
         PublicIncludePaths.AddRange(
             new string[] {
-                ModuleDirectory,
+                ModuleDirectory + "/ThirdParty/Public",
             }
         );
         
         PrivateIncludePaths.AddRange(
             new string[] {
-                
+                ModuleDirectory + "/ThirdParty/Private",
             }
         );
+        
 
         PublicDependencyModuleNames.AddRange(
             new string[]

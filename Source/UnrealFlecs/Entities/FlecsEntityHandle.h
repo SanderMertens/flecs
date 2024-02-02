@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "flecs/flecs.h"
+#include "flecs.h"
 #include "SolidMacros/Macros.h"
 #include "FlecsEntityHandle.generated.h"
 
@@ -13,35 +13,35 @@ struct UNREALFLECS_API FFlecsEntityHandle
 	GENERATED_BODY()
 
 public:
-	FORCEINLINE FFlecsEntityHandle() = default;
-	FORCEINLINE FFlecsEntityHandle(const flecs::entity& InEntity) : Entity(InEntity) {}
+	FFlecsEntityHandle() = default;
+	FFlecsEntityHandle(const flecs::entity& InEntity) : Entity(InEntity) {}
 	
-	FORCEINLINE NO_DISCARD flecs::entity GetEntity() const { return Entity; }
+	flecs::entity GetEntity() const { return Entity; }
 	
-	FORCEINLINE NO_DISCARD operator flecs::entity() const { return GetEntity(); }
-	FORCEINLINE NO_DISCARD operator flecs::id_t() const { return GetEntity().id(); }
+	operator flecs::entity() const { return GetEntity(); }
+	operator flecs::id_t() const { return GetEntity().id(); }
 	
-	FORCEINLINE NO_DISCARD bool IsValid() const { return GetEntity().is_valid(); }
-	FORCEINLINE NO_DISCARD bool IsAlive() const { return GetEntity().is_alive(); }
+	bool IsValid() const { return GetEntity().is_valid(); }
+	bool IsAlive() const { return GetEntity().is_alive(); }
 
-	FORCEINLINE NO_DISCARD bool HasTag(const FFlecsEntityHandle& Tag) const { return GetEntity().has(Tag); }
+	bool HasTag(const FFlecsEntityHandle& Tag) const { return GetEntity().has(Tag); }
 
-	FORCEINLINE NO_DISCARD bool operator==(const FFlecsEntityHandle& Other) const
+	bool operator==(const FFlecsEntityHandle& Other) const
 	{
 		return GetEntity() == Other.GetEntity();
 	}
 	
-	FORCEINLINE NO_DISCARD bool operator!=(const FFlecsEntityHandle& Other) const
+	bool operator!=(const FFlecsEntityHandle& Other) const
 	{
 		return GetEntity() != Other.GetEntity();
 	}
 
-	FORCEINLINE NO_DISCARD bool operator==(const flecs::entity& Other) const
+	bool operator==(const flecs::entity& Other) const
 	{
 		return GetEntity() == Other;
 	}
 
-	FORCEINLINE NO_DISCARD bool operator!=(const flecs::entity& Other) const
+	bool operator!=(const flecs::entity& Other) const
 	{
 		return GetEntity() != Other;
 	}
@@ -56,9 +56,6 @@ struct TStructOpsTypeTraits<FFlecsEntityHandle> : public TStructOpsTypeTraitsBas
 	enum
 	{
 		WithCopy = true,
-		WithSerializer = true,
-		WithStructuredSerializer = true,
-		WithPostSerialize = true,
-		WithIdenticalViaEquality = true
 	};
-};
+	
+}; // struct TStructOpsTypeTraits<FFlecsEntityHandle>

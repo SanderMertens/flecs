@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "flecs/flecs.h"
+#include "flecs.h"
 #include "SolidMacros/Macros.h"
 #include "UObject/Object.h"
 #include "FlecsWorld.generated.h"
@@ -14,43 +14,43 @@ struct UNREALFLECS_API FFlecsWorld
 	GENERATED_BODY()
 
 public:
-	FORCEINLINE FFlecsWorld() = default;
-	FORCEINLINE FFlecsWorld(flecs::world& InWorld) : World(&InWorld) {}
+	FFlecsWorld() = default;
+	FFlecsWorld(flecs::world& InWorld) : World(&InWorld) {}
 
-	FORCEINLINE void SetWorld(flecs::world& InWorld) { World = &InWorld; }
+	void SetWorld(flecs::world& InWorld) { World = &InWorld; }
 
-	FORCEINLINE NO_DISCARD flecs::world& GetWorld() { return *World; }
-	FORCEINLINE NO_DISCARD const flecs::world& GetWorld() const { return *World; }
+	flecs::world& GetWorld() { return *World; }
+	const flecs::world& GetWorld() const { return *World; }
 
-	FORCEINLINE NO_DISCARD operator flecs::world&() { return GetWorld(); }
-	FORCEINLINE NO_DISCARD operator const flecs::world&() const { return GetWorld(); }
+	operator flecs::world&() { return GetWorld(); }
+	operator const flecs::world&() const { return GetWorld(); }
 
-	FORCEINLINE NO_DISCARD bool IsValid() const { return World != nullptr; }
+	bool IsValid() const { return World != nullptr; }
 
-	FORCEINLINE NO_DISCARD bool operator!() const { return !IsValid(); }
+	bool operator!() const { return !IsValid(); }
 
-	FORCEINLINE NO_DISCARD flecs::world* operator->() { return World; }
-	FORCEINLINE NO_DISCARD const flecs::world* operator->() const { return World; }
+	flecs::world* operator->() { return World; }
+	const flecs::world* operator->() const { return World; }
 
-	FORCEINLINE NO_DISCARD flecs::world& operator*() { return GetWorld(); }
-	FORCEINLINE NO_DISCARD const flecs::world& operator*() const { return GetWorld(); }
+	flecs::world& operator*() { return GetWorld(); }
+	const flecs::world& operator*() const { return GetWorld(); }
 
-	FORCEINLINE NO_DISCARD bool operator==(const FFlecsWorld& Other) const
+	bool operator==(const FFlecsWorld& Other) const
 	{
 		return World == Other.World;
 	}
 
-	FORCEINLINE NO_DISCARD bool operator!=(const FFlecsWorld& Other) const
+	bool operator!=(const FFlecsWorld& Other) const
 	{
 		return World != Other.World;
 	}
 
-	FORCEINLINE NO_DISCARD bool operator==(const flecs::world& Other) const
+	bool operator==(const flecs::world& Other) const
 	{
 		return World == &Other;
 	}
 
-	FORCEINLINE NO_DISCARD bool operator!=(const flecs::world& Other) const
+	bool operator!=(const flecs::world& Other) const
 	{
 		return World != &Other;
 	}

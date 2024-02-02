@@ -1,7 +1,6 @@
 ﻿// Solstice Games © 2024. All Rights Reserved.
 
 #include "EntityFunctionLibrary.h"
-
 #include "Worlds/FlecsWorld.h"
 #include "Worlds/FlecsWorldSubsystem.h"
 
@@ -10,7 +9,8 @@
 FFlecsEntityHandle UEntityFunctionLibrary::CreateEntity(const UObject* WorldContextObject, const FString& EntityName)
 {
     FFlecsWorld& World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
-    return FFlecsEntityHandle(World.GetWorld().entity(EntityName));
+    char* EntityNameCStr = TCHAR_TO_ANSI(*EntityName);
+    return FFlecsEntityHandle(World.GetWorld().entity(EntityNameCStr));
 }
 
 FFlecsEntityHandle UEntityFunctionLibrary::GetEntityWithName(const UObject* WorldContextObject,
@@ -33,12 +33,4 @@ void UEntityFunctionLibrary::DestroyEntityByName(const UObject* WorldContextObje
     FFlecsWorld& World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
     const char* EntityNameCStr = TCHAR_TO_ANSI(*EntityName);
     World.GetWorld().delete_with(*EntityNameCStr, bSearchPath);
-}
-
-template <typename ...Args>
-FFlecsEntityHandle UEntityFunctionLibrary::CreateEntity(const UObject* WorldContextObject, Args&&... InArgs)
-{
-    FFlecsWorld& World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
-    const FFlecsEntityHandle EntityHandle(World.GetWorld().entity(std::forward<Args>(InArgs)...));
-    return EntityHandle;
 }

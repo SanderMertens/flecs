@@ -4,20 +4,19 @@
 	"VersionName": "1.0",
 	"FriendlyName": "UnrealFlecs",
 	"Description": "",
-	"Category": "Other",
+	"Category": "ECS",
 	"CreatedBy": "Reddy-dev",
 	"CreatedByURL": "",
 	"DocsURL": "",
 	"MarketplaceURL": "",
 	"CanContainContent": true,
 	"IsBetaVersion": true,
-	"IsExperimentalVersion": false,
+	"IsExperimentalVersion": true,
 	"Installed": false,
-	"CanBeUsedWithUnrealHeaderTool": true,
 	"Modules": [
 		{
 			"Name": "FlecsLibrary",
-			"Type": "Default",
+			"Type": "Runtime",
 			"LoadingPhase": "Default"
 		},
 		{

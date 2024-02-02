@@ -7,6 +7,9 @@ public class UnrealFlecs : ModuleRules
 	public UnrealFlecs(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
+
+		CppStandard = CppStandardVersion.Latest;
+		CStandard = CStandardVersion.C99;
 		
 		PublicIncludePaths.AddRange(
 			new string[] {
