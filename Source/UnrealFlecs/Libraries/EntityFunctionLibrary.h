@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "flecs.h"
 #include "Entities/FlecsEntityHandle.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "EntityFunctionLibrary.generated.h"

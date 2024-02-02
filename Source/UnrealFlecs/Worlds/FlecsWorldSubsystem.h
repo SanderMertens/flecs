@@ -8,6 +8,7 @@
 #include "flecs.h"
 #include "FlecsWorld.h"
 #include "FlecsWorldSettings.h"
+// ReSharper disable once CppUnusedIncludeDirective
 #include "SolidMacros/Standard/Hashing.h"
 #include "Subsystems/WorldSubsystem.h"
 #include "FlecsWorldSubsystem.generated.h"
@@ -49,6 +50,12 @@ public:
 		World->set_automerge(Settings.bAutoMerge);
 		
 		return Worlds.back();
+	}
+
+	template <typename T>
+	void ImportModule(const FName& WorldName) const
+	{
+		GetFlecsWorld(WorldName)->import<T>();
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs", BlueprintPure = false)

@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "flecs.h"
-#include "SolidMacros/Macros.h"
 #include "FlecsEntityHandle.generated.h"
 
 USTRUCT(BlueprintType)
