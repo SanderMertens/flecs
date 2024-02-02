@@ -3,17 +3,29 @@ This document provides an overview of the REST API. The Flecs REST API enables (
 
 ## Enable the REST API
 The REST API can be enabled in an application by instantiating the `EcsRest`/`flecs::Rest` component:
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
 
 ```c
 // Start REST API with default parameters
 ecs_singleton_set(world, EcsRest, {0});
 ```
+</li>
+<li><b class="tab-title">C++</b>
+
 ```cpp
 // Start REST API with default parameters
 world.set<flecs::Rest>({});
 ```
+</li>
+</ul>
+</div>
 
 When an application uses the app addon [FLECS_APP](https://www.flecs.dev/flecs/group__c__addons__app.html) the REST interface can be enabled like this:
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
 
 ```c
 // Start application main loop, enable REST interface
@@ -21,12 +33,18 @@ ecs_app_run(world, &(ecs_app_desc_t){
     .enable_rest = true
 });
 ```
+</li>
+<li><b class="tab-title">C++</b>
+
 ```cpp
 // Start application main loop, enable REST interface
 world.app()
   .enable_rest()
   .run();
 ```
+</li>
+</ul>
+</div>
 
 To test if the REST API is working, navigate to http://localhost:27750/entity/flecs/core/World. Upon success this request should return a reply that looks like:
 ```json
@@ -34,16 +52,29 @@ To test if the REST API is working, navigate to http://localhost:27750/entity/fl
 ```
 
 When the monitor module is imported, the REST API provides a `stats` endpoint with statistics for different time intervals:
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
 
 ```c
 // Import monitor addon
 ECS_IMPORT(world, FlecsMonitor);
 ```
+</li>
+<li><b class="tab-title">C++</b>
+
 ```cpp
 world.import<flecs::monitor>();
 ```
+</li>
+</ul>
+</div>
 
 When an application uses the app addon [FLECS_APP](https://www.flecs.dev/flecs/group__c__addons__app.html) the monitoring can be enabled like this:
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
 ```c
 // Start application main loop, enable REST interface and monitoring
 ecs_app_run(world, &(ecs_app_desc_t){
@@ -51,6 +82,9 @@ ecs_app_run(world, &(ecs_app_desc_t){
     .enable_monitor = true
 });
 ```
+</li>
+<li><b class="tab-title">C++</b>
+
 ```cpp
 // Start application main loop, enable REST interface and monitoring
 world.app()
@@ -58,6 +92,9 @@ world.app()
   .enable_monitor()
   .run();
 ```
+</li>
+</ul>
+</div>
 
 For the full C/C++ API reference [see the REST addon documentation](https://www.flecs.dev/flecs/group__c__addons__rest.html).
 
@@ -73,13 +110,22 @@ The remote icon next to the title should be visible. If the connection is not su
 If connection issues persist, the browser could be preventing connections to a local application. See the [Explorer repository README](https://github.com/flecs-hub/explorer) for more information on how to workaround this and other issues.
 
 **Tip**: To show the application title in the explorer, pass the command line arguments to `ecs_init`/`flecs::world::world`:
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
 
 ```c
 ecs_world_t *world = ecs_init_w_args(argc, argv);
 ```
+</li>
+<li><b class="tab-title">C++</b>
+
 ```c++
 flecs::world world(argc, argc);
 ```
+</li>
+</ul>
+</div>
 
 ### Queries
 The search bar in the explorer makes it possible to directly query the ECS storage. A query can be entered in the "Search" box, and needs to be specified in the query DSL (see [query manual](Queries.md#query-dsl)). An example:
@@ -90,7 +136,13 @@ The default query engine used by the search bar is the rules engine, which means
 
 ![Remote Explorer](img/explorer-rules.png)
 
-It is also possible to inspect the results of existing queries. This can be done by entering a `?-`, followed by the name of the query. Queries can be given a name by setting the `.entity` field to a named entity in C:
+It is also possible to inspect the results of existing queries. This can be done by entering a `?-`, followed by the name of the query. Queries can be given a name.
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+In C this is done by setting the `.entity` field to a named entity:
 
 ```c
 ecs_query_t *q = ecs_query(world, {
@@ -101,12 +153,17 @@ ecs_query_t *q = ecs_query(world, {
   }
 });
 ```
+</li>
+<li><b class="tab-title">C++</b>
 
 In C++ a name can be provided to the query factory method:
 
 ```cpp
 auto q = world.query<Position, Velocity>("Move");
 ```
+</li>
+</ul>
+</div>
 
 This also works for filters and rules. Because systems are queries, the name of a system can be entered to inspect the entities matched by the system:
 
