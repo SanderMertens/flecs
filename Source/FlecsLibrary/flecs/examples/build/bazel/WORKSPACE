@@ -1,8 +1,0 @@
-load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
-
-git_repository(
-    name = "flecs",
-    remote = "https://github.com/SanderMertens/flecs",
-    commit = "f150d96ba9ea8be2b24dbf2217368c231cb17720", # v2.3.2+merge329
-    shallow_since = "1615075784 -0800",
-)

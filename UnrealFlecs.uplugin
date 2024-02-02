@@ -13,7 +13,7 @@
 	"IsBetaVersion": true,
 	"IsExperimentalVersion": false,
 	"Installed": false,
-	"CanBeUsedWithUnrealHeaderTool": false,
+	"CanBeUsedWithUnrealHeaderTool": true,
 	"Modules": [
 		{
 			"Name": "FlecsLibrary",

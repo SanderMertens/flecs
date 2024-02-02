@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "flecs/addons/cpp/world.hpp"
+#include "flecs/flecs.h"
 #include "SolidMacros/Macros.h"
 #include "UObject/Object.h"
 #include "FlecsWorld.generated.h"

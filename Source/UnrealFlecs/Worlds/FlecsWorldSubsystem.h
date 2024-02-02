@@ -41,7 +41,7 @@ public:
 		Worlds.emplace_back(World);
 		WorldNameMap[Name] = &Worlds.back();
 
-		World->add<FName>(Name);
+		World->set<FName>(Name);
 		World->set_ctx(this);
 
 		World->set_automerge(Settings.bAutoMerge);
@@ -52,11 +52,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs", BlueprintPure = false)
 	FORCEINLINE void SetAutoMerge(const FName& Name, const bool bAutoMerge) const
 	{
-		GetWorld(Name)->set_automerge(bAutoMerge);
+		GetFlecsWorld(Name)->set_automerge(bAutoMerge);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	FORCEINLINE FFlecsWorld& GetWorld(const FName& Name) const
+	FORCEINLINE FFlecsWorld& GetFlecsWorld(const FName& Name) const
 	{
 		return *WorldNameMap.at(Name);
 	}
@@ -65,14 +65,14 @@ public:
 	static FORCEINLINE FFlecsWorld& GetWorldStatic(UObject* WorldContextObject, const FName& Name)
 	{
 		return GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull)
-		              ->GetSubsystem<UFlecsWorldSubsystem>()->GetWorld(Name);
+		              ->GetSubsystem<UFlecsWorldSubsystem>()->GetFlecsWorld(Name);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs", Meta = (WorldContext = "WorldContextObject"))
 	static FORCEINLINE FFlecsWorld& GetDefaultWorld(const UObject* WorldContextObject)
 	{
 		return GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull)
-		              ->GetSubsystem<UFlecsWorldSubsystem>()->GetWorld(DEFAULT_FLECS_WORLD_NAME);
+		              ->GetSubsystem<UFlecsWorldSubsystem>()->GetFlecsWorld(DEFAULT_FLECS_WORLD_NAME);
 	}
 	
 	UFUNCTION(BlueprintCallable, Category = "Flecs")

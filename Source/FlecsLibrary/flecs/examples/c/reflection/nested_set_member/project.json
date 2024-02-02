@@ -1,9 +1,0 @@
-{
-    "id": "nested_set_member",
-    "type": "application",
-    "value": {
-        "use": [
-            "flecs"
-        ]
-    }
-}

@@ -12,11 +12,11 @@ public class FlecsLibrary : ModuleRules
         CppStandard = CppStandardVersion.Cpp17;
         
         AppendStringToPublicDefinition("flecs_EXPORTS", "0");
+        AppendStringToPublicDefinition("HAVE_EXECINFO", "0");
         
         PublicIncludePaths.AddRange(
             new string[] {
                 ModuleDirectory,
-                ModuleDirectory + "/flecs/include"
             }
         );
         

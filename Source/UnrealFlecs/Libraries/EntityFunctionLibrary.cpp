@@ -32,13 +32,13 @@ void UEntityFunctionLibrary::DestroyEntityByName(const UObject* WorldContextObje
 {
     FFlecsWorld& World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
     const char* EntityNameCStr = TCHAR_TO_ANSI(*EntityName);
-    World.GetWorld().delete_with(EntityNameCStr, bSearchPath);
+    World.GetWorld().delete_with(*EntityNameCStr, bSearchPath);
 }
 
 template <typename ...Args>
 FFlecsEntityHandle UEntityFunctionLibrary::CreateEntity(const UObject* WorldContextObject, Args&&... InArgs)
 {
     FFlecsWorld& World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
-    FFlecsEntityHandle EntityHandle(World.GetWorld().entity(std::forward<Args>(InArgs)...));
+    const FFlecsEntityHandle EntityHandle(World.GetWorld().entity(std::forward<Args>(InArgs)...));
     return EntityHandle;
 }

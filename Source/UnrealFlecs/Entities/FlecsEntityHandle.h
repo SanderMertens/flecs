@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "flecs/addons/cpp/flecs.hpp"
+#include "flecs/flecs.h"
 #include "SolidMacros/Macros.h"
 #include "FlecsEntityHandle.generated.h"
 
@@ -15,8 +15,6 @@ struct UNREALFLECS_API FFlecsEntityHandle
 public:
 	FORCEINLINE FFlecsEntityHandle() = default;
 	FORCEINLINE FFlecsEntityHandle(const flecs::entity& InEntity) : Entity(InEntity) {}
-	FORCEINLINE FFlecsEntityHandle(const FFlecsEntityHandle& Other) : Entity(Other.Entity) {}
-	FORCEINLINE FFlecsEntityHandle(FFlecsEntityHandle&& Other) NOEXCEPT : Entity(Other.Entity) {}
 	
 	FORCEINLINE NO_DISCARD flecs::entity GetEntity() const { return Entity; }
 	
