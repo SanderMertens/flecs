@@ -1,7 +1,7 @@
 .flecs-snippet-tabs > ul {
     padding-inline-start: 0px;
     margin: 0;
-    padding: var(--spacing-small) 0;
+    padding: 0;
 }
 
 .flecs-snippet-tabs-tab {
@@ -10,6 +10,14 @@
 
 .flecs-snippet-tabs-tab.selected {
     display: block;
+}
+
+.flecs-snippet-tabs-tab p.startli:first-child {
+    display: none;
+}
+
+.flecs-snippet-tabs-tab .doxygen-awesome-fragment-wrapper:first-of-type .fragment {
+    margin-top: 0;
 }
 
 .flecs-snippet-tabs-overview-container {
