@@ -44,7 +44,17 @@ public:
 
 	void Tick(float DeltaTime) override
 	{
-		
+		for (FFlecsWorld& World : Worlds)
+		{
+			const bool bResult = World->progress(DeltaTime);
+			UN_LOG(FlecsWorldSubsystemLogCategory, Verbose,
+				"UFlecsWorldSubsystem::Tick: World %s progress result: %d", *World->get<FName>()->ToString(), bResult);
+
+			if (bResult)
+			{
+				World->merge();
+			}
+		}
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
@@ -52,7 +62,9 @@ public:
 	{
 		if UNLIKELY_IF(ScriptStruct == nullptr)
 		{
-			UN_LOG(FlecsWorldSubsystemLogCategory, Error, "UFlecsWorldSubsystem::RegisterScriptStruct: ScriptStruct is nullptr");
+			UN_LOG(FlecsWorldSubsystemLogCategory, Error,
+				"UFlecsWorldSubsystem::RegisterScriptStruct: ScriptStruct is nullptr");
+			
 			return FFlecsEntityHandle();
 		}
 		
@@ -108,7 +120,7 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	FFlecsEntityHandle RegisterComponent(const FName& Name, const int32 Size, const int32 Alignment) const
+	FFlecsEntityHandle RegisterComponentType(const FName& Name, const int32 Size, const int32 Alignment) const
 	{
 		const flecs::entity Component = GetFlecsWorld(DEFAULT_FLECS_WORLD_NAME)->entity(TCHAR_TO_ANSI(*Name.ToString()))
 			.set<flecs::Component>({ Size, Alignment });
@@ -119,6 +131,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
 	FFlecsWorld& CreateWorld(const FName& Name, const FFlecsWorldSettings& Settings)
 	{
+		checkf(!HasWorld(Name), TEXT("World with name %s already exists"), *Name.ToString());
+		checkf(Name != NAME_None, TEXT("World name cannot be NAME_None"));
+		
 		flecs::world NewWorld = flecs::world();
 		FFlecsWorld World(NewWorld);
 		
@@ -133,6 +148,12 @@ public:
 		return Worlds.back();
 	}
 
+	UFUNCTION(BlueprintCallable, Category = "Flecs")
+	bool HasWorld(const FName& Name) const
+	{
+		return WorldNameMap.contains(Name);
+	}
+
 	template <typename T>
 	void ImportModule(const FName& WorldName) const
 	{
@@ -145,26 +166,6 @@ public:
 		GetFlecsWorld(Name)->set_automerge(bAutoMerge);
 	}
 
-	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	FFlecsWorld& GetFlecsWorld(const FName& Name) const
-	{
-		return *WorldNameMap.at(Name);
-	}
-
-	UFUNCTION(BlueprintCallable, Category = "Flecs", Meta = (WorldContext = "WorldContextObject"))
-	static FFlecsWorld& GetWorldStatic(UObject* WorldContextObject, const FName& Name)
-	{
-		return GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull)
-		              ->GetSubsystem<UFlecsWorldSubsystem>()->GetFlecsWorld(Name);
-	}
-
-	UFUNCTION(BlueprintCallable, Category = "Flecs", Meta = (WorldContext = "WorldContextObject"))
-	static FFlecsWorld& GetDefaultWorld(const UObject* WorldContextObject)
-	{
-		return GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull)
-		              ->GetSubsystem<UFlecsWorldSubsystem>()->GetFlecsWorld(DEFAULT_FLECS_WORLD_NAME);
-	}
-	
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
 	void DestroyWorldByName(const FName& Name)
 	{
@@ -186,6 +187,27 @@ public:
 				break;
 			}
 		}
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "Flecs")
+	FFlecsWorld& GetFlecsWorld(const FName& Name) const
+	{
+		checkf(HasWorld(Name), TEXT("World with name %s does not exist"), *Name.ToString());
+		return *WorldNameMap.at(Name);
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "Flecs", Meta = (WorldContext = "WorldContextObject"))
+	static FFlecsWorld& GetWorldStatic(UObject* WorldContextObject, const FName& Name)
+	{
+		return GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull)
+		              ->GetSubsystem<UFlecsWorldSubsystem>()->GetFlecsWorld(Name);
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "Flecs", Meta = (WorldContext = "WorldContextObject"))
+	static FFlecsWorld& GetDefaultWorld(const UObject* WorldContextObject)
+	{
+		return GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull)
+		              ->GetSubsystem<UFlecsWorldSubsystem>()->GetFlecsWorld(DEFAULT_FLECS_WORLD_NAME);
 	}
 	
 	bool DoesSupportWorldType(const EWorldType::Type WorldType) const override
