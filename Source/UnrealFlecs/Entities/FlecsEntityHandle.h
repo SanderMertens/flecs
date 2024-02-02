@@ -24,7 +24,9 @@ public:
 	FORCEINLINE bool IsAlive() const { return GetEntity().is_alive(); }
 
 	FORCEINLINE bool Has(const FFlecsEntityHandle& InEntity) const { return GetEntity().has(InEntity); }
-	
+
+	FORCEINLINE void Add(const FFlecsEntityHandle& InEntity) const { GetEntity().add(InEntity); }
+	FORCEINLINE void Remove(const FFlecsEntityHandle& InEntity) const { GetEntity().remove(InEntity); }
 
 	bool operator==(const FFlecsEntityHandle& Other) const
 	{

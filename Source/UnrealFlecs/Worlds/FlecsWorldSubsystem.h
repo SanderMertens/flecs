@@ -2,16 +2,23 @@
 
 #pragma once
 
+// ReSharper disable CppUnusedIncludeDirective
+
 #include <unordered_map>
 
 #include "CoreMinimal.h"
 #include "flecs.h"
 #include "FlecsWorld.h"
 #include "FlecsWorldSettings.h"
-// ReSharper disable once CppUnusedIncludeDirective
+#include "Components/FlecsScriptClassComponent.h"
+#include "Components/FlecsScriptStructComponent.h"
+#include "SolidMacros/Concepts/SolidConcepts.h"
 #include "SolidMacros/Standard/Hashing.h"
 #include "Subsystems/WorldSubsystem.h"
+#include "General/UnLog/Unlog.h"
 #include "FlecsWorldSubsystem.generated.h"
+
+UNLOG_CATEGORY(FlecsWorldSubsystemLogCategory)
 
 const FName DEFAULT_FLECS_WORLD_NAME = "DefaultFlecsWorld";
 
@@ -33,6 +40,80 @@ public:
 		Super::Deinitialize();
 
 		DestroyWorldByName(DEFAULT_FLECS_WORLD_NAME);
+	}
+
+	void Tick(float DeltaTime) override
+	{
+		
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "Flecs")
+	FFlecsEntityHandle RegisterScriptStruct(UScriptStruct* ScriptStruct) const
+	{
+		if UNLIKELY_IF(ScriptStruct == nullptr)
+		{
+			UN_LOG(FlecsWorldSubsystemLogCategory, Error, "UFlecsWorldSubsystem::RegisterScriptStruct: ScriptStruct is nullptr");
+			return FFlecsEntityHandle();
+		}
+		
+		const flecs::entity ScriptStructComponent
+			= GetFlecsWorld(DEFAULT_FLECS_WORLD_NAME)->entity(TCHAR_TO_ANSI(*ScriptStruct->GetFName().ToString()))
+			                                         .set<flecs::Component>(
+			                                         {
+				                                         ScriptStruct->GetStructureSize(),
+				                                         ScriptStruct->GetMinAlignment()
+			                                         })
+			                                         .set<FFlecsScriptStructComponent>(
+			                                         {
+				                                         ScriptStruct
+			                                         });
+
+		return FFlecsEntityHandle(ScriptStructComponent);
+	}
+
+	template <Solid::TStaticStructConcept T>
+	FFlecsEntityHandle RegisterScriptStruct()
+	{
+		return RegisterScriptStruct(T::StaticStruct());
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "Flecs")
+	FFlecsEntityHandle RegisterScriptClass(TSubclassOf<UObject> ScriptClass) const
+	{
+		if UNLIKELY_IF(ScriptClass == nullptr)
+		{
+			UN_LOG(FlecsWorldSubsystemLogCategory, Error, "UFlecsWorldSubsystem::RegisterScriptClass: ScriptClass is nullptr");
+			return FFlecsEntityHandle();
+		}
+		
+		const flecs::entity ScriptClassComponent
+			= GetFlecsWorld(DEFAULT_FLECS_WORLD_NAME)->entity(TCHAR_TO_ANSI(*ScriptClass->GetFName().ToString()))
+			                                        .set<flecs::Component>(
+			                                        {
+				                                        ScriptClass->GetStructureSize(),
+				                                        ScriptClass->GetMinAlignment()
+			                                        })
+			                                        .set<FFlecsScriptClassComponent>(
+			                                        {
+				                                        ScriptClass
+			                                        });
+
+		return FFlecsEntityHandle(ScriptClassComponent);
+	}
+
+	template <Solid::TStaticClassConcept T>
+	FFlecsEntityHandle RegisterScriptClass()
+	{
+		return RegisterScriptClass(T::StaticClass());
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "Flecs")
+	FFlecsEntityHandle RegisterComponent(const FName& Name, const int32 Size, const int32 Alignment) const
+	{
+		const flecs::entity Component = GetFlecsWorld(DEFAULT_FLECS_WORLD_NAME)->entity(TCHAR_TO_ANSI(*Name.ToString()))
+			.set<flecs::Component>({ Size, Alignment });
+
+		return FFlecsEntityHandle(Component);
 	}
 	
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
