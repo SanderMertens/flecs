@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "flecs.h"
 #include "Macros.h"
+#include "Worlds/FlecsWorld.h"
 #include "FlecsEntityHandle.generated.h"
 
 USTRUCT(BlueprintType)
@@ -14,7 +15,7 @@ struct UNREALFLECS_API FFlecsEntityHandle
 
 public:
 	FFlecsEntityHandle() = default;
-	FFlecsEntityHandle(const flecs::entity& InEntity) : Entity(InEntity) {}
+	FORCEINLINE FFlecsEntityHandle(const flecs::entity& InEntity) : Entity(InEntity) {}
 	
 	FORCEINLINE NO_DISCARD flecs::entity GetEntity() const { return Entity; }
 	
@@ -23,6 +24,10 @@ public:
 	
 	FORCEINLINE NO_DISCARD bool IsValid() const { return GetEntity().is_valid(); }
 	FORCEINLINE NO_DISCARD bool IsAlive() const { return GetEntity().is_alive(); }
+
+	FORCEINLINE NO_DISCARD flecs::world GetWorld() const { return GetEntity().world(); }
+	
+	FORCEINLINE NO_DISCARD flecs::type GetType() const { return GetEntity().type(); }
 
 	FORCEINLINE NO_DISCARD bool Has(const FFlecsEntityHandle& InEntity) const { return GetEntity().has(InEntity); }
 
@@ -73,6 +78,21 @@ public:
 	FORCEINLINE void SetDocDetails(const FString& InDocDetails) const { GetEntity().set_doc_detail(TCHAR_TO_ANSI(*InDocDetails)); }
 	FORCEINLINE NO_DISCARD FString GetDocDetails() const { return FString(GetEntity().doc_detail()); }
 
+	FORCEINLINE void SetPair(const FFlecsEntityHandle& InRelation, const FFlecsEntityHandle& InTarget) const
+	{
+		GetEntity().set_second(InRelation, InTarget);
+	}
+
+	FORCEINLINE NO_DISCARD bool IsPair() const
+	{
+		return GetEntity().is_pair();
+	}
+
+	FORCEINLINE void SetFlag(const FFlecsEntityHandle& InFlag) const
+	{
+		
+	}
+
 	bool operator==(const FFlecsEntityHandle& Other) const
 	{
 		return GetEntity() == Other.GetEntity();
@@ -95,6 +115,11 @@ public:
 
 	FORCEINLINE flecs::entity* operator->() { return &Entity; }
 	FORCEINLINE const flecs::entity* operator->() const { return &Entity; }
+
+	FORCEINLINE NO_DISCARD FString ToString() const
+	{
+		return FString::Printf(TEXT("Entity: %llu"), GetEntity().id());
+	}
 	
 private:
 	flecs::entity Entity;

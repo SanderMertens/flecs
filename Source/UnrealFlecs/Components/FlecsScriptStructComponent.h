@@ -41,4 +41,4 @@ struct std::hash<FFlecsScriptStructComponent>
     {
         return GetTypeHash(InScriptStructComponent);
     }
-};
+}; // struct std::hash<FFlecsScriptStructComponent>

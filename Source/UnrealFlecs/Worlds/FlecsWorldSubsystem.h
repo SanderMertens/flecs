@@ -17,6 +17,7 @@
 #include "Subsystems/WorldSubsystem.h"
 #include "FlecsWorldSubsystem.generated.h"
 
+// ReSharper disable once CppUE4CodingStandardNamingViolationWarning
 const FName DEFAULT_FLECS_WORLD_NAME = "DefaultFlecsWorld";
 
 USTRUCT(BlueprintType)
@@ -191,17 +192,17 @@ public:
 		checkf(!HasWorld(Name), TEXT("World with name %s already exists"), *Name.ToString());
 		checkf(Name != NAME_None, TEXT("World name cannot be NAME_None"));
 		
-		flecs::world NewWorld = flecs::world();
+		flecs::world* NewWorld = new flecs::world();
 		FFlecsWorld NewFlecsWorld(NewWorld);
 		
 		WorldNameMap[Name] = &Worlds.back();
 
+		// Worlds have a Name Singleton
 		NewFlecsWorld.GetFlecsWorld().set<FName>(Name);
+		
 		NewFlecsWorld.GetFlecsWorld().set_ctx(this);
 
 		NewFlecsWorld.GetFlecsWorld().set_automerge(Settings.bAutoMerge);
-
-		NewFlecsWorld.GetFlecsWorld().init_builtin_components();
 
 		Worlds.emplace_back(NewFlecsWorld);
 		
@@ -317,6 +318,12 @@ public:
 	FORCEINLINE void RemoveSingleton(const FName& WorldName) const
 	{
 		GetFlecsWorld(WorldName)->remove<T>();
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "Flecs | Stages")
+	void SetStageCount(const FName& WorldName, const int32 Stages) const
+	{
+		GetFlecsWorld(WorldName)->set_stage_count(Stages);
 	}
 	
 	bool DoesSupportWorldType(const EWorldType::Type WorldType) const override

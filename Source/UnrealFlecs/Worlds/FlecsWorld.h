@@ -14,9 +14,10 @@ struct UNREALFLECS_API FFlecsWorld
 
 public:
 	FFlecsWorld() = default;
-	FFlecsWorld(flecs::world& InWorld) : World(&InWorld) {}
+	FORCEINLINE FFlecsWorld(flecs::world& InWorld) : World(&InWorld) {}
+	FORCEINLINE FFlecsWorld(flecs::world* InWorld) : World(InWorld) {}
 
-	void SetWorld(flecs::world& InWorld) { World = &InWorld; }
+	FORCEINLINE void SetWorld(flecs::world& InWorld) { World = &InWorld; }
 
 	flecs::world& GetFlecsWorld() { return *World; }
 	const flecs::world& GetFlecsWorld() const { return *World; }
@@ -24,15 +25,15 @@ public:
 	operator flecs::world&() { return GetFlecsWorld(); }
 	operator const flecs::world&() const { return GetFlecsWorld(); }
 
-	bool IsValid() const { return World != nullptr; }
+	FORCEINLINE NO_DISCARD bool IsValid() const { return World != nullptr; }
 
-	bool operator!() const { return !IsValid(); }
+	FORCEINLINE bool operator!() const { return !IsValid(); }
 
-	flecs::world* operator->() { return World; }
-	const flecs::world* operator->() const { return World; }
+	FORCEINLINE flecs::world* operator->() { return World; }
+	FORCEINLINE const flecs::world* operator->() const { return World; }
 
-	flecs::world& operator*() { return GetFlecsWorld(); }
-	const flecs::world& operator*() const { return GetFlecsWorld(); }
+	FORCEINLINE flecs::world& operator*() { return GetFlecsWorld(); }
+	FORCEINLINE const flecs::world& operator*() const { return GetFlecsWorld(); }
 
 	bool operator==(const FFlecsWorld& Other) const
 	{
