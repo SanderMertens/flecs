@@ -29,6 +29,42 @@ public:
         const FString& EntityName, const bool bSearchPath = true);
 
     UFUNCTION(BlueprintCallable, Category = "Flecs|Entity")
+    static void SetEntityName(const FFlecsEntityHandle& Entity, const FName& EntityName)
+    {
+        Entity.SetName(EntityName);
+    }
+
+    UFUNCTION(BlueprintCallable, Category = "Flecs|Entity")
+    static FName GetEntityName(const FFlecsEntityHandle& Entity)
+    {
+        return Entity.GetName();
+    }
+
+    UFUNCTION(BlueprintCallable, Category = "Flecs|Entity")
+    static void AddComponent(const FFlecsEntityHandle& Entity, UScriptStruct* ComponentType)
+    {
+        Entity.Add(ComponentType);
+    }
+
+    UFUNCTION(BlueprintCallable, Category = "Flecs|Entity")
+    static void AddEntityType(const FFlecsEntityHandle& Entity, const FFlecsEntityHandle& EntityType)
+    {
+        Entity.Add(EntityType);
+    }
+
+    UFUNCTION(BlueprintCallable, Category = "Flecs|Entity")
+    static void RemoveComponent(const FFlecsEntityHandle& Entity, UScriptStruct* ComponentType)
+    {
+        Entity.Remove(ComponentType);
+    }
+
+    UFUNCTION(BlueprintCallable, Category = "Flecs|Entity")
+    static void RemoveEntityType(const FFlecsEntityHandle& Entity, const FFlecsEntityHandle& EntityType)
+    {
+        Entity.Remove(EntityType);
+    }
+
+    UFUNCTION(BlueprintCallable, Category = "Flecs|Entity")
     static bool IsValid(const FFlecsEntityHandle& Entity)
     {
         return Entity.IsValid();
