@@ -34,6 +34,10 @@
 		{
 			"Name": "SolidMacros",
 			"Enabled": true
+		},
+		{
+			"Name": "StructUtils",
+			"Enabled": true
 		}
 	]
 }
