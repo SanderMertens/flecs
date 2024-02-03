@@ -39,3 +39,11 @@ void FFlecsEntityHandle::Set(UScriptStruct* StructType, const void* InValue) con
     const FFlecsEntityHandle TypeHandle = GetFlecsWorldSubsystem()->ObtainComponentTypeStruct(StructType);
     Set(TypeHandle, InValue);
 }
+
+void FFlecsEntityHandle::Set(const FInstancedStruct& InValue) const
+{
+    const FFlecsEntityHandle TypeHandle = GetFlecsWorldSubsystem()
+        ->ObtainComponentTypeStruct(const_cast<UScriptStruct*>(InValue.GetScriptStruct()));
+
+    Set(TypeHandle, InValue.GetMemory());
+}

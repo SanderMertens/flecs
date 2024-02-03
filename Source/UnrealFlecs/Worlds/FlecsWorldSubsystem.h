@@ -12,6 +12,7 @@
 #include "FlecsWorldSettings.h"
 #include "Components/FlecsScriptClassComponent.h"
 #include "Components/FlecsScriptStructComponent.h"
+#include "Entities/FlecsEntityHandle.h"
 #include "SolidMacros/Concepts/SolidConcepts.h"
 #include "SolidMacros/Standard/Hashing.h"
 #include "Subsystems/WorldSubsystem.h"

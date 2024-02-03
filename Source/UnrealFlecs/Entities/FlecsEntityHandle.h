@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "flecs.h"
 #include "FlecsType.h"
+#include "InstancedStruct.h"
 #include "SolidMacros/Macros.h"
 #include "FlecsEntityHandle.generated.h"
 
@@ -62,6 +63,8 @@ public:
 	FORCEINLINE void Set(const FFlecsEntityHandle& InEntity, const void* InValue) const { GetEntity().set(InEntity, InValue); }
 
 	void Set(UScriptStruct* StructType, const void* InValue) const;
+
+	void Set(const FInstancedStruct& InValue) const;
 
 	FORCEINLINE void Clear() const { GetEntity().clear(); }
 
