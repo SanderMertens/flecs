@@ -15,12 +15,22 @@
 #include "SolidMacros/Concepts/SolidConcepts.h"
 #include "SolidMacros/Standard/Hashing.h"
 #include "Subsystems/WorldSubsystem.h"
-#include "General/UnLog/Unlog.h"
 #include "FlecsWorldSubsystem.generated.h"
 
-UNLOG_CATEGORY(FlecsWorldSubsystemLogCategory)
-
 const FName DEFAULT_FLECS_WORLD_NAME = "DefaultFlecsWorld";
+
+USTRUCT(BlueprintType)
+struct FFlecsRestSettings
+{
+	GENERATED_BODY()
+	
+	UPROPERTY(EditAnywhere, Category = "Flecs | REST API",
+		meta = (ClampMin = "0", ClampMax = "65535", UIMin = "0", UIMax = "65535"))
+	int32 Port = 27750;
+
+	UPROPERTY(EditAnywhere, Category = "Flecs | REST API")
+	FString IPAddress = "0.0.0.0";
+}; // struct FFlecsRestSettings
 
 UCLASS(BlueprintType)
 class UNREALFLECS_API UFlecsWorldSubsystem final : public UTickableWorldSubsystem
@@ -46,11 +56,7 @@ public:
 	{
 		for (FFlecsWorld& World : Worlds)
 		{
-			const bool bResult = World->progress(DeltaTime);
-			UN_LOG(FlecsWorldSubsystemLogCategory, Verbose,
-				"UFlecsWorldSubsystem::Tick: World %s progress result: %d", *World->get<FName>()->ToString(), bResult);
-
-			if (bResult)
+			if (World->progress(DeltaTime))
 			{
 				World->merge();
 			}
@@ -62,9 +68,6 @@ public:
 	{
 		if UNLIKELY_IF(ScriptStruct == nullptr)
 		{
-			UN_LOG(FlecsWorldSubsystemLogCategory, Error,
-				"UFlecsWorldSubsystem::RegisterScriptStruct: ScriptStruct is nullptr");
-			
 			return FFlecsEntityHandle();
 		}
 		
@@ -94,7 +97,6 @@ public:
 	{
 		if UNLIKELY_IF(ScriptClass == nullptr)
 		{
-			UN_LOG(FlecsWorldSubsystemLogCategory, Error, "UFlecsWorldSubsystem::RegisterScriptClass: ScriptClass is nullptr");
 			return FFlecsEntityHandle();
 		}
 		
@@ -135,15 +137,18 @@ public:
 		checkf(Name != NAME_None, TEXT("World name cannot be NAME_None"));
 		
 		flecs::world NewWorld = flecs::world();
-		FFlecsWorld World(NewWorld);
+		FFlecsWorld NewFlecsWorld(NewWorld);
 		
-		Worlds.emplace_back(World);
 		WorldNameMap[Name] = &Worlds.back();
 
-		World->set<FName>(Name);
-		World->set_ctx(this);
+		NewFlecsWorld.GetFlecsWorld().set<FName>(Name);
+		NewFlecsWorld.GetFlecsWorld().set_ctx(this);
 
-		World->set_automerge(Settings.bAutoMerge);
+		NewFlecsWorld.GetFlecsWorld().set_automerge(Settings.bAutoMerge);
+
+		NewFlecsWorld.GetFlecsWorld().init_builtin_components();
+
+		Worlds.emplace_back(NewFlecsWorld);
 		
 		return Worlds.back();
 	}
@@ -160,6 +165,18 @@ public:
 		GetFlecsWorld(WorldName)->import<T>();
 	}
 
+	UFUNCTION(BlueprintCallable, Category = "Flecs")
+	void ImportRestModule(const FName& WorldName, const bool bUseMonitoring, const FFlecsRestSettings& Settings) const
+	{
+		Set<flecs::Rest>(WorldName,
+				{ static_cast<uint16>(Settings.Port), TCHAR_TO_ANSI(*Settings.IPAddress) });
+
+		if (bUseMonitoring)
+		{
+			ImportModule<flecs::monitor>(WorldName);
+		}
+	}
+
 	UFUNCTION(BlueprintCallable, Category = "Flecs", BlueprintPure = false)
 	void SetAutoMerge(const FName& Name, const bool bAutoMerge) const
 	{
@@ -169,7 +186,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
 	void DestroyWorldByName(const FName& Name)
 	{
-		WorldNameMap.at(Name)->GetWorld().init_builtin_components();
 		WorldNameMap.erase(Name);
 	}
 
@@ -196,6 +212,12 @@ public:
 		return *WorldNameMap.at(Name);
 	}
 
+	UFUNCTION(BlueprintCallable, Category = "Flecs")
+	static FName GetWorldName(const FFlecsWorld& World)
+	{
+		return *World->get<FName>();
+	}
+	
 	UFUNCTION(BlueprintCallable, Category = "Flecs", Meta = (WorldContext = "WorldContextObject"))
 	static FFlecsWorld& GetWorldStatic(UObject* WorldContextObject, const FName& Name)
 	{
@@ -208,6 +230,34 @@ public:
 	{
 		return GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull)
 		              ->GetSubsystem<UFlecsWorldSubsystem>()->GetFlecsWorld(DEFAULT_FLECS_WORLD_NAME);
+	}
+
+	// Sets a Singleton component in the world
+	template <typename T>
+	FORCEINLINE void Set(const FName& WorldName, const T& Value) const
+	{
+		GetFlecsWorld(WorldName)->set<T>(Value);
+	}
+
+	// Gets a Singleton component from the world
+	template <typename T>
+	FORCEINLINE NO_DISCARD T Get(const FName& WorldName) const
+	{
+		return GetFlecsWorld(WorldName)->get<T>();
+	}
+
+	// Checks if world has a Singleton component
+	template <typename T>
+	FORCEINLINE NO_DISCARD bool Has(const FName& WorldName) const
+	{
+		return GetFlecsWorld(WorldName)->has<T>();
+	}
+
+	// Removes a Singleton component from the world
+	template <typename T>
+	FORCEINLINE void Remove(const FName& WorldName) const
+	{
+		GetFlecsWorld(WorldName)->remove<T>();
 	}
 	
 	bool DoesSupportWorldType(const EWorldType::Type WorldType) const override

@@ -18,11 +18,11 @@ public:
 
 	void SetWorld(flecs::world& InWorld) { World = &InWorld; }
 
-	flecs::world& GetWorld() { return *World; }
-	const flecs::world& GetWorld() const { return *World; }
+	flecs::world& GetFlecsWorld() { return *World; }
+	const flecs::world& GetFlecsWorld() const { return *World; }
 
-	operator flecs::world&() { return GetWorld(); }
-	operator const flecs::world&() const { return GetWorld(); }
+	operator flecs::world&() { return GetFlecsWorld(); }
+	operator const flecs::world&() const { return GetFlecsWorld(); }
 
 	bool IsValid() const { return World != nullptr; }
 
@@ -31,8 +31,8 @@ public:
 	flecs::world* operator->() { return World; }
 	const flecs::world* operator->() const { return World; }
 
-	flecs::world& operator*() { return GetWorld(); }
-	const flecs::world& operator*() const { return GetWorld(); }
+	flecs::world& operator*() { return GetFlecsWorld(); }
+	const flecs::world& operator*() const { return GetFlecsWorld(); }
 
 	bool operator==(const FFlecsWorld& Other) const
 	{

@@ -10,9 +10,6 @@ struct FFlecsScriptClassComponent
 {
     GENERATED_BODY()
 
-public:
-    
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs")
     TSubclassOf<UObject> ScriptClass;
-    
 }; // struct FFlecsScriptClassComponent
