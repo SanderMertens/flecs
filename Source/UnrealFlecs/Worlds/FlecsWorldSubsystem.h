@@ -69,25 +69,25 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
 	bool HasScriptStruct(UScriptStruct* ScriptStruct) const
 	{
-		return ScriptStructMap.Contains(ScriptStruct);
+		return ScriptStructMap.contains(ScriptStruct);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
 	bool HasScriptClass(const TSubclassOf<UObject> ScriptClass) const
 	{
-		return ScriptClassMap.Contains(ScriptClass);
+		return ScriptClassMap.contains(ScriptClass);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
 	FFlecsEntityHandle GetScriptStructEntity(UScriptStruct* ScriptStruct) const
 	{
-		return ScriptStructMap[ScriptStruct];
+		return ScriptStructMap.at(ScriptStruct);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
 	FFlecsEntityHandle GetScriptClassEntity(const TSubclassOf<UObject> ScriptClass) const
 	{
-		return ScriptClassMap[ScriptClass];
+		return ScriptClassMap.at(ScriptClass);
 	}
 
 	template <Solid::TStaticStructConcept T>
@@ -135,7 +135,7 @@ public:
 			                                         });
 
 		const FFlecsEntityHandle Handle(ScriptStructComponent);
-		ScriptStructMap.Add(ScriptStruct, Handle);
+		ScriptStructMap.emplace(ScriptStruct, Handle);
 		return Handle;
 	}
 
@@ -166,7 +166,7 @@ public:
 			                                        });
 
 		const FFlecsEntityHandle Handle(ScriptClassComponent);
-		ScriptClassMap.Add(ScriptClass, Handle);
+		ScriptClassMap.emplace(ScriptClass, Handle);
 		return Handle;
 	}
 
@@ -328,6 +328,6 @@ protected:
 	std::vector<FFlecsWorld> Worlds;
 	std::unordered_map<FName, FFlecsWorld*> WorldNameMap;
 	
-	TMap<FFlecsScriptStructComponent, FFlecsEntityHandle> ScriptStructMap;
-	TMap<FFlecsScriptClassComponent, FFlecsEntityHandle> ScriptClassMap;
+	std::unordered_map<FFlecsScriptStructComponent, FFlecsEntityHandle> ScriptStructMap;
+	std::unordered_map<FFlecsScriptClassComponent, FFlecsEntityHandle> ScriptClassMap;
 }; // class UFlecsWorldSubsystem

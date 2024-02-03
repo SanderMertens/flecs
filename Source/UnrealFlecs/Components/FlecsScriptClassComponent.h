@@ -33,3 +33,13 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs")
     TSubclassOf<UObject> ScriptClass;
 }; // struct FFlecsScriptClassComponent
+
+template<>
+struct std::hash<FFlecsScriptClassComponent>
+{
+    std::size_t operator()(const FFlecsScriptClassComponent& InScriptClassComponent) const NOEXCEPT
+    {
+        return GetTypeHash(InScriptClassComponent);
+    }
+};
+

@@ -44,6 +44,8 @@ public:
 	template <typename T>
 	FORCEINLINE void Set(const T& InValue) const { GetEntity().template set<T>(InValue); }
 
+	FORCEINLINE void Set(const FFlecsEntityHandle& InEntity, const void* InValue) const { GetEntity().set(InEntity, InValue); }
+
 	FORCEINLINE void Clear() const { GetEntity().clear(); }
 
 	FORCEINLINE void Enable() const { GetEntity().enable(); }
