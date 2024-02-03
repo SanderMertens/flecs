@@ -14,5 +14,4 @@ struct FFlecsFilter
 public:
 
 private:
-    flecs::filter<>
 }; // struct FFlecsFilter
