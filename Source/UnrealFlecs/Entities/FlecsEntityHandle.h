@@ -4,9 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "flecs.h"
-#include "Macros.h"
-#include "Worlds/FlecsWorld.h"
+#include "SolidMacros/Macros.h"
 #include "FlecsEntityHandle.generated.h"
+
+class UFlecsWorldSubsystem;
+struct FFlecsWorld;
 
 USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsEntityHandle
@@ -25,8 +27,9 @@ public:
 	FORCEINLINE NO_DISCARD bool IsValid() const { return GetEntity().is_valid(); }
 	FORCEINLINE NO_DISCARD bool IsAlive() const { return GetEntity().is_alive(); }
 
-	FORCEINLINE NO_DISCARD flecs::world GetWorld() const { return GetEntity().world(); }
-	
+	NO_DISCARD UFlecsWorldSubsystem* GetFlecsWorldSubsystem() const;
+	NO_DISCARD FFlecsWorld& GetFlecsWorld() const;
+
 	FORCEINLINE NO_DISCARD flecs::type GetType() const { return GetEntity().type(); }
 
 	FORCEINLINE NO_DISCARD bool Has(const FFlecsEntityHandle& InEntity) const { return GetEntity().has(InEntity); }
@@ -34,12 +37,18 @@ public:
 	template <typename T>
 	FORCEINLINE NO_DISCARD bool Has() const { return GetEntity().has<T>(); }
 
+	NO_DISCARD bool Has(UScriptStruct* StructType) const;
+
 	FORCEINLINE void Add(const FFlecsEntityHandle& InEntity) const { GetEntity().add(InEntity); }
 
+	void Add(UScriptStruct* StructType) const;
+	
 	template <typename T>
 	FORCEINLINE void Add() const { GetEntity().template add<T>(); }
 	
 	FORCEINLINE void Remove(const FFlecsEntityHandle& InEntity) const { GetEntity().remove(InEntity); }
+
+	void Remove(UScriptStruct* StructType) const;
 
 	template <typename T>
 	FORCEINLINE void Remove() const { GetEntity().template remove<T>(); }
@@ -50,6 +59,8 @@ public:
 	FORCEINLINE void Set(const T& InValue) const { GetEntity().template set<T>(InValue); }
 
 	FORCEINLINE void Set(const FFlecsEntityHandle& InEntity, const void* InValue) const { GetEntity().set(InEntity, InValue); }
+
+	void Set(UScriptStruct* StructType, const void* InValue) const;
 
 	FORCEINLINE void Clear() const { GetEntity().clear(); }
 
@@ -86,11 +97,6 @@ public:
 	FORCEINLINE NO_DISCARD bool IsPair() const
 	{
 		return GetEntity().is_pair();
-	}
-
-	FORCEINLINE void SetFlag(const FFlecsEntityHandle& InFlag) const
-	{
-		
 	}
 
 	bool operator==(const FFlecsEntityHandle& Other) const

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Standard/Hashing.h"
 #include "FlecsScriptClassComponent.generated.h"
 
 USTRUCT(BlueprintType)
@@ -26,20 +27,12 @@ struct FFlecsScriptClassComponent
     }
 
     FORCEINLINE operator TSubclassOf<UObject>() const { return ScriptClass.Get(); }
-
-public:
+    
     FORCEINLINE FFlecsScriptClassComponent(const TSubclassOf<UObject> InScriptClass = nullptr) : ScriptClass(InScriptClass) {}
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs")
     TSubclassOf<UObject> ScriptClass;
 }; // struct FFlecsScriptClassComponent
 
-template<>
-struct std::hash<FFlecsScriptClassComponent>
-{
-    std::size_t operator()(const FFlecsScriptClassComponent& InScriptClassComponent) const NOEXCEPT
-    {
-        return GetTypeHash(InScriptClassComponent);
-    }
-}; // struct std::hash<FFlecsScriptClassComponent>
+DEFINE_STD_HASH(FFlecsScriptClassComponent)
 

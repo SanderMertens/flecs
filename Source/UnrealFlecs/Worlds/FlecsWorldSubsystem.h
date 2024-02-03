@@ -116,7 +116,7 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	FFlecsEntityHandle RegisterScriptStruct(UScriptStruct* ScriptStruct)
+	FFlecsEntityHandle RegisterScriptStruct(UScriptStruct* ScriptStruct) const
 	{
 		if UNLIKELY_IF(ScriptStruct == nullptr)
 		{
@@ -141,13 +141,13 @@ public:
 	}
 
 	template <Solid::TStaticStructConcept T>
-	FFlecsEntityHandle RegisterScriptStruct()
+	FFlecsEntityHandle RegisterScriptStruct() const
 	{
 		return RegisterScriptStruct(T::StaticStruct());
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	FFlecsEntityHandle RegisterScriptClass(TSubclassOf<UObject> ScriptClass)
+	FFlecsEntityHandle RegisterScriptClass(TSubclassOf<UObject> ScriptClass) const
 	{
 		if UNLIKELY_IF(ScriptClass == nullptr)
 		{
@@ -172,7 +172,7 @@ public:
 	}
 
 	template <Solid::TStaticClassConcept T>
-	FFlecsEntityHandle RegisterScriptClass()
+	FFlecsEntityHandle RegisterScriptClass() const
 	{
 		return RegisterScriptClass(T::StaticClass());
 	}
@@ -184,6 +184,28 @@ public:
 			.set<flecs::Component>({ Size, Alignment });
 
 		return FFlecsEntityHandle(Component);
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "Flecs")
+	FFlecsEntityHandle ObtainComponentTypeStruct(UScriptStruct* ScriptStruct) const
+	{
+		if (HasScriptStruct(ScriptStruct))
+		{
+			return GetScriptStructEntity(ScriptStruct);
+		}
+
+		return RegisterScriptStruct(ScriptStruct);
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "Flecs")
+	FFlecsEntityHandle ObtainComponentTypeClass(const TSubclassOf<UObject> ScriptClass) const
+	{
+		if (HasScriptClass(ScriptClass))
+		{
+			return GetScriptClassEntity(ScriptClass);
+		}
+
+		return RegisterScriptClass(ScriptClass);
 	}
 	
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
@@ -335,6 +357,6 @@ protected:
 	std::vector<FFlecsWorld> Worlds;
 	std::unordered_map<FName, FFlecsWorld*> WorldNameMap;
 	
-	std::unordered_map<FFlecsScriptStructComponent, FFlecsEntityHandle> ScriptStructMap;
-	std::unordered_map<FFlecsScriptClassComponent, FFlecsEntityHandle> ScriptClassMap;
+	mutable std::unordered_map<FFlecsScriptStructComponent, FFlecsEntityHandle> ScriptStructMap;
+	mutable std::unordered_map<FFlecsScriptClassComponent, FFlecsEntityHandle> ScriptClassMap;
 }; // class UFlecsWorldSubsystem
