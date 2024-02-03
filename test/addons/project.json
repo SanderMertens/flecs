@@ -1313,7 +1313,9 @@
                 "var_eq_after_var_0_src",
                 "2_or_w_eq_this",
                 "2_or_w_eq_lookup_var",
-                "3_or_w_eq_lookup_var"
+                "3_or_w_eq_lookup_var",
+                "unwritten_var_error_neq",
+                "unwritten_var_error_match"
             ]
         }, {
             "id": "RulesScopes",

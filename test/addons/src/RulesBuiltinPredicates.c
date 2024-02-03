@@ -3202,3 +3202,35 @@ void RulesBuiltinPredicates_3_or_w_eq_lookup_var(void) {
 
     ecs_fini(world);
 }
+
+void RulesBuiltinPredicates_unwritten_var_error_neq(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_log_set_level(-4);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "(ChildOf, $p), $q != \"e\""
+    });
+
+    test_assert(r == NULL);
+
+    ecs_fini(world);
+}
+
+void RulesBuiltinPredicates_unwritten_var_error_match(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_log_set_level(-4);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "(ChildOf, $p), $q ~= \"e\""
+    });
+
+    test_assert(r == NULL);
+
+    ecs_fini(world);
+}

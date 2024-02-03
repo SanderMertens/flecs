@@ -1287,6 +1287,8 @@ void RulesBuiltinPredicates_var_eq_after_var_0_src(void);
 void RulesBuiltinPredicates_2_or_w_eq_this(void);
 void RulesBuiltinPredicates_2_or_w_eq_lookup_var(void);
 void RulesBuiltinPredicates_3_or_w_eq_lookup_var(void);
+void RulesBuiltinPredicates_unwritten_var_error_neq(void);
+void RulesBuiltinPredicates_unwritten_var_error_match(void);
 
 // Testsuite 'RulesScopes'
 void RulesScopes_term_w_not_scope_1_term(void);
@@ -6909,6 +6911,14 @@ bake_test_case RulesBuiltinPredicates_testcases[] = {
     {
         "3_or_w_eq_lookup_var",
         RulesBuiltinPredicates_3_or_w_eq_lookup_var
+    },
+    {
+        "unwritten_var_error_neq",
+        RulesBuiltinPredicates_unwritten_var_error_neq
+    },
+    {
+        "unwritten_var_error_match",
+        RulesBuiltinPredicates_unwritten_var_error_match
     }
 };
 
@@ -9099,7 +9109,7 @@ static bake_test_suite suites[] = {
         "RulesBuiltinPredicates",
         NULL,
         NULL,
-        76,
+        78,
         RulesBuiltinPredicates_testcases
     },
     {

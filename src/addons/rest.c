@@ -6,6 +6,7 @@
 #include "../private_api.h"
 
 #ifdef FLECS_REST
+#include "json/json.h"
 
 static ECS_TAG_DECLARE(EcsRestPlecs);
 
@@ -493,6 +494,53 @@ bool flecs_rest_reply_query(
     return true;
 }
 
+static
+bool flecs_rest_reply_query_plan(
+    ecs_world_t *world,
+    const ecs_http_request_t* req,
+    ecs_http_reply_t *reply)
+{
+    const char *q_name = ecs_http_get_param(req, "name");
+    if (q_name) {
+        reply->code = 400;
+        ecs_strbuf_appendlit(&reply->body, 
+            "query plan endpoint unsupported for named queries");
+        return true;
+    }
+
+    const char *q = ecs_http_get_param(req, "q");
+    if (!q) {
+        ecs_strbuf_appendlit(&reply->body, "Missing parameter 'q'");
+        reply->code = 400; /* bad request */
+        return true;
+    }
+
+    ecs_dbg_2("rest: request query '%s'", q);
+    bool prev_color = ecs_log_enable_colors(false);
+    rest_prev_log = ecs_os_api.log_;
+    ecs_os_api.log_ = flecs_rest_capture_log;
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
+        .expr = q
+    });
+    if (!r) {
+        flecs_rest_reply_set_captured_log(reply);
+    } else {
+        ecs_log_enable_colors(true);
+        char *plan = ecs_rule_str(r);
+        ecs_strbuf_appendlit(&reply->body, "{\"content\":");
+        flecs_json_string_escape(&reply->body, plan);
+        ecs_strbuf_appendlit(&reply->body, "}");
+        ecs_os_free(plan);
+        ecs_rule_fini(r);
+    }
+
+    ecs_os_api.log_ = rest_prev_log;
+    ecs_log_enable_colors(prev_color);
+
+    return true;
+}
+
 #ifdef FLECS_MONITOR
 
 static
@@ -876,6 +924,10 @@ bool flecs_rest_reply(
         /* Query endpoint */
         } else if (!ecs_os_strcmp(req->path, "query")) {
             return flecs_rest_reply_query(world, req, reply);
+
+        /* Query plan endpoint */
+        } else if (!ecs_os_strcmp(req->path, "query_plan")) {
+            return flecs_rest_reply_query_plan(world, req, reply);
 
         /* World endpoint */
         } else if (!ecs_os_strcmp(req->path, "world")) {

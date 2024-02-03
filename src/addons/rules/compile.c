@@ -1276,6 +1276,18 @@ int flecs_rule_compile_builtin_pred(
         }
     }
 
+    if (!(write_state & (1ull << op->first.var))) {
+        /* If this is an == operator with a right-hand side that resolves to a
+         * single entity, the left-hand side is allowed to be undefined, as the
+         * instruction will be evaluated as an assignment. */
+        if (op->kind != EcsRulePredEq && op->kind != EcsRulePredEqName) {
+            ecs_err("uninitialized variable '%s' on left-hand side of "
+                "equality operator", 
+                    ecs_rule_var_name(rule, op->first.var));
+            return -1;
+        }
+    }
+
     return 0;
 }
 
