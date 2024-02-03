@@ -23,6 +23,9 @@ USTRUCT(BlueprintType)
 struct FFlecsRestSettings
 {
 	GENERATED_BODY()
+
+	/* Defaults Set according to flecs's defaults */
+	/* no this isn't bad grammar, it's a name */
 	
 	UPROPERTY(EditAnywhere, Category = "Flecs | REST API",
 		meta = (ClampMin = "0", ClampMax = "65535", UIMin = "0", UIMax = "65535"))
@@ -64,7 +67,55 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	FFlecsEntityHandle RegisterScriptStruct(UScriptStruct* ScriptStruct) const
+	bool HasScriptStruct(UScriptStruct* ScriptStruct) const
+	{
+		return ScriptStructMap.Contains(ScriptStruct);
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "Flecs")
+	bool HasScriptClass(const TSubclassOf<UObject> ScriptClass) const
+	{
+		return ScriptClassMap.Contains(ScriptClass);
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "Flecs")
+	FFlecsEntityHandle GetScriptStructEntity(UScriptStruct* ScriptStruct) const
+	{
+		return ScriptStructMap[ScriptStruct];
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "Flecs")
+	FFlecsEntityHandle GetScriptClassEntity(const TSubclassOf<UObject> ScriptClass) const
+	{
+		return ScriptClassMap[ScriptClass];
+	}
+
+	template <Solid::TStaticStructConcept T>
+	FORCEINLINE NO_DISCARD FFlecsEntityHandle GetScriptStructEntity() const
+	{
+		return GetScriptStructEntity(T::StaticStruct());
+	}
+	
+	template <Solid::TStaticClassConcept T>
+	FORCEINLINE NO_DISCARD FFlecsEntityHandle GetScriptClassEntity() const
+	{
+		return GetScriptClassEntity(T::StaticClass());
+	}
+
+	template <Solid::TStaticStructConcept T>
+	FORCEINLINE NO_DISCARD bool HasScriptStruct() const
+	{
+		return HasScriptStruct(T::StaticStruct());
+	}
+
+	template <Solid::TStaticClassConcept T>
+	FORCEINLINE NO_DISCARD bool HasScriptClass() const
+	{
+		return HasScriptClass(T::StaticClass());
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "Flecs")
+	FFlecsEntityHandle RegisterScriptStruct(UScriptStruct* ScriptStruct)
 	{
 		if UNLIKELY_IF(ScriptStruct == nullptr)
 		{
@@ -83,7 +134,9 @@ public:
 				                                         ScriptStruct
 			                                         });
 
-		return FFlecsEntityHandle(ScriptStructComponent);
+		const FFlecsEntityHandle Handle(ScriptStructComponent);
+		ScriptStructMap.Add(ScriptStruct, Handle);
+		return Handle;
 	}
 
 	template <Solid::TStaticStructConcept T>
@@ -93,7 +146,7 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	FFlecsEntityHandle RegisterScriptClass(TSubclassOf<UObject> ScriptClass) const
+	FFlecsEntityHandle RegisterScriptClass(TSubclassOf<UObject> ScriptClass)
 	{
 		if UNLIKELY_IF(ScriptClass == nullptr)
 		{
@@ -112,7 +165,9 @@ public:
 				                                        ScriptClass
 			                                        });
 
-		return FFlecsEntityHandle(ScriptClassComponent);
+		const FFlecsEntityHandle Handle(ScriptClassComponent);
+		ScriptClassMap.Add(ScriptClass, Handle);
+		return Handle;
 	}
 
 	template <Solid::TStaticClassConcept T>
@@ -165,16 +220,22 @@ public:
 		GetFlecsWorld(WorldName)->import<T>();
 	}
 
-	UFUNCTION(BlueprintCallable, Category = "Flecs")
+	UFUNCTION(BlueprintCallable, Category = "Flecs | REST API")
 	void ImportRestModule(const FName& WorldName, const bool bUseMonitoring, const FFlecsRestSettings& Settings) const
 	{
-		Set<flecs::Rest>(WorldName,
+		SetSingleton<flecs::Rest>(WorldName,
 				{ static_cast<uint16>(Settings.Port), TCHAR_TO_ANSI(*Settings.IPAddress) });
 
 		if (bUseMonitoring)
 		{
-			ImportModule<flecs::monitor>(WorldName);
+			ImportMonitoringModule(WorldName);
 		}
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "Flecs")
+	void ImportMonitoringModule(const FName& WorldName) const
+	{
+		ImportModule<flecs::monitor>(WorldName);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs", BlueprintPure = false)
@@ -203,6 +264,8 @@ public:
 				break;
 			}
 		}
+
+		delete WorldPtr;
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
@@ -221,41 +284,37 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs", Meta = (WorldContext = "WorldContextObject"))
 	static FFlecsWorld& GetWorldStatic(UObject* WorldContextObject, const FName& Name)
 	{
-		return GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull)
+		return GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::Assert)
 		              ->GetSubsystem<UFlecsWorldSubsystem>()->GetFlecsWorld(Name);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs", Meta = (WorldContext = "WorldContextObject"))
 	static FFlecsWorld& GetDefaultWorld(const UObject* WorldContextObject)
 	{
-		return GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull)
+		return GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::Assert)
 		              ->GetSubsystem<UFlecsWorldSubsystem>()->GetFlecsWorld(DEFAULT_FLECS_WORLD_NAME);
 	}
-
-	// Sets a Singleton component in the world
+	
 	template <typename T>
-	FORCEINLINE void Set(const FName& WorldName, const T& Value) const
+	FORCEINLINE void SetSingleton(const FName& WorldName, const T& Value) const
 	{
 		GetFlecsWorld(WorldName)->set<T>(Value);
 	}
-
-	// Gets a Singleton component from the world
+	
 	template <typename T>
-	FORCEINLINE NO_DISCARD T Get(const FName& WorldName) const
+	FORCEINLINE NO_DISCARD T GetSingleton(const FName& WorldName) const
 	{
 		return GetFlecsWorld(WorldName)->get<T>();
 	}
-
-	// Checks if world has a Singleton component
+	
 	template <typename T>
-	FORCEINLINE NO_DISCARD bool Has(const FName& WorldName) const
+	FORCEINLINE NO_DISCARD bool HasSingleton(const FName& WorldName) const
 	{
 		return GetFlecsWorld(WorldName)->has<T>();
 	}
-
-	// Removes a Singleton component from the world
+	
 	template <typename T>
-	FORCEINLINE void Remove(const FName& WorldName) const
+	FORCEINLINE void RemoveSingleton(const FName& WorldName) const
 	{
 		GetFlecsWorld(WorldName)->remove<T>();
 	}
@@ -268,4 +327,7 @@ public:
 protected:
 	std::vector<FFlecsWorld> Worlds;
 	std::unordered_map<FName, FFlecsWorld*> WorldNameMap;
+	
+	TMap<FFlecsScriptStructComponent, FFlecsEntityHandle> ScriptStructMap;
+	TMap<FFlecsScriptClassComponent, FFlecsEntityHandle> ScriptClassMap;
 }; // class UFlecsWorldSubsystem
