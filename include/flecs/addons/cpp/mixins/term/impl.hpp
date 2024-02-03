@@ -81,7 +81,7 @@ struct term final : term_builder_i<term> {
         this->set_term(&value);
     }
 
-    term(term&& t) : term_builder_i<term>(&value) {
+    term(term&& t) noexcept : term_builder_i<term>(&value) {
         m_world = t.m_world;
         value = ecs_term_move(&t.value);
         t.reset();
@@ -96,7 +96,7 @@ struct term final : term_builder_i<term> {
         return *this;
     }
 
-    term& operator=(term&& t) {
+    term& operator=(term&& t) noexcept {
         ecs_assert(m_world == t.m_world, ECS_INVALID_PARAMETER, NULL);
         ecs_term_fini(&value);
         value = t.value;

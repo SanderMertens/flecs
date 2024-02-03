@@ -59,7 +59,7 @@ public:
         this->value = obj.value;
     }
 
-    Pod(Pod&& obj) {
+    Pod(Pod&& obj) noexcept {
         move_ctor_invoked ++;
         this->value = obj.value;
     }
@@ -70,7 +70,7 @@ public:
         return *this;
     }
 
-    Pod& operator=(Pod&& obj) {
+    Pod& operator=(Pod&& obj) noexcept {
         move_invoked ++;
         this->value = obj.value;
         return *this;
@@ -317,7 +317,7 @@ public:
         this->value = obj.value;
     }
 
-    CountNoDefaultCtor(CountNoDefaultCtor&& obj) {
+    CountNoDefaultCtor(CountNoDefaultCtor&& obj) noexcept {
         move_ctor_invoked ++;
         this->value = obj.value;
     }
@@ -328,7 +328,7 @@ public:
         return *this;
     }
 
-    CountNoDefaultCtor& operator=(CountNoDefaultCtor&& obj) {
+    CountNoDefaultCtor& operator=(CountNoDefaultCtor&& obj) noexcept {
         move_invoked ++;
         this->value = obj.value;
         return *this;

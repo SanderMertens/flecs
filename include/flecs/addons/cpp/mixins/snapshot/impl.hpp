@@ -19,7 +19,7 @@ struct snapshot final {
         m_snapshot = ecs_snapshot_take_w_iter(&it);
     }
 
-    snapshot(snapshot&& obj) 
+    snapshot(snapshot&& obj) noexcept
         : m_world(obj.m_world)
         , m_snapshot(obj.m_snapshot)
     {
@@ -33,7 +33,7 @@ struct snapshot final {
         return *this;
     }
 
-    snapshot& operator=(snapshot&& obj) {
+    snapshot& operator=(snapshot&& obj) noexcept {
         ecs_assert(m_world.c_ptr() == obj.m_world.c_ptr(), ECS_INVALID_PARAMETER, NULL);
         m_snapshot = obj.m_snapshot;
         obj.m_snapshot = nullptr;

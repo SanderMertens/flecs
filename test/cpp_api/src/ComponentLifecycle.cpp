@@ -1045,7 +1045,7 @@ public:
     CtorDtor_w_MoveAssign(CtorDtor_w_MoveAssign&& obj) = default;
     CtorDtor_w_MoveAssign& operator=(const CtorDtor_w_MoveAssign& obj) = default;
 
-    CtorDtor_w_MoveAssign& operator=(CtorDtor_w_MoveAssign&& obj) {
+    CtorDtor_w_MoveAssign& operator=(CtorDtor_w_MoveAssign&& obj) noexcept {
         move_value = this->x_;
 
         this->x_ = obj.x_;

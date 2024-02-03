@@ -16385,7 +16385,7 @@ struct string {
         }
     }
 
-    string(string&& str) {
+    string(string&& str) noexcept {
         ecs_os_free(m_str);
         m_str = str.m_str;
         m_const_str = str.m_const_str;
@@ -16397,7 +16397,7 @@ struct string {
         return m_const_str;
     }
 
-    string& operator=(string&& str) {
+    string& operator=(string&& str) noexcept {
         ecs_os_free(m_str);
         m_str = str.m_str;
         m_const_str = str.m_const_str;
@@ -16815,13 +16815,13 @@ struct stringstream {
         ecs_strbuf_reset(&m_buf);
     }
 
-    stringstream(stringstream&& str) {
+    stringstream(stringstream&& str) noexcept {
         ecs_strbuf_reset(&m_buf);
         m_buf = str.m_buf;
         str.m_buf = {};
     }
 
-    stringstream& operator=(stringstream&& str) {
+    stringstream& operator=(stringstream&& str) noexcept {
         ecs_strbuf_reset(&m_buf);
         m_buf = str.m_buf;
         str.m_buf = {};
@@ -19717,7 +19717,7 @@ struct world {
      */
     world(const world& obj) = delete;
 
-    world(world&& obj) {
+    world(world&& obj) noexcept {
         m_world = obj.m_world;
         m_owned = obj.m_owned;
         obj.m_world = nullptr;
@@ -19731,7 +19731,7 @@ struct world {
      */
     world& operator=(const world& obj) = delete;
 
-    world& operator=(world&& obj) {
+    world& operator=(world&& obj) noexcept {
         this->~world();
 
         m_world = obj.m_world;
@@ -27971,7 +27971,7 @@ struct term final : term_builder_i<term> {
         this->set_term(&value);
     }
 
-    term(term&& t) : term_builder_i<term>(&value) {
+    term(term&& t) noexcept : term_builder_i<term>(&value) {
         m_world = t.m_world;
         value = ecs_term_move(&t.value);
         t.reset();
@@ -27986,7 +27986,7 @@ struct term final : term_builder_i<term> {
         return *this;
     }
 
-    term& operator=(term&& t) {
+    term& operator=(term&& t) noexcept {
         ecs_assert(m_world == t.m_world, ECS_INVALID_PARAMETER, NULL);
         ecs_term_fini(&value);
         value = t.value;
@@ -28117,7 +28117,7 @@ public:
         m_desc = f.m_desc;
     }
 
-    builder(builder&& f) 
+    builder(builder&& f)  noexcept
         : builder<T, TDesc, Base, IBuilder, Components...>(f) { }
 
     operator TDesc*() {
@@ -28497,7 +28497,7 @@ struct filter_base {
         return *this; 
     }
 
-    filter_base(filter_base&& obj) {
+    filter_base(filter_base&& obj) noexcept {
         this->m_world = obj.m_world;
         if (obj.m_filter_ptr) {
             this->m_filter_ptr = &this->m_filter;
@@ -28507,7 +28507,7 @@ struct filter_base {
         ecs_filter_move(&m_filter, &obj.m_filter);
     }
 
-    filter_base& operator=(filter_base&& obj) {
+    filter_base& operator=(filter_base&& obj) noexcept {
         this->m_world = obj.m_world;
         if (obj.m_filter_ptr) {
             this->m_filter_ptr = &this->m_filter;
@@ -28581,9 +28581,9 @@ public:
         return *this;
     }
 
-    filter(filter&& obj) : filter_base(FLECS_MOV(obj)) { }
+    filter(filter&& obj) noexcept : filter_base(FLECS_MOV(obj)) { }
 
-    filter& operator=(filter&& obj) {
+    filter& operator=(filter&& obj) noexcept {
         filter_base::operator=(FLECS_FWD(obj));
         return *this;
     }
@@ -30232,7 +30232,7 @@ struct snapshot final {
         m_snapshot = ecs_snapshot_take_w_iter(&it);
     }
 
-    snapshot(snapshot&& obj) 
+    snapshot(snapshot&& obj) noexcept
         : m_world(obj.m_world)
         , m_snapshot(obj.m_snapshot)
     {
@@ -30246,7 +30246,7 @@ struct snapshot final {
         return *this;
     }
 
-    snapshot& operator=(snapshot&& obj) {
+    snapshot& operator=(snapshot&& obj) noexcept {
         ecs_assert(m_world.c_ptr() == obj.m_world.c_ptr(), ECS_INVALID_PARAMETER, NULL);
         m_snapshot = obj.m_snapshot;
         obj.m_snapshot = nullptr;

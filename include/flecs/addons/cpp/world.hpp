@@ -154,7 +154,7 @@ struct world {
      */
     world(const world& obj) = delete;
 
-    world(world&& obj) {
+    world(world&& obj) noexcept {
         m_world = obj.m_world;
         m_owned = obj.m_owned;
         obj.m_world = nullptr;
@@ -168,7 +168,7 @@ struct world {
      */
     world& operator=(const world& obj) = delete;
 
-    world& operator=(world&& obj) {
+    world& operator=(world&& obj) noexcept {
         this->~world();
 
         m_world = obj.m_world;
