@@ -142,6 +142,9 @@ This section contains an overview of all the different concepts in Flecs and how
 
 ### World
 The world is the container for all ECS data. It stores the entities and their components, does queries and runs systems. Typically there is only a single world, but there is no limit on the number of worlds an application can create.
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
 
 ```c
 ecs_world_t *world = ecs_init();
@@ -150,14 +153,23 @@ ecs_world_t *world = ecs_init();
 
 ecs_fini(world);
 ```
+</li>
+<li><b class="tab-title">C++</b>
+
 ```cpp
 flecs::world world;
 
 // Do the ECS stuff
 ```
+</li>
+</ul>
+</div>
 
 ### Entity
 An entity is a unique thing in the world, and is represented by a 64 bit id. Entities can be created and deleted. If an entity is deleted it is no longer considered "alive". A world can contain up to 4 billion(!) alive entities. Entity identifiers contain a few bits that make it possible to check whether an entity is alive or not.
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
 
 ```c
 ecs_entity_t e = ecs_new_id(world);
@@ -166,6 +178,9 @@ ecs_is_alive(world, e); // true!
 ecs_delete(world, e);
 ecs_is_alive(world, e); // false!
 ```
+</li>
+<li><b class="tab-title">C++</b>
+
 ```cpp
 auto e = world.entity();
 e.is_alive(); // true!
@@ -173,28 +188,50 @@ e.is_alive(); // true!
 e.destruct();
 e.is_alive(); // false!
 ```
+</li>
+</ul>
+</div>
 
-Entities can have names which makes it easier to identify them in an application. In C++ the name can be passed to the constructor. In C a name can be assigned with the `ecs_entity_init` function/`ecs_entity` macro. If a name is provided during entity creation time and an entity with that name already exists, the existing entity will be returned.
+Entities can have names which makes it easier to identify them in an application. In C++ the name can be passed to the constructor. If a name is provided during entity creation time and an entity with that name already exists, the existing entity will be returned.
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
 
+In C a name can be assigned with the `ecs_entity_init` function or `ecs_entity` macro. 
 ```c
 ecs_entity_t e = ecs_entity(world, { .name = "Bob" });
 
 printf("Entity name: %s\n", ecs_get_name(world, e));
 ```
+</li>
+<li><b class="tab-title">C++</b>
+
 ```cpp
 auto e = world.entity("Bob");
 
 std::cout << "Entity name: " << e.name() << std::endl;
 ```
+</li>
+</ul>
+</div>
 
 Entities can be looked up by name with the `lookup` function:
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
 
 ```c
 ecs_entity_t e = ecs_lookup(world, "Bob");
 ```
+</li>
+<li><b class="tab-title">C++</b>
+
 ```cpp
 auto e = world.lookup("Bob");
 ```
+</li>
+</ul>
+</div>
 
 ### Id
 An id is a 64 bit number that can encode anything that can be added to an entity. In flecs this can be either a component, tag or a pair. A component is data that can be added to an entity. A tag is an "empty" component. A pair is a combination of two component/tag ids which is used to encode entity relationships. All entity/component/tag identifiers are valid ids, but not all ids are valid entity identifier.
@@ -202,7 +239,10 @@ An id is a 64 bit number that can encode anything that can be added to an entity
 The following sections describe components, tags and pairs in more detail.
 
 ### Component
-A component is a type of which instances can be added and removed to entities. Each component can be added only once to an entity (though not really, see [Pair](#pair)). In C applications components must be registered before use. In C++ this happens automatically.
+A component is a type of which instances can be added and removed to entities. Each component can be added only once to an entity (though not really, see [Pair](#pair)). In C applications components must be registered before use. By default in C++ this happens automatically.
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
 
 ```c
 ECS_COMPONENT(world, Position);
@@ -225,6 +265,9 @@ const Position *p = ecs_get(world, e, Position);
 // Remove component
 ecs_remove(world, e, Position);
 ```
+</li>
+<li><b class="tab-title">C++</b>
+
 ```cpp
 auto e = world.entity();
 
@@ -243,9 +286,16 @@ const Position *p = e.get<Position>();
 // Remove component
 e.remove<Position>();
 ```
+</li>
+</ul>
+</div>
 
-Each component is associated by a unique entity identifier by Flecs. This makes it possible to inspect component data, or attach your own data to components. C applications can use the `ecs_id` macro to get the entity id for a component. C++ applications can use the `world::id` function:
+Each component is associated by a unique entity identifier by Flecs. This makes it possible to inspect component data, or attach your own data to components. 
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
 
+C applications can use the `ecs_id` macro to get the entity id for a component.
 ```c
 ECS_COMPONENT(world, Position);
 
@@ -255,6 +305,10 @@ printf("Name: %s\n", ecs_get_name(world, pos_e)); // outputs 'Name: Position'
 // It's possible to add components like you would for any entity
 ecs_add(world, pos_e, Serializable);
 ```
+</li>
+<li><b class="tab-title">C++</b>
+
+C++ applications can use the `world::entity` function.
 ```cpp
 flecs::entity pos_e = world.entity<Position>();
 std::cout << "Name: " << pos_e.name() << std::endl;  // outputs 'Name: Position'
@@ -262,8 +316,14 @@ std::cout << "Name: " << pos_e.name() << std::endl;  // outputs 'Name: Position'
 // It's possible to add components like you would for any entity
 pos_e.add<Serializable>();
 ```
+</li>
+</ul>
+</div>
 
 The thing that makes an ordinary entity a component is the `EcsComponent` (or `flecs::Component`, in C++) component. This is a builtin component that tells Flecs how much space is needed to store a component, and can be inspected by applications:
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
 
 ```c
 ECS_COMPONENT(world, Position);
@@ -273,17 +333,26 @@ ecs_entity_t pos_e = ecs_id(Position);
 const EcsComponent *c = ecs_get(world, pos_e, EcsComponent);
 printf("Component size: %u\n", c->size);
 ```
+</li>
+<li><b class="tab-title">C++</b>
+
 ```cpp
 flecs::entity pos_e = world.entity<Position>();
 
 const EcsComponent *c = pos_e.get<flecs::Component>();
 std::cout << "Component size: " << c->size << std::endl;
 ```
+</li>
+</ul>
+</div>
 
 Because components are stored as regular entities, they can in theory also be deleted. To prevent unexpected accidents however, by default components are registered with a tag that prevents them from being deleted. If this tag were to be removed, deleting a component would cause it to be removed from all entities. For more information on these policies, see [Relationship cleanup properties](Relationships.md#cleanup-properties).
 
 ### Tag
 A tag is a component that does not have any data. In Flecs tags can be either empty types (in C++) or regular entities (C & C++) that do not have the `EcsComponent` component (or have an `EcsComponent` component with size 0). Tags can be added & removed using the same APIs as adding & removing components, but because tags have no data, they cannot be assigned a value. Because tags (like components) are regular entities, they can be created & deleted at runtime.
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
 
 ```c
 // Create Enemy tag
@@ -298,6 +367,9 @@ ecs_has_id(world, e, Enemy); // true!
 ecs_remove_id(world, e, Enemy);
 ecs_has_id(world, e, Enemy); // false!
 ```
+</li>
+<li><b class="tab-title">C++</b>
+
 ```cpp
 // Option 1: create Tag as empty struct
 struct Enemy { };
@@ -320,6 +392,9 @@ e.has(Enemy); // true!
 e.remove(Enemy);
 e.has(Enemy); // false!
 ```
+</li>
+</ul>
+</div>
 
 Note that both options in the C++ example achieve the same effect. The only difference is that in option 1 the tag is fixed at compile time, whereas in option 2 the tag can be created dynamically at runtime.
 
@@ -327,6 +402,9 @@ When a tag is deleted, the same rules apply as for components (see [Relationship
 
 ### Pair
 A pair is a combination of two entity ids. Pairs can be used to store entity relationships, where the first id represents the relationship kind and the second id represents the relationship target (called "object"). This is best explained by an example:
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
 
 ```c
 // Create Likes relationship
@@ -343,6 +421,9 @@ ecs_has_pair(world, Bob, Likes, Alice); // true!
 ecs_remove_pair(world, Bob, Likes, Alice);
 ecs_has_pair(world, Bob, Likes, Alice); // false!
 ```
+</li>
+<li><b class="tab-title">C++</b>
+
 ```cpp
 // Create Likes relationship as empty type (tag)
 struct Likes { };
@@ -358,17 +439,32 @@ Bob.has<Likes>(Alice); // true!
 Bob.remove<Likes>(Alice);
 Bob.has<Likes>(Alice); // false!
 ```
+</li>
+</ul>
+</div>
 
 A pair can be encoded in a single 64 bit identifier by using the `ecs_pair` macro in C, or the `world.pair` function in C++:
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
 
 ```c
 ecs_id_t id = ecs_pair(Likes, Bob);
 ```
+</li>
+<li><b class="tab-title">C++</b>
+
 ```cpp
 flecs::id id = world.pair<Likes>(Bob);
 ```
+</li>
+</ul>
+</div>
 
 The following examples show how to get back the elements from a pair:
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
 
 ```c
 if (ecs_id_is_pair(id)) {
@@ -376,14 +472,24 @@ if (ecs_id_is_pair(id)) {
     ecs_entity_t target = ecs_pair_second(world, id);
 }
 ```
+</li>
+<li><b class="tab-title">C++</b>
+
 ```cpp
+flecs::id id = ...;
 if (id.is_pair()) {
     auto relationship = id.first();
     auto target = id.second();
 }
 ```
+</li>
+</ul>
+</div>
 
 A component or tag can be added multiple times to the same entity as long as it is part of a pair, and the pair itself is unique:
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
 
 ```c
 ecs_add_pair(world, Bob, Eats, Apples);
@@ -394,29 +500,49 @@ ecs_has_pair(world, Bob, Eats, Apples); // true!
 ecs_has_pair(world, Bob, Eats, Pears);  // true!
 ecs_has_pair(world, Bob, Grows, Pears); // true!
 ```
-```cpp
-Bob.add(Eats, Apples);
-Bob.add(Eats, Pears);
-Bob.add(Grows, Pears);
+</li>
+<li><b class="tab-title">C++</b>
 
-Bob.has(Eats, Apples); // true!
-Bob.has(Eats, Pears);  // true!
-Bob.has(Grows, Pears); // true!
+```cpp
+flecs::entity bob = ...;
+bob.add(Eats, Apples);
+bob.add(Eats, Pears);
+bob.add(Grows, Pears);
+
+bob.has(Eats, Apples); // true!
+bob.has(Eats, Pears);  // true!
+bob.has(Grows, Pears); // true!
 ```
+</li>
+</ul>
+</div>
 
 The `target` function can be used in C and C++ to get the object for a relationship:
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
 
 ```c
 ecs_entity_t o = ecs_get_target(world, Alice, Likes, 0); // Returns Bob
 ```
+</li>
+<li><b class="tab-title">C++</b>
+
 ```cpp
-auto o = Alice.target<Likes>(); // Returns Bob
+flecs::entity alice = ...;
+auto o = alice.target<Likes>(); // Returns Bob
 ```
+</li>
+</ul>
+</div>
 
 Entity relationships enable lots of interesting patterns and possibilities. Make sure to check out the [Relationships manual](Relationships.md).
 
 ### Hierarchies
 Flecs has builtin support for hierarchies with the builtin `EcsChildOf` (or `flecs::ChildOf`, in C++) relationship. A hierarchy can be created with the regular relationship API, or with the `child_of` shortcut in C++:
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
 
 ```c
 ecs_entity_t parent = ecs_new_id(world);
@@ -427,6 +553,9 @@ ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
 // Deleting the parent also deletes its children
 ecs_delete(world, parent);
 ```
+</li>
+<li><b class="tab-title">C++</b>
+
 ```cpp
 auto parent = world.entity();
 auto child = world.entity().child_of(parent);
@@ -434,8 +563,14 @@ auto child = world.entity().child_of(parent);
 // Deleting the parent also deletes its children
 parent.destruct();
 ```
+</li>
+</ul>
+</div>
 
 When entities have names, they can be used together with hierarchies to generate path names or do relative lookups:
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
 
 ```c
 ecs_entity_t parent = ecs_entity(world, {
@@ -455,6 +590,9 @@ ecs_os_free(path);
 ecs_lookup_path(world, 0, "parent.child"); // returns child
 ecs_lookup_path(world, parent, "child");   // returns child
 ```
+</li>
+<li><b class="tab-title">C++</b>
+
 ```cpp
 auto parent = world.entity("parent");
 auto child = world.entity("child").child_of(parent);
@@ -463,8 +601,14 @@ std::cout << child.path() << std::endl; // output: 'parent::child'
 world.lookup("parent::child"); // returns child
 parent.lookup("child"); // returns child
 ```
+</li>
+</ul>
+</div>
 
 Queries (see below) can use hierarchies to order data breadth-first, which can come in handy when you're implementing a transform system:
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
 
 ```c
 ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
@@ -486,6 +630,9 @@ while (ecs_query_next(&it)) {
     }
 }
 ```
+</li>
+<li><b class="tab-title">C++</b>
+
 ```cpp
 auto q = world.query_builder<Position, Position>()
     .term_at(2).parent().cascade()
@@ -495,9 +642,15 @@ q.each([](Position& p, Position& p_parent) {
     // Do the thing
 });
 ```
+</li>
+</ul>
+</div>
 
 ### Instancing
 Flecs has builtin support for instancing (sharing a single component with multiple entities) through the builtin `EcsIsA` relationship (`flecs::IsA` in C++). An entity with an `IsA` relationship to a base entity "inherits" all entities from that base:
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
 
 ```c
 // Shortcut to create entity & set a component
@@ -507,6 +660,9 @@ ecs_entity_t base = ecs_set(world, 0, Triangle, {{0, 0}, {1, 1}, {-1, -1}});
 ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
 const Triangle *t = ecs_get(world, e, Triangle); // gets Triangle from base
 ```
+</li>
+<li><b class="tab-title">C++</b>
+
 ```cpp
 auto base = world.entity().set<Triangle>({{0, 0}, {1, 1}, {-1, -1}});
 
@@ -514,22 +670,37 @@ auto base = world.entity().set<Triangle>({{0, 0}, {1, 1}, {-1, -1}});
 auto e = world.entity().is_a(base);
 const Triangle *t = e.get<Triangle>(); // gets Triangle from base
 ```
+</li>
+</ul>
+</div>
 
 Entities can override components from their base:
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
 
 ```c
 // Add private instance of Triangle to e, copy value from base
 ecs_add(world, e, Triangle);
 ```
+</li>
+<li><b class="tab-title">C++</b>
+
 ```cpp
 // Add private instance of Triangle to e, copy value from base
 e.add<Triangle>();
 ```
+</li>
+</ul>
+</div>
 
 Instancing can be used to build modular prefab hierarchies, as the foundation of a batched renderer with instancing support, or just to reduce memory footprint by sharing common data across entities.
 
 ### Type
 The type (often referred to as "archetype") is the list of ids an entity has. Types can be used for introspection which is useful when debugging, or when for example building an entity editor. The most common thing to do with a type is to convert it to text and print it:
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
 
 ```c
 ECS_COMPONENT(world, Position);
@@ -544,6 +715,9 @@ char *type_str = ecs_type_str(world, type);
 printf("Type: %s\n", type_str); // output: 'Position,Velocity'
 ecs_os_free(type_str);
 ```
+</li>
+<li><b class="tab-title">C++</b>
+
 ```cpp
 auto e = ecs.entity()
     .add<Position>()
@@ -551,8 +725,15 @@ auto e = ecs.entity()
 
 std::cout << e.type().str() << std::endl; // output: 'Position,Velocity'
 ```
+</li>
+</ul>
+</div>
 
 A type can also be iterated by an application:
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
 ```c
 const ecs_type_t *type = ecs_get_type(world, e);
 for (int i = 0; i < type->count; i++) {
@@ -561,6 +742,9 @@ for (int i = 0; i < type->count; i++) {
     }
 }
 ```
+</li>
+<li><b class="tab-title">C++</b>
+
 ```cpp
 e.each([&](flecs::id id) {
     if (id == world.id<Position>()) {
@@ -568,9 +752,15 @@ e.each([&](flecs::id id) {
     }
 });
 ```
+</li>
+</ul>
+</div>
 
 ### Singleton
 A singleton is a single instance of a component that can be retrieved without an entity. The functions for singletons are very similar to the regular API:
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
 
 ```c
 // Set singleton component
@@ -579,6 +769,9 @@ ecs_singleton_set(world, Gravity, { 9.81 });
 // Get singleton component
 const Gravity *g = ecs_singleton_get(world, Gravity);
 ```
+</li>
+<li><b class="tab-title">C++</b>
+
 ```cpp
 // Set singleton component
 world.set<Gravity>({ 9.81 });
@@ -586,14 +779,23 @@ world.set<Gravity>({ 9.81 });
 // Get singleton component
 const Gravity *g = world.get<Gravity>();
 ```
+</li>
+</ul>
+</div>
 
 Singleton components are created by adding the component to its own entity id. The above code examples are shortcuts for these regular API calls:
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
 
 ```c
 ecs_set(world, ecs_id(Gravity), Gravity, {10, 20});
 
 const Gravity *g = ecs_get(world, ecs_id(Gravity), Gravity);
 ```
+</li>
+<li><b class="tab-title">C++</b>
+
 ```cpp
 flecs::entity grav_e = world.entity<Gravity>();
 
@@ -601,8 +803,14 @@ grav_e.set<Gravity>({10, 20});
 
 const Gravity *g = grav_e.get<Gravity>();
 ```
+</li>
+</ul>
+</div>
 
 The following examples show how to query for a singleton component:
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
 
 ```c
 // Create query that matches Gravity as singleton
@@ -618,15 +826,23 @@ ecs_query_t *q = ecs_query(ecs, {
 // Create a system using the query DSL with a singleton:
 ECS_SYSTEM(world, ApplyGravity, EcsOnUpdate, Velocity, Gravity($));
 ```
+</li>
+<li><b class="tab-title">C++</b>
 
 ```cpp
 world.query_builder<Velocity, Gravity>()
     .term_at(2).singleton()
     .build();
 ```
+</li>
+</ul>
+</div>
 
 ### Filter
 Filters are a kind of uncached query that are cheap to create. This makes them a good fit for scenarios where an application doesn't know in advance what it has to query for, like when finding the children for a parent. The following example shows a simple filter:
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
 
 ```c
 // Initialize a filter with 2 terms on the stack
@@ -654,6 +870,9 @@ while (ecs_filter_next(&it)) {
 
 ecs_filter_fini(f);
 ```
+</li>
+<li><b class="tab-title">C++</b>
+
 ```cpp
 // For simple queries the each function can be used
 world.each([](Position& p, Velocity& v) { // flecs::entity argument is optional
@@ -673,16 +892,22 @@ f.each([](flecs::entity e, Position& p) {
 
 // Option 2: iter() function that iterates each archetype
 f.iter([](flecs::iter& it, Position *p) {
-    for (int i : it) {
+    for (auto i : it) {
         std::cout << it.entity(i).name()
             << ": {" << p[i].x << ", " << p[i].y << "}" << std::endl;
     }
 });
 ```
+</li>
+</ul>
+</div>
 
 Filters can use operators to exclude components, optionally match components or match one out of a list of components. Additionally filters may contain wildcards for terms which is especially useful when combined with pairs.
 
 The following example shows a filter that matches all entities with a parent that do not have `Position`:
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
 
 ```c
 ecs_filter_t *f = ecs_filter_init(world, &(ecs_filter_desc_t){
@@ -694,6 +919,9 @@ ecs_filter_t *f = ecs_filter_init(world, &(ecs_filter_desc_t){
 
 // Iteration code is the same
 ```
+</li>
+<li><b class="tab-title">C++</b>
+
 ```cpp
 auto f = world.filter_builder<>()
     .term(flecs::ChildOf, flecs::Wildcard)
@@ -702,11 +930,17 @@ auto f = world.filter_builder<>()
 
 // Iteration code is the same
 ```
+</li>
+</ul>
+</div>
 
 ### Query
 Queries are cached versions of filters. They are slower to create than filters, but much faster to iterate since this just means iterating their cache.
 
 The API for queries is similar to filters:
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
 
 ```c
 // Create a query with 2 terms
@@ -722,6 +956,9 @@ while (ecs_query_next(&it)) {
     // Same as for filters
 }
 ```
+</li>
+<li><b class="tab-title">C++</b>
+
 ```cpp
 // Create a query with two terms
 auto q = world.query_builder<Position>()
@@ -730,6 +967,9 @@ auto q = world.query_builder<Position>()
 
 // Iteration is the same as filters
 ```
+</li>
+</ul>
+</div>
 
 When using queries, make sure to reuse a query object instead of creating a new one each time you need it. Query creation is expensive, and many of the performance benefits of queries are lost when they are created in loops.
 
@@ -737,6 +977,9 @@ See the [query manual](Queries.md) for more details.
 
 ### System
 A system is a query combined with a callback. Systems can be either ran manually or ran as part of an ECS-managed main loop (see [Pipeline](#pipeline)). The system API looks similar to queries:
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
 
 ```c
 // Option 1, use the ECS_SYSTEM convenience macro
@@ -765,11 +1008,14 @@ void Move(ecs_iter_t *it) {
     }
 }
 ```
+</li>
+<li><b class="tab-title">C++</b>
+
 ```cpp
 // Use each() function that iterates each individual entity
 auto move_sys = world.system<Position, Velocity>()
     .iter([](flecs::iter it, Position *p, Velocity *v) {
-        for (int i : it) {
+        for (auto i : it) {
             p[i].x += v[i].x * it.delta_time();
             p[i].y += v[i].y * it.delta_time();
         }
@@ -780,22 +1026,37 @@ auto move_sys = world.system<Position, Velocity>()
 
 move_sys.run();
 ```
+</li>
+</ul>
+</div>
 
 Systems are stored as entities with an `EcsSystem` component (`flecs::System` in C++), similar to components. That means that an application can use a system as a regular entity:
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
 
 ```c
 printf("System: %s\n", ecs_get_name(world, move_sys));
 ecs_add(world, move_sys, EcsOnUpdate);
 ecs_delete(world, move_sys);
 ```
+</li>
+<li><b class="tab-title">C++</b>
+
 ```cpp
 std::cout << "System: " << move_sys.name() << std::endl;
 move_sys.add(flecs::OnUpdate);
 move_sys.destruct();
 ```
+</li>
+</ul>
+</div>
 
 ### Pipeline
 A pipeline is a list of tags that when matched, produces a list of systems to run. These tags are also referred to as a system "phase". Flecs comes with a default pipeline that has the following phases:
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
 
 ```c
 EcsOnLoad
@@ -807,6 +1068,9 @@ EcsPostUpdate
 EcsPreStore
 EcsOnStore
 ```
+</li>
+<li><b class="tab-title">C++</b>
+
 ```cpp
 flecs::OnLoad
 flecs::PostLoad
@@ -817,8 +1081,14 @@ flecs::PostUpdate
 flecs::PreStore
 flecs::OnStore
 ```
+</li>
+</ul>
+</div>
 
 When a pipeline is executed, systems are ran in the order of the phases. This makes pipelines and phases the primary mechanism for defining ordering between systems. The following code shows how to assign systems to a pipeline, and how to run the pipeline with the `progress()` function:
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
 
 ```c
 ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
@@ -827,6 +1097,9 @@ ECS_SYSTEM(world, Render, EcsOnStore, Transform, Mesh);
 
 ecs_progress(world, 0); // run systems in default pipeline
 ```
+</li>
+<li><b class="tab-title">C++</b>
+
 ```cpp
 world.system<Position, Velocity>("Move").kind(flecs::OnUpdate).each( ... );
 world.system<Position, Transform>("Transform").kind(flecs::PostUpdate).each( ... );
@@ -834,16 +1107,29 @@ world.system<Transform, Mesh>("Render").kind(flecs::OnStore).each( ... );
 
 world.progress();
 ```
+</li>
+</ul>
+</div>
 
 Because phases are just tags that are added to systems, applications can use the regular API to add/remove systems to a phase:
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
 ```c
 ecs_remove_id(world, Move, EcsOnUpdate);
 ecs_add_id(world, Move, EcsPostUpdate);
 ```
+</li>
+<li><b class="tab-title">C++</b>
+
 ```cpp
 move_sys.add(flecs::OnUpdate);
 move_sys.remove(flecs::PostUpdate);
 ```
+</li>
+</ul>
+</div>
 
 Inside a phase, systems are guaranteed to be ran in their declaration order.
 
@@ -853,6 +1139,9 @@ Observers are callbacks that are invoked when one or more events matches the que
 When an observer has a query with more than one component, the observer will not be invoked until the entity for which the event is emitted satisfies the entire query.
 
 An example of an observer with two components:
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
 
 ```c
 ecs_observer(world, {
@@ -868,6 +1157,9 @@ ecs_set(world, e, Position, {10, 20}); // Doesn't invoke the observer
 ecs_set(world, e, Velocity, {1, 2});   // Invokes the observer
 ecs_set(world, e, Position, {20, 40}); // Invokes the observer
 ```
+</li>
+<li><b class="tab-title">C++</b>
+
 ```cpp
 world.observer<Position, Velocity>("OnSetPosition").event(flecs::OnSet).each( ... );
 
@@ -876,9 +1168,15 @@ e.set<Position>({10, 20}); // Doesn't invoke the observer
 e.set<Velocity>({1, 2});   // Invokes the observer
 e.set<Position>({20, 30}); // Invokes the observer
 ```
+</li>
+</ul>
+</div>
 
 ### Module
 A module is a function that imports and organizes components, systems, triggers, observers, prefabs into the world as reusable units of code. A well designed module has no code that directly relies on code of another module, except for components definitions. All module contents are stored as child entities inside the module scope with the `ChildOf` relationship. The following examples show how to define a module in C and C++:
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
 
 ```c
 // Module header (e.g. MyModule.h)
@@ -903,6 +1201,9 @@ void MyModuleImport(ecs_world_t *world) {
 // Import code
 ECS_IMPORT(world, MyModule);
 ```
+</li>
+<li><b class="tab-title">C++</b>
+
 ```cpp
 struct my_module {
     my_module(flecs::world& world) {
@@ -916,3 +1217,6 @@ struct my_module {
 // Import code
 world.import<my_module>();
 ```
+</li>
+</ul>
+</div>
