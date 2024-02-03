@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "flecs.h"
+#include "FlecsType.h"
 #include "SolidMacros/Macros.h"
 #include "FlecsEntityHandle.generated.h"
 
@@ -29,8 +30,8 @@ public:
 
 	NO_DISCARD UFlecsWorldSubsystem* GetFlecsWorldSubsystem() const;
 	NO_DISCARD FFlecsWorld& GetFlecsWorld() const;
-
-	FORCEINLINE NO_DISCARD flecs::type GetType() const { return GetEntity().type(); }
+	
+	FORCEINLINE NO_DISCARD FFlecsType GetType() const { return FFlecsType(GetEntity().type()); }
 
 	FORCEINLINE NO_DISCARD bool Has(const FFlecsEntityHandle& InEntity) const { return GetEntity().has(InEntity); }
 
