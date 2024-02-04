@@ -34683,14 +34683,15 @@ void flecs_rest_reply_set_captured_log(
     if (err) {
         char *escaped_err = ecs_astresc('"', err);
         flecs_reply_error(reply, escaped_err);
-        reply->code = 400;
         ecs_os_free(escaped_err);
         ecs_os_free(err);
     }
+
+    reply->code = 400;
 }
 
 static
-int flecs_rest_iter_to_reply(
+void flecs_rest_iter_to_reply(
     ecs_world_t *world,
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply,
@@ -34709,16 +34710,13 @@ int flecs_rest_iter_to_reply(
 
     if (offset < 0 || limit < 0) {
         flecs_reply_error(reply, "invalid offset/limit parameter");
-        return -1;
+        return;
     }
 
     ecs_iter_t pit = ecs_page_iter(it, offset, limit);
     if (ecs_iter_to_json_buf(world, &pit, &reply->body, &desc)) {
         flecs_rest_reply_set_captured_log(reply);
-        return -1;
     }
-
-    return 0;
 }
 
 static
@@ -34791,6 +34789,9 @@ bool flecs_rest_reply_query(
         return true;
     }
 
+    bool try = false;
+    flecs_rest_bool_param(req, "try", &try);
+
     ecs_dbg_2("rest: request query '%s'", q);
     bool prev_color = ecs_log_enable_colors(false);
     rest_prev_log = ecs_os_api.log_;
@@ -34801,6 +34802,10 @@ bool flecs_rest_reply_query(
     });
     if (!r) {
         flecs_rest_reply_set_captured_log(reply);
+        if (try) {
+            /* If client is trying queries, don't spam console with errors */
+            reply->code = 200;
+        }
     } else {
         ecs_iter_t it = ecs_rule_iter(world, r);
         flecs_rest_iter_to_reply(world, req, reply, &it);
@@ -34834,7 +34839,10 @@ bool flecs_rest_reply_query_plan(
         return true;
     }
 
-    ecs_dbg_2("rest: request query '%s'", q);
+    bool try = false;
+    flecs_rest_bool_param(req, "try", &try);
+
+    ecs_dbg_2("rest: request query plan for '%s'", q);
     bool prev_color = ecs_log_enable_colors(false);
     rest_prev_log = ecs_os_api.log_;
     ecs_os_api.log_ = flecs_rest_capture_log;
@@ -34844,6 +34852,10 @@ bool flecs_rest_reply_query_plan(
     });
     if (!r) {
         flecs_rest_reply_set_captured_log(reply);
+        if (try) {
+            /* If client is trying queries, don't spam console with errors */
+            reply->code = 200;
+        }
     } else {
         ecs_log_enable_colors(true);
         char *plan = ecs_rule_str(r);

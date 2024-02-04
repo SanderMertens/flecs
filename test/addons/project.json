@@ -1846,7 +1846,9 @@
                 "teardown",
                 "get",
                 "get_cached",
-                "get_cached_invalid"
+                "get_cached_invalid",
+                "try_query",
+                "try_query_plan"
             ]
         }, {
             "id": "Metrics",

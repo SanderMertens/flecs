@@ -18885,7 +18885,7 @@ inline void set_level(int level) {
     ecs_log_set_level(level);
 }
 
-inline int get_level(void) {
+inline int get_level() {
     return ecs_log_get_level();
 }
 
