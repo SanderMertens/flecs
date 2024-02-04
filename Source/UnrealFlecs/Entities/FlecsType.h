@@ -25,6 +25,19 @@ public:
     FORCEINLINE operator flecs::type&() { return GetFlecsType(); }
     FORCEINLINE operator const flecs::type&() const { return GetFlecsType(); }
 
+    FORCEINLINE flecs::type* operator->() { return &Type; }
+    FORCEINLINE const flecs::type* operator->() const { return &Type; }
+
+    FORCEINLINE bool operator==(const FFlecsType& Other) const
+    {
+        return Type == Other.Type;
+    }
+
+    FORCEINLINE bool operator!=(const FFlecsType& Other) const
+    {
+        return Type != Other.Type;
+    }
+
 private:
     flecs::type Type;
 }; // struct FFlecsType
