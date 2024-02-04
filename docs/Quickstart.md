@@ -162,6 +162,14 @@ flecs::world world;
 // Do the ECS stuff
 ```
 </li>
+<li><b class="tab-title">C#</b>
+
+```cs
+using World world = World.Create();
+
+// Do the ECS stuff
+```
+</li>
 </ul>
 </div>
 
@@ -189,6 +197,16 @@ e.destruct();
 e.is_alive(); // false!
 ```
 </li>
+<li><b class="tab-title">C#</b>
+
+```cs
+Entity e = world.Entity();
+e.IsAlive(); // true!
+
+e.Destruct();
+e.IsAlive(); // false!
+```
+</li>
 </ul>
 </div>
 
@@ -212,6 +230,14 @@ auto e = world.entity("Bob");
 std::cout << "Entity name: " << e.name() << std::endl;
 ```
 </li>
+<li><b class="tab-title">C#</b>
+
+```cs
+Entity e = world.Entity("Bob");
+
+Console.WriteLine($"Entity name: {e.Name()}");
+```
+</li>
 </ul>
 </div>
 
@@ -228,6 +254,12 @@ ecs_entity_t e = ecs_lookup(world, "Bob");
 
 ```cpp
 auto e = world.lookup("Bob");
+```
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+Entity e = world.Lookup("Bob");
 ```
 </li>
 </ul>
@@ -287,6 +319,27 @@ const Position *p = e.get<Position>();
 e.remove<Position>();
 ```
 </li>
+<li><b class="tab-title">C#</b>
+
+```cs
+Entity e = world.Entity();
+
+// Add a component. This creates the component in the ECS storage, but does not
+// assign it with a value.
+e.Add<Velocity>();
+
+// Set the value for the Position & Velocity components. A component will be
+// added if the entity doesn't have it yet.
+e.Set<Position>(new(10, 20))
+ .Set<Velocity>(new(1, 2));
+
+// Get a component
+ref readonly Position p = ref e.Get<Position>();
+
+// Remove component
+e.Remove<Position>();
+```
+</li>
 </ul>
 </div>
 
@@ -317,6 +370,17 @@ std::cout << "Name: " << pos_e.name() << std::endl;  // outputs 'Name: Position'
 pos_e.add<Serializable>();
 ```
 </li>
+<li><b class="tab-title">C#</b>
+
+C# applications can use the `World.Entity()` function.
+```cs
+Entity posE = world.Entity<Position>();
+Console.WriteLine($"Name: {posE.Name()}"); // outputs 'Name: Position'
+
+// It's possible to add components like you would for any entity
+posE.Add<Serializable>();
+```
+</li>
 </ul>
 </div>
 
@@ -341,6 +405,15 @@ flecs::entity pos_e = world.entity<Position>();
 
 const EcsComponent *c = pos_e.get<flecs::Component>();
 std::cout << "Component size: " << c->size << std::endl;
+```
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+Entity posE = world.Entity<Position>();
+
+ref readonly EcsComponent c = ref posE.Get<EcsComponent>();
+Console.WriteLine($"Component size: {c.size}");
 ```
 </li>
 </ul>
@@ -393,6 +466,31 @@ e.remove(Enemy);
 e.has(Enemy); // false!
 ```
 </li>
+<li><b class="tab-title">C#</b>
+
+```cs
+// Option 1: create Tag as empty struct
+public struct Enemy { }
+
+// Create entity, add Enemy tag
+Entity e = world.Entity().Add<Enemy>();
+e.Has<Enemy>(); // true!
+
+e.Remove<Enemy>();
+e.Has<Enemy>(); // false!
+
+
+// Option 2: create Tag as entity
+Entity Enemy = world.Entity();
+
+// Create entity, add Enemy tag
+Entity e = world.Entity().Add(Enemy);
+e.Has(Enemy); // true!
+
+e.Remove(Enemy);
+e.Has(Enemy); // false!
+```
+</li>
 </ul>
 </div>
 
@@ -440,6 +538,24 @@ Bob.remove<Likes>(Alice);
 Bob.has<Likes>(Alice); // false!
 ```
 </li>
+<li><b class="tab-title">C#</b>
+
+```cs
+// Create Likes relationship as empty type (tag)
+public struct Likes { }
+
+// Create a small graph with two entities that like each other
+Entity Bob = world.Entity();
+Entity Alice = world.Entity();
+
+Bob.Add<Likes>(Alice); // Bob likes Alice
+Alice.Add<Likes>(Bob); // Alice likes Bob
+Bob.Has<Likes>(Alice); // true!
+
+Bob.Remove<Likes>(Alice);
+Bob.Has<Likes>(Alice); // false!
+```
+</li>
 </ul>
 </div>
 
@@ -456,6 +572,12 @@ ecs_id_t id = ecs_pair(Likes, Bob);
 
 ```cpp
 flecs::id id = world.pair<Likes>(Bob);
+```
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+Id id = world.Pair<Likes>(bob);
 ```
 </li>
 </ul>
@@ -480,6 +602,17 @@ flecs::id id = ...;
 if (id.is_pair()) {
     auto relationship = id.first();
     auto target = id.second();
+}
+```
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+Id id = ...;
+if (id.IsPair())
+{
+    Entity relationship = id.First();
+    Entity target = id.Second();
 }
 ```
 </li>
@@ -514,6 +647,19 @@ bob.has(Eats, Pears);  // true!
 bob.has(Grows, Pears); // true!
 ```
 </li>
+<li><b class="tab-title">C#</b>
+
+```cs
+Entity Bob = ...;
+Bob.Add(Eats, Apples);
+Bob.Add(Eats, Pears);
+Bob.Add(Grows, Pears);
+
+Bob.Has(Eats, Apples); // true!
+Bob.Has(Eats, Pears);  // true!
+Bob.Has(Grows, Pears); // true!
+```
+</li>
 </ul>
 </div>
 
@@ -531,6 +677,13 @@ ecs_entity_t o = ecs_get_target(world, Alice, Likes, 0); // Returns Bob
 ```cpp
 flecs::entity alice = ...;
 auto o = alice.target<Likes>(); // Returns Bob
+```
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+Entity Alice = ...;
+Entity o = Alice.Target<Likes>(); // Returns Bob
 ```
 </li>
 </ul>
@@ -562,6 +715,16 @@ auto child = world.entity().child_of(parent);
 
 // Deleting the parent also deletes its children
 parent.destruct();
+```
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+Entity parent = world.Entity();
+Entity child = world.Entity().ChildOf(parent);
+
+// Deleting the parent also deletes its children
+parent.Destruct();
 ```
 </li>
 </ul>
@@ -600,6 +763,17 @@ std::cout << child.path() << std::endl; // output: 'parent::child'
 
 world.lookup("parent::child"); // returns child
 parent.lookup("child"); // returns child
+```
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+Entity parent = world.Entity("parent");
+Entity child = world.Entity("child").ChildOf(parent);
+Console.WriteLine(child.Path()); // output: 'parent.child'
+
+world.Lookup("parent.child"); // returns child
+parent.Lookup("child"); // returns child
 ```
 </li>
 </ul>
@@ -643,6 +817,19 @@ q.each([](Position& p, Position& p_parent) {
 });
 ```
 </li>
+<li><b class="tab-title">C#</b>
+
+```cs
+Query q = world.QueryBuilder<Position, Position>()
+    .TermAt(2).Parent().Cascade()
+    .Build();
+
+q.Each((ref Position p, ref Position pParent) =>
+{
+    // Do the thing
+});
+```
+</li>
 </ul>
 </div>
 
@@ -671,6 +858,16 @@ auto e = world.entity().is_a(base);
 const Triangle *t = e.get<Triangle>(); // gets Triangle from base
 ```
 </li>
+<li><b class="tab-title">C#</b>
+
+```cs
+Entity base = world.Entity().Set<Triangle>(new Triangle(new(0, 0), new(1, 1), new(-1, -1)));
+
+// Create entity that shares components with base
+Entity e = world.Entity().IsA(base);
+ref readonly Triangle t = ref e.Get<Triangle>(); // gets Triangle from base
+```
+</li>
 </ul>
 </div>
 
@@ -689,6 +886,13 @@ ecs_add(world, e, Triangle);
 ```cpp
 // Add private instance of Triangle to e, copy value from base
 e.add<Triangle>();
+```
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+// Add private instance of Triangle to e, copy value from base
+e.Add<Triangle>();
 ```
 </li>
 </ul>
@@ -726,6 +930,16 @@ auto e = ecs.entity()
 std::cout << e.type().str() << std::endl; // output: 'Position,Velocity'
 ```
 </li>
+<li><b class="tab-title">C#</b>
+
+```cs
+Entity e = ecs.Entity()
+    .Add<Position>()
+    .Add<Velocity>();
+
+Console.WriteLine(e.Type().Str()); // output: 'Position,Velocity'
+```
+</li>
 </ul>
 </div>
 
@@ -748,6 +962,18 @@ for (int i = 0; i < type->count; i++) {
 ```cpp
 e.each([&](flecs::id id) {
     if (id == world.id<Position>()) {
+        // Found Position component!
+    }
+});
+```
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+e.Each((Id id) =>
+{
+    if (id == world.Id<Position>()) 
+    {
         // Found Position component!
     }
 });
@@ -780,6 +1006,16 @@ world.set<Gravity>({ 9.81 });
 const Gravity *g = world.get<Gravity>();
 ```
 </li>
+<li><b class="tab-title">C#</b>
+
+```cs
+// Set singleton component
+world.Set<Gravity>(new(9.81));
+
+// Get singleton component
+ref readonly Gravity g = ref world.Get<Gravity>();
+```
+</li>
 </ul>
 </div>
 
@@ -802,6 +1038,16 @@ flecs::entity grav_e = world.entity<Gravity>();
 grav_e.set<Gravity>({10, 20});
 
 const Gravity *g = grav_e.get<Gravity>();
+```
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+Entity gravE = world.Entity<Gravity>();
+
+gravE.Set<Gravity>(new(10, 20));
+
+ref readonly Gravity g = ref gravE.Get<Gravity>();
 ```
 </li>
 </ul>
@@ -833,6 +1079,14 @@ ECS_SYSTEM(world, ApplyGravity, EcsOnUpdate, Velocity, Gravity($));
 world.query_builder<Velocity, Gravity>()
     .term_at(2).singleton()
     .build();
+```
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+world.QueryBuilder<Velocity, Gravity>()
+    .TermAt(2).Singleton()
+    .Build();
 ```
 </li>
 </ul>
@@ -899,6 +1153,35 @@ f.iter([](flecs::iter& it, Position *p) {
 });
 ```
 </li>
+<li><b class="tab-title">C#</b>
+
+```cs
+// For simple queries the each function can be used
+world.Each((ref Position p, ref Velocity v) => // Entity argument is optional
+{
+    p.X += v.X;
+    p.Y += v.Y;
+});
+
+// More complex filters can first be created, then iterated
+using Filter f = world.FilterBuilder<Position>()
+    .Term(Ecs.ChildOf, parent)
+    .Build();
+
+// Option 1: Each() function that iterates each entity
+f.Each((Entity e, ref Position p) =>
+{
+    Console.WriteLine($"{e.Name()}: ({p.X}, {p.Y})")
+});
+
+// Option 2: Iter() function that iterates each archetype
+f.Iter((Iter it, Column<Position> p) =>
+{
+    foreach (int i in it)
+        Console.WriteLine($"{it.Entity(i).Name()}: ({p[i].X}, {p[i].Y})")
+});
+```
+</li>
 </ul>
 </div>
 
@@ -927,6 +1210,17 @@ auto f = world.filter_builder<>()
     .term(flecs::ChildOf, flecs::Wildcard)
     .term<Position>().oper(flecs::Not)
     .build();
+
+// Iteration code is the same
+```
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+using Filter f = world.FilterBuilder()
+    .Term(Ecs.ChildOf, Ecs.Wildcard)
+    .Term<Position>().Oper(Ecs.Not)
+    .Build();
 
 // Iteration code is the same
 ```
@@ -964,6 +1258,17 @@ while (ecs_query_next(&it)) {
 auto q = world.query_builder<Position>()
     .term(flecs::ChildOf, flecs::Wildcard)
     .build();
+
+// Iteration is the same as filters
+```
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+// Create a query with two terms
+Query q = world.QueryBuilder<Position>()
+    .Term(Ecs.ChildOf, Ecs.Wildcard)
+    .Build();
 
 // Iteration is the same as filters
 ```
@@ -1027,6 +1332,26 @@ auto move_sys = world.system<Position, Velocity>()
 move_sys.run();
 ```
 </li>
+<li><b class="tab-title">C#</b>
+
+```cs
+// Use Each() function that iterates each individual entity
+Routine moveSys = world.Routine<Position, Velocity>()
+    .Iter((Iter it, Column<Position> p, Column<Velocity> v) =>
+    {
+        foreach (int i in it) 
+        {
+            p[i].X += v[i].X * it.DeltaTime();
+            p[i].Y += v[i].Y * it.DeltaTime();
+        }
+    });
+
+    // Just like with filters & queries, systems have both the Iter() and
+    // Each() methods to iterate entities.
+
+moveSys.Run();
+```
+</li>
 </ul>
 </div>
 
@@ -1047,6 +1372,14 @@ ecs_delete(world, move_sys);
 std::cout << "System: " << move_sys.name() << std::endl;
 move_sys.add(flecs::OnUpdate);
 move_sys.destruct();
+```
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+Console.WriteLine($"System: {moveSys.Name()}");
+moveSys.Entity.Add(Ecs.OnUpdate);
+moveSys.Entity.Destruct();
 ```
 </li>
 </ul>
@@ -1082,6 +1415,19 @@ flecs::PreStore
 flecs::OnStore
 ```
 </li>
+<li><b class="tab-title">C#</b>
+
+```cs
+Ecs.OnLoad
+Ecs.PostLoad
+Ecs.PreUpdate
+Ecs.OnUpdate
+Ecs.OnValidate
+Ecs.PostUpdate
+Ecs.PreStore
+Ecs.OnStore
+```
+</li>
 </ul>
 </div>
 
@@ -1108,6 +1454,16 @@ world.system<Transform, Mesh>("Render").kind(flecs::OnStore).each( ... );
 world.progress();
 ```
 </li>
+<li><b class="tab-title">C#</b>
+
+```cs
+world.Routine<Position, Velocity>("Move").Kind(Ecs.OnUpdate).Each( ... );
+world.Routine<Position, Transform>("Transform").Kind(Ecs.PostUpdate).Each( ... );
+world.Routine<Transform, Mesh>("Render").Kind(Ecs.OnStore).Each( ... );
+
+world.Progress();
+```
+</li>
 </ul>
 </div>
 
@@ -1126,6 +1482,13 @@ ecs_add_id(world, Move, EcsPostUpdate);
 ```cpp
 move_sys.add(flecs::OnUpdate);
 move_sys.remove(flecs::PostUpdate);
+```
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+moveSys.Add(Ecs.OnUpdate);
+moveSys.Remove(Ecs.PostUpdate);
 ```
 </li>
 </ul>
@@ -1167,6 +1530,17 @@ auto e = ecs.entity();     // Doesn't invoke the observer
 e.set<Position>({10, 20}); // Doesn't invoke the observer
 e.set<Velocity>({1, 2});   // Invokes the observer
 e.set<Position>({20, 30}); // Invokes the observer
+```
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+world.Observer<Position, Velocity>("OnSetPosition").Event(Ecs.OnSet).Each( ... );
+
+Entity e = ecs.Entity();      // Doesn't invoke the observer
+e.Set<Position>(new(10, 20)); // Doesn't invoke the observer
+e.Set<Velocity>(new(1, 2));   // Invokes the observer
+e.Set<Position>(new(20, 30)); // Invokes the observer
 ```
 </li>
 </ul>
@@ -1216,6 +1590,24 @@ struct my_module {
 
 // Import code
 world.import<my_module>();
+```
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+public struct MyModule : IFlecsModule
+{
+    public void InitModule(ref World world)
+    {
+        world.Module<MyModule>();
+
+        // Define components, systems, triggers, ... as usual. They will be
+        // automatically created inside the scope of the module.
+    }
+};
+
+// Import code
+world.Import<MyModule>();
 ```
 </li>
 </ul>

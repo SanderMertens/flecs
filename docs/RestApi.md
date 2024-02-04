@@ -19,6 +19,13 @@ ecs_singleton_set(world, EcsRest, {0});
 world.set<flecs::Rest>({});
 ```
 </li>
+<li><b class="tab-title">C#</b>
+
+```cs
+// Start REST API with default parameters
+world.Set<EcsRest>(default);
+```
+</li>
 </ul>
 </div>
 
@@ -41,6 +48,15 @@ ecs_app_run(world, &(ecs_app_desc_t){
 world.app()
   .enable_rest()
   .run();
+```
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+// Start application main loop, enable REST interface
+world.App()
+  .EnableRest()
+  .Run();
 ```
 </li>
 </ul>
@@ -67,6 +83,12 @@ ECS_IMPORT(world, FlecsMonitor);
 world.import<flecs::monitor>();
 ```
 </li>
+<li><b class="tab-title">C#</b>
+
+```cs
+world.Import<Ecs.Monitor>();
+```
+</li>
 </ul>
 </div>
 
@@ -91,6 +113,16 @@ world.app()
   .enable_rest()
   .enable_monitor()
   .run();
+```
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+// Start application main loop, enable REST interface and monitoring
+world.App()
+  .EnableRest()
+  .EnableMonitor()
+  .Run();
 ```
 </li>
 </ul>
@@ -122,6 +154,12 @@ ecs_world_t *world = ecs_init_w_args(argc, argv);
 
 ```c++
 flecs::world world(argc, argc);
+```
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+using World world = World.Create(args);
 ```
 </li>
 </ul>
@@ -160,6 +198,14 @@ In C++ a name can be provided to the query factory method:
 
 ```cpp
 auto q = world.query<Position, Velocity>("Move");
+```
+</li>
+<li><b class="tab-title">C#</b>
+
+In C# a name can be provided to the query factory method:
+
+```cs
+Query q = world.Query<Position, Velocity>("Move");
 ```
 </li>
 </ul>
