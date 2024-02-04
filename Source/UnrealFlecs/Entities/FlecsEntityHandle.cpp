@@ -13,7 +13,12 @@ UFlecsWorldSubsystem* FFlecsEntityHandle::GetFlecsWorldSubsystem() const
 
 FFlecsWorld& FFlecsEntityHandle::GetFlecsWorld() const
 {
-    return GetFlecsWorldSubsystem()->GetFlecsWorld(*GetEntity().world().get<FName>());
+    return GetFlecsWorldSubsystem()->GetFlecsWorld(GetWorldName());
+}
+
+FName FFlecsEntityHandle::GetWorldName() const
+{
+    return *GetEntity().world().get<FName>();
 }
 
 bool FFlecsEntityHandle::Has(UScriptStruct* StructType) const

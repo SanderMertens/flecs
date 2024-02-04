@@ -31,6 +31,7 @@ public:
 
 	NO_DISCARD UFlecsWorldSubsystem* GetFlecsWorldSubsystem() const;
 	NO_DISCARD FFlecsWorld& GetFlecsWorld() const;
+	NO_DISCARD FName GetWorldName() const;
 	
 	FORCEINLINE NO_DISCARD FFlecsType GetType() const { return FFlecsType(GetEntity().type()); }
 
@@ -102,23 +103,28 @@ public:
 	{
 		return GetEntity().is_pair();
 	}
+	
+	FORCEINLINE NO_DISCARD FFlecsEntityHandle GetParent() const
+	{
+		return GetEntity().parent();
+	}
 
-	bool operator==(const FFlecsEntityHandle& Other) const
+	FORCEINLINE NO_DISCARD bool operator==(const FFlecsEntityHandle& Other) const
 	{
 		return GetEntity() == Other.GetEntity();
 	}
 	
-	bool operator!=(const FFlecsEntityHandle& Other) const
+	FORCEINLINE NO_DISCARD bool operator!=(const FFlecsEntityHandle& Other) const
 	{
 		return GetEntity() != Other.GetEntity();
 	}
 
-	bool operator==(const flecs::entity& Other) const
+	FORCEINLINE NO_DISCARD bool operator==(const flecs::entity& Other) const
 	{
 		return GetEntity() == Other;
 	}
 
-	bool operator!=(const flecs::entity& Other) const
+	FORCEINLINE NO_DISCARD bool operator!=(const flecs::entity& Other) const
 	{
 		return GetEntity() != Other;
 	}
@@ -134,13 +140,3 @@ public:
 private:
 	flecs::entity Entity;
 }; // struct FFlecsEntityHandle
-
-template<>
-struct TStructOpsTypeTraits<FFlecsEntityHandle> : public TStructOpsTypeTraitsBase2<FFlecsEntityHandle>
-{
-	enum
-	{
-		WithCopy = true,
-	};
-	
-}; // struct TStructOpsTypeTraits<FFlecsEntityHandle>
