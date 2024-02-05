@@ -85,6 +85,17 @@ public:
         Filter.iter(InEntity, Function);
     }
 
+    template <typename FunctionType>
+    FORCEINLINE NO_DISCARD FFlecsEntityHandle Find(FunctionType Function) const
+    {
+        return Filter.find(Function);
+    }
+
+    FORCEINLINE NO_DISCARD FFlecsEntityHandle First() const
+    {
+        return Filter.first();
+    }
+
 private:
     flecs::filter<> Filter;
 }; // struct FFlecsFilter

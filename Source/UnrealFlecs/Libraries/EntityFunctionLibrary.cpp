@@ -9,16 +9,14 @@
 FFlecsEntityHandle UEntityFunctionLibrary::CreateEntity(const UObject* WorldContextObject, const FString& EntityName)
 {
     FFlecsWorld& World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
-    char* EntityNameCStr = TCHAR_TO_ANSI(*EntityName);
-    return FFlecsEntityHandle(World.GetFlecsWorld().entity(EntityNameCStr));
+    return FFlecsEntityHandle(World.GetFlecsWorld().entity(TCHAR_TO_ANSI(*EntityName)));
 }
 
 FFlecsEntityHandle UEntityFunctionLibrary::GetEntityWithName(const UObject* WorldContextObject,
     const FString& EntityName, const bool bSearchPath)
 {
     FFlecsWorld& FlecsWorld = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
-    const char* EntityNameCStr = TCHAR_TO_ANSI(*EntityName);
-    return FFlecsEntityHandle(FlecsWorld.GetFlecsWorld().lookup(EntityNameCStr, bSearchPath));
+    return FFlecsEntityHandle(FlecsWorld.GetFlecsWorld().lookup(TCHAR_TO_ANSI(*EntityName), bSearchPath));
 }
 
 void UEntityFunctionLibrary::DestroyEntity(const UObject* WorldContextObject, const FFlecsEntityHandle& Entity)
@@ -31,6 +29,5 @@ void UEntityFunctionLibrary::DestroyEntityByName(const UObject* WorldContextObje
     const bool bSearchPath)
 {
     FFlecsWorld& FlecsWorld = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
-    const char* EntityNameCStr = TCHAR_TO_ANSI(*EntityName);
-    FlecsWorld.GetFlecsWorld().delete_with(*EntityNameCStr, bSearchPath);
+    FlecsWorld.GetFlecsWorld().delete_with(*TCHAR_TO_ANSI(*EntityName), bSearchPath);
 }
