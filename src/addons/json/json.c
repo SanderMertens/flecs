@@ -380,6 +380,9 @@ const char* flecs_json_entity_label(
     ecs_entity_t e)
 {
     const char *lbl = NULL;
+    if (!e) {
+        return "0";
+    }
 #ifdef FLECS_DOC
     lbl = ecs_doc_get_name(world, e);
 #else

@@ -2746,6 +2746,7 @@ ecs_iter_t ecs_rule_iter(
     int32_t i, var_count = rule->var_count, op_count = rule->op_count;
     it.world = ECS_CONST_CAST(ecs_world_t*, world);
     it.real_world = rule->filter.world;
+    it.query = &rule->filter;
     it.terms = rule->filter.terms;
     it.next = ecs_rule_next;
     it.fini = flecs_rule_iter_fini;

@@ -2280,6 +2280,7 @@ ecs_iter_t ecs_query_iter(
     ecs_iter_t result = {
         .real_world = world,
         .world = ECS_CONST_CAST(ecs_world_t*, stage),
+        .query = &query->filter,
         .terms = query->filter.terms,
         .field_count = query->filter.field_count,
         .table_count = table_count,

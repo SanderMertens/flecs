@@ -266,7 +266,8 @@ struct ecs_iter_t {
     ecs_id_t event_id;            /* The (component) id for the event */
 
     /* Query information */
-    ecs_term_t *terms;            /* Terms of query being evaluated */
+    const ecs_filter_t *query;    /* Query being evaluated */
+    ecs_term_t *terms;            /* Term array of query being evaluated */
     int32_t table_count;          /* Active table count for query */
     int32_t term_index;           /* Index of term that emitted an event.
                                    * This field will be set to the 'index' field

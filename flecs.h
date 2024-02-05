@@ -2981,6 +2981,7 @@ struct ecs_filter_t {
     ecs_term_t *terms;         /**< Array containing terms for filter */
     char *variable_names[1];   /**< Placeholder variable names array */
     int32_t *sizes;            /**< Field size (same for each result) */
+    ecs_id_t *ids;             /**< Array with field ids */
 
     /* Mixins */
     ecs_entity_t entity;       /**< Entity associated with filter (optional) */
@@ -3356,7 +3357,8 @@ struct ecs_iter_t {
     ecs_id_t event_id;            /* The (component) id for the event */
 
     /* Query information */
-    ecs_term_t *terms;            /* Terms of query being evaluated */
+    const ecs_filter_t *query;    /* Query being evaluated */
+    ecs_term_t *terms;            /* Term array of query being evaluated */
     int32_t table_count;          /* Active table count for query */
     int32_t term_index;           /* Index of term that emitted an event.
                                    * This field will be set to the 'index' field
@@ -12954,6 +12956,8 @@ typedef struct ecs_iter_to_json_desc_t {
     bool serialize_type_info;       /**< Serialize type information */
     bool serialize_table;           /**< Serialize entire table vs. matched components */
     bool serialize_rows;            /**< Use row-based serialization, with entities in separate elements */
+    bool serialize_field_info;      /**< Serialize metadata for fields returned by query */
+    bool dont_serialize_results;    /**< If true, query won't be evaluated */
 } ecs_iter_to_json_desc_t;
 
 #define ECS_ITER_TO_JSON_INIT (ecs_iter_to_json_desc_t){\
@@ -12975,7 +12979,9 @@ typedef struct ecs_iter_to_json_desc_t {
     .measure_eval_duration =     false, \
     .serialize_type_info =       false, \
     .serialize_table =           false,  \
-    .serialize_rows =            false  \
+    .serialize_rows =            false,  \
+    .serialize_field_info =      false,  \
+    .dont_serialize_results =    false,  \
 }
 
 /** Serialize iterator into JSON string.

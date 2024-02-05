@@ -1338,10 +1338,12 @@ int ecs_filter_finalize(
             ecs_term_t *term = &terms[i];
             ecs_id_record_t *idr = term->idr;
             int32_t field = term->field_index;
+            f->ids[field] = term->id;
 
             if (term->oper == EcsOr || (i && (term[-1].oper == EcsOr))) {
                 if (flecs_filter_or_other_type(f, i)) {
                     f->sizes[field] = 0;
+                    f->ids[field] = 0;
                     continue;
                 }
             }
@@ -1350,8 +1352,12 @@ int ecs_filter_finalize(
                 if (!ECS_IS_PAIR(idr->id) || ECS_PAIR_FIRST(idr->id) != EcsWildcard) {
                     if (idr->flags & EcsIdUnion) {
                         f->sizes[field] = ECS_SIZEOF(ecs_entity_t);
+#ifdef FLECS_META
+                        f->ids[field] = ecs_id(ecs_entity_t);
+#endif
                     } else if (idr->type_info) {
                         f->sizes[field] = idr->type_info->size;
+                        f->ids[field] = idr->id;
                     }
                 }
             } else {
@@ -1364,17 +1370,22 @@ int ecs_filter_finalize(
                 }
                 if (is_union) {
                     f->sizes[field] = ECS_SIZEOF(ecs_entity_t);
+#ifdef FLECS_META
+                    f->ids[field] = ecs_id(ecs_entity_t);
+#endif
                 } else {
                     const ecs_type_info_t *ti = ecs_get_type_info(
                         world, term->id);
                     if (ti) {
                         f->sizes[field] = ti->size;
+                        f->ids[field] = term->id;
                     }
                 }
             }
         }
     } else {
         f->sizes = NULL;
+        f->ids = NULL;
     }
 
     ecs_assert(filter_terms <= term_count, ECS_INTERNAL_ERROR, NULL);
@@ -1462,6 +1473,7 @@ void flecs_filter_fini(
             ecs_os_free(filter->terms);
         } else {
             ecs_os_free(filter->sizes);
+            ecs_os_free(filter->ids);
         }
     }
 
@@ -1620,13 +1632,16 @@ ecs_filter_t* ecs_filter_init(
                 ECS_INTERNAL_ERROR, NULL);
             f->term_count = flecs_ito(int8_t, term_count + expr_count);
             ecs_size_t terms_size = ECS_SIZEOF(ecs_term_t) * f->term_count;
+            ecs_size_t ids_size = ECS_SIZEOF(ecs_id_t) * f->term_count;
             ecs_size_t sizes_size = ECS_SIZEOF(int32_t) * f->term_count;
-            f->terms = ecs_os_calloc(terms_size + sizes_size);
-            f->sizes = ECS_OFFSET(f->terms, terms_size);
+            f->terms = ecs_os_calloc(terms_size + sizes_size + ids_size);
+            f->ids = ECS_OFFSET(f->terms, terms_size);
+            f->sizes = ECS_OFFSET(f->terms, terms_size + ids_size);
         } else {
             f->terms = storage_terms;
             f->term_count = flecs_ito(int8_t, storage_count);
             f->sizes = ecs_os_calloc_n(ecs_size_t, term_count);
+            f->ids = ecs_os_calloc_n(ecs_id_t, term_count);
         }
 
         /* Copy terms to filter storage */
@@ -1686,10 +1701,13 @@ void ecs_filter_copy(
         int32_t i, term_count = src->term_count;
         ecs_size_t terms_size = ECS_SIZEOF(ecs_term_t) * term_count;
         ecs_size_t sizes_size = ECS_SIZEOF(int32_t) * term_count;
-        dst->terms = ecs_os_malloc(terms_size + sizes_size);
-        dst->sizes = ECS_OFFSET(dst->terms, terms_size);
+        ecs_size_t ids_size = ECS_SIZEOF(ecs_id_t) * term_count;
+        dst->terms = ecs_os_malloc(terms_size + sizes_size + ids_size);
+        dst->ids = ECS_OFFSET(dst->terms, terms_size);
+        dst->sizes = ECS_OFFSET(dst->terms, terms_size + ids_size);
         dst->flags |= EcsFilterOwnsTermsStorage;
         ecs_os_memcpy_n(dst->sizes, src->sizes, int32_t, term_count);
+        ecs_os_memcpy_n(dst->ids, src->ids, int32_t, term_count);
 
         for (i = 0; i < term_count; i ++) {
             dst->terms[i] = ecs_term_copy(&src->terms[i]);
@@ -1712,12 +1730,14 @@ void ecs_filter_move(
         if (src->flags & EcsFilterOwnsTermsStorage) {
             dst->terms = src->terms;
             dst->sizes = src->sizes;
+            dst->ids = src->ids;
             dst->flags |= EcsFilterOwnsTermsStorage;
         } else {
             ecs_filter_copy(dst, src);
         }
         src->terms = NULL;
         src->sizes = NULL;
+        src->ids = NULL;
         src->term_count = 0;
     } else {
         ecs_os_memset_t(dst, 0, ecs_filter_t);
@@ -2841,6 +2861,7 @@ ecs_iter_t flecs_filter_iter_w_flags(
     ecs_iter_t it = {
         .real_world = ECS_CONST_CAST(ecs_world_t*, world),
         .world = ECS_CONST_CAST(ecs_world_t*, stage),
+        .query = filter,
         .terms = filter ? filter->terms : NULL,
         .next = ecs_filter_next,
         .flags = flags,
@@ -2917,6 +2938,7 @@ ecs_iter_t ecs_filter_chain_iter(
     const ecs_filter_t *filter)
 {
     ecs_iter_t it = {
+        .query = filter,
         .terms = filter->terms,
         .field_count = filter->field_count,
         .world = chain_it->world,

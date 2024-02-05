@@ -1526,7 +1526,7 @@ void SerializeIterToRowJson_serialize_not(void) {
     });
     test_assert(json != NULL);
 
-    char* expect = "{\"results\":[{\"name\":\"e3\", \"components\":{\"Position\":{\"x\":30, \"y\":40}}}]}";
+    char* expect = "{\"results\":[{\"name\":\"e3\", \"is_set\":[true, false], \"components\":{\"Position\":{\"x\":30, \"y\":40}}}]}";
     test_str(json, expect);
 
     ecs_os_free(json);
@@ -1566,8 +1566,8 @@ void SerializeIterToRowJson_serialize_not_pair_wildcard(void) {
     test_assert(json != NULL);
 
     char* expect = "{\"results\":["
-        "{\"name\":\"e1\", \"pairs\":{\"RelA\":\"TgtA\"}}, "
-        "{\"name\":\"e2\", \"pairs\":{\"RelA\":\"TgtA\"}}]}";
+        "{\"name\":\"e1\", \"pairs\":{\"RelA\":\"TgtA\"},\"is_set\":[true, false]}, "
+        "{\"name\":\"e2\", \"pairs\":{\"RelA\":\"TgtA\"},\"is_set\":[true, false]}]}";
     test_str(json, expect);
 
     ecs_os_free(json);
@@ -1609,7 +1609,7 @@ void SerializeIterToRowJson_serialize_not_pair_var(void) {
     test_assert(json != NULL);
 
     char* expect = "{\"results\":["
-        "{\"name\":\"e3\", \"pairs\":{\"RelA\":\"TgtA\"},\"vars\":{\"var\":\"*\"}}]}";
+        "{\"name\":\"e3\", \"pairs\":{\"RelA\":\"TgtA\"},\"vars\":{\"var\":\"*\"},\"is_set\":[true, false]}]}";
     test_str(json, expect);
 
     ecs_os_free(json);
@@ -1652,8 +1652,8 @@ void SerializeIterToRowJson_serialize_not_pair_var_constrained(void) {
     test_assert(json != NULL);
 
     char* expect = "{\"results\":["
-        "{\"name\":\"e1\", \"pairs\":{\"RelA\":\"TgtA\"},\"vars\":{\"var\":\"TgtA\"}}, "
-        "{\"name\":\"e2\", \"pairs\":{\"RelA\":\"TgtA\"},\"vars\":{\"var\":\"TgtA\"}}]}";
+        "{\"name\":\"e1\", \"pairs\":{\"RelA\":\"TgtA\"},\"vars\":{\"var\":\"TgtA\"},\"is_set\":[true, false]}, "
+        "{\"name\":\"e2\", \"pairs\":{\"RelA\":\"TgtA\"},\"vars\":{\"var\":\"TgtA\"},\"is_set\":[true, false]}]}";
     test_str(json, expect);
 
     ecs_os_free(json);
@@ -1709,9 +1709,9 @@ void SerializeIterToRowJson_serialize_optional(void) {
     test_assert(json != NULL);
 
     char* expect = "{\"results\":["
-        "{\"name\":\"e3\", \"components\":{\"Position\":{\"x\":30, \"y\":40}}}, "
-        "{\"name\":\"e1\", \"components\":{\"Position\":{\"x\":10, \"y\":20}, \"Mass\":{\"value\":1}}}, "
-        "{\"name\":\"e2\", \"components\":{\"Position\":{\"x\":20, \"y\":30}, \"Mass\":{\"value\":2}}}]}";
+        "{\"name\":\"e3\", \"is_set\":[true, false], \"components\":{\"Position\":{\"x\":30, \"y\":40}}}, "
+        "{\"name\":\"e1\", \"is_set\":[true, true], \"components\":{\"Position\":{\"x\":10, \"y\":20}, \"Mass\":{\"value\":1}}}, "
+        "{\"name\":\"e2\", \"is_set\":[true, true], \"components\":{\"Position\":{\"x\":20, \"y\":30}, \"Mass\":{\"value\":2}}}]}";
     test_str(json, expect);
 
     ecs_os_free(json);
@@ -1753,9 +1753,9 @@ void SerializeIterToRowJson_serialize_optional_pair_wildcard(void) {
     test_assert(json != NULL);
 
     char* expect = "{\"results\":["
-        "{\"name\":\"e3\", \"pairs\":{\"RelA\":\"TgtA\"}}, "
-        "{\"name\":\"e1\", \"pairs\":{\"RelA\":\"TgtA\", \"RelB\":\"TgtA\"}}, "
-        "{\"name\":\"e2\", \"pairs\":{\"RelA\":\"TgtA\", \"RelB\":\"TgtA\"}}]}";
+        "{\"name\":\"e3\", \"pairs\":{\"RelA\":\"TgtA\"},\"is_set\":[true, false]}, "
+        "{\"name\":\"e1\", \"pairs\":{\"RelA\":\"TgtA\", \"RelB\":\"TgtA\"},\"is_set\":[true, true]}, "
+        "{\"name\":\"e2\", \"pairs\":{\"RelA\":\"TgtA\", \"RelB\":\"TgtA\"},\"is_set\":[true, true]}]}";
     test_str(json, expect);
 
     ecs_os_free(json);
@@ -1797,9 +1797,9 @@ void SerializeIterToRowJson_serialize_optional_pair_var(void) {
     test_assert(json != NULL);
 
     char* expect = "{\"results\":["
-        "{\"name\":\"e3\", \"pairs\":{\"RelA\":\"TgtA\"},\"vars\":{\"var\":\"*\"}}, "
-        "{\"name\":\"e1\", \"pairs\":{\"RelA\":\"TgtA\", \"RelB\":\"TgtA\"},\"vars\":{\"var\":\"TgtA\"}}, "
-        "{\"name\":\"e2\", \"pairs\":{\"RelA\":\"TgtA\", \"RelB\":\"TgtA\"},\"vars\":{\"var\":\"TgtA\"}}]}";
+        "{\"name\":\"e3\", \"pairs\":{\"RelA\":\"TgtA\"},\"vars\":{\"var\":\"*\"},\"is_set\":[true, false]}, "
+        "{\"name\":\"e1\", \"pairs\":{\"RelA\":\"TgtA\", \"RelB\":\"TgtA\"},\"vars\":{\"var\":\"TgtA\"},\"is_set\":[true, true]}, "
+        "{\"name\":\"e2\", \"pairs\":{\"RelA\":\"TgtA\", \"RelB\":\"TgtA\"},\"vars\":{\"var\":\"TgtA\"},\"is_set\":[true, true]}]}";
     test_str(json, expect);
 
     ecs_os_free(json);
@@ -1842,9 +1842,9 @@ void SerializeIterToRowJson_serialize_optional_pair_var_constrained(void) {
     test_assert(json != NULL);
 
     char* expect = "{\"results\":["
-        "{\"name\":\"e1\", \"pairs\":{\"RelA\":\"TgtA\"},\"vars\":{\"var\":\"TgtA\"}}, "
-        "{\"name\":\"e2\", \"pairs\":{\"RelA\":\"TgtA\"},\"vars\":{\"var\":\"TgtA\"}}, "
-        "{\"name\":\"e3\", \"pairs\":{\"RelA\":\"TgtA\", \"RelB\":\"TgtA\"},\"vars\":{\"var\":\"TgtA\"}}]}";
+        "{\"name\":\"e1\", \"pairs\":{\"RelA\":\"TgtA\"},\"vars\":{\"var\":\"TgtA\"},\"is_set\":[true, false]}, "
+        "{\"name\":\"e2\", \"pairs\":{\"RelA\":\"TgtA\"},\"vars\":{\"var\":\"TgtA\"},\"is_set\":[true, false]}, "
+        "{\"name\":\"e3\", \"pairs\":{\"RelA\":\"TgtA\", \"RelB\":\"TgtA\"},\"vars\":{\"var\":\"TgtA\"},\"is_set\":[true, true]}]}";
     test_str(json, expect);
 
     ecs_os_free(json);
@@ -1949,8 +1949,8 @@ void SerializeIterToRowJson_serialize_scope(void) {
      *       the serializer doesn't crash, and will be updated after the query
      *       refactor. */
     char* expect = "{\"results\":["
-        "{\"name\":\"e1\", \"tags\":[\"TagA\", \"TagB\"],\"pairs\":{\"ChildOf\":\"e1\"},\"vars\":{\"child\":\"*\"}}, "
-        "{\"name\":\"e3\", \"tags\":[\"TagA\", \"TagB\", \"TagB\"],\"pairs\":{\"ChildOf\":\"e2\"},\"vars\":{\"child\":\"*\"}}]}";
+        "{\"name\":\"e1\", \"tags\":[\"TagA\", \"TagB\"],\"pairs\":{\"ChildOf\":\"e1\"},\"vars\":{\"child\":\"*\"},\"is_set\":[true, false, true, false, false, true]}, "
+        "{\"name\":\"e3\", \"tags\":[\"TagA\", \"TagB\", \"TagB\"],\"pairs\":{\"ChildOf\":\"e2\"},\"vars\":{\"child\":\"*\"},\"is_set\":[true, false, true, true, false, true]}]}";
     test_str(json, expect);
 
     ecs_os_free(json);
@@ -2025,8 +2025,8 @@ void SerializeIterToRowJson_serialize_neq(void) {
     test_assert(json != NULL);
 
     char* expect = "{\"results\":["
-        "{\"name\":\"e1\", \"tags\":[\"TagA\"]}, "
-        "{\"name\":\"e3\", \"tags\":[\"TagA\"]}]}";
+        "{\"name\":\"e1\", \"tags\":[\"TagA\"],\"is_set\":[true, false]}, "
+        "{\"name\":\"e3\", \"tags\":[\"TagA\"],\"is_set\":[true, false]}]}";
     test_str(json, expect);
 
     ecs_os_free(json);
@@ -2816,6 +2816,294 @@ void SerializeIterToRowJson_serialize_w_type_info(void) {
             "{\"name\":\"e2\", \"components\":{\"Position\":{\"x\":20, \"y\":30}}}, "
             "{\"name\":\"e3\", \"components\":{\"Position\":{\"x\":30, \"y\":40}}}]}";
     
+    test_str(json, expect);
+
+    ecs_os_free(json);
+
+    ecs_rule_fini(q);
+
+    ecs_fini(world);
+}
+
+void SerializeIterToRowJson_serialize_w_field_info(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Mass);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            { "x", ecs_id(ecs_i32_t) },
+            { "y", ecs_id(ecs_i32_t) }
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Mass),
+        .members = {
+            { "value", ecs_id(ecs_i32_t) }
+        }
+    });
+
+    ecs_rule_t *q = ecs_rule(world, {
+        .expr = "Position, ?Mass"
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_entity_t e3 = ecs_new_entity(world, "e3");
+
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_set(world, e2, Position, {20, 30});
+    ecs_set(world, e3, Position, {30, 40});
+
+    ecs_set(world, e3, Mass, {100});
+
+    ecs_iter_t it = ecs_rule_iter(world, q);
+    char *json = ecs_iter_to_json(world, &it, &(ecs_iter_to_json_desc_t) {
+        .serialize_rows = true,
+        .serialize_field_info = true
+    });
+    test_assert(json != NULL);
+
+    char* expect = "{"
+        "\"field_info\":["
+            "{\"id\":\"Position\", \"type\":\"Position\", \"schema\":{\"x\":[\"int\"], \"y\":[\"int\"]}}, "
+            "{\"id\":\"Mass\", \"optional\":true, \"type\":\"Mass\", \"schema\":{\"value\":[\"int\"]}}], "
+        "\"results\":["
+            "{\"name\":\"e1\", \"is_set\":[true, false], \"components\":{\"Position\":{\"x\":10, \"y\":20}}}, "
+            "{\"name\":\"e2\", \"is_set\":[true, false], \"components\":{\"Position\":{\"x\":20, \"y\":30}}}, "
+            "{\"name\":\"e3\", \"is_set\":[true, true], \"components\":{\"Position\":{\"x\":30, \"y\":40}, \"Mass\":{\"value\":100}}}]}";
+    test_str(json, expect);
+
+    ecs_os_free(json);
+
+    ecs_rule_fini(q);
+
+    ecs_fini(world);
+}
+
+void SerializeIterToRowJson_serialize_w_field_info_pair_w_0_target(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Mass);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            { "x", ecs_id(ecs_i32_t) },
+            { "y", ecs_id(ecs_i32_t) }
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Mass),
+        .members = {
+            { "value", ecs_id(ecs_i32_t) }
+        }
+    });
+
+    ecs_rule_t *q = ecs_rule(world, {
+        .expr = "Position, ?Mass, (ChildOf, 0)"
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_entity_t e3 = ecs_new_entity(world, "e3");
+
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_set(world, e2, Position, {20, 30});
+    ecs_set(world, e3, Position, {30, 40});
+
+    ecs_set(world, e3, Mass, {100});
+
+    ecs_iter_t it = ecs_rule_iter(world, q);
+    char *json = ecs_iter_to_json(world, &it, &(ecs_iter_to_json_desc_t) {
+        .serialize_rows = true,
+        .serialize_field_info = true
+    });
+    test_assert(json != NULL);
+
+    char* expect = "{\"field_info\":["
+        "{\"id\":\"Position\", \"type\":\"Position\", \"schema\":{\"x\":[\"int\"], \"y\":[\"int\"]}}, "
+        "{\"id\":\"Mass\", \"optional\":true, \"type\":\"Mass\", \"schema\":{\"value\":[\"int\"]}}, "
+        "{\"id\":\"(ChildOf,0)\", \"exclusive\":true}], "
+    "\"results\":["
+        "{\"name\":\"e1\", \"pairs\":{\"ChildOf\":\"0\"},\"is_set\":[true, false, true], \"components\":{\"Position\":{\"x\":10, \"y\":20}}}, "
+        "{\"name\":\"e2\", \"pairs\":{\"ChildOf\":\"0\"},\"is_set\":[true, false, true], \"components\":{\"Position\":{\"x\":20, \"y\":30}}}, "
+        "{\"name\":\"e3\", \"pairs\":{\"ChildOf\":\"0\"},\"is_set\":[true, true, true], \"components\":{\"Position\":{\"x\":30, \"y\":40}, \"Mass\":{\"value\":100}}}]}";
+    test_str(json, expect);
+
+    ecs_os_free(json);
+
+    ecs_rule_fini(q);
+
+    ecs_fini(world);
+}
+
+void SerializeIterToRowJson_serialize_w_field_info_pair_w_not_tag(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            { "x", ecs_id(ecs_i32_t) },
+            { "y", ecs_id(ecs_i32_t) }
+        }
+    });
+
+    ecs_rule_t *q = ecs_rule(world, {
+        .expr = "Position, !Foo"
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_entity_t e3 = ecs_new_entity(world, "e3");
+
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_set(world, e2, Position, {20, 30});
+    ecs_set(world, e3, Position, {30, 40});
+
+    ecs_add(world, e3, Foo);
+
+    ecs_iter_t it = ecs_rule_iter(world, q);
+    char *json = ecs_iter_to_json(world, &it, &(ecs_iter_to_json_desc_t) {
+        .serialize_rows = true,
+        .serialize_field_info = true
+    });
+    test_assert(json != NULL);
+
+    char* expect = "{"
+        "\"field_info\":["
+            "{\"id\":\"Position\", \"type\":\"Position\", \"schema\":{\"x\":[\"int\"], \"y\":[\"int\"]}}, "
+            "{\"id\":\"Foo\", \"not\":true}], "
+        "\"results\":["
+            "{\"name\":\"e1\", \"is_set\":[true, false], \"components\":{\"Position\":{\"x\":10, \"y\":20}}}, "
+            "{\"name\":\"e2\", \"is_set\":[true, false], \"components\":{\"Position\":{\"x\":20, \"y\":30}}}]}";
+    test_str(json, expect);
+
+    ecs_os_free(json);
+
+    ecs_rule_fini(q);
+
+    ecs_fini(world);
+}
+
+void SerializeIterToRowJson_serialize_w_field_info_pair_w_not_pair(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            { "x", ecs_id(ecs_i32_t) },
+            { "y", ecs_id(ecs_i32_t) }
+        }
+    });
+
+    ecs_rule_t *q = ecs_rule(world, {
+        .expr = "Position, !(ChildOf, flecs)"
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_entity_t e3 = ecs_new_entity(world, "e3");
+
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_set(world, e2, Position, {20, 30});
+    ecs_set(world, e3, Position, {30, 40});
+
+    ecs_add(world, e3, Foo);
+
+    ecs_iter_t it = ecs_rule_iter(world, q);
+    char *json = ecs_iter_to_json(world, &it, &(ecs_iter_to_json_desc_t) {
+        .serialize_rows = true,
+        .serialize_field_info = true
+    });
+    test_assert(json != NULL);
+
+    char* expect = "{"
+        "\"field_info\":["
+            "{\"id\":\"Position\", \"type\":\"Position\", \"schema\":{\"x\":[\"int\"], \"y\":[\"int\"]}}, "
+            "{\"id\":\"(ChildOf,flecs)\", \"not\":true}], "
+        "\"results\":["
+            "{\"name\":\"e1\", \"is_set\":[true, false], \"components\":{\"Position\":{\"x\":10, \"y\":20}}}, "
+            "{\"name\":\"e2\", \"is_set\":[true, false], \"components\":{\"Position\":{\"x\":20, \"y\":30}}}, "
+            "{\"name\":\"e3\", \"is_set\":[true, false], \"components\":{\"Position\":{\"x\":30, \"y\":40}}}]}";
+    test_str(json, expect);
+
+    ecs_os_free(json);
+
+    ecs_rule_fini(q);
+
+    ecs_fini(world);
+}
+
+void SerializeIterToRowJson_serialize_w_field_info_pair_w_not_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Mass);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            { "x", ecs_id(ecs_i32_t) },
+            { "y", ecs_id(ecs_i32_t) }
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Mass),
+        .members = {
+            { "value", ecs_id(ecs_i32_t) }
+        }
+    });
+
+    ecs_rule_t *q = ecs_rule(world, {
+        .expr = "Position, !Mass"
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_entity_t e3 = ecs_new_entity(world, "e3");
+
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_set(world, e2, Position, {20, 30});
+    ecs_set(world, e3, Position, {30, 40});
+
+    ecs_set(world, e3, Mass, {100});
+
+    ecs_iter_t it = ecs_rule_iter(world, q);
+    char *json = ecs_iter_to_json(world, &it, &(ecs_iter_to_json_desc_t) {
+        .serialize_rows = true,
+        .serialize_field_info = true
+    });
+    test_assert(json != NULL);
+
+    char* expect = "{\"field_info\":["
+        "{\"id\":\"Position\", \"type\":\"Position\", \"schema\":{\"x\":[\"int\"], \"y\":[\"int\"]}}, "
+        "{\"id\":\"Mass\", \"not\":true}], "
+    "\"results\":["
+        "{\"name\":\"e1\", \"is_set\":[true, false], \"components\":{\"Position\":{\"x\":10, \"y\":20}}}, "
+        "{\"name\":\"e2\", \"is_set\":[true, false], \"components\":{\"Position\":{\"x\":20, \"y\":30}}}]}";
     test_str(json, expect);
 
     ecs_os_free(json);

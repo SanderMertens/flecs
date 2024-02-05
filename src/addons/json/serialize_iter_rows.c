@@ -141,6 +141,7 @@ bool flecs_json_serialize_tags_pairs_vars(
     result |= flecs_json_serialize_row_tags(world, it, buf);
     result |= flecs_json_serialize_row_pairs(world, it, buf);
     result |= flecs_json_serialize_row_vars(world, it, buf);
+    result |= flecs_json_serialize_iter_result_is_set(it, buf);
     ecs_strbuf_list_pop(buf, "");
     if (!result) {
         ecs_strbuf_reset(buf);
@@ -298,23 +299,41 @@ bool flecs_json_serialize_get_value_ctx(
     if (!ctx->initialized) {
         ctx->initialized = true;
 
+        ecs_strbuf_t idlbl = ECS_STRBUF_INIT;
+        flecs_json_id_member(&idlbl, world, id);
+        ctx->id_label = ecs_strbuf_get(&idlbl);
+
         ecs_entity_t type = ecs_get_typeid(world, id);
         if (!type) {
             return false;
         }
 
+        ctx->type = type;
         ctx->ser = ecs_get(world, type, EcsMetaTypeSerialized);
         if (!ctx->ser) {
             return false;
         }
 
-        ecs_strbuf_t idlbl = ECS_STRBUF_INIT;
-        flecs_json_id_member(&idlbl, world, id);
-        ctx->id_label = ecs_strbuf_get(&idlbl);
-
         return true;
     } else {
         return ctx->ser != NULL;
+    }
+}
+
+bool flecs_json_serialize_get_field_ctx(
+    const ecs_world_t *world,
+    const ecs_iter_t *it,
+    int32_t f,
+    ecs_json_ser_ctx_t *ser_ctx)
+{
+    ecs_json_value_ser_ctx_t *value_ctx = &ser_ctx->value_ctx[f];
+    if (it->query) {
+        return flecs_json_serialize_get_value_ctx(
+            world, it->query->ids[f], value_ctx);
+    } else if (it->ids[f]) {
+        return flecs_json_serialize_get_value_ctx(world, it->ids[f], value_ctx);
+    } else {
+        return false;
     }
 }
 

@@ -840,6 +840,11 @@ void SerializeIterToRowJson_serialize_everything(void);
 void SerializeIterToRowJson_serialize_everything_table(void);
 void SerializeIterToRowJson_serialize_everything_table_w_private(void);
 void SerializeIterToRowJson_serialize_w_type_info(void);
+void SerializeIterToRowJson_serialize_w_field_info(void);
+void SerializeIterToRowJson_serialize_w_field_info_pair_w_0_target(void);
+void SerializeIterToRowJson_serialize_w_field_info_pair_w_not_tag(void);
+void SerializeIterToRowJson_serialize_w_field_info_pair_w_not_pair(void);
+void SerializeIterToRowJson_serialize_w_field_info_pair_w_not_component(void);
 
 // Testsuite 'SerializeTypeInfoToJson'
 void SerializeTypeInfoToJson_bool(void);
@@ -4357,6 +4362,26 @@ bake_test_case SerializeIterToRowJson_testcases[] = {
     {
         "serialize_w_type_info",
         SerializeIterToRowJson_serialize_w_type_info
+    },
+    {
+        "serialize_w_field_info",
+        SerializeIterToRowJson_serialize_w_field_info
+    },
+    {
+        "serialize_w_field_info_pair_w_0_target",
+        SerializeIterToRowJson_serialize_w_field_info_pair_w_0_target
+    },
+    {
+        "serialize_w_field_info_pair_w_not_tag",
+        SerializeIterToRowJson_serialize_w_field_info_pair_w_not_tag
+    },
+    {
+        "serialize_w_field_info_pair_w_not_pair",
+        SerializeIterToRowJson_serialize_w_field_info_pair_w_not_pair
+    },
+    {
+        "serialize_w_field_info_pair_w_not_component",
+        SerializeIterToRowJson_serialize_w_field_info_pair_w_not_component
     }
 };
 
@@ -5536,7 +5561,7 @@ static bake_test_suite suites[] = {
         "SerializeIterToRowJson",
         NULL,
         NULL,
-        54,
+        59,
         SerializeIterToRowJson_testcases
     },
     {

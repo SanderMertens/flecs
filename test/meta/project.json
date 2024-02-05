@@ -876,7 +876,12 @@
                 "serialize_everything",
                 "serialize_everything_table",
                 "serialize_everything_table_w_private",
-                "serialize_w_type_info"
+                "serialize_w_type_info",
+                "serialize_w_field_info",
+                "serialize_w_field_info_pair_w_0_target",
+                "serialize_w_field_info_pair_w_not_tag",
+                "serialize_w_field_info_pair_w_not_pair",
+                "serialize_w_field_info_pair_w_not_component"
             ]
         }, {
             "id": "SerializeTypeInfoToJson",
