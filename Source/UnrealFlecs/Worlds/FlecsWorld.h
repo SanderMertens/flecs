@@ -55,6 +55,18 @@ public:
 		return World != &Other;
 	}
 
+	template <typename FunctionType>
+	FORCEINLINE void ForEach(FunctionType Function)
+	{
+		World->each<FunctionType>(Function);
+	}
+
+	template <typename T, typename FunctionType>
+	FORCEINLINE void ForEach(FunctionType Function)
+	{
+		World->each<T, FunctionType>(Function);
+	}
+
 private:
 	flecs::world* World = nullptr;
 }; // struct FFlecsWorld

@@ -14,7 +14,7 @@ struct FFlecsFilter
 
 public:
     FORCEINLINE FFlecsFilter() = default;
-
+    
     FORCEINLINE FFlecsFilter(const flecs::filter<>& InFilter) : Filter(InFilter) {}
     FORCEINLINE FFlecsFilter(const flecs::filter<>* InFilter) : Filter(*InFilter) {}
 
