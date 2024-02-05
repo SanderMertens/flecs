@@ -52,6 +52,19 @@ flecs::system sys = world.system<Position, const Velocity>("Move")
     });
 ```
 </li>
+<li><b class="tab-title">C#</b>
+
+```cs
+// System declaration
+Routine sys = world.Routine<Position, Velocity>("Move")
+    .Each((ref Position p, ref Velocity v) =>
+    {
+        // Each is invoked for each entity
+        p.X += v.X;
+        p.Y += v.Y;
+    });
+```
+</li>
 </ul>
 </div>
 
@@ -69,6 +82,13 @@ ecs_run(world, ecs_id(Move), 0.0 /* delta_time */, NULL /* param */)
 ```cpp
 flecs::system sys = ...;
 sys.run();
+```
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+Routine sys = ...;
+sys.Run();
 ```
 </li>
 </ul>
@@ -90,6 +110,13 @@ flecs::world world = ...;
 world.progress();
 ```
 </li>
+<li><b class="tab-title">C#</b>
+
+```cs
+using World world = World.Create();
+world.Progress();
+```
+</li>
 </ul>
 </div>
 
@@ -108,6 +135,14 @@ ECS_SYSTEM(world, Move, 0, Position, [in] Velocity);
 flecs::system sys = world.system<Position, const Velocity>("Move")
     .kind(0)
     .each([](Position& p, const Velocity &v) { /* ... */ });
+```
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+Routine sys = world.Routine<Position, Velocity>("Move")
+    .Kind(0)
+    .Each((ref Position p, ref Velocity v) => { /* ... */ });
 ```
 </li>
 </ul>
@@ -183,6 +218,41 @@ The `iter` function can be invoked multiple times per frame, once for each match
 
 Note that there is no significant performance difference between `iter` and `each`, which can both be vectorized by the compiler. By default `each` can actually end up being faster, as it is instanced (see [query manual](Queries.md#each-c)).
 </li>
+<li><b class="tab-title">C#</b>
+
+```cs
+// Query iteration (Each)
+q.Each((ref Position p, ref Velocity v) => { /* ... */ });
+
+// System iteration (Each)
+world.Routine<Position, Velocity>("Move")
+    .Each((ref Position p, ref Velocity v) => { /* ... */ });
+```
+```cs
+// Query iteration (Iter)
+q.Iter((Iter it, Column<Position> p, Column<Velocity> v) =>
+{
+    foreach (int i in it) 
+    {
+        p[i].X += v[i].X;
+        p[i].Y += v[i].Y;
+    }
+});
+
+// System iteration (Iter)
+world.Routine<Position, Velocity>("Move")
+    .Iter((Iter it, Column<Position> p, Column<Velocity> v) =>
+    {
+        foreach (int i in it)
+        {
+            p[i].X += v[i].X;
+            p[i].Y += v[i].Y;
+        }
+    });
+```
+
+The `Iter` function can be invoked multiple times per frame, once for each matched table. The `Each` function is called once per matched entity.
+</li>
 </ul>
 </div>
 
@@ -208,7 +278,7 @@ for (int i = 0; i < it->count, i++) {
 
 ```cpp
 world.system<Position, const Velocity>("Move")
-    .iter([](flecs::iter& it, size_t, Position& p, const Velocity &v) {
+    .each([](flecs::iter& it, size_t, Position& p, const Velocity &v) {
         p.x += v.x * it.delta_time();
         p.y += v.y * it.delta_time();
     });
@@ -218,6 +288,27 @@ world.system<Position, const Velocity>("Move")
         for (auto i : it) {
             p[i].x += v[i].x * it.delta_time();
             p[i].y += v[i].y * it.delta_time();
+        }
+    });
+```
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+world.Routine<Position, Velocity>("Move")
+    .Each((Iter it, int i, ref Position p, ref Velocity v) =>
+    {
+        p.X += v.X * it.DeltaTime();
+        p.Y += v.Y * it.DeltaTime();
+    });
+
+world.Routine<Position, Velocity>("Move")
+    .Iter((Iter it, Column<Position> p, Column<Velocity> v) =>
+    {
+        foreach (int i in it)
+        {
+            p[i].X += v[i].X * it.DeltaTime();
+            p[i].Y += v[i].Y * it.DeltaTime();
         }
     });
 ```
@@ -240,6 +331,12 @@ ecs_progress(world, delta_time);
 world.progress(delta_time);
 ```
 </li>
+<li><b class="tab-title">C#</b>
+
+```cs
+world.Progress(deltaTime);
+```
+</li>
 </ul>
 </div>
 
@@ -256,6 +353,12 @@ ecs_progress(world, 0);
 
 ```cpp
 world.progress();
+```
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+world.Progress();
 ```
 </li>
 </ul>
@@ -298,6 +401,20 @@ world.system("PrintTime")
     .kind(flecs::OnUpdate)
     .iter([](flecs::iter& it) {
         printf("Time: %f\n", it.delta_time());
+    });
+
+// Runs PrintTime
+world.progress();
+```
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+world.Routine("PrintTime")
+    .Kind(Ecs.OnUpdate)
+    .Iter((Iter it) =>
+    {
+        Console.WriteLine($"Time: {it.DeltaTime()}");
     });
 
 // Runs PrintTime
@@ -348,6 +465,18 @@ world.system<Game>("PrintTime")
     });
 ```
 </li>
+<li><b class="tab-title">C#</b>
+
+```cs
+world.Routine<Game>("PrintTime")
+    .TermAt(1).Singleton()
+    .Kind(Ecs.OnUpdate)
+    .Each((ref Game g) =>
+    {
+        Console.WriteLine($"Time: {g.Time}");
+    });
+```
+</li>
 </ul>
 </div>
 
@@ -382,6 +511,18 @@ world.system<Position, Velocity>("Move")
   .each([](Position& p, Velocity& v) {
     // ...
   });
+```
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+// System is created with (DependsOn, OnUpdate)
+world.Routine<Position, Velocity>("Move")
+    .Kind(Ecs.OnUpdate)
+    .Each((ref Position p, ref Velocity v) =>
+    {
+        // ...
+    });
 ```
 </li>
 </ul>
@@ -425,6 +566,18 @@ Flecs has the following builtin phases, listed in topology order:
 - `flecs::PostUpdate`
 - `flecs::PreStore`
 - `flecs::OnStore`
+</li>
+<li><b class="tab-title">C#</b>
+
+- `Ecs.OnStart`
+- `Ecs.OnLoad`
+- `Ecs.PostLoad`
+- `Ecs.PreUpdate`
+- `Ecs.OnUpdate`
+- `Ecs.OnValidate`
+- `Ecs.PostUpdate`
+- `Ecs.PreStore`
+- `Ecs.OnStore`
 </li>
 </ul>
 </div>
@@ -481,6 +634,17 @@ world.pipeline()
 flecs.system.System, Phase(cascade(DependsOn)), !Disabled(up(DependsOn)), !Disabled(up(ChildOf))
 ```
 </li>
+<li><b class="tab-title">C#</b>
+
+```cs
+world.Pipeline()
+    .With(Ecs.System)
+    .With(Ecs.Phase).Cascade(Ecs.DependsOn)
+    .Without(Ecs.Disabled).Up(Ecs.DependsOn)
+    .Without(Ecs.Disabled).Up(Ecs.ChildOf)
+    .Build();
+```
+</li>
 </ul>
 </div>
 
@@ -532,6 +696,27 @@ auto move = world.system<Position, Velocity>("Move")
 world.progress();
 ```
 </li>
+<li><b class="tab-title">C#</b>
+
+```cs
+// Create custom pipeline
+Pipeline pipeline = world.Pipeline()
+    .With(Ecs.System)
+    .With(foo) // or .With<Foo>() if a type
+    .Build();
+
+// Configure the world to use the custom pipeline
+world.SetPipeline(pipeline);
+
+// Create system
+Routine move = world.Routine<Position, Velocity>("Move")
+    .Kind(foo) // or .Kind<Foo>() if a type
+    .Each(...);
+
+// Runs the pipeline & system
+world.Progress();
+```
+</li>
 </ul>
 </div>
 
@@ -553,6 +738,12 @@ ecs_add(world, Move, Foo);
 
 ```cpp
 move.add(Foo);
+```
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+move.Entity.Add(foo);
 ```
 </li>
 </ul>
@@ -588,6 +779,15 @@ s.disable();
 s.enable();
 ```
 </li>
+<li><b class="tab-title">C#</b>
+
+```cs
+// Disable system in C#
+s.Entity.Disable();
+// Enable system in C#
+s.Entity.Enable();
+```
+</li>
 </ul>
 </div>
 
@@ -604,6 +804,12 @@ ecs_add_id(world, Move, EcsDisabled);
 
 ```cpp
 s.add(flecs::Disabled);
+```
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+s.Entity.Add(Ecs.Disabled);
 ```
 </li>
 </ul>
@@ -684,6 +890,15 @@ world.system<Position>()
     .each( /* ... */);
 ```
 </li>
+<li><b class="tab-title">C#</b>
+
+```cs
+// In the C# API, use the write method to indicate commands could be inserted.
+world.Routine<Position>()
+    .Write<Transform>()
+    .Each( /* ... */);
+```
+</li>
 </ul>
 </div>
 
@@ -717,6 +932,15 @@ ecs_system(world, {
 world.system<Position>()
     .read<Transform>()
     .each( /* ... */);
+```
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+// In the C# API, use the read method to indicate a component is read using .Get
+world.Routine<Position>()
+    .Read<Transform>()
+    .Each( /* ... */);
 ```
 </li>
 </ul>
@@ -762,6 +986,15 @@ ecs_system(ecs, {
         .iter([&](flecs::iter& it) { /* ... */ })
 ```
 </li>
+<li><b class="tab-title">C#</b>
+
+```cs
+ecs.Routine("AssignPlate")
+    .With<Plate>()
+    .NoReadonly() // disable readonly mode for this system
+    .Iter((Iter it) => { /* ... */ })
+```
+</li>
 </ul>
 </div>
 
@@ -796,6 +1029,22 @@ void AssignPlate(ecs_iter_t *it) {
 });
 ```
 </li>
+<li><b class="tab-title">C#</b>
+
+```cs
+.Iter((Iter it) =>
+{
+    foreach (int i in it)
+    {
+        // ECS operations ran here are visible after running the system
+        it.World().DeferSuspend();
+        // ECS operations ran here are immediately visible
+        it.World().DeferResume();
+        // ECS operations ran here are visible after running the system
+    }
+});
+```
+</li>
 </ul>
 </div>
 
@@ -815,6 +1064,12 @@ ecs_set_threads(world, 4); // Create 4 worker threads
 
 ```cpp
 world.set_threads(4);
+```
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+world.SetThreads(4);
 ```
 </li>
 </ul>
@@ -846,6 +1101,14 @@ world.system<Position>()
   .each( /* ... */ );
 ```
 </li>
+<li><b class="tab-title">C#</b>
+
+```cs
+world.Routine<Position>()
+  .MultiThreaded()
+  .Each( /* ... */ );
+```
+</li>
 </ul>
 </div>
 
@@ -868,6 +1131,12 @@ ecs_set_task_threads(world, 4); // Create 4 worker task threads for the duration
 
 ```cpp
 world.set_task_threads(4);
+```
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+world.SetTaskThreads(4);
 ```
 </li>
 </ul>
@@ -918,6 +1187,14 @@ world.system<Position, const Velocity>()
     .each(...);
 ```
 </li>
+<li><b class="tab-title">C#</b>
+
+```cs
+world.Routine<Position, Velocity>()
+    .Interval(1.0f) // Run at 1Hz
+    .Each(...);
+```
+</li>
 </ul>
 </div>
 
@@ -954,6 +1231,14 @@ ecs_system(world, {
 world.system<Position, const Velocity>()
     .rate(2) // Run every other frame
     .each(...);
+```
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+world.Routine<Position, Velocity>()
+    .Rate(2) // Run every other frame
+    .Each(...);
 ```
 </li>
 </ul>
@@ -1008,6 +1293,18 @@ world.system<Position, const Velocity>()
     .each(...);
 ```
 </li>
+<li><b class="tab-title">C#</b>
+
+```cs
+// A rate filter can be created with .Rate(2)
+TimerEntity tickSource = world.Timer()
+    .Interval(1.0f);
+
+world.Routine<Position, Velocity>()
+    .TickSource(tickSource) // Set tick source for system
+    .Each(...);
+```
+</li>
 </ul>
 </div>
 
@@ -1032,6 +1329,16 @@ tick_source.stop();
 
 // Resume timer
 tick_source.start();
+```
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+// Pause timer
+tickSource.Stop();
+
+// Resume timer
+tickSource.Start();
 ```
 </li>
 </ul>
@@ -1072,6 +1379,22 @@ flecs::entity each_minute = world.timer()
 // Tick each hour
 flecs::entity each_hour = world.timer()
     .rate(60, each_minute);
+```
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+// Tick at 1Hz
+TimerEntity eachSecond = world.Timer()
+    .Interval(1.0f);
+
+// Tick each minute
+TimerEntity eachMinute = world.Timer()
+    .Rate(60, eachSecond);
+
+// Tick each hour
+TimerEntity eachHour = world.Timer()
+    .Rate(60, eachMinute);
 ```
 </li>
 </ul>
@@ -1135,6 +1458,27 @@ flecs::entity each_hour = world.system("EachHour")
     .tick_source(each_minute)
     .rate(60)
     .iter([](flecs::iter& it) { /* ... */ });
+```
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+// Tick at 1Hz
+Routine eachSecond = world.Routine("EachSecond")
+    .Interval(1.0f)
+    .Iter((Iter it) => { /* ... */ });
+
+// Tick each minute
+Routine eachMinute = world.Routine("EachMinute")
+    .TickSource(eachSecond)
+    .Rate(60)
+    .Iter((Iter it) => { /* ... */ });
+
+// Tick each hour
+Routine eachHour = world.Routine("EachHour")
+    .TickSource(eachMinute)
+    .Rate(60)
+    .Iter((Iter it) => { /* ... */ });
 ```
 </li>
 </ul>
