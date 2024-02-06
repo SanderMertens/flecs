@@ -2,7 +2,7 @@
 #include <iostream>
 
 /* Prefabs can inherit from each other, which creates prefab variants. With
- * variants applications can reuse a commmon set of components and specialize it
+ * variants applications can reuse a common set of components and specialize it
  * by adding or overriding components on the variant. */
 
 struct Attack { 

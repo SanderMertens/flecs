@@ -2751,7 +2751,7 @@ void* ecs_get_mut_id(
     ecs_entity_t entity,
     ecs_id_t id);
 
-/** Combines get_mut + modifed in single operation.
+/** Combines get_mut + modified in single operation.
  * This operation is a more efficient alternative to calling ecs_get_mut_id() and
  * ecs_modified_id() separately. This operation is only valid when the world is in
  * deferred mode, which ensures that the Modified event is not emitted before

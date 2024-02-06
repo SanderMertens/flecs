@@ -1031,7 +1031,7 @@ struct world {
  *  ecs_ensure. */
 #ifndef ensure
     /** Ensures that entity with provided generation is alive.
-     * Ths operation will fail if an entity exists with the same id and a
+     * This operation will fail if an entity exists with the same id and a
      * different, non-zero generation.
      *
      * @see ecs_ensure

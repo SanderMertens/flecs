@@ -195,7 +195,7 @@ ecs_id_record_t* flecs_id_record_new(
 
             /* If pair is not a wildcard, append it to wildcard lists. These 
              * allow for quickly enumerating all relationships for an object, 
-             * or all objecs for a relationship. */
+             * or all objects for a relationship. */
             flecs_insert_id_elem(world, idr, ecs_pair(rel, EcsWildcard), idr_r);
 
             idr_t = flecs_id_record_ensure(world, ecs_pair(EcsWildcard, tgt));
