@@ -312,3 +312,29 @@ void Reference_get_ref_w_low_id_tag_after_add(void) {
 
     ecs_fini(world);
 }
+
+void Reference_aba_table(void) {
+  ecs_world_t *world = ecs_mini();
+
+  ECS_COMPONENT(world, Position);
+
+  ecs_entity_t t1 = ecs_new_id(world);
+  ecs_entity_t t2 = ecs_new_id(world);
+  ecs_entity_t t3 = ecs_new_id(world);
+  ecs_entity_t e = ecs_new_id(world);
+
+  ecs_set_pair(world, e, Position, t1, {10, 20});
+  ecs_set_pair(world, e, Position, t2, {20, 30});
+
+  ecs_ref_t r = ecs_ref_init_id(world, e, ecs_pair_t(Position, t2));
+
+  ecs_delete(world, t1);
+  ecs_set_pair(world, e, Position, t3, {30, 40});
+
+  Position *p = ecs_ref_get_id(world, &r, ecs_pair_t(Position, t2));
+  test_assert(p != NULL);
+  test_int(p->x, 20);
+  test_int(p->y, 30);
+  
+  ecs_fini(world);
+}

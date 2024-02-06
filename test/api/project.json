@@ -673,7 +673,8 @@
                 "get_ref_monitored",
                 "get_ref_w_low_id_tag",
                 "get_ref_w_low_id_tag_after_add",
-                "get_nonexisting"
+                "get_nonexisting",
+                "aba_table"
             ]
         }, {
             "id": "Delete",
