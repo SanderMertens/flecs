@@ -3166,3 +3166,32 @@ void OnDelete_fini_query_w_singleton_in_module(void) {
 
     ecs_fini(world);
 }
+
+void OnDelete_fini_observer_w_relationship_in_scope(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t Tag = ecs_new_id(world);
+
+    ecs_entity_t ns = ecs_new_entity(world, "ns");
+    ecs_entity_t Rel = ecs_component(world, {
+        .entity = ecs_entity(world, { .name = "Rel" }),
+    });
+
+    ecs_add_pair(world, Rel, EcsChildOf, ns);
+
+    ecs_observer(world, {
+        .filter.terms = {
+            { ecs_pair(Rel, EcsWildcard) },
+            { Tag }
+        },
+        .events = { EcsOnRemove },
+        .callback = Observer
+    });
+
+    ecs_new_w_id(world, Tag);
+
+    ecs_fini(world);
+
+    // Tests edge case where above code would cause a crash
+    test_assert(true);
+}

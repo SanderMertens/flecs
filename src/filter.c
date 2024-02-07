@@ -2191,8 +2191,14 @@ bool flecs_term_match_table(
     ecs_table_record_t *tr = 0;
     bool is_any = is_any_pair(id);
 
+    ecs_id_record_t *idr = term->idr;
+    if (world->flags & EcsWorldQuit) {
+        /* During world cleanup the keep_alive assert for id records is no 
+         * longer enforced */
+        idr = NULL;
+    }
     column = flecs_search_relation_w_idr(world, match_table,
-        column, id, src->trav, src->flags, &source, id_out, &tr, term->idr);
+        column, id, src->trav, src->flags, &source, id_out, &tr, idr);
 
     if (tr && match_index_out) {
         if (!is_any) {
@@ -2548,8 +2554,14 @@ bool flecs_term_iter_find_superset(
     ecs_term_id_t *src = &term->src;
 
     /* Test if following the relationship finds the id */
+    ecs_id_record_t *idr = term->idr;
+    if (world->flags & EcsWorldQuit) {
+        /* During world cleanup the keep_alive assert for id records is no 
+         * longer enforced */
+        idr = NULL;
+    }
     int32_t index = flecs_search_relation_w_idr(world, table, 0, 
-        term->id, src->trav, src->flags, source, id, 0, term->idr);
+        term->id, src->trav, src->flags, source, id, 0, idr);
 
     if (index == -1) {
         *source = 0;

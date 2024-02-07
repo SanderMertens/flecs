@@ -720,8 +720,6 @@ void Event_emit_nested(void) {
         .ctx = &ctx_2,
         .callback = Nested2
     });
-
-    printf("\n\n\n\n\n\n");
     
     ecs_emit(world, &(ecs_event_desc_t) {
         .event = Event,

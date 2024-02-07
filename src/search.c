@@ -17,7 +17,7 @@ int32_t flecs_type_search(
     ecs_id_t *ids,
     ecs_id_t *id_out,
     ecs_table_record_t **tr_out)
-{    
+{
     ecs_table_record_t *tr = ecs_table_cache_get(&idr->cache, table);
     if (tr) {
         int32_t r = tr->index;

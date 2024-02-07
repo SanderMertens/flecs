@@ -791,6 +791,7 @@ void OnDelete_delete_w_low_rel_mixed_cleanup(void);
 void OnDelete_delete_w_low_rel_mixed_cleanup_interleaved_ids(void);
 void OnDelete_fini_query_w_singleton_in_scope_no_module(void);
 void OnDelete_fini_query_w_singleton_in_module(void);
+void OnDelete_fini_observer_w_relationship_in_scope(void);
 
 // Testsuite 'Set'
 void Set_set_empty(void);
@@ -5692,6 +5693,10 @@ bake_test_case OnDelete_testcases[] = {
     {
         "fini_query_w_singleton_in_module",
         OnDelete_fini_query_w_singleton_in_module
+    },
+    {
+        "fini_observer_w_relationship_in_scope",
+        OnDelete_fini_observer_w_relationship_in_scope
     }
 };
 
@@ -13023,7 +13028,6 @@ bake_test_case StackAlloc_testcases[] = {
     }
 };
 
-
 static bake_test_suite suites[] = {
     {
         "Id",
@@ -13155,7 +13159,7 @@ static bake_test_suite suites[] = {
         "OnDelete",
         NULL,
         NULL,
-        115,
+        116,
         OnDelete_testcases
     },
     {
