@@ -189,6 +189,7 @@ void Event_emit_custom_implicit_any(void);
 void Event_emit_custom_empty_type(void);
 void Event_emit_w_param(void);
 void Event_emit_w_const_param(void);
+void Event_emit_nested(void);
 void Event_enqueue_event_1_id(void);
 void Event_enqueue_event_2_ids(void);
 void Event_enqueue_event_w_data(void);
@@ -3378,6 +3379,10 @@ bake_test_case Event_testcases[] = {
     {
         "emit_w_const_param",
         Event_emit_w_const_param
+    },
+    {
+        "emit_nested",
+        Event_emit_nested
     },
     {
         "enqueue_event_1_id",
@@ -13045,7 +13050,7 @@ static bake_test_suite suites[] = {
         "Event",
         NULL,
         NULL,
-        33,
+        34,
         Event_testcases
     },
     {

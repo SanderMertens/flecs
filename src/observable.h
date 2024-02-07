@@ -54,8 +54,7 @@ void flecs_observers_invoke(
     ecs_map_t *observers,
     ecs_iter_t *it,
     ecs_table_t *table,
-    ecs_entity_t trav,
-    int32_t evtx);
+    ecs_entity_t trav);
 
 void flecs_emit_propagate_invalidate(
     ecs_world_t *world,

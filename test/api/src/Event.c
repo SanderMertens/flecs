@@ -664,6 +664,78 @@ void Event_emit_w_const_param(void) {
     ecs_fini(world);
 }
 
+static ecs_entity_t other = 0;
+
+static void Nested1(ecs_iter_t *it) {
+    int *ctx = it->ctx;
+    (*ctx) ++;
+
+    test_int(it->count, 1);
+
+    if (it->entities[0] != other) {
+        ecs_emit(it->world, &(ecs_event_desc_t) {
+            .event = it->event,
+            .ids = &(ecs_type_t){ .count = 1, .array = &it->event_id },
+            .entity = other,
+            .observable = it->world
+        });
+    }
+}
+
+static void Nested2(ecs_iter_t *it) {
+    int *ctx = it->ctx;
+    (*ctx) ++;
+}
+
+void Event_emit_nested(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+    ECS_TAG(world, Event);
+
+    int ctx_1 = 0;
+    int ctx_2 = 0;
+
+    ecs_entity_t e1 = ecs_new_id(world);
+    other = ecs_new_id(world);
+
+    ecs_add(world, e1, Foo);
+    ecs_add(world, e1, Bar);
+    ecs_add(world, other, Foo);
+    ecs_add(world, other, Bar);
+
+    ecs_observer(world, {
+        .entity = ecs_entity(world, { .name = "o1" }),
+        .filter.terms = {{ Foo }, { Bar }},
+        .events = { Event },
+        .ctx = &ctx_1,
+        .callback = Nested1
+    });
+
+    ecs_observer(world, {
+        .entity = ecs_entity(world, { .name = "o2" }),
+        .filter.terms = {{ Foo }, { Bar }},
+        .events = { Event },
+        .ctx = &ctx_2,
+        .callback = Nested2
+    });
+
+    printf("\n\n\n\n\n\n");
+    
+    ecs_emit(world, &(ecs_event_desc_t) {
+        .event = Event,
+        .ids =  &(ecs_type_t){ .count = 1, .array = &Foo },
+        .entity = e1,
+        .observable = world
+    });
+
+    test_int(ctx_1, 2);
+    test_int(ctx_2, 2);
+
+    ecs_fini(world);
+}
+
 void Event_enqueue_event_1_id(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -1466,3 +1538,4 @@ void Event_enqueue_on_readonly_world(void) {
 
     ecs_fini(world);
 }
+

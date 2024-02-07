@@ -234,13 +234,13 @@ static
 bool flecs_ignore_observer(
     ecs_observer_t *observer,
     ecs_table_t *table,
-    int32_t evtx)
+    ecs_iter_t *it)
 {
     ecs_assert(observer != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     int32_t *last_event_id = observer->last_event_id;
-    if (last_event_id && last_event_id[0] == evtx) {
+    if (last_event_id && last_event_id[0] == it->event_cur) {
         return true;
     }
 
@@ -353,12 +353,11 @@ void flecs_uni_observer_invoke(
     ecs_iter_t *it,
     ecs_table_t *table,
     ecs_entity_t trav,
-    int32_t evtx,
     bool simple_result)
 {
     ecs_filter_t *filter = &observer->filter;
     ecs_term_t *term = &filter->terms[0];
-    if (flecs_ignore_observer(observer, table, evtx)) {
+    if (flecs_ignore_observer(observer, table, it)) {
         return;
     }
 
@@ -377,6 +376,7 @@ void flecs_uni_observer_invoke(
     it->terms = observer->filter.terms;
 
     ecs_entity_t event = it->event;
+    int32_t event_cur = it->event_cur;
     it->event = flecs_get_observer_event(term, event);
 
     if (observer->run) {
@@ -391,6 +391,7 @@ void flecs_uni_observer_invoke(
     }
 
     it->event = event;
+    it->event_cur = event_cur;
 }
 
 void flecs_observers_invoke(
@@ -398,8 +399,7 @@ void flecs_observers_invoke(
     ecs_map_t *observers,
     ecs_iter_t *it,
     ecs_table_t *table,
-    ecs_entity_t trav,
-    int32_t evtx)
+    ecs_entity_t trav)
 {
     if (ecs_map_is_init(observers)) {
         ecs_table_lock(it->world, table);
@@ -409,7 +409,8 @@ void flecs_observers_invoke(
         while (ecs_map_next(&oit)) {
             ecs_observer_t *o = ecs_map_ptr(&oit);
             ecs_assert(it->table == table, ECS_INTERNAL_ERROR, NULL);
-            flecs_uni_observer_invoke(world, o, it, table, trav, evtx, simple_result);
+            flecs_uni_observer_invoke(
+                world, o, it, table, trav, simple_result);
         }
 
         ecs_table_unlock(it->world, table);
@@ -417,11 +418,13 @@ void flecs_observers_invoke(
 }
 
 static
-bool flecs_multi_observer_invoke(ecs_iter_t *it) {
+bool flecs_multi_observer_invoke(
+    ecs_iter_t *it) 
+{
     ecs_observer_t *o = it->ctx;
     ecs_world_t *world = it->real_world;
 
-    if (o->last_event_id[0] == world->event_id) {
+    if (o->last_event_id[0] == it->event_cur) {
         /* Already handled this event */
         return false;
     }
@@ -536,7 +539,9 @@ bool ecs_observer_default_run_action(ecs_iter_t *it) {
 }
 
 static
-void flecs_default_multi_observer_run_callback(ecs_iter_t *it) {
+void flecs_default_multi_observer_run_callback(
+    ecs_iter_t *it) 
+{
     flecs_multi_observer_invoke(it);
 }
 
@@ -598,6 +603,7 @@ void flecs_uni_observer_yield_existing(
         ecs_assert(next != NULL, ECS_INTERNAL_ERROR, NULL);
         while (next(&it)) {
             it.event_id = it.ids[0];
+            it.event_cur = ++ world->event_id;
             callback(&it);
         }
     }
@@ -649,8 +655,8 @@ void flecs_multi_observer_yield_existing(
         ecs_assert(next != NULL, ECS_INTERNAL_ERROR, NULL);
         while (next(&it)) {
             it.event_id = it.ids[0];
+            it.event_cur = ++ world->event_id;
             run(&it);
-            world->event_id ++;
         }
     }
 

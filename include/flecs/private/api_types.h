@@ -265,6 +265,7 @@ struct ecs_iter_t {
     ecs_entity_t system;          /* The system (if applicable) */
     ecs_entity_t event;           /* The event (if applicable) */
     ecs_id_t event_id;            /* The (component) id for the event */
+    int32_t event_cur;            /* Unique event id. Used to dedup observer calls */
 
     /* Query information */
     const ecs_filter_t *query;    /* Query being evaluated */
