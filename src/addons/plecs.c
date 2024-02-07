@@ -776,7 +776,7 @@ int plecs_create_term(
     } else {
         if (!obj) {
             /* If no subject or object were provided, use predicate as subj 
-             * unless the expression explictly excluded the subject */
+             * unless the expression explicitly excluded the subject */
             if (pred_as_subj) {
                 state->last_subject = pred;
                 subj = pred;

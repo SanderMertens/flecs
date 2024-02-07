@@ -284,7 +284,7 @@ int ecs_ptr_to_str_buf(
  *
  * @param world The world.
  * @param kind The kind of primitive value.
- * @param data The value ot serialize
+ * @param data The value to serialize
  * @param buf The strbuf to append the string to.
  * @return Zero if success, non-zero if failed.
  */

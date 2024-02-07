@@ -5530,7 +5530,7 @@ void* ecs_get_mut_id(
     ecs_entity_t entity,
     ecs_id_t id);
 
-/** Combines get_mut + modifed in single operation.
+/** Combines get_mut + modified in single operation.
  * This operation is a more efficient alternative to calling ecs_get_mut_id() and
  * ecs_modified_id() separately. This operation is only valid when the world is in
  * deferred mode, which ensures that the Modified event is not emitted before
@@ -14677,7 +14677,7 @@ int ecs_ptr_to_str_buf(
  *
  * @param world The world.
  * @param kind The kind of primitive value.
- * @param data The value ot serialize
+ * @param data The value to serialize
  * @param buf The strbuf to append the string to.
  * @return Zero if success, non-zero if failed.
  */
@@ -20601,7 +20601,7 @@ struct world {
  *  ecs_ensure. */
 #ifndef ensure
     /** Ensures that entity with provided generation is alive.
-     * Ths operation will fail if an entity exists with the same id and a
+     * This operation will fail if an entity exists with the same id and a
      * different, non-zero generation.
      *
      * @see ecs_ensure
