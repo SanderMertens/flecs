@@ -2944,6 +2944,81 @@ void DeserializeFromJson_ser_deser_new_world_2_entities_w_named_parent_w_cycle(v
     ecs_fini(world);
 }
 
+void DeserializeFromJson_ser_deser_new_world_w_prefab(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_entity_t b = ecs_new(world, Foo);
+    test_assert(b != 0);
+    ecs_add_id(world, b, EcsPrefab);
+    ecs_entity_t e = ecs_new(world, Bar);
+    test_assert(e != 0);
+    ecs_add_pair(world, e, EcsIsA, b);
+
+    char *json = ecs_world_to_json(world, NULL);
+    test_assert(json != NULL);
+
+    ecs_fini(world);
+    world = ecs_init();
+    ECS_TAG_DEFINE(world, Foo); /* pin tags */
+    ECS_TAG_DEFINE(world, Bar);
+
+    const char *r = ecs_world_from_json(world, json, NULL);
+    test_str(r, "");
+    ecs_os_free(json);
+
+    test_assert(ecs_is_alive(world, Foo));
+    test_assert(ecs_is_alive(world, Bar));
+    test_assert(ecs_is_alive(world, b));
+    test_assert(ecs_is_alive(world, e));
+
+    test_assert(ecs_has(world, b, Foo));
+    test_assert(ecs_has_id(world, b, EcsPrefab));
+    test_assert(ecs_has(world, e, Foo));
+    test_assert(ecs_has(world, e, Bar));
+    test_assert(ecs_has_pair(world, e, EcsIsA, b));
+    test_str(ecs_get_name(world, Foo), "Foo");
+    test_str(ecs_get_name(world, Bar), "Bar");
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_ser_deser_new_world_w_disabled(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_entity_t b = ecs_new(world, Foo);
+    test_assert(b != 0);
+    ecs_enable(world, b, false);
+    test_assert(ecs_has_id(world, b, EcsDisabled));
+
+    char *json = ecs_world_to_json(world, NULL);
+    test_assert(json != NULL);
+
+    ecs_fini(world);
+    world = ecs_init();
+    ECS_TAG_DEFINE(world, Foo); /* pin tags */
+    ECS_TAG_DEFINE(world, Bar);
+
+    const char *r = ecs_world_from_json(world, json, NULL);
+    test_str(r, "");
+    ecs_os_free(json);
+
+    test_assert(ecs_is_alive(world, Foo));
+    test_assert(ecs_is_alive(world, Bar));
+    test_assert(ecs_is_alive(world, b));
+
+    test_assert(ecs_has(world, b, Foo));
+    test_assert(ecs_has_id(world, b, EcsDisabled));
+    test_str(ecs_get_name(world, Foo), "Foo");
+
+    ecs_fini(world);
+}
+
 void DeserializeFromJson_ser_deser_restore_1_entity_to_empty_table(void) {
     ecs_world_t *world = ecs_init();
 

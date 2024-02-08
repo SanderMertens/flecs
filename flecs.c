@@ -53645,6 +53645,8 @@ int ecs_world_to_json_buf(
         }
     }
 
+    filter_desc.flags = EcsFilterMatchDisabled|EcsFilterMatchPrefab;
+
     if (ecs_filter_init(world, &filter_desc) == NULL) {
         return -1;
     }
