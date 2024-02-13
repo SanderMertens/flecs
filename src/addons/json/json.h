@@ -17,6 +17,7 @@ typedef enum ecs_json_token_t {
     JsonComma,
     JsonNumber,
     JsonString,
+    JsonBoolean,
     JsonTrue,
     JsonFalse,
     JsonNull,
@@ -52,6 +53,12 @@ const char* flecs_json_expect(
     const char *json,
     ecs_json_token_t token_kind,
     char *token,
+    const ecs_from_json_desc_t *desc);
+
+const char* flecs_json_expect_string(
+    const char *json,
+    char *token,
+    char **out,
     const ecs_from_json_desc_t *desc);
 
 const char* flecs_json_expect_member(

@@ -1170,6 +1170,10 @@ int flecs_json_serialize_matches(
                 ecs_entity_t *entities = ecs_vec_first(&table->data.entities);
                 for (i = 0; i < count; i ++) {
                     ecs_poly_t *q = queries[i].poly;
+                    if (!q) {
+                        continue;
+                    }
+
                     ecs_iter_t qit;
                     ecs_iter_poly(world, q, &qit, NULL);
                     if (!qit.variables) {

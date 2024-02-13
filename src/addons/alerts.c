@@ -248,6 +248,10 @@ void MonitorAlerts(ecs_iter_t *it) {
         ecs_entity_t default_severity = ecs_get_target(
             world, a, ecs_id(EcsAlert), 0);
         ecs_rule_t *rule = poly[i].poly;
+        if (!rule) {
+            continue;
+        }
+
         ecs_poly_assert(rule, ecs_rule_t);
 
         ecs_id_t member_id = alert[i].id;
@@ -366,6 +370,10 @@ void MonitorAlertInstances(ecs_iter_t *it) {
     ecs_assert(poly != NULL, ECS_INVALID_OPERATION, 
         "alert entity does not have (Poly, Query) component");
     ecs_rule_t *rule = poly->poly;
+    if (!rule) {
+        return;
+    }
+
     ecs_poly_assert(rule, ecs_rule_t);
 
     ecs_id_t member_id = alert->id;
