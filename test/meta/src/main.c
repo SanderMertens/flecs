@@ -639,6 +639,7 @@ void DeserializeFromJson_ser_deser_long_name_256_chars(void);
 void DeserializeFromJson_ser_deser_w_alerts(void);
 void DeserializeFromJson_ser_deser_w_alerts_w_progress(void);
 void DeserializeFromJson_ser_deser_struct(void);
+void DeserializeFromJson_ser_deser_anon_w_same_id_as_existing_named(void);
 
 // Testsuite 'SerializeToJson'
 void SerializeToJson_struct_bool(void);
@@ -3598,6 +3599,10 @@ bake_test_case DeserializeFromJson_testcases[] = {
     {
         "ser_deser_struct",
         DeserializeFromJson_ser_deser_struct
+    },
+    {
+        "ser_deser_anon_w_same_id_as_existing_named",
+        DeserializeFromJson_ser_deser_anon_w_same_id_as_existing_named
     }
 };
 
@@ -5633,7 +5638,7 @@ static bake_test_suite suites[] = {
         "DeserializeFromJson",
         NULL,
         NULL,
-        123,
+        124,
         DeserializeFromJson_testcases
     },
     {

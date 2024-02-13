@@ -5796,3 +5796,44 @@ void DeserializeFromJson_ser_deser_w_alerts_w_progress(void) {
 
     ecs_fini(world);
 }
+
+void DeserializeFromJson_ser_deser_anon_w_same_id_as_existing_named(void) {
+    ecs_world_t *world = ecs_init();
+
+    {
+        ECS_TAG(world, Foo);
+        ECS_TAG(world, Bar);
+
+        ecs_entity_t e = 2000;
+        ecs_ensure(world, e);
+        ecs_add(world, e, Foo);
+    }
+
+    char *json = ecs_world_to_json(world, NULL);
+    test_assert(json != NULL);
+
+    ecs_fini(world);
+    world = ecs_init();
+
+    {
+        ECS_IMPORT(world, FlecsAlerts);
+        ECS_TAG(world, Foo);
+        ECS_TAG(world, Bar);
+
+        ecs_entity_t e = 2000;
+        ecs_ensure(world, e);
+        ecs_set_name(world, e, "e");
+        ecs_add(world, e, Bar);
+
+        const char *r = ecs_world_from_json(world, json, NULL);
+        test_str(r, "");
+        ecs_os_free(json);
+
+        test_assert(!ecs_has(world, e, Foo));
+        test_assert(ecs_has(world, e, Bar));
+
+        test_int(ecs_count(world, Foo), 1);
+    }
+
+    ecs_fini(world);
+}

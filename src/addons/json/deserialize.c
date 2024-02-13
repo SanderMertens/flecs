@@ -532,9 +532,13 @@ ecs_entity_t flecs_json_ensure_entity(
              * to use. This allows the deserializer to bind to existing 
              * anonymous ids, as they will never be reissued. */
             deser_id = ecs_map_ensure(anonymous_ids, ser_id);
-            if (!ecs_exists(world, ser_id) || ecs_is_alive(world, ser_id)) {
+            if (!ecs_exists(world, ser_id) || 
+               (ecs_is_alive(world, ser_id) && !ecs_get_name(world, ser_id))) 
+            {
                 /* Only use existing id if it's alive or doesn't exist yet. The 
-                 * id could have been recycled for another entity */
+                 * id could have been recycled for another entity 
+                 * Also don't use existing id if the existing entity is not
+                 * anonymous. */
                 deser_id[0] = ser_id;
                 ecs_ensure(world, ser_id);
             } else {
