@@ -559,6 +559,13 @@ ecs_entity_t flecs_json_ensure_entity(
 }
 
 static
+int flecs_id_cmp(const void *a, const void *b) {
+    ecs_id_t id_a = *(const ecs_id_t*)a;
+    ecs_id_t id_b = *(const ecs_id_t*)b;
+    return (id_a > id_b) - (id_a < id_b);
+}
+
+static
 ecs_table_t* flecs_json_parse_table(
     ecs_world_t *world,
     const char *json,
@@ -567,7 +574,6 @@ ecs_table_t* flecs_json_parse_table(
     const ecs_from_json_desc_t *desc)
 {
     ecs_json_token_t token_kind = 0;
-    ecs_table_t *table = NULL;
 
     ecs_vec_clear(&ctx->result_ids);
 
@@ -626,11 +632,6 @@ ecs_table_t* flecs_json_parse_table(
 
         ecs_vec_append_t(ctx->a, &ctx->result_ids, ecs_id_t)[0] = id;
 
-        table = ecs_table_add_id(world, table, id);
-        if (!table) {
-            goto error;
-        }
-
         const char *lah = flecs_json_parse(json, &token_kind, token);
         if (token_kind == JsonComma) {
             json = lah;
@@ -642,6 +643,25 @@ ecs_table_t* flecs_json_parse_table(
             goto error;
         }
     } while (json[0]);
+
+    /* Make a copy of the ids array because we need the original order for 
+     * deserializing the component values, and the sorted order for finding or
+     * creating the table. */
+    ecs_vec_t id_copy = ecs_vec_copy_t(ctx->a, &ctx->result_ids, ecs_id_t);
+    ecs_type_t type = { 
+        .array = ecs_vec_first(&id_copy),
+        .count = ecs_vec_count(&id_copy)
+    };
+
+    qsort(type.array, flecs_itosize(type.count), sizeof(ecs_id_t), 
+        flecs_id_cmp);
+
+    ecs_table_t *table = flecs_table_find_or_create(world, &type);
+    if (!table) {
+        goto error;
+    }
+
+    ecs_vec_fini_t(ctx->a, &id_copy, ecs_id_t);
 
     return table;
 error:
