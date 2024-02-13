@@ -275,6 +275,10 @@ int flecs_entity_compare(
     ecs_entity_t e2, 
     const void *ptr2); 
 
+/* Load file contents into string */
+char* flecs_load_from_file(
+    const char *filename);
+
 bool flecs_name_is_id(
     const char *name);
 

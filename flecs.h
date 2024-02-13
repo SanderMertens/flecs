@@ -12734,6 +12734,10 @@ typedef struct ecs_from_json_desc_t {
         const char *value,
         void *ctx);
     void *lookup_ctx;
+
+    /** Require components to be registered with reflection data. When not
+     * in strict mode, values for components without reflection are ignored. */
+    bool strict;
 } ecs_from_json_desc_t;
 
 /** Parse JSON string into value.
@@ -12777,11 +12781,26 @@ const char* ecs_entity_from_json(
  *
  * @param world The world.
  * @param json The JSON expression to parse (see iterator in JSON format manual).
+ * @param desc Deserialization parameters.
+ * @return Last deserialized character, NULL if failed.
  */
 FLECS_API
 const char* ecs_world_from_json(
     ecs_world_t *world,
     const char *json,
+    const ecs_from_json_desc_t *desc);
+
+/** Same as ecs_world_from_json(), but loads JSON from file. 
+ * 
+ * @param world The world.
+ * @param filename The file from which to load the JSON.
+ * @param desc Deserialization parameters.
+ * @return Last deserialized character, NULL if failed.
+ */
+FLECS_API
+const char* ecs_world_from_json_file(
+    ecs_world_t *world,
+    const char *filename,
     const ecs_from_json_desc_t *desc);
 
 /** Serialize array into JSON string.
@@ -21346,6 +21365,15 @@ const char* from_json(T* value, const char *json, flecs::from_json_desc_t *desc 
  */
 const char* from_json(const char *json, flecs::from_json_desc_t *desc = nullptr) {
     return ecs_world_from_json(m_world, json, desc);
+}
+
+/** Deserialize JSON file into world.
+ * 
+ * @memberof flecs::world
+ * @ingroup cpp_addons_json
+ */
+const char* from_json_file(const char *json, flecs::from_json_desc_t *desc = nullptr) {
+    return ecs_world_from_json_file(m_world, json, desc);
 }
 
 #   endif

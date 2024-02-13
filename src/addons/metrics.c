@@ -260,6 +260,10 @@ static void UpdateMemberInstance(ecs_iter_t *it, bool counter) {
     for (i = 0; i < count; i ++) {
         ecs_member_metric_ctx_t *ctx = mi[i].ctx;
         ecs_ref_t *ref = &mi[i].ref;
+        if (!ref->entity) {
+            continue;
+        }
+
         const void *ptr = ecs_ref_get_id(world, ref, ref->id);
         if (ptr) {
             ptr = ECS_OFFSET(ptr, ctx->offset);
@@ -296,7 +300,12 @@ static void UpdateIdInstance(ecs_iter_t *it, bool counter) {
 
     int32_t i, count = it->count;
     for (i = 0; i < count; i ++) {
-        ecs_table_t *table = mi[i].r->table;
+        ecs_record_t *r = mi[i].r;
+        if (!r) {
+            continue;
+        }
+
+        ecs_table_t *table = r->table;
         if (!table) {
             ecs_delete(it->world, it->entities[i]);
             continue;
@@ -336,7 +345,12 @@ static void UpdateOneOfInstance(ecs_iter_t *it, bool counter) {
     int32_t i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_oneof_metric_ctx_t *ctx = mi[i].ctx;
-        ecs_table_t *mtable = mi[i].r->table;
+        ecs_record_t *r = mi[i].r;
+        if (!r) {
+            continue;
+        }
+
+        ecs_table_t *mtable = r->table;
 
         double *value = ECS_ELEM(m, ctx->size, i);
         if (!counter) {

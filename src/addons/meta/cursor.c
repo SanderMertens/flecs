@@ -179,7 +179,7 @@ int flecs_meta_cursor_push_type(
         world, type, EcsMetaTypeSerialized);
     if (ser == NULL) {
         char *str = ecs_id_str(world, type);
-        ecs_err("cannot open scope for entity '%s' which is not a type", str);
+        ecs_err("cannot open scope for '%s' (missing reflection data)", str);
         ecs_os_free(str);
         return -1;
     }

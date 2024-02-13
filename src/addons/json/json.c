@@ -23,6 +23,7 @@ const char* flecs_json_token_str(
     case JsonLargeInt: return "large integer";
     case JsonLargeString:
     case JsonString: return "string";
+    case JsonBoolean: return "bool";
     case JsonTrue: return "true";
     case JsonFalse: return "false";
     case JsonNull: return "null";
@@ -39,6 +40,7 @@ const char* flecs_json_parse(
     ecs_json_token_t *token_kind,
     char *token)
 {
+    ecs_assert(json != NULL, ECS_INTERNAL_ERROR, NULL);
     json = ecs_parse_ws_eol(json);
 
     char ch = json[0];
@@ -66,17 +68,17 @@ const char* flecs_json_parse(
         char *token_ptr = token;
         json ++;
         for (; (ch = json[0]); ) {
-            if (ch == '"') {
-                json ++;
-                token_ptr[0] = '\0';
-                break;
-            }
-
             if (token_ptr - token >= ECS_MAX_TOKEN_SIZE) {
                 /* Token doesn't fit in buffer, signal to app to try again with
                  * dynamic buffer. */
                 token_kind[0] = JsonLargeString;
                 return start;
+            }
+
+            if (ch == '"') {
+                json ++;
+                token_ptr[0] = '\0';
+                break;
             }
 
             json = ecs_chrparse(json, token_ptr ++);
@@ -161,16 +163,66 @@ const char* flecs_json_expect(
     char *token,
     const ecs_from_json_desc_t *desc)
 {
+    /* Strings must be handled by flecs_json_expect_string for LargeString */
+    ecs_assert(token_kind != JsonString, ECS_INTERNAL_ERROR, NULL);
+
     ecs_json_token_t kind = 0;
     json = flecs_json_parse(json, &kind, token);
+
     if (kind == JsonInvalid) {
-        ecs_parser_error(desc->name, desc->expr, json - desc->expr, "invalid json");
+        ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
+            "invalid json");
         return NULL;
     } else if (kind != token_kind) {
-        ecs_parser_error(desc->name, desc->expr, json - desc->expr, "expected %s",
-            flecs_json_token_str(token_kind));
+        if (token_kind == JsonBoolean && 
+            (kind == JsonTrue || kind == JsonFalse)) 
+        {
+            /* ok */
+        } else {
+            ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
+                "expected %s, got %s",
+                flecs_json_token_str(token_kind), flecs_json_token_str(kind));
+            return NULL;
+        }
+    }
+
+    return json;
+}
+
+const char* flecs_json_expect_string(
+    const char *json,
+    char *token,
+    char **out,
+    const ecs_from_json_desc_t *desc)
+{
+    ecs_json_token_t token_kind = 0;
+    json = flecs_json_parse(json, &token_kind, token);
+    if (token_kind == JsonInvalid) {
+        ecs_parser_error(
+            desc->name, desc->expr, json - desc->expr, "invalid json");
+        return NULL;
+    } else if (token_kind != JsonString && token_kind != JsonLargeString) {
+        ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
+            "expected string");
         return NULL;
     }
+
+    if (token_kind == JsonLargeString) {
+        ecs_strbuf_t large_token = ECS_STRBUF_INIT;
+        json = flecs_json_parse_large_string(json, &large_token);
+        if (!json) {
+            return NULL;
+        }
+
+        if (out) {
+            *out = ecs_strbuf_get(&large_token);
+        } else {
+            ecs_strbuf_reset(&large_token);
+        }
+    } else if (out) {
+        *out = token;
+    }
+
     return json;
 }
 
@@ -179,10 +231,16 @@ const char* flecs_json_expect_member(
     char *token,
     const ecs_from_json_desc_t *desc)
 {
-    json = flecs_json_expect(json, JsonString, token, desc);
+    char *out = NULL;
+    json = flecs_json_expect_string(json, token, &out, desc);
     if (!json) {
         return NULL;
     }
+
+    if (out != token) {
+        ecs_os_free(out);
+    }
+
     json = flecs_json_expect(json, JsonColon, token, desc);
     if (!json) {
         return NULL;
@@ -208,11 +266,38 @@ const char* flecs_json_expect_member_name(
     return json;
 }
 
+static
+const char* flecs_json_skip_string(
+    const char *json)
+{
+    if (json[0] != '"') {
+        return NULL; /* can only skip strings */
+    }
+
+    char ch, ch_out;
+    json ++;
+    for (; (ch = json[0]); ) {
+        if (ch == '"') {
+            json ++;
+            break;
+        }
+
+        json = ecs_chrparse(json, &ch_out);
+    }
+
+    if (!ch) {
+        return NULL;
+    } else {
+        return json;
+    }
+}
+
 const char* flecs_json_skip_object(
     const char *json,
     char *token,
     const ecs_from_json_desc_t *desc)
 {
+    ecs_assert(json != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_json_token_t token_kind = 0;
 
     while ((json = flecs_json_parse(json, &token_kind, token))) {
@@ -220,16 +305,21 @@ const char* flecs_json_skip_object(
             json = flecs_json_skip_object(json, token, desc);
         } else if (token_kind == JsonArrayOpen) {
             json = flecs_json_skip_array(json, token, desc);
+        } else if (token_kind == JsonLargeString) {
+            json = flecs_json_skip_string(json);
         } else if (token_kind == JsonObjectClose) {
             return json;
         } else if (token_kind == JsonArrayClose) {
             ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
-                "expected }");
+                "expected }, got ]");
             return NULL;
         }
+
+        ecs_assert(json != NULL, ECS_INTERNAL_ERROR, NULL);
     }
 
-    ecs_parser_error(desc->name, desc->expr, json - desc->expr, "expected }");
+    ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
+        "expected }, got end of string");
     return NULL;
 }
 
@@ -238,6 +328,7 @@ const char* flecs_json_skip_array(
     char *token,
     const ecs_from_json_desc_t *desc)
 {
+    ecs_assert(json != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_json_token_t token_kind = 0;
 
     while ((json = flecs_json_parse(json, &token_kind, token))) {
@@ -245,6 +336,8 @@ const char* flecs_json_skip_array(
             json = flecs_json_skip_object(json, token, desc);
         } else if (token_kind == JsonArrayOpen) {
             json = flecs_json_skip_array(json, token, desc);
+        } else if (token_kind == JsonLargeString) {
+            json = flecs_json_skip_string(json);
         } else if (token_kind == JsonObjectClose) {
             ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
                 "expected ]");
@@ -252,6 +345,8 @@ const char* flecs_json_skip_array(
         } else if (token_kind == JsonArrayClose) {
             return json;
         }
+
+        ecs_assert(json != NULL, ECS_INTERNAL_ERROR, NULL);
     }
 
     ecs_parser_error(desc->name, desc->expr, json - desc->expr, "expected ]");

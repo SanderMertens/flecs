@@ -621,6 +621,24 @@ void DeserializeFromJson_ser_deser_3_entities_after_remove_all(void);
 void DeserializeFromJson_ser_deser_3_entities_after_delete_with(void);
 void DeserializeFromJson_ser_deser_w_hooks(void);
 void DeserializeFromJson_ser_deser_large_data(void);
+void DeserializeFromJson_ser_deser_different_component_order(void);
+void DeserializeFromJson_ser_deser_no_reflection_data(void);
+void DeserializeFromJson_ser_deser_no_reflection_data_strict(void);
+void DeserializeFromJson_ser_deser_value_for_tag(void);
+void DeserializeFromJson_ser_deser_value_for_tag_strict(void);
+void DeserializeFromJson_ser_deser_value_for_non_existing(void);
+void DeserializeFromJson_ser_deser_value_for_non_existing_strict(void);
+void DeserializeFromJson_ser_deser_cpp_typename(void);
+void DeserializeFromJson_ser_deser_cpp_template(void);
+void DeserializeFromJson_ser_deser_cpp_template_1_param(void);
+void DeserializeFromJson_ser_deser_cpp_template_n_params(void);
+void DeserializeFromJson_ser_deser_cpp_template_nested(void);
+void DeserializeFromJson_ser_deser_cpp_template_n_params_nested(void);
+void DeserializeFromJson_ser_deser_long_name(void);
+void DeserializeFromJson_ser_deser_long_name_256_chars(void);
+void DeserializeFromJson_ser_deser_w_alerts(void);
+void DeserializeFromJson_ser_deser_w_alerts_w_progress(void);
+void DeserializeFromJson_ser_deser_struct(void);
 
 // Testsuite 'SerializeToJson'
 void SerializeToJson_struct_bool(void);
@@ -3508,6 +3526,78 @@ bake_test_case DeserializeFromJson_testcases[] = {
     {
         "ser_deser_large_data",
         DeserializeFromJson_ser_deser_large_data
+    },
+    {
+        "ser_deser_different_component_order",
+        DeserializeFromJson_ser_deser_different_component_order
+    },
+    {
+        "ser_deser_no_reflection_data",
+        DeserializeFromJson_ser_deser_no_reflection_data
+    },
+    {
+        "ser_deser_no_reflection_data_strict",
+        DeserializeFromJson_ser_deser_no_reflection_data_strict
+    },
+    {
+        "ser_deser_value_for_tag",
+        DeserializeFromJson_ser_deser_value_for_tag
+    },
+    {
+        "ser_deser_value_for_tag_strict",
+        DeserializeFromJson_ser_deser_value_for_tag_strict
+    },
+    {
+        "ser_deser_value_for_non_existing",
+        DeserializeFromJson_ser_deser_value_for_non_existing
+    },
+    {
+        "ser_deser_value_for_non_existing_strict",
+        DeserializeFromJson_ser_deser_value_for_non_existing_strict
+    },
+    {
+        "ser_deser_cpp_typename",
+        DeserializeFromJson_ser_deser_cpp_typename
+    },
+    {
+        "ser_deser_cpp_template",
+        DeserializeFromJson_ser_deser_cpp_template
+    },
+    {
+        "ser_deser_cpp_template_1_param",
+        DeserializeFromJson_ser_deser_cpp_template_1_param
+    },
+    {
+        "ser_deser_cpp_template_n_params",
+        DeserializeFromJson_ser_deser_cpp_template_n_params
+    },
+    {
+        "ser_deser_cpp_template_nested",
+        DeserializeFromJson_ser_deser_cpp_template_nested
+    },
+    {
+        "ser_deser_cpp_template_n_params_nested",
+        DeserializeFromJson_ser_deser_cpp_template_n_params_nested
+    },
+    {
+        "ser_deser_long_name",
+        DeserializeFromJson_ser_deser_long_name
+    },
+    {
+        "ser_deser_long_name_256_chars",
+        DeserializeFromJson_ser_deser_long_name_256_chars
+    },
+    {
+        "ser_deser_w_alerts",
+        DeserializeFromJson_ser_deser_w_alerts
+    },
+    {
+        "ser_deser_w_alerts_w_progress",
+        DeserializeFromJson_ser_deser_w_alerts_w_progress
+    },
+    {
+        "ser_deser_struct",
+        DeserializeFromJson_ser_deser_struct
     }
 };
 
@@ -5543,7 +5633,7 @@ static bake_test_suite suites[] = {
         "DeserializeFromJson",
         NULL,
         NULL,
-        105,
+        123,
         DeserializeFromJson_testcases
     },
     {

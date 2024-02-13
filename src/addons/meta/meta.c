@@ -519,11 +519,14 @@ int flecs_add_member_to_struct(
 
         member_size *= elem->count;
         elem->size = member_size;
-
         size = elem->offset + member_size;
 
         const EcsComponent* comp = ecs_get(world, type, EcsComponent);
-        alignment = comp->alignment;
+        if (comp) {
+            alignment = comp->alignment;
+        } else {
+            alignment = member_alignment;
+        }
     }
 
     if (size == 0) {

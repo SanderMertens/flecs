@@ -61,3 +61,12 @@ const char* from_json(T* value, const char *json, flecs::from_json_desc_t *desc 
 const char* from_json(const char *json, flecs::from_json_desc_t *desc = nullptr) {
     return ecs_world_from_json(m_world, json, desc);
 }
+
+/** Deserialize JSON file into world.
+ * 
+ * @memberof flecs::world
+ * @ingroup cpp_addons_json
+ */
+const char* from_json_file(const char *json, flecs::from_json_desc_t *desc = nullptr) {
+    return ecs_world_from_json_file(m_world, json, desc);
+}

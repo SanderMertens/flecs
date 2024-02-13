@@ -649,7 +649,25 @@
                 "ser_deser_3_entities_after_remove_all",
                 "ser_deser_3_entities_after_delete_with",
                 "ser_deser_w_hooks",
-                "ser_deser_large_data"
+                "ser_deser_large_data",
+                "ser_deser_different_component_order",
+                "ser_deser_no_reflection_data",
+                "ser_deser_no_reflection_data_strict",
+                "ser_deser_value_for_tag",
+                "ser_deser_value_for_tag_strict",
+                "ser_deser_value_for_non_existing",
+                "ser_deser_value_for_non_existing_strict",
+                "ser_deser_cpp_typename",
+                "ser_deser_cpp_template",
+                "ser_deser_cpp_template_1_param",
+                "ser_deser_cpp_template_n_params",
+                "ser_deser_cpp_template_nested",
+                "ser_deser_cpp_template_n_params_nested",
+                "ser_deser_long_name",
+                "ser_deser_long_name_256_chars",
+                "ser_deser_w_alerts",
+                "ser_deser_w_alerts_w_progress",
+                "ser_deser_struct"
             ]
         }, {
             "id": "SerializeToJson",
