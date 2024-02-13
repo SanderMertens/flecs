@@ -12790,7 +12790,7 @@ const char* ecs_world_from_json(
     const char *json,
     const ecs_from_json_desc_t *desc);
 
-/** Same as ecs_world_from_json, but loads JSON from file. 
+/** Same as ecs_world_from_json(), but loads JSON from file. 
  * 
  * @param world The world.
  * @param filename The file from which to load the JSON.
