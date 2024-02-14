@@ -144,6 +144,15 @@ extern "C" {
 #define EcsFilterOwnsTermsStorage      (1u << 18u) /* Is terms array owned by filter */
 
 ////////////////////////////////////////////////////////////////////////////////
+//// Observer flags (used by ecs_observer_t::flags)
+////////////////////////////////////////////////////////////////////////////////
+
+#define EcsObserverIsMulti             (1u << 1u)  /* Does observer have multiple terms */
+#define EcsObserverIsMonitor           (1u << 2u)  /* Is observer a monitor */
+#define EcsObserverIsDisabled          (1u << 3u)  /* Is observer entity disabled */
+#define EcsObserverIsParentDisabled    (1u << 4u)  /* Is module parent of observer disabled  */
+
+////////////////////////////////////////////////////////////////////////////////
 //// Table flags (used by ecs_table_t::flags)
 ////////////////////////////////////////////////////////////////////////////////
 

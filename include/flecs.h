@@ -817,11 +817,7 @@ struct ecs_observer_t {
     ecs_id_t register_id;       /**< Id observer is registered with (single term observers only) */
     int32_t term_index;         /**< Index of the term in parent observer (single term observers only) */
 
-    bool is_monitor;            /**< If true, the observer only triggers when the
-                                 * filter did not match with the entity before
-                                 * the event happened. */
-
-    bool is_multi;              /**< If true, the observer triggers on more than one term */
+    ecs_flags32_t flags;        /**< Observer flags */
 
     /* Mixins */
     ecs_poly_dtor_t dtor;

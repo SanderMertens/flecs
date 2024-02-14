@@ -122,11 +122,14 @@ void SerializeIterToRowJson_serialize_this_w_1_tag_no_name(void) {
     test_assert(json != NULL);
 
     char* expect_fmt = "{\"results\":["
-        "{\"parent\":\"p1\", \"name\":\"528\", \"tags\":[\"TagA\"]}, "
-        "{\"parent\":\"p1\", \"name\":\"529\", \"tags\":[\"TagA\"]}, "
-        "{\"parent\":\"p1\", \"name\":\"530\", \"tags\":[\"TagA\"]}]}";
+        "{\"parent\":\"p1\", \"name\":\"%u\", \"tags\":[\"TagA\"]}, "
+        "{\"parent\":\"p1\", \"name\":\"%u\", \"tags\":[\"TagA\"]}, "
+        "{\"parent\":\"p1\", \"name\":\"%u\", \"tags\":[\"TagA\"]}]}";
 
-    char *expect = ecs_asprintf(expect_fmt, e1, e2, e3);
+    char *expect = ecs_asprintf(expect_fmt, 
+        (uint32_t)e1, 
+        (uint32_t)e2, 
+        (uint32_t)e3);
     test_str(json, expect);
 
     ecs_os_free(json);

@@ -244,6 +244,10 @@ bool flecs_ignore_observer(
         return true;
     }
 
+    if (observer->flags & (EcsObserverIsDisabled|EcsObserverIsParentDisabled)) {
+        return true;
+    }
+
     ecs_flags32_t table_flags = table->flags, filter_flags = observer->filter.flags;
 
     bool result = (table_flags & EcsTableIsPrefab) &&
@@ -480,7 +484,7 @@ bool flecs_multi_observer_invoke(
     {
         /* Monitor observers only invoke when the filter matches for the first
          * time with an entity */
-        if (o->is_monitor) {
+        if (o->flags & EcsObserverIsMonitor) {
             if (flecs_filter_match_table(world, &o->filter, prev_table, 
                 NULL, NULL, NULL, NULL, NULL, true, -1, user_it.flags)) 
             {
@@ -526,7 +530,7 @@ done:
 
 bool ecs_observer_default_run_action(ecs_iter_t *it) {
     ecs_observer_t *o = it->ctx;
-    if (o->is_multi) {
+    if (o->flags & EcsObserverIsMulti) {
         return flecs_multi_observer_invoke(it);
     } else {
         it->ctx = o->ctx;
@@ -710,7 +714,7 @@ int flecs_multi_observer_init(
     observer->last_event_id = ecs_os_calloc_t(int32_t);
     
     /* Mark observer as multi observer */
-    observer->is_multi = true;
+    observer->flags |= EcsObserverIsMulti;
 
     /* Create a child observer for each term in the filter */
     ecs_filter_t *filter = &observer->filter;
@@ -898,7 +902,7 @@ ecs_entity_t ecs_observer_init(
                 observer->events[0] = EcsOnAdd;
                 observer->events[1] = EcsOnRemove;
                 observer->event_count ++;
-                observer->is_monitor = true;
+                observer->flags |= EcsObserverIsMonitor;
             } else {
                 observer->events[i] = event;
             }
@@ -922,7 +926,8 @@ ecs_entity_t ecs_observer_init(
             multi |= term->oper == EcsOptional;
         }
 
-        if (filter->term_count == 1 && !observer->is_monitor && !multi) {
+        bool is_monitor = observer->flags & EcsObserverIsMonitor;
+        if (filter->term_count == 1 && !is_monitor && !multi) {
             if (flecs_uni_observer_init(world, observer, desc)) {
                 goto error;
             }
@@ -1009,7 +1014,7 @@ void* ecs_observer_get_binding_ctx(
 void flecs_observer_fini(
     ecs_observer_t *observer)
 {
-    if (observer->is_multi) {
+    if (observer->flags & EcsObserverIsMulti) {
         ecs_os_free(observer->last_event_id);
     } else {
         if (observer->filter.term_count) {
