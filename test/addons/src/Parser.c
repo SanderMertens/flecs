@@ -4516,6 +4516,146 @@ void Parser_oneof_other_pred_w_invalid_obj(void) {
     ecs_fini(world);
 }
 
+void Parser_oneof_w_other_entity_w_same_name(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, OneOf);
+    ECS_ENTITY(world, Obj, (ChildOf, Rel));
+    ecs_entity_t obj_2 = ecs_new_entity(world, "Obj");
+
+    test_uint( ecs_lookup_child(world, 0, "Obj"), obj_2 );
+    test_uint( ecs_lookup_fullpath(world, "Rel.Obj"), Obj );
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "(Rel, Obj)"
+    }));
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_first(terms[0], Rel, EcsSelf|EcsIsEntity);
+    test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
+    test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    ecs_filter_fini(&f);
+ 
+    ecs_fini(world);
+}
+
+void Parser_oneof_w_other_entity_w_same_name_w_set_scope(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, OneOf);
+    ECS_ENTITY(world, Obj, (ChildOf, Rel));
+
+    ecs_entity_t p = ecs_new_entity(world, "parent");
+    ecs_entity_t obj_2 = ecs_new_entity(world, "Obj");
+    ecs_add_pair(world, obj_2, EcsChildOf, p);
+
+    ecs_set_scope(world, p);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "(Rel, Obj)"
+    }));
+
+    ecs_set_scope(world, 0);
+
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_first(terms[0], Rel, EcsSelf|EcsIsEntity);
+    test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
+    test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    ecs_filter_fini(&f);
+ 
+    ecs_fini(world);
+}
+
+void Parser_oneof_w_wildcard(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, OneOf);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "(Rel, *)"
+    }));
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_first(terms[0], Rel, EcsSelf|EcsIsEntity);
+    test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
+    test_second(terms[0], EcsWildcard, EcsSelf|EcsIsVariable);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    ecs_filter_fini(&f);
+ 
+    ecs_fini(world);
+}
+
+void Parser_oneof_w_any(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, OneOf);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "(Rel, _)"
+    }));
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_first(terms[0], Rel, EcsSelf|EcsIsEntity);
+    test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
+    test_second(terms[0], EcsAny, EcsSelf|EcsIsVariable);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    ecs_filter_fini(&f);
+ 
+    ecs_fini(world);
+}
+
+void Parser_oneof_w_fullpath(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, OneOf);
+    ECS_ENTITY(world, Obj, (ChildOf, Rel));
+    ecs_entity_t obj_2 = ecs_new_entity(world, "Obj");
+
+    test_uint( ecs_lookup_child(world, 0, "Obj"), obj_2 );
+    test_uint( ecs_lookup_fullpath(world, "Rel.Obj"), Obj );
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "(Rel, Rel.Obj)"
+    }));
+    test_int(filter_count(&f), 1);
+
+    ecs_term_t *terms = filter_terms(&f);
+    test_first(terms[0], Rel, EcsSelf|EcsIsEntity);
+    test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
+    test_second(terms[0], Obj, EcsSelf|EcsIsEntity);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    ecs_filter_fini(&f);
+ 
+    ecs_fini(world);
+}
+
 void Parser_pair_implicit_src_missing_rel(void) {
     ecs_log_set_level(-4);
 

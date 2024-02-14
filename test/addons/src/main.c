@@ -191,6 +191,11 @@ void Parser_oneof_self_pred_w_relative_obj(void);
 void Parser_oneof_other_pred_w_relative_obj(void);
 void Parser_oneof_self_pred_w_invalid_obj(void);
 void Parser_oneof_other_pred_w_invalid_obj(void);
+void Parser_oneof_w_other_entity_w_same_name(void);
+void Parser_oneof_w_other_entity_w_same_name_w_set_scope(void);
+void Parser_oneof_w_wildcard(void);
+void Parser_oneof_w_any(void);
+void Parser_oneof_w_fullpath(void);
 void Parser_pair_implicit_src_missing_rel(void);
 void Parser_pair_implicit_src_missing_obj(void);
 void Parser_pair_explicit_src_missing_src(void);
@@ -2584,6 +2589,26 @@ bake_test_case Parser_testcases[] = {
     {
         "oneof_other_pred_w_invalid_obj",
         Parser_oneof_other_pred_w_invalid_obj
+    },
+    {
+        "oneof_w_other_entity_w_same_name",
+        Parser_oneof_w_other_entity_w_same_name
+    },
+    {
+        "oneof_w_other_entity_w_same_name_w_set_scope",
+        Parser_oneof_w_other_entity_w_same_name_w_set_scope
+    },
+    {
+        "oneof_w_wildcard",
+        Parser_oneof_w_wildcard
+    },
+    {
+        "oneof_w_any",
+        Parser_oneof_w_any
+    },
+    {
+        "oneof_w_fullpath",
+        Parser_oneof_w_fullpath
     },
     {
         "pair_implicit_src_missing_rel",
@@ -9042,7 +9067,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        249,
+        254,
         Parser_testcases
     },
     {
