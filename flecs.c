@@ -2917,8 +2917,25 @@ void flecs_observer_set_disable_bit(
     }
 
     ecs_observer_t *o = poly->poly;
-    ecs_poly_assert(o, ecs_observer_t);
-    ECS_BIT_COND(o->flags, bit, cond);
+    if (o->flags & EcsObserverIsMulti) {
+        /* If this is a multi-component observer, set flag on single-term
+         * observer children. */
+        ecs_iter_t child_it = ecs_children(world, e);
+        while (ecs_children_next(&child_it)) {
+            ecs_table_t *table = child_it.table;
+            if (ecs_table_has_id(world, table, EcsObserver)) {
+                int32_t i;
+                for (i = 0; i < child_it.count; i ++) {
+                    flecs_observer_set_disable_bit(
+                        world, child_it.entities[i], bit, cond);
+
+                }
+            }
+        }
+    } else {
+        ecs_poly_assert(o, ecs_observer_t);
+        ECS_BIT_COND(o->flags, bit, cond);
+    }
 }
 
 static

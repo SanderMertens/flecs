@@ -2042,6 +2042,10 @@ void Observer_disable_observer(void);
 void Observer_disable_observer_module(void);
 void Observer_disable_observer_module_nested(void);
 void Observer_disable_observer_and_module(void);
+void Observer_disable_multi_observer(void);
+void Observer_disable_multi_observer_module(void);
+void Observer_disable_multi_observer_module_nested(void);
+void Observer_disable_multi_observer_and_module(void);
 void Observer_cache_test_1(void);
 void Observer_cache_test_2(void);
 void Observer_cache_test_3(void);
@@ -10620,6 +10624,22 @@ bake_test_case Observer_testcases[] = {
         Observer_disable_observer_and_module
     },
     {
+        "disable_multi_observer",
+        Observer_disable_multi_observer
+    },
+    {
+        "disable_multi_observer_module",
+        Observer_disable_multi_observer_module
+    },
+    {
+        "disable_multi_observer_module_nested",
+        Observer_disable_multi_observer_module_nested
+    },
+    {
+        "disable_multi_observer_and_module",
+        Observer_disable_multi_observer_and_module
+    },
+    {
         "cache_test_1",
         Observer_cache_test_1
     },
@@ -13285,7 +13305,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        120,
+        124,
         Observer_testcases
     },
     {
