@@ -2904,6 +2904,79 @@ void flecs_ensure_module_tag(ecs_iter_t *it) {
     }
 }
 
+static
+void flecs_observer_set_disable_bit(
+    ecs_world_t *world,
+    ecs_entity_t e,
+    ecs_flags32_t bit,
+    bool cond)
+{
+    const EcsPoly *poly = ecs_get_pair(world, e, EcsPoly, EcsObserver);
+    if (!poly || !poly->poly) {
+        return;
+    }
+
+    ecs_observer_t *o = poly->poly;
+    ecs_poly_assert(o, ecs_observer_t);
+    ECS_BIT_COND(o->flags, bit, cond);
+}
+
+static
+void flecs_disable_observer(
+    ecs_iter_t *it) 
+{
+    ecs_world_t *world = it->world;
+    ecs_entity_t evt = it->event;
+
+    int32_t i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        flecs_observer_set_disable_bit(world, it->entities[i], 
+            EcsObserverIsDisabled, evt == EcsOnAdd);
+    }
+}
+
+static
+void flecs_disable_module_observers(
+    ecs_world_t *world, 
+    ecs_entity_t module,
+    bool should_disable)
+{
+    ecs_iter_t child_it = ecs_children(world, module);
+    while (ecs_children_next(&child_it)) {
+        ecs_table_t *table = child_it.table;
+        bool table_disabled = table->flags & EcsTableIsDisabled;
+        int32_t i;
+
+        /* Recursively walk modules, don't propagate to disabled modules */
+        if (ecs_table_has_id(world, table, EcsModule) && !table_disabled) {    
+            for (i = 0; i < child_it.count; i ++) {
+                flecs_disable_module_observers(
+                    world, child_it.entities[i], should_disable);
+            }
+            continue;
+        }
+
+        /* Only disable observers */
+        if (!ecs_table_has_id(world, table, EcsObserver)) {
+            continue;
+        }
+
+        for (i = 0; i < child_it.count; i ++) {
+            flecs_observer_set_disable_bit(world, child_it.entities[i], 
+                EcsObserverIsParentDisabled, should_disable);
+        }
+    }
+}
+
+static
+void flecs_disable_module(ecs_iter_t *it) {
+    int32_t i;
+    for (i = 0; i < it->count; i ++) {
+        flecs_disable_module_observers(
+            it->world, it->entities[i], it->event == EcsOnAdd);
+    }
+}
+
 /* -- Iterable mixins -- */
 
 static
@@ -3356,6 +3429,26 @@ void flecs_bootstrap(
         .filter.terms = {{ .id = EcsModule, .src.flags = EcsSelf }, match_prefab},
         .events = {EcsOnAdd},
         .callback = flecs_ensure_module_tag
+    });
+
+    /* Observer that tracks whether observers are disabled */
+    ecs_observer(world, {
+        .filter.terms = {
+            { .id = EcsObserver, .src.flags = EcsSelf|EcsFilter },
+            { .id = EcsDisabled, .src.flags = EcsSelf },
+        },
+        .events = {EcsOnAdd, EcsOnRemove},
+        .callback = flecs_disable_observer
+    });
+
+    /* Observer that tracks whether modules are disabled */
+    ecs_observer(world, {
+        .filter.terms = {
+            { .id = EcsModule, .src.flags = EcsSelf|EcsFilter },
+            { .id = EcsDisabled, .src.flags = EcsSelf },
+        },
+        .events = {EcsOnAdd, EcsOnRemove},
+        .callback = flecs_disable_module
     });
 
     /* Set scope back to flecs core */
@@ -16074,6 +16167,10 @@ bool flecs_ignore_observer(
         return true;
     }
 
+    if (observer->flags & (EcsObserverIsDisabled|EcsObserverIsParentDisabled)) {
+        return true;
+    }
+
     ecs_flags32_t table_flags = table->flags, filter_flags = observer->filter.flags;
 
     bool result = (table_flags & EcsTableIsPrefab) &&
@@ -16310,7 +16407,7 @@ bool flecs_multi_observer_invoke(
     {
         /* Monitor observers only invoke when the filter matches for the first
          * time with an entity */
-        if (o->is_monitor) {
+        if (o->flags & EcsObserverIsMonitor) {
             if (flecs_filter_match_table(world, &o->filter, prev_table, 
                 NULL, NULL, NULL, NULL, NULL, true, -1, user_it.flags)) 
             {
@@ -16356,7 +16453,7 @@ done:
 
 bool ecs_observer_default_run_action(ecs_iter_t *it) {
     ecs_observer_t *o = it->ctx;
-    if (o->is_multi) {
+    if (o->flags & EcsObserverIsMulti) {
         return flecs_multi_observer_invoke(it);
     } else {
         it->ctx = o->ctx;
@@ -16540,7 +16637,7 @@ int flecs_multi_observer_init(
     observer->last_event_id = ecs_os_calloc_t(int32_t);
     
     /* Mark observer as multi observer */
-    observer->is_multi = true;
+    observer->flags |= EcsObserverIsMulti;
 
     /* Create a child observer for each term in the filter */
     ecs_filter_t *filter = &observer->filter;
@@ -16728,7 +16825,7 @@ ecs_entity_t ecs_observer_init(
                 observer->events[0] = EcsOnAdd;
                 observer->events[1] = EcsOnRemove;
                 observer->event_count ++;
-                observer->is_monitor = true;
+                observer->flags |= EcsObserverIsMonitor;
             } else {
                 observer->events[i] = event;
             }
@@ -16752,7 +16849,8 @@ ecs_entity_t ecs_observer_init(
             multi |= term->oper == EcsOptional;
         }
 
-        if (filter->term_count == 1 && !observer->is_monitor && !multi) {
+        bool is_monitor = observer->flags & EcsObserverIsMonitor;
+        if (filter->term_count == 1 && !is_monitor && !multi) {
             if (flecs_uni_observer_init(world, observer, desc)) {
                 goto error;
             }
@@ -16839,7 +16937,7 @@ void* ecs_observer_get_binding_ctx(
 void flecs_observer_fini(
     ecs_observer_t *observer)
 {
-    if (observer->is_multi) {
+    if (observer->flags & EcsObserverIsMulti) {
         ecs_os_free(observer->last_event_id);
     } else {
         if (observer->filter.term_count) {

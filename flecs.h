@@ -426,6 +426,15 @@ extern "C" {
 #define EcsFilterOwnsTermsStorage      (1u << 18u) /* Is terms array owned by filter */
 
 ////////////////////////////////////////////////////////////////////////////////
+//// Observer flags (used by ecs_observer_t::flags)
+////////////////////////////////////////////////////////////////////////////////
+
+#define EcsObserverIsMulti             (1u << 1u)  /* Does observer have multiple terms */
+#define EcsObserverIsMonitor           (1u << 2u)  /* Is observer a monitor */
+#define EcsObserverIsDisabled          (1u << 3u)  /* Is observer entity disabled */
+#define EcsObserverIsParentDisabled    (1u << 4u)  /* Is module parent of observer disabled  */
+
+////////////////////////////////////////////////////////////////////////////////
 //// Table flags (used by ecs_table_t::flags)
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -3017,11 +3026,7 @@ struct ecs_observer_t {
     ecs_id_t register_id;       /**< Id observer is registered with (single term observers only) */
     int32_t term_index;         /**< Index of the term in parent observer (single term observers only) */
 
-    bool is_monitor;            /**< If true, the observer only triggers when the
-                                 * filter did not match with the entity before
-                                 * the event happened. */
-
-    bool is_multi;              /**< If true, the observer triggers on more than one term */
+    ecs_flags32_t flags;        /**< Observer flags */
 
     /* Mixins */
     ecs_poly_dtor_t dtor;

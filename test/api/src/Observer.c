@@ -3937,6 +3937,187 @@ void Observer_wildcard_propagate_w_other_table(void) {
     ecs_fini(world);
 }
 
+void Observer_disable_observer(void) {
+    ecs_world_t *ecs = ecs_mini();
+
+    ECS_COMPONENT(ecs, Position);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(ecs, {
+        .filter.terms = {
+            { .id = ecs_id(Position) }
+        },
+        .events = { EcsOnAdd },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_new(ecs, Position);
+    test_int(ctx.invoked, 1);
+    ecs_os_zeromem(&ctx);
+
+    ecs_enable(ecs, o, false);
+
+    ecs_new(ecs, Position);
+    test_int(ctx.invoked, 0);
+    ecs_os_zeromem(&ctx);
+
+    ecs_enable(ecs, o, true);
+
+    ecs_new(ecs, Position);
+    test_int(ctx.invoked, 1);
+    ecs_os_zeromem(&ctx);
+
+    ecs_fini(ecs);
+}
+
+void Observer_disable_observer_module(void) {
+    ecs_world_t *ecs = ecs_mini();
+
+    ECS_COMPONENT(ecs, Position);
+
+    ecs_entity_t module = ecs_new_w_id(ecs, EcsModule);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(ecs, {
+        .entity = ecs_entity(ecs, { .add = { ecs_childof(module) }}),
+        .filter.terms = {
+            { .id = ecs_id(Position) }
+        },
+        .events = { EcsOnAdd },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_new(ecs, Position);
+    test_int(ctx.invoked, 1);
+    ecs_os_zeromem(&ctx);
+
+    ecs_enable(ecs, module, false);
+    test_assert(!ecs_has_id(ecs, o, EcsDisabled));
+
+    ecs_new(ecs, Position);
+    test_int(ctx.invoked, 0);
+    ecs_os_zeromem(&ctx);
+
+    ecs_enable(ecs, module, true);
+    test_assert(!ecs_has_id(ecs, o, EcsDisabled));
+
+    ecs_new(ecs, Position);
+    test_int(ctx.invoked, 1);
+    ecs_os_zeromem(&ctx);
+
+    ecs_fini(ecs);
+}
+
+void Observer_disable_observer_module_nested(void) {
+    ecs_world_t *ecs = ecs_mini();
+
+    ECS_COMPONENT(ecs, Position);
+
+    ecs_entity_t module = ecs_new_w_id(ecs, EcsModule);
+    ecs_entity_t module_child = ecs_new_w_id(ecs, EcsModule);
+    ecs_add_pair(ecs, module_child, EcsChildOf, module);
+
+    Probe ctx = {0};
+    ecs_observer(ecs, {
+        .entity = ecs_entity(ecs, { .add = { ecs_childof(module_child) }}),
+        .filter.terms = {
+            { .id = ecs_id(Position) }
+        },
+        .events = { EcsOnAdd },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_new(ecs, Position);
+    test_int(ctx.invoked, 1);
+    ecs_os_zeromem(&ctx);
+
+    ecs_enable(ecs, module, false);
+    test_assert(!ecs_has_id(ecs, module_child, EcsDisabled));
+
+    ecs_new(ecs, Position);
+    test_int(ctx.invoked, 0);
+    ecs_os_zeromem(&ctx);
+
+    ecs_enable(ecs, module_child, false);
+    test_assert(ecs_has_id(ecs, module_child, EcsDisabled));
+
+    ecs_new(ecs, Position);
+    test_int(ctx.invoked, 0);
+    ecs_os_zeromem(&ctx);
+
+    ecs_enable(ecs, module, true);
+    test_assert(ecs_has_id(ecs, module_child, EcsDisabled));
+
+    ecs_new(ecs, Position);
+    test_int(ctx.invoked, 0);
+    ecs_os_zeromem(&ctx);
+
+    ecs_enable(ecs, module_child, true);
+    test_assert(!ecs_has_id(ecs, module_child, EcsDisabled));
+
+    ecs_new(ecs, Position);
+    test_int(ctx.invoked, 1);
+    ecs_os_zeromem(&ctx);
+
+    ecs_fini(ecs);
+}
+
+void Observer_disable_observer_and_module(void) {
+    ecs_world_t *ecs = ecs_mini();
+
+    ECS_COMPONENT(ecs, Position);
+
+    ecs_entity_t module = ecs_new_w_id(ecs, EcsModule);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(ecs, {
+        .entity = ecs_entity(ecs, { .add = { ecs_childof(module) }}),
+        .filter.terms = {
+            { .id = ecs_id(Position) }
+        },
+        .events = { EcsOnAdd },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_new(ecs, Position);
+    test_int(ctx.invoked, 1);
+    ecs_os_zeromem(&ctx);
+
+    ecs_enable(ecs, module, false);
+    test_assert(!ecs_has_id(ecs, o, EcsDisabled));
+
+    ecs_new(ecs, Position);
+    test_int(ctx.invoked, 0);
+    ecs_os_zeromem(&ctx);
+
+    ecs_enable(ecs, o, false);
+    test_assert(ecs_has_id(ecs, o, EcsDisabled));
+
+    ecs_new(ecs, Position);
+    test_int(ctx.invoked, 0);
+    ecs_os_zeromem(&ctx);
+
+    ecs_enable(ecs, module, true);
+    test_assert(ecs_has_id(ecs, o, EcsDisabled));
+
+    ecs_new(ecs, Position);
+    test_int(ctx.invoked, 0);
+    ecs_os_zeromem(&ctx);
+
+    ecs_enable(ecs, o, true);
+    test_assert(!ecs_has_id(ecs, o, EcsDisabled));
+
+    ecs_new(ecs, Position);
+    test_int(ctx.invoked, 1);
+    ecs_os_zeromem(&ctx);
+
+    ecs_fini(ecs);
+}
+
 void Observer_cache_test_1(void) {
     ecs_world_t *world = ecs_mini();
     
