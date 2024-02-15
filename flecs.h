@@ -12384,6 +12384,9 @@ typedef struct {
     double frame_time_last;     /**< Time spent processing a frame */
     double system_time_last;    /**< Time spent in systems */
     double merge_time_last;     /**< Time spent in merges */
+
+    /* Frame count */
+    int64_t frame_count;        /**< Number of frames processed */
 } EcsWorldSummary;
 
 /* Module import */

@@ -30594,6 +30594,8 @@ void UpdateWorldSummary(ecs_iter_t *it) {
         summary[i].frame_time_total = (double)info->frame_time_total;
         summary[i].system_time_total = (double)info->system_time_total;
         summary[i].merge_time_total = (double)info->merge_time_total;
+
+        summary[i].frame_count ++;
     }
 }
 
@@ -30883,7 +30885,8 @@ void FlecsMonitorImport(
             { .name = "merge_time_total", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds  },
             { .name = "frame_time_last", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds  },
             { .name = "system_time_last", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds  },
-            { .name = "merge_time_last", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds  }
+            { .name = "merge_time_last", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds  },
+            { .name = "frame_count", .type = ecs_id(ecs_u64_t)  }
         }
     });
 #endif
