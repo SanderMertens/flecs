@@ -13,6 +13,9 @@ inline metrics::metrics(flecs::world& world) {
     /* Import C module  */
     FlecsMetricsImport(world);
 
+    world.component<Value>();
+    world.component<Source>();
+
     world.entity<metrics::Instance>("::flecs::metrics::Instance");
     world.entity<metrics::Metric>("::flecs::metrics::Metric");
     world.entity<metrics::Counter>("::flecs::metrics::Metric::Counter");

@@ -53,6 +53,7 @@ inline void init(flecs::world& world) {
     world.component<Enum>("flecs::meta::Enum");
     world.component<Bitmask>("flecs::meta::Bitmask");
     world.component<Member>("flecs::meta::Member");
+    world.component<MemberRanges>("flecs::meta::MemberRanges");
     world.component<Struct>("flecs::meta::Struct");
     world.component<Array>("flecs::meta::Array");
     world.component<Vector>("flecs::meta::Vector");
