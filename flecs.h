@@ -19809,7 +19809,7 @@ struct world {
 
     /** Register action to be executed when world is destroyed.
      */
-    void atfini(ecs_fini_action_t action, void *ctx) const {
+    void atfini(ecs_fini_action_t action, void *ctx = nullptr) const {
         ecs_atfini(m_world, action, ctx);
     }
 

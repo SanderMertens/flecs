@@ -1215,7 +1215,9 @@
                 "make_pair_of_pair_id",
                 "make_pair_of_pair_id_tgt",
                 "make_pair_of_pair_type",
-                "delta_time"
+                "delta_time",
+                "atfini",
+                "atfini_w_ctx"
             ]
         }, {
             "id": "Singleton",

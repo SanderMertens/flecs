@@ -1166,6 +1166,8 @@ void World_make_pair_of_pair_id(void);
 void World_make_pair_of_pair_id_tgt(void);
 void World_make_pair_of_pair_type(void);
 void World_delta_time(void);
+void World_atfini(void);
+void World_atfini_w_ctx(void);
 
 // Testsuite 'Singleton'
 void Singleton_set_get_singleton(void);
@@ -5859,6 +5861,14 @@ bake_test_case World_testcases[] = {
     {
         "delta_time",
         World_delta_time
+    },
+    {
+        "atfini",
+        World_atfini
+    },
+    {
+        "atfini_w_ctx",
+        World_atfini_w_ctx
     }
 };
 
@@ -6689,7 +6699,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        108,
+        110,
         World_testcases
     },
     {

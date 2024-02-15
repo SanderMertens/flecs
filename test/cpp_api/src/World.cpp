@@ -1867,3 +1867,30 @@ void World_register_nested_component_in_module(void) {
     test_str(foo.path().c_str(), "::nested_component_module::Foo");
     test_str(bar.path().c_str(), "::nested_component_module::Foo::Bar");
 }
+
+static void *atfini_ctx = nullptr;
+static int atfini_invoked = 0;
+static void atfini_callback(flecs::world_t *world, void *ctx) {
+    test_assert(world != nullptr);
+    atfini_ctx = ctx;
+    atfini_invoked ++;
+}
+
+void World_atfini(void) {
+    {
+        flecs::world ecs;
+        ecs.atfini(atfini_callback);
+    }
+    test_int(atfini_invoked, 1);
+    test_assert(atfini_ctx == nullptr);
+}
+
+void World_atfini_w_ctx(void) {
+    int ctx;
+    {
+        flecs::world ecs;
+        ecs.atfini(atfini_callback, &ctx);
+    }
+    test_int(atfini_invoked, 1);
+    test_assert(atfini_ctx == &ctx);
+}
