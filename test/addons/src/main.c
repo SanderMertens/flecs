@@ -1783,6 +1783,8 @@ void Rest_get_cached(void);
 void Rest_get_cached_invalid(void);
 void Rest_try_query(void);
 void Rest_try_query_plan(void);
+void Rest_query(void);
+void Rest_named_query(void);
 
 // Testsuite 'Metrics'
 void Metrics_member_gauge_1_entity(void);
@@ -8760,6 +8762,14 @@ bake_test_case Rest_testcases[] = {
     {
         "try_query_plan",
         Rest_try_query_plan
+    },
+    {
+        "query",
+        Rest_query
+    },
+    {
+        "named_query",
+        Rest_named_query
     }
 };
 
@@ -9298,7 +9308,7 @@ static bake_test_suite suites[] = {
         "Rest",
         NULL,
         NULL,
-        6,
+        8,
         Rest_testcases
     },
     {

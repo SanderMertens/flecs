@@ -1853,7 +1853,9 @@
                 "get_cached",
                 "get_cached_invalid",
                 "try_query",
-                "try_query_plan"
+                "try_query_plan",
+                "query",
+                "named_query"
             ]
         }, {
             "id": "Metrics",

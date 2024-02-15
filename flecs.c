@@ -34972,7 +34972,7 @@ bool flecs_rest_reply_existing_query(
     }
 
     const EcsPoly *poly = ecs_get_pair(world, q, EcsPoly, EcsQuery);
-    if (!poly || poly->poly) {
+    if (!poly || !poly->poly) {
         flecs_reply_error(reply, 
             "resolved identifier '%s' is not a query", name);
         reply->code = 400;
