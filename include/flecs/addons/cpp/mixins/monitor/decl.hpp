@@ -21,6 +21,9 @@ using WorldStats = EcsWorldStats;
 /** Component that stores system/pipeline statistics */
 using PipelineStats = EcsPipelineStats;
 
+/** Component with world summary stats */
+using WorldSummary = EcsWorldSummary;
+
 struct monitor {
     monitor(flecs::world& world);
 };

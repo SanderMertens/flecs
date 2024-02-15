@@ -53,6 +53,7 @@ inline void init(flecs::world& world) {
     world.component<Enum>("flecs::meta::Enum");
     world.component<Bitmask>("flecs::meta::Bitmask");
     world.component<Member>("flecs::meta::Member");
+    world.component<MemberRanges>("flecs::meta::MemberRanges");
     world.component<Struct>("flecs::meta::Struct");
     world.component<Array>("flecs::meta::Array");
     world.component<Vector>("flecs::meta::Vector");
@@ -82,11 +83,12 @@ inline void init(flecs::world& world) {
     }
 
     // Register opaque type support for C++ entity wrappers
-    world.component<flecs::entity_view>()
-        .opaque(flecs_entity_support<flecs::entity_view>);
-
-    world.component<flecs::entity>()
-        .opaque(flecs_entity_support<flecs::entity>);
+    world.entity("::flecs::cpp").add(flecs::Module).scope([&]{
+        world.component<flecs::entity_view>()
+            .opaque(flecs_entity_support<flecs::entity_view>);
+        world.component<flecs::entity>()
+            .opaque(flecs_entity_support<flecs::entity>);
+    });
 }
 
 } // namespace _

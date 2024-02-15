@@ -16030,6 +16030,7 @@ static const flecs::entity_t Toggle = ECS_TOGGLE;
 /* Builtin components */
 using Component = EcsComponent;
 using Identifier = EcsIdentifier;
+using Iterable = EcsIterable;
 using Poly = EcsPoly;
 using Target = EcsTarget;
 
@@ -18568,6 +18569,9 @@ using WorldStats = EcsWorldStats;
 
 /** Component that stores system/pipeline statistics */
 using PipelineStats = EcsPipelineStats;
+
+/** Component with world summary stats */
+using WorldSummary = EcsWorldSummary;
 
 struct monitor {
     monitor(flecs::world& world);
@@ -30751,6 +30755,7 @@ inline void init(flecs::world& world) {
     world.component<Enum>("flecs::meta::Enum");
     world.component<Bitmask>("flecs::meta::Bitmask");
     world.component<Member>("flecs::meta::Member");
+    world.component<MemberRanges>("flecs::meta::MemberRanges");
     world.component<Struct>("flecs::meta::Struct");
     world.component<Array>("flecs::meta::Array");
     world.component<Vector>("flecs::meta::Vector");
@@ -30780,11 +30785,12 @@ inline void init(flecs::world& world) {
     }
 
     // Register opaque type support for C++ entity wrappers
-    world.component<flecs::entity_view>()
-        .opaque(flecs_entity_support<flecs::entity_view>);
-
-    world.component<flecs::entity>()
-        .opaque(flecs_entity_support<flecs::entity>);
+    world.entity("::flecs::cpp").add(flecs::Module).scope([&]{
+        world.component<flecs::entity_view>()
+            .opaque(flecs_entity_support<flecs::entity_view>);
+        world.component<flecs::entity>()
+            .opaque(flecs_entity_support<flecs::entity>);
+    });
 }
 
 } // namespace _
@@ -31090,6 +31096,9 @@ inline monitor::monitor(flecs::world& world) {
     /* Import C module  */
     FlecsMonitorImport(world);
 
+    world.component<WorldSummary>();
+    world.component<WorldStats>();
+    world.component<PipelineStats>();
 }
 
 }
@@ -31110,6 +31119,9 @@ inline metrics::metrics(flecs::world& world) {
 
     /* Import C module  */
     FlecsMetricsImport(world);
+
+    world.component<Value>();
+    world.component<Source>();
 
     world.entity<metrics::Instance>("::flecs::metrics::Instance");
     world.entity<metrics::Metric>("::flecs::metrics::Metric");
@@ -31453,8 +31465,13 @@ struct alert final : entity
 };
 
 inline alerts::alerts(flecs::world& world) {
+    world.import<metrics>();
+
     /* Import C module  */
     FlecsAlertsImport(world);
+
+    world.component<AlertsActive>();
+    world.component<Instance>();
 
     world.entity<alerts::Alert>("::flecs::alerts::Alert");
     world.entity<alerts::Info>("::flecs::alerts::Info");
@@ -31568,6 +31585,12 @@ namespace flecs
 {
 
 inline void world::init_builtin_components() {
+    this->component<Component>();
+    this->component<Identifier>();
+    this->component<Iterable>("flecs::core::Iterable");
+    this->component<Poly>();
+    this->component<Target>();
+
 #   ifdef FLECS_SYSTEM
     _::system_init(*this);
 #   endif

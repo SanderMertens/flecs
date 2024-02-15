@@ -9,6 +9,12 @@ namespace flecs
 {
 
 inline void world::init_builtin_components() {
+    this->component<Component>();
+    this->component<Identifier>();
+    this->component<Iterable>("flecs::core::Iterable");
+    this->component<Poly>();
+    this->component<Target>();
+
 #   ifdef FLECS_SYSTEM
     _::system_init(*this);
 #   endif

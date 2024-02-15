@@ -3209,6 +3209,10 @@ void flecs_bootstrap(
     flecs_bootstrap_builtin_t(world, table, EcsPoly);
     flecs_bootstrap_builtin_t(world, table, EcsTarget);
 
+    /* Patch up symbol of EcsIterable. The type is a typedef, which causes a
+     * symbol mismatch when registering the type with the C++ API. */
+    ecs_set_symbol(world, ecs_id(EcsIterable), "ecs_iterable_t");
+
     /* Initialize default entity id range */
     world->info.last_component_id = EcsFirstUserComponentId;
     flecs_entities_max_id(world) = EcsFirstUserEntityId;
