@@ -54,6 +54,18 @@ public:
     }
 };
 
+class ReparentModule {
+public:
+    ReparentModule(flecs::world& world) {
+        flecs::entity m = world.module<ReparentModule>();
+        m.child_of(world.entity("::parent"));
+
+        flecs::entity other = world.entity("::ns::ReparentModule");
+        test_assert(other != 0);
+        test_assert(other != m);
+    }
+};
+
 }
 
 struct Module {
@@ -316,4 +328,15 @@ void Module_lookup_module_after_reparent(void) {
         .expr("(ChildOf, p.NestedModule)").build().count(), 1);
     test_int(world.filter_builder()
         .expr("(ChildOf, ns.NestedModule)").build().count(), 0);
+}
+
+void Module_reparent_module_in_ctor(void) {
+    flecs::world world;
+
+    flecs::entity m = world.import<ns::ReparentModule>();
+    test_str(m.path().c_str(), "::parent::ReparentModule");
+
+    flecs::entity other = world.lookup("::ns::ReparentModule");
+    test_assert(other != 0);
+    test_assert(other != m);
 }

@@ -1049,7 +1049,8 @@
                 "module_as_component",
                 "module_with_core_name",
                 "import_addons_two_worlds",
-                "lookup_module_after_reparent"
+                "lookup_module_after_reparent",
+                "reparent_module_in_ctor"
             ]
         }, {
             "id": "ImplicitComponents",
