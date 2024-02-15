@@ -9580,15 +9580,16 @@ ecs_entity_t ecs_lookup_symbol(
     ecs_check(world != NULL, ECS_INTERNAL_ERROR, NULL);
     world = ecs_get_world(world);
 
-    ecs_entity_t e = flecs_name_index_find(&world->symbols, name, 0, 0);
-    if (e) {
-        return e;
-    }
-
+    ecs_entity_t e = 0;
     if (lookup_as_path) {
-        return ecs_lookup_path_w_sep(world, 0, name, ".", NULL, recursive);
+        e = ecs_lookup_path_w_sep(world, 0, name, ".", NULL, recursive);
     }
 
+    if (!e) {
+        e = flecs_name_index_find(&world->symbols, name, 0, 0);
+    }
+
+    return e;
 error:
     return 0;
 }

@@ -930,7 +930,8 @@
                 "lookup_child_invalid_digit",
                 "lookup_digit_from_wrong_scope",
                 "lookup_core_entity_from_wrong_scope",
-                "lookup_alias_w_number"
+                "lookup_alias_w_number",
+                "lookup_symbol_path"
             ]
         }, {
             "id": "Singleton",

@@ -664,3 +664,23 @@ void Lookup_lookup_alias_w_number(void) {
 
     ecs_fini(world);
 }
+
+void Lookup_lookup_symbol_path(void) {
+    ecs_world_t *world = ecs_mini();
+    
+    ecs_entity_t foo = ecs_new_entity(world, "foo");
+    ecs_entity_t bar = ecs_new_entity(world, "bar");
+    ecs_add_pair(world, bar, EcsChildOf, foo);
+
+    ecs_entity_t e = ecs_set_symbol(world, 0, "foo.bar");
+
+    test_assert(ecs_lookup_symbol(world, "foo.bar", false, false) == e);
+    test_assert(ecs_lookup_symbol(world, "foo.bar", true, false) == bar);
+
+    ecs_delete(world, bar);
+
+    test_assert(ecs_lookup_symbol(world, "foo.bar", false, false) == e);
+    test_assert(ecs_lookup_symbol(world, "foo.bar", true, false) == e);
+
+    ecs_fini(world);
+}
