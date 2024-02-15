@@ -34462,6 +34462,10 @@ void flecs_json_number(
     ecs_strbuf_t *buf,
     double value);
 
+void flecs_json_u32(
+    ecs_strbuf_t *buf,
+    uint32_t value);
+
 void flecs_json_true(
     ecs_strbuf_t *buf);
 
@@ -51503,6 +51507,13 @@ void flecs_json_number(
     ecs_strbuf_appendflt(buf, value, '"');
 }
 
+void flecs_json_u32(
+    ecs_strbuf_t *buf,
+    uint32_t value)
+{
+    ecs_strbuf_appendint(buf, flecs_uto(int64_t, value));
+}
+
 void flecs_json_true(
     ecs_strbuf_t *buf)
 {
@@ -53515,7 +53526,7 @@ void flecs_json_serialize_iter_result_variable_ids(
         }
 
         ecs_strbuf_list_next(buf);
-        flecs_json_number(buf, (double)variables[i].entity);
+        flecs_json_u32(buf, (uint32_t)variables[i].entity);
     }
 
     if (actual_count) {
@@ -53562,7 +53573,7 @@ void flecs_json_serialize_iter_result_entity_ids(
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
         flecs_json_next(buf);
-        flecs_json_number(buf, (double)(uint32_t)entities[i]);
+        flecs_json_u32(buf, (uint32_t)entities[i]);
     }
 
     flecs_json_array_pop(buf);
@@ -53614,7 +53625,7 @@ void flecs_json_serialize_iter_result_entities(
         int i, count = it->count;
         for (i = 0; i < count; i ++) {
             flecs_json_next(buf);
-            flecs_json_number(buf, (double)(uint32_t)entities[i]);
+            flecs_json_u32(buf, (uint32_t)entities[i]);
         }
     }
 

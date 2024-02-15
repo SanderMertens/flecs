@@ -477,6 +477,7 @@ void SerializeToExpr_float(void);
 void SerializeToExpr_double(void);
 void SerializeToExpr_string(void);
 void SerializeToExpr_entity(void);
+void SerializeToExpr_entity_10k(void);
 void SerializeToExpr_id(void);
 void SerializeToExpr_enum(void);
 void SerializeToExpr_bitmask(void);
@@ -659,6 +660,7 @@ void SerializeToJson_struct_float(void);
 void SerializeToJson_struct_double(void);
 void SerializeToJson_struct_string(void);
 void SerializeToJson_struct_entity(void);
+void SerializeToJson_struct_entity_10k(void);
 void SerializeToJson_struct_entity_after_float(void);
 void SerializeToJson_struct_id(void);
 void SerializeToJson_struct_float_nan(void);
@@ -777,8 +779,15 @@ void SerializeIterToJson_serialize_component_from_var(void);
 void SerializeIterToJson_serialize_color(void);
 void SerializeIterToJson_serialize_ids(void);
 void SerializeIterToJson_serialize_ids_2_entities(void);
+void SerializeIterToJson_serialize_anonymous(void);
+void SerializeIterToJson_serialize_anonymous_ids(void);
 void SerializeIterToJson_serialize_variable_ids(void);
 void SerializeIterToJson_serialize_variable_ids_2_entities(void);
+void SerializeIterToJson_serialize_variable_anonymous(void);
+void SerializeIterToJson_serialize_variable_anonymous_ids(void);
+void SerializeIterToJson_serialize_anonymous_tag(void);
+void SerializeIterToJson_serialize_anonymous_component(void);
+void SerializeIterToJson_serialize_anonymous_pair(void);
 void SerializeIterToJson_serialize_invalid_value(void);
 void SerializeIterToJson_serialize_recycled_pair_id(void);
 void SerializeIterToJson_serialize_w_alert(void);
@@ -2958,6 +2967,10 @@ bake_test_case SerializeToExpr_testcases[] = {
         SerializeToExpr_entity
     },
     {
+        "entity_10k",
+        SerializeToExpr_entity_10k
+    },
+    {
         "id",
         SerializeToExpr_id
     },
@@ -3676,6 +3689,10 @@ bake_test_case SerializeToJson_testcases[] = {
         SerializeToJson_struct_entity
     },
     {
+        "struct_entity_10k",
+        SerializeToJson_struct_entity_10k
+    },
+    {
         "struct_entity_after_float",
         SerializeToJson_struct_entity_after_float
     },
@@ -4138,12 +4155,40 @@ bake_test_case SerializeIterToJson_testcases[] = {
         SerializeIterToJson_serialize_ids_2_entities
     },
     {
+        "serialize_anonymous",
+        SerializeIterToJson_serialize_anonymous
+    },
+    {
+        "serialize_anonymous_ids",
+        SerializeIterToJson_serialize_anonymous_ids
+    },
+    {
         "serialize_variable_ids",
         SerializeIterToJson_serialize_variable_ids
     },
     {
         "serialize_variable_ids_2_entities",
         SerializeIterToJson_serialize_variable_ids_2_entities
+    },
+    {
+        "serialize_variable_anonymous",
+        SerializeIterToJson_serialize_variable_anonymous
+    },
+    {
+        "serialize_variable_anonymous_ids",
+        SerializeIterToJson_serialize_variable_anonymous_ids
+    },
+    {
+        "serialize_anonymous_tag",
+        SerializeIterToJson_serialize_anonymous_tag
+    },
+    {
+        "serialize_anonymous_component",
+        SerializeIterToJson_serialize_anonymous_component
+    },
+    {
+        "serialize_anonymous_pair",
+        SerializeIterToJson_serialize_anonymous_pair
     },
     {
         "serialize_invalid_value",
@@ -5631,7 +5676,7 @@ static bake_test_suite suites[] = {
         "SerializeToExpr",
         NULL,
         NULL,
-        54,
+        55,
         SerializeToExpr_testcases
     },
     {
@@ -5645,7 +5690,7 @@ static bake_test_suite suites[] = {
         "SerializeToJson",
         NULL,
         NULL,
-        43,
+        44,
         SerializeToJson_testcases
     },
     {
@@ -5659,7 +5704,7 @@ static bake_test_suite suites[] = {
         "SerializeIterToJson",
         NULL,
         NULL,
-        65,
+        72,
         SerializeIterToJson_testcases
     },
     {

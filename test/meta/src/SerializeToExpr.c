@@ -551,6 +551,20 @@ void SerializeToExpr_entity(void) {
     ecs_fini(world);
 }
 
+void SerializeToExpr_entity_10k(void) {
+    ecs_world_t *world = ecs_init();
+
+    {
+    ecs_entity_t value = 10000;
+    char *expr = ecs_ptr_to_expr(world, ecs_id(ecs_entity_t), &value);
+    test_assert(expr != NULL);
+    test_str(expr, "10000");
+    ecs_os_free(expr);
+    }
+
+    ecs_fini(world);
+}
+
 void SerializeToExpr_id(void) {
     ecs_world_t *world = ecs_init();
 

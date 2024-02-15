@@ -533,4 +533,3 @@ void PrimitiveTypes_primitive_w_short_notation(void) {
 
     ecs_fini(world);
 }
-

@@ -1746,6 +1746,78 @@ void SerializeIterToJson_serialize_ids_2_entities(void) {
     ecs_fini(world);
 }
 
+void SerializeIterToJson_serialize_anonymous(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_query_t *q = ecs_query_new(world, "Tag");
+
+    ecs_entity_t e1 = 5000;
+    ecs_entity_t e2 = 10000;
+    ecs_entity_t e3 = 100000;
+    ecs_entity_t e4 = 1000000;
+    ecs_ensure(world, 5000);
+    ecs_ensure(world, 10000);
+    ecs_ensure(world, 100000);
+    ecs_ensure(world, 1000000);
+    ecs_add(world, e1, Tag);
+    ecs_add(world, e2, Tag);
+    ecs_add(world, e3, Tag);
+    ecs_add(world, e4, Tag);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    ecs_iter_to_json_desc_t desc = {0};
+    desc.serialize_entities = true;
+    char *json = ecs_iter_to_json(world, &it, &desc);
+    test_assert(json != NULL);
+
+    char *expect = ecs_asprintf(
+        "{\"results\":[{\"entities\":[5000, 10000, 100000, 1000000]}]}");
+    test_str(json, expect);
+
+    ecs_os_free(json);
+    ecs_os_free(expect);
+
+    ecs_fini(world);
+}
+
+void SerializeIterToJson_serialize_anonymous_ids(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_query_t *q = ecs_query_new(world, "Tag");
+
+    ecs_entity_t e1 = 5000;
+    ecs_entity_t e2 = 10000;
+    ecs_entity_t e3 = 100000;
+    ecs_entity_t e4 = 1000000;
+    ecs_ensure(world, 5000);
+    ecs_ensure(world, 10000);
+    ecs_ensure(world, 100000);
+    ecs_ensure(world, 1000000);
+    ecs_add(world, e1, Tag);
+    ecs_add(world, e2, Tag);
+    ecs_add(world, e3, Tag);
+    ecs_add(world, e4, Tag);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    ecs_iter_to_json_desc_t desc = {0};
+    desc.serialize_entity_ids = true;
+    char *json = ecs_iter_to_json(world, &it, &desc);
+    test_assert(json != NULL);
+
+    char *expect = ecs_asprintf(
+        "{\"results\":[{\"entity_ids\":[5000, 10000, 100000, 1000000]}]}");
+    test_str(json, expect);
+
+    ecs_os_free(json);
+    ecs_os_free(expect);
+
+    ecs_fini(world);
+}
+
 void SerializeIterToJson_serialize_variable_ids(void) {
     ecs_world_t *world = ecs_init();
 
@@ -1811,6 +1883,171 @@ void SerializeIterToJson_serialize_variable_ids_2_entities(void) {
     ecs_os_free(expect);
 
     ecs_rule_fini(q);
+
+    ecs_fini(world);
+}
+
+void SerializeIterToJson_serialize_variable_anonymous(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_rule_t *q = ecs_rule_new(world, "Tag($Entity)");
+
+    ecs_entity_t e = 10000;
+    ecs_ensure(world, 10000);
+    ecs_add(world, e, Tag);
+
+    ecs_iter_t it = ecs_rule_iter(world, q);
+    ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
+    desc.serialize_ids = false;
+    desc.serialize_values = false;
+    desc.serialize_is_set = false;
+    desc.serialize_sources = false;
+    char *json = ecs_iter_to_json(world, &it, &desc);
+    test_assert(json != NULL);
+
+    char *expect = ecs_asprintf(
+        "{\"ids\":[[\"Tag\"]], \"vars\":[\"Entity\"], \"results\":[{\"vars\":[\"10000\"]}]}",
+        (uint32_t)e);
+    test_str(json, expect);
+
+    ecs_os_free(json);
+    ecs_os_free(expect);
+
+    ecs_rule_fini(q);
+
+    ecs_fini(world);
+}
+
+void SerializeIterToJson_serialize_variable_anonymous_ids(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_rule_t *q = ecs_rule_new(world, "Tag($Entity)");
+
+    ecs_entity_t e = 10000;
+    ecs_ensure(world, 10000);
+    ecs_add(world, e, Tag);
+
+    ecs_iter_t it = ecs_rule_iter(world, q);
+    ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
+    desc.serialize_ids = false;
+    desc.serialize_variables = false;
+    desc.serialize_variable_ids = true;
+    desc.serialize_values = false;
+    desc.serialize_is_set = false;
+    desc.serialize_sources = false;
+    char *json = ecs_iter_to_json(world, &it, &desc);
+    test_assert(json != NULL);
+
+    char *expect = ecs_asprintf(
+        "{\"ids\":[[\"Tag\"]], \"vars\":[\"Entity\"], \"results\":[{\"var_ids\":[10000]}]}",
+        (uint32_t)e);
+    test_str(json, expect);
+
+    ecs_os_free(json);
+    ecs_os_free(expect);
+
+    ecs_rule_fini(q);
+
+    ecs_fini(world);
+}
+
+void SerializeIterToJson_serialize_anonymous_tag(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t tag = 10000;
+    ecs_ensure(world, tag);
+    ecs_query_t *q = ecs_query_new(world, "10000");
+
+    ecs_entity_t e = ecs_new_entity(world, "e");
+    ecs_add_id(world, e, tag);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    ecs_iter_to_json_desc_t desc = {0};
+    desc.serialize_term_ids = true;
+    desc.serialize_ids = true;
+    desc.serialize_entities = true;
+    char *json = ecs_iter_to_json(world, &it, &desc);
+    test_assert(json != NULL);
+
+    char *expect = ecs_asprintf(
+        "{\"ids\":[[\"10000\"]], \"results\":[{\"ids\":[[\"10000\"]], \"entities\":[\"e\"]}]}");
+    test_str(json, expect);
+
+    ecs_os_free(json);
+    ecs_os_free(expect);
+
+    ecs_fini(world);
+}
+
+void SerializeIterToJson_serialize_anonymous_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t tag = 10000;
+    ecs_ensure(world, tag);
+    ecs_struct(world, {
+        .entity = tag,
+        .members = {
+            { "value", ecs_id(ecs_i32_t) }
+        }
+    });
+
+    ecs_query_t *q = ecs_query_new(world, "10000");
+
+    ecs_entity_t e = ecs_new_entity(world, "e");
+    int32_t *ptr = ecs_get_mut_id(world, e, tag);
+    *ptr = 10;
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    ecs_iter_to_json_desc_t desc = {0};
+    desc.serialize_term_ids = true;
+    desc.serialize_ids = true;
+    desc.serialize_entities = true;
+    desc.serialize_values = true;
+    desc.serialize_type_info = true;
+    char *json = ecs_iter_to_json(world, &it, &desc);
+    test_assert(json != NULL);
+
+    char *expect = ecs_asprintf(
+        "{\"ids\":[[\"10000\"]], \"type_info\":{\"10000\":{\"value\":[\"int\"]}}, "
+        "\"results\":[{\"ids\":[[\"10000\"]], \"entities\":[\"e\"], \"values\":[[{\"value\":10}]]}]}");
+    test_str(json, expect);
+
+    ecs_os_free(json);
+    ecs_os_free(expect);
+
+    ecs_fini(world);
+}
+
+void SerializeIterToJson_serialize_anonymous_pair(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t rel = 10000;
+    ecs_ensure(world, rel);
+    ecs_entity_t tgt = 20000;
+    ecs_ensure(world, tgt);
+    ecs_query_t *q = ecs_query_new(world, "(10000, 20000)");
+
+    ecs_entity_t e = ecs_new_entity(world, "e");
+    ecs_add_id(world, e, ecs_pair(rel, tgt));
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    ecs_iter_to_json_desc_t desc = {0};
+    desc.serialize_term_ids = true;
+    desc.serialize_ids = true;
+    desc.serialize_entities = true;
+    char *json = ecs_iter_to_json(world, &it, &desc);
+    test_assert(json != NULL);
+
+    char *expect = ecs_asprintf(
+        "{\"ids\":[[\"10000\",\"20000\"]], \"results\":[{\"ids\":[[\"10000\",\"20000\"]], \"entities\":[\"e\"]}]}");
+    test_str(json, expect);
+
+    ecs_os_free(json);
+    ecs_os_free(expect);
 
     ecs_fini(world);
 }

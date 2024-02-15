@@ -366,6 +366,13 @@ void flecs_json_number(
     ecs_strbuf_appendflt(buf, value, '"');
 }
 
+void flecs_json_u32(
+    ecs_strbuf_t *buf,
+    uint32_t value)
+{
+    ecs_strbuf_appendint(buf, flecs_uto(int64_t, value));
+}
+
 void flecs_json_true(
     ecs_strbuf_t *buf)
 {
