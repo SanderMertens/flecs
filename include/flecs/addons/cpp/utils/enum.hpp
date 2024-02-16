@@ -160,14 +160,15 @@ static const char* enum_constant_to_name() {
 /** Enumeration constant data */
 struct enum_constant_data {
     flecs::entity_t id;
-    int next;
+    int offset;
 };
 
 /** Enumeration type data */
 struct enum_data_impl {
     flecs::entity_t id;
-    int min;
-    int max;
+    int min = 0;
+    int max = -1;
+    int contiguous_through = 0;
     enum_constant_data constants[FLECS_ENUM_MAX_COUNT];
 };
 
@@ -221,22 +222,23 @@ private:
     static void init_constant(flecs::world_t *world) {
         int v = to_int<Value>();
         const char *name = enum_constant_to_name<E, Value>();
-        data.constants[v].next = data.min;
-        data.min = v;
-        if (!data.max) {
-            data.max = v;
+        ++data.max;
+        if (data.max == v) {
+            data.contiguous_through = v;
         }
 
-        data.constants[v].id = ecs_cpp_enum_constant_register(
-            world, data.id, data.constants[v].id, name, v);
+        data.constants[data.max].offset = data.max? v - data.constants[data.max - 1].offset: v;
+        data.constants[data.max].id = ecs_cpp_enum_constant_register(
+            world, data.id, data.constants[data.max].id, name, v);
+
     }
 
     template <E Value = FLECS_ENUM_MAX(E) >
     static void init(flecs::world_t *world) {
-        init_constant<Value>(world);
         if (is_not_0<Value>()) {
             init<from_int<to_int<Value>() - is_not_0<Value>()>()>(world);
         }
+        init_constant<Value>(world);
     }
 };
 
@@ -273,7 +275,7 @@ struct enum_data {
     }
 
     int next(int cur) const {
-        return impl_.constants[cur].next;
+        return cur + 1;
     }
 
     flecs::entity entity() const;

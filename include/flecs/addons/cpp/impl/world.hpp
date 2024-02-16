@@ -259,12 +259,23 @@ inline flecs::entity enum_data<E>::entity() const {
 
 template <typename E>
 inline flecs::entity enum_data<E>::entity(int value) const {
-    return flecs::entity(world_, impl_.constants[value].id);
+    if (value <= impl_.contiguous_through) {
+        return flecs::entity(world_, impl_.constants[value].id);
+    }
+    // Skip to last contiguous enum entry
+    int accumulator = impl_.contiguous_through; 
+    for (int i = impl_.contiguous_through + 1; i <= impl_.max; ++i) {
+        accumulator += impl_.constants[i].offset;
+        if (accumulator == value) {
+            return flecs::entity(world_, impl_.constants[i].id);
+        }
+    }
+    ecs_abort(ECS_INTERNAL_ERROR, "Enum value %s not found", value);
 }
 
 template <typename E>
 inline flecs::entity enum_data<E>::entity(E value) const {
-    return flecs::entity(world_, impl_.constants[static_cast<int>(value)].id);
+    return entity(static_cast<int>(value));
 }
 
 /** Use provided scope for operations ran on returned world.
