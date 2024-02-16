@@ -974,6 +974,7 @@ void RulesVariables_lookup_as_target(void);
 void RulesVariables_lookup_assign_var(void);
 void RulesVariables_lookup_eq_var(void);
 void RulesVariables_lookup_neq_var(void);
+void RulesVariables_lookup_unresolved_dependent(void);
 void RulesVariables_check_vars_this(void);
 void RulesVariables_check_vars_var(void);
 void RulesVariables_check_vars_wildcard(void);
@@ -5695,6 +5696,10 @@ bake_test_case RulesVariables_testcases[] = {
         RulesVariables_lookup_neq_var
     },
     {
+        "lookup_unresolved_dependent",
+        RulesVariables_lookup_unresolved_dependent
+    },
+    {
         "check_vars_this",
         RulesVariables_check_vars_this
     },
@@ -9119,7 +9124,7 @@ static bake_test_suite suites[] = {
         "RulesVariables",
         NULL,
         NULL,
-        161,
+        162,
         RulesVariables_testcases
     },
     {

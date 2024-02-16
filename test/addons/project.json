@@ -991,6 +991,7 @@
                 "lookup_assign_var",
                 "lookup_eq_var",
                 "lookup_neq_var",
+                "lookup_unresolved_dependent",
                 "check_vars_this",
                 "check_vars_var",
                 "check_vars_wildcard",

@@ -62823,7 +62823,7 @@ int flecs_rule_discover_vars(
                 /* Get name from table var (must exist). We can't use allocated
                  * name since variables don't own names. */
                 const char *base_name = NULL;
-                if (base_table_id) {
+                if (base_table_id != EcsVarNone && base_table_id) {
                     ecs_rule_var_t *base_table_var = ecs_vec_get_t(
                         vars, ecs_rule_var_t, (int32_t)base_table_id - 1);
                     base_name = base_table_var->name;

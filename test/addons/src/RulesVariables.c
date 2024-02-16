@@ -8538,6 +8538,19 @@ void RulesVariables_lookup_neq_var(void) {
     ecs_fini(world);
 }
 
+void RulesVariables_lookup_unresolved_dependent(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_log_set_level(-4);
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "(ChildOf, $_tgt), ChildOf(flecs, $tgt.child)"
+    });
+
+    test_assert(r == NULL);
+
+    ecs_fini(world);
+}
+
 void RulesVariables_check_vars_this(void) {
     ecs_world_t *world = ecs_init();
 
