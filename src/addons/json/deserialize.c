@@ -756,10 +756,16 @@ int flecs_json_parse_entities(
             ecs_os_free(name);
         }
 
-        ecs_assert(table == r->table, ECS_INTERNAL_ERROR, NULL);
-        ecs_record_t** elem = ecs_vec_append_t(
-            ctx->a, &ctx->records, ecs_record_t*);
-        *elem = r;
+        if (table != r->table) {
+            ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
+                "invalid entity identifier");
+            goto error;
+        } else {
+            ecs_assert(table == r->table, ECS_INTERNAL_ERROR, NULL);
+            ecs_record_t** elem = ecs_vec_append_t(
+                ctx->a, &ctx->records, ecs_record_t*);
+            *elem = r;
+        }
 
         json = flecs_json_parse(json, &token_kind, token);
         if (token_kind == JsonArrayClose) {

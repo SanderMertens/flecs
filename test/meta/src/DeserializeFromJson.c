@@ -5837,3 +5837,19 @@ void DeserializeFromJson_ser_deser_anon_w_same_id_as_existing_named(void) {
 
     ecs_fini(world);
 }
+
+void DeserializeFromJson_deser_invalid_entity_name(void) {
+    char *json = "{\"results\":["
+        "{\"ids\":[[\"flecs.core.Identifier\",\"flecs.core.Name\"]], \"entities\":[\"Foo\"], \"values\":[0]}, "
+        "{\"ids\":[[\"Foo\"]], \"entities\":[\"1e4\", 20000]}]}";
+
+    ecs_world_t *world = ecs_init();
+
+    {
+        ecs_log_set_level(-4);
+        const char *r = ecs_world_from_json(world, json, NULL);
+        test_str(r, NULL);
+    }
+
+    ecs_fini(world);
+}
