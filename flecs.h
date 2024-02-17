@@ -16698,45 +16698,12 @@ static const char* enum_constant_to_name() {
 /** Enumeration constant data */
 struct enum_constant_data {
     flecs::entity_t id;
-    int next;
+    int offset;
 };
 
-/** Enumeration type data */
-struct enum_data_impl {
-    flecs::entity_t id;
-    int min;
-    int max;
-    enum_constant_data constants[FLECS_ENUM_MAX_COUNT];
-};
-
-/** Class that scans an enum for constants, extracts names & creates entities */
+/** Compile time generated enum data */
 template <typename E>
-struct enum_type {
-    static enum_data_impl data;
-
-    static enum_type<E>& get() {
-        static _::enum_type<E> instance;
-        return instance;
-    }
-
-    flecs::entity_t entity(E value) const {
-        return data.constants[static_cast<int>(value)].id;
-    }
-
-    void init(flecs::world_t *world, flecs::entity_t id) {
-#if !FLECS_CPP_ENUM_REFLECTION_SUPPORT
-        ecs_abort(ECS_UNSUPPORTED, "enum reflection requires gcc 7.5 or higher")
-#endif
-
-        ecs_log_push();
-        ecs_cpp_enum_init(world, id);
-        data.id = id;
-        data.min = FLECS_ENUM_MAX(int);
-        init< enum_last<E>::value >(world);
-        ecs_log_pop();
-    }
-
-private:
+struct enum_reflection {
     template <E Value>
     static constexpr int to_int() {
         return static_cast<int>(Value);
@@ -16751,35 +16718,98 @@ private:
     static constexpr int is_not_0() {
         return static_cast<int>(Value != from_int<0>());
     }
-
     template <E Value, flecs::if_not_t< enum_constant_is_valid<E, Value>() > = 0>
-    static void init_constant(flecs::world_t*) { }
+    static constexpr int count_if_valid() {
+        return 0;
+    }
 
     template <E Value, flecs::if_t< enum_constant_is_valid<E, Value>() > = 0>
-    static void init_constant(flecs::world_t *world) {
-        int v = to_int<Value>();
-        const char *name = enum_constant_to_name<E, Value>();
-        data.constants[v].next = data.min;
-        data.min = v;
-        if (!data.max) {
-            data.max = v;
-        }
-
-        data.constants[v].id = ecs_cpp_enum_constant_register(
-            world, data.id, data.constants[v].id, name, v);
+    static constexpr int count_if_valid() {
+        return 1;
     }
 
     template <E Value = FLECS_ENUM_MAX(E) >
-    static void init(flecs::world_t *world) {
-        init_constant<Value>(world);
-        if (is_not_0<Value>()) {
-            init<from_int<to_int<Value>() - is_not_0<Value>()>()>(world);
+    static constexpr int num_enums() {
+        return is_not_0<Value>()
+            ?  num_enums<from_int<to_int<Value>() - is_not_0<Value>()>()>() + count_if_valid<Value>()
+            : count_if_valid<Value>();
+    }
+};
+
+/** Enumeration type data */
+template<typename E>
+struct enum_data_impl {
+    flecs::entity_t id;
+    int min;
+    int max;
+    int contiguous_through;
+    enum_constant_data constants[enum_reflection<E>::template num_enums< enum_last<E>::value >()];
+};
+
+/** Class that scans an enum for constants, extracts names & creates entities */
+template <typename E>
+struct enum_type {
+    static enum_data_impl<E> data;
+
+    static enum_type<E>& get() {
+        static _::enum_type<E> instance;
+        return instance;
+    }
+
+    flecs::entity_t entity(E value) const {
+        return data.constants[static_cast<int>(value)].id;
+    }
+
+    void init(flecs::world_t *world, flecs::entity_t id) {
+#if !FLECS_CPP_ENUM_REFLECTION_SUPPORT
+        ecs_abort(ECS_UNSUPPORTED, "enum reflection requires gcc 7.5 or higher")
+#endif
+        data.min = 0;
+        data.max = -1;
+        data.contiguous_through = -1;
+
+        ecs_log_push();
+        ecs_cpp_enum_init(world, id);
+        data.id = id;
+        init< enum_last<E>::value >(world);
+        ecs_log_pop();
+    }
+
+private:
+
+    template <E Value, flecs::if_not_t< enum_constant_is_valid<E, Value>() > = 0>
+    static int init_constant(flecs::world_t*, int last_value) {
+        return last_value;
+    }
+
+    template <E Value, flecs::if_t< enum_constant_is_valid<E, Value>() > = 0>
+    static int init_constant(flecs::world_t *world, int last_value) {
+        int v = enum_reflection<E>::template to_int<Value>();
+        const char *name = enum_constant_to_name<E, Value>();
+        ++data.max;
+        if (data.max == v && data.contiguous_through == v - 1) {
+            // Still contiguous through current value
+            data.contiguous_through = v;
         }
+
+        data.constants[data.max].offset = v - last_value;
+        data.constants[data.max].id = ecs_cpp_enum_constant_register(
+            world, data.id, 0, name, v);
+        return v;
+    }
+
+    template <E Value = FLECS_ENUM_MAX(E) >
+    static int init(flecs::world_t *world) {
+        int last_value = 0;
+        if (enum_reflection<E>::template is_not_0<Value>()) {
+            last_value = init<enum_reflection<E>::template from_int<enum_reflection<E>::template to_int<Value>() - enum_reflection<E>::template is_not_0<Value>()>()>(world);
+        }
+        return init_constant<Value>(world, last_value);
     }
 };
 
 template <typename E>
-enum_data_impl enum_type<E>::data;
+enum_data_impl<E> enum_type<E>::data;
 
 template <typename E, if_t< is_enum<E>::value > = 0>
 inline static void init_enum(flecs::world_t *world, flecs::entity_t id) {
@@ -16794,12 +16824,38 @@ inline static void init_enum(flecs::world_t*, flecs::entity_t) { }
 /** Enumeration type data wrapper with world pointer */
 template <typename E>
 struct enum_data {
-    enum_data(flecs::world_t *world, _::enum_data_impl& impl) 
+    enum_data(flecs::world_t *world, _::enum_data_impl<E>& impl)
         : world_(world)
         , impl_(impl) { }
 
     bool is_valid(int value) {
-        return impl_.constants[value].id != 0;
+        int index = index_by_value(value);
+        if (index < 0) {
+            return false;
+        }
+        return impl_.constants[index].id != 0;
+    }
+
+    int index_by_value(int value) const {
+        if (value < 0 || !impl_.max) {
+            return -1;
+        }
+        // Check if value is in contiguous lookup section
+        if (value <= impl_.contiguous_through) {
+            return value;
+        }
+        int accumulator = impl_.contiguous_through > 0? impl_.contiguous_through: 0;
+        for (int i = impl_.contiguous_through > 0? impl_.contiguous_through + 1: 0; i <= impl_.max; ++i) {
+            accumulator += impl_.constants[i].offset;
+            if (accumulator == value) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    int index_by_value(E value) const {
+        return index_by_value(static_cast<int>(value));
     }
 
     int first() const {
@@ -16811,7 +16867,7 @@ struct enum_data {
     }
 
     int next(int cur) const {
-        return impl_.constants[cur].next;
+        return cur + 1;
     }
 
     flecs::entity entity() const;
@@ -16819,7 +16875,7 @@ struct enum_data {
     flecs::entity entity(E value) const;
 
     flecs::world_t *world_;
-    _::enum_data_impl& impl_;
+    _::enum_data_impl<E>& impl_;
 };
 
 /** Convenience function for getting enum reflection data */
@@ -31818,12 +31874,16 @@ inline flecs::entity enum_data<E>::entity() const {
 
 template <typename E>
 inline flecs::entity enum_data<E>::entity(int value) const {
-    return flecs::entity(world_, impl_.constants[value].id);
+    int index = index_by_value(value);
+    if (index >= 0) {
+        return flecs::entity(world_, impl_.constants[index].id);
+    }
+    return flecs::entity(world_, 0);
 }
 
 template <typename E>
 inline flecs::entity enum_data<E>::entity(E value) const {
-    return flecs::entity(world_, impl_.constants[static_cast<int>(value)].id);
+    return entity(static_cast<int>(value));
 }
 
 /** Use provided scope for operations ran on returned world.

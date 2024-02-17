@@ -55,6 +55,11 @@ void Enum_standard_enum_reflection(void) {
     test_int(enum_type.first(), Red);
     test_int(enum_type.last(), Blue);
 
+    test_int(enum_type.index_by_value(Red), 0);
+    test_int(enum_type.index_by_value(Green), 1);
+    test_int(enum_type.index_by_value(Blue), 2);
+    test_int(enum_type.index_by_value(Blue+1), -1);
+
     auto e_red = enum_type.entity(Red);
     auto e_green = enum_type.entity(Green);
     auto e_blue = enum_type.entity(Blue);
@@ -89,8 +94,13 @@ void Enum_sparse_enum_reflection(void) {
     test_assert(e != 0);
     test_assert(e == ecs.component<SparseEnum>());
     test_str(e.path().c_str(), "::SparseEnum");
-    test_int(enum_type.first(), Black);
-    test_int(enum_type.last(), Grey);
+    test_int(enum_type.first(), 0);
+    test_int(enum_type.last(), 2);
+
+    test_int(enum_type.index_by_value(Black), 0);
+    test_int(enum_type.index_by_value(White), 1);
+    test_int(enum_type.index_by_value(Grey), 2);
+    test_int(enum_type.index_by_value(Grey+1), -1);
 
     auto e_black = enum_type.entity(Black);
     auto e_white = enum_type.entity(White);
@@ -132,6 +142,11 @@ void Enum_enum_class_reflection(void) {
     test_int(enum_type.first(), (int)EnumClass::Grass);
     test_int(enum_type.last(), (int)EnumClass::Stone);
 
+    test_int(enum_type.index_by_value(EnumClass::Grass), 0);
+    test_int(enum_type.index_by_value(EnumClass::Sand), 1);
+    test_int(enum_type.index_by_value(EnumClass::Stone), 2);
+    test_int(enum_type.index_by_value((int)EnumClass::Stone + 1), -1);
+
     auto e_grass = enum_type.entity(EnumClass::Grass);
     auto e_sand = enum_type.entity(EnumClass::Sand);
     auto e_stone = enum_type.entity(EnumClass::Stone);
@@ -169,6 +184,9 @@ void Enum_prefixed_enum_reflection(void) {
     test_int(enum_type.first(), PrefixEnum::PrefixEnumFoo);
     test_int(enum_type.last(), PrefixEnum::PrefixEnumBar);
 
+    test_int(enum_type.index_by_value(PrefixEnum::PrefixEnumFoo), 0);
+    test_int(enum_type.index_by_value(PrefixEnum::PrefixEnumBar), 1);
+
     auto e_foo = enum_type.entity(PrefixEnum::PrefixEnumFoo);
     auto e_bar = enum_type.entity(PrefixEnum::PrefixEnumBar);
 
@@ -180,7 +198,7 @@ void Enum_prefixed_enum_reflection(void) {
 
     test_assert(e_bar != 0);
     test_str(e_bar.path().c_str(), "::PrefixEnum::Bar");
-    test_bool(enum_type.is_valid(PrefixEnum::PrefixEnumFoo), true);
+    test_bool(enum_type.is_valid(PrefixEnum::PrefixEnumBar), true);
     test_assert(e_bar.get<PrefixEnum>() != nullptr);
     test_assert(e_bar.get<PrefixEnum>()[0] == PrefixEnum::PrefixEnumBar);
 
@@ -198,6 +216,10 @@ void Enum_constant_with_num_reflection(void) {
     test_str(e.path().c_str(), "::ConstantsWithNum");
     test_int(enum_type.first(), ConstantsWithNum::Num1);
     test_int(enum_type.last(), ConstantsWithNum::Num3);
+
+    test_int(enum_type.index_by_value(ConstantsWithNum::Num1), 0);
+    test_int(enum_type.index_by_value(ConstantsWithNum::Num2), 1);
+    test_int(enum_type.index_by_value(ConstantsWithNum::Num3), 2);
 
     auto num_1 = enum_type.entity(ConstantsWithNum::Num1);
     auto num_2 = enum_type.entity(ConstantsWithNum::Num2);

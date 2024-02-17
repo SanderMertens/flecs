@@ -188,14 +188,13 @@ struct enum_reflection {
     template <E Value, flecs::if_t< enum_constant_is_valid<E, Value>() > = 0>
     static constexpr int count_if_valid() {
         return 1;
-    };
+    }
 
     template <E Value = FLECS_ENUM_MAX(E) >
     static constexpr int num_enums() {
-        if (is_not_0<Value>()) {
-            return num_enums<from_int<to_int<Value>() - is_not_0<Value>()>()>() + count_if_valid<Value>();
-        }
-        return count_if_valid<Value>();
+        return is_not_0<Value>()
+            ?  num_enums<from_int<to_int<Value>() - is_not_0<Value>()>()>() + count_if_valid<Value>()
+            : count_if_valid<Value>();
     }
 };
 
@@ -229,7 +228,7 @@ struct enum_type {
 #endif
         data.min = 0;
         data.max = -1;
-        data.contiguous_through = 0;
+        data.contiguous_through = -1;
 
         ecs_log_push();
         ecs_cpp_enum_init(world, id);
@@ -241,28 +240,33 @@ struct enum_type {
 private:
 
     template <E Value, flecs::if_not_t< enum_constant_is_valid<E, Value>() > = 0>
-    static void init_constant(flecs::world_t*) { }
+    static int init_constant(flecs::world_t*, int last_value) {
+        return last_value;
+    }
 
     template <E Value, flecs::if_t< enum_constant_is_valid<E, Value>() > = 0>
-    static void init_constant(flecs::world_t *world) {
+    static int init_constant(flecs::world_t *world, int last_value) {
         int v = enum_reflection<E>::template to_int<Value>();
         const char *name = enum_constant_to_name<E, Value>();
         ++data.max;
-        if (data.max == v) {
+        if (data.max == v && data.contiguous_through == v - 1) {
+            // Still contiguous through current value
             data.contiguous_through = v;
         }
 
-        data.constants[data.max].offset = data.max? v - data.constants[data.max - 1].offset: v;
+        data.constants[data.max].offset = v - last_value;
         data.constants[data.max].id = ecs_cpp_enum_constant_register(
             world, data.id, 0, name, v);
+        return v;
     }
 
     template <E Value = FLECS_ENUM_MAX(E) >
-    static void init(flecs::world_t *world) {
+    static int init(flecs::world_t *world) {
+        int last_value = 0;
         if (enum_reflection<E>::template is_not_0<Value>()) {
-            init<enum_reflection<E>::template from_int<enum_reflection<E>::template to_int<Value>() - enum_reflection<E>::template is_not_0<Value>()>()>(world);
+            last_value = init<enum_reflection<E>::template from_int<enum_reflection<E>::template to_int<Value>() - enum_reflection<E>::template is_not_0<Value>()>()>(world);
         }
-        init_constant<Value>(world);
+        return init_constant<Value>(world, last_value);
     }
 };
 
@@ -282,12 +286,38 @@ inline static void init_enum(flecs::world_t*, flecs::entity_t) { }
 /** Enumeration type data wrapper with world pointer */
 template <typename E>
 struct enum_data {
-    enum_data(flecs::world_t *world, _::enum_data_impl<E>& impl) 
+    enum_data(flecs::world_t *world, _::enum_data_impl<E>& impl)
         : world_(world)
         , impl_(impl) { }
 
     bool is_valid(int value) {
-        return impl_.constants[value].id != 0;
+        int index = index_by_value(value);
+        if (index < 0) {
+            return false;
+        }
+        return impl_.constants[index].id != 0;
+    }
+
+    int index_by_value(int value) const {
+        if (value < 0 || !impl_.max) {
+            return -1;
+        }
+        // Check if value is in contiguous lookup section
+        if (value <= impl_.contiguous_through) {
+            return value;
+        }
+        int accumulator = impl_.contiguous_through > 0? impl_.contiguous_through: 0;
+        for (int i = impl_.contiguous_through > 0? impl_.contiguous_through + 1: 0; i <= impl_.max; ++i) {
+            accumulator += impl_.constants[i].offset;
+            if (accumulator == value) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    int index_by_value(E value) const {
+        return index_by_value(static_cast<int>(value));
     }
 
     int first() const {
