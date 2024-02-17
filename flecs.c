@@ -5576,10 +5576,13 @@ void flecs_throw_invalid_delete(
     char *id_str = NULL;
     if (!(world->flags & EcsWorldQuit)) {
         id_str = ecs_id_str(world, id);
-        ecs_throw(ECS_CONSTRAINT_VIOLATED, id_str);
-    }
-error:
-    ecs_os_free(id_str);
+        ecs_err("(OnDelete, Throw) constraint violated while deleting %s", 
+            id_str);
+        ecs_os_free(id_str);
+        #ifndef FLECS_SOFT_ASSERT
+        ecs_abort(ECS_CONSTRAINT_VIOLATED, NULL);
+        #endif
+    }    
 }
 
 static
@@ -42783,16 +42786,37 @@ ecs_id_record_t* flecs_id_record_new(
         if (tgt && !ecs_id_is_wildcard(tgt)) {
             /* Check if target of relationship satisfies OneOf property */
             ecs_entity_t oneof = flecs_get_oneof(world, rel);
-            ecs_check( !oneof || ecs_has_pair(world, tgt, EcsChildOf, oneof),
-                ECS_CONSTRAINT_VIOLATED, NULL);
-            (void)oneof;
+            if (oneof) {
+                if (!ecs_has_pair(world, tgt, EcsChildOf, oneof)) {
+                    char *idstr = ecs_id_str(world, id);
+                    char *tgtstr = ecs_get_fullpath(world, tgt);
+                    char *oneofstr = ecs_get_fullpath(world, oneof);
+                    ecs_err("OneOf constraint violated: "
+                        "%s: '%s' is not a child of '%s'",
+                        idstr, tgtstr, oneofstr);
+                    ecs_os_free(oneofstr);
+                    ecs_os_free(tgtstr);
+                    ecs_os_free(idstr);
+                    #ifndef FLECS_SOFT_ASSERT
+                    ecs_abort(ECS_CONSTRAINT_VIOLATED, NULL);
+                    #endif
+                }
+            }
 
             /* Check if we're not trying to inherit from a final target */
             if (rel == EcsIsA) {
-                bool is_final = ecs_has_id(world, tgt, EcsFinal);
-                ecs_check(!is_final, ECS_CONSTRAINT_VIOLATED, 
-                    "cannot inherit from final entity");
-                (void)is_final;
+                if (ecs_has_id(world, tgt, EcsFinal)) {
+                    char *idstr = ecs_id_str(world, id);
+                    char *tgtstr = ecs_get_fullpath(world, tgt);
+                    ecs_err("Final constraint violated: "
+                            "%s: cannot inherit from final entity '%s'",
+                        idstr, tgtstr);
+                    ecs_os_free(tgtstr);
+                    ecs_os_free(idstr);
+                    #ifndef FLECS_SOFT_ASSERT
+                    ecs_abort(ECS_CONSTRAINT_VIOLATED, NULL);
+                    #endif
+                }
             }
         }
 #endif
@@ -42876,10 +42900,6 @@ ecs_id_record_t* flecs_id_record_new(
     world->info.pair_id_count += is_pair;
 
     return idr;
-#ifdef FLECS_DEBUG
-error:
-    return NULL;
-#endif
 }
 
 static

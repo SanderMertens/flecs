@@ -2056,10 +2056,13 @@ void flecs_throw_invalid_delete(
     char *id_str = NULL;
     if (!(world->flags & EcsWorldQuit)) {
         id_str = ecs_id_str(world, id);
-        ecs_throw(ECS_CONSTRAINT_VIOLATED, id_str);
-    }
-error:
-    ecs_os_free(id_str);
+        ecs_err("(OnDelete, Throw) constraint violated while deleting %s", 
+            id_str);
+        ecs_os_free(id_str);
+        #ifndef FLECS_SOFT_ASSERT
+        ecs_abort(ECS_CONSTRAINT_VIOLATED, NULL);
+        #endif
+    }    
 }
 
 static

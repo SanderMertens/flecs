@@ -605,6 +605,12 @@ extern "C" {
 /* This warning can get thrown for expressions that evaluate to constants
  * in debug/release mode. */
 #pragma clang diagnostic ignored "-Wconstant-logical-operand"
+/* With soft asserts enabled the code won't abort, which in some cases means
+ * code paths are reached where values are uninitialized. */
+#ifdef FLECS_SOFT_ASSERT
+#pragma clang diagnostic ignored "-Wsometimes-uninitialized"
+#endif
+
 #elif defined(ECS_TARGET_GNU)
 #ifndef __cplusplus
 #pragma GCC diagnostic ignored "-Wdeclaration-after-statement"
