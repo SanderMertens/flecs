@@ -232,7 +232,7 @@ void Plecs_line_comment_before_stmt(void) {
     test_assert(ecs_plecs_from_str(world, NULL, "// Hello(World)\nFoo\n") == 0);
 
     test_assert(ecs_lookup(world, "Hello") == 0);
-    test_assert(ecs_lookup(world, "World") == 0);
+    test_assert(ecs_lookup_child(world, 0, "World") == 0);
     test_assert(ecs_lookup(world, "Foo") != 0);
 
     ecs_fini(world);
@@ -244,7 +244,7 @@ void Plecs_line_comment_after_stmt(void) {
     test_assert(ecs_plecs_from_str(world, NULL, "Foo\n// Hello(World)\n") == 0);
 
     test_assert(ecs_lookup(world, "Hello") == 0);
-    test_assert(ecs_lookup(world, "World") == 0);
+    test_assert(ecs_lookup_child(world, 0, "World") == 0);
     test_assert(ecs_lookup(world, "Foo") != 0);
 
     ecs_fini(world);
@@ -256,7 +256,7 @@ void Plecs_line_comment_between_stmt(void) {
     test_assert(ecs_plecs_from_str(world, NULL, "Foo\n// Hello(World)\nBar\n") == 0);
 
     test_assert(ecs_lookup(world, "Hello") == 0);
-    test_assert(ecs_lookup(world, "World") == 0);
+    test_assert(ecs_lookup_child(world, 0, "World") == 0);
     test_assert(ecs_lookup(world, "Foo") != 0);
     test_assert(ecs_lookup(world, "Bar") != 0);
 
@@ -269,7 +269,7 @@ void Plecs_multiple_line_comment(void) {
     test_assert(ecs_plecs_from_str(world, NULL, "// Hello(World)\n// Boo(Baz)\nFoo") == 0);
 
     test_assert(ecs_lookup(world, "Hello") == 0);
-    test_assert(ecs_lookup(world, "World") == 0);
+    test_assert(ecs_lookup_child(world, 0, "World") == 0);
     test_assert(ecs_lookup(world, "Boo") == 0);
     test_assert(ecs_lookup(world, "Baz") == 0);
     test_assert(ecs_lookup(world, "Foo") != 0);
@@ -283,7 +283,7 @@ void Plecs_line_comment_after_stmt_same_line(void) {
     test_assert(ecs_plecs_from_str(world, NULL, "Foo // Hello(World)\nBar\n") == 0);
 
     test_assert(ecs_lookup(world, "Hello") == 0);
-    test_assert(ecs_lookup(world, "World") == 0);
+    test_assert(ecs_lookup_child(world, 0, "World") == 0);
     test_assert(ecs_lookup(world, "Foo") != 0);
     test_assert(ecs_lookup(world, "Bar") != 0);
 

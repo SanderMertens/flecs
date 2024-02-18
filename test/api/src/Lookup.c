@@ -135,6 +135,11 @@ void Lookup_lookup_by_id(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_lookup(world, "1000");
+    test_int(e, 0);
+
+    ecs_ensure(world, 1000);
+
+    e = ecs_lookup(world, "1000");
     test_int(e, 1000);
 
     ecs_fini(world);

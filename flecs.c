@@ -9545,32 +9545,9 @@ error:
 
 ecs_entity_t ecs_lookup(
     const ecs_world_t *world,
-    const char *name)
+    const char *path)
 {   
-    if (!name) {
-        return 0;
-    }
-
-    ecs_check(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    world = ecs_get_world(world);
-
-    ecs_entity_t e = flecs_get_builtin(name);
-    if (e) {
-        return e;
-    }
-
-    if (flecs_name_is_id(name)) {
-        return flecs_name_to_id(world, name);
-    }
-
-    e = flecs_name_index_find(&world->aliases, name, 0, 0);
-    if (e) {
-        return e;
-    }    
-    
-    return ecs_lookup_child(world, 0, name);
-error:
-    return 0;
+    return ecs_lookup_path_w_sep(world, 0, path, ".", NULL, true);
 }
 
 ecs_entity_t ecs_lookup_symbol(
