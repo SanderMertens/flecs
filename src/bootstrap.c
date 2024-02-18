@@ -677,7 +677,7 @@ void flecs_bootstrap_entity(
     ecs_assert(ecs_get_name(world, id) != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (!parent || parent == EcsFlecsCore) {
-        ecs_assert(ecs_lookup_fullpath(world, name) == id, 
+        ecs_assert(ecs_lookup(world, name) == id, 
             ECS_INTERNAL_ERROR, NULL);
     }
 }

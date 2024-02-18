@@ -1666,7 +1666,7 @@ bool flecs_rule_pred_eq_name(
     ecs_rule_run_ctx_t *ctx)
 {
     const char *name = flecs_rule_name_arg(op, ctx);
-    ecs_entity_t e = ecs_lookup_fullpath(ctx->world, name);
+    ecs_entity_t e = ecs_lookup(ctx->world, name);
     if (!e) {
         /* Entity doesn't exist */
         return false;
@@ -1872,7 +1872,7 @@ bool flecs_rule_pred_neq_name(
     ecs_rule_run_ctx_t *ctx)
 {
     const char *name = flecs_rule_name_arg(op, ctx);
-    ecs_entity_t e = ecs_lookup_fullpath(ctx->world, name);
+    ecs_entity_t e = ecs_lookup(ctx->world, name);
     if (!e) {
         /* Entity doesn't exist */
         return true && !redo;

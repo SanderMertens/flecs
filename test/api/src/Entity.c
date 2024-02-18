@@ -2003,7 +2003,7 @@ void Entity_defer_entity_init_w_set_name_w_add_childof(void) {
     ecs_defer_end(world);
 
     test_str(ecs_get_name(world, e), "FooBar");
-    test_assert(e == ecs_lookup_fullpath(world, "parent.FooBar"));
+    test_assert(e == ecs_lookup(world, "parent.FooBar"));
 
     ecs_fini(world);
 }

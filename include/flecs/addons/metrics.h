@@ -151,7 +151,7 @@ ecs_entity_t ecs_metric_init(
  *
  * @code
  * ecs_metric(world, {
- *   .member = ecs_lookup_fullpath(world, "Position.x")
+ *   .member = ecs_lookup(world, "Position.x")
  *   .kind = EcsGauge
  * });
  * @endcode

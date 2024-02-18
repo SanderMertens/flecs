@@ -3132,7 +3132,7 @@ void flecs_bootstrap_entity(
     ecs_assert(ecs_get_name(world, id) != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (!parent || parent == EcsFlecsCore) {
-        ecs_assert(ecs_lookup_fullpath(world, name) == id, 
+        ecs_assert(ecs_lookup(world, name) == id, 
             ECS_INTERNAL_ERROR, NULL);
     }
 }
@@ -25338,7 +25338,7 @@ void FlecsCoreDocImport(
     ecs_doc_set_brief(world, EcsEmpty, "Tag used to indicate a query has no results");
     
     /* Initialize documentation for meta components */
-    ecs_entity_t meta = ecs_lookup_fullpath(world, "flecs.meta");
+    ecs_entity_t meta = ecs_lookup(world, "flecs.meta");
     ecs_doc_set_brief(world, meta, "Flecs module with reflection components");
 
     ecs_doc_set_brief(world, ecs_id(EcsMetaType), "Component added to types");
@@ -25370,7 +25370,7 @@ void FlecsCoreDocImport(
     ecs_doc_set_brief(world, ecs_id(ecs_entity_t), "entity component");
 
     /* Initialize documentation for doc components */
-    ecs_entity_t doc = ecs_lookup_fullpath(world, "flecs.doc");
+    ecs_entity_t doc = ecs_lookup(world, "flecs.doc");
     ecs_doc_set_brief(world, doc, "Flecs module with documentation components");
 
     ecs_doc_set_brief(world, ecs_id(EcsDocDescription), "Component used to add documentation");
@@ -30327,7 +30327,7 @@ ecs_entity_t ecs_import(
     const char *old_name_prefix = world->info.name_prefix;
 
     char *path = ecs_module_path_from_c(module_name);
-    ecs_entity_t e = ecs_lookup_fullpath(world, path);
+    ecs_entity_t e = ecs_lookup(world, path);
     ecs_os_free(path);
     
     if (!e) {
@@ -30338,7 +30338,7 @@ ecs_entity_t ecs_import(
         module(world);
 
         /* Lookup module entity (must be registered by module) */
-        e = ecs_lookup_fullpath(world, module_name);
+        e = ecs_lookup(world, module_name);
         ecs_check(e != 0, ECS_MODULE_UNDEFINED, module_name);
 
         ecs_log_pop();
@@ -31328,7 +31328,7 @@ const char* flecs_parse_term_flags(
                     return NULL;
                 }         
 
-                id->trav = ecs_lookup_fullpath(world, token);
+                id->trav = ecs_lookup(world, token);
                 if (!id->trav) {
                     ecs_parser_error(name, expr, column, 
                         "unresolved identifier '%s'", token);
@@ -33334,7 +33334,7 @@ const char* plecs_parse_using_stmt(
     ecs_entity_t scope;
     if (len > 2 && !ecs_os_strcmp(&using_path[len - 2], ".*")) {
         using_path[len - 2] = '\0';
-        scope = ecs_lookup_fullpath(world, using_path);
+        scope = ecs_lookup(world, using_path);
         if (!scope) {
             ecs_parser_error(name, expr, ptr - expr,
                 "unresolved identifier '%s' in using statement", using_path);
@@ -34717,7 +34717,7 @@ void flecs_rest_parse_json_ser_entity_params(
     char *rel = NULL;
     flecs_rest_string_param(req, "refs", &rel);
     if (rel) {
-        desc->serialize_refs = ecs_lookup_fullpath(world, rel);
+        desc->serialize_refs = ecs_lookup(world, rel);
     }
 }
 
@@ -34963,7 +34963,7 @@ bool flecs_rest_reply_existing_query(
     ecs_http_reply_t *reply,
     const char *name)
 {
-    ecs_entity_t q = ecs_lookup_fullpath(world, name);
+    ecs_entity_t q = ecs_lookup(world, name);
     if (!q) {
         flecs_reply_error(reply, "unresolved identifier '%s'", name);
         reply->code = 404;
@@ -49986,7 +49986,7 @@ const char* flecs_json_parse_path(
         goto error;
     }
 
-    ecs_entity_t result = ecs_lookup_fullpath(world, path);
+    ecs_entity_t result = ecs_lookup(world, path);
     if (!result) {
         ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
             "unresolved identifier '%s'", path);
@@ -50957,7 +50957,7 @@ const char* flecs_json_parse_result(
             goto error;
         }
 
-        parent = ecs_lookup_fullpath(world, parent_name);
+        parent = ecs_lookup(world, parent_name);
         if (parent_name != token) {
             ecs_os_free(parent_name);
         }
@@ -62478,7 +62478,7 @@ const char* ecs_rule_parse_vars(
             return NULL;
         }
 
-        ecs_entity_t val = ecs_lookup_fullpath(rule->filter.world, token);
+        ecs_entity_t val = ecs_lookup(rule->filter.world, token);
         if (!val) {
             ecs_parser_error(name, expr, (ptr - expr), 
                 "unresolved entity '%s'", token);
@@ -66394,7 +66394,7 @@ bool flecs_rule_pred_eq_name(
     ecs_rule_run_ctx_t *ctx)
 {
     const char *name = flecs_rule_name_arg(op, ctx);
-    ecs_entity_t e = ecs_lookup_fullpath(ctx->world, name);
+    ecs_entity_t e = ecs_lookup(ctx->world, name);
     if (!e) {
         /* Entity doesn't exist */
         return false;
@@ -66600,7 +66600,7 @@ bool flecs_rule_pred_neq_name(
     ecs_rule_run_ctx_t *ctx)
 {
     const char *name = flecs_rule_name_arg(op, ctx);
-    ecs_entity_t e = ecs_lookup_fullpath(ctx->world, name);
+    ecs_entity_t e = ecs_lookup(ctx->world, name);
     if (!e) {
         /* Entity doesn't exist */
         return true && !redo;

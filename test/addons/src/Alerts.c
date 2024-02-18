@@ -1491,7 +1491,7 @@ void Alerts_member_range_warning(void) {
     ecs_entity_t e1 = ecs_new_entity(world, "e1");
     ecs_set(world, e1, Mass, {50});
 
-    ecs_entity_t member = ecs_lookup_fullpath(world, "Mass.value");
+    ecs_entity_t member = ecs_lookup(world, "Mass.value");
     test_assert(member != 0);
 
     ecs_entity_t alert = ecs_alert(world, {
@@ -1559,7 +1559,7 @@ void Alerts_member_range_error(void) {
     ecs_entity_t e1 = ecs_new_entity(world, "e1");
     ecs_set(world, e1, Mass, {50});
 
-    ecs_entity_t member = ecs_lookup_fullpath(world, "Mass.value");
+    ecs_entity_t member = ecs_lookup(world, "Mass.value");
     test_assert(member != 0);
 
     ecs_entity_t alert = ecs_alert(world, {
@@ -1627,7 +1627,7 @@ void Alerts_member_range_warning_error(void) {
     ecs_entity_t e1 = ecs_new_entity(world, "e1");
     ecs_set(world, e1, Mass, {25});
 
-    ecs_entity_t member = ecs_lookup_fullpath(world, "Mass.value");
+    ecs_entity_t member = ecs_lookup(world, "Mass.value");
     test_assert(member != 0);
 
     ecs_entity_t alert = ecs_alert(world, {
@@ -1723,7 +1723,7 @@ void Alerts_member_range_error_w_warning_severity(void) {
     ecs_entity_t e1 = ecs_new_entity(world, "e1");
     ecs_set(world, e1, Mass, {50});
 
-    ecs_entity_t member = ecs_lookup_fullpath(world, "Mass.value");
+    ecs_entity_t member = ecs_lookup(world, "Mass.value");
     test_assert(member != 0);
 
     ecs_entity_t alert = ecs_alert(world, {
@@ -1793,7 +1793,7 @@ void Alerts_member_range_error_w_severity_filter(void) {
     ecs_entity_t e1 = ecs_new_entity(world, "e1");
     ecs_set(world, e1, Mass, {50});
 
-    ecs_entity_t member = ecs_lookup_fullpath(world, "Mass.value");
+    ecs_entity_t member = ecs_lookup(world, "Mass.value");
     test_assert(member != 0);
 
     ecs_entity_t alert = ecs_alert(world, {
@@ -1888,7 +1888,7 @@ void Alerts_member_range_warning_w_severity_filter(void) {
     ecs_entity_t e1 = ecs_new_entity(world, "e1");
     ecs_set(world, e1, Mass, {50});
 
-    ecs_entity_t member = ecs_lookup_fullpath(world, "Mass.value");
+    ecs_entity_t member = ecs_lookup(world, "Mass.value");
     test_assert(member != 0);
 
     ecs_entity_t alert = ecs_alert(world, {
@@ -1983,7 +1983,7 @@ void Alerts_member_range_pair_id(void) {
     ecs_entity_t e1 = ecs_new_entity(world, "e1");
     ecs_set(world, e1, Mass, {50});
 
-    ecs_entity_t member = ecs_lookup_fullpath(world, "Mass.value");
+    ecs_entity_t member = ecs_lookup(world, "Mass.value");
     test_assert(member != 0);
 
     ecs_entity_t alert = ecs_alert(world, {
@@ -2050,7 +2050,7 @@ void Alerts_member_range_invalid_member(void) {
         .members = {{ "value", ecs_id(ecs_f32_t), .error_range = { 0, 100 }}}
     });
 
-    ecs_entity_t member = ecs_lookup_fullpath(world, "Mass.value");
+    ecs_entity_t member = ecs_lookup(world, "Mass.value");
     test_assert(member != 0);
 
     ecs_log_set_level(-4);
@@ -2076,7 +2076,7 @@ void Alerts_member_range_invalid_member_child(void) {
         .members = {{ "value", ecs_id(ecs_f32_t), .error_range = { 0, 100 }}}
     });
 
-    ecs_entity_t member = ecs_lookup_fullpath(world, "Mass.value");
+    ecs_entity_t member = ecs_lookup(world, "Mass.value");
     test_assert(member != 0);
 
     ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, ecs_id(Mass));
@@ -2105,7 +2105,7 @@ void Alerts_member_range_invalid_type(void) {
         .members = {{ "value", ecs_id(ecs_f32_t), .error_range = { 0, 100 }}}
     });
 
-    ecs_entity_t member = ecs_lookup_fullpath(world, "Mass.value");
+    ecs_entity_t member = ecs_lookup(world, "Mass.value");
     test_assert(member != 0);
 
     ecs_log_set_level(-4);
@@ -2137,7 +2137,7 @@ void Alerts_member_range_invalid_member_type(void) {
         .members = {{ "value", ecs_id(Mass) }}
     });
 
-    ecs_entity_t member = ecs_lookup_fullpath(world, "Foo.value");
+    ecs_entity_t member = ecs_lookup(world, "Foo.value");
     test_assert(member != 0);
 
     ecs_log_set_level(-4);
@@ -2163,7 +2163,7 @@ void Alerts_member_range_no_range(void) {
         .members = {{ "value", ecs_id(ecs_f32_t) }}
     });
 
-    ecs_entity_t member = ecs_lookup_fullpath(world, "Mass.value");
+    ecs_entity_t member = ecs_lookup(world, "Mass.value");
     test_assert(member != 0);
 
     ecs_log_set_level(-4);
@@ -2194,7 +2194,7 @@ void Alerts_member_range_alert_two_instances(void) {
     ecs_entity_t e2 = ecs_new_entity(world, "e2");
     ecs_set(world, e2, Mass, {50});
 
-    ecs_entity_t member = ecs_lookup_fullpath(world, "Mass.value");
+    ecs_entity_t member = ecs_lookup(world, "Mass.value");
     test_assert(member != 0);
 
     ecs_entity_t alert = ecs_alert(world, {
@@ -2310,7 +2310,7 @@ void Alerts_member_range_from_var(void) {
     ecs_set(world, p, Mass, {50});
     ecs_entity_t e1 = ecs_new_w_pair(world, EcsChildOf, p);
 
-    ecs_entity_t member = ecs_lookup_fullpath(world, "Mass.value");
+    ecs_entity_t member = ecs_lookup(world, "Mass.value");
     test_assert(member != 0);
 
     ecs_entity_t alert = ecs_alert(world, {
@@ -2380,7 +2380,7 @@ void Alerts_member_range_from_var_after_remove(void) {
     ecs_set(world, p, Mass, {50});
     ecs_entity_t e1 = ecs_new_w_pair(world, EcsChildOf, p);
 
-    ecs_entity_t member = ecs_lookup_fullpath(world, "Mass.value");
+    ecs_entity_t member = ecs_lookup(world, "Mass.value");
     test_assert(member != 0);
 
     ecs_entity_t alert = ecs_alert(world, {

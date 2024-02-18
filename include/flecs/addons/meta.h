@@ -551,7 +551,7 @@ typedef struct ecs_meta_cursor_t {
     bool valid;
     bool is_primitive_scope;  /**< If in root scope, this allows for a push for primitive types */
 
-    /* Custom entity lookup action for overriding default ecs_lookup_fullpath */
+    /* Custom entity lookup action for overriding default ecs_lookup */
     ecs_entity_t (*lookup_action)(const ecs_world_t*, const char*, void*);
     void *lookup_ctx;
 } ecs_meta_cursor_t;

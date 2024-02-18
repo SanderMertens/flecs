@@ -308,16 +308,16 @@ void Module_lookup_module_after_reparent(void) {
     flecs::entity m = world.import<ns::NestedModule>();
     test_str(m.path().c_str(), "::ns::NestedModule");
     test_assert(world.lookup("::ns::NestedModule") == m);
-    test_assert(ecs_lookup_fullpath(world, "ns.NestedModule") == m);
+    test_assert(ecs_lookup(world, "ns.NestedModule") == m);
 
     flecs::entity p = world.entity("p");
     m.child_of(p);
     test_str(m.path().c_str(), "::p::NestedModule");
     test_assert(world.lookup("::p::NestedModule") == m);
-    test_assert(ecs_lookup_fullpath(world, "p.NestedModule") == m);
+    test_assert(ecs_lookup(world, "p.NestedModule") == m);
     
     test_assert(world.lookup("::ns::NestedModule") == 0);
-    test_assert(ecs_lookup_fullpath(world, "ns.NestedModule") == 0);
+    test_assert(ecs_lookup(world, "ns.NestedModule") == 0);
 
     flecs::entity e = world.entity("::ns::NestedModule");
     test_assert(e != m);

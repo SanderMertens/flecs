@@ -154,7 +154,7 @@ You can! Systems are an optional addon that can be disabled. You can build appli
 This is likely because the entity has a parent. A lookup by name requires you to provide the full path to an entity, like:
 
 ```c
-ecs_lookup_fullpath(world, "parent.child");
+ecs_lookup(world, "parent.child");
 ```
 
 or in C++:

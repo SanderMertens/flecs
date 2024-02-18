@@ -39,7 +39,7 @@ ecs_term_t* filter_terms(ecs_filter_t *f) {
 void Parser_resolve_this(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_lookup_fullpath(world, ".");
+    ecs_entity_t e = ecs_lookup(world, ".");
     test_assert(e != 0);
     test_assert(e == EcsThis);
 
@@ -49,7 +49,7 @@ void Parser_resolve_this(void) {
 void Parser_resolve_wildcard(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_lookup_fullpath(world, "*");
+    ecs_entity_t e = ecs_lookup(world, "*");
     test_assert(e != 0);
     test_assert(e == EcsWildcard);
 
@@ -59,7 +59,7 @@ void Parser_resolve_wildcard(void) {
 void Parser_resolve_any(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_lookup_fullpath(world, "_");
+    ecs_entity_t e = ecs_lookup(world, "_");
     test_assert(e != 0);
     test_assert(e == EcsAny);
 
@@ -69,7 +69,7 @@ void Parser_resolve_any(void) {
 void Parser_resolve_is_a(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_lookup_fullpath(world, "IsA");
+    ecs_entity_t e = ecs_lookup(world, "IsA");
     test_assert(e != 0);
     test_assert(e == EcsIsA);
 
@@ -4524,7 +4524,7 @@ void Parser_oneof_w_other_entity_w_same_name(void) {
     ecs_entity_t obj_2 = ecs_new_entity(world, "Obj");
 
     test_uint( ecs_lookup_child(world, 0, "Obj"), obj_2 );
-    test_uint( ecs_lookup_fullpath(world, "Rel.Obj"), Obj );
+    test_uint( ecs_lookup(world, "Rel.Obj"), Obj );
 
     ecs_filter_t f = ECS_FILTER_INIT;
     test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
@@ -4635,7 +4635,7 @@ void Parser_oneof_w_fullpath(void) {
     ecs_entity_t obj_2 = ecs_new_entity(world, "Obj");
 
     test_uint( ecs_lookup_child(world, 0, "Obj"), obj_2 );
-    test_uint( ecs_lookup_fullpath(world, "Rel.Obj"), Obj );
+    test_uint( ecs_lookup(world, "Rel.Obj"), Obj );
 
     ecs_filter_t f = ECS_FILTER_INIT;
     test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){

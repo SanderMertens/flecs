@@ -605,7 +605,7 @@ flecs::filter<> f = world.filter_builder()
 ```
 
 #### Query DSL
-To query for a components in the query DSL they can be specified in a comma separated list of identifiers. The rules for resolving identifiers are the same as the `ecs_lookup_fullpath` / `world.lookup` functions. An example:
+To query for a components in the query DSL they can be specified in a comma separated list of identifiers. The rules for resolving identifiers are the same as the `ecs_lookup` / `world.lookup` functions. An example:
 
 ```
 Position, Velocity

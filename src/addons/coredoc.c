@@ -109,7 +109,7 @@ void FlecsCoreDocImport(
     ecs_doc_set_brief(world, EcsEmpty, "Tag used to indicate a query has no results");
     
     /* Initialize documentation for meta components */
-    ecs_entity_t meta = ecs_lookup_fullpath(world, "flecs.meta");
+    ecs_entity_t meta = ecs_lookup(world, "flecs.meta");
     ecs_doc_set_brief(world, meta, "Flecs module with reflection components");
 
     ecs_doc_set_brief(world, ecs_id(EcsMetaType), "Component added to types");
@@ -141,7 +141,7 @@ void FlecsCoreDocImport(
     ecs_doc_set_brief(world, ecs_id(ecs_entity_t), "entity component");
 
     /* Initialize documentation for doc components */
-    ecs_entity_t doc = ecs_lookup_fullpath(world, "flecs.doc");
+    ecs_entity_t doc = ecs_lookup(world, "flecs.doc");
     ecs_doc_set_brief(world, doc, "Flecs module with documentation components");
 
     ecs_doc_set_brief(world, ecs_id(EcsDocDescription), "Component used to add documentation");

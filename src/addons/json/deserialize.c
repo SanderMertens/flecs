@@ -56,7 +56,7 @@ const char* flecs_json_parse_path(
         goto error;
     }
 
-    ecs_entity_t result = ecs_lookup_fullpath(world, path);
+    ecs_entity_t result = ecs_lookup(world, path);
     if (!result) {
         ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
             "unresolved identifier '%s'", path);
@@ -1027,7 +1027,7 @@ const char* flecs_json_parse_result(
             goto error;
         }
 
-        parent = ecs_lookup_fullpath(world, parent_name);
+        parent = ecs_lookup(world, parent_name);
         if (parent_name != token) {
             ecs_os_free(parent_name);
         }

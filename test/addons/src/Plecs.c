@@ -398,10 +398,10 @@ void Plecs_hierarchy_1_child(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    test_assert(ecs_lookup_fullpath(world, "Child") == 0);
+    test_assert(ecs_lookup(world, "Child") == 0);
 
-    ecs_entity_t parent = ecs_lookup_fullpath(world, "Parent");
-    ecs_entity_t child = ecs_lookup_fullpath(world, "Parent.Child");
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    ecs_entity_t child = ecs_lookup(world, "Parent.Child");
 
     test_assert(parent != 0);
     test_assert(child != 0);
@@ -422,12 +422,12 @@ void Plecs_hierarchy_2_children(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    test_assert(ecs_lookup_fullpath(world, "ChildA") == 0);
-    test_assert(ecs_lookup_fullpath(world, "ChildB") == 0);
+    test_assert(ecs_lookup(world, "ChildA") == 0);
+    test_assert(ecs_lookup(world, "ChildB") == 0);
 
-    ecs_entity_t parent = ecs_lookup_fullpath(world, "Parent");
-    ecs_entity_t child_a = ecs_lookup_fullpath(world, "Parent.ChildA");
-    ecs_entity_t child_b = ecs_lookup_fullpath(world, "Parent.ChildB");
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    ecs_entity_t child_a = ecs_lookup(world, "Parent.ChildA");
+    ecs_entity_t child_b = ecs_lookup(world, "Parent.ChildB");
 
     test_assert(parent != 0);
     test_assert(child_a != 0);
@@ -447,10 +447,10 @@ void Plecs_hierarchy_1_child_same_line(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    test_assert(ecs_lookup_fullpath(world, "Child") == 0);
+    test_assert(ecs_lookup(world, "Child") == 0);
 
-    ecs_entity_t parent = ecs_lookup_fullpath(world, "Parent");
-    ecs_entity_t child = ecs_lookup_fullpath(world, "Parent.Child");
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    ecs_entity_t child = ecs_lookup(world, "Parent.Child");
 
     test_assert(parent != 0);
     test_assert(child != 0);
@@ -468,12 +468,12 @@ void Plecs_hierarchy_2_children_same_line(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    test_assert(ecs_lookup_fullpath(world, "ChildA") == 0);
-    test_assert(ecs_lookup_fullpath(world, "ChildB") == 0);
+    test_assert(ecs_lookup(world, "ChildA") == 0);
+    test_assert(ecs_lookup(world, "ChildB") == 0);
 
-    ecs_entity_t parent = ecs_lookup_fullpath(world, "Parent");
-    ecs_entity_t child_a = ecs_lookup_fullpath(world, "Parent.ChildA");
-    ecs_entity_t child_b = ecs_lookup_fullpath(world, "Parent.ChildB");
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    ecs_entity_t child_a = ecs_lookup(world, "Parent.ChildA");
+    ecs_entity_t child_b = ecs_lookup(world, "Parent.ChildB");
 
     test_assert(parent != 0);
     test_assert(child_a != 0);
@@ -496,11 +496,11 @@ void Plecs_entity_after_hierarchy(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    test_assert(ecs_lookup_fullpath(world, "Child") == 0);
+    test_assert(ecs_lookup(world, "Child") == 0);
 
-    ecs_entity_t parent = ecs_lookup_fullpath(world, "Parent");
-    ecs_entity_t child = ecs_lookup_fullpath(world, "Parent.Child");
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    ecs_entity_t child = ecs_lookup(world, "Parent.Child");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
 
     test_assert(parent != 0);
     test_assert(child != 0);
@@ -525,10 +525,10 @@ void Plecs_newline_before_scope_open(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    test_assert(ecs_lookup_fullpath(world, "Child") == 0);
+    test_assert(ecs_lookup(world, "Child") == 0);
 
-    ecs_entity_t parent = ecs_lookup_fullpath(world, "Parent");
-    ecs_entity_t child = ecs_lookup_fullpath(world, "Parent.Child");
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    ecs_entity_t child = ecs_lookup(world, "Parent.Child");
 
     test_assert(parent != 0);
     test_assert(child != 0);
@@ -550,13 +550,13 @@ void Plecs_comment_before_scope_open(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    test_assert(ecs_lookup_fullpath(world, "Child") == 0);
+    test_assert(ecs_lookup(world, "Child") == 0);
 
-    test_assert(ecs_lookup_fullpath(world, "Some") == 0);
-    test_assert(ecs_lookup_fullpath(world, "Comment") == 0);
+    test_assert(ecs_lookup(world, "Some") == 0);
+    test_assert(ecs_lookup(world, "Comment") == 0);
 
-    ecs_entity_t parent = ecs_lookup_fullpath(world, "Parent");
-    ecs_entity_t child = ecs_lookup_fullpath(world, "Parent.Child");
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    ecs_entity_t child = ecs_lookup(world, "Parent.Child");
 
     test_assert(parent != 0);
     test_assert(child != 0);
@@ -579,13 +579,13 @@ void Plecs_comment_after_newline_before_scope_open(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    test_assert(ecs_lookup_fullpath(world, "Child") == 0);
+    test_assert(ecs_lookup(world, "Child") == 0);
 
-    test_assert(ecs_lookup_fullpath(world, "Some") == 0);
-    test_assert(ecs_lookup_fullpath(world, "Comment") == 0);
+    test_assert(ecs_lookup(world, "Some") == 0);
+    test_assert(ecs_lookup(world, "Comment") == 0);
 
-    ecs_entity_t parent = ecs_lookup_fullpath(world, "Parent");
-    ecs_entity_t child = ecs_lookup_fullpath(world, "Parent.Child");
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    ecs_entity_t child = ecs_lookup(world, "Parent.Child");
 
     test_assert(parent != 0);
     test_assert(child != 0);
@@ -607,12 +607,12 @@ void Plecs_hierarchy_2_levels(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    test_assert(ecs_lookup_fullpath(world, "Child") == 0);
-    test_assert(ecs_lookup_fullpath(world, "GrandChild") == 0);
+    test_assert(ecs_lookup(world, "Child") == 0);
+    test_assert(ecs_lookup(world, "GrandChild") == 0);
 
-    ecs_entity_t parent = ecs_lookup_fullpath(world, "Parent");
-    ecs_entity_t child = ecs_lookup_fullpath(world, "Parent.Child");
-    ecs_entity_t grandchild = ecs_lookup_fullpath(world, "Parent.Child.GrandChild");
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    ecs_entity_t child = ecs_lookup(world, "Parent.Child");
+    ecs_entity_t grandchild = ecs_lookup(world, "Parent.Child.GrandChild");
 
     test_assert(parent != 0);
     test_assert(child != 0);
@@ -639,15 +639,15 @@ void Plecs_hierarchy_2_levels_2_subtrees(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    test_assert(ecs_lookup_fullpath(world, "ChildA") == 0);
-    test_assert(ecs_lookup_fullpath(world, "ChildB") == 0);
-    test_assert(ecs_lookup_fullpath(world, "GrandChild") == 0);
+    test_assert(ecs_lookup(world, "ChildA") == 0);
+    test_assert(ecs_lookup(world, "ChildB") == 0);
+    test_assert(ecs_lookup(world, "GrandChild") == 0);
 
-    ecs_entity_t parent = ecs_lookup_fullpath(world, "Parent");
-    ecs_entity_t child_a = ecs_lookup_fullpath(world, "Parent.ChildA");
-    ecs_entity_t child_b = ecs_lookup_fullpath(world, "Parent.ChildB");
-    ecs_entity_t grandchild_a = ecs_lookup_fullpath(world, "Parent.ChildA.GrandChild");
-    ecs_entity_t grandchild_b = ecs_lookup_fullpath(world, "Parent.ChildB.GrandChild");
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    ecs_entity_t child_a = ecs_lookup(world, "Parent.ChildA");
+    ecs_entity_t child_b = ecs_lookup(world, "Parent.ChildB");
+    ecs_entity_t grandchild_a = ecs_lookup(world, "Parent.ChildA.GrandChild");
+    ecs_entity_t grandchild_b = ecs_lookup(world, "Parent.ChildB.GrandChild");
 
     test_assert(parent != 0);
     test_assert(child_a != 0);
@@ -711,12 +711,12 @@ void Plecs_create_in_scope(void) {
 
     test_assert(ecs_get_scope(world) == Root);
 
-    test_assert(ecs_lookup_fullpath(world, "Child") == 0);
+    test_assert(ecs_lookup(world, "Child") == 0);
 
     ecs_set_scope(world, 0);
 
-    ecs_entity_t parent = ecs_lookup_fullpath(world, "Parent");
-    ecs_entity_t child = ecs_lookup_fullpath(world, "Parent.Child");
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    ecs_entity_t child = ecs_lookup(world, "Parent.Child");
 
     test_assert(parent != 0);
     test_assert(child != 0);
@@ -737,11 +737,11 @@ void Plecs_hierarchy_w_pred_subj(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    test_assert(ecs_lookup_fullpath(world, "Child") == 0);
+    test_assert(ecs_lookup(world, "Child") == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
-    ecs_entity_t child = ecs_lookup_fullpath(world, "Bar.Child");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t child = ecs_lookup(world, "Bar.Child");
 
     test_assert(foo != 0);
     test_assert(bar != 0);
@@ -763,9 +763,9 @@ void Plecs_hierarchy_custom_relation(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
-    ecs_entity_t child = ecs_lookup_fullpath(world, "Child");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t child = ecs_lookup(world, "Child");
 
     test_assert(foo != 0);
     test_assert(bar != 0);
@@ -797,14 +797,14 @@ void Plecs_hierarchy_custom_relation_2_levels(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
-    ecs_entity_t rel = ecs_lookup_fullpath(world, "Rel");
-    ecs_entity_t obj_a = ecs_lookup_fullpath(world, "ObjA");
-    ecs_entity_t obj_b = ecs_lookup_fullpath(world, "ObjB");
-    ecs_entity_t child = ecs_lookup_fullpath(world, "Child");
-    ecs_entity_t child_a = ecs_lookup_fullpath(world, "ChildA");
-    ecs_entity_t child_b = ecs_lookup_fullpath(world, "ChildB");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t rel = ecs_lookup(world, "Rel");
+    ecs_entity_t obj_a = ecs_lookup(world, "ObjA");
+    ecs_entity_t obj_b = ecs_lookup(world, "ObjB");
+    ecs_entity_t child = ecs_lookup(world, "Child");
+    ecs_entity_t child_a = ecs_lookup(world, "ChildA");
+    ecs_entity_t child_b = ecs_lookup(world, "ChildB");
 
     test_assert(foo != 0);
     test_assert(bar != 0);
@@ -847,10 +847,10 @@ void Plecs_entity_after_hierarchy_custom_relation(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
-    ecs_entity_t child = ecs_lookup_fullpath(world, "Child");
-    ecs_entity_t hello = ecs_lookup_fullpath(world, "Hello");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t child = ecs_lookup(world, "Child");
+    ecs_entity_t hello = ecs_lookup(world, "Hello");
 
     test_assert(foo != 0);
     test_assert(bar != 0);
@@ -886,17 +886,17 @@ void Plecs_entity_after_hierarchy_custom_relation_2_levels(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
-    ecs_entity_t rel = ecs_lookup_fullpath(world, "Rel");
-    ecs_entity_t obj_a = ecs_lookup_fullpath(world, "ObjA");
-    ecs_entity_t obj_b = ecs_lookup_fullpath(world, "ObjB");
-    ecs_entity_t child = ecs_lookup_fullpath(world, "Child");
-    ecs_entity_t child_a = ecs_lookup_fullpath(world, "ChildA");
-    ecs_entity_t child_b = ecs_lookup_fullpath(world, "ChildB");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t rel = ecs_lookup(world, "Rel");
+    ecs_entity_t obj_a = ecs_lookup(world, "ObjA");
+    ecs_entity_t obj_b = ecs_lookup(world, "ObjB");
+    ecs_entity_t child = ecs_lookup(world, "Child");
+    ecs_entity_t child_a = ecs_lookup(world, "ChildA");
+    ecs_entity_t child_b = ecs_lookup(world, "ChildB");
 
-    ecs_entity_t test_a = ecs_lookup_fullpath(world, "TestA");
-    ecs_entity_t test_b = ecs_lookup_fullpath(world, "TestB");
+    ecs_entity_t test_a = ecs_lookup(world, "TestA");
+    ecs_entity_t test_b = ecs_lookup(world, "TestB");
 
     test_assert(foo != 0);
     test_assert(bar != 0);
@@ -949,10 +949,10 @@ void Plecs_hierarchy_custom_relation_apply_to_object(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t rel = ecs_lookup_fullpath(world, "Rel");
-    ecs_entity_t obj_a = ecs_lookup_fullpath(world, "ObjA");
-    ecs_entity_t obj_b = ecs_lookup_fullpath(world, "ObjB");
-    ecs_entity_t obj_c = ecs_lookup_fullpath(world, "ObjC");
+    ecs_entity_t rel = ecs_lookup(world, "Rel");
+    ecs_entity_t obj_a = ecs_lookup(world, "ObjA");
+    ecs_entity_t obj_b = ecs_lookup(world, "ObjB");
+    ecs_entity_t obj_c = ecs_lookup(world, "ObjC");
 
     test_assert(rel != 0);
     test_assert(obj_a != 0);
@@ -980,11 +980,11 @@ void Plecs_hierarchy_custom_relation_apply_to_object_2_levels(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t rel = ecs_lookup_fullpath(world, "Rel");
-    ecs_entity_t obj_a = ecs_lookup_fullpath(world, "ObjA");
-    ecs_entity_t obj_b = ecs_lookup_fullpath(world, "ObjB");
-    ecs_entity_t obj_c = ecs_lookup_fullpath(world, "ObjC");
-    ecs_entity_t obj_d = ecs_lookup_fullpath(world, "ObjD");
+    ecs_entity_t rel = ecs_lookup(world, "Rel");
+    ecs_entity_t obj_a = ecs_lookup(world, "ObjA");
+    ecs_entity_t obj_b = ecs_lookup(world, "ObjB");
+    ecs_entity_t obj_c = ecs_lookup(world, "ObjC");
+    ecs_entity_t obj_d = ecs_lookup(world, "ObjD");
 
     test_assert(rel != 0);
     test_assert(obj_a != 0);
@@ -1012,8 +1012,8 @@ void Plecs_pred_scope(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t hello = ecs_lookup_fullpath(world, "Foo.Hello");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t hello = ecs_lookup(world, "Foo.Hello");
 
     test_assert(foo != 0);
     test_assert(hello != 0);
@@ -1036,9 +1036,9 @@ void Plecs_pred_scope_2_levels(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
-    ecs_entity_t hello = ecs_lookup_fullpath(world, "Bar.Hello");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t hello = ecs_lookup(world, "Bar.Hello");
 
     test_assert(foo != 0);
     test_assert(bar != 0);
@@ -1067,9 +1067,9 @@ void Plecs_pred_scope_inside_with(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t tag = ecs_lookup_fullpath(world, "Tag");
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t hello = ecs_lookup_fullpath(world, "Foo.Hello");
+    ecs_entity_t tag = ecs_lookup(world, "Tag");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t hello = ecs_lookup(world, "Foo.Hello");
 
     test_assert(foo != 0);
     test_assert(hello != 0);
@@ -1096,9 +1096,9 @@ void Plecs_pred_scope_nested_w_subj_scope(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t parent = ecs_lookup_fullpath(world, "Parent");
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t hello = ecs_lookup_fullpath(world, "Foo.Hello");
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t hello = ecs_lookup(world, "Foo.Hello");
 
     test_assert(parent != 0);
     test_assert(foo != 0);
@@ -1124,8 +1124,8 @@ void Plecs_with_tag(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t tag = ecs_lookup_fullpath(world, "Tag");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t tag = ecs_lookup(world, "Tag");
 
     test_assert(foo != 0);
     test_assert(tag != 0);
@@ -1146,9 +1146,9 @@ void Plecs_with_tag_2_entities(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
-    ecs_entity_t tag = ecs_lookup_fullpath(world, "Tag");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t tag = ecs_lookup(world, "Tag");
 
     test_assert(foo != 0);
     test_assert(bar != 0);
@@ -1168,8 +1168,8 @@ void Plecs_with_tag_same_line(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t tag = ecs_lookup_fullpath(world, "Tag");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t tag = ecs_lookup(world, "Tag");
 
     test_assert(foo != 0);
     test_assert(tag != 0);
@@ -1187,9 +1187,9 @@ void Plecs_with_tag_2_entities_same_line(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
-    ecs_entity_t tag = ecs_lookup_fullpath(world, "Tag");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t tag = ecs_lookup(world, "Tag");
 
     test_assert(foo != 0);
     test_assert(bar != 0);
@@ -1213,9 +1213,9 @@ void Plecs_with_tag_2_levels(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t tag_a = ecs_lookup_fullpath(world, "TagA");
-    ecs_entity_t tag_b = ecs_lookup_fullpath(world, "TagB");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t tag_a = ecs_lookup(world, "TagA");
+    ecs_entity_t tag_b = ecs_lookup(world, "TagB");
 
     test_assert(foo != 0);
     test_assert(tag_a != 0);
@@ -1244,12 +1244,12 @@ void Plecs_with_tag_2_levels_2_subtrees(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t tag_a = ecs_lookup_fullpath(world, "TagA");
-    ecs_entity_t tag_b = ecs_lookup_fullpath(world, "TagB");
-    ecs_entity_t tag_c = ecs_lookup_fullpath(world, "TagC");
-    ecs_entity_t bar_a = ecs_lookup_fullpath(world, "BarA");
-    ecs_entity_t bar_b = ecs_lookup_fullpath(world, "BarB");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t tag_a = ecs_lookup(world, "TagA");
+    ecs_entity_t tag_b = ecs_lookup(world, "TagB");
+    ecs_entity_t tag_c = ecs_lookup(world, "TagC");
+    ecs_entity_t bar_a = ecs_lookup(world, "BarA");
+    ecs_entity_t bar_b = ecs_lookup(world, "BarB");
 
     test_assert(foo != 0);
     test_assert(tag_a != 0);
@@ -1284,10 +1284,10 @@ void Plecs_with_n_tags(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
-    ecs_entity_t tag_a = ecs_lookup_fullpath(world, "TagA");
-    ecs_entity_t tag_b = ecs_lookup_fullpath(world, "TagB");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t tag_a = ecs_lookup(world, "TagA");
+    ecs_entity_t tag_b = ecs_lookup(world, "TagB");
 
     test_assert(foo != 0);
     test_assert(bar != 0);
@@ -1321,21 +1321,21 @@ void Plecs_with_n_tags_2_levels(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t tag_a = ecs_lookup_fullpath(world, "TagA");
-    ecs_entity_t tag_b = ecs_lookup_fullpath(world, "TagB");
-    ecs_entity_t tag_c = ecs_lookup_fullpath(world, "TagC");
-    ecs_entity_t tag_d = ecs_lookup_fullpath(world, "TagD");
-    ecs_entity_t tag_e = ecs_lookup_fullpath(world, "TagE");
-    ecs_entity_t tag_f = ecs_lookup_fullpath(world, "TagF");
-    ecs_entity_t tag_g = ecs_lookup_fullpath(world, "TagG");
-    ecs_entity_t tag_h = ecs_lookup_fullpath(world, "TagH");
+    ecs_entity_t tag_a = ecs_lookup(world, "TagA");
+    ecs_entity_t tag_b = ecs_lookup(world, "TagB");
+    ecs_entity_t tag_c = ecs_lookup(world, "TagC");
+    ecs_entity_t tag_d = ecs_lookup(world, "TagD");
+    ecs_entity_t tag_e = ecs_lookup(world, "TagE");
+    ecs_entity_t tag_f = ecs_lookup(world, "TagF");
+    ecs_entity_t tag_g = ecs_lookup(world, "TagG");
+    ecs_entity_t tag_h = ecs_lookup(world, "TagH");
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
 
-    ecs_entity_t hello_a = ecs_lookup_fullpath(world, "HelloA");
-    ecs_entity_t hello_b = ecs_lookup_fullpath(world, "HelloB");
-    ecs_entity_t hello_c = ecs_lookup_fullpath(world, "HelloC");
+    ecs_entity_t hello_a = ecs_lookup(world, "HelloA");
+    ecs_entity_t hello_b = ecs_lookup(world, "HelloB");
+    ecs_entity_t hello_c = ecs_lookup(world, "HelloC");
 
     test_assert(tag_a != 0);
     test_assert(tag_b != 0);
@@ -1411,10 +1411,10 @@ void Plecs_with_after_scope(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t e1 = ecs_lookup_fullpath(world, "E1");
-    ecs_entity_t e2 = ecs_lookup_fullpath(world, "E2");
-    ecs_entity_t e3 = ecs_lookup_fullpath(world, "E3");
-    ecs_entity_t e4 = ecs_lookup_fullpath(world, "E4");
+    ecs_entity_t e1 = ecs_lookup(world, "E1");
+    ecs_entity_t e2 = ecs_lookup(world, "E2");
+    ecs_entity_t e3 = ecs_lookup(world, "E3");
+    ecs_entity_t e4 = ecs_lookup(world, "E4");
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -1443,10 +1443,10 @@ void Plecs_with_after_with(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t e1 = ecs_lookup_fullpath(world, "E1");
-    ecs_entity_t e2 = ecs_lookup_fullpath(world, "E2");
-    ecs_entity_t e3 = ecs_lookup_fullpath(world, "E3");
-    ecs_entity_t e4 = ecs_lookup_fullpath(world, "E4");
+    ecs_entity_t e1 = ecs_lookup(world, "E1");
+    ecs_entity_t e2 = ecs_lookup(world, "E2");
+    ecs_entity_t e3 = ecs_lookup(world, "E3");
+    ecs_entity_t e4 = ecs_lookup(world, "E4");
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -1478,11 +1478,11 @@ void Plecs_scope_inside_with_inside_scope(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t sun = ecs_lookup_fullpath(world, "Sun");
-    ecs_entity_t planet = ecs_lookup_fullpath(world, "Planet");
-    ecs_entity_t earth = ecs_lookup_fullpath(world, "Sun.Earth");
-    ecs_entity_t moon = ecs_lookup_fullpath(world, "Sun.Earth.Moon");
-    ecs_entity_t mars = ecs_lookup_fullpath(world, "Sun.Mars");
+    ecs_entity_t sun = ecs_lookup(world, "Sun");
+    ecs_entity_t planet = ecs_lookup(world, "Planet");
+    ecs_entity_t earth = ecs_lookup(world, "Sun.Earth");
+    ecs_entity_t moon = ecs_lookup(world, "Sun.Earth.Moon");
+    ecs_entity_t mars = ecs_lookup(world, "Sun.Mars");
 
     test_assert(sun != 0);
     test_assert(planet != 0);
@@ -1520,9 +1520,9 @@ void Plecs_with_inside_scope(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t earth = ecs_lookup_fullpath(world, "Earth");
-    ecs_entity_t continent = ecs_lookup_fullpath(world, "Continent");
-    ecs_entity_t europe = ecs_lookup_fullpath(world, "Earth.Europe");
+    ecs_entity_t earth = ecs_lookup(world, "Earth");
+    ecs_entity_t continent = ecs_lookup(world, "Continent");
+    ecs_entity_t europe = ecs_lookup(world, "Earth.Europe");
 
     test_assert(earth != 0);
     test_assert(continent != 0);
@@ -1544,8 +1544,8 @@ void Plecs_assignment_w_1(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t earth = ecs_lookup_fullpath(world, "Earth");
-    ecs_entity_t planet = ecs_lookup_fullpath(world, "Planet");
+    ecs_entity_t earth = ecs_lookup(world, "Earth");
+    ecs_entity_t planet = ecs_lookup(world, "Planet");
 
     test_assert(earth != 0);
     test_assert(planet != 0);
@@ -1563,9 +1563,9 @@ void Plecs_assignment_w_2(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t earth = ecs_lookup_fullpath(world, "Earth");
-    ecs_entity_t planet = ecs_lookup_fullpath(world, "Planet");
-    ecs_entity_t habitable = ecs_lookup_fullpath(world, "Habitable");
+    ecs_entity_t earth = ecs_lookup(world, "Earth");
+    ecs_entity_t planet = ecs_lookup(world, "Planet");
+    ecs_entity_t habitable = ecs_lookup(world, "Habitable");
 
     test_assert(earth != 0);
     test_assert(planet != 0);
@@ -1585,9 +1585,9 @@ void Plecs_assignment_w_pair(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t earth = ecs_lookup_fullpath(world, "Sun.Earth");
-    ecs_entity_t planet = ecs_lookup_fullpath(world, "Planet");
-    ecs_entity_t sun = ecs_lookup_fullpath(world, "Sun");
+    ecs_entity_t earth = ecs_lookup(world, "Sun.Earth");
+    ecs_entity_t planet = ecs_lookup(world, "Planet");
+    ecs_entity_t sun = ecs_lookup(world, "Sun");
 
     test_assert(earth != 0);
     test_assert(planet != 0);
@@ -1633,8 +1633,8 @@ void Plecs_inherit_w_colon(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
 
     test_assert(foo != 0);
     test_assert(bar != 0);
@@ -1652,9 +1652,9 @@ void Plecs_inherit_w_colon_w_scope(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
-    ecs_entity_t child = ecs_lookup_fullpath(world, "Foo.Child");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t child = ecs_lookup(world, "Foo.Child");
 
     test_assert(foo != 0);
     test_assert(bar != 0);
@@ -1673,9 +1673,9 @@ void Plecs_inherit_w_colon_w_assign(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
-    ecs_entity_t comp = ecs_lookup_fullpath(world, "Comp");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t comp = ecs_lookup(world, "Comp");
 
     test_assert(foo != 0);
     test_assert(bar != 0);
@@ -1701,7 +1701,7 @@ void Plecs_assign_component_value(void) {
     HEAD "Foo :- Position{10, 20}";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
 
     test_assert(foo != 0);
 
@@ -1739,7 +1739,7 @@ void Plecs_assign_2_component_values(void) {
     LINE "Foo :- Velocity {1, 2}";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
 
     test_assert(foo != 0);
 
@@ -1780,7 +1780,7 @@ void Plecs_assign_component_value_in_assign_scope(void) {
     LINE "}";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
 
     test_assert(foo != 0);
 
@@ -1821,7 +1821,7 @@ void Plecs_assign_2_component_values_in_assign_scope(void) {
     LINE "}";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
 
     test_assert(foo != 0);
 
@@ -1857,8 +1857,8 @@ void Plecs_type_and_assign_in_plecs(void) {
     LINE "Foo :- Position{10, 20}";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
-    ecs_entity_t ecs_id(Position) = ecs_lookup_fullpath(world, "Position");
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t ecs_id(Position) = ecs_lookup(world, "Position");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
 
     test_assert(ecs_id(Position) != 0);
     test_assert(foo != 0);
@@ -1887,8 +1887,8 @@ void Plecs_type_and_assign_in_plecs_w_2_members(void) {
     LINE "Foo :- Position{x: 10, y: 20}";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
-    ecs_entity_t ecs_id(Position) = ecs_lookup_fullpath(world, "Position");
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t ecs_id(Position) = ecs_lookup(world, "Position");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
 
     test_assert(ecs_id(Position) != 0);
     test_assert(foo != 0);
@@ -1924,8 +1924,8 @@ void Plecs_type_and_assign_in_plecs_w_3_members(void) {
     LINE "Foo :- Position{x: 10, y: 20, z: 30}";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
-    ecs_entity_t ecs_id(Position3D) = ecs_lookup_fullpath(world, "Position");
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t ecs_id(Position3D) = ecs_lookup(world, "Position");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
 
     test_assert(ecs_id(Position3D) != 0);
     test_assert(foo != 0);
@@ -1968,8 +1968,8 @@ void Plecs_type_and_assign_in_plecs_w_enum(void) {
     LINE "Foo :- SomeType{value: Blue}";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
-    ecs_entity_t ecs_id(SomeType) = ecs_lookup_fullpath(world, "SomeType");
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t ecs_id(SomeType) = ecs_lookup(world, "SomeType");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
 
     test_assert(ecs_id(SomeType) != 0);
     test_assert(foo != 0);
@@ -2012,16 +2012,16 @@ void Plecs_type_and_assign_in_plecs_w_enum_using_meta(void) {
     LINE "Foo :- SomeType{value: Blue}";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
-    ecs_entity_t ecs_id(SomeType) = ecs_lookup_fullpath(world, "SomeType");
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t ecs_id(SomeType) = ecs_lookup(world, "SomeType");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
 
     /* Make sure no meta entities were created in the root */
-    test_assert(ecs_lookup_fullpath(world, "Enum") == 0);
-    test_assert(ecs_lookup_fullpath(world, "Struct") == 0);
-    test_assert(ecs_lookup_fullpath(world, "Constant") == 0);
-    test_assert(ecs_lookup_fullpath(world, "Red") == 0);
-    test_assert(ecs_lookup_fullpath(world, "Green") == 0);
-    test_assert(ecs_lookup_fullpath(world, "Blue") == 0);
+    test_assert(ecs_lookup(world, "Enum") == 0);
+    test_assert(ecs_lookup(world, "Struct") == 0);
+    test_assert(ecs_lookup(world, "Constant") == 0);
+    test_assert(ecs_lookup(world, "Red") == 0);
+    test_assert(ecs_lookup(world, "Green") == 0);
+    test_assert(ecs_lookup(world, "Blue") == 0);
 
     test_assert(ecs_id(SomeType) != 0);
     test_assert(foo != 0);
@@ -2055,16 +2055,16 @@ void Plecs_type_and_assign_in_plecs_w_enum_primitive_using_meta(void) {
     LINE "Foo :- Color{Blue}";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
-    ecs_entity_t ecs_id(Color) = ecs_lookup_fullpath(world, "Color");
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t ecs_id(Color) = ecs_lookup(world, "Color");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
 
     /* Make sure no meta entities were created in the root */
-    test_assert(ecs_lookup_fullpath(world, "Enum") == 0);
-    test_assert(ecs_lookup_fullpath(world, "Struct") == 0);
-    test_assert(ecs_lookup_fullpath(world, "Constant") == 0);
-    test_assert(ecs_lookup_fullpath(world, "Red") == 0);
-    test_assert(ecs_lookup_fullpath(world, "Green") == 0);
-    test_assert(ecs_lookup_fullpath(world, "Blue") == 0);
+    test_assert(ecs_lookup(world, "Enum") == 0);
+    test_assert(ecs_lookup(world, "Struct") == 0);
+    test_assert(ecs_lookup(world, "Constant") == 0);
+    test_assert(ecs_lookup(world, "Red") == 0);
+    test_assert(ecs_lookup(world, "Green") == 0);
+    test_assert(ecs_lookup(world, "Blue") == 0);
 
     test_assert(ecs_id(Color) != 0);
     test_assert(foo != 0);
@@ -2108,17 +2108,17 @@ void Plecs_type_and_assign_in_plecs_w_enum_primitive_and_struct(void) {
     LINE "}";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
-    ecs_entity_t ecs_id(Position) = ecs_lookup_fullpath(world, "Position");
-    ecs_entity_t ecs_id(Color) = ecs_lookup_fullpath(world, "Color");
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t ecs_id(Position) = ecs_lookup(world, "Position");
+    ecs_entity_t ecs_id(Color) = ecs_lookup(world, "Color");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
 
     /* Make sure no meta entities were created in the root */
-    test_assert(ecs_lookup_fullpath(world, "Enum") == 0);
-    test_assert(ecs_lookup_fullpath(world, "Struct") == 0);
-    test_assert(ecs_lookup_fullpath(world, "Constant") == 0);
-    test_assert(ecs_lookup_fullpath(world, "Red") == 0);
-    test_assert(ecs_lookup_fullpath(world, "Green") == 0);
-    test_assert(ecs_lookup_fullpath(world, "Blue") == 0);
+    test_assert(ecs_lookup(world, "Enum") == 0);
+    test_assert(ecs_lookup(world, "Struct") == 0);
+    test_assert(ecs_lookup(world, "Constant") == 0);
+    test_assert(ecs_lookup(world, "Red") == 0);
+    test_assert(ecs_lookup(world, "Green") == 0);
+    test_assert(ecs_lookup(world, "Blue") == 0);
 
     test_assert(ecs_id(Position) != 0);
     test_assert(ecs_id(Color) != 0);
@@ -2175,8 +2175,8 @@ void Plecs_type_and_assign_in_plecs_nested_member(void) {
     LINE "l :- Line{start: {x: 10, y: 20}, stop: {x: 30, y: 40}}";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
-    ecs_entity_t ecs_id(Line) = ecs_lookup_fullpath(world, "Line");
-    ecs_entity_t l = ecs_lookup_fullpath(world, "l");
+    ecs_entity_t ecs_id(Line) = ecs_lookup(world, "Line");
+    ecs_entity_t l = ecs_lookup(world, "l");
 
     test_assert(ecs_id(Line) != 0);
     test_assert(l != 0);
@@ -2228,8 +2228,8 @@ void Plecs_dot_assign_nested_member(void) {
     LINE "l :- Line{start.x: 10, start.y: 20, stop.x: 30, stop.y: 40}";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
-    ecs_entity_t ecs_id(Line) = ecs_lookup_fullpath(world, "Line");
-    ecs_entity_t l = ecs_lookup_fullpath(world, "l");
+    ecs_entity_t ecs_id(Line) = ecs_lookup(world, "Line");
+    ecs_entity_t l = ecs_lookup(world, "l");
 
     test_assert(ecs_id(Line) != 0);
     test_assert(l != 0);
@@ -2281,8 +2281,8 @@ void Plecs_dot_assign_binary_expr(void) {
     LINE "l :- Line{start.x: 2 + 8, start.y: 5 + 15, stop.x: 10 + 20, stop.y: 15 + 25}";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
-    ecs_entity_t ecs_id(Line) = ecs_lookup_fullpath(world, "Line");
-    ecs_entity_t l = ecs_lookup_fullpath(world, "l");
+    ecs_entity_t ecs_id(Line) = ecs_lookup(world, "Line");
+    ecs_entity_t l = ecs_lookup(world, "l");
 
     test_assert(ecs_id(Line) != 0);
     test_assert(l != 0);
@@ -2315,10 +2315,10 @@ void Plecs_open_scope_no_parent(void) {
     LINE "Hello";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Foo.Bar");
-    ecs_entity_t zoo = ecs_lookup_fullpath(world, "Zoo");
-    ecs_entity_t hello = ecs_lookup_fullpath(world, "Hello");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Foo.Bar");
+    ecs_entity_t zoo = ecs_lookup(world, "Zoo");
+    ecs_entity_t hello = ecs_lookup(world, "Hello");
 
     test_assert(foo != 0);
     test_assert(bar != 0);
@@ -2355,10 +2355,10 @@ void Plecs_create_subject_in_scope_w_resolvable_id(void) {
     LINE "}";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
 
-    ecs_entity_t tag = ecs_lookup_fullpath(world, "Foo.Tag");
+    ecs_entity_t tag = ecs_lookup(world, "Foo.Tag");
     test_assert(tag != 0);
     test_assert(tag != EcsTag);
 
@@ -2380,10 +2380,10 @@ void Plecs_create_subject_in_scope_w_resolvable_id_using(void) {
     LINE "Hello(Bar)";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Foo.Bar");
-    ecs_entity_t root_bar = ecs_lookup_fullpath(world, "Bar");
-    ecs_entity_t hello = ecs_lookup_fullpath(world, "Hello");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Foo.Bar");
+    ecs_entity_t root_bar = ecs_lookup(world, "Bar");
+    ecs_entity_t hello = ecs_lookup(world, "Hello");
 
     test_assert(foo != 0);
     test_assert(bar != 0);
@@ -2411,11 +2411,11 @@ void Plecs_using_scope(void) {
     LINE "Foo.Bar(World)";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Foo.Bar");
-    ecs_entity_t not_bar = ecs_lookup_fullpath(world, "Bar");
-    ecs_entity_t hello = ecs_lookup_fullpath(world, "Hello");
-    ecs_entity_t _world = ecs_lookup_fullpath(world, "World");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Foo.Bar");
+    ecs_entity_t not_bar = ecs_lookup(world, "Bar");
+    ecs_entity_t hello = ecs_lookup(world, "Hello");
+    ecs_entity_t _world = ecs_lookup(world, "World");
 
     test_assert(foo != 0);
     test_assert(bar != 0);
@@ -2447,13 +2447,13 @@ void Plecs_using_nested_scope(void) {
     LINE "Foo.Bar.Zoo(World)";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Foo.Bar");
-    ecs_entity_t zoo = ecs_lookup_fullpath(world, "Foo.Bar.Zoo");
-    ecs_entity_t not_bar = ecs_lookup_fullpath(world, "Bar");
-    ecs_entity_t not_zoo = ecs_lookup_fullpath(world, "Zoo");
-    ecs_entity_t hello = ecs_lookup_fullpath(world, "Hello");
-    ecs_entity_t _world = ecs_lookup_fullpath(world, "World");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Foo.Bar");
+    ecs_entity_t zoo = ecs_lookup(world, "Foo.Bar.Zoo");
+    ecs_entity_t not_bar = ecs_lookup(world, "Bar");
+    ecs_entity_t not_zoo = ecs_lookup(world, "Zoo");
+    ecs_entity_t hello = ecs_lookup(world, "Hello");
+    ecs_entity_t _world = ecs_lookup(world, "World");
 
     test_assert(foo != 0);
     test_assert(bar != 0);
@@ -2487,13 +2487,13 @@ void Plecs_using_nested_in_scope(void) {
     LINE "Zoo(World)";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Foo.Bar");
-    ecs_entity_t zoo = ecs_lookup_fullpath(world, "Foo.Bar.Zoo");
-    ecs_entity_t not_bar = ecs_lookup_fullpath(world, "Bar");
-    ecs_entity_t zoo_root = ecs_lookup_fullpath(world, "Zoo");
-    ecs_entity_t hello = ecs_lookup_fullpath(world, "Hello");
-    ecs_entity_t _world = ecs_lookup_fullpath(world, "World");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Foo.Bar");
+    ecs_entity_t zoo = ecs_lookup(world, "Foo.Bar.Zoo");
+    ecs_entity_t not_bar = ecs_lookup(world, "Bar");
+    ecs_entity_t zoo_root = ecs_lookup(world, "Zoo");
+    ecs_entity_t hello = ecs_lookup(world, "Hello");
+    ecs_entity_t _world = ecs_lookup(world, "World");
 
     test_assert(foo != 0);
     test_assert(bar != 0);
@@ -2528,16 +2528,16 @@ void Plecs_using_with_scope(void) {
     LINE "}";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
-    ecs_entity_t scope = ecs_lookup_fullpath(world, "Scope");
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Scope.Foo");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Scope.Bar");
-    ecs_entity_t x = ecs_lookup_fullpath(world, "Scope.Bar.x");
+    ecs_entity_t scope = ecs_lookup(world, "Scope");
+    ecs_entity_t foo = ecs_lookup(world, "Scope.Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Scope.Bar");
+    ecs_entity_t x = ecs_lookup(world, "Scope.Bar.x");
 
-    test_assert(ecs_lookup_fullpath(world, "Foo") == 0);
-    test_assert(ecs_lookup_fullpath(world, "Bar") == 0);
-    test_assert(ecs_lookup_fullpath(world, "x") == 0);
-    test_assert(ecs_lookup_fullpath(world, "Struct") == 0);
-    test_assert(ecs_lookup_fullpath(world, "Member") == 0);
+    test_assert(ecs_lookup(world, "Foo") == 0);
+    test_assert(ecs_lookup(world, "Bar") == 0);
+    test_assert(ecs_lookup(world, "x") == 0);
+    test_assert(ecs_lookup(world, "Struct") == 0);
+    test_assert(ecs_lookup(world, "Member") == 0);
 
     test_assert(scope != 0);
     test_assert(foo != 0);
@@ -2565,8 +2565,8 @@ void Plecs_using_w_entity_ref_in_value_2_members(void) {
     LINE "Foo :- Position{x: 10, y: 20}";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
-    ecs_entity_t ecs_id(Position) = ecs_lookup_fullpath(world, "Position");
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t ecs_id(Position) = ecs_lookup(world, "Position");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
 
     test_assert(ecs_id(Position) != 0);
     test_assert(foo != 0);
@@ -2604,8 +2604,8 @@ void Plecs_using_w_entity_ref_in_value_3_members(void) {
     LINE "Foo :- Position{x: 10, y: 20, z: 30}";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
-    ecs_entity_t ecs_id(Position3D) = ecs_lookup_fullpath(world, "Position");
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t ecs_id(Position3D) = ecs_lookup(world, "Position");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
 
     test_assert(ecs_id(Position3D) != 0);
     test_assert(foo != 0);
@@ -2642,13 +2642,13 @@ void Plecs_2_using_scope(void) {
     LINE "TheWorld(E2)";
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t hello = ecs_lookup_fullpath(world, "Foo.Hello");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
-    ecs_entity_t _world = ecs_lookup_fullpath(world, "Bar.TheWorld");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t hello = ecs_lookup(world, "Foo.Hello");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t _world = ecs_lookup(world, "Bar.TheWorld");
 
-    ecs_entity_t e1 = ecs_lookup_fullpath(world, "E1");
-    ecs_entity_t e2 = ecs_lookup_fullpath(world, "E2");
+    ecs_entity_t e1 = ecs_lookup(world, "E1");
+    ecs_entity_t e2 = ecs_lookup(world, "E2");
 
     test_assert(foo != 0);
     test_assert(bar != 0);
@@ -2657,8 +2657,8 @@ void Plecs_2_using_scope(void) {
     test_assert(e1 != 0);
     test_assert(e2 != 0);
 
-    test_assert(ecs_lookup_fullpath(world, "Hello") == 0);
-    test_assert(ecs_lookup_fullpath(world, "TheWorld") == 0);
+    test_assert(ecs_lookup(world, "Hello") == 0);
+    test_assert(ecs_lookup(world, "TheWorld") == 0);
 
     test_assert(ecs_has_pair(world, hello, EcsChildOf, foo));
     test_assert(ecs_has_pair(world, _world, EcsChildOf, bar));
@@ -2699,20 +2699,20 @@ void Plecs_2_using_in_different_scope(void) {
     LINE;
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t hello = ecs_lookup_fullpath(world, "Foo.Hello");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
-    ecs_entity_t _world = ecs_lookup_fullpath(world, "Bar.TheWorld");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t hello = ecs_lookup(world, "Foo.Hello");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t _world = ecs_lookup(world, "Bar.TheWorld");
 
-    ecs_entity_t e1 = ecs_lookup_fullpath(world, "E1");
-    ecs_entity_t e1_child = ecs_lookup_fullpath(world, "E1.Child");
-    ecs_entity_t e2 = ecs_lookup_fullpath(world, "E2");
-    ecs_entity_t e2_child = ecs_lookup_fullpath(world, "E2.Child");
+    ecs_entity_t e1 = ecs_lookup(world, "E1");
+    ecs_entity_t e1_child = ecs_lookup(world, "E1.Child");
+    ecs_entity_t e2 = ecs_lookup(world, "E2");
+    ecs_entity_t e2_child = ecs_lookup(world, "E2.Child");
 
-    ecs_entity_t root_hello = ecs_lookup_fullpath(world, "Hello");
-    ecs_entity_t root_world = ecs_lookup_fullpath(world, "TheWorld");
+    ecs_entity_t root_hello = ecs_lookup(world, "Hello");
+    ecs_entity_t root_world = ecs_lookup(world, "TheWorld");
 
-    ecs_entity_t root_child = ecs_lookup_fullpath(world, "RootChild");
+    ecs_entity_t root_child = ecs_lookup(world, "RootChild");
 
     test_assert(foo != 0);
     test_assert(bar != 0);
@@ -2823,8 +2823,8 @@ void Plecs_assign_after_inherit(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
 
     test_assert(foo != 0);
     test_assert(bar != 0);
@@ -2867,7 +2867,7 @@ void Plecs_multiple_assignments_single_line(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
 
     {
@@ -2898,8 +2898,8 @@ void Plecs_2_stmts_in_scope_w_no_parent(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
 
     test_assert(foo != 0);
     test_assert(bar != 0);
@@ -2952,7 +2952,7 @@ void Plecs_empty_scope_after_using(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert( foo != 0);
     test_assert( !ecs_has_pair(world, foo, EcsChildOf, EcsWildcard));
 
@@ -3019,9 +3019,9 @@ void Plecs_assign_tag_to_parent(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
-    ecs_entity_t child = ecs_lookup_fullpath(world, "Foo.Child");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t child = ecs_lookup(world, "Foo.Child");
 
     test_assert(foo != 0);
     test_assert(bar != 0);
@@ -3054,8 +3054,8 @@ void Plecs_assign_component_to_parent(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t child = ecs_lookup_fullpath(world, "Foo.Child");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t child = ecs_lookup(world, "Foo.Child");
 
     test_assert(foo != 0);
     test_assert(child != 0);
@@ -3083,9 +3083,9 @@ void Plecs_assign_to_parent_pair_w_new_entities_in_scope(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t rel = ecs_lookup_fullpath(world, "Rel");
-    ecs_entity_t obj = ecs_lookup_fullpath(world, "Obj");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t rel = ecs_lookup(world, "Rel");
+    ecs_entity_t obj = ecs_lookup(world, "Obj");
 
     test_assert(foo != 0);
     test_assert(rel != 0);
@@ -3109,9 +3109,9 @@ void Plecs_assign_to_parent_pair_w_existing_entities_in_scope(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t rel = ecs_lookup_fullpath(world, "Rel");
-    ecs_entity_t obj = ecs_lookup_fullpath(world, "Obj");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t rel = ecs_lookup(world, "Rel");
+    ecs_entity_t obj = ecs_lookup(world, "Obj");
 
     test_assert(foo != 0);
     test_assert(rel != 0);
@@ -3136,12 +3136,12 @@ void Plecs_default_child_component(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
     
-    ecs_entity_t parent = ecs_lookup_fullpath(world, "Parent");
-    ecs_entity_t child_a = ecs_lookup_fullpath(world, "Parent.ChildA");
-    ecs_entity_t child_b = ecs_lookup_fullpath(world, "Parent.ChildB");
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    ecs_entity_t child_a = ecs_lookup(world, "Parent.ChildA");
+    ecs_entity_t child_b = ecs_lookup(world, "Parent.ChildB");
 
     test_assert(foo != 0);
     test_assert(bar != 0);
@@ -3180,11 +3180,11 @@ void Plecs_default_child_component_w_assign(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
     
-    ecs_entity_t parent = ecs_lookup_fullpath(world, "Parent");
-    ecs_entity_t child_a = ecs_lookup_fullpath(world, "Parent.ChildA");
-    ecs_entity_t child_b = ecs_lookup_fullpath(world, "Parent.ChildB");
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    ecs_entity_t child_a = ecs_lookup(world, "Parent.ChildA");
+    ecs_entity_t child_b = ecs_lookup(world, "Parent.ChildB");
 
     test_assert(foo != 0);
     test_assert(parent != 0);
@@ -3217,8 +3217,8 @@ void Plecs_struct_type_w_default_child_component(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t ecs_id(Position) = ecs_lookup_fullpath(world, "Position");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t ecs_id(Position) = ecs_lookup(world, "Position");
 
     test_assert(foo != 0);
     test_assert(ecs_id(Position) != 0);
@@ -3266,8 +3266,8 @@ void Plecs_struct_type_w_default_child_component_nested_member(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t ecs_id(Line) = ecs_lookup_fullpath(world, "Line");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t ecs_id(Line) = ecs_lookup(world, "Line");
 
     test_assert(foo != 0);
     test_assert(ecs_id(Line) != 0);
@@ -3302,8 +3302,8 @@ void Plecs_enum_type_w_default_child_component(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t ecs_id(Color) = ecs_lookup_fullpath(world, "Color");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t ecs_id(Color) = ecs_lookup(world, "Color");
 
     test_assert(foo != 0);
     test_assert(ecs_id(Color) != 0);
@@ -3336,8 +3336,8 @@ void Plecs_default_type_from_with(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t e1 = ecs_lookup_fullpath(world, "e1");
-    ecs_entity_t e2 = ecs_lookup_fullpath(world, "e2");
+    ecs_entity_t e1 = ecs_lookup(world, "e1");
+    ecs_entity_t e2 = ecs_lookup(world, "e2");
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -3366,11 +3366,11 @@ void Plecs_scope_w_1_subj_and_2_pairs(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t parent = ecs_lookup_fullpath(world, "Parent");
-    ecs_entity_t rel_a = ecs_lookup_fullpath(world, "RelA");
-    ecs_entity_t rel_b = ecs_lookup_fullpath(world, "RelB");
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Parent.Foo");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Parent.Bar");
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    ecs_entity_t rel_a = ecs_lookup(world, "RelA");
+    ecs_entity_t rel_b = ecs_lookup(world, "RelB");
+    ecs_entity_t foo = ecs_lookup(world, "Parent.Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Parent.Bar");
 
     test_assert(parent != 0);
     test_assert(rel_a != 0);
@@ -3392,9 +3392,9 @@ void Plecs_inherit_from_multiple(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t inst = ecs_lookup_fullpath(world, "Inst");
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
+    ecs_entity_t inst = ecs_lookup(world, "Inst");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
 
     test_assert(inst != 0);
     test_assert(foo != 0);
@@ -3428,9 +3428,9 @@ void Plecs_assign_pair_component(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
-    ecs_entity_t ecs_id(Position) = ecs_lookup_fullpath(world, "Position");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t ecs_id(Position) = ecs_lookup(world, "Position");
 
     test_assert(foo != 0);
     test_assert(bar != 0);
@@ -3464,10 +3464,10 @@ void Plecs_assign_pair_component_in_scope(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t parent = ecs_lookup_fullpath(world, "Parent");
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
-    ecs_entity_t ecs_id(Position) = ecs_lookup_fullpath(world, "Position");
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t ecs_id(Position) = ecs_lookup(world, "Position");
 
     test_assert(parent != 0);
     test_assert(foo != 0);
@@ -3510,9 +3510,9 @@ void Plecs_assign_pair_component_in_script(void) {
     });
     test_assert(s != 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
-    ecs_entity_t ecs_id(Position) = ecs_lookup_fullpath(world, "Position");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t ecs_id(Position) = ecs_lookup(world, "Position");
 
     test_assert(foo != 0);
     test_assert(bar != 0);
@@ -3549,9 +3549,9 @@ void Plecs_assign_pair_component_in_script_update(void) {
 
     test_assert(ecs_script_update(world, s, 0, expr, NULL) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
-    ecs_entity_t ecs_id(Position) = ecs_lookup_fullpath(world, "Position");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t ecs_id(Position) = ecs_lookup(world, "Position");
 
     test_assert(foo != 0);
     test_assert(bar != 0);
@@ -3579,12 +3579,12 @@ void Plecs_set_entity_names(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "foo");
-    ecs_entity_t self = ecs_lookup_fullpath(world, "self");
-    ecs_entity_t down = ecs_lookup_fullpath(world, "down");
-    ecs_entity_t up = ecs_lookup_fullpath(world, "up");
-    ecs_entity_t parent = ecs_lookup_fullpath(world, "parent");
-    ecs_entity_t cascade = ecs_lookup_fullpath(world, "cascade");
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    ecs_entity_t self = ecs_lookup(world, "self");
+    ecs_entity_t down = ecs_lookup(world, "down");
+    ecs_entity_t up = ecs_lookup(world, "up");
+    ecs_entity_t parent = ecs_lookup(world, "parent");
+    ecs_entity_t cascade = ecs_lookup(world, "cascade");
 
     test_assert(foo != 0);
     test_assert(self != 0);
@@ -3615,14 +3615,14 @@ void Plecs_oneof(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t color = ecs_lookup_fullpath(world, "Color");
-    ecs_entity_t green = ecs_lookup_fullpath(world, "Color.Green");
-    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    ecs_entity_t color = ecs_lookup(world, "Color");
+    ecs_entity_t green = ecs_lookup(world, "Color.Green");
+    ecs_entity_t e = ecs_lookup(world, "e");
 
     test_assert(color != 0);
     test_assert(green != 0);
     test_assert(e != 0);
-    test_assert(ecs_lookup_fullpath(world, "Green") == 0);
+    test_assert(ecs_lookup(world, "Green") == 0);
 
     test_assert( ecs_has_id(world, color, EcsOneOf));
     test_assert( ecs_has_id(world, green, EcsConstant));
@@ -3646,9 +3646,9 @@ void Plecs_invalid_oneof(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
 
-    ecs_entity_t color = ecs_lookup_fullpath(world, "Color");
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    ecs_entity_t color = ecs_lookup(world, "Color");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t e = ecs_lookup(world, "e");
 
     test_assert(color != 0);
     test_assert(foo == 0);
@@ -3672,9 +3672,9 @@ void Plecs_brief_annotation(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
-    ecs_entity_t baz = ecs_lookup_fullpath(world, "Baz");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t baz = ecs_lookup(world, "Baz");
 
     test_assert(foo != 0);
     test_assert(bar != 0);
@@ -3700,9 +3700,9 @@ void Plecs_name_annotation(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
-    ecs_entity_t baz = ecs_lookup_fullpath(world, "Baz");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t baz = ecs_lookup(world, "Baz");
 
     test_assert(foo != 0);
     test_assert(bar != 0);
@@ -3728,9 +3728,9 @@ void Plecs_link_annotation(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
-    ecs_entity_t baz = ecs_lookup_fullpath(world, "Baz");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t baz = ecs_lookup(world, "Baz");
 
     test_assert(foo != 0);
     test_assert(bar != 0);
@@ -3756,9 +3756,9 @@ void Plecs_color_annotation(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
-    ecs_entity_t baz = ecs_lookup_fullpath(world, "Baz");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t baz = ecs_lookup(world, "Baz");
 
     test_assert(foo != 0);
     test_assert(bar != 0);
@@ -3788,9 +3788,9 @@ void Plecs_multiple_annotations(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
-    ecs_entity_t baz = ecs_lookup_fullpath(world, "Baz");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t baz = ecs_lookup(world, "Baz");
 
     test_assert(foo != 0);
     test_assert(bar != 0);
@@ -3816,7 +3816,7 @@ void Plecs_annotation_w_trailing_space(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
 
     test_str(ecs_doc_get_brief(world, foo), "A description");
@@ -3847,7 +3847,7 @@ void Plecs_multiline_string(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
     test_assert(ecs_has(world, foo, String));
 
@@ -3898,10 +3898,10 @@ void Plecs_annotate_declaration(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
 
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
     test_assert(bar != 0);
 
     test_assert(ecs_has_id(world, bar, foo));
@@ -3921,10 +3921,10 @@ void Plecs_declaration_w_underscore_name(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
 
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "_Bar");
+    ecs_entity_t bar = ecs_lookup(world, "_Bar");
     test_assert(bar != 0);
 
     test_assert(!ecs_has_id(world, foo, bar));
@@ -3941,7 +3941,7 @@ void Plecs_anonymous_entity(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
 
     ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t){ foo });
@@ -3965,9 +3965,9 @@ void Plecs_anonymous_entity_in_scope(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
-    ecs_entity_t parent = ecs_lookup_fullpath(world, "Parent");
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
     test_assert(parent != 0);
 
     ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t){ foo });
@@ -3990,7 +3990,7 @@ void Plecs_anonymous_declaration(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
 
     ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t){ foo });
@@ -4023,7 +4023,7 @@ void Plecs_const_var_int(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Position));
 
@@ -4054,7 +4054,7 @@ void Plecs_const_var_float(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Position));
 
@@ -4090,7 +4090,7 @@ void Plecs_const_var_bool(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Bools));
 
@@ -4121,7 +4121,7 @@ void Plecs_const_var_string(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Position));
 
@@ -4165,7 +4165,7 @@ void Plecs_const_var_struct(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Line));
 
@@ -4218,11 +4218,11 @@ void Plecs_const_var_scoped(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t a = ecs_lookup_fullpath(world, "a");
+    ecs_entity_t a = ecs_lookup(world, "a");
     test_assert(a != 0);
-    ecs_entity_t b = ecs_lookup_fullpath(world, "a.b");
+    ecs_entity_t b = ecs_lookup(world, "a.b");
     test_assert(b != 0);
-    ecs_entity_t c = ecs_lookup_fullpath(world, "a.c");
+    ecs_entity_t c = ecs_lookup(world, "a.c");
     test_assert(c != 0);
 
     test_assert(ecs_has(world, a, Position));
@@ -4266,10 +4266,10 @@ void Plecs_assign_component_from_var(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t var = ecs_lookup_fullpath(world, "var_pos");
+    ecs_entity_t var = ecs_lookup(world, "var_pos");
     test_assert(var == 0);
 
-    ecs_entity_t a = ecs_lookup_fullpath(world, "a");
+    ecs_entity_t a = ecs_lookup(world, "a");
     test_assert(a != 0);
 
     const Position *p = ecs_get(world, a, Position);
@@ -4300,10 +4300,10 @@ void Plecs_assign_component_from_var_in_scope(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t var = ecs_lookup_fullpath(world, "var_pos");
+    ecs_entity_t var = ecs_lookup(world, "var_pos");
     test_assert(var == 0);
 
-    ecs_entity_t a = ecs_lookup_fullpath(world, "a");
+    ecs_entity_t a = ecs_lookup(world, "a");
     test_assert(a != 0);
 
     const Position *p = ecs_get(world, a, Position);
@@ -4333,7 +4333,7 @@ void Plecs_scope_w_component_after_const_var(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
     test_assert(ecs_has(world, foo, Position));
 
@@ -4364,7 +4364,7 @@ void Plecs_component_after_const_add_expr(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
     test_assert(ecs_has(world, foo, Position));
 
@@ -4395,7 +4395,7 @@ void Plecs_component_after_const_sub_expr(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
     test_assert(ecs_has(world, foo, Position));
 
@@ -4426,7 +4426,7 @@ void Plecs_component_after_const_mul_expr(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
     test_assert(ecs_has(world, foo, Position));
 
@@ -4457,7 +4457,7 @@ void Plecs_component_after_const_div_expr(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
     test_assert(ecs_has(world, foo, Position));
 
@@ -4490,7 +4490,7 @@ void Plecs_component_after_const_paren_expr(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Position));
 
@@ -4517,9 +4517,9 @@ void Plecs_parse_with(void) {
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
     ecs_set_with(world, 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
-    ecs_entity_t hello = ecs_lookup_fullpath(world, "Bar.Hello");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t hello = ecs_lookup(world, "Bar.Hello");
 
     test_assert(foo != 0);
     test_assert(bar != 0);
@@ -4550,9 +4550,9 @@ void Plecs_parse_with_w_with(void) {
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
     ecs_set_with(world, 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
-    ecs_entity_t hello = ecs_lookup_fullpath(world, "Bar.Hello");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t hello = ecs_lookup(world, "Bar.Hello");
 
     test_assert(foo != 0);
     test_assert(bar != 0);
@@ -4588,9 +4588,9 @@ void Plecs_parse_with_w_tag(void) {
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
     ecs_set_with(world, 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
-    ecs_entity_t hello = ecs_lookup_fullpath(world, "Hello");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t hello = ecs_lookup(world, "Hello");
 
     test_assert(foo != 0);
     test_assert(bar != 0);
@@ -4630,8 +4630,8 @@ void Plecs_parse_with_value(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
 
     test_assert(foo != 0);
     test_assert(bar != 0);
@@ -4683,8 +4683,8 @@ void Plecs_parse_with_2_values(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
 
     test_assert(foo != 0);
     test_assert(bar != 0);
@@ -4750,8 +4750,8 @@ void Plecs_parse_with_2_nested_values(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
 
     test_assert(foo != 0);
     test_assert(bar != 0);
@@ -4807,8 +4807,8 @@ void Plecs_parse_with_var(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
 
     test_assert(foo != 0);
     test_assert(bar != 0);
@@ -4861,8 +4861,8 @@ void Plecs_parse_with_2_vars(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
 
     test_assert(foo != 0);
     test_assert(bar != 0);
@@ -4930,8 +4930,8 @@ void Plecs_parse_with_2_nested_vars(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
 
     test_assert(foo != 0);
     test_assert(bar != 0);
@@ -4989,9 +4989,9 @@ void Plecs_parse_with_var_in_scope(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t parent = ecs_lookup_fullpath(world, "Parent");
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Parent.Foo");
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Parent.Bar");
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    ecs_entity_t foo = ecs_lookup(world, "Parent.Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Parent.Bar");
 
     test_assert(parent != 0);
     test_assert(foo != 0);
@@ -5031,7 +5031,7 @@ void Plecs_assign_const_w_expr(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Position));
 
@@ -5060,7 +5060,7 @@ void Plecs_const_w_type(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Position));
 
@@ -5090,7 +5090,7 @@ void Plecs_assembly_no_scope(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+    ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
 
     ecs_fini(world);
@@ -5211,7 +5211,7 @@ void Plecs_assembly_prop(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+    ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
 
     const EcsStruct *st = ecs_get(world, tree, EcsStruct);
@@ -5243,7 +5243,7 @@ void Plecs_assembly_prop_space_colon(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+    ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
 
     const EcsStruct *st = ecs_get(world, tree, EcsStruct);
@@ -5276,7 +5276,7 @@ void Plecs_assembly_2_props(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+    ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
 
     const EcsStruct *st = ecs_get(world, tree, EcsStruct);
@@ -5314,10 +5314,10 @@ void Plecs_assembly_instance_w_default_values(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+    ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
 
-    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
 
     const EcsStruct *st = ecs_get(world, tree, EcsStruct);
@@ -5363,10 +5363,10 @@ void Plecs_assembly_instance_w_assign_default_values(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+    ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
 
-    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
 
     const EcsStruct *st = ecs_get(world, tree, EcsStruct);
@@ -5412,10 +5412,10 @@ void Plecs_assembly_instance_w_overridden_values(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+    ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
 
-    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
 
     const EcsStruct *st = ecs_get(world, tree, EcsStruct);
@@ -5462,13 +5462,13 @@ void Plecs_assembly_w_child(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+    ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
 
-    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
 
-    ecs_entity_t child = ecs_lookup_fullpath(world, "e.child");
+    ecs_entity_t child = ecs_lookup(world, "e.child");
     test_assert(child != 0);
 
     const EcsStruct *st = ecs_get(world, tree, EcsStruct);
@@ -5523,13 +5523,13 @@ void Plecs_assembly_w_child_parse_script(void) {
         .str = expr
     }) != 0);
 
-    ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+    ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
 
-    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
 
-    ecs_entity_t child = ecs_lookup_fullpath(world, "e.child");
+    ecs_entity_t child = ecs_lookup(world, "e.child");
     test_assert(child != 0);
 
     const EcsStruct *st = ecs_get(world, tree, EcsStruct);
@@ -5589,13 +5589,13 @@ void Plecs_assembly_w_child_parse_script_twice(void) {
         .str = expr
     }) != 0);
 
-    ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+    ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
 
-    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
 
-    ecs_entity_t child = ecs_lookup_fullpath(world, "e.child");
+    ecs_entity_t child = ecs_lookup(world, "e.child");
     test_assert(child != 0);
 
     const EcsStruct *st = ecs_get(world, tree, EcsStruct);
@@ -5651,13 +5651,13 @@ void Plecs_assembly_w_child_update_after_parse(void) {
     }) != 0);
 
     {
-        ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+        ecs_entity_t tree = ecs_lookup(world, "Tree");
         test_assert(tree != 0);
 
-        ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+        ecs_entity_t e = ecs_lookup(world, "e");
         test_assert(e != 0);
 
-        ecs_entity_t child = ecs_lookup_fullpath(world, "e.child");
+        ecs_entity_t child = ecs_lookup(world, "e.child");
         test_assert(child != 0);
     }
 
@@ -5669,13 +5669,13 @@ void Plecs_assembly_w_child_update_after_parse(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr_update) == 0);
 
-    ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+    ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
 
-    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
 
-    ecs_entity_t child = ecs_lookup_fullpath(world, "e.child");
+    ecs_entity_t child = ecs_lookup(world, "e.child");
     test_assert(child != 0);
 
     const EcsStruct *st = ecs_get(world, tree, EcsStruct);
@@ -5730,16 +5730,16 @@ void Plecs_assembly_w_nested_child(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+    ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
 
-    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
 
-    ecs_entity_t child = ecs_lookup_fullpath(world, "e.child");
+    ecs_entity_t child = ecs_lookup(world, "e.child");
     test_assert(child != 0);
 
-    ecs_entity_t grand_child = ecs_lookup_fullpath(world, "e.child.grand_child");
+    ecs_entity_t grand_child = ecs_lookup(world, "e.child.grand_child");
     test_assert(grand_child != 0);
 
     const EcsStruct *st = ecs_get(world, tree, EcsStruct);
@@ -5814,16 +5814,16 @@ void Plecs_assembly_w_prefab(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+    ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
 
-    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
 
-    ecs_entity_t child = ecs_lookup_fullpath(world, "e.child");
+    ecs_entity_t child = ecs_lookup(world, "e.child");
     test_assert(child != 0);
 
-    ecs_entity_t base = ecs_lookup_fullpath(world, "e.base");
+    ecs_entity_t base = ecs_lookup(world, "e.base");
     test_assert(base != 0);
 
     const EcsStruct *st = ecs_get(world, tree, EcsStruct);
@@ -5910,19 +5910,19 @@ void Plecs_assembly_w_prefab_tree(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+    ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
 
-    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
 
-    ecs_entity_t child = ecs_lookup_fullpath(world, "e.child");
+    ecs_entity_t child = ecs_lookup(world, "e.child");
     test_assert(child != 0);
 
-    ecs_entity_t base = ecs_lookup_fullpath(world, "e.base");
+    ecs_entity_t base = ecs_lookup(world, "e.base");
     test_assert(base != 0);
 
-    ecs_entity_t base_child = ecs_lookup_fullpath(world, "e.base.child");
+    ecs_entity_t base_child = ecs_lookup(world, "e.base.child");
     test_assert(base_child != 0);
 
     const EcsStruct *st = ecs_get(world, tree, EcsStruct);
@@ -6007,16 +6007,16 @@ void Plecs_assembly_w_nested_assembly(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+    ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
-    ecs_entity_t forest = ecs_lookup_fullpath(world, "Forest");
+    ecs_entity_t forest = ecs_lookup(world, "Forest");
     test_assert(forest != 0);
-    test_assert(ecs_lookup_fullpath(world, "Forest.tree_1") != 0);
-    test_assert(ecs_lookup_fullpath(world, "Forest.tree_2") != 0);
-    test_assert(ecs_lookup_fullpath(world, "Forest.tree_1.child") == 0);
-    test_assert(ecs_lookup_fullpath(world, "Forest.tree_2.child") == 0);
-    test_assert(ecs_lookup_fullpath(world, "tree_1") == 0);
-    test_assert(ecs_lookup_fullpath(world, "tree_2") == 0);
+    test_assert(ecs_lookup(world, "Forest.tree_1") != 0);
+    test_assert(ecs_lookup(world, "Forest.tree_2") != 0);
+    test_assert(ecs_lookup(world, "Forest.tree_1.child") == 0);
+    test_assert(ecs_lookup(world, "Forest.tree_2.child") == 0);
+    test_assert(ecs_lookup(world, "tree_1") == 0);
+    test_assert(ecs_lookup(world, "tree_2") == 0);
 
     {
         const EcsStruct *st = ecs_get(world, tree, EcsStruct);
@@ -6045,15 +6045,15 @@ void Plecs_assembly_w_nested_assembly(void) {
     LINE "";
     test_assert(ecs_plecs_from_str(world, NULL, expr_instance) == 0);
 
-    ecs_entity_t f = ecs_lookup_fullpath(world, "f");
+    ecs_entity_t f = ecs_lookup(world, "f");
     test_assert(f != 0);
-    ecs_entity_t f_tree_1 = ecs_lookup_fullpath(world, "f.tree_1");
+    ecs_entity_t f_tree_1 = ecs_lookup(world, "f.tree_1");
     test_assert(f_tree_1 != 0);
-    ecs_entity_t f_tree_2 = ecs_lookup_fullpath(world, "f.tree_2");
+    ecs_entity_t f_tree_2 = ecs_lookup(world, "f.tree_2");
     test_assert(f_tree_2 != 0);
-    ecs_entity_t f_tree_1_child = ecs_lookup_fullpath(world, "f.tree_1.child");
+    ecs_entity_t f_tree_1_child = ecs_lookup(world, "f.tree_1.child");
     test_assert(f_tree_1_child != 0);
-    ecs_entity_t f_tree_2_child = ecs_lookup_fullpath(world, "f.tree_2.child");
+    ecs_entity_t f_tree_2_child = ecs_lookup(world, "f.tree_2.child");
     test_assert(f_tree_2_child != 0);
 
     {
@@ -6119,24 +6119,24 @@ void Plecs_instantiate_prefab_w_assembly(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+    ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
-    ecs_entity_t p = ecs_lookup_fullpath(world, "p");
+    ecs_entity_t p = ecs_lookup(world, "p");
     test_assert(p != 0);
-    test_assert(ecs_lookup_fullpath(world, "p.child") == 0);
-    test_assert(ecs_lookup_fullpath(world, "child") == 0);
+    test_assert(ecs_lookup(world, "p.child") == 0);
+    test_assert(ecs_lookup(world, "child") == 0);
     
     const char *expr_instance =
     LINE "e : p"
     LINE "";
     test_assert(ecs_plecs_from_str(world, NULL, expr_instance) == 0);
 
-    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
-    ecs_entity_t child = ecs_lookup_fullpath(world, "e.child");
+    ecs_entity_t child = ecs_lookup(world, "e.child");
     test_assert(child != 0);
 
-    test_assert(ecs_lookup_fullpath(world, "e.child") != 0);
+    test_assert(ecs_lookup(world, "e.child") != 0);
 
     const EcsStruct *st = ecs_get(world, tree, EcsStruct);
     test_assert(st != NULL);
@@ -6187,16 +6187,16 @@ void Plecs_assembly_w_prefab_w_assembly(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+    ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
-    ecs_entity_t forest = ecs_lookup_fullpath(world, "Forest");
+    ecs_entity_t forest = ecs_lookup(world, "Forest");
     test_assert(forest != 0);
-    ecs_entity_t tree_prefab = ecs_lookup_fullpath(world, "Forest.TreePrefab");
+    ecs_entity_t tree_prefab = ecs_lookup(world, "Forest.TreePrefab");
     test_assert(tree_prefab != 0);
 
-    ecs_entity_t f = ecs_lookup_fullpath(world, "f");
+    ecs_entity_t f = ecs_lookup(world, "f");
     test_assert(f != 0);
-    ecs_entity_t child = ecs_lookup_fullpath(world, "f.child");
+    ecs_entity_t child = ecs_lookup(world, "f.child");
     test_assert(child != 0);
 
     {
@@ -6257,18 +6257,18 @@ void Plecs_3_assemblies(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+    ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
-    ecs_entity_t forest = ecs_lookup_fullpath(world, "Forest");
+    ecs_entity_t forest = ecs_lookup(world, "Forest");
     test_assert(forest != 0);
-    ecs_entity_t park = ecs_lookup_fullpath(world, "Park");
+    ecs_entity_t park = ecs_lookup(world, "Park");
     test_assert(park != 0);
     
-    ecs_entity_t a = ecs_lookup_fullpath(world, "a");
+    ecs_entity_t a = ecs_lookup(world, "a");
     test_assert(a != 0);
-    ecs_entity_t b = ecs_lookup_fullpath(world, "b");
+    ecs_entity_t b = ecs_lookup(world, "b");
     test_assert(b != 0);
-    ecs_entity_t c = ecs_lookup_fullpath(world, "c");
+    ecs_entity_t c = ecs_lookup(world, "c");
     test_assert(c != 0);
 
     {
@@ -6345,16 +6345,16 @@ void Plecs_assembly_nested_w_default_var(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+    ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
-    ecs_entity_t forest = ecs_lookup_fullpath(world, "Forest");
+    ecs_entity_t forest = ecs_lookup(world, "Forest");
     test_assert(forest != 0);
 
-    ecs_entity_t f = ecs_lookup_fullpath(world, "f");
+    ecs_entity_t f = ecs_lookup(world, "f");
     test_assert(f != 0);
-    ecs_entity_t child = ecs_lookup_fullpath(world, "f.child");
+    ecs_entity_t child = ecs_lookup(world, "f.child");
     test_assert(child != 0);
-    ecs_entity_t trunk = ecs_lookup_fullpath(world, "f.child.trunk");
+    ecs_entity_t trunk = ecs_lookup(world, "f.child.trunk");
     test_assert(trunk != 0);
 
     {
@@ -6422,9 +6422,9 @@ void Plecs_assembly_w_anonymous(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+    ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
-    ecs_entity_t t = ecs_lookup_fullpath(world, "t");
+    ecs_entity_t t = ecs_lookup(world, "t");
     test_assert(t != 0);
 
     {
@@ -6484,9 +6484,9 @@ void Plecs_assembly_w_anonymous_parse_again(void) {
     LINE "t :- Tree{10}";
     test_assert(ecs_plecs_from_str(world, NULL, expr_again) == 0);
 
-    ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+    ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
-    ecs_entity_t t = ecs_lookup_fullpath(world, "t");
+    ecs_entity_t t = ecs_lookup(world, "t");
     test_assert(t != 0);
 
     {
@@ -6559,10 +6559,10 @@ void Plecs_typed_const_w_composite_type(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t var = ecs_lookup_fullpath(world, "var_pos");
+    ecs_entity_t var = ecs_lookup(world, "var_pos");
     test_assert(var == 0);
 
-    ecs_entity_t a = ecs_lookup_fullpath(world, "a");
+    ecs_entity_t a = ecs_lookup(world, "a");
     test_assert(a != 0);
 
     const Position *p = ecs_get(world, a, Position);
@@ -6592,10 +6592,10 @@ void Plecs_assign_var_to_typed_const_w_composite_type(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t var = ecs_lookup_fullpath(world, "var_pos");
+    ecs_entity_t var = ecs_lookup(world, "var_pos");
     test_assert(var == 0);
 
-    ecs_entity_t a = ecs_lookup_fullpath(world, "a");
+    ecs_entity_t a = ecs_lookup(world, "a");
     test_assert(a != 0);
 
     const Position *p = ecs_get(world, a, Position);
@@ -6655,11 +6655,11 @@ void Plecs_assembly_w_composite_prop(void) {
     LINE "";
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+    ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
-    ecs_entity_t t = ecs_lookup_fullpath(world, "t");
+    ecs_entity_t t = ecs_lookup(world, "t");
     test_assert(t != 0);
-    ecs_entity_t t_child = ecs_lookup_fullpath(world, "t.child");
+    ecs_entity_t t_child = ecs_lookup(world, "t.child");
     test_assert(t_child != 0);
 
     {
@@ -6704,13 +6704,13 @@ void Plecs_assembly_with_with(void) {
     LINE "";
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t tree = ecs_lookup_fullpath(world, "Tree");
+    ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
-    ecs_entity_t t = ecs_lookup_fullpath(world, "t");
+    ecs_entity_t t = ecs_lookup(world, "t");
     test_assert(t != 0);
-    ecs_entity_t t_child = ecs_lookup_fullpath(world, "t.child");
+    ecs_entity_t t_child = ecs_lookup(world, "t.child");
     test_assert(t_child != 0);
 
     {
@@ -6767,11 +6767,11 @@ void Plecs_using_wildcard(void) {
     LINE "e :- Velocity{1, 2}\n";
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t pos = ecs_lookup_fullpath(world, "foo.p1.Position");
+    ecs_entity_t pos = ecs_lookup(world, "foo.p1.Position");
     test_assert(pos == ecs_id(Position));
-    ecs_entity_t vel = ecs_lookup_fullpath(world, "foo.p2.Velocity");
+    ecs_entity_t vel = ecs_lookup(world, "foo.p2.Velocity");
     test_assert(vel == ecs_id(Velocity));
-    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
 
     test_assert(ecs_has(world, e, Position));
@@ -6814,7 +6814,7 @@ void Plecs_single_line_comment_in_value(void) {
     LINE "}";
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
 
     test_assert(ecs_has(world, e, Position));
@@ -6848,7 +6848,7 @@ void Plecs_single_line_comment_in_value_after_scope(void) {
     LINE "}";
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
 
     test_assert(ecs_has(world, e, Position));
@@ -6884,7 +6884,7 @@ void Plecs_multi_line_comment_in_value(void) {
     LINE "}";
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
 
     test_assert(ecs_has(world, e, Position));
@@ -6920,7 +6920,7 @@ void Plecs_multi_line_comment_in_value_after_scope(void) {
     LINE "}";
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+    ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
 
     test_assert(ecs_has(world, e, Position));
@@ -6978,13 +6978,13 @@ void Plecs_module_stmt(void) {
     LINE "e :- Foo\n";
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t hello = ecs_lookup_fullpath(world, "hello");
+    ecs_entity_t hello = ecs_lookup(world, "hello");
     test_assert(hello != 0);
     test_assert(ecs_has_id(world, hello, EcsModule));
 
-    ecs_entity_t e = ecs_lookup_fullpath(world, "hello.e");
+    ecs_entity_t e = ecs_lookup(world, "hello.e");
     test_assert(e != 0);
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
 
     test_assert(ecs_has(world, e, Position));
@@ -7019,16 +7019,16 @@ void Plecs_nested_module_stmt(void) {
     LINE "e :- Foo\n";
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t hello = ecs_lookup_fullpath(world, "hello");
+    ecs_entity_t hello = ecs_lookup(world, "hello");
     test_assert(hello != 0);
     test_assert(ecs_has_id(world, hello, EcsModule));
-    ecs_entity_t hello_world = ecs_lookup_fullpath(world, "hello.world");
+    ecs_entity_t hello_world = ecs_lookup(world, "hello.world");
     test_assert(hello_world != 0);
     test_assert(ecs_has_id(world, hello_world, EcsModule));
 
-    ecs_entity_t e = ecs_lookup_fullpath(world, "hello.world.e");
+    ecs_entity_t e = ecs_lookup(world, "hello.world.e");
     test_assert(e != 0);
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
 
     test_assert(ecs_has(world, e, Position));
@@ -7068,20 +7068,20 @@ void Plecs_module_stmt_w_scope(void) {
     LINE "";
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t hello = ecs_lookup_fullpath(world, "hello");
+    ecs_entity_t hello = ecs_lookup(world, "hello");
     test_assert(hello != 0);
     test_assert(ecs_has_id(world, hello, EcsModule));
-    ecs_entity_t hello_world = ecs_lookup_fullpath(world, "hello.world");
+    ecs_entity_t hello_world = ecs_lookup(world, "hello.world");
     test_assert(hello_world != 0);
     test_assert(ecs_has_id(world, hello_world, EcsModule));
 
-    ecs_entity_t parent = ecs_lookup_fullpath(world, "hello.world.parent");
+    ecs_entity_t parent = ecs_lookup(world, "hello.world.parent");
     test_assert(parent != 0);
-    ecs_entity_t e = ecs_lookup_fullpath(world, "hello.world.parent.e");
+    ecs_entity_t e = ecs_lookup(world, "hello.world.parent.e");
     test_assert(e != 0);
-    ecs_entity_t f = ecs_lookup_fullpath(world, "hello.world.f");
+    ecs_entity_t f = ecs_lookup(world, "hello.world.f");
     test_assert(f != 0);
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
 
     test_assert(ecs_has(world, e, Position));
@@ -7131,22 +7131,22 @@ void Plecs_module_stmt_w_nested_scope(void) {
     LINE "";
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t hello = ecs_lookup_fullpath(world, "hello");
+    ecs_entity_t hello = ecs_lookup(world, "hello");
     test_assert(hello != 0);
     test_assert(ecs_has_id(world, hello, EcsModule));
-    ecs_entity_t hello_world = ecs_lookup_fullpath(world, "hello.world");
+    ecs_entity_t hello_world = ecs_lookup(world, "hello.world");
     test_assert(hello_world != 0);
     test_assert(ecs_has_id(world, hello_world, EcsModule));
 
-    ecs_entity_t parent = ecs_lookup_fullpath(world, "hello.world.parent");
+    ecs_entity_t parent = ecs_lookup(world, "hello.world.parent");
     test_assert(parent != 0);
-    ecs_entity_t child = ecs_lookup_fullpath(world, "hello.world.parent.child");
+    ecs_entity_t child = ecs_lookup(world, "hello.world.parent.child");
     test_assert(child != 0);
-    ecs_entity_t e = ecs_lookup_fullpath(world, "hello.world.parent.child.e");
+    ecs_entity_t e = ecs_lookup(world, "hello.world.parent.child.e");
     test_assert(e != 0);
-    ecs_entity_t f = ecs_lookup_fullpath(world, "hello.world.f");
+    ecs_entity_t f = ecs_lookup(world, "hello.world.f");
     test_assert(f != 0);
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
 
     test_assert(ecs_has(world, e, Position));
@@ -7196,11 +7196,11 @@ void Plecs_module_w_assembly(void) {
     LINE "t :- hello.world.Tree{10}\n";
     test_assert(ecs_plecs_from_str(world, NULL, expr_inst) == 0);
 
-    ecs_entity_t tree = ecs_lookup_fullpath(world, "hello.world.Tree");
+    ecs_entity_t tree = ecs_lookup(world, "hello.world.Tree");
     test_assert(tree != 0);
-    ecs_entity_t t = ecs_lookup_fullpath(world, "t");
+    ecs_entity_t t = ecs_lookup(world, "t");
     test_assert(t != 0);
-    ecs_entity_t child = ecs_lookup_fullpath(world, "t.child");
+    ecs_entity_t child = ecs_lookup(world, "t.child");
     test_assert(child != 0);
 
     {
@@ -7253,15 +7253,15 @@ void Plecs_module_w_nested_assembly(void) {
     LINE "f :- hello.world.Forest{10}\n";
     test_assert(ecs_plecs_from_str(world, NULL, expr_inst) == 0);
 
-    ecs_entity_t forest = ecs_lookup_fullpath(world, "hello.world.Forest");
+    ecs_entity_t forest = ecs_lookup(world, "hello.world.Forest");
     test_assert(forest != 0);
-    ecs_entity_t tree = ecs_lookup_fullpath(world, "hello.world.Tree");
+    ecs_entity_t tree = ecs_lookup(world, "hello.world.Tree");
     test_assert(tree != 0);
-    ecs_entity_t f = ecs_lookup_fullpath(world, "f");
+    ecs_entity_t f = ecs_lookup(world, "f");
     test_assert(f != 0);
-    ecs_entity_t t = ecs_lookup_fullpath(world, "f.t");
+    ecs_entity_t t = ecs_lookup(world, "f.t");
     test_assert(t != 0);
-    ecs_entity_t child = ecs_lookup_fullpath(world, "f.t.child");
+    ecs_entity_t child = ecs_lookup(world, "f.t.child");
     test_assert(child != 0);
 
     {
@@ -7298,7 +7298,7 @@ void Plecs_assign_singleton_tag(void) {
     LINE "$ :- Foo\n";
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
 
     test_assert(ecs_has_id(world, foo, foo));
@@ -7342,7 +7342,7 @@ void Plecs_assign_singleton_tag_w_scope(void) {
     LINE "}\n";
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
 
     test_assert(ecs_has_id(world, foo, foo));
@@ -7360,9 +7360,9 @@ void Plecs_assign_singleton_2_tags_w_scope(void) {
     LINE "}\n";
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
     test_assert(bar != 0);
 
     test_assert(ecs_has_id(world, foo, foo));
@@ -7457,13 +7457,13 @@ void Plecs_with_pair_in_scope(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t parent = ecs_lookup_fullpath(world, "Parent");
-    ecs_entity_t child = ecs_lookup_fullpath(world, "Parent.Child");
-    ecs_entity_t rel = ecs_lookup_fullpath(world, "Rel");
-    ecs_entity_t tgt = ecs_lookup_fullpath(world, "Tgt");
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    ecs_entity_t child = ecs_lookup(world, "Parent.Child");
+    ecs_entity_t rel = ecs_lookup(world, "Rel");
+    ecs_entity_t tgt = ecs_lookup(world, "Tgt");
 
-    test_assert(!ecs_lookup_fullpath(world, "Parent.Rel"));
-    test_assert(!ecs_lookup_fullpath(world, "Parent.Tgt"));
+    test_assert(!ecs_lookup(world, "Parent.Rel"));
+    test_assert(!ecs_lookup(world, "Parent.Tgt"));
 
     test_assert(parent != 0);
     test_assert(child != 0);
@@ -7540,7 +7540,7 @@ void Plecs_add_auto_override(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t p = ecs_lookup_fullpath(world, "p");
+    ecs_entity_t p = ecs_lookup(world, "p");
     test_assert(p != 0);
     test_assert(ecs_has_id(world, p, ECS_OVERRIDE | Tag));
 
@@ -7563,7 +7563,7 @@ void Plecs_add_auto_override_pair(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t p = ecs_lookup_fullpath(world, "p");
+    ecs_entity_t p = ecs_lookup(world, "p");
     test_assert(p != 0);
     test_assert(ecs_has_id(world, p, ECS_OVERRIDE | ecs_pair(Rel, Tgt)));
 
@@ -7587,7 +7587,7 @@ void Plecs_scope_w_auto_override(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t p = ecs_lookup_fullpath(world, "p");
+    ecs_entity_t p = ecs_lookup(world, "p");
     test_assert(p != 0);
     test_assert(ecs_has_id(world, p, ECS_OVERRIDE | Tag));
 
@@ -7612,7 +7612,7 @@ void Plecs_scope_w_auto_override_pair(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t p = ecs_lookup_fullpath(world, "p");
+    ecs_entity_t p = ecs_lookup(world, "p");
     test_assert(p != 0);
     test_assert(ecs_has_id(world, p, ECS_OVERRIDE | ecs_pair(Rel, Tgt)));
 
@@ -7638,7 +7638,7 @@ void Plecs_pair_w_rel_var(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t ent = ecs_lookup_fullpath(world, "ent");
+    ecs_entity_t ent = ecs_lookup(world, "ent");
 
     test_assert(ecs_has_pair(world, ent, Rel, Tgt));
 
@@ -7660,7 +7660,7 @@ void Plecs_pair_w_tgt_var(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t ent = ecs_lookup_fullpath(world, "ent");
+    ecs_entity_t ent = ecs_lookup(world, "ent");
 
     test_assert(ecs_has_pair(world, ent, Rel, Tgt));
 
@@ -7682,8 +7682,8 @@ void Plecs_assembly_w_pair_w_this_var(void) {
 
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
-    ecs_entity_t ent = ecs_lookup_fullpath(world, "ent");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t ent = ecs_lookup(world, "ent");
 
     test_assert(ecs_has_id(world, ent, foo));
     test_assert(ecs_has_pair(world, ent, Rel, ent));
@@ -7791,9 +7791,9 @@ void Plecs_component_in_with_scope_in_scope(void) {
     ecs_log_set_level(-4);
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "foo");
+    ecs_entity_t foo = ecs_lookup(world, "foo");
     test_assert(foo != 0);
-    ecs_entity_t bar = ecs_lookup_fullpath(world, "Bar");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
     test_assert(bar != 0);
 
     test_assert(ecs_has(world, foo, Position));
@@ -7839,7 +7839,7 @@ void Plecs_assign_after_with_in_scope(void) {
     ecs_log_set_level(-4);
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "foo");
+    ecs_entity_t foo = ecs_lookup(world, "foo");
     test_assert(foo != 0);
 
     test_assert(ecs_has(world, foo, Position));
@@ -7873,7 +7873,7 @@ void Plecs_array_component(void) {
     LINE "foo :- Position[10, 20]\n";
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup_fullpath(world, "foo");
+    ecs_entity_t foo = ecs_lookup(world, "foo");
     test_assert(foo != 0);
 
     test_assert(ecs_has(world, foo, Position));

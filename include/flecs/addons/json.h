@@ -35,7 +35,7 @@ typedef struct ecs_from_json_desc_t {
     const char *expr; /**< Full expression (used for logging) */
 
     /** Callback that allows for specifying a custom lookup function. The
-     * default behavior uses ecs_lookup_fullpath() */
+     * default behavior uses ecs_lookup() */
     ecs_entity_t (*lookup_action)(
         const ecs_world_t*,
         const char *value,
