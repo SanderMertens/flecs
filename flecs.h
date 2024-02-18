@@ -6226,18 +6226,21 @@ void ecs_set_alias(
     ecs_entity_t entity,
     const char *alias);
 
-/** Lookup an entity by name.
- * Returns an entity that matches the specified name. Only looks for entities in
- * the current scope (root if no scope is provided).
+/** Lookup an entity by it's path.
+ * This operation is equivalent to calling:
+ *
+ * @code
+ * ecs_lookup_path_w_sep(world, 0, path, ".", NULL, true);
+ * @endcode
  *
  * @param world The world.
- * @param name The entity name.
- * @return The entity with the specified name, or 0 if no entity was found.
+ * @param path The entity path.
+ * @return The entity with the specified path, or 0 if no entity was found.
  */
 FLECS_API
 ecs_entity_t ecs_lookup(
     const ecs_world_t *world,
-    const char *name);
+    const char *path);
 
 /** Lookup a child entity by name.
  * Returns an entity that matches the specified name. Only looks for entities in

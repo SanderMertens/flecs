@@ -9970,6 +9970,10 @@ int flecs_term_id_finalize_flags(
         return -1;
     }
 
+    if (term_id->name && term_id->name[0] == '$' && term_id->name[1]) {
+        term_id->flags |= EcsIsVariable;
+    }
+
     if (!(term_id->flags & (EcsIsEntity|EcsIsVariable|EcsIsName))) {
         if (term_id->id || term_id->name) {
             if (term_id->id == EcsThis || 
@@ -11399,6 +11403,18 @@ void ecs_filter_fini(
     }
 }
 
+static
+void flecs_normalize_term_name(
+    ecs_term_id_t *ref) 
+{
+    if (ref->name && ref->name[0] == '$' && ref->name[1]) {
+        ecs_assert(ref->flags & EcsIsVariable, ECS_INTERNAL_ERROR, NULL);
+        const char *old = ref->name;
+        ref->name = ecs_os_strdup(&old[1]);
+        ecs_os_free(ECS_CONST_CAST(char*, old)); /* safe, filter owns name */
+    }
+}
+
 ecs_filter_t* ecs_filter_init(
     ecs_world_t *world,
     const ecs_filter_desc_t *desc)    
@@ -11571,7 +11587,12 @@ ecs_filter_t* ecs_filter_init(
 
     /* Any allocated resources remaining in terms are now owned by filter */
     for (i = 0; i < f->term_count; i ++) {
-        f->terms[i].move = false;
+        ecs_term_t *term = &f->terms[i];
+        /* Post process term names in case they were used to create variables */
+        flecs_normalize_term_name(&term->first);
+        flecs_normalize_term_name(&term->second);
+        flecs_normalize_term_name(&term->src);
+        term->move = false;
     }
 
     f->variable_names[0] = NULL;
