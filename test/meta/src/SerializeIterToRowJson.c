@@ -3115,3 +3115,59 @@ void SerializeIterToRowJson_serialize_w_field_info_pair_w_not_component(void) {
 
     ecs_fini(world);
 }
+
+void SerializeIterToRowJson_serialize_w_field_info_w_or(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Mass);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            { "x", ecs_id(ecs_i32_t) },
+            { "y", ecs_id(ecs_i32_t) }
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Mass),
+        .members = {
+            { "value", ecs_id(ecs_i32_t) }
+        }
+    });
+
+    ecs_rule_t *q = ecs_rule(world, {
+        .expr = "Position || Mass"
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_entity_t e3 = ecs_new_entity(world, "e3");
+
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_set(world, e2, Position, {20, 30});
+    ecs_set(world, e3, Mass, {100});
+
+    ecs_iter_t it = ecs_rule_iter(world, q);
+    char *json = ecs_iter_to_json(world, &it, &(ecs_iter_to_json_desc_t) {
+        .serialize_rows = true,
+        .serialize_field_info = true
+    });
+    test_assert(json != NULL);
+
+    char* expect = "{\"field_info\":[{\"id\":0}], "
+        "\"results\":["
+            "{\"name\":\"e1\", \"tags\":[\"Position\"]}, "
+            "{\"name\":\"e2\", \"tags\":[\"Position\"]}, "
+            "{\"name\":\"e3\", \"tags\":[\"Mass\"]}]}";
+    test_str(json, expect);
+
+    ecs_os_free(json);
+
+    ecs_rule_fini(q);
+
+    ecs_fini(world);
+}

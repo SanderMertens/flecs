@@ -912,7 +912,8 @@
                 "serialize_w_field_info_pair_w_0_target",
                 "serialize_w_field_info_pair_w_not_tag",
                 "serialize_w_field_info_pair_w_not_pair",
-                "serialize_w_field_info_pair_w_not_component"
+                "serialize_w_field_info_pair_w_not_component",
+                "serialize_w_field_info_w_or"
             ]
         }, {
             "id": "SerializeTypeInfoToJson",
@@ -957,6 +958,28 @@
                 "struct_nested_2_lvls",
                 "struct_nested_2_members",
                 "struct_nested_3_members"
+            ]
+        }, {
+            "id": "SerializeQueryInfoToJson",
+            "testcases": [
+                "1_tag",
+                "1_component",
+                "1_pair",
+                "1_pair_w_wildcard",
+                "1_pair_w_any",
+                "1_tag_fixed_src",
+                "1_tag_var_src",
+                "1_component_in",
+                "1_component_inout",
+                "1_component_out",
+                "1_component_none",
+                "1_tag_not",
+                "2_tags_or",
+                "1_tag_optional",
+                "1_tag_self",
+                "1_tag_self_dont_inherit",
+                "1_tag_up",
+                "1_tag_cascade"
             ]
         }, {
             "id": "MetaUtils",

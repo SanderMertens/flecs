@@ -8,7 +8,7 @@
 #ifdef FLECS_JSON
 
 static
-int json_ser_type_ops(
+int flecs_json_ser_type_ops(
     const ecs_world_t *world,
     ecs_meta_type_op_t *ops,
     int32_t op_count,
@@ -17,7 +17,7 @@ int json_ser_type_ops(
     int32_t in_array);
 
 static
-int json_ser_type_op(
+int flecs_json_ser_type_op(
     const ecs_world_t *world,
     ecs_meta_type_op_t *op, 
     const void *base,
@@ -125,7 +125,7 @@ int json_ser_elements(
     int i;
     for (i = 0; i < elem_count; i ++) {
         ecs_strbuf_list_next(str);
-        if (json_ser_type_ops(world, ops, op_count, ptr, str, is_array)) {
+        if (flecs_json_ser_type_ops(world, ops, op_count, ptr, str, is_array)) {
             return -1;
         }
         ptr = ECS_OFFSET(ptr, elem_size);
@@ -137,7 +137,7 @@ int json_ser_elements(
 }
 
 static
-int json_ser_type_elements(
+int flecs_json_ser_type_elements(
     const ecs_world_t *world,
     ecs_entity_t type, 
     const void *base, 
@@ -170,7 +170,7 @@ int json_ser_array(
     const EcsArray *a = ecs_get(world, op->type, EcsArray);
     ecs_assert(a != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    return json_ser_type_elements(
+    return flecs_json_ser_type_elements(
         world, a->type, ptr, a->count, str, true);
 }
 
@@ -190,7 +190,7 @@ int json_ser_vector(
     void *array = ecs_vec_first(value);
 
     /* Serialize contiguous buffer of vector */
-    return json_ser_type_elements(world, v->type, array, count, str, false);
+    return flecs_json_ser_type_elements(world, v->type, array, count, str, false);
 }
 
 typedef struct json_serializer_ctx_t {
@@ -282,7 +282,7 @@ int json_ser_custom_type(
 
 /* Forward serialization to the different type kinds */
 static
-int json_ser_type_op(
+int flecs_json_ser_type_op(
     const ecs_world_t *world,
     ecs_meta_type_op_t *op, 
     const void *ptr,
@@ -401,7 +401,7 @@ error:
 
 /* Iterate over a slice of the type ops array */
 static
-int json_ser_type_ops(
+int flecs_json_ser_type_ops(
     const ecs_world_t *world,
     ecs_meta_type_op_t *ops,
     int32_t op_count,
@@ -465,7 +465,7 @@ int json_ser_type_ops(
         case EcsOpId:
         case EcsOpString:
         case EcsOpOpaque:
-            if (json_ser_type_op(world, op, base, str)) {
+            if (flecs_json_ser_type_op(world, op, base, str)) {
                 goto error;
             }
             break;
@@ -480,7 +480,7 @@ error:
 }
 
 /* Iterate over the type ops of a type */
-int json_ser_type(
+int flecs_json_ser_type(
     const ecs_world_t *world,
     const ecs_vec_t *v_ops,
     const void *base, 
@@ -488,7 +488,7 @@ int json_ser_type(
 {
     ecs_meta_type_op_t *ops = ecs_vec_first_t(v_ops, ecs_meta_type_op_t);
     int32_t count = ecs_vec_count(v_ops);
-    return json_ser_type_ops(world, ops, count, base, str, 0);
+    return flecs_json_ser_type_ops(world, ops, count, base, str, 0);
 }
 
 static
@@ -507,7 +507,7 @@ int array_to_json_buf_w_type_data(
 
         do {
             ecs_strbuf_list_next(buf);
-            if (json_ser_type(world, &ser->ops, ptr, buf)) {
+            if (flecs_json_ser_type(world, &ser->ops, ptr, buf)) {
                 return -1;
             }
 
@@ -516,7 +516,7 @@ int array_to_json_buf_w_type_data(
 
         flecs_json_array_pop(buf);
     } else {
-        if (json_ser_type(world, &ser->ops, ptr, buf)) {
+        if (flecs_json_ser_type(world, &ser->ops, ptr, buf)) {
             return -1;
         }
     }
@@ -735,7 +735,7 @@ int flecs_json_append_type_values(
                     ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
                     flecs_json_next(buf);
-                    if (json_ser_type(world, &ser->ops, ptr, buf) != 0) {
+                    if (flecs_json_ser_type(world, &ser->ops, ptr, buf) != 0) {
                         /* Entity contains invalid value */
                         return -1;
                     }
@@ -1487,64 +1487,28 @@ void flecs_json_serialize_field_info(
     flecs_json_memberl(buf, "field_info");
     flecs_json_array_push(buf);
 
-    int f, t;
+    int f;
     for (f = 0; f < field_count; f ++) {
         flecs_json_next(buf);
-        flecs_json_object_push(buf);
-        flecs_json_memberl(buf, "id");
-
-        flecs_json_serialize_get_field_ctx(world, it, f, ctx);
-        ecs_json_value_ser_ctx_t *value_ctx = &ctx->value_ctx[f];
-
-        if (value_ctx->id_label) {
-            flecs_json_string(buf, value_ctx->id_label);
-
-            const ecs_term_t *term = NULL;
-            for (t = 0; t < q->term_count; t ++) {
-                if (q->terms[t].field_index == f) {
-                    term = &q->terms[t];
-                    break;
-                }
-            }
-
-            ecs_assert(term != NULL, ECS_INTERNAL_ERROR, NULL);
-
-            if (term->oper != EcsNot) {
-                if (term->oper == EcsOptional) {
-                    flecs_json_memberl(buf, "optional");
-                    flecs_json_bool(buf, true);
-                }
-
-                if (ECS_IS_PAIR(term->id)) {
-                    if (term->first.flags & EcsIsEntity && term->first.id) {
-                        if (ecs_has_id(world, term->first.id, EcsExclusive)) {
-                            flecs_json_memberl(buf, "exclusive");
-                            flecs_json_bool(buf, true);
-                        }
-                    }
-                }
-
-                if (value_ctx->type) {
-                    flecs_json_memberl(buf, "type");
-                    flecs_json_label(buf, world, value_ctx->type);
-                }
-
-                if (value_ctx->ser) {
-                    flecs_json_memberl(buf, "schema");
-                    ecs_type_info_to_json_buf(world, value_ctx->type, buf);
-                }
-            } else {
-                flecs_json_memberl(buf, "not");
-                flecs_json_bool(buf, true);
-            }
-        } else {
-            ecs_strbuf_appendlit(buf, "0");
-        }
-
-        flecs_json_object_pop(buf);
+        flecs_json_serialize_field(world, it, q, f, buf, ctx);
     }
 
     flecs_json_array_pop(buf);
+}
+
+static
+void flecs_json_serialize_query_info(
+    const ecs_world_t *world,
+    const ecs_iter_t *it, 
+    ecs_strbuf_t *buf)
+{
+    if (!it->query) {
+        return;
+    }
+
+    const ecs_filter_t *q = it->query;
+    flecs_json_memberl(buf, "query_info");
+    flecs_json_serialize_query(world, q, buf);
 }
 
 static
@@ -2285,6 +2249,11 @@ int ecs_iter_to_json_buf(
     /* Serialize field info if enabled */
     if (desc && desc->serialize_field_info) {
         flecs_json_serialize_field_info(world, it, buf, &ser_ctx);
+    }
+
+    /* Serialize query info if enabled */
+    if (desc && desc->serialize_query_info) {
+        flecs_json_serialize_query_info(world, it, buf);
     }
 
     /* Serialize results */

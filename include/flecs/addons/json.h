@@ -285,6 +285,7 @@ typedef struct ecs_iter_to_json_desc_t {
     bool serialize_table;           /**< Serialize entire table vs. matched components */
     bool serialize_rows;            /**< Use row-based serialization, with entities in separate elements */
     bool serialize_field_info;      /**< Serialize metadata for fields returned by query */
+    bool serialize_query_info;      /**< Serialize query terms */
     bool dont_serialize_results;    /**< If true, query won't be evaluated */
 } ecs_iter_to_json_desc_t;
 
@@ -292,7 +293,7 @@ typedef struct ecs_iter_to_json_desc_t {
     .serialize_term_ids =        true,  \
     .serialize_term_labels =     false, \
     .serialize_ids =             true,  \
-    .serialize_id_labels =       false,  \
+    .serialize_id_labels =       false, \
     .serialize_sources =         true,  \
     .serialize_variables =       true,  \
     .serialize_is_set =          true,  \
@@ -306,10 +307,11 @@ typedef struct ecs_iter_to_json_desc_t {
     .serialize_colors =          false, \
     .measure_eval_duration =     false, \
     .serialize_type_info =       false, \
-    .serialize_table =           false,  \
-    .serialize_rows =            false,  \
-    .serialize_field_info =      false,  \
-    .dont_serialize_results =    false,  \
+    .serialize_table =           false, \
+    .serialize_rows =            false, \
+    .serialize_field_info =      false, \
+    .serialize_query_info =      false, \
+    .dont_serialize_results =    false, \
 }
 
 /** Serialize iterator into JSON string.

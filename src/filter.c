@@ -285,7 +285,7 @@ int flecs_term_ids_finalize(
 
     /* If source is wildcard, term won't return any data */
     if ((src->flags & EcsIsVariable) && ecs_id_is_wildcard(src->id)) {
-        term->inout |= EcsInOutNone;
+        term->inout = EcsInOutNone;
     }
 
     return 0;
@@ -1257,7 +1257,9 @@ int ecs_filter_finalize(
              * as component value with type ecs_entity_t */
             if (ecs_id_is_tag(world, term->id)) {
                 filter_term = true;
-            } else if (ECS_PAIR_SECOND(term->id) == EcsWildcard) {
+            } else if ((ECS_PAIR_SECOND(term->id) == EcsWildcard) ||
+                       (ECS_PAIR_SECOND(term->id) == EcsAny)) 
+            {
                 /* If the second element of a pair is a wildcard and the first
                  * element is not a type, we can't know in advance what the
                  * type of the term is, so it can't provide data. */

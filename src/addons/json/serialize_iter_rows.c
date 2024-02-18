@@ -296,6 +296,9 @@ bool flecs_json_serialize_get_value_ctx(
     ecs_id_t id,
     ecs_json_value_ser_ctx_t *ctx)
 {
+    if (!id) {
+        return false;
+    }
     if (!ctx->initialized) {
         ctx->initialized = true;
 
@@ -376,7 +379,7 @@ int flecs_json_serialize_row_components(
         }
 
         flecs_json_member(buf, value_ctx->id_label);
-        if (json_ser_type(world, &value_ctx->ser->ops, ptr, buf) != 0) {
+        if (flecs_json_ser_type(world, &value_ctx->ser->ops, ptr, buf) != 0) {
             return -1;
         }
 
@@ -416,7 +419,7 @@ int flecs_json_serialize_row_table_components(
         ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(value_ctx->id_label != NULL, ECS_INTERNAL_ERROR, NULL);
         flecs_json_member(buf, value_ctx->id_label);
-        if (json_ser_type(world, &value_ctx->ser->ops, ptr, buf) != 0) {
+        if (flecs_json_ser_type(world, &value_ctx->ser->ops, ptr, buf) != 0) {
             return -1;
         }
 

@@ -31,6 +31,14 @@ void Id_pair_id_w_rel_component_obj_wildcard_is_tag(void);
 void Id_pair_id_w_obj_wildcard_is_tag(void);
 void Id_pair_id_w_tag_property_w_obj_component_is_tag(void);
 void Id_pair_id_w_tag_property_w_obj_wildcard_is_tag(void);
+void Id_pair_w_rel_wildcard_is_tag(void);
+void Id_pair_w_obj_wildcard_is_tag(void);
+void Id_pair_w_rel_tag_obj_wildcard_is_tag(void);
+void Id_pair_w_wildcard_wildcard_is_tag(void);
+void Id_pair_w_rel_any_is_tag(void);
+void Id_pair_w_obj_any_is_tag(void);
+void Id_pair_w_rel_tag_obj_any_is_tag(void);
+void Id_pair_w_any_any_is_tag(void);
 void Id_id_w_override_is_tag(void);
 void Id_id_w_toggle_is_tag(void);
 void Id_pair_id_override_is_tag(void);
@@ -2772,6 +2780,38 @@ bake_test_case Id_testcases[] = {
     {
         "pair_id_w_tag_property_w_obj_wildcard_is_tag",
         Id_pair_id_w_tag_property_w_obj_wildcard_is_tag
+    },
+    {
+        "pair_w_rel_wildcard_is_tag",
+        Id_pair_w_rel_wildcard_is_tag
+    },
+    {
+        "pair_w_obj_wildcard_is_tag",
+        Id_pair_w_obj_wildcard_is_tag
+    },
+    {
+        "pair_w_rel_tag_obj_wildcard_is_tag",
+        Id_pair_w_rel_tag_obj_wildcard_is_tag
+    },
+    {
+        "pair_w_wildcard_wildcard_is_tag",
+        Id_pair_w_wildcard_wildcard_is_tag
+    },
+    {
+        "pair_w_rel_any_is_tag",
+        Id_pair_w_rel_any_is_tag
+    },
+    {
+        "pair_w_obj_any_is_tag",
+        Id_pair_w_obj_any_is_tag
+    },
+    {
+        "pair_w_rel_tag_obj_any_is_tag",
+        Id_pair_w_rel_tag_obj_any_is_tag
+    },
+    {
+        "pair_w_any_any_is_tag",
+        Id_pair_w_any_any_is_tag
     },
     {
         "id_w_override_is_tag",
@@ -13079,7 +13119,7 @@ static bake_test_suite suites[] = {
         "Id",
         NULL,
         NULL,
-        29,
+        37,
         Id_testcases
     },
     {
