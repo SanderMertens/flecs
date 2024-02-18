@@ -2874,8 +2874,8 @@ void SerializeIterToRowJson_serialize_w_field_info(void) {
 
     char* expect = "{"
         "\"field_info\":["
-            "{\"id\":\"Position\", \"type\":\"Position\", \"schema\":{\"x\":[\"int\"], \"y\":[\"int\"]}}, "
-            "{\"id\":\"Mass\", \"optional\":true, \"type\":\"Mass\", \"schema\":{\"value\":[\"int\"]}}], "
+            "{\"id\":\"Position\", \"type\":\"Position\", \"symbol\":\"Position\", \"schema\":{\"x\":[\"int\"], \"y\":[\"int\"]}}, "
+            "{\"id\":\"Mass\", \"optional\":true, \"type\":\"Mass\", \"symbol\":\"Mass\", \"schema\":{\"value\":[\"int\"]}}], "
         "\"results\":["
             "{\"name\":\"e1\", \"is_set\":[true, false], \"components\":{\"Position\":{\"x\":10, \"y\":20}}}, "
             "{\"name\":\"e2\", \"is_set\":[true, false], \"components\":{\"Position\":{\"x\":20, \"y\":30}}}, "
@@ -2934,8 +2934,8 @@ void SerializeIterToRowJson_serialize_w_field_info_pair_w_0_target(void) {
     test_assert(json != NULL);
 
     char* expect = "{\"field_info\":["
-        "{\"id\":\"Position\", \"type\":\"Position\", \"schema\":{\"x\":[\"int\"], \"y\":[\"int\"]}}, "
-        "{\"id\":\"Mass\", \"optional\":true, \"type\":\"Mass\", \"schema\":{\"value\":[\"int\"]}}, "
+        "{\"id\":\"Position\", \"type\":\"Position\", \"symbol\":\"Position\", \"schema\":{\"x\":[\"int\"], \"y\":[\"int\"]}}, "
+        "{\"id\":\"Mass\", \"optional\":true, \"type\":\"Mass\", \"symbol\":\"Mass\", \"schema\":{\"value\":[\"int\"]}}, "
         "{\"id\":\"(ChildOf,0)\", \"exclusive\":true}], "
     "\"results\":["
         "{\"name\":\"e1\", \"pairs\":{\"ChildOf\":\"0\"},\"is_set\":[true, false, true], \"components\":{\"Position\":{\"x\":10, \"y\":20}}}, "
@@ -2989,7 +2989,7 @@ void SerializeIterToRowJson_serialize_w_field_info_pair_w_not_tag(void) {
 
     char* expect = "{"
         "\"field_info\":["
-            "{\"id\":\"Position\", \"type\":\"Position\", \"schema\":{\"x\":[\"int\"], \"y\":[\"int\"]}}, "
+            "{\"id\":\"Position\", \"type\":\"Position\", \"symbol\":\"Position\", \"schema\":{\"x\":[\"int\"], \"y\":[\"int\"]}}, "
             "{\"id\":\"Foo\", \"not\":true}], "
         "\"results\":["
             "{\"name\":\"e1\", \"is_set\":[true, false], \"components\":{\"Position\":{\"x\":10, \"y\":20}}}, "
@@ -3042,7 +3042,7 @@ void SerializeIterToRowJson_serialize_w_field_info_pair_w_not_pair(void) {
 
     char* expect = "{"
         "\"field_info\":["
-            "{\"id\":\"Position\", \"type\":\"Position\", \"schema\":{\"x\":[\"int\"], \"y\":[\"int\"]}}, "
+            "{\"id\":\"Position\", \"type\":\"Position\", \"symbol\":\"Position\", \"schema\":{\"x\":[\"int\"], \"y\":[\"int\"]}}, "
             "{\"id\":\"(ChildOf,flecs)\", \"not\":true}], "
         "\"results\":["
             "{\"name\":\"e1\", \"is_set\":[true, false], \"components\":{\"Position\":{\"x\":10, \"y\":20}}}, "
@@ -3102,7 +3102,7 @@ void SerializeIterToRowJson_serialize_w_field_info_pair_w_not_component(void) {
     test_assert(json != NULL);
 
     char* expect = "{\"field_info\":["
-        "{\"id\":\"Position\", \"type\":\"Position\", \"schema\":{\"x\":[\"int\"], \"y\":[\"int\"]}}, "
+        "{\"id\":\"Position\", \"type\":\"Position\", \"symbol\":\"Position\", \"schema\":{\"x\":[\"int\"], \"y\":[\"int\"]}}, "
         "{\"id\":\"Mass\", \"not\":true}], "
     "\"results\":["
         "{\"name\":\"e1\", \"is_set\":[true, false], \"components\":{\"Position\":{\"x\":10, \"y\":20}}}, "

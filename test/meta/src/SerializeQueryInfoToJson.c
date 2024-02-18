@@ -26,6 +26,8 @@ void SerializeQueryInfoToJson_1_tag(void) {
             "\"flags\":[\"self\", \"up\"]}]}}");
     ecs_os_free(json);
 
+    ecs_rule_fini(r);
+
     ecs_fini(world);
 }
 
@@ -54,6 +56,8 @@ void SerializeQueryInfoToJson_1_component(void) {
             "\"trav\":{\"entity\":\"flecs.core.IsA\", \"symbol\":\"EcsIsA\"}, "
             "\"flags\":[\"self\", \"up\"]}]}}");
     ecs_os_free(json);
+
+    ecs_rule_fini(r);
 
     ecs_fini(world);
 }
@@ -86,6 +90,8 @@ void SerializeQueryInfoToJson_1_pair(void) {
             "\"flags\":[\"self\", \"up\"]}]}}");
     ecs_os_free(json);
 
+    ecs_rule_fini(r);
+
     ecs_fini(world);
 }
 
@@ -116,6 +122,8 @@ void SerializeQueryInfoToJson_1_pair_w_wildcard(void) {
             "\"flags\":[\"self\", \"up\"]}]}}");
     ecs_os_free(json);
 
+    ecs_rule_fini(r);
+
     ecs_fini(world);
 }
 
@@ -145,6 +153,8 @@ void SerializeQueryInfoToJson_1_pair_w_any(void) {
             "\"trav\":{\"entity\":\"flecs.core.IsA\", \"symbol\":\"EcsIsA\"}, "
             "\"flags\":[\"self\", \"up\"]}]}}");
     ecs_os_free(json);
+    
+    ecs_rule_fini(r);
 
     ecs_fini(world);
 }
@@ -176,6 +186,8 @@ void SerializeQueryInfoToJson_1_tag_fixed_src(void) {
             "\"flags\":[\"self\", \"up\"]}]}}");
     ecs_os_free(json);
 
+    ecs_rule_fini(r);
+
     ecs_fini(world);
 }
 
@@ -204,6 +216,8 @@ void SerializeQueryInfoToJson_1_tag_var_src(void) {
             "\"trav\":{\"entity\":\"flecs.core.IsA\", \"symbol\":\"EcsIsA\"}, "
             "\"flags\":[\"self\", \"up\"]}]}}");
     ecs_os_free(json);
+
+    ecs_rule_fini(r);
 
     ecs_fini(world);
 }
@@ -234,6 +248,8 @@ void SerializeQueryInfoToJson_1_component_in(void) {
             "\"flags\":[\"self\", \"up\"]}]}}");
     ecs_os_free(json);
 
+    ecs_rule_fini(r);
+
     ecs_fini(world);
 }
 
@@ -262,6 +278,8 @@ void SerializeQueryInfoToJson_1_component_inout(void) {
             "\"trav\":{\"entity\":\"flecs.core.IsA\", \"symbol\":\"EcsIsA\"}, "
             "\"flags\":[\"self\", \"up\"]}]}}");
     ecs_os_free(json);
+
+    ecs_rule_fini(r);
 
     ecs_fini(world);
 }
@@ -292,6 +310,8 @@ void SerializeQueryInfoToJson_1_component_out(void) {
             "\"flags\":[\"self\", \"up\"]}]}}");
     ecs_os_free(json);
 
+    ecs_rule_fini(r);
+
     ecs_fini(world);
 }
 
@@ -321,6 +341,8 @@ void SerializeQueryInfoToJson_1_component_none(void) {
             "\"flags\":[\"self\", \"up\"]}]}}");
     ecs_os_free(json);
 
+    ecs_rule_fini(r);
+
     ecs_fini(world);
 }
 
@@ -349,6 +371,8 @@ void SerializeQueryInfoToJson_1_tag_not(void) {
             "\"trav\":{\"entity\":\"flecs.core.IsA\", \"symbol\":\"EcsIsA\"}, "
             "\"flags\":[\"self\", \"up\"]}]}}");
     ecs_os_free(json);
+
+    ecs_rule_fini(r);
 
     ecs_fini(world);
 }
@@ -385,6 +409,8 @@ void SerializeQueryInfoToJson_2_tags_or(void) {
             "\"flags\":[\"self\", \"up\"]}]}}");
     ecs_os_free(json);
 
+    ecs_rule_fini(r);
+
     ecs_fini(world);
 }
 
@@ -414,6 +440,8 @@ void SerializeQueryInfoToJson_1_tag_optional(void) {
             "\"flags\":[\"self\", \"up\"]}]}}");
     ecs_os_free(json);
 
+    ecs_rule_fini(r);
+
     ecs_fini(world);
 }
 
@@ -442,6 +470,8 @@ void SerializeQueryInfoToJson_1_tag_self(void) {
             "\"flags\":[\"self\"]}]}}");
     ecs_os_free(json);
 
+    ecs_rule_fini(r);
+
     ecs_fini(world);
 }
 
@@ -469,6 +499,8 @@ void SerializeQueryInfoToJson_1_tag_self_dont_inherit(void) {
             "\"first\":{\"entity\":\"Foo\"}, "
             "\"flags\":[\"self\"]}]}}");
     ecs_os_free(json);
+
+    ecs_rule_fini(r);
 
     ecs_fini(world);
 }
@@ -499,6 +531,8 @@ void SerializeQueryInfoToJson_1_tag_up(void) {
             "\"flags\":[\"up\"]}]}}");
     ecs_os_free(json);
 
+    ecs_rule_fini(r);
+
     ecs_fini(world);
 }
 
@@ -527,6 +561,8 @@ void SerializeQueryInfoToJson_1_tag_cascade(void) {
             "\"trav\":{\"entity\":\"flecs.core.IsA\", \"symbol\":\"EcsIsA\"}, "
             "\"flags\":[\"cascade\"]}]}}");
     ecs_os_free(json);
+    
+    ecs_rule_fini(r);
 
     ecs_fini(world);
 }

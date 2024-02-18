@@ -53,6 +53,12 @@ void flecs_json_serialize_field(
             if (value_ctx->type) {
                 flecs_json_memberl(buf, "type");
                 flecs_json_label(buf, world, value_ctx->type);
+
+                const char *symbol = ecs_get_symbol(world, value_ctx->type);
+                if (symbol) {
+                    flecs_json_memberl(buf, "symbol");
+                    flecs_json_string(buf, symbol);
+                }
             }
 
             if (value_ctx->ser) {
