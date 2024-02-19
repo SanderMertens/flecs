@@ -230,7 +230,7 @@ ecs_os_free(path);
 Paths can be used to lookup an entity:
 
 ```c
-ecs_entity_t e = ecs_lookup_fullpath(world, "Parent.Child.GrandChild");
+ecs_entity_t e = ecs_lookup(world, "Parent.Child.GrandChild");
 ```
 
 Path lookups may be relative:
@@ -790,7 +790,7 @@ ecs_entity_t e = ecs_new(world, Car);
 Module contents are namespaced, which means that the identifiers of the content of the module (components, tags, systems) are stored in the scope of the module. For the above example module, everything would be stored in the `vehicles` scope. To resolve the `Car` component by name, an application would have to do:
 
 ```c
-ecs_entity_t car_entity = ecs_lookup_fullpath(world, "vehicles.Car");
+ecs_entity_t car_entity = ecs_lookup(world, "vehicles.Car");
 ```
 
 Note that even though the module name is specified with uppercase, the name is stored with lowercase. This is because the naming convention for modules in C is PascalCase, whereas the stored identifiers use snake_case. If a module name contains several uppercase letters, this will be translated to a nested module. For example, the C module name `MySimpleModule` will be translated to `my.simple.module`.
@@ -908,10 +908,10 @@ printf("%s\n", path); // Prints  "parent.child"
 free(path);
 ```
 
-To lookup an entity using a path, use `ecs_lookup_fullpath`:
+To lookup an entity using a path, use `ecs_lookup`:
 
 ```c
-ecs_entity_t e = ecs_lookup_fullpath(world, "parent.child");
+ecs_entity_t e = ecs_lookup(world, "parent.child");
 ```
 
 Applications can also lookup entities using a relative path expression:
@@ -946,7 +946,7 @@ ecs_entity_t prev_scope = ecs_set_scope(world, parent);
 ecs_entity_t child = ecs_new(world, 0);
 
 // Look for "child" relative to parent
-ecs_entity_t e = ecs_lookup_fullpath(world, "child");
+ecs_entity_t e = ecs_lookup(world, "child");
 
 // It's good practice to restore the previous scope
 ecs_set_scope(prev_scope);

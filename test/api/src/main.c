@@ -31,6 +31,14 @@ void Id_pair_id_w_rel_component_obj_wildcard_is_tag(void);
 void Id_pair_id_w_obj_wildcard_is_tag(void);
 void Id_pair_id_w_tag_property_w_obj_component_is_tag(void);
 void Id_pair_id_w_tag_property_w_obj_wildcard_is_tag(void);
+void Id_pair_w_rel_wildcard_is_tag(void);
+void Id_pair_w_obj_wildcard_is_tag(void);
+void Id_pair_w_rel_tag_obj_wildcard_is_tag(void);
+void Id_pair_w_wildcard_wildcard_is_tag(void);
+void Id_pair_w_rel_any_is_tag(void);
+void Id_pair_w_obj_any_is_tag(void);
+void Id_pair_w_rel_tag_obj_any_is_tag(void);
+void Id_pair_w_any_any_is_tag(void);
 void Id_id_w_override_is_tag(void);
 void Id_id_w_toggle_is_tag(void);
 void Id_pair_id_override_is_tag(void);
@@ -1122,6 +1130,9 @@ void Filter_filter_w_this_variable_name(void);
 void Filter_filter_w_src_var(void);
 void Filter_filter_w_first_var(void);
 void Filter_filter_w_second_var(void);
+void Filter_filter_w_src_var_from_name(void);
+void Filter_filter_w_first_first_var(void);
+void Filter_filter_w_second_second_var(void);
 void Filter_filter_w_0_source(void);
 void Filter_filter_w_0_target(void);
 void Filter_filter_2_terms_w_or(void);
@@ -2772,6 +2783,38 @@ bake_test_case Id_testcases[] = {
     {
         "pair_id_w_tag_property_w_obj_wildcard_is_tag",
         Id_pair_id_w_tag_property_w_obj_wildcard_is_tag
+    },
+    {
+        "pair_w_rel_wildcard_is_tag",
+        Id_pair_w_rel_wildcard_is_tag
+    },
+    {
+        "pair_w_obj_wildcard_is_tag",
+        Id_pair_w_obj_wildcard_is_tag
+    },
+    {
+        "pair_w_rel_tag_obj_wildcard_is_tag",
+        Id_pair_w_rel_tag_obj_wildcard_is_tag
+    },
+    {
+        "pair_w_wildcard_wildcard_is_tag",
+        Id_pair_w_wildcard_wildcard_is_tag
+    },
+    {
+        "pair_w_rel_any_is_tag",
+        Id_pair_w_rel_any_is_tag
+    },
+    {
+        "pair_w_obj_any_is_tag",
+        Id_pair_w_obj_any_is_tag
+    },
+    {
+        "pair_w_rel_tag_obj_any_is_tag",
+        Id_pair_w_rel_tag_obj_any_is_tag
+    },
+    {
+        "pair_w_any_any_is_tag",
+        Id_pair_w_any_any_is_tag
     },
     {
         "id_w_override_is_tag",
@@ -6973,6 +7016,18 @@ bake_test_case Filter_testcases[] = {
     {
         "filter_w_second_var",
         Filter_filter_w_second_var
+    },
+    {
+        "filter_w_src_var_from_name",
+        Filter_filter_w_src_var_from_name
+    },
+    {
+        "filter_w_first_first_var",
+        Filter_filter_w_first_first_var
+    },
+    {
+        "filter_w_second_second_var",
+        Filter_filter_w_second_second_var
     },
     {
         "filter_w_0_source",
@@ -13079,7 +13134,7 @@ static bake_test_suite suites[] = {
         "Id",
         NULL,
         NULL,
-        29,
+        37,
         Id_testcases
     },
     {
@@ -13268,7 +13323,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        301,
+        304,
         Filter_testcases
     },
     {

@@ -1258,7 +1258,7 @@ const char* plecs_parse_using_stmt(
     ecs_entity_t scope;
     if (len > 2 && !ecs_os_strcmp(&using_path[len - 2], ".*")) {
         using_path[len - 2] = '\0';
-        scope = ecs_lookup_fullpath(world, using_path);
+        scope = ecs_lookup(world, using_path);
         if (!scope) {
             ecs_parser_error(name, expr, ptr - expr,
                 "unresolved identifier '%s' in using statement", using_path);

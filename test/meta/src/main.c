@@ -876,6 +876,7 @@ void SerializeIterToRowJson_serialize_w_field_info_pair_w_0_target(void);
 void SerializeIterToRowJson_serialize_w_field_info_pair_w_not_tag(void);
 void SerializeIterToRowJson_serialize_w_field_info_pair_w_not_pair(void);
 void SerializeIterToRowJson_serialize_w_field_info_pair_w_not_component(void);
+void SerializeIterToRowJson_serialize_w_field_info_w_or(void);
 
 // Testsuite 'SerializeTypeInfoToJson'
 void SerializeTypeInfoToJson_bool(void);
@@ -918,6 +919,26 @@ void SerializeTypeInfoToJson_struct_nested(void);
 void SerializeTypeInfoToJson_struct_nested_2_lvls(void);
 void SerializeTypeInfoToJson_struct_nested_2_members(void);
 void SerializeTypeInfoToJson_struct_nested_3_members(void);
+
+// Testsuite 'SerializeQueryInfoToJson'
+void SerializeQueryInfoToJson_1_tag(void);
+void SerializeQueryInfoToJson_1_component(void);
+void SerializeQueryInfoToJson_1_pair(void);
+void SerializeQueryInfoToJson_1_pair_w_wildcard(void);
+void SerializeQueryInfoToJson_1_pair_w_any(void);
+void SerializeQueryInfoToJson_1_tag_fixed_src(void);
+void SerializeQueryInfoToJson_1_tag_var_src(void);
+void SerializeQueryInfoToJson_1_component_in(void);
+void SerializeQueryInfoToJson_1_component_inout(void);
+void SerializeQueryInfoToJson_1_component_out(void);
+void SerializeQueryInfoToJson_1_component_none(void);
+void SerializeQueryInfoToJson_1_tag_not(void);
+void SerializeQueryInfoToJson_2_tags_or(void);
+void SerializeQueryInfoToJson_1_tag_optional(void);
+void SerializeQueryInfoToJson_1_tag_self(void);
+void SerializeQueryInfoToJson_1_tag_self_dont_inherit(void);
+void SerializeQueryInfoToJson_1_tag_up(void);
+void SerializeQueryInfoToJson_1_tag_cascade(void);
 
 // Testsuite 'MetaUtils'
 void MetaUtils_struct_w_2_i32(void);
@@ -4537,6 +4558,10 @@ bake_test_case SerializeIterToRowJson_testcases[] = {
     {
         "serialize_w_field_info_pair_w_not_component",
         SerializeIterToRowJson_serialize_w_field_info_pair_w_not_component
+    },
+    {
+        "serialize_w_field_info_w_or",
+        SerializeIterToRowJson_serialize_w_field_info_w_or
     }
 };
 
@@ -4700,6 +4725,81 @@ bake_test_case SerializeTypeInfoToJson_testcases[] = {
     {
         "struct_nested_3_members",
         SerializeTypeInfoToJson_struct_nested_3_members
+    }
+};
+
+bake_test_case SerializeQueryInfoToJson_testcases[] = {
+    {
+        "1_tag",
+        SerializeQueryInfoToJson_1_tag
+    },
+    {
+        "1_component",
+        SerializeQueryInfoToJson_1_component
+    },
+    {
+        "1_pair",
+        SerializeQueryInfoToJson_1_pair
+    },
+    {
+        "1_pair_w_wildcard",
+        SerializeQueryInfoToJson_1_pair_w_wildcard
+    },
+    {
+        "1_pair_w_any",
+        SerializeQueryInfoToJson_1_pair_w_any
+    },
+    {
+        "1_tag_fixed_src",
+        SerializeQueryInfoToJson_1_tag_fixed_src
+    },
+    {
+        "1_tag_var_src",
+        SerializeQueryInfoToJson_1_tag_var_src
+    },
+    {
+        "1_component_in",
+        SerializeQueryInfoToJson_1_component_in
+    },
+    {
+        "1_component_inout",
+        SerializeQueryInfoToJson_1_component_inout
+    },
+    {
+        "1_component_out",
+        SerializeQueryInfoToJson_1_component_out
+    },
+    {
+        "1_component_none",
+        SerializeQueryInfoToJson_1_component_none
+    },
+    {
+        "1_tag_not",
+        SerializeQueryInfoToJson_1_tag_not
+    },
+    {
+        "2_tags_or",
+        SerializeQueryInfoToJson_2_tags_or
+    },
+    {
+        "1_tag_optional",
+        SerializeQueryInfoToJson_1_tag_optional
+    },
+    {
+        "1_tag_self",
+        SerializeQueryInfoToJson_1_tag_self
+    },
+    {
+        "1_tag_self_dont_inherit",
+        SerializeQueryInfoToJson_1_tag_self_dont_inherit
+    },
+    {
+        "1_tag_up",
+        SerializeQueryInfoToJson_1_tag_up
+    },
+    {
+        "1_tag_cascade",
+        SerializeQueryInfoToJson_1_tag_cascade
     }
 };
 
@@ -5716,7 +5816,7 @@ static bake_test_suite suites[] = {
         "SerializeIterToRowJson",
         NULL,
         NULL,
-        59,
+        60,
         SerializeIterToRowJson_testcases
     },
     {
@@ -5725,6 +5825,13 @@ static bake_test_suite suites[] = {
         NULL,
         40,
         SerializeTypeInfoToJson_testcases
+    },
+    {
+        "SerializeQueryInfoToJson",
+        NULL,
+        NULL,
+        18,
+        SerializeQueryInfoToJson_testcases
     },
     {
         "MetaUtils",
@@ -5764,5 +5871,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("meta", argc, argv, suites, 23);
+    return bake_test_run("meta", argc, argv, suites, 24);
 }

@@ -74,6 +74,10 @@ int flecs_term_id_finalize_flags(
         return -1;
     }
 
+    if (term_id->name && term_id->name[0] == '$' && term_id->name[1]) {
+        term_id->flags |= EcsIsVariable;
+    }
+
     if (!(term_id->flags & (EcsIsEntity|EcsIsVariable|EcsIsName))) {
         if (term_id->id || term_id->name) {
             if (term_id->id == EcsThis || 
@@ -285,7 +289,7 @@ int flecs_term_ids_finalize(
 
     /* If source is wildcard, term won't return any data */
     if ((src->flags & EcsIsVariable) && ecs_id_is_wildcard(src->id)) {
-        term->inout |= EcsInOutNone;
+        term->inout = EcsInOutNone;
     }
 
     return 0;
@@ -1257,7 +1261,9 @@ int ecs_filter_finalize(
              * as component value with type ecs_entity_t */
             if (ecs_id_is_tag(world, term->id)) {
                 filter_term = true;
-            } else if (ECS_PAIR_SECOND(term->id) == EcsWildcard) {
+            } else if ((ECS_PAIR_SECOND(term->id) == EcsWildcard) ||
+                       (ECS_PAIR_SECOND(term->id) == EcsAny)) 
+            {
                 /* If the second element of a pair is a wildcard and the first
                  * element is not a type, we can't know in advance what the
                  * type of the term is, so it can't provide data. */
@@ -1501,6 +1507,18 @@ void ecs_filter_fini(
     }
 }
 
+static
+void flecs_normalize_term_name(
+    ecs_term_id_t *ref) 
+{
+    if (ref->name && ref->name[0] == '$' && ref->name[1]) {
+        ecs_assert(ref->flags & EcsIsVariable, ECS_INTERNAL_ERROR, NULL);
+        const char *old = ref->name;
+        ref->name = ecs_os_strdup(&old[1]);
+        ecs_os_free(ECS_CONST_CAST(char*, old)); /* safe, filter owns name */
+    }
+}
+
 ecs_filter_t* ecs_filter_init(
     ecs_world_t *world,
     const ecs_filter_desc_t *desc)    
@@ -1673,7 +1691,12 @@ ecs_filter_t* ecs_filter_init(
 
     /* Any allocated resources remaining in terms are now owned by filter */
     for (i = 0; i < f->term_count; i ++) {
-        f->terms[i].move = false;
+        ecs_term_t *term = &f->terms[i];
+        /* Post process term names in case they were used to create variables */
+        flecs_normalize_term_name(&term->first);
+        flecs_normalize_term_name(&term->second);
+        flecs_normalize_term_name(&term->src);
+        term->move = false;
     }
 
     f->variable_names[0] = NULL;

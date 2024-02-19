@@ -184,7 +184,20 @@ bool flecs_json_serialize_iter_result_is_set(
 bool flecs_json_skip_variable(
     const char *name);
 
-int json_ser_type(
+void flecs_json_serialize_field(
+    const ecs_world_t *world,
+    const ecs_iter_t *it,
+    const ecs_filter_t *q,
+    int field,
+    ecs_strbuf_t *buf,
+    ecs_json_ser_ctx_t *ctx);
+
+void flecs_json_serialize_query(
+    const ecs_world_t *world,
+    const ecs_filter_t *q,
+    ecs_strbuf_t *buf);
+
+int flecs_json_ser_type(
     const ecs_world_t *world,
     const ecs_vec_t *ser, 
     const void *base, 

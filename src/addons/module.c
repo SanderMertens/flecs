@@ -43,7 +43,7 @@ ecs_entity_t ecs_import(
     const char *old_name_prefix = world->info.name_prefix;
 
     char *path = ecs_module_path_from_c(module_name);
-    ecs_entity_t e = ecs_lookup_fullpath(world, path);
+    ecs_entity_t e = ecs_lookup(world, path);
     ecs_os_free(path);
     
     if (!e) {
@@ -54,7 +54,7 @@ ecs_entity_t ecs_import(
         module(world);
 
         /* Lookup module entity (must be registered by module) */
-        e = ecs_lookup_fullpath(world, module_name);
+        e = ecs_lookup(world, module_name);
         ecs_check(e != 0, ECS_MODULE_UNDEFINED, module_name);
 
         ecs_log_pop();

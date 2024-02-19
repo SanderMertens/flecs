@@ -1867,7 +1867,7 @@ void DeserializeFromJson_ser_deser_new_world_1_named_entity_w_tag(void) {
     test_str(r, "");
     ecs_os_free(json);
 
-    e = ecs_lookup_fullpath(world, "foo");
+    e = ecs_lookup(world, "foo");
     test_assert(e != 0);
     test_assert(ecs_is_alive(world, Tag));
     test_assert(ecs_has(world, e, Tag));
@@ -1896,7 +1896,7 @@ void DeserializeFromJson_ser_deser_new_world_1_named_entity_w_component(void) {
     test_str(r, "");
     ecs_os_free(json);
 
-    e = ecs_lookup_fullpath(world, "foo");
+    e = ecs_lookup(world, "foo");
     test_assert(e != 0);
     test_assert(ecs_is_alive(world, e));
     test_assert(ecs_is_alive(world, ecs_id(Position)));
@@ -1944,7 +1944,7 @@ void DeserializeFromJson_ser_deser_new_world_1_named_entity_w_component_meta(voi
     test_str(r, "");
     ecs_os_free(json);
 
-    e = ecs_lookup_fullpath(world, "foo");
+    e = ecs_lookup(world, "foo");
     test_assert(e != 0);
     test_assert(ecs_is_alive(world, e));
     test_assert(ecs_is_alive(world, ecs_id(Position)));
@@ -2095,7 +2095,7 @@ void DeserializeFromJson_ser_deser_new_world_1_named_entity_w_tag_serialize_all(
     test_str(r, "");
     ecs_os_free(json);
 
-    e = ecs_lookup_fullpath(world, "foo");
+    e = ecs_lookup(world, "foo");
     test_assert(e != 0);
     test_assert(ecs_is_alive(world, Tag));
     test_assert(ecs_has(world, e, Tag));
@@ -2127,7 +2127,7 @@ void DeserializeFromJson_ser_deser_new_world_1_named_entity_w_component_serializ
     test_str(r, "");
     ecs_os_free(json);
 
-    e = ecs_lookup_fullpath(world, "foo");
+    e = ecs_lookup(world, "foo");
     test_assert(e != 0);
     test_assert(ecs_is_alive(world, e));
     test_assert(ecs_is_alive(world, ecs_id(Position)));
@@ -2178,7 +2178,7 @@ void DeserializeFromJson_ser_deser_new_world_1_named_entity_w_component_meta_ser
     test_str(r, "");
     ecs_os_free(json);
 
-    e = ecs_lookup_fullpath(world, "foo");
+    e = ecs_lookup(world, "foo");
     test_assert(e != 0);
     test_assert(ecs_is_alive(world, e));
     test_assert(ecs_is_alive(world, ecs_id(Position)));
@@ -2232,9 +2232,9 @@ void DeserializeFromJson_ser_deser_new_world_3_entities_w_component_meta(void) {
     test_str(r, "");
     ecs_os_free(json);
 
-    e1 = ecs_lookup_fullpath(world, "e1");
-    e2 = ecs_lookup_fullpath(world, "e2");
-    e3 = ecs_lookup_fullpath(world, "e3");
+    e1 = ecs_lookup(world, "e1");
+    e2 = ecs_lookup(world, "e2");
+    e3 = ecs_lookup(world, "e3");
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -2325,9 +2325,9 @@ void DeserializeFromJson_ser_deser_new_world_3_entities_w_2_components_meta(void
     test_str(r, "");
     ecs_os_free(json);
 
-    e1 = ecs_lookup_fullpath(world, "e1");
-    e2 = ecs_lookup_fullpath(world, "e2");
-    e3 = ecs_lookup_fullpath(world, "e3");
+    e1 = ecs_lookup(world, "e1");
+    e2 = ecs_lookup(world, "e2");
+    e3 = ecs_lookup(world, "e3");
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -2427,10 +2427,10 @@ void DeserializeFromJson_ser_deser_new_world_4_entities_2_tables_w_component_met
     test_str(r, "");
     ecs_os_free(json);
 
-    e1 = ecs_lookup_fullpath(world, "e1");
-    e2 = ecs_lookup_fullpath(world, "e2");
-    e3 = ecs_lookup_fullpath(world, "e3");
-    e4 = ecs_lookup_fullpath(world, "e4");
+    e1 = ecs_lookup(world, "e1");
+    e2 = ecs_lookup(world, "e2");
+    e3 = ecs_lookup(world, "e3");
+    e4 = ecs_lookup(world, "e4");
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -2522,9 +2522,9 @@ void DeserializeFromJson_ser_deser_new_world_component_w_anon_entity_member(void
     test_str(r, "");
     ecs_os_free(json);
 
-    e1 = ecs_lookup_fullpath(world, "e1");
-    e2 = ecs_lookup_fullpath(world, "e2");
-    e3 = ecs_lookup_fullpath(world, "e3");
+    e1 = ecs_lookup(world, "e1");
+    e2 = ecs_lookup(world, "e2");
+    e3 = ecs_lookup(world, "e3");
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -2590,9 +2590,9 @@ void DeserializeFromJson_ser_deser_new_world_component_w_named_entity_member(voi
     test_str(r, "");
     ecs_os_free(json);
 
-    e1 = ecs_lookup_fullpath(world, "e1");
-    e2 = ecs_lookup_fullpath(world, "e2");
-    e3 = ecs_lookup_fullpath(world, "e3");
+    e1 = ecs_lookup(world, "e1");
+    e2 = ecs_lookup(world, "e2");
+    e3 = ecs_lookup(world, "e3");
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -2658,9 +2658,9 @@ void DeserializeFromJson_ser_deser_new_world_component_w_anon_and_named_entity_m
     test_str(r, "");
     ecs_os_free(json);
 
-    e1 = ecs_lookup_fullpath(world, "e1");
-    e2 = ecs_lookup_fullpath(world, "e2");
-    e3 = ecs_lookup_fullpath(world, "e3");
+    e1 = ecs_lookup(world, "e1");
+    e2 = ecs_lookup(world, "e2");
+    e3 = ecs_lookup(world, "e3");
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -2703,7 +2703,7 @@ void DeserializeFromJson_ser_deser_new_world_component_w_anon_entity_with_self(v
     test_str(r, "");
     ecs_os_free(json);
 
-    e2 = ecs_lookup_fullpath(world, "e2");
+    e2 = ecs_lookup(world, "e2");
     test_assert(e2 != 0);
 
     const ecs_type_t *type = ecs_get_type(world, e2);
@@ -2737,10 +2737,10 @@ void DeserializeFromJson_ser_deser_new_world_component_w_named_entity_with_self(
     test_str(r, "");
     ecs_os_free(json);
 
-    e1 = ecs_lookup_fullpath(world, "e1");
+    e1 = ecs_lookup(world, "e1");
     test_assert(e1 != 0);
 
-    e2 = ecs_lookup_fullpath(world, "e2");
+    e2 = ecs_lookup(world, "e2");
     test_assert(e2 != 0);
 
     test_assert(ecs_has_id(world, e2, e1));
@@ -2777,7 +2777,7 @@ void DeserializeFromJson_ser_deser_new_world_2_entities_w_anon_parent(void) {
     test_str(r, "");
     ecs_os_free(json);
 
-    foo = ecs_lookup_fullpath(world, "foo");
+    foo = ecs_lookup(world, "foo");
     test_assert(foo != 0);
 
     e1 = ecs_get_target(world, foo, TagA, 0);
@@ -2822,15 +2822,15 @@ void DeserializeFromJson_ser_deser_new_world_2_entities_w_named_parent(void) {
     test_str(r, "");
     ecs_os_free(json);
 
-    parent = ecs_lookup_fullpath(world, "parent");
+    parent = ecs_lookup(world, "parent");
     test_assert(parent != 0);
     test_str(ecs_get_name(world, parent), "parent");
 
-    e1 = ecs_lookup_fullpath(world, "parent.e1");
+    e1 = ecs_lookup(world, "parent.e1");
     test_assert(e1 != 0);
     test_str(ecs_get_name(world, e1), "e1");
 
-    e2 = ecs_lookup_fullpath(world, "parent.e2");
+    e2 = ecs_lookup(world, "parent.e2");
     test_assert(e2 != 0);
     test_str(ecs_get_name(world, e2), "e2");
 
@@ -2871,7 +2871,7 @@ void DeserializeFromJson_ser_deser_new_world_2_entities_w_anon_parent_w_cycle(vo
     test_str(r, "");
     ecs_os_free(json);
 
-    foo = ecs_lookup_fullpath(world, "foo");
+    foo = ecs_lookup(world, "foo");
     test_assert(foo != 0);
 
     e1 = ecs_get_target(world, foo, TagA, 0);
@@ -2923,15 +2923,15 @@ void DeserializeFromJson_ser_deser_new_world_2_entities_w_named_parent_w_cycle(v
     test_str(r, "");
     ecs_os_free(json);
 
-    parent = ecs_lookup_fullpath(world, "parent");
+    parent = ecs_lookup(world, "parent");
     test_assert(parent != 0);
     test_str(ecs_get_name(world, parent), "parent");
 
-    e1 = ecs_lookup_fullpath(world, "parent.e1");
+    e1 = ecs_lookup(world, "parent.e1");
     test_assert(e1 != 0);
     test_str(ecs_get_name(world, e1), "e1");
 
-    e2 = ecs_lookup_fullpath(world, "parent.e2");
+    e2 = ecs_lookup(world, "parent.e2");
     test_assert(e2 != 0);
     test_str(ecs_get_name(world, e2), "e2");
 
@@ -3048,8 +3048,8 @@ void DeserializeFromJson_ser_deser_restore_1_entity_to_empty_table(void) {
     test_str(r, "");
     ecs_os_free(json);
 
-    test_assert(e1 == ecs_lookup_fullpath(world, "e1"));
-    test_assert(e2 == ecs_lookup_fullpath(world, "e2"));
+    test_assert(e1 == ecs_lookup(world, "e1"));
+    test_assert(e2 == ecs_lookup(world, "e2"));
 
     test_assert(ecs_has(world, e1, Position));
     test_assert(ecs_has(world, e2, Position));
@@ -3116,8 +3116,8 @@ void DeserializeFromJson_ser_deser_restore_1_entity_to_non_empty_table(void) {
     test_str(r, "");
     ecs_os_free(json);
 
-    test_assert(e1 == ecs_lookup_fullpath(world, "e1"));
-    test_assert(e2 == ecs_lookup_fullpath(world, "e2"));
+    test_assert(e1 == ecs_lookup(world, "e1"));
+    test_assert(e2 == ecs_lookup(world, "e2"));
 
     test_assert(ecs_has(world, e1, Position));
     test_assert(ecs_has(world, e2, Position));
@@ -3309,7 +3309,7 @@ void DeserializeFromJson_ser_deser_restore_1_deleted_entity_to_empty_table(void)
     test_str(r, "");
     ecs_os_free(json);
 
-    e1 = ecs_lookup_fullpath(world, "e1");
+    e1 = ecs_lookup(world, "e1");
     test_assert(e1 != 0);
     test_assert(ecs_has(world, e1, Position));
 
@@ -3349,7 +3349,7 @@ void DeserializeFromJson_ser_deser_restore_1_deleted_entity_to_non_empty_table(v
     ecs_os_free(json);
 
 
-    e1 = ecs_lookup_fullpath(world, "e1");
+    e1 = ecs_lookup(world, "e1");
     test_assert(e1 != 0);
     test_assert(ecs_has(world, e1, Position));
 
@@ -3502,7 +3502,7 @@ void DeserializeFromJson_ser_deser_restore_1_deleted_w_ref(void) {
     test_str(r, "");
     ecs_os_free(json);
 
-    e1 = ecs_lookup_fullpath(world, "e1");
+    e1 = ecs_lookup(world, "e1");
     test_assert(e1 != 0);
     test_assert(ecs_get_target(world, e2, TagA, 0) == e1);
 
@@ -3617,7 +3617,7 @@ void DeserializeFromJson_ser_deser_restore_1_deleted_w_cycle_ref(void) {
     test_str(r, "");
     ecs_os_free(json);
 
-    e1 = ecs_lookup_fullpath(world, "e1");
+    e1 = ecs_lookup(world, "e1");
     test_assert(e1 != 0);
     test_assert(ecs_get_target(world, e2, TagA, 0) == e1);
     test_assert(ecs_get_target(world, e1, TagA, 0) == e2);
@@ -3740,7 +3740,7 @@ void DeserializeFromJson_ser_deser_restore_1_deleted_w_recycled(void) {
     test_str(r, "");
     ecs_os_free(json);
 
-    e1 = ecs_lookup_fullpath(world, "e1");
+    e1 = ecs_lookup(world, "e1");
     test_assert(e1 != 0);
     test_assert(e1 != e3);
     test_assert(ecs_get_target(world, e2, TagA, 0) == e1);
@@ -4027,9 +4027,9 @@ void DeserializeFromJson_ser_deser_3_entities_after_remove_all(void) {
     test_str(r, "");
     ecs_os_free(json);
 
-    e1 = ecs_lookup_fullpath(world, "e1");
-    e2 = ecs_lookup_fullpath(world, "e2");
-    e3 = ecs_lookup_fullpath(world, "e3");
+    e1 = ecs_lookup(world, "e1");
+    e2 = ecs_lookup(world, "e2");
+    e3 = ecs_lookup(world, "e3");
 
     test_assert(ecs_is_alive(world, e1));
     test_assert(ecs_is_alive(world, e2));
@@ -4091,9 +4091,9 @@ void DeserializeFromJson_ser_deser_3_entities_after_delete_with(void) {
     test_str(r, "");
     ecs_os_free(json);
 
-    e1 = ecs_lookup_fullpath(world, "e1");
-    e2 = ecs_lookup_fullpath(world, "e2");
-    e3 = ecs_lookup_fullpath(world, "e3");
+    e1 = ecs_lookup(world, "e1");
+    e2 = ecs_lookup(world, "e2");
+    e3 = ecs_lookup(world, "e3");
 
     test_assert(ecs_is_alive(world, e1));
     test_assert(ecs_is_alive(world, e2));
@@ -4194,10 +4194,10 @@ void DeserializeFromJson_ser_deser_w_hooks(void) {
     test_str(r, "");
     ecs_os_free(json);
 
-    test_assert(ecs_lookup_fullpath(world, "e1") == e1);
-    test_assert(ecs_lookup_fullpath(world, "e2") == e2);
-    test_assert(ecs_lookup_fullpath(world, "e3") == e3);
-    e4 = ecs_lookup_fullpath(world, "e4");
+    test_assert(ecs_lookup(world, "e1") == e1);
+    test_assert(ecs_lookup(world, "e2") == e2);
+    test_assert(ecs_lookup(world, "e3") == e3);
+    e4 = ecs_lookup(world, "e4");
     test_assert(e4 != 0);
 
     test_assert(ecs_is_alive(world, e1));
@@ -4398,12 +4398,12 @@ void DeserializeFromJson_ser_deser_different_component_order(void) {
         test_str(ecs_get_name(world, ecs_id(Velocity)), "Velocity");
         test_str(ecs_get_name(world, ecs_id(Mass)), "Mass");
 
-        ecs_entity_t e1 = ecs_lookup_fullpath(world, "e1");
-        ecs_entity_t e2 = ecs_lookup_fullpath(world, "e2");
-        ecs_entity_t e3 = ecs_lookup_fullpath(world, "e3");
-        ecs_entity_t e4 = ecs_lookup_fullpath(world, "e4");
-        ecs_entity_t e5 = ecs_lookup_fullpath(world, "e5");
-        ecs_entity_t e6 = ecs_lookup_fullpath(world, "e6");
+        ecs_entity_t e1 = ecs_lookup(world, "e1");
+        ecs_entity_t e2 = ecs_lookup(world, "e2");
+        ecs_entity_t e3 = ecs_lookup(world, "e3");
+        ecs_entity_t e4 = ecs_lookup(world, "e4");
+        ecs_entity_t e5 = ecs_lookup(world, "e5");
+        ecs_entity_t e6 = ecs_lookup(world, "e6");
 
         test_assert(ecs_is_alive(world, e1));
         test_assert(ecs_is_alive(world, e2));
@@ -4637,12 +4637,12 @@ void DeserializeFromJson_ser_deser_no_reflection_data(void) {
         test_str(ecs_get_name(world, ecs_id(Velocity)), "Velocity");
         test_str(ecs_get_name(world, ecs_id(Mass)), "Mass");
 
-        ecs_entity_t e1 = ecs_lookup_fullpath(world, "e1");
-        ecs_entity_t e2 = ecs_lookup_fullpath(world, "e2");
-        ecs_entity_t e3 = ecs_lookup_fullpath(world, "e3");
-        ecs_entity_t e4 = ecs_lookup_fullpath(world, "e4");
-        ecs_entity_t e5 = ecs_lookup_fullpath(world, "e5");
-        ecs_entity_t e6 = ecs_lookup_fullpath(world, "e6");
+        ecs_entity_t e1 = ecs_lookup(world, "e1");
+        ecs_entity_t e2 = ecs_lookup(world, "e2");
+        ecs_entity_t e3 = ecs_lookup(world, "e3");
+        ecs_entity_t e4 = ecs_lookup(world, "e4");
+        ecs_entity_t e5 = ecs_lookup(world, "e5");
+        ecs_entity_t e6 = ecs_lookup(world, "e6");
 
         test_assert(ecs_is_alive(world, e1));
         test_assert(ecs_is_alive(world, e2));
@@ -4966,12 +4966,12 @@ void DeserializeFromJson_ser_deser_value_for_tag(void) {
         test_str(ecs_get_name(world, ecs_id(Velocity)), "Velocity");
         test_str(ecs_get_name(world, ecs_id(Mass)), "Mass");
 
-        ecs_entity_t e1 = ecs_lookup_fullpath(world, "e1");
-        ecs_entity_t e2 = ecs_lookup_fullpath(world, "e2");
-        ecs_entity_t e3 = ecs_lookup_fullpath(world, "e3");
-        ecs_entity_t e4 = ecs_lookup_fullpath(world, "e4");
-        ecs_entity_t e5 = ecs_lookup_fullpath(world, "e5");
-        ecs_entity_t e6 = ecs_lookup_fullpath(world, "e6");
+        ecs_entity_t e1 = ecs_lookup(world, "e1");
+        ecs_entity_t e2 = ecs_lookup(world, "e2");
+        ecs_entity_t e3 = ecs_lookup(world, "e3");
+        ecs_entity_t e4 = ecs_lookup(world, "e4");
+        ecs_entity_t e5 = ecs_lookup(world, "e5");
+        ecs_entity_t e6 = ecs_lookup(world, "e6");
 
         test_assert(ecs_is_alive(world, e1));
         test_assert(ecs_is_alive(world, e2));
@@ -5285,7 +5285,7 @@ void DeserializeFromJson_ser_deser_value_for_non_existing(void) {
         test_str(r, "");
         ecs_os_free(json);
 
-        ecs_entity_t ecs_id(Velocity) = ecs_lookup_fullpath(
+        ecs_entity_t ecs_id(Velocity) = ecs_lookup(
             world, "module.Velocity");
         test_assert(ecs_id(Velocity) != 0);
 
@@ -5297,12 +5297,12 @@ void DeserializeFromJson_ser_deser_value_for_non_existing(void) {
         test_str(ecs_get_name(world, ecs_id(Velocity)), "Velocity");
         test_str(ecs_get_name(world, ecs_id(Mass)), "Mass");
 
-        ecs_entity_t e1 = ecs_lookup_fullpath(world, "e1");
-        ecs_entity_t e2 = ecs_lookup_fullpath(world, "e2");
-        ecs_entity_t e3 = ecs_lookup_fullpath(world, "e3");
-        ecs_entity_t e4 = ecs_lookup_fullpath(world, "e4");
-        ecs_entity_t e5 = ecs_lookup_fullpath(world, "e5");
-        ecs_entity_t e6 = ecs_lookup_fullpath(world, "e6");
+        ecs_entity_t e1 = ecs_lookup(world, "e1");
+        ecs_entity_t e2 = ecs_lookup(world, "e2");
+        ecs_entity_t e3 = ecs_lookup(world, "e3");
+        ecs_entity_t e4 = ecs_lookup(world, "e4");
+        ecs_entity_t e5 = ecs_lookup(world, "e5");
+        ecs_entity_t e6 = ecs_lookup(world, "e6");
 
         test_assert(ecs_is_alive(world, e1));
         test_assert(ecs_is_alive(world, e2));
@@ -5574,10 +5574,10 @@ void ser_deser_cpp_name_test(
         test_str(r, "");
         ecs_os_free(json);
 
-        ecs_entity_t t = ecs_lookup_fullpath(world, typename);
+        ecs_entity_t t = ecs_lookup(world, typename);
         test_assert(t != 0);
 
-        ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+        ecs_entity_t e = ecs_lookup(world, "e");
         test_assert(e != 0);
 
         ecs_entity_t c = ecs_lookup_child(world, t, "c");
@@ -5679,7 +5679,7 @@ void DeserializeFromJson_ser_deser_w_alerts(void) {
         test_str(r, "");
         ecs_os_free(json);
 
-        ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+        ecs_entity_t e = ecs_lookup(world, "e");
         test_assert(e != 0);
 
         test_assert(ecs_has(world, e, Foo));
@@ -5715,7 +5715,7 @@ void DeserializeFromJson_ser_deser_struct(void) {
         test_str(r, "");
         ecs_os_free(json);
 
-        ecs_entity_t t = ecs_lookup_fullpath(world, "Position");
+        ecs_entity_t t = ecs_lookup(world, "Position");
         test_assert(t != 0);
 
         const EcsComponent *c = ecs_get(world, t, EcsComponent);
@@ -5783,7 +5783,7 @@ void DeserializeFromJson_ser_deser_w_alerts_w_progress(void) {
         test_str(r, "");
         ecs_os_free(json);
 
-        ecs_entity_t e = ecs_lookup_fullpath(world, "e");
+        ecs_entity_t e = ecs_lookup(world, "e");
         test_assert(e != 0);
 
         test_assert(ecs_has(world, e, Foo));

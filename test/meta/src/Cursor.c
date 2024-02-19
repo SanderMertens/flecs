@@ -4557,10 +4557,10 @@ void Cursor_get_member_id(void) {
     ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
     test_ok( ecs_meta_push(&cur) );
     test_assert(ecs_meta_get_member_id(&cur) != 0);
-    test_assert(ecs_meta_get_member_id(&cur) == ecs_lookup_fullpath(world, "T.x"));
+    test_assert(ecs_meta_get_member_id(&cur) == ecs_lookup(world, "T.x"));
     test_ok( ecs_meta_next(&cur) );
     test_assert(ecs_meta_get_member_id(&cur) != 0);
-    test_assert(ecs_meta_get_member_id(&cur) == ecs_lookup_fullpath(world, "T.y"));
+    test_assert(ecs_meta_get_member_id(&cur) == ecs_lookup(world, "T.y"));
     test_ok( ecs_meta_pop(&cur) );
 
     ecs_fini(world);

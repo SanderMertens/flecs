@@ -6226,18 +6226,21 @@ void ecs_set_alias(
     ecs_entity_t entity,
     const char *alias);
 
-/** Lookup an entity by name.
- * Returns an entity that matches the specified name. Only looks for entities in
- * the current scope (root if no scope is provided).
+/** Lookup an entity by it's path.
+ * This operation is equivalent to calling:
+ *
+ * @code
+ * ecs_lookup_path_w_sep(world, 0, path, ".", NULL, true);
+ * @endcode
  *
  * @param world The world.
- * @param name The entity name.
- * @return The entity with the specified name, or 0 if no entity was found.
+ * @param path The entity path.
+ * @return The entity with the specified path, or 0 if no entity was found.
  */
 FLECS_API
 ecs_entity_t ecs_lookup(
     const ecs_world_t *world,
-    const char *name);
+    const char *path);
 
 /** Lookup a child entity by name.
  * Returns an entity that matches the specified name. Only looks for entities in
@@ -9141,8 +9144,9 @@ int ecs_value_move_ctor(
 #define ecs_lookup_path(world, parent, path)\
     ecs_lookup_path_w_sep(world, parent, path, ".", NULL, true)
 
+/* Deprecated: use ecs_lookup instead */
 #define ecs_lookup_fullpath(world, path)\
-    ecs_lookup_path_w_sep(world, 0, path, ".", NULL, true)
+    ecs_lookup(world, path)
 
 #define ecs_get_path(world, parent, child)\
     ecs_get_path_w_sep(world, parent, child, ".", NULL)
@@ -12071,7 +12075,7 @@ ecs_entity_t ecs_metric_init(
  *
  * @code
  * ecs_metric(world, {
- *   .member = ecs_lookup_fullpath(world, "Position.x")
+ *   .member = ecs_lookup(world, "Position.x")
  *   .kind = EcsGauge
  * });
  * @endcode
@@ -12742,7 +12746,7 @@ typedef struct ecs_from_json_desc_t {
     const char *expr; /**< Full expression (used for logging) */
 
     /** Callback that allows for specifying a custom lookup function. The
-     * default behavior uses ecs_lookup_fullpath() */
+     * default behavior uses ecs_lookup() */
     ecs_entity_t (*lookup_action)(
         const ecs_world_t*,
         const char *value,
@@ -12992,6 +12996,7 @@ typedef struct ecs_iter_to_json_desc_t {
     bool serialize_table;           /**< Serialize entire table vs. matched components */
     bool serialize_rows;            /**< Use row-based serialization, with entities in separate elements */
     bool serialize_field_info;      /**< Serialize metadata for fields returned by query */
+    bool serialize_query_info;      /**< Serialize query terms */
     bool dont_serialize_results;    /**< If true, query won't be evaluated */
 } ecs_iter_to_json_desc_t;
 
@@ -12999,7 +13004,7 @@ typedef struct ecs_iter_to_json_desc_t {
     .serialize_term_ids =        true,  \
     .serialize_term_labels =     false, \
     .serialize_ids =             true,  \
-    .serialize_id_labels =       false,  \
+    .serialize_id_labels =       false, \
     .serialize_sources =         true,  \
     .serialize_variables =       true,  \
     .serialize_is_set =          true,  \
@@ -13013,10 +13018,11 @@ typedef struct ecs_iter_to_json_desc_t {
     .serialize_colors =          false, \
     .measure_eval_duration =     false, \
     .serialize_type_info =       false, \
-    .serialize_table =           false,  \
-    .serialize_rows =            false,  \
-    .serialize_field_info =      false,  \
-    .dont_serialize_results =    false,  \
+    .serialize_table =           false, \
+    .serialize_rows =            false, \
+    .serialize_field_info =      false, \
+    .serialize_query_info =      false, \
+    .dont_serialize_results =    false, \
 }
 
 /** Serialize iterator into JSON string.
@@ -14004,7 +14010,7 @@ typedef struct ecs_meta_cursor_t {
     bool valid;
     bool is_primitive_scope;  /**< If in root scope, this allows for a push for primitive types */
 
-    /* Custom entity lookup action for overriding default ecs_lookup_fullpath */
+    /* Custom entity lookup action for overriding default ecs_lookup */
     ecs_entity_t (*lookup_action)(const ecs_world_t*, const char*, void*);
     void *lookup_ctx;
 } ecs_meta_cursor_t;

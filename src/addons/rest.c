@@ -166,7 +166,7 @@ void flecs_rest_parse_json_ser_entity_params(
     char *rel = NULL;
     flecs_rest_string_param(req, "refs", &rel);
     if (rel) {
-        desc->serialize_refs = ecs_lookup_fullpath(world, rel);
+        desc->serialize_refs = ecs_lookup(world, rel);
     }
 }
 
@@ -192,6 +192,7 @@ void flecs_rest_parse_json_ser_iter_params(
     flecs_rest_bool_param(req, "duration", &desc->measure_eval_duration);
     flecs_rest_bool_param(req, "type_info", &desc->serialize_type_info);
     flecs_rest_bool_param(req, "field_info", &desc->serialize_field_info);
+    flecs_rest_bool_param(req, "query_info", &desc->serialize_query_info);
     flecs_rest_bool_param(req, "table", &desc->serialize_table);
     flecs_rest_bool_param(req, "rows", &desc->serialize_rows);
     bool results = true;
@@ -411,7 +412,7 @@ bool flecs_rest_reply_existing_query(
     ecs_http_reply_t *reply,
     const char *name)
 {
-    ecs_entity_t q = ecs_lookup_fullpath(world, name);
+    ecs_entity_t q = ecs_lookup(world, name);
     if (!q) {
         flecs_reply_error(reply, "unresolved identifier '%s'", name);
         reply->code = 404;

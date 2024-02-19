@@ -2811,7 +2811,7 @@ void SingleThreadStaging_lookup_after_stage_count_change(void) {
     ecs_set_stage_count(world, 2);
 
     /* Make sure we can still lookup entities from flecs.core */
-    test_assert(ecs_lookup_fullpath(world, "$") != 0);
+    test_assert(ecs_lookup(world, "$") != 0);
 
     ecs_fini(world);
 }
@@ -2823,15 +2823,15 @@ void SingleThreadStaging_lookup_w_scope_after_stage_count_change(void) {
     ecs_entity_t child = ecs_new_entity(world, "child");
     ecs_add_pair(world, child, EcsChildOf, parent);
 
-    test_assert(ecs_lookup_fullpath(world, "parent.child") != 0);
+    test_assert(ecs_lookup(world, "parent.child") != 0);
     ecs_set_scope(world, parent);
-    test_assert(ecs_lookup_fullpath(world, "parent.child") != 0);
-    test_assert(ecs_lookup_fullpath(world, "child") != 0);
+    test_assert(ecs_lookup(world, "parent.child") != 0);
+    test_assert(ecs_lookup(world, "child") != 0);
 
     ecs_set_stage_count(world, 2);
 
-    test_assert(ecs_lookup_fullpath(world, "parent.child") != 0);
-    test_assert(ecs_lookup_fullpath(world, "child") != 0);
+    test_assert(ecs_lookup(world, "parent.child") != 0);
+    test_assert(ecs_lookup(world, "child") != 0);
 
     ecs_fini(world);
 }

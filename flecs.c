@@ -2175,7 +2175,6 @@ void flecs_bootstrap(
     ecs_ensure(world, name);\
     ecs_add_id(world, name, EcsFinal);\
     ecs_add_pair(world, name, EcsChildOf, ecs_get_scope(world));\
-    ecs_set(world, name, EcsComponent, {.size = 0});\
     ecs_set_name(world, name, (const char*)&#name[ecs_os_strlen(world->info.name_prefix)]);\
     ecs_set_symbol(world, name, #name)
 
@@ -3133,7 +3132,7 @@ void flecs_bootstrap_entity(
     ecs_assert(ecs_get_name(world, id) != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (!parent || parent == EcsFlecsCore) {
-        ecs_assert(ecs_lookup_fullpath(world, name) == id, 
+        ecs_assert(ecs_lookup(world, name) == id, 
             ECS_INTERNAL_ERROR, NULL);
     }
 }
@@ -9546,32 +9545,9 @@ error:
 
 ecs_entity_t ecs_lookup(
     const ecs_world_t *world,
-    const char *name)
+    const char *path)
 {   
-    if (!name) {
-        return 0;
-    }
-
-    ecs_check(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    world = ecs_get_world(world);
-
-    ecs_entity_t e = flecs_get_builtin(name);
-    if (e) {
-        return e;
-    }
-
-    if (flecs_name_is_id(name)) {
-        return flecs_name_to_id(world, name);
-    }
-
-    e = flecs_name_index_find(&world->aliases, name, 0, 0);
-    if (e) {
-        return e;
-    }    
-    
-    return ecs_lookup_child(world, 0, name);
-error:
-    return 0;
+    return ecs_lookup_path_w_sep(world, 0, path, ".", NULL, true);
 }
 
 ecs_entity_t ecs_lookup_symbol(
@@ -9994,6 +9970,10 @@ int flecs_term_id_finalize_flags(
         return -1;
     }
 
+    if (term_id->name && term_id->name[0] == '$' && term_id->name[1]) {
+        term_id->flags |= EcsIsVariable;
+    }
+
     if (!(term_id->flags & (EcsIsEntity|EcsIsVariable|EcsIsName))) {
         if (term_id->id || term_id->name) {
             if (term_id->id == EcsThis || 
@@ -10205,7 +10185,7 @@ int flecs_term_ids_finalize(
 
     /* If source is wildcard, term won't return any data */
     if ((src->flags & EcsIsVariable) && ecs_id_is_wildcard(src->id)) {
-        term->inout |= EcsInOutNone;
+        term->inout = EcsInOutNone;
     }
 
     return 0;
@@ -11177,7 +11157,9 @@ int ecs_filter_finalize(
              * as component value with type ecs_entity_t */
             if (ecs_id_is_tag(world, term->id)) {
                 filter_term = true;
-            } else if (ECS_PAIR_SECOND(term->id) == EcsWildcard) {
+            } else if ((ECS_PAIR_SECOND(term->id) == EcsWildcard) ||
+                       (ECS_PAIR_SECOND(term->id) == EcsAny)) 
+            {
                 /* If the second element of a pair is a wildcard and the first
                  * element is not a type, we can't know in advance what the
                  * type of the term is, so it can't provide data. */
@@ -11421,6 +11403,18 @@ void ecs_filter_fini(
     }
 }
 
+static
+void flecs_normalize_term_name(
+    ecs_term_id_t *ref) 
+{
+    if (ref->name && ref->name[0] == '$' && ref->name[1]) {
+        ecs_assert(ref->flags & EcsIsVariable, ECS_INTERNAL_ERROR, NULL);
+        const char *old = ref->name;
+        ref->name = ecs_os_strdup(&old[1]);
+        ecs_os_free(ECS_CONST_CAST(char*, old)); /* safe, filter owns name */
+    }
+}
+
 ecs_filter_t* ecs_filter_init(
     ecs_world_t *world,
     const ecs_filter_desc_t *desc)    
@@ -11593,7 +11587,12 @@ ecs_filter_t* ecs_filter_init(
 
     /* Any allocated resources remaining in terms are now owned by filter */
     for (i = 0; i < f->term_count; i ++) {
-        f->terms[i].move = false;
+        ecs_term_t *term = &f->terms[i];
+        /* Post process term names in case they were used to create variables */
+        flecs_normalize_term_name(&term->first);
+        flecs_normalize_term_name(&term->second);
+        flecs_normalize_term_name(&term->src);
+        term->move = false;
     }
 
     f->variable_names[0] = NULL;
@@ -25360,7 +25359,7 @@ void FlecsCoreDocImport(
     ecs_doc_set_brief(world, EcsEmpty, "Tag used to indicate a query has no results");
     
     /* Initialize documentation for meta components */
-    ecs_entity_t meta = ecs_lookup_fullpath(world, "flecs.meta");
+    ecs_entity_t meta = ecs_lookup(world, "flecs.meta");
     ecs_doc_set_brief(world, meta, "Flecs module with reflection components");
 
     ecs_doc_set_brief(world, ecs_id(EcsMetaType), "Component added to types");
@@ -25392,7 +25391,7 @@ void FlecsCoreDocImport(
     ecs_doc_set_brief(world, ecs_id(ecs_entity_t), "entity component");
 
     /* Initialize documentation for doc components */
-    ecs_entity_t doc = ecs_lookup_fullpath(world, "flecs.doc");
+    ecs_entity_t doc = ecs_lookup(world, "flecs.doc");
     ecs_doc_set_brief(world, doc, "Flecs module with documentation components");
 
     ecs_doc_set_brief(world, ecs_id(EcsDocDescription), "Component used to add documentation");
@@ -30349,7 +30348,7 @@ ecs_entity_t ecs_import(
     const char *old_name_prefix = world->info.name_prefix;
 
     char *path = ecs_module_path_from_c(module_name);
-    ecs_entity_t e = ecs_lookup_fullpath(world, path);
+    ecs_entity_t e = ecs_lookup(world, path);
     ecs_os_free(path);
     
     if (!e) {
@@ -30360,7 +30359,7 @@ ecs_entity_t ecs_import(
         module(world);
 
         /* Lookup module entity (must be registered by module) */
-        e = ecs_lookup_fullpath(world, module_name);
+        e = ecs_lookup(world, module_name);
         ecs_check(e != 0, ECS_MODULE_UNDEFINED, module_name);
 
         ecs_log_pop();
@@ -31350,7 +31349,7 @@ const char* flecs_parse_term_flags(
                     return NULL;
                 }         
 
-                id->trav = ecs_lookup_fullpath(world, token);
+                id->trav = ecs_lookup(world, token);
                 if (!id->trav) {
                     ecs_parser_error(name, expr, column, 
                         "unresolved identifier '%s'", token);
@@ -33356,7 +33355,7 @@ const char* plecs_parse_using_stmt(
     ecs_entity_t scope;
     if (len > 2 && !ecs_os_strcmp(&using_path[len - 2], ".*")) {
         using_path[len - 2] = '\0';
-        scope = ecs_lookup_fullpath(world, using_path);
+        scope = ecs_lookup(world, using_path);
         if (!scope) {
             ecs_parser_error(name, expr, ptr - expr,
                 "unresolved identifier '%s' in using statement", using_path);
@@ -34559,7 +34558,20 @@ bool flecs_json_serialize_iter_result_is_set(
 bool flecs_json_skip_variable(
     const char *name);
 
-int json_ser_type(
+void flecs_json_serialize_field(
+    const ecs_world_t *world,
+    const ecs_iter_t *it,
+    const ecs_filter_t *q,
+    int field,
+    ecs_strbuf_t *buf,
+    ecs_json_ser_ctx_t *ctx);
+
+void flecs_json_serialize_query(
+    const ecs_world_t *world,
+    const ecs_filter_t *q,
+    ecs_strbuf_t *buf);
+
+int flecs_json_ser_type(
     const ecs_world_t *world,
     const ecs_vec_t *ser, 
     const void *base, 
@@ -34726,7 +34738,7 @@ void flecs_rest_parse_json_ser_entity_params(
     char *rel = NULL;
     flecs_rest_string_param(req, "refs", &rel);
     if (rel) {
-        desc->serialize_refs = ecs_lookup_fullpath(world, rel);
+        desc->serialize_refs = ecs_lookup(world, rel);
     }
 }
 
@@ -34752,6 +34764,7 @@ void flecs_rest_parse_json_ser_iter_params(
     flecs_rest_bool_param(req, "duration", &desc->measure_eval_duration);
     flecs_rest_bool_param(req, "type_info", &desc->serialize_type_info);
     flecs_rest_bool_param(req, "field_info", &desc->serialize_field_info);
+    flecs_rest_bool_param(req, "query_info", &desc->serialize_query_info);
     flecs_rest_bool_param(req, "table", &desc->serialize_table);
     flecs_rest_bool_param(req, "rows", &desc->serialize_rows);
     bool results = true;
@@ -34971,7 +34984,7 @@ bool flecs_rest_reply_existing_query(
     ecs_http_reply_t *reply,
     const char *name)
 {
-    ecs_entity_t q = ecs_lookup_fullpath(world, name);
+    ecs_entity_t q = ecs_lookup(world, name);
     if (!q) {
         flecs_reply_error(reply, "unresolved identifier '%s'", name);
         reply->code = 404;
@@ -49994,7 +50007,7 @@ const char* flecs_json_parse_path(
         goto error;
     }
 
-    ecs_entity_t result = ecs_lookup_fullpath(world, path);
+    ecs_entity_t result = ecs_lookup(world, path);
     if (!result) {
         ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
             "unresolved identifier '%s'", path);
@@ -50965,7 +50978,7 @@ const char* flecs_json_parse_result(
             goto error;
         }
 
-        parent = ecs_lookup_fullpath(world, parent_name);
+        parent = ecs_lookup(world, parent_name);
         if (parent_name != token) {
             ecs_os_free(parent_name);
         }
@@ -51769,7 +51782,7 @@ ecs_primitive_kind_t flecs_json_op_to_primitive_kind(
 #ifdef FLECS_JSON
 
 static
-int json_ser_type_ops(
+int flecs_json_ser_type_ops(
     const ecs_world_t *world,
     ecs_meta_type_op_t *ops,
     int32_t op_count,
@@ -51778,7 +51791,7 @@ int json_ser_type_ops(
     int32_t in_array);
 
 static
-int json_ser_type_op(
+int flecs_json_ser_type_op(
     const ecs_world_t *world,
     ecs_meta_type_op_t *op, 
     const void *base,
@@ -51886,7 +51899,7 @@ int json_ser_elements(
     int i;
     for (i = 0; i < elem_count; i ++) {
         ecs_strbuf_list_next(str);
-        if (json_ser_type_ops(world, ops, op_count, ptr, str, is_array)) {
+        if (flecs_json_ser_type_ops(world, ops, op_count, ptr, str, is_array)) {
             return -1;
         }
         ptr = ECS_OFFSET(ptr, elem_size);
@@ -51898,7 +51911,7 @@ int json_ser_elements(
 }
 
 static
-int json_ser_type_elements(
+int flecs_json_ser_type_elements(
     const ecs_world_t *world,
     ecs_entity_t type, 
     const void *base, 
@@ -51931,7 +51944,7 @@ int json_ser_array(
     const EcsArray *a = ecs_get(world, op->type, EcsArray);
     ecs_assert(a != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    return json_ser_type_elements(
+    return flecs_json_ser_type_elements(
         world, a->type, ptr, a->count, str, true);
 }
 
@@ -51951,7 +51964,7 @@ int json_ser_vector(
     void *array = ecs_vec_first(value);
 
     /* Serialize contiguous buffer of vector */
-    return json_ser_type_elements(world, v->type, array, count, str, false);
+    return flecs_json_ser_type_elements(world, v->type, array, count, str, false);
 }
 
 typedef struct json_serializer_ctx_t {
@@ -52043,7 +52056,7 @@ int json_ser_custom_type(
 
 /* Forward serialization to the different type kinds */
 static
-int json_ser_type_op(
+int flecs_json_ser_type_op(
     const ecs_world_t *world,
     ecs_meta_type_op_t *op, 
     const void *ptr,
@@ -52162,7 +52175,7 @@ error:
 
 /* Iterate over a slice of the type ops array */
 static
-int json_ser_type_ops(
+int flecs_json_ser_type_ops(
     const ecs_world_t *world,
     ecs_meta_type_op_t *ops,
     int32_t op_count,
@@ -52226,7 +52239,7 @@ int json_ser_type_ops(
         case EcsOpId:
         case EcsOpString:
         case EcsOpOpaque:
-            if (json_ser_type_op(world, op, base, str)) {
+            if (flecs_json_ser_type_op(world, op, base, str)) {
                 goto error;
             }
             break;
@@ -52241,7 +52254,7 @@ error:
 }
 
 /* Iterate over the type ops of a type */
-int json_ser_type(
+int flecs_json_ser_type(
     const ecs_world_t *world,
     const ecs_vec_t *v_ops,
     const void *base, 
@@ -52249,7 +52262,7 @@ int json_ser_type(
 {
     ecs_meta_type_op_t *ops = ecs_vec_first_t(v_ops, ecs_meta_type_op_t);
     int32_t count = ecs_vec_count(v_ops);
-    return json_ser_type_ops(world, ops, count, base, str, 0);
+    return flecs_json_ser_type_ops(world, ops, count, base, str, 0);
 }
 
 static
@@ -52268,7 +52281,7 @@ int array_to_json_buf_w_type_data(
 
         do {
             ecs_strbuf_list_next(buf);
-            if (json_ser_type(world, &ser->ops, ptr, buf)) {
+            if (flecs_json_ser_type(world, &ser->ops, ptr, buf)) {
                 return -1;
             }
 
@@ -52277,7 +52290,7 @@ int array_to_json_buf_w_type_data(
 
         flecs_json_array_pop(buf);
     } else {
-        if (json_ser_type(world, &ser->ops, ptr, buf)) {
+        if (flecs_json_ser_type(world, &ser->ops, ptr, buf)) {
             return -1;
         }
     }
@@ -52496,7 +52509,7 @@ int flecs_json_append_type_values(
                     ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
                     flecs_json_next(buf);
-                    if (json_ser_type(world, &ser->ops, ptr, buf) != 0) {
+                    if (flecs_json_ser_type(world, &ser->ops, ptr, buf) != 0) {
                         /* Entity contains invalid value */
                         return -1;
                     }
@@ -53248,64 +53261,28 @@ void flecs_json_serialize_field_info(
     flecs_json_memberl(buf, "field_info");
     flecs_json_array_push(buf);
 
-    int f, t;
+    int f;
     for (f = 0; f < field_count; f ++) {
         flecs_json_next(buf);
-        flecs_json_object_push(buf);
-        flecs_json_memberl(buf, "id");
-
-        flecs_json_serialize_get_field_ctx(world, it, f, ctx);
-        ecs_json_value_ser_ctx_t *value_ctx = &ctx->value_ctx[f];
-
-        if (value_ctx->id_label) {
-            flecs_json_string(buf, value_ctx->id_label);
-
-            const ecs_term_t *term = NULL;
-            for (t = 0; t < q->term_count; t ++) {
-                if (q->terms[t].field_index == f) {
-                    term = &q->terms[t];
-                    break;
-                }
-            }
-
-            ecs_assert(term != NULL, ECS_INTERNAL_ERROR, NULL);
-
-            if (term->oper != EcsNot) {
-                if (term->oper == EcsOptional) {
-                    flecs_json_memberl(buf, "optional");
-                    flecs_json_bool(buf, true);
-                }
-
-                if (ECS_IS_PAIR(term->id)) {
-                    if (term->first.flags & EcsIsEntity && term->first.id) {
-                        if (ecs_has_id(world, term->first.id, EcsExclusive)) {
-                            flecs_json_memberl(buf, "exclusive");
-                            flecs_json_bool(buf, true);
-                        }
-                    }
-                }
-
-                if (value_ctx->type) {
-                    flecs_json_memberl(buf, "type");
-                    flecs_json_label(buf, world, value_ctx->type);
-                }
-
-                if (value_ctx->ser) {
-                    flecs_json_memberl(buf, "schema");
-                    ecs_type_info_to_json_buf(world, value_ctx->type, buf);
-                }
-            } else {
-                flecs_json_memberl(buf, "not");
-                flecs_json_bool(buf, true);
-            }
-        } else {
-            ecs_strbuf_appendlit(buf, "0");
-        }
-
-        flecs_json_object_pop(buf);
+        flecs_json_serialize_field(world, it, q, f, buf, ctx);
     }
 
     flecs_json_array_pop(buf);
+}
+
+static
+void flecs_json_serialize_query_info(
+    const ecs_world_t *world,
+    const ecs_iter_t *it, 
+    ecs_strbuf_t *buf)
+{
+    if (!it->query) {
+        return;
+    }
+
+    const ecs_filter_t *q = it->query;
+    flecs_json_memberl(buf, "query_info");
+    flecs_json_serialize_query(world, q, buf);
 }
 
 static
@@ -54048,6 +54025,11 @@ int ecs_iter_to_json_buf(
         flecs_json_serialize_field_info(world, it, buf, &ser_ctx);
     }
 
+    /* Serialize query info if enabled */
+    if (desc && desc->serialize_query_info) {
+        flecs_json_serialize_query_info(world, it, buf);
+    }
+
     /* Serialize results */
     if (!desc || !desc->dont_serialize_results) {
         flecs_json_memberl(buf, "results");
@@ -54169,6 +54151,85 @@ char* ecs_world_to_json(
     }
 
     return ecs_strbuf_get(&buf);
+}
+
+#endif
+
+/**
+ * @file json/serialize_type_info.c
+ * @brief Serialize type (reflection) information to JSON.
+ */
+
+
+#ifdef FLECS_JSON
+
+void flecs_json_serialize_field(
+    const ecs_world_t *world,
+    const ecs_iter_t *it,
+    const ecs_filter_t *q,
+    int field,
+    ecs_strbuf_t *buf,
+    ecs_json_ser_ctx_t *ctx)
+{
+    flecs_json_object_push(buf);
+    flecs_json_memberl(buf, "id");
+
+    flecs_json_serialize_get_field_ctx(world, it, field, ctx);
+    ecs_json_value_ser_ctx_t *value_ctx = &ctx->value_ctx[field];
+
+    if (value_ctx->id_label) {
+        flecs_json_string(buf, value_ctx->id_label);
+
+        const ecs_term_t *term = NULL;
+        int t;
+        for (t = 0; t < q->term_count; t ++) {
+            if (q->terms[t].field_index == field) {
+                term = &q->terms[t];
+                break;
+            }
+        }
+
+        ecs_assert(term != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        if (term->oper != EcsNot) {
+            if (term->oper == EcsOptional) {
+                flecs_json_memberl(buf, "optional");
+                flecs_json_bool(buf, true);
+            }
+
+            if (ECS_IS_PAIR(term->id)) {
+                if (term->first.flags & EcsIsEntity && term->first.id) {
+                    if (ecs_has_id(world, term->first.id, EcsExclusive)) {
+                        flecs_json_memberl(buf, "exclusive");
+                        flecs_json_bool(buf, true);
+                    }
+                }
+            }
+
+            if (value_ctx->type) {
+                flecs_json_memberl(buf, "type");
+                flecs_json_label(buf, world, value_ctx->type);
+
+                const char *symbol = ecs_get_symbol(world, value_ctx->type);
+                if (symbol) {
+                    flecs_json_memberl(buf, "symbol");
+                    flecs_json_string(buf, symbol);
+                }
+            }
+
+            if (value_ctx->ser) {
+                flecs_json_memberl(buf, "schema");
+                ecs_type_info_to_json_buf(world, value_ctx->type, buf);
+            }
+        } else {
+            flecs_json_memberl(buf, "not");
+            flecs_json_bool(buf, true);
+        }
+    } else {
+        ecs_strbuf_appendlit(buf, "0");
+    }
+
+    flecs_json_object_pop(buf);
 }
 
 #endif
@@ -54470,6 +54531,9 @@ bool flecs_json_serialize_get_value_ctx(
     ecs_id_t id,
     ecs_json_value_ser_ctx_t *ctx)
 {
+    if (!id) {
+        return false;
+    }
     if (!ctx->initialized) {
         ctx->initialized = true;
 
@@ -54550,7 +54614,7 @@ int flecs_json_serialize_row_components(
         }
 
         flecs_json_member(buf, value_ctx->id_label);
-        if (json_ser_type(world, &value_ctx->ser->ops, ptr, buf) != 0) {
+        if (flecs_json_ser_type(world, &value_ctx->ser->ops, ptr, buf) != 0) {
             return -1;
         }
 
@@ -54590,7 +54654,7 @@ int flecs_json_serialize_row_table_components(
         ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(value_ctx->id_label != NULL, ECS_INTERNAL_ERROR, NULL);
         flecs_json_member(buf, value_ctx->id_label);
-        if (json_ser_type(world, &value_ctx->ser->ops, ptr, buf) != 0) {
+        if (flecs_json_ser_type(world, &value_ctx->ser->ops, ptr, buf) != 0) {
             return -1;
         }
 
@@ -54793,6 +54857,183 @@ int flecs_json_serialize_iter_result_rows(
     ecs_os_free(parent_path);
 
     return 0;
+}
+
+#endif
+
+/**
+ * @file json/serialize_query_info.c
+ * @brief Serialize (component) values to JSON strings.
+ */
+
+
+#ifdef FLECS_JSON
+
+static
+const char* flecs_json_inout_str(
+    ecs_inout_kind_t kind)
+{
+    switch(kind) {
+    case EcsIn: return "in";
+    case EcsOut: return "out";
+    case EcsInOut: return "inout";
+    case EcsInOutNone: return "none";
+    case EcsInOutDefault: return "default";
+    default: return "unknown";
+    }
+}
+
+static
+const char* flecs_json_oper_str(
+    ecs_oper_kind_t kind)
+{
+    switch(kind) {
+    case EcsAnd: return "and";
+    case EcsNot: return "not";
+    case EcsOr: return "or";
+    case EcsOptional: return "optional";
+    case EcsAndFrom: return "andfrom";
+    case EcsNotFrom: return "notfrom";
+    case EcsOrFrom: return "orfrom";
+    default: return "unknown";
+    }
+}
+
+static
+void flecs_json_serialize_term_entity(
+    const ecs_world_t *world,
+    ecs_entity_t e,
+    ecs_strbuf_t *buf)
+{
+    flecs_json_memberl(buf, "entity");
+    flecs_json_path(buf, world, e);
+
+    const char *symbol = ecs_get_symbol(world, e);
+    if (symbol) {
+        flecs_json_memberl(buf, "symbol");
+        flecs_json_string(buf, symbol);
+    }
+
+    if (ecs_has(world, e, EcsComponent)) {
+        flecs_json_memberl(buf, "type");
+        flecs_json_true(buf);
+    }
+}
+
+static
+void flecs_json_serialize_term_ref(
+    const ecs_world_t *world,
+    const ecs_term_id_t *ref,
+    ecs_strbuf_t *buf)
+{
+    flecs_json_object_push(buf);
+    if (ref->flags & EcsIsEntity) {
+        flecs_json_serialize_term_entity(world, ref->id, buf);
+    } else if (ref->flags & EcsIsVariable) {
+        flecs_json_memberl(buf, "var");
+        if (ref->name) {
+            flecs_json_string(buf, ref->name);
+        } else if (ref->id) {
+            if (ref->id == EcsThis) {
+                flecs_json_string(buf, "this");
+            } else {
+                flecs_json_path(buf, world, ref->id);
+            }
+        }
+    } else if (ref->flags & EcsIsName) {
+        flecs_json_memberl(buf, "name");
+        flecs_json_string(buf, ref->name);
+    }
+    flecs_json_object_pop(buf);
+}
+
+static
+void flecs_json_serialize_term_trav(
+    const ecs_world_t *world,
+    const ecs_term_t *term,
+    ecs_strbuf_t *buf)
+{
+    if (term->src.trav) {
+        flecs_json_memberl(buf, "trav");
+        flecs_json_object_push(buf);
+        flecs_json_serialize_term_entity(world, term->src.trav, buf);
+        flecs_json_object_pop(buf);
+    }
+
+    flecs_json_memberl(buf, "flags");
+    flecs_json_array_push(buf);
+    if (term->src.flags & EcsSelf) {
+        flecs_json_next(buf);
+        flecs_json_string(buf, "self");
+    }
+    if (term->src.flags & EcsCascade) {
+        flecs_json_next(buf);
+        flecs_json_string(buf, "cascade");
+    } else
+    if (term->src.flags & EcsUp) {
+        flecs_json_next(buf);
+        flecs_json_string(buf, "up");
+    }
+    flecs_json_array_pop(buf);
+}
+
+static
+void flecs_json_serialize_term(
+    const ecs_world_t *world,
+    const ecs_filter_t *q,
+    int t,
+    ecs_strbuf_t *buf)
+{
+    ecs_term_t *term = &q->terms[t];
+
+    flecs_json_object_push(buf);
+    flecs_json_memberl(buf, "inout");
+    flecs_json_string(buf, flecs_json_inout_str(term->inout));
+
+    flecs_json_memberl(buf, "has_data");
+    flecs_json_bool(buf, 0 == (term->flags & EcsTermNoData));
+
+    if (term->first.flags & EcsIsEntity && term->first.id) {
+        if (ecs_has_id(world, term->first.id, EcsDontInherit)) {
+            flecs_json_memberl(buf, "dont_inherit");
+            flecs_json_true(buf);
+        }
+    }
+
+    flecs_json_memberl(buf, "oper");
+    flecs_json_string(buf, flecs_json_oper_str(term->oper));
+
+    flecs_json_memberl(buf, "src");
+    flecs_json_serialize_term_ref(world, &term->src, buf);
+
+    flecs_json_memberl(buf, "first");
+    flecs_json_serialize_term_ref(world, &term->first, buf);
+    
+    if (term->second.id || term->second.name || term->second.flags & EcsIsEntity) {
+        flecs_json_memberl(buf, "second");
+        flecs_json_serialize_term_ref(world, &term->second, buf);
+    }
+
+    flecs_json_serialize_term_trav(world, term, buf);
+
+    flecs_json_object_pop(buf);
+}
+
+void flecs_json_serialize_query(
+    const ecs_world_t *world,
+    const ecs_filter_t *q,
+    ecs_strbuf_t *buf)
+{
+    flecs_json_object_push(buf);
+    flecs_json_memberl(buf, "terms");
+    flecs_json_array_push(buf);
+    int t;
+    for (t = 0; t < q->term_count; t ++) {
+        flecs_json_next(buf);
+        flecs_json_serialize_term(world, q, t, buf);
+    }
+    flecs_json_array_pop(buf);
+    flecs_json_object_pop(buf);
 }
 
 #endif
@@ -62258,7 +62499,7 @@ const char* ecs_rule_parse_vars(
             return NULL;
         }
 
-        ecs_entity_t val = ecs_lookup_fullpath(rule->filter.world, token);
+        ecs_entity_t val = ecs_lookup(rule->filter.world, token);
         if (!val) {
             ecs_parser_error(name, expr, (ptr - expr), 
                 "unresolved entity '%s'", token);
@@ -66174,7 +66415,7 @@ bool flecs_rule_pred_eq_name(
     ecs_rule_run_ctx_t *ctx)
 {
     const char *name = flecs_rule_name_arg(op, ctx);
-    ecs_entity_t e = ecs_lookup_fullpath(ctx->world, name);
+    ecs_entity_t e = ecs_lookup(ctx->world, name);
     if (!e) {
         /* Entity doesn't exist */
         return false;
@@ -66380,7 +66621,7 @@ bool flecs_rule_pred_neq_name(
     ecs_rule_run_ctx_t *ctx)
 {
     const char *name = flecs_rule_name_arg(op, ctx);
-    ecs_entity_t e = ecs_lookup_fullpath(ctx->world, name);
+    ecs_entity_t e = ecs_lookup(ctx->world, name);
     if (!e) {
         /* Entity doesn't exist */
         return true && !redo;

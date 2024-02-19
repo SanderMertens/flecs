@@ -16,7 +16,7 @@ void Metrics_member_gauge_1_entity(void) {
 
     ecs_entity_t m = ecs_metric(world, {
         .entity = ecs_entity(world, { .name = "metrics.position_y" }),
-        .member = ecs_lookup_fullpath(world, "Position.y"),
+        .member = ecs_lookup(world, "Position.y"),
         .kind = EcsGauge
     });
     test_assert(m != 0);
@@ -60,7 +60,7 @@ void Metrics_member_gauge_2_entities(void) {
 
     ecs_entity_t m = ecs_metric(world, {
         .entity = ecs_entity(world, { .name = "metrics.position_y" }),
-        .member = ecs_lookup_fullpath(world, "Position.y"),
+        .member = ecs_lookup(world, "Position.y"),
         .kind = EcsGauge
     });
     test_assert(m != 0);
@@ -117,7 +117,7 @@ void Metrics_member_gauge_2_entities_1_existing(void) {
 
     ecs_entity_t m = ecs_metric(world, {
         .entity = ecs_entity(world, { .name = "metrics.position_y" }),
-        .member = ecs_lookup_fullpath(world, "Position.y"),
+        .member = ecs_lookup(world, "Position.y"),
         .kind = EcsGauge
     });
     test_assert(m != 0);
@@ -171,7 +171,7 @@ void Metrics_member_gauge_2_entities_update(void) {
 
     ecs_entity_t m = ecs_metric(world, {
         .entity = ecs_entity(world, { .name = "metrics.position_y" }),
-        .member = ecs_lookup_fullpath(world, "Position.y"),
+        .member = ecs_lookup(world, "Position.y"),
         .kind = EcsGauge
     });
     test_assert(m != 0);
@@ -260,7 +260,7 @@ void Metrics_member_gauge_w_remove(void) {
 
     ecs_entity_t m = ecs_metric(world, {
         .entity = ecs_entity(world, { .name = "metrics.position_y" }),
-        .member = ecs_lookup_fullpath(world, "Position.y"),
+        .member = ecs_lookup(world, "Position.y"),
         .kind = EcsGauge
     });
     test_assert(m != 0);
@@ -339,7 +339,7 @@ void Metrics_member_gauge_w_clear(void) {
 
     ecs_entity_t m = ecs_metric(world, {
         .entity = ecs_entity(world, { .name = "metrics.position_y" }),
-        .member = ecs_lookup_fullpath(world, "Position.y"),
+        .member = ecs_lookup(world, "Position.y"),
         .kind = EcsGauge
     });
     test_assert(m != 0);
@@ -418,7 +418,7 @@ void Metrics_member_gauge_w_delete(void) {
 
     ecs_entity_t m = ecs_metric(world, {
         .entity = ecs_entity(world, { .name = "metrics.position_y" }),
-        .member = ecs_lookup_fullpath(world, "Position.y"),
+        .member = ecs_lookup(world, "Position.y"),
         .kind = EcsGauge
     });
     test_assert(m != 0);
@@ -1355,7 +1355,7 @@ void Metrics_member_counter(void) {
 
     ecs_entity_t m = ecs_metric(world, {
         .entity = ecs_entity(world, { .name = "metrics.position_y" }),
-        .member = ecs_lookup_fullpath(world, "Position.y"),
+        .member = ecs_lookup(world, "Position.y"),
         .kind = EcsCounter
     });
     test_assert(m != 0);
@@ -1418,7 +1418,7 @@ void Metrics_member_auto_counter(void) {
 
     ecs_entity_t m = ecs_metric(world, {
         .entity = ecs_entity(world, { .name = "metrics.position_y" }),
-        .member = ecs_lookup_fullpath(world, "Position.y"),
+        .member = ecs_lookup(world, "Position.y"),
         .kind = EcsCounterIncrement
     });
     test_assert(m != 0);
@@ -1652,7 +1652,7 @@ void Metrics_metric_description(void) {
 
     ecs_entity_t m = ecs_metric(world, {
         .entity = ecs_entity(world, { .name = "metrics.position_y" }),
-        .member = ecs_lookup_fullpath(world, "Position.y"),
+        .member = ecs_lookup(world, "Position.y"),
         .kind = EcsGauge,
         .brief = "Position y"
     });
@@ -1750,7 +1750,7 @@ void Metrics_id_target_count(void) {
     ecs_progress(world, 1);
 
     {
-        ecs_entity_t red = ecs_lookup_fullpath(world, "metrics.color.Red");
+        ecs_entity_t red = ecs_lookup(world, "metrics.color.Red");
         test_assert(red != 0);
         const EcsMetricValue *v = ecs_get(world, red, EcsMetricValue);
         test_assert(v != NULL);
@@ -1758,7 +1758,7 @@ void Metrics_id_target_count(void) {
     }
 
     {
-        ecs_entity_t green = ecs_lookup_fullpath(world, "metrics.color.Green");
+        ecs_entity_t green = ecs_lookup(world, "metrics.color.Green");
         test_assert(green != 0);
         const EcsMetricValue *v = ecs_get(world, green, EcsMetricValue);
         test_assert(v != NULL);
@@ -1766,7 +1766,7 @@ void Metrics_id_target_count(void) {
     }
 
     {
-        ecs_entity_t blue = ecs_lookup_fullpath(world, "metrics.color.Blue");
+        ecs_entity_t blue = ecs_lookup(world, "metrics.color.Blue");
         test_assert(blue != 0);
         const EcsMetricValue *v = ecs_get(world, blue, EcsMetricValue);
         test_assert(v != NULL);
@@ -1792,7 +1792,7 @@ void Metrics_metric_instance_has_doc_name(void) {
 
     ecs_entity_t m = ecs_metric(world, {
         .entity = ecs_entity(world, { .name = "metrics.position_y" }),
-        .member = ecs_lookup_fullpath(world, "Position.y"),
+        .member = ecs_lookup(world, "Position.y"),
         .kind = EcsGauge
     });
     test_assert(m != 0);
@@ -2065,7 +2065,7 @@ void Metrics_id_w_member_same_type(void) {
     ecs_entity_t m = ecs_metric(world, {
         .entity = ecs_entity(world, { .name = "metrics.position_y" }),
         .id = ecs_id(Position),
-        .member = ecs_lookup_fullpath(world, "Position.y"),
+        .member = ecs_lookup(world, "Position.y"),
         .kind = EcsGauge
     });
     test_assert(m != 0);
@@ -2112,7 +2112,7 @@ void Metrics_id_w_member_mismatching_type(void) {
     ecs_entity_t m = ecs_metric(world, {
         .entity = ecs_entity(world, { .name = "metrics.position_y" }),
         .id = ecs_id(Velocity),
-        .member = ecs_lookup_fullpath(world, "Position.y"),
+        .member = ecs_lookup(world, "Position.y"),
         .kind = EcsGauge
     });
     test_assert(m == 0);
@@ -2139,7 +2139,7 @@ void Metrics_pair_member_rel_type(void) {
     ecs_entity_t m = ecs_metric(world, {
         .entity = ecs_entity(world, { .name = "metrics.position_y" }),
         .id = ecs_pair_t(Position, Foo),
-        .member = ecs_lookup_fullpath(world, "Position.y"),
+        .member = ecs_lookup(world, "Position.y"),
         .kind = EcsGauge
     });
     test_assert(m != 0);
@@ -2187,7 +2187,7 @@ void Metrics_pair_member_tgt_type(void) {
     ecs_entity_t m = ecs_metric(world, {
         .entity = ecs_entity(world, { .name = "metrics.position_y" }),
         .id = ecs_pair(Foo, ecs_id(Position)),
-        .member = ecs_lookup_fullpath(world, "Position.y"),
+        .member = ecs_lookup(world, "Position.y"),
         .kind = EcsGauge
     });
     test_assert(m != 0);
@@ -2367,7 +2367,7 @@ void Metrics_pair_member_counter_increment(void) {
     ecs_entity_t m = ecs_metric(world, {
         .entity = ecs_entity(world, { .name = "metrics.position_y" }),
         .id = ecs_pair_t(Position, Foo),
-        .member = ecs_lookup_fullpath(world, "Position.y"),
+        .member = ecs_lookup(world, "Position.y"),
         .kind = EcsCounterIncrement
     });
     test_assert(m != 0);

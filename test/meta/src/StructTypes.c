@@ -499,9 +499,9 @@ void StructTypes_value_range(void) {
 
     test_assert(s == ecs_id(Position));
 
-    ecs_entity_t x = ecs_lookup_fullpath(world, "Position.x");
+    ecs_entity_t x = ecs_lookup(world, "Position.x");
     test_assert(x != 0);
-    ecs_entity_t y = ecs_lookup_fullpath(world, "Position.y");
+    ecs_entity_t y = ecs_lookup(world, "Position.y");
     test_assert(y != 0);
 
     const EcsMemberRanges *xr = ecs_get(world, x, EcsMemberRanges);
@@ -540,9 +540,9 @@ void StructTypes_error_range(void) {
 
     test_assert(s == ecs_id(Position));
 
-    ecs_entity_t x = ecs_lookup_fullpath(world, "Position.x");
+    ecs_entity_t x = ecs_lookup(world, "Position.x");
     test_assert(x != 0);
-    ecs_entity_t y = ecs_lookup_fullpath(world, "Position.y");
+    ecs_entity_t y = ecs_lookup(world, "Position.y");
     test_assert(y != 0);
 
     const EcsMemberRanges *xr = ecs_get(world, x, EcsMemberRanges);
@@ -577,9 +577,9 @@ void StructTypes_warning_range(void) {
 
     test_assert(s == ecs_id(Position));
 
-    ecs_entity_t x = ecs_lookup_fullpath(world, "Position.x");
+    ecs_entity_t x = ecs_lookup(world, "Position.x");
     test_assert(x != 0);
-    ecs_entity_t y = ecs_lookup_fullpath(world, "Position.y");
+    ecs_entity_t y = ecs_lookup(world, "Position.y");
     test_assert(y != 0);
 
     const EcsMemberRanges *xr = ecs_get(world, x, EcsMemberRanges);
@@ -614,9 +614,9 @@ void StructTypes_error_and_warning_range(void) {
 
     test_assert(s == ecs_id(Position));
 
-    ecs_entity_t x = ecs_lookup_fullpath(world, "Position.x");
+    ecs_entity_t x = ecs_lookup(world, "Position.x");
     test_assert(x != 0);
-    ecs_entity_t y = ecs_lookup_fullpath(world, "Position.y");
+    ecs_entity_t y = ecs_lookup(world, "Position.y");
     test_assert(y != 0);
 
     const EcsMemberRanges *xr = ecs_get(world, x, EcsMemberRanges);

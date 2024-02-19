@@ -17,7 +17,7 @@ Entities can be created and deleted dynamically. When entities are deleted, the 
 ### Entity Names
 Flecs entities can be named. This makes it easy to identify entities in editors or while debugging, and also allows you to lookup entities by name. Names must be unique inside a scope, which is determined by the `ChildOf` relationship. For example, two entities with the same parent must have different names. 
 
-Names can be looked up using a relative path or absolute path using the `ecs_lookup_fullpath` or `entity::lookup` functions. The default scope separator for C applications is a dot (`.`), whereas in C++ it is a double colon (`::`). Lookups use a hashmap internally, which provides O(1) performance.
+Names can be looked up using a relative path or absolute path using the `ecs_lookup` or `entity::lookup` functions. The default scope separator for C applications is a dot (`.`), whereas in C++ it is a double colon (`::`). Lookups use a hashmap internally, which provides O(1) performance.
 
 Entities can be assigned user friendly names with the doc addon, using the `ecs_doc_set_name` or `entity::set_doc_name` functions. Names assigned by the doc framework do not have to be unique.
 

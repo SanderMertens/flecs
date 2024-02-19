@@ -413,7 +413,7 @@ We could save this script as is, load it into our game, and instantiate the pref
 // In C
 ecs_plecs_from_file(world, "fence.flecs");
 
-ecs_entity_t fence = ecs_lookup_fullpath(world, "Fence");
+ecs_entity_t fence = ecs_lookup(world, "Fence");
 ecs_entity_t fence_a = ecs_new_w_pair(world, EcsIsA, fence);
 ecs_entity_t fence_b = ecs_new_w_pair(world, EcsIsA, fence);
 

@@ -2874,8 +2874,8 @@ void SerializeIterToRowJson_serialize_w_field_info(void) {
 
     char* expect = "{"
         "\"field_info\":["
-            "{\"id\":\"Position\", \"type\":\"Position\", \"schema\":{\"x\":[\"int\"], \"y\":[\"int\"]}}, "
-            "{\"id\":\"Mass\", \"optional\":true, \"type\":\"Mass\", \"schema\":{\"value\":[\"int\"]}}], "
+            "{\"id\":\"Position\", \"type\":\"Position\", \"symbol\":\"Position\", \"schema\":{\"x\":[\"int\"], \"y\":[\"int\"]}}, "
+            "{\"id\":\"Mass\", \"optional\":true, \"type\":\"Mass\", \"symbol\":\"Mass\", \"schema\":{\"value\":[\"int\"]}}], "
         "\"results\":["
             "{\"name\":\"e1\", \"is_set\":[true, false], \"components\":{\"Position\":{\"x\":10, \"y\":20}}}, "
             "{\"name\":\"e2\", \"is_set\":[true, false], \"components\":{\"Position\":{\"x\":20, \"y\":30}}}, "
@@ -2934,8 +2934,8 @@ void SerializeIterToRowJson_serialize_w_field_info_pair_w_0_target(void) {
     test_assert(json != NULL);
 
     char* expect = "{\"field_info\":["
-        "{\"id\":\"Position\", \"type\":\"Position\", \"schema\":{\"x\":[\"int\"], \"y\":[\"int\"]}}, "
-        "{\"id\":\"Mass\", \"optional\":true, \"type\":\"Mass\", \"schema\":{\"value\":[\"int\"]}}, "
+        "{\"id\":\"Position\", \"type\":\"Position\", \"symbol\":\"Position\", \"schema\":{\"x\":[\"int\"], \"y\":[\"int\"]}}, "
+        "{\"id\":\"Mass\", \"optional\":true, \"type\":\"Mass\", \"symbol\":\"Mass\", \"schema\":{\"value\":[\"int\"]}}, "
         "{\"id\":\"(ChildOf,0)\", \"exclusive\":true}], "
     "\"results\":["
         "{\"name\":\"e1\", \"pairs\":{\"ChildOf\":\"0\"},\"is_set\":[true, false, true], \"components\":{\"Position\":{\"x\":10, \"y\":20}}}, "
@@ -2989,7 +2989,7 @@ void SerializeIterToRowJson_serialize_w_field_info_pair_w_not_tag(void) {
 
     char* expect = "{"
         "\"field_info\":["
-            "{\"id\":\"Position\", \"type\":\"Position\", \"schema\":{\"x\":[\"int\"], \"y\":[\"int\"]}}, "
+            "{\"id\":\"Position\", \"type\":\"Position\", \"symbol\":\"Position\", \"schema\":{\"x\":[\"int\"], \"y\":[\"int\"]}}, "
             "{\"id\":\"Foo\", \"not\":true}], "
         "\"results\":["
             "{\"name\":\"e1\", \"is_set\":[true, false], \"components\":{\"Position\":{\"x\":10, \"y\":20}}}, "
@@ -3042,7 +3042,7 @@ void SerializeIterToRowJson_serialize_w_field_info_pair_w_not_pair(void) {
 
     char* expect = "{"
         "\"field_info\":["
-            "{\"id\":\"Position\", \"type\":\"Position\", \"schema\":{\"x\":[\"int\"], \"y\":[\"int\"]}}, "
+            "{\"id\":\"Position\", \"type\":\"Position\", \"symbol\":\"Position\", \"schema\":{\"x\":[\"int\"], \"y\":[\"int\"]}}, "
             "{\"id\":\"(ChildOf,flecs)\", \"not\":true}], "
         "\"results\":["
             "{\"name\":\"e1\", \"is_set\":[true, false], \"components\":{\"Position\":{\"x\":10, \"y\":20}}}, "
@@ -3102,11 +3102,67 @@ void SerializeIterToRowJson_serialize_w_field_info_pair_w_not_component(void) {
     test_assert(json != NULL);
 
     char* expect = "{\"field_info\":["
-        "{\"id\":\"Position\", \"type\":\"Position\", \"schema\":{\"x\":[\"int\"], \"y\":[\"int\"]}}, "
+        "{\"id\":\"Position\", \"type\":\"Position\", \"symbol\":\"Position\", \"schema\":{\"x\":[\"int\"], \"y\":[\"int\"]}}, "
         "{\"id\":\"Mass\", \"not\":true}], "
     "\"results\":["
         "{\"name\":\"e1\", \"is_set\":[true, false], \"components\":{\"Position\":{\"x\":10, \"y\":20}}}, "
         "{\"name\":\"e2\", \"is_set\":[true, false], \"components\":{\"Position\":{\"x\":20, \"y\":30}}}]}";
+    test_str(json, expect);
+
+    ecs_os_free(json);
+
+    ecs_rule_fini(q);
+
+    ecs_fini(world);
+}
+
+void SerializeIterToRowJson_serialize_w_field_info_w_or(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Mass);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            { "x", ecs_id(ecs_i32_t) },
+            { "y", ecs_id(ecs_i32_t) }
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Mass),
+        .members = {
+            { "value", ecs_id(ecs_i32_t) }
+        }
+    });
+
+    ecs_rule_t *q = ecs_rule(world, {
+        .expr = "Position || Mass"
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_entity_t e3 = ecs_new_entity(world, "e3");
+
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_set(world, e2, Position, {20, 30});
+    ecs_set(world, e3, Mass, {100});
+
+    ecs_iter_t it = ecs_rule_iter(world, q);
+    char *json = ecs_iter_to_json(world, &it, &(ecs_iter_to_json_desc_t) {
+        .serialize_rows = true,
+        .serialize_field_info = true
+    });
+    test_assert(json != NULL);
+
+    char* expect = "{\"field_info\":[{\"id\":0}], "
+        "\"results\":["
+            "{\"name\":\"e1\", \"tags\":[\"Position\"]}, "
+            "{\"name\":\"e2\", \"tags\":[\"Position\"]}, "
+            "{\"name\":\"e3\", \"tags\":[\"Mass\"]}]}";
     test_str(json, expect);
 
     ecs_os_free(json);
