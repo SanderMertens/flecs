@@ -979,7 +979,8 @@
                 "1_tag_self",
                 "1_tag_self_dont_inherit",
                 "1_tag_up",
-                "1_tag_cascade"
+                "1_tag_cascade",
+                "0_term"
             ]
         }, {
             "id": "MetaUtils",

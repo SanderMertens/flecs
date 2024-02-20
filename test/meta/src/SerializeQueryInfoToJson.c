@@ -566,3 +566,33 @@ void SerializeQueryInfoToJson_1_tag_cascade(void) {
 
     ecs_fini(world);
 }
+
+void SerializeQueryInfoToJson_0_term(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .expr = "Foo(0)"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    ecs_iter_to_json_desc_t desc = {
+        .serialize_query_info = true,
+        .dont_serialize_results = true
+    };
+
+    char *json = ecs_iter_to_json(world, &it, &desc);
+    test_str(json, "{\"query_info\":{\"terms\":["
+        "{\"inout\":\"default\", \"has_data\":false, \"oper\":\"and\", "
+            "\"src\":{\"entity\":\"0\"}, "
+            "\"first\":{\"entity\":\"Foo\"}, "
+            "\"flags\":[]}]}}");
+    ecs_os_free(json);
+    
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}

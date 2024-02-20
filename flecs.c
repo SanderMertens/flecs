@@ -54905,15 +54905,17 @@ void flecs_json_serialize_term_entity(
     flecs_json_memberl(buf, "entity");
     flecs_json_path(buf, world, e);
 
-    const char *symbol = ecs_get_symbol(world, e);
-    if (symbol) {
-        flecs_json_memberl(buf, "symbol");
-        flecs_json_string(buf, symbol);
-    }
+    if (e) {
+        const char *symbol = ecs_get_symbol(world, e);
+        if (symbol) {
+            flecs_json_memberl(buf, "symbol");
+            flecs_json_string(buf, symbol);
+        }
 
-    if (ecs_has(world, e, EcsComponent)) {
-        flecs_json_memberl(buf, "type");
-        flecs_json_true(buf);
+        if (ecs_has(world, e, EcsComponent)) {
+            flecs_json_memberl(buf, "type");
+            flecs_json_true(buf);
+        }
     }
 }
 

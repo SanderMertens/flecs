@@ -939,6 +939,7 @@ void SerializeQueryInfoToJson_1_tag_self(void);
 void SerializeQueryInfoToJson_1_tag_self_dont_inherit(void);
 void SerializeQueryInfoToJson_1_tag_up(void);
 void SerializeQueryInfoToJson_1_tag_cascade(void);
+void SerializeQueryInfoToJson_0_term(void);
 
 // Testsuite 'MetaUtils'
 void MetaUtils_struct_w_2_i32(void);
@@ -4800,6 +4801,10 @@ bake_test_case SerializeQueryInfoToJson_testcases[] = {
     {
         "1_tag_cascade",
         SerializeQueryInfoToJson_1_tag_cascade
+    },
+    {
+        "0_term",
+        SerializeQueryInfoToJson_0_term
     }
 };
 
@@ -5830,7 +5835,7 @@ static bake_test_suite suites[] = {
         "SerializeQueryInfoToJson",
         NULL,
         NULL,
-        18,
+        19,
         SerializeQueryInfoToJson_testcases
     },
     {
