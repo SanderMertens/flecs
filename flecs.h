@@ -16744,7 +16744,8 @@ struct enum_data_impl {
     int max;
     int contiguous_through;
     // Constants array is sized to the number of found-constants, or 1 (to avoid 0-sized array)
-    enum_constant_data constants[enum_reflection<E>::template num_enums< enum_last<E>::value >() || 1];
+    const static unsigned int constants_size = enum_reflection<E>::template num_enums< enum_last<E>::value >();
+    enum_constant_data constants[constants_size? constants_size: 1];
 };
 
 /** Class that scans an enum for constants, extracts names & creates entities */
@@ -31879,7 +31880,7 @@ inline flecs::entity enum_data<E>::entity(int value) const {
     if (index >= 0) {
         return flecs::entity(world_, impl_.constants[index].id);
     }
-    return flecs::entity::null(world_);
+    return flecs::entity(world_, 0);
 }
 
 template <typename E>

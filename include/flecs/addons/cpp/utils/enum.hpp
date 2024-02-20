@@ -206,7 +206,7 @@ struct enum_data_impl {
     int max;
     int contiguous_through;
     // Constants array is sized to the number of found-constants, or 1 (to avoid 0-sized array)
-    const static int constants_size = enum_reflection<E>::template num_enums< enum_last<E>::value >();
+    const static unsigned int constants_size = enum_reflection<E>::template num_enums< enum_last<E>::value >();
     enum_constant_data constants[constants_size? constants_size: 1];
 };
 
