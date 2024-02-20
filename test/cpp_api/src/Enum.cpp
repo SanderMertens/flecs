@@ -47,6 +47,7 @@ void Enum_standard_enum_reflection(void) {
     flecs::world ecs;
 
     auto enum_type = flecs::enum_type<StandardEnum>(ecs);
+    test_int(enum_type.impl_.constants_size, 3);
 
     auto e = enum_type.entity();
     test_assert(e != 0);
@@ -89,6 +90,7 @@ void Enum_sparse_enum_reflection(void) {
     flecs::world ecs;
 
     auto enum_type = flecs::enum_type<SparseEnum>(ecs);
+    test_int(enum_type.impl_.constants_size, 3);
 
     auto e = enum_type.entity();
     test_assert(e != 0);
@@ -134,6 +136,7 @@ void Enum_enum_class_reflection(void) {
     flecs::world ecs;
 
     auto enum_type = flecs::enum_type<EnumClass>(ecs);
+    test_int(enum_type.impl_.constants_size, 3);
 
     auto e = enum_type.entity();
     test_assert(e != 0);
@@ -176,6 +179,7 @@ void Enum_prefixed_enum_reflection(void) {
     flecs::world ecs;
 
     auto enum_type = flecs::enum_type<PrefixEnum>(ecs);
+    test_int(enum_type.impl_.constants_size, 2);
 
     auto e = enum_type.entity();
     test_assert(e != 0);
@@ -209,6 +213,7 @@ void Enum_constant_with_num_reflection(void) {
     flecs::world ecs;
 
     auto enum_type = flecs::enum_type<ConstantsWithNum>(ecs);
+    test_int(enum_type.impl_.constants_size, 3);
 
     auto e = enum_type.entity();
     test_assert(e != 0);
