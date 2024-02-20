@@ -3730,6 +3730,7 @@ void Commands_add_path(void) {
     char *path = ecs_get_fullpath(world, e);
     test_assert(path != NULL);
     test_str(path, "p.foo");
+    ecs_os_free(path);
 
     ecs_fini(world);
 }
@@ -3770,6 +3771,7 @@ void Commands_add_path_nested(void) {
     char *path = ecs_get_fullpath(world, e);
     test_assert(path != NULL);
     test_str(path, "p.foo.bar");
+    ecs_os_free(path);
 
     ecs_fini(world);
 }
@@ -3831,6 +3833,7 @@ void Commands_add_path_w_stage(void) {
     char *path = ecs_get_fullpath(world, e);
     test_assert(path != NULL);
     test_str(path, "p.foo");
+    ecs_os_free(path);
 
     ecs_fini(world);
 }
@@ -3875,6 +3878,7 @@ void Commands_add_path_nested_w_stage(void) {
     char *path = ecs_get_fullpath(world, e);
     test_assert(path != NULL);
     test_str(path, "p.foo.bar");
+    ecs_os_free(path);
 
     ecs_fini(world);
 }
