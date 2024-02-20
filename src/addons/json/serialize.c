@@ -1512,6 +1512,49 @@ void flecs_json_serialize_query_info(
 }
 
 static
+void flecs_json_serialize_query_plan(
+    const ecs_world_t *world,
+    const ecs_iter_t *it, 
+    ecs_strbuf_t *buf)
+{
+    (void)world;
+    (void)it;
+    (void)buf;
+
+#ifdef FLECS_RULES
+    if (!it->query) {
+        return;
+    }
+
+    /* Temporary hack to get rule object. Will no longer be necessary in v4 */
+    ecs_iter_next_action_t next = it->next;
+    if (next == ecs_page_next) {
+        if (!it->chain_it) {
+            return;
+        }
+
+        next = it->chain_it->next;
+    }
+
+    if (next != ecs_rule_next) {
+        return;
+    }
+
+    const ecs_filter_t *f = it->query;
+    const ecs_rule_t *q = ECS_OFFSET(f, -ECS_SIZEOF(ecs_header_t));
+    ecs_poly_assert(q, ecs_rule_t);
+
+    flecs_json_memberl(buf, "query_plan");
+
+    bool prev_color = ecs_log_enable_colors(true);
+    char *plan = ecs_rule_str(q);
+    flecs_json_string_escape(buf, plan);
+    ecs_os_free(plan);
+    ecs_log_enable_colors(prev_color);
+#endif
+}
+
+static
 void flecs_json_serialize_iter_variables(ecs_iter_t *it, ecs_strbuf_t *buf) {
     char **variable_names = it->variable_names;
     int32_t var_count = it->variable_count;
@@ -2254,6 +2297,11 @@ int ecs_iter_to_json_buf(
     /* Serialize query info if enabled */
     if (desc && desc->serialize_query_info) {
         flecs_json_serialize_query_info(world, it, buf);
+    }
+
+    /* Serialize query plan if enabled */
+    if (desc && desc->serialize_query_plan) {
+        flecs_json_serialize_query_plan(world, it, buf);
     }
 
     /* Serialize results */

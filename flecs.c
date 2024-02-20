@@ -34765,6 +34765,7 @@ void flecs_rest_parse_json_ser_iter_params(
     flecs_rest_bool_param(req, "type_info", &desc->serialize_type_info);
     flecs_rest_bool_param(req, "field_info", &desc->serialize_field_info);
     flecs_rest_bool_param(req, "query_info", &desc->serialize_query_info);
+    flecs_rest_bool_param(req, "query_plan", &desc->serialize_query_plan);
     flecs_rest_bool_param(req, "table", &desc->serialize_table);
     flecs_rest_bool_param(req, "rows", &desc->serialize_rows);
     bool results = true;
@@ -34992,9 +34993,15 @@ bool flecs_rest_reply_existing_query(
     }
 
     const EcsPoly *poly = ecs_get_pair(world, q, EcsPoly, EcsQuery);
-    if (!poly || !poly->poly) {
+    if (!poly) {
         flecs_reply_error(reply, 
             "resolved identifier '%s' is not a query", name);
+        reply->code = 400;
+        return true;
+    }
+
+    if (!poly->poly) {
+        flecs_reply_error(reply, "query '%s' is not initialized", name);
         reply->code = 400;
         return true;
     }
@@ -35067,60 +35074,6 @@ bool flecs_rest_reply_query(
     } else {
         ecs_iter_t it = ecs_rule_iter(world, r);
         flecs_rest_iter_to_reply(world, req, reply, &it);
-        ecs_rule_fini(r);
-    }
-
-    ecs_os_api.log_ = rest_prev_log;
-    ecs_log_enable_colors(prev_color);
-
-    return true;
-}
-
-static
-bool flecs_rest_reply_query_plan(
-    ecs_world_t *world,
-    const ecs_http_request_t* req,
-    ecs_http_reply_t *reply)
-{
-    const char *q_name = ecs_http_get_param(req, "name");
-    if (q_name) {
-        reply->code = 400;
-        ecs_strbuf_appendlit(&reply->body, 
-            "query plan endpoint unsupported for named queries");
-        return true;
-    }
-
-    const char *q = ecs_http_get_param(req, "q");
-    if (!q) {
-        ecs_strbuf_appendlit(&reply->body, "Missing parameter 'q'");
-        reply->code = 400; /* bad request */
-        return true;
-    }
-
-    bool try = false;
-    flecs_rest_bool_param(req, "try", &try);
-
-    ecs_dbg_2("rest: request query plan for '%s'", q);
-    bool prev_color = ecs_log_enable_colors(false);
-    rest_prev_log = ecs_os_api.log_;
-    ecs_os_api.log_ = flecs_rest_capture_log;
-
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = q
-    });
-    if (!r) {
-        flecs_rest_reply_set_captured_log(reply);
-        if (try) {
-            /* If client is trying queries, don't spam console with errors */
-            reply->code = 200;
-        }
-    } else {
-        ecs_log_enable_colors(true);
-        char *plan = ecs_rule_str(r);
-        ecs_strbuf_appendlit(&reply->body, "{\"content\":");
-        flecs_json_string_escape(&reply->body, plan);
-        ecs_strbuf_appendlit(&reply->body, "}");
-        ecs_os_free(plan);
         ecs_rule_fini(r);
     }
 
@@ -35513,10 +35466,6 @@ bool flecs_rest_reply(
         /* Query endpoint */
         } else if (!ecs_os_strcmp(req->path, "query")) {
             return flecs_rest_reply_query(world, req, reply);
-
-        /* Query plan endpoint */
-        } else if (!ecs_os_strcmp(req->path, "query_plan")) {
-            return flecs_rest_reply_query_plan(world, req, reply);
 
         /* World endpoint */
         } else if (!ecs_os_strcmp(req->path, "world")) {
@@ -53286,6 +53235,49 @@ void flecs_json_serialize_query_info(
 }
 
 static
+void flecs_json_serialize_query_plan(
+    const ecs_world_t *world,
+    const ecs_iter_t *it, 
+    ecs_strbuf_t *buf)
+{
+    (void)world;
+    (void)it;
+    (void)buf;
+
+#ifdef FLECS_RULES
+    if (!it->query) {
+        return;
+    }
+
+    /* Temporary hack to get rule object. Will no longer be necessary in v4 */
+    ecs_iter_next_action_t next = it->next;
+    if (next == ecs_page_next) {
+        if (!it->chain_it) {
+            return;
+        }
+
+        next = it->chain_it->next;
+    }
+
+    if (next != ecs_rule_next) {
+        return;
+    }
+
+    const ecs_filter_t *f = it->query;
+    const ecs_rule_t *q = ECS_OFFSET(f, -ECS_SIZEOF(ecs_header_t));
+    ecs_poly_assert(q, ecs_rule_t);
+
+    flecs_json_memberl(buf, "query_plan");
+
+    bool prev_color = ecs_log_enable_colors(true);
+    char *plan = ecs_rule_str(q);
+    flecs_json_string_escape(buf, plan);
+    ecs_os_free(plan);
+    ecs_log_enable_colors(prev_color);
+#endif
+}
+
+static
 void flecs_json_serialize_iter_variables(ecs_iter_t *it, ecs_strbuf_t *buf) {
     char **variable_names = it->variable_names;
     int32_t var_count = it->variable_count;
@@ -54028,6 +54020,11 @@ int ecs_iter_to_json_buf(
     /* Serialize query info if enabled */
     if (desc && desc->serialize_query_info) {
         flecs_json_serialize_query_info(world, it, buf);
+    }
+
+    /* Serialize query plan if enabled */
+    if (desc && desc->serialize_query_plan) {
+        flecs_json_serialize_query_plan(world, it, buf);
     }
 
     /* Serialize results */

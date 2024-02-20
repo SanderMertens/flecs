@@ -141,35 +141,6 @@ void Rest_try_query(void) {
     ecs_fini(world);
 }
 
-void Rest_try_query_plan(void) {
-    ecs_world_t *world = ecs_init();
-
-    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
-    test_assert(srv != NULL);
-
-    ecs_log_set_level(-4);
-
-    {
-        ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
-        test_int(-1, ecs_http_server_request(srv, "GET",
-            "/query_plan?q=Foo", &reply));
-        test_int(reply.code, 400); // No try, should error
-        ecs_strbuf_reset(&reply.body);
-    }
-
-    {
-        ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
-        test_int(0, ecs_http_server_request(srv, "GET",
-            "/query_plan?q=Foo&try=true", &reply));
-        test_int(reply.code, 200); // With try, should not error
-        ecs_strbuf_reset(&reply.body);
-    }
-
-    ecs_rest_server_fini(srv);
-
-    ecs_fini(world);
-}
-
 void Rest_query(void) {
     ecs_world_t *world = ecs_init();
 

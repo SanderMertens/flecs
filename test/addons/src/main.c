@@ -1783,7 +1783,6 @@ void Rest_get(void);
 void Rest_get_cached(void);
 void Rest_get_cached_invalid(void);
 void Rest_try_query(void);
-void Rest_try_query_plan(void);
 void Rest_query(void);
 void Rest_named_query(void);
 
@@ -8765,10 +8764,6 @@ bake_test_case Rest_testcases[] = {
         Rest_try_query
     },
     {
-        "try_query_plan",
-        Rest_try_query_plan
-    },
-    {
         "query",
         Rest_query
     },
@@ -9313,7 +9308,7 @@ static bake_test_suite suites[] = {
         "Rest",
         NULL,
         NULL,
-        8,
+        7,
         Rest_testcases
     },
     {
