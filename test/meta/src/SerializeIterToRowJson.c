@@ -3171,3 +3171,41 @@ void SerializeIterToRowJson_serialize_w_field_info_w_or(void) {
 
     ecs_fini(world);
 }
+
+void SerializeIterToRowJson_serialize_recycled_id(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_rule_t *q = ecs_rule(world, {
+        .expr = "TagA"
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t _e1 = ecs_new_id(world);
+    ecs_delete(world, _e1);
+    ecs_entity_t e1 = ecs_new_id(world);
+    test_assert(e1 != _e1);
+    test_assert((uint32_t)e1 == _e1);
+
+    ecs_add(world, e1, TagA);
+
+    ecs_iter_t it = ecs_rule_iter(world, q);
+    char *json = ecs_iter_to_json(world, &it, &(ecs_iter_to_json_desc_t) {
+        .serialize_rows = true
+    });
+    test_assert(json != NULL);
+
+    char* expect = ecs_asprintf("{\"results\":["
+        "{\"name\":\"%u\", \"tags\":[\"TagA\"]}]}", (uint32_t)e1);
+    test_str(json, expect);
+
+    ecs_os_free(json);
+    ecs_os_free(expect);
+
+    ecs_rule_fini(q);
+
+    ecs_fini(world);
+}

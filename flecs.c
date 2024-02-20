@@ -54683,7 +54683,8 @@ void flecs_json_serialize_iter_this_row(
         flecs_json_string(buf, names[row].value);
     } else {
         ecs_strbuf_appendlit(buf, "\"");
-        ecs_strbuf_appendint(buf, flecs_uto(int32_t, it->entities[row]));
+        ecs_strbuf_appendint(buf, flecs_uto(int64_t, 
+            (uint32_t)it->entities[row]));
         ecs_strbuf_appendlit(buf, "\"");
     }
 }
