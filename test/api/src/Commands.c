@@ -3713,3 +3713,211 @@ void Commands_on_set_hook_batched_is_deferred(void) {
 
     ecs_fini(world);
 }
+
+void Commands_add_path(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_entity(world, "p");
+    ecs_entity_t e = ecs_new_entity(world, "e");
+
+    ecs_defer_begin(world);
+    ecs_add_path(world, e, p, "foo");
+    ecs_defer_end(world);
+
+    ecs_entity_t foo = ecs_lookup(world, "p.foo");
+    test_assert(foo == e);
+
+    char *path = ecs_get_fullpath(world, e);
+    test_assert(path != NULL);
+    test_str(path, "p.foo");
+
+    ecs_fini(world);
+}
+
+void Commands_add_path_to_deleted_parent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_entity(world, "p");
+    ecs_entity_t e = ecs_new_entity(world, "e");
+
+    ecs_defer_begin(world);
+    ecs_delete(world, p);
+    ecs_add_path(world, e, p, "foo");
+    ecs_defer_end(world);
+
+    ecs_entity_t foo = ecs_lookup(world, "p.foo");
+    test_assert(foo == 0);
+
+    test_assert(!ecs_is_alive(world, p));
+    test_assert(!ecs_is_alive(world, e));
+
+    ecs_fini(world);
+}
+
+void Commands_add_path_nested(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_entity(world, "p");
+    ecs_entity_t e = ecs_new_entity(world, "e");
+
+    ecs_defer_begin(world);
+    ecs_add_path(world, e, p, "foo.bar");
+    ecs_defer_end(world);
+
+    ecs_entity_t foo = ecs_lookup(world, "p.foo");
+    test_assert(foo != 0);
+
+    char *path = ecs_get_fullpath(world, e);
+    test_assert(path != NULL);
+    test_str(path, "p.foo.bar");
+
+    ecs_fini(world);
+}
+
+void Commands_add_path_nested_to_deleted_parent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_entity(world, "p");
+    ecs_entity_t e = ecs_new_entity(world, "e");
+
+    ecs_defer_begin(world);
+    ecs_delete(world, p);
+    ecs_add_path(world, e, p, "foo.bar");
+    ecs_defer_end(world);
+
+    ecs_entity_t foo = ecs_lookup(world, "p.foo");
+    test_assert(foo == 0);
+
+    test_assert(!ecs_is_alive(world, p));
+    test_assert(!ecs_is_alive(world, e));
+
+    ecs_fini(world);
+}
+
+void Commands_add_path_nested_to_created_deleted_parent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_entity(world, "p");
+    ecs_entity_t e = ecs_new_entity(world, "e");
+
+    ecs_defer_begin(world);
+    ecs_entity_t foo = ecs_new_entity(world, "p.foo");
+    ecs_delete(world, foo);
+    ecs_add_path(world, e, p, "foo.bar");
+    ecs_defer_end(world);
+
+    test_assert(ecs_is_alive(world, p));
+    test_assert(!ecs_is_alive(world, e));
+    test_assert(!ecs_is_alive(world, foo));
+
+    ecs_fini(world);
+}
+
+void Commands_add_path_w_stage(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_entity(world, "p");
+    ecs_entity_t e = ecs_new_entity(world, "e");
+
+    ecs_world_t *s = ecs_get_stage(world, 0);
+
+    ecs_defer_begin(world);
+    ecs_add_path(s, e, p, "foo");
+    ecs_defer_end(world);
+
+    ecs_entity_t foo = ecs_lookup(world, "p.foo");
+    test_assert(foo == e);
+
+    char *path = ecs_get_fullpath(world, e);
+    test_assert(path != NULL);
+    test_str(path, "p.foo");
+
+    ecs_fini(world);
+}
+
+void Commands_add_path_to_deleted_parent_w_stage(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_entity(world, "p");
+    ecs_entity_t e = ecs_new_entity(world, "e");
+
+    ecs_world_t *s = ecs_get_stage(world, 0);
+
+    ecs_defer_begin(world);
+    ecs_delete(world, p);
+    ecs_add_path(s, e, p, "foo");
+    ecs_defer_end(world);
+
+    ecs_entity_t foo = ecs_lookup(world, "p.foo");
+    test_assert(foo == 0);
+
+    test_assert(!ecs_is_alive(world, p));
+    test_assert(!ecs_is_alive(world, e));
+
+    ecs_fini(world);
+}
+
+void Commands_add_path_nested_w_stage(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_entity(world, "p");
+    ecs_entity_t e = ecs_new_entity(world, "e");
+
+    ecs_world_t *s = ecs_get_stage(world, 0);
+
+    ecs_defer_begin(world);
+    ecs_add_path(s, e, p, "foo.bar");
+    ecs_defer_end(world);
+
+    ecs_entity_t foo = ecs_lookup(world, "p.foo");
+    test_assert(foo != 0);
+
+    char *path = ecs_get_fullpath(world, e);
+    test_assert(path != NULL);
+    test_str(path, "p.foo.bar");
+
+    ecs_fini(world);
+}
+
+void Commands_add_path_nested_to_deleted_parent_w_stage(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_entity(world, "p");
+    ecs_entity_t e = ecs_new_entity(world, "e");
+
+    ecs_world_t *s = ecs_get_stage(world, 0);
+
+    ecs_defer_begin(world);
+    ecs_delete(world, p);
+    ecs_add_path(s, e, p, "foo.bar");
+    ecs_defer_end(world);
+
+    ecs_entity_t foo = ecs_lookup(world, "p.foo");
+    test_assert(foo == 0);
+
+    test_assert(!ecs_is_alive(world, p));
+    test_assert(!ecs_is_alive(world, e));
+
+    ecs_fini(world);
+}
+
+void Commands_add_path_nested_to_created_deleted_parent_w_stage(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_new_entity(world, "p");
+    ecs_entity_t e = ecs_new_entity(world, "e");
+
+    ecs_world_t *s = ecs_get_stage(world, 0);
+
+    ecs_defer_begin(world);
+    ecs_entity_t foo = ecs_new_entity(s, "p.foo");
+    ecs_delete(s, foo);
+    ecs_add_path(s, e, p, "foo.bar");
+    ecs_defer_end(world);
+
+    test_assert(ecs_is_alive(world, p));
+    test_assert(!ecs_is_alive(world, e));
+    test_assert(!ecs_is_alive(world, foo));
+
+    ecs_fini(world);
+}

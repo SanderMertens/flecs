@@ -4987,15 +4987,24 @@ bool flecs_defer_end(
                     flecs_flush_bulk_new(world, cmd);
                     world->info.cmd.other_count ++;
                     continue;
-                case EcsCmdPath:
+                case EcsCmdPath: {
+                    bool keep_alive = true;
                     ecs_ensure(world, e);
                     if (cmd->id) {
-                        ecs_add_pair(world, e, EcsChildOf, cmd->id);
+                        if (ecs_is_alive(world, cmd->id)) {
+                            ecs_add_pair(world, e, EcsChildOf, cmd->id);
+                        } else {
+                            ecs_delete(world, e);
+                            keep_alive = false;
+                        }
                     }
-                    ecs_set_name(world, e, cmd->is._1.value);
-                    ecs_os_free(cmd->is._1.value);
-                    cmd->is._1.value = NULL;
+                    if (keep_alive) {
+                        ecs_set_name(world, e, cmd->is._1.value);
+                        ecs_os_free(cmd->is._1.value);
+                        cmd->is._1.value = NULL;
+                    }
                     break;
+                }
                 case EcsCmdEvent: {
                     ecs_event_desc_t *desc = cmd->is._1.value;
                     ecs_assert(desc != NULL, ECS_INTERNAL_ERROR, NULL);

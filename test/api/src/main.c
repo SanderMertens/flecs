@@ -2531,6 +2531,16 @@ void Commands_on_add_hook_while_defer_suspended(void);
 void Commands_on_set_hook_while_defer_suspended(void);
 void Commands_on_remove_hook_while_defer_suspended(void);
 void Commands_on_set_hook_batched_is_deferred(void);
+void Commands_add_path(void);
+void Commands_add_path_to_deleted_parent(void);
+void Commands_add_path_nested(void);
+void Commands_add_path_nested_to_deleted_parent(void);
+void Commands_add_path_nested_to_created_deleted_parent(void);
+void Commands_add_path_w_stage(void);
+void Commands_add_path_to_deleted_parent_w_stage(void);
+void Commands_add_path_nested_w_stage(void);
+void Commands_add_path_nested_to_deleted_parent_w_stage(void);
+void Commands_add_path_nested_to_created_deleted_parent_w_stage(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -12524,6 +12534,46 @@ bake_test_case Commands_testcases[] = {
     {
         "on_set_hook_batched_is_deferred",
         Commands_on_set_hook_batched_is_deferred
+    },
+    {
+        "add_path",
+        Commands_add_path
+    },
+    {
+        "add_path_to_deleted_parent",
+        Commands_add_path_to_deleted_parent
+    },
+    {
+        "add_path_nested",
+        Commands_add_path_nested
+    },
+    {
+        "add_path_nested_to_deleted_parent",
+        Commands_add_path_nested_to_deleted_parent
+    },
+    {
+        "add_path_nested_to_created_deleted_parent",
+        Commands_add_path_nested_to_created_deleted_parent
+    },
+    {
+        "add_path_w_stage",
+        Commands_add_path_w_stage
+    },
+    {
+        "add_path_to_deleted_parent_w_stage",
+        Commands_add_path_to_deleted_parent_w_stage
+    },
+    {
+        "add_path_nested_w_stage",
+        Commands_add_path_nested_w_stage
+    },
+    {
+        "add_path_nested_to_deleted_parent_w_stage",
+        Commands_add_path_nested_to_deleted_parent_w_stage
+    },
+    {
+        "add_path_nested_to_created_deleted_parent_w_stage",
+        Commands_add_path_nested_to_created_deleted_parent_w_stage
     }
 };
 
@@ -13435,7 +13485,7 @@ static bake_test_suite suites[] = {
         "Commands",
         NULL,
         NULL,
-        123,
+        133,
         Commands_testcases
     },
     {
