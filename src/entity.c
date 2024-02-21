@@ -5000,9 +5000,9 @@ bool flecs_defer_end(
                     }
                     if (keep_alive) {
                         ecs_set_name(world, e, cmd->is._1.value);
-                        ecs_os_free(cmd->is._1.value);
-                        cmd->is._1.value = NULL;
                     }
+                    ecs_os_free(cmd->is._1.value);
+                    cmd->is._1.value = NULL;
                     break;
                 }
                 case EcsCmdEvent: {
