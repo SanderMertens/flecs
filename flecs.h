@@ -16212,6 +16212,9 @@ using remove_pointer_t = typename std::remove_pointer<T>::type;
 template <typename T>
 using remove_reference_t = typename std::remove_reference<T>::type;
 
+template <typename T>
+using underlying_type_t = typename std::underlying_type<T>::type;
+
 using std::is_base_of;
 using std::is_empty;
 using std::is_const;
@@ -16565,7 +16568,7 @@ namespace flecs {
 
 /** Int to enum */
 namespace _ {
-template <typename E, int Value>
+template <typename E, underlying_type_t<E> Value>
 struct to_constant {
 #if defined(__clang__) && __clang_major__ >= 16
     // https://reviews.llvm.org/D130058, https://reviews.llvm.org/D131307
@@ -16575,7 +16578,7 @@ struct to_constant {
 #endif
 };
 
-template <typename E, int Value>
+template <typename E, underlying_type_t<E> Value>
 constexpr E to_constant<E, Value>::value;
 }
 
@@ -16705,35 +16708,52 @@ struct enum_constant_data {
 template <typename E>
 struct enum_reflection {
     template <E Value>
-    static constexpr int to_int() {
-        return static_cast<int>(Value);
+    static constexpr underlying_type_t<E> to_int() {
+        return static_cast<underlying_type_t<E>>(Value);
     }
 
-    template <int Value>
+    template <underlying_type_t<E> Value>
     static constexpr E from_int() {
         return to_constant<E, Value>::value;
     }
 
     template <E Value>
-    static constexpr int is_not_0() {
-        return static_cast<int>(Value != from_int<0>());
+    static constexpr underlying_type_t<E> is_not_0() {
+        return static_cast<underlying_type_t<E>>(Value != from_int<0>());
     }
+
     template <E Value, flecs::if_not_t< enum_constant_is_valid<E, Value>() > = 0>
-    static constexpr int count_if_valid() {
+    static constexpr underlying_type_t<E> count_if_valid() {
         return 0;
     }
 
     template <E Value, flecs::if_t< enum_constant_is_valid<E, Value>() > = 0>
-    static constexpr int count_if_valid() {
+    static constexpr underlying_type_t<E> count_if_valid() {
         return 1;
     }
 
-    template <E Value = FLECS_ENUM_MAX(E) >
-    static constexpr int num_enums() {
-        return is_not_0<Value>()
-            ?  num_enums<from_int<to_int<Value>() - is_not_0<Value>()>()>() + count_if_valid<Value>()
-            : count_if_valid<Value>();
+    template <E Low, E High>
+    static constexpr underlying_type_t<E> num_enums() {
+        return to_int<High>() - to_int<Low>() <= 1
+            ? to_int<High>() == to_int<Low>()
+                ? count_if_valid<Low>()
+                : count_if_valid<Low>() + count_if_valid<High>()
+            : num_enums<Low, from_int<(to_int<Low>()+to_int<High>()) / 2>()>() + num_enums<from_int<(to_int<Low>()+to_int<High>()) / 2 + 1>(), High>();
     }
+
+    template <E Low, E High>
+    static constexpr underlying_type_t<E> num_masks() {
+        return (to_int<Low>() & to_int<High>()) || High == Low
+            ? 0
+            : count_if_valid<High>() + num_masks<Low, from_int<((to_int<High>() >> 1) & ~MSB)>()>();
+    }
+
+    template <E Value = FLECS_ENUM_MAX(E)>
+    static constexpr underlying_type_t<E> num_enums() {
+        return num_enums<from_int<0>(), Value>() + num_masks<Value, from_int<MSB>()>();
+    }
+
+    static const underlying_type_t<E> MSB = (underlying_type_t<E>)1 << (sizeof(underlying_type_t<E>) * 8 - 1);
 };
 
 /** Enumeration type data */
@@ -16744,7 +16764,7 @@ struct enum_data_impl {
     int max;
     int contiguous_through;
     // Constants array is sized to the number of found-constants, or 1 (to avoid 0-sized array)
-    const static unsigned int constants_size = enum_reflection<E>::template num_enums< enum_last<E>::value >();
+    static constexpr unsigned int constants_size = enum_reflection<E>::template num_enums< enum_last<E>::value >();
     enum_constant_data constants[constants_size? constants_size: 1];
 };
 
@@ -16830,7 +16850,7 @@ struct enum_data {
         : world_(world)
         , impl_(impl) { }
 
-    bool is_valid(int value) {
+    bool is_valid(underlying_type_t<E> value) {
         int index = index_by_value(value);
         if (index < 0) {
             return false;
@@ -16838,7 +16858,11 @@ struct enum_data {
         return impl_.constants[index].id != 0;
     }
 
-    int index_by_value(int value) const {
+    bool is_valid(E value) {
+        return is_valid(static_cast<underlying_type_t<E>>(value));
+    }
+
+    int index_by_value(underlying_type_t<E> value) const {
         if (value < 0 || !impl_.max) {
             return -1;
         }
@@ -16857,7 +16881,7 @@ struct enum_data {
     }
 
     int index_by_value(E value) const {
-        return index_by_value(static_cast<int>(value));
+        return index_by_value(static_cast<underlying_type_t<E>>(value));
     }
 
     int first() const {
@@ -16873,7 +16897,7 @@ struct enum_data {
     }
 
     flecs::entity entity() const;
-    flecs::entity entity(int value) const;
+    flecs::entity entity(underlying_type_t<E> value) const;
     flecs::entity entity(E value) const;
 
     flecs::world_t *world_;
@@ -31875,7 +31899,7 @@ inline flecs::entity enum_data<E>::entity() const {
 }
 
 template <typename E>
-inline flecs::entity enum_data<E>::entity(int value) const {
+inline flecs::entity enum_data<E>::entity(underlying_type_t<E> value) const {
     int index = index_by_value(value);
     if (index >= 0) {
         return flecs::entity(world_, impl_.constants[index].id);
@@ -31885,7 +31909,7 @@ inline flecs::entity enum_data<E>::entity(int value) const {
 
 template <typename E>
 inline flecs::entity enum_data<E>::entity(E value) const {
-    return entity(static_cast<int>(value));
+    return entity(static_cast<underlying_type_t<E>>(value));
 }
 
 /** Use provided scope for operations ran on returned world.

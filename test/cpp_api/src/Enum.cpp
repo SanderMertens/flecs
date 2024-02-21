@@ -12,6 +12,83 @@ enum SparseEnum {
     Black = 1, White = 3, Grey = 5
 };
 
+enum BitMaskEnum {
+    ZERO = 0,
+    bit_LS_0,
+    bit_LS_1 = bit_LS_0 << 1,
+    bit_LS_2 = bit_LS_0<<2,
+    bit_LS_3 = bit_LS_0<<3,
+    bit_LS_4 = bit_LS_0<<4,
+    bit_LS_5 = bit_LS_0<<5,
+    bit_LS_6 = bit_LS_0<<6,
+    bit_LS_7 = bit_LS_0<<7,
+    bit_LS_8 = bit_LS_0<<8,
+    bit_LS_9 = bit_LS_0<<9,
+    bit_LS_10 = bit_LS_0<<10,
+    bit_LS_11 = bit_LS_0<<11,
+    bit_LS_12 = bit_LS_0<<12,
+    bit_LS_13 = bit_LS_0<<13,
+    bit_LS_14 = bit_LS_0<<14,
+    bit_LS_15 = bit_LS_0<<15,
+    bit_LS_16 = bit_LS_0<<16,
+    bit_LS_17 = bit_LS_0<<17,
+    bit_LS_18 = bit_LS_0<<18,
+    bit_LS_19 = bit_LS_0<<19,
+    bit_LS_20 = bit_LS_0<<20,
+    bit_LS_21 = bit_LS_0<<21,
+    bit_LS_22 = bit_LS_0<<22,
+    bit_LS_23 = bit_LS_0<<23,
+    bit_LS_24 = bit_LS_0<<24,
+    bit_LS_25 = bit_LS_0<<25,
+    bit_LS_26 = bit_LS_0<<26,
+    bit_LS_27 = bit_LS_0<<27,
+    bit_LS_28 = bit_LS_0<<28,
+    bit_LS_29 = bit_LS_0<<29,
+    bit_LS_30 = bit_LS_0<<30,
+    bit_LS_31 = bit_LS_0<<31,
+};
+
+enum class TypedBitMaskEnum : uint64_t {
+    ZERO = 0,
+    bit_LS_0,
+    bit_LS_1 = bit_LS_0 << 1,
+    bit_LS_2 = bit_LS_0<<2,
+    bit_LS_3 = bit_LS_0<<3,
+    bit_LS_4 = bit_LS_0<<4,
+    bit_LS_5 = bit_LS_0<<5,
+    bit_LS_6 = bit_LS_0<<6,
+    bit_LS_7 = bit_LS_0<<7,
+    bit_LS_8 = bit_LS_0<<8,
+    bit_LS_9 = bit_LS_0<<9,
+    bit_LS_10 = bit_LS_0<<10,
+    bit_LS_11 = bit_LS_0<<11,
+    bit_LS_12 = bit_LS_0<<12,
+    bit_LS_13 = bit_LS_0<<13,
+    bit_LS_14 = bit_LS_0<<14,
+    bit_LS_15 = bit_LS_0<<15,
+    bit_LS_16 = bit_LS_0<<16,
+    bit_LS_17 = bit_LS_0<<17,
+    bit_LS_18 = bit_LS_0<<18,
+    bit_LS_19 = bit_LS_0<<19,
+    bit_LS_20 = bit_LS_0<<20,
+    bit_LS_21 = bit_LS_0<<21,
+    bit_LS_22 = bit_LS_0<<22,
+    bit_LS_23 = bit_LS_0<<23,
+    bit_LS_24 = bit_LS_0<<24,
+    bit_LS_25 = bit_LS_0<<25,
+    bit_LS_26 = bit_LS_0<<26,
+    bit_LS_27 = bit_LS_0<<27,
+    bit_LS_28 = bit_LS_0<<28,
+    bit_LS_29 = bit_LS_0<<29,
+    bit_LS_30 = bit_LS_0<<30,
+    bit_LS_31 = bit_LS_0<<31,
+    bit_LS_32 = bit_LS_0<<32,
+    bit_LS_33 = bit_LS_0<<33,
+    bit_LS_34 = bit_LS_0<<34,
+    bit_LS_35 = bit_LS_0<<35,
+    bit_LS_36 = bit_LS_0<<36,
+};
+
 enum class EnumClass {
     Grass, Sand, Stone
 };
@@ -129,6 +206,102 @@ void Enum_sparse_enum_reflection(void) {
     test_bool(enum_type.is_valid(0), false);
     test_bool(enum_type.is_valid(2), false);
     test_bool(enum_type.is_valid(4), false);
+    test_bool(enum_type.is_valid(6), false);
+}
+
+void Enum_bitmask_enum_reflection(void) {
+    flecs::world ecs;
+
+    auto enum_type = flecs::enum_type<BitMaskEnum>(ecs);
+    test_int(enum_type.impl_.constants_size, 33);
+
+    auto e = enum_type.entity();
+    test_assert(e != 0);
+    test_assert(e == ecs.component<BitMaskEnum>());
+    test_str(e.path().c_str(), "::BitMaskEnum");
+    test_int(enum_type.first(), 0);
+    test_int(enum_type.last(), 32);
+
+    test_int(enum_type.index_by_value(ZERO), 0);
+    test_int(enum_type.index_by_value(bit_LS_0), 1);
+    test_int(enum_type.index_by_value(bit_LS_1), 2);
+    test_int(enum_type.index_by_value(2), 2);
+    test_int(enum_type.index_by_value(4), 3);
+    test_int(enum_type.index_by_value(bit_LS_31), 32);
+    test_int(enum_type.index_by_value(7), -1);
+
+    auto e_8 = enum_type.entity(8);
+    auto e_16 = enum_type.entity(bit_LS_5);
+    auto e_32 = enum_type.entity(0x20);
+
+    test_assert(e_8 != 0);
+    test_str(e_8.path().c_str(), "::BitMaskEnum::bit_LS_4");
+    test_bool(enum_type.is_valid(bit_LS_8), true);
+    test_assert(e_8.get<BitMaskEnum>() != nullptr);
+    test_assert(e_8.get<BitMaskEnum>()[0] == bit_LS_8);
+
+    test_assert(e_16 != 0);
+    test_str(e_16.path().c_str(), "::BitMaskEnum::bit_LS_5");
+    test_bool(enum_type.is_valid(bit_LS_5), true);
+    test_assert(e_16.get<BitMaskEnum>() != nullptr);
+    test_assert(e_16.get<BitMaskEnum>()[0] == bit_LS_5);
+
+    test_assert(e_32 != 0);
+    test_str(e_32.path().c_str(), "::BitMaskEnum::bit_LS_6");
+    test_bool(enum_type.is_valid(bit_LS_6), true);
+    test_assert(e_32.get<BitMaskEnum>() != nullptr);
+    test_assert(e_32.get<BitMaskEnum>()[0] == bit_LS_6);
+
+    test_bool(enum_type.is_valid(3), false);
+    test_bool(enum_type.is_valid(5), false);
+    test_bool(enum_type.is_valid(6), false);
+}
+
+void Enum_bitmask_enum_with_type_reflection(void) {
+    flecs::world ecs;
+
+    auto enum_type = flecs::enum_type<TypedBitMaskEnum>(ecs);
+    test_int(enum_type.impl_.constants_size, 36);
+
+    auto e = enum_type.entity();
+    test_assert(e != 0);
+    test_assert(e == ecs.component<TypedBitMaskEnum>());
+    test_str(e.path().c_str(), "::TypedBitMaskEnum");
+    test_int(enum_type.first(), 0);
+    test_int(enum_type.last(), 36);
+
+    test_int(enum_type.index_by_value(TypedBitMaskEnum::ZERO), 0);
+    test_int(enum_type.index_by_value(TypedBitMaskEnum::bit_LS_0), 1);
+    test_int(enum_type.index_by_value(TypedBitMaskEnum::bit_LS_1), 2);
+    test_int(enum_type.index_by_value(2), 2);
+    test_int(enum_type.index_by_value(4), 3);
+    test_int(enum_type.index_by_value(TypedBitMaskEnum::bit_LS_31), 32);
+    test_int(enum_type.index_by_value(7), -1);
+
+    auto e_8 = enum_type.entity(8);
+    auto e_16 = enum_type.entity(TypedBitMaskEnum::bit_LS_5);
+    auto e_32 = enum_type.entity(0x20);
+
+    test_assert(e_8 != 0);
+    test_str(e_8.path().c_str(), "::TypedBitMaskEnum::bit_LS_4");
+    test_bool(enum_type.is_valid(TypedBitMaskEnum::bit_LS_8), true);
+    test_assert(e_8.get<TypedBitMaskEnum>() != nullptr);
+    test_assert(e_8.get<TypedBitMaskEnum>()[0] == TypedBitMaskEnum::bit_LS_8);
+
+    test_assert(e_16 != 0);
+    test_str(e_16.path().c_str(), "::TypedBitMaskEnum::bit_LS_5");
+    test_bool(enum_type.is_valid(TypedBitMaskEnum::bit_LS_5), true);
+    test_assert(e_16.get<TypedBitMaskEnum>() != nullptr);
+    test_assert(e_16.get<TypedBitMaskEnum>()[0] == TypedBitMaskEnum::bit_LS_5);
+
+    test_assert(e_32 != 0);
+    test_str(e_32.path().c_str(), "::TypedBitMaskEnum::bit_LS_6");
+    test_bool(enum_type.is_valid(TypedBitMaskEnum::bit_LS_6), true);
+    test_assert(e_32.get<TypedBitMaskEnum>() != nullptr);
+    test_assert(e_32.get<TypedBitMaskEnum>()[0] == TypedBitMaskEnum::bit_LS_6);
+
+    test_bool(enum_type.is_valid(3), false);
+    test_bool(enum_type.is_valid(5), false);
     test_bool(enum_type.is_valid(6), false);
 }
 
@@ -965,4 +1138,8 @@ void Enum_enum_child_count(void) {
         .build();
 
     test_assert(f.count() == 3);
+}
+
+void Enum_enum_w_different_size(void) {
+    // Implement testcase
 }

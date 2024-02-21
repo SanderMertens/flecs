@@ -258,7 +258,7 @@ inline flecs::entity enum_data<E>::entity() const {
 }
 
 template <typename E>
-inline flecs::entity enum_data<E>::entity(int value) const {
+inline flecs::entity enum_data<E>::entity(underlying_type_t<E> value) const {
     int index = index_by_value(value);
     if (index >= 0) {
         return flecs::entity(world_, impl_.constants[index].id);
@@ -268,7 +268,7 @@ inline flecs::entity enum_data<E>::entity(int value) const {
 
 template <typename E>
 inline flecs::entity enum_data<E>::entity(E value) const {
-    return entity(static_cast<int>(value));
+    return entity(static_cast<underlying_type_t<E>>(value));
 }
 
 /** Use provided scope for operations ran on returned world.

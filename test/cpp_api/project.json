@@ -345,6 +345,8 @@
             "testcases": [
                 "standard_enum_reflection",
                 "sparse_enum_reflection",
+                "bitmask_enum_reflection",
+                "bitmask_enum_with_type_reflection",
                 "enum_class_reflection",
                 "prefixed_enum_reflection",
                 "constant_with_num_reflection",
@@ -366,7 +368,7 @@
                 "add_enum_constant_w_tag",
                 "remove_enum_constant_w_tag",
                 "set_enum_constant_w_tag",
-                "enum_w_incorrect_size",
+                "enum_w_different_size",
                 "add_union_enum",
                 "add_2_union_enums",
                 "add_2_union_enums_reverse",
