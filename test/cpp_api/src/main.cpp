@@ -333,6 +333,8 @@ void Pairs_set_R_existing_value(void);
 // Testsuite 'Enum'
 void Enum_standard_enum_reflection(void);
 void Enum_sparse_enum_reflection(void);
+void Enum_bitmask_enum_reflection(void);
+void Enum_bitmask_enum_with_type_reflection(void);
 void Enum_enum_class_reflection(void);
 void Enum_prefixed_enum_reflection(void);
 void Enum_constant_with_num_reflection(void);
@@ -2620,6 +2622,14 @@ bake_test_case Enum_testcases[] = {
     {
         "sparse_enum_reflection",
         Enum_sparse_enum_reflection
+    },
+    {
+        "bitmask_enum_reflection",
+        Enum_bitmask_enum_reflection
+    },
+    {
+        "bitmask_enum_with_type_reflection",
+        Enum_bitmask_enum_with_type_reflection
     },
     {
         "enum_class_reflection",
@@ -6519,7 +6529,6 @@ bake_test_case Doc_testcases[] = {
     }
 };
 
-
 static bake_test_suite suites[] = {
     {
         "PrettyFunction",
@@ -6546,7 +6555,7 @@ static bake_test_suite suites[] = {
         "Enum",
         NULL,
         NULL,
-        36,
+        38,
         Enum_testcases
     },
     {

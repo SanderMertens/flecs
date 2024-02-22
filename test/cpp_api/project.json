@@ -368,7 +368,7 @@
                 "add_enum_constant_w_tag",
                 "remove_enum_constant_w_tag",
                 "set_enum_constant_w_tag",
-                "enum_w_different_size",
+                "enum_w_incorrect_size",
                 "add_union_enum",
                 "add_2_union_enums",
                 "add_2_union_enums_reverse",

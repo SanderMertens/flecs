@@ -16548,6 +16548,7 @@ struct string_view : string {
  */
 
 #include <string.h>
+#include <limits>
 
 #define FLECS_ENUM_MAX(T) _::to_constant<T, 128>::value
 #define FLECS_ENUM_MAX_COUNT (FLECS_ENUM_MAX(int) + 1)
@@ -16699,13 +16700,14 @@ static const char* enum_constant_to_name() {
 }
 
 /** Enumeration constant data */
+template<typename T>
 struct enum_constant_data {
     flecs::entity_t id;
-    int offset;
+    T offset;
 };
 
 /** Compile time generated enum data */
-template <typename E>
+template <typename E, template<typename> class Fn>
 struct enum_reflection {
     template <E Value>
     static constexpr underlying_type_t<E> to_int() {
@@ -16722,55 +16724,69 @@ struct enum_reflection {
         return static_cast<underlying_type_t<E>>(Value != from_int<0>());
     }
 
-    template <E Value, flecs::if_not_t< enum_constant_is_valid<E, Value>() > = 0>
-    static constexpr underlying_type_t<E> count_if_valid() {
-        return 0;
-    }
-
-    template <E Value, flecs::if_t< enum_constant_is_valid<E, Value>() > = 0>
-    static constexpr underlying_type_t<E> count_if_valid() {
-        return 1;
-    }
-
-    template <E Low, E High>
-    static constexpr underlying_type_t<E> num_enums() {
+    template <E Low, E High, typename... Args>
+    static constexpr underlying_type_t<E> each_enum_range(underlying_type_t<E> last_value, Args... args) {
         return to_int<High>() - to_int<Low>() <= 1
             ? to_int<High>() == to_int<Low>()
-                ? count_if_valid<Low>()
-                : count_if_valid<Low>() + count_if_valid<High>()
-            : num_enums<Low, from_int<(to_int<Low>()+to_int<High>()) / 2>()>() + num_enums<from_int<(to_int<Low>()+to_int<High>()) / 2 + 1>(), High>();
+                ? Fn<E>::template fn<Low>(last_value, args...)
+                : Fn<E>::template fn<High>(Fn<E>::template fn<Low>(last_value, args...), args...)
+            : each_enum_range<from_int<(to_int<Low>()+to_int<High>()) / 2 + 1>(), High>(
+                    each_enum_range<Low, from_int<(to_int<Low>()+to_int<High>()) / 2>()>(last_value, args...),
+                    args...
+              );
     }
 
-    template <E Low, E High>
-    static constexpr underlying_type_t<E> num_masks() {
+    template <E Low, E High, typename... Args>
+    static constexpr underlying_type_t<E> each_mask_range(underlying_type_t<E> last_value, Args... args) {
         return (to_int<Low>() & to_int<High>()) || High == Low
-            ? 0
-            : count_if_valid<High>() + num_masks<Low, from_int<((to_int<High>() >> 1) & ~MSB)>()>();
+            ? last_value
+            : Fn<E>::template fn<High>(
+                each_mask_range<Low, from_int<((to_int<High>() >> 1) & ~high_bit)>()>(last_value, args...),
+                args...
+              );
     }
 
-    template <E Value = FLECS_ENUM_MAX(E)>
-    static constexpr underlying_type_t<E> num_enums() {
-        return num_enums<from_int<0>(), Value>() + num_masks<Value, from_int<MSB>()>();
+    template <E Value = FLECS_ENUM_MAX(E), typename... Args>
+    static constexpr underlying_type_t<E> each_enum(Args... args) {
+        return each_mask_range<Value, from_int<high_bit>()>(each_enum_range<from_int<0>(), Value>(0, args...), args...);
     }
 
-    static const underlying_type_t<E> MSB = (underlying_type_t<E>)1 << (sizeof(underlying_type_t<E>) * 8 - 1);
+    static const underlying_type_t<E> high_bit = static_cast<underlying_type_t<E>>(1) << (sizeof(underlying_type_t<E>) * 8 - 1);
 };
 
 /** Enumeration type data */
 template<typename E>
 struct enum_data_impl {
+private:
+    template<typename Enum>
+    struct reflection_count {
+        template <Enum Value, flecs::if_not_t< enum_constant_is_valid<Enum, Value>() > = 0>
+        static constexpr underlying_type_t<Enum> fn(underlying_type_t<E> last_value) {
+            return last_value;
+        }
+
+        template <Enum Value, flecs::if_t< enum_constant_is_valid<Enum, Value>() > = 0>
+        static constexpr underlying_type_t<Enum> fn(underlying_type_t<E> last_value) {
+            return 1 + last_value;
+        }
+    };
+    using EnumReflectionCount = enum_reflection<E, reflection_count>;
+public:
     flecs::entity_t id;
     int min;
     int max;
-    int contiguous_through;
+    bool has_contiguous;
+    underlying_type_t<E> contiguous_until;
     // Constants array is sized to the number of found-constants, or 1 (to avoid 0-sized array)
-    static constexpr unsigned int constants_size = enum_reflection<E>::template num_enums< enum_last<E>::value >();
-    enum_constant_data constants[constants_size? constants_size: 1];
+    static constexpr unsigned int constants_size = EnumReflectionCount::template each_enum< enum_last<E>::value >();
+    enum_constant_data<underlying_type_t<E>> constants[constants_size? constants_size: 1];
 };
 
 /** Class that scans an enum for constants, extracts names & creates entities */
 template <typename E>
 struct enum_type {
+    using EnumReflectionInit = enum_reflection<E, enum_type>;
+
     static enum_data_impl<E> data;
 
     static enum_type<E>& get() {
@@ -16779,7 +16795,11 @@ struct enum_type {
     }
 
     flecs::entity_t entity(E value) const {
-        return data.constants[static_cast<int>(value)].id;
+        int index = index_by_value(value);
+        if (index >= 0) {
+            return data.constants[index].id;
+        }
+        return 0;
     }
 
     void init(flecs::world_t *world, flecs::entity_t id) {
@@ -16788,45 +16808,41 @@ struct enum_type {
 #endif
         data.min = 0;
         data.max = -1;
-        data.contiguous_through = -1;
+        data.has_contiguous = true;
+        data.contiguous_until = 0;
 
         ecs_log_push();
         ecs_cpp_enum_init(world, id);
         data.id = id;
-        init< enum_last<E>::value >(world);
+        EnumReflectionInit::template each_enum< enum_last<E>::value >(world);
         ecs_log_pop();
     }
 
-private:
-
     template <E Value, flecs::if_not_t< enum_constant_is_valid<E, Value>() > = 0>
-    static int init_constant(flecs::world_t*, int last_value) {
+    static underlying_type_t<E> fn(underlying_type_t<E> last_value, flecs::world_t*) {
         return last_value;
     }
 
     template <E Value, flecs::if_t< enum_constant_is_valid<E, Value>() > = 0>
-    static int init_constant(flecs::world_t *world, int last_value) {
-        int v = enum_reflection<E>::template to_int<Value>();
+    static underlying_type_t<E> fn(underlying_type_t<E> last_value, flecs::world_t *world) {
+        auto v = EnumReflectionInit::template to_int<Value>();
         const char *name = enum_constant_to_name<E, Value>();
         ++data.max;
-        if (data.max == v && data.contiguous_through == v - 1) {
+        if (data.has_contiguous && static_cast<underlying_type_t<E>>(data.max) == v && data.contiguous_until == v) {
             // Still contiguous through current value
-            data.contiguous_through = v;
+            ++data.contiguous_until;
+        }
+        else if (!data.contiguous_until && data.has_contiguous) {
+            data.has_contiguous = false;
         }
 
+        ecs_assert(!(last_value > 0 && v < std::numeric_limits<underlying_type_t<E>>::min() + last_value), ECS_UNSUPPORTED,
+            "Signed integer enums causes integer overflow when recording offset from high positive to"
+            " low negative. Consider using unsigned integers as underlying type.");
         data.constants[data.max].offset = v - last_value;
         data.constants[data.max].id = ecs_cpp_enum_constant_register(
             world, data.id, 0, name, v);
         return v;
-    }
-
-    template <E Value = FLECS_ENUM_MAX(E) >
-    static int init(flecs::world_t *world) {
-        int last_value = 0;
-        if (enum_reflection<E>::template is_not_0<Value>()) {
-            last_value = init<enum_reflection<E>::template from_int<enum_reflection<E>::template to_int<Value>() - enum_reflection<E>::template is_not_0<Value>()>()>(world);
-        }
-        return init_constant<Value>(world, last_value);
     }
 };
 
@@ -16863,15 +16879,15 @@ struct enum_data {
     }
 
     int index_by_value(underlying_type_t<E> value) const {
-        if (value < 0 || !impl_.max) {
+        if (!impl_.max) {
             return -1;
         }
         // Check if value is in contiguous lookup section
-        if (value <= impl_.contiguous_through) {
+        if (impl_.has_contiguous && value < impl_.contiguous_until && value >= 0) {
             return value;
         }
-        int accumulator = impl_.contiguous_through > 0? impl_.contiguous_through: 0;
-        for (int i = impl_.contiguous_through > 0? impl_.contiguous_through + 1: 0; i <= impl_.max; ++i) {
+        underlying_type_t<E> accumulator = impl_.contiguous_until? impl_.contiguous_until - 1: 0;
+        for (int i = impl_.contiguous_until; i <= impl_.max; ++i) {
             accumulator += impl_.constants[i].offset;
             if (accumulator == value) {
                 return i;
