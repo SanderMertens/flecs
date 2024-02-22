@@ -98,8 +98,6 @@ ecs_entity_t ecs_system_init(
     ecs_world_t *world,
     const ecs_system_desc_t *desc);
 
-#ifndef FLECS_LEGACY
-
 /** Forward declare a system. */
 #define ECS_SYSTEM_DECLARE(id) ecs_entity_t ecs_id(id)
 
@@ -160,8 +158,6 @@ ecs_entity_t ecs_system_init(
  */
 #define ecs_system(world, ...)\
     ecs_system_init(world, &(ecs_system_desc_t) __VA_ARGS__ )
-
-#endif
 
 /** Run a specific system manually.
  * This operation runs a single system manually. It is an efficient way to

@@ -151,10 +151,6 @@
 extern "C" {
 #endif
 
-#ifdef __BAKE_LEGACY__
-#define FLECS_LEGACY
-#endif
-
 /* Some symbols are only exported when building in debug build, to enable
  * white-box testing of internal data structures */
 #ifndef FLECS_NDEBUG
@@ -168,22 +164,10 @@ extern "C" {
 //// Language support defines
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FLECS_LEGACY
 #include <stdbool.h>
-#endif
 
 #ifndef NULL
 #define NULL ((void*)0)
-#endif
-
-/* The API uses the native bool type in C++, or a custom one in C */
-#if !defined(__cplusplus) && !defined(__bool_true_false_are_defined)
-#undef bool
-#undef true
-#undef false
-typedef char bool;
-#define false 0
-#define true !false
 #endif
 
 /* Utility types to indicate usage as bitmask */
@@ -348,8 +332,6 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 //// Convenience macros for ctor, dtor, move and copy
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FLECS_LEGACY
-
 /* Constructor/Destructor convenience macro */
 #define ECS_XTOR_IMPL(type, postfix, var, ...)\
     void type##_##postfix(\
@@ -420,8 +402,6 @@ typedef struct ecs_allocator_t ecs_allocator_t;
             __VA_ARGS__\
         }\
     }
-
-#endif
 
 #ifdef __cplusplus
 }

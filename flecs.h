@@ -45,11 +45,6 @@
 #define ecs_ftime_t ecs_float_t
 #endif
 
-/** @def FLECS_LEGACY
- * Define when building for C89
- */
-// #define FLECS_LEGACY
-
 /** @def FLECS_NO_DEPRECATED_WARNINGS
  * disables deprecated warnings
  */
@@ -681,10 +676,6 @@ extern "C" {
 extern "C" {
 #endif
 
-#ifdef __BAKE_LEGACY__
-#define FLECS_LEGACY
-#endif
-
 /* Some symbols are only exported when building in debug build, to enable
  * white-box testing of internal data structures */
 #ifndef FLECS_NDEBUG
@@ -698,22 +689,10 @@ extern "C" {
 //// Language support defines
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FLECS_LEGACY
 #include <stdbool.h>
-#endif
 
 #ifndef NULL
 #define NULL ((void*)0)
-#endif
-
-/* The API uses the native bool type in C++, or a custom one in C */
-#if !defined(__cplusplus) && !defined(__bool_true_false_are_defined)
-#undef bool
-#undef true
-#undef false
-typedef char bool;
-#define false 0
-#define true !false
 #endif
 
 /* Utility types to indicate usage as bitmask */
@@ -878,8 +857,6 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 //// Convenience macros for ctor, dtor, move and copy
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FLECS_LEGACY
-
 /* Constructor/Destructor convenience macro */
 #define ECS_XTOR_IMPL(type, postfix, var, ...)\
     void type##_##postfix(\
@@ -950,8 +927,6 @@ typedef struct ecs_allocator_t ecs_allocator_t;
             __VA_ARGS__\
         }\
     }
-
-#endif
 
 #ifdef __cplusplus
 }
@@ -9799,8 +9774,6 @@ void ecs_parser_errorv_(
 //// Logging macros
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FLECS_LEGACY /* C89 doesn't support variadic macros */
-
 /* Base logging function. Accepts a custom level */
 #define ecs_print(level, ...)\
     ecs_print_(level, __FILE__, __LINE__, __VA_ARGS__)
@@ -10038,8 +10011,6 @@ void ecs_parser_errorv_(
 
 #define ecs_parser_errorv(name, expr, column, fmt, args)\
     ecs_parser_errorv_(name, expr, column, fmt, args)
-
-#endif // FLECS_LEGACY
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -11000,8 +10971,6 @@ void FlecsTimerImport(
 extern "C" {
 #endif
 
-#ifndef FLECS_LEGACY
-
 #define ECS_PIPELINE_DEFINE(world, id_, ...) \
     { \
         ecs_pipeline_desc_t desc = {0}; \
@@ -11022,8 +10991,6 @@ extern "C" {
 
 #define ecs_pipeline(world, ...)\
     ecs_pipeline_init(world, &(ecs_pipeline_desc_t) __VA_ARGS__ )
-
-#endif
 
 /* Pipeline descriptor (used with ecs_pipeline_init()) */
 typedef struct ecs_pipeline_desc_t {
@@ -11291,8 +11258,6 @@ ecs_entity_t ecs_system_init(
     ecs_world_t *world,
     const ecs_system_desc_t *desc);
 
-#ifndef FLECS_LEGACY
-
 /** Forward declare a system. */
 #define ECS_SYSTEM_DECLARE(id) ecs_entity_t ecs_id(id)
 
@@ -11353,8 +11318,6 @@ ecs_entity_t ecs_system_init(
  */
 #define ecs_system(world, ...)\
     ecs_system_init(world, &(ecs_system_desc_t) __VA_ARGS__ )
-
-#endif
 
 /** Run a specific system manually.
  * This operation runs a single system manually. It is an efficient way to

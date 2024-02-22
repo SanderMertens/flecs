@@ -43,11 +43,6 @@
 #define ecs_ftime_t ecs_float_t
 #endif
 
-/** @def FLECS_LEGACY
- * Define when building for C89
- */
-// #define FLECS_LEGACY
-
 /** @def FLECS_NO_DEPRECATED_WARNINGS
  * disables deprecated warnings
  */

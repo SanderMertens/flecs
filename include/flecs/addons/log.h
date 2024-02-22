@@ -184,8 +184,6 @@ void ecs_parser_errorv_(
 //// Logging macros
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef FLECS_LEGACY /* C89 doesn't support variadic macros */
-
 /* Base logging function. Accepts a custom level */
 #define ecs_print(level, ...)\
     ecs_print_(level, __FILE__, __LINE__, __VA_ARGS__)
@@ -423,8 +421,6 @@ void ecs_parser_errorv_(
 
 #define ecs_parser_errorv(name, expr, column, fmt, args)\
     ecs_parser_errorv_(name, expr, column, fmt, args)
-
-#endif // FLECS_LEGACY
 
 
 ////////////////////////////////////////////////////////////////////////////////
