@@ -16738,7 +16738,7 @@ struct enum_reflection {
 
     template <E Low, E High, typename... Args>
     static constexpr underlying_type_t<E> each_mask_range(underlying_type_t<E> last_value, Args... args) {
-        return (to_int<Low>() & to_int<High>()) || High == Low
+        return (to_int<Low>() & to_int<High>()) || to_int<High>() == to_int<Low>()
             ? last_value
             : Fn<E>::template fn<High>(
                 each_mask_range<Low, from_int<((to_int<High>() >> 1) & ~high_bit)>()>(last_value, args...),
@@ -16841,7 +16841,7 @@ struct enum_type {
             " low negative. Consider using unsigned integers as underlying type.");
         data.constants[data.max].offset = v - last_value;
         data.constants[data.max].id = ecs_cpp_enum_constant_register(
-            world, data.id, 0, name, v);
+            world, data.id, 0, name, static_cast<int32_t>(v));
         return v;
     }
 };
@@ -16884,10 +16884,10 @@ struct enum_data {
         }
         // Check if value is in contiguous lookup section
         if (impl_.has_contiguous && value < impl_.contiguous_until && value >= 0) {
-            return value;
+            return static_cast<int>(value);
         }
         underlying_type_t<E> accumulator = impl_.contiguous_until? impl_.contiguous_until - 1: 0;
-        for (int i = impl_.contiguous_until; i <= impl_.max; ++i) {
+        for (int i = static_cast<int>(impl_.contiguous_until); i <= impl_.max; ++i) {
             accumulator += impl_.constants[i].offset;
             if (accumulator == value) {
                 return i;
