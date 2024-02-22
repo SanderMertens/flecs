@@ -223,12 +223,12 @@ char* flecs_load_from_file(
     }
 
     /* Determine file size */
-    fseek(file, 0 , SEEK_END);
+    fseek(file, 0, SEEK_END);
     bytes = (int32_t)ftell(file);
     if (bytes == -1) {
         goto error;
     }
-    rewind(file);
+    fseek(file, 0, SEEK_SET);
 
     /* Load contents in memory */
     content = ecs_os_malloc(bytes + 1);
