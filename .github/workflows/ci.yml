@@ -565,11 +565,9 @@ jobs:
       fail-fast: false
       matrix:
         os: 
-          - { version: macOS-11, xcode: '11.7' }
-          - { version: macOS-11, xcode: '12.4' }
-          - { version: macOS-11, xcode: '13.0' }
           - { version: macOS-12, xcode: '13.1' }
           - { version: macOS-12, xcode: '14.0' }
+          - { version: macOS-13, xcode: '14.3.1' }
           - { version: macOS-14, xcode: '15.2' }
 
     env:
