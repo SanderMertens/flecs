@@ -16726,34 +16726,34 @@ struct enum_reflection {
         return static_cast<underlying_type_t<E>>(Value != from_int<0>());
     }
 
-    template <E Low, E High, typename Args = void*>
-    static constexpr underlying_type_t<E> each_enum_range(underlying_type_t<E> last_value, Args args = nullptr) {
+    template <E Low, E High, typename... Args>
+    static constexpr underlying_type_t<E> each_enum_range(underlying_type_t<E> last_value, Args... args) {
         return to_int<High>() - to_int<Low>() <= 1
             ? to_int<High>() == to_int<Low>()
-                ? Fn<E>::template fn<Low>(last_value, args)
-                : Fn<E>::template fn<High>(Fn<E>::template fn<Low>(last_value, args), args)
+                ? Fn<E>::template fn<Low>(last_value, args...)
+                : Fn<E>::template fn<High>(Fn<E>::template fn<Low>(last_value, args...), args...)
             : each_enum_range<from_int<(to_int<Low>()+to_int<High>()) / 2 + 1>(), High>(
-                    each_enum_range<Low, from_int<(to_int<Low>()+to_int<High>()) / 2>()>(last_value, args),
-                    args
+                    each_enum_range<Low, from_int<(to_int<Low>()+to_int<High>()) / 2>()>(last_value, args...),
+                    args...
               );
     }
 
-    template <E Low, E High, typename Args = void*>
-    static constexpr underlying_type_t<E> each_mask_range(underlying_type_t<E> last_value, Args args = nullptr) {
+    template <E Low, E High, typename... Args>
+    static constexpr underlying_type_t<E> each_mask_range(underlying_type_t<E> last_value, Args... args) {
         return (to_int<Low>() & to_int<High>()) || to_int<High>() == to_int<Low>()
             ? last_value
             : Fn<E>::template fn<High>(
-                each_mask_range<Low, from_int<((to_int<High>() >> 1) & ~high_bit)>()>(last_value, args),
-                args
+                each_mask_range<Low, from_int<((to_int<High>() >> 1) & ~high_bit)>()>(last_value, args...),
+                args...
               );
     }
 
-    template <E Value = FLECS_ENUM_MAX(E), typename Args = void*>
-    static constexpr underlying_type_t<E> each_enum(Args args = nullptr) {
-        return each_mask_range<Value, from_int<high_bit>()>(each_enum_range<from_int<0>(), Value>(0, args), args);
+    template <E Value = FLECS_ENUM_MAX(E), typename... Args>
+    static constexpr underlying_type_t<E> each_enum(Args... args) {
+        return each_mask_range<Value, from_int<high_bit>()>(each_enum_range<from_int<0>(), Value>(0, args...), args...);
     }
 
-    static const underlying_type_t<E> high_bit = static_cast<underlying_type_t<E>>(1) << (sizeof(underlying_type_t<E>) * 8 - 1);
+    static const underlying_type_t<E> high_bit = static_cast<underlying_type_t<E>>(1) << (sizeof(underlying_type_t<E>) * 8 - 2);
 };
 
 /** Enumeration type data */
@@ -16763,12 +16763,12 @@ private:
     template<typename Enum>
     struct reflection_count {
         template <Enum Value, flecs::if_not_t< enum_constant_is_valid<Enum, Value>() > = 0>
-        static constexpr underlying_type_t<Enum> fn(underlying_type_t<E> last_value, void*) {
+        static constexpr underlying_type_t<Enum> fn(underlying_type_t<E> last_value) {
             return last_value;
         }
 
         template <Enum Value, flecs::if_t< enum_constant_is_valid<Enum, Value>() > = 0>
-        static constexpr underlying_type_t<Enum> fn(underlying_type_t<E> last_value, void*) {
+        static constexpr underlying_type_t<Enum> fn(underlying_type_t<E> last_value) {
             return 1 + last_value;
         }
     };
@@ -16816,21 +16816,17 @@ struct enum_type {
         ecs_log_push();
         ecs_cpp_enum_init(world, id);
         data.id = id;
-        EnumReflectionInit::template each_enum< enum_last<E>::value >(enum_reflection_input{world});
+        EnumReflectionInit::template each_enum< enum_last<E>::value >(world);
         ecs_log_pop();
     }
 
-    struct enum_reflection_input {
-        flecs::world_t *world;
-    };
-
     template <E Value, flecs::if_not_t< enum_constant_is_valid<E, Value>() > = 0>
-    static underlying_type_t<E> fn(underlying_type_t<E> last_value, enum_reflection_input) {
+    static underlying_type_t<E> fn(underlying_type_t<E> last_value, flecs::world_t*) {
         return last_value;
     }
 
     template <E Value, flecs::if_t< enum_constant_is_valid<E, Value>() > = 0>
-    static underlying_type_t<E> fn(underlying_type_t<E> last_value, enum_reflection_input input) {
+    static underlying_type_t<E> fn(underlying_type_t<E> last_value, flecs::world_t *world) {
         auto v = EnumReflectionInit::template to_int<Value>();
         const char *name = enum_constant_to_name<E, Value>();
         ++data.max;
@@ -16847,7 +16843,7 @@ struct enum_type {
             " low negative. Consider using unsigned integers as underlying type.");
         data.constants[data.max].offset = v - last_value;
         data.constants[data.max].id = ecs_cpp_enum_constant_register(
-            input.world, data.id, 0, name, static_cast<int32_t>(v));
+            world, data.id, 0, name, static_cast<int32_t>(v));
         return v;
     }
 };

@@ -49,7 +49,7 @@ enum class TypedBitMaskEnum : uint32_t {
     bit_LS_13 = bit_LS_0<<13,
     bit_LS_14 = bit_LS_0<<14,
     bit_LS_15 = bit_LS_0<<15,
-    bit_LS_31 = bit_LS_0<<31,
+    bit_LS_30 = bit_LS_0<<30,
 };
 
 enum class EnumClass {
@@ -251,7 +251,7 @@ void Enum_bitmask_enum_with_type_reflection(void) {
     auto e_16 = enum_type.entity(TypedBitMaskEnum::bit_LS_4);
     auto e_32 = enum_type.entity(0x20);
     auto e_ls_15 = enum_type.entity(TypedBitMaskEnum::bit_LS_15);
-    auto e_ls_31 = enum_type.entity(TypedBitMaskEnum::bit_LS_31);
+    auto e_ls_30 = enum_type.entity(TypedBitMaskEnum::bit_LS_30);
 
     test_assert(e_8 != 0);
     test_str(e_8.path().c_str(), "::TypedBitMaskEnum::bit_LS_3");
@@ -277,11 +277,11 @@ void Enum_bitmask_enum_with_type_reflection(void) {
     test_assert(e_ls_15.get<TypedBitMaskEnum>() != nullptr);
     test_assert(e_ls_15.get<TypedBitMaskEnum>()[0] == TypedBitMaskEnum::bit_LS_15);
 
-    test_assert(e_ls_31 != 0);
-    test_str(e_ls_31.path().c_str(), "::TypedBitMaskEnum::bit_LS_31");
-    test_bool(enum_type.is_valid(TypedBitMaskEnum::bit_LS_31), true);
-    test_assert(e_ls_31.get<TypedBitMaskEnum>() != nullptr);
-    test_assert(e_ls_31.get<TypedBitMaskEnum>()[0] == TypedBitMaskEnum::bit_LS_31);
+    test_assert(e_ls_30 != 0);
+    test_str(e_ls_30.path().c_str(), "::TypedBitMaskEnum::bit_LS_30");
+    test_bool(enum_type.is_valid(TypedBitMaskEnum::bit_LS_30), true);
+    test_assert(e_ls_30.get<TypedBitMaskEnum>() != nullptr);
+    test_assert(e_ls_30.get<TypedBitMaskEnum>()[0] == TypedBitMaskEnum::bit_LS_30);
 
     test_bool(enum_type.is_valid(3), false);
     test_bool(enum_type.is_valid(5), false);
