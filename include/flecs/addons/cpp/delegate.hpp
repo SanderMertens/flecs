@@ -219,7 +219,7 @@ struct each_delegate : public delegate {
     }
 
     // Function that can be used as callback to free delegate
-    static void free(void *obj) {
+    static void destruct(void *obj) {
         _::free_obj<each_delegate>(static_cast<each_delegate*>(obj));
     }
 
