@@ -242,9 +242,9 @@ struct entity_builder : entity_view {
      *
      * @param second The second element of the pair.
      */
-    template <typename E, if_t<is_enum<E>::value && is_same<std::underlying_type_t<E>, entity_t>::value> = 0>
+    template <typename E, if_t<is_enum<E>::value && is_same<typename std::underlying_type<E>::type, entity_t>::value> = 0>
     Self& depends_on(E second) {
-        return this->depends_on(std::underlying_type_t<E>(second));
+        return this->depends_on(static_cast<std::underlying_type<E>::type>(second));
     }
     
 
