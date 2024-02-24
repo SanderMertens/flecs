@@ -79,6 +79,15 @@ struct entity : entity_builder<entity>
     explicit entity(entity_t id)
         : entity_builder( nullptr, id ) { }
 
+
+    /** Conversion from an enum with an underlying type of flecs::entity_t to flecs::entity.
+     *
+     * @param id The enum with an underlying type of flecs::entity_t value to convert.
+     */
+    template <typename E, if_t<is_enum<E>::value && is_same<std::underlying_type_t<E>, entity_t>::value> = 0> 
+    entity(E id_enum)
+    : entity(std::underlying_type_t<E>(id_enum)) {}
+
     /** Get mutable component value.
      * This operation returns a mutable pointer to the component. If the entity
      * did not yet have the component, it will be added. If a base entity had

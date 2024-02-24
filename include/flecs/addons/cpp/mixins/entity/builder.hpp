@@ -237,6 +237,17 @@ struct entity_builder : entity_view {
         return this->add(flecs::DependsOn, second);
     }
 
+
+    /** Shortcut for add(DependsOn, entity), enabled if using an enum with an underlying type of entity_t.
+     *
+     * @param second The second element of the pair.
+     */
+    template <typename E, if_t<is_enum<E>::value && is_same<std::underlying_type_t<E>, entity_t>::value> = 0>
+    Self& depends_on(E second) {
+        return this->depends_on(std::underlying_type_t<E>(second));
+    }
+    
+
     /** Shortcut for add(SlotOf, entity).
      *
      * @param second The second element of the pair.
