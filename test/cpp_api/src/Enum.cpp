@@ -52,6 +52,18 @@ enum class TypedBitMaskEnum : uint32_t {
     bit_LS_31 = bit_LS_0<<31,
 };
 
+enum MixedConstantBitmaskEnum {
+    Vim,
+    Emacs,
+    Nano,
+    VsCode,
+    Editor = 1 << 7,
+    OperatingSystem = 1 << 8,
+    Terminal = 1 << 9,
+    GUI = 1 << 30,
+    BAD_BEEF = -0xBADBEEF
+};
+
 enum class EnumClass {
     Grass, Sand, Stone
 };
@@ -286,6 +298,37 @@ void Enum_bitmask_enum_with_type_reflection(void) {
     test_bool(enum_type.is_valid(3), false);
     test_bool(enum_type.is_valid(5), false);
     test_bool(enum_type.is_valid(6), false);
+}
+
+void Enum_enum_with_mixed_constants_and_bitmask(void) {
+    flecs::world ecs;
+    auto ec = ecs.component<MixedConstantBitmaskEnum>()
+        .constant("BAD_BEEF", BAD_BEEF);
+
+    auto bad_beef_e = ec.lookup("BAD_BEEF");
+    test_assert(bad_beef_e != 0);
+
+    flecs::entity vim = ecs.entity().add(Vim);
+    test_assert(vim.has(Vim));
+
+    flecs::entity vs_code = ecs.entity().add(MixedConstantBitmaskEnum::VsCode);
+    test_assert(vs_code.has(VsCode));
+
+    flecs::entity terminal = ecs.entity().add(MixedConstantBitmaskEnum::Terminal);
+    test_assert(terminal.has(Terminal));
+
+    flecs::entity gui = ecs.entity().add(MixedConstantBitmaskEnum::GUI);
+    test_assert(gui.has(GUI));
+
+    vim.add(Editor);
+    test_assert(vim.has(Editor));
+    test_assert(!vim.has(Vim));
+
+    flecs::entity bad_beef = ecs.entity().add(MixedConstantBitmaskEnum::BAD_BEEF);
+    test_assert(bad_beef.has(BAD_BEEF));
+    bad_beef.add(Nano);
+    test_assert(bad_beef.has(Nano));
+    test_assert(!bad_beef.has(BAD_BEEF));
 }
 
 void Enum_enum_class_reflection(void) {
@@ -988,6 +1031,7 @@ void Enum_component_registered_as_enum(void) {
     test_assert(e.has<flecs::Enum>());
 
     const flecs::MetaType *mt = e.get<flecs::MetaType>();
+
     test_assert(mt != nullptr);
     test_assert(mt->kind == flecs::meta::EnumType);
 
@@ -1122,4 +1166,3 @@ void Enum_enum_child_count(void) {
 
     test_assert(f.count() == 3);
 }
-

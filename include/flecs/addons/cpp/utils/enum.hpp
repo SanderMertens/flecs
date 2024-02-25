@@ -108,7 +108,7 @@ constexpr size_t enum_type_len() {
 /** Test if value is valid for enumeration.
  * This function leverages that when a valid value is provided, 
  * __PRETTY_FUNCTION__ contains the enumeration name, whereas if a value is
- * invalid, the string contains a number. */
+ * invalid, the string contains a number or a negative (-) symbol. */
 #if defined(ECS_TARGET_CLANG)
 #if ECS_CLANG_VERSION < 13
 template <typename E, E C>
@@ -167,8 +167,17 @@ struct enum_constant_data {
     T offset;
 };
 
-/** Compile time generated enum data */
-template <typename E, template<typename> class Fn>
+/**
+ * @brief Provides utilities for enum reflection.
+ * 
+ * This struct provides static functions for enum reflection, including conversion
+ * between enum values and their underlying integral types, and iteration over enum
+ * values.
+ * 
+ * @tparam E The enum type.
+ * @tparam Handler The handler for enum reflection operations.
+ */
+template <typename E, template<typename> class Handler>
 struct enum_reflection {
     template <E Value>
     static constexpr underlying_type_t<E> to_int() {
@@ -185,28 +194,69 @@ struct enum_reflection {
         return static_cast<underlying_type_t<E>>(Value != from_int<0>());
     }
 
+    /**
+     * @brief Iterates over the range [Low, High] of enum values between Low and High.
+     *
+     * Recursively divide and conquers the search space to reduce the template-depth. Once
+     * recursive division is complete, calls Handle<E>::handle_constant in ascending order,
+     * passing the values computed up the chain.
+     * 
+     * @tparam Low The lower bound of the search range, inclusive.
+     * @tparam High The upper bound of the search range, inclusive.
+     * @tparam Args Additional arguments to be passed through to Handler<E>::handle_constant
+     * @param last_value The last value processed in the iteration.
+     * @param args Additional arguments to be passed through to Handler<E>::handle_constant
+     * @return constexpr underlying_type_t<E> The result of the iteration.
+     */
     template <E Low, E High, typename... Args>
     static constexpr underlying_type_t<E> each_enum_range(underlying_type_t<E> last_value, Args... args) {
         return to_int<High>() - to_int<Low>() <= 1
             ? to_int<High>() == to_int<Low>()
-                ? Fn<E>::template fn<Low>(last_value, args...)
-                : Fn<E>::template fn<High>(Fn<E>::template fn<Low>(last_value, args...), args...)
+                ? Handler<E>::template handle_constant<Low>(last_value, args...)
+                : Handler<E>::template handle_constant<High>(Handler<E>::template handle_constant<Low>(last_value, args...), args...)
             : each_enum_range<from_int<(to_int<Low>()+to_int<High>()) / 2 + 1>(), High>(
                     each_enum_range<Low, from_int<(to_int<Low>()+to_int<High>()) / 2>()>(last_value, args...),
                     args...
               );
     }
 
+    /**
+     * @brief Iterates over the mask range (Low, High] of enum values between Low and High.
+     *
+     * Recursively iterates the search space, looking for enums defined as multiple-of-2 
+     * bitmasks. Each iteration, shifts bit to the right until it hits Low, then calls
+     * Handler<E>::handle_constant for each bitmask in ascending order.
+     * 
+     * @tparam Low The lower bound of the search range, not inclusive
+     * @tparam High The upper bound of the search range, inclusive.
+     * @tparam Args Additional arguments to be passed through to Handler<E>::handle_constant
+     * @param last_value The last value processed in the iteration.
+     * @param args Additional arguments to be passed through to Handler<E>::handle_constant
+     * @return constexpr underlying_type_t<E> The result of the iteration.
+     */
     template <E Low, E High, typename... Args>
     static constexpr underlying_type_t<E> each_mask_range(underlying_type_t<E> last_value, Args... args) {
-        return (to_int<Low>() & to_int<High>()) || to_int<High>() == to_int<Low>()
+        // If Low shares any bits with Current Flag, or if High is less than/equal to Low (and High isn't negative because max-flag signed)
+        return (to_int<Low>() & to_int<High>()) || (to_int<High>() <= to_int<Low>() && to_int<High>() != high_bit)
             ? last_value
-            : Fn<E>::template fn<High>(
+            : Handler<E>::template handle_constant<High>(
                 each_mask_range<Low, from_int<((to_int<High>() >> 1) & ~high_bit)>()>(last_value, args...),
                 args...
               );
     }
 
+    /**
+     * @brief Handles enum iteration for gathering reflection data.
+     *
+     * Iterates over all enum values up to a specified maximum value 
+     * (each_enum_range<0, Value>), then iterates the rest of the possible bitmasks
+     * (each_mask_range<Value, high_bit>).
+     * 
+     * @tparam Value The maximum enum value to iterate up to.
+     * @tparam Args Additional arguments to be passed through to Handler<E>::handle_constant
+     * @param args Additional arguments to be passed through to Handler<E>::handle_constant
+     * @return constexpr underlying_type_t<E> The result of the iteration.
+     */
     template <E Value = FLECS_ENUM_MAX(E), typename... Args>
     static constexpr underlying_type_t<E> each_enum(Args... args) {
         return each_mask_range<Value, from_int<high_bit>()>(each_enum_range<from_int<0>(), Value>(0, args...), args...);
@@ -219,27 +269,31 @@ struct enum_reflection {
 template<typename E>
 struct enum_data_impl {
 private:
+    /**
+     * @brief Handler struct for generating compile-time count of enum constants.
+     */
     template<typename Enum>
     struct reflection_count {
         template <Enum Value, flecs::if_not_t< enum_constant_is_valid<Enum, Value>() > = 0>
-        static constexpr underlying_type_t<Enum> fn(underlying_type_t<E> last_value) {
+        static constexpr underlying_type_t<Enum> handle_constant(underlying_type_t<E> last_value) {
             return last_value;
         }
 
         template <Enum Value, flecs::if_t< enum_constant_is_valid<Enum, Value>() > = 0>
-        static constexpr underlying_type_t<Enum> fn(underlying_type_t<E> last_value) {
+        static constexpr underlying_type_t<Enum> handle_constant(underlying_type_t<E> last_value) {
             return 1 + last_value;
         }
     };
-    using EnumReflectionCount = enum_reflection<E, reflection_count>;
 public:
     flecs::entity_t id;
     int min;
     int max;
     bool has_contiguous;
+	// If enum constants start not-sparse, contiguous_until will be the index of the first sparse value, or end of the constants array
     underlying_type_t<E> contiguous_until;
+	// Compile-time generated count of enum constants.
+    static constexpr unsigned int constants_size = enum_reflection<E, reflection_count>::template each_enum< enum_last<E>::value >();
     // Constants array is sized to the number of found-constants, or 1 (to avoid 0-sized array)
-    static constexpr unsigned int constants_size = EnumReflectionCount::template each_enum< enum_last<E>::value >();
     enum_constant_data<underlying_type_t<E>> constants[constants_size? constants_size: 1];
 };
 
@@ -247,22 +301,35 @@ public:
 template <typename E>
 struct enum_type {
 private:
+    /**
+     * @brief Helper struct for filling enum_type's static `enum_data_impl<E>` member with reflection data.
+     *
+     * Because reflection occurs in-order, we can use current value/last value to determine continuity, and
+     * use that as a lookup heuristic later on.
+     * 
+     * @tparam Enum The enum type.
+     */
     template <typename Enum>
     struct reflection_init {
         template <Enum Value, flecs::if_not_t< enum_constant_is_valid<Enum, Value>() > = 0>
-        static underlying_type_t<Enum> fn(underlying_type_t<Enum> last_value, flecs::world_t*) {
+        static underlying_type_t<Enum> handle_constant(underlying_type_t<Enum> last_value, flecs::world_t*) {
+            // Search for constant failed. Pass last valid value through.
             return last_value;
         }
 
         template <Enum Value, flecs::if_t< enum_constant_is_valid<Enum, Value>() > = 0>
-        static underlying_type_t<Enum> fn(underlying_type_t<Enum> last_value, flecs::world_t *world) {
-            auto v = EnumReflectionInit::template to_int<Value>();
+        static underlying_type_t<Enum> handle_constant(underlying_type_t<Enum> last_value, flecs::world_t *world) {
+            // Constant is valid, so fill reflection data.
+            auto v = enum_reflection<E, reflection_init>::template to_int<Value>();
             const char *name = enum_constant_to_name<Enum, Value>();
-            ++enum_type<Enum>::data.max;
+            
+            ++enum_type<Enum>::data.max; // Increment cursor as we build constants array.
+
+            // If the enum was previously contiguous, and continues to be through the current value...
             if (enum_type<Enum>::data.has_contiguous && static_cast<underlying_type_t<Enum>>(enum_type<Enum>::data.max) == v && enum_type<Enum>::data.contiguous_until == v) {
-                // Still contiguous through current value
                 ++enum_type<Enum>::data.contiguous_until;
             }
+            // else, if the enum was never contiguous and hasn't been set as not contiguous...
             else if (!enum_type<Enum>::data.contiguous_until && enum_type<Enum>::data.has_contiguous) {
                 enum_type<Enum>::data.has_contiguous = false;
             }
@@ -276,7 +343,6 @@ private:
             return v;
         }
     };
-    using EnumReflectionInit = enum_reflection<E, reflection_init>;
 public:
 
     static enum_data_impl<E> data;
@@ -298,6 +364,7 @@ public:
 #if !FLECS_CPP_ENUM_REFLECTION_SUPPORT
         ecs_abort(ECS_UNSUPPORTED, "enum reflection requires gcc 7.5 or higher")
 #endif
+        // Initialize/reset reflection data values to default state.
         data.min = 0;
         data.max = -1;
         data.has_contiguous = true;
@@ -306,7 +373,9 @@ public:
         ecs_log_push();
         ecs_cpp_enum_init(world, id);
         data.id = id;
-        EnumReflectionInit::template each_enum< enum_last<E>::value >(world);
+
+        // Generate reflection data
+        enum_reflection<E, reflection_init>::template each_enum< enum_last<E>::value >(world);
         ecs_log_pop();
     }
 
@@ -331,7 +400,14 @@ struct enum_data {
     enum_data(flecs::world_t *world, _::enum_data_impl<E>& impl)
         : world_(world)
         , impl_(impl) { }
-
+    
+	/**
+     * @brief Checks if a given integral value is a valid enum value.
+     * 
+     * @param value The integral value.
+     * @return true If the value is a valid enum value.
+     * @return false If the value is not a valid enum value.
+     */
     bool is_valid(underlying_type_t<E> value) {
         int index = index_by_value(value);
         if (index < 0) {
@@ -340,10 +416,23 @@ struct enum_data {
         return impl_.constants[index].id != 0;
     }
 
+    /**
+     * @brief Checks if a given enum value is valid.
+     * 
+     * @param value The enum value.
+     * @return true If the value is valid.
+     * @return false If the value is not valid.
+     */
     bool is_valid(E value) {
         return is_valid(static_cast<underlying_type_t<E>>(value));
     }
 
+    /**
+     * @brief Finds the index into the constants array for a value, if one exists
+     * 
+     * @param value The enum value.
+     * @return int The index of the enum value.
+     */
     int index_by_value(underlying_type_t<E> value) const {
         if (!impl_.max) {
             return -1;
@@ -362,6 +451,12 @@ struct enum_data {
         return -1;
     }
 
+    /**
+     * @brief Finds the index into the constants array for an enum value, if one exists
+     * 
+     * @param value The enum value.
+     * @return int The index of the enum value.
+     */
     int index_by_value(E value) const {
         return index_by_value(static_cast<underlying_type_t<E>>(value));
     }

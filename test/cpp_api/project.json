@@ -347,6 +347,7 @@
                 "sparse_enum_reflection",
                 "bitmask_enum_reflection",
                 "bitmask_enum_with_type_reflection",
+                "enum_with_mixed_constants_and_bitmask",
                 "enum_class_reflection",
                 "prefixed_enum_reflection",
                 "constant_with_num_reflection",
