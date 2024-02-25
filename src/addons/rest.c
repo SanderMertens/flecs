@@ -6,7 +6,6 @@
 #include "../private_api.h"
 
 #ifdef FLECS_REST
-#include "json/json.h"
 
 static ECS_TAG_DECLARE(EcsRestPlecs);
 
