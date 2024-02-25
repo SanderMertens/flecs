@@ -42,6 +42,14 @@ public:
         return *this;
     }
 
+    template <typename E, if_t<is_enum<E>::value> = 0>
+    Base& kind(E phase)
+    {
+        const auto& et = enum_type<E>(this->world_v());
+        flecs::entity_t target = et.entity(phase);
+        return this->kind(target);
+    }
+
     /** Specify in which phase the system should run.
      *
      * @tparam Phase The phase.
