@@ -16137,13 +16137,29 @@ void flecs_inc_observer_count(
 }
 
 static
+ecs_id_t flecs_observer_id(
+    ecs_id_t id)
+{
+    if (ECS_IS_PAIR(id)) {
+        if (ECS_PAIR_FIRST(id) == EcsAny) {
+            id = ecs_pair(EcsWildcard, ECS_PAIR_SECOND(id));
+        }
+        if (ECS_PAIR_SECOND(id) == EcsAny) {
+            id = ecs_pair(ECS_PAIR_FIRST(id), EcsWildcard);
+        }
+    }
+
+    return id;
+}
+
+static
 void flecs_register_observer_for_id(
     ecs_world_t *world,
     ecs_observable_t *observable,
     ecs_observer_t *observer,
     size_t offset)
 {
-    ecs_id_t term_id = observer->register_id;
+    ecs_id_t term_id = flecs_observer_id(observer->register_id);
     ecs_term_t *term = &observer->filter.terms[0];
     ecs_entity_t trav = term->src.trav;
 
@@ -16202,7 +16218,7 @@ void flecs_unregister_observer_for_id(
     ecs_observer_t *observer,
     size_t offset)
 {
-    ecs_id_t term_id = observer->register_id;
+    ecs_id_t term_id = flecs_observer_id(observer->register_id);
     ecs_term_t *term = &observer->filter.terms[0];
     ecs_entity_t trav = term->src.trav;
 

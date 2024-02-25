@@ -2074,6 +2074,14 @@ void Observer_tag_w_on_set_and_on_add(void);
 void Observer_tag_w_on_set_and_on_add_reverse(void);
 void Observer_tag_w_un_set_and_on_remove(void);
 void Observer_tag_w_un_set_and_on_remove_reverse(void);
+void Observer_on_add_pair_w_rel_any(void);
+void Observer_on_remove_pair_w_rel_any(void);
+void Observer_on_add_pair_w_tgt_any(void);
+void Observer_on_remove_pair_w_tgt_any(void);
+void Observer_on_add_pair_w_any_any(void);
+void Observer_on_remove_pair_w_any_any(void);
+void Observer_on_add_any(void);
+void Observer_on_remove_any(void);
 void Observer_cache_test_1(void);
 void Observer_cache_test_2(void);
 void Observer_cache_test_3(void);
@@ -10790,6 +10798,38 @@ bake_test_case Observer_testcases[] = {
         Observer_tag_w_un_set_and_on_remove_reverse
     },
     {
+        "on_add_pair_w_rel_any",
+        Observer_on_add_pair_w_rel_any
+    },
+    {
+        "on_remove_pair_w_rel_any",
+        Observer_on_remove_pair_w_rel_any
+    },
+    {
+        "on_add_pair_w_tgt_any",
+        Observer_on_add_pair_w_tgt_any
+    },
+    {
+        "on_remove_pair_w_tgt_any",
+        Observer_on_remove_pair_w_tgt_any
+    },
+    {
+        "on_add_pair_w_any_any",
+        Observer_on_add_pair_w_any_any
+    },
+    {
+        "on_remove_pair_w_any_any",
+        Observer_on_remove_pair_w_any_any
+    },
+    {
+        "on_add_any",
+        Observer_on_add_any
+    },
+    {
+        "on_remove_any",
+        Observer_on_remove_any
+    },
+    {
         "cache_test_1",
         Observer_cache_test_1
     },
@@ -13495,7 +13535,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        140,
+        148,
         Observer_testcases
     },
     {
