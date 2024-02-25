@@ -1045,6 +1045,7 @@ void Sorting_dont_resort_after_set_unsorted_component_w_tag(void);
 void Sorting_dont_resort_after_set_unsorted_component_w_tag_w_out_term(void);
 void Sorting_sort_component_not_queried_for(void);
 void Sorting_sort_by_wildcard(void);
+void Sorting_sort_shared_w_delete(void);
 
 // Testsuite 'SortingEntireTable'
 void SortingEntireTable_sort_by_component(void);
@@ -1080,6 +1081,7 @@ void SortingEntireTable_sort_relation_marked(void);
 void SortingEntireTable_dont_resort_after_set_unsorted_component(void);
 void SortingEntireTable_dont_resort_after_set_unsorted_component_w_tag(void);
 void SortingEntireTable_dont_resort_after_set_unsorted_component_w_tag_w_out_term(void);
+void SortingEntireTable_sort_shared_w_delete(void);
 
 // Testsuite 'Filter'
 void Filter_filter_1_term(void);
@@ -6720,6 +6722,10 @@ bake_test_case Sorting_testcases[] = {
     {
         "sort_by_wildcard",
         Sorting_sort_by_wildcard
+    },
+    {
+        "sort_shared_w_delete",
+        Sorting_sort_shared_w_delete
     }
 };
 
@@ -6855,6 +6861,10 @@ bake_test_case SortingEntireTable_testcases[] = {
     {
         "dont_resort_after_set_unsorted_component_w_tag_w_out_term",
         SortingEntireTable_dont_resort_after_set_unsorted_component_w_tag_w_out_term
+    },
+    {
+        "sort_shared_w_delete",
+        SortingEntireTable_sort_shared_w_delete
     }
 };
 
@@ -13479,14 +13489,14 @@ static bake_test_suite suites[] = {
         "Sorting",
         NULL,
         NULL,
-        36,
+        37,
         Sorting_testcases
     },
     {
         "SortingEntireTable",
         NULL,
         NULL,
-        33,
+        34,
         SortingEntireTable_testcases
     },
     {

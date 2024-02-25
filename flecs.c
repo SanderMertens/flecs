@@ -19174,7 +19174,6 @@ void flecs_query_sort_tables(
     }
 
     ecs_sort_table_action_t sort = query->sort_table;
-    
     ecs_entity_t order_by_component = query->order_by_component;
     int32_t order_by_term = query->order_by_term;
 
@@ -19193,6 +19192,7 @@ void flecs_query_sort_tables(
         bool dirty = false;
 
         if (flecs_query_check_table_monitor(query, qt, 0)) {
+            tables_sorted = true; /* Ensure ranges are rebuilt */
             dirty = true;
         }
 
