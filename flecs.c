@@ -14864,7 +14864,9 @@ void flecs_emit_propagate(
         /* Get traversed relationship */
         ecs_entity_t trav = ECS_PAIR_FIRST(cur->id);
         if (propagate_trav && propagate_trav != trav) {
-            continue;
+            if (propagate_trav != EcsIsA) {
+                continue;
+            }
         }
 
         flecs_emit_propagate_id(
@@ -14949,6 +14951,55 @@ void flecs_emit_propagate_invalidate(
             flecs_emit_propagate_invalidate_tables(world, idr_t);
         }
     }
+}
+
+static
+void flecs_propagate_entities(
+    ecs_world_t *world,
+    ecs_iter_t *it,
+    ecs_id_record_t *idr,
+    ecs_entity_t *entities,
+    int32_t count,
+    ecs_entity_t src,
+    ecs_event_id_record_t **iders,
+    int32_t ider_count)
+{
+    if (!count) {
+        return;
+    }
+
+    ecs_entity_t old_src = it->sources[0];
+    ecs_table_t *old_table = it->table;
+    ecs_table_t *old_other_table = it->other_table;
+    ecs_entity_t *old_entities = it->entities;
+    int32_t old_count = it->count;
+    int32_t old_offset = it->offset;
+
+    int32_t i;
+    for (i = 0; i < count; i ++) {
+        ecs_record_t *record = flecs_entities_get(world, entities[i]);
+        if (!record) {
+            /* If the event is emitted after a bulk operation, it's possible
+             * that it hasn't been populated with entities yet. */
+            continue;
+        }
+
+        ecs_id_record_t *idr_t = record->idr;
+        if (idr_t) {
+            /* Entity is used as target in traversable pairs, propagate */
+            ecs_entity_t e = src ? src : entities[i];
+            it->sources[0] = e;
+            flecs_emit_propagate(
+                world, it, idr, idr_t, 0, iders, ider_count);
+        }
+    }
+    
+    it->table = old_table;
+    it->other_table = old_other_table;
+    it->entities = old_entities;
+    it->count = old_count;
+    it->offset = old_offset;
+    it->sources[0] = old_src;
 }
 
 static
@@ -15316,7 +15367,7 @@ void flecs_emit_forward_table_up(
         }
 
         /* Id has the same relationship, traverse to find ids for forwarding */
-        if (ECS_PAIR_FIRST(id) == trav) {
+        if (ECS_PAIR_FIRST(id) == trav || ECS_PAIR_FIRST(id) == EcsIsA) {
             ecs_table_t **t = ecs_vec_append_t(&world->allocator, stack, 
                 ecs_table_t*);
             t[0] = tgt_table;
@@ -15512,6 +15563,46 @@ void flecs_emit_forward(
                 rc_idr, elem->src, r->table, tr->index, offset, trav);
         }
     }
+
+    /* Propagate events for new reachable ids downwards */
+    if (table->_->traversable_count) {
+        int32_t i;
+        ecs_entity_t *entities = flecs_table_entities_array(table);
+        entities = ECS_ELEM_T(entities, ecs_entity_t, it->offset);
+        for (i = 0; i < it->count; i ++) {
+            ecs_record_t *r = flecs_entities_get(world, entities[i]);
+            if (r->idr) {
+                break;
+            }
+        }
+
+        if (i != it->count) {
+            ecs_reachable_elem_t *elems = ecs_vec_first_t(&rc->ids, 
+                ecs_reachable_elem_t);
+            int32_t count = ecs_vec_count(&rc->ids);
+            for (i = 0; i < count; i ++) {
+                ecs_reachable_elem_t *elem = &elems[i];
+                const ecs_table_record_t *tr = elem->tr;
+                ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
+                ecs_id_record_t *rc_idr = (ecs_id_record_t*)tr->hdr.cache;
+                ecs_record_t *r = elem->record;
+
+                ecs_assert(rc_idr->id == elem->id, ECS_INTERNAL_ERROR, NULL);
+                ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+                ecs_assert(flecs_entities_get(world, elem->src) == r,
+                    ECS_INTERNAL_ERROR, NULL);
+                ecs_dbg_assert(r->table == elem->table, ECS_INTERNAL_ERROR, NULL);
+                (void)r;
+
+                ecs_event_id_record_t *iders[5] = {0};
+                int32_t ider_count = flecs_event_observers_get(
+                    er, rc_idr->id, iders);
+
+                flecs_propagate_entities(world, it, rc_idr, it->entities, 
+                    it->count, elem->src, iders, ider_count);
+            }
+        }
+    }
 }
 
 /* The emit function is responsible for finding and invoking the observers 
@@ -15543,7 +15634,7 @@ void flecs_emit(
     ecs_entity_t event = desc->event;
     ecs_table_t *table = desc->table, *other_table = desc->other_table;
     int32_t offset = desc->offset;
-    int32_t i, r, count = desc->count;
+    int32_t i, count = desc->count;
     ecs_flags32_t table_flags = table->flags;
 
     /* Deferring cannot be suspended for observers */
@@ -15842,33 +15933,8 @@ repeat_event:
          * entities that are used as targets of traversable relationships. If the
          * entity/entities for which the event was generated is used as such a
          * target, events must be propagated downwards. */
-        ecs_entity_t *entities = it.entities;
-        it.entities = NULL;
-
-        for (r = 0; r < count; r ++) {
-            ecs_record_t *record = flecs_entities_get(world, entities[r]);
-            if (!record) {
-                /* If the event is emitted after a bulk operation, it's possible
-                 * that it hasn't been populated with entities yet. */
-                continue;
-            }
-
-            ecs_id_record_t *idr_t = record->idr;
-            if (idr_t) {
-                /* Entity is used as target in traversable pairs, propagate */
-                ecs_entity_t e = entities[r];
-                it.sources[0] = e;
-                flecs_emit_propagate(
-                    world, &it, idr, idr_t, 0, iders, ider_count);
-            }
-        }
-
-        it.table = table;
-        it.other_table = other_table;
-        it.entities = entities;
-        it.count = count;
-        it.offset = offset;
-        it.sources[0] = 0;
+        flecs_propagate_entities(
+            world, &it, idr, it.entities, count, 0, iders, ider_count);
     }
 
     can_override = false; /* Don't override twice */

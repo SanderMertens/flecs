@@ -3323,6 +3323,443 @@ void Observer_propagate_match_relationship_w_up(void) {
     ecs_fini(world);
 }
 
+void Observer_propagate_isa_of_parent_add(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .filter.terms = {{ TagA, .src.flags = EcsUp, .src.trav = EcsChildOf }},
+        .events = {EcsOnAdd},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t base = ecs_new_id(world);
+    ecs_entity_t parent = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_add(world, base, TagA);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], child);
+    test_int(ctx.s[0][0], base);
+    test_int(ctx.c[0][0], TagA);
+    test_int(ctx.event, EcsOnAdd);
+
+    ecs_fini(world);
+}
+
+void Observer_propagate_isa_of_parent_remove(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .filter.terms = {{ TagA, .src.flags = EcsUp, .src.trav = EcsChildOf }},
+        .events = {EcsOnRemove},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t base = ecs_new_id(world);
+    ecs_add(world, base, TagA);
+    ecs_entity_t parent = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_remove(world, base, TagA);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], child);
+    test_int(ctx.s[0][0], base);
+    test_int(ctx.c[0][0], TagA);
+    test_int(ctx.event, EcsOnRemove);
+
+    ecs_fini(world);
+}
+
+void Observer_propagate_isa_of_parent_set(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .filter.terms = {{ ecs_id(Position), .src.flags = EcsUp, .src.trav = EcsChildOf }},
+        .events = {EcsOnSet},
+        .callback = Observer_w_1_value,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t base = ecs_set(world, 0, Position, {0, 0});
+    ecs_entity_t parent = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_set(world, base, Position, {10, 20});
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], child);
+    test_int(ctx.s[0][0], base);
+    test_int(ctx.c[0][0], ecs_id(Position));
+    test_int(ctx.event, EcsOnSet);
+
+    ecs_fini(world);
+}
+
+void Observer_propagate_add_childof_of_parent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .filter.terms = {{ TagA, .src.flags = EcsUp, .src.trav = EcsChildOf }},
+        .events = {EcsOnAdd},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t grandparent = ecs_new_id(world);
+    ecs_add(world, grandparent, TagA);
+    ecs_entity_t parent = ecs_new_id(world);
+    ecs_new_w_pair(world, EcsChildOf, parent);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_add_pair(world, parent, EcsChildOf, grandparent);
+
+    test_int(ctx.invoked, 2);
+    test_int(ctx.count, 2);
+    test_int(ctx.s[0][0], grandparent);
+    test_int(ctx.c[0][0], TagA);
+    test_int(ctx.event, EcsOnAdd);
+
+    ecs_fini(world);
+}
+
+void Observer_propagate_add_childof_of_parent_w_siblings(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .filter.terms = {{ TagA, .src.flags = EcsUp, .src.trav = EcsChildOf }},
+        .events = {EcsOnAdd},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t grandparent = ecs_new_id(world);
+    ecs_add(world, grandparent, TagA);
+
+    {
+        ecs_entity_t parent = ecs_new_w_pair(world, EcsChildOf, grandparent);
+        ecs_new_w_pair(world, EcsChildOf, parent);
+
+        test_int(ctx.invoked, 2);
+        test_int(ctx.count, 2);
+        test_int(ctx.e[0], parent);
+        test_int(ctx.s[0][0], grandparent);
+        test_int(ctx.c[0][0], TagA);
+        test_int(ctx.event, EcsOnAdd);
+    }
+
+    ecs_os_zeromem(&ctx);
+
+    {
+        ecs_entity_t parent = ecs_new_w_pair(world, EcsChildOf, grandparent);
+        ecs_new_w_pair(world, EcsChildOf, parent);
+
+        test_int(ctx.invoked, 2);
+        test_int(ctx.count, 2);
+        test_int(ctx.e[0], parent);
+        test_int(ctx.s[0][0], grandparent);
+        test_int(ctx.c[0][0], TagA);
+        test_int(ctx.event, EcsOnAdd);
+    }
+
+    ecs_os_zeromem(&ctx);
+
+    {
+        ecs_entity_t parent = ecs_new_w_pair(world, EcsChildOf, grandparent);
+        ecs_new_w_pair(world, EcsChildOf, parent);
+
+        test_int(ctx.invoked, 2);
+        test_int(ctx.count, 2);
+        test_int(ctx.e[0], parent);
+        test_int(ctx.s[0][0], grandparent);
+        test_int(ctx.c[0][0], TagA);
+        test_int(ctx.event, EcsOnAdd);
+    }
+
+    ecs_fini(world);
+}
+
+void Observer_propagate_add_childof_w_parent_w_base(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .filter.terms = {{ TagA, .src.flags = EcsUp, .src.trav = EcsChildOf }},
+        .events = {EcsOnAdd},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t base = ecs_new(world, TagA);
+    ecs_entity_t parent = ecs_new_w_pair(world, EcsIsA, base);
+    
+    test_int(ctx.invoked, 0);
+    
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], child);
+    test_int(ctx.s[0][0], base);
+    test_int(ctx.c[0][0], TagA);
+    test_int(ctx.event, EcsOnAdd);
+
+    ecs_fini(world);
+}
+
+void Observer_propagate_remove_childof_w_parent_w_base(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .filter.terms = {{ TagA, .src.flags = EcsUp, .src.trav = EcsChildOf }},
+        .events = {EcsOnRemove},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t base = ecs_new(world, TagA);
+    ecs_entity_t parent = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_remove_pair(world, child, EcsChildOf, parent);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], child);
+    test_int(ctx.s[0][0], base);
+    test_int(ctx.c[0][0], TagA);
+    test_int(ctx.event, EcsOnRemove);
+
+    ecs_fini(world);
+}
+
+void Observer_propagate_remove_childof_of_parent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .filter.terms = {{ TagA, .src.flags = EcsUp, .src.trav = EcsChildOf }},
+        .events = {EcsOnRemove},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t grandparent = ecs_new_id(world);
+    ecs_add(world, grandparent, TagA);
+    ecs_entity_t parent = ecs_new_w_pair(world, EcsChildOf, grandparent);
+    ecs_new_w_pair(world, EcsChildOf, parent);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_remove_pair(world, parent, EcsChildOf, grandparent);
+
+    test_int(ctx.invoked, 2);
+    test_int(ctx.count, 2);
+    test_int(ctx.s[0][0], grandparent);
+    test_int(ctx.c[0][0], TagA);
+    test_int(ctx.event, EcsOnRemove);
+
+    ecs_fini(world);
+}
+
+void Observer_propagate_add_isa_of_parent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .filter.terms = {{ TagA, .src.flags = EcsUp, .src.trav = EcsChildOf }},
+        .events = {EcsOnAdd},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t base = ecs_new_id(world);
+    ecs_add(world, base, TagA);
+    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_add_pair(world, parent, EcsIsA, base);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], child);
+    test_int(ctx.s[0][0], base);
+    test_int(ctx.c[0][0], TagA);
+    test_int(ctx.event, EcsOnAdd);
+
+    ecs_fini(world);
+}
+
+void Observer_propagate_remove_isa_of_parent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .filter.terms = {{ TagA, .src.flags = EcsUp, .src.trav = EcsChildOf }},
+        .events = {EcsOnRemove},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t base = ecs_new_id(world);
+    ecs_add(world, base, TagA);
+    ecs_entity_t parent = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_remove_pair(world, parent, EcsIsA, base);    
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], child);
+    test_int(ctx.s[0][0], base);
+    test_int(ctx.c[0][0], TagA);
+    test_int(ctx.event, EcsOnRemove);
+
+    ecs_fini(world);
+}
+
+void Observer_propagate_add_childof_of_base(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .filter.terms = {{ TagA, .src.flags = EcsUp, .src.trav = EcsChildOf }},
+        .events = {EcsOnAdd},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t base = ecs_new_id(world);
+    ecs_add(world, base, TagA);
+    ecs_entity_t parent = ecs_new_id(world);
+    ecs_new_w_pair(world, EcsIsA, parent);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_add_pair(world, parent, EcsChildOf, base);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], parent);
+    test_int(ctx.s[0][0], base);
+    test_int(ctx.c[0][0], TagA);
+    test_int(ctx.event, EcsOnAdd);
+
+    ecs_fini(world);
+}
+
+void Observer_propagate_remove_childof_of_base(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    Probe ctx = {0};
+    ecs_observer(world, {
+        .filter.terms = {{ TagA, .src.flags = EcsUp, .src.trav = EcsChildOf }},
+        .events = {EcsOnRemove},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t base = ecs_new_id(world);
+    ecs_add(world, base, TagA);
+    ecs_entity_t parent = ecs_new_w_pair(world, EcsChildOf, base);
+    ecs_new_w_pair(world, EcsIsA, parent);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_remove_pair(world, parent, EcsChildOf, base);    
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], parent);
+    test_int(ctx.s[0][0], base);
+    test_int(ctx.c[0][0], TagA);
+    test_int(ctx.event, EcsOnRemove);
+
+    ecs_fini(world);
+}
+
+void Observer_emit_for_parent_w_prefab_child_and_instance(void) {
+    ecs_world_t* ecs = ecs_init();
+
+    ECS_COMPONENT(ecs, Position);
+
+    Probe ctx = {0};
+    ecs_observer(ecs, {
+        .filter.terms = {
+            { .id = ecs_id(Position) }
+        },
+        .events = { EcsOnSet },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_new_id(ecs);
+    ecs_entity_t p = ecs_new_w_pair(ecs, EcsChildOf, e);
+    ecs_entity_t child_1 = ecs_new_w_pair(ecs, EcsChildOf, e);
+    ecs_add_pair(ecs, child_1, EcsIsA, p);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_set(ecs, e, Position, {10, 20});
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_id(Position));
+    test_int(ctx.event, EcsOnSet);
+
+    ecs_fini(ecs);
+}
+
 void Observer_observer_w_2_fixed_src(void) {
     ecs_world_t *world = ecs_init();
 
@@ -5003,6 +5440,11 @@ void Observer_cache_test_8(void) {
     ecs_fini(world);
 }
 
+static
+void testobserver(ecs_iter_t *it) {
+    printf("%s\n", ecs_iter_str(it));
+}
+
 void Observer_cache_test_9(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -5031,8 +5473,11 @@ void Observer_cache_test_9(void) {
     ecs_add_pair(world, inst, EcsIsA, base_3);
 
     ecs_clear(world, base_2);
-    test_int(ctx.invoked, 1);
-    test_int(ctx.count, 1);
+
+    /* Once for Position of base_2, twice because Position is reachable through
+     * two paths. */
+    test_int(ctx.invoked, 2);
+    test_int(ctx.count, 2);
     test_int(ctx.e[0], inst);
     test_int(ctx.s[0][0], base_2);
     test_int(ctx.c[0][0], ecs_id(Position));
@@ -5041,8 +5486,11 @@ void Observer_cache_test_9(void) {
     ecs_os_zeromem(&ctx);
 
     ecs_clear(world, base_3);
-    test_int(ctx.invoked, 1);
-    test_int(ctx.count, 1);
+
+    /* Once for Position of base_2, twice because Position is reachable through
+     * two paths. */
+    test_int(ctx.invoked, 2);
+    test_int(ctx.count, 2);
     test_int(ctx.e[0], inst);
     test_int(ctx.s[0][0], base_3);
     test_int(ctx.c[0][0], ecs_id(Position));
@@ -5549,37 +5997,4 @@ void Observer_add_in_yield_existing_multi(void) {
     test_assert(ecs_has(world, e3, Velocity));
 
     ecs_fini(world);
-}
-
-void Observer_emit_for_parent_w_prefab_child_and_instance(void) {
-    ecs_world_t* ecs = ecs_init();
-
-    ECS_COMPONENT(ecs, Position);
-
-    Probe ctx = {0};
-    ecs_observer(ecs, {
-        .filter.terms = {
-            { .id = ecs_id(Position) }
-        },
-        .events = { EcsOnSet },
-        .callback = Observer,
-        .ctx = &ctx
-    });
-
-    ecs_entity_t e = ecs_new_id(ecs);
-    ecs_entity_t p = ecs_new_w_pair(ecs, EcsChildOf, e);
-    ecs_entity_t child_1 = ecs_new_w_pair(ecs, EcsChildOf, e);
-    ecs_add_pair(ecs, child_1, EcsIsA, p);
-
-    test_int(ctx.invoked, 0);
-
-    ecs_set(ecs, e, Position, {10, 20});
-
-    test_int(ctx.invoked, 1);
-    test_int(ctx.count, 1);
-    test_int(ctx.e[0], e);
-    test_int(ctx.c[0][0], ecs_id(Position));
-    test_int(ctx.event, EcsOnSet);
-
-    ecs_fini(ecs);
 }

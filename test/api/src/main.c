@@ -2027,6 +2027,19 @@ void Observer_propagate_after_on_delete_clear_action(void);
 void Observer_on_add_after_batch_w_exclusive_adds(void);
 void Observer_propagate_match_relationship_w_self_up(void);
 void Observer_propagate_match_relationship_w_up(void);
+void Observer_propagate_isa_of_parent_add(void);
+void Observer_propagate_isa_of_parent_remove(void);
+void Observer_propagate_isa_of_parent_set(void);
+void Observer_propagate_add_childof_of_parent(void);
+void Observer_propagate_add_childof_of_parent_w_siblings(void);
+void Observer_propagate_add_childof_w_parent_w_base(void);
+void Observer_propagate_remove_childof_w_parent_w_base(void);
+void Observer_propagate_remove_childof_of_parent(void);
+void Observer_propagate_add_isa_of_parent(void);
+void Observer_propagate_remove_isa_of_parent(void);
+void Observer_propagate_add_childof_of_base(void);
+void Observer_propagate_remove_childof_of_base(void);
+void Observer_emit_for_parent_w_prefab_child_and_instance(void);
 void Observer_observer_w_2_fixed_src(void);
 void Observer_emit_for_recreated_id_after_remove_all(void);
 void Observer_emit_for_recreated_id_after_remove_all_wildcard(void);
@@ -2049,7 +2062,6 @@ void Observer_multi_observer_table_fill_w_singleton(void);
 void Observer_wildcard_propagate_w_other_table(void);
 void Observer_add_in_yield_existing(void);
 void Observer_add_in_yield_existing_multi(void);
-void Observer_emit_for_parent_w_prefab_child_and_instance(void);
 void Observer_disable_observer(void);
 void Observer_disable_observer_module(void);
 void Observer_disable_observer_module_nested(void);
@@ -10590,6 +10602,58 @@ bake_test_case Observer_testcases[] = {
         Observer_propagate_match_relationship_w_up
     },
     {
+        "propagate_isa_of_parent_add",
+        Observer_propagate_isa_of_parent_add
+    },
+    {
+        "propagate_isa_of_parent_remove",
+        Observer_propagate_isa_of_parent_remove
+    },
+    {
+        "propagate_isa_of_parent_set",
+        Observer_propagate_isa_of_parent_set
+    },
+    {
+        "propagate_add_childof_of_parent",
+        Observer_propagate_add_childof_of_parent
+    },
+    {
+        "propagate_add_childof_of_parent_w_siblings",
+        Observer_propagate_add_childof_of_parent_w_siblings
+    },
+    {
+        "propagate_add_childof_w_parent_w_base",
+        Observer_propagate_add_childof_w_parent_w_base
+    },
+    {
+        "propagate_remove_childof_w_parent_w_base",
+        Observer_propagate_remove_childof_w_parent_w_base
+    },
+    {
+        "propagate_remove_childof_of_parent",
+        Observer_propagate_remove_childof_of_parent
+    },
+    {
+        "propagate_add_isa_of_parent",
+        Observer_propagate_add_isa_of_parent
+    },
+    {
+        "propagate_remove_isa_of_parent",
+        Observer_propagate_remove_isa_of_parent
+    },
+    {
+        "propagate_add_childof_of_base",
+        Observer_propagate_add_childof_of_base
+    },
+    {
+        "propagate_remove_childof_of_base",
+        Observer_propagate_remove_childof_of_base
+    },
+    {
+        "emit_for_parent_w_prefab_child_and_instance",
+        Observer_emit_for_parent_w_prefab_child_and_instance
+    },
+    {
         "observer_w_2_fixed_src",
         Observer_observer_w_2_fixed_src
     },
@@ -10676,10 +10740,6 @@ bake_test_case Observer_testcases[] = {
     {
         "add_in_yield_existing_multi",
         Observer_add_in_yield_existing_multi
-    },
-    {
-        "emit_for_parent_w_prefab_child_and_instance",
-        Observer_emit_for_parent_w_prefab_child_and_instance
     },
     {
         "disable_observer",
@@ -13435,7 +13495,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        128,
+        140,
         Observer_testcases
     },
     {
