@@ -1870,7 +1870,7 @@ void flecs_json_serialize_iter_result_parent(
 
     ecs_id_t id = table->type.array[tr->index];
     ecs_entity_t parent = ecs_pair_second(world, id);
-    char *path = ecs_get_fullpath(world, parent);
+    char *path = ecs_get_path_w_sep(world, 0, parent, ".", "");
     flecs_json_memberl(buf, "parent");
     flecs_json_string(buf, path);
     ecs_os_free(path);

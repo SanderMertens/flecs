@@ -641,6 +641,10 @@ void DeserializeFromJson_ser_deser_w_alerts(void);
 void DeserializeFromJson_ser_deser_w_alerts_w_progress(void);
 void DeserializeFromJson_ser_deser_struct(void);
 void DeserializeFromJson_ser_deser_anon_w_same_id_as_existing_named(void);
+void DeserializeFromJson_ser_deser_named_to_different_table(void);
+void DeserializeFromJson_ser_deser_named_child_to_different_table(void);
+void DeserializeFromJson_ser_deser_with_child_tgt(void);
+void DeserializeFromJson_ser_deser_with_child_tgt_no_child(void);
 void DeserializeFromJson_deser_invalid_entity_name(void);
 
 // Testsuite 'SerializeToJson'
@@ -3642,6 +3646,22 @@ bake_test_case DeserializeFromJson_testcases[] = {
         DeserializeFromJson_ser_deser_anon_w_same_id_as_existing_named
     },
     {
+        "ser_deser_named_to_different_table",
+        DeserializeFromJson_ser_deser_named_to_different_table
+    },
+    {
+        "ser_deser_named_child_to_different_table",
+        DeserializeFromJson_ser_deser_named_child_to_different_table
+    },
+    {
+        "ser_deser_with_child_tgt",
+        DeserializeFromJson_ser_deser_with_child_tgt
+    },
+    {
+        "ser_deser_with_child_tgt_no_child",
+        DeserializeFromJson_ser_deser_with_child_tgt_no_child
+    },
+    {
         "deser_invalid_entity_name",
         DeserializeFromJson_deser_invalid_entity_name
     }
@@ -5798,7 +5818,7 @@ static bake_test_suite suites[] = {
         "DeserializeFromJson",
         NULL,
         NULL,
-        125,
+        129,
         DeserializeFromJson_testcases
     },
     {

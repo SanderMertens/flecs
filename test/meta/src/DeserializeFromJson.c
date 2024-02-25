@@ -5853,3 +5853,150 @@ void DeserializeFromJson_deser_invalid_entity_name(void) {
 
     ecs_fini(world);
 }
+
+void DeserializeFromJson_ser_deser_named_to_different_table(void) {
+    ecs_world_t *world = ecs_init();
+
+    {
+        ECS_TAG(world, Foo);
+        ecs_entity_t e = ecs_new_entity(world, "e");
+        ecs_add(world, e, Foo);
+    }
+
+    char *json = ecs_world_to_json(world, NULL);
+    test_assert(json != NULL);
+
+    ecs_fini(world);
+    world = ecs_init();
+
+    {
+        ECS_TAG(world, Foo);
+        ecs_entity_t e = ecs_new_entity(world, "e");
+
+        const char *r = ecs_world_from_json(world, json, NULL);
+        test_str(r, "");
+        ecs_os_free(json);
+
+        test_assert(ecs_has(world, e, Foo));
+    }
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_ser_deser_named_child_to_different_table(void) {
+    ecs_world_t *world = ecs_init();
+
+    {
+        ECS_TAG(world, Foo);
+        ecs_entity_t p = ecs_new_entity(world, "p");
+        ecs_entity_t e = ecs_new_entity(world, "e");
+        ecs_add_pair(world, e, EcsChildOf, p);
+        ecs_add(world, e, Foo);
+    }
+
+    char *json = ecs_world_to_json(world, NULL);
+    test_assert(json != NULL);
+
+    ecs_fini(world);
+    world = ecs_init();
+
+    {
+        ECS_TAG(world, Foo);
+        ecs_entity_t p = ecs_new_entity(world, "p");
+        ecs_entity_t e = ecs_new_entity(world, "e");
+        ecs_add_pair(world, e, EcsChildOf, p);
+
+        const char *r = ecs_world_from_json(world, json, NULL);
+        test_str(r, "");
+        ecs_os_free(json);
+
+        test_assert(ecs_has(world, e, Foo));
+        test_assert(ecs_has_pair(world, e, EcsChildOf, p));
+    }
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_ser_deser_with_child_tgt(void) {
+    ecs_world_t *world = ecs_init();
+
+    {
+        ECS_TAG(world, Rel);
+        ECS_TAG(world, Foo);
+        ecs_entity_t p = ecs_new_entity(world, "p");
+
+        ecs_entity_t e = ecs_new_entity(world, "e");
+        ecs_add_pair(world, e, EcsChildOf, p);
+        ecs_add(world, e, Foo);
+
+        ecs_entity_t c = ecs_new_entity(world, "c");
+        ecs_add_pair(world, c, EcsChildOf, e);
+        ecs_add_pair(world, e, Rel, c);
+    }
+
+    char *json = ecs_world_to_json(world, NULL);
+    test_assert(json != NULL);
+
+    ecs_fini(world);
+    world = ecs_init();
+
+    {
+        ECS_TAG(world, Rel);
+        ECS_TAG(world, Foo);
+
+        const char *r = ecs_world_from_json(world, json, NULL);
+        test_str(r, "");
+        ecs_os_free(json);
+
+        ecs_entity_t p = ecs_lookup(world, "p");
+        test_assert(p != 0);
+        ecs_entity_t e = ecs_lookup(world, "p.e");
+        test_assert(e != 0);
+        ecs_entity_t c = ecs_lookup(world, "p.e.c");
+        test_assert(c != 0);
+
+        test_assert(ecs_has(world, e, Foo));
+        test_assert(ecs_has_pair(world, e, EcsChildOf, p));
+        test_assert(ecs_has_pair(world, e, Rel, c));
+
+        test_assert(ecs_has_pair(world, c, EcsChildOf, e));
+    }
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_ser_deser_with_child_tgt_no_child(void) {
+    ecs_world_t *world = ecs_init();
+
+    char *json = "{ \"results\": [ "
+        "{ \"ids\": [ [ \"Foo\" ], [ \"flecs.core.Identifier\", \"flecs.core.Name\" ], [ \"flecs.core.ChildOf\", \"p\" ], [ \"Rel\", \"p.e.c\" ] ], "
+        "\"parent\": \"p\", "
+        "\"entities\": [ \"e\" ], "
+        "\"values\": [ 0, 0, 0, 0 ] } ] }";
+
+    ecs_fini(world);
+    world = ecs_init();
+
+    {
+        ECS_TAG(world, Rel);
+        ECS_TAG(world, Foo);
+
+        const char *r = ecs_world_from_json(world, json, NULL);
+        test_str(r, "");
+
+        ecs_entity_t p = ecs_lookup(world, "p");
+        test_assert(p != 0);
+        ecs_entity_t e = ecs_lookup(world, "p.e");
+        test_assert(e != 0);
+        ecs_entity_t c = ecs_lookup(world, "p.e.c");
+        test_assert(c != 0);
+
+        test_assert(ecs_has(world, e, Foo));
+        test_assert(ecs_has_pair(world, e, EcsChildOf, p));
+        test_assert(ecs_has_pair(world, e, Rel, c));
+
+        test_assert(ecs_has_pair(world, c, EcsChildOf, e));
+    }
+
+    ecs_fini(world);
+}

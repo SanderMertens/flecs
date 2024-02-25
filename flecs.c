@@ -50752,6 +50752,7 @@ int flecs_json_parse_entities(
                 ecs_commit(world, e, r, r->table, NULL, &r->table->type);
                 cleared = true;
             }
+
             ecs_commit(world, e, r, table, &table->type, NULL);
             if (cleared) {
                 char *entity_name = strrchr(name, '.');
@@ -51041,7 +51042,7 @@ const char* flecs_json_parse_result(
             goto error;
         }
 
-        parent = ecs_lookup(world, parent_name);
+        parent = flecs_json_lookup(world, 0, parent_name, desc);
         if (parent_name != token) {
             ecs_os_free(parent_name);
         }
@@ -53707,7 +53708,7 @@ void flecs_json_serialize_iter_result_parent(
 
     ecs_id_t id = table->type.array[tr->index];
     ecs_entity_t parent = ecs_pair_second(world, id);
-    char *path = ecs_get_fullpath(world, parent);
+    char *path = ecs_get_path_w_sep(world, 0, parent, ".", "");
     flecs_json_memberl(buf, "parent");
     flecs_json_string(buf, path);
     ecs_os_free(path);
