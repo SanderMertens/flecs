@@ -265,15 +265,19 @@ inline flecs::entity enum_data<E>::entity(underlying_type_t<E> value) const {
     }
 #ifdef FLECS_META
     // Reflection data lookup failed. Try value lookup amongst flecs::Constant relationships
-    flecs::entity enum_component = flecs::world(world_).component<E>();
-    int32_t i = 0;
-    while (auto constant = enum_component.target(flecs::Constant, i++)) {
-        if (constant.has<E>() && value == static_cast<underlying_type_t<E>>(*constant.get<E>())) {
-            return constant;
-        }
-    }
-#endif
+    flecs::world world = flecs::world(world_);
+    return world.filter_builder()
+        .with(flecs::ChildOf, world.id<E>())
+        .with(flecs::Constant, world.id<int32_t>())
+        .build()
+        .find([value](flecs::entity constant) {
+            const int32_t *constant_value = constant.get_second<int32_t>(flecs::Constant);
+            ecs_assert(constant_value, ECS_INTERNAL_ERROR, NULL);
+            return value == static_cast<underlying_type_t<E>>(*constant_value);
+        });
+#else
     return flecs::entity::null(world_);
+#endif
 }
 
 template <typename E>

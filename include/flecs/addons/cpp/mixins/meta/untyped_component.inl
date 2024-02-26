@@ -96,8 +96,6 @@ untyped_component& constant(const char *name, int32_t value) {
         ecs_pair(flecs::Constant, flecs::I32), sizeof(int32_t),
         &value);
 
-    ecs_add_pair(m_world, m_id, flecs::Constant, eid);
-
     return *this;
 }
 
