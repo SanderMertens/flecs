@@ -2288,12 +2288,13 @@ void System_singleton_tick_source(void) {
     test_int(1, sys_invoked);
 }
 
-void System_pipeline_step_with_kind_enum(void) {
-    enum class PipelineStepEnum
-    {
-        CustomStep,
-    };
+enum class PipelineStepEnum
+{
+    CustomStep,
+    CustomStep2
+};
 
+void System_pipeline_step_with_kind_enum(void) {
     flecs::world ecs;
 
     ecs.entity(PipelineStepEnum::CustomStep).add(flecs::Phase).depends_on(flecs::OnStart);
@@ -2307,12 +2308,6 @@ void System_pipeline_step_with_kind_enum(void) {
 }
 
 void System_pipeline_step_depends_on_pipeline_step_with_enum(void) {
-    enum class PipelineStepEnum
-    {
-        CustomStep,
-        CustomStep2
-    };
-
     flecs::world ecs;
 
     ecs.entity(PipelineStepEnum::CustomStep).add(flecs::Phase).depends_on(flecs::OnStart);
