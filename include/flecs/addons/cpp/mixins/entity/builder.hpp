@@ -239,6 +239,18 @@ struct entity_builder : entity_view {
         return this->add(flecs::DependsOn, second);
     }
 
+     /** Shortcut for add(DependsOn, entity).
+     *
+     * @param second The second element of the pair.
+     */
+    template <typename E, if_t<is_enum<E>::value> = 0>
+    Self& depends_on(E second)
+    {
+        const auto& et = enum_type<E>(this->m_world);
+        flecs::entity_t target = et.entity(second);
+        return depends_on(target);
+    }
+
     /** Shortcut for add(SlotOf, entity).
      *
      * @param second The second element of the pair.
