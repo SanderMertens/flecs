@@ -85,6 +85,9 @@ using remove_pointer_t = typename std::remove_pointer<T>::type;
 template <typename T>
 using remove_reference_t = typename std::remove_reference<T>::type;
 
+template <typename T>
+using underlying_type_t = typename std::underlying_type<T>::type;
+
 using std::is_base_of;
 using std::is_empty;
 using std::is_const;

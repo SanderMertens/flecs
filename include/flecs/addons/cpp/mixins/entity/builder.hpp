@@ -43,6 +43,8 @@ struct entity_builder : entity_view {
         flecs::entity_t first = _::cpp_type<E>::id(this->m_world);
         const auto& et = enum_type<E>(this->m_world);
         flecs::entity_t second = et.entity(value);
+
+        ecs_assert(second, ECS_INVALID_PARAMETER, "Component was not found in reflection data.");
         return this->add(first, second);
     }
 

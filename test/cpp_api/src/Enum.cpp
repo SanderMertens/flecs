@@ -12,6 +12,58 @@ enum SparseEnum {
     Black = 1, White = 3, Grey = 5
 };
 
+enum BitMaskEnum {
+    ZERO = 0,
+    bit_LS_0,
+    bit_LS_1 = bit_LS_0<<1,
+    bit_LS_2 = bit_LS_0<<2,
+    bit_LS_3 = bit_LS_0<<3,
+    bit_LS_4 = bit_LS_0<<4,
+    bit_LS_5 = bit_LS_0<<5,
+    bit_LS_6 = bit_LS_0<<6,
+    bit_LS_7 = bit_LS_0<<7,
+    bit_LS_8 = bit_LS_0<<8,
+    bit_LS_14 = bit_LS_0<<14,
+    bit_LS_15 = bit_LS_0<<15,
+    bit_LS_28 = bit_LS_0<<28,
+    bit_LS_29 = bit_LS_0<<29,
+    bit_LS_30 = bit_LS_0<<30,
+    // bit_LS_31 = bit_LS_0<<31,
+};
+
+enum class TypedBitMaskEnum : uint32_t {
+    ZERO = 0,
+    bit_LS_0,
+    bit_LS_1 = bit_LS_0<<1,
+    bit_LS_2 = bit_LS_0<<2,
+    bit_LS_3 = bit_LS_0<<3,
+    bit_LS_4 = bit_LS_0<<4,
+    bit_LS_5 = bit_LS_0<<5,
+    bit_LS_6 = bit_LS_0<<6,
+    bit_LS_7 = bit_LS_0<<7,
+    bit_LS_8 = bit_LS_0<<8,
+    bit_LS_9 = bit_LS_0<<9,
+    bit_LS_10 = bit_LS_0<<10,
+    bit_LS_11 = bit_LS_0<<11,
+    bit_LS_12 = bit_LS_0<<12,
+    bit_LS_13 = bit_LS_0<<13,
+    bit_LS_14 = bit_LS_0<<14,
+    bit_LS_15 = bit_LS_0<<15,
+    bit_LS_31 = bit_LS_0<<31,
+};
+
+enum MixedConstantBitmaskEnum {
+    Vim,
+    Emacs,
+    Nano,
+    VsCode,
+    Editor = 1 << 7,
+    OperatingSystem = 1 << 8,
+    Terminal = 1 << 9,
+    GUI = 1 << 30,
+    BAD_BEEF = -0xBADBEEF
+};
+
 enum class EnumClass {
     Grass, Sand, Stone
 };
@@ -47,6 +99,7 @@ void Enum_standard_enum_reflection(void) {
     flecs::world ecs;
 
     auto enum_type = flecs::enum_type<StandardEnum>(ecs);
+    test_int(enum_type.impl_.constants_size, 3);
 
     auto e = enum_type.entity();
     test_assert(e != 0);
@@ -54,6 +107,11 @@ void Enum_standard_enum_reflection(void) {
     test_str(e.path().c_str(), "::StandardEnum");
     test_int(enum_type.first(), Red);
     test_int(enum_type.last(), Blue);
+
+    test_int(enum_type.index_by_value(Red), 0);
+    test_int(enum_type.index_by_value(Green), 1);
+    test_int(enum_type.index_by_value(Blue), 2);
+    test_int(enum_type.index_by_value(Blue+1), -1);
 
     auto e_red = enum_type.entity(Red);
     auto e_green = enum_type.entity(Green);
@@ -84,13 +142,19 @@ void Enum_sparse_enum_reflection(void) {
     flecs::world ecs;
 
     auto enum_type = flecs::enum_type<SparseEnum>(ecs);
+    test_int(enum_type.impl_.constants_size, 3);
 
     auto e = enum_type.entity();
     test_assert(e != 0);
     test_assert(e == ecs.component<SparseEnum>());
     test_str(e.path().c_str(), "::SparseEnum");
-    test_int(enum_type.first(), Black);
-    test_int(enum_type.last(), Grey);
+    test_int(enum_type.first(), 0);
+    test_int(enum_type.last(), 2);
+
+    test_int(enum_type.index_by_value(Black), 0);
+    test_int(enum_type.index_by_value(White), 1);
+    test_int(enum_type.index_by_value(Grey), 2);
+    test_int(enum_type.index_by_value(Grey+1), -1);
 
     auto e_black = enum_type.entity(Black);
     auto e_white = enum_type.entity(White);
@@ -120,10 +184,158 @@ void Enum_sparse_enum_reflection(void) {
     test_bool(enum_type.is_valid(6), false);
 }
 
+void Enum_bitmask_enum_reflection(void) {
+    flecs::world ecs;
+
+    auto enum_type = flecs::enum_type<BitMaskEnum>(ecs);
+    test_int(enum_type.impl_.constants_size, 15);
+
+    auto e = enum_type.entity();
+    test_assert(e != 0);
+    test_assert(e == ecs.component<BitMaskEnum>());
+    test_str(e.path().c_str(), "::BitMaskEnum");
+    test_int(enum_type.first(), 0);
+    test_int(enum_type.last(), 14);
+
+    test_int(enum_type.index_by_value(ZERO), 0);
+    test_int(enum_type.index_by_value(bit_LS_0), 1);
+    test_int(enum_type.index_by_value(bit_LS_1), 2);
+    test_int(enum_type.index_by_value(2), 2);
+    test_int(enum_type.index_by_value(4), 3);
+    test_int(enum_type.index_by_value(bit_LS_30), 14);
+    test_int(enum_type.index_by_value(7), -1);
+
+    auto e_8 = enum_type.entity(8);
+    auto e_16 = enum_type.entity(bit_LS_4);
+    auto e_32 = enum_type.entity(0x20);
+    auto e_ls_30 = enum_type.entity(bit_LS_30);
+
+    test_assert(e_8 != 0);
+    test_str(e_8.path().c_str(), "::BitMaskEnum::bit_LS_3");
+    test_bool(enum_type.is_valid(bit_LS_3), true);
+    test_assert(e_8.get<BitMaskEnum>() != nullptr);
+    test_assert(e_8.get<BitMaskEnum>()[0] == bit_LS_3);
+
+    test_assert(e_16 != 0);
+    test_str(e_16.path().c_str(), "::BitMaskEnum::bit_LS_4");
+    test_bool(enum_type.is_valid(bit_LS_4), true);
+    test_assert(e_16.get<BitMaskEnum>() != nullptr);
+    test_assert(e_16.get<BitMaskEnum>()[0] == bit_LS_4);
+
+    test_assert(e_32 != 0);
+    test_str(e_32.path().c_str(), "::BitMaskEnum::bit_LS_5");
+    test_bool(enum_type.is_valid(bit_LS_5), true);
+    test_assert(e_32.get<BitMaskEnum>() != nullptr);
+    test_assert(e_32.get<BitMaskEnum>()[0] == bit_LS_5);
+
+    test_assert(e_ls_30 != 0);
+    test_str(e_ls_30.path().c_str(), "::BitMaskEnum::bit_LS_30");
+    test_bool(enum_type.is_valid(bit_LS_30), true);
+    test_assert(e_ls_30.get<BitMaskEnum>() != nullptr);
+    test_assert(e_ls_30.get<BitMaskEnum>()[0] == bit_LS_30);
+
+    test_bool(enum_type.is_valid(3), false);
+    test_bool(enum_type.is_valid(5), false);
+    test_bool(enum_type.is_valid((1 << 31) + 1), false);
+}
+
+void Enum_bitmask_enum_with_type_reflection(void) {
+    flecs::world ecs;
+
+    auto enum_type = flecs::enum_type<TypedBitMaskEnum>(ecs);
+    test_int(enum_type.impl_.constants_size, 18);
+
+    auto e = enum_type.entity();
+    test_assert(e != 0);
+    test_assert(e == ecs.component<TypedBitMaskEnum>());
+    test_str(e.path().c_str(), "::TypedBitMaskEnum");
+    test_int(enum_type.first(), 0);
+    test_int(enum_type.last(), 17);
+
+    test_int(enum_type.index_by_value(TypedBitMaskEnum::ZERO), 0);
+    test_int(enum_type.index_by_value(TypedBitMaskEnum::bit_LS_0), 1);
+    test_int(enum_type.index_by_value(TypedBitMaskEnum::bit_LS_1), 2);
+    test_int(enum_type.index_by_value(2), 2);
+    test_int(enum_type.index_by_value(4), 3);
+    test_int(enum_type.index_by_value(7), -1);
+
+    auto e_8 = enum_type.entity(8);
+    auto e_16 = enum_type.entity(TypedBitMaskEnum::bit_LS_4);
+    auto e_32 = enum_type.entity(0x20);
+    auto e_ls_15 = enum_type.entity(TypedBitMaskEnum::bit_LS_15);
+    auto e_ls_31 = enum_type.entity(TypedBitMaskEnum::bit_LS_31);
+
+    test_assert(e_8 != 0);
+    test_str(e_8.path().c_str(), "::TypedBitMaskEnum::bit_LS_3");
+    test_bool(enum_type.is_valid(TypedBitMaskEnum::bit_LS_3), true);
+    test_assert(e_8.get<TypedBitMaskEnum>() != nullptr);
+    test_assert(e_8.get<TypedBitMaskEnum>()[0] == TypedBitMaskEnum::bit_LS_3);
+
+    test_assert(e_16 != 0);
+    test_str(e_16.path().c_str(), "::TypedBitMaskEnum::bit_LS_4");
+    test_bool(enum_type.is_valid(TypedBitMaskEnum::bit_LS_4), true);
+    test_assert(e_16.get<TypedBitMaskEnum>() != nullptr);
+    test_assert(e_16.get<TypedBitMaskEnum>()[0] == TypedBitMaskEnum::bit_LS_4);
+
+    test_assert(e_32 != 0);
+    test_str(e_32.path().c_str(), "::TypedBitMaskEnum::bit_LS_5");
+    test_bool(enum_type.is_valid(TypedBitMaskEnum::bit_LS_5), true);
+    test_assert(e_32.get<TypedBitMaskEnum>() != nullptr);
+    test_assert(e_32.get<TypedBitMaskEnum>()[0] == TypedBitMaskEnum::bit_LS_5);
+
+    test_assert(e_ls_15 != 0);
+    test_str(e_ls_15.path().c_str(), "::TypedBitMaskEnum::bit_LS_15");
+    test_bool(enum_type.is_valid(TypedBitMaskEnum::bit_LS_15), true);
+    test_assert(e_ls_15.get<TypedBitMaskEnum>() != nullptr);
+    test_assert(e_ls_15.get<TypedBitMaskEnum>()[0] == TypedBitMaskEnum::bit_LS_15);
+
+    test_assert(e_ls_31 != 0);
+    test_str(e_ls_31.path().c_str(), "::TypedBitMaskEnum::bit_LS_31");
+    test_bool(enum_type.is_valid(TypedBitMaskEnum::bit_LS_31), true);
+    test_assert(e_ls_31.get<TypedBitMaskEnum>() != nullptr);
+    test_assert(e_ls_31.get<TypedBitMaskEnum>()[0] == TypedBitMaskEnum::bit_LS_31);
+
+    test_bool(enum_type.is_valid(3), false);
+    test_bool(enum_type.is_valid(5), false);
+    test_bool(enum_type.is_valid(6), false);
+}
+
+void Enum_enum_with_mixed_constants_and_bitmask(void) {
+    flecs::world ecs;
+    auto ec = ecs.component<MixedConstantBitmaskEnum>()
+        .constant("BAD_BEEF", BAD_BEEF);
+
+    auto bad_beef_e = ec.lookup("BAD_BEEF");
+    test_assert(bad_beef_e != 0);
+
+    flecs::entity vim = ecs.entity().add(Vim);
+    test_assert(vim.has(Vim));
+
+    flecs::entity vs_code = ecs.entity().add(MixedConstantBitmaskEnum::VsCode);
+    test_assert(vs_code.has(VsCode));
+
+    flecs::entity terminal = ecs.entity().add(MixedConstantBitmaskEnum::Terminal);
+    test_assert(terminal.has(Terminal));
+
+    flecs::entity gui = ecs.entity().add(MixedConstantBitmaskEnum::GUI);
+    test_assert(gui.has(GUI));
+
+    vim.add(Editor);
+    test_assert(vim.has(Editor));
+    test_assert(!vim.has(Vim));
+
+    flecs::entity bad_beef = ecs.entity().add(MixedConstantBitmaskEnum::BAD_BEEF);
+    test_assert(bad_beef.has(BAD_BEEF));
+    bad_beef.add(Nano);
+    test_assert(bad_beef.has(Nano));
+    test_assert(!bad_beef.has(BAD_BEEF));
+}
+
 void Enum_enum_class_reflection(void) {
     flecs::world ecs;
 
     auto enum_type = flecs::enum_type<EnumClass>(ecs);
+    test_int(enum_type.impl_.constants_size, 3);
 
     auto e = enum_type.entity();
     test_assert(e != 0);
@@ -131,6 +343,11 @@ void Enum_enum_class_reflection(void) {
     test_str(e.path().c_str(), "::EnumClass");
     test_int(enum_type.first(), (int)EnumClass::Grass);
     test_int(enum_type.last(), (int)EnumClass::Stone);
+
+    test_int(enum_type.index_by_value(EnumClass::Grass), 0);
+    test_int(enum_type.index_by_value(EnumClass::Sand), 1);
+    test_int(enum_type.index_by_value(EnumClass::Stone), 2);
+    test_int(enum_type.index_by_value((int)EnumClass::Stone + 1), -1);
 
     auto e_grass = enum_type.entity(EnumClass::Grass);
     auto e_sand = enum_type.entity(EnumClass::Sand);
@@ -161,6 +378,7 @@ void Enum_prefixed_enum_reflection(void) {
     flecs::world ecs;
 
     auto enum_type = flecs::enum_type<PrefixEnum>(ecs);
+    test_int(enum_type.impl_.constants_size, 2);
 
     auto e = enum_type.entity();
     test_assert(e != 0);
@@ -168,6 +386,9 @@ void Enum_prefixed_enum_reflection(void) {
     test_str(e.path().c_str(), "::PrefixEnum");
     test_int(enum_type.first(), PrefixEnum::PrefixEnumFoo);
     test_int(enum_type.last(), PrefixEnum::PrefixEnumBar);
+
+    test_int(enum_type.index_by_value(PrefixEnum::PrefixEnumFoo), 0);
+    test_int(enum_type.index_by_value(PrefixEnum::PrefixEnumBar), 1);
 
     auto e_foo = enum_type.entity(PrefixEnum::PrefixEnumFoo);
     auto e_bar = enum_type.entity(PrefixEnum::PrefixEnumBar);
@@ -180,7 +401,7 @@ void Enum_prefixed_enum_reflection(void) {
 
     test_assert(e_bar != 0);
     test_str(e_bar.path().c_str(), "::PrefixEnum::Bar");
-    test_bool(enum_type.is_valid(PrefixEnum::PrefixEnumFoo), true);
+    test_bool(enum_type.is_valid(PrefixEnum::PrefixEnumBar), true);
     test_assert(e_bar.get<PrefixEnum>() != nullptr);
     test_assert(e_bar.get<PrefixEnum>()[0] == PrefixEnum::PrefixEnumBar);
 
@@ -191,6 +412,7 @@ void Enum_constant_with_num_reflection(void) {
     flecs::world ecs;
 
     auto enum_type = flecs::enum_type<ConstantsWithNum>(ecs);
+    test_int(enum_type.impl_.constants_size, 3);
 
     auto e = enum_type.entity();
     test_assert(e != 0);
@@ -198,6 +420,10 @@ void Enum_constant_with_num_reflection(void) {
     test_str(e.path().c_str(), "::ConstantsWithNum");
     test_int(enum_type.first(), ConstantsWithNum::Num1);
     test_int(enum_type.last(), ConstantsWithNum::Num3);
+
+    test_int(enum_type.index_by_value(ConstantsWithNum::Num1), 0);
+    test_int(enum_type.index_by_value(ConstantsWithNum::Num2), 1);
+    test_int(enum_type.index_by_value(ConstantsWithNum::Num3), 2);
 
     auto num_1 = enum_type.entity(ConstantsWithNum::Num1);
     auto num_2 = enum_type.entity(ConstantsWithNum::Num2);
@@ -805,6 +1031,7 @@ void Enum_component_registered_as_enum(void) {
     test_assert(e.has<flecs::Enum>());
 
     const flecs::MetaType *mt = e.get<flecs::MetaType>();
+
     test_assert(mt != nullptr);
     test_assert(mt->kind == flecs::meta::EnumType);
 

@@ -264,13 +264,31 @@ inline flecs::entity enum_data<E>::entity() const {
 }
 
 template <typename E>
-inline flecs::entity enum_data<E>::entity(int value) const {
-    return flecs::entity(world_, impl_.constants[value].id);
+inline flecs::entity enum_data<E>::entity(underlying_type_t<E> value) const {
+    int index = index_by_value(value);
+    if (index >= 0) {
+        return flecs::entity(world_, impl_.constants[index].id);
+    }
+#ifdef FLECS_META
+    // Reflection data lookup failed. Try value lookup amongst flecs::Constant relationships
+    flecs::world world = flecs::world(world_);
+    return world.filter_builder()
+        .with(flecs::ChildOf, world.id<E>())
+        .with(flecs::Constant, world.id<int32_t>())
+        .build()
+        .find([value](flecs::entity constant) {
+            const int32_t *constant_value = constant.get_second<int32_t>(flecs::Constant);
+            ecs_assert(constant_value, ECS_INTERNAL_ERROR, NULL);
+            return value == static_cast<underlying_type_t<E>>(*constant_value);
+        });
+#else
+    return flecs::entity::null(world_);
+#endif
 }
 
 template <typename E>
 inline flecs::entity enum_data<E>::entity(E value) const {
-    return flecs::entity(world_, impl_.constants[static_cast<int>(value)].id);
+    return entity(static_cast<underlying_type_t<E>>(value));
 }
 
 /** Use provided scope for operations ran on returned world.

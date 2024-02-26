@@ -549,6 +549,9 @@ struct entity_view : public id {
     bool has(E value) const {
         auto r = _::cpp_type<E>::id(m_world);
         auto o = enum_type<E>(m_world).entity(value);
+        ecs_assert(o, ECS_INVALID_PARAMETER,
+            "Constant was not found in Enum reflection data."
+            " Did you mean to use has<E>() instead of has(E)?");
         return ecs_has_pair(m_world, m_id, r, o);
     }
 
