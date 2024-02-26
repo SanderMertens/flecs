@@ -2287,3 +2287,41 @@ void System_singleton_tick_source(void) {
     ecs.progress(2.0);
     test_int(1, sys_invoked);
 }
+
+void System_pipeline_step_with_kind_enum(void) {
+    enum class PipelineStepEnum
+    {
+        CustomStep,
+    };
+
+    flecs::world ecs;
+
+    ecs.entity(PipelineStepEnum::CustomStep).add(flecs::Phase).depends_on(flecs::OnStart);
+
+    bool ran_test = false;
+
+    ecs.system().kind(PipelineStepEnum::CustomStep).iter([&ran_test](flecs::iter& it) { ran_test = true; });
+
+    ecs.progress();
+    test_assert(ran_test);
+}
+
+void System_pipeline_step_depends_on_pipeline_step_with_enum(void) {
+    enum class PipelineStepEnum
+    {
+        CustomStep,
+        CustomStep2
+    };
+
+    flecs::world ecs;
+
+    ecs.entity(PipelineStepEnum::CustomStep).add(flecs::Phase).depends_on(flecs::OnStart);
+    ecs.entity(PipelineStepEnum::CustomStep2).add(flecs::Phase).depends_on(PipelineStepEnum::CustomStep);
+
+    bool ran_test = false;
+
+    ecs.system().kind(PipelineStepEnum::CustomStep2).iter([&ran_test](flecs::iter& it) { ran_test = true; });
+
+    ecs.progress();
+    test_assert(ran_test);
+}

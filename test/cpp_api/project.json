@@ -487,7 +487,9 @@
                 "range_get",
                 "randomize_timers",
                 "optional_pair_term",
-                "singleton_tick_source"
+                "singleton_tick_source",
+                "pipeline_step_with_kind_enum",
+                "pipeline_step_depends_on_pipeline_step_with_enum"
             ]
         }, {
             "id": "Event",
