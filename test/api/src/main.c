@@ -861,6 +861,8 @@ void Lookup_lookup_symbol_by_id(void);
 void Lookup_lookup_name_w_digit(void);
 void Lookup_lookup_symbol_w_digit(void);
 void Lookup_lookup_path_w_digit(void);
+void Lookup_lookup_name_w_spaces(void);
+void Lookup_lookup_path_w_spaces(void);
 void Lookup_set_name_of_existing(void);
 void Lookup_change_name_of_existing(void);
 void Lookup_lookup_alias(void);
@@ -6012,6 +6014,14 @@ bake_test_case Lookup_testcases[] = {
     {
         "lookup_path_w_digit",
         Lookup_lookup_path_w_digit
+    },
+    {
+        "lookup_name_w_spaces",
+        Lookup_lookup_name_w_spaces
+    },
+    {
+        "lookup_path_w_spaces",
+        Lookup_lookup_path_w_spaces
     },
     {
         "set_name_of_existing",
@@ -13471,7 +13481,7 @@ static bake_test_suite suites[] = {
         "Lookup",
         Lookup_setup,
         NULL,
-        47,
+        49,
         Lookup_testcases
     },
     {

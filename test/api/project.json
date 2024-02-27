@@ -908,6 +908,8 @@
                 "lookup_name_w_digit",
                 "lookup_symbol_w_digit",
                 "lookup_path_w_digit",
+                "lookup_name_w_spaces",
+                "lookup_path_w_spaces",
                 "set_name_of_existing",
                 "change_name_of_existing",
                 "lookup_alias",

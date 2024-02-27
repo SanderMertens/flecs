@@ -212,6 +212,33 @@ void Lookup_lookup_path_w_digit(void) {
     ecs_fini(world);
 }
 
+void Lookup_lookup_name_w_spaces(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e1 = ecs_set_name(world, 0, "hello world");
+    ecs_entity_t e2 = ecs_set_name(world, 0, "hello mars");
+    test_assert(e1 != e2);
+    test_str(ecs_get_name(world, e1), "hello world");
+    test_str(ecs_get_name(world, e2), "hello mars");
+    
+    ecs_fini(world);
+}
+
+void Lookup_lookup_path_w_spaces(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e1 = ecs_set_name(world, 0, "hello world");
+    ecs_entity_t e2 = ecs_set_name(world, 0, "hello mars");
+    ecs_add_pair(world, e2, EcsChildOf, e1);
+    
+    test_str(ecs_get_name(world, e1), "hello world");
+    test_str(ecs_get_name(world, e2), "hello mars");
+
+    test_assert(e2 == ecs_lookup(world, "hello world.hello mars"));
+    
+    ecs_fini(world);
+}
+
 void Lookup_set_name_of_existing(void) {
     ecs_world_t *world = ecs_mini();
 

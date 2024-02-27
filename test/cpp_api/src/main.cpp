@@ -470,6 +470,8 @@ void System_range_get(void);
 void System_randomize_timers(void);
 void System_optional_pair_term(void);
 void System_singleton_tick_source(void);
+void System_pipeline_step_with_kind_enum(void);
+void System_pipeline_step_depends_on_pipeline_step_with_enum(void);
 
 // Testsuite 'Event'
 void Event_evt_1_id_entity(void);
@@ -3160,6 +3162,14 @@ bake_test_case System_testcases[] = {
     {
         "singleton_tick_source",
         System_singleton_tick_source
+    },
+    {
+        "pipeline_step_with_kind_enum",
+        System_pipeline_step_with_kind_enum
+    },
+    {
+        "pipeline_step_depends_on_pipeline_step_with_enum",
+        System_pipeline_step_depends_on_pipeline_step_with_enum
     }
 };
 
@@ -6554,6 +6564,7 @@ bake_test_case Doc_testcases[] = {
     }
 };
 
+
 static bake_test_suite suites[] = {
     {
         "PrettyFunction",
@@ -6601,7 +6612,7 @@ static bake_test_suite suites[] = {
         "System",
         NULL,
         NULL,
-        69,
+        71,
         System_testcases
     },
     {

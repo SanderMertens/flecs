@@ -31242,10 +31242,15 @@ const char* ecs_parse_token(
             tmpl_nesting --;
         } else if (ch == '"') {
             in_str = !in_str;
-        } else
-        if (!flecs_valid_token_char(ch) && !in_str) {
+        } else if (ch == '\\') {
+            ptr ++;
+            tptr[0] = ptr[0];
+            tptr ++;
+            continue;
+        } else if (!flecs_valid_token_char(ch) && !in_str) {
             break;
         }
+
         if (delim && (ch == delim)) {
             break;
         }

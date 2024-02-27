@@ -263,6 +263,13 @@ void Parser_newline_after_term_src(void);
 void Parser_newline_after_term_src_pair(void);
 void Parser_newline_after_term_pair_comma(void);
 void Parser_newline_after_term_pair_second(void);
+void Parser_tag_w_space_implicit_this(void);
+void Parser_tag_w_space(void);
+void Parser_pair_first_w_space_implicit_this(void);
+void Parser_pair_first_w_space(void);
+void Parser_pair_second_w_space_implicit_this(void);
+void Parser_pair_second_w_space(void);
+void Parser_pair_src_w_space(void);
 
 // Testsuite 'Plecs'
 void Plecs_null(void);
@@ -2879,6 +2886,34 @@ bake_test_case Parser_testcases[] = {
     {
         "newline_after_term_pair_second",
         Parser_newline_after_term_pair_second
+    },
+    {
+        "tag_w_space_implicit_this",
+        Parser_tag_w_space_implicit_this
+    },
+    {
+        "tag_w_space",
+        Parser_tag_w_space
+    },
+    {
+        "pair_first_w_space_implicit_this",
+        Parser_pair_first_w_space_implicit_this
+    },
+    {
+        "pair_first_w_space",
+        Parser_pair_first_w_space
+    },
+    {
+        "pair_second_w_space_implicit_this",
+        Parser_pair_second_w_space_implicit_this
+    },
+    {
+        "pair_second_w_space",
+        Parser_pair_second_w_space
+    },
+    {
+        "pair_src_w_space",
+        Parser_pair_src_w_space
     }
 };
 
@@ -9077,7 +9112,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        254,
+        261,
         Parser_testcases
     },
     {

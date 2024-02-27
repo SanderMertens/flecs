@@ -267,7 +267,14 @@
                 "newline_after_term_src",
                 "newline_after_term_src_pair",
                 "newline_after_term_pair_comma",
-                "newline_after_term_pair_second"
+                "newline_after_term_pair_second",
+                "tag_w_space_implicit_this",
+                "tag_w_space",
+                "pair_first_w_space_implicit_this",
+                "pair_first_w_space",
+                "pair_second_w_space_implicit_this",
+                "pair_second_w_space",
+                "pair_src_w_space"
             ]
         }, {
             "id": "Plecs",
