@@ -2676,6 +2676,50 @@ void ComponentLifecycle_component_init_set_hooks(void) {
     test_int(1, on_remove_count);
 }
 
+void ComponentLifecycle_component_init_name_from_type_info(void) {
+    ecs_world_t* world = ecs_mini();
+
+    ecs_entity_t c = ecs_component_init(world, &(ecs_component_desc_t){
+        .type = {
+            .name = "Position",
+            .size = ECS_SIZEOF(Position),
+            .alignment = ECS_ALIGNOF(Position),
+        }
+    });
+
+    test_assert(c != 0);
+    test_assert(c == ecs_lookup(world, "Position"));
+
+    const EcsComponent *ptr = ecs_get(world, c, EcsComponent);
+    test_assert(ptr != NULL);
+    test_int(ptr->size, ECS_SIZEOF(Position));
+    test_int(ptr->size, ECS_SIZEOF(Velocity));
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_component_init_scoped_name_from_type_info(void) {
+    ecs_world_t* world = ecs_mini();
+
+    ecs_entity_t c = ecs_component_init(world, &(ecs_component_desc_t){
+        .type = {
+            .name = "ns.Position",
+            .size = ECS_SIZEOF(Position),
+            .alignment = ECS_ALIGNOF(Position),
+        }
+    });
+
+    test_assert(c != 0);
+    test_assert(c == ecs_lookup(world, "ns.Position"));
+
+    const EcsComponent *ptr = ecs_get(world, c, EcsComponent);
+    test_assert(ptr != NULL);
+    test_int(ptr->size, ECS_SIZEOF(Position));
+    test_int(ptr->size, ECS_SIZEOF(Velocity));
+
+    ecs_fini(world);
+}
+
 static int ctor_before_on_add_count = 0;
 static int on_add_after_ctor_count = 0;
 

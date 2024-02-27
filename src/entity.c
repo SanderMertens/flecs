@@ -1937,6 +1937,10 @@ ecs_entity_t ecs_component_init(
         new_component = ecs_has(world, result, EcsComponent);
     }
 
+    if (desc->type.name && new_component) {
+        ecs_add_path(world, result, 0, desc->type.name);
+    }
+
     EcsComponent *ptr = ecs_get_mut(world, result, EcsComponent);
     if (!ptr->size) {
         ecs_assert(ptr->alignment == 0, ECS_INTERNAL_ERROR, NULL);

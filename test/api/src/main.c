@@ -993,6 +993,8 @@ void ComponentLifecycle_on_set_ctx(void);
 void ComponentLifecycle_on_add_w_existing_component(void);
 void ComponentLifecycle_on_remove_w_existing_component(void);
 void ComponentLifecycle_component_init_set_hooks(void);
+void ComponentLifecycle_component_init_name_from_type_info(void);
+void ComponentLifecycle_component_init_scoped_name_from_type_info(void);
 void ComponentLifecycle_on_add_after_ctor_w_add(void);
 void ComponentLifecycle_on_add_after_ctor_w_add_to(void);
 void ComponentLifecycle_with_before_hooks(void);
@@ -6519,6 +6521,14 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "component_init_set_hooks",
         ComponentLifecycle_component_init_set_hooks
+    },
+    {
+        "component_init_name_from_type_info",
+        ComponentLifecycle_component_init_name_from_type_info
+    },
+    {
+        "component_init_scoped_name_from_type_info",
+        ComponentLifecycle_component_init_scoped_name_from_type_info
     },
     {
         "on_add_after_ctor_w_add",
@@ -13482,7 +13492,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        87,
+        89,
         ComponentLifecycle_testcases
     },
     {

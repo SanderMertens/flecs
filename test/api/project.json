@@ -1046,6 +1046,8 @@
                 "on_add_w_existing_component",
                 "on_remove_w_existing_component",
                 "component_init_set_hooks",
+                "component_init_name_from_type_info",
+                "component_init_scoped_name_from_type_info",
                 "on_add_after_ctor_w_add",
                 "on_add_after_ctor_w_add_to",
                 "with_before_hooks",
