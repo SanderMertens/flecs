@@ -593,70 +593,37 @@ void flecs_clean_tables(
 }
 
 static
-void flecs_fini_root_tables(
-    ecs_world_t *world,
-    ecs_id_record_t *idr,
-    bool fini_targets)
+void flecs_fini_subtrees_with_cleanup_order(
+    ecs_world_t *world)
 {
-    ecs_table_cache_iter_t it;
-
-    bool has_roots = flecs_table_cache_iter(&idr->cache, &it);
-    ecs_assert(has_roots == true, ECS_INTERNAL_ERROR, NULL);
-    (void)has_roots;
-
-    const ecs_table_record_t *tr;
-    while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
-        ecs_table_t *table = tr->hdr.table;
-        if (table->flags & EcsTableHasBuiltins) {
-            continue; /* Filter out modules */
+    flecs_defer_begin(world, &world->stages[0]);
+    ecs_filter_t *relationship_filter = ecs_filter(world, {
+        .terms = {
+            { .id = ecs_pair(EcsOnDeleteTarget, EcsDelete) },
         }
+    });
+    ecs_iter_t rel_it = ecs_filter_iter(world, relationship_filter);
+    while (ecs_filter_next(&rel_it)) {
+        for (int rel_i = 0; rel_i < rel_it.count; ++rel_i) {
+            ecs_filter_t *related_entities_filter = ecs_filter(world, {
+                .terms = {
+                    { .id = ecs_pair(rel_it.entities[rel_i], EcsWildcard) },
+                }
+            });
 
-        int32_t i, count = table->data.entities.count;
-        ecs_entity_t *entities = table->data.entities.array;
-
-        if (fini_targets) {
-            /* Only delete entities that are used as pair target. Iterate 
-             * backwards to minimize moving entities around in table. */
-            for (i = count - 1; i >= 0; i --) {
-                ecs_record_t *r = flecs_entities_get(world, entities[i]);
-                ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-                if (ECS_RECORD_TO_ROW_FLAGS(r->row) & EcsEntityIsTarget) {
-                    ecs_delete(world, entities[i]);
+            ecs_iter_t e_it = ecs_filter_iter(world, related_entities_filter);
+            while (ecs_filter_next(&e_it)) {
+                for (int e_i = 0; e_i < e_it.count; ++e_i) {
+                    if (e_it.table->flags & EcsTableHasBuiltins) {
+                        continue; /* Filter out modules */
+                    }
+                    ecs_delete(world, e_it.entities[e_i]);
                 }
             }
-        } else {
-            /* Delete remaining entities that are not in use (added to another
-             * entity). This limits table moves during cleanup and delays 
-             * cleanup of tags. */
-            for (i = count - 1; i >= 0; i --) {
-                ecs_record_t *r = flecs_entities_get(world, entities[i]);
-                ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-                if (!ECS_RECORD_TO_ROW_FLAGS(r->row)) {
-                    ecs_delete(world, entities[i]);
-                }
-            }
+            ecs_filter_fini(related_entities_filter);
         }
     }
-}
-
-static
-void flecs_fini_roots(
-    ecs_world_t *world) 
-{
-    ecs_id_record_t *idr = flecs_id_record_get(world, ecs_pair(EcsChildOf, 0));
-
-    ecs_run_aperiodic(world, EcsAperiodicEmptyTables);
-
-    /* Delete root entities that are not modules. This prioritizes deleting 
-     * regular entities first, which reduces the chance of components getting
-     * destructed in random order because it got deleted before entities,
-     * thereby bypassing the OnDeleteTarget policy. */
-    flecs_defer_begin(world, &world->stages[0]);
-    flecs_fini_root_tables(world, idr, true);
-    flecs_defer_end(world, &world->stages[0]);
-
-    flecs_defer_begin(world, &world->stages[0]);
-    flecs_fini_root_tables(world, idr, false);
+    ecs_filter_fini(relationship_filter);
     flecs_defer_end(world, &world->stages[0]);
 }
 
@@ -1374,11 +1341,11 @@ int ecs_fini(
 
     world->flags |= EcsWorldQuit;
 
-    /* Delete root entities first using regular APIs. This ensures that cleanup
-     * policies get a chance to execute. */
-    ecs_dbg_1("#[bold]cleanup root entities");
+    /* Cleanup subtrees for anything that has a cleanup policy requiring children
+     * deletion before parents. Leave tree-roots to be deleted later. */
+    ecs_dbg_1("#[bold]cleanup subtree entities");
     ecs_log_push_1();
-    flecs_fini_roots(world);
+    flecs_fini_subtrees_with_cleanup_order(world);
     ecs_log_pop_1();
 
     world->flags |= EcsWorldFini;
