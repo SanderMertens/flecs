@@ -1783,9 +1783,9 @@ void ComponentLifecycle_dtor_with_relation(void) {
         test_int(Pod::move_ctor_invoked, 1);
     }
 
-    test_int(Pod::ctor_invoked, 4);
-    test_int(Pod::dtor_invoked, 5);
-    test_int(Pod::move_invoked, 2);
+    test_int(Pod::ctor_invoked, 5);
+    test_int(Pod::dtor_invoked, 6);
+    test_int(Pod::move_invoked, 4);
     test_int(Pod::move_ctor_invoked, 1);
 }
 
