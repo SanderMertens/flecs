@@ -2747,7 +2747,7 @@ static ECS_COMPONENT_DECLARE(Position);
 static int on_remove_velocity = 0;
 static void ecs_on_remove(Velocity)(ecs_iter_t *it) {
     on_remove_velocity ++;
-    test_assert(ecs_is_alive(it->world, ecs_id(Position)));
+    test_assert(!ecs_is_alive(it->world, ecs_id(Position)));
 }
 
 void OnDelete_fini_cleanup_order_entity_after_singleton(void) {

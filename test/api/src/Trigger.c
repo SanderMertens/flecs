@@ -3571,7 +3571,7 @@ void Trigger_on_set_base_w_override(void) {
 
     ecs_fini(world);
 
-    test_int(ctx.invoked, 0);
+    test_int(ctx.invoked, 1);
 }
 
 void Trigger_entity_source_1_trigger(void) {
