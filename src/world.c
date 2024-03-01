@@ -643,39 +643,62 @@ static
 void flecs_fini_subtrees_with_cleanup_order(
     ecs_world_t *world)
 {
-    flecs_defer_begin(world, &world->stages[0]);
-    ecs_filter_t *relationship_filter = ecs_filter(world, {
-        .terms = {
-            { .id = ecs_pair(EcsOnDeleteTarget, EcsDelete) },
-        }
-    });
-    ecs_iter_t rel_it = ecs_filter_iter(world, relationship_filter);
-    while (ecs_filter_next(&rel_it)) {
-        for (int rel_i = 0; rel_i < rel_it.count; ++rel_i) {
-            ecs_filter_t *related_entities_filter = ecs_filter(world, {
-                .terms = {
-                    { .id = ecs_pair(rel_it.entities[rel_i], EcsWildcard) },
-                }
-            });
+    ecs_table_cache_iter_t rel_it;
+    ecs_table_cache_iter_t e_it;
 
-            ecs_iter_t e_it = ecs_filter_iter(world, related_entities_filter);
-            while (ecs_filter_next(&e_it)) {
-                for (int e_i = 0; e_i < e_it.count; ++e_i) {
+    flecs_defer_begin(world, &world->stages[0]);
+    ecs_id_record_t *rel_idr = flecs_id_record_get(world, ecs_pair(EcsOnDeleteTarget, EcsDelete));
+
+    bool has_roots = flecs_table_cache_iter(&rel_idr->cache, &rel_it);
+    ecs_assert(has_roots == true, ECS_INTERNAL_ERROR, NULL);
+    (void)has_roots;
+
+    const ecs_table_record_t *rel_tr;
+    // For each relationship that has (OnDeleteTarget, Delete)
+    while ((rel_tr = flecs_table_cache_next(&rel_it, ecs_table_record_t))) {
+        ecs_table_t *rel_table = rel_tr->hdr.table;
+
+        int32_t rel_i, rel_count = rel_table->data.entities.count;
+        ecs_entity_t *relationships = rel_table->data.entities.array;
+        /* Only delete entities that are used as pair target. Iterate 
+         * backwards to minimize moving entities around in table. */
+        for (rel_i = 0; rel_i < rel_count; ++rel_i) {
+            ecs_record_t *rel_record = flecs_entities_get(world, relationships[rel_i]);
+            ecs_assert(rel_record != NULL, ECS_INTERNAL_ERROR, NULL);
+            (void)rel_record;
+
+            ecs_id_record_t *e_idr = flecs_id_record_get(world, ecs_pair(relationships[rel_i], EcsWildcard));
+
+            if (!flecs_table_cache_iter(&e_idr->cache, &e_it)) {
+                // Empty -- Ex: (OnDeleteTarget, Delete)
+                continue;
+            }
+
+            const ecs_table_record_t *e_tr;
+            // For each entity, 
+            while ((e_tr = flecs_table_cache_next(&e_it, ecs_table_record_t))) {
+                ecs_table_t *e_table = e_tr->hdr.table;
+                /* Filter out for cleanup in later stage */
+                if (e_table->flags & EcsTableHasBuiltins) {
+                    continue; /* Modules */
+                }
+
+                int32_t e_i, e_count = e_table->data.entities.count;
+                ecs_entity_t *related_entities = e_table->data.entities.array;
+                for (e_i = e_count - 1; e_i >= 0; --e_i) {
                     /* Filter out for cleanup in later stage */
-                    if (e_it.table->flags & EcsTableHasBuiltins /* Modules */
-                        || ecs_has_id(world, e_it.entities[e_i], ecs_pair(EcsFlatten, EcsWildcard)) /* Entities pointing to Flattened Tables */
-                        || ecs_has_id(world, e_it.entities[e_i], ecs_pair(EcsWildcard, rel_it.entities[rel_i])) /* Entities pointing to the relationship itself */
-                        || ecs_has_id(world, e_it.entities[e_i], ecs_pair(EcsUnion, EcsWildcard)) /* Unions, which do not follow cleanup policies. */
-                        ) {
+                    if (ecs_has_id(world, related_entities[e_i], ecs_pair(EcsFlatten, EcsWildcard)) /* Entities pointing to Flattened Tables */
+                        || ecs_has_id(world, related_entities[e_i], ecs_pair(EcsWildcard, relationships[rel_i])) /* Entities pointing to the relationship itself */
+                        || ecs_has_id(world, related_entities[e_i], ecs_pair(EcsUnion, EcsWildcard)) /* Unions, which do not follow cleanup policies. */
+                       ) {
                         continue;
                     }
-                    ecs_delete(world, e_it.entities[e_i]);
+                    ecs_delete(world, related_entities[e_i]);
                 }
             }
-            ecs_filter_fini(related_entities_filter);
         }
     }
-    ecs_filter_fini(relationship_filter);
+
     flecs_defer_end(world, &world->stages[0]);
 }
 
