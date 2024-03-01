@@ -34683,6 +34683,7 @@ void flecs_rest_parse_json_ser_iter_params(
     flecs_rest_bool_param(req, "field_info", &desc->serialize_field_info);
     flecs_rest_bool_param(req, "query_info", &desc->serialize_query_info);
     flecs_rest_bool_param(req, "query_plan", &desc->serialize_query_plan);
+    flecs_rest_bool_param(req, "query_profile", &desc->serialize_query_profile);
     flecs_rest_bool_param(req, "table", &desc->serialize_table);
     flecs_rest_bool_param(req, "rows", &desc->serialize_rows);
     bool results = true;
@@ -34871,12 +34872,14 @@ void flecs_rest_iter_to_reply(
     ecs_world_t *world,
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply,
+    ecs_poly_t *query,
     ecs_iter_t *it)
 {
     ecs_iter_to_json_desc_t desc = {0};
     desc.serialize_entities = true;
     desc.serialize_variables = true;
     flecs_rest_parse_json_ser_iter_params(&desc, req);
+    desc.query = query;
 
     int32_t offset = 0;
     int32_t limit = 1000;
@@ -34893,6 +34896,8 @@ void flecs_rest_iter_to_reply(
     if (ecs_iter_to_json_buf(world, &pit, &reply->body, &desc)) {
         flecs_rest_reply_set_captured_log(reply);
     }
+
+    flecs_rest_int_param(req, "offset", &offset);
 }
 
 static
@@ -34945,7 +34950,7 @@ bool flecs_rest_reply_existing_query(
         }
     }
 
-    flecs_rest_iter_to_reply(world, req, reply, &it);
+    flecs_rest_iter_to_reply(world, req, reply, poly->poly, &it);
 
     ecs_os_api.log_ = rest_prev_log;
     ecs_log_enable_colors(prev_color);    
@@ -34990,7 +34995,7 @@ bool flecs_rest_reply_query(
         }
     } else {
         ecs_iter_t it = ecs_rule_iter(world, r);
-        flecs_rest_iter_to_reply(world, req, reply, &it);
+        flecs_rest_iter_to_reply(world, req, reply, r, &it);
         ecs_rule_fini(r);
     }
 
@@ -53361,34 +53366,23 @@ void flecs_json_serialize_query_info(
 static
 void flecs_json_serialize_query_plan(
     const ecs_world_t *world,
-    const ecs_iter_t *it, 
-    ecs_strbuf_t *buf)
+    ecs_strbuf_t *buf,
+    const ecs_iter_to_json_desc_t *desc)
 {
     (void)world;
-    (void)it;
     (void)buf;
+    (void)desc;
 
 #ifdef FLECS_RULES
-    if (!it->query) {
+    if (!desc->query) {
         return;
     }
 
-    /* Temporary hack to get rule object. Will no longer be necessary in v4 */
-    ecs_iter_next_action_t next = it->next;
-    if (next == ecs_page_next) {
-        if (!it->chain_it) {
-            return;
-        }
-
-        next = it->chain_it->next;
-    }
-
-    if (next != ecs_rule_next) {
+    if (!ecs_poly_is(desc->query, ecs_rule_t)) {
         return;
     }
 
-    const ecs_filter_t *f = it->query;
-    const ecs_rule_t *q = ECS_OFFSET(f, -ECS_SIZEOF(ecs_header_t));
+    const ecs_rule_t *q = desc->query;
     ecs_poly_assert(q, ecs_rule_t);
 
     flecs_json_memberl(buf, "query_plan");
@@ -53399,6 +53393,73 @@ void flecs_json_serialize_query_plan(
     ecs_os_free(plan);
     ecs_log_enable_colors(prev_color);
 #endif
+}
+
+static
+void flecs_json_serialize_query_profile(
+    const ecs_world_t *world,
+    ecs_strbuf_t *buf,
+    const ecs_iter_to_json_desc_t *desc)
+{
+    if (!desc->query) {
+        return;
+    }
+    
+    ecs_time_t t = {0};
+    int32_t result_count = 0, entity_count = 0, i, sample_count = 100;
+    double eval_time = 0, eval_min = 0, eval_max = 0;
+    ecs_time_measure(&t);
+
+    for (i = 0; i < sample_count; i ++) {
+        result_count = 0; 
+        entity_count = 0;
+
+        ecs_iter_t it;
+        ecs_iter_poly(world, desc->query, &it, NULL);
+        it.flags |= EcsIterIsInstanced;
+        it.flags |= EcsIterNoData;
+        
+        while (ecs_iter_next(&it)) {
+            result_count ++;
+            entity_count += it.count;
+        }
+
+        double time_measure = ecs_time_measure(&t);
+        if (!i) {
+            eval_min = time_measure;
+        } else if (time_measure < eval_min) {
+            eval_min = time_measure;
+        }
+
+        if (time_measure > eval_max) {
+            eval_max = time_measure;
+        }
+
+        eval_time += time_measure;
+
+        /* Don't profile for too long */
+        if (eval_time > 0.001) {
+            break;
+        }
+    }
+
+    eval_time /= i;
+
+    flecs_json_memberl(buf, "query_profile");
+    flecs_json_object_push(buf);
+    flecs_json_memberl(buf, "result_count");
+    flecs_json_number(buf, result_count);
+    flecs_json_memberl(buf, "entity_count");
+    flecs_json_number(buf, entity_count);
+
+    flecs_json_memberl(buf, "eval_time_avg_us");
+    flecs_json_number(buf, eval_time * 1000.0 * 1000.0);
+    flecs_json_memberl(buf, "eval_time_min_us");
+    flecs_json_number(buf, eval_min * 1000.0 * 1000.0);
+    flecs_json_memberl(buf, "eval_time_max_us");
+    flecs_json_number(buf, eval_max * 1000.0 * 1000.0);
+
+    flecs_json_object_pop(buf);
 }
 
 static
@@ -54148,7 +54209,12 @@ int ecs_iter_to_json_buf(
 
     /* Serialize query plan if enabled */
     if (desc && desc->serialize_query_plan) {
-        flecs_json_serialize_query_plan(world, it, buf);
+        flecs_json_serialize_query_plan(world, buf, desc);
+    }
+
+    /* Profile query */
+    if (desc && desc->serialize_query_profile) {
+        flecs_json_serialize_query_profile(world, buf, desc);
     }
 
     /* Serialize results */

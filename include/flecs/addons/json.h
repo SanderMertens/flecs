@@ -287,7 +287,9 @@ typedef struct ecs_iter_to_json_desc_t {
     bool serialize_field_info;      /**< Serialize metadata for fields returned by query */
     bool serialize_query_info;      /**< Serialize query terms */
     bool serialize_query_plan;      /**< Serialize query plan */
+    bool serialize_query_profile;   /**< Profile query performance */
     bool dont_serialize_results;    /**< If true, query won't be evaluated */
+    ecs_poly_t *query;              /**< Query object (required for serialize_query_[plan|profile]). */
 } ecs_iter_to_json_desc_t;
 
 #define ECS_ITER_TO_JSON_INIT (ecs_iter_to_json_desc_t){\
@@ -313,6 +315,7 @@ typedef struct ecs_iter_to_json_desc_t {
     .serialize_field_info =      false, \
     .serialize_query_info =      false, \
     .serialize_query_plan =      false, \
+    .serialize_query_profile =   false, \
     .dont_serialize_results =    false, \
 }
 

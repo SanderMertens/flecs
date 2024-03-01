@@ -193,6 +193,7 @@ void flecs_rest_parse_json_ser_iter_params(
     flecs_rest_bool_param(req, "field_info", &desc->serialize_field_info);
     flecs_rest_bool_param(req, "query_info", &desc->serialize_query_info);
     flecs_rest_bool_param(req, "query_plan", &desc->serialize_query_plan);
+    flecs_rest_bool_param(req, "query_profile", &desc->serialize_query_profile);
     flecs_rest_bool_param(req, "table", &desc->serialize_table);
     flecs_rest_bool_param(req, "rows", &desc->serialize_rows);
     bool results = true;
@@ -381,12 +382,14 @@ void flecs_rest_iter_to_reply(
     ecs_world_t *world,
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply,
+    ecs_poly_t *query,
     ecs_iter_t *it)
 {
     ecs_iter_to_json_desc_t desc = {0};
     desc.serialize_entities = true;
     desc.serialize_variables = true;
     flecs_rest_parse_json_ser_iter_params(&desc, req);
+    desc.query = query;
 
     int32_t offset = 0;
     int32_t limit = 1000;
@@ -403,6 +406,8 @@ void flecs_rest_iter_to_reply(
     if (ecs_iter_to_json_buf(world, &pit, &reply->body, &desc)) {
         flecs_rest_reply_set_captured_log(reply);
     }
+
+    flecs_rest_int_param(req, "offset", &offset);
 }
 
 static
@@ -455,7 +460,7 @@ bool flecs_rest_reply_existing_query(
         }
     }
 
-    flecs_rest_iter_to_reply(world, req, reply, &it);
+    flecs_rest_iter_to_reply(world, req, reply, poly->poly, &it);
 
     ecs_os_api.log_ = rest_prev_log;
     ecs_log_enable_colors(prev_color);    
@@ -500,7 +505,7 @@ bool flecs_rest_reply_query(
         }
     } else {
         ecs_iter_t it = ecs_rule_iter(world, r);
-        flecs_rest_iter_to_reply(world, req, reply, &it);
+        flecs_rest_iter_to_reply(world, req, reply, r, &it);
         ecs_rule_fini(r);
     }
 
