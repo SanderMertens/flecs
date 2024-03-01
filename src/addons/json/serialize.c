@@ -1587,6 +1587,7 @@ void flecs_json_serialize_query_profile(
 
         /* Don't profile for too long */
         if (eval_time > 0.001) {
+            i ++;
             break;
         }
     }
