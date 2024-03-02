@@ -679,20 +679,15 @@ void flecs_fini_subtrees_with_cleanup_order(
             while ((e_tr = flecs_table_cache_next(&e_it, ecs_table_record_t))) {
                 ecs_table_t *e_table = e_tr->hdr.table;
                 /* Filter out for cleanup in later stage */
-                if (e_table->flags & EcsTableHasBuiltins) {
-                    continue; /* Modules */
+                if (e_table->flags & EcsTableHasBuiltins || /* Modules */
+                    e_table->flags & EcsTableHasTarget      /* Flattened Hierarchies */
+                    ) {
+                    continue;
                 }
 
                 int32_t e_i, e_count = e_table->data.entities.count;
                 ecs_entity_t *related_entities = e_table->data.entities.array;
                 for (e_i = e_count - 1; e_i >= 0; --e_i) {
-                    /* Filter out for cleanup in later stage */
-                    if (ecs_has_id(world, related_entities[e_i], ecs_pair(EcsFlatten, EcsWildcard)) /* Entities pointing to Flattened Tables */
-                        || ecs_has_id(world, related_entities[e_i], ecs_pair(EcsWildcard, relationships[rel_i])) /* Entities pointing to the relationship itself */
-                        || ecs_has_id(world, related_entities[e_i], ecs_pair(EcsUnion, EcsWildcard)) /* Unions, which do not follow cleanup policies. */
-                       ) {
-                        continue;
-                    }
                     ecs_delete(world, related_entities[e_i]);
                 }
             }
