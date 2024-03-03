@@ -8,7 +8,7 @@ module::module(flecs::world& ecs) {
     ecs.module<module>();
 
     // All contents of the module are created inside the module's namespace, so
-    // the Position component will be created as simple.module.Position
+    // the Position component will be created as simple::module::Position
 
     // Component registration is optional, however by registering components
     // inside the module constructor, they will be created inside the scope
