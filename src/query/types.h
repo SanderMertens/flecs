@@ -472,9 +472,7 @@ typedef struct ecs_query_cache_t {
     int32_t match_count;             /* How often have tables been (un)matched */
     int32_t prev_match_count;        /* Track if sorting is needed */
     int32_t rematch_count;           /* Track which tables were added during rematch */
-
-    /* Mixins */
-    ecs_world_t *world;
+    
     ecs_entity_t entity;
 
     /* Query-level allocators */

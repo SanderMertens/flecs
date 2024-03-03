@@ -173,8 +173,7 @@ int flecs_query_create_cache(
 
     if (q->cache_kind == EcsQueryCacheAll) {
         /* Create query cache for all terms */
-        impl->cache = flecs_query_cache_init(impl, desc);
-        if (!impl->cache) {
+        if (!flecs_query_cache_init(impl, desc)) {
             goto error;
         }
     } else if (q->cache_kind == EcsQueryCacheAuto) {
@@ -203,8 +202,7 @@ int flecs_query_create_cache(
         }
 
         if (dst_count) {
-            impl->cache = flecs_query_cache_init(impl, &cache_desc);
-            if (!impl->cache) {
+            if (!flecs_query_cache_init(impl, &cache_desc)) {
                 goto error;
             }
             impl->field_map = ecs_os_memdup_n(field_map, int8_t, dst_count);
@@ -213,6 +211,7 @@ int flecs_query_create_cache(
 
     return 0;
 error:
+    flecs_query_cache_fini(impl);
     return -1;
 }
 
@@ -346,6 +345,11 @@ ecs_query_t* ecs_query_init(
 
     ecs_query_desc_t desc = *const_desc;
     ecs_entity_t entity = const_desc->entity;
+
+    if (entity) {
+        /* Remove existing query if entity has one */
+        ecs_remove_pair(world, entity, ecs_id(EcsPoly), EcsQuery);
+    }
 
     /* Initialize the query */
     result->pub.entity = entity;

@@ -1852,6 +1852,7 @@ void OrderByEntireTable_sort_not_term(void) {
 
     ECS_COMPONENT(world, Position);
 
+    ecs_log_set_level(-4);
     ecs_query_t *q = ecs_query(world, {
         .expr = "!Position",
         .order_by_component = ecs_id(Position),
@@ -1870,6 +1871,7 @@ void OrderByEntireTable_sort_or_term(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
+    ecs_log_set_level(-4);
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position || Velocity",
         .order_by_component = ecs_id(Position),
@@ -1887,6 +1889,7 @@ void OrderByEntireTable_sort_optional_term(void) {
 
     ECS_COMPONENT(world, Position);
 
+    ecs_log_set_level(-4);
     ecs_query_t *q = ecs_query(world, {
         .expr = "?Position",
         .order_by_component = ecs_id(Position),

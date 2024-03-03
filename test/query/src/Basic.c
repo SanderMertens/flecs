@@ -8179,6 +8179,46 @@ void Basic_create_query_w_existing_entity(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
+
+    if (cache_kind == EcsQueryCacheDefault) {
+        /* Make sure we also test uncached, as the default will create a cached
+         * query if an entity id is provided. */
+        cache_kind = EcsQueryCacheNone;
+    }
+
+    ecs_entity_t e = ecs_entity(world, { .name = "q" });
+
+    ecs_query_t *q_1 = ecs_query(world, {
+        .entity = e,
+        .terms = {
+            { .id = Foo },
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q_1 != NULL);
+
+    ecs_query_t *q_2 = ecs_query(world, {
+        .entity = e,
+        .terms = {
+            { .id = Foo },
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q_2 != NULL);
+    
+    test_str(ecs_get_name(world, e), "q");
+
+    ecs_query_fini(q_2);
+
+    ecs_fini(world);
+}
+
+void Basic_create_multi_component_query_w_existing_entity(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
     if (cache_kind == EcsQueryCacheDefault) {
@@ -8204,6 +8244,7 @@ void Basic_create_query_w_existing_entity(void) {
         .entity = e,
         .terms = {
             { .id = Foo },
+            { .id = Bar },
         },
         .cache_kind = cache_kind
     });
@@ -8275,8 +8316,4 @@ void Basic_delete_query_by_entity(void) {
     ecs_delete(world, e);
 
     ecs_fini(world);
-}
-
-void Basic_create_multi_component_query_w_existing_entity(void) {
-    // Implement testcase
 }

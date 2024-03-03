@@ -200,7 +200,10 @@ void ChangeDetection_query_change_after_modified(void) {
     ecs_fini(world);
 }
 
-void Sys(ecs_iter_t *it) { }
+static int sys_invoked = 0;
+void Sys(ecs_iter_t *it) { 
+    sys_invoked ++;
+}
 
 void ChangeDetection_query_change_after_out_system(void) {
     ecs_world_t *world = ecs_init();
@@ -208,7 +211,7 @@ void ChangeDetection_query_change_after_out_system(void) {
     ECS_COMPONENT(world, Position);
 
     ECS_SYSTEM(world, Sys, EcsOnUpdate, [out] Position);
-    
+
     ecs_new(world, Position);
 
     ecs_query_t *q = ecs_query(world, {
@@ -225,6 +228,7 @@ void ChangeDetection_query_change_after_out_system(void) {
     test_bool(false, ecs_query_changed(q));
 
     ecs_progress(world, 0);
+    test_int(sys_invoked, 1);
     test_bool(true, ecs_query_changed(q));
 
     it = ecs_query_iter(world, q);
@@ -235,6 +239,8 @@ void ChangeDetection_query_change_after_out_system(void) {
     ecs_query_fini(q);
 
     ecs_fini(world);
+
+    test_int(sys_invoked, 1);
 }
 
 void ChangeDetection_query_change_after_in_system(void) {

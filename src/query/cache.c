@@ -376,8 +376,8 @@ void flecs_query_cache_insert_table_node(
         ECS_INTERNAL_ERROR, NULL);
 
     /* If this is the first match, activate system */
-    if (!cache->list.first && cache->query->entity) {
-        ecs_remove_id(cache->query->world, cache->query->entity, EcsEmpty);
+    if (!cache->list.first && cache->entity) {
+        ecs_remove_id(cache->query->world, cache->entity, EcsEmpty);
     }
 
     flecs_query_cache_compute_group_id(cache, match);
@@ -1226,6 +1226,8 @@ void flecs_query_cache_fini(
     ecs_query_fini(cache->query);
 
     flecs_query_cache_allocators_fini(cache);
+
+    ecs_os_free(cache);
 }
 
 /* -- Public API -- */
@@ -1243,13 +1245,16 @@ ecs_query_cache_t* flecs_query_cache_init(
     /* Create private version of desc to create the uncached query that will
      * populate the query cache. */
     ecs_query_desc_t desc = *const_desc;
+    ecs_entity_t entity = desc.entity;
     desc.cache_kind = EcsQueryCacheNone; /* Don't create caches recursively */
     desc.group_by = NULL;
     desc.group_by_id = 0;
     desc.order_by = NULL;
     desc.order_by_component = 0;
+    desc.entity = 0;
 
     ecs_query_cache_t *result = ecs_os_calloc_t(ecs_query_cache_t);
+    result->entity = entity;
     impl->cache = result;
 
     ecs_observer_desc_t observer_desc = { .filter = desc };
@@ -1262,9 +1267,7 @@ ecs_query_cache_t* flecs_query_cache_init(
 
     flecs_query_cache_allocators_init(result);
 
-    ecs_entity_t entity = desc.entity;
     if (q->term_count) {
-        observer_desc.entity = 0;
         observer_desc.run = flecs_query_cache_on_event;
         observer_desc.ctx = impl;
         observer_desc.events[0] = EcsOnTableEmpty;
@@ -1361,10 +1364,6 @@ ecs_query_cache_t* flecs_query_cache_init(
 
     return result;
 error:
-    if (result) {
-        ecs_query_fini(result->query);
-        ecs_os_free(result);
-    }
     return NULL;
 }
 
