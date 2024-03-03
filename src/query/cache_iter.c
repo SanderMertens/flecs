@@ -145,6 +145,8 @@ bool flecs_query_cache_search(
 
         ECS_BIT_CONDN(
             it->set_fields, field_index, node->set_fields & (1llu << i));
+        ECS_BIT_CONDN(
+            it->up_fields, field_index, node->up_fields & (1llu << i));
     }
 
     ctx->vars[0].range.count = node->count;
@@ -168,6 +170,7 @@ bool flecs_query_is_cache_search(
     it->ids = node->ids;
     it->sources = node->sources;
     it->set_fields = node->set_fields;
+    it->up_fields = node->up_fields;
 
     ctx->vars[0].range.count = node->count;
     ctx->vars[0].range.offset = node->offset;

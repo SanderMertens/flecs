@@ -1405,6 +1405,18 @@ void Toggle_this_tag_pair(void);
 void Toggle_this_tag_pair_wildcard(void);
 void Toggle_this_toggle_shared_self_up(void);
 void Toggle_this_toggle_shared_up(void);
+void Toggle_this_toggle_shared_self_up_w_self(void);
+void Toggle_this_toggle_shared_up_w_self(void);
+void Toggle_this_toggle_shared_self_up_w_self_reverse(void);
+void Toggle_this_toggle_shared_up_w_self_reverse(void);
+void Toggle_this_toggle_shared_self_up_w_self_toggle(void);
+void Toggle_this_toggle_shared_up_w_self_toggle(void);
+void Toggle_this_toggle_shared_self_up_w_self_toggle_reverse(void);
+void Toggle_this_toggle_shared_up_w_self_toggle_reverse(void);
+void Toggle_this_toggle_not_shared_self_up(void);
+void Toggle_this_toggle_not_shared_up(void);
+void Toggle_this_toggle_optional_shared_self_up(void);
+void Toggle_this_toggle_optional_shared_up(void);
 void Toggle_this_64_mod_1(void);
 void Toggle_this_64_mod_2(void);
 void Toggle_this_64_mod_3(void);
@@ -7090,6 +7102,54 @@ bake_test_case Toggle_testcases[] = {
         Toggle_this_toggle_shared_up
     },
     {
+        "this_toggle_shared_self_up_w_self",
+        Toggle_this_toggle_shared_self_up_w_self
+    },
+    {
+        "this_toggle_shared_up_w_self",
+        Toggle_this_toggle_shared_up_w_self
+    },
+    {
+        "this_toggle_shared_self_up_w_self_reverse",
+        Toggle_this_toggle_shared_self_up_w_self_reverse
+    },
+    {
+        "this_toggle_shared_up_w_self_reverse",
+        Toggle_this_toggle_shared_up_w_self_reverse
+    },
+    {
+        "this_toggle_shared_self_up_w_self_toggle",
+        Toggle_this_toggle_shared_self_up_w_self_toggle
+    },
+    {
+        "this_toggle_shared_up_w_self_toggle",
+        Toggle_this_toggle_shared_up_w_self_toggle
+    },
+    {
+        "this_toggle_shared_self_up_w_self_toggle_reverse",
+        Toggle_this_toggle_shared_self_up_w_self_toggle_reverse
+    },
+    {
+        "this_toggle_shared_up_w_self_toggle_reverse",
+        Toggle_this_toggle_shared_up_w_self_toggle_reverse
+    },
+    {
+        "this_toggle_not_shared_self_up",
+        Toggle_this_toggle_not_shared_self_up
+    },
+    {
+        "this_toggle_not_shared_up",
+        Toggle_this_toggle_not_shared_up
+    },
+    {
+        "this_toggle_optional_shared_self_up",
+        Toggle_this_toggle_optional_shared_self_up
+    },
+    {
+        "this_toggle_optional_shared_up",
+        Toggle_this_toggle_optional_shared_up
+    },
+    {
         "this_64_mod_1",
         Toggle_this_64_mod_1
     },
@@ -8083,7 +8143,7 @@ static bake_test_suite suites[] = {
         "Toggle",
         Toggle_setup,
         NULL,
-        149,
+        161,
         Toggle_testcases,
         1,
         Toggle_params

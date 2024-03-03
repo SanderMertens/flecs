@@ -311,15 +311,14 @@ typedef struct {
 
 /* Rule run state */
 typedef struct {
-    uint64_t *written;            /* Bitset to check which variables have been written */
-    ecs_query_lbl_t op_index;      /* Currently evaluated operation */
-    ecs_var_t *vars;              /* Variable storage */
-    ecs_iter_t *it;               /* Iterator */
-    ecs_query_op_ctx_t *op_ctx;    /* Operation context (stack) */
-    ecs_world_t *world;           /* Reference to world */
-    const ecs_query_impl_t *rule;       /* Reference to rule */
+    uint64_t *written;                /* Bitset to check which variables have been written */
+    ecs_query_lbl_t op_index;         /* Currently evaluated operation */
+    ecs_var_t *vars;                  /* Variable storage */
+    ecs_iter_t *it;                   /* Iterator */
+    ecs_query_op_ctx_t *op_ctx;       /* Operation context (stack) */
+    ecs_world_t *world;               /* Reference to world */
+    const ecs_query_impl_t *rule;     /* Reference to rule */
     const ecs_query_var_t *rule_vars; /* Reference to rule variable array */
-    ecs_flags32_t *source_set;    /* Whether ecs_iter_t::sources is written by instruction */
     ecs_query_iter_t *qit;
 } ecs_query_run_ctx_t;
 
@@ -389,6 +388,7 @@ struct ecs_query_cache_table_match_t {
     ecs_entity_t *sources;           /* Subjects (sources) of ids */
     ecs_vec_t refs;                  /* Cached components for non-this terms */
     ecs_flags64_t set_fields;        /* Fields that are set */
+    ecs_flags64_t up_fields;         /* Fields that are matched through traversal */
     uint64_t group_id;               /* Value used to organize tables in groups */
     int32_t *monitor;                /* Used to monitor table for changes */
     ecs_entity_filter_t *entity_filter; /* Entity specific filters */

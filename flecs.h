@@ -3275,7 +3275,6 @@ typedef struct ecs_query_iter_t {
     struct ecs_query_op_ctx_t *op_ctx;    /* Operation-specific state */
     ecs_query_cache_table_match_t *node, *prev, *last; /* For cached iteration */
     uint64_t *written;
-    ecs_flags32_t source_set;
     int32_t skip_count;
 
 #ifdef FLECS_DEBUG
@@ -3341,6 +3340,7 @@ struct ecs_iter_t {
     uint64_t group_id;            /* Group id for table, if group_by is used */
     int32_t field_count;          /* Number of fields in iterator */
     ecs_termset_t shared_fields;  /* Bitset with shared fields */
+    ecs_termset_t up_fields;      /* Bitset with fields matched through up traversal */
 
     /* Input information */
     ecs_entity_t system;          /* The system (if applicable) */

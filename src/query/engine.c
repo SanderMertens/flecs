@@ -74,20 +74,20 @@ ecs_query_op_ctx_t* flecs_op_ctx_(
 
 static
 void flecs_reset_source_set_flag(
-    const ecs_query_run_ctx_t *ctx,
+    ecs_iter_t *it,
     int32_t field_index)
 {
     ecs_assert(field_index != -1, ECS_INTERNAL_ERROR, NULL);
-    (*ctx->source_set) &= ~(1u << field_index);
+    it->up_fields &= ~(1u << field_index);
 }
 
 static
 void flecs_set_source_set_flag(
-    const ecs_query_run_ctx_t *ctx,
+    ecs_iter_t *it,
     int32_t field_index)
 {
     ecs_assert(field_index != -1, ECS_INTERNAL_ERROR, NULL);
-    (*ctx->source_set) |= (1u << field_index);
+    it->up_fields |= (1u << field_index);
 }
 
 static
@@ -780,7 +780,7 @@ bool flecs_query_up_select(
                     if (!flecs_query_table_filter(table, op->other, 
                         (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled)))
                     {
-                        flecs_reset_source_set_flag(ctx, op->field_index);
+                        flecs_reset_source_set_flag(it, op->field_index);
                         op_ctx->row --;
                         return true;
                     }
@@ -841,7 +841,7 @@ next_elem:
         break;
     } while (true);
 
-    flecs_set_source_set_flag(ctx, op->field_index);
+    flecs_set_source_set_flag(it, op->field_index);
 
     return true;
 }
@@ -894,7 +894,7 @@ bool flecs_query_up_with(
         it->columns[op->field_index] = up->column;
         it->ids[op->field_index] = up->id;
         flecs_query_set_vars(op, up->id, ctx);
-        flecs_set_source_set_flag(ctx, op->field_index);
+        flecs_set_source_set_flag(it, op->field_index);
         return true;
     } else {
         return false;
@@ -915,6 +915,9 @@ bool flecs_query_self_up_with(
         } else {
             result = flecs_query_with(op, redo, ctx);
         }
+
+        flecs_reset_source_set_flag(ctx->it, op->field_index);
+
         if (result) {
             ecs_query_up_ctx_t *op_ctx = flecs_op_ctx(ctx, up);
             op_ctx->trav = 0;
@@ -924,8 +927,6 @@ bool flecs_query_self_up_with(
             }
             return true;
         }
-
-        flecs_reset_source_set_flag(ctx, op->field_index);
 
         return flecs_query_up_with(op, redo, ctx);
     } else {
@@ -2267,6 +2268,41 @@ flecs_query_row_mask_t flecs_query_get_row_mask(
 }
 
 static
+bool flecs_query_toggle_for_up(
+    ecs_iter_t *it,
+    ecs_query_run_ctx_t *ctx,
+    ecs_flags64_t and_fields,
+    ecs_flags64_t not_fields)
+{
+    uint32_t i, field_count = it->field_count;
+    ecs_flags64_t fields = (and_fields | not_fields) & it->up_fields;
+
+    for (i = 0; i < field_count; i ++) {
+        uint64_t field_bit = 1llu << i;
+        if (!(fields & field_bit)) {
+            continue;
+        }
+
+        bool match = false;
+        if ((it->set_fields & field_bit)) {
+            ecs_entity_t src = it->sources[i];
+            ecs_assert(src != 0, ECS_INTERNAL_ERROR, NULL);
+            match = ecs_is_enabled_id(it->world, src, it->ids[i]);
+        }
+
+        if (field_bit & not_fields) {
+            match = !match;
+        }
+
+        if (!match) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+static
 bool flecs_query_toggle_cmp(
     const ecs_query_op_t *op,
     bool redo,
@@ -2285,6 +2321,25 @@ bool flecs_query_toggle_cmp(
         return false;
     }
 
+    ecs_flags32_t up_fields = it->up_fields;
+    if (!redo) {
+        if (up_fields & (and_fields|not_fields)) {
+            /* If there are toggle fields that were matched with query 
+             * traversal, evaluate those separately. */
+            if (!flecs_query_toggle_for_up(
+                it, ctx, and_fields, not_fields)) 
+            {
+                return false;
+            }
+
+            it->set_fields &= ~(not_fields & up_fields);
+        }
+    }
+
+    /* Shared fields are evaluated, can be ignored from now on */
+    // and_fields &= ~up_fields;
+    not_fields &= ~up_fields;
+
     if (!(table->flags & EcsTableHasToggle)) {
         if (not_fields) {
             /* If any of the toggle fields with a not operator are for fields
@@ -2293,7 +2348,11 @@ bool flecs_query_toggle_cmp(
         } else {
             /* If table doesn't have toggles but query matched toggleable 
              * components, all entities match. */
-            return !redo;
+            if (!redo) {            
+                return true;
+            } else {
+                return false;
+            }
         }
     }
 
@@ -2335,6 +2394,7 @@ bool flecs_query_toggle_cmp(
     if (new_block_index != block_index) {
 compute_block:
         block_index = op_ctx->block_index = new_block_index;
+
         flecs_query_row_mask_t row_mask = flecs_query_get_row_mask(
             it, table, block_index, and_fields, not_fields, op_ctx);
 
@@ -2407,12 +2467,14 @@ next_block:
 
     flecs_query_var_narrow_range(op->src.var, table, row, cur - row, ctx);
     op_ctx->cur = cur;
+
     return true;
 
 done:
     /* Restore range & set fields */
     flecs_query_var_narrow_range(op->src.var, 
         table, op_ctx->range.offset, op_ctx->range.count, ctx);
+
     it->set_fields = op_ctx->prev_set_fields;
     return false;
 }
@@ -2550,14 +2612,14 @@ bool flecs_query_setvars(
     }
 
     int32_t i;
-    ecs_flags32_t source_set = *ctx->source_set;
+    ecs_flags32_t up_fields = it->up_fields;
     for (i = 0; i < q->field_count; i ++) {
         ecs_var_id_t var_id = src_vars[i];
         if (!var_id) {
             continue;
         }
 
-        if (source_set & (1u << i)) {
+        if (up_fields & (1u << i)) {
             continue;
         }
 
@@ -3416,7 +3478,6 @@ bool ecs_query_next_instanced(
     ctx.rule_vars = qit->rule_vars;
     ctx.written = qit->written;
     ctx.op_ctx = qit->op_ctx;
-    ctx.source_set = &qit->source_set;
     ctx.qit = qit;
     const ecs_query_op_t *ops = qit->ops;
 
@@ -3611,6 +3672,7 @@ ecs_iter_t flecs_query_iter(
     it.field_count = q->field_count;
     it.sizes = q->sizes;
     it.set_fields = q->set_fields;
+    it.up_fields = 0;
     flecs_query_apply_iter_flags(&it, q);
 
     flecs_iter_init(world, &it, 
@@ -3622,7 +3684,6 @@ ecs_iter_t flecs_query_iter(
     qit->rule = q;
     qit->rule_vars = impl->vars;
     qit->ops = impl->ops;
-    qit->source_set = 0;
 
     ecs_query_cache_t *cache = impl->cache;
     if (cache) {
