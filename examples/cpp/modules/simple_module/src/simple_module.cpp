@@ -4,7 +4,7 @@ namespace simple {
 
 module::module(flecs::world& ecs) {
     // Register module with world. The module entity will be created with the
-    // same hierarchy as the C++ namespaces (e.g. simple.module)
+    // same hierarchy as the C++ namespaces (e.g. simple::module)
     ecs.module<module>();
 
     // All contents of the module are created inside the module's namespace, so
