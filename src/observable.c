@@ -40,7 +40,7 @@ void flecs_observable_fini(
         ecs_assert(er != NULL, ECS_INTERNAL_ERROR, NULL);
         (void)er;
 
-        /* All triggers should've unregistered by now */
+        /* All observers should've unregistered by now */
         ecs_assert(!ecs_map_is_init(&er->event_ids), 
             ECS_INTERNAL_ERROR, NULL);
     }

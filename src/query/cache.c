@@ -1189,12 +1189,15 @@ void flecs_query_cache_allocators_fini(
 void flecs_query_cache_fini(
     ecs_query_impl_t *impl)
 {
-    printf("query_cache_fini\n");
     ecs_world_t *world = impl->pub.world;
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_query_cache_t *cache = impl->cache;
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (cache->observer) {
+        flecs_observer_fini(cache->observer);
+    }
 
     ecs_group_delete_action_t on_delete = cache->on_group_delete;
     if (on_delete) {
@@ -1261,7 +1264,7 @@ ecs_query_cache_t* flecs_query_cache_init(
 
     ecs_entity_t entity = desc.entity;
     if (q->term_count) {
-        observer_desc.entity = entity;
+        observer_desc.entity = 0;
         observer_desc.run = flecs_query_cache_on_event;
         observer_desc.ctx = impl;
         observer_desc.events[0] = EcsOnTableEmpty;
@@ -1276,8 +1279,8 @@ ecs_query_cache_t* flecs_query_cache_init(
             ecs_term_t, FLECS_TERM_COUNT_MAX);
         observer_desc.filter.expr = NULL; /* Already parsed */
 
-        entity = ecs_observer_init(world, &observer_desc);
-        if (!entity) {
+        result->observer = flecs_observer_init(world, &observer_desc);
+        if (!result->observer) {
             goto error;
         }
     }

@@ -553,15 +553,19 @@ void flecs_init_store(
     /* Initialize entity index */
     flecs_entities_init(world);
 
-    /* Initialize root table */
+    /* Initialize table sparse set */
     flecs_sparse_init_t(&world->store.tables, 
         a, &world->allocators.sparse_chunk, ecs_table_t);
 
     /* Initialize table map */
     flecs_table_hashmap_init(world, &world->store.table_map);
 
-    /* Initialize one root table per stage */
+    /* Initialize root table */
     flecs_init_root_table(world);
+
+    /* Initilaize observer sparse set */
+    flecs_sparse_init_t(&world->store.observers,
+        a, &world->allocators.sparse_chunk, ecs_observer_t);
 }
 
 static
@@ -671,6 +675,10 @@ void flecs_fini_store(ecs_world_t *world) {
     flecs_table_free(world, &world->store.root);
     flecs_entities_clear(world);
     flecs_hashmap_fini(&world->store.table_map);
+
+    ecs_assert(flecs_sparse_count(&world->store.observers) == 0, 
+        ECS_INTERNAL_ERROR, NULL);
+    flecs_sparse_fini(&world->store.observers);
 
     ecs_allocator_t *a = &world->allocator;
     ecs_vec_fini_t(a, &world->store.records, ecs_table_record_t);

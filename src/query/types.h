@@ -435,8 +435,11 @@ typedef struct ecs_query_cache_allocators_t {
 
 /** Query that is automatically matched against tables */
 typedef struct ecs_query_cache_t {
-    /* Query filter */
+    /* Uncached query used to populate the cache */
     ecs_query_t *query;
+
+    /* Observer to keep the cache in sync */
+    ecs_observer_t *observer;
 
     /* Tables matched with query */
     ecs_table_cache_t cache;

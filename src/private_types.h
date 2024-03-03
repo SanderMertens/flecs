@@ -325,7 +325,7 @@ typedef struct ecs_store_t {
     /* Entity lookup */
     ecs_entity_index_t entity_index;
 
-    /* Table lookup by id */
+    /* Tables */
     ecs_sparse_t tables;             /* sparse<table_id, ecs_table_t> */
 
     /* Table lookup by hash */
@@ -333,6 +333,9 @@ typedef struct ecs_store_t {
 
     /* Root table */
     ecs_table_t root;
+
+    /* Observers */
+    ecs_sparse_t observers;          /* sparse<table_id, ecs_table_t> */
 
     /* Records cache */
     ecs_vec_t records;

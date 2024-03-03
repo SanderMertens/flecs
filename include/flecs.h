@@ -786,7 +786,8 @@ struct ecs_observer_t {
                                  * filter did not match with the entity before
                                  * the event happened. */
 
-    bool is_multi;              /**< If true, the observer triggers on more than one term */
+    uint64_t id;                /**< Internal id (not entity id) */
+    ecs_vec_t children;         /**< If multi observer, vector stores child observers */
 
     /* Mixins */
     ecs_poly_dtor_t dtor;
@@ -3914,17 +3915,21 @@ char* ecs_query_str(
  * @{
  */
 
+FLECS_API
 ecs_iter_t ecs_each_id(
     const ecs_world_t *world,
     ecs_id_t id);
 
+FLECS_API
 bool ecs_each_next(
     ecs_iter_t *it);
 
+FLECS_API
 ecs_iter_t ecs_children(
     const ecs_world_t *world,
     ecs_entity_t parent);
 
+FLECS_API
 bool ecs_children_next(
     ecs_iter_t *it);
 

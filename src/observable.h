@@ -38,6 +38,10 @@ bool flecs_observers_exist(
     ecs_id_t id,
     ecs_entity_t event);
 
+ecs_observer_t* flecs_observer_init(
+    ecs_world_t *world,
+    const ecs_observer_desc_t *desc);
+
 void flecs_observer_fini(
     ecs_observer_t *observer);
 

@@ -521,6 +521,7 @@
                 "set_get_context_w_free",
                 "set_get_binding_context_w_free",
                 "create_query_w_existing_entity",
+                "create_query_w_existing_entity_different_term_count",
                 "create_multi_component_query_w_existing_entity",
                 "delete_query_by_entity"
             ]

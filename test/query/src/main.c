@@ -509,6 +509,7 @@ void Basic_set_get_binding_context(void);
 void Basic_set_get_context_w_free(void);
 void Basic_set_get_binding_context_w_free(void);
 void Basic_create_query_w_existing_entity(void);
+void Basic_create_query_w_existing_entity_different_term_count(void);
 void Basic_create_multi_component_query_w_existing_entity(void);
 void Basic_delete_query_by_entity(void);
 
@@ -3617,6 +3618,10 @@ bake_test_case Basic_testcases[] = {
     {
         "create_query_w_existing_entity",
         Basic_create_query_w_existing_entity
+    },
+    {
+        "create_query_w_existing_entity_different_term_count",
+        Basic_create_query_w_existing_entity_different_term_count
     },
     {
         "create_multi_component_query_w_existing_entity",
@@ -8036,7 +8041,7 @@ static bake_test_suite suites[] = {
         "Basic",
         Basic_setup,
         NULL,
-        167,
+        168,
         Basic_testcases,
         1,
         Basic_params
