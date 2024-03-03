@@ -8187,8 +8187,10 @@ void Basic_create_query_w_existing_entity(void) {
         cache_kind = EcsQueryCacheNone;
     }
 
+    ecs_entity_t e = ecs_entity(world, { .name = "q" });
+
     ecs_query_t *q_1 = ecs_query(world, {
-        .entity = ecs_entity(world, { .name = "q" }),
+        .entity = e,
         .terms = {
             { .id = Foo },
             { .id = Bar }
@@ -8199,7 +8201,7 @@ void Basic_create_query_w_existing_entity(void) {
     test_assert(q_1 != NULL);
 
     ecs_query_t *q_2 = ecs_query(world, {
-        .entity = ecs_entity(world, { .name = "q" }),
+        .entity = e,
         .terms = {
             { .id = Foo },
             { .id = Bar }
@@ -8208,8 +8210,31 @@ void Basic_create_query_w_existing_entity(void) {
     });
 
     test_assert(q_2 != NULL);
+    test_str(ecs_get_name(world, e), "q");
 
     ecs_query_fini(q_2);
 
     ecs_fini(world);
+}
+
+void Basic_delete_query_by_entity(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t e = ecs_new_entity(world, "q");
+    ecs_query_t *q = ecs_query(world, {
+        .entity = e,
+        .expr = "Foo",
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    ecs_delete(world, e);
+
+    ecs_fini(world);
+}
+
+void Basic_create_multi_component_query_w_existing_entity(void) {
+    // Implement testcase
 }

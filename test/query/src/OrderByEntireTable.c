@@ -1795,7 +1795,7 @@ void OrderByEntireTable_dont_resort_after_set_unsorted_component_w_tag_w_out_ter
     ecs_query_t *q = ecs_query(world, {
         .expr = "[in] Position",
         .order_by_component = ecs_id(Position),
-        .order_by = dummy_compare
+        .order_by = dummy_compare,
     });
 
     // Dummy queries that mutate
@@ -1848,13 +1848,53 @@ void OrderByEntireTable_dont_resort_after_set_unsorted_component_w_tag_w_out_ter
 }
 
 void OrderByEntireTable_sort_not_term(void) {
-    // Implement testcase
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "!Position",
+        .order_by_component = ecs_id(Position),
+        .order_by = ecs_compare(Position),
+        .sort_table = ecs_sort_table(Position)
+    });
+
+    test_assert(q == NULL);
+
+    ecs_fini(world);
 }
 
 void OrderByEntireTable_sort_or_term(void) {
-    // Implement testcase
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Position || Velocity",
+        .order_by_component = ecs_id(Position),
+        .order_by = ecs_compare(Position),
+        .sort_table = ecs_sort_table(Position)
+    });
+
+    test_assert(q == NULL);
+
+    ecs_fini(world);
 }
 
 void OrderByEntireTable_sort_optional_term(void) {
-    // Implement testcase
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "?Position",
+        .order_by_component = ecs_id(Position),
+        .order_by = ecs_compare(Position),
+        .sort_table = ecs_sort_table(Position)
+    });
+
+    test_assert(q == NULL);
+
+    ecs_fini(world);
 }

@@ -509,6 +509,8 @@ void Basic_set_get_binding_context(void);
 void Basic_set_get_context_w_free(void);
 void Basic_set_get_binding_context_w_free(void);
 void Basic_create_query_w_existing_entity(void);
+void Basic_create_multi_component_query_w_existing_entity(void);
+void Basic_delete_query_by_entity(void);
 
 // Testsuite 'Plan'
 void Plan_reordered_plan_1(void);
@@ -3615,6 +3617,14 @@ bake_test_case Basic_testcases[] = {
     {
         "create_query_w_existing_entity",
         Basic_create_query_w_existing_entity
+    },
+    {
+        "create_multi_component_query_w_existing_entity",
+        Basic_create_multi_component_query_w_existing_entity
+    },
+    {
+        "delete_query_by_entity",
+        Basic_delete_query_by_entity
     }
 };
 
@@ -8026,7 +8036,7 @@ static bake_test_suite suites[] = {
         "Basic",
         Basic_setup,
         NULL,
-        165,
+        167,
         Basic_testcases,
         1,
         Basic_params

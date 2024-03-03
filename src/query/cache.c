@@ -998,7 +998,7 @@ void flecs_query_cache_notify(
 }
 
 static
-void flecs_query_cache_order_by(
+int flecs_query_cache_order_by(
     ecs_world_t *world,
     ecs_query_impl_t *impl,
     ecs_entity_t order_by_component,
@@ -1027,8 +1027,12 @@ void flecs_query_cache_order_by(
             }
         }
 
-        ecs_check(order_by_term != -1, ECS_INVALID_PARAMETER, 
-            "sorted component not is queried for");
+        if (order_by_term == -1) {
+            char *id_str = ecs_id_str(world, order_by_component);
+            ecs_err("order_by component '%s' not is queried for", id_str);
+            ecs_os_free(id_str);
+            goto error;
+        }
     }
 
     cache->order_by_component = order_by_component;
@@ -1042,8 +1046,10 @@ void flecs_query_cache_order_by(
     if (!cache->table_slices.array) {
         flecs_query_cache_build_sorted_tables(cache);
     }
+
+    return 0;
 error:
-    return;
+    return -1;
 }
 
 static
@@ -1183,6 +1189,7 @@ void flecs_query_cache_allocators_fini(
 void flecs_query_cache_fini(
     ecs_query_impl_t *impl)
 {
+    printf("query_cache_fini\n");
     ecs_world_t *world = impl->pub.world;
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -1333,9 +1340,12 @@ ecs_query_cache_t* flecs_query_cache_init(
     flecs_query_cache_match_tables(world, impl, result);
 
     if (const_desc->order_by) {
-        flecs_query_cache_order_by(
+        if (flecs_query_cache_order_by(
             world, impl, const_desc->order_by_component, const_desc->order_by,
-            const_desc->sort_table);
+            const_desc->sort_table))
+        {
+            goto error;
+        }
     }
 
     if (entity) {

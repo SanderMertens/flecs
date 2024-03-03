@@ -1921,13 +1921,50 @@ void OrderBy_sort_by_wildcard(void) {
 }
 
 void OrderBy_sort_not_term(void) {
-    // Implement testcase
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "!Position",
+        .order_by_component = ecs_id(Position),
+        .order_by = compare_position
+    });
+
+    test_assert(q == NULL);
+
+    ecs_fini(world);
 }
 
 void OrderBy_sort_or_term(void) {
-    // Implement testcase
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Position || Velocity",
+        .order_by_component = ecs_id(Position),
+        .order_by = compare_position
+    });
+
+    test_assert(q == NULL);
+
+    ecs_fini(world);
 }
 
 void OrderBy_sort_optional_term(void) {
-    // Implement testcase
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "?Position",
+        .order_by_component = ecs_id(Position),
+        .order_by = compare_position
+    });
+
+    test_assert(q == NULL);
+
+    ecs_fini(world);
 }
