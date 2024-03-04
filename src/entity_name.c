@@ -9,6 +9,14 @@
 #define ECS_NAME_BUFFER_LENGTH (64)
 
 static
+bool flecs_is_scope_op(
+    const char *sep)
+{
+    const char *scope_op = "::\0";
+    return ecs_os_strlen(sep) == 2 && !ecs_os_strncmp(sep, scope_op, 2);
+}
+
+static
 bool flecs_path_append(
     const ecs_world_t *world, 
     ecs_entity_t parent, 
@@ -423,6 +431,10 @@ retry:
         if (!cur) {
             goto tail;
         }
+        if (flecs_path_elem(ptr, sep, NULL) && flecs_is_scope_op(sep) && !ecs_has_id(world, cur, EcsModule)) {
+            // If descending a scope, make current scope a module to prevent component deletion on fini
+            ecs_add_id(ECS_CONST_CAST(ecs_world_t*, world), cur, EcsModule);
+        }
     }
 
 tail:
@@ -628,6 +640,10 @@ ecs_entity_t ecs_add_path_w_sep(
                     } else {
                         e = ecs_new_id(world);
                     }
+                }
+                if (!last_elem && flecs_is_scope_op(sep) && !ecs_has_id(world, e, EcsModule)) {
+                    // If descending a scope, make current scope a module to prevent component deletion on fini
+                    ecs_add_id(world, e, EcsModule);
                 }
 
                 if (!cur && last_elem && root_path) {

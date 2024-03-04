@@ -13308,7 +13308,6 @@ bake_test_case StackAlloc_testcases[] = {
     }
 };
 
-
 static bake_test_suite suites[] = {
     {
         "Id",

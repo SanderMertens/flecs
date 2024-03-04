@@ -2502,6 +2502,7 @@ void Entity_with_scope(void) {
     test_assert(parent.lookup("C1") != 0);
     test_assert(parent.lookup("C2") != 0);
     test_assert(parent.lookup("C3") != 0);
+    test_assert(parent.has(flecs::Module));
 
     test_assert(ecs.lookup("P::C1") == parent.lookup("C1"));
     test_assert(ecs.lookup("P::C2") == parent.lookup("C2"));
@@ -2547,14 +2548,17 @@ void Entity_with_scope_nested(void) {
     test_assert(0 == ecs.lookup("C"));
     test_assert(0 == ecs.lookup("GC"));
     test_assert(0 == ecs.lookup("C::GC"));
+    test_assert(parent.has(flecs::Module));
 
     auto child = ecs.lookup("P::C");
     test_assert(0 != child);
     test_assert(child.has(flecs::ChildOf, parent));
+    test_assert(child.has(flecs::Module));
 
     auto gchild = ecs.lookup("P::C::GC");
     test_assert(0 != gchild);
     test_assert(gchild.has(flecs::ChildOf, child));
+    test_assert(!gchild.has(flecs::Module));
 }
 
 void Entity_with_scope_nested_same_name_as_parent(void) {
@@ -2576,14 +2580,18 @@ void Entity_with_scope_nested_same_name_as_parent(void) {
     test_assert(0 == ecs.lookup("C"));
     test_assert(0 == ecs.lookup("C"));
     test_assert(0 == ecs.lookup("C::C"));
+    test_assert(parent.has(flecs::Module));
 
     auto child = ecs.lookup("P::C");
     test_assert(0 != child);
     test_assert(child.has(flecs::ChildOf, parent));
+    test_assert(child.has(flecs::Module));
 
     auto gchild = ecs.lookup("P::C::C");
     test_assert(0 != gchild);
+    test_assert(child != gchild);
     test_assert(gchild.has(flecs::ChildOf, child));
+    test_assert(!gchild.has(flecs::Module));
 }
 
 void Entity_no_recursive_lookup(void) {
@@ -2625,6 +2633,8 @@ void Entity_defer_new_w_nested_name(void) {
     test_assert(e.has<flecs::Identifier>(flecs::Name));
     test_str(e.name(), "Bar");
     test_str(e.path(), "::Foo::Bar");
+    test_assert(ecs.entity("Foo").has(flecs::Module));
+    test_assert(!e.has(flecs::Module));
 }
 
 
@@ -2643,6 +2653,8 @@ void Entity_defer_new_w_scope_name(void) {
     test_assert(e.has<flecs::Identifier>(flecs::Name));
     test_str(e.name(), "Foo");
     test_str(e.path(), "::Parent::Foo");
+    test_assert(parent.has(flecs::Module));
+    test_assert(!e.has(flecs::Module));
 }
 
 void Entity_defer_new_w_scope_nested_name(void) {
@@ -2660,6 +2672,10 @@ void Entity_defer_new_w_scope_nested_name(void) {
     test_assert(e.has<flecs::Identifier>(flecs::Name));
     test_str(e.name(), "Bar");
     test_str(e.path(), "::Parent::Foo::Bar");
+    test_assert(parent.has(flecs::Module));
+    test_assert(ecs.lookup("::Parent::Foo").id() != 0);
+    test_assert(ecs.lookup("::Parent::Foo").has(flecs::Module));
+    test_assert(!e.has(flecs::Module));
 }
 
 void Entity_defer_new_w_deferred_scope_nested_name(void) {
@@ -2681,6 +2697,10 @@ void Entity_defer_new_w_deferred_scope_nested_name(void) {
     test_assert(e.has<flecs::Identifier>(flecs::Name));
     test_str(e.name(), "Bar");
     test_str(e.path(), "::Parent::Foo::Bar");
+    test_assert(parent.has(flecs::Module));
+    test_assert(ecs.lookup("::Parent::Foo").id() != 0);
+    test_assert(ecs.lookup("::Parent::Foo").has(flecs::Module));
+    test_assert(!e.has(flecs::Module));
 }
 
 void Entity_defer_new_w_scope(void) {
@@ -2735,6 +2755,8 @@ void Entity_defer_new_w_name_scope_with(void) {
     test_assert(e.has<flecs::Identifier>(flecs::Name));
     test_str(e.name(), "Foo");
     test_str(e.path(), "::Parent::Foo");
+    test_assert(parent.has(flecs::Module));
+    test_assert(!e.has(flecs::Module));
 }
 
 void Entity_defer_new_w_nested_name_scope_with() {
@@ -2758,6 +2780,9 @@ void Entity_defer_new_w_nested_name_scope_with() {
     test_assert(e.has<flecs::Identifier>(flecs::Name));
     test_str(e.name(), "Bar");
     test_str(e.path(), "::Parent::Foo::Bar");
+    test_assert(parent.has(flecs::Module));
+    test_assert(ecs.entity("Foo").has(flecs::Module));
+    test_assert(!e.has(flecs::Module));
 }
 
 void Entity_defer_w_with_implicit_component(void) {
@@ -4387,3 +4412,4 @@ void Entity_world_lookup_not_recursive(void) {
     test_assert(world.scope(child).lookup("foo") == foo);
     test_assert(world.scope(child).lookup("foo", false) == 0);
 }
+

@@ -94,9 +94,11 @@ void Module_lookup_from_scope(void) {
 
     auto ns_entity = world.lookup("ns");
     test_assert(ns_entity.id() != 0);
+    test_assert(ns_entity.has(flecs::Module));
 
     auto module_entity = world.lookup("ns::SimpleModule");
     test_assert(module_entity.id() != 0);
+    test_assert(module_entity.has(flecs::Module));
 
     auto position_entity = world.lookup("ns::SimpleModule::Position");
     test_assert(position_entity.id() != 0);
@@ -339,4 +341,40 @@ void Module_reparent_module_in_ctor(void) {
     flecs::entity other = world.lookup("::ns::ReparentModule");
     test_assert(other != 0);
     test_assert(other != m);
+}
+
+namespace NamespaceLvl1 {
+    namespace NamespaceLvl2 {
+        struct StructLvl1 {
+            struct StructLvl2 {};
+        };
+    }
+}
+void Module_implicitely_add_module_to_scopes(void) {
+    flecs::world ecs;
+
+    using StructLvl2 = NamespaceLvl1::NamespaceLvl2::StructLvl1::StructLvl2;
+
+    auto current = ecs.entity<StructLvl2>();
+    test_assert(current.id() != 0);
+    test_assert(!current.has(flecs::Module));
+    test_assert(current.path() == "::NamespaceLvl1::NamespaceLvl2::StructLvl1::StructLvl2");
+
+    current = current.parent();
+    test_assert(current.id() != 0);
+    test_assert(current.has(flecs::Module));
+    test_assert(current.path() == "::NamespaceLvl1::NamespaceLvl2::StructLvl1");
+
+    current = current.parent();
+    test_assert(current.id() != 0);
+    test_assert(current.has(flecs::Module));
+    test_assert(current.path() == "::NamespaceLvl1::NamespaceLvl2");
+
+    current = current.parent();
+    test_assert(current.id() != 0);
+    test_assert(current.has(flecs::Module));
+    test_assert(current.path() == "::NamespaceLvl1");
+
+    current = current.parent();
+    test_assert(current.id() == 0);
 }

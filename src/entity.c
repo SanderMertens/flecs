@@ -1805,6 +1805,9 @@ ecs_entity_t ecs_entity_init(
     if (stage->defer) {
         flecs_deferred_add_remove((ecs_world_t*)stage, result, name, desc, 
             scope, with, flecs_new_entity, name_assigned);
+        if (scope) {
+            flecs_defer_add(stage, scope, EcsModule);
+        }
     } else {
         if (flecs_traverse_add(world, result, name, desc,
             scope, with, flecs_new_entity, name_assigned)) 
