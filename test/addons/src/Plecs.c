@@ -3944,7 +3944,7 @@ void Plecs_anonymous_entity(void) {
     ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
     test_assert(foo != 0);
 
-    ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t){ foo });
+    ecs_iter_t it = ecs_each(world, foo );
     test_assert(ecs_term_next(&it));
     test_int(it.count, 1);
     ecs_entity_t e = it.entities[0];
@@ -3970,7 +3970,7 @@ void Plecs_anonymous_entity_in_scope(void) {
     ecs_entity_t parent = ecs_lookup_fullpath(world, "Parent");
     test_assert(parent != 0);
 
-    ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t){ foo });
+    ecs_iter_t it = ecs_each(world, foo );
     test_assert(ecs_term_next(&it));
     test_int(it.count, 1);
     ecs_entity_t e = it.entities[0];
@@ -3993,7 +3993,7 @@ void Plecs_anonymous_declaration(void) {
     ecs_entity_t foo = ecs_lookup_fullpath(world, "Foo");
     test_assert(foo != 0);
 
-    ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t){ foo });
+    ecs_iter_t it = ecs_each(world, foo );
     test_assert(ecs_term_next(&it));
     test_int(it.count, 1);
     ecs_entity_t e = it.entities[0];

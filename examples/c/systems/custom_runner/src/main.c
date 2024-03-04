@@ -17,7 +17,7 @@ void Move(ecs_iter_t *it) {
 
     // In a run function we have to manually iterate through the query results.
     // Note that this code looks the same as iterating a query.
-    while (ecs_query_cache_next(it)) {
+    while (ecs_query_next(it)) {
         // Inside the loop the code looks the same as for a regular system
         Position *p = ecs_field(it, Position, 1);
         const Velocity *v = ecs_field(it, Velocity, 2);

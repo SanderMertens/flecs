@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
 
     // Do the transform
     ecs_iter_t it = ecs_query_cache_iter(ecs, q);
-    while (ecs_query_cache_next(&it)) {
+    while (ecs_query_next(&it)) {
         const Position *p = ecs_field(&it, Position, 1);
         Position *p_out = ecs_field(&it, Position, 2);
         const Position *p_parent = ecs_field(&it, Position, 3);

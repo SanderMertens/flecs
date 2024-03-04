@@ -239,10 +239,6 @@ void flecs_assembly_on_set(
         ecs_script_update(world, assembly, instance, script->script, &vars);
         ecs_vars_fini(&vars);
 
-        if (ecs_record_has_id(world, r, EcsFlatten)) {
-            ecs_flatten(it->real_world, ecs_childof(instance), NULL);
-        }
-
         data = ECS_OFFSET(data, ct->size);
     }
 }

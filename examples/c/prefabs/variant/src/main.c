@@ -72,7 +72,7 @@ int main(int argc, char *argv[]) {
     });
 
     ecs_iter_t it = ecs_query_cache_iter(ecs, q);
-    while (ecs_query_cache_next(&it)) {
+    while (ecs_query_next(&it)) {
         Position  *p = ecs_field(&it, Position, 1);
         ImpulseSpeed *s = ecs_field(&it, ImpulseSpeed, 2);
         Defense *d = ecs_field(&it, Defense, 3);

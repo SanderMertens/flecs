@@ -1027,7 +1027,7 @@ void SerializeEntityToJson_serialize_w_1_alert(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_velocity"),
-        .filter.expr = "Position, !Velocity",
+        .query.expr = "Position, !Velocity",
         .message = "$this has Position but not Velocity"
     });
 
@@ -1071,13 +1071,13 @@ void SerializeEntityToJson_serialize_w_2_alerts(void) {
 
     ecs_entity_t alert_1 = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_velocity"),
-        .filter.expr = "Position, !Velocity",
+        .query.expr = "Position, !Velocity",
         .message = "$this has Position but not Velocity"
     });
 
     ecs_entity_t alert_2 = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_mass"),
-        .filter.expr = "Position, !Mass",
+        .query.expr = "Position, !Mass",
         .message = "$this has Position but not Mass"
     });
 
@@ -1128,7 +1128,7 @@ void SerializeEntityToJson_serialize_w_child_alerts(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_velocity"),
-        .filter.expr = "Position, !Velocity",
+        .query.expr = "Position, !Velocity",
         .message = "$this has Position but not Velocity"
     });
 
@@ -1211,7 +1211,7 @@ void SerializeEntityToJson_serialize_w_severity_filter_alert(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_velocity"),
-        .filter.expr = "Position, !Velocity",
+        .query.expr = "Position, !Velocity",
         .message = "$this has Position but not Velocity",
         .severity_filters[0] = {
             .severity = EcsAlertWarning,
@@ -1283,7 +1283,7 @@ void SerializeEntityToJson_serialize_w_alerts_no_message(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_velocity"),
-        .filter.expr = "Position, !Velocity"
+        .query.expr = "Position, !Velocity"
     });
 
     ecs_entity_t e1 = ecs_new_entity(world, "e1");

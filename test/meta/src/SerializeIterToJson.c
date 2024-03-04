@@ -16,8 +16,8 @@ void SerializeIterToJson_serialize_1_comps_empty(void) {
         }
     });
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "Position");
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
+    ecs_query_t *q = ecs_query_new(world, "Position");
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     char *json = ecs_iter_to_json(world, &it, NULL);
     test_assert(json != NULL);
@@ -47,8 +47,8 @@ void SerializeIterToJson_serialize_1_comps_2_ents_same_table(void) {
     ecs_set(world, e1, Position, {10, 20});
     ecs_set(world, e2, Position, {30, 40});
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "Position");
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
+    ecs_query_t *q = ecs_query_new(world, "Position");
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     char *json = ecs_iter_to_json(world, &it, NULL);
     test_str(json, 
@@ -102,8 +102,8 @@ void SerializeIterToJson_serialize_2_comps_2_ents_same_table(void) {
     ecs_set(world, e1, Mass, {1});
     ecs_set(world, e2, Mass, {2});
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "Position, Mass");
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
+    ecs_query_t *q = ecs_query_new(world, "Position, Mass");
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     char *json = ecs_iter_to_json(world, &it, NULL);
     test_str(json, 
@@ -141,8 +141,8 @@ void SerializeIterToJson_serialize_1_tag_2_ents_same_table(void) {
     ecs_add(world, e1, MyTag);
     ecs_add(world, e2, MyTag);
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "MyTag");
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
+    ecs_query_t *q = ecs_query_new(world, "MyTag");
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     char *json = ecs_iter_to_json(world, &it, NULL);
     test_str(json, 
@@ -185,8 +185,8 @@ void SerializeIterToJson_serialize_1_tag_1_comp_2_ents_same_table(void) {
     ecs_add(world, e1, MyTag);
     ecs_add(world, e2, MyTag);
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "Position, MyTag");
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
+    ecs_query_t *q = ecs_query_new(world, "Position, MyTag");
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     char *json = ecs_iter_to_json(world, &it, NULL);
     test_str(json, 
@@ -244,8 +244,8 @@ void SerializeIterToJson_serialize_1_tag_1_comp_4_ents_two_tables(void) {
     ecs_add(world, e3, TagB);
     ecs_add(world, e4, TagB);
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "Position, TagA");
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
+    ecs_query_t *q = ecs_query_new(world, "Position, TagA");
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     char *json = ecs_iter_to_json(world, &it, NULL);
     test_str(json, 
@@ -311,8 +311,8 @@ void SerializeIterToJson_serialize_2_comps_1_owned_2_ents(void) {
     ecs_add_pair(world, e1, EcsIsA, base);
     ecs_add_pair(world, e2, EcsIsA, base);
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "Position, Mass(up(IsA))");
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
+    ecs_query_t *q = ecs_query_new(world, "Position, Mass(up(IsA))");
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     char *json = ecs_iter_to_json(world, &it, NULL);
     test_str(json, 
@@ -351,8 +351,8 @@ void SerializeIterToJson_serialize_w_pair_wildcard(void) {
     ecs_add_pair(world, e1, Rel, ObjA);
     ecs_add_pair(world, e2, Rel, ObjB);
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "(Rel, *)");
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
+    ecs_query_t *q = ecs_query_new(world, "(Rel, *)");
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     char *json = ecs_iter_to_json(world, &it, NULL);
     test_str(json, 
@@ -492,8 +492,8 @@ void SerializeIterToJson_serialize_type_info_1_tags(void) {
     ecs_add(world, e1, TagA);
     ecs_add(world, e2, TagA);
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "TagA");
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
+    ecs_query_t *q = ecs_query_new(world, "TagA");
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
     desc.serialize_type_info = true;
@@ -530,8 +530,8 @@ void SerializeIterToJson_serialize_type_info_2_tags(void) {
     ecs_add(world, e2, TagA);
     ecs_add(world, e2, TagB);
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "TagA, TagB");
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
+    ecs_query_t *q = ecs_query_new(world, "TagA, TagB");
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
     desc.serialize_type_info = true;
@@ -565,8 +565,8 @@ void SerializeIterToJson_serialize_type_info_1_component(void) {
     ecs_add(world, e1, Position);
     ecs_add(world, e2, Position);
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "Position");
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
+    ecs_query_t *q = ecs_query_new(world, "Position");
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
     desc.serialize_type_info = true;
@@ -606,8 +606,8 @@ void SerializeIterToJson_serialize_type_info_2_components(void) {
     ecs_add(world, e1, Velocity);
     ecs_add(world, e2, Velocity);
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "Position, Velocity");
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
+    ecs_query_t *q = ecs_query_new(world, "Position, Velocity");
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
     desc.serialize_type_info = true;
@@ -653,8 +653,8 @@ void SerializeIterToJson_serialize_type_info_1_struct(void) {
     ecs_add(world, e1, Position);
     ecs_add(world, e2, Position);
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "Position");
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
+    ecs_query_t *q = ecs_query_new(world, "Position");
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
     desc.serialize_type_info = true;
@@ -707,8 +707,8 @@ void SerializeIterToJson_serialize_type_info_1_component_1_struct(void) {
     ecs_add(world, e1, Velocity);
     ecs_add(world, e2, Velocity);
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "Position, Velocity");
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
+    ecs_query_t *q = ecs_query_new(world, "Position, Velocity");
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
     desc.serialize_type_info = true;
@@ -772,8 +772,8 @@ void SerializeIterToJson_serialize_type_info_2_structs(void) {
     ecs_add(world, e1, Velocity);
     ecs_add(world, e2, Velocity);
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "Position, Velocity");
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
+    ecs_query_t *q = ecs_query_new(world, "Position, Velocity");
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
     desc.serialize_type_info = true;
@@ -834,8 +834,8 @@ void SerializeIterToJson_serialize_type_info_w_unit(void) {
     ecs_set(world, e1, T, {24});
     ecs_set(world, e2, T, {16});
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "T");
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
+    ecs_query_t *q = ecs_query_new(world, "T");
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
     desc.serialize_type_info = true;
@@ -900,8 +900,8 @@ void SerializeIterToJson_serialize_type_info_w_unit_quantity(void) {
     ecs_set(world, e1, T, {24});
     ecs_set(world, e2, T, {16});
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "T");
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
+    ecs_query_t *q = ecs_query_new(world, "T");
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
     desc.serialize_type_info = true;
@@ -973,8 +973,8 @@ void SerializeIterToJson_serialize_type_info_w_unit_over(void) {
     ecs_set(world, e1, T, {24});
     ecs_set(world, e2, T, {16});
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "T");
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
+    ecs_query_t *q = ecs_query_new(world, "T");
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
     desc.serialize_type_info = true;
@@ -1018,8 +1018,8 @@ void SerializeIterToJson_serialize_w_entity_label(void) {
     ecs_add(world, e1, Tag);
     ecs_add(world, e2, Tag);
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "Tag");
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
+    ecs_query_t *q = ecs_query_new(world, "Tag");
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
     desc.serialize_entity_labels = true;
@@ -1118,8 +1118,8 @@ void SerializeIterToJson_serialize_color(void) {
     ecs_add(world, e1, Tag);
     ecs_add(world, e2, Tag);
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "Tag");
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
+    ecs_query_t *q = ecs_query_new(world, "Tag");
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
     desc.serialize_colors = true;
@@ -1215,8 +1215,8 @@ void SerializeIterToJson_serialize_w_optional_tag(void) {
     ecs_add(world, e1, TagA);
     ecs_add(world, e2, TagA);
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "TagA, ?TagB");
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
+    ecs_query_t *q = ecs_query_new(world, "TagA, ?TagB");
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     char *json = ecs_iter_to_json(world, &it, NULL);
 
@@ -1258,8 +1258,8 @@ void SerializeIterToJson_serialize_w_optional_component(void) {
     ecs_add(world, e1, Position);
     ecs_add(world, e2, Position);
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "Position, ?Velocity");
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
+    ecs_query_t *q = ecs_query_new(world, "Position, ?Velocity");
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     char *json = ecs_iter_to_json(world, &it, NULL);
 
@@ -1316,8 +1316,8 @@ void SerializeIterToJson_serialize_w_optional_reflected_component(void) {
     ecs_set(world, e1, Position, {10, 20});
     ecs_set(world, e2, Position, {10, 20});
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "Position, ?Velocity");
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
+    ecs_query_t *q = ecs_query_new(world, "Position, ?Velocity");
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     char *json = ecs_iter_to_json(world, &it, NULL);
 
@@ -1357,8 +1357,8 @@ void SerializeIterToJson_serialize_w_inout_filter_tag(void) {
 
     ecs_add(world, e1, TagA);
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "[none] TagA");
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
+    ecs_query_t *q = ecs_query_new(world, "[none] TagA");
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     char *json = ecs_iter_to_json(world, &it, NULL);
 
@@ -1398,8 +1398,8 @@ void SerializeIterToJson_serialize_w_inout_filter_component(void) {
     ecs_set(world, e1, Position, {10, 20});
     ecs_set(world, e1, Velocity, {1, 2});
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "[none] Position, Velocity");
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
+    ecs_query_t *q = ecs_query_new(world, "[none] Position, Velocity");
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     char *json = ecs_iter_to_json(world, &it, NULL);
 
@@ -1448,8 +1448,8 @@ void SerializeIterToJson_serialize_w_inout_filter_reflected_component(void) {
     ecs_set(world, e1, Position, {10, 20});
     ecs_set(world, e1, Velocity, {1, 2});
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "[none] Position, Velocity");
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
+    ecs_query_t *q = ecs_query_new(world, "[none] Position, Velocity");
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     char *json = ecs_iter_to_json(world, &it, NULL);
 
@@ -1480,8 +1480,8 @@ void SerializeIterToJson_serialize_w_inout_out_tag(void) {
 
     ecs_add(world, e1, TagA);
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "[out] TagA");
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
+    ecs_query_t *q = ecs_query_new(world, "[out] TagA");
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     char *json = ecs_iter_to_json(world, &it, NULL);
 
@@ -1521,8 +1521,8 @@ void SerializeIterToJson_serialize_w_inout_out_component(void) {
     ecs_set(world, e1, Position, {10, 20});
     ecs_set(world, e1, Velocity, {1, 2});
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "[out] Position, Velocity");
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
+    ecs_query_t *q = ecs_query_new(world, "[out] Position, Velocity");
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     char *json = ecs_iter_to_json(world, &it, NULL);
 
@@ -1571,8 +1571,8 @@ void SerializeIterToJson_serialize_w_inout_out_reflected_component(void) {
     ecs_set(world, e1, Position, {10, 20});
     ecs_set(world, e1, Velocity, {1, 2});
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "[out] Position, Velocity");
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
+    ecs_query_t *q = ecs_query_new(world, "[out] Position, Velocity");
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     char *json = ecs_iter_to_json(world, &it, NULL);
 
@@ -1641,12 +1641,12 @@ void SerializeIterToJson_serialize_ids(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "Tag");
+    ecs_query_t *q = ecs_query_new(world, "Tag");
 
     ecs_entity_t e = ecs_new_entity(world, "e");
     ecs_add(world, e, Tag);
 
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
     desc.serialize_ids = false;
     desc.serialize_entity_ids = true;
@@ -1672,7 +1672,7 @@ void SerializeIterToJson_serialize_ids_2_entities(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "Tag");
+    ecs_query_t *q = ecs_query_new(world, "Tag");
 
     ecs_entity_t e1 = ecs_new_entity(world, "e1");
     ecs_add(world, e1, Tag);
@@ -1680,7 +1680,7 @@ void SerializeIterToJson_serialize_ids_2_entities(void) {
     ecs_entity_t e2 = ecs_new_entity(world, "e2");
     ecs_add(world, e2, Tag);
 
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
     desc.serialize_ids = false;
     desc.serialize_entity_ids = true;
@@ -1800,8 +1800,8 @@ void SerializeIterToJson_serialize_invalid_value(void) {
         ecs_set(world, e, T, {4});
     }
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "T");
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
+    ecs_query_t *q = ecs_query_new(world, "T");
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     ecs_log_set_level(-4);
     char *json = ecs_iter_to_json(world, &it, NULL);
@@ -1828,7 +1828,7 @@ void SerializeIterToJson_serialize_recycled_pair_id(void) {
         }
     });
 
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     char *json = ecs_iter_to_json(world, &it, NULL);
     test_assert(json != NULL);
     test_str(json, "{\"ids\":[[\"Rel\",\"Tgt\"]], \"results\":["
@@ -1853,7 +1853,7 @@ void SerializeIterToJson_serialize_w_alert(void) {
 
     ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_velocity"),
-        .filter.expr = "Position, !Velocity",
+        .query.expr = "Position, !Velocity",
     });
 
     ecs_set(world, e1, Position, {10, 20});
@@ -1862,10 +1862,10 @@ void SerializeIterToJson_serialize_w_alert(void) {
 
     ecs_progress(world, 1.0); /* Evaluate alert logic */
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "Position");
+    ecs_query_t *q = ecs_query_new(world, "Position");
     test_assert(q != NULL);
 
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
     desc.serialize_ids = false;
@@ -2650,8 +2650,8 @@ void SerializeIterToJson_serialize_term_labels(void) {
         }
     });
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "Position");
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
+    ecs_query_t *q = ecs_query_new(world, "Position");
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     ecs_iter_to_json_desc_t desc = {0};
     desc.serialize_term_labels = true;
@@ -2682,8 +2682,8 @@ void SerializeIterToJson_serialize_id_labels(void) {
     ecs_entity_t e = ecs_new_entity(world, "ent");
     ecs_set(world, e, Position, {1, 2});
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "Position");
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
+    ecs_query_t *q = ecs_query_new(world, "Position");
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     ecs_iter_to_json_desc_t desc = {0};
     desc.serialize_id_labels = true;
@@ -2715,7 +2715,7 @@ void SerializeIterToJson_serialize_vars_for_query(void) {
     ecs_iter_to_json_desc_t desc = {0};
     desc.serialize_entities = true;
     desc.serialize_variables = true;
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     char *json = ecs_iter_to_json(world, &it, &desc);
     test_assert(json != NULL);
     test_str(json, "{\"results\":[{\"entities\":[\"e1\", \"e2\"]}]}");
@@ -2744,7 +2744,7 @@ void SerializeIterToJson_serialize_var_labels_for_query(void) {
     ecs_iter_to_json_desc_t desc = {0};
     desc.serialize_entities = true;
     desc.serialize_variable_labels = true;
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     char *json = ecs_iter_to_json(world, &it, &desc);
     test_assert(json != NULL);
     test_str(json, "{\"results\":[{\"entities\":[\"e1\", \"e2\"]}]}");
@@ -2773,7 +2773,7 @@ void SerializeIterToJson_serialize_var_ids_for_query(void) {
     ecs_iter_to_json_desc_t desc = {0};
     desc.serialize_entities = true;
     desc.serialize_variable_ids = true;
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     char *json = ecs_iter_to_json(world, &it, &desc);
     test_assert(json != NULL);
     test_str(json, "{\"results\":[{\"entities\":[\"e1\", \"e2\"]}]}");
@@ -2804,7 +2804,7 @@ void SerializeIterToJson_serialize_null_doc_name(void) {
     desc.serialize_entities = true;
     desc.serialize_entity_labels = true;
 
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     char *json = ecs_iter_to_json(world, &it, &desc);
     test_assert(json != NULL);
     test_str(json, "{\"results\":[{\"entities\":[\"foo\"]}]}");

@@ -392,7 +392,7 @@ void flecs_register_symmetric(ecs_iter_t *it) {
          * added, or remove the reverse relationship when R(X, Y) is removed. */
         ecs_observer(world, {
             .entity = ecs_entity(world, {.add = {ecs_childof(r)}}),
-            .filter.terms[0] = { .id = ecs_pair(r, EcsWildcard) },
+            .query.terms[0] = { .id = ecs_pair(r, EcsWildcard) },
             .callback = flecs_on_symmetric_add_remove,
             .events = {EcsOnAdd, EcsOnRemove}
         });
@@ -636,7 +636,6 @@ void flecs_bootstrap(
     });
 
     flecs_type_info_init(world, EcsIterable, { 0 });
-    flecs_type_info_init(world, EcsTarget, { 0 });
 
     /* Create and cache often used id records on world */
     flecs_init_id_records(world);
@@ -652,7 +651,6 @@ void flecs_bootstrap(
     flecs_bootstrap_builtin_t(world, table, EcsComponent);
     flecs_bootstrap_builtin_t(world, table, EcsIterable);
     flecs_bootstrap_builtin_t(world, table, EcsPoly);
-    flecs_bootstrap_builtin_t(world, table, EcsTarget);
 
     /* Initialize default entity id range */
     world->info.last_component_id = EcsFirstUserComponentId;
@@ -667,7 +665,7 @@ void flecs_bootstrap(
     /* Register observer for tag property before adding EcsTag */
     ecs_observer(world, {
         .entity = ecs_entity(world, {.add = { ecs_childof(EcsFlecsInternals)}}),
-        .filter.terms[0] = { .id = EcsTag, .src.id = EcsSelf },
+        .query.terms[0] = { .id = EcsTag, .src.id = EcsSelf },
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = flecs_register_tag,
         .yield_existing = true
@@ -740,7 +738,6 @@ void flecs_bootstrap(
     flecs_bootstrap_tag(world, EcsDelete);
     flecs_bootstrap_tag(world, EcsPanic);
 
-    flecs_bootstrap_tag(world, EcsFlatten);
     flecs_bootstrap_tag(world, EcsDefaultChildComponent);
 
     /* Builtin predicates */
@@ -776,7 +773,6 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsChildOf, EcsTag);
     ecs_add_id(world, EcsSlotOf, EcsTag);
     ecs_add_id(world, EcsDependsOn, EcsTag);
-    ecs_add_id(world, EcsFlatten, EcsTag);
     ecs_add_id(world, EcsDefaultChildComponent, EcsTag);
     ecs_add_id(world, EcsFlag, EcsTag);
     ecs_add_id(world, EcsWith, EcsTag);
@@ -801,77 +797,77 @@ void flecs_bootstrap(
      * set flags on an id record when a property is added to a component, which
      * allows for quick property testing in various operations. */
     ecs_observer(world, {
-        .filter.terms = {{ .id = EcsFinal, .src.id = EcsSelf } },
-        .filter.flags = EcsQueryMatchPrefab,
+        .query.terms = {{ .id = EcsFinal, .src.id = EcsSelf } },
+        .query.flags = EcsQueryMatchPrefab,
         .events = {EcsOnAdd},
         .callback = flecs_register_final
     });
 
     ecs_observer(world, {
-        .filter.terms = {
+        .query.terms = {
             { .id = ecs_pair(EcsOnDelete, EcsWildcard), .src.id = EcsSelf }
         },
-        .filter.flags = EcsQueryMatchPrefab,
+        .query.flags = EcsQueryMatchPrefab,
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = flecs_register_on_delete
     });
 
     ecs_observer(world, {
-        .filter.terms = {
+        .query.terms = {
             { .id = ecs_pair(EcsOnDeleteTarget, EcsWildcard), .src.id = EcsSelf }
         },
-        .filter.flags = EcsQueryMatchPrefab,
+        .query.flags = EcsQueryMatchPrefab,
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = flecs_register_on_delete_object
     });
 
     ecs_observer(world, {
-        .filter.terms = { { .id = EcsTraversable, .src.id = EcsSelf } },
-        .filter.flags = EcsQueryMatchPrefab,
+        .query.terms = { { .id = EcsTraversable, .src.id = EcsSelf } },
+        .query.flags = EcsQueryMatchPrefab,
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = flecs_register_traversable
     });
 
     ecs_observer(world, {
-        .filter.terms = {{ .id = EcsExclusive, .src.id = EcsSelf  } },
-        .filter.flags = EcsQueryMatchPrefab,
+        .query.terms = {{ .id = EcsExclusive, .src.id = EcsSelf  } },
+        .query.flags = EcsQueryMatchPrefab,
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = flecs_register_exclusive
     });
 
     ecs_observer(world, {
-        .filter.terms = {{ .id = EcsSymmetric, .src.id = EcsSelf  } },
-        .filter.flags = EcsQueryMatchPrefab,
+        .query.terms = {{ .id = EcsSymmetric, .src.id = EcsSelf  } },
+        .query.flags = EcsQueryMatchPrefab,
         .events = {EcsOnAdd},
         .callback = flecs_register_symmetric
     });
 
     ecs_observer(world, {
-        .filter.terms = {{ .id = EcsDontInherit, .src.id = EcsSelf } },
-        .filter.flags = EcsQueryMatchPrefab,
+        .query.terms = {{ .id = EcsDontInherit, .src.id = EcsSelf } },
+        .query.flags = EcsQueryMatchPrefab,
         .events = {EcsOnAdd},
         .callback = flecs_register_dont_inherit
     });
 
     ecs_observer(world, {
-        .filter.terms = {{ .id = EcsAlwaysOverride, .src.id = EcsSelf } },
-        .filter.flags = EcsQueryMatchPrefab,
+        .query.terms = {{ .id = EcsAlwaysOverride, .src.id = EcsSelf } },
+        .query.flags = EcsQueryMatchPrefab,
         .events = {EcsOnAdd},
         .callback = flecs_register_always_override
     });
 
     ecs_observer(world, {
-        .filter.terms = {{ .id = EcsCanToggle, .src.id = EcsSelf } },
-        .filter.flags = EcsQueryMatchPrefab,
+        .query.terms = {{ .id = EcsCanToggle, .src.id = EcsSelf } },
+        .query.flags = EcsQueryMatchPrefab,
         .events = {EcsOnAdd},
         .callback = flecs_register_can_toggle
     });
 
     ecs_observer(world, {
-        .filter.terms = {
+        .query.terms = {
             { .id = ecs_pair(EcsWith, EcsWildcard), .src.id = EcsSelf },
         },
-        .filter.flags = EcsQueryMatchPrefab,
+        .query.flags = EcsQueryMatchPrefab,
         .events = {EcsOnAdd},
         .callback = flecs_register_with
     });
@@ -879,8 +875,8 @@ void flecs_bootstrap(
     /* Define observer to make sure that adding a module to a child entity also
      * adds it to the parent. */
     ecs_observer(world, {
-        .filter.terms = {{ .id = EcsModule, .src.id = EcsSelf } },
-        .filter.flags = EcsQueryMatchPrefab,
+        .query.terms = {{ .id = EcsModule, .src.id = EcsSelf } },
+        .query.flags = EcsQueryMatchPrefab,
         .events = {EcsOnAdd},
         .callback = flecs_ensure_module_tag
     });
@@ -911,7 +907,6 @@ void flecs_bootstrap(
     /* Exclusive properties */
     ecs_add_id(world, EcsSlotOf, EcsExclusive);
     ecs_add_id(world, EcsOneOf, EcsExclusive);
-    ecs_add_id(world, EcsFlatten, EcsExclusive);
 
     /* Private properties */
     ecs_add_id(world, ecs_id(EcsPoly), EcsPrivate);

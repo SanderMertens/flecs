@@ -391,7 +391,6 @@ struct ecs_query_cache_table_match_t {
     ecs_flags64_t up_fields;         /* Fields that are matched through traversal */
     uint64_t group_id;               /* Value used to organize tables in groups */
     int32_t *monitor;                /* Used to monitor table for changes */
-    ecs_entity_filter_t *entity_filter; /* Entity specific filters */
 
     /* Next match in cache for same table (includes empty tables) */
     ecs_query_cache_table_match_t *next_match;

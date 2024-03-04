@@ -568,9 +568,6 @@ void flecs_query_cache_set_table_match(
                 qm->storage_columns[i] = -2;
             }
         }
-
-        flecs_entity_filter_init(world, &qm->entity_filter, filter, 
-            table, qm->ids, qm->columns);
     }
 
     /* Add references for substituted terms */
@@ -850,7 +847,6 @@ void flecs_query_cache_table_match_free(
         }
         
         ecs_vec_fini_t(&world->allocator, &cur->refs, ecs_ref_t);
-        flecs_entity_filter_fini(world, cur->entity_filter);
 
         next = cur->next_match;
 
@@ -1257,7 +1253,7 @@ ecs_query_cache_t* flecs_query_cache_init(
     result->entity = entity;
     impl->cache = result;
 
-    ecs_observer_desc_t observer_desc = { .filter = desc };
+    ecs_observer_desc_t observer_desc = { .query = desc };
 
     desc.flags |= EcsQueryMatchEmptyTables | EcsQueryTableOnly;
     ecs_query_t *q = result->query = ecs_query_init(world, &desc);
@@ -1274,13 +1270,13 @@ ecs_query_cache_t* flecs_query_cache_init(
         observer_desc.events[1] = EcsOnTableFill;
         observer_desc.events[2] = EcsOnTableCreate;
         observer_desc.events[3] = EcsOnTableDelete;
-        observer_desc.filter.flags |= EcsQueryNoData|EcsQueryIsInstanced;
+        observer_desc.query.flags |= EcsQueryNoData|EcsQueryIsInstanced;
 
         /* ecs_query_init could have moved away resources from the terms array
          * in the descriptor, so use the terms array from the filter. */
-        ecs_os_memcpy_n(observer_desc.filter.terms, q->terms, 
+        ecs_os_memcpy_n(observer_desc.query.terms, q->terms, 
             ecs_term_t, FLECS_TERM_COUNT_MAX);
-        observer_desc.filter.expr = NULL; /* Already parsed */
+        observer_desc.query.expr = NULL; /* Already parsed */
 
         result->observer = flecs_observer_init(world, &observer_desc);
         if (!result->observer) {

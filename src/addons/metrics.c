@@ -556,7 +556,7 @@ int flecs_member_metric_init(
     ecs_observer(world, {
         .entity = metric,
         .events = { EcsOnAdd },
-        .filter.terms[0] = {
+        .query.terms[0] = {
             .id = id,
             .src.id = EcsSelf,
             .inout = EcsInOutNone
@@ -591,7 +591,7 @@ int flecs_id_metric_init(
     ecs_observer(world, {
         .entity = metric,
         .events = { EcsOnAdd },
-        .filter.terms[0] = {
+        .query.terms[0] = {
             .id = desc->id,
             .src.id = EcsSelf,
             .inout = EcsInOutNone
@@ -666,7 +666,7 @@ int flecs_oneof_metric_init(
     ecs_observer(world, {
         .entity = metric,
         .events = { EcsMonitor },
-        .filter.terms[0] = {
+        .query.terms[0] = {
             .id = desc->id,
             .src.id = EcsSelf,
             .inout = EcsInOutNone

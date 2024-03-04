@@ -34,7 +34,7 @@ void Collide(ecs_iter_t *it) {
 
         // For each matching entity, iterate the query
         ecs_iter_t qit = ecs_query_cache_iter(it->world, q_collide);
-        while (ecs_query_cache_next(&qit)) {
+        while (ecs_query_next(&qit)) {
             const Position *p2 = ecs_field(&qit, Position, 1);
             const Radius *r2 = ecs_field(&qit, Radius, 2);
             for (int j = 0; j < qit.count; j ++) {

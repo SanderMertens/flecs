@@ -3322,7 +3322,7 @@ void DeserializeFromJson_ser_deser_restore_1_deleted_anon_entity_to_empty_table(
     test_str(r, "");
     ecs_os_free(json);
 
-    ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t){ .id = ecs_id(Position) });
+    ecs_iter_t it = ecs_each(world, ecs_id(Position));
     e1 = ecs_iter_first(&it);
     test_assert(e1 != 0);
 
@@ -3365,7 +3365,7 @@ void DeserializeFromJson_ser_deser_restore_1_deleted_anon_entity_to_non_empty_ta
     test_str(r, "");
     ecs_os_free(json);
 
-    ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t){ .id = ecs_id(Position) });
+    ecs_iter_t it = ecs_each(world, ecs_id(Position));
     test_assert(ecs_term_next(&it) == true);
     test_int(it.count, 2);
     if (it.entities[0] == e2) {

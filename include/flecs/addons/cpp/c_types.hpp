@@ -64,7 +64,6 @@ static const flecs::entity_t Toggle = ECS_TOGGLE;
 using Component = EcsComponent;
 using Identifier = EcsIdentifier;
 using Poly = EcsPoly;
-using Target = EcsTarget;
 
 /* Builtin tags */
 static const flecs::entity_t Query = EcsQuery;

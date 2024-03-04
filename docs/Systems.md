@@ -80,10 +80,10 @@ Because systems use queries, the iterating code looks similar:
 
 ```c
 // Query iteration
-ecs_iter_t it = ecs_query_cache_iter(world, q);
+ecs_iter_t it = ecs_query_iter(world, q);
 
 // Iterate tables matched by query
-while (ecs_query_cache_next(&it)) {
+while (ecs_query_next(&it)) {
     // Get fields from query
     Position *p = ecs_field(it, Position, 1);
     Velocity *v = ecs_field(it, Velocity, 2);

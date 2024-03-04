@@ -81,8 +81,8 @@ int main(int argc, char *argv[]) {
     printf("q_read changed: %d\n", ecs_query_changed(q_read, NULL));
 
     // The changed state will remain true until we have iterated each table.
-    ecs_iter_t it = ecs_query_cache_iter(world, q_read);
-    while (ecs_query_cache_next(&it)) {
+    ecs_iter_t it = ecs_query_iter(world, q_read);
+    while (ecs_query_next(&it)) {
         // With the it.changed() function we can check if the table we're
         // currently iterating has changed since last iteration.
         // Because this is the first time the query is iterated, all tables
@@ -98,8 +98,8 @@ int main(int argc, char *argv[]) {
 
     // Iterate the write query. Because the Position term is InOut (default)
     // iterating the query will write to the dirty state of iterated tables.
-    it = ecs_query_cache_iter(world, q_write);
-    while (ecs_query_cache_next(&it)) {
+    it = ecs_query_iter(world, q_write);
+    while (ecs_query_next(&it)) {
         Dirty *dirty = ecs_field(&it, Dirty, 1);
 
         char *table_str = ecs_table_str(world, it.table);
@@ -129,8 +129,8 @@ int main(int argc, char *argv[]) {
     printf("\nq_read changed: %d\n", ecs_query_changed(q_read, NULL));
 
     // When we iterate the read query, we'll see that one table has changed.
-    it = ecs_query_cache_iter(world, q_read);
-    while (ecs_query_cache_next(&it)) {
+    it = ecs_query_iter(world, q_read);
+    while (ecs_query_next(&it)) {
         char *table_str = ecs_table_str(world, it.table);
         printf("it.changed for table [%s]: %d\n", table_str,
             ecs_query_changed(q_read, &it));

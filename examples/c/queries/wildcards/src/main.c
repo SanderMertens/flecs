@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
 
     // Iterate the query
     ecs_iter_t it = ecs_query_cache_iter(ecs, q);
-    while (ecs_query_cache_next(&it)) {
+    while (ecs_query_next(&it)) {
         Eats *eats = ecs_field(&it, Eats, 1);
         ecs_id_t pair = ecs_field_id(&it, 1);
         ecs_entity_t food = ecs_pair_second(ecs, pair);

@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
     });
 
     ecs_iter_t it = ecs_query_cache_iter(ecs, q);
-    while (ecs_query_cache_next(&it)) {
+    while (ecs_query_next(&it)) {
         Defense *d = ecs_field(&it, Defense, 1);
         for (int i = 0; i < it.count; i ++) {
             printf("%s: defense: %f\n", 

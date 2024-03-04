@@ -127,26 +127,6 @@ typedef struct flecs_flat_table_term_t {
     ecs_vec_t monitor;
 } flecs_flat_table_term_t;
 
-/* Entity filter. This filters the entities of a matched table, for example when
- * it has disabled components or union relationships (switch). */
-typedef struct ecs_entity_filter_t {
-    ecs_vec_t ft_terms;              /* Terms with components from flattened tree */
-    int32_t flat_tree_column;
-} ecs_entity_filter_t;
-
-typedef struct ecs_entity_filter_iter_t {
-    ecs_entity_filter_t *entity_filter;
-    ecs_iter_t *it;
-    int32_t *columns;
-    ecs_table_t *prev;
-    ecs_table_range_t range;
-    int32_t bs_offset;
-    int32_t sw_offset;
-    int32_t sw_smallest;
-    int32_t flat_tree_offset;
-    int32_t target_count;
-} ecs_entity_filter_iter_t;
-
 /** All observers for a specific (component) id */
 typedef struct ecs_event_id_record_t {
     /* Triggers for Self */

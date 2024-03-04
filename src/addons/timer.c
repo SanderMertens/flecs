@@ -275,7 +275,7 @@ void ecs_randomize_timers(
 {
     ecs_observer(world, {
         .entity = ecs_entity(world, { .name = "flecs.timer.RandomizeTimers" }),
-        .filter.terms = {{
+        .query.terms = {{
             .id = ecs_id(EcsTimer)
         }},
         .events = {EcsOnSet},

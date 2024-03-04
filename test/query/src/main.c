@@ -1632,6 +1632,31 @@ void OrderByEntireTable_sort_not_term(void);
 void OrderByEntireTable_sort_or_term(void);
 void OrderByEntireTable_sort_optional_term(void);
 
+// Testsuite 'QueryStr'
+void QueryStr_one_term(void);
+void QueryStr_one_term_w_inout(void);
+void QueryStr_two_terms(void);
+void QueryStr_two_terms_w_inout(void);
+void QueryStr_three_terms_w_or(void);
+void QueryStr_three_terms_w_or_inout(void);
+void QueryStr_four_terms_three_w_or_inout(void);
+void QueryStr_one_term_w_pair(void);
+void QueryStr_one_term_w_pair_entity_src(void);
+void QueryStr_one_term_w_self(void);
+void QueryStr_one_term_w_up(void);
+void QueryStr_one_term_w_0(void);
+void QueryStr_one_term_w_singleton(void);
+void QueryStr_one_term_w_final_pair(void);
+void QueryStr_one_term_w_final_dont_inherit_pair(void);
+void QueryStr_one_term_w_src_var(void);
+void QueryStr_one_term_w_first_var(void);
+void QueryStr_one_term_w_second_var(void);
+void QueryStr_one_term_w_first_var_entity_src(void);
+void QueryStr_one_term_w_pair_w_0_entity(void);
+void QueryStr_not_term(void);
+void QueryStr_wildcard_term(void);
+void QueryStr_scopes(void);
+
 bake_test_case Validator_testcases[] = {
     {
         "validate_1_term",
@@ -8000,6 +8025,101 @@ bake_test_case OrderByEntireTable_testcases[] = {
     }
 };
 
+bake_test_case QueryStr_testcases[] = {
+    {
+        "one_term",
+        QueryStr_one_term
+    },
+    {
+        "one_term_w_inout",
+        QueryStr_one_term_w_inout
+    },
+    {
+        "two_terms",
+        QueryStr_two_terms
+    },
+    {
+        "two_terms_w_inout",
+        QueryStr_two_terms_w_inout
+    },
+    {
+        "three_terms_w_or",
+        QueryStr_three_terms_w_or
+    },
+    {
+        "three_terms_w_or_inout",
+        QueryStr_three_terms_w_or_inout
+    },
+    {
+        "four_terms_three_w_or_inout",
+        QueryStr_four_terms_three_w_or_inout
+    },
+    {
+        "one_term_w_pair",
+        QueryStr_one_term_w_pair
+    },
+    {
+        "one_term_w_pair_entity_src",
+        QueryStr_one_term_w_pair_entity_src
+    },
+    {
+        "one_term_w_self",
+        QueryStr_one_term_w_self
+    },
+    {
+        "one_term_w_up",
+        QueryStr_one_term_w_up
+    },
+    {
+        "one_term_w_0",
+        QueryStr_one_term_w_0
+    },
+    {
+        "one_term_w_singleton",
+        QueryStr_one_term_w_singleton
+    },
+    {
+        "one_term_w_final_pair",
+        QueryStr_one_term_w_final_pair
+    },
+    {
+        "one_term_w_final_dont_inherit_pair",
+        QueryStr_one_term_w_final_dont_inherit_pair
+    },
+    {
+        "one_term_w_src_var",
+        QueryStr_one_term_w_src_var
+    },
+    {
+        "one_term_w_first_var",
+        QueryStr_one_term_w_first_var
+    },
+    {
+        "one_term_w_second_var",
+        QueryStr_one_term_w_second_var
+    },
+    {
+        "one_term_w_first_var_entity_src",
+        QueryStr_one_term_w_first_var_entity_src
+    },
+    {
+        "one_term_w_pair_w_0_entity",
+        QueryStr_one_term_w_pair_w_0_entity
+    },
+    {
+        "not_term",
+        QueryStr_not_term
+    },
+    {
+        "wildcard_term",
+        QueryStr_wildcard_term
+    },
+    {
+        "scopes",
+        QueryStr_scopes
+    }
+};
+
 bake_test_param Basic_params[] = {
     {"cache_kind", (char*[]){"default", "auto"}, 2}
 };
@@ -8176,9 +8296,16 @@ static bake_test_suite suites[] = {
         NULL,
         36,
         OrderByEntireTable_testcases
+    },
+    {
+        "QueryStr",
+        NULL,
+        NULL,
+        23,
+        QueryStr_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("query", argc, argv, suites, 20);
+    return bake_test_run("query", argc, argv, suites, 21);
 }

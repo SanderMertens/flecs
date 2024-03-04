@@ -55,7 +55,7 @@ int main(int argc, char *argv[]) {
     ecs_add_pair(world, e3, Movement, Walking);
 
     // Iterate query as usual
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     while (ecs_iter_next(&it)) {
         ecs_entity_t *movement = ecs_field(&it, ecs_entity_t, 1);
         ecs_entity_t *direction = ecs_field(&it, ecs_entity_t, 2);

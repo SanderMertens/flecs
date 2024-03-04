@@ -1696,6 +1696,33 @@
                 "sort_or_term",
                 "sort_optional_term"
             ]
+        }, {
+            "id": "QueryStr",
+            "testcases": [
+                "one_term",
+                "one_term_w_inout",
+                "two_terms",
+                "two_terms_w_inout",
+                "three_terms_w_or",
+                "three_terms_w_or_inout",
+                "four_terms_three_w_or_inout",
+                "one_term_w_pair",
+                "one_term_w_pair_entity_src",
+                "one_term_w_self",
+                "one_term_w_up",
+                "one_term_w_0",
+                "one_term_w_singleton",
+                "one_term_w_final_pair",
+                "one_term_w_final_dont_inherit_pair",
+                "one_term_w_src_var",
+                "one_term_w_first_var",
+                "one_term_w_second_var",
+                "one_term_w_first_var_entity_src",
+                "one_term_w_pair_w_0_entity",
+                "not_term",
+                "wildcard_term",
+                "scopes"
+            ]
         }]
     }
 }

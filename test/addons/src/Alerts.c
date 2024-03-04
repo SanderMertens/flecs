@@ -17,7 +17,7 @@ void Alerts_one_active_alert(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_velocity"),
-        .filter.expr = "Position, !Velocity"
+        .query.expr = "Position, !Velocity"
     });
     test_assert(alert != 0);
 
@@ -107,12 +107,12 @@ void Alerts_two_active_alerts(void) {
 
     ecs_entity_t alert_1 = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_velocity"),
-        .filter.expr = "Position, !Velocity"
+        .query.expr = "Position, !Velocity"
     });
 
     ecs_entity_t alert_2 = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_mass"),
-        .filter.expr = "Position, !Mass"
+        .query.expr = "Position, !Mass"
     });
 
     ecs_progress(world, 1.0);
@@ -261,7 +261,7 @@ void Alerts_alert_message(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_velocity"),
-        .filter.expr = "Position, !Velocity",
+        .query.expr = "Position, !Velocity",
         .message = "missing velocity"
     });
     test_assert(alert != 0);
@@ -314,7 +314,7 @@ void Alerts_alert_message_w_this_var(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_velocity"),
-        .filter.expr = "Position, !Velocity",
+        .query.expr = "Position, !Velocity",
         .message = "$this: missing velocity"
     });
     test_assert(alert != 0);
@@ -370,7 +370,7 @@ void Alerts_alert_message_w_var(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_velocity"),
-        .filter.expr = "Position($this), ChildOf($this, $parent), !Position($parent)",
+        .query.expr = "Position($this), ChildOf($this, $parent), !Position($parent)",
         .message = "$this: parent $parent does not have Position"
     });
     test_assert(alert != 0);
@@ -427,7 +427,7 @@ void Alerts_alert_message_w_changed_var(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_velocity"),
-        .filter.expr = "Position($this), ChildOf($this, $parent), !Position($parent)",
+        .query.expr = "Position($this), ChildOf($this, $parent), !Position($parent)",
         .message = "$this: parent $parent does not have Position"
     });
     test_assert(alert != 0);
@@ -501,7 +501,7 @@ void Alerts_set_brief(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "has_position"),
-        .filter.expr = "Position",
+        .query.expr = "Position",
         .brief = "Entity has Position"
     });
     test_assert(alert != 0);
@@ -519,7 +519,7 @@ void Alerts_set_doc_name(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "has_position"),
-        .filter.expr = "Position",
+        .query.expr = "Position",
         .doc_name = "Has Position"
     });
     test_assert(alert != 0);
@@ -541,7 +541,7 @@ void Alerts_alert_instance_has_doc_name(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_velocity"),
-        .filter.expr = "Position, !Velocity"
+        .query.expr = "Position, !Velocity"
     });
     test_assert(alert != 0);
 
@@ -590,7 +590,7 @@ void Alerts_reraise_alert(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_velocity"),
-        .filter.expr = "Position, !Velocity"
+        .query.expr = "Position, !Velocity"
     });
     test_assert(alert != 0);
 
@@ -674,7 +674,7 @@ void Alerts_info_severity(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_velocity"),
-        .filter.expr = "Position, !Velocity",
+        .query.expr = "Position, !Velocity",
         .severity = EcsAlertInfo
     });
     test_assert(alert != 0);
@@ -722,7 +722,7 @@ void Alerts_warning_severity(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_velocity"),
-        .filter.expr = "Position, !Velocity",
+        .query.expr = "Position, !Velocity",
         .severity = EcsAlertWarning
     });
     test_assert(alert != 0);
@@ -770,7 +770,7 @@ void Alerts_error_severity(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_velocity"),
-        .filter.expr = "Position, !Velocity",
+        .query.expr = "Position, !Velocity",
         .severity = EcsAlertError
     });
     test_assert(alert != 0);
@@ -822,7 +822,7 @@ void Alerts_expire_after_retain(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_velocity"),
-        .filter.expr = "Position, !Velocity",
+        .query.expr = "Position, !Velocity",
         .retain_period = 1.0
     });
     test_assert(alert != 0);
@@ -914,7 +914,7 @@ void Alerts_revive_w_retain(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_velocity"),
-        .filter.expr = "Position, !Velocity",
+        .query.expr = "Position, !Velocity",
         .retain_period = 1.0
     });
     test_assert(alert != 0);
@@ -1020,7 +1020,7 @@ void Alerts_severity_filter(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_velocity"),
-        .filter.expr = "Position, !Velocity",
+        .query.expr = "Position, !Velocity",
         .severity_filters[0] = {
             .severity = EcsAlertWarning,
             .with = ecs_id(Mass)
@@ -1127,7 +1127,7 @@ void Alerts_two_severity_filters(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_velocity"),
-        .filter.expr = "Position, !Velocity",
+        .query.expr = "Position, !Velocity",
         .severity_filters[0] = {
             .severity = EcsAlertWarning,
             .with = ecs_id(Mass)
@@ -1270,7 +1270,7 @@ void Alerts_severity_filter_w_var(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_velocity"),
-        .filter.expr = "Position, !Velocity, (ChildOf, $parent)",
+        .query.expr = "Position, !Velocity, (ChildOf, $parent)",
         .severity_filters[0] = {
             .severity = EcsAlertWarning,
             .with = ecs_id(Mass),
@@ -1383,7 +1383,7 @@ void Alerts_severity_filter_w_var_change_var(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_velocity"),
-        .filter.expr = "Position, !Velocity, (ChildOf, $parent)",
+        .query.expr = "Position, !Velocity, (ChildOf, $parent)",
         .severity_filters[0] = {
             .severity = EcsAlertWarning,
             .with = ecs_id(Mass),
@@ -1496,7 +1496,7 @@ void Alerts_member_range_warning(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "high_mass"),
-        .filter.expr = "Mass",
+        .query.expr = "Mass",
         .member = member
     });
     test_assert(alert != 0);
@@ -1564,7 +1564,7 @@ void Alerts_member_range_error(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "high_mass"),
-        .filter.expr = "Mass",
+        .query.expr = "Mass",
         .member = member
     });
     test_assert(alert != 0);
@@ -1632,7 +1632,7 @@ void Alerts_member_range_warning_error(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "high_mass"),
-        .filter.expr = "Mass",
+        .query.expr = "Mass",
         .member = member
     });
     test_assert(alert != 0);
@@ -1728,7 +1728,7 @@ void Alerts_member_range_error_w_warning_severity(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "high_mass"),
-        .filter.expr = "Mass",
+        .query.expr = "Mass",
         .severity = EcsAlertWarning,
         .member = member
     });
@@ -1798,7 +1798,7 @@ void Alerts_member_range_error_w_severity_filter(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "high_mass"),
-        .filter.expr = "Mass",
+        .query.expr = "Mass",
         .severity = EcsAlertWarning,
         .severity_filters[0] = {
             .with = Tag,
@@ -1893,7 +1893,7 @@ void Alerts_member_range_warning_w_severity_filter(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "high_mass"),
-        .filter.expr = "Mass",
+        .query.expr = "Mass",
         .severity = EcsAlertWarning,
         .severity_filters[0] = {
             .with = Tag,
@@ -1988,7 +1988,7 @@ void Alerts_member_range_pair_id(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "high_mass"),
-        .filter.expr = "Mass",
+        .query.expr = "Mass",
         .member = member,
         .id = ecs_pair_t(Mass, Tag)
     });
@@ -2056,7 +2056,7 @@ void Alerts_member_range_invalid_member(void) {
     ecs_log_set_level(-4);
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "high_mass"),
-        .filter.expr = "Mass",
+        .query.expr = "Mass",
         .member = Tag,
     });
     test_assert(alert == 0);
@@ -2084,7 +2084,7 @@ void Alerts_member_range_invalid_member_child(void) {
     ecs_log_set_level(-4);
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "high_mass"),
-        .filter.expr = "Mass",
+        .query.expr = "Mass",
         .member = child,
     });
     test_assert(alert == 0);
@@ -2111,7 +2111,7 @@ void Alerts_member_range_invalid_type(void) {
     ecs_log_set_level(-4);
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "high_mass"),
-        .filter.expr = "Mass",
+        .query.expr = "Mass",
         .member = member,
         .id = Tag
     });
@@ -2143,7 +2143,7 @@ void Alerts_member_range_invalid_member_type(void) {
     ecs_log_set_level(-4);
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "high_mass"),
-        .filter.expr = "Mass",
+        .query.expr = "Mass",
         .member = member,
     });
     test_assert(alert == 0);
@@ -2169,7 +2169,7 @@ void Alerts_member_range_no_range(void) {
     ecs_log_set_level(-4);
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "high_mass"),
-        .filter.expr = "Mass",
+        .query.expr = "Mass",
         .member = member,
     });
     test_assert(alert == 0);
@@ -2199,7 +2199,7 @@ void Alerts_member_range_alert_two_instances(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "high_mass"),
-        .filter.expr = "Mass",
+        .query.expr = "Mass",
         .member = member,
     });
     test_assert(alert != 0);
@@ -2315,7 +2315,7 @@ void Alerts_member_range_from_var(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "high_parent_mass"),
-        .filter.expr = "(ChildOf, $parent), Mass($parent)",
+        .query.expr = "(ChildOf, $parent), Mass($parent)",
         .member = member,
         .var = "parent"
     });
@@ -2385,7 +2385,7 @@ void Alerts_member_range_from_var_after_remove(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "high_parent_mass"),
-        .filter.expr = "(ChildOf, $parent), Mass($parent)",
+        .query.expr = "(ChildOf, $parent), Mass($parent)",
         .member = member,
         .var = "parent"
     });
@@ -2447,7 +2447,7 @@ void Alerts_retained_alert_w_dead_source(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_velocity"),
-        .filter.expr = "Position, !Velocity",
+        .query.expr = "Position, !Velocity",
         .severity = EcsAlertError,
         .retain_period = 10
     });
@@ -2534,13 +2534,13 @@ void Alerts_alert_counts(void) {
 
     ecs_entity_t alert_1 = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_velocity"),
-        .filter.expr = "Position, !Velocity"
+        .query.expr = "Position, !Velocity"
     });
     test_assert(alert_1 != 0);
 
     ecs_entity_t alert_2 = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_mass"),
-        .filter.expr = "Position, !Mass",
+        .query.expr = "Position, !Mass",
         .severity = EcsAlertWarning
     });
     test_assert(alert_2 != 0);

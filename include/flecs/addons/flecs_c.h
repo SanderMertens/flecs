@@ -138,7 +138,7 @@
         edesc.name = #id_; \
         desc.entity = ecs_entity_init(world, &edesc); \
         desc.callback = id_;\
-        desc.filter.expr = #__VA_ARGS__;\
+        desc.query.expr = #__VA_ARGS__;\
         desc.events[0] = kind;\
         ecs_id(id_) = ecs_observer_init(world, &desc);\
         ecs_assert(ecs_id(id_) != 0, ECS_INVALID_PARAMETER, NULL);\
@@ -730,15 +730,14 @@
 #define ecs_childof(e)   ecs_pair(EcsChildOf, e)
 #define ecs_dependson(e) ecs_pair(EcsDependsOn, e)
 
-#define ecs_query_cache_new(world, q_expr)\
-    ecs_query_cache_init(world, &(ecs_query_desc_t){\
-        .filter.expr = q_expr\
-    })
-
 #define ecs_query_new(world, q_expr)\
     ecs_query_init(world, &(ecs_query_desc_t){\
         .expr = q_expr\
     })
+
+#define ecs_each(world, id) ecs_each_id(world, ecs_id(id))
+#define ecs_each_pair(world, r, t) ecs_each_id(world, ecs_pair(r, t))
+#define ecs_each_pair_t(world, R, t) ecs_each_id(world, ecs_pair(ecs_id(R), t))
 
 /** @} */
 

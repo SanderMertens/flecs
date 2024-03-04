@@ -99,17 +99,6 @@ bool flecs_query_get_match_monitor(
         monitor[field + 1] = 0;
     }
 
-    /* If matched table needs entity filter, make sure to test fields that could
-     * be matched by flattened parents. */
-    ecs_entity_filter_t *ef = match->entity_filter;
-    if (ef && ef->flat_tree_column != -1) {
-        int32_t *fields = ecs_vec_first(&ef->ft_terms);
-        int32_t field_count = ecs_vec_count(&ef->ft_terms);
-        for (i = 0; i < field_count; i ++) {
-            monitor[fields[i] + 1] = 0;
-        }
-    }
-
     match->monitor = monitor;
 
     impl->pub.flags |= EcsQueryHasMonitor;
@@ -307,7 +296,7 @@ bool flecs_query_check_match_monitor(
         }
     }
 
-    bool has_flat = false, is_this = false;
+    bool is_this = false;
     const ecs_query_t *filter = cache->query;
     ecs_world_t *world = filter->world;
     int32_t i, j, field_count = filter->field_count;
@@ -362,30 +351,17 @@ bool flecs_query_check_match_monitor(
 
         /* Flattened fields are encoded by adding field_count to the column
          * index of the parent component. */
-        if (is_this && it && (column > field_count)) {
-            has_flat = true;
-        } else {
-            if (is_this) {
-                /* Component reached through traversal from this */
-                int32_t ref_index = column;
-                ecs_ref_t *ref = ecs_vec_get_t(refs, ecs_ref_t, ref_index);
-                if (ref->id != 0) {
-                    ecs_ref_update(world, ref);
-                    ecs_table_record_t *tr = ref->tr;
-                    ecs_table_t *src_table = tr->hdr.table;
-                    column = tr->index;
-                    column = ecs_table_type_to_column_index(src_table, column);
-                    int32_t *src_dirty_state = flecs_table_get_dirty_state(
-                        world, src_table);
-                    if (mon != src_dirty_state[column + 1]) {
-                        return true;
-                    }
-                }
-            } else {
-                /* Component from static source */
-                ecs_entity_t fixed_src = match->sources[i];
-                ecs_table_t *src_table = ecs_get_table(world, fixed_src);
-                ecs_assert(src_table != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(column <= field_count, ECS_INTERNAL_ERROR, NULL);
+
+        if (is_this) {
+            /* Component reached through traversal from this */
+            int32_t ref_index = column;
+            ecs_ref_t *ref = ecs_vec_get_t(refs, ecs_ref_t, ref_index);
+            if (ref->id != 0) {
+                ecs_ref_update(world, ref);
+                ecs_table_record_t *tr = ref->tr;
+                ecs_table_t *src_table = tr->hdr.table;
+                column = tr->index;
                 column = ecs_table_type_to_column_index(src_table, column);
                 int32_t *src_dirty_state = flecs_table_get_dirty_state(
                     world, src_table);
@@ -393,21 +369,15 @@ bool flecs_query_check_match_monitor(
                     return true;
                 }
             }
-        }
-    }
-
-    if (has_flat) {
-        ecs_entity_filter_t *ef = match->entity_filter;
-        flecs_flat_table_term_t *fields = ecs_vec_first(&ef->ft_terms);
-        ecs_entity_filter_iter_t *ent_it = it->priv.entity_iter;
-        int32_t cur_tgt = ent_it->target_count - 1;
-        field_count = ecs_vec_count(&ef->ft_terms);
-
-        for (i = 0; i < field_count; i ++) {
-            flecs_flat_table_term_t *field = &fields[i];
-            flecs_flat_monitor_t *fmon = ecs_vec_get_t(&field->monitor, 
-                flecs_flat_monitor_t, cur_tgt);
-            if (fmon->monitor != fmon->table_state) {
+        } else {
+            /* Component from static source */
+            ecs_entity_t fixed_src = match->sources[i];
+            ecs_table_t *src_table = ecs_get_table(world, fixed_src);
+            ecs_assert(src_table != NULL, ECS_INTERNAL_ERROR, NULL);
+            column = ecs_table_type_to_column_index(src_table, column);
+            int32_t *src_dirty_state = flecs_table_get_dirty_state(
+                world, src_table);
+            if (mon != src_dirty_state[column + 1]) {
                 return true;
             }
         }
@@ -569,20 +539,6 @@ void flecs_query_sync_match_monitor(
 
             monitor[field + 1] = flecs_table_get_dirty_state(
                 q->world, tc.table)[tc.column + 1];
-        }
-    }
-
-    ecs_entity_filter_t *ef = match->entity_filter;
-    if (ef && ef->flat_tree_column != -1) {
-        flecs_flat_table_term_t *fields = ecs_vec_first(&ef->ft_terms);
-        int32_t f, field_count = ecs_vec_count(&ef->ft_terms);
-        for (f = 0; f < field_count; f ++) {
-            flecs_flat_table_term_t *field = &fields[f];
-            flecs_flat_monitor_t *tgt_mon = ecs_vec_first(&field->monitor);
-            int32_t tgt, tgt_count = ecs_vec_count(&field->monitor);
-            for (tgt = 0; tgt < tgt_count; tgt ++) {
-                tgt_mon[tgt].monitor = tgt_mon[tgt].table_state;
-            }
         }
     }
 

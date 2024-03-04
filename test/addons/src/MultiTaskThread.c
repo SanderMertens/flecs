@@ -775,7 +775,7 @@ void MultiTaskThread_2_thread_test_combs_100_entity_w_next_worker(void) {
 
     ECS_SYSTEM(world, TestSubset, 0, Position);
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "Position, TestSubset()");
+    ecs_query_t *q = ecs_query_new(world, "Position, TestSubset()");
 
     int i, ENTITIES = 100;
 
@@ -785,13 +785,13 @@ void MultiTaskThread_2_thread_test_combs_100_entity_w_next_worker(void) {
         ecs_set(world, ids[i], Position, {1, 2});
     }
 
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     ecs_iter_t wit = ecs_worker_iter(&it, 0, 2);
     while (ecs_worker_next(&wit)) {
         TestAll(&wit);
     }
 
-    it = ecs_query_cache_iter(world, q);
+    it = ecs_query_iter(world, q);
     wit = ecs_worker_iter(&it, 1, 2);
     while (ecs_worker_next(&wit)) {
         TestAll(&wit);
@@ -1092,7 +1092,7 @@ static int create_query_invoked = 0;
 
 static
 void CreateQuery(ecs_iter_t *it) {
-    ecs_query_cache_new(it->world, "0");
+    ecs_query_new(it->world, "0");
     create_query_invoked ++;
 }
 

@@ -82,13 +82,13 @@ An application can query for relationships with the `(Relationship, Target)` not
 
 ```c
 // Find all entities that eat apples
-ecs_query_cache_t *q = ecs_query_cache_new(world, "(Eats, Apples)");
+ecs_query_t *q = ecs_query_new(world, "(Eats, Apples)");
 
 // Find all entities that eat anything
-ecs_query_cache_t *q = ecs_query_cache_new(world, "(Eats, *)");
+ecs_query_t *q = ecs_query_new(world, "(Eats, *)");
 
 // Or with the ecs_query_cache_init function:
-ecs_query_cache_t *q = ecs_query_cache_init(world, &(ecs_query_desc_t){
+ecs_query_t *q = ecs_query(world, {
     .filter.terms = {{ecs_pair(Eats, Apples)}}
 });
 ```
@@ -377,15 +377,15 @@ e.set<Position>(third, {5, 6});
 When querying for relationship pairs, it is often useful to be able to find all instances for a given relationship or target. To accomplish this, an application can use wildcard expressions. Consider the following example, that queries for all entities with a `Likes` relationship:
 
 ```c
-ecs_query_cache_t *q = ecs_query_cache_init(world, &(ecs_query_desc_t){
+ecs_query_t *q = ecs_query(world, {
   .filter.terms = {
     {ecs_pair(Likes, EcsWildcard)}
   }
 });
 
-ecs_iter_t it = ecs_query_cache_iter(world, q);
+ecs_iter_t it = ecs_query_iter(world, q);
 
-while (ecs_query_cache_next(&it)) {
+while (ecs_query_next(&it)) {
   ecs_id_t id = ecs_field_id(&it, 1); // Obtain pair id
 
   // Get relationship & target
@@ -419,8 +419,8 @@ q.iter([](flecs::iter& it) {
 Wildcards may appear in query expressions, using the `*` character:
 
 ```c
-ecs_query_cache_t *q = ecs_query_cache_init(world, &(ecs_query_desc_t){
-  .filter.expr = "(Likes, *)"
+ecs_query_t *q = ecs_query(world, {
+  .query.expr = "(Likes, *)"
 });
 ```
 ```cpp

@@ -221,7 +221,7 @@ void SystemMisc_invalid_empty_string(void) {
 
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, { .name = "Dummy", .add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.filter.expr = "",
+        .query.query.expr = "",
         .callback = Dummy
     });
 
@@ -237,7 +237,7 @@ void SystemMisc_invalid_empty_string_w_space(void) {
 
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, { .name = "Dummy", .add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.filter.expr = "  ",
+        .query.query.expr = "  ",
         .callback = Dummy
     });
 
@@ -555,7 +555,7 @@ void SystemMisc_change_system_action(void) {
     
     ecs_entity_t sys = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, { .name = "Sys", .add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.filter.expr = "Position",
+        .query.query.expr = "Position",
         .callback = ActionA
     });
 
@@ -689,13 +689,13 @@ void SystemMisc_redefine_null_signature(void) {
 
     ecs_entity_t s_1 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, { .name = "System", .add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.filter.expr = NULL,
+        .query.query.expr = NULL,
         .callback = Action
     });
 
     ecs_entity_t s_2 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, { .name = "System", .add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.filter.expr = NULL,
+        .query.query.expr = NULL,
         .callback = Action
     });      
 
@@ -709,13 +709,13 @@ void SystemMisc_redefine_0_signature(void) {
 
     ecs_entity_t s_1 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, { .name = "System", .add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.filter.expr = "0",
+        .query.query.expr = "0",
         .callback = Action
     });
 
     ecs_entity_t s_2 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, { .name = "System", .add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.filter.expr = "0",
+        .query.query.expr = "0",
         .callback = Action
     }); 
 
@@ -732,13 +732,13 @@ void SystemMisc_redeclare_system_explicit_id(void) {
 
     ecs_entity_t s1 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.name = "Move", .add = {ecs_dependson(EcsOnUpdate)}}), 
-        .query.filter.expr = "Position, Velocity", 
+        .query.query.expr = "Position, Velocity", 
         .callback = Dummy
     });
 
     ecs_entity_t s2 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.id = s1, .name = "Move", .add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.filter.expr = "Position, Velocity", 
+        .query.query.expr = "Position, Velocity", 
         .callback = Dummy
     });
 
@@ -755,13 +755,13 @@ void SystemMisc_redeclare_system_explicit_id_null_expr(void) {
 
     ecs_entity_t s1 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.name = "Move", .add = {ecs_dependson(EcsOnUpdate)}}), 
-        .query.filter.expr = NULL, 
+        .query.query.expr = NULL, 
         .callback = Dummy
     });
 
     ecs_entity_t s2 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.id = s1, .name = "Move", .add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.filter.expr = NULL, 
+        .query.query.expr = NULL, 
         .callback = Dummy
     });
 
@@ -778,13 +778,13 @@ void SystemMisc_redeclare_system_explicit_id_no_name(void) {
 
     ecs_entity_t s1 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.name = "Move", .add = {ecs_dependson(EcsOnUpdate)}}), 
-        .query.filter.expr = "Position, Velocity", 
+        .query.query.expr = "Position, Velocity", 
         .callback = Dummy
     });
 
     ecs_entity_t s2 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.id = s1, .add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.filter.expr = "Position, Velocity", 
+        .query.query.expr = "Position, Velocity", 
         .callback = Dummy
     });
 
@@ -804,7 +804,7 @@ void SystemMisc_declare_different_id_same_name(void) {
 
     ecs_entity_t s_1 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.id = e1, .name = "Move", .add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.filter.expr = "0", 
+        .query.query.expr = "0", 
         .callback = Dummy
     });
     test_assert(e1 == s_1);
@@ -813,7 +813,7 @@ void SystemMisc_declare_different_id_same_name(void) {
 
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.id = e2, .name = "Move", .add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.filter.expr = "0", 
+        .query.query.expr = "0", 
         .callback = Dummy
     });
 }
@@ -831,7 +831,7 @@ void SystemMisc_declare_different_id_same_name_w_scope(void) {
 
     ecs_entity_t s_1 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.id = e1, .name = "Move", .add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.filter.expr = "0", 
+        .query.query.expr = "0", 
         .callback = Dummy
     });
     test_assert(e1 == s_1);
@@ -840,7 +840,7 @@ void SystemMisc_declare_different_id_same_name_w_scope(void) {
 
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.id = e2, .name = "Move", .add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.filter.expr = "0", 
+        .query.query.expr = "0", 
         .callback = Dummy
     });
 }
@@ -851,16 +851,16 @@ void SystemMisc_rw_in_implicit_any(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "Position, Velocity(self|up)");
+    ecs_query_t *q = ecs_query_new(world, "Position, Velocity(self|up)");
 
     ecs_entity_t e = ecs_new(world, Position);
     ecs_add(world, e, Velocity);
 
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
-    test_assert(ecs_query_cache_next(&it) == true);
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_assert(ecs_query_next(&it) == true);
     test_assert(ecs_field_is_readonly(&it, 1) == false);
     test_assert(ecs_field_is_readonly(&it, 2) == false);
-    test_assert(ecs_query_cache_next(&it) == false);
+    test_assert(ecs_query_next(&it) == false);
 
     ecs_fini(world);
 }
@@ -871,17 +871,17 @@ void SystemMisc_rw_in_implicit_shared(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "Position, Velocity(up(IsA))");
+    ecs_query_t *q = ecs_query_new(world, "Position, Velocity(up(IsA))");
 
     ecs_entity_t base = ecs_new(world, Velocity);
     ecs_entity_t e = ecs_new(world, Position);
     ecs_add_pair(world, e, EcsIsA, base);
 
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
-    test_assert(ecs_query_cache_next(&it) == true);
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_assert(ecs_query_next(&it) == true);
     test_assert(ecs_field_is_readonly(&it, 1) == false);
     test_assert(ecs_field_is_readonly(&it, 2) == true);
-    test_assert(ecs_query_cache_next(&it) == false);
+    test_assert(ecs_query_next(&it) == false);
 
     ecs_fini(world);
 }
@@ -892,16 +892,16 @@ void SystemMisc_rw_in_implicit_from_empty(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "Position, Velocity()");
+    ecs_query_t *q = ecs_query_new(world, "Position, Velocity()");
 
     ecs_entity_t e = ecs_new(world, Position);
     ecs_add(world, e, Velocity);
 
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
-    test_assert(ecs_query_cache_next(&it) == true);
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_assert(ecs_query_next(&it) == true);
     test_assert(ecs_field_is_readonly(&it, 1) == false);
     test_assert(ecs_field_is_readonly(&it, 2) == true);
-    test_assert(ecs_query_cache_next(&it) == false);
+    test_assert(ecs_query_next(&it) == false);
 
     ecs_fini(world);
 }
@@ -913,16 +913,16 @@ void SystemMisc_rw_in_implicit_from_entity(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_ENTITY(world, f, Velocity);
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "Position, Velocity(f)");
+    ecs_query_t *q = ecs_query_new(world, "Position, Velocity(f)");
 
     ecs_entity_t e = ecs_new(world, Position);
     ecs_add(world, e, Velocity);
 
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
-    test_assert(ecs_query_cache_next(&it) == true);
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_assert(ecs_query_next(&it) == true);
     test_assert(ecs_field_is_readonly(&it, 1) == false);
     test_assert(ecs_field_is_readonly(&it, 2) == true);
-    test_assert(ecs_query_cache_next(&it) == false);
+    test_assert(ecs_query_next(&it) == false);
 
     ecs_fini(world);
 }
@@ -933,16 +933,16 @@ void SystemMisc_rw_out_explicit_any(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "Position, [out] Velocity(self|up(IsA))");
+    ecs_query_t *q = ecs_query_new(world, "Position, [out] Velocity(self|up(IsA))");
 
     ecs_entity_t e = ecs_new(world, Position);
     ecs_add(world, e, Velocity);
 
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
-    test_assert(ecs_query_cache_next(&it) == true);
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_assert(ecs_query_next(&it) == true);
     test_assert(ecs_field_is_readonly(&it, 1) == false);
     test_assert(ecs_field_is_readonly(&it, 2) == false);
-    test_assert(ecs_query_cache_next(&it) == false);
+    test_assert(ecs_query_next(&it) == false);
 
     ecs_fini(world);
 }
@@ -953,17 +953,17 @@ void SystemMisc_rw_out_explicit_shared(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "Position, [out] Velocity(up(IsA))");
+    ecs_query_t *q = ecs_query_new(world, "Position, [out] Velocity(up(IsA))");
 
     ecs_entity_t base = ecs_new(world, Velocity);
     ecs_entity_t e = ecs_new(world, Position);
     ecs_add_pair(world, e, EcsIsA, base);
 
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
-    test_assert(ecs_query_cache_next(&it) == true);
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_assert(ecs_query_next(&it) == true);
     test_assert(ecs_field_is_readonly(&it, 1) == false);
     test_assert(ecs_field_is_readonly(&it, 2) == false);
-    test_assert(ecs_query_cache_next(&it) == false);
+    test_assert(ecs_query_next(&it) == false);
 
     ecs_fini(world);
 }
@@ -974,16 +974,16 @@ void SystemMisc_rw_out_explicit_from_empty(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "Position, [out] Velocity()");
+    ecs_query_t *q = ecs_query_new(world, "Position, [out] Velocity()");
 
     ecs_entity_t e = ecs_new(world, Position);
     ecs_add(world, e, Velocity);
 
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
-    test_assert(ecs_query_cache_next(&it) == true);
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_assert(ecs_query_next(&it) == true);
     test_assert(ecs_field_is_readonly(&it, 1) == false);
     test_assert(ecs_field_is_readonly(&it, 2) == false);
-    test_assert(ecs_query_cache_next(&it) == false);
+    test_assert(ecs_query_next(&it) == false);
 
     ecs_fini(world);
 }
@@ -995,16 +995,16 @@ void SystemMisc_rw_out_explicit_from_entity(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_ENTITY(world, f, Velocity);
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "Position, [out] Velocity(f)");
+    ecs_query_t *q = ecs_query_new(world, "Position, [out] Velocity(f)");
 
     ecs_entity_t e = ecs_new(world, Position);
     ecs_add(world, e, Velocity);
 
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
-    test_assert(ecs_query_cache_next(&it) == true);
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_assert(ecs_query_next(&it) == true);
     test_assert(ecs_field_is_readonly(&it, 1) == false);
     test_assert(ecs_field_is_readonly(&it, 2) == false);
-    test_assert(ecs_query_cache_next(&it) == false);
+    test_assert(ecs_query_next(&it) == false);
 
     ecs_fini(world);
 }
@@ -1056,8 +1056,8 @@ void SystemMisc_get_query(void) {
 
     int32_t count = 0;
 
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
-    while (ecs_query_cache_next(&it)) {
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
         Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
 

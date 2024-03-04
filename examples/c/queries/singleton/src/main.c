@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
     //   Velocity, Gravity($)
 
     ecs_iter_t it = ecs_query_cache_iter(ecs, q);
-    while (ecs_query_cache_next(&it)) {
+    while (ecs_query_next(&it)) {
         Velocity *v = ecs_field(&it, Velocity, 1);
         Gravity *g = ecs_field(&it, Gravity, 2);
 

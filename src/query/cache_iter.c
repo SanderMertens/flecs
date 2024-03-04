@@ -1,7 +1,7 @@
 #include "../private_api.h"
 
 static
-ecs_query_cache_table_match_t* flecs_query_cache_next(
+ecs_query_cache_table_match_t* flecs_query_next(
     const ecs_query_run_ctx_t *ctx)
 {
     ecs_iter_t *it = ctx->it;
@@ -127,7 +127,7 @@ bool flecs_query_cache_search(
     const ecs_query_impl_t *impl,
     const ecs_query_run_ctx_t *ctx)
 {
-    ecs_query_cache_table_match_t *node = flecs_query_cache_next(ctx);
+    ecs_query_cache_table_match_t *node = flecs_query_next(ctx);
     if (!node) {
         return false;
     }
@@ -160,7 +160,7 @@ bool flecs_query_is_cache_search(
 {
     (void)impl;
 
-    ecs_query_cache_table_match_t *node = flecs_query_cache_next(ctx);
+    ecs_query_cache_table_match_t *node = flecs_query_next(ctx);
     if (!node) {
         return false;
     }
@@ -290,7 +290,7 @@ bool flecs_query_is_cache_test(
         qit->last = qt->last;
     }
 
-    ecs_query_cache_table_match_t *node = flecs_query_cache_next(ctx);
+    ecs_query_cache_table_match_t *node = flecs_query_next(ctx);
     if (!node) {
         return false;
     }

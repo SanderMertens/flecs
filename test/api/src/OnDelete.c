@@ -1457,7 +1457,7 @@ void OnDelete_empty_table_w_on_remove(void) {
     ecs_add_id(world, e1, Tag);
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = e2,
+        .query.terms[0].id = e2,
         .events = {EcsOnRemove},
         .callback = dummy_on_remove
     });
@@ -1519,14 +1519,14 @@ void OnDelete_delete_table_in_on_remove_during_fini(void) {
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
         .events = {EcsOnRemove},
-        .filter.terms[0].id = e1,
+        .query.terms[0].id = e1,
         .callback = delete_self_on_remove,
         .ctx = &e2
     });
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
         .events = {EcsOnRemove},
-        .filter.terms[0].id = e2,
+        .query.terms[0].id = e2,
         .callback = delete_self_on_remove,
         .ctx = &e1
     });    
@@ -1558,7 +1558,7 @@ void OnDelete_delete_other_in_on_remove_during_fini(void) {
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
         .events = {EcsOnRemove},
-        .filter.terms[0].id = ecs_id(Entity),
+        .query.terms[0].id = ecs_id(Entity),
         .callback = delete_on_remove
     });
 
@@ -2567,7 +2567,7 @@ void OnDelete_delete_self_in_on_remove(void) {
     ecs_entity_t Rel = ecs_new_w_pair(world, EcsOnDeleteTarget, EcsDelete);
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_pair(Rel, EcsWildcard),
+        .query.terms[0].id = ecs_pair(Rel, EcsWildcard),
         .events = { EcsOnRemove },
         .callback = DeleteTarget
     });
@@ -2607,7 +2607,7 @@ void OnDelete_delete_nested_in_on_remove(void) {
     ECS_TAG(world, Tag);
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_pair(Rel, EcsWildcard),
+        .query.terms[0].id = ecs_pair(Rel, EcsWildcard),
         .events = { EcsOnRemove },
         .callback = DeleteOther,
         .ctx = &Tag
@@ -2651,7 +2651,7 @@ void OnDelete_add_deleted_in_on_remove(void) {
     ecs_new_w_id(world, t);
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = t,
+        .query.terms[0].id = t,
         .events = { EcsOnRemove },
         .callback = AddRemoved
     });
@@ -2667,7 +2667,7 @@ void OnDelete_delete_tree_w_query(void) {
     ECS_ENTITY(world, Rel, EcsTraversable);
     ECS_TAG(world, Foo);
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "Tag(up(Rel))");
+    ecs_query_t *q = ecs_query_new(world, "Tag(up(Rel))");
     test_assert(q != NULL);
 
     ecs_entity_t e1 = ecs_new(world, Tag);
@@ -2717,7 +2717,7 @@ void OnDelete_fini_cleanup_order(void) {
     ecs_add(world, e2, Tag);
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = Tag,
+        .query.terms[0].id = Tag,
         .events = {EcsOnRemove},
         .callback = TestAlive
     });
@@ -2891,23 +2891,23 @@ void OnDelete_delete_with_inherited_tag_w_query(void) {
     ecs_entity_t base = ecs_new(world, Tag);
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
     
-    ecs_query_cache_t *query = ecs_query_cache_init(world, &(ecs_query_desc_t){
-        .filter.terms = {{ Tag }}
+    ecs_query_t *query = ecs_query(world, {
+        .terms = {{ Tag }}
     });
     test_assert(query != NULL);
 
     test_assert(ecs_is_alive(world, base));
     test_assert(ecs_is_alive(world, inst));
 
-    ecs_iter_t it = ecs_query_cache_iter(world, query);
-    test_bool(true, ecs_query_cache_next(&it));
+    ecs_iter_t it = ecs_query_iter(world, query);
+    test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(base, it.entities[0]);
 
-    test_bool(true, ecs_query_cache_next(&it));
+    test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(inst, it.entities[0]);
-    test_bool(false, ecs_query_cache_next(&it));
+    test_bool(false, ecs_query_next(&it));
 
     ecs_delete_with(world, Tag);
 
@@ -2915,8 +2915,8 @@ void OnDelete_delete_with_inherited_tag_w_query(void) {
     test_assert(ecs_is_alive(world, inst));
     test_assert(ecs_is_alive(world, Tag));
 
-    it = ecs_query_cache_iter(world, query);
-    test_bool(false, ecs_query_cache_next(&it));
+    it = ecs_query_iter(world, query);
+    test_bool(false, ecs_query_next(&it));
 
     ecs_fini(world);
 }
@@ -2935,7 +2935,7 @@ void OnDelete_delete_with_inherited_tag_w_observer(void) {
     
     Probe ctx;
     ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ Tag }},
+        .query.terms = {{ Tag }},
         .events = { EcsOnRemove },
         .callback = Observer,
         .ctx = &ctx
@@ -3070,7 +3070,7 @@ void OnDelete_match_marked_for_deletion(void) {
     ecs_set_scope(world, 0);
 
     /* During cleanup a new table will be created that matches the query */
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "ns.Position");
+    ecs_query_t *q = ecs_query_new(world, "ns.Position");
     test_assert(q != NULL);
 
     ecs_entity_t prefab = ecs_new_id(world);
@@ -3131,13 +3131,13 @@ void OnDelete_fini_query_w_singleton_in_scope_no_module(void) {
     ecs_entity_t s = ecs_new_entity(world, "ns.singleton");
     ecs_add_id(world, s, s);
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "Position, ns.singleton($)");
+    ecs_query_t *q = ecs_query_new(world, "Position, ns.singleton($)");
 
     ecs_entity_t e = ecs_new_id(world);
     ecs_add_id(world, e, t);
     ecs_add(world, e, Position);
 
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     test_assert(ecs_iter_is_true(&it));
 
     ecs_fini(world);
@@ -3155,13 +3155,13 @@ void OnDelete_fini_query_w_singleton_in_module(void) {
     ecs_entity_t s = ecs_new_entity(world, "ns.singleton");
     ecs_add_id(world, s, s);
 
-    ecs_query_cache_t *q = ecs_query_cache_new(world, "Position, ns.singleton($)");
+    ecs_query_t *q = ecs_query_new(world, "Position, ns.singleton($)");
 
     ecs_entity_t e = ecs_new_id(world);
     ecs_add_id(world, e, t);
     ecs_add(world, e, Position);
 
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     test_assert(ecs_iter_is_true(&it));
 
     ecs_fini(world);

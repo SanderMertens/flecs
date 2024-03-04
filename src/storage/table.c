@@ -236,10 +236,6 @@ void flecs_table_init_flags(
                     }
                 } else if (id == ecs_pair_t(EcsIdentifier, EcsName)) {
                     table->flags |= EcsTableHasName;
-                } else if (r == ecs_id(EcsTarget)) {
-                    ecs_table__t *meta = table->_;
-                    table->flags |= EcsTableHasTarget;
-                    meta->ft_offset = flecs_ito(int16_t, i);
                 } else if (r == ecs_id(EcsPoly)) {
                     table->flags |= EcsTableHasBuiltins;
                 }
@@ -1337,8 +1333,6 @@ int32_t flecs_table_append(
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(!table->_->lock, ECS_LOCKED_STORAGE, NULL);
-    ecs_assert(!(table->flags & EcsTableHasTarget), 
-        ECS_INVALID_OPERATION, NULL);
 
     flecs_table_check_sanity(table);
 
@@ -1451,8 +1445,6 @@ void flecs_table_delete(
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(!table->_->lock, ECS_LOCKED_STORAGE, NULL);
-    ecs_assert(!(table->flags & EcsTableHasTarget), 
-        ECS_INVALID_OPERATION, NULL);
 
     flecs_table_check_sanity(table);
 

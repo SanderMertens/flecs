@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
     ecs_iter_t it = ecs_query_cache_iter(ecs, q);
 
     // Outer loop, iterates archetypes
-    while (ecs_query_cache_next(&it)) {
+    while (ecs_query_next(&it)) {
         Position *p = ecs_field(&it, Position, 1);
         const Velocity *v = ecs_field(&it, Velocity, 2);
 

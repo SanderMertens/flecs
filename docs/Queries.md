@@ -96,8 +96,8 @@ ecs_query_cache_t *q = ecs_query(world, {
     }
 });
 
-ecs_iter_t it = ecs_query_cache_iter(world, q);
-while (ecs_query_cache_next(&it)) {
+ecs_iter_t it = ecs_query_iter(world, q);
+while (ecs_query_next(&it)) {
     Position *p = ecs_field(&it, Position, 1);
     Velocity *v = ecs_field(&it, Velocity, 2);
 
@@ -272,7 +272,7 @@ The query DSL requires the `FLECS_PARSER` addon to be included in a build.
 This section describes the different ways queries can be iterated. The code examples use filters, but also apply to cached queries and rules.
 
 ### Iterators (C)
-In the C API an iterator object of type `ecs_iter_t` can be created for each of the query kinds, using the `ecs_query_iter`, `ecs_query_cache_iter` and `ecs_query_iter` functions. This iterator can then be iterated with the respective `next` functions: `ecs_query_next`, `ecs_query_cache_next` and `ecs_query_next`.
+In the C API an iterator object of type `ecs_iter_t` can be created for each of the query kinds, using the `ecs_query_iter`, `ecs_query_cache_iter` and `ecs_query_iter` functions. This iterator can then be iterated with the respective `next` functions: `ecs_query_next`, `ecs_query_next` and `ecs_query_next`.
 
 An iterator can also be iterated with the `ecs_iter_next` function which is slightly slower, but does not require knowledge about the source the iterator was created for.
 
@@ -2466,8 +2466,8 @@ ecs_entity_t e = ecs_new_id(world);
 ecs_set(world, e, Position, {10, 20});
 
 // Iterating a query with inout/out terms will update the change state
-ecs_iter_t it = ecs_query_cache_iter(world, q_write);
-while (ecs_query_cache_next(&it)) {
+ecs_iter_t it = ecs_query_iter(world, q_write);
+while (ecs_query_next(&it)) {
   if (dont_change) {
     // If no changes are made to the iterated table, the skip function can be
     // called to prevent marking the matched components as dirty.
@@ -2480,8 +2480,8 @@ while (ecs_query_cache_next(&it)) {
 }
 
 // Iterating tables with q_read will reset the changed state
-it = ecs_query_cache_iter(world, q_read);
-while (ecs_query_cache_next(&it)) {
+it = ecs_query_iter(world, q_read);
+while (ecs_query_next(&it)) {
   if (ecs_query_changed(q_read, &it)) {
     // Check if the current table has changed. The change state will be reset 
     // after the table is iterated, so code can respond to changes in individual
@@ -3074,8 +3074,8 @@ ecs_add(world, e, Position);
 ecs_add(world, e, Velocity);
 
 // Iterate the tables in the cache
-ecs_iter_t it = ecs_query_cache_iter(world, q);
-while (ecs_query_cache_next(&it)) {
+ecs_iter_t it = ecs_query_iter(world, q);
+while (ecs_query_next(&it)) {
     Position *p = ecs_field(&it, Position, 1);
     Velocity *v = ecs_field(&it, Velocity, 2);
 

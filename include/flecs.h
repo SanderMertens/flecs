@@ -1032,7 +1032,7 @@ typedef struct ecs_observer_desc_t {
     ecs_entity_t entity;
 
     /** Query for observer */
-    ecs_query_desc_t filter;
+    ecs_query_desc_t query;
 
     /** Events to observe (OnAdd, OnRemove, OnSet, UnSet) */
     ecs_entity_t events[FLECS_EVENT_DESC_MAX];
@@ -1230,12 +1230,6 @@ typedef struct EcsComponent {
 typedef struct EcsPoly {
     ecs_poly_t *poly;          /**< Pointer to poly object */
 } EcsPoly;
-
-/** Target data for flattened relationships. */
-typedef struct EcsTarget {
-    int32_t count;
-    ecs_record_t *target;
-} EcsTarget;
 
 /** Component for iterable entities */
 typedef ecs_iterable_t EcsIterable;
@@ -1481,13 +1475,6 @@ FLECS_API extern const ecs_entity_t EcsDelete;
 /** Panic cleanup policy. Must be used as target in pair with EcsOnDelete or
  * EcsOnDeleteTarget. */
 FLECS_API extern const ecs_entity_t EcsPanic;
-
-/** Component that stores data for flattened relationships */
-FLECS_API extern const ecs_entity_t ecs_id(EcsTarget);
-
-/** Tag added to root entity to indicate its subtree should be flattened. Used
- * together with assemblies. */
-FLECS_API extern const ecs_entity_t EcsFlatten;
 
 /** Used like (EcsDefaultChildComponent, Component). When added to an entity,
  * this informs serialization formats which component to use when a value is
@@ -3202,48 +3189,6 @@ int32_t ecs_get_depth(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t rel);
-
-typedef struct ecs_flatten_desc_t {
-    /* When true, the flatten operation will not remove names from entities in
-     * the flattened tree. This may fail if entities from different subtrees
-     * have the same name. */
-    bool keep_names;
-
-    /* When true, the flattened tree won't contain information about the 
-     * original depth of the entities. This can reduce fragmentation, but may
-     * cause existing code, such as cascade queries, to no longer work. */
-    bool lose_depth;
-} ecs_flatten_desc_t;
-
-/** Recursively flatten relationship for target entity (experimental).
- * This operation combines entities in the subtree of the specified pair from
- * different parents in the same table. This can reduce memory fragmentation
- * and reduces the number of tables in the storage, which improves RAM 
- * utilization and various other operations, such as entity cleanup.
- * 
- * The lifecycle of entities in a fixed subtree are bound to the specified
- * parent. Entities in a fixed subtree cannot be deleted individually. Entities
- * can also not change the target of the fixed relationship, which includes
- * removing the relationship.
- * 
- * Entities in a fixed subtree are still fragmented on subtree depth. This 
- * ensures that entities can still be iterated in breadth-first order with the
- * cascade query modifier.
- * 
- * The current implementation is limited to exclusive acyclic relationships, and
- * does not allow for adding/removing to entities in flattened tables. An entity
- * may only be flattened for a single relationship. Future iterations of the
- * feature may remove these limitations.
- * 
- * @param world The world.
- * @param pair The relationship pair from which to start flattening.
- * @param desc Options for flattening the tree.
- */
-FLECS_API
-void ecs_flatten(
-    ecs_world_t *world,
-    ecs_id_t pair,
-    const ecs_flatten_desc_t *desc);
 
 /** Count entities that have the specified id.
  * Returns the number of entities that have the specified id.

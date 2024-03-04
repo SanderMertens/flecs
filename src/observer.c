@@ -489,9 +489,6 @@ bool flecs_multi_observer_invoke(ecs_iter_t *it) {
             ecs_query_has_table(o->query, prev_table, &user_it);
         }
 
-        flecs_iter_populate_data(world, &user_it, it->table, it->offset, 
-            it->count, user_it.ptrs);
-
         user_it.ptrs[pivot_term] = it->ptrs[0];
         user_it.ids[pivot_term] = it->event_id;
         user_it.system = o->query->entity;
@@ -724,13 +721,13 @@ int flecs_multi_observer_init(
     child_desc.callback = flecs_multi_observer_builtin_run;
     child_desc.ctx = observer;
     child_desc.ctx_free = NULL;
-    child_desc.filter.expr = NULL;
+    child_desc.query.expr = NULL;
     child_desc.binding_ctx = NULL;
     child_desc.binding_ctx_free = NULL;
     child_desc.yield_existing = false;
     ecs_os_zeromem(&child_desc.entity);
-    ecs_os_zeromem(&child_desc.filter.terms);
-    ecs_os_zeromem(&child_desc.filter);
+    ecs_os_zeromem(&child_desc.query.terms);
+    ecs_os_zeromem(&child_desc.query);
     ecs_os_memcpy_n(child_desc.events, observer->events, 
         ecs_entity_t, observer->event_count);
 
@@ -745,11 +742,11 @@ int flecs_multi_observer_init(
     }
 
     if (query->flags & EcsQueryMatchPrefab) {
-        child_desc.filter.flags |= EcsQueryMatchPrefab;
+        child_desc.query.flags |= EcsQueryMatchPrefab;
     }
 
     if (query->flags & EcsQueryMatchDisabled) {
-        child_desc.filter.flags |= EcsQueryMatchDisabled;
+        child_desc.query.flags |= EcsQueryMatchDisabled;
     }
 
     for (i = 0; i < term_count; i ++) {
@@ -757,7 +754,7 @@ int flecs_multi_observer_init(
             continue;
         }
 
-        ecs_term_t *term = &child_desc.filter.terms[0];
+        ecs_term_t *term = &child_desc.query.terms[0];
         child_desc.term_index = query->terms[i].field_index;
         *term = query->terms[i];
 
@@ -841,7 +838,7 @@ ecs_observer_t* flecs_observer_init(
     /* Make writeable copy of filter desc so that we can set name. This will
      * make debugging easier, as any error messages related to creating the
      * filter will have the name of the observer. */
-    ecs_query_desc_t query_desc = desc->filter;
+    ecs_query_desc_t query_desc = desc->query;
     query_desc.entity = 0;
     query_desc.cache_kind = EcsQueryCacheNone;
 

@@ -584,7 +584,7 @@ void Set_get_mut_w_realloc_in_on_add(void) {
     ecs_observer_init(world, &(ecs_observer_desc_t){
         .callback = OnAddRealloc,
         .events = {EcsOnAdd},
-        .filter.terms[0].id = ecs_id(Position),
+        .query.terms[0].id = ecs_id(Position),
         .ctx = entities
     });
 
@@ -698,7 +698,7 @@ void Set_emplace_w_observer_w_add(void) {
     ecs_observer_init(world, &(ecs_observer_desc_t){
         .callback = OnAddMove,
         .events = {EcsOnAdd},
-        .filter.terms[0].id = ecs_id(Position)
+        .query.terms[0].id = ecs_id(Position)
     });
 
     ecs_entity_t e = ecs_new_id(world);

@@ -1054,7 +1054,7 @@ void FlecsRestImport(
     });
 
     ecs_observer(world, {
-        .filter = { 
+        .query = { 
             .terms = {{ .id = EcsDisabled, .src.id = ecs_id(FlecsRest) }}
         },
         .events = {EcsOnAdd, EcsOnRemove},

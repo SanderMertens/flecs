@@ -403,7 +403,7 @@ void TriggerOnSet_on_set_after_override_w_new(void) {
 
     Probe ctx = {0};
     ecs_entity_t t1 = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_id(Position),
+        .query.terms[0].id = ecs_id(Position),
         .events = {EcsOnSet},
         .callback = OnSet,
         .ctx = &ctx
@@ -556,7 +556,7 @@ void TriggerOnSet_emplace(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_id(Position),
+        .query.terms[0].id = ecs_id(Position),
         .events = {EcsOnSet},
         .callback = Dummy
     });
@@ -581,7 +581,7 @@ void TriggerOnSet_un_set_tag_w_remove(void) {
     ECS_TAG(world, Tag);
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = Tag,
+        .query.terms[0].id = Tag,
         .events = {EcsUnSet},
         .callback = Dummy
     });
@@ -605,7 +605,7 @@ void TriggerOnSet_un_set_tag_w_clear(void) {
     ECS_TAG(world, Tag);
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = Tag,
+        .query.terms[0].id = Tag,
         .events = {EcsUnSet},
         .callback = Dummy
     });
@@ -629,7 +629,7 @@ void TriggerOnSet_un_set_tag_w_delete(void) {
     ECS_TAG(world, Tag);
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = Tag,
+        .query.terms[0].id = Tag,
         .events = {EcsUnSet},
         .callback = Dummy
     });

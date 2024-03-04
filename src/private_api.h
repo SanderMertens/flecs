@@ -178,25 +178,6 @@ uint64_t flecs_ito_(
 #define flecs_itoi32(value) flecs_ito(int32_t, (value))
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Entity filter
-////////////////////////////////////////////////////////////////////////////////
-
-void flecs_entity_filter_init(
-    ecs_world_t *world,
-    ecs_entity_filter_t **entity_filter,
-    const ecs_query_t *filter,
-    const ecs_table_t *table,
-    ecs_id_t *ids,
-    int32_t *columns);
-
-void flecs_entity_filter_fini(
-    ecs_world_t *world,
-    ecs_entity_filter_t *entity_filter);
-
-int flecs_entity_filter_next(
-    ecs_entity_filter_iter_t *it);
-
-////////////////////////////////////////////////////////////////////////////////
 //// Utilities
 ////////////////////////////////////////////////////////////////////////////////
 

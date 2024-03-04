@@ -2643,12 +2643,12 @@ void SingleThreadStaging_lock_table(void) {
 
     ecs_entity_t e = ecs_new(world, Position);
 
-    ecs_query_cache_t *q = ecs_query_cache_init(world, &(ecs_query_desc_t){
-        .filter.terms = {{ecs_id(Position)}}
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ecs_id(Position)}}
     });
 
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
-    while (ecs_query_cache_next(&it)) {
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
         ecs_table_t *table = it.table;
         test_assert(table != NULL);
         
@@ -2670,12 +2670,12 @@ void SingleThreadStaging_recursive_lock_table(void) {
 
     ecs_entity_t e = ecs_new(world, Position);
 
-    ecs_query_cache_t *q = ecs_query_cache_init(world, &(ecs_query_desc_t){
-        .filter.terms = {{ecs_id(Position)}}
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ecs_id(Position)}}
     });
 
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
-    while (ecs_query_cache_next(&it)) {
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
         ecs_table_t *table = it.table;
         test_assert(table != NULL);
         
@@ -2697,14 +2697,14 @@ void SingleThreadStaging_modify_after_lock(void) {
 
     ecs_entity_t e = ecs_new(world, Position);
 
-    ecs_query_cache_t *q = ecs_query_cache_init(world, &(ecs_query_desc_t){
-        .filter.terms = {{ecs_id(Position)}}
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ecs_id(Position)}}
     });
 
     int32_t count = 0;
 
-    ecs_iter_t it = ecs_query_cache_iter(world, q);
-    while (ecs_query_cache_next(&it)) {    
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {    
         ecs_table_t *table = it.table;
         test_assert(table != NULL);
                     

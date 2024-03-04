@@ -467,7 +467,7 @@ parent.lookup("child"); // returns child
 Queries (see below) can use hierarchies to order data breadth-first, which can come in handy when you're implementing a transform system:
 
 ```c
-ecs_query_cache_t *q = ecs_query_cache_init(world, &(ecs_query_desc_t){
+ecs_query_t *q = ecs_query(world, {
     .filter.terms = {
         { ecs_id(Position) },
         { ecs_id(Position), .src = {
@@ -477,8 +477,8 @@ ecs_query_cache_t *q = ecs_query_cache_init(world, &(ecs_query_desc_t){
     }
 });
 
-ecs_iter_t it = ecs_query_cache_iter(world, q);
-while (ecs_query_cache_next(&it)) {
+ecs_iter_t it = ecs_query_iter(world, q);
+while (ecs_query_next(&it)) {
     Position *p = ecs_field(&it, Position, 1);
     Position *p_parent = ecs_field(&it, Position, 2);
     for (int i = 0; i < it.count; i++) {
@@ -710,15 +710,15 @@ The API for queries is similar to filters:
 
 ```c
 // Create a query with 2 terms
-ecs_query_cache_t *q = ecs_query_cache_init(world, &(ecs_query_desc_t){
+ecs_query_t *q = ecs_query(world, {
     .filter.terms = {
         { ecs_id(Position) },
         { ecs_pair(EcsChildOf, EcsWildcard) }
     }
 });
 
-ecs_iter_t it = ecs_query_cache_iter(world, q);
-while (ecs_query_cache_next(&it)) {
+ecs_iter_t it = ecs_query_iter(world, q);
+while (ecs_query_next(&it)) {
     // Same as for filters
 }
 ```

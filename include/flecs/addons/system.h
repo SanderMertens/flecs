@@ -49,13 +49,13 @@ typedef struct ecs_system_desc_t {
      * "callback" action for each result returned from the system's query. 
      * 
      * It should not be assumed that the input iterator can always be iterated
-     * with ecs_query_cache_next. When a system is multithreaded and/or paged, the
+     * with ecs_query_next. When a system is multithreaded and/or paged, the
      * iterator can be either a worker or paged iterator. Future use cases may
      * introduce additional inputs for a system, such as rules and filters. The
      * correct function to use for iteration is ecs_iter_next.
      * 
      * An implementation can test whether the iterator is a query iterator by
-     * testing whether the it->next value is equal to ecs_query_cache_next. */
+     * testing whether the it->next value is equal to ecs_query_next. */
     ecs_run_action_t run;
 
     /** Callback that is ran for each result returned by the system's query. This

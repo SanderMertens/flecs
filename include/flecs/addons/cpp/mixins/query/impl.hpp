@@ -146,15 +146,15 @@ private:
         if (!world) {
             world = m_world;
         }
-        return ecs_query_cache_iter(world, m_query);
+        return ecs_query_iter(world, m_query);
     }
 
     ecs_iter_next_action_t next_action() const override {
-        return ecs_query_cache_next;
+        return ecs_query_next;
     }
 
     ecs_iter_next_action_t next_each_action() const override {
-        return ecs_query_cache_next_instanced;
+        return ecs_query_next_instanced;
     }
 
 public:
