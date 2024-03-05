@@ -383,7 +383,7 @@ void Module_implicitely_add_module_to_scopes_entity(void) {
 
     using StructLvl2_2 = NamespaceLvl1::NamespaceLvl2::StructLvl1::StructLvl2_2;
 
-    flecs::entity current = ecs.entity<StructLvl2_2>().add<flecs::Component>();
+    flecs::entity current = ecs.entity<StructLvl2_2>().set<flecs::Component>({});
     test_assert(current.id() != 0);
     test_assert(!current.has(flecs::Module));
     test_assert(current.has<flecs::Component>());

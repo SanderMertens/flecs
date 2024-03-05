@@ -2877,6 +2877,13 @@ void flecs_on_component(ecs_iter_t *it) {
             "component id must be smaller than %u", ECS_MAX_COMPONENT_ID);
         (void)component_id;
 
+        if (it->event != EcsOnRemove) {
+            ecs_entity_t parent = ecs_get_target(world, e, EcsChildOf, 0);
+            if (parent) {
+                ecs_add_id(world, parent, EcsModule);
+            }
+        }
+
         if (it->event == EcsOnSet) {
             if (flecs_type_info_init_id(
                 world, e, c[i].size, c[i].alignment, NULL))
@@ -4472,10 +4479,6 @@ void flecs_add_id(
     ecs_table_t *src_table = r->table;
     ecs_table_t *dst_table = flecs_table_traverse_add(
         world, src_table, &id, &diff);
-    if (id == ecs_id(EcsComponent) && ecs_has_id(world, entity, ecs_pair(EcsChildOf, EcsWildcard))) {
-        ecs_entity_t parent = ecs_get_target(world, entity, EcsChildOf, 0);
-        flecs_add_id(world, parent, EcsModule);
-    }
 
     flecs_commit(world, entity, r, dst_table, &diff, true, 0);
 
@@ -5490,11 +5493,6 @@ ecs_entity_t ecs_component_init(
 
     if (result >= world->info.last_component_id && result < FLECS_HI_COMPONENT_ID) {
         world->info.last_component_id = result + 1;
-    }
-
-    if (ecs_has_id(world, result, ecs_pair(EcsChildOf, EcsWildcard))) {
-        ecs_entity_t parent = ecs_get_target(world, result, EcsChildOf, 0);
-        ecs_add_id(world, parent, EcsModule);
     }
 
     /* Ensure components cannot be deleted */
