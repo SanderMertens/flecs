@@ -368,7 +368,7 @@ void flecs_uni_observer_invoke(
 
     bool is_filter = term->inout == EcsInOutNone;
     ECS_BIT_COND(it->flags, EcsIterNoData, is_filter);
-    it->system = observer->query->entity;
+    it->system = observer->entity;
     it->ctx = observer->ctx;
     it->binding_ctx = observer->binding_ctx;
     it->term_index = observer->term_index;
@@ -491,7 +491,7 @@ bool flecs_multi_observer_invoke(ecs_iter_t *it) {
 
         user_it.ptrs[pivot_term] = it->ptrs[0];
         user_it.ids[pivot_term] = it->event_id;
-        user_it.system = o->query->entity;
+        user_it.system = o->entity;
         user_it.term_index = pivot_term;
         user_it.ctx = o->ctx;
         user_it.binding_ctx = o->binding_ctx;
@@ -580,7 +580,7 @@ void flecs_uni_observer_yield_existing(
 
         ecs_iter_t it;
         iterable->init(world, world, &it, &observer->query->terms[0]);
-        it.system = observer->query->entity;
+        it.system = observer->entity;
         it.ctx = observer->ctx;
         it.binding_ctx = observer->binding_ctx;
         it.event = evt;
@@ -630,7 +630,7 @@ void flecs_multi_observer_yield_existing(
         it.terms = observer->query->terms;
         it.field_count = 1;
         it.term_index = pivot_term;
-        it.system = observer->query->entity;
+        it.system = observer->entity;
         it.ctx = observer;
         it.binding_ctx = observer->binding_ctx;
         it.event = evt;

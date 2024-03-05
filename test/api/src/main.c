@@ -147,6 +147,60 @@ void Entity_commit_w_on_remove(void);
 void Entity_commit_w_cmd_in_observer(void);
 void Entity_entity_init_existing_no_sep(void);
 
+// Testsuite 'Each'
+void Each_each_tag(void);
+void Each_each_component(void);
+void Each_each_pair(void);
+void Each_each_pair_rel_wildcard(void);
+void Each_each_pair_tgt_wildcard(void);
+
+// Testsuite 'Iter'
+void Iter_page_iter_0_0(void);
+void Iter_page_iter_1_0(void);
+void Iter_page_iter_0_1(void);
+void Iter_page_iter_n_0(void);
+void Iter_page_iter_0_n(void);
+void Iter_page_iter_m_n(void);
+void Iter_page_iter_skip_1_table(void);
+void Iter_page_iter_skip_2_tables(void);
+void Iter_worker_iter_1(void);
+void Iter_worker_iter_2(void);
+void Iter_worker_iter_3(void);
+void Iter_worker_iter_4(void);
+void Iter_paged_iter_w_shared_comp(void);
+void Iter_worker_iter_w_shared_comp(void);
+void Iter_paged_iter_w_task_query(void);
+void Iter_worker_iter_w_task_query(void);
+void Iter_worker_iter_w_singleton(void);
+void Iter_worker_iter_w_singleton_component(void);
+void Iter_worker_iter_w_singleton_instanced(void);
+void Iter_worker_iter_w_singleton_component_instanced(void);
+void Iter_paged_iter_w_singleton(void);
+void Iter_paged_iter_w_singleton_component(void);
+void Iter_paged_iter_w_singleton_instanced(void);
+void Iter_paged_iter_w_singleton_component_instanced(void);
+void Iter_count(void);
+void Iter_iter_restore_stack_iter(void);
+void Iter_interleaved_iter(void);
+void Iter_get_first(void);
+void Iter_page_iter_w_only_tag(void);
+void Iter_worker_iter_w_only_tag(void);
+void Iter_page_iter_w_inout_none(void);
+void Iter_worker_iter_w_inout_none(void);
+void Iter_page_iter_w_ctx(void);
+void Iter_page_iter_w_binding_ctx(void);
+void Iter_worker_iter_w_ctx(void);
+void Iter_worker_iter_w_binding_ctx(void);
+void Iter_column_index_owned(void);
+void Iter_column_index_shared(void);
+void Iter_column_index_not(void);
+void Iter_page_iter_w_fini(void);
+void Iter_worker_iter_w_fini(void);
+void Iter_rule_page_iter_w_fini(void);
+void Iter_rule_worker_iter_w_fini(void);
+void Iter_to_str_before_next(void);
+void Iter_to_str(void);
+
 // Testsuite 'Search'
 void Search_search(void);
 void Search_search_wildcard(void);
@@ -855,53 +909,6 @@ void ComponentLifecycle_on_set_hook_on_override(void);
 void ComponentLifecycle_on_set_hook_on_auto_override(void);
 void ComponentLifecycle_batched_set_new_component_w_lifecycle(void);
 void ComponentLifecycle_batched_get_mut_new_component_w_lifecycle(void);
-
-// Testsuite 'Iter'
-void Iter_page_iter_0_0(void);
-void Iter_page_iter_1_0(void);
-void Iter_page_iter_0_1(void);
-void Iter_page_iter_n_0(void);
-void Iter_page_iter_0_n(void);
-void Iter_page_iter_m_n(void);
-void Iter_page_iter_skip_1_table(void);
-void Iter_page_iter_skip_2_tables(void);
-void Iter_worker_iter_1(void);
-void Iter_worker_iter_2(void);
-void Iter_worker_iter_3(void);
-void Iter_worker_iter_4(void);
-void Iter_paged_iter_w_shared_comp(void);
-void Iter_worker_iter_w_shared_comp(void);
-void Iter_paged_iter_w_task_query(void);
-void Iter_worker_iter_w_task_query(void);
-void Iter_worker_iter_w_singleton(void);
-void Iter_worker_iter_w_singleton_component(void);
-void Iter_worker_iter_w_singleton_instanced(void);
-void Iter_worker_iter_w_singleton_component_instanced(void);
-void Iter_paged_iter_w_singleton(void);
-void Iter_paged_iter_w_singleton_component(void);
-void Iter_paged_iter_w_singleton_instanced(void);
-void Iter_paged_iter_w_singleton_component_instanced(void);
-void Iter_count(void);
-void Iter_iter_restore_stack_iter(void);
-void Iter_interleaved_iter(void);
-void Iter_get_first(void);
-void Iter_page_iter_w_only_tag(void);
-void Iter_worker_iter_w_only_tag(void);
-void Iter_page_iter_w_inout_none(void);
-void Iter_worker_iter_w_inout_none(void);
-void Iter_page_iter_w_ctx(void);
-void Iter_page_iter_w_binding_ctx(void);
-void Iter_worker_iter_w_ctx(void);
-void Iter_worker_iter_w_binding_ctx(void);
-void Iter_column_index_owned(void);
-void Iter_column_index_shared(void);
-void Iter_column_index_not(void);
-void Iter_page_iter_w_fini(void);
-void Iter_worker_iter_w_fini(void);
-void Iter_rule_page_iter_w_fini(void);
-void Iter_rule_worker_iter_w_fini(void);
-void Iter_to_str_before_next(void);
-void Iter_to_str(void);
 
 // Testsuite 'Pairs'
 void Pairs_type_w_one_pair(void);
@@ -2413,6 +2420,212 @@ bake_test_case Entity_testcases[] = {
     {
         "entity_init_existing_no_sep",
         Entity_entity_init_existing_no_sep
+    }
+};
+
+bake_test_case Each_testcases[] = {
+    {
+        "each_tag",
+        Each_each_tag
+    },
+    {
+        "each_component",
+        Each_each_component
+    },
+    {
+        "each_pair",
+        Each_each_pair
+    },
+    {
+        "each_pair_rel_wildcard",
+        Each_each_pair_rel_wildcard
+    },
+    {
+        "each_pair_tgt_wildcard",
+        Each_each_pair_tgt_wildcard
+    }
+};
+
+bake_test_case Iter_testcases[] = {
+    {
+        "page_iter_0_0",
+        Iter_page_iter_0_0
+    },
+    {
+        "page_iter_1_0",
+        Iter_page_iter_1_0
+    },
+    {
+        "page_iter_0_1",
+        Iter_page_iter_0_1
+    },
+    {
+        "page_iter_n_0",
+        Iter_page_iter_n_0
+    },
+    {
+        "page_iter_0_n",
+        Iter_page_iter_0_n
+    },
+    {
+        "page_iter_m_n",
+        Iter_page_iter_m_n
+    },
+    {
+        "page_iter_skip_1_table",
+        Iter_page_iter_skip_1_table
+    },
+    {
+        "page_iter_skip_2_tables",
+        Iter_page_iter_skip_2_tables
+    },
+    {
+        "worker_iter_1",
+        Iter_worker_iter_1
+    },
+    {
+        "worker_iter_2",
+        Iter_worker_iter_2
+    },
+    {
+        "worker_iter_3",
+        Iter_worker_iter_3
+    },
+    {
+        "worker_iter_4",
+        Iter_worker_iter_4
+    },
+    {
+        "paged_iter_w_shared_comp",
+        Iter_paged_iter_w_shared_comp
+    },
+    {
+        "worker_iter_w_shared_comp",
+        Iter_worker_iter_w_shared_comp
+    },
+    {
+        "paged_iter_w_task_query",
+        Iter_paged_iter_w_task_query
+    },
+    {
+        "worker_iter_w_task_query",
+        Iter_worker_iter_w_task_query
+    },
+    {
+        "worker_iter_w_singleton",
+        Iter_worker_iter_w_singleton
+    },
+    {
+        "worker_iter_w_singleton_component",
+        Iter_worker_iter_w_singleton_component
+    },
+    {
+        "worker_iter_w_singleton_instanced",
+        Iter_worker_iter_w_singleton_instanced
+    },
+    {
+        "worker_iter_w_singleton_component_instanced",
+        Iter_worker_iter_w_singleton_component_instanced
+    },
+    {
+        "paged_iter_w_singleton",
+        Iter_paged_iter_w_singleton
+    },
+    {
+        "paged_iter_w_singleton_component",
+        Iter_paged_iter_w_singleton_component
+    },
+    {
+        "paged_iter_w_singleton_instanced",
+        Iter_paged_iter_w_singleton_instanced
+    },
+    {
+        "paged_iter_w_singleton_component_instanced",
+        Iter_paged_iter_w_singleton_component_instanced
+    },
+    {
+        "count",
+        Iter_count
+    },
+    {
+        "iter_restore_stack_iter",
+        Iter_iter_restore_stack_iter
+    },
+    {
+        "interleaved_iter",
+        Iter_interleaved_iter
+    },
+    {
+        "get_first",
+        Iter_get_first
+    },
+    {
+        "page_iter_w_only_tag",
+        Iter_page_iter_w_only_tag
+    },
+    {
+        "worker_iter_w_only_tag",
+        Iter_worker_iter_w_only_tag
+    },
+    {
+        "page_iter_w_inout_none",
+        Iter_page_iter_w_inout_none
+    },
+    {
+        "worker_iter_w_inout_none",
+        Iter_worker_iter_w_inout_none
+    },
+    {
+        "page_iter_w_ctx",
+        Iter_page_iter_w_ctx
+    },
+    {
+        "page_iter_w_binding_ctx",
+        Iter_page_iter_w_binding_ctx
+    },
+    {
+        "worker_iter_w_ctx",
+        Iter_worker_iter_w_ctx
+    },
+    {
+        "worker_iter_w_binding_ctx",
+        Iter_worker_iter_w_binding_ctx
+    },
+    {
+        "column_index_owned",
+        Iter_column_index_owned
+    },
+    {
+        "column_index_shared",
+        Iter_column_index_shared
+    },
+    {
+        "column_index_not",
+        Iter_column_index_not
+    },
+    {
+        "page_iter_w_fini",
+        Iter_page_iter_w_fini
+    },
+    {
+        "worker_iter_w_fini",
+        Iter_worker_iter_w_fini
+    },
+    {
+        "rule_page_iter_w_fini",
+        Iter_rule_page_iter_w_fini
+    },
+    {
+        "rule_worker_iter_w_fini",
+        Iter_rule_worker_iter_w_fini
+    },
+    {
+        "to_str_before_next",
+        Iter_to_str_before_next
+    },
+    {
+        "to_str",
+        Iter_to_str
     }
 };
 
@@ -5116,189 +5329,6 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "batched_get_mut_new_component_w_lifecycle",
         ComponentLifecycle_batched_get_mut_new_component_w_lifecycle
-    }
-};
-
-bake_test_case Iter_testcases[] = {
-    {
-        "page_iter_0_0",
-        Iter_page_iter_0_0
-    },
-    {
-        "page_iter_1_0",
-        Iter_page_iter_1_0
-    },
-    {
-        "page_iter_0_1",
-        Iter_page_iter_0_1
-    },
-    {
-        "page_iter_n_0",
-        Iter_page_iter_n_0
-    },
-    {
-        "page_iter_0_n",
-        Iter_page_iter_0_n
-    },
-    {
-        "page_iter_m_n",
-        Iter_page_iter_m_n
-    },
-    {
-        "page_iter_skip_1_table",
-        Iter_page_iter_skip_1_table
-    },
-    {
-        "page_iter_skip_2_tables",
-        Iter_page_iter_skip_2_tables
-    },
-    {
-        "worker_iter_1",
-        Iter_worker_iter_1
-    },
-    {
-        "worker_iter_2",
-        Iter_worker_iter_2
-    },
-    {
-        "worker_iter_3",
-        Iter_worker_iter_3
-    },
-    {
-        "worker_iter_4",
-        Iter_worker_iter_4
-    },
-    {
-        "paged_iter_w_shared_comp",
-        Iter_paged_iter_w_shared_comp
-    },
-    {
-        "worker_iter_w_shared_comp",
-        Iter_worker_iter_w_shared_comp
-    },
-    {
-        "paged_iter_w_task_query",
-        Iter_paged_iter_w_task_query
-    },
-    {
-        "worker_iter_w_task_query",
-        Iter_worker_iter_w_task_query
-    },
-    {
-        "worker_iter_w_singleton",
-        Iter_worker_iter_w_singleton
-    },
-    {
-        "worker_iter_w_singleton_component",
-        Iter_worker_iter_w_singleton_component
-    },
-    {
-        "worker_iter_w_singleton_instanced",
-        Iter_worker_iter_w_singleton_instanced
-    },
-    {
-        "worker_iter_w_singleton_component_instanced",
-        Iter_worker_iter_w_singleton_component_instanced
-    },
-    {
-        "paged_iter_w_singleton",
-        Iter_paged_iter_w_singleton
-    },
-    {
-        "paged_iter_w_singleton_component",
-        Iter_paged_iter_w_singleton_component
-    },
-    {
-        "paged_iter_w_singleton_instanced",
-        Iter_paged_iter_w_singleton_instanced
-    },
-    {
-        "paged_iter_w_singleton_component_instanced",
-        Iter_paged_iter_w_singleton_component_instanced
-    },
-    {
-        "count",
-        Iter_count
-    },
-    {
-        "iter_restore_stack_iter",
-        Iter_iter_restore_stack_iter
-    },
-    {
-        "interleaved_iter",
-        Iter_interleaved_iter
-    },
-    {
-        "get_first",
-        Iter_get_first
-    },
-    {
-        "page_iter_w_only_tag",
-        Iter_page_iter_w_only_tag
-    },
-    {
-        "worker_iter_w_only_tag",
-        Iter_worker_iter_w_only_tag
-    },
-    {
-        "page_iter_w_inout_none",
-        Iter_page_iter_w_inout_none
-    },
-    {
-        "worker_iter_w_inout_none",
-        Iter_worker_iter_w_inout_none
-    },
-    {
-        "page_iter_w_ctx",
-        Iter_page_iter_w_ctx
-    },
-    {
-        "page_iter_w_binding_ctx",
-        Iter_page_iter_w_binding_ctx
-    },
-    {
-        "worker_iter_w_ctx",
-        Iter_worker_iter_w_ctx
-    },
-    {
-        "worker_iter_w_binding_ctx",
-        Iter_worker_iter_w_binding_ctx
-    },
-    {
-        "column_index_owned",
-        Iter_column_index_owned
-    },
-    {
-        "column_index_shared",
-        Iter_column_index_shared
-    },
-    {
-        "column_index_not",
-        Iter_column_index_not
-    },
-    {
-        "page_iter_w_fini",
-        Iter_page_iter_w_fini
-    },
-    {
-        "worker_iter_w_fini",
-        Iter_worker_iter_w_fini
-    },
-    {
-        "rule_page_iter_w_fini",
-        Iter_rule_page_iter_w_fini
-    },
-    {
-        "rule_worker_iter_w_fini",
-        Iter_rule_worker_iter_w_fini
-    },
-    {
-        "to_str_before_next",
-        Iter_to_str_before_next
-    },
-    {
-        "to_str",
-        Iter_to_str
     }
 };
 
@@ -9055,6 +9085,20 @@ static bake_test_suite suites[] = {
         Entity_testcases
     },
     {
+        "Each",
+        NULL,
+        NULL,
+        5,
+        Each_testcases
+    },
+    {
+        "Iter",
+        NULL,
+        NULL,
+        45,
+        Iter_testcases
+    },
+    {
         "Search",
         NULL,
         NULL,
@@ -9202,13 +9246,6 @@ static bake_test_suite suites[] = {
         ComponentLifecycle_testcases
     },
     {
-        "Iter",
-        NULL,
-        NULL,
-        45,
-        Iter_testcases
-    },
-    {
         "Pairs",
         NULL,
         NULL,
@@ -9351,5 +9388,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("api", argc, argv, suites, 44);
+    return bake_test_run("api", argc, argv, suites, 45);
 }

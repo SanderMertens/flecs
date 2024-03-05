@@ -3,7 +3,7 @@
  * @brief Simple iterator for a single component id.
  */
 
-#include "../private_api.h"
+#include "private_api.h"
 
 ecs_iter_t ecs_each_id(
     const ecs_world_t *stage,
@@ -51,17 +51,19 @@ bool ecs_each_next(
         &each_iter->it, ecs_table_record_t);
     it->flags |= EcsIterIsValid;
     if (next) {
-        it->table = next->hdr.table;
-        it->count = ecs_table_count(it->table);
-        it->entities = flecs_table_entities_array(it->table);
-        it->ids = &each_iter->ids;
+        ecs_table_t *table = next->hdr.table;
+        it->table = table;
+        it->count = ecs_table_count(table);
+        it->entities = flecs_table_entities_array(table);
+        it->ids = &table->type.array[next->index];
         it->columns = &each_iter->columns;
         it->sources = &each_iter->sources;
         it->sizes = &each_iter->sizes;
         it->ptrs = &each_iter->ptrs;
+        it->set_fields = 1;
         each_iter->columns = next->index;
 
-        if (next->column) {
+        if (next->column != -1) {
             each_iter->ptrs = ecs_vec_first(
                 &it->table->data.columns[next->column].data);
         }
