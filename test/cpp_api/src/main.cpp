@@ -1012,6 +1012,8 @@ void Module_module_with_core_name(void);
 void Module_import_addons_two_worlds(void);
 void Module_lookup_module_after_reparent(void);
 void Module_reparent_module_in_ctor(void);
+void Module_implicitely_add_module_to_scopes_component(void);
+void Module_implicitely_add_module_to_scopes_entity(void);
 
 // Testsuite 'ImplicitComponents'
 void ImplicitComponents_add(void);
@@ -5268,6 +5270,14 @@ bake_test_case Module_testcases[] = {
     {
         "reparent_module_in_ctor",
         Module_reparent_module_in_ctor
+    },
+    {
+        "implicitely_add_module_to_scopes_component",
+        Module_implicitely_add_module_to_scopes_component
+    },
+    {
+        "implicitely_add_module_to_scopes_entity",
+        Module_implicitely_add_module_to_scopes_entity
     }
 };
 
@@ -6685,7 +6695,7 @@ static bake_test_suite suites[] = {
         "Module",
         NULL,
         NULL,
-        15,
+        17,
         Module_testcases
     },
     {
