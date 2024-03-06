@@ -1555,21 +1555,36 @@ void flecs_json_serialize_query_profile(
     
     ecs_time_t t = {0};
     int32_t result_count = 0, entity_count = 0, i, sample_count = 100;
+    ecs_size_t component_bytes = 0, shared_component_bytes = 0;
     double eval_time = 0, eval_min = 0, eval_max = 0;
     ecs_time_measure(&t);
 
     for (i = 0; i < sample_count; i ++) {
         result_count = 0; 
         entity_count = 0;
+        component_bytes = 0;
+        shared_component_bytes = 0;
 
         ecs_iter_t it;
         ecs_iter_poly(world, desc->query, &it, NULL);
         it.flags |= EcsIterIsInstanced;
-        it.flags |= EcsIterNoData;
-        
+    
         while (ecs_iter_next(&it)) {
             result_count ++;
             entity_count += it.count;
+
+            int32_t f, field_count = it.field_count;
+            for (f = 0; f < field_count; f ++) {
+                size_t size = ecs_field_size(&it, f + 1);
+                if (ecs_field_is_set(&it, f + 1) && size) {
+                    if (ecs_field_is_self(&it, f + 1)) {
+                        component_bytes += 
+                            flecs_uto(ecs_size_t, size) * it.count;
+                    } else {
+                        shared_component_bytes += flecs_uto(ecs_size_t, size);
+                    }
+                }
+            }
         }
 
         double time_measure = ecs_time_measure(&t);
@@ -1607,6 +1622,11 @@ void flecs_json_serialize_query_profile(
     flecs_json_number(buf, eval_min * 1000.0 * 1000.0);
     flecs_json_memberl(buf, "eval_time_max_us");
     flecs_json_number(buf, eval_max * 1000.0 * 1000.0);
+
+    flecs_json_memberl(buf, "component_bytes");
+    flecs_json_number(buf, component_bytes);
+    flecs_json_memberl(buf, "shared_component_bytes");
+    flecs_json_number(buf, shared_component_bytes);
 
     flecs_json_object_pop(buf);
 }
