@@ -2877,6 +2877,13 @@ void flecs_on_component(ecs_iter_t *it) {
             "component id must be smaller than %u", ECS_MAX_COMPONENT_ID);
         (void)component_id;
 
+        if (it->event != EcsOnRemove) {
+            ecs_entity_t parent = ecs_get_target(world, e, EcsChildOf, 0);
+            if (parent) {
+                ecs_add_id(world, parent, EcsModule);
+            }
+        }
+
         if (it->event == EcsOnSet) {
             if (flecs_type_info_init_id(
                 world, e, c[i].size, c[i].alignment, NULL))

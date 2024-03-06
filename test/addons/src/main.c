@@ -1769,6 +1769,7 @@ void Modules_module_tag_on_namespace_on_add_2_levels(void);
 void Modules_import_monitor_2_worlds(void);
 void Modules_import_monitor_after_mini(void);
 void Modules_import_2_worlds(void);
+void Modules_component_parent_becomes_module(void);
 
 // Testsuite 'App'
 void App_app_w_frame_action(void);
@@ -8728,6 +8729,10 @@ bake_test_case Modules_testcases[] = {
     {
         "import_2_worlds",
         Modules_import_2_worlds
+    },
+    {
+        "component_parent_becomes_module",
+        Modules_component_parent_becomes_module
     }
 };
 
@@ -9106,7 +9111,6 @@ bake_test_case Alerts_testcases[] = {
     }
 };
 
-
 static bake_test_suite suites[] = {
     {
         "Parser",
@@ -9322,7 +9326,7 @@ static bake_test_suite suites[] = {
         "Modules",
         Modules_setup,
         NULL,
-        23,
+        24,
         Modules_testcases
     },
     {
