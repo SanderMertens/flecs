@@ -853,7 +853,8 @@
                 "serialize_var_ids_for_query",
                 "serialize_null_doc_name",
                 "serialize_rule_w_optional",
-                "serialize_rule_w_optional_component"
+                "serialize_rule_w_optional_component",
+                "serialize_entity_w_flecs_core_parent"
             ]
         }, {
             "id": "SerializeIterToRowJson",
@@ -918,7 +919,8 @@
                 "serialize_w_field_info_pair_w_not_pair",
                 "serialize_w_field_info_pair_w_not_component",
                 "serialize_w_field_info_w_or",
-                "serialize_recycled_id"
+                "serialize_recycled_id",
+                "serialize_entity_w_flecs_core_parent"
             ]
         }, {
             "id": "SerializeTypeInfoToJson",

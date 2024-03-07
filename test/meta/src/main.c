@@ -819,6 +819,7 @@ void SerializeIterToJson_serialize_var_ids_for_query(void);
 void SerializeIterToJson_serialize_null_doc_name(void);
 void SerializeIterToJson_serialize_rule_w_optional(void);
 void SerializeIterToJson_serialize_rule_w_optional_component(void);
+void SerializeIterToJson_serialize_entity_w_flecs_core_parent(void);
 
 // Testsuite 'SerializeIterToRowJson'
 void SerializeIterToRowJson_serialize_this_w_1_tag(void);
@@ -882,6 +883,7 @@ void SerializeIterToRowJson_serialize_w_field_info_pair_w_not_pair(void);
 void SerializeIterToRowJson_serialize_w_field_info_pair_w_not_component(void);
 void SerializeIterToRowJson_serialize_w_field_info_w_or(void);
 void SerializeIterToRowJson_serialize_recycled_id(void);
+void SerializeIterToRowJson_serialize_entity_w_flecs_core_parent(void);
 
 // Testsuite 'SerializeTypeInfoToJson'
 void SerializeTypeInfoToJson_bool(void);
@@ -4341,6 +4343,10 @@ bake_test_case SerializeIterToJson_testcases[] = {
     {
         "serialize_rule_w_optional_component",
         SerializeIterToJson_serialize_rule_w_optional_component
+    },
+    {
+        "serialize_entity_w_flecs_core_parent",
+        SerializeIterToJson_serialize_entity_w_flecs_core_parent
     }
 };
 
@@ -4588,6 +4594,10 @@ bake_test_case SerializeIterToRowJson_testcases[] = {
     {
         "serialize_recycled_id",
         SerializeIterToRowJson_serialize_recycled_id
+    },
+    {
+        "serialize_entity_w_flecs_core_parent",
+        SerializeIterToRowJson_serialize_entity_w_flecs_core_parent
     }
 };
 
@@ -5839,14 +5849,14 @@ static bake_test_suite suites[] = {
         "SerializeIterToJson",
         NULL,
         NULL,
-        72,
+        73,
         SerializeIterToJson_testcases
     },
     {
         "SerializeIterToRowJson",
         NULL,
         NULL,
-        61,
+        62,
         SerializeIterToRowJson_testcases
     },
     {

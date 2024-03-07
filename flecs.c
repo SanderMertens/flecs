@@ -55064,7 +55064,7 @@ int flecs_json_serialize_iter_result_rows(
                 ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
                 ecs_entity_t parent = ecs_pair_second(
                     world, table->type.array[tr->index]);
-                parent_path = ecs_get_fullpath(world, parent);
+                parent_path = ecs_get_path_w_sep(world, 0, parent, ".", "");
             }
 
             /* Fetch name column once vs. calling ecs_get_name for each row */

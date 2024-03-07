@@ -3209,3 +3209,35 @@ void SerializeIterToRowJson_serialize_recycled_id(void) {
 
     ecs_fini(world);
 }
+
+void SerializeIterToRowJson_serialize_entity_w_flecs_core_parent(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t e1 = ecs_new(world, Foo);
+    ecs_set_name(world, e1, "e1");
+
+    ecs_entity_t flecs_core_parent = 
+        ecs_new_from_fullpath(world, "flecs.core.bob");
+    ecs_add_pair(world, e1, EcsChildOf, flecs_core_parent);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
+        .expr = "Foo"
+    });
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+
+    char *json = ecs_iter_to_json(world, &it, &(ecs_iter_to_json_desc_t) {
+        .serialize_rows = true
+    });
+
+    test_str(json, "{\"results\":["
+        "{\"parent\":\"flecs.core.bob\", \"name\":\"e1\", \"tags\":[\"Foo\"]}]}");
+
+    ecs_os_free(json);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}

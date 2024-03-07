@@ -3250,3 +3250,42 @@ void SerializeIterToJson_serialize_rule_w_optional_component(void) {
 
     ecs_fini(world);
 }
+
+void SerializeIterToJson_serialize_entity_w_flecs_core_parent(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t e1 = ecs_new(world, Foo);
+    ecs_set_name(world, e1, "e1");
+
+    ecs_entity_t flecs_core_parent = 
+        ecs_new_from_fullpath(world, "flecs.core.bob");
+    ecs_add_pair(world, e1, EcsChildOf, flecs_core_parent);
+
+    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
+        .expr = "Foo"
+    });
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+
+    char *json = ecs_iter_to_json(world, &it, NULL);
+    test_str(json, 
+    "{"
+        "\"ids\":[[\"Foo\"]], "
+        "\"results\":[{"
+            "\"ids\":[[\"Foo\"]], "
+            "\"sources\":[0], "
+            "\"parent\":\"flecs.core.bob\", "
+            "\"entities\":["
+                "\"e1\""
+            "]"
+        "}]"
+    "}");
+
+    ecs_os_free(json);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}
