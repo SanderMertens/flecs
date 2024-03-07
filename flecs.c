@@ -16362,6 +16362,7 @@ void flecs_observer_invoke(
     bool table_only = it->flags & EcsIterTableOnly;
     if (match_this && (simple_result || instanced || table_only)) {
         callback(it);
+        filter->eval_count ++;
     } else {
         ecs_entity_t observer_src = term->src.id;
         if (observer_src && !(term->src.flags & EcsIsEntity)) {
@@ -16377,6 +16378,7 @@ void flecs_observer_invoke(
             it->entities = &e;
             if (!observer_src) {
                 callback(it);
+                filter->eval_count ++;
             } else if (observer_src == e) {
                 ecs_entity_t dummy = 0;
                 it->entities = &dummy;
@@ -16384,6 +16386,7 @@ void flecs_observer_invoke(
                     it->sources[0] = e;
                 }
                 callback(it);
+                filter->eval_count ++;
                 it->sources[0] = src;
                 break;
             }
@@ -17093,6 +17096,19 @@ void* ecs_observer_get_binding_ctx(
     } else {
         return NULL;
     }      
+}
+
+const ecs_filter_t* ecs_observer_get_filter(
+    const ecs_world_t *world,
+    ecs_entity_t observer)
+{
+    const EcsPoly *o = ecs_poly_bind_get(world, observer, ecs_observer_t);
+    if (o) {
+        ecs_poly_assert(o->poly, ecs_observer_t);
+        return &((ecs_observer_t*)o->poly)->filter;
+    } else {
+        return NULL;
+    }   
 }
 
 void flecs_observer_fini(
@@ -34929,22 +34945,30 @@ bool flecs_rest_reply_existing_query(
         return true;
     }
 
-    const EcsPoly *poly = ecs_get_pair(world, q, EcsPoly, EcsQuery);
-    if (!poly) {
-        flecs_reply_error(reply, 
-            "resolved identifier '%s' is not a query", name);
-        reply->code = 400;
-        return true;
+    ecs_poly_t *poly = NULL;
+    const EcsPoly *poly_comp = ecs_get_pair(world, q, EcsPoly, EcsQuery);
+    if (!poly_comp) {
+        poly_comp = ecs_get_pair(world, q, EcsPoly, EcsObserver);
+        if (poly_comp) {
+            poly = &((ecs_observer_t*)poly_comp->poly)->filter;
+        } else {
+            flecs_reply_error(reply, 
+                "resolved identifier '%s' is not a query", name);
+            reply->code = 400;
+            return true;
+        }
+    } else {
+        poly = poly_comp->poly;
     }
 
-    if (!poly->poly) {
+    if (!poly) {
         flecs_reply_error(reply, "query '%s' is not initialized", name);
         reply->code = 400;
         return true;
     }
 
     ecs_iter_t it;
-    ecs_iter_poly(world, poly->poly, &it, NULL);
+    ecs_iter_poly(world, poly, &it, NULL);
 
     ecs_dbg_2("rest: request query '%s'", q);
     bool prev_color = ecs_log_enable_colors(false);
@@ -34953,19 +34977,19 @@ bool flecs_rest_reply_existing_query(
 
     const char *vars = ecs_http_get_param(req, "vars");
     if (vars) {
-        if (!ecs_poly_is(poly->poly, ecs_rule_t)) {
+        if (!ecs_poly_is(poly, ecs_rule_t)) {
             flecs_reply_error(reply, 
                 "variables are only supported for rule queries");
             reply->code = 400;
             return true;
         }
-        if (ecs_rule_parse_vars(poly->poly, &it, vars) == NULL) {
+        if (ecs_rule_parse_vars(poly, &it, vars) == NULL) {
             flecs_rest_reply_set_captured_log(reply);
             return true;
         }
     }
 
-    flecs_rest_iter_to_reply(world, req, reply, poly->poly, &it);
+    flecs_rest_iter_to_reply(world, req, reply, poly, &it);
 
     ecs_os_api.log_ = rest_prev_log;
     ecs_log_enable_colors(prev_color);    
@@ -53434,21 +53458,21 @@ void flecs_json_serialize_query_profile(
         component_bytes = 0;
         shared_component_bytes = 0;
 
-        ecs_iter_t it;
-        ecs_iter_poly(world, desc->query, &it, NULL);
-        it.flags |= EcsIterIsInstanced;
+        ecs_iter_t pit;
+        ecs_iter_poly(world, desc->query, &pit, NULL);
+        pit.flags |= EcsIterIsInstanced;
     
-        while (ecs_iter_next(&it)) {
+        while (ecs_iter_next(&pit)) {
             result_count ++;
-            entity_count += it.count;
+            entity_count += pit.count;
 
-            int32_t f, field_count = it.field_count;
+            int32_t f, field_count = pit.field_count;
             for (f = 0; f < field_count; f ++) {
-                size_t size = ecs_field_size(&it, f + 1);
-                if (ecs_field_is_set(&it, f + 1) && size) {
-                    if (ecs_field_is_self(&it, f + 1)) {
+                size_t size = ecs_field_size(&pit, f + 1);
+                if (ecs_field_is_set(&pit, f + 1) && size) {
+                    if (ecs_field_is_self(&pit, f + 1)) {
                         component_bytes += 
-                            flecs_uto(ecs_size_t, size) * it.count;
+                            flecs_uto(ecs_size_t, size) * pit.count;
                     } else {
                         shared_component_bytes += flecs_uto(ecs_size_t, size);
                     }
@@ -54411,7 +54435,7 @@ void flecs_json_serialize_field(
     if (value_ctx->id_label) {
         flecs_json_string(buf, value_ctx->id_label);
 
-        const ecs_term_t *term = NULL;
+        const ecs_term_t *term = &q->terms[0];
         int t;
         for (t = 0; t < q->term_count; t ++) {
             if (q->terms[t].field_index == field) {
@@ -54419,8 +54443,6 @@ void flecs_json_serialize_field(
                 break;
             }
         }
-
-        ecs_assert(term != NULL, ECS_INTERNAL_ERROR, NULL);
 
         if (term->oper != EcsNot) {
             if (term->oper == EcsOptional) {

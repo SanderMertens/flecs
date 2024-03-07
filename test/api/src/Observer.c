@@ -6256,3 +6256,77 @@ void Observer_add_in_yield_existing_multi(void) {
 
     ecs_fini(world);
 }
+
+void Observer_get_filter(void) {
+    ecs_world_t* world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t o = ecs_observer(world, {
+        .filter.terms = {
+            { .id = ecs_id(Position) },
+        },
+        .callback = Observer,
+        .events = { EcsOnAdd },
+    });
+
+    const ecs_filter_t *f = ecs_observer_get_filter(world, o);
+    test_assert(f != NULL);
+    test_int(f->term_count, 1);
+    test_uint(ecs_id(Position), f->terms[0].id);
+    
+    ecs_fini(world);
+}
+
+void Observer_uni_observer_eval_count(void) {
+    ecs_world_t* world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t o = ecs_observer(world, {
+        .filter.terms = {
+            { .id = ecs_id(Position) },
+        },
+        .callback = Observer,
+        .events = { EcsOnAdd },
+    });
+
+    const ecs_filter_t *f = ecs_observer_get_filter(world, o);
+    test_assert(f != NULL);
+    test_int(f->eval_count, 0);
+
+    ecs_new(world, Position);
+
+    test_int(f->eval_count, 1);
+
+    ecs_fini(world);
+}
+
+void Observer_multi_observer_eval_count(void) {
+    ecs_world_t* world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t o = ecs_observer(world, {
+        .filter.terms = {
+            { .id = ecs_id(Position) },
+            { .id = ecs_id(Velocity) },
+        },
+        .callback = Observer,
+        .events = { EcsOnAdd },
+    });
+
+    const ecs_filter_t *f = ecs_observer_get_filter(world, o);
+    test_assert(f != NULL);
+    test_int(f->eval_count, 0);
+
+    ecs_entity_t e = ecs_new(world, Position);
+    test_int(f->eval_count, 0);
+
+    ecs_add(world, e, Velocity);
+    test_int(f->eval_count, 1);
+
+    ecs_fini(world);
+}
+

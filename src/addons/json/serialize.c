@@ -1566,21 +1566,21 @@ void flecs_json_serialize_query_profile(
         component_bytes = 0;
         shared_component_bytes = 0;
 
-        ecs_iter_t it;
-        ecs_iter_poly(world, desc->query, &it, NULL);
-        it.flags |= EcsIterIsInstanced;
+        ecs_iter_t pit;
+        ecs_iter_poly(world, desc->query, &pit, NULL);
+        pit.flags |= EcsIterIsInstanced;
     
-        while (ecs_iter_next(&it)) {
+        while (ecs_iter_next(&pit)) {
             result_count ++;
-            entity_count += it.count;
+            entity_count += pit.count;
 
-            int32_t f, field_count = it.field_count;
+            int32_t f, field_count = pit.field_count;
             for (f = 0; f < field_count; f ++) {
-                size_t size = ecs_field_size(&it, f + 1);
-                if (ecs_field_is_set(&it, f + 1) && size) {
-                    if (ecs_field_is_self(&it, f + 1)) {
+                size_t size = ecs_field_size(&pit, f + 1);
+                if (ecs_field_is_set(&pit, f + 1) && size) {
+                    if (ecs_field_is_self(&pit, f + 1)) {
                         component_bytes += 
-                            flecs_uto(ecs_size_t, size) * it.count;
+                            flecs_uto(ecs_size_t, size) * pit.count;
                     } else {
                         shared_component_bytes += flecs_uto(ecs_size_t, size);
                     }

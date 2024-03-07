@@ -24,7 +24,7 @@ void flecs_json_serialize_field(
     if (value_ctx->id_label) {
         flecs_json_string(buf, value_ctx->id_label);
 
-        const ecs_term_t *term = NULL;
+        const ecs_term_t *term = &q->terms[0];
         int t;
         for (t = 0; t < q->term_count; t ++) {
             if (q->terms[t].field_index == field) {
@@ -32,8 +32,6 @@ void flecs_json_serialize_field(
                 break;
             }
         }
-
-        ecs_assert(term != NULL, ECS_INTERNAL_ERROR, NULL);
 
         if (term->oper != EcsNot) {
             if (term->oper == EcsOptional) {

@@ -315,6 +315,7 @@ void flecs_observer_invoke(
     bool table_only = it->flags & EcsIterTableOnly;
     if (match_this && (simple_result || instanced || table_only)) {
         callback(it);
+        filter->eval_count ++;
     } else {
         ecs_entity_t observer_src = term->src.id;
         if (observer_src && !(term->src.flags & EcsIsEntity)) {
@@ -330,6 +331,7 @@ void flecs_observer_invoke(
             it->entities = &e;
             if (!observer_src) {
                 callback(it);
+                filter->eval_count ++;
             } else if (observer_src == e) {
                 ecs_entity_t dummy = 0;
                 it->entities = &dummy;
@@ -337,6 +339,7 @@ void flecs_observer_invoke(
                     it->sources[0] = e;
                 }
                 callback(it);
+                filter->eval_count ++;
                 it->sources[0] = src;
                 break;
             }
@@ -1046,6 +1049,19 @@ void* ecs_observer_get_binding_ctx(
     } else {
         return NULL;
     }      
+}
+
+const ecs_filter_t* ecs_observer_get_filter(
+    const ecs_world_t *world,
+    ecs_entity_t observer)
+{
+    const EcsPoly *o = ecs_poly_bind_get(world, observer, ecs_observer_t);
+    if (o) {
+        ecs_poly_assert(o->poly, ecs_observer_t);
+        return &((ecs_observer_t*)o->poly)->filter;
+    } else {
+        return NULL;
+    }   
 }
 
 void flecs_observer_fini(

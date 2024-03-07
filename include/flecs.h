@@ -4736,6 +4736,18 @@ void* ecs_observer_get_binding_ctx(
     const ecs_world_t *world,
     ecs_entity_t observer);
 
+/** Get observer query.
+ * Return the observer query.
+ *
+ * @param world The world.
+ * @param observer The observer.
+ * @return The observer query.
+ */
+FLECS_API
+const ecs_filter_t* ecs_observer_get_filter(
+    const ecs_world_t *world,
+    ecs_entity_t observer);
+
 /** @} */
 
 /**

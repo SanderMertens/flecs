@@ -424,22 +424,30 @@ bool flecs_rest_reply_existing_query(
         return true;
     }
 
-    const EcsPoly *poly = ecs_get_pair(world, q, EcsPoly, EcsQuery);
-    if (!poly) {
-        flecs_reply_error(reply, 
-            "resolved identifier '%s' is not a query", name);
-        reply->code = 400;
-        return true;
+    ecs_poly_t *poly = NULL;
+    const EcsPoly *poly_comp = ecs_get_pair(world, q, EcsPoly, EcsQuery);
+    if (!poly_comp) {
+        poly_comp = ecs_get_pair(world, q, EcsPoly, EcsObserver);
+        if (poly_comp) {
+            poly = &((ecs_observer_t*)poly_comp->poly)->filter;
+        } else {
+            flecs_reply_error(reply, 
+                "resolved identifier '%s' is not a query", name);
+            reply->code = 400;
+            return true;
+        }
+    } else {
+        poly = poly_comp->poly;
     }
 
-    if (!poly->poly) {
+    if (!poly) {
         flecs_reply_error(reply, "query '%s' is not initialized", name);
         reply->code = 400;
         return true;
     }
 
     ecs_iter_t it;
-    ecs_iter_poly(world, poly->poly, &it, NULL);
+    ecs_iter_poly(world, poly, &it, NULL);
 
     ecs_dbg_2("rest: request query '%s'", q);
     bool prev_color = ecs_log_enable_colors(false);
@@ -448,19 +456,19 @@ bool flecs_rest_reply_existing_query(
 
     const char *vars = ecs_http_get_param(req, "vars");
     if (vars) {
-        if (!ecs_poly_is(poly->poly, ecs_rule_t)) {
+        if (!ecs_poly_is(poly, ecs_rule_t)) {
             flecs_reply_error(reply, 
                 "variables are only supported for rule queries");
             reply->code = 400;
             return true;
         }
-        if (ecs_rule_parse_vars(poly->poly, &it, vars) == NULL) {
+        if (ecs_rule_parse_vars(poly, &it, vars) == NULL) {
             flecs_rest_reply_set_captured_log(reply);
             return true;
         }
     }
 
-    flecs_rest_iter_to_reply(world, req, reply, poly->poly, &it);
+    flecs_rest_iter_to_reply(world, req, reply, poly, &it);
 
     ecs_os_api.log_ = rest_prev_log;
     ecs_log_enable_colors(prev_color);    
