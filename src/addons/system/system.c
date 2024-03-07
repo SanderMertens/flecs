@@ -129,8 +129,6 @@ ecs_entity_t ecs_run_intern(
         system_data->time_spent += (ecs_ftime_t)ecs_time_measure(&time_start);
     }
 
-    system_data->invoke_count ++;
-
     flecs_defer_end(world, stage);
 
     return it->interrupted_by;

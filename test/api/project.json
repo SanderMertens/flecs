@@ -1779,7 +1779,10 @@
                 "rule_page_iter_w_fini",
                 "rule_worker_iter_w_fini",
                 "to_str_before_next",
-                "to_str"
+                "to_str",
+                "filter_eval_count",
+                "query_eval_count",
+                "rule_eval_count"
             ]
         }, {
             "id": "Pairs",

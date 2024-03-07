@@ -398,6 +398,9 @@ void ecs_query_stats_get(
         ECS_GAUGE_RECORD(&s->matched_table_count, t, 0);
         ECS_GAUGE_RECORD(&s->matched_empty_table_count, t, 0);
     }
+    
+    const ecs_filter_t *f = ecs_query_get_filter(query);
+    ECS_COUNTER_RECORD(&s->eval_count, t, f->eval_count);
 
 error:
     return;
@@ -457,7 +460,6 @@ bool ecs_system_stats_get(
     int32_t t = s->query.t;
 
     ECS_COUNTER_RECORD(&s->time_spent, t, ptr->time_spent);
-    ECS_COUNTER_RECORD(&s->invoke_count, t, ptr->invoke_count);
 
     s->task = !(ptr->query->filter.flags & EcsFilterMatchThis);
 

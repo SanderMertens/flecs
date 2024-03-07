@@ -2998,6 +2998,8 @@ struct ecs_filter_t {
     int32_t *sizes;            /**< Field size (same for each result) */
     ecs_id_t *ids;             /**< Array with field ids */
 
+    int32_t eval_count;        /**< Number of times query is evaluated */
+
     /* Mixins */
     ecs_entity_t entity;       /**< Entity associated with filter (optional) */
     ecs_iterable_t iterable;   /**< Iterable mixin */
@@ -11659,6 +11661,7 @@ typedef struct ecs_query_stats_t {
     ecs_metric_t matched_table_count;       /**< Matched non-empty tables */
     ecs_metric_t matched_empty_table_count; /**< Matched empty tables */
     ecs_metric_t matched_entity_count;      /**< Number of matched entities */
+    ecs_metric_t eval_count;                /**< Number of times query is evaluated */
     int64_t last_;
 
     /** Current position in ring buffer */
@@ -11669,7 +11672,6 @@ typedef struct ecs_query_stats_t {
 typedef struct ecs_system_stats_t {
     int64_t first_;
     ecs_metric_t time_spent;       /**< Time spent processing a system */
-    ecs_metric_t invoke_count;     /**< Number of times system is invoked */
     int64_t last_;
 
     bool task;                     /**< Is system a task */

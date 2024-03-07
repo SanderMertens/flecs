@@ -29,7 +29,6 @@ typedef struct ecs_system_t {
     bool multi_threaded;
     bool no_readonly;
 
-    int64_t invoke_count;           /* Number of times system is invoked */
     ecs_ftime_t time_spent;         /* Time spent on running system */
     ecs_ftime_t time_passed;        /* Time passed since last invocation */
     int64_t last_frame;             /* Last frame for which the system was considered */

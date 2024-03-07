@@ -783,6 +783,8 @@ struct ecs_filter_t {
     int32_t *sizes;            /**< Field size (same for each result) */
     ecs_id_t *ids;             /**< Array with field ids */
 
+    int32_t eval_count;        /**< Number of times query is evaluated */
+
     /* Mixins */
     ecs_entity_t entity;       /**< Entity associated with filter (optional) */
     ecs_iterable_t iterable;   /**< Iterable mixin */

@@ -1703,6 +1703,7 @@ ecs_filter_t* ecs_filter_init(
     f->iterable.init = flecs_filter_iter_init;
     f->dtor = (ecs_poly_dtor_t)flecs_filter_fini;
     f->entity = entity;
+    f->eval_count = 0;
 
     if (entity && (f->flags & EcsFilterOwnsStorage)) {
         EcsPoly *poly = ecs_poly_bind(world, entity, ecs_filter_t);
@@ -2971,6 +2972,11 @@ ecs_iter_t ecs_filter_iter(
     const ecs_world_t *stage,
     const ecs_filter_t *filter)
 {
+    if (filter) {
+        // Ok, only for stats
+        ECS_CONST_CAST(ecs_filter_t*, filter)->eval_count ++;
+    }
+
     return flecs_filter_iter_w_flags(stage, filter, 0);
 }
 

@@ -994,7 +994,7 @@ void flecs_query_match_tables(
     ecs_table_t *table = NULL;
     ecs_query_table_t *qt = NULL;
 
-    ecs_iter_t it = ecs_filter_iter(world, &query->filter);
+    ecs_iter_t it = flecs_filter_iter_w_flags(world, &query->filter, 0);
     ECS_BIT_SET(it.flags, EcsIterIsInstanced);
     ECS_BIT_SET(it.flags, EcsIterNoData);
     ECS_BIT_SET(it.flags, EcsIterTableOnly);
@@ -1639,7 +1639,7 @@ void flecs_query_rematch_tables(
         parent_it = ecs_query_iter(world, parent_query);
         it = ecs_filter_chain_iter(&parent_it, &query->filter);
     } else {
-        it = ecs_filter_iter(world, &query->filter);
+        it = flecs_filter_iter_w_flags(world, &query->filter, 0);
     }
 
     ECS_BIT_SET(it.flags, EcsIterIsInstanced);
@@ -2245,6 +2245,8 @@ ecs_iter_t ecs_query_iter(
 
     ecs_world_t *world = query->filter.world;
     ecs_poly_assert(world, ecs_world_t);
+
+    query->filter.eval_count ++;
 
     /* Process table events to ensure that the list of iterated tables doesn't
      * contain empty tables. */

@@ -2741,6 +2741,9 @@ ecs_iter_t ecs_rule_iter(
     ecs_rule_iter_t *rit = &it.priv.iter.rule;
     ecs_check(rule != NULL, ECS_INVALID_PARAMETER, NULL);
 
+    // Ok, only for stats
+    ECS_CONST_CAST(ecs_rule_t*, rule)->filter.eval_count ++;
+
     ecs_run_aperiodic(rule->filter.world, EcsAperiodicEmptyTables);
 
     int32_t i, var_count = rule->var_count, op_count = rule->op_count;

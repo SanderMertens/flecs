@@ -1715,6 +1715,9 @@ void Iter_rule_page_iter_w_fini(void);
 void Iter_rule_worker_iter_w_fini(void);
 void Iter_to_str_before_next(void);
 void Iter_to_str(void);
+void Iter_filter_eval_count(void);
+void Iter_query_eval_count(void);
+void Iter_rule_eval_count(void);
 
 // Testsuite 'Pairs'
 void Pairs_type_w_one_pair(void);
@@ -9381,6 +9384,18 @@ bake_test_case Iter_testcases[] = {
     {
         "to_str",
         Iter_to_str
+    },
+    {
+        "filter_eval_count",
+        Iter_filter_eval_count
+    },
+    {
+        "query_eval_count",
+        Iter_query_eval_count
+    },
+    {
+        "rule_eval_count",
+        Iter_rule_eval_count
     }
 };
 
@@ -13328,6 +13343,7 @@ bake_test_case StackAlloc_testcases[] = {
     }
 };
 
+
 static bake_test_suite suites[] = {
     {
         "Id",
@@ -13543,7 +13559,7 @@ static bake_test_suite suites[] = {
         "Iter",
         NULL,
         NULL,
-        45,
+        48,
         Iter_testcases
     },
     {

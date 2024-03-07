@@ -11621,6 +11621,7 @@ ecs_filter_t* ecs_filter_init(
     f->iterable.init = flecs_filter_iter_init;
     f->dtor = (ecs_poly_dtor_t)flecs_filter_fini;
     f->entity = entity;
+    f->eval_count = 0;
 
     if (entity && (f->flags & EcsFilterOwnsStorage)) {
         EcsPoly *poly = ecs_poly_bind(world, entity, ecs_filter_t);
@@ -12889,6 +12890,11 @@ ecs_iter_t ecs_filter_iter(
     const ecs_world_t *stage,
     const ecs_filter_t *filter)
 {
+    if (filter) {
+        // Ok, only for stats
+        ECS_CONST_CAST(ecs_filter_t*, filter)->eval_count ++;
+    }
+
     return flecs_filter_iter_w_flags(stage, filter, 0);
 }
 
@@ -18875,7 +18881,7 @@ void flecs_query_match_tables(
     ecs_table_t *table = NULL;
     ecs_query_table_t *qt = NULL;
 
-    ecs_iter_t it = ecs_filter_iter(world, &query->filter);
+    ecs_iter_t it = flecs_filter_iter_w_flags(world, &query->filter, 0);
     ECS_BIT_SET(it.flags, EcsIterIsInstanced);
     ECS_BIT_SET(it.flags, EcsIterNoData);
     ECS_BIT_SET(it.flags, EcsIterTableOnly);
@@ -19520,7 +19526,7 @@ void flecs_query_rematch_tables(
         parent_it = ecs_query_iter(world, parent_query);
         it = ecs_filter_chain_iter(&parent_it, &query->filter);
     } else {
-        it = ecs_filter_iter(world, &query->filter);
+        it = flecs_filter_iter_w_flags(world, &query->filter, 0);
     }
 
     ECS_BIT_SET(it.flags, EcsIterIsInstanced);
@@ -20126,6 +20132,8 @@ ecs_iter_t ecs_query_iter(
 
     ecs_world_t *world = query->filter.world;
     ecs_poly_assert(world, ecs_world_t);
+
+    query->filter.eval_count ++;
 
     /* Process table events to ensure that the list of iterated tables doesn't
      * contain empty tables. */
@@ -36075,7 +36083,6 @@ typedef struct ecs_system_t {
     bool multi_threaded;
     bool no_readonly;
 
-    int64_t invoke_count;           /* Number of times system is invoked */
     ecs_ftime_t time_spent;         /* Time spent on running system */
     ecs_ftime_t time_passed;        /* Time passed since last invocation */
     int64_t last_frame;             /* Last frame for which the system was considered */
@@ -36594,6 +36601,9 @@ void ecs_query_stats_get(
         ECS_GAUGE_RECORD(&s->matched_table_count, t, 0);
         ECS_GAUGE_RECORD(&s->matched_empty_table_count, t, 0);
     }
+    
+    const ecs_filter_t *f = ecs_query_get_filter(query);
+    ECS_COUNTER_RECORD(&s->eval_count, t, f->eval_count);
 
 error:
     return;
@@ -36653,7 +36663,6 @@ bool ecs_system_stats_get(
     int32_t t = s->query.t;
 
     ECS_COUNTER_RECORD(&s->time_spent, t, ptr->time_spent);
-    ECS_COUNTER_RECORD(&s->invoke_count, t, ptr->invoke_count);
 
     s->task = !(ptr->query->filter.flags & EcsFilterMatchThis);
 
@@ -53406,6 +53415,7 @@ static
 void flecs_json_serialize_query_profile(
     const ecs_world_t *world,
     ecs_strbuf_t *buf,
+    const ecs_iter_t *it,
     const ecs_iter_to_json_desc_t *desc)
 {
     if (!desc->query) {
@@ -53470,6 +53480,12 @@ void flecs_json_serialize_query_profile(
 
     flecs_json_memberl(buf, "query_profile");
     flecs_json_object_push(buf);
+    if (it->query) {
+        /* Correct for profiler */
+        ECS_CONST_CAST(ecs_filter_t*, it->query)->eval_count -= i;
+        flecs_json_memberl(buf, "eval_count");
+        flecs_json_number(buf, it->query->eval_count);
+    }
     flecs_json_memberl(buf, "result_count");
     flecs_json_number(buf, result_count);
     flecs_json_memberl(buf, "entity_count");
@@ -54242,7 +54258,7 @@ int ecs_iter_to_json_buf(
 
     /* Profile query */
     if (desc && desc->serialize_query_profile) {
-        flecs_json_serialize_query_profile(world, buf, desc);
+        flecs_json_serialize_query_profile(world, buf, it, desc);
     }
 
     /* Serialize results */
@@ -60939,7 +60955,8 @@ bool flecs_pipeline_build(
     /* Iterate systems in pipeline, add ops for running / merging */
     while (ecs_query_next(&it)) {
         EcsPoly *poly = flecs_pipeline_term_system(&it);
-        bool is_active = ecs_table_get_type_index(world, it.table, EcsEmpty) == -1;
+        bool is_active = ecs_table_get_type_index(
+            world, it.table, EcsEmpty) == -1;
 
         int32_t i;
         for (i = 0; i < it.count; i ++) {
@@ -67708,6 +67725,9 @@ ecs_iter_t ecs_rule_iter(
     ecs_rule_iter_t *rit = &it.priv.iter.rule;
     ecs_check(rule != NULL, ECS_INVALID_PARAMETER, NULL);
 
+    // Ok, only for stats
+    ECS_CONST_CAST(ecs_rule_t*, rule)->filter.eval_count ++;
+
     ecs_run_aperiodic(rule->filter.world, EcsAperiodicEmptyTables);
 
     int32_t i, var_count = rule->var_count, op_count = rule->op_count;
@@ -68753,8 +68773,6 @@ ecs_entity_t ecs_run_intern(
     if (measure_time) {
         system_data->time_spent += (ecs_ftime_t)ecs_time_measure(&time_start);
     }
-
-    system_data->invoke_count ++;
 
     flecs_defer_end(world, stage);
 

@@ -1547,6 +1547,7 @@ static
 void flecs_json_serialize_query_profile(
     const ecs_world_t *world,
     ecs_strbuf_t *buf,
+    const ecs_iter_t *it,
     const ecs_iter_to_json_desc_t *desc)
 {
     if (!desc->query) {
@@ -1611,6 +1612,12 @@ void flecs_json_serialize_query_profile(
 
     flecs_json_memberl(buf, "query_profile");
     flecs_json_object_push(buf);
+    if (it->query) {
+        /* Correct for profiler */
+        ECS_CONST_CAST(ecs_filter_t*, it->query)->eval_count -= i;
+        flecs_json_memberl(buf, "eval_count");
+        flecs_json_number(buf, it->query->eval_count);
+    }
     flecs_json_memberl(buf, "result_count");
     flecs_json_number(buf, result_count);
     flecs_json_memberl(buf, "entity_count");
@@ -2383,7 +2390,7 @@ int ecs_iter_to_json_buf(
 
     /* Profile query */
     if (desc && desc->serialize_query_profile) {
-        flecs_json_serialize_query_profile(world, buf, desc);
+        flecs_json_serialize_query_profile(world, buf, it, desc);
     }
 
     /* Serialize results */
