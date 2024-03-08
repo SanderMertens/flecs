@@ -614,7 +614,7 @@ struct world {
      */
     #ifndef ensure
     template <typename T>
-    T* ensure() const;
+    T& ensure() const;
     #endif
 
     /** Mark singleton component as modified.

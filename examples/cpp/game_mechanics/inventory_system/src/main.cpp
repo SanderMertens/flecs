@@ -141,8 +141,8 @@ void transfer_item(flecs::entity container, flecs::entity item) {
         flecs::entity dst_item = find_item_w_kind(container, ik);
         if (dst_item) {
             // If a matching item was found, increase its amount
-            Amount *dst_amt = dst_item.ensure<Amount>();
-            dst_amt->value += amt->value;
+            Amount& dst_amt = dst_item.ensure<Amount>();
+            dst_amt.value += amt->value;
             item.destruct(); // Remove the src item
             return;
         } else {
@@ -190,7 +190,7 @@ void attack(flecs::entity player, flecs::entity weapon) {
     // Get armor item, if player has equipped any
     flecs::entity armor = find_item_w_kind(player, ecs.entity<Armor>(), true);
     if (armor) {
-        Health *armor_health = armor.ensure<Health>();
+        Health *armor_health = armor.get_mut<Health>();
         if (!armor_health) {
             // Armor without Defense power? Odd.
             std::cout << " - the " << item_name(armor) << " armor is a dud\n";
@@ -218,24 +218,24 @@ void attack(flecs::entity player, flecs::entity weapon) {
     }
 
     // For each usage of the weapon, subtract one from its health
-    Health *weapon_health = weapon.ensure<Health>();
-    if (!--weapon_health->value) {
+    Health& weapon_health = weapon.ensure<Health>();
+    if (!--weapon_health.value) {
         std::cout << " - " << item_name(weapon) << " is destroyed!\n";
         weapon.destruct();
     } else {
         std::cout << " - " << item_name(weapon) << " has " 
-            << weapon_health->value << " uses left";
+            << weapon_health.value << " uses left";
     }
 
     // If armor didn't counter the whole attack, subtract from the player health
     if (att_value) {
-        Health *player_health = player.ensure<Health>();
-        if (!(player_health->value -= att_value)) {
+        Health& player_health = player.ensure<Health>();
+        if (!(player_health.value -= att_value)) {
             std::cout << " - " << player.name() << " died!\n";
             player.destruct();
         } else {
             std::cout << " - " << player.name() << " has " 
-                << player_health->value << " health left after taking " 
+                << player_health.value << " health left after taking " 
                 << att_value << " damage\n";
         }
     }

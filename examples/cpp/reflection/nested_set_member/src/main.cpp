@@ -24,9 +24,9 @@ int main(int, char *[]) {
 
     // Create entity, set value of Line using reflection API
     flecs::entity e = ecs.entity();
-    Line *ptr = e.ensure<Line>();
+    Line& ptr = e.ensure<Line>();
 
-    flecs::cursor cur = ecs.cursor<Line>(ptr);
+    flecs::cursor cur = ecs.cursor<Line>(&ptr);
     cur.push();          // {
     cur.member("start"); //   start:
     cur.push();          //   {
@@ -45,6 +45,6 @@ int main(int, char *[]) {
     cur.pop();           // }
 
     // Convert component to string
-    std::cout << ecs.to_expr(ptr).c_str() << "\n";
+    std::cout << ecs.to_expr(&ptr).c_str() << "\n";
     // {start: {x: 10.00, y: 20.00}, stop: {x: 30.00, y: 40.00}}
 }

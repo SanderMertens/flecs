@@ -19,8 +19,8 @@ int main(int, char *[]) {
             p.y += v.y;
         });
 
-    flecs::Timer *t = s.ensure<flecs::Timer>();
-    t->time = 0;
+    flecs::Timer& t = s.ensure<flecs::Timer>();
+    t.time = 0;
 
     auto e = ecs.entity()
         .set<Position>({10, 20})

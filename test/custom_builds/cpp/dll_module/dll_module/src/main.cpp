@@ -3,9 +3,9 @@
 namespace movement 
 {
    module::module(flecs::world& ecs) {
-        ecs.module<module>();
+      ecs.module<module>();
 
-        ecs.component<Position>();
-        ecs.component<Velocity>();
+      ecs.component<Position>();
+      ecs.component<Velocity>();
    }
 }

@@ -20504,7 +20504,7 @@ struct world {
      */
     #ifndef ensure
     template <typename T>
-    T* ensure() const;
+    T& ensure() const;
     #endif
 
     /** Mark singleton component as modified.
@@ -24733,10 +24733,10 @@ struct entity : entity_builder<entity>
      * @return Pointer to the component value.
      */
     template <typename T>
-    T* ensure() const {
+    T& ensure() const {
         auto comp_id = _::cpp_type<T>::id(m_world);
         ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
-        return static_cast<T*>(ecs_ensure_id(m_world, m_id, comp_id));
+        return *static_cast<T*>(ecs_ensure_id(m_world, m_id, comp_id));
     }
 
     /** Get mutable component value (untyped).
@@ -24760,8 +24760,8 @@ struct entity : entity_builder<entity>
      */
     template <typename First, typename Second, typename P = pair<First, Second>,
         typename A = actual_type_t<P>, if_not_t< flecs::is_pair<First>::value> = 0>
-    A* ensure() const {
-        return static_cast<A*>(ecs_ensure_id(m_world, m_id, ecs_pair(
+    A& ensure() const {
+        return *static_cast<A*>(ecs_ensure_id(m_world, m_id, ecs_pair(
             _::cpp_type<First>::id(m_world),
             _::cpp_type<Second>::id(m_world))));
     }
@@ -24773,10 +24773,10 @@ struct entity : entity_builder<entity>
      * @param second The second element of the pair.
      */
     template <typename First>
-    First* ensure(entity_t second) const {
+    First& ensure(entity_t second) const {
         auto comp_id = _::cpp_type<First>::id(m_world);
         ecs_assert(_::cpp_type<First>::size() != 0, ECS_INVALID_PARAMETER, NULL);
-        return static_cast<First*>(
+        return *static_cast<First*>(
             ecs_ensure_id(m_world, m_id, ecs_pair(comp_id, second)));
     }
 
@@ -24801,10 +24801,10 @@ struct entity : entity_builder<entity>
      * @param first The first element of the pair.
      */
     template <typename Second>
-    Second* ensure_second(entity_t first) const {
+    Second& ensure_second(entity_t first) const {
         auto second = _::cpp_type<Second>::id(m_world);
         ecs_assert(_::cpp_type<Second>::size() != 0, ECS_INVALID_PARAMETER, NULL);
-        return static_cast<Second*>(
+        return *static_cast<Second*>(
             ecs_ensure_id(m_world, m_id, ecs_pair(first, second)));
     }
 
@@ -32094,11 +32094,13 @@ inline entity world::lookup(const char *name, bool search_path) const {
     return flecs::entity(*this, e);
 }
 
+#ifndef ensure
 template <typename T>
-inline T* world::ensure() const {
+inline T& world::ensure() const {
     flecs::entity e(m_world, _::cpp_type<T>::id(m_world));
     return e.ensure<T>();
 }
+#endif
 
 template <typename T>
 inline void world::modified() const {

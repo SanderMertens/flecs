@@ -14,9 +14,9 @@ void Singleton_set_get_singleton(void) {
 void Singleton_ensure_singleton(void) {
     flecs::world world;
 
-    Position *p_mut = world.ensure<Position>();
-    p_mut->x = 10;
-    p_mut->y = 20;
+    Position& p_mut = world.ensure<Position>();
+    p_mut.x = 10;
+    p_mut.y = 20;
 
     const Position *p = world.get<Position>();
     test_assert(p != NULL);
@@ -47,8 +47,7 @@ void Singleton_modified_singleton(void) {
         });
 
     auto e = world.entity();
-    Position *p = e.ensure<Position>();
-    test_assert(p != NULL);
+    e.ensure<Position>();
     test_int(invoked, 0);
 
     e.modified<Position>();
@@ -83,11 +82,10 @@ void Singleton_remove_singleton(void) {
             invoked ++;
         });
 
-    Position *p_mut = world.ensure<Position>();
-    test_assert(p_mut != NULL);
+    world.ensure<Position>();
+    test_int(invoked, 0);
 
     world.remove<Position>();
-
     test_int(invoked, 1);
 }
 

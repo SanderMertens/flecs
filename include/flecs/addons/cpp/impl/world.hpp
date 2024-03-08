@@ -80,11 +80,13 @@ inline entity world::lookup(const char *name, bool search_path) const {
     return flecs::entity(*this, e);
 }
 
+#ifndef ensure
 template <typename T>
-inline T* world::ensure() const {
+inline T& world::ensure() const {
     flecs::entity e(m_world, _::cpp_type<T>::id(m_world));
     return e.ensure<T>();
 }
+#endif
 
 template <typename T>
 inline void world::modified() const {

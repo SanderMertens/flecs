@@ -67509,8 +67509,6 @@ bool flecs_rule_run_until(
             return true;
         }
     } while (true);
-
-    return false;
 }
 
 static

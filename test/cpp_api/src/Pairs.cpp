@@ -255,13 +255,12 @@ void Pairs_ensure_pair(void) {
 
     auto e = ecs.entity();
 
-    Pair *t = e.ensure<Pair, Position>();
-    test_assert(t != NULL);
-    t->value = 10;
+    Pair& t = e.ensure<Pair, Position>();
+    t.value = 10;
 
     const Pair *t_2 = e.get<Pair, Position>();
-    test_assert(t == t_2);
-    test_int(t->value, 10);
+    test_int(t.value, 10);
+    test_int(t_2->value, 10);
 }
 
 void Pairs_ensure_pair_existing(void) {
@@ -270,14 +269,13 @@ void Pairs_ensure_pair_existing(void) {
     auto e = ecs.entity()
         .set<Pair, Position>({20});
 
-    Pair *t = e.ensure<Pair, Position>();
-    test_assert(t != NULL);
-    test_int(t->value, 20);
-    t->value = 10;
+    Pair& t = e.ensure<Pair, Position>();
+    test_int(t.value, 20);
+    t.value = 10;
 
     const Pair *t_2 = e.get<Pair, Position>();
-    test_assert(t == t_2);
-    test_int(t->value, 10);
+    test_int(t.value, 10);
+    test_int(t_2->value, 10);
 }
 
 void Pairs_ensure_pair_tag(void) {
@@ -287,15 +285,15 @@ void Pairs_ensure_pair_tag(void) {
 
     auto e = ecs.entity();
 
-    Position *p = e.ensure_second<Position>(Pair);
-    test_assert(p != NULL);
-    p->x = 10;
-    p->y = 20;
+    Position& p = e.ensure_second<Position>(Pair);
+    p.x = 10;
+    p.y = 20;
 
     const Position *p_2 = e.get_second<Position>(Pair);
-    test_assert(p == p_2);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
+    test_int(p.x, 10);
+    test_int(p.y, 20);
+    test_int(p_2->x, 10);
+    test_int(p_2->y, 20);
 }
 
 void Pairs_ensure_pair_tag_existing(void) {
@@ -306,15 +304,15 @@ void Pairs_ensure_pair_tag_existing(void) {
     auto e = ecs.entity()
         .set_second<Position>(Pair, {10, 20});
 
-    Position *p = e.ensure_second<Position>(Pair);
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
+    Position& p = e.ensure_second<Position>(Pair);
+    test_int(p.x, 10);
+    test_int(p.y, 20);
 
     const Position *p_2 = e.get_second<Position>(Pair);
-    test_assert(p == p_2);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
+    test_int(p.x, 10);
+    test_int(p.y, 20);
+    test_int(p_2->x, 10);
+    test_int(p_2->y, 20);
 }
 
 void Pairs_ensure_R_tag_O(void) {
@@ -323,17 +321,17 @@ void Pairs_ensure_R_tag_O(void) {
     auto e = ecs.entity()
         .set<Tag, Position>({10, 20});
 
-    Position *t = e.ensure<Tag, Position>();
-    test_assert(t != NULL);
-    test_int(t->x, 10);
-    test_int(t->y, 20);
-    t->x = 30;
-    t->y = 40;
+    Position& t = e.ensure<Tag, Position>();
+    test_int(t.x, 10);
+    test_int(t.y, 20);
+    t.x = 30;
+    t.y = 40;
 
     const Position *t_2 = e.get<Tag, Position>();
-    test_assert(t == t_2);
-    test_int(t->x, 30);
-    test_int(t->y, 40);
+    test_int(t.x, 30);
+    test_int(t.y, 40);
+    test_int(t_2->x, 30);
+    test_int(t_2->y, 40);
 }
 
 void Pairs_get_relation_from_id(void) {

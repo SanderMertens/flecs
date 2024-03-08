@@ -505,8 +505,7 @@ void ComponentLifecycle_ensure_new(void) {
     auto e = world.entity();
     test_assert(e.id() != 0);
 
-    Pod* value = e.ensure<Pod>();
-    test_assert(value != NULL);
+    e.ensure<Pod>();
 
     Pod::ctor_invoked = 1;
     Pod::dtor_invoked = 0;
@@ -529,16 +528,14 @@ void ComponentLifecycle_ensure_existing(void) {
     auto e = world.entity();
     test_assert(e.id() != 0);
 
-    Pod* value = e.ensure<Pod>();
-    test_assert(value != NULL);
+    e.ensure<Pod>();
 
     Pod::ctor_invoked = 1;
     Pod::dtor_invoked = 0;
     Pod::copy_invoked = 0;
     Pod::move_invoked = 0;
 
-    value = e.ensure<Pod>();
-    test_assert(value != NULL);
+    e.ensure<Pod>();
 
     /* Repeated calls to ensure should not invoke constructor */
     Pod::ctor_invoked = 1;
