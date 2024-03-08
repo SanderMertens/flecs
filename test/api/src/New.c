@@ -158,7 +158,7 @@ void New_new_component_id_skip_used(void) {
     test_assert(!ecs_get_type(world, e));
 
     /* Explicitly set an id that is one above the last issued id */
-    ecs_ensure(world, e + 1);
+    ecs_make_alive(world, e + 1);
     ecs_add_id(world, e + 1, Foo);
 
     ecs_entity_t e2 = ecs_new_low_id(world);
@@ -181,7 +181,7 @@ void New_new_component_id_skip_to_hi_id(void) {
     /* Use up all low component ids */
     int i;
     for (i = (int)e; i < FLECS_HI_COMPONENT_ID; i ++) {
-        ecs_ensure(world, i);
+        ecs_make_alive(world, i);
         ecs_add_id(world, i, Foo);
     }
 

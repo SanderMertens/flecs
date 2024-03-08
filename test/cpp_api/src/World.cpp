@@ -1512,7 +1512,7 @@ void World_get_alive(void) {
     test_assert(ecs.get_alive(e_no_gen) == e_2);
 }
 
-void World_ensure(void) {
+void World_make_alive(void) {
     flecs::world ecs;
 
     auto e_1 = ecs.entity();
@@ -1525,7 +1525,7 @@ void World_ensure(void) {
     e_2.destruct();
     test_assert(!e_2.is_alive());
 
-    auto e_3 = ecs.ensure(e_2);
+    auto e_3 = ecs.make_alive(e_2);
     test_assert(e_2 == e_3);
     test_assert(e_3.is_alive());
 }

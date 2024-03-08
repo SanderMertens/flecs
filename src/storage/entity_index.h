@@ -64,12 +64,12 @@ void flecs_entity_index_remove(
     uint64_t entity);
 
 /* Set generation of entity */
-void flecs_entity_index_set_generation(
+void flecs_entity_index_make_alive(
     ecs_entity_index_t *index,
     uint64_t entity);
 
 /* Get current generation of entity */
-uint64_t flecs_entity_index_get_generation(
+uint64_t flecs_entity_index_get_alive(
     const ecs_entity_index_t *index,
     uint64_t entity);
 
@@ -138,8 +138,8 @@ void flecs_entity_index_restore(
 #define flecs_entities_get_any(world, entity) flecs_entity_index_get_any(ecs_eis(world), entity)
 #define flecs_entities_ensure(world, entity) flecs_entity_index_ensure(ecs_eis(world), entity)
 #define flecs_entities_remove(world, entity) flecs_entity_index_remove(ecs_eis(world), entity)
-#define flecs_entities_set_generation(world, entity) flecs_entity_index_set_generation(ecs_eis(world), entity)
-#define flecs_entities_get_generation(world, entity) flecs_entity_index_get_generation(ecs_eis(world), entity)
+#define flecs_entities_make_alive(world, entity) flecs_entity_index_make_alive(ecs_eis(world), entity)
+#define flecs_entities_get_alive(world, entity) flecs_entity_index_get_alive(ecs_eis(world), entity)
 #define flecs_entities_is_alive(world, entity) flecs_entity_index_is_alive(ecs_eis(world), entity)
 #define flecs_entities_is_valid(world, entity) flecs_entity_index_is_valid(ecs_eis(world), entity)
 #define flecs_entities_exists(world, entity) flecs_entity_index_exists(ecs_eis(world), entity)

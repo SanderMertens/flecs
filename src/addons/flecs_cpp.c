@@ -242,7 +242,7 @@ void ecs_cpp_component_validate(
     } else {
         /* Ensure that the entity id valid */
         if (!ecs_is_alive(world, id)) {
-            ecs_ensure(world, id);
+            ecs_make_alive(world, id);
         }
 
         /* Register name with entity, so that when the entity is created the

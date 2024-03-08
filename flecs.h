@@ -1354,12 +1354,6 @@ FLECS_API
 int32_t ecs_sparse_count(
     const ecs_sparse_t *sparse);
 
-/** Override the generation count for a specific id */
-FLECS_API
-void flecs_sparse_set_generation(
-    ecs_sparse_t *sparse,
-    uint64_t id);
-
 FLECS_API
 void* ecs_sparse_get_dense(
     const ecs_sparse_t *sparse,
@@ -5774,7 +5768,7 @@ bool ecs_is_valid(
 /** Test whether an entity is alive.
  * Entities are alive after they are created, and become not alive when they are
  * deleted. Operations that return alive ids are (amongst others) ecs_new_id(),
- * ecs_new_low_id() and ecs_entity_init(). Ids can be made alive with the ecs_ensure()
+ * ecs_new_low_id() and ecs_entity_init(). Ids can be made alive with the ecs_make_alive()
  * function.
  *
  * After an id is deleted it can be recycled. Recycled ids are different from
@@ -5868,11 +5862,11 @@ ecs_entity_t ecs_get_alive(
  * @param entity The entity id to make alive.
  */
 FLECS_API
-void ecs_ensure(
+void ecs_make_alive(
     ecs_world_t *world,
     ecs_entity_t entity);
 
-/** Same as ecs_ensure(), but for (component) ids.
+/** Same as ecs_make_alive(), but for (component) ids.
  * An id can be an entity or pair, and can contain id flags. This operation
  * ensures that the entity (or entities, for a pair) are alive.
  *
@@ -5883,7 +5877,7 @@ void ecs_ensure(
  * will not fail when an entity with non-zero generation count already exists in
  * the world.
  *
- * This is different from ecs_ensure(), which will fail if attempted with an id
+ * This is different from ecs_make_alive(), which will fail if attempted with an id
  * that has generation 0 and an entity with a non-zero generation is currently
  * alive.
  *
@@ -5891,7 +5885,7 @@ void ecs_ensure(
  * @param id The id to make alive.
  */
 FLECS_API
-void ecs_ensure_id(
+void ecs_make_alive_id(
     ecs_world_t *world,
     ecs_id_t id);
 
@@ -20863,14 +20857,13 @@ struct world {
 /* Prevent clashing with Unreal define. Unreal applications will have to use
  *  ecs_ensure. */
 #ifndef ensure
-    /** Ensures that entity with provided generation is alive.
-     * This operation will fail if an entity exists with the same id and a
-     * different, non-zero generation.
-     *
+    /**
      * @see ecs_ensure
      */
     flecs::entity ensure(flecs::entity_t e) const;
 #endif
+
+    flecs::entity make_alive(flecs::entity_t e) const;
 
     /* Run callback after completing frame */
     void run_post_frame(ecs_fini_action_t action, void *ctx) const {
@@ -32088,10 +32081,15 @@ inline flecs::entity world::get_alive(flecs::entity_t e) const {
  *  ecs_ensure. */
 #ifndef ensure
 inline flecs::entity world::ensure(flecs::entity_t e) const {
-    ecs_ensure(m_world, e);
+    // ecs_make_alive(m_world, e); // TODO
     return flecs::entity(m_world, e);
 }
 #endif
+
+inline flecs::entity world::make_alive(flecs::entity_t e) const {
+    ecs_make_alive(m_world, e);
+    return flecs::entity(m_world, e);
+}
 
 template <typename E>
 inline flecs::entity enum_data<E>::entity() const {

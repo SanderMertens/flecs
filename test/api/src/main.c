@@ -101,12 +101,12 @@ void Entity_init_w_name_staged(void);
 void Entity_record_find_for_empty(void);
 void Entity_record_find(void);
 void Entity_record_find_from_stage(void);
-void Entity_ensure_zero_gen(void);
-void Entity_ensure_nonzero_gen(void);
-void Entity_ensure_zero_gen_exists(void);
-void Entity_ensure_nonzero_gen_exists(void);
-void Entity_ensure_zero_gen_exists_alive(void);
-void Entity_ensure_nonzero_gen_exists_alive(void);
+void Entity_make_alive_zero_gen(void);
+void Entity_make_alive_nonzero_gen(void);
+void Entity_make_alive_zero_gen_exists(void);
+void Entity_make_alive_nonzero_gen_exists(void);
+void Entity_make_alive_zero_gen_exists_alive(void);
+void Entity_make_alive_nonzero_gen_exists_alive(void);
 void Entity_set_scope_w_entity_init_from_stage(void);
 void Entity_entity_init_w_scope_twice(void);
 void Entity_entity_init_w_childof_twice(void);
@@ -141,9 +141,9 @@ void Entity_entity_init_w_empty_sep_w_prefix(void);
 void Entity_set_name_w_same_ptr(void);
 void Entity_set_name_w_overlapping_ptr(void);
 void Entity_defer_set_name_w_overlapping_ptr(void);
-void Entity_ensure_from_stage(void);
-void Entity_ensure_after_deleted_1_entity(void);
-void Entity_ensure_after_deleted_2_entities(void);
+void Entity_make_alive_from_stage(void);
+void Entity_make_alive_after_deleted_1_entity(void);
+void Entity_make_alive_after_deleted_2_entities(void);
 void Entity_defer_entity_init_w_set_name_w_add_childof(void);
 void Entity_entity_w_digit_name(void);
 void Entity_entity_w_existing_digit_name(void);
@@ -3106,28 +3106,28 @@ bake_test_case Entity_testcases[] = {
         Entity_record_find_from_stage
     },
     {
-        "ensure_zero_gen",
-        Entity_ensure_zero_gen
+        "make_alive_zero_gen",
+        Entity_make_alive_zero_gen
     },
     {
-        "ensure_nonzero_gen",
-        Entity_ensure_nonzero_gen
+        "make_alive_nonzero_gen",
+        Entity_make_alive_nonzero_gen
     },
     {
-        "ensure_zero_gen_exists",
-        Entity_ensure_zero_gen_exists
+        "make_alive_zero_gen_exists",
+        Entity_make_alive_zero_gen_exists
     },
     {
-        "ensure_nonzero_gen_exists",
-        Entity_ensure_nonzero_gen_exists
+        "make_alive_nonzero_gen_exists",
+        Entity_make_alive_nonzero_gen_exists
     },
     {
-        "ensure_zero_gen_exists_alive",
-        Entity_ensure_zero_gen_exists_alive
+        "make_alive_zero_gen_exists_alive",
+        Entity_make_alive_zero_gen_exists_alive
     },
     {
-        "ensure_nonzero_gen_exists_alive",
-        Entity_ensure_nonzero_gen_exists_alive
+        "make_alive_nonzero_gen_exists_alive",
+        Entity_make_alive_nonzero_gen_exists_alive
     },
     {
         "set_scope_w_entity_init_from_stage",
@@ -3266,16 +3266,16 @@ bake_test_case Entity_testcases[] = {
         Entity_defer_set_name_w_overlapping_ptr
     },
     {
-        "ensure_from_stage",
-        Entity_ensure_from_stage
+        "make_alive_from_stage",
+        Entity_make_alive_from_stage
     },
     {
-        "ensure_after_deleted_1_entity",
-        Entity_ensure_after_deleted_1_entity
+        "make_alive_after_deleted_1_entity",
+        Entity_make_alive_after_deleted_1_entity
     },
     {
-        "ensure_after_deleted_2_entities",
-        Entity_ensure_after_deleted_2_entities
+        "make_alive_after_deleted_2_entities",
+        Entity_make_alive_after_deleted_2_entities
     },
     {
         "defer_entity_init_w_set_name_w_add_childof",

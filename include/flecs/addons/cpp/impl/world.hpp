@@ -253,10 +253,15 @@ inline flecs::entity world::get_alive(flecs::entity_t e) const {
  *  ecs_ensure. */
 #ifndef ensure
 inline flecs::entity world::ensure(flecs::entity_t e) const {
-    ecs_ensure(m_world, e);
+    // ecs_make_alive(m_world, e); // TODO
     return flecs::entity(m_world, e);
 }
 #endif
+
+inline flecs::entity world::make_alive(flecs::entity_t e) const {
+    ecs_make_alive(m_world, e);
+    return flecs::entity(m_world, e);
+}
 
 template <typename E>
 inline flecs::entity enum_data<E>::entity() const {

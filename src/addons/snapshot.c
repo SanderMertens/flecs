@@ -310,7 +310,7 @@ void restore_filtered(
                     ECS_RECORD_TO_ROW(r->row), true);
             } else {
                 /* Make sure that the entity has the same generation count */
-                flecs_entities_set_generation(world, e);
+                flecs_entities_make_alive(world, e);
             }
         }
 

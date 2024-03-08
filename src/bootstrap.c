@@ -676,7 +676,7 @@ void flecs_bootstrap_entity(
     ecs_os_strcpy(symbol, "flecs.core.");
     ecs_os_strcat(symbol, name);
     
-    ecs_ensure(world, id);
+    ecs_make_alive(world, id);
     ecs_add_pair(world, id, EcsChildOf, parent);
     ecs_set_name(world, id, name);
     ecs_set_symbol(world, id, symbol);
@@ -697,26 +697,26 @@ void flecs_bootstrap(
     ecs_set_name_prefix(world, "Ecs");
 
     /* Ensure builtin ids are alive */
-    ecs_ensure(world, ecs_id(EcsComponent));
-    ecs_ensure(world, EcsFinal);
-    ecs_ensure(world, ecs_id(EcsIdentifier));
-    ecs_ensure(world, EcsName);
-    ecs_ensure(world, EcsSymbol);
-    ecs_ensure(world, EcsAlias);
-    ecs_ensure(world, EcsChildOf);
-    ecs_ensure(world, EcsFlecs);
-    ecs_ensure(world, EcsFlecsCore);
-    ecs_ensure(world, EcsOnAdd);
-    ecs_ensure(world, EcsOnRemove);
-    ecs_ensure(world, EcsOnSet);
-    ecs_ensure(world, EcsUnSet);
-    ecs_ensure(world, EcsOnDelete);
-    ecs_ensure(world, EcsPanic);
-    ecs_ensure(world, EcsFlag);
-    ecs_ensure(world, EcsIsA);
-    ecs_ensure(world, EcsWildcard);
-    ecs_ensure(world, EcsAny);
-    ecs_ensure(world, EcsTag);
+    ecs_make_alive(world, ecs_id(EcsComponent));
+    ecs_make_alive(world, EcsFinal);
+    ecs_make_alive(world, ecs_id(EcsIdentifier));
+    ecs_make_alive(world, EcsName);
+    ecs_make_alive(world, EcsSymbol);
+    ecs_make_alive(world, EcsAlias);
+    ecs_make_alive(world, EcsChildOf);
+    ecs_make_alive(world, EcsFlecs);
+    ecs_make_alive(world, EcsFlecsCore);
+    ecs_make_alive(world, EcsOnAdd);
+    ecs_make_alive(world, EcsOnRemove);
+    ecs_make_alive(world, EcsOnSet);
+    ecs_make_alive(world, EcsUnSet);
+    ecs_make_alive(world, EcsOnDelete);
+    ecs_make_alive(world, EcsPanic);
+    ecs_make_alive(world, EcsFlag);
+    ecs_make_alive(world, EcsIsA);
+    ecs_make_alive(world, EcsWildcard);
+    ecs_make_alive(world, EcsAny);
+    ecs_make_alive(world, EcsTag);
 
     /* Register type information for builtin components */
     flecs_type_info_init(world, EcsComponent, { 

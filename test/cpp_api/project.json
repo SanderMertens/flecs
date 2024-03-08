@@ -1200,7 +1200,7 @@
                 "is_valid",
                 "exists",
                 "get_alive",
-                "ensure",
+                "make_alive",
                 "reset_all",
                 "get_tick",
                 "register_from_scope",

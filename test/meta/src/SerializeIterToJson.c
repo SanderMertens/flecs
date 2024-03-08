@@ -1757,10 +1757,10 @@ void SerializeIterToJson_serialize_anonymous(void) {
     ecs_entity_t e2 = 10000;
     ecs_entity_t e3 = 100000;
     ecs_entity_t e4 = 1000000;
-    ecs_ensure(world, 5000);
-    ecs_ensure(world, 10000);
-    ecs_ensure(world, 100000);
-    ecs_ensure(world, 1000000);
+    ecs_make_alive(world, 5000);
+    ecs_make_alive(world, 10000);
+    ecs_make_alive(world, 100000);
+    ecs_make_alive(world, 1000000);
     ecs_add(world, e1, Tag);
     ecs_add(world, e2, Tag);
     ecs_add(world, e3, Tag);
@@ -1793,10 +1793,10 @@ void SerializeIterToJson_serialize_anonymous_ids(void) {
     ecs_entity_t e2 = 10000;
     ecs_entity_t e3 = 100000;
     ecs_entity_t e4 = 1000000;
-    ecs_ensure(world, 5000);
-    ecs_ensure(world, 10000);
-    ecs_ensure(world, 100000);
-    ecs_ensure(world, 1000000);
+    ecs_make_alive(world, 5000);
+    ecs_make_alive(world, 10000);
+    ecs_make_alive(world, 100000);
+    ecs_make_alive(world, 1000000);
     ecs_add(world, e1, Tag);
     ecs_add(world, e2, Tag);
     ecs_add(world, e3, Tag);
@@ -1895,7 +1895,7 @@ void SerializeIterToJson_serialize_variable_anonymous(void) {
     ecs_rule_t *q = ecs_rule_new(world, "Tag($Entity)");
 
     ecs_entity_t e = 10000;
-    ecs_ensure(world, 10000);
+    ecs_make_alive(world, 10000);
     ecs_add(world, e, Tag);
 
     ecs_iter_t it = ecs_rule_iter(world, q);
@@ -1928,7 +1928,7 @@ void SerializeIterToJson_serialize_variable_anonymous_ids(void) {
     ecs_rule_t *q = ecs_rule_new(world, "Tag($Entity)");
 
     ecs_entity_t e = 10000;
-    ecs_ensure(world, 10000);
+    ecs_make_alive(world, 10000);
     ecs_add(world, e, Tag);
 
     ecs_iter_t it = ecs_rule_iter(world, q);
@@ -1959,7 +1959,7 @@ void SerializeIterToJson_serialize_anonymous_tag(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t tag = 10000;
-    ecs_ensure(world, tag);
+    ecs_make_alive(world, tag);
     ecs_query_t *q = ecs_query_new(world, "10000");
 
     ecs_entity_t e = ecs_new_entity(world, "e");
@@ -1987,7 +1987,7 @@ void SerializeIterToJson_serialize_anonymous_component(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t tag = 10000;
-    ecs_ensure(world, tag);
+    ecs_make_alive(world, tag);
     ecs_struct(world, {
         .entity = tag,
         .members = {
@@ -2026,9 +2026,9 @@ void SerializeIterToJson_serialize_anonymous_pair(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t rel = 10000;
-    ecs_ensure(world, rel);
+    ecs_make_alive(world, rel);
     ecs_entity_t tgt = 20000;
-    ecs_ensure(world, tgt);
+    ecs_make_alive(world, tgt);
     ecs_query_t *q = ecs_query_new(world, "(10000, 20000)");
 
     ecs_entity_t e = ecs_new_entity(world, "e");

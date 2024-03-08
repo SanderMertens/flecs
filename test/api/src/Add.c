@@ -403,7 +403,7 @@ void Add_add_random_id(void) {
 
     for (int i = 0; i < 10; i ++) {
         ecs_entity_t id = rand() % (100 * 1000) + 1000;
-        ecs_ensure(world, id);
+        ecs_make_alive(world, id);
         test_assert(ecs_is_alive(world, id));
         ecs_entity_t e = ecs_new_w_id(world, id);
         test_assert(ecs_has_id(world, e, id));

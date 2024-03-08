@@ -309,7 +309,7 @@ ecs_id_t flecs_rule_op_get_id_w_written(
     if (flags_2nd & (EcsRuleIsVar | EcsRuleIsEntity)) {
         return ecs_pair(first, second);
     } else {
-        return flecs_entities_get_generation(ctx->world, first);
+        return flecs_entities_get_alive(ctx->world, first);
     }
 }
 
@@ -836,7 +836,7 @@ bool flecs_rule_up_with(
             return false;
         }
 
-        it->sources[op->field_index] = flecs_entities_get_generation(
+        it->sources[op->field_index] = flecs_entities_get_alive(
             ctx->world, up->src);
         it->columns[op->field_index] = up->column + 1;
         it->ids[op->field_index] = up->id;

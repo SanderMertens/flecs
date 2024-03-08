@@ -1150,7 +1150,7 @@ void World_is_alive(void);
 void World_is_valid(void);
 void World_exists(void);
 void World_get_alive(void);
-void World_ensure(void);
+void World_make_alive(void);
 void World_reset_all(void);
 void World_get_tick(void);
 void World_register_from_scope(void);
@@ -5806,8 +5806,8 @@ bake_test_case World_testcases[] = {
         World_get_alive
     },
     {
-        "ensure",
-        World_ensure
+        "make_alive",
+        World_make_alive
     },
     {
         "reset_all",

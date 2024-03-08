@@ -1030,14 +1030,13 @@ struct world {
 /* Prevent clashing with Unreal define. Unreal applications will have to use
  *  ecs_ensure. */
 #ifndef ensure
-    /** Ensures that entity with provided generation is alive.
-     * This operation will fail if an entity exists with the same id and a
-     * different, non-zero generation.
-     *
+    /**
      * @see ecs_ensure
      */
     flecs::entity ensure(flecs::entity_t e) const;
 #endif
+
+    flecs::entity make_alive(flecs::entity_t e) const;
 
     /* Run callback after completing frame */
     void run_post_frame(ecs_fini_action_t action, void *ctx) const {

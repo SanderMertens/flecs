@@ -1172,7 +1172,7 @@ void Entity_record_find_from_stage(void) {
     ecs_fini(world);
 }
 
-void Entity_ensure_zero_gen(void) {
+void Entity_make_alive_zero_gen(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t id = 1000;
@@ -1180,7 +1180,7 @@ void Entity_ensure_zero_gen(void) {
     test_bool(ecs_is_valid(world, id), true);
     test_bool(ecs_exists(world, id), false);
 
-    ecs_ensure(world, id);
+    ecs_make_alive(world, id);
     test_bool(ecs_is_alive(world, id), true);
     test_bool(ecs_is_valid(world, id), true);
     test_bool(ecs_exists(world, id), true);
@@ -1188,7 +1188,7 @@ void Entity_ensure_zero_gen(void) {
     ecs_fini(world);
 }
 
-void Entity_ensure_nonzero_gen(void) {
+void Entity_make_alive_nonzero_gen(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t id = ECS_GENERATION_INC(1000);
@@ -1197,7 +1197,7 @@ void Entity_ensure_nonzero_gen(void) {
     test_bool(ecs_is_valid(world, id), false);
     test_bool(ecs_exists(world, id), false);
 
-    ecs_ensure(world, id);
+    ecs_make_alive(world, id);
     test_bool(ecs_is_alive(world, id), true);
     test_bool(ecs_is_valid(world, id), true);
     test_bool(ecs_exists(world, id), true);
@@ -1205,7 +1205,7 @@ void Entity_ensure_nonzero_gen(void) {
     ecs_fini(world);
 }
 
-void Entity_ensure_zero_gen_exists(void) {
+void Entity_make_alive_zero_gen_exists(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new_id(world);
@@ -1214,7 +1214,7 @@ void Entity_ensure_zero_gen_exists(void) {
     test_assert(!ecs_is_valid(world, e));
     test_assert(!ecs_is_alive(world, e));
 
-    ecs_ensure(world, e);
+    ecs_make_alive(world, e);
     test_assert(ecs_exists(world, e));
     test_assert(ecs_is_valid(world, e));
     test_assert(ecs_is_alive(world, e));
@@ -1222,7 +1222,7 @@ void Entity_ensure_zero_gen_exists(void) {
     ecs_fini(world);
 }
 
-void Entity_ensure_nonzero_gen_exists(void) {
+void Entity_make_alive_nonzero_gen_exists(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new_id(world);
@@ -1237,7 +1237,7 @@ void Entity_ensure_nonzero_gen_exists(void) {
     test_assert(!ecs_is_valid(world, e));
     test_assert(!ecs_is_alive(world, e));
 
-    ecs_ensure(world, e);
+    ecs_make_alive(world, e);
     test_assert(ecs_exists(world, e));
     test_assert(ecs_is_valid(world, e));
     test_assert(ecs_is_alive(world, e));
@@ -1245,7 +1245,7 @@ void Entity_ensure_nonzero_gen_exists(void) {
     ecs_fini(world);
 }
 
-void Entity_ensure_zero_gen_exists_alive(void) {
+void Entity_make_alive_zero_gen_exists_alive(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -1262,10 +1262,10 @@ void Entity_ensure_zero_gen_exists_alive(void) {
     test_assert(ecs_strip_generation(e1) == e);
 
     test_expect_abort();
-    ecs_ensure(world, e); // not allowed, can't ensure gen 0 if gen 1 is alive
+    ecs_make_alive(world, e); // not allowed, can't ensure gen 0 if gen 1 is alive
 }
 
-void Entity_ensure_nonzero_gen_exists_alive(void) {
+void Entity_make_alive_nonzero_gen_exists_alive(void) {
     install_test_abort();
     
     ecs_world_t *world = ecs_mini();
@@ -1285,7 +1285,7 @@ void Entity_ensure_nonzero_gen_exists_alive(void) {
     e = ECS_GENERATION_INC(e);
 
     test_expect_abort();
-    ecs_ensure(world, e); // not allowed, can't ensure gen 2 if gen 1 is alive
+    ecs_make_alive(world, e); // not allowed, can't ensure gen 2 if gen 1 is alive
 }
 
 void Entity_set_scope_w_entity_init_from_stage(void) {
@@ -1943,18 +1943,18 @@ void Entity_defer_set_name_w_overlapping_ptr(void) {
     ecs_fini(world);
 }
 
-void Entity_ensure_from_stage(void) {
+void Entity_make_alive_from_stage(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_world_t *stage = ecs_get_stage(world, 0);
     test_assert(!ecs_is_alive(world, 1000));
-    ecs_ensure(stage, 1000);
+    ecs_make_alive(stage, 1000);
     test_assert(ecs_is_alive(world, 1000));
 
     ecs_fini(world);
 }
 
-void Entity_ensure_after_deleted_1_entity(void) {
+void Entity_make_alive_after_deleted_1_entity(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e1 = ecs_new_id(world);
@@ -1963,13 +1963,13 @@ void Entity_ensure_after_deleted_1_entity(void) {
     ecs_delete(world, e1);
 
     test_assert(!ecs_is_alive(world, e1));
-    ecs_ensure(world, e1);
+    ecs_make_alive(world, e1);
     test_assert(ecs_is_alive(world, e1));
 
     ecs_fini(world);
 }
 
-void Entity_ensure_after_deleted_2_entities(void) {
+void Entity_make_alive_after_deleted_2_entities(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e1 = ecs_new_id(world);
@@ -1980,11 +1980,11 @@ void Entity_ensure_after_deleted_2_entities(void) {
     ecs_delete(world, e2);
 
     test_assert(!ecs_is_alive(world, e1));
-    ecs_ensure(world, e1);
+    ecs_make_alive(world, e1);
     test_assert(ecs_is_alive(world, e1));
 
     test_assert(!ecs_is_alive(world, e2));
-    ecs_ensure(world, e2);
+    ecs_make_alive(world, e2);
     test_assert(ecs_is_alive(world, e2));
 
     ecs_fini(world);

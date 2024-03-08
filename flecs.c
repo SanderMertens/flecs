@@ -109,12 +109,12 @@ void flecs_entity_index_remove(
     uint64_t entity);
 
 /* Set generation of entity */
-void flecs_entity_index_set_generation(
+void flecs_entity_index_make_alive(
     ecs_entity_index_t *index,
     uint64_t entity);
 
 /* Get current generation of entity */
-uint64_t flecs_entity_index_get_generation(
+uint64_t flecs_entity_index_get_alive(
     const ecs_entity_index_t *index,
     uint64_t entity);
 
@@ -183,8 +183,8 @@ void flecs_entity_index_restore(
 #define flecs_entities_get_any(world, entity) flecs_entity_index_get_any(ecs_eis(world), entity)
 #define flecs_entities_ensure(world, entity) flecs_entity_index_ensure(ecs_eis(world), entity)
 #define flecs_entities_remove(world, entity) flecs_entity_index_remove(ecs_eis(world), entity)
-#define flecs_entities_set_generation(world, entity) flecs_entity_index_set_generation(ecs_eis(world), entity)
-#define flecs_entities_get_generation(world, entity) flecs_entity_index_get_generation(ecs_eis(world), entity)
+#define flecs_entities_make_alive(world, entity) flecs_entity_index_make_alive(ecs_eis(world), entity)
+#define flecs_entities_get_alive(world, entity) flecs_entity_index_get_alive(ecs_eis(world), entity)
 #define flecs_entities_is_alive(world, entity) flecs_entity_index_is_alive(ecs_eis(world), entity)
 #define flecs_entities_is_valid(world, entity) flecs_entity_index_is_valid(ecs_eis(world), entity)
 #define flecs_entities_exists(world, entity) flecs_entity_index_exists(ecs_eis(world), entity)
@@ -2172,7 +2172,7 @@ void flecs_bootstrap(
     });
 
 #define flecs_bootstrap_tag(world, name)\
-    ecs_ensure(world, name);\
+    ecs_make_alive(world, name);\
     ecs_add_id(world, name, EcsFinal);\
     ecs_add_pair(world, name, EcsChildOf, ecs_get_scope(world));\
     ecs_set_name(world, name, (const char*)&#name[ecs_os_strlen(world->info.name_prefix)]);\
@@ -3131,7 +3131,7 @@ void flecs_bootstrap_entity(
     ecs_os_strcpy(symbol, "flecs.core.");
     ecs_os_strcat(symbol, name);
     
-    ecs_ensure(world, id);
+    ecs_make_alive(world, id);
     ecs_add_pair(world, id, EcsChildOf, parent);
     ecs_set_name(world, id, name);
     ecs_set_symbol(world, id, symbol);
@@ -3152,26 +3152,26 @@ void flecs_bootstrap(
     ecs_set_name_prefix(world, "Ecs");
 
     /* Ensure builtin ids are alive */
-    ecs_ensure(world, ecs_id(EcsComponent));
-    ecs_ensure(world, EcsFinal);
-    ecs_ensure(world, ecs_id(EcsIdentifier));
-    ecs_ensure(world, EcsName);
-    ecs_ensure(world, EcsSymbol);
-    ecs_ensure(world, EcsAlias);
-    ecs_ensure(world, EcsChildOf);
-    ecs_ensure(world, EcsFlecs);
-    ecs_ensure(world, EcsFlecsCore);
-    ecs_ensure(world, EcsOnAdd);
-    ecs_ensure(world, EcsOnRemove);
-    ecs_ensure(world, EcsOnSet);
-    ecs_ensure(world, EcsUnSet);
-    ecs_ensure(world, EcsOnDelete);
-    ecs_ensure(world, EcsPanic);
-    ecs_ensure(world, EcsFlag);
-    ecs_ensure(world, EcsIsA);
-    ecs_ensure(world, EcsWildcard);
-    ecs_ensure(world, EcsAny);
-    ecs_ensure(world, EcsTag);
+    ecs_make_alive(world, ecs_id(EcsComponent));
+    ecs_make_alive(world, EcsFinal);
+    ecs_make_alive(world, ecs_id(EcsIdentifier));
+    ecs_make_alive(world, EcsName);
+    ecs_make_alive(world, EcsSymbol);
+    ecs_make_alive(world, EcsAlias);
+    ecs_make_alive(world, EcsChildOf);
+    ecs_make_alive(world, EcsFlecs);
+    ecs_make_alive(world, EcsFlecsCore);
+    ecs_make_alive(world, EcsOnAdd);
+    ecs_make_alive(world, EcsOnRemove);
+    ecs_make_alive(world, EcsOnSet);
+    ecs_make_alive(world, EcsUnSet);
+    ecs_make_alive(world, EcsOnDelete);
+    ecs_make_alive(world, EcsPanic);
+    ecs_make_alive(world, EcsFlag);
+    ecs_make_alive(world, EcsIsA);
+    ecs_make_alive(world, EcsWildcard);
+    ecs_make_alive(world, EcsAny);
+    ecs_make_alive(world, EcsTag);
 
     /* Register type information for builtin components */
     flecs_type_info_init(world, EcsComponent, { 
@@ -5283,7 +5283,7 @@ ecs_entity_t ecs_entity_init(
         }
     } else {
         /* Make sure provided id is either alive or revivable */
-        ecs_ensure(world, result);
+        ecs_make_alive(world, result);
 
         name_assigned = ecs_has_pair(
             world, result, ecs_id(EcsIdentifier), EcsName);
@@ -5364,7 +5364,7 @@ const ecs_entity_t* ecs_bulk_init(
     } else {
         int i;
         for (i = 0; i < count; i ++) {
-            ecs_ensure(world, entities[i]);
+            ecs_make_alive(world, entities[i]);
         }
     }
 
@@ -5459,7 +5459,7 @@ ecs_entity_t ecs_component_init(
     if (!result) {
         result = ecs_new_low_id(world);
     } else {
-        ecs_ensure(world, result);
+        ecs_make_alive(world, result);
         new_component = ecs_has(world, result, EcsComponent);
     }
 
@@ -7483,7 +7483,7 @@ ecs_entity_t ecs_get_alive(
         return 0;
     }
 
-    ecs_entity_t current = flecs_entities_get_generation(world, entity);
+    ecs_entity_t current = flecs_entities_get_alive(world, entity);
     if (!current || !flecs_entities_is_alive(world, current)) {
         return 0;
     }
@@ -7493,7 +7493,7 @@ error:
     return 0;
 }
 
-void ecs_ensure(
+void ecs_make_alive(
     ecs_world_t *world,
     ecs_entity_t entity)
 {
@@ -7526,7 +7526,7 @@ void ecs_ensure(
      * While this could've been addressed in the sparse set, this is a rare
      * scenario that can only be triggered by ecs_ensure. Implementing it here
      * allows the sparse set to not do this check, which is more efficient. */
-    flecs_entities_set_generation(world, entity);
+    flecs_entities_make_alive(world, entity);
 
     /* Ensure id exists. The underlying data structure will verify that the
      * generation count matches the provided one. */
@@ -7535,7 +7535,7 @@ error:
     return;
 }
 
-void ecs_ensure_id(
+void ecs_make_alive_id(
     ecs_world_t *world,
     ecs_id_t id)
 {
@@ -7547,12 +7547,12 @@ void ecs_ensure_id(
         ecs_check(r != 0, ECS_INVALID_PARAMETER, NULL);
         ecs_check(o != 0, ECS_INVALID_PARAMETER, NULL);
 
-        if (flecs_entities_get_generation(world, r) == 0) {
+        if (flecs_entities_get_alive(world, r) == 0) {
             ecs_assert(!ecs_exists(world, r), ECS_INVALID_PARAMETER, 
                 "first element of pair is not alive");
             flecs_entities_ensure(world, r);
         }
-        if (flecs_entities_get_generation(world, o) == 0) {
+        if (flecs_entities_get_alive(world, o) == 0) {
             ecs_assert(!ecs_exists(world, o), ECS_INVALID_PARAMETER,
                 "second element of pair is not alive");
             flecs_entities_ensure(world, o);
@@ -8519,7 +8519,7 @@ bool flecs_defer_end(
                     continue;
                 case EcsCmdPath: {
                     bool keep_alive = true;
-                    ecs_ensure(world, e);
+                    ecs_make_alive(world, e);
                     if (cmd->id) {
                         if (ecs_is_alive(world, cmd->id)) {
                             ecs_add_pair(world, e, EcsChildOf, cmd->id);
@@ -15493,7 +15493,7 @@ void flecs_emit_forward_up(
 {
     ecs_id_t id = idr->id;
     ecs_entity_t tgt = ECS_PAIR_SECOND(id);
-    tgt = flecs_entities_get_generation(world, tgt);
+    tgt = flecs_entities_get_alive(world, tgt);
     ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_record_t *tgt_record = flecs_entities_try(world, tgt);
     ecs_table_t *tgt_table;
@@ -23888,7 +23888,7 @@ void ecs_set_entity_generation(
     ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, NULL);
     ecs_assert(!(ecs_is_deferred(world)), ECS_INVALID_OPERATION, NULL);
 
-    flecs_entities_set_generation(world, entity_with_generation);
+    flecs_entities_make_alive(world, entity_with_generation);
 
     ecs_record_t *r = flecs_entities_get(world, entity_with_generation);
     if (r && r->table) {
@@ -25970,7 +25970,7 @@ void ecs_cpp_component_validate(
     } else {
         /* Ensure that the entity id valid */
         if (!ecs_is_alive(world, id)) {
-            ecs_ensure(world, id);
+            ecs_make_alive(world, id);
         }
 
         /* Register name with entity, so that when the entity is created the
@@ -30661,7 +30661,7 @@ ecs_entity_t ecs_module_init(
         ecs_os_free(module_path);
     } else if (!ecs_exists(world, e)) {
         char *module_path = ecs_module_path_from_c(c_name);
-        ecs_ensure(world, e);
+        ecs_make_alive(world, e);
         ecs_add_fullpath(world, e, module_path);
         ecs_set_symbol(world, e, module_path);
         ecs_os_free(module_path);
@@ -35939,7 +35939,7 @@ void restore_filtered(
                     ECS_RECORD_TO_ROW(r->row), true);
             } else {
                 /* Make sure that the entity has the same generation count */
-                flecs_entities_set_generation(world, e);
+                flecs_entities_make_alive(world, e);
             }
         }
 
@@ -42337,7 +42337,7 @@ void flecs_entity_index_remove(
         ECS_INTERNAL_ERROR, NULL);
 }
 
-void flecs_entity_index_set_generation(
+void flecs_entity_index_make_alive(
     ecs_entity_index_t *index,
     uint64_t entity)
 {
@@ -42347,7 +42347,7 @@ void flecs_entity_index_set_generation(
     }
 }
 
-uint64_t flecs_entity_index_get_generation(
+uint64_t flecs_entity_index_get_alive(
     const ecs_entity_index_t *index,
     uint64_t entity)
 {
@@ -42504,7 +42504,7 @@ void flecs_entity_index_copy_intern(
         uint64_t id = ids[i];
         ecs_record_t *src_ptr = flecs_entity_index_get(src, id);
         ecs_record_t *dst_ptr = flecs_entity_index_ensure(dst, id);
-        flecs_entity_index_set_generation(dst, id);
+        flecs_entity_index_make_alive(dst, id);
         ecs_os_memcpy_t(dst_ptr, src_ptr, ecs_record_t);
     }
 
@@ -42694,7 +42694,7 @@ ecs_id_record_t* flecs_id_record_new(
     if (is_pair) {
         // rel = ecs_pair_first(world, id);
         rel = ECS_PAIR_FIRST(id);
-        rel = flecs_entities_get_generation(world, rel);
+        rel = flecs_entities_get_alive(world, rel);
         ecs_assert(rel != 0, ECS_INTERNAL_ERROR, NULL);
 
         /* Relationship object can be 0, as tables without a ChildOf 
@@ -42704,7 +42704,7 @@ ecs_id_record_t* flecs_id_record_new(
 #ifdef FLECS_DEBUG
         /* Check constraints */
         if (tgt) {
-            tgt = flecs_entities_get_generation(world, tgt);
+            tgt = flecs_entities_get_alive(world, tgt);
             ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);
         }
         if (tgt && !ecs_id_is_wildcard(tgt)) {
@@ -46851,7 +46851,7 @@ ecs_table_t* flecs_find_table_with(
     ecs_table_t *node,
     ecs_id_t with)
 {    
-    ecs_ensure_id(world, with);
+    ecs_make_alive_id(world, with);
 
     ecs_id_record_t *idr = NULL;
     ecs_entity_t r = 0, o = 0;
@@ -50608,7 +50608,7 @@ ecs_entity_t flecs_json_ensure_entity(
                  * Also don't use existing id if the existing entity is not
                  * anonymous. */
                 deser_id[0] = ser_id;
-                ecs_ensure(world, ser_id);
+                ecs_make_alive(world, ser_id);
             } else {
                 /* If id exists and is not alive, create a new id */
                 deser_id[0] = flecs_json_new_id(world, ser_id);
@@ -54702,7 +54702,7 @@ bool flecs_json_serialize_table_row_pairs(
             continue;
         }
 
-        ecs_entity_t first = flecs_entities_get_generation(
+        ecs_entity_t first = flecs_entities_get_alive(
             world, ECS_PAIR_FIRST(id));
         if (!desc || !desc->serialize_private) {
             if (ecs_has_id(world, first, EcsPrivate)) {
@@ -54715,7 +54715,7 @@ bool flecs_json_serialize_table_row_pairs(
             flecs_json_object_push(buf);            
         }
 
-        ecs_entity_t second = flecs_entities_get_generation(
+        ecs_entity_t second = flecs_entities_get_alive(
             world, ECS_PAIR_SECOND(id));
 
         bool is_last = f == (type_count - 1);
@@ -65315,7 +65315,7 @@ ecs_id_t flecs_rule_op_get_id_w_written(
     if (flags_2nd & (EcsRuleIsVar | EcsRuleIsEntity)) {
         return ecs_pair(first, second);
     } else {
-        return flecs_entities_get_generation(ctx->world, first);
+        return flecs_entities_get_alive(ctx->world, first);
     }
 }
 
@@ -65842,7 +65842,7 @@ bool flecs_rule_up_with(
             return false;
         }
 
-        it->sources[op->field_index] = flecs_entities_get_generation(
+        it->sources[op->field_index] = flecs_entities_get_alive(
             ctx->world, up->src);
         it->columns[op->field_index] = up->column + 1;
         it->ids[op->field_index] = up->id;

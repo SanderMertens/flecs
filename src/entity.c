@@ -1757,7 +1757,7 @@ ecs_entity_t ecs_entity_init(
         }
     } else {
         /* Make sure provided id is either alive or revivable */
-        ecs_ensure(world, result);
+        ecs_make_alive(world, result);
 
         name_assigned = ecs_has_pair(
             world, result, ecs_id(EcsIdentifier), EcsName);
@@ -1838,7 +1838,7 @@ const ecs_entity_t* ecs_bulk_init(
     } else {
         int i;
         for (i = 0; i < count; i ++) {
-            ecs_ensure(world, entities[i]);
+            ecs_make_alive(world, entities[i]);
         }
     }
 
@@ -1933,7 +1933,7 @@ ecs_entity_t ecs_component_init(
     if (!result) {
         result = ecs_new_low_id(world);
     } else {
-        ecs_ensure(world, result);
+        ecs_make_alive(world, result);
         new_component = ecs_has(world, result, EcsComponent);
     }
 
@@ -3957,7 +3957,7 @@ ecs_entity_t ecs_get_alive(
         return 0;
     }
 
-    ecs_entity_t current = flecs_entities_get_generation(world, entity);
+    ecs_entity_t current = flecs_entities_get_alive(world, entity);
     if (!current || !flecs_entities_is_alive(world, current)) {
         return 0;
     }
@@ -3967,7 +3967,7 @@ error:
     return 0;
 }
 
-void ecs_ensure(
+void ecs_make_alive(
     ecs_world_t *world,
     ecs_entity_t entity)
 {
@@ -4000,7 +4000,7 @@ void ecs_ensure(
      * While this could've been addressed in the sparse set, this is a rare
      * scenario that can only be triggered by ecs_ensure. Implementing it here
      * allows the sparse set to not do this check, which is more efficient. */
-    flecs_entities_set_generation(world, entity);
+    flecs_entities_make_alive(world, entity);
 
     /* Ensure id exists. The underlying data structure will verify that the
      * generation count matches the provided one. */
@@ -4009,7 +4009,7 @@ error:
     return;
 }
 
-void ecs_ensure_id(
+void ecs_make_alive_id(
     ecs_world_t *world,
     ecs_id_t id)
 {
@@ -4021,12 +4021,12 @@ void ecs_ensure_id(
         ecs_check(r != 0, ECS_INVALID_PARAMETER, NULL);
         ecs_check(o != 0, ECS_INVALID_PARAMETER, NULL);
 
-        if (flecs_entities_get_generation(world, r) == 0) {
+        if (flecs_entities_get_alive(world, r) == 0) {
             ecs_assert(!ecs_exists(world, r), ECS_INVALID_PARAMETER, 
                 "first element of pair is not alive");
             flecs_entities_ensure(world, r);
         }
-        if (flecs_entities_get_generation(world, o) == 0) {
+        if (flecs_entities_get_alive(world, o) == 0) {
             ecs_assert(!ecs_exists(world, o), ECS_INVALID_PARAMETER,
                 "second element of pair is not alive");
             flecs_entities_ensure(world, o);
@@ -4993,7 +4993,7 @@ bool flecs_defer_end(
                     continue;
                 case EcsCmdPath: {
                     bool keep_alive = true;
-                    ecs_ensure(world, e);
+                    ecs_make_alive(world, e);
                     if (cmd->id) {
                         if (ecs_is_alive(world, cmd->id)) {
                             ecs_add_pair(world, e, EcsChildOf, cmd->id);
