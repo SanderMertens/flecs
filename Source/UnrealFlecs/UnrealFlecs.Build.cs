@@ -30,7 +30,8 @@ public class UnrealFlecs : ModuleRules
 			{
 				"Core",
 				"FlecsLibrary",
-				"SolidMacros"
+				"SolidMacros",
+				"GameplayTags"
 			}
 			);
 			

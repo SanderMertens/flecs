@@ -33,5 +33,4 @@ struct FFlecsScriptStructComponent
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs")
     TObjectPtr<UScriptStruct> ScriptStruct;
 }; // struct FFlecsScriptStructComponent
-
 DEFINE_STD_HASH(FFlecsScriptStructComponent)

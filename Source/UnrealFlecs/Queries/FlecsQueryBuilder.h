@@ -4,15 +4,15 @@
 
 #include "CoreMinimal.h"
 #include "flecs.h"
-#include "FlecsWorkerIterator.generated.h"
+#include "FlecsQueryBuilder.generated.h"
 
-USTRUCT()
-struct FFlecsWorkerIterator
+USTRUCT(BlueprintType)
+struct FFlecsQueryBuilder
 {
     GENERATED_BODY()
 
 public:
 
 private:
-    flecs::worker_iterable<> WorkerIterator;
-};
+    flecs::
+}; // struct FFlecsQueryBuilder

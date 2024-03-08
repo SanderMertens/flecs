@@ -6,7 +6,6 @@
 #include "flecs.h"
 #include "Entities/FlecsEntityHandle.h"
 #include "SolidMacros/Macros.h"
-#include "Worlds/FlecsWorld.h"
 #include "FlecsFilter.generated.h"
 
 USTRUCT(BlueprintType)
@@ -19,6 +18,23 @@ public:
     
     FORCEINLINE FFlecsFilter(const flecs::filter<>& InFilter) : Filter(InFilter) {}
     FORCEINLINE FFlecsFilter(const flecs::filter<>* InFilter) : Filter(*InFilter) {}
+    
+    FORCEINLINE FFlecsFilter(flecs::filter_builder<>& InFilterBuilder)
+    {
+        Filter = InFilterBuilder.build();
+    }
+
+    template <typename... Components>
+    FORCEINLINE static FFlecsFilter New()
+    {
+        return flecs::filter<Components...>();
+    }
+
+    template <typename... Components>
+    FORCEINLINE static FFlecsFilter New(FFlecsWorld& InWorld)
+    {
+        return flecs::filter<Components...>(InWorld);
+    }
 
     FORCEINLINE NO_DISCARD flecs::filter<>& GetFlecsFilter() { return Filter; }
     FORCEINLINE NO_DISCARD const flecs::filter<>& GetFlecsFilter() const { return Filter; }
