@@ -400,7 +400,7 @@ const char* ecs_entity_from_json(
         }
 
         /* Get mutable pointer */
-        void *comp_ptr = ecs_get_mut_id(world, e, id);
+        void *comp_ptr = ecs_ensure_id(world, e, id);
         if (!comp_ptr) {
             char *idstr = ecs_id_str(world, id);
             ecs_parser_error(name, expr, json - expr, 

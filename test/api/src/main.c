@@ -627,7 +627,7 @@ void Get_component_get_1_from_2_add_in_progress(void);
 void Get_component_get_both_from_2_add_in_progress(void);
 void Get_component_get_both_from_2_add_remove_in_progress(void);
 void Get_component_get_childof_component(void);
-void Get_component_get_mut_equal_get(void);
+void Get_component_ensure_equal_get(void);
 void Get_component_get_tag(void);
 void Get_component_get_pair_tag(void);
 void Get_component_get_wildcard(void);
@@ -815,19 +815,19 @@ void Set_set_remove_other(void);
 void Set_set_remove_twice(void);
 void Set_set_and_new(void);
 void Set_set_null(void);
-void Set_get_mut_new(void);
-void Set_get_mut_existing(void);
-void Set_get_mut_tag_new(void);
-void Set_get_mut_tag_existing(void);
-void Set_get_mut_tag_new_w_comp(void);
-void Set_get_mut_tag_existing_w_comp(void);
-void Set_get_mut_tag_new_w_pair(void);
-void Set_get_mut_tag_existing_w_pair(void);
+void Set_ensure_new(void);
+void Set_ensure_existing(void);
+void Set_ensure_tag_new(void);
+void Set_ensure_tag_existing(void);
+void Set_ensure_tag_new_w_comp(void);
+void Set_ensure_tag_existing_w_comp(void);
+void Set_ensure_tag_new_w_pair(void);
+void Set_ensure_tag_existing_w_pair(void);
 void Set_modified_w_on_set(void);
 void Set_modified_no_component(void);
-void Set_get_mut_w_add_in_on_add(void);
-void Set_get_mut_w_remove_in_on_add(void);
-void Set_get_mut_w_realloc_in_on_add(void);
+void Set_ensure_w_add_in_on_add(void);
+void Set_ensure_w_remove_in_on_add(void);
+void Set_ensure_w_realloc_in_on_add(void);
 void Set_emplace(void);
 void Set_emplace_2(void);
 void Set_emplace_existing(void);
@@ -900,7 +900,7 @@ void Lookup_lookup_symbol_path(void);
 void Singleton_add_singleton(void);
 void Singleton_remove_singleton(void);
 void Singleton_set_get_singleton(void);
-void Singleton_get_mut_singleton(void);
+void Singleton_ensure_singleton(void);
 void Singleton_singleton_system(void);
 
 // Testsuite 'Clone'
@@ -1010,7 +1010,7 @@ void ComponentLifecycle_on_set_hook_check_offset(void);
 void ComponentLifecycle_on_set_hook_on_override(void);
 void ComponentLifecycle_on_set_hook_on_auto_override(void);
 void ComponentLifecycle_batched_set_new_component_w_lifecycle(void);
-void ComponentLifecycle_batched_get_mut_new_component_w_lifecycle(void);
+void ComponentLifecycle_batched_ensure_new_component_w_lifecycle(void);
 
 // Testsuite 'Sorting'
 void Sorting_sort_by_component(void);
@@ -2396,7 +2396,7 @@ void World_use_after_delete_empty_w_component(void);
 void World_use_after_clear_empty_w_component(void);
 void World_use_after_clear_empty_w_component_w_lifecycle(void);
 void World_use_after_clear_unused(void);
-void World_get_mut_in_at_fini(void);
+void World_ensure_in_at_fini(void);
 void World_get_type_info(void);
 void World_get_type_info_after_delete_with(void);
 void World_get_type_info_after_reuse(void);
@@ -2456,15 +2456,15 @@ void Commands_defer_twice(void);
 void Commands_defer_twice_in_progress(void);
 void Commands_run_w_defer(void);
 void Commands_system_in_progress_w_defer(void);
-void Commands_defer_get_mut_no_modify(void);
-void Commands_defer_get_mut_w_modify(void);
+void Commands_defer_ensure_no_modify(void);
+void Commands_defer_ensure_w_modify(void);
 void Commands_defer_modify(void);
 void Commands_defer_set_pair(void);
 void Commands_defer_clear(void);
 void Commands_defer_add_after_delete(void);
 void Commands_defer_set_after_delete(void);
-void Commands_defer_get_mut_after_delete(void);
-void Commands_defer_get_mut_after_delete_2nd_to_last(void);
+void Commands_defer_ensure_after_delete(void);
+void Commands_defer_ensure_after_delete_2nd_to_last(void);
 void Commands_defer_add_child_to_deleted_parent(void);
 void Commands_recreate_deleted_entity_while_deferred(void);
 void Commands_defer_add_to_recycled_id(void);
@@ -2489,7 +2489,7 @@ void Commands_discard_remove_two(void);
 void Commands_discard_child(void);
 void Commands_discard_child_w_add(void);
 void Commands_defer_return_value(void);
-void Commands_defer_get_mut_pair(void);
+void Commands_defer_ensure_pair(void);
 void Commands_async_stage_add(void);
 void Commands_async_stage_add_twice(void);
 void Commands_async_stage_remove(void);
@@ -2539,24 +2539,24 @@ void Commands_clear_after_add_to_nonempty(void);
 void Commands_remove_after_add_to_nonempty(void);
 void Commands_register_while_deferred_with_n_stages(void);
 void Commands_defer_2_sets_w_multi_observer(void);
-void Commands_defer_2_get_muts_w_multi_observer(void);
-void Commands_defer_2_get_muts_no_modified_w_multi_observer(void);
+void Commands_defer_2_ensures_w_multi_observer(void);
+void Commands_defer_2_ensures_no_modified_w_multi_observer(void);
 void Commands_exists_remove_set(void);
 void Commands_absent_remove_set(void);
 void Commands_exists_set_remove(void);
 void Commands_absent_set_remove(void);
-void Commands_exists_remove_get_mut(void);
-void Commands_absent_remove_get_mut(void);
-void Commands_exists_get_mut_remove(void);
-void Commands_absent_get_mut_remove(void);
-void Commands_exists_set_w_get_mut(void);
+void Commands_exists_remove_ensure(void);
+void Commands_absent_remove_ensure(void);
+void Commands_exists_ensure_remove(void);
+void Commands_absent_ensure_remove(void);
+void Commands_exists_set_w_ensure(void);
 void Commands_absent_set_invoke_on_set(void);
 void Commands_exists_set_invoke_on_set(void);
-void Commands_defer_get_mut_no_on_set(void);
-void Commands_defer_existing_get_mut_no_on_set(void);
-void Commands_get_mut_override(void);
+void Commands_defer_ensure_no_on_set(void);
+void Commands_defer_existing_ensure_no_on_set(void);
+void Commands_ensure_override(void);
 void Commands_set_override(void);
-void Commands_absent_get_mut_for_entity_w_tag(void);
+void Commands_absent_ensure_for_entity_w_tag(void);
 void Commands_on_set_hook_before_on_add_for_existing_component(void);
 void Commands_defer_2_sets_w_observer_same_component(void);
 void Commands_defer_2_sets_w_observer_other_component(void);
@@ -2634,9 +2634,9 @@ void SingleThreadStaging_override_after_remove_in_progress(void);
 void SingleThreadStaging_get_parent_in_progress(void);
 void SingleThreadStaging_merge_once(void);
 void SingleThreadStaging_clear_stage_after_merge(void);
-void SingleThreadStaging_get_mutable(void);
-void SingleThreadStaging_get_mutable_from_main(void);
-void SingleThreadStaging_get_mutable_w_add(void);
+void SingleThreadStaging_ensureable(void);
+void SingleThreadStaging_ensureable_from_main(void);
+void SingleThreadStaging_ensureable_w_add(void);
 void SingleThreadStaging_on_add_after_new_type_in_progress(void);
 void SingleThreadStaging_lock_table(void);
 void SingleThreadStaging_recursive_lock_table(void);
@@ -5128,8 +5128,8 @@ bake_test_case Get_component_testcases[] = {
         Get_component_get_childof_component
     },
     {
-        "get_mut_equal_get",
-        Get_component_get_mut_equal_get
+        "ensure_equal_get",
+        Get_component_ensure_equal_get
     },
     {
         "get_tag",
@@ -5852,36 +5852,36 @@ bake_test_case Set_testcases[] = {
         Set_set_null
     },
     {
-        "get_mut_new",
-        Set_get_mut_new
+        "ensure_new",
+        Set_ensure_new
     },
     {
-        "get_mut_existing",
-        Set_get_mut_existing
+        "ensure_existing",
+        Set_ensure_existing
     },
     {
-        "get_mut_tag_new",
-        Set_get_mut_tag_new
+        "ensure_tag_new",
+        Set_ensure_tag_new
     },
     {
-        "get_mut_tag_existing",
-        Set_get_mut_tag_existing
+        "ensure_tag_existing",
+        Set_ensure_tag_existing
     },
     {
-        "get_mut_tag_new_w_comp",
-        Set_get_mut_tag_new_w_comp
+        "ensure_tag_new_w_comp",
+        Set_ensure_tag_new_w_comp
     },
     {
-        "get_mut_tag_existing_w_comp",
-        Set_get_mut_tag_existing_w_comp
+        "ensure_tag_existing_w_comp",
+        Set_ensure_tag_existing_w_comp
     },
     {
-        "get_mut_tag_new_w_pair",
-        Set_get_mut_tag_new_w_pair
+        "ensure_tag_new_w_pair",
+        Set_ensure_tag_new_w_pair
     },
     {
-        "get_mut_tag_existing_w_pair",
-        Set_get_mut_tag_existing_w_pair
+        "ensure_tag_existing_w_pair",
+        Set_ensure_tag_existing_w_pair
     },
     {
         "modified_w_on_set",
@@ -5892,16 +5892,16 @@ bake_test_case Set_testcases[] = {
         Set_modified_no_component
     },
     {
-        "get_mut_w_add_in_on_add",
-        Set_get_mut_w_add_in_on_add
+        "ensure_w_add_in_on_add",
+        Set_ensure_w_add_in_on_add
     },
     {
-        "get_mut_w_remove_in_on_add",
-        Set_get_mut_w_remove_in_on_add
+        "ensure_w_remove_in_on_add",
+        Set_ensure_w_remove_in_on_add
     },
     {
-        "get_mut_w_realloc_in_on_add",
-        Set_get_mut_w_realloc_in_on_add
+        "ensure_w_realloc_in_on_add",
+        Set_ensure_w_realloc_in_on_add
     },
     {
         "emplace",
@@ -6173,8 +6173,8 @@ bake_test_case Singleton_testcases[] = {
         Singleton_set_get_singleton
     },
     {
-        "get_mut_singleton",
-        Singleton_get_mut_singleton
+        "ensure_singleton",
+        Singleton_ensure_singleton
     },
     {
         "singleton_system",
@@ -6599,8 +6599,8 @@ bake_test_case ComponentLifecycle_testcases[] = {
         ComponentLifecycle_batched_set_new_component_w_lifecycle
     },
     {
-        "batched_get_mut_new_component_w_lifecycle",
-        ComponentLifecycle_batched_get_mut_new_component_w_lifecycle
+        "batched_ensure_new_component_w_lifecycle",
+        ComponentLifecycle_batched_ensure_new_component_w_lifecycle
     }
 };
 
@@ -12051,8 +12051,8 @@ bake_test_case World_testcases[] = {
         World_use_after_clear_unused
     },
     {
-        "get_mut_in_at_fini",
-        World_get_mut_in_at_fini
+        "ensure_in_at_fini",
+        World_ensure_in_at_fini
     },
     {
         "get_type_info",
@@ -12272,12 +12272,12 @@ bake_test_case Commands_testcases[] = {
         Commands_system_in_progress_w_defer
     },
     {
-        "defer_get_mut_no_modify",
-        Commands_defer_get_mut_no_modify
+        "defer_ensure_no_modify",
+        Commands_defer_ensure_no_modify
     },
     {
-        "defer_get_mut_w_modify",
-        Commands_defer_get_mut_w_modify
+        "defer_ensure_w_modify",
+        Commands_defer_ensure_w_modify
     },
     {
         "defer_modify",
@@ -12300,12 +12300,12 @@ bake_test_case Commands_testcases[] = {
         Commands_defer_set_after_delete
     },
     {
-        "defer_get_mut_after_delete",
-        Commands_defer_get_mut_after_delete
+        "defer_ensure_after_delete",
+        Commands_defer_ensure_after_delete
     },
     {
-        "defer_get_mut_after_delete_2nd_to_last",
-        Commands_defer_get_mut_after_delete_2nd_to_last
+        "defer_ensure_after_delete_2nd_to_last",
+        Commands_defer_ensure_after_delete_2nd_to_last
     },
     {
         "defer_add_child_to_deleted_parent",
@@ -12404,8 +12404,8 @@ bake_test_case Commands_testcases[] = {
         Commands_defer_return_value
     },
     {
-        "defer_get_mut_pair",
-        Commands_defer_get_mut_pair
+        "defer_ensure_pair",
+        Commands_defer_ensure_pair
     },
     {
         "async_stage_add",
@@ -12604,12 +12604,12 @@ bake_test_case Commands_testcases[] = {
         Commands_defer_2_sets_w_multi_observer
     },
     {
-        "defer_2_get_muts_w_multi_observer",
-        Commands_defer_2_get_muts_w_multi_observer
+        "defer_2_ensures_w_multi_observer",
+        Commands_defer_2_ensures_w_multi_observer
     },
     {
-        "defer_2_get_muts_no_modified_w_multi_observer",
-        Commands_defer_2_get_muts_no_modified_w_multi_observer
+        "defer_2_ensures_no_modified_w_multi_observer",
+        Commands_defer_2_ensures_no_modified_w_multi_observer
     },
     {
         "exists_remove_set",
@@ -12628,24 +12628,24 @@ bake_test_case Commands_testcases[] = {
         Commands_absent_set_remove
     },
     {
-        "exists_remove_get_mut",
-        Commands_exists_remove_get_mut
+        "exists_remove_ensure",
+        Commands_exists_remove_ensure
     },
     {
-        "absent_remove_get_mut",
-        Commands_absent_remove_get_mut
+        "absent_remove_ensure",
+        Commands_absent_remove_ensure
     },
     {
-        "exists_get_mut_remove",
-        Commands_exists_get_mut_remove
+        "exists_ensure_remove",
+        Commands_exists_ensure_remove
     },
     {
-        "absent_get_mut_remove",
-        Commands_absent_get_mut_remove
+        "absent_ensure_remove",
+        Commands_absent_ensure_remove
     },
     {
-        "exists_set_w_get_mut",
-        Commands_exists_set_w_get_mut
+        "exists_set_w_ensure",
+        Commands_exists_set_w_ensure
     },
     {
         "absent_set_invoke_on_set",
@@ -12656,24 +12656,24 @@ bake_test_case Commands_testcases[] = {
         Commands_exists_set_invoke_on_set
     },
     {
-        "defer_get_mut_no_on_set",
-        Commands_defer_get_mut_no_on_set
+        "defer_ensure_no_on_set",
+        Commands_defer_ensure_no_on_set
     },
     {
-        "defer_existing_get_mut_no_on_set",
-        Commands_defer_existing_get_mut_no_on_set
+        "defer_existing_ensure_no_on_set",
+        Commands_defer_existing_ensure_no_on_set
     },
     {
-        "get_mut_override",
-        Commands_get_mut_override
+        "ensure_override",
+        Commands_ensure_override
     },
     {
         "set_override",
         Commands_set_override
     },
     {
-        "absent_get_mut_for_entity_w_tag",
-        Commands_absent_get_mut_for_entity_w_tag
+        "absent_ensure_for_entity_w_tag",
+        Commands_absent_ensure_for_entity_w_tag
     },
     {
         "on_set_hook_before_on_add_for_existing_component",
@@ -12975,16 +12975,16 @@ bake_test_case SingleThreadStaging_testcases[] = {
         SingleThreadStaging_clear_stage_after_merge
     },
     {
-        "get_mutable",
-        SingleThreadStaging_get_mutable
+        "ensureable",
+        SingleThreadStaging_ensureable
     },
     {
-        "get_mutable_from_main",
-        SingleThreadStaging_get_mutable_from_main
+        "ensureable_from_main",
+        SingleThreadStaging_ensureable_from_main
     },
     {
-        "get_mutable_w_add",
-        SingleThreadStaging_get_mutable_w_add
+        "ensureable_w_add",
+        SingleThreadStaging_ensureable_w_add
     },
     {
         "on_add_after_new_type_in_progress",

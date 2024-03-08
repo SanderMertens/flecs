@@ -710,11 +710,11 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
         return true;
     }
 
-    static bool get_mut_ptrs(world_t *world, ecs_entity_t e, ArrayType& ptrs) {
-        /* Get pointers w/get_mut */
+    static bool ensure_ptrs(world_t *world, ecs_entity_t e, ArrayType& ptrs) {
+        /* Get pointers w/ensure */
         size_t i = 0;
         DummyArray dummy ({
-            (ptrs[i ++] = ecs_get_mut_id(world, e, 
+            (ptrs[i ++] = ecs_ensure_id(world, e, 
                 _::cpp_type<Args>().id(world)), 0)...
         });
 
@@ -790,7 +790,7 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
     }
 
     template <typename Func>
-    static bool invoke_get_mut(world_t *world, entity_t id, const Func& func) {
+    static bool invoke_ensure(world_t *world, entity_t id, const Func& func) {
         flecs::world w(world);
 
         ArrayType ptrs;
@@ -840,9 +840,9 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
 
             ECS_TABLE_LOCK(world, table);
 
-        // When deferred, obtain pointers with regular get_mut
+        // When deferred, obtain pointers with regular ensure
         } else {
-            get_mut_ptrs(world, id, ptrs);
+            ensure_ptrs(world, id, ptrs);
         }
 
         invoke_callback(func, 0, ptrs);

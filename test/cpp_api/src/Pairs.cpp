@@ -250,12 +250,12 @@ void Pairs_override_tag_pair(void) {
     test_assert(t == t_2); 
 }
 
-void Pairs_get_mut_pair(void) {
+void Pairs_ensure_pair(void) {
     flecs::world ecs;
 
     auto e = ecs.entity();
 
-    Pair *t = e.get_mut<Pair, Position>();
+    Pair *t = e.ensure<Pair, Position>();
     test_assert(t != NULL);
     t->value = 10;
 
@@ -264,13 +264,13 @@ void Pairs_get_mut_pair(void) {
     test_int(t->value, 10);
 }
 
-void Pairs_get_mut_pair_existing(void) {
+void Pairs_ensure_pair_existing(void) {
     flecs::world ecs;
 
     auto e = ecs.entity()
         .set<Pair, Position>({20});
 
-    Pair *t = e.get_mut<Pair, Position>();
+    Pair *t = e.ensure<Pair, Position>();
     test_assert(t != NULL);
     test_int(t->value, 20);
     t->value = 10;
@@ -280,14 +280,14 @@ void Pairs_get_mut_pair_existing(void) {
     test_int(t->value, 10);
 }
 
-void Pairs_get_mut_pair_tag(void) {
+void Pairs_ensure_pair_tag(void) {
     flecs::world ecs;
 
     auto Pair = ecs.entity();
 
     auto e = ecs.entity();
 
-    Position *p = e.get_mut_second<Position>(Pair);
+    Position *p = e.ensure_second<Position>(Pair);
     test_assert(p != NULL);
     p->x = 10;
     p->y = 20;
@@ -298,7 +298,7 @@ void Pairs_get_mut_pair_tag(void) {
     test_int(p->y, 20);
 }
 
-void Pairs_get_mut_pair_tag_existing(void) {
+void Pairs_ensure_pair_tag_existing(void) {
     flecs::world ecs;
 
     auto Pair = ecs.entity();
@@ -306,7 +306,7 @@ void Pairs_get_mut_pair_tag_existing(void) {
     auto e = ecs.entity()
         .set_second<Position>(Pair, {10, 20});
 
-    Position *p = e.get_mut_second<Position>(Pair);
+    Position *p = e.ensure_second<Position>(Pair);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -317,13 +317,13 @@ void Pairs_get_mut_pair_tag_existing(void) {
     test_int(p->y, 20);
 }
 
-void Pairs_get_mut_R_tag_O(void) {
+void Pairs_ensure_R_tag_O(void) {
     flecs::world ecs;
 
     auto e = ecs.entity()
         .set<Tag, Position>({10, 20});
 
-    Position *t = e.get_mut<Tag, Position>();
+    Position *t = e.ensure<Tag, Position>();
     test_assert(t != NULL);
     test_int(t->x, 10);
     test_int(t->y, 20);

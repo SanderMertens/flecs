@@ -19,7 +19,7 @@ Self& set_json(
         return to_base();
     }
 
-    void *ptr = ecs_get_mut_id(m_world, m_id, e);
+    void *ptr = ecs_ensure_id(m_world, m_id, e);
     ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_ptr_from_json(m_world, type, ptr, json, desc);
     ecs_modified_id(m_world, m_id, e);

@@ -16,7 +16,7 @@ int main(int, char *[]) {
 
     // Create entity, set value of position using reflection API
     flecs::entity e = ecs.entity();
-    Position *ptr = e.get_mut<Position>();
+    Position *ptr = e.ensure<Position>();
 
     flecs::cursor cur = ecs.cursor<Position>(ptr);
     cur.push();          // {

@@ -465,7 +465,7 @@ void Entity_get_generic(void) {
     test_int(p->y, 20);
 }
 
-void Entity_get_mut_generic(void) {
+void Entity_ensure_generic(void) {
     flecs::world world;
 
     auto position = world.component<Position>();
@@ -483,7 +483,7 @@ void Entity_get_mut_generic(void) {
             invoked = true;
         });
 
-    void *void_p = entity.get_mut(position);
+    void *void_p = entity.ensure(position);
     test_assert(void_p != nullptr);
 
     Position *p = static_cast<Position*>(void_p);
@@ -534,7 +534,7 @@ void Entity_get_generic_w_id_t(void) {
     test_int(p->y, 20);
 }
 
-void Entity_get_mut_generic_w_id(void) {
+void Entity_ensure_generic_w_id(void) {
     flecs::world world;
 
     auto position = world.component<Position>();
@@ -553,7 +553,7 @@ void Entity_get_mut_generic_w_id(void) {
             invoked = true;
         });
 
-    void *void_p = entity.get_mut(id);
+    void *void_p = entity.ensure(id);
     test_assert(void_p != nullptr);
 
     Position *p = static_cast<Position*>(void_p);
@@ -564,7 +564,7 @@ void Entity_get_mut_generic_w_id(void) {
     test_bool(invoked, true);
 }
 
-void Entity_get_mut_generic_w_id_t(void) {
+void Entity_ensure_generic_w_id_t(void) {
     flecs::world world;
 
     auto position = world.component<Position>();
@@ -583,7 +583,7 @@ void Entity_get_mut_generic_w_id_t(void) {
             invoked = true;
         });
 
-    void *void_p = entity.get_mut(id);
+    void *void_p = entity.ensure(id);
     test_assert(void_p != nullptr);
 
     Position *p = static_cast<Position*>(void_p);
@@ -1873,7 +1873,7 @@ void Entity_get_2_components_w_callback(void) {
     test_bool(e_3.get([](const Position& p, const Velocity& v) {}), false);
 }
 
-void Entity_get_mut_1_component_w_callback(void) {
+void Entity_ensure_1_component_w_callback(void) {
     flecs::world ecs;
 
     auto e_1 = ecs.entity()
@@ -1912,7 +1912,7 @@ void Entity_get_mut_1_component_w_callback(void) {
     test_bool(e_3.get([](const Position& p) {}), false);
 }
 
-void Entity_get_mut_2_components_w_callback(void) {
+void Entity_ensure_2_components_w_callback(void) {
     flecs::world ecs;
 
     auto e_1 = ecs.entity()
@@ -1969,7 +1969,7 @@ void Entity_get_component_w_callback_nested(void) {
     }), true);
 }
 
-void Entity_get_mut_component_w_callback_nested(void) {
+void Entity_ensure_component_w_callback_nested(void) {
     install_test_abort();
 
     flecs::world ecs;

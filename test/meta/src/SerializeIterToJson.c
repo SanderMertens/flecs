@@ -1998,7 +1998,7 @@ void SerializeIterToJson_serialize_anonymous_component(void) {
     ecs_query_t *q = ecs_query_new(world, "10000");
 
     ecs_entity_t e = ecs_new_entity(world, "e");
-    int32_t *ptr = ecs_get_mut_id(world, e, tag);
+    int32_t *ptr = ecs_ensure_id(world, e, tag);
     *ptr = 10;
 
     ecs_iter_t it = ecs_query_iter(world, q);

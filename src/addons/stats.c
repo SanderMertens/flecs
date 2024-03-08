@@ -302,7 +302,7 @@ void ecs_world_stats_get(
     ECS_COUNTER_RECORD(&s->commands.delete_count, t, world->info.cmd.delete_count);
     ECS_COUNTER_RECORD(&s->commands.clear_count, t, world->info.cmd.clear_count);
     ECS_COUNTER_RECORD(&s->commands.set_count, t, world->info.cmd.set_count);
-    ECS_COUNTER_RECORD(&s->commands.get_mut_count, t, world->info.cmd.get_mut_count);
+    ECS_COUNTER_RECORD(&s->commands.ensure_count, t, world->info.cmd.ensure_count);
     ECS_COUNTER_RECORD(&s->commands.modified_count, t, world->info.cmd.modified_count);
     ECS_COUNTER_RECORD(&s->commands.other_count, t, world->info.cmd.other_count);
     ECS_COUNTER_RECORD(&s->commands.discard_count, t, world->info.cmd.discard_count);
@@ -823,7 +823,7 @@ void ecs_world_stats_log(
     flecs_counter_print("delete commands", t, &s->commands.delete_count);
     flecs_counter_print("clear commands", t, &s->commands.clear_count);
     flecs_counter_print("set commands", t, &s->commands.set_count);
-    flecs_counter_print("get_mut commands", t, &s->commands.get_mut_count);
+    flecs_counter_print("ensure commands", t, &s->commands.ensure_count);
     flecs_counter_print("modified commands", t, &s->commands.modified_count);
     flecs_counter_print("other commands", t, &s->commands.other_count);
     flecs_counter_print("discarded commands", t, &s->commands.discard_count);

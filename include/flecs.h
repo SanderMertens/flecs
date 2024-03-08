@@ -1246,7 +1246,7 @@ typedef struct ecs_world_info_t {
         int64_t delete_count;          /**< delete commands processed */
         int64_t clear_count;           /**< clear commands processed */
         int64_t set_count;             /**< set commands processed */
-        int64_t get_mut_count;         /**< get_mut/emplace commands processed */
+        int64_t ensure_count;         /**< ensure/emplace commands processed */
         int64_t modified_count;        /**< modified commands processed */
         int64_t other_count;           /**< other commands processed */
         int64_t discard_count;         /**< commands discarded, happens when entity is no longer alive when running the command */
@@ -2733,7 +2733,7 @@ void ecs_ref_update(
  * This operation returns a mutable pointer to a component. If the component did
  * not yet exist, it will be added.
  *
- * If get_mut is called when the world is in deferred/readonly mode, the
+ * If ensure is called when the world is in deferred/readonly mode, the
  * function will:
  * - return a pointer to a temp storage if the component does not yet exist, or
  * - return a pointer to the existing component if it exists
@@ -2744,13 +2744,13 @@ void ecs_ref_update(
  * @return The component pointer.
  */
 FLECS_API
-void* ecs_get_mut_id(
+void* ecs_ensure_id(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id);
 
-/** Combines get_mut + modified in single operation.
- * This operation is a more efficient alternative to calling ecs_get_mut_id() and
+/** Combines ensure + modified in single operation.
+ * This operation is a more efficient alternative to calling ecs_ensure_id() and
  * ecs_modified_id() separately. This operation is only valid when the world is in
  * deferred mode, which ensures that the Modified event is not emitted before
  * the modification takes place.
@@ -2761,7 +2761,7 @@ void* ecs_get_mut_id(
  * @return The component pointer.
  */
 FLECS_API
-void* ecs_get_mut_modified_id(
+void* ecs_ensure_modified_id(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id);
@@ -2869,7 +2869,7 @@ const void* ecs_record_get_id(
  * @return Pointer to component, or NULL if entity does not have the component.
  */
 FLECS_API
-void* ecs_record_get_mut_id(
+void* ecs_record_ensure_id(
     ecs_world_t *world,
     ecs_record_t *record,
     ecs_id_t id);
@@ -2887,7 +2887,7 @@ bool ecs_record_has_id(
     ecs_id_t id);
 
 /** Emplace a component.
- * Emplace is similar to ecs_get_mut_id() except that the component constructor is not
+ * Emplace is similar to ecs_ensure_id() except that the component constructor is not
  * invoked for the returned pointer, allowing the component to be "constructed"
  * directly in the storage.
  *
@@ -2907,7 +2907,7 @@ void* ecs_emplace_id(
 
 /** Signal that a component has been modified.
  * This operation is usually used after modifying a component value obtained by
- * ecs_get_mut_id(). The operation will mark the component as dirty, and invoke
+ * ecs_ensure_id(). The operation will mark the component as dirty, and invoke
  * OnSet observers and hooks.
  *
  * @param world The world.
@@ -2922,7 +2922,7 @@ void ecs_modified_id(
 
 /** Set the value of a component.
  * This operation allows an application to set the value of a component. The
- * operation is equivalent to calling ecs_get_mut_id() followed by
+ * operation is equivalent to calling ecs_ensure_id() followed by
  * ecs_modified_id(). The operation will not modify the value of the passed in
  * component. If the component has a copy hook registered, it will be used to
  * copy in the component.

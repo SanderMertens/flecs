@@ -15,7 +15,7 @@ flecs::entity ref<T>::entity() const {
 template <typename Self>
 template <typename Func, if_t< is_callable<Func>::value > >
 inline Self& entity_builder<Self>::set(const Func& func) {
-    _::entity_with_delegate<Func>::invoke_get_mut(
+    _::entity_with_delegate<Func>::invoke_ensure(
         this->m_world, this->m_id, func);
     return to_base();
 }

@@ -627,7 +627,7 @@ void flecs_world_stats_to_json(
     ECS_COUNTER_APPEND(reply, stats, commands.delete_count, "Delete commands executed");
     ECS_COUNTER_APPEND(reply, stats, commands.clear_count, "Clear commands executed");
     ECS_COUNTER_APPEND(reply, stats, commands.set_count, "Set commands executed");
-    ECS_COUNTER_APPEND(reply, stats, commands.get_mut_count, "Get_mut commands executed");
+    ECS_COUNTER_APPEND(reply, stats, commands.ensure_count, "Get_mut commands executed");
     ECS_COUNTER_APPEND(reply, stats, commands.modified_count, "Modified commands executed");
     ECS_COUNTER_APPEND(reply, stats, commands.other_count, "Misc commands executed");
     ECS_COUNTER_APPEND(reply, stats, commands.discard_count, "Commands for already deleted entities");

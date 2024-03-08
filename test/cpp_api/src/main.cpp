@@ -43,11 +43,11 @@ void Entity_emplace_pair_w_entity(void);
 void Entity_emplace_pair_type(void);
 void Entity_emplace_pair_second(void);
 void Entity_get_generic(void);
-void Entity_get_mut_generic(void);
+void Entity_ensure_generic(void);
 void Entity_get_generic_w_id(void);
 void Entity_get_generic_w_id_t(void);
-void Entity_get_mut_generic_w_id(void);
-void Entity_get_mut_generic_w_id_t(void);
+void Entity_ensure_generic_w_id(void);
+void Entity_ensure_generic_w_id_t(void);
 void Entity_set_generic(void);
 void Entity_set_generic_w_id(void);
 void Entity_set_generic_w_id_t(void);
@@ -130,10 +130,10 @@ void Entity_get_2_components_w_callback(void);
 void Entity_set_1_component_w_callback(void);
 void Entity_set_2_components_w_callback(void);
 void Entity_set_3_components_w_callback(void);
-void Entity_get_mut_1_component_w_callback(void);
-void Entity_get_mut_2_components_w_callback(void);
+void Entity_ensure_1_component_w_callback(void);
+void Entity_ensure_2_components_w_callback(void);
 void Entity_get_component_w_callback_nested(void);
-void Entity_get_mut_component_w_callback_nested(void);
+void Entity_ensure_component_w_callback_nested(void);
 void Entity_defer_set_1_component(void);
 void Entity_defer_set_2_components(void);
 void Entity_defer_set_3_components(void);
@@ -274,11 +274,11 @@ void Pairs_system_1_pair_instance(void);
 void Pairs_system_2_pair_instances(void);
 void Pairs_override_pair(void);
 void Pairs_override_tag_pair(void);
-void Pairs_get_mut_pair(void);
-void Pairs_get_mut_pair_existing(void);
-void Pairs_get_mut_pair_tag(void);
-void Pairs_get_mut_pair_tag_existing(void);
-void Pairs_get_mut_R_tag_O(void);
+void Pairs_ensure_pair(void);
+void Pairs_ensure_pair_existing(void);
+void Pairs_ensure_pair_tag(void);
+void Pairs_ensure_pair_tag_existing(void);
+void Pairs_ensure_R_tag_O(void);
 void Pairs_get_relation_from_id(void);
 void Pairs_get_second_from_id(void);
 void Pairs_get_recycled_relation_from_id(void);
@@ -929,8 +929,8 @@ void ComponentLifecycle_struct_w_vector_add_2_remove(void);
 void ComponentLifecycle_struct_w_vector_set_2_remove(void);
 void ComponentLifecycle_struct_w_vector_add_2_remove_w_tag(void);
 void ComponentLifecycle_struct_w_vector_set_2_remove_w_tag(void);
-void ComponentLifecycle_get_mut_new(void);
-void ComponentLifecycle_get_mut_existing(void);
+void ComponentLifecycle_ensure_new(void);
+void ComponentLifecycle_ensure_existing(void);
 void ComponentLifecycle_implicit_component(void);
 void ComponentLifecycle_implicit_after_query(void);
 void ComponentLifecycle_deleted_copy(void);
@@ -1178,7 +1178,7 @@ void World_atfini_w_ctx(void);
 
 // Testsuite 'Singleton'
 void Singleton_set_get_singleton(void);
-void Singleton_get_mut_singleton(void);
+void Singleton_ensure_singleton(void);
 void Singleton_emplace_singleton(void);
 void Singleton_modified_singleton(void);
 void Singleton_add_singleton(void);
@@ -1483,8 +1483,8 @@ bake_test_case Entity_testcases[] = {
         Entity_get_generic
     },
     {
-        "get_mut_generic",
-        Entity_get_mut_generic
+        "ensure_generic",
+        Entity_ensure_generic
     },
     {
         "get_generic_w_id",
@@ -1495,12 +1495,12 @@ bake_test_case Entity_testcases[] = {
         Entity_get_generic_w_id_t
     },
     {
-        "get_mut_generic_w_id",
-        Entity_get_mut_generic_w_id
+        "ensure_generic_w_id",
+        Entity_ensure_generic_w_id
     },
     {
-        "get_mut_generic_w_id_t",
-        Entity_get_mut_generic_w_id_t
+        "ensure_generic_w_id_t",
+        Entity_ensure_generic_w_id_t
     },
     {
         "set_generic",
@@ -1831,20 +1831,20 @@ bake_test_case Entity_testcases[] = {
         Entity_set_3_components_w_callback
     },
     {
-        "get_mut_1_component_w_callback",
-        Entity_get_mut_1_component_w_callback
+        "ensure_1_component_w_callback",
+        Entity_ensure_1_component_w_callback
     },
     {
-        "get_mut_2_components_w_callback",
-        Entity_get_mut_2_components_w_callback
+        "ensure_2_components_w_callback",
+        Entity_ensure_2_components_w_callback
     },
     {
         "get_component_w_callback_nested",
         Entity_get_component_w_callback_nested
     },
     {
-        "get_mut_component_w_callback_nested",
-        Entity_get_mut_component_w_callback_nested
+        "ensure_component_w_callback_nested",
+        Entity_ensure_component_w_callback_nested
     },
     {
         "defer_set_1_component",
@@ -2402,24 +2402,24 @@ bake_test_case Pairs_testcases[] = {
         Pairs_override_tag_pair
     },
     {
-        "get_mut_pair",
-        Pairs_get_mut_pair
+        "ensure_pair",
+        Pairs_ensure_pair
     },
     {
-        "get_mut_pair_existing",
-        Pairs_get_mut_pair_existing
+        "ensure_pair_existing",
+        Pairs_ensure_pair_existing
     },
     {
-        "get_mut_pair_tag",
-        Pairs_get_mut_pair_tag
+        "ensure_pair_tag",
+        Pairs_ensure_pair_tag
     },
     {
-        "get_mut_pair_tag_existing",
-        Pairs_get_mut_pair_tag_existing
+        "ensure_pair_tag_existing",
+        Pairs_ensure_pair_tag_existing
     },
     {
-        "get_mut_R_tag_O",
-        Pairs_get_mut_R_tag_O
+        "ensure_R_tag_O",
+        Pairs_ensure_R_tag_O
     },
     {
         "get_relation_from_id",
@@ -4952,12 +4952,12 @@ bake_test_case ComponentLifecycle_testcases[] = {
         ComponentLifecycle_struct_w_vector_set_2_remove_w_tag
     },
     {
-        "get_mut_new",
-        ComponentLifecycle_get_mut_new
+        "ensure_new",
+        ComponentLifecycle_ensure_new
     },
     {
-        "get_mut_existing",
-        ComponentLifecycle_get_mut_existing
+        "ensure_existing",
+        ComponentLifecycle_ensure_existing
     },
     {
         "implicit_component",
@@ -5913,8 +5913,8 @@ bake_test_case Singleton_testcases[] = {
         Singleton_set_get_singleton
     },
     {
-        "get_mut_singleton",
-        Singleton_get_mut_singleton
+        "ensure_singleton",
+        Singleton_ensure_singleton
     },
     {
         "emplace_singleton",

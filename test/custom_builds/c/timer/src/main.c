@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
     });
     assert(s != 0);
 
-    EcsTimer *timer = ecs_get_mut(world, s, EcsTimer);
+    EcsTimer *timer = ecs_ensure(world, s, EcsTimer);
     timer->time = 0;
 
     ecs_entity_t e = ecs_new_id(world);

@@ -11,10 +11,10 @@ void Singleton_set_get_singleton(void) {
     test_int(p->y, 20);
 }
 
-void Singleton_get_mut_singleton(void) {
+void Singleton_ensure_singleton(void) {
     flecs::world world;
 
-    Position *p_mut = world.get_mut<Position>();
+    Position *p_mut = world.ensure<Position>();
     p_mut->x = 10;
     p_mut->y = 20;
 
@@ -47,7 +47,7 @@ void Singleton_modified_singleton(void) {
         });
 
     auto e = world.entity();
-    Position *p = e.get_mut<Position>();
+    Position *p = e.ensure<Position>();
     test_assert(p != NULL);
     test_int(invoked, 0);
 
@@ -83,7 +83,7 @@ void Singleton_remove_singleton(void) {
             invoked ++;
         });
 
-    Position *p_mut = world.get_mut<Position>();
+    Position *p_mut = world.ensure<Position>();
     test_assert(p_mut != NULL);
 
     world.remove<Position>();

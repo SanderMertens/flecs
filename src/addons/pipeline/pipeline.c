@@ -191,7 +191,7 @@ bool flecs_pipeline_check_term(
         case EcsIn:
         case EcsInOut:
             if (ws == WriteStateToStage) {
-                /* If a system does a get/get_mut, the component is fetched from
+                /* If a system does a get/ensure, the component is fetched from
                  * the main store so it must be merged first */
                 return true;
             }

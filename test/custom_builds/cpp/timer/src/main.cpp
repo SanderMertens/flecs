@@ -19,7 +19,7 @@ int main(int, char *[]) {
             p.y += v.y;
         });
 
-    flecs::Timer *t = s.get_mut<flecs::Timer>();
+    flecs::Timer *t = s.ensure<flecs::Timer>();
     t->time = 0;
 
     auto e = ecs.entity()

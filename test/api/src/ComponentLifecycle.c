@@ -3184,7 +3184,7 @@ void ComponentLifecycle_batched_set_new_component_w_lifecycle(void) {
     ecs_fini(world);
 }
 
-void ComponentLifecycle_batched_get_mut_new_component_w_lifecycle(void) {
+void ComponentLifecycle_batched_ensure_new_component_w_lifecycle(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -3200,7 +3200,7 @@ void ComponentLifecycle_batched_get_mut_new_component_w_lifecycle(void) {
     ecs_defer_begin(world);
 
     ecs_entity_t e = ecs_new_id(world);
-    ecs_get_mut(world, e, Position);
+    ecs_ensure(world, e, Position);
     ecs_add(world, e, Tag); // to hit command batching
 
     test_int(ctor_position, 1);

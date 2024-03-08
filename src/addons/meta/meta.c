@@ -257,7 +257,7 @@ int flecs_init_type(
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(type != 0, ECS_INTERNAL_ERROR, NULL);
 
-    EcsMetaType *meta_type = ecs_get_mut(world, type, EcsMetaType);
+    EcsMetaType *meta_type = ecs_ensure(world, type, EcsMetaType);
     if (meta_type->kind == 0) {
         meta_type->existing = ecs_has(world, type, EcsComponent);
 
@@ -278,7 +278,7 @@ int flecs_init_type(
     }
 
     if (!meta_type->existing) {
-        EcsComponent *comp = ecs_get_mut(world, type, EcsComponent);
+        EcsComponent *comp = ecs_ensure(world, type, EcsComponent);
         comp->size = size;
         comp->alignment = alignment;
         ecs_modified(world, type, EcsComponent);
@@ -405,7 +405,7 @@ int flecs_add_member_to_struct(
         }
     }
 
-    EcsStruct *s = ecs_get_mut(world, type, EcsStruct);
+    EcsStruct *s = ecs_ensure(world, type, EcsStruct);
     ecs_assert(s != NULL, ECS_INTERNAL_ERROR, NULL);
 
     /* First check if member is already added to struct */
@@ -476,7 +476,7 @@ int flecs_add_member_to_struct(
             if (elem->member == member) {
                 m->offset = elem->offset;
             } else {
-                EcsMember *other = ecs_get_mut(world, elem->member, EcsMember);
+                EcsMember *other = ecs_ensure(world, elem->member, EcsMember);
                 other->offset = elem->offset;
             }
 
@@ -551,7 +551,7 @@ int flecs_add_member_to_struct(
 
     /* If current struct is also a member, assign to itself */
     if (ecs_has(world, type, EcsMember)) {
-        EcsMember *type_mbr = ecs_get_mut(world, type, EcsMember);
+        EcsMember *type_mbr = ecs_ensure(world, type, EcsMember);
         ecs_assert(type_mbr != NULL, ECS_INTERNAL_ERROR, NULL);
 
         type_mbr->type = type;
@@ -570,7 +570,7 @@ int flecs_add_constant_to_enum(
     ecs_entity_t e,
     ecs_id_t constant_id)
 {
-    EcsEnum *ptr = ecs_get_mut(world, type, EcsEnum);
+    EcsEnum *ptr = ecs_ensure(world, type, EcsEnum);
 
     /* Remove constant from map if it was already added */
     ecs_map_iter_t it = ecs_map_iter(&ptr->constants);
@@ -626,12 +626,12 @@ int flecs_add_constant_to_enum(
     c->value = value;
     c->constant = e;
 
-    ecs_i32_t *cptr = ecs_get_mut_pair_object(
+    ecs_i32_t *cptr = ecs_ensure_pair_object(
         world, e, EcsConstant, ecs_i32_t);
     ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
     cptr[0] = value;
 
-    cptr = ecs_get_mut_id(world, e, type);
+    cptr = ecs_ensure_id(world, e, type);
     cptr[0] = value;
 
     return 0;
@@ -644,7 +644,7 @@ int flecs_add_constant_to_bitmask(
     ecs_entity_t e,
     ecs_id_t constant_id)
 {
-    EcsBitmask *ptr = ecs_get_mut(world, type, EcsBitmask);
+    EcsBitmask *ptr = ecs_ensure(world, type, EcsBitmask);
     
     /* Remove constant from map if it was already added */
     ecs_map_iter_t it = ecs_map_iter(&ptr->constants);
@@ -695,12 +695,12 @@ int flecs_add_constant_to_bitmask(
     c->value = value;
     c->constant = e;
 
-    ecs_u32_t *cptr = ecs_get_mut_pair_object(
+    ecs_u32_t *cptr = ecs_ensure_pair_object(
         world, e, EcsConstant, ecs_u32_t);
     ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
     cptr[0] = value;
 
-    cptr = ecs_get_mut_id(world, e, type);
+    cptr = ecs_ensure_id(world, e, type);
     cptr[0] = value;
 
     return 0;

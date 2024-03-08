@@ -321,7 +321,7 @@ void Set_set_null(void) {
     ecs_fini(world);
 }
 
-void Set_get_mut_new(void) {
+void Set_ensure_new(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -329,7 +329,7 @@ void Set_get_mut_new(void) {
     ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
-    Position *p = ecs_get_mut(world, e, Position);
+    Position *p = ecs_ensure(world, e, Position);
     test_assert(p != NULL);
     test_assert( ecs_has(world, e, Position));
     test_assert(p == ecs_get(world, e, Position));
@@ -337,7 +337,7 @@ void Set_get_mut_new(void) {
     ecs_fini(world);
 }
 
-void Set_get_mut_existing(void) {
+void Set_ensure_existing(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -347,7 +347,7 @@ void Set_get_mut_existing(void) {
     test_assert( ecs_has(world, e, Position));
     const Position *p_prev = ecs_get(world, e, Position);
 
-    Position *p = ecs_get_mut(world, e, Position);
+    Position *p = ecs_ensure(world, e, Position);
     test_assert(p != NULL);
     test_assert( ecs_has(world, e, Position));
     test_assert(p == p_prev);
@@ -355,7 +355,7 @@ void Set_get_mut_existing(void) {
     ecs_fini(world);
 }
 
-void Set_get_mut_tag_new(void) {
+void Set_ensure_tag_new(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -367,10 +367,10 @@ void Set_get_mut_tag_new(void) {
 
     test_expect_abort();
 
-    ecs_get_mut_id(world, e, MyTag);
+    ecs_ensure_id(world, e, MyTag);
 }
 
-void Set_get_mut_tag_existing(void) {
+void Set_ensure_tag_existing(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -383,10 +383,10 @@ void Set_get_mut_tag_existing(void) {
 
     test_expect_abort();
 
-    ecs_get_mut_id(world, e, MyTag);
+    ecs_ensure_id(world, e, MyTag);
 }
 
-void Set_get_mut_tag_new_w_comp(void) {
+void Set_ensure_tag_new_w_comp(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -399,10 +399,10 @@ void Set_get_mut_tag_new_w_comp(void) {
 
     test_expect_abort();
 
-    ecs_get_mut_id(world, e, MyTag);
+    ecs_ensure_id(world, e, MyTag);
 }
 
-void Set_get_mut_tag_existing_w_comp(void) {
+void Set_ensure_tag_existing_w_comp(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -417,10 +417,10 @@ void Set_get_mut_tag_existing_w_comp(void) {
 
     test_expect_abort();
 
-    ecs_get_mut_id(world, e, MyTag);
+    ecs_ensure_id(world, e, MyTag);
 }
 
-void Set_get_mut_tag_new_w_pair(void) {
+void Set_ensure_tag_new_w_pair(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -434,10 +434,10 @@ void Set_get_mut_tag_new_w_pair(void) {
 
     test_expect_abort();
 
-    ecs_get_mut_id(world, e, MyTag);
+    ecs_ensure_id(world, e, MyTag);
 }
 
-void Set_get_mut_tag_existing_w_pair(void) {
+void Set_ensure_tag_existing_w_pair(void) {
     install_test_abort();
     
     ecs_world_t *world = ecs_mini();
@@ -453,7 +453,7 @@ void Set_get_mut_tag_existing_w_pair(void) {
 
     test_expect_abort();
 
-    ecs_get_mut_id(world, e, MyTag);
+    ecs_ensure_id(world, e, MyTag);
 }
 
 static bool is_invoked = false;
@@ -471,7 +471,7 @@ void Set_modified_w_on_set(void) {
     ecs_entity_t e = ecs_new(world, 0);
     test_assert(e != 0);
 
-    Position *p = ecs_get_mut(world, e, Position);
+    Position *p = ecs_ensure(world, e, Position);
     test_assert(p != NULL);
     test_assert( ecs_has(world, e, Position));
     test_assert(p == ecs_get(world, e, Position));
@@ -521,7 +521,7 @@ void OnAddRemove(ecs_iter_t *it) {
     }
 }
 
-void Set_get_mut_w_add_in_on_add(void) {
+void Set_ensure_w_add_in_on_add(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT_DEFINE(world, Position);
@@ -531,7 +531,7 @@ void Set_get_mut_w_add_in_on_add(void) {
 
     ecs_entity_t e = ecs_new_id(world);
 
-    Position *p = ecs_get_mut(world, e, Position);
+    Position *p = ecs_ensure(world, e, Position);
     test_assert(p != NULL);
     p->x = 10;
     p->y = 20;
@@ -543,7 +543,7 @@ void Set_get_mut_w_add_in_on_add(void) {
     ecs_fini(world);
 }
 
-void Set_get_mut_w_remove_in_on_add(void) {
+void Set_ensure_w_remove_in_on_add(void) {
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -555,9 +555,9 @@ void Set_get_mut_w_remove_in_on_add(void) {
 
     test_expect_abort();
 
-    /* get_mut is guaranteed to always return a valid pointer, so removing the
+    /* ensure is guaranteed to always return a valid pointer, so removing the
      * component from the OnAdd trigger is not allowed */
-    ecs_get_mut(world, e, Position);
+    ecs_ensure(world, e, Position);
 }
 
 static
@@ -570,7 +570,7 @@ void OnAddRealloc(ecs_iter_t *it) {
     }
 }
 
-void Set_get_mut_w_realloc_in_on_add(void) {
+void Set_ensure_w_realloc_in_on_add(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT_DEFINE(world, Position);
@@ -589,7 +589,7 @@ void Set_get_mut_w_realloc_in_on_add(void) {
     });
 
     ecs_entity_t e = ecs_new(world, Velocity);
-    const Position *ptr = ecs_get_mut(world, e, Position);
+    const Position *ptr = ecs_ensure(world, e, Position);
     test_assert(ptr == ecs_get(world, e, Position));
 
     for (int i = 0; i < 1000; i ++) {

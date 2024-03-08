@@ -79,6 +79,8 @@ struct entity : entity_builder<entity>
     explicit entity(entity_t id)
         : entity_builder( nullptr, id ) { }
 
+    #ifndef ensure
+
     /** Get mutable component value.
      * This operation returns a mutable pointer to the component. If the entity
      * did not yet have the component, it will be added. If a base entity had
@@ -89,10 +91,10 @@ struct entity : entity_builder<entity>
      * @return Pointer to the component value.
      */
     template <typename T>
-    T* get_mut() const {
+    T* ensure() const {
         auto comp_id = _::cpp_type<T>::id(m_world);
         ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
-        return static_cast<T*>(ecs_get_mut_id(m_world, m_id, comp_id));
+        return static_cast<T*>(ecs_ensure_id(m_world, m_id, comp_id));
     }
 
     /** Get mutable component value (untyped).
@@ -104,8 +106,8 @@ struct entity : entity_builder<entity>
      * @param comp The component to get.
      * @return Pointer to the component value.
      */
-    void* get_mut(entity_t comp) const {
-        return ecs_get_mut_id(m_world, m_id, comp);
+    void* ensure(entity_t comp) const {
+        return ecs_ensure_id(m_world, m_id, comp);
     }
 
     /** Get mutable pointer for a pair.
@@ -116,8 +118,8 @@ struct entity : entity_builder<entity>
      */
     template <typename First, typename Second, typename P = pair<First, Second>,
         typename A = actual_type_t<P>, if_not_t< flecs::is_pair<First>::value> = 0>
-    A* get_mut() const {
-        return static_cast<A*>(ecs_get_mut_id(m_world, m_id, ecs_pair(
+    A* ensure() const {
+        return static_cast<A*>(ecs_ensure_id(m_world, m_id, ecs_pair(
             _::cpp_type<First>::id(m_world),
             _::cpp_type<Second>::id(m_world))));
     }
@@ -129,11 +131,11 @@ struct entity : entity_builder<entity>
      * @param second The second element of the pair.
      */
     template <typename First>
-    First* get_mut(entity_t second) const {
+    First* ensure(entity_t second) const {
         auto comp_id = _::cpp_type<First>::id(m_world);
         ecs_assert(_::cpp_type<First>::size() != 0, ECS_INVALID_PARAMETER, NULL);
         return static_cast<First*>(
-            ecs_get_mut_id(m_world, m_id, ecs_pair(comp_id, second)));
+            ecs_ensure_id(m_world, m_id, ecs_pair(comp_id, second)));
     }
 
     /** Get mutable pointer for a pair (untyped).
@@ -144,9 +146,11 @@ struct entity : entity_builder<entity>
      * @param first The first element of the pair.
      * @param second The second element of the pair.
      */
-    void* get_mut(entity_t first, entity_t second) const {
-        return ecs_get_mut_id(m_world, m_id, ecs_pair(first, second));
+    void* ensure(entity_t first, entity_t second) const {
+        return ecs_ensure_id(m_world, m_id, ecs_pair(first, second));
     }
+
+    #endif
 
     /** Get mutable pointer for the second element of a pair.
      * This operation gets the value for a pair from the entity.
@@ -155,11 +159,11 @@ struct entity : entity_builder<entity>
      * @param first The first element of the pair.
      */
     template <typename Second>
-    Second* get_mut_second(entity_t first) const {
+    Second* ensure_second(entity_t first) const {
         auto second = _::cpp_type<Second>::id(m_world);
         ecs_assert(_::cpp_type<Second>::size() != 0, ECS_INVALID_PARAMETER, NULL);
         return static_cast<Second*>(
-            ecs_get_mut_id(m_world, m_id, ecs_pair(first, second)));
+            ecs_ensure_id(m_world, m_id, ecs_pair(first, second)));
     }
 
     /** Signal that component was modified.

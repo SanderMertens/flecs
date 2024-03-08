@@ -413,12 +413,12 @@ static void UpdateCountTargets(ecs_iter_t *it) {
                     ecs_set_name(world, mi[0], name);
                 }
 
-                EcsMetricSource *source = ecs_get_mut(
+                EcsMetricSource *source = ecs_ensure(
                     world, mi[0], EcsMetricSource);
                 source->entity = tgt;
             }
 
-            EcsMetricValue *value = ecs_get_mut(world, mi[0], EcsMetricValue);
+            EcsMetricValue *value = ecs_ensure(world, mi[0], EcsMetricValue);
             value->value += (double)ecs_count_id(world, cur->id) * 
                 (double)it->delta_system_time;
         }

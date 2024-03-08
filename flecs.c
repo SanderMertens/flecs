@@ -1165,7 +1165,7 @@ typedef enum ecs_cmd_kind_t {
     EcsCmdRemove,   
     EcsCmdSet,
     EcsCmdEmplace,
-    EcsCmdMut,
+    EcsCmdEnsure,
     EcsCmdModified,
     EcsCmdModifiedNoHook,
     EcsCmdAddModified,
@@ -1186,7 +1186,7 @@ typedef struct ecs_cmd_entry_t {
 } ecs_cmd_entry_t;
 
 typedef struct ecs_cmd_1_t {
-    void *value;                     /* Component value (used by set / get_mut) */
+    void *value;                     /* Component value (used by set / ensure) */
     ecs_size_t size;                 /* Size of value */
     bool clone_value;                /* Clone entity with value (used for clone) */ 
 } ecs_cmd_1_t;
@@ -4509,7 +4509,7 @@ void flecs_remove_id(
 }
 
 static
-flecs_component_ptr_t flecs_get_mut(
+flecs_component_ptr_t flecs_ensure(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t id,
@@ -5467,7 +5467,7 @@ ecs_entity_t ecs_component_init(
         ecs_add_path(world, result, 0, desc->type.name);
     }
 
-    EcsComponent *ptr = ecs_get_mut(world, result, EcsComponent);
+    EcsComponent *ptr = ecs_ensure(world, result, EcsComponent);
     if (!ptr->size) {
         ecs_assert(ptr->alignment == 0, ECS_INTERNAL_ERROR, NULL);
         ptr->size = desc->type.size;
@@ -6289,7 +6289,7 @@ error:
     return NULL;
 }
 
-void* ecs_get_mut_id(
+void* ecs_ensure_id(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id)
@@ -6300,12 +6300,12 @@ void* ecs_get_mut_id(
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     if (flecs_defer_cmd(stage)) {
-        return flecs_defer_set(world, stage, EcsCmdMut, entity, id, 0, NULL);
+        return flecs_defer_set(world, stage, EcsCmdEnsure, entity, id, 0, NULL);
     }
 
     ecs_record_t *r = flecs_entities_get(world, entity);
     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
-    void *result = flecs_get_mut(world, entity, id, r).ptr;
+    void *result = flecs_ensure(world, entity, id, r).ptr;
     ecs_check(result != NULL, ECS_INVALID_PARAMETER, NULL);
 
     flecs_defer_end(world, stage);
@@ -6314,7 +6314,7 @@ error:
     return NULL;
 }
 
-void* ecs_get_mut_modified_id(
+void* ecs_ensure_modified_id(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id)
@@ -6440,7 +6440,7 @@ bool ecs_record_has_id(
     return false;
 }
 
-void* ecs_record_get_mut_id(
+void* ecs_record_ensure_id(
     ecs_world_t *stage,
     ecs_record_t *r,
     ecs_id_t id)
@@ -6670,7 +6670,7 @@ void flecs_copy_ptr_w_id(
     }
 
     ecs_record_t *r = flecs_entities_get(world, entity);
-    flecs_component_ptr_t dst = flecs_get_mut(world, entity, id, r);
+    flecs_component_ptr_t dst = flecs_ensure(world, entity, id, r);
     const ecs_type_info_t *ti = dst.ti;
     ecs_check(dst.ptr != NULL, ECS_INVALID_PARAMETER, NULL);
 
@@ -6716,14 +6716,14 @@ void flecs_move_ptr_w_id(
     }
 
     ecs_record_t *r = flecs_entities_get(world, entity);
-    flecs_component_ptr_t dst = flecs_get_mut(world, entity, id, r);
+    flecs_component_ptr_t dst = flecs_ensure(world, entity, id, r);
     ecs_check(dst.ptr != NULL, ECS_INVALID_PARAMETER, NULL);
 
     const ecs_type_info_t *ti = dst.ti;
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_move_t move;
     if (cmd_kind != EcsCmdEmplace) {
-        /* ctor will have happened by get_mut */
+        /* ctor will have happened by ensure */
         move = ti->hooks.move_dtor;
     } else {
         move = ti->hooks.ctor_move_dtor;
@@ -7340,11 +7340,11 @@ ecs_entity_t flecs_set_identifier(
         return entity;
     }
 
-    EcsIdentifier *ptr = ecs_get_mut_pair(world, entity, EcsIdentifier, tag);
+    EcsIdentifier *ptr = ecs_ensure_pair(world, entity, EcsIdentifier, tag);
     ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (tag == EcsName) {
-        /* Insert command after get_mut, but before the name is potentially 
+        /* Insert command after ensure, but before the name is potentially 
          * freed. Even though the name is a const char*, it is possible that the
          * application passed in the existing name of the entity which could 
          * still cause it to be freed. */
@@ -8234,7 +8234,7 @@ void flecs_cmd_batch_for_entity(
             }
             break;
         case EcsCmdSet:
-        case EcsCmdMut:
+        case EcsCmdEnsure:
             table = flecs_find_table_add(world, table, id, diff);
             world->info.cmd.batched_command_count ++;
             has_set = true;
@@ -8302,7 +8302,7 @@ void flecs_cmd_batch_for_entity(
             }
             switch(cmd->kind) {
             case EcsCmdSet:
-            case EcsCmdMut: {
+            case EcsCmdEnsure: {
                 flecs_component_ptr_t ptr = {0};
                 if (r->table) {
                     ptr = flecs_get_component_ptr(world, 
@@ -8332,7 +8332,7 @@ void flecs_cmd_batch_for_entity(
                          * observers. */
                         cmd->kind = EcsCmdModified;
                     } else {
-                        /* If this was a get_mut, nothing's left to be done */
+                        /* If this was a ensure, nothing's left to be done */
                         cmd->kind = EcsCmdSkip;
                     }
                 } else {
@@ -8468,13 +8468,13 @@ bool flecs_defer_end(
                     flecs_move_ptr_w_id(world, dst_stage, e, 
                         cmd->id, flecs_itosize(cmd->is._1.size), 
                         cmd->is._1.value, kind);
-                    world->info.cmd.get_mut_count ++;
+                    world->info.cmd.ensure_count ++;
                     break;
-                case EcsCmdMut:
+                case EcsCmdEnsure:
                     flecs_move_ptr_w_id(world, dst_stage, e, 
                         cmd->id, flecs_itosize(cmd->is._1.size), 
                         cmd->is._1.value, kind);
-                    world->info.cmd.get_mut_count ++;
+                    world->info.cmd.ensure_count ++;
                     break;
                 case EcsCmdModified:
                     flecs_modified_id_if(world, e, id, true);
@@ -17821,7 +17821,7 @@ EcsPoly* ecs_poly_bind_(
 
     /* If this is a new poly, leave the actual creation up to the caller so they
      * call tell the difference between a create or an update */
-    EcsPoly *result = ecs_get_mut_pair(world, entity, EcsPoly, tag);
+    EcsPoly *result = ecs_ensure_pair(world, entity, EcsPoly, tag);
 
     if (deferred) {
         ecs_defer_resume(world);
@@ -24573,7 +24573,7 @@ void flecs_alerts_add_alert_to_src(
     ecs_entity_t alert,
     ecs_entity_t alert_instance)
 {
-    EcsAlertsActive *active = ecs_get_mut(
+    EcsAlertsActive *active = ecs_ensure(
         world, source, EcsAlertsActive);
     ecs_assert(active != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -24598,7 +24598,7 @@ void flecs_alerts_remove_alert_from_src(
     ecs_entity_t source,
     ecs_entity_t alert)
 {
-    EcsAlertsActive *active = ecs_get_mut(
+    EcsAlertsActive *active = ecs_ensure(
         world, source, EcsAlertsActive);
     ecs_assert(active != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_map_remove(&active->alerts, alert);
@@ -24820,7 +24820,7 @@ void MonitorAlertInstances(ecs_iter_t *it) {
     ecs_assert(parent != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ecs_has(world, parent, EcsAlert), ECS_INVALID_OPERATION,
         "alert entity does not have Alert component");
-    EcsAlert *alert = ecs_get_mut(world, parent, EcsAlert);
+    EcsAlert *alert = ecs_ensure(world, parent, EcsAlert);
     const EcsPoly *poly = ecs_get_pair(world, parent, EcsPoly, EcsQuery);
     ecs_assert(poly != NULL, ECS_INVALID_OPERATION, 
         "alert entity does not have (Poly, Query) component");
@@ -24981,7 +24981,7 @@ ecs_entity_t ecs_alert_init(
     }
 
     /* Initialize Alert component which identifiers entity as alert */
-    EcsAlert *alert = ecs_get_mut(world, result, EcsAlert);
+    EcsAlert *alert = ecs_ensure(world, result, EcsAlert);
     ecs_assert(alert != NULL, ECS_INTERNAL_ERROR, NULL);
     alert->message = ecs_os_strdup(desc->message);
     alert->retain_period = desc->retain_period;
@@ -29903,12 +29903,12 @@ static void UpdateCountTargets(ecs_iter_t *it) {
                     ecs_set_name(world, mi[0], name);
                 }
 
-                EcsMetricSource *source = ecs_get_mut(
+                EcsMetricSource *source = ecs_ensure(
                     world, mi[0], EcsMetricSource);
                 source->entity = tgt;
             }
 
-            EcsMetricValue *value = ecs_get_mut(world, mi[0], EcsMetricValue);
+            EcsMetricValue *value = ecs_ensure(world, mi[0], EcsMetricValue);
             value->value += (double)ecs_count_id(world, cur->id) * 
                 (double)it->delta_system_time;
         }
@@ -32581,7 +32581,7 @@ int flecs_assembly_create(
 
     ecs_add_id(world, assembly, EcsAlwaysOverride);
 
-    EcsScript *script = ecs_get_mut(world, assembly, EcsScript);
+    EcsScript *script = ecs_ensure(world, assembly, EcsScript);
     flecs_dtor_script(script);
     script->world = world;
     script->script = script_code;
@@ -32716,7 +32716,7 @@ void plecs_apply_with_frame(
         ecs_id_t id = state->with[i];
         plecs_with_value_t *v = &state->with_value_frames[i];
         if (v->value.type) {
-            void *ptr = ecs_get_mut_id(world, e, id);
+            void *ptr = ecs_ensure_id(world, e, id);
             ecs_value_copy(world, v->value.type, ptr, v->value.ptr);
             ecs_modified_id(world, e, id);
         } else {
@@ -33217,7 +33217,7 @@ const char* plecs_parse_assign_expr(
         assign_to = type;
     }
 
-    void *value_ptr = ecs_get_mut_id(world, assign_to, assign_id);
+    void *value_ptr = ecs_ensure_id(world, assign_to, assign_id);
 
     ptr = ecs_parse_expr(world, ptr, &(ecs_value_t){type, value_ptr}, 
         &(ecs_parse_expr_desc_t){
@@ -33430,7 +33430,7 @@ const char* plecs_parse_var_as_component(
         assign_to = state->last_subject;
     }
 
-    void *dst = ecs_get_mut_id(world, assign_to, type);
+    void *dst = ecs_ensure_id(world, assign_to, type);
     if (!dst) {
         char *type_name = ecs_get_fullpath(world, type);
         ecs_parser_error(name, expr, ptr - expr, 
@@ -34414,7 +34414,7 @@ int ecs_script_update(
 
     ecs_script_clear(world, e, instance);
 
-    EcsScript *s = ecs_get_mut(world, e, EcsScript);
+    EcsScript *s = ecs_ensure(world, e, EcsScript);
     if (!s->script || ecs_os_strcmp(s->script, script)) {
         s->script = ecs_os_strdup(script);
         ecs_modified(world, e, EcsScript);
@@ -35148,7 +35148,7 @@ void flecs_world_stats_to_json(
     ECS_COUNTER_APPEND(reply, stats, commands.delete_count, "Delete commands executed");
     ECS_COUNTER_APPEND(reply, stats, commands.clear_count, "Clear commands executed");
     ECS_COUNTER_APPEND(reply, stats, commands.set_count, "Set commands executed");
-    ECS_COUNTER_APPEND(reply, stats, commands.get_mut_count, "Get_mut commands executed");
+    ECS_COUNTER_APPEND(reply, stats, commands.ensure_count, "Get_mut commands executed");
     ECS_COUNTER_APPEND(reply, stats, commands.modified_count, "Modified commands executed");
     ECS_COUNTER_APPEND(reply, stats, commands.other_count, "Misc commands executed");
     ECS_COUNTER_APPEND(reply, stats, commands.discard_count, "Commands for already deleted entities");
@@ -36529,7 +36529,7 @@ void ecs_world_stats_get(
     ECS_COUNTER_RECORD(&s->commands.delete_count, t, world->info.cmd.delete_count);
     ECS_COUNTER_RECORD(&s->commands.clear_count, t, world->info.cmd.clear_count);
     ECS_COUNTER_RECORD(&s->commands.set_count, t, world->info.cmd.set_count);
-    ECS_COUNTER_RECORD(&s->commands.get_mut_count, t, world->info.cmd.get_mut_count);
+    ECS_COUNTER_RECORD(&s->commands.ensure_count, t, world->info.cmd.ensure_count);
     ECS_COUNTER_RECORD(&s->commands.modified_count, t, world->info.cmd.modified_count);
     ECS_COUNTER_RECORD(&s->commands.other_count, t, world->info.cmd.other_count);
     ECS_COUNTER_RECORD(&s->commands.discard_count, t, world->info.cmd.discard_count);
@@ -37050,7 +37050,7 @@ void ecs_world_stats_log(
     flecs_counter_print("delete commands", t, &s->commands.delete_count);
     flecs_counter_print("clear commands", t, &s->commands.clear_count);
     flecs_counter_print("set commands", t, &s->commands.set_count);
-    flecs_counter_print("get_mut commands", t, &s->commands.get_mut_count);
+    flecs_counter_print("ensure commands", t, &s->commands.ensure_count);
     flecs_counter_print("modified commands", t, &s->commands.modified_count);
     flecs_counter_print("other commands", t, &s->commands.other_count);
     flecs_counter_print("discarded commands", t, &s->commands.discard_count);
@@ -37218,7 +37218,7 @@ ecs_entity_t ecs_set_interval(
         timer = ecs_new(world, EcsTimer);
     }
 
-    EcsTimer *t = ecs_get_mut(world, timer, EcsTimer);
+    EcsTimer *t = ecs_ensure(world, timer, EcsTimer);
     ecs_check(t != NULL, ECS_INVALID_PARAMETER, NULL);
     t->timeout = interval;
     t->active = true;
@@ -37254,7 +37254,7 @@ void ecs_start_timer(
     ecs_world_t *world,
     ecs_entity_t timer)
 {
-    EcsTimer *ptr = ecs_get_mut(world, timer, EcsTimer);
+    EcsTimer *ptr = ecs_ensure(world, timer, EcsTimer);
     ecs_check(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
     ptr->active = true;
     ptr->time = 0;
@@ -37266,7 +37266,7 @@ void ecs_stop_timer(
     ecs_world_t *world,
     ecs_entity_t timer)
 {
-    EcsTimer *ptr = ecs_get_mut(world, timer, EcsTimer);
+    EcsTimer *ptr = ecs_ensure(world, timer, EcsTimer);
     ecs_check(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
     ptr->active = false;
 error:
@@ -37277,7 +37277,7 @@ void ecs_reset_timer(
     ecs_world_t *world,
     ecs_entity_t timer)
 {
-    EcsTimer *ptr = ecs_get_mut(world, timer, EcsTimer);
+    EcsTimer *ptr = ecs_ensure(world, timer, EcsTimer);
     ecs_check(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
     ptr->time = 0;
 error:
@@ -40455,26 +40455,6 @@ void flecs_sparse_remove(
     } else {
         /* Element is not paired and thus not alive, nothing to be done */
         return;
-    }
-}
-
-void flecs_sparse_set_generation(
-    ecs_sparse_t *sparse,
-    uint64_t index)
-{
-    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_page_t *page = flecs_sparse_get_or_create_page(sparse, PAGE(index));
-    
-    uint64_t index_w_gen = index;
-    flecs_sparse_strip_generation(&index);
-    int32_t offset = OFFSET(index);
-    int32_t dense = page->sparse[offset];
-
-    if (dense) {
-        /* Increase generation */
-        ecs_vec_get_t(&sparse->dense, uint64_t, dense)[0] = index_w_gen;
-    } else {
-        /* Element is not paired and thus not alive, nothing to be done */
     }
 }
 
@@ -50468,7 +50448,7 @@ const char* ecs_entity_from_json(
         }
 
         /* Get mutable pointer */
-        void *comp_ptr = ecs_get_mut_id(world, e, id);
+        void *comp_ptr = ecs_ensure_id(world, e, id);
         if (!comp_ptr) {
             char *idstr = ecs_id_str(world, id);
             ecs_parser_error(name, expr, json - expr, 
@@ -56022,7 +56002,7 @@ ecs_entity_t ecs_struct_init(
         const ecs_member_value_range_t *error = &m_desc->error_range;
         const ecs_member_value_range_t *warning = &m_desc->warning_range;
         if (ECS_NEQ(range->min, range->max)) {
-            ranges = ecs_get_mut(world, m, EcsMemberRanges);
+            ranges = ecs_ensure(world, m, EcsMemberRanges);
             if (range->min > range->max) {
                 char *member_name = ecs_get_fullpath(world, m);
                 ecs_err("member '%s' has an invalid value range [%f..%f]",
@@ -56049,7 +56029,7 @@ ecs_entity_t ecs_struct_init(
                 goto error;
             }
             if (!ranges) {
-                ranges = ecs_get_mut(world, m, EcsMemberRanges);
+                ranges = ecs_ensure(world, m, EcsMemberRanges);
             }
             ranges->error.min = error->min;
             ranges->error.max = error->max;
@@ -56079,7 +56059,7 @@ ecs_entity_t ecs_struct_init(
             }
 
             if (!ranges) {
-                ranges = ecs_get_mut(world, m, EcsMemberRanges);
+                ranges = ecs_ensure(world, m, EcsMemberRanges);
             }
             ranges->warning.min = warning->min;
             ranges->warning.max = warning->max;
@@ -56166,7 +56146,7 @@ ecs_entity_t ecs_unit_init(
         ecs_remove_pair(world, t, EcsQuantity, EcsWildcard);
     }
 
-    EcsUnit *value = ecs_get_mut(world, t, EcsUnit);
+    EcsUnit *value = ecs_ensure(world, t, EcsUnit);
     value->base = desc->base;
     value->over = desc->over;
     value->translation = desc->translation;
@@ -58533,7 +58513,7 @@ int flecs_init_type(
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(type != 0, ECS_INTERNAL_ERROR, NULL);
 
-    EcsMetaType *meta_type = ecs_get_mut(world, type, EcsMetaType);
+    EcsMetaType *meta_type = ecs_ensure(world, type, EcsMetaType);
     if (meta_type->kind == 0) {
         meta_type->existing = ecs_has(world, type, EcsComponent);
 
@@ -58554,7 +58534,7 @@ int flecs_init_type(
     }
 
     if (!meta_type->existing) {
-        EcsComponent *comp = ecs_get_mut(world, type, EcsComponent);
+        EcsComponent *comp = ecs_ensure(world, type, EcsComponent);
         comp->size = size;
         comp->alignment = alignment;
         ecs_modified(world, type, EcsComponent);
@@ -58681,7 +58661,7 @@ int flecs_add_member_to_struct(
         }
     }
 
-    EcsStruct *s = ecs_get_mut(world, type, EcsStruct);
+    EcsStruct *s = ecs_ensure(world, type, EcsStruct);
     ecs_assert(s != NULL, ECS_INTERNAL_ERROR, NULL);
 
     /* First check if member is already added to struct */
@@ -58752,7 +58732,7 @@ int flecs_add_member_to_struct(
             if (elem->member == member) {
                 m->offset = elem->offset;
             } else {
-                EcsMember *other = ecs_get_mut(world, elem->member, EcsMember);
+                EcsMember *other = ecs_ensure(world, elem->member, EcsMember);
                 other->offset = elem->offset;
             }
 
@@ -58827,7 +58807,7 @@ int flecs_add_member_to_struct(
 
     /* If current struct is also a member, assign to itself */
     if (ecs_has(world, type, EcsMember)) {
-        EcsMember *type_mbr = ecs_get_mut(world, type, EcsMember);
+        EcsMember *type_mbr = ecs_ensure(world, type, EcsMember);
         ecs_assert(type_mbr != NULL, ECS_INTERNAL_ERROR, NULL);
 
         type_mbr->type = type;
@@ -58846,7 +58826,7 @@ int flecs_add_constant_to_enum(
     ecs_entity_t e,
     ecs_id_t constant_id)
 {
-    EcsEnum *ptr = ecs_get_mut(world, type, EcsEnum);
+    EcsEnum *ptr = ecs_ensure(world, type, EcsEnum);
 
     /* Remove constant from map if it was already added */
     ecs_map_iter_t it = ecs_map_iter(&ptr->constants);
@@ -58902,12 +58882,12 @@ int flecs_add_constant_to_enum(
     c->value = value;
     c->constant = e;
 
-    ecs_i32_t *cptr = ecs_get_mut_pair_object(
+    ecs_i32_t *cptr = ecs_ensure_pair_object(
         world, e, EcsConstant, ecs_i32_t);
     ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
     cptr[0] = value;
 
-    cptr = ecs_get_mut_id(world, e, type);
+    cptr = ecs_ensure_id(world, e, type);
     cptr[0] = value;
 
     return 0;
@@ -58920,7 +58900,7 @@ int flecs_add_constant_to_bitmask(
     ecs_entity_t e,
     ecs_id_t constant_id)
 {
-    EcsBitmask *ptr = ecs_get_mut(world, type, EcsBitmask);
+    EcsBitmask *ptr = ecs_ensure(world, type, EcsBitmask);
     
     /* Remove constant from map if it was already added */
     ecs_map_iter_t it = ecs_map_iter(&ptr->constants);
@@ -58971,12 +58951,12 @@ int flecs_add_constant_to_bitmask(
     c->value = value;
     c->constant = e;
 
-    ecs_u32_t *cptr = ecs_get_mut_pair_object(
+    ecs_u32_t *cptr = ecs_ensure_pair_object(
         world, e, EcsConstant, ecs_u32_t);
     ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
     cptr[0] = value;
 
-    cptr = ecs_get_mut_id(world, e, type);
+    cptr = ecs_ensure_id(world, e, type);
     cptr[0] = value;
 
     return 0;
@@ -60051,7 +60031,7 @@ void ecs_meta_type_serialized_init(
         ecs_vec_init_t(NULL, &ops, ecs_meta_type_op_t, 0);
         flecs_meta_serialize_component(world, e, &ops);
 
-        EcsMetaTypeSerialized *ptr = ecs_get_mut(
+        EcsMetaTypeSerialized *ptr = ecs_ensure(
             world, e, EcsMetaTypeSerialized);
         if (ptr->ops.array) {
             ecs_meta_dtor_serialized(ptr);
@@ -60887,7 +60867,7 @@ bool flecs_pipeline_check_term(
         case EcsIn:
         case EcsInOut:
             if (ws == WriteStateToStage) {
-                /* If a system does a get/get_mut, the component is fetched from
+                /* If a system does a get/ensure, the component is fetched from
                  * the main store so it must be merged first */
                 return true;
             }

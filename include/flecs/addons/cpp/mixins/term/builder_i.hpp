@@ -314,7 +314,7 @@ struct term_builder_i : term_id_builder_i<Base> {
     }
 
     /** Short for inout_stage(flecs::InOut).
-     *   Use when system uses get_mut.
+     *   Use when system uses ensure.
      */
     Base& read_write() {
         return this->inout_stage(flecs::InOut);

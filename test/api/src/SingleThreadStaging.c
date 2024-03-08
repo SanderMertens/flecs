@@ -2431,7 +2431,7 @@ void MutableTest(ecs_iter_t *it) {
     int32_t i;
     for (i = 0; i < it->count; i ++) {
         bool is_added = !ecs_has(world, it->entities[i], Velocity);
-        Velocity *v_mut = ecs_get_mut(world, it->entities[i], Velocity);
+        Velocity *v_mut = ecs_ensure(world, it->entities[i], Velocity);
 
         test_assert(v_mut != NULL);
 
@@ -2455,7 +2455,7 @@ void MutableTest(ecs_iter_t *it) {
     }
 }
 
-void SingleThreadStaging_get_mutable(void) {
+void SingleThreadStaging_ensureable(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2484,7 +2484,7 @@ void SingleThreadStaging_get_mutable(void) {
     ecs_fini(world);
 }
 
-void SingleThreadStaging_get_mutable_from_main(void) {
+void SingleThreadStaging_ensureable_from_main(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2528,7 +2528,7 @@ void MutableTest_w_Add(ecs_iter_t *it) {
         ecs_add(world, it->entities[i], MyTag);
 
         bool is_added = !ecs_has(world, it->entities[i], Velocity);
-        Velocity *v_mut = ecs_get_mut(world, it->entities[i], Velocity);
+        Velocity *v_mut = ecs_ensure(world, it->entities[i], Velocity);
 
         test_assert(v_mut != NULL);
 
@@ -2554,7 +2554,7 @@ void MutableTest_w_Add(ecs_iter_t *it) {
 
 typedef bool MyBool;
 
-void SingleThreadStaging_get_mutable_w_add(void) {
+void SingleThreadStaging_ensureable_w_add(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);

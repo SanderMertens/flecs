@@ -404,18 +404,18 @@
     (ECS_CAST(const Second*, ecs_record_get_id(world, record,\
         ecs_pair(first, ecs_id(Second)))))
 
-#define ecs_record_get_mut(world, record, T)\
-    (ECS_CAST(T*, ecs_record_get_mut_id(world, record, ecs_id(T))))
+#define ecs_record_ensure(world, record, T)\
+    (ECS_CAST(T*, ecs_record_ensure_id(world, record, ecs_id(T))))
 
-#define ecs_record_get_mut_pair(world, record, First, second)\
-    (ECS_CAST(First*, ecs_record_get_mut_id(world, record, \
+#define ecs_record_ensure_pair(world, record, First, second)\
+    (ECS_CAST(First*, ecs_record_ensure_id(world, record, \
         ecs_pair(ecs_id(First), second))))
 
-#define ecs_record_get_mut_pair_second(world, record, first, Second)\
-    (ECS_CAST(Second*, ecs_record_get_mut_id(world, record,\
+#define ecs_record_ensure_pair_second(world, record, first, Second)\
+    (ECS_CAST(Second*, ecs_record_ensure_id(world, record,\
         ecs_pair(first, ecs_id(Second)))))
 
-#define ecs_record_get_mut_pair_object ecs_record_get_mut_pair_second
+#define ecs_record_ensure_pair_object ecs_record_ensure_pair_second
 
 #define ecs_ref_init(world, entity, T)\
     ecs_ref_init_id(world, entity, ecs_id(T))
@@ -423,18 +423,18 @@
 #define ecs_ref_get(world, ref, T)\
     (ECS_CAST(const T*, ecs_ref_get_id(world, ref, ecs_id(T))))
 
-#define ecs_get_mut(world, entity, T)\
-    (ECS_CAST(T*, ecs_get_mut_id(world, entity, ecs_id(T))))
+#define ecs_ensure(world, entity, T)\
+    (ECS_CAST(T*, ecs_ensure_id(world, entity, ecs_id(T))))
 
-#define ecs_get_mut_pair(world, subject, First, second)\
-    (ECS_CAST(First*, ecs_get_mut_id(world, subject,\
+#define ecs_ensure_pair(world, subject, First, second)\
+    (ECS_CAST(First*, ecs_ensure_id(world, subject,\
         ecs_pair(ecs_id(First), second))))
 
-#define ecs_get_mut_pair_second(world, subject, first, Second)\
-    (ECS_CAST(Second*, ecs_get_mut_id(world, subject,\
+#define ecs_ensure_pair_second(world, subject, first, Second)\
+    (ECS_CAST(Second*, ecs_ensure_id(world, subject,\
         ecs_pair(first, ecs_id(Second)))))
 
-#define ecs_get_mut_pair_object ecs_get_mut_pair_second
+#define ecs_ensure_pair_object ecs_ensure_pair_second
 
 #define ecs_modified(world, entity, component)\
     ecs_modified_id(world, entity, ecs_id(component))
@@ -464,8 +464,8 @@
 #define ecs_singleton_set(world, comp, ...)\
     ecs_set(world, ecs_id(comp), comp, __VA_ARGS__)
 
-#define ecs_singleton_get_mut(world, comp)\
-    ecs_get_mut(world, ecs_id(comp), comp)
+#define ecs_singleton_ensure(world, comp)\
+    ecs_ensure(world, ecs_id(comp), comp)
 
 #define ecs_singleton_modified(world, comp)\
     ecs_modified(world, ecs_id(comp), comp)

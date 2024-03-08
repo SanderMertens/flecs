@@ -118,7 +118,7 @@ void flecs_alerts_add_alert_to_src(
     ecs_entity_t alert,
     ecs_entity_t alert_instance)
 {
-    EcsAlertsActive *active = ecs_get_mut(
+    EcsAlertsActive *active = ecs_ensure(
         world, source, EcsAlertsActive);
     ecs_assert(active != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -143,7 +143,7 @@ void flecs_alerts_remove_alert_from_src(
     ecs_entity_t source,
     ecs_entity_t alert)
 {
-    EcsAlertsActive *active = ecs_get_mut(
+    EcsAlertsActive *active = ecs_ensure(
         world, source, EcsAlertsActive);
     ecs_assert(active != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_map_remove(&active->alerts, alert);
@@ -365,7 +365,7 @@ void MonitorAlertInstances(ecs_iter_t *it) {
     ecs_assert(parent != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ecs_has(world, parent, EcsAlert), ECS_INVALID_OPERATION,
         "alert entity does not have Alert component");
-    EcsAlert *alert = ecs_get_mut(world, parent, EcsAlert);
+    EcsAlert *alert = ecs_ensure(world, parent, EcsAlert);
     const EcsPoly *poly = ecs_get_pair(world, parent, EcsPoly, EcsQuery);
     ecs_assert(poly != NULL, ECS_INVALID_OPERATION, 
         "alert entity does not have (Poly, Query) component");
@@ -526,7 +526,7 @@ ecs_entity_t ecs_alert_init(
     }
 
     /* Initialize Alert component which identifiers entity as alert */
-    EcsAlert *alert = ecs_get_mut(world, result, EcsAlert);
+    EcsAlert *alert = ecs_ensure(world, result, EcsAlert);
     ecs_assert(alert != NULL, ECS_INTERNAL_ERROR, NULL);
     alert->message = ecs_os_strdup(desc->message);
     alert->retain_period = desc->retain_period;
