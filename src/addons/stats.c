@@ -790,8 +790,8 @@ void ecs_world_stats_log(
     flecs_counter_print("pipeline rebuilds", t, &s->frame.pipeline_build_count);
     flecs_counter_print("systems ran", t, &s->frame.systems_ran);
     ecs_trace("");
-    flecs_metric_print("target FPS", world->info.target_fps);
-    flecs_metric_print("time scale", world->info.time_scale);
+    flecs_metric_print("target FPS", (ecs_float_t)world->info.target_fps);
+    flecs_metric_print("time scale", (ecs_float_t)world->info.time_scale);
     ecs_trace("");
     flecs_gauge_print("actual FPS", t, &s->performance.fps);
     flecs_counter_print("frame time", t, &s->performance.frame_time);

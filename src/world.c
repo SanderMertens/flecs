@@ -1822,6 +1822,11 @@ ecs_ftime_t flecs_start_measure_frame(
                 } else {
                     /* Best guess */
                     delta_time = (ecs_ftime_t)1.0 / (ecs_ftime_t)60.0; 
+
+                    if (ECS_EQZERO(delta_time)) {
+                        delta_time = user_delta_time;
+                        break;
+                    }
                 }
             }
         

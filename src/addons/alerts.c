@@ -777,12 +777,12 @@ void FlecsAlertsImport(ecs_world_t *world) {
     ecs_system(world, {
         .entity = ecs_id(MonitorAlerts),
         .no_readonly = true,
-        .interval = 0.5
+        .interval = (ecs_ftime_t)0.5
     });
 
     ecs_system(world, {
         .entity = ecs_id(MonitorAlertInstances),
-        .interval = 0.5
+        .interval = (ecs_ftime_t)0.5
     });
 }
 
