@@ -2667,7 +2667,7 @@ void Parser_2_or_pred_inout(void) {
 void Parser_1_digit_pred_implicit_subj(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_ensure(world, 100);
+    ecs_make_alive(world, 100);
 
     ecs_filter_t f = ECS_FILTER_INIT;
     test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
@@ -2691,7 +2691,7 @@ void Parser_1_digit_pred_implicit_subj(void) {
 void Parser_1_digit_pred_no_subj(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_ensure(world, 100);
+    ecs_make_alive(world, 100);
 
     ecs_filter_t f = ECS_FILTER_INIT;
     test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
@@ -2715,8 +2715,8 @@ void Parser_1_digit_pred_no_subj(void) {
 void Parser_1_digit_pred_explicit_subj(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_ensure(world, 100);
-    ecs_ensure(world, 200);
+    ecs_make_alive(world, 100);
+    ecs_make_alive(world, 200);
 
     ecs_filter_t f = ECS_FILTER_INIT;
     test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
@@ -2743,8 +2743,8 @@ void Parser_1_digit_pair_implicit_subj(void) {
     ECS_TAG(world, Pred_1);
     ECS_TAG(world, Pred_2);
 
-    ecs_ensure(world, 100);
-    ecs_ensure(world, 300);
+    ecs_make_alive(world, 100);
+    ecs_make_alive(world, 300);
 
     ecs_filter_t f = ECS_FILTER_INIT;
     test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
@@ -2772,9 +2772,9 @@ void Parser_1_digit_pair_explicit_subj(void) {
     ECS_TAG(world, Pred_1);
     ECS_TAG(world, Pred_2);
 
-    ecs_ensure(world, 100);
-    ecs_ensure(world, 200);
-    ecs_ensure(world, 300);
+    ecs_make_alive(world, 100);
+    ecs_make_alive(world, 200);
+    ecs_make_alive(world, 300);
 
     ecs_filter_t f = ECS_FILTER_INIT;
     test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){

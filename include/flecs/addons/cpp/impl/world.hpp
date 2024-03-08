@@ -80,11 +80,13 @@ inline entity world::lookup(const char *name, bool search_path) const {
     return flecs::entity(*this, e);
 }
 
+#ifndef ensure
 template <typename T>
-inline T* world::get_mut() const {
+inline T& world::ensure() const {
     flecs::entity e(m_world, _::cpp_type<T>::id(m_world));
-    return e.get_mut<T>();
+    return e.ensure<T>();
 }
+#endif
 
 template <typename T>
 inline void world::modified() const {
@@ -241,7 +243,7 @@ inline void world::get(const Func& func) const {
 template <typename Func, if_t< is_callable<Func>::value > >
 inline void world::set(const Func& func) const {
     static_assert(arity<Func>::value == 1, "singleton component must be the only argument");
-    _::entity_with_delegate<Func>::invoke_get_mut(
+    _::entity_with_delegate<Func>::invoke_ensure(
         this->m_world, this->singleton<first_arg_t<Func>>(), func);
 }
 
@@ -249,14 +251,11 @@ inline flecs::entity world::get_alive(flecs::entity_t e) const {
     e = ecs_get_alive(m_world, e);
     return flecs::entity(m_world, e);
 }
-/* Prevent clashing with Unreal define. Unreal applications will have to use
- *  ecs_ensure. */
-#ifndef ensure
-inline flecs::entity world::ensure(flecs::entity_t e) const {
-    ecs_ensure(m_world, e);
+
+inline flecs::entity world::make_alive(flecs::entity_t e) const {
+    ecs_make_alive(m_world, e);
     return flecs::entity(m_world, e);
 }
-#endif
 
 template <typename E>
 inline flecs::entity enum_data<E>::entity() const {

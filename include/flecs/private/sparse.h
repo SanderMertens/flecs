@@ -184,12 +184,6 @@ FLECS_API
 int32_t ecs_sparse_count(
     const ecs_sparse_t *sparse);
 
-/** Override the generation count for a specific id */
-FLECS_API
-void flecs_sparse_set_generation(
-    ecs_sparse_t *sparse,
-    uint64_t id);
-
 FLECS_API
 void* ecs_sparse_get_dense(
     const ecs_sparse_t *sparse,

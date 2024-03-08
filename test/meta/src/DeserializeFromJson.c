@@ -896,9 +896,9 @@ void DeserializeFromJson_struct_i32_array_3(void) {
 
     T value = {0};
 
-    ecs_ensure(world, 10);
-    ecs_ensure(world, 20);
-    ecs_ensure(world, 30);
+    ecs_make_alive(world, 10);
+    ecs_make_alive(world, 20);
+    ecs_make_alive(world, 30);
 
     const char *ptr = ecs_ptr_from_json(world, t, &value, "{\"x\": [10, 20, 30]}", NULL);
     test_assert(ptr != NULL);
@@ -5805,7 +5805,7 @@ void DeserializeFromJson_ser_deser_anon_w_same_id_as_existing_named(void) {
         ECS_TAG(world, Bar);
 
         ecs_entity_t e = 2000;
-        ecs_ensure(world, e);
+        ecs_make_alive(world, e);
         ecs_add(world, e, Foo);
     }
 
@@ -5821,7 +5821,7 @@ void DeserializeFromJson_ser_deser_anon_w_same_id_as_existing_named(void) {
         ECS_TAG(world, Bar);
 
         ecs_entity_t e = 2000;
-        ecs_ensure(world, e);
+        ecs_make_alive(world, e);
         ecs_set_name(world, e, "e");
         ecs_add(world, e, Bar);
 

@@ -400,7 +400,7 @@ const char* ecs_entity_from_json(
         }
 
         /* Get mutable pointer */
-        void *comp_ptr = ecs_get_mut_id(world, e, id);
+        void *comp_ptr = ecs_ensure_id(world, e, id);
         if (!comp_ptr) {
             char *idstr = ecs_id_str(world, id);
             ecs_parser_error(name, expr, json - expr, 
@@ -540,7 +540,7 @@ ecs_entity_t flecs_json_ensure_entity(
                  * Also don't use existing id if the existing entity is not
                  * anonymous. */
                 deser_id[0] = ser_id;
-                ecs_ensure(world, ser_id);
+                ecs_make_alive(world, ser_id);
             } else {
                 /* If id exists and is not alive, create a new id */
                 deser_id[0] = flecs_json_new_id(world, ser_id);

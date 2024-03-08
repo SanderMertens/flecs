@@ -601,7 +601,7 @@ void SerializeToJson_struct_entity_10k(void) {
         }
     });
 
-    ecs_ensure(world, 10000);
+    ecs_make_alive(world, 10000);
 
     T value = {10000};
     char *expr = ecs_ptr_to_json(world, t, &value);

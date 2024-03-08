@@ -16,12 +16,12 @@ inline void set(world_t *world, flecs::entity_t entity, T&& value, flecs::id_t i
     ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
 
     if (!ecs_is_deferred(world)) {
-        T& dst = *static_cast<T*>(ecs_get_mut_id(world, entity, id));
+        T& dst = *static_cast<T*>(ecs_ensure_id(world, entity, id));
         dst = FLECS_MOV(value);
 
         ecs_modified_id(world, entity, id);
     } else {
-        T& dst = *static_cast<T*>(ecs_get_mut_modified_id(world, entity, id));
+        T& dst = *static_cast<T*>(ecs_ensure_modified_id(world, entity, id));
         dst = FLECS_MOV(value);
     }
 }
@@ -32,12 +32,12 @@ inline void set(world_t *world, flecs::entity_t entity, const T& value, flecs::i
     ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
 
     if (!ecs_is_deferred(world)) {
-        T& dst = *static_cast<T*>(ecs_get_mut_id(world, entity, id));
+        T& dst = *static_cast<T*>(ecs_ensure_id(world, entity, id));
         dst = FLECS_MOV(value);
 
         ecs_modified_id(world, entity, id);
     } else {
-        T& dst = *static_cast<T*>(ecs_get_mut_modified_id(world, entity, id));
+        T& dst = *static_cast<T*>(ecs_ensure_modified_id(world, entity, id));
         dst = FLECS_MOV(value);
     }
 }
@@ -48,12 +48,12 @@ inline void set(world_t *world, flecs::entity_t entity, T&& value, flecs::id_t i
     ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
 
     if (!ecs_is_deferred(world)) {
-        T& dst = *static_cast<remove_reference_t<T>*>(ecs_get_mut_id(world, entity, id));
+        T& dst = *static_cast<remove_reference_t<T>*>(ecs_ensure_id(world, entity, id));
         dst = FLECS_MOV(value);
 
         ecs_modified_id(world, entity, id);
     } else {
-        T& dst = *static_cast<remove_reference_t<T>*>(ecs_get_mut_modified_id(world, entity, id));
+        T& dst = *static_cast<remove_reference_t<T>*>(ecs_ensure_modified_id(world, entity, id));
         dst = FLECS_MOV(value);
     }
 }
@@ -64,12 +64,12 @@ inline void set(world_t *world, flecs::entity_t entity, const T& value, flecs::i
     ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
 
     if (!ecs_is_deferred(world)) {
-        T& dst = *static_cast<remove_reference_t<T>*>(ecs_get_mut_id(world, entity, id));
+        T& dst = *static_cast<remove_reference_t<T>*>(ecs_ensure_id(world, entity, id));
         dst = FLECS_MOV(value);
 
         ecs_modified_id(world, entity, id);
     } else {
-        T& dst = *static_cast<remove_reference_t<T>*>(ecs_get_mut_modified_id(world, entity, id));
+        T& dst = *static_cast<remove_reference_t<T>*>(ecs_ensure_modified_id(world, entity, id));
         dst = FLECS_MOV(value);
     }
 }
@@ -610,10 +610,12 @@ struct world {
             FLECS_FWD(args)...);
     }
 
-    /** Get mut singleton component.
+    /** Ensure singleton component.
      */
+    #ifndef ensure
     template <typename T>
-    T* get_mut() const;
+    T& ensure() const;
+    #endif
 
     /** Mark singleton component as modified.
      */
@@ -1027,17 +1029,7 @@ struct world {
      */
     flecs::entity get_alive(flecs::entity_t e) const;
 
-/* Prevent clashing with Unreal define. Unreal applications will have to use
- *  ecs_ensure. */
-#ifndef ensure
-    /** Ensures that entity with provided generation is alive.
-     * This operation will fail if an entity exists with the same id and a
-     * different, non-zero generation.
-     *
-     * @see ecs_ensure
-     */
-    flecs::entity ensure(flecs::entity_t e) const;
-#endif
+    flecs::entity make_alive(flecs::entity_t e) const;
 
     /* Run callback after completing frame */
     void run_post_frame(ecs_fini_action_t action, void *ctx) const {

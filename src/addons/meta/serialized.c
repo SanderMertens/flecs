@@ -285,7 +285,7 @@ void ecs_meta_type_serialized_init(
         ecs_vec_init_t(NULL, &ops, ecs_meta_type_op_t, 0);
         flecs_meta_serialize_component(world, e, &ops);
 
-        EcsMetaTypeSerialized *ptr = ecs_get_mut(
+        EcsMetaTypeSerialized *ptr = ecs_ensure(
             world, e, EcsMetaTypeSerialized);
         if (ptr->ops.array) {
             ecs_meta_dtor_serialized(ptr);

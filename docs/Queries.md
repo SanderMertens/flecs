@@ -2429,7 +2429,7 @@ The change detection feature cannot detect all changes. The following scenarios 
 - A change in tables matched by the query
 
 The following scenarios are not detected by change detection:
-- Modifying a component obtained by `get_mut` without calling `modified`
+- Modifying a component obtained by `ensure` without calling `modified`
 - Modifying the value of a ref (`ecs_ref_t` or `flecs::ref`) without calling `modified`
 
 A query with change detection enabled will only report a change for the components it matched with, or when an entity got added/removed to a matched table. A change to a component in a matched table that is not matched by the query will not be reported by the query.

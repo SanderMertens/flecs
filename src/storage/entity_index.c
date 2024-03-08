@@ -187,7 +187,7 @@ void flecs_entity_index_remove(
         ECS_INTERNAL_ERROR, NULL);
 }
 
-void flecs_entity_index_set_generation(
+void flecs_entity_index_make_alive(
     ecs_entity_index_t *index,
     uint64_t entity)
 {
@@ -197,7 +197,7 @@ void flecs_entity_index_set_generation(
     }
 }
 
-uint64_t flecs_entity_index_get_generation(
+uint64_t flecs_entity_index_get_alive(
     const ecs_entity_index_t *index,
     uint64_t entity)
 {
@@ -354,7 +354,7 @@ void flecs_entity_index_copy_intern(
         uint64_t id = ids[i];
         ecs_record_t *src_ptr = flecs_entity_index_get(src, id);
         ecs_record_t *dst_ptr = flecs_entity_index_ensure(dst, id);
-        flecs_entity_index_set_generation(dst, id);
+        flecs_entity_index_make_alive(dst, id);
         ecs_os_memcpy_t(dst_ptr, src_ptr, ecs_record_t);
     }
 

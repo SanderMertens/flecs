@@ -838,7 +838,7 @@ ecs_table_t* flecs_find_table_with(
     ecs_table_t *node,
     ecs_id_t with)
 {    
-    ecs_ensure_id(world, with);
+    ecs_make_alive_id(world, with);
 
     ecs_id_record_t *idr = NULL;
     ecs_entity_t r = 0, o = 0;

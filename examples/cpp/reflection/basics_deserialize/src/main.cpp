@@ -16,19 +16,19 @@ int main(int, char *[]) {
 
     // Create entity, set value of position using reflection API
     flecs::entity e = ecs.entity();
-    Position *ptr = e.get_mut<Position>();
+    Position& ptr = e.ensure<Position>();
 
-    flecs::cursor cur = ecs.cursor<Position>(ptr);
+    flecs::cursor cur = ecs.cursor<Position>(&ptr);
     cur.push();          // {
     cur.set_float(10.0); //   10
     cur.next();          //   ,
     cur.set_float(20.0); //   20
     cur.pop();           // }
 
-    std::cout << ecs.to_expr(ptr).c_str() << "\n"; // {x: 10.00, y: 20.00}
+    std::cout << ecs.to_expr(&ptr).c_str() << "\n"; // {x: 10.00, y: 20.00}
 
     // Use member names before assigning values
-    cur = ecs.cursor<Position>(ptr);
+    cur = ecs.cursor<Position>(&ptr);
     cur.push();        // {
     cur.member("y");   //   y: 
     cur.set_float(10); //   10
@@ -36,5 +36,5 @@ int main(int, char *[]) {
     cur.set_float(20); //   20
     cur.pop();         // }
 
-    std::cout << ecs.to_expr(ptr).c_str() << "\n"; // {x: 20.00, y: 10.00}
+    std::cout << ecs.to_expr(&ptr).c_str() << "\n"; // {x: 20.00, y: 10.00}
 }

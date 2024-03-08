@@ -934,7 +934,7 @@ void Sorting_sort_1000_entities_again(void) {
 
     for (int i = 0; i < 1000; i ++) {
         int32_t v = rand();
-        ecs_ensure(world, i + start);
+        ecs_make_alive(world, i + start);
         ecs_set(world, i + start, Position, {v});
 
         ecs_iter_t it = ecs_query_iter(world, q);
@@ -1029,7 +1029,7 @@ void Sorting_sort_1000_entities_2_types_again(void) {
 
     for (int i = 0; i < 1000; i ++) {
         int32_t v = rand();
-        ecs_ensure(world, i + start);
+        ecs_make_alive(world, i + start);
         ecs_set(world, i + start, Position, {v});
 
         if (!(i % 2)) {
@@ -1088,7 +1088,7 @@ void Sorting_sort_1000_entities_add_type_after_sort(void) {
 
     for (int i = 0; i < 500; i ++) {
         int32_t v = rand();
-        ecs_ensure(world, i + start);
+        ecs_make_alive(world, i + start);
         ecs_set(world, i + start, Position, {v});
 
         ecs_iter_t it = ecs_query_iter(world, q);
@@ -1115,7 +1115,7 @@ void Sorting_sort_1000_entities_add_type_after_sort(void) {
 
     for (int i = 0; i < 500; i ++) {
         int32_t v = rand();
-        ecs_ensure(world, i + start + 500);
+        ecs_make_alive(world, i + start + 500);
         ecs_set(world, i + start + 500, Position, {v});
         ecs_add(world, i + start + 500, Velocity);
 

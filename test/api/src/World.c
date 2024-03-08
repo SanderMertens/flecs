@@ -146,7 +146,7 @@ void World_entity_range_out_of_range_check_disabled(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_ensure(world, 4999);
+    ecs_make_alive(world, 4999);
 
     ecs_enable_range_check(world, false);
     ecs_set_entity_range(world, 5000, 10000);
@@ -1391,11 +1391,11 @@ void at_fini_test(
     ecs_world_t* world,
     void* context) 
 {
-    test_assert(ecs_singleton_get_mut(world, Test) != NULL);
+    test_assert(ecs_singleton_ensure(world, Test) != NULL);
     at_fini_test_invoked = 1;
 }
 
-void World_get_mut_in_at_fini(void) {
+void World_ensure_in_at_fini(void) {
     ecs_world_t* world = ecs_mini();
 
     ECS_COMPONENT_DEFINE(world, Test);

@@ -137,7 +137,7 @@ void Lookup_lookup_by_id(void) {
     ecs_entity_t e = ecs_lookup(world, "1000");
     test_int(e, 0);
 
-    ecs_ensure(world, 1000);
+    ecs_make_alive(world, 1000);
 
     e = ecs_lookup(world, "1000");
     test_int(e, 1000);
@@ -182,7 +182,7 @@ void Lookup_lookup_name_w_digit(void) {
 void Lookup_lookup_symbol_by_id(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_ensure(world, 1000);
+    ecs_make_alive(world, 1000);
     ecs_entity_t e = ecs_lookup_symbol(world, "1000", true, true);
     test_int(e, 1000);
 

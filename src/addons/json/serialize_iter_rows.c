@@ -214,7 +214,7 @@ bool flecs_json_serialize_table_row_pairs(
             continue;
         }
 
-        ecs_entity_t first = flecs_entities_get_generation(
+        ecs_entity_t first = flecs_entities_get_alive(
             world, ECS_PAIR_FIRST(id));
         if (!desc || !desc->serialize_private) {
             if (ecs_has_id(world, first, EcsPrivate)) {
@@ -227,7 +227,7 @@ bool flecs_json_serialize_table_row_pairs(
             flecs_json_object_push(buf);            
         }
 
-        ecs_entity_t second = flecs_entities_get_generation(
+        ecs_entity_t second = flecs_entities_get_alive(
             world, ECS_PAIR_SECOND(id));
 
         bool is_last = f == (type_count - 1);

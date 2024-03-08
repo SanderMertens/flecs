@@ -416,7 +416,7 @@ void OnSetTestInvoked(ecs_iter_t *it) {
     on_set_invoked = 1;
 }
 
-void Commands_defer_get_mut_no_modify(void) {
+void Commands_defer_ensure_no_modify(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -428,7 +428,7 @@ void Commands_defer_get_mut_no_modify(void) {
 
     ecs_defer_begin(world);
 
-    Velocity *v = ecs_get_mut(world, e, Velocity);
+    Velocity *v = ecs_ensure(world, e, Velocity);
     v->x = 1;
     v->y = 2;
 
@@ -446,7 +446,7 @@ void Commands_defer_get_mut_no_modify(void) {
     ecs_fini(world);
 }
 
-void Commands_defer_get_mut_w_modify(void) {
+void Commands_defer_ensure_w_modify(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -458,7 +458,7 @@ void Commands_defer_get_mut_w_modify(void) {
 
     ecs_defer_begin(world);
 
-    Velocity *v = ecs_get_mut(world, e, Velocity);
+    Velocity *v = ecs_ensure(world, e, Velocity);
     v->x = 1;
     v->y = 2;
     test_assert(!on_set_invoked);
@@ -618,7 +618,7 @@ void Commands_defer_set_after_delete(void) {
     ecs_fini(world);  
 }
 
-void Commands_defer_get_mut_after_delete(void) {
+void Commands_defer_ensure_after_delete(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -631,7 +631,7 @@ void Commands_defer_get_mut_after_delete(void) {
     ecs_defer_begin(world);
 
     ecs_delete(world, e);
-    Velocity *v = ecs_get_mut(world, e, Velocity);
+    Velocity *v = ecs_ensure(world, e, Velocity);
     v->x = 1;
     v->y = 2;
 
@@ -653,7 +653,7 @@ void Commands_defer_get_mut_after_delete(void) {
     ecs_fini(world);  
 }
 
-void Commands_defer_get_mut_after_delete_2nd_to_last(void) {
+void Commands_defer_ensure_after_delete_2nd_to_last(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -670,7 +670,7 @@ void Commands_defer_get_mut_after_delete_2nd_to_last(void) {
     ecs_defer_begin(world);
 
     ecs_delete(world, e);
-    Velocity *v = ecs_get_mut(world, e, Velocity);
+    Velocity *v = ecs_ensure(world, e, Velocity);
     v->x = 1;
     v->y = 2;
 
@@ -1470,7 +1470,7 @@ void Commands_defer_return_value(void) {
     ecs_fini(world);
 }
 
-void Commands_defer_get_mut_pair(void) {
+void Commands_defer_ensure_pair(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -1480,7 +1480,7 @@ void Commands_defer_get_mut_pair(void) {
 
     ecs_defer_begin(world);
 
-    Position *p = ecs_get_mut_pair(world, e, Position, Pair);
+    Position *p = ecs_ensure_pair(world, e, Position, Pair);
     test_assert(p != NULL);
     p->x = 10;
     p->y = 20;
@@ -1894,7 +1894,7 @@ static void update_counter(ecs_iter_t *it) {
         ecs_entity_t parent = ecs_get_target(world, e, EcsChildOf, 0);
         test_assert(parent != 0);
 
-        Counter *ptr = ecs_get_mut(world, parent, Counter);
+        Counter *ptr = ecs_ensure(world, parent, Counter);
         test_assert(ptr != NULL);
 
         if (it->event == EcsOnAdd) {
@@ -2145,7 +2145,7 @@ void Commands_defer_set_large_component(void) {
     ecs_entity_t e = ecs_new_id(world);
 
     ecs_defer_begin(world);
-    LargeComponent *ptr = ecs_get_mut(world, e, LargeComponent);
+    LargeComponent *ptr = ecs_ensure(world, e, LargeComponent);
     test_assert(ptr != NULL);
     for (int i = 0; i < 8096; i ++) {
         ptr->arr[i] = i;
@@ -2153,7 +2153,7 @@ void Commands_defer_set_large_component(void) {
     test_assert(!ecs_has(world, e, LargeComponent));
     ecs_defer_end(world);
 
-    ptr = ecs_get_mut(world, e, LargeComponent);
+    ptr = ecs_ensure(world, e, LargeComponent);
     test_assert(ptr != NULL);
     for (int i = 0; i < 8096; i ++) {
         test_int(ptr->arr[i], i);
@@ -2855,7 +2855,7 @@ void Commands_defer_2_sets_w_multi_observer(void) {
     ecs_fini(world);
 }
 
-void Commands_defer_2_get_muts_w_multi_observer(void) {
+void Commands_defer_2_ensures_w_multi_observer(void) {
     ecs_world_t *world = ecs_mini();
     
     ECS_COMPONENT(world, Position);
@@ -2871,11 +2871,11 @@ void Commands_defer_2_get_muts_w_multi_observer(void) {
 
     ecs_defer_begin(world);
     {
-        Position *p = ecs_get_mut(world, e, Position);
+        Position *p = ecs_ensure(world, e, Position);
         p->x = 10;
         p->y = 20;
         ecs_modified(world, e, Position);
-        Velocity *v = ecs_get_mut(world, e, Velocity);
+        Velocity *v = ecs_ensure(world, e, Velocity);
         v->x = 1;
         v->y = 2;
         ecs_modified(world, e, Velocity);
@@ -2894,7 +2894,7 @@ void Commands_defer_2_get_muts_w_multi_observer(void) {
     ecs_fini(world);
 }
 
-void Commands_defer_2_get_muts_no_modified_w_multi_observer(void) {
+void Commands_defer_2_ensures_no_modified_w_multi_observer(void) {
     ecs_world_t *world = ecs_mini();
     
     ECS_COMPONENT(world, Position);
@@ -2910,10 +2910,10 @@ void Commands_defer_2_get_muts_no_modified_w_multi_observer(void) {
 
     ecs_defer_begin(world);
     {
-        Position *p = ecs_get_mut(world, e, Position);
+        Position *p = ecs_ensure(world, e, Position);
         p->x = 10;
         p->y = 20;
-        Velocity *v = ecs_get_mut(world, e, Velocity);
+        Velocity *v = ecs_ensure(world, e, Velocity);
         v->x = 1;
         v->y = 2;
     }
@@ -3009,7 +3009,7 @@ void Commands_absent_set_remove(void) {
     ecs_fini(world);
 }
 
-void Commands_exists_set_w_get_mut(void) {
+void Commands_exists_set_w_ensure(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -3020,7 +3020,7 @@ void Commands_exists_set_w_get_mut(void) {
     ecs_defer_begin(world);
     {
         ecs_set(world, e, Position, {5, 6});
-        Position *p = ecs_get_mut(world, e, Position);
+        Position *p = ecs_ensure(world, e, Position);
         p->x = 11;
     }
     ecs_defer_end(world);
@@ -3033,7 +3033,7 @@ void Commands_exists_set_w_get_mut(void) {
     ecs_fini(world);
 }
 
-void Commands_exists_remove_get_mut(void) {
+void Commands_exists_remove_ensure(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -3044,7 +3044,7 @@ void Commands_exists_remove_get_mut(void) {
     ecs_defer_begin(world);
     ecs_remove(world, e, Position);
     {
-        Position *p = ecs_get_mut(world, e, Position);
+        Position *p = ecs_ensure(world, e, Position);
         test_assert(p != NULL);
         p->x = 5;
         p->y = 6;
@@ -3059,7 +3059,7 @@ void Commands_exists_remove_get_mut(void) {
     ecs_fini(world);
 }
 
-void Commands_absent_remove_get_mut(void) {
+void Commands_absent_remove_ensure(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -3069,7 +3069,7 @@ void Commands_absent_remove_get_mut(void) {
     ecs_defer_begin(world);
     ecs_remove(world, e, Position);
     {
-        Position *p = ecs_get_mut(world, e, Position);
+        Position *p = ecs_ensure(world, e, Position);
         test_assert(p != NULL);
         p->x = 5;
         p->y = 6;
@@ -3085,7 +3085,7 @@ void Commands_absent_remove_get_mut(void) {
     ecs_fini(world);
 }
 
-void Commands_exists_get_mut_remove(void) {
+void Commands_exists_ensure_remove(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -3095,7 +3095,7 @@ void Commands_exists_get_mut_remove(void) {
 
     ecs_defer_begin(world);
     {
-        Position *p = ecs_get_mut(world, e, Position);
+        Position *p = ecs_ensure(world, e, Position);
         test_assert(p != NULL);
         p->x = 5;
         p->y = 6;
@@ -3109,7 +3109,7 @@ void Commands_exists_get_mut_remove(void) {
     ecs_fini(world);
 }
 
-void Commands_absent_get_mut_remove(void) {
+void Commands_absent_ensure_remove(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -3118,7 +3118,7 @@ void Commands_absent_get_mut_remove(void) {
 
     ecs_defer_begin(world);
     {
-        Position *p = ecs_get_mut(world, e, Position);
+        Position *p = ecs_ensure(world, e, Position);
         test_assert(p != NULL);
         p->x = 5;
         p->y = 6;
@@ -3184,7 +3184,7 @@ void Commands_exists_set_invoke_on_set(void) {
     ecs_fini(world);
 }
 
-void Commands_defer_get_mut_no_on_set(void) {
+void Commands_defer_ensure_no_on_set(void) {
     ecs_world_t *world = ecs_mini();
     on_set_invoked = 0;
 
@@ -3196,7 +3196,7 @@ void Commands_defer_get_mut_no_on_set(void) {
     /* create the component */
     ecs_defer_begin(world);
     {
-        Position *p = ecs_get_mut(world, e, Position);
+        Position *p = ecs_ensure(world, e, Position);
         p->x = 1;
         p->y = 2;
     }
@@ -3212,7 +3212,7 @@ void Commands_defer_get_mut_no_on_set(void) {
     ecs_fini(world);
 }
 
-void Commands_defer_existing_get_mut_no_on_set(void) {
+void Commands_defer_existing_ensure_no_on_set(void) {
     ecs_world_t *world = ecs_mini();
     on_set_invoked = 0;
 
@@ -3224,7 +3224,7 @@ void Commands_defer_existing_get_mut_no_on_set(void) {
     /* create the component */
     ecs_defer_begin(world);
     {
-        Position *p = ecs_get_mut(world, e, Position);
+        Position *p = ecs_ensure(world, e, Position);
         p->x = 1;
         p->y = 2;
     }
@@ -3240,7 +3240,7 @@ void Commands_defer_existing_get_mut_no_on_set(void) {
     ecs_fini(world);
 }
 
-void Commands_get_mut_override(void) {
+void Commands_ensure_override(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -3250,7 +3250,7 @@ void Commands_get_mut_override(void) {
 
     ecs_defer_begin(world);
     {
-        Position *p = ecs_get_mut(world, e, Position);
+        Position *p = ecs_ensure(world, e, Position);
         test_assert(p != NULL);
         test_int(p->x, 1);
         test_int(p->y, 2);
@@ -3307,7 +3307,7 @@ void Commands_set_override(void) {
     ecs_fini(world);
 }
 
-void Commands_absent_get_mut_for_entity_w_tag(void) {
+void Commands_absent_ensure_for_entity_w_tag(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -3318,7 +3318,7 @@ void Commands_absent_get_mut_for_entity_w_tag(void) {
     
     ecs_defer_begin(world);
     {
-        Position *p = ecs_get_mut(world, e, Position);
+        Position *p = ecs_ensure(world, e, Position);
         test_assert(p != NULL);
         p->x = 10;
         p->y = 20;

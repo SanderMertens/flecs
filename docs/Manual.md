@@ -497,10 +497,10 @@ The value of a component can be requested with `ecs_get`, which will return `NUL
 const Position *p = ecs_get(world, e, Position);
 ```
 
-The `ecs_get` operation returns a const pointer which should not be modified by the application. An application can obtain a mutable pointer with `ecs_get_mut`. The `ecs_get_mut` operation ensures that, even when using multiple threads, an application obtains a pointer to a component that can be safely modified, whereas the `ecs_get` operation might return a pointer to memory that is shared between threads. When an application modified a component obtained with `ecs_get_mut`, it should invoke `ecs_modified` to let the framework know the component value was changed. An example:
+The `ecs_get` operation returns a const pointer which should not be modified by the application. An application can obtain a mutable pointer with `ecs_ensure`. The `ecs_ensure` operation ensures that, even when using multiple threads, an application obtains a pointer to a component that can be safely modified, whereas the `ecs_get` operation might return a pointer to memory that is shared between threads. When an application modified a component obtained with `ecs_ensure`, it should invoke `ecs_modified` to let the framework know the component value was changed. An example:
 
 ```c
-Position *p = ecs_get_mut(world, e, Position);
+Position *p = ecs_ensure(world, e, Position);
 p->x++;
 ecs_modified(world, e, Position);
 ```
@@ -1212,7 +1212,7 @@ The effects of these operations will not be visible until the `ecs_defer_end` op
 
 There are a few things to keep in mind when deferring:
 - creating a new entity will always return a new id which increases the last used id counter of the world
-- `ecs_get_mut` returns a pointer initialized with the current component value, and does not take into account deferred set or get_mut operations
+- `ecs_ensure` returns a pointer initialized with the current component value, and does not take into account deferred set or ensure operations
 - if an operation is called on an entity which was deleted while deferred, the operation will ignored by `ecs_defer_end`
 - if a child entity is created for a deleted parent while deferred, the child entity will be deleted by `ecs_defer_end`
 
