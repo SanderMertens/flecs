@@ -456,6 +456,73 @@ void Set_ensure_tag_existing_w_pair(void) {
     ecs_ensure_id(world, e, MyTag);
 }
 
+void Set_get_mut_not_existing(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new_id(world);
+    Position *p = ecs_get_mut(world, e, Position);
+    test_assert(p == NULL);
+    
+    ecs_fini(world);
+}
+
+void Set_get_mut_existing(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    Position *p = ecs_get_mut(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+    
+    ecs_fini(world);
+}
+
+void Set_get_mut_tag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t e = ecs_new(world, Foo);
+    test_assert(NULL == ecs_get_mut_id(world, e, Foo));
+    
+    ecs_fini(world);
+}
+
+void Set_get_mut_pair(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tgt);
+
+    ecs_entity_t e = ecs_set_pair(world, 0, Position, Tgt, {10, 20});
+    Position *p = ecs_get_mut_pair(world, e, Position, Tgt);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+    
+    ecs_fini(world);
+}
+
+void Set_get_mut_pair_second(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tgt);
+
+    ecs_entity_t e = ecs_set_pair_second(world, 0, Tgt, Position, {10, 20});
+    Position *p = ecs_get_mut_pair_second(world, e, Tgt, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+    
+    ecs_fini(world);
+}
+
 static bool is_invoked = false;
 
 void OnSetPosition(ecs_iter_t *it) {

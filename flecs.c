@@ -6289,6 +6289,42 @@ error:
     return NULL;
 }
 
+void* ecs_get_mut_id(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id)
+{
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_is_alive(world, entity), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(flecs_stage_from_readonly_world(world)->async == false, 
+        ECS_INVALID_PARAMETER, NULL);
+
+    world = ecs_get_world(world);
+
+    ecs_record_t *r = flecs_entities_get(world, entity);
+    ecs_assert(r != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_table_t *table = r->table;
+    if (!table) {
+        return NULL;
+    }
+
+    ecs_id_record_t *idr = flecs_id_record_get(world, id);
+    if (!idr) {
+        return NULL;
+    }
+
+    const ecs_table_record_t *tr = flecs_id_record_get_table(idr, table);
+    if (!tr || (tr->column == -1)) {
+       return NULL;
+    }
+
+    int32_t row = ECS_RECORD_TO_ROW(r->row);
+    return flecs_get_component_w_index(table, tr->column, row).ptr;
+error:
+    return NULL;
+}
+
 void* ecs_ensure_id(
     ecs_world_t *world,
     ecs_entity_t entity,

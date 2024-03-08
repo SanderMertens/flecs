@@ -2675,6 +2675,9 @@ bool ecs_is_enabled_id(
 /** Get an immutable pointer to a component.
  * This operation obtains a const pointer to the requested component. The
  * operation accepts the component entity id.
+ * 
+ * This operation can return inherited components reachable through an IsA
+ * relationship.
  *
  * @param world The world.
  * @param entity The entity.
@@ -2684,6 +2687,60 @@ bool ecs_is_enabled_id(
 FLECS_API
 const void* ecs_get_id(
     const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id);
+
+/** Get a mutable pointer to a component.
+ * This operation obtains a mutable pointer to the requested component. The
+ * operation accepts the component entity id.
+ * 
+ * Unlike ecs_get_id, this operation does not return inherited components. 
+ *
+ * @param world The world.
+ * @param entity The entity.
+ * @param id The id of the component to get.
+ * @return The component pointer, NULL if the entity does not have the component.
+ */
+FLECS_API
+void* ecs_get_mut_id(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id);
+
+/** Get a mutable pointer to a component.
+ * This operation returns a mutable pointer to a component. If the component did
+ * not yet exist, it will be added.
+ *
+ * If ensure is called when the world is in deferred/readonly mode, the
+ * function will:
+ * - return a pointer to a temp storage if the component does not yet exist, or
+ * - return a pointer to the existing component if it exists
+ *
+ * @param world The world.
+ * @param entity The entity.
+ * @param id The entity id of the component to obtain.
+ * @return The component pointer.
+ */
+FLECS_API
+void* ecs_ensure_id(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id);
+
+/** Combines ensure + modified in single operation.
+ * This operation is a more efficient alternative to calling ecs_ensure_id() and
+ * ecs_modified_id() separately. This operation is only valid when the world is in
+ * deferred mode, which ensures that the Modified event is not emitted before
+ * the modification takes place.
+ *
+ * @param world The world.
+ * @param entity The entity.
+ * @param id The id of the component to obtain.
+ * @return The component pointer.
+ */
+FLECS_API
+void* ecs_ensure_modified_id(
+    ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id);
 
@@ -2728,43 +2785,6 @@ FLECS_API
 void ecs_ref_update(
     const ecs_world_t *world,
     ecs_ref_t *ref);
-
-/** Get a mutable pointer to a component.
- * This operation returns a mutable pointer to a component. If the component did
- * not yet exist, it will be added.
- *
- * If ensure is called when the world is in deferred/readonly mode, the
- * function will:
- * - return a pointer to a temp storage if the component does not yet exist, or
- * - return a pointer to the existing component if it exists
- *
- * @param world The world.
- * @param entity The entity.
- * @param id The entity id of the component to obtain.
- * @return The component pointer.
- */
-FLECS_API
-void* ecs_ensure_id(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    ecs_id_t id);
-
-/** Combines ensure + modified in single operation.
- * This operation is a more efficient alternative to calling ecs_ensure_id() and
- * ecs_modified_id() separately. This operation is only valid when the world is in
- * deferred mode, which ensures that the Modified event is not emitted before
- * the modification takes place.
- *
- * @param world The world.
- * @param entity The entity.
- * @param id The id of the component to obtain.
- * @return The component pointer.
- */
-FLECS_API
-void* ecs_ensure_modified_id(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    ecs_id_t id);
 
 /** Begin exclusive write access to entity.
  * This operation provides safe exclusive access to the components of an entity

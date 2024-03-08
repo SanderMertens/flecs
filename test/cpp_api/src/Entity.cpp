@@ -594,6 +594,113 @@ void Entity_ensure_generic_w_id_t(void) {
     test_bool(invoked, true);
 }
 
+void Entity_get_mut_w_id(void) {
+    flecs::world world;
+
+    flecs::entity e = world.entity();
+
+    Position *p = static_cast<Position*>(e.get_mut(world.id<Position>()));
+    test_assert(p == nullptr);
+
+    e.set<Position>({10, 20});
+    
+    p = static_cast<Position*>(e.get_mut(world.id<Position>()));
+    test_assert(p != nullptr);
+
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Entity_get_mut_T(void) {
+    flecs::world world;
+
+    flecs::entity e = world.entity();
+
+    Position *p = e.get_mut<Position>();
+    test_assert(p == nullptr);
+
+    e.set<Position>({10, 20});
+    
+    p = e.get_mut<Position>();
+    test_assert(p != nullptr);
+
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Entity_get_mut_r_t(void) {
+    flecs::world world;
+
+    flecs::entity tgt = world.entity();
+    flecs::entity e = world.entity();
+
+    Position *p = static_cast<Position*>(e.get_mut(world.id<Position>(), tgt));
+    test_assert(p == nullptr);
+
+    e.set<Position>(tgt, {10, 20});
+    
+    p = static_cast<Position*>(e.get_mut(world.id<Position>(), tgt));
+    test_assert(p != nullptr);
+
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Entity_get_mut_R_t(void) {
+    flecs::world world;
+
+    flecs::entity tgt = world.entity();
+    flecs::entity e = world.entity();
+
+    Position *p = e.get_mut<Position>(tgt);
+    test_assert(p == nullptr);
+
+    e.set<Position>(tgt, {10, 20});
+    
+    p = e.get_mut<Position>(tgt);
+    test_assert(p != nullptr);
+
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Entity_get_mut_R_T(void) {
+    flecs::world world;
+
+    struct Tgt { };
+
+    flecs::entity e = world.entity();
+
+    Position *p = e.get_mut<Position, Tgt>();
+    test_assert(p == nullptr);
+
+    e.set<Position, Tgt>({10, 20});
+    
+    p = e.get_mut<Position, Tgt>();
+    test_assert(p != nullptr);
+
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void Entity_get_mut_r_T(void) {
+    flecs::world world;
+
+    flecs::entity rel = world.entity();
+    flecs::entity e = world.entity();
+
+    Position *p = e.get_mut_second<Position>(rel);
+    test_assert(p == nullptr);
+
+    e.set_second<Position>(rel, {10, 20});
+    
+    p = e.get_mut_second<Position>(rel);
+    test_assert(p != nullptr);
+
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
 void Entity_set_generic(void) {
     flecs::world world;
 

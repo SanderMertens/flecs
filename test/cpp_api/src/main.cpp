@@ -48,6 +48,12 @@ void Entity_get_generic_w_id(void);
 void Entity_get_generic_w_id_t(void);
 void Entity_ensure_generic_w_id(void);
 void Entity_ensure_generic_w_id_t(void);
+void Entity_get_mut_w_id(void);
+void Entity_get_mut_T(void);
+void Entity_get_mut_r_t(void);
+void Entity_get_mut_R_t(void);
+void Entity_get_mut_R_T(void);
+void Entity_get_mut_r_T(void);
 void Entity_set_generic(void);
 void Entity_set_generic_w_id(void);
 void Entity_set_generic_w_id_t(void);
@@ -1501,6 +1507,30 @@ bake_test_case Entity_testcases[] = {
     {
         "ensure_generic_w_id_t",
         Entity_ensure_generic_w_id_t
+    },
+    {
+        "get_mut_w_id",
+        Entity_get_mut_w_id
+    },
+    {
+        "get_mut_T",
+        Entity_get_mut_T
+    },
+    {
+        "get_mut_r_t",
+        Entity_get_mut_r_t
+    },
+    {
+        "get_mut_R_t",
+        Entity_get_mut_R_t
+    },
+    {
+        "get_mut_R_T",
+        Entity_get_mut_R_T
+    },
+    {
+        "get_mut_r_T",
+        Entity_get_mut_r_T
     },
     {
         "set_generic",
@@ -6587,7 +6617,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        247,
+        253,
         Entity_testcases
     },
     {

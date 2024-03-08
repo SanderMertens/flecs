@@ -5464,6 +5464,9 @@ bool ecs_is_enabled_id(
 /** Get an immutable pointer to a component.
  * This operation obtains a const pointer to the requested component. The
  * operation accepts the component entity id.
+ * 
+ * This operation can return inherited components reachable through an IsA
+ * relationship.
  *
  * @param world The world.
  * @param entity The entity.
@@ -5473,6 +5476,60 @@ bool ecs_is_enabled_id(
 FLECS_API
 const void* ecs_get_id(
     const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id);
+
+/** Get a mutable pointer to a component.
+ * This operation obtains a mutable pointer to the requested component. The
+ * operation accepts the component entity id.
+ * 
+ * Unlike ecs_get_id, this operation does not return inherited components. 
+ *
+ * @param world The world.
+ * @param entity The entity.
+ * @param id The id of the component to get.
+ * @return The component pointer, NULL if the entity does not have the component.
+ */
+FLECS_API
+void* ecs_get_mut_id(
+    const ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id);
+
+/** Get a mutable pointer to a component.
+ * This operation returns a mutable pointer to a component. If the component did
+ * not yet exist, it will be added.
+ *
+ * If ensure is called when the world is in deferred/readonly mode, the
+ * function will:
+ * - return a pointer to a temp storage if the component does not yet exist, or
+ * - return a pointer to the existing component if it exists
+ *
+ * @param world The world.
+ * @param entity The entity.
+ * @param id The entity id of the component to obtain.
+ * @return The component pointer.
+ */
+FLECS_API
+void* ecs_ensure_id(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_id_t id);
+
+/** Combines ensure + modified in single operation.
+ * This operation is a more efficient alternative to calling ecs_ensure_id() and
+ * ecs_modified_id() separately. This operation is only valid when the world is in
+ * deferred mode, which ensures that the Modified event is not emitted before
+ * the modification takes place.
+ *
+ * @param world The world.
+ * @param entity The entity.
+ * @param id The id of the component to obtain.
+ * @return The component pointer.
+ */
+FLECS_API
+void* ecs_ensure_modified_id(
+    ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id);
 
@@ -5517,43 +5574,6 @@ FLECS_API
 void ecs_ref_update(
     const ecs_world_t *world,
     ecs_ref_t *ref);
-
-/** Get a mutable pointer to a component.
- * This operation returns a mutable pointer to a component. If the component did
- * not yet exist, it will be added.
- *
- * If ensure is called when the world is in deferred/readonly mode, the
- * function will:
- * - return a pointer to a temp storage if the component does not yet exist, or
- * - return a pointer to the existing component if it exists
- *
- * @param world The world.
- * @param entity The entity.
- * @param id The entity id of the component to obtain.
- * @return The component pointer.
- */
-FLECS_API
-void* ecs_ensure_id(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    ecs_id_t id);
-
-/** Combines ensure + modified in single operation.
- * This operation is a more efficient alternative to calling ecs_ensure_id() and
- * ecs_modified_id() separately. This operation is only valid when the world is in
- * deferred mode, which ensures that the Modified event is not emitted before
- * the modification takes place.
- *
- * @param world The world.
- * @param entity The entity.
- * @param id The id of the component to obtain.
- * @return The component pointer.
- */
-FLECS_API
-void* ecs_ensure_modified_id(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    ecs_id_t id);
 
 /** Begin exclusive write access to entity.
  * This operation provides safe exclusive access to the components of an entity
@@ -8973,6 +8993,8 @@ int ecs_value_move_ctor(
  * @{
  */
 
+/* set */
+
 #define ecs_set_ptr(world, entity, component, ptr)\
     ecs_set_id(world, entity, ecs_id(component), sizeof(component), ptr)
 
@@ -8995,11 +9017,15 @@ int ecs_value_move_ctor(
     ecs_add_id(world, entity, ECS_OVERRIDE | ecs_id(T));\
     ecs_set(world, entity, T, __VA_ARGS__)
 
+/* emplace */
+
 #define ecs_emplace(world, entity, T)\
     (ECS_CAST(T*, ecs_emplace_id(world, entity, ecs_id(T))))
 
 #define ecs_emplace_pair(world, entity, First, second)\
     (ECS_CAST(First*, ecs_emplace_id(world, entity, ecs_pair_t(First, second))))
+
+/* get */
 
 #define ecs_get(world, entity, T)\
     (ECS_CAST(const T*, ecs_get_id(world, entity, ecs_id(T))))
@@ -9013,6 +9039,62 @@ int ecs_value_move_ctor(
         ecs_pair(first, ecs_id(Second)))))
 
 #define ecs_get_pair_object ecs_get_pair_second
+
+/* get_mut */
+
+#define ecs_get_mut(world, entity, T)\
+    (ECS_CAST(T*, ecs_get_mut_id(world, entity, ecs_id(T))))
+
+#define ecs_get_mut_pair(world, subject, First, second)\
+    (ECS_CAST(First*, ecs_get_mut_id(world, subject,\
+        ecs_pair(ecs_id(First), second))))
+
+#define ecs_get_mut_pair_second(world, subject, first, Second)\
+    (ECS_CAST(Second*, ecs_get_mut_id(world, subject,\
+        ecs_pair(first, ecs_id(Second)))))
+
+#define ecs_get_mut_pair_object ecs_get_mut_pair_second
+
+#define ecs_get_mut(world, entity, T)\
+    (ECS_CAST(T*, ecs_get_mut_id(world, entity, ecs_id(T))))
+
+/* ensure */
+
+#define ecs_ensure(world, entity, T)\
+    (ECS_CAST(T*, ecs_ensure_id(world, entity, ecs_id(T))))
+
+#define ecs_ensure_pair(world, subject, First, second)\
+    (ECS_CAST(First*, ecs_ensure_id(world, subject,\
+        ecs_pair(ecs_id(First), second))))
+
+#define ecs_ensure_pair_second(world, subject, first, Second)\
+    (ECS_CAST(Second*, ecs_ensure_id(world, subject,\
+        ecs_pair(first, ecs_id(Second)))))
+
+#define ecs_ensure_pair_object ecs_ensure_pair_second
+
+#define ecs_ensure(world, entity, T)\
+    (ECS_CAST(T*, ecs_ensure_id(world, entity, ecs_id(T))))
+
+#define ecs_ensure_pair(world, subject, First, second)\
+    (ECS_CAST(First*, ecs_ensure_id(world, subject,\
+        ecs_pair(ecs_id(First), second))))
+
+#define ecs_ensure_pair_second(world, subject, first, Second)\
+    (ECS_CAST(Second*, ecs_ensure_id(world, subject,\
+        ecs_pair(first, ecs_id(Second)))))
+
+#define ecs_ensure_pair_object ecs_ensure_pair_second
+
+/* modified */
+
+#define ecs_modified(world, entity, component)\
+    ecs_modified_id(world, entity, ecs_id(component))
+
+#define ecs_modified_pair(world, subject, first, second)\
+    ecs_modified_id(world, subject, ecs_pair(first, second))
+
+/* record */
 
 #define ecs_record_get(world, record, T)\
     (ECS_CAST(const T*, ecs_record_get_id(world, record, ecs_id(T))))
@@ -9046,25 +9128,6 @@ int ecs_value_move_ctor(
 
 #define ecs_ref_get(world, ref, T)\
     (ECS_CAST(const T*, ecs_ref_get_id(world, ref, ecs_id(T))))
-
-#define ecs_ensure(world, entity, T)\
-    (ECS_CAST(T*, ecs_ensure_id(world, entity, ecs_id(T))))
-
-#define ecs_ensure_pair(world, subject, First, second)\
-    (ECS_CAST(First*, ecs_ensure_id(world, subject,\
-        ecs_pair(ecs_id(First), second))))
-
-#define ecs_ensure_pair_second(world, subject, first, Second)\
-    (ECS_CAST(Second*, ecs_ensure_id(world, subject,\
-        ecs_pair(first, ecs_id(Second)))))
-
-#define ecs_ensure_pair_object ecs_ensure_pair_second
-
-#define ecs_modified(world, entity, component)\
-    ecs_modified_id(world, entity, ecs_id(component))
-
-#define ecs_modified_pair(world, subject, first, second)\
-    ecs_modified_id(world, subject, ecs_pair(first, second))
 
 /** @} */
 
@@ -22607,6 +22670,123 @@ struct entity_view : public id {
     template<typename First, typename Second>
     const Second* get_second() const {
         return get<pair_object<First, Second>>();
+    }
+
+    /** Get mutable component value.
+     * 
+     * @tparam T The component to get.
+     * @return Pointer to the component value, nullptr if the entity does not
+     *         have the component.
+     */
+    template <typename T, if_t< is_actual<T>::value > = 0>
+    T* get_mut() const {
+        auto comp_id = _::cpp_type<T>::id(m_world);
+        ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        return static_cast<T*>(ecs_get_mut_id(m_world, m_id, comp_id));
+    }
+
+    /** Get mutable component value.
+     * Overload for when T is not the same as the actual type, which happens
+     * when using pair types.
+     * 
+     * @tparam T The component to get.
+     * @return Pointer to the component value, nullptr if the entity does not
+     *         have the component.
+     */
+    template <typename T, typename A = actual_type_t<T>, 
+        if_t< flecs::is_pair<T>::value > = 0>
+    A* get_mut() const {
+        auto comp_id = _::cpp_type<T>::id(m_world);
+        ecs_assert(_::cpp_type<A>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        return static_cast<A*>(ecs_get_mut_id(m_world, m_id, comp_id));
+    }
+
+    /** Get a mutable pair.
+     * This operation gets the value for a pair from the entity.
+     *
+     * @tparam First The first element of the pair.
+     * @tparam Second the second element of a pair.
+     */
+    template <typename First, typename Second, typename P = pair<First, Second>, 
+        typename A = actual_type_t<P>, if_not_t< flecs::is_pair<First>::value > = 0>
+    A* get_mut() const {
+        return this->get_mut<P>();
+    }
+
+    /** Get a mutable pair.
+     * This operation gets the value for a pair from the entity. 
+     *
+     * @tparam First The first element of the pair.
+     * @param second The second element of the pair.
+     */
+    template<typename First, typename Second, if_not_t< is_enum<Second>::value> = 0>
+    First* get_mut(Second second) const {
+        auto comp_id = _::cpp_type<First>::id(m_world);
+        ecs_assert(_::cpp_type<First>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        return static_cast<First*>(
+            ecs_get_mut_id(m_world, m_id, ecs_pair(comp_id, second)));
+    }
+
+    /** Get a mutable pair.
+     * This operation gets the value for a pair from the entity. 
+     *
+     * @tparam First The first element of the pair.
+     * @param constant the enum constant.
+     */
+    template<typename First, typename Second, if_t<is_enum<Second>::value> = 0>
+    First* get_mut(Second constant) const {
+        const auto& et = enum_type<Second>(this->m_world);
+        flecs::entity_t target = et.entity(constant);
+        return get_mut<First>(target);
+    }
+
+    /** Get mutable component value (untyped).
+     * 
+     * @param comp The component to get.
+     * @return Pointer to the component value, nullptr if the entity does not
+     *         have the component.
+     */
+    void* get_mut(flecs::id_t comp) const {
+        return ecs_get_mut_id(m_world, m_id, comp);
+    }
+
+    /** Get a mutable pair (untyped).
+     * This operation gets the value for a pair from the entity. If neither the
+     * first nor the second part of the pair are components, the operation 
+     * will fail.
+     *
+     * @param first The first element of the pair.
+     * @param second The second element of the pair.
+     */
+    void* get_mut(flecs::entity_t first, flecs::entity_t second) const {
+        return ecs_get_mut_id(m_world, m_id, ecs_pair(first, second));
+    }
+
+    /** Get the second part for a pair.
+     * This operation gets the value for a pair from the entity. The first
+     * part of the pair should not be a component.
+     *
+     * @tparam Second the second element of a pair.
+     * @param first The first part of the pair.
+     */
+    template<typename Second>
+    Second* get_mut_second(flecs::entity_t first) const {
+        auto second = _::cpp_type<Second>::id(m_world);
+        ecs_assert(_::cpp_type<Second>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        return static_cast<Second*>(
+            ecs_get_mut_id(m_world, m_id, ecs_pair(first, second)));
+    }
+
+    /** Get the second part for a pair.
+     * This operation gets the value for a pair from the entity. The first
+     * part of the pair should not be a component.
+     *
+     * @tparam First The first element of the pair.
+     * @tparam Second the second element of a pair.
+     */
+    template<typename First, typename Second>
+    Second* get_mut_second() const {
+        return get_mut<pair_object<First, Second>>();
     }
 
     /** Get target for a given pair.

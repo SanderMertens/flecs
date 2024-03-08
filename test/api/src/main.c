@@ -823,6 +823,11 @@ void Set_ensure_tag_new_w_comp(void);
 void Set_ensure_tag_existing_w_comp(void);
 void Set_ensure_tag_new_w_pair(void);
 void Set_ensure_tag_existing_w_pair(void);
+void Set_get_mut_not_existing(void);
+void Set_get_mut_existing(void);
+void Set_get_mut_tag(void);
+void Set_get_mut_pair(void);
+void Set_get_mut_pair_second(void);
 void Set_modified_w_on_set(void);
 void Set_modified_no_component(void);
 void Set_ensure_w_add_in_on_add(void);
@@ -5882,6 +5887,26 @@ bake_test_case Set_testcases[] = {
     {
         "ensure_tag_existing_w_pair",
         Set_ensure_tag_existing_w_pair
+    },
+    {
+        "get_mut_not_existing",
+        Set_get_mut_not_existing
+    },
+    {
+        "get_mut_existing",
+        Set_get_mut_existing
+    },
+    {
+        "get_mut_tag",
+        Set_get_mut_tag
+    },
+    {
+        "get_mut_pair",
+        Set_get_mut_pair
+    },
+    {
+        "get_mut_pair_second",
+        Set_get_mut_pair_second
     },
     {
         "modified_w_on_set",
@@ -13497,7 +13522,7 @@ static bake_test_suite suites[] = {
         "Set",
         NULL,
         NULL,
-        31,
+        36,
         Set_testcases
     },
     {
