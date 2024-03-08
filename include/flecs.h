@@ -30,6 +30,13 @@
  * @{
  */
 
+/** @def FLECS_CONFIG_HEADER
+ * Allows for including a user-customizable header that specifies compile-time 
+ * features. */
+#ifdef FLECS_CONFIG_HEADER
+#include "flecs_config.h"
+#endif
+
 /** @def ecs_float_t
  * Customizable precision for floating point operations */
 #ifndef ecs_float_t
