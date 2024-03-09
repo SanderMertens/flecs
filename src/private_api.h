@@ -267,12 +267,17 @@ const char* flecs_name_from_symbol(
     ecs_world_t *world,
     const char *type_name);
 
-/* Compare function for entity ids */
+/* Compare function for entity ids used for order_by */
 int flecs_entity_compare(
     ecs_entity_t e1, 
     const void *ptr1, 
     ecs_entity_t e2, 
     const void *ptr2); 
+
+/* Compare function for component ids used for qsort */
+int flecs_id_qsort_cmp(
+    const void *a, 
+    const void *b);
 
 /* Load file contents into string */
 char* flecs_load_from_file(

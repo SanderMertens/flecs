@@ -127,6 +127,12 @@ int flecs_entity_compare(
     return (e1 > e2) - (e1 < e2);
 }
 
+int flecs_id_qsort_cmp(const void *a, const void *b) {
+    ecs_id_t id_a = *(const ecs_id_t*)a;
+    ecs_id_t id_b = *(const ecs_id_t*)b;
+    return (id_a > id_b) - (id_a < id_b);
+}
+
 uint64_t flecs_string_hash(
     const void *ptr)
 {

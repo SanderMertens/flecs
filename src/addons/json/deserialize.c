@@ -563,13 +563,6 @@ ecs_entity_t flecs_json_ensure_entity(
 }
 
 static
-int flecs_id_cmp(const void *a, const void *b) {
-    ecs_id_t id_a = *(const ecs_id_t*)a;
-    ecs_id_t id_b = *(const ecs_id_t*)b;
-    return (id_a > id_b) - (id_a < id_b);
-}
-
-static
 ecs_table_t* flecs_json_parse_table(
     ecs_world_t *world,
     const char *json,
@@ -658,7 +651,7 @@ ecs_table_t* flecs_json_parse_table(
     };
 
     qsort(type.array, flecs_itosize(type.count), sizeof(ecs_id_t), 
-        flecs_id_cmp);
+        flecs_id_qsort_cmp);
 
     ecs_table_t *table = flecs_table_find_or_create(world, &type);
     if (!table) {

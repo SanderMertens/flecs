@@ -269,15 +269,13 @@ void flecs_instantiate_children(
     /* Instantiate child table for each instance */
 
     /* Create component array for creating the table */
-    ecs_type_t components = {
-        .array = ecs_os_alloca_n(ecs_entity_t, type_count + 1)
-    };
-
+    ecs_table_diff_t diff = { .added = {0}};
+    diff.added.array = ecs_os_alloca_n(ecs_entity_t, type_count + 1);
     void **component_data = ecs_os_alloca_n(void*, type_count + 1);
 
     /* Copy in component identifiers. Find the base index in the component
      * array, since we'll need this to replace the base with the instance id */
-    int j, i, childof_base_index = -1, pos = 0;
+    int j, i, childof_base_index = -1;
     for (i = 0; i < type_count; i ++) {
         ecs_id_t id = ids[i];
 
@@ -321,19 +319,19 @@ void flecs_instantiate_children(
          * created children point to the instance and not the prefab */ 
         if (ECS_HAS_RELATION(id, EcsChildOf) && 
            (ECS_PAIR_SECOND(id) == (uint32_t)base)) {
-            childof_base_index = pos;
+            childof_base_index = diff.added.count;
         }
 
         int32_t storage_index = ecs_table_type_to_column_index(child_table, i);
         if (storage_index != -1) {
             ecs_vec_t *column = &child_data->columns[storage_index].data;
-            component_data[pos] = ecs_vec_first(column);
+            component_data[diff.added.count] = ecs_vec_first(column);
         } else {
-            component_data[pos] = NULL;
+            component_data[diff.added.count] = NULL;
         }
 
-        components.array[pos] = id;
-        pos ++;
+        diff.added.array[diff.added.count] = id;
+        diff.added.count ++;
     }
 
     /* Table must contain children of base */
@@ -341,12 +339,34 @@ void flecs_instantiate_children(
 
     /* If children are added to a prefab, make sure they are prefabs too */
     if (table->flags & EcsTableIsPrefab) {
-        components.array[pos] = EcsPrefab;
-        component_data[pos] = NULL;
-        pos ++;
-    }
+        /* Find right place to insert tag so array remains sorted */
+        for (i = 0; i < diff.added.count; i ++) {
+            if (diff.added.array[i] >= EcsPrefab) {
+                break;
+            }
+        }
 
-    components.count = pos;
+        if (i != diff.added.count) {
+            if (diff.added.array[i] != EcsPrefab) {
+                int32_t to_move = diff.added.count - i;
+                ecs_os_memmove(&diff.added.array[i + 1],
+                    &diff.added.array[i], to_move * ECS_SIZEOF(ecs_id_t));
+                ecs_os_memmove(&component_data[i + 1],
+                    &component_data[i], to_move * ECS_SIZEOF(void*));
+
+                diff.added.array[i] = EcsPrefab;
+                component_data[i] = NULL;
+
+                if (childof_base_index != -1) {
+                    /* ChildOf pair always comes after prefab so it's guaranteed 
+                    * that it got moved up one element. */
+                    childof_base_index ++;
+                }
+
+                diff.added.count ++;
+            }
+        }
+    }
 
     /* Instantiate the prefab child table for each new instance */
     ecs_entity_t *instances = ecs_vec_first(&table->data.entities);
@@ -355,21 +375,16 @@ void flecs_instantiate_children(
 
     for (i = row; i < count + row; i ++) {
         ecs_entity_t instance = instances[i];
-        ecs_table_diff_builder_t diff = ECS_TABLE_DIFF_INIT;
-        flecs_table_diff_builder_init(world, &diff);
         ecs_table_t *i_table = NULL;
  
         /* Replace ChildOf element in the component array with instance id */
-        components.array[childof_base_index] = ecs_pair(EcsChildOf, instance);
+        diff.added.array[childof_base_index] = ecs_pair(EcsChildOf, instance);
 
         /* Find or create table */
-        for (j = 0; j < components.count; j ++) {
-            i_table = flecs_find_table_add(
-                world, i_table, components.array[j], &diff);
-        }
+        i_table = flecs_table_find_or_create(world, &diff.added);
 
         ecs_assert(i_table != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(i_table->type.count == components.count,
+        ecs_assert(i_table->type.count == diff.added.count,
             ECS_INTERNAL_ERROR, NULL);
 
         /* The instance is trying to instantiate from a base that is also
@@ -390,12 +405,8 @@ void flecs_instantiate_children(
 
         /* Create children */
         int32_t child_row;
-        ecs_table_diff_t table_diff;
-        flecs_table_diff_build_noalloc(&diff, &table_diff);
         const ecs_entity_t *i_children = flecs_bulk_new(world, i_table, NULL, 
-            &components, child_count, component_data, false, &child_row, 
-            &table_diff);
-        flecs_table_diff_builder_fini(world, &diff);
+            &diff.added, child_count, component_data, false, &child_row, &diff);
 
         /* If children have union relationships, initialize */
         if (has_union) {
@@ -853,6 +864,7 @@ const ecs_entity_t* flecs_bulk_new(
     }
 
     flecs_defer_begin(world, &world->stages[0]);
+
     flecs_notify_on_add(world, table, NULL, row, count, &diff->added, 
         (component_data == NULL) ? 0 : EcsEventNoOnSet);
 
@@ -899,6 +911,7 @@ const ecs_entity_t* flecs_bulk_new(
                 .array = &table->data.columns[j].id,
                 .count = 1
             };
+
             flecs_notify_on_set(world, table, row, count, &set_type, true);
         }
     }
