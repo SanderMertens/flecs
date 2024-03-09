@@ -67,7 +67,7 @@ namespace _ {
 
 #if INTPTR_MAX == INT64_MAX
     #ifdef ECS_TARGET_MSVC
-        #if _MSC_VER >= 1930
+        #if _MSC_VER >= 1929
             #define ECS_SIZE_T_STR "unsigned __int64"
         #else
             #define ECS_SIZE_T_STR "unsigned int"
@@ -83,7 +83,7 @@ namespace _ {
     #endif
 #else
     #ifdef ECS_TARGET_MSVC
-        #if _MSC_VER >= 1930
+        #if _MSC_VER >= 1929
             #define ECS_SIZE_T_STR "unsigned __int32"
         #else
             #define ECS_SIZE_T_STR "unsigned int"
