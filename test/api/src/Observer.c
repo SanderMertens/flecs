@@ -5194,6 +5194,65 @@ void Observer_on_remove_any(void) {
     ecs_fini(world);
 }
 
+void Observer_yield_existing_uni_no_this(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t e1 = ecs_new(world, TagA);
+
+    Probe ctx = {0};
+
+    ecs_observer(world, {
+        .filter.terms = {
+            { TagA, .src.id = e1 },
+        },
+        .events = {EcsOnAdd},
+        .callback = Observer,
+        .ctx = &ctx,
+        .yield_existing = true
+    });
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.e[0], 0);
+    test_int(ctx.s[0][0], e1);
+    test_int(ctx.c[0][0], TagA);
+    test_int(ctx.event, EcsOnAdd);
+
+    ecs_fini(world);
+}
+
+void Observer_yield_existing_multi_no_this(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t e1 = ecs_new(world, TagA);
+    ecs_add(world, e1, TagB);
+
+    Probe ctx = {0};
+
+    ecs_observer(world, {
+        .filter.terms = {
+            { TagA, .src.id = e1 },
+            { TagB, .src.id = e1 },
+        },
+        .events = {EcsOnAdd},
+        .callback = Observer,
+        .ctx = &ctx,
+        .yield_existing = true
+    });
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.e[0], 0);
+    test_int(ctx.s[0][0], e1);
+    test_int(ctx.c[0][0], TagA);
+    test_int(ctx.event, EcsOnAdd);
+
+    ecs_fini(world);
+}
+
 void Observer_cache_test_1(void) {
     ecs_world_t *world = ecs_mini();
     
@@ -6329,4 +6388,3 @@ void Observer_multi_observer_eval_count(void) {
 
     ecs_fini(world);
 }
-

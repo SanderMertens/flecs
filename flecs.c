@@ -3010,7 +3010,6 @@ void flecs_on_event_iterable_init(
     ecs_term_t *filter)
 {
     ecs_iter_poly(world, poly, it, filter);
-    it->event_id = filter->id;
 }
 
 /* -- Bootstrapping -- */
@@ -16421,6 +16420,7 @@ void flecs_observer_invoke(
                 if (!src) {
                     it->sources[0] = e;
                 }
+
                 callback(it);
                 filter->eval_count ++;
                 it->sources[0] = src;
@@ -16615,7 +16615,7 @@ bool flecs_multi_observer_invoke(
         user_it.binding_ctx = o->binding_ctx;
         user_it.field_count = o->filter.field_count;
         user_it.callback = o->callback;
-        
+
         flecs_iter_validate(&user_it);
         ecs_table_lock(it->world, table);
         flecs_observer_invoke(world, &user_it, o, o->callback, 
@@ -16699,7 +16699,7 @@ void flecs_uni_observer_yield_existing(
         }
 
         ecs_iter_t it;
-        iterable->init(world, world, &it, &observer->filter.terms[0]);
+        iterable->init(world, &observer->filter, &it, NULL);
         it.system = observer->filter.entity;
         it.ctx = observer->ctx;
         it.binding_ctx = observer->binding_ctx;
@@ -16733,7 +16733,7 @@ void flecs_multi_observer_yield_existing(
 
     int32_t pivot_term = ecs_filter_pivot_term(world, &observer->filter);
     if (pivot_term < 0) {
-        return;
+        pivot_term = 0; /* Observer has no this terms */
     }
 
     /* If yield existing is enabled, invoke for each thing that matches

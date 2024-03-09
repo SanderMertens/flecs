@@ -2170,6 +2170,8 @@
                 "get_filter",
                 "uni_observer_eval_count",
                 "multi_observer_eval_count",
+                "yield_existing_uni_no_this",
+                "yield_existing_multi_no_this",
                 "cache_test_1",
                 "cache_test_2",
                 "cache_test_3",
