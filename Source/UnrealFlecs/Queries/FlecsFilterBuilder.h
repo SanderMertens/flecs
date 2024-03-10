@@ -1,6 +1,7 @@
 ﻿// Solstice Games © 2024. All Rights Reserved.
 
-#pragma once
+#ifndef FLECS_FILTER_BUILDER_H
+#define FLECS_FILTER_BUILDER_H
 
 #include "CoreMinimal.h"
 #include "flecs.h"
@@ -8,18 +9,10 @@
 #include "Macros.h"
 #include "Entities/FlecsEntityHandle.h"
 #include "Entities/FlecsId.h"
-#include "FlecsFilterBuilder.generated.h"
 
-USTRUCT(BlueprintType)
 struct FFlecsFilterBuilder
 {
-    GENERATED_BODY()
-
 public:
-    FORCEINLINE FFlecsFilterBuilder()
-    {
-    }
-    
     FORCEINLINE explicit FFlecsFilterBuilder(const flecs::world& InWorld, const FString& InName = TEXT(""))
         : FilterBuilder(InWorld, TCHAR_TO_ANSI(*InName))
     {
@@ -205,12 +198,4 @@ private:
     flecs::filter_builder<> FilterBuilder;
 }; // struct FFlecsFilterBuilder
 
-template <>
-struct TStructOpsTypeTraits<FFlecsFilterBuilder> : public TStructOpsTypeTraitsBase2<FFlecsFilterBuilder>
-{
-    enum
-    {
-        WithCopy = false,
-    }; // enum
-    
-}; // struct TStructOpsTypeTraits<FFlecsFilterBuilder>
+#endif // FLECS_FILTER_BUILDER_H

@@ -1,13 +1,13 @@
 ﻿// Solstice Games © 2024. All Rights Reserved.
 
-#pragma once
+#ifndef FLECS_RULE_BUILDER_H
+#define FLECS_RULE_BUILDER_H
 
 #include "CoreMinimal.h"
-#include "FlecsRuleBuilder.generated.h"
 
-USTRUCT(BlueprintType)
 struct FFlecsRuleBuilder
 {
-    GENERATED_BODY()
-    
+
 };
+
+#endif // FLECS_RULE_BUILDER_H

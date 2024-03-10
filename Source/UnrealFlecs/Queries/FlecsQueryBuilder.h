@@ -1,18 +1,16 @@
 ﻿// Solstice Games © 2024. All Rights Reserved.
 
-#pragma once
+#ifndef FLECS_QUERY_BUILDER_H
+#define FLECS_QUERY_BUILDER_H
 
 #include "CoreMinimal.h"
 #include "flecs.h"
-#include "FlecsQueryBuilder.generated.h"
 
-USTRUCT(BlueprintType)
 struct FFlecsQueryBuilder
 {
-    GENERATED_BODY()
-
 public:
 
 private:
-    flecs::
 }; // struct FFlecsQueryBuilder
+
+#endif // FLECS_QUERY_BUILDER_H
