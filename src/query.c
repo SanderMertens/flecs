@@ -1340,11 +1340,6 @@ void flecs_query_sort_tables(
                 if (tr) {
                     column = tr->column;
                 }
-
-                if (column == -1) {
-                    /* Component is shared, no sorting is needed */
-                    dirty = false;
-                }
             }
         }
 
