@@ -5860,7 +5860,7 @@ void flecs_remove_from_table(
     ecs_world_t *world, 
     ecs_table_t *table) 
 {
-    ecs_table_diff_t temp_diff;
+    ecs_table_diff_t temp_diff = { .added = {0} };
     ecs_table_diff_builder_t diff = ECS_TABLE_DIFF_INIT;
     flecs_table_diff_builder_init(world, &diff);
     ecs_table_t *dst_table = table; 
