@@ -541,7 +541,25 @@ ecs_table_t *flecs_create_table(
     ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
     result->_ = flecs_calloc_t(&world->allocator, ecs_table__t);
     ecs_assert(result->_ != NULL, ECS_INTERNAL_ERROR, NULL);
-    
+
+#ifdef FLECS_SANITIZE
+    int32_t i, j, count = type->count;
+    for (i = 0; i < count - 1; i ++) {
+        if (type->array[i] >= type->array[i + 1]) {
+            for (j = 0; j < count; j ++) {
+                char *str = ecs_id_str(world, type->array[j]);
+                if (i == j) {
+                    ecs_err(" > %d: %s", j, str);
+                } else {
+                    ecs_err("   %d: %s", j, str);
+                }
+                ecs_os_free(str);
+            }
+            ecs_abort(ECS_CONSTRAINT_VIOLATED, "table type is not ordered");
+        }
+    }
+#endif
+
     result->id = flecs_sparse_last_id(&world->store.tables);
     result->type = *type;
 

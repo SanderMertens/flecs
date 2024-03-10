@@ -2351,6 +2351,8 @@ void Prefab_auto_override_copy_once(void);
 void Prefab_always_override(void);
 void Prefab_always_override_pair(void);
 void Prefab_child_of_prefab_is_prefab(void);
+void Prefab_child_of_prefab_w_prefab_is_prefab(void);
+void Prefab_child_of_prefab_w_prefab_is_prefab_w_component(void);
 void Prefab_override_exclusive(void);
 void Prefab_override_exclusive_2_lvls(void);
 void Prefab_hierarchy_w_recycled_id(void);
@@ -11887,6 +11889,14 @@ bake_test_case Prefab_testcases[] = {
         Prefab_child_of_prefab_is_prefab
     },
     {
+        "child_of_prefab_w_prefab_is_prefab",
+        Prefab_child_of_prefab_w_prefab_is_prefab
+    },
+    {
+        "child_of_prefab_w_prefab_is_prefab_w_component",
+        Prefab_child_of_prefab_w_prefab_is_prefab_w_component
+    },
+    {
         "override_exclusive",
         Prefab_override_exclusive
     },
@@ -13672,7 +13682,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        127,
+        129,
         Prefab_testcases
     },
     {

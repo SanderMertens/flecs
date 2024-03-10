@@ -4237,10 +4237,42 @@ void Prefab_child_of_prefab_is_prefab(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
-    ecs_entity_t inst = ecs_new_w_pair(world, EcsChildOf, base);
-    test_assert(ecs_has_id(world, inst, EcsPrefab));
-    ecs_entity_t inst_child = ecs_new_w_pair(world, EcsChildOf, inst);
-    test_assert(ecs_has_id(world, inst_child, EcsPrefab));
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, base);
+    test_assert(ecs_has_id(world, child, EcsPrefab));
+    test_assert(ecs_has_pair(world, child, EcsChildOf, base));
+
+    ecs_entity_t grand_child = ecs_new_w_pair(world, EcsChildOf, child);
+    test_assert(ecs_has_id(world, grand_child, EcsPrefab));
+    test_assert(ecs_has_pair(world, grand_child, EcsChildOf, child));
+
+    ecs_fini(world);
+}
+
+void Prefab_child_of_prefab_w_prefab_is_prefab(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t child = ecs_new_w_id(world, EcsPrefab);
+    ecs_add_pair(world, child, EcsChildOf, base);
+    test_assert(ecs_has_id(world, child, EcsPrefab));
+    test_assert(ecs_has_pair(world, child, EcsChildOf, base));
+
+    ecs_fini(world);
+}
+
+void Prefab_child_of_prefab_w_prefab_is_prefab_w_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t child = ecs_new_w_id(world, EcsPrefab);
+    ecs_add(world, child, Position);
+    ecs_add_pair(world, child, EcsChildOf, base);
+
+    test_assert(ecs_has_id(world, child, EcsPrefab));
+    test_assert(ecs_has(world, child, Position));
+    test_assert(ecs_has_pair(world, child, EcsChildOf, base));
 
     ecs_fini(world);
 }
@@ -4323,3 +4355,4 @@ void Prefab_hierarchy_w_recycled_id(void) {
 
     ecs_fini(ecs);
 }
+

@@ -247,6 +247,42 @@ error:
 }
 
 static
+int32_t flecs_child_type_insert(
+    ecs_type_t *type,
+    void **component_data,
+    ecs_id_t id)
+{
+    int32_t i, count = type->count;
+    for (i = 0; i < count; i ++) {
+        ecs_id_t cur = type->array[i];
+        if (cur == id) {
+            /* Id is already part of type */
+            return -1;
+        }
+
+        if (cur > id) {
+            /* A larger id was found so id can't be part of the type. */
+            break;
+        }
+    }
+
+    /* Assumes that the array has enough memory to store the new element. */
+    int32_t to_move = type->count - i;
+    if (to_move) {
+        ecs_os_memmove(&type->array[i + 1],
+            &type->array[i], to_move * ECS_SIZEOF(ecs_id_t));
+        ecs_os_memmove(&component_data[i + 1],
+            &component_data[i], to_move * ECS_SIZEOF(void*));
+    }
+
+    component_data[i] = NULL;
+    type->array[i] = id;
+    type->count ++;
+
+    return i;
+}
+
+static
 void flecs_instantiate_children(
     ecs_world_t *world,
     ecs_entity_t base,
@@ -339,32 +375,10 @@ void flecs_instantiate_children(
 
     /* If children are added to a prefab, make sure they are prefabs too */
     if (table->flags & EcsTableIsPrefab) {
-        /* Find right place to insert tag so array remains sorted */
-        for (i = 0; i < diff.added.count; i ++) {
-            if (diff.added.array[i] >= EcsPrefab) {
-                break;
-            }
-        }
-
-        if (i != diff.added.count) {
-            if (diff.added.array[i] != EcsPrefab) {
-                int32_t to_move = diff.added.count - i;
-                ecs_os_memmove(&diff.added.array[i + 1],
-                    &diff.added.array[i], to_move * ECS_SIZEOF(ecs_id_t));
-                ecs_os_memmove(&component_data[i + 1],
-                    &component_data[i], to_move * ECS_SIZEOF(void*));
-
-                diff.added.array[i] = EcsPrefab;
-                component_data[i] = NULL;
-
-                if (childof_base_index != -1) {
-                    /* ChildOf pair always comes after prefab so it's guaranteed 
-                    * that it got moved up one element. */
-                    childof_base_index ++;
-                }
-
-                diff.added.count ++;
-            }
+        if (flecs_child_type_insert(
+            &diff.added, component_data, EcsPrefab) != -1) 
+        {
+            childof_base_index ++;
         }
     }
 
@@ -2073,7 +2087,7 @@ void flecs_throw_invalid_delete(
     char *id_str = NULL;
     if (!(world->flags & EcsWorldQuit)) {
         id_str = ecs_id_str(world, id);
-        ecs_err("(OnDelete, Throw) constraint violated while deleting %s", 
+        ecs_err("(OnDelete, Panic) constraint violated while deleting %s", 
             id_str);
         ecs_os_free(id_str);
         #ifndef FLECS_SOFT_ASSERT
@@ -2350,8 +2364,10 @@ void flecs_remove_from_table(
 
         do {
             ecs_id_t id = dst_table->type.array[t];
-            dst_table = flecs_table_traverse_remove(
+            ecs_table_t *tgt_table = flecs_table_traverse_remove(
                 world, dst_table, &id, &temp_diff);
+            ecs_assert(tgt_table != dst_table, ECS_INTERNAL_ERROR, NULL);
+            dst_table = tgt_table;
             flecs_table_diff_build_append_table(world, &diff, &temp_diff);
         } while (dst_table->type.count && (t = ecs_search_offset(
             world, dst_table, t, idr->id, NULL)) != -1);
