@@ -4,13 +4,11 @@
 #define FLECS_QUERY_BUILDER_H
 
 #include "CoreMinimal.h"
-#include "flecs.h"
+#include "FlecsBaseBuilder.h"
+#include "FlecsQuery.h"
 
-struct FFlecsQueryBuilder
+struct FFlecsQueryBuilder : public TFlecsBaseQueryBuilder<flecs::query_builder<>, FFlecsQueryBuilder, FFlecsQuery>
 {
-public:
-
-private:
 }; // struct FFlecsQueryBuilder
 
 #endif // FLECS_QUERY_BUILDER_H

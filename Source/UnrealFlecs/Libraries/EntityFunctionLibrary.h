@@ -65,6 +65,18 @@ public:
     }
 
     UFUNCTION(BlueprintCallable, Category = "Flecs|Entity")
+    static bool HasComponent(const FFlecsEntityHandle& Entity, UScriptStruct* ComponentType)
+    {
+        return Entity.Has(ComponentType);
+    }
+
+    UFUNCTION(BlueprintCallable, Category = "Flecs|Entity")
+    static bool HasEntityType(const FFlecsEntityHandle& Entity, const FFlecsEntityHandle& EntityType)
+    {
+        return Entity.Has(EntityType);
+    }
+
+    UFUNCTION(BlueprintCallable, Category = "Flecs|Entity")
     static bool IsValid(const FFlecsEntityHandle& Entity)
     {
         return Entity.IsValid();
@@ -74,6 +86,24 @@ public:
     static bool IsAlive(const FFlecsEntityHandle& Entity)
     {
         return Entity.IsAlive();
+    }
+
+    UFUNCTION(BlueprintCallable, Category = "Flecs|Entity")
+    static bool IsEnabled(const FFlecsEntityHandle& Entity)
+    {
+        return Entity.IsEnabled();
+    }
+
+    UFUNCTION(BlueprintCallable, Category = "Flecs|Entity")
+    static void Enable(const FFlecsEntityHandle& Entity)
+    {
+        Entity.Enable();
+    }
+
+    UFUNCTION(BlueprintCallable, Category = "Flecs|Entity")
+    static void Disable(const FFlecsEntityHandle& Entity)
+    {
+        Entity.Disable();
     }
     
 }; // class UEntityFunctionLibrary

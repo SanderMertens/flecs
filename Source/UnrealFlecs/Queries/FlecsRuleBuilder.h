@@ -4,10 +4,11 @@
 #define FLECS_RULE_BUILDER_H
 
 #include "CoreMinimal.h"
+#include "FlecsBaseBuilder.h"
+#include "FlecsRule.h"
 
-struct FFlecsRuleBuilder
+struct FFlecsRuleBuilder : public TFlecsBaseQueryBuilder<flecs::rule_builder<>, FFlecsRuleBuilder, FFlecsRule>
 {
-
-};
+}; // struct FFlecsRuleBuilder
 
 #endif // FLECS_RULE_BUILDER_H
