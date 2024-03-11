@@ -36,6 +36,33 @@ enum Number {
     Three = 3
 };
 
+struct EmplaceParent {
+    int value;
+};
+
+struct EmplaceDependant {
+    int value;
+
+    static EmplaceDependant build(flecs::entity dependant) {
+        flecs::entity base = dependant.target<EmplaceParent>();
+        EmplaceDependant dep{-1};
+        if (base) {
+            dep.value = 2 * base.get<EmplaceParent>()->value;
+        }
+        printf("dep(e): %i\n", dep.value);
+        return dep;
+    }
+
+    static EmplaceDependant build(flecs::entity dependant, int scalar) {
+        flecs::entity base = dependant.target<EmplaceParent>();
+        if (base) {
+            return {scalar * base.get<EmplaceParent>()->value};
+        }
+        return {-1};
+    }
+};
+
+
 class Pod {
 public:
     struct Child { };
