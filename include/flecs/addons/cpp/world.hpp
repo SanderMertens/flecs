@@ -76,13 +76,28 @@ inline void set(world_t *world, flecs::entity_t entity, const T& value, flecs::i
 
 // emplace for T(Args...)
 template <typename T, typename ... Args, if_t<
-    std::is_constructible<actual_type_t<T>, Args...>::value ||
-    std::is_default_constructible<actual_type_t<T>>::value > = 0>
+    (std::is_default_constructible<actual_type_t<T>>::value ||
+     std::is_constructible<actual_type_t<T>, Args...>::value) &&
+    !std::is_constructible<actual_type_t<T>, flecs::entity, Args...>::value > = 0>
 inline void emplace(world_t *world, flecs::entity_t entity, flecs::id_t id, Args&&... args) {
     ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
     T& dst = *static_cast<T*>(ecs_emplace_id(world, entity, id));
 
     FLECS_PLACEMENT_NEW(&dst, T{FLECS_FWD(args)...});
+
+    ecs_modified_id(world, entity, id);
+}
+
+// emplace for T(flecs::entity, Args...)
+template <typename T, typename ... Args, if_t<
+    std::is_constructible<actual_type_t<T>, flecs::entity, Args...>::value> = 0>
+inline void emplace(world_t *world, flecs::entity_t entity, flecs::id_t id, Args&&... args) {
+    ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+    T& dst = *static_cast<T*>(ecs_emplace_id(world, entity, id));
+
+#define EMPLACE_COMMA ,
+    FLECS_PLACEMENT_NEW(&dst, T{flecs::entity(world, entity) EMPLACE_COMMA FLECS_FWD(args)...});
+#undef EMPLACE_COMMA
 
     ecs_modified_id(world, entity, id);
 }
