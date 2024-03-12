@@ -43,22 +43,31 @@ struct EmplaceParent {
 struct EmplaceDependant {
     int value;
 
-    static EmplaceDependant build(flecs::entity dependant) {
+    EmplaceDependant(int value_) : value(value_) {}
+    EmplaceDependant(int x, int y, int z) : value(x*y*z) {}
+    static EmplaceDependant on_emplace(flecs::entity dependant) {
         flecs::entity base = dependant.target<EmplaceParent>();
         EmplaceDependant dep{-1};
         if (base) {
             dep.value = 2 * base.get<EmplaceParent>()->value;
         }
-        printf("dep(e): %i\n", dep.value);
         return dep;
     }
 
-    static EmplaceDependant build(flecs::entity dependant, int scalar) {
+    static EmplaceDependant on_emplace(flecs::entity dependant, int scalar) {
         flecs::entity base = dependant.target<EmplaceParent>();
         if (base) {
             return {scalar * base.get<EmplaceParent>()->value};
         }
         return {-1};
+    }
+};
+
+struct EmplaceBuilder {
+    int i1,i2,i3,i4,i5;
+
+    static EmplaceBuilder on_emplace(flecs::entity, int i1_, int i2_, int i3_) {
+        return {i1_, i2_, i3_, i1_*i2_, i2_*i3_};
     }
 };
 
@@ -75,7 +84,12 @@ public:
     Pod(int v) {
         ctor_invoked ++;
         value = v;
-    }    
+    }
+
+    static Pod on_emplace(flecs::entity, int v, int) {
+        on_emplace_invoked ++;
+        return {v};
+    }
 
     ~Pod() {
         dtor_invoked ++;
@@ -111,6 +125,7 @@ public:
     static int move_invoked;
     static int copy_ctor_invoked;
     static int move_ctor_invoked;
+    static int on_emplace_invoked;
 };
 
 struct TagA { };
@@ -145,6 +160,10 @@ struct NoDefaultCtor {
     NoDefaultCtor(const NoDefaultCtor& obj) = default;
     NoDefaultCtor(NoDefaultCtor&& obj) = default;
 
+    static NoDefaultCtor on_emplace(flecs::entity, int v, int) {
+        return {v};
+    }
+
     NoDefaultCtor& operator=(const NoDefaultCtor& obj) = default;
     NoDefaultCtor& operator=(NoDefaultCtor&& obj) = default;
 
@@ -158,6 +177,10 @@ struct DefaultInit {
     DefaultInit(int x) : x_(x) { test_assert(y_ == 99); }
     DefaultInit(const DefaultInit& obj) = default;
     DefaultInit(DefaultInit&& obj) = default;
+
+    static DefaultInit on_emplace(flecs::entity, int v, int) {
+        return {v};
+    }
 
     DefaultInit& operator=(const DefaultInit& obj) = default;
     DefaultInit& operator=(DefaultInit&& obj) = default;
@@ -174,6 +197,10 @@ struct NoCopy {
     NoCopy(const NoCopy& obj) = delete;
     NoCopy(NoCopy&& obj) = default;
 
+    static NoCopy on_emplace(flecs::entity, int v, int) {
+        return {v};
+    }
+
     NoCopy& operator=(const NoCopy& obj) = delete;
     NoCopy& operator=(NoCopy&& obj) = default;
 
@@ -187,6 +214,10 @@ struct NoMove {
     NoMove(int x) : x_(x) { }
     NoMove(const NoMove& obj) = default;
     NoMove(NoMove&& obj) = delete;
+
+    static NoMove on_emplace(flecs::entity, int v, int) {
+        return {v};
+    }
 
     NoMove& operator=(const NoMove& obj) = default;
     NoMove& operator=(NoMove&& obj) = delete;
@@ -202,6 +233,10 @@ struct NoCopyCtor {
     NoCopyCtor(const NoCopyCtor& obj) = delete;
     NoCopyCtor(NoCopyCtor&& obj) = default;
 
+    static NoCopyCtor on_emplace(flecs::entity, int v, int) {
+        return {v};
+    }
+
     NoCopyCtor& operator=(const NoCopyCtor& obj) = default;
     NoCopyCtor& operator=(NoCopyCtor&& obj) = default;
 
@@ -215,6 +250,10 @@ struct NoCopyAssign {
     NoCopyAssign(int x) : x_(x) { }
     NoCopyAssign(const NoCopyAssign& obj) = default;
     NoCopyAssign(NoCopyAssign&& obj) = default;
+
+    static NoCopyAssign on_emplace(flecs::entity, int v, int) {
+        return {v};
+    }
 
     NoCopyAssign& operator=(const NoCopyAssign& obj) = delete;
     NoCopyAssign& operator=(NoCopyAssign&& obj) = default;
@@ -230,6 +269,10 @@ struct NoMoveCtor {
     NoMoveCtor(const NoMoveCtor& obj) = default;
     NoMoveCtor(NoMoveCtor&& obj) = delete;
 
+    static NoMoveCtor on_emplace(flecs::entity, int v, int) {
+        return {v};
+    }
+
     NoMoveCtor& operator=(const NoMoveCtor& obj) = default;
     NoMoveCtor& operator=(NoMoveCtor&& obj) = default;
 
@@ -243,6 +286,10 @@ struct NoMoveAssign {
     NoMoveAssign(int x) : x_(x) { }
     NoMoveAssign(const NoMoveAssign& obj) = default;
     NoMoveAssign(NoMoveAssign&& obj) = default;
+
+    static NoMoveAssign on_emplace(flecs::entity, int v, int) {
+        return {v};
+    }
 
     NoMoveAssign& operator=(const NoMoveAssign& obj) = default;
     NoMoveAssign& operator=(NoMoveAssign&& obj) = delete;
@@ -304,6 +351,10 @@ struct DefaultCtorValueCtor {
     DefaultCtorValueCtor(const DefaultCtorValueCtor& obj) = delete;
     DefaultCtorValueCtor(DefaultCtorValueCtor&& obj) = default;
 
+    static DefaultCtorValueCtor on_emplace(flecs::entity, int v, int) {
+        return {v};
+    }
+
     DefaultCtorValueCtor& operator=(const DefaultCtorValueCtor& obj) = default;
     DefaultCtorValueCtor& operator=(DefaultCtorValueCtor&& obj) = default;
 
@@ -318,6 +369,10 @@ struct FlecsCtorValueCtor {
 
     FlecsCtorValueCtor(const FlecsCtorValueCtor& obj) = delete;
     FlecsCtorValueCtor(FlecsCtorValueCtor&& obj) = default;
+
+    static FlecsCtorValueCtor on_emplace(flecs::entity, int v, int) {
+        return {v};
+    }
 
     FlecsCtorValueCtor& operator=(const FlecsCtorValueCtor& obj) = default;
     FlecsCtorValueCtor& operator=(FlecsCtorValueCtor&& obj) = default;
@@ -349,6 +404,11 @@ public:
         this->value = obj.value;
     }
 
+    static CountNoDefaultCtor on_emplace(flecs::entity, int v, int) {
+        on_emplace_invoked ++;
+        return {v};
+    }
+
     CountNoDefaultCtor& operator=(const CountNoDefaultCtor& obj) {
         copy_invoked ++;
         this->value = obj.value;
@@ -368,6 +428,7 @@ public:
         move_invoked = 0;
         copy_ctor_invoked = 0;
         move_ctor_invoked = 0;
+        on_emplace_invoked = 0;
     }
 
     int value;
@@ -378,6 +439,7 @@ public:
     static int move_invoked;
     static int copy_ctor_invoked;
     static int move_ctor_invoked;
+    static int on_emplace_invoked;
 };
 
 struct Struct_w_string {

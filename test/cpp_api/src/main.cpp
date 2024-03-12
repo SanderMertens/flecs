@@ -175,6 +175,7 @@ void Entity_defer_suspend_resume(void);
 void Entity_emplace_entity_param_no_base(void);
 void Entity_emplace_entity_param_w_base(void);
 void Entity_emplace_entity_param_w_base_scalar(void);
+void Entity_emplace_entity_param_without_builder(void);
 void Entity_entity_id_str(void);
 void Entity_pair_id_str(void);
 void Entity_role_id_str(void);
@@ -958,11 +959,17 @@ void ComponentLifecycle_no_move(void);
 void ComponentLifecycle_no_dtor(void);
 void ComponentLifecycle_default_ctor_w_value_ctor(void);
 void ComponentLifecycle_no_default_ctor_move_ctor_on_set(void);
+void ComponentLifecycle_no_default_ctor_move_ctor_on_set_on_emplace(void);
 void ComponentLifecycle_emplace_w_ctor(void);
+void ComponentLifecycle_emplace_w_ctor_on_emplace(void);
 void ComponentLifecycle_emplace_no_default_ctor(void);
+void ComponentLifecycle_emplace_no_default_ctor_on_emplace(void);
 void ComponentLifecycle_emplace_defer_use_move_ctor(void);
+void ComponentLifecycle_emplace_defer_use_move_ctor_on_emplace(void);
 void ComponentLifecycle_emplace_existing(void);
+void ComponentLifecycle_emplace_existing_on_emplace(void);
 void ComponentLifecycle_emplace_singleton(void);
+void ComponentLifecycle_emplace_singleton_on_emplace(void);
 void ComponentLifecycle_dtor_w_non_trivial_implicit_move(void);
 void ComponentLifecycle_dtor_w_non_trivial_explicit_move(void);
 void ComponentLifecycle_grow_no_default_ctor(void);
@@ -2018,6 +2025,10 @@ bake_test_case Entity_testcases[] = {
     {
         "emplace_entity_param_w_base_scalar",
         Entity_emplace_entity_param_w_base_scalar
+    },
+    {
+        "emplace_entity_param_without_builder",
+        Entity_emplace_entity_param_without_builder
     },
     {
         "entity_id_str",
@@ -5077,24 +5088,48 @@ bake_test_case ComponentLifecycle_testcases[] = {
         ComponentLifecycle_no_default_ctor_move_ctor_on_set
     },
     {
+        "no_default_ctor_move_ctor_on_set_on_emplace",
+        ComponentLifecycle_no_default_ctor_move_ctor_on_set_on_emplace
+    },
+    {
         "emplace_w_ctor",
         ComponentLifecycle_emplace_w_ctor
+    },
+    {
+        "emplace_w_ctor_on_emplace",
+        ComponentLifecycle_emplace_w_ctor_on_emplace
     },
     {
         "emplace_no_default_ctor",
         ComponentLifecycle_emplace_no_default_ctor
     },
     {
+        "emplace_no_default_ctor_on_emplace",
+        ComponentLifecycle_emplace_no_default_ctor_on_emplace
+    },
+    {
         "emplace_defer_use_move_ctor",
         ComponentLifecycle_emplace_defer_use_move_ctor
+    },
+    {
+        "emplace_defer_use_move_ctor_on_emplace",
+        ComponentLifecycle_emplace_defer_use_move_ctor_on_emplace
     },
     {
         "emplace_existing",
         ComponentLifecycle_emplace_existing
     },
     {
+        "emplace_existing_on_emplace",
+        ComponentLifecycle_emplace_existing_on_emplace
+    },
+    {
         "emplace_singleton",
         ComponentLifecycle_emplace_singleton
+    },
+    {
+        "emplace_singleton_on_emplace",
+        ComponentLifecycle_emplace_singleton_on_emplace
     },
     {
         "dtor_w_non_trivial_implicit_move",
@@ -6631,7 +6666,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        256,
+        257,
         Entity_testcases
     },
     {
@@ -6736,7 +6771,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        75,
+        81,
         ComponentLifecycle_testcases
     },
     {

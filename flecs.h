@@ -19972,10 +19972,10 @@ inline void set(world_t *world, flecs::entity_t entity, const T& value, flecs::i
 }
 
 template <typename T, typename... Args>
-struct if_buildable {
+struct if_emplaceable {
 private:
     template <typename C>
-    static std::true_type test(decltype(C::build(std::declval<flecs::entity>(), std::declval<Args>()...)) (C::*)(Args...));
+    static std::true_type test(decltype(C::on_emplace(std::declval<flecs::entity>(), std::declval<Args>()...)) (C::*)(Args...));
     template <typename C>
     static std::false_type test(...);
 public:
@@ -19986,7 +19986,7 @@ public:
 template <typename T, typename ... Args, if_t<
     (std::is_default_constructible<actual_type_t<T>>::value ||
      std::is_constructible<actual_type_t<T>, Args...>::value) &&
-    !(if_buildable<T, Args...>::value) > = 0>
+    !(if_emplaceable<T, Args...>::value) > = 0>
 inline void emplace(world_t *world, flecs::entity_t entity, flecs::id_t id, Args&&... args) {
     ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
     T& dst = *static_cast<T*>(ecs_emplace_id(world, entity, id));
@@ -19996,12 +19996,12 @@ inline void emplace(world_t *world, flecs::entity_t entity, flecs::id_t id, Args
     ecs_modified_id(world, entity, id);
 }
 
-// emplace for static T::build(flecs::entity, Args...)
-template <typename T, typename ... Args, if_t<if_buildable<T, Args...>::value> = 0>
+// emplace for static T::on_emplace(flecs::entity, Args...)
+template <typename T, typename ... Args, if_t<if_emplaceable<T, Args...>::value> = 0>
 inline void emplace(world_t *world, flecs::entity_t entity, flecs::id_t id, Args&&... args) {
     ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
 
-    *static_cast<T*>(ecs_emplace_id(world, entity, id)) = T::build(
+    *static_cast<T*>(ecs_emplace_id(world, entity, id)) = T::on_emplace(
         flecs::entity(world, entity), FLECS_FWD(args)...);
 
     ecs_modified_id(world, entity, id);

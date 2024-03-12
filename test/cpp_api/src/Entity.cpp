@@ -3082,6 +3082,19 @@ void Entity_emplace_entity_param_w_base_scalar(void) {
     test_int(e.get<EmplaceDependant>()->value, 42*3);
 }
 
+void Entity_emplace_entity_param_without_builder(void) {
+    flecs::world ecs;
+
+    auto base = ecs.entity()
+        .emplace<EmplaceParent>(42);
+
+    auto e = ecs.entity()
+        .add<EmplaceParent>(base)
+        .emplace<EmplaceDependant>(1,2,3);
+
+    test_int(e.get<EmplaceDependant>()->value, 6);
+}
+
 void Entity_entity_id_str(void) {
     flecs::world ecs;
 
