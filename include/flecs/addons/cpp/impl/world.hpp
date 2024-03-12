@@ -95,7 +95,7 @@ inline void world::modified() const {
 }
 
 // emplace for static T::on_emplace(flecs::entity, Args...)
-template <typename T, typename ... Args, if_t<if_emplaceable<T, Args...>::value> = 0>
+template <typename T, typename ... Args, if_t<if_emplaceable<T, Args...>::value>>
 inline void emplace(world_t *world, flecs::entity_t entity, flecs::id_t id, Args&&... args) {
     ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
 
