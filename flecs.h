@@ -19998,14 +19998,7 @@ inline void emplace(world_t *world, flecs::entity_t entity, flecs::id_t id, Args
 
 // emplace for static T::on_emplace(flecs::entity, Args...)
 template <typename T, typename ... Args, if_t<if_emplaceable<T, Args...>::value> = 0>
-inline void emplace(world_t *world, flecs::entity_t entity, flecs::id_t id, Args&&... args) {
-    ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
-
-    *static_cast<T*>(ecs_emplace_id(world, entity, id)) = T::on_emplace(
-        flecs::entity(world, entity), FLECS_FWD(args)...);
-
-    ecs_modified_id(world, entity, id);
-}
+inline void emplace(world_t *world, flecs::entity_t entity, flecs::id_t id, Args&&... args);
 
 // set(T&&)
 template <typename T, typename A>
@@ -32136,6 +32129,17 @@ template <typename T>
 inline void world::modified() const {
     flecs::entity e(m_world, _::cpp_type<T>::id(m_world));
     e.modified<T>();
+}
+
+// emplace for static T::on_emplace(flecs::entity, Args...)
+template <typename T, typename ... Args, if_t<if_emplaceable<T, Args...>::value> = 0>
+inline void emplace(world_t *world, flecs::entity_t entity, flecs::id_t id, Args&&... args) {
+    ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+
+    *static_cast<T*>(ecs_emplace_id(world, entity, id)) = T::on_emplace(
+        flecs::entity(world, entity), FLECS_FWD(args)...);
+
+    ecs_modified_id(world, entity, id);
 }
 
 template <typename First, typename Second>
