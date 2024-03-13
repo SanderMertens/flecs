@@ -167,6 +167,7 @@ static ecs_entity_t ecs_default_lookup_path[2] = { 0, 0 };
 
 /* Declarations for addons. Located in world.c to avoid issues during linking of 
  * static library */
+
 #ifdef FLECS_ALERTS
 ECS_COMPONENT_DECLARE(EcsAlert);
 ECS_COMPONENT_DECLARE(EcsAlertInstance);
@@ -822,9 +823,6 @@ static const char *flecs_addons_info[] = {
 #ifdef FLECS_DOC
     "FLECS_DOC",
 #endif
-#ifdef FLECS_COREDOC
-    "FLECS_COREDOC",
-#endif
 #ifdef FLECS_LOG
     "FLECS_LOG",
 #endif
@@ -868,6 +866,8 @@ static
 void flecs_log_build_info(void) {
     const ecs_build_info_t *bi = ecs_get_build_info();
     ecs_assert(bi != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_trace("flecs version %s", bi->version);
 
     ecs_trace("addons included in build:");
     ecs_log_push();
@@ -1015,9 +1015,6 @@ ecs_world_t *ecs_init(void) {
 #endif
 #ifdef FLECS_DOC
     ECS_IMPORT(world, FlecsDoc);
-#endif
-#ifdef FLECS_COREDOC
-    ECS_IMPORT(world, FlecsCoreDoc);
 #endif
 #ifdef FLECS_SCRIPT
     ECS_IMPORT(world, FlecsScript);

@@ -384,11 +384,6 @@ jobs:
           bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_DOC
           bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_DOC
 
-      - name: FLECS_COREDOC
-        run: |
-          bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_COREDOC
-          bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_COREDOC
-
       - name: FLECS_LOG
         run: |
           bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_LOG

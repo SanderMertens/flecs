@@ -2235,7 +2235,7 @@ void FlecsScriptImport(
 {
     ECS_MODULE(world, FlecsScript);
     ECS_IMPORT(world, FlecsMeta);
-#ifdef FLECS_COREDOC
+#ifdef FLECS_DOC
     ECS_IMPORT(world, FlecsDoc);
     ecs_doc_set_brief(world, ecs_id(FlecsScript), 
         "Module with components for managing Flecs scripts");

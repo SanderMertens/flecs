@@ -1139,6 +1139,9 @@ void FlecsMetaImport(
     ecs_world_t *world)
 {
     ECS_MODULE(world, FlecsMeta);
+#ifdef FLECS_DOC
+    ECS_IMPORT(world, FlecsDoc);
+#endif
 
     ecs_set_name_prefix(world, "Ecs");
 
@@ -1358,133 +1361,8 @@ void FlecsMetaImport(
     ecs_add_id(world, EcsQuantity, EcsExclusive);
     ecs_add_id(world, EcsQuantity, EcsTag);
 
-    /* Initialize reflection data for meta components */
-    ecs_entity_t type_kind = ecs_enum_init(world, &(ecs_enum_desc_t){
-        .entity = ecs_entity(world, { .name = "TypeKind" }),
-        .constants = {
-            { .name = "PrimitiveType" },
-            { .name = "BitmaskType" },
-            { .name = "EnumType" },
-            { .name = "StructType" },
-            { .name = "ArrayType" },
-            { .name = "VectorType" },
-            { .name = "OpaqueType" }
-        }
-    });
-
-    ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity = ecs_id(EcsMetaType),
-        .members = {
-            { .name = "kind", .type = type_kind }
-        }
-    });
-
-    ecs_entity_t primitive_kind = ecs_enum_init(world, &(ecs_enum_desc_t){
-        .entity = ecs_entity(world, { .name = "PrimitiveKind" }),
-        .constants = {
-            { .name = "Bool", 1 }, 
-            { .name = "Char" }, 
-            { .name = "Byte" }, 
-            { .name = "U8" }, 
-            { .name = "U16" }, 
-            { .name = "U32" }, 
-            { .name = "U64 "},
-            { .name = "I8" }, 
-            { .name = "I16" }, 
-            { .name = "I32" }, 
-            { .name = "I64" }, 
-            { .name = "F32" }, 
-            { .name = "F64" }, 
-            { .name = "UPtr "},
-            { .name = "IPtr" }, 
-            { .name = "String" }, 
-            { .name = "Entity" },
-            { .name = "Id" }
-        }
-    });
-
-    ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity = ecs_id(EcsPrimitive),
-        .members = {
-            { .name = "kind", .type = primitive_kind }
-        }
-    });
-
-    ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity = ecs_id(EcsMember),
-        .members = {
-            { .name = "type", .type = ecs_id(ecs_entity_t) },
-            { .name = "count", .type = ecs_id(ecs_i32_t) },
-            { .name = "unit", .type = ecs_id(ecs_entity_t) },
-            { .name = "offset", .type = ecs_id(ecs_i32_t) }
-        }
-    });
-
-    ecs_entity_t vr = ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity = ecs_entity(world, { .name = "value_range" }),
-        .members = {
-            { .name = "min", .type = ecs_id(ecs_f64_t) },
-            { .name = "max", .type = ecs_id(ecs_f64_t) }
-        }
-    });
-
-    ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity = ecs_id(EcsMemberRanges),
-        .members = {
-            { .name = "value", .type = vr },
-            { .name = "warning", .type = vr },
-            { .name = "error", .type = vr }
-        }
-    });
-
-    ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity = ecs_id(EcsArray),
-        .members = {
-            { .name = "type", .type = ecs_id(ecs_entity_t) },
-            { .name = "count", .type = ecs_id(ecs_i32_t) },
-        }
-    });
-
-    ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity = ecs_id(EcsVector),
-        .members = {
-            { .name = "type", .type = ecs_id(ecs_entity_t) }
-        }
-    });
-
-    ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity = ecs_id(EcsOpaque),
-        .members = {
-            { .name = "as_type", .type = ecs_id(ecs_entity_t) }
-        }
-    });
-
-    ecs_entity_t ut = ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity = ecs_entity(world, { .name = "unit_translation" }),
-        .members = {
-            { .name = "factor", .type = ecs_id(ecs_i32_t) },
-            { .name = "power", .type = ecs_id(ecs_i32_t) }
-        }
-    });
-
-    ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity = ecs_id(EcsUnit),
-        .members = {
-            { .name = "symbol", .type = ecs_id(ecs_string_t) },
-            { .name = "prefix", .type = ecs_id(ecs_entity_t) },
-            { .name = "base", .type = ecs_id(ecs_entity_t) },
-            { .name = "over", .type = ecs_id(ecs_entity_t) },
-            { .name = "translation", .type = ut }
-        }
-    });
-
-    ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity = ecs_id(EcsUnitPrefix),
-        .members = {
-            { .name = "symbol", .type = ecs_id(ecs_string_t) },
-            { .name = "translation", .type = ut }
-        }
-    });
+    /* Import reflection definitions for builtin types */
+    flecs_meta_import_definitions(world);
 }
 
 #endif

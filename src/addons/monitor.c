@@ -322,7 +322,7 @@ void FlecsMonitorImport(
 #ifdef FLECS_UNITS
     ECS_IMPORT(world, FlecsUnits);
 #endif
-#ifdef FLECS_COREDOC
+#ifdef FLECS_DOC
     ECS_IMPORT(world, FlecsDoc);
     ecs_doc_set_brief(world, ecs_id(FlecsMonitor), 
         "Module that automatically monitors statistics for the world & systems");
@@ -338,7 +338,7 @@ void FlecsMonitorImport(
 
     ECS_COMPONENT_DEFINE(world, EcsWorldSummary);
 
-#if defined(FLECS_META) && defined(FLECS_UNITS)
+#if defined(FLECS_META) && defined(FLECS_UNITS) 
     ecs_struct(world, {
         .entity = ecs_id(EcsWorldSummary),
         .members = {

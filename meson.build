@@ -38,6 +38,7 @@ flecs_src = files(
     'src/addons/json/json.c',
     'src/addons/log.c',
     'src/addons/meta/api.c',
+    'src/addons/meta/definitions.c',
     'src/addons/meta/meta.c',
     'src/addons/meta/serialized.c',
     'src/addons/meta/cursor.c',

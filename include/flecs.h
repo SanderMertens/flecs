@@ -33,7 +33,8 @@
 #define FLECS_VERSION_MAJOR 3
 #define FLECS_VERSION_MINOR 2
 #define FLECS_VERSION_PATCH 12
-#define FLECS_VERSION_(major, minor, patch) #major "." #minor "." #patch
+#define FLECS_VERSION__(major, minor, patch) #major "." #minor "." #patch
+#define FLECS_VERSION_(major, minor, patch) FLECS_VERSION__(major, minor, patch)
 #define FLECS_VERSION FLECS_VERSION_(FLECS_VERSION_MAJOR, FLECS_VERSION_MINOR, FLECS_VERSION_PATCH)
 
 /** @def FLECS_CONFIG_HEADER
@@ -189,7 +190,6 @@
 #define FLECS_EXPR          /**< Parsing strings to/from component values */
 #define FLECS_JSON          /**< Parsing JSON to/from component values */
 #define FLECS_DOC           /**< Document entities & components */
-#define FLECS_COREDOC       /**< Documentation for core entities & components */
 #define FLECS_LOG           /**< When enabled ECS provides more detailed logs */
 #define FLECS_APP           /**< Application addon */
 #define FLECS_OS_API_IMPL   /**< Default implementation for OS API */

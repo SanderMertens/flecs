@@ -35,7 +35,8 @@
 #define FLECS_VERSION_MAJOR 3
 #define FLECS_VERSION_MINOR 2
 #define FLECS_VERSION_PATCH 12
-#define FLECS_VERSION_(major, minor, patch) #major "." #minor "." #patch
+#define FLECS_VERSION__(major, minor, patch) #major "." #minor "." #patch
+#define FLECS_VERSION_(major, minor, patch) FLECS_VERSION__(major, minor, patch)
 #define FLECS_VERSION FLECS_VERSION_(FLECS_VERSION_MAJOR, FLECS_VERSION_MINOR, FLECS_VERSION_PATCH)
 
 /** @def FLECS_CONFIG_HEADER
@@ -191,7 +192,6 @@
 #define FLECS_EXPR          /**< Parsing strings to/from component values */
 #define FLECS_JSON          /**< Parsing JSON to/from component values */
 #define FLECS_DOC           /**< Document entities & components */
-#define FLECS_COREDOC       /**< Documentation for core entities & components */
 #define FLECS_LOG           /**< When enabled ECS provides more detailed logs */
 #define FLECS_APP           /**< Application addon */
 #define FLECS_OS_API_IMPL   /**< Default implementation for OS API */
@@ -9617,9 +9617,6 @@ int ecs_value_move_ctor(
 #ifdef FLECS_NO_DOC
 #undef FLECS_DOC
 #endif
-#ifdef FLECS_NO_COREDOC
-#undef FLECS_COREDOC
-#endif
 #ifdef FLECS_NO_LOG
 #undef FLECS_LOG
 #endif
@@ -12514,61 +12511,6 @@ void FlecsMonitorImport(
 #endif
 
 /** @} */
-
-#endif
-
-#endif
-
-#ifdef FLECS_COREDOC
-#ifdef FLECS_NO_COREDOC
-#error "FLECS_NO_COREDOC failed: COREDOC is required by other addons"
-#endif
-/**
- * @file addons/coredoc.h
- * @brief Core doc module.
- *
- * The core doc module imports documentation and reflection data for core
- * components, tags and systems.
- */
-
-#ifdef FLECS_COREDOC
-
-#ifndef FLECS_DOC
-#define FLECS_DOC
-#endif
-
-#ifndef FLECS_META
-#define FLECS_META
-#endif
-
-#ifndef FLECS_COREDOC_H
-#define FLECS_COREDOC_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/**
- * @defgroup c_addons_coredoc Coredoc
- * @ingroup c_addons
- * Module that adds documentation and reflection to core entities.
- *
- * @{
- */
-
-/* Module import */
-
-FLECS_API
-void FlecsCoreDocImport(
-    ecs_world_t *world);
-
-/** @} */
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
 
 #endif
 

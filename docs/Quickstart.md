@@ -119,7 +119,6 @@ Addon         | Description                                      | Define       
 [Expr](/flecs/group__c__addons__expr.html)                 | String format optimized for ECS data             | FLECS_EXPR          |
 [JSON](/flecs/group__c__addons__json.html)                 | JSON format                                      | FLECS_JSON          |
 [Doc](/flecs/group__c__addons__doc.html)                   | Add documentation to components, systems & more  | FLECS_DOC           |
-[Coredoc](/flecs/group__c__addons__coredoc.html)           | Documentation for builtin components & modules   | FLECS_COREDOC       |
 [Http](/flecs/group__c__addons__http.html)                 | Tiny HTTP server for processing simple requests  | FLECS_HTTP          |
 [Rest](/flecs/group__c__addons__rest.html)                 | REST API for showing entities in the browser     | FLECS_REST          |
 [Parser](/flecs/group__c__addons__parser.html)             | Create entities & queries from strings           | FLECS_PARSER        |
