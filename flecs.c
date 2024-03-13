@@ -23122,92 +23122,165 @@ void flecs_world_allocators_fini(
     flecs_allocator_fini(&world->allocator);
 }
 
+#define FLECS_COMPILER_INFO_MAX (64)
+static char flecs_compiler_info[FLECS_COMPILER_INFO_MAX] = {0};
+static bool flecs_compiler_info_initialized = false;
+static const char *flecs_addons_info[] = {
+#ifdef FLECS_CPP
+    "FLECS_CPP",
+#endif
+#ifdef FLECS_MODULE
+    "FLECS_MODULE",
+#endif
+#ifdef FLECS_PARSER
+    "FLECS_PARSER",
+#endif
+#ifdef FLECS_PLECS
+    "FLECS_PLECS",
+#endif
+#ifdef FLECS_RULES
+    "FLECS_RULES",
+#endif
+#ifdef FLECS_SNAPSHOT
+    "FLECS_SNAPSHOT",
+#endif
+#ifdef FLECS_STATS
+    "FLECS_STATS",
+#endif
+#ifdef FLECS_MONITOR
+    "FLECS_MONITOR",
+#endif
+#ifdef FLECS_METRICS
+    "FLECS_METRICS",
+#endif
+#ifdef FLECS_ALERTS
+    "FLECS_ALERTS",
+#endif
+#ifdef FLECS_SYSTEM
+    "FLECS_SYSTEM",
+#endif
+#ifdef FLECS_PIPELINE
+    "FLECS_PIPELINE",
+#endif
+#ifdef FLECS_TIMER
+    "FLECS_TIMER",
+#endif
+#ifdef FLECS_META
+    "FLECS_META",
+#endif
+#ifdef FLECS_META_C
+    "FLECS_META_C",
+#endif
+#ifdef FLECS_UNITS
+    "FLECS_UNITS",
+#endif
+#ifdef FLECS_EXPR
+    "FLECS_EXPR",
+#endif
+#ifdef FLECS_JSON
+    "FLECS_JSON",
+#endif
+#ifdef FLECS_DOC
+    "FLECS_DOC",
+#endif
+#ifdef FLECS_COREDOC
+    "FLECS_COREDOC",
+#endif
+#ifdef FLECS_LOG
+    "FLECS_LOG",
+#endif
+#ifdef FLECS_JOURNAL
+    "FLECS_JOURNAL",
+#endif
+#ifdef FLECS_APP
+    "FLECS_APP",
+#endif
+#ifdef FLECS_OS_API_IMPL
+    "FLECS_OS_API_IMPL",
+#endif
+#ifdef FLECS_SCRIPT
+    "FLECS_SCRIPT",
+#endif
+#ifdef FLECS_HTTP
+    "FLECS_HTTP",
+#endif
+#ifdef FLECS_REST
+    "FLECS_REST",
+#endif
+NULL
+};
+
+static ecs_build_info_t flecs_build_info = {
+    .compiler = flecs_compiler_info,
+    .addons = flecs_addons_info,
+#ifdef FLECS_DEBUG
+    .debug = true,
+#endif
+#ifdef FLECS_SANITIZE
+    .sanitize = true,
+#endif
+    .version = FLECS_VERSION,
+    .version_major = FLECS_VERSION_MAJOR,
+    .version_minor = FLECS_VERSION_MINOR,
+    .version_patch = FLECS_VERSION_PATCH
+};
+
 static
-void flecs_log_addons(void) {
+void flecs_log_build_info(void) {
+    const ecs_build_info_t *bi = ecs_get_build_info();
+    ecs_assert(bi != NULL, ECS_INTERNAL_ERROR, NULL);
+
     ecs_trace("addons included in build:");
     ecs_log_push();
-    #ifdef FLECS_CPP
-        ecs_trace("FLECS_CPP");
-    #endif
-    #ifdef FLECS_MODULE
-        ecs_trace("FLECS_MODULE");
-    #endif
-    #ifdef FLECS_PARSER
-        ecs_trace("FLECS_PARSER");
-    #endif
-    #ifdef FLECS_PLECS
-        ecs_trace("FLECS_PLECS");
-    #endif
-    #ifdef FLECS_RULES
-        ecs_trace("FLECS_RULES");
-    #endif
-    #ifdef FLECS_SNAPSHOT
-        ecs_trace("FLECS_SNAPSHOT");
-    #endif
-    #ifdef FLECS_STATS
-        ecs_trace("FLECS_STATS");
-    #endif
-    #ifdef FLECS_MONITOR
-        ecs_trace("FLECS_MONITOR");
-    #endif
-    #ifdef FLECS_METRICS
-        ecs_trace("FLECS_METRICS");
-    #endif
-    #ifdef FLECS_SYSTEM
-        ecs_trace("FLECS_SYSTEM");
-    #endif
-    #ifdef FLECS_PIPELINE
-        ecs_trace("FLECS_PIPELINE");
-    #endif
-    #ifdef FLECS_TIMER
-        ecs_trace("FLECS_TIMER");
-    #endif
-    #ifdef FLECS_META
-        ecs_trace("FLECS_META");
-    #endif
-    #ifdef FLECS_META_C
-        ecs_trace("FLECS_META_C");
-    #endif
-    #ifdef FLECS_UNITS
-        ecs_trace("FLECS_UNITS");
-    #endif
-    #ifdef FLECS_EXPR
-        ecs_trace("FLECS_EXPR");
-    #endif
-    #ifdef FLECS_JSON
-        ecs_trace("FLECS_JSON");
-    #endif
-    #ifdef FLECS_DOC
-        ecs_trace("FLECS_DOC");
-    #endif
-    #ifdef FLECS_COREDOC
-        ecs_trace("FLECS_COREDOC");
-    #endif
-    #ifdef FLECS_LOG
-        ecs_trace("FLECS_LOG");
-    #endif
-    #ifdef FLECS_JOURNAL
-        ecs_trace("FLECS_JOURNAL");
-    #endif
-    #ifdef FLECS_APP
-        ecs_trace("FLECS_APP");
-    #endif
-    #ifdef FLECS_OS_API_IMPL
-        ecs_trace("FLECS_OS_API_IMPL");
-    #endif
-    #ifdef FLECS_SCRIPT
-        ecs_trace("FLECS_SCRIPT");
-    #endif
-    #ifdef FLECS_HTTP
-        ecs_trace("FLECS_HTTP");
-    #endif
-    #ifdef FLECS_REST
-        ecs_trace("FLECS_REST");
-    #endif
+
+    const char **addon = bi->addons;
+    do {
+        ecs_trace(addon[0]);
+    } while ((++ addon)[0]);
     ecs_log_pop();
+
+    if (bi->sanitize) {
+        ecs_trace("sanitize build, rebuild without FLECS_SANITIZE for (much) "
+            "improved performance");
+    } else if (bi->debug) {
+        ecs_trace("debug build, rebuild with NDEBUG or FLECS_NDEBUG for "
+            "improved performance");
+    } else {
+        ecs_trace("#[green]release#[reset] build");
+    }
+
+    ecs_trace("compiled with %s", bi->compiler);
 }
 
 /* -- Public functions -- */
+
+const ecs_build_info_t* ecs_get_build_info(void) {
+    if (!flecs_compiler_info_initialized) {
+    #ifdef __clang__
+        ecs_os_snprintf(flecs_compiler_info, FLECS_COMPILER_INFO_MAX, 
+            "clang %s", __clang_version__);
+    #elif defined(__GNUC__)
+        ecs_os_snprintf(flecs_compiler_info, FLECS_COMPILER_INFO_MAX, 
+            "gcc %d.%d", __GNUC__, __GNUC_MINOR__);
+    #elif defined (_MSC_VER)
+        ecs_os_snprintf(flecs_compiler_info, FLECS_COMPILER_INFO_MAX, 
+            "msvc %d", _MSC_VER);
+    #elif defined (__TINYC__)
+        ecs_os_snprintf(flecs_compiler_info, FLECS_COMPILER_INFO_MAX, 
+            "tcc %d", __TINYC__);
+    #endif
+        flecs_compiler_info_initialized = true;
+    }
+
+    return &flecs_build_info;
+}
+
+const ecs_world_info_t* ecs_get_world_info(
+    const ecs_world_t *world)
+{
+    world = ecs_get_world(world);
+    return &world->info;
+}
 
 ecs_world_t *ecs_mini(void) {
 #ifdef FLECS_OS_API_IMPL
@@ -23232,27 +23305,7 @@ ecs_world_t *ecs_mini(void) {
         ecs_trace("time management not available");
     }
 
-    flecs_log_addons();
-
-#ifdef FLECS_SANITIZE
-    ecs_trace("sanitize build, rebuild without FLECS_SANITIZE for (much) "
-        "improved performance");
-#elif defined(FLECS_DEBUG)
-    ecs_trace("debug build, rebuild with NDEBUG or FLECS_NDEBUG for improved "
-        "performance");
-#else
-    ecs_trace("#[green]release#[reset] build");
-#endif
-
-#ifdef __clang__
-    ecs_trace("compiled with clang %s", __clang_version__);
-#elif defined(__GNUC__)
-    ecs_trace("compiled with gcc %d.%d", __GNUC__, __GNUC_MINOR__);
-#elif defined (_MSC_VER)
-    ecs_trace("compiled with msvc %d", _MSC_VER);
-#elif defined (__TINYC__)
-    ecs_trace("compiled with tcc %d", __TINYC__);
-#endif
+    flecs_log_build_info();
 
     ecs_world_t *world = ecs_os_calloc_t(ecs_world_t);
     ecs_assert(world != NULL, ECS_OUT_OF_MEMORY, NULL);
@@ -24260,13 +24313,6 @@ void ecs_frame_end(
     flecs_stop_measure_frame(world);
 error:
     return;
-}
-
-const ecs_world_info_t* ecs_get_world_info(
-    const ecs_world_t *world)
-{
-    world = ecs_get_world(world);
-    return &world->info;
 }
 
 void flecs_delete_table(

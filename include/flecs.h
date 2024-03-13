@@ -30,6 +30,12 @@
  * @{
  */
 
+#define FLECS_VERSION_MAJOR 3
+#define FLECS_VERSION_MINOR 2
+#define FLECS_VERSION_PATCH 12
+#define FLECS_VERSION_(major, minor, patch) #major "." #minor "." #patch
+#define FLECS_VERSION FLECS_VERSION_(FLECS_VERSION_MAJOR, FLECS_VERSION_MINOR, FLECS_VERSION_PATCH)
+
 /** @def FLECS_CONFIG_HEADER
  * Allows for including a user-customizable header that specifies compile-time 
  * features. */
@@ -1209,6 +1215,18 @@ typedef struct ecs_value_t {
     void *ptr;
 } ecs_value_t;
 
+/** Type with information about the current Flecs build */
+typedef struct ecs_build_info_t {
+    const char *compiler;           /**< Compiler used to compile flecs */
+    const char **addons;            /**< Addons included in build */
+    const char *version;            /**< Stringified version */
+    int16_t version_major;          /**< Major flecs version */
+    int16_t version_minor;          /**< Minor flecs version */
+    int16_t version_patch;          /**< Patch flecs version */
+    bool debug;                     /**< Is this a debug build */
+    bool sanitize;                  /**< Is this a sanitize build */
+} ecs_build_info_t;
+
 /** Type that contains information about the world. */
 typedef struct ecs_world_info_t {
     ecs_entity_t last_component_id;   /**< Last issued component entity id */
@@ -2127,6 +2145,11 @@ void* ecs_get_ctx(
 FLECS_API
 void* ecs_get_binding_ctx(
     const ecs_world_t *world);
+
+/** Get build info.
+ *  Returns information about the current Flecs build.
+ */
+const ecs_build_info_t* ecs_get_build_info(void);
 
 /** Get world info.
  *
