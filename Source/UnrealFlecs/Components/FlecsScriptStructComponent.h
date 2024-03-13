@@ -11,17 +11,17 @@ struct FFlecsScriptStructComponent
 {
     GENERATED_BODY()
 
-    FORCEINLINE friend uint32 GetTypeHash(const FFlecsScriptStructComponent& InScriptStructComponent)
+    FORCEINLINE NO_DISCARD friend uint32 GetTypeHash(const FFlecsScriptStructComponent& InScriptStructComponent)
     {
         return GetTypeHash(InScriptStructComponent.ScriptStruct);
     }
 
-    FORCEINLINE friend bool operator==(const FFlecsScriptStructComponent& Lhs, const FFlecsScriptStructComponent& Rhs)
+    FORCEINLINE NO_DISCARD friend bool operator==(const FFlecsScriptStructComponent& Lhs, const FFlecsScriptStructComponent& Rhs)
     {
         return Lhs.ScriptStruct == Rhs.ScriptStruct;
     }
 
-    FORCEINLINE friend bool operator!=(const FFlecsScriptStructComponent& Lhs, const FFlecsScriptStructComponent& Rhs)
+    FORCEINLINE NO_DISCARD friend bool operator!=(const FFlecsScriptStructComponent& Lhs, const FFlecsScriptStructComponent& Rhs)
     {
         return !(Lhs == Rhs);
     }

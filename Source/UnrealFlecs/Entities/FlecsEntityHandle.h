@@ -7,6 +7,7 @@
 #include "FlecsType.h"
 #include "InstancedStruct.h"
 #include "SolidMacros/Macros.h"
+#include "Worlds/FlecsWorld.h"
 #include "FlecsEntityHandle.generated.h"
 
 class UFlecsWorldSubsystem;

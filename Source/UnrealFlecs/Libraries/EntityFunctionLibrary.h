@@ -105,5 +105,11 @@ public:
     {
         Entity.Disable();
     }
+
+    UFUNCTION(BlueprintCallable, Category = "Flecs|Entity")
+    static void Clear(const FFlecsEntityHandle& Entity)
+    {
+        Entity.Clear();
+    }
     
 }; // class UEntityFunctionLibrary
