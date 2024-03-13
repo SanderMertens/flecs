@@ -545,8 +545,13 @@ int flecs_json_serialize_iter_result_table_rows(
         flecs_json_object_push(buf);
 
         if (has_this) {
+            const EcsIdentifier *name_ptr = NULL;
+            if (names) {
+                /* Correct for offset applied by iterator */
+                name_ptr = &names[-it->offset];
+            }
             flecs_json_serialize_iter_this_row(
-                it, parent_path, &names[-it->offset], i, buf);
+                it, parent_path, name_ptr, i, buf);
         }
 
         if (tags_pairs_vars) {
