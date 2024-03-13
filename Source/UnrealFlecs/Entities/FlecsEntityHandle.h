@@ -134,7 +134,7 @@ public:
 
 	FORCEINLINE NO_DISCARD FString ToString() const
 	{
-		return FString::Printf(TEXT("Entity: %llu"), GetEntity().id());
+		return FString::Printf(TEXT("Entity: %hs"), GetEntity().str().c_str());
 	}
 	
 private:

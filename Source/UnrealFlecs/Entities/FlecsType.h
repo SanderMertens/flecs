@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "flecs.h"
+#include "SolidMacros/Macros.h"
 #include "FlecsType.generated.h"
 
 USTRUCT(BlueprintType)
@@ -28,12 +29,12 @@ public:
     FORCEINLINE flecs::type* operator->() { return &Type; }
     FORCEINLINE const flecs::type* operator->() const { return &Type; }
 
-    FORCEINLINE bool operator==(const FFlecsType& Other) const
+    FORCEINLINE NO_DISCARD bool operator==(const FFlecsType& Other) const
     {
         return Type == Other.Type;
     }
 
-    FORCEINLINE bool operator!=(const FFlecsType& Other) const
+    FORCEINLINE NO_DISCARD bool operator!=(const FFlecsType& Other) const
     {
         return Type != Other.Type;
     }
