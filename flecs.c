@@ -30812,6 +30812,8 @@ void UpdateWorldSummary(ecs_iter_t *it) {
         summary[i].merge_time_total = (double)info->merge_time_total;
 
         summary[i].frame_count ++;
+
+        summary[i].build_info = *ecs_get_build_info();
     }
 }
 
@@ -31092,6 +31094,7 @@ void FlecsMonitorImport(
     ECS_COMPONENT_DEFINE(world, EcsWorldSummary);
 
 #if defined(FLECS_META) && defined(FLECS_UNITS) 
+    ecs_entity_t build_info = ecs_lookup(world, "flecs.core.build_info_t");
     ecs_struct(world, {
         .entity = ecs_id(EcsWorldSummary),
         .members = {
@@ -31102,7 +31105,8 @@ void FlecsMonitorImport(
             { .name = "frame_time_last", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds  },
             { .name = "system_time_last", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds  },
             { .name = "merge_time_last", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds  },
-            { .name = "frame_count", .type = ecs_id(ecs_u64_t)  }
+            { .name = "frame_count", .type = ecs_id(ecs_u64_t) },
+            { .name = "build_info", .type = build_info }
         }
     });
 #endif
@@ -58343,6 +58347,28 @@ double ecs_meta_ptr_to_float(
 
 #ifdef FLECS_META
 
+/* Opaque type serializatior addon vector */
+static
+int flecs_addon_vec_serialize(const ecs_serializer_t *ser, const void *ptr) {
+    char ***data = ECS_CONST_CAST(char***, ptr);
+    char **addons = data[0];
+    do {
+        ser->value(ser, ecs_id(ecs_string_t), addons);
+    } while((++ addons)[0]);
+    return 0;
+}
+
+static
+size_t flecs_addon_vec_count(const void *ptr) {
+    int32_t count = 0;
+    char ***data = ECS_CONST_CAST(char***, ptr);
+    char **addons = data[0];
+    do {
+        ++ count;
+    } while(addons[count]);
+    return flecs_ito(size_t, count);
+}
+
 /* Initialize reflection data for core components */
 static
 void flecs_meta_import_core_definitions(
@@ -58356,6 +58382,26 @@ void flecs_meta_import_core_definitions(
         }
     });
 
+    ecs_entity_t string_vec = ecs_vector(world, {
+        .entity = ecs_entity(world, { .name = "flecs.core.string_vec_t "}),
+        .type = ecs_id(ecs_string_t)
+    });
+
+    ecs_entity_t addon_vec = ecs_opaque(world, {
+        .entity = ecs_component(world, { 
+            .type = {
+                .name = "flecs.core.addon_vec_t",
+                .size = ECS_SIZEOF(char**),
+                .alignment = ECS_ALIGNOF(char**)
+            }
+        }),
+        .type = {
+            .as_type = string_vec,
+            .serialize = flecs_addon_vec_serialize,
+            .count = flecs_addon_vec_count,
+        }
+    });
+
     ecs_struct(world, {
         .entity = ecs_entity(world, { 
             .name = "flecs.core.build_info_t",
@@ -58363,7 +58409,7 @@ void flecs_meta_import_core_definitions(
         }),
         .members = {
             { .name = "compiler", .type = ecs_id(ecs_string_t) },
-            { .name = "addons", .type = ecs_id(ecs_string_t) },
+            { .name = "addons", .type = addon_vec },
             { .name = "version", .type = ecs_id(ecs_string_t) },
             { .name = "version_major", .type = ecs_id(ecs_i16_t) },
             { .name = "version_minor", .type = ecs_id(ecs_i16_t) },
@@ -58379,12 +58425,15 @@ static
 void flecs_meta_import_doc_definitions(
     ecs_world_t *world)
 {
+    (void)world;
+#ifdef FLECS_DOC
     ecs_struct(world, {
         .entity = ecs_id(EcsDocDescription),
         .members = {
             { .name = "value", .type = ecs_id(ecs_string_t) }
         }
     });
+#endif
 }
 
 /* Initialize reflection data for meta components */

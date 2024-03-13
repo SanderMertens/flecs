@@ -32,12 +32,12 @@
  * @{
  */
 
+/* Flecs version macro */
 #define FLECS_VERSION_MAJOR 3
 #define FLECS_VERSION_MINOR 2
 #define FLECS_VERSION_PATCH 12
-#define FLECS_VERSION__(major, minor, patch) #major "." #minor "." #patch
-#define FLECS_VERSION_(major, minor, patch) FLECS_VERSION__(major, minor, patch)
-#define FLECS_VERSION FLECS_VERSION_(FLECS_VERSION_MAJOR, FLECS_VERSION_MINOR, FLECS_VERSION_PATCH)
+#define FLECS_VERSION FLECS_VERSION_IMPL(\
+    FLECS_VERSION_MAJOR, FLECS_VERSION_MINOR, FLECS_VERSION_PATCH)
 
 /** @def FLECS_CONFIG_HEADER
  * Allows for including a user-customizable header that specifies compile-time 
@@ -799,6 +799,11 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 #define ECS_NEQ(a, b) (!ECS_EQ(a, b))
 #define ECS_EQZERO(a) ECS_EQ(a, (uint64_t){0})
 #define ECS_NEQZERO(a) ECS_NEQ(a, (uint64_t){0})
+
+/* Utilities to convert flecs version to string */
+#define FLECS_VERSION_IMPLSTR(major, minor, patch) #major "." #minor "." #patch
+#define FLECS_VERSION_IMPL(major, minor, patch) \
+    FLECS_VERSION_IMPLSTR(major, minor, patch)
 
 #define ECS_CONCAT(a, b) a ## b
 
@@ -12497,6 +12502,9 @@ typedef struct {
 
     /* Frame count */
     int64_t frame_count;        /**< Number of frames processed */
+
+    /* Build info */
+    ecs_build_info_t build_info; /**< Build info */
 } EcsWorldSummary;
 
 /* Module import */

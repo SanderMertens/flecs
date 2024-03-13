@@ -20,7 +20,6 @@ endif
 
 flecs_src = files(
     'src/addons/alerts.c',
-    'src/addons/coredoc.c',
     'src/addons/doc.c',
     'src/addons/expr/deserialize.c',
     'src/addons/expr/serialize.c',

@@ -30,12 +30,12 @@
  * @{
  */
 
+/* Flecs version macro */
 #define FLECS_VERSION_MAJOR 3
 #define FLECS_VERSION_MINOR 2
 #define FLECS_VERSION_PATCH 12
-#define FLECS_VERSION__(major, minor, patch) #major "." #minor "." #patch
-#define FLECS_VERSION_(major, minor, patch) FLECS_VERSION__(major, minor, patch)
-#define FLECS_VERSION FLECS_VERSION_(FLECS_VERSION_MAJOR, FLECS_VERSION_MINOR, FLECS_VERSION_PATCH)
+#define FLECS_VERSION FLECS_VERSION_IMPL(\
+    FLECS_VERSION_MAJOR, FLECS_VERSION_MINOR, FLECS_VERSION_PATCH)
 
 /** @def FLECS_CONFIG_HEADER
  * Allows for including a user-customizable header that specifies compile-time 

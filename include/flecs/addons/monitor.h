@@ -73,6 +73,9 @@ typedef struct {
 
     /* Frame count */
     int64_t frame_count;        /**< Number of frames processed */
+
+    /* Build info */
+    ecs_build_info_t build_info; /**< Build info */
 } EcsWorldSummary;
 
 /* Module import */
