@@ -15,6 +15,7 @@
 #include "Entities/FlecsEntityHandle.h"
 #include "SolidMacros/Concepts/SolidConcepts.h"
 #include "SolidMacros/Standard/Hashing.h"
+#include "Standard/robin_hood.h"
 #include "Subsystems/WorldSubsystem.h"
 #include "FlecsWorldSubsystem.generated.h"
 
@@ -43,21 +44,21 @@ class UNREALFLECS_API UFlecsWorldSubsystem final : public UTickableWorldSubsyste
 	GENERATED_BODY()
 
 public:
-	void Initialize(FSubsystemCollectionBase& Collection) override
+	virtual void Initialize(FSubsystemCollectionBase& Collection) override
 	{
 		Super::Initialize(Collection);
 
 		CreateWorld(DEFAULT_FLECS_WORLD_NAME, FFlecsWorldSettings());
 	}
 
-	void Deinitialize() override
+	virtual void Deinitialize() override
 	{
 		Super::Deinitialize();
 
 		DestroyWorldByName(DEFAULT_FLECS_WORLD_NAME);
 	}
 
-	void Tick(float DeltaTime) override
+	virtual void Tick(float DeltaTime) override
 	{
 		for (FFlecsWorld& World : Worlds)
 		{
@@ -349,15 +350,21 @@ public:
 		GetFlecsWorld(WorldName)->set_stage_count(Stages);
 	}
 	
-	bool DoesSupportWorldType(const EWorldType::Type WorldType) const override
+	virtual bool DoesSupportWorldType(const EWorldType::Type WorldType) const override
 	{
 		return WorldType == EWorldType::Game || WorldType == EWorldType::PIE;
 	}
 
+	UFUNCTION(BlueprintCallable, Category = "Flecs | Threading")
+	void SetTaskThreads(const FName& WorldName, const int32 Threads) const
+	{
+		GetFlecsWorld(WorldName)->set_task_threads(Threads);
+	}
+
 protected:
 	std::vector<FFlecsWorld> Worlds;
-	std::unordered_map<FName, FFlecsWorld*> WorldNameMap;
+	robin_hood::unordered_flat_map<FName, FFlecsWorld*> WorldNameMap;
 	
-	mutable std::unordered_map<FFlecsScriptStructComponent, FFlecsEntityHandle> ScriptStructMap;
-	mutable std::unordered_map<FFlecsScriptClassComponent, FFlecsEntityHandle> ScriptClassMap;
+	mutable robin_hood::unordered_flat_map<FFlecsScriptStructComponent, FFlecsEntityHandle> ScriptStructMap;
+	mutable robin_hood::unordered_flat_map<FFlecsScriptClassComponent, FFlecsEntityHandle> ScriptClassMap;
 }; // class UFlecsWorldSubsystem
