@@ -3317,7 +3317,7 @@ void FixedHierarchies_staged_query_w_parent_field_1_lvl(void) {
     });
 
     ecs_world_t *stage = ecs_get_stage(world, 0);
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
 
     ecs_iter_t it = ecs_query_iter(stage, q);
     {
@@ -3397,7 +3397,7 @@ void FixedHierarchies_staged_query_w_parent_field_2_lvl(void) {
     });
 
     ecs_world_t *stage = ecs_get_stage(world, 0);
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
 
     ecs_iter_t it = ecs_query_iter(stage, q);
     {
@@ -3500,7 +3500,7 @@ void FixedHierarchies_staged_query_w_parent_field_1_fixed_1_regular(void) {
     });
 
     ecs_world_t *stage = ecs_get_stage(world, 0);
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
 
     ecs_iter_t it = ecs_query_iter(stage, q);
     {
@@ -3589,7 +3589,7 @@ void FixedHierarchies_staged_query_w_cascade_field_2_lvl(void) {
     });
 
     ecs_world_t *stage = ecs_get_stage(world, 0);
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
 
     ecs_iter_t it = ecs_query_iter(stage, q);
     {

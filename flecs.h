@@ -4636,25 +4636,39 @@ void ecs_set_target_fps(
  */
 
 /** Begin readonly mode.
- * Readonly mode guarantees that no mutations will occur on the world, which
- * makes the world safe to access from multiple threads. While the world is in
- * readonly mode, operations are deferred.
- *
- * Note that while similar to ecs_defer_begin(), deferring only does not guarantee
- * the world is not mutated. Operations that are not deferred (like creating a
- * query) update data structures on the world and are allowed when deferring is
- * enabled, but not when the world is in readonly mode.
- *
- * A call to ecs_readonly_begin() must be followed up with ecs_readonly_end().
- *
- * The ecs_progress() function automatically enables readonly mode while systems
- * are executed.
- *
- * When a world has more than one stage, the specific stage must be provided to
- * mutating ECS operations. Failing to do so will throw a readonly assert. A
- * world typically has more than one stage when using threads. An example:
- *
+ * This operation puts the world in readonly mode, which disallows mutations on
+ * the world. Readonly mode exists so that internal mechanisms can implement
+ * optimizations that certain aspects of the world to not change, while also 
+ * providing a mechanism for applications to prevent accidental mutations in, 
+ * for example, multithreaded applications.
+ * 
+ * Readonly mode is a stronger version of deferred mode. In deferred mode
+ * ECS operations such as add/remove/set/delete etc. are added to a command 
+ * queue to be executed later. In readonly mode, operations that could break
+ * scheduler logic (such as creating systems, queries) are also disallowed.
+ * 
+ * Readonly mode itself has a single threaded and a multi threaded mode. In
+ * single threaded mode certain mutations on the world are still allowed, for 
+ * example:
+ * - Entity liveliness operations (such as new, make_alive), so that systems are
+ *   able to create new entities.
+ * - Implicit component registration, so that this works from systems
+ * - Mutations to supporting data structures for the evaluation of uncached 
+ *   queries (filters), so that these can be created on the fly.
+ * 
+ * These mutations are safe in a single threaded applications, but for
+ * multithreaded applications the world needs to be entirely immutable. For this
+ * purpose multi threaded readonly mode exists, which disallows all mutations on
+ * the world. This means that in multi threaded applications, entity liveliness
+ * operations, implicit component registration, and on-the-fly filter creation
+ * are not guaranteed to work.
+ * 
+ * While in readonly mode, applications can still enqueue ECS operations on a
+ * stage. Stages are managed automatically when using the pipeline addon and 
+ * ecs_progress(), but they can also be configured manually as shown here:
+ * 
  * @code
+ * // Number of stages typically corresponds with number of threads
  * ecs_set_stage_count(world, 2);
  * ecs_stage_t *stage = ecs_get_stage(world, 1);
  *
@@ -4662,13 +4676,38 @@ void ecs_set_target_fps(
  * ecs_add(world, e, Tag); // readonly assert
  * ecs_add(stage, e, Tag); // OK
  * @endcode
+ * 
+ * When an attempt is made to perform an operation on a world in readonly mode,
+ * the code will throw an assert saying that the world is in readonly mode.
+ * 
+ * A call to ecs_readonly_begin() must be followed up with ecs_readonly_end().
+ * When ecs_readonly_end() is called, all enqueued commands from configured 
+ * stages are merged back into the world. Calls to ecs_readonly_begin() and
+ * ecs_readonly_end() should always happen from a context where the code has
+ * exclusive access to the world. The functions themselves are not thread safe.
+ * 
+ * In a typical application, a (non-exhaustive) call stack that uses 
+ * ecs_readonly_begin() and ecs_readonly_end() will look like this:
+ * 
+ * @code
+ * ecs_progress()
+ *   ecs_readonly_begin()
+ *     ecs_defer_begin()
+ * 
+ *       // user code
+ * 
+ *   ecs_readonly_end()
+ *     ecs_defer_end()
+ *@endcode
  *
  * @param world The world
+ * @param multi_threaded Whether to enable readonly/multi threaded mode.
  * @return Whether world is in readonly mode.
  */
 FLECS_API
 bool ecs_readonly_begin(
-    ecs_world_t *world);
+    ecs_world_t *world,
+    bool multi_threaded);
 
 /** End readonly mode.
  * This operation ends readonly mode, and must be called after
@@ -20124,34 +20163,19 @@ struct world {
         ecs_frame_end(m_world);
     }
 
-    /** Begin staging.
-     * When an application does not use ecs_progress to control the main loop, it
-     * can still use Flecs features such as the defer queue. When an application
-     * needs to stage changes, it needs to call this function after ecs_frame_begin.
-     * A call to ecs_readonly_begin must be followed by a call to ecs_readonly_end.
-     *
-     * When staging is enabled, modifications to entities are stored to a stage.
-     * This ensures that arrays are not modified while iterating. Modifications are
-     * merged back to the "main stage" when ecs_readonly_end is invoked.
-     *
-     * While the world is in staging mode, no structural changes (add/remove/...)
-     * can be made to the world itself. Operations must be executed on a stage
-     * instead (see ecs_get_stage).
-     *
-     * This function should only be ran from the main thread.
+    /** Begin readonly mode.
+     * 
+     * @see ecs_readonly_begin
      *
      * @return Whether world is currently staged.
      */
-    bool readonly_begin() const {
-        return ecs_readonly_begin(m_world);
+    bool readonly_begin(bool multi_threaded = false) const {
+        return ecs_readonly_begin(m_world, multi_threaded);
     }
 
-    /** End staging.
-     * Leaves staging mode. After this operation the world may be directly mutated
-     * again. By default this operation also merges data back into the world, unless
-     * auto-merging was disabled explicitly.
-     *
-     * This function should only be ran from the main thread.
+    /** End readonly mode.
+     * 
+     * @see ecs_readonly_end
      */
     void readonly_end() const {
         ecs_readonly_end(m_world);

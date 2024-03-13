@@ -437,7 +437,7 @@ void Lookup_lookup_from_scope_staged(void) {
     ecs_entity_t child = ecs_set_name(world, 0, "Child");
     ecs_add_pair(world, child, EcsChildOf, parent);
 
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
     ecs_world_t *stage = ecs_get_stage(world, 0);
     test_assert(ecs_set_scope(stage, parent) == 0);
 
@@ -471,7 +471,7 @@ void Lookup_lookup_core_from_stage(void) {
     test_assert(c == ecs_id(EcsComponent));
 
     ecs_world_t *stage = ecs_get_stage(world, 0);
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
     ecs_entity_t d = ecs_lookup(stage, "Component");
     test_assert(d != 0);
     test_assert(d == ecs_id(EcsComponent));
@@ -522,7 +522,7 @@ void Lookup_lookup_custom_search_path_from_stage(void) {
     ecs_entity_t *old_path = ecs_set_lookup_path(world, lookup_path);
 
     ecs_world_t *stage = ecs_get_stage(world, 0);
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
     test_assert(ecs_lookup(stage, "Parent") == parent);
     test_assert(ecs_lookup(stage, "Child") == child);
     test_assert(ecs_lookup(stage, "Parent.Child") == child);

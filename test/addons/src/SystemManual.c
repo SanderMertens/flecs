@@ -111,7 +111,7 @@ void SystemManual_no_automerge(void) {
 
     ecs_set_automerge(world, false);
 
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
     ecs_world_t *stage = ecs_get_stage(world, 0);
 
     ecs_run(stage, AddVelocity, 1, NULL);

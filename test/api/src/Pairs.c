@@ -2270,7 +2270,7 @@ void Pairs_get_target_for_id_from_stage(void) {
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
 
     ecs_world_t *stage = ecs_get_stage(world, 0);
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
     ecs_entity_t result = ecs_get_target_for_id(stage, e, EcsIsA, Tag);
     test_assert(result != 0);
     test_assert(result == base);

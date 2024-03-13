@@ -128,7 +128,7 @@ void ReadWrite_read_from_stage(void) {
     ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
 
     ecs_world_t *s = ecs_get_stage(world, 0);
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
 
     const ecs_record_t *r = ecs_read_begin(s, e);
     test_assert(r != NULL);
@@ -155,7 +155,7 @@ void ReadWrite_write_from_stage(void) {
     ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
 
     ecs_world_t *s = ecs_get_stage(world, 0);
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
 
     ecs_record_t *r = ecs_write_begin(s, e);
     test_assert(r != NULL);

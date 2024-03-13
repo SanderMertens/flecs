@@ -295,7 +295,7 @@ void Event_emit_staged_from_world(void) {
         .callback = system_callback,
         .ctx = &ctx
     });
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
     ecs_emit(world, &(ecs_event_desc_t){
         .event = evt,
         .ids = &(ecs_type_t){.count = 1, .array = (ecs_id_t[]){ id }},
@@ -330,7 +330,7 @@ void Event_emit_staged_from_stage(void) {
         .callback = system_callback,
         .ctx = &ctx
     });
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
     ecs_world_t *stage = ecs_get_stage(world, 0);
     ecs_emit(stage, &(ecs_event_desc_t){
         .event = evt,
@@ -366,7 +366,7 @@ void Event_emit_staged_from_world_observer(void) {
         .callback = system_callback,
         .ctx = &ctx
     });
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
     ecs_emit(world, &(ecs_event_desc_t){
         .event = evt,
         .ids = &(ecs_type_t){.count = 1, .array = (ecs_id_t[]){ id }},
@@ -402,7 +402,7 @@ void Event_emit_staged_from_stage_observer(void) {
         .ctx = &ctx
     });
 
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
     ecs_world_t *stage = ecs_get_stage(world, 0);
 
     ecs_emit(stage, &(ecs_event_desc_t){
@@ -1515,7 +1515,7 @@ void Event_enqueue_on_readonly_world(void) {
         .ctx = &ctx
     });
 
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
 
     ecs_enqueue(world, &(ecs_event_desc_t){
         .event = evt,

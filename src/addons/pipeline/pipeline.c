@@ -595,10 +595,9 @@ void flecs_run_pipeline(
     ecs_stage_t *stage = flecs_stage_from_world(&world);  
     int32_t stage_index = ecs_get_stage_id(stage->thread_ctx);
     int32_t stage_count = ecs_get_stage_count(world);
+    bool multi_threaded = world->worker_cond != 0;
 
     ecs_assert(!stage_index, ECS_INVALID_OPERATION, NULL);
-
-    bool multi_threaded = ecs_get_stage_count(world) > 1;
 
     // Update the pipeline the workers will execute
     world->pq = pq;
@@ -620,7 +619,7 @@ void flecs_run_pipeline(
         pq->no_readonly = no_readonly;
 
         if (!no_readonly) {
-            ecs_readonly_begin(world);
+            ecs_readonly_begin(world, multi_threaded);
         }
 
         ECS_BIT_COND(world->flags, EcsWorldMultiThreaded, op_multi_threaded);
