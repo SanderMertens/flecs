@@ -13,6 +13,7 @@
 #include "Components/FlecsScriptClassComponent.h"
 #include "Components/FlecsScriptStructComponent.h"
 #include "Entities/FlecsEntityHandle.h"
+#include "General/FlecsDeveloperSettings.h"
 #include "SolidMacros/Concepts/SolidConcepts.h"
 #include "SolidMacros/Standard/Hashing.h"
 #include "Standard/robin_hood.h"
@@ -44,18 +45,43 @@ class UNREALFLECS_API UFlecsWorldSubsystem final : public UTickableWorldSubsyste
 	GENERATED_BODY()
 
 public:
+	virtual bool ShouldCreateSubsystem(UObject* Outer) const override
+	{
+		return GetDefault<UFlecsDeveloperSettings>()->bEnableFlecs;
+	}
+	
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override
 	{
 		Super::Initialize(Collection);
 
-		CreateWorld(DEFAULT_FLECS_WORLD_NAME, FFlecsWorldSettings());
+		DeveloperSettings = GetDefault<UFlecsDeveloperSettings>();
+
+		checkf(DeveloperSettings->bEnableFlecs, TEXT("Flecs is not enabled in the Flecs Developer Settings"));
+		
+		if (DeveloperSettings->bAutoCreateWorld)
+		{
+			CreateWorld(DEFAULT_FLECS_WORLD_NAME, FFlecsWorldSettings());
+		}
+
+		if (DeveloperSettings->bAutoTickWorld)
+		{
+			
+		}
 	}
 
 	virtual void Deinitialize() override
 	{
 		Super::Deinitialize();
 
-		DestroyWorldByName(DEFAULT_FLECS_WORLD_NAME);
+		if (!DeveloperSettings->bEnableFlecs)
+		{
+			return;
+		}
+
+		if (DeveloperSettings->bAutoDestroyWorld)
+		{
+			DestroyWorldByName(DEFAULT_FLECS_WORLD_NAME);
+		}
 	}
 
 	virtual void Tick(float DeltaTime) override
@@ -367,4 +393,7 @@ protected:
 	
 	mutable robin_hood::unordered_flat_map<FFlecsScriptStructComponent, FFlecsEntityHandle> ScriptStructMap;
 	mutable robin_hood::unordered_flat_map<FFlecsScriptClassComponent, FFlecsEntityHandle> ScriptClassMap;
+
+	UPROPERTY()
+	TWeakObjectPtr<const UFlecsDeveloperSettings> DeveloperSettings;
 }; // class UFlecsWorldSubsystem

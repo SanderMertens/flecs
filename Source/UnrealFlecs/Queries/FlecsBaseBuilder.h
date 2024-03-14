@@ -15,7 +15,7 @@ struct TFlecsBaseQueryBuilder
     
 public:
     FORCEINLINE explicit TFlecsBaseQueryBuilder(const flecs::world& InWorld, const char* InName = "")
-        : Builder(InWorld, const_cast<char*>(InName)) // cast away const for older flecs versions
+        : Builder(InWorld, InName)
     {
     }
 

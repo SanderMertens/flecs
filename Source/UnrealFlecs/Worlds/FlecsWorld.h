@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "flecs.h"
+#include "Entities/FlecsId.h"
 #include "UObject/Object.h"
 #include "FlecsWorld.generated.h"
 
@@ -56,15 +57,26 @@ public:
 	}
 
 	template <typename FunctionType>
-	FORCEINLINE void ForEach(FunctionType Function)
+	FORCEINLINE void ForEach(FunctionType&& Function)
 	{
-		World->each<FunctionType>(Function);
+		World->each(std::forward<FunctionType>(Function));
 	}
 
 	template <typename T, typename FunctionType>
-	FORCEINLINE void ForEach(FunctionType Function)
+	FORCEINLINE void ForEach(FunctionType&& Function)
 	{
-		World->each<T, FunctionType>(Function);
+		World->each<T>(std::forward<FunctionType>(Function));
+	}
+
+	template <typename FunctionType>
+	FORCEINLINE void ForEach(const FFlecsId& InTermId, FunctionType&& Function)
+	{
+		World->each(InTermId.GetFlecsId(), std::forward<FunctionType>(Function));
+	}
+
+	FORCEINLINE void Merge() const
+	{
+		World->merge();
 	}
 
 private:
