@@ -16,399 +16,399 @@ class UNREALFLECS_API UDefaultEntitiesLibrary : public UBlueprintFunctionLibrary
 public:
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle PairEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetPairEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return FFlecsEntityHandle(flecs::entity(World.GetFlecsWorld(), flecs::Pair));
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle OverrideEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetOverrideEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return FFlecsEntityHandle(flecs::entity(World.GetFlecsWorld(), flecs::Override));
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle ToggleEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetToggleEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return FFlecsEntityHandle(flecs::entity(World.GetFlecsWorld(), flecs::Toggle));
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle QueryEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetQueryEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return FFlecsEntityHandle(flecs::entity(World.GetFlecsWorld(), flecs::Query));
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle ObserverEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetObserverEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return FFlecsEntityHandle(flecs::entity(World.GetFlecsWorld(), flecs::Observer));
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle PrivateEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetPrivateEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return FFlecsEntityHandle(flecs::entity(World.GetFlecsWorld(), flecs::Private));
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle ModuleEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetModuleEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return FFlecsEntityHandle(flecs::entity(World.GetFlecsWorld(), flecs::Module));
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle PrefabEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetPrefabEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return FFlecsEntityHandle(flecs::entity(World.GetFlecsWorld(), flecs::Prefab));
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle DisabledEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetDisabledEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return FFlecsEntityHandle(flecs::entity(World.GetFlecsWorld(), flecs::Disabled));
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle EmptyEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetEmptyEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return FFlecsEntityHandle(flecs::entity(World.GetFlecsWorld()));
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle MonitorEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetMonitorEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return FFlecsEntityHandle(flecs::entity(World.GetFlecsWorld(), flecs::Monitor));
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle SystemEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetSystemEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return FFlecsEntityHandle(flecs::entity(World.GetFlecsWorld(), flecs::System));
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle PipelineEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetPipelineEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return FFlecsEntityHandle(flecs::entity(World.GetFlecsWorld(), flecs::Pipeline));
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle PhaseEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetPhaseEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return FFlecsEntityHandle(flecs::entity(World.GetFlecsWorld(), flecs::Phase));
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle OnAddEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetOnAddEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return FFlecsEntityHandle(flecs::entity(World.GetFlecsWorld(), flecs::OnAdd));
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle OnRemoveEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetOnRemoveEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return FFlecsEntityHandle(flecs::entity(World.GetFlecsWorld(), flecs::OnRemove));
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle OnSetEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetOnSetEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return FFlecsEntityHandle(flecs::entity(World.GetFlecsWorld(), flecs::OnSet));
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle UnSetEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetUnSetEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return FFlecsEntityHandle(flecs::entity(World.GetFlecsWorld(), flecs::UnSet));
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle OnTableCreateEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetOnTableCreateEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return flecs::entity(World.GetFlecsWorld(), flecs::OnTableCreate);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle OnTableDeleteEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetOnTableDeleteEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return flecs::entity(World.GetFlecsWorld(), flecs::OnTableDelete);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle FlecsEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetFlecsEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return flecs::entity(World.GetFlecsWorld(), flecs::Flecs);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle FlecsCoreEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetFlecsCoreEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return flecs::entity(World.GetFlecsWorld(), flecs::FlecsCore);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle WorldEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetWorldEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return flecs::entity(World.GetFlecsWorld(), flecs::World);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle WildcardEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetWildcardEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return flecs::entity(World.GetFlecsWorld(), flecs::Wildcard);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle AnyEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetAnyEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return flecs::entity(World.GetFlecsWorld(), flecs::Any);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle ThisEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetThisEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return flecs::entity(World.GetFlecsWorld(), flecs::This);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle TransitiveEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetTransitiveEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return flecs::entity(World.GetFlecsWorld(), flecs::Transitive);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle ReflexiveEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetReflexiveEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return flecs::entity(World.GetFlecsWorld(), flecs::Reflexive);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle FinalEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetFinalEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return flecs::entity(World.GetFlecsWorld(), flecs::Final);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle DontInheritEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetDontInheritEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return flecs::entity(World.GetFlecsWorld(), flecs::DontInherit);
 	}
 	
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle AlwaysOverrideEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetAlwaysOverrideEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return flecs::entity(World.GetFlecsWorld(), flecs::AlwaysOverride);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle TagEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetTagEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return flecs::entity(World.GetFlecsWorld(), flecs::Tag);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle UnionEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetUnionEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return flecs::entity(World.GetFlecsWorld(), flecs::Union);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle ExclusiveEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetExclusiveEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return flecs::entity(World.GetFlecsWorld(), flecs::Exclusive);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle AcyclicEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetAcyclicEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return flecs::entity(World.GetFlecsWorld(), flecs::Acyclic);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle TraversableEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetTraversableEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return flecs::entity(World.GetFlecsWorld(), flecs::Traversable);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle SymmetricEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetSymmetricEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return flecs::entity(World.GetFlecsWorld(), flecs::Symmetric);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle WithEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetWithEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return flecs::entity(World.GetFlecsWorld(), flecs::With);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle OneOfEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetOneOfEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return flecs::entity(World.GetFlecsWorld(), flecs::OneOf);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle IsAEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetIsAEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return FFlecsEntityHandle(flecs::entity(World.GetFlecsWorld(), flecs::IsA));
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle ChildOfEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetChildOfEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return FFlecsEntityHandle(flecs::entity(World.GetFlecsWorld(), flecs::ChildOf));
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle DependsOnEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetDependsOnEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return FFlecsEntityHandle(flecs::entity(World.GetFlecsWorld(), flecs::DependsOn));
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle SlotOfEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetSlotOfEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return FFlecsEntityHandle(flecs::entity(World.GetFlecsWorld(), flecs::SlotOf));
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle NameEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetNameEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return FFlecsEntityHandle(flecs::entity(World.GetFlecsWorld(), flecs::Name));
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle SymbolEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetSymbolEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return FFlecsEntityHandle(flecs::entity(World.GetFlecsWorld(), flecs::Symbol));
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle OnDeleteEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetOnDeleteEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return FFlecsEntityHandle(flecs::entity(World.GetFlecsWorld(), flecs::OnDelete));
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle OnDeleteTargetEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetOnDeleteTargetEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return FFlecsEntityHandle(flecs::entity(World.GetFlecsWorld(), flecs::OnDeleteTarget));
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle RemoveEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetRemoveEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return FFlecsEntityHandle(flecs::entity(World.GetFlecsWorld(), flecs::Remove));
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle DeleteEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetDeleteEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return FFlecsEntityHandle(flecs::entity(World.GetFlecsWorld(), flecs::Delete));
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle PanicEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetPanicEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return FFlecsEntityHandle(flecs::entity(World.GetFlecsWorld(), flecs::Panic));
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle FlattenEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetFlattenEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return FFlecsEntityHandle(flecs::entity(World.GetFlecsWorld(), flecs::Flatten));
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle DefaultChildComponentEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetDefaultChildComponentEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return FFlecsEntityHandle(flecs::entity(World.GetFlecsWorld(), flecs::DefaultChildComponent));
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle PredicateEqualEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetPredicateEqualEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return FFlecsEntityHandle(flecs::entity(World.GetFlecsWorld(), flecs::PredEq));
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle PredicateMatchEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetPredicateMatchEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return FFlecsEntityHandle(flecs::entity(World.GetFlecsWorld(), flecs::PredMatch));
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle PredicateLookupEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetPredicateLookupEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return FFlecsEntityHandle(flecs::entity(World.GetFlecsWorld(), flecs::PredLookup));
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle ScopeOpenEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetScopeOpenEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return FFlecsEntityHandle(flecs::entity(World.GetFlecsWorld(), flecs::ScopeOpen));
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FFlecsEntityHandle ScopeCloseEntity(const UObject* WorldContextObject)
+	static FFlecsEntityHandle GetScopeCloseEntity(const UObject* WorldContextObject)
 	{
 		FFlecsWorld World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return FFlecsEntityHandle(flecs::entity(World.GetFlecsWorld(), flecs::ScopeClose));
