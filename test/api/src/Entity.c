@@ -1107,7 +1107,7 @@ void Entity_init_w_childof_nested_name_twice_deferred(void) {
 void Entity_init_w_name_staged(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
 
     ecs_world_t *stage = ecs_get_stage(world, 0);
 
@@ -1159,7 +1159,7 @@ void Entity_record_find_from_stage(void) {
     ecs_entity_t e = ecs_new(world, TagA);
     test_assert(e != 0);
 
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
 
     ecs_world_t *stage = ecs_get_stage(world, 0);
 
@@ -1293,7 +1293,7 @@ void Entity_set_scope_w_entity_init_from_stage(void) {
 
     ecs_world_t *stage = ecs_get_stage(world, 0);
 
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
     ecs_entity_t parent = ecs_set_name(stage, 0, "Parent");
     ecs_set_scope(stage, parent);
     ecs_entity_t child = ecs_entity_init(stage, &(ecs_entity_desc_t){
@@ -1680,7 +1680,7 @@ void Entity_staged_set_name_n_stages(void) {
 
     ecs_set_stage_count(world, 2);
 
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
 
     ecs_world_t *s = ecs_get_stage(world, 1);
 
@@ -1701,7 +1701,7 @@ void Entity_staged_set_symbol_n_stages(void) {
 
     ecs_set_stage_count(world, 2);
 
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
 
     ecs_world_t *s = ecs_get_stage(world, 1);
 

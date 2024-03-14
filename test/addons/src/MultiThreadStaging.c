@@ -342,7 +342,7 @@ void MultiThreadStaging_custom_thread_auto_merge(void) {
     ecs_world_t *ctx_2 = ecs_get_stage(world, 1);
 
     ecs_frame_begin(world, 0);
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, true);
 
     /* thread 1 */
     ecs_defer_begin(ctx_1);
@@ -395,7 +395,7 @@ void MultiThreadStaging_custom_thread_manual_merge(void) {
     ecs_world_t *ctx_2 = ecs_get_stage(world, 1);
 
     ecs_frame_begin(world, 0);
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, true);
 
     /* thread 1 */
     ecs_defer_begin(ctx_1);
@@ -454,7 +454,7 @@ void MultiThreadStaging_custom_thread_partial_manual_merge(void) {
     ecs_set_automerge(ctx_2, false);
 
     ecs_frame_begin(world, 0);
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, true);
 
     /* thread 1 */
     ecs_defer_begin(ctx_1);
@@ -512,7 +512,7 @@ void MultiThreadStaging_set_pair_w_new_target_readonly(void) {
     ecs_world_t *thr_1 = ecs_get_stage(world, 0);
 
     ecs_frame_begin(world, 0);
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, true);
 
     ecs_entity_t tgt = ecs_new_id(thr_1);
     ecs_set_pair(thr_1, e, Position, tgt, {10, 20});
@@ -542,7 +542,7 @@ void MultiThreadStaging_set_pair_w_new_target_tgt_component_readonly(void) {
     ecs_world_t *thr_1 = ecs_get_stage(world, 0);
 
     ecs_frame_begin(world, 0);
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, true);
 
     ecs_entity_t tgt = ecs_new_id(thr_1);
     ecs_set_pair_second(thr_1, e, tgt, Position, {10, 20});

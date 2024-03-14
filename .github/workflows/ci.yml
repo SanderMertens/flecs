@@ -689,7 +689,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest ]
+        os: [ ubuntu-20.04 ]
 
     steps:
       - uses: actions/checkout@v4
@@ -713,7 +713,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest ]
+        os: [ ubuntu-20.04 ]
 
     steps:
       - uses: actions/checkout@v4
@@ -737,7 +737,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest ]
+        os: [ ubuntu-20.04 ]
 
     steps:
       - uses: actions/checkout@v4
@@ -761,7 +761,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest ]
+        os: [ ubuntu-20.04 ]
 
     steps:
       - uses: actions/checkout@v4
@@ -785,7 +785,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest ]
+        os: [ ubuntu-20.04 ]
 
     steps:
       - uses: actions/checkout@v4

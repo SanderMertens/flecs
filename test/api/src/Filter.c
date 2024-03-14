@@ -4074,7 +4074,7 @@ void Filter_term_iter_in_stage(void) {
     ecs_entity_t e2 = ecs_new(world, Tag);
     ecs_add(world, e2, TagB);
 
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
 
     ecs_world_t *stage = ecs_get_stage(world, 0);
     test_assert(stage != NULL);
@@ -5281,7 +5281,7 @@ void Filter_filter_iter_in_stage(void) {
 
     ecs_entity_t e = ecs_new(world, Tag);
 
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
 
     ecs_world_t *stage = ecs_get_stage(world, 0);
     test_assert(stage != NULL);

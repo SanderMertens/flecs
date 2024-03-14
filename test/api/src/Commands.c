@@ -335,7 +335,7 @@ void Commands_defer_twice_in_progress(void) {
     ecs_entity_t e = ecs_new(world, Position);
 
     ecs_frame_begin(world, 0);
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
     ecs_world_t *stage = ecs_get_stage(world, 0);
 
     ecs_defer_begin(stage);
@@ -1700,7 +1700,7 @@ void Commands_register_component_while_staged(void) {
     ecs_entity_t e = ecs_new_id(world);
     ecs_entity_t canary = ecs_new_id(world);
 
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
 
     ecs_world_t *stage = ecs_get_stage(world, 0);
 
@@ -2184,7 +2184,7 @@ void Commands_defer_while_suspend_readonly(void) {
 
     ecs_world_t *s = ecs_get_stage(world, 0);
 
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
 
     /* Component creation suspends readonly mode so that they can be used right
      * after they have been registered */
@@ -2231,7 +2231,7 @@ void Commands_defer_while_suspend_readonly_w_existing_commands(void) {
 
     ecs_world_t *s = ecs_get_stage(world, 0);
 
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
 
     ecs_entity_t e1 = ecs_set(s, 0, Position, {10, 20});
     test_assert(!ecs_has(s, e1, Position));

@@ -331,7 +331,7 @@ void Misc_quantity_from_defer(void) {
 void Misc_primitive_from_readonly(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
 
     ecs_entity_t t = ecs_primitive(world, { .kind = EcsI32 });
     test_assert(t != 0);
@@ -345,7 +345,7 @@ void Misc_primitive_from_readonly(void) {
 void Misc_enum_from_readonly(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
 
     ecs_entity_t t = ecs_enum(world, {
         .constants = {
@@ -363,7 +363,7 @@ void Misc_enum_from_readonly(void) {
 void Misc_bitmask_from_readonly(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
 
     ecs_entity_t t = ecs_bitmask(world, {
         .constants = {
@@ -381,7 +381,7 @@ void Misc_bitmask_from_readonly(void) {
 void Misc_array_from_readonly(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
 
     ecs_entity_t t = ecs_array(world, {
         .type = ecs_id(ecs_i32_t),
@@ -398,7 +398,7 @@ void Misc_array_from_readonly(void) {
 void Misc_vector_from_readonly(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
 
     ecs_entity_t t = ecs_vector(world, {
         .type = ecs_id(ecs_i32_t)
@@ -414,7 +414,7 @@ void Misc_vector_from_readonly(void) {
 void Misc_struct_from_readonly(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
 
     ecs_entity_t t = ecs_struct(world, { .members = {
         {"x", ecs_id(ecs_i32_t)},
@@ -433,7 +433,7 @@ void Misc_opaque_from_readonly(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
 
     ecs_entity_t t = ecs_opaque(world, {
         .entity = ecs_id(Position),
@@ -450,7 +450,7 @@ void Misc_opaque_from_readonly(void) {
 void Misc_unit_from_readonly(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
 
     ecs_entity_t t = ecs_unit(world, {
         .symbol = "f"
@@ -466,7 +466,7 @@ void Misc_unit_from_readonly(void) {
 void Misc_unit_prefix_from_readonly(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
 
     ecs_entity_t t = ecs_unit_prefix(world, {
         .symbol = "f"
@@ -482,7 +482,7 @@ void Misc_unit_prefix_from_readonly(void) {
 void Misc_quantity_from_readonly(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
 
     ecs_entity_t t = ecs_quantity(world, {
         .name = "q"

@@ -2732,7 +2732,7 @@ void SingleThreadStaging_get_case_from_stage(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
 
     ecs_world_t *stage = ecs_get_stage(world, 0);
 
@@ -2755,7 +2755,7 @@ void SingleThreadStaging_get_object_from_stage(void) {
     ecs_entity_t parent = ecs_new_id(world);
     ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, parent);
 
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
 
     ecs_world_t *stage = ecs_get_stage(world, 0);
 
@@ -2773,7 +2773,7 @@ void SingleThreadStaging_add_to_world_while_readonly(void) {
 
     ecs_entity_t e = ecs_new_id(world);
 
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
     ecs_add(world, e, Tag);
     test_assert(!ecs_has(world, e, Tag));
     ecs_readonly_end(world);
@@ -2792,7 +2792,7 @@ void SingleThreadStaging_add_to_world_and_stage_while_readonly(void) {
     ecs_entity_t e = ecs_new_id(world);
     ecs_world_t *stage = ecs_get_stage(world, 0);
 
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
     ecs_add(world, e, TagA);
     ecs_add(stage, e, TagB);
     test_assert(!ecs_has(world, e, TagA));

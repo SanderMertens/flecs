@@ -21963,7 +21963,8 @@ error:
 }
 
 bool ecs_readonly_begin(
-    ecs_world_t *world)
+    ecs_world_t *world,
+    bool multi_threaded)
 {
     ecs_poly_assert(world, ecs_world_t);
 
@@ -21986,14 +21987,7 @@ bool ecs_readonly_begin(
     /* From this point on, the world is "locked" for mutations, and it is only 
      * allowed to enqueue commands from stages */
     ECS_BIT_SET(world->flags, EcsWorldReadonly);
-
-    /* If world has more than one stage, signal we might be running on multiple
-     * threads. This is a stricter version of readonly mode: while some 
-     * mutations like implicit component registration are still allowed in plain
-     * readonly mode, no mutations are allowed when multithreaded. */
-    if (world->worker_cond) {
-        ECS_BIT_SET(world->flags, EcsWorldMultiThreaded);
-    }
+    ECS_BIT_COND(world->flags, EcsWorldMultiThreaded, multi_threaded);
 
     return is_readonly;
 }
@@ -61512,10 +61506,9 @@ void flecs_run_pipeline(
     ecs_stage_t *stage = flecs_stage_from_world(&world);  
     int32_t stage_index = ecs_get_stage_id(stage->thread_ctx);
     int32_t stage_count = ecs_get_stage_count(world);
+    bool multi_threaded = world->worker_cond != 0;
 
     ecs_assert(!stage_index, ECS_INVALID_OPERATION, NULL);
-
-    bool multi_threaded = ecs_get_stage_count(world) > 1;
 
     // Update the pipeline the workers will execute
     world->pq = pq;
@@ -61537,7 +61530,7 @@ void flecs_run_pipeline(
         pq->no_readonly = no_readonly;
 
         if (!no_readonly) {
-            ecs_readonly_begin(world);
+            ecs_readonly_begin(world, multi_threaded);
         }
 
         ECS_BIT_COND(world->flags, EcsWorldMultiThreaded, op_multi_threaded);

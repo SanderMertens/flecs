@@ -774,7 +774,8 @@ error:
 }
 
 bool ecs_readonly_begin(
-    ecs_world_t *world)
+    ecs_world_t *world,
+    bool multi_threaded)
 {
     ecs_poly_assert(world, ecs_world_t);
 
@@ -797,14 +798,7 @@ bool ecs_readonly_begin(
     /* From this point on, the world is "locked" for mutations, and it is only 
      * allowed to enqueue commands from stages */
     ECS_BIT_SET(world->flags, EcsWorldReadonly);
-
-    /* If world has more than one stage, signal we might be running on multiple
-     * threads. This is a stricter version of readonly mode: while some 
-     * mutations like implicit component registration are still allowed in plain
-     * readonly mode, no mutations are allowed when multithreaded. */
-    if (world->worker_cond) {
-        ECS_BIT_SET(world->flags, EcsWorldMultiThreaded);
-    }
+    ECS_BIT_COND(world->flags, EcsWorldMultiThreaded, multi_threaded);
 
     return is_readonly;
 }

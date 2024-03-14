@@ -849,7 +849,7 @@ void Snapshot_snapshot_from_stage(void) {
     ecs_entity_t e1 = ecs_set(world, 0, Position, {1, 2});
     ecs_entity_t e2 = ecs_set(world, 0, Position, {3, 4});
 
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
 
     ecs_world_t *stage = ecs_get_stage(world, 0);
 

@@ -252,34 +252,19 @@ struct world {
         ecs_frame_end(m_world);
     }
 
-    /** Begin staging.
-     * When an application does not use ecs_progress to control the main loop, it
-     * can still use Flecs features such as the defer queue. When an application
-     * needs to stage changes, it needs to call this function after ecs_frame_begin.
-     * A call to ecs_readonly_begin must be followed by a call to ecs_readonly_end.
-     *
-     * When staging is enabled, modifications to entities are stored to a stage.
-     * This ensures that arrays are not modified while iterating. Modifications are
-     * merged back to the "main stage" when ecs_readonly_end is invoked.
-     *
-     * While the world is in staging mode, no structural changes (add/remove/...)
-     * can be made to the world itself. Operations must be executed on a stage
-     * instead (see ecs_get_stage).
-     *
-     * This function should only be ran from the main thread.
+    /** Begin readonly mode.
+     * 
+     * @see ecs_readonly_begin
      *
      * @return Whether world is currently staged.
      */
-    bool readonly_begin() const {
-        return ecs_readonly_begin(m_world);
+    bool readonly_begin(bool multi_threaded = false) const {
+        return ecs_readonly_begin(m_world, multi_threaded);
     }
 
-    /** End staging.
-     * Leaves staging mode. After this operation the world may be directly mutated
-     * again. By default this operation also merges data back into the world, unless
-     * auto-merging was disabled explicitly.
-     *
-     * This function should only be ran from the main thread.
+    /** End readonly mode.
+     * 
+     * @see ecs_readonly_end
      */
     void readonly_end() const {
         ecs_readonly_end(m_world);

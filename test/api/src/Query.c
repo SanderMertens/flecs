@@ -4531,7 +4531,7 @@ void Query_query_rematch_optional_after_add(void) {
     ecs_add(world, base, Velocity);
 
     /* Trigger a merge, which triggers the rematch */
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
     ecs_readonly_end(world);
 
     /* Second iteration, base has Velocity and entity should be able to access
