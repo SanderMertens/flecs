@@ -30,9 +30,6 @@ public:
 
 	FORCEINLINE bool operator!() const { return !IsValid(); }
 
-	FORCEINLINE flecs::world* operator->() { return World; }
-	FORCEINLINE const flecs::world* operator->() const { return World; }
-
 	FORCEINLINE flecs::world& operator*() { return GetFlecsWorld(); }
 	FORCEINLINE const flecs::world& operator*() const { return GetFlecsWorld(); }
 

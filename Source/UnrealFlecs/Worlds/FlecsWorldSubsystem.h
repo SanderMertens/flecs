@@ -97,9 +97,9 @@ public:
 	{
 		for (FFlecsWorld& World : Worlds)
 		{
-			if (World->progress(DeltaTime))
+			if (World.GetFlecsWorld().progress(DeltaTime))
 			{
-				World->merge();
+				World.GetFlecsWorld().merge();
 			}
 		}
 	}
@@ -161,7 +161,7 @@ public:
 		}
 		
 		const flecs::entity ScriptStructComponent
-			= GetFlecsWorld(DEFAULT_FLECS_WORLD_NAME)->entity(TCHAR_TO_ANSI(*ScriptStruct->GetFName().ToString()))
+			= GetFlecsWorld(DEFAULT_FLECS_WORLD_NAME).GetFlecsWorld().entity(TCHAR_TO_ANSI(*ScriptStruct->GetFName().ToString()))
 			                                         .set<flecs::Component>(
 			                                         {
 				                                         ScriptStruct->GetStructureSize(),
@@ -192,7 +192,7 @@ public:
 		}
 		
 		const flecs::entity ScriptClassComponent
-			= GetFlecsWorld(DEFAULT_FLECS_WORLD_NAME)->entity(TCHAR_TO_ANSI(*ScriptClass->GetFName().ToString()))
+			= GetFlecsWorld(DEFAULT_FLECS_WORLD_NAME).GetFlecsWorld().entity(TCHAR_TO_ANSI(*ScriptClass->GetFName().ToString()))
 			                                        .set<flecs::Component>(
 			                                        {
 				                                        ScriptClass->GetStructureSize(),
@@ -217,7 +217,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
 	FFlecsEntityHandle RegisterComponentType(const FName& Name, const int32 Size, const int32 Alignment) const
 	{
-		const flecs::entity Component = GetFlecsWorld(DEFAULT_FLECS_WORLD_NAME)->entity(TCHAR_TO_ANSI(*Name.ToString()))
+		const flecs::entity Component = GetFlecsWorld(DEFAULT_FLECS_WORLD_NAME).GetFlecsWorld().entity(TCHAR_TO_ANSI(*Name.ToString()))
 			.set<flecs::Component>({ Size, Alignment });
 
 		return FFlecsEntityHandle(Component);
@@ -306,7 +306,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs", BlueprintPure = false)
 	void SetAutoMerge(const FName& Name, const bool bAutoMerge) const
 	{
-		GetFlecsWorld(Name)->set_automerge(bAutoMerge);
+		GetFlecsWorld(Name).GetFlecsWorld().set_automerge(bAutoMerge);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
@@ -318,10 +318,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
 	void DestroyWorld(FFlecsWorld& World)
 	{
-		const FFlecsWorld* WorldPtr = WorldNameMap.at(*World->get<FName>());
-		WorldNameMap.erase(*World->get<FName>());
+		const FFlecsWorld* WorldPtr = WorldNameMap.at(*World.GetFlecsWorld().get<FName>());
+		WorldNameMap.erase(*World.GetFlecsWorld().get<FName>());
 
-		for (auto It = Worlds.begin(); It != Worlds.end(); ++It)
+		for (std::vector<FFlecsWorld>::iterator It = Worlds.begin(); It != Worlds.end(); ++It)
 		{
 			if (&*It == WorldPtr)
 			{
@@ -343,7 +343,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
 	static FName GetWorldName(const FFlecsWorld& World)
 	{
-		return *World->get<FName>();
+		return *World.GetFlecsWorld().get<FName>();
 	}
 	
 	UFUNCTION(BlueprintCallable, Category = "Flecs", Meta = (WorldContext = "WorldContextObject"))
