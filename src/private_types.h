@@ -376,6 +376,12 @@ typedef struct ecs_commands_t {
     ecs_sparse_t entries;       /* <entity, op_entry_t> - command batching */
 } ecs_commands_t;
 
+/** Callback used to capture commands of a frame */
+typedef void (*ecs_on_commands_action_t)(
+    const ecs_stage_t *stage,
+    const ecs_vec_t *commands,
+    void *ctx);
+
 /** A stage is a context that allows for safely using the API from multiple 
  * threads. Stage pointers can be passed to the world argument of API 
  * operations, which causes the operation to be ran on the stage instead of the
@@ -523,6 +529,15 @@ struct ecs_world_t {
     /* -- Staging -- */
     ecs_stage_t *stages;             /* Stages */
     int32_t stage_count;             /* Number of stages */
+
+    /* Internal callback for command inspection. Only one callback can be set at
+     * a time. After assignment the action will become active at the start of 
+     * the next frame, set by ecs_frame_begin, and will be reset by 
+     * ecs_frame_end. */
+    ecs_on_commands_action_t on_commands;
+    ecs_on_commands_action_t on_commands_active;
+    void *on_commands_ctx;
+    void *on_commands_ctx_active;
 
     /* -- Multithreading -- */
     ecs_os_cond_t worker_cond;       /* Signal that worker threads can start */

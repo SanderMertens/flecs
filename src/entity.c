@@ -4933,6 +4933,12 @@ bool flecs_defer_end(
         ecs_vec_t *queue = &commands->queue;
 
         if (ecs_vec_count(queue)) {
+            /* Internal callback for capturing commands */
+            if (world->on_commands_active) {
+                world->on_commands_active(stage, queue, 
+                    world->on_commands_ctx_active);
+            }
+
             ecs_cmd_t *cmds = ecs_vec_first(queue);
             int32_t i, count = ecs_vec_count(queue);
 

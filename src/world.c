@@ -1925,6 +1925,13 @@ ecs_ftime_t ecs_frame_begin(
     /* Keep track of total scaled time passed in world */
     world->info.world_time_total += world->info.delta_time;
 
+    /* Command buffer capturing */
+    world->on_commands_active = world->on_commands;
+    world->on_commands = NULL;
+
+    world->on_commands_ctx_active = world->on_commands_ctx;
+    world->on_commands_ctx = NULL;
+
     ecs_run_aperiodic(world, 0);
 
     return world->info.delta_time;
@@ -1947,6 +1954,10 @@ void ecs_frame_end(
     }
 
     flecs_stop_measure_frame(world);
+
+    /* Reset command handler each frame */
+    world->on_commands_active = NULL;
+    world->on_commands_ctx_active = NULL;
 error:
     return;
 }
