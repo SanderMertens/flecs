@@ -19,10 +19,9 @@ FFlecsEntityHandle UEntityFunctionLibrary::GetEntityWithName(const UObject* Worl
     return FFlecsEntityHandle(FlecsWorld.GetFlecsWorld().lookup(TCHAR_TO_ANSI(*EntityName), bSearchPath));
 }
 
-void UEntityFunctionLibrary::DestroyEntity(const UObject* WorldContextObject, const FFlecsEntityHandle& Entity)
+void UEntityFunctionLibrary::DestroyEntity(const FFlecsEntityHandle& Entity)
 {
-    FFlecsWorld& FlecsWorld = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
-    FlecsWorld.GetFlecsWorld().delete_with(Entity.GetEntity());
+    Entity.GetEntity().destruct();
 }
 
 void UEntityFunctionLibrary::DestroyEntityByName(const UObject* WorldContextObject, const FString& EntityName,

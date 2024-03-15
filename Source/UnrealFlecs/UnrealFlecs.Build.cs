@@ -43,7 +43,8 @@ public class UnrealFlecs : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
-				"StructUtils"
+				"StructUtils",
+				"DeveloperSettings"
 			}
 			);
 		

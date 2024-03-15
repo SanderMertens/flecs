@@ -32,6 +32,7 @@ struct FFlecsScriptClassComponent
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs")
     TSubclassOf<UObject> ScriptClass;
+    
 }; // struct FFlecsScriptClassComponent
 DEFINE_STD_HASH(FFlecsScriptClassComponent)
 

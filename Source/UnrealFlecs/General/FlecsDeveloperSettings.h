@@ -14,15 +14,18 @@ class UNREALFLECS_API UFlecsDeveloperSettings final : public UDeveloperSettings
 public:
 
 	UPROPERTY(EditAnywhere, Config, Category = "Flecs")
-	bool bEnableFlecs : 1 = true;
+	uint32 bEnableFlecs : 1 = true;
 
 	UPROPERTY(EditAnywhere, Config, Category = "Flecs")
-	bool bAutoCreateWorld : 1 = true;
+	uint32 bAutoCreateWorld : 1 = true;
 
 	UPROPERTY(EditAnywhere, Config, Category = "Flecs")
-	bool bAutoDestroyWorld : 1 = true;
+	uint32 bAutoDestroyWorld : 1 = true;
 
 	UPROPERTY(EditAnywhere, Config, Category = "Flecs")
-	bool bAutoTickWorld : 1 = true;
+	uint32 bAutoTickWorld : 1 = true;
+
+	UPROPERTY(EditAnywhere, Config, Category = "Flecs")
+	uint32 bAutoImportExplorer : 1 = true;
 
 }; // class UFlecsDeveloperSettings

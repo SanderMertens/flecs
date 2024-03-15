@@ -19,7 +19,10 @@ public class UnrealFlecsEditor : ModuleRules
                 "CoreUObject",
                 "Engine",
                 "Slate",
-                "SlateCore"
+                "SlateCore",
+                "ToolMenus",
+                "EditorStyle",
+                "Projects"
             }
         );
     }

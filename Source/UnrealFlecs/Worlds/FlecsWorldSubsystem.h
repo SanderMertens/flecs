@@ -47,13 +47,22 @@ class UNREALFLECS_API UFlecsWorldSubsystem final : public UTickableWorldSubsyste
 public:
 	virtual bool ShouldCreateSubsystem(UObject* Outer) const override
 	{
-		return GetDefault<UFlecsDeveloperSettings>()->bEnableFlecs;
+		return GetDefault<UFlecsDeveloperSettings>() && GetDefault<UFlecsDeveloperSettings>()->bEnableFlecs;
+	}
+
+	virtual ETickableTickType GetTickableTickType() const override
+	{
+		return GetDefault<UFlecsDeveloperSettings>()
+			&& GetDefault<UFlecsDeveloperSettings>()->bAutoTickWorld ? ETickableTickType::Always : ETickableTickType::Never;
 	}
 	
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override
 	{
 		Super::Initialize(Collection);
+	}
 
+	virtual void OnWorldBeginPlay(UWorld& InWorld) override
+	{
 		DeveloperSettings = GetDefault<UFlecsDeveloperSettings>();
 
 		checkf(DeveloperSettings->bEnableFlecs, TEXT("Flecs is not enabled in the Flecs Developer Settings"));
@@ -62,18 +71,13 @@ public:
 		{
 			CreateWorld(DEFAULT_FLECS_WORLD_NAME, FFlecsWorldSettings());
 		}
-
-		if (DeveloperSettings->bAutoTickWorld)
-		{
-			
-		}
 	}
 
 	virtual void Deinitialize() override
 	{
 		Super::Deinitialize();
 
-		if (!DeveloperSettings->bEnableFlecs)
+		if (!DeveloperSettings.IsValid())
 		{
 			return;
 		}
@@ -82,6 +86,11 @@ public:
 		{
 			DestroyWorldByName(DEFAULT_FLECS_WORLD_NAME);
 		}
+	}
+
+	virtual TStatId GetStatId() const override
+	{
+		return TStatId();
 	}
 
 	virtual void Tick(float DeltaTime) override
@@ -245,7 +254,7 @@ public:
 		flecs::world* NewWorld = new flecs::world();
 		FFlecsWorld NewFlecsWorld(NewWorld);
 		
-		WorldNameMap[Name] = &Worlds.back();
+		WorldNameMap.emplace(Name, &NewFlecsWorld);
 
 		// Worlds have a Name Singleton
 		NewFlecsWorld.GetFlecsWorld().set<FName>(Name);
@@ -255,6 +264,11 @@ public:
 		NewFlecsWorld.GetFlecsWorld().set_automerge(Settings.bAutoMerge);
 
 		Worlds.emplace_back(NewFlecsWorld);
+
+		if (DeveloperSettings->bAutoImportExplorer)
+		{
+			ImportRestModule(Name, true, FFlecsRestSettings());
+		}
 		
 		return Worlds.back();
 	}
@@ -268,7 +282,7 @@ public:
 	template <typename T>
 	void ImportModule(const FName& WorldName) const
 	{
-		GetFlecsWorld(WorldName)->import<T>();
+		GetFlecsWorld(WorldName).GetFlecsWorld().import<T>();
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | REST API")
@@ -349,31 +363,31 @@ public:
 	template <typename T>
 	FORCEINLINE void SetSingleton(const FName& WorldName, const T& Value) const
 	{
-		GetFlecsWorld(WorldName)->set<T>(Value);
+		GetFlecsWorld(WorldName).GetFlecsWorld().set<T>(Value);
 	}
 	
 	template <typename T>
 	FORCEINLINE NO_DISCARD T GetSingleton(const FName& WorldName) const
 	{
-		return GetFlecsWorld(WorldName)->get<T>();
+		return GetFlecsWorld(WorldName).GetFlecsWorld().get<T>();
 	}
 	
 	template <typename T>
 	FORCEINLINE NO_DISCARD bool HasSingleton(const FName& WorldName) const
 	{
-		return GetFlecsWorld(WorldName)->has<T>();
+		return GetFlecsWorld(WorldName).GetFlecsWorld().has<T>();
 	}
 	
 	template <typename T>
 	FORCEINLINE void RemoveSingleton(const FName& WorldName) const
 	{
-		GetFlecsWorld(WorldName)->remove<T>();
+		GetFlecsWorld(WorldName).GetFlecsWorld().remove<T>();
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Stages")
 	void SetStageCount(const FName& WorldName, const int32 Stages) const
 	{
-		GetFlecsWorld(WorldName)->set_stage_count(Stages);
+		GetFlecsWorld(WorldName).GetFlecsWorld().set_stage_count(Stages);
 	}
 	
 	virtual bool DoesSupportWorldType(const EWorldType::Type WorldType) const override
@@ -384,7 +398,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Threading")
 	void SetTaskThreads(const FName& WorldName, const int32 Threads) const
 	{
-		GetFlecsWorld(WorldName)->set_task_threads(Threads);
+		GetFlecsWorld(WorldName).GetFlecsWorld().set_task_threads(Threads);
 	}
 
 protected:
