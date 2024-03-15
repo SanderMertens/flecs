@@ -257,7 +257,7 @@ public:
 		WorldNameMap.emplace(Name, &NewFlecsWorld);
 
 		// Worlds have a Name Singleton
-		NewFlecsWorld.GetFlecsWorld().set<FName>(Name);
+		NewFlecsWorld.GetFlecsWorld().set<FName>(GWorld_Name_Component, Name);
 		
 		NewFlecsWorld.GetFlecsWorld().set_ctx(this);
 
@@ -279,17 +279,11 @@ public:
 		return WorldNameMap.contains(Name);
 	}
 
-	template <typename T>
-	void ImportModule(const FName& WorldName) const
-	{
-		GetFlecsWorld(WorldName).GetFlecsWorld().import<T>();
-	}
-
 	UFUNCTION(BlueprintCallable, Category = "Flecs | REST API")
 	void ImportRestModule(const FName& WorldName, const bool bUseMonitoring, const FFlecsRestSettings& Settings) const
 	{
-		SetSingleton<flecs::Rest>(WorldName,
-				{ static_cast<uint16>(Settings.Port), TCHAR_TO_ANSI(*Settings.IPAddress) });
+		GetFlecsWorld(WorldName).GetFlecsWorld().set<flecs::Rest>(
+				flecs::Rest { static_cast<uint16>(Settings.Port), TCHAR_TO_ANSI(*Settings.IPAddress) });
 
 		if (bUseMonitoring)
 		{
@@ -300,19 +294,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
 	void ImportMonitoringModule(const FName& WorldName) const
 	{
-		ImportModule<flecs::monitor>(WorldName);
-	}
-
-	UFUNCTION(BlueprintCallable, Category = "Flecs", BlueprintPure = false)
-	void SetAutoMerge(const FName& Name, const bool bAutoMerge) const
-	{
-		GetFlecsWorld(Name).GetFlecsWorld().set_automerge(bAutoMerge);
+		GetFlecsWorld(WorldName).ImportModule<flecs::monitor>();
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
 	void DestroyWorldByName(const FName& Name)
 	{
-		WorldNameMap.erase(Name);
+		DestroyWorld(GetFlecsWorld(Name));
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
@@ -343,7 +331,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
 	static FName GetWorldName(const FFlecsWorld& World)
 	{
-		return *World.GetFlecsWorld().get<FName>();
+		return *World.GetFlecsWorld().get<FName>(GWorld_Name_Component);
 	}
 	
 	UFUNCTION(BlueprintCallable, Category = "Flecs", Meta = (WorldContext = "WorldContextObject"))
@@ -360,45 +348,9 @@ public:
 		              ->GetSubsystem<UFlecsWorldSubsystem>()->GetFlecsWorld(DEFAULT_FLECS_WORLD_NAME);
 	}
 	
-	template <typename T>
-	FORCEINLINE void SetSingleton(const FName& WorldName, const T& Value) const
-	{
-		GetFlecsWorld(WorldName).GetFlecsWorld().set<T>(Value);
-	}
-	
-	template <typename T>
-	FORCEINLINE NO_DISCARD T GetSingleton(const FName& WorldName) const
-	{
-		return GetFlecsWorld(WorldName).GetFlecsWorld().get<T>();
-	}
-	
-	template <typename T>
-	FORCEINLINE NO_DISCARD bool HasSingleton(const FName& WorldName) const
-	{
-		return GetFlecsWorld(WorldName).GetFlecsWorld().has<T>();
-	}
-	
-	template <typename T>
-	FORCEINLINE void RemoveSingleton(const FName& WorldName) const
-	{
-		GetFlecsWorld(WorldName).GetFlecsWorld().remove<T>();
-	}
-
-	UFUNCTION(BlueprintCallable, Category = "Flecs | Stages")
-	void SetStageCount(const FName& WorldName, const int32 Stages) const
-	{
-		GetFlecsWorld(WorldName).GetFlecsWorld().set_stage_count(Stages);
-	}
-	
 	virtual bool DoesSupportWorldType(const EWorldType::Type WorldType) const override
 	{
 		return WorldType == EWorldType::Game || WorldType == EWorldType::PIE;
-	}
-
-	UFUNCTION(BlueprintCallable, Category = "Flecs | Threading")
-	void SetTaskThreads(const FName& WorldName, const int32 Threads) const
-	{
-		GetFlecsWorld(WorldName).GetFlecsWorld().set_task_threads(Threads);
 	}
 
 protected:
