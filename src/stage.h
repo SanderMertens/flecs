@@ -109,4 +109,8 @@ void flecs_commands_push(
 void flecs_commands_pop(
     ecs_stage_t *stage);
 
+ecs_entity_t flecs_stage_set_system(
+    ecs_stage_t *stage,
+    ecs_entity_t system);
+
 #endif

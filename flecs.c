@@ -1208,6 +1208,8 @@ typedef struct ecs_cmd_t {
         ecs_cmd_1_t _1;              /* Data for single entity operation */
         ecs_cmd_n_t _n;              /* Data for multi entity operation */
     } is;
+
+    ecs_entity_t system;             /* System that enqueued the command */
 } ecs_cmd_t;
 
 /* Data structures that store the command queue */
@@ -1254,6 +1256,9 @@ struct ecs_stage_t {
     ecs_entity_t with;               /* Id to add by default to new entities */
     ecs_entity_t base;               /* Currently instantiated top-level base */
     const ecs_entity_t *lookup_path; /* Search path used by lookup operations */
+
+    /* Running system */
+    ecs_entity_t system;
 
     /* Properties */
     bool auto_merge;                 /* Should this stage automatically merge? */
@@ -1957,6 +1962,10 @@ void flecs_commands_push(
 
 void flecs_commands_pop(
     ecs_stage_t *stage);
+
+ecs_entity_t flecs_stage_set_system(
+    ecs_stage_t *stage,
+    ecs_entity_t system);
 
 #endif
 
@@ -8544,6 +8553,7 @@ bool flecs_defer_end(
                     break;
                 case EcsCmdClone:
                     ecs_clone(world, e, id, cmd->is._1.clone_value);
+                    world->info.cmd.other_count ++;
                     break;
                 case EcsCmdSet:
                     flecs_move_ptr_w_id(world, dst_stage, e, 
@@ -8577,8 +8587,7 @@ bool flecs_defer_end(
                 case EcsCmdAddModified:
                     flecs_add_id(world, e, id);
                     flecs_modified_id_if(world, e, id, true);
-                    world->info.cmd.add_count ++;
-                    world->info.cmd.modified_count ++;
+                    world->info.cmd.set_count ++;
                     break;
                 case EcsCmdDelete: {
                     ecs_delete(world, e);
@@ -8623,6 +8632,7 @@ bool flecs_defer_end(
                     }
                     ecs_os_free(cmd->is._1.value);
                     cmd->is._1.value = NULL;
+                    world->info.cmd.other_count ++;
                     break;
                 }
                 case EcsCmdEvent: {
@@ -8630,6 +8640,7 @@ bool flecs_defer_end(
                     ecs_assert(desc != NULL, ECS_INTERNAL_ERROR, NULL);
                     ecs_emit((ecs_world_t*)stage, desc);
                     flecs_free_cmd_event(world, desc);
+                    world->info.cmd.event_count ++;
                     break;
                 }
                 case EcsCmdSkip:
@@ -8646,6 +8657,12 @@ bool flecs_defer_end(
             flecs_commands_pop(stage);
 
             flecs_table_diff_builder_fini(world, &diff);
+
+            /* Internal callback for capturing commands, signal queue is done */
+            if (world->on_commands_active) {
+                world->on_commands_active(stage, NULL, 
+                    world->on_commands_ctx_active);
+            }
         }
 
         return true;
@@ -16443,6 +16460,8 @@ void flecs_observer_invoke(
 
     ecs_log_push_3();
 
+    ecs_entity_t old_system = flecs_stage_set_system(
+        &world->stages[0], observer->filter.entity);
     world->info.observers_ran_frame ++;
 
     ecs_filter_t *filter = &observer->filter;
@@ -16491,6 +16510,8 @@ void flecs_observer_invoke(
         it->entities = entities;
         it->count = count;
     }
+
+    flecs_stage_set_system(&world->stages[0], old_system);
 
     ecs_log_pop_3();
 }
@@ -21236,6 +21257,7 @@ ecs_cmd_t* flecs_cmd_new(
     cmd->is._1.value = NULL;
     cmd->next_for_entity = 0;
     cmd->entry = NULL;
+    cmd->system = stage->system;
     return cmd;
 }
 
@@ -22141,6 +22163,15 @@ bool ecs_is_deferred(
     return stage->defer > 0;
 error:
     return false;
+}
+
+ecs_entity_t flecs_stage_set_system(
+    ecs_stage_t *stage,
+    ecs_entity_t system)
+{
+    ecs_entity_t old = stage->system;
+    stage->system = system;
+    return old;
 }
 
 /**
@@ -23231,6 +23262,9 @@ static ecs_build_info_t flecs_build_info = {
 #endif
 #ifdef FLECS_SANITIZE
     .sanitize = true,
+#endif
+#ifdef FLECS_PERF_TRACE
+    .perf_trace = true,
 #endif
     .version = FLECS_VERSION,
     .version_major = FLECS_VERSION_MAJOR,
@@ -30838,6 +30872,17 @@ void UpdateWorldSummary(ecs_iter_t *it) {
         summary[i].merge_time_total = (double)info->merge_time_total;
 
         summary[i].frame_count ++;
+        summary[i].command_count +=
+            info->cmd.add_count +
+            info->cmd.remove_count +
+            info->cmd.delete_count +
+            info->cmd.clear_count +
+            info->cmd.set_count +
+            info->cmd.ensure_count +
+            info->cmd.modified_count +
+            info->cmd.discard_count +
+            info->cmd.event_count +
+            info->cmd.other_count;
 
         summary[i].build_info = *ecs_get_build_info();
     }
@@ -31132,6 +31177,7 @@ void FlecsMonitorImport(
             { .name = "system_time_last", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds  },
             { .name = "merge_time_last", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds  },
             { .name = "frame_count", .type = ecs_id(ecs_u64_t) },
+            { .name = "command_count", .type = ecs_id(ecs_u64_t) },
             { .name = "build_info", .type = build_info }
         }
     });
@@ -34634,6 +34680,8 @@ typedef struct {
 
 typedef struct {
     char *cmds;
+    ecs_time_t start_time;
+    ecs_strbuf_t buf;
 } ecs_rest_cmd_sync_capture_t;
 
 typedef struct {
@@ -35535,6 +35583,34 @@ const char* flecs_rest_cmd_kind_to_str(
 }
 
 static
+bool flecs_rest_cmd_has_id(
+    const ecs_cmd_t *cmd)
+{
+    switch(cmd->kind) {
+    case EcsCmdClear:
+    case EcsCmdDelete:
+    case EcsCmdClone:
+    case EcsCmdDisable:
+    case EcsCmdPath:
+        return false;
+    case EcsCmdBulkNew:
+    case EcsCmdAdd:
+    case EcsCmdRemove:
+    case EcsCmdSet:
+    case EcsCmdEmplace:
+    case EcsCmdEnsure:
+    case EcsCmdModified:
+    case EcsCmdModifiedNoHook:
+    case EcsCmdAddModified:
+    case EcsCmdOnDeleteAction:
+    case EcsCmdEnable:
+    case EcsCmdEvent:
+    case EcsCmdSkip:
+        return true;
+    }
+}
+
+static
 void flecs_rest_cmd_to_json(
     ecs_world_t *world,
     ecs_strbuf_t *buf,
@@ -35546,11 +35622,21 @@ void flecs_rest_cmd_to_json(
         ecs_strbuf_appendstr(buf, flecs_rest_cmd_kind_to_str(cmd->kind));
         ecs_strbuf_appendlit(buf, "\"");
 
-    ecs_strbuf_list_appendlit(buf, "\"id\":\"");
-        char *idstr = ecs_id_str(world, cmd->id);
-        ecs_strbuf_appendstr(buf, idstr);
-        ecs_strbuf_appendlit(buf, "\"");
-        ecs_os_free(idstr);
+    if (flecs_rest_cmd_has_id(cmd)) {
+        ecs_strbuf_list_appendlit(buf, "\"id\":\"");
+            char *idstr = ecs_id_str(world, cmd->id);
+            ecs_strbuf_appendstr(buf, idstr);
+            ecs_strbuf_appendlit(buf, "\"");
+            ecs_os_free(idstr);
+    }
+
+    if (cmd->system) {
+        ecs_strbuf_list_appendlit(buf, "\"system\":\"");
+            char *sysstr = ecs_get_fullpath(world, cmd->system);
+            ecs_strbuf_appendstr(buf, sysstr);
+            ecs_strbuf_appendlit(buf, "\"");
+            ecs_os_free(sysstr); 
+    }
 
     if (cmd->kind == EcsCmdBulkNew) {
         /* Todo */
@@ -35590,24 +35676,38 @@ void flecs_rest_on_commands(
     ecs_rest_cmd_capture_t *capture = ctx;
     ecs_assert(capture != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_vec_init_if_t(&capture->syncs, ecs_rest_cmd_sync_capture_t);
-    ecs_rest_cmd_sync_capture_t *sync = ecs_vec_append_t(
-        NULL, &capture->syncs, ecs_rest_cmd_sync_capture_t);
+    if (commands) {
+        ecs_vec_init_if_t(&capture->syncs, ecs_rest_cmd_sync_capture_t);
+        ecs_rest_cmd_sync_capture_t *sync = ecs_vec_append_t(
+            NULL, &capture->syncs, ecs_rest_cmd_sync_capture_t);
 
-    int32_t i, count = ecs_vec_count(commands);
-    ecs_cmd_t *cmds = ecs_vec_first(commands);
-    ecs_strbuf_t buf = ECS_STRBUF_INIT;
-    ecs_strbuf_list_push(&buf, "{", ",");
-    ecs_strbuf_list_appendlit(&buf, "\"commands\":");
-        ecs_strbuf_list_push(&buf, "[", ",");
-        for (i = 0; i < count; i ++) {
-            ecs_strbuf_list_next(&buf);
-            flecs_rest_cmd_to_json(world, &buf, &cmds[i]);
-        }
-        ecs_strbuf_list_pop(&buf, "]");
-    ecs_strbuf_list_pop(&buf, "}");
+        int32_t i, count = ecs_vec_count(commands);
+        ecs_cmd_t *cmds = ecs_vec_first(commands);
+        sync->buf = ECS_STRBUF_INIT;
+        ecs_strbuf_list_push(&sync->buf, "{", ",");
+        ecs_strbuf_list_appendlit(&sync->buf, "\"commands\":");
+            ecs_strbuf_list_push(&sync->buf, "[", ",");
+            for (i = 0; i < count; i ++) {
+                ecs_strbuf_list_next(&sync->buf);
+                flecs_rest_cmd_to_json(world, &sync->buf, &cmds[i]);
+            }
+            ecs_strbuf_list_pop(&sync->buf, "]");
 
-    sync->cmds = ecs_strbuf_get(&buf);
+        /* Measure how long it takes to process queue */
+        sync->start_time = (ecs_time_t){0};
+        ecs_time_measure(&sync->start_time);
+    } else {
+        /* Finished processing queue, measure duration */
+        ecs_rest_cmd_sync_capture_t *sync = ecs_vec_last_t(
+            &capture->syncs, ecs_rest_cmd_sync_capture_t);
+        double duration = ecs_time_measure(&sync->start_time);
+
+        ecs_strbuf_list_appendlit(&sync->buf, "\"duration\":");
+        ecs_strbuf_appendflt(&sync->buf, duration, '"');
+        ecs_strbuf_list_pop(&sync->buf, "}");
+
+        sync->cmds = ecs_strbuf_get(&sync->buf);
+    }
 }
 
 static
@@ -35795,7 +35895,7 @@ void flecs_on_set_rest(ecs_iter_t *it) {
             &(ecs_http_server_desc_t){ 
                 .ipaddr = rest[i].ipaddr, 
                 .port = rest[i].port,
-                .cache_timeout = 1.0
+                .cache_timeout = 0.2f
             });
 
         if (!srv) {
@@ -58633,6 +58733,7 @@ void flecs_meta_import_core_definitions(
             { .name = "version_patch", .type = ecs_id(ecs_i16_t) },
             { .name = "debug", .type = ecs_id(ecs_bool_t) },
             { .name = "sanitize", .type = ecs_id(ecs_bool_t) },
+            { .name = "perf_trace", .type = ecs_id(ecs_bool_t) }
         }
     });
 }
@@ -69201,6 +69302,7 @@ ecs_entity_t ecs_run_intern(
         it = &wit;
     }
 
+    ecs_entity_t old_system = flecs_stage_set_system(stage, system);
     ecs_iter_action_t action = system_data->action;
     it->callback = action;
     
@@ -69221,6 +69323,8 @@ ecs_entity_t ecs_run_intern(
         action(&qit);
         ecs_iter_fini(&qit);
     }
+
+    flecs_stage_set_system(stage, old_system);
 
     if (measure_time) {
         system_data->time_spent += (ecs_ftime_t)ecs_time_measure(&time_start);

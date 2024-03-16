@@ -367,6 +367,8 @@ typedef struct ecs_cmd_t {
         ecs_cmd_1_t _1;              /* Data for single entity operation */
         ecs_cmd_n_t _n;              /* Data for multi entity operation */
     } is;
+
+    ecs_entity_t system;             /* System that enqueued the command */
 } ecs_cmd_t;
 
 /* Data structures that store the command queue */
@@ -413,6 +415,9 @@ struct ecs_stage_t {
     ecs_entity_t with;               /* Id to add by default to new entities */
     ecs_entity_t base;               /* Currently instantiated top-level base */
     const ecs_entity_t *lookup_path; /* Search path used by lookup operations */
+
+    /* Running system */
+    ecs_entity_t system;
 
     /* Properties */
     bool auto_merge;                 /* Should this stage automatically merge? */

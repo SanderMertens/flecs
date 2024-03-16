@@ -4999,6 +4999,7 @@ bool flecs_defer_end(
                     break;
                 case EcsCmdClone:
                     ecs_clone(world, e, id, cmd->is._1.clone_value);
+                    world->info.cmd.other_count ++;
                     break;
                 case EcsCmdSet:
                     flecs_move_ptr_w_id(world, dst_stage, e, 
@@ -5032,8 +5033,7 @@ bool flecs_defer_end(
                 case EcsCmdAddModified:
                     flecs_add_id(world, e, id);
                     flecs_modified_id_if(world, e, id, true);
-                    world->info.cmd.add_count ++;
-                    world->info.cmd.modified_count ++;
+                    world->info.cmd.set_count ++;
                     break;
                 case EcsCmdDelete: {
                     ecs_delete(world, e);
@@ -5078,6 +5078,7 @@ bool flecs_defer_end(
                     }
                     ecs_os_free(cmd->is._1.value);
                     cmd->is._1.value = NULL;
+                    world->info.cmd.other_count ++;
                     break;
                 }
                 case EcsCmdEvent: {
@@ -5085,6 +5086,7 @@ bool flecs_defer_end(
                     ecs_assert(desc != NULL, ECS_INTERNAL_ERROR, NULL);
                     ecs_emit((ecs_world_t*)stage, desc);
                     flecs_free_cmd_event(world, desc);
+                    world->info.cmd.event_count ++;
                     break;
                 }
                 case EcsCmdSkip:
@@ -5101,6 +5103,12 @@ bool flecs_defer_end(
             flecs_commands_pop(stage);
 
             flecs_table_diff_builder_fini(world, &diff);
+
+            /* Internal callback for capturing commands, signal queue is done */
+            if (world->on_commands_active) {
+                world->on_commands_active(stage, NULL, 
+                    world->on_commands_ctx_active);
+            }
         }
 
         return true;

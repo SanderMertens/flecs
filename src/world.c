@@ -856,6 +856,9 @@ static ecs_build_info_t flecs_build_info = {
 #ifdef FLECS_SANITIZE
     .sanitize = true,
 #endif
+#ifdef FLECS_PERF_TRACE
+    .perf_trace = true,
+#endif
     .version = FLECS_VERSION,
     .version_major = FLECS_VERSION_MAJOR,
     .version_minor = FLECS_VERSION_MINOR,

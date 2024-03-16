@@ -26,6 +26,7 @@ ecs_cmd_t* flecs_cmd_new(
     cmd->is._1.value = NULL;
     cmd->next_for_entity = 0;
     cmd->entry = NULL;
+    cmd->system = stage->system;
     return cmd;
 }
 
@@ -931,4 +932,13 @@ bool ecs_is_deferred(
     return stage->defer > 0;
 error:
     return false;
+}
+
+ecs_entity_t flecs_stage_set_system(
+    ecs_stage_t *stage,
+    ecs_entity_t system)
+{
+    ecs_entity_t old = stage->system;
+    stage->system = system;
+    return old;
 }

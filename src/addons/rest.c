@@ -18,6 +18,8 @@ typedef struct {
 
 typedef struct {
     char *cmds;
+    ecs_time_t start_time;
+    ecs_strbuf_t buf;
 } ecs_rest_cmd_sync_capture_t;
 
 typedef struct {
@@ -919,6 +921,34 @@ const char* flecs_rest_cmd_kind_to_str(
 }
 
 static
+bool flecs_rest_cmd_has_id(
+    const ecs_cmd_t *cmd)
+{
+    switch(cmd->kind) {
+    case EcsCmdClear:
+    case EcsCmdDelete:
+    case EcsCmdClone:
+    case EcsCmdDisable:
+    case EcsCmdPath:
+        return false;
+    case EcsCmdBulkNew:
+    case EcsCmdAdd:
+    case EcsCmdRemove:
+    case EcsCmdSet:
+    case EcsCmdEmplace:
+    case EcsCmdEnsure:
+    case EcsCmdModified:
+    case EcsCmdModifiedNoHook:
+    case EcsCmdAddModified:
+    case EcsCmdOnDeleteAction:
+    case EcsCmdEnable:
+    case EcsCmdEvent:
+    case EcsCmdSkip:
+        return true;
+    }
+}
+
+static
 void flecs_rest_cmd_to_json(
     ecs_world_t *world,
     ecs_strbuf_t *buf,
@@ -930,11 +960,21 @@ void flecs_rest_cmd_to_json(
         ecs_strbuf_appendstr(buf, flecs_rest_cmd_kind_to_str(cmd->kind));
         ecs_strbuf_appendlit(buf, "\"");
 
-    ecs_strbuf_list_appendlit(buf, "\"id\":\"");
-        char *idstr = ecs_id_str(world, cmd->id);
-        ecs_strbuf_appendstr(buf, idstr);
-        ecs_strbuf_appendlit(buf, "\"");
-        ecs_os_free(idstr);
+    if (flecs_rest_cmd_has_id(cmd)) {
+        ecs_strbuf_list_appendlit(buf, "\"id\":\"");
+            char *idstr = ecs_id_str(world, cmd->id);
+            ecs_strbuf_appendstr(buf, idstr);
+            ecs_strbuf_appendlit(buf, "\"");
+            ecs_os_free(idstr);
+    }
+
+    if (cmd->system) {
+        ecs_strbuf_list_appendlit(buf, "\"system\":\"");
+            char *sysstr = ecs_get_fullpath(world, cmd->system);
+            ecs_strbuf_appendstr(buf, sysstr);
+            ecs_strbuf_appendlit(buf, "\"");
+            ecs_os_free(sysstr); 
+    }
 
     if (cmd->kind == EcsCmdBulkNew) {
         /* Todo */
@@ -974,24 +1014,38 @@ void flecs_rest_on_commands(
     ecs_rest_cmd_capture_t *capture = ctx;
     ecs_assert(capture != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_vec_init_if_t(&capture->syncs, ecs_rest_cmd_sync_capture_t);
-    ecs_rest_cmd_sync_capture_t *sync = ecs_vec_append_t(
-        NULL, &capture->syncs, ecs_rest_cmd_sync_capture_t);
+    if (commands) {
+        ecs_vec_init_if_t(&capture->syncs, ecs_rest_cmd_sync_capture_t);
+        ecs_rest_cmd_sync_capture_t *sync = ecs_vec_append_t(
+            NULL, &capture->syncs, ecs_rest_cmd_sync_capture_t);
 
-    int32_t i, count = ecs_vec_count(commands);
-    ecs_cmd_t *cmds = ecs_vec_first(commands);
-    ecs_strbuf_t buf = ECS_STRBUF_INIT;
-    ecs_strbuf_list_push(&buf, "{", ",");
-    ecs_strbuf_list_appendlit(&buf, "\"commands\":");
-        ecs_strbuf_list_push(&buf, "[", ",");
-        for (i = 0; i < count; i ++) {
-            ecs_strbuf_list_next(&buf);
-            flecs_rest_cmd_to_json(world, &buf, &cmds[i]);
-        }
-        ecs_strbuf_list_pop(&buf, "]");
-    ecs_strbuf_list_pop(&buf, "}");
+        int32_t i, count = ecs_vec_count(commands);
+        ecs_cmd_t *cmds = ecs_vec_first(commands);
+        sync->buf = ECS_STRBUF_INIT;
+        ecs_strbuf_list_push(&sync->buf, "{", ",");
+        ecs_strbuf_list_appendlit(&sync->buf, "\"commands\":");
+            ecs_strbuf_list_push(&sync->buf, "[", ",");
+            for (i = 0; i < count; i ++) {
+                ecs_strbuf_list_next(&sync->buf);
+                flecs_rest_cmd_to_json(world, &sync->buf, &cmds[i]);
+            }
+            ecs_strbuf_list_pop(&sync->buf, "]");
 
-    sync->cmds = ecs_strbuf_get(&buf);
+        /* Measure how long it takes to process queue */
+        sync->start_time = (ecs_time_t){0};
+        ecs_time_measure(&sync->start_time);
+    } else {
+        /* Finished processing queue, measure duration */
+        ecs_rest_cmd_sync_capture_t *sync = ecs_vec_last_t(
+            &capture->syncs, ecs_rest_cmd_sync_capture_t);
+        double duration = ecs_time_measure(&sync->start_time);
+
+        ecs_strbuf_list_appendlit(&sync->buf, "\"duration\":");
+        ecs_strbuf_appendflt(&sync->buf, duration, '"');
+        ecs_strbuf_list_pop(&sync->buf, "}");
+
+        sync->cmds = ecs_strbuf_get(&sync->buf);
+    }
 }
 
 static
@@ -1179,7 +1233,7 @@ void flecs_on_set_rest(ecs_iter_t *it) {
             &(ecs_http_server_desc_t){ 
                 .ipaddr = rest[i].ipaddr, 
                 .port = rest[i].port,
-                .cache_timeout = 1.0
+                .cache_timeout = 0.2f
             });
 
         if (!srv) {
