@@ -69,7 +69,8 @@ public:
 		
 		if (DeveloperSettings->bAutoCreateWorld)
 		{
-			CreateWorld(DEFAULT_FLECS_WORLD_NAME, FFlecsWorldSettings());
+			CreateWorld(DEFAULT_FLECS_WORLD_NAME,
+				FFlecsWorldSettings{ static_cast<bool>(DeveloperSettings->bDefaultAutoMerge) });
 		}
 	}
 
@@ -257,18 +258,22 @@ public:
 		WorldNameMap.emplace(Name, &NewFlecsWorld);
 
 		// Worlds have a Name Singleton
-		NewFlecsWorld.GetFlecsWorld().set<FName>(GWorld_Name_Component, Name);
+		NewFlecsWorld.SetName(Name);
 		
-		NewFlecsWorld.GetFlecsWorld().set_ctx(this);
+		NewFlecsWorld.SetContext(this);
 
-		NewFlecsWorld.GetFlecsWorld().set_automerge(Settings.bAutoMerge);
+		NewFlecsWorld.SetAutoMerge(Settings.bAutoMerge);
 
 		Worlds.emplace_back(NewFlecsWorld);
 
+		#if WITH_EDITOR
+		
 		if (DeveloperSettings->bAutoImportExplorer)
 		{
 			ImportRestModule(Name, true, FFlecsRestSettings());
 		}
+		
+		#endif // WITH_EDITOR
 		
 		return Worlds.back();
 	}
@@ -282,7 +287,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs | REST API")
 	void ImportRestModule(const FName& WorldName, const bool bUseMonitoring, const FFlecsRestSettings& Settings) const
 	{
-		GetFlecsWorld(WorldName).GetFlecsWorld().set<flecs::Rest>(
+		GetFlecsWorld(WorldName).SetSingleton<flecs::Rest>(
 				flecs::Rest { static_cast<uint16>(Settings.Port), TCHAR_TO_ANSI(*Settings.IPAddress) });
 
 		if (bUseMonitoring)
@@ -331,7 +336,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
 	static FName GetWorldName(const FFlecsWorld& World)
 	{
-		return *World.GetFlecsWorld().get<FName>(GWorld_Name_Component);
+		return World.GetName();
 	}
 	
 	UFUNCTION(BlueprintCallable, Category = "Flecs", Meta = (WorldContext = "WorldContextObject"))

@@ -8,8 +8,6 @@
 #include "UObject/Object.h"
 #include "FlecsWorld.generated.h"
 
-const FString GWorld_Name_Component = "WorldName";
-
 USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsWorld
 {
@@ -80,15 +78,15 @@ public:
 	}
 
 	template <typename First, typename Second>
-	FORCEINLINE void SetSingleton(const First& InFirst, const Second& InSecond) const
+	FORCEINLINE void SetSingleton(const First& InFirst, const Second InSecond) const
 	{
-		World->set<First, Second>(InFirst, InSecond);
+		World->set<First, Second>(InSecond, InFirst);
 	}
 
 	template <typename First, typename ...TArgs>
 	FORCEINLINE void SetSingleton(const First& InFirst, const TArgs&... Args) const
 	{
-		World->set<First, TArgs...>(InFirst, Args...);
+		World->set(std::forward<const TArgs&>(Args)..., InFirst);
 	}
 
 	template <typename T>
@@ -160,7 +158,7 @@ public:
 	template <typename First, typename Second>
 	FORCEINLINE NO_DISCARD First GetSingleton(const Second& InSecond) const
 	{
-		return *World->get<First>(InSecond);
+		return *World->get<First, Second>(InSecond);
 	}
 
 	FORCEINLINE void Merge() const
@@ -175,13 +173,43 @@ public:
 
 	FORCEINLINE NO_DISCARD FName GetName() const
 	{
-		return GetSingleton<FName>(GWorld_Name_Component);
+		return GetSingleton<FName>();
+	}
+
+	FORCEINLINE void SetName(const FName& InName) const
+	{
+		SetSingleton(InName);
 	}
 
 	template <typename T>
 	FORCEINLINE void ImportModule() const
 	{
 		World->import<T>();
+	}
+
+	FORCEINLINE bool BeginDefer() const
+	{
+		return World->defer_begin();
+	}
+
+	FORCEINLINE bool EndDefer() const
+	{
+		return World->defer_end();
+	}
+
+	FORCEINLINE bool BeginReadOnly() const
+	{
+		return World->readonly_begin();
+	}
+
+	FORCEINLINE void EndReadOnly() const
+	{
+		World->readonly_end();
+	}
+
+	FORCEINLINE void SetContext(void* InContext) const
+	{
+		World->set_ctx(InContext);
 	}
 
 private:

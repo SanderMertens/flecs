@@ -17,18 +17,18 @@ public:
     {
     }
 
-    bool operator==(const FFlecsWorldSettings& Other) const
+    FORCEINLINE NO_DISCARD bool operator==(const FFlecsWorldSettings& Other) const
     {
         return bAutoMerge == Other.bAutoMerge;
     }
 
-    bool operator!=(const FFlecsWorldSettings& Other) const
+    FORCEINLINE NO_DISCARD bool operator!=(const FFlecsWorldSettings& Other) const
     {
         return !(*this == Other);
     }
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs")
-    bool bAutoMerge = true;
+    uint8 bAutoMerge : 1 = true;
     
 }; // struct FFlecsWorldSettings
 

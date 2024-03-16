@@ -26,6 +26,9 @@ public:
 	uint32 bAutoTickWorld : 1 = true;
 
 	UPROPERTY(EditAnywhere, Config, Category = "Flecs")
+	uint32 bDefaultAutoMerge : 1 = true;
+
+	UPROPERTY(EditAnywhere, Config, Category = "Flecs")
 	uint32 bAutoImportExplorer : 1 = true;
 
 }; // class UFlecsDeveloperSettings
