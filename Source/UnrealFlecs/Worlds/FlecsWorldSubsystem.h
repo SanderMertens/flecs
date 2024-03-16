@@ -78,20 +78,15 @@ public:
 	{
 		Super::Deinitialize();
 
-		if (!DeveloperSettings.IsValid())
+		for (const FFlecsWorld& World : Worlds)
 		{
-			return;
-		}
-
-		if (DeveloperSettings->bAutoDestroyWorld)
-		{
-			DestroyWorldByName(DEFAULT_FLECS_WORLD_NAME);
+			delete &World;
 		}
 	}
 
 	virtual TStatId GetStatId() const override
 	{
-		return TStatId();
+		RETURN_QUICK_DECLARE_CYCLE_STAT(UFlecsWorldSubsystem, STATGROUP_Tickables);
 	}
 
 	virtual void Tick(float DeltaTime) override
@@ -256,8 +251,7 @@ public:
 		FFlecsWorld NewFlecsWorld(NewWorld);
 		
 		WorldNameMap.emplace(Name, &NewFlecsWorld);
-
-		// Worlds have a Name Singleton
+		
 		NewFlecsWorld.SetName(Name);
 		
 		NewFlecsWorld.SetContext(this);
@@ -311,8 +305,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
 	void DestroyWorld(FFlecsWorld& World)
 	{
-		const FFlecsWorld* WorldPtr = WorldNameMap.at(*World.GetFlecsWorld().get<FName>());
-		WorldNameMap.erase(*World.GetFlecsWorld().get<FName>());
+		const FFlecsWorld* WorldPtr = WorldNameMap.at(World.GetName());
+		WorldNameMap.erase(World.GetName());
 
 		for (std::vector<FFlecsWorld>::iterator It = Worlds.begin(); It != Worlds.end(); ++It)
 		{

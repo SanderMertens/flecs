@@ -30,9 +30,9 @@ public:
 	FORCEINLINE NO_DISCARD bool IsValid() const { return GetEntity().is_valid(); }
 	FORCEINLINE NO_DISCARD bool IsAlive() const { return GetEntity().is_alive(); }
 
-	NO_DISCARD UFlecsWorldSubsystem* GetFlecsWorldSubsystem() const;
-	NO_DISCARD FFlecsWorld& GetFlecsWorld() const;
-	NO_DISCARD FName GetWorldName() const;
+	FORCEINLINE NO_DISCARD UFlecsWorldSubsystem* GetFlecsWorldSubsystem() const;
+	FORCEINLINE NO_DISCARD FFlecsWorld& GetFlecsWorld() const;
+	FORCEINLINE NO_DISCARD FName GetWorldName() const;
 	
 	FORCEINLINE NO_DISCARD FFlecsType GetType() const { return FFlecsType(GetEntity().type()); }
 

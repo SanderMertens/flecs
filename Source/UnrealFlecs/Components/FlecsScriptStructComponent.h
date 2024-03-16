@@ -34,4 +34,5 @@ struct FFlecsScriptStructComponent
     TObjectPtr<UScriptStruct> ScriptStruct;
     
 }; // struct FFlecsScriptStructComponent
+
 DEFINE_STD_HASH(FFlecsScriptStructComponent)

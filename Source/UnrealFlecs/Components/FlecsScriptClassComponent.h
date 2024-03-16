@@ -28,11 +28,12 @@ struct FFlecsScriptClassComponent
 
     FORCEINLINE operator TSubclassOf<UObject>() const { return ScriptClass.Get(); }
     
-    FORCEINLINE FFlecsScriptClassComponent(const TSubclassOf<UObject> InScriptClass = nullptr) : ScriptClass(InScriptClass) {}
+    FORCEINLINE FFlecsScriptClassComponent(const TSubclassOf<UObject>& InScriptClass = nullptr) : ScriptClass(InScriptClass) {}
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs")
     TSubclassOf<UObject> ScriptClass;
     
 }; // struct FFlecsScriptClassComponent
+
 DEFINE_STD_HASH(FFlecsScriptClassComponent)
 

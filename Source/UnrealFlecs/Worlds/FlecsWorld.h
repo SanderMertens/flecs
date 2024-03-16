@@ -20,11 +20,11 @@ public:
 
 	FORCEINLINE void SetWorld(flecs::world& InWorld) { World = &InWorld; }
 
-	flecs::world& GetFlecsWorld() { return *World; }
-	const flecs::world& GetFlecsWorld() const { return *World; }
+	FORCEINLINE NO_DISCARD flecs::world& GetFlecsWorld() { return *World; }
+	FORCEINLINE NO_DISCARD const flecs::world& GetFlecsWorld() const { return *World; }
 
-	operator flecs::world&() { return GetFlecsWorld(); }
-	operator const flecs::world&() const { return GetFlecsWorld(); }
+	FORCEINLINE operator flecs::world&() { return GetFlecsWorld(); }
+	FORCEINLINE operator const flecs::world&() const { return GetFlecsWorld(); }
 
 	FORCEINLINE NO_DISCARD bool IsValid() const { return World != nullptr; }
 
@@ -33,40 +33,40 @@ public:
 	FORCEINLINE flecs::world& operator*() { return GetFlecsWorld(); }
 	FORCEINLINE const flecs::world& operator*() const { return GetFlecsWorld(); }
 
-	bool operator==(const FFlecsWorld& Other) const
+	FORCEINLINE NO_DISCARD bool operator==(const FFlecsWorld& Other) const
 	{
 		return World == Other.World;
 	}
 
-	bool operator!=(const FFlecsWorld& Other) const
+	FORCEINLINE NO_DISCARD bool operator!=(const FFlecsWorld& Other) const
 	{
 		return World != Other.World;
 	}
 
-	bool operator==(const flecs::world& Other) const
+	FORCEINLINE NO_DISCARD bool operator==(const flecs::world& Other) const
 	{
 		return World == &Other;
 	}
 
-	bool operator!=(const flecs::world& Other) const
+	FORCEINLINE NO_DISCARD bool operator!=(const flecs::world& Other) const
 	{
 		return World != &Other;
 	}
 
 	template <typename FunctionType>
-	FORCEINLINE void ForEach(FunctionType&& Function)
+	FORCEINLINE void ForEach(FunctionType&& Function) const
 	{
 		World->each(std::forward<FunctionType>(Function));
 	}
 
 	template <typename T, typename FunctionType>
-	FORCEINLINE void ForEach(FunctionType&& Function)
+	FORCEINLINE void ForEach(FunctionType&& Function) const
 	{
 		World->each<T>(std::forward<FunctionType>(Function));
 	}
 
 	template <typename FunctionType>
-	FORCEINLINE void ForEach(const FFlecsId& InTermId, FunctionType&& Function)
+	FORCEINLINE void ForEach(const FFlecsId& InTermId, FunctionType&& Function) const
 	{
 		World->each(InTermId.GetFlecsId(), std::forward<FunctionType>(Function));
 	}
@@ -178,7 +178,7 @@ public:
 
 	FORCEINLINE void SetName(const FName& InName) const
 	{
-		SetSingleton(InName);
+		SetSingleton<FName>(InName);
 	}
 
 	template <typename T>
@@ -210,6 +210,58 @@ public:
 	FORCEINLINE void SetContext(void* InContext) const
 	{
 		World->set_ctx(InContext);
+	}
+
+	FORCEINLINE bool Progress(const float DeltaTime = 0.f) const
+	{
+		return World->progress(DeltaTime);
+	}
+
+	FORCEINLINE void SetTimeScale(const float InTimeScale) const
+	{
+		World->set_time_scale(InTimeScale);
+	}
+
+	FORCEINLINE void SetTargetFps(const float InTargetFps) const
+	{
+		World->set_target_fps(InTargetFps);
+	}
+
+	FORCEINLINE void Quit() const
+	{
+		World->quit();
+	}
+
+	FORCEINLINE void SetPipeline(const flecs::entity& InPipeline) const
+	{
+		World->set_pipeline(InPipeline);
+	}
+
+	template <typename T>
+	FORCEINLINE void SetPipeline() const
+	{
+		World->set_pipeline<T>();
+	}
+
+	FORCEINLINE NO_DISCARD flecs::entity GetPipeline() const
+	{
+		return World->get_pipeline();
+	}
+
+	FORCEINLINE flecs::entity SetScope(const flecs::entity& InScope) const
+	{
+		return World->set_scope(InScope);
+	}
+
+	template <typename T>
+	FORCEINLINE flecs::entity SetScope() const
+	{
+		return World->set_scope<T>();
+	}
+
+	FORCEINLINE NO_DISCARD flecs::entity GetScope() const
+	{
+		return World->get_scope();
 	}
 
 private:
