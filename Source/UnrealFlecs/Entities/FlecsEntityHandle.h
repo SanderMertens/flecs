@@ -41,18 +41,18 @@ public:
 	template <typename T>
 	FORCEINLINE NO_DISCARD bool Has() const { return GetEntity().has<T>(); }
 
-	NO_DISCARD bool Has(UScriptStruct* StructType) const;
+	FORCEINLINE NO_DISCARD bool Has(UScriptStruct* StructType) const;
 
 	FORCEINLINE void Add(const FFlecsEntityHandle& InEntity) const { GetEntity().add(InEntity); }
 
-	void Add(UScriptStruct* StructType) const;
+	FORCEINLINE void Add(UScriptStruct* StructType) const;
 	
 	template <typename T>
 	FORCEINLINE void Add() const { GetEntity().template add<T>(); }
 	
 	FORCEINLINE void Remove(const FFlecsEntityHandle& InEntity) const { GetEntity().remove(InEntity); }
 
-	void Remove(UScriptStruct* StructType) const;
+	FORCEINLINE void Remove(UScriptStruct* StructType) const;
 
 	template <typename T>
 	FORCEINLINE void Remove() const { GetEntity().template remove<T>(); }
@@ -64,9 +64,9 @@ public:
 
 	FORCEINLINE void Set(const FFlecsEntityHandle& InEntity, const void* InValue) const { GetEntity().set(InEntity, InValue); }
 
-	void Set(UScriptStruct* StructType, const void* InValue) const;
+	FORCEINLINE void Set(UScriptStruct* StructType, const void* InValue) const;
 
-	void Set(const FInstancedStruct& InValue) const;
+	FORCEINLINE void Set(const FInstancedStruct& InValue) const;
 
 	FORCEINLINE void Clear() const { GetEntity().clear(); }
 
