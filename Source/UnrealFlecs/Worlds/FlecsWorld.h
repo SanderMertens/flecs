@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "flecs.h"
 #include "Entities/FlecsId.h"
+#include "Systems/FlecsSystem.h"
 #include "UObject/Object.h"
 #include "FlecsWorld.generated.h"
 
@@ -179,6 +180,12 @@ public:
 	FORCEINLINE void SetName(const FName& InName) const
 	{
 		SetSingleton<FName>(InName);
+
+		#if WITH_EDITOR
+		
+		World->entity<FName>().set_doc_name(TCHAR_TO_ANSI(*InName.ToString()));
+
+		#endif // WITH_EDITOR
 	}
 
 	template <typename T>
@@ -212,17 +219,17 @@ public:
 		World->set_ctx(InContext);
 	}
 
-	FORCEINLINE bool Progress(const float DeltaTime = 0.f) const
+	FORCEINLINE bool Progress(const double DeltaTime = 0.0) const
 	{
 		return World->progress(DeltaTime);
 	}
 
-	FORCEINLINE void SetTimeScale(const float InTimeScale) const
+	FORCEINLINE void SetTimeScale(const double InTimeScale) const
 	{
 		World->set_time_scale(InTimeScale);
 	}
 
-	FORCEINLINE void SetTargetFps(const float InTargetFps) const
+	FORCEINLINE void SetTargetFps(const double InTargetFps) const
 	{
 		World->set_target_fps(InTargetFps);
 	}
@@ -264,6 +271,23 @@ public:
 		return World->get_scope();
 	}
 
+	FORCEINLINE NO_DISCARD double GetDeltaTime() const
+	{
+		return World->delta_time();
+	}
+
+	template <typename ...TComponents>
+	FORCEINLINE NO_DISCARD FFlecsSystem CreateSystem(const FString& InName) const
+	{
+		return FFlecsSystem(World->system<TComponents...>(TCHAR_TO_ANSI(*InName)));
+	}
+
+	template <typename ...TComponents>
+	FORCEINLINE NO_DISCARD flecs::system_builder<TComponents...> CreateSystem(const FString& InName) const
+	{
+		return World->system<TComponents...>(TCHAR_TO_ANSI(*InName));
+	}
+	
 private:
 	flecs::world* World = nullptr;
 }; // struct FFlecsWorld
