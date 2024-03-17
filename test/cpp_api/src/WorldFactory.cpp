@@ -93,8 +93,8 @@ void WorldFactory_system_w_expr(void) {
     auto s = ecs.system<>("MySystem")
         .expr("Position, [in] Velocity")
         .iter([](flecs::iter it) {
-            flecs::column<Position> p(it, 1);
-            flecs::column<const Velocity> v(it, 2);
+            flecs::field<Position> p(it, 1);
+            flecs::field<const Velocity> v(it, 2);
 
             for (auto i : it) {
                 p[i].x += v[i].x;
@@ -148,8 +148,8 @@ void WorldFactory_query_w_expr(void) {
         .set<Velocity>({1, 2});
 
     q.iter([](flecs::iter it) {
-        flecs::column<Position> p(it, 1);
-        flecs::column<const Velocity> v(it, 2);
+        flecs::field<Position> p(it, 1);
+        flecs::field<const Velocity> v(it, 2);
 
         for (auto i : it) {
             p[i].x += v[i].x;

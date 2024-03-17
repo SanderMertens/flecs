@@ -30,11 +30,6 @@ inline flecs::entity iter::entity(size_t row) const {
     return flecs::entity(m_iter->world, m_iter->entities[row]);
 }
 
-template <typename T>
-inline column<T>::column(iter &iter, int32_t index) {
-    *this = iter.field<T>(index);
-}
-
 inline flecs::entity iter::src(int32_t index) const {
     return flecs::entity(m_iter->world, ecs_field_src(m_iter, index));
 }
@@ -62,6 +57,27 @@ inline flecs::table iter::table() const {
 inline flecs::table_range iter::range() const {
     return flecs::table_range(m_iter->real_world, m_iter->table, 
         m_iter->offset, m_iter->count);
+}
+
+template <typename T, typename A,
+    typename std::enable_if<std::is_const<T>::value, void>::type*>
+inline flecs::field<A> iter::field(int32_t index) const {
+    ecs_assert(!(m_iter->flags & EcsIterCppEach), ECS_INVALID_OPERATION,
+        "cannot .field from .each, use .field_at<const %s>(%d, row) instead",
+            _::type_name<T>(), index);
+    return get_field<A>(index);
+}
+
+template <typename T, typename A,
+    typename std::enable_if<
+        std::is_const<T>::value == false, void>::type*>
+inline flecs::field<A> iter::field(int32_t index) const {
+    ecs_assert(!(m_iter->flags & EcsIterCppEach), ECS_INVALID_OPERATION,
+        "cannot .field from .each, use .field_at<%s>(%d, row) instead",
+            _::type_name<T>(), index);
+    ecs_assert(!ecs_field_is_readonly(m_iter, index),
+        ECS_ACCESS_VIOLATION, NULL);
+    return get_field<A>(index);
 }
 
 #ifdef FLECS_RULES

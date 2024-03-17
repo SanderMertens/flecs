@@ -199,6 +199,8 @@ struct each_delegate : public delegate {
     void invoke(ecs_iter_t *iter) const {
         term_ptrs<Components...> terms;
 
+        iter->flags |= EcsIterCppEach;
+
         if (terms.populate(iter)) {
             invoke_callback< each_ref_column >(iter, m_func, 0, terms.m_terms);
         } else {

@@ -279,8 +279,8 @@ void System_signature(void) {
 
     world.system<>().expr("Position, Velocity")
         .iter([](flecs::iter&it) {
-            flecs::column<Position> p(it, 1);
-            flecs::column<Velocity> v(it, 2);
+            flecs::field<Position> p(it, 1);
+            flecs::field<Velocity> v(it, 2);
 
             for (auto i : it) {
                 p[i].x += v[i].x;
@@ -308,8 +308,8 @@ void System_signature_const(void) {
 
     world.system<>().expr("Position, [in] Velocity")
         .iter([](flecs::iter&it) {
-            flecs::column<Position> p(it, 1);
-            flecs::column<const Velocity> v(it, 2);
+            flecs::field<Position> p(it, 1);
+            flecs::field<const Velocity> v(it, 2);
 
             for (auto i : it) {
                 p[i].x += v[i].x;
@@ -344,8 +344,8 @@ void System_signature_shared(void) {
 
     world.system<>().expr("Position, [in] Velocity(self|up)")
         .iter([](flecs::iter&it) {
-            flecs::column<Position> p(it, 1);
-            flecs::column<const Velocity> v(it, 2);
+            flecs::field<Position> p(it, 1);
+            flecs::field<const Velocity> v(it, 2);
 
             if (!it.is_self(2)) {
                 for (auto i : it) {
@@ -393,9 +393,9 @@ void System_signature_optional(void) {
 
     world.system<>().expr("Position, ?Velocity, ?Mass")
         .iter([](flecs::iter& it) {
-            flecs::column<Position> p(it, 1);
-            flecs::column<Velocity> v(it, 2);
-            flecs::column<Mass> m(it, 3);
+            flecs::field<Position> p(it, 1);
+            flecs::field<Velocity> v(it, 2);
+            flecs::field<Mass> m(it, 3);
 
             if (it.is_set(2) && it.is_set(3)) {
                 for (auto i : it) {

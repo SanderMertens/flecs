@@ -997,7 +997,7 @@ void Enum_query_union_enum(void) {
         .build();
 
     q.iter([&](flecs::iter& it) {
-        flecs::column<flecs::entity_t> colors = it.field<flecs::entity_t>(1);
+        flecs::field<flecs::entity_t> colors = it.field<flecs::entity_t>(1);
         test_int(it.count(), 3);
         test_uint(it.entity(0), e1);
         test_uint(it.entity(1), e2);

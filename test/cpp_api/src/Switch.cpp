@@ -109,7 +109,7 @@ void Switch_system_w_switch(void) {
     world.system()
         .expr("(Movement, *)")
         .iter([&](flecs::iter it) {
-            flecs::column<flecs::entity_t> movement(it, 1);
+            flecs::field<flecs::entity_t> movement(it, 1);
 
             invoke_count ++;
             for (auto i : it) {

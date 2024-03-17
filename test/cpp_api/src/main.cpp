@@ -580,6 +580,15 @@ void Query_query_iter_w_func_ptr(void);
 void Query_query_each_w_func_no_ptr(void);
 void Query_query_iter_w_func_no_ptr(void);
 void Query_query_each_w_iter(void);
+void Query_each_w_iter_no_this(void);
+void Query_invalid_each_w_no_this(void);
+void Query_invalid_field_from_each_w_iter(void);
+void Query_invalid_field_T_from_each_w_iter(void);
+void Query_invalid_field_const_T_from_each_w_iter(void);
+void Query_field_at_from_each_w_iter(void);
+void Query_field_at_T_from_each_w_iter(void);
+void Query_field_at_const_T_from_each_w_iter(void);
+void Query_field_at_from_each_w_iter_w_base_type(void);
 void Query_change_tracking(void);
 void Query_not_w_write(void);
 void Query_get_first(void);
@@ -587,8 +596,6 @@ void Query_get_count_direct(void);
 void Query_get_is_true_direct(void);
 void Query_get_first_direct(void);
 void Query_each_w_no_this(void);
-void Query_each_w_iter_no_this(void);
-void Query_invalid_each_w_no_this(void);
 void Query_named_query(void);
 void Query_named_scoped_query(void);
 void Query_instanced_nested_query_w_iter(void);
@@ -3597,6 +3604,42 @@ bake_test_case Query_testcases[] = {
         Query_query_each_w_iter
     },
     {
+        "each_w_iter_no_this",
+        Query_each_w_iter_no_this
+    },
+    {
+        "invalid_each_w_no_this",
+        Query_invalid_each_w_no_this
+    },
+    {
+        "invalid_field_from_each_w_iter",
+        Query_invalid_field_from_each_w_iter
+    },
+    {
+        "invalid_field_T_from_each_w_iter",
+        Query_invalid_field_T_from_each_w_iter
+    },
+    {
+        "invalid_field_const_T_from_each_w_iter",
+        Query_invalid_field_const_T_from_each_w_iter
+    },
+    {
+        "field_at_from_each_w_iter",
+        Query_field_at_from_each_w_iter
+    },
+    {
+        "field_at_T_from_each_w_iter",
+        Query_field_at_T_from_each_w_iter
+    },
+    {
+        "field_at_const_T_from_each_w_iter",
+        Query_field_at_const_T_from_each_w_iter
+    },
+    {
+        "field_at_from_each_w_iter_w_base_type",
+        Query_field_at_from_each_w_iter_w_base_type
+    },
+    {
         "change_tracking",
         Query_change_tracking
     },
@@ -3623,14 +3666,6 @@ bake_test_case Query_testcases[] = {
     {
         "each_w_no_this",
         Query_each_w_no_this
-    },
-    {
-        "each_w_iter_no_this",
-        Query_each_w_iter_no_this
-    },
-    {
-        "invalid_each_w_no_this",
-        Query_invalid_each_w_no_this
     },
     {
         "named_query",
@@ -6673,7 +6708,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        85,
+        92,
         Query_testcases
     },
     {
