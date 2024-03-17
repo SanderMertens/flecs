@@ -101,6 +101,7 @@ struct each_delegate;
 #include "lifecycle_traits.hpp"
 #include "ref.hpp"
 #include "world.hpp"
+#include "field.hpp"
 #include "iter.hpp"
 #include "entity.hpp"
 #include "delegate.hpp"
@@ -162,6 +163,7 @@ struct each_delegate;
 #include "mixins/alerts/impl.hpp"
 #endif
 
+#include "impl/field.hpp"
 #include "impl/iter.hpp"
 #include "impl/world.hpp"
 

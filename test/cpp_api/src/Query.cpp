@@ -1841,6 +1841,237 @@ void Query_query_each_w_iter(void) {
     test_int(ptr->y, 31);
 }
 
+void Query_each_w_iter_no_this(void) {
+    flecs::world ecs;
+
+    auto e = ecs.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto q = ecs.query_builder<Position, Velocity>()
+        .arg(1).src(e)
+        .arg(2).src(e)
+        .build();
+
+    int32_t count = 0;
+
+    q.each([&](flecs::iter& it, size_t index, Position& p, Velocity& v) {
+        count ++;
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+        test_int(v.x, 1);
+        test_int(v.y, 2);
+        test_int(index, 0);
+        test_int(it.count(), 0);
+    });
+
+    test_int(count, 1);
+}
+
+void Query_invalid_field_from_each_w_iter(void) {
+    install_test_abort();
+
+    flecs::world ecs;
+
+    ecs.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto q = ecs.query_builder<Position>()
+        .with<Velocity>().inout()
+        .build();
+
+    test_expect_abort();
+
+    q.each([&](flecs::iter& it, size_t index, Position& p) {
+        it.field(2); // not allowed from each
+    });
+}
+
+void Query_invalid_field_T_from_each_w_iter(void) {
+    install_test_abort();
+
+    flecs::world ecs;
+
+    ecs.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto q = ecs.query_builder<Position>()
+        .with<Velocity>().inout()
+        .build();
+
+    test_expect_abort();
+
+    q.each([&](flecs::iter& it, size_t index, Position& p) {
+        it.field<Velocity>(2); // not allowed from each
+    });
+}
+
+void Query_invalid_field_const_T_from_each_w_iter(void) {
+    install_test_abort();
+
+    flecs::world ecs;
+
+    ecs.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto q = ecs.query_builder<Position>()
+        .with<Velocity>().inout()
+        .build();
+
+    test_expect_abort();
+
+    q.each([&](flecs::iter& it, size_t index, Position& p) {
+        it.field<const Velocity>(2); // not allowed from each
+    });
+}
+
+void Query_field_at_from_each_w_iter(void) {
+    flecs::world ecs;
+
+    flecs::entity e1 = ecs.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    flecs::entity e2 = ecs.entity()
+        .set<Position>({20, 30})
+        .set<Velocity>({3, 4});
+
+    auto q = ecs.query_builder<Position>()
+        .with<Velocity>().inout()
+        .build();
+
+    int32_t count = 0;
+
+    q.each([&](flecs::iter& it, size_t row, Position& p) {
+        Velocity* v = static_cast<Velocity*>(it.field_at(2, row));
+        if (it.entity(row) == e1) {
+            test_int(v->x, 1);
+            test_int(v->y, 2);
+            count ++;
+        } else if (it.entity(row) == e2) {
+            test_int(v->x, 3);
+            test_int(v->y, 4);
+            count ++;
+        }
+    });
+
+    test_int(count, 2);
+}
+
+void Query_field_at_T_from_each_w_iter(void) {
+    flecs::world ecs;
+
+    flecs::entity e1 = ecs.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    flecs::entity e2 = ecs.entity()
+        .set<Position>({20, 30})
+        .set<Velocity>({3, 4});
+
+    auto q = ecs.query_builder<Position>()
+        .with<Velocity>().inout()
+        .build();
+
+    int32_t count = 0;
+
+    q.each([&](flecs::iter& it, size_t row, Position& p) {
+        Velocity& v = it.field_at<Velocity>(2, row);
+        if (it.entity(row) == e1) {
+            test_int(v.x, 1);
+            test_int(v.y, 2);
+            count ++;
+        } else if (it.entity(row) == e2) {
+            test_int(v.x, 3);
+            test_int(v.y, 4);
+            count ++;
+        }
+    });
+
+    test_int(count, 2);
+}
+
+void Query_field_at_const_T_from_each_w_iter(void) {
+    flecs::world ecs;
+
+    flecs::entity e1 = ecs.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    flecs::entity e2 = ecs.entity()
+        .set<Position>({20, 30})
+        .set<Velocity>({3, 4});
+
+    auto q = ecs.query_builder<Position>()
+        .with<Velocity>().inout()
+        .build();
+
+    int32_t count = 0;
+
+    q.each([&](flecs::iter& it, size_t row, Position& p) {
+        const Velocity& v = it.field_at<const Velocity>(2, row);
+        if (it.entity(row) == e1) {
+            test_int(v.x, 1);
+            test_int(v.y, 2);
+            count ++;
+        } else if (it.entity(row) == e2) {
+            test_int(v.x, 3);
+            test_int(v.y, 4);
+            count ++;
+        }
+    });
+
+    test_int(count, 2);
+}
+
+struct VelocityDerived : public Velocity {
+    VelocityDerived() { }
+
+    VelocityDerived(float _x, float _y, float _z) {
+        x = _x;
+        y = _y;
+        z = _z;
+    }
+
+    float z;
+};
+
+void Query_field_at_from_each_w_iter_w_base_type(void) {
+    flecs::world ecs;
+
+    flecs::entity e1 = ecs.entity()
+        .set<Position>({10, 20})
+        .set<VelocityDerived>({1, 2, 3});
+
+    flecs::entity e2 = ecs.entity()
+        .set<Position>({20, 30})
+        .set<VelocityDerived>({3, 4, 5});
+
+    auto q = ecs.query_builder<Position>()
+        .with<VelocityDerived>().inout()
+        .build();
+
+    int32_t count = 0;
+
+    q.each([&](flecs::iter& it, size_t row, Position& p) {
+        Velocity* v = static_cast<Velocity*>(it.field_at(2, row));
+        if (it.entity(row) == e1) {
+            test_int(v->x, 1);
+            test_int(v->y, 2);
+            count ++;
+        } else if (it.entity(row) == e2) {
+            test_int(v->x, 3);
+            test_int(v->y, 4);
+            count ++;
+        }
+    });
+
+    test_int(count, 2);
+}
+
 void Query_change_tracking(void) {
     flecs::world w;
 
@@ -2008,33 +2239,6 @@ void Query_each_w_no_this(void) {
         test_int(p.y, 20);
         test_int(v.x, 1);
         test_int(v.y, 2);
-    });
-
-    test_int(count, 1);
-}
-
-void Query_each_w_iter_no_this(void) {
-    flecs::world ecs;
-
-    auto e = ecs.entity()
-        .set<Position>({10, 20})
-        .set<Velocity>({1, 2});
-
-    auto q = ecs.query_builder<Position, Velocity>()
-        .arg(1).src(e)
-        .arg(2).src(e)
-        .build();
-
-    int32_t count = 0;
-
-    q.each([&](flecs::iter& it, size_t index, Position& p, Velocity& v) {
-        count ++;
-        test_int(p.x, 10);
-        test_int(p.y, 20);
-        test_int(v.x, 1);
-        test_int(v.y, 2);
-        test_int(index, 0);
-        test_int(it.count(), 0);
     });
 
     test_int(count, 1);

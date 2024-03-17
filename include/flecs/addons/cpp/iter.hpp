@@ -16,107 +16,6 @@
 namespace flecs
 {
 
-/** Unsafe wrapper class around a column.
- * This class can be used when a system does not know the type of a column at
- * compile time.
- *
- * @ingroup cpp_iterator
- */
-struct untyped_column {
-    untyped_column(void* array, size_t size, size_t count, bool is_shared = false)
-        : m_array(array)
-        , m_size(size)
-        , m_count(count)
-        , m_is_shared(is_shared) {}
-
-    /** Return element in component array.
-     * This operator may only be used if the column is not shared.
-     *
-     * @param index Index of element.
-     * @return Reference to element.
-     */
-    void* operator[](size_t index) const {
-        ecs_assert(index < m_count, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
-        ecs_assert(!m_is_shared, ECS_INVALID_PARAMETER, NULL);
-        return ECS_OFFSET(m_array, m_size * index);
-    }
-
-protected:
-    void* m_array;
-    size_t m_size;
-    size_t m_count;
-    bool m_is_shared;
-};
-
-/** Wrapper class around a column.
- *
- * @tparam T component type of the column.
- *
- * @ingroup cpp_iterator
- */
-template <typename T>
-struct column {
-    static_assert(std::is_empty<T>::value == false,
-        "invalid type for column, cannot iterate empty type");
-
-    /** Create column from component array.
-     *
-     * @param array Pointer to the component array.
-     * @param count Number of elements in component array.
-     * @param is_shared Is the component shared or not.
-     */
-    column(T* array, size_t count, bool is_shared = false)
-        : m_array(array)
-        , m_count(count)
-        , m_is_shared(is_shared) {}
-
-    /** Create column from iterator.
-     *
-     * @param iter Iterator object.
-     * @param column Index of the signature of the query being iterated over.
-     */
-    column(iter &iter, int column);
-
-    /** Return element in component array.
-     * This operator may only be used if the column is not shared.
-     *
-     * @param index Index of element.
-     * @return Reference to element.
-     */
-    T& operator[](size_t index) const {
-        ecs_assert(index < m_count, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
-        ecs_assert(!index || !m_is_shared, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(m_array != nullptr, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
-        return m_array[index];
-    }
-
-    /** Return first element of component array.
-     * This operator is typically used when the column is shared.
-     *
-     * @return Reference to the first element.
-     */
-    T& operator*() const {
-      ecs_assert(m_array != nullptr, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
-      return *m_array;
-    }
-
-    /** Return first element of component array.
-     * This operator is typically used when the column is shared.
-     *
-     * @return Pointer to the first element.
-     */
-    T* operator->() const {
-        ecs_assert(m_array != nullptr, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
-        return m_array;
-    }
-
-protected:
-    T* m_array;
-    size_t m_count;
-    bool m_is_shared;
-};
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
 namespace _ {
@@ -338,9 +237,7 @@ public:
      */
     template <typename T, typename A = actual_type_t<T>,
         typename std::enable_if<std::is_const<T>::value, void>::type* = nullptr>
-    flecs::column<A> field(int32_t index) const {
-        return get_field<A>(index);
-    }
+    flecs::field<A> field(int32_t index) const;
 
     /** Get read/write access to field data.
      * If the matched id for the specified field does not match with the provided
@@ -353,11 +250,7 @@ public:
     template <typename T, typename A = actual_type_t<T>,
         typename std::enable_if<
             std::is_const<T>::value == false, void>::type* = nullptr>
-    flecs::column<A> field(int32_t index) const {
-        ecs_assert(!ecs_field_is_readonly(m_iter, index),
-            ECS_ACCESS_VIOLATION, NULL);
-        return get_field<A>(index);
-    }
+    flecs::field<A> field(int32_t index) const;
 
     /** Get unchecked access to field data.
      * Unchecked access is required when a system does not know the type of a
@@ -365,16 +258,40 @@ public:
      *
      * @param index The field index.
      */
-    flecs::untyped_column field(int32_t index) const {
+    flecs::untyped_field field(int32_t index) const {
+        ecs_assert(!(m_iter->flags & EcsIterCppEach), ECS_INVALID_OPERATION,
+            "cannot .field from .each, use .field_at(%d, row) instead", index);
         return get_unchecked_field(index);
+    }
+
+    /** Get pointer to field at row. */
+    void* field_at(int32_t index, size_t row) const {
+        return get_unchecked_field(index)[row];
+    }
+
+    /** Get reference to field at row. */
+    template <typename T, typename A = actual_type_t<T>,
+        typename std::enable_if<std::is_const<T>::value, void>::type* = nullptr>
+    const A& field_at(int32_t index, size_t row) const {
+        return get_field<A>(index)[row];
+    }
+
+    /** Get reference to field at row. */
+    template <typename T, typename A = actual_type_t<T>,
+        typename std::enable_if<
+            std::is_const<T>::value == false, void>::type* = nullptr>
+    A& field_at(int32_t index, size_t row) const {
+        ecs_assert(!ecs_field_is_readonly(m_iter, index),
+            ECS_ACCESS_VIOLATION, NULL);
+        return get_field<A>(index)[row];
     }
 
     /** Get readonly access to entity ids.
      *
      * @return The entity ids.
      */
-    flecs::column<const flecs::entity_t> entities() const {
-        return flecs::column<const flecs::entity_t>(m_iter->entities, static_cast<size_t>(m_iter->count), false);
+    flecs::field<const flecs::entity_t> entities() const {
+        return flecs::field<const flecs::entity_t>(m_iter->entities, static_cast<size_t>(m_iter->count), false);
     }
 
     /** Obtain the total number of tables the iterator will iterate over. */
@@ -419,7 +336,7 @@ public:
 private:
     /* Get field, check if correct type is used */
     template <typename T, typename A = actual_type_t<T>>
-    flecs::column<T> get_field(int32_t index) const {
+    flecs::field<T> get_field(int32_t index) const {
 
 #ifndef FLECS_NDEBUG
         ecs_entity_t term_id = ecs_field_id(m_iter, index);
@@ -442,12 +359,12 @@ private:
             count = static_cast<size_t>(m_iter->count);
         }
 
-        return flecs::column<A>(
+        return flecs::field<A>(
             static_cast<T*>(ecs_field_w_size(m_iter, sizeof(A), index)),
             count, is_shared);
     }
 
-    flecs::untyped_column get_unchecked_field(int32_t index) const {
+    flecs::untyped_field get_unchecked_field(int32_t index) const {
         size_t count;
         size_t size = ecs_field_size(m_iter, index);
         bool is_shared = !ecs_field_is_self(m_iter, index);
@@ -463,7 +380,7 @@ private:
             count = static_cast<size_t>(m_iter->count);
         }
 
-        return flecs::untyped_column(
+        return flecs::untyped_field(
             ecs_field_w_size(m_iter, 0, index), size, count, is_shared);
     }
 

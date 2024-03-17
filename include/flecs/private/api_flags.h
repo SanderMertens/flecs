@@ -112,6 +112,7 @@ extern "C" {
 #define EcsIterTrivialSearchNoData     (1u << 13u) /* Trivial iterator w/no data */
 #define EcsIterTrivialTest             (1u << 14u) /* Trivial test mode (constrained $this) */
 #define EcsIterTrivialSearchWildcard   (1u << 15u) /* Trivial search with wildcard ids */
+#define EcsIterCppEach                 (1u << 16u) /* Uses C++ 'each' iterator */
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Event flags (used by ecs_event_decs_t::flags)

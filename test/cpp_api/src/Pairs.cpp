@@ -147,7 +147,7 @@ void Pairs_system_1_pair_instance(void) {
     ecs.system<>()
         .expr("(Pair, *)")
         .iter([&](flecs::iter it) {
-            flecs::column<Pair> tr(it, 1);
+            flecs::field<Pair> tr(it, 1);
             invoke_count ++;            
             for (auto i : it) {
                 entity_count ++;
@@ -176,7 +176,7 @@ void Pairs_system_2_pair_instances(void) {
     ecs.system<>()
         .expr("(Pair, *)")
         .iter([&](flecs::iter it) {
-            flecs::column<Pair> tr(it, 1);
+            flecs::field<Pair> tr(it, 1);
             invoke_count ++;            
             for (auto i : it) {
                 entity_count ++;
