@@ -7,6 +7,9 @@
 
 #ifdef FLECS_REST
 
+/* Retain captured commands for one minute at 60 FPS */
+#define FLECS_REST_COMMAND_RETAIN_COUNT (60 * 60)
+
 static ECS_TAG_DECLARE(EcsRestPlecs);
 
 typedef struct {
@@ -48,8 +51,7 @@ static ECS_DTOR(EcsRest, ptr, {
     if (impl) {
         impl->rc --;
         if (!impl->rc) {
-            ecs_http_server_fini(impl->srv);
-            ecs_os_free(impl);
+            ecs_rest_server_fini(impl->srv);
         }
     }
     ecs_os_free(ptr->ipaddr);
@@ -944,7 +946,69 @@ bool flecs_rest_cmd_has_id(
     case EcsCmdEnable:
     case EcsCmdEvent:
     case EcsCmdSkip:
+    default:
         return true;
+    }
+}
+
+static
+void flecs_rest_server_garbage_collect_all(
+    ecs_rest_ctx_t *impl)
+{
+    ecs_map_iter_t it = ecs_map_iter(&impl->cmd_captures);
+
+    while (ecs_map_next(&it)) {
+        ecs_rest_cmd_capture_t *capture = ecs_map_ptr(&it);
+        int32_t i, count = ecs_vec_count(&capture->syncs);
+        ecs_rest_cmd_sync_capture_t *syncs = ecs_vec_first(&capture->syncs);
+        for (i = 0; i < count; i ++) {
+            ecs_rest_cmd_sync_capture_t *sync = &syncs[i];
+            ecs_os_free(sync->cmds);
+        }
+        ecs_vec_fini_t(NULL, &capture->syncs, ecs_rest_cmd_capture_t);
+        ecs_os_free(capture);
+    }
+
+    ecs_map_fini(&impl->cmd_captures);
+}
+
+static
+void flecs_rest_server_garbage_collect(
+    ecs_world_t *world,
+    ecs_rest_ctx_t *impl)
+{
+    const ecs_world_info_t *wi = ecs_get_world_info(world);
+    ecs_map_iter_t it = ecs_map_iter(&impl->cmd_captures);
+    ecs_vec_t removed_frames = {0};
+
+    while (ecs_map_next(&it)) {
+        int64_t frame = flecs_uto(int64_t, ecs_map_key(&it));
+        if ((wi->frame_count_total - frame) > FLECS_REST_COMMAND_RETAIN_COUNT) {
+            ecs_rest_cmd_capture_t *capture = ecs_map_ptr(&it);
+            int32_t i, count = ecs_vec_count(&capture->syncs);
+            ecs_rest_cmd_sync_capture_t *syncs = ecs_vec_first(&capture->syncs);
+            for (i = 0; i < count; i ++) {
+                ecs_rest_cmd_sync_capture_t *sync = &syncs[i];
+                ecs_os_free(sync->cmds);
+            }
+            ecs_vec_fini_t(NULL, &capture->syncs, ecs_rest_cmd_capture_t);
+            ecs_os_free(capture);
+
+            ecs_vec_init_if_t(&removed_frames, int64_t);
+            ecs_vec_append_t(NULL, &removed_frames, int64_t)[0] = frame;
+        }
+    }
+
+    int32_t i, count = ecs_vec_count(&removed_frames);
+    if (count) {
+        int64_t *frames = ecs_vec_first(&removed_frames);
+        if (count) {
+            for (i = 0; i < count; i ++) {
+                ecs_map_remove(&impl->cmd_captures, 
+                    flecs_ito(uint64_t, frames[i]));
+            }
+        }
+        ecs_vec_fini_t(NULL, &removed_frames, int64_t);
     }
 }
 
@@ -1069,6 +1133,9 @@ bool flecs_rest_reply_commands_capture(
     world->on_commands = flecs_rest_on_commands;
     world->on_commands_ctx = capture;
 
+    /* Run garbage collection so that requests don't linger */
+    flecs_rest_server_garbage_collect(world, impl);
+
     return true;
 }
 
@@ -1083,6 +1150,7 @@ bool flecs_rest_reply_commands_request(
     char *frame_str = &req->path[15];
     int32_t frame = atoi(frame_str);
     
+    ecs_map_init_if(&impl->cmd_captures, &world->allocator);
     const ecs_rest_cmd_capture_t *capture = ecs_map_get_deref(
         &impl->cmd_captures, ecs_rest_cmd_capture_t, 
         flecs_ito(uint64_t, frame));
@@ -1214,8 +1282,9 @@ ecs_http_server_t* ecs_rest_server_init(
 void ecs_rest_server_fini(
     ecs_http_server_t *srv)
 {
-    ecs_rest_ctx_t *srv_ctx = ecs_http_server_ctx(srv);
-    ecs_os_free(srv_ctx);
+    ecs_rest_ctx_t *impl = ecs_http_server_ctx(srv);
+    flecs_rest_server_garbage_collect_all(impl);
+    ecs_os_free(impl);
     ecs_http_server_fini(srv);
 }
 
@@ -1264,6 +1333,7 @@ void DequeueRest(ecs_iter_t *it) {
         ecs_rest_ctx_t *ctx = rest[i].impl;
         if (ctx) {
             ecs_http_server_dequeue(ctx->srv, it->delta_time);
+            flecs_rest_server_garbage_collect(it->world, ctx);
         }
     } 
 }
