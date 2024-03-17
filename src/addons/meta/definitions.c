@@ -77,6 +77,7 @@ void flecs_meta_import_core_definitions(
             { .name = "version_patch", .type = ecs_id(ecs_i16_t) },
             { .name = "debug", .type = ecs_id(ecs_bool_t) },
             { .name = "sanitize", .type = ecs_id(ecs_bool_t) },
+            { .name = "perf_trace", .type = ecs_id(ecs_bool_t) }
         }
     });
 }

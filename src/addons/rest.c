@@ -7,13 +7,27 @@
 
 #ifdef FLECS_REST
 
+/* Retain captured commands for one minute at 60 FPS */
+#define FLECS_REST_COMMAND_RETAIN_COUNT (60 * 60)
+
 static ECS_TAG_DECLARE(EcsRestPlecs);
 
 typedef struct {
     ecs_world_t *world;
     ecs_http_server_t *srv;
     int32_t rc;
+    ecs_map_t cmd_captures;
 } ecs_rest_ctx_t;
+
+typedef struct {
+    char *cmds;
+    ecs_time_t start_time;
+    ecs_strbuf_t buf;
+} ecs_rest_cmd_sync_capture_t;
+
+typedef struct {
+    ecs_vec_t syncs;
+} ecs_rest_cmd_capture_t;
 
 static ECS_COPY(EcsRest, dst, src, {
     ecs_rest_ctx_t *impl = src->impl;
@@ -37,8 +51,7 @@ static ECS_DTOR(EcsRest, ptr, {
     if (impl) {
         impl->rc --;
         if (!impl->rc) {
-            ecs_http_server_fini(impl->srv);
-            ecs_os_free(impl);
+            ecs_rest_server_fini(impl->srv);
         }
     }
     ecs_os_free(ptr->ipaddr);
@@ -883,6 +896,293 @@ bool flecs_rest_reply_tables(
 }
 
 static
+const char* flecs_rest_cmd_kind_to_str(
+    ecs_cmd_kind_t kind)
+{
+    switch(kind) {
+    case EcsCmdClone: return "Clone";
+    case EcsCmdBulkNew: return "BulkNew";
+    case EcsCmdAdd: return "Add";
+    case EcsCmdRemove: return "Remove";
+    case EcsCmdSet: return "Set";
+    case EcsCmdEmplace: return "Emplace";
+    case EcsCmdEnsure: return "Ensure";
+    case EcsCmdModified: return "Modified";
+    case EcsCmdModifiedNoHook: return "ModifiedNoHook";
+    case EcsCmdAddModified: return "AddModified";
+    case EcsCmdPath: return "Path";
+    case EcsCmdDelete: return "Delete";
+    case EcsCmdClear: return "Clear";
+    case EcsCmdOnDeleteAction: return "OnDeleteAction";
+    case EcsCmdEnable: return "Enable";
+    case EcsCmdDisable: return "Disable";
+    case EcsCmdEvent: return "Event";
+    case EcsCmdSkip: return "Skip";
+    default: return "Unknown";
+    }
+}
+
+static
+bool flecs_rest_cmd_has_id(
+    const ecs_cmd_t *cmd)
+{
+    switch(cmd->kind) {
+    case EcsCmdClear:
+    case EcsCmdDelete:
+    case EcsCmdClone:
+    case EcsCmdDisable:
+    case EcsCmdPath:
+        return false;
+    case EcsCmdBulkNew:
+    case EcsCmdAdd:
+    case EcsCmdRemove:
+    case EcsCmdSet:
+    case EcsCmdEmplace:
+    case EcsCmdEnsure:
+    case EcsCmdModified:
+    case EcsCmdModifiedNoHook:
+    case EcsCmdAddModified:
+    case EcsCmdOnDeleteAction:
+    case EcsCmdEnable:
+    case EcsCmdEvent:
+    case EcsCmdSkip:
+    default:
+        return true;
+    }
+}
+
+static
+void flecs_rest_server_garbage_collect_all(
+    ecs_rest_ctx_t *impl)
+{
+    ecs_map_iter_t it = ecs_map_iter(&impl->cmd_captures);
+
+    while (ecs_map_next(&it)) {
+        ecs_rest_cmd_capture_t *capture = ecs_map_ptr(&it);
+        int32_t i, count = ecs_vec_count(&capture->syncs);
+        ecs_rest_cmd_sync_capture_t *syncs = ecs_vec_first(&capture->syncs);
+        for (i = 0; i < count; i ++) {
+            ecs_rest_cmd_sync_capture_t *sync = &syncs[i];
+            ecs_os_free(sync->cmds);
+        }
+        ecs_vec_fini_t(NULL, &capture->syncs, ecs_rest_cmd_sync_capture_t);
+        ecs_os_free(capture);
+    }
+
+    ecs_map_fini(&impl->cmd_captures);
+}
+
+static
+void flecs_rest_server_garbage_collect(
+    ecs_world_t *world,
+    ecs_rest_ctx_t *impl)
+{
+    const ecs_world_info_t *wi = ecs_get_world_info(world);
+    ecs_map_iter_t it = ecs_map_iter(&impl->cmd_captures);
+    ecs_vec_t removed_frames = {0};
+
+    while (ecs_map_next(&it)) {
+        int64_t frame = flecs_uto(int64_t, ecs_map_key(&it));
+        if ((wi->frame_count_total - frame) > FLECS_REST_COMMAND_RETAIN_COUNT) {
+            ecs_rest_cmd_capture_t *capture = ecs_map_ptr(&it);
+            int32_t i, count = ecs_vec_count(&capture->syncs);
+            ecs_rest_cmd_sync_capture_t *syncs = ecs_vec_first(&capture->syncs);
+            for (i = 0; i < count; i ++) {
+                ecs_rest_cmd_sync_capture_t *sync = &syncs[i];
+                ecs_os_free(sync->cmds);
+            }
+            ecs_vec_fini_t(NULL, &capture->syncs, ecs_rest_cmd_sync_capture_t);
+            ecs_os_free(capture);
+
+            ecs_vec_init_if_t(&removed_frames, int64_t);
+            ecs_vec_append_t(NULL, &removed_frames, int64_t)[0] = frame;
+        }
+    }
+
+    int32_t i, count = ecs_vec_count(&removed_frames);
+    if (count) {
+        int64_t *frames = ecs_vec_first(&removed_frames);
+        if (count) {
+            for (i = 0; i < count; i ++) {
+                ecs_map_remove(&impl->cmd_captures, 
+                    flecs_ito(uint64_t, frames[i]));
+            }
+        }
+        ecs_vec_fini_t(NULL, &removed_frames, int64_t);
+    }
+}
+
+static
+void flecs_rest_cmd_to_json(
+    ecs_world_t *world,
+    ecs_strbuf_t *buf,
+    ecs_cmd_t *cmd)
+{
+    ecs_strbuf_list_push(buf, "{", ",");
+
+    ecs_strbuf_list_appendlit(buf, "\"kind\":\"");
+        ecs_strbuf_appendstr(buf, flecs_rest_cmd_kind_to_str(cmd->kind));
+        ecs_strbuf_appendlit(buf, "\"");
+
+    if (flecs_rest_cmd_has_id(cmd)) {
+        ecs_strbuf_list_appendlit(buf, "\"id\":\"");
+            char *idstr = ecs_id_str(world, cmd->id);
+            ecs_strbuf_appendstr(buf, idstr);
+            ecs_strbuf_appendlit(buf, "\"");
+            ecs_os_free(idstr);
+    }
+
+    if (cmd->system) {
+        ecs_strbuf_list_appendlit(buf, "\"system\":\"");
+            char *sysstr = ecs_get_fullpath(world, cmd->system);
+            ecs_strbuf_appendstr(buf, sysstr);
+            ecs_strbuf_appendlit(buf, "\"");
+            ecs_os_free(sysstr); 
+    }
+
+    if (cmd->kind == EcsCmdBulkNew) {
+        /* Todo */
+    } else if (cmd->kind == EcsCmdEvent) {
+        /* Todo */
+    } else {
+        if (cmd->entity) {
+            ecs_strbuf_list_appendlit(buf, "\"entity\":\"");
+                char *path = ecs_get_path_w_sep(world, 0, cmd->entity, ".", "");
+                ecs_strbuf_appendstr(buf, path);
+                ecs_strbuf_appendlit(buf, "\"");
+                ecs_os_free(path);
+
+            ecs_strbuf_list_appendlit(buf, "\"is_alive\":\"");
+                if (ecs_is_alive(world, cmd->entity)) {
+                    ecs_strbuf_appendlit(buf, "true");
+                } else {
+                    ecs_strbuf_appendlit(buf, "false");
+                }
+                ecs_strbuf_appendlit(buf, "\"");
+
+            ecs_strbuf_list_appendlit(buf, "\"next_for_entity\":");
+                ecs_strbuf_appendint(buf, cmd->next_for_entity);
+        }
+    }
+
+    ecs_strbuf_list_pop(buf, "}");
+}
+
+static
+void flecs_rest_on_commands(
+    const ecs_stage_t *stage,
+    const ecs_vec_t *commands,
+    void *ctx)
+{
+    ecs_world_t *world = stage->world;
+    ecs_rest_cmd_capture_t *capture = ctx;
+    ecs_assert(capture != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (commands) {
+        ecs_vec_init_if_t(&capture->syncs, ecs_rest_cmd_sync_capture_t);
+        ecs_rest_cmd_sync_capture_t *sync = ecs_vec_append_t(
+            NULL, &capture->syncs, ecs_rest_cmd_sync_capture_t);
+
+        int32_t i, count = ecs_vec_count(commands);
+        ecs_cmd_t *cmds = ecs_vec_first(commands);
+        sync->buf = ECS_STRBUF_INIT;
+        ecs_strbuf_list_push(&sync->buf, "{", ",");
+        ecs_strbuf_list_appendlit(&sync->buf, "\"commands\":");
+            ecs_strbuf_list_push(&sync->buf, "[", ",");
+            for (i = 0; i < count; i ++) {
+                ecs_strbuf_list_next(&sync->buf);
+                flecs_rest_cmd_to_json(world, &sync->buf, &cmds[i]);
+            }
+            ecs_strbuf_list_pop(&sync->buf, "]");
+
+        /* Measure how long it takes to process queue */
+        sync->start_time = (ecs_time_t){0};
+        ecs_time_measure(&sync->start_time);
+    } else {
+        /* Finished processing queue, measure duration */
+        ecs_rest_cmd_sync_capture_t *sync = ecs_vec_last_t(
+            &capture->syncs, ecs_rest_cmd_sync_capture_t);
+        double duration = ecs_time_measure(&sync->start_time);
+
+        ecs_strbuf_list_appendlit(&sync->buf, "\"duration\":");
+        ecs_strbuf_appendflt(&sync->buf, duration, '"');
+        ecs_strbuf_list_pop(&sync->buf, "}");
+
+        sync->cmds = ecs_strbuf_get(&sync->buf);
+    }
+}
+
+static
+bool flecs_rest_reply_commands_capture(
+    ecs_world_t *world,
+    ecs_rest_ctx_t *impl,
+    const ecs_http_request_t* req,
+    ecs_http_reply_t *reply)
+{
+    (void)req;
+    const ecs_world_info_t *wi = ecs_get_world_info(world);
+    ecs_strbuf_appendstr(&reply->body, "{");
+    ecs_strbuf_append(&reply->body, "\"frame\":%u", wi->frame_count_total);
+    ecs_strbuf_appendstr(&reply->body, "}");
+    
+    ecs_map_init_if(&impl->cmd_captures, &world->allocator);
+    ecs_rest_cmd_capture_t *capture = ecs_map_ensure_alloc_t(
+        &impl->cmd_captures, ecs_rest_cmd_capture_t, 
+        flecs_ito(uint64_t, wi->frame_count_total));
+
+    world->on_commands = flecs_rest_on_commands;
+    world->on_commands_ctx = capture;
+
+    /* Run garbage collection so that requests don't linger */
+    flecs_rest_server_garbage_collect(world, impl);
+
+    return true;
+}
+
+static
+bool flecs_rest_reply_commands_request(
+    ecs_world_t *world,
+    ecs_rest_ctx_t *impl,
+    const ecs_http_request_t* req,
+    ecs_http_reply_t *reply)
+{
+    (void)world;
+    char *frame_str = &req->path[15];
+    int32_t frame = atoi(frame_str);
+    
+    ecs_map_init_if(&impl->cmd_captures, &world->allocator);
+    const ecs_rest_cmd_capture_t *capture = ecs_map_get_deref(
+        &impl->cmd_captures, ecs_rest_cmd_capture_t, 
+        flecs_ito(uint64_t, frame));
+
+    if (!capture) {
+        ecs_strbuf_appendstr(&reply->body, "{");
+        ecs_strbuf_append(&reply->body, 
+            "\"error\": \"no capture for frame %u\"", frame);
+        ecs_strbuf_appendstr(&reply->body, "}"); 
+        reply->code = 404;
+        return true;
+    }
+
+    ecs_strbuf_appendstr(&reply->body, "{");
+    ecs_strbuf_list_append(&reply->body, "\"syncs\":");
+    ecs_strbuf_list_push(&reply->body, "[", ",");
+
+    int32_t i, count = ecs_vec_count(&capture->syncs);
+    ecs_rest_cmd_sync_capture_t *syncs = ecs_vec_first(&capture->syncs);
+
+    for (i = 0; i < count; i ++) {
+        ecs_rest_cmd_sync_capture_t *sync = &syncs[i];
+        ecs_strbuf_list_appendstr(&reply->body, sync->cmds);
+    }
+
+    ecs_strbuf_list_pop(&reply->body, "]");
+    ecs_strbuf_appendstr(&reply->body, "}");
+
+    return true;
+}
+
+static
 bool flecs_rest_reply(
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply,
@@ -918,6 +1218,14 @@ bool flecs_rest_reply(
         /* Tables endpoint */
         } else if (!ecs_os_strncmp(req->path, "tables", 6)) {
             return flecs_rest_reply_tables(world, req, reply);
+
+        /* Commands capture endpoint */
+        } else if (!ecs_os_strncmp(req->path, "commands/capture", 16)) {
+            return flecs_rest_reply_commands_capture(world, impl, req, reply);
+
+        /* Commands request endpoint (request commands from specific frame) */
+        } else if (!ecs_os_strncmp(req->path, "commands/frame/", 15)) {
+            return flecs_rest_reply_commands_request(world, impl, req, reply);
         }
 
     } else if (req->method == EcsHttpPut) {
@@ -974,8 +1282,9 @@ ecs_http_server_t* ecs_rest_server_init(
 void ecs_rest_server_fini(
     ecs_http_server_t *srv)
 {
-    ecs_rest_ctx_t *srv_ctx = ecs_http_server_ctx(srv);
-    ecs_os_free(srv_ctx);
+    ecs_rest_ctx_t *impl = ecs_http_server_ctx(srv);
+    flecs_rest_server_garbage_collect_all(impl);
+    ecs_os_free(impl);
     ecs_http_server_fini(srv);
 }
 
@@ -993,7 +1302,7 @@ void flecs_on_set_rest(ecs_iter_t *it) {
             &(ecs_http_server_desc_t){ 
                 .ipaddr = rest[i].ipaddr, 
                 .port = rest[i].port,
-                .cache_timeout = 1.0
+                .cache_timeout = 0.2
             });
 
         if (!srv) {
@@ -1024,6 +1333,7 @@ void DequeueRest(ecs_iter_t *it) {
         ecs_rest_ctx_t *ctx = rest[i].impl;
         if (ctx) {
             ecs_http_server_dequeue(ctx->srv, it->delta_time);
+            flecs_rest_server_garbage_collect(it->world, ctx);
         }
     } 
 }

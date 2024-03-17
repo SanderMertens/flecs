@@ -71,8 +71,8 @@ typedef struct {
     double system_time_last;    /**< Time spent in systems */
     double merge_time_last;     /**< Time spent in merges */
 
-    /* Frame count */
     int64_t frame_count;        /**< Number of frames processed */
+    int64_t command_count;      /**< Number of commands processed */
 
     /* Build info */
     ecs_build_info_t build_info; /**< Build info */

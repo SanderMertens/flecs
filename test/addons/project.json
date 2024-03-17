@@ -1864,7 +1864,12 @@
                 "try_query",
                 "query",
                 "named_query",
-                "tables"
+                "tables",
+                "request_commands",
+                "request_commands_2_syncs",
+                "request_commands_no_frames",
+                "request_commands_no_commands",
+                "request_commands_garbage_collect"
             ]
         }, {
             "id": "Metrics",

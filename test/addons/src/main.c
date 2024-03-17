@@ -1794,6 +1794,11 @@ void Rest_try_query(void);
 void Rest_query(void);
 void Rest_named_query(void);
 void Rest_tables(void);
+void Rest_request_commands(void);
+void Rest_request_commands_2_syncs(void);
+void Rest_request_commands_no_frames(void);
+void Rest_request_commands_no_commands(void);
+void Rest_request_commands_garbage_collect(void);
 
 // Testsuite 'Metrics'
 void Metrics_member_gauge_1_entity(void);
@@ -8815,6 +8820,26 @@ bake_test_case Rest_testcases[] = {
     {
         "tables",
         Rest_tables
+    },
+    {
+        "request_commands",
+        Rest_request_commands
+    },
+    {
+        "request_commands_2_syncs",
+        Rest_request_commands_2_syncs
+    },
+    {
+        "request_commands_no_frames",
+        Rest_request_commands_no_frames
+    },
+    {
+        "request_commands_no_commands",
+        Rest_request_commands_no_commands
+    },
+    {
+        "request_commands_garbage_collect",
+        Rest_request_commands_garbage_collect
     }
 };
 
@@ -9353,7 +9378,7 @@ static bake_test_suite suites[] = {
         "Rest",
         NULL,
         NULL,
-        8,
+        13,
         Rest_testcases
     },
     {
