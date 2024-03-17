@@ -126,8 +126,8 @@ typedef struct {
     uint16_t port;                    /**< HTTP port */
     const char *ipaddr;               /**< Interface to listen on (optional) */
     int32_t send_queue_wait_ms;       /**< Send queue wait time when empty */
-    ecs_ftime_t cache_timeout;             /**< Cache invalidation timeout (0 disables caching) */
-    ecs_ftime_t cache_purge_timeout;       /**< Cache purge timeout (for purging cache entries) */
+    double cache_timeout;             /**< Cache invalidation timeout (0 disables caching) */
+    double cache_purge_timeout;       /**< Cache purge timeout (for purging cache entries) */
 } ecs_http_server_desc_t;
 
 /** Create server.

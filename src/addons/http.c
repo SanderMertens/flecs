@@ -134,7 +134,7 @@ typedef struct ecs_http_request_entry_t {
     char *content;
     int32_t content_length;
     int code;
-    ecs_ftime_t time;
+    double time;
 } ecs_http_request_entry_t;
 
 /* HTTP server struct */
@@ -149,8 +149,8 @@ struct ecs_http_server_t {
     ecs_http_reply_action_t callback;
     void *ctx;
 
-    ecs_ftime_t cache_timeout;
-    ecs_ftime_t cache_purge_timeout;
+    double cache_timeout;
+    double cache_purge_timeout;
 
     ecs_sparse_t connections; /* sparse<http_connection_t> */
     ecs_sparse_t requests; /* sparse<http_request_t> */
@@ -553,7 +553,7 @@ ecs_http_request_entry_t* http_find_request_entry(
         &srv->request_cache, &key, ecs_http_request_entry_t);
 
     if (entry) {
-        ecs_ftime_t tf = (ecs_ftime_t)ecs_time_measure(&t);
+        double tf = ecs_time_measure(&t);
         if ((tf - entry->time) < srv->cache_timeout) {
             return entry;
         }
@@ -588,7 +588,7 @@ void http_insert_request_entry(
     }
 
     ecs_time_t t = {0, 0};
-    entry->time = (ecs_ftime_t)ecs_time_measure(&t);
+    entry->time = ecs_time_measure(&t);
     entry->content_length = ecs_strbuf_written(&reply->body);
     entry->content = ecs_strbuf_get(&reply->body);
     entry->code = reply->code;
@@ -1366,7 +1366,7 @@ void http_purge_request_cache(
     bool fini)
 {
     ecs_time_t t = {0, 0};
-    ecs_ftime_t time = (ecs_ftime_t)ecs_time_measure(&t);
+    double time = ecs_time_measure(&t);
     ecs_map_iter_t it = ecs_map_iter(&srv->request_cache.impl);
     while (ecs_map_next(&it)) {
         ecs_hm_bucket_t *bucket = ecs_map_ptr(&it);

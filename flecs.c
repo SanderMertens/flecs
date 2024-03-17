@@ -26507,7 +26507,7 @@ typedef struct ecs_http_request_entry_t {
     char *content;
     int32_t content_length;
     int code;
-    ecs_ftime_t time;
+    double time;
 } ecs_http_request_entry_t;
 
 /* HTTP server struct */
@@ -26522,8 +26522,8 @@ struct ecs_http_server_t {
     ecs_http_reply_action_t callback;
     void *ctx;
 
-    ecs_ftime_t cache_timeout;
-    ecs_ftime_t cache_purge_timeout;
+    double cache_timeout;
+    double cache_purge_timeout;
 
     ecs_sparse_t connections; /* sparse<http_connection_t> */
     ecs_sparse_t requests; /* sparse<http_request_t> */
@@ -26926,7 +26926,7 @@ ecs_http_request_entry_t* http_find_request_entry(
         &srv->request_cache, &key, ecs_http_request_entry_t);
 
     if (entry) {
-        ecs_ftime_t tf = (ecs_ftime_t)ecs_time_measure(&t);
+        double tf = ecs_time_measure(&t);
         if ((tf - entry->time) < srv->cache_timeout) {
             return entry;
         }
@@ -26961,7 +26961,7 @@ void http_insert_request_entry(
     }
 
     ecs_time_t t = {0, 0};
-    entry->time = (ecs_ftime_t)ecs_time_measure(&t);
+    entry->time = ecs_time_measure(&t);
     entry->content_length = ecs_strbuf_written(&reply->body);
     entry->content = ecs_strbuf_get(&reply->body);
     entry->code = reply->code;
@@ -27739,7 +27739,7 @@ void http_purge_request_cache(
     bool fini)
 {
     ecs_time_t t = {0, 0};
-    ecs_ftime_t time = (ecs_ftime_t)ecs_time_measure(&t);
+    double time = ecs_time_measure(&t);
     ecs_map_iter_t it = ecs_map_iter(&srv->request_cache.impl);
     while (ecs_map_next(&it)) {
         ecs_hm_bucket_t *bucket = ecs_map_ptr(&it);
@@ -35627,7 +35627,7 @@ void flecs_rest_server_garbage_collect_all(
             ecs_rest_cmd_sync_capture_t *sync = &syncs[i];
             ecs_os_free(sync->cmds);
         }
-        ecs_vec_fini_t(NULL, &capture->syncs, ecs_rest_cmd_capture_t);
+        ecs_vec_fini_t(NULL, &capture->syncs, ecs_rest_cmd_sync_capture_t);
         ecs_os_free(capture);
     }
 
@@ -35653,7 +35653,7 @@ void flecs_rest_server_garbage_collect(
                 ecs_rest_cmd_sync_capture_t *sync = &syncs[i];
                 ecs_os_free(sync->cmds);
             }
-            ecs_vec_fini_t(NULL, &capture->syncs, ecs_rest_cmd_capture_t);
+            ecs_vec_fini_t(NULL, &capture->syncs, ecs_rest_cmd_sync_capture_t);
             ecs_os_free(capture);
 
             ecs_vec_init_if_t(&removed_frames, int64_t);
@@ -35964,7 +35964,7 @@ void flecs_on_set_rest(ecs_iter_t *it) {
             &(ecs_http_server_desc_t){ 
                 .ipaddr = rest[i].ipaddr, 
                 .port = rest[i].port,
-                .cache_timeout = 0.2f
+                .cache_timeout = 0.2
             });
 
         if (!srv) {

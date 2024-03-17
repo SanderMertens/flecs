@@ -965,7 +965,7 @@ void flecs_rest_server_garbage_collect_all(
             ecs_rest_cmd_sync_capture_t *sync = &syncs[i];
             ecs_os_free(sync->cmds);
         }
-        ecs_vec_fini_t(NULL, &capture->syncs, ecs_rest_cmd_capture_t);
+        ecs_vec_fini_t(NULL, &capture->syncs, ecs_rest_cmd_sync_capture_t);
         ecs_os_free(capture);
     }
 
@@ -991,7 +991,7 @@ void flecs_rest_server_garbage_collect(
                 ecs_rest_cmd_sync_capture_t *sync = &syncs[i];
                 ecs_os_free(sync->cmds);
             }
-            ecs_vec_fini_t(NULL, &capture->syncs, ecs_rest_cmd_capture_t);
+            ecs_vec_fini_t(NULL, &capture->syncs, ecs_rest_cmd_sync_capture_t);
             ecs_os_free(capture);
 
             ecs_vec_init_if_t(&removed_frames, int64_t);
@@ -1302,7 +1302,7 @@ void flecs_on_set_rest(ecs_iter_t *it) {
             &(ecs_http_server_desc_t){ 
                 .ipaddr = rest[i].ipaddr, 
                 .port = rest[i].port,
-                .cache_timeout = 0.2f
+                .cache_timeout = 0.2
             });
 
         if (!srv) {
