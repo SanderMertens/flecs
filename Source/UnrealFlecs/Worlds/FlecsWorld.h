@@ -6,7 +6,6 @@
 #include "flecs.h"
 #include "Entities/FlecsId.h"
 #include "Systems/FlecsSystem.h"
-#include "UObject/Object.h"
 #include "FlecsWorld.generated.h"
 
 USTRUCT(BlueprintType)
@@ -182,8 +181,12 @@ public:
 		SetSingleton<FName>(InName);
 
 		#if WITH_EDITOR
+
+		const char* Name = TCHAR_TO_ANSI(*InName.ToString());
+
+		World->entity(EcsWorld).set_doc_name(Name);
 		
-		World->entity<FName>().set_doc_name(TCHAR_TO_ANSI(*InName.ToString()));
+		World->entity<FName>().set_doc_name(Name);
 
 		#endif // WITH_EDITOR
 	}
