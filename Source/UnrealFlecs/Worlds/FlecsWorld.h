@@ -242,6 +242,12 @@ public:
 		World->quit();
 	}
 
+	FORCEINLINE void DestroyWorld()
+	{
+		delete World;
+		World = nullptr;
+	}
+
 	FORCEINLINE void SetPipeline(const flecs::entity& InPipeline) const
 	{
 		World->set_pipeline(InPipeline);
@@ -277,6 +283,16 @@ public:
 	FORCEINLINE NO_DISCARD double GetDeltaTime() const
 	{
 		return World->delta_time();
+	}
+
+	FORCEINLINE NO_DISCARD flecs::entity GetAlive(const FFlecsId& InId) const
+	{
+		return World->get_alive(InId.GetFlecsId());
+	}
+
+	FORCEINLINE flecs::entity MakeAlive(const FFlecsId& InId) const
+	{
+		return World->make_alive(InId.GetFlecsId());
 	}
 
 	template <typename ...TComponents>

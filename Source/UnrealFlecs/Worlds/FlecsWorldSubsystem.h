@@ -76,12 +76,12 @@ public:
 
 	virtual void Deinitialize() override
 	{
-		Super::Deinitialize();
-
-		for (const FFlecsWorld& World : Worlds)
+		for (FFlecsWorld& World : Worlds)
 		{
-			delete &World;
+			World.DestroyWorld();
 		}
+		
+		Super::Deinitialize();
 	}
 
 	virtual TStatId GetStatId() const override
