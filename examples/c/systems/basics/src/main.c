@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
         .entity = ecs_entity(ecs, {
             .name = "Move" 
         }),
-        .query.filter.terms = {
+        .query.terms = {
             { .id = ecs_id(Position) },
             { .id = ecs_id(Velocity), .inout = EcsIn }
         },

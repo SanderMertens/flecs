@@ -17,7 +17,7 @@ void Alerts_one_active_alert(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_velocity"),
-        .filter.expr = "Position, !Velocity"
+        .query.expr = "Position, !Velocity"
     });
     test_assert(alert != 0);
 
@@ -29,9 +29,9 @@ void Alerts_one_active_alert(void) {
     {
         test_assert(ecs_get_alert_count(world, e2, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
         
         test_assert(it.entities[0] != 0);
@@ -44,8 +44,8 @@ void Alerts_one_active_alert(void) {
         test_assert(source != NULL);
         test_int(source->entity, e2);
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_progress(world, 1.0);
@@ -57,9 +57,9 @@ void Alerts_one_active_alert(void) {
     {
         test_assert(ecs_get_alert_count(world, e2, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
         
         test_assert(it.entities[0] != 0);
@@ -72,8 +72,8 @@ void Alerts_one_active_alert(void) {
         test_assert(source != NULL);
         test_int(source->entity, e2);
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_add(world, e2, Velocity);
@@ -107,12 +107,12 @@ void Alerts_two_active_alerts(void) {
 
     ecs_entity_t alert_1 = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_velocity"),
-        .filter.expr = "Position, !Velocity"
+        .query.expr = "Position, !Velocity"
     });
 
     ecs_entity_t alert_2 = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_mass"),
-        .filter.expr = "Position, !Mass"
+        .query.expr = "Position, !Mass"
     });
 
     ecs_progress(world, 1.0);
@@ -125,9 +125,9 @@ void Alerts_two_active_alerts(void) {
         test_assert(ecs_get_alert_count(world, e2, alert_2) == 1);
         test_assert(ecs_get_alert_count(world, e2, 0) == 2);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
         test_assert(it.entities[0] != 0);
         test_assert(ecs_get_parent(world, it.entities[0]) == alert_1);
@@ -140,7 +140,7 @@ void Alerts_two_active_alerts(void) {
             test_int(source->entity, e2);
         }
 
-        test_bool(ecs_filter_next(&it), true);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
         test_assert(it.entities[0] != 0);
         test_assert(ecs_get_parent(world, it.entities[0]) == alert_2);
@@ -153,8 +153,8 @@ void Alerts_two_active_alerts(void) {
             test_int(source->entity, e2);
         }
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_progress(world, 1.0);
@@ -168,9 +168,9 @@ void Alerts_two_active_alerts(void) {
         test_assert(ecs_get_alert_count(world, e2, alert_2) == 1);
         test_assert(ecs_get_alert_count(world, e2, 0) == 2);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
         test_assert(it.entities[0] != 0);
         test_assert(ecs_get_parent(world, it.entities[0]) == alert_1);
@@ -183,7 +183,7 @@ void Alerts_two_active_alerts(void) {
             test_int(source->entity, e2);
         }
 
-        test_bool(ecs_filter_next(&it), true);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
         test_assert(it.entities[0] != 0);
         test_assert(ecs_get_parent(world, it.entities[0]) == alert_2);
@@ -196,8 +196,8 @@ void Alerts_two_active_alerts(void) {
             test_int(source->entity, e2);
         }
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_add(world, e2, Mass);
@@ -213,9 +213,9 @@ void Alerts_two_active_alerts(void) {
         test_assert(ecs_get_alert_count(world, e2, alert_2) == 0);
         test_assert(ecs_get_alert_count(world, e2, 0) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
         
         test_assert(it.entities[0] != 0);
@@ -228,8 +228,8 @@ void Alerts_two_active_alerts(void) {
         test_assert(source != NULL);
         test_int(source->entity, e2);
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_add(world, e2, Velocity);
@@ -261,7 +261,7 @@ void Alerts_alert_message(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_velocity"),
-        .filter.expr = "Position, !Velocity",
+        .query.expr = "Position, !Velocity",
         .message = "missing velocity"
     });
     test_assert(alert != 0);
@@ -274,9 +274,9 @@ void Alerts_alert_message(void) {
     {
         test_assert(ecs_get_alert_count(world, e2, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
         
         test_assert(it.entities[0] != 0);
@@ -290,8 +290,8 @@ void Alerts_alert_message(void) {
         test_assert(source != NULL);
         test_int(source->entity, e2);
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_fini(world);
@@ -314,7 +314,7 @@ void Alerts_alert_message_w_this_var(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_velocity"),
-        .filter.expr = "Position, !Velocity",
+        .query.expr = "Position, !Velocity",
         .message = "$this: missing velocity"
     });
     test_assert(alert != 0);
@@ -327,9 +327,9 @@ void Alerts_alert_message_w_this_var(void) {
     {
         test_assert(ecs_get_alert_count(world, e2, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
         
         test_assert(it.entities[0] != 0);
@@ -343,8 +343,8 @@ void Alerts_alert_message_w_this_var(void) {
         test_assert(source != NULL);
         test_int(source->entity, e2);
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_fini(world);
@@ -370,7 +370,7 @@ void Alerts_alert_message_w_var(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_velocity"),
-        .filter.expr = "Position($this), ChildOf($this, $parent), !Position($parent)",
+        .query.expr = "Position($this), ChildOf($this, $parent), !Position($parent)",
         .message = "$this: parent $parent does not have Position"
     });
     test_assert(alert != 0);
@@ -383,9 +383,9 @@ void Alerts_alert_message_w_var(void) {
     {
         test_assert(ecs_get_alert_count(world, e2, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
         
         test_assert(it.entities[0] != 0);
@@ -399,8 +399,8 @@ void Alerts_alert_message_w_var(void) {
         test_assert(source != NULL);
         test_int(source->entity, e2);
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_fini(world);
@@ -427,7 +427,7 @@ void Alerts_alert_message_w_changed_var(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_velocity"),
-        .filter.expr = "Position($this), ChildOf($this, $parent), !Position($parent)",
+        .query.expr = "Position($this), ChildOf($this, $parent), !Position($parent)",
         .message = "$this: parent $parent does not have Position"
     });
     test_assert(alert != 0);
@@ -440,9 +440,9 @@ void Alerts_alert_message_w_changed_var(void) {
     {
         test_assert(ecs_get_alert_count(world, e2, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
         
         test_assert(it.entities[0] != 0);
@@ -456,8 +456,8 @@ void Alerts_alert_message_w_changed_var(void) {
         test_assert(source != NULL);
         test_int(source->entity, e2);
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_add_pair(world, e2, EcsChildOf, parent_3);
@@ -470,9 +470,9 @@ void Alerts_alert_message_w_changed_var(void) {
     {
         test_assert(ecs_get_alert_count(world, e2, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
         
         test_assert(it.entities[0] != 0);
@@ -485,8 +485,8 @@ void Alerts_alert_message_w_changed_var(void) {
         test_assert(source != NULL);
         test_int(source->entity, e2);
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_fini(world);
@@ -501,7 +501,7 @@ void Alerts_set_brief(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "has_position"),
-        .filter.expr = "Position",
+        .query.expr = "Position",
         .brief = "Entity has Position"
     });
     test_assert(alert != 0);
@@ -519,7 +519,7 @@ void Alerts_set_doc_name(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "has_position"),
-        .filter.expr = "Position",
+        .query.expr = "Position",
         .doc_name = "Has Position"
     });
     test_assert(alert != 0);
@@ -541,7 +541,7 @@ void Alerts_alert_instance_has_doc_name(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_velocity"),
-        .filter.expr = "Position, !Velocity"
+        .query.expr = "Position, !Velocity"
     });
     test_assert(alert != 0);
 
@@ -552,9 +552,9 @@ void Alerts_alert_instance_has_doc_name(void) {
     {
         test_assert(ecs_get_alert_count(world, e2, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
         
         test_assert(it.entities[0] != 0);
@@ -569,8 +569,8 @@ void Alerts_alert_instance_has_doc_name(void) {
 
         test_str(ecs_doc_get_name(world, it.entities[0]), "e2");
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_fini(world);
@@ -590,7 +590,7 @@ void Alerts_reraise_alert(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_velocity"),
-        .filter.expr = "Position, !Velocity"
+        .query.expr = "Position, !Velocity"
     });
     test_assert(alert != 0);
 
@@ -601,9 +601,9 @@ void Alerts_reraise_alert(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
         
         test_assert(it.entities[0] != 0);
@@ -616,8 +616,8 @@ void Alerts_reraise_alert(void) {
         test_assert(source != NULL);
         test_int(source->entity, e1);
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     /* Clear the alert */
@@ -639,9 +639,9 @@ void Alerts_reraise_alert(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
         
         test_assert(it.entities[0] != 0);
@@ -654,8 +654,8 @@ void Alerts_reraise_alert(void) {
         test_assert(source != NULL);
         test_int(source->entity, e1);
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_fini(world);
@@ -674,7 +674,7 @@ void Alerts_info_severity(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_velocity"),
-        .filter.expr = "Position, !Velocity",
+        .query.expr = "Position, !Velocity",
         .severity = EcsAlertInfo
     });
     test_assert(alert != 0);
@@ -687,9 +687,9 @@ void Alerts_info_severity(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
         
         test_assert(it.entities[0] != 0);
@@ -702,8 +702,8 @@ void Alerts_info_severity(void) {
         test_assert(source != NULL);
         test_int(source->entity, e1);
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_fini(world);
@@ -722,7 +722,7 @@ void Alerts_warning_severity(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_velocity"),
-        .filter.expr = "Position, !Velocity",
+        .query.expr = "Position, !Velocity",
         .severity = EcsAlertWarning
     });
     test_assert(alert != 0);
@@ -735,9 +735,9 @@ void Alerts_warning_severity(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
         
         test_assert(it.entities[0] != 0);
@@ -750,8 +750,8 @@ void Alerts_warning_severity(void) {
         test_assert(source != NULL);
         test_int(source->entity, e1);
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_fini(world);
@@ -770,7 +770,7 @@ void Alerts_error_severity(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_velocity"),
-        .filter.expr = "Position, !Velocity",
+        .query.expr = "Position, !Velocity",
         .severity = EcsAlertError
     });
     test_assert(alert != 0);
@@ -783,9 +783,9 @@ void Alerts_error_severity(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
         
         test_assert(it.entities[0] != 0);
@@ -798,8 +798,8 @@ void Alerts_error_severity(void) {
         test_assert(source != NULL);
         test_int(source->entity, e1);
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_fini(world);
@@ -822,7 +822,7 @@ void Alerts_expire_after_retain(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_velocity"),
-        .filter.expr = "Position, !Velocity",
+        .query.expr = "Position, !Velocity",
         .retain_period = 1.0
     });
     test_assert(alert != 0);
@@ -836,9 +836,9 @@ void Alerts_expire_after_retain(void) {
     {
         test_assert(ecs_get_alert_count(world, e2, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
         
         test_assert(it.entities[0] != 0);
@@ -855,8 +855,8 @@ void Alerts_expire_after_retain(void) {
         test_assert(ecs_has(world, ai, EcsMetricValue));
         test_int(ecs_get(world, ai, EcsMetricValue)->value, 1);
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_progress(world, 1.0);
@@ -914,7 +914,7 @@ void Alerts_revive_w_retain(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_velocity"),
-        .filter.expr = "Position, !Velocity",
+        .query.expr = "Position, !Velocity",
         .retain_period = 1.0
     });
     test_assert(alert != 0);
@@ -928,9 +928,9 @@ void Alerts_revive_w_retain(void) {
     {
         test_assert(ecs_get_alert_count(world, e2, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
         
         test_assert(it.entities[0] != 0);
@@ -947,8 +947,8 @@ void Alerts_revive_w_retain(void) {
         test_assert(ecs_has(world, ai, EcsMetricValue));
         test_int(ecs_get(world, ai, EcsMetricValue)->value, 1);
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_progress(world, 1.0);
@@ -1020,7 +1020,7 @@ void Alerts_severity_filter(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_velocity"),
-        .filter.expr = "Position, !Velocity",
+        .query.expr = "Position, !Velocity",
         .severity_filters[0] = {
             .severity = EcsAlertWarning,
             .with = ecs_id(Mass)
@@ -1036,9 +1036,9 @@ void Alerts_severity_filter(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
         
         test_assert(it.entities[0] != 0);
@@ -1051,8 +1051,8 @@ void Alerts_severity_filter(void) {
         test_assert(source != NULL);
         test_int(source->entity, e1);
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_add(world, e1, Mass);
@@ -1063,9 +1063,9 @@ void Alerts_severity_filter(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
         
         test_assert(it.entities[0] != 0);
@@ -1078,8 +1078,8 @@ void Alerts_severity_filter(void) {
         test_assert(source != NULL);
         test_int(source->entity, e1);
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_remove(world, e1, Mass);
@@ -1090,9 +1090,9 @@ void Alerts_severity_filter(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
         
         test_assert(it.entities[0] != 0);
@@ -1105,8 +1105,8 @@ void Alerts_severity_filter(void) {
         test_assert(source != NULL);
         test_int(source->entity, e1);
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_fini(world);
@@ -1127,7 +1127,7 @@ void Alerts_two_severity_filters(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_velocity"),
-        .filter.expr = "Position, !Velocity",
+        .query.expr = "Position, !Velocity",
         .severity_filters[0] = {
             .severity = EcsAlertWarning,
             .with = ecs_id(Mass)
@@ -1147,9 +1147,9 @@ void Alerts_two_severity_filters(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
         
         test_assert(it.entities[0] != 0);
@@ -1162,8 +1162,8 @@ void Alerts_two_severity_filters(void) {
         test_assert(source != NULL);
         test_int(source->entity, e1);
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_add(world, e1, Mass);
@@ -1174,9 +1174,9 @@ void Alerts_two_severity_filters(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
         
         test_assert(it.entities[0] != 0);
@@ -1189,8 +1189,8 @@ void Alerts_two_severity_filters(void) {
         test_assert(source != NULL);
         test_int(source->entity, e1);
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_remove(world, e1, Mass);
@@ -1202,9 +1202,9 @@ void Alerts_two_severity_filters(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
         
         test_assert(it.entities[0] != 0);
@@ -1217,8 +1217,8 @@ void Alerts_two_severity_filters(void) {
         test_assert(source != NULL);
         test_int(source->entity, e1);
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_remove(world, e1, Rotation);
@@ -1230,9 +1230,9 @@ void Alerts_two_severity_filters(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
         
         test_assert(it.entities[0] != 0);
@@ -1245,8 +1245,8 @@ void Alerts_two_severity_filters(void) {
         test_assert(source != NULL);
         test_int(source->entity, e1);
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_fini(world);
@@ -1270,7 +1270,7 @@ void Alerts_severity_filter_w_var(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_velocity"),
-        .filter.expr = "Position, !Velocity, (ChildOf, $parent)",
+        .query.expr = "Position, !Velocity, (ChildOf, $parent)",
         .severity_filters[0] = {
             .severity = EcsAlertWarning,
             .with = ecs_id(Mass),
@@ -1287,9 +1287,9 @@ void Alerts_severity_filter_w_var(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
 
         test_assert(it.entities[0] != 0);
@@ -1302,8 +1302,8 @@ void Alerts_severity_filter_w_var(void) {
         test_assert(source != NULL);
         test_int(source->entity, e1);
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_add(world, parent, Mass);
@@ -1314,9 +1314,9 @@ void Alerts_severity_filter_w_var(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
         
         test_assert(it.entities[0] != 0);
@@ -1329,8 +1329,8 @@ void Alerts_severity_filter_w_var(void) {
         test_assert(source != NULL);
         test_int(source->entity, e1);
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_remove(world, parent, Mass);
@@ -1341,9 +1341,9 @@ void Alerts_severity_filter_w_var(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
         
         test_assert(it.entities[0] != 0);
@@ -1356,8 +1356,8 @@ void Alerts_severity_filter_w_var(void) {
         test_assert(source != NULL);
         test_int(source->entity, e1);
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_fini(world);
@@ -1383,7 +1383,7 @@ void Alerts_severity_filter_w_var_change_var(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_velocity"),
-        .filter.expr = "Position, !Velocity, (ChildOf, $parent)",
+        .query.expr = "Position, !Velocity, (ChildOf, $parent)",
         .severity_filters[0] = {
             .severity = EcsAlertWarning,
             .with = ecs_id(Mass),
@@ -1400,9 +1400,9 @@ void Alerts_severity_filter_w_var_change_var(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
 
         test_assert(it.entities[0] != 0);
@@ -1415,8 +1415,8 @@ void Alerts_severity_filter_w_var_change_var(void) {
         test_assert(source != NULL);
         test_int(source->entity, e1);
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_add_pair(world, e1, EcsChildOf, parent_2);
@@ -1427,9 +1427,9 @@ void Alerts_severity_filter_w_var_change_var(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
         
         test_assert(it.entities[0] != 0);
@@ -1442,8 +1442,8 @@ void Alerts_severity_filter_w_var_change_var(void) {
         test_assert(source != NULL);
         test_int(source->entity, e1);
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_add_pair(world, e1, EcsChildOf, parent_1);
@@ -1454,9 +1454,9 @@ void Alerts_severity_filter_w_var_change_var(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
         
         test_assert(it.entities[0] != 0);
@@ -1469,8 +1469,8 @@ void Alerts_severity_filter_w_var_change_var(void) {
         test_assert(source != NULL);
         test_int(source->entity, e1);
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_fini(world);
@@ -1496,7 +1496,7 @@ void Alerts_member_range_warning(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "high_mass"),
-        .filter.expr = "Mass",
+        .query.expr = "Mass",
         .member = member
     });
     test_assert(alert != 0);
@@ -1515,9 +1515,9 @@ void Alerts_member_range_warning(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
         
         test_assert(it.entities[0] != 0);
@@ -1530,8 +1530,8 @@ void Alerts_member_range_warning(void) {
         test_assert(source != NULL);
         test_int(source->entity, e1);
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_set(world, e1, Mass, {25});
@@ -1564,7 +1564,7 @@ void Alerts_member_range_error(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "high_mass"),
-        .filter.expr = "Mass",
+        .query.expr = "Mass",
         .member = member
     });
     test_assert(alert != 0);
@@ -1583,9 +1583,9 @@ void Alerts_member_range_error(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
         
         test_assert(it.entities[0] != 0);
@@ -1598,8 +1598,8 @@ void Alerts_member_range_error(void) {
         test_assert(source != NULL);
         test_int(source->entity, e1);
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_set(world, e1, Mass, {25});
@@ -1632,7 +1632,7 @@ void Alerts_member_range_warning_error(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "high_mass"),
-        .filter.expr = "Mass",
+        .query.expr = "Mass",
         .member = member
     });
     test_assert(alert != 0);
@@ -1651,9 +1651,9 @@ void Alerts_member_range_warning_error(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
         
         test_assert(it.entities[0] != 0);
@@ -1666,8 +1666,8 @@ void Alerts_member_range_warning_error(void) {
         test_assert(source != NULL);
         test_int(source->entity, e1);
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_set(world, e1, Mass, {125});
@@ -1679,9 +1679,9 @@ void Alerts_member_range_warning_error(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
         
         test_assert(it.entities[0] != 0);
@@ -1694,8 +1694,8 @@ void Alerts_member_range_warning_error(void) {
         test_assert(source != NULL);
         test_int(source->entity, e1);
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_set(world, e1, Mass, {25});
@@ -1728,7 +1728,7 @@ void Alerts_member_range_error_w_warning_severity(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "high_mass"),
-        .filter.expr = "Mass",
+        .query.expr = "Mass",
         .severity = EcsAlertWarning,
         .member = member
     });
@@ -1748,9 +1748,9 @@ void Alerts_member_range_error_w_warning_severity(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
 
         test_assert(it.entities[0] != 0);
@@ -1763,8 +1763,8 @@ void Alerts_member_range_error_w_warning_severity(void) {
         test_assert(source != NULL);
         test_int(source->entity, e1);
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_set(world, e1, Mass, {25});
@@ -1798,7 +1798,7 @@ void Alerts_member_range_error_w_severity_filter(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "high_mass"),
-        .filter.expr = "Mass",
+        .query.expr = "Mass",
         .severity = EcsAlertWarning,
         .severity_filters[0] = {
             .with = Tag,
@@ -1822,9 +1822,9 @@ void Alerts_member_range_error_w_severity_filter(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
 
         test_assert(it.entities[0] != 0);
@@ -1837,8 +1837,8 @@ void Alerts_member_range_error_w_severity_filter(void) {
         test_assert(source != NULL);
         test_int(source->entity, e1);
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_add(world, e1, Tag);
@@ -1850,9 +1850,9 @@ void Alerts_member_range_error_w_severity_filter(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
 
         test_assert(it.entities[0] != 0);
@@ -1865,8 +1865,8 @@ void Alerts_member_range_error_w_severity_filter(void) {
         test_assert(source != NULL);
         test_int(source->entity, e1);
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_fini(world);
@@ -1893,7 +1893,7 @@ void Alerts_member_range_warning_w_severity_filter(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "high_mass"),
-        .filter.expr = "Mass",
+        .query.expr = "Mass",
         .severity = EcsAlertWarning,
         .severity_filters[0] = {
             .with = Tag,
@@ -1917,9 +1917,9 @@ void Alerts_member_range_warning_w_severity_filter(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
 
         test_assert(it.entities[0] != 0);
@@ -1932,8 +1932,8 @@ void Alerts_member_range_warning_w_severity_filter(void) {
         test_assert(source != NULL);
         test_int(source->entity, e1);
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_add(world, e1, Tag);
@@ -1945,9 +1945,9 @@ void Alerts_member_range_warning_w_severity_filter(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
 
         test_assert(it.entities[0] != 0);
@@ -1960,8 +1960,8 @@ void Alerts_member_range_warning_w_severity_filter(void) {
         test_assert(source != NULL);
         test_int(source->entity, e1);
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_fini(world);
@@ -1988,7 +1988,7 @@ void Alerts_member_range_pair_id(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "high_mass"),
-        .filter.expr = "Mass",
+        .query.expr = "Mass",
         .member = member,
         .id = ecs_pair_t(Mass, Tag)
     });
@@ -2008,9 +2008,9 @@ void Alerts_member_range_pair_id(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
         
         test_assert(it.entities[0] != 0);
@@ -2023,8 +2023,8 @@ void Alerts_member_range_pair_id(void) {
         test_assert(source != NULL);
         test_int(source->entity, e1);
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_set_pair(world, e1, Mass, Tag, {25});
@@ -2056,7 +2056,7 @@ void Alerts_member_range_invalid_member(void) {
     ecs_log_set_level(-4);
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "high_mass"),
-        .filter.expr = "Mass",
+        .query.expr = "Mass",
         .member = Tag,
     });
     test_assert(alert == 0);
@@ -2084,7 +2084,7 @@ void Alerts_member_range_invalid_member_child(void) {
     ecs_log_set_level(-4);
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "high_mass"),
-        .filter.expr = "Mass",
+        .query.expr = "Mass",
         .member = child,
     });
     test_assert(alert == 0);
@@ -2111,7 +2111,7 @@ void Alerts_member_range_invalid_type(void) {
     ecs_log_set_level(-4);
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "high_mass"),
-        .filter.expr = "Mass",
+        .query.expr = "Mass",
         .member = member,
         .id = Tag
     });
@@ -2143,7 +2143,7 @@ void Alerts_member_range_invalid_member_type(void) {
     ecs_log_set_level(-4);
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "high_mass"),
-        .filter.expr = "Mass",
+        .query.expr = "Mass",
         .member = member,
     });
     test_assert(alert == 0);
@@ -2169,7 +2169,7 @@ void Alerts_member_range_no_range(void) {
     ecs_log_set_level(-4);
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "high_mass"),
-        .filter.expr = "Mass",
+        .query.expr = "Mass",
         .member = member,
     });
     test_assert(alert == 0);
@@ -2199,7 +2199,7 @@ void Alerts_member_range_alert_two_instances(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "high_mass"),
-        .filter.expr = "Mass",
+        .query.expr = "Mass",
         .member = member,
     });
     test_assert(alert != 0);
@@ -2222,9 +2222,9 @@ void Alerts_member_range_alert_two_instances(void) {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
         test_assert(ecs_get_alert_count(world, e2, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 2);
 
         test_assert(it.entities[0] != 0);
@@ -2244,8 +2244,8 @@ void Alerts_member_range_alert_two_instances(void) {
             test_int(source->entity, e2);
         }
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_progress(world, 1.0);
@@ -2257,9 +2257,9 @@ void Alerts_member_range_alert_two_instances(void) {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
         test_assert(ecs_get_alert_count(world, e2, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 2);
 
         test_assert(it.entities[0] != 0);
@@ -2279,8 +2279,8 @@ void Alerts_member_range_alert_two_instances(void) {
             test_int(source->entity, e2);
         }
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_set(world, e1, Mass, {25});
@@ -2315,7 +2315,7 @@ void Alerts_member_range_from_var(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "high_parent_mass"),
-        .filter.expr = "(ChildOf, $parent), Mass($parent)",
+        .query.expr = "(ChildOf, $parent), Mass($parent)",
         .member = member,
         .var = "parent"
     });
@@ -2335,9 +2335,9 @@ void Alerts_member_range_from_var(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
         
         test_assert(it.entities[0] != 0);
@@ -2350,8 +2350,8 @@ void Alerts_member_range_from_var(void) {
         test_assert(source != NULL);
         test_int(source->entity, e1);
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_set(world, p, Mass, {25});
@@ -2385,7 +2385,7 @@ void Alerts_member_range_from_var_after_remove(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "high_parent_mass"),
-        .filter.expr = "(ChildOf, $parent), Mass($parent)",
+        .query.expr = "(ChildOf, $parent), Mass($parent)",
         .member = member,
         .var = "parent"
     });
@@ -2405,9 +2405,9 @@ void Alerts_member_range_from_var_after_remove(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
         
         test_assert(it.entities[0] != 0);
@@ -2420,8 +2420,8 @@ void Alerts_member_range_from_var_after_remove(void) {
         test_assert(source != NULL);
         test_int(source->entity, e1);
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_remove(world, p, Mass);
@@ -2447,7 +2447,7 @@ void Alerts_retained_alert_w_dead_source(void) {
 
     ecs_entity_t alert = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_velocity"),
-        .filter.expr = "Position, !Velocity",
+        .query.expr = "Position, !Velocity",
         .severity = EcsAlertError,
         .retain_period = 10
     });
@@ -2462,9 +2462,9 @@ void Alerts_retained_alert_w_dead_source(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
 
         ai = it.entities[0];
@@ -2479,8 +2479,8 @@ void Alerts_retained_alert_w_dead_source(void) {
         test_assert(source != NULL);
         test_int(source->entity, e1);
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_add(world, e1, Velocity);
@@ -2492,9 +2492,9 @@ void Alerts_retained_alert_w_dead_source(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 0);
 
-        ecs_filter_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance, ?Disabled" });
-        ecs_iter_t it = ecs_filter_iter(world, alerts);
-        test_bool(ecs_filter_next(&it), true);
+        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance, ?Disabled" });
+        ecs_iter_t it = ecs_query_iter(world, alerts);
+        test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
         
         test_assert(it.entities[0] == ai);
@@ -2507,8 +2507,8 @@ void Alerts_retained_alert_w_dead_source(void) {
         test_assert(source != NULL);
         test_int(source->entity, e1);
 
-        test_bool(ecs_filter_next(&it), false);
-        ecs_filter_fini(alerts);
+        test_bool(ecs_query_next(&it), false);
+        ecs_query_fini(alerts);
     }
 
     ecs_delete(world, e1);
@@ -2534,13 +2534,13 @@ void Alerts_alert_counts(void) {
 
     ecs_entity_t alert_1 = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_velocity"),
-        .filter.expr = "Position, !Velocity"
+        .query.expr = "Position, !Velocity"
     });
     test_assert(alert_1 != 0);
 
     ecs_entity_t alert_2 = ecs_alert(world, {
         .entity = ecs_new_entity(world, "position_without_mass"),
-        .filter.expr = "Position, !Mass",
+        .query.expr = "Position, !Mass",
         .severity = EcsAlertWarning
     });
     test_assert(alert_2 != 0);

@@ -22,10 +22,10 @@ struct rule_base {
         : m_world(world)
         , m_rule(rule) { }
 
-    rule_base(world_t *world, ecs_filter_desc_t *desc) 
+    rule_base(world_t *world, ecs_query_desc_t *desc) 
         : m_world(world)
     {
-        m_rule = ecs_rule_init(world, desc);
+        m_rule = ecs_query_init(world, desc);
         if (desc->terms_buffer) {
             ecs_os_free(desc->terms_buffer);
         }
@@ -46,7 +46,7 @@ struct rule_base {
     /** Free the rule. */
     void destruct() {
         if (m_rule) {
-            ecs_rule_fini(m_rule);
+            ecs_query_fini(m_rule);
             m_world = nullptr;
             m_rule = nullptr;
         }
@@ -67,25 +67,25 @@ struct rule_base {
     }
 
     flecs::filter_base filter() const {
-        return filter_base(m_world, ecs_rule_get_filter(m_rule));
+        return filter_base(m_world, ecs_query_get_filter(m_rule));
     }
 
     /** Converts this rule to a string expression
-     * @see ecs_filter_str
+     * @see ecs_query_str
      */
     flecs::string str() const {
-        const ecs_filter_t *f = ecs_rule_get_filter(m_rule);
-        char *result = ecs_filter_str(m_world, f);
+        const ecs_query_t *f = ecs_query_get_filter(m_rule);
+        char *result = ecs_query_str(m_world, f);
         return flecs::string(result);
     }
 
 
     /** Converts this rule to a string that can be used to aid debugging
      * the behavior of the rule.
-     * @see ecs_rule_str
+     * @see ecs_query_plan
      */
     flecs::string rule_str() const {
-        char *result = ecs_rule_str(m_rule);
+        char *result = ecs_query_plan(m_rule);
         return flecs::string(result);
     }
 
@@ -105,22 +105,22 @@ private:
         if (!world) {
             world = m_world;
         }
-        return ecs_rule_iter(world, m_rule);
+        return ecs_query_iter(world, m_rule);
     }
 
     ecs_iter_next_action_t next_action() const override {
-        return ecs_rule_next;
+        return ecs_query_next;
     }
 
     ecs_iter_next_action_t next_each_action() const override {
-        return ecs_rule_next_instanced;
+        return ecs_query_next_instanced;
     }
 
 public:
     using rule_base::rule_base;
 
     int32_t find_var(const char *name) {
-        return ecs_rule_find_var(m_rule, name);
+        return ecs_query_find_var(m_rule, name);
     }
 };
 

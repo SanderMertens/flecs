@@ -178,7 +178,7 @@ void Rest_named_query(void) {
 
     ecs_query(world, {
         .filter.entity = ecs_entity(world, { .name = "position_query" }),
-        .filter.terms = {
+        .terms = {
             { .id = ecs_id(Position) }
         }
     });

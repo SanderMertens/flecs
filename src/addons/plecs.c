@@ -239,10 +239,6 @@ void flecs_assembly_on_set(
         ecs_script_update(world, assembly, instance, script->script, &vars);
         ecs_vars_fini(&vars);
 
-        if (ecs_record_has_id(world, r, EcsFlatten)) {
-            ecs_flatten(it->real_world, ecs_childof(instance), NULL);
-        }
-
         data = ECS_OFFSET(data, ct->size);
     }
 }
@@ -560,7 +556,7 @@ static
 ecs_entity_t plecs_ensure_term_id(
     ecs_world_t *world,
     plecs_state_t *state,
-    ecs_term_id_t *term_id,
+    ecs_term_ref_t *term_id,
     const char *expr,
     int64_t column,
     ecs_entity_t pred,
@@ -568,7 +564,7 @@ ecs_entity_t plecs_ensure_term_id(
 {
     ecs_entity_t result = 0;
     const char *name = term_id->name;
-    if (term_id->flags & EcsIsVariable) {
+    if (term_id->id & EcsIsVariable) {
         if (name != NULL) {
             ecs_expr_var_t *var = ecs_vars_lookup(&state->vars, name);
             if (!var) {
@@ -632,19 +628,15 @@ bool plecs_pred_is_subj(
 /* Set masks aren't useful in plecs, so translate them back to entity names */
 static
 const char* plecs_set_mask_to_name(
-    ecs_flags32_t flags) 
+    ecs_entity_t flags) 
 {
     flags &= EcsTraverseFlags;
     if (flags == EcsSelf) {
         return "self";
     } else if (flags == EcsUp) {
         return "up";
-    } else if (flags == EcsDown) {
-        return "down";
     } else if (flags == EcsCascade || flags == (EcsUp|EcsCascade)) {
         return "cascade";
-    } else if (flags == EcsParent) {
-        return "parent";
     }
     return NULL;
 }
@@ -710,10 +702,10 @@ int plecs_create_term(
 
     const char *subj_name = term->src.name;
     if (!subj_name) {
-        subj_name = plecs_set_mask_to_name(term->src.flags);
+        subj_name = plecs_set_mask_to_name(term->src.id);
     }
 
-    if (!ecs_term_id_is_set(&term->first)) {
+    if (!ecs_term_ref_is_set(&term->first)) {
         ecs_parser_error(name, expr, column, "missing term in expression");
         return -1;
     }
@@ -733,7 +725,7 @@ int plecs_create_term(
 
     subj = plecs_ensure_entity(world, state, subj_name, pred, true);
 
-    if (ecs_term_id_is_set(&term->second)) {
+    if (ecs_term_ref_is_set(&term->second)) {
         obj = plecs_ensure_term_id(world, state, &term->second, expr, column, 
             pred, !state->assign_stmt && !state->with_stmt);
         if (!obj) {
@@ -760,11 +752,11 @@ int plecs_create_term(
     }
 
     if (subj) {
-        ecs_id_t id;
+        ecs_id_t id, flags = term->id & ECS_ID_FLAGS_MASK;
         if (!obj) {
-            id = term->id_flags | pred;
+            id = flags | pred;
         } else {
-            id = term->id_flags | ecs_pair(pred, obj);
+            id = flags | ecs_pair(pred, obj);
             state->last_object = obj;
         }
         state->last_assign_id = id;
@@ -1266,9 +1258,8 @@ const char* plecs_parse_using_stmt(
         }
 
         /* Add each child of the scope to using stack */
-        ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t){ 
-            .id = ecs_childof(scope) });
-        while (ecs_term_next(&it)) {
+        ecs_iter_t it = ecs_children(world, scope);
+        while (ecs_children_next(&it)) {
             int32_t i, count = it.count;
             for (i = 0; i < count; i ++) {
                 plecs_push_using(it.entities[i], state);
@@ -1711,7 +1702,8 @@ const char *plecs_parse_plecs_term(
         decl_id = state->last_predicate;
     }
 
-    ptr = ecs_parse_term(world, name, expr, ptr, &term, NULL, NULL, false);
+    ecs_stage_t *stage = flecs_stage_from_readonly_world(world);
+    ptr = ecs_parse_term(world, stage, name, expr, ptr, &term, NULL, NULL, false);
     if (!ptr) {
         return NULL;
     }
@@ -1726,7 +1718,6 @@ const char *plecs_parse_plecs_term(
     }
 
     if (plecs_create_term(world, &term, name, expr, (ptr - expr), state)) {
-        ecs_term_fini(&term);
         return NULL; /* Failed to create term */
     }
 
@@ -1735,8 +1726,6 @@ const char *plecs_parse_plecs_term(
     }
 
     state->decl_type = false;
-
-    ecs_term_fini(&term);
 
     return ptr;
 }
@@ -2007,7 +1996,6 @@ int flecs_plecs_parse(
     ecs_entity_t instance)
 {
     const char *ptr = expr;
-    ecs_term_t term = {0};
     plecs_state_t state = {0};
 
     if (!expr) {
@@ -2095,7 +2083,6 @@ error:
     ecs_vars_fini(&state.vars);
     ecs_set_scope(world, state.scope[0]);
     ecs_set_with(world, prev_with);
-    ecs_term_fini(&term);
     return -1;
 }
 

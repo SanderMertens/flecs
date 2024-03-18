@@ -52,7 +52,7 @@ int main(int argc, char *argv[]) {
             // Listen for Position events from self
             { .id = ecs_id(Position) },
             // Listen for Position events from parent
-            { .id = ecs_id(Position), .src.flags = EcsUp, .src.trav = EcsChildOf }
+            { .id = ecs_id(Position), .src.id = EcsUp, .trav = EcsChildOf }
         }},
         .events = { EcsOnSet },
         .callback = Observer

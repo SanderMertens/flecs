@@ -76,8 +76,8 @@ int main(int argc, char *argv[]) {
     ecs_add(ecs, npc_07, Npc);
 
     // Create a query that matches all Npc's, grouped by WorldCell
-    ecs_query_t *q = ecs_query(ecs, {
-        .filter.terms = {
+    ecs_query_cache_t *q = ecs_query(ecs, {
+        .terms = {
             { .id = Npc }
         },
         .group_by = group_by_relation,
@@ -86,7 +86,7 @@ int main(int argc, char *argv[]) {
 
     // Iterate all tables
     printf("All tables:\n");
-    ecs_iter_t it = ecs_query_iter(ecs, q);
+    ecs_iter_t it = ecs_query_cache_iter(ecs, q);
     while (ecs_query_next(&it)) {
         char *table_str = ecs_table_str(ecs, it.table);
         char *group_str = ecs_get_fullpath(ecs, it.group_id);
@@ -103,8 +103,8 @@ int main(int argc, char *argv[]) {
 
     // Only iterate entities in cell 1_0
     printf("Tables for cell 1_0:\n");
-    it = ecs_query_iter(ecs, q);
-    ecs_query_set_group(&it, Cell_1_0);
+    it = ecs_query_cache_iter(ecs, q);
+    ecs_query_cache_set_group(&it, Cell_1_0);
     while (ecs_query_next(&it)) {
         char *table_str = ecs_table_str(ecs, it.table);
         char *group_str = ecs_get_fullpath(ecs, it.group_id);

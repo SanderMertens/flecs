@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
 
     // Create a system for Position, Velocity
     ecs_entity_t move = ecs_system(ecs, {
-        .query.filter.terms = {
+        .query.terms = {
             { .id = ecs_id(Position) },
             { .id = ecs_id(Velocity), .inout = EcsIn }
         },

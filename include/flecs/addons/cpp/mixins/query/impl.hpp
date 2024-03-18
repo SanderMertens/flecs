@@ -25,7 +25,7 @@ struct query_base {
     query_base(world_t *world, ecs_query_desc_t *desc) 
         : m_world(world)
     {
-        m_query = ecs_query_init(world, desc);
+        m_query = ecs_query_cache_init(world, desc);
 
         if (!m_query) {
             ecs_abort(ECS_INVALID_PARAMETER, NULL);
@@ -61,7 +61,7 @@ struct query_base {
      * @return true if query is orphaned, otherwise false.
      */
     bool orphaned() const {
-        return ecs_query_orphaned(m_query);
+        return ecs_query_cache_orphaned(m_query);
     }
 
     /** Get info for group. 
@@ -70,7 +70,7 @@ struct query_base {
      * @return The group info.
      */
     const flecs::query_group_info_t* group_info(uint64_t group_id) const {
-        return ecs_query_get_group_info(m_query, group_id);
+        return ecs_query_cache_get_group_info(m_query, group_id);
     }
 
     /** Get context for group. 
@@ -90,7 +90,7 @@ struct query_base {
     /** Free the query.
      */
     void destruct() {
-        ecs_query_fini(m_query);
+        ecs_query_cache_fini(m_query);
         m_world = nullptr;
         m_query = nullptr;
     }
@@ -101,23 +101,23 @@ struct query_base {
     }
 
     filter_base filter() const {
-        return filter_base(m_world, ecs_query_get_filter(m_query));
+        return filter_base(m_world, ecs_query_cache_get_filter(m_query));
     }
 
     flecs::term term(int32_t index) const {
-        const ecs_filter_t *f = ecs_query_get_filter(m_query);
+        const ecs_query_t *f = ecs_query_cache_get_filter(m_query);
         ecs_assert(f != NULL, ECS_INVALID_PARAMETER, NULL);
         return flecs::term(m_world, f->terms[index]);
     }
 
     int32_t field_count() const {
-        const ecs_filter_t *f = ecs_query_get_filter(m_query);
+        const ecs_query_t *f = ecs_query_cache_get_filter(m_query);
         return f->term_count;   
     }
 
     flecs::string str() const {
-        const ecs_filter_t *f = ecs_query_get_filter(m_query);
-        char *result = ecs_filter_str(m_world, f);
+        const ecs_query_t *f = ecs_query_cache_get_filter(m_query);
+        char *result = ecs_query_str(m_world, f);
         return flecs::string(result);
     }
 

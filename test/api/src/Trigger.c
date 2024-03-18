@@ -115,7 +115,7 @@ void Trigger_on_add_trigger_before_table(void) {
     /* Create trigger before table */
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = TagA,
+        .query.terms[0].id = TagA,
         .events = {EcsOnAdd},
         .callback = Trigger,
         .ctx = &ctx
@@ -152,7 +152,7 @@ void Trigger_on_add_trigger_after_table(void) {
     /* Create trigger after table, should send notification to table */
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = TagA,
+        .query.terms[0].id = TagA,
         .events = {EcsOnAdd},
         .callback = Trigger,
         .ctx = &ctx
@@ -183,7 +183,7 @@ void Trigger_on_remove_trigger_before_table(void) {
     /* Create trigger after table */
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = TagA,
+        .query.terms[0].id = TagA,
         .events = {EcsOnRemove},
         .callback = Trigger,
         .ctx = &ctx
@@ -223,7 +223,7 @@ void Trigger_on_remove_trigger_after_table(void) {
     /* Create trigger after table, should send notification to table */
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = TagA,
+        .query.terms[0].id = TagA,
         .events = {EcsOnRemove},
         .callback = Trigger,
         .ctx = &ctx
@@ -252,7 +252,7 @@ void Trigger_on_add_tag(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = TagA,
+        .query.terms[0].id = TagA,
         .events = {EcsOnAdd},
         .callback = Trigger,
         .ctx = &ctx
@@ -282,7 +282,7 @@ void Trigger_on_add_component(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_id(Position),
+        .query.terms[0].id = ecs_id(Position),
         .events = {EcsOnAdd},
         .callback = Trigger,
         .ctx = &ctx
@@ -313,7 +313,7 @@ void Trigger_on_add_wildcard(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = EcsWildcard,
+        .query.terms[0].id = EcsWildcard,
         .events = {EcsOnAdd},
         .callback = Trigger,
         .ctx = &ctx
@@ -359,7 +359,7 @@ void Trigger_on_add_pair(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_pair(Pred, Obj),
+        .query.terms[0].id = ecs_pair(Pred, Obj),
         .events = {EcsOnAdd},
         .callback = Trigger,
         .ctx = &ctx
@@ -393,7 +393,7 @@ void Trigger_on_add_pair_obj_wildcard(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_pair(Pred, EcsWildcard),
+        .query.terms[0].id = ecs_pair(Pred, EcsWildcard),
         .events = {EcsOnAdd},
         .callback = Trigger,
         .ctx = &ctx
@@ -442,7 +442,7 @@ void Trigger_on_add_pair_pred_wildcard(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_pair(EcsWildcard, Obj),
+        .query.terms[0].id = ecs_pair(EcsWildcard, Obj),
         .events = {EcsOnAdd},
         .callback = Trigger,
         .ctx = &ctx
@@ -490,7 +490,7 @@ void Trigger_on_add_pair_wildcard(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_pair(EcsWildcard, EcsWildcard),
+        .query.terms[0].id = ecs_pair(EcsWildcard, EcsWildcard),
         .events = {EcsOnAdd},
         .callback = Trigger,
         .ctx = &ctx
@@ -524,7 +524,7 @@ void Trigger_on_add_any(void) {
 
     Probe *ctx_any = ecs_os_calloc_t(Probe);
     ecs_entity_t t_any = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = EcsAny,
+        .query.terms[0].id = EcsAny,
         .events = {EcsOnAdd},
         .callback = Trigger,
         .ctx = ctx_any
@@ -532,7 +532,7 @@ void Trigger_on_add_any(void) {
 
     Probe *ctx_wc = ecs_os_calloc_t(Probe);
     ecs_entity_t t_wc = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = EcsWildcard,
+        .query.terms[0].id = EcsWildcard,
         .events = {EcsOnAdd},
         .callback = Trigger,
         .ctx = ctx_wc
@@ -540,7 +540,7 @@ void Trigger_on_add_any(void) {
 
     Probe *ctx_wc_pair = ecs_os_calloc_t(Probe);
     ecs_entity_t t_wc_pair = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_pair(EcsWildcard, EcsWildcard),
+        .query.terms[0].id = ecs_pair(EcsWildcard, EcsWildcard),
         .events = {EcsOnAdd},
         .callback = Trigger,
         .ctx = ctx_wc_pair
@@ -593,7 +593,7 @@ void Trigger_on_remove_tag(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = TagA,
+        .query.terms[0].id = TagA,
         .events = {EcsOnRemove},
         .callback = Trigger,
         .ctx = &ctx
@@ -626,7 +626,7 @@ void Trigger_on_remove_component(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_id(Position),
+        .query.terms[0].id = ecs_id(Position),
         .events = {EcsOnRemove},
         .callback = Trigger,
         .ctx = &ctx
@@ -660,7 +660,7 @@ void Trigger_on_remove_wildcard(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = EcsWildcard,
+        .query.terms[0].id = EcsWildcard,
         .events = {EcsOnRemove},
         .callback = Trigger,
         .ctx = &ctx
@@ -711,7 +711,7 @@ void Trigger_on_remove_pair(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_pair(Pred, Obj),
+        .query.terms[0].id = ecs_pair(Pred, Obj),
         .events = {EcsOnRemove},
         .callback = Trigger,
         .ctx = &ctx
@@ -748,7 +748,7 @@ void Trigger_on_remove_pair_obj_wildcard(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_pair(Pred, EcsWildcard),
+        .query.terms[0].id = ecs_pair(Pred, EcsWildcard),
         .events = {EcsOnRemove},
         .callback = Trigger,
         .ctx = &ctx
@@ -802,7 +802,7 @@ void Trigger_on_remove_pair_pred_wildcard(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_pair(EcsWildcard, Obj),
+        .query.terms[0].id = ecs_pair(EcsWildcard, Obj),
         .events = {EcsOnRemove},
         .callback = Trigger,
         .ctx = &ctx
@@ -853,7 +853,7 @@ void Trigger_on_remove_pair_wildcard(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_pair(EcsWildcard, EcsWildcard),
+        .query.terms[0].id = ecs_pair(EcsWildcard, EcsWildcard),
         .events = {EcsOnRemove},
         .callback = Trigger,
         .ctx = &ctx
@@ -893,7 +893,7 @@ void Trigger_wildcard_pair_w_pred_component(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_pair(ecs_id(Position), EcsWildcard),
+        .query.terms[0].id = ecs_pair(ecs_id(Position), EcsWildcard),
         .events = {EcsOnSet},
         .callback = Trigger_w_value,
         .ctx = &ctx
@@ -948,7 +948,7 @@ void Trigger_wildcard_pair_w_obj_component(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_pair(EcsWildcard, ecs_id(Position)),
+        .query.terms[0].id = ecs_pair(EcsWildcard, ecs_id(Position)),
         .events = {EcsOnSet},
         .callback = Trigger_w_value,
         .ctx = &ctx
@@ -1002,7 +1002,7 @@ void Trigger_on_set_component(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_id(Position),
+        .query.terms[0].id = ecs_id(Position),
         .events = {EcsOnSet},
         .callback = Trigger,
         .ctx = &ctx
@@ -1035,7 +1035,7 @@ void Trigger_on_set_wildcard(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = EcsWildcard,
+        .query.terms[0].id = EcsWildcard,
         .events = {EcsOnSet},
         .callback = Trigger,
         .ctx = &ctx
@@ -1070,7 +1070,7 @@ void Trigger_on_set_pair(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_pair(ecs_id(Position), Obj),
+        .query.terms[0].id = ecs_pair(ecs_id(Position), Obj),
         .events = {EcsOnSet},
         .callback = Trigger,
         .ctx = &ctx
@@ -1107,7 +1107,7 @@ void Trigger_on_set_pair_w_obj_wildcard(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_pair(ecs_id(Position), EcsWildcard),
+        .query.terms[0].id = ecs_pair(ecs_id(Position), EcsWildcard),
         .events = {EcsOnSet},
         .callback = Trigger,
         .ctx = &ctx
@@ -1144,7 +1144,7 @@ void Trigger_on_set_pair_pred_wildcard(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_pair(EcsWildcard, Obj),
+        .query.terms[0].id = ecs_pair(EcsWildcard, Obj),
         .events = {EcsOnSet},
         .callback = Trigger,
         .ctx = &ctx
@@ -1181,7 +1181,7 @@ void Trigger_on_set_pair_wildcard(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_pair(EcsWildcard, EcsWildcard),
+        .query.terms[0].id = ecs_pair(EcsWildcard, EcsWildcard),
         .events = {EcsOnSet},
         .callback = Trigger,
         .ctx = &ctx
@@ -1220,7 +1220,7 @@ void Trigger_on_add_remove(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = TagA,
+        .query.terms[0].id = TagA,
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = Trigger,
         .ctx = &ctx
@@ -1265,7 +1265,7 @@ void Trigger_on_set_component_after_modified(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_id(Position),
+        .query.terms[0].id = ecs_id(Position),
         .events = {EcsOnSet},
         .callback = Trigger,
         .ctx = &ctx
@@ -1299,7 +1299,7 @@ void Trigger_un_set_component(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_id(Position),
+        .query.terms[0].id = ecs_id(Position),
         .events = {EcsUnSet},
         .callback = Trigger,
         .ctx = &ctx
@@ -1333,7 +1333,7 @@ void Trigger_un_set_wildcard(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = EcsWildcard,
+        .query.terms[0].id = EcsWildcard,
         .events = {EcsUnSet},
         .callback = Trigger,
         .ctx = &ctx
@@ -1371,7 +1371,7 @@ void Trigger_un_set_pair(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_pair(Rel, Obj),
+        .query.terms[0].id = ecs_pair(Rel, Obj),
         .events = {EcsUnSet},
         .callback = Trigger,
         .ctx = &ctx
@@ -1411,7 +1411,7 @@ void Trigger_un_set_pair_w_obj_wildcard(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_pair(Rel, EcsWildcard),
+        .query.terms[0].id = ecs_pair(Rel, EcsWildcard),
         .events = {EcsUnSet},
         .callback = Trigger,
         .ctx = &ctx
@@ -1451,7 +1451,7 @@ void Trigger_un_set_pair_pred_wildcard(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_pair(EcsWildcard, Obj),
+        .query.terms[0].id = ecs_pair(EcsWildcard, Obj),
         .events = {EcsUnSet},
         .callback = Trigger,
         .ctx = &ctx
@@ -1491,7 +1491,7 @@ void Trigger_un_set_pair_wildcard(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_pair(EcsWildcard, EcsWildcard),
+        .query.terms[0].id = ecs_pair(EcsWildcard, EcsWildcard),
         .events = {EcsUnSet},
         .callback = Trigger,
         .ctx = &ctx
@@ -1530,8 +1530,8 @@ void Trigger_on_add_not_tag(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = TagA,
-        .filter.terms[0].oper = EcsNot,
+        .query.terms[0].id = TagA,
+        .query.terms[0].oper = EcsNot,
         .events = {EcsOnAdd},
         .callback = Trigger,
         .ctx = &ctx
@@ -1570,8 +1570,8 @@ void Trigger_on_remove_not_tag(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = TagA,
-        .filter.terms[0].oper = EcsNot,
+        .query.terms[0].id = TagA,
+        .query.terms[0].oper = EcsNot,
         .events = {EcsOnRemove},
         .callback = Trigger,
         .ctx = &ctx
@@ -1606,8 +1606,9 @@ void Trigger_on_add_superset(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = TagA,
-        .filter.terms[0].src.flags = EcsUp,
+        .query.terms[0].id = TagA,
+        .query.terms[0].src.id = EcsUp,
+        .query.terms[0].trav = EcsIsA,
         .events = {EcsOnAdd},
         .callback = Trigger,
         .ctx = &ctx
@@ -1653,8 +1654,9 @@ void Trigger_on_add_superset_2_levels(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = TagA,
-        .filter.terms[0].src.flags = EcsUp,
+        .query.terms[0].id = TagA,
+        .query.terms[0].src.id = EcsUp,
+        .query.terms[0].trav = EcsIsA,
         .events = {EcsOnAdd},
         .callback = Trigger,
         .ctx = &ctx
@@ -1704,8 +1706,9 @@ void Trigger_on_remove_superset(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = TagA,
-        .filter.terms[0].src.flags = EcsUp,
+        .query.terms[0].id = TagA,
+        .query.terms[0].src.id = EcsUp,
+        .query.terms[0].trav = EcsIsA,
         .events = {EcsOnRemove},
         .callback = Trigger,
         .ctx = &ctx
@@ -1753,10 +1756,10 @@ void Trigger_on_add_superset_childof(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0] = {
+        .query.terms[0] = {
             .id = TagA,
-            .src.trav = EcsChildOf,
-            .src.flags = EcsUp
+            .trav = EcsChildOf,
+            .src.id = EcsUp
         },
         .events = {EcsOnAdd},
         .callback = Trigger,
@@ -1802,10 +1805,10 @@ void Trigger_on_remove_superset_childof(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0] = {
+        .query.terms[0] = {
             .id = TagA,
-            .src.trav = EcsChildOf,
-            .src.flags = EcsUp
+            .trav = EcsChildOf,
+            .src.id = EcsUp
         },
         .events = {EcsOnRemove},
         .callback = Trigger,
@@ -1854,8 +1857,9 @@ void Trigger_on_add_self_superset(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = TagA,
-        .filter.terms[0].src.flags = EcsSelf | EcsUp,
+        .query.terms[0].id = TagA,
+        .query.terms[0].src.id = EcsSelf | EcsUp,
+        .query.terms[0].trav = EcsIsA,
         .events = {EcsOnAdd},
         .callback = Trigger,
         .ctx = &ctx
@@ -1927,8 +1931,9 @@ void Trigger_on_remove_self_superset(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = TagA,
-        .filter.terms[0].src.flags = EcsSelf | EcsUp,
+        .query.terms[0].id = TagA,
+        .query.terms[0].src.id = EcsSelf | EcsUp,
+        .query.terms[0].trav = EcsIsA,
         .events = {EcsOnRemove},
         .callback = Trigger,
         .ctx = &ctx
@@ -2002,7 +2007,7 @@ void Trigger_add_twice(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = TagA,
+        .query.terms[0].id = TagA,
         .events = {EcsOnAdd},
         .callback = Trigger,
         .ctx = &ctx
@@ -2038,7 +2043,7 @@ void Trigger_remove_twice(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = TagA,
+        .query.terms[0].id = TagA,
         .events = {EcsOnRemove},
         .callback = Trigger,
         .ctx = &ctx
@@ -2076,7 +2081,7 @@ void Trigger_on_remove_w_clear(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = TagA,
+        .query.terms[0].id = TagA,
         .events = {EcsOnRemove},
         .callback = Trigger,
         .ctx = &ctx
@@ -2109,7 +2114,7 @@ void Trigger_on_remove_w_delete(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = TagA,
+        .query.terms[0].id = TagA,
         .events = {EcsOnRemove},
         .callback = Trigger,
         .ctx = &ctx
@@ -2142,7 +2147,7 @@ void Trigger_on_remove_w_world_fini(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = TagA,
+        .query.terms[0].id = TagA,
         .events = {EcsOnRemove},
         .callback = Trigger,
         .ctx = &ctx
@@ -2173,7 +2178,7 @@ void Trigger_on_add_w_clone(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = TagA,
+        .query.terms[0].id = TagA,
         .events = {EcsOnAdd},
         .callback = Trigger,
         .ctx = &ctx
@@ -2218,7 +2223,7 @@ void Trigger_add_in_trigger(void) {
     ECS_TAG(world, TagB);
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = TagA,
+        .query.terms[0].id = TagA,
         .events = {EcsOnAdd},
         .callback = TriggerAdd,
         .ctx = &TagB
@@ -2239,7 +2244,7 @@ void Trigger_remove_in_trigger(void) {
     ECS_TAG(world, TagB);
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = TagA,
+        .query.terms[0].id = TagA,
         .events = {EcsOnAdd},
         .callback = TriggerRemove,
         .ctx = &TagB
@@ -2262,7 +2267,7 @@ void Trigger_clear_in_trigger(void) {
     ECS_TAG(world, TagB);
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = TagA,
+        .query.terms[0].id = TagA,
         .events = {EcsOnAdd},
         .callback = TriggerClear,
     });
@@ -2285,7 +2290,7 @@ void Trigger_delete_in_trigger(void) {
     ECS_TAG(world, TagB);
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = TagA,
+        .query.terms[0].id = TagA,
         .events = {EcsOnAdd},
         .callback = TriggerDelete,
     });
@@ -2309,7 +2314,7 @@ void Trigger_trigger_w_named_entity(void) {
     Probe ctx = {0};
     ecs_observer_init(world, &(ecs_observer_desc_t){
         .entity = ecs_entity(world, {.name = "MyTrigger"}),
-        .filter.terms[0].id = TagA,
+        .query.terms[0].id = TagA,
         .events = {EcsOnAdd},
         .callback = Trigger,
         .ctx = &ctx
@@ -2402,7 +2407,7 @@ void Trigger_set_get_context(void) {
     int32_t ctx_a, ctx_b;
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
         .entity = ecs_entity(world, {.name = "MyTrigger"}),
-        .filter.terms[0].id = Tag,
+        .query.terms[0].id = Tag,
         .events = {EcsOnAdd},
         .callback = Trigger,
         .ctx = &ctx_a
@@ -2429,7 +2434,7 @@ void Trigger_set_get_binding_context(void) {
     int32_t ctx_a, ctx_b;
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
         .entity = ecs_entity(world, {.name = "MyTrigger"}),
-        .filter.terms[0].id = Tag,
+        .query.terms[0].id = Tag,
         .events = {EcsOnAdd},
         .callback = Trigger,
         .binding_ctx = &ctx_a
@@ -2468,7 +2473,7 @@ void Trigger_delete_trigger_w_delete_ctx(void) {
     ECS_TAG(world, Tag);
 
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = Tag,
+        .query.terms[0].id = Tag,
         .events = {EcsOnAdd},
         .callback = Trigger,
         .ctx = &ctx_value,
@@ -2496,7 +2501,7 @@ void Trigger_trigger_w_index(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = Tag,
+        .query.terms[0].id = Tag,
         .term_index = 50,
         .events = {EcsOnAdd},
         .callback = Trigger,
@@ -2525,7 +2530,7 @@ void Trigger_iter_type_set(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = Tag,
+        .query.terms[0].id = Tag,
         .events = {EcsOnAdd},
         .callback = TypeTrigger,
         .ctx = &ctx
@@ -2554,7 +2559,7 @@ void Trigger_readonly_term(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0] = { TagA, .inout = EcsIn },
+        .query.terms[0] = { TagA, .inout = EcsIn },
         .events = {EcsOnAdd},
         .callback = TriggerReadonly,
         .ctx = &ctx
@@ -2587,14 +2592,14 @@ void Trigger_trigger_on_prefab(void) {
     Probe ctx_2 = {0};
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0] = { TagA },
+        .query.terms[0] = { TagA },
         .events = {EcsOnAdd},
         .callback = Trigger,
         .ctx = &ctx_1
     });
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ TagA }, { EcsPrefab, .oper = EcsOptional }},
+        .query.terms = {{ TagA }, { EcsPrefab, .oper = EcsOptional }},
         .events = {EcsOnAdd},
         .callback = Trigger,
         .ctx = &ctx_2
@@ -2633,14 +2638,14 @@ void Trigger_trigger_on_disabled(void) {
     Probe ctx_2 = {0};
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0] = { TagA },
+        .query.terms[0] = { TagA },
         .events = {EcsOnAdd},
         .callback = Trigger,
         .ctx = &ctx_1
     });
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ TagA }, { EcsDisabled, .oper = EcsOptional }},
+        .query.terms = {{ TagA }, { EcsDisabled, .oper = EcsOptional }},
         .events = {EcsOnAdd},
         .callback = Trigger,
         .ctx = &ctx_2
@@ -2676,7 +2681,7 @@ void Trigger_trigger_on_prefab_tag(void) {
     Probe ctx_1 = {0};
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0] = { EcsPrefab },
+        .query.terms[0] = { EcsPrefab },
         .events = {EcsOnAdd},
         .callback = Trigger,
         .ctx = &ctx_1
@@ -2694,7 +2699,7 @@ void Trigger_trigger_on_disabled_tag(void) {
     Probe ctx_1 = {0};
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0] = { EcsDisabled },
+        .query.terms[0] = { EcsDisabled },
         .events = {EcsOnAdd},
         .callback = Trigger,
         .ctx = &ctx_1
@@ -2712,13 +2717,13 @@ void Trigger_trigger_cleanup_2_w_self_super_id(void) {
     ECS_TAG(world, Tag);
 
     ecs_entity_t t1 = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0] = { .id = Tag, .src.flags = EcsUp },
+        .query.terms[0] = { .id = Tag, .src.id = EcsUp },
         .events = { EcsOnAdd },
         .callback = Trigger
     });
 
     ecs_entity_t t2 = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0] = { Tag },
+        .query.terms[0] = { Tag },
         .events = { EcsOnAdd },
         .callback = Trigger
     });
@@ -2747,7 +2752,7 @@ void Trigger_on_add_yield_existing(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = Tag,
+        .query.terms[0].id = Tag,
         .events = {EcsOnAdd},
         .callback = Trigger,
         .ctx = &ctx,
@@ -2794,7 +2799,7 @@ void Trigger_on_add_yield_existing_2_tables(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = TagA,
+        .query.terms[0].id = TagA,
         .events = {EcsOnAdd},
         .callback = Trigger,
         .ctx = &ctx,
@@ -2841,7 +2846,7 @@ void Trigger_on_add_yield_existing_wildcard_pair(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_pair(Rel, EcsWildcard),
+        .query.terms[0].id = ecs_pair(Rel, EcsWildcard),
         .events = {EcsOnAdd},
         .callback = Trigger,
         .ctx = &ctx,
@@ -2886,7 +2891,7 @@ void Trigger_on_set_yield_existing(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_id(Position),
+        .query.terms[0].id = ecs_id(Position),
         .events = {EcsOnSet},
         .callback = Trigger_n_w_values,
         .ctx = &ctx,
@@ -2925,7 +2930,7 @@ void Trigger_filter_term(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0] = { .id = ecs_id(Position), .inout = EcsInOutNone },
+        .query.terms[0] = { .id = ecs_id(Position), .inout = EcsInOutNone },
         .events = {EcsOnSet},
         .callback = Trigger_w_filter_term,
         .ctx = &ctx
@@ -2958,7 +2963,7 @@ void Trigger_on_add_remove_after_exclusive_add(void) {
 
     Probe ctx_add = {0};
     ecs_entity_t t_add = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_pair(Rel, EcsWildcard),
+        .query.terms[0].id = ecs_pair(Rel, EcsWildcard),
         .events = {EcsOnAdd},
         .callback = Trigger,
         .ctx = &ctx_add
@@ -2966,7 +2971,7 @@ void Trigger_on_add_remove_after_exclusive_add(void) {
 
     Probe ctx_remove = {0};
     ecs_entity_t t_remove = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_pair(Rel, EcsWildcard),
+        .query.terms[0].id = ecs_pair(Rel, EcsWildcard),
         .events = {EcsOnRemove},
         .callback = Trigger,
         .ctx = &ctx_remove
@@ -3021,7 +3026,7 @@ void Trigger_on_add_base(void) {
     /* Create trigger before table */
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = TagA, /* Implicitly also listens to IsA */
+        .query.terms[0].id = TagA, /* Implicitly also listens to IsA */
         .events = {EcsOnAdd},
         .callback = Trigger,
         .ctx = &ctx
@@ -3061,7 +3066,7 @@ void Trigger_on_remove_base(void) {
     /* Create trigger before table */
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = TagA, /* Implicitly also listens to IsA */
+        .query.terms[0].id = TagA, /* Implicitly also listens to IsA */
         .events = {EcsOnRemove},
         .callback = Trigger,
         .ctx = &ctx
@@ -3105,7 +3110,7 @@ void Trigger_on_set_base(void) {
     /* Create trigger before table */
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_id(Position), /* Implicitly also listens to IsA */
+        .query.terms[0].id = ecs_id(Position), /* Implicitly also listens to IsA */
         .events = {EcsOnSet},
         .callback = Trigger_w_value,
         .ctx = &ctx
@@ -3156,7 +3161,7 @@ void Trigger_on_unset_base(void) {
     /* Create trigger before table */
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_id(Position), /* Implicitly also listens to IsA */
+        .query.terms[0].id = ecs_id(Position), /* Implicitly also listens to IsA */
         .events = {EcsUnSet},
         .callback = Trigger_w_value,
         .ctx = &ctx
@@ -3199,8 +3204,9 @@ void Trigger_on_add_base_superset_trigger(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = TagA,
-        .filter.terms[0].src.flags = EcsUp,
+        .query.terms[0].id = TagA,
+        .query.terms[0].src.id = EcsUp,
+        .query.terms[0].trav = EcsIsA,
         .events = {EcsOnAdd},
         .callback = Trigger,
         .ctx = &ctx
@@ -3238,8 +3244,9 @@ void Trigger_on_add_base_superset_trigger_2_lvls(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = TagA,
-        .filter.terms[0].src.flags = EcsUp,
+        .query.terms[0].id = TagA,
+        .query.terms[0].src.id = EcsUp,
+        .query.terms[0].trav = EcsIsA,
         .events = {EcsOnAdd},
         .callback = Trigger,
         .ctx = &ctx
@@ -3282,7 +3289,7 @@ void Trigger_on_add_base_2_entities(void) {
     /* Create trigger before table */
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = TagA, /* Implicitly also listens to IsA */
+        .query.terms[0].id = TagA, /* Implicitly also listens to IsA */
         .events = {EcsOnAdd},
         .callback = Trigger,
         .ctx = &ctx
@@ -3324,8 +3331,8 @@ void Trigger_on_add_base_2_entities_filter(void) {
     /* Create trigger before table */
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = TagA, /* Implicitly also listens to IsA */
-        .filter.terms[0].inout = EcsInOutNone,
+        .query.terms[0].id = TagA, /* Implicitly also listens to IsA */
+        .query.terms[0].inout = EcsInOutNone,
         .events = {EcsOnAdd},
         .callback = Trigger_w_filter_term,
         .ctx = &ctx
@@ -3367,7 +3374,7 @@ void Trigger_on_set_base_w_value_2_entities(void) {
     /* Create trigger before table */
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_id(Position), /* Implicitly also listens to IsA */
+        .query.terms[0].id = ecs_id(Position), /* Implicitly also listens to IsA */
         .events = {EcsOnSet},
         .callback = Trigger_w_value,
         .ctx = &ctx
@@ -3419,8 +3426,8 @@ void Trigger_on_set_base_w_value_2_entities_instanced(void) {
     /* Create trigger before table */
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_id(Position), /* Implicitly also listens to IsA */
-        .filter.instanced = true,
+        .query.terms[0].id = ecs_id(Position), /* Implicitly also listens to IsA */
+        .query.flags = EcsQueryIsInstanced,
         .events = {EcsOnSet},
         .callback = Trigger_w_value_instanced,
         .ctx = &ctx
@@ -3472,7 +3479,7 @@ void Trigger_on_add_base_w_override(void) {
     /* Create trigger before table */
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = TagA, /* Implicitly also listens to IsA */
+        .query.terms[0].id = TagA, /* Implicitly also listens to IsA */
         .events = {EcsOnAdd},
         .callback = Trigger,
         .ctx = &ctx
@@ -3527,7 +3534,7 @@ void Trigger_on_set_base_w_override(void) {
     /* Create trigger before table */
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_id(Position), /* Implicitly also listens to IsA */
+        .query.terms[0].id = ecs_id(Position), /* Implicitly also listens to IsA */
         .events = {EcsOnSet},
         .callback = Trigger_w_value,
         .ctx = &ctx
@@ -3585,8 +3592,8 @@ void Trigger_entity_source_1_trigger(void) {
     /* Create trigger before table */
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_id(Position),
-        .filter.terms[0].src.id = subj,
+        .query.terms[0].id = ecs_id(Position),
+        .query.terms[0].src.id = subj,
         .events = {EcsOnSet},
         .callback = Trigger_w_value_from_entity,
         .ctx = &ctx
@@ -3621,16 +3628,16 @@ void Trigger_entity_source_2_triggers(void) {
     /* Create trigger before table */
     Probe ctx = {0};
     ecs_entity_t t1 = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_id(Position),
-        .filter.terms[0].src.id = subj_a,
+        .query.terms[0].id = ecs_id(Position),
+        .query.terms[0].src.id = subj_a,
         .events = {EcsOnSet},
         .callback = Trigger_w_value_from_entity,
         .ctx = &ctx
     });
 
     ecs_entity_t t2 = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_id(Position),
-        .filter.terms[0].src.id = subj_b,
+        .query.terms[0].id = ecs_id(Position),
+        .query.terms[0].src.id = subj_b,
         .events = {EcsOnSet},
         .callback = Trigger_w_value_from_entity,
         .ctx = &ctx
@@ -3679,8 +3686,8 @@ void Trigger_entity_source_base_set(void) {
     /* Create trigger before table */
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_id(Position),
-        .filter.terms[0].src.id = subj,
+        .query.terms[0].id = ecs_id(Position),
+        .query.terms[0].src.id = subj,
         .events = {EcsOnSet},
         .callback = Trigger_w_value_from_entity,
         .ctx = &ctx
@@ -3713,9 +3720,10 @@ void Trigger_not_from_superset(void) {
 
     Probe ctx = {0};
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = Tag,
-        .filter.terms[0].oper = EcsNot,
-        .filter.terms[0].src.flags = EcsUp,
+        .query.terms[0].id = Tag,
+        .query.terms[0].oper = EcsNot,
+        .query.terms[0].src.id = EcsUp,
+        .query.terms[0].trav = EcsIsA,
         .events = {EcsOnAdd},
         .callback = Trigger,
         .ctx = &ctx
@@ -3741,8 +3749,8 @@ void Trigger_create_stresstest(void) {
      * builds don't detect leaks that are cleaned up @ ecs_fini). */
     for (int i = 0; i < 100 * 1000; i ++) {
         ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-            .filter.terms[0].id = Tag,
-            .filter.terms[0].src.flags = EcsSelf | EcsUp,
+            .query.terms[0].id = Tag,
+            .query.terms[0].src.id = EcsSelf | EcsUp,
             .events = {EcsOnAdd},
             .callback = Trigger
         });
@@ -3767,7 +3775,7 @@ void Trigger_add_non_existing_entity(void) {
 
     Probe ctx = {0};
     ecs_entity_t t1 = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_pair(Rel, EcsWildcard),
+        .query.terms[0].id = ecs_pair(Rel, EcsWildcard),
         .events = {EcsOnAdd},
         .callback = Trigger_w_new_entity_value,
         .ctx = &ctx
@@ -3797,8 +3805,8 @@ void Trigger_on_add_self_trigger_with_add_isa(void) {
 
     Probe ctx = {0};
     ecs_entity_t t1 = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = Tag,
-        .filter.terms[0].src.flags = EcsSelf,
+        .query.terms[0].id = Tag,
+        .query.terms[0].src.id = EcsSelf,
         .events = {EcsOnAdd},
         .callback = Trigger,
         .ctx = &ctx
@@ -3827,8 +3835,8 @@ void Trigger_on_set_self_trigger_with_add_isa(void) {
 
     Probe ctx = {0};
     ecs_entity_t t1 = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_id(Position),
-        .filter.terms[0].src.flags = EcsSelf,
+        .query.terms[0].id = ecs_id(Position),
+        .query.terms[0].src.id = EcsSelf,
         .events = {EcsOnSet},
         .callback = Trigger,
         .ctx = &ctx
@@ -3883,7 +3891,7 @@ void Trigger_notify_propagated_twice(void) {
 
     Probe ctx = {0};
     ecs_entity_t t1 = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = TagA,
+        .query.terms[0].id = TagA,
         .events = {EcsOnAdd},
         .callback = TriggerTwice,
         .ctx = &ctx
@@ -3918,8 +3926,9 @@ void Trigger_trigger_superset_wildcard(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_pair(Rel, EcsWildcard), 
-        .filter.terms[0].src.flags = EcsUp,
+        .query.terms[0].id = ecs_pair(Rel, EcsWildcard), 
+        .query.terms[0].src.id = EcsUp,
+        .query.terms[0].trav = EcsIsA,
         .events = {EcsOnAdd},
         .callback = Trigger,
         .ctx = &ctx
@@ -3967,7 +3976,7 @@ void Trigger_remove_wildcard_1_id(void) {
 
     Probe ctx_a = {0};
     ecs_entity_t t_a = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_pair(Rel, ObjA), 
+        .query.terms[0].id = ecs_pair(Rel, ObjA), 
         .events = {EcsOnRemove},
         .callback = Trigger,
         .ctx = &ctx_a
@@ -3976,7 +3985,7 @@ void Trigger_remove_wildcard_1_id(void) {
 
     Probe ctx_b = {0};
     ecs_entity_t t_b = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_pair(Rel, EcsWildcard),
+        .query.terms[0].id = ecs_pair(Rel, EcsWildcard),
         .events = {EcsOnRemove},
         .callback = Trigger,
         .ctx = &ctx_b
@@ -4026,7 +4035,7 @@ void Trigger_remove_wildcard_2_ids(void) {
 
     Probe *ctx_a = &ctx_array[0];
     ecs_entity_t t_a = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_pair(Rel, EcsWildcard), 
+        .query.terms[0].id = ecs_pair(Rel, EcsWildcard), 
         .events = {EcsOnRemove},
         .callback = Trigger,
         .ctx = ctx_a
@@ -4035,7 +4044,7 @@ void Trigger_remove_wildcard_2_ids(void) {
 
     Probe *ctx_b = &ctx_array[1];
     ecs_entity_t t_b = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_pair(Rel, ObjA),
+        .query.terms[0].id = ecs_pair(Rel, ObjA),
         .events = {EcsOnRemove},
         .callback = Trigger,
         .ctx = ctx_b
@@ -4044,7 +4053,7 @@ void Trigger_remove_wildcard_2_ids(void) {
 
     Probe *ctx_c = &ctx_array[2];
     ecs_entity_t t_c = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_pair(Rel, ObjB),
+        .query.terms[0].id = ecs_pair(Rel, ObjB),
         .events = {EcsOnRemove},
         .callback = Trigger,
         .ctx = ctx_c
@@ -4096,7 +4105,7 @@ void Trigger_on_set_w_tag(void) {
 
     Probe ctx = {0};
     ecs_entity_t t1 = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = TagA,
+        .query.terms[0].id = TagA,
         .events = {EcsOnSet},
         .callback = Trigger,
         .ctx = &ctx
@@ -4143,7 +4152,7 @@ static void CreateTriggers(ecs_iter_t *it) {
 
     for (i = 0; i < ctx->count; i ++) {
         ecs_observer_init(it->world, &(ecs_observer_desc_t){
-            .filter.terms[0].id = ctx->first + i,
+            .query.terms[0].id = ctx->first + i,
             .events = {EcsOnAdd},
             .callback = NestedTrigger
         });
@@ -4160,7 +4169,7 @@ void Trigger_create_triggers_in_trigger(void) {
 
     CreateTriggers_ctx ctx = { .count = CreateCount };
     ecs_entity_t t1 = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = TagA,
+        .query.terms[0].id = TagA,
         .events = {EcsOnAdd},
         .callback = CreateTriggers,
         .ctx = &ctx
@@ -4206,7 +4215,7 @@ void Trigger_on_add_superset_w_component(void) {
 
     Probe ctx = {0};
 	ecs_observer_init(world, &(ecs_observer_desc_t){
-		.filter.terms[0].id = ecs_id(Position),
+		.query.terms[0].id = ecs_id(Position),
 		.events = {EcsOnAdd},
 		.callback = Trigger_w_nonzero_value,
         .ctx = &ctx
@@ -4237,7 +4246,7 @@ void Trigger_on_set_superset_w_component(void) {
 
     Probe ctx = {0};
 	ecs_observer_init(world, &(ecs_observer_desc_t){
-		.filter.terms[0].id = ecs_id(Position),
+		.query.terms[0].id = ecs_id(Position),
 		.events = {EcsOnSet},
 		.callback = Trigger_w_value,
         .ctx = &ctx
@@ -4268,9 +4277,10 @@ void Trigger_on_add_base_superset_w_owned(void) {
 
     Probe ctx = {0};
 	ecs_observer_init(world, &(ecs_observer_desc_t){
-		.filter.terms[0] = {
+		.query.terms[0] = {
             .id = ecs_id(Tag),
-            .src.flags = EcsUp,
+            .src.id = EcsUp,
+            .trav = EcsIsA,
         },
 		.events = {EcsOnAdd},
 		.callback = Trigger,
@@ -4300,9 +4310,10 @@ void Trigger_on_add_base_self_superset_w_owned(void) {
 
     Probe ctx = {0};
 	ecs_observer_init(world, &(ecs_observer_desc_t){
-		.filter.terms[0] = {
+		.query.terms[0] = {
             .id = ecs_id(Tag),
-            .src.flags = EcsSelf|EcsUp,
+            .src.id = EcsSelf|EcsUp,
+            .trav = EcsIsA,
         },
 		.events = {EcsOnAdd},
 		.callback = Trigger,
@@ -4351,9 +4362,10 @@ void Trigger_on_set_self_from_child_of_prefab(void) {
 
     Probe ctx = {0};
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0] = {
+        .query.terms[0] = {
             .id = ecs_id(Position),
-            .src.flags = EcsSelf
+            .src.id = EcsSelf,
+            .trav = EcsIsA,
         },
         .events = {EcsOnSet},
         .callback = Trigger_w_value,
@@ -4388,9 +4400,10 @@ void Trigger_on_set_self_superset_from_child_of_prefab(void) {
 
     Probe ctx = {0};
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0] = {
+        .query.terms[0] = {
             .id = ecs_id(Position),
-            .src.flags = EcsSelf | EcsUp
+            .src.id = EcsSelf|EcsUp,
+            .trav = EcsIsA,
         },
         .events = {EcsOnSet},
         .callback = Trigger_w_value,
@@ -4427,9 +4440,9 @@ void Trigger_on_set_self_from_child_base_of_prefab(void) {
 
     Probe ctx = {0};
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0] = {
+        .query.terms[0] = {
             .id = ecs_id(Position),
-            .src.flags = EcsSelf
+            .src.id = EcsSelf
         },
         .events = {EcsOnSet},
         .callback = Trigger_w_value,
@@ -4463,9 +4476,10 @@ void Trigger_on_set_self_superset_from_child_base_of_prefab(void) {
 
     Probe ctx = {0};
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0] = {
+        .query.terms[0] = {
             .id = ecs_id(Position),
-            .src.flags = EcsSelf | EcsUp
+            .src.id = EcsSelf|EcsUp,
+            .trav = EcsIsA
         },
         .events = {EcsOnSet},
         .callback = Trigger_w_value,
@@ -4496,9 +4510,9 @@ void Trigger_on_set_self_auto_override(void) {
 
     Probe ctx = {0};
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0] = {
+        .query.terms[0] = {
             .id = ecs_id(Position),
-            .src.flags = EcsSelf
+            .src.id = EcsSelf
         },
         .events = {EcsOnSet},
         .callback = Trigger_w_value,
@@ -4527,9 +4541,10 @@ void Trigger_on_set_self_superset_auto_override(void) {
 
     Probe ctx = {0};
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0] = {
+        .query.terms[0] = {
             .id = ecs_id(Position),
-            .src.flags = EcsSelf | EcsUp
+            .src.id = EcsSelf|EcsUp,
+            .trav = EcsIsA,
         },
         .events = {EcsOnSet},
         .callback = Trigger_w_value,
@@ -4558,9 +4573,10 @@ void Trigger_on_set_superset_auto_override(void) {
 
     Probe ctx = {0};
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0] = {
+        .query.terms[0] = {
             .id = ecs_id(Position),
-            .src.flags = EcsUp
+            .src.id = EcsUp,
+            .trav = EcsIsA,
         },
         .events = {EcsOnSet},
         .callback = Trigger_w_value,
@@ -4587,7 +4603,7 @@ void Trigger_not_only(void) {
 
     Probe ctx = {0};
     ecs_observer(world, {
-        .filter.terms = {
+        .query.terms = {
             { TagA, .oper = EcsNot }
         },
         .events = { EcsOnAdd },
@@ -4613,7 +4629,7 @@ void Trigger_not_only_w_base(void) {
 
     Probe ctx = {0};
     ecs_observer(world, {
-        .filter.terms = {
+        .query.terms = {
             { TagA, .oper = EcsNot }
         },
         .events = { EcsOnAdd },
@@ -4643,7 +4659,7 @@ void Trigger_not_only_w_base_no_match(void) {
 
     Probe ctx = {0};
     ecs_observer(world, {
-        .filter.terms = {
+        .query.terms = {
             { TagB, .oper = EcsNot }
         },
         .events = { EcsOnAdd },
@@ -4672,10 +4688,10 @@ void Trigger_on_set_superset_after_filter_observer(void) {
 
     Probe ctx_1 = {0};
     ecs_observer(world, {
-        .filter.terms = {
+        .query.terms = {
             { ecs_id(Position) }
         },
-        .filter.flags = EcsFilterNoData,
+        .query.flags = EcsQueryNoData,
         .events = { EcsOnSet },
         .callback = Trigger,
         .ctx = &ctx_1
@@ -4683,8 +4699,8 @@ void Trigger_on_set_superset_after_filter_observer(void) {
 
     Probe ctx_2 = {0};
     ecs_observer(world, {
-        .filter.terms = {
-            { ecs_id(Position), .src.flags = EcsUp }
+        .query.terms = {
+            { ecs_id(Position), .src.id = EcsUp, .trav = EcsIsA }
         },
         .events = { EcsOnSet },
         .callback = Trigger_w_value,
@@ -4717,10 +4733,10 @@ void Trigger_on_set_superset_after_filter_observer_w_on_add(void) {
 
     Probe ctx_1 = {0};
     ecs_observer(world, {
-        .filter.terms = {
+        .query.terms = {
             { ecs_id(Position) }
         },
-        .filter.flags = EcsFilterNoData,
+        .query.flags = EcsQueryNoData,
         .events = { EcsOnAdd },
         .callback = Trigger,
         .ctx = &ctx_1
@@ -4728,8 +4744,8 @@ void Trigger_on_set_superset_after_filter_observer_w_on_add(void) {
 
     Probe ctx_2 = {0};
     ecs_observer(world, {
-        .filter.terms = {
-            { ecs_id(Position), .src.flags = EcsUp }
+        .query.terms = {
+            { ecs_id(Position), .src.id = EcsUp, .trav = EcsIsA }
         },
         .events = { EcsOnAdd },
         .callback = Trigger,
@@ -4762,10 +4778,10 @@ void Trigger_on_set_superset_after_filter_observer_w_on_add_isa_after_set(void) 
 
     Probe ctx_1 = {0};
     ecs_observer(world, {
-        .filter.terms = {
-            { ecs_id(Position), .src.flags = EcsUp }
+        .query.terms = {
+            { ecs_id(Position), .src.id = EcsUp, .trav = EcsIsA, }
         },
-        .filter.flags = EcsFilterNoData,
+        .query.flags = EcsQueryNoData,
         .events = { EcsOnAdd },
         .callback = Trigger,
         .ctx = &ctx_1
@@ -4773,8 +4789,8 @@ void Trigger_on_set_superset_after_filter_observer_w_on_add_isa_after_set(void) 
 
     Probe ctx_2 = {0};
     ecs_observer(world, {
-        .filter.terms = {
-            { ecs_id(Position), .src.flags = EcsUp }
+        .query.terms = {
+            { ecs_id(Position), .src.id = EcsUp, .trav = EcsIsA, }
         },
         .events = { EcsOnAdd },
         .callback = Trigger,
@@ -4812,10 +4828,10 @@ void Trigger_on_set_superset_after_filter_observer_w_on_add_2(void) {
     // first observer causes observer to be initialized with filter flag
     Probe ctx_1 = {0};
     ecs_observer(world, { 
-        .filter.terms = {
+        .query.terms = {
             { ecs_id(Position) }
         },
-        .filter.flags = EcsFilterNoData,
+        .query.flags = EcsQueryNoData,
         .events = { EcsOnAdd },
         .callback = Trigger,
         .ctx = &ctx_1
@@ -4824,8 +4840,8 @@ void Trigger_on_set_superset_after_filter_observer_w_on_add_2(void) {
     // second observer is not a filter, so value should be avaulable
     Probe ctx_2 = {0};
     ecs_observer(world, {
-        .filter.terms = {
-            { ecs_id(Position), .src.flags = EcsUp }
+        .query.terms = {
+            { ecs_id(Position), .src.id = EcsUp, .trav = EcsIsA }
         },
         .events = { EcsOnAdd },
         .callback = Trigger,
@@ -4854,42 +4870,6 @@ void Trigger_on_set_superset_after_filter_observer_w_on_add_2(void) {
     test_int(ctx_2.e[0], inst);
     test_int(ctx_2.c[0][0], ecs_id(Position));
     test_int(ctx_2.s[0][0], base);
-
-    ecs_fini(world);
-}
-
-void Trigger_propagate_w_union_pair(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_TAG(world, Tag);
-    ECS_TAG(world, RelX);
-    ECS_ENTITY(world, RelY, Union);
-
-    ecs_entity_t base = ecs_new_id(world);
-    ecs_entity_t tgt = ecs_new_id(world);
-    ecs_new_w_pair(world, EcsIsA, base);
-
-    Probe ctx = {0};
-    ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0] = {
-            .id = Tag,
-            .src.flags = EcsUp
-        },
-        .events = {EcsOnAdd},
-        .callback = Trigger,
-        .ctx = &ctx
-    });
-    test_int(ctx.invoked, 0);
-    
-    ecs_add_id(world, base, Tag);
-    test_int(ctx.invoked, 1);
-
-    ecs_os_zeromem(&ctx);
-    ecs_add_pair(world, base, RelX, tgt);
-    test_int(ctx.invoked, 0);
-
-    ecs_add_pair(world, base, RelY, tgt);
-    test_int(ctx.invoked, 0);
 
     ecs_fini(world);
 }

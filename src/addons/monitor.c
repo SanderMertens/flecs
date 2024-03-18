@@ -219,7 +219,7 @@ void flecs_stats_monitor_import(
     // Called each frame, collects 60 measurements per second
     ecs_system(world, {
         .entity = ecs_entity(world, { .name = "Monitor1s", .add = {ecs_dependson(EcsPreFrame)} }),
-        .query.filter.terms = {{
+        .query.terms = {{
             .id = ecs_pair(kind, EcsPeriod1s),
             .src.id = EcsWorld 
         }},
@@ -229,7 +229,7 @@ void flecs_stats_monitor_import(
     // Called each second, reduces into 60 measurements per minute
     ecs_entity_t mw1m = ecs_system(world, {
         .entity = ecs_entity(world, { .name = "Monitor1m", .add = {ecs_dependson(EcsPreFrame)} }),
-        .query.filter.terms = {{
+        .query.terms = {{
             .id = ecs_pair(kind, EcsPeriod1m),
             .src.id = EcsWorld 
         }, {
@@ -243,7 +243,7 @@ void flecs_stats_monitor_import(
     // Called each minute, reduces into 60 measurements per hour
     ecs_system(world, {
         .entity = ecs_entity(world, { .name = "Monitor1h", .add = {ecs_dependson(EcsPreFrame)} }),
-        .query.filter.terms = {{
+        .query.terms = {{
             .id = ecs_pair(kind, EcsPeriod1h),
             .src.id = EcsWorld 
         }, {
@@ -258,7 +258,7 @@ void flecs_stats_monitor_import(
     // Called each minute, reduces into 60 measurements per day
     ecs_system(world, {
         .entity = ecs_entity(world, { .name = "Monitor1d", .add = {ecs_dependson(EcsPreFrame)} }),
-        .query.filter.terms = {{
+        .query.terms = {{
             .id = ecs_pair(kind, EcsPeriod1d),
             .src.id = EcsWorld 
         }, {
@@ -274,7 +274,7 @@ void flecs_stats_monitor_import(
     // Called each hour, reduces into 60 measurements per week
     ecs_system(world, {
         .entity = ecs_entity(world, { .name = "Monitor1w", .add = {ecs_dependson(EcsPreFrame)} }),
-        .query.filter.terms = {{
+        .query.terms = {{
             .id = ecs_pair(kind, EcsPeriod1w),
             .src.id = EcsWorld 
         }, {
@@ -375,7 +375,7 @@ void FlecsMonitorImport(
             .name = "UpdateWorldSummary", 
             .add = {ecs_dependson(EcsPreFrame)} 
         }),
-        .query.filter.terms[0] = { .id = ecs_id(EcsWorldSummary) },
+        .query.terms[0] = { .id = ecs_id(EcsWorldSummary) },
         .callback = UpdateWorldSummary
     });
 

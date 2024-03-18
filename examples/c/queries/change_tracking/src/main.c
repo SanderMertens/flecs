@@ -28,19 +28,19 @@ int main(int argc, char *argv[]) {
     // when query::changed() is called.
     // Each query has its own private dirty state which is reset only when the
     // query is iterated.
-    ecs_query_t *q_read = ecs_query(world, {
-        .filter.terms = {{ .id = ecs_id(Position), .inout = EcsIn }}
+    ecs_query_cache_t *q_read = ecs_query(world, {
+        .terms = {{ .id = ecs_id(Position), .inout = EcsIn }}
     });
 
     // Create a query that writes the component based on a Dirty state.
-    ecs_query_t *q_write = ecs_query(world, {
+    ecs_query_cache_t *q_write = ecs_query(world, {
         .filter = {
             .terms = {
                 // Only match if Dirty is shared from prefab
                 { 
                     .id = ecs_id(Dirty), 
                     .inout = EcsIn,
-                    .src.flags = EcsUp 
+                    .src.id = EcsUp 
                 },
                 { .id = ecs_id(Position) }
             },
@@ -109,7 +109,7 @@ int main(int argc, char *argv[]) {
         // Because we enforced that Dirty is a shared component, we can check
         // a single value for the entire table.
         if (!dirty->value) {
-            ecs_query_skip(&it);
+            ecs_query_cache_skip(&it);
             table_str = ecs_table_str(world, it.table);
             printf("it.skip for table [%s]\n", table_str);
             ecs_os_free(table_str);

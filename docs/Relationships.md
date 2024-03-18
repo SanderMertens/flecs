@@ -87,9 +87,9 @@ ecs_query_t *q = ecs_query_new(world, "(Eats, Apples)");
 // Find all entities that eat anything
 ecs_query_t *q = ecs_query_new(world, "(Eats, *)");
 
-// Or with the ecs_query_init function:
-ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-    .filter.terms = {{ecs_pair(Eats, Apples)}}
+// Or with the ecs_query_cache_init function:
+ecs_query_t *q = ecs_query(world, {
+    .terms = {{ecs_pair(Eats, Apples)}}
 });
 ```
 ```cpp
@@ -189,18 +189,18 @@ Bob.each([](flecs::id id) {
 
 ### Find all entities with a pair
 ```c
-ecs_filter_t *f = ecs_filter(world, {
+ecs_query_t *f = ecs_filter(world, {
   .terms[0] = ecs_pair(Eats, Apples)
 });
 
-ecs_iter_t it = ecs_filter_iter(world, f);
-while (ecs_filter_next(&it)) {
+ecs_iter_t it = ecs_query_iter(world, f);
+while (ecs_query_next(&it)) {
   for (int i = 0; i < it.count; i ++) {
     // Iterate as usual
   }
 }
 
-ecs_filter_fini(f);
+ecs_query_fini(f);
 ```
 ```cpp
 world.filter_builder()
@@ -213,19 +213,19 @@ world.filter_builder()
 
 ### Find all entities with a pair wildcard
 ```c
-ecs_filter_t *f = ecs_filter(world, {
+ecs_query_t *f = ecs_filter(world, {
   .terms[0] = ecs_pair(Eats, EcsWildcard)
 });
 
-ecs_iter_t it = ecs_filter_iter(world, f);
-while (ecs_filter_next(&it)) {
+ecs_iter_t it = ecs_query_iter(world, f);
+while (ecs_query_next(&it)) {
   ecs_id_t pair_id = ecs_field_id(&it, 1);
   ecs_entity_t food = ecs_pair_second(world, pair_id); // Apples, ...
   for (int i = 0; i < it.count; i ++) {
     // Iterate as usual
   }
 }
-ecs_filter_fini(f);
+ecs_query_fini(f);
 ```
 ```cpp
 world.filter_builder()
@@ -377,8 +377,8 @@ e.set<Position>(third, {5, 6});
 When querying for relationship pairs, it is often useful to be able to find all instances for a given relationship or target. To accomplish this, an application can use wildcard expressions. Consider the following example, that queries for all entities with a `Likes` relationship:
 
 ```c
-ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-  .filter.terms = {
+ecs_query_t *q = ecs_query(world, {
+  .terms = {
     {ecs_pair(Likes, EcsWildcard)}
   }
 });
@@ -419,8 +419,8 @@ q.iter([](flecs::iter& it) {
 Wildcards may appear in query expressions, using the `*` character:
 
 ```c
-ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-  .filter.expr = "(Likes, *)"
+ecs_query_t *q = ecs_query(world, {
+  .query.expr = "(Likes, *)"
 });
 ```
 ```cpp
@@ -862,10 +862,10 @@ To understand why some ways to organize entities work better than others, having
 1. **Find all root entities**
 World teardown starts by finding all root entities, which are entities that do not have the builtin `ChildOf` relationship. Note that empty entities (entities without any components) are not found during this step.
 
-2. **Filter out modules, components, observers and systems**
+2. **Query out modules, components, observers and systems**
 This ensures that components are not cleaned up before the entities that use them, and triggers, observers and systems are not cleaned up while there are still conditions under which they could be invoked.
 
-3. **Filter out entities that have no children**
+3. **Query out entities that have no children**
 If entities have no children they cannot cause complex cleanup logic. This also decreases the likelihood of initiating cleanup actions that could impact other entities.
 
 4. **Delete root entities**
@@ -1187,7 +1187,7 @@ e.add(Movement, Walking); // replaces (Movement, Running)
 When compared to regular relationships, union relationships have some differences and limitations:
 - Relationship cleanup does not work yet for union relationships
 - Removing a union relationship removes any target, even if the specified target is different
-- Filters and rules do not support union relationships
+- Querys and rules do not support union relationships
 - Union relationships cannot have data
 - Union relationship query terms can use only the `And` operator
 - Queries with a `(R, *)` term will return `(R, *)` as term id for each entity

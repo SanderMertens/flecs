@@ -11,7 +11,7 @@ namespace flecs {
 namespace _ {
     template <typename ... Components>
     using rule_builder_base = builder<
-        rule, ecs_filter_desc_t, rule_builder<Components...>, 
+        rule, ecs_query_desc_t, rule_builder<Components...>, 
         filter_builder_i, Components ...>;
 }
 

@@ -247,12 +247,8 @@ void MonitorAlerts(ecs_iter_t *it) {
         ecs_entity_t a = it->entities[i]; /* Alert entity */
         ecs_entity_t default_severity = ecs_get_target(
             world, a, ecs_id(EcsAlert), 0);
-        ecs_rule_t *rule = poly[i].poly;
-        if (!rule) {
-            continue;
-        }
-
-        ecs_poly_assert(rule, ecs_rule_t);
+        ecs_query_t *rule = poly[i].poly;
+        ecs_poly_assert(rule, ecs_query_impl_t);
 
         ecs_id_t member_id = alert[i].id;
         const EcsMemberRanges *ranges = NULL;
@@ -260,11 +256,11 @@ void MonitorAlerts(ecs_iter_t *it) {
             ranges = ecs_ref_get(world, &alert[i].ranges, EcsMemberRanges);
         }
 
-        ecs_iter_t rit = ecs_rule_iter(world, rule);
+        ecs_iter_t rit = ecs_query_iter(world, rule);
         rit.flags |= EcsIterNoData;
         rit.flags |= EcsIterIsInstanced;
 
-        while (ecs_rule_next(&rit)) {
+        while (ecs_query_next(&rit)) {
             ecs_entity_t severity = flecs_alert_get_severity(
                 world, &rit, &alert[i]);
             if (!severity) {
@@ -361,20 +357,19 @@ void MonitorAlertInstances(ecs_iter_t *it) {
         ecs_err("alert instances must be a child of an alert");
         return;
     }
+
     ecs_entity_t parent = ecs_pair_second(world, childof_pair);
     ecs_assert(parent != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ecs_has(world, parent, EcsAlert), ECS_INVALID_OPERATION,
         "alert entity does not have Alert component");
+
     EcsAlert *alert = ecs_ensure(world, parent, EcsAlert);
     const EcsPoly *poly = ecs_get_pair(world, parent, EcsPoly, EcsQuery);
     ecs_assert(poly != NULL, ECS_INVALID_OPERATION, 
         "alert entity does not have (Poly, Query) component");
-    ecs_rule_t *rule = poly->poly;
-    if (!rule) {
-        return;
-    }
 
-    ecs_poly_assert(rule, ecs_rule_t);
+    ecs_query_t *rule = poly->poly;
+    ecs_poly_assert(rule, ecs_query_impl_t);
 
     ecs_id_t member_id = alert->id;
     const EcsMemberRanges *ranges = NULL;
@@ -398,12 +393,12 @@ void MonitorAlertInstances(ecs_iter_t *it) {
         }
 
         /* Check if alert instance still matches rule */
-        ecs_iter_t rit = ecs_rule_iter(world, rule);
+        ecs_iter_t rit = ecs_query_iter(world, rule);
         rit.flags |= EcsIterNoData;
         rit.flags |= EcsIterIsInstanced;
         ecs_iter_set_var(&rit, 0, e);
 
-        if (ecs_rule_next(&rit)) {
+        if (ecs_query_next(&rit)) {
             bool match = true;
 
             /* If alert is monitoring member range, test value against range */
@@ -509,19 +504,18 @@ ecs_entity_t ecs_alert_init(
         result = ecs_new(world, 0);
     }
 
-    ecs_filter_desc_t private_desc = desc->filter;
+    ecs_query_desc_t private_desc = desc->filter;
     private_desc.entity = result;
 
-    ecs_rule_t *rule = ecs_rule_init(world, &private_desc);
-    if (!rule) {
+    ecs_query_t *q = ecs_query_init(world, &private_desc);
+    if (!q) {
         ecs_err("failed to create alert filter");
         return 0;
     }
 
-    const ecs_filter_t *filter = ecs_rule_get_filter(rule);
-    if (!(filter->flags & EcsFilterMatchThis)) {
+    if (!(q->flags & EcsQueryMatchThis)) {
         ecs_err("alert filter must have at least one '$this' term");
-        ecs_rule_fini(rule);
+        ecs_query_fini(q);
         return 0;
     }
 
@@ -543,7 +537,7 @@ ecs_entity_t ecs_alert_init(
                 &alert->severity_filters, ecs_alert_severity_filter_t);
             *sf = desc->severity_filters[i];
             if (sf->var) {
-                sf->_var_index = ecs_rule_find_var(rule, sf->var);
+                sf->_var_index = ecs_query_find_var(q, sf->var);
                 if (sf->_var_index == -1) {
                     ecs_err("unresolved variable '%s' in alert severity filter", 
                         sf->var);
@@ -606,7 +600,7 @@ ecs_entity_t ecs_alert_init(
 
         int32_t var_id = 0;
         if (desc->var) {
-            var_id = ecs_rule_find_var(rule, desc->var);
+            var_id = ecs_query_find_var(q, desc->var);
             if (var_id == -1) {
                 ecs_err("unresolved variable '%s' in alert member", desc->var);
                 goto error;

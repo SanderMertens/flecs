@@ -20,7 +20,7 @@
 #define FLECS_PARSER_H
 
 /** Maximum number of extra arguments in term expression */
-#define ECS_PARSER_MAX_ARGS (16)
+#define FLECS_TERM_ARG_COUNT_MAX (16)
 
 #ifdef __cplusplus
 extern "C" {
@@ -106,22 +106,24 @@ const char* ecs_parse_token(
  * The parser accepts expressions in the legacy string format.
  *
  * @param world The world.
+ * @param stage The stage.
  * @param name The name of the expression (optional, improves error logs)
  * @param expr The expression to parse (optional, improves error logs)
  * @param ptr The pointer to the current term (must be in expr).
  * @param term_out Out parameter for the term.
- * @param extra_args Out array for extra args, must be of size ECS_PARSER_MAX_ARGS.
+ * @param extra_args Out array for extra args, must be of size FLECS_TERM_ARG_COUNT_MAX.
  * @return pointer to next term if successful, NULL if failed.
  */
 FLECS_API
 char* ecs_parse_term(
     const ecs_world_t *world,
+    ecs_stage_t *stage,
     const char *name,
     const char *expr,
     const char *ptr,
     ecs_term_t *term_out,
     ecs_oper_kind_t *extra_oper,
-    ecs_term_id_t *extra_args,
+    ecs_term_ref_t *extra_args,
     bool allow_newline);
 
 #ifdef __cplusplus

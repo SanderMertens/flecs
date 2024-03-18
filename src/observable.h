@@ -38,6 +38,11 @@ bool flecs_observers_exist(
     ecs_id_t id,
     ecs_entity_t event);
 
+ecs_observer_t* flecs_observer_init(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const ecs_observer_desc_t *desc);
+
 void flecs_observer_fini(
     ecs_observer_t *observer);
 
@@ -61,5 +66,11 @@ void flecs_emit_propagate_invalidate(
     ecs_table_t *table,
     int32_t offset,
     int32_t count);
+
+void flecs_observer_set_disable_bit(
+    ecs_world_t *world,
+    ecs_entity_t e,
+    ecs_flags32_t bit,
+    bool cond);
 
 #endif

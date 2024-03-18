@@ -64,11 +64,8 @@ void json_typeinfo_ser_constants(
     ecs_entity_t type,
     ecs_strbuf_t *str)
 {
-    ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t) {
-        .id = ecs_pair(EcsChildOf, type)
-    });
-
-    while (ecs_term_next(&it)) {
+    ecs_iter_t it = ecs_each_id(world, ecs_pair(EcsChildOf, type));
+    while (ecs_each_next(&it)) {
         int32_t i, count = it.count;
         for (i = 0; i < count; i ++) {
             flecs_json_next(str);

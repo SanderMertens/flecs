@@ -357,13 +357,13 @@ typedef struct ecs_world_to_json_desc_t {
 /** Serialize world into JSON string.
  * This operation iterates the contents of the world to JSON. The operation is
  * equivalent to the following code:
- *
+ * 
  * @code
- * ecs_filter_t *f = ecs_filter(world, {
+ * ecs_query_t *f = ecs_filter(world, {
  *   .terms = {{ .id = EcsAny }}
  * });
- *
- * ecs_iter_t it = ecs_filter_init(world, &f);
+ * 
+ * ecs_iter_t it = ecs_query_init(world, &f);
  * ecs_iter_to_json_desc_t desc = { .serialize_table = true };
  * ecs_iter_to_json(world, iter, &desc);
  * @endcode

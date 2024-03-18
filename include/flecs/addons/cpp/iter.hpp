@@ -313,7 +313,7 @@ public:
      * When this operation is invoked, the components of the current table will
      * not be marked dirty. */
     void skip() {
-        ecs_query_skip(m_iter);
+        ecs_query_cache_skip(m_iter);
     }
 
     /* Return group id for current table (grouped queries only) */

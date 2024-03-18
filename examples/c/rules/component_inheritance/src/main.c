@@ -44,19 +44,19 @@ int main(int argc, char *argv[]) {
     ecs_add(ecs, builder_2, Builder);
 
     // Create a rule to find all ranged units
-    ecs_rule_t *r = ecs_rule(ecs, {
+    ecs_query_impl_t *r = ecs_query(ecs, {
         .terms = {{ .id = RangedUnit }}
     });
 
     // Iterate the rule
-    ecs_iter_t it = ecs_rule_iter(ecs, r);
-    while (ecs_rule_next(&it)) {
+    ecs_iter_t it = ecs_query_iter(ecs, r);
+    while (ecs_query_next(&it)) {
         for (int i = 0; i < it.count; i ++) {
             printf("Unit %s found\n", ecs_get_name(ecs, it.entities[i]));
         }
     }
 
-    ecs_rule_fini(r);
+    ecs_query_fini(r);
 
     // Output
     //  Unit wizard_1 found

@@ -2244,7 +2244,7 @@ void ComponentLifecycle_free_component_new_id_while_fini(void) {
     ECS_TAG(world, Tag);
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = Tag,
+        .query.terms[0].id = Tag,
         .events = {EcsOnRemove},
         .callback = on_remove_tag_set_position
     });
@@ -2263,7 +2263,7 @@ void ComponentLifecycle_dtor_component_new_id_while_fini(void) {
     ECS_TAG(world, Tag);
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = Tag,
+        .query.terms[0].id = Tag,
         .events = {EcsOnRemove},
         .callback = on_remove_tag_set_position
     });
@@ -2290,7 +2290,7 @@ void ComponentLifecycle_free_component_new_pair_id_while_fini(void) {
     ECS_TAG(world, Tag);
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = Tag,
+        .query.terms[0].id = Tag,
         .events = {EcsOnRemove},
         .callback = on_remove_tag_set_position_pair
     });
@@ -2309,7 +2309,7 @@ void ComponentLifecycle_dtor_component_new_pair_id_while_fini(void) {
     ECS_TAG(world, Tag);
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = Tag,
+        .query.terms[0].id = Tag,
         .events = {EcsOnRemove},
         .callback = on_remove_tag_set_position_pair
     });
@@ -2336,7 +2336,7 @@ void ComponentLifecycle_free_component_new_obj_pair_id_while_fini(void) {
     ECS_TAG(world, Tag);
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = Tag,
+        .query.terms[0].id = Tag,
         .events = {EcsOnRemove},
         .callback = on_remove_tag_set_position_obj_pair
     });
@@ -2355,7 +2355,7 @@ void ComponentLifecycle_dtor_component_new_obj_pair_id_while_fini(void) {
     ECS_TAG(world, Tag);
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = Tag,
+        .query.terms[0].id = Tag,
         .events = {EcsOnRemove},
         .callback = on_remove_tag_set_position_obj_pair
     });

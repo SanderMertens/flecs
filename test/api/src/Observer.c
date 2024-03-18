@@ -102,7 +102,7 @@ void Observer_2_terms_w_on_add(void) {
 
     Probe ctx = {0};
     ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{TagA}, {TagB}},
+        .query.terms = {{TagA}, {TagB}},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx
@@ -137,7 +137,7 @@ void Observer_2_terms_w_on_remove(void) {
 
     Probe ctx = {0};
     ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{TagA}, {TagB}},
+        .query.terms = {{TagA}, {TagB}},
         .events = {EcsOnRemove},
         .callback = Observer,
         .ctx = &ctx
@@ -175,7 +175,7 @@ void Observer_2_terms_w_on_set_value(void) {
 
     Probe ctx = {0};
     ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ecs_id(Position)}, {ecs_id(Velocity)}},
+        .query.terms = {{ecs_id(Position)}, {ecs_id(Velocity)}},
         .events = {EcsOnSet},
         .callback = Observer_w_value,
         .ctx = &ctx
@@ -210,7 +210,7 @@ void Observer_2_terms_w_on_remove_value(void) {
 
     Probe ctx = {0};
     ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ecs_id(Position)}, {ecs_id(Velocity)}},
+        .query.terms = {{ecs_id(Position)}, {ecs_id(Velocity)}},
         .events = {EcsOnRemove},
         .callback = Observer_w_value,
         .ctx = &ctx
@@ -249,7 +249,7 @@ void Observer_2_terms_w_on_add_2nd(void) {
 
     Probe ctx = {0};
     ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{TagA}, {TagB}},
+        .query.terms = {{TagA}, {TagB}},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx
@@ -284,7 +284,7 @@ void Observer_2_terms_w_on_remove_2nd(void) {
 
     Probe ctx = {0};
     ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{TagA}, {TagB}},
+        .query.terms = {{TagA}, {TagB}},
         .events = {EcsOnRemove},
         .callback = Observer,
         .ctx = &ctx
@@ -327,7 +327,7 @@ void Observer_2_pair_terms_w_on_add(void) {
 
     Probe ctx = {0};
     ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{pair_a}, {pair_b}},
+        .query.terms = {{pair_a}, {pair_b}},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx
@@ -367,7 +367,7 @@ void Observer_2_pair_terms_w_on_remove(void) {
 
     Probe ctx = {0};
     ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{pair_a}, {pair_b}},
+        .query.terms = {{pair_a}, {pair_b}},
         .events = {EcsOnRemove},
         .callback = Observer,
         .ctx = &ctx
@@ -407,7 +407,7 @@ void Observer_2_wildcard_pair_terms_w_on_add(void) {
 
     Probe ctx = {0};
     ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ecs_pair(RelA, ObjA)}, {ecs_pair(RelB, EcsWildcard)}},
+        .query.terms = {{ecs_pair(RelA, ObjA)}, {ecs_pair(RelB, EcsWildcard)}},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx
@@ -444,7 +444,7 @@ void Observer_2_wildcard_pair_terms_w_on_add_2_matching(void) {
 
     Probe ctx = {0};
     ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ecs_pair(RelA, ObjA)}, {ecs_pair(RelB, EcsWildcard)}},
+        .query.terms = {{ecs_pair(RelA, ObjA)}, {ecs_pair(RelB, EcsWildcard)}},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx
@@ -495,7 +495,7 @@ void Observer_2_wildcard_pair_terms_w_on_add_3_matching(void) {
 
     Probe ctx = {0};
     ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ecs_pair(RelA, ObjA)}, {ecs_pair(RelB, EcsWildcard)}},
+        .query.terms = {{ecs_pair(RelA, ObjA)}, {ecs_pair(RelB, EcsWildcard)}},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx
@@ -548,7 +548,6 @@ void Observer_2_wildcard_pair_terms_w_on_add_3_matching(void) {
     ecs_fini(world);
 }
 
-
 void Observer_2_wildcard_pair_terms_w_on_remove(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -559,7 +558,7 @@ void Observer_2_wildcard_pair_terms_w_on_remove(void) {
 
     Probe ctx = {0};
     ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ecs_pair(RelA, ObjA)}, {ecs_pair(RelB, EcsWildcard)}},
+        .query.terms = {{ecs_pair(RelA, ObjA)}, {ecs_pair(RelB, EcsWildcard)}},
         .events = {EcsOnRemove},
         .callback = Observer,
         .ctx = &ctx
@@ -596,7 +595,7 @@ void Observer_on_set_n_entities(void) {
 
     Probe ctx = {0};
     ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ecs_id(Self)}},
+        .query.terms = {{ecs_id(Self)}},
         .events = {EcsOnSet},
         .callback = Observer,
         .ctx = &ctx
@@ -657,7 +656,7 @@ void Observer_on_set_n_entities_2_comp(void) {
 
     Probe ctx = {0};
     ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ecs_id(Self)}, {ecs_pair(ecs_id(Self), EcsWildcard)}},
+        .query.terms = {{ecs_id(Self)}, {ecs_pair(ecs_id(Self), EcsWildcard)}},
         .events = {EcsOnSet},
         .callback = Observer,
         .ctx = &ctx
@@ -708,7 +707,7 @@ void Observer_wildcard_pair_w_pred_component(void) {
 
     Probe ctx = {0};
     ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ecs_pair(ecs_id(Position), EcsWildcard)}},
+        .query.terms = {{ecs_pair(ecs_id(Position), EcsWildcard)}},
         .events = {EcsOnSet},
         .callback = Observer_w_value,
         .ctx = &ctx
@@ -763,7 +762,7 @@ void Observer_wildcard_pair_w_obj_component(void) {
 
     Probe ctx = {0};
     ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ ecs_pair(EcsWildcard, ecs_id(Position)) }},
+        .query.terms = {{ ecs_pair(EcsWildcard, ecs_id(Position)) }},
         .events = {EcsOnSet},
         .callback = Observer_w_value,
         .ctx = &ctx
@@ -817,7 +816,7 @@ void Observer_2_terms_1_not_w_on_add(void) {
 
     Probe ctx = {0};
     ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{TagA}, {TagB, .oper = EcsNot}},
+        .query.terms = {{TagA}, {TagB, .oper = EcsNot}},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx
@@ -859,7 +858,7 @@ void Observer_2_terms_1_not_w_on_remove(void) {
 
     Probe ctx = {0};
     ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{TagA}, {TagB, .oper = EcsNot}},
+        .query.terms = {{TagA}, {TagB, .oper = EcsNot}},
         .events = {EcsOnRemove},
         .callback = Observer,
         .ctx = &ctx
@@ -906,7 +905,7 @@ void Observer_2_terms_w_on_set(void) {
 
     Probe ctx = {0};
     ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ecs_id(Position)}, {TagB}},
+        .query.terms = {{ecs_id(Position)}, {TagB}},
         .events = {EcsOnSet},
         .callback = Observer,
         .ctx = &ctx
@@ -944,7 +943,7 @@ void Observer_2_terms_w_un_set(void) {
 
     Probe ctx = {0};
     ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ecs_id(Position)}, {TagB}},
+        .query.terms = {{ecs_id(Position)}, {TagB}},
         .events = {EcsUnSet},
         .callback = Observer,
         .ctx = &ctx
@@ -986,7 +985,7 @@ void Observer_3_terms_2_or_on_add(void) {
 
     Probe ctx = {0};
     ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{TagA}, {TagB, .oper = EcsOr}, {TagC }},
+        .query.terms = {{TagA}, {TagB, .oper = EcsOr}, {TagC }},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx
@@ -1036,7 +1035,7 @@ void Observer_3_terms_2_or_on_remove(void) {
 
     Probe ctx = {0};
     ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{TagA}, {TagB, .oper = EcsOr}, {TagC }},
+        .query.terms = {{TagA}, {TagB, .oper = EcsOr}, {TagC }},
         .events = {EcsOnRemove},
         .callback = Observer,
         .ctx = &ctx
@@ -1076,7 +1075,7 @@ void Observer_2_terms_w_from_entity_on_add(void) {
     
     Probe ctx = {0};
     ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{TagA}, {TagB, .src.id = x}},
+        .query.terms = {{TagA}, {TagB, .src.id = x}},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx
@@ -1111,7 +1110,7 @@ void Observer_2_terms_on_remove_on_clear(void) {
 
     Probe ctx = {0};
     ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{TagA}, {TagB}},
+        .query.terms = {{TagA}, {TagB}},
         .events = {EcsOnRemove},
         .callback = Observer,
         .ctx = &ctx
@@ -1140,7 +1139,7 @@ void Observer_2_terms_on_remove_on_delete(void) {
 
     Probe ctx = {0};
     ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{TagA}, {TagB}},
+        .query.terms = {{TagA}, {TagB}},
         .events = {EcsOnRemove},
         .callback = Observer,
         .ctx = &ctx
@@ -1167,7 +1166,7 @@ void Observer_add_after_delete_observer(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_entity_t observer = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{.id = ecs_id(Position) }},
+        .query.terms = {{.id = ecs_id(Position) }},
         .events = {EcsOnAdd},
         .callback = Dummy
     });
@@ -1196,7 +1195,7 @@ void Observer_remove_after_delete_observer(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_entity_t observer = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{.id = ecs_id(Position) }},
+        .query.terms = {{.id = ecs_id(Position) }},
         .events = {EcsOnRemove},
         .callback = Dummy
     });
@@ -1259,7 +1258,7 @@ void Observer_delete_observer_w_ctx(void) {
     ECS_TAG(world, Tag);
 
     ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms =  {{ Tag }},
+        .query.terms =  {{ Tag }},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx_value,
@@ -1286,7 +1285,7 @@ void Observer_update_ctx(void) {
     ECS_TAG(world, Tag);
 
     ecs_entity_t system = ecs_observer(world, {
-        .filter.terms = {{.id = Tag}},
+        .query.terms = {{.id = Tag}},
         .callback = Dummy,
         .events = {EcsOnAdd},
         .ctx = &ctx_value,
@@ -1344,7 +1343,7 @@ void Observer_filter_w_strings(void) {
 
     Probe ctx = {0};
     ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{.first.name = "TagA"}, {.first.name = "TagB"}},
+        .query.terms = {{.first.name = "TagA"}, {.first.name = "TagB"}},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx
@@ -1384,7 +1383,7 @@ void Observer_iter_type_set(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ Tag }},
+        .query.terms = {{ Tag }},
         .events = {EcsOnAdd},
         .callback = TypeObserver,
         .ctx = &ctx
@@ -1414,7 +1413,7 @@ void Observer_readonly_term(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ TagA, .inout = EcsIn }},
+        .query.terms = {{ TagA, .inout = EcsIn }},
         .events = {EcsOnAdd},
         .callback = ObserverReadonly,
         .ctx = &ctx
@@ -1447,14 +1446,14 @@ void Observer_trigger_on_prefab(void) {
     Probe ctx_2 = {0};
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ TagA }},
+        .query.terms = {{ TagA }},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx_1
     });
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ TagA }, { EcsPrefab, .oper = EcsOptional}},
+        .query.terms = {{ TagA }, { EcsPrefab, .oper = EcsOptional}},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx_2
@@ -1493,14 +1492,14 @@ void Observer_trigger_on_disabled(void) {
     Probe ctx_2 = {0};
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ TagA }},
+        .query.terms = {{ TagA }},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx_1
     });
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ TagA }, { EcsDisabled, .oper = EcsOptional}},
+        .query.terms = {{ TagA }, { EcsDisabled, .oper = EcsOptional}},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx_2
@@ -2119,7 +2118,7 @@ void Observer_filter_term(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ .id = ecs_id(Position), .inout = EcsInOutNone }},
+        .query.terms = {{ .id = ecs_id(Position), .inout = EcsInOutNone }},
         .events = {EcsOnSet},
         .callback = Observer_w_filter_term,
         .ctx = &ctx
@@ -2151,7 +2150,7 @@ void Observer_2_terms_1_filter(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {
+        .query.terms = {
             { .id = ecs_id(Position), .inout = EcsInOutNone },
             { .id = ecs_id(Velocity) }
         },
@@ -2191,7 +2190,7 @@ void Observer_3_terms_2_filter(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {
+        .query.terms = {
             { .id = ecs_id(Position), .inout = EcsInOutNone },
             { .id = ecs_id(Velocity), .inout = EcsInOutNone },
             { .id = ecs_id(Mass) }
@@ -2234,8 +2233,8 @@ void Observer_and_from(void) {
 
     Probe ctx = {0};
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {
-            { ECS_AND | Type}
+        .query.terms = {
+            { Type, .oper = EcsAndFrom }
         },
         .events = {EcsOnAdd},
         .callback = Observer,
@@ -2269,7 +2268,7 @@ void Observer_or_from(void) {
 
     Probe ctx = {0};
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {
+        .query.terms = {
             { Type, .oper = EcsOrFrom }
         },
         .events = {EcsOnAdd},
@@ -2329,7 +2328,7 @@ void Observer_notify_propagated_twice(void) {
 
     Probe ctx = {0};
     ecs_entity_t t1 = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ TagA }},
+        .query.terms = {{ TagA }},
         .events = {EcsOnAdd},
         .callback = TriggerTwice,
         .ctx = &ctx
@@ -2367,7 +2366,7 @@ void Observer_on_add_yield_existing(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ Tag }},
+        .query.terms = {{ Tag }},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx,
@@ -2414,7 +2413,7 @@ void Observer_on_add_yield_existing_2_tables(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ TagA }},
+        .query.terms = {{ TagA }},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx,
@@ -2470,7 +2469,7 @@ void Observer_on_add_yield_existing_2_terms(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ TagA }, { TagB }},
+        .query.terms = {{ TagA }, { TagB }},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx,
@@ -2514,7 +2513,7 @@ void Observer_on_add_yield_existing_wildcard(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ ecs_pair(Rel, EcsWildcard ) }},
+        .query.terms = {{ ecs_pair(Rel, EcsWildcard ) }},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx,
@@ -2553,7 +2552,7 @@ void Observer_on_add_yield_existing_wildcard_multi(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ ecs_pair(Rel, EcsWildcard ) }, { Tag }},
+        .query.terms = {{ ecs_pair(Rel, EcsWildcard ) }, { Tag }},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx,
@@ -2593,7 +2592,7 @@ void Observer_on_add_yield_existing_wildcard_multi_w_wildcard_pivot(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ ecs_pair(Rel, EcsWildcard ) }, { Tag }},
+        .query.terms = {{ ecs_pair(Rel, EcsWildcard ) }, { Tag }},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx,
@@ -2630,7 +2629,11 @@ void Observer_observer_superset_wildcard(void) {
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ .id = ecs_pair(Rel, EcsWildcard), .src.flags = EcsUp }},
+        .query.terms = {{ 
+            .id = ecs_pair(Rel, EcsWildcard), 
+            .src.id = EcsUp, 
+            .trav = EcsIsA
+        }},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx
@@ -2681,7 +2684,11 @@ void Observer_observer_superset_wildcard_add_isa(void) {
     
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ .id = ecs_pair(Rel, EcsWildcard), .src.flags = EcsUp }},
+        .query.terms = {{ 
+            .id = ecs_pair(Rel, EcsWildcard), 
+            .src.id = EcsUp,
+            .trav = EcsIsA
+        }},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx
@@ -2722,7 +2729,11 @@ void Observer_observer_superset_wildcard_add_isa_at_offset(void) {
     
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ .id = ecs_pair(Rel, EcsWildcard), .src.flags = EcsUp }},
+        .query.terms = {{ 
+            .id = ecs_pair(Rel, EcsWildcard), 
+            .src.id = EcsUp,
+            .trav = EcsIsA 
+        }},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx
@@ -2752,7 +2763,7 @@ void Observer_on_set_w_tag(void) {
 
     Probe ctx = {0};
     ecs_entity_t t1 = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ TagA }},
+        .query.terms = {{ TagA }},
         .events = {EcsOnSet},
         .callback = Observer,
         .ctx = &ctx
@@ -2780,7 +2791,7 @@ void Observer_mixed_on_set_w_tag(void) {
 
     Probe ctx = {0};
     ecs_entity_t t1 = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ TagA }, { ecs_id(Position) }},
+        .query.terms = {{ TagA }, { ecs_id(Position) }},
         .events = {EcsOnSet},
         .callback = Observer,
         .ctx = &ctx
@@ -2829,7 +2840,7 @@ void Observer_mixed_un_set_w_tag(void) {
 
     Probe ctx = {0};
     ecs_entity_t t1 = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ TagA }, { ecs_id(Position) }},
+        .query.terms = {{ TagA }, { ecs_id(Position) }},
         .events = {EcsUnSet},
         .callback = Observer,
         .ctx = &ctx
@@ -2875,7 +2886,7 @@ void Observer_match_base_w_id_at_offset(void) {
 
     Probe ctx_1 = {0};
     ecs_entity_t t1 = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ ecs_id(Position) }},
+        .query.terms = {{ ecs_id(Position) }},
         .events = {EcsOnSet},
         .callback = Observer,
         .ctx = &ctx_1
@@ -2884,7 +2895,7 @@ void Observer_match_base_w_id_at_offset(void) {
 
     Probe ctx_2 = {0};
     ecs_entity_t t2 = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ ecs_id(Velocity) }},
+        .query.terms = {{ ecs_id(Velocity) }},
         .events = {EcsOnSet},
         .callback = Observer,
         .ctx = &ctx_2
@@ -2942,7 +2953,7 @@ void Observer_custom_run_action(void) {
 
     Probe ctx = {0};
     ecs_entity_t t1 = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ TagA }},
+        .query.terms = {{ TagA }},
         .events = {EcsOnAdd},
         .run = Run,
         .callback = Observer,
@@ -2969,7 +2980,7 @@ void Observer_custom_run_action_w_iter_next(void) {
 
     Probe ctx = {0};
     ecs_entity_t t1 = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ TagA }},
+        .query.terms = {{ TagA }},
         .events = {EcsOnAdd},
         .run = Run_w_iter_next,
         .callback = Observer,
@@ -2996,7 +3007,7 @@ void Observer_custom_run_action_2_terms(void) {
 
     Probe ctx = {0};
     ecs_entity_t t1 = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ TagA }, { TagB }},
+        .query.terms = {{ TagA }, { TagB }},
         .events = {EcsOnAdd},
         .run = Run,
         .callback = Observer,
@@ -3027,7 +3038,7 @@ void Observer_custom_run_action_w_iter_next_2_terms(void) {
 
     Probe ctx = {0};
     ecs_entity_t t1 = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ TagA }, { TagB }},
+        .query.terms = {{ TagA }, { TagB }},
         .events = {EcsOnAdd},
         .run = Run_w_iter_next,
         .callback = Observer,
@@ -3054,12 +3065,12 @@ void Observer_read_in_on_remove_after_add_other_w_not(void) {
 
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Tag);
-    ECS_TAG(world, O);
+    ECS_TAG(world, Tgt);
 
     Probe ctx = {0};
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {
-            { .id = ecs_pair(ecs_id(Position), O)},
+        .query.terms = {
+            { .id = ecs_pair_t(Position, Tgt)},
             { .id = Tag, .oper = EcsNot }
         },
         .events = {EcsOnRemove},
@@ -3067,7 +3078,7 @@ void Observer_read_in_on_remove_after_add_other_w_not(void) {
         .ctx = &ctx
     });
 
-    ecs_entity_t e = ecs_set_pair(world, 0, Position, O, { 10, 20 });
+    ecs_entity_t e = ecs_set_pair(world, 0, Position, Tgt, { 10, 20 });
     test_int(ctx.invoked, 0);
 
     ecs_add(world, e, Tag);
@@ -3086,7 +3097,7 @@ void Observer_observer_w_short_notation(void) {
 
     Probe ctx = {0};
     ecs_entity_t o = ecs_observer(world, {
-        .filter.terms = {{
+        .query.terms = {{
             .id = Foo
         }},
         .events = { EcsOnAdd },
@@ -3113,7 +3124,7 @@ void Observer_observer_w_filter_term(void) {
 
     Probe ctx = {0};
     ecs_observer(world, {
-        .filter.terms = {{ .id = TagA }, { .id = TagB, .src.flags = EcsFilter }},
+        .query.terms = {{ .id = TagA }, { .id = TagB, .inout = EcsInOutFilter }},
         .events = { EcsOnAdd },
         .callback = Observer,
         .ctx = &ctx
@@ -3167,7 +3178,7 @@ void Observer_multi_observer_w_ctx_free(void) {
     *ctx = 10;
 
     ecs_entity_t o = ecs_observer(world, {
-        .filter.terms = {{ .id = TagA }, { .id = TagB }},
+        .query.terms = {{ .id = TagA }, { .id = TagB }},
         .events = { EcsOnAdd },
         .callback = Observer_w_ctx,
         .ctx = ctx,
@@ -3205,10 +3216,10 @@ void Observer_propagate_after_on_delete_clear_action(void) {
     Probe ctx = {0};
 
     ecs_observer(world, {
-        .filter.terms = {{ 
+        .query.terms = {{ 
             .id = ecs_pair(Rel, EcsWildcard), 
-            .src.flags = EcsUp, 
-            .src.trav = EcsChildOf 
+            .src.id = EcsUp, 
+            .trav = EcsChildOf 
         }},
         .events = { EcsOnRemove },
         .callback = Observer,
@@ -3238,9 +3249,9 @@ void Observer_on_add_after_batch_w_exclusive_adds(void) {
     Probe ctx = {0};
 
     ecs_observer(world, {
-        .filter.terms = {{ 
+        .query.terms = {{ 
             ecs_pair(Rel, EcsWildcard), 
-            .src.flags = EcsSelf
+            .src.id = EcsSelf
         }},
         .events = {EcsOnAdd},
         .callback = Observer,
@@ -3276,7 +3287,7 @@ void Observer_propagate_match_relationship_w_self_up(void) {
 
     Probe ctx = {0};
     ecs_observer(world, {
-        .filter.terms = {{ TagB, .src.flags = EcsSelf|EcsUp }},
+        .query.terms = {{ TagB, .src.id = EcsSelf|EcsUp, .trav = EcsIsA }},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx
@@ -3306,7 +3317,7 @@ void Observer_propagate_match_relationship_w_up(void) {
 
     Probe ctx = {0};
     ecs_observer(world, {
-        .filter.terms = {{ TagB, .src.flags = EcsUp }},
+        .query.terms = {{ TagB, .src.id = EcsUp, .trav = EcsIsA }},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx
@@ -3330,7 +3341,7 @@ void Observer_propagate_isa_of_parent_add(void) {
 
     Probe ctx = {0};
     ecs_observer(world, {
-        .filter.terms = {{ TagA, .src.flags = EcsUp, .src.trav = EcsChildOf }},
+        .query.terms = {{ TagA, .src.id = EcsUp, .trav = EcsChildOf }},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx
@@ -3361,7 +3372,7 @@ void Observer_propagate_isa_of_parent_remove(void) {
 
     Probe ctx = {0};
     ecs_observer(world, {
-        .filter.terms = {{ TagA, .src.flags = EcsUp, .src.trav = EcsChildOf }},
+        .query.terms = {{ TagA, .src.id = EcsUp, .trav = EcsChildOf }},
         .events = {EcsOnRemove},
         .callback = Observer,
         .ctx = &ctx
@@ -3393,7 +3404,7 @@ void Observer_propagate_isa_of_parent_set(void) {
 
     Probe ctx = {0};
     ecs_observer(world, {
-        .filter.terms = {{ ecs_id(Position), .src.flags = EcsUp, .src.trav = EcsChildOf }},
+        .query.terms = {{ ecs_id(Position), .src.id = EcsUp, .trav = EcsChildOf }},
         .events = {EcsOnSet},
         .callback = Observer_w_1_value,
         .ctx = &ctx
@@ -3424,7 +3435,7 @@ void Observer_propagate_add_childof_of_parent(void) {
 
     Probe ctx = {0};
     ecs_observer(world, {
-        .filter.terms = {{ TagA, .src.flags = EcsUp, .src.trav = EcsChildOf }},
+        .query.terms = {{ TagA, .src.id = EcsUp, .trav = EcsChildOf }},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx
@@ -3455,7 +3466,7 @@ void Observer_propagate_add_childof_of_parent_w_siblings(void) {
 
     Probe ctx = {0};
     ecs_observer(world, {
-        .filter.terms = {{ TagA, .src.flags = EcsUp, .src.trav = EcsChildOf }},
+        .query.terms = {{ TagA, .src.id = EcsUp, .trav = EcsChildOf }},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx
@@ -3514,7 +3525,7 @@ void Observer_propagate_add_childof_w_parent_w_base(void) {
 
     Probe ctx = {0};
     ecs_observer(world, {
-        .filter.terms = {{ TagA, .src.flags = EcsUp, .src.trav = EcsChildOf }},
+        .query.terms = {{ TagA, .src.id = EcsUp, .trav = EcsChildOf }},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx
@@ -3544,7 +3555,7 @@ void Observer_propagate_remove_childof_w_parent_w_base(void) {
 
     Probe ctx = {0};
     ecs_observer(world, {
-        .filter.terms = {{ TagA, .src.flags = EcsUp, .src.trav = EcsChildOf }},
+        .query.terms = {{ TagA, .src.id = EcsUp, .trav = EcsChildOf }},
         .events = {EcsOnRemove},
         .callback = Observer,
         .ctx = &ctx
@@ -3575,7 +3586,7 @@ void Observer_propagate_remove_childof_of_parent(void) {
 
     Probe ctx = {0};
     ecs_observer(world, {
-        .filter.terms = {{ TagA, .src.flags = EcsUp, .src.trav = EcsChildOf }},
+        .query.terms = {{ TagA, .src.id = EcsUp, .trav = EcsChildOf }},
         .events = {EcsOnRemove},
         .callback = Observer,
         .ctx = &ctx
@@ -3606,7 +3617,7 @@ void Observer_propagate_add_isa_of_parent(void) {
 
     Probe ctx = {0};
     ecs_observer(world, {
-        .filter.terms = {{ TagA, .src.flags = EcsUp, .src.trav = EcsChildOf }},
+        .query.terms = {{ TagA, .src.id = EcsUp, .trav = EcsChildOf }},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx
@@ -3638,7 +3649,7 @@ void Observer_propagate_remove_isa_of_parent(void) {
 
     Probe ctx = {0};
     ecs_observer(world, {
-        .filter.terms = {{ TagA, .src.flags = EcsUp, .src.trav = EcsChildOf }},
+        .query.terms = {{ TagA, .src.id = EcsUp, .trav = EcsChildOf }},
         .events = {EcsOnRemove},
         .callback = Observer,
         .ctx = &ctx
@@ -3670,7 +3681,7 @@ void Observer_propagate_add_childof_of_base(void) {
 
     Probe ctx = {0};
     ecs_observer(world, {
-        .filter.terms = {{ TagA, .src.flags = EcsUp, .src.trav = EcsChildOf }},
+        .query.terms = {{ TagA, .src.id = EcsUp, .trav = EcsChildOf }},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx
@@ -3702,7 +3713,7 @@ void Observer_propagate_remove_childof_of_base(void) {
 
     Probe ctx = {0};
     ecs_observer(world, {
-        .filter.terms = {{ TagA, .src.flags = EcsUp, .src.trav = EcsChildOf }},
+        .query.terms = {{ TagA, .src.id = EcsUp, .trav = EcsChildOf }},
         .events = {EcsOnRemove},
         .callback = Observer,
         .ctx = &ctx
@@ -3734,7 +3745,7 @@ void Observer_emit_for_parent_w_prefab_child_and_instance(void) {
 
     Probe ctx = {0};
     ecs_observer(ecs, {
-        .filter.terms = {
+        .query.terms = {
             { .id = ecs_id(Position) }
         },
         .events = { EcsOnSet },
@@ -3771,9 +3782,8 @@ void Observer_observer_w_2_fixed_src(void) {
 
     Probe ctx = {0};
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {
-            // Comment out either of these and the callback succeeds.
-            { Foo , .src.id = e1 },
+        .query.terms = {
+            { Foo, .src.id = e1 },
             { Bar, .src.id = e2 },
         },
         .events = { EcsOnAdd },
@@ -3802,7 +3812,7 @@ void Observer_emit_for_recreated_id_after_remove_all(void) {
 
     Probe ctx = {0};
     ecs_observer(world, {
-        .filter.terms = {
+        .query.terms = {
             { TagA },
             { ecs_pair(Rel, Tgt) }
         },
@@ -3843,7 +3853,7 @@ void Observer_emit_for_recreated_id_after_remove_all_wildcard(void) {
 
     Probe ctx = {0};
     ecs_observer(world, {
-        .filter.terms = {
+        .query.terms = {
             { TagA },
             { ecs_pair(Rel, Tgt) }
         },
@@ -3884,7 +3894,7 @@ void Observer_emit_for_recreated_id_after_delete_with(void) {
 
     Probe ctx = {0};
     ecs_observer(world, {
-        .filter.terms = {
+        .query.terms = {
             { TagA },
             { ecs_pair(Rel, Tgt) }
         },
@@ -3925,7 +3935,7 @@ void Observer_emit_for_recreated_id_after_delete_with_wildcard(void) {
 
     Probe ctx = {0};
     ecs_observer(world, {
-        .filter.terms = {
+        .query.terms = {
             { TagA },
             { ecs_pair(Rel, Tgt) }
         },
@@ -3968,7 +3978,7 @@ void Observer_delete_observed_id(void) {
 
     Probe ctx = {0};
     ecs_observer(world, {
-        .filter.terms = {
+        .query.terms = {
             { TagA },
             { ecs_pair(Rel, Tgt) }
         },
@@ -3995,7 +4005,7 @@ void Observer_delete_observed_rel(void) {
 
     Probe ctx = {0};
     ecs_observer(world, {
-        .filter.terms = {
+        .query.terms = {
             { TagA },
             { ecs_pair(Rel, Tgt) }
         },
@@ -4022,7 +4032,7 @@ void Observer_delete_observed_tgt(void) {
 
     Probe ctx = {0};
     ecs_observer(world, {
-        .filter.terms = {
+        .query.terms = {
             { TagA },
             { ecs_pair(Rel, Tgt) }
         },
@@ -4246,8 +4256,8 @@ void Observer_on_remove_target_from_base_at_offset(void) {
 
     Probe ctx = { 0 };
     ecs_entity_t o = ecs_observer(world, {
-        .filter.terms = {
-            { .id = ecs_pair(R, EcsWildcard), .src.flags = EcsUp },
+        .query.terms = {
+            { .id = ecs_pair(R, EcsWildcard), .src.id = EcsUp, .trav = EcsIsA },
             { .id = C },
         },
         .events = { EcsOnRemove },
@@ -4294,8 +4304,8 @@ void Observer_on_remove_target_component_from_base_at_offset(void) {
 
     Probe ctx = { 0 };
     ecs_entity_t o = ecs_observer(world, {
-        .filter.terms = {
-            { .id = ecs_pair(ecs_id(Position), EcsWildcard), .src.flags = EcsUp },
+        .query.terms = {
+            { .id = ecs_pair(ecs_id(Position), EcsWildcard), .src.id = EcsUp, .trav = EcsIsA },
             { .id = C },
         },
         .events = { EcsOnRemove },
@@ -4349,20 +4359,20 @@ void Observer_wildcard_propagate_w_other_table(void) {
     Probe ctx_parent = {0};
 
     ecs_observer(world, {
-        .filter.terms = {{ ecs_pair(rel, EcsWildcard) }},
+        .query.terms = {{ ecs_pair(rel, EcsWildcard) }},
         .events = {EcsOnAdd},
         .callback = Observer_dummy
     });
 
     ecs_observer(world, {
-        .filter.terms = {{ ecs_pair(rel, EcsWildcard) }},
+        .query.terms = {{ ecs_pair(rel, EcsWildcard) }},
         .events = {EcsWildcard},
         .callback = Observer_w_other_table,
         .ctx = &ctx_parent
     });
 
     ecs_observer(world, {
-        .filter.terms = {{ ecs_pair(rel, EcsWildcard), .src.flags = EcsUp, .src.trav = EcsChildOf }},
+        .query.terms = {{ ecs_pair(rel, EcsWildcard), .src.id = EcsUp }},
         .events = {EcsWildcard},
         .callback = Observer_dummy
     });
@@ -4381,7 +4391,7 @@ void Observer_disable_observer(void) {
 
     Probe ctx = {0};
     ecs_entity_t o = ecs_observer(ecs, {
-        .filter.terms = {
+        .query.terms = {
             { .id = ecs_id(Position) }
         },
         .events = { EcsOnAdd },
@@ -4418,7 +4428,7 @@ void Observer_disable_observer_module(void) {
     Probe ctx = {0};
     ecs_entity_t o = ecs_observer(ecs, {
         .entity = ecs_entity(ecs, { .add = { ecs_childof(module) }}),
-        .filter.terms = {
+        .query.terms = {
             { .id = ecs_id(Position) }
         },
         .events = { EcsOnAdd },
@@ -4459,7 +4469,7 @@ void Observer_disable_observer_module_nested(void) {
     Probe ctx = {0};
     ecs_observer(ecs, {
         .entity = ecs_entity(ecs, { .add = { ecs_childof(module_child) }}),
-        .filter.terms = {
+        .query.terms = {
             { .id = ecs_id(Position) }
         },
         .events = { EcsOnAdd },
@@ -4512,7 +4522,7 @@ void Observer_disable_observer_and_module(void) {
     Probe ctx = {0};
     ecs_entity_t o = ecs_observer(ecs, {
         .entity = ecs_entity(ecs, { .add = { ecs_childof(module) }}),
-        .filter.terms = {
+        .query.terms = {
             { .id = ecs_id(Position) }
         },
         .events = { EcsOnAdd },
@@ -4563,7 +4573,7 @@ void Observer_disable_multi_observer(void) {
 
     Probe ctx = {0};
     ecs_entity_t o = ecs_observer(ecs, {
-        .filter.terms = {
+        .query.terms = {
             { .id = ecs_id(Position) },
             { .id = ecs_id(Velocity) },
         },
@@ -4611,7 +4621,7 @@ void Observer_disable_multi_observer_module(void) {
     Probe ctx = {0};
     ecs_entity_t o = ecs_observer(ecs, {
         .entity = ecs_entity(ecs, { .add = { ecs_childof(module) }}),
-        .filter.terms = {
+        .query.terms = {
             { .id = ecs_id(Position) },
             { .id = ecs_id(Velocity) },
         },
@@ -4663,7 +4673,7 @@ void Observer_disable_multi_observer_module_nested(void) {
     Probe ctx = {0};
     ecs_observer(ecs, {
         .entity = ecs_entity(ecs, { .add = { ecs_childof(module_child) }}),
-        .filter.terms = {
+        .query.terms = {
             { .id = ecs_id(Position) },
             { .id = ecs_id(Velocity) }
         },
@@ -4733,7 +4743,7 @@ void Observer_disable_multi_observer_and_module(void) {
     Probe ctx = {0};
     ecs_entity_t o = ecs_observer(ecs, {
         .entity = ecs_entity(ecs, { .add = { ecs_childof(module) }}),
-        .filter.terms = {
+        .query.terms = {
             { .id = ecs_id(Position) },
             { .id = ecs_id(Velocity) }
         },
@@ -4801,7 +4811,7 @@ void Observer_tag_w_on_set_and_on_add(void) {
     Probe ctx = {0};
 
     ecs_entity_t o = ecs_observer(world, {
-        .filter.terms = {{ tag }},
+        .query.terms = {{ tag }},
         .events = {EcsOnAdd, EcsOnSet},
         .callback = Observer,
         .ctx = &ctx
@@ -4835,7 +4845,7 @@ void Observer_tag_w_on_set_and_on_add_reverse(void) {
     Probe ctx = {0};
 
     ecs_entity_t o = ecs_observer(world, {
-        .filter.terms = {{ tag }},
+        .query.terms = {{ tag }},
         .events = {EcsOnSet, EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx
@@ -4869,7 +4879,7 @@ void Observer_tag_w_un_set_and_on_remove(void) {
     Probe ctx = {0};
 
     ecs_entity_t o = ecs_observer(world, {
-        .filter.terms = {{ tag }},
+        .query.terms = {{ tag }},
         .events = {EcsOnRemove, EcsUnSet},
         .callback = Observer,
         .ctx = &ctx
@@ -4907,7 +4917,7 @@ void Observer_tag_w_un_set_and_on_remove_reverse(void) {
     Probe ctx = {0};
 
     ecs_entity_t o = ecs_observer(world, {
-        .filter.terms = {{ tag }},
+        .query.terms = {{ tag }},
         .events = {EcsUnSet, EcsOnRemove},
         .callback = Observer,
         .ctx = &ctx
@@ -4947,7 +4957,7 @@ void Observer_on_add_pair_w_rel_any(void) {
     Probe ctx = {0};
 
     ecs_observer(world, {
-        .filter.terms = {{ ecs_pair(EcsAny, Tgt) }},
+        .query.terms = {{ ecs_pair(EcsAny, Tgt) }},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx
@@ -4978,7 +4988,7 @@ void Observer_on_remove_pair_w_rel_any(void) {
     Probe ctx = {0};
 
     ecs_observer(world, {
-        .filter.terms = {{ ecs_pair(EcsAny, Tgt) }},
+        .query.terms = {{ ecs_pair(EcsAny, Tgt) }},
         .events = {EcsOnRemove},
         .callback = Observer,
         .ctx = &ctx
@@ -5013,7 +5023,7 @@ void Observer_on_add_pair_w_tgt_any(void) {
     Probe ctx = {0};
 
     ecs_observer(world, {
-        .filter.terms = {{ ecs_pair(Rel, EcsAny) }},
+        .query.terms = {{ ecs_pair(Rel, EcsAny) }},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx
@@ -5044,7 +5054,7 @@ void Observer_on_remove_pair_w_tgt_any(void) {
     Probe ctx = {0};
 
     ecs_observer(world, {
-        .filter.terms = {{ ecs_pair(Rel, EcsAny) }},
+        .query.terms = {{ ecs_pair(Rel, EcsAny) }},
         .events = {EcsOnRemove},
         .callback = Observer,
         .ctx = &ctx
@@ -5079,7 +5089,7 @@ void Observer_on_add_pair_w_any_any(void) {
     Probe ctx = {0};
 
     ecs_observer(world, {
-        .filter.terms = {{ ecs_pair(EcsAny, EcsAny) }},
+        .query.terms = {{ ecs_pair(EcsAny, EcsAny) }},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx
@@ -5110,7 +5120,7 @@ void Observer_on_remove_pair_w_any_any(void) {
     Probe ctx = {0};
 
     ecs_observer(world, {
-        .filter.terms = {{ ecs_pair(EcsAny, EcsAny) }},
+        .query.terms = {{ ecs_pair(EcsAny, EcsAny) }},
         .events = {EcsOnRemove},
         .callback = Observer,
         .ctx = &ctx
@@ -5144,7 +5154,7 @@ void Observer_on_add_any(void) {
     Probe ctx = {0};
 
     ecs_observer(world, {
-        .filter.terms = {{ EcsAny }},
+        .query.terms = {{ EcsAny }},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx
@@ -5174,7 +5184,7 @@ void Observer_on_remove_any(void) {
     Probe ctx = {0};
 
     ecs_observer(world, {
-        .filter.terms = {{ EcsAny }},
+        .query.terms = {{ EcsAny }},
         .events = {EcsOnRemove},
         .callback = Observer,
         .ctx = &ctx
@@ -5204,7 +5214,7 @@ void Observer_yield_existing_uni_no_this(void) {
     Probe ctx = {0};
 
     ecs_observer(world, {
-        .filter.terms = {
+        .query.terms = {
             { TagA, .src.id = e1 },
         },
         .events = {EcsOnAdd},
@@ -5234,7 +5244,7 @@ void Observer_yield_existing_multi_no_this(void) {
     Probe ctx = {0};
 
     ecs_observer(world, {
-        .filter.terms = {
+        .query.terms = {
             { TagA, .src.id = e1 },
             { TagB, .src.id = e1 },
         },
@@ -5263,7 +5273,7 @@ void Observer_cache_test_1(void) {
     Probe ctx = {0};
 
     ecs_observer(world, {
-        .filter.terms = {{ tag, .src.flags = EcsUp, .src.trav = EcsChildOf }},
+        .query.terms = {{ tag, .src.id = EcsUp, .trav = EcsChildOf }},
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = Observer,
         .ctx = &ctx
@@ -5330,13 +5340,13 @@ void Observer_cache_test_2(void) {
     Probe ctx_2 = {0};
 
     ecs_observer(world, {
-        .filter.terms = {{ tag_1, .src.flags = EcsUp, .src.trav = EcsChildOf }},
+        .query.terms = {{ tag_1, .src.id = EcsUp, .trav = EcsChildOf }},
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = Observer,
         .ctx = &ctx_1
     });
     ecs_observer(world, {
-        .filter.terms = {{ tag_2, .src.flags = EcsUp, .src.trav = EcsChildOf }},
+        .query.terms = {{ tag_2, .src.id = EcsUp, .trav = EcsChildOf }},
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = Observer,
         .ctx = &ctx_2
@@ -5392,13 +5402,13 @@ void Observer_cache_test_3(void) {
     Probe ctx_2 = {0};
 
     ecs_observer(world, {
-        .filter.terms = {{ tag_1, .src.flags = EcsUp, .src.trav = EcsChildOf }},
+        .query.terms = {{ tag_1, .src.id = EcsUp, .trav = EcsChildOf }},
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = Observer,
         .ctx = &ctx_1
     });
     ecs_observer(world, {
-        .filter.terms = {{ tag_2, .src.flags = EcsUp, .src.trav = EcsChildOf }},
+        .query.terms = {{ tag_2, .src.id = EcsUp, .trav = EcsChildOf }},
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = Observer,
         .ctx = &ctx_2
@@ -5458,19 +5468,19 @@ void Observer_cache_test_4(void) {
     Probe *ctx_2 = ecs_os_calloc_t(Probe);
 
     ecs_observer(world, {
-        .filter.terms = {{ tag_0, .src.flags = EcsUp, .src.trav = EcsChildOf }},
+        .query.terms = {{ tag_0, .src.id = EcsUp, .trav = EcsChildOf }},
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = Observer,
         .ctx = ctx_0
     });
     ecs_observer(world, {
-        .filter.terms = {{ tag_1, .src.flags = EcsUp, .src.trav = EcsChildOf }},
+        .query.terms = {{ tag_1, .src.id = EcsUp, .trav = EcsChildOf }},
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = Observer,
         .ctx = ctx_1
     });
     ecs_observer(world, {
-        .filter.terms = {{ tag_2, .src.flags = EcsUp, .src.trav = EcsChildOf }},
+        .query.terms = {{ tag_2, .src.id = EcsUp, .trav = EcsChildOf }},
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = Observer,
         .ctx = ctx_2
@@ -5566,13 +5576,13 @@ void Observer_cache_test_5(void) {
     Probe ctx_2 = {0};
 
     ecs_observer(world, {
-        .filter.terms = {{ tag_1, .src.flags = EcsUp, .src.trav = EcsChildOf }},
+        .query.terms = {{ tag_1, .src.id = EcsUp, .trav = EcsChildOf }},
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = Observer,
         .ctx = &ctx_1
     });
     ecs_observer(world, {
-        .filter.terms = {{ tag_2, .src.flags = EcsUp, .src.trav = EcsChildOf }},
+        .query.terms = {{ tag_2, .src.id = EcsUp, .trav = EcsChildOf }},
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = Observer,
         .ctx = &ctx_2
@@ -5648,7 +5658,7 @@ void Observer_cache_test_6(void) {
 
     Probe ctx_1 = {0};
     ecs_observer(world, {
-        .filter.terms = {{ tag_1, .src.flags = EcsUp, .src.trav = EcsChildOf }},
+        .query.terms = {{ tag_1, .src.id = EcsUp, .trav = EcsChildOf }},
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = Observer,
         .ctx = &ctx_1
@@ -5692,7 +5702,7 @@ void Observer_cache_test_7(void) {
 
     Probe ctx_1 = {0};
     ecs_observer(world, {
-        .filter.terms = {{ tag_1, .src.flags = EcsUp, .src.trav = EcsChildOf }},
+        .query.terms = {{ tag_1, .src.id = EcsUp, .trav = EcsChildOf }},
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = Observer,
         .ctx = &ctx_1
@@ -5734,7 +5744,7 @@ void Observer_cache_test_8(void) {
 
     Probe ctx = {0};
     ecs_observer(world, {
-        .filter.terms = {{ TagB }},
+        .query.terms = {{ TagB }},
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx
@@ -5769,7 +5779,7 @@ void Observer_cache_test_9(void) {
 
     Probe ctx = {0};
     ecs_observer(world, {
-        .filter.terms = {{ ecs_id(Position), .src.flags = EcsUp }},
+        .query.terms = {{ ecs_id(Position), .src.id = EcsUp, .trav = EcsIsA }},
         .events = { EcsOnRemove },
         .callback = Observer,
         .ctx = &ctx
@@ -6062,7 +6072,7 @@ void Observer_filter_observer_after_observer(void) {
     ECS_TAG(world, Tag);
 
     ecs_observer(world, {
-        .filter.terms = {
+        .query.terms = {
             { .id = ecs_id(Position) },
             { .id = Tag }
         },
@@ -6071,7 +6081,7 @@ void Observer_filter_observer_after_observer(void) {
     });
 
     ecs_observer(world, {
-        .filter.terms = {
+        .query.terms = {
             { .id = ecs_id(Position), .inout = EcsInOutNone },
             { .id = Tag, .inout = EcsInOutNone}
         },
@@ -6097,7 +6107,7 @@ void Observer_notify_after_defer_batched(void) {
     Probe ctx = {0};
 
     ecs_observer(world, {
-        .filter.terms = {
+        .query.terms = {
             { .id = ecs_id(Position) },
             { .id = ecs_id(Velocity) }
         },
@@ -6128,7 +6138,7 @@ void Observer_notify_after_defer_batched_2_entities_in_table(void) {
     Probe ctx = {0};
 
     ecs_observer(world, {
-        .filter.terms = {
+        .query.terms = {
             { .id = ecs_id(Position) },
             { .id = ecs_id(Velocity) }
         },
@@ -6169,7 +6179,7 @@ void Observer_notify_after_defer_batched_2_entities_in_table_w_tgt(void) {
     Probe ctx = {0};
 
     ecs_observer(world, {
-        .filter.terms = {
+        .query.terms = {
             { .id = ecs_id(Position) },
             { .id = ecs_id(Velocity) }
         },
@@ -6212,11 +6222,11 @@ void Observer_multi_observer_table_fill_w_singleton(void) {
     Probe ctx = {0};
 
     ecs_observer(world, {
-        .filter.terms = {
-            { .id = ecs_id(Position), .src.flags = EcsIsEntity, .src.id = ecs_id(Position) },
+        .query.terms = {
+            { .id = ecs_id(Position), .src.id = ecs_id(Position)|EcsIsEntity },
             { .id = ecs_id(Velocity) },
         },
-        .filter.flags = EcsFilterNoData,
+        .query.flags = EcsQueryNoData,
         .callback = Observer,
         .events = { EcsOnTableFill },
         .ctx = &ctx
@@ -6256,7 +6266,7 @@ void Observer_add_in_yield_existing(void) {
     ecs_entity_t e3 = ecs_new(world, Position);
 
     ecs_observer(world, {
-        .filter.terms = {
+        .query.terms = {
             { .id = ecs_id(Position) },
         },
         .callback = AddVelocity,
@@ -6292,7 +6302,7 @@ void Observer_add_in_yield_existing_multi(void) {
     ecs_add(world, e3, Mass);
 
     ecs_observer(world, {
-        .filter.terms = {
+        .query.terms = {
             { .id = ecs_id(Position) },
             { .id = ecs_id(Mass) },
         },
@@ -6322,14 +6332,14 @@ void Observer_get_filter(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_entity_t o = ecs_observer(world, {
-        .filter.terms = {
-            { .id = ecs_id(Position) },
+        .query.terms = {
+            { .id = ecs_id(Position) }
         },
         .callback = Observer,
         .events = { EcsOnAdd },
     });
 
-    const ecs_filter_t *f = ecs_observer_get_filter(world, o);
+    const ecs_query_t *f = ecs_observer_get_query(world, o);
     test_assert(f != NULL);
     test_int(f->term_count, 1);
     test_uint(ecs_id(Position), f->terms[0].id);
@@ -6343,20 +6353,20 @@ void Observer_uni_observer_eval_count(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_entity_t o = ecs_observer(world, {
-        .filter.terms = {
+        .query.terms = {
             { .id = ecs_id(Position) },
         },
         .callback = Observer,
         .events = { EcsOnAdd },
     });
 
-    const ecs_filter_t *f = ecs_observer_get_filter(world, o);
-    test_assert(f != NULL);
-    test_int(f->eval_count, 0);
+    const ecs_query_t *q = ecs_observer_get_query(world, o);
+    test_assert(q != NULL);
+    test_int(q->eval_count, 0);
 
     ecs_new(world, Position);
 
-    test_int(f->eval_count, 1);
+    test_int(q->eval_count, 1);
 
     ecs_fini(world);
 }
@@ -6368,7 +6378,7 @@ void Observer_multi_observer_eval_count(void) {
     ECS_COMPONENT(world, Velocity);
 
     ecs_entity_t o = ecs_observer(world, {
-        .filter.terms = {
+        .query.terms = {
             { .id = ecs_id(Position) },
             { .id = ecs_id(Velocity) },
         },
@@ -6376,15 +6386,15 @@ void Observer_multi_observer_eval_count(void) {
         .events = { EcsOnAdd },
     });
 
-    const ecs_filter_t *f = ecs_observer_get_filter(world, o);
-    test_assert(f != NULL);
-    test_int(f->eval_count, 0);
+    const ecs_query_t *q = ecs_observer_get_query(world, o);
+    test_assert(q != NULL);
+    test_int(q->eval_count, 0);
 
     ecs_entity_t e = ecs_new(world, Position);
-    test_int(f->eval_count, 0);
+    test_int(q->eval_count, 0);
 
     ecs_add(world, e, Velocity);
-    test_int(f->eval_count, 1);
+    test_int(q->eval_count, 1);
 
     ecs_fini(world);
 }

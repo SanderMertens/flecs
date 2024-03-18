@@ -127,13 +127,6 @@ inline void entity_view::each(const Func& func) const {
         ecs_id_t id = ids[i];
         flecs::id ent(m_world, id);
         func(ent); 
-
-        // Union object is not stored in type, so handle separately
-        if (ECS_PAIR_FIRST(id) == EcsUnion) {
-            ent = flecs::id(m_world, ECS_PAIR_SECOND(id),
-                ecs_get_target(m_world, m_id, ECS_PAIR_SECOND(id), 0));
-            func(ent);
-        }
     }
 }
 

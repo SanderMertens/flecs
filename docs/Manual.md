@@ -614,7 +614,7 @@ int main() {
     ecs_enable_component(world, e, Position, false);
 
     /* Will return false */
-    printf("%d\n", ecs_is_enabled_component(world, e, Position));
+    printf("%d\n", ecs_is_enabled(world, e, Position));
 
     /* Re-enable the component */
     ecs_enable_component(world, e, Position, true);
@@ -883,7 +883,7 @@ Additionally, a query can iterate the hierarchy in breadth-first order by provid
 
 ```c
 // Iterate all entities with Position that have a parent that also has Position
-ecs_query_t *q = ecs_query_new(world, "Position(parent|cascade), Position");
+ecs_query_t *q = ecs_query_new(world, "Position(cascade), Position");
 ```
 
 This does two things. First, it will iterate over all entities that have Position and that _optionally_ have a parent that has `Position`. By making the parent component optional, it is ensured that if an application is iterating a tree of entities, the root is also included. Secondly, the query iterates over the children in breadth-first order. This is particularly useful when writing transform systems, as they require parent entities to be transformed before child entities.
@@ -891,7 +891,7 @@ This does two things. First, it will iterate over all entities that have Positio
 The above query does not match root entities, as they do not have a parent with `Position`. To also match root entities, add `?` to make the term optional:
 
 ```c
-ecs_query_t *q = ecs_query_new(world, "?Position(parent|cascade), Position");
+ecs_query_t *q = ecs_query_new(world, "?Position(cascade), Position");
 ```
 
 See the [query manual](Queries.md) section for more details.

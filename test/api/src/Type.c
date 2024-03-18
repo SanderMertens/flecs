@@ -279,20 +279,6 @@ void Type_entity_pair_str(void) {
     ecs_fini(world);
 }
 
-void Type_entity_and_str(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_ENTITY(world, Foo, 0);
-
-    ecs_entity_t e = ECS_AND | Foo;
-
-    char *str = ecs_id_str(world, e);
-    test_str(str, "AND|Foo");
-    ecs_os_free(str);
-
-    ecs_fini(world);
-}
-
 void Type_entity_str_small_buffer(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -310,11 +296,6 @@ void Type_entity_str_small_buffer(void) {
 void Type_role_pair_str(void) {
     ecs_entity_t e = ECS_PAIR;
     test_str(ecs_id_flag_str(e), "PAIR");
-}
-
-void Type_role_and_str(void) {
-    ecs_entity_t e = ECS_AND;
-    test_str(ecs_id_flag_str(e), "AND");
 }
 
 void Type_role_owned_str(void) {

@@ -70,7 +70,7 @@ void Query_action_shared(void) {
         .set<Velocity>({3, 4});
 
     auto q = world.query_builder<Position>()
-        .expr("Velocity(self|up)")
+        .expr("Velocity(self|up(IsA))")
         .build();
 
     q.iter([](flecs::iter&it, Position *p) {
@@ -363,7 +363,7 @@ void Query_signature_shared(void) {
         .set<Velocity>({3, 4});
 
     auto q = world.query_builder<>()
-        .expr("Position, [in] Velocity(self|up)")
+        .expr("Position, [in] Velocity(self|up(IsA))")
         .build();
     
     q.iter([](flecs::iter&it) {

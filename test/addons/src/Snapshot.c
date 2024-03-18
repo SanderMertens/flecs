@@ -173,13 +173,13 @@ void Snapshot_snapshot_w_include_filter(void) {
     test_assert(e3 != 0);
     test_assert(ecs_has(world, e3, Velocity));
 
-    ecs_filter_t f = ECS_FILTER_INIT;
-    ecs_filter_init(world, &(ecs_filter_desc_t){
+    ecs_query_t f = ECS_FILTER_INIT;
+    ecs_query_init(world, &(ecs_query_desc_t){
         .storage = &f,
         .terms = {{ ecs_id(Position) }}
     });
 
-    ecs_iter_t it = ecs_filter_iter(world, &f);
+    ecs_iter_t it = ecs_query_iter(world, &f);
     ecs_snapshot_t *s = ecs_snapshot_take_w_iter(&it);
 
     Position *p = ecs_ensure(world, e1, Position);
@@ -228,7 +228,7 @@ void Snapshot_snapshot_w_include_filter(void) {
 
     test_assert(ecs_new(world, 0) > e3);
 
-    ecs_filter_fini(&f);
+    ecs_query_fini(&f);
 
     ecs_fini(world);
 }
@@ -253,13 +253,13 @@ void Snapshot_snapshot_w_exclude_filter(void) {
     test_assert(e3 != 0);
     test_assert(ecs_has(world, e3, Velocity));
 
-    ecs_filter_t f = ECS_FILTER_INIT;
-    ecs_filter_init(world, &(ecs_filter_desc_t){
+    ecs_query_t f = ECS_FILTER_INIT;
+    ecs_query_init(world, &(ecs_query_desc_t){
         .storage = &f,
         .terms = {{ ecs_id(Position), .oper = EcsNot }}
     });
 
-    ecs_iter_t it = ecs_filter_iter(world, &f);
+    ecs_iter_t it = ecs_query_iter(world, &f);
     ecs_snapshot_t *s = ecs_snapshot_take_w_iter(&it);
 
     Position *p = ecs_ensure(world, e1, Position);
@@ -308,7 +308,7 @@ void Snapshot_snapshot_w_exclude_filter(void) {
 
     test_assert(ecs_new(world, 0) > e3);
 
-    ecs_filter_fini(&f);
+    ecs_query_fini(&f);
 
     ecs_fini(world);
 }
@@ -327,13 +327,13 @@ void Snapshot_snapshot_w_filter_after_new(void) {
     test_assert(e2 != 0);
     test_assert(ecs_has(world, e2, Velocity));
 
-    ecs_filter_t f = ECS_FILTER_INIT;
-    ecs_filter_init(world, &(ecs_filter_desc_t){
+    ecs_query_t f = ECS_FILTER_INIT;
+    ecs_query_init(world, &(ecs_query_desc_t){
         .storage = &f,
         .terms = {{ ecs_id(Position) }}
     });
 
-    ecs_iter_t it = ecs_filter_iter(world, &f);
+    ecs_iter_t it = ecs_query_iter(world, &f);
     ecs_snapshot_t *s = ecs_snapshot_take_w_iter(&it);
 
     ecs_set(world, e1, Position, {5, 6});
@@ -373,7 +373,7 @@ void Snapshot_snapshot_w_filter_after_new(void) {
     test_int(v->x, 34);
     test_int(v->y, 45);
 
-    ecs_filter_fini(&f);
+    ecs_query_fini(&f);
 
     ecs_fini(world);
 }
@@ -400,13 +400,13 @@ void Snapshot_snapshot_w_filter_after_delete(void) {
     test_assert(e4 != 0);
     test_assert(ecs_has(world, e4, Velocity));
 
-    ecs_filter_t f = ECS_FILTER_INIT;
-    ecs_filter_init(world, &(ecs_filter_desc_t){
+    ecs_query_t f = ECS_FILTER_INIT;
+    ecs_query_init(world, &(ecs_query_desc_t){
         .storage = &f,
         .terms = {{ ecs_id(Position) }}
     });
 
-    ecs_iter_t it = ecs_filter_iter(world, &f);
+    ecs_iter_t it = ecs_query_iter(world, &f);
     ecs_snapshot_t *s = ecs_snapshot_take_w_iter(&it);
 
     ecs_delete(world, e3);
@@ -426,7 +426,7 @@ void Snapshot_snapshot_w_filter_after_delete(void) {
     test_assert(ecs_has(world, e2, Velocity));
     test_assert(ecs_has(world, e3, Position));
 
-    ecs_filter_fini(&f);
+    ecs_query_fini(&f);
 
     ecs_fini(world);
 }
@@ -468,19 +468,19 @@ void Snapshot_snapshot_free_filtered(void) {
     test_assert( ecs_new(world, Position) != 0);
     test_assert( ecs_new(world, Velocity) != 0);
 
-    ecs_filter_t f = ECS_FILTER_INIT;
-    ecs_filter_init(world, &(ecs_filter_desc_t){
+    ecs_query_t f = ECS_FILTER_INIT;
+    ecs_query_init(world, &(ecs_query_desc_t){
         .storage = &f,
         .terms = {{ ecs_id(Position) }}
     });
 
-    ecs_iter_t it = ecs_filter_iter(world, &f);
+    ecs_iter_t it = ecs_query_iter(world, &f);
     ecs_snapshot_t *s = ecs_snapshot_take_w_iter(&it);
     test_assert(s != NULL);
 
     ecs_snapshot_free(s);
 
-    ecs_filter_fini(&f);
+    ecs_query_fini(&f);
 
     ecs_fini(world);
 }
@@ -514,19 +514,19 @@ void Snapshot_snapshot_free_filtered_w_dtor(void) {
 
     ecs_add(world, e3, Mass);
 
-    ecs_filter_t f = ECS_FILTER_INIT;
-    ecs_filter_init(world, &(ecs_filter_desc_t){
+    ecs_query_t f = ECS_FILTER_INIT;
+    ecs_query_init(world, &(ecs_query_desc_t){
         .storage = &f,
         .terms = {{ ecs_id(Position) }, { ecs_id(Velocity) }}
     });
 
-    ecs_iter_t it = ecs_filter_iter(world, &f);
+    ecs_iter_t it = ecs_query_iter(world, &f);
     ecs_snapshot_t *s = ecs_snapshot_take_w_iter(&it);
     test_assert(s != NULL);
 
     ecs_snapshot_free(s);
 
-    ecs_filter_fini(&f);
+    ecs_query_fini(&f);
 
     ecs_fini(world);
 }
@@ -548,13 +548,13 @@ void Snapshot_snapshot_activate_table_w_filter(void) {
     ecs_entity_t e = ecs_set(world, 0, Position, {0, 0});
     test_assert(e != 0);
 
-    ecs_filter_t f = ECS_FILTER_INIT;
-    ecs_filter_init(world, &(ecs_filter_desc_t){
+    ecs_query_t f = ECS_FILTER_INIT;
+    ecs_query_init(world, &(ecs_query_desc_t){
         .storage = &f,
         .terms = {{ ecs_id(Position) }}
     });
 
-    ecs_iter_t it = ecs_filter_iter(world, &f);
+    ecs_iter_t it = ecs_query_iter(world, &f);
     ecs_snapshot_t *s = ecs_snapshot_take_w_iter(&it);
 
     ecs_snapshot_restore(world, s);
@@ -564,7 +564,7 @@ void Snapshot_snapshot_activate_table_w_filter(void) {
     ecs_progress(world, 0);
     test_bool(invoked, true);
 
-    ecs_filter_fini(&f);
+    ecs_query_fini(&f);
 
     ecs_fini(world);
 }

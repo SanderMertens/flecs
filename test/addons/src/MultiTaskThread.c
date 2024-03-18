@@ -1278,7 +1278,7 @@ void MultiTaskThread_sys_bulk_init_2(ecs_iter_t *it) {
         .ids = {ecs_id(Position)}
     });
 
-    ecs_iter_t qit = ecs_query_iter(it->world, it->ctx);
+    ecs_iter_t qit = ecs_query_cache_iter(it->world, it->ctx);
     ecs_iter_fini(&qit);
 }
 
@@ -1293,12 +1293,12 @@ void MultiTaskThread_bulk_new_in_no_readonly_w_multithread_2(void) {
         .entity = ecs_entity(world, {
             .add = { ecs_dependson(EcsOnUpdate) }
         }),
-        .query.filter.terms = {{ ecs_id(Position) }},
+        .query.terms = {{ ecs_id(Position) }},
         .callback = MultiTaskThread_sys
     });
 
-    ecs_query_t *q = ecs_query(world, {
-        .filter.terms = {{ ecs_id(Position) }}
+    ecs_query_cache_t *q = ecs_query(world, {
+        .terms = {{ ecs_id(Position) }}
     });
 
     ecs_system(world, {

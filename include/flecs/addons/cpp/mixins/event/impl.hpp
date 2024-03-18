@@ -32,8 +32,8 @@ namespace _ {
     {
         ecs_observer_desc_t desc = {};
         desc.events[0] = event;
-        desc.filter.terms[0].id = EcsAny;
-        desc.filter.terms[0].src.id = entity;
+        desc.terms[0].id = EcsAny;
+        desc.terms[0].src.id = entity;
         desc.callback = callback;
         desc.binding_ctx = binding_ctx;
         desc.binding_ctx_free = binding_ctx_free;

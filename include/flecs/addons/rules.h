@@ -28,10 +28,6 @@
 extern "C" {
 #endif
 
-/** Convenience macro for rule creation */
-#define ecs_rule(world, ...)\
-    ecs_rule_init(world, &(ecs_filter_desc_t) __VA_ARGS__ )
-
 /** Create a rule.
  * A rule accepts the same descriptor as a filter, but has the additional
  * ability to use query variables.
@@ -70,35 +66,25 @@ extern "C" {
  *
  * Different terms with the same variable name are automatically correlated by
  * the query engine.
- *
- * A rule needs to be explicitly deleted with ecs_rule_fini().
- *
+ * 
+ * A query needs to be explicitly deleted with ecs_query_fini.
+ * 
  * @param world The world.
- * @param desc The descriptor (see ecs_filter_desc_t)
+ * @param desc The descriptor (see ecs_query_desc_t)
  * @return The rule.
  */
 FLECS_API
-ecs_rule_t* ecs_rule_init(
+ecs_query_t* ecs_query_init(
     ecs_world_t *world,
-    const ecs_filter_desc_t *desc);
+    const ecs_query_desc_t *desc);
 
 /** Delete a rule.
  *
  * @param rule The rule.
  */
 FLECS_API
-void ecs_rule_fini(
-    ecs_rule_t *rule);
-
-/** Obtain filter from rule.
- * This operation returns the filter with which the rule was created.
- *
- * @param rule The rule.
- * @return The filter.
- */
-FLECS_API
-const ecs_filter_t* ecs_rule_get_filter(
-    const ecs_rule_t *rule);
+void ecs_query_fini(
+    ecs_query_t *rule);
 
 /** Return number of variables in rule.
  *
@@ -106,8 +92,8 @@ const ecs_filter_t* ecs_rule_get_filter(
  * @return The number of variables/
  */
 FLECS_API
-int32_t ecs_rule_var_count(
-    const ecs_rule_t *rule);
+int32_t ecs_query_var_count(
+    const ecs_query_t *rule);
 
 /** Find variable index.
  * This operation looks up the index of a variable in the rule. This index can
@@ -118,9 +104,9 @@ int32_t ecs_rule_var_count(
  * @return The variable index.
  */
 FLECS_API
-int32_t ecs_rule_find_var(
-    const ecs_rule_t *rule,
-    const char *name);
+int32_t ecs_query_find_var(
+    const ecs_query_t *rule,
+    const char *name);    
 
 /** Get variable name.
  * This operation returns the variable name for an index.
@@ -129,13 +115,13 @@ int32_t ecs_rule_find_var(
  * @param var_id The variable index.
  */
 FLECS_API
-const char* ecs_rule_var_name(
-    const ecs_rule_t *rule,
+const char* ecs_query_var_name(
+    const ecs_query_t *rule,
     int32_t var_id);
 
 /** Test if variable is an entity.
  * Internally the rule engine has entity variables and table variables. When
- * iterating through rule variables (by using ecs_rule_variable_count()) only
+ * iterating through rule variables (by using ecs_query_variable_count) only
  * the values for entity variables are accessible. This operation enables an
  * application to check if a variable is an entity variable.
  *
@@ -143,14 +129,14 @@ const char* ecs_rule_var_name(
  * @param var_id The variable id.
  */
 FLECS_API
-bool ecs_rule_var_is_entity(
-    const ecs_rule_t *rule,
-    int32_t var_id);
+bool ecs_query_var_is_entity(
+    const ecs_query_t *rule,
+    int32_t var_id);  
 
 /** Iterate a rule.
  * Note that rule iterators may allocate memory, and that unless the iterator
  * is iterated until completion, it may still hold resources. When stopping
- * iteration before ecs_rule_next() has returned false, use ecs_iter_fini() to
+ * iteration before ecs_query_next has returned false, use ecs_iter_fini to
  * cleanup any remaining resources.
  *
  * @param world The world.
@@ -158,16 +144,16 @@ bool ecs_rule_var_is_entity(
  * @return An iterator.
  */
 FLECS_API
-ecs_iter_t ecs_rule_iter(
+ecs_iter_t ecs_query_iter(
     const ecs_world_t *world,
-    const ecs_rule_t *rule);
+    const ecs_query_t *rule);
 
 /** Progress rule iterator.
  *
  * @param it The iterator.
  */
 FLECS_API
-bool ecs_rule_next(
+bool ecs_query_next(
     ecs_iter_t *it);
 
 /** Progress instanced iterator.
@@ -176,7 +162,28 @@ bool ecs_rule_next(
  * @param it The iterator.
  */
 FLECS_API
-bool ecs_rule_next_instanced(
+bool ecs_query_next_instanced(
+    ecs_iter_t *it);
+
+/** Returns true if rule matches with entity. */
+FLECS_API
+bool ecs_query_has(
+    ecs_query_t *rule,
+    ecs_entity_t entity,
+    ecs_iter_t *it);
+
+/** Returns true if rule matches with table. */
+FLECS_API
+bool ecs_query_has_table(
+    ecs_query_t *rule,
+    ecs_table_t *table,
+    ecs_iter_t *it);
+
+/** Returns true if rule matches with table. */
+FLECS_API
+bool ecs_query_has_range(
+    ecs_query_t *rule,
+    ecs_table_range_t *range,
     ecs_iter_t *it);
 
 /** Convert rule to a string.
@@ -189,8 +196,8 @@ bool ecs_rule_next_instanced(
  * @return The string
  */
 FLECS_API
-char* ecs_rule_str(
-    const ecs_rule_t *rule);
+char* ecs_query_plan(
+    const ecs_query_t *rule);
 
 /** Convert rule to string with profile.
  * To use this you must set the EcsIterProfile flag on an iterator before
@@ -201,8 +208,8 @@ char* ecs_rule_str(
  * @return The string
  */
 FLECS_API
-char* ecs_rule_str_w_profile(
-    const ecs_rule_t *rule,
+char* ecs_query_str_w_profile(
+    const ecs_query_t *rule,
     const ecs_iter_t *it);
 
 /** Populate variables from key-value string.
@@ -217,8 +224,8 @@ char* ecs_rule_str_w_profile(
  * @param expr The key-value expression.
  */
 FLECS_API
-const char* ecs_rule_parse_vars(
-    ecs_rule_t *rule,
+const char* ecs_query_parse_vars(
+    ecs_query_t *rule,
     ecs_iter_t *it,
     const char *expr);
 

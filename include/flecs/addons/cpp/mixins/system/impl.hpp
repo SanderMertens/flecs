@@ -82,8 +82,8 @@ struct system final : entity
         m_world = world;
         m_id = ecs_system_init(world, desc);
 
-        if (desc->query.filter.terms_buffer) {
-            ecs_os_free(desc->query.filter.terms_buffer);
+        if (desc->query.terms_buffer) {
+            ecs_os_free(desc->query.terms_buffer);
         }
     }
 

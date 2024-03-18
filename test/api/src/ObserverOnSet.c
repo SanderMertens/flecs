@@ -238,7 +238,7 @@ void ObserverOnSet_set_1_of_2_1_from_base(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_ENTITY(world, Base, Position);
-    ECS_OBSERVER(world, OnPosition, EcsOnSet, Position(self|up), Velocity);
+    ECS_OBSERVER(world, OnPosition, EcsOnSet, Position(self|up(IsA)), Velocity);
 
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
@@ -272,7 +272,7 @@ void ObserverOnSet_set_1_of_3_1_from_base(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
     ECS_ENTITY(world, Base, Position);
-    ECS_OBSERVER(world, OnPosition, EcsOnSet, Position(self|up), Velocity, Mass);
+    ECS_OBSERVER(world, OnPosition, EcsOnSet, Position(self|up(IsA)), Velocity, Mass);
 
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
@@ -327,7 +327,7 @@ void ObserverOnSet_add_base(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_ENTITY(world, Base, Position);
-    ECS_OBSERVER(world, OnPosition, EcsOnSet, Position(self|up), Velocity);
+    ECS_OBSERVER(world, OnPosition, EcsOnSet, Position(self|up(IsA)), Velocity);
 
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
@@ -356,7 +356,7 @@ void ObserverOnSet_add_base_to_1_overridden(void) {
 
     ECS_COMPONENT(world, Position);
     ECS_ENTITY(world, Base, Position);
-    ECS_OBSERVER(world, OnPosition, EcsOnSet, Position(self|up));
+    ECS_OBSERVER(world, OnPosition, EcsOnSet, Position(self|up(IsA)));
 
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
@@ -376,7 +376,7 @@ void ObserverOnSet_add_base_to_2_overridden(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_ENTITY(world, Base, Position, Velocity);
-    ECS_OBSERVER(world, OnPosition, EcsOnSet, Position(self|up), Velocity(self|up));
+    ECS_OBSERVER(world, OnPosition, EcsOnSet, Position(self|up(IsA)), Velocity(self|up(IsA)));
 
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
@@ -397,7 +397,7 @@ void ObserverOnSet_add_base_to_1_of_2_overridden(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_ENTITY(world, Base, Position, Velocity);
-    ECS_OBSERVER(world, OnPosition, EcsOnSet, Position(self|up));
+    ECS_OBSERVER(world, OnPosition, EcsOnSet, Position(self|up(IsA)));
 
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
@@ -464,7 +464,7 @@ void ObserverOnSet_no_set_after_remove_base(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_ENTITY(world, Base, Position);
-    ECS_OBSERVER(world, OnPosition, EcsOnSet, Position(self|up));
+    ECS_OBSERVER(world, OnPosition, EcsOnSet, Position(self|up(IsA)));
 
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
@@ -504,7 +504,7 @@ void ObserverOnSet_un_set_after_remove_base(void) {
 
     ECS_COMPONENT(world, Position);
     ECS_ENTITY(world, Base, Position);
-    ECS_OBSERVER(world, OnPosition, EcsUnSet, Position(self|up));
+    ECS_OBSERVER(world, OnPosition, EcsUnSet, Position(self|up(IsA)));
 
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);

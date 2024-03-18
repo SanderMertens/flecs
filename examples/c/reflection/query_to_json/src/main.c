@@ -60,15 +60,15 @@ int main(int argc, char *argv[]) {
     ecs_set(ecs, d, Mass, {20});
 
     // Query for components
-    ecs_query_t *q = ecs_query(ecs, {
-        .filter.terms = {
+    ecs_query_cache_t *q = ecs_query(ecs, {
+        .terms = {
             { .id = ecs_id(Position) }, { .id = ecs_id(Velocity) }
         }
     });
 
     // Serialize query to JSON. Note that this works for iterators from any
     // source, including filters & rules.
-    ecs_iter_t it = ecs_query_iter(ecs, q);
+    ecs_iter_t it = ecs_query_cache_iter(ecs, q);
     char *json = ecs_iter_to_json(ecs, &it, NULL);
     printf("%s\n", json);
     ecs_os_free(json);

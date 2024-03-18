@@ -130,8 +130,8 @@ void flecs_register_observer_for_id(
     size_t offset)
 {
     ecs_id_t term_id = flecs_observer_id(observer->register_id);
-    ecs_term_t *term = &observer->filter.terms[0];
-    ecs_entity_t trav = term->src.trav;
+    ecs_term_t *term = &observer->query->terms[0];
+    ecs_entity_t trav = term->trav;
 
     int i;
     for (i = 0; i < observer->event_count; i ++) {
@@ -149,7 +149,7 @@ void flecs_register_observer_for_id(
 
         ecs_map_t *observers = ECS_OFFSET(idt, offset);
         ecs_map_init_w_params_if(observers, &world->allocators.ptr);
-        ecs_map_insert_ptr(observers, observer->filter.entity, observer);
+        ecs_map_insert_ptr(observers, observer->id, observer);
 
         flecs_inc_observer_count(world, event, er, term_id, 1);
         if (trav) {
@@ -165,8 +165,8 @@ void flecs_uni_observer_register(
     ecs_observable_t *observable,
     ecs_observer_t *observer)
 {
-    ecs_term_t *term = &observer->filter.terms[0];
-    ecs_flags32_t flags = term->src.flags;
+    ecs_term_t *term = &observer->query->terms[0];
+    ecs_flags64_t flags = ECS_TERM_REF_FLAGS(&term->src);
 
     if ((flags & (EcsSelf|EcsUp)) == (EcsSelf|EcsUp)) {
         flecs_register_observer_for_id(world, observable, observer,
@@ -175,7 +175,7 @@ void flecs_uni_observer_register(
         flecs_register_observer_for_id(world, observable, observer,
             offsetof(ecs_event_id_record_t, self));
     } else if (flags & EcsUp) {
-        ecs_assert(term->src.trav != 0, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(term->trav != 0, ECS_INTERNAL_ERROR, NULL);
         flecs_register_observer_for_id(world, observable, observer,
             offsetof(ecs_event_id_record_t, up));
     }
@@ -189,8 +189,8 @@ void flecs_unregister_observer_for_id(
     size_t offset)
 {
     ecs_id_t term_id = flecs_observer_id(observer->register_id);
-    ecs_term_t *term = &observer->filter.terms[0];
-    ecs_entity_t trav = term->src.trav;
+    ecs_term_t *term = &observer->query->terms[0];
+    ecs_entity_t trav = term->trav;
 
     int i;
     for (i = 0; i < observer->event_count; i ++) {
@@ -206,7 +206,7 @@ void flecs_unregister_observer_for_id(
         ecs_assert(idt != NULL, ECS_INTERNAL_ERROR, NULL);
 
         ecs_map_t *id_observers = ECS_OFFSET(idt, offset);
-        ecs_map_remove(id_observers, observer->filter.entity);
+        ecs_map_remove(id_observers, observer->id);
         if (!ecs_map_count(id_observers)) {
             ecs_map_fini(id_observers);
         }
@@ -226,13 +226,12 @@ void flecs_unregister_observer(
     ecs_observer_t *observer)
 {
     ecs_assert(observer != NULL, ECS_INTERNAL_ERROR, NULL);
-    if (!observer->filter.terms) {
-        ecs_assert(observer->filter.term_count == 0, ECS_INTERNAL_ERROR, NULL);
+    if (observer->query->term_count == 0) {
         return;
     }
 
-    ecs_term_t *term = &observer->filter.terms[0];
-    ecs_flags32_t flags = term->src.flags;
+    ecs_term_t *term = &observer->query->terms[0];
+    ecs_flags64_t flags = ECS_TERM_REF_FLAGS(&term->src);
 
     if ((flags & (EcsSelf|EcsUp)) == (EcsSelf|EcsUp)) {
         flecs_unregister_observer_for_id(world, observable, observer,
@@ -264,12 +263,12 @@ bool flecs_ignore_observer(
         return true;
     }
 
-    ecs_flags32_t table_flags = table->flags, filter_flags = observer->filter.flags;
+    ecs_flags32_t table_flags = table->flags, filter_flags = observer->query->flags;
 
     bool result = (table_flags & EcsTableIsPrefab) &&
-        !(filter_flags & EcsFilterMatchPrefab);
+        !(filter_flags & EcsQueryMatchPrefab);
     result = result || ((table_flags & EcsTableIsDisabled) &&
-        !(filter_flags & EcsFilterMatchDisabled));
+        !(filter_flags & EcsQueryMatchDisabled));
 
     return result;
 }
@@ -301,26 +300,27 @@ void flecs_observer_invoke(
     ecs_log_push_3();
 
     ecs_entity_t old_system = flecs_stage_set_system(
-        &world->stages[0], observer->filter.entity);
+        &world->stages[0], observer->entity);
     world->info.observers_ran_frame ++;
 
-    ecs_filter_t *filter = &observer->filter;
-    ecs_assert(term_index < filter->term_count, ECS_INTERNAL_ERROR, NULL);
-    ecs_term_t *term = &filter->terms[term_index];
-    if (term->oper != EcsNot) {
+    ecs_query_t *query = observer->query;
+    ecs_assert(term_index < query->term_count, ECS_INTERNAL_ERROR, NULL);
+    ecs_term_t *term = &query->terms[term_index];
+    if (it->table && (term->oper != EcsNot)) {
         ecs_assert((it->offset + it->count) <= ecs_table_count(it->table), 
             ECS_INTERNAL_ERROR, NULL);
     }
 
-    bool instanced = filter->flags & EcsFilterIsInstanced;
-    bool match_this = filter->flags & EcsFilterMatchThis;
+    bool instanced = query->flags & EcsQueryIsInstanced;
+    bool match_this = query->flags & EcsQueryMatchThis;
     bool table_only = it->flags & EcsIterTableOnly;
+
     if (match_this && (simple_result || instanced || table_only)) {
         callback(it);
-        filter->eval_count ++;
+        query->eval_count ++;
     } else {
-        ecs_entity_t observer_src = term->src.id;
-        if (observer_src && !(term->src.flags & EcsIsEntity)) {
+        ecs_entity_t observer_src = ECS_TERM_REF_ID(&term->src);
+        if (observer_src && !(term->src.id & EcsIsEntity)) {
             observer_src = 0;
         }
 
@@ -333,7 +333,7 @@ void flecs_observer_invoke(
             it->entities = &e;
             if (!observer_src) {
                 callback(it);
-                filter->eval_count ++;
+                query->eval_count ++;
             } else if (observer_src == e) {
                 ecs_entity_t dummy = 0;
                 it->entities = &dummy;
@@ -342,7 +342,7 @@ void flecs_observer_invoke(
                 }
 
                 callback(it);
-                filter->eval_count ++;
+                query->eval_count ++;
                 it->sources[0] = src;
                 break;
             }
@@ -383,25 +383,24 @@ void flecs_uni_observer_invoke(
     ecs_entity_t trav,
     bool simple_result)
 {
-    ecs_filter_t *filter = &observer->filter;
-    ecs_term_t *term = &filter->terms[0];
+    ecs_query_t *query = observer->query;
+    ecs_term_t *term = &query->terms[0];
     if (flecs_ignore_observer(observer, table, it)) {
         return;
     }
 
     ecs_assert(trav == 0 || it->sources[0] != 0, ECS_INTERNAL_ERROR, NULL);
-    if (trav && term->src.trav != trav) {
+    if (trav && term->trav != trav) {
         return;
     }
 
     bool is_filter = term->inout == EcsInOutNone;
     ECS_BIT_COND(it->flags, EcsIterNoData, is_filter);
-    it->system = observer->filter.entity;
+    it->system = observer->entity;
     it->ctx = observer->ctx;
     it->binding_ctx = observer->binding_ctx;
     it->term_index = observer->term_index;
-    it->query = &observer->filter;
-    it->terms = observer->filter.terms;
+    it->query = observer->query;
 
     ecs_entity_t event = it->event;
     int32_t event_cur = it->event_cur;
@@ -459,96 +458,104 @@ bool flecs_multi_observer_invoke(
 
     o->last_event_id[0] = world->event_id;
 
-    ecs_iter_t user_it = *it;
-    user_it.field_count = o->filter.field_count;
-    user_it.query = &o->filter;
-    user_it.terms = o->filter.terms;
-    user_it.flags = 0;
-    ECS_BIT_COND(user_it.flags, EcsIterNoData,    
-        ECS_BIT_IS_SET(o->filter.flags, EcsFilterNoData));
-    user_it.ids = NULL;
-    user_it.columns = NULL;
-    user_it.sources = NULL;
-    user_it.sizes = NULL;
-    user_it.ptrs = NULL;
-
-    flecs_iter_init(it->world, &user_it, flecs_iter_cache_all);
-    user_it.flags |= (it->flags & EcsIterTableOnly);
-
     ecs_table_t *table = it->table;
     ecs_table_t *prev_table = it->other_table;
     int32_t pivot_term = it->term_index;
-    ecs_term_t *term = &o->filter.terms[pivot_term];
+    ecs_term_t *term = &o->query->terms[pivot_term];
 
     int32_t column = it->columns[0];
-    if (term->oper == EcsNot) {
+    bool is_not = term->oper == EcsNot;
+    if (is_not) {
         table = it->other_table;
         prev_table = it->table;
     }
 
-    if (!table) {
-        table = &world->store.root;
-    }
-    if (!prev_table) {
-        prev_table = &world->store.root;
-    }
+    table = table ? table : &world->store.root;
+    prev_table = prev_table ? prev_table : &world->store.root;
 
     if (column < 0) {
         column = -column;
     }
 
-    user_it.columns[0] = 0;
-    user_it.columns[pivot_term] = column;
-    user_it.sources[pivot_term] = it->sources[0];
-    user_it.sizes = o->filter.sizes;
+    ecs_iter_t user_it;
 
-    if (flecs_filter_match_table(world, &o->filter, table, user_it.ids, 
-        user_it.columns, user_it.sources, NULL, NULL, false, pivot_term, 
-        user_it.flags))
-    {
+    bool match;
+    if (is_not) {
+        match = ecs_query_has_table(o->query, table, &user_it);
+        if (match) {
+            /* The target table matches but the entity hasn't moved to it yet. 
+             * Now match the not_query, which will populate the iterator with
+             * data from the table the entity is still stored in. */
+            ecs_iter_fini(&user_it);
+            match = ecs_query_has_table(o->not_query, prev_table, &user_it);
+
+            /* A not query replaces Not terms with Optional terms, so if the 
+             * regular query matches, the not_query should also match. */
+            ecs_assert(match, ECS_INTERNAL_ERROR, NULL);
+        }
+    } else {
+        ecs_table_range_t range = {
+            .table = table,
+            .offset = it->offset,
+            .count = it->count
+        };
+        match = ecs_query_has_range(o->query, &range, &user_it);
+    }
+
+    if (match) {
         /* Monitor observers only invoke when the filter matches for the first
          * time with an entity */
         if (o->flags & EcsObserverIsMonitor) {
-            if (flecs_filter_match_table(world, &o->filter, prev_table, 
-                NULL, NULL, NULL, NULL, NULL, true, -1, user_it.flags)) 
-            {
+            ecs_iter_t table_it;
+            if (ecs_query_has_table(o->query, prev_table, &table_it)) {
+                ecs_iter_fini(&table_it);
+                ecs_iter_fini(&user_it);
                 goto done;
             }
         }
 
-        /* While filter matching needs to be reversed for a Not term, the
-         * component data must be fetched from the table we got notified for.
-         * Repeat the matching process for the non-matching table so we get the
-         * correct column ids and sources, which we need for populate_data */
-        if (term->oper == EcsNot) {
-            flecs_filter_match_table(world, &o->filter, prev_table, user_it.ids, 
-                user_it.columns, user_it.sources, NULL, NULL, false, -1, 
-                user_it.flags | EcsFilterPopulate);
-        }
+        ECS_BIT_COND(user_it.flags, EcsIterNoData,    
+            ECS_BIT_IS_SET(o->query->flags, EcsQueryNoData));
 
-        flecs_iter_populate_data(world, &user_it, it->table, it->offset, 
-            it->count, user_it.ptrs);
-
-        user_it.ptrs[pivot_term] = it->ptrs[0];
-        user_it.ids[pivot_term] = it->event_id;
-        user_it.system = o->filter.entity;
+        /* Patch data from original iterator. If the observer query has 
+         * wildcards which triggered the original event, the component id that
+         * got matched by ecs_query_has_range may not be the same as the one
+         * that caused the event. We need to make sure to communicate the
+         * component id that actually triggered the observer. */
+        int32_t pivot_field = term->field_index;
+        ecs_assert(pivot_field >= 0, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(pivot_field < user_it.field_count, ECS_INTERNAL_ERROR, NULL);
+        user_it.ids[pivot_field] = it->event_id;
+        user_it.ptrs[pivot_field] = it->ptrs[0];
+        user_it.columns[pivot_field] = it->columns[0];
         user_it.term_index = pivot_term;
+
         user_it.ctx = o->ctx;
         user_it.binding_ctx = o->binding_ctx;
-        user_it.field_count = o->filter.field_count;
         user_it.callback = o->callback;
+        user_it.system = o->entity;
+        user_it.event = it->event;
+        user_it.event_id = it->event_id;
+        user_it.other_table = it->other_table;
 
-        flecs_iter_validate(&user_it);
+        ecs_entity_t old_system = flecs_stage_set_system(
+            &world->stages[0], o->entity);
         ecs_table_lock(it->world, table);
-        flecs_observer_invoke(world, &user_it, o, o->callback, 
-            pivot_term, flecs_is_simple_result(&user_it));
+
+        user_it.callback(&user_it);
+
         ecs_table_unlock(it->world, table);
+        flecs_stage_set_system(&world->stages[0], old_system);
+
         ecs_iter_fini(&user_it);
         return true;
+    } else {
+        /* While the observer query was strictly speaking evaluated, it's more
+         * useful to measure how often the observer was actually invoked. */
+        o->query->eval_count --;
     }
 
 done:
-    ecs_iter_fini(&user_it);
     return false;
 }
 
@@ -580,6 +587,7 @@ bool flecs_default_observer_next_callback(ecs_iter_t *it) {
         return false;
     } else {
         /* Use interrupted_by to signal the next iteration must return false */
+        ecs_assert(it->system != 0, ECS_INTERNAL_ERROR, NULL);
         it->interrupted_by = it->system;
         return true;
     }
@@ -602,45 +610,7 @@ void flecs_multi_observer_builtin_run(ecs_iter_t *it) {
 }
 
 static
-void flecs_uni_observer_yield_existing(
-    ecs_world_t *world,
-    ecs_observer_t *observer)
-{
-    ecs_iter_action_t callback = observer->callback;
-
-    ecs_defer_begin(world);
-
-    /* If yield existing is enabled, observer for each thing that matches
-     * the event, if the event is iterable. */
-    int i, count = observer->event_count;
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t evt = observer->events[i];
-        const EcsIterable *iterable = ecs_get(world, evt, EcsIterable);
-        if (!iterable) {
-            continue;
-        }
-
-        ecs_iter_t it;
-        iterable->init(world, &observer->filter, &it, NULL);
-        it.system = observer->filter.entity;
-        it.ctx = observer->ctx;
-        it.binding_ctx = observer->binding_ctx;
-        it.event = evt;
-
-        ecs_iter_next_action_t next = it.next;
-        ecs_assert(next != NULL, ECS_INTERNAL_ERROR, NULL);
-        while (next(&it)) {
-            it.event_id = it.ids[0];
-            it.event_cur = ++ world->event_id;
-            callback(&it);
-        }
-    }
-
-    ecs_defer_end(world);
-}
-
-static
-void flecs_multi_observer_yield_existing(
+void flecs_observer_yield_existing(
     ecs_world_t *world,
     ecs_observer_t *observer)
 {
@@ -653,35 +623,16 @@ void flecs_multi_observer_yield_existing(
 
     ecs_defer_begin(world);
 
-    int32_t pivot_term = ecs_filter_pivot_term(world, &observer->filter);
-    if (pivot_term < 0) {
-        pivot_term = 0; /* Observer has no this terms */
-    }
-
     /* If yield existing is enabled, invoke for each thing that matches
      * the event, if the event is iterable. */
     int i, count = observer->event_count;
     for (i = 0; i < count; i ++) {
-        ecs_entity_t evt = observer->events[i];
-        const EcsIterable *iterable = ecs_get(world, evt, EcsIterable);
-        if (!iterable) {
-            continue;
-        }
-
-        ecs_iter_t it;
-        iterable->init(world, world, &it, &observer->filter.terms[pivot_term]);
-        it.query = &observer->filter;
-        it.terms = observer->filter.terms;
-        it.field_count = 1;
-        it.term_index = pivot_term;
-        it.system = observer->filter.entity;
+        ecs_iter_t it = ecs_query_iter(world, observer->query);
+        it.system = observer->entity;
         it.ctx = observer;
         it.binding_ctx = observer->binding_ctx;
-        it.event = evt;
-
-        ecs_iter_next_action_t next = it.next;
-        ecs_assert(next != NULL, ECS_INTERNAL_ERROR, NULL);
-        while (next(&it)) {
+        it.event = observer->events[i];;
+        while (ecs_query_next(&it)) {
             it.event_id = it.ids[0];
             it.event_cur = ++ world->event_id;
             run(&it);
@@ -697,13 +648,13 @@ int flecs_uni_observer_init(
     ecs_observer_t *observer,
     const ecs_observer_desc_t *desc)
 {
-    ecs_term_t *term = &observer->filter.terms[0];
+    ecs_term_t *term = &observer->query->terms[0];
     observer->last_event_id = desc->last_event_id;    
     if (!observer->last_event_id) {
         observer->last_event_id = &observer->last_event_id_storage;
     }
-    observer->register_id = flecs_from_public_id(world, term->id);
-    term->field_index = desc->term_index;
+    observer->register_id = term->id;
+    term->field_index = flecs_ito(int16_t, desc->term_index);
 
     if (ecs_id_is_tag(world, term->id)) {
         /* If id is a tag, downgrade OnSet/UnSet to OnAdd/OnRemove. */
@@ -741,10 +692,24 @@ int flecs_uni_observer_init(
 
     flecs_uni_observer_register(world, observer->observable, observer);
 
-    if (desc->yield_existing) {
-        flecs_uni_observer_yield_existing(world, observer);
+    return 0;
+}
+
+static
+int flecs_observer_add_child(
+    ecs_world_t *world,
+    ecs_observer_t *observer,
+    const ecs_observer_desc_t *child_desc)
+{
+    ecs_observer_t *child_observer = flecs_observer_init(
+        world, 0, child_desc);
+    if (!child_observer) {
+        return -1;
     }
 
+    ecs_vec_append_t(&world->allocator, &observer->children, 
+        ecs_observer_t*)[0] = child_observer;
+    child_observer->entity = observer->entity;
     return 0;
 }
 
@@ -761,55 +726,62 @@ int flecs_multi_observer_init(
     /* Mark observer as multi observer */
     observer->flags |= EcsObserverIsMulti;
 
+    /* Vector that stores a single-component observer for each query term */
+    ecs_vec_init_t(&world->allocator, &observer->children, ecs_observer_t*, 2);
+
     /* Create a child observer for each term in the filter */
-    ecs_filter_t *filter = &observer->filter;
+    ecs_query_t *query = observer->query;
     ecs_observer_desc_t child_desc = *desc;
     child_desc.last_event_id = observer->last_event_id;
     child_desc.run = NULL;
     child_desc.callback = flecs_multi_observer_builtin_run;
     child_desc.ctx = observer;
     child_desc.ctx_free = NULL;
-    child_desc.filter.expr = NULL;
-    child_desc.filter.terms_buffer = NULL;
-    child_desc.filter.terms_buffer_count = 0;
+    child_desc.query.expr = NULL;
     child_desc.binding_ctx = NULL;
     child_desc.binding_ctx_free = NULL;
     child_desc.yield_existing = false;
     ecs_os_zeromem(&child_desc.entity);
-    ecs_os_zeromem(&child_desc.filter.terms);
+    ecs_os_zeromem(&child_desc.query.terms);
+    ecs_os_zeromem(&child_desc.query);
     ecs_os_memcpy_n(child_desc.events, observer->events, 
         ecs_entity_t, observer->event_count);
 
-    int i, term_count = filter->term_count;
-    bool optional_only = filter->flags & EcsFilterMatchThis;
+    int i, term_count = query->term_count;
+    bool optional_only = query->flags & EcsQueryMatchThis;
+    bool has_not = false;
     for (i = 0; i < term_count; i ++) {
-        if (filter->terms[i].oper != EcsOptional) {
-            if (ecs_term_match_this(&filter->terms[i])) {
+        if (query->terms[i].oper != EcsOptional) {
+            if (ecs_term_match_this(&query->terms[i])) {
                 optional_only = false;
             }
         }
+
+        if ((query->terms[i].oper == EcsNot) && 
+            (query->terms[i].inout != EcsInOutFilter)) 
+        {
+            has_not = true;
+        }
     }
 
-    if (filter->flags & EcsFilterMatchPrefab) {
-        child_desc.filter.flags |= EcsFilterMatchPrefab;
-    }
-    if (filter->flags & EcsFilterMatchDisabled) {
-        child_desc.filter.flags |= EcsFilterMatchDisabled;
+    if (query->flags & EcsQueryMatchPrefab) {
+        child_desc.query.flags |= EcsQueryMatchPrefab;
     }
 
-    /* Create observers as children of observer */
-    ecs_entity_t old_scope = ecs_set_scope(world, observer->filter.entity);
+    if (query->flags & EcsQueryMatchDisabled) {
+        child_desc.query.flags |= EcsQueryMatchDisabled;
+    }
 
     for (i = 0; i < term_count; i ++) {
-        if (filter->terms[i].src.flags & EcsFilter) {
+        if (query->terms[i].inout == EcsInOutFilter) {
             continue;
         }
 
-        ecs_term_t *term = &child_desc.filter.terms[0];
-        child_desc.term_index = filter->terms[i].field_index;
-        *term = filter->terms[i];
+        ecs_term_t *term = &child_desc.query.terms[0];
+        child_desc.term_index = query->terms[i].field_index;
+        *term = query->terms[i];
 
-        ecs_oper_kind_t oper = term->oper;
+        int16_t oper = term->oper;
         ecs_id_t id = term->id;
 
         /* AndFrom & OrFrom terms insert multiple observers */
@@ -832,7 +804,7 @@ int flecs_multi_observer_init(
                 term->first.id = ti_ids[ti];
                 term->id = ti_ids[ti];
 
-                if (ecs_observer_init(world, &child_desc) == 0) {
+                if (flecs_observer_add_child(world, observer, &child_desc)) {
                     goto error;
                 }
             }
@@ -848,13 +820,13 @@ int flecs_multi_observer_init(
         if (optional_only) {
             term->id = EcsAny;
             term->first.id = EcsAny;
-            term->src.id = EcsThis;
-            term->src.flags = EcsIsVariable;
+            term->src.id = EcsThis | EcsIsVariable;
             term->second.id = 0;
         } else if (term->oper == EcsOptional) {
             continue;
         }
-        if (ecs_observer_init(world, &child_desc) == 0) {
+
+        if (flecs_observer_add_child(world, observer, &child_desc)) {
             goto error;
         }
 
@@ -863,15 +835,138 @@ int flecs_multi_observer_init(
         }
     }
 
-    ecs_set_scope(world, old_scope);
+    /* If observer has Not terms, we need to create a query that replaces Not
+     * with Optional which we can use to populate the observer data for the 
+     * table that the entity moved away from (or to, if it's an OnRemove 
+     * observer). */
+    if (has_not) {
+        ecs_query_desc_t not_desc = desc->query;
+        not_desc.expr = NULL;
+        ecs_os_memcpy_n(not_desc.terms, observer->query->terms, 
+            ecs_term_t, term_count);
+        for (i = 0; i < term_count; i ++) {
+            if (not_desc.terms[i].oper == EcsNot) {
+                not_desc.terms[i].oper = EcsOptional;
+            }
+        }
 
-    if (desc->yield_existing) {
-        flecs_multi_observer_yield_existing(world, observer);
+        observer->not_query = ecs_query_init(world, &not_desc);
     }
 
     return 0; 
 error:
     return -1;
+}
+
+ecs_observer_t* flecs_observer_init(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const ecs_observer_desc_t *desc)
+{
+    ecs_check(desc->callback != NULL || desc->run != NULL, 
+        ECS_INVALID_OPERATION, NULL);
+
+    ecs_observer_t *observer = flecs_sparse_add_t(
+        &world->store.observers, ecs_observer_t);
+    ecs_assert(observer != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_poly_init(observer, ecs_observer_t);
+    observer->id = flecs_sparse_last_id(&world->store.observers);
+    observer->dtor = (ecs_poly_dtor_t)flecs_observer_fini;
+
+    /* Make writeable copy of filter desc so that we can set name. This will
+     * make debugging easier, as any error messages related to creating the
+     * filter will have the name of the observer. */
+    ecs_query_desc_t query_desc = desc->query;
+    query_desc.entity = 0;
+    query_desc.cache_kind = EcsQueryCacheNone;
+
+    /* Parse filter */
+    ecs_query_t *query = observer->query = ecs_query_init(
+        world, &query_desc);
+    if (query == NULL) {
+        flecs_observer_fini(observer);
+        return 0;
+    }
+
+    ecs_poly_assert(query, ecs_query_impl_t);
+
+    /* Observer must have at least one term */
+    ecs_check(observer->query->term_count > 0, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_observable_t *observable = desc->observable;
+    if (!observable) {
+        observable = ecs_get_observable(world);
+    }
+
+    observer->run = desc->run;
+    observer->callback = desc->callback;
+    observer->ctx = desc->ctx;
+    observer->binding_ctx = desc->binding_ctx;
+    observer->ctx_free = desc->ctx_free;
+    observer->binding_ctx_free = desc->binding_ctx_free;
+    observer->term_index = desc->term_index;
+    observer->observable = observable;
+    observer->entity = entity;
+
+    /* Check if observer is monitor. Monitors are created as multi observers
+        * since they require pre/post checking of the filter to test if the
+        * entity is entering/leaving the monitor. */
+    int i;
+    for (i = 0; i < FLECS_EVENT_DESC_MAX; i ++) {
+        ecs_entity_t event = desc->events[i];
+        if (!event) {
+            break;
+        }
+
+        if (event == EcsMonitor) {
+            /* Monitor event must be first and last event */
+            ecs_check(i == 0, ECS_INVALID_PARAMETER, NULL);
+
+            observer->events[0] = EcsOnAdd;
+            observer->events[1] = EcsOnRemove;
+            observer->event_count ++;
+            observer->flags |= EcsObserverIsMonitor;
+        } else {
+            observer->events[i] = event;
+        }
+
+        observer->event_count ++;
+    }
+
+    /* Observer must have at least one event */
+    ecs_check(observer->event_count != 0, ECS_INVALID_PARAMETER, NULL);
+
+    bool multi = false;
+
+    if (query->term_count == 1 && !desc->last_event_id) {
+        ecs_term_t *term = &query->terms[0];
+        /* If the filter has a single term but it is a *From operator, we
+         * need to create a multi observer */
+        multi |= (term->oper == EcsAndFrom) || (term->oper == EcsOrFrom);
+        
+        /* An observer with only optional terms is a special case that is
+            * only handled by multi observers */
+        multi |= term->oper == EcsOptional;
+    }
+
+    bool is_monitor = observer->flags & EcsObserverIsMonitor;
+    if (query->term_count == 1 && !is_monitor && !multi) {
+        if (flecs_uni_observer_init(world, observer, desc)) {
+            goto error;
+        }
+    } else {
+        if (flecs_multi_observer_init(world, observer, desc)) {
+            goto error;
+        }
+    }
+
+    if (desc->yield_existing) {
+        flecs_observer_yield_existing(world, observer);
+    }
+
+    return observer;
+error:
+    return NULL;
 }
 
 ecs_entity_t ecs_observer_init(
@@ -890,97 +985,9 @@ ecs_entity_t ecs_observer_init(
 
     EcsPoly *poly = ecs_poly_bind(world, entity, ecs_observer_t);
     if (!poly->poly) {
-        ecs_check(desc->callback != NULL || desc->run != NULL, 
-            ECS_INVALID_OPERATION, NULL);
-
-        ecs_observer_t *observer = ecs_poly_new(ecs_observer_t);
-        ecs_assert(observer != NULL, ECS_INTERNAL_ERROR, NULL);
-        observer->dtor = (ecs_poly_dtor_t)flecs_observer_fini;
-
-        /* Make writeable copy of filter desc so that we can set name. This will
-         * make debugging easier, as any error messages related to creating the
-         * filter will have the name of the observer. */
-        ecs_filter_desc_t filter_desc = desc->filter;
-        filter_desc.entity = entity;
-        ecs_filter_t *filter = filter_desc.storage = &observer->filter;
-        *filter = ECS_FILTER_INIT;
-
-        /* Parse filter */
-        if (ecs_filter_init(world, &filter_desc) == NULL) {
-            flecs_observer_fini(observer);
-            return 0;
-        }
-
-        /* Observer must have at least one term */
-        ecs_check(observer->filter.term_count > 0, ECS_INVALID_PARAMETER, NULL);
-
+        ecs_observer_t *observer = flecs_observer_init(world, entity, desc);
+        ecs_assert(observer->entity == entity, ECS_INTERNAL_ERROR, NULL);
         poly->poly = observer;
-
-        ecs_observable_t *observable = desc->observable;
-        if (!observable) {
-            observable = ecs_get_observable(world);
-        }
-
-        observer->run = desc->run;
-        observer->callback = desc->callback;
-        observer->ctx = desc->ctx;
-        observer->binding_ctx = desc->binding_ctx;
-        observer->ctx_free = desc->ctx_free;
-        observer->binding_ctx_free = desc->binding_ctx_free;
-        observer->term_index = desc->term_index;
-        observer->observable = observable;
-
-        /* Check if observer is monitor. Monitors are created as multi observers
-         * since they require pre/post checking of the filter to test if the
-         * entity is entering/leaving the monitor. */
-        int i;
-        for (i = 0; i < FLECS_EVENT_DESC_MAX; i ++) {
-            ecs_entity_t event = desc->events[i];
-            if (!event) {
-                break;
-            }
-
-            if (event == EcsMonitor) {
-                /* Monitor event must be first and last event */
-                ecs_check(i == 0, ECS_INVALID_PARAMETER, NULL);
-
-                observer->events[0] = EcsOnAdd;
-                observer->events[1] = EcsOnRemove;
-                observer->event_count ++;
-                observer->flags |= EcsObserverIsMonitor;
-            } else {
-                observer->events[i] = event;
-            }
-
-            observer->event_count ++;
-        }
-
-        /* Observer must have at least one event */
-        ecs_check(observer->event_count != 0, ECS_INVALID_PARAMETER, NULL);
-
-        bool multi = false;
-
-        if (filter->term_count == 1 && !desc->last_event_id) {
-            ecs_term_t *term = &filter->terms[0];
-            /* If the filter has a single term but it is a *From operator, we
-             * need to create a multi observer */
-            multi |= (term->oper == EcsAndFrom) || (term->oper == EcsOrFrom);
-            
-            /* An observer with only optional terms is a special case that is
-             * only handled by multi observers */
-            multi |= term->oper == EcsOptional;
-        }
-
-        bool is_monitor = observer->flags & EcsObserverIsMonitor;
-        if (filter->term_count == 1 && !is_monitor && !multi) {
-            if (flecs_uni_observer_init(world, observer, desc)) {
-                goto error;
-            }
-        } else {
-            if (flecs_multi_observer_init(world, observer, desc)) {
-                goto error;
-            }
-        }
 
         if (ecs_get_name(world, entity)) {
             ecs_trace("#[green]observer#[reset] %s created", 
@@ -993,6 +1000,7 @@ ecs_entity_t ecs_observer_init(
         if (desc->run) {
             observer->run = desc->run;
         }
+
         if (desc->callback) {
             observer->callback = desc->callback;
         }
@@ -1002,8 +1010,11 @@ ecs_entity_t ecs_observer_init(
                 observer->ctx_free(observer->ctx);
             }
         }
+
         if (observer->binding_ctx_free) {
-            if (observer->binding_ctx && observer->binding_ctx != desc->binding_ctx) {
+            if (observer->binding_ctx && 
+                observer->binding_ctx != desc->binding_ctx) 
+            {
                 observer->binding_ctx_free(observer->binding_ctx);
             }
         }
@@ -1011,12 +1022,15 @@ ecs_entity_t ecs_observer_init(
         if (desc->ctx) {
             observer->ctx = desc->ctx;
         }
+
         if (desc->binding_ctx) {
             observer->binding_ctx = desc->binding_ctx;
         }
+
         if (desc->ctx_free) {
             observer->ctx_free = desc->ctx_free;
         }
+
         if (desc->binding_ctx_free) {
             observer->binding_ctx_free = desc->binding_ctx_free;
         }
@@ -1056,14 +1070,14 @@ void* ecs_observer_get_binding_ctx(
     }      
 }
 
-const ecs_filter_t* ecs_observer_get_filter(
+const ecs_query_t* ecs_observer_get_query(
     const ecs_world_t *world,
     ecs_entity_t observer)
 {
     const EcsPoly *o = ecs_poly_bind_get(world, observer, ecs_observer_t);
     if (o) {
         ecs_poly_assert(o->poly, ecs_observer_t);
-        return &((ecs_observer_t*)o->poly)->filter;
+        return ((ecs_observer_t*)o->poly)->query;
     } else {
         return NULL;
     }   
@@ -1072,19 +1086,32 @@ const ecs_filter_t* ecs_observer_get_filter(
 void flecs_observer_fini(
     ecs_observer_t *observer)
 {
-    if (observer->flags & EcsObserverIsMulti) {
+    ecs_assert(observer != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_world_t *world = observer->query->world;
+
+    ecs_observer_t **children = ecs_vec_first(&observer->children);
+    int32_t i, children_count = ecs_vec_count(&observer->children);
+    if (children_count) {
+        for (i = 0; i < children_count; i ++) {
+            flecs_observer_fini(children[i]);
+        }
         ecs_os_free(observer->last_event_id);
     } else {
-        if (observer->filter.term_count) {
+        if (observer->query->term_count) {
             flecs_unregister_observer(
-                observer->filter.world, observer->observable, observer);
+                world, observer->observable, observer);
         } else {
             /* Observer creation failed while creating filter */
         }
     }
 
+    ecs_vec_fini_t(&world->allocator, &observer->children, ecs_observer_t*);
+
     /* Cleanup filters */
-    ecs_filter_fini(&observer->filter);
+    ecs_query_fini(observer->query);
+    if (observer->not_query) {
+        ecs_query_fini(observer->not_query);
+    }
 
     /* Cleanup context */
     if (observer->ctx_free) {
@@ -1095,5 +1122,33 @@ void flecs_observer_fini(
         observer->binding_ctx_free(observer->binding_ctx);
     }
 
-    ecs_poly_free(observer, ecs_observer_t);
+    ecs_poly_fini(observer, ecs_observer_t);
+    flecs_sparse_remove_t(
+        &world->store.observers, ecs_observer_t, observer->id);
+}
+
+void flecs_observer_set_disable_bit(
+    ecs_world_t *world,
+    ecs_entity_t e,
+    ecs_flags32_t bit,
+    bool cond)
+{
+    const EcsPoly *poly = ecs_get_pair(world, e, EcsPoly, EcsObserver);
+    if (!poly || !poly->poly) {
+        return;
+    }
+
+    ecs_observer_t *o = poly->poly;
+    if (o->flags & EcsObserverIsMulti) {
+        ecs_observer_t **children = ecs_vec_first(&o->children);
+        int32_t i, children_count = ecs_vec_count(&o->children);
+        if (children_count) {
+            for (i = 0; i < children_count; i ++) {
+                ECS_BIT_COND(children[i]->flags, bit, cond);
+            }
+        }
+    } else {
+        ecs_poly_assert(o, ecs_observer_t);
+        ECS_BIT_COND(o->flags, bit, cond);
+    }
 }

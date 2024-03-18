@@ -55,18 +55,18 @@ https://github.com/SanderMertens/flecs/tree/master/examples
 ## Types
 Flecs has different query types, which are optimized for different kinds of use cases. This section provides a brief overview of each kind:
 
- ### Filters
- Filters are cheap to create, low overhead, reasonably efficient to iterate. They are good for ad-hoc queries with runtime-defined conditions. An example:
+ ### Querys
+ Querys are cheap to create, low overhead, reasonably efficient to iterate. They are good for ad-hoc queries with runtime-defined conditions. An example:
  
  ```c
- ecs_filter_t *f = ecs_filter(world, {
+ ecs_query_t *f = ecs_filter(world, {
     .terms = {
         { ecs_id(Position) }, { ecs_id(Velocity) }
     }
 });
 
-ecs_iter_t it = ecs_filter_iter(world, f);
-while (ecs_filter_next(&it)) {
+ecs_iter_t it = ecs_query_iter(world, f);
+while (ecs_query_next(&it)) {
     Position *p = ecs_field(&it, Position, 1);
     Velocity *v = ecs_field(&it, Velocity, 2);
 
@@ -90,8 +90,8 @@ f.each([](Position& p, Velocity& v) {
 Cached queries cache the output of a filter. They are more expensive to create and have higher overhead, but are the fastest to iterate. Cached queries are the default for systems. An example:
 
 ```c
-ecs_query_t *q = ecs_query(world, {
-    .filter.terms = {
+ecs_query_cache_t *q = ecs_query(world, {
+    .terms = {
         { ecs_id(Position) }, { ecs_id(Velocity) }
     }
 });
@@ -121,14 +121,14 @@ q.each([](Position& p, Velocity& v) {
 Rules are a constraint-based query engine capable of traversing graphs. They are more expensive to create than filters, have low overhead, and their iteration performance depends on query complexity. An example:
 
 ```c
-ecs_rule_t *r = ecs_rule(world, {
+ecs_query_impl_t *r = ecs_query(world, {
     .terms = {
         { ecs_id(Position) }, { ecs_id(Velocity) }
     }
 });
 
-ecs_iter_t it = ecs_rule_iter(world, r);
-while (ecs_rule_next(&it)) {
+ecs_iter_t it = ecs_query_iter(world, r);
+while (ecs_query_next(&it)) {
     Position *p = ecs_field(&it, Position, 1);
     Velocity *v = ecs_field(&it, Velocity, 2);
 
@@ -154,10 +154,10 @@ For more information on how each implementation performs, see [Performance](#per
 This section explains how to create queries in the different language bindings and the flecs query DSL.
 
 ### Query Descriptors (C)
-Query descriptors are the C API for creating queries. The API uses a type called `ecs_filter_desc_t`, to describe the structure of a query. This type is used to create all query kinds (`ecs_filter_t`, `ecs_query_t`, `ecs_rule_t`). An example:
+Query descriptors are the C API for creating queries. The API uses a type called `ecs_query_desc_t`, to describe the structure of a query. This type is used to create all query kinds (`ecs_query_t`, `ecs_query_cache_t`, `ecs_query_impl_t`). An example:
 
 ```c
-ecs_filter_t *f = ecs_filter(world, {
+ecs_query_t *f = ecs_filter(world, {
   .terms = {
     { ecs_id(Position) }, { ecs_id(Velocity) },
   }
@@ -167,7 +167,7 @@ ecs_filter_t *f = ecs_filter(world, {
 The example shows the short notation, which looks like this when expanded:
 
 ```c
-ecs_filter_t *f = ecs_filter_init(world, &(ecs_filter_desc_t){
+ecs_query_t *f = ecs_query_init(world, &(ecs_query_desc_t){
   .terms = {
     { ecs_id(Position) }, { ecs_id(Velocity) },
   }
@@ -177,21 +177,21 @@ ecs_filter_t *f = ecs_filter_init(world, &(ecs_filter_desc_t){
 Query descriptors can also be used by the C++ API. However because C++ does not support taking the address of a temporary, and not all language revisions support designated initializers, query descriptors in C++ should be used like this:
 
 ```c
-ecs_filter_desc_t desc = {}; // Zero-initialize the struct
+ecs_query_desc_t desc = {}; // Zero-initialize the struct
 desc.terms[0].id = ecs_id(Position);
 desc.terms[1].id = ecs_id(Velocity);
-ecs_filter_t *f = ecs_filter_init(world, &desc);
+ecs_query_t *f = ecs_query_init(world, &desc);
 ```
 
 The following table provides an overview of the query types with the init/fini functions:
 
 | Kind   | Type           | Init              | Fini              | Descriptor type     |
 |--------|----------------|-------------------|-------------------|---------------------|
-| Filter | `ecs_filter_t` | `ecs_filter_init` | `ecs_filter_fini` | `ecs_filter_desc_t` |
-| Query  | `ecs_query_t`  | `ecs_query_init`  | `ecs_query_fini`  | `ecs_query_desc_t`  |
-| Rule   | `ecs_rule_t`   | `ecs_rule_init`   | `ecs_rule_fini`   | `ecs_filter_desc_t` |
+| Query | `ecs_query_t` | `ecs_query_init` | `ecs_query_fini` | `ecs_query_desc_t` |
+| Query  | `ecs_query_cache_t`  | `ecs_query_cache_init`  | `ecs_query_cache_fini`  | `ecs_query_desc_t`  |
+| Rule   | `ecs_query_impl_t`   | `ecs_query_init`   | `ecs_query_fini`   | `ecs_query_desc_t` |
 
-Additionally the descriptor types for systems (`ecs_system_desc_t`) and observers (`ecs_observer_desc_t`) embed the `ecs_filter_desc_t` descriptor type.
+Additionally the descriptor types for systems (`ecs_system_desc_t`) and observers (`ecs_observer_desc_t`) embed the `ecs_query_desc_t` descriptor type.
 
 ### Query Builder (C++)
 Query builders are the C++ API for creating queries. The builder API is built on top of the descriptor API, and adds a layer of convenience and type safety that matches modern idiomatic C++. The builder API is implemented for all query kinds (filters, cached queries, rules). An example of a simple query:
@@ -227,7 +227,7 @@ The following table provides an overview of the query types with the factory fun
 
 | Kind   | Type            | Factory                 |
 |--------|-----------------|-------------------------|
-| Filter | `flecs::filter` | `world::filter_builder` |
+| Query | `flecs::filter` | `world::filter_builder` |
 | Query  | `flecs::query`  | `world::query_builder`  |
 | Rule   | `flecs::rule`   | `world::rule_builder`   |
 
@@ -256,7 +256,7 @@ ECS_SYSTEM(world, Move, EcsOnUpdate, Position, [in] Velocity);
 Queries can be created from expressions with both the descriptor and builder APIs:
 
 ```c
-ecs_filter_t *f = ecs_filter(world, {
+ecs_query_t *f = ecs_filter(world, {
   .expr = "Position, [in] Velocity"
 });
 ```
@@ -272,23 +272,23 @@ The query DSL requires the `FLECS_PARSER` addon to be included in a build.
 This section describes the different ways queries can be iterated. The code examples use filters, but also apply to cached queries and rules.
 
 ### Iterators (C)
-In the C API an iterator object of type `ecs_iter_t` can be created for each of the query kinds, using the `ecs_filter_iter`, `ecs_query_iter` and `ecs_rule_iter` functions. This iterator can then be iterated with the respective `next` functions: `ecs_filter_next`, `ecs_query_next` and `ecs_rule_next`.
+In the C API an iterator object of type `ecs_iter_t` can be created for each of the query kinds, using the `ecs_query_iter`, `ecs_query_cache_iter` and `ecs_query_iter` functions. This iterator can then be iterated with the respective `next` functions: `ecs_query_next`, `ecs_query_next` and `ecs_query_next`.
 
 An iterator can also be iterated with the `ecs_iter_next` function which is slightly slower, but does not require knowledge about the source the iterator was created for.
 
 An example:
 
 ```c
-ecs_filter_t *f = ecs_filter(world, {
+ecs_query_t *f = ecs_filter(world, {
   .terms = {
     { ecs_id(Position) }, { ecs_id(Velocity) },
   }
 });
 
-ecs_iter_t it = ecs_filter_iter(world, f);
+ecs_iter_t it = ecs_query_iter(world, f);
 
 // Outer loop: matching tables
-while (ecs_filter_next(&it)) {
+while (ecs_query_next(&it)) {
   Position *p = ecs_field(&it, Position, 1); // 1st term
   Velocity *v = ecs_field(&it, Velocity, 2); // 2nd term
 
@@ -505,7 +505,7 @@ To query for a component in C, the `id` field of a term can be set:
 ECS_COMPONENT(world, Position);
 ECS_COMPONENT(world, Velocity);
 
-ecs_filter_t *f = ecs_filter(world, {
+ecs_query_t *f = ecs_filter(world, {
   .terms = {
     { .id = ecs_id(Position) }, 
     { .id = ecs_id(Velocity) }
@@ -516,7 +516,7 @@ ecs_filter_t *f = ecs_filter(world, {
 The `id` field is guaranteed to be the first member of a term, which allows the previous code to be rewritten in this shorter form:
 
 ```c
-ecs_filter_t *f = ecs_filter(world, {
+ecs_query_t *f = ecs_filter(world, {
   .terms = {
     { ecs_id(Position) }, 
     { ecs_id(Velocity) }
@@ -530,7 +530,7 @@ The `ecs_id` macro converts the component typename into the variable name that h
 ECS_TAG(world, Npc);
 ecs_entity_t Platoon_01 = ecs_new_id(world);
 
-ecs_filter_t *f = ecs_filter(world, {
+ecs_query_t *f = ecs_filter(world, {
   .terms = {
     { Npc }, 
     { Platoon_01 }
@@ -544,7 +544,7 @@ Components can also be queried for by name by setting the `.first.name` member i
 ECS_COMPONENT(world, Position);
 ECS_COMPONENT(world, Velocity);
 
-ecs_filter_t *f = ecs_filter(world, {
+ecs_query_t *f = ecs_filter(world, {
   .terms = {
     { .first.name = "Position" }, 
     { .first.name = "Velocity" }
@@ -660,7 +660,7 @@ ecs_entity_t e = ecs_new_id(world);
 ecs_add(world, e, Position);
 ecs_add(world, e, Velocity);
 
-ecs_filter_t *f = ecs_filter(world, {
+ecs_query_t *f = ecs_filter(world, {
   .terms = {
     { EcsWildcard }
   }
@@ -686,7 +686,7 @@ ecs_entity_t e = ecs_new_id(world);
 ecs_add(world, e, Position);
 ecs_add(world, e, Velocity);
 
-ecs_filter_t *f = ecs_filter(world, {
+ecs_query_t *f = ecs_filter(world, {
   .terms = {
     { EcsAny }
   }
@@ -722,7 +722,7 @@ To query for a pair in C, the `id` field of a term can be set to a pair using th
 ecs_entity_t Likes = ecs_new_id(world);
 ecs_entity_t Bob = ecs_new_id(world);
 
-ecs_filter_t *f = ecs_filter(world, {
+ecs_query_t *f = ecs_filter(world, {
   .terms = {
     { .id = ecs_pair(Likes, Bob) }
   }
@@ -735,7 +735,7 @@ The `id` field is guaranteed to be the first member of a term, which allows the 
 ecs_entity_t Likes = ecs_new_id(world);
 ecs_entity_t Bob = ecs_new_id(world);
 
-ecs_filter_t *f = ecs_filter(world, {
+ecs_query_t *f = ecs_filter(world, {
   .terms = {
     { ecs_pair(Likes, Bob) }
   }
@@ -748,7 +748,7 @@ When an element of the pair is a component type, use the `ecs_id` macro to obtai
 ECS_COMPONENT(world, Eats);
 ecs_entity_t Apples = ecs_new_id(world);
 
-ecs_filter_t *f = ecs_filter(world, {
+ecs_query_t *f = ecs_filter(world, {
   .terms = {
     { ecs_pair(ecs_id(Eats), Apples) }
   }
@@ -758,13 +758,13 @@ ecs_filter_t *f = ecs_filter(world, {
 The `ecs_isa`, `ecs_childof` and `ecs_dependson` convenience macros can be used to create pairs for builtin relationships. The two queries in the next example are equivalent:
 
 ```c
-ecs_filter_t *f_1 = ecs_filter(world, {
+ecs_query_t *f_1 = ecs_filter(world, {
   .terms = {
     { ecs_pair(EcsChildOf, parent) }
   }
 });
 
-ecs_filter_t *f_2 = ecs_filter(world, {
+ecs_query_t *f_2 = ecs_filter(world, {
   .terms = {
     { ecs_childof(parent) }
   }
@@ -774,7 +774,7 @@ ecs_filter_t *f_2 = ecs_filter(world, {
 Pair queries can be created by setting their individual elements in the `first.id` and `second.id` members of a term:
 
 ```c
-ecs_filter_t *f = ecs_filter(world, {
+ecs_query_t *f = ecs_filter(world, {
   .terms = {
     { .first.id = Eats, .second.id = Apples }
   }
@@ -788,13 +788,13 @@ Alternatively, one or both elements of a pair can be resolved by name. The two q
 ECS_TAG(world, Eats);
 ECS_TAG(world, Apples);
 
-ecs_filter_t *f_1 = ecs_filter(world, {
+ecs_query_t *f_1 = ecs_filter(world, {
   .terms = {
     { .first.name = "Eats", .second.id = Apples }
   }
 });
 
-ecs_filter_t *f_2 = ecs_filter(world, {
+ecs_query_t *f_2 = ecs_filter(world, {
   .terms = {
     { .first.name = "Eats", .second.name = "Apples" }
   }
@@ -804,14 +804,14 @@ ecs_filter_t *f_2 = ecs_filter(world, {
 When a query pair contains a wildcard, the `ecs_field_id` function can be used to determine the id of the pair element that matched the query:
 
 ```c
-ecs_filter_t *f = ecs_filter(world, {
+ecs_query_t *f = ecs_filter(world, {
   .terms = {
     { ecs_pair(Likes, EcsWildcard) }
   }
 });
 
-ecs_iter_t it = ecs_filter_iter(world, f);
-while (ecs_filter_next(&it)) {
+ecs_iter_t it = ecs_query_iter(world, f);
+while (ecs_query_next(&it)) {
     ecs_id_t id = ecs_field_id(&it, 1);
     ecs_entity_t second = ecs_pair_second(world, id);
 
@@ -969,7 +969,7 @@ The following sections show how to use access modifiers in the different languag
 Access modifiers can be set using the `inout` member:
 
 ```c
-ecs_filter_t *f = ecs_filter(world, {
+ecs_query_t *f = ecs_filter(world, {
   .terms = {
     { ecs_id(Position) }, 
     { ecs_id(Velocity), .inout = EcsIn }
@@ -1063,14 +1063,14 @@ The `And` operator is used when no other operators are specified. The following 
 When no operator is specified, `And` is assumed. The following two queries are equivalent:
 
 ```c
-ecs_filter_t *f_1 = ecs_filter(world, {
+ecs_query_t *f_1 = ecs_filter(world, {
   .terms = {
     { ecs_id(Position) }, 
     { ecs_id(Velocity) }
   }
 });
 
-ecs_filter_t *f_2 = ecs_filter(world, {
+ecs_query_t *f_2 = ecs_filter(world, {
   .terms = {
     { ecs_id(Position), .oper = EcsAnd }, 
     { ecs_id(Velocity), .oper = EcsAnd }
@@ -1131,7 +1131,7 @@ To create a query with `Or` terms, set `oper` to `EcsOr`:
 
 ```c
 // Position, Velocity || Speed, Mass
-ecs_filter_t *f = ecs_filter(world, {
+ecs_query_t *f = ecs_filter(world, {
   .terms = {
     { ecs_id(Position) }, 
     { ecs_id(Velocity), .oper = EcsOr },
@@ -1140,8 +1140,8 @@ ecs_filter_t *f = ecs_filter(world, {
   }
 });
 
-ecs_iter_t it = ecs_filter_iter(world, f);
-while (ecs_filter_next(&it)) {
+ecs_iter_t it = ecs_query_iter(world, f);
+while (ecs_query_next(&it)) {
   Position *p = ecs_field(&it, Position, 1);
   Mass *m = ecs_field(&it, Mass, 3); // not 4, because of the Or expression
 
@@ -1218,7 +1218,7 @@ The following sections show how to use the `Not` operator in the different langu
 To create a query with `Not` terms, set `oper` to `EcsNot`:
 
 ```c
-ecs_filter_t *f = ecs_filter(world, {
+ecs_query_t *f = ecs_filter(world, {
   .terms = {
     { ecs_id(Position) }, 
     { ecs_id(Velocity), .oper = EcsNot }
@@ -1273,15 +1273,15 @@ The following sections show how to use the `Optional` operator in the different 
 To create a query with `Optional` terms, set `oper` to `EcsOptional`:
 
 ```c
-ecs_filter_t *f = ecs_filter(world, {
+ecs_query_t *f = ecs_filter(world, {
   .terms = {
     { ecs_id(Position) }, 
     { ecs_id(Velocity), .oper = EcsOptional }
   }
 });
 
-ecs_iter_t it = ecs_filter_iter(world, f);
-while (ecs_filter_next(&it)) {
+ecs_iter_t it = ecs_query_iter(world, f);
+while (ecs_query_next(&it)) {
   Position *p = ecs_field(&it, Position, 1);
   if (ecs_field_is_set(&it, 2)) {
     Velocity *v = ecs_field(&it, Velocity, 2);
@@ -1362,7 +1362,7 @@ Terms with equality operators return no data.
 
 #### Query Descriptor (C)
 ```c
-ecs_rule_t *r = ecs_rule(world, {
+ecs_query_impl_t *r = ecs_query(world, {
   .terms = {
     // $this == Foo
     { .first.id = EcsPredEq, .second.id = Foo }, 
@@ -1419,7 +1419,7 @@ ecs_entity_t type_list = ecs_new_w_id(world, EcsPrefab);
 ecs_add(world, type_list, Position);
 ecs_add(world, type_list, Velocity);
 
-ecs_filter_t *f = ecs_filter(world, {
+ecs_query_t *f = ecs_filter(world, {
   .terms = {
     { type_list, .oper = EcsAndFrom }, // match Position, Velocity
     { type_list, .oper = EcsOrFrom },  // match Position || Velocity
@@ -1504,7 +1504,7 @@ The following examples show how to use scopes in the different language bindings
 
 #### Query Descriptor (C)
 ```c
-ecs_rule_t *r = ecs_rule(world, {
+ecs_query_impl_t *r = ecs_query(world, {
   .terms = {
     // Position, !{ Velocity || Speed }
     { .id = ecs_id(Position) },
@@ -1551,7 +1551,7 @@ To specify a fixed source, set the `src.id` member to the entity to match. The f
 ecs_entity_t Game = ecs_new_id(world);
 ecs_add(world, Game, SimTime);
 
-ecs_filter_t *f = ecs_filter(world, {
+ecs_query_t *f = ecs_filter(world, {
   .terms = {
     { ecs_id(Position) }, // normal term, uses $This source
     { ecs_id(Velocity) },  // normal term, also uses $This source
@@ -1559,8 +1559,8 @@ ecs_filter_t *f = ecs_filter(world, {
   }
 });
 
-ecs_iter_t it = ecs_filter_iter(world, f);
-while (ecs_filter_next(&it)) {
+ecs_iter_t it = ecs_query_iter(world, f);
+while (ecs_query_next(&it)) {
   Position *p = ecs_field(&it, Position, 1);
   Velocity *v = ecs_field(&it, Velocity, 2);
   SimTime *st = ecs_field(&it, SimTime, 3);
@@ -1582,7 +1582,7 @@ A source may also be specified by name by setting the `src.name` member:
 ecs_entity_t Game = ecs_entity(world, { .name = "Game" });
 ecs_add(world, Game, SimTime);
 
-ecs_filter_t *f = ecs_filter(world, {
+ecs_query_t *f = ecs_filter(world, {
   .terms = {
     { ecs_id(SimTime), .src.name = "Game" }
   }
@@ -1592,14 +1592,14 @@ ecs_filter_t *f = ecs_filter(world, {
 This examples shows how to access the entities matched by the default `$This` source and a fixed source:
 
 ```c
-ecs_filter_t *f = ecs_filter(world, {
+ecs_query_t *f = ecs_filter(world, {
   .terms = {
     { ecs_id(Position) }, // normal term, uses $This source
     { ecs_id(SimTime), .src.id = Game } // fixed source, match SimTime on Game
   }
 });
 
-while (ecs_filter_next(&it)) {
+while (ecs_query_next(&it)) {
   ecs_entity_t src_1 = ecs_field_src(&it, 1); // Returns 0, meaning entity is stored in it.entities
   ecs_entity_t src_2 = ecs_field_src(&it, 2); // Returns Game
 
@@ -1733,7 +1733,7 @@ The following sections show how to use singletons in the different language bind
 A singleton query is created by specifying the same id as component and source:
 
 ```c
-ecs_filter_t *f = ecs_filter(world, {
+ecs_query_t *f = ecs_filter(world, {
   .terms = {
     { Player },
     { ecs_id(Position) },
@@ -1800,8 +1800,6 @@ Traversal behavior can be customized with the following bitflags, in addition to
 |----------|----------------|---------------|-------------------|-------------|
 | Self     | `self`         | `EcsSelf`     | `flecs::Self`     | Match self |
 | Up       | `up`           | `EcsUp`       | `flecs::Up`       | Match by traversing upwards |
-| Down     | `down`         | `EcsDown`     | `flecs::Down`     | Match by traversing downwards (derived, cannot be set) |
-| Parent   | `parent`       | `EcsParent`   | `flecs::Parent`   | Short for up(ChildOf) |
 | Cascade  | `cascade`      | `EcsCascade`  | `flecs::Cascade`  | Same as Up, but iterate in breadth-first order |
 | Desc     | `desc`         | `EcsDesc`     | `flecs::Desc`     | Combine with Cascade to iterate hierarchy bottom to top |
 
@@ -1853,7 +1851,7 @@ By default queries traverse the `IsA` relationship if a component cannot be foun
 ecs_entity_t base = ecs_new(world, Position);
 ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base); // Inherits Position
 
-ecs_filter_t *f = ecs_filter(world, {
+ecs_query_t *f = ecs_filter(world, {
   .terms = {
     { ecs_id(Position) }
   }
@@ -1863,7 +1861,7 @@ ecs_filter_t *f = ecs_filter(world, {
 Implicit traversal can be disabled by setting the `flags` member to `EcsSelf`. The following example only matches `base`:
 
 ```c
-ecs_filter_t *f = ecs_filter(world, {
+ecs_query_t *f = ecs_filter(world, {
   .terms = {
     { ecs_id(Position), .src.flags = EcsSelf }
   }
@@ -1878,7 +1876,7 @@ ecs_entity_t child = ecs_new(world, Position);
 
 ecs_add_pair(world, child, EcsChildOf, parent);
 
-ecs_filter_t *f = ecs_filter(world, {
+ecs_query_t *f = ecs_filter(world, {
   .terms = {
     // term matches parent & child
     { ecs_id(Position) },
@@ -1891,7 +1889,7 @@ ecs_filter_t *f = ecs_filter(world, {
 The `EcsParent` flag can be used which is shorthand for `EcsUp` with `EcsChildOf`. The query in the following example is equivalent to the one in the previous example:
 
 ```c
-ecs_filter_t *f = ecs_filter(world, {
+ecs_query_t *f = ecs_filter(world, {
   .terms = {
     { ecs_id(Position) },
     { ecs_id(Position), .src.flags = EcsParent }
@@ -1902,7 +1900,7 @@ ecs_filter_t *f = ecs_filter(world, {
 If a query needs to match a component from both child and parent, but must also include the root of the tree, the term that traverses the relationship can be made optional. The following example matches both `parent` and `child`. The second term is not set for the result that contains `parent`.
 
 ```c
-ecs_filter_t *f = ecs_filter(world, {
+ecs_query_t *f = ecs_filter(world, {
   .terms = {
     { ecs_id(Position) },
     { ecs_id(Position), .src.flags = EcsParent, .oper = EcsOptional }
@@ -1913,8 +1911,8 @@ ecs_filter_t *f = ecs_filter(world, {
 By adding the `EcsCascade` flag, a query will iterate the hierarchy top-down. This is only supported for cached queries:
 
 ```c
-ecs_query_t *q = ecs_query(world, {
-  .filter.terms = {
+ecs_query_cache_t *q = ecs_query(world, {
+  .terms = {
     { ecs_id(Position) },
     { ecs_id(Position), .src.flags = EcsCascade|EcsParent, .oper = EcsOptional }
   }
@@ -1924,7 +1922,7 @@ ecs_query_t *q = ecs_query(world, {
 Relationship traversal can be combined with fixed [source](#source) terms. The following query matches if the `my_widget` entity has a parent with the `Window` component:
 
 ```c
-ecs_filter_t *f = ecs_filter(world, {
+ecs_query_t *f = ecs_filter(world, {
   .terms = {
     { ecs_id(Window), .src.flags = EcsParent, .src.id = my_widget }
   }
@@ -1934,17 +1932,17 @@ ecs_filter_t *f = ecs_filter(world, {
 The two queries in the following example are equivalent, and show how the implicit traversal of the `IsA` relationship is implemented:
 
 ```cpp
-ecs_filter_t *f_1 = ecs_filter(world, {
+ecs_query_t *f_1 = ecs_filter(world, {
   .terms = {
     { ecs_id(Position) }
   }
 });
 
-ecs_filter_t *f_2 = ecs_filter(world, {
+ecs_query_t *f_2 = ecs_filter(world, {
   .terms = {{
     .id = ecs_id(Position),       // match Position
     .src.flags = EcsSelf | EcsUp  // first match self, traverse upwards while not found
-    .src.trav = EcsIsA,           // traverse using the IsA relationship
+    .trav = EcsIsA,           // traverse using the IsA relationship
   }}
 });
 ```
@@ -2068,7 +2066,7 @@ Position, ?Position(parent)
 By adding the `cascade` keyword, a query will iterate the `ChildOf` hierarchy top-down. The `cascade` feature is only supported by cached queries:
 
 ```
-Position, ?Position(parent|cascade)
+Position, ?Position(cascade)
 ```
 
 Relationship traversal can be combined with fixed [source](#source) terms, by using a colon (`:`) to separate the traversal flags and the source identifier. The following query matches if the `my_widget` entity has a parent with the `Window` component:
@@ -2199,7 +2197,7 @@ The following sections show how to use instancing in the different language bind
 Queries can be instanced by setting the `instanced` member to true:
 
 ```c
-ecs_filter_t *f = ecs_filter(world, {
+ecs_query_t *f = ecs_filter(world, {
   .terms = {
     { ecs_id(Position), src.flags = EcsSelf }, // Never inherit Position
     { ecs_id(Mass) }
@@ -2210,8 +2208,8 @@ ecs_filter_t *f = ecs_filter(world, {
   .instanced = true
 });
 
-ecs_iter_t it = ecs_filter_iter(world, &it);
-while (ecs_filter_next(&it)) {
+ecs_iter_t it = ecs_query_iter(world, &it);
+while (ecs_query_next(&it)) {
   // Fetch components as usual
   Position *p = ecs_field(&it, Position, 1);
   Mass *m = ecs_field(&it, Mass, 2);
@@ -2335,7 +2333,7 @@ Query variables can be specified by setting the `name` member in combination wit
 
 ```c
 // SpaceShip, (DockedTo, $Location), Planet($Location)
-ecs_rule_t *r = ecs_rule(world, {
+ecs_query_impl_t *r = ecs_query(world, {
   .terms = {
     { .id = SpaceShip },
     {
@@ -2362,10 +2360,10 @@ An application can constrain the results of the query by setting the variable be
 ecs_entity_t earth = ecs_new(world, Planet);
 
 // Find index for Location variable
-int32_t location_var = ecs_rule_find_var(r, "Location");
+int32_t location_var = ecs_query_find_var(r, "Location");
 
 // Constrain results of iterator to return spaceships docked to Earth
-ecs_iter_t it = ecs_rule_iter(world, r);
+ecs_iter_t it = ecs_query_iter(world, r);
 ecs_iter_set_var(&it, location_var, earth);
 
 // Iterate as usual
@@ -2450,13 +2448,13 @@ The following example shows how the change detection API is used in C:
 ```c
 // Query used for change detection. Note that change detection is not enabled on
 // the query itself, but by calling change detection functions for the query.
-ecs_query_t *q_read = ecs_query(world, {
-    .filter.terms = {{ .id = ecs_id(Position), .inout = EcsIn }}
+ecs_query_cache_t *q_read = ecs_query(world, {
+    .terms = {{ .id = ecs_id(Position), .inout = EcsIn }}
 });
 
 // Query used to create changes
-ecs_query_t *q_write = ecs_query(world, {
-    .filter.terms = {{ .id = ecs_id(Position) }} // defaults to inout
+ecs_query_cache_t *q_write = ecs_query(world, {
+    .terms = {{ .id = ecs_id(Position) }} // defaults to inout
 });
 
 // Test if changes have occurred for anything matching the query. If this is the
@@ -2473,7 +2471,7 @@ while (ecs_query_next(&it)) {
   if (dont_change) {
     // If no changes are made to the iterated table, the skip function can be
     // called to prevent marking the matched components as dirty.
-    ecs_query_skip(&it);
+    ecs_query_cache_skip(&it);
   } else {
     // Iterate as usual. It does not matter whether the code actually writes the
     // components or not: when a table is not skipped, components matched with
@@ -2578,8 +2576,8 @@ The following sections show how to use sorting in the different language binding
 The following example shows how to use sorted queries in C:
 
 ```c
-ecs_query_t *q = ecs_query(world, {
-    .filter.terms = {
+ecs_query_cache_t *q = ecs_query(world, {
+    .terms = {
       // Use readonly term for component used for sorting
       { ecs_id(Depth), .inout = EcsIn }
       { ecs_id(Position) },
@@ -2602,8 +2600,8 @@ int compare_position(ecs_entity_t e1, const void *v1, ecs_entity_t e2, const voi
 A query may only use entity identifiers to sort by not setting the `order_by_component` member:
 
 ```c
-ecs_query_t *q = ecs_query(world, {
-    .filter.terms = {
+ecs_query_cache_t *q = ecs_query(world, {
+    .terms = {
       { ecs_id(Position) },
     },
     .order_by = compare_entity,
@@ -2696,7 +2694,7 @@ ecs_add_pair(world, unit_02, Region, Region_02);
 
 // Create query that groups entities that are in the same region
 ecs_query(world, {
-  .filter.terms = {{ Unit }},
+  .terms = {{ Unit }},
   .group_by = group_by_target, // function that groups by relationship target
   .group_by_id = Region // optional, passed to group_by function
 });
@@ -2782,7 +2780,7 @@ ecs_entity_t unit_01 = ecs_new_w_id(world, MeleeUnit);
 ecs_entity_t unit_02 = ecs_new_w_id(world, RangedUnit);
 
 // Matches entities with Unit, MeleeUnit and RangedUnit
-ecs_rule_t *r = ecs_rule(world, {
+ecs_query_impl_t *r = ecs_query(world, {
   .terms = {{ Unit }}
 });
 
@@ -2834,7 +2832,7 @@ ecs_entity_t CentralPark = ecs_new_w_pair(world, LocatedIn, Manhattan);
 ecs_entity_t Bob = ecs_new_w_pair(world, LocatedIn, CentralPark);
 
 // Matches ManHattan, CentralPark, Bob
-ecs_rule_t *r = ecs_rule(world, {
+ecs_query_impl_t *r = ecs_query(world, {
   .terms = {{ ecs_pair(LocatedIn, NewYork) }}
 });
 
@@ -2848,7 +2846,7 @@ Queries for transitive relationships can be compared with variables. This query 
 //  - ManHattan (Place = NewYork)
 //  - CentralPark (Place = ManHattan, NewYork)
 //  - Bob (Place = CentralPark, ManHattan, NewYork)
-ecs_rule_t *r = ecs_rule(world, {
+ecs_query_impl_t *r = ecs_query(world, {
   .terms = {{ .first.id = LocatedIn, .second.name = "Place", .second.flags = EcsIsVariable }}
 });
 ```
@@ -2864,7 +2862,7 @@ ecs_add_id(world, NewYork, City);
 //  - ManHattan (Place = NewYork)
 //  - CentralPark (Place = NewYork)
 //  - Bob (Place = NewYork)
-ecs_rule_t *r = ecs_rule(world, {
+ecs_query_impl_t *r = ecs_query(world, {
   .terms = {
     { .first.id = LocatedIn, .second.name = "Place", .second.flags = EcsIsVariable },
     { .id = City, .src.name = "Place", .src.flags = EcsIsVariable }
@@ -2964,7 +2962,7 @@ ecs_entity_t Tree = ecs_new_id(world);
 ecs_entity_t Oak = ecs_new_w_pair(world, EcsIsA, Tree);
 
 // Matches Tree, Oak
-ecs_rule_t *r = ecs_rule(world, {
+ecs_query_impl_t *r = ecs_query(world, {
   .terms = {{ ecs_pair(EcsIsA, Tree )}}
 });
 ```
@@ -2992,10 +2990,10 @@ Reflexivity in a query is enabled by adding the `Reflexive` property to a relati
 ## Performance
 This section describes performance characteristics for each query type.
 
-### Filter
-A filter is a data type that describes the structure of a query in Flecs. Filters are the cheapest to create, as creating one just requires initializing the value of the filter object.
+### Query
+A filter is a data type that describes the structure of a query in Flecs. Querys are the cheapest to create, as creating one just requires initializing the value of the filter object.
 
-Filters can serve different purposes, like iterating all matching entities, or testing if a specific entity matches with a filter. Filters can also be used to filter the output of other queries, including other filters.
+Querys can serve different purposes, like iterating all matching entities, or testing if a specific entity matches with a filter. Querys can also be used to filter the output of other queries, including other filters.
 
 While the exact way a filter is evaluated depends on what kind of filter it is, almost all filter evaluation follows steps similar to the ones in this diagram:
 
@@ -3018,21 +3016,21 @@ When a table reaches the `yield` node it means that it matched all parts of the 
 Because filters are fast to create, have low overhead, and are reasonably efficient to iterate, they are the goto solution for when an application cannot know in advance what it needs to query for, like finding all children for a specific entity:
 
 ```c
-ecs_filter_f fs = ECS_FILTER_INIT;
-ecs_filter_t *f = ecs_filter(world, {
+ecs_query_f fs = ECS_FILTER_INIT;
+ecs_query_t *f = ecs_filter(world, {
     .storage = &fs, // optional, but prevents allocation
     .terms = {{ ecs_childof(e) }}
 });
 
-ecs_iter_t child_it = ecs_filter_iter(f);
-while (ecs_filter_next(&child_it)) {
+ecs_iter_t child_it = ecs_query_iter(f);
+while (ecs_query_next(&child_it)) {
     for (int c = 0; c < child_it.count; c ++) {
         printf("child %s\n", ecs_get_name(world, 
             child_it.entities[c]));
     }
 }
 
-ecs_filter_fini(f);
+ecs_query_fini(f);
 ```
 ```cpp
 auto f = world.filter_builder()
@@ -3063,8 +3061,8 @@ The following example shows how cached queries are used:
 
 ```c
 // Creates query, populates the cache with existing tables
-ecs_query_t *q = ecs_query(world, {
-    .filter.terms = {
+ecs_query_cache_t *q = ecs_query(world, {
+    .terms = {
         { ecs_id(Position) }, { ecs_id(Velocity) }
     }
 });

@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
     // pipeline does not require the use of phases (see custom_phases) or of the
     // DependsOn relationship. 
     ecs_entity_t pipeline = ecs_pipeline(ecs, {
-        .query.filter.terms = {
+        .query.terms = {
             { .id = EcsSystem }, // Mandatory, must always match systems
             { .id = Physics }
         }

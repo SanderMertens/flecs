@@ -221,7 +221,7 @@ void SystemMisc_invalid_empty_string(void) {
 
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, { .name = "Dummy", .add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.filter.expr = "",
+        .query.query.expr = "",
         .callback = Dummy
     });
 
@@ -237,7 +237,7 @@ void SystemMisc_invalid_empty_string_w_space(void) {
 
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, { .name = "Dummy", .add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.filter.expr = "  ",
+        .query.query.expr = "  ",
         .callback = Dummy
     });
 
@@ -379,7 +379,7 @@ void SystemMisc_dont_enable_after_rematch(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position(self|up), Velocity(self|up));
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position(self|up(IsA)), Velocity(self|up(IsA)));
 
     /* Create an entity that is watched. Whenever components are added/removed
      * to and/or from watched entities, a rematch is triggered. */
@@ -555,7 +555,7 @@ void SystemMisc_change_system_action(void) {
     
     ecs_entity_t sys = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, { .name = "Sys", .add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.filter.expr = "Position",
+        .query.query.expr = "Position",
         .callback = ActionA
     });
 
@@ -689,13 +689,13 @@ void SystemMisc_redefine_null_signature(void) {
 
     ecs_entity_t s_1 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, { .name = "System", .add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.filter.expr = NULL,
+        .query.query.expr = NULL,
         .callback = Action
     });
 
     ecs_entity_t s_2 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, { .name = "System", .add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.filter.expr = NULL,
+        .query.query.expr = NULL,
         .callback = Action
     });      
 
@@ -709,93 +709,17 @@ void SystemMisc_redefine_0_signature(void) {
 
     ecs_entity_t s_1 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, { .name = "System", .add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.filter.expr = "0",
+        .query.query.expr = "0",
         .callback = Action
     });
 
     ecs_entity_t s_2 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, { .name = "System", .add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.filter.expr = "0",
+        .query.query.expr = "0",
         .callback = Action
     }); 
 
     test_assert(s_1 == s_2);
-
-    ecs_fini(world);
-}
-
-void SystemMisc_one_named_column_of_two(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-
-    ecs_filter_t f = ECS_FILTER_INIT;
-    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
-        .storage = &f, .terms = {
-        { ecs_id(Position), .name = "pos" },
-        { ecs_id(Velocity) }
-    }}));
-
-    test_int(f.term_count, 2);
-    test_int(f.field_count, 2);
-
-    ecs_term_t *
-    term = &f.terms[0];
-    test_assert(term->oper == EcsAnd);
-    test_assert(term->src.flags == (EcsSelf|EcsUp|EcsIsVariable));
-    test_assert(term->src.id == EcsThis);
-    test_assert(term->inout == EcsInOutDefault);
-    test_assert(term->id == ecs_id(Position));
-    test_str(term->name, "pos");
-
-    term = &f.terms[1];
-    test_assert(term->oper == EcsAnd);
-    test_assert(term->src.flags == (EcsSelf|EcsUp|EcsIsVariable));
-    test_assert(term->src.id == EcsThis);
-    test_assert(term->inout == EcsInOutDefault);
-    test_assert(term->id == ecs_id(Velocity));
-    test_str(term->name, NULL);
-
-    ecs_filter_fini(&f);
-
-    ecs_fini(world);
-}
-
-void SystemMisc_two_named_columns_of_two(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-
-    ecs_filter_t f = ECS_FILTER_INIT;
-    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
-        .storage = &f, .terms = {
-        { ecs_id(Position), .name = "pos" },
-        { ecs_id(Velocity), .name = "vel" }
-    }}));    
-
-    test_int(f.term_count, 2);
-    test_int(f.field_count, 2);
-
-    ecs_term_t *
-    term = &f.terms[0];
-    test_assert(term->oper == EcsAnd);
-    test_assert(term->src.flags == (EcsSelf|EcsUp|EcsIsVariable));
-    test_assert(term->src.id == EcsThis);
-    test_assert(term->inout == EcsInOutDefault);
-    test_assert(term->id == ecs_id(Position));
-    test_str(term->name, "pos");
-
-    term = &f.terms[1];
-    test_assert(term->oper == EcsAnd);
-    test_assert(term->src.flags == (EcsSelf|EcsUp|EcsIsVariable));
-    test_assert(term->src.id == EcsThis);
-    test_assert(term->inout == EcsInOutDefault);
-    test_assert(term->id == ecs_id(Velocity));
-    test_str(term->name, "vel");
-
-    ecs_filter_fini(&f);
 
     ecs_fini(world);
 }
@@ -808,13 +732,13 @@ void SystemMisc_redeclare_system_explicit_id(void) {
 
     ecs_entity_t s1 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.name = "Move", .add = {ecs_dependson(EcsOnUpdate)}}), 
-        .query.filter.expr = "Position, Velocity", 
+        .query.query.expr = "Position, Velocity", 
         .callback = Dummy
     });
 
     ecs_entity_t s2 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.id = s1, .name = "Move", .add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.filter.expr = "Position, Velocity", 
+        .query.query.expr = "Position, Velocity", 
         .callback = Dummy
     });
 
@@ -831,13 +755,13 @@ void SystemMisc_redeclare_system_explicit_id_null_expr(void) {
 
     ecs_entity_t s1 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.name = "Move", .add = {ecs_dependson(EcsOnUpdate)}}), 
-        .query.filter.expr = NULL, 
+        .query.query.expr = NULL, 
         .callback = Dummy
     });
 
     ecs_entity_t s2 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.id = s1, .name = "Move", .add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.filter.expr = NULL, 
+        .query.query.expr = NULL, 
         .callback = Dummy
     });
 
@@ -854,13 +778,13 @@ void SystemMisc_redeclare_system_explicit_id_no_name(void) {
 
     ecs_entity_t s1 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.name = "Move", .add = {ecs_dependson(EcsOnUpdate)}}), 
-        .query.filter.expr = "Position, Velocity", 
+        .query.query.expr = "Position, Velocity", 
         .callback = Dummy
     });
 
     ecs_entity_t s2 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.id = s1, .add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.filter.expr = "Position, Velocity", 
+        .query.query.expr = "Position, Velocity", 
         .callback = Dummy
     });
 
@@ -880,7 +804,7 @@ void SystemMisc_declare_different_id_same_name(void) {
 
     ecs_entity_t s_1 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.id = e1, .name = "Move", .add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.filter.expr = "0", 
+        .query.query.expr = "0", 
         .callback = Dummy
     });
     test_assert(e1 == s_1);
@@ -889,7 +813,7 @@ void SystemMisc_declare_different_id_same_name(void) {
 
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.id = e2, .name = "Move", .add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.filter.expr = "0", 
+        .query.query.expr = "0", 
         .callback = Dummy
     });
 }
@@ -907,7 +831,7 @@ void SystemMisc_declare_different_id_same_name_w_scope(void) {
 
     ecs_entity_t s_1 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.id = e1, .name = "Move", .add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.filter.expr = "0", 
+        .query.query.expr = "0", 
         .callback = Dummy
     });
     test_assert(e1 == s_1);
@@ -916,7 +840,7 @@ void SystemMisc_declare_different_id_same_name_w_scope(void) {
 
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.id = e2, .name = "Move", .add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.filter.expr = "0", 
+        .query.query.expr = "0", 
         .callback = Dummy
     });
 }
@@ -947,7 +871,7 @@ void SystemMisc_rw_in_implicit_shared(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, Velocity(up)");
+    ecs_query_t *q = ecs_query_new(world, "Position, Velocity(up(IsA))");
 
     ecs_entity_t base = ecs_new(world, Velocity);
     ecs_entity_t e = ecs_new(world, Position);
@@ -1009,7 +933,7 @@ void SystemMisc_rw_out_explicit_any(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, [out] Velocity(self|up)");
+    ecs_query_t *q = ecs_query_new(world, "Position, [out] Velocity(self|up(IsA))");
 
     ecs_entity_t e = ecs_new(world, Position);
     ecs_add(world, e, Velocity);
@@ -1029,7 +953,7 @@ void SystemMisc_rw_out_explicit_shared(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, [out] Velocity(up)");
+    ecs_query_t *q = ecs_query_new(world, "Position, [out] Velocity(up(IsA))");
 
     ecs_entity_t base = ecs_new(world, Velocity);
     ecs_entity_t e = ecs_new(world, Position);
@@ -1127,7 +1051,7 @@ void SystemMisc_get_query(void) {
     ecs_set(world, 0, Position, {1, 0});
     ecs_set(world, 0, Position, {2, 0});
 
-    ecs_query_t *q = ecs_system_get_query(world, Dummy);
+    ecs_query_cache_t *q = ecs_system_get_query(world, Dummy);
     test_assert(q != NULL);
 
     int32_t count = 0;
@@ -1158,7 +1082,7 @@ void SystemMisc_set_get_context(void) {
 
     ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.name = "MySystem"}),
-        .query.filter.terms = {{Tag}},
+        .query.terms = {{Tag}},
         .callback = Dummy,
         .ctx = &ctx_a
     });
@@ -1185,7 +1109,7 @@ void SystemMisc_set_get_binding_context(void) {
 
     ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.name = "MySystem"}),
-        .query.filter.terms = {{Tag}},
+        .query.terms = {{Tag}},
         .callback = Dummy,
         .binding_ctx = &ctx_a
     });
@@ -1236,7 +1160,7 @@ void SystemMisc_delete_system(void) {
     Probe ctx = {0};
     ecs_entity_t system = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.name = "Foo"}),
-        .query.filter.terms = {{.id = Tag}},
+        .query.terms = {{.id = Tag}},
         .callback = Dummy
     });
     test_assert(system != 0);
@@ -1266,13 +1190,13 @@ void SystemMisc_delete_pipeline_system(void) {
     // Create system before
     test_assert(ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.filter.terms = {{.id = Tag}},
+        .query.terms = {{.id = Tag}},
         .callback = Dummy
     }) != 0);
 
     ecs_entity_t system = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.filter.terms = {{.id = Tag}},
+        .query.terms = {{.id = Tag}},
         .callback = Dummy
     });
     test_assert(system != 0);
@@ -1280,7 +1204,7 @@ void SystemMisc_delete_pipeline_system(void) {
     // Create system after
     test_assert(ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.filter.terms = {{.id = Tag}},
+        .query.terms = {{.id = Tag}},
         .callback = Dummy
     }) != 0);
 
@@ -1337,7 +1261,7 @@ void SystemMisc_delete_system_w_ctx(void) {
 
     Probe ctx = {0};
     ecs_entity_t system = ecs_system_init(world, &(ecs_system_desc_t){
-        .query.filter.terms = {{.id = Tag}},
+        .query.terms = {{.id = Tag}},
         .callback = Dummy,
         .ctx = &ctx_value,
         .ctx_free = ctx_free,
@@ -1371,7 +1295,7 @@ void SystemMisc_update_ctx(void) {
     ECS_TAG(world, Tag);
 
     ecs_entity_t system = ecs_system_init(world, &(ecs_system_desc_t){
-        .query.filter.terms = {{.id = Tag}},
+        .query.terms = {{.id = Tag}},
         .callback = Dummy,
         .ctx = &ctx_value,
         .ctx_free = ctx_free,
@@ -1457,7 +1381,7 @@ void SystemMisc_run_custom_run_action(void) {
 
     Probe ctx = {0};
     ecs_entity_t system = ecs_system_init(world, &(ecs_system_desc_t){
-        .query.filter.terms = {{ .id = TagA }},
+        .query.terms = {{ .id = TagA }},
         .run = Run,
         .callback = Dummy,
         .ctx = &ctx,
@@ -1491,7 +1415,7 @@ void SystemMisc_run_w_offset_limit_custom_run_action(void) {
 
     Probe ctx = {0};
     ecs_entity_t system = ecs_system_init(world, &(ecs_system_desc_t){
-        .query.filter.terms = {{ .id = TagA }},
+        .query.terms = {{ .id = TagA }},
         .run = Run,
         .callback = Dummy,
         .ctx = &ctx,
@@ -1524,7 +1448,7 @@ void SystemMisc_pipeline_custom_run_action(void) {
     Probe ctx = {0};
     ecs_entity_t system = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.filter.terms = {{ .id = TagA }},
+        .query.terms = {{ .id = TagA }},
         .run = Run,
         .callback = Dummy,
         .ctx = &ctx
@@ -1558,7 +1482,7 @@ void SystemMisc_change_custom_run_action(void) {
 
     Probe ctx = {0};
     ecs_entity_t system = ecs_system_init(world, &(ecs_system_desc_t){
-        .query.filter.terms = {{ .id = TagA }},
+        .query.terms = {{ .id = TagA }},
         .run = Run,
         .callback = Dummy,
         .ctx = &ctx,
@@ -1593,7 +1517,7 @@ void SystemMisc_custom_run_action_call_next(void) {
 
     Probe ctx = {0};
     ecs_entity_t system = ecs_system_init(world, &(ecs_system_desc_t){
-        .query.filter.terms = {{ .id = TagA }},
+        .query.terms = {{ .id = TagA }},
         .run = Run_call_callback,
         .callback = Dummy,
         .ctx = &ctx,
@@ -1627,7 +1551,7 @@ void SystemMisc_system_w_short_notation(void) {
 
     Probe ctx = {0};
     ecs_entity_t system = ecs_system(world, {
-        .query.filter.terms = {{ .id = Tag }},
+        .query.terms = {{ .id = Tag }},
         .callback = Dummy,
         .ctx = &ctx,
         .entity = ecs_entity(world, {.add = {ecs_dependson(EcsOnUpdate)}})
@@ -1672,14 +1596,14 @@ void SystemMisc_update_rate_w_system_init(void) {
         .callback = Dummy,
     });
     test_assert(system != 0);
-    test_assert(ecs_get(world, system, EcsRateFilter) == NULL);
+    test_assert(ecs_get(world, system, EcsRateQuery) == NULL);
 
     ecs_system(world, {
         .entity = system,
         .rate = 2.0
     });
 
-    const EcsRateFilter *r = ecs_get(world, system, EcsRateFilter);
+    const EcsRateQuery *r = ecs_get(world, system, EcsRateQuery);
     test_assert(r != NULL);
     test_int(r->rate, 2.0);
 

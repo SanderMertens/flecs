@@ -709,7 +709,7 @@
                 "iter_w_stage"
             ]
         }, {
-            "id": "FilterBuilder",
+            "id": "QueryBuilder",
             "testcases": [
                 "builder_assign_same_type",
                 "builder_assign_from_empty",
@@ -925,7 +925,7 @@
                 "name_from_root"
             ]
         }, {
-            "id": "Filter",
+            "id": "Query",
             "testcases": [
                 "term_each_component",
                 "term_each_tag",

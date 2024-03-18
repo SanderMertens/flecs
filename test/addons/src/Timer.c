@@ -519,7 +519,7 @@ void Timer_rate_entity(void) {
         test_bool(src->tick, false);
     }
 
-    /* Filter should tick again */
+    /* Query should tick again */
     ecs_progress(world, 0);
     test_bool(src->tick, true);
 
@@ -553,7 +553,7 @@ void Timer_nested_rate_entity(void) {
         test_bool(src->tick, false);
     }
 
-    /* Filter should tick again */
+    /* Query should tick again */
     ecs_progress(world, 0);
     test_bool(src->tick, true);
 
@@ -587,7 +587,7 @@ void Timer_nested_rate_entity_empty_src(void) {
         test_bool(src->tick, false);
     }
 
-    /* Filter should tick again */
+    /* Query should tick again */
     ecs_progress(world, 0);
     test_bool(src->tick, true);
 

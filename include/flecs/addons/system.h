@@ -120,7 +120,7 @@ ecs_entity_t ecs_system_init(
         edesc.add[0] = ((phase) ? ecs_pair(EcsDependsOn, (phase)) : 0); \
         edesc.add[1] = (phase); \
         desc.entity = ecs_entity_init(world, &edesc);\
-        desc.query.filter.expr = #__VA_ARGS__; \
+        desc.query.expr = #__VA_ARGS__; \
         desc.callback = id_; \
         ecs_id(id_) = ecs_system_init(world, &desc); \
     } \
@@ -150,7 +150,7 @@ ecs_entity_t ecs_system_init(
  *     .name = "MyEntity",
  *     .add = { ecs_dependson(EcsOnUpdate) }
  *   }),
- *   .query.filter.terms = {
+ *   .query.terms = {
  *     { ecs_id(Position) },
  *     { ecs_id(Velocity) }
  *   },

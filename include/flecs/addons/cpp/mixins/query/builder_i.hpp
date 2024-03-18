@@ -64,7 +64,11 @@ public:
     }
 
     /** Group and sort matched tables.
+<<<<<<< HEAD
      * Similar to ecs_query_order_by(), but instead of sorting individual entities, this
+=======
+     * Similar yo ecs_query_cache_order_by, but instead of sorting individual entities, this
+>>>>>>> 45a6e85b8 (v4)
      * operation only sorts matched tables. This can be useful of a query needs to
      * enforce a certain iteration order upon the tables it is iterating, for 
      * example by giving a certain component or tag a higher priority.

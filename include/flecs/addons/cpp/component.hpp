@@ -251,7 +251,7 @@ struct cpp_type_impl {
         (void)name;
         (void)allow_tag;
 
-        ecs_assert(registered(world), ECS_INVALID_OPERATION,
+        ecs_assert(registered(world), ECS_INVALID_OPERATION, 
             "component '%s' was not registered before use",
             type_name<T>());
 #endif
@@ -410,6 +410,7 @@ struct component : untyped_component {
                         last_elem = ptr;
                     }
                 }
+
                 if (last_elem) {
                     name = last_elem + 1;
                 }

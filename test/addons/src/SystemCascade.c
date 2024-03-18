@@ -31,7 +31,7 @@ void SystemCascade_cascade_depth_1(void) {
     ECS_ENTITY(world, e3, Position);
     ECS_ENTITY(world, e4, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Position(parent|cascade));
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Position(cascade));
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = Iter,
         .query.filter.instanced = true
@@ -99,7 +99,7 @@ void SystemCascade_cascade_depth_2(void) {
     ECS_ENTITY(world, e5, Position);
     ECS_ENTITY(world, e6, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Position(parent|cascade));
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Position(cascade));
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = Iter,
         .query.filter.instanced = true
@@ -277,7 +277,7 @@ void SystemCascade_add_after_match(void) {
     ECS_ENTITY(world, e3, Position);
     ECS_ENTITY(world, e4, Position);
 
-    ECS_SYSTEM(world, AddParent, EcsOnUpdate, Position, ?Position(parent|cascade));
+    ECS_SYSTEM(world, AddParent, EcsOnUpdate, Position, ?Position(cascade));
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = AddParent,
         .query.filter.instanced = true
@@ -298,7 +298,7 @@ void SystemCascade_add_after_match(void) {
     ecs_progress(world, 1);
 
     /* Before adding Position to parent, it wasn't being considered for the
-     * column(parent|cascade), so tables could have been ordered randomly. Make sure
+     * column(cascade), so tables could have been ordered randomly. Make sure
      * that queries can handle changes to depth after all tables are matched */
     ecs_set(world, parent, Position, {1, 2});
 
@@ -354,7 +354,7 @@ void SystemCascade_adopt_after_match(void) {
     ECS_ENTITY(world, e3, Position);
     ECS_ENTITY(world, e4, Position);
 
-    ECS_SYSTEM(world, AddParent, EcsOnUpdate, Position, ?Position(parent|cascade));
+    ECS_SYSTEM(world, AddParent, EcsOnUpdate, Position, ?Position(cascade));
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = AddParent,
         .query.filter.instanced = true
@@ -596,7 +596,7 @@ void SystemCascade_custom_relation_add_after_match(void) {
     ecs_progress(world, 1);
 
     /* Before adding Position to parent, it wasn't being considered for the
-     * column(parent|cascade), so tables could have been ordered randomly. Make sure
+     * column(cascade), so tables could have been ordered randomly. Make sure
      * that queries can handle changes to depth after all tables are matched */
     ecs_set(world, parent, Position, {1, 2});
 

@@ -44,14 +44,14 @@ int main(int argc, char *argv[]) {
     // Create entity observer. Use EcsAny to indicate we're not interested in
     // matching specific components.
     ecs_observer(ecs, {
-        .filter.terms = {{ .id = EcsAny, .src.id = widget }},
+        .terms = {{ .id = EcsAny, .src.id = widget }},
         .events = { Click },
         .callback = OnClick
     });
 
     // Create another one for the Resize event
     ecs_observer(ecs, {
-        .filter.terms = {{ .id = EcsAny, .src.id = widget }},
+        .terms = {{ .id = EcsAny, .src.id = widget }},
         .events = { ecs_id(Resize) },
         .callback = OnResize
     });

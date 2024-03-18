@@ -25,7 +25,7 @@ double distance_sqr(const Position *p1, const Position *p2) {
 }
 
 void Collide(ecs_iter_t *it) {
-    ecs_query_t *q_collide = it->ctx; // Get query from system context
+    ecs_query_cache_t *q_collide = it->ctx; // Get query from system context
     const Position *p1 = ecs_field(it, Position, 1);
     const Radius *r1 = ecs_field(it, Radius, 2);
 
@@ -33,7 +33,7 @@ void Collide(ecs_iter_t *it) {
         ecs_entity_t e1 = it->entities[i];
 
         // For each matching entity, iterate the query
-        ecs_iter_t qit = ecs_query_iter(it->world, q_collide);
+        ecs_iter_t qit = ecs_query_cache_iter(it->world, q_collide);
         while (ecs_query_next(&qit)) {
             const Position *p2 = ecs_field(&qit, Position, 1);
             const Radius *r2 = ecs_field(&qit, Radius, 2);
@@ -69,8 +69,8 @@ int main(int argc, char *argv[]) {
 
     // Create a query for Position that we can use inside the collide system to
     // check each entity with each other entity.
-    ecs_query_t  *q_position = ecs_query(ecs, {
-        .filter.terms = {
+    ecs_query_cache_t  *q_position = ecs_query(ecs, {
+        .terms = {
             { ecs_id(Position), .inout = EcsIn },
             { ecs_id(Radius), .inout = EcsIn }
         }
@@ -78,7 +78,7 @@ int main(int argc, char *argv[]) {
 
     // Create collide system that passes query as context
     ecs_entity_t collide = ecs_system(ecs, {
-        .query.filter.terms = {
+        .query.terms = {
             { .id = ecs_id(Position), .inout = EcsIn },
             { ecs_id(Radius), .inout = EcsIn }
         },

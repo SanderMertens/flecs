@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
     //
     // Rules are similar to queries, but support more advanced features. This
     // example shows how the basics of how to use rules & variables.
-    ecs_rule_t *r = ecs_rule(ecs, {
+    ecs_query_impl_t *r = ecs_query(ecs, {
         .terms = {
             // Query variables are like wildcards, but enforce that the entity
             // substituted by the wildcard is the same across terms.
@@ -43,21 +43,21 @@ int main(int argc, char *argv[]) {
             // By replacing * with _Food, both terms are constrained to use the
             // same entity.
             { .first.id = Eats, .second = { 
-                .name = "Food", .flags = EcsIsVariable },
+                .name = "Food", .id = EcsIsVariable },
             },
             { .first.id = Healthy, .src = {
-                .name = "Food", .flags = EcsIsVariable }
+                .name = "Food", .id = EcsIsVariable }
             }
         }
     });
 
     // Lookup the index of the variable. This will let us quickly lookup its
     // value while we're iterating.
-    int food_var = ecs_rule_find_var(r, "Food");
+    int food_var = ecs_query_find_var(r, "Food");
 
     // Iterate the rule
-    ecs_iter_t it = ecs_rule_iter(ecs, r);
-    while (ecs_rule_next(&it)) {
+    ecs_iter_t it = ecs_query_iter(ecs, r);
+    while (ecs_query_next(&it)) {
         ecs_entity_t food = ecs_iter_get_var(&it, food_var);
         for (int i = 0; i < it.count; i ++) {
             printf("%s eats %s\n", ecs_get_name(ecs, it.entities[i]),
@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Rules need to be explicitly deleted
-    ecs_rule_fini(r);
+    ecs_query_fini(r);
 
     // Output
     //  Bob eats Apples

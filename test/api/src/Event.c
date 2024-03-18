@@ -28,7 +28,7 @@ void Event_table_1_id_w_trigger(void) {
     Probe ctx = {0};
 
     ecs_entity_t s = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = id,
+        .query.terms[0].id = id,
         .events = {evt},
         .callback = system_callback,
         .ctx = &ctx
@@ -64,7 +64,7 @@ void Event_table_2_ids_w_trigger(void) {
     Probe ctx = {0};
 
     ecs_entity_t s_a = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = id_a,
+        .query.terms[0].id = id_a,
         .events = {evt},
         .callback = system_callback,
         .ctx = &ctx,
@@ -87,7 +87,7 @@ void Event_table_2_ids_w_trigger(void) {
     ecs_delete(world, s_a);
 
     ecs_entity_t s_b = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = id_b,
+        .query.terms[0].id = id_b,
         .events = {evt},
         .callback = system_callback,
         .ctx = &ctx
@@ -123,7 +123,7 @@ void Event_table_1_id_w_observer(void) {
     Probe ctx = {0};
 
     ecs_entity_t s = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ id }},
+        .query.terms = {{ id }},
         .events = {evt},
         .callback = system_callback,
         .ctx = &ctx
@@ -159,7 +159,7 @@ void Event_table_2_ids_w_observer(void) {
     Probe ctx = {0};
 
     ecs_entity_t s_a = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ id_a }},
+        .query.terms = {{ id_a }},
         .events = {evt},
         .callback = system_callback,
         .ctx = &ctx
@@ -203,7 +203,7 @@ void Event_emit_event_for_empty_table(void) {
     ecs_delete(world, e);
 
     ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ TagA }},
+        .query.terms = {{ TagA }},
         .events = {evt},
         .callback = empty_table_callback,
         .ctx = table
@@ -240,16 +240,17 @@ void Event_emit_table_event(void) {
     ecs_entity_t evt = ecs_new_id(world);
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = TagA,
-        .filter.terms[0].src.flags = EcsSelf,
+        .query.terms[0].id = TagA,
+        .query.terms[0].src.id = EcsSelf,
         .events = {evt},
         .callback = system_callback,
         .ctx = &ctx_a
     });
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = TagA,
-        .filter.terms[0].src.flags = EcsUp,
+        .query.terms[0].id = TagA,
+        .query.terms[0].src.id = EcsUp,
+        .query.terms[0].trav = EcsIsA,
         .events = {evt},
         .callback = system_callback,
         .ctx = &ctx_b
@@ -290,7 +291,7 @@ void Event_emit_staged_from_world(void) {
     Probe ctx = {0};
 
     ecs_entity_t s = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = id,
+        .query.terms[0].id = id,
         .events = {evt},
         .callback = system_callback,
         .ctx = &ctx
@@ -325,7 +326,7 @@ void Event_emit_staged_from_stage(void) {
     Probe ctx = {0};
 
     ecs_entity_t s = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = id,
+        .query.terms[0].id = id,
         .events = {evt},
         .callback = system_callback,
         .ctx = &ctx
@@ -361,7 +362,7 @@ void Event_emit_staged_from_world_observer(void) {
     Probe ctx = {0};
 
     ecs_entity_t s = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ id }},
+        .query.terms = {{ id }},
         .events = {evt},
         .callback = system_callback,
         .ctx = &ctx
@@ -396,7 +397,7 @@ void Event_emit_staged_from_stage_observer(void) {
     Probe ctx = {0};
 
     ecs_entity_t s = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ id }},
+        .query.terms = {{ id }},
         .events = {evt},
         .callback = system_callback,
         .ctx = &ctx
@@ -433,7 +434,7 @@ void Event_emit_for_entity(void) {
     Probe ctx = {0};
 
     ecs_entity_t s = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = id,
+        .query.terms[0].id = id,
         .events = {evt},
         .callback = system_callback,
         .ctx = &ctx
@@ -476,13 +477,13 @@ void Event_emit_custom_for_any(void) {
     ecs_entity_t e2 = ecs_new(world, Tag);
 
     ecs_observer(world, {
-        .filter.terms = {{ .id = EcsAny, .src.id = e1 }},
+        .query.terms = {{ .id = EcsAny, .src.id = e1 }},
         .events = {MyEvent},
         .callback = ObserverA
     });
 
     ecs_observer(world, {
-        .filter.terms = {{ .id = EcsAny, .src.id = e2 }},
+        .query.terms = {{ .id = EcsAny, .src.id = e2 }},
         .events = {MyEvent},
         .callback = ObserverB
     });
@@ -519,13 +520,13 @@ void Event_emit_custom_implicit_any(void) {
     ecs_entity_t e2 = ecs_new(world, Tag);
 
     ecs_observer(world, {
-        .filter.terms = {{ .id = EcsAny, .src.id = e1 }},
+        .query.terms = {{ .id = EcsAny, .src.id = e1 }},
         .events = {MyEvent},
         .callback = ObserverA
     });
 
     ecs_observer(world, {
-        .filter.terms = {{ .id = EcsAny, .src.id = e2 }},
+        .query.terms = {{ .id = EcsAny, .src.id = e2 }},
         .events = {MyEvent},
         .callback = ObserverB
     });
@@ -560,13 +561,13 @@ void Event_emit_custom_empty_type(void) {
     ecs_entity_t e2 = ecs_new(world, Tag);
 
     ecs_observer(world, {
-        .filter.terms = {{ .id = EcsAny, .src.id = e1 }},
+        .query.terms = {{ .id = EcsAny, .src.id = e1 }},
         .events = {MyEvent},
         .callback = ObserverA
     });
 
     ecs_observer(world, {
-        .filter.terms = {{ .id = EcsAny, .src.id = e2 }},
+        .query.terms = {{ .id = EcsAny, .src.id = e2 }},
         .events = {MyEvent},
         .callback = ObserverB
     });
@@ -604,7 +605,7 @@ void Event_emit_w_param(void) {
     Position p = {10, 20};
 
     ecs_entity_t s = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = id,
+        .query.terms[0].id = id,
         .events = {ecs_id(Position)},
         .callback = system_w_param_callback,
         .ctx = &ctx
@@ -640,7 +641,7 @@ void Event_emit_w_const_param(void) {
     Position p = {10, 20};
 
     ecs_entity_t s = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = id,
+        .query.terms[0].id = id,
         .events = {ecs_id(Position)},
         .callback = system_w_param_callback,
         .ctx = &ctx
@@ -707,7 +708,7 @@ void Event_emit_nested(void) {
 
     ecs_observer(world, {
         .entity = ecs_entity(world, { .name = "o1" }),
-        .filter.terms = {{ Foo }, { Bar }},
+        .query.terms = {{ Foo }, { Bar }},
         .events = { Event },
         .ctx = &ctx_1,
         .callback = Nested1
@@ -715,7 +716,7 @@ void Event_emit_nested(void) {
 
     ecs_observer(world, {
         .entity = ecs_entity(world, { .name = "o2" }),
-        .filter.terms = {{ Foo }, { Bar }},
+        .query.terms = {{ Foo }, { Bar }},
         .events = { Event },
         .ctx = &ctx_2,
         .callback = Nested2
@@ -744,7 +745,7 @@ void Event_enqueue_event_1_id(void) {
     Probe ctx = {0};
 
     ecs_entity_t s = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = id,
+        .query.terms[0].id = id,
         .events = {evt},
         .callback = system_callback,
         .ctx = &ctx
@@ -785,14 +786,14 @@ void Event_enqueue_event_2_ids(void) {
     Probe *ctx_b = ecs_os_calloc_t(Probe);
 
     ecs_entity_t s_a = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = id_a,
+        .query.terms[0].id = id_a,
         .events = {evt},
         .callback = system_callback,
         .ctx = ctx_a
     });
 
     ecs_entity_t s_b = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = id_b,
+        .query.terms[0].id = id_b,
         .events = {evt},
         .callback = system_callback,
         .ctx = ctx_b
@@ -843,7 +844,7 @@ void Event_enqueue_event_w_data(void) {
     Position p = {10, 20};
 
     ecs_entity_t s = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = id,
+        .query.terms[0].id = id,
         .events = {ecs_id(Position)},
         .callback = system_w_param_callback,
         .ctx = &ctx
@@ -912,7 +913,7 @@ void Event_enqueue_event_w_data_move(void) {
     Position p = {10, 20};
 
     ecs_entity_t s = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = id,
+        .query.terms[0].id = id,
         .events = {ecs_id(Position)},
         .callback = system_w_param_callback,
         .ctx = &ctx
@@ -965,7 +966,7 @@ void Event_enqueue_event_w_data_copy(void) {
     Position p = {10, 20};
 
     ecs_entity_t s = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = id,
+        .query.terms[0].id = id,
         .events = {ecs_id(Position)},
         .callback = system_w_param_callback,
         .ctx = &ctx
@@ -1013,7 +1014,7 @@ void Event_enqueue_event_w_const_data_no_copy(void) {
     Position p = {10, 20};
 
     ecs_entity_t s = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = id,
+        .query.terms[0].id = id,
         .events = {ecs_id(Position)},
         .callback = system_w_param_callback,
         .ctx = &ctx
@@ -1057,7 +1058,7 @@ void Event_enqueue_event_not_alive(void) {
     Probe ctx = {0};
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = id,
+        .query.terms[0].id = id,
         .events = {evt},
         .callback = system_callback,
         .ctx = &ctx
@@ -1100,7 +1101,7 @@ void Event_enqueue_event_not_alive_w_data_move(void) {
     Position p = {10, 20};
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = id,
+        .query.terms[0].id = id,
         .events = {ecs_id(Position)},
         .callback = system_w_param_callback,
         .ctx = &ctx
@@ -1144,7 +1145,7 @@ void Event_enqueue_event_not_alive_w_data_copy(void) {
     Position p = {10, 20};
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = id,
+        .query.terms[0].id = id,
         .events = {ecs_id(Position)},
         .callback = system_w_param_callback,
         .ctx = &ctx
@@ -1190,14 +1191,14 @@ void Event_enqueue_event_not_alive_after_delete_during_merge(void) {
     Probe ctx = {0};
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = id,
+        .query.terms[0].id = id,
         .events = {evt},
         .callback = system_callback,
         .ctx = &ctx
     });
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = id,
+        .query.terms[0].id = id,
         .events = {delete_evt},
         .callback = system_delete_callback,
     });
@@ -1244,14 +1245,14 @@ void Event_enqueue_event_not_alive_w_data_move_after_delete_during_merge(void) {
     Position p = {10, 20};
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = id,
+        .query.terms[0].id = id,
         .events = {ecs_id(Position)},
         .callback = system_w_param_callback,
         .ctx = &ctx
     });
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = id,
+        .query.terms[0].id = id,
         .events = {delete_evt},
         .callback = system_delete_callback,
     });
@@ -1302,14 +1303,14 @@ void Event_enqueue_event_not_alive_w_data_copy_after_delete_during_merge(void) {
     Position p = {10, 20};
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = id,
+        .query.terms[0].id = id,
         .events = {ecs_id(Position)},
         .callback = system_w_param_callback,
         .ctx = &ctx
     });
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = id,
+        .query.terms[0].id = id,
         .events = {delete_evt},
         .callback = system_delete_callback,
     });
@@ -1371,7 +1372,7 @@ void Event_enqueue_event_not_deferred_to_async(void) {
     Probe ctx = {0};
 
     ecs_entity_t s = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = id,
+        .query.terms[0].id = id,
         .events = {evt},
         .callback = system_callback,
         .ctx = &ctx
@@ -1412,13 +1413,13 @@ void Event_enqueue_custom_implicit_any(void) {
     ecs_entity_t e2 = ecs_new(world, Tag);
 
     ecs_observer(world, {
-        .filter.terms = {{ .id = EcsAny, .src.id = e1 }},
+        .query.terms = {{ .id = EcsAny, .src.id = e1 }},
         .events = {MyEvent},
         .callback = ObserverA
     });
 
     ecs_observer(world, {
-        .filter.terms = {{ .id = EcsAny, .src.id = e2 }},
+        .query.terms = {{ .id = EcsAny, .src.id = e2 }},
         .events = {MyEvent},
         .callback = ObserverB
     });
@@ -1509,7 +1510,7 @@ void Event_enqueue_on_readonly_world(void) {
     Probe ctx = {0};
 
     ecs_entity_t s = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = id,
+        .query.terms[0].id = id,
         .events = {evt},
         .callback = system_callback,
         .ctx = &ctx

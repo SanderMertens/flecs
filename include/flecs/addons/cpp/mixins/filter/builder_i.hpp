@@ -1,6 +1,6 @@
 /**
  * @file addons/cpp/mixins/filter/builder_i.hpp
- * @brief Filter builder interface.
+ * @brief Query builder interface.
  */
 
 #pragma once
@@ -10,13 +10,13 @@
 namespace flecs 
 {
 
-/** Filter builder interface.
+/** Query builder interface.
  * 
  * @ingroup cpp_core_filters
  */
 template<typename Base, typename ... Components>
 struct filter_builder_i : term_builder_i<Base> {
-    filter_builder_i(ecs_filter_desc_t *desc, int32_t term_index = 0) 
+    filter_builder_i(ecs_query_desc_t *desc, int32_t term_index = 0) 
         : m_term_index(term_index)
         , m_expr_count(0)
         , m_desc(desc) { }
@@ -257,7 +257,7 @@ private:
         return *static_cast<Base*>(this);
     }
 
-    ecs_filter_desc_t *m_desc;
+    ecs_query_desc_t *m_desc;
 };
 
 }

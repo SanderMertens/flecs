@@ -32,7 +32,7 @@ ecs_entity_t ecs_id(Move) = ecs_system(world, {
         .name = "Move",
         .add = { ecs_dependson(EcsOnUpdate) }
     }),
-    .query.filter.terms = { /* ecs_filter_desc_t::terms */
+    .query.terms = { /* ecs_query_desc_t::terms */
         { ecs_id(Position) },
         { ecs_id(Velocity), .inout = EcsIn }
     }
@@ -447,7 +447,7 @@ ecs_system(world, {
         .name = "PrintTime",
         .add = { ecs_dependson(EcsOnUpdate) }
     }),
-    .query.filter.terms = {
+    .query.terms = {
         { .id = ecs_id(Game), .src.id = ecs_id(Game) } // Singleton source
     },
     .callback = PrintTime
@@ -608,11 +608,11 @@ The builtin pipeline query looks like this:
 
 ```c
 ecs_pipeline_init(world, &(ecs_pipeline_desc_t){
-    .query.filter.terms = {
+    .query.terms = {
         { .id = EcsSystem },
-        { .id = EcsPhase, .src.flags = EcsCascade, .src.trav = EcsDependsOn },
-        { .id = EcsDisabled, .src.flags = EcsUp, .src.trav = EcsDependsOn, .oper = EcsNot },
-        { .id = EcsDisabled, .src.flags = EcsUp, .src.trav = EcsChildOf, .oper = EcsNot }
+        { .id = EcsPhase, .src.flags = EcsCascade, .trav = EcsDependsOn },
+        { .id = EcsDisabled, .src.flags = EcsUp, .trav = EcsDependsOn, .oper = EcsNot },
+        { .id = EcsDisabled, .src.flags = EcsUp, .trav = EcsChildOf, .oper = EcsNot }
     }
 });
 ```
@@ -659,7 +659,7 @@ ECS_TAG(world, Foo);
 
 // Create custom pipeline
 ecs_entity_t pipeline = ecs_pipeline_init(world, &(ecs_pipeline_desc_t){
-    .query.filter.terms = {
+    .query.terms = {
         { .id = EcsSystem }, // mandatory
         { .id = Foo }
     }
@@ -868,7 +868,7 @@ ECS_SYSTEM(world, SetTransform, EcsOnUpdate, Position, [out] Transform());
 // When using the descriptor API for creating the system, set the EcsIsEntity
 // flag while leaving the id field to 0. This is equivalent to doing `()` in the DSL.
 ecs_system(world, {
-    .query.filter.terms = {
+    .query.terms = {
         { ecs_id(Position) },
         {
             .inout = EcsOut,
@@ -912,7 +912,7 @@ ECS_SYSTEM(world, SetTransform, EcsOnUpdate, Position, [in] Transform());
 ```
 ```c
 ecs_system(world, {
-    .query.filter.terms = {
+    .query.terms = {
         { ecs_id(Position) },
         {
             .inout = EcsIn,
@@ -969,7 +969,7 @@ ecs_system(ecs, {
         .name = "AssignPlate",
         .add = { ecs_dependson(EcsOnUpdate) }
     }),
-    .query.filter.terms = {
+    .query.terms = {
         { .id = Plate },
     },
     .callback = AssignPlate,
@@ -1085,7 +1085,7 @@ ecs_system(ecs, {
     .entity = ecs_entity(ecs, {
         .add = { ecs_dependson(EcsOnUpdate) }
     }),
-    .query.filter.terms = {
+    .query.terms = {
         { .id = ecs_id(Position) }
     },
     .callback = Dummy,
@@ -1170,7 +1170,7 @@ ecs_system(world, {
         .name = "Move",
         .add = { ecs_dependson(EcsOnUpdate) }
     }),
-    .query.filter.terms = {
+    .query.terms = {
         { ecs_id(Position) }, 
         { ecs_id(Velocity), .inout = EcsIn }
     },
@@ -1216,7 +1216,7 @@ ecs_system(world, {
         .name = "Move",
         .add = { ecs_dependson(EcsOnUpdate) }
     }),
-    .query.filter.terms = {
+    .query.terms = {
         { ecs_id(Position) }, 
         { ecs_id(Velocity), .inout = EcsIn }
     },
@@ -1272,7 +1272,7 @@ ecs_system(world, {
         .name = "Move",
         .add = { ecs_dependson(EcsOnUpdate) }
     }),
-    .query.filter.terms = {
+    .query.terms = {
         { ecs_id(Position) }, 
         { ecs_id(Velocity), .inout = EcsIn }
     },

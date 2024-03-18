@@ -54,7 +54,7 @@ struct snapshot final {
             ecs_snapshot_free(m_snapshot);
         }
 
-        ecs_iter_t it = ecs_filter_iter(m_world, f.c_ptr());
+        ecs_iter_t it = ecs_query_iter(m_world, f.c_ptr());
 
         m_snapshot = ecs_snapshot_take_w_iter(&it);
     }    

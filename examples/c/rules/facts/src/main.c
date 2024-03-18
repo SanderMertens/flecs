@@ -47,38 +47,38 @@ int main(int argc, char *argv[]) {
     // fact, vs reusing a single rule for multiple facts.
     //
     // See the setting_variables example for more details
-    ecs_rule_t *friends = ecs_rule(ecs, {
+    ecs_query_impl_t *friends = ecs_query(ecs, {
         .terms = {
             { 
                 .first.id = Likes, 
-                .src = { .name = "X", .flags = EcsIsVariable },
-                .second = { .name = "Y", .flags = EcsIsVariable }
+                .src = { .name = "X", .id = EcsIsVariable },
+                .second = { .name = "Y", .id = EcsIsVariable }
             },
             { 
                 .first.id = Likes, 
-                .src = { .name = "Y", .flags = EcsIsVariable },
-                .second = { .name = "X", .flags = EcsIsVariable }
+                .src = { .name = "Y", .id = EcsIsVariable },
+                .second = { .name = "X", .id = EcsIsVariable }
             }
         }
     });
 
     // Lookup the index of the variables.
-    int x_var = ecs_rule_find_var(friends, "X");
-    int y_var = ecs_rule_find_var(friends, "Y");
+    int x_var = ecs_query_find_var(friends, "X");
+    int y_var = ecs_query_find_var(friends, "Y");
 
-    ecs_iter_t it = ecs_rule_iter(ecs, friends);
+    ecs_iter_t it = ecs_query_iter(ecs, friends);
     ecs_iter_set_var(&it, x_var, bob);
     ecs_iter_set_var(&it, y_var, alice);
     printf("Are Bob and Alice friends? %s\n",
         ecs_iter_is_true(&it) ? "Yes" : "No");
 
-    it = ecs_rule_iter(ecs, friends);
+    it = ecs_query_iter(ecs, friends);
     ecs_iter_set_var(&it, x_var, bob);
     ecs_iter_set_var(&it, y_var, john);
     printf("Are Bob and John friends? %s\n",
         ecs_iter_is_true(&it) ? "Yes" : "No");
 
-    it = ecs_rule_iter(ecs, friends);
+    it = ecs_query_iter(ecs, friends);
     ecs_iter_set_var(&it, x_var, jane);
     ecs_iter_set_var(&it, y_var, john);
     printf("Are Jane and John friends? %s\n",
@@ -86,13 +86,13 @@ int main(int argc, char *argv[]) {
 
     // It doesn't matter who we assign to X or Y. After the variables are 
     // substituted, either yields a fact that is true.
-    it = ecs_rule_iter(ecs, friends);
+    it = ecs_query_iter(ecs, friends);
     ecs_iter_set_var(&it, x_var, john);
     ecs_iter_set_var(&it, y_var, jane);
     printf("Are John and Jane friends? %s\n",
         ecs_iter_is_true(&it) ? "Yes" : "No"); 
 
-    ecs_rule_fini(friends);
+    ecs_query_fini(friends);
 
     // Output
     //  Are Bob and Alice friends? Yes

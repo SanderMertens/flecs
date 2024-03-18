@@ -505,7 +505,7 @@ void TriggerOnAdd_override_after_add_in_on_add(void) {
 
     ECS_OBSERVER(world, AddVelocity, EcsOnAdd, Position(self));
 
-    ecs_observer_init(world, &(ecs_observer_desc_t){
+    ecs_observer(world, {
         .entity = ecs_entity(world, {.id = AddVelocity}),
         .ctx = &ecs_id(Velocity)
     });
@@ -558,7 +558,7 @@ void TriggerOnAdd_set_after_add_in_on_add(void) {
     ECS_OBSERVER(world, AddVelocity, EcsOnAdd, Position);
     ECS_OBSERVER(world, OnSetPosition, EcsOnSet, Position);
 
-    ecs_observer_init(world, &(ecs_observer_desc_t){
+    ecs_observer(world, {
         .entity = ecs_entity(world, {.id = AddVelocity}),
         .ctx = &ecs_id(Velocity)
     });
@@ -730,7 +730,7 @@ void TriggerOnAdd_sys_context(void) {
 
     ECS_OBSERVER(world, TestContext, EcsOnAdd, Position);
 
-    ecs_observer_init(world, &(ecs_observer_desc_t){
+    ecs_observer(world, {
         .entity = ecs_entity(world, {.id = TestContext}), .ctx = &param
     });
 
@@ -747,7 +747,7 @@ void TriggerOnAdd_get_sys_context_from_param(void) {
 
     ECS_OBSERVER(world, TestContext, EcsOnAdd, Position);
 
-    ecs_observer_init(world, &(ecs_observer_desc_t){
+    ecs_observer(world, {
         .entity = ecs_entity(world, {.id = TestContext}), .ctx = &param
     });
 
@@ -933,8 +933,8 @@ void TriggerOnAdd_emplace(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_id(Position),
+    ecs_observer(world, {
+        .query.terms[0].id = ecs_id(Position),
         .events = {EcsOnAdd},
         .callback = Dummy
     });    
@@ -955,8 +955,8 @@ void TriggerOnAdd_add_after_delete_trigger(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t trigger = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_id(Position),
+    ecs_entity_t trigger = ecs_observer(world, {
+        .query.terms[0].id = ecs_id(Position),
         .events = {EcsOnAdd},
         .callback = Dummy
     });
@@ -984,8 +984,8 @@ void TriggerOnAdd_add_after_delete_wildcard_id_trigger(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t trigger = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = EcsWildcard,
+    ecs_entity_t trigger = ecs_observer(world, {
+        .query.terms[0].id = EcsWildcard,
         .events = {EcsOnAdd},
         .callback = Dummy
     });

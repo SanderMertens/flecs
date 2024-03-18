@@ -34,35 +34,35 @@ int main(int argc, char *argv[]) {
     // Because this query does not use This at all, the entities array will not
     // be populated, and it.count() will always be 0.
     // Create a rule to find all ranged units
-    ecs_rule_t *r = ecs_rule(ecs, {
+    ecs_query_impl_t *r = ecs_query(ecs, {
         .terms = {
             { 
                 .first.id = Likes, 
-                .src = { .name = "X", .flags = EcsIsVariable },
-                .second = { .name = "Y", .flags = EcsIsVariable }
+                .src = { .name = "X", .id = EcsIsVariable },
+                .second = { .name = "Y", .id = EcsIsVariable }
             },
             { 
                 .first.id = Likes, 
-                .src = { .name = "Y", .flags = EcsIsVariable },
-                .second = { .name = "X", .flags = EcsIsVariable }
+                .src = { .name = "Y", .id = EcsIsVariable },
+                .second = { .name = "X", .id = EcsIsVariable }
             }
         }
     });
 
     // Lookup the index of the variables. This will let us quickly lookup their
     // values while we're iterating.
-    int x_var = ecs_rule_find_var(r, "X");
-    int y_var = ecs_rule_find_var(r, "Y");
+    int x_var = ecs_query_find_var(r, "X");
+    int y_var = ecs_query_find_var(r, "Y");
 
     // Iterate the rule
-    ecs_iter_t it = ecs_rule_iter(ecs, r);
-    while (ecs_rule_next(&it)) {
+    ecs_iter_t it = ecs_query_iter(ecs, r);
+    while (ecs_query_next(&it)) {
         ecs_entity_t x = ecs_iter_get_var(&it, x_var);
         ecs_entity_t y = ecs_iter_get_var(&it, y_var);
         printf("%s likes %s\n", ecs_get_name(ecs, x), ecs_get_name(ecs, y));
     }
 
-    ecs_rule_fini(r);
+    ecs_query_fini(r);
 
     // Output
     //  Bob likes Alice

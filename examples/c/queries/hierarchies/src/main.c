@@ -42,8 +42,8 @@ int main(int argc, char *argv[]) {
 
     // Create a hierarchical query to compute the global position from the
     // local position and the parent position.
-    ecs_query_t *q = ecs_query(ecs, {
-        .filter.terms = {
+    ecs_query_cache_t *q = ecs_query(ecs, {
+        .terms = {
             // Read from entity's Local position
             { .id = ecs_pair(ecs_id(Position), Local), .inout = EcsIn }, 
             // Write to entity's World position
@@ -53,8 +53,8 @@ int main(int argc, char *argv[]) {
             {
                 .id = ecs_pair(ecs_id(Position), World), 
                 .inout = EcsIn,
-                // Get from the parent, in breadth-first order (cascade)
-                .src.flags = EcsParent | EcsCascade,
+                // Get from the parent in breadth-first order (cascade)
+                .src.id = EcsCascade,
                 // Make parent term optional so we also match the root (sun)
                 .oper = EcsOptional
             }
@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
     });
 
     // Do the transform
-    ecs_iter_t it = ecs_query_iter(ecs, q);
+    ecs_iter_t it = ecs_query_cache_iter(ecs, q);
     while (ecs_query_next(&it)) {
         const Position *p = ecs_field(&it, Position, 1);
         Position *p_out = ecs_field(&it, Position, 2);

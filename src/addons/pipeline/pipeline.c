@@ -13,7 +13,7 @@ static void flecs_pipeline_free(
     ecs_pipeline_state_t *p) 
 {
     if (p) {
-        ecs_world_t *world = p->query->filter.world;
+        ecs_world_t *world = p->query->world;
         ecs_allocator_t *a = &world->allocator;
         ecs_vec_fini_t(a, &p->ops, ecs_pipeline_op_t);
         ecs_vec_fini_t(a, &p->systems, ecs_entity_t);
@@ -130,17 +130,17 @@ bool flecs_pipeline_check_term(
 {
     (void)world;
 
-    ecs_term_id_t *src = &term->src;
-    if (src->flags & EcsInOutNone) {
+    ecs_term_ref_t *src = &term->src;
+    if (term->inout == EcsInOutNone || term->inout == EcsInOutFilter) {
         return false;
     }
 
     ecs_id_t id = term->id;
-    ecs_oper_kind_t oper = term->oper;
-    ecs_inout_kind_t inout = term->inout;
+    int16_t oper = term->oper;
+    int16_t inout = term->inout;
     bool from_any = ecs_term_match_0(term);
     bool from_this = ecs_term_match_this(term);
-    bool is_shared = !from_any && (!from_this || !(src->flags & EcsSelf));
+    bool is_shared = !from_any && (!from_this || !(src->id & EcsSelf));
 
     ecs_write_kind_t ws = flecs_pipeline_get_write_state(write_state, id);
 
@@ -183,6 +183,7 @@ bool flecs_pipeline_check_term(
             break;
         case EcsInOutDefault:
         case EcsInOutNone:
+        case EcsInOutFilter:
         case EcsIn:
             break;
         }
@@ -198,6 +199,7 @@ bool flecs_pipeline_check_term(
             /* fall through */
         case EcsInOutDefault:
         case EcsInOutNone:
+        case EcsInOutFilter:
         case EcsOut:
             break;
         }
@@ -209,7 +211,7 @@ bool flecs_pipeline_check_term(
 static
 bool flecs_pipeline_check_terms(
     ecs_world_t *world,
-    ecs_filter_t *filter,
+    ecs_query_t *filter,
     bool is_active,
     ecs_write_state_t *ws)
 {
@@ -256,11 +258,12 @@ bool flecs_pipeline_build(
 {
     ecs_iter_t it = ecs_query_iter(world, pq->query);
 
-    if (pq->match_count == pq->query->match_count) {
-        /* No need to rebuild the pipeline */
-        ecs_iter_fini(&it);
-        return false;
-    }
+    /* TODO */
+    // if (pq->match_count == pq->query->match_count) {
+    //     /* No need to rebuild the pipeline */
+    //     ecs_iter_fini(&it);
+    //     return false;
+    // }
 
     world->info.pipeline_build_count_total ++;
     pq->rebuild_count ++;
@@ -292,7 +295,7 @@ bool flecs_pipeline_build(
 
             bool needs_merge = false;
             needs_merge = flecs_pipeline_check_terms(
-                world, &q->filter, is_active, &ws);
+                world, q, is_active, &ws);
 
             if (is_active) {
                 if (first) {
@@ -334,7 +337,7 @@ bool flecs_pipeline_build(
                 needs_merge = false;
                 if (is_active) {
                     needs_merge = flecs_pipeline_check_terms(
-                        world, &q->filter, true, &ws);
+                        world, q, true, &ws);
                 }
 
                 /* The component states were just reset, so if we conclude that
@@ -448,7 +451,8 @@ bool flecs_pipeline_build(
         ecs_log_pop_1();
     }
 
-    pq->match_count = pq->query->match_count;
+    // TODO
+    // pq->match_count = pq->query->match_count;
 
     ecs_assert(pq->cur_op <= ecs_vec_last_t(&pq->ops, ecs_pipeline_op_t),
         ECS_INTERNAL_ERROR, NULL);
@@ -696,12 +700,12 @@ void flecs_run_startup_systems(
     ecs_log_push_2();
     ecs_entity_t start_pip = ecs_pipeline_init(world, &(ecs_pipeline_desc_t){
         .query = {
-            .filter.terms = {
+            .terms = {
                 { .id = EcsSystem },
-                { .id = EcsPhase, .src.flags = EcsCascade, .src.trav = EcsDependsOn },
-                { .id = ecs_dependson(EcsOnStart), .src.trav = EcsDependsOn },
-                { .id = EcsDisabled, .src.flags = EcsUp, .src.trav = EcsDependsOn, .oper = EcsNot },
-                { .id = EcsDisabled, .src.flags = EcsUp, .src.trav = EcsChildOf, .oper = EcsNot }
+                { .id = EcsPhase, .src.id = EcsCascade, .trav = EcsDependsOn },
+                { .id = ecs_dependson(EcsOnStart), .trav = EcsDependsOn },
+                { .id = EcsDisabled, .src.id = EcsUp, .trav = EcsDependsOn, .oper = EcsNot },
+                { .id = EcsDisabled, .src.id = EcsUp, .trav = EcsChildOf, .oper = EcsNot }
             },
             .order_by = flecs_entity_compare
         }
@@ -817,7 +821,7 @@ ecs_entity_t ecs_pipeline_init(
     if (!qd.order_by) {
         qd.order_by = flecs_entity_compare;
     }
-    qd.filter.entity = result;
+    qd.entity = result;
 
     ecs_query_t *query = ecs_query_init(world, &qd);
     if (!query) {
@@ -825,9 +829,9 @@ ecs_entity_t ecs_pipeline_init(
         return 0;
     }
 
-    ecs_check(query->filter.terms != NULL, ECS_INVALID_PARAMETER, 
+    ecs_check(query->terms != NULL, ECS_INVALID_PARAMETER, 
         "pipeline query cannot be empty");
-    ecs_check(query->filter.terms[0].id == EcsSystem,
+    ecs_check(query->terms[0].id == EcsSystem,
         ECS_INVALID_PARAMETER, "pipeline must start with System term");
 
     ecs_pipeline_state_t *pq = ecs_os_calloc_t(ecs_pipeline_state_t);
@@ -921,12 +925,12 @@ void FlecsPipelineImport(
     world->pipeline = ecs_pipeline(world, {
         .entity = ecs_entity(world, { .name = "BuiltinPipeline" }),
         .query = {
-            .filter.terms = {
+            .terms = {
                 { .id = EcsSystem },
-                { .id = EcsPhase, .src.flags = EcsCascade, .src.trav = EcsDependsOn },
-                { .id = ecs_dependson(EcsOnStart), .src.trav = EcsDependsOn, .oper = EcsNot },
-                { .id = EcsDisabled, .src.flags = EcsUp, .src.trav = EcsDependsOn, .oper = EcsNot },
-                { .id = EcsDisabled, .src.flags = EcsUp, .src.trav = EcsChildOf, .oper = EcsNot }
+                { .id = EcsPhase, .src.id = EcsCascade, .trav = EcsDependsOn },
+                { .id = ecs_dependson(EcsOnStart), .trav = EcsDependsOn, .oper = EcsNot },
+                { .id = EcsDisabled, .src.id = EcsUp, .trav = EcsDependsOn, .oper = EcsNot },
+                { .id = EcsDisabled, .src.id = EcsUp, .trav = EcsChildOf, .oper = EcsNot }
             },
             .order_by = flecs_entity_compare
         }

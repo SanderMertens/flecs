@@ -39,8 +39,8 @@ int main(int argc, char *argv[]) {
     ECS_TAG(ecs, Third);
 
     // Grouped query
-    ecs_query_t *q = ecs_query(ecs, {
-        .filter.terms = {
+    ecs_query_cache_t *q = ecs_query(ecs, {
+        .terms = {
             { .id = ecs_id(Position) }
         },
         // Group tables by the relationship target of the "Group" relationship.
@@ -86,7 +86,7 @@ int main(int argc, char *argv[]) {
     //
 
     // Iterate query, print position & table components
-    ecs_iter_t it = ecs_query_iter(ecs, q);
+    ecs_iter_t it = ecs_query_cache_iter(ecs, q);
     while (ecs_query_next(&it)) {
         Position *p = ecs_field(&it, Position, 1);
         char *table_str = ecs_table_str(ecs, it.table);

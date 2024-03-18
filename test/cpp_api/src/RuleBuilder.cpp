@@ -719,7 +719,7 @@ void RuleBuilder_unresolved_by_name(void) {
     flecs::world ecs;
 
     auto q = ecs.rule_builder()
-        .filter_flags(EcsFilterUnresolvedByName)
+        .filter_flags(EcsQueryAllowUnresolvedByName)
         .expr("$this == Foo")
         .build();
 

@@ -97,27 +97,27 @@ int main(int argc, char *argv[]) {
     // 
     // The equivalent of this query in the DSL is:
     //   Person, (LocatedIn, $Location), Country($Location)
-    ecs_rule_t *r = ecs_rule(ecs, {
+    ecs_query_impl_t *r = ecs_query(ecs, {
         .terms = {
             { .id = Person },
             { 
                 .first.id = LocatedIn, 
-                .second = { .name = "Location", .flags = EcsIsVariable },
+                .second = { .name = "Location", .id = EcsIsVariable },
             },
             {
                 .first.id = Country, 
-                .src = { .name = "Location", .flags = EcsIsVariable },
+                .src = { .name = "Location", .id = EcsIsVariable },
             },
         }
     });
 
     // Lookup the index of the variable. This will let us quickly lookup its
     // value while we're iterating.
-    int location_var = ecs_rule_find_var(r, "Location");
+    int location_var = ecs_query_find_var(r, "Location");
 
     // Iterate the rule
-    ecs_iter_t it = ecs_rule_iter(ecs, r);
-    while (ecs_rule_next(&it)) {
+    ecs_iter_t it = ecs_query_iter(ecs, r);
+    while (ecs_query_next(&it)) {
         ecs_entity_t location = ecs_iter_get_var(&it, location_var);
         for (int i = 0; i < it.count; i ++) {
             printf("%s lives in %s\n",
@@ -126,7 +126,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    ecs_rule_fini(r);
+    ecs_query_fini(r);
 
     // Output:
     //   Bob lives in UnitedStates

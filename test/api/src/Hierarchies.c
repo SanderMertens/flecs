@@ -78,8 +78,8 @@ void Hierarchies_tree_iter_empty(void) {
 
     ECS_ENTITY(world, Parent, 0);
 
-    ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t){ ecs_childof(Parent) });
-    test_assert( !ecs_term_next(&it));
+    ecs_iter_t it = ecs_children(world, Parent);
+    test_assert( !ecs_children_next(&it));
 
     ecs_fini(world);
 }
@@ -93,15 +93,15 @@ void Hierarchies_tree_iter_1_table(void) {
     ECS_ENTITY(world, Child2, (ChildOf, Parent));
     ECS_ENTITY(world, Child3, (ChildOf, Parent));
 
-    ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t){ ecs_childof(Parent) });
-    test_assert( ecs_term_next(&it) == true);
+    ecs_iter_t it = ecs_children(world, Parent);
+    test_assert( ecs_children_next(&it) == true);
     test_int( it.count, 3);
 
     test_assert(it.entities[0] == Child1);
     test_assert(it.entities[1] == Child2);
     test_assert(it.entities[2] == Child3);
 
-    test_assert( !ecs_term_next(&it));
+    test_assert( !ecs_children_next(&it));
 
     ecs_fini(world);
 }
@@ -118,19 +118,19 @@ void Hierarchies_tree_iter_2_tables(void) {
     ECS_ENTITY(world, Child3, (ChildOf, Parent), Position);
     ECS_ENTITY(world, Child4, (ChildOf, Parent), Position);
 
-    ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t){ ecs_childof(Parent) });
+    ecs_iter_t it = ecs_children(world, Parent);
 
-    test_assert( ecs_term_next(&it) == true);
+    test_assert( ecs_children_next(&it) == true);
     test_int( it.count, 2);
     test_int(it.entities[0], Child1);
     test_int(it.entities[1], Child2);
 
-    test_assert( ecs_term_next(&it) == true);
+    test_assert( ecs_children_next(&it) == true);
     test_int( it.count, 2);
     test_int(it.entities[0], Child3);
     test_int(it.entities[1], Child4);
 
-    test_assert( !ecs_term_next(&it));
+    test_assert( !ecs_children_next(&it));
 
     ecs_fini(world);
 }
@@ -1139,76 +1139,6 @@ void Hierarchies_delete_tree_3_levels(void) {
     ecs_fini(world);
 }
 
-void Hierarchies_delete_tree_count_tables(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_entity_t parent = ecs_new(world, Position);
-    test_assert(parent != 0);
-
-    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
-    test_assert(ecs_get_type(world, child) != NULL);
-    ecs_add(world, child, Position);
-
-    ecs_entity_t grand_child = ecs_new_w_pair(world, EcsChildOf, child);
-    test_assert(ecs_get_type(world, grand_child) != NULL);
-    ecs_add(world, grand_child, Position);
-
-    ecs_query_t *q = ecs_query_new(world, "Position");
-    ecs_iter_t it = ecs_query_iter(world, q);
-    test_int(it.table_count, 3);
-    ecs_iter_fini(&it);
-
-    ecs_delete(world, parent);
-    
-    test_bool(ecs_is_alive(world, parent), false);
-    test_bool(ecs_is_alive(world, child), false);
-    test_bool(ecs_is_alive(world, grand_child), false);
-
-    it = ecs_query_iter(world, q);
-    test_int(it.table_count, 0);
-    ecs_iter_fini(&it);
-
-    ecs_fini(world);
-}
-
-void Hierarchies_delete_tree_staged(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_entity_t parent = ecs_new(world, Position);
-    test_assert(parent != 0);
-
-    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
-    test_assert(ecs_get_type(world, child) != NULL);
-    ecs_add(world, child, Position);
-
-    ecs_entity_t grand_child = ecs_new_w_pair(world, EcsChildOf, child);
-    test_assert(ecs_get_type(world, grand_child) != NULL);
-    ecs_add(world, grand_child, Position);
-
-    ecs_query_t *q = ecs_query_new(world, "Position");
-    ecs_iter_t it = ecs_query_iter(world, q);
-    test_int(it.table_count, 3);
-    ecs_iter_fini(&it);
-
-    ecs_defer_begin(world);
-    ecs_delete(world, parent);
-    ecs_defer_end(world);
-    
-    test_bool(ecs_is_alive(world, parent), false);
-    test_bool(ecs_is_alive(world, child), false);
-    test_bool(ecs_is_alive(world, grand_child), false);
-
-    it = ecs_query_iter(world, q);
-    test_int(it.table_count, 0);
-    ecs_iter_fini(&it);
-
-    ecs_fini(world);
-}
-
 void Hierarchies_delete_tree_empty_table(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -1302,8 +1232,8 @@ void Hierarchies_scope_iter_after_delete_tree(void) {
 
     ecs_delete_children(world, parent);
 
-    ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t){ ecs_childof(parent) });
-    test_assert(!ecs_term_next(&it));
+    ecs_iter_t it = ecs_children(world, parent);
+    test_assert(!ecs_children_next(&it));
 
     ecs_fini(world);
 }
@@ -1456,140 +1386,6 @@ void Hierarchies_get_type_after_recycled_parent_add(void) {
     ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, parent);
     test_assert(e != 0);
     test_assert( ecs_get_type(world, parent) != NULL);
-
-    ecs_fini(world);
-}
-
-void Hierarchies_rematch_after_add_to_recycled_parent(void) {
-    ecs_world_t *world = ecs_mini();
-    
-    ECS_COMPONENT(world, Position);
-    ECS_TAG(world, Tag);
-
-    ecs_query_t *q = ecs_query_new(world, "Tag, Position(parent)");
-
-    ecs_entity_t parent = ecs_new(world, 0);
-    test_assert(parent != 0);
-
-    ecs_delete(world, parent);
-    test_assert( !ecs_is_alive(world, parent));
-
-    parent = ecs_new(world, 0);
-    test_assert(parent != 0);
-
-    ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, parent);
-    test_assert(e != 0);
-    test_assert( ecs_has_pair(world, e, EcsChildOf, parent));
-    ecs_add(world, e, Tag);
-
-    ecs_iter_t it = ecs_query_iter(world, q);
-    test_bool(ecs_query_next(&it), false);
-
-    ecs_set(world, parent, Position, {10, 20});
-
-    ecs_run_aperiodic(world, 0);
-
-    it = ecs_query_iter(world, q);
-    test_bool(ecs_query_next(&it), true);
-    test_int(it.count, 1);
-
-    const Position *p = ecs_field(&it, Position, 2);
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
-
-    test_assert(ecs_field_src(&it, 2) == parent);
-    test_bool(ecs_query_next(&it), false);
-
-    ecs_fini(world);
-}
-
-void Hierarchies_cascade_after_recycled_parent_change(void) {
-    ecs_world_t *world = ecs_mini();
-    
-    ECS_COMPONENT(world, Position);
-    ECS_TAG(world, Tag);
-
-    ecs_query_t *q = ecs_query_new(world, "Tag, ?Position(parent|cascade)");
-
-    ecs_entity_t parent = ecs_new(world, 0);
-    test_assert(parent != 0);
-    ecs_entity_t child = ecs_new(world, 0);
-    test_assert(child != 0);
-
-    ecs_delete(world, parent);
-    test_assert( !ecs_is_alive(world, parent));
-    ecs_delete(world, child);
-    test_assert( !ecs_is_alive(world, child));
-
-    parent = ecs_new_w_id(world, Tag);
-    test_assert(parent != 0);
-    child = ecs_new_w_id(world, Tag);
-    test_assert(child != 0);
-    ecs_add_pair(world, child, EcsChildOf, parent);
-
-    ecs_entity_t e = ecs_new_w_id(world, Tag);
-    test_assert(e != 0);
-
-    ecs_add_pair(world, e, EcsChildOf, child);
-    test_assert( ecs_has_pair(world, e, EcsChildOf, child));
-
-    ecs_iter_t it = ecs_query_iter(world, q);
-    test_bool(ecs_query_next(&it), true);
-    test_int(it.count, 1);
-    test_assert(it.entities[0] == parent);
-    test_assert(ecs_field_src(&it, 2) == 0);
-    const Position *p = ecs_field(&it, Position, 2);
-    test_assert(p == NULL);
-
-    test_bool(ecs_query_next(&it), true);
-    test_int(it.count, 1);
-    test_assert(it.entities[0] == child);
-    test_assert(ecs_field_src(&it, 2) == 0);
-    p = ecs_field(&it, Position, 2);
-    test_assert(p == NULL);
-
-    test_bool(ecs_query_next(&it), true);
-    test_int(it.count, 1);
-    test_assert(it.entities[0] == e);
-    test_assert(ecs_field_src(&it, 2) == 0);
-    p = ecs_field(&it, Position, 2);
-    test_assert(p == NULL);
-
-    test_bool(ecs_query_next(&it), false);
-
-    ecs_set(world, parent, Position, {10, 20});
-    ecs_set(world, child, Position, {20, 30});
-
-    ecs_run_aperiodic(world, 0);
-
-    it = ecs_query_iter(world, q);
-    test_bool(ecs_query_next(&it), true);
-    test_int(it.count, 1);
-    test_assert(it.entities[0] == parent);
-    test_assert(ecs_field_src(&it, 2) == 0);
-    p = ecs_field(&it, Position, 2);
-    test_assert(p == NULL);
-
-    test_bool(ecs_query_next(&it), true);
-    test_int(it.count, 1);
-    test_assert(it.entities[0] == child);
-    test_assert(ecs_field_src(&it, 2) == parent);
-    p = ecs_field(&it, Position, 2);
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
-
-    test_bool(ecs_query_next(&it), true);
-    test_int(it.count, 1);
-    test_assert(it.entities[0] == e);
-    test_assert(ecs_field_src(&it, 2) == child);
-    p = ecs_field(&it, Position, 2);
-    test_assert(p != NULL);
-    test_int(p->x, 20);
-    test_int(p->y, 30);
-
-    test_bool(ecs_query_next(&it), false);
 
     ecs_fini(world);
 }

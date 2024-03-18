@@ -1368,17 +1368,15 @@ int ecs_meta_set_string(
         ecs_id_t id = 0;
 #ifdef FLECS_PARSER
         ecs_term_t term = {0};
+        ecs_stage_t *stage = flecs_stage_from_readonly_world(cursor->world);
         if (ecs_parse_term(
-            cursor->world, NULL, value, value, &term, NULL, NULL, false)) 
+            cursor->world, stage, NULL, value, value, &term, NULL, NULL, false)) 
         {
             if (ecs_term_finalize(cursor->world, &term)) {
-                ecs_term_fini(&term);
                 goto error;
             }
             id = term.id;
-            ecs_term_fini(&term);
         } else {
-            ecs_term_fini(&term);
             goto error;
         }
 #endif

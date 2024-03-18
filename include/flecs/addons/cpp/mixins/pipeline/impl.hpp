@@ -20,8 +20,8 @@ struct pipeline : entity {
             ecs_abort(ECS_INVALID_PARAMETER, NULL);
         }
 
-        if (desc->query.filter.terms_buffer) {
-            ecs_os_free(desc->query.filter.terms_buffer);
+        if (desc->query.terms_buffer) {
+            ecs_os_free(desc->query.terms_buffer);
         }
     }
 };

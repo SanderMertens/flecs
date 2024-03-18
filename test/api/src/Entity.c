@@ -2065,7 +2065,7 @@ void Entity_set_generation_on_nonempty_entity(void) {
     e1 |= 0x200000000ul;
     ecs_set_entity_generation(world, e1);
 
-    ecs_iter_t it = ecs_term_iter(world, &(ecs_term_t){ .id = Tag });
+    ecs_iter_t it = ecs_each(world, Tag);
     ecs_entity_t first = ecs_iter_first(&it);
     test_uint(first, e1);
 
@@ -2097,7 +2097,7 @@ void Entity_commit_w_on_add(void) {
     int invoked = 0;
 
     ecs_observer(world, {
-        .filter.terms = {
+        .query.terms = {
             { .id = Tag }
         },
         .events = { EcsOnAdd },
@@ -2131,7 +2131,7 @@ void Entity_commit_w_on_remove(void) {
     int invoked = 0;
 
     ecs_observer(world, {
-        .filter.terms = {
+        .query.terms = {
             { .id = Tag }
         },
         .events = { EcsOnRemove },
@@ -2183,7 +2183,7 @@ void Entity_commit_w_cmd_in_observer(void) {
     int invoked = 0;
 
     ecs_observer(world, {
-        .filter.terms = {
+        .query.terms = {
             { .id = Tag }
         },
         .events = { EcsOnAdd },

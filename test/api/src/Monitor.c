@@ -133,7 +133,7 @@ void Monitor_1_parent(void) {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_OBSERVER(world, OnPosition, EcsOnAdd, Position(parent));
+    ECS_OBSERVER(world, OnPosition, EcsOnAdd, Position(up));
 
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
@@ -424,7 +424,7 @@ void Monitor_monitor_w_superset(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
-    ECS_OBSERVER(world, OnPosition, EcsMonitor, Position, Velocity(up));
+    ECS_OBSERVER(world, OnPosition, EcsMonitor, Position, Velocity(up(IsA)));
 
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
@@ -471,7 +471,7 @@ void Monitor_monitor_w_self_superset(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
-    ECS_OBSERVER(world, OnPosition, EcsMonitor, Position, Velocity(self|up));
+    ECS_OBSERVER(world, OnPosition, EcsMonitor, Position, Velocity(self|up(IsA)));
 
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
@@ -585,7 +585,7 @@ void Monitor_monitor_at_fini(void) {
     Probe ctx = {0};
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ TagA }},
+        .query.terms = {{ TagA }},
         .events = {EcsMonitor},
         .callback = Monitor,
         .ctx = &ctx
@@ -636,7 +636,7 @@ void Monitor_monitor_other_table(void) {
 
     check_table_t ctx = {0};
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {
+        .query.terms = {
             { X },
             { Y, .oper = EcsNot }
         },
@@ -693,7 +693,7 @@ void Monitor_monitor_component(void) {
 
     check_component_t ctx = {0};
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {
+        .query.terms = {
             { ecs_id(Position) },
             { Tag, .oper = EcsNot }
         },

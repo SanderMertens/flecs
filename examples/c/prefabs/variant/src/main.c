@@ -62,8 +62,8 @@ int main(int argc, char *argv[]) {
     ecs_set(ecs, inst, Defense, {100});
 
     // Queries can match components from multiple levels of inheritance
-    ecs_query_t *q = ecs_query(ecs, {
-        .filter.terms = {
+    ecs_query_cache_t *q = ecs_query(ecs, {
+        .terms = {
             { .id = ecs_id(Position) },
             { .id = ecs_id(ImpulseSpeed) }, 
             { .id = ecs_id(Defense) }, 
@@ -71,7 +71,7 @@ int main(int argc, char *argv[]) {
         }
     });
 
-    ecs_iter_t it = ecs_query_iter(ecs, q);
+    ecs_iter_t it = ecs_query_cache_iter(ecs, q);
     while (ecs_query_next(&it)) {
         Position  *p = ecs_field(&it, Position, 1);
         ImpulseSpeed *s = ecs_field(&it, ImpulseSpeed, 2);

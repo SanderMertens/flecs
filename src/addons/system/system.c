@@ -111,7 +111,7 @@ ecs_entity_t ecs_run_intern(
     ecs_run_action_t run = system_data->run;
     if (run) {
         run(it);
-    } else if (system_data->query->filter.term_count) {
+    } else if (system_data->query->term_count) {
         if (it == &qit) {
             while (ecs_query_next(&qit)) {
                 action(&qit);
@@ -286,7 +286,7 @@ ecs_entity_t ecs_system_init(
         system->entity = entity;
 
         ecs_query_desc_t query_desc = desc->query;
-        query_desc.filter.entity = entity;
+        query_desc.entity = entity;
 
         ecs_query_t *query = ecs_query_init(world, &query_desc);
         if (!query) {
@@ -298,7 +298,7 @@ ecs_entity_t ecs_system_init(
         flecs_defer_begin(world, &world->stages[0]);
 
         system->query = query;
-        system->query_entity = query->filter.entity;
+        system->query_entity = query->entity;
 
         system->run = desc->run;
         system->action = desc->callback;
@@ -356,8 +356,8 @@ ecs_entity_t ecs_system_init(
         if (desc->binding_ctx_free) {
             system->binding_ctx_free = desc->binding_ctx_free;
         }
-        if (desc->query.filter.instanced) {
-            ECS_BIT_SET(system->query->filter.flags, EcsFilterIsInstanced);
+        if (desc->query.flags & EcsQueryIsInstanced) {
+            ECS_BIT_SET(system->query->flags, EcsQueryIsInstanced);
         }
         if (desc->multi_threaded) {
             system->multi_threaded = desc->multi_threaded;

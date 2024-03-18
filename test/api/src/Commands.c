@@ -1852,7 +1852,7 @@ void Commands_deferred_modified_after_remove(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_id(Position),
+        .query.terms[0].id = ecs_id(Position),
         .events = { EcsOnSet },
         .callback = OnSetTestInvoked
     });
@@ -1923,15 +1923,15 @@ void Commands_merge_cleanup_ops_before_delete(void) {
     ECS_TAG(world, Tag);
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = Tag,
+        .query.terms[0].id = Tag,
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = update_counter
     });
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0] = {
+        .query.terms[0] = {
             .id = ecs_id(Counter),
-            .src.flags = EcsSelf
+            .src.id = EcsSelf
         },
         .events = {EcsOnRemove},
         .callback = remove_counter
@@ -1964,18 +1964,18 @@ void Commands_merge_nested_cleanup_ops_before_delete(void) {
     ECS_TAG(world, Tag);
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0] = {
+        .query.terms[0] = {
             .id = Tag,
-            .src.flags = EcsSelf
+            .src.id = EcsSelf
         },
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = update_counter
     });
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0] = {
+        .query.terms[0] = {
             .id = ecs_id(Counter),
-            .src.flags = EcsSelf
+            .src.id = EcsSelf
         },
         .events = {EcsOnRemove},
         .callback = remove_counter
@@ -2059,7 +2059,7 @@ void Commands_create_observer_while_deferred(void) {
     ecs_defer_begin(world);
     Probe ctx = {0};
     ecs_entity_t observer = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ .id = TagA }},
+        .query.terms = {{ .id = TagA }},
         .events = {EcsOnAdd},
         .callback = System,
         .ctx = &ctx
@@ -2080,8 +2080,8 @@ void Commands_create_query_while_deferred(void) {
     ECS_TAG(world, TagA);
 
     ecs_defer_begin(world);
-    ecs_query_t *query = ecs_query_init(world, &(ecs_query_desc_t){
-        .filter.terms = {{ .id = TagA }}
+    ecs_query_t *query = ecs_query(world, {
+        .terms = {{ .id = TagA }}
     });
     ecs_defer_end(world);
     test_assert(query != 0);
@@ -2094,6 +2094,8 @@ void Commands_create_query_while_deferred(void) {
     test_uint(e, it.entities[0]);
     test_bool(false, ecs_query_next(&it));
 
+    ecs_query_fini(query);
+
     ecs_fini(world);
 }
 
@@ -2105,7 +2107,7 @@ void Commands_update_observer_while_deferred(void) {
     ecs_defer_begin(world);
     Probe ctx = {0};
     ecs_entity_t observer = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms = {{ .id = TagA }},
+        .query.terms = {{ .id = TagA }},
         .events = {EcsOnAdd},
         .callback = System,
         .ctx = &ctx
@@ -2177,7 +2179,7 @@ void Commands_defer_while_suspend_readonly(void) {
     /* Create observer on EcsComponent which will defer a command while readonly
      * mode is suspended */
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_id(EcsComponent),
+        .query.terms[0].id = ecs_id(EcsComponent),
         .events = { EcsOnAdd },
         .callback = CreatePosition
     });
@@ -2224,7 +2226,7 @@ void Commands_defer_while_suspend_readonly_w_existing_commands(void) {
     /* Create observer on EcsComponent which will defer a command while readonly
      * mode is suspended */
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_id(EcsComponent),
+        .query.terms[0].id = ecs_id(EcsComponent),
         .events = { EcsOnAdd },
         .callback = CreatePosition
     });
@@ -2268,90 +2270,6 @@ void Commands_defer_while_suspend_readonly_w_existing_commands(void) {
     test_int(v->y, 2);
 
     test_int(3, ecs_count(world, Position));
-
-    ecs_fini(world);
-}
-
-void Commands_defer_add_union_relationship(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_ENTITY(world, Rel, Union);
-    ECS_TAG(world, Tgt);
-
-    ecs_entity_t e = ecs_new_id(world);
-    ecs_defer_begin(world);
-    ecs_add_pair(world, e, Rel, Tgt);
-    test_assert(!ecs_has_pair(world, e, Rel, Tgt));
-    ecs_defer_end(world);
-    test_assert(ecs_has_pair(world, e, Rel, Tgt));
-
-    ecs_fini(world);
-}
-
-void Commands_defer_add_existing_union_relationship(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_ENTITY(world, Rel, Union);
-    ECS_TAG(world, TgtA);
-    ECS_TAG(world, TgtB);
-
-    ecs_entity_t e = ecs_new_id(world);
-    ecs_add_pair(world, e, Rel, TgtA);
-    test_assert(ecs_has_pair(world, e, Rel, TgtA));
-
-    ecs_defer_begin(world);
-    ecs_add_pair(world, e, Rel, TgtB);
-    test_assert(ecs_has_pair(world, e, Rel, TgtA));
-    test_assert(!ecs_has_pair(world, e, Rel, TgtB));
-    ecs_defer_end(world);
-    test_assert(!ecs_has_pair(world, e, Rel, TgtA));
-    test_assert(ecs_has_pair(world, e, Rel, TgtB));
-
-    ecs_fini(world);
-}
-
-void Commands_defer_add_union_relationship_2_ops(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_ENTITY(world, Rel, Union);
-    ECS_TAG(world, Tgt);
-    ECS_TAG(world, Tag);
-
-    ecs_entity_t e = ecs_new_id(world);
-    ecs_defer_begin(world);
-    ecs_add_pair(world, e, Rel, Tgt);
-    ecs_add(world, e, Tag);
-    test_assert(!ecs_has_pair(world, e, Rel, Tgt));
-    test_assert(!ecs_has(world, e, Tag));
-    ecs_defer_end(world);
-    test_assert(ecs_has_pair(world, e, Rel, Tgt));
-    test_assert(ecs_has(world, e, Tag));
-
-    ecs_fini(world);
-}
-
-void Commands_defer_add_existing_union_relationship_2_ops(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_ENTITY(world, Rel, Union);
-    ECS_TAG(world, TgtA);
-    ECS_TAG(world, TgtB);
-    ECS_TAG(world, Tag);
-
-    ecs_entity_t e = ecs_new_id(world);
-    ecs_add_pair(world, e, Rel, TgtA);
-    test_assert(ecs_has_pair(world, e, Rel, TgtA));
-
-    ecs_defer_begin(world);
-    ecs_add_pair(world, e, Rel, TgtB);
-    ecs_add(world, e, Tag);
-    test_assert(ecs_has_pair(world, e, Rel, TgtA));
-    test_assert(!ecs_has_pair(world, e, Rel, TgtB));
-    test_assert(!ecs_has(world, e, Tag));
-    ecs_defer_end(world);
-    test_assert(!ecs_has_pair(world, e, Rel, TgtA));
-    test_assert(ecs_has_pair(world, e, Rel, TgtB));
-    test_assert(ecs_has(world, e, Tag));
 
     ecs_fini(world);
 }
@@ -2831,7 +2749,7 @@ void Commands_defer_2_sets_w_multi_observer(void) {
     ECS_COMPONENT(world, Velocity);
 
     ecs_observer(world, {
-        .filter.terms = {{ ecs_id(Position) }, { ecs_id(Velocity) }},
+        .query.terms = {{ ecs_id(Position) }, { ecs_id(Velocity) }},
         .callback = PositionVelocityObserver,
         .events = { EcsOnSet }
     });
@@ -2862,7 +2780,7 @@ void Commands_defer_2_ensures_w_multi_observer(void) {
     ECS_COMPONENT(world, Velocity);
 
     ecs_observer(world, {
-        .filter.terms = {{ ecs_id(Position) }, { ecs_id(Velocity) }},
+        .query.terms = {{ ecs_id(Position) }, { ecs_id(Velocity) }},
         .callback = PositionVelocityObserver,
         .events = { EcsOnSet }
     });
@@ -2901,7 +2819,7 @@ void Commands_defer_2_ensures_no_modified_w_multi_observer(void) {
     ECS_COMPONENT(world, Velocity);
 
     ecs_observer(world, {
-        .filter.terms = {{ ecs_id(Position) }, { ecs_id(Velocity) }},
+        .query.terms = {{ ecs_id(Position) }, { ecs_id(Velocity) }},
         .callback = PositionVelocityObserver,
         .events = { EcsOnSet }
     });
@@ -3364,7 +3282,7 @@ void Commands_on_set_hook_before_on_add_for_existing_component(void) {
     });
 
     ecs_observer(world, {
-        .filter.terms[0].id = TagA,
+        .query.terms[0].id = TagA,
         .events = { EcsOnAdd },
         .callback = add_tag
     });
@@ -3392,7 +3310,7 @@ void Commands_defer_2_sets_w_observer_same_component(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_observer(world, {
-        .filter.terms[0].id = ecs_id(Position),
+        .query.terms[0].id = ecs_id(Position),
         .events = { EcsOnSet },
         .callback = set_position_hook
     });
@@ -3421,13 +3339,13 @@ void Commands_defer_2_sets_w_observer_other_component(void) {
     ECS_COMPONENT(world, Velocity);
 
     ecs_observer(world, {
-        .filter.terms[0].id = ecs_id(Position),
+        .query.terms[0].id = ecs_id(Position),
         .events = { EcsOnSet },
         .callback = set_position_hook
     });
 
     ecs_observer(world, {
-        .filter.terms[0].id = ecs_id(Velocity),
+        .query.terms[0].id = ecs_id(Velocity),
         .events = { EcsOnSet },
         .callback = set_velocity_hook
     });
@@ -3468,7 +3386,7 @@ void Commands_on_remove_after_deferred_clear_and_add(void) {
     ECS_TAG(world, TagC);
 
     ecs_observer(world, {
-        .filter.terms[0].id = TagA,
+        .query.terms[0].id = TagA,
         .events = { EcsOnRemove },
         .callback = remove_tag
     });
@@ -3507,7 +3425,7 @@ void Commands_defer_delete_recycle_same_id(void) {
     ecs_entity_t e2 = ecs_new_id(world);
 
     ecs_observer(world, {
-        .filter.terms = {
+        .query.terms = {
             { .id = ecs_id(Foo) }
         },
         .events = { EcsOnAdd },
@@ -3546,7 +3464,7 @@ void Commands_observer_while_defer_suspended(void) {
     ECS_COMPONENT_DEFINE(world, Velocity);
 
     ecs_observer(world, {
-        .filter.terms = {
+        .query.terms = {
             { .id = ecs_id(Position) }
         },
         .events = { EcsOnAdd },

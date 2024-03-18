@@ -442,7 +442,7 @@ bool flecs_rest_reply_existing_query(
     if (!poly_comp) {
         poly_comp = ecs_get_pair(world, q, EcsPoly, EcsObserver);
         if (poly_comp) {
-            poly = &((ecs_observer_t*)poly_comp->poly)->filter;
+            poly = &((ecs_observer_t*)poly_comp->poly)->query;
         } else {
             flecs_reply_error(reply, 
                 "resolved identifier '%s' is not a query", name);
@@ -469,13 +469,13 @@ bool flecs_rest_reply_existing_query(
 
     const char *vars = ecs_http_get_param(req, "vars");
     if (vars) {
-        if (!ecs_poly_is(poly, ecs_rule_t)) {
+        if (!ecs_poly_is(poly, ecs_query_impl_t)) {
             flecs_reply_error(reply, 
                 "variables are only supported for rule queries");
             reply->code = 400;
             return true;
         }
-        if (ecs_rule_parse_vars(poly, &it, vars) == NULL) {
+        if (ecs_query_parse_vars(poly, &it, vars) == NULL) {
             flecs_rest_reply_set_captured_log(reply);
             return true;
         }
@@ -500,8 +500,8 @@ bool flecs_rest_reply_query(
         return flecs_rest_reply_existing_query(world, req, reply, q_name);
     }
 
-    const char *q = ecs_http_get_param(req, "q");
-    if (!q) {
+    const char *expr = ecs_http_get_param(req, "q");
+    if (!expr) {
         ecs_strbuf_appendlit(&reply->body, "Missing parameter 'q'");
         reply->code = 400; /* bad request */
         return true;
@@ -510,24 +510,22 @@ bool flecs_rest_reply_query(
     bool try = false;
     flecs_rest_bool_param(req, "try", &try);
 
-    ecs_dbg_2("rest: request query '%s'", q);
+    ecs_dbg_2("rest: request query '%s'", expr);
     bool prev_color = ecs_log_enable_colors(false);
     rest_prev_log = ecs_os_api.log_;
     ecs_os_api.log_ = flecs_rest_capture_log;
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = q
-    });
-    if (!r) {
+    ecs_query_t *q = ecs_query(world, { .expr = expr });
+    if (!q) {
         flecs_rest_reply_set_captured_log(reply);
         if (try) {
             /* If client is trying queries, don't spam console with errors */
             reply->code = 200;
         }
     } else {
-        ecs_iter_t it = ecs_rule_iter(world, r);
-        flecs_rest_iter_to_reply(world, req, reply, r, &it);
-        ecs_rule_fini(r);
+        ecs_iter_t it = ecs_query_iter(world, q);
+        flecs_rest_iter_to_reply(world, req, reply, q, &it);
+        ecs_query_fini(q);
     }
 
     ecs_os_api.log_ = rest_prev_log;
@@ -1342,14 +1340,11 @@ static
 void DisableRest(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
 
-    ecs_iter_t rit = ecs_term_iter(world, &(ecs_term_t){
-        .id = ecs_id(EcsRest),
-        .src.flags = EcsSelf
-    });
+    ecs_iter_t rit = ecs_each_id(world, ecs_id(EcsRest));
 
     if (it->event == EcsOnAdd) {
         /* REST module was disabled */
-        while (ecs_term_next(&rit)) {
+        while (ecs_each_next(&rit)) {
             EcsRest *rest = ecs_field(&rit, EcsRest, 1);
             int i;
             for (i = 0; i < rit.count; i ++) {
@@ -1359,7 +1354,7 @@ void DisableRest(ecs_iter_t *it) {
         }
     } else if (it->event == EcsOnRemove) {
         /* REST module was enabled */
-        while (ecs_term_next(&rit)) {
+        while (ecs_each_next(&rit)) {
             EcsRest *rest = ecs_field(&rit, EcsRest, 1);
             int i;
             for (i = 0; i < rit.count; i ++) {
@@ -1405,7 +1400,7 @@ void FlecsRestImport(
     });
 
     ecs_observer(world, {
-        .filter = { 
+        .query = { 
             .terms = {{ .id = EcsDisabled, .src.id = ecs_id(FlecsRest) }}
         },
         .events = {EcsOnAdd, EcsOnRemove},

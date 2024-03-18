@@ -20,9 +20,6 @@ extern "C" {
 //// Opaque types
 ////////////////////////////////////////////////////////////////////////////////
 
-/** A stage enables modification while iterating and from multiple threads */
-typedef struct ecs_stage_t ecs_stage_t;
-
 /** Table data */
 typedef struct ecs_data_t ecs_data_t;
 
@@ -30,7 +27,7 @@ typedef struct ecs_data_t ecs_data_t;
 typedef struct ecs_switch_t ecs_switch_t;
 
 /* Cached query table data */
-typedef struct ecs_query_table_match_t ecs_query_table_match_t;
+typedef struct ecs_query_cache_table_match_t ecs_query_cache_table_match_t;
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Non-opaque types
@@ -122,86 +119,57 @@ typedef struct ecs_table_cache_iter_t {
     struct ecs_table_cache_hdr_t *next_list;
 } ecs_table_cache_iter_t;
 
-/** Term-iterator specific data */
-typedef struct ecs_term_iter_t {
-    ecs_term_t term;
-    ecs_id_record_t *self_index;
-    ecs_id_record_t *set_index;
-
-    ecs_id_record_t *cur;
+/** Each iterator */
+typedef struct ecs_each_iter_t {
     ecs_table_cache_iter_t it;
-    int32_t index;
-    int32_t observed_table_count;
-    
-    ecs_table_t *table;
-    int32_t cur_match;
-    int32_t match_count;
-    int32_t last_column;
 
-    bool empty_tables;
-
-    /* Storage */
-    ecs_id_t id;
-    int32_t column;
-    ecs_entity_t subject;
-    ecs_size_t size;
-    void *ptr;
-} ecs_term_iter_t;
-
-typedef enum ecs_iter_kind_t {
-    EcsIterEvalCondition,
-    EcsIterEvalTables,
-    EcsIterEvalChain,
-    EcsIterEvalNone
-} ecs_iter_kind_t;
-
-/** Filter-iterator specific data */
-typedef struct ecs_filter_iter_t {
-    const ecs_filter_t *filter;
-    ecs_iter_kind_t kind; 
-    ecs_term_iter_t term_iter;
-    int32_t matches_left;
-    int32_t pivot_term;
-} ecs_filter_iter_t;
+    /* Storage for iterator fields */
+    ecs_id_t ids;
+    ecs_entity_t sources;
+    ecs_size_t sizes;
+    int32_t columns;
+    void *ptrs;
+} ecs_each_iter_t;
 
 /** Query-iterator specific data */
-typedef struct ecs_query_iter_t {
-    ecs_query_t *query;
-    ecs_query_table_match_t *node, *prev, *last;
+typedef struct ecs_query_cache_iter_t {
+    struct ecs_query_cache_t *query;
+    ecs_query_cache_table_match_t *node, *prev, *last;
     int32_t sparse_smallest;
     int32_t sparse_first;
     int32_t bitset_first;
     int32_t skip_count;
-} ecs_query_iter_t;
+} ecs_query_cache_iter_t;
 
 /** Snapshot-iterator specific data */
 typedef struct ecs_snapshot_iter_t {
-    ecs_filter_t filter;
+    ecs_query_t filter;
     ecs_vec_t tables; /* ecs_table_leaf_t */
     int32_t index;
 } ecs_snapshot_iter_t;
 
-typedef struct ecs_rule_op_profile_t {
+typedef struct ecs_query_op_profile_t {
     int32_t count[2]; /* 0 = enter, 1 = redo */
-} ecs_rule_op_profile_t;
+} ecs_query_op_profile_t;
 
 /** Rule-iterator specific data */
-typedef struct ecs_rule_iter_t {
-    const ecs_rule_t *rule;
+typedef struct ecs_query_iter_t {
+    const ecs_query_t *rule;
     struct ecs_var_t *vars;              /* Variable storage */
-    const struct ecs_rule_var_t *rule_vars;
-    const struct ecs_rule_op_t *ops;
-    struct ecs_rule_op_ctx_t *op_ctx;    /* Operation-specific state */
+    const struct ecs_query_var_t *rule_vars;
+    const struct ecs_query_op_t *ops;
+    struct ecs_query_op_ctx_t *op_ctx;    /* Operation-specific state */
+    ecs_query_cache_table_match_t *node, *prev, *last; /* For cached iteration */
     uint64_t *written;
-    ecs_flags32_t source_set;
+    int32_t skip_count;
 
 #ifdef FLECS_DEBUG
-    ecs_rule_op_profile_t *profile;
+    ecs_query_op_profile_t *profile;
 #endif
 
     int16_t op;
     int16_t sp;
-} ecs_rule_iter_t;
+} ecs_query_iter_t;
 
 /* Bits for tracking whether a cache was used/whether the array was allocated.
  * Used by flecs_iter_init, flecs_iter_validate and ecs_iter_fini. 
@@ -210,8 +178,7 @@ typedef struct ecs_rule_iter_t {
 #define flecs_iter_cache_columns       (1u << 1u)
 #define flecs_iter_cache_sources       (1u << 2u)
 #define flecs_iter_cache_ptrs          (1u << 3u)
-#define flecs_iter_cache_match_indices (1u << 4u)
-#define flecs_iter_cache_variables     (1u << 5u)
+#define flecs_iter_cache_variables     (1u << 4u)
 #define flecs_iter_cache_all           (255)
 
 /* Inline iterator arrays to prevent allocations for small array sizes */
@@ -225,16 +192,15 @@ typedef struct ecs_iter_cache_t {
  * progress & to provide builtin storage. */
 typedef struct ecs_iter_private_t {
     union {
-        ecs_term_iter_t term;
-        ecs_filter_iter_t filter;
-        ecs_query_iter_t query;
-        ecs_rule_iter_t rule;
+        ecs_query_cache_iter_t query;
+        ecs_query_iter_t rule;
         ecs_snapshot_iter_t snapshot;
         ecs_page_iter_t page;
         ecs_worker_iter_t worker;
+        ecs_each_iter_t each;
     } iter;                       /* Iterator specific data */
 
-    void *entity_iter;            /* Filter applied after matching a table */
+    void *entity_iter;            /* Query applied after matching a table */
     ecs_iter_cache_t cache;       /* Inline arrays to reduce allocations */
 } ecs_iter_private_t;
 
@@ -247,19 +213,20 @@ struct ecs_iter_t {
     /* Matched data */
     ecs_entity_t *entities;       /* Entity identifiers */
     void **ptrs;                  /* Pointers to components. Array if from this, pointer if not. */
-    ecs_size_t *sizes;            /* Component sizes */
+    const ecs_size_t *sizes;      /* Component sizes */
     ecs_table_t *table;           /* Current table */
     ecs_table_t *other_table;     /* Prev or next table when adding/removing */
     ecs_id_t *ids;                /* (Component) ids */
     ecs_var_t *variables;         /* Values of variables (if any) */
     int32_t *columns;             /* Query term to table column mapping */
     ecs_entity_t *sources;        /* Entity on which the id was matched (0 if same as entities) */
-    int32_t *match_indices;       /* Indices of current match for term. Allows an iterator to iterate
-                                   * all permutations of wildcards in query. */
     ecs_ref_t *references;        /* Cached refs to components (if iterating a cache) */
     ecs_flags64_t constrained_vars; /* Bitset that marks constrained variables */
+    ecs_flags64_t set_fields;     /* Fields that are set */
     uint64_t group_id;            /* Group id for table, if group_by is used */
     int32_t field_count;          /* Number of fields in iterator */
+    ecs_termset_t shared_fields;  /* Bitset with shared fields */
+    ecs_termset_t up_fields;      /* Bitset with fields matched through up traversal */
 
     /* Input information */
     ecs_entity_t system;          /* The system (if applicable) */
@@ -268,9 +235,7 @@ struct ecs_iter_t {
     int32_t event_cur;            /* Unique event id. Used to dedup observer calls */
 
     /* Query information */
-    const ecs_filter_t *query;    /* Query being evaluated */
-    ecs_term_t *terms;            /* Term array of query being evaluated */
-    int32_t table_count;          /* Active table count for query */
+    const ecs_query_t *query;     /* Query being evaluated */
     int32_t term_index;           /* Index of term that emitted an event.
                                    * This field will be set to the 'index' field
                                    * of an observer term. */

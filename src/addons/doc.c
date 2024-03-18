@@ -162,11 +162,7 @@ void flecs_doc_import_core_definitions(
     ecs_doc_set_brief(world, EcsDisabled, "Tag that is added to disabled entities");
     ecs_doc_set_brief(world, EcsPrivate, "Tag that is added to private components");
     ecs_doc_set_brief(world, EcsFlag, "Internal tag for tracking ids with special id flags");
-    ecs_doc_set_brief(world, ecs_id(EcsIterable), "Internal component to make (query) entities iterable");
     ecs_doc_set_brief(world, ecs_id(EcsPoly), "Internal component that stores pointer to poly objects");
-    
-    ecs_doc_set_brief(world, ecs_id(EcsTarget), "Internal component that stores information for flattened trees");
-    ecs_doc_set_brief(world, EcsFlatten, "Tag that when added to assembly automatically flattens tree");
 
     ecs_doc_set_brief(world, ecs_id(EcsIdentifier), "Component used for entity names");
     ecs_doc_set_brief(world, EcsName, "Tag used with EcsIdentifier to store entity name");
@@ -187,7 +183,6 @@ void flecs_doc_import_core_definitions(
     ecs_doc_set_brief(world, EcsSymmetric, "Trait that causes a relationship to be two-way");
     ecs_doc_set_brief(world, EcsWith, "Trait for adding additional components when a component is added");
     ecs_doc_set_brief(world, EcsAlwaysOverride, "Trait that indicates a component should always be overridden");
-    ecs_doc_set_brief(world, EcsUnion, "Trait for creating a non-fragmenting relationship");
     ecs_doc_set_brief(world, EcsOneOf, "Trait that enforces target of relationship is a child of <specified>");
     ecs_doc_set_brief(world, EcsOnDelete, "Cleanup trait for specifying what happens when component is deleted");
     ecs_doc_set_brief(world, EcsOnDeleteTarget, "Cleanup trait for specifying what happens when pair target is deleted");

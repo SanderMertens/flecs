@@ -274,7 +274,7 @@ void TriggerOnRemove_remove_after_delete_trigger(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_entity_t trigger = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = ecs_id(Position),
+        .query.terms[0].id = ecs_id(Position),
         .events = {EcsOnRemove},
         .callback = Dummy
     });
@@ -309,7 +309,7 @@ void TriggerOnRemove_remove_after_delete_wildcard_id_trigger(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_entity_t trigger = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = EcsWildcard,
+        .query.terms[0].id = EcsWildcard,
         .events = {EcsOnRemove},
         .callback = Dummy
     });
@@ -374,7 +374,7 @@ void TriggerOnRemove_has_removed_tag_trigger_1_tag(void) {
     };
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = Tag,
+        .query.terms[0].id = Tag,
         .events = {EcsOnRemove},
         .callback = OnRemoveHasTag,
         .ctx = &ctx
@@ -406,7 +406,7 @@ void TriggerOnRemove_has_removed_tag_trigger_2_tags(void) {
     };
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
-        .filter.terms[0].id = TagA,
+        .query.terms[0].id = TagA,
         .events = {EcsOnRemove},
         .callback = OnRemoveHasTag,
         .ctx = &ctx

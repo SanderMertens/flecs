@@ -11,7 +11,7 @@ ecs_stage_t* flecs_stage_from_world(
     ecs_world_t **world_ptr);
 
 /* Get current thread-specific stage from readonly world */
-const ecs_stage_t* flecs_stage_from_readonly_world(
+ecs_stage_t* flecs_stage_from_readonly_world(
     const ecs_world_t *world);
 
 /* Get component callbacks */

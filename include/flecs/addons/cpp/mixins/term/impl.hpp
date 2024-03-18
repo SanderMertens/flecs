@@ -17,19 +17,18 @@ struct term final : term_builder_i<term> {
     term()
         : term_builder_i<term>(&value)
         , value({})
-        , m_world(nullptr) { value.move = true; }
+        , m_world(nullptr) { value.flags |= EcsTermMove; }
 
     term(flecs::world_t *world_ptr) 
         : term_builder_i<term>(&value)
         , value({})
-        , m_world(world_ptr) { value.move = true; }
+        , m_world(world_ptr) { value.flags |= EcsTermMove; }
 
     term(flecs::world_t *world_ptr, ecs_term_t t)
         : term_builder_i<term>(&value)
         , value({})
         , m_world(world_ptr) {
             value = t;
-            value.move = false;
             this->set_term(&value);
         }
 
@@ -42,7 +41,6 @@ struct term final : term_builder_i<term> {
             } else {
                 value.first.id = id;
             }
-            value.move = false;
             this->set_term(&value);
         }
 
@@ -51,7 +49,6 @@ struct term final : term_builder_i<term> {
         , value({})
         , m_world(world_ptr) {
             value.id = ecs_pair(r, o);
-            value.move = false;
             this->set_term(&value);
         }
 
@@ -64,7 +61,7 @@ struct term final : term_builder_i<term> {
             } else {
                 value.first.id = id;
             }
-            value.move = true; 
+            value.flags |= EcsTermMove;
         }
 
     term(id_t r, id_t o) 
@@ -72,7 +69,7 @@ struct term final : term_builder_i<term> {
         , value({})
         , m_world(nullptr) { 
             value.id = ecs_pair(r, o);
-            value.move = true; 
+            value.flags |= EcsTermMove;
         }
 
     term(const term& t) : term_builder_i<term>(&value) {
@@ -135,15 +132,15 @@ struct term final : term_builder_i<term> {
     }
 
     flecs::entity get_src() {
-        return flecs::entity(m_world, value.src.id);
+        return flecs::entity(m_world, ECS_TERM_REF_ID(&value.src));
     }
 
     flecs::entity get_first() {
-        return flecs::entity(m_world, value.first.id);
+        return flecs::entity(m_world, ECS_TERM_REF_ID(&value.first));
     }
 
     flecs::entity get_second() {
-        return flecs::entity(m_world, value.second.id);
+        return flecs::entity(m_world, ECS_TERM_REF_ID(&value.second));
     }
 
     ecs_term_t move() { /* explicit move to ecs_term_t */

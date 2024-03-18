@@ -14,8 +14,8 @@ int main(int argc, char *argv[]) {
 
     // Create a query for Position, Velocity. Queries are the fastest way to
     // iterate entities as they cache results.
-    ecs_query_t *q = ecs_query(ecs, {
-        .filter.terms = {
+    ecs_query_cache_t *q = ecs_query(ecs, {
+        .terms = {
             { .id = ecs_id(Position) }, 
             { .id = ecs_id(Velocity), .inout = EcsIn}
         }
@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
     ecs_set(ecs, e3, Position, {10, 20});
 
     // Iterate entities matching the query
-    ecs_iter_t it = ecs_query_iter(ecs, q);
+    ecs_iter_t it = ecs_query_cache_iter(ecs, q);
 
     // Outer loop, iterates archetypes
     while (ecs_query_next(&it)) {
@@ -51,19 +51,19 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    // Filters are uncached queries. They are a bit slower to iterate but faster
+    // Querys are uncached queries. They are a bit slower to iterate but faster
     // to create & have lower overhead as they don't have to maintain a cache.
-    ecs_filter_t *f = ecs_filter(ecs, {
+    ecs_query_t *f = ecs_filter(ecs, {
         .terms = {
             { .id = ecs_id(Position) }, 
             { .id = ecs_id(Velocity), .inout = EcsIn}
         }
     });
 
-    // Filter iteration looks the same as query iteration
-    it = ecs_filter_iter(ecs, f);
+    // Query iteration looks the same as query iteration
+    it = ecs_query_iter(ecs, f);
 
-    while (ecs_filter_next(&it)) {
+    while (ecs_query_next(&it)) {
         Position *p = ecs_field(&it, Position, 1);
         const Velocity *v = ecs_field(&it, Velocity, 2);
 
@@ -75,11 +75,11 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    // Cleanup filter. Filters can allocate memory if the number of terms 
+    // Cleanup filter. Querys can allocate memory if the number of terms 
     // exceeds their internal buffer, or when terms have names. In this case the
     // filter didn't allocate, so while fini isn't strictly necessary here, it's
     // still good practice to add it.
-    ecs_filter_fini(f);
+    ecs_query_fini(f);
 
     return ecs_fini(ecs);
 }

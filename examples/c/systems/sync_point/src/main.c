@@ -99,7 +99,7 @@ int main(int argc, char *argv[]) {
     //
     // To create the same system with ecs_system_init, do:
     //  ecs_system_init(ecs, &(ecs_system_desc_t){
-    //      .query.filter.terms = {
+    //      .query.terms = {
     //          { 
     //              .id = ecs_id(Position), 
     //              .inout = EcsInOutNone 
@@ -107,7 +107,7 @@ int main(int argc, char *argv[]) {
     //          { 
     //              .id = ecs_id(Velocity), 
     //              .inout = EcsOut, 
-    //              .src.flags = EcsIsEntity 
+    //              .src.id = EcsIsEntity 
     //          }
     //      },
     //      .entity = {

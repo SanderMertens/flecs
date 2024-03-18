@@ -22,14 +22,14 @@ ECS_DECLARE(Plate);
 // ensures that we won't assign plates to the same waiter more than once.
 void AssignPlate(ecs_iter_t *it) {
     ecs_world_t *ecs = it->world;
-    ecs_query_t *q_waiter = it->ctx; // Get query from system context
+    ecs_query_cache_t *q_waiter = it->ctx; // Get query from system context
 
     // Iterate unassigned plates
     for (int i = 0; i < it->count; i ++) {
         ecs_entity_t plate = it->entities[i];
 
         // Find an available waiter
-        ecs_iter_t qit = ecs_query_iter(ecs, q_waiter);
+        ecs_iter_t qit = ecs_query_cache_iter(ecs, q_waiter);
         ecs_entity_t waiter = ecs_iter_first(&qit); // Get first matching entity
         if (waiter) {
             // An available waiter was found, assign a plate to it so that the
@@ -70,8 +70,8 @@ int main(int argc, char *argv[]) {
     ECS_TAG_DEFINE(ecs, Plate);
 
     // Create query to find all waiters without a plate
-    ecs_query_t *q_waiter = ecs_query(ecs, {
-        .filter.terms = {
+    ecs_query_cache_t *q_waiter = ecs_query(ecs, {
+        .terms = {
             { .id = Waiter },
             { .id = ecs_pair(Plate, EcsWildcard), .oper = EcsNot }
         }
@@ -83,7 +83,7 @@ int main(int argc, char *argv[]) {
             .name = "AssignPlate",
             .add = { ecs_dependson(EcsOnUpdate) }
         }),
-        .query.filter.terms = {
+        .query.terms = {
             { .id = Plate },
             { .id = ecs_pair(Waiter, EcsWildcard), .oper = EcsNot }
         },

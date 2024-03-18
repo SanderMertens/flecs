@@ -82,7 +82,6 @@ flecs_src = files(
     'src/storage/table_graph.c',
     'src/bootstrap.c',
     'src/entity.c',
-    'src/entity_filter.c',
     'src/entity_name.c',
     'src/filter.c',
     'src/iter.c',

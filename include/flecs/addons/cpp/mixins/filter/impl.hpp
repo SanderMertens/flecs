@@ -1,6 +1,6 @@
 /**
  * @file addons/cpp/mixins/filter/impl.hpp
- * @brief Filter implementation.
+ * @brief Query implementation.
  */
 
 #pragma once
@@ -16,23 +16,23 @@ struct filter_base {
         , m_filter({})
         , m_filter_ptr(nullptr) { }
 
-    filter_base(world_t *world, const ecs_filter_t *filter)
+    filter_base(world_t *world, const ecs_query_t *filter)
         : m_world(world)
         , m_filter({})
         , m_filter_ptr(filter) { }
 
-    filter_base(world_t *world, ecs_filter_t *filter)
+    filter_base(world_t *world, ecs_query_t *filter)
         : m_world(world)
         , m_filter_ptr(&m_filter) {
-            ecs_filter_move(&m_filter, filter);
+            ecs_query_move(&m_filter, filter);
         }
 
-    filter_base(world_t *world, ecs_filter_desc_t *desc) 
+    filter_base(world_t *world, ecs_query_desc_t *desc) 
         : m_world(world)
     {
         desc->storage = &m_filter;
 
-        if (ecs_filter_init(world, desc) == NULL) {
+        if (ecs_query_init(world, desc) == NULL) {
             ecs_abort(ECS_INVALID_PARAMETER, NULL);
         }
 
@@ -50,7 +50,7 @@ struct filter_base {
         } else {
             this->m_filter_ptr = nullptr;
         }
-        ecs_filter_copy(&m_filter, &obj.m_filter);
+        ecs_query_copy(&m_filter, &obj.m_filter);
     }
 
     filter_base& operator=(const filter_base& obj) {
@@ -60,7 +60,7 @@ struct filter_base {
         } else {
             this->m_filter_ptr = nullptr;
         }
-        ecs_filter_copy(&m_filter, &obj.m_filter);
+        ecs_query_copy(&m_filter, &obj.m_filter);
         return *this; 
     }
 
@@ -71,7 +71,7 @@ struct filter_base {
         } else {
             this->m_filter_ptr = nullptr;
         }
-        ecs_filter_move(&m_filter, &obj.m_filter);
+        ecs_query_move(&m_filter, &obj.m_filter);
     }
 
     filter_base& operator=(filter_base&& obj) noexcept {
@@ -81,7 +81,7 @@ struct filter_base {
         } else {
             this->m_filter_ptr = nullptr;
         }
-        ecs_filter_move(&m_filter, &obj.m_filter);
+        ecs_query_move(&m_filter, &obj.m_filter);
         return *this; 
     }
 
@@ -97,7 +97,7 @@ struct filter_base {
      */
     ~filter_base() {
         if ((&m_filter == m_filter_ptr) && m_filter_ptr) {
-            ecs_filter_fini(&m_filter);
+            ecs_query_fini(&m_filter);
         }
     }
 
@@ -119,7 +119,7 @@ struct filter_base {
     }
 
     flecs::string str() {
-        char *result = ecs_filter_str(m_world, m_filter_ptr);
+        char *result = ecs_query_str(m_world, m_filter_ptr);
         return flecs::string(result);
     }
 
@@ -160,15 +160,15 @@ private:
         if (!world) {
             world = m_world;
         }
-        return ecs_filter_iter(world, m_filter_ptr);
+        return ecs_query_iter(world, m_filter_ptr);
     }
 
     ecs_iter_next_action_t next_action() const override {
-        return ecs_filter_next;
+        return ecs_query_next;
     }
 
     ecs_iter_next_action_t next_each_action() const override {
-        return ecs_filter_next_instanced;
+        return ecs_query_next_instanced;
     }
 };
 
@@ -263,7 +263,7 @@ inline void world::each(flecs::id_t term_id, Func&& func) const {
 // filter_base implementation
 inline filter_base::operator flecs::filter<> () const {
     flecs::filter<> f;
-    ecs_filter_copy(&f.m_filter, &this->m_filter);
+    ecs_query_copy(&f.m_filter, &this->m_filter);
     f.m_filter_ptr = &f.m_filter;
     f.m_world = this->m_world;
     return f;

@@ -166,7 +166,7 @@
         edesc.name = #id_; \
         desc.entity = ecs_entity_init(world, &edesc); \
         desc.callback = id_;\
-        desc.filter.expr = #__VA_ARGS__;\
+        desc.query.expr = #__VA_ARGS__;\
         desc.events[0] = kind;\
         ecs_id(id_) = ecs_observer_init(world, &desc);\
         ecs_assert(ecs_id(id_) != 0, ECS_INVALID_PARAMETER, NULL);\
@@ -233,28 +233,12 @@
         .type.alignment = ECS_ALIGNOF(T) \
     })
 
-/** Shorthand for creating a filter with ecs_filter_init().
+/** Shorthand for creating a query with ecs_query_cache_init.
  *
  * Example:
- *
- * @code
- * ecs_filter(world, {
- *   .terms = {{ ecs_id(Position) }}
- * });
- * @endcode
- */
-#define ecs_filter(world, ...)\
-    ecs_filter_init(world, &(ecs_filter_desc_t) __VA_ARGS__ )
-
-/** Shorthand for creating a query with ecs_query_init().
- *
- * Example:
- *
- * @code
- * ecs_query(world, {
- *   .filter.terms = {{ ecs_id(Position) }}
- * });
- * @endcode
+ *   ecs_query(world, {
+ *     .terms = {{ ecs_id(Position) }}
+ *   });
  */
 #define ecs_query(world, ...)\
     ecs_query_init(world, &(ecs_query_desc_t) __VA_ARGS__ )
@@ -265,7 +249,7 @@
  *
  * @code
  * ecs_observer(world, {
- *   .filter.terms = {{ ecs_id(Position) }},
+ *   .terms = {{ ecs_id(Position) }},
  *   .events = { EcsOnAdd },
  *   .callback = AddPosition
  * });
@@ -552,7 +536,7 @@
 #define ecs_enable_component(world, entity, T, enable)\
     ecs_enable_id(world, entity, ecs_id(T), enable)
 
-#define ecs_is_enabled_component(world, entity, T)\
+#define ecs_is_enabled(world, entity, T)\
     ecs_is_enabled_id(world, entity, ecs_id(T))
 
 #define ecs_enable_pair(world, entity, First, second, enable)\
@@ -570,10 +554,6 @@
 
 #define ecs_lookup_path(world, parent, path)\
     ecs_lookup_path_w_sep(world, parent, path, ".", NULL, true)
-
-/* Deprecated: use ecs_lookup instead */
-#define ecs_lookup_fullpath(world, path)\
-    ecs_lookup(world, path)
 
 #define ecs_get_path(world, parent, child)\
     ecs_get_path_w_sep(world, parent, child, ".", NULL)
@@ -860,13 +840,12 @@
 
 #define ecs_query_new(world, q_expr)\
     ecs_query_init(world, &(ecs_query_desc_t){\
-        .filter.expr = q_expr\
-    })
-
-#define ecs_rule_new(world, q_expr)\
-    ecs_rule_init(world, &(ecs_filter_desc_t){\
         .expr = q_expr\
     })
+
+#define ecs_each(world, id) ecs_each_id(world, ecs_id(id))
+#define ecs_each_pair(world, r, t) ecs_each_id(world, ecs_pair(r, t))
+#define ecs_each_pair_t(world, R, t) ecs_each_id(world, ecs_pair(ecs_id(R), t))
 
 /** @} */
 

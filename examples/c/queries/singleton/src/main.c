@@ -32,8 +32,8 @@ int main(int argc, char *argv[]) {
     ecs_set(ecs, e3, Velocity, {0, 2});
 
     // Create query that matches Gravity as singleton
-    ecs_query_t *q = ecs_query(ecs, {
-        .filter.terms = {
+    ecs_query_cache_t *q = ecs_query(ecs, {
+        .terms = {
             { .id = ecs_id(Velocity) },
             // A singleton is a component matched on itself
             { .id = ecs_id(Gravity), .src.id =  ecs_id(Gravity) }
@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
     // In a query string expression you can use the $ shortcut for singletons:
     //   Velocity, Gravity($)
 
-    ecs_iter_t it = ecs_query_iter(ecs, q);
+    ecs_iter_t it = ecs_query_cache_iter(ecs, q);
     while (ecs_query_next(&it)) {
         Velocity *v = ecs_field(&it, Velocity, 1);
         Gravity *g = ecs_field(&it, Gravity, 2);

@@ -31,8 +31,8 @@ int main(int argc, char *argv[]) {
 
     // Create a query that subscribers for all entities that have a Direction
     // and that are walking.
-    ecs_query_t *q = ecs_query(world, {
-        .filter.terms = {
+    ecs_query_cache_t *q = ecs_query(world, {
+        .terms = {
             { .id = ecs_pair(Movement, Walking) },
             { .id = ecs_pair(Direction, EcsWildcard) }
         }

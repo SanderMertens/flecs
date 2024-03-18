@@ -68,17 +68,17 @@ int main(int argc, char *argv[]) {
     // The way to read how this query is evaluated is:
     // - find all entities with (Platoon, *), store * in _Platoon
     // - check if _Platoon has (Player, *), store * in _Player
-    ecs_rule_t *r = ecs_rule(ecs, {
+    ecs_query_impl_t *r = ecs_query(ecs, {
         .terms = {
             { .first.id = RangedUnit },
             {
                 .first.id = Platoon, 
-                .second = { .name = "Platoon", .flags = EcsIsVariable },
+                .second = { .name = "Platoon", .id = EcsIsVariable },
             },
             { 
                 .first.id = Player, 
-                .src = { .name = "Platoon", .flags = EcsIsVariable },
-                .second = { .name = "Player", .flags = EcsIsVariable },
+                .src = { .name = "Platoon", .id = EcsIsVariable },
+                .second = { .name = "Player", .id = EcsIsVariable },
             }
         }
     });
@@ -88,14 +88,14 @@ int main(int argc, char *argv[]) {
     // platoon or a single player setting a variable beforehand. In this example
     // we'll just find all platoons & ranged units for a single player.
 
-    int player_var = ecs_rule_find_var(r, "Player");
-    int platoon_var = ecs_rule_find_var(r, "Platoon");
+    int player_var = ecs_query_find_var(r, "Player");
+    int platoon_var = ecs_query_find_var(r, "Platoon");
 
     // Iterate rule, limit the results to units of MyPlayer
-    ecs_iter_t it = ecs_rule_iter(ecs, r);
+    ecs_iter_t it = ecs_query_iter(ecs, r);
     ecs_iter_set_var(&it, player_var, ecs_lookup(ecs, "MyPlayer"));
 
-    while (ecs_rule_next(&it)) {
+    while (ecs_query_next(&it)) {
         ecs_entity_t player = ecs_iter_get_var(&it, player_var);
         ecs_entity_t platoon = ecs_iter_get_var(&it, platoon_var);
         char *platoon_str = ecs_get_fullpath(ecs, platoon);
@@ -113,7 +113,7 @@ int main(int argc, char *argv[]) {
         ecs_os_free(platoon_str);
     }
 
-    ecs_rule_fini(r);
+    ecs_query_fini(r);
 
     // Output
     //  Unit 513 of class Wizard in platoon 510 for player MyPlayer

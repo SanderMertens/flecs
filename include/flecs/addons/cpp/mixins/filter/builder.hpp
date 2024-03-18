@@ -1,6 +1,6 @@
 /**
  * @file addons/cpp/mixins/filter/builder.hpp
- * @brief Filter builder.
+ * @brief Query builder.
  */
 
 #pragma once
@@ -12,11 +12,11 @@ namespace flecs {
 namespace _ {
     template <typename ... Components>
     using filter_builder_base = builder<
-        filter, ecs_filter_desc_t, filter_builder<Components...>, 
+        filter, ecs_query_desc_t, filter_builder<Components...>, 
         filter_builder_i, Components ...>;
 }
 
-/** Filter builder.
+/** Query builder.
  * 
  * @ingroup cpp_core_filters
  */

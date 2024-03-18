@@ -93,6 +93,10 @@ void flecs_dump_backtrace(
     : (ECS_BIT_CLEAR(flags, bit)))
 #define ECS_BIT_IS_SET(flags, bit) ((flags) & (bit))
 
+#define ECS_BIT_SETN(flags, n) ECS_BIT_SET(flags, 1llu << n)
+#define ECS_BIT_CLEARN(flags, n) ECS_BIT_CLEAR(flags, 1llu << n)
+#define ECS_BIT_CONDN(flags, n, cond) ECS_BIT_COND(flags, 1llu << n, cond)
+
 #ifdef __cplusplus
 }
 #endif

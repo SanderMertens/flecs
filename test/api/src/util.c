@@ -22,8 +22,8 @@ void probe_system_w_ctx(
         ctx->c[ctx->invoked][i] = it->ids[i];
         ctx->s[ctx->invoked][i] = ecs_field_src(it, i + 1);
 
-        ecs_id_t e = ecs_field_id(it, i + 1);
-        test_assert(e != 0);
+        ecs_id_t field_id = ecs_field_id(it, i + 1);
+        test_assert(field_id != 0);
     }
 
     for (i = 0; i < it->count; i ++) {
