@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "flecs.h"
 #include "Macros.h"
-#include "Worlds/FlecsWorld.h"
 #include "FlecsQuery.generated.h"
 
 USTRUCT(BlueprintType)

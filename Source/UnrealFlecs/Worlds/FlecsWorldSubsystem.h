@@ -12,6 +12,7 @@
 #include "FlecsWorldSettings.h"
 #include "Components/FlecsScriptClassComponent.h"
 #include "Components/FlecsScriptStructComponent.h"
+#include "Components/FlecsTypeMapComponent.h"
 #include "Entities/FlecsEntityHandle.h"
 #include "General/FlecsDeveloperSettings.h"
 #include "SolidMacros/Concepts/SolidConcepts.h"
@@ -103,25 +104,29 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
 	FORCEINLINE bool HasScriptStruct(UScriptStruct* ScriptStruct) const
 	{
-		return ScriptStructMap.contains(ScriptStruct);
+		return GetDefaultWorld(this)
+			.GetSingletonRef<FFlecsTypeMapComponent>()->ScriptStructMap.contains(ScriptStruct);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
 	FORCEINLINE bool HasScriptClass(const TSubclassOf<UObject> ScriptClass) const
 	{
-		return ScriptClassMap.contains(ScriptClass);
+		return GetDefaultWorld(this)
+			.GetSingletonRef<FFlecsTypeMapComponent>()->ScriptClassMap.contains(ScriptClass);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
 	FORCEINLINE FFlecsEntityHandle GetScriptStructEntity(UScriptStruct* ScriptStruct) const
 	{
-		return ScriptStructMap.at(ScriptStruct);
+		return GetDefaultWorld(this)
+			.GetSingletonRef<FFlecsTypeMapComponent>()->ScriptStructMap.at(ScriptStruct);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
 	FORCEINLINE FFlecsEntityHandle GetScriptClassEntity(const TSubclassOf<UObject> ScriptClass) const
 	{
-		return ScriptClassMap.at(ScriptClass);
+		return GetDefaultWorld(this)
+			.GetSingletonRef<FFlecsTypeMapComponent>()->ScriptClassMap.at(ScriptClass);
 	}
 
 	template <Solid::TStaticStructConcept T>
@@ -169,7 +174,7 @@ public:
 			                                         });
 
 		const FFlecsEntityHandle Handle(ScriptStructComponent);
-		ScriptStructMap.emplace(ScriptStruct, Handle);
+		GetDefaultWorld(this).GetSingletonRef<FFlecsTypeMapComponent>()->ScriptStructMap.emplace(ScriptStruct, Handle);
 		return Handle;
 	}
 
@@ -200,7 +205,7 @@ public:
 			                                        });
 
 		const FFlecsEntityHandle Handle(ScriptClassComponent);
-		ScriptClassMap.emplace(ScriptClass, Handle);
+		GetDefaultWorld(this).GetSingletonRef<FFlecsTypeMapComponent>()->ScriptClassMap.emplace(ScriptClass, Handle);
 		return Handle;
 	}
 
@@ -268,6 +273,8 @@ public:
 		}
 		
 		#endif // WITH_EDITOR
+
+		GetDefaultWorld(this).AddSingleton<FFlecsTypeMapComponent>();
 		
 		return Worlds.back();
 	}
@@ -355,9 +362,6 @@ public:
 protected:
 	std::vector<FFlecsWorld> Worlds;
 	robin_hood::unordered_flat_map<FName, FFlecsWorld*> WorldNameMap;
-	
-	mutable robin_hood::unordered_flat_map<FFlecsScriptStructComponent, FFlecsEntityHandle> ScriptStructMap;
-	mutable robin_hood::unordered_flat_map<FFlecsScriptClassComponent, FFlecsEntityHandle> ScriptClassMap;
 
 	UPROPERTY()
 	TWeakObjectPtr<const UFlecsDeveloperSettings> DeveloperSettings;

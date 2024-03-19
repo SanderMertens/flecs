@@ -63,7 +63,7 @@ public:
 	template <typename T>
 	FORCEINLINE void Set(const T& InValue) const { GetEntity().template set<T>(InValue); }
 
-	FORCEINLINE void Set(const FFlecsEntityHandle& InEntity, const void* InValue) const { GetEntity().set(InEntity, InValue); }
+	FORCEINLINE void Set(const FFlecsEntityHandle& InEntity, const void* InValue) const { GetEntity().set_second(InEntity, InValue); }
 
 	FORCEINLINE void Set(UScriptStruct* StructType, const void* InValue) const;
 

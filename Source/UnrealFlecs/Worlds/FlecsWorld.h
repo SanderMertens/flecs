@@ -72,6 +72,12 @@ public:
 	}
 
 	template <typename T>
+	FORCEINLINE void AddSingleton() const
+	{
+		World->add<T>();
+	}
+
+	template <typename T>
 	FORCEINLINE void SetSingleton(const T& Value) const
 	{
 		World->set<T>(Value);
@@ -159,6 +165,18 @@ public:
 	FORCEINLINE NO_DISCARD First GetSingleton(const Second& InSecond) const
 	{
 		return *World->get<First, Second>(InSecond);
+	}
+
+	template <typename T>
+	FORCEINLINE NO_DISCARD const T* GetSingletonPtr() const
+	{
+		return World->get<T>();
+	}
+
+	template <typename T>
+	FORCEINLINE NO_DISCARD flecs::ref<T> GetSingletonRef() const
+	{
+		return World->get_ref<T>();
 	}
 
 	FORCEINLINE void Merge() const
