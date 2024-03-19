@@ -10,6 +10,7 @@ int Pod::copy_invoked = 0;
 int Pod::move_invoked = 0;
 int Pod::copy_ctor_invoked = 0;
 int Pod::move_ctor_invoked = 0;
+int Pod::on_emplace_invoked = 0;
 
 int CountNoDefaultCtor::ctor_invoked = 0;
 int CountNoDefaultCtor::dtor_invoked = 0;
@@ -17,6 +18,7 @@ int CountNoDefaultCtor::copy_invoked = 0;
 int CountNoDefaultCtor::move_invoked = 0;
 int CountNoDefaultCtor::copy_ctor_invoked = 0;
 int CountNoDefaultCtor::move_ctor_invoked = 0;
+int CountNoDefaultCtor::on_emplace_invoked = 0;
 
 void ComponentLifecycle_ctor_on_add(void) {
     flecs::world world;
@@ -864,6 +866,39 @@ void ComponentLifecycle_no_default_ctor_move_ctor_on_set(void) {
     test_int(CountNoDefaultCtor::move_ctor_invoked, 0);    
 }
 
+void ComponentLifecycle_no_default_ctor_move_ctor_on_set_on_emplace(void) {
+    flecs::world ecs;
+
+    ecs.component<CountNoDefaultCtor>();
+
+    // Emplace, construct
+    test_int(CountNoDefaultCtor::on_emplace_invoked, 0);
+    auto e = ecs.entity().emplace<CountNoDefaultCtor>(10, 0);
+    test_assert(e.has<CountNoDefaultCtor>());
+    test_int(CountNoDefaultCtor::on_emplace_invoked, 1);
+
+    const CountNoDefaultCtor* ptr = e.get<CountNoDefaultCtor>();
+    test_assert(ptr != NULL);
+    test_int(ptr->value, 10);
+
+    test_int(CountNoDefaultCtor::ctor_invoked, 1);
+    test_int(CountNoDefaultCtor::dtor_invoked, 1);
+    test_int(CountNoDefaultCtor::copy_invoked, 0);
+    test_int(CountNoDefaultCtor::move_invoked, 1);
+    test_int(CountNoDefaultCtor::copy_ctor_invoked, 0);
+    test_int(CountNoDefaultCtor::move_ctor_invoked, 0);
+
+    // Set, move assign
+    e.set<CountNoDefaultCtor>({10});
+
+    test_int(CountNoDefaultCtor::ctor_invoked, 2);
+    test_int(CountNoDefaultCtor::dtor_invoked, 2);
+    test_int(CountNoDefaultCtor::copy_invoked, 0);
+    test_int(CountNoDefaultCtor::move_invoked, 2);
+    test_int(CountNoDefaultCtor::copy_ctor_invoked, 0);
+    test_int(CountNoDefaultCtor::move_ctor_invoked, 0);    
+}
+
 void ComponentLifecycle_emplace_w_ctor(void) {
     flecs::world ecs;
 
@@ -881,6 +916,25 @@ void ComponentLifecycle_emplace_w_ctor(void) {
     test_int(Pod::dtor_invoked, 0);    
 }
 
+void ComponentLifecycle_emplace_w_ctor_on_emplace(void) {
+    flecs::world ecs;
+
+    test_int(Pod::on_emplace_invoked, 0);
+    auto e = ecs.entity()
+        .emplace<Pod>(10, 0);
+    test_int(Pod::on_emplace_invoked, 1);
+
+    test_int(Pod::ctor_invoked, 1);
+    test_int(Pod::dtor_invoked, 1);
+
+    const Pod *ptr = e.get<Pod>();
+    test_assert(ptr != NULL);
+    test_int(ptr->value, 10);
+
+    test_int(Pod::ctor_invoked, 1);
+    test_int(Pod::dtor_invoked, 1);    
+}
+
 void ComponentLifecycle_emplace_no_default_ctor(void) {
     flecs::world ecs;
 
@@ -896,6 +950,25 @@ void ComponentLifecycle_emplace_no_default_ctor(void) {
 
     test_int(CountNoDefaultCtor::ctor_invoked, 1);
     test_int(CountNoDefaultCtor::dtor_invoked, 0); 
+}
+
+void ComponentLifecycle_emplace_no_default_ctor_on_emplace(void) {
+    flecs::world ecs;
+
+    test_int(CountNoDefaultCtor::on_emplace_invoked, 0);
+    auto e = ecs.entity()
+        .emplace<CountNoDefaultCtor>(10, 0);
+    test_int(CountNoDefaultCtor::on_emplace_invoked, 1);
+
+    test_int(CountNoDefaultCtor::ctor_invoked, 1);
+    test_int(CountNoDefaultCtor::dtor_invoked, 1);
+
+    const CountNoDefaultCtor *ptr = e.get<CountNoDefaultCtor>();
+    test_assert(ptr != NULL);
+    test_int(ptr->value, 10);
+
+    test_int(CountNoDefaultCtor::ctor_invoked, 1);
+    test_int(CountNoDefaultCtor::dtor_invoked, 1); 
 }
 
 void ComponentLifecycle_emplace_defer_use_move_ctor(void) {
@@ -935,6 +1008,45 @@ void ComponentLifecycle_emplace_defer_use_move_ctor(void) {
     test_int(CountNoDefaultCtor::move_ctor_invoked, 1);
 }
 
+void ComponentLifecycle_emplace_defer_use_move_ctor_on_emplace(void) {
+    {
+        flecs::world ecs;
+
+        auto e = ecs.entity();
+
+        ecs.defer_begin();
+        test_int(CountNoDefaultCtor::on_emplace_invoked, 0);
+        e.emplace<CountNoDefaultCtor>(10, 0);
+        test_int(CountNoDefaultCtor::on_emplace_invoked, 1);
+        test_assert(!e.has<CountNoDefaultCtor>());
+        test_int(CountNoDefaultCtor::ctor_invoked, 1);
+        test_int(CountNoDefaultCtor::dtor_invoked, 1);
+        test_int(CountNoDefaultCtor::move_invoked, 1);
+        test_int(CountNoDefaultCtor::move_ctor_invoked, 0);
+        ecs.defer_end();
+
+        test_assert(e.has<CountNoDefaultCtor>());
+        test_int(CountNoDefaultCtor::ctor_invoked, 1);
+        test_int(CountNoDefaultCtor::dtor_invoked, 2);
+        test_int(CountNoDefaultCtor::move_invoked, 1);
+        test_int(CountNoDefaultCtor::move_ctor_invoked, 1);
+
+        const CountNoDefaultCtor *ptr = e.get<CountNoDefaultCtor>();
+        test_assert(ptr != NULL);
+        test_int(ptr->value, 10);
+
+        test_int(CountNoDefaultCtor::ctor_invoked, 1);
+        test_int(CountNoDefaultCtor::dtor_invoked, 2);
+        test_int(CountNoDefaultCtor::move_invoked, 1);
+        test_int(CountNoDefaultCtor::move_ctor_invoked, 1);
+    }
+
+    test_int(CountNoDefaultCtor::ctor_invoked, 1);
+    test_int(CountNoDefaultCtor::dtor_invoked, 3);
+    test_int(CountNoDefaultCtor::move_invoked, 1);
+    test_int(CountNoDefaultCtor::move_ctor_invoked, 1);
+}
+
 void ComponentLifecycle_emplace_existing(void) {
     install_test_abort();
 
@@ -954,6 +1066,27 @@ void ComponentLifecycle_emplace_existing(void) {
     e.emplace<Pod>(20);
 }
 
+void ComponentLifecycle_emplace_existing_on_emplace(void) {
+    install_test_abort();
+
+    flecs::world ecs;
+
+    test_int(Pod::on_emplace_invoked, 0);
+    auto e = ecs.entity()
+        .emplace<Pod>(10, 0);
+    test_int(Pod::on_emplace_invoked, 1);
+
+    const Pod *ptr = e.get<Pod>();
+    test_assert(ptr != NULL);
+    test_int(ptr->value, 10);    
+
+    test_int(Pod::ctor_invoked, 1);
+    test_int(Pod::dtor_invoked, 1);
+
+    test_expect_abort();
+    e.emplace<Pod>(20, 0);
+}
+
 void ComponentLifecycle_emplace_singleton(void) {
     flecs::world ecs;
 
@@ -968,6 +1101,24 @@ void ComponentLifecycle_emplace_singleton(void) {
 
     test_int(Pod::ctor_invoked, 1);
     test_int(Pod::dtor_invoked, 0); 
+}
+
+void ComponentLifecycle_emplace_singleton_on_emplace(void) {
+    flecs::world ecs;
+
+    test_int(Pod::on_emplace_invoked, 0);
+    ecs.emplace<Pod>(10, 0);
+    test_int(Pod::on_emplace_invoked, 1);
+
+    test_int(Pod::ctor_invoked, 1);
+    test_int(Pod::dtor_invoked, 1);
+
+    const Pod *ptr = ecs.get<Pod>();
+    test_assert(ptr != NULL);
+    test_int(ptr->value, 10);
+
+    test_int(Pod::ctor_invoked, 1);
+    test_int(Pod::dtor_invoked, 1); 
 }
 
 class CtorDtorNonTrivial {
