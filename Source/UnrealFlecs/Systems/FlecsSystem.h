@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "flecs.h"
+#include "Entities/FlecsEntityHandle.h"
+#include "Queries/FlecsQuery.h"
 #include "FlecsSystem.generated.h"
 
 USTRUCT(BlueprintType)
@@ -16,7 +18,6 @@ public:
 	
 	FORCEINLINE FFlecsSystem(const flecs::system& InSystem) : System(InSystem) {}
 	FORCEINLINE FFlecsSystem(const flecs::system* InSystem) : System(*InSystem) {}
-	
 	
 	template <typename ...TComponents>
 	FORCEINLINE NO_DISCARD static flecs::system_builder<TComponents...> CreateSystem(flecs::world& InWorld, const TCHAR* InName)
@@ -44,7 +45,60 @@ public:
 		return static_cast<FString>(System.name());
 	}
 
+	FORCEINLINE void SetContext(void* InContext)
+	{
+		System.ctx(InContext);
+	}
 
-private:
+	FORCEINLINE NO_DISCARD void* GetContext() const
+	{
+		return System.ctx();
+	}
+
+	FORCEINLINE NO_DISCARD FFlecsQuery GetQuery() const
+	{
+		return System.query();
+	}
+
+	FORCEINLINE NO_DISCARD FFlecsEntityHandle GetEntity() const
+	{
+		return FFlecsEntityHandle(System);
+	}
+
+	FORCEINLINE void SetInterval(const float InInterval)
+	{
+		System.interval(InInterval);
+	}
+
+	FORCEINLINE NO_DISCARD float GetInterval()
+	{
+		return System.interval();
+	}
+
+	FORCEINLINE void SetTimeout(const float InTimeout)
+	{
+		System.timeout(InTimeout);
+	}
+
+	FORCEINLINE NO_DISCARD float GetTimeout()
+	{
+		return System.timeout();
+	}
+
+	FORCEINLINE void SetRate(const float InRate)
+	{
+		System.rate(InRate);
+	}
+
+	FORCEINLINE void StartTimer()
+	{
+		System.start();
+	}
+
+	FORCEINLINE void StopTimer()
+	{
+		System.stop();
+	}
+	
 	flecs::system System;
 }; // struct FFlecsSystem

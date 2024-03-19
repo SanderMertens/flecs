@@ -101,25 +101,25 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	bool HasScriptStruct(UScriptStruct* ScriptStruct) const
+	FORCEINLINE bool HasScriptStruct(UScriptStruct* ScriptStruct) const
 	{
 		return ScriptStructMap.contains(ScriptStruct);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	bool HasScriptClass(const TSubclassOf<UObject> ScriptClass) const
+	FORCEINLINE bool HasScriptClass(const TSubclassOf<UObject> ScriptClass) const
 	{
 		return ScriptClassMap.contains(ScriptClass);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	FFlecsEntityHandle GetScriptStructEntity(UScriptStruct* ScriptStruct) const
+	FORCEINLINE FFlecsEntityHandle GetScriptStructEntity(UScriptStruct* ScriptStruct) const
 	{
 		return ScriptStructMap.at(ScriptStruct);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	FFlecsEntityHandle GetScriptClassEntity(const TSubclassOf<UObject> ScriptClass) const
+	FORCEINLINE FFlecsEntityHandle GetScriptClassEntity(const TSubclassOf<UObject> ScriptClass) const
 	{
 		return ScriptClassMap.at(ScriptClass);
 	}
@@ -148,8 +148,8 @@ public:
 		return HasScriptClass(T::StaticClass());
 	}
 
-	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	FFlecsEntityHandle RegisterScriptStruct(UScriptStruct* ScriptStruct) const
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
+	FORCEINLINE FFlecsEntityHandle RegisterScriptStruct(UScriptStruct* ScriptStruct) const
 	{
 		if UNLIKELY_IF(ScriptStruct == nullptr)
 		{
@@ -174,13 +174,13 @@ public:
 	}
 
 	template <Solid::TStaticStructConcept T>
-	FFlecsEntityHandle RegisterScriptStruct() const
+	FORCEINLINE FFlecsEntityHandle RegisterScriptStruct() const
 	{
 		return RegisterScriptStruct(T::StaticStruct());
 	}
 
-	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	FFlecsEntityHandle RegisterScriptClass(TSubclassOf<UObject> ScriptClass) const
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
+	FORCEINLINE FFlecsEntityHandle RegisterScriptClass(TSubclassOf<UObject> ScriptClass) const
 	{
 		if UNLIKELY_IF(ScriptClass == nullptr)
 		{
@@ -205,13 +205,13 @@ public:
 	}
 
 	template <Solid::TStaticClassConcept T>
-	FFlecsEntityHandle RegisterScriptClass() const
+	FORCEINLINE FFlecsEntityHandle RegisterScriptClass() const
 	{
 		return RegisterScriptClass(T::StaticClass());
 	}
 
-	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	FFlecsEntityHandle RegisterComponentType(const FName& Name, const int32 Size, const int32 Alignment) const
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
+	FORCEINLINE FFlecsEntityHandle RegisterComponentType(const FName& Name, const int32 Size, const int32 Alignment) const
 	{
 		const flecs::entity Component = GetFlecsWorld(DEFAULT_FLECS_WORLD_NAME).GetFlecsWorld().entity(TCHAR_TO_ANSI(*Name.ToString()))
 			.set<flecs::Component>({ Size, Alignment });
@@ -219,8 +219,8 @@ public:
 		return FFlecsEntityHandle(Component);
 	}
 
-	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	FFlecsEntityHandle ObtainComponentTypeStruct(UScriptStruct* ScriptStruct) const
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
+	FORCEINLINE FFlecsEntityHandle ObtainComponentTypeStruct(UScriptStruct* ScriptStruct) const
 	{
 		if (HasScriptStruct(ScriptStruct))
 		{
@@ -230,8 +230,8 @@ public:
 		return RegisterScriptStruct(ScriptStruct);
 	}
 
-	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	FFlecsEntityHandle ObtainComponentTypeClass(const TSubclassOf<UObject> ScriptClass) const
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
+	FORCEINLINE FFlecsEntityHandle ObtainComponentTypeClass(const TSubclassOf<UObject> ScriptClass) const
 	{
 		if (HasScriptClass(ScriptClass))
 		{
@@ -242,7 +242,7 @@ public:
 	}
 	
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	FFlecsWorld& CreateWorld(const FName& Name, const FFlecsWorldSettings& Settings)
+	FORCEINLINE FFlecsWorld& CreateWorld(const FName& Name, const FFlecsWorldSettings& Settings)
 	{
 		checkf(!HasWorld(Name), TEXT("World with name %s already exists"), *Name.ToString());
 		checkf(Name != NAME_None, TEXT("World name cannot be NAME_None"));
@@ -273,13 +273,13 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	bool HasWorld(const FName& Name) const
+	FORCEINLINE bool HasWorld(const FName& Name) const
 	{
 		return WorldNameMap.contains(Name);
 	}
 
-	UFUNCTION(BlueprintCallable, Category = "Flecs | REST API")
-	void ImportRestModule(const FName& WorldName, const bool bUseMonitoring, const FFlecsRestSettings& Settings) const
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | REST API")
+	FORCEINLINE void ImportRestModule(const FName& WorldName, const bool bUseMonitoring, const FFlecsRestSettings& Settings) const
 	{
 		GetFlecsWorld(WorldName).SetSingleton<flecs::Rest>(
 				flecs::Rest { static_cast<uint16>(Settings.Port), TCHAR_TO_ANSI(*Settings.IPAddress) });
@@ -290,22 +290,22 @@ public:
 		}
 	}
 
-	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	void ImportMonitoringModule(const FName& WorldName) const
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
+	FORCEINLINE void ImportMonitoringModule(const FName& WorldName) const
 	{
 		GetFlecsWorld(WorldName).ImportModule<flecs::monitor>();
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	void DestroyWorldByName(const FName& Name)
+	FORCEINLINE void DestroyWorldByName(const FName& Name)
 	{
 		DestroyWorld(GetFlecsWorld(Name));
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	void DestroyWorld(FFlecsWorld& World)
+	FORCEINLINE void DestroyWorld(FFlecsWorld& World)
 	{
-		const FFlecsWorld* WorldPtr = WorldNameMap.at(World.GetName());
+		FFlecsWorld* WorldPtr = WorldNameMap.at(World.GetName());
 		WorldNameMap.erase(World.GetName());
 
 		for (std::vector<FFlecsWorld>::iterator It = Worlds.begin(); It != Worlds.end(); ++It)
@@ -317,31 +317,31 @@ public:
 			}
 		}
 
-		delete WorldPtr;
+		WorldPtr->DestroyWorld();
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	FFlecsWorld& GetFlecsWorld(const FName& Name) const
+	FORCEINLINE FFlecsWorld& GetFlecsWorld(const FName& Name) const
 	{
 		checkf(HasWorld(Name), TEXT("World with name %s does not exist"), *Name.ToString());
 		return *WorldNameMap.at(Name);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	static FName GetWorldName(const FFlecsWorld& World)
+	static FORCEINLINE FName GetWorldName(const FFlecsWorld& World)
 	{
 		return World.GetName();
 	}
 	
 	UFUNCTION(BlueprintCallable, Category = "Flecs", Meta = (WorldContext = "WorldContextObject"))
-	static FFlecsWorld& GetWorldStatic(UObject* WorldContextObject, const FName& Name)
+	static FORCEINLINE FFlecsWorld& GetWorldStatic(UObject* WorldContextObject, const FName& Name)
 	{
 		return GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::Assert)
 		              ->GetSubsystem<UFlecsWorldSubsystem>()->GetFlecsWorld(Name);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs", Meta = (WorldContext = "WorldContextObject"))
-	static FFlecsWorld& GetDefaultWorld(const UObject* WorldContextObject)
+	static FORCEINLINE FFlecsWorld& GetDefaultWorld(const UObject* WorldContextObject)
 	{
 		return GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::Assert)
 		              ->GetSubsystem<UFlecsWorldSubsystem>()->GetFlecsWorld(DEFAULT_FLECS_WORLD_NAME);

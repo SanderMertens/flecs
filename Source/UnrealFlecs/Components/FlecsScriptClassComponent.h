@@ -30,6 +30,18 @@ struct FFlecsScriptClassComponent
     
     FORCEINLINE FFlecsScriptClassComponent(const TSubclassOf<UObject>& InScriptClass = nullptr) : ScriptClass(InScriptClass) {}
 
+    template <typename T>
+    FORCEINLINE NO_DISCARD TSubclassOf<T> Get() const
+    {
+        return Cast<T>(ScriptClass.Get());
+    }
+
+    template <typename T>
+    FORCEINLINE NO_DISCARD TSubclassOf<T> GetChecked() const
+    {
+        return CastChecked<T>(ScriptClass.Get());
+    }
+
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs")
     TSubclassOf<UObject> ScriptClass;
     

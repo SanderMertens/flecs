@@ -7,7 +7,6 @@
 #include "FlecsType.h"
 #include "InstancedStruct.h"
 #include "SolidMacros/Macros.h"
-#include "Worlds/FlecsWorld.h"
 #include "FlecsEntityHandle.generated.h"
 
 class UFlecsWorldSubsystem;
@@ -29,6 +28,8 @@ public:
 	
 	FORCEINLINE NO_DISCARD bool IsValid() const { return GetEntity().is_valid(); }
 	FORCEINLINE NO_DISCARD bool IsAlive() const { return GetEntity().is_alive(); }
+
+	FORCEINLINE operator bool() const { return IsValid(); }
 
 	FORCEINLINE NO_DISCARD UFlecsWorldSubsystem* GetFlecsWorldSubsystem() const;
 	FORCEINLINE NO_DISCARD FFlecsWorld& GetFlecsWorld() const;
