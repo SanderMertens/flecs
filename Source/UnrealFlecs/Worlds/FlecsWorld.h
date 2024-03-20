@@ -15,8 +15,7 @@ struct UNREALFLECS_API FFlecsWorld
 
 public:
 	FFlecsWorld() = default;
-	FORCEINLINE FFlecsWorld(flecs::world& InWorld) : World(&InWorld) {}
-	FORCEINLINE FFlecsWorld(flecs::world* InWorld) : World(InWorld) {}
+	FORCEINLINE FFlecsWorld(flecs::world InWorld) : World(&InWorld) {}
 
 	FORCEINLINE void SetWorld(flecs::world& InWorld) { World = &InWorld; }
 
@@ -51,6 +50,22 @@ public:
 	FORCEINLINE NO_DISCARD bool operator!=(const flecs::world& Other) const
 	{
 		return World != &Other;
+	}
+
+	FORCEINLINE void Reset() const
+	{
+		World->reset();
+	}
+
+	FORCEINLINE void ResetClock() const
+	{
+		World->reset_clock();
+	}
+
+	template <typename ...TArgs>
+	FORCEINLINE FFlecsEntityHandle CreateEntity(const TArgs&... Args) const
+	{
+		return World->entity(Args...);
 	}
 
 	template <typename FunctionType>
@@ -202,7 +217,7 @@ public:
 
 		const char* Name = TCHAR_TO_ANSI(*InName.ToString());
 
-		World->entity(EcsWorld).set_doc_name(Name);
+		GetWorldEntity().SetDocName(Name);
 		
 		World->entity<FName>().set_doc_name(Name);
 
@@ -223,6 +238,11 @@ public:
 	FORCEINLINE bool EndDefer() const
 	{
 		return World->defer_end();
+	}
+
+	FORCEINLINE NO_DISCARD bool IsDeferred() const
+	{
+		return World->is_deferred();
 	}
 
 	FORCEINLINE bool BeginReadOnly() const
@@ -266,7 +286,7 @@ public:
 		World = nullptr;
 	}
 
-	FORCEINLINE void SetPipeline(const flecs::entity& InPipeline) const
+	FORCEINLINE void SetPipeline(const FFlecsEntityHandle& InPipeline) const
 	{
 		World->set_pipeline(InPipeline);
 	}
@@ -277,38 +297,38 @@ public:
 		World->set_pipeline<T>();
 	}
 
-	FORCEINLINE NO_DISCARD flecs::entity GetPipeline() const
+	FORCEINLINE NO_DISCARD FFlecsEntityHandle GetPipeline() const
 	{
 		return World->get_pipeline();
 	}
 
-	FORCEINLINE flecs::entity SetScope(const flecs::entity& InScope) const
+	FORCEINLINE FFlecsEntityHandle SetScope(const FFlecsEntityHandle& InScope) const
 	{
 		return World->set_scope(InScope);
 	}
 
 	template <typename T>
-	FORCEINLINE flecs::entity SetScope() const
+	FORCEINLINE FFlecsEntityHandle SetScope() const
 	{
 		return World->set_scope<T>();
 	}
 
-	FORCEINLINE NO_DISCARD flecs::entity GetScope() const
+	FORCEINLINE NO_DISCARD FFlecsEntityHandle GetScope() const
 	{
 		return World->get_scope();
 	}
 
-	FORCEINLINE NO_DISCARD double GetDeltaTime() const
+	FORCEINLINE NO_DISCARD float GetDeltaTime() const
 	{
 		return World->delta_time();
 	}
 
-	FORCEINLINE NO_DISCARD flecs::entity GetAlive(const FFlecsId& InId) const
+	FORCEINLINE NO_DISCARD FFlecsEntityHandle GetAlive(const FFlecsId& InId) const
 	{
 		return World->get_alive(InId.GetFlecsId());
 	}
 
-	FORCEINLINE flecs::entity MakeAlive(const FFlecsId& InId) const
+	FORCEINLINE FFlecsEntityHandle MakeAlive(const FFlecsId& InId) const
 	{
 		return World->make_alive(InId.GetFlecsId());
 	}
@@ -323,6 +343,77 @@ public:
 	FORCEINLINE NO_DISCARD flecs::system_builder<TComponents...> CreateSystem(const FString& InName) const
 	{
 		return World->system<TComponents...>(TCHAR_TO_ANSI(*InName));
+	}
+
+	FORCEINLINE NO_DISCARD FFlecsEntityHandle GetWorldEntity() const
+	{
+		return World->entity(EcsWorld);
+	}
+
+	FORCEINLINE void SetStageCount(const int32 InStageCount) const
+	{
+		World->set_stage_count(InStageCount);
+	}
+
+	FORCEINLINE NO_DISCARD int32 GetStageCount() const
+	{
+		return World->get_stage_count();
+	}
+
+	FORCEINLINE NO_DISCARD int32 GetStageId() const
+	{
+		return World->get_stage_id();
+	}
+
+	FORCEINLINE NO_DISCARD bool IsStage() const
+	{
+		return World->is_stage();
+	}
+
+	FORCEINLINE NO_DISCARD FFlecsWorld GetStage(const int32 InStageId) const
+	{
+		return World->get_stage(InStageId);
+	}
+
+	FORCEINLINE NO_DISCARD FFlecsWorld ObtainAsyncStage() const
+	{
+		return World->async_stage();
+	}
+
+	FORCEINLINE NO_DISCARD bool IsReadOnly() const
+	{
+		return World->is_readonly();
+	}
+
+	FORCEINLINE void PreallocateEntities(const int32 InEntityCount) const
+	{
+		World->dim(InEntityCount);
+	}
+
+	FORCEINLINE void SetEntityRange(const int32 InMin, const int32 InMax) const
+	{
+		World->set_entity_range(InMin, InMax);
+	}
+
+	FORCEINLINE void EnforceEntityRange(const bool bInEnforce) const
+	{
+		World->enable_range_check(bInEnforce);
+	}
+
+	template <typename FunctionType>
+	FORCEINLINE void ForEachChild(FunctionType&& Function) const
+	{
+		World->children(std::forward<FunctionType>(Function));
+	}
+
+	FORCEINLINE void SetThreads(const int32 InThreadCount) const
+	{
+		World->set_threads(InThreadCount);
+	}
+
+	FORCEINLINE NO_DISCARD int32 GetThreads() const
+	{
+		return World->get_threads();
 	}
 	
 private:

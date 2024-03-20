@@ -12,6 +12,11 @@ struct FFlecsQuery
 {
     GENERATED_BODY()
 
+    FORCEINLINE NO_DISCARD friend uint32 GetTypeHash(const FFlecsQuery& InQuery)
+    {
+        return GetTypeHash(InQuery.GetQuery().entity().id());
+    }
+
 public:
     FORCEINLINE FFlecsQuery() = default;
     
@@ -26,6 +31,11 @@ public:
     FORCEINLINE NO_DISCARD bool HasChanged() const
     {
         return Query.changed();
+    }
+
+    FORCEINLINE NO_DISCARD bool IsOrphaned() const
+    {
+        return Query.orphaned();
     }
 
     FORCEINLINE NO_DISCARD flecs::world GetWorld() const
@@ -51,6 +61,36 @@ public:
     FORCEINLINE NO_DISCARD bool HasMatches() const
     {
         return Query.is_true();
+    }
+
+    FORCEINLINE NO_DISCARD FString ToString() const
+    {
+        return static_cast<FString>(Query.str());
+    }
+
+    FORCEINLINE NO_DISCARD FFlecsEntityHandle GetEntity() const
+    {
+        return FFlecsEntityHandle(Query.entity());
+    }
+
+    FORCEINLINE NO_DISCARD bool operator==(const FFlecsQuery& Other) const
+    {
+        return Query == Other.Query;
+    }
+
+    FORCEINLINE NO_DISCARD bool operator!=(const FFlecsQuery& Other) const
+    {
+        return Query != Other.Query;
+    }
+
+    FORCEINLINE NO_DISCARD bool operator==(const flecs::query<>& Other) const
+    {
+        return Query == Other;
+    }
+
+    FORCEINLINE NO_DISCARD bool operator!=(const flecs::query<>& Other) const
+    {
+        return Query != Other;
     }
 
 private:

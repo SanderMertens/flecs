@@ -21,7 +21,7 @@ FFlecsEntityHandle UEntityFunctionLibrary::GetEntityWithName(const UObject* Worl
 
 void UEntityFunctionLibrary::DestroyEntity(const FFlecsEntityHandle& Entity)
 {
-    Entity.GetEntity().destruct();
+    Entity.Destroy();
 }
 
 void UEntityFunctionLibrary::DestroyEntityByName(const UObject* WorldContextObject, const FString& EntityName,

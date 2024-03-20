@@ -175,6 +175,15 @@ public:
 
 		const FFlecsEntityHandle Handle(ScriptStructComponent);
 		GetDefaultWorld(this).GetSingletonRef<FFlecsTypeMapComponent>()->ScriptStructMap.emplace(ScriptStruct, Handle);
+
+		if (ScriptStruct->GetSuperStruct())
+		{
+			if (!HasScriptStruct(static_cast<UScriptStruct*>(ScriptStruct->GetSuperStruct())))
+			{
+				RegisterScriptStruct(static_cast<UScriptStruct*>(ScriptStruct->GetSuperStruct()));
+			}
+		}
+		
 		return Handle;
 	}
 
@@ -206,6 +215,15 @@ public:
 
 		const FFlecsEntityHandle Handle(ScriptClassComponent);
 		GetDefaultWorld(this).GetSingletonRef<FFlecsTypeMapComponent>()->ScriptClassMap.emplace(ScriptClass, Handle);
+
+		if (ScriptClass->GetSuperClass())
+		{
+			if (!HasScriptClass(ScriptClass->GetSuperClass()))
+			{
+				MAYBE_UNUSED FFlecsEntityHandle Entity = RegisterScriptClass(ScriptClass->GetSuperClass());
+			}
+		}
+		
 		return Handle;
 	}
 
@@ -218,7 +236,8 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
 	FORCEINLINE FFlecsEntityHandle RegisterComponentType(const FName& Name, const int32 Size, const int32 Alignment) const
 	{
-		const flecs::entity Component = GetFlecsWorld(DEFAULT_FLECS_WORLD_NAME).GetFlecsWorld().entity(TCHAR_TO_ANSI(*Name.ToString()))
+		const flecs::entity Component = GetFlecsWorld(DEFAULT_FLECS_WORLD_NAME)
+			.GetFlecsWorld().entity(TCHAR_TO_ANSI(*Name.ToString()))
 			.set<flecs::Component>({ Size, Alignment });
 
 		return FFlecsEntityHandle(Component);
@@ -253,7 +272,7 @@ public:
 		checkf(Name != NAME_None, TEXT("World name cannot be NAME_None"));
 		
 		flecs::world* NewWorld = new flecs::world();
-		FFlecsWorld NewFlecsWorld(NewWorld);
+		FFlecsWorld NewFlecsWorld(std::move(*NewWorld));
 		
 		WorldNameMap.emplace(Name, &NewFlecsWorld);
 		

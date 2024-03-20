@@ -85,7 +85,7 @@ public:
 		return System.timeout();
 	}
 
-	FORCEINLINE void SetRate(const float InRate)
+	FORCEINLINE void SetRate(const int32 InRate)
 	{
 		System.rate(InRate);
 	}
@@ -98,6 +98,28 @@ public:
 	FORCEINLINE void StopTimer()
 	{
 		System.stop();
+	}
+
+	FORCEINLINE flecs::system_runner_fluent Run(const float DeltaTime = 0.0f, void* InParam = nullptr) const
+	{
+		return System.run(DeltaTime, InParam);
+	}
+
+	FORCEINLINE flecs::system_runner_fluent RunWorker(const int32 CurrentStage, const int32 StageCount,
+		const float DeltaTime = 0.0f, void* InParam = nullptr) const
+	{
+		return System.run_worker(CurrentStage, StageCount, DeltaTime, InParam);
+	}
+
+	template <typename T>
+	FORCEINLINE void SetTickSource()
+	{
+		System.set_tick_source<T>();
+	}
+
+	FORCEINLINE void SetTickSource(const flecs::entity InSource)
+	{
+		System.set_tick_source(InSource);
 	}
 	
 	flecs::system System;

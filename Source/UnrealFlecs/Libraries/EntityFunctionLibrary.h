@@ -8,7 +8,7 @@
 #include "EntityFunctionLibrary.generated.h"
 
 UCLASS(BlueprintType)
-class UNREALFLECS_API UEntityFunctionLibrary : public UBlueprintFunctionLibrary
+class UNREALFLECS_API UEntityFunctionLibrary final : public UBlueprintFunctionLibrary
 {
     GENERATED_BODY()
 

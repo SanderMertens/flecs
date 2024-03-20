@@ -17,6 +17,11 @@ struct UNREALFLECS_API FFlecsEntityHandle
 {
 	GENERATED_BODY()
 
+	FORCEINLINE NO_DISCARD friend uint32 GetTypeHash(const FFlecsEntityHandle& InEntity)
+	{
+		return GetTypeHash(InEntity.GetEntity().id());
+	}
+
 public:
 	FFlecsEntityHandle() = default;
 	FORCEINLINE FFlecsEntityHandle(const flecs::entity& InEntity) : Entity(InEntity) {}
@@ -30,6 +35,8 @@ public:
 	FORCEINLINE NO_DISCARD bool IsAlive() const { return GetEntity().is_alive(); }
 
 	FORCEINLINE operator bool() const { return IsValid(); }
+
+	FORCEINLINE NO_DISCARD int32 GetId() const { return GetEntity().id(); }
 
 	FORCEINLINE NO_DISCARD UFlecsWorldSubsystem* GetFlecsWorldSubsystem() const;
 	FORCEINLINE NO_DISCARD FFlecsWorld& GetFlecsWorld() const;
@@ -73,6 +80,8 @@ public:
 
 	FORCEINLINE void Enable() const { GetEntity().enable(); }
 	FORCEINLINE void Disable() const { GetEntity().disable(); }
+
+	FORCEINLINE void Toggle() const { GetEntity().enable(!IsEnabled()); }
 
 	FORCEINLINE NO_DISCARD bool IsEnabled() const { return GetEntity().enabled(); }
 

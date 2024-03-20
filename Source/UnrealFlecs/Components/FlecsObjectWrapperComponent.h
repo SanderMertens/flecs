@@ -12,7 +12,5 @@ struct UNREALFLECS_API FFlecsObjectWrapperComponent
 	GENERATED_BODY()
 
 public:
-
-private:
 	
 }; // struct FFlecsObjectWrapperComponent
