@@ -46,10 +46,6 @@ The [Flecs playground](https://www.flecs.dev/explorer/?local=true&wasm=https://w
 To learn how to use the playground, check the [Flecs Script Tutorial](https://www.flecs.dev/flecs/md_docs_2FlecsScriptTutorial.html).
 
 
-The [Flecs C playground](https://godbolt.org/z/vYhfsddx4) lets you try Flecs by writing C code online!
-
-<div><iframe width="800px" height="1800px" src="https://godbolt.org/e#z:OYLghAFBqd5QCxAYwPYBMCmBRdBLAF1QCcAaPECAMzwBtMA7AQwFtMQByARg9KtQYEAysib0QXACx8BBAKoBnTAAUAHpwAMvAFYTStJg1AB9U8lJL6yAngGVG6AMKpaAVxYMQAJlIOAMngMmABy7gBGmMQgAJzSAA6oCoS2DM5uHt6kCUk2AgFBoSwRUbEWmFa5DEIETMQEae6ePpaY1inVtQT5IeGRMdIKNXUNGc1DXYE9RX2xAJQWqK7EyOwcAKReAMyByG5YANRrm44IBARxCiAA9FfETADuAHTAhAiuYa5Ky7KMBI9oLCuQkMWGIAFlIgRGAorlQrDCWExBpFYfDHggjtg1hoAIIbbYMXauA5HE5nC7XW4PZ6vd6fSJoQS/f6oQHAhigiF1aGo1oIpFQ4i85AKf6Y7F4rY7PaYQ7HTCqVqBfjo8W4/HS4my0mDfCoVWbLHqqWEmVyxy62h4MIGo143EEACecUwWCo%2B0GxFc1kOAHYAEIS/b7OGoJgEfaqUj7R1HQPq30AEX2ykSyQE0YAauVUMhCLHNvH7cWbvsAGIke61dD7LC7WqygEJIKCD2ofb3RuGfb0/aEEPEVkh1yEyoKfaoAgISL7KfdxGBCXYRxCYyOADyYOU6%2BC2GCABVjInl34cQAlbAQVM5FKzONLldrzfb3cHo8n8%2BX7O0XP5u%2BFiUJUGcM8GQfYADdUDwGskmAJRgHAiBAgjWDo1g5VUGMCMACoMOjSDoP2bDvWMAj0DvBMi2DYMqDhT4EAgXVFgIf8qOo2i3AUBjdUiYhWMApNANxMj9jiYhkKwpgwiQ1sajCCi8QDIN2JIGSIzwOVkw0OM%2B3NI5kzknSNkDLx/TwBTqMs0TxMEKgIA2LxLIc/iE0TIScREsSJN%2BfM1NnKToz5Yx7hIWh0Cwoi%2BUCkVjB8p0IswWY/TY4NkAQWoiLicMEGMT1NP2ILgEwAhjCoVxaFoLKpwgKKCpcnFLLSjLsKdF1coIYh8qC1rMHa4gapFaKFGMIqSp6gaFEC2Z6ssrzBEk6S5Jm6i5oIOyHPxDYAFYa228c1i2kytoUA7kwcwLoyqnLPWjHq%2BuW4MgsSUriEwTAIDuz0HoKmLnqoV73qu%2B771c9yRLBVBwPeoLCEiCLcJY5LlOvdMGEyrqYpocp0CQghoxRypoy4Zbv1/J0iPAjHhqxsLcazHM8ydaMvHq5T%2BE6vyNP0/ZtMLXTST7AgAFpMTQEcCB0vBjOMpK1iU3FZoOszTseVRDlM7nwKVqWtsTVWiMFkXDSwWgaiwvA2BBhqVu1lXHXVwNNmTLXDp1vX7eww3MRNs2bEtgCFZWmySrix0IA0aNCCN7BXrEYLQvQSPhcxOK8EwE7XdO77VvWrxHIhqH7K8LaqGjbaqDvLbHAYc7RNt3XVcu%2Bv3dYw5A7ltzQfVbucWAmwwJEpQ5w5eh%2BuQj08GAfCoJrCBsPSkfIlmNS0MnjD4enwjsPmITomxaIrODce4SYOCFLlot989b0UMnpg2gED0mCt3e2BYIei4ANgUJhowjieABemBUB2R/tNF%2BGhog/0eD/XKd8H5o25gvdAo8IFQKYDApgpUDBwXykIHExghAAEkADiRDghlnXH6RwIYcEnQDvaKBk9MAsDiE6D%2BGxv4YNgYiBQABrVmkC8DukYvAyooip7qy4X/cB3c96QJzkXLwsF76VGci/QSPdx4LgYH5WowBzD7Cap1bC%2BiXaBl1rLeW1tgy7yHsg0eEBiEkKENgEhmZV5wUwAhGREDiyWSCiFYgYV4Z8ipsYQIhBgrGH0QoCA%2BjDFmMETY/Yy5Vwbi3DuPch5jxlnIZeWqBNbxW0smkp8mTXw5OwHk3cE16Y/kZo6ZJTlA7BjKUIAAmkIfc2AwR1P2AXTA0ZsAinXAwOQcR0DhiGSmNMhN9ik0ac06ixiCrMEtodLa2ldYlOouPfufD6EpVoWGCM6AJYMOUsGBQogGC5y8NtXaxd3TbUkFA2unCDmTSkecwK6zEp%2BICTFUOCVwlBHuLFQQvlaqMFYAChhQLhofxhfjOZKQy4Bi4P/Lw2kkzfSCsiwaBV6lk0dBi/0XBmYd2%2BlckMJB9ic3yrzf0/NjizlAocoyGtTLmTbiki%2BtLEXGDEqgYAr0FBxNquc5Zh8OL0UYgQdAzEaWaP8dRV6BAlhoyCjQBgeAJqsyTBweYtBOBbV4J4DgWhSCoE4DQhQixljai2DwUgBBNDGvmHwiQGgI6mo4JIXgLAQC%2BmiI8AAHFtT%2Bn9w2%2BnDdEcNGh41cHDaQS11rbUcF4JcCO7qrXGtIHAWASAFStFcEQMgFB4nEDgsoQw5QhAIFQPcS1rqmx0BAgIOtQRaCNubem3g7bR4oGAFwTYPgh2RGCHCzgg7WRxDoJEdc5a%2B0to9b4RUyAcQ1suFmjdrRqj4FbRoHmjwuD7BxEVQQvB%2BCCBEGIdgUgZCCEUCodQ%2BbSC6EpQYIwIBTDGHMFaMIlxIDzFQGwlIu6hbEHQI6dZoFeCQ14tBdO8B5heihWwfcqAXAgYgPMB1SwVh6F1IEbtDam1ro/fcO4cROA8BNWai167M3YE3eW%2Blqhw2fyFp/SQ%2BwDFgTHY8RyEBHDDPwBW9Wmxia8DzVoaapBpxMFBJQRjAag3eA0GeyQmwZNeCxVwaIWLw1eE/mmljs6LAgFzR6xT/rNjMY/ZmuTdn5hQ2IEkOwkggA%3D%3D"></iframe></div>
-
 ## Documentation
 - [Quickstart](https://www.flecs.dev/flecs/md_docs_2Quickstart.html)
 - [FAQ](https://www.flecs.dev/flecs/md_docs_2FAQ.html)
@@ -71,26 +67,35 @@ void Move(ecs_iter_t *it) {
   Velocity *v = ecs_field(it, Velocity, 2);
 
   for (int i = 0; i < it->count; i++) {
-    p[i].x += v[i].x;
-    p[i].y += v[i].y;
+    p[i].x += v[i].x * it->delta_time;
+    p[i].y += v[i].y * it->delta_time;
+    printf("Move: %s: {%f, %f}\n",
+        ecs_get_name(it->world, it->entities[i]), 
+        p[i].x, p[i].y); 
   }
 }
 
 int main(int argc, char *argv[]) {
-  ecs_world_t *ecs = ecs_init();
+    ecs_world_t *ecs = ecs_init_for_godbolt(argc, argv);
 
-  ECS_COMPONENT(ecs, Position);
-  ECS_COMPONENT(ecs, Velocity);
+    ECS_COMPONENT(ecs, Position);
+    ECS_COMPONENT(ecs, Velocity);
 
-  ECS_SYSTEM(ecs, Move, EcsOnUpdate, Position, Velocity);
+    ECS_SYSTEM(ecs, Move, EcsOnUpdate, Position, Velocity);
 
-  ecs_entity_t e = ecs_new_id(ecs);
-  ecs_set(ecs, e, Position, {10, 20});
-  ecs_set(ecs, e, Velocity, {1, 2});
+    ecs_entity_t e = ecs_new_entity(ecs, "ent");
+    ecs_set(ecs, e, Position, {10, 20});
+    ecs_set(ecs, e, Velocity, {1, 2});
+    
+    for (int i = 0; i < 5; ++i) 
+    {
+        ecs_progress(ecs, 0);
+    }
 
-  while (ecs_progress(ecs, 0)) { }
+    return ecs_fini(ecs);
 }
 ```
+[Edit & run on godbolt.org](https://godbolt.org/z/5oonvncj9) 
 
 Same example in C++11:
 
