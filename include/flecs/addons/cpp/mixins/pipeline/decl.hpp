@@ -9,9 +9,9 @@ namespace flecs {
 
 /**
  * @defgroup cpp_pipelines Pipelines
- * @brief Pipelines order and schedule systems for execution.
- * 
- * \ingroup cpp_addons
+ * @ingroup cpp_addons
+ * Pipelines order and schedule systems for execution.
+ *
  * @{
  */
 

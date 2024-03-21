@@ -20,7 +20,6 @@ endif
 
 flecs_src = files(
     'src/addons/alerts.c',
-    'src/addons/coredoc.c',
     'src/addons/doc.c',
     'src/addons/expr/deserialize.c',
     'src/addons/expr/serialize.c',
@@ -31,10 +30,14 @@ flecs_src = files(
     'src/addons/journal.c',
     'src/addons/json/deserialize.c',
     'src/addons/json/serialize.c',
+    'src/addons/json/serialize_field_info.c',
+    'src/addons/json/serialize_iter_rows.c',
+    'src/addons/json/serialize_query_info.c',
     'src/addons/json/serialize_type_info.c',
     'src/addons/json/json.c',
     'src/addons/log.c',
     'src/addons/meta/api.c',
+    'src/addons/meta/definitions.c',
     'src/addons/meta/meta.c',
     'src/addons/meta/serialized.c',
     'src/addons/meta/cursor.c',
@@ -52,6 +55,9 @@ flecs_src = files(
     'src/addons/rules/compile.c',
     'src/addons/rules/engine.c',
     'src/addons/rules/trav_cache.c',
+    'src/addons/rules/trav_down_cache.c',
+    'src/addons/rules/trav_up_cache.c',
+    'src/addons/rules/trivial_iter.c',
     'src/addons/snapshot.c',
     'src/addons/stats.c',
     'src/addons/system/system.c',
@@ -111,14 +117,18 @@ flecs_dep = declare_dependency(
     include_directories : flecs_inc
 )
 
-helloworld_inc = include_directories('examples/c/hello_world/include')
+opt_helloworld = get_option('build_example').disable_auto_if(meson.is_subproject())
 
-helloworld_exe = executable('helloworld',
-    'examples/c/hello_world/src/main.c',
-    include_directories : helloworld_inc,
-    implicit_include_directories : false,
-    dependencies : flecs_dep
+if opt_helloworld.allowed()
+    helloworld_inc = include_directories('examples/c/hello_world/include')
+
+    helloworld_exe = executable('helloworld',
+        'examples/c/hello_world/src/main.c',
+        include_directories : helloworld_inc,
+        implicit_include_directories : false,
+        dependencies : flecs_dep
 )
+endif
 
 if meson.version().version_compare('>= 0.54.0')
     meson.override_dependency('flecs', flecs_dep)

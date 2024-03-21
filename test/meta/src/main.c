@@ -26,6 +26,7 @@ void PrimitiveTypes_float(void);
 void PrimitiveTypes_double(void);
 void PrimitiveTypes_string(void);
 void PrimitiveTypes_entity(void);
+void PrimitiveTypes_id(void);
 void PrimitiveTypes_builtin_bool(void);
 void PrimitiveTypes_builtin_byte(void);
 void PrimitiveTypes_builtin_char(void);
@@ -43,6 +44,7 @@ void PrimitiveTypes_builtin_float(void);
 void PrimitiveTypes_builtin_double(void);
 void PrimitiveTypes_builtin_string(void);
 void PrimitiveTypes_builtin_entity(void);
+void PrimitiveTypes_builtin_id(void);
 void PrimitiveTypes_struct_w_bool(void);
 void PrimitiveTypes_struct_w_byte(void);
 void PrimitiveTypes_struct_w_char(void);
@@ -60,6 +62,7 @@ void PrimitiveTypes_struct_w_float(void);
 void PrimitiveTypes_struct_w_double(void);
 void PrimitiveTypes_struct_w_string(void);
 void PrimitiveTypes_struct_w_entity(void);
+void PrimitiveTypes_struct_w_id(void);
 void PrimitiveTypes_primitive_init(void);
 void PrimitiveTypes_primitive_w_short_notation(void);
 
@@ -215,6 +218,7 @@ void Serialized_ops_float(void);
 void Serialized_ops_double(void);
 void Serialized_ops_string(void);
 void Serialized_ops_entity(void);
+void Serialized_ops_id(void);
 void Serialized_ops_struct_bool(void);
 void Serialized_ops_struct_bool_bool(void);
 void Serialized_ops_struct_i32(void);
@@ -257,6 +261,7 @@ void Serialized_ops_bitmask(void);
 void Serialized_ops_struct_w_bitmask(void);
 void Serialized_ops_enum(void);
 void Serialized_ops_struct_w_enum(void);
+void Serialized_ops_missing_metatype(void);
 
 // Testsuite 'Cursor'
 void Cursor_set_bool(void);
@@ -280,6 +285,9 @@ void Cursor_set_string_to_null(void);
 void Cursor_set_entity(void);
 void Cursor_set_entity_to_number(void);
 void Cursor_set_entity_to_0(void);
+void Cursor_set_id(void);
+void Cursor_set_id_to_number(void);
+void Cursor_set_id_to_0(void);
 void Cursor_set_enum(void);
 void Cursor_set_bitmask(void);
 void Cursor_set_signed_as_unsigned(void);
@@ -291,6 +299,9 @@ void Cursor_set_string_to_null_as_unsigned(void);
 void Cursor_set_entity_as_signed(void);
 void Cursor_set_entity_as_unsigned(void);
 void Cursor_set_entity_as_signed_out_of_range(void);
+void Cursor_set_id_as_signed(void);
+void Cursor_set_id_as_unsigned(void);
+void Cursor_set_id_as_signed_out_of_range(void);
 void Cursor_set_str_to_bool(void);
 void Cursor_set_str_to_char(void);
 void Cursor_set_str_literal_to_char(void);
@@ -298,11 +309,14 @@ void Cursor_set_str_to_i8(void);
 void Cursor_set_str_to_i16(void);
 void Cursor_set_str_to_i32(void);
 void Cursor_set_str_to_i64(void);
+void Cursor_set_str_to_u64(void);
 void Cursor_set_str_to_f32(void);
 void Cursor_set_str_to_f64(void);
 void Cursor_set_str_to_entity(void);
+void Cursor_set_str_to_id(void);
 void Cursor_set_str_to_invalid_bool(void);
 void Cursor_set_str_to_invalid_entity(void);
+void Cursor_set_str_to_invalid_id(void);
 void Cursor_struct_set_i32(void);
 void Cursor_struct_set_i32_i32(void);
 void Cursor_struct_set_i32_i32_i32(void);
@@ -336,6 +350,8 @@ void Cursor_struct_w_array_type_i32_i32(void);
 void Cursor_struct_w_array_type_struct(void);
 void Cursor_struct_w_2_array_type_i32_i32(void);
 void Cursor_struct_w_2_array_type_struct(void);
+void Cursor_array_i32_3(void);
+void Cursor_array_struct_3(void);
 void Cursor_array_move_primitive(void);
 void Cursor_array_move_struct(void);
 void Cursor_array_move_out_of_range(void);
@@ -346,6 +362,7 @@ void Cursor_opaque_set_uint(void);
 void Cursor_opaque_set_float(void);
 void Cursor_opaque_set_string(void);
 void Cursor_opaque_set_entity(void);
+void Cursor_opaque_set_id(void);
 void Cursor_opaque_set_int_vec(void);
 void Cursor_opaque_set_int_vec_empty(void);
 void Cursor_opaque_set_int_vec_resize_smaller(void);
@@ -404,6 +421,7 @@ void DeserializeFromExpr_negative_int(void);
 void DeserializeFromExpr_negative_float(void);
 void DeserializeFromExpr_string(void);
 void DeserializeFromExpr_entity(void);
+void DeserializeFromExpr_id(void);
 void DeserializeFromExpr_enum(void);
 void DeserializeFromExpr_bitmask(void);
 void DeserializeFromExpr_struct_enum(void);
@@ -412,6 +430,7 @@ void DeserializeFromExpr_struct_i32(void);
 void DeserializeFromExpr_struct_i32_neg(void);
 void DeserializeFromExpr_struct_i32_i32(void);
 void DeserializeFromExpr_struct_entity(void);
+void DeserializeFromExpr_struct_id(void);
 void DeserializeFromExpr_struct_nested_i32(void);
 void DeserializeFromExpr_struct_nested_i32_i32(void);
 void DeserializeFromExpr_struct_2_nested_i32_i32(void);
@@ -458,6 +477,8 @@ void SerializeToExpr_float(void);
 void SerializeToExpr_double(void);
 void SerializeToExpr_string(void);
 void SerializeToExpr_entity(void);
+void SerializeToExpr_entity_10k(void);
+void SerializeToExpr_id(void);
 void SerializeToExpr_enum(void);
 void SerializeToExpr_bitmask(void);
 void SerializeToExpr_float_nan(void);
@@ -469,6 +490,7 @@ void SerializeToExpr_struct_bitmask(void);
 void SerializeToExpr_struct_i32(void);
 void SerializeToExpr_struct_i32_i32(void);
 void SerializeToExpr_struct_entity(void);
+void SerializeToExpr_struct_id(void);
 void SerializeToExpr_array_i32_3(void);
 void SerializeToExpr_array_struct_i32_i32(void);
 void SerializeToExpr_array_array_i32_3(void);
@@ -515,6 +537,7 @@ void DeserializeFromJson_struct_negative_int(void);
 void DeserializeFromJson_struct_negative_float(void);
 void DeserializeFromJson_struct_string(void);
 void DeserializeFromJson_struct_entity(void);
+void DeserializeFromJson_struct_id(void);
 void DeserializeFromJson_struct_enum(void);
 void DeserializeFromJson_struct_bitmask(void);
 void DeserializeFromJson_struct_i32_i32(void);
@@ -576,6 +599,8 @@ void DeserializeFromJson_ser_deser_new_world_2_entities_w_anon_parent(void);
 void DeserializeFromJson_ser_deser_new_world_2_entities_w_named_parent(void);
 void DeserializeFromJson_ser_deser_new_world_2_entities_w_anon_parent_w_cycle(void);
 void DeserializeFromJson_ser_deser_new_world_2_entities_w_named_parent_w_cycle(void);
+void DeserializeFromJson_ser_deser_new_world_w_prefab(void);
+void DeserializeFromJson_ser_deser_new_world_w_disabled(void);
 void DeserializeFromJson_ser_deser_restore_1_entity_to_empty_table(void);
 void DeserializeFromJson_ser_deser_restore_1_entity_to_non_empty_table(void);
 void DeserializeFromJson_ser_deser_restore_1_anon_entity_to_empty_table(void);
@@ -597,6 +622,30 @@ void DeserializeFromJson_ser_deser_3_entities_after_remove_all(void);
 void DeserializeFromJson_ser_deser_3_entities_after_delete_with(void);
 void DeserializeFromJson_ser_deser_w_hooks(void);
 void DeserializeFromJson_ser_deser_large_data(void);
+void DeserializeFromJson_ser_deser_different_component_order(void);
+void DeserializeFromJson_ser_deser_no_reflection_data(void);
+void DeserializeFromJson_ser_deser_no_reflection_data_strict(void);
+void DeserializeFromJson_ser_deser_value_for_tag(void);
+void DeserializeFromJson_ser_deser_value_for_tag_strict(void);
+void DeserializeFromJson_ser_deser_value_for_non_existing(void);
+void DeserializeFromJson_ser_deser_value_for_non_existing_strict(void);
+void DeserializeFromJson_ser_deser_cpp_typename(void);
+void DeserializeFromJson_ser_deser_cpp_template(void);
+void DeserializeFromJson_ser_deser_cpp_template_1_param(void);
+void DeserializeFromJson_ser_deser_cpp_template_n_params(void);
+void DeserializeFromJson_ser_deser_cpp_template_nested(void);
+void DeserializeFromJson_ser_deser_cpp_template_n_params_nested(void);
+void DeserializeFromJson_ser_deser_long_name(void);
+void DeserializeFromJson_ser_deser_long_name_256_chars(void);
+void DeserializeFromJson_ser_deser_w_alerts(void);
+void DeserializeFromJson_ser_deser_w_alerts_w_progress(void);
+void DeserializeFromJson_ser_deser_struct(void);
+void DeserializeFromJson_ser_deser_anon_w_same_id_as_existing_named(void);
+void DeserializeFromJson_ser_deser_named_to_different_table(void);
+void DeserializeFromJson_ser_deser_named_child_to_different_table(void);
+void DeserializeFromJson_ser_deser_with_child_tgt(void);
+void DeserializeFromJson_ser_deser_with_child_tgt_no_child(void);
+void DeserializeFromJson_deser_invalid_entity_name(void);
 
 // Testsuite 'SerializeToJson'
 void SerializeToJson_struct_bool(void);
@@ -616,7 +665,9 @@ void SerializeToJson_struct_float(void);
 void SerializeToJson_struct_double(void);
 void SerializeToJson_struct_string(void);
 void SerializeToJson_struct_entity(void);
+void SerializeToJson_struct_entity_10k(void);
 void SerializeToJson_struct_entity_after_float(void);
+void SerializeToJson_struct_id(void);
 void SerializeToJson_struct_float_nan(void);
 void SerializeToJson_struct_float_inf(void);
 void SerializeToJson_struct_double_nan(void);
@@ -717,6 +768,7 @@ void SerializeIterToJson_serialize_type_info_w_unit(void);
 void SerializeIterToJson_serialize_type_info_w_unit_quantity(void);
 void SerializeIterToJson_serialize_type_info_w_unit_over(void);
 void SerializeIterToJson_serialize_w_entity_label(void);
+void SerializeIterToJson_serialize_w_entity_label_w_str(void);
 void SerializeIterToJson_serialize_w_var_labels(void);
 void SerializeIterToJson_serialize_w_var_component(void);
 void SerializeIterToJson_serialize_w_optional_tag(void);
@@ -732,8 +784,15 @@ void SerializeIterToJson_serialize_component_from_var(void);
 void SerializeIterToJson_serialize_color(void);
 void SerializeIterToJson_serialize_ids(void);
 void SerializeIterToJson_serialize_ids_2_entities(void);
+void SerializeIterToJson_serialize_anonymous(void);
+void SerializeIterToJson_serialize_anonymous_ids(void);
 void SerializeIterToJson_serialize_variable_ids(void);
 void SerializeIterToJson_serialize_variable_ids_2_entities(void);
+void SerializeIterToJson_serialize_variable_anonymous(void);
+void SerializeIterToJson_serialize_variable_anonymous_ids(void);
+void SerializeIterToJson_serialize_anonymous_tag(void);
+void SerializeIterToJson_serialize_anonymous_component(void);
+void SerializeIterToJson_serialize_anonymous_pair(void);
 void SerializeIterToJson_serialize_invalid_value(void);
 void SerializeIterToJson_serialize_recycled_pair_id(void);
 void SerializeIterToJson_serialize_w_alert(void);
@@ -753,9 +812,78 @@ void SerializeIterToJson_serialize_table_w_private(void);
 void SerializeIterToJson_serialize_world(void);
 void SerializeIterToJson_serialize_term_labels(void);
 void SerializeIterToJson_serialize_id_labels(void);
+void SerializeIterToJson_serialize_id_labels_w_str(void);
 void SerializeIterToJson_serialize_vars_for_query(void);
 void SerializeIterToJson_serialize_var_labels_for_query(void);
 void SerializeIterToJson_serialize_var_ids_for_query(void);
+void SerializeIterToJson_serialize_null_doc_name(void);
+void SerializeIterToJson_serialize_rule_w_optional(void);
+void SerializeIterToJson_serialize_rule_w_optional_component(void);
+void SerializeIterToJson_serialize_entity_w_flecs_core_parent(void);
+
+// Testsuite 'SerializeIterToRowJson'
+void SerializeIterToRowJson_serialize_this_w_1_tag(void);
+void SerializeIterToRowJson_serialize_this_w_1_tag_w_parent(void);
+void SerializeIterToRowJson_serialize_this_w_1_tag_no_name(void);
+void SerializeIterToRowJson_serialize_this_w_1_tag_doc_name(void);
+void SerializeIterToRowJson_serialize_this_w_2_tag(void);
+void SerializeIterToRowJson_serialize_this_w_1_component(void);
+void SerializeIterToRowJson_serialize_this_w_2_component(void);
+void SerializeIterToRowJson_serialize_this_w_2_component_1_shared(void);
+void SerializeIterToRowJson_serialize_this_w_1_pair(void);
+void SerializeIterToRowJson_serialize_this_w_2_pair(void);
+void SerializeIterToRowJson_serialize_this_w_1_pair_component(void);
+void SerializeIterToRowJson_serialize_this_w_1_var(void);
+void SerializeIterToRowJson_serialize_this_w_2_var(void);
+void SerializeIterToRowJson_serialize_this_w_2_var_doc_name(void);
+void SerializeIterToRowJson_serialize_this_w_1_tag_component_pair_var(void);
+void SerializeIterToRowJson_serialize_this_w_2_tag_component_pair_var(void);
+void SerializeIterToRowJson_serialize_var_w_1_tag(void);
+void SerializeIterToRowJson_serialize_var_w_1_component(void);
+void SerializeIterToRowJson_serialize_var_w_1_pair(void);
+void SerializeIterToRowJson_serialize_var_w_1_var(void);
+void SerializeIterToRowJson_serialize_var_w_2_component_1_shared(void);
+void SerializeIterToRowJson_serialize_var_w_1_tag_component_pair_var(void);
+void SerializeIterToRowJson_serialize_var_w_2_tag_component_pair_var(void);
+void SerializeIterToRowJson_serialize_fixed_w_1_tag(void);
+void SerializeIterToRowJson_serialize_fixed_w_1_component(void);
+void SerializeIterToRowJson_serialize_fixed_w_1_pair(void);
+void SerializeIterToRowJson_serialize_fixed_w_1_var(void);
+void SerializeIterToRowJson_serialize_fixed_w_2_component_1_shared(void);
+void SerializeIterToRowJson_serialize_fixed_w_1_tag_component_pair_var(void);
+void SerializeIterToRowJson_serialize_fixed_w_2_tag_component_pair_var(void);
+void SerializeIterToRowJson_serialize_not(void);
+void SerializeIterToRowJson_serialize_not_pair_wildcard(void);
+void SerializeIterToRowJson_serialize_not_pair_var(void);
+void SerializeIterToRowJson_serialize_not_pair_var_constrained(void);
+void SerializeIterToRowJson_serialize_optional(void);
+void SerializeIterToRowJson_serialize_optional_pair_wildcard(void);
+void SerializeIterToRowJson_serialize_optional_pair_var(void);
+void SerializeIterToRowJson_serialize_optional_pair_var_constrained(void);
+void SerializeIterToRowJson_serialize_or(void);
+void SerializeIterToRowJson_serialize_scope(void);
+void SerializeIterToRowJson_serialize_eq(void);
+void SerializeIterToRowJson_serialize_neq(void);
+void SerializeIterToRowJson_serialize_eq_m(void);
+void SerializeIterToRowJson_serialize_table(void);
+void SerializeIterToRowJson_serialize_table_w_eq(void);
+void SerializeIterToRowJson_serialize_table_w_neq(void);
+void SerializeIterToRowJson_serialize_table_w_2_pair_targets(void);
+void SerializeIterToRowJson_serialize_table_w_2_pair_targets_2_rel(void);
+void SerializeIterToRowJson_serialize_table_w_3_pair_targets(void);
+void SerializeIterToRowJson_serialize_table_w_3_pair_targets_2_rel(void);
+void SerializeIterToRowJson_serialize_everything(void);
+void SerializeIterToRowJson_serialize_everything_table(void);
+void SerializeIterToRowJson_serialize_everything_table_w_private(void);
+void SerializeIterToRowJson_serialize_w_type_info(void);
+void SerializeIterToRowJson_serialize_w_field_info(void);
+void SerializeIterToRowJson_serialize_w_field_info_pair_w_0_target(void);
+void SerializeIterToRowJson_serialize_w_field_info_pair_w_not_tag(void);
+void SerializeIterToRowJson_serialize_w_field_info_pair_w_not_pair(void);
+void SerializeIterToRowJson_serialize_w_field_info_pair_w_not_component(void);
+void SerializeIterToRowJson_serialize_w_field_info_w_or(void);
+void SerializeIterToRowJson_serialize_recycled_id(void);
+void SerializeIterToRowJson_serialize_entity_w_flecs_core_parent(void);
 
 // Testsuite 'SerializeTypeInfoToJson'
 void SerializeTypeInfoToJson_bool(void);
@@ -775,6 +903,7 @@ void SerializeTypeInfoToJson_float(void);
 void SerializeTypeInfoToJson_double(void);
 void SerializeTypeInfoToJson_string(void);
 void SerializeTypeInfoToJson_entity(void);
+void SerializeTypeInfoToJson_id(void);
 void SerializeTypeInfoToJson_enum(void);
 void SerializeTypeInfoToJson_bitmask(void);
 void SerializeTypeInfoToJson_struct(void);
@@ -797,6 +926,27 @@ void SerializeTypeInfoToJson_struct_nested(void);
 void SerializeTypeInfoToJson_struct_nested_2_lvls(void);
 void SerializeTypeInfoToJson_struct_nested_2_members(void);
 void SerializeTypeInfoToJson_struct_nested_3_members(void);
+
+// Testsuite 'SerializeQueryInfoToJson'
+void SerializeQueryInfoToJson_1_tag(void);
+void SerializeQueryInfoToJson_1_component(void);
+void SerializeQueryInfoToJson_1_pair(void);
+void SerializeQueryInfoToJson_1_pair_w_wildcard(void);
+void SerializeQueryInfoToJson_1_pair_w_any(void);
+void SerializeQueryInfoToJson_1_tag_fixed_src(void);
+void SerializeQueryInfoToJson_1_tag_var_src(void);
+void SerializeQueryInfoToJson_1_component_in(void);
+void SerializeQueryInfoToJson_1_component_inout(void);
+void SerializeQueryInfoToJson_1_component_out(void);
+void SerializeQueryInfoToJson_1_component_none(void);
+void SerializeQueryInfoToJson_1_tag_not(void);
+void SerializeQueryInfoToJson_2_tags_or(void);
+void SerializeQueryInfoToJson_1_tag_optional(void);
+void SerializeQueryInfoToJson_1_tag_self(void);
+void SerializeQueryInfoToJson_1_tag_self_dont_inherit(void);
+void SerializeQueryInfoToJson_1_tag_up(void);
+void SerializeQueryInfoToJson_1_tag_cascade(void);
+void SerializeQueryInfoToJson_0_term(void);
 
 // Testsuite 'MetaUtils'
 void MetaUtils_struct_w_2_i32(void);
@@ -947,6 +1097,7 @@ void DeserExprOperators_var_chain_func(void);
 void DeserExprOperators_interpolate_string_w_i32_var(void);
 void DeserExprOperators_interpolate_string_w_string_var(void);
 void DeserExprOperators_interpolate_string_w_entity_var(void);
+void DeserExprOperators_interpolate_string_w_id_var(void);
 void DeserExprOperators_interpolate_string_w_var_not_found(void);
 void DeserExprOperators_interpolate_string_w_entity_var_0(void);
 void DeserExprOperators_interpolate_string_w_var_special_chars(void);
@@ -984,6 +1135,48 @@ void OpaqueTypes_deser_entity_from_json(void);
 void OpaqueTypes_ser_deser_world_w_ser_opaque(void);
 void OpaqueTypes_ser_deser_entity(void);
 void OpaqueTypes_ser_deser_0_entity(void);
+
+// Testsuite 'Misc'
+void Misc_primitive_from_stage(void);
+void Misc_enum_from_stage(void);
+void Misc_bitmask_from_stage(void);
+void Misc_struct_from_stage(void);
+void Misc_array_from_stage(void);
+void Misc_vector_from_stage(void);
+void Misc_opaque_from_stage(void);
+void Misc_unit_from_stage(void);
+void Misc_unit_prefix_from_stage(void);
+void Misc_quantity_from_stage(void);
+void Misc_primitive_from_defer(void);
+void Misc_enum_from_defer(void);
+void Misc_bitmask_from_defer(void);
+void Misc_array_from_defer(void);
+void Misc_vector_from_defer(void);
+void Misc_struct_from_defer(void);
+void Misc_opaque_from_defer(void);
+void Misc_unit_from_defer(void);
+void Misc_unit_prefix_from_defer(void);
+void Misc_quantity_from_defer(void);
+void Misc_primitive_from_readonly(void);
+void Misc_enum_from_readonly(void);
+void Misc_bitmask_from_readonly(void);
+void Misc_array_from_readonly(void);
+void Misc_vector_from_readonly(void);
+void Misc_struct_from_readonly(void);
+void Misc_opaque_from_readonly(void);
+void Misc_unit_from_readonly(void);
+void Misc_unit_prefix_from_readonly(void);
+void Misc_quantity_from_readonly(void);
+void Misc_primitive_from_suspend_defer(void);
+void Misc_enum_from_suspend_defer(void);
+void Misc_bitmask_from_suspend_defer(void);
+void Misc_array_from_suspend_defer(void);
+void Misc_vector_from_suspend_defer(void);
+void Misc_struct_from_suspend_defer(void);
+void Misc_opaque_from_suspend_defer(void);
+void Misc_unit_from_suspend_defer(void);
+void Misc_unit_prefix_from_suspend_defer(void);
+void Misc_quantity_from_suspend_defer(void);
 
 bake_test_case PrimitiveTypes_testcases[] = {
     {
@@ -1055,6 +1248,10 @@ bake_test_case PrimitiveTypes_testcases[] = {
         PrimitiveTypes_entity
     },
     {
+        "id",
+        PrimitiveTypes_id
+    },
+    {
         "builtin_bool",
         PrimitiveTypes_builtin_bool
     },
@@ -1123,6 +1320,10 @@ bake_test_case PrimitiveTypes_testcases[] = {
         PrimitiveTypes_builtin_entity
     },
     {
+        "builtin_id",
+        PrimitiveTypes_builtin_id
+    },
+    {
         "struct_w_bool",
         PrimitiveTypes_struct_w_bool
     },
@@ -1189,6 +1390,10 @@ bake_test_case PrimitiveTypes_testcases[] = {
     {
         "struct_w_entity",
         PrimitiveTypes_struct_w_entity
+    },
+    {
+        "struct_w_id",
+        PrimitiveTypes_struct_w_id
     },
     {
         "primitive_init",
@@ -1771,6 +1976,10 @@ bake_test_case Serialized_testcases[] = {
         Serialized_ops_entity
     },
     {
+        "ops_id",
+        Serialized_ops_id
+    },
+    {
         "ops_struct_bool",
         Serialized_ops_struct_bool
     },
@@ -1937,6 +2146,10 @@ bake_test_case Serialized_testcases[] = {
     {
         "ops_struct_w_enum",
         Serialized_ops_struct_w_enum
+    },
+    {
+        "ops_missing_metatype",
+        Serialized_ops_missing_metatype
     }
 };
 
@@ -2026,6 +2239,18 @@ bake_test_case Cursor_testcases[] = {
         Cursor_set_entity_to_0
     },
     {
+        "set_id",
+        Cursor_set_id
+    },
+    {
+        "set_id_to_number",
+        Cursor_set_id_to_number
+    },
+    {
+        "set_id_to_0",
+        Cursor_set_id_to_0
+    },
+    {
         "set_enum",
         Cursor_set_enum
     },
@@ -2070,6 +2295,18 @@ bake_test_case Cursor_testcases[] = {
         Cursor_set_entity_as_signed_out_of_range
     },
     {
+        "set_id_as_signed",
+        Cursor_set_id_as_signed
+    },
+    {
+        "set_id_as_unsigned",
+        Cursor_set_id_as_unsigned
+    },
+    {
+        "set_id_as_signed_out_of_range",
+        Cursor_set_id_as_signed_out_of_range
+    },
+    {
         "set_str_to_bool",
         Cursor_set_str_to_bool
     },
@@ -2098,6 +2335,10 @@ bake_test_case Cursor_testcases[] = {
         Cursor_set_str_to_i64
     },
     {
+        "set_str_to_u64",
+        Cursor_set_str_to_u64
+    },
+    {
         "set_str_to_f32",
         Cursor_set_str_to_f32
     },
@@ -2110,12 +2351,20 @@ bake_test_case Cursor_testcases[] = {
         Cursor_set_str_to_entity
     },
     {
+        "set_str_to_id",
+        Cursor_set_str_to_id
+    },
+    {
         "set_str_to_invalid_bool",
         Cursor_set_str_to_invalid_bool
     },
     {
         "set_str_to_invalid_entity",
         Cursor_set_str_to_invalid_entity
+    },
+    {
+        "set_str_to_invalid_id",
+        Cursor_set_str_to_invalid_id
     },
     {
         "struct_set_i32",
@@ -2250,6 +2499,14 @@ bake_test_case Cursor_testcases[] = {
         Cursor_struct_w_2_array_type_struct
     },
     {
+        "array_i32_3",
+        Cursor_array_i32_3
+    },
+    {
+        "array_struct_3",
+        Cursor_array_struct_3
+    },
+    {
         "array_move_primitive",
         Cursor_array_move_primitive
     },
@@ -2288,6 +2545,10 @@ bake_test_case Cursor_testcases[] = {
     {
         "opaque_set_entity",
         Cursor_opaque_set_entity
+    },
+    {
+        "opaque_set_id",
+        Cursor_opaque_set_id
     },
     {
         "opaque_set_int_vec",
@@ -2517,6 +2778,10 @@ bake_test_case DeserializeFromExpr_testcases[] = {
         DeserializeFromExpr_entity
     },
     {
+        "id",
+        DeserializeFromExpr_id
+    },
+    {
         "enum",
         DeserializeFromExpr_enum
     },
@@ -2547,6 +2812,10 @@ bake_test_case DeserializeFromExpr_testcases[] = {
     {
         "struct_entity",
         DeserializeFromExpr_struct_entity
+    },
+    {
+        "struct_id",
+        DeserializeFromExpr_struct_id
     },
     {
         "struct_nested_i32",
@@ -2728,6 +2997,14 @@ bake_test_case SerializeToExpr_testcases[] = {
         SerializeToExpr_entity
     },
     {
+        "entity_10k",
+        SerializeToExpr_entity_10k
+    },
+    {
+        "id",
+        SerializeToExpr_id
+    },
+    {
         "enum",
         SerializeToExpr_enum
     },
@@ -2770,6 +3047,10 @@ bake_test_case SerializeToExpr_testcases[] = {
     {
         "struct_entity",
         SerializeToExpr_struct_entity
+    },
+    {
+        "struct_id",
+        SerializeToExpr_struct_id
     },
     {
         "array_i32_3",
@@ -2949,6 +3230,10 @@ bake_test_case DeserializeFromJson_testcases[] = {
     {
         "struct_entity",
         DeserializeFromJson_struct_entity
+    },
+    {
+        "struct_id",
+        DeserializeFromJson_struct_id
     },
     {
         "struct_enum",
@@ -3195,6 +3480,14 @@ bake_test_case DeserializeFromJson_testcases[] = {
         DeserializeFromJson_ser_deser_new_world_2_entities_w_named_parent_w_cycle
     },
     {
+        "ser_deser_new_world_w_prefab",
+        DeserializeFromJson_ser_deser_new_world_w_prefab
+    },
+    {
+        "ser_deser_new_world_w_disabled",
+        DeserializeFromJson_ser_deser_new_world_w_disabled
+    },
+    {
         "ser_deser_restore_1_entity_to_empty_table",
         DeserializeFromJson_ser_deser_restore_1_entity_to_empty_table
     },
@@ -3277,6 +3570,102 @@ bake_test_case DeserializeFromJson_testcases[] = {
     {
         "ser_deser_large_data",
         DeserializeFromJson_ser_deser_large_data
+    },
+    {
+        "ser_deser_different_component_order",
+        DeserializeFromJson_ser_deser_different_component_order
+    },
+    {
+        "ser_deser_no_reflection_data",
+        DeserializeFromJson_ser_deser_no_reflection_data
+    },
+    {
+        "ser_deser_no_reflection_data_strict",
+        DeserializeFromJson_ser_deser_no_reflection_data_strict
+    },
+    {
+        "ser_deser_value_for_tag",
+        DeserializeFromJson_ser_deser_value_for_tag
+    },
+    {
+        "ser_deser_value_for_tag_strict",
+        DeserializeFromJson_ser_deser_value_for_tag_strict
+    },
+    {
+        "ser_deser_value_for_non_existing",
+        DeserializeFromJson_ser_deser_value_for_non_existing
+    },
+    {
+        "ser_deser_value_for_non_existing_strict",
+        DeserializeFromJson_ser_deser_value_for_non_existing_strict
+    },
+    {
+        "ser_deser_cpp_typename",
+        DeserializeFromJson_ser_deser_cpp_typename
+    },
+    {
+        "ser_deser_cpp_template",
+        DeserializeFromJson_ser_deser_cpp_template
+    },
+    {
+        "ser_deser_cpp_template_1_param",
+        DeserializeFromJson_ser_deser_cpp_template_1_param
+    },
+    {
+        "ser_deser_cpp_template_n_params",
+        DeserializeFromJson_ser_deser_cpp_template_n_params
+    },
+    {
+        "ser_deser_cpp_template_nested",
+        DeserializeFromJson_ser_deser_cpp_template_nested
+    },
+    {
+        "ser_deser_cpp_template_n_params_nested",
+        DeserializeFromJson_ser_deser_cpp_template_n_params_nested
+    },
+    {
+        "ser_deser_long_name",
+        DeserializeFromJson_ser_deser_long_name
+    },
+    {
+        "ser_deser_long_name_256_chars",
+        DeserializeFromJson_ser_deser_long_name_256_chars
+    },
+    {
+        "ser_deser_w_alerts",
+        DeserializeFromJson_ser_deser_w_alerts
+    },
+    {
+        "ser_deser_w_alerts_w_progress",
+        DeserializeFromJson_ser_deser_w_alerts_w_progress
+    },
+    {
+        "ser_deser_struct",
+        DeserializeFromJson_ser_deser_struct
+    },
+    {
+        "ser_deser_anon_w_same_id_as_existing_named",
+        DeserializeFromJson_ser_deser_anon_w_same_id_as_existing_named
+    },
+    {
+        "ser_deser_named_to_different_table",
+        DeserializeFromJson_ser_deser_named_to_different_table
+    },
+    {
+        "ser_deser_named_child_to_different_table",
+        DeserializeFromJson_ser_deser_named_child_to_different_table
+    },
+    {
+        "ser_deser_with_child_tgt",
+        DeserializeFromJson_ser_deser_with_child_tgt
+    },
+    {
+        "ser_deser_with_child_tgt_no_child",
+        DeserializeFromJson_ser_deser_with_child_tgt_no_child
+    },
+    {
+        "deser_invalid_entity_name",
+        DeserializeFromJson_deser_invalid_entity_name
     }
 };
 
@@ -3350,8 +3739,16 @@ bake_test_case SerializeToJson_testcases[] = {
         SerializeToJson_struct_entity
     },
     {
+        "struct_entity_10k",
+        SerializeToJson_struct_entity_10k
+    },
+    {
         "struct_entity_after_float",
         SerializeToJson_struct_entity_after_float
+    },
+    {
+        "struct_id",
+        SerializeToJson_struct_id
     },
     {
         "struct_float_nan",
@@ -3744,6 +4141,10 @@ bake_test_case SerializeIterToJson_testcases[] = {
         SerializeIterToJson_serialize_w_entity_label
     },
     {
+        "serialize_w_entity_label_w_str",
+        SerializeIterToJson_serialize_w_entity_label_w_str
+    },
+    {
         "serialize_w_var_labels",
         SerializeIterToJson_serialize_w_var_labels
     },
@@ -3804,12 +4205,40 @@ bake_test_case SerializeIterToJson_testcases[] = {
         SerializeIterToJson_serialize_ids_2_entities
     },
     {
+        "serialize_anonymous",
+        SerializeIterToJson_serialize_anonymous
+    },
+    {
+        "serialize_anonymous_ids",
+        SerializeIterToJson_serialize_anonymous_ids
+    },
+    {
         "serialize_variable_ids",
         SerializeIterToJson_serialize_variable_ids
     },
     {
         "serialize_variable_ids_2_entities",
         SerializeIterToJson_serialize_variable_ids_2_entities
+    },
+    {
+        "serialize_variable_anonymous",
+        SerializeIterToJson_serialize_variable_anonymous
+    },
+    {
+        "serialize_variable_anonymous_ids",
+        SerializeIterToJson_serialize_variable_anonymous_ids
+    },
+    {
+        "serialize_anonymous_tag",
+        SerializeIterToJson_serialize_anonymous_tag
+    },
+    {
+        "serialize_anonymous_component",
+        SerializeIterToJson_serialize_anonymous_component
+    },
+    {
+        "serialize_anonymous_pair",
+        SerializeIterToJson_serialize_anonymous_pair
     },
     {
         "serialize_invalid_value",
@@ -3888,6 +4317,10 @@ bake_test_case SerializeIterToJson_testcases[] = {
         SerializeIterToJson_serialize_id_labels
     },
     {
+        "serialize_id_labels_w_str",
+        SerializeIterToJson_serialize_id_labels_w_str
+    },
+    {
         "serialize_vars_for_query",
         SerializeIterToJson_serialize_vars_for_query
     },
@@ -3898,6 +4331,273 @@ bake_test_case SerializeIterToJson_testcases[] = {
     {
         "serialize_var_ids_for_query",
         SerializeIterToJson_serialize_var_ids_for_query
+    },
+    {
+        "serialize_null_doc_name",
+        SerializeIterToJson_serialize_null_doc_name
+    },
+    {
+        "serialize_rule_w_optional",
+        SerializeIterToJson_serialize_rule_w_optional
+    },
+    {
+        "serialize_rule_w_optional_component",
+        SerializeIterToJson_serialize_rule_w_optional_component
+    },
+    {
+        "serialize_entity_w_flecs_core_parent",
+        SerializeIterToJson_serialize_entity_w_flecs_core_parent
+    }
+};
+
+bake_test_case SerializeIterToRowJson_testcases[] = {
+    {
+        "serialize_this_w_1_tag",
+        SerializeIterToRowJson_serialize_this_w_1_tag
+    },
+    {
+        "serialize_this_w_1_tag_w_parent",
+        SerializeIterToRowJson_serialize_this_w_1_tag_w_parent
+    },
+    {
+        "serialize_this_w_1_tag_no_name",
+        SerializeIterToRowJson_serialize_this_w_1_tag_no_name
+    },
+    {
+        "serialize_this_w_1_tag_doc_name",
+        SerializeIterToRowJson_serialize_this_w_1_tag_doc_name
+    },
+    {
+        "serialize_this_w_2_tag",
+        SerializeIterToRowJson_serialize_this_w_2_tag
+    },
+    {
+        "serialize_this_w_1_component",
+        SerializeIterToRowJson_serialize_this_w_1_component
+    },
+    {
+        "serialize_this_w_2_component",
+        SerializeIterToRowJson_serialize_this_w_2_component
+    },
+    {
+        "serialize_this_w_2_component_1_shared",
+        SerializeIterToRowJson_serialize_this_w_2_component_1_shared
+    },
+    {
+        "serialize_this_w_1_pair",
+        SerializeIterToRowJson_serialize_this_w_1_pair
+    },
+    {
+        "serialize_this_w_2_pair",
+        SerializeIterToRowJson_serialize_this_w_2_pair
+    },
+    {
+        "serialize_this_w_1_pair_component",
+        SerializeIterToRowJson_serialize_this_w_1_pair_component
+    },
+    {
+        "serialize_this_w_1_var",
+        SerializeIterToRowJson_serialize_this_w_1_var
+    },
+    {
+        "serialize_this_w_2_var",
+        SerializeIterToRowJson_serialize_this_w_2_var
+    },
+    {
+        "serialize_this_w_2_var_doc_name",
+        SerializeIterToRowJson_serialize_this_w_2_var_doc_name
+    },
+    {
+        "serialize_this_w_1_tag_component_pair_var",
+        SerializeIterToRowJson_serialize_this_w_1_tag_component_pair_var
+    },
+    {
+        "serialize_this_w_2_tag_component_pair_var",
+        SerializeIterToRowJson_serialize_this_w_2_tag_component_pair_var
+    },
+    {
+        "serialize_var_w_1_tag",
+        SerializeIterToRowJson_serialize_var_w_1_tag
+    },
+    {
+        "serialize_var_w_1_component",
+        SerializeIterToRowJson_serialize_var_w_1_component
+    },
+    {
+        "serialize_var_w_1_pair",
+        SerializeIterToRowJson_serialize_var_w_1_pair
+    },
+    {
+        "serialize_var_w_1_var",
+        SerializeIterToRowJson_serialize_var_w_1_var
+    },
+    {
+        "serialize_var_w_2_component_1_shared",
+        SerializeIterToRowJson_serialize_var_w_2_component_1_shared
+    },
+    {
+        "serialize_var_w_1_tag_component_pair_var",
+        SerializeIterToRowJson_serialize_var_w_1_tag_component_pair_var
+    },
+    {
+        "serialize_var_w_2_tag_component_pair_var",
+        SerializeIterToRowJson_serialize_var_w_2_tag_component_pair_var
+    },
+    {
+        "serialize_fixed_w_1_tag",
+        SerializeIterToRowJson_serialize_fixed_w_1_tag
+    },
+    {
+        "serialize_fixed_w_1_component",
+        SerializeIterToRowJson_serialize_fixed_w_1_component
+    },
+    {
+        "serialize_fixed_w_1_pair",
+        SerializeIterToRowJson_serialize_fixed_w_1_pair
+    },
+    {
+        "serialize_fixed_w_1_var",
+        SerializeIterToRowJson_serialize_fixed_w_1_var
+    },
+    {
+        "serialize_fixed_w_2_component_1_shared",
+        SerializeIterToRowJson_serialize_fixed_w_2_component_1_shared
+    },
+    {
+        "serialize_fixed_w_1_tag_component_pair_var",
+        SerializeIterToRowJson_serialize_fixed_w_1_tag_component_pair_var
+    },
+    {
+        "serialize_fixed_w_2_tag_component_pair_var",
+        SerializeIterToRowJson_serialize_fixed_w_2_tag_component_pair_var
+    },
+    {
+        "serialize_not",
+        SerializeIterToRowJson_serialize_not
+    },
+    {
+        "serialize_not_pair_wildcard",
+        SerializeIterToRowJson_serialize_not_pair_wildcard
+    },
+    {
+        "serialize_not_pair_var",
+        SerializeIterToRowJson_serialize_not_pair_var
+    },
+    {
+        "serialize_not_pair_var_constrained",
+        SerializeIterToRowJson_serialize_not_pair_var_constrained
+    },
+    {
+        "serialize_optional",
+        SerializeIterToRowJson_serialize_optional
+    },
+    {
+        "serialize_optional_pair_wildcard",
+        SerializeIterToRowJson_serialize_optional_pair_wildcard
+    },
+    {
+        "serialize_optional_pair_var",
+        SerializeIterToRowJson_serialize_optional_pair_var
+    },
+    {
+        "serialize_optional_pair_var_constrained",
+        SerializeIterToRowJson_serialize_optional_pair_var_constrained
+    },
+    {
+        "serialize_or",
+        SerializeIterToRowJson_serialize_or
+    },
+    {
+        "serialize_scope",
+        SerializeIterToRowJson_serialize_scope
+    },
+    {
+        "serialize_eq",
+        SerializeIterToRowJson_serialize_eq
+    },
+    {
+        "serialize_neq",
+        SerializeIterToRowJson_serialize_neq
+    },
+    {
+        "serialize_eq_m",
+        SerializeIterToRowJson_serialize_eq_m
+    },
+    {
+        "serialize_table",
+        SerializeIterToRowJson_serialize_table
+    },
+    {
+        "serialize_table_w_eq",
+        SerializeIterToRowJson_serialize_table_w_eq
+    },
+    {
+        "serialize_table_w_neq",
+        SerializeIterToRowJson_serialize_table_w_neq
+    },
+    {
+        "serialize_table_w_2_pair_targets",
+        SerializeIterToRowJson_serialize_table_w_2_pair_targets
+    },
+    {
+        "serialize_table_w_2_pair_targets_2_rel",
+        SerializeIterToRowJson_serialize_table_w_2_pair_targets_2_rel
+    },
+    {
+        "serialize_table_w_3_pair_targets",
+        SerializeIterToRowJson_serialize_table_w_3_pair_targets
+    },
+    {
+        "serialize_table_w_3_pair_targets_2_rel",
+        SerializeIterToRowJson_serialize_table_w_3_pair_targets_2_rel
+    },
+    {
+        "serialize_everything",
+        SerializeIterToRowJson_serialize_everything
+    },
+    {
+        "serialize_everything_table",
+        SerializeIterToRowJson_serialize_everything_table
+    },
+    {
+        "serialize_everything_table_w_private",
+        SerializeIterToRowJson_serialize_everything_table_w_private
+    },
+    {
+        "serialize_w_type_info",
+        SerializeIterToRowJson_serialize_w_type_info
+    },
+    {
+        "serialize_w_field_info",
+        SerializeIterToRowJson_serialize_w_field_info
+    },
+    {
+        "serialize_w_field_info_pair_w_0_target",
+        SerializeIterToRowJson_serialize_w_field_info_pair_w_0_target
+    },
+    {
+        "serialize_w_field_info_pair_w_not_tag",
+        SerializeIterToRowJson_serialize_w_field_info_pair_w_not_tag
+    },
+    {
+        "serialize_w_field_info_pair_w_not_pair",
+        SerializeIterToRowJson_serialize_w_field_info_pair_w_not_pair
+    },
+    {
+        "serialize_w_field_info_pair_w_not_component",
+        SerializeIterToRowJson_serialize_w_field_info_pair_w_not_component
+    },
+    {
+        "serialize_w_field_info_w_or",
+        SerializeIterToRowJson_serialize_w_field_info_w_or
+    },
+    {
+        "serialize_recycled_id",
+        SerializeIterToRowJson_serialize_recycled_id
+    },
+    {
+        "serialize_entity_w_flecs_core_parent",
+        SerializeIterToRowJson_serialize_entity_w_flecs_core_parent
     }
 };
 
@@ -3969,6 +4669,10 @@ bake_test_case SerializeTypeInfoToJson_testcases[] = {
     {
         "entity",
         SerializeTypeInfoToJson_entity
+    },
+    {
+        "id",
+        SerializeTypeInfoToJson_id
     },
     {
         "enum",
@@ -4057,6 +4761,85 @@ bake_test_case SerializeTypeInfoToJson_testcases[] = {
     {
         "struct_nested_3_members",
         SerializeTypeInfoToJson_struct_nested_3_members
+    }
+};
+
+bake_test_case SerializeQueryInfoToJson_testcases[] = {
+    {
+        "1_tag",
+        SerializeQueryInfoToJson_1_tag
+    },
+    {
+        "1_component",
+        SerializeQueryInfoToJson_1_component
+    },
+    {
+        "1_pair",
+        SerializeQueryInfoToJson_1_pair
+    },
+    {
+        "1_pair_w_wildcard",
+        SerializeQueryInfoToJson_1_pair_w_wildcard
+    },
+    {
+        "1_pair_w_any",
+        SerializeQueryInfoToJson_1_pair_w_any
+    },
+    {
+        "1_tag_fixed_src",
+        SerializeQueryInfoToJson_1_tag_fixed_src
+    },
+    {
+        "1_tag_var_src",
+        SerializeQueryInfoToJson_1_tag_var_src
+    },
+    {
+        "1_component_in",
+        SerializeQueryInfoToJson_1_component_in
+    },
+    {
+        "1_component_inout",
+        SerializeQueryInfoToJson_1_component_inout
+    },
+    {
+        "1_component_out",
+        SerializeQueryInfoToJson_1_component_out
+    },
+    {
+        "1_component_none",
+        SerializeQueryInfoToJson_1_component_none
+    },
+    {
+        "1_tag_not",
+        SerializeQueryInfoToJson_1_tag_not
+    },
+    {
+        "2_tags_or",
+        SerializeQueryInfoToJson_2_tags_or
+    },
+    {
+        "1_tag_optional",
+        SerializeQueryInfoToJson_1_tag_optional
+    },
+    {
+        "1_tag_self",
+        SerializeQueryInfoToJson_1_tag_self
+    },
+    {
+        "1_tag_self_dont_inherit",
+        SerializeQueryInfoToJson_1_tag_self_dont_inherit
+    },
+    {
+        "1_tag_up",
+        SerializeQueryInfoToJson_1_tag_up
+    },
+    {
+        "1_tag_cascade",
+        SerializeQueryInfoToJson_1_tag_cascade
+    },
+    {
+        "0_term",
+        SerializeQueryInfoToJson_0_term
     }
 };
 
@@ -4644,6 +5427,10 @@ bake_test_case DeserExprOperators_testcases[] = {
         DeserExprOperators_interpolate_string_w_entity_var
     },
     {
+        "interpolate_string_w_id_var",
+        DeserExprOperators_interpolate_string_w_id_var
+    },
+    {
         "interpolate_string_w_var_not_found",
         DeserExprOperators_interpolate_string_w_var_not_found
     },
@@ -4788,12 +5575,176 @@ bake_test_case OpaqueTypes_testcases[] = {
     }
 };
 
+bake_test_case Misc_testcases[] = {
+    {
+        "primitive_from_stage",
+        Misc_primitive_from_stage
+    },
+    {
+        "enum_from_stage",
+        Misc_enum_from_stage
+    },
+    {
+        "bitmask_from_stage",
+        Misc_bitmask_from_stage
+    },
+    {
+        "struct_from_stage",
+        Misc_struct_from_stage
+    },
+    {
+        "array_from_stage",
+        Misc_array_from_stage
+    },
+    {
+        "vector_from_stage",
+        Misc_vector_from_stage
+    },
+    {
+        "opaque_from_stage",
+        Misc_opaque_from_stage
+    },
+    {
+        "unit_from_stage",
+        Misc_unit_from_stage
+    },
+    {
+        "unit_prefix_from_stage",
+        Misc_unit_prefix_from_stage
+    },
+    {
+        "quantity_from_stage",
+        Misc_quantity_from_stage
+    },
+    {
+        "primitive_from_defer",
+        Misc_primitive_from_defer
+    },
+    {
+        "enum_from_defer",
+        Misc_enum_from_defer
+    },
+    {
+        "bitmask_from_defer",
+        Misc_bitmask_from_defer
+    },
+    {
+        "array_from_defer",
+        Misc_array_from_defer
+    },
+    {
+        "vector_from_defer",
+        Misc_vector_from_defer
+    },
+    {
+        "struct_from_defer",
+        Misc_struct_from_defer
+    },
+    {
+        "opaque_from_defer",
+        Misc_opaque_from_defer
+    },
+    {
+        "unit_from_defer",
+        Misc_unit_from_defer
+    },
+    {
+        "unit_prefix_from_defer",
+        Misc_unit_prefix_from_defer
+    },
+    {
+        "quantity_from_defer",
+        Misc_quantity_from_defer
+    },
+    {
+        "primitive_from_readonly",
+        Misc_primitive_from_readonly
+    },
+    {
+        "enum_from_readonly",
+        Misc_enum_from_readonly
+    },
+    {
+        "bitmask_from_readonly",
+        Misc_bitmask_from_readonly
+    },
+    {
+        "array_from_readonly",
+        Misc_array_from_readonly
+    },
+    {
+        "vector_from_readonly",
+        Misc_vector_from_readonly
+    },
+    {
+        "struct_from_readonly",
+        Misc_struct_from_readonly
+    },
+    {
+        "opaque_from_readonly",
+        Misc_opaque_from_readonly
+    },
+    {
+        "unit_from_readonly",
+        Misc_unit_from_readonly
+    },
+    {
+        "unit_prefix_from_readonly",
+        Misc_unit_prefix_from_readonly
+    },
+    {
+        "quantity_from_readonly",
+        Misc_quantity_from_readonly
+    },
+    {
+        "primitive_from_suspend_defer",
+        Misc_primitive_from_suspend_defer
+    },
+    {
+        "enum_from_suspend_defer",
+        Misc_enum_from_suspend_defer
+    },
+    {
+        "bitmask_from_suspend_defer",
+        Misc_bitmask_from_suspend_defer
+    },
+    {
+        "array_from_suspend_defer",
+        Misc_array_from_suspend_defer
+    },
+    {
+        "vector_from_suspend_defer",
+        Misc_vector_from_suspend_defer
+    },
+    {
+        "struct_from_suspend_defer",
+        Misc_struct_from_suspend_defer
+    },
+    {
+        "opaque_from_suspend_defer",
+        Misc_opaque_from_suspend_defer
+    },
+    {
+        "unit_from_suspend_defer",
+        Misc_unit_from_suspend_defer
+    },
+    {
+        "unit_prefix_from_suspend_defer",
+        Misc_unit_prefix_from_suspend_defer
+    },
+    {
+        "quantity_from_suspend_defer",
+        Misc_quantity_from_suspend_defer
+    }
+};
+
+
 static bake_test_suite suites[] = {
     {
         "PrimitiveTypes",
         NULL,
         NULL,
-        53,
+        56,
         PrimitiveTypes_testcases
     },
     {
@@ -4849,42 +5800,42 @@ static bake_test_suite suites[] = {
         "Serialized",
         NULL,
         NULL,
-        60,
+        62,
         Serialized_testcases
     },
     {
         "Cursor",
         NULL,
         NULL,
-        123,
+        135,
         Cursor_testcases
     },
     {
         "DeserializeFromExpr",
         NULL,
         NULL,
-        55,
+        57,
         DeserializeFromExpr_testcases
     },
     {
         "SerializeToExpr",
         NULL,
         NULL,
-        52,
+        55,
         SerializeToExpr_testcases
     },
     {
         "DeserializeFromJson",
         NULL,
         NULL,
-        102,
+        129,
         DeserializeFromJson_testcases
     },
     {
         "SerializeToJson",
         NULL,
         NULL,
-        42,
+        44,
         SerializeToJson_testcases
     },
     {
@@ -4898,15 +5849,29 @@ static bake_test_suite suites[] = {
         "SerializeIterToJson",
         NULL,
         NULL,
-        60,
+        73,
         SerializeIterToJson_testcases
+    },
+    {
+        "SerializeIterToRowJson",
+        NULL,
+        NULL,
+        62,
+        SerializeIterToRowJson_testcases
     },
     {
         "SerializeTypeInfoToJson",
         NULL,
         NULL,
-        39,
+        40,
         SerializeTypeInfoToJson_testcases
+    },
+    {
+        "SerializeQueryInfoToJson",
+        NULL,
+        NULL,
+        19,
+        SerializeQueryInfoToJson_testcases
     },
     {
         "MetaUtils",
@@ -4926,7 +5891,7 @@ static bake_test_suite suites[] = {
         "DeserExprOperators",
         NULL,
         NULL,
-        125,
+        126,
         DeserExprOperators_testcases
     },
     {
@@ -4935,9 +5900,16 @@ static bake_test_suite suites[] = {
         NULL,
         17,
         OpaqueTypes_testcases
+    },
+    {
+        "Misc",
+        NULL,
+        NULL,
+        40,
+        Misc_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("meta", argc, argv, suites, 21);
+    return bake_test_run("meta", argc, argv, suites, 24);
 }

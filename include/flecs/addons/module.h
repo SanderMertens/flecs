@@ -2,7 +2,7 @@
  * @file addons/module.h
  * @brief Module addon.
  *
- * The module addon allows for creating and importing modules. Flecs modules 
+ * The module addon allows for creating and importing modules. Flecs modules
  * enable applications to organize components and systems into reusable units of
  * code that can easily be across projects.
  */
@@ -11,9 +11,9 @@
 
 /**
  * @defgroup c_addons_module Module
- * @brief Modules organize components, systems and more in reusable units of code.
- * 
- * \ingroup c_addons
+ * @ingroup c_addons
+ * Modules organize components, systems and more in reusable units of code.
+ *
  * @{
  */
 
@@ -31,9 +31,9 @@ extern "C" {
  * will be translated from PascalCase to an entity path (pascal.case) before the
  * lookup occurs.
  *
- * Module contents will be stored as children of the module entity. This 
+ * Module contents will be stored as children of the module entity. This
  * prevents modules from accidentally defining conflicting identifiers. This is
- * enforced by setting the scope before and after loading the module to the 
+ * enforced by setting the scope before and after loading the module to the
  * module entity id.
  *
  * A more convenient way to import a module is by using the ECS_IMPORT macro.
@@ -49,7 +49,7 @@ ecs_entity_t ecs_import(
     ecs_module_action_t module,
     const char *module_name);
 
-/** Same as ecs_import, but with name to scope conversion.
+/** Same as ecs_import(), but with name to scope conversion.
  * PascalCase names are automatically converted to scoped names.
  *
  * @param world The world.
@@ -64,7 +64,7 @@ ecs_entity_t ecs_import_c(
     const char *module_name_c);
 
 /** Import a module from a library.
- * Similar to ecs_import, except that this operation will attempt to load the
+ * Similar to ecs_import(), except that this operation will attempt to load the
  * module from a dynamic library.
  *
  * A library may contain multiple modules, which is why both a library name and
@@ -107,11 +107,13 @@ ecs_entity_t ecs_module_init(
     ecs_entity_t ecs_id(id) = 0; ECS_MODULE_DEFINE(world, id)\
     (void)ecs_id(id)
 
-/** Wrapper around ecs_import.
+/** Wrapper around ecs_import().
  * This macro provides a convenient way to load a module with the world. It can
  * be used like this:
  *
+ * @code
  * ECS_IMPORT(world, FlecsSystemsPhysics);
+ * @endcode
  */
 #define ECS_IMPORT(world, id) ecs_import_c(world, id##Import, #id)
 

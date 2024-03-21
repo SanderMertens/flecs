@@ -210,7 +210,7 @@ void Get_component_get_childof_component(void) {
     ecs_get(world, ecs_pair(EcsChildOf, ecs_id(Position)), EcsComponent);
 }
 
-void Get_component_get_mut_equal_get(void) {
+void Get_component_ensure_equal_get(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -219,7 +219,7 @@ void Get_component_get_mut_equal_get(void) {
     ECS_ENTITY(world, e, Position);
     test_assert(e != 0);
 
-    test_assert(ecs_get_mut(world, e, Position) == ecs_get(world, e,
+    test_assert(ecs_ensure(world, e, Position) == ecs_get(world, e,
                 Position));
 
     ecs_fini(world);

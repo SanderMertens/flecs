@@ -1,0 +1,14 @@
+{
+    "id": "int_time_type",
+    "type": "application",
+    "value": {
+        "public": false,
+        "use": [
+            "flecs"
+        ],
+        "standalone": true
+    },
+    "lang.c": {
+        "defines": ["ecs_ftime_t=int32_t"]
+    }
+}

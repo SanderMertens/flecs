@@ -10,9 +10,9 @@ namespace doc {
 
 /**
  * @defgroup cpp_addons_doc Doc
- * @brief Utilities for documenting entities, components and systems.
- * 
- * \ingroup cpp_addons
+ * @ingroup cpp_addons
+ * Utilities for documenting entities, components and systems.
+ *
  * @{
  */
 
@@ -31,7 +31,9 @@ static const flecs::entity_t Link = EcsDocLink;
 /** flecs.doc.Color component */
 static const flecs::entity_t Color = EcsDocColor;
 
+/** @private */
 namespace _ {
+/** @private */
 void init(flecs::world& world);
 }
 

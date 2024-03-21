@@ -1,6 +1,6 @@
 /**
  * @file misc.c
- * @brief Miscallaneous functions.
+ * @brief Miscellaneous functions.
  */
 
 #include "private_api.h"
@@ -127,6 +127,12 @@ int flecs_entity_compare(
     return (e1 > e2) - (e1 < e2);
 }
 
+int flecs_id_qsort_cmp(const void *a, const void *b) {
+    ecs_id_t id_a = *(const ecs_id_t*)a;
+    ecs_id_t id_b = *(const ecs_id_t*)b;
+    return (id_a > id_b) - (id_a < id_b);
+}
+
 uint64_t flecs_string_hash(
     const void *ptr)
 {
@@ -205,4 +211,47 @@ char* flecs_to_snake_case(const char *str) {
     out_ptr[0] = '\0';
 
     return out;
+}
+
+char* flecs_load_from_file(
+    const char *filename)
+{
+    FILE* file;
+    char* content = NULL;
+    int32_t bytes;
+    size_t size;
+
+    /* Open file for reading */
+    ecs_os_fopen(&file, filename, "r");
+    if (!file) {
+        ecs_err("%s (%s)", ecs_os_strerror(errno), filename);
+        goto error;
+    }
+
+    /* Determine file size */
+    fseek(file, 0, SEEK_END);
+    bytes = (int32_t)ftell(file);
+    if (bytes == -1) {
+        goto error;
+    }
+    fseek(file, 0, SEEK_SET);
+
+    /* Load contents in memory */
+    content = ecs_os_malloc(bytes + 1);
+    size = (size_t)bytes;
+    if (!(size = fread(content, 1, size, file)) && bytes) {
+        ecs_err("%s: read zero bytes instead of %d", filename, size);
+        ecs_os_free(content);
+        content = NULL;
+        goto error;
+    } else {
+        content[size] = '\0';
+    }
+
+    fclose(file);
+
+    return content;
+error:
+    ecs_os_free(content);
+    return NULL;
 }

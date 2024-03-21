@@ -18,7 +18,7 @@ int main(int argc, char *argv[]) {
     ECS_META_COMPONENT(ecs, Line);
 
     ecs_entity_t ent = ecs_new_id(ecs);
-    Line *ptr = ecs_get_mut(ecs, ent, Line);
+    Line *ptr = ecs_ensure(ecs, ent, Line);
 
     ecs_meta_cursor_t cur = ecs_meta_cursor(ecs, ecs_id(Line), ptr);
     ecs_meta_push(&cur);            // {

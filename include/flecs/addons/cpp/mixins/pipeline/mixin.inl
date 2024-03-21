@@ -4,8 +4,10 @@
  */
 
 /**
- * \memberof flecs::world
- * \ingroup cpp_pipelines
+ * @memberof flecs::world
+ * @ingroup cpp_pipelines
+ *
+ * @{
  */
 
 /** Create a new pipeline.

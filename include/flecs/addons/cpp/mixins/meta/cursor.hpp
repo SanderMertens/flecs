@@ -9,15 +9,15 @@ namespace flecs {
 
 /**
  * @defgroup cpp_addons_meta Meta
- * @brief Flecs reflection framework.
- * 
- * \ingroup cpp_addons
+ * @ingroup cpp_addons
+ * Flecs reflection framework.
+ *
  * @{
  */
 
 /** Class for reading/writing dynamic values.
- * 
- * \ingroup cpp_addons_meta
+ *
+ * @ingroup cpp_addons_meta
  */
 struct cursor {
     cursor(flecs::world_t *world, flecs::entity_t type_id, void *ptr) {
@@ -108,6 +108,11 @@ struct cursor {
     /** Set entity value */
     int set_entity(flecs::entity_t value) {
         return ecs_meta_set_entity(&m_cursor, value);
+    }
+
+    /** Set (component) id value */
+    int set_id(flecs::id_t value) {
+        return ecs_meta_set_id(&m_cursor, value);
     }
 
     /** Set null value */

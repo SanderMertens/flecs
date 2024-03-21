@@ -2,7 +2,7 @@
 
 [![Version](https://img.shields.io/github/v/release/sandermertens/flecs?include_prereleases&style=for-the-badge)](https://github.com/SanderMertens/flecs/releases)
 [![MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=for-the-badge)](https://github.com/SanderMertens/flecs/blob/master/LICENSE)
-[![Documentation](https://img.shields.io/badge/docs-flecs-blue?style=for-the-badge&color=blue)](https://www.flecs.dev/flecs/md_docs_Docs.html)
+[![Documentation](https://img.shields.io/badge/docs-flecs-blue?style=for-the-badge&color=blue)](https://www.flecs.dev/flecs/md_docs_2Docs.html)
 [![actions](https://img.shields.io/github/actions/workflow/status/SanderMertens/flecs/ci.yml?branch=master&style=for-the-badge)](https://github.com/SanderMertens/flecs/actions?query=workflow%3ACI)
 [![Discord Chat](https://img.shields.io/discord/633826290415435777.svg?style=for-the-badge&color=%235a64f6)](https://discord.gg/BEzP5Rgrrp)
 
@@ -10,8 +10,8 @@ Flecs is a fast and lightweight Entity Component System that lets you build game
 
 - Fast and [portable](#language-bindings) zero dependency [C99 API](https://www.flecs.dev/flecs/group__c.html)
 - Modern type-safe [C++11 API](https://www.flecs.dev/flecs/group__cpp.html) that doesn't use STL containers
-- First open source ECS with full support for [Entity Relationships](https://www.flecs.dev/flecs/md_docs_Relationships.html)!
-- Fast native support for [hierarchies](https://www.flecs.dev/flecs/md_docs_Relationships.html#autotoc_md277) and [prefabs](https://www.flecs.dev/flecs/md_docs_Relationships.html#autotoc_md305)
+- First open source ECS with full support for [Entity Relationships](https://www.flecs.dev/flecs/md_docs_2Relationships.html)!
+- Fast native support for [hierarchies](https://www.flecs.dev/flecs/md_docs_2Relationships.html#the-childof-relationship) and [prefabs](https://www.flecs.dev/flecs/md_docs_2Relationships.html#the-isa-relationship)
 - Code base that builds in less than 5 seconds
 - Runs [in the browser](https://flecs.dev/city) without modifications with emscripten
 - Cache friendly [archetype/SoA storage](https://ajmmertens.medium.com/building-an-ecs-2-archetypes-and-vectorization-fe21690805f9) that can process millions of entities every frame
@@ -43,13 +43,13 @@ The [Flecs playground](https://www.flecs.dev/explorer/?local=true&wasm=https://w
 
 [![Flecs playground](docs/img/playground.png)](https://www.flecs.dev/explorer/?local=true&wasm=https://www.flecs.dev/explorer/playground.js)
 
-To learn how to use the playground, check the [Flecs Script Tutorial](https://www.flecs.dev/flecs/md_docs_FlecsScriptTutorial.html).
+To learn how to use the playground, check the [Flecs Script Tutorial](https://www.flecs.dev/flecs/md_docs_2FlecsScriptTutorial.html).
 
 ## Documentation
-- [Quickstart](https://www.flecs.dev/flecs/md_docs_Quickstart.html)
-- [FAQ](https://www.flecs.dev/flecs/md_docs_FAQ.html)
+- [Quickstart](https://www.flecs.dev/flecs/md_docs_2Quickstart.html)
+- [FAQ](https://www.flecs.dev/flecs/md_docs_2FAQ.html)
 - [Examples](https://github.com/SanderMertens/flecs/tree/master/examples)
-- [All Documentation](https://www.flecs.dev/flecs/md_docs_Docs.html)
+- [All Documentation](https://www.flecs.dev/flecs/md_docs_2Docs.html)
 
 ## Performance
 For a list of regularly tracked benchmarks, see the [ECS Benchmark](https://github.com/SanderMertens/ecs_benchmark) project.
@@ -120,39 +120,41 @@ int main(int argc, char *argv[]) {
 ## Projects using Flecs
 If you have a project you'd like to share, let me know on [Discord](https://discord.gg/BEzP5Rgrrp)!
 
-### Tempest Rising
-https://store.steampowered.com/app/1486920/Tempest_Rising/
+### [Hytale](https://hytale.com/)
+[![Hytale](docs/img/projects/hytale.png)](https://hytale.com/)
+
+> We knew that we wanted to build Hytale around an Entity-Component-System (ECS). When we analyzed the options, FLECS rose to the top. FLECS provides the backbone of the Hytale Game Engine. Its flexibility has allowed us to build highly varied gameplay while supporting our vision for empowering Creators.
+
+-- Dann Webster, Hypixel studios
+
+### [Tempest Rising](https://store.steampowered.com/app/1486920/Tempest_Rising/)
 [![Tempest Rising](docs/img/projects/tempest_rising.png)](https://store.steampowered.com/app/1486920/Tempest_Rising/)
 
-### Territory Control
-https://store.steampowered.com/app/690290/Territory_Control_2/
+### [Territory Control](https://store.steampowered.com/app/690290/Territory_Control_2/)
 [![image](docs/img/projects/territory_control.jpeg)](https://store.steampowered.com/app/690290/Territory_Control_2/)
 
-### The Forge
-https://github.com/ConfettiFX/The-Forge
+### [The Forge](https://github.com/ConfettiFX/The-Forge)
 [![image](docs/img/projects/the_forge.jpg)](https://github.com/ConfettiFX/The-Forge)
 
-### Sol Survivor
-https://nicok.itch.io/sol-survivor-demo
+### [Extermination Shock](https://store.steampowered.com/app/2510820/Extermination_Shock/)
+[![image](docs/img/projects/extermination_shock.jpeg)](https://store.steampowered.com/app/2510820/Extermination_Shock/)
+
+### [Sol Survivor](https://nicok.itch.io/sol-survivor-demo)
 [![image](docs/img/projects/sol_survivor.png)](https://nicok.itch.io/sol-survivor-demo)
 
-### Equilibrium Engine
-https://github.com/clibequilibrium/EquilibriumEngine
+### [Equilibrium Engine](https://github.com/clibequilibrium/EquilibriumEngine)
 [![image](docs/img/projects/equilibrium_engine.png)](https://github.com/clibequilibrium/EquilibriumEngine)
 
-### Gravitas
-https://thepunkcollective.itch.io/gravitas
+### [Gravitas](https://thepunkcollective.itch.io/gravitas)
 [![image](docs/img/projects/gravitas.png)](https://thepunkcollective.itch.io/gravitas)
 
-### After Sun
-https://github.com/foxnne/aftersun
+### [After Sun](https://github.com/foxnne/aftersun)
 [![image](docs/img/projects/after_sun.png)](https://github.com/foxnne/aftersun)
 
-### Tower defense (open source demo)
+### Flecs Demo's
 https://www.flecs.dev/tower_defense/etc ([repository](https://github.com/SanderMertens/tower_defense))
 ![image](docs/img/projects/tower_defense.png)
 
-### Procedural City (open source demo)
 https://www.flecs.dev/city ([repository](https://github.com/flecs-hub/city))
 ![image](docs/img/projects/city.png)
 
@@ -162,10 +164,8 @@ https://www.flecs.dev/city ([repository](https://github.com/flecs-hub/city))
 - [Unreal Minimum Viable Flecs Project](https://github.com/PreyK/Unreal-Minimum-Viable-Flecs)
 - [Bgfx/Imgui module](https://github.com/flecs-hub/flecs-systems-bgfx/tree/bgfx_imgui)
 - [Tower defense example](https://gist.github.com/oldmanauz/b4ced44737bf9d248233538fa06a989e)
-- [Flecs + UE4 is magic](https://jtferson.github.io/blog/flecs_and_unreal/)
-- [Quickstart with Flecs in UE4](https://jtferson.github.io/blog/quickstart_with_flecs_in_unreal_part_1/) 
-- [Automatic component registration in UE4](https://jtferson.github.io/blog/automatic_flecs_component_registration_in_unreal/)
-- [Building a space battle with Flecs in UE4](https://twitter.com/ajmmertens/status/1361070033334456320) 
+- [Unreal + Flecs example](https://github.com/PreyK/Unreal-Minimum-Viable-Flecs)
+- [Building a space battle with Flecs in UE4](https://twitter.com/ajmmertens/status/1361070033334456320)
 - [Flecs + SDL + Web ASM example](https://github.com/HeatXD/flecs_web_demo) ([live demo](https://heatxd.github.io/flecs_web_demo/))
 - [Flecs + Raylib example](https://github.com/Lexxicon/FlecsRaylib)
 - [Flecs + gunslinger example](https://github.com/MrFrenik/gs_examples/blob/main/ex_demos/flecs/source/main.c)
@@ -180,7 +180,7 @@ https://www.flecs.dev/city ([repository](https://github.com/flecs-hub/city))
 ## Flecs Hub
 [Flecs Hub](https://github.com/flecs-hub) is a collection of repositories that show how Flecs can be used to build game systems like input handling, hierarchical transforms and rendering.
 
-Module      | Description      
+Module      | Description
 ------------|------------------
 [flecs.components.cglm](https://github.com/flecs-hub/flecs-components-cglm) | Component registration for cglm (math) types
 [flecs.components.input](https://github.com/flecs-hub/flecs-components-input) | Components that describe keyboard and mouse input
@@ -199,11 +199,10 @@ The following language bindings have been developed with Flecs! Note that these 
 - C#:
   - [flecs-hub/flecs-cs](https://github.com/flecs-hub/flecs-cs)
   - [BeanCheeseBurrito/Flecs.NET](https://github.com/BeanCheeseBurrito/Flecs.NET)
-  - [copygirl/gaemstone.ECS](https://git.mcft.net/copygirl/gaemstone.ECS)
 - Rust:
   - [flecs-rs](https://github.com/jazzay/flecs-rs)
   - [flecs-polyglot](https://github.com/flecs-hub/flecs-polyglot)
-- Zig: 
+- Zig:
   - [michal-z/zig-gamedev](https://github.com/michal-z/zig-gamedev/tree/main/libs/zflecs)
   - [foxnne/zig-flecs](https://github.com/foxnne/zig-flecs)
   - [prime31/zig-flecs](https://github.com/prime31/zig-flecs)

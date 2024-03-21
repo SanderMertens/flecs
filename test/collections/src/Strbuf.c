@@ -1,11 +1,11 @@
 #include <collections.h>
 #include <math.h>
 
-void Strbuf_setup() {
+void Strbuf_setup(void) {
     ecs_os_set_api_defaults();
 }
 
-void Strbuf_append() {
+void Strbuf_append(void) {
     ecs_strbuf_t b = ECS_STRBUF_INIT;
     ecs_strbuf_append(&b, "Foo");
     ecs_strbuf_append(&b, "Bar %d", 10);
@@ -15,7 +15,7 @@ void Strbuf_append() {
     ecs_os_free(str);
 }
 
-void Strbuf_appendstr() {
+void Strbuf_appendstr(void) {
     ecs_strbuf_t b = ECS_STRBUF_INIT;
     ecs_strbuf_appendstr(&b, "Foo");
     ecs_strbuf_appendstr(&b, "Bar");
@@ -25,7 +25,7 @@ void Strbuf_appendstr() {
     ecs_os_free(str);
 }
 
-void Strbuf_appendstrn() {
+void Strbuf_appendstrn(void) {
     ecs_strbuf_t b = ECS_STRBUF_INIT;
     ecs_strbuf_append(&b, "Foo");
     ecs_strbuf_appendstrn(&b, "Bar", 1);
@@ -35,7 +35,7 @@ void Strbuf_appendstrn() {
     ecs_os_free(str);
 }
 
-void Strbuf_appendstr_null() {
+void Strbuf_appendstr_null(void) {
     install_test_abort();
     ecs_strbuf_t b = ECS_STRBUF_INIT;
     ecs_strbuf_append(&b, "Foo");
@@ -43,7 +43,7 @@ void Strbuf_appendstr_null() {
     ecs_strbuf_appendstr(&b, NULL);
 }
 
-void Strbuf_append_list() {
+void Strbuf_append_list(void) {
     ecs_strbuf_t b = ECS_STRBUF_INIT;
     ecs_strbuf_append(&b, "Foo");
     ecs_strbuf_list_push(&b, "{", ",");
@@ -56,7 +56,7 @@ void Strbuf_append_list() {
     ecs_os_free(str);
 }
 
-void Strbuf_append_nested_list() {
+void Strbuf_append_nested_list(void) {
     ecs_strbuf_t b = ECS_STRBUF_INIT;
     ecs_strbuf_append(&b, "Foo");
     ecs_strbuf_list_push(&b, "{", ",");
@@ -81,7 +81,7 @@ void Strbuf_append_nested_list() {
     ecs_os_free(str);
 }
 
-void Strbuf_large_str() {
+void Strbuf_large_str(void) {
     ecs_strbuf_t b = ECS_STRBUF_INIT;
     ecs_strbuf_append(&b, "Foo");
 
@@ -100,42 +100,13 @@ void Strbuf_large_str() {
     ecs_os_free(str);
 }
 
-void Strbuf_empty_str() {
+void Strbuf_empty_str(void) {
     ecs_strbuf_t b = ECS_STRBUF_INIT;
     char *str = ecs_strbuf_get(&b);
     test_assert(str == NULL);
 }
 
-void Strbuf_append_zerocopy() {
-    ecs_strbuf_t b = ECS_STRBUF_INIT;
-    ecs_strbuf_appendstr(&b, "Foo");
-    ecs_strbuf_appendstr_zerocpy(&b, ecs_os_strdup("Bar"));
-    char *str = ecs_strbuf_get(&b);
-    test_assert(str != NULL);
-    test_str(str, "FooBar");
-    ecs_os_free(str);
-}
-
-void Strbuf_append_zerocopy_const() {
-    ecs_strbuf_t b = ECS_STRBUF_INIT;
-    ecs_strbuf_appendstr(&b, "Foo");
-    ecs_strbuf_appendstr_zerocpy_const(&b, "Bar");
-    char *str = ecs_strbuf_get(&b);
-    test_assert(str != NULL);
-    test_str(str, "FooBar");
-    ecs_os_free(str);
-}
-
-void Strbuf_append_zerocopy_only() {
-    ecs_strbuf_t b = ECS_STRBUF_INIT;
-    ecs_strbuf_appendstr_zerocpy(&b, ecs_os_strdup("Bar"));
-    char *str = ecs_strbuf_get(&b);
-    test_assert(str != NULL);
-    test_str(str, "Bar");
-    ecs_os_free(str);
-}
-
-void Strbuf_reset() {
+void Strbuf_reset(void) {
     ecs_strbuf_t b = ECS_STRBUF_INIT;
     ecs_strbuf_appendstr(&b, "Foo");
     ecs_strbuf_appendstr(&b, "Bar");
@@ -144,7 +115,7 @@ void Strbuf_reset() {
     test_assert(str == NULL);
 }
 
-void Strbuf_merge() {
+void Strbuf_merge(void) {
     ecs_strbuf_t b1 = ECS_STRBUF_INIT;
     ecs_strbuf_appendstr(&b1, "Foo");
     ecs_strbuf_appendstr(&b1, "Bar");
@@ -162,21 +133,23 @@ void Strbuf_merge() {
     test_assert(str == NULL);
 }
 
-void Strbuf_app_buffer() {
-    char buf[256];
-    ecs_strbuf_t b = ECS_STRBUF_INIT;
-    b.buf = buf;
-    b.max = 256;
-    ecs_strbuf_appendstr(&b, "Foo");
-    ecs_strbuf_appendstr(&b, "Bar");
+void Strbuf_merge_empty(void) {
+    ecs_strbuf_t b1 = ECS_STRBUF_INIT;
+    ecs_strbuf_appendstr(&b1, "Foo");
+    ecs_strbuf_appendstr(&b1, "Bar");
 
-    char *str = ecs_strbuf_get(&b);
-    test_assert(str != NULL);
+    ecs_strbuf_t b2 = ECS_STRBUF_INIT;
+    ecs_strbuf_mergebuff(&b1, &b2);
+
+    char *str = ecs_strbuf_get(&b1);
     test_str(str, "FooBar");
     ecs_os_free(str);
+
+    str = ecs_strbuf_get(&b2);
+    test_assert(str == NULL);
 }
 
-void Strbuf_append_char() {
+void Strbuf_append_char(void) {
     ecs_strbuf_t b = ECS_STRBUF_INIT;
     ecs_strbuf_appendch(&b, 'a');
     ecs_strbuf_appendch(&b, 'b');
@@ -188,7 +161,7 @@ void Strbuf_append_char() {
     ecs_os_free(str);
 }
 
-void Strbuf_append_511_chars() {
+void Strbuf_append_511_chars(void) {
     ecs_strbuf_t b = ECS_STRBUF_INIT;
 
     for (int i = 0; i < 511; i ++) {
@@ -203,7 +176,7 @@ void Strbuf_append_511_chars() {
     ecs_os_free(str);
 }
 
-void Strbuf_append_512_chars() {
+void Strbuf_append_512_chars(void) {
     ecs_strbuf_t b = ECS_STRBUF_INIT;
 
     for (int i = 0; i < 512; i ++) {
@@ -218,7 +191,7 @@ void Strbuf_append_512_chars() {
     ecs_os_free(str);
 }
 
-void Strbuf_append_513_chars() {
+void Strbuf_append_513_chars(void) {
     ecs_strbuf_t b = ECS_STRBUF_INIT;
 
     for (int i = 0; i < 513; i ++) {
@@ -233,7 +206,259 @@ void Strbuf_append_513_chars() {
     ecs_os_free(str);
 }
 
-void Strbuf_append_flt() {
+void Strbuf_append_1023_chars(void) {
+    ecs_strbuf_t b = ECS_STRBUF_INIT;
+
+    for (int i = 0; i < 1023; i ++) {
+        ecs_strbuf_appendch(&b, 'a' + (i % 26));
+    }
+
+    char *str = ecs_strbuf_get(&b);
+    test_assert(str != NULL);
+    for (int i = 0; i < 1023; i ++) {
+        test_assert(str[i] == ('a' + i % 26));
+    }
+    ecs_os_free(str);
+}
+
+void Strbuf_append_1024_chars(void) {
+    ecs_strbuf_t b = ECS_STRBUF_INIT;
+
+    for (int i = 0; i < 1024; i ++) {
+        ecs_strbuf_appendch(&b, 'a' + (i % 26));
+    }
+
+    char *str = ecs_strbuf_get(&b);
+    test_assert(str != NULL);
+    for (int i = 0; i < 1024; i ++) {
+        test_assert(str[i] == ('a' + i % 26));
+    }
+    ecs_os_free(str);
+}
+
+void Strbuf_append_1025_chars(void) {
+    ecs_strbuf_t b = ECS_STRBUF_INIT;
+
+    for (int i = 0; i < 1025; i ++) {
+        ecs_strbuf_appendch(&b, 'a' + (i % 26));
+    }
+
+    char *str = ecs_strbuf_get(&b);
+    test_assert(str != NULL);
+    for (int i = 0; i < 1025; i ++) {
+        test_assert(str[i] == ('a' + i % 26));
+    }
+    ecs_os_free(str);
+}
+
+void Strbuf_append_2047_chars(void) {
+    ecs_strbuf_t b = ECS_STRBUF_INIT;
+
+    for (int i = 0; i < 2047; i ++) {
+        ecs_strbuf_appendch(&b, 'a' + (i % 26));
+    }
+
+    char *str = ecs_strbuf_get(&b);
+    test_assert(str != NULL);
+    for (int i = 0; i < 2047; i ++) {
+        test_assert(str[i] == ('a' + i % 26));
+    }
+    ecs_os_free(str);
+}
+
+void Strbuf_append_2048_chars(void) {
+    ecs_strbuf_t b = ECS_STRBUF_INIT;
+
+    for (int i = 0; i < 2048; i ++) {
+        ecs_strbuf_appendch(&b, 'a' + (i % 26));
+    }
+
+    char *str = ecs_strbuf_get(&b);
+    test_assert(str != NULL);
+    for (int i = 0; i < 2048; i ++) {
+        test_assert(str[i] == ('a' + i % 26));
+    }
+    ecs_os_free(str);
+}
+
+void Strbuf_append_2049_chars(void) {
+    ecs_strbuf_t b = ECS_STRBUF_INIT;
+
+    for (int i = 0; i < 2049; i ++) {
+        ecs_strbuf_appendch(&b, 'a' + (i % 26));
+    }
+
+    char *str = ecs_strbuf_get(&b);
+    test_assert(str != NULL);
+    for (int i = 0; i < 2049; i ++) {
+        test_assert(str[i] == ('a' + i % 26));
+    }
+    ecs_os_free(str);
+}
+
+void Strbuf_append_511_str(void) {
+    ecs_strbuf_t b = ECS_STRBUF_INIT;
+
+    for (int i = 0; i < 511; i ++) {
+        ecs_strbuf_appendch(&b, 'a' + (i % 26));
+    }
+
+    char *str = ecs_strbuf_get(&b);
+
+    ecs_strbuf_appendstr(&b, str);
+    char *str2 = ecs_strbuf_get(&b);
+
+    test_str(str, str2);
+
+    ecs_os_free(str);
+    ecs_os_free(str2);
+}
+
+void Strbuf_append_512_str(void) {
+    ecs_strbuf_t b = ECS_STRBUF_INIT;
+
+    for (int i = 0; i < 512; i ++) {
+        ecs_strbuf_appendch(&b, 'a' + (i % 26));
+    }
+
+    char *str = ecs_strbuf_get(&b);
+
+    ecs_strbuf_appendstr(&b, str);
+    char *str2 = ecs_strbuf_get(&b);
+
+    test_str(str, str2);
+
+    ecs_os_free(str);
+    ecs_os_free(str2);
+}
+
+void Strbuf_append_513_str(void) {
+    ecs_strbuf_t b = ECS_STRBUF_INIT;
+
+    for (int i = 0; i < 513; i ++) {
+        ecs_strbuf_appendch(&b, 'a' + (i % 26));
+    }
+
+    char *str = ecs_strbuf_get(&b);
+
+    ecs_strbuf_appendstr(&b, str);
+    char *str2 = ecs_strbuf_get(&b);
+
+    test_str(str, str2);
+
+    ecs_os_free(str);
+    ecs_os_free(str2);
+}
+
+void Strbuf_append_1023_str(void) {
+    ecs_strbuf_t b = ECS_STRBUF_INIT;
+
+    for (int i = 0; i < 1023; i ++) {
+        ecs_strbuf_appendch(&b, 'a' + (i % 26));
+    }
+
+    char *str = ecs_strbuf_get(&b);
+
+    ecs_strbuf_appendstr(&b, str);
+    char *str2 = ecs_strbuf_get(&b);
+
+    test_str(str, str2);
+
+    ecs_os_free(str);
+    ecs_os_free(str2);
+}
+
+void Strbuf_append_1024_str(void) {
+    ecs_strbuf_t b = ECS_STRBUF_INIT;
+
+    for (int i = 0; i < 1024; i ++) {
+        ecs_strbuf_appendch(&b, 'a' + (i % 26));
+    }
+
+    char *str = ecs_strbuf_get(&b);
+
+    ecs_strbuf_appendstr(&b, str);
+    char *str2 = ecs_strbuf_get(&b);
+
+    test_str(str, str2);
+
+    ecs_os_free(str);
+    ecs_os_free(str2);
+}
+
+void Strbuf_append_1025_str(void) {
+    ecs_strbuf_t b = ECS_STRBUF_INIT;
+
+    for (int i = 0; i < 1025; i ++) {
+        ecs_strbuf_appendch(&b, 'a' + (i % 26));
+    }
+
+    char *str = ecs_strbuf_get(&b);
+
+    ecs_strbuf_appendstr(&b, str);
+    char *str2 = ecs_strbuf_get(&b);
+
+    test_str(str, str2);
+
+    ecs_os_free(str);
+    ecs_os_free(str2);
+}
+
+void Strbuf_append_2047_str(void) {
+    ecs_strbuf_t b = ECS_STRBUF_INIT;
+
+    for (int i = 0; i < 2047; i ++) {
+        ecs_strbuf_appendch(&b, 'a' + (i % 26));
+    }
+
+    char *str = ecs_strbuf_get(&b);
+
+    ecs_strbuf_appendstr(&b, str);
+    char *str2 = ecs_strbuf_get(&b);
+
+    test_str(str, str2);
+
+    ecs_os_free(str);
+    ecs_os_free(str2);
+}
+
+void Strbuf_append_2048_str(void) {
+    ecs_strbuf_t b = ECS_STRBUF_INIT;
+
+    for (int i = 0; i < 2048; i ++) {
+        ecs_strbuf_appendch(&b, 'a' + (i % 26));
+    }
+
+    char *str = ecs_strbuf_get(&b);
+
+    ecs_strbuf_appendstr(&b, str);
+    char *str2 = ecs_strbuf_get(&b);
+
+    test_str(str, str2);
+
+    ecs_os_free(str);
+    ecs_os_free(str2);
+}
+
+void Strbuf_append_2049_str(void) {
+    ecs_strbuf_t b = ECS_STRBUF_INIT;
+
+    for (int i = 0; i < 2049; i ++) {
+        ecs_strbuf_appendch(&b, 'a' + (i % 26));
+    }
+
+    char *str = ecs_strbuf_get(&b);
+
+    ecs_strbuf_appendstr(&b, str);
+    char *str2 = ecs_strbuf_get(&b);
+
+    test_str(str, str2);
+
+    ecs_os_free(str);
+    ecs_os_free(str2);
+}
+
+void Strbuf_append_flt(void) {
     ecs_strbuf_t b = ECS_STRBUF_INIT;
     ecs_strbuf_appendflt(&b, 10.5, 0);
 
@@ -243,7 +468,7 @@ void Strbuf_append_flt() {
     ecs_os_free(str);
 }
 
-void Strbuf_append_nan() {
+void Strbuf_append_nan(void) {
     ecs_strbuf_t b = ECS_STRBUF_INIT;
     ecs_strbuf_appendflt(&b, NAN, 0);
 
@@ -253,7 +478,7 @@ void Strbuf_append_nan() {
     ecs_os_free(str);
 }
 
-void Strbuf_append_inf() {
+void Strbuf_append_inf(void) {
     {
         ecs_strbuf_t b = ECS_STRBUF_INIT;
         ecs_strbuf_appendflt(&b, INFINITY, 0);
@@ -274,7 +499,7 @@ void Strbuf_append_inf() {
     }
 }
 
-void Strbuf_append_nan_delim() {
+void Strbuf_append_nan_delim(void) {
     ecs_strbuf_t b = ECS_STRBUF_INIT;
     ecs_strbuf_appendflt(&b, NAN, '"');
 
@@ -284,7 +509,7 @@ void Strbuf_append_nan_delim() {
     ecs_os_free(str);
 }
 
-void Strbuf_append_inf_delim() {
+void Strbuf_append_inf_delim(void) {
     {
         ecs_strbuf_t b = ECS_STRBUF_INIT;
         ecs_strbuf_appendflt(&b, INFINITY, '"');

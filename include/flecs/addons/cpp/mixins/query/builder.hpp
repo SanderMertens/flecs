@@ -18,7 +18,7 @@ namespace _ {
 
 /** Query builder.
  * 
- * \ingroup cpp_core_queries
+ * @ingroup cpp_core_queries
  */
 template <typename ... Components>
 struct query_builder final : _::query_builder_base<Components...> {

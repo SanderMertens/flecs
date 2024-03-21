@@ -10,9 +10,9 @@
 
 /**
  * @defgroup c_addons_metrics Metrics
- * @brief Collect user-defined metrics from ECS data.
- * 
- * \ingroup c_addons
+ * @ingroup c_addons
+ * Collect user-defined metrics from ECS data.
+ *
  * @{
  */
 
@@ -74,13 +74,13 @@ typedef struct ecs_metric_desc_t {
 
     /** Entity associated with metric */
     ecs_entity_t entity;
-    
+
     /** Entity associated with member that stores metric value. Must not be set
      * at the same time as id. Cannot be combined with EcsCounterId. */
     ecs_entity_t member;
 
     /* Member dot expression. Can be used instead of member and supports nested
-     * members. Must be set together with id and should not be set at the same 
+     * members. Must be set together with id and should not be set at the same
      * time as member. */
     const char *dotmember;
 
@@ -89,7 +89,7 @@ typedef struct ecs_metric_desc_t {
     ecs_id_t id;
 
     /** If id is a (R, *) wildcard and relationship R has the OneOf property,
-     * setting this value to true will track individual targets. 
+     * setting this value to true will track individual targets.
      * If the kind is EcsCountId and the id is a (R, *) wildcard, this value
      * will create a metric per target. */
     bool targets;
@@ -106,36 +106,36 @@ typedef struct ecs_metric_desc_t {
  * properties in the ECS storage. Metrics provide a single unified interface to
  * discovering and reading these values, which can be useful for monitoring
  * utilities, or for debugging.
- * 
+ *
  * Examples of properties that can be measured by metrics are:
  *  - Component member values
  *  - How long an entity has had a specific component
  *  - How long an entity has had a specific target for a relationship
  *  - How many entities have a specific component
- * 
+ *
  * Metrics can either be created as a "gauge" or "counter". A gauge is a metric
  * that represents the value of something at a specific point in time, for
  * example "velocity". A counter metric represents a value that is monotonically
  * increasing, for example "miles driven".
- * 
+ *
  * There are three different kinds of counter metric kinds:
  * - EcsCounter
  *   When combined with a member, this will store the actual value of the member
  *   in the metric. This is useful for values that are already counters, such as
  *   a MilesDriven component.
  *   This kind creates a metric per entity that has the member/id.
- * 
+ *
  * - EcsCounterIncrement
  *   When combined with a member, this will increment the value of the metric by
  *   the value of the member * delta_time. This is useful for values that are
  *   not counters, such as a Velocity component.
  *   This kind creates a metric per entity that has the member.
- * 
+ *
  * - EcsCounterId
- *   This metric kind will count the number of entities with a specific 
+ *   This metric kind will count the number of entities with a specific
  *   (component) id. This kind creates a single metric instance for regular ids,
  *   and a metric instance per target for wildcard ids when targets is set.
- * 
+ *
  * @param world The world.
  * @param desc Metric description.
  * @return The metric entity.
@@ -145,13 +145,16 @@ ecs_entity_t ecs_metric_init(
     ecs_world_t *world,
     const ecs_metric_desc_t *desc);
 
-/** Shorthand for creating a metric with ecs_metric_init.
+/** Shorthand for creating a metric with ecs_metric_init().
  *
  * Example:
- *   ecs_metric(world, {
- *     .member = ecs_lookup_fullpath(world, "Position.x")
- *     .kind = EcsGauge
- *   });
+ *
+ * @code
+ * ecs_metric(world, {
+ *   .member = ecs_lookup(world, "Position.x")
+ *   .kind = EcsGauge
+ * });
+ * @endcode
  */
 #define ecs_metric(world, ...)\
     ecs_metric_init(world, &(ecs_metric_desc_t) __VA_ARGS__ )

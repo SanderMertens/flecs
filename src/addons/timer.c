@@ -155,7 +155,7 @@ ecs_entity_t ecs_set_interval(
         timer = ecs_new(world, EcsTimer);
     }
 
-    EcsTimer *t = ecs_get_mut(world, timer, EcsTimer);
+    EcsTimer *t = ecs_ensure(world, timer, EcsTimer);
     ecs_check(t != NULL, ECS_INVALID_PARAMETER, NULL);
     t->timeout = interval;
     t->active = true;
@@ -191,7 +191,7 @@ void ecs_start_timer(
     ecs_world_t *world,
     ecs_entity_t timer)
 {
-    EcsTimer *ptr = ecs_get_mut(world, timer, EcsTimer);
+    EcsTimer *ptr = ecs_ensure(world, timer, EcsTimer);
     ecs_check(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
     ptr->active = true;
     ptr->time = 0;
@@ -203,7 +203,7 @@ void ecs_stop_timer(
     ecs_world_t *world,
     ecs_entity_t timer)
 {
-    EcsTimer *ptr = ecs_get_mut(world, timer, EcsTimer);
+    EcsTimer *ptr = ecs_ensure(world, timer, EcsTimer);
     ecs_check(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
     ptr->active = false;
 error:
@@ -214,7 +214,7 @@ void ecs_reset_timer(
     ecs_world_t *world,
     ecs_entity_t timer)
 {
-    EcsTimer *ptr = ecs_get_mut(world, timer, EcsTimer);
+    EcsTimer *ptr = ecs_ensure(world, timer, EcsTimer);
     ecs_check(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
     ptr->time = 0;
 error:
@@ -288,8 +288,12 @@ void FlecsTimerImport(
     ecs_world_t *world)
 {    
     ECS_MODULE(world, FlecsTimer);
-
     ECS_IMPORT(world, FlecsPipeline);
+#ifdef FLECS_DOC
+    ECS_IMPORT(world, FlecsDoc);
+    ecs_doc_set_brief(world, ecs_id(FlecsTimer), 
+        "Module that implements system timers (used by .interval)");
+#endif
 
     ecs_set_name_prefix(world, "Ecs");
 

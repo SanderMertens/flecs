@@ -12,9 +12,9 @@ struct entity;
 
 /**
  * @defgroup cpp_ids Ids
- * @brief Class for working with entity, component, tag and pair ids.
- * 
- * \ingroup cpp_core
+ * @ingroup cpp_core
+ * Class for working with entity, component, tag and pair ids.
+ *
  * @{
  */
 
@@ -29,7 +29,7 @@ struct id {
         : m_world(nullptr)
         , m_id(0) { }
 
-    explicit id(flecs::id_t value) 
+    explicit id(flecs::id_t value)
         : m_world(nullptr)
         , m_id(value) { }
 
@@ -77,7 +77,7 @@ struct id {
     flecs::entity remove_flags() const;
 
     /** Return id without role */
-    flecs::entity remove_generation() const;    
+    flecs::entity remove_generation() const;
 
     /** Return component type of id */
     flecs::entity type_id() const;
@@ -135,7 +135,7 @@ struct id {
     }
 
     flecs::world world() const;
-    
+
 protected:
     /* World is optional, but guarantees that entity identifiers extracted from
      * the id are valid */

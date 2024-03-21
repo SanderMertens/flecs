@@ -16,3 +16,4 @@ bazel-testlogs
 **/CMakeFiles/*
 .vs
 out
+docs/html

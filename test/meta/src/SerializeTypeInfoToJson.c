@@ -187,6 +187,17 @@ void SerializeTypeInfoToJson_entity(void) {
     ecs_fini(world);
 }
 
+void SerializeTypeInfoToJson_id(void) {
+    ecs_world_t *world = ecs_init();
+
+    char *str = ecs_type_info_to_json(world, ecs_id(ecs_id_t));
+    test_assert(str != NULL);
+    test_str(str, "[\"id\"]");
+    ecs_os_free(str);
+
+    ecs_fini(world);
+}
+
 void SerializeTypeInfoToJson_enum(void) {
     ecs_world_t *world = ecs_init();
 

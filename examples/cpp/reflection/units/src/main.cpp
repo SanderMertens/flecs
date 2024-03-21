@@ -33,8 +33,8 @@ int main(int, char *[]) {
     flecs::entity e = ecs.entity().set<WeatherStation>({24, 1.2, 0.5});
 
     // Use cursor API to print values with units
-    WeatherStation *ptr = e.get_mut<WeatherStation>();
-    flecs::cursor cur = ecs.cursor<WeatherStation>(ptr);
+    WeatherStation& ptr = e.ensure<WeatherStation>();
+    flecs::cursor cur = ecs.cursor<WeatherStation>(&ptr);
     cur.push();
     print_value(cur);
     cur.next();

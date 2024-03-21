@@ -1,23 +1,23 @@
 # Documentation
 
 ## Getting Started
-- [FAQ](/flecs/md_docs_FAQ.html)
-- [Quickstart](/flecs/md_docs_Quickstart.html)
-- [Flecs Script Tutorial](/flecs/md_docs_FlecsScriptTutorial.html)
-- [Designing with Flecs](/flecs/md_docs_DesignWithFlecs.html)
+- [FAQ](FAQ.md)
+- [Quickstart](Quickstart.md)
+- [Flecs Script Tutorial](FlecsScriptTutorial.md)
+- [Designing with Flecs](DesignWithFlecs.md)
 - [Getting Started with Unreal Engine](https://github.com/PreyK/Unreal-Minimum-Viable-Flecs)
 
 ## Manuals
-- [Manual](/flecs/md_docs_Manual.html)
-- [Query Manual](/flecs/md_docs_Queries.html)
-- [Systems Manual](/flecs/md_docs_Systems.html)
-- [Relationships Manual](/flecs/md_docs_Relationships.html)
-- [JSON Format Manual](/flecs/md_docs_JsonFormat.html)
-- [REST API Manual](/flecs/md_docs_RestApi.html)
+- [Manual](Manual.md)
+- [Query Manual](Queries.md)
+- [Systems Manual](Systems.md)
+- [Relationships Manual](Relationships.md)
+- [JSON Format Manual](JsonFormat.md)
+- [REST API Manual](RestApi.md)
 
 ## API reference
- - [C API](/flecs/group__c.html)
- - [C++ API](/flecs/group__cpp.html)
+ - [C API](@ref c)
+ - [C++ API](@ref cpp)
 
 ## Examples
 - [C examples](https://github.com/SanderMertens/flecs/tree/master/examples/c)

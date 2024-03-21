@@ -37,10 +37,10 @@ bool flecs_type_is_number(
     case EcsIPtr:
     case EcsString:
     case EcsEntity:
+    case EcsId:
         return false;
     default:
         ecs_abort(ECS_INVALID_PARAMETER, NULL);
-        return false;
     }
 }
 
@@ -48,6 +48,9 @@ ecs_entity_t ecs_primitive_init(
     ecs_world_t *world,
     const ecs_primitive_desc_t *desc)
 {
+    ecs_suspend_readonly_state_t rs;
+    world = flecs_suspend_readonly(world, &rs);
+
     ecs_entity_t t = desc->entity;
     if (!t) {
         t = ecs_new_low_id(world);
@@ -55,6 +58,7 @@ ecs_entity_t ecs_primitive_init(
 
     ecs_set(world, t, EcsPrimitive, { desc->kind });
 
+    flecs_resume_readonly(world, &rs);
     return t;
 }
 
@@ -62,6 +66,9 @@ ecs_entity_t ecs_enum_init(
     ecs_world_t *world,
     const ecs_enum_desc_t *desc)
 {
+    ecs_suspend_readonly_state_t rs;
+    world = flecs_suspend_readonly(world, &rs);
+
     ecs_entity_t t = desc->entity;
     if (!t) {
         t = ecs_new_low_id(world);
@@ -91,6 +98,7 @@ ecs_entity_t ecs_enum_init(
     }
 
     ecs_set_scope(world, old_scope);
+    flecs_resume_readonly(world, &rs);
 
     if (i == 0) {
         ecs_err("enum '%s' has no constants", ecs_get_name(world, t));
@@ -105,6 +113,9 @@ ecs_entity_t ecs_bitmask_init(
     ecs_world_t *world,
     const ecs_bitmask_desc_t *desc)
 {
+    ecs_suspend_readonly_state_t rs;
+    world = flecs_suspend_readonly(world, &rs);
+
     ecs_entity_t t = desc->entity;
     if (!t) {
         t = ecs_new_low_id(world);
@@ -134,6 +145,7 @@ ecs_entity_t ecs_bitmask_init(
     }
 
     ecs_set_scope(world, old_scope);
+    flecs_resume_readonly(world, &rs);
 
     if (i == 0) {
         ecs_err("bitmask '%s' has no constants", ecs_get_name(world, t));
@@ -148,6 +160,9 @@ ecs_entity_t ecs_array_init(
     ecs_world_t *world,
     const ecs_array_desc_t *desc)
 {
+    ecs_suspend_readonly_state_t rs;
+    world = flecs_suspend_readonly(world, &rs);
+
     ecs_entity_t t = desc->entity;
     if (!t) {
         t = ecs_new_low_id(world);
@@ -158,6 +173,8 @@ ecs_entity_t ecs_array_init(
         .count = desc->count
     });
 
+    flecs_resume_readonly(world, &rs);
+
     return t;
 }
 
@@ -165,6 +182,9 @@ ecs_entity_t ecs_vector_init(
     ecs_world_t *world,
     const ecs_vector_desc_t *desc)
 {
+    ecs_suspend_readonly_state_t rs;
+    world = flecs_suspend_readonly(world, &rs);
+
     ecs_entity_t t = desc->entity;
     if (!t) {
         t = ecs_new_low_id(world);
@@ -173,6 +193,8 @@ ecs_entity_t ecs_vector_init(
     ecs_set(world, t, EcsVector, {
         .type = desc->type
     });
+
+    flecs_resume_readonly(world, &rs);
 
     return t;
 }
@@ -203,6 +225,9 @@ ecs_entity_t ecs_struct_init(
     ecs_world_t *world,
     const ecs_struct_desc_t *desc)
 {
+    ecs_suspend_readonly_state_t rs;
+    world = flecs_suspend_readonly(world, &rs);
+
     ecs_entity_t t = desc->entity;
     if (!t) {
         t = ecs_new_low_id(world);
@@ -220,8 +245,7 @@ ecs_entity_t ecs_struct_init(
         if (!m_desc->name) {
             ecs_err("member %d of struct '%s' does not have a name", i, 
                 ecs_get_name(world, t));
-            ecs_delete(world, t);
-            return 0;
+            goto error;
         }
 
         ecs_entity_t m = ecs_entity(world, {
@@ -240,10 +264,10 @@ ecs_entity_t ecs_struct_init(
         const ecs_member_value_range_t *error = &m_desc->error_range;
         const ecs_member_value_range_t *warning = &m_desc->warning_range;
         if (ECS_NEQ(range->min, range->max)) {
-            ranges = ecs_get_mut(world, m, EcsMemberRanges);
+            ranges = ecs_ensure(world, m, EcsMemberRanges);
             if (range->min > range->max) {
                 char *member_name = ecs_get_fullpath(world, m);
-                ecs_err("member '%s' has an invalid value range [%d..%d]",
+                ecs_err("member '%s' has an invalid value range [%f..%f]",
                     member_name, range->min, range->max);
                 ecs_os_free(member_name);
                 goto error;
@@ -254,7 +278,7 @@ ecs_entity_t ecs_struct_init(
         if (ECS_NEQ(error->min, error->max)) {
             if (error->min > error->max) {
                 char *member_name = ecs_get_fullpath(world, m);
-                ecs_err("member '%s' has an invalid error range [%d..%d]",
+                ecs_err("member '%s' has an invalid error range [%f..%f]",
                     member_name, error->min, error->max);
                 ecs_os_free(member_name);
                 goto error;
@@ -267,7 +291,7 @@ ecs_entity_t ecs_struct_init(
                 goto error;
             }
             if (!ranges) {
-                ranges = ecs_get_mut(world, m, EcsMemberRanges);
+                ranges = ecs_ensure(world, m, EcsMemberRanges);
             }
             ranges->error.min = error->min;
             ranges->error.max = error->max;
@@ -276,7 +300,7 @@ ecs_entity_t ecs_struct_init(
         if (ECS_NEQ(warning->min, warning->max)) {
             if (warning->min > warning->max) {
                 char *member_name = ecs_get_fullpath(world, m);
-                ecs_err("member '%s' has an invalid warning range [%d..%d]",
+                ecs_err("member '%s' has an invalid warning range [%f..%f]",
                     member_name, warning->min, warning->max);
                 ecs_os_free(member_name);
                 goto error;
@@ -297,7 +321,7 @@ ecs_entity_t ecs_struct_init(
             }
 
             if (!ranges) {
-                ranges = ecs_get_mut(world, m, EcsMemberRanges);
+                ranges = ecs_ensure(world, m, EcsMemberRanges);
             }
             ranges->warning.min = warning->min;
             ranges->warning.max = warning->max;
@@ -317,21 +341,20 @@ ecs_entity_t ecs_struct_init(
     }
 
     ecs_set_scope(world, old_scope);
+    flecs_resume_readonly(world, &rs);
 
     if (i == 0) {
         ecs_err("struct '%s' has no members", ecs_get_name(world, t));
-        ecs_delete(world, t);
-        return 0;
+        goto error;
     }
 
     if (!ecs_has(world, t, EcsStruct)) {
-        /* Invalid members */
-        ecs_delete(world, t);
-        return 0;
+        goto error;
     }
 
     return t;
 error:
+    flecs_resume_readonly(world, &rs);
     if (t) {
         ecs_delete(world, t);
     }
@@ -342,9 +365,11 @@ ecs_entity_t ecs_opaque_init(
     ecs_world_t *world,
     const ecs_opaque_desc_t *desc)
 {
-    ecs_poly_assert(world, ecs_world_t);
     ecs_assert(desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(desc->type.as_type != 0, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_suspend_readonly_state_t rs;
+    world = flecs_suspend_readonly(world, &rs);
 
     ecs_entity_t t = desc->entity;
     if (!t) {
@@ -353,6 +378,8 @@ ecs_entity_t ecs_opaque_init(
 
     ecs_set_ptr(world, t, EcsOpaque, &desc->type);
 
+    flecs_resume_readonly(world, &rs);
+
     return t;
 }
 
@@ -360,6 +387,9 @@ ecs_entity_t ecs_unit_init(
     ecs_world_t *world,
     const ecs_unit_desc_t *desc)
 {
+    ecs_suspend_readonly_state_t rs;
+    world = flecs_suspend_readonly(world, &rs);
+
     ecs_entity_t t = desc->entity;
     if (!t) {
         t = ecs_new_low_id(world);
@@ -378,7 +408,7 @@ ecs_entity_t ecs_unit_init(
         ecs_remove_pair(world, t, EcsQuantity, EcsWildcard);
     }
 
-    EcsUnit *value = ecs_get_mut(world, t, EcsUnit);
+    EcsUnit *value = ecs_ensure(world, t, EcsUnit);
     value->base = desc->base;
     value->over = desc->over;
     value->translation = desc->translation;
@@ -391,11 +421,13 @@ ecs_entity_t ecs_unit_init(
 
     ecs_modified(world, t, EcsUnit);
 
+    flecs_resume_readonly(world, &rs);
     return t;
 error:
     if (t) {
         ecs_delete(world, t);
     }
+    flecs_resume_readonly(world, &rs);
     return 0;
 }
 
@@ -403,6 +435,9 @@ ecs_entity_t ecs_unit_prefix_init(
     ecs_world_t *world,
     const ecs_unit_prefix_desc_t *desc)
 {
+    ecs_suspend_readonly_state_t rs;
+    world = flecs_suspend_readonly(world, &rs);
+
     ecs_entity_t t = desc->entity;
     if (!t) {
         t = ecs_new_low_id(world);
@@ -413,6 +448,8 @@ ecs_entity_t ecs_unit_prefix_init(
         .translation = desc->translation
     });
 
+    flecs_resume_readonly(world, &rs);
+
     return t;
 }
 
@@ -420,12 +457,17 @@ ecs_entity_t ecs_quantity_init(
     ecs_world_t *world,
     const ecs_entity_desc_t *desc)
 {
+    ecs_suspend_readonly_state_t rs;
+    world = flecs_suspend_readonly(world, &rs);
+
     ecs_entity_t t = ecs_entity_init(world, desc);
     if (!t) {
         return 0;
     }
 
     ecs_add_id(world, t, EcsQuantity);
+
+    flecs_resume_readonly(world, &rs);
 
     return t;
 }

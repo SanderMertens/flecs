@@ -137,7 +137,7 @@ void ctor_move_dtor_impl(void *dst_ptr, void *src_ptr, int32_t count,
     }
 }
 
-// Move assign + dtor (non-trivial move assigmnment)
+// Move assign + dtor (non-trivial move assignment)
 // Typically used when moving a component to a deleted component
 template <typename T, if_not_t<
     std::is_trivially_move_assignable<T>::value > = 0>
@@ -157,7 +157,7 @@ void move_dtor_impl(void *dst_ptr, void *src_ptr, int32_t count,
     }
 }
 
-// Move assign + dtor (trivial move assigmnment)
+// Move assign + dtor (trivial move assignment)
 // Typically used when moving a component to a deleted component
 template <typename T, if_t<
     std::is_trivially_move_assignable<T>::value > = 0>

@@ -31,6 +31,14 @@ void Id_pair_id_w_rel_component_obj_wildcard_is_tag(void);
 void Id_pair_id_w_obj_wildcard_is_tag(void);
 void Id_pair_id_w_tag_property_w_obj_component_is_tag(void);
 void Id_pair_id_w_tag_property_w_obj_wildcard_is_tag(void);
+void Id_pair_w_rel_wildcard_is_tag(void);
+void Id_pair_w_obj_wildcard_is_tag(void);
+void Id_pair_w_rel_tag_obj_wildcard_is_tag(void);
+void Id_pair_w_wildcard_wildcard_is_tag(void);
+void Id_pair_w_rel_any_is_tag(void);
+void Id_pair_w_obj_any_is_tag(void);
+void Id_pair_w_rel_tag_obj_any_is_tag(void);
+void Id_pair_w_any_any_is_tag(void);
 void Id_id_w_override_is_tag(void);
 void Id_id_w_toggle_is_tag(void);
 void Id_pair_id_override_is_tag(void);
@@ -93,12 +101,12 @@ void Entity_init_w_name_staged(void);
 void Entity_record_find_for_empty(void);
 void Entity_record_find(void);
 void Entity_record_find_from_stage(void);
-void Entity_ensure_zero_gen(void);
-void Entity_ensure_nonzero_gen(void);
-void Entity_ensure_zero_gen_exists(void);
-void Entity_ensure_nonzero_gen_exists(void);
-void Entity_ensure_zero_gen_exists_alive(void);
-void Entity_ensure_nonzero_gen_exists_alive(void);
+void Entity_make_alive_zero_gen(void);
+void Entity_make_alive_nonzero_gen(void);
+void Entity_make_alive_zero_gen_exists(void);
+void Entity_make_alive_nonzero_gen_exists(void);
+void Entity_make_alive_zero_gen_exists_alive(void);
+void Entity_make_alive_nonzero_gen_exists_alive(void);
 void Entity_set_scope_w_entity_init_from_stage(void);
 void Entity_entity_init_w_scope_twice(void);
 void Entity_entity_init_w_childof_twice(void);
@@ -133,9 +141,9 @@ void Entity_entity_init_w_empty_sep_w_prefix(void);
 void Entity_set_name_w_same_ptr(void);
 void Entity_set_name_w_overlapping_ptr(void);
 void Entity_defer_set_name_w_overlapping_ptr(void);
-void Entity_ensure_from_stage(void);
-void Entity_ensure_after_deleted_1_entity(void);
-void Entity_ensure_after_deleted_2_entities(void);
+void Entity_make_alive_from_stage(void);
+void Entity_make_alive_after_deleted_1_entity(void);
+void Entity_make_alive_after_deleted_2_entities(void);
 void Entity_defer_entity_init_w_set_name_w_add_childof(void);
 void Entity_entity_w_digit_name(void);
 void Entity_entity_w_existing_digit_name(void);
@@ -184,6 +192,29 @@ void Event_emit_staged_from_stage(void);
 void Event_emit_staged_from_world_observer(void);
 void Event_emit_staged_from_stage_observer(void);
 void Event_emit_for_entity(void);
+void Event_emit_custom_for_any(void);
+void Event_emit_custom_implicit_any(void);
+void Event_emit_custom_empty_type(void);
+void Event_emit_w_param(void);
+void Event_emit_w_const_param(void);
+void Event_emit_nested(void);
+void Event_enqueue_event_1_id(void);
+void Event_enqueue_event_2_ids(void);
+void Event_enqueue_event_w_data(void);
+void Event_enqueue_event_w_data_move(void);
+void Event_enqueue_event_w_data_copy(void);
+void Event_enqueue_event_w_const_data_no_copy(void);
+void Event_enqueue_event_not_alive(void);
+void Event_enqueue_event_not_alive_w_data_move(void);
+void Event_enqueue_event_not_alive_w_data_copy(void);
+void Event_enqueue_event_not_alive_after_delete_during_merge(void);
+void Event_enqueue_event_not_alive_w_data_move_after_delete_during_merge(void);
+void Event_enqueue_event_not_alive_w_data_copy_after_delete_during_merge(void);
+void Event_enqueue_event_not_deferred(void);
+void Event_enqueue_event_not_deferred_to_async(void);
+void Event_enqueue_custom_implicit_any(void);
+void Event_enqueue_custom_after_large_cmd(void);
+void Event_enqueue_on_readonly_world(void);
 
 // Testsuite 'New'
 void New_setup(void);
@@ -596,7 +627,7 @@ void Get_component_get_1_from_2_add_in_progress(void);
 void Get_component_get_both_from_2_add_in_progress(void);
 void Get_component_get_both_from_2_add_remove_in_progress(void);
 void Get_component_get_childof_component(void);
-void Get_component_get_mut_equal_get(void);
+void Get_component_ensure_equal_get(void);
 void Get_component_get_tag(void);
 void Get_component_get_pair_tag(void);
 void Get_component_get_wildcard(void);
@@ -615,6 +646,7 @@ void Reference_get_ref_monitored(void);
 void Reference_get_ref_w_low_id_tag(void);
 void Reference_get_ref_w_low_id_tag_after_add(void);
 void Reference_get_nonexisting(void);
+void Reference_aba_table(void);
 
 // Testsuite 'Delete'
 void Delete_setup(void);
@@ -765,6 +797,9 @@ void OnDelete_deferred_delete_with_childof_after_create_named(void);
 void OnDelete_match_marked_for_deletion(void);
 void OnDelete_delete_w_low_rel_mixed_cleanup(void);
 void OnDelete_delete_w_low_rel_mixed_cleanup_interleaved_ids(void);
+void OnDelete_fini_query_w_singleton_in_scope_no_module(void);
+void OnDelete_fini_query_w_singleton_in_module(void);
+void OnDelete_fini_observer_w_relationship_in_scope(void);
 
 // Testsuite 'Set'
 void Set_set_empty(void);
@@ -780,19 +815,24 @@ void Set_set_remove_other(void);
 void Set_set_remove_twice(void);
 void Set_set_and_new(void);
 void Set_set_null(void);
-void Set_get_mut_new(void);
+void Set_ensure_new(void);
+void Set_ensure_existing(void);
+void Set_ensure_tag_new(void);
+void Set_ensure_tag_existing(void);
+void Set_ensure_tag_new_w_comp(void);
+void Set_ensure_tag_existing_w_comp(void);
+void Set_ensure_tag_new_w_pair(void);
+void Set_ensure_tag_existing_w_pair(void);
+void Set_get_mut_not_existing(void);
 void Set_get_mut_existing(void);
-void Set_get_mut_tag_new(void);
-void Set_get_mut_tag_existing(void);
-void Set_get_mut_tag_new_w_comp(void);
-void Set_get_mut_tag_existing_w_comp(void);
-void Set_get_mut_tag_new_w_pair(void);
-void Set_get_mut_tag_existing_w_pair(void);
+void Set_get_mut_tag(void);
+void Set_get_mut_pair(void);
+void Set_get_mut_pair_second(void);
 void Set_modified_w_on_set(void);
 void Set_modified_no_component(void);
-void Set_get_mut_w_add_in_on_add(void);
-void Set_get_mut_w_remove_in_on_add(void);
-void Set_get_mut_w_realloc_in_on_add(void);
+void Set_ensure_w_add_in_on_add(void);
+void Set_ensure_w_remove_in_on_add(void);
+void Set_ensure_w_realloc_in_on_add(void);
 void Set_emplace(void);
 void Set_emplace_2(void);
 void Set_emplace_existing(void);
@@ -826,6 +866,8 @@ void Lookup_lookup_symbol_by_id(void);
 void Lookup_lookup_name_w_digit(void);
 void Lookup_lookup_symbol_w_digit(void);
 void Lookup_lookup_path_w_digit(void);
+void Lookup_lookup_name_w_spaces(void);
+void Lookup_lookup_path_w_spaces(void);
 void Lookup_set_name_of_existing(void);
 void Lookup_change_name_of_existing(void);
 void Lookup_lookup_alias(void);
@@ -857,12 +899,13 @@ void Lookup_lookup_child_invalid_digit(void);
 void Lookup_lookup_digit_from_wrong_scope(void);
 void Lookup_lookup_core_entity_from_wrong_scope(void);
 void Lookup_lookup_alias_w_number(void);
+void Lookup_lookup_symbol_path(void);
 
 // Testsuite 'Singleton'
 void Singleton_add_singleton(void);
 void Singleton_remove_singleton(void);
 void Singleton_set_get_singleton(void);
-void Singleton_get_mut_singleton(void);
+void Singleton_ensure_singleton(void);
 void Singleton_singleton_system(void);
 
 // Testsuite 'Clone'
@@ -880,6 +923,7 @@ void Clone_tag(void);
 void Clone_tag_w_value(void);
 void Clone_1_tag_1_component(void);
 void Clone_1_tag_1_component_w_value(void);
+void Clone_clone_w_name(void);
 
 // Testsuite 'ComponentLifecycle'
 void ComponentLifecycle_setup(void);
@@ -956,6 +1000,8 @@ void ComponentLifecycle_on_set_ctx(void);
 void ComponentLifecycle_on_add_w_existing_component(void);
 void ComponentLifecycle_on_remove_w_existing_component(void);
 void ComponentLifecycle_component_init_set_hooks(void);
+void ComponentLifecycle_component_init_name_from_type_info(void);
+void ComponentLifecycle_component_init_scoped_name_from_type_info(void);
 void ComponentLifecycle_on_add_after_ctor_w_add(void);
 void ComponentLifecycle_on_add_after_ctor_w_add_to(void);
 void ComponentLifecycle_with_before_hooks(void);
@@ -968,6 +1014,8 @@ void ComponentLifecycle_on_remove_hook_check_offset(void);
 void ComponentLifecycle_on_set_hook_check_offset(void);
 void ComponentLifecycle_on_set_hook_on_override(void);
 void ComponentLifecycle_on_set_hook_on_auto_override(void);
+void ComponentLifecycle_batched_set_new_component_w_lifecycle(void);
+void ComponentLifecycle_batched_ensure_new_component_w_lifecycle(void);
 
 // Testsuite 'Sorting'
 void Sorting_sort_by_component(void);
@@ -1006,6 +1054,7 @@ void Sorting_dont_resort_after_set_unsorted_component_w_tag(void);
 void Sorting_dont_resort_after_set_unsorted_component_w_tag_w_out_term(void);
 void Sorting_sort_component_not_queried_for(void);
 void Sorting_sort_by_wildcard(void);
+void Sorting_sort_shared_w_delete(void);
 
 // Testsuite 'SortingEntireTable'
 void SortingEntireTable_sort_by_component(void);
@@ -1041,6 +1090,7 @@ void SortingEntireTable_sort_relation_marked(void);
 void SortingEntireTable_dont_resort_after_set_unsorted_component(void);
 void SortingEntireTable_dont_resort_after_set_unsorted_component_w_tag(void);
 void SortingEntireTable_dont_resort_after_set_unsorted_component_w_tag_w_out_term(void);
+void SortingEntireTable_sort_shared_w_delete(void);
 
 // Testsuite 'Filter'
 void Filter_filter_1_term(void);
@@ -1091,6 +1141,9 @@ void Filter_filter_w_this_variable_name(void);
 void Filter_filter_w_src_var(void);
 void Filter_filter_w_first_var(void);
 void Filter_filter_w_second_var(void);
+void Filter_filter_w_src_var_from_name(void);
+void Filter_filter_w_first_first_var(void);
+void Filter_filter_w_second_second_var(void);
 void Filter_filter_w_0_source(void);
 void Filter_filter_w_0_target(void);
 void Filter_filter_2_terms_w_or(void);
@@ -1369,6 +1422,12 @@ void FilterStr_one_term_w_pair_w_0_entity(void);
 void FilterStr_not_term(void);
 void FilterStr_wildcard_term(void);
 void FilterStr_scopes(void);
+void FilterStr_pred_eq(void);
+void FilterStr_pred_neq(void);
+void FilterStr_pred_eq_name(void);
+void FilterStr_pred_neq_name(void);
+void FilterStr_pred_eq_m(void);
+void FilterStr_pred_neq_m(void);
 
 // Testsuite 'Query'
 void Query_simple_query_existing_table(void);
@@ -1535,6 +1594,8 @@ void Query_existing_custom_rel_cascade(void);
 void Query_new_custom_rel_cascade(void);
 void Query_cascade_w_2_depths(void);
 void Query_cascade_w_3_depths(void);
+void Query_cascade_w_2_depths_desc(void);
+void Query_cascade_w_3_depths_desc(void);
 void Query_not_pair_relation_wildcard(void);
 void Query_not_pair_object_wildcard(void);
 void Query_two_pair_wildcards_one_not(void);
@@ -1567,6 +1628,9 @@ void Query_childof_rematch_2_lvls(void);
 void Query_cascade_rematch_2_lvls(void);
 void Query_cascade_rematch_2_lvls_2_relations(void);
 void Query_cascade_topological(void);
+void Query_cascade_desc_rematch_2_lvls(void);
+void Query_cascade_desc_rematch_2_lvls_2_relations(void);
+void Query_cascade_desc_topological(void);
 void Query_childof_rematch_from_isa(void);
 void Query_rematch_optional_ref(void);
 void Query_rematch_optional_ref_w_2_refs(void);
@@ -1606,6 +1670,9 @@ void Query_set_this(void);
 void Query_set_this_no_match(void);
 void Query_set_this_is_true(void);
 void Query_set_this_w_wildcard(void);
+void Query_singleton_w_inout_none(void);
+void Query_singleton_w_inout_none_or(void);
+void Query_component_w_inout_none_or(void);
 
 // Testsuite 'Iter'
 void Iter_page_iter_0_0(void);
@@ -1651,6 +1718,11 @@ void Iter_page_iter_w_fini(void);
 void Iter_worker_iter_w_fini(void);
 void Iter_rule_page_iter_w_fini(void);
 void Iter_rule_worker_iter_w_fini(void);
+void Iter_to_str_before_next(void);
+void Iter_to_str(void);
+void Iter_filter_eval_count(void);
+void Iter_query_eval_count(void);
+void Iter_rule_eval_count(void);
 
 // Testsuite 'Pairs'
 void Pairs_type_w_one_pair(void);
@@ -1768,6 +1840,8 @@ void Pairs_oneof_other(void);
 void Pairs_oneof_self_constraint_violated(void);
 void Pairs_oneof_other_constraint_violated(void);
 void Pairs_oneof_other_rel_parent_constraint_violated(void);
+void Pairs_set_w_recycled_rel(void);
+void Pairs_set_w_recycled_tgt(void);
 
 // Testsuite 'Trigger'
 void Trigger_on_add_trigger_before_table(void);
@@ -1967,6 +2041,19 @@ void Observer_propagate_after_on_delete_clear_action(void);
 void Observer_on_add_after_batch_w_exclusive_adds(void);
 void Observer_propagate_match_relationship_w_self_up(void);
 void Observer_propagate_match_relationship_w_up(void);
+void Observer_propagate_isa_of_parent_add(void);
+void Observer_propagate_isa_of_parent_remove(void);
+void Observer_propagate_isa_of_parent_set(void);
+void Observer_propagate_add_childof_of_parent(void);
+void Observer_propagate_add_childof_of_parent_w_siblings(void);
+void Observer_propagate_add_childof_w_parent_w_base(void);
+void Observer_propagate_remove_childof_w_parent_w_base(void);
+void Observer_propagate_remove_childof_of_parent(void);
+void Observer_propagate_add_isa_of_parent(void);
+void Observer_propagate_remove_isa_of_parent(void);
+void Observer_propagate_add_childof_of_base(void);
+void Observer_propagate_remove_childof_of_base(void);
+void Observer_emit_for_parent_w_prefab_child_and_instance(void);
 void Observer_observer_w_2_fixed_src(void);
 void Observer_emit_for_recreated_id_after_remove_all(void);
 void Observer_emit_for_recreated_id_after_remove_all_wildcard(void);
@@ -1989,6 +2076,31 @@ void Observer_multi_observer_table_fill_w_singleton(void);
 void Observer_wildcard_propagate_w_other_table(void);
 void Observer_add_in_yield_existing(void);
 void Observer_add_in_yield_existing_multi(void);
+void Observer_disable_observer(void);
+void Observer_disable_observer_module(void);
+void Observer_disable_observer_module_nested(void);
+void Observer_disable_observer_and_module(void);
+void Observer_disable_multi_observer(void);
+void Observer_disable_multi_observer_module(void);
+void Observer_disable_multi_observer_module_nested(void);
+void Observer_disable_multi_observer_and_module(void);
+void Observer_tag_w_on_set_and_on_add(void);
+void Observer_tag_w_on_set_and_on_add_reverse(void);
+void Observer_tag_w_un_set_and_on_remove(void);
+void Observer_tag_w_un_set_and_on_remove_reverse(void);
+void Observer_on_add_pair_w_rel_any(void);
+void Observer_on_remove_pair_w_rel_any(void);
+void Observer_on_add_pair_w_tgt_any(void);
+void Observer_on_remove_pair_w_tgt_any(void);
+void Observer_on_add_pair_w_any_any(void);
+void Observer_on_remove_pair_w_any_any(void);
+void Observer_on_add_any(void);
+void Observer_on_remove_any(void);
+void Observer_get_filter(void);
+void Observer_uni_observer_eval_count(void);
+void Observer_multi_observer_eval_count(void);
+void Observer_yield_existing_uni_no_this(void);
+void Observer_yield_existing_multi_no_this(void);
 void Observer_cache_test_1(void);
 void Observer_cache_test_2(void);
 void Observer_cache_test_3(void);
@@ -2004,6 +2116,7 @@ void Observer_cache_test_12(void);
 void Observer_cache_test_13(void);
 void Observer_cache_test_14(void);
 void Observer_cache_test_15(void);
+void Observer_cache_test_16(void);
 
 // Testsuite 'ObserverOnSet'
 void ObserverOnSet_set_1_of_1(void);
@@ -2238,8 +2351,11 @@ void Prefab_auto_override_copy_once(void);
 void Prefab_always_override(void);
 void Prefab_always_override_pair(void);
 void Prefab_child_of_prefab_is_prefab(void);
+void Prefab_child_of_prefab_w_prefab_is_prefab(void);
+void Prefab_child_of_prefab_w_prefab_is_prefab_w_component(void);
 void Prefab_override_exclusive(void);
 void Prefab_override_exclusive_2_lvls(void);
+void Prefab_hierarchy_w_recycled_id(void);
 
 // Testsuite 'World'
 void World_setup(void);
@@ -2289,7 +2405,7 @@ void World_use_after_delete_empty_w_component(void);
 void World_use_after_clear_empty_w_component(void);
 void World_use_after_clear_empty_w_component_w_lifecycle(void);
 void World_use_after_clear_unused(void);
-void World_get_mut_in_at_fini(void);
+void World_ensure_in_at_fini(void);
 void World_get_type_info(void);
 void World_get_type_info_after_delete_with(void);
 void World_get_type_info_after_reuse(void);
@@ -2303,16 +2419,10 @@ void World_set_get_binding_context_w_free(void);
 void WorldInfo_get_tick(void);
 void WorldInfo_table_count(void);
 void WorldInfo_empty_table_count(void);
-void WorldInfo_tag_table_count(void);
-void WorldInfo_trivial_table_count(void);
-void WorldInfo_table_record_count(void);
-void WorldInfo_table_storage_count(void);
 void WorldInfo_table_create_count(void);
 void WorldInfo_table_delete_count(void);
-void WorldInfo_id_count(void);
 void WorldInfo_id_tag_component_count(void);
 void WorldInfo_id_pair_count(void);
-void WorldInfo_id_wildcard_count(void);
 
 // Testsuite 'Type'
 void Type_setup(void);
@@ -2342,127 +2452,140 @@ void Type_role_disabled_str(void);
 void Type_large_type_expr(void);
 void Type_large_type_expr_limit(void);
 
-// Testsuite 'DeferredActions'
-void DeferredActions_defer_new(void);
-void DeferredActions_defer_bulk_new(void);
-void DeferredActions_defer_add(void);
-void DeferredActions_defer_add_two(void);
-void DeferredActions_defer_remove(void);
-void DeferredActions_defer_remove_two(void);
-void DeferredActions_defer_set(void);
-void DeferredActions_defer_delete(void);
-void DeferredActions_defer_twice(void);
-void DeferredActions_defer_twice_in_progress(void);
-void DeferredActions_run_w_defer(void);
-void DeferredActions_system_in_progress_w_defer(void);
-void DeferredActions_defer_get_mut_no_modify(void);
-void DeferredActions_defer_get_mut_w_modify(void);
-void DeferredActions_defer_modify(void);
-void DeferredActions_defer_set_pair(void);
-void DeferredActions_defer_clear(void);
-void DeferredActions_defer_add_after_delete(void);
-void DeferredActions_defer_set_after_delete(void);
-void DeferredActions_defer_get_mut_after_delete(void);
-void DeferredActions_defer_get_mut_after_delete_2nd_to_last(void);
-void DeferredActions_defer_add_child_to_deleted_parent(void);
-void DeferredActions_recreate_deleted_entity_while_deferred(void);
-void DeferredActions_defer_add_to_recycled_id(void);
-void DeferredActions_defer_add_to_recycled_id_w_role(void);
-void DeferredActions_defer_add_to_recycled_relation(void);
-void DeferredActions_defer_add_to_recycled_object(void);
-void DeferredActions_defer_add_to_recycled_object_childof(void);
-void DeferredActions_defer_add_to_deleted_id(void);
-void DeferredActions_defer_add_to_deleted_id_w_role(void);
-void DeferredActions_defer_add_to_deleted_relation(void);
-void DeferredActions_defer_add_to_deleted_object(void);
-void DeferredActions_defer_add_to_deleted_object_childof(void);
-void DeferredActions_defer_delete_added_id(void);
-void DeferredActions_defer_delete_added_id_w_role(void);
-void DeferredActions_defer_delete_added_relation(void);
-void DeferredActions_defer_delete_added_object(void);
-void DeferredActions_defer_delete_added_object_childof(void);
-void DeferredActions_discard_add(void);
-void DeferredActions_discard_remove(void);
-void DeferredActions_discard_add_two(void);
-void DeferredActions_discard_remove_two(void);
-void DeferredActions_discard_child(void);
-void DeferredActions_discard_child_w_add(void);
-void DeferredActions_defer_return_value(void);
-void DeferredActions_defer_get_mut_pair(void);
-void DeferredActions_async_stage_add(void);
-void DeferredActions_async_stage_add_twice(void);
-void DeferredActions_async_stage_remove(void);
-void DeferredActions_async_stage_clear(void);
-void DeferredActions_async_stage_delete(void);
-void DeferredActions_async_stage_new(void);
-void DeferredActions_async_stage_no_get(void);
-void DeferredActions_async_stage_readonly(void);
-void DeferredActions_async_stage_is_async(void);
-void DeferredActions_register_component_while_in_progress(void);
-void DeferredActions_register_component_while_staged(void);
-void DeferredActions_register_component_while_deferred(void);
-void DeferredActions_defer_enable(void);
-void DeferredActions_defer_disable(void);
-void DeferredActions_defer_delete_with(void);
-void DeferredActions_defer_remove_all(void);
-void DeferredActions_deferred_modified_after_remove(void);
-void DeferredActions_merge_cleanup_ops_before_delete(void);
-void DeferredActions_merge_nested_cleanup_ops_before_delete(void);
-void DeferredActions_defer_suspend_resume(void);
-void DeferredActions_create_observer_while_deferred(void);
-void DeferredActions_create_query_while_deferred(void);
-void DeferredActions_update_observer_while_deferred(void);
-void DeferredActions_defer_set_large_component(void);
-void DeferredActions_defer_while_suspend_readonly(void);
-void DeferredActions_defer_while_suspend_readonly_w_existing_commands(void);
-void DeferredActions_defer_add_union_relationship(void);
-void DeferredActions_defer_add_existing_union_relationship(void);
-void DeferredActions_defer_add_union_relationship_2_ops(void);
-void DeferredActions_defer_add_existing_union_relationship_2_ops(void);
-void DeferredActions_defer_remove_after_set(void);
-void DeferredActions_defer_remove_after_set_w_observer(void);
-void DeferredActions_defer_override_after_remove(void);
-void DeferredActions_defer_override_after_remove_3_ops(void);
-void DeferredActions_flush_stage_to_deferred_world(void);
-void DeferredActions_add_in_observer_during_merge(void);
-void DeferredActions_add_in_observer_during_merge_2_commands(void);
-void DeferredActions_add_2_in_observer_while_on_remove_for_delete(void);
-void DeferredActions_add_2_in_observer_while_on_remove_for_delete_child(void);
-void DeferredActions_add_2_in_observer_while_on_remove_for_delete_recycled_id(void);
-void DeferredActions_add_2_in_observer_while_on_remove_for_deferred_delete_recycled_id(void);
-void DeferredActions_defer_add_after_clear(void);
-void DeferredActions_defer_cmd_after_modified(void);
-void DeferredActions_defer_remove_after_emplace_different_id(void);
-void DeferredActions_defer_remove_after_set_and_emplace_different_id(void);
-void DeferredActions_clear_after_add_to_nonempty(void);
-void DeferredActions_remove_after_add_to_nonempty(void);
-void DeferredActions_register_while_deferred_with_n_stages(void);
-void DeferredActions_defer_2_sets_w_multi_observer(void);
-void DeferredActions_exists_remove_set(void);
-void DeferredActions_absent_remove_set(void);
-void DeferredActions_exists_set_remove(void);
-void DeferredActions_absent_set_remove(void);
-void DeferredActions_exists_remove_get_mut(void);
-void DeferredActions_absent_remove_get_mut(void);
-void DeferredActions_exists_get_mut_remove(void);
-void DeferredActions_absent_get_mut_remove(void);
-void DeferredActions_exists_set_w_get_mut(void);
-void DeferredActions_absent_set_invoke_on_set(void);
-void DeferredActions_exists_set_invoke_on_set(void);
-void DeferredActions_defer_get_mut_no_on_set(void);
-void DeferredActions_defer_existing_get_mut_no_on_set(void);
-void DeferredActions_get_mut_override(void);
-void DeferredActions_set_override(void);
-void DeferredActions_absent_get_mut_for_entity_w_tag(void);
-void DeferredActions_on_set_hook_before_on_add_for_existing_component(void);
-void DeferredActions_defer_2_sets_w_observer_same_component(void);
-void DeferredActions_defer_2_sets_w_observer_other_component(void);
-void DeferredActions_on_remove_after_deferred_clear_and_add(void);
-void DeferredActions_defer_delete_recycle_same_id(void);
-void DeferredActions_observer_while_defer_suspended(void);
-void DeferredActions_on_add_hook_while_defer_suspended(void);
-void DeferredActions_on_set_hook_while_defer_suspended(void);
-void DeferredActions_on_remove_hook_while_defer_suspended(void);
+// Testsuite 'Commands'
+void Commands_defer_new(void);
+void Commands_defer_bulk_new(void);
+void Commands_defer_add(void);
+void Commands_defer_add_two(void);
+void Commands_defer_remove(void);
+void Commands_defer_remove_two(void);
+void Commands_defer_set(void);
+void Commands_defer_delete(void);
+void Commands_defer_twice(void);
+void Commands_defer_twice_in_progress(void);
+void Commands_run_w_defer(void);
+void Commands_system_in_progress_w_defer(void);
+void Commands_defer_ensure_no_modify(void);
+void Commands_defer_ensure_w_modify(void);
+void Commands_defer_modify(void);
+void Commands_defer_set_pair(void);
+void Commands_defer_clear(void);
+void Commands_defer_add_after_delete(void);
+void Commands_defer_set_after_delete(void);
+void Commands_defer_ensure_after_delete(void);
+void Commands_defer_ensure_after_delete_2nd_to_last(void);
+void Commands_defer_add_child_to_deleted_parent(void);
+void Commands_recreate_deleted_entity_while_deferred(void);
+void Commands_defer_add_to_recycled_id(void);
+void Commands_defer_add_to_recycled_id_w_role(void);
+void Commands_defer_add_to_recycled_relation(void);
+void Commands_defer_add_to_recycled_object(void);
+void Commands_defer_add_to_recycled_object_childof(void);
+void Commands_defer_add_to_deleted_id(void);
+void Commands_defer_add_to_deleted_id_w_role(void);
+void Commands_defer_add_to_deleted_relation(void);
+void Commands_defer_add_to_deleted_object(void);
+void Commands_defer_add_to_deleted_object_childof(void);
+void Commands_defer_delete_added_id(void);
+void Commands_defer_delete_added_id_w_role(void);
+void Commands_defer_delete_added_relation(void);
+void Commands_defer_delete_added_object(void);
+void Commands_defer_delete_added_object_childof(void);
+void Commands_discard_add(void);
+void Commands_discard_remove(void);
+void Commands_discard_add_two(void);
+void Commands_discard_remove_two(void);
+void Commands_discard_child(void);
+void Commands_discard_child_w_add(void);
+void Commands_defer_return_value(void);
+void Commands_defer_ensure_pair(void);
+void Commands_async_stage_add(void);
+void Commands_async_stage_add_twice(void);
+void Commands_async_stage_remove(void);
+void Commands_async_stage_clear(void);
+void Commands_async_stage_delete(void);
+void Commands_async_stage_new(void);
+void Commands_async_stage_no_get(void);
+void Commands_async_stage_readonly(void);
+void Commands_async_stage_is_async(void);
+void Commands_register_component_while_in_progress(void);
+void Commands_register_component_while_staged(void);
+void Commands_register_component_while_deferred(void);
+void Commands_defer_enable(void);
+void Commands_defer_disable(void);
+void Commands_defer_delete_with(void);
+void Commands_defer_remove_all(void);
+void Commands_deferred_modified_after_remove(void);
+void Commands_merge_cleanup_ops_before_delete(void);
+void Commands_merge_nested_cleanup_ops_before_delete(void);
+void Commands_defer_suspend_resume(void);
+void Commands_create_observer_while_deferred(void);
+void Commands_create_query_while_deferred(void);
+void Commands_update_observer_while_deferred(void);
+void Commands_defer_set_large_component(void);
+void Commands_defer_while_suspend_readonly(void);
+void Commands_defer_while_suspend_readonly_w_existing_commands(void);
+void Commands_defer_add_union_relationship(void);
+void Commands_defer_add_existing_union_relationship(void);
+void Commands_defer_add_union_relationship_2_ops(void);
+void Commands_defer_add_existing_union_relationship_2_ops(void);
+void Commands_defer_remove_after_set(void);
+void Commands_defer_remove_after_set_w_observer(void);
+void Commands_defer_override_after_remove(void);
+void Commands_defer_override_after_remove_3_ops(void);
+void Commands_flush_stage_to_deferred_world(void);
+void Commands_add_in_observer_during_merge(void);
+void Commands_add_in_observer_during_merge_2_commands(void);
+void Commands_add_2_in_observer_while_on_remove_for_delete(void);
+void Commands_add_2_in_observer_while_on_remove_for_delete_child(void);
+void Commands_add_2_in_observer_while_on_remove_for_delete_recycled_id(void);
+void Commands_add_2_in_observer_while_on_remove_for_deferred_delete_recycled_id(void);
+void Commands_defer_add_after_clear(void);
+void Commands_defer_cmd_after_modified(void);
+void Commands_defer_remove_after_emplace_different_id(void);
+void Commands_defer_remove_after_set_and_emplace_different_id(void);
+void Commands_clear_after_add_to_nonempty(void);
+void Commands_remove_after_add_to_nonempty(void);
+void Commands_register_while_deferred_with_n_stages(void);
+void Commands_defer_2_sets_w_multi_observer(void);
+void Commands_defer_2_ensures_w_multi_observer(void);
+void Commands_defer_2_ensures_no_modified_w_multi_observer(void);
+void Commands_exists_remove_set(void);
+void Commands_absent_remove_set(void);
+void Commands_exists_set_remove(void);
+void Commands_absent_set_remove(void);
+void Commands_exists_remove_ensure(void);
+void Commands_absent_remove_ensure(void);
+void Commands_exists_ensure_remove(void);
+void Commands_absent_ensure_remove(void);
+void Commands_exists_set_w_ensure(void);
+void Commands_absent_set_invoke_on_set(void);
+void Commands_exists_set_invoke_on_set(void);
+void Commands_defer_ensure_no_on_set(void);
+void Commands_defer_existing_ensure_no_on_set(void);
+void Commands_ensure_override(void);
+void Commands_set_override(void);
+void Commands_absent_ensure_for_entity_w_tag(void);
+void Commands_on_set_hook_before_on_add_for_existing_component(void);
+void Commands_defer_2_sets_w_observer_same_component(void);
+void Commands_defer_2_sets_w_observer_other_component(void);
+void Commands_on_remove_after_deferred_clear_and_add(void);
+void Commands_defer_delete_recycle_same_id(void);
+void Commands_observer_while_defer_suspended(void);
+void Commands_on_add_hook_while_defer_suspended(void);
+void Commands_on_set_hook_while_defer_suspended(void);
+void Commands_on_remove_hook_while_defer_suspended(void);
+void Commands_on_set_hook_batched_is_deferred(void);
+void Commands_add_path(void);
+void Commands_add_path_to_deleted_parent(void);
+void Commands_add_path_nested(void);
+void Commands_add_path_nested_to_deleted_parent(void);
+void Commands_add_path_nested_to_created_deleted_parent(void);
+void Commands_add_path_w_stage(void);
+void Commands_add_path_to_deleted_parent_w_stage(void);
+void Commands_add_path_nested_w_stage(void);
+void Commands_add_path_nested_to_deleted_parent_w_stage(void);
+void Commands_add_path_nested_to_created_deleted_parent_w_stage(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -2520,9 +2643,9 @@ void SingleThreadStaging_override_after_remove_in_progress(void);
 void SingleThreadStaging_get_parent_in_progress(void);
 void SingleThreadStaging_merge_once(void);
 void SingleThreadStaging_clear_stage_after_merge(void);
-void SingleThreadStaging_get_mutable(void);
-void SingleThreadStaging_get_mutable_from_main(void);
-void SingleThreadStaging_get_mutable_w_add(void);
+void SingleThreadStaging_ensureable(void);
+void SingleThreadStaging_ensureable_from_main(void);
+void SingleThreadStaging_ensureable_w_add(void);
 void SingleThreadStaging_on_add_after_new_type_in_progress(void);
 void SingleThreadStaging_lock_table(void);
 void SingleThreadStaging_recursive_lock_table(void);
@@ -2715,6 +2838,38 @@ bake_test_case Id_testcases[] = {
     {
         "pair_id_w_tag_property_w_obj_wildcard_is_tag",
         Id_pair_id_w_tag_property_w_obj_wildcard_is_tag
+    },
+    {
+        "pair_w_rel_wildcard_is_tag",
+        Id_pair_w_rel_wildcard_is_tag
+    },
+    {
+        "pair_w_obj_wildcard_is_tag",
+        Id_pair_w_obj_wildcard_is_tag
+    },
+    {
+        "pair_w_rel_tag_obj_wildcard_is_tag",
+        Id_pair_w_rel_tag_obj_wildcard_is_tag
+    },
+    {
+        "pair_w_wildcard_wildcard_is_tag",
+        Id_pair_w_wildcard_wildcard_is_tag
+    },
+    {
+        "pair_w_rel_any_is_tag",
+        Id_pair_w_rel_any_is_tag
+    },
+    {
+        "pair_w_obj_any_is_tag",
+        Id_pair_w_obj_any_is_tag
+    },
+    {
+        "pair_w_rel_tag_obj_any_is_tag",
+        Id_pair_w_rel_tag_obj_any_is_tag
+    },
+    {
+        "pair_w_any_any_is_tag",
+        Id_pair_w_any_any_is_tag
     },
     {
         "id_w_override_is_tag",
@@ -2960,28 +3115,28 @@ bake_test_case Entity_testcases[] = {
         Entity_record_find_from_stage
     },
     {
-        "ensure_zero_gen",
-        Entity_ensure_zero_gen
+        "make_alive_zero_gen",
+        Entity_make_alive_zero_gen
     },
     {
-        "ensure_nonzero_gen",
-        Entity_ensure_nonzero_gen
+        "make_alive_nonzero_gen",
+        Entity_make_alive_nonzero_gen
     },
     {
-        "ensure_zero_gen_exists",
-        Entity_ensure_zero_gen_exists
+        "make_alive_zero_gen_exists",
+        Entity_make_alive_zero_gen_exists
     },
     {
-        "ensure_nonzero_gen_exists",
-        Entity_ensure_nonzero_gen_exists
+        "make_alive_nonzero_gen_exists",
+        Entity_make_alive_nonzero_gen_exists
     },
     {
-        "ensure_zero_gen_exists_alive",
-        Entity_ensure_zero_gen_exists_alive
+        "make_alive_zero_gen_exists_alive",
+        Entity_make_alive_zero_gen_exists_alive
     },
     {
-        "ensure_nonzero_gen_exists_alive",
-        Entity_ensure_nonzero_gen_exists_alive
+        "make_alive_nonzero_gen_exists_alive",
+        Entity_make_alive_nonzero_gen_exists_alive
     },
     {
         "set_scope_w_entity_init_from_stage",
@@ -3120,16 +3275,16 @@ bake_test_case Entity_testcases[] = {
         Entity_defer_set_name_w_overlapping_ptr
     },
     {
-        "ensure_from_stage",
-        Entity_ensure_from_stage
+        "make_alive_from_stage",
+        Entity_make_alive_from_stage
     },
     {
-        "ensure_after_deleted_1_entity",
-        Entity_ensure_after_deleted_1_entity
+        "make_alive_after_deleted_1_entity",
+        Entity_make_alive_after_deleted_1_entity
     },
     {
-        "ensure_after_deleted_2_entities",
-        Entity_ensure_after_deleted_2_entities
+        "make_alive_after_deleted_2_entities",
+        Entity_make_alive_after_deleted_2_entities
     },
     {
         "defer_entity_init_w_set_name_w_add_childof",
@@ -3312,6 +3467,98 @@ bake_test_case Event_testcases[] = {
     {
         "emit_for_entity",
         Event_emit_for_entity
+    },
+    {
+        "emit_custom_for_any",
+        Event_emit_custom_for_any
+    },
+    {
+        "emit_custom_implicit_any",
+        Event_emit_custom_implicit_any
+    },
+    {
+        "emit_custom_empty_type",
+        Event_emit_custom_empty_type
+    },
+    {
+        "emit_w_param",
+        Event_emit_w_param
+    },
+    {
+        "emit_w_const_param",
+        Event_emit_w_const_param
+    },
+    {
+        "emit_nested",
+        Event_emit_nested
+    },
+    {
+        "enqueue_event_1_id",
+        Event_enqueue_event_1_id
+    },
+    {
+        "enqueue_event_2_ids",
+        Event_enqueue_event_2_ids
+    },
+    {
+        "enqueue_event_w_data",
+        Event_enqueue_event_w_data
+    },
+    {
+        "enqueue_event_w_data_move",
+        Event_enqueue_event_w_data_move
+    },
+    {
+        "enqueue_event_w_data_copy",
+        Event_enqueue_event_w_data_copy
+    },
+    {
+        "enqueue_event_w_const_data_no_copy",
+        Event_enqueue_event_w_const_data_no_copy
+    },
+    {
+        "enqueue_event_not_alive",
+        Event_enqueue_event_not_alive
+    },
+    {
+        "enqueue_event_not_alive_w_data_move",
+        Event_enqueue_event_not_alive_w_data_move
+    },
+    {
+        "enqueue_event_not_alive_w_data_copy",
+        Event_enqueue_event_not_alive_w_data_copy
+    },
+    {
+        "enqueue_event_not_alive_after_delete_during_merge",
+        Event_enqueue_event_not_alive_after_delete_during_merge
+    },
+    {
+        "enqueue_event_not_alive_w_data_move_after_delete_during_merge",
+        Event_enqueue_event_not_alive_w_data_move_after_delete_during_merge
+    },
+    {
+        "enqueue_event_not_alive_w_data_copy_after_delete_during_merge",
+        Event_enqueue_event_not_alive_w_data_copy_after_delete_during_merge
+    },
+    {
+        "enqueue_event_not_deferred",
+        Event_enqueue_event_not_deferred
+    },
+    {
+        "enqueue_event_not_deferred_to_async",
+        Event_enqueue_event_not_deferred_to_async
+    },
+    {
+        "enqueue_custom_implicit_any",
+        Event_enqueue_custom_implicit_any
+    },
+    {
+        "enqueue_custom_after_large_cmd",
+        Event_enqueue_custom_after_large_cmd
+    },
+    {
+        "enqueue_on_readonly_world",
+        Event_enqueue_on_readonly_world
     }
 };
 
@@ -4890,8 +5137,8 @@ bake_test_case Get_component_testcases[] = {
         Get_component_get_childof_component
     },
     {
-        "get_mut_equal_get",
-        Get_component_get_mut_equal_get
+        "ensure_equal_get",
+        Get_component_ensure_equal_get
     },
     {
         "get_tag",
@@ -4955,6 +5202,10 @@ bake_test_case Reference_testcases[] = {
     {
         "get_nonexisting",
         Reference_get_nonexisting
+    },
+    {
+        "aba_table",
+        Reference_aba_table
     }
 };
 
@@ -5541,6 +5792,18 @@ bake_test_case OnDelete_testcases[] = {
     {
         "delete_w_low_rel_mixed_cleanup_interleaved_ids",
         OnDelete_delete_w_low_rel_mixed_cleanup_interleaved_ids
+    },
+    {
+        "fini_query_w_singleton_in_scope_no_module",
+        OnDelete_fini_query_w_singleton_in_scope_no_module
+    },
+    {
+        "fini_query_w_singleton_in_module",
+        OnDelete_fini_query_w_singleton_in_module
+    },
+    {
+        "fini_observer_w_relationship_in_scope",
+        OnDelete_fini_observer_w_relationship_in_scope
     }
 };
 
@@ -5598,36 +5861,56 @@ bake_test_case Set_testcases[] = {
         Set_set_null
     },
     {
-        "get_mut_new",
-        Set_get_mut_new
+        "ensure_new",
+        Set_ensure_new
+    },
+    {
+        "ensure_existing",
+        Set_ensure_existing
+    },
+    {
+        "ensure_tag_new",
+        Set_ensure_tag_new
+    },
+    {
+        "ensure_tag_existing",
+        Set_ensure_tag_existing
+    },
+    {
+        "ensure_tag_new_w_comp",
+        Set_ensure_tag_new_w_comp
+    },
+    {
+        "ensure_tag_existing_w_comp",
+        Set_ensure_tag_existing_w_comp
+    },
+    {
+        "ensure_tag_new_w_pair",
+        Set_ensure_tag_new_w_pair
+    },
+    {
+        "ensure_tag_existing_w_pair",
+        Set_ensure_tag_existing_w_pair
+    },
+    {
+        "get_mut_not_existing",
+        Set_get_mut_not_existing
     },
     {
         "get_mut_existing",
         Set_get_mut_existing
     },
     {
-        "get_mut_tag_new",
-        Set_get_mut_tag_new
+        "get_mut_tag",
+        Set_get_mut_tag
     },
     {
-        "get_mut_tag_existing",
-        Set_get_mut_tag_existing
+        "get_mut_pair",
+        Set_get_mut_pair
     },
     {
-        "get_mut_tag_new_w_comp",
-        Set_get_mut_tag_new_w_comp
-    },
-    {
-        "get_mut_tag_existing_w_comp",
-        Set_get_mut_tag_existing_w_comp
-    },
-    {
-        "get_mut_tag_new_w_pair",
-        Set_get_mut_tag_new_w_pair
-    },
-    {
-        "get_mut_tag_existing_w_pair",
-        Set_get_mut_tag_existing_w_pair
+        "get_mut_pair_second",
+        Set_get_mut_pair_second
     },
     {
         "modified_w_on_set",
@@ -5638,16 +5921,16 @@ bake_test_case Set_testcases[] = {
         Set_modified_no_component
     },
     {
-        "get_mut_w_add_in_on_add",
-        Set_get_mut_w_add_in_on_add
+        "ensure_w_add_in_on_add",
+        Set_ensure_w_add_in_on_add
     },
     {
-        "get_mut_w_remove_in_on_add",
-        Set_get_mut_w_remove_in_on_add
+        "ensure_w_remove_in_on_add",
+        Set_ensure_w_remove_in_on_add
     },
     {
-        "get_mut_w_realloc_in_on_add",
-        Set_get_mut_w_realloc_in_on_add
+        "ensure_w_realloc_in_on_add",
+        Set_ensure_w_realloc_in_on_add
     },
     {
         "emplace",
@@ -5766,6 +6049,14 @@ bake_test_case Lookup_testcases[] = {
     {
         "lookup_path_w_digit",
         Lookup_lookup_path_w_digit
+    },
+    {
+        "lookup_name_w_spaces",
+        Lookup_lookup_name_w_spaces
+    },
+    {
+        "lookup_path_w_spaces",
+        Lookup_lookup_path_w_spaces
     },
     {
         "set_name_of_existing",
@@ -5890,6 +6181,10 @@ bake_test_case Lookup_testcases[] = {
     {
         "lookup_alias_w_number",
         Lookup_lookup_alias_w_number
+    },
+    {
+        "lookup_symbol_path",
+        Lookup_lookup_symbol_path
     }
 };
 
@@ -5907,8 +6202,8 @@ bake_test_case Singleton_testcases[] = {
         Singleton_set_get_singleton
     },
     {
-        "get_mut_singleton",
-        Singleton_get_mut_singleton
+        "ensure_singleton",
+        Singleton_ensure_singleton
     },
     {
         "singleton_system",
@@ -5972,6 +6267,10 @@ bake_test_case Clone_testcases[] = {
     {
         "1_tag_1_component_w_value",
         Clone_1_tag_1_component_w_value
+    },
+    {
+        "clone_w_name",
+        Clone_clone_w_name
     }
 };
 
@@ -6269,6 +6568,14 @@ bake_test_case ComponentLifecycle_testcases[] = {
         ComponentLifecycle_component_init_set_hooks
     },
     {
+        "component_init_name_from_type_info",
+        ComponentLifecycle_component_init_name_from_type_info
+    },
+    {
+        "component_init_scoped_name_from_type_info",
+        ComponentLifecycle_component_init_scoped_name_from_type_info
+    },
+    {
         "on_add_after_ctor_w_add",
         ComponentLifecycle_on_add_after_ctor_w_add
     },
@@ -6315,6 +6622,14 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "on_set_hook_on_auto_override",
         ComponentLifecycle_on_set_hook_on_auto_override
+    },
+    {
+        "batched_set_new_component_w_lifecycle",
+        ComponentLifecycle_batched_set_new_component_w_lifecycle
+    },
+    {
+        "batched_ensure_new_component_w_lifecycle",
+        ComponentLifecycle_batched_ensure_new_component_w_lifecycle
     }
 };
 
@@ -6462,6 +6777,10 @@ bake_test_case Sorting_testcases[] = {
     {
         "sort_by_wildcard",
         Sorting_sort_by_wildcard
+    },
+    {
+        "sort_shared_w_delete",
+        Sorting_sort_shared_w_delete
     }
 };
 
@@ -6597,6 +6916,10 @@ bake_test_case SortingEntireTable_testcases[] = {
     {
         "dont_resort_after_set_unsorted_component_w_tag_w_out_term",
         SortingEntireTable_dont_resort_after_set_unsorted_component_w_tag_w_out_term
+    },
+    {
+        "sort_shared_w_delete",
+        SortingEntireTable_sort_shared_w_delete
     }
 };
 
@@ -6792,6 +7115,18 @@ bake_test_case Filter_testcases[] = {
     {
         "filter_w_second_var",
         Filter_filter_w_second_var
+    },
+    {
+        "filter_w_src_var_from_name",
+        Filter_filter_w_src_var_from_name
+    },
+    {
+        "filter_w_first_first_var",
+        Filter_filter_w_first_first_var
+    },
+    {
+        "filter_w_second_second_var",
+        Filter_filter_w_second_second_var
     },
     {
         "filter_w_0_source",
@@ -7899,6 +8234,30 @@ bake_test_case FilterStr_testcases[] = {
     {
         "scopes",
         FilterStr_scopes
+    },
+    {
+        "pred_eq",
+        FilterStr_pred_eq
+    },
+    {
+        "pred_neq",
+        FilterStr_pred_neq
+    },
+    {
+        "pred_eq_name",
+        FilterStr_pred_eq_name
+    },
+    {
+        "pred_neq_name",
+        FilterStr_pred_neq_name
+    },
+    {
+        "pred_eq_m",
+        FilterStr_pred_eq_m
+    },
+    {
+        "pred_neq_m",
+        FilterStr_pred_neq_m
     }
 };
 
@@ -8560,6 +8919,14 @@ bake_test_case Query_testcases[] = {
         Query_cascade_w_3_depths
     },
     {
+        "cascade_w_2_depths_desc",
+        Query_cascade_w_2_depths_desc
+    },
+    {
+        "cascade_w_3_depths_desc",
+        Query_cascade_w_3_depths_desc
+    },
+    {
         "not_pair_relation_wildcard",
         Query_not_pair_relation_wildcard
     },
@@ -8686,6 +9053,18 @@ bake_test_case Query_testcases[] = {
     {
         "cascade_topological",
         Query_cascade_topological
+    },
+    {
+        "cascade_desc_rematch_2_lvls",
+        Query_cascade_desc_rematch_2_lvls
+    },
+    {
+        "cascade_desc_rematch_2_lvls_2_relations",
+        Query_cascade_desc_rematch_2_lvls_2_relations
+    },
+    {
+        "cascade_desc_topological",
+        Query_cascade_desc_topological
     },
     {
         "childof_rematch_from_isa",
@@ -8842,6 +9221,18 @@ bake_test_case Query_testcases[] = {
     {
         "set_this_w_wildcard",
         Query_set_this_w_wildcard
+    },
+    {
+        "singleton_w_inout_none",
+        Query_singleton_w_inout_none
+    },
+    {
+        "singleton_w_inout_none_or",
+        Query_singleton_w_inout_none_or
+    },
+    {
+        "component_w_inout_none_or",
+        Query_component_w_inout_none_or
     }
 };
 
@@ -9017,6 +9408,26 @@ bake_test_case Iter_testcases[] = {
     {
         "rule_worker_iter_w_fini",
         Iter_rule_worker_iter_w_fini
+    },
+    {
+        "to_str_before_next",
+        Iter_to_str_before_next
+    },
+    {
+        "to_str",
+        Iter_to_str
+    },
+    {
+        "filter_eval_count",
+        Iter_filter_eval_count
+    },
+    {
+        "query_eval_count",
+        Iter_query_eval_count
+    },
+    {
+        "rule_eval_count",
+        Iter_rule_eval_count
     }
 };
 
@@ -9480,6 +9891,14 @@ bake_test_case Pairs_testcases[] = {
     {
         "oneof_other_rel_parent_constraint_violated",
         Pairs_oneof_other_rel_parent_constraint_violated
+    },
+    {
+        "set_w_recycled_rel",
+        Pairs_set_w_recycled_rel
+    },
+    {
+        "set_w_recycled_tgt",
+        Pairs_set_w_recycled_tgt
     }
 };
 
@@ -10268,6 +10687,58 @@ bake_test_case Observer_testcases[] = {
         Observer_propagate_match_relationship_w_up
     },
     {
+        "propagate_isa_of_parent_add",
+        Observer_propagate_isa_of_parent_add
+    },
+    {
+        "propagate_isa_of_parent_remove",
+        Observer_propagate_isa_of_parent_remove
+    },
+    {
+        "propagate_isa_of_parent_set",
+        Observer_propagate_isa_of_parent_set
+    },
+    {
+        "propagate_add_childof_of_parent",
+        Observer_propagate_add_childof_of_parent
+    },
+    {
+        "propagate_add_childof_of_parent_w_siblings",
+        Observer_propagate_add_childof_of_parent_w_siblings
+    },
+    {
+        "propagate_add_childof_w_parent_w_base",
+        Observer_propagate_add_childof_w_parent_w_base
+    },
+    {
+        "propagate_remove_childof_w_parent_w_base",
+        Observer_propagate_remove_childof_w_parent_w_base
+    },
+    {
+        "propagate_remove_childof_of_parent",
+        Observer_propagate_remove_childof_of_parent
+    },
+    {
+        "propagate_add_isa_of_parent",
+        Observer_propagate_add_isa_of_parent
+    },
+    {
+        "propagate_remove_isa_of_parent",
+        Observer_propagate_remove_isa_of_parent
+    },
+    {
+        "propagate_add_childof_of_base",
+        Observer_propagate_add_childof_of_base
+    },
+    {
+        "propagate_remove_childof_of_base",
+        Observer_propagate_remove_childof_of_base
+    },
+    {
+        "emit_for_parent_w_prefab_child_and_instance",
+        Observer_emit_for_parent_w_prefab_child_and_instance
+    },
+    {
         "observer_w_2_fixed_src",
         Observer_observer_w_2_fixed_src
     },
@@ -10356,6 +10827,106 @@ bake_test_case Observer_testcases[] = {
         Observer_add_in_yield_existing_multi
     },
     {
+        "disable_observer",
+        Observer_disable_observer
+    },
+    {
+        "disable_observer_module",
+        Observer_disable_observer_module
+    },
+    {
+        "disable_observer_module_nested",
+        Observer_disable_observer_module_nested
+    },
+    {
+        "disable_observer_and_module",
+        Observer_disable_observer_and_module
+    },
+    {
+        "disable_multi_observer",
+        Observer_disable_multi_observer
+    },
+    {
+        "disable_multi_observer_module",
+        Observer_disable_multi_observer_module
+    },
+    {
+        "disable_multi_observer_module_nested",
+        Observer_disable_multi_observer_module_nested
+    },
+    {
+        "disable_multi_observer_and_module",
+        Observer_disable_multi_observer_and_module
+    },
+    {
+        "tag_w_on_set_and_on_add",
+        Observer_tag_w_on_set_and_on_add
+    },
+    {
+        "tag_w_on_set_and_on_add_reverse",
+        Observer_tag_w_on_set_and_on_add_reverse
+    },
+    {
+        "tag_w_un_set_and_on_remove",
+        Observer_tag_w_un_set_and_on_remove
+    },
+    {
+        "tag_w_un_set_and_on_remove_reverse",
+        Observer_tag_w_un_set_and_on_remove_reverse
+    },
+    {
+        "on_add_pair_w_rel_any",
+        Observer_on_add_pair_w_rel_any
+    },
+    {
+        "on_remove_pair_w_rel_any",
+        Observer_on_remove_pair_w_rel_any
+    },
+    {
+        "on_add_pair_w_tgt_any",
+        Observer_on_add_pair_w_tgt_any
+    },
+    {
+        "on_remove_pair_w_tgt_any",
+        Observer_on_remove_pair_w_tgt_any
+    },
+    {
+        "on_add_pair_w_any_any",
+        Observer_on_add_pair_w_any_any
+    },
+    {
+        "on_remove_pair_w_any_any",
+        Observer_on_remove_pair_w_any_any
+    },
+    {
+        "on_add_any",
+        Observer_on_add_any
+    },
+    {
+        "on_remove_any",
+        Observer_on_remove_any
+    },
+    {
+        "get_filter",
+        Observer_get_filter
+    },
+    {
+        "uni_observer_eval_count",
+        Observer_uni_observer_eval_count
+    },
+    {
+        "multi_observer_eval_count",
+        Observer_multi_observer_eval_count
+    },
+    {
+        "yield_existing_uni_no_this",
+        Observer_yield_existing_uni_no_this
+    },
+    {
+        "yield_existing_multi_no_this",
+        Observer_yield_existing_multi_no_this
+    },
+    {
         "cache_test_1",
         Observer_cache_test_1
     },
@@ -10414,6 +10985,10 @@ bake_test_case Observer_testcases[] = {
     {
         "cache_test_15",
         Observer_cache_test_15
+    },
+    {
+        "cache_test_16",
+        Observer_cache_test_16
     }
 };
 
@@ -11314,12 +11889,24 @@ bake_test_case Prefab_testcases[] = {
         Prefab_child_of_prefab_is_prefab
     },
     {
+        "child_of_prefab_w_prefab_is_prefab",
+        Prefab_child_of_prefab_w_prefab_is_prefab
+    },
+    {
+        "child_of_prefab_w_prefab_is_prefab_w_component",
+        Prefab_child_of_prefab_w_prefab_is_prefab_w_component
+    },
+    {
         "override_exclusive",
         Prefab_override_exclusive
     },
     {
         "override_exclusive_2_lvls",
         Prefab_override_exclusive_2_lvls
+    },
+    {
+        "hierarchy_w_recycled_id",
+        Prefab_hierarchy_w_recycled_id
     }
 };
 
@@ -11509,8 +12096,8 @@ bake_test_case World_testcases[] = {
         World_use_after_clear_unused
     },
     {
-        "get_mut_in_at_fini",
-        World_get_mut_in_at_fini
+        "ensure_in_at_fini",
+        World_ensure_in_at_fini
     },
     {
         "get_type_info",
@@ -11560,22 +12147,6 @@ bake_test_case WorldInfo_testcases[] = {
         WorldInfo_empty_table_count
     },
     {
-        "tag_table_count",
-        WorldInfo_tag_table_count
-    },
-    {
-        "trivial_table_count",
-        WorldInfo_trivial_table_count
-    },
-    {
-        "table_record_count",
-        WorldInfo_table_record_count
-    },
-    {
-        "table_storage_count",
-        WorldInfo_table_storage_count
-    },
-    {
         "table_create_count",
         WorldInfo_table_create_count
     },
@@ -11584,20 +12155,12 @@ bake_test_case WorldInfo_testcases[] = {
         WorldInfo_table_delete_count
     },
     {
-        "id_count",
-        WorldInfo_id_count
-    },
-    {
         "id_tag_component_count",
         WorldInfo_id_tag_component_count
     },
     {
         "id_pair_count",
         WorldInfo_id_pair_count
-    },
-    {
-        "id_wildcard_count",
-        WorldInfo_id_wildcard_count
     }
 };
 
@@ -11704,486 +12267,538 @@ bake_test_case Type_testcases[] = {
     }
 };
 
-bake_test_case DeferredActions_testcases[] = {
+bake_test_case Commands_testcases[] = {
     {
         "defer_new",
-        DeferredActions_defer_new
+        Commands_defer_new
     },
     {
         "defer_bulk_new",
-        DeferredActions_defer_bulk_new
+        Commands_defer_bulk_new
     },
     {
         "defer_add",
-        DeferredActions_defer_add
+        Commands_defer_add
     },
     {
         "defer_add_two",
-        DeferredActions_defer_add_two
+        Commands_defer_add_two
     },
     {
         "defer_remove",
-        DeferredActions_defer_remove
+        Commands_defer_remove
     },
     {
         "defer_remove_two",
-        DeferredActions_defer_remove_two
+        Commands_defer_remove_two
     },
     {
         "defer_set",
-        DeferredActions_defer_set
+        Commands_defer_set
     },
     {
         "defer_delete",
-        DeferredActions_defer_delete
+        Commands_defer_delete
     },
     {
         "defer_twice",
-        DeferredActions_defer_twice
+        Commands_defer_twice
     },
     {
         "defer_twice_in_progress",
-        DeferredActions_defer_twice_in_progress
+        Commands_defer_twice_in_progress
     },
     {
         "run_w_defer",
-        DeferredActions_run_w_defer
+        Commands_run_w_defer
     },
     {
         "system_in_progress_w_defer",
-        DeferredActions_system_in_progress_w_defer
+        Commands_system_in_progress_w_defer
     },
     {
-        "defer_get_mut_no_modify",
-        DeferredActions_defer_get_mut_no_modify
+        "defer_ensure_no_modify",
+        Commands_defer_ensure_no_modify
     },
     {
-        "defer_get_mut_w_modify",
-        DeferredActions_defer_get_mut_w_modify
+        "defer_ensure_w_modify",
+        Commands_defer_ensure_w_modify
     },
     {
         "defer_modify",
-        DeferredActions_defer_modify
+        Commands_defer_modify
     },
     {
         "defer_set_pair",
-        DeferredActions_defer_set_pair
+        Commands_defer_set_pair
     },
     {
         "defer_clear",
-        DeferredActions_defer_clear
+        Commands_defer_clear
     },
     {
         "defer_add_after_delete",
-        DeferredActions_defer_add_after_delete
+        Commands_defer_add_after_delete
     },
     {
         "defer_set_after_delete",
-        DeferredActions_defer_set_after_delete
+        Commands_defer_set_after_delete
     },
     {
-        "defer_get_mut_after_delete",
-        DeferredActions_defer_get_mut_after_delete
+        "defer_ensure_after_delete",
+        Commands_defer_ensure_after_delete
     },
     {
-        "defer_get_mut_after_delete_2nd_to_last",
-        DeferredActions_defer_get_mut_after_delete_2nd_to_last
+        "defer_ensure_after_delete_2nd_to_last",
+        Commands_defer_ensure_after_delete_2nd_to_last
     },
     {
         "defer_add_child_to_deleted_parent",
-        DeferredActions_defer_add_child_to_deleted_parent
+        Commands_defer_add_child_to_deleted_parent
     },
     {
         "recreate_deleted_entity_while_deferred",
-        DeferredActions_recreate_deleted_entity_while_deferred
+        Commands_recreate_deleted_entity_while_deferred
     },
     {
         "defer_add_to_recycled_id",
-        DeferredActions_defer_add_to_recycled_id
+        Commands_defer_add_to_recycled_id
     },
     {
         "defer_add_to_recycled_id_w_role",
-        DeferredActions_defer_add_to_recycled_id_w_role
+        Commands_defer_add_to_recycled_id_w_role
     },
     {
         "defer_add_to_recycled_relation",
-        DeferredActions_defer_add_to_recycled_relation
+        Commands_defer_add_to_recycled_relation
     },
     {
         "defer_add_to_recycled_object",
-        DeferredActions_defer_add_to_recycled_object
+        Commands_defer_add_to_recycled_object
     },
     {
         "defer_add_to_recycled_object_childof",
-        DeferredActions_defer_add_to_recycled_object_childof
+        Commands_defer_add_to_recycled_object_childof
     },
     {
         "defer_add_to_deleted_id",
-        DeferredActions_defer_add_to_deleted_id
+        Commands_defer_add_to_deleted_id
     },
     {
         "defer_add_to_deleted_id_w_role",
-        DeferredActions_defer_add_to_deleted_id_w_role
+        Commands_defer_add_to_deleted_id_w_role
     },
     {
         "defer_add_to_deleted_relation",
-        DeferredActions_defer_add_to_deleted_relation
+        Commands_defer_add_to_deleted_relation
     },
     {
         "defer_add_to_deleted_object",
-        DeferredActions_defer_add_to_deleted_object
+        Commands_defer_add_to_deleted_object
     },
     {
         "defer_add_to_deleted_object_childof",
-        DeferredActions_defer_add_to_deleted_object_childof
+        Commands_defer_add_to_deleted_object_childof
     },
     {
         "defer_delete_added_id",
-        DeferredActions_defer_delete_added_id
+        Commands_defer_delete_added_id
     },
     {
         "defer_delete_added_id_w_role",
-        DeferredActions_defer_delete_added_id_w_role
+        Commands_defer_delete_added_id_w_role
     },
     {
         "defer_delete_added_relation",
-        DeferredActions_defer_delete_added_relation
+        Commands_defer_delete_added_relation
     },
     {
         "defer_delete_added_object",
-        DeferredActions_defer_delete_added_object
+        Commands_defer_delete_added_object
     },
     {
         "defer_delete_added_object_childof",
-        DeferredActions_defer_delete_added_object_childof
+        Commands_defer_delete_added_object_childof
     },
     {
         "discard_add",
-        DeferredActions_discard_add
+        Commands_discard_add
     },
     {
         "discard_remove",
-        DeferredActions_discard_remove
+        Commands_discard_remove
     },
     {
         "discard_add_two",
-        DeferredActions_discard_add_two
+        Commands_discard_add_two
     },
     {
         "discard_remove_two",
-        DeferredActions_discard_remove_two
+        Commands_discard_remove_two
     },
     {
         "discard_child",
-        DeferredActions_discard_child
+        Commands_discard_child
     },
     {
         "discard_child_w_add",
-        DeferredActions_discard_child_w_add
+        Commands_discard_child_w_add
     },
     {
         "defer_return_value",
-        DeferredActions_defer_return_value
+        Commands_defer_return_value
     },
     {
-        "defer_get_mut_pair",
-        DeferredActions_defer_get_mut_pair
+        "defer_ensure_pair",
+        Commands_defer_ensure_pair
     },
     {
         "async_stage_add",
-        DeferredActions_async_stage_add
+        Commands_async_stage_add
     },
     {
         "async_stage_add_twice",
-        DeferredActions_async_stage_add_twice
+        Commands_async_stage_add_twice
     },
     {
         "async_stage_remove",
-        DeferredActions_async_stage_remove
+        Commands_async_stage_remove
     },
     {
         "async_stage_clear",
-        DeferredActions_async_stage_clear
+        Commands_async_stage_clear
     },
     {
         "async_stage_delete",
-        DeferredActions_async_stage_delete
+        Commands_async_stage_delete
     },
     {
         "async_stage_new",
-        DeferredActions_async_stage_new
+        Commands_async_stage_new
     },
     {
         "async_stage_no_get",
-        DeferredActions_async_stage_no_get
+        Commands_async_stage_no_get
     },
     {
         "async_stage_readonly",
-        DeferredActions_async_stage_readonly
+        Commands_async_stage_readonly
     },
     {
         "async_stage_is_async",
-        DeferredActions_async_stage_is_async
+        Commands_async_stage_is_async
     },
     {
         "register_component_while_in_progress",
-        DeferredActions_register_component_while_in_progress
+        Commands_register_component_while_in_progress
     },
     {
         "register_component_while_staged",
-        DeferredActions_register_component_while_staged
+        Commands_register_component_while_staged
     },
     {
         "register_component_while_deferred",
-        DeferredActions_register_component_while_deferred
+        Commands_register_component_while_deferred
     },
     {
         "defer_enable",
-        DeferredActions_defer_enable
+        Commands_defer_enable
     },
     {
         "defer_disable",
-        DeferredActions_defer_disable
+        Commands_defer_disable
     },
     {
         "defer_delete_with",
-        DeferredActions_defer_delete_with
+        Commands_defer_delete_with
     },
     {
         "defer_remove_all",
-        DeferredActions_defer_remove_all
+        Commands_defer_remove_all
     },
     {
         "deferred_modified_after_remove",
-        DeferredActions_deferred_modified_after_remove
+        Commands_deferred_modified_after_remove
     },
     {
         "merge_cleanup_ops_before_delete",
-        DeferredActions_merge_cleanup_ops_before_delete
+        Commands_merge_cleanup_ops_before_delete
     },
     {
         "merge_nested_cleanup_ops_before_delete",
-        DeferredActions_merge_nested_cleanup_ops_before_delete
+        Commands_merge_nested_cleanup_ops_before_delete
     },
     {
         "defer_suspend_resume",
-        DeferredActions_defer_suspend_resume
+        Commands_defer_suspend_resume
     },
     {
         "create_observer_while_deferred",
-        DeferredActions_create_observer_while_deferred
+        Commands_create_observer_while_deferred
     },
     {
         "create_query_while_deferred",
-        DeferredActions_create_query_while_deferred
+        Commands_create_query_while_deferred
     },
     {
         "update_observer_while_deferred",
-        DeferredActions_update_observer_while_deferred
+        Commands_update_observer_while_deferred
     },
     {
         "defer_set_large_component",
-        DeferredActions_defer_set_large_component
+        Commands_defer_set_large_component
     },
     {
         "defer_while_suspend_readonly",
-        DeferredActions_defer_while_suspend_readonly
+        Commands_defer_while_suspend_readonly
     },
     {
         "defer_while_suspend_readonly_w_existing_commands",
-        DeferredActions_defer_while_suspend_readonly_w_existing_commands
+        Commands_defer_while_suspend_readonly_w_existing_commands
     },
     {
         "defer_add_union_relationship",
-        DeferredActions_defer_add_union_relationship
+        Commands_defer_add_union_relationship
     },
     {
         "defer_add_existing_union_relationship",
-        DeferredActions_defer_add_existing_union_relationship
+        Commands_defer_add_existing_union_relationship
     },
     {
         "defer_add_union_relationship_2_ops",
-        DeferredActions_defer_add_union_relationship_2_ops
+        Commands_defer_add_union_relationship_2_ops
     },
     {
         "defer_add_existing_union_relationship_2_ops",
-        DeferredActions_defer_add_existing_union_relationship_2_ops
+        Commands_defer_add_existing_union_relationship_2_ops
     },
     {
         "defer_remove_after_set",
-        DeferredActions_defer_remove_after_set
+        Commands_defer_remove_after_set
     },
     {
         "defer_remove_after_set_w_observer",
-        DeferredActions_defer_remove_after_set_w_observer
+        Commands_defer_remove_after_set_w_observer
     },
     {
         "defer_override_after_remove",
-        DeferredActions_defer_override_after_remove
+        Commands_defer_override_after_remove
     },
     {
         "defer_override_after_remove_3_ops",
-        DeferredActions_defer_override_after_remove_3_ops
+        Commands_defer_override_after_remove_3_ops
     },
     {
         "flush_stage_to_deferred_world",
-        DeferredActions_flush_stage_to_deferred_world
+        Commands_flush_stage_to_deferred_world
     },
     {
         "add_in_observer_during_merge",
-        DeferredActions_add_in_observer_during_merge
+        Commands_add_in_observer_during_merge
     },
     {
         "add_in_observer_during_merge_2_commands",
-        DeferredActions_add_in_observer_during_merge_2_commands
+        Commands_add_in_observer_during_merge_2_commands
     },
     {
         "add_2_in_observer_while_on_remove_for_delete",
-        DeferredActions_add_2_in_observer_while_on_remove_for_delete
+        Commands_add_2_in_observer_while_on_remove_for_delete
     },
     {
         "add_2_in_observer_while_on_remove_for_delete_child",
-        DeferredActions_add_2_in_observer_while_on_remove_for_delete_child
+        Commands_add_2_in_observer_while_on_remove_for_delete_child
     },
     {
         "add_2_in_observer_while_on_remove_for_delete_recycled_id",
-        DeferredActions_add_2_in_observer_while_on_remove_for_delete_recycled_id
+        Commands_add_2_in_observer_while_on_remove_for_delete_recycled_id
     },
     {
         "add_2_in_observer_while_on_remove_for_deferred_delete_recycled_id",
-        DeferredActions_add_2_in_observer_while_on_remove_for_deferred_delete_recycled_id
+        Commands_add_2_in_observer_while_on_remove_for_deferred_delete_recycled_id
     },
     {
         "defer_add_after_clear",
-        DeferredActions_defer_add_after_clear
+        Commands_defer_add_after_clear
     },
     {
         "defer_cmd_after_modified",
-        DeferredActions_defer_cmd_after_modified
+        Commands_defer_cmd_after_modified
     },
     {
         "defer_remove_after_emplace_different_id",
-        DeferredActions_defer_remove_after_emplace_different_id
+        Commands_defer_remove_after_emplace_different_id
     },
     {
         "defer_remove_after_set_and_emplace_different_id",
-        DeferredActions_defer_remove_after_set_and_emplace_different_id
+        Commands_defer_remove_after_set_and_emplace_different_id
     },
     {
         "clear_after_add_to_nonempty",
-        DeferredActions_clear_after_add_to_nonempty
+        Commands_clear_after_add_to_nonempty
     },
     {
         "remove_after_add_to_nonempty",
-        DeferredActions_remove_after_add_to_nonempty
+        Commands_remove_after_add_to_nonempty
     },
     {
         "register_while_deferred_with_n_stages",
-        DeferredActions_register_while_deferred_with_n_stages
+        Commands_register_while_deferred_with_n_stages
     },
     {
         "defer_2_sets_w_multi_observer",
-        DeferredActions_defer_2_sets_w_multi_observer
+        Commands_defer_2_sets_w_multi_observer
+    },
+    {
+        "defer_2_ensures_w_multi_observer",
+        Commands_defer_2_ensures_w_multi_observer
+    },
+    {
+        "defer_2_ensures_no_modified_w_multi_observer",
+        Commands_defer_2_ensures_no_modified_w_multi_observer
     },
     {
         "exists_remove_set",
-        DeferredActions_exists_remove_set
+        Commands_exists_remove_set
     },
     {
         "absent_remove_set",
-        DeferredActions_absent_remove_set
+        Commands_absent_remove_set
     },
     {
         "exists_set_remove",
-        DeferredActions_exists_set_remove
+        Commands_exists_set_remove
     },
     {
         "absent_set_remove",
-        DeferredActions_absent_set_remove
+        Commands_absent_set_remove
     },
     {
-        "exists_remove_get_mut",
-        DeferredActions_exists_remove_get_mut
+        "exists_remove_ensure",
+        Commands_exists_remove_ensure
     },
     {
-        "absent_remove_get_mut",
-        DeferredActions_absent_remove_get_mut
+        "absent_remove_ensure",
+        Commands_absent_remove_ensure
     },
     {
-        "exists_get_mut_remove",
-        DeferredActions_exists_get_mut_remove
+        "exists_ensure_remove",
+        Commands_exists_ensure_remove
     },
     {
-        "absent_get_mut_remove",
-        DeferredActions_absent_get_mut_remove
+        "absent_ensure_remove",
+        Commands_absent_ensure_remove
     },
     {
-        "exists_set_w_get_mut",
-        DeferredActions_exists_set_w_get_mut
+        "exists_set_w_ensure",
+        Commands_exists_set_w_ensure
     },
     {
         "absent_set_invoke_on_set",
-        DeferredActions_absent_set_invoke_on_set
+        Commands_absent_set_invoke_on_set
     },
     {
         "exists_set_invoke_on_set",
-        DeferredActions_exists_set_invoke_on_set
+        Commands_exists_set_invoke_on_set
     },
     {
-        "defer_get_mut_no_on_set",
-        DeferredActions_defer_get_mut_no_on_set
+        "defer_ensure_no_on_set",
+        Commands_defer_ensure_no_on_set
     },
     {
-        "defer_existing_get_mut_no_on_set",
-        DeferredActions_defer_existing_get_mut_no_on_set
+        "defer_existing_ensure_no_on_set",
+        Commands_defer_existing_ensure_no_on_set
     },
     {
-        "get_mut_override",
-        DeferredActions_get_mut_override
+        "ensure_override",
+        Commands_ensure_override
     },
     {
         "set_override",
-        DeferredActions_set_override
+        Commands_set_override
     },
     {
-        "absent_get_mut_for_entity_w_tag",
-        DeferredActions_absent_get_mut_for_entity_w_tag
+        "absent_ensure_for_entity_w_tag",
+        Commands_absent_ensure_for_entity_w_tag
     },
     {
         "on_set_hook_before_on_add_for_existing_component",
-        DeferredActions_on_set_hook_before_on_add_for_existing_component
+        Commands_on_set_hook_before_on_add_for_existing_component
     },
     {
         "defer_2_sets_w_observer_same_component",
-        DeferredActions_defer_2_sets_w_observer_same_component
+        Commands_defer_2_sets_w_observer_same_component
     },
     {
         "defer_2_sets_w_observer_other_component",
-        DeferredActions_defer_2_sets_w_observer_other_component
+        Commands_defer_2_sets_w_observer_other_component
     },
     {
         "on_remove_after_deferred_clear_and_add",
-        DeferredActions_on_remove_after_deferred_clear_and_add
+        Commands_on_remove_after_deferred_clear_and_add
     },
     {
         "defer_delete_recycle_same_id",
-        DeferredActions_defer_delete_recycle_same_id
+        Commands_defer_delete_recycle_same_id
     },
     {
         "observer_while_defer_suspended",
-        DeferredActions_observer_while_defer_suspended
+        Commands_observer_while_defer_suspended
     },
     {
         "on_add_hook_while_defer_suspended",
-        DeferredActions_on_add_hook_while_defer_suspended
+        Commands_on_add_hook_while_defer_suspended
     },
     {
         "on_set_hook_while_defer_suspended",
-        DeferredActions_on_set_hook_while_defer_suspended
+        Commands_on_set_hook_while_defer_suspended
     },
     {
         "on_remove_hook_while_defer_suspended",
-        DeferredActions_on_remove_hook_while_defer_suspended
+        Commands_on_remove_hook_while_defer_suspended
+    },
+    {
+        "on_set_hook_batched_is_deferred",
+        Commands_on_set_hook_batched_is_deferred
+    },
+    {
+        "add_path",
+        Commands_add_path
+    },
+    {
+        "add_path_to_deleted_parent",
+        Commands_add_path_to_deleted_parent
+    },
+    {
+        "add_path_nested",
+        Commands_add_path_nested
+    },
+    {
+        "add_path_nested_to_deleted_parent",
+        Commands_add_path_nested_to_deleted_parent
+    },
+    {
+        "add_path_nested_to_created_deleted_parent",
+        Commands_add_path_nested_to_created_deleted_parent
+    },
+    {
+        "add_path_w_stage",
+        Commands_add_path_w_stage
+    },
+    {
+        "add_path_to_deleted_parent_w_stage",
+        Commands_add_path_to_deleted_parent_w_stage
+    },
+    {
+        "add_path_nested_w_stage",
+        Commands_add_path_nested_w_stage
+    },
+    {
+        "add_path_nested_to_deleted_parent_w_stage",
+        Commands_add_path_nested_to_deleted_parent_w_stage
+    },
+    {
+        "add_path_nested_to_created_deleted_parent_w_stage",
+        Commands_add_path_nested_to_created_deleted_parent_w_stage
     }
 };
 
@@ -12405,16 +13020,16 @@ bake_test_case SingleThreadStaging_testcases[] = {
         SingleThreadStaging_clear_stage_after_merge
     },
     {
-        "get_mutable",
-        SingleThreadStaging_get_mutable
+        "ensureable",
+        SingleThreadStaging_ensureable
     },
     {
-        "get_mutable_from_main",
-        SingleThreadStaging_get_mutable_from_main
+        "ensureable_from_main",
+        SingleThreadStaging_ensureable_from_main
     },
     {
-        "get_mutable_w_add",
-        SingleThreadStaging_get_mutable_w_add
+        "ensureable_w_add",
+        SingleThreadStaging_ensureable_w_add
     },
     {
         "on_add_after_new_type_in_progress",
@@ -12788,12 +13403,13 @@ bake_test_case StackAlloc_testcases[] = {
     }
 };
 
+
 static bake_test_suite suites[] = {
     {
         "Id",
         NULL,
         NULL,
-        29,
+        37,
         Id_testcases
     },
     {
@@ -12814,7 +13430,7 @@ static bake_test_suite suites[] = {
         "Event",
         NULL,
         NULL,
-        11,
+        34,
         Event_testcases
     },
     {
@@ -12905,7 +13521,7 @@ static bake_test_suite suites[] = {
         "Reference",
         Reference_setup,
         NULL,
-        12,
+        13,
         Reference_testcases
     },
     {
@@ -12919,14 +13535,14 @@ static bake_test_suite suites[] = {
         "OnDelete",
         NULL,
         NULL,
-        113,
+        116,
         OnDelete_testcases
     },
     {
         "Set",
         NULL,
         NULL,
-        31,
+        36,
         Set_testcases
     },
     {
@@ -12940,7 +13556,7 @@ static bake_test_suite suites[] = {
         "Lookup",
         Lookup_setup,
         NULL,
-        46,
+        49,
         Lookup_testcases
     },
     {
@@ -12954,63 +13570,63 @@ static bake_test_suite suites[] = {
         "Clone",
         NULL,
         NULL,
-        14,
+        15,
         Clone_testcases
     },
     {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        85,
+        89,
         ComponentLifecycle_testcases
     },
     {
         "Sorting",
         NULL,
         NULL,
-        36,
+        37,
         Sorting_testcases
     },
     {
         "SortingEntireTable",
         NULL,
         NULL,
-        33,
+        34,
         SortingEntireTable_testcases
     },
     {
         "Filter",
         NULL,
         NULL,
-        301,
+        304,
         Filter_testcases
     },
     {
         "FilterStr",
         NULL,
         NULL,
-        23,
+        29,
         FilterStr_testcases
     },
     {
         "Query",
         NULL,
         NULL,
-        235,
+        243,
         Query_testcases
     },
     {
         "Iter",
         NULL,
         NULL,
-        43,
+        48,
         Iter_testcases
     },
     {
         "Pairs",
         NULL,
         NULL,
-        115,
+        117,
         Pairs_testcases
     },
     {
@@ -13024,7 +13640,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        114,
+        153,
         Observer_testcases
     },
     {
@@ -13066,7 +13682,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        126,
+        129,
         Prefab_testcases
     },
     {
@@ -13080,7 +13696,7 @@ static bake_test_suite suites[] = {
         "WorldInfo",
         NULL,
         NULL,
-        13,
+        7,
         WorldInfo_testcases
     },
     {
@@ -13091,11 +13707,11 @@ static bake_test_suite suites[] = {
         Type_testcases
     },
     {
-        "DeferredActions",
+        "Commands",
         NULL,
         NULL,
-        120,
-        DeferredActions_testcases
+        133,
+        Commands_testcases
     },
     {
         "SingleThreadStaging",

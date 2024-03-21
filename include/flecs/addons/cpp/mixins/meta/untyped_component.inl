@@ -4,8 +4,8 @@
  */
 
 /**
- * \memberof flecs::component
- * \ingroup cpp_addons_meta
+ * @memberof flecs::component
+ * @ingroup cpp_addons_meta
  * 
  * @{
  */
@@ -116,6 +116,17 @@ untyped_component& bit(const char *name, uint32_t value) {
     return *this;
 }
 
+/** Register array metadata for component */
+template <typename Elem>
+untyped_component& array(int32_t elem_count) {
+    ecs_array_desc_t desc = {};
+    desc.entity = m_id;
+    desc.type = _::cpp_type<Elem>::id(m_world);
+    desc.count = elem_count;
+    ecs_array_init(m_world, &desc);
+    return *this;
+}
+
 /** Add member value range */
 untyped_component& range(double min, double max) {
     const flecs::member_t *m = ecs_cpp_last_member(m_world, m_id);
@@ -125,7 +136,10 @@ untyped_component& range(double min, double max) {
 
     flecs::world w(m_world);
     flecs::entity me = w.entity(m->member);
-    flecs::MemberRanges *mr = me.get_mut<flecs::MemberRanges>();
+
+    // Don't use C++ ensure because Unreal defines a macro called ensure
+    flecs::MemberRanges *mr = static_cast<flecs::MemberRanges*>(
+        ecs_ensure_id(w, me, w.id<flecs::MemberRanges>()));
     mr->value.min = min;
     mr->value.max = max;
     me.modified<flecs::MemberRanges>();
@@ -141,7 +155,10 @@ untyped_component& warning_range(double min, double max) {
 
     flecs::world w(m_world);
     flecs::entity me = w.entity(m->member);
-    flecs::MemberRanges *mr = me.get_mut<flecs::MemberRanges>();
+
+    // Don't use C++ ensure because Unreal defines a macro called ensure
+    flecs::MemberRanges *mr = static_cast<flecs::MemberRanges*>(
+        ecs_ensure_id(w, me, w.id<flecs::MemberRanges>()));
     mr->warning.min = min;
     mr->warning.max = max;
     me.modified<flecs::MemberRanges>();
@@ -157,7 +174,10 @@ untyped_component& error_range(double min, double max) {
 
     flecs::world w(m_world);
     flecs::entity me = w.entity(m->member);
-    flecs::MemberRanges *mr = me.get_mut<flecs::MemberRanges>();
+
+    // Don't use C++ ensure because Unreal defines a macro called ensure
+    flecs::MemberRanges *mr = static_cast<flecs::MemberRanges*>(ecs_ensure_id(
+        w, me, w.id<flecs::MemberRanges>()));
     mr->error.min = min;
     mr->error.max = max;
     me.modified<flecs::MemberRanges>();

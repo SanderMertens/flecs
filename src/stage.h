@@ -88,8 +88,7 @@ void* flecs_defer_set(
     ecs_entity_t entity,
     ecs_entity_t component,
     ecs_size_t size,
-    void *value,
-    bool need_value);
+    void *value);
 
 bool flecs_defer_end(
     ecs_world_t *world,
@@ -98,5 +97,20 @@ bool flecs_defer_end(
 bool flecs_defer_purge(
     ecs_world_t *world,
     ecs_stage_t *stage);
+
+void flecs_enqueue(
+    ecs_world_t *world,
+    ecs_stage_t *stage,
+    ecs_event_desc_t *desc);
+
+void flecs_commands_push(
+    ecs_stage_t *stage);
+
+void flecs_commands_pop(
+    ecs_stage_t *stage);
+
+ecs_entity_t flecs_stage_set_system(
+    ecs_stage_t *stage,
+    ecs_entity_t system);
 
 #endif

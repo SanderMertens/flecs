@@ -498,3 +498,135 @@ void FilterStr_scopes(void) {
 
     ecs_fini(world);
 }
+
+void FilterStr_pred_eq(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "$this == TagA"
+    }));
+
+    char *str = ecs_filter_str(world, &f);
+    test_str(str, "$this == TagA");
+    ecs_os_free(str);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void FilterStr_pred_neq(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "$this != TagA"
+    }));
+
+    char *str = ecs_filter_str(world, &f);
+    test_str(str, "$this != TagA");
+    ecs_os_free(str);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void FilterStr_pred_eq_name(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "$this == \"TagA\""
+    }));
+
+    char *str = ecs_filter_str(world, &f);
+    test_str(str, "$this == \"TagA\"");
+    ecs_os_free(str);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void FilterStr_pred_neq_name(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "$this != \"TagA\""
+    }));
+
+    char *str = ecs_filter_str(world, &f);
+    test_str(str, "$this != \"TagA\"");
+    ecs_os_free(str);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void FilterStr_pred_eq_m(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "$this ~= \"TagA\""
+    }));
+
+    char *str = ecs_filter_str(world, &f);
+    test_str(str, "$this ~= \"TagA\"");
+    ecs_os_free(str);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void FilterStr_pred_neq_m(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .expr = "$this ~= \"!TagA\""
+    }));
+
+    char *str = ecs_filter_str(world, &f);
+    test_str(str, "$this ~= \"!TagA\"");
+    ecs_os_free(str);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}

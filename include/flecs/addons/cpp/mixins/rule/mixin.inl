@@ -4,8 +4,10 @@
  */
 
 /**
- * \memberof flecs::world
- * \ingroup cpp_addons_rules
+ * @memberof flecs::world
+ * @ingroup cpp_addons_rules
+ *
+ * @{
  */
 
 /** Create a rule.

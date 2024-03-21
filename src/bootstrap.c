@@ -422,6 +422,13 @@ void flecs_on_component(ecs_iter_t *it) {
             "component id must be smaller than %u", ECS_MAX_COMPONENT_ID);
         (void)component_id;
 
+        if (it->event != EcsOnRemove) {
+            ecs_entity_t parent = ecs_get_target(world, e, EcsChildOf, 0);
+            if (parent) {
+                ecs_add_id(world, parent, EcsModule);
+            }
+        }
+
         if (it->event == EcsOnSet) {
             if (flecs_type_info_init_id(
                 world, e, c[i].size, c[i].alignment, NULL))
@@ -448,6 +455,96 @@ void flecs_ensure_module_tag(ecs_iter_t *it) {
     }
 }
 
+static
+void flecs_observer_set_disable_bit(
+    ecs_world_t *world,
+    ecs_entity_t e,
+    ecs_flags32_t bit,
+    bool cond)
+{
+    const EcsPoly *poly = ecs_get_pair(world, e, EcsPoly, EcsObserver);
+    if (!poly || !poly->poly) {
+        return;
+    }
+
+    ecs_observer_t *o = poly->poly;
+    if (o->flags & EcsObserverIsMulti) {
+        /* If this is a multi-component observer, set flag on single-term
+         * observer children. */
+        ecs_iter_t child_it = ecs_children(world, e);
+        while (ecs_children_next(&child_it)) {
+            ecs_table_t *table = child_it.table;
+            if (ecs_table_has_id(world, table, EcsObserver)) {
+                int32_t i;
+                for (i = 0; i < child_it.count; i ++) {
+                    flecs_observer_set_disable_bit(
+                        world, child_it.entities[i], bit, cond);
+
+                }
+            }
+        }
+    } else {
+        ecs_poly_assert(o, ecs_observer_t);
+        ECS_BIT_COND(o->flags, bit, cond);
+    }
+}
+
+static
+void flecs_disable_observer(
+    ecs_iter_t *it) 
+{
+    ecs_world_t *world = it->world;
+    ecs_entity_t evt = it->event;
+
+    int32_t i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        flecs_observer_set_disable_bit(world, it->entities[i], 
+            EcsObserverIsDisabled, evt == EcsOnAdd);
+    }
+}
+
+static
+void flecs_disable_module_observers(
+    ecs_world_t *world, 
+    ecs_entity_t module,
+    bool should_disable)
+{
+    ecs_iter_t child_it = ecs_children(world, module);
+    while (ecs_children_next(&child_it)) {
+        ecs_table_t *table = child_it.table;
+        bool table_disabled = table->flags & EcsTableIsDisabled;
+        int32_t i;
+
+        /* Recursively walk modules, don't propagate to disabled modules */
+        if (ecs_table_has_id(world, table, EcsModule) && !table_disabled) {    
+            for (i = 0; i < child_it.count; i ++) {
+                flecs_disable_module_observers(
+                    world, child_it.entities[i], should_disable);
+            }
+            continue;
+        }
+
+        /* Only disable observers */
+        if (!ecs_table_has_id(world, table, EcsObserver)) {
+            continue;
+        }
+
+        for (i = 0; i < child_it.count; i ++) {
+            flecs_observer_set_disable_bit(world, child_it.entities[i], 
+                EcsObserverIsParentDisabled, should_disable);
+        }
+    }
+}
+
+static
+void flecs_disable_module(ecs_iter_t *it) {
+    int32_t i;
+    for (i = 0; i < it->count; i ++) {
+        flecs_disable_module_observers(
+            it->world, it->entities[i], it->event == EcsOnAdd);
+    }
+}
+
 /* -- Iterable mixins -- */
 
 static
@@ -458,7 +555,6 @@ void flecs_on_event_iterable_init(
     ecs_term_t *filter)
 {
     ecs_iter_poly(world, poly, it, filter);
-    it->event_id = filter->id;
 }
 
 /* -- Bootstrapping -- */
@@ -484,7 +580,7 @@ void flecs_bootstrap_builtin(
     ecs_record_t *record = flecs_entities_ensure(world, entity);
     record->table = table;
 
-    int32_t index = flecs_table_append(world, table, entity, record, false, false);
+    int32_t index = flecs_table_append(world, table, entity, false, false);
     record->row = ECS_ROW_TO_RECORD(index, 0);
 
     EcsComponent *component = ecs_vec_first(&columns[0].data);
@@ -561,7 +657,6 @@ ecs_table_t* flecs_bootstrap_component_table(
     /* Preallocate enough memory for initial components */
     ecs_allocator_t *a = &world->allocator;
     ecs_vec_init_t(a, &data->entities, ecs_entity_t, EcsFirstUserComponentId);
-    ecs_vec_init_t(a, &data->records, ecs_record_t*, EcsFirstUserComponentId);
     ecs_vec_init_t(a, &data->columns[0].data, EcsComponent, EcsFirstUserComponentId);
     ecs_vec_init_t(a, &data->columns[1].data, EcsIdentifier, EcsFirstUserComponentId);
     ecs_vec_init_t(a, &data->columns[2].data, EcsIdentifier, EcsFirstUserComponentId);
@@ -580,7 +675,7 @@ void flecs_bootstrap_entity(
     ecs_os_strcpy(symbol, "flecs.core.");
     ecs_os_strcat(symbol, name);
     
-    ecs_ensure(world, id);
+    ecs_make_alive(world, id);
     ecs_add_pair(world, id, EcsChildOf, parent);
     ecs_set_name(world, id, name);
     ecs_set_symbol(world, id, symbol);
@@ -588,7 +683,7 @@ void flecs_bootstrap_entity(
     ecs_assert(ecs_get_name(world, id) != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (!parent || parent == EcsFlecsCore) {
-        ecs_assert(ecs_lookup_fullpath(world, name) == id, 
+        ecs_assert(ecs_lookup(world, name) == id, 
             ECS_INTERNAL_ERROR, NULL);
     }
 }
@@ -601,26 +696,26 @@ void flecs_bootstrap(
     ecs_set_name_prefix(world, "Ecs");
 
     /* Ensure builtin ids are alive */
-    ecs_ensure(world, ecs_id(EcsComponent));
-    ecs_ensure(world, EcsFinal);
-    ecs_ensure(world, ecs_id(EcsIdentifier));
-    ecs_ensure(world, EcsName);
-    ecs_ensure(world, EcsSymbol);
-    ecs_ensure(world, EcsAlias);
-    ecs_ensure(world, EcsChildOf);
-    ecs_ensure(world, EcsFlecs);
-    ecs_ensure(world, EcsFlecsCore);
-    ecs_ensure(world, EcsOnAdd);
-    ecs_ensure(world, EcsOnRemove);
-    ecs_ensure(world, EcsOnSet);
-    ecs_ensure(world, EcsUnSet);
-    ecs_ensure(world, EcsOnDelete);
-    ecs_ensure(world, EcsPanic);
-    ecs_ensure(world, EcsFlag);
-    ecs_ensure(world, EcsIsA);
-    ecs_ensure(world, EcsWildcard);
-    ecs_ensure(world, EcsAny);
-    ecs_ensure(world, EcsTag);
+    ecs_make_alive(world, ecs_id(EcsComponent));
+    ecs_make_alive(world, EcsFinal);
+    ecs_make_alive(world, ecs_id(EcsIdentifier));
+    ecs_make_alive(world, EcsName);
+    ecs_make_alive(world, EcsSymbol);
+    ecs_make_alive(world, EcsAlias);
+    ecs_make_alive(world, EcsChildOf);
+    ecs_make_alive(world, EcsFlecs);
+    ecs_make_alive(world, EcsFlecsCore);
+    ecs_make_alive(world, EcsOnAdd);
+    ecs_make_alive(world, EcsOnRemove);
+    ecs_make_alive(world, EcsOnSet);
+    ecs_make_alive(world, EcsUnSet);
+    ecs_make_alive(world, EcsOnDelete);
+    ecs_make_alive(world, EcsPanic);
+    ecs_make_alive(world, EcsFlag);
+    ecs_make_alive(world, EcsIsA);
+    ecs_make_alive(world, EcsWildcard);
+    ecs_make_alive(world, EcsAny);
+    ecs_make_alive(world, EcsTag);
 
     /* Register type information for builtin components */
     flecs_type_info_init(world, EcsComponent, { 
@@ -663,6 +758,10 @@ void flecs_bootstrap(
     flecs_bootstrap_builtin_t(world, table, EcsIterable);
     flecs_bootstrap_builtin_t(world, table, EcsPoly);
     flecs_bootstrap_builtin_t(world, table, EcsTarget);
+
+    /* Patch up symbol of EcsIterable. The type is a typedef, which causes a
+     * symbol mismatch when registering the type with the C++ API. */
+    ecs_set_symbol(world, ecs_id(EcsIterable), "ecs_iterable_t");
 
     /* Initialize default entity id range */
     world->info.last_component_id = EcsFirstUserComponentId;
@@ -903,6 +1002,26 @@ void flecs_bootstrap(
         .callback = flecs_ensure_module_tag
     });
 
+    /* Observer that tracks whether observers are disabled */
+    ecs_observer(world, {
+        .filter.terms = {
+            { .id = EcsObserver, .src.flags = EcsSelf|EcsFilter },
+            { .id = EcsDisabled, .src.flags = EcsSelf },
+        },
+        .events = {EcsOnAdd, EcsOnRemove},
+        .callback = flecs_disable_observer
+    });
+
+    /* Observer that tracks whether modules are disabled */
+    ecs_observer(world, {
+        .filter.terms = {
+            { .id = EcsModule, .src.flags = EcsSelf|EcsFilter },
+            { .id = EcsDisabled, .src.flags = EcsSelf },
+        },
+        .events = {EcsOnAdd, EcsOnRemove},
+        .callback = flecs_disable_module
+    });
+
     /* Set scope back to flecs core */
     ecs_set_scope(world, EcsFlecsCore);
 
@@ -914,6 +1033,8 @@ void flecs_bootstrap(
 
     /* DontInherit components */
     ecs_add_id(world, EcsPrefab, EcsDontInherit);
+    ecs_add_id(world, ecs_id(EcsComponent), EcsDontInherit);
+    ecs_add_id(world, EcsOnDelete, EcsDontInherit);
 
     /* Acyclic/Traversable components */
     ecs_add_id(world, EcsIsA, EcsTraversable);
@@ -941,6 +1062,9 @@ void flecs_bootstrap(
     ecs_set_scope(world, 0);
 
     ecs_set_name_prefix(world, NULL);
+
+    ecs_assert(world->idr_childof_wildcard != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(world->idr_isa_wildcard != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_log_pop();
 }

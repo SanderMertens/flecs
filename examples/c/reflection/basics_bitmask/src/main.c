@@ -34,11 +34,11 @@ int main(int argc, char *argv[]) {
         }
     });
 
-    // Create entity with Position as usual
+    // Create entity with Sandwich as usual
     ecs_entity_t ent = ecs_new_id(ecs);
     ecs_set(ecs, ent, Sandwich, {Bacon | Lettuce});
 
-    // Convert position component to flecs expression string
+    // Convert Sandwich component to flecs expression string
     const Sandwich *ptr = ecs_get(ecs, ent, Sandwich);
     char *str = ecs_ptr_to_expr(ecs, ecs_id(Sandwich), ptr);
     printf("%s\n", str); // {toppings: Bacon|Lettuce}

@@ -9,8 +9,9 @@ namespace flecs {
 
 /**
  * @defgroup cpp_addons_app App
- * @brief Optional addon for running the main application loop.
- * \ingroup cpp_addons
+ * @ingroup cpp_addons
+ * Optional addon for running the main application loop.
+ *
  * @{
  */
 
@@ -73,7 +74,7 @@ struct app_builder {
         int result = ecs_app_run(m_world, &m_desc);
         if (ecs_should_quit(m_world)) {
             // Only free world if quit flag is set. This ensures that we won't
-            // try to cleanup the world if the app is used in an environment 
+            // try to cleanup the world if the app is used in an environment
             // that takes over the main loop, like with emscripten.
             ecs_fini(m_world);
         }

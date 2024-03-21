@@ -13,13 +13,13 @@ struct stringstream {
         ecs_strbuf_reset(&m_buf);
     }
 
-    stringstream(stringstream&& str) {
+    stringstream(stringstream&& str) noexcept {
         ecs_strbuf_reset(&m_buf);
         m_buf = str.m_buf;
         str.m_buf = {};
     }
 
-    stringstream& operator=(stringstream&& str) {
+    stringstream& operator=(stringstream&& str) noexcept {
         ecs_strbuf_reset(&m_buf);
         m_buf = str.m_buf;
         str.m_buf = {};

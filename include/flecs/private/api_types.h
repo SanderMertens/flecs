@@ -85,6 +85,7 @@ typedef struct ecs_var_t {
 struct ecs_ref_t {
     ecs_entity_t entity;    /* Entity */
     ecs_entity_t id;        /* Component id */
+    uint64_t table_id;      /* Table id for detecting ABA issues */
     struct ecs_table_record_t *tr; /* Table record for component */
     ecs_record_t *record;   /* Entity index record */
 };
@@ -192,12 +193,12 @@ typedef struct ecs_rule_iter_t {
     const struct ecs_rule_op_t *ops;
     struct ecs_rule_op_ctx_t *op_ctx;    /* Operation-specific state */
     uint64_t *written;
+    ecs_flags32_t source_set;
 
 #ifdef FLECS_DEBUG
     ecs_rule_op_profile_t *profile;
 #endif
 
-    bool redo;
     int16_t op;
     int16_t sp;
 } ecs_rule_iter_t;
@@ -264,9 +265,11 @@ struct ecs_iter_t {
     ecs_entity_t system;          /* The system (if applicable) */
     ecs_entity_t event;           /* The event (if applicable) */
     ecs_id_t event_id;            /* The (component) id for the event */
+    int32_t event_cur;            /* Unique event id. Used to dedup observer calls */
 
     /* Query information */
-    ecs_term_t *terms;            /* Terms of query being evaluated */
+    const ecs_filter_t *query;    /* Query being evaluated */
+    ecs_term_t *terms;            /* Term array of query being evaluated */
     int32_t table_count;          /* Active table count for query */
     int32_t term_index;           /* Index of term that emitted an event.
                                    * This field will be set to the 'index' field

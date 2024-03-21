@@ -58,7 +58,7 @@ void ReadWrite_write(void) {
 
     ecs_record_t *r = ecs_write_begin(world, e);
     test_assert(r != NULL);
-    Position *p = ecs_record_get_mut(world, r, Position);
+    Position *p = ecs_record_ensure(world, r, Position);
     test_assert(p != NULL);
     test_assert(p == ecs_get(world, e, Position));
     test_int(p->x, 10);
@@ -128,7 +128,7 @@ void ReadWrite_read_from_stage(void) {
     ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
 
     ecs_world_t *s = ecs_get_stage(world, 0);
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
 
     const ecs_record_t *r = ecs_read_begin(s, e);
     test_assert(r != NULL);
@@ -155,11 +155,11 @@ void ReadWrite_write_from_stage(void) {
     ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
 
     ecs_world_t *s = ecs_get_stage(world, 0);
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
 
     ecs_record_t *r = ecs_write_begin(s, e);
     test_assert(r != NULL);
-    Position *p = ecs_record_get_mut(s, r, Position);
+    Position *p = ecs_record_ensure(s, r, Position);
     test_assert(p != NULL);
     test_assert(p == ecs_get(world, e, Position));
     test_int(p->x, 10);

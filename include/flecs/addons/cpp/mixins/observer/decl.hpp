@@ -9,9 +9,9 @@ namespace flecs {
 
 /**
  * @defgroup cpp_observers Observers
- * @brief Observers let applications register callbacks for ECS events.
- * 
- * \ingroup cpp_core
+ * @ingroup cpp_core
+ * Observers let applications register callbacks for ECS events.
+ *
  * @{
  */
 

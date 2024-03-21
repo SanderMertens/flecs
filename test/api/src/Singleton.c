@@ -47,12 +47,12 @@ void Singleton_set_get_singleton(void) {
     ecs_fini(world);
 }
 
-void Singleton_get_mut_singleton(void) {
+void Singleton_ensure_singleton(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
-    Position *p_mut = ecs_singleton_get_mut(world, Position);
+    Position *p_mut = ecs_singleton_ensure(world, Position);
     p_mut->x = 10;
     p_mut->y = 20;
     

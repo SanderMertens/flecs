@@ -124,7 +124,8 @@ int flecs_expr_ser_primitive(
                     out[0] = '"';
                     out[length + 1] = '"';
                     out[length + 2] = '\0';
-                    ecs_strbuf_appendstr_zerocpy(str, out);
+                    ecs_strbuf_appendstr(str, out);
+                    ecs_os_free(out);
                 }
             }
         } else {
@@ -138,6 +139,15 @@ int flecs_expr_ser_primitive(
             ecs_strbuf_appendch(str, '0');
         } else {
             ecs_get_path_w_sep_buf(world, 0, e, ".", NULL, str);
+        }
+        break;
+    }
+    case EcsId: {
+        ecs_id_t id = *(const ecs_id_t*)base;
+        if (!id) {
+            ecs_strbuf_appendch(str, '0');
+        } else {
+            ecs_id_str_buf(world, id, str);
         }
         break;
     }
@@ -370,6 +380,7 @@ int flecs_expr_ser_type_op(
     case EcsOpUPtr:
     case EcsOpIPtr:
     case EcsOpEntity:
+    case EcsOpId:
     case EcsOpString:
     case EcsOpOpaque:
         if (flecs_expr_ser_primitive(world, flecs_expr_op_to_primitive_kind(op->kind), 
@@ -454,6 +465,7 @@ int flecs_expr_ser_type_ops(
         case EcsOpUPtr:
         case EcsOpIPtr:
         case EcsOpEntity:
+        case EcsOpId:
         case EcsOpString:
         case EcsOpOpaque:
             if (flecs_expr_ser_type_op(world, op, base, str, is_expr)) {

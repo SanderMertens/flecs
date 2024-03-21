@@ -70,19 +70,16 @@ ecs_poly_t* ecs_poly_get_(
 
 /* Utilities for testing/asserting an object type */
 #ifndef FLECS_NDEBUG
-void* ecs_poly_assert_(
-    const ecs_poly_t *object,
-    int32_t type,
-    const char *file,
-    int32_t line);
-
-#define ecs_poly_assert(object, type)\
-    ecs_poly_assert_(object, type##_magic, __FILE__, __LINE__)
-
-#define ecs_poly(object, T) ((T*)ecs_poly_assert(object, T))
+#define ecs_poly_assert(object, ty)\
+    do {\
+        ecs_assert(object != NULL, ECS_INVALID_PARAMETER, NULL);\
+        const ecs_header_t *hdr = (const ecs_header_t *)object;\
+        const char *type_name = hdr->mixins->type_name;\
+        ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER, type_name);\
+        ecs_assert(hdr->type == ty##_magic, ECS_INVALID_PARAMETER, type_name);\
+    } while (0)
 #else
-#define ecs_poly_assert(object, type)
-#define ecs_poly(object, T) ((T*)object)
+#define ecs_poly_assert(object, ty)
 #endif
 
 /* Utility functions for getting a mixin from an object */

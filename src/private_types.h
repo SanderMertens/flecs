@@ -27,6 +27,7 @@
 extern const ecs_entity_t EcsFlag;
 
 #define ECS_MAX_JOBS_PER_WORKER (16)
+#define ECS_MAX_DEFER_STACK (8)
 
 /* Magic number for a flecs object */
 #define ECS_OBJECT_MAGIC (0x6563736f)
@@ -251,7 +252,7 @@ struct ecs_query_t {
     /* Monitor generation */
     int32_t monitor_generation;
 
-    int32_t cascade_by;              /* Identify cascade column */
+    int32_t cascade_by;              /* Identify cascade term */
     int32_t match_count;             /* How often have tables been (un)matched */
     int32_t prev_match_count;        /* Track if sorting is needed */
     int32_t rematch_count;           /* Track which tables were added during rematch */
@@ -317,26 +318,34 @@ typedef struct ecs_stage_allocators_t {
 
 /** Types for deferred operations */
 typedef enum ecs_cmd_kind_t {
-    EcsOpClone,
-    EcsOpBulkNew,
-    EcsOpAdd,
-    EcsOpRemove,   
-    EcsOpSet,
-    EcsOpEmplace,
-    EcsOpMut,
-    EcsOpModified,
-    EcsOpAddModified,
-    EcsOpPath,
-    EcsOpDelete,
-    EcsOpClear,
-    EcsOpOnDeleteAction,
-    EcsOpEnable,
-    EcsOpDisable,
-    EcsOpSkip
+    EcsCmdClone,
+    EcsCmdBulkNew,
+    EcsCmdAdd,
+    EcsCmdRemove,   
+    EcsCmdSet,
+    EcsCmdEmplace,
+    EcsCmdEnsure,
+    EcsCmdModified,
+    EcsCmdModifiedNoHook,
+    EcsCmdAddModified,
+    EcsCmdPath,
+    EcsCmdDelete,
+    EcsCmdClear,
+    EcsCmdOnDeleteAction,
+    EcsCmdEnable,
+    EcsCmdDisable,
+    EcsCmdEvent,
+    EcsCmdSkip
 } ecs_cmd_kind_t;
 
+/* Entity specific metadata for command in queue */
+typedef struct ecs_cmd_entry_t {
+    int32_t first;
+    int32_t last;                    /* If -1, a delete command was inserted */
+} ecs_cmd_entry_t;
+
 typedef struct ecs_cmd_1_t {
-    void *value;                     /* Component value (used by set / get_mut) */
+    void *value;                     /* Component value (used by set / ensure) */
     ecs_size_t size;                 /* Size of value */
     bool clone_value;                /* Clone entity with value (used for clone) */ 
 } ecs_cmd_1_t;
@@ -351,19 +360,29 @@ typedef struct ecs_cmd_t {
     int32_t next_for_entity;         /* Next operation for entity */    
     ecs_id_t id;                     /* (Component) id */
     ecs_id_record_t *idr;            /* Id record (only for set/mut/emplace) */
+    ecs_cmd_entry_t *entry;
     ecs_entity_t entity;             /* Entity id */
 
     union {
         ecs_cmd_1_t _1;              /* Data for single entity operation */
         ecs_cmd_n_t _n;              /* Data for multi entity operation */
     } is;
+
+    ecs_entity_t system;             /* System that enqueued the command */
 } ecs_cmd_t;
 
-/* Entity specific metadata for command in defer queue */
-typedef struct ecs_cmd_entry_t {
-    int32_t first;
-    int32_t last;                    /* If -1, a delete command was inserted */
-} ecs_cmd_entry_t;
+/* Data structures that store the command queue */
+typedef struct ecs_commands_t {
+    ecs_vec_t queue;
+    ecs_stack_t stack;          /* Temp memory used by deferred commands */
+    ecs_sparse_t entries;       /* <entity, op_entry_t> - command batching */
+} ecs_commands_t;
+
+/** Callback used to capture commands of a frame */
+typedef void (*ecs_on_commands_action_t)(
+    const ecs_stage_t *stage,
+    const ecs_vec_t *commands,
+    void *ctx);
 
 /** A stage is a context that allows for safely using the API from multiple 
  * threads. Stage pointers can be passed to the world argument of API 
@@ -375,11 +394,13 @@ struct ecs_stage_t {
     /* Unique id that identifies the stage */
     int32_t id;
 
-    /* Deferred command queue */
+    /* Zero if not deferred, positive if deferred, negative if suspended */
     int32_t defer;
-    ecs_vec_t commands;
-    ecs_stack_t defer_stack;         /* Temp memory used by deferred commands */
-    ecs_sparse_t cmd_entries;        /* <entity, op_entry_t> - command combining */
+
+    /* Command queue stack, for nested execution */
+    ecs_commands_t *cmd;
+    ecs_commands_t cmd_stack[ECS_MAX_DEFER_STACK];
+    int32_t cmd_sp;
 
     /* Thread context */
     ecs_world_t *thread_ctx;         /* Points to stage when a thread stage */
@@ -394,6 +415,9 @@ struct ecs_stage_t {
     ecs_entity_t with;               /* Id to add by default to new entities */
     ecs_entity_t base;               /* Currently instantiated top-level base */
     const ecs_entity_t *lookup_path; /* Search path used by lookup operations */
+
+    /* Running system */
+    ecs_entity_t system;
 
     /* Properties */
     bool auto_merge;                 /* Should this stage automatically merge? */
@@ -510,6 +534,15 @@ struct ecs_world_t {
     /* -- Staging -- */
     ecs_stage_t *stages;             /* Stages */
     int32_t stage_count;             /* Number of stages */
+
+    /* Internal callback for command inspection. Only one callback can be set at
+     * a time. After assignment the action will become active at the start of 
+     * the next frame, set by ecs_frame_begin, and will be reset by 
+     * ecs_frame_end. */
+    ecs_on_commands_action_t on_commands;
+    ecs_on_commands_action_t on_commands_active;
+    void *on_commands_ctx;
+    void *on_commands_ctx_active;
 
     /* -- Multithreading -- */
     ecs_os_cond_t worker_cond;       /* Signal that worker threads can start */

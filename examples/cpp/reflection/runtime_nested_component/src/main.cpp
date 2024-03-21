@@ -15,7 +15,7 @@ int main(int, char *[]) {
 
     // Create entity, set value of position using reflection API
     flecs::entity e = ecs.entity();
-    void *ptr = e.get_mut(line);
+    void *ptr = e.ensure(line);
 
     flecs::cursor cur = ecs.cursor(line, ptr);
     cur.push();        // {

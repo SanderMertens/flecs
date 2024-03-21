@@ -18,42 +18,53 @@ static ecs_mixins_t ecs_rule_t_mixins = {
     }
 };
 
-static
 const char* flecs_rule_op_str(
     uint16_t kind)
 {
     switch(kind) {
-    case EcsRuleAnd:          return "and     ";
-    case EcsRuleAndId:        return "and_id  ";
-    case EcsRuleAndAny:       return "andany  ";
-    case EcsRuleWith:         return "with    ";
-    case EcsRuleTrav:         return "trav    ";
-    case EcsRuleIdsRight:     return "idsr    ";
-    case EcsRuleIdsLeft:      return "idsl    ";
-    case EcsRuleEach:         return "each    ";
-    case EcsRuleStore:        return "store   ";
-    case EcsRuleReset:        return "reset   ";
-    case EcsRuleUnion:        return "union   ";
-    case EcsRuleEnd:          return "end     ";
-    case EcsRuleNot:          return "not     ";
-    case EcsRulePredEq:       return "eq      ";
-    case EcsRulePredNeq:      return "neq     ";
-    case EcsRulePredEqName:   return "eq_nm   ";
-    case EcsRulePredNeqName:  return "neq_nm  ";
-    case EcsRulePredEqMatch:  return "eq_m    ";
-    case EcsRulePredNeqMatch: return "neq_m   ";
-    case EcsRuleSetVars:      return "setvars ";
-    case EcsRuleSetThis:      return "setthis ";
-    case EcsRuleSetFixed:     return "setfix  ";
-    case EcsRuleSetIds:       return "setids  ";
-    case EcsRuleContain:      return "contain ";
-    case EcsRulePairEq:       return "pair_eq ";
-    case EcsRuleSetCond:      return "setcond ";
-    case EcsRuleJmpCondFalse: return "jfalse  ";
-    case EcsRuleJmpNotSet:    return "jnotset ";
-    case EcsRuleYield:        return "yield   ";
-    case EcsRuleNothing:      return "nothing ";
-    default: return "!invalid";
+    case EcsRuleAnd:           return "and     ";
+    case EcsRuleAndId:         return "andid   ";
+    case EcsRuleAndAny:        return "andany  ";
+    case EcsRuleTriv:          return "triv    ";
+    case EcsRuleTrivData:      return "trivpop ";
+    case EcsRuleTrivWildcard:  return "trivwc  ";
+    case EcsRuleSelectAny:     return "any     ";
+    case EcsRuleUp:            return "up      ";
+    case EcsRuleUpId:          return "upid    ";
+    case EcsRuleSelfUp:        return "selfup  ";
+    case EcsRuleSelfUpId:      return "selfupid";
+    case EcsRuleWith:          return "with    ";
+    case EcsRuleTrav:          return "trav    ";
+    case EcsRuleIds:           return "ids     ";
+    case EcsRuleIdsRight:      return "idsr    ";
+    case EcsRuleIdsLeft:       return "idsl    ";
+    case EcsRuleEach:          return "each    ";
+    case EcsRuleStore:         return "store   ";
+    case EcsRuleReset:         return "reset   ";
+    case EcsRuleOr:            return "or      ";
+    case EcsRuleOptional:      return "option  ";
+    case EcsRuleIf:            return "if      ";
+    case EcsRuleEnd:           return "end     ";
+    case EcsRuleNot:           return "not     ";
+    case EcsRulePredEq:        return "eq      ";
+    case EcsRulePredNeq:       return "neq     ";
+    case EcsRulePredEqName:    return "eq_nm   ";
+    case EcsRulePredNeqName:   return "neq_nm  ";
+    case EcsRulePredEqMatch:   return "eq_m    ";
+    case EcsRulePredNeqMatch:  return "neq_m   ";
+    case EcsRuleLookup:        return "lookup  ";
+    case EcsRuleSetVars:       return "setvars ";
+    case EcsRuleSetThis:       return "setthis ";
+    case EcsRuleSetFixed:      return "setfix  ";
+    case EcsRuleSetIds:        return "setids  ";
+    case EcsRuleSetId:         return "setid   ";
+    case EcsRuleContain:       return "contain ";
+    case EcsRulePairEq:        return "pair_eq ";
+    case EcsRulePopulate:      return "pop     ";
+    case EcsRulePopulateSelf:  return "popself ";
+    case EcsRuleYield:         return "yield   ";
+    case EcsRuleNothing:       return "nothing ";
+    default:                   return "!invalid";
     }
 }
 
@@ -196,6 +207,7 @@ char* ecs_rule_str_w_profile(
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
     ecs_rule_op_t *ops = rule->ops;
     int32_t i, count = rule->op_count, indent = 0;
+
     for (i = 0; i < count; i ++) {
         ecs_rule_op_t *op = &ops[i];
         ecs_flags16_t flags = op->flags;
@@ -226,20 +238,17 @@ char* ecs_rule_str_w_profile(
         ecs_strbuf_appendstr(&buf, " ");
 
         int32_t written = ecs_strbuf_written(&buf);
-        for (int32_t j = 0; j < (10 - (written - start)); j ++) {
-            ecs_strbuf_appendch(&buf, ' ');
-        }
-
-        if (op->kind == EcsRuleJmpCondFalse || op->kind == EcsRuleSetCond ||
-            op->kind == EcsRuleJmpNotSet) 
-        {
-            ecs_strbuf_appendint(&buf, op->other);
+        for (int32_t j = 0; j < (12 - (written - start)); j ++) {
             ecs_strbuf_appendch(&buf, ' ');
         }
     
         hidden_chars = flecs_rule_op_ref_str(rule, &op->src, src_flags, &buf);
 
-        if (op->kind == EcsRuleUnion) {
+        if (op->kind == EcsRuleNot || 
+            op->kind == EcsRuleOr || 
+            op->kind == EcsRuleOptional || 
+            op->kind == EcsRuleIf) 
+        {
             indent ++;
         }
 
@@ -251,6 +260,11 @@ char* ecs_rule_str_w_profile(
         written = ecs_strbuf_written(&buf) - hidden_chars;
         for (int32_t j = 0; j < (30 - (written - start)); j ++) {
             ecs_strbuf_appendch(&buf, ' ');
+        }
+
+        if (!first_flags && !second_flags) {
+            ecs_strbuf_appendstr(&buf, "\n");
+            continue;
         }
 
         ecs_strbuf_appendstr(&buf, "(");
@@ -271,6 +285,13 @@ char* ecs_rule_str_w_profile(
                 ecs_strbuf_appendstr(&buf, "\"#[reset]");
                 break;
             }
+            case EcsRuleLookup: {
+                ecs_var_id_t src_id = op->src.var;
+                ecs_strbuf_appendstr(&buf, ", #[yellow]\"");
+                ecs_strbuf_appendstr(&buf, rule->vars[src_id].lookup);
+                ecs_strbuf_appendstr(&buf, "\"#[reset]");
+                break;
+            }
             default:
                 break;
             }
@@ -283,7 +304,7 @@ char* ecs_rule_str_w_profile(
 
 #ifdef FLECS_LOG    
     char *str = ecs_strbuf_get(&buf);
-    flecs_colorize_buf(str, true, &buf);
+    flecs_colorize_buf(str, ecs_os_api.flags_ & EcsOsApiLogWithColors, &buf);
     ecs_os_free(str);
 #endif
     return ecs_strbuf_get(&buf);
@@ -358,7 +379,7 @@ const char* ecs_rule_parse_vars(
             return NULL;
         }
 
-        ecs_entity_t val = ecs_lookup_fullpath(rule->filter.world, token);
+        ecs_entity_t val = ecs_lookup(rule->filter.world, token);
         if (!val) {
             ecs_parser_error(name, expr, (ptr - expr), 
                 "unresolved entity '%s'", token);

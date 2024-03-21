@@ -15,7 +15,7 @@ namespace flecs
  * descriptions can reference entities by id, name or by variable, which means
  * the entity will be resolved when the term is evaluated.
  * 
- * \ingroup cpp_core_filters
+ * @ingroup cpp_core_filters
  */
 template<typename Base>
 struct term_id_builder_i {
@@ -63,6 +63,13 @@ struct term_id_builder_i {
         return this->cascade(_::cpp_type<Trav>::id(this->world_v()));
     }
 
+    /* Use with cascade to iterate results in descending (bottom -> top) order */
+    Base& desc() {
+        this->assert_term_id();
+        m_term_id->flags |= flecs::Desc;
+        return *this;
+    }
+
     /* The parent flag is short for up(flecs::ChildOf) */
     Base& parent() {
         this->assert_term_id();
@@ -85,7 +92,7 @@ struct term_id_builder_i {
         return *this;
     }
 
-    /* Specify value of identifier by id. Amost the same as id(entity), but this
+    /* Specify value of identifier by id. Almost the same as id(entity), but this
      * operation explicitly sets the flecs::IsEntity flag. This forces the id to 
      * be interpreted as entity, whereas not setting the flag would implicitly
      * convert ids for builtin variables such as flecs::This to a variable.
@@ -142,7 +149,7 @@ private:
 /** Term builder interface. 
  * A term is a single element of a query expression. 
  * 
- * \ingroup cpp_addons_filter
+ * @ingroup cpp_core_filters
  */
 template<typename Base>
 struct term_builder_i : term_id_builder_i<Base> {
@@ -307,7 +314,7 @@ struct term_builder_i : term_id_builder_i<Base> {
     }
 
     /** Short for inout_stage(flecs::InOut).
-     *   Use when system uses get_mut.
+     *   Use when system uses ensure.
      */
     Base& read_write() {
         return this->inout_stage(flecs::InOut);

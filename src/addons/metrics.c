@@ -260,6 +260,10 @@ static void UpdateMemberInstance(ecs_iter_t *it, bool counter) {
     for (i = 0; i < count; i ++) {
         ecs_member_metric_ctx_t *ctx = mi[i].ctx;
         ecs_ref_t *ref = &mi[i].ref;
+        if (!ref->entity) {
+            continue;
+        }
+
         const void *ptr = ecs_ref_get_id(world, ref, ref->id);
         if (ptr) {
             ptr = ECS_OFFSET(ptr, ctx->offset);
@@ -296,7 +300,12 @@ static void UpdateIdInstance(ecs_iter_t *it, bool counter) {
 
     int32_t i, count = it->count;
     for (i = 0; i < count; i ++) {
-        ecs_table_t *table = mi[i].r->table;
+        ecs_record_t *r = mi[i].r;
+        if (!r) {
+            continue;
+        }
+
+        ecs_table_t *table = r->table;
         if (!table) {
             ecs_delete(it->world, it->entities[i]);
             continue;
@@ -336,7 +345,12 @@ static void UpdateOneOfInstance(ecs_iter_t *it, bool counter) {
     int32_t i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_oneof_metric_ctx_t *ctx = mi[i].ctx;
-        ecs_table_t *mtable = mi[i].r->table;
+        ecs_record_t *r = mi[i].r;
+        if (!r) {
+            continue;
+        }
+
+        ecs_table_t *mtable = r->table;
 
         double *value = ECS_ELEM(m, ctx->size, i);
         if (!counter) {
@@ -399,12 +413,12 @@ static void UpdateCountTargets(ecs_iter_t *it) {
                     ecs_set_name(world, mi[0], name);
                 }
 
-                EcsMetricSource *source = ecs_get_mut(
+                EcsMetricSource *source = ecs_ensure(
                     world, mi[0], EcsMetricSource);
                 source->entity = tgt;
             }
 
-            EcsMetricValue *value = ecs_get_mut(world, mi[0], EcsMetricValue);
+            EcsMetricValue *value = ecs_ensure(world, mi[0], EcsMetricValue);
             value->value += (double)ecs_count_id(world, cur->id) * 
                 (double)it->delta_system_time;
         }
@@ -430,7 +444,7 @@ int flecs_member_metric_init(
     ecs_entity_t metric,
     const ecs_metric_desc_t *desc)
 {
-    ecs_entity_t type = 0, member_type = 0, member = 0;
+    ecs_entity_t type = 0, member_type = 0, member = 0, id = 0;
     uintptr_t offset = 0;
 
     if (desc->dotmember) {
@@ -450,7 +464,9 @@ int flecs_member_metric_init(
             goto error;
         }
 
-        ecs_meta_cursor_t cur = ecs_meta_cursor(world, desc->id, NULL);
+        type = ecs_get_typeid(world, desc->id);
+
+        ecs_meta_cursor_t cur = ecs_meta_cursor(world, type, NULL);
         if (ecs_meta_push(&cur)) {
             char *metric_name = ecs_get_fullpath(world, metric);
             ecs_err("invalid type for metric '%s'", metric_name);
@@ -465,7 +481,7 @@ int flecs_member_metric_init(
             goto error;
         }
 
-        type = desc->id;
+        id = desc->id;
         member_type = ecs_meta_get_type(&cur);
         offset = (uintptr_t)ecs_meta_get_ptr(&cur);
         member = ecs_meta_get_member_id(&cur);
@@ -492,6 +508,22 @@ int flecs_member_metric_init(
             goto error;
         }
         
+        id = type;
+        if (desc->id) {
+            if (type != ecs_get_typeid(world, desc->id)) {
+                char *metric_name = ecs_get_fullpath(world, metric);
+                char *member_name = ecs_get_fullpath(world, desc->member);
+                char *id_name = ecs_get_fullpath(world, desc->id);
+                ecs_err("member '%s' for metric '%s' is not of type '%s'",
+                    member_name, metric_name, id_name);
+                ecs_os_free(id_name);
+                ecs_os_free(member_name);
+                ecs_os_free(metric_name);
+                goto error;
+            }
+            id = desc->id;
+        }
+
         member = desc->member;
         member_type = m->type;
         offset = flecs_ito(uintptr_t, m->offset);
@@ -539,7 +571,7 @@ int flecs_member_metric_init(
         .entity = metric,
         .events = { EcsOnAdd },
         .filter.terms[0] = {
-            .id = type,
+            .id = id,
             .src.flags = EcsSelf,
             .inout = EcsInOutNone
         },
@@ -728,13 +760,13 @@ ecs_entity_t ecs_metric_init(
         goto error;
     }
 
-    if (kind == EcsCounterIncrement && !desc->member) {
+    if (kind == EcsCounterIncrement && !desc->member && !desc->dotmember) {
         ecs_err("CounterIncrement can only be used in combination with member");
         goto error;
     }
 
-    if (kind == EcsCounterId && desc->member) {
-        ecs_err("CounterIncrement cannot be used in combination with member");
+    if (kind == EcsCounterId && (desc->member || desc->dotmember)) {
+        ecs_err("CounterId cannot be used in combination with member");
         goto error;
     }
 
@@ -747,10 +779,6 @@ ecs_entity_t ecs_metric_init(
     }
 
     if (desc->member || desc->dotmember) {
-        if (desc->id && desc->member) {
-            ecs_err("cannot specify both member and id for metric");
-            goto error;
-        }
         if (flecs_member_metric_init(world, result, desc)) {
             goto error;
         }

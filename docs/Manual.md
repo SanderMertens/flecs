@@ -230,7 +230,7 @@ ecs_os_free(path);
 Paths can be used to lookup an entity:
 
 ```c
-ecs_entity_t e = ecs_lookup_fullpath(world, "Parent.Child.GrandChild");
+ecs_entity_t e = ecs_lookup(world, "Parent.Child.GrandChild");
 ```
 
 Path lookups may be relative:
@@ -497,10 +497,10 @@ The value of a component can be requested with `ecs_get`, which will return `NUL
 const Position *p = ecs_get(world, e, Position);
 ```
 
-The `ecs_get` operation returns a const pointer which should not be modified by the application. An application can obtain a mutable pointer with `ecs_get_mut`. The `ecs_get_mut` operation ensures that, even when using multiple threads, an application obtains a pointer to a component that can be safely modified, whereas the `ecs_get` operation might return a pointer to memory that is shared between threads. When an application modified a component obtained with `ecs_get_mut`, it should invoke `ecs_modified` to let the framework know the component value was changed. An example:
+The `ecs_get` operation returns a const pointer which should not be modified by the application. An application can obtain a mutable pointer with `ecs_ensure`. The `ecs_ensure` operation ensures that, even when using multiple threads, an application obtains a pointer to a component that can be safely modified, whereas the `ecs_get` operation might return a pointer to memory that is shared between threads. When an application modified a component obtained with `ecs_ensure`, it should invoke `ecs_modified` to let the framework know the component value was changed. An example:
 
 ```c
-Position *p = ecs_get_mut(world, e, Position);
+Position *p = ecs_ensure(world, e, Position);
 p->x++;
 ecs_modified(world, e, Position);
 ```
@@ -790,7 +790,7 @@ ecs_entity_t e = ecs_new(world, Car);
 Module contents are namespaced, which means that the identifiers of the content of the module (components, tags, systems) are stored in the scope of the module. For the above example module, everything would be stored in the `vehicles` scope. To resolve the `Car` component by name, an application would have to do:
 
 ```c
-ecs_entity_t car_entity = ecs_lookup_fullpath(world, "vehicles.Car");
+ecs_entity_t car_entity = ecs_lookup(world, "vehicles.Car");
 ```
 
 Note that even though the module name is specified with uppercase, the name is stored with lowercase. This is because the naming convention for modules in C is PascalCase, whereas the stored identifiers use snake_case. If a module name contains several uppercase letters, this will be translated to a nested module. For example, the C module name `MySimpleModule` will be translated to `my.simple.module`.
@@ -799,31 +799,22 @@ Note that even though the module name is specified with uppercase, the name is s
 A module in C++ is defined as a class where the module contents are defined in the constructor. The above Vehicles module would look like this in C++:
 
 ```cpp
-/* In C++ it is more convenient to define tags as empty structs */
+/* In C++ tags can be defined as empty structs */
 struct Moving { };
 
 /* Module implementation */
-class vehicles {
-public:
+struct vehicles {
     vehicles(flecs::world& world) {
-        flecs::module<Vehicles>(world, "vehicles");
+        world.component<Car>();
+        world.component<Bus>();
+        world.component<MotorCycle>();
+        world.component<Moving>();
 
-        m_car = flecs::component<Car>(world, "Car");
-        m_bus = flecs::component<Bus>(world, "Bus");
-        m_motor_cycle = flecs::component<MotorCycle>(world, "MotorCycle");
-
-        m_moving = flecs::component<Moving>(world, "Moving");
-        m_move = flecs::system<Car, Moving>(world, "Move")
-            .each([](flecs::entity e, Car &car, Moving&) {
+        world.system<Car, Moving>("Move")
+            .each([](flecs::entity e, Car& car, Moving) {
                 /* System implementation */
             });
     }
-
-    flecs::entity m_car;
-    flecs::entity m_bus;
-    flecs::entity m_motor_cycle;
-    flecs::entity m_moving;
-    flecs::entity m_move;
 }
 ```
 
@@ -831,7 +822,7 @@ An application can import the module in C++ like this:
 
 ```cpp
 flecs::world world;
-flecs::import<vehicles>(world);
+world.import<vehicles>();
 ```
 
 ## Hierarchies
@@ -917,10 +908,10 @@ printf("%s\n", path); // Prints  "parent.child"
 free(path);
 ```
 
-To lookup an entity using a path, use `ecs_lookup_fullpath`:
+To lookup an entity using a path, use `ecs_lookup`:
 
 ```c
-ecs_entity_t e = ecs_lookup_fullpath(world, "parent.child");
+ecs_entity_t e = ecs_lookup(world, "parent.child");
 ```
 
 Applications can also lookup entities using a relative path expression:
@@ -955,7 +946,7 @@ ecs_entity_t prev_scope = ecs_set_scope(world, parent);
 ecs_entity_t child = ecs_new(world, 0);
 
 // Look for "child" relative to parent
-ecs_entity_t e = ecs_lookup_fullpath(world, "child");
+ecs_entity_t e = ecs_lookup(world, "child");
 
 // It's good practice to restore the previous scope
 ecs_set_scope(prev_scope);
@@ -1221,7 +1212,7 @@ The effects of these operations will not be visible until the `ecs_defer_end` op
 
 There are a few things to keep in mind when deferring:
 - creating a new entity will always return a new id which increases the last used id counter of the world
-- `ecs_get_mut` returns a pointer initialized with the current component value, and does not take into account deferred set or get_mut operations
+- `ecs_ensure` returns a pointer initialized with the current component value, and does not take into account deferred set or ensure operations
 - if an operation is called on an entity which was deleted while deferred, the operation will ignored by `ecs_defer_end`
 - if a child entity is created for a deleted parent while deferred, the child entity will be deleted by `ecs_defer_end`
 

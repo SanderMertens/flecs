@@ -11,7 +11,7 @@ namespace flecs {
 
 /** Query builder interface.
  * 
- * \ingroup cpp_core_queries
+ * @ingroup cpp_core_queries
  */
 template<typename Base, typename ... Components>
 struct query_builder_i : filter_builder_i<Base, Components ...> {
@@ -64,7 +64,7 @@ public:
     }
 
     /** Group and sort matched tables.
-     * Similar yo ecs_query_order_by, but instead of sorting individual entities, this
+     * Similar to ecs_query_order_by(), but instead of sorting individual entities, this
      * operation only sorts matched tables. This can be useful of a query needs to
      * enforce a certain iteration order upon the tables it is iterating, for 
      * example by giving a certain component or tag a higher priority.

@@ -33,10 +33,9 @@ void flecs_bootstrap(
     });
 
 #define flecs_bootstrap_tag(world, name)\
-    ecs_ensure(world, name);\
+    ecs_make_alive(world, name);\
     ecs_add_id(world, name, EcsFinal);\
     ecs_add_pair(world, name, EcsChildOf, ecs_get_scope(world));\
-    ecs_set(world, name, EcsComponent, {.size = 0});\
     ecs_set_name(world, name, (const char*)&#name[ecs_os_strlen(world->info.name_prefix)]);\
     ecs_set_symbol(world, name, #name)
 
@@ -268,12 +267,21 @@ const char* flecs_name_from_symbol(
     ecs_world_t *world,
     const char *type_name);
 
-/* Compare function for entity ids */
+/* Compare function for entity ids used for order_by */
 int flecs_entity_compare(
     ecs_entity_t e1, 
     const void *ptr1, 
     ecs_entity_t e2, 
     const void *ptr2); 
+
+/* Compare function for component ids used for qsort */
+int flecs_id_qsort_cmp(
+    const void *a, 
+    const void *b);
+
+/* Load file contents into string */
+char* flecs_load_from_file(
+    const char *filename);
 
 bool flecs_name_is_id(
     const char *name);
@@ -294,9 +302,6 @@ uint64_t flecs_string_hash(
 void flecs_table_hashmap_init(
     ecs_world_t *world,
     ecs_hashmap_t *hm);
-
-void flecs_dump_backtrace(
-    FILE *stream);
 
 void flecs_colorize_buf(
     char *msg,
@@ -324,5 +329,11 @@ int32_t flecs_search_relation_w_idr(
     ecs_id_t *id_out,
     struct ecs_table_record_t **tr_out,
     ecs_id_record_t *idr);
+
+bool flecs_type_can_inherit_id(
+    const ecs_world_t *world,
+    const ecs_table_t *table,
+    const ecs_id_record_t *idr,
+    ecs_id_t id);
 
 #endif

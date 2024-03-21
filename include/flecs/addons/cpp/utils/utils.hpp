@@ -85,6 +85,9 @@ using remove_pointer_t = typename std::remove_pointer<T>::type;
 template <typename T>
 using remove_reference_t = typename std::remove_reference<T>::type;
 
+template <typename T>
+using underlying_type_t = typename std::underlying_type<T>::type;
+
 using std::is_base_of;
 using std::is_empty;
 using std::is_const;
@@ -108,6 +111,12 @@ using transcribe_volatile_t = conditional_t<is_volatile<Src>::value, Dst volatil
 
 template<class Src, class Dst>
 using transcribe_cv_t = transcribe_const_t< Src, transcribe_volatile_t< Src, Dst> >;
+
+template<class Src, class Dst>
+using transcribe_pointer_t = conditional_t<is_pointer<Src>::value, Dst*, Dst>;
+
+template<class Src, class Dst>
+using transcribe_cvp_t = transcribe_cv_t< Src, transcribe_pointer_t< Src, Dst> >;
 
 
 // More convenience templates. The if_*_t templates use int as default type

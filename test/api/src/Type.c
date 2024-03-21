@@ -50,8 +50,8 @@ void Type_type_of_2_tostr(void) {
 void Type_type_of_2_tostr_no_id(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_ensure(world, 100);
-    ecs_ensure(world, 200);
+    ecs_make_alive(world, 100);
+    ecs_make_alive(world, 200);
     ecs_type_t t = { .array = (ecs_id_t[]){ 100, 200 }, .count = 2 };
     
     char *str = ecs_type_str(world, &t);
@@ -137,8 +137,8 @@ void Type_get_type_from_0(void) {
 void Type_type_to_expr_pair(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_ensure(world, 100);
-    ecs_ensure(world, 200);
+    ecs_make_alive(world, 100);
+    ecs_make_alive(world, 200);
     ecs_type_t t = { .array = (ecs_id_t[]){ ecs_pair(100, 200) }, .count = 1 };
     
     char *str = ecs_type_str(world, &t);

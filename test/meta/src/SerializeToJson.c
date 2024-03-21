@@ -280,11 +280,29 @@ void SerializeToJson_struct_u64(void) {
         }
     });
 
-    T value = {10};
-    char *expr = ecs_ptr_to_json(world, t, &value);
-    test_assert(expr != NULL);
-    test_str(expr, "{\"x\":10}");
-    ecs_os_free(expr);
+    {
+        T value = {0};
+        char *expr = ecs_ptr_to_json(world, t, &value);
+        test_assert(expr != NULL);
+        test_str(expr, "{\"x\":0}");
+        ecs_os_free(expr);
+    }
+
+    {
+        T value = {10};
+        char *expr = ecs_ptr_to_json(world, t, &value);
+        test_assert(expr != NULL);
+        test_str(expr, "{\"x\":10}");
+        ecs_os_free(expr);
+    }
+
+    {
+        T value = {2366700781656087864};
+        char *expr = ecs_ptr_to_json(world, t, &value);
+        test_assert(expr != NULL);
+        test_str(expr, "{\"x\":\"2366700781656087864\"}");
+        ecs_os_free(expr);
+    }
 
     ecs_fini(world);
 }
@@ -564,6 +582,54 @@ void SerializeToJson_struct_entity(void) {
     char *expr = ecs_ptr_to_json(world, t, &value);
     test_assert(expr != NULL);
     test_str(expr, "{\"x\":\"flecs.core\"}");
+    ecs_os_free(expr);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_struct_entity_10k(void) {
+    typedef struct {
+        ecs_entity_t x;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"x", ecs_id(ecs_entity_t)}
+        }
+    });
+
+    ecs_make_alive(world, 10000);
+
+    T value = {10000};
+    char *expr = ecs_ptr_to_json(world, t, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "{\"x\":\"10000\"}");
+    ecs_os_free(expr);
+
+    ecs_fini(world);
+}
+
+void SerializeToJson_struct_id(void) {
+    typedef struct {
+        ecs_id_t x;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"x", ecs_id(ecs_id_t)}
+        }
+    });
+
+    T value = {EcsFlecsCore};
+    char *expr = ecs_ptr_to_json(world, t, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "{\"x\":[\"flecs.core\"]}");
     ecs_os_free(expr);
 
     ecs_fini(world);

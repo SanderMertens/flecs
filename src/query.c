@@ -119,12 +119,26 @@ ecs_query_table_match_t* flecs_query_find_group_insertion_node(
     ecs_map_iter_t it = ecs_map_iter(&query->groups);
     ecs_query_table_list_t *list, *closest_list = NULL;
     uint64_t id, closest_id = 0;
+    
+    bool desc = false;
+
+    if (query->cascade_by) {
+        desc = (query->filter.terms[
+            query->cascade_by - 1].src.flags & EcsDesc) != 0;
+    }
 
     /* Find closest smaller group id */
     while (ecs_map_next(&it)) {
         id = ecs_map_key(&it);
-        if (id >= group_id) {
-            continue;
+
+        if (!desc) {
+            if (id >= group_id) {
+                continue;
+            }
+        } else {
+            if (id <= group_id) {
+                continue;
+            }
         }
 
         list = ecs_map_ptr(&it);
@@ -133,7 +147,14 @@ ecs_query_table_match_t* flecs_query_find_group_insertion_node(
             continue;
         }
 
-        if (!closest_list || ((group_id - id) < (group_id - closest_id))) {
+        bool comp;
+        if (!desc) {
+            comp = ((group_id - id) < (group_id - closest_id));
+        } else {
+            comp = ((group_id - id) > (group_id - closest_id));
+        }
+
+        if (!closest_list || comp) {
             closest_id = id;
             closest_list = list;
         }
@@ -973,7 +994,7 @@ void flecs_query_match_tables(
     ecs_table_t *table = NULL;
     ecs_query_table_t *qt = NULL;
 
-    ecs_iter_t it = ecs_filter_iter(world, &query->filter);
+    ecs_iter_t it = flecs_filter_iter_w_flags(world, &query->filter, 0);
     ECS_BIT_SET(it.flags, EcsIterIsInstanced);
     ECS_BIT_SET(it.flags, EcsIterNoData);
     ECS_BIT_SET(it.flags, EcsIterTableOnly);
@@ -1283,7 +1304,6 @@ void flecs_query_sort_tables(
     }
 
     ecs_sort_table_action_t sort = query->sort_table;
-    
     ecs_entity_t order_by_component = query->order_by_component;
     int32_t order_by_term = query->order_by_term;
 
@@ -1302,6 +1322,7 @@ void flecs_query_sort_tables(
         bool dirty = false;
 
         if (flecs_query_check_table_monitor(query, qt, 0)) {
+            tables_sorted = true; /* Ensure ranges are rebuilt */
             dirty = true;
         }
 
@@ -1618,7 +1639,7 @@ void flecs_query_rematch_tables(
         parent_it = ecs_query_iter(world, parent_query);
         it = ecs_filter_chain_iter(&parent_it, &query->filter);
     } else {
-        it = ecs_filter_iter(world, &query->filter);
+        it = flecs_filter_iter_w_flags(world, &query->filter, 0);
     }
 
     ECS_BIT_SET(it.flags, EcsIterIsInstanced);
@@ -2225,6 +2246,8 @@ ecs_iter_t ecs_query_iter(
     ecs_world_t *world = query->filter.world;
     ecs_poly_assert(world, ecs_world_t);
 
+    query->filter.eval_count ++;
+
     /* Process table events to ensure that the list of iterated tables doesn't
      * contain empty tables. */
     flecs_process_pending_tables(world);
@@ -2259,13 +2282,15 @@ ecs_iter_t ecs_query_iter(
     ecs_iter_t result = {
         .real_world = world,
         .world = ECS_CONST_CAST(ecs_world_t*, stage),
+        .query = &query->filter,
         .terms = query->filter.terms,
         .field_count = query->filter.field_count,
         .table_count = table_count,
         .variable_count = 1,
         .priv.iter.query = it,
         .next = ecs_query_next,
-        .set_var = flecs_query_set_var
+        .set_var = flecs_query_set_var,
+        .system = query->filter.entity
     };
 
     flecs_filter_apply_iter_flags(&result, &query->filter);

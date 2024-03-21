@@ -5,9 +5,9 @@
 
 /**
  * @defgroup cpp_addons_plecs Plecs
- * @brief Data definition format for loading entity data.
- * 
- * \ingroup cpp_addons
+ * @ingroup cpp_addons
+ * Data definition format for loading entity data.
+ *
  * @{
  */
 

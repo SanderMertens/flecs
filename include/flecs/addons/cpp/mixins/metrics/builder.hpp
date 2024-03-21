@@ -10,7 +10,7 @@
 namespace flecs {
 
 /**
- * \ingroup cpp_addon_metrics
+ * @ingroup cpp_addons_metrics
  * @{
  */
 
@@ -57,6 +57,11 @@ struct metric_builder {
     template <typename First>
     metric_builder& id(flecs::entity_t second) {
         return id(_::cpp_type<First>::id(m_world), second);
+    }
+
+    template <typename Second>
+    metric_builder& id_second(flecs::entity_t first) {
+        return id(first, _::cpp_type<Second>::id(m_world));
     }
 
     template <typename First, typename Second>

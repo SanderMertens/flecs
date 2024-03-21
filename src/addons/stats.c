@@ -280,14 +280,12 @@ void ecs_world_stats_get(
     ECS_GAUGE_RECORD(&s->entities.count, t, flecs_entities_count(world));
     ECS_GAUGE_RECORD(&s->entities.not_alive_count, t, flecs_entities_not_alive_count(world));
 
-    ECS_GAUGE_RECORD(&s->ids.count, t, world->info.id_count);
-    ECS_GAUGE_RECORD(&s->ids.tag_count, t, world->info.tag_id_count);
-    ECS_GAUGE_RECORD(&s->ids.component_count, t, world->info.component_id_count);
-    ECS_GAUGE_RECORD(&s->ids.pair_count, t, world->info.pair_id_count);
-    ECS_GAUGE_RECORD(&s->ids.wildcard_count, t, world->info.wildcard_id_count);
-    ECS_GAUGE_RECORD(&s->ids.type_count, t, ecs_sparse_count(&world->type_info));
-    ECS_COUNTER_RECORD(&s->ids.create_count, t, world->info.id_create_total);
-    ECS_COUNTER_RECORD(&s->ids.delete_count, t, world->info.id_delete_total);
+    ECS_GAUGE_RECORD(&s->components.tag_count, t, world->info.tag_id_count);
+    ECS_GAUGE_RECORD(&s->components.component_count, t, world->info.component_id_count);
+    ECS_GAUGE_RECORD(&s->components.pair_count, t, world->info.pair_id_count);
+    ECS_GAUGE_RECORD(&s->components.type_count, t, ecs_sparse_count(&world->type_info));
+    ECS_COUNTER_RECORD(&s->components.create_count, t, world->info.id_create_total);
+    ECS_COUNTER_RECORD(&s->components.delete_count, t, world->info.id_delete_total);
 
     ECS_GAUGE_RECORD(&s->queries.query_count, t, ecs_count_id(world, EcsQuery));
     ECS_GAUGE_RECORD(&s->queries.observer_count, t, ecs_count_id(world, EcsObserver));
@@ -298,17 +296,13 @@ void ecs_world_stats_get(
     ECS_COUNTER_RECORD(&s->tables.delete_count, t, world->info.table_delete_total);
     ECS_GAUGE_RECORD(&s->tables.count, t, world->info.table_count);
     ECS_GAUGE_RECORD(&s->tables.empty_count, t, world->info.empty_table_count);
-    ECS_GAUGE_RECORD(&s->tables.tag_only_count, t, world->info.tag_table_count);
-    ECS_GAUGE_RECORD(&s->tables.trivial_only_count, t, world->info.trivial_table_count);
-    ECS_GAUGE_RECORD(&s->tables.storage_count, t, world->info.table_storage_count);
-    ECS_GAUGE_RECORD(&s->tables.record_count, t, world->info.table_record_count);
 
     ECS_COUNTER_RECORD(&s->commands.add_count, t, world->info.cmd.add_count);
     ECS_COUNTER_RECORD(&s->commands.remove_count, t, world->info.cmd.remove_count);
     ECS_COUNTER_RECORD(&s->commands.delete_count, t, world->info.cmd.delete_count);
     ECS_COUNTER_RECORD(&s->commands.clear_count, t, world->info.cmd.clear_count);
     ECS_COUNTER_RECORD(&s->commands.set_count, t, world->info.cmd.set_count);
-    ECS_COUNTER_RECORD(&s->commands.get_mut_count, t, world->info.cmd.get_mut_count);
+    ECS_COUNTER_RECORD(&s->commands.ensure_count, t, world->info.cmd.ensure_count);
     ECS_COUNTER_RECORD(&s->commands.modified_count, t, world->info.cmd.modified_count);
     ECS_COUNTER_RECORD(&s->commands.other_count, t, world->info.cmd.other_count);
     ECS_COUNTER_RECORD(&s->commands.discard_count, t, world->info.cmd.discard_count);
@@ -331,22 +325,6 @@ void ecs_world_stats_get(
     ECS_COUNTER_RECORD(&s->memory.stack_alloc_count, t, ecs_stack_allocator_alloc_count);
     ECS_COUNTER_RECORD(&s->memory.stack_free_count, t, ecs_stack_allocator_free_count);
     ECS_GAUGE_RECORD(&s->memory.stack_outstanding_alloc_count, t, outstanding_allocs);
-
-#ifdef FLECS_REST
-    ECS_COUNTER_RECORD(&s->rest.request_count, t, ecs_rest_request_count);
-    ECS_COUNTER_RECORD(&s->rest.entity_count, t, ecs_rest_entity_count);
-    ECS_COUNTER_RECORD(&s->rest.entity_error_count, t, ecs_rest_entity_error_count);
-    ECS_COUNTER_RECORD(&s->rest.query_count, t, ecs_rest_query_count);
-    ECS_COUNTER_RECORD(&s->rest.query_error_count, t, ecs_rest_query_error_count);
-    ECS_COUNTER_RECORD(&s->rest.query_name_count, t, ecs_rest_query_name_count);
-    ECS_COUNTER_RECORD(&s->rest.query_name_error_count, t, ecs_rest_query_name_error_count);
-    ECS_COUNTER_RECORD(&s->rest.query_name_from_cache_count, t, ecs_rest_query_name_from_cache_count);
-    ECS_COUNTER_RECORD(&s->rest.enable_count, t, ecs_rest_enable_count);
-    ECS_COUNTER_RECORD(&s->rest.enable_error_count, t, ecs_rest_enable_error_count);
-    ECS_COUNTER_RECORD(&s->rest.world_stats_count, t, ecs_rest_world_stats_count);
-    ECS_COUNTER_RECORD(&s->rest.pipeline_stats_count, t, ecs_rest_pipeline_stats_count);
-    ECS_COUNTER_RECORD(&s->rest.stats_error_count, t, ecs_rest_stats_error_count);
-#endif
 
 #ifdef FLECS_HTTP
     ECS_COUNTER_RECORD(&s->http.request_received_count, t, ecs_http_request_received_count);
@@ -420,6 +398,9 @@ void ecs_query_stats_get(
         ECS_GAUGE_RECORD(&s->matched_table_count, t, 0);
         ECS_GAUGE_RECORD(&s->matched_empty_table_count, t, 0);
     }
+    
+    const ecs_filter_t *f = ecs_query_get_filter(query);
+    ECS_COUNTER_RECORD(&s->eval_count, t, f->eval_count);
 
 error:
     return;
@@ -479,7 +460,6 @@ bool ecs_system_stats_get(
     int32_t t = s->query.t;
 
     ECS_COUNTER_RECORD(&s->time_spent, t, ptr->time_spent);
-    ECS_COUNTER_RECORD(&s->invoke_count, t, ptr->invoke_count);
 
     s->task = !(ptr->query->filter.flags & EcsFilterMatchThis);
 
@@ -810,8 +790,8 @@ void ecs_world_stats_log(
     flecs_counter_print("pipeline rebuilds", t, &s->frame.pipeline_build_count);
     flecs_counter_print("systems ran", t, &s->frame.systems_ran);
     ecs_trace("");
-    flecs_metric_print("target FPS", world->info.target_fps);
-    flecs_metric_print("time scale", world->info.time_scale);
+    flecs_metric_print("target FPS", (ecs_float_t)world->info.target_fps);
+    flecs_metric_print("time scale", (ecs_float_t)world->info.time_scale);
     ecs_trace("");
     flecs_gauge_print("actual FPS", t, &s->performance.fps);
     flecs_counter_print("frame time", t, &s->performance.frame_time);
@@ -819,14 +799,12 @@ void ecs_world_stats_log(
     flecs_counter_print("merge time", t, &s->performance.merge_time);
     flecs_counter_print("simulation time elapsed", t, &s->performance.world_time);
     ecs_trace("");
-    flecs_gauge_print("id count", t, &s->ids.count);
-    flecs_gauge_print("tag id count", t, &s->ids.tag_count);
-    flecs_gauge_print("component id count", t, &s->ids.component_count);
-    flecs_gauge_print("pair id count", t, &s->ids.pair_count);
-    flecs_gauge_print("wildcard id count", t, &s->ids.wildcard_count);
-    flecs_gauge_print("type count", t, &s->ids.type_count);
-    flecs_counter_print("id create count", t, &s->ids.create_count);
-    flecs_counter_print("id delete count", t, &s->ids.delete_count);
+    flecs_gauge_print("tag id count", t, &s->components.tag_count);
+    flecs_gauge_print("component id count", t, &s->components.component_count);
+    flecs_gauge_print("pair id count", t, &s->components.pair_count);
+    flecs_gauge_print("type count", t, &s->components.type_count);
+    flecs_counter_print("id create count", t, &s->components.create_count);
+    flecs_counter_print("id delete count", t, &s->components.delete_count);
     ecs_trace("");
     flecs_gauge_print("alive entity count", t, &s->entities.count);
     flecs_gauge_print("not alive entity count", t, &s->entities.not_alive_count);
@@ -837,10 +815,6 @@ void ecs_world_stats_log(
     ecs_trace("");
     flecs_gauge_print("table count", t, &s->tables.count);
     flecs_gauge_print("empty table count", t, &s->tables.empty_count);
-    flecs_gauge_print("tag table count", t, &s->tables.tag_only_count);
-    flecs_gauge_print("trivial table count", t, &s->tables.trivial_only_count);
-    flecs_gauge_print("table storage count", t, &s->tables.storage_count);
-    flecs_gauge_print("table cache record count", t, &s->tables.record_count);
     flecs_counter_print("table create count", t, &s->tables.create_count);
     flecs_counter_print("table delete count", t, &s->tables.delete_count);
     ecs_trace("");
@@ -849,7 +823,7 @@ void ecs_world_stats_log(
     flecs_counter_print("delete commands", t, &s->commands.delete_count);
     flecs_counter_print("clear commands", t, &s->commands.clear_count);
     flecs_counter_print("set commands", t, &s->commands.set_count);
-    flecs_counter_print("get_mut commands", t, &s->commands.get_mut_count);
+    flecs_counter_print("ensure commands", t, &s->commands.ensure_count);
     flecs_counter_print("modified commands", t, &s->commands.modified_count);
     flecs_counter_print("other commands", t, &s->commands.other_count);
     flecs_counter_print("discarded commands", t, &s->commands.discard_count);

@@ -1,0 +1,11 @@
+{
+    "id": "ensure_define",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "language": "c++",
+        "public": false
+    }
+}

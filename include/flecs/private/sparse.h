@@ -32,13 +32,13 @@ typedef struct ecs_sparse_t {
 /** Initialize sparse set */
 FLECS_DBG_API
 void flecs_sparse_init(
-    ecs_sparse_t *sparse,
+    ecs_sparse_t *result,
     struct ecs_allocator_t *allocator,
     struct ecs_block_allocator_t *page_allocator,
-    ecs_size_t elem_size);
+    ecs_size_t size);
 
-#define flecs_sparse_init_t(sparse, allocator, page_allocator, T)\
-    flecs_sparse_init(sparse, allocator, page_allocator, ECS_SIZEOF(T))
+#define flecs_sparse_init_t(result, allocator, page_allocator, T)\
+    flecs_sparse_init(result, allocator, page_allocator, ECS_SIZEOF(T))
 
 FLECS_DBG_API
 void flecs_sparse_fini(
@@ -183,12 +183,6 @@ uint64_t ecs_sparse_last_id(
 FLECS_API
 int32_t ecs_sparse_count(
     const ecs_sparse_t *sparse);
-
-/** Override the generation count for a specific id */
-FLECS_API
-void flecs_sparse_set_generation(
-    ecs_sparse_t *sparse,
-    uint64_t id);
 
 FLECS_API
 void* ecs_sparse_get_dense(

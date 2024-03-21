@@ -32,7 +32,7 @@ public:
         m_desc = f.m_desc;
     }
 
-    builder(builder&& f) 
+    builder(builder&& f)  noexcept
         : builder<T, TDesc, Base, IBuilder, Components...>(f) { }
 
     operator TDesc*() {

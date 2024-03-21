@@ -18,7 +18,7 @@ namespace _ {
 
 /** Pipeline builder.
  * 
- * \ingroup cpp_pipelines
+ * @ingroup cpp_pipelines
  */
 template <typename ... Components>
 struct pipeline_builder final : _::pipeline_builder_base<Components...> {

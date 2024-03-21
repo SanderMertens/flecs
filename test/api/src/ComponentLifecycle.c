@@ -2676,6 +2676,50 @@ void ComponentLifecycle_component_init_set_hooks(void) {
     test_int(1, on_remove_count);
 }
 
+void ComponentLifecycle_component_init_name_from_type_info(void) {
+    ecs_world_t* world = ecs_mini();
+
+    ecs_entity_t c = ecs_component_init(world, &(ecs_component_desc_t){
+        .type = {
+            .name = "Position",
+            .size = ECS_SIZEOF(Position),
+            .alignment = ECS_ALIGNOF(Position),
+        }
+    });
+
+    test_assert(c != 0);
+    test_assert(c == ecs_lookup(world, "Position"));
+
+    const EcsComponent *ptr = ecs_get(world, c, EcsComponent);
+    test_assert(ptr != NULL);
+    test_int(ptr->size, ECS_SIZEOF(Position));
+    test_int(ptr->size, ECS_SIZEOF(Velocity));
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_component_init_scoped_name_from_type_info(void) {
+    ecs_world_t* world = ecs_mini();
+
+    ecs_entity_t c = ecs_component_init(world, &(ecs_component_desc_t){
+        .type = {
+            .name = "ns.Position",
+            .size = ECS_SIZEOF(Position),
+            .alignment = ECS_ALIGNOF(Position),
+        }
+    });
+
+    test_assert(c != 0);
+    test_assert(c == ecs_lookup(world, "ns.Position"));
+
+    const EcsComponent *ptr = ecs_get(world, c, EcsComponent);
+    test_assert(ptr != NULL);
+    test_int(ptr->size, ECS_SIZEOF(Position));
+    test_int(ptr->size, ECS_SIZEOF(Velocity));
+
+    ecs_fini(world);
+}
+
 static int ctor_before_on_add_count = 0;
 static int on_add_after_ctor_count = 0;
 
@@ -3095,6 +3139,88 @@ void ComponentLifecycle_on_set_hook_on_auto_override(void) {
         test_int(p->x, 10);
         test_int(p->y, 20);
     }
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_batched_set_new_component_w_lifecycle(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = ecs_ctor(Position),
+        .move = ecs_move(Position),
+        .copy = ecs_copy(Position),
+        .dtor = ecs_dtor(Position)
+    });
+
+    ecs_defer_begin(world);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_set(world, e, Position, {10, 20});
+    ecs_add(world, e, Tag); // to hit command batching
+
+    test_int(ctor_position, 1);
+    test_int(move_position, 0);
+    test_int(copy_position, 1);
+    test_int(dtor_position, 0);
+
+    ecs_defer_end(world);
+
+    test_int(ctor_position, 2);
+    test_int(move_position, 1);
+    test_int(copy_position, 1);
+    test_int(dtor_position, 1);
+
+    ecs_delete(world, e);
+
+    test_int(ctor_position, 2);
+    test_int(move_position, 1);
+    test_int(copy_position, 1);
+    test_int(dtor_position, 2);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_batched_ensure_new_component_w_lifecycle(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = ecs_ctor(Position),
+        .move = ecs_move(Position),
+        .copy = ecs_copy(Position),
+        .dtor = ecs_dtor(Position)
+    });
+
+    ecs_defer_begin(world);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_ensure(world, e, Position);
+    ecs_add(world, e, Tag); // to hit command batching
+
+    test_int(ctor_position, 1);
+    test_int(move_position, 0);
+    test_int(copy_position, 0);
+    test_int(dtor_position, 0);
+
+    ecs_defer_end(world);
+
+    test_int(ctor_position, 2);
+    test_int(move_position, 1);
+    test_int(copy_position, 0);
+    test_int(dtor_position, 1);
+
+    ecs_delete(world, e);
+
+    test_int(ctor_position, 2);
+    test_int(move_position, 1);
+    test_int(copy_position, 0);
+    test_int(dtor_position, 2);
 
     ecs_fini(world);
 }

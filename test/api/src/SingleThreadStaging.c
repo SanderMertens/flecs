@@ -2431,7 +2431,7 @@ void MutableTest(ecs_iter_t *it) {
     int32_t i;
     for (i = 0; i < it->count; i ++) {
         bool is_added = !ecs_has(world, it->entities[i], Velocity);
-        Velocity *v_mut = ecs_get_mut(world, it->entities[i], Velocity);
+        Velocity *v_mut = ecs_ensure(world, it->entities[i], Velocity);
 
         test_assert(v_mut != NULL);
 
@@ -2455,7 +2455,7 @@ void MutableTest(ecs_iter_t *it) {
     }
 }
 
-void SingleThreadStaging_get_mutable(void) {
+void SingleThreadStaging_ensureable(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2484,7 +2484,7 @@ void SingleThreadStaging_get_mutable(void) {
     ecs_fini(world);
 }
 
-void SingleThreadStaging_get_mutable_from_main(void) {
+void SingleThreadStaging_ensureable_from_main(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2528,7 +2528,7 @@ void MutableTest_w_Add(ecs_iter_t *it) {
         ecs_add(world, it->entities[i], MyTag);
 
         bool is_added = !ecs_has(world, it->entities[i], Velocity);
-        Velocity *v_mut = ecs_get_mut(world, it->entities[i], Velocity);
+        Velocity *v_mut = ecs_ensure(world, it->entities[i], Velocity);
 
         test_assert(v_mut != NULL);
 
@@ -2554,7 +2554,7 @@ void MutableTest_w_Add(ecs_iter_t *it) {
 
 typedef bool MyBool;
 
-void SingleThreadStaging_get_mutable_w_add(void) {
+void SingleThreadStaging_ensureable_w_add(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -2732,7 +2732,7 @@ void SingleThreadStaging_get_case_from_stage(void) {
 
     ecs_frame_begin(world, 1);
 
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
 
     ecs_world_t *stage = ecs_get_stage(world, 0);
 
@@ -2755,7 +2755,7 @@ void SingleThreadStaging_get_object_from_stage(void) {
     ecs_entity_t parent = ecs_new_id(world);
     ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, parent);
 
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
 
     ecs_world_t *stage = ecs_get_stage(world, 0);
 
@@ -2773,7 +2773,7 @@ void SingleThreadStaging_add_to_world_while_readonly(void) {
 
     ecs_entity_t e = ecs_new_id(world);
 
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
     ecs_add(world, e, Tag);
     test_assert(!ecs_has(world, e, Tag));
     ecs_readonly_end(world);
@@ -2792,7 +2792,7 @@ void SingleThreadStaging_add_to_world_and_stage_while_readonly(void) {
     ecs_entity_t e = ecs_new_id(world);
     ecs_world_t *stage = ecs_get_stage(world, 0);
 
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
     ecs_add(world, e, TagA);
     ecs_add(stage, e, TagB);
     test_assert(!ecs_has(world, e, TagA));
@@ -2811,7 +2811,7 @@ void SingleThreadStaging_lookup_after_stage_count_change(void) {
     ecs_set_stage_count(world, 2);
 
     /* Make sure we can still lookup entities from flecs.core */
-    test_assert(ecs_lookup_fullpath(world, "$") != 0);
+    test_assert(ecs_lookup(world, "$") != 0);
 
     ecs_fini(world);
 }
@@ -2823,15 +2823,15 @@ void SingleThreadStaging_lookup_w_scope_after_stage_count_change(void) {
     ecs_entity_t child = ecs_new_entity(world, "child");
     ecs_add_pair(world, child, EcsChildOf, parent);
 
-    test_assert(ecs_lookup_fullpath(world, "parent.child") != 0);
+    test_assert(ecs_lookup(world, "parent.child") != 0);
     ecs_set_scope(world, parent);
-    test_assert(ecs_lookup_fullpath(world, "parent.child") != 0);
-    test_assert(ecs_lookup_fullpath(world, "child") != 0);
+    test_assert(ecs_lookup(world, "parent.child") != 0);
+    test_assert(ecs_lookup(world, "child") != 0);
 
     ecs_set_stage_count(world, 2);
 
-    test_assert(ecs_lookup_fullpath(world, "parent.child") != 0);
-    test_assert(ecs_lookup_fullpath(world, "child") != 0);
+    test_assert(ecs_lookup(world, "parent.child") != 0);
+    test_assert(ecs_lookup(world, "child") != 0);
 
     ecs_fini(world);
 }

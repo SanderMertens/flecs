@@ -945,7 +945,7 @@ void SortingEntireTable_sort_1000_entities_again(void) {
 
     for (int i = 0; i < 1000; i ++) {
         int32_t v = rand();
-        ecs_ensure(world, i + start);
+        ecs_make_alive(world, i + start);
         ecs_set(world, i + start, Position, {v});
 
         ecs_iter_t it = ecs_query_iter(world, q);
@@ -1042,7 +1042,7 @@ void SortingEntireTable_sort_1000_entities_2_types_again(void) {
 
     for (int i = 0; i < 1000; i ++) {
         int32_t v = rand();
-        ecs_ensure(world, i + start);
+        ecs_make_alive(world, i + start);
         ecs_set(world, i + start, Position, {v});
 
         if (!(i % 2)) {
@@ -1102,7 +1102,7 @@ void SortingEntireTable_sort_1000_entities_add_type_after_sort(void) {
 
     for (int i = 0; i < 500; i ++) {
         int32_t v = rand();
-        ecs_ensure(world, i + start);
+        ecs_make_alive(world, i + start);
         ecs_set(world, i + start, Position, {v});
 
         ecs_iter_t it = ecs_query_iter(world, q);
@@ -1129,7 +1129,7 @@ void SortingEntireTable_sort_1000_entities_add_type_after_sort(void) {
 
     for (int i = 0; i < 500; i ++) {
         int32_t v = rand();
-        ecs_ensure(world, i + start + 500);
+        ecs_make_alive(world, i + start + 500);
         ecs_set(world, i + start + 500, Position, {v});
         ecs_add(world, i + start + 500, Velocity);
 
@@ -1777,6 +1777,58 @@ void SortingEntireTable_dont_resort_after_set_unsorted_component_w_tag_w_out_ter
     test_bool(dummy_compare_invoked, true);
     dummy_compare_invoked = false;
     ecs_iter_fini(&itq);
+
+    ecs_fini(world);
+}
+
+void SortingEntireTable_sort_shared_w_delete(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .filter.terms = {
+            { .id = ecs_id(Position), .inout = EcsIn }
+        },
+        .filter.instanced = true,
+        .order_by_component = ecs_id(Position),
+        .order_by = ecs_compare(Position),
+        .sort_table = ecs_sort_table(Position)
+    });
+
+    ecs_entity_t base = ecs_set(world, 0, Position, {0, 0});
+    ecs_add_id(world, base, EcsPrefab);
+
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t e3 = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t e4 = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_entity_t e5 = ecs_new_w_pair(world, EcsIsA, base);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(5, it.count);
+        test_uint(e1, it.entities[0]);
+        test_uint(e2, it.entities[1]);
+        test_uint(e3, it.entities[2]);
+        test_uint(e4, it.entities[3]);
+        test_uint(e5, it.entities[4]);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_delete(world, e1);
+    ecs_delete(world, e2);
+    ecs_delete(world, e3);
+    ecs_delete(world, e4);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(e5, it.entities[4]);
+        test_bool(false, ecs_query_next(&it));
+    }
 
     ecs_fini(world);
 }

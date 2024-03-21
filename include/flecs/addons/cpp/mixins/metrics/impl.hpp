@@ -13,6 +13,9 @@ inline metrics::metrics(flecs::world& world) {
     /* Import C module  */
     FlecsMetricsImport(world);
 
+    world.component<Value>();
+    world.component<Source>();
+
     world.entity<metrics::Instance>("::flecs::metrics::Instance");
     world.entity<metrics::Metric>("::flecs::metrics::Metric");
     world.entity<metrics::Counter>("::flecs::metrics::Metric::Counter");
@@ -28,7 +31,17 @@ inline metric_builder::~metric_builder() {
 }
 
 inline metric_builder& metric_builder::member(const char *name) {
-    return member(flecs::world(m_world).lookup(name));
+    flecs::entity m;
+    if (m_desc.id) {
+        flecs::entity_t type = ecs_get_typeid(m_world, m_desc.id);
+        m = flecs::entity(m_world, type).lookup(name);
+    } else {
+        m = flecs::world(m_world).lookup(name);
+    }
+    if (!m) {
+        flecs::log::err("member '%s' not found", name);
+    }
+    return member(m);
 }
 
 template <typename T>

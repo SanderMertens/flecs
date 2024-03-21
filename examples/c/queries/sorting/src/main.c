@@ -5,7 +5,7 @@ typedef struct {
     double x, y;
 } Position;
 
-// Order by x member of Position */
+// Order by x member of Position
 int compare_position(
     ecs_entity_t e1,
     const Position *p1,

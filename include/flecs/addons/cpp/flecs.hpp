@@ -13,7 +13,7 @@
  * @{
  */
 
-namespace flecs 
+namespace flecs
 {
 
 struct world;
@@ -29,13 +29,13 @@ struct untyped_component;
 template <typename T>
 struct component;
 
-namespace _ 
+namespace _
 {
 template <typename T, typename U = int>
 struct cpp_type;
 
 template <typename Func, typename ... Components>
-struct each_invoker;
+struct each_delegate;
 
 } // namespace _
 } // namespace flecs
@@ -101,9 +101,10 @@ struct each_invoker;
 #include "lifecycle_traits.hpp"
 #include "ref.hpp"
 #include "world.hpp"
+#include "field.hpp"
 #include "iter.hpp"
 #include "entity.hpp"
-#include "invoker.hpp"
+#include "delegate.hpp"
 #include "utils/iterable.hpp"
 #include "component.hpp"
 #include "type.hpp"
@@ -115,9 +116,9 @@ struct each_invoker;
 #include "mixins/component/impl.hpp"
 #include "mixins/term/impl.hpp"
 #include "mixins/filter/impl.hpp"
-#include "mixins/event/impl.hpp"
 #include "mixins/query/impl.hpp"
 #include "mixins/observer/impl.hpp"
+#include "mixins/event/impl.hpp"
 #include "mixins/enum/impl.hpp"
 #ifdef FLECS_MODULE
 #include "mixins/module/impl.hpp"
@@ -162,21 +163,22 @@ struct each_invoker;
 #include "mixins/alerts/impl.hpp"
 #endif
 
+#include "impl/field.hpp"
 #include "impl/iter.hpp"
 #include "impl/world.hpp"
 
 /**
  * @defgroup cpp_core Core
- * @brief Core ECS functionality (entities, storage, queries)
- * 
+ * Core ECS functionality (entities, storage, queries)
+ *
  * @{
  * @}
  */
 
 /**
  * @defgroup cpp_addons Addons
- * @brief C++ APIs for addons.
- * 
+ * C++ APIs for addons.
+ *
  * @{
  * @}
  */

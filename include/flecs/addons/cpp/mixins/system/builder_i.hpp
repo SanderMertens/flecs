@@ -12,7 +12,7 @@ namespace flecs
 
 /** System builder interface.
  * 
- * \ingroup cpp_addons_systems
+ * @ingroup cpp_addons_systems
  */
 template<typename Base, typename ... Components>
 struct system_builder_i : query_builder_i<Base, Components ...> {
@@ -40,6 +40,14 @@ public:
             ecs_add_id(world_v(), m_desc->entity, phase);
         }
         return *this;
+    }
+
+    template <typename E, if_t<is_enum<E>::value> = 0>
+    Base& kind(E phase)
+    {
+        const auto& et = enum_type<E>(this->world_v());
+        flecs::entity_t target = et.entity(phase);
+        return this->kind(target);
     }
 
     /** Specify in which phase the system should run.
@@ -110,6 +118,17 @@ public:
     /** Set tick source.
      * This operation sets a shared tick source for the system.
      *
+     * @tparam T The type associated with the singleton tick source to use for the system.
+     */
+    template<typename T>
+    Base& tick_source() {
+        m_desc->tick_source = _::cpp_type<T>::id(world_v());
+        return *this;
+    }
+
+    /** Set tick source.
+     * This operation sets a shared tick source for the system.
+     *
      * @param tick_source The tick source to use for the system.
      */
     Base& tick_source(flecs::entity_t tick_source) {
@@ -139,7 +158,5 @@ private:
 
     ecs_system_desc_t *m_desc;
 };
-
-/** @} */
 
 }

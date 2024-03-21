@@ -4,8 +4,10 @@
  */
 
 /**
- * \memberof flecs::world
- * \ingroup cpp_addons_snapshot
+ * @memberof flecs::world
+ * @ingroup cpp_addons_snapshots
+ *
+ * @{
  */
 
 /** Create a snapshot.

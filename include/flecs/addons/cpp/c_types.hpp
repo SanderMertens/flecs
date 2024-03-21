@@ -9,9 +9,9 @@ namespace flecs {
 
 /**
  * @defgroup cpp_globals API Types & Globals
- * @brief Types & constants bridged from C API.
- * 
- * \ingroup cpp_core
+ * @ingroup cpp_core
+ * Types & constants bridged from C API.
+ *
  * @{
  */
 
@@ -56,12 +56,13 @@ static const flecs::entity_t Override = ECS_OVERRIDE;
 static const flecs::entity_t Toggle = ECS_TOGGLE;
 
 ////////////////////////////////////////////////////////////////////////////////
-//// Builtin components and tags 
+//// Builtin components and tags
 ////////////////////////////////////////////////////////////////////////////////
 
 /* Builtin components */
 using Component = EcsComponent;
 using Identifier = EcsIdentifier;
+using Iterable = EcsIterable;
 using Poly = EcsPoly;
 using Target = EcsTarget;
 
@@ -91,6 +92,7 @@ static const uint32_t Self = EcsSelf;
 static const uint32_t Up = EcsUp;
 static const uint32_t Down = EcsDown;
 static const uint32_t Cascade = EcsCascade;
+static const uint32_t Desc = EcsDesc;
 static const uint32_t Parent = EcsParent;
 static const uint32_t IsVariable = EcsIsVariable;
 static const uint32_t IsEntity = EcsIsEntity;
@@ -110,6 +112,7 @@ static const flecs::entity_t Transitive = EcsTransitive;
 static const flecs::entity_t Reflexive = EcsReflexive;
 static const flecs::entity_t Final = EcsFinal;
 static const flecs::entity_t DontInherit = EcsDontInherit;
+static const flecs::entity_t AlwaysOverride = EcsAlwaysOverride;
 static const flecs::entity_t Tag = EcsTag;
 static const flecs::entity_t Union = EcsUnion;
 static const flecs::entity_t Exclusive = EcsExclusive;

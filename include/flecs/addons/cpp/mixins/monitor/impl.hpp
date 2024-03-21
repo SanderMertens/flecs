@@ -11,6 +11,9 @@ inline monitor::monitor(flecs::world& world) {
     /* Import C module  */
     FlecsMonitorImport(world);
 
+    world.component<WorldSummary>();
+    world.component<WorldStats>();
+    world.component<PipelineStats>();
 }
 
 }

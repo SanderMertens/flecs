@@ -23,11 +23,11 @@ int main(int, char *[]) {
         .member<Point>("start")
         .member<Point>("stop");
 
-    // Create entity with Position as usual
+    // Create entity with Line as usual
     flecs::entity e = ecs.entity()
         .set<Line>({{10, 20}, {30, 40}});
 
-    // Convert position component to flecs expression string
+    // Convert Line component to flecs expression string
     const Line *ptr = e.get<Line>();
     std::cout << ecs.to_expr(ptr).c_str() << std::endl;
     // {start: {x: 10.00, y: 20.00}, stop: {x: 30.00, y: 40.00}}

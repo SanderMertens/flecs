@@ -3122,3 +3122,76 @@ void OnDelete_delete_w_low_rel_mixed_cleanup_interleaved_ids(void) {
     ecs_fini(world);
 }
 
+void OnDelete_fini_query_w_singleton_in_scope_no_module(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t t = ecs_new_entity(world, "ns.foo");
+    ecs_entity_t s = ecs_new_entity(world, "ns.singleton");
+    ecs_add_id(world, s, s);
+
+    ecs_query_t *q = ecs_query_new(world, "Position, ns.singleton($)");
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add_id(world, e, t);
+    ecs_add(world, e, Position);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_assert(ecs_iter_is_true(&it));
+
+    ecs_fini(world);
+}
+
+void OnDelete_fini_query_w_singleton_in_module(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t n = ecs_new_entity(world, "ns");
+    ecs_add_id(world, n, EcsModule);
+
+    ecs_entity_t t = ecs_new_entity(world, "ns.foo");
+    ecs_entity_t s = ecs_new_entity(world, "ns.singleton");
+    ecs_add_id(world, s, s);
+
+    ecs_query_t *q = ecs_query_new(world, "Position, ns.singleton($)");
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add_id(world, e, t);
+    ecs_add(world, e, Position);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_assert(ecs_iter_is_true(&it));
+
+    ecs_fini(world);
+}
+
+void OnDelete_fini_observer_w_relationship_in_scope(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t Tag = ecs_new_id(world);
+
+    ecs_entity_t ns = ecs_new_entity(world, "ns");
+    ecs_entity_t Rel = ecs_component(world, {
+        .entity = ecs_entity(world, { .name = "Rel" }),
+    });
+
+    ecs_add_pair(world, Rel, EcsChildOf, ns);
+
+    ecs_observer(world, {
+        .filter.terms = {
+            { ecs_pair(Rel, EcsWildcard) },
+            { Tag }
+        },
+        .events = { EcsOnRemove },
+        .callback = Observer
+    });
+
+    ecs_new_w_id(world, Tag);
+
+    ecs_fini(world);
+
+    // Tests edge case where above code would cause a crash
+    test_assert(true);
+}

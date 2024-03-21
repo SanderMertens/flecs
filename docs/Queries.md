@@ -605,7 +605,7 @@ flecs::filter<> f = world.filter_builder()
 ```
 
 #### Query DSL
-To query for a components in the query DSL they can be specified in a comma separated list of identifiers. The rules for resolving identifiers are the same as the `ecs_lookup_fullpath` / `world.lookup` functions. An example:
+To query for a components in the query DSL they can be specified in a comma separated list of identifiers. The rules for resolving identifiers are the same as the `ecs_lookup` / `world.lookup` functions. An example:
 
 ```
 Position, Velocity
@@ -1407,7 +1407,7 @@ The `AndFrom`, `OrFrom` and `NotFrom` operators are especially useful when combi
 
 Component lists can be organized recursively by adding an id to an entity with the `AND` and `OR` id flags.
 
-Fields for terms that use the `AndFrom`, `OrFrom` or `NotFrom` operators never provide data. Access modifiers for these operators default to `InOutNone`. When a the `AndFrom`, `OrFrom` or `NotFrom` operator is combined with an access modifier other than `InOutDefault` or `InOutNone` query creation will fail.
+Fields for terms that use the `AndFrom`, `OrFrom` or `NotFrom` operators never provide data. Access modifiers for these operators default to `InOutNone`. When a `AndFrom`, `OrFrom` or `NotFrom` operator is combined with an access modifier other than `InOutDefault` or `InOutNone` query creation will fail.
 
 The following sections show how to use the operators in the different language bindings. The code examples use filter queries, but also apply to queries and rules.
 
@@ -1777,7 +1777,7 @@ Player, Position, Input($)
 ```
 
 ### Relationship Traversal
-> *Supported by: filters, cached queries, rules(!)*
+> *Supported by: filters, cached queries, rules*
 
 Relationship traversal enables a query to search for a component by traversing a relationship. One of the most common examples of where this is useful is a Transform system, which matches `Position` on an entity and the entity's parent. To find the `Position` component on a parent entity, a query traverses the `ChildOf` relationship upwards:
 
@@ -1803,6 +1803,7 @@ Traversal behavior can be customized with the following bitflags, in addition to
 | Down     | `down`         | `EcsDown`     | `flecs::Down`     | Match by traversing downwards (derived, cannot be set) |
 | Parent   | `parent`       | `EcsParent`   | `flecs::Parent`   | Short for up(ChildOf) |
 | Cascade  | `cascade`      | `EcsCascade`  | `flecs::Cascade`  | Same as Up, but iterate in breadth-first order |
+| Desc     | `desc`         | `EcsDesc`     | `flecs::Desc`     | Combine with Cascade to iterate hierarchy bottom to top |
 
 If just `Self` is set a query will only match components on the matched entity (no traversal). If just `Up` is set, a query will only match components that can be reached by following the relationship and ignore components from the matched entity. If both `Self` and `Up` are set, the query will first look on the matched entity, and if it does not have the component the query will continue searching by traverse the relationship.
 
@@ -1839,9 +1840,7 @@ To ensure fast table-based iteration an application can enable [instancing](#ins
 This list is an overview of current relationship traversal limitations:
 
 - The `Down` flag is currently reserved for internal purposes and should not be set when creating a query.
-- The `Cascade` flag only works for cached queries.
-- Rule queries currently only traverse when this is implicitly required (by transitive relationships, inheritance), but ignores flags set at query creation time.
-- Rule queries do not yet support all forms of implicit traversal (most notably the one used by prefabs)
+- The `Cascade` and `Desc` flag only works for cached queries.
 - Traversal flags can currently only be specified for the term source.
 - Union relationships are not supported for traversal.
 
@@ -2248,7 +2247,7 @@ flecs::filter<Position, Mass> f = world.filter_builder<Position, Mass>()
   .build();
 
 f.iter([](flecs::iter& it, Position *p, Mass *v) {
-  if (it.is_self()) {
+  if (it.is_self(2)) {
     // Mass is matched on self, access as array
     for (auto i : it) {
       p[i].x += 1.0 / m[i].value;
@@ -2430,7 +2429,7 @@ The change detection feature cannot detect all changes. The following scenarios 
 - A change in tables matched by the query
 
 The following scenarios are not detected by change detection:
-- Modifying a component obtained by `get_mut` without calling `modified`
+- Modifying a component obtained by `ensure` without calling `modified`
 - Modifying the value of a ref (`ecs_ref_t` or `flecs::ref`) without calling `modified`
 
 A query with change detection enabled will only report a change for the components it matched with, or when an entity got added/removed to a matched table. A change to a component in a matched table that is not matched by the query will not be reported by the query.

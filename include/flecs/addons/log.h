@@ -1,25 +1,25 @@
 /**
  * @file addons/log.h
  * @brief Logging addon.
- * 
+ *
  * The logging addon provides an API for (debug) tracing and reporting errors
  * at various levels. When enabled, the logging addon can provide more detailed
  * information about the state of the ECS and any errors that may occur.
- * 
+ *
  * The logging addon can be disabled to reduce footprint of the library, but
  * limits information logged to only file, line and error code.
- * 
+ *
  * When enabled the logging addon can be configured to exclude levels of tracing
- * from the build to reduce the impact on performance. By default all debug 
+ * from the build to reduce the impact on performance. By default all debug
  * tracing is enabled for debug builds, tracing is enabled at release builds.
- * 
- * Applications can change the logging level at runtime with ecs_log_set_level,
- * but what is actually logged depends on what is compiled (when compiled 
- * without debug tracing, setting the runtime level to debug won't have an 
+ *
+ * Applications can change the logging level at runtime with ecs_log_set_level(),
+ * but what is actually logged depends on what is compiled (when compiled
+ * without debug tracing, setting the runtime level to debug won't have an
  * effect).
- * 
+ *
  * The logging addon uses the OS API log_ function for all tracing.
- * 
+ *
  * Note that even when the logging addon is not enabled, its header/source must
  * be included in a build. To prevent unused variable warnings in the code, some
  * API functions are included when the addon is disabled, but have empty bodies.
@@ -36,9 +36,9 @@ extern "C" {
 
 /**
  * @defgroup c_addons_log Log
- * @brief Logging functions.
- * 
- * \ingroup c_addons
+ * @ingroup c_addons
+ * Logging functions.
+ *
  * @{
  */
 
@@ -48,14 +48,14 @@ extern "C" {
 
 FLECS_API
 void ecs_deprecated_(
-    const char *file, 
-    int32_t line, 
+    const char *file,
+    int32_t line,
     const char *msg);
 
 /** Increase log stack.
  * This operation increases the indent_ value of the OS API and can be useful to
  * make nested behavior more visible.
- * 
+ *
  * @param level The log level.
  */
 FLECS_API
@@ -64,14 +64,14 @@ void ecs_log_push_(int32_t level);
 /** Decrease log stack.
  * This operation decreases the indent_ value of the OS API and can be useful to
  * make nested behavior more visible.
- * 
+ *
  * @param level The log level.
  */
 FLECS_API
 void ecs_log_pop_(int32_t level);
 
 /** Should current level be logged.
- * This operation returns true when the specified log level should be logged 
+ * This operation returns true when the specified log level should be logged
  * with the current log level.
  *
  * @param level The log level to check for.
@@ -155,8 +155,7 @@ void ecs_abort_(
     ...);
 
 FLECS_API
-bool ecs_assert_(
-    bool condition,
+void ecs_assert_log_(
     int32_t error_code,
     const char *condition_str,
     const char *file,
@@ -167,7 +166,7 @@ bool ecs_assert_(
 FLECS_API
 void ecs_parser_error_(
     const char *name,
-    const char *expr, 
+    const char *expr,
     int64_t column,
     const char *fmt,
     ...);
@@ -175,7 +174,7 @@ void ecs_parser_error_(
 FLECS_API
 void ecs_parser_errorv_(
     const char *name,
-    const char *expr, 
+    const char *expr,
     int64_t column,
     const char *fmt,
     va_list args);
@@ -344,13 +343,14 @@ void ecs_parser_errorv_(
     ecs_abort_(error_code, __FILE__, __LINE__, __VA_ARGS__);\
     ecs_os_abort(); abort(); /* satisfy compiler/static analyzers */
 
-/** Assert. 
+/** Assert.
  * Aborts if condition is false, disabled in debug mode. */
 #if defined(FLECS_NDEBUG) && !defined(FLECS_KEEP_ASSERT)
 #define ecs_assert(condition, error_code, ...)
 #else
 #define ecs_assert(condition, error_code, ...)\
-    if (!ecs_assert_(condition, error_code, #condition, __FILE__, __LINE__, __VA_ARGS__)) {\
+    if (!(condition)) {\
+        ecs_assert_log_(error_code, #condition, __FILE__, __LINE__, __VA_ARGS__);\
         ecs_os_abort();\
     }\
     assert(condition) /* satisfy compiler/static analyzers */
@@ -368,6 +368,15 @@ void ecs_parser_errorv_(
 #define ecs_dbg_assert(condition, error_code, ...)
 #endif
 
+/** Sanitize assert.
+ * Assert that is only valid in sanitized mode (ignores FLECS_KEEP_ASSERT) */
+#ifdef FLECS_SANITIZE
+#define ecs_san_assert(condition, error_code, ...) ecs_assert(condition, error_code, __VA_ARGS__)
+#else
+#define ecs_san_assert(condition, error_code, ...)
+#endif
+
+
 /* Silence dead code/unused label warnings when compiling without checks. */
 #define ecs_dummy_check\
     if ((false)) {\
@@ -381,7 +390,8 @@ void ecs_parser_errorv_(
 #else
 #ifdef FLECS_SOFT_ASSERT
 #define ecs_check(condition, error_code, ...)\
-    if (!ecs_assert_(condition, error_code, #condition, __FILE__, __LINE__, __VA_ARGS__)) {\
+    if (!(condition)) {\
+        ecs_assert_log_(error_code, #condition, __FILE__, __LINE__, __VA_ARGS__);\
         goto error;\
     }
 #else // FLECS_SOFT_ASSERT
@@ -443,8 +453,8 @@ FLECS_API
 int ecs_log_set_level(
     int level);
 
-/** Get current log level. 
- * 
+/** Get current log level.
+ *
  * @return Previous log level.
  */
 FLECS_API
@@ -474,12 +484,12 @@ bool ecs_log_enable_timestamp(
 /** Enable/disable logging time since last log.
  * By default deltatime is disabled. Note that enabling timestamps introduces
  * overhead as the logging code will need to obtain the current time.
- * 
+ *
  * When enabled, this logs the amount of time in seconds passed since the last
  * log, when this amount is non-zero. The format is a '+' character followed by
  * the number of seconds:
- * 
- *   +1 trace: log message
+ *
+ *     +1 trace: log message
  *
  * @param enabled Whether to enable tracing with timestamps.
  * @return Previous timestamp setting.

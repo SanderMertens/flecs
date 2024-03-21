@@ -112,7 +112,7 @@ using return_type_t = typename _::function_traits<T>::return_type;
 template <typename T>
 using arg_list_t = typename _::function_traits<T>::args;
 
-
+// First arg
 template<typename Func, typename ... Args>
 struct first_arg_impl;
 
@@ -128,5 +128,22 @@ struct first_arg {
 
 template <typename Func>
 using first_arg_t = typename first_arg<Func>::type;
+
+// Last arg
+template<typename Func, typename ... Args>
+struct second_arg_impl;
+
+template<typename Func, typename First, typename T, typename ... Args>
+struct second_arg_impl<Func, _::arg_list<First, T, Args ...> > {
+    using type = T;
+};
+
+template<typename Func>
+struct second_arg {
+    using type = typename second_arg_impl<Func, arg_list_t<Func>>::type;
+};
+
+template <typename Func>
+using second_arg_t = typename second_arg<Func>::type;
 
 } // flecs

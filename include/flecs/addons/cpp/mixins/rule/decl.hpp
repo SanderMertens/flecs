@@ -9,9 +9,9 @@ namespace flecs {
 
 /**
  * @defgroup cpp_addons_rules Rules
- * @brief Rules are an advanced query engine for matching against entity graphs.
- * 
- * \ingroup cpp_addons
+ * @ingroup cpp_addons
+ * Rules are an advanced query engine for matching against entity graphs.
+ *
  * @{
  */
 

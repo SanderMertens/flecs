@@ -60,9 +60,6 @@
 #ifdef FLECS_NO_DOC
 #undef FLECS_DOC
 #endif
-#ifdef FLECS_NO_COREDOC
-#undef FLECS_COREDOC
-#endif
 #ifdef FLECS_NO_LOG
 #undef FLECS_LOG
 #endif
@@ -175,13 +172,6 @@
 #error "FLECS_NO_MONITOR failed: MONITOR is required by other addons"
 #endif
 #include "../addons/monitor.h"
-#endif
-
-#ifdef FLECS_COREDOC
-#ifdef FLECS_NO_COREDOC
-#error "FLECS_NO_COREDOC failed: COREDOC is required by other addons"
-#endif
-#include "../addons/coredoc.h"
 #endif
 
 #ifdef FLECS_DOC

@@ -330,7 +330,7 @@ int flecs_assembly_create(
 
     ecs_add_id(world, assembly, EcsAlwaysOverride);
 
-    EcsScript *script = ecs_get_mut(world, assembly, EcsScript);
+    EcsScript *script = ecs_ensure(world, assembly, EcsScript);
     flecs_dtor_script(script);
     script->world = world;
     script->script = script_code;
@@ -465,7 +465,7 @@ void plecs_apply_with_frame(
         ecs_id_t id = state->with[i];
         plecs_with_value_t *v = &state->with_value_frames[i];
         if (v->value.type) {
-            void *ptr = ecs_get_mut_id(world, e, id);
+            void *ptr = ecs_ensure_id(world, e, id);
             ecs_value_copy(world, v->value.type, ptr, v->value.ptr);
             ecs_modified_id(world, e, id);
         } else {
@@ -776,7 +776,7 @@ int plecs_create_term(
     } else {
         if (!obj) {
             /* If no subject or object were provided, use predicate as subj 
-             * unless the expression explictly excluded the subject */
+             * unless the expression explicitly excluded the subject */
             if (pred_as_subj) {
                 state->last_subject = pred;
                 subj = pred;
@@ -966,7 +966,7 @@ const char* plecs_parse_assign_expr(
         assign_to = type;
     }
 
-    void *value_ptr = ecs_get_mut_id(world, assign_to, assign_id);
+    void *value_ptr = ecs_ensure_id(world, assign_to, assign_id);
 
     ptr = ecs_parse_expr(world, ptr, &(ecs_value_t){type, value_ptr}, 
         &(ecs_parse_expr_desc_t){
@@ -1179,7 +1179,7 @@ const char* plecs_parse_var_as_component(
         assign_to = state->last_subject;
     }
 
-    void *dst = ecs_get_mut_id(world, assign_to, type);
+    void *dst = ecs_ensure_id(world, assign_to, type);
     if (!dst) {
         char *type_name = ecs_get_fullpath(world, type);
         ecs_parser_error(name, expr, ptr - expr, 
@@ -1258,7 +1258,7 @@ const char* plecs_parse_using_stmt(
     ecs_entity_t scope;
     if (len > 2 && !ecs_os_strcmp(&using_path[len - 2], ".*")) {
         using_path[len - 2] = '\0';
-        scope = ecs_lookup_fullpath(world, using_path);
+        scope = ecs_lookup(world, using_path);
         if (!scope) {
             ecs_parser_error(name, expr, ptr - expr,
                 "unresolved identifier '%s' in using statement", using_path);
@@ -1711,7 +1711,7 @@ const char *plecs_parse_plecs_term(
         decl_id = state->last_predicate;
     }
 
-    ptr = ecs_parse_term(world, name, expr, ptr, &term);
+    ptr = ecs_parse_term(world, name, expr, ptr, &term, NULL, NULL, false);
     if (!ptr) {
         return NULL;
     }
@@ -1872,6 +1872,7 @@ term_expr:
         goto error;
     }
 
+
     const char *tptr = ecs_parse_ws(ptr);
     if (flecs_isident(tptr[0])) {
         if (state->decl_stmt) {
@@ -1895,7 +1896,7 @@ next_term:
     } else if (ptr[0] == ',') {
         ptr = plecs_parse_fluff(ptr + 1);
         goto term_expr;
-    } else if (ptr[0] == '{') {
+    } else if (ptr[0] == '{' || ptr[0] == '[') {
         if (state->assign_stmt) {
             goto assign_expr;
         } else if (state->with_stmt && !isspace(ptr[-1])) {
@@ -1934,7 +1935,7 @@ assign_stmt:
     ptr = plecs_parse_fluff(ptr);
 
     /* Assignment without a preceding component */
-    if (ptr[0] == '{') {
+    if (ptr[0] == '{' || ptr[0] == '[') {
         goto assign_expr;
     }
 
@@ -2106,50 +2107,6 @@ int ecs_plecs_from_str(
     return flecs_plecs_parse(world, name, expr, NULL, 0, 0);
 }
 
-static
-char* flecs_load_from_file(
-    const char *filename)
-{
-    FILE* file;
-    char* content = NULL;
-    int32_t bytes;
-    size_t size;
-
-    /* Open file for reading */
-    ecs_os_fopen(&file, filename, "r");
-    if (!file) {
-        ecs_err("%s (%s)", ecs_os_strerror(errno), filename);
-        goto error;
-    }
-
-    /* Determine file size */
-    fseek(file, 0 , SEEK_END);
-    bytes = (int32_t)ftell(file);
-    if (bytes == -1) {
-        goto error;
-    }
-    rewind(file);
-
-    /* Load contents in memory */
-    content = ecs_os_malloc(bytes + 1);
-    size = (size_t)bytes;
-    if (!(size = fread(content, 1, size, file)) && bytes) {
-        ecs_err("%s: read zero bytes instead of %d", filename, size);
-        ecs_os_free(content);
-        content = NULL;
-        goto error;
-    } else {
-        content[size] = '\0';
-    }
-
-    fclose(file);
-
-    return content;
-error:
-    ecs_os_free(content);
-    return NULL;
-}
-
 int ecs_plecs_from_file(
     ecs_world_t *world,
     const char *filename) 
@@ -2206,7 +2163,7 @@ int ecs_script_update(
 
     ecs_script_clear(world, e, instance);
 
-    EcsScript *s = ecs_get_mut(world, e, EcsScript);
+    EcsScript *s = ecs_ensure(world, e, EcsScript);
     if (!s->script || ecs_os_strcmp(s->script, script)) {
         s->script = ecs_os_strdup(script);
         ecs_modified(world, e, EcsScript);
@@ -2278,6 +2235,11 @@ void FlecsScriptImport(
 {
     ECS_MODULE(world, FlecsScript);
     ECS_IMPORT(world, FlecsMeta);
+#ifdef FLECS_DOC
+    ECS_IMPORT(world, FlecsDoc);
+    ecs_doc_set_brief(world, ecs_id(FlecsScript), 
+        "Module with components for managing Flecs scripts");
+#endif
 
     ecs_set_name_prefix(world, "Ecs");
     ECS_COMPONENT_DEFINE(world, EcsScript);

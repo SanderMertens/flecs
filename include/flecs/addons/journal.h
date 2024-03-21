@@ -5,8 +5,8 @@
  * The journaling addon traces API calls. The trace is formatted as runnable
  * C code, which allows for (partially) reproducing the behavior of an app
  * with the journaling trace.
- * 
- * The journaling addon is disabled by default. Enabling it can have a 
+ *
+ * The journaling addon is disabled by default. Enabling it can have a
  * significant impact on performance.
  */
 
@@ -21,9 +21,10 @@
 
 /**
  * @defgroup c_addons_journal Journal
- * @brief Journaling addon (disabled by default).
- * 
- * \ingroup c_addons
+ * @ingroup c_addons
+ * Journaling addon (disabled by default).
+ *
+ *
  * @{
  */
 
@@ -64,12 +65,11 @@ void flecs_journal_end(void);
 #ifdef __cplusplus
 }
 #endif // __cplusplus
+/** @} */
 #endif // FLECS_JOURNAL_H
 #else
 #define flecs_journal_begin(...)
 #define flecs_journal_end(...)
 #define flecs_journal(...)
-
-/** @} */
 
 #endif // FLECS_JOURNAL

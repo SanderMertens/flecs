@@ -964,6 +964,98 @@ void Filter_filter_w_second_var(void) {
     ecs_fini(world);
 }
 
+void Filter_filter_w_src_var_from_name(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .terms = {{ 
+            .first.id = Foo, 
+            .src.name = "$Var"
+        }}
+    }));
+    
+    test_int(f.term_count, 1);
+    test_int(f.field_count, 1);
+    test_assert(f.terms != NULL);
+    test_int(f.terms[0].id, Foo);
+    test_int(f.terms[0].oper, EcsAnd);
+    test_int(f.terms[0].field_index, 0);
+    test_int(f.terms[0].first.id, Foo);
+    test_int(f.terms[0].first.flags, EcsSelf|EcsIsEntity);
+    test_str(f.terms[0].src.name, "Var");
+    test_int(f.terms[0].src.flags, EcsSelf|EcsUp|EcsIsVariable);
+    test_int(f.terms[0].src.trav, EcsIsA);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_w_first_first_var(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .terms = {{ 
+            .first.name = "$Var"
+        }}
+    }));
+    
+    test_int(f.term_count, 1);
+    test_int(f.field_count, 1);
+    test_assert(f.terms != NULL);
+    test_int(f.terms[0].id, EcsWildcard);
+    test_int(f.terms[0].oper, EcsAnd);
+    test_int(f.terms[0].field_index, 0);
+    test_str(f.terms[0].first.name, "Var");
+    test_int(f.terms[0].first.flags, EcsSelf|EcsIsVariable);
+    test_int(f.terms[0].src.id, EcsThis);
+    test_int(f.terms[0].src.flags, EcsSelf|EcsUp|EcsIsVariable);
+    test_int(f.terms[0].src.trav, EcsIsA);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
+void Filter_filter_w_second_second_var(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_filter_t f = ECS_FILTER_INIT;
+    test_assert(NULL != ecs_filter_init(world, &(ecs_filter_desc_t){
+        .storage = &f,
+        .terms = {{ 
+            .first.id = Foo,
+            .second.name = "$Var"
+        }}
+    }));
+
+    test_int(f.term_count, 1);
+    test_int(f.field_count, 1);
+    test_assert(f.terms != NULL);
+    test_int(f.terms[0].id, ecs_pair(Foo, EcsWildcard));
+    test_int(f.terms[0].oper, EcsAnd);
+    test_int(f.terms[0].field_index, 0);
+    test_int(f.terms[0].first.id, Foo);
+    test_int(f.terms[0].first.flags, EcsSelf|EcsIsEntity);
+    test_int(f.terms[0].src.id, EcsThis);
+    test_int(f.terms[0].src.flags, EcsSelf|EcsUp|EcsIsVariable);
+    test_int(f.terms[0].src.trav, EcsIsA);
+    test_str(f.terms[0].second.name, "Var");
+    test_int(f.terms[0].second.flags, EcsSelf|EcsIsVariable);
+
+    ecs_filter_fini(&f);
+
+    ecs_fini(world);
+}
+
 void Filter_filter_1_variable_as_obj(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -3982,7 +4074,7 @@ void Filter_term_iter_in_stage(void) {
     ecs_entity_t e2 = ecs_new(world, Tag);
     ecs_add(world, e2, TagB);
 
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
 
     ecs_world_t *stage = ecs_get_stage(world, 0);
     test_assert(stage != NULL);
@@ -5189,7 +5281,7 @@ void Filter_filter_iter_in_stage(void) {
 
     ecs_entity_t e = ecs_new(world, Tag);
 
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
 
     ecs_world_t *stage = ecs_get_stage(world, 0);
     test_assert(stage != NULL);

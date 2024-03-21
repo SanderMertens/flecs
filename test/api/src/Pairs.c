@@ -2270,7 +2270,7 @@ void Pairs_get_target_for_id_from_stage(void) {
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
 
     ecs_world_t *stage = ecs_get_stage(world, 0);
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
     ecs_entity_t result = ecs_get_target_for_id(stage, e, EcsIsA, Tag);
     test_assert(result != 0);
     test_assert(result == base);
@@ -2984,4 +2984,58 @@ void Pairs_oneof_other_rel_parent_constraint_violated(void) {
 
     test_expect_abort();
     ecs_add_pair(world, e, Rel, ObjC);
+}
+
+void Pairs_set_w_recycled_rel(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t dummy = ecs_new_id(world);
+    ecs_delete(world, dummy);
+
+    ecs_entity_t ecs_id(Position) = ecs_component(world, {
+        .entity = ecs_new_id(world),
+        .type.size = ECS_SIZEOF(Position),
+        .type.alignment = ECS_ALIGNOF(Position)
+    });
+
+    test_assert(ecs_id(Position) != (uint32_t)ecs_id(Position));
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t tgt = ecs_new_id(world);
+    ecs_set_pair(world, e, Position, tgt, {10, 20});
+    test_assert(ecs_has_pair(world, e, ecs_id(Position), tgt));
+
+    const Position *p = ecs_get_pair(world, e, Position, tgt);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Pairs_set_w_recycled_tgt(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t dummy = ecs_new_id(world);
+    ecs_delete(world, dummy);
+
+    ecs_entity_t ecs_id(Position) = ecs_component(world, {
+        .entity = ecs_new_id(world),
+        .type.size = ECS_SIZEOF(Position),
+        .type.alignment = ECS_ALIGNOF(Position)
+    });
+
+    test_assert(ecs_id(Position) != (uint32_t)ecs_id(Position));
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t rel = ecs_new_id(world);
+    ecs_set_pair_second(world, e, rel, Position, {10, 20});
+    test_assert(ecs_has_pair(world, e, rel, ecs_id(Position)));
+
+    const Position *p = ecs_get_pair_second(world, e, rel, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
 }

@@ -2529,3 +2529,53 @@ void FilterBuilder_iter_w_stage(void) {
 
     test_int(count, 1);
 }
+
+void FilterBuilder_with_t_inout(void) {
+    flecs::world ecs;
+
+    flecs::filter<> f = ecs.filter_builder()
+        .with(ecs.id<Position>())
+        .build();
+
+    test_assert(f.term(0).inout() == flecs::InOutNone);
+}
+
+void FilterBuilder_with_T_inout(void) {
+    flecs::world ecs;
+
+    flecs::filter<> f = ecs.filter_builder()
+        .with<Position>()
+        .build();
+
+    test_assert(f.term(0).inout() == flecs::InOutNone);
+}
+
+void FilterBuilder_with_R_T_inout(void) {
+    flecs::world ecs;
+
+    flecs::filter<> f = ecs.filter_builder()
+        .with<Position, Velocity>()
+        .build();
+
+    test_assert(f.term(0).inout() == flecs::InOutNone);
+}
+
+void FilterBuilder_with_R_t_inout(void) {
+    flecs::world ecs;
+
+    flecs::filter<> f = ecs.filter_builder()
+        .with<Position>(ecs.id<Velocity>())
+        .build();
+
+    test_assert(f.term(0).inout() == flecs::InOutNone);
+}
+
+void FilterBuilder_with_r_t_inout(void) {
+    flecs::world ecs;
+
+    flecs::filter<> f = ecs.filter_builder()
+        .with(ecs.id<Position>(), ecs.id<Velocity>())
+        .build();
+
+    test_assert(f.term(0).inout() == flecs::InOutNone);
+}

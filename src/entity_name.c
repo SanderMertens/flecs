@@ -318,32 +318,9 @@ error:
 
 ecs_entity_t ecs_lookup(
     const ecs_world_t *world,
-    const char *name)
+    const char *path)
 {   
-    if (!name) {
-        return 0;
-    }
-
-    ecs_check(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    world = ecs_get_world(world);
-
-    ecs_entity_t e = flecs_get_builtin(name);
-    if (e) {
-        return e;
-    }
-
-    if (flecs_name_is_id(name)) {
-        return flecs_name_to_id(world, name);
-    }
-
-    e = flecs_name_index_find(&world->aliases, name, 0, 0);
-    if (e) {
-        return e;
-    }    
-    
-    return ecs_lookup_child(world, 0, name);
-error:
-    return 0;
+    return ecs_lookup_path_w_sep(world, 0, path, ".", NULL, true);
 }
 
 ecs_entity_t ecs_lookup_symbol(
@@ -359,15 +336,16 @@ ecs_entity_t ecs_lookup_symbol(
     ecs_check(world != NULL, ECS_INTERNAL_ERROR, NULL);
     world = ecs_get_world(world);
 
-    ecs_entity_t e = flecs_name_index_find(&world->symbols, name, 0, 0);
-    if (e) {
-        return e;
-    }
-
+    ecs_entity_t e = 0;
     if (lookup_as_path) {
-        return ecs_lookup_path_w_sep(world, 0, name, ".", NULL, recursive);
+        e = ecs_lookup_path_w_sep(world, 0, name, ".", NULL, recursive);
     }
 
+    if (!e) {
+        e = flecs_name_index_find(&world->symbols, name, 0, 0);
+    }
+
+    return e;
 error:
     return 0;
 }
@@ -560,8 +538,9 @@ void flecs_add_path(
     ecs_set_name(world, entity, name);
 
     if (defer_suspend) {
+        ecs_stage_t *stage = flecs_stage_from_world(&world);
         flecs_resume_readonly(real_world, &srs);
-        flecs_defer_path((ecs_stage_t*)world, parent, entity, name);
+        flecs_defer_path(stage, parent, entity, name);
     }
 }
 
@@ -603,8 +582,9 @@ ecs_entity_t ecs_add_path_w_sep(
     /* If we're in deferred/readonly mode suspend it, so that the name index is
      * immediately updated. Without this, we could create multiple entities for
      * the same name in a single command queue. */
-    bool suspend_defer = ecs_poly_is(world, ecs_stage_t) && 
+    bool suspend_defer = ecs_is_deferred(world) &&
         (ecs_get_stage_count(world) <= 1);
+        
     ecs_entity_t cur = parent;
     char *name = NULL;
 

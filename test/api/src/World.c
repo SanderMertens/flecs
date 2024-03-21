@@ -146,7 +146,7 @@ void World_entity_range_out_of_range_check_disabled(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_ensure(world, 4999);
+    ecs_make_alive(world, 4999);
 
     ecs_enable_range_check(world, false);
     ecs_set_entity_range(world, 5000, 10000);
@@ -201,7 +201,7 @@ void World_entity_range_add_existing_staged(void) {
 
     ecs_set_entity_range(world, 1000, 1500);
 
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
     ecs_world_t *stage = ecs_get_stage(world, 0);
     ecs_add(stage, e, Velocity);
     ecs_readonly_end(world);
@@ -220,7 +220,7 @@ void World_entity_range_add_in_range_staged(void) {
     ecs_entity_t e = ecs_new(world, Position);
     test_assert(e == 500);
 
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
     ecs_world_t *stage = ecs_get_stage(world, 0);
     ecs_add(stage, e, Velocity);
     ecs_readonly_end(world);
@@ -253,7 +253,7 @@ void World_entity_range_add_out_of_range_staged(void) {
     ecs_entity_t e = ecs_new(world, Position);
     test_assert(e == 500);
 
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
     ecs_world_t *stage = ecs_get_stage(world, 0);
     ecs_add(stage, e, Velocity);
     ecs_readonly_end(world);
@@ -320,13 +320,13 @@ void World_dim(void) {
 
     ecs_bulk_new(world, Position, 500);
 
-    test_int(malloc_count, 3);
+    test_int(malloc_count, 2);
 
     malloc_count = 0;
 
     ecs_bulk_new(world, Position, 500);
 
-    test_int(malloc_count, 3);
+    test_int(malloc_count, 2);
 
     ecs_fini(world);
 }
@@ -1391,11 +1391,11 @@ void at_fini_test(
     ecs_world_t* world,
     void* context) 
 {
-    test_assert(ecs_singleton_get_mut(world, Test) != NULL);
+    test_assert(ecs_singleton_ensure(world, Test) != NULL);
     at_fini_test_invoked = 1;
 }
 
-void World_get_mut_in_at_fini(void) {
+void World_ensure_in_at_fini(void) {
     ecs_world_t* world = ecs_mini();
 
     ECS_COMPONENT_DEFINE(world, Test);

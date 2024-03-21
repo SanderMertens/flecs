@@ -1,0 +1,10 @@
+{
+    "id": "factory",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "language": "c++"
+    }
+}

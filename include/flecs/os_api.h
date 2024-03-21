@@ -2,11 +2,11 @@
  * @file os_api.h
  * @brief Operating system abstraction API.
  *
- * This file contains the operating system abstraction API. The flecs core 
+ * This file contains the operating system abstraction API. The flecs core
  * library avoids OS/runtime specific API calls as much as possible. Instead it
  * provides an interface that can be implemented by applications.
  *
- * Examples for how to implement this interface can be found in the 
+ * Examples for how to implement this interface can be found in the
  * examples/os_api folder.
  */
 
@@ -15,14 +15,15 @@
 
 /**
  * @defgroup c_os_api OS API
- * @brief Interface for providing OS specific functionality.
- * 
- * \ingroup c
+ * @ingroup c
+ * Interface for providing OS specific functionality.
+ *
  * @{
  */
 
 #include <stdarg.h>
 #include <errno.h>
+#include <stdio.h>
 
 #if defined(ECS_TARGET_WINDOWS)
 #include <malloc.h>
@@ -61,25 +62,25 @@ typedef uint64_t ecs_os_thread_id_t;
 typedef void (*ecs_os_proc_t)(void);
 
 /* OS API init */
-typedef 
+typedef
 void (*ecs_os_api_init_t)(void);
 
 /* OS API deinit */
-typedef 
+typedef
 void (*ecs_os_api_fini_t)(void);
 
 /* Memory management */
-typedef 
+typedef
 void* (*ecs_os_api_malloc_t)(
     ecs_size_t size);
 
-typedef 
+typedef
 void (*ecs_os_api_free_t)(
     void *ptr);
 
 typedef
 void* (*ecs_os_api_realloc_t)(
-    void *ptr, 
+    void *ptr,
     ecs_size_t size);
 
 typedef
@@ -165,12 +166,12 @@ void (*ecs_os_api_cond_wait_t)(
     ecs_os_cond_t cond,
     ecs_os_mutex_t mutex);
 
-typedef 
+typedef
 void (*ecs_os_api_sleep_t)(
     int32_t sec,
     int32_t nanosec);
 
-typedef 
+typedef
 void (*ecs_os_api_enable_high_timer_resolution_t)(
     bool enable);
 
@@ -212,7 +213,7 @@ typedef
 char* (*ecs_os_api_module_to_path_t)(
     const char *module_id);
 
-/* Prefix members of struct with 'ecs_' as some system headers may define 
+/* Prefix members of struct with 'ecs_' as some system headers may define
  * macros for functions like "strdup", "log" or "_free" */
 
 typedef struct ecs_os_api_t {
@@ -238,7 +239,7 @@ typedef struct ecs_os_api_t {
     ecs_os_api_thread_new_t task_new_;
     ecs_os_api_thread_join_t task_join_;
 
-    /* Atomic incremenet / decrement */
+    /* Atomic increment / decrement */
     ecs_os_api_ainc_t ainc_;
     ecs_os_api_ainc_t adec_;
     ecs_os_api_lainc_t lainc_;
@@ -300,6 +301,9 @@ typedef struct ecs_os_api_t {
 
     /* OS API flags */
     ecs_flags32_t flags_;
+
+    /* File used for logging output (hint, log_ decides where to write) */
+    FILE *log_out_;
 } ecs_os_api_t;
 
 FLECS_API
@@ -375,6 +379,10 @@ void ecs_os_set_api_defaults(void);
 #define ecs_os_memcpy_n(ptr1, ptr2, T, count) ecs_os_memcpy(ptr1, ptr2, ECS_SIZEOF(T) * count)
 #define ecs_os_memcmp_t(ptr1, ptr2, T) ecs_os_memcmp(ptr1, ptr2, ECS_SIZEOF(T))
 
+#define ecs_os_memmove_t(ptr1, ptr2, T) ecs_os_memmove(ptr1, ptr2, ECS_SIZEOF(T))
+#define ecs_os_memmove_n(ptr1, ptr2, T, count) ecs_os_memmove(ptr1, ptr2, ECS_SIZEOF(T) * count)
+#define ecs_os_memmove_t(ptr1, ptr2, T) ecs_os_memmove(ptr1, ptr2, ECS_SIZEOF(T))
+
 #define ecs_os_strcmp(str1, str2) strcmp(str1, str2)
 #define ecs_os_memset_t(ptr, value, T) ecs_os_memset(ptr, value, ECS_SIZEOF(T))
 #define ecs_os_memset_n(ptr, value, T, count) ecs_os_memset(ptr, value, ECS_SIZEOF(T) * count)
@@ -389,6 +397,7 @@ void ecs_os_set_api_defaults(void);
 #if !defined(ECS_TARGET_POSIX) && !defined(ECS_TARGET_MINGW)
 #define ecs_os_strcat(str1, str2) strcat_s(str1, INT_MAX, str2)
 #define ecs_os_sprintf(ptr, ...) sprintf_s(ptr, INT_MAX, __VA_ARGS__)
+#define ecs_os_snprintf(ptr, len, ...) sprintf_s(ptr, len, __VA_ARGS__)
 #define ecs_os_vsprintf(ptr, fmt, args) vsprintf_s(ptr, INT_MAX, fmt, args)
 #define ecs_os_strcpy(str1, str2) strcpy_s(str1, INT_MAX, str2)
 #ifdef __cplusplus
@@ -399,6 +408,7 @@ void ecs_os_set_api_defaults(void);
 #else
 #define ecs_os_strcat(str1, str2) strcat(str1, str2)
 #define ecs_os_sprintf(ptr, ...) sprintf(ptr, __VA_ARGS__)
+#define ecs_os_snprintf(ptr, len, ...) snprintf(ptr, len, __VA_ARGS__)
 #define ecs_os_vsprintf(ptr, fmt, args) vsprintf(ptr, fmt, args)
 #define ecs_os_strcpy(str1, str2) strcpy(str1, str2)
 #ifdef __cplusplus
@@ -527,7 +537,7 @@ double ecs_time_to_double(
 
 FLECS_API
 void* ecs_os_memdup(
-    const void *src, 
+    const void *src,
     ecs_size_t size);
 
 /** Are heap functions available? */

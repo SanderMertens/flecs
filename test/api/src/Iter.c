@@ -2182,3 +2182,118 @@ void Iter_rule_worker_iter_w_fini(void) {
 
     ecs_fini(world);
 }
+
+void Iter_to_str_before_next(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_query_t *q = ecs_query_new(world, "Tag");
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    char *str = ecs_iter_str(&it);
+    test_assert(str == NULL);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Iter_to_str(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+    
+    ecs_entity_t e = ecs_new_entity(world, "foo");
+    ecs_add(world, e, Tag);
+
+    ecs_query_t *q = ecs_query_new(world, "Tag");
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    char *str = ecs_iter_str(&it);
+    test_assert(str != NULL);
+    test_str(str, 
+        "id:  Tag\n"
+        "src: 0\n"
+        "set: true\n"
+        "this:\n"
+        "    - foo\n"
+    );
+    ecs_os_free(str);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Iter_filter_eval_count(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_filter_t *f = ecs_filter(world, {
+        .terms = {{ Foo }}
+    });
+
+    test_assert(f != NULL);
+
+    test_int(f->eval_count, 0);
+
+    ecs_iter_t it = ecs_filter_iter(world, f);
+    test_bool(false, ecs_filter_next(&it));
+    
+    test_int(f->eval_count, 1);
+
+    ecs_filter_fini(f);
+
+    ecs_fini(world);
+}
+
+void Iter_query_eval_count(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .filter.terms = {{ Foo }}
+    });
+
+    test_assert(q != NULL);
+
+    const ecs_filter_t *f = ecs_query_get_filter(q);
+    test_int(f->eval_count, 0);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(false, ecs_query_next(&it));
+
+    test_int(f->eval_count, 1);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Iter_rule_eval_count(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_rule_t *r = ecs_rule(world, {
+        .terms = {{ Foo }}
+    });
+
+    test_assert(r != NULL);
+
+    const ecs_filter_t *f = ecs_rule_get_filter(r);
+    test_int(f->eval_count, 0);
+
+    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_bool(false, ecs_rule_next(&it));
+
+    test_int(f->eval_count, 1);
+
+    ecs_rule_fini(r);
+
+    ecs_fini(world);
+}

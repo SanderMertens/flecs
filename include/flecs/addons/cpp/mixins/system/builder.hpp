@@ -18,7 +18,7 @@ namespace _ {
 
 /** System builder.
  * 
- * \ingroup cpp_addons_systems
+ * @ingroup cpp_addons_systems
  */
 template <typename ... Components>
 struct system_builder final : _::system_builder_base<Components...> {

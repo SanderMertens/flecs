@@ -13,7 +13,7 @@
 #pragma once
 
 /**
- * \ingroup cpp_entities
+ * @ingroup cpp_entities
  * @{
  */
 
@@ -23,7 +23,7 @@ namespace flecs
 /** Entity view.
  * Class with read operations for entities. Base for flecs::entity.
  * 
- * \ingroup cpp_entities
+ * @ingroup cpp_entities
  */
 struct entity_view : public id {
 
@@ -140,7 +140,10 @@ struct entity_view : public id {
 
     /** Iterate (component) ids of an entity.
      * The function parameter must match the following signature:
-     *   void(*)(flecs::id id)
+     *
+     * @code
+     * void(*)(flecs::id id)
+     * @endcode
      *
      * @param func The function invoked for each id.
      */
@@ -149,7 +152,10 @@ struct entity_view : public id {
 
     /** Iterate matching pair ids of an entity.
      * The function parameter must match the following signature:
-     *   void(*)(flecs::id id)
+     *
+     * @code
+     * void(*)(flecs::id id)
+     * @endcode
      *
      * @param func The function invoked for each id.
      */
@@ -158,7 +164,10 @@ struct entity_view : public id {
 
     /** Iterate targets for a given relationship.
      * The function parameter must match the following signature:
-     *   void(*)(flecs::entity target)
+     *
+     * @code
+     * void(*)(flecs::entity target)
+     * @endcode
      *
      * @param rel The relationship for which to iterate the targets.
      * @param func The function invoked for each target.
@@ -168,7 +177,10 @@ struct entity_view : public id {
 
     /** Iterate targets for a given relationship.
      * The function parameter must match the following signature:
-     *   void(*)(flecs::entity target)
+     *
+     * @code
+     * void(*)(flecs::entity target)
+     * @endcode
      *
      * @tparam First The relationship for which to iterate the targets.
      * @param func The function invoked for each target.     
@@ -180,7 +192,10 @@ struct entity_view : public id {
 
     /** Iterate children for entity.
      * The function parameter must match the following signature:
-     *   void(*)(flecs::entity target)
+     *
+     * @code
+     * void(*)(flecs::entity target)
+     * @endcode
      *
      * @param rel The relationship to follow.
      * @param func The function invoked for each child.     
@@ -212,7 +227,7 @@ struct entity_view : public id {
         if (ecs_filter_init(m_world, &desc) != nullptr) {
             ecs_iter_t it = ecs_filter_iter(m_world, &f);
             while (ecs_filter_next(&it)) {
-                _::each_invoker<Func>(FLECS_MOV(func)).invoke(&it);
+                _::each_delegate<Func>(FLECS_MOV(func)).invoke(&it);
             }
 
             ecs_filter_fini(&f);
@@ -221,7 +236,10 @@ struct entity_view : public id {
 
     /** Iterate children for entity.
      * The function parameter must match the following signature:
-     *   void(*)(flecs::entity target)
+     *
+     * @code
+     * void(*)(flecs::entity target)
+     * @endcode
      *
      * @tparam Rel The relationship to follow.
      * @param func The function invoked for each child.     
@@ -233,7 +251,10 @@ struct entity_view : public id {
 
     /** Iterate children for entity.
      * The function parameter must match the following signature:
-     *   void(*)(flecs::entity target)
+     *
+     * @code
+     * void(*)(flecs::entity target)
+     * @endcode
      * 
      * This operation follows the ChildOf relationship.
      *
@@ -354,13 +375,16 @@ struct entity_view : public id {
      * function will write-lock the table (see ecs_write_begin).
      * 
      * Example:
-     *   e.get([](Position& p, Velocity& v) { // write lock
-     *     p.x += v.x;
-     *   });
+     *
+     * @code
+     * e.get([](Position& p, Velocity& v) { // write lock
+     *   p.x += v.x;
+     * });
      * 
-     *   e.get([](const Position& p) {        // read lock
-     *     std::cout << p.x << std::endl;
-     *   });
+     * e.get([](const Position& p) {        // read lock
+     *   std::cout << p.x << std::endl;
+     * });
+     * @endcode
      *
      * @param func The callback to invoke.
      * @return True if the entity has all components, false if not.
@@ -403,6 +427,123 @@ struct entity_view : public id {
         return get<pair_object<First, Second>>();
     }
 
+    /** Get mutable component value.
+     * 
+     * @tparam T The component to get.
+     * @return Pointer to the component value, nullptr if the entity does not
+     *         have the component.
+     */
+    template <typename T, if_t< is_actual<T>::value > = 0>
+    T* get_mut() const {
+        auto comp_id = _::cpp_type<T>::id(m_world);
+        ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        return static_cast<T*>(ecs_get_mut_id(m_world, m_id, comp_id));
+    }
+
+    /** Get mutable component value.
+     * Overload for when T is not the same as the actual type, which happens
+     * when using pair types.
+     * 
+     * @tparam T The component to get.
+     * @return Pointer to the component value, nullptr if the entity does not
+     *         have the component.
+     */
+    template <typename T, typename A = actual_type_t<T>, 
+        if_t< flecs::is_pair<T>::value > = 0>
+    A* get_mut() const {
+        auto comp_id = _::cpp_type<T>::id(m_world);
+        ecs_assert(_::cpp_type<A>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        return static_cast<A*>(ecs_get_mut_id(m_world, m_id, comp_id));
+    }
+
+    /** Get a mutable pair.
+     * This operation gets the value for a pair from the entity.
+     *
+     * @tparam First The first element of the pair.
+     * @tparam Second the second element of a pair.
+     */
+    template <typename First, typename Second, typename P = pair<First, Second>, 
+        typename A = actual_type_t<P>, if_not_t< flecs::is_pair<First>::value > = 0>
+    A* get_mut() const {
+        return this->get_mut<P>();
+    }
+
+    /** Get a mutable pair.
+     * This operation gets the value for a pair from the entity. 
+     *
+     * @tparam First The first element of the pair.
+     * @param second The second element of the pair.
+     */
+    template<typename First, typename Second, if_not_t< is_enum<Second>::value> = 0>
+    First* get_mut(Second second) const {
+        auto comp_id = _::cpp_type<First>::id(m_world);
+        ecs_assert(_::cpp_type<First>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        return static_cast<First*>(
+            ecs_get_mut_id(m_world, m_id, ecs_pair(comp_id, second)));
+    }
+
+    /** Get a mutable pair.
+     * This operation gets the value for a pair from the entity. 
+     *
+     * @tparam First The first element of the pair.
+     * @param constant the enum constant.
+     */
+    template<typename First, typename Second, if_t<is_enum<Second>::value> = 0>
+    First* get_mut(Second constant) const {
+        const auto& et = enum_type<Second>(this->m_world);
+        flecs::entity_t target = et.entity(constant);
+        return get_mut<First>(target);
+    }
+
+    /** Get mutable component value (untyped).
+     * 
+     * @param comp The component to get.
+     * @return Pointer to the component value, nullptr if the entity does not
+     *         have the component.
+     */
+    void* get_mut(flecs::id_t comp) const {
+        return ecs_get_mut_id(m_world, m_id, comp);
+    }
+
+    /** Get a mutable pair (untyped).
+     * This operation gets the value for a pair from the entity. If neither the
+     * first nor the second part of the pair are components, the operation 
+     * will fail.
+     *
+     * @param first The first element of the pair.
+     * @param second The second element of the pair.
+     */
+    void* get_mut(flecs::entity_t first, flecs::entity_t second) const {
+        return ecs_get_mut_id(m_world, m_id, ecs_pair(first, second));
+    }
+
+    /** Get the second part for a pair.
+     * This operation gets the value for a pair from the entity. The first
+     * part of the pair should not be a component.
+     *
+     * @tparam Second the second element of a pair.
+     * @param first The first part of the pair.
+     */
+    template<typename Second>
+    Second* get_mut_second(flecs::entity_t first) const {
+        auto second = _::cpp_type<Second>::id(m_world);
+        ecs_assert(_::cpp_type<Second>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        return static_cast<Second*>(
+            ecs_get_mut_id(m_world, m_id, ecs_pair(first, second)));
+    }
+
+    /** Get the second part for a pair.
+     * This operation gets the value for a pair from the entity. The first
+     * part of the pair should not be a component.
+     *
+     * @tparam First The first element of the pair.
+     * @tparam Second the second element of a pair.
+     */
+    template<typename First, typename Second>
+    Second* get_mut_second() const {
+        return get_mut<pair_object<First, Second>>();
+    }
+
     /** Get target for a given pair.
      * This operation returns the target for a given pair. The optional
      * index can be used to iterate through targets, in case the entity has
@@ -433,8 +574,10 @@ struct entity_view : public id {
      * This operation can be used to lookup, for example, which prefab is providing
      * a component by specifying the IsA pair:
      * 
-     *   // Is Position provided by the entity or one of its base entities?
-     *   ecs_get_target_for_id(world, entity, EcsIsA, ecs_id(Position))
+     * @code
+     * // Is Position provided by the entity or one of its base entities?
+     * ecs_get_target_for_id(world, entity, EcsIsA, ecs_id(Position))
+     * @endcode
      * 
      * @param relationship The relationship to follow.
      * @param id The id to lookup.
@@ -523,6 +666,9 @@ struct entity_view : public id {
     bool has(E value) const {
         auto r = _::cpp_type<E>::id(m_world);
         auto o = enum_type<E>(m_world).entity(value);
+        ecs_assert(o, ECS_INVALID_PARAMETER,
+            "Constant was not found in Enum reflection data."
+            " Did you mean to use has<E>() instead of has(E)?");
         return ecs_has_pair(m_world, m_id, r, o);
     }
 
@@ -744,6 +890,7 @@ struct entity_view : public id {
 #   endif
 
 #   include "mixins/enum/entity_view.inl"
+#   include "mixins/event/entity_view.inl"
 
 private:
     flecs::entity set_stage(world_t *stage);

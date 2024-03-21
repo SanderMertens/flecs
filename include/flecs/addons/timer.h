@@ -10,9 +10,9 @@
 
 /**
  * @defgroup c_addons_timer Timer
- * @brief Run systems at a time interval.
- * 
- * \ingroup c_addons
+ * @ingroup c_addons
+ * Run systems at a time interval.
+ *
  * @{
  */
 
@@ -52,15 +52,15 @@ typedef struct EcsRateFilter {
 
 /** Set timer timeout.
  * This operation executes any systems associated with the timer after the
- * specified timeout value. If the entity contains an existing timer, the 
- * timeout value will be reset. The timer can be started and stopped with 
- * ecs_start_timer and ecs_stop_timer.
+ * specified timeout value. If the entity contains an existing timer, the
+ * timeout value will be reset. The timer can be started and stopped with
+ * ecs_start_timer() and ecs_stop_timer().
  *
  * The timer is synchronous, and is incremented each frame by delta_time.
  *
  * The tick_source entity will be a tick source after this operation. Tick
  * sources can be read by getting the EcsTickSource component. If the tick
- * source ticked this frame, the 'tick' member will be true. When the tick 
+ * source ticked this frame, the 'tick' member will be true. When the tick
  * source is a system, the system will tick when the timer ticks.
  *
  * @param world The world.
@@ -75,18 +75,18 @@ ecs_entity_t ecs_set_timeout(
     ecs_ftime_t timeout);
 
 /** Get current timeout value for the specified timer.
- * This operation returns the value set by ecs_set_timeout. If no timer is
+ * This operation returns the value set by ecs_set_timeout(). If no timer is
  * active for this entity, the operation returns 0.
  *
  * After the timeout expires the EcsTimer component is removed from the entity.
- * This means that if ecs_get_timeout is invoked after the timer is expired, the
+ * This means that if ecs_get_timeout() is invoked after the timer is expired, the
  * operation will return 0.
  *
  * The timer is synchronous, and is incremented each frame by delta_time.
  *
  * The tick_source entity will be a tick source after this operation. Tick
  * sources can be read by getting the EcsTickSource component. If the tick
- * source ticked this frame, the 'tick' member will be true. When the tick 
+ * source ticked this frame, the 'tick' member will be true. When the tick
  * source is a system, the system will tick when the timer ticks.
  *
  * @param world The world.
@@ -99,7 +99,7 @@ ecs_ftime_t ecs_get_timeout(
     ecs_entity_t tick_source);
 
 /** Set timer interval.
- * This operation will continously invoke systems associated with the timer 
+ * This operation will continuously invoke systems associated with the timer
  * after the interval period expires. If the entity contains an existing timer,
  * the interval value will be reset.
  *
@@ -107,8 +107,8 @@ ecs_ftime_t ecs_get_timeout(
  *
  * The tick_source entity will be a tick source after this operation. Tick
  * sources can be read by getting the EcsTickSource component. If the tick
- * source ticked this frame, the 'tick' member will be true. When the tick 
- * source is a system, the system will tick when the timer ticks. 
+ * source ticked this frame, the 'tick' member will be true. When the tick
+ * source is a system, the system will tick when the timer ticks.
  *
  * @param world The world.
  * @param tick_source The timer for which to set the interval (0 to create one).
@@ -119,10 +119,10 @@ FLECS_API
 ecs_entity_t ecs_set_interval(
     ecs_world_t *world,
     ecs_entity_t tick_source,
-    ecs_ftime_t interval);   
+    ecs_ftime_t interval);
 
 /** Get current interval value for the specified timer.
- * This operation returns the value set by ecs_set_interval. If the entity is
+ * This operation returns the value set by ecs_set_interval(). If the entity is
  * not a timer, the operation will return 0.
  *
  * @param world The world.
@@ -158,7 +158,7 @@ void ecs_stop_timer(
 
 /** Reset time value of timer to 0.
  * This operation resets the timer value to 0.
- * 
+ *
  * @param world The world.
  * @param tick_source The timer to reset.
  */
@@ -167,10 +167,10 @@ void ecs_reset_timer(
     ecs_world_t *world,
     ecs_entity_t tick_source);
 
-/** Enable randomizing initial time value of timers. 
- * Intializes timers with a random time value, which can improve scheduling as
+/** Enable randomizing initial time value of timers.
+ * Initializes timers with a random time value, which can improve scheduling as
  * systems/timers for the same interval don't all happen on the same tick.
- * 
+ *
  * @param world The world.
  */
 FLECS_API
@@ -186,20 +186,20 @@ void ecs_randomize_timers(
  * with interval timers alone. For example, if timer A has interval 2.0 and
  * timer B has interval 4.0, it is not guaranteed that B will tick at exactly
  * twice the multiple of A. This is partly due to the indeterministic nature of
- * timers, and partly due to floating point rounding errors. 
+ * timers, and partly due to floating point rounding errors.
  *
- * Rate filters can be combined with timers (or other rate filters) to ensure 
+ * Rate filters can be combined with timers (or other rate filters) to ensure
  * that a system ticks at an exact multiple of a tick source (which can be
  * another system). If a rate filter is created with a rate of 1 it will tick
  * at the exact same time as its source.
  *
  * If no tick source is provided, the rate filter will use the frame tick as
- * source, which corresponds with the number of times ecs_progress is called.
+ * source, which corresponds with the number of times ecs_progress() is called.
  *
  * The tick_source entity will be a tick source after this operation. Tick
  * sources can be read by getting the EcsTickSource component. If the tick
- * source ticked this frame, the 'tick' member will be true. When the tick 
- * source is a system, the system will tick when the timer ticks.  
+ * source ticked this frame, the 'tick' member will be true. When the tick
+ * source is a system, the system will tick when the timer ticks.
  *
  * @param world The world.
  * @param tick_source The rate filter entity (0 to create one).
@@ -218,7 +218,7 @@ ecs_entity_t ecs_set_rate(
  * Systems can be their own tick source, which can be any of the tick sources
  * (one shot timers, interval times and rate filters). However, in some cases it
  * is must be guaranteed that different systems tick on the exact same frame.
- * 
+ *
  * This cannot be guaranteed by giving two systems the same interval/rate filter
  * as it is possible that one system is (for example) disabled, which would
  * cause the systems to go out of sync. To provide these guarantees, systems
@@ -229,13 +229,13 @@ ecs_entity_t ecs_set_rate(
  * source, including another system. If the provided entity is not a tick source
  * the system will not be ran.
  *
- * To disassociate a tick source from a system, use 0 for the tick_source 
+ * To disassociate a tick source from a system, use 0 for the tick_source
  * parameter.
  *
  * @param world The world.
  * @param system The system to associate with the timer.
  * @param tick_source The tick source to associate with the system.
- */ 
+ */
 FLECS_API
 void ecs_set_tick_source(
     ecs_world_t *world,

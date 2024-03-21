@@ -51,11 +51,17 @@
                 "emplace_pair_type",
                 "emplace_pair_second",
                 "get_generic",
-                "get_mut_generic",
+                "ensure_generic",
                 "get_generic_w_id",
                 "get_generic_w_id_t",
-                "get_mut_generic_w_id",
-                "get_mut_generic_w_id_t",
+                "ensure_generic_w_id",
+                "ensure_generic_w_id_t",
+                "get_mut_w_id",
+                "get_mut_T",
+                "get_mut_r_t",
+                "get_mut_R_t",
+                "get_mut_R_T",
+                "get_mut_r_T",
                 "set_generic",
                 "set_generic_w_id",
                 "set_generic_w_id_t",
@@ -138,10 +144,10 @@
                 "set_1_component_w_callback",
                 "set_2_components_w_callback",
                 "set_3_components_w_callback",
-                "get_mut_1_component_w_callback",
-                "get_mut_2_components_w_callback",
+                "ensure_1_component_w_callback",
+                "ensure_2_components_w_callback",
                 "get_component_w_callback_nested",
-                "get_mut_component_w_callback_nested",
+                "ensure_component_w_callback_nested",
                 "defer_set_1_component",
                 "defer_set_2_components",
                 "defer_set_3_components",
@@ -162,7 +168,7 @@
                 "with_scope_nested",
                 "with_scope_nested_same_name_as_parent",
                 "scope_after_builder_method",
-                "scope_before_builder_method",                
+                "scope_before_builder_method",
                 "no_recursive_lookup",
                 "defer_new_w_name",
                 "defer_new_w_nested_name",
@@ -277,18 +283,18 @@
                 "add_tag_pair_to_tag",
                 "remove_component_pair",
                 "remove_tag_pair",
-                "remove_tag_pair_to_tag",                
+                "remove_tag_pair_to_tag",
                 "set_component_pair",
                 "set_tag_pair",
                 "system_1_pair_instance",
                 "system_2_pair_instances",
                 "override_pair",
                 "override_tag_pair",
-                "get_mut_pair",
-                "get_mut_pair_existing",
-                "get_mut_pair_tag",
-                "get_mut_pair_tag_existing",
-                "get_mut_R_tag_O",
+                "ensure_pair",
+                "ensure_pair_existing",
+                "ensure_pair_tag",
+                "ensure_pair_tag_existing",
+                "ensure_R_tag_O",
                 "get_relation_from_id",
                 "get_second_from_id",
                 "get_recycled_relation_from_id",
@@ -345,6 +351,9 @@
             "testcases": [
                 "standard_enum_reflection",
                 "sparse_enum_reflection",
+                "bitmask_enum_reflection",
+                "bitmask_enum_with_type_reflection",
+                "enum_with_mixed_constants_and_bitmask",
                 "enum_class_reflection",
                 "prefixed_enum_reflection",
                 "constant_with_num_reflection",
@@ -377,7 +386,8 @@
                 "query_union_enum_invalid_query_type",
                 "component_registered_as_enum",
                 "mixed_auto_manual_constants",
-                "enum_class_mixed_auto_manual_constants"
+                "enum_class_mixed_auto_manual_constants",
+                "enum_child_count"
             ]
         }, {
             "id": "Switch",
@@ -409,7 +419,8 @@
                 "alias_scoped_component_w_name",
                 "alias_entity",
                 "alias_entity_by_name",
-                "alias_entity_by_scoped_name"
+                "alias_entity_by_scoped_name",
+                "alias_entity_empty"
             ]
         }, {
             "id": "System",
@@ -480,7 +491,11 @@
                 "nested_rate_tick_source",
                 "table_get",
                 "range_get",
-                "randomize_timers"
+                "randomize_timers",
+                "optional_pair_term",
+                "singleton_tick_source",
+                "pipeline_step_with_kind_enum",
+                "pipeline_step_depends_on_pipeline_step_with_enum"
             ]
         }, {
             "id": "Event",
@@ -499,7 +514,22 @@
                 "evt_1_id_pair_rel_obj_id_entity",
                 "evt_1_id_pair_rel_obj_entity",
                 "emit_staged_from_world",
-                "emit_staged_from_stage"
+                "emit_staged_from_stage",
+                "emit_custom_for_any",
+                "entity_emit_event_id",
+                "entity_emit_event_type",
+                "entity_emit_event_w_payload",
+                "entity_emit_event_id_no_src",
+                "entity_emit_event_type_no_src",
+                "entity_emit_event_w_payload_no_src",
+                "entity_emit_event_w_payload_derived_event_type",
+                "entity_emit_event_w_payload_derived_event_type_no_src",
+                "enqueue_event",
+                "enqueue_entity_event",
+                "enqueue_event_w_payload",
+                "enqueue_entity_event_w_payload",
+                "enqueue_entity_from_readonly_world",
+                "enqueue_entity_w_payload_from_readonly_world"
             ]
         }, {
             "id": "Iterable",
@@ -574,6 +604,15 @@
                 "query_each_w_func_no_ptr",
                 "query_iter_w_func_no_ptr",
                 "query_each_w_iter",
+                "each_w_iter_no_this",
+                "invalid_each_w_no_this",
+                "invalid_field_from_each_w_iter",
+                "invalid_field_T_from_each_w_iter",
+                "invalid_field_const_T_from_each_w_iter",
+                "field_at_from_each_w_iter",
+                "field_at_T_from_each_w_iter",
+                "field_at_const_T_from_each_w_iter",
+                "field_at_from_each_w_iter_w_base_type",
                 "change_tracking",
                 "not_w_write",
                 "get_first",
@@ -581,8 +620,6 @@
                 "get_is_true_direct",
                 "get_first_direct",
                 "each_w_no_this",
-                "each_w_iter_no_this",
-                "invalid_each_w_no_this",
                 "named_query",
                 "named_scoped_query",
                 "instanced_nested_query_w_iter",
@@ -595,7 +632,8 @@
                 "iter_get_pair_w_id",
                 "find",
                 "find_not_found",
-                "find_w_entity"
+                "find_w_entity",
+                "optional_pair_term"
             ]
         }, {
             "id": "QueryBuilder",
@@ -664,6 +702,7 @@
                 "cascade_w_relationship",
                 "up_w_type",
                 "cascade_w_type",
+                "cascade_desc",
                 "named_query",
                 "term_w_write",
                 "term_w_read",
@@ -779,7 +818,12 @@
                 "read_pair_component_name",
                 "read_enum",
                 "assign_after_init",
-                "iter_w_stage"
+                "iter_w_stage",
+                "with_t_inout",
+                "with_T_inout",
+                "with_R_T_inout",
+                "with_R_t_inout",
+                "with_r_t_inout"
             ]
         }, {
             "id": "RuleBuilder",
@@ -816,7 +860,7 @@
                 "inspect_terms_w_expr",
                 "find",
                 "find_not_found",
-                "find_w_entity"                
+                "find_w_entity"
             ]
         }, {
             "id": "SystemBuilder",
@@ -841,8 +885,9 @@
                 "20_terms",
                 "name_arg",
                 "create_w_no_template_args",
-                "write_annotation"
-            ]  
+                "write_annotation",
+                "name_from_root"
+            ]
         }, {
             "id": "Observer",
             "testcases": [
@@ -876,7 +921,8 @@
                 "on_add_pair_wildcard_singleton",
                 "on_add_with_pair_singleton",
                 "add_in_yield_existing",
-                "add_in_yield_existing_multi"
+                "add_in_yield_existing_multi",
+                "name_from_root"
             ]
         }, {
             "id": "Filter",
@@ -906,7 +952,8 @@
                 "inspect_terms_w_expr",
                 "find",
                 "find_not_found",
-                "find_w_entity"
+                "find_w_entity",
+                "optional_pair_term"
             ]
         }, {
             "id": "ComponentLifecycle",
@@ -933,8 +980,8 @@
                 "struct_w_vector_set_2_remove",
                 "struct_w_vector_add_2_remove_w_tag",
                 "struct_w_vector_set_2_remove_w_tag",
-                "get_mut_new",
-                "get_mut_existing",
+                "ensure_new",
+                "ensure_existing",
                 "implicit_component",
                 "implicit_after_query",
                 "deleted_copy",
@@ -1000,7 +1047,9 @@
                 "pair_ref",
                 "pair_ref_w_entity",
                 "pair_ref_second",
-                "from_stage"
+                "from_stage",
+                "default_ctor",
+                "try_get"
             ]
         }, {
             "id": "Module",
@@ -1016,7 +1065,12 @@
                 "module_in_namespace_w_root_name",
                 "module_as_entity",
                 "module_as_component",
-                "module_with_core_name"
+                "module_with_core_name",
+                "import_addons_two_worlds",
+                "lookup_module_after_reparent",
+                "reparent_module_in_ctor",
+                "implicitely_add_module_to_scopes_component",
+                "implicitely_add_module_to_scopes_entity"
             ]
         }, {
             "id": "ImplicitComponents",
@@ -1104,6 +1158,7 @@
                 "reregister_after_reset_w_hooks_and_in_use_implicit",
                 "register_component_w_reset_in_multithreaded",
                 "register_component_w_core_name",
+                "register_nested_component_in_module",
                 "count",
                 "count_id",
                 "count_pair",
@@ -1158,7 +1213,7 @@
                 "is_valid",
                 "exists",
                 "get_alive",
-                "ensure",
+                "make_alive",
                 "reset_all",
                 "get_tick",
                 "register_from_scope",
@@ -1179,13 +1234,16 @@
                 "make_pair",
                 "make_pair_of_pair_id",
                 "make_pair_of_pair_id_tgt",
-                "make_pair_of_pair_type"
+                "make_pair_of_pair_type",
+                "delta_time",
+                "atfini",
+                "atfini_w_ctx"
             ]
         }, {
             "id": "Singleton",
             "testcases": [
                 "set_get_singleton",
-                "get_mut_singleton",
+                "ensure_singleton",
                 "emplace_singleton",
                 "modified_singleton",
                 "add_singleton",
@@ -1236,6 +1294,10 @@
                 "dotmember_metric",
                 "counter_id_metric",
                 "counter_target_metric",
+                "member_metric_w_pair_R_T",
+                "member_metric_w_pair_R_t",
+                "member_metric_w_pair_r_t",
+                "member_metric_w_pair_r_T",
                 "alert",
                 "alert_w_message",
                 "alert_w_brief",
@@ -1287,10 +1349,17 @@
                 "vector_type",
                 "i32_from_json",
                 "struct_from_json",
+                "void_from_json",
                 "entity_from_json_empty",
                 "entity_from_json_w_path",
                 "entity_from_json_w_ids",
                 "entity_from_json_w_values",
+                "set_type_json",
+                "set_pair_R_T_json",
+                "set_pair_R_t_json",
+                "set_pair_r_T_json",
+                "set_pair_r_t_json",
+                "set_id_json",
                 "ser_deser_std_string",
                 "ser_deser_std_vector_int",
                 "ser_deser_std_vector_std_string",
@@ -1306,7 +1375,8 @@
                 "warning_range",
                 "error_range",
                 "struct_member_ptr",
-                "struct_member_ptr_packed_struct"
+                "struct_member_ptr_packed_struct",
+                "component_as_array"
             ]
         }, {
             "id": "Table",

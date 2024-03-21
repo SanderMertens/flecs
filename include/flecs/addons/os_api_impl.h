@@ -7,9 +7,9 @@
 
 /**
  * @defgroup c_addons_os_api_impl OS API Implementation
- * @brief Default implementation for OS API interface.
- * 
- * \ingroup c_addons
+ * @ingroup c_addons
+ * Default implementation for OS API interface.
+ *
  * @{
  */
 

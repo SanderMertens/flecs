@@ -11,7 +11,7 @@ namespace flecs {
 
 /** Alert builder interface.
  * 
- * \ingroup cpp_addons_alerts
+ * @ingroup cpp_addons_alerts
  */
 template<typename Base, typename ... Components>
 struct alert_builder_i : filter_builder_i<Base, Components ...> {
@@ -84,7 +84,7 @@ public:
     /** Add severity filter */
     Base& severity_filter(flecs::entity_t kind, flecs::id_t with, const char *var = nullptr) {
         ecs_assert(severity_filter_count < ECS_ALERT_MAX_SEVERITY_FILTERS, 
-            ECS_INVALID_PARAMETER, "Maxium number of severity filters reached");
+            ECS_INVALID_PARAMETER, "Maximum number of severity filters reached");
 
         ecs_alert_severity_filter_t *filter = 
             &m_desc->severity_filters[severity_filter_count ++];

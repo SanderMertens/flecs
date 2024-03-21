@@ -322,7 +322,7 @@ void Stresstests_create_1m_set_two_components(void) {
     ecs_entity_t e = ecs_new(world, 0);
     ecs_entity_t i, j;
     for (i = e; i < 1000000 + e; i ++) {
-        ecs_ensure(world, i);
+        ecs_make_alive(world, i);
         ecs_set(world, i, Position, {10, 20});
     }
 
@@ -331,7 +331,7 @@ void Stresstests_create_1m_set_two_components(void) {
     }    
 
     for (i = e; i < e + 1000000 + e; i ++) {
-        ecs_ensure(world, i);
+        ecs_make_alive(world, i);
         ecs_set(world, i, Velocity, {1, 2});
     }    
 

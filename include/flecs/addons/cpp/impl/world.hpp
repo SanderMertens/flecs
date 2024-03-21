@@ -9,6 +9,12 @@ namespace flecs
 {
 
 inline void world::init_builtin_components() {
+    this->component<Component>();
+    this->component<Identifier>();
+    this->component<Iterable>("flecs::core::Iterable");
+    this->component<Poly>();
+    this->component<Target>();
+
 #   ifdef FLECS_SYSTEM
     _::system_init(*this);
 #   endif
@@ -51,9 +57,9 @@ inline void world::use(flecs::entity e, const char *alias) const {
     const char *name = alias;
     if (!name) {
         // If no name is defined, use the entity name without the scope
-        ecs_get_name(m_world, eid);
+        name = ecs_get_name(m_world, eid);
     }
-    ecs_set_alias(m_world, eid, alias);
+    ecs_set_alias(m_world, eid, name);
 }
 
 inline flecs::entity world::set_scope(const flecs::entity_t s) const {
@@ -74,16 +80,18 @@ inline entity world::lookup(const char *name, bool search_path) const {
     return flecs::entity(*this, e);
 }
 
+#ifndef ensure
 template <typename T>
-inline T* world::get_mut() const {
+inline T& world::ensure() const {
     flecs::entity e(m_world, _::cpp_type<T>::id(m_world));
-    return e.get_mut<T>();
+    return e.ensure<T>();
 }
+#endif
 
 template <typename T>
 inline void world::modified() const {
     flecs::entity e(m_world, _::cpp_type<T>::id(m_world));
-    return e.modified<T>();
+    e.modified<T>();
 }
 
 template <typename First, typename Second>
@@ -228,14 +236,14 @@ inline flecs::entity world::target(
 template <typename Func, if_t< is_callable<Func>::value > >
 inline void world::get(const Func& func) const {
     static_assert(arity<Func>::value == 1, "singleton component must be the only argument");
-    _::entity_with_invoker<Func>::invoke_get(
+    _::entity_with_delegate<Func>::invoke_get(
         this->m_world, this->singleton<first_arg_t<Func>>(), func);
 }
 
 template <typename Func, if_t< is_callable<Func>::value > >
 inline void world::set(const Func& func) const {
     static_assert(arity<Func>::value == 1, "singleton component must be the only argument");
-    _::entity_with_invoker<Func>::invoke_get_mut(
+    _::entity_with_delegate<Func>::invoke_ensure(
         this->m_world, this->singleton<first_arg_t<Func>>(), func);
 }
 
@@ -243,14 +251,11 @@ inline flecs::entity world::get_alive(flecs::entity_t e) const {
     e = ecs_get_alive(m_world, e);
     return flecs::entity(m_world, e);
 }
-/* Prevent clashing with Unreal define. Unreal applications will have to use
- *  ecs_ensure. */
-#ifndef ensure
-inline flecs::entity world::ensure(flecs::entity_t e) const {
-    ecs_ensure(m_world, e);
+
+inline flecs::entity world::make_alive(flecs::entity_t e) const {
+    ecs_make_alive(m_world, e);
     return flecs::entity(m_world, e);
 }
-#endif
 
 template <typename E>
 inline flecs::entity enum_data<E>::entity() const {
@@ -258,13 +263,31 @@ inline flecs::entity enum_data<E>::entity() const {
 }
 
 template <typename E>
-inline flecs::entity enum_data<E>::entity(int value) const {
-    return flecs::entity(world_, impl_.constants[value].id);
+inline flecs::entity enum_data<E>::entity(underlying_type_t<E> value) const {
+    int index = index_by_value(value);
+    if (index >= 0) {
+        return flecs::entity(world_, impl_.constants[index].id);
+    }
+#ifdef FLECS_META
+    // Reflection data lookup failed. Try value lookup amongst flecs::Constant relationships
+    flecs::world world = flecs::world(world_);
+    return world.filter_builder()
+        .with(flecs::ChildOf, world.id<E>())
+        .with(flecs::Constant, world.id<int32_t>())
+        .build()
+        .find([value](flecs::entity constant) {
+            const int32_t *constant_value = constant.get_second<int32_t>(flecs::Constant);
+            ecs_assert(constant_value, ECS_INTERNAL_ERROR, NULL);
+            return value == static_cast<underlying_type_t<E>>(*constant_value);
+        });
+#else
+    return flecs::entity::null(world_);
+#endif
 }
 
 template <typename E>
 inline flecs::entity enum_data<E>::entity(E value) const {
-    return flecs::entity(world_, impl_.constants[static_cast<int>(value)].id);
+    return entity(static_cast<underlying_type_t<E>>(value));
 }
 
 /** Use provided scope for operations ran on returned world.

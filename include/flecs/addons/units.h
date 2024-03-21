@@ -6,12 +6,18 @@
  * the addon is included in the build. To import the module, do:
  *
  * In C:
- *   ECS_IMPORT(world, FlecsUnits);
- * 
- * In C++:
- *   world.import<flecs::units>();
  *
- * As a result this module behaves just like an application-defined module, 
+ * @code
+ * ECS_IMPORT(world, FlecsUnits);
+ * @endcode
+ *
+ * In C++:
+ *
+ * @code
+ * world.import<flecs::units>();
+ * @endcode
+ *
+ * As a result this module behaves just like an application-defined module,
  * which means that the ids generated for the entities inside the module are not
  * fixed, and depend on the order in which the module is imported.
  */
@@ -20,9 +26,9 @@
 
 /**
  * @defgroup c_addons_units Units.
- * @brief Common unit annotations for reflection framework.
- * 
- * \ingroup c_addons
+ * @ingroup c_addons
+ * Common unit annotations for reflection framework.
+ *
  * @{
  */
 
@@ -43,9 +49,9 @@ extern "C" {
 
 /**
  * @defgroup c_addons_units_prefixes Prefixes
- * @brief Prefixes to indicate unit count (e.g. Kilo, Mega)
- * 
- * \ingroup c_addons_units
+ * @ingroup c_addons_units
+ * Prefixes to indicate unit count (e.g. Kilo, Mega)
+ *
  * @{
  */
 
@@ -85,8 +91,7 @@ FLECS_API extern ECS_DECLARE(EcsYobi);
 
 /**
  * @defgroup c_addons_units_duration Duration
- * 
- * \ingroup c_addons_units
+ * @ingroup c_addons_units
  * @{
  */
 
@@ -104,8 +109,7 @@ FLECS_API extern     ECS_DECLARE(EcsDays);
 
 /**
  * @defgroup c_addons_units_time Time
- * 
- * \ingroup c_addons_units
+ * @ingroup c_addons_units
  * @{
  */
 
@@ -116,8 +120,7 @@ FLECS_API extern     ECS_DECLARE(EcsDate);
 
 /**
  * @defgroup c_addons_units_mass Mass
- * 
- * \ingroup c_addons_units
+ * @ingroup c_addons_units
  * @{
  */
 
@@ -129,8 +132,7 @@ FLECS_API extern     ECS_DECLARE(EcsKiloGrams);
 
 /**
  * @defgroup c_addons_units_electric_Current Electric Current
- * 
- * \ingroup c_addons_units
+ * @ingroup c_addons_units
  * @{
  */
 
@@ -141,8 +143,7 @@ FLECS_API extern     ECS_DECLARE(EcsAmpere);
 
 /**
  * @defgroup c_addons_units_amount Amount
- * 
- * \ingroup c_addons_units
+ * @ingroup c_addons_units
  * @{
  */
 
@@ -153,8 +154,7 @@ FLECS_API extern     ECS_DECLARE(EcsMole);
 
 /**
  * @defgroup c_addons_units_luminous_intensity Luminous Intensity
- * 
- * \ingroup c_addons_units
+ * @ingroup c_addons_units
  * @{
  */
 
@@ -165,8 +165,7 @@ FLECS_API extern     ECS_DECLARE(EcsCandela);
 
 /**
  * @defgroup c_addons_units_force Force
- * 
- * \ingroup c_addons_units
+ * @ingroup c_addons_units
  * @{
  */
 
@@ -177,8 +176,7 @@ FLECS_API extern     ECS_DECLARE(EcsNewton);
 
 /**
  * @defgroup c_addons_units_length Length
- * 
- * \ingroup c_addons_units
+ * @ingroup c_addons_units
  * @{
  */
 
@@ -197,8 +195,7 @@ FLECS_API extern     ECS_DECLARE(EcsPixels);
 
 /**
  * @defgroup c_addons_units_pressure Pressure
- * 
- * \ingroup c_addons_units
+ * @ingroup c_addons_units
  * @{
  */
 
@@ -210,8 +207,7 @@ FLECS_API extern     ECS_DECLARE(EcsBar);
 
 /**
  * @defgroup c_addons_units_speed Speed
- * 
- * \ingroup c_addons_units
+ * @ingroup c_addons_units
  * @{
  */
 
@@ -225,8 +221,7 @@ FLECS_API extern     ECS_DECLARE(EcsMilesPerHour);
 
 /**
  * @defgroup c_addons_units_temperature Temperature
- * 
- * \ingroup c_addons_units
+ * @ingroup c_addons_units
  * @{
  */
 
@@ -239,8 +234,7 @@ FLECS_API extern     ECS_DECLARE(EcsFahrenheit);
 
 /**
  * @defgroup c_addons_units_data Data
- * 
- * \ingroup c_addons_units
+ * @ingroup c_addons_units
  * @{
  */
 
@@ -261,8 +255,7 @@ FLECS_API extern         ECS_DECLARE(EcsGibiBytes);
 
 /**
  * @defgroup c_addons_units_datarate Data Rate
- * 
- * \ingroup c_addons_units
+ * @ingroup c_addons_units
  * @{
  */
 
@@ -280,8 +273,7 @@ FLECS_API extern     ECS_DECLARE(EcsGigaBytesPerSecond);
 
 /**
  * @defgroup c_addons_units_duration Duration
- * 
- * \ingroup c_addons_units
+ * @ingroup c_addons_units
  * @{
  */
 
@@ -293,8 +285,7 @@ FLECS_API extern     ECS_DECLARE(EcsDegrees);
 
 /**
  * @defgroup c_addons_units_angle Angle
- * 
- * \ingroup c_addons_units
+ * @ingroup c_addons_units
  * @{
  */
 
@@ -308,8 +299,7 @@ FLECS_API extern     ECS_DECLARE(EcsGigaHertz);
 
 /**
  * @defgroup c_addons_units_uri Uri
- * 
- * \ingroup c_addons_units
+ * @ingroup c_addons_units
  * @{
  */
 

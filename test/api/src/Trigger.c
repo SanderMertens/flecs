@@ -916,7 +916,7 @@ void Trigger_wildcard_pair_w_pred_component(void) {
 
     /* Change existing component without triggering OnSet as the callback
      * expects value {10, 20}, then add a new component with {10, 20} */
-    Position *p = ecs_get_mut_pair(world, e, Position, ObjA);
+    Position *p = ecs_ensure_pair(world, e, Position, ObjA);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -971,7 +971,7 @@ void Trigger_wildcard_pair_w_obj_component(void) {
 
     /* Change existing component without triggering OnSet as the callback
      * expects value {10, 20}, then add a new component with {10, 20} */
-    Position *p = ecs_get_mut_pair_second(world, e, RelA, Position);
+    Position *p = ecs_ensure_pair_second(world, e, RelA, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);

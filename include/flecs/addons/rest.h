@@ -4,7 +4,7 @@
  *
  * A small REST API that uses the HTTP server and JSON serializer to provide
  * access to application data for remote applications.
- * 
+ *
  * A description of the API can be found in docs/RestApi.md
  */
 
@@ -12,9 +12,9 @@
 
 /**
  * @defgroup c_addons_rest Rest
- * @brief REST API for querying and mutating entities.
- * 
- * \ingroup c_addons
+ * @ingroup c_addons
+ * REST API for querying and mutating entities.
+ *
  * @{
  */
 
@@ -56,27 +56,10 @@ typedef struct {
     void *impl;
 } EcsRest;
 
-/* Global statistics */
-extern int64_t ecs_rest_request_count;
-extern int64_t ecs_rest_entity_count;
-extern int64_t ecs_rest_entity_error_count;
-extern int64_t ecs_rest_query_count;
-extern int64_t ecs_rest_query_error_count;
-extern int64_t ecs_rest_query_name_count;
-extern int64_t ecs_rest_query_name_error_count;
-extern int64_t ecs_rest_query_name_from_cache_count;
-extern int64_t ecs_rest_enable_count;
-extern int64_t ecs_rest_enable_error_count;
-extern int64_t ecs_rest_delete_count;
-extern int64_t ecs_rest_delete_error_count;
-extern int64_t ecs_rest_world_stats_count;
-extern int64_t ecs_rest_pipeline_stats_count;
-extern int64_t ecs_rest_stats_error_count;
-
-/** Create HTTP server for REST API. 
+/** Create HTTP server for REST API.
  * This allows for the creation of a REST server that can be managed by the
  * application without using Flecs systems.
- * 
+ *
  * @param world The world.
  * @param desc The HTTP server descriptor.
  * @return The HTTP server, or NULL if failed.
@@ -86,8 +69,8 @@ ecs_http_server_t* ecs_rest_server_init(
     ecs_world_t *world,
     const ecs_http_server_desc_t *desc);
 
-/** Cleanup REST HTTP server. 
- * The server must have been created with ecs_rest_server_init.
+/** Cleanup REST HTTP server.
+ * The server must have been created with ecs_rest_server_init().
  */
 FLECS_API
 void ecs_rest_server_fini(

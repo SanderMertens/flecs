@@ -348,3 +348,31 @@ void Clone_1_tag_1_component_w_value(void) {
 
     ecs_fini(world);
 }
+
+void Clone_clone_w_name(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t t = ecs_new_entity(world, "template");
+    ecs_set(world, t, Position, {10, 20});
+    ecs_set(world, t, Velocity, {1, 2});
+
+    ecs_entity_t i = ecs_clone(world, 0, t, true);
+    test_assert(ecs_has(world, i, Position));
+    test_assert(ecs_has(world, i, Velocity));
+    test_assert(!ecs_has_pair(world, i, ecs_id(EcsIdentifier), EcsName));
+
+    const Position *p = ecs_get(world, i, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    const Velocity *v = ecs_get(world, i, Velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 1);
+    test_int(v->y, 2); 
+
+    ecs_fini(world);
+}

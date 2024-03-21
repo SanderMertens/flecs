@@ -108,6 +108,11 @@ extern "C" {
 #define EcsIterMatchVar                (1u << 8u)  
 #define EcsIterHasCondSet              (1u << 10u) /* Does iterator have conditionally set fields */
 #define EcsIterProfile                 (1u << 11u) /* Profile iterator performance */
+#define EcsIterTrivialSearch           (1u << 12u) /* Trivial iterator mode */
+#define EcsIterTrivialSearchNoData     (1u << 13u) /* Trivial iterator w/no data */
+#define EcsIterTrivialTest             (1u << 14u) /* Trivial test mode (constrained $this) */
+#define EcsIterTrivialSearchWildcard   (1u << 15u) /* Trivial search with wildcard ids */
+#define EcsIterCppEach                 (1u << 16u) /* Uses C++ 'each' iterator */
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Event flags (used by ecs_event_decs_t::flags)
@@ -133,6 +138,20 @@ extern "C" {
 #define EcsFilterUnresolvedByName      (1u << 11u) /* Use by-name matching for unresolved entity identifiers */
 #define EcsFilterHasPred               (1u << 12u) /* Filter has equality predicates */
 #define EcsFilterHasScopes             (1u << 13u) /* Filter has query scopes */
+#define EcsFilterIsTrivial             (1u << 14u) /* Trivial filter */
+#define EcsFilterMatchOnlySelf         (1u << 15u) /* Filter has no up traversal */
+#define EcsFilterHasWildcards          (1u << 16u) /* Filter has no up traversal */
+#define EcsFilterOwnsStorage           (1u << 17u) /* Is ecs_filter_t object owned by filter */
+#define EcsFilterOwnsTermsStorage      (1u << 18u) /* Is terms array owned by filter */
+
+////////////////////////////////////////////////////////////////////////////////
+//// Observer flags (used by ecs_observer_t::flags)
+////////////////////////////////////////////////////////////////////////////////
+
+#define EcsObserverIsMulti             (1u << 1u)  /* Does observer have multiple terms */
+#define EcsObserverIsMonitor           (1u << 2u)  /* Is observer a monitor */
+#define EcsObserverIsDisabled          (1u << 3u)  /* Is observer entity disabled */
+#define EcsObserverIsParentDisabled    (1u << 4u)  /* Is module parent of observer disabled  */
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Table flags (used by ecs_table_t::flags)

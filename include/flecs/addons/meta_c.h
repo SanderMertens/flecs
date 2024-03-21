@@ -7,9 +7,9 @@
 
 /**
  * @defgroup c_addons_meta_c Meta Utilities
- * @brief Macro utilities to automatically insert reflection data.
- * 
- * \ingroup c_addons
+ * @ingroup c_addons
+ * Macro utilities to automatically insert reflection data.
+ *
  * @{
  */
 
@@ -79,7 +79,7 @@ int ecs_meta_from_desc(
 
 /* Private API */
 
-/* Utilities to switch beteen IMPL, DECLARE and EXTERN variants */
+/* Utilities to switch between IMPL, DECLARE and EXTERN variants */
 #define ECS_META_IMPL_CALL_INNER(base, impl, name, type_desc)\
     base ## impl(name, type_desc)
 

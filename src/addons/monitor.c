@@ -57,6 +57,21 @@ void UpdateWorldSummary(ecs_iter_t *it) {
         summary[i].frame_time_total = (double)info->frame_time_total;
         summary[i].system_time_total = (double)info->system_time_total;
         summary[i].merge_time_total = (double)info->merge_time_total;
+
+        summary[i].frame_count ++;
+        summary[i].command_count +=
+            info->cmd.add_count +
+            info->cmd.remove_count +
+            info->cmd.delete_count +
+            info->cmd.clear_count +
+            info->cmd.set_count +
+            info->cmd.ensure_count +
+            info->cmd.modified_count +
+            info->cmd.discard_count +
+            info->cmd.event_count +
+            info->cmd.other_count;
+
+        summary[i].build_info = *ecs_get_build_info();
     }
 }
 
@@ -317,6 +332,14 @@ void FlecsMonitorImport(
 #ifdef FLECS_META
     ECS_IMPORT(world, FlecsMeta);
 #endif
+#ifdef FLECS_UNITS
+    ECS_IMPORT(world, FlecsUnits);
+#endif
+#ifdef FLECS_DOC
+    ECS_IMPORT(world, FlecsDoc);
+    ecs_doc_set_brief(world, ecs_id(FlecsMonitor), 
+        "Module that automatically monitors statistics for the world & systems");
+#endif
 
     ecs_set_name_prefix(world, "Ecs");
 
@@ -328,7 +351,8 @@ void FlecsMonitorImport(
 
     ECS_COMPONENT_DEFINE(world, EcsWorldSummary);
 
-#if defined(FLECS_META) && defined(FLECS_UNITS)
+#if defined(FLECS_META) && defined(FLECS_UNITS) 
+    ecs_entity_t build_info = ecs_lookup(world, "flecs.core.build_info_t");
     ecs_struct(world, {
         .entity = ecs_id(EcsWorldSummary),
         .members = {
@@ -338,7 +362,10 @@ void FlecsMonitorImport(
             { .name = "merge_time_total", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds  },
             { .name = "frame_time_last", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds  },
             { .name = "system_time_last", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds  },
-            { .name = "merge_time_last", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds  }
+            { .name = "merge_time_last", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds  },
+            { .name = "frame_count", .type = ecs_id(ecs_u64_t) },
+            { .name = "command_count", .type = ecs_id(ecs_u64_t) },
+            { .name = "build_info", .type = build_info }
         }
     });
 #endif

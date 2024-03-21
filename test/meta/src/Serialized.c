@@ -295,6 +295,19 @@ void Serialized_ops_entity(void) {
     ecs_fini(world);
 }
 
+void Serialized_ops_id(void) {
+    ecs_world_t *world = ecs_init();
+
+    const EcsMetaTypeSerialized *s = ecs_get(
+        world, ecs_id(ecs_id_t), EcsMetaTypeSerialized);
+    test_assert(s != NULL);
+    test_int(ecs_vec_count(&s->ops), 1);
+
+    test_op(&s->ops, 0, EcsOpPrimitive + EcsId, 1, 1, ecs_id(ecs_id_t));
+
+    ecs_fini(world);
+}
+
 void Serialized_ops_struct_bool(void) {
     typedef struct {
         ecs_bool_t x;
@@ -2124,6 +2137,34 @@ void Serialized_ops_struct_w_enum(void) {
     test_mp(&s->ops, 2, EcsOpEnum, 1, 1, T, v, e);
     test_mp(&s->ops, 3, EcsOpBool, 1, 1, T, after, ecs_id(ecs_bool_t));
     test_op(&s->ops, 4, EcsOpPop, 1, 1, 0);
+
+    ecs_fini(world);
+}
+
+void Serialized_ops_missing_metatype(void) {
+    typedef struct {
+        ecs_u64_t a;
+    } X;
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, X);
+
+    ecs_log_set_level(-4);
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"x", ecs_id(X)}
+        }
+    });
+    test_assert(t != 0);
+
+    const EcsMetaTypeSerialized *s = ecs_get(world, t, EcsMetaTypeSerialized);
+    test_assert(s != NULL);
+    test_int(ecs_vec_count(&s->ops), 2);
+    
+    test_op(&s->ops, 0, EcsOpPush, 1, 2, t);
+    test_op(&s->ops, 1, EcsOpPop, 1, 1, 0);
 
     ecs_fini(world);
 }

@@ -48,6 +48,9 @@ char* ecs_chresc(
         *bptr++ = '\\';
         *bptr = '\\';
         break;
+    case '\033':
+        *bptr = '['; /* Used for terminal colors */
+        break;
     default:
         if (in == delimiter) {
             *bptr++ = '\\';

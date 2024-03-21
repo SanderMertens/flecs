@@ -185,11 +185,17 @@ void Parser_this_subj_no_name(void);
 void Parser_this_obj_no_name(void);
 void Parser_auto_object_variable(void);
 void Parser_auto_object_variable_w_subj(void);
+void Parser_auto_scoped_variable(void);
 void Parser_invalid_variable_only(void);
 void Parser_oneof_self_pred_w_relative_obj(void);
 void Parser_oneof_other_pred_w_relative_obj(void);
 void Parser_oneof_self_pred_w_invalid_obj(void);
 void Parser_oneof_other_pred_w_invalid_obj(void);
+void Parser_oneof_w_other_entity_w_same_name(void);
+void Parser_oneof_w_other_entity_w_same_name_w_set_scope(void);
+void Parser_oneof_w_wildcard(void);
+void Parser_oneof_w_any(void);
+void Parser_oneof_w_fullpath(void);
 void Parser_pair_implicit_src_missing_rel(void);
 void Parser_pair_implicit_src_missing_obj(void);
 void Parser_pair_explicit_src_missing_src(void);
@@ -232,8 +238,38 @@ void Parser_query_nested_scope_spaces(void);
 void Parser_query_scope_unbalanced(void);
 void Parser_query_not_scope(void);
 void Parser_query_empty_scope(void);
+void Parser_query_scope_newline_after_open(void);
+void Parser_query_scope_newline_after_close(void);
 void Parser_override_tag(void);
 void Parser_override_pair(void);
+void Parser_pair_3_args(void);
+void Parser_pair_3_args_implicit_this(void);
+void Parser_pair_4_args(void);
+void Parser_pair_4_args_implicit_this(void);
+void Parser_pair_3_args_2_terms(void);
+void Parser_pair_3_args_this_tgt(void);
+void Parser_pair_3_args_2_terms_this_tgt(void);
+void Parser_pair_3_args_2_terms_this_tgt_implicit_this(void);
+void Parser_pair_3_or_args(void);
+void Parser_pair_3_or_args_implicit_this(void);
+void Parser_pair_4_or_args(void);
+void Parser_pair_4_or_args_implicit_this(void);
+void Parser_pair_or_before_and_oper(void);
+void Parser_pair_and_before_or_oper(void);
+void Parser_cascade_desc(void);
+void Parser_newline_after_inout(void);
+void Parser_newline_after_term_open(void);
+void Parser_newline_after_term_src(void);
+void Parser_newline_after_term_src_pair(void);
+void Parser_newline_after_term_pair_comma(void);
+void Parser_newline_after_term_pair_second(void);
+void Parser_tag_w_space_implicit_this(void);
+void Parser_tag_w_space(void);
+void Parser_pair_first_w_space_implicit_this(void);
+void Parser_pair_first_w_space(void);
+void Parser_pair_second_w_space_implicit_this(void);
+void Parser_pair_second_w_space(void);
+void Parser_pair_src_w_space(void);
 
 // Testsuite 'Plecs'
 void Plecs_null(void);
@@ -361,6 +397,8 @@ void Plecs_scope_w_1_subj_and_2_pairs(void);
 void Plecs_inherit_from_multiple(void);
 void Plecs_assign_pair_component(void);
 void Plecs_assign_pair_component_in_scope(void);
+void Plecs_assign_pair_component_in_script(void);
+void Plecs_assign_pair_component_in_script_update(void);
 void Plecs_set_entity_names(void);
 void Plecs_oneof(void);
 void Plecs_invalid_oneof(void);
@@ -438,7 +476,9 @@ void Plecs_assembly_w_composite_prop(void);
 void Plecs_assembly_with_with(void);
 void Plecs_using_wildcard(void);
 void Plecs_single_line_comment_in_value(void);
+void Plecs_single_line_comment_in_value_after_scope(void);
 void Plecs_multi_line_comment_in_value(void);
+void Plecs_multi_line_comment_in_value_after_scope(void);
 void Plecs_unterminated_multi_line_comment_in_value(void);
 void Plecs_module_stmt(void);
 void Plecs_nested_module_stmt(void);
@@ -468,6 +508,7 @@ void Plecs_component_in_with_scope(void);
 void Plecs_component_in_with_scope_nested(void);
 void Plecs_component_in_with_scope_in_scope(void);
 void Plecs_assign_after_with_in_scope(void);
+void Plecs_array_component(void);
 
 // Testsuite 'Doc'
 void Doc_get_set_name(void);
@@ -475,6 +516,11 @@ void Doc_get_entity_name(void);
 void Doc_get_set_brief(void);
 void Doc_get_set_detail(void);
 void Doc_get_set_link(void);
+void Doc_set_name_nullptr(void);
+void Doc_set_brief_nullptr(void);
+void Doc_set_detail_nullptr(void);
+void Doc_set_link_nullptr(void);
+void Doc_set_color_nullptr(void);
 
 // Testsuite 'Pipeline'
 void Pipeline_system_order_same_phase(void);
@@ -678,6 +724,7 @@ void RulesBasic_this_src_w_pair_rel_wildcard(void);
 void RulesBasic_this_src_w_pair_tgt_wildcard(void);
 void RulesBasic_this_src_w_pair_rel_tgt_wildcard(void);
 void RulesBasic_this_src_w_any(void);
+void RulesBasic_this_src_w_any_written(void);
 void RulesBasic_this_src_w_pair_rel_any(void);
 void RulesBasic_this_src_w_pair_tgt_any(void);
 void RulesBasic_this_src_w_pair_rel_tgt_any(void);
@@ -694,6 +741,8 @@ void RulesBasic_1_wildcard_src_w_pair_rel_var(void);
 void RulesBasic_1_wildcard_src_w_pair_tgt_this(void);
 void RulesBasic_1_wildcard_src_w_pair_rel_this(void);
 void RulesBasic_1_any_src(void);
+void RulesBasic_1_any_src_component(void);
+void RulesBasic_1_any_src_component_w_this_component(void);
 void RulesBasic_1_any_src_w_pair(void);
 void RulesBasic_2_any_src(void);
 void RulesBasic_2_any_src_w_pair(void);
@@ -701,6 +750,17 @@ void RulesBasic_1_any_src_w_pair_tgt_var(void);
 void RulesBasic_1_any_src_w_pair_rel_var(void);
 void RulesBasic_1_any_src_w_pair_tgt_this(void);
 void RulesBasic_1_any_src_w_pair_rel_this(void);
+void RulesBasic_1_any_src_any_tgt_w_rel_fixed(void);
+void RulesBasic_1_any_src_any_rel_w_tgt_fixed(void);
+void RulesBasic_1_any_src_w_childof_pair_any_tgt(void);
+void RulesBasic_1_any_src_empty(void);
+void RulesBasic_1_any_src_pair_tgt_wildcard_empty(void);
+void RulesBasic_1_any_src_pair_rel_wildcard_empty(void);
+void RulesBasic_1_any_src_any_tgt_w_rel_fixed_empty(void);
+void RulesBasic_1_any_src_any_rel_w_tgt_fixed_empty(void);
+void RulesBasic_1_any_src_pair_w_tag_query_empty(void);
+void RulesBasic_1_any_src_tag_w_pair_query_empty(void);
+void RulesBasic_not_any(void);
 void RulesBasic_rule_w_iter_next(void);
 void RulesBasic_empty_rule(void);
 void RulesBasic_invalid_rule(void);
@@ -720,6 +780,67 @@ void RulesBasic_find_this_tgt_lowercase(void);
 void RulesBasic_find_this_tgt_uppercase(void);
 void RulesBasic_get_filter(void);
 void RulesBasic_iter_empty_source(void);
+void RulesBasic_iter_empty_source_2_terms(void);
+void RulesBasic_iter_empty_source_wildcard(void);
+void RulesBasic_iter_empty_source_pair(void);
+void RulesBasic_iter_empty_source_pair_wildcard(void);
+void RulesBasic_iter_empty_source_2_terms_pair(void);
+void RulesBasic_iter_empty_source_2_terms_mixed(void);
+void RulesBasic_iter_empty_source_2_terms_mixed_pair(void);
+void RulesBasic_iter_empty_source_2_terms_mixed_pair_wildcard(void);
+void RulesBasic_this_var_w_empty_entity(void);
+void RulesBasic_match_disabled(void);
+void RulesBasic_match_prefab(void);
+void RulesBasic_match_disabled_prefab(void);
+void RulesBasic_match_disabled_this_tgt(void);
+void RulesBasic_match_prefab_this_tgt(void);
+void RulesBasic_match_disabled_prefab_this_tgt(void);
+void RulesBasic_match_self_disabled(void);
+void RulesBasic_match_self_prefab(void);
+void RulesBasic_match_self_disabled_prefab(void);
+void RulesBasic_inout_none_first_term(void);
+void RulesBasic_inout_none_second_term(void);
+void RulesBasic_no_data_rule(void);
+void RulesBasic_frame_offset(void);
+void RulesBasic_frame_offset_no_data(void);
+void RulesBasic_match_empty_tables(void);
+void RulesBasic_match_empty_tables_no_data(void);
+void RulesBasic_match_empty_tables_w_not(void);
+void RulesBasic_match_empty_tables_w_wildcard(void);
+void RulesBasic_match_empty_tables_w_no_empty_tables(void);
+void RulesBasic_match_empty_tables_trivial(void);
+void RulesBasic_oneof_wildcard(void);
+void RulesBasic_oneof_any(void);
+void RulesBasic_instanced_w_singleton(void);
+void RulesBasic_instanced_w_base(void);
+void RulesBasic_not_instanced_w_singleton(void);
+void RulesBasic_not_instanced_w_base(void);
+void RulesBasic_unknown_before_known(void);
+void RulesBasic_unknown_before_known_after_or(void);
+void RulesBasic_unknown_before_known_after_not(void);
+void RulesBasic_unknown_before_known_after_optional(void);
+void RulesBasic_unknown_before_known_after_scope(void);
+void RulesBasic_reordered_plan_1(void);
+void RulesBasic_reordered_plan_2(void);
+void RulesBasic_1_trivial_plan(void);
+void RulesBasic_2_trivial_plan(void);
+void RulesBasic_1_trivial_plan_component(void);
+void RulesBasic_2_trivial_plan_component(void);
+void RulesBasic_2_trivial_plan_w_wildcard(void);
+void RulesBasic_3_trivial_plan_w_pair(void);
+void RulesBasic_3_trivial_plan_w_wildcard(void);
+void RulesBasic_3_trivial_plan_w_any(void);
+void RulesBasic_3_trivial_plan_w_pair_component(void);
+void RulesBasic_3_trivial_plan_w_wildcard_component(void);
+void RulesBasic_3_trivial_plan_w_any_component(void);
+void RulesBasic_1_trivial_component_w_none(void);
+void RulesBasic_2_trivial_component_w_none(void);
+void RulesBasic_2_trivial_mixed_2_tables(void);
+void RulesBasic_2_trivial_mixed_2_tables_component(void);
+void RulesBasic_2_trivial_mixed_2_tables_wildcard(void);
+void RulesBasic_1_plan_any_src(void);
+void RulesBasic_1_plan_not_any_src(void);
+void RulesBasic_1_plan_optional_any_src(void);
 
 // Testsuite 'RulesVariables'
 void RulesVariables_1_ent_src_w_var(void);
@@ -783,6 +904,24 @@ void RulesVariables_1_set_src_this_w_pair(void);
 void RulesVariables_1_set_src_this_w_pair_set_rel(void);
 void RulesVariables_1_set_src_this_w_pair_set_tgt(void);
 void RulesVariables_1_set_src_this_w_pair_set_rel_tgt(void);
+void RulesVariables_1_set_src_this_to_empty_table(void);
+void RulesVariables_1_set_src_this_to_empty_table_w_component(void);
+void RulesVariables_1_set_src_this_to_empty_table_w_component_self(void);
+void RulesVariables_1_set_src_this_to_entiy_in_table(void);
+void RulesVariables_1_set_src_this_to_entiy_in_table_self(void);
+void RulesVariables_2_set_src_this(void);
+void RulesVariables_2_set_src_this_self(void);
+void RulesVariables_2_set_src_this_component(void);
+void RulesVariables_2_set_src_this_self_component(void);
+void RulesVariables_2_set_src_this_w_up(void);
+void RulesVariables_2_set_src_this_self_w_up(void);
+void RulesVariables_2_set_src_this_component_w_up(void);
+void RulesVariables_2_set_src_this_self_component_w_up(void);
+void RulesVariables_2_set_src_this_w_exclusive_wildcard(void);
+void RulesVariables_2_set_src_this_self_w_exclusive_wildcard(void);
+void RulesVariables_1_src_this_var_as_entity(void);
+void RulesVariables_1_src_this_var_as_table(void);
+void RulesVariables_1_src_this_var_as_table_range(void);
 void RulesVariables_2_join_by_rel_var(void);
 void RulesVariables_2_join_by_pair_rel_var(void);
 void RulesVariables_2_join_by_pair_tgt_var(void);
@@ -819,6 +958,53 @@ void RulesVariables_no_this_anonymous_src(void);
 void RulesVariables_no_this_anonymous_src_w_pair(void);
 void RulesVariables_no_this_anonymous_component_src(void);
 void RulesVariables_no_this_anonymous_component_src_w_pair(void);
+void RulesVariables_lookup_from_table_this(void);
+void RulesVariables_lookup_from_entity_this(void);
+void RulesVariables_lookup_from_table(void);
+void RulesVariables_lookup_from_entity(void);
+void RulesVariables_lookup_from_not_written(void);
+void RulesVariables_lookup_from_table_this_component(void);
+void RulesVariables_lookup_from_entity_this_component(void);
+void RulesVariables_lookup_from_table_component(void);
+void RulesVariables_lookup_from_entity_component(void);
+void RulesVariables_lookup_from_table_two_children(void);
+void RulesVariables_lookup_from_entity_two_children(void);
+void RulesVariables_lookup_from_table_same_child_twice(void);
+void RulesVariables_lookup_from_entity_same_child_twice(void);
+void RulesVariables_lookup_from_table_not(void);
+void RulesVariables_lookup_from_entity_not(void);
+void RulesVariables_lookup_from_table_w_any_component(void);
+void RulesVariables_lookup_from_entity_w_any_component(void);
+void RulesVariables_lookup_as_tag(void);
+void RulesVariables_lookup_as_relationship(void);
+void RulesVariables_lookup_as_target(void);
+void RulesVariables_lookup_assign_var(void);
+void RulesVariables_lookup_eq_var(void);
+void RulesVariables_lookup_neq_var(void);
+void RulesVariables_lookup_unresolved_dependent(void);
+void RulesVariables_check_vars_this(void);
+void RulesVariables_check_vars_var(void);
+void RulesVariables_check_vars_wildcard(void);
+void RulesVariables_check_vars_any(void);
+void RulesVariables_check_vars_var_as_tgt(void);
+void RulesVariables_check_vars_this_as_tgt(void);
+void RulesVariables_check_vars_anonymous_var_as_tgt(void);
+void RulesVariables_check_vars_wildcard_as_tgt(void);
+void RulesVariables_check_vars_any_as_tgt(void);
+void RulesVariables_check_vars_this_w_lookup_var(void);
+void RulesVariables_check_vars_var_w_lookup_var(void);
+void RulesVariables_1_trivial_1_var(void);
+void RulesVariables_2_trivial_1_var(void);
+void RulesVariables_1_trivial_1_var_component(void);
+void RulesVariables_2_trivial_1_var_component(void);
+void RulesVariables_1_trivial_1_wildcard(void);
+void RulesVariables_2_trivial_1_wildcard(void);
+void RulesVariables_1_trivial_1_wildcard_component(void);
+void RulesVariables_2_trivial_1_wildcard_component(void);
+void RulesVariables_1_trivial_1_any(void);
+void RulesVariables_2_trivial_1_any(void);
+void RulesVariables_1_trivial_1_any_component(void);
+void RulesVariables_2_trivial_1_any_component(void);
 
 // Testsuite 'RulesOperators'
 void RulesOperators_2_and_not(void);
@@ -838,6 +1024,11 @@ void RulesOperators_2_and_not_pair_rel_src_tgt_same_var_written(void);
 void RulesOperators_2_and_not_pair_any_rel(void);
 void RulesOperators_2_and_not_pair_any_tgt(void);
 void RulesOperators_2_and_not_pair_any_src(void);
+void RulesOperators_1_not_any_src_fixed_first(void);
+void RulesOperators_1_not_any_src_any_tgt_fixed_first(void);
+void RulesOperators_1_not_any_src_any_first_fixed_tgt(void);
+void RulesOperators_1_not_any_src_any_childof_pair_any_tgt(void);
+void RulesOperators_1_not_any_src_any_isa_pair_any_tgt(void);
 void RulesOperators_2_and_optional(void);
 void RulesOperators_3_and_optional_optional(void);
 void RulesOperators_2_and_optional_pair_rel_wildcard(void);
@@ -867,6 +1058,11 @@ void RulesOperators_3_and_optional_dependent_optional_pair_src(void);
 void RulesOperators_3_and_optional_dependent_not_pair_rel(void);
 void RulesOperators_3_and_optional_dependent_not_pair_tgt(void);
 void RulesOperators_3_and_optional_dependent_not_pair_src(void);
+void RulesOperators_1_optional_any_src_fixed_first(void);
+void RulesOperators_1_optional_any_src_any_tgt_fixed_first(void);
+void RulesOperators_1_optional_any_src_any_first_fixed_tgt(void);
+void RulesOperators_1_optional_any_src_any_childof_pair_any_tgt(void);
+void RulesOperators_1_optional_any_src_any_isa_pair_any_tgt(void);
 void RulesOperators_2_or(void);
 void RulesOperators_3_or(void);
 void RulesOperators_2_or_written(void);
@@ -885,6 +1081,8 @@ void RulesOperators_2_or_dependent_2_vars(void);
 void RulesOperators_2_or_written_dependent(void);
 void RulesOperators_2_or_written_dependent_2_vars(void);
 void RulesOperators_2_or_w_dependent(void);
+void RulesOperators_2_or_w_both(void);
+void RulesOperators_3_or_w_both(void);
 void RulesOperators_2_not_first(void);
 void RulesOperators_2_optional_first(void);
 void RulesOperators_root_entities_empty(void);
@@ -1002,6 +1200,11 @@ void RulesComponentInheritance_1_var_0_lvl_written(void);
 void RulesComponentInheritance_1_var_1_lvl_written(void);
 void RulesComponentInheritance_1_var_2_lvl_written(void);
 void RulesComponentInheritance_1_var_3_lvl_written(void);
+void RulesComponentInheritance_1_ent_1_lvl_self(void);
+void RulesComponentInheritance_1_this_1_lvl_self(void);
+void RulesComponentInheritance_1_this_1_lvl_written_self(void);
+void RulesComponentInheritance_1_var_1_lvl_self(void);
+void RulesComponentInheritance_1_var_1_lvl_written_self(void);
 void RulesComponentInheritance_1_ent_src_not(void);
 void RulesComponentInheritance_1_this_src_not(void);
 void RulesComponentInheritance_1_var_src_not(void);
@@ -1037,6 +1240,7 @@ void RulesBuiltinPredicates_var_eq_id_written_no_match(void);
 void RulesBuiltinPredicates_var_eq_name_written(void);
 void RulesBuiltinPredicates_var_eq_name_written_no_match(void);
 void RulesBuiltinPredicates_var_eq_var_written(void);
+void RulesBuiltinPredicates_var_eq_this(void);
 void RulesBuiltinPredicates_this_neq_id(void);
 void RulesBuiltinPredicates_this_neq_name(void);
 void RulesBuiltinPredicates_this_neq_var(void);
@@ -1053,6 +1257,7 @@ void RulesBuiltinPredicates_var_neq_id_written_no_match(void);
 void RulesBuiltinPredicates_var_neq_name_written(void);
 void RulesBuiltinPredicates_var_neq_name_written_no_match(void);
 void RulesBuiltinPredicates_var_neq_var_written(void);
+void RulesBuiltinPredicates_var_neq_this(void);
 void RulesBuiltinPredicates_this_2_neq_id(void);
 void RulesBuiltinPredicates_this_2_neq_name(void);
 void RulesBuiltinPredicates_var_2_neq_id(void);
@@ -1072,6 +1277,7 @@ void RulesBuiltinPredicates_var_2_or_name_written(void);
 void RulesBuiltinPredicates_this_match_eq(void);
 void RulesBuiltinPredicates_var_match_eq(void);
 void RulesBuiltinPredicates_this_match_eq_written(void);
+void RulesBuiltinPredicates_this_match_eq_written_self(void);
 void RulesBuiltinPredicates_var_match_eq_written(void);
 void RulesBuiltinPredicates_this_match_neq(void);
 void RulesBuiltinPredicates_var_match_neq(void);
@@ -1086,6 +1292,16 @@ void RulesBuiltinPredicates_this_match_2_or_written(void);
 void RulesBuiltinPredicates_this_match_3_or(void);
 void RulesBuiltinPredicates_this_match_3_or_written(void);
 void RulesBuiltinPredicates_unresolved_by_name(void);
+void RulesBuiltinPredicates_var_eq_wildcard(void);
+void RulesBuiltinPredicates_var_eq_any(void);
+void RulesBuiltinPredicates_var_eq_wildcard_after_write(void);
+void RulesBuiltinPredicates_var_eq_any_after_write(void);
+void RulesBuiltinPredicates_var_eq_after_var_0_src(void);
+void RulesBuiltinPredicates_2_or_w_eq_this(void);
+void RulesBuiltinPredicates_2_or_w_eq_lookup_var(void);
+void RulesBuiltinPredicates_3_or_w_eq_lookup_var(void);
+void RulesBuiltinPredicates_unwritten_var_error_neq(void);
+void RulesBuiltinPredicates_unwritten_var_error_match(void);
 
 // Testsuite 'RulesScopes'
 void RulesScopes_term_w_not_scope_1_term(void);
@@ -1098,6 +1314,100 @@ void RulesScopes_term_w_not_scope_1_term_w_not_w_var(void);
 void RulesScopes_term_w_not_scope_2_terms_w_not_w_var(void);
 void RulesScopes_term_w_not_scope_2_terms_w_or(void);
 void RulesScopes_term_w_not_scope_3_terms_w_or(void);
+
+// Testsuite 'RulesTraversal'
+void RulesTraversal_this_self_up_childof(void);
+void RulesTraversal_this_up_childof(void);
+void RulesTraversal_this_written_self_up_childof(void);
+void RulesTraversal_this_written_up_childof(void);
+void RulesTraversal_var_self_up_childof(void);
+void RulesTraversal_var_up_childof(void);
+void RulesTraversal_var_written_self_up_childof(void);
+void RulesTraversal_var_written_up_childof(void);
+void RulesTraversal_set_var_self_up_childof(void);
+void RulesTraversal_set_var_up_childof(void);
+void RulesTraversal_set_var_written_self_up_childof(void);
+void RulesTraversal_set_var_written_up_childof(void);
+void RulesTraversal_ent_self_up_childof(void);
+void RulesTraversal_ent_up_childof(void);
+void RulesTraversal_implicit_this_self_up_isa(void);
+void RulesTraversal_implicit_this_up_isa(void);
+void RulesTraversal_implicit_var_self_up_isa(void);
+void RulesTraversal_implicit_var_up_isa(void);
+void RulesTraversal_implicit_ent_self_up_isa(void);
+void RulesTraversal_implicit_ent_up_isa(void);
+void RulesTraversal_self_up_2_targets(void);
+void RulesTraversal_up_2_targets(void);
+void RulesTraversal_self_up_2_targets_diamond(void);
+void RulesTraversal_up_2_targets_diamond(void);
+void RulesTraversal_written_self_up_2_targets(void);
+void RulesTraversal_written_up_2_targets(void);
+void RulesTraversal_written_self_up_2_targets_diamond(void);
+void RulesTraversal_written_up_2_targets_diamond(void);
+void RulesTraversal_2_self_up_terms(void);
+void RulesTraversal_2_self_up_terms_2_targets(void);
+void RulesTraversal_self_up_empty_table(void);
+void RulesTraversal_up_empty_table(void);
+void RulesTraversal_self_up_all_owned(void);
+void RulesTraversal_up_all_owned(void);
+void RulesTraversal_this_self_up_childof_inherited(void);
+void RulesTraversal_this_up_childof_inherited(void);
+void RulesTraversal_this_written_self_up_childof_inherited(void);
+void RulesTraversal_this_written_up_childof_inherited(void);
+void RulesTraversal_var_self_up_childof_inherited(void);
+void RulesTraversal_var_up_childof_inherited(void);
+void RulesTraversal_var_written_self_up_childof_inherited(void);
+void RulesTraversal_var_written_up_childof_inherited(void);
+void RulesTraversal_ent_self_up_childof_inherited(void);
+void RulesTraversal_ent_up_childof_inherited(void);
+void RulesTraversal_ent_written_self_up_childof_inherited(void);
+void RulesTraversal_ent_written_up_childof_inherited(void);
+void RulesTraversal_this_self_up_childof_component(void);
+void RulesTraversal_this_up_childof_component(void);
+void RulesTraversal_this_written_self_up_childof_component(void);
+void RulesTraversal_this_written_up_childof_component(void);
+void RulesTraversal_var_self_up_childof_component(void);
+void RulesTraversal_var_up_childof_component(void);
+void RulesTraversal_var_written_self_up_childof_component(void);
+void RulesTraversal_var_written_up_childof_component(void);
+void RulesTraversal_this_self_up_childof_recycled_parent(void);
+void RulesTraversal_this_up_childof_recycled_parent(void);
+void RulesTraversal_this_written_self_up_childof_recycled_parent(void);
+void RulesTraversal_this_written_up_childof_recycled_parent(void);
+void RulesTraversal_this_self_up_childof_recycled_parent_component(void);
+void RulesTraversal_this_up_childof_recycled_parent_component(void);
+void RulesTraversal_this_written_self_up_childof_recycled_parent_component(void);
+void RulesTraversal_this_written_up_childof_recycled_parent_component(void);
+void RulesTraversal_this_self_up_childof_pair(void);
+void RulesTraversal_this_up_childof_pair(void);
+void RulesTraversal_this_written_self_up_childof_pair(void);
+void RulesTraversal_this_written_up_childof_pair(void);
+void RulesTraversal_this_self_up_childof_pair_wildcard(void);
+void RulesTraversal_this_up_childof_pair_wildcard(void);
+void RulesTraversal_this_written_self_up_childof_pair_wildcard(void);
+void RulesTraversal_this_written_up_childof_pair_wildcard(void);
+void RulesTraversal_this_self_up_childof_pair_tgt_var(void);
+void RulesTraversal_this_written_self_up_childof_pair_tgt_var(void);
+void RulesTraversal_this_self_up_childof_pair_rel_var(void);
+void RulesTraversal_this_written_self_up_childof_pair_rel_var(void);
+void RulesTraversal_this_self_up_childof_pair_for_var_written(void);
+void RulesTraversal_this_up_childof_pair_for_var_written(void);
+void RulesTraversal_this_written_self_up_childof_pair_for_var_written(void);
+void RulesTraversal_this_self_up_childof_pair_for_var_written_n_targets(void);
+void RulesTraversal_this_written_self_up_childof_pair_for_var_written_n_targets(void);
+void RulesTraversal_self_up_2_levels(void);
+void RulesTraversal_not_up_disabled(void);
+void RulesTraversal_up_2_rel_instances(void);
+void RulesTraversal_up_2_rel_instances_match_2nd(void);
+void RulesTraversal_up_only_w_owned(void);
+void RulesTraversal_this_self_cascade_childof(void);
+void RulesTraversal_this_cascade_childof(void);
+void RulesTraversal_this_written_self_cascade_childof(void);
+void RulesTraversal_this_written_cascade_childof(void);
+void RulesTraversal_this_self_cascade_childof_w_parent_flag(void);
+void RulesTraversal_this_cascade_childof_w_parent_flag(void);
+void RulesTraversal_this_written_self_cascade_childof_w_parent_flag(void);
+void RulesTraversal_this_written_cascade_childof_w_parent_flag(void);
 
 // Testsuite 'SystemPeriodic'
 void SystemPeriodic_1_type_1_component(void);
@@ -1459,6 +1769,7 @@ void Modules_module_tag_on_namespace_on_add_2_levels(void);
 void Modules_import_monitor_2_worlds(void);
 void Modules_import_monitor_after_mini(void);
 void Modules_import_2_worlds(void);
+void Modules_component_parent_becomes_module(void);
 
 // Testsuite 'App'
 void App_app_w_frame_action(void);
@@ -1477,6 +1788,17 @@ void Http_stop_start(void);
 // Testsuite 'Rest'
 void Rest_teardown(void);
 void Rest_get(void);
+void Rest_get_cached(void);
+void Rest_get_cached_invalid(void);
+void Rest_try_query(void);
+void Rest_query(void);
+void Rest_named_query(void);
+void Rest_tables(void);
+void Rest_request_commands(void);
+void Rest_request_commands_2_syncs(void);
+void Rest_request_commands_no_frames(void);
+void Rest_request_commands_no_commands(void);
+void Rest_request_commands_garbage_collect(void);
 
 // Testsuite 'Metrics'
 void Metrics_member_gauge_1_entity(void);
@@ -1507,6 +1829,15 @@ void Metrics_id_count(void);
 void Metrics_id_target_count(void);
 void Metrics_metric_instance_has_doc_name(void);
 void Metrics_metric_nested_member(void);
+void Metrics_metric_nested_member_counter(void);
+void Metrics_metric_nested_member_counter_increment(void);
+void Metrics_id_w_member_same_type(void);
+void Metrics_id_w_member_mismatching_type(void);
+void Metrics_pair_member_rel_type(void);
+void Metrics_pair_member_tgt_type(void);
+void Metrics_pair_dotmember_rel_type(void);
+void Metrics_pair_dotmember_tgt_type(void);
+void Metrics_pair_member_counter_increment(void);
 
 // Testsuite 'Alerts'
 void Alerts_one_active_alert(void);
@@ -2252,6 +2583,10 @@ bake_test_case Parser_testcases[] = {
         Parser_auto_object_variable_w_subj
     },
     {
+        "auto_scoped_variable",
+        Parser_auto_scoped_variable
+    },
+    {
         "invalid_variable_only",
         Parser_invalid_variable_only
     },
@@ -2270,6 +2605,26 @@ bake_test_case Parser_testcases[] = {
     {
         "oneof_other_pred_w_invalid_obj",
         Parser_oneof_other_pred_w_invalid_obj
+    },
+    {
+        "oneof_w_other_entity_w_same_name",
+        Parser_oneof_w_other_entity_w_same_name
+    },
+    {
+        "oneof_w_other_entity_w_same_name_w_set_scope",
+        Parser_oneof_w_other_entity_w_same_name_w_set_scope
+    },
+    {
+        "oneof_w_wildcard",
+        Parser_oneof_w_wildcard
+    },
+    {
+        "oneof_w_any",
+        Parser_oneof_w_any
+    },
+    {
+        "oneof_w_fullpath",
+        Parser_oneof_w_fullpath
     },
     {
         "pair_implicit_src_missing_rel",
@@ -2440,12 +2795,132 @@ bake_test_case Parser_testcases[] = {
         Parser_query_empty_scope
     },
     {
+        "query_scope_newline_after_open",
+        Parser_query_scope_newline_after_open
+    },
+    {
+        "query_scope_newline_after_close",
+        Parser_query_scope_newline_after_close
+    },
+    {
         "override_tag",
         Parser_override_tag
     },
     {
         "override_pair",
         Parser_override_pair
+    },
+    {
+        "pair_3_args",
+        Parser_pair_3_args
+    },
+    {
+        "pair_3_args_implicit_this",
+        Parser_pair_3_args_implicit_this
+    },
+    {
+        "pair_4_args",
+        Parser_pair_4_args
+    },
+    {
+        "pair_4_args_implicit_this",
+        Parser_pair_4_args_implicit_this
+    },
+    {
+        "pair_3_args_2_terms",
+        Parser_pair_3_args_2_terms
+    },
+    {
+        "pair_3_args_this_tgt",
+        Parser_pair_3_args_this_tgt
+    },
+    {
+        "pair_3_args_2_terms_this_tgt",
+        Parser_pair_3_args_2_terms_this_tgt
+    },
+    {
+        "pair_3_args_2_terms_this_tgt_implicit_this",
+        Parser_pair_3_args_2_terms_this_tgt_implicit_this
+    },
+    {
+        "pair_3_or_args",
+        Parser_pair_3_or_args
+    },
+    {
+        "pair_3_or_args_implicit_this",
+        Parser_pair_3_or_args_implicit_this
+    },
+    {
+        "pair_4_or_args",
+        Parser_pair_4_or_args
+    },
+    {
+        "pair_4_or_args_implicit_this",
+        Parser_pair_4_or_args_implicit_this
+    },
+    {
+        "pair_or_before_and_oper",
+        Parser_pair_or_before_and_oper
+    },
+    {
+        "pair_and_before_or_oper",
+        Parser_pair_and_before_or_oper
+    },
+    {
+        "cascade_desc",
+        Parser_cascade_desc
+    },
+    {
+        "newline_after_inout",
+        Parser_newline_after_inout
+    },
+    {
+        "newline_after_term_open",
+        Parser_newline_after_term_open
+    },
+    {
+        "newline_after_term_src",
+        Parser_newline_after_term_src
+    },
+    {
+        "newline_after_term_src_pair",
+        Parser_newline_after_term_src_pair
+    },
+    {
+        "newline_after_term_pair_comma",
+        Parser_newline_after_term_pair_comma
+    },
+    {
+        "newline_after_term_pair_second",
+        Parser_newline_after_term_pair_second
+    },
+    {
+        "tag_w_space_implicit_this",
+        Parser_tag_w_space_implicit_this
+    },
+    {
+        "tag_w_space",
+        Parser_tag_w_space
+    },
+    {
+        "pair_first_w_space_implicit_this",
+        Parser_pair_first_w_space_implicit_this
+    },
+    {
+        "pair_first_w_space",
+        Parser_pair_first_w_space
+    },
+    {
+        "pair_second_w_space_implicit_this",
+        Parser_pair_second_w_space_implicit_this
+    },
+    {
+        "pair_second_w_space",
+        Parser_pair_second_w_space
+    },
+    {
+        "pair_src_w_space",
+        Parser_pair_src_w_space
     }
 };
 
@@ -2951,6 +3426,14 @@ bake_test_case Plecs_testcases[] = {
         Plecs_assign_pair_component_in_scope
     },
     {
+        "assign_pair_component_in_script",
+        Plecs_assign_pair_component_in_script
+    },
+    {
+        "assign_pair_component_in_script_update",
+        Plecs_assign_pair_component_in_script_update
+    },
+    {
         "set_entity_names",
         Plecs_set_entity_names
     },
@@ -3259,8 +3742,16 @@ bake_test_case Plecs_testcases[] = {
         Plecs_single_line_comment_in_value
     },
     {
+        "single_line_comment_in_value_after_scope",
+        Plecs_single_line_comment_in_value_after_scope
+    },
+    {
         "multi_line_comment_in_value",
         Plecs_multi_line_comment_in_value
+    },
+    {
+        "multi_line_comment_in_value_after_scope",
+        Plecs_multi_line_comment_in_value_after_scope
     },
     {
         "unterminated_multi_line_comment_in_value",
@@ -3377,6 +3868,10 @@ bake_test_case Plecs_testcases[] = {
     {
         "assign_after_with_in_scope",
         Plecs_assign_after_with_in_scope
+    },
+    {
+        "array_component",
+        Plecs_array_component
     }
 };
 
@@ -3400,6 +3895,26 @@ bake_test_case Doc_testcases[] = {
     {
         "get_set_link",
         Doc_get_set_link
+    },
+    {
+        "set_name_nullptr",
+        Doc_set_name_nullptr
+    },
+    {
+        "set_brief_nullptr",
+        Doc_set_brief_nullptr
+    },
+    {
+        "set_detail_nullptr",
+        Doc_set_detail_nullptr
+    },
+    {
+        "set_link_nullptr",
+        Doc_set_link_nullptr
+    },
+    {
+        "set_color_nullptr",
+        Doc_set_color_nullptr
     }
 };
 
@@ -4199,6 +4714,10 @@ bake_test_case RulesBasic_testcases[] = {
         RulesBasic_this_src_w_any
     },
     {
+        "this_src_w_any_written",
+        RulesBasic_this_src_w_any_written
+    },
+    {
         "this_src_w_pair_rel_any",
         RulesBasic_this_src_w_pair_rel_any
     },
@@ -4263,6 +4782,14 @@ bake_test_case RulesBasic_testcases[] = {
         RulesBasic_1_any_src
     },
     {
+        "1_any_src_component",
+        RulesBasic_1_any_src_component
+    },
+    {
+        "1_any_src_component_w_this_component",
+        RulesBasic_1_any_src_component_w_this_component
+    },
+    {
         "1_any_src_w_pair",
         RulesBasic_1_any_src_w_pair
     },
@@ -4289,6 +4816,50 @@ bake_test_case RulesBasic_testcases[] = {
     {
         "1_any_src_w_pair_rel_this",
         RulesBasic_1_any_src_w_pair_rel_this
+    },
+    {
+        "1_any_src_any_tgt_w_rel_fixed",
+        RulesBasic_1_any_src_any_tgt_w_rel_fixed
+    },
+    {
+        "1_any_src_any_rel_w_tgt_fixed",
+        RulesBasic_1_any_src_any_rel_w_tgt_fixed
+    },
+    {
+        "1_any_src_w_childof_pair_any_tgt",
+        RulesBasic_1_any_src_w_childof_pair_any_tgt
+    },
+    {
+        "1_any_src_empty",
+        RulesBasic_1_any_src_empty
+    },
+    {
+        "1_any_src_pair_tgt_wildcard_empty",
+        RulesBasic_1_any_src_pair_tgt_wildcard_empty
+    },
+    {
+        "1_any_src_pair_rel_wildcard_empty",
+        RulesBasic_1_any_src_pair_rel_wildcard_empty
+    },
+    {
+        "1_any_src_any_tgt_w_rel_fixed_empty",
+        RulesBasic_1_any_src_any_tgt_w_rel_fixed_empty
+    },
+    {
+        "1_any_src_any_rel_w_tgt_fixed_empty",
+        RulesBasic_1_any_src_any_rel_w_tgt_fixed_empty
+    },
+    {
+        "1_any_src_pair_w_tag_query_empty",
+        RulesBasic_1_any_src_pair_w_tag_query_empty
+    },
+    {
+        "1_any_src_tag_w_pair_query_empty",
+        RulesBasic_1_any_src_tag_w_pair_query_empty
+    },
+    {
+        "not_any",
+        RulesBasic_not_any
     },
     {
         "rule_w_iter_next",
@@ -4365,6 +4936,250 @@ bake_test_case RulesBasic_testcases[] = {
     {
         "iter_empty_source",
         RulesBasic_iter_empty_source
+    },
+    {
+        "iter_empty_source_2_terms",
+        RulesBasic_iter_empty_source_2_terms
+    },
+    {
+        "iter_empty_source_wildcard",
+        RulesBasic_iter_empty_source_wildcard
+    },
+    {
+        "iter_empty_source_pair",
+        RulesBasic_iter_empty_source_pair
+    },
+    {
+        "iter_empty_source_pair_wildcard",
+        RulesBasic_iter_empty_source_pair_wildcard
+    },
+    {
+        "iter_empty_source_2_terms_pair",
+        RulesBasic_iter_empty_source_2_terms_pair
+    },
+    {
+        "iter_empty_source_2_terms_mixed",
+        RulesBasic_iter_empty_source_2_terms_mixed
+    },
+    {
+        "iter_empty_source_2_terms_mixed_pair",
+        RulesBasic_iter_empty_source_2_terms_mixed_pair
+    },
+    {
+        "iter_empty_source_2_terms_mixed_pair_wildcard",
+        RulesBasic_iter_empty_source_2_terms_mixed_pair_wildcard
+    },
+    {
+        "this_var_w_empty_entity",
+        RulesBasic_this_var_w_empty_entity
+    },
+    {
+        "match_disabled",
+        RulesBasic_match_disabled
+    },
+    {
+        "match_prefab",
+        RulesBasic_match_prefab
+    },
+    {
+        "match_disabled_prefab",
+        RulesBasic_match_disabled_prefab
+    },
+    {
+        "match_disabled_this_tgt",
+        RulesBasic_match_disabled_this_tgt
+    },
+    {
+        "match_prefab_this_tgt",
+        RulesBasic_match_prefab_this_tgt
+    },
+    {
+        "match_disabled_prefab_this_tgt",
+        RulesBasic_match_disabled_prefab_this_tgt
+    },
+    {
+        "match_self_disabled",
+        RulesBasic_match_self_disabled
+    },
+    {
+        "match_self_prefab",
+        RulesBasic_match_self_prefab
+    },
+    {
+        "match_self_disabled_prefab",
+        RulesBasic_match_self_disabled_prefab
+    },
+    {
+        "inout_none_first_term",
+        RulesBasic_inout_none_first_term
+    },
+    {
+        "inout_none_second_term",
+        RulesBasic_inout_none_second_term
+    },
+    {
+        "no_data_rule",
+        RulesBasic_no_data_rule
+    },
+    {
+        "frame_offset",
+        RulesBasic_frame_offset
+    },
+    {
+        "frame_offset_no_data",
+        RulesBasic_frame_offset_no_data
+    },
+    {
+        "match_empty_tables",
+        RulesBasic_match_empty_tables
+    },
+    {
+        "match_empty_tables_no_data",
+        RulesBasic_match_empty_tables_no_data
+    },
+    {
+        "match_empty_tables_w_not",
+        RulesBasic_match_empty_tables_w_not
+    },
+    {
+        "match_empty_tables_w_wildcard",
+        RulesBasic_match_empty_tables_w_wildcard
+    },
+    {
+        "match_empty_tables_w_no_empty_tables",
+        RulesBasic_match_empty_tables_w_no_empty_tables
+    },
+    {
+        "match_empty_tables_trivial",
+        RulesBasic_match_empty_tables_trivial
+    },
+    {
+        "oneof_wildcard",
+        RulesBasic_oneof_wildcard
+    },
+    {
+        "oneof_any",
+        RulesBasic_oneof_any
+    },
+    {
+        "instanced_w_singleton",
+        RulesBasic_instanced_w_singleton
+    },
+    {
+        "instanced_w_base",
+        RulesBasic_instanced_w_base
+    },
+    {
+        "not_instanced_w_singleton",
+        RulesBasic_not_instanced_w_singleton
+    },
+    {
+        "not_instanced_w_base",
+        RulesBasic_not_instanced_w_base
+    },
+    {
+        "unknown_before_known",
+        RulesBasic_unknown_before_known
+    },
+    {
+        "unknown_before_known_after_or",
+        RulesBasic_unknown_before_known_after_or
+    },
+    {
+        "unknown_before_known_after_not",
+        RulesBasic_unknown_before_known_after_not
+    },
+    {
+        "unknown_before_known_after_optional",
+        RulesBasic_unknown_before_known_after_optional
+    },
+    {
+        "unknown_before_known_after_scope",
+        RulesBasic_unknown_before_known_after_scope
+    },
+    {
+        "reordered_plan_1",
+        RulesBasic_reordered_plan_1
+    },
+    {
+        "reordered_plan_2",
+        RulesBasic_reordered_plan_2
+    },
+    {
+        "1_trivial_plan",
+        RulesBasic_1_trivial_plan
+    },
+    {
+        "2_trivial_plan",
+        RulesBasic_2_trivial_plan
+    },
+    {
+        "1_trivial_plan_component",
+        RulesBasic_1_trivial_plan_component
+    },
+    {
+        "2_trivial_plan_component",
+        RulesBasic_2_trivial_plan_component
+    },
+    {
+        "2_trivial_plan_w_wildcard",
+        RulesBasic_2_trivial_plan_w_wildcard
+    },
+    {
+        "3_trivial_plan_w_pair",
+        RulesBasic_3_trivial_plan_w_pair
+    },
+    {
+        "3_trivial_plan_w_wildcard",
+        RulesBasic_3_trivial_plan_w_wildcard
+    },
+    {
+        "3_trivial_plan_w_any",
+        RulesBasic_3_trivial_plan_w_any
+    },
+    {
+        "3_trivial_plan_w_pair_component",
+        RulesBasic_3_trivial_plan_w_pair_component
+    },
+    {
+        "3_trivial_plan_w_wildcard_component",
+        RulesBasic_3_trivial_plan_w_wildcard_component
+    },
+    {
+        "3_trivial_plan_w_any_component",
+        RulesBasic_3_trivial_plan_w_any_component
+    },
+    {
+        "1_trivial_component_w_none",
+        RulesBasic_1_trivial_component_w_none
+    },
+    {
+        "2_trivial_component_w_none",
+        RulesBasic_2_trivial_component_w_none
+    },
+    {
+        "2_trivial_mixed_2_tables",
+        RulesBasic_2_trivial_mixed_2_tables
+    },
+    {
+        "2_trivial_mixed_2_tables_component",
+        RulesBasic_2_trivial_mixed_2_tables_component
+    },
+    {
+        "2_trivial_mixed_2_tables_wildcard",
+        RulesBasic_2_trivial_mixed_2_tables_wildcard
+    },
+    {
+        "1_plan_any_src",
+        RulesBasic_1_plan_any_src
+    },
+    {
+        "1_plan_not_any_src",
+        RulesBasic_1_plan_not_any_src
+    },
+    {
+        "1_plan_optional_any_src",
+        RulesBasic_1_plan_optional_any_src
     }
 };
 
@@ -4614,6 +5429,78 @@ bake_test_case RulesVariables_testcases[] = {
         RulesVariables_1_set_src_this_w_pair_set_rel_tgt
     },
     {
+        "1_set_src_this_to_empty_table",
+        RulesVariables_1_set_src_this_to_empty_table
+    },
+    {
+        "1_set_src_this_to_empty_table_w_component",
+        RulesVariables_1_set_src_this_to_empty_table_w_component
+    },
+    {
+        "1_set_src_this_to_empty_table_w_component_self",
+        RulesVariables_1_set_src_this_to_empty_table_w_component_self
+    },
+    {
+        "1_set_src_this_to_entiy_in_table",
+        RulesVariables_1_set_src_this_to_entiy_in_table
+    },
+    {
+        "1_set_src_this_to_entiy_in_table_self",
+        RulesVariables_1_set_src_this_to_entiy_in_table_self
+    },
+    {
+        "2_set_src_this",
+        RulesVariables_2_set_src_this
+    },
+    {
+        "2_set_src_this_self",
+        RulesVariables_2_set_src_this_self
+    },
+    {
+        "2_set_src_this_component",
+        RulesVariables_2_set_src_this_component
+    },
+    {
+        "2_set_src_this_self_component",
+        RulesVariables_2_set_src_this_self_component
+    },
+    {
+        "2_set_src_this_w_up",
+        RulesVariables_2_set_src_this_w_up
+    },
+    {
+        "2_set_src_this_self_w_up",
+        RulesVariables_2_set_src_this_self_w_up
+    },
+    {
+        "2_set_src_this_component_w_up",
+        RulesVariables_2_set_src_this_component_w_up
+    },
+    {
+        "2_set_src_this_self_component_w_up",
+        RulesVariables_2_set_src_this_self_component_w_up
+    },
+    {
+        "2_set_src_this_w_exclusive_wildcard",
+        RulesVariables_2_set_src_this_w_exclusive_wildcard
+    },
+    {
+        "2_set_src_this_self_w_exclusive_wildcard",
+        RulesVariables_2_set_src_this_self_w_exclusive_wildcard
+    },
+    {
+        "1_src_this_var_as_entity",
+        RulesVariables_1_src_this_var_as_entity
+    },
+    {
+        "1_src_this_var_as_table",
+        RulesVariables_1_src_this_var_as_table
+    },
+    {
+        "1_src_this_var_as_table_range",
+        RulesVariables_1_src_this_var_as_table_range
+    },
+    {
         "2_join_by_rel_var",
         RulesVariables_2_join_by_rel_var
     },
@@ -4756,6 +5643,194 @@ bake_test_case RulesVariables_testcases[] = {
     {
         "no_this_anonymous_component_src_w_pair",
         RulesVariables_no_this_anonymous_component_src_w_pair
+    },
+    {
+        "lookup_from_table_this",
+        RulesVariables_lookup_from_table_this
+    },
+    {
+        "lookup_from_entity_this",
+        RulesVariables_lookup_from_entity_this
+    },
+    {
+        "lookup_from_table",
+        RulesVariables_lookup_from_table
+    },
+    {
+        "lookup_from_entity",
+        RulesVariables_lookup_from_entity
+    },
+    {
+        "lookup_from_not_written",
+        RulesVariables_lookup_from_not_written
+    },
+    {
+        "lookup_from_table_this_component",
+        RulesVariables_lookup_from_table_this_component
+    },
+    {
+        "lookup_from_entity_this_component",
+        RulesVariables_lookup_from_entity_this_component
+    },
+    {
+        "lookup_from_table_component",
+        RulesVariables_lookup_from_table_component
+    },
+    {
+        "lookup_from_entity_component",
+        RulesVariables_lookup_from_entity_component
+    },
+    {
+        "lookup_from_table_two_children",
+        RulesVariables_lookup_from_table_two_children
+    },
+    {
+        "lookup_from_entity_two_children",
+        RulesVariables_lookup_from_entity_two_children
+    },
+    {
+        "lookup_from_table_same_child_twice",
+        RulesVariables_lookup_from_table_same_child_twice
+    },
+    {
+        "lookup_from_entity_same_child_twice",
+        RulesVariables_lookup_from_entity_same_child_twice
+    },
+    {
+        "lookup_from_table_not",
+        RulesVariables_lookup_from_table_not
+    },
+    {
+        "lookup_from_entity_not",
+        RulesVariables_lookup_from_entity_not
+    },
+    {
+        "lookup_from_table_w_any_component",
+        RulesVariables_lookup_from_table_w_any_component
+    },
+    {
+        "lookup_from_entity_w_any_component",
+        RulesVariables_lookup_from_entity_w_any_component
+    },
+    {
+        "lookup_as_tag",
+        RulesVariables_lookup_as_tag
+    },
+    {
+        "lookup_as_relationship",
+        RulesVariables_lookup_as_relationship
+    },
+    {
+        "lookup_as_target",
+        RulesVariables_lookup_as_target
+    },
+    {
+        "lookup_assign_var",
+        RulesVariables_lookup_assign_var
+    },
+    {
+        "lookup_eq_var",
+        RulesVariables_lookup_eq_var
+    },
+    {
+        "lookup_neq_var",
+        RulesVariables_lookup_neq_var
+    },
+    {
+        "lookup_unresolved_dependent",
+        RulesVariables_lookup_unresolved_dependent
+    },
+    {
+        "check_vars_this",
+        RulesVariables_check_vars_this
+    },
+    {
+        "check_vars_var",
+        RulesVariables_check_vars_var
+    },
+    {
+        "check_vars_wildcard",
+        RulesVariables_check_vars_wildcard
+    },
+    {
+        "check_vars_any",
+        RulesVariables_check_vars_any
+    },
+    {
+        "check_vars_var_as_tgt",
+        RulesVariables_check_vars_var_as_tgt
+    },
+    {
+        "check_vars_this_as_tgt",
+        RulesVariables_check_vars_this_as_tgt
+    },
+    {
+        "check_vars_anonymous_var_as_tgt",
+        RulesVariables_check_vars_anonymous_var_as_tgt
+    },
+    {
+        "check_vars_wildcard_as_tgt",
+        RulesVariables_check_vars_wildcard_as_tgt
+    },
+    {
+        "check_vars_any_as_tgt",
+        RulesVariables_check_vars_any_as_tgt
+    },
+    {
+        "check_vars_this_w_lookup_var",
+        RulesVariables_check_vars_this_w_lookup_var
+    },
+    {
+        "check_vars_var_w_lookup_var",
+        RulesVariables_check_vars_var_w_lookup_var
+    },
+    {
+        "1_trivial_1_var",
+        RulesVariables_1_trivial_1_var
+    },
+    {
+        "2_trivial_1_var",
+        RulesVariables_2_trivial_1_var
+    },
+    {
+        "1_trivial_1_var_component",
+        RulesVariables_1_trivial_1_var_component
+    },
+    {
+        "2_trivial_1_var_component",
+        RulesVariables_2_trivial_1_var_component
+    },
+    {
+        "1_trivial_1_wildcard",
+        RulesVariables_1_trivial_1_wildcard
+    },
+    {
+        "2_trivial_1_wildcard",
+        RulesVariables_2_trivial_1_wildcard
+    },
+    {
+        "1_trivial_1_wildcard_component",
+        RulesVariables_1_trivial_1_wildcard_component
+    },
+    {
+        "2_trivial_1_wildcard_component",
+        RulesVariables_2_trivial_1_wildcard_component
+    },
+    {
+        "1_trivial_1_any",
+        RulesVariables_1_trivial_1_any
+    },
+    {
+        "2_trivial_1_any",
+        RulesVariables_2_trivial_1_any
+    },
+    {
+        "1_trivial_1_any_component",
+        RulesVariables_1_trivial_1_any_component
+    },
+    {
+        "2_trivial_1_any_component",
+        RulesVariables_2_trivial_1_any_component
     }
 };
 
@@ -4827,6 +5902,26 @@ bake_test_case RulesOperators_testcases[] = {
     {
         "2_and_not_pair_any_src",
         RulesOperators_2_and_not_pair_any_src
+    },
+    {
+        "1_not_any_src_fixed_first",
+        RulesOperators_1_not_any_src_fixed_first
+    },
+    {
+        "1_not_any_src_any_tgt_fixed_first",
+        RulesOperators_1_not_any_src_any_tgt_fixed_first
+    },
+    {
+        "1_not_any_src_any_first_fixed_tgt",
+        RulesOperators_1_not_any_src_any_first_fixed_tgt
+    },
+    {
+        "1_not_any_src_any_childof_pair_any_tgt",
+        RulesOperators_1_not_any_src_any_childof_pair_any_tgt
+    },
+    {
+        "1_not_any_src_any_isa_pair_any_tgt",
+        RulesOperators_1_not_any_src_any_isa_pair_any_tgt
     },
     {
         "2_and_optional",
@@ -4945,6 +6040,26 @@ bake_test_case RulesOperators_testcases[] = {
         RulesOperators_3_and_optional_dependent_not_pair_src
     },
     {
+        "1_optional_any_src_fixed_first",
+        RulesOperators_1_optional_any_src_fixed_first
+    },
+    {
+        "1_optional_any_src_any_tgt_fixed_first",
+        RulesOperators_1_optional_any_src_any_tgt_fixed_first
+    },
+    {
+        "1_optional_any_src_any_first_fixed_tgt",
+        RulesOperators_1_optional_any_src_any_first_fixed_tgt
+    },
+    {
+        "1_optional_any_src_any_childof_pair_any_tgt",
+        RulesOperators_1_optional_any_src_any_childof_pair_any_tgt
+    },
+    {
+        "1_optional_any_src_any_isa_pair_any_tgt",
+        RulesOperators_1_optional_any_src_any_isa_pair_any_tgt
+    },
+    {
         "2_or",
         RulesOperators_2_or
     },
@@ -5015,6 +6130,14 @@ bake_test_case RulesOperators_testcases[] = {
     {
         "2_or_w_dependent",
         RulesOperators_2_or_w_dependent
+    },
+    {
+        "2_or_w_both",
+        RulesOperators_2_or_w_both
+    },
+    {
+        "3_or_w_both",
+        RulesOperators_3_or_w_both
     },
     {
         "2_not_first",
@@ -5475,6 +6598,26 @@ bake_test_case RulesComponentInheritance_testcases[] = {
         RulesComponentInheritance_1_var_3_lvl_written
     },
     {
+        "1_ent_1_lvl_self",
+        RulesComponentInheritance_1_ent_1_lvl_self
+    },
+    {
+        "1_this_1_lvl_self",
+        RulesComponentInheritance_1_this_1_lvl_self
+    },
+    {
+        "1_this_1_lvl_written_self",
+        RulesComponentInheritance_1_this_1_lvl_written_self
+    },
+    {
+        "1_var_1_lvl_self",
+        RulesComponentInheritance_1_var_1_lvl_self
+    },
+    {
+        "1_var_1_lvl_written_self",
+        RulesComponentInheritance_1_var_1_lvl_written_self
+    },
+    {
         "1_ent_src_not",
         RulesComponentInheritance_1_ent_src_not
     },
@@ -5605,6 +6748,10 @@ bake_test_case RulesBuiltinPredicates_testcases[] = {
         RulesBuiltinPredicates_var_eq_var_written
     },
     {
+        "var_eq_this",
+        RulesBuiltinPredicates_var_eq_this
+    },
+    {
         "this_neq_id",
         RulesBuiltinPredicates_this_neq_id
     },
@@ -5667,6 +6814,10 @@ bake_test_case RulesBuiltinPredicates_testcases[] = {
     {
         "var_neq_var_written",
         RulesBuiltinPredicates_var_neq_var_written
+    },
+    {
+        "var_neq_this",
+        RulesBuiltinPredicates_var_neq_this
     },
     {
         "this_2_neq_id",
@@ -5745,6 +6896,10 @@ bake_test_case RulesBuiltinPredicates_testcases[] = {
         RulesBuiltinPredicates_this_match_eq_written
     },
     {
+        "this_match_eq_written_self",
+        RulesBuiltinPredicates_this_match_eq_written_self
+    },
+    {
         "var_match_eq_written",
         RulesBuiltinPredicates_var_match_eq_written
     },
@@ -5799,6 +6954,46 @@ bake_test_case RulesBuiltinPredicates_testcases[] = {
     {
         "unresolved_by_name",
         RulesBuiltinPredicates_unresolved_by_name
+    },
+    {
+        "var_eq_wildcard",
+        RulesBuiltinPredicates_var_eq_wildcard
+    },
+    {
+        "var_eq_any",
+        RulesBuiltinPredicates_var_eq_any
+    },
+    {
+        "var_eq_wildcard_after_write",
+        RulesBuiltinPredicates_var_eq_wildcard_after_write
+    },
+    {
+        "var_eq_any_after_write",
+        RulesBuiltinPredicates_var_eq_any_after_write
+    },
+    {
+        "var_eq_after_var_0_src",
+        RulesBuiltinPredicates_var_eq_after_var_0_src
+    },
+    {
+        "2_or_w_eq_this",
+        RulesBuiltinPredicates_2_or_w_eq_this
+    },
+    {
+        "2_or_w_eq_lookup_var",
+        RulesBuiltinPredicates_2_or_w_eq_lookup_var
+    },
+    {
+        "3_or_w_eq_lookup_var",
+        RulesBuiltinPredicates_3_or_w_eq_lookup_var
+    },
+    {
+        "unwritten_var_error_neq",
+        RulesBuiltinPredicates_unwritten_var_error_neq
+    },
+    {
+        "unwritten_var_error_match",
+        RulesBuiltinPredicates_unwritten_var_error_match
     }
 };
 
@@ -5842,6 +7037,377 @@ bake_test_case RulesScopes_testcases[] = {
     {
         "term_w_not_scope_3_terms_w_or",
         RulesScopes_term_w_not_scope_3_terms_w_or
+    }
+};
+
+bake_test_case RulesTraversal_testcases[] = {
+    {
+        "this_self_up_childof",
+        RulesTraversal_this_self_up_childof
+    },
+    {
+        "this_up_childof",
+        RulesTraversal_this_up_childof
+    },
+    {
+        "this_written_self_up_childof",
+        RulesTraversal_this_written_self_up_childof
+    },
+    {
+        "this_written_up_childof",
+        RulesTraversal_this_written_up_childof
+    },
+    {
+        "var_self_up_childof",
+        RulesTraversal_var_self_up_childof
+    },
+    {
+        "var_up_childof",
+        RulesTraversal_var_up_childof
+    },
+    {
+        "var_written_self_up_childof",
+        RulesTraversal_var_written_self_up_childof
+    },
+    {
+        "var_written_up_childof",
+        RulesTraversal_var_written_up_childof
+    },
+    {
+        "set_var_self_up_childof",
+        RulesTraversal_set_var_self_up_childof
+    },
+    {
+        "set_var_up_childof",
+        RulesTraversal_set_var_up_childof
+    },
+    {
+        "set_var_written_self_up_childof",
+        RulesTraversal_set_var_written_self_up_childof
+    },
+    {
+        "set_var_written_up_childof",
+        RulesTraversal_set_var_written_up_childof
+    },
+    {
+        "ent_self_up_childof",
+        RulesTraversal_ent_self_up_childof
+    },
+    {
+        "ent_up_childof",
+        RulesTraversal_ent_up_childof
+    },
+    {
+        "implicit_this_self_up_isa",
+        RulesTraversal_implicit_this_self_up_isa
+    },
+    {
+        "implicit_this_up_isa",
+        RulesTraversal_implicit_this_up_isa
+    },
+    {
+        "implicit_var_self_up_isa",
+        RulesTraversal_implicit_var_self_up_isa
+    },
+    {
+        "implicit_var_up_isa",
+        RulesTraversal_implicit_var_up_isa
+    },
+    {
+        "implicit_ent_self_up_isa",
+        RulesTraversal_implicit_ent_self_up_isa
+    },
+    {
+        "implicit_ent_up_isa",
+        RulesTraversal_implicit_ent_up_isa
+    },
+    {
+        "self_up_2_targets",
+        RulesTraversal_self_up_2_targets
+    },
+    {
+        "up_2_targets",
+        RulesTraversal_up_2_targets
+    },
+    {
+        "self_up_2_targets_diamond",
+        RulesTraversal_self_up_2_targets_diamond
+    },
+    {
+        "up_2_targets_diamond",
+        RulesTraversal_up_2_targets_diamond
+    },
+    {
+        "written_self_up_2_targets",
+        RulesTraversal_written_self_up_2_targets
+    },
+    {
+        "written_up_2_targets",
+        RulesTraversal_written_up_2_targets
+    },
+    {
+        "written_self_up_2_targets_diamond",
+        RulesTraversal_written_self_up_2_targets_diamond
+    },
+    {
+        "written_up_2_targets_diamond",
+        RulesTraversal_written_up_2_targets_diamond
+    },
+    {
+        "2_self_up_terms",
+        RulesTraversal_2_self_up_terms
+    },
+    {
+        "2_self_up_terms_2_targets",
+        RulesTraversal_2_self_up_terms_2_targets
+    },
+    {
+        "self_up_empty_table",
+        RulesTraversal_self_up_empty_table
+    },
+    {
+        "up_empty_table",
+        RulesTraversal_up_empty_table
+    },
+    {
+        "self_up_all_owned",
+        RulesTraversal_self_up_all_owned
+    },
+    {
+        "up_all_owned",
+        RulesTraversal_up_all_owned
+    },
+    {
+        "this_self_up_childof_inherited",
+        RulesTraversal_this_self_up_childof_inherited
+    },
+    {
+        "this_up_childof_inherited",
+        RulesTraversal_this_up_childof_inherited
+    },
+    {
+        "this_written_self_up_childof_inherited",
+        RulesTraversal_this_written_self_up_childof_inherited
+    },
+    {
+        "this_written_up_childof_inherited",
+        RulesTraversal_this_written_up_childof_inherited
+    },
+    {
+        "var_self_up_childof_inherited",
+        RulesTraversal_var_self_up_childof_inherited
+    },
+    {
+        "var_up_childof_inherited",
+        RulesTraversal_var_up_childof_inherited
+    },
+    {
+        "var_written_self_up_childof_inherited",
+        RulesTraversal_var_written_self_up_childof_inherited
+    },
+    {
+        "var_written_up_childof_inherited",
+        RulesTraversal_var_written_up_childof_inherited
+    },
+    {
+        "ent_self_up_childof_inherited",
+        RulesTraversal_ent_self_up_childof_inherited
+    },
+    {
+        "ent_up_childof_inherited",
+        RulesTraversal_ent_up_childof_inherited
+    },
+    {
+        "ent_written_self_up_childof_inherited",
+        RulesTraversal_ent_written_self_up_childof_inherited
+    },
+    {
+        "ent_written_up_childof_inherited",
+        RulesTraversal_ent_written_up_childof_inherited
+    },
+    {
+        "this_self_up_childof_component",
+        RulesTraversal_this_self_up_childof_component
+    },
+    {
+        "this_up_childof_component",
+        RulesTraversal_this_up_childof_component
+    },
+    {
+        "this_written_self_up_childof_component",
+        RulesTraversal_this_written_self_up_childof_component
+    },
+    {
+        "this_written_up_childof_component",
+        RulesTraversal_this_written_up_childof_component
+    },
+    {
+        "var_self_up_childof_component",
+        RulesTraversal_var_self_up_childof_component
+    },
+    {
+        "var_up_childof_component",
+        RulesTraversal_var_up_childof_component
+    },
+    {
+        "var_written_self_up_childof_component",
+        RulesTraversal_var_written_self_up_childof_component
+    },
+    {
+        "var_written_up_childof_component",
+        RulesTraversal_var_written_up_childof_component
+    },
+    {
+        "this_self_up_childof_recycled_parent",
+        RulesTraversal_this_self_up_childof_recycled_parent
+    },
+    {
+        "this_up_childof_recycled_parent",
+        RulesTraversal_this_up_childof_recycled_parent
+    },
+    {
+        "this_written_self_up_childof_recycled_parent",
+        RulesTraversal_this_written_self_up_childof_recycled_parent
+    },
+    {
+        "this_written_up_childof_recycled_parent",
+        RulesTraversal_this_written_up_childof_recycled_parent
+    },
+    {
+        "this_self_up_childof_recycled_parent_component",
+        RulesTraversal_this_self_up_childof_recycled_parent_component
+    },
+    {
+        "this_up_childof_recycled_parent_component",
+        RulesTraversal_this_up_childof_recycled_parent_component
+    },
+    {
+        "this_written_self_up_childof_recycled_parent_component",
+        RulesTraversal_this_written_self_up_childof_recycled_parent_component
+    },
+    {
+        "this_written_up_childof_recycled_parent_component",
+        RulesTraversal_this_written_up_childof_recycled_parent_component
+    },
+    {
+        "this_self_up_childof_pair",
+        RulesTraversal_this_self_up_childof_pair
+    },
+    {
+        "this_up_childof_pair",
+        RulesTraversal_this_up_childof_pair
+    },
+    {
+        "this_written_self_up_childof_pair",
+        RulesTraversal_this_written_self_up_childof_pair
+    },
+    {
+        "this_written_up_childof_pair",
+        RulesTraversal_this_written_up_childof_pair
+    },
+    {
+        "this_self_up_childof_pair_wildcard",
+        RulesTraversal_this_self_up_childof_pair_wildcard
+    },
+    {
+        "this_up_childof_pair_wildcard",
+        RulesTraversal_this_up_childof_pair_wildcard
+    },
+    {
+        "this_written_self_up_childof_pair_wildcard",
+        RulesTraversal_this_written_self_up_childof_pair_wildcard
+    },
+    {
+        "this_written_up_childof_pair_wildcard",
+        RulesTraversal_this_written_up_childof_pair_wildcard
+    },
+    {
+        "this_self_up_childof_pair_tgt_var",
+        RulesTraversal_this_self_up_childof_pair_tgt_var
+    },
+    {
+        "this_written_self_up_childof_pair_tgt_var",
+        RulesTraversal_this_written_self_up_childof_pair_tgt_var
+    },
+    {
+        "this_self_up_childof_pair_rel_var",
+        RulesTraversal_this_self_up_childof_pair_rel_var
+    },
+    {
+        "this_written_self_up_childof_pair_rel_var",
+        RulesTraversal_this_written_self_up_childof_pair_rel_var
+    },
+    {
+        "this_self_up_childof_pair_for_var_written",
+        RulesTraversal_this_self_up_childof_pair_for_var_written
+    },
+    {
+        "this_up_childof_pair_for_var_written",
+        RulesTraversal_this_up_childof_pair_for_var_written
+    },
+    {
+        "this_written_self_up_childof_pair_for_var_written",
+        RulesTraversal_this_written_self_up_childof_pair_for_var_written
+    },
+    {
+        "this_self_up_childof_pair_for_var_written_n_targets",
+        RulesTraversal_this_self_up_childof_pair_for_var_written_n_targets
+    },
+    {
+        "this_written_self_up_childof_pair_for_var_written_n_targets",
+        RulesTraversal_this_written_self_up_childof_pair_for_var_written_n_targets
+    },
+    {
+        "self_up_2_levels",
+        RulesTraversal_self_up_2_levels
+    },
+    {
+        "not_up_disabled",
+        RulesTraversal_not_up_disabled
+    },
+    {
+        "up_2_rel_instances",
+        RulesTraversal_up_2_rel_instances
+    },
+    {
+        "up_2_rel_instances_match_2nd",
+        RulesTraversal_up_2_rel_instances_match_2nd
+    },
+    {
+        "up_only_w_owned",
+        RulesTraversal_up_only_w_owned
+    },
+    {
+        "this_self_cascade_childof",
+        RulesTraversal_this_self_cascade_childof
+    },
+    {
+        "this_cascade_childof",
+        RulesTraversal_this_cascade_childof
+    },
+    {
+        "this_written_self_cascade_childof",
+        RulesTraversal_this_written_self_cascade_childof
+    },
+    {
+        "this_written_cascade_childof",
+        RulesTraversal_this_written_cascade_childof
+    },
+    {
+        "this_self_cascade_childof_w_parent_flag",
+        RulesTraversal_this_self_cascade_childof_w_parent_flag
+    },
+    {
+        "this_cascade_childof_w_parent_flag",
+        RulesTraversal_this_cascade_childof_w_parent_flag
+    },
+    {
+        "this_written_self_cascade_childof_w_parent_flag",
+        RulesTraversal_this_written_self_cascade_childof_w_parent_flag
+    },
+    {
+        "this_written_cascade_childof_w_parent_flag",
+        RulesTraversal_this_written_cascade_childof_w_parent_flag
     }
 };
 
@@ -7169,6 +8735,10 @@ bake_test_case Modules_testcases[] = {
     {
         "import_2_worlds",
         Modules_import_2_worlds
+    },
+    {
+        "component_parent_becomes_module",
+        Modules_component_parent_becomes_module
     }
 };
 
@@ -7226,6 +8796,50 @@ bake_test_case Rest_testcases[] = {
     {
         "get",
         Rest_get
+    },
+    {
+        "get_cached",
+        Rest_get_cached
+    },
+    {
+        "get_cached_invalid",
+        Rest_get_cached_invalid
+    },
+    {
+        "try_query",
+        Rest_try_query
+    },
+    {
+        "query",
+        Rest_query
+    },
+    {
+        "named_query",
+        Rest_named_query
+    },
+    {
+        "tables",
+        Rest_tables
+    },
+    {
+        "request_commands",
+        Rest_request_commands
+    },
+    {
+        "request_commands_2_syncs",
+        Rest_request_commands_2_syncs
+    },
+    {
+        "request_commands_no_frames",
+        Rest_request_commands_no_frames
+    },
+    {
+        "request_commands_no_commands",
+        Rest_request_commands_no_commands
+    },
+    {
+        "request_commands_garbage_collect",
+        Rest_request_commands_garbage_collect
     }
 };
 
@@ -7341,6 +8955,42 @@ bake_test_case Metrics_testcases[] = {
     {
         "metric_nested_member",
         Metrics_metric_nested_member
+    },
+    {
+        "metric_nested_member_counter",
+        Metrics_metric_nested_member_counter
+    },
+    {
+        "metric_nested_member_counter_increment",
+        Metrics_metric_nested_member_counter_increment
+    },
+    {
+        "id_w_member_same_type",
+        Metrics_id_w_member_same_type
+    },
+    {
+        "id_w_member_mismatching_type",
+        Metrics_id_w_member_mismatching_type
+    },
+    {
+        "pair_member_rel_type",
+        Metrics_pair_member_rel_type
+    },
+    {
+        "pair_member_tgt_type",
+        Metrics_pair_member_tgt_type
+    },
+    {
+        "pair_dotmember_rel_type",
+        Metrics_pair_dotmember_rel_type
+    },
+    {
+        "pair_dotmember_tgt_type",
+        Metrics_pair_dotmember_tgt_type
+    },
+    {
+        "pair_member_counter_increment",
+        Metrics_pair_member_counter_increment
     }
 };
 
@@ -7491,26 +9141,27 @@ bake_test_case Alerts_testcases[] = {
     }
 };
 
+
 static bake_test_suite suites[] = {
     {
         "Parser",
         NULL,
         NULL,
-        225,
+        261,
         Parser_testcases
     },
     {
         "Plecs",
         NULL,
         NULL,
-        232,
+        237,
         Plecs_testcases
     },
     {
         "Doc",
         NULL,
         NULL,
-        5,
+        10,
         Doc_testcases
     },
     {
@@ -7531,21 +9182,21 @@ static bake_test_suite suites[] = {
         "RulesBasic",
         NULL,
         NULL,
-        89,
+        164,
         RulesBasic_testcases
     },
     {
         "RulesVariables",
         NULL,
         NULL,
-        97,
+        162,
         RulesVariables_testcases
     },
     {
         "RulesOperators",
         NULL,
         NULL,
-        93,
+        105,
         RulesOperators_testcases
     },
     {
@@ -7559,7 +9210,7 @@ static bake_test_suite suites[] = {
         "RulesComponentInheritance",
         NULL,
         NULL,
-        31,
+        36,
         RulesComponentInheritance_testcases
     },
     {
@@ -7573,7 +9224,7 @@ static bake_test_suite suites[] = {
         "RulesBuiltinPredicates",
         NULL,
         NULL,
-        65,
+        78,
         RulesBuiltinPredicates_testcases
     },
     {
@@ -7582,6 +9233,13 @@ static bake_test_suite suites[] = {
         NULL,
         10,
         RulesScopes_testcases
+    },
+    {
+        "RulesTraversal",
+        NULL,
+        NULL,
+        92,
+        RulesTraversal_testcases
     },
     {
         "SystemPeriodic",
@@ -7699,7 +9357,7 @@ static bake_test_suite suites[] = {
         "Modules",
         Modules_setup,
         NULL,
-        23,
+        24,
         Modules_testcases
     },
     {
@@ -7720,14 +9378,14 @@ static bake_test_suite suites[] = {
         "Rest",
         NULL,
         NULL,
-        2,
+        13,
         Rest_testcases
     },
     {
         "Metrics",
         NULL,
         NULL,
-        28,
+        37,
         Metrics_testcases
     },
     {
@@ -7740,5 +9398,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("addons", argc, argv, suites, 35);
+    return bake_test_run("addons", argc, argv, suites, 36);
 }

@@ -54,6 +54,18 @@ public:
     }
 };
 
+class ReparentModule {
+public:
+    ReparentModule(flecs::world& world) {
+        flecs::entity m = world.module<ReparentModule>();
+        m.child_of(world.entity("::parent"));
+
+        flecs::entity other = world.entity("::ns::ReparentModule");
+        test_assert(other != 0);
+        test_assert(other != m);
+    }
+};
+
 }
 
 struct Module {
@@ -275,4 +287,123 @@ void Module_module_with_core_name(void) {
     test_assert(pos != 0);
     test_str(pos.path().c_str(), "::Module::Position");
     test_assert(pos == world.id<Position>());
+}
+
+void Module_import_addons_two_worlds(void) {
+    flecs::world a;
+    auto m1 = a.import<flecs::monitor>();
+    auto u1 = a.import<flecs::units>();
+
+    flecs::world b;
+    auto m2 = b.import<flecs::monitor>();
+    auto u2 = b.import<flecs::units>();
+
+    test_assert(m1 == m2);
+    test_assert(u1 == u2);
+}
+
+void Module_lookup_module_after_reparent(void) {
+    flecs::world world;
+
+    flecs::entity m = world.import<ns::NestedModule>();
+    test_str(m.path().c_str(), "::ns::NestedModule");
+    test_assert(world.lookup("::ns::NestedModule") == m);
+    test_assert(ecs_lookup(world, "ns.NestedModule") == m);
+
+    flecs::entity p = world.entity("p");
+    m.child_of(p);
+    test_str(m.path().c_str(), "::p::NestedModule");
+    test_assert(world.lookup("::p::NestedModule") == m);
+    test_assert(ecs_lookup(world, "p.NestedModule") == m);
+    
+    test_assert(world.lookup("::ns::NestedModule") == 0);
+    test_assert(ecs_lookup(world, "ns.NestedModule") == 0);
+
+    flecs::entity e = world.entity("::ns::NestedModule");
+    test_assert(e != m);
+
+    // Tests if symbol resolving (used by query DSL) interferes with getting the
+    // correct object
+    test_int(world.filter_builder()
+        .expr("(ChildOf, p.NestedModule)").build().count(), 1);
+    test_int(world.filter_builder()
+        .expr("(ChildOf, ns.NestedModule)").build().count(), 0);
+}
+
+void Module_reparent_module_in_ctor(void) {
+    flecs::world world;
+
+    flecs::entity m = world.import<ns::ReparentModule>();
+    test_str(m.path().c_str(), "::parent::ReparentModule");
+
+    flecs::entity other = world.lookup("::ns::ReparentModule");
+    test_assert(other != 0);
+    test_assert(other != m);
+}
+namespace NamespaceLvl1 {
+    namespace NamespaceLvl2 {
+        struct StructLvl1 {
+            struct StructLvl2_1 {};
+            struct StructLvl2_2 {};
+        };
+    }
+}
+void Module_implicitely_add_module_to_scopes_component(void) {
+    flecs::world ecs;
+
+    using StructLvl2_1 = NamespaceLvl1::NamespaceLvl2::StructLvl1::StructLvl2_1;
+
+    flecs::entity current = ecs.component<StructLvl2_1>();
+    test_assert(current.id() != 0);
+    test_assert(!current.has(flecs::Module));
+    test_assert(current.has<flecs::Component>());
+    test_assert(current.path() == "::NamespaceLvl1::NamespaceLvl2::StructLvl1::StructLvl2_1");
+
+    current = current.parent();
+    test_assert(current.id() != 0);
+    test_assert(current.has(flecs::Module));
+    test_assert(current.path() == "::NamespaceLvl1::NamespaceLvl2::StructLvl1");
+
+    current = current.parent();
+    test_assert(current.id() != 0);
+    test_assert(current.has(flecs::Module));
+    test_assert(current.path() == "::NamespaceLvl1::NamespaceLvl2");
+
+    current = current.parent();
+    test_assert(current.id() != 0);
+    test_assert(current.has(flecs::Module));
+    test_assert(current.path() == "::NamespaceLvl1");
+
+    current = current.parent();
+    test_assert(current.id() == 0);
+}
+
+void Module_implicitely_add_module_to_scopes_entity(void) {
+    flecs::world ecs;
+
+    using StructLvl2_2 = NamespaceLvl1::NamespaceLvl2::StructLvl1::StructLvl2_2;
+
+    flecs::entity current = ecs.entity<StructLvl2_2>().set<flecs::Component>({});
+    test_assert(current.id() != 0);
+    test_assert(!current.has(flecs::Module));
+    test_assert(current.has<flecs::Component>());
+    test_assert(current.path() == "::NamespaceLvl1::NamespaceLvl2::StructLvl1::StructLvl2_2");
+
+    current = current.parent();
+    test_assert(current.id() != 0);
+    test_assert(current.has(flecs::Module));
+    test_assert(current.path() == "::NamespaceLvl1::NamespaceLvl2::StructLvl1");
+
+    current = current.parent();
+    test_assert(current.id() != 0);
+    test_assert(current.has(flecs::Module));
+    test_assert(current.path() == "::NamespaceLvl1::NamespaceLvl2");
+
+    current = current.parent();
+    test_assert(current.id() != 0);
+    test_assert(current.has(flecs::Module));
+    test_assert(current.path() == "::NamespaceLvl1");
+
+    current = current.parent();
+    test_assert(current.id() == 0);
 }

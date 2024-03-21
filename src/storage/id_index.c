@@ -156,6 +156,7 @@ ecs_id_record_t* flecs_id_record_new(
     if (is_pair) {
         // rel = ecs_pair_first(world, id);
         rel = ECS_PAIR_FIRST(id);
+        rel = flecs_entities_get_alive(world, rel);
         ecs_assert(rel != 0, ECS_INTERNAL_ERROR, NULL);
 
         /* Relationship object can be 0, as tables without a ChildOf 
@@ -165,22 +166,43 @@ ecs_id_record_t* flecs_id_record_new(
 #ifdef FLECS_DEBUG
         /* Check constraints */
         if (tgt) {
-            tgt = ecs_get_alive(world, tgt);
+            tgt = flecs_entities_get_alive(world, tgt);
             ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);
         }
         if (tgt && !ecs_id_is_wildcard(tgt)) {
             /* Check if target of relationship satisfies OneOf property */
             ecs_entity_t oneof = flecs_get_oneof(world, rel);
-            ecs_check( !oneof || ecs_has_pair(world, tgt, EcsChildOf, oneof),
-                ECS_CONSTRAINT_VIOLATED, NULL);
-            (void)oneof;
+            if (oneof) {
+                if (!ecs_has_pair(world, tgt, EcsChildOf, oneof)) {
+                    char *idstr = ecs_id_str(world, id);
+                    char *tgtstr = ecs_get_fullpath(world, tgt);
+                    char *oneofstr = ecs_get_fullpath(world, oneof);
+                    ecs_err("OneOf constraint violated: "
+                        "%s: '%s' is not a child of '%s'",
+                        idstr, tgtstr, oneofstr);
+                    ecs_os_free(oneofstr);
+                    ecs_os_free(tgtstr);
+                    ecs_os_free(idstr);
+                    #ifndef FLECS_SOFT_ASSERT
+                    ecs_abort(ECS_CONSTRAINT_VIOLATED, NULL);
+                    #endif
+                }
+            }
 
             /* Check if we're not trying to inherit from a final target */
             if (rel == EcsIsA) {
-                bool is_final = ecs_has_id(world, tgt, EcsFinal);
-                ecs_check(!is_final, ECS_CONSTRAINT_VIOLATED, 
-                    "cannot inherit from final entity");
-                (void)is_final;
+                if (ecs_has_id(world, tgt, EcsFinal)) {
+                    char *idstr = ecs_id_str(world, id);
+                    char *tgtstr = ecs_get_fullpath(world, tgt);
+                    ecs_err("Final constraint violated: "
+                            "%s: cannot inherit from final entity '%s'",
+                        idstr, tgtstr);
+                    ecs_os_free(tgtstr);
+                    ecs_os_free(idstr);
+                    #ifndef FLECS_SOFT_ASSERT
+                    ecs_abort(ECS_CONSTRAINT_VIOLATED, NULL);
+                    #endif
+                }
             }
         }
 #endif
@@ -194,7 +216,7 @@ ecs_id_record_t* flecs_id_record_new(
 
             /* If pair is not a wildcard, append it to wildcard lists. These 
              * allow for quickly enumerating all relationships for an object, 
-             * or all objecs for a relationship. */
+             * or all objects for a relationship. */
             flecs_insert_id_elem(world, idr, ecs_pair(rel, EcsWildcard), idr_r);
 
             idr_t = flecs_id_record_ensure(world, ecs_pair(EcsWildcard, tgt));
@@ -259,28 +281,11 @@ ecs_id_record_t* flecs_id_record_new(
 
     /* Update counters */
     world->info.id_create_total ++;
-
-    if (!is_wildcard) {
-        world->info.id_count ++;
-
-        if (idr->type_info) {
-            world->info.component_id_count ++;
-        } else {
-            world->info.tag_id_count ++;
-        }
-
-        if (is_pair) {
-            world->info.pair_id_count ++;
-        }
-    } else {
-        world->info.wildcard_id_count ++;
-    }
+    world->info.component_id_count += idr->type_info != NULL;
+    world->info.tag_id_count += idr->type_info == NULL;
+    world->info.pair_id_count += is_pair;
 
     return idr;
-#ifdef FLECS_DEBUG
-error:
-    return NULL;
-#endif
 }
 
 static
@@ -349,22 +354,9 @@ void flecs_id_record_free(
 
     /* Update counters */
     world->info.id_delete_total ++;
-
-    if (!ecs_id_is_wildcard(id)) {
-        world->info.id_count --;
-
-        if (ECS_IS_PAIR(id)) {
-            world->info.pair_id_count --;
-        }
-
-        if (idr->type_info) {
-            world->info.component_id_count --;
-        } else {
-            world->info.tag_id_count --;
-        }
-    } else {
-        world->info.wildcard_id_count --;
-    }
+    world->info.pair_id_count -= ECS_IS_PAIR(id);
+    world->info.component_id_count -= idr->type_info != NULL;
+    world->info.tag_id_count -= idr->type_info == NULL;
 
     /* Unregister the id record from the world & free resources */
     ecs_table_cache_fini(&idr->cache);

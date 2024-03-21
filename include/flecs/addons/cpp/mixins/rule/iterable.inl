@@ -4,8 +4,10 @@
  */
 
 /**
- * \memberof flecs::iter
- * \ingroup cpp_addons_rules
+ * @memberof flecs::iter
+ * @ingroup cpp_addons_rules
+ *
+ * @{
  */
 
 iter_iterable<Components...>& set_var(const char *name, flecs::entity_t value) {

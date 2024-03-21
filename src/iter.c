@@ -308,8 +308,8 @@ bool flecs_iter_next_row(
             int t, field_count = it->field_count;
 
             for (t = 0; t < field_count; t ++) {
-                int32_t column = it->columns[t];
-                if (column >= 0) {
+                ecs_entity_t src = it->sources[t];
+                if (!src) {
                     void *ptr = it->ptrs[t];
                     if (ptr) {
                         it->ptrs[t] = ECS_OFFSET(ptr, it->sizes[t]);
@@ -474,6 +474,10 @@ size_t ecs_field_size(
 char* ecs_iter_str(
     const ecs_iter_t *it)
 {
+    if (!(it->flags & EcsIterIsValid)) {
+        return NULL;
+    }
+
     ecs_world_t *world = it->world;
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
     int i;
@@ -508,7 +512,7 @@ char* ecs_iter_str(
         ecs_strbuf_list_pop(&buf, "\n");
     }
 
-    if (it->variable_count) {
+    if (it->variable_count && it->variable_names) {
         int32_t actual_count = 0;
         for (i = 0; i < it->variable_count; i ++) {
             const char *var_name = it->variable_names[i];
@@ -638,6 +642,9 @@ ecs_entity_t ecs_iter_get_var(
     ecs_entity_t e = var->entity;
     if (!e) {
         ecs_table_t *table = var->range.table;
+        if (!table && !var_id) {
+            table = it->table;
+        }
         if (table) {
             if ((var->range.count == 1) || (ecs_table_count(table) == 1)) {
                 ecs_assert(ecs_table_count(table) > var->range.offset,
@@ -665,6 +672,10 @@ ecs_table_t* ecs_iter_get_var_as_table(
 
     ecs_var_t *var = &it->variables[var_id];
     ecs_table_t *table = var->range.table;
+    if (!table && !var_id) {
+        table = it->table;
+    }
+
     if (!table) {
         /* If table is not set, try to get table from entity */
         ecs_entity_t e = var->entity;
@@ -709,6 +720,10 @@ ecs_table_range_t ecs_iter_get_var_as_range(
 
     ecs_var_t *var = &it->variables[var_id];
     ecs_table_t *table = var->range.table;
+    if (!table && !var_id) {
+        table = it->table;
+    }
+   
     if (!table) {
         ecs_entity_t e = var->entity;
         if (e) {

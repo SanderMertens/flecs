@@ -10,7 +10,7 @@
 namespace flecs {
 
 /**
- * \ingroup cpp_addons_event
+ * @ingroup cpp_addons_event
  * @{
  */
 
@@ -76,15 +76,7 @@ struct event_builder_base {
 
     /** Set entity for which to emit event */
     Base& entity(flecs::entity_t e) {
-        ecs_record_t *r = ecs_record_find(m_world, e);
-        
-        /* Can't emit for empty entity */
-        ecs_assert(r != nullptr, ECS_INVALID_PARAMETER, nullptr);
-        ecs_assert(r->table != nullptr, ECS_INVALID_PARAMETER, nullptr);
-
-        m_desc.table = r->table;
-        m_desc.offset = ECS_RECORD_TO_ROW(r->row);
-        m_desc.count = 1;
+        m_desc.entity = e;
         return *this;
     }
 
@@ -98,17 +90,28 @@ struct event_builder_base {
 
     /* Set event data */
     Base& ctx(const E* ptr) {
+        m_desc.const_param = ptr;
+        return *this;
+    }
+
+    /* Set event data */
+    Base& ctx(E* ptr) {
         m_desc.param = ptr;
         return *this;
     }
 
     void emit() {
-        ecs_assert(m_ids.count != 0, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(m_desc.table != nullptr, ECS_INVALID_PARAMETER, NULL);
         m_ids.array = m_ids_array;
         m_desc.ids = &m_ids;
         m_desc.observable = const_cast<flecs::world_t*>(ecs_get_world(m_world));
         ecs_emit(m_world, &m_desc);
+    }
+
+    void enqueue() {
+        m_ids.array = m_ids_array;
+        m_desc.ids = &m_ids;
+        m_desc.observable = const_cast<flecs::world_t*>(ecs_get_world(m_world));
+        ecs_enqueue(m_world, &m_desc);
     }
 
 protected:
@@ -137,6 +140,12 @@ public:
 
     /* Set event data */
     Class& ctx(const E& ptr) {
+        this->m_desc.const_param = &ptr;
+        return *this;
+    }
+
+    /* Set event data */
+    Class& ctx(E&& ptr) {
         this->m_desc.param = &ptr;
         return *this;
     }

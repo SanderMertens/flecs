@@ -9,9 +9,9 @@ namespace flecs {
 
 /**
  * @defgroup cpp_addons_timer Timer
- * @brief Run systems at a time interval.
- * 
- * \ingroup cpp_addons
+ * @ingroup cpp_addons
+ * Run systems at a time interval.
+ *
  * @{
  */
 

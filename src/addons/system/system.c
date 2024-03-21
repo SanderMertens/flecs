@@ -104,6 +104,7 @@ ecs_entity_t ecs_run_intern(
         it = &wit;
     }
 
+    ecs_entity_t old_system = flecs_stage_set_system(stage, system);
     ecs_iter_action_t action = system_data->action;
     it->callback = action;
     
@@ -125,11 +126,11 @@ ecs_entity_t ecs_run_intern(
         ecs_iter_fini(&qit);
     }
 
+    flecs_stage_set_system(stage, old_system);
+
     if (measure_time) {
         system_data->time_spent += (ecs_ftime_t)ecs_time_measure(&time_start);
     }
-
-    system_data->invoke_count ++;
 
     flecs_defer_end(world, stage);
 
@@ -322,7 +323,8 @@ ecs_entity_t ecs_system_init(
 
         ecs_defer_end(world);            
     } else {
-        ecs_system_t *system = ecs_poly(poly->poly, ecs_system_t);
+        ecs_poly_assert(poly->poly, ecs_system_t);
+        ecs_system_t *system = (ecs_system_t*)poly->poly;
 
         if (desc->run) {
             system->run = desc->run;
@@ -378,6 +380,11 @@ void FlecsSystemImport(
     ecs_world_t *world)
 {
     ECS_MODULE(world, FlecsSystem);
+#ifdef FLECS_DOC
+    ECS_IMPORT(world, FlecsDoc);
+    ecs_doc_set_brief(world, ecs_id(FlecsSystem), 
+        "Module that implements Flecs systems");
+#endif
 
     ecs_set_name_prefix(world, "Ecs");
 

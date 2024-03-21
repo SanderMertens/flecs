@@ -75,6 +75,17 @@ namespace ns {
     int namespace_module::system_invoke_count = 0;
 }
 
+struct nested_component_module {
+    struct Foo {
+        struct Bar { };
+    };
+
+    nested_component_module(flecs::world& ecs) {
+        ecs.component<Foo>();
+        ecs.component<Foo::Bar>();
+    }
+};
+
 void World_builtin_components(void) {
     flecs::world ecs;
 
@@ -1501,7 +1512,7 @@ void World_get_alive(void) {
     test_assert(ecs.get_alive(e_no_gen) == e_2);
 }
 
-void World_ensure(void) {
+void World_make_alive(void) {
     flecs::world ecs;
 
     auto e_1 = ecs.entity();
@@ -1514,7 +1525,7 @@ void World_ensure(void) {
     e_2.destruct();
     test_assert(!e_2.is_alive());
 
-    auto e_3 = ecs.ensure(e_2);
+    auto e_3 = ecs.make_alive(e_2);
     test_assert(e_2 == e_3);
     test_assert(e_3.is_alive());
 }
@@ -1823,4 +1834,63 @@ void World_make_pair_of_pair_type(void) {
     test_assert(id.is_pair());
     test_assert(id.first() == ecs.id<Position>());
     test_assert(id.second() == t);
+}
+
+void World_delta_time(void) {
+    flecs::world ecs;
+
+    float dt = 0;
+
+    ecs.entity().add<Tag>();
+
+    ecs.system<Tag>()
+        .each([&](flecs::entity e, Tag) {
+            dt = e.world().delta_time();
+        });
+
+    ecs.progress(2);
+
+    test_int(dt, 2);
+}
+
+void World_register_nested_component_in_module(void) {
+    flecs::world ecs;
+
+    ecs.import<nested_component_module>();
+
+    test_assert(flecs::type_id<nested_component_module::Foo>() != 0);
+    test_assert(flecs::type_id<nested_component_module::Foo::Bar>() != 0);
+
+    flecs::entity foo = ecs.component<nested_component_module::Foo>();
+    flecs::entity bar = ecs.component<nested_component_module::Foo::Bar>();
+
+    test_str(foo.path().c_str(), "::nested_component_module::Foo");
+    test_str(bar.path().c_str(), "::nested_component_module::Foo::Bar");
+}
+
+static void *atfini_ctx = nullptr;
+static int atfini_invoked = 0;
+static void atfini_callback(flecs::world_t *world, void *ctx) {
+    test_assert(world != nullptr);
+    atfini_ctx = ctx;
+    atfini_invoked ++;
+}
+
+void World_atfini(void) {
+    {
+        flecs::world ecs;
+        ecs.atfini(atfini_callback);
+    }
+    test_int(atfini_invoked, 1);
+    test_assert(atfini_ctx == nullptr);
+}
+
+void World_atfini_w_ctx(void) {
+    int ctx;
+    {
+        flecs::world ecs;
+        ecs.atfini(atfini_callback, &ctx);
+    }
+    test_int(atfini_invoked, 1);
+    test_assert(atfini_ctx == &ctx);
 }

@@ -4,11 +4,11 @@ namespace simple {
 
 module::module(flecs::world& ecs) {
     // Register module with world. The module entity will be created with the
-    // same hierarchy as the C++ namespaces (e.g. simple.module)
+    // same hierarchy as the C++ namespaces (e.g. simple::module)
     ecs.module<module>();
 
     // All contents of the module are created inside the module's namespace, so
-    // the Position component will be created as simple.module.Position
+    // the Position component will be created as simple::module::Position
 
     // Component registration is optional, however by registering components
     // inside the module constructor, they will be created inside the scope

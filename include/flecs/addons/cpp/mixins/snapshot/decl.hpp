@@ -9,9 +9,9 @@ namespace flecs {
 
 /**
  * @defgroup cpp_addons_snapshots Snapshots
- * @brief Save & restore world.
- * 
- * \ingroup cpp_addons
+ * @ingroup cpp_addons
+ * Save & restore world.
+ *
  * @{
  */
 

@@ -386,9 +386,9 @@ void Misc_oneof_gauge_metric(void) {
             test_uint(s[1].entity, e2);
             test_uint(s[2].entity, e3);
 
-            test_str(ecs.to_json(m, &i[0]), "{\"blue\":0, \"green\":0, \"red\":1}");
-            test_str(ecs.to_json(m, &i[1]), "{\"blue\":0, \"green\":1, \"red\":0}");
-            test_str(ecs.to_json(m, &i[2]), "{\"blue\":1, \"green\":0, \"red\":0}");
+            test_str(ecs.to_json(m, &i[0]), "{\"red\":1, \"green\":0, \"blue\":0}");
+            test_str(ecs.to_json(m, &i[1]), "{\"red\":0, \"green\":1, \"blue\":0}");
+            test_str(ecs.to_json(m, &i[2]), "{\"red\":0, \"green\":0, \"blue\":1}");
 
             test_assert(it.entity(0).has<flecs::metrics::Instance>());
             test_assert(it.entity(1).has<flecs::metrics::Instance>());
@@ -409,9 +409,9 @@ void Misc_oneof_gauge_metric(void) {
             test_uint(s[1].entity, e2);
             test_uint(s[2].entity, e3);
 
-            test_str(ecs.to_json(m, &i[0]), "{\"blue\":0, \"green\":0, \"red\":1}");
-            test_str(ecs.to_json(m, &i[1]), "{\"blue\":0, \"green\":1, \"red\":0}");
-            test_str(ecs.to_json(m, &i[2]), "{\"blue\":1, \"green\":0, \"red\":0}");
+            test_str(ecs.to_json(m, &i[0]), "{\"red\":1, \"green\":0, \"blue\":0}");
+            test_str(ecs.to_json(m, &i[1]), "{\"red\":0, \"green\":1, \"blue\":0}");
+            test_str(ecs.to_json(m, &i[2]), "{\"red\":0, \"green\":0, \"blue\":1}");
 
             test_assert(it.entity(0).has<flecs::metrics::Instance>());
             test_assert(it.entity(1).has<flecs::metrics::Instance>());
@@ -503,9 +503,9 @@ void Misc_oneof_counter_metric(void) {
             test_uint(s[1].entity, e2);
             test_uint(s[2].entity, e3);
 
-            test_str(ecs.to_json(m, &i[0]), "{\"blue\":0, \"green\":0, \"red\":1}");
-            test_str(ecs.to_json(m, &i[1]), "{\"blue\":0, \"green\":1, \"red\":0}");
-            test_str(ecs.to_json(m, &i[2]), "{\"blue\":1, \"green\":0, \"red\":0}");
+            test_str(ecs.to_json(m, &i[0]), "{\"red\":1, \"green\":0, \"blue\":0}");
+            test_str(ecs.to_json(m, &i[1]), "{\"red\":0, \"green\":1, \"blue\":0}");
+            test_str(ecs.to_json(m, &i[2]), "{\"red\":0, \"green\":0, \"blue\":1}");
 
             test_assert(it.entity(0).has<flecs::metrics::Instance>());
             test_assert(it.entity(1).has<flecs::metrics::Instance>());
@@ -527,9 +527,9 @@ void Misc_oneof_counter_metric(void) {
             test_uint(s[1].entity, e2);
             test_uint(s[2].entity, e3);
 
-            test_str(ecs.to_json(m, &i[0]), "{\"blue\":0, \"green\":0, \"red\":2}");
-            test_str(ecs.to_json(m, &i[1]), "{\"blue\":0, \"green\":2, \"red\":0}");
-            test_str(ecs.to_json(m, &i[2]), "{\"blue\":2, \"green\":0, \"red\":0}");
+            test_str(ecs.to_json(m, &i[0]), "{\"red\":2, \"green\":0, \"blue\":0}");
+            test_str(ecs.to_json(m, &i[1]), "{\"red\":0, \"green\":2, \"blue\":0}");
+            test_str(ecs.to_json(m, &i[2]), "{\"red\":0, \"green\":0, \"blue\":2}");
 
             test_assert(it.entity(0).has<flecs::metrics::Instance>());
             test_assert(it.entity(1).has<flecs::metrics::Instance>());
@@ -1973,4 +1973,164 @@ void Misc_map_api(void) {
     ecs_os_free(v);
 
     ecs_map_fini(&m);
+}
+
+void Misc_member_metric_w_pair_R_T(void) {
+    flecs::world ecs;
+
+    ecs.import<flecs::metrics>();
+
+    ecs.component<Mass>()
+        .member<float>("value");
+
+    flecs::entity m = ecs.metric("mass")
+        .kind<flecs::metrics::Gauge>()
+        .id<Mass, Tag>()
+        .member("value");
+
+    flecs::entity e1 = ecs.entity().set<Mass, Tag>({10});
+    flecs::entity e2 = ecs.entity().set<Mass, Tag>({20});
+
+    ecs.progress();
+
+    int32_t count = 0;
+    ecs.filter<flecs::metrics::Source, flecs::metrics::Value>()
+        .iter([&](flecs::iter& it, flecs::metrics::Source *s, flecs::metrics::Value *i) {
+            count += it.count();
+
+            test_int(count, 2);
+            test_uint(s[0].entity, e1);
+            test_uint(s[1].entity, e2);
+
+            test_int(i[0].value, 10);
+            test_int(i[1].value, 20);
+
+            test_assert(it.entity(0).parent() == m);
+            test_assert(it.entity(1).parent() == m);
+
+            test_assert(it.entity(0).has<flecs::metrics::Instance>());
+            test_assert(it.entity(1).has<flecs::metrics::Instance>());
+        });
+
+    test_int(count, 2);
+}
+
+void Misc_member_metric_w_pair_R_t(void) {
+    flecs::world ecs;
+
+    ecs.import<flecs::metrics>();
+
+    ecs.component<Mass>()
+        .member<float>("value");
+
+    flecs::entity m = ecs.metric("mass")
+        .kind<flecs::metrics::Gauge>()
+        .id<Mass>(ecs.id<Tag>())
+        .member("value");
+
+    flecs::entity e1 = ecs.entity().set<Mass, Tag>({10});
+    flecs::entity e2 = ecs.entity().set<Mass, Tag>({20});
+
+    ecs.progress();
+
+    int32_t count = 0;
+    ecs.filter<flecs::metrics::Source, flecs::metrics::Value>()
+        .iter([&](flecs::iter& it, flecs::metrics::Source *s, flecs::metrics::Value *i) {
+            count += it.count();
+
+            test_int(count, 2);
+            test_uint(s[0].entity, e1);
+            test_uint(s[1].entity, e2);
+
+            test_int(i[0].value, 10);
+            test_int(i[1].value, 20);
+
+            test_assert(it.entity(0).parent() == m);
+            test_assert(it.entity(1).parent() == m);
+
+            test_assert(it.entity(0).has<flecs::metrics::Instance>());
+            test_assert(it.entity(1).has<flecs::metrics::Instance>());
+        });
+
+    test_int(count, 2);
+}
+
+void Misc_member_metric_w_pair_r_t(void) {
+    flecs::world ecs;
+
+    ecs.import<flecs::metrics>();
+
+    ecs.component<Mass>()
+        .member<float>("value");
+
+    flecs::entity m = ecs.metric("mass")
+        .kind<flecs::metrics::Gauge>()
+        .id(ecs.id<Mass>(), ecs.id<Tag>())
+        .member("value");
+
+    flecs::entity e1 = ecs.entity().set<Mass, Tag>({10});
+    flecs::entity e2 = ecs.entity().set<Mass, Tag>({20});
+
+    ecs.progress();
+
+    int32_t count = 0;
+    ecs.filter<flecs::metrics::Source, flecs::metrics::Value>()
+        .iter([&](flecs::iter& it, flecs::metrics::Source *s, flecs::metrics::Value *i) {
+            count += it.count();
+
+            test_int(count, 2);
+            test_uint(s[0].entity, e1);
+            test_uint(s[1].entity, e2);
+
+            test_int(i[0].value, 10);
+            test_int(i[1].value, 20);
+
+            test_assert(it.entity(0).parent() == m);
+            test_assert(it.entity(1).parent() == m);
+
+            test_assert(it.entity(0).has<flecs::metrics::Instance>());
+            test_assert(it.entity(1).has<flecs::metrics::Instance>());
+        });
+
+    test_int(count, 2);
+}
+
+void Misc_member_metric_w_pair_r_T(void) {
+    flecs::world ecs;
+
+    ecs.import<flecs::metrics>();
+
+    ecs.component<Mass>()
+        .member<float>("value");
+
+    flecs::entity m = ecs.metric("mass")
+        .kind<flecs::metrics::Gauge>()
+        .id_second<Tag>(ecs.id<Mass>())
+        .member("value");
+
+    flecs::entity e1 = ecs.entity().set<Mass, Tag>({10});
+    flecs::entity e2 = ecs.entity().set<Mass, Tag>({20});
+
+    ecs.progress();
+
+    int32_t count = 0;
+    ecs.filter<flecs::metrics::Source, flecs::metrics::Value>()
+        .iter([&](flecs::iter& it, flecs::metrics::Source *s, flecs::metrics::Value *i) {
+            count += it.count();
+
+            test_int(count, 2);
+            test_uint(s[0].entity, e1);
+            test_uint(s[1].entity, e2);
+
+            test_int(i[0].value, 10);
+            test_int(i[1].value, 20);
+
+            test_assert(it.entity(0).parent() == m);
+            test_assert(it.entity(1).parent() == m);
+
+            test_assert(it.entity(0).has<flecs::metrics::Instance>());
+            test_assert(it.entity(1).has<flecs::metrics::Instance>());
+        });
+
+    test_int(count, 2);
 }

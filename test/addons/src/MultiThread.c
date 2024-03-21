@@ -920,11 +920,11 @@ void MultiThread_change_thread_count(void) {
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES / 2; i ++) {
-        Position *p = ecs_get_mut(world, ids_1[i], Position);
+        Position *p = ecs_ensure(world, ids_1[i], Position);
         test_int(p->x, ENTITIES - i);
         p->x = 1;
 
-        p = ecs_get_mut(world, ids_2[i], Position);
+        p = ecs_ensure(world, ids_2[i], Position);
         test_int(p->x, ENTITIES - (i + ENTITIES / 2));
         p->x = 1;
     }

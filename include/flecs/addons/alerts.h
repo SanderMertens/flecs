@@ -11,9 +11,9 @@
 
 /**
  * @defgroup c_addons_alerts Alerts
- * @brief Create alerts from monitoring queries.
- * 
- * \ingroup c_addons
+ * @ingroup c_addons
+ * Create alerts from monitoring queries.
+ *
  * @{
  */
 
@@ -72,7 +72,7 @@ typedef struct ecs_alert_severity_filter_t {
     int32_t _var_index;    /* Index of variable in filter (do not set) */
 } ecs_alert_severity_filter_t;
 
-typedef struct ecs_alert_desc_t { 
+typedef struct ecs_alert_desc_t {
     int32_t _canary;
 
     /** Entity associated with alert */
@@ -85,11 +85,12 @@ typedef struct ecs_alert_desc_t {
 
     /** Template for alert message. This string is used to generate the alert
      * message and may refer to variables in the query result. The format for
-     * the template expressions is as specified by ecs_interpolate_string.
-     * 
+     * the template expressions is as specified by ecs_interpolate_string().
+     *
      * Examples:
-     *   "$this has Position but not Velocity"
-     *   "$this has a parent entity $parent without Position"
+     *
+     *     "$this has Position but not Velocity"
+     *     "$this has a parent entity $parent without Position"
      */
     const char *message;
 
@@ -99,19 +100,19 @@ typedef struct ecs_alert_desc_t {
     /** Description of alert. Will only be set if FLECS_DOC addon is enabled */
     const char *brief;
 
-    /** Metric kind. Must be EcsAlertInfo, EcsAlertWarning, EcsAlertError or 
+    /** Metric kind. Must be EcsAlertInfo, EcsAlertWarning, EcsAlertError or
      * EcsAlertCritical. Defaults to EcsAlertError. */
     ecs_entity_t severity;
 
     /** Severity filters can be used to assign different severities to the same
-     * alert. This prevents having to create multiple alerts, and allows 
-     * entities to transition between severities without resetting the 
+     * alert. This prevents having to create multiple alerts, and allows
+     * entities to transition between severities without resetting the
      * alert duration (optional). */
     ecs_alert_severity_filter_t severity_filters[ECS_ALERT_MAX_SEVERITY_FILTERS];
 
     /** The retain period specifies how long an alert must be inactive before it
      * is cleared. This makes it easier to track noisy alerts. While an alert is
-     * inactive its duration won't increase. 
+     * inactive its duration won't increase.
      * When the retain period is 0, the alert will clear immediately after it no
      * longer matches the alert query. */
     ecs_ftime_t retain_period;
@@ -130,26 +131,26 @@ typedef struct ecs_alert_desc_t {
 } ecs_alert_desc_t;
 
 /** Create a new alert.
- * An alert is a query that is evaluated periodically and creates alert 
- * instances for each entity that matches the query. Alerts can be used to 
+ * An alert is a query that is evaluated periodically and creates alert
+ * instances for each entity that matches the query. Alerts can be used to
  * automate detection of errors in an application.
- * 
+ *
  * Alerts are automatically cleared when a query is no longer true for an alert
  * instance. At most one alert instance will be created per matched entity.
- * 
+ *
  * Alert instances have three components:
  * - AlertInstance: contains the alert message for the instance
  * - MetricSource: contains the entity that triggered the alert
  * - MetricValue: contains how long the alert has been active
- * 
+ *
  * Alerts reuse components from the metrics addon so that alert instances can be
  * tracked and discovered as metrics. Just like metrics, alert instances are
  * created as children of the alert.
- * 
+ *
  * When an entity has active alerts, it will have the EcsAlertsActive component
  * which contains a map with active alerts for the entity. This component
  * will be automatically removed once all alerts are cleared for the entity.
- * 
+ *
  * @param world The world.
  * @param desc Alert description.
  * @return The alert entity.
@@ -167,7 +168,7 @@ ecs_entity_t ecs_alert_init(
  * will return whether the specified alert is active for the entity. When no
  * alert is specified, the operation will return the total number of active
  * alerts for the entity.
- * 
+ *
  * @param world The world.
  * @param entity The entity.
  * @param alert The alert to test for (optional).
@@ -182,7 +183,7 @@ int32_t ecs_get_alert_count(
 /** Return alert instance for specified alert.
  * This operation returns the alert instance for the specified alert. If the
  * alert is not active for the entity, the operation will return 0.
- * 
+ *
  * @param world The world.
  * @param entity The entity.
  * @param alert The alert to test for.

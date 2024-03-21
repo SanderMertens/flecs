@@ -3317,7 +3317,7 @@ void FixedHierarchies_staged_query_w_parent_field_1_lvl(void) {
     });
 
     ecs_world_t *stage = ecs_get_stage(world, 0);
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
 
     ecs_iter_t it = ecs_query_iter(stage, q);
     {
@@ -3397,7 +3397,7 @@ void FixedHierarchies_staged_query_w_parent_field_2_lvl(void) {
     });
 
     ecs_world_t *stage = ecs_get_stage(world, 0);
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
 
     ecs_iter_t it = ecs_query_iter(stage, q);
     {
@@ -3500,7 +3500,7 @@ void FixedHierarchies_staged_query_w_parent_field_1_fixed_1_regular(void) {
     });
 
     ecs_world_t *stage = ecs_get_stage(world, 0);
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
 
     ecs_iter_t it = ecs_query_iter(stage, q);
     {
@@ -3589,7 +3589,7 @@ void FixedHierarchies_staged_query_w_cascade_field_2_lvl(void) {
     });
 
     ecs_world_t *stage = ecs_get_stage(world, 0);
-    ecs_readonly_begin(world);
+    ecs_readonly_begin(world, false);
 
     ecs_iter_t it = ecs_query_iter(stage, q);
     {
@@ -3748,10 +3748,10 @@ void FixedHierarchies_make_fixed_1_lvl_w_name(void) {
 
     ecs_flatten(world, ecs_pair(EcsChildOf, p), NULL);
 
-    test_assert(ecs_lookup_fullpath(world, "p.name_1") == p_1);
-    test_assert(ecs_lookup_fullpath(world, "p.name_2") == p_2);
-    test_assert(ecs_lookup_fullpath(world, "p.name_1.child_1") == 0);
-    test_assert(ecs_lookup_fullpath(world, "p.name_2.child_1") == 0);
+    test_assert(ecs_lookup(world, "p.name_1") == p_1);
+    test_assert(ecs_lookup(world, "p.name_2") == p_2);
+    test_assert(ecs_lookup(world, "p.name_1.child_1") == 0);
+    test_assert(ecs_lookup(world, "p.name_2.child_1") == 0);
 
     test_str(ecs_get_name(world, p_1), "name_1");
     test_str(ecs_get_name(world, p_2), "name_2");
@@ -3783,12 +3783,12 @@ void FixedHierarchies_make_fixed_2_lvl_w_name(void) {
 
     ecs_flatten(world, ecs_pair(EcsChildOf, p), NULL);
 
-    test_assert(ecs_lookup_fullpath(world, "p.name_1") == p_1);
-    test_assert(ecs_lookup_fullpath(world, "p.name_2") == p_2);
-    test_assert(ecs_lookup_fullpath(world, "p.name_1.child_1") == 0);
-    test_assert(ecs_lookup_fullpath(world, "p.name_2.child_1") == 0);
-    test_assert(ecs_lookup_fullpath(world, "p.name_1.child_1.child_1_1") == 0);
-    test_assert(ecs_lookup_fullpath(world, "p.name_2.child_1.child_1_1") == 0);
+    test_assert(ecs_lookup(world, "p.name_1") == p_1);
+    test_assert(ecs_lookup(world, "p.name_2") == p_2);
+    test_assert(ecs_lookup(world, "p.name_1.child_1") == 0);
+    test_assert(ecs_lookup(world, "p.name_2.child_1") == 0);
+    test_assert(ecs_lookup(world, "p.name_1.child_1.child_1_1") == 0);
+    test_assert(ecs_lookup(world, "p.name_2.child_1.child_1_1") == 0);
 
     test_str(ecs_get_name(world, p_1), "name_1");
     test_str(ecs_get_name(world, p_2), "name_2");
@@ -3820,10 +3820,10 @@ void FixedHierarchies_make_fixed_1_lvl_w_name_keep_name(void) {
         .keep_names = true
     });
 
-    test_assert(ecs_lookup_fullpath(world, "p.name_1") == p_1);
-    test_assert(ecs_lookup_fullpath(world, "p.name_2") == p_2);
-    test_assert(ecs_lookup_fullpath(world, "p.name_1.child_1") == 0);
-    test_assert(ecs_lookup_fullpath(world, "p.name_2.child_1") == 0);
+    test_assert(ecs_lookup(world, "p.name_1") == p_1);
+    test_assert(ecs_lookup(world, "p.name_2") == p_2);
+    test_assert(ecs_lookup(world, "p.name_1.child_1") == 0);
+    test_assert(ecs_lookup(world, "p.name_2.child_1") == 0);
 
     test_str(ecs_get_name(world, p_1), "name_1");
     test_str(ecs_get_name(world, p_2), "name_2");
@@ -3857,12 +3857,12 @@ void FixedHierarchies_make_fixed_2_lvl_w_name_keep_name(void) {
         .keep_names = true
     });
 
-    test_assert(ecs_lookup_fullpath(world, "p.name_1") == p_1);
-    test_assert(ecs_lookup_fullpath(world, "p.name_2") == p_2);
-    test_assert(ecs_lookup_fullpath(world, "p.name_1.child_1") == 0);
-    test_assert(ecs_lookup_fullpath(world, "p.name_2.child_1") == 0);
-    test_assert(ecs_lookup_fullpath(world, "p.name_1.child_1.child_1_1") == 0);
-    test_assert(ecs_lookup_fullpath(world, "p.name_2.child_1.child_1_1") == 0);
+    test_assert(ecs_lookup(world, "p.name_1") == p_1);
+    test_assert(ecs_lookup(world, "p.name_2") == p_2);
+    test_assert(ecs_lookup(world, "p.name_1.child_1") == 0);
+    test_assert(ecs_lookup(world, "p.name_2.child_1") == 0);
+    test_assert(ecs_lookup(world, "p.name_1.child_1.child_1_1") == 0);
+    test_assert(ecs_lookup(world, "p.name_2.child_1.child_1_1") == 0);
 
     test_str(ecs_get_name(world, p_1), "name_1");
     test_str(ecs_get_name(world, p_2), "name_2");

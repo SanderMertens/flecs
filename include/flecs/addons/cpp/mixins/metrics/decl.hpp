@@ -9,6 +9,15 @@
 
 namespace flecs {
 
+/**
+ * @defgroup cpp_addons_metrics Metrics
+ * @ingroup cpp_addons
+ * The metrics module extracts metrics from components and makes them available
+ * through a unified component interface.
+ *
+ * @{
+ */
+
 struct metrics {
     using Value = EcsMetricValue;
     using Source = EcsMetricSource;
@@ -22,5 +31,7 @@ struct metrics {
 
     metrics(flecs::world& world);
 };
+
+/** @} */
 
 }

@@ -16,7 +16,7 @@ void Metrics_member_gauge_1_entity(void) {
 
     ecs_entity_t m = ecs_metric(world, {
         .entity = ecs_entity(world, { .name = "metrics.position_y" }),
-        .member = ecs_lookup_fullpath(world, "Position.y"),
+        .member = ecs_lookup(world, "Position.y"),
         .kind = EcsGauge
     });
     test_assert(m != 0);
@@ -60,7 +60,7 @@ void Metrics_member_gauge_2_entities(void) {
 
     ecs_entity_t m = ecs_metric(world, {
         .entity = ecs_entity(world, { .name = "metrics.position_y" }),
-        .member = ecs_lookup_fullpath(world, "Position.y"),
+        .member = ecs_lookup(world, "Position.y"),
         .kind = EcsGauge
     });
     test_assert(m != 0);
@@ -117,7 +117,7 @@ void Metrics_member_gauge_2_entities_1_existing(void) {
 
     ecs_entity_t m = ecs_metric(world, {
         .entity = ecs_entity(world, { .name = "metrics.position_y" }),
-        .member = ecs_lookup_fullpath(world, "Position.y"),
+        .member = ecs_lookup(world, "Position.y"),
         .kind = EcsGauge
     });
     test_assert(m != 0);
@@ -171,7 +171,7 @@ void Metrics_member_gauge_2_entities_update(void) {
 
     ecs_entity_t m = ecs_metric(world, {
         .entity = ecs_entity(world, { .name = "metrics.position_y" }),
-        .member = ecs_lookup_fullpath(world, "Position.y"),
+        .member = ecs_lookup(world, "Position.y"),
         .kind = EcsGauge
     });
     test_assert(m != 0);
@@ -260,7 +260,7 @@ void Metrics_member_gauge_w_remove(void) {
 
     ecs_entity_t m = ecs_metric(world, {
         .entity = ecs_entity(world, { .name = "metrics.position_y" }),
-        .member = ecs_lookup_fullpath(world, "Position.y"),
+        .member = ecs_lookup(world, "Position.y"),
         .kind = EcsGauge
     });
     test_assert(m != 0);
@@ -339,7 +339,7 @@ void Metrics_member_gauge_w_clear(void) {
 
     ecs_entity_t m = ecs_metric(world, {
         .entity = ecs_entity(world, { .name = "metrics.position_y" }),
-        .member = ecs_lookup_fullpath(world, "Position.y"),
+        .member = ecs_lookup(world, "Position.y"),
         .kind = EcsGauge
     });
     test_assert(m != 0);
@@ -418,7 +418,7 @@ void Metrics_member_gauge_w_delete(void) {
 
     ecs_entity_t m = ecs_metric(world, {
         .entity = ecs_entity(world, { .name = "metrics.position_y" }),
-        .member = ecs_lookup_fullpath(world, "Position.y"),
+        .member = ecs_lookup(world, "Position.y"),
         .kind = EcsGauge
     });
     test_assert(m != 0);
@@ -1355,7 +1355,7 @@ void Metrics_member_counter(void) {
 
     ecs_entity_t m = ecs_metric(world, {
         .entity = ecs_entity(world, { .name = "metrics.position_y" }),
-        .member = ecs_lookup_fullpath(world, "Position.y"),
+        .member = ecs_lookup(world, "Position.y"),
         .kind = EcsCounter
     });
     test_assert(m != 0);
@@ -1418,7 +1418,7 @@ void Metrics_member_auto_counter(void) {
 
     ecs_entity_t m = ecs_metric(world, {
         .entity = ecs_entity(world, { .name = "metrics.position_y" }),
-        .member = ecs_lookup_fullpath(world, "Position.y"),
+        .member = ecs_lookup(world, "Position.y"),
         .kind = EcsCounterIncrement
     });
     test_assert(m != 0);
@@ -1652,7 +1652,7 @@ void Metrics_metric_description(void) {
 
     ecs_entity_t m = ecs_metric(world, {
         .entity = ecs_entity(world, { .name = "metrics.position_y" }),
-        .member = ecs_lookup_fullpath(world, "Position.y"),
+        .member = ecs_lookup(world, "Position.y"),
         .kind = EcsGauge,
         .brief = "Position y"
     });
@@ -1750,7 +1750,7 @@ void Metrics_id_target_count(void) {
     ecs_progress(world, 1);
 
     {
-        ecs_entity_t red = ecs_lookup_fullpath(world, "metrics.color.Red");
+        ecs_entity_t red = ecs_lookup(world, "metrics.color.Red");
         test_assert(red != 0);
         const EcsMetricValue *v = ecs_get(world, red, EcsMetricValue);
         test_assert(v != NULL);
@@ -1758,7 +1758,7 @@ void Metrics_id_target_count(void) {
     }
 
     {
-        ecs_entity_t green = ecs_lookup_fullpath(world, "metrics.color.Green");
+        ecs_entity_t green = ecs_lookup(world, "metrics.color.Green");
         test_assert(green != 0);
         const EcsMetricValue *v = ecs_get(world, green, EcsMetricValue);
         test_assert(v != NULL);
@@ -1766,7 +1766,7 @@ void Metrics_id_target_count(void) {
     }
 
     {
-        ecs_entity_t blue = ecs_lookup_fullpath(world, "metrics.color.Blue");
+        ecs_entity_t blue = ecs_lookup(world, "metrics.color.Blue");
         test_assert(blue != 0);
         const EcsMetricValue *v = ecs_get(world, blue, EcsMetricValue);
         test_assert(v != NULL);
@@ -1792,7 +1792,7 @@ void Metrics_metric_instance_has_doc_name(void) {
 
     ecs_entity_t m = ecs_metric(world, {
         .entity = ecs_entity(world, { .name = "metrics.position_y" }),
-        .member = ecs_lookup_fullpath(world, "Position.y"),
+        .member = ecs_lookup(world, "Position.y"),
         .kind = EcsGauge
     });
     test_assert(m != 0);
@@ -1886,6 +1886,534 @@ void Metrics_metric_nested_member(void) {
     }
 
     test_bool(false, ecs_children_next(&it));
+
+    ecs_fini(world);
+}
+
+void Metrics_metric_nested_member_counter(void) {
+    typedef struct {
+        float x, y;
+    } Point;
+
+    typedef struct {
+        float dummy;
+        Point position;
+    } Position;
+
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsMetrics);
+
+    ECS_COMPONENT(world, Point);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Point),
+        .members = {
+            { "x", ecs_id(ecs_f32_t) },
+            { "y", ecs_id(ecs_f32_t) },
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            { "dummy", ecs_id(ecs_f32_t) },
+            { "position", ecs_id(Point) },
+        }
+    });
+
+    ecs_entity_t m = ecs_metric(world, {
+        .entity = ecs_entity(world, { .name = "metrics.position_y" }),
+        .id = ecs_id(Position),
+        .dotmember = "position.y",
+        .kind = EcsCounter
+    });
+
+    test_assert(m != 0);
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_set(world, e1, Position, {10, {20, 30}});
+
+    ecs_progress(world, 0);
+    
+    ecs_iter_t it = ecs_children(world, m);
+    test_bool(true, ecs_children_next(&it));
+    test_uint(it.count, 1);
+    {
+        ecs_entity_t e = it.entities[0];
+        test_assert(ecs_has_pair(world, e, EcsMetric, EcsCounter));
+        const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
+        const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
+        test_assert(src != NULL);
+        test_assert(inst != NULL);
+        test_uint(src->entity, e1);
+        test_int(inst->value, 30);
+
+        test_str(ecs_doc_get_name(world, e), "e1");
+    }
+
+    test_bool(false, ecs_children_next(&it));
+
+    ecs_fini(world);
+}
+
+void Metrics_metric_nested_member_counter_increment(void) {
+    typedef struct {
+        float x, y;
+    } Point;
+
+    typedef struct {
+        float dummy;
+        Point position;
+    } Position;
+
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsMetrics);
+
+    ECS_COMPONENT(world, Point);
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Point),
+        .members = {
+            { "x", ecs_id(ecs_f32_t) },
+            { "y", ecs_id(ecs_f32_t) },
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            { "dummy", ecs_id(ecs_f32_t) },
+            { "position", ecs_id(Point) },
+        }
+    });
+
+    ecs_entity_t m = ecs_metric(world, {
+        .entity = ecs_entity(world, { .name = "metrics.position_y" }),
+        .id = ecs_id(Position),
+        .dotmember = "position.y",
+        .kind = EcsCounterIncrement
+    });
+
+    test_assert(m != 0);
+
+    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_set(world, e1, Position, {10, {20, 30}});
+
+    ecs_progress(world, 1);
+    
+    {
+        ecs_iter_t it = ecs_children(world, m);
+        test_bool(true, ecs_children_next(&it));
+        test_uint(it.count, 1);
+        {
+            ecs_entity_t e = it.entities[0];
+            test_assert(ecs_has_pair(world, e, EcsMetric, EcsCounterIncrement));
+            const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
+            const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
+            test_assert(src != NULL);
+            test_assert(inst != NULL);
+            test_uint(src->entity, e1);
+            test_int(inst->value, 30);
+
+            test_str(ecs_doc_get_name(world, e), "e1");
+        }
+
+        test_bool(false, ecs_children_next(&it));
+    }
+
+    ecs_progress(world, 1);
+
+    {
+        ecs_iter_t it = ecs_children(world, m);
+        test_bool(true, ecs_children_next(&it));
+        test_uint(it.count, 1);
+        {
+            ecs_entity_t e = it.entities[0];
+            test_assert(ecs_has_pair(world, e, EcsMetric, EcsCounterIncrement));
+            const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
+            const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
+            test_assert(src != NULL);
+            test_assert(inst != NULL);
+            test_uint(src->entity, e1);
+            test_int(inst->value, 60);
+
+            test_str(ecs_doc_get_name(world, e), "e1");
+        }
+
+        test_bool(false, ecs_children_next(&it));
+    }
+
+    ecs_fini(world);
+}
+
+void Metrics_id_w_member_same_type(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsMetrics);
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            { "x", ecs_id(ecs_f32_t) },
+            { "y", ecs_id(ecs_f32_t) },
+        }
+    });
+
+    ecs_entity_t m = ecs_metric(world, {
+        .entity = ecs_entity(world, { .name = "metrics.position_y" }),
+        .id = ecs_id(Position),
+        .member = ecs_lookup(world, "Position.y"),
+        .kind = EcsGauge
+    });
+    test_assert(m != 0);
+
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+
+    ecs_progress(world, 0);
+    
+    ecs_iter_t it = ecs_children(world, m);
+    test_bool(true, ecs_children_next(&it));
+    test_uint(it.count, 1);
+    {
+        ecs_entity_t e = it.entities[0];
+        test_assert(ecs_has_pair(world, e, EcsMetric, EcsGauge));
+        const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
+        const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
+        test_assert(src != NULL);
+        test_assert(inst != NULL);
+        test_uint(src->entity, e1);
+        test_int(inst->value, 20);
+    }
+
+    test_bool(false, ecs_children_next(&it));
+
+    ecs_fini(world);
+}
+
+void Metrics_id_w_member_mismatching_type(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsMetrics);
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            { "x", ecs_id(ecs_f32_t) },
+            { "y", ecs_id(ecs_f32_t) },
+        }
+    });
+
+    ecs_log_set_level(-4);
+    ecs_entity_t m = ecs_metric(world, {
+        .entity = ecs_entity(world, { .name = "metrics.position_y" }),
+        .id = ecs_id(Velocity),
+        .member = ecs_lookup(world, "Position.y"),
+        .kind = EcsGauge
+    });
+    test_assert(m == 0);
+
+    ecs_fini(world);
+}
+
+void Metrics_pair_member_rel_type(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsMetrics);
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            { "x", ecs_id(ecs_f32_t) },
+            { "y", ecs_id(ecs_f32_t) },
+        }
+    });
+
+    ecs_entity_t m = ecs_metric(world, {
+        .entity = ecs_entity(world, { .name = "metrics.position_y" }),
+        .id = ecs_pair_t(Position, Foo),
+        .member = ecs_lookup(world, "Position.y"),
+        .kind = EcsGauge
+    });
+    test_assert(m != 0);
+
+    ecs_entity_t e1 = ecs_set_pair(world, 0, Position, Foo, {10, 20});
+    ecs_set_pair(world, e1, Position, Bar, {1, 2});
+
+    ecs_progress(world, 0);
+    
+    ecs_iter_t it = ecs_children(world, m);
+    test_bool(true, ecs_children_next(&it));
+    test_uint(it.count, 1);
+    {
+        ecs_entity_t e = it.entities[0];
+        test_assert(ecs_has_pair(world, e, EcsMetric, EcsGauge));
+        const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
+        const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
+        test_assert(src != NULL);
+        test_assert(inst != NULL);
+        test_uint(src->entity, e1);
+        test_int(inst->value, 20);
+    }
+
+    test_bool(false, ecs_children_next(&it));
+
+    ecs_fini(world);
+}
+
+void Metrics_pair_member_tgt_type(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsMetrics);
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            { "x", ecs_id(ecs_f32_t) },
+            { "y", ecs_id(ecs_f32_t) },
+        }
+    });
+
+    ecs_entity_t m = ecs_metric(world, {
+        .entity = ecs_entity(world, { .name = "metrics.position_y" }),
+        .id = ecs_pair(Foo, ecs_id(Position)),
+        .member = ecs_lookup(world, "Position.y"),
+        .kind = EcsGauge
+    });
+    test_assert(m != 0);
+
+    ecs_entity_t e1 = ecs_set_pair_second(world, 0, Foo, Position, {10, 20});
+    ecs_set_pair_second(world, e1, Bar, Position, {1, 2});
+
+    ecs_progress(world, 0);
+    
+    ecs_iter_t it = ecs_children(world, m);
+    test_bool(true, ecs_children_next(&it));
+    test_uint(it.count, 1);
+    {
+        ecs_entity_t e = it.entities[0];
+        test_assert(ecs_has_pair(world, e, EcsMetric, EcsGauge));
+        const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
+        const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
+        test_assert(src != NULL);
+        test_assert(inst != NULL);
+        test_uint(src->entity, e1);
+        test_int(inst->value, 20);
+    }
+
+    test_bool(false, ecs_children_next(&it));
+
+    ecs_fini(world);
+}
+
+void Metrics_pair_dotmember_rel_type(void) {
+    typedef struct {
+        float x, y;
+    } Point;
+
+    typedef struct {
+        float dummy;
+        Point position;
+    } Position;
+
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsMetrics);
+
+    ECS_COMPONENT(world, Point);
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Point),
+        .members = {
+            { "x", ecs_id(ecs_f32_t) },
+            { "y", ecs_id(ecs_f32_t) },
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            { "dummy", ecs_id(ecs_f32_t) },
+            { "position", ecs_id(Point) },
+        }
+    });
+
+    ecs_entity_t m = ecs_metric(world, {
+        .entity = ecs_entity(world, { .name = "metrics.position_y" }),
+        .id = ecs_pair_t(Position, Foo),
+        .dotmember = "position.y",
+        .kind = EcsGauge
+    });
+    test_assert(m != 0);
+
+    ecs_entity_t e1 = ecs_set_pair(world, 0, Position, Foo, {0, {10, 20}});
+    ecs_set_pair(world, e1, Position, Bar, {0, {1, 2}});
+
+    ecs_progress(world, 0);
+    
+    ecs_iter_t it = ecs_children(world, m);
+    test_bool(true, ecs_children_next(&it));
+    test_uint(it.count, 1);
+    {
+        ecs_entity_t e = it.entities[0];
+        test_assert(ecs_has_pair(world, e, EcsMetric, EcsGauge));
+        const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
+        const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
+        test_assert(src != NULL);
+        test_assert(inst != NULL);
+        test_uint(src->entity, e1);
+        test_int(inst->value, 20);
+    }
+
+    test_bool(false, ecs_children_next(&it));
+
+    ecs_fini(world);
+}
+
+void Metrics_pair_dotmember_tgt_type(void) {
+    typedef struct {
+        float x, y;
+    } Point;
+
+    typedef struct {
+        float dummy;
+        Point position;
+    } Position;
+
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsMetrics);
+
+    ECS_COMPONENT(world, Point);
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Point),
+        .members = {
+            { "x", ecs_id(ecs_f32_t) },
+            { "y", ecs_id(ecs_f32_t) },
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            { "dummy", ecs_id(ecs_f32_t) },
+            { "position", ecs_id(Point) },
+        }
+    });
+
+    ecs_entity_t m = ecs_metric(world, {
+        .entity = ecs_entity(world, { .name = "metrics.position_y" }),
+        .id = ecs_pair(Foo, ecs_id(Position)),
+        .dotmember = "position.y",
+        .kind = EcsGauge
+    });
+    test_assert(m != 0);
+
+    ecs_entity_t e1 = ecs_set_pair_second(world, 0, Foo, Position, {0, {10, 20}});
+    ecs_set_pair_second(world, e1, Bar, Position, {0, {1, 2}});
+
+    ecs_progress(world, 0);
+    
+    ecs_iter_t it = ecs_children(world, m);
+    test_bool(true, ecs_children_next(&it));
+    test_uint(it.count, 1);
+    {
+        ecs_entity_t e = it.entities[0];
+        test_assert(ecs_has_pair(world, e, EcsMetric, EcsGauge));
+        const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
+        const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
+        test_assert(src != NULL);
+        test_assert(inst != NULL);
+        test_uint(src->entity, e1);
+        test_int(inst->value, 20);
+    }
+
+    test_bool(false, ecs_children_next(&it));
+
+    ecs_fini(world);
+}
+
+void Metrics_pair_member_counter_increment(void) {
+    ecs_world_t *world = ecs_init();
+    ECS_IMPORT(world, FlecsMetrics);
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            { "x", ecs_id(ecs_f32_t) },
+            { "y", ecs_id(ecs_f32_t) },
+        }
+    });
+
+    ecs_entity_t m = ecs_metric(world, {
+        .entity = ecs_entity(world, { .name = "metrics.position_y" }),
+        .id = ecs_pair_t(Position, Foo),
+        .member = ecs_lookup(world, "Position.y"),
+        .kind = EcsCounterIncrement
+    });
+    test_assert(m != 0);
+
+    ecs_entity_t e1 = ecs_set_pair(world, 0, Position, Foo, {10, 20});
+    ecs_set_pair(world, e1, Position, Bar, {1, 2});
+
+    ecs_progress(world, 1);
+    
+    {
+        ecs_iter_t it = ecs_children(world, m);
+        test_bool(true, ecs_children_next(&it));
+        test_uint(it.count, 1);
+        {
+            ecs_entity_t e = it.entities[0];
+            test_assert(ecs_has_pair(world, e, EcsMetric, EcsCounterIncrement));
+            const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
+            const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
+            test_assert(src != NULL);
+            test_assert(inst != NULL);
+            test_uint(src->entity, e1);
+            test_int(inst->value, 20);
+        }
+
+        test_bool(false, ecs_children_next(&it));
+    }
+
+    ecs_progress(world, 1);
+
+    {
+        ecs_iter_t it = ecs_children(world, m);
+        test_bool(true, ecs_children_next(&it));
+        test_uint(it.count, 1);
+        {
+            ecs_entity_t e = it.entities[0];
+            test_assert(ecs_has_pair(world, e, EcsMetric, EcsCounterIncrement));
+            const EcsMetricSource *src = ecs_get(world, e, EcsMetricSource);
+            const EcsMetricValue *inst = ecs_get(world, e, EcsMetricValue);
+            test_assert(src != NULL);
+            test_assert(inst != NULL);
+            test_uint(src->entity, e1);
+            test_int(inst->value, 40);
+        }
+
+        test_bool(false, ecs_children_next(&it));
+    }
 
     ecs_fini(world);
 }

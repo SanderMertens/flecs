@@ -26,11 +26,11 @@ ecs_entity_t do_import(world& world, const char *symbol) {
     ecs_set_scope(world, scope);
 
     // It should now be possible to lookup the module
-    ecs_entity_t m = ecs_lookup_symbol(world, symbol, true, false);
+    ecs_entity_t m = ecs_lookup_symbol(world, symbol, false, false);
     ecs_assert(m != 0, ECS_MODULE_UNDEFINED, symbol);
     ecs_assert(m == m_c, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_log_pop();     
+    ecs_log_pop();
 
     return m;
 }
@@ -40,13 +40,13 @@ flecs::entity import(world& world) {
     const char *symbol = _::symbol_name<T>();
 
     ecs_entity_t m = ecs_lookup_symbol(world, symbol, true, false);
-    
+
     if (!_::cpp_type<T>::registered(world)) {
 
         /* Module is registered with world, initialize static data */
         if (m) {
             _::cpp_type<T>::init(m, false);
-        
+
         /* Module is not yet registered, register it now */
         } else {
             m = _::do_import<T>(world, symbol);
@@ -65,9 +65,9 @@ flecs::entity import(world& world) {
 
 /**
  * @defgroup cpp_addons_modules Modules
- * @brief Modules organize components, systems and more in reusable units of code.
- * 
- * \ingroup cpp_addons
+ * @ingroup cpp_addons
+ * Modules organize components, systems and more in reusable units of code.
+ *
  * @{
  */
 

@@ -489,26 +489,6 @@ void flecs_sparse_remove(
     }
 }
 
-void flecs_sparse_set_generation(
-    ecs_sparse_t *sparse,
-    uint64_t index)
-{
-    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_page_t *page = flecs_sparse_get_or_create_page(sparse, PAGE(index));
-    
-    uint64_t index_w_gen = index;
-    flecs_sparse_strip_generation(&index);
-    int32_t offset = OFFSET(index);
-    int32_t dense = page->sparse[offset];
-
-    if (dense) {
-        /* Increase generation */
-        ecs_vec_get_t(&sparse->dense, uint64_t, dense)[0] = index_w_gen;
-    } else {
-        /* Element is not paired and thus not alive, nothing to be done */
-    }
-}
-
 void* flecs_sparse_get_dense(
     const ecs_sparse_t *sparse,
     ecs_size_t size,

@@ -497,7 +497,7 @@ void ComponentLifecycle_struct_w_vector_set_2_remove_w_tag(void) {
     test_assert(ptr2 == NULL);
 }
 
-void ComponentLifecycle_get_mut_new(void) {
+void ComponentLifecycle_ensure_new(void) {
     flecs::world world;
 
     world.component<Pod>();
@@ -505,8 +505,7 @@ void ComponentLifecycle_get_mut_new(void) {
     auto e = world.entity();
     test_assert(e.id() != 0);
 
-    Pod* value = e.get_mut<Pod>();
-    test_assert(value != NULL);
+    e.ensure<Pod>();
 
     Pod::ctor_invoked = 1;
     Pod::dtor_invoked = 0;
@@ -521,7 +520,7 @@ void ComponentLifecycle_get_mut_new(void) {
     Pod::move_invoked = 0;    
 }
 
-void ComponentLifecycle_get_mut_existing(void) {
+void ComponentLifecycle_ensure_existing(void) {
     flecs::world world;
 
     world.component<Pod>();
@@ -529,18 +528,16 @@ void ComponentLifecycle_get_mut_existing(void) {
     auto e = world.entity();
     test_assert(e.id() != 0);
 
-    Pod* value = e.get_mut<Pod>();
-    test_assert(value != NULL);
+    e.ensure<Pod>();
 
     Pod::ctor_invoked = 1;
     Pod::dtor_invoked = 0;
     Pod::copy_invoked = 0;
     Pod::move_invoked = 0;
 
-    value = e.get_mut<Pod>();
-    test_assert(value != NULL);
+    e.ensure<Pod>();
 
-    /* Repeated calls to get_mut should not invoke constructor */
+    /* Repeated calls to ensure should not invoke constructor */
     Pod::ctor_invoked = 1;
     Pod::dtor_invoked = 0;
     Pod::copy_invoked = 0;
@@ -1045,7 +1042,7 @@ public:
     CtorDtor_w_MoveAssign(CtorDtor_w_MoveAssign&& obj) = default;
     CtorDtor_w_MoveAssign& operator=(const CtorDtor_w_MoveAssign& obj) = default;
 
-    CtorDtor_w_MoveAssign& operator=(CtorDtor_w_MoveAssign&& obj) {
+    CtorDtor_w_MoveAssign& operator=(CtorDtor_w_MoveAssign&& obj) noexcept {
         move_value = this->x_;
 
         this->x_ = obj.x_;

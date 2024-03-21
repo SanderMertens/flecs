@@ -26,7 +26,7 @@ typedef struct ecs_table_event_t {
     /* Event match */
     ecs_entity_t event;
 
-    /* If the nubmer of fields gets out of hand, this can be turned into a union
+    /* If the number of fields gets out of hand, this can be turned into a union
      * but since events are very temporary objects, this works for now and makes
      * initializing an event a bit simpler. */
 } ecs_table_event_t;
@@ -62,7 +62,6 @@ typedef struct ecs_column_t {
 /** Table data */
 struct ecs_data_t {
     ecs_vec_t entities;              /* Entity ids */
-    ecs_vec_t records;               /* Ptrs to records in entity index */
     ecs_column_t *columns;           /* Component data */
 };
 
@@ -144,7 +143,6 @@ int32_t flecs_table_append(
     ecs_world_t *world,
     ecs_table_t *table,
     ecs_entity_t entity,
-    ecs_record_t *record,
     bool construct,
     bool on_add);
 
@@ -257,5 +255,11 @@ int32_t flecs_table_column_to_union_index(
 void flecs_table_traversable_add(
     ecs_table_t *table,
     int32_t value);
+
+ecs_vec_t* flecs_table_entities(
+    ecs_table_t *table);
+
+ecs_entity_t* flecs_table_entities_array(
+    ecs_table_t *table);
 
 #endif

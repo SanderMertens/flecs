@@ -10,9 +10,9 @@
 
 /**
  * @defgroup c_addons_stats Stats
- * @brief Collection of statistics for world, queries, systems and pipelines.
- * 
- * \ingroup c_addons
+ * @ingroup c_addons
+ * Collection of statistics for world, queries, systems and pipelines.
+ *
  * @{
  */
 
@@ -53,26 +53,20 @@ typedef struct ecs_world_stats_t {
         ecs_metric_t not_alive_count;     /**< Number of not alive (recyclable) entity ids */
     } entities;
 
-    /* Components and ids */
+    /* Component ids */
     struct {
-        ecs_metric_t count;               /**< Number of ids (excluding wildcards) */
         ecs_metric_t tag_count;           /**< Number of tag ids (ids without data) */
         ecs_metric_t component_count;     /**< Number of components ids (ids with data) */
         ecs_metric_t pair_count;          /**< Number of pair ids */
-        ecs_metric_t wildcard_count;      /**< Number of wildcard ids */
         ecs_metric_t type_count;          /**< Number of registered types */
         ecs_metric_t create_count;        /**< Number of times id has been created */
         ecs_metric_t delete_count;        /**< Number of times id has been deleted */
-    } ids;
+    } components;
 
     /* Tables */
     struct {
         ecs_metric_t count;                /**< Number of tables */
         ecs_metric_t empty_count;          /**< Number of empty tables */
-        ecs_metric_t tag_only_count;       /**< Number of tables with only tags */
-        ecs_metric_t trivial_only_count;   /**< Number of tables with only trivial components */
-        ecs_metric_t record_count;         /**< Number of table cache records */
-        ecs_metric_t storage_count;        /**< Number of table storages */
         ecs_metric_t create_count;         /**< Number of times table has been created */
         ecs_metric_t delete_count;         /**< Number of times table has been deleted */
     } tables;
@@ -91,7 +85,7 @@ typedef struct ecs_world_stats_t {
         ecs_metric_t delete_count;
         ecs_metric_t clear_count;
         ecs_metric_t set_count;
-        ecs_metric_t get_mut_count;
+        ecs_metric_t ensure_count;
         ecs_metric_t modified_count;
         ecs_metric_t other_count;
         ecs_metric_t discard_count;
@@ -139,23 +133,6 @@ typedef struct ecs_world_stats_t {
         ecs_metric_t stack_outstanding_alloc_count; /**< Difference between allocs & frees */
     } memory;
 
-    /* REST statistics */
-    struct {
-        ecs_metric_t request_count;
-        ecs_metric_t entity_count;
-        ecs_metric_t entity_error_count;
-        ecs_metric_t query_count;
-        ecs_metric_t query_error_count;
-        ecs_metric_t query_name_count;
-        ecs_metric_t query_name_error_count;
-        ecs_metric_t query_name_from_cache_count;
-        ecs_metric_t enable_count;
-        ecs_metric_t enable_error_count;
-        ecs_metric_t world_stats_count;
-        ecs_metric_t pipeline_stats_count;
-        ecs_metric_t stats_error_count;
-    } rest;
-
     /* HTTP statistics */
     struct {
         ecs_metric_t request_received_count;
@@ -171,27 +148,27 @@ typedef struct ecs_world_stats_t {
 
     int64_t last_;
 
-    /** Current position in ringbuffer */
+    /** Current position in ring buffer */
     int32_t t;
 } ecs_world_stats_t;
 
-/** Statistics for a single query (use ecs_query_stats_get) */
+/** Statistics for a single query (use ecs_query_stats_get()) */
 typedef struct ecs_query_stats_t {
     int64_t first_;
-    ecs_metric_t matched_table_count;       /**< Matched non-empty tables */    
+    ecs_metric_t matched_table_count;       /**< Matched non-empty tables */
     ecs_metric_t matched_empty_table_count; /**< Matched empty tables */
     ecs_metric_t matched_entity_count;      /**< Number of matched entities */
+    ecs_metric_t eval_count;                /**< Number of times query is evaluated */
     int64_t last_;
 
-    /** Current position in ringbuffer */
-    int32_t t; 
+    /** Current position in ring buffer */
+    int32_t t;
 } ecs_query_stats_t;
 
-/** Statistics for a single system (use ecs_system_stats_get) */
+/** Statistics for a single system (use ecs_system_stats_get()) */
 typedef struct ecs_system_stats_t {
     int64_t first_;
     ecs_metric_t time_spent;       /**< Time spent processing a system */
-    ecs_metric_t invoke_count;     /**< Number of times system is invoked */
     int64_t last_;
 
     bool task;                     /**< Is system a task */
@@ -219,7 +196,7 @@ typedef struct ecs_pipeline_stats_t {
     /** Vector with system ids of all systems in the pipeline. The systems are
      * stored in the order they are executed. Merges are represented by a 0. */
     ecs_vec_t systems;
-    
+
     /** Vector with sync point stats */
     ecs_vec_t sync_points;
 
@@ -227,7 +204,7 @@ typedef struct ecs_pipeline_stats_t {
      * entry in the map exists of type ecs_system_stats_t. */
     ecs_map_t system_stats;
 
-    /** Current position in ringbuffer */
+    /** Current position in ring buffer */
     int32_t t;
 
     int32_t system_count;        /**< Number of systems in pipeline */
@@ -240,13 +217,13 @@ typedef struct ecs_pipeline_stats_t {
  * @param world The world.
  * @param stats Out parameter for statistics.
  */
-FLECS_API 
+FLECS_API
 void ecs_world_stats_get(
     const ecs_world_t *world,
     ecs_world_stats_t *stats);
 
 /** Reduce source measurement window into single destination measurement. */
-FLECS_API 
+FLECS_API
 void ecs_world_stats_reduce(
     ecs_world_stats_t *dst,
     const ecs_world_stats_t *src);
@@ -269,7 +246,7 @@ void ecs_world_stats_copy_last(
     ecs_world_stats_t *dst,
     const ecs_world_stats_t *src);
 
-FLECS_API 
+FLECS_API
 void ecs_world_stats_log(
     const ecs_world_t *world,
     const ecs_world_stats_t *stats);
@@ -281,14 +258,14 @@ void ecs_world_stats_log(
  * @param query The query.
  * @param stats Out parameter for statistics.
  */
-FLECS_API 
+FLECS_API
 void ecs_query_stats_get(
     const ecs_world_t *world,
     const ecs_query_t *query,
     ecs_query_stats_t *stats);
 
 /** Reduce source measurement window into single destination measurement. */
-FLECS_API 
+FLECS_API
 void ecs_query_stats_reduce(
     ecs_query_stats_t *dst,
     const ecs_query_stats_t *src);
@@ -320,14 +297,14 @@ void ecs_query_stats_copy_last(
  * @param stats Out parameter for statistics.
  * @return true if success, false if not a system.
  */
-FLECS_API 
+FLECS_API
 bool ecs_system_stats_get(
     const ecs_world_t *world,
     ecs_entity_t system,
     ecs_system_stats_t *stats);
 
 /** Reduce source measurement window into single destination measurement */
-FLECS_API 
+FLECS_API
 void ecs_system_stats_reduce(
     ecs_system_stats_t *dst,
     const ecs_system_stats_t *src);
@@ -360,14 +337,14 @@ void ecs_system_stats_copy_last(
  * @param stats Out parameter for statistics.
  * @return true if success, false if not a pipeline.
  */
-FLECS_API 
+FLECS_API
 bool ecs_pipeline_stats_get(
     ecs_world_t *world,
     ecs_entity_t pipeline,
     ecs_pipeline_stats_t *stats);
 
 /** Free pipeline stats.
- * 
+ *
  * @param stats The stats to free.
  */
 FLECS_API
@@ -375,7 +352,7 @@ void ecs_pipeline_stats_fini(
     ecs_pipeline_stats_t *stats);
 
 /** Reduce source measurement window into single destination measurement */
-FLECS_API 
+FLECS_API
 void ecs_pipeline_stats_reduce(
     ecs_pipeline_stats_t *dst,
     const ecs_pipeline_stats_t *src);
@@ -395,7 +372,7 @@ void ecs_pipeline_stats_repeat_last(
 /** Copy last measurement to destination.
  * This operation copies the last measurement into the destination. It does not
  * modify the cursor.
- * 
+ *
  * @param dst The metrics.
  * @param src The metrics to copy.
  */
@@ -407,7 +384,7 @@ void ecs_pipeline_stats_copy_last(
 #endif
 
 /** Reduce all measurements from a window into a single measurement. */
-FLECS_API 
+FLECS_API
 void ecs_metric_reduce(
     ecs_metric_t *dst,
     const ecs_metric_t *src,

@@ -640,7 +640,7 @@ ecs_entity_t child = ecs_entity(world, {
 // Create the hierarchy
 ecs_add_pair(world, child, EcsChildOf, parent);
 
-child = ecs_lookup_fullpath(world, "Parent::Child"); // true
+child = ecs_lookup(world, "Parent::Child"); // true
 child = ecs_lookup_path(world, parent, "Child"); // true
 ```
 ```cpp

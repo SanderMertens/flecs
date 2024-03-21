@@ -35,13 +35,47 @@ Flecs and EnTT both are ECS libraries, but other than that they are different in
 - Entity destruct are faster in Flecs (especially for worlds/registries with lots of components)
 - Iterating a single entity's components are faster in Flecs
 
-When doing a benchmark comparison don't rely on someone elses numbers, always test for your own use case!
+When doing a benchmark comparison don't rely on someone else's numbers, always test for your own use case!
 
 ## Is Flecs used for commercial projects?
-Yes, Flecs is used commercially.
+Yes, Flecs is used commercially (see the README).
 
-## Why are my queries so slow?
-This is likely because you're creating a query in a loop. Queries should be created once, and iterated often.
+## Why are queries slow?
+This is likely because queries (`flecs::query`) are created repeatedly in a loop or system. Queries are the fastest way to iterate over entities, but are expensive to create, so make sure to create them in advance:
+
+```cpp
+// GOOD
+flecs::query<Position> q = world.query<Position>();
+
+world.system()
+    .iter([=](flecs::iter& it) {
+        q.each([&](Position& p) {
+            // ...
+        });
+    });
+```
+```cpp
+// BAD
+world.system()
+    .iter([](flecs::iter& it) {
+        flecs::query<Position> q = world.query<Position>();
+        q.each([&](Position& p) {
+            // ...
+        });
+    });
+```
+
+## Why are queries taking up a lot of RAM?
+Likely because of the same reason as above. Queries are registered with the world, and unless they are deleted explicitly they will take up space. To delete a query, do:
+
+```cpp
+q.destruct();
+```
+
+## Why is my system called multiple times per frame?
+System functions are called for each matching archetype (see above for "What is an archetype"). In short, the reason for this is that it provides systems with direct access to component arrays.
+
+If you have code that needs to run only once per frame or you want to take control over the entire iteration, take a look the `custom_runner` examples, which show how to use the `run` callback.
 
 ## Can Flecs be compiled to web assembly?
 Yes it can! See the [quickstart manual](Quickstart.md) for more information.
@@ -89,7 +123,7 @@ Not all addons are useful in any project. You can customize a Flecs build to onl
 
 ## Why does the explorer not work?
 Make sure that:
-- The REST API is enabled (see the [REST manual](https://www.flecs.dev/flecs/md_docs_RestApi.html))
+- The REST API is enabled (see the [REST manual](RestApi.md))
 - You can reach the REST API by testing http://localhost:27750/entity/flecs
 - You call `ecs_progress`/`world::progress` in your main loop
 
@@ -120,7 +154,7 @@ You can! Systems are an optional addon that can be disabled. You can build appli
 This is likely because the entity has a parent. A lookup by name requires you to provide the full path to an entity, like:
 
 ```c
-ecs_lookup_fullpath(world, "parent.child");
+ecs_lookup(world, "parent.child");
 ```
 
 or in C++:
