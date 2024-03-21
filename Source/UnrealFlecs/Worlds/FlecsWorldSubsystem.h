@@ -10,9 +10,7 @@
 #include "flecs.h"
 #include "FlecsWorld.h"
 #include "FlecsWorldSettings.h"
-#include "Components/FlecsScriptClassComponent.h"
-#include "Components/FlecsScriptStructComponent.h"
-#include "Components/FlecsTypeMapComponent.h"
+#include "Components/FlecsWorldPtrComponent.h"
 #include "Entities/FlecsEntityHandle.h"
 #include "General/FlecsDeveloperSettings.h"
 #include "SolidMacros/Concepts/SolidConcepts.h"
@@ -77,9 +75,9 @@ public:
 
 	virtual void Deinitialize() override
 	{
-		for (FFlecsWorld& World : Worlds)
+		for (const UFlecsWorld* World : Worlds)
 		{
-			World.DestroyWorld();
+			World->DestroyWorld();
 		}
 		
 		Super::Deinitialize();
@@ -92,197 +90,38 @@ public:
 
 	virtual void Tick(float DeltaTime) override
 	{
-		for (FFlecsWorld& World : Worlds)
+		for (const UFlecsWorld* World : Worlds)
 		{
-			if (World.GetFlecsWorld().progress(DeltaTime))
+			if (World->Progress())
 			{
-				World.GetFlecsWorld().merge();
+				//World->Merge();
 			}
 		}
-	}
-
-	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	FORCEINLINE bool HasScriptStruct(UScriptStruct* ScriptStruct) const
-	{
-		return GetDefaultWorld(this)
-			.GetSingletonRef<FFlecsTypeMapComponent>()->ScriptStructMap.contains(ScriptStruct);
-	}
-
-	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	FORCEINLINE bool HasScriptClass(const TSubclassOf<UObject> ScriptClass) const
-	{
-		return GetDefaultWorld(this)
-			.GetSingletonRef<FFlecsTypeMapComponent>()->ScriptClassMap.contains(ScriptClass);
-	}
-
-	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	FORCEINLINE FFlecsEntityHandle GetScriptStructEntity(UScriptStruct* ScriptStruct) const
-	{
-		return GetDefaultWorld(this)
-			.GetSingletonRef<FFlecsTypeMapComponent>()->ScriptStructMap.at(ScriptStruct);
-	}
-
-	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	FORCEINLINE FFlecsEntityHandle GetScriptClassEntity(const TSubclassOf<UObject> ScriptClass) const
-	{
-		return GetDefaultWorld(this)
-			.GetSingletonRef<FFlecsTypeMapComponent>()->ScriptClassMap.at(ScriptClass);
-	}
-
-	template <Solid::TStaticStructConcept T>
-	FORCEINLINE NO_DISCARD FFlecsEntityHandle GetScriptStructEntity() const
-	{
-		return GetScriptStructEntity(T::StaticStruct());
-	}
-	
-	template <Solid::TStaticClassConcept T>
-	FORCEINLINE NO_DISCARD FFlecsEntityHandle GetScriptClassEntity() const
-	{
-		return GetScriptClassEntity(T::StaticClass());
-	}
-
-	template <Solid::TStaticStructConcept T>
-	FORCEINLINE NO_DISCARD bool HasScriptStruct() const
-	{
-		return HasScriptStruct(T::StaticStruct());
-	}
-
-	template <Solid::TStaticClassConcept T>
-	FORCEINLINE NO_DISCARD bool HasScriptClass() const
-	{
-		return HasScriptClass(T::StaticClass());
-	}
-
-	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
-	FORCEINLINE FFlecsEntityHandle RegisterScriptStruct(UScriptStruct* ScriptStruct) const
-	{
-		if UNLIKELY_IF(ScriptStruct == nullptr)
-		{
-			return FFlecsEntityHandle();
-		}
-		
-		const flecs::entity ScriptStructComponent
-			= GetFlecsWorld(DEFAULT_FLECS_WORLD_NAME).GetFlecsWorld().entity(TCHAR_TO_ANSI(*ScriptStruct->GetFName().ToString()))
-			                                         .set<flecs::Component>(
-			                                         {
-				                                         ScriptStruct->GetStructureSize(),
-				                                         ScriptStruct->GetMinAlignment()
-			                                         })
-			                                         .set<FFlecsScriptStructComponent>(
-			                                         {
-				                                         ScriptStruct
-			                                         });
-
-		const FFlecsEntityHandle Handle(ScriptStructComponent);
-		GetDefaultWorld(this).GetSingletonRef<FFlecsTypeMapComponent>()->ScriptStructMap.emplace(ScriptStruct, Handle);
-
-		if (ScriptStruct->GetSuperStruct())
-		{
-			if (!HasScriptStruct(static_cast<UScriptStruct*>(ScriptStruct->GetSuperStruct())))
-			{
-				RegisterScriptStruct(static_cast<UScriptStruct*>(ScriptStruct->GetSuperStruct()));
-			}
-		}
-		
-		return Handle;
-	}
-
-	template <Solid::TStaticStructConcept T>
-	FORCEINLINE FFlecsEntityHandle RegisterScriptStruct() const
-	{
-		return RegisterScriptStruct(T::StaticStruct());
-	}
-
-	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
-	FORCEINLINE FFlecsEntityHandle RegisterScriptClass(TSubclassOf<UObject> ScriptClass) const
-	{
-		if UNLIKELY_IF(ScriptClass == nullptr)
-		{
-			return FFlecsEntityHandle();
-		}
-		
-		const flecs::entity ScriptClassComponent
-			= GetFlecsWorld(DEFAULT_FLECS_WORLD_NAME).GetFlecsWorld().entity(TCHAR_TO_ANSI(*ScriptClass->GetFName().ToString()))
-			                                        .set<flecs::Component>(
-			                                        {
-				                                        ScriptClass->GetStructureSize(),
-				                                        ScriptClass->GetMinAlignment()
-			                                        })
-			                                        .set<FFlecsScriptClassComponent>(
-			                                        {
-				                                        ScriptClass
-			                                        });
-
-		const FFlecsEntityHandle Handle(ScriptClassComponent);
-		GetDefaultWorld(this).GetSingletonRef<FFlecsTypeMapComponent>()->ScriptClassMap.emplace(ScriptClass, Handle);
-
-		if (ScriptClass->GetSuperClass())
-		{
-			if (!HasScriptClass(ScriptClass->GetSuperClass()))
-			{
-				MAYBE_UNUSED FFlecsEntityHandle Entity = RegisterScriptClass(ScriptClass->GetSuperClass());
-			}
-		}
-		
-		return Handle;
-	}
-
-	template <Solid::TStaticClassConcept T>
-	FORCEINLINE FFlecsEntityHandle RegisterScriptClass() const
-	{
-		return RegisterScriptClass(T::StaticClass());
-	}
-
-	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
-	FORCEINLINE FFlecsEntityHandle RegisterComponentType(const FName& Name, const int32 Size, const int32 Alignment) const
-	{
-		const flecs::entity Component = GetFlecsWorld(DEFAULT_FLECS_WORLD_NAME)
-			.GetFlecsWorld().entity(TCHAR_TO_ANSI(*Name.ToString()))
-			.set<flecs::Component>({ Size, Alignment });
-
-		return FFlecsEntityHandle(Component);
-	}
-
-	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
-	FORCEINLINE FFlecsEntityHandle ObtainComponentTypeStruct(UScriptStruct* ScriptStruct) const
-	{
-		if (HasScriptStruct(ScriptStruct))
-		{
-			return GetScriptStructEntity(ScriptStruct);
-		}
-
-		return RegisterScriptStruct(ScriptStruct);
-	}
-
-	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
-	FORCEINLINE FFlecsEntityHandle ObtainComponentTypeClass(const TSubclassOf<UObject> ScriptClass) const
-	{
-		if (HasScriptClass(ScriptClass))
-		{
-			return GetScriptClassEntity(ScriptClass);
-		}
-
-		return RegisterScriptClass(ScriptClass);
 	}
 	
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	FORCEINLINE FFlecsWorld& CreateWorld(const FName& Name, const FFlecsWorldSettings& Settings)
+	FORCEINLINE UFlecsWorld* CreateWorld(const FName& Name, const FFlecsWorldSettings& Settings)
 	{
 		checkf(!HasWorld(Name), TEXT("World with name %s already exists"), *Name.ToString());
 		checkf(Name != NAME_None, TEXT("World name cannot be NAME_None"));
-		
-		flecs::world* NewWorld = new flecs::world();
-		FFlecsWorld NewFlecsWorld(std::move(*NewWorld));
-		
-		WorldNameMap.emplace(Name, &NewFlecsWorld);
-		
-		NewFlecsWorld.SetName(Name);
-		
-		NewFlecsWorld.SetContext(this);
 
-		NewFlecsWorld.SetAutoMerge(Settings.bAutoMerge);
+		flecs::world NewWorld = flecs::world();
 
-		Worlds.emplace_back(NewFlecsWorld);
+		UFlecsWorld* NewFlecsWorld = NewObject<UFlecsWorld>(this);
+		NewFlecsWorld->SetWorld(std::move(NewWorld));
+		
+		Worlds.Add(NewFlecsWorld);
+
+		NewFlecsWorld->SetName(Name);
+		
+		NewFlecsWorld->SetContext(this);
+
+		NewFlecsWorld->SetAutoMerge(Settings.bAutoMerge);
+
+		NewFlecsWorld->SetSingleton<FFlecsWorldPtrComponent>(FFlecsWorldPtrComponent
+			{ NewFlecsWorld, GetWorld() });
+		
+		WorldNameMap.emplace(Name, NewFlecsWorld);
 
 		#if WITH_EDITOR
 		
@@ -293,9 +132,9 @@ public:
 		
 		#endif // WITH_EDITOR
 
-		GetDefaultWorld(this).AddSingleton<FFlecsTypeMapComponent>();
+		GetDefaultWorld(this)->AddSingleton<FFlecsTypeMapComponent>();
 		
-		return Worlds.back();
+		return Worlds.Last();
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
@@ -307,7 +146,7 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | REST API")
 	FORCEINLINE void ImportRestModule(const FName& WorldName, const bool bUseMonitoring, const FFlecsRestSettings& Settings) const
 	{
-		GetFlecsWorld(WorldName).SetSingleton<flecs::Rest>(
+		GetFlecsWorld(WorldName)->SetSingleton<flecs::Rest>(
 				flecs::Rest { static_cast<uint16>(Settings.Port), TCHAR_TO_ANSI(*Settings.IPAddress) });
 
 		if (bUseMonitoring)
@@ -319,7 +158,7 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
 	FORCEINLINE void ImportMonitoringModule(const FName& WorldName) const
 	{
-		GetFlecsWorld(WorldName).ImportModule<flecs::monitor>();
+		GetFlecsWorld(WorldName)->ImportModule<flecs::monitor>();
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
@@ -329,45 +168,38 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	FORCEINLINE void DestroyWorld(FFlecsWorld& World)
+	FORCEINLINE void DestroyWorld(UFlecsWorld* World)
 	{
-		FFlecsWorld* WorldPtr = WorldNameMap.at(World.GetName());
-		WorldNameMap.erase(World.GetName());
+		WorldNameMap.erase(World->GetWorldName());
 
-		for (std::vector<FFlecsWorld>::iterator It = Worlds.begin(); It != Worlds.end(); ++It)
+		for (int32 i = 0; i < Worlds.Num(); ++i)
 		{
-			if (&*It == WorldPtr)
+			if (Worlds[i] == World)
 			{
-				Worlds.erase(It);
+				Worlds.RemoveAt(i);
 				break;
 			}
 		}
 
-		WorldPtr->DestroyWorld();
+		World->DestroyWorld();
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	FORCEINLINE FFlecsWorld& GetFlecsWorld(const FName& Name) const
+	FORCEINLINE UFlecsWorld* GetFlecsWorld(const FName& Name) const
 	{
 		checkf(HasWorld(Name), TEXT("World with name %s does not exist"), *Name.ToString());
-		return *WorldNameMap.at(Name);
-	}
-
-	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	static FORCEINLINE FName GetWorldName(const FFlecsWorld& World)
-	{
-		return World.GetName();
+		return WorldNameMap.at(Name);
 	}
 	
 	UFUNCTION(BlueprintCallable, Category = "Flecs", Meta = (WorldContext = "WorldContextObject"))
-	static FORCEINLINE FFlecsWorld& GetWorldStatic(UObject* WorldContextObject, const FName& Name)
+	static FORCEINLINE UFlecsWorld* GetWorldStatic(UObject* WorldContextObject, const FName& Name)
 	{
 		return GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::Assert)
 		              ->GetSubsystem<UFlecsWorldSubsystem>()->GetFlecsWorld(Name);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs", Meta = (WorldContext = "WorldContextObject"))
-	static FORCEINLINE FFlecsWorld& GetDefaultWorld(const UObject* WorldContextObject)
+	static FORCEINLINE UFlecsWorld* GetDefaultWorld(const UObject* WorldContextObject)
 	{
 		return GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::Assert)
 		              ->GetSubsystem<UFlecsWorldSubsystem>()->GetFlecsWorld(DEFAULT_FLECS_WORLD_NAME);
@@ -379,8 +211,10 @@ public:
 	}
 
 protected:
-	std::vector<FFlecsWorld> Worlds;
-	robin_hood::unordered_flat_map<FName, FFlecsWorld*> WorldNameMap;
+	UPROPERTY()
+	TArray<TObjectPtr<UFlecsWorld>> Worlds;
+
+	robin_hood::unordered_flat_map<FName, UFlecsWorld*> WorldNameMap;
 
 	UPROPERTY()
 	TWeakObjectPtr<const UFlecsDeveloperSettings> DeveloperSettings;

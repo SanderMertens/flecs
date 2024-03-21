@@ -9,8 +9,7 @@
 #include "SolidMacros/Macros.h"
 #include "FlecsEntityHandle.generated.h"
 
-class UFlecsWorldSubsystem;
-struct FFlecsWorld;
+class UFlecsWorld;
 
 USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsEntityHandle
@@ -37,9 +36,10 @@ public:
 	FORCEINLINE operator bool() const { return IsValid(); }
 
 	FORCEINLINE NO_DISCARD int32 GetId() const { return GetEntity().id(); }
-
-	FORCEINLINE NO_DISCARD UFlecsWorldSubsystem* GetFlecsWorldSubsystem() const;
-	FORCEINLINE NO_DISCARD FFlecsWorld& GetFlecsWorld() const;
+	
+	FORCEINLINE NO_DISCARD UFlecsWorld* GetFlecsWorld() const;
+	FORCEINLINE NO_DISCARD UWorld* GetOuterWorld() const;
+	
 	FORCEINLINE NO_DISCARD FName GetWorldName() const;
 	
 	FORCEINLINE NO_DISCARD FFlecsType GetType() const { return FFlecsType(GetEntity().type()); }
@@ -70,7 +70,10 @@ public:
 	template <typename T>
 	FORCEINLINE void Set(const T& InValue) const { GetEntity().template set<T>(InValue); }
 
-	FORCEINLINE void Set(const FFlecsEntityHandle& InEntity, const void* InValue) const { GetEntity().set_second(InEntity, InValue); }
+	FORCEINLINE void Set(const FFlecsEntityHandle& InEntity, const void* InValue) const
+	{
+		GetEntity().set_second(InEntity, InValue);
+	}
 
 	FORCEINLINE void Set(UScriptStruct* StructType, const void* InValue) const;
 
