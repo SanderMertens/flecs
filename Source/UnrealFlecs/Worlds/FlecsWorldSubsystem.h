@@ -75,7 +75,7 @@ public:
 
 	virtual void Deinitialize() override
 	{
-		for (const UFlecsWorld* World : Worlds)
+		for (UFlecsWorld* World : Worlds)
 		{
 			World->DestroyWorld();
 		}

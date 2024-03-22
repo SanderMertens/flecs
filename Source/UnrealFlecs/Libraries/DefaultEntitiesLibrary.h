@@ -9,7 +9,7 @@
 #include "DefaultEntitiesLibrary.generated.h"
 
 UCLASS()
-class UNREALFLECS_API UDefaultEntitiesLibrary : public UBlueprintFunctionLibrary
+class UNREALFLECS_API UDefaultEntitiesLibrary final : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 

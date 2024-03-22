@@ -21,12 +21,14 @@ public:
 	{
 		World = std::move(InWorld);
 	}
-	
+
+	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE void Reset()
 	{
 		World.reset();
 	}
 
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FORCEINLINE void ResetClock() const
 	{
 		World.reset_clock();
@@ -164,21 +166,25 @@ public:
 		return World.get_ref<T>();
 	}
 
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FORCEINLINE void Merge() const
 	{
 		World.merge();
 	}
 
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FORCEINLINE void SetAutoMerge(const bool bInAutoMerge) const
 	{
 		World.set_automerge(bInAutoMerge);
 	}
 
+	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE FName GetWorldName() const
 	{
 		return GetSingleton<FName>();
 	}
 
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FORCEINLINE void SetName(const FName& InName) const
 	{
 		SetSingleton<FName>(InName);
@@ -200,26 +206,31 @@ public:
 		World.import<T>();
 	}
 
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FORCEINLINE bool BeginDefer() const
 	{
 		return World.defer_begin();
 	}
 
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FORCEINLINE bool EndDefer() const
 	{
 		return World.defer_end();
 	}
 
+	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE bool IsDeferred() const
 	{
 		return World.is_deferred();
 	}
 
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FORCEINLINE bool BeginReadOnly() const
 	{
 		return World.readonly_begin();
 	}
 
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FORCEINLINE void EndReadOnly() const
 	{
 		World.readonly_end();
@@ -230,31 +241,38 @@ public:
 		World.set_ctx(InContext);
 	}
 
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FORCEINLINE bool Progress(const double DeltaTime = 0.0) const
 	{
 		return World.progress(DeltaTime);
 	}
 
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FORCEINLINE void SetTimeScale(const double InTimeScale) const
 	{
 		World.set_time_scale(InTimeScale);
 	}
 
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FORCEINLINE void SetTargetFps(const double InTargetFps) const
 	{
 		World.set_target_fps(InTargetFps);
 	}
 
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FORCEINLINE void Quit() const
 	{
 		World.quit();
 	}
 
-	FORCEINLINE void DestroyWorld() const
+	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
+	FORCEINLINE void DestroyWorld()
 	{
+		MarkAsGarbage();
 		Quit();
 	}
 
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FORCEINLINE void SetPipeline(const FFlecsEntityHandle& InPipeline) const
 	{
 		World.set_pipeline(InPipeline);
@@ -266,11 +284,13 @@ public:
 		World.set_pipeline<T>();
 	}
 
+	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE FFlecsEntityHandle GetPipeline() const
 	{
 		return World.get_pipeline();
 	}
 
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FORCEINLINE FFlecsEntityHandle SetScope(const FFlecsEntityHandle& InScope) const
 	{
 		return World.set_scope(InScope);
@@ -282,21 +302,25 @@ public:
 		return World.set_scope<T>();
 	}
 
+	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE FFlecsEntityHandle GetScope() const
 	{
 		return World.get_scope();
 	}
 
+	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE float GetDeltaTime() const
 	{
 		return World.delta_time();
 	}
 
+	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE FFlecsEntityHandle GetAlive(const FFlecsId& InId) const
 	{
 		return World.get_alive(InId.GetFlecsId());
 	}
 
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FORCEINLINE FFlecsEntityHandle MakeAlive(const FFlecsId& InId) const
 	{
 		return World.make_alive(InId.GetFlecsId());
@@ -314,31 +338,37 @@ public:
 		return World.system<TComponents...>(TCHAR_TO_ANSI(*InName));
 	}
 
+	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE FFlecsEntityHandle GetWorldEntity() const
 	{
 		return World.entity(EcsWorld);
 	}
 
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FORCEINLINE void SetStageCount(const int32 InStageCount) const
 	{
 		World.set_stage_count(InStageCount);
 	}
 
+	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE int32 GetStageCount() const
 	{
 		return World.get_stage_count();
 	}
 
+	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE int32 GetStageId() const
 	{
 		return World.get_stage_id();
 	}
 
+	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE bool IsStage() const
 	{
 		return World.is_stage();
 	}
 
+	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE UFlecsWorld* GetStage(const int32 InStageId) const
 	{
 		UFlecsWorld* Stage = NewObject<UFlecsWorld>();
@@ -346,6 +376,7 @@ public:
 		return Stage;
 	}
 
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FORCEINLINE UFlecsWorld* ObtainAsyncStage() const
 	{
 		UFlecsWorld* Stage = NewObject<UFlecsWorld>();
@@ -353,21 +384,25 @@ public:
 		return Stage;
 	}
 
+	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE bool IsReadOnly() const
 	{
 		return World.is_readonly();
 	}
 
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FORCEINLINE void PreallocateEntities(const int32 InEntityCount) const
 	{
 		World.dim(InEntityCount);
 	}
 
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FORCEINLINE void SetEntityRange(const int32 InMin, const int32 InMax) const
 	{
 		World.set_entity_range(InMin, InMax);
 	}
 
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FORCEINLINE void EnforceEntityRange(const bool bInEnforce) const
 	{
 		World.enable_range_check(bInEnforce);
@@ -379,46 +414,49 @@ public:
 		World.children(std::forward<FunctionType>(Function));
 	}
 
+	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE void SetThreads(const int32 InThreadCount) const
 	{
 		World.set_threads(InThreadCount);
 	}
 
-	UFUNCTION(BlueprintCallable, Category = "Flecs|World")
+	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE int32 GetThreads() const
 	{
 		return World.get_threads();
 	}
 
+	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE bool UsingTaskThreads() const
 	{
 		return World.using_task_threads();
 	}
 
+	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE void SetTaskThreads(const int32 InThreadCount) const
 	{
 		World.set_task_threads(InThreadCount);
 	}
 
-	UFUNCTION(BlueprintCallable, Category = "Flecs")
+	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE bool HasScriptStruct(UScriptStruct* ScriptStruct) const
 	{
 		return GetSingletonRef<FFlecsTypeMapComponent>()->ScriptStructMap.contains(ScriptStruct);
 	}
 
-	UFUNCTION(BlueprintCallable, Category = "Flecs")
+	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE bool HasScriptClass(const TSubclassOf<UObject> ScriptClass) const
 	{
 		return GetSingletonRef<FFlecsTypeMapComponent>()->ScriptClassMap.contains(ScriptClass);
 	}
 
-	UFUNCTION(BlueprintCallable, Category = "Flecs")
+	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE FFlecsEntityHandle GetScriptStructEntity(UScriptStruct* ScriptStruct) const
 	{
 		return GetSingletonRef<FFlecsTypeMapComponent>()->ScriptStructMap.at(ScriptStruct);
 	}
 
-	UFUNCTION(BlueprintCallable, Category = "Flecs")
+	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE FFlecsEntityHandle GetScriptClassEntity(const TSubclassOf<UObject> ScriptClass) const
 	{
 		return GetSingletonRef<FFlecsTypeMapComponent>()->ScriptClassMap.at(ScriptClass);
@@ -558,7 +596,30 @@ public:
 
 		return RegisterScriptClass(ScriptClass);
 	}
+
+	template <typename T>
+	FORCEINLINE FFlecsEntityHandle CreatePrefab(const FString& Name) const
+	{
+		return World.prefab<T>(TCHAR_TO_ANSI(*Name));
+	}
+
+	template <typename ...TArgs>
+	FORCEINLINE FFlecsEntityHandle CreatePrefab(TArgs&... Args) const
+	{
+		return World.prefab(std::forward<TArgs&>(Args)...);
+	}
+
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
+	FORCEINLINE FFlecsEntityHandle CreatePrefab(const FString& Name) const
+	{
+		return World.prefab(TCHAR_TO_ANSI(*Name));
+	}
+
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
+	FORCEINLINE FFlecsEntityHandle CreateEmptyPrefab() const
+	{
+		return World.prefab();
+	}
 	
 	flecs::world World;
-	
 }; // class UFlecsWorld

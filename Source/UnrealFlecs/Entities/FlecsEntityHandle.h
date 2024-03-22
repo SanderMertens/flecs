@@ -90,6 +90,11 @@ public:
 
 	FORCEINLINE void Destroy() const { GetEntity().destruct(); }
 
+	FORCEINLINE NO_DISCARD FFlecsEntityHandle Clone(const bool bCloneValue = true, const int32 DestinationId = 0) const
+	{
+		return GetEntity().clone(bCloneValue, DestinationId);
+	}
+
 	FORCEINLINE void SetName(const FName& InName) const { GetEntity().set_name(TCHAR_TO_ANSI(*InName.ToString())); }
 	FORCEINLINE NO_DISCARD FName GetName() const { return FName(GetEntity().name().c_str()); }
 
@@ -123,6 +128,15 @@ public:
 		return GetEntity().parent();
 	}
 
+	FORCEINLINE void Flatten(const FFlecsEntityHandle& RelationshipEntity, const bool bKeepNames, const bool bLoseDepth) const
+	{
+		ecs_flatten_desc_t Desc;
+		Desc.keep_names = bKeepNames;
+		Desc.lose_depth = bLoseDepth;
+		
+		GetEntity().flatten(RelationshipEntity, &Desc);
+	}
+
 	FORCEINLINE NO_DISCARD bool operator==(const FFlecsEntityHandle& Other) const
 	{
 		return GetEntity() == Other.GetEntity();
@@ -150,7 +164,25 @@ public:
 	{
 		return FString::Printf(TEXT("Entity: %hs"), GetEntity().str().c_str());
 	}
+
+	template <typename TEnum>
+	FORCEINLINE NO_DISCARD TEnum ToConstant() const
+	{
+		return GetEntity().to_constant<TEnum>();
+	}
+
+	
 	
 private:
 	flecs::entity Entity;
 }; // struct FFlecsEntityHandle
+
+template <>
+struct TStructOpsTypeTraits<FFlecsEntityHandle> : public TStructOpsTypeTraitsBase2<FFlecsEntityHandle>
+{
+	enum
+	{
+		
+	}; // enum
+	
+}; // struct TStructOpsTypeTraits<FFlecsEntityHandle>

@@ -6115,12 +6115,12 @@ typedef struct ecs_flatten_desc_t {
     /* When true, the flatten operation will not remove names from entities in
      * the flattened tree. This may fail if entities from different subtrees
      * have the same name. */
-    bool keep_names;
+    bool keep_names : 1;
 
     /* When true, the flattened tree won't contain information about the
      * original depth of the entities. This can reduce fragmentation, but may
      * cause existing code, such as cascade queries, to no longer work. */
-    bool lose_depth;
+    bool lose_depth : 1;
 } ecs_flatten_desc_t;
 
 /** Recursively flatten relationship for target entity (experimental).
