@@ -1068,7 +1068,8 @@
                 "on_set_hook_on_override",
                 "on_set_hook_on_auto_override",
                 "batched_set_new_component_w_lifecycle",
-                "batched_ensure_new_component_w_lifecycle"
+                "batched_ensure_new_component_w_lifecycle",
+                "on_nested_prefab_copy_test_invokes_copy_count"
             ]
         }, {
             "id": "Sorting",

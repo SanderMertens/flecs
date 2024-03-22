@@ -1016,6 +1016,7 @@ void ComponentLifecycle_on_set_hook_on_override(void);
 void ComponentLifecycle_on_set_hook_on_auto_override(void);
 void ComponentLifecycle_batched_set_new_component_w_lifecycle(void);
 void ComponentLifecycle_batched_ensure_new_component_w_lifecycle(void);
+void ComponentLifecycle_on_nested_prefab_copy_test_invokes_copy_count(void);
 
 // Testsuite 'Sorting'
 void Sorting_sort_by_component(void);
@@ -6630,6 +6631,10 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "batched_ensure_new_component_w_lifecycle",
         ComponentLifecycle_batched_ensure_new_component_w_lifecycle
+    },
+    {
+        "on_nested_prefab_copy_test_invokes_copy_count",
+        ComponentLifecycle_on_nested_prefab_copy_test_invokes_copy_count
     }
 };
 
@@ -13403,7 +13408,6 @@ bake_test_case StackAlloc_testcases[] = {
     }
 };
 
-
 static bake_test_suite suites[] = {
     {
         "Id",
@@ -13577,7 +13581,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        89,
+        90,
         ComponentLifecycle_testcases
     },
     {

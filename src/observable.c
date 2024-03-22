@@ -500,7 +500,7 @@ void flecs_override_copy(
     int32_t i;
     if (copy) {
         for (i = 0; i < count; i ++) {
-            copy(ptr, src, count, ti);
+            copy(ptr, src, 1, ti);
             ptr = ECS_OFFSET(ptr, size);
         }
     } else {
