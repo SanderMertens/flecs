@@ -72,7 +72,7 @@ public:
 
 	FORCEINLINE void Set(const FFlecsEntityHandle& InEntity, const void* InValue) const
 	{
-		GetEntity().set_second(InEntity, InValue);
+		GetEntity().set_ptr(InEntity, InValue);
 	}
 
 	FORCEINLINE void Set(UScriptStruct* StructType, const void* InValue) const;
@@ -83,6 +83,12 @@ public:
 
 	FORCEINLINE void Enable() const { GetEntity().enable(); }
 	FORCEINLINE void Disable() const { GetEntity().disable(); }
+
+	template <typename T>
+	FORCEINLINE void Enable() const { GetEntity().template enable<T>(); }
+
+	template <typename T>
+	FORCEINLINE void Disable() const { GetEntity().template disable<T>(); }
 
 	FORCEINLINE void Toggle() const { GetEntity().enable(!IsEnabled()); }
 
@@ -128,13 +134,26 @@ public:
 		return GetEntity().parent();
 	}
 
-	FORCEINLINE void Flatten(const FFlecsEntityHandle& RelationshipEntity, const bool bKeepNames, const bool bLoseDepth) const
+	FORCEINLINE NO_DISCARD bool IsPrefab() const
 	{
-		ecs_flatten_desc_t Desc;
-		Desc.keep_names = bKeepNames;
-		Desc.lose_depth = bLoseDepth;
-		
-		GetEntity().flatten(RelationshipEntity, &Desc);
+		return GetEntity().has(flecs::Prefab);
+	}
+
+	FORCEINLINE void Flatten(const FFlecsEntityHandle& RelationshipEntity) const
+	{
+		GetEntity().flatten(RelationshipEntity, nullptr);
+	}
+
+	template <typename T>
+	FORCEINLINE void Emit() const
+	{
+		GetEntity().template emit<T>();
+	}
+
+	template <typename T>
+	FORCEINLINE void Emit(const T& InValue) const
+	{
+		GetEntity().template emit<T>(InValue);
 	}
 
 	FORCEINLINE NO_DISCARD bool operator==(const FFlecsEntityHandle& Other) const
@@ -171,7 +190,25 @@ public:
 		return GetEntity().to_constant<TEnum>();
 	}
 
-	
+	FORCEINLINE NO_DISCARD FString ToJson() const
+	{
+		return FString(GetEntity().to_json().c_str());
+	}
+
+	FORCEINLINE bool Serialize(FArchive& Ar) const
+	{
+		FString Json = ToJson();
+		Ar << Json;
+		return true;
+	}
+
+	FORCEINLINE bool NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess) const
+	{
+		FString Json = ToJson();
+		Ar << Json;
+		bOutSuccess = true;
+		return true;
+	}
 	
 private:
 	flecs::entity Entity;
@@ -182,7 +219,8 @@ struct TStructOpsTypeTraits<FFlecsEntityHandle> : public TStructOpsTypeTraitsBas
 {
 	enum
 	{
-		
+		WithSerializer = true,
+		WithNetSerializer = true,
 	}; // enum
 	
 }; // struct TStructOpsTypeTraits<FFlecsEntityHandle>

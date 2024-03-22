@@ -6,7 +6,6 @@
 #include "Components/ActorComponent.h"
 #include "FlecsEntityActorComponent.generated.h"
 
-
 UCLASS(BlueprintType, Blueprintable, ClassGroup=(Flecs), meta=(BlueprintSpawnableComponent))
 class UNREALFLECS_API UFlecsEntityActorComponent : public UActorComponent
 {
@@ -21,4 +20,4 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	
-};
+}; // class UFlecsEntityActorComponent

@@ -603,12 +603,6 @@ public:
 		return World.prefab<T>(TCHAR_TO_ANSI(*Name));
 	}
 
-	template <typename ...TArgs>
-	FORCEINLINE FFlecsEntityHandle CreatePrefab(TArgs&... Args) const
-	{
-		return World.prefab(std::forward<TArgs&>(Args)...);
-	}
-
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
 	FORCEINLINE FFlecsEntityHandle CreatePrefab(const FString& Name) const
 	{
@@ -619,6 +613,39 @@ public:
 	FORCEINLINE FFlecsEntityHandle CreateEmptyPrefab() const
 	{
 		return World.prefab();
+	}
+
+	template <typename ...TComponents>
+	FORCEINLINE flecs::observer_builder<TComponents...> CreateObserver(const FString& Name) const
+	{
+		return World.observer<TComponents...>(TCHAR_TO_ANSI(*Name));
+	}
+
+	FORCEINLINE flecs::observer_builder<> CreateObserver(const FString& Name) const
+	{
+		return World.observer<>(TCHAR_TO_ANSI(*Name));
+	}
+
+	template <typename ...TComponents>
+	FORCEINLINE flecs::observer_builder<TComponents...> CreateObserver(const FFlecsEntityHandle& InEntity) const
+	{
+		return World.observer<TComponents...>(InEntity.GetEntity());
+	}
+
+	FORCEINLINE FFlecsEntityHandle CreateObserver(const FFlecsEntityHandle& InEntity) const
+	{
+		return World.observer(InEntity.GetEntity());
+	}
+
+	FORCEINLINE flecs::event_builder Event(const FFlecsEntityHandle& InEntity) const
+	{
+		return World.event(InEntity.GetEntity());
+	}
+
+	template <typename TEvent>
+	FORCEINLINE flecs::event_builder Event() const
+	{
+		return World.event<TEvent>();
 	}
 	
 	flecs::world World;
