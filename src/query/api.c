@@ -11,7 +11,6 @@ static ecs_mixins_t ecs_query_impl_t_mixins = {
     .elems = {
         [EcsMixinWorld] = offsetof(ecs_query_impl_t, pub.world),
         [EcsMixinEntity] = offsetof(ecs_query_impl_t, pub.entity),
-        [EcsMixinIterable] = offsetof(ecs_query_impl_t, iterable),
         [EcsMixinDtor] = offsetof(ecs_query_impl_t, dtor)
     }
 };
@@ -76,17 +75,10 @@ static
 void flecs_query_iter_mixin_init(
     const ecs_world_t *world,
     const ecs_poly_t *poly,
-    ecs_iter_t *iter,
-    ecs_term_t *filter)
+    ecs_iter_t *iter)
 {
     ecs_poly_assert(poly, ecs_query_impl_t);
-
-    if (filter) {
-        iter[1] = ecs_query_iter(world, ECS_CONST_CAST(ecs_query_t*, poly));
-        // iter[0] = ecs_term_chain_iter(&iter[1], filter); TODO
-    } else {
-        iter[0] = ecs_query_iter(world, ECS_CONST_CAST(ecs_query_t*, poly));
-    }
+    iter[0] = ecs_query_iter(world, ECS_CONST_CAST(ecs_query_t*, poly));
 }
 
 static
@@ -369,7 +361,6 @@ ecs_query_t* ecs_query_init(
     result->ctx_free = const_desc->ctx_free;
     result->binding_ctx_free = const_desc->binding_ctx_free;
     result->dtor = (ecs_poly_dtor_t)flecs_query_fini;
-    result->iterable.init = flecs_query_iter_mixin_init;
     result->cache = NULL;
 
     /* Initialize query cache if necessary */

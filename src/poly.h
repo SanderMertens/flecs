@@ -82,10 +82,6 @@ ecs_poly_t* ecs_poly_get_(
 #define ecs_poly_assert(object, ty)
 #endif
 
-/* Utility functions for getting a mixin from an object */
-ecs_iterable_t* ecs_get_iterable(
-    const ecs_poly_t *poly);
-
 ecs_observable_t* ecs_get_observable(
     const ecs_poly_t *object);
 

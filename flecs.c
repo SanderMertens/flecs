@@ -761,7 +761,6 @@ typedef enum ecs_mixin_kind_t {
     EcsMixinWorld,
     EcsMixinEntity,
     EcsMixinObservable,
-    EcsMixinIterable,
     EcsMixinDtor,
     EcsMixinMax
 } ecs_mixin_kind_t;
@@ -1085,7 +1084,6 @@ struct ecs_world_t {
     /* -- Mixins -- */
     ecs_world_t *self;
     ecs_observable_t observable;
-    ecs_iterable_t iterable;
 
     /* Unique id per generated event used to prevent duplicate notifications */
     int32_t event_id;
@@ -1742,7 +1740,6 @@ struct ecs_query_impl_t {
     ecs_ctx_free_t binding_ctx_free; /* Callback to free binding_ctx */
 
     /* Mixins */
-    ecs_iterable_t iterable;
     ecs_poly_dtor_t dtor;
 
 #ifdef FLECS_DEBUG
@@ -2465,10 +2462,6 @@ ecs_poly_t* ecs_poly_get_(
 #else
 #define ecs_poly_assert(object, ty)
 #endif
-
-/* Utility functions for getting a mixin from an object */
-ecs_iterable_t* ecs_get_iterable(
-    const ecs_poly_t *poly);
 
 ecs_observable_t* ecs_get_observable(
     const ecs_poly_t *object);
@@ -3556,18 +3549,6 @@ void flecs_disable_module(ecs_iter_t *it) {
         flecs_disable_module_observers(
             it->world, it->entities[i], it->event == EcsOnAdd);
     }
-}
-
-/* -- Iterable mixins -- */
-
-static
-void flecs_on_event_iterable_init(
-    const ecs_world_t *world,
-    const ecs_poly_t *poly, /* Observable */
-    ecs_iter_t *it,
-    ecs_term_t *filter)
-{
-    ecs_iter_poly(world, poly, it, filter);
 }
 
 /* -- Bootstrapping -- */
@@ -10142,16 +10123,6 @@ char* ecs_iter_str(
     return ecs_strbuf_get(&buf);
 }
 
-void ecs_iter_poly(
-    const ecs_world_t *world,
-    const ecs_poly_t *poly,
-    ecs_iter_t *iter_out,
-    ecs_term_t *filter)
-{
-    ecs_iterable_t *iterable = ecs_get_iterable(poly);
-    iterable->init(world, poly, iter_out, filter);
-}
-
 bool ecs_iter_next(
     ecs_iter_t *iter)
 {
@@ -14178,7 +14149,6 @@ static const char* mixin_kind_str[] = {
     [EcsMixinWorld] = "world",
     [EcsMixinEntity] = "entity",
     [EcsMixinObservable] = "observable",
-    [EcsMixinIterable] = "iterable",
     [EcsMixinDtor] = "dtor",
     [EcsMixinMax] = "max (should never be requested by application)"
 };
@@ -14188,7 +14158,6 @@ ecs_mixins_t ecs_world_t_mixins = {
     .elems = {
         [EcsMixinWorld] = offsetof(ecs_world_t, self),
         [EcsMixinObservable] = offsetof(ecs_world_t, observable),
-        [EcsMixinIterable] = offsetof(ecs_world_t, iterable)
     }
 };
 
@@ -14332,12 +14301,6 @@ bool ecs_poly_is_(
     const ecs_header_t *hdr = poly;
     ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER, NULL);
     return hdr->type == type;    
-}
-
-ecs_iterable_t* ecs_get_iterable(
-    const ecs_poly_t *poly)
-{
-    return (ecs_iterable_t*)assert_mixin(poly, EcsMixinIterable);
 }
 
 ecs_observable_t* ecs_get_observable(
@@ -16617,21 +16580,16 @@ static
 void flecs_world_iter_init(
     const ecs_world_t *world,
     const ecs_poly_t *poly,
-    ecs_iter_t *iter,
-    ecs_term_t *filter)
+    ecs_iter_t *iter)
 {
     ecs_poly_assert(poly, ecs_world_t);
     (void)poly;
 
-    if (filter) {
-        iter[0] = ecs_each_id(world, filter->id);
-    } else {
-        iter[0] = (ecs_iter_t){
-            .world = ECS_CONST_CAST(ecs_world_t*, world),
-            .real_world = ECS_CONST_CAST(ecs_world_t*, ecs_get_world(world)),
-            .next = flecs_world_iter_next
-        };
-    }
+    iter[0] = (ecs_iter_t){
+        .world = ECS_CONST_CAST(ecs_world_t*, world),
+        .real_world = ECS_CONST_CAST(ecs_world_t*, ecs_get_world(world)),
+        .next = flecs_world_iter_next
+    };
 }
 
 static 
@@ -16881,7 +16839,6 @@ ecs_world_t *ecs_mini(void) {
     ecs_map_init_w_params(&world->id_index_hi, &world->allocators.ptr);
     world->id_index_lo = ecs_os_calloc_n(ecs_id_record_t, FLECS_HI_ID_RECORD_ID);
     flecs_observable_init(&world->observable);
-    world->iterable.init = flecs_world_iter_init;
 
     world->pending_tables = ecs_os_calloc_t(ecs_sparse_t);
     flecs_sparse_init_t(world->pending_tables, a, 
@@ -28549,19 +28506,19 @@ bool flecs_rest_reply_existing_query(
     ecs_http_reply_t *reply,
     const char *name)
 {
-    ecs_entity_t q = ecs_lookup(world, name);
-    if (!q) {
+    ecs_entity_t qe = ecs_lookup(world, name);
+    if (!qe) {
         flecs_reply_error(reply, "unresolved identifier '%s'", name);
         reply->code = 404;
         return true;
     }
 
-    ecs_poly_t *poly = NULL;
-    const EcsPoly *poly_comp = ecs_get_pair(world, q, EcsPoly, EcsQuery);
+    ecs_query_t *q = NULL;
+    const EcsPoly *poly_comp = ecs_get_pair(world, qe, EcsPoly, EcsQuery);
     if (!poly_comp) {
-        poly_comp = ecs_get_pair(world, q, EcsPoly, EcsObserver);
+        poly_comp = ecs_get_pair(world, qe, EcsPoly, EcsObserver);
         if (poly_comp) {
-            poly = &((ecs_observer_t*)poly_comp->poly)->query;
+            q = ((ecs_observer_t*)poly_comp->poly)->query;
         } else {
             flecs_reply_error(reply, 
                 "resolved identifier '%s' is not a query", name);
@@ -28569,38 +28526,31 @@ bool flecs_rest_reply_existing_query(
             return true;
         }
     } else {
-        poly = poly_comp->poly;
+        q = poly_comp->poly;
     }
 
-    if (!poly) {
+    if (!q) {
         flecs_reply_error(reply, "query '%s' is not initialized", name);
         reply->code = 400;
         return true;
     }
 
-    ecs_iter_t it;
-    ecs_iter_poly(world, poly, &it, NULL);
+    ecs_iter_t it = ecs_query_iter(world, q);
 
-    ecs_dbg_2("rest: request query '%s'", q);
+    ecs_dbg_2("rest: request query '%s'", name);
     bool prev_color = ecs_log_enable_colors(false);
     rest_prev_log = ecs_os_api.log_;
     ecs_os_api.log_ = flecs_rest_capture_log;
 
     const char *vars = ecs_http_get_param(req, "vars");
     if (vars) {
-        if (!ecs_poly_is(poly, ecs_query_impl_t)) {
-            flecs_reply_error(reply, 
-                "variables are only supported for rule queries");
-            reply->code = 400;
-            return true;
-        }
-        if (ecs_query_parse_vars(poly, &it, vars) == NULL) {
+        if (ecs_query_parse_vars(q, &it, vars) == NULL) {
             flecs_rest_reply_set_captured_log(reply);
             return true;
         }
     }
 
-    flecs_rest_iter_to_reply(world, req, reply, poly, &it);
+    flecs_rest_iter_to_reply(world, req, reply, q, &it);
 
     ecs_os_api.log_ = rest_prev_log;
     ecs_log_enable_colors(prev_color);    
@@ -35662,7 +35612,6 @@ static ecs_mixins_t ecs_query_impl_t_mixins = {
     .elems = {
         [EcsMixinWorld] = offsetof(ecs_query_impl_t, pub.world),
         [EcsMixinEntity] = offsetof(ecs_query_impl_t, pub.entity),
-        [EcsMixinIterable] = offsetof(ecs_query_impl_t, iterable),
         [EcsMixinDtor] = offsetof(ecs_query_impl_t, dtor)
     }
 };
@@ -35727,17 +35676,10 @@ static
 void flecs_query_iter_mixin_init(
     const ecs_world_t *world,
     const ecs_poly_t *poly,
-    ecs_iter_t *iter,
-    ecs_term_t *filter)
+    ecs_iter_t *iter)
 {
     ecs_poly_assert(poly, ecs_query_impl_t);
-
-    if (filter) {
-        iter[1] = ecs_query_iter(world, ECS_CONST_CAST(ecs_query_t*, poly));
-        // iter[0] = ecs_term_chain_iter(&iter[1], filter); TODO
-    } else {
-        iter[0] = ecs_query_iter(world, ECS_CONST_CAST(ecs_query_t*, poly));
-    }
+    iter[0] = ecs_query_iter(world, ECS_CONST_CAST(ecs_query_t*, poly));
 }
 
 static
@@ -36020,7 +35962,6 @@ ecs_query_t* ecs_query_init(
     result->ctx_free = const_desc->ctx_free;
     result->binding_ctx_free = const_desc->binding_ctx_free;
     result->dtor = (ecs_poly_dtor_t)flecs_query_fini;
-    result->iterable.init = flecs_query_iter_mixin_init;
     result->cache = NULL;
 
     /* Initialize query cache if necessary */
@@ -59062,8 +59003,7 @@ int flecs_json_serialize_matches(
                         continue;
                     }
 
-                    ecs_iter_t qit;
-                    ecs_iter_poly(world, q, &qit, NULL);
+                    ecs_iter_t qit = ecs_query_iter(world, q);
                     if (!qit.variables) {
                         ecs_iter_fini(&qit);
                         continue;
@@ -59448,21 +59388,20 @@ void flecs_json_serialize_query_profile(
         component_bytes = 0;
         shared_component_bytes = 0;
 
-        ecs_iter_t pit;
-        ecs_iter_poly(world, desc->query, &pit, NULL);
-        pit.flags |= EcsIterIsInstanced;
+        ecs_iter_t qit = ecs_query_iter(world, desc->query);
+        qit.flags |= EcsIterIsInstanced;
     
-        while (ecs_iter_next(&pit)) {
+        while (ecs_iter_next(&qit)) {
             result_count ++;
-            entity_count += pit.count;
+            entity_count += qit.count;
 
-            int32_t f, field_count = pit.field_count;
+            int32_t f, field_count = qit.field_count;
             for (f = 0; f < field_count; f ++) {
-                size_t size = ecs_field_size(&pit, f + 1);
-                if (ecs_field_is_set(&pit, f + 1) && size) {
-                    if (ecs_field_is_self(&pit, f + 1)) {
+                size_t size = ecs_field_size(&qit, f + 1);
+                if (ecs_field_is_set(&qit, f + 1) && size) {
+                    if (ecs_field_is_self(&qit, f + 1)) {
                         component_bytes += 
-                            flecs_uto(ecs_size_t, size) * pit.count;
+                            flecs_uto(ecs_size_t, size) * qit.count;
                     } else {
                         shared_component_bytes += flecs_uto(ecs_size_t, size);
                     }

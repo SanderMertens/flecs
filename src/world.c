@@ -708,21 +708,16 @@ static
 void flecs_world_iter_init(
     const ecs_world_t *world,
     const ecs_poly_t *poly,
-    ecs_iter_t *iter,
-    ecs_term_t *filter)
+    ecs_iter_t *iter)
 {
     ecs_poly_assert(poly, ecs_world_t);
     (void)poly;
 
-    if (filter) {
-        iter[0] = ecs_each_id(world, filter->id);
-    } else {
-        iter[0] = (ecs_iter_t){
-            .world = ECS_CONST_CAST(ecs_world_t*, world),
-            .real_world = ECS_CONST_CAST(ecs_world_t*, ecs_get_world(world)),
-            .next = flecs_world_iter_next
-        };
-    }
+    iter[0] = (ecs_iter_t){
+        .world = ECS_CONST_CAST(ecs_world_t*, world),
+        .real_world = ECS_CONST_CAST(ecs_world_t*, ecs_get_world(world)),
+        .next = flecs_world_iter_next
+    };
 }
 
 static 
@@ -972,7 +967,6 @@ ecs_world_t *ecs_mini(void) {
     ecs_map_init_w_params(&world->id_index_hi, &world->allocators.ptr);
     world->id_index_lo = ecs_os_calloc_n(ecs_id_record_t, FLECS_HI_ID_RECORD_ID);
     flecs_observable_init(&world->observable);
-    world->iterable.init = flecs_world_iter_init;
 
     world->pending_tables = ecs_os_calloc_t(ecs_sparse_t);
     flecs_sparse_init_t(world->pending_tables, a, 

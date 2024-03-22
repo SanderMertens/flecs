@@ -502,18 +502,6 @@ void flecs_disable_module(ecs_iter_t *it) {
     }
 }
 
-/* -- Iterable mixins -- */
-
-static
-void flecs_on_event_iterable_init(
-    const ecs_world_t *world,
-    const ecs_poly_t *poly, /* Observable */
-    ecs_iter_t *it,
-    ecs_term_t *filter)
-{
-    ecs_iter_poly(world, poly, it, filter);
-}
-
 /* -- Bootstrapping -- */
 
 #define flecs_bootstrap_builtin_t(world, table, name)\

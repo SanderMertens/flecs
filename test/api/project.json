@@ -1935,15 +1935,9 @@
         }, {
             "id": "Poly",
             "testcases": [
-                "iter_query",
-                "iter_query_w_filter",
-                "iter_world",
-                "iter_world_w_filter",
                 "on_set_poly_observer",
                 "on_set_poly_query",
-                "on_set_poly_system",
-                "iter_query_from_entity",
-                "free_query_entity"
+                "on_set_poly_system"
             ]
         }, {
             "id": "Internals",

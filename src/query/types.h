@@ -362,7 +362,6 @@ struct ecs_query_impl_t {
     ecs_ctx_free_t binding_ctx_free; /* Callback to free binding_ctx */
 
     /* Mixins */
-    ecs_iterable_t iterable;
     ecs_poly_dtor_t dtor;
 
 #ifdef FLECS_DEBUG

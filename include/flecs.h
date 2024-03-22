@@ -526,23 +526,6 @@ typedef void (*ecs_run_action_t)(
 typedef void (*ecs_iter_action_t)(
     ecs_iter_t *it);
 
-/** Function prototype for creating an iterator from a poly.
- * Used to create iterators from poly objects with the iterable mixin. When a
- * filter is provided, an array of two iterators must be passed to the function.
- * This allows the mixin implementation to create a chained iterator when
- * necessary, which requires two iterator objects.
- *
- * @param world The world or stage for which to create the iterator.
- * @param iterable An iterable poly object.
- * @param it The iterator to create (out parameter)
- * @param filter Optional term to filter results.
- */
-typedef void (*ecs_iter_init_action_t)(
-    const ecs_world_t *world,
-    const ecs_poly_t *iterable,
-    ecs_iter_t *it,
-    ecs_term_t *filter);
-
 /** Function prototype for iterating an iterator.
  * Stored inside initialized iterators. This allows an application to iterate
  * an iterator without needing to know what created it.
@@ -644,21 +627,6 @@ typedef void (*ecs_move_t)(
 /* Destructor function for poly objects */
 typedef void (*ecs_poly_dtor_t)(
     ecs_poly_t *poly);
-
-/** @} */
-
-/**
- * @defgroup mixins Poly mixin types.
- * Mixin types for poly mechanism.
- *
- * @{
- */
-
-/** Iterable mixin.
- * Allows its container to be iterated. */
-typedef struct ecs_iterable_t {
-    ecs_iter_init_action_t init; /**< Callback that creates iterator. */
-} ecs_iterable_t;
 
 /** @} */
 
@@ -4267,34 +4235,6 @@ const ecs_query_t* ecs_observer_get_query(
  *
  * @{
  */
-
-/** Create iterator from poly object.
- * The provided poly object must have the iterable mixin. If an object is
- * provided that does not have the mixin, the function will assert.
- *
- * When a filter is provided, an array of two iterators must be passed to the
- * function. This allows the mixin implementation to create a chained iterator
- * when necessary, which requires two iterator objects.
- *
- * If a filter is provided, the first element in the array of two iterators is
- * the one that should be iterated. The mixin implementation may or may not set
- * the second element, depending on whether an iterator chain is required.
- *
- * Additionally, when a filter is provided the returned iterator will be for a
- * single term with the provided filter id. If the iterator is chained, the
- * previous iterator in the chain can be accessed through it->chain_it.
- *
- * @param world The world or stage for which to create the iterator.
- * @param poly The poly object from which to create the iterator.
- * @param iter The iterator (out, ecs_iter_t[2] when filter is set).
- * @param filter Optional term used for filtering the results.
- */
-FLECS_API
-void ecs_iter_poly(
-    const ecs_world_t *world,
-    const ecs_poly_t *poly,
-    ecs_iter_t *iter,
-    ecs_term_t *filter);
 
 /** Progress any iterator.
  * This operation is useful in combination with iterators for which it is not

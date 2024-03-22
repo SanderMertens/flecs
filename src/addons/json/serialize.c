@@ -1150,8 +1150,7 @@ int flecs_json_serialize_matches(
                         continue;
                     }
 
-                    ecs_iter_t qit;
-                    ecs_iter_poly(world, q, &qit, NULL);
+                    ecs_iter_t qit = ecs_query_iter(world, q);
                     if (!qit.variables) {
                         ecs_iter_fini(&qit);
                         continue;
@@ -1536,21 +1535,20 @@ void flecs_json_serialize_query_profile(
         component_bytes = 0;
         shared_component_bytes = 0;
 
-        ecs_iter_t pit;
-        ecs_iter_poly(world, desc->query, &pit, NULL);
-        pit.flags |= EcsIterIsInstanced;
+        ecs_iter_t qit = ecs_query_iter(world, desc->query);
+        qit.flags |= EcsIterIsInstanced;
     
-        while (ecs_iter_next(&pit)) {
+        while (ecs_iter_next(&qit)) {
             result_count ++;
-            entity_count += pit.count;
+            entity_count += qit.count;
 
-            int32_t f, field_count = pit.field_count;
+            int32_t f, field_count = qit.field_count;
             for (f = 0; f < field_count; f ++) {
-                size_t size = ecs_field_size(&pit, f + 1);
-                if (ecs_field_is_set(&pit, f + 1) && size) {
-                    if (ecs_field_is_self(&pit, f + 1)) {
+                size_t size = ecs_field_size(&qit, f + 1);
+                if (ecs_field_is_set(&qit, f + 1) && size) {
+                    if (ecs_field_is_self(&qit, f + 1)) {
                         component_bytes += 
-                            flecs_uto(ecs_size_t, size) * pit.count;
+                            flecs_uto(ecs_size_t, size) * qit.count;
                     } else {
                         shared_component_bytes += flecs_uto(ecs_size_t, size);
                     }

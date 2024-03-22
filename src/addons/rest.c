@@ -430,19 +430,19 @@ bool flecs_rest_reply_existing_query(
     ecs_http_reply_t *reply,
     const char *name)
 {
-    ecs_entity_t q = ecs_lookup(world, name);
-    if (!q) {
+    ecs_entity_t qe = ecs_lookup(world, name);
+    if (!qe) {
         flecs_reply_error(reply, "unresolved identifier '%s'", name);
         reply->code = 404;
         return true;
     }
 
-    ecs_poly_t *poly = NULL;
-    const EcsPoly *poly_comp = ecs_get_pair(world, q, EcsPoly, EcsQuery);
+    ecs_query_t *q = NULL;
+    const EcsPoly *poly_comp = ecs_get_pair(world, qe, EcsPoly, EcsQuery);
     if (!poly_comp) {
-        poly_comp = ecs_get_pair(world, q, EcsPoly, EcsObserver);
+        poly_comp = ecs_get_pair(world, qe, EcsPoly, EcsObserver);
         if (poly_comp) {
-            poly = &((ecs_observer_t*)poly_comp->poly)->query;
+            q = ((ecs_observer_t*)poly_comp->poly)->query;
         } else {
             flecs_reply_error(reply, 
                 "resolved identifier '%s' is not a query", name);
@@ -450,38 +450,31 @@ bool flecs_rest_reply_existing_query(
             return true;
         }
     } else {
-        poly = poly_comp->poly;
+        q = poly_comp->poly;
     }
 
-    if (!poly) {
+    if (!q) {
         flecs_reply_error(reply, "query '%s' is not initialized", name);
         reply->code = 400;
         return true;
     }
 
-    ecs_iter_t it;
-    ecs_iter_poly(world, poly, &it, NULL);
+    ecs_iter_t it = ecs_query_iter(world, q);
 
-    ecs_dbg_2("rest: request query '%s'", q);
+    ecs_dbg_2("rest: request query '%s'", name);
     bool prev_color = ecs_log_enable_colors(false);
     rest_prev_log = ecs_os_api.log_;
     ecs_os_api.log_ = flecs_rest_capture_log;
 
     const char *vars = ecs_http_get_param(req, "vars");
     if (vars) {
-        if (!ecs_poly_is(poly, ecs_query_impl_t)) {
-            flecs_reply_error(reply, 
-                "variables are only supported for rule queries");
-            reply->code = 400;
-            return true;
-        }
-        if (ecs_query_parse_vars(poly, &it, vars) == NULL) {
+        if (ecs_query_parse_vars(q, &it, vars) == NULL) {
             flecs_rest_reply_set_captured_log(reply);
             return true;
         }
     }
 
-    flecs_rest_iter_to_reply(world, req, reply, poly, &it);
+    flecs_rest_iter_to_reply(world, req, reply, q, &it);
 
     ecs_os_api.log_ = rest_prev_log;
     ecs_log_enable_colors(prev_color);    

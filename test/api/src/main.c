@@ -1850,15 +1850,9 @@ void Table_get_depth_2_paths(void);
 void Table_get_column_size(void);
 
 // Testsuite 'Poly'
-void Poly_iter_query(void);
-void Poly_iter_query_w_filter(void);
-void Poly_iter_world(void);
-void Poly_iter_world_w_filter(void);
 void Poly_on_set_poly_observer(void);
 void Poly_on_set_poly_query(void);
 void Poly_on_set_poly_system(void);
-void Poly_iter_query_from_entity(void);
-void Poly_free_query_entity(void);
 
 // Testsuite 'Internals'
 void Internals_setup(void);
@@ -9014,22 +9008,6 @@ bake_test_case Table_testcases[] = {
 
 bake_test_case Poly_testcases[] = {
     {
-        "iter_query",
-        Poly_iter_query
-    },
-    {
-        "iter_query_w_filter",
-        Poly_iter_query_w_filter
-    },
-    {
-        "iter_world",
-        Poly_iter_world
-    },
-    {
-        "iter_world_w_filter",
-        Poly_iter_world_w_filter
-    },
-    {
         "on_set_poly_observer",
         Poly_on_set_poly_observer
     },
@@ -9040,14 +9018,6 @@ bake_test_case Poly_testcases[] = {
     {
         "on_set_poly_system",
         Poly_on_set_poly_system
-    },
-    {
-        "iter_query_from_entity",
-        Poly_iter_query_from_entity
-    },
-    {
-        "free_query_entity",
-        Poly_free_query_entity
     }
 };
 
@@ -9474,7 +9444,7 @@ static bake_test_suite suites[] = {
         "Poly",
         NULL,
         NULL,
-        9,
+        3,
         Poly_testcases
     },
     {

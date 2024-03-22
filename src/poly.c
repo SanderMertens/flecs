@@ -22,7 +22,6 @@ static const char* mixin_kind_str[] = {
     [EcsMixinWorld] = "world",
     [EcsMixinEntity] = "entity",
     [EcsMixinObservable] = "observable",
-    [EcsMixinIterable] = "iterable",
     [EcsMixinDtor] = "dtor",
     [EcsMixinMax] = "max (should never be requested by application)"
 };
@@ -32,7 +31,6 @@ ecs_mixins_t ecs_world_t_mixins = {
     .elems = {
         [EcsMixinWorld] = offsetof(ecs_world_t, self),
         [EcsMixinObservable] = offsetof(ecs_world_t, observable),
-        [EcsMixinIterable] = offsetof(ecs_world_t, iterable)
     }
 };
 
@@ -176,12 +174,6 @@ bool ecs_poly_is_(
     const ecs_header_t *hdr = poly;
     ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER, NULL);
     return hdr->type == type;    
-}
-
-ecs_iterable_t* ecs_get_iterable(
-    const ecs_poly_t *poly)
-{
-    return (ecs_iterable_t*)assert_mixin(poly, EcsMixinIterable);
 }
 
 ecs_observable_t* ecs_get_observable(

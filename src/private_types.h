@@ -45,7 +45,6 @@ typedef enum ecs_mixin_kind_t {
     EcsMixinWorld,
     EcsMixinEntity,
     EcsMixinObservable,
-    EcsMixinIterable,
     EcsMixinDtor,
     EcsMixinMax
 } ecs_mixin_kind_t;
@@ -369,7 +368,6 @@ struct ecs_world_t {
     /* -- Mixins -- */
     ecs_world_t *self;
     ecs_observable_t observable;
-    ecs_iterable_t iterable;
 
     /* Unique id per generated event used to prevent duplicate notifications */
     int32_t event_id;
