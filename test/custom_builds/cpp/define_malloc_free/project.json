@@ -1,0 +1,10 @@
+{
+    "id": "define_malloc_free",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "language": "c++"
+    }
+}

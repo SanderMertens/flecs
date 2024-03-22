@@ -1,6 +1,5 @@
 // Comment out this line when using as DLL
-//#define flecs_STATIC
-
+#define flecs_STATIC
 /**
  * @file flecs.h
  * @brief Flecs public API.
@@ -33,6 +32,13 @@
  * @{
  */
 
+/* Flecs version macro */
+#define FLECS_VERSION_MAJOR 3
+#define FLECS_VERSION_MINOR 2
+#define FLECS_VERSION_PATCH 12
+#define FLECS_VERSION FLECS_VERSION_IMPL(\
+    FLECS_VERSION_MAJOR, FLECS_VERSION_MINOR, FLECS_VERSION_PATCH)
+
 /** @def FLECS_CONFIG_HEADER
  * Allows for including a user-customizable header that specifies compile-time 
  * features. */
@@ -50,7 +56,7 @@
  * Customizable precision for scalar time values. Change to double precision for
  * processes that can run for a long time (e.g. longer than a day). */
 #ifndef ecs_ftime_t
-#define ecs_ftime_t double
+#define ecs_ftime_t ecs_float_t
 #endif
 
 /** @def FLECS_LEGACY
@@ -186,7 +192,6 @@
 #define FLECS_EXPR          /**< Parsing strings to/from component values */
 #define FLECS_JSON          /**< Parsing JSON to/from component values */
 #define FLECS_DOC           /**< Document entities & components */
-#define FLECS_COREDOC       /**< Documentation for core entities & components */
 #define FLECS_LOG           /**< When enabled ECS provides more detailed logs */
 #define FLECS_APP           /**< Application addon */
 #define FLECS_OS_API_IMPL   /**< Default implementation for OS API */
@@ -402,6 +407,7 @@ extern "C" {
 #define EcsIterTrivialSearchNoData     (1u << 13u) /* Trivial iterator w/no data */
 #define EcsIterTrivialTest             (1u << 14u) /* Trivial test mode (constrained $this) */
 #define EcsIterTrivialSearchWildcard   (1u << 15u) /* Trivial search with wildcard ids */
+#define EcsIterCppEach                 (1u << 16u) /* Uses C++ 'each' iterator */
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Event flags (used by ecs_event_decs_t::flags)
@@ -794,6 +800,11 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 #define ECS_NEQ(a, b) (!ECS_EQ(a, b))
 #define ECS_EQZERO(a) ECS_EQ(a, (uint64_t){0})
 #define ECS_NEQZERO(a) ECS_NEQ(a, (uint64_t){0})
+
+/* Utilities to convert flecs version to string */
+#define FLECS_VERSION_IMPLSTR(major, minor, patch) #major "." #minor "." #patch
+#define FLECS_VERSION_IMPL(major, minor, patch) \
+    FLECS_VERSION_IMPLSTR(major, minor, patch)
 
 #define ECS_CONCAT(a, b) a ## b
 
@@ -2314,6 +2325,7 @@ void ecs_os_set_api_defaults(void);
 #if !defined(ECS_TARGET_POSIX) && !defined(ECS_TARGET_MINGW)
 #define ecs_os_strcat(str1, str2) strcat_s(str1, INT_MAX, str2)
 #define ecs_os_sprintf(ptr, ...) sprintf_s(ptr, INT_MAX, __VA_ARGS__)
+#define ecs_os_snprintf(ptr, len, ...) sprintf_s(ptr, len, __VA_ARGS__)
 #define ecs_os_vsprintf(ptr, fmt, args) vsprintf_s(ptr, INT_MAX, fmt, args)
 #define ecs_os_strcpy(str1, str2) strcpy_s(str1, INT_MAX, str2)
 #ifdef __cplusplus
@@ -2324,6 +2336,7 @@ void ecs_os_set_api_defaults(void);
 #else
 #define ecs_os_strcat(str1, str2) strcat(str1, str2)
 #define ecs_os_sprintf(ptr, ...) sprintf(ptr, __VA_ARGS__)
+#define ecs_os_snprintf(ptr, len, ...) snprintf(ptr, len, __VA_ARGS__)
 #define ecs_os_vsprintf(ptr, fmt, args) vsprintf(ptr, fmt, args)
 #define ecs_os_strcpy(str1, str2) strcpy(str1, str2)
 #ifdef __cplusplus
@@ -3978,6 +3991,19 @@ typedef struct ecs_value_t {
     void *ptr;
 } ecs_value_t;
 
+/** Type with information about the current Flecs build */
+typedef struct ecs_build_info_t {
+    const char *compiler;           /**< Compiler used to compile flecs */
+    const char **addons;            /**< Addons included in build */
+    const char *version;            /**< Stringified version */
+    int16_t version_major;          /**< Major flecs version */
+    int16_t version_minor;          /**< Minor flecs version */
+    int16_t version_patch;          /**< Patch flecs version */
+    bool debug;                     /**< Is this a debug build */
+    bool sanitize;                  /**< Is this a sanitize build */
+    bool perf_trace;                /**< Is this a perf tracing build */
+} ecs_build_info_t;
+
 /** Type that contains information about the world. */
 typedef struct ecs_world_info_t {
     ecs_entity_t last_component_id;   /**< Last issued component entity id */
@@ -4017,17 +4043,18 @@ typedef struct ecs_world_info_t {
 
     /* -- Command counts -- */
     struct {
-        int64_t add_count;             /**< add commands processed */
-        int64_t remove_count;          /**< remove commands processed */
-        int64_t delete_count;          /**< delete commands processed */
-        int64_t clear_count;           /**< clear commands processed */
-        int64_t set_count;             /**< set commands processed */
-        int64_t ensure_count;         /**< ensure/emplace commands processed */
-        int64_t modified_count;        /**< modified commands processed */
-        int64_t other_count;           /**< other commands processed */
-        int64_t discard_count;         /**< commands discarded, happens when entity is no longer alive when running the command */
-        int64_t batched_entity_count;  /**< entities for which commands were batched */
-        int64_t batched_command_count; /**< commands batched */
+        int64_t add_count;             /**< Add commands processed */
+        int64_t remove_count;          /**< Remove commands processed */
+        int64_t delete_count;          /**< Selete commands processed */
+        int64_t clear_count;           /**< Clear commands processed */
+        int64_t set_count;             /**< Set commands processed */
+        int64_t ensure_count;          /**< Ensure/emplace commands processed */
+        int64_t modified_count;        /**< Modified commands processed */
+        int64_t discard_count;         /**< Commands discarded, happens when entity is no longer alive when running the command */
+        int64_t event_count;           /**< Enqueued custom events */
+        int64_t other_count;           /**< Other commands processed */
+        int64_t batched_entity_count;  /**< Entities for which commands were batched */
+        int64_t batched_command_count; /**< Commands batched */
     } cmd;
 
     const char *name_prefix;          /**< Value set by ecs_set_name_prefix(). Used
@@ -4612,25 +4639,39 @@ void ecs_set_target_fps(
  */
 
 /** Begin readonly mode.
- * Readonly mode guarantees that no mutations will occur on the world, which
- * makes the world safe to access from multiple threads. While the world is in
- * readonly mode, operations are deferred.
- *
- * Note that while similar to ecs_defer_begin(), deferring only does not guarantee
- * the world is not mutated. Operations that are not deferred (like creating a
- * query) update data structures on the world and are allowed when deferring is
- * enabled, but not when the world is in readonly mode.
- *
- * A call to ecs_readonly_begin() must be followed up with ecs_readonly_end().
- *
- * The ecs_progress() function automatically enables readonly mode while systems
- * are executed.
- *
- * When a world has more than one stage, the specific stage must be provided to
- * mutating ECS operations. Failing to do so will throw a readonly assert. A
- * world typically has more than one stage when using threads. An example:
- *
+ * This operation puts the world in readonly mode, which disallows mutations on
+ * the world. Readonly mode exists so that internal mechanisms can implement
+ * optimizations that certain aspects of the world to not change, while also 
+ * providing a mechanism for applications to prevent accidental mutations in, 
+ * for example, multithreaded applications.
+ * 
+ * Readonly mode is a stronger version of deferred mode. In deferred mode
+ * ECS operations such as add/remove/set/delete etc. are added to a command 
+ * queue to be executed later. In readonly mode, operations that could break
+ * scheduler logic (such as creating systems, queries) are also disallowed.
+ * 
+ * Readonly mode itself has a single threaded and a multi threaded mode. In
+ * single threaded mode certain mutations on the world are still allowed, for 
+ * example:
+ * - Entity liveliness operations (such as new, make_alive), so that systems are
+ *   able to create new entities.
+ * - Implicit component registration, so that this works from systems
+ * - Mutations to supporting data structures for the evaluation of uncached 
+ *   queries (filters), so that these can be created on the fly.
+ * 
+ * These mutations are safe in a single threaded applications, but for
+ * multithreaded applications the world needs to be entirely immutable. For this
+ * purpose multi threaded readonly mode exists, which disallows all mutations on
+ * the world. This means that in multi threaded applications, entity liveliness
+ * operations, implicit component registration, and on-the-fly filter creation
+ * are not guaranteed to work.
+ * 
+ * While in readonly mode, applications can still enqueue ECS operations on a
+ * stage. Stages are managed automatically when using the pipeline addon and 
+ * ecs_progress(), but they can also be configured manually as shown here:
+ * 
  * @code
+ * // Number of stages typically corresponds with number of threads
  * ecs_set_stage_count(world, 2);
  * ecs_stage_t *stage = ecs_get_stage(world, 1);
  *
@@ -4638,13 +4679,38 @@ void ecs_set_target_fps(
  * ecs_add(world, e, Tag); // readonly assert
  * ecs_add(stage, e, Tag); // OK
  * @endcode
+ * 
+ * When an attempt is made to perform an operation on a world in readonly mode,
+ * the code will throw an assert saying that the world is in readonly mode.
+ * 
+ * A call to ecs_readonly_begin() must be followed up with ecs_readonly_end().
+ * When ecs_readonly_end() is called, all enqueued commands from configured 
+ * stages are merged back into the world. Calls to ecs_readonly_begin() and
+ * ecs_readonly_end() should always happen from a context where the code has
+ * exclusive access to the world. The functions themselves are not thread safe.
+ * 
+ * In a typical application, a (non-exhaustive) call stack that uses 
+ * ecs_readonly_begin() and ecs_readonly_end() will look like this:
+ * 
+ * @code
+ * ecs_progress()
+ *   ecs_readonly_begin()
+ *     ecs_defer_begin()
+ * 
+ *       // user code
+ * 
+ *   ecs_readonly_end()
+ *     ecs_defer_end()
+ *@endcode
  *
  * @param world The world
+ * @param multi_threaded Whether to enable readonly/multi threaded mode.
  * @return Whether world is in readonly mode.
  */
 FLECS_API
 bool ecs_readonly_begin(
-    ecs_world_t *world);
+    ecs_world_t *world,
+    bool multi_threaded);
 
 /** End readonly mode.
  * This operation ends readonly mode, and must be called after
@@ -4917,6 +4983,11 @@ void* ecs_get_ctx(
 FLECS_API
 void* ecs_get_binding_ctx(
     const ecs_world_t *world);
+
+/** Get build info.
+ *  Returns information about the current Flecs build.
+ */
+const ecs_build_info_t* ecs_get_build_info(void);
 
 /** Get world info.
  *
@@ -6115,12 +6186,12 @@ typedef struct ecs_flatten_desc_t {
     /* When true, the flatten operation will not remove names from entities in
      * the flattened tree. This may fail if entities from different subtrees
      * have the same name. */
-    bool keep_names : 1;
+    bool keep_names;
 
     /* When true, the flattened tree won't contain information about the
      * original depth of the entities. This can reduce fragmentation, but may
      * cause existing code, such as cascade queries, to no longer work. */
-    bool lose_depth : 1;
+    bool lose_depth;
 } ecs_flatten_desc_t;
 
 /** Recursively flatten relationship for target entity (experimental).
@@ -9593,9 +9664,6 @@ int ecs_value_move_ctor(
 #ifdef FLECS_NO_DOC
 #undef FLECS_DOC
 #endif
-#ifdef FLECS_NO_COREDOC
-#undef FLECS_COREDOC
-#endif
 #ifdef FLECS_NO_LOG
 #undef FLECS_LOG
 #endif
@@ -10546,8 +10614,8 @@ typedef struct {
     uint16_t port;                    /**< HTTP port */
     const char *ipaddr;               /**< Interface to listen on (optional) */
     int32_t send_queue_wait_ms;       /**< Send queue wait time when empty */
-    ecs_ftime_t cache_timeout;             /**< Cache invalidation timeout (0 disables caching) */
-    ecs_ftime_t cache_purge_timeout;       /**< Cache purge timeout (for purging cache entries) */
+    double cache_timeout;             /**< Cache invalidation timeout (0 disables caching) */
+    double cache_purge_timeout;       /**< Cache purge timeout (for purging cache entries) */
 } ecs_http_server_desc_t;
 
 /** Create server.
@@ -12474,8 +12542,11 @@ typedef struct {
     double system_time_last;    /**< Time spent in systems */
     double merge_time_last;     /**< Time spent in merges */
 
-    /* Frame count */
     int64_t frame_count;        /**< Number of frames processed */
+    int64_t command_count;      /**< Number of commands processed */
+
+    /* Build info */
+    ecs_build_info_t build_info; /**< Build info */
 } EcsWorldSummary;
 
 /* Module import */
@@ -12490,61 +12561,6 @@ void FlecsMonitorImport(
 #endif
 
 /** @} */
-
-#endif
-
-#endif
-
-#ifdef FLECS_COREDOC
-#ifdef FLECS_NO_COREDOC
-#error "FLECS_NO_COREDOC failed: COREDOC is required by other addons"
-#endif
-/**
- * @file addons/coredoc.h
- * @brief Core doc module.
- *
- * The core doc module imports documentation and reflection data for core
- * components, tags and systems.
- */
-
-#ifdef FLECS_COREDOC
-
-#ifndef FLECS_DOC
-#define FLECS_DOC
-#endif
-
-#ifndef FLECS_META
-#define FLECS_META
-#endif
-
-#ifndef FLECS_COREDOC_H
-#define FLECS_COREDOC_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/**
- * @defgroup c_addons_coredoc Coredoc
- * @ingroup c_addons
- * Module that adds documentation and reflection to core entities.
- *
- * @{
- */
-
-/* Module import */
-
-FLECS_API
-void FlecsCoreDocImport(
-    ecs_world_t *world);
-
-/** @} */
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
 
 #endif
 
@@ -16708,7 +16724,7 @@ namespace _ {
 
 #if INTPTR_MAX == INT64_MAX
     #ifdef ECS_TARGET_MSVC
-        #if _MSC_VER >= 1930
+        #if _MSC_VER >= 1929
             #define ECS_SIZE_T_STR "unsigned __int64"
         #else
             #define ECS_SIZE_T_STR "unsigned int"
@@ -16724,7 +16740,7 @@ namespace _ {
     #endif
 #else
     #ifdef ECS_TARGET_MSVC
-        #if _MSC_VER >= 1930
+        #if _MSC_VER >= 1929
             #define ECS_SIZE_T_STR "unsigned __int32"
         #else
             #define ECS_SIZE_T_STR "unsigned int"
@@ -20150,34 +20166,19 @@ struct world {
         ecs_frame_end(m_world);
     }
 
-    /** Begin staging.
-     * When an application does not use ecs_progress to control the main loop, it
-     * can still use Flecs features such as the defer queue. When an application
-     * needs to stage changes, it needs to call this function after ecs_frame_begin.
-     * A call to ecs_readonly_begin must be followed by a call to ecs_readonly_end.
-     *
-     * When staging is enabled, modifications to entities are stored to a stage.
-     * This ensures that arrays are not modified while iterating. Modifications are
-     * merged back to the "main stage" when ecs_readonly_end is invoked.
-     *
-     * While the world is in staging mode, no structural changes (add/remove/...)
-     * can be made to the world itself. Operations must be executed on a stage
-     * instead (see ecs_get_stage).
-     *
-     * This function should only be ran from the main thread.
+    /** Begin readonly mode.
+     * 
+     * @see ecs_readonly_begin
      *
      * @return Whether world is currently staged.
      */
-    bool readonly_begin() const {
-        return ecs_readonly_begin(m_world);
+    bool readonly_begin(bool multi_threaded = false) const {
+        return ecs_readonly_begin(m_world, multi_threaded);
     }
 
-    /** End staging.
-     * Leaves staging mode. After this operation the world may be directly mutated
-     * again. By default this operation also merges data back into the world, unless
-     * auto-merging was disabled explicitly.
-     *
-     * This function should only be ran from the main thread.
+    /** End readonly mode.
+     * 
+     * @see ecs_readonly_end
      */
     void readonly_end() const {
         ecs_readonly_end(m_world);
@@ -21764,6 +21765,118 @@ struct scoped_world : world {
 
 } // namespace flecs
 
+
+/**
+ * @file addons/cpp/field.hpp
+ * @brief Wrapper classes for fields returned by flecs::iter.
+ */
+
+#pragma once
+
+/**
+ * @defgroup cpp_field Fields
+ * @ingroup cpp_core
+ * Field helper types.
+ *
+ * @{
+ */
+
+namespace flecs
+{
+
+/** Unsafe wrapper class around a field.
+ * This class can be used when a system does not know the type of a field at
+ * compile time.
+ *
+ * @ingroup cpp_iterator
+ */
+struct untyped_field {
+    untyped_field(void* array, size_t size, size_t count, bool is_shared = false)
+        : m_data(array)
+        , m_size(size)
+        , m_count(count)
+        , m_is_shared(is_shared) {}
+
+    /** Return element in component array.
+     * This operator may only be used if the field is not shared.
+     *
+     * @param index Index of element.
+     * @return Reference to element.
+     */
+    void* operator[](size_t index) const {
+        ecs_assert(!m_is_shared, ECS_INVALID_PARAMETER,
+            "invalid usage of [] operator for shared component field");
+        ecs_assert(index < m_count, ECS_COLUMN_INDEX_OUT_OF_RANGE,
+            "index %d out of range for field", index);
+        return ECS_OFFSET(m_data, m_size * index);
+    }
+
+protected:
+    void* m_data;
+    size_t m_size;
+    size_t m_count;
+    bool m_is_shared;
+};
+
+/** Wrapper class around a field.
+ *
+ * @tparam T component type of the field.
+ *
+ * @ingroup cpp_iterator
+ */
+template <typename T>
+struct field {
+    static_assert(std::is_empty<T>::value == false,
+        "invalid type for field, cannot iterate empty type");
+
+    /** Create field from component array.
+     *
+     * @param array Pointer to the component array.
+     * @param count Number of elements in component array.
+     * @param is_shared Is the component shared or not.
+     */
+    field(T* array, size_t count, bool is_shared = false)
+        : m_data(array)
+        , m_count(count)
+        , m_is_shared(is_shared) {}
+
+    /** Create field from iterator.
+     *
+     * @param iter Iterator object.
+     * @param field Index of the signature of the query being iterated over.
+     */
+    field(iter &iter, int field);
+
+    /** Return element in component array.
+     * This operator may only be used if the field is not shared.
+     *
+     * @param index Index of element.
+     * @return Reference to element.
+     */
+    T& operator[](size_t index) const;
+
+    /** Return first element of component array.
+     * This operator is typically used when the field is shared.
+     *
+     * @return Reference to the first element.
+     */
+    T& operator*() const;
+
+    /** Return first element of component array.
+     * This operator is typically used when the field is shared.
+     *
+     * @return Pointer to the first element.
+     */
+    T* operator->() const;
+
+protected:
+    T* m_data;
+    size_t m_count;
+    bool m_is_shared;
+};
+
+}
+
 /**
  * @file addons/cpp/iter.hpp
  * @brief Wrapper classes for ecs_iter_t and component arrays.
@@ -21781,107 +21894,6 @@ struct scoped_world : world {
 
 namespace flecs
 {
-
-/** Unsafe wrapper class around a column.
- * This class can be used when a system does not know the type of a column at
- * compile time.
- *
- * @ingroup cpp_iterator
- */
-struct untyped_column {
-    untyped_column(void* array, size_t size, size_t count, bool is_shared = false)
-        : m_array(array)
-        , m_size(size)
-        , m_count(count)
-        , m_is_shared(is_shared) {}
-
-    /** Return element in component array.
-     * This operator may only be used if the column is not shared.
-     *
-     * @param index Index of element.
-     * @return Reference to element.
-     */
-    void* operator[](size_t index) const {
-        ecs_assert(index < m_count, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
-        ecs_assert(!m_is_shared, ECS_INVALID_PARAMETER, NULL);
-        return ECS_OFFSET(m_array, m_size * index);
-    }
-
-protected:
-    void* m_array;
-    size_t m_size;
-    size_t m_count;
-    bool m_is_shared;
-};
-
-/** Wrapper class around a column.
- *
- * @tparam T component type of the column.
- *
- * @ingroup cpp_iterator
- */
-template <typename T>
-struct column {
-    static_assert(std::is_empty<T>::value == false,
-        "invalid type for column, cannot iterate empty type");
-
-    /** Create column from component array.
-     *
-     * @param array Pointer to the component array.
-     * @param count Number of elements in component array.
-     * @param is_shared Is the component shared or not.
-     */
-    column(T* array, size_t count, bool is_shared = false)
-        : m_array(array)
-        , m_count(count)
-        , m_is_shared(is_shared) {}
-
-    /** Create column from iterator.
-     *
-     * @param iter Iterator object.
-     * @param column Index of the signature of the query being iterated over.
-     */
-    column(iter &iter, int column);
-
-    /** Return element in component array.
-     * This operator may only be used if the column is not shared.
-     *
-     * @param index Index of element.
-     * @return Reference to element.
-     */
-    T& operator[](size_t index) const {
-        ecs_assert(index < m_count, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
-        ecs_assert(!index || !m_is_shared, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(m_array != nullptr, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
-        return m_array[index];
-    }
-
-    /** Return first element of component array.
-     * This operator is typically used when the column is shared.
-     *
-     * @return Reference to the first element.
-     */
-    T& operator*() const {
-      ecs_assert(m_array != nullptr, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
-      return *m_array;
-    }
-
-    /** Return first element of component array.
-     * This operator is typically used when the column is shared.
-     *
-     * @return Pointer to the first element.
-     */
-    T* operator->() const {
-        ecs_assert(m_array != nullptr, ECS_COLUMN_INDEX_OUT_OF_RANGE, NULL);
-        return m_array;
-    }
-
-protected:
-    T* m_array;
-    size_t m_count;
-    bool m_is_shared;
-};
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -22104,9 +22116,7 @@ public:
      */
     template <typename T, typename A = actual_type_t<T>,
         typename std::enable_if<std::is_const<T>::value, void>::type* = nullptr>
-    flecs::column<A> field(int32_t index) const {
-        return get_field<A>(index);
-    }
+    flecs::field<A> field(int32_t index) const;
 
     /** Get read/write access to field data.
      * If the matched id for the specified field does not match with the provided
@@ -22119,11 +22129,7 @@ public:
     template <typename T, typename A = actual_type_t<T>,
         typename std::enable_if<
             std::is_const<T>::value == false, void>::type* = nullptr>
-    flecs::column<A> field(int32_t index) const {
-        ecs_assert(!ecs_field_is_readonly(m_iter, index),
-            ECS_ACCESS_VIOLATION, NULL);
-        return get_field<A>(index);
-    }
+    flecs::field<A> field(int32_t index) const;
 
     /** Get unchecked access to field data.
      * Unchecked access is required when a system does not know the type of a
@@ -22131,16 +22137,40 @@ public:
      *
      * @param index The field index.
      */
-    flecs::untyped_column field(int32_t index) const {
+    flecs::untyped_field field(int32_t index) const {
+        ecs_assert(!(m_iter->flags & EcsIterCppEach), ECS_INVALID_OPERATION,
+            "cannot .field from .each, use .field_at(%d, row) instead", index);
         return get_unchecked_field(index);
+    }
+
+    /** Get pointer to field at row. */
+    void* field_at(int32_t index, size_t row) const {
+        return get_unchecked_field(index)[row];
+    }
+
+    /** Get reference to field at row. */
+    template <typename T, typename A = actual_type_t<T>,
+        typename std::enable_if<std::is_const<T>::value, void>::type* = nullptr>
+    const A& field_at(int32_t index, size_t row) const {
+        return get_field<A>(index)[row];
+    }
+
+    /** Get reference to field at row. */
+    template <typename T, typename A = actual_type_t<T>,
+        typename std::enable_if<
+            std::is_const<T>::value == false, void>::type* = nullptr>
+    A& field_at(int32_t index, size_t row) const {
+        ecs_assert(!ecs_field_is_readonly(m_iter, index),
+            ECS_ACCESS_VIOLATION, NULL);
+        return get_field<A>(index)[row];
     }
 
     /** Get readonly access to entity ids.
      *
      * @return The entity ids.
      */
-    flecs::column<const flecs::entity_t> entities() const {
-        return flecs::column<const flecs::entity_t>(m_iter->entities, static_cast<size_t>(m_iter->count), false);
+    flecs::field<const flecs::entity_t> entities() const {
+        return flecs::field<const flecs::entity_t>(m_iter->entities, static_cast<size_t>(m_iter->count), false);
     }
 
     /** Obtain the total number of tables the iterator will iterate over. */
@@ -22185,7 +22215,7 @@ public:
 private:
     /* Get field, check if correct type is used */
     template <typename T, typename A = actual_type_t<T>>
-    flecs::column<T> get_field(int32_t index) const {
+    flecs::field<T> get_field(int32_t index) const {
 
 #ifndef FLECS_NDEBUG
         ecs_entity_t term_id = ecs_field_id(m_iter, index);
@@ -22208,12 +22238,12 @@ private:
             count = static_cast<size_t>(m_iter->count);
         }
 
-        return flecs::column<A>(
+        return flecs::field<A>(
             static_cast<T*>(ecs_field_w_size(m_iter, sizeof(A), index)),
             count, is_shared);
     }
 
-    flecs::untyped_column get_unchecked_field(int32_t index) const {
+    flecs::untyped_field get_unchecked_field(int32_t index) const {
         size_t count;
         size_t size = ecs_field_size(m_iter, index);
         bool is_shared = !ecs_field_is_self(m_iter, index);
@@ -22229,7 +22259,7 @@ private:
             count = static_cast<size_t>(m_iter->count);
         }
 
-        return flecs::untyped_column(
+        return flecs::untyped_field(
             ecs_field_w_size(m_iter, 0, index), size, count, is_shared);
     }
 
@@ -25172,6 +25202,8 @@ struct each_delegate : public delegate {
     // iterating a query.
     void invoke(ecs_iter_t *iter) const {
         term_ptrs<Components...> terms;
+
+        iter->flags |= EcsIterCppEach;
 
         if (terms.populate(iter)) {
             invoke_callback< each_ref_column >(iter, m_func, 0, terms.m_terms);
@@ -31935,6 +31967,67 @@ inline flecs::alert_builder<Comps...> world::alert(Args &&... args) const {
 #endif
 
 /**
+ * @file addons/cpp/impl/field.hpp
+ * @brief Field implementation.
+ */
+
+#pragma once
+
+namespace flecs
+{
+
+template <typename T>
+inline field<T>::field(iter &iter, int32_t index) {
+    *this = iter.field<T>(index);
+}
+
+template <typename T>
+T& field<T>::operator[](size_t index) const {
+    ecs_assert(m_data != nullptr, ECS_INVALID_OPERATION, 
+        "invalid nullptr dereference of component type %s", 
+            _::type_name<T>());
+    ecs_assert(index < m_count, ECS_COLUMN_INDEX_OUT_OF_RANGE,
+        "index %d out of range for array of component type %s",
+            index, _::type_name<T>());
+    ecs_assert(!index || !m_is_shared, ECS_INVALID_PARAMETER,
+        "non-zero index invalid for shared field of component type %s",
+            _::type_name<T>());
+    return m_data[index];
+}
+
+/** Return first element of component array.
+ * This operator is typically used when the field is shared.
+ *
+ * @return Reference to the first element.
+ */
+template <typename T>
+T& field<T>::operator*() const {
+    ecs_assert(m_data != nullptr, ECS_INVALID_OPERATION, 
+        "invalid nullptr dereference of component type %s", 
+            _::type_name<T>());
+    return *m_data;
+}
+
+/** Return first element of component array.
+ * This operator is typically used when the field is shared.
+ *
+ * @return Pointer to the first element.
+ */
+template <typename T>
+T* field<T>::operator->() const {
+    ecs_assert(m_data != nullptr, ECS_INVALID_OPERATION, 
+        "invalid nullptr dereference of component type %s", 
+            _::type_name<T>());
+    ecs_assert(m_data != nullptr, ECS_INVALID_OPERATION, 
+        "-> operator invalid for array with >1 element of "
+        "component type %s, use [row] instead",
+            _::type_name<T>());
+    return m_data;
+}
+
+}
+
+/**
  * @file addons/cpp/impl/iter.hpp
  * @brief Iterator implementation.
  */
@@ -31966,11 +32059,6 @@ inline flecs::entity iter::entity(size_t row) const {
     return flecs::entity(m_iter->world, m_iter->entities[row]);
 }
 
-template <typename T>
-inline column<T>::column(iter &iter, int32_t index) {
-    *this = iter.field<T>(index);
-}
-
 inline flecs::entity iter::src(int32_t index) const {
     return flecs::entity(m_iter->world, ecs_field_src(m_iter, index));
 }
@@ -31998,6 +32086,27 @@ inline flecs::table iter::table() const {
 inline flecs::table_range iter::range() const {
     return flecs::table_range(m_iter->real_world, m_iter->table, 
         m_iter->offset, m_iter->count);
+}
+
+template <typename T, typename A,
+    typename std::enable_if<std::is_const<T>::value, void>::type*>
+inline flecs::field<A> iter::field(int32_t index) const {
+    ecs_assert(!(m_iter->flags & EcsIterCppEach), ECS_INVALID_OPERATION,
+        "cannot .field from .each, use .field_at<const %s>(%d, row) instead",
+            _::type_name<T>(), index);
+    return get_field<A>(index);
+}
+
+template <typename T, typename A,
+    typename std::enable_if<
+        std::is_const<T>::value == false, void>::type*>
+inline flecs::field<A> iter::field(int32_t index) const {
+    ecs_assert(!(m_iter->flags & EcsIterCppEach), ECS_INVALID_OPERATION,
+        "cannot .field from .each, use .field_at<%s>(%d, row) instead",
+            _::type_name<T>(), index);
+    ecs_assert(!ecs_field_is_readonly(m_iter, index),
+        ECS_ACCESS_VIOLATION, NULL);
+    return get_field<A>(index);
 }
 
 #ifdef FLECS_RULES

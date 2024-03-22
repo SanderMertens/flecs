@@ -1,0 +1,2 @@
+
+#define HELLOWORLD 1
