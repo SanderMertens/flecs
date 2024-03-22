@@ -45,6 +45,7 @@ The [Flecs playground](https://www.flecs.dev/explorer/?local=true&wasm=https://w
 
 To learn how to use the playground, check the [Flecs Script Tutorial](https://www.flecs.dev/flecs/md_docs_2FlecsScriptTutorial.html).
 
+
 ## Documentation
 - [Quickstart](https://www.flecs.dev/flecs/md_docs_2Quickstart.html)
 - [FAQ](https://www.flecs.dev/flecs/md_docs_2FAQ.html)
@@ -66,26 +67,35 @@ void Move(ecs_iter_t *it) {
   Velocity *v = ecs_field(it, Velocity, 2);
 
   for (int i = 0; i < it->count; i++) {
-    p[i].x += v[i].x;
-    p[i].y += v[i].y;
+    p[i].x += v[i].x * it->delta_time;
+    p[i].y += v[i].y * it->delta_time;
+    printf("Move: %s: {%f, %f}\n",
+        ecs_get_name(it->world, it->entities[i]), 
+        p[i].x, p[i].y); 
   }
 }
 
 int main(int argc, char *argv[]) {
-  ecs_world_t *ecs = ecs_init();
+    ecs_world_t *ecs = ecs_init_for_godbolt(argc, argv);
 
-  ECS_COMPONENT(ecs, Position);
-  ECS_COMPONENT(ecs, Velocity);
+    ECS_COMPONENT(ecs, Position);
+    ECS_COMPONENT(ecs, Velocity);
 
-  ECS_SYSTEM(ecs, Move, EcsOnUpdate, Position, Velocity);
+    ECS_SYSTEM(ecs, Move, EcsOnUpdate, Position, Velocity);
 
-  ecs_entity_t e = ecs_new_id(ecs);
-  ecs_set(ecs, e, Position, {10, 20});
-  ecs_set(ecs, e, Velocity, {1, 2});
+    ecs_entity_t e = ecs_new_entity(ecs, "ent");
+    ecs_set(ecs, e, Position, {10, 20});
+    ecs_set(ecs, e, Velocity, {1, 2});
+    
+    for (int i = 0; i < 5; ++i) 
+    {
+        ecs_progress(ecs, 0);
+    }
 
-  while (ecs_progress(ecs, 0)) { }
+    return ecs_fini(ecs);
 }
 ```
+[Edit & run on godbolt.org](https://godbolt.org/z/5oonvncj9) 
 
 Same example in C++11:
 
