@@ -209,6 +209,18 @@ public:
 		bOutSuccess = true;
 		return true;
 	}
+
+	template <typename FunctionType>
+	FORCEINLINE void Iterate(const FunctionType& InFunction) const
+	{
+		GetEntity().each(InFunction);
+	}
+
+	template <typename TFirst, typename FunctionType>
+	FORCEINLINE void Iterate(const FunctionType& InFunction) const
+	{
+		GetEntity().each<TFirst>(InFunction);
+	}
 	
 private:
 	flecs::entity Entity;
