@@ -628,12 +628,6 @@ public:
 		return World.prefab<T>(TCHAR_TO_ANSI(*Name));
 	}
 
-	template <typename ...TArgs>
-	FORCEINLINE FFlecsEntityHandle CreatePrefab(TArgs&&... Args) const
-	{
-		return World.prefab(std::forward<TArgs>(Args)...);
-	}
-
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
 	FORCEINLINE FFlecsEntityHandle CreatePrefab(const FString& Name) const
 	{
