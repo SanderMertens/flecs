@@ -101,7 +101,6 @@ public:
 	FORCEINLINE NO_DISCARD bool IsEnabled() const { return GetEntity().enabled(); }
 
 	FORCEINLINE void Destroy() const { GetEntity().destruct(); }
-	
 
 	FORCEINLINE NO_DISCARD FFlecsEntityHandle Clone(const bool bCloneValue = true, const int32 DestinationId = 0) const
 	{
@@ -163,6 +162,29 @@ public:
 		GetEntity().template emit<T>(InValue);
 	}
 
+	FORCEINLINE void Emit(const FFlecsEntityHandle& InEntity) const
+	{
+		GetEntity().emit(InEntity);
+	}
+
+	template <typename FunctionType>
+	FORCEINLINE void Observe(FunctionType&& InFunction) const
+	{
+		GetEntity().observe(InFunction);
+	}
+
+	template <typename TEvent, typename FunctionType>
+	FORCEINLINE void Observe(FunctionType&& InFunction) const
+	{
+		GetEntity().template observe<TEvent>(InFunction);
+	}
+
+	template <typename FunctionType>
+	FORCEINLINE void Observe(const FFlecsEntityHandle& InEntity, FunctionType&& InFunction) const
+	{
+		GetEntity().observe(InEntity, InFunction);
+	}
+
 	FORCEINLINE NO_DISCARD bool operator==(const FFlecsEntityHandle& Other) const
 	{
 		return GetEntity() == Other.GetEntity();
@@ -212,7 +234,6 @@ public:
 	FORCEINLINE bool NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess) const
 	{
 		FString Json = ToJson();
-		Ar << Json;
 		bOutSuccess = true;
 		return true;
 	}

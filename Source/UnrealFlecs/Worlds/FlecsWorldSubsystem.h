@@ -94,7 +94,7 @@ public:
 		{
 			if (World->Progress())
 			{
-				//World->Merge();
+				World->Merge();
 			}
 		}
 	}
