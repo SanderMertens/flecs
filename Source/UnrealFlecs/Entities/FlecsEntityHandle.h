@@ -234,6 +234,7 @@ public:
 	FORCEINLINE bool NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess) const
 	{
 		FString Json = ToJson();
+		Ar << Json;
 		bOutSuccess = true;
 		return true;
 	}

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Entities/FlecsEntityHandle.h"
 #include "FlecsEntityActorComponent.generated.h"
 
 UCLASS(BlueprintType, Blueprintable, ClassGroup=(Flecs), meta=(BlueprintSpawnableComponent))
@@ -14,10 +15,13 @@ class UNREALFLECS_API UFlecsEntityActorComponent : public UActorComponent
 public:
 	UFlecsEntityActorComponent(const FObjectInitializer& ObjectInitializer);
 
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
-							   FActorComponentTickFunction* ThisTickFunction) override;
+	UFUNCTION(BlueprintCallable, Category = "Flecs | Entity")
+	FORCEINLINE FFlecsEntityHandle GetEntityHandle() const
+	{
+		return EntityHandle;
+	}
 
-protected:
-	virtual void BeginPlay() override;
+	UPROPERTY()
+	FFlecsEntityHandle EntityHandle;
 	
 }; // class UFlecsEntityActorComponent

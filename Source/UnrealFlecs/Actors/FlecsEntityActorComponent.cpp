@@ -9,16 +9,3 @@ UFlecsEntityActorComponent::UFlecsEntityActorComponent(const FObjectInitializer&
 {
 	
 }
-
-void UFlecsEntityActorComponent::BeginPlay()
-{
-	Super::BeginPlay();
-	
-}
-
-void UFlecsEntityActorComponent::TickComponent(float DeltaTime, ELevelTick TickType,
-                                               FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-}
-
