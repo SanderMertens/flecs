@@ -413,5 +413,11 @@ public:
 		const UFlecsWorld* World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return FFlecsEntityHandle(flecs::entity(World->World, flecs::ScopeClose));
 	}
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs | Default Entities")
+	static FORCEINLINE FFlecsEntityHandle GetNullEntity()
+	{
+		return FFlecsEntityHandle::GetNullHandle();
+	}
 	
 }; // class UDefaultEntitiesLibrary

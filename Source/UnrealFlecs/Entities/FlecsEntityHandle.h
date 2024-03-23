@@ -21,6 +21,11 @@ struct UNREALFLECS_API FFlecsEntityHandle
 		return GetTypeHash(InEntity.GetEntity().id());
 	}
 
+	FORCEINLINE static NO_DISCARD FFlecsEntityHandle GetNullHandle()
+	{
+		return flecs::entity::null();
+	}
+
 public:
 	FFlecsEntityHandle() = default;
 	FORCEINLINE FFlecsEntityHandle(const flecs::entity& InEntity) : Entity(InEntity) {}
@@ -29,6 +34,7 @@ public:
 	
 	FORCEINLINE operator flecs::entity() const { return GetEntity(); }
 	FORCEINLINE operator flecs::id_t() const { return GetEntity().id(); }
+	FORCEINLINE operator flecs::entity_view() const { return GetEntity().view(); }
 	
 	FORCEINLINE NO_DISCARD bool IsValid() const { return GetEntity().is_valid(); }
 	FORCEINLINE NO_DISCARD bool IsAlive() const { return GetEntity().is_alive(); }
@@ -95,6 +101,7 @@ public:
 	FORCEINLINE NO_DISCARD bool IsEnabled() const { return GetEntity().enabled(); }
 
 	FORCEINLINE void Destroy() const { GetEntity().destruct(); }
+	
 
 	FORCEINLINE NO_DISCARD FFlecsEntityHandle Clone(const bool bCloneValue = true, const int32 DestinationId = 0) const
 	{
@@ -219,7 +226,7 @@ public:
 	template <typename TFirst, typename FunctionType>
 	FORCEINLINE void Iterate(const FunctionType& InFunction) const
 	{
-		GetEntity().each<TFirst>(InFunction);
+		GetEntity().each<TFirst, FunctionType>(InFunction);
 	}
 	
 private:

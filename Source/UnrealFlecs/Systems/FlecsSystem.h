@@ -25,6 +25,31 @@ public:
 		return InWorld.system<TComponents...>(TCHAR_TO_ANSI(InName));
 	}
 
+	FORCEINLINE void Enable()
+	{
+		System.enable();
+	}
+
+	FORCEINLINE void Disable()
+	{
+		System.disable();
+	}
+
+	FORCEINLINE NO_DISCARD bool IsEnabled() const
+	{
+		return !System.has(flecs::Disabled);
+	}
+
+	FORCEINLINE NO_DISCARD bool IsDisabled() const
+	{
+		return System.has(flecs::Disabled);
+	}
+
+	FORCEINLINE void Toggle()
+	{
+		IsEnabled() ? Disable() : Enable();
+	}
+
 	FORCEINLINE void SetSystem(const flecs::system& InSystem)
 	{
 		System = InSystem;

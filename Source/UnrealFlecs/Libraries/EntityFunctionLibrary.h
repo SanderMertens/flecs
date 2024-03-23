@@ -14,19 +14,11 @@ class UNREALFLECS_API UEntityFunctionLibrary final : public UBlueprintFunctionLi
 
 public:
 
-    UFUNCTION(BlueprintCallable, Category = "Flecs | Entity", meta = (WorldContext = "WorldContextObject"))
-    static FORCEINLINE FFlecsEntityHandle CreateEntity(const UObject* WorldContextObject, const FString& EntityName = "None");
-
-    UFUNCTION(BlueprintCallable, Category = "Flecs | Entity", meta = (WorldContext = "WorldContextObject"))
-    static FORCEINLINE FFlecsEntityHandle GetEntityWithName(const UObject* WorldContextObject,
-        const FString& EntityName, const bool bSearchPath = true);
-
     UFUNCTION(BlueprintCallable, Category = "Flecs | Entity")
-    static FORCEINLINE void DestroyEntity(const FFlecsEntityHandle& Entity);
-
-    UFUNCTION(BlueprintCallable, Category = "Flecs | Entity", meta = (WorldContext = "WorldContextObject"))
-    static FORCEINLINE void DestroyEntityByName(const UObject* WorldContextObject,
-        const FString& EntityName, const bool bSearchPath = true);
+    static FORCEINLINE void DestroyEntity(const FFlecsEntityHandle& Entity)
+    {
+        Entity.Destroy();
+    }
 
     UFUNCTION(BlueprintCallable, Category = "Flecs | Entity")
     static FORCEINLINE void SetEntityName(const FFlecsEntityHandle& Entity, const FName& EntityName)

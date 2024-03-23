@@ -8,6 +8,7 @@
 #include "SolidMacros/Concepts/SolidConcepts.h"
 #include "Entities/FlecsId.h"
 #include "Systems/FlecsSystem.h"
+#include "Timers/FlecsTimer.h"
 #include "FlecsWorld.generated.h"
 
 UCLASS(BlueprintType)
@@ -38,6 +39,30 @@ public:
 	FORCEINLINE FFlecsEntityHandle CreateEntity(const TArgs&... Args) const
 	{
 		return World.entity(Args...);
+	}
+
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
+	FORCEINLINE FFlecsEntityHandle CreateEntity(const FString& Name = "None") const
+	{
+		return World.entity(TCHAR_TO_ANSI(*Name));
+	}
+
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
+	FORCEINLINE FFlecsEntityHandle CreateEntityWithPrefab(const FFlecsEntityHandle& InPrefab) const
+	{
+		return World.entity(InPrefab.GetEntity());
+	}
+	
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
+	FORCEINLINE FFlecsEntityHandle GetEntityWithName(const FString& Name, const bool bSearchPath = true) const
+	{
+		return World.lookup(TCHAR_TO_ANSI(*Name), bSearchPath);
+	}
+
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
+	FORCEINLINE void DestroyEntityByName(const FString& Name, const bool bSearchPath = true) const
+	{
+		World.delete_with(*TCHAR_TO_ANSI(*Name), bSearchPath);
 	}
 
 	template <typename FunctionType>
@@ -603,6 +628,12 @@ public:
 		return World.prefab<T>(TCHAR_TO_ANSI(*Name));
 	}
 
+	template <typename ...TArgs>
+	FORCEINLINE FFlecsEntityHandle CreatePrefab(TArgs&&... Args) const
+	{
+		return World.prefab(std::forward<TArgs>(Args)...);
+	}
+
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
 	FORCEINLINE FFlecsEntityHandle CreatePrefab(const FString& Name) const
 	{
@@ -626,10 +657,10 @@ public:
 		return World.observer<>(TCHAR_TO_ANSI(*Name));
 	}
 
-	template <typename ...TComponents>
-	FORCEINLINE flecs::observer_builder<TComponents...> CreateObserver(const FFlecsEntityHandle& InEntity) const
+	template <typename ...TComponents, typename ...TArgs>
+	FORCEINLINE flecs::observer_builder<TComponents...> CreateObserver(const FFlecsEntityHandle& InEntity, TArgs&&... Args) const
 	{
-		return World.observer<TComponents...>(InEntity.GetEntity());
+		return World.observer<TComponents...>(InEntity.GetEntity(), std::forward<TArgs>(Args)...);
 	}
 
 	FORCEINLINE FFlecsEntityHandle CreateObserver(const FFlecsEntityHandle& InEntity) const
@@ -646,6 +677,34 @@ public:
 	FORCEINLINE flecs::event_builder Event() const
 	{
 		return World.event<TEvent>();
+	}
+
+	FORCEINLINE NO_DISCARD flecs::pipeline_builder<> CreatePipeline() const
+	{
+		return World.pipeline();
+	}
+
+	template <typename ...TComponents>
+	FORCEINLINE NO_DISCARD flecs::pipeline_builder<TComponents...> CreatePipeline() const
+	{
+		return World.pipeline<TComponents...>();
+	}
+
+	FORCEINLINE void RandomizeTimers() const
+	{
+		World.randomize_timers();
+	}
+
+	template <typename ...TArgs>
+	FORCEINLINE NO_DISCARD FFlecsTimer CreateTimer(const TArgs&... Args) const
+	{
+		return World.timer(Args...);
+	}
+
+	template <typename T>
+	FORCEINLINE NO_DISCARD FFlecsTimer CreateTimer() const
+	{
+		return World.timer<T>();
 	}
 	
 	flecs::world World;

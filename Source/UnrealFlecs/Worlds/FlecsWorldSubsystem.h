@@ -133,6 +133,8 @@ public:
 		#endif // WITH_EDITOR
 
 		GetDefaultWorld(this)->AddSingleton<FFlecsTypeMapComponent>();
+
+		NewFlecsWorld->SetThreads(DeveloperSettings->DefaultWorkerThreads);
 		
 		return Worlds.Last();
 	}

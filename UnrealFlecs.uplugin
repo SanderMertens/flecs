@@ -1,7 +1,7 @@
 ﻿{
 	"FileVersion": 3,
 	"Version": 1,
-	"VersionName": "1.0",
+	"VersionName": "3.2.12",
 	"FriendlyName": "UnrealFlecs",
 	"Description": "",
 	"Category": "ECS",

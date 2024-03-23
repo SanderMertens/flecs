@@ -56,7 +56,7 @@
  * Customizable precision for scalar time values. Change to double precision for
  * processes that can run for a long time (e.g. longer than a day). */
 #ifndef ecs_ftime_t
-#define ecs_ftime_t ecs_float_t
+#define ecs_ftime_t double
 #endif
 
 /** @def FLECS_LEGACY
