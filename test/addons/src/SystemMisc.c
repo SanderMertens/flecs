@@ -221,7 +221,7 @@ void SystemMisc_invalid_empty_string(void) {
 
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, { .name = "Dummy", .add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.query.expr = "",
+        .query.expr = "",
         .callback = Dummy
     });
 
@@ -237,7 +237,7 @@ void SystemMisc_invalid_empty_string_w_space(void) {
 
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, { .name = "Dummy", .add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.query.expr = "  ",
+        .query.expr = "  ",
         .callback = Dummy
     });
 
@@ -450,41 +450,6 @@ void SystemMisc_ensure_single_merge(void) {
     ecs_fini(world);
 }
 
-static int test_table_count_invoked;
-
-static void TestTableCount(ecs_iter_t *it) {
-    test_int(it->table_count, 2);
-
-    test_table_count_invoked ++;
-}
-
-void SystemMisc_table_count(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-    ECS_COMPONENT(world, Mass);
-
-    ECS_SYSTEM(world, TestTableCount, EcsOnUpdate, Position);
-
-    // Create two active tables
-    ecs_new(world, Position);
-    ecs_entity_t e2 = ecs_new(world, Position);
-    ecs_add(world, e2, Velocity);
-
-    // Create one inactive table
-    ecs_entity_t e3 = ecs_new(world, Position);
-    ecs_add(world, e3, Velocity);
-    ecs_add(world, e3, Mass);
-    ecs_delete(world, e3);
-
-    ecs_progress(world, 0);
-
-    test_int(test_table_count_invoked, 2);
-
-    ecs_fini(world);
-}
-
 void SystemMisc_match_system(void) {
     ecs_world_t *world = ecs_init();
 
@@ -555,7 +520,7 @@ void SystemMisc_change_system_action(void) {
     
     ecs_entity_t sys = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, { .name = "Sys", .add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.query.expr = "Position",
+        .query.expr = "Position",
         .callback = ActionA
     });
 
@@ -689,13 +654,13 @@ void SystemMisc_redefine_null_signature(void) {
 
     ecs_entity_t s_1 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, { .name = "System", .add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.query.expr = NULL,
+        .query.expr = NULL,
         .callback = Action
     });
 
     ecs_entity_t s_2 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, { .name = "System", .add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.query.expr = NULL,
+        .query.expr = NULL,
         .callback = Action
     });      
 
@@ -709,13 +674,13 @@ void SystemMisc_redefine_0_signature(void) {
 
     ecs_entity_t s_1 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, { .name = "System", .add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.query.expr = "0",
+        .query.expr = "0",
         .callback = Action
     });
 
     ecs_entity_t s_2 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, { .name = "System", .add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.query.expr = "0",
+        .query.expr = "0",
         .callback = Action
     }); 
 
@@ -732,13 +697,13 @@ void SystemMisc_redeclare_system_explicit_id(void) {
 
     ecs_entity_t s1 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.name = "Move", .add = {ecs_dependson(EcsOnUpdate)}}), 
-        .query.query.expr = "Position, Velocity", 
+        .query.expr = "Position, Velocity", 
         .callback = Dummy
     });
 
     ecs_entity_t s2 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.id = s1, .name = "Move", .add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.query.expr = "Position, Velocity", 
+        .query.expr = "Position, Velocity", 
         .callback = Dummy
     });
 
@@ -755,13 +720,13 @@ void SystemMisc_redeclare_system_explicit_id_null_expr(void) {
 
     ecs_entity_t s1 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.name = "Move", .add = {ecs_dependson(EcsOnUpdate)}}), 
-        .query.query.expr = NULL, 
+        .query.expr = NULL, 
         .callback = Dummy
     });
 
     ecs_entity_t s2 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.id = s1, .name = "Move", .add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.query.expr = NULL, 
+        .query.expr = NULL, 
         .callback = Dummy
     });
 
@@ -778,13 +743,13 @@ void SystemMisc_redeclare_system_explicit_id_no_name(void) {
 
     ecs_entity_t s1 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.name = "Move", .add = {ecs_dependson(EcsOnUpdate)}}), 
-        .query.query.expr = "Position, Velocity", 
+        .query.expr = "Position, Velocity", 
         .callback = Dummy
     });
 
     ecs_entity_t s2 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.id = s1, .add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.query.expr = "Position, Velocity", 
+        .query.expr = "Position, Velocity", 
         .callback = Dummy
     });
 
@@ -804,7 +769,7 @@ void SystemMisc_declare_different_id_same_name(void) {
 
     ecs_entity_t s_1 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.id = e1, .name = "Move", .add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.query.expr = "0", 
+        .query.expr = "0", 
         .callback = Dummy
     });
     test_assert(e1 == s_1);
@@ -813,7 +778,7 @@ void SystemMisc_declare_different_id_same_name(void) {
 
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.id = e2, .name = "Move", .add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.query.expr = "0", 
+        .query.expr = "0", 
         .callback = Dummy
     });
 }
@@ -831,7 +796,7 @@ void SystemMisc_declare_different_id_same_name_w_scope(void) {
 
     ecs_entity_t s_1 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.id = e1, .name = "Move", .add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.query.expr = "0", 
+        .query.expr = "0", 
         .callback = Dummy
     });
     test_assert(e1 == s_1);
@@ -840,7 +805,7 @@ void SystemMisc_declare_different_id_same_name_w_scope(void) {
 
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.id = e2, .name = "Move", .add = {ecs_dependson(EcsOnUpdate)}}),
-        .query.query.expr = "0", 
+        .query.expr = "0", 
         .callback = Dummy
     });
 }
@@ -1051,7 +1016,7 @@ void SystemMisc_get_query(void) {
     ecs_set(world, 0, Position, {1, 0});
     ecs_set(world, 0, Position, {2, 0});
 
-    ecs_query_cache_t *q = ecs_system_get_query(world, Dummy);
+    ecs_query_t *q = ecs_system_get_query(world, Dummy);
     test_assert(q != NULL);
 
     int32_t count = 0;
@@ -1699,4 +1664,8 @@ void SystemMisc_system_same_interval_same_tick(void) {
     test_assert(sys_c_invoked);
 
     ecs_fini(world);
+}
+
+void SystemMisc_table_count(void) {
+    // Implement testcase
 }

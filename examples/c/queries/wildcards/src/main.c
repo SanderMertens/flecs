@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
     ECS_TAG(ecs, Pears);
 
     // Create a query that matches edible components
-    ecs_query_cache_t *q = ecs_query(ecs, {
+    ecs_query_t *q = ecs_query(ecs, {
         .terms = {{ .id = ecs_pair(ecs_id(Eats), EcsWildcard ) }}
     });
 
@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
     ecs_set_pair(ecs, alice, Eats, Apples, {4});
 
     // Iterate the query
-    ecs_iter_t it = ecs_query_cache_iter(ecs, q);
+    ecs_iter_t it = ecs_query_iter(ecs, q);
     while (ecs_query_next(&it)) {
         Eats *eats = ecs_field(&it, Eats, 1);
         ecs_id_t pair = ecs_field_id(&it, 1);

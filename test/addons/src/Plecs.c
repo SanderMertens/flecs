@@ -3944,13 +3944,13 @@ void Plecs_anonymous_entity(void) {
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
 
-    ecs_iter_t it = ecs_each(world, foo );
-    test_assert(ecs_term_next(&it));
+    ecs_iter_t it = ecs_each_id(world, foo );
+    test_assert(ecs_each_next(&it));
     test_int(it.count, 1);
     ecs_entity_t e = it.entities[0];
     test_assert(e != 0);
     test_str(ecs_get_name(world, e), NULL);
-    test_assert(!ecs_term_next(&it));
+    test_assert(!ecs_each_next(&it));
 
     ecs_fini(world);
 }
@@ -3970,14 +3970,14 @@ void Plecs_anonymous_entity_in_scope(void) {
     ecs_entity_t parent = ecs_lookup(world, "Parent");
     test_assert(parent != 0);
 
-    ecs_iter_t it = ecs_each(world, foo );
-    test_assert(ecs_term_next(&it));
+    ecs_iter_t it = ecs_each_id(world, foo );
+    test_assert(ecs_each_next(&it));
     test_int(it.count, 1);
     ecs_entity_t e = it.entities[0];
     test_assert(e != 0);
     test_str(ecs_get_name(world, e), NULL);
     test_assert(ecs_has_pair(world, e, EcsChildOf, parent));
-    test_assert(!ecs_term_next(&it));
+    test_assert(!ecs_each_next(&it));
 
     ecs_fini(world);
 }
@@ -3993,13 +3993,13 @@ void Plecs_anonymous_declaration(void) {
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
 
-    ecs_iter_t it = ecs_each(world, foo );
-    test_assert(ecs_term_next(&it));
+    ecs_iter_t it = ecs_each_id(world, foo );
+    test_assert(ecs_each_next(&it));
     test_int(it.count, 1);
     ecs_entity_t e = it.entities[0];
     test_assert(e != 0);
     test_str(ecs_get_name(world, e), NULL);
-    test_assert(!ecs_term_next(&it));
+    test_assert(!ecs_each_next(&it));
 
     ecs_fini(world);
 }
@@ -6428,7 +6428,7 @@ void Plecs_assembly_w_anonymous(void) {
     test_assert(t != 0);
 
     {
-        ecs_query_t *f = ecs_filter(world, {
+        ecs_query_t *f = ecs_query(world, {
             .terms = {
                 { .id = ecs_childof(tree) },
                 { .id = ecs_id(Position) },
@@ -6442,7 +6442,7 @@ void Plecs_assembly_w_anonymous(void) {
     }
 
     {
-        ecs_query_t *f = ecs_filter(world, {
+        ecs_query_t *f = ecs_query(world, {
             .terms = {
                 { .id = ecs_childof(t) },
                 { .id = ecs_id(Position) },
@@ -6490,7 +6490,7 @@ void Plecs_assembly_w_anonymous_parse_again(void) {
     test_assert(t != 0);
 
     {
-        ecs_query_t *f = ecs_filter(world, {
+        ecs_query_t *f = ecs_query(world, {
             .terms = {
                 { .id = ecs_childof(tree) },
                 { .id = ecs_id(Position) },
@@ -6504,7 +6504,7 @@ void Plecs_assembly_w_anonymous_parse_again(void) {
     }
 
     {
-        ecs_query_t *f = ecs_filter(world, {
+        ecs_query_t *f = ecs_query(world, {
             .terms = {
                 { .id = ecs_childof(t) },
                 { .id = ecs_id(Position) },

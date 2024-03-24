@@ -496,7 +496,7 @@ ecs_entity_t ecs_alert_init(
     ecs_poly_assert(world, ecs_world_t);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(!desc->filter.entity || desc->entity == desc->filter.entity, 
+    ecs_check(!desc->query.entity || desc->entity == desc->query.entity, 
         ECS_INVALID_PARAMETER, NULL);
 
     ecs_entity_t result = desc->entity;
@@ -504,7 +504,7 @@ ecs_entity_t ecs_alert_init(
         result = ecs_new(world, 0);
     }
 
-    ecs_query_desc_t private_desc = desc->filter;
+    ecs_query_desc_t private_desc = desc->query;
     private_desc.entity = result;
 
     ecs_query_t *q = ecs_query_init(world, &private_desc);

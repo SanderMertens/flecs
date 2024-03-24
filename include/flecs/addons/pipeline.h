@@ -51,7 +51,7 @@ extern "C" {
         edesc.id = id_;\
         edesc.name = #id_;\
         desc.entity = ecs_entity_init(world, &edesc);\
-        desc.query.query.expr = #__VA_ARGS__; \
+        desc.query.expr = #__VA_ARGS__; \
         id_ = ecs_pipeline_init(world, &desc); \
         ecs_id(id_) = id_;\
     } \

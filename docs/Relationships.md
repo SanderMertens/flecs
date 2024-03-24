@@ -189,7 +189,7 @@ Bob.each([](flecs::id id) {
 
 ### Find all entities with a pair
 ```c
-ecs_query_t *f = ecs_filter(world, {
+ecs_query_t *f = ecs_query(world, {
   .terms[0] = ecs_pair(Eats, Apples)
 });
 
@@ -213,7 +213,7 @@ world.filter_builder()
 
 ### Find all entities with a pair wildcard
 ```c
-ecs_query_t *f = ecs_filter(world, {
+ecs_query_t *f = ecs_query(world, {
   .terms[0] = ecs_pair(Eats, EcsWildcard)
 });
 

@@ -183,7 +183,7 @@ It is also possible to inspect the results of existing queries. This can be done
 In C this is done by setting the `.entity` field to a named entity:
 
 ```c
-ecs_query_cache_t *q = ecs_query(world, {
+ecs_query_t *q = ecs_query(world, {
   .entity = ecs_entity(world, { .name = "Move" }),
   .terms = {
     { ecs_id(Position) },

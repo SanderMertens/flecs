@@ -10471,7 +10471,7 @@ extern "C" {
         edesc.id = id_;\
         edesc.name = #id_;\
         desc.entity = ecs_entity_init(world, &edesc);\
-        desc.query.query.expr = #__VA_ARGS__; \
+        desc.query.expr = #__VA_ARGS__; \
         id_ = ecs_pipeline_init(world, &desc); \
         ecs_id(id_) = id_;\
     } \
@@ -11649,7 +11649,7 @@ typedef struct ecs_alert_desc_t {
     /** Alert query. An alert will be created for each entity that matches the
      * specified query. The query must have at least one term that uses the
      * $this variable (default). */
-    ecs_query_desc_t filter;
+    ecs_query_desc_t query;
 
     /** Template for alert message. This string is used to generate the alert
      * message and may refer to variables in the query result. The format for
@@ -12480,7 +12480,7 @@ typedef struct ecs_world_to_json_desc_t {
  * equivalent to the following code:
  * 
  * @code
- * ecs_query_t *f = ecs_filter(world, {
+ * ecs_query_t *f = ecs_query(world, {
  *   .terms = {{ .id = EcsAny }}
  * });
  * 

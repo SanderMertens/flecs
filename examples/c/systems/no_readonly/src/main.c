@@ -29,7 +29,7 @@ void AssignPlate(ecs_iter_t *it) {
         ecs_entity_t plate = it->entities[i];
 
         // Find an available waiter
-        ecs_iter_t qit = ecs_query_cache_iter(ecs, q_waiter);
+        ecs_iter_t qit = ecs_query_iter(ecs, q_waiter);
         ecs_entity_t waiter = ecs_iter_first(&qit); // Get first matching entity
         if (waiter) {
             // An available waiter was found, assign a plate to it so that the

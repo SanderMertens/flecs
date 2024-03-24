@@ -2103,7 +2103,7 @@ void SerializeIterToJson_serialize_recycled_pair_id(void) {
     ecs_entity_t e = ecs_new_w_pair(world, rel, tgt);
     ecs_set_name(world, e, "ent");
 
-    ecs_query_cache_t *q = ecs_query(world, {
+    ecs_query_t *q = ecs_query(world, {
         .terms[0] = {
             .first.id = rel,
             .second.id = tgt
@@ -2452,7 +2452,7 @@ void SerializeIterToJson_serialize_table(void) {
     ecs_set(world, e2, Velocity, {1, 1});
     ecs_set(world, e3, Mass, {100});
 
-    ecs_query_t *f = ecs_filter(world, {
+    ecs_query_t *f = ecs_query(world, {
         .terms = {
             { .id = ecs_id(Position) }
         }
@@ -2540,7 +2540,7 @@ void SerializeIterToJson_serialize_table_w_id_labels(void) {
     ecs_set(world, e2, Velocity, {1, 1});
     ecs_set(world, e3, Mass, {100});
 
-    ecs_query_t *f = ecs_filter(world, {
+    ecs_query_t *f = ecs_query(world, {
         .terms = {
             { .id = ecs_id(Position) }
         }
@@ -3015,7 +3015,7 @@ void SerializeIterToJson_serialize_vars_for_query(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_query_cache_t *q = ecs_query(world, {
+    ecs_query_t *q = ecs_query(world, {
         .terms[0] = {
             .id = ecs_id(Position)
         }
@@ -3044,7 +3044,7 @@ void SerializeIterToJson_serialize_var_labels_for_query(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_query_cache_t *q = ecs_query(world, {
+    ecs_query_t *q = ecs_query(world, {
         .terms[0] = {
             .id = ecs_id(Position)
         }
@@ -3073,7 +3073,7 @@ void SerializeIterToJson_serialize_var_ids_for_query(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_query_cache_t *q = ecs_query(world, {
+    ecs_query_t *q = ecs_query(world, {
         .terms[0] = {
             .id = ecs_id(Position)
         }
@@ -3107,7 +3107,7 @@ void SerializeIterToJson_serialize_null_doc_name(void) {
     ecs_doc_set_name(world, e, NULL);
     ecs_add(world, e, Tag);
 
-    ecs_query_cache_t *q = ecs_query(world, {
+    ecs_query_t *q = ecs_query(world, {
         .terms[0] = {
             .id = Tag
         }

@@ -1059,7 +1059,7 @@ The following examples show how to query for a singleton component:
 
 ```c
 // Create query that matches Gravity as singleton
-ecs_query_cache_t *q = ecs_query(ecs, {
+ecs_query_t *q = ecs_query(ecs, {
     .terms = {
         // Regular component
         { .id = ecs_id(Velocity) },

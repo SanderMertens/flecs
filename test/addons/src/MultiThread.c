@@ -594,9 +594,9 @@ void MultiThread_2_thread_1_entity_instanced(void) {
     ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.add = {ecs_dependson(EcsOnUpdate)}}),
         .callback = Progress,
-        .query.filter = {
+        .query = {
             .expr = "Position",
-            .instanced = true
+            .flags = EcsQueryIsInstanced
         },
         .multi_threaded = true
     });
@@ -633,9 +633,9 @@ void MultiThread_2_thread_5_entity_instanced(void) {
     ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.add = {ecs_dependson(EcsOnUpdate)}}),
         .callback = Progress,
-        .query.filter = {
+        .query = {
             .expr = "Position",
-            .instanced = true
+            .flags = EcsQueryIsInstanced
         },
         .multi_threaded = true
     });
@@ -672,9 +672,9 @@ void MultiThread_2_thread_10_entity_instanced(void) {
     ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.add = {ecs_dependson(EcsOnUpdate)}}),
         .callback = Progress,
-        .query.filter = {
+        .query = {
             .expr = "Position",
-            .instanced = true
+            .flags = EcsQueryIsInstanced
         },
         .multi_threaded = true
     });
@@ -1278,7 +1278,7 @@ void sys_bulk_init_2(ecs_iter_t *it) {
         .ids = {ecs_id(Position)}
     });
 
-    ecs_iter_t qit = ecs_query_cache_iter(it->world, it->ctx);
+    ecs_iter_t qit = ecs_query_iter(it->world, it->ctx);
     ecs_iter_fini(&qit);
 }
 
@@ -1297,7 +1297,7 @@ void MultiThread_bulk_new_in_no_readonly_w_multithread_2(void) {
         .callback = sys
     });
 
-    ecs_query_cache_t *q = ecs_query(world, {
+    ecs_query_t *q = ecs_query(world, {
         .terms = {{ ecs_id(Position) }}
     });
 

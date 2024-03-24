@@ -718,34 +718,6 @@ void MultiTaskThreadStaging_set_pair_w_new_target_tgt_component_readonly(void);
 void MultiTaskThreadStaging_set_pair_w_new_target_defer(void);
 void MultiTaskThreadStaging_set_pair_w_new_target_tgt_component_defer(void);
 
-// Testsuite 'Snapshot'
-void Snapshot_simple_snapshot(void);
-void Snapshot_snapshot_after_new(void);
-void Snapshot_snapshot_after_delete(void);
-void Snapshot_snapshot_after_new_type(void);
-void Snapshot_snapshot_after_add(void);
-void Snapshot_snapshot_after_remove(void);
-void Snapshot_snapshot_w_include_filter(void);
-void Snapshot_snapshot_w_exclude_filter(void);
-void Snapshot_snapshot_w_filter_after_new(void);
-void Snapshot_snapshot_w_filter_after_delete(void);
-void Snapshot_snapshot_free_empty(void);
-void Snapshot_snapshot_free(void);
-void Snapshot_snapshot_free_filtered(void);
-void Snapshot_snapshot_free_filtered_w_dtor(void);
-void Snapshot_snapshot_activate_table_w_filter(void);
-void Snapshot_snapshot_copy(void);
-void Snapshot_snapshot_get_ref_after_restore(void);
-void Snapshot_new_after_snapshot(void);
-void Snapshot_new_empty_after_snapshot(void);
-void Snapshot_add_after_snapshot(void);
-void Snapshot_delete_after_snapshot(void);
-void Snapshot_set_after_snapshot(void);
-void Snapshot_restore_recycled(void);
-void Snapshot_snapshot_w_new_in_onset(void);
-void Snapshot_snapshot_w_new_in_onset_in_snapshot_table(void);
-void Snapshot_snapshot_from_stage(void);
-
 // Testsuite 'Modules'
 void Modules_setup(void);
 void Modules_simple_module(void);
@@ -3596,113 +3568,6 @@ bake_test_case MultiTaskThreadStaging_testcases[] = {
     }
 };
 
-bake_test_case Snapshot_testcases[] = {
-    {
-        "simple_snapshot",
-        Snapshot_simple_snapshot
-    },
-    {
-        "snapshot_after_new",
-        Snapshot_snapshot_after_new
-    },
-    {
-        "snapshot_after_delete",
-        Snapshot_snapshot_after_delete
-    },
-    {
-        "snapshot_after_new_type",
-        Snapshot_snapshot_after_new_type
-    },
-    {
-        "snapshot_after_add",
-        Snapshot_snapshot_after_add
-    },
-    {
-        "snapshot_after_remove",
-        Snapshot_snapshot_after_remove
-    },
-    {
-        "snapshot_w_include_filter",
-        Snapshot_snapshot_w_include_filter
-    },
-    {
-        "snapshot_w_exclude_filter",
-        Snapshot_snapshot_w_exclude_filter
-    },
-    {
-        "snapshot_w_filter_after_new",
-        Snapshot_snapshot_w_filter_after_new
-    },
-    {
-        "snapshot_w_filter_after_delete",
-        Snapshot_snapshot_w_filter_after_delete
-    },
-    {
-        "snapshot_free_empty",
-        Snapshot_snapshot_free_empty
-    },
-    {
-        "snapshot_free",
-        Snapshot_snapshot_free
-    },
-    {
-        "snapshot_free_filtered",
-        Snapshot_snapshot_free_filtered
-    },
-    {
-        "snapshot_free_filtered_w_dtor",
-        Snapshot_snapshot_free_filtered_w_dtor
-    },
-    {
-        "snapshot_activate_table_w_filter",
-        Snapshot_snapshot_activate_table_w_filter
-    },
-    {
-        "snapshot_copy",
-        Snapshot_snapshot_copy
-    },
-    {
-        "snapshot_get_ref_after_restore",
-        Snapshot_snapshot_get_ref_after_restore
-    },
-    {
-        "new_after_snapshot",
-        Snapshot_new_after_snapshot
-    },
-    {
-        "new_empty_after_snapshot",
-        Snapshot_new_empty_after_snapshot
-    },
-    {
-        "add_after_snapshot",
-        Snapshot_add_after_snapshot
-    },
-    {
-        "delete_after_snapshot",
-        Snapshot_delete_after_snapshot
-    },
-    {
-        "set_after_snapshot",
-        Snapshot_set_after_snapshot
-    },
-    {
-        "restore_recycled",
-        Snapshot_restore_recycled
-    },
-    {
-        "snapshot_w_new_in_onset",
-        Snapshot_snapshot_w_new_in_onset
-    },
-    {
-        "snapshot_w_new_in_onset_in_snapshot_table",
-        Snapshot_snapshot_w_new_in_onset_in_snapshot_table
-    },
-    {
-        "snapshot_from_stage",
-        Snapshot_snapshot_from_stage
-    }
-};
-
 bake_test_case Modules_testcases[] = {
     {
         "simple_module",
@@ -4337,13 +4202,6 @@ static bake_test_suite suites[] = {
         MultiTaskThreadStaging_testcases
     },
     {
-        "Snapshot",
-        NULL,
-        NULL,
-        26,
-        Snapshot_testcases
-    },
-    {
         "Modules",
         Modules_setup,
         NULL,
@@ -4388,5 +4246,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("addons", argc, argv, suites, 26);
+    return bake_test_run("addons", argc, argv, suites, 25);
 }

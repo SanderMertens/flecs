@@ -847,7 +847,7 @@ void Metrics_oneof_gauge_3_entities(void) {
 
     ecs_progress(world, 0);
 
-    ecs_query_t *f = ecs_filter(world, {
+    ecs_query_t *f = ecs_query(world, {
         .terms = {
             { .id = ecs_childof(m) },
             { .id = ecs_pair(EcsMetric, EcsGauge) }
@@ -922,7 +922,7 @@ void Metrics_oneof_gauge_3_entities_1_existing(void) {
 
     ecs_progress(world, 0);
 
-    ecs_query_t *f = ecs_filter(world, {
+    ecs_query_t *f = ecs_query(world, {
         .terms = {
             { .id = ecs_childof(m) },
             { .id = ecs_pair(EcsMetric, EcsGauge) }
@@ -1000,7 +1000,7 @@ void Metrics_oneof_gauge_w_remove(void) {
     
     ecs_progress(world, 0);
 
-    ecs_query_t *f = ecs_filter(world, {
+    ecs_query_t *f = ecs_query(world, {
         .terms = {
             { .id = ecs_childof(m) },
             { .id = ecs_pair(EcsMetric, EcsGauge) }
@@ -1112,7 +1112,7 @@ void Metrics_oneof_gauge_w_clear(void) {
     
     ecs_progress(world, 0);
 
-    ecs_query_t *f = ecs_filter(world, {
+    ecs_query_t *f = ecs_query(world, {
         .terms = {
             { .id = ecs_childof(m) },
             { .id = ecs_pair(EcsMetric, EcsGauge) }
@@ -1224,7 +1224,7 @@ void Metrics_oneof_gauge_w_delete(void) {
     
     ecs_progress(world, 0);
 
-    ecs_query_t *f = ecs_filter(world, {
+    ecs_query_t *f = ecs_query(world, {
         .terms = {
             { .id = ecs_childof(m) },
             { .id = ecs_pair(EcsMetric, EcsGauge) }
@@ -1542,7 +1542,7 @@ void Metrics_oneof_counter(void) {
 
     ecs_progress(world, 1.0);
 
-    ecs_query_t *f = ecs_filter(world, {
+    ecs_query_t *f = ecs_query(world, {
         .terms = {
             { .id = ecs_childof(m) },
             { .id = ecs_pair(EcsMetric, EcsCounter) }

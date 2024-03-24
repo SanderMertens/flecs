@@ -359,7 +359,7 @@ typedef struct ecs_world_to_json_desc_t {
  * equivalent to the following code:
  * 
  * @code
- * ecs_query_t *f = ecs_filter(world, {
+ * ecs_query_t *f = ecs_query(world, {
  *   .terms = {{ .id = EcsAny }}
  * });
  * 

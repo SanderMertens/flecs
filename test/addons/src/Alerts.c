@@ -29,7 +29,7 @@ void Alerts_one_active_alert(void) {
     {
         test_assert(ecs_get_alert_count(world, e2, alert) == 1);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
@@ -57,7 +57,7 @@ void Alerts_one_active_alert(void) {
     {
         test_assert(ecs_get_alert_count(world, e2, alert) == 1);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
@@ -125,7 +125,7 @@ void Alerts_two_active_alerts(void) {
         test_assert(ecs_get_alert_count(world, e2, alert_2) == 1);
         test_assert(ecs_get_alert_count(world, e2, 0) == 2);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
@@ -168,7 +168,7 @@ void Alerts_two_active_alerts(void) {
         test_assert(ecs_get_alert_count(world, e2, alert_2) == 1);
         test_assert(ecs_get_alert_count(world, e2, 0) == 2);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
@@ -213,7 +213,7 @@ void Alerts_two_active_alerts(void) {
         test_assert(ecs_get_alert_count(world, e2, alert_2) == 0);
         test_assert(ecs_get_alert_count(world, e2, 0) == 1);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
@@ -274,7 +274,7 @@ void Alerts_alert_message(void) {
     {
         test_assert(ecs_get_alert_count(world, e2, alert) == 1);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
@@ -327,7 +327,7 @@ void Alerts_alert_message_w_this_var(void) {
     {
         test_assert(ecs_get_alert_count(world, e2, alert) == 1);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
@@ -383,7 +383,7 @@ void Alerts_alert_message_w_var(void) {
     {
         test_assert(ecs_get_alert_count(world, e2, alert) == 1);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
@@ -440,7 +440,7 @@ void Alerts_alert_message_w_changed_var(void) {
     {
         test_assert(ecs_get_alert_count(world, e2, alert) == 1);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
@@ -470,7 +470,7 @@ void Alerts_alert_message_w_changed_var(void) {
     {
         test_assert(ecs_get_alert_count(world, e2, alert) == 1);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
@@ -552,7 +552,7 @@ void Alerts_alert_instance_has_doc_name(void) {
     {
         test_assert(ecs_get_alert_count(world, e2, alert) == 1);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
@@ -601,7 +601,7 @@ void Alerts_reraise_alert(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
@@ -639,7 +639,7 @@ void Alerts_reraise_alert(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
@@ -687,7 +687,7 @@ void Alerts_info_severity(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
@@ -735,7 +735,7 @@ void Alerts_warning_severity(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
@@ -783,7 +783,7 @@ void Alerts_error_severity(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
@@ -836,7 +836,7 @@ void Alerts_expire_after_retain(void) {
     {
         test_assert(ecs_get_alert_count(world, e2, alert) == 1);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
@@ -928,7 +928,7 @@ void Alerts_revive_w_retain(void) {
     {
         test_assert(ecs_get_alert_count(world, e2, alert) == 1);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
@@ -1036,7 +1036,7 @@ void Alerts_severity_filter(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
@@ -1063,7 +1063,7 @@ void Alerts_severity_filter(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
@@ -1090,7 +1090,7 @@ void Alerts_severity_filter(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
@@ -1147,7 +1147,7 @@ void Alerts_two_severity_filters(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
@@ -1174,7 +1174,7 @@ void Alerts_two_severity_filters(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
@@ -1202,7 +1202,7 @@ void Alerts_two_severity_filters(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
@@ -1230,7 +1230,7 @@ void Alerts_two_severity_filters(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
@@ -1287,7 +1287,7 @@ void Alerts_severity_filter_w_var(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
@@ -1314,7 +1314,7 @@ void Alerts_severity_filter_w_var(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
@@ -1341,7 +1341,7 @@ void Alerts_severity_filter_w_var(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
@@ -1400,7 +1400,7 @@ void Alerts_severity_filter_w_var_change_var(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
@@ -1427,7 +1427,7 @@ void Alerts_severity_filter_w_var_change_var(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
@@ -1454,7 +1454,7 @@ void Alerts_severity_filter_w_var_change_var(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
@@ -1515,7 +1515,7 @@ void Alerts_member_range_warning(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
@@ -1583,7 +1583,7 @@ void Alerts_member_range_error(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
@@ -1651,7 +1651,7 @@ void Alerts_member_range_warning_error(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
@@ -1679,7 +1679,7 @@ void Alerts_member_range_warning_error(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
@@ -1748,7 +1748,7 @@ void Alerts_member_range_error_w_warning_severity(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
@@ -1822,7 +1822,7 @@ void Alerts_member_range_error_w_severity_filter(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
@@ -1850,7 +1850,7 @@ void Alerts_member_range_error_w_severity_filter(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
@@ -1917,7 +1917,7 @@ void Alerts_member_range_warning_w_severity_filter(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
@@ -1945,7 +1945,7 @@ void Alerts_member_range_warning_w_severity_filter(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
@@ -2008,7 +2008,7 @@ void Alerts_member_range_pair_id(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
@@ -2222,7 +2222,7 @@ void Alerts_member_range_alert_two_instances(void) {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
         test_assert(ecs_get_alert_count(world, e2, alert) == 1);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 2);
@@ -2257,7 +2257,7 @@ void Alerts_member_range_alert_two_instances(void) {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
         test_assert(ecs_get_alert_count(world, e2, alert) == 1);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 2);
@@ -2335,7 +2335,7 @@ void Alerts_member_range_from_var(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
@@ -2405,7 +2405,7 @@ void Alerts_member_range_from_var_after_remove(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
@@ -2462,7 +2462,7 @@ void Alerts_retained_alert_w_dead_source(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 1);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);
@@ -2492,7 +2492,7 @@ void Alerts_retained_alert_w_dead_source(void) {
     {
         test_assert(ecs_get_alert_count(world, e1, alert) == 0);
 
-        ecs_query_t *alerts = ecs_filter(world, { .expr = "flecs.alerts.Instance, ?Disabled" });
+        ecs_query_t *alerts = ecs_query(world, { .expr = "flecs.alerts.Instance, ?Disabled" });
         ecs_iter_t it = ecs_query_iter(world, alerts);
         test_bool(ecs_query_next(&it), true);
         test_int(it.count, 1);

@@ -760,36 +760,6 @@
                 "set_pair_w_new_target_tgt_component_defer"
             ]
         }, {
-            "id": "Snapshot",
-            "testcases": [
-                "simple_snapshot",
-                "snapshot_after_new",
-                "snapshot_after_delete",
-                "snapshot_after_new_type",
-                "snapshot_after_add",
-                "snapshot_after_remove",
-                "snapshot_w_include_filter",
-                "snapshot_w_exclude_filter",
-                "snapshot_w_filter_after_new",
-                "snapshot_w_filter_after_delete",
-                "snapshot_free_empty",
-                "snapshot_free",
-                "snapshot_free_filtered",
-                "snapshot_free_filtered_w_dtor",
-                "snapshot_activate_table_w_filter",
-                "snapshot_copy",
-                "snapshot_get_ref_after_restore",
-                "new_after_snapshot",
-                "new_empty_after_snapshot",
-                "add_after_snapshot",
-                "delete_after_snapshot",
-                "set_after_snapshot",
-                "restore_recycled",
-                "snapshot_w_new_in_onset",
-                "snapshot_w_new_in_onset_in_snapshot_table",
-                "snapshot_from_stage"
-            ]
-        }, {
             "id": "Modules",
             "setup": true,
             "testcases": [

@@ -26,7 +26,7 @@ void print_position(ecs_iter_t *it) {
 
 // Iterate query, printed values will be ordered
 void print_query(ecs_world_t *ecs, ecs_query_cache_t *q) {
-    ecs_iter_t it = ecs_query_cache_iter(ecs, q);
+    ecs_iter_t it = ecs_query_iter(ecs, q);
     while (ecs_query_next(&it)) {
         print_position(&it);
     }
@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
     });
 
     // Create sorted query
-    ecs_query_cache_t *q = ecs_query(ecs, {
+    ecs_query_t *q = ecs_query(ecs, {
         .terms = {{ .id = ecs_id(Position) }},
         .order_by = (ecs_order_by_action_t)compare_position,
         .order_by_component = ecs_id(Position)

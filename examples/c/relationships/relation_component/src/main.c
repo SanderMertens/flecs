@@ -85,14 +85,14 @@ int main(int argc, char *argv[]) {
     ecs_os_free(type_str);
 
     // When querying for a relationship, provide both parts of the pair:
-    ecs_query_cache_t *q = ecs_query(ecs, {
+    ecs_query_t *q = ecs_query(ecs, {
         .terms = {
             { .id = ecs_pair(ecs_id(Requires), Gigawatts) }
         }
     });
 
     // When iterating, always use the pair type:
-    ecs_iter_t it = ecs_query_cache_iter(ecs, q);
+    ecs_iter_t it = ecs_query_iter(ecs, q);
     while (ecs_query_next(&it)) {
         r = ecs_field(&it, Requires, 1);
         for (int i = 0; i < it.count; i ++) {

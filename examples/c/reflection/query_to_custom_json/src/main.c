@@ -62,13 +62,13 @@ int main(int argc, char *argv[]) {
     ecs_set(ecs, d, Mass, {20});
 
     // Query for components
-    ecs_query_cache_t *q = ecs_query(ecs, {
+    ecs_query_t *q = ecs_query(ecs, {
         .terms = {
             { .id = ecs_id(Position) }, { .id = ecs_id(Velocity) }
         }
     });
 
-    ecs_iter_t it = ecs_query_cache_iter(ecs, q);
+    ecs_iter_t it = ecs_query_iter(ecs, q);
 
     // Serialize query to JSON. Customize serializer to only serialize entity
     // names and component values.
