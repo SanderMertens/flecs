@@ -27,10 +27,21 @@ struct UNREALFLECS_API FFlecsEntityHandle
 	}
 
 public:
-	FFlecsEntityHandle() = default;
+	FFlecsEntityHandle();
 	FORCEINLINE FFlecsEntityHandle(const flecs::entity& InEntity) : Entity(InEntity) {}
+
+	FORCEINLINE FFlecsEntityHandle(const flecs::entity_t& InEntity) : Entity(InEntity) 
+	{
+		FFlecsEntityHandle();
+	}
 	
 	FORCEINLINE NO_DISCARD flecs::entity GetEntity() const { return Entity; }
+
+	FORCEINLINE void SetEntity(const flecs::entity& InEntity) { Entity = InEntity; }
+	FORCEINLINE void SetEntity(const flecs::entity_t& InEntity)
+	{
+		*this = FFlecsEntityHandle(InEntity);
+	}
 	
 	FORCEINLINE operator flecs::entity() const { return GetEntity(); }
 	FORCEINLINE operator flecs::id_t() const { return GetEntity().id(); }
@@ -224,13 +235,6 @@ public:
 		return FString(GetEntity().to_json().c_str());
 	}
 
-	FORCEINLINE bool Serialize(FArchive& Ar) const
-	{
-		FString Json = ToJson();
-		Ar << Json;
-		return true;
-	}
-
 	FORCEINLINE bool NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess) const
 	{
 		FString Json = ToJson();
@@ -250,6 +254,16 @@ public:
 	{
 		GetEntity().each<TFirst, FunctionType>(InFunction);
 	}
+
+	#if WITH_EDITORONLY_DATA
+
+	UPROPERTY()
+	FName DisplayName;
+
+	#endif // WITH_EDITORONLY_DATA
+
+	UPROPERTY(EditAnywhere, Category = "Flecs")
+	FName WorldName = FName("DefaultFlecsWorld");
 	
 private:
 	flecs::entity Entity;
@@ -260,7 +274,6 @@ struct TStructOpsTypeTraits<FFlecsEntityHandle> : public TStructOpsTypeTraitsBas
 {
 	enum
 	{
-		WithSerializer = true,
 		WithNetSerializer = true,
 	}; // enum
 	

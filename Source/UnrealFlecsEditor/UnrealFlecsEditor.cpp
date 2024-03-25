@@ -1,5 +1,6 @@
 ﻿#include "UnrealFlecsEditor.h"
 #include "UnrealFlecsEditorStyle.h"
+#include "Widgets/FlecsEntityHandlePropertyEditor.h"
 
 #define LOCTEXT_NAMESPACE "FUnrealFlecsEditorModule"
 
@@ -9,10 +10,20 @@ void FUnrealFlecsEditorModule::StartupModule()
 	
     UToolMenus::RegisterStartupCallback(FSimpleMulticastDelegate::FDelegate::CreateRaw(this,
     	&FUnrealFlecsEditorModule::RegisterExplorerMenuExtension));
+
+	FPropertyEditorModule& PropertyEditorModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
+	PropertyEditorModule.RegisterCustomPropertyTypeLayout("FlecsEntityHandle",
+		FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FFlecsEntityHandleCustomization::MakeInstance));
 }
 
 void FUnrealFlecsEditorModule::ShutdownModule()
 {
+	if (FModuleManager::Get().IsModuleLoaded("PropertyEditor"))
+	{
+		FPropertyEditorModule& PropertyEditorModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
+		PropertyEditorModule.UnregisterCustomPropertyTypeLayout("FlecsEntityHandle");
+	}
+	
 	FUnrealFlecsEditorStyle::Shutdown();
 	
     UToolMenus::UnRegisterStartupCallback(this);

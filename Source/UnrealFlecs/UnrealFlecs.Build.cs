@@ -44,7 +44,9 @@ public class UnrealFlecs : ModuleRules
 				"Slate",
 				"SlateCore",
 				"StructUtils",
-				"DeveloperSettings"
+				"DeveloperSettings",
+				"NetCore",
+				"NetCommon",
 			}
 			);
 		

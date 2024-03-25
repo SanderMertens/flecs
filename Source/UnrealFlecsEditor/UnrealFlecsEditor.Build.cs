@@ -22,7 +22,13 @@ public class UnrealFlecsEditor : ModuleRules
                 "SlateCore",
                 "ToolMenus",
                 "EditorStyle",
-                "Projects"
+                "Projects",
+                "PropertyEditor",
+                "UnrealFlecs",
+                "FlecsLibrary",
+                "StructUtils",
+                "InputCore",
+                "UnrealEd"
             }
         );
     }

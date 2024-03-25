@@ -11,7 +11,6 @@
 #include "FlecsWorld.h"
 #include "FlecsWorldSettings.h"
 #include "Components/FlecsWorldPtrComponent.h"
-#include "Entities/FlecsEntityHandle.h"
 #include "General/FlecsDeveloperSettings.h"
 #include "SolidMacros/Concepts/SolidConcepts.h"
 #include "SolidMacros/Standard/Hashing.h"
@@ -209,7 +208,8 @@ public:
 	
 	virtual bool DoesSupportWorldType(const EWorldType::Type WorldType) const override
 	{
-		return WorldType == EWorldType::Game || WorldType == EWorldType::PIE;
+		return WorldType == EWorldType::Game || WorldType == EWorldType::PIE || WorldType == EWorldType::GamePreview
+			|| WorldType == EWorldType::GameRPC;
 	}
 
 protected:

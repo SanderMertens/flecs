@@ -1,11 +1,25 @@
 ﻿// Solstice Games © 2023. All Rights Reserved.
 
 #include "FlecsEntityHandle.h"
-
 #include "Components/FlecsWorldPtrComponent.h"
 #include "Worlds/FlecsWorld.h"
+#include "Worlds/FlecsWorldSubsystem.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsEntityHandle)
+
+FFlecsEntityHandle::FFlecsEntityHandle()
+{
+    if (!GWorld  || !GWorld->IsGameWorld())
+    {
+        return;
+    }
+    
+    if (GetFlecsWorld() == nullptr)
+    {
+        const UFlecsWorldSubsystem* FlecsWorldSubsystem = GWorld->GetSubsystem<UFlecsWorldSubsystem>();
+        SetEntity(flecs::entity(FlecsWorldSubsystem->GetFlecsWorld(WorldName)->World, GetEntity().id()));
+    }
+}
 
 UFlecsWorld* FFlecsEntityHandle::GetFlecsWorld() const
 {
