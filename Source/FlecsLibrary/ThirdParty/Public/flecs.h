@@ -223,7 +223,7 @@
  * operations. Component ids that fall outside of this range use a regular map
  * lookup, which is slower but more memory efficient. */
 #ifndef FLECS_HI_COMPONENT_ID
-#define FLECS_HI_COMPONENT_ID (256)
+#define FLECS_HI_COMPONENT_ID (1024)
 #endif
 
 /** @def FLECS_HI_ID_RECORD_ID
