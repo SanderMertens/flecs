@@ -34,6 +34,8 @@ public:
     FORCEINLINE NO_DISCARD flecs::id* operator->() { return &Id; }
     FORCEINLINE NO_DISCARD const flecs::id* operator->() const { return &Id; }
 
+    FORCEINLINE NO_DISCARD bool IsPair() const { return Id.is_pair(); }
+
     FORCEINLINE NO_DISCARD bool operator==(const FFlecsId& Other) const
     {
         return Id == Other.Id;
