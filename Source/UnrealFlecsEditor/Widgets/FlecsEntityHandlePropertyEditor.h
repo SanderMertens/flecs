@@ -35,6 +35,8 @@ public:
 
 		UE_LOG(LogTemp, Warning, TEXT("Options array size: %d"), Options.Num());
 
+		ApplyMetadataFilters();
+
 		const TSharedPtr<IPropertyHandle> WorldNameHandle
 			= PropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FFlecsEntityHandle,WorldName));
 		if (WorldNameHandle && WorldNameHandle->IsValidHandle())
@@ -83,6 +85,7 @@ private:
 
 	TSharedPtr<IPropertyHandle> PropertyHandle;
 
+	// ReSharper disable once CppMemberFunctionMayBeConst
 	void OnEntitySelected(const FName NewValue, ESelectInfo::Type)
 	{
 		if LIKELY_IF(PropertyHandle && PropertyHandle->IsValidHandle())
@@ -164,6 +167,36 @@ private:
 		}
 
 		return NSLOCTEXT("Flecs", "SelectAnEntity", "Select an entity...");
+	}
+
+	void ApplyMetadataFilters()
+	{
+		// Retrieve excluded and included lists from metadata
+		const FString ExcludedList = PropertyHandle->GetProperty()->GetMetaData(TEXT("Excluded"));
+		const FString IncludedList = PropertyHandle->GetProperty()->GetMetaData(TEXT("Included"));
+
+		TArray<FString> ExcludedItems;
+		ExcludedList.ParseIntoArray(ExcludedItems, TEXT(","), true);
+
+		TArray<FString> IncludedItems;
+		IncludedList.ParseIntoArray(IncludedItems, TEXT(","), true);
+
+		// If included list is specified, start with an empty options array and only add those included
+		if (IncludedItems.Num() > 0)
+		{
+			TArray<FName> FilteredOptions;
+			for (const FString& Item : IncludedItems)
+			{
+				FilteredOptions.Add(FName(*Item));
+			}
+			Options = FilteredOptions;
+		}
+
+		// Exclude items from the options
+		for (const FString& ExcludedItem : ExcludedItems)
+		{
+			Options.Remove(FName(*ExcludedItem));
+		}
 	}
 	
 }; // class FFlecsEntityHandleCustomization

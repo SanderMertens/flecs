@@ -14,7 +14,7 @@ FFlecsEntityHandle::FFlecsEntityHandle()
         return;
     }
     
-    if (GetFlecsWorld() == nullptr)
+    if (GetEntity().world().m_world == nullptr)
     {
         const UFlecsWorldSubsystem* FlecsWorldSubsystem = GWorld->GetSubsystem<UFlecsWorldSubsystem>();
         SetEntity(flecs::entity(FlecsWorldSubsystem->GetFlecsWorld(WorldName)->World, GetEntity().id()));

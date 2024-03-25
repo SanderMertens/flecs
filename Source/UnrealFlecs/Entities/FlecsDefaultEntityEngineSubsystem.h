@@ -32,6 +32,7 @@ private:
 #define REGISTER_FLECS_ENTITY_OPTION(EntityName, EntityHandle) \
 	GEngine->GetEngineSubsystem<UFlecsDefaultEntityEngineSubsystem>()->RegisterEntityOption(FName(EntityName), EntityHandle)
 
+// Must not be a Pre-defined Tag, has to be entirely new
 #define REGISTER_FLECS_TAG_OPTION(TagName, TagHandleName) \
 	ECS_TAG_DECLARE(TagHandleName); \
 	GEngine->GetEngineSubsystem<UFlecsDefaultEntityEngineSubsystem>()->RegisterEntityOption(FName(TagName), TagHandleName)

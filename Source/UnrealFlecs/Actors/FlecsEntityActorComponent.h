@@ -21,7 +21,7 @@ public:
 		return EntityHandle;
 	}
 
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, Category = "Flecs | Entity")
 	FFlecsEntityHandle EntityHandle;
 	
 }; // class UFlecsEntityActorComponent

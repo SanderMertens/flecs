@@ -70,8 +70,8 @@ void UFlecsDefaultEntityEngineSubsystem::Initialize(FSubsystemCollectionBase& Co
 void UFlecsDefaultEntityEngineSubsystem::RegisterEntityOption(const FName& EntityName,
                                                               const flecs::entity_t& EntityHandle)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Entity %s registered"), *EntityName.ToString());
-	UE_LOG(LogTemp, Warning, TEXT("Option Count: %d"), EntityOptionMap.Num());
+	UE_LOG(LogTemp, Log, TEXT("Entity %s registered"), *EntityName.ToString());
+	UE_LOG(LogTemp, Log, TEXT("Option Count: %d"), EntityOptionMap.Num());
 	EntityOptionMap.Emplace(EntityName, EntityHandle);
 }
 
