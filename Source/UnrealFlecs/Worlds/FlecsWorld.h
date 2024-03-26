@@ -11,6 +11,11 @@
 #include "Timers/FlecsTimer.h"
 #include "FlecsWorld.generated.h"
 
+DECLARE_STATS_GROUP(TEXT("FlecsWorld"), STATGROUP_FlecsWorld, STATCAT_Advanced);
+
+DECLARE_CYCLE_STAT(TEXT("FlecsWorld Progress"), STAT_FlecsWorldProgress, STATGROUP_FlecsWorld);
+
+
 UCLASS(BlueprintType)
 class UNREALFLECS_API UFlecsWorld final : public UObject
 {
@@ -39,6 +44,11 @@ public:
 	FORCEINLINE FFlecsEntityHandle CreateEntity(const TArgs&... Args) const
 	{
 		return World.entity(Args...);
+	}
+
+	FORCEINLINE FFlecsEntityHandle CreateEntity(const flecs::entity_t InEntity) const
+	{
+		return World.make_alive(InEntity);
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
@@ -269,6 +279,7 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FORCEINLINE bool Progress(const double DeltaTime = 0.0) const
 	{
+		SCOPE_CYCLE_COUNTER(STAT_FlecsWorldProgress);
 		return World.progress(DeltaTime);
 	}
 
@@ -699,6 +710,12 @@ public:
 	FORCEINLINE NO_DISCARD FFlecsTimer CreateTimer() const
 	{
 		return World.timer<T>();
+	}
+
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
+	FORCEINLINE bool HasEntityWithName(const FString& Name, const bool bSearchPath = true) const
+	{
+		return World.lookup(TCHAR_TO_ANSI(*Name), bSearchPath).is_valid();
 	}
 	
 	flecs::world World;

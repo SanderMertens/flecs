@@ -151,6 +151,11 @@ public:
 		return GetEntity().parent();
 	}
 
+	FORCEINLINE void SetParent(const FFlecsEntityHandle& InParent) const
+	{
+		GetEntity().child_of(InParent);
+	}
+
 	FORCEINLINE NO_DISCARD bool IsPrefab() const
 	{
 		return GetEntity().has(flecs::Prefab);

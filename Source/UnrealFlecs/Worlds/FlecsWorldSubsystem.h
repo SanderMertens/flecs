@@ -1,5 +1,6 @@
 ﻿// Solstice Games © 2024. All Rights Reserved.
 
+// ReSharper disable CppMemberFunctionMayBeStatic
 #pragma once
 
 // ReSharper disable CppUnusedIncludeDirective
@@ -10,6 +11,9 @@
 #include "flecs.h"
 #include "FlecsWorld.h"
 #include "FlecsWorldSettings.h"
+#include "GameplayTagContainer.h"
+#include "GameplayTagsManager.h"
+#include "Components/FlecsGameplayTagEntityComponent.h"
 #include "Components/FlecsWorldPtrComponent.h"
 #include "Entities/FlecsDefaultEntityEngineSubsystem.h"
 #include "General/FlecsDeveloperSettings.h"
@@ -142,9 +146,11 @@ public:
 				= GEngine->GetEngineSubsystem<UFlecsDefaultEntityEngineSubsystem>();
 			 const TTuple<FName, flecs::entity_t>& Entity : DefaultEntityEngineSubsystem->DefaultEntityMap)
 		{
-			flecs::entity SpawnedEntity = NewFlecsWorld->World.make_alive(Entity.Value);
+			flecs::entity SpawnedEntity = NewFlecsWorld->CreateEntity(Entity.Value);
 			SpawnedEntity.set_name(TCHAR_TO_ANSI(*Entity.Key.ToString()));
 		}
+
+		RegisterAllGameplayTags(NewFlecsWorld);
 		
 		OnWorldCreated.Broadcast(Name, NewFlecsWorld);
 		
@@ -235,4 +241,86 @@ protected:
 
 	UPROPERTY()
 	TWeakObjectPtr<const UFlecsDeveloperSettings> DeveloperSettings;
+
+	void RegisterAllGameplayTags(UFlecsWorld* InFlecsWorld)
+	{
+		TMap<FGameplayTag, TArray<FGameplayTag>> TagHierarchy;
+		BuildTagHierarchyMap(TagHierarchy);
+
+		TSet<FName> ProcessedTags;
+		
+		for (const TTuple<FGameplayTag, TArray<FGameplayTag>>& Pair : TagHierarchy)
+		{
+			if (!Pair.Key.IsValid())
+			{
+				continue;
+			}
+			
+			RegisterGameplayTagEntityRecursively(Pair.Key, InFlecsWorld, TagHierarchy, ProcessedTags);
+		}
+	}
+
+	void BuildTagHierarchyMap(TMap<FGameplayTag, TArray<FGameplayTag>>& InTagHierarchy)
+	{
+		FGameplayTagContainer AllTags;
+		UGameplayTagsManager::Get().RequestAllGameplayTags(AllTags, false);
+
+		for (const FGameplayTag& Tag : AllTags)
+		{
+			FGameplayTag ParentTag = Tag.RequestDirectParent();
+			
+			if (ParentTag.IsValid())
+			{
+				InTagHierarchy.FindOrAdd(ParentTag).Add(Tag);
+			}
+			else
+			{
+				InTagHierarchy.FindOrAdd(Tag);
+			}
+		}
+	}
+
+	FFlecsEntityHandle RegisterGameplayTagEntityRecursively(const FGameplayTag& Tag, UFlecsWorld* NewFlecsWorld,
+		const TMap<FGameplayTag, TArray<FGameplayTag>>& TagHierarchy, TSet<FName>& ProcessedTags)
+	{
+		if (ProcessedTags.Contains(Tag.GetTagName()))
+		{
+			return FFlecsEntityHandle();
+		}
+		
+		ProcessedTags.Add(Tag.GetTagName());
+
+		const FString LastPartOfTagName = ExtractLastPartOfTagName(Tag.GetTagName().ToString());
+
+		const FFlecsEntityHandle TagEntity = NewFlecsWorld->CreateEntity(LastPartOfTagName);
+		
+		TagEntity.Set<FFlecsGameplayTagEntityComponent>({Tag});
+		
+		if (const TArray<FGameplayTag>* Children = TagHierarchy.Find(Tag))
+		{
+			for (const FGameplayTag& ChildTag : *Children)
+			{
+				FFlecsEntityHandle ChildEntity = RegisterGameplayTagEntityRecursively(ChildTag, NewFlecsWorld,
+					TagHierarchy, ProcessedTags);
+				
+				ChildEntity.SetParent(TagEntity);
+			}
+		}
+
+		return TagEntity;
+	}
+
+	FString ExtractLastPartOfTagName(const FString& FullTagName)
+	{
+		FString LastPartOfTagName;
+		
+		if (FullTagName.Split(TEXT("."), nullptr, &LastPartOfTagName,
+			ESearchCase::IgnoreCase, ESearchDir::FromEnd))
+		{
+			return LastPartOfTagName;
+		}
+		
+		return FullTagName;
+	}
+	
 }; // class UFlecsWorldSubsystem
