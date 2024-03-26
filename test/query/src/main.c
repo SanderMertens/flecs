@@ -470,6 +470,15 @@ void Basic_match_disabled_prefab_this_tgt(void);
 void Basic_match_self_disabled(void);
 void Basic_match_self_prefab(void);
 void Basic_match_self_disabled_prefab(void);
+void Basic_match_optional_disabled(void);
+void Basic_match_optional_prefab(void);
+void Basic_match_optional_disabled_prefab(void);
+void Basic_match_optional_disabled_this_tgt(void);
+void Basic_match_optional_prefab_this_tgt(void);
+void Basic_match_optional_disabled_prefab_this_tgt(void);
+void Basic_match_optional_self_disabled(void);
+void Basic_match_optional_self_prefab(void);
+void Basic_match_optional_self_disabled_prefab(void);
 void Basic_inout_none_first_term(void);
 void Basic_inout_none_second_term(void);
 void Basic_inout_none_singleton(void);
@@ -498,6 +507,14 @@ void Basic_unknown_before_known_after_scope(void);
 void Basic_2_trivial_mixed_2_tables(void);
 void Basic_2_trivial_mixed_2_tables_component(void);
 void Basic_2_trivial_mixed_2_tables_wildcard(void);
+void Basic_2_trivial_1_unused_id(void);
+void Basic_2_trivial_one_regular(void);
+void Basic_1_trivial_one_regular_one_trivial(void);
+void Basic_one_regular_2_trivial(void);
+void Basic_2_trivial_w_prefab(void);
+void Basic_3_trivial_w_prefab(void);
+void Basic_2_trivial_w_disabled(void);
+void Basic_3_trivial_w_disabled(void);
 void Basic_2_this_w_fixed_src(void);
 void Basic_2_fixed_src_w_this(void);
 void Basic_2_this_w_fixed_src_no_match_fixed(void);
@@ -3529,6 +3546,42 @@ bake_test_case Basic_testcases[] = {
         Basic_match_self_disabled_prefab
     },
     {
+        "match_optional_disabled",
+        Basic_match_optional_disabled
+    },
+    {
+        "match_optional_prefab",
+        Basic_match_optional_prefab
+    },
+    {
+        "match_optional_disabled_prefab",
+        Basic_match_optional_disabled_prefab
+    },
+    {
+        "match_optional_disabled_this_tgt",
+        Basic_match_optional_disabled_this_tgt
+    },
+    {
+        "match_optional_prefab_this_tgt",
+        Basic_match_optional_prefab_this_tgt
+    },
+    {
+        "match_optional_disabled_prefab_this_tgt",
+        Basic_match_optional_disabled_prefab_this_tgt
+    },
+    {
+        "match_optional_self_disabled",
+        Basic_match_optional_self_disabled
+    },
+    {
+        "match_optional_self_prefab",
+        Basic_match_optional_self_prefab
+    },
+    {
+        "match_optional_self_disabled_prefab",
+        Basic_match_optional_self_disabled_prefab
+    },
+    {
         "inout_none_first_term",
         Basic_inout_none_first_term
     },
@@ -3639,6 +3692,38 @@ bake_test_case Basic_testcases[] = {
     {
         "2_trivial_mixed_2_tables_wildcard",
         Basic_2_trivial_mixed_2_tables_wildcard
+    },
+    {
+        "2_trivial_1_unused_id",
+        Basic_2_trivial_1_unused_id
+    },
+    {
+        "2_trivial_one_regular",
+        Basic_2_trivial_one_regular
+    },
+    {
+        "1_trivial_one_regular_one_trivial",
+        Basic_1_trivial_one_regular_one_trivial
+    },
+    {
+        "one_regular_2_trivial",
+        Basic_one_regular_2_trivial
+    },
+    {
+        "2_trivial_w_prefab",
+        Basic_2_trivial_w_prefab
+    },
+    {
+        "3_trivial_w_prefab",
+        Basic_3_trivial_w_prefab
+    },
+    {
+        "2_trivial_w_disabled",
+        Basic_2_trivial_w_disabled
+    },
+    {
+        "3_trivial_w_disabled",
+        Basic_3_trivial_w_disabled
     },
     {
         "2_this_w_fixed_src",
@@ -8361,7 +8446,7 @@ static bake_test_suite suites[] = {
         "Basic",
         Basic_setup,
         NULL,
-        171,
+        188,
         Basic_testcases,
         1,
         Basic_params

@@ -9,17 +9,28 @@ static
 bool flecs_query_trivial_search_init(
     const ecs_query_run_ctx_t *ctx,
     ecs_query_trivial_ctx_t *op_ctx,
-    const ecs_query_t *filter,
-    bool first)
+    const ecs_query_t *query,
+    bool first,
+    ecs_flags64_t term_set)
 {
     if (first) {
-        const ecs_term_t *terms = filter->terms;
-        ecs_id_record_t *idr = flecs_id_record_get(ctx->world, terms->id);
+        /* Find first trivial term*/
+        int32_t t;
+        for (t = 0; t < query->term_count; t ++) {
+            if (term_set & (1llu << t)) {
+                break;
+            }
+        }
+
+        ecs_assert(t != query->term_count, ECS_INTERNAL_ERROR, NULL);
+
+        const ecs_term_t *term = &query->terms[t];
+        ecs_id_record_t *idr = flecs_id_record_get(ctx->world, term->id);
         if (!idr) {
             return false;
         }
 
-        if (filter->flags & EcsQueryMatchEmptyTables) {
+        if (query->flags & EcsQueryMatchEmptyTables) {
             if (!flecs_table_cache_all_iter(&idr->cache, &op_ctx->it)){
                 return false;
             }
@@ -28,6 +39,15 @@ bool flecs_query_trivial_search_init(
                 return false;
             }
         }
+
+        /* Find next term to evaluate once */
+        for (; t < query->term_count; t ++) {
+            if (term_set & (1llu << t)) {
+                break;
+            }
+        }
+
+        op_ctx->first_to_eval = t;
     }
 
     return true;
@@ -45,7 +65,7 @@ bool flecs_query_trivial_search(
     ecs_iter_t *it = ctx->it;
     int32_t t, term_count = rule->pub.term_count;
 
-    if (!flecs_query_trivial_search_init(ctx, op_ctx, q, first)) {
+    if (!flecs_query_trivial_search_init(ctx, op_ctx, q, first, term_set)) {
         return false;
     }
 
@@ -61,7 +81,7 @@ bool flecs_query_trivial_search(
             continue;
         }
 
-        for (t = 1; t < term_count; t ++) {
+        for (t = op_ctx->first_to_eval; t < term_count; t ++) {
             if (!(term_set & (1llu << t))) {
                 continue;
             }
@@ -138,7 +158,7 @@ bool flecs_query_trivial_search_nodata(
     ecs_iter_t *it = ctx->it;
     int32_t t, term_count = rule->pub.term_count;
 
-    if (!flecs_query_trivial_search_init(ctx, op_ctx, q, first)) {
+    if (!flecs_query_trivial_search_init(ctx, op_ctx, q, first, term_set)) {
         return false;
     }
 
@@ -154,13 +174,17 @@ bool flecs_query_trivial_search_nodata(
             continue;
         }
 
-        for (t = 1; t < term_count; t ++) {
+        for (t = op_ctx->first_to_eval; t < term_count; t ++) {
             if (!(term_set & (1llu << t))) {
                 continue;
             }
 
             const ecs_term_t *term = &terms[t];
             ecs_id_record_t *idr = flecs_id_record_get(ctx->world, term->id);
+            if (!idr) {
+                break;
+            }
+
             const ecs_table_record_t *tr_with = flecs_id_record_get_table(
                 idr, table);
             if (!tr_with) {

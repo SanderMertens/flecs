@@ -551,6 +551,11 @@ void flecs_query_insert_trivial_search(
     int32_t i, term_count = q->term_count;
     ecs_flags64_t trivial_set = 0;
 
+    /* Trivial search always ignores prefabs and disabled entities */
+    if (rule->pub.flags & (EcsQueryMatchPrefab|EcsQueryMatchDisabled)) {
+        return;
+    }
+
     /* Find trivial terms, which can be handled in single instruction */
     int32_t trivial_wildcard_terms = 0;
     int32_t trivial_data_terms = 0;

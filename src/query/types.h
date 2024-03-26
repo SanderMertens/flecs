@@ -239,6 +239,7 @@ typedef struct {
 typedef struct {
     ecs_table_cache_iter_t it;
     const ecs_table_record_t *tr;
+    int32_t first_to_eval;
 } ecs_query_trivial_ctx_t;
 
 /* *From operator iterator context */
