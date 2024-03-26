@@ -14,7 +14,7 @@ FFlecsEntityHandle::FFlecsEntityHandle()
         return;
     }
 
-    if (WorldName == NAME_None)
+    if (WorldName == NAME_None || GetEntity().id() == 0)
     {
         return;
     }
