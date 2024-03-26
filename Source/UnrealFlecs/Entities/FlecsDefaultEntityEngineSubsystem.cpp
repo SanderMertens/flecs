@@ -2,6 +2,8 @@
 
 #include "FlecsDefaultEntityEngineSubsystem.h"
 
+#include "FlecsDefaultEntitiesDeveloperSettings.h"
+
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsDefaultEntityEngineSubsystem)
 
 void UFlecsDefaultEntityEngineSubsystem::Initialize(FSubsystemCollectionBase& Collection)
@@ -65,6 +67,19 @@ void UFlecsDefaultEntityEngineSubsystem::Initialize(FSubsystemCollectionBase& Co
 	REGISTER_FLECS_ENTITY_OPTION("PredLookup", flecs::PredLookup);
 	REGISTER_FLECS_ENTITY_OPTION("ScopeOpen", flecs::ScopeOpen);
 	REGISTER_FLECS_ENTITY_OPTION("ScopeClose", flecs::ScopeClose);
+
+	UFlecsDefaultEntitiesDeveloperSettings* Settings = GetMutableDefault<UFlecsDefaultEntitiesDeveloperSettings>();
+	checkf(Settings, TEXT("Default Entities Developer Settings not found"));
+	UpdateDefaultEntities();
+
+	#if WITH_EDITOR
+	
+	Settings->OnSettingChanged().AddLambda([this](UObject*, struct FPropertyChangedEvent&)
+	{
+		UpdateDefaultEntities();
+	});
+
+	#endif // WITH_EDITOR
 }
 
 void UFlecsDefaultEntityEngineSubsystem::RegisterEntityOption(const FName& EntityName,
@@ -78,4 +93,23 @@ void UFlecsDefaultEntityEngineSubsystem::RegisterEntityOption(const FName& Entit
 const TMap<FName, flecs::entity_t>& UFlecsDefaultEntityEngineSubsystem::GetEntityOptions() const
 {
 	return EntityOptionMap;
+}
+
+void UFlecsDefaultEntityEngineSubsystem::UpdateDefaultEntities()
+{
+	const UFlecsDefaultEntitiesDeveloperSettings* Settings = GetDefault<UFlecsDefaultEntitiesDeveloperSettings>();
+	checkf(Settings, TEXT("Default Entities Developer Settings not found"));
+	
+	DefaultEntityMap.Empty();
+
+	for (size_t Index = 0; Index < Settings->DefaultEntities.Num(); ++Index)
+	{
+		DefaultEntityMap.Emplace(Settings->DefaultEntities[Index], StartingDefaultEntityId + Index + 1);
+	}
+
+	for (const TTuple<FName, flecs::entity_t>& Entity : DefaultEntityMap)
+	{
+		UE_LOG(LogTemp, Log, TEXT("Entity %s registered"), *Entity.Key.ToString());
+		EntityOptionMap.Emplace(Entity.Key, Entity.Value);
+	}
 }

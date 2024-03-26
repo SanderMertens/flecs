@@ -11,6 +11,7 @@
 #include "FlecsWorld.h"
 #include "FlecsWorldSettings.h"
 #include "Components/FlecsWorldPtrComponent.h"
+#include "Entities/FlecsDefaultEntityEngineSubsystem.h"
 #include "General/FlecsDeveloperSettings.h"
 #include "SolidMacros/Concepts/SolidConcepts.h"
 #include "SolidMacros/Standard/Hashing.h"
@@ -36,6 +37,8 @@ struct FFlecsRestSettings
 	UPROPERTY(EditAnywhere, Category = "Flecs | REST API")
 	FString IPAddress = "0.0.0.0";
 }; // struct FFlecsRestSettings
+
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnWorldCreated, FName, UFlecsWorld*);
 
 UCLASS(BlueprintType)
 class UNREALFLECS_API UFlecsWorldSubsystem final : public UTickableWorldSubsystem
@@ -134,6 +137,16 @@ public:
 		GetDefaultWorld(this)->AddSingleton<FFlecsTypeMapComponent>();
 
 		NewFlecsWorld->SetThreads(DeveloperSettings->DefaultWorkerThreads);
+
+		for (UFlecsDefaultEntityEngineSubsystem* DefaultEntityEngineSubsystem
+				= GEngine->GetEngineSubsystem<UFlecsDefaultEntityEngineSubsystem>();
+			 const TTuple<FName, flecs::entity_t>& Entity : DefaultEntityEngineSubsystem->DefaultEntityMap)
+		{
+			flecs::entity SpawnedEntity = NewFlecsWorld->World.make_alive(Entity.Value);
+			SpawnedEntity.set_name(TCHAR_TO_ANSI(*Entity.Key.ToString()));
+		}
+		
+		OnWorldCreated.Broadcast(Name, NewFlecsWorld);
 		
 		return Worlds.Last();
 	}
@@ -211,6 +224,8 @@ public:
 		return WorldType == EWorldType::Game || WorldType == EWorldType::PIE || WorldType == EWorldType::GamePreview
 			|| WorldType == EWorldType::GameRPC;
 	}
+	
+	FOnWorldCreated OnWorldCreated;
 
 protected:
 	UPROPERTY()

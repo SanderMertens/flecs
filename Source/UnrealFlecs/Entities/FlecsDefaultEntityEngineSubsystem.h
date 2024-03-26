@@ -12,6 +12,8 @@ class UNREALFLECS_API UFlecsDefaultEntityEngineSubsystem : public UEngineSubsyst
 {
 	GENERATED_BODY()
 
+	static constexpr flecs::entity_t StartingDefaultEntityId = FLECS_HI_COMPONENT_ID * 5;
+
 public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	
@@ -19,20 +21,12 @@ public:
 	
 	const TMap<FName, flecs::entity_t>& GetEntityOptions() const;
 
-	UFUNCTION(BlueprintCallable, Category = "Flecs | Entities", DisplayName = "Register Entity Option", meta = (AdvancedDisplay = "InId"))
-	FORCEINLINE void K2_RegisterEntityOption(const FName& EntityName, const FFlecsId& InId = FFlecsId())
-	{
-		RegisterEntityOption(EntityName, InId.GetFlecsId());
-	}
-
-private:
+	UFUNCTION()
+	void UpdateDefaultEntities();
+	
 	TMap<FName, flecs::entity_t> EntityOptionMap;
+	TMap<FName, flecs::entity_t> DefaultEntityMap;
 }; // class UFlecsDefaultEntityEngineSubsystem
 
 #define REGISTER_FLECS_ENTITY_OPTION(EntityName, EntityHandle) \
 	GEngine->GetEngineSubsystem<UFlecsDefaultEntityEngineSubsystem>()->RegisterEntityOption(FName(EntityName), EntityHandle)
-
-// Must not be a Pre-defined Tag, has to be entirely new
-#define REGISTER_FLECS_TAG_OPTION(TagName, TagHandleName) \
-	ECS_TAG_DECLARE(TagHandleName); \
-	GEngine->GetEngineSubsystem<UFlecsDefaultEntityEngineSubsystem>()->RegisterEntityOption(FName(TagName), TagHandleName)

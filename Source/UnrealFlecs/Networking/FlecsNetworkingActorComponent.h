@@ -62,7 +62,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Networking")
 	FORCEINLINE bool HasNetworkOwnedEntity(const FFlecsEntityHandle& Entity) const
 	{
-		return NetworkOwnedEntities.Contains(Entity);
+		return GetNetworkOwnedEntities().Contains(Entity);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Networking")
@@ -74,13 +74,13 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Networking")
-	FORCEINLINE TArray<FFlecsEntityHandle> GetNetworkOwnedEntities() const
+	FORCEINLINE TSet<FFlecsEntityHandle> GetNetworkOwnedEntities() const
 	{
-		return NetworkOwnedEntities;
+		return static_cast<TSet<FFlecsEntityHandle>>(NetworkOwnedEntities);
 	}
 
 private:
-	UPROPERTY(ReplicatedUsing=OnRep_NetworkOwnedEntities)
+	UPROPERTY(Replicated)
 	TArray<FFlecsEntityHandle> NetworkOwnedEntities;
 
 	FORCEINLINE void SortNetworkOwnedEntities()
@@ -89,12 +89,6 @@ private:
 		{
 			return A.GetId() < B.GetId();
 		});
-	}
-
-	UFUNCTION()
-	FORCEINLINE void OnRep_NetworkOwnedEntities()
-	{
-		
 	}
 
 }; // class UFlecsNetworkingActorComponent

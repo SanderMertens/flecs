@@ -13,11 +13,32 @@ FFlecsEntityHandle::FFlecsEntityHandle()
     {
         return;
     }
+
+    if (WorldName == NAME_None)
+    {
+        return;
+    }
     
     if (GetEntity().world().m_world == nullptr)
     {
-        const UFlecsWorldSubsystem* FlecsWorldSubsystem = GWorld->GetSubsystem<UFlecsWorldSubsystem>();
-        SetEntity(flecs::entity(FlecsWorldSubsystem->GetFlecsWorld(WorldName)->World, GetEntity().id()));
+        UFlecsWorldSubsystem* FlecsWorldSubsystem = GWorld->GetSubsystem<UFlecsWorldSubsystem>();
+        if LIKELY_IF(FlecsWorldSubsystem->HasWorld(WorldName))
+        {
+            SetEntity(flecs::entity(FlecsWorldSubsystem->GetFlecsWorld(WorldName)->World, GetEntity().id()));
+        }
+        else
+        {
+            FDelegateHandle OnWorldCreatedHandle = FlecsWorldSubsystem
+                ->OnWorldCreated.AddLambda([&](const FName& Name, const UFlecsWorld* InFlecsWorld)
+            {
+                if (Name == WorldName)
+                {
+                    SetEntity(flecs::entity(InFlecsWorld->World, GetEntity().id()));
+                }
+
+                FlecsWorldSubsystem->OnWorldCreated.Remove(OnWorldCreatedHandle);
+            });
+        }
     }
 }
 

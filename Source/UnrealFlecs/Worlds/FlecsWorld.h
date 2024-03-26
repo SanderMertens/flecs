@@ -12,7 +12,7 @@
 #include "FlecsWorld.generated.h"
 
 UCLASS(BlueprintType)
-class UNREALFLECS_API UFlecsWorld : public UObject
+class UNREALFLECS_API UFlecsWorld final : public UObject
 {
 	GENERATED_BODY()
 

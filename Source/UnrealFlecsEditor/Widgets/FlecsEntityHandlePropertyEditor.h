@@ -94,7 +94,7 @@ private:
 			PropertyHandle->NotifyPreChange();
 
 			PropertyHandle->EnumerateRawData(
-				[&](void* RawData, const int32 DataIndex, const int32 NumDatas)
+				[&](void* RawData, const int32 DataIndex, MAYBE_UNUSED const int32 NumDatas)
 				{
 					if UNLIKELY_IF(RawData == nullptr)
 					{
@@ -135,7 +135,7 @@ private:
 		if (PropertyHandle && PropertyHandle->IsValidHandle())
 		{
 			PropertyHandle->EnumerateRawData(
-				[&](void* RawData, const int32 DataIndex, const int32 NumDatas)
+				[&](void* RawData, const int32 DataIndex, MAYBE_UNUSED const int32 NumDatas)
 				{
 					if UNLIKELY_IF(RawData == nullptr)
 					{
