@@ -4,6 +4,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "NetworkIdComponent.h"
 #include "Components/ActorComponent.h"
 #include "Entities/FlecsEntityHandle.h"
 #include "Net/UnrealNetwork.h"
@@ -28,6 +29,15 @@ public:
 
 		checkf(GetOwner()->IsA<APlayerController>(),
 			TEXT("Owner of UFlecsNetworkingActorComponent must be a APlayerController"));
+
+		if (GetOwner()->HasAuthority())
+		{
+			
+		}
+		else
+		{
+			
+		}
 	}
 
 	FORCEINLINE virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override
@@ -41,7 +51,7 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Networking")
-	FORCEINLINE void AddNetworkOwnedEntity(const FFlecsEntityHandle& Entity)
+	FORCEINLINE void AddNetworkOwnedEntity(const FFlecsNetworkIdComponent& Entity)
 	{
 		checkf(Entity.IsValid(), TEXT("Entity must be valid"));
 		NetworkOwnedEntities.Add(Entity);
@@ -51,7 +61,7 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Networking")
-	FORCEINLINE void RemoveNetworkOwnedEntity(const FFlecsEntityHandle& Entity)
+	FORCEINLINE void RemoveNetworkOwnedEntity(const FFlecsNetworkIdComponent& Entity)
 	{
 		NetworkOwnedEntities.Remove(Entity);
 		SortNetworkOwnedEntities();
@@ -60,7 +70,7 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Networking")
-	FORCEINLINE bool HasNetworkOwnedEntity(const FFlecsEntityHandle& Entity) const
+	FORCEINLINE bool HasNetworkOwnedEntity(const FFlecsNetworkIdComponent& Entity) const
 	{
 		return GetNetworkOwnedEntities().Contains(Entity);
 	}
@@ -74,20 +84,20 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Networking")
-	FORCEINLINE TSet<FFlecsEntityHandle> GetNetworkOwnedEntities() const
+	FORCEINLINE TSet<FFlecsNetworkIdComponent> GetNetworkOwnedEntities() const
 	{
-		return static_cast<TSet<FFlecsEntityHandle>>(NetworkOwnedEntities);
+		return static_cast<TSet<FFlecsNetworkIdComponent>>(NetworkOwnedEntities);
 	}
 
 private:
 	UPROPERTY(Replicated)
-	TArray<FFlecsEntityHandle> NetworkOwnedEntities;
+	TArray<FFlecsNetworkIdComponent> NetworkOwnedEntities;
 
 	FORCEINLINE void SortNetworkOwnedEntities()
 	{
-		NetworkOwnedEntities.Sort([](const FFlecsEntityHandle& A, const FFlecsEntityHandle& B)
+		NetworkOwnedEntities.Sort([](const FFlecsNetworkIdComponent& A, const FFlecsNetworkIdComponent& B)
 		{
-			return A.GetId() < B.GetId();
+			return A.GetNetworkId() < B.GetNetworkId();
 		});
 	}
 

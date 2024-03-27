@@ -29,4 +29,4 @@ public:
 }; // class UFlecsDefaultEntityEngineSubsystem
 
 #define REGISTER_FLECS_ENTITY_OPTION(EntityName, EntityHandle) \
-	GEngine->GetEngineSubsystem<UFlecsDefaultEntityEngineSubsystem>()->RegisterEntityOption(FName(EntityName), EntityHandle)
+	RegisterEntityOption(FName(EntityName), EntityHandle)

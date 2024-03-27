@@ -33,8 +33,6 @@ public:
 		
 		GEngine->GetEngineSubsystem<UFlecsDefaultEntityEngineSubsystem>()->GetEntityOptions().GenerateKeyArray(Options);
 
-		UE_LOG(LogTemp, Warning, TEXT("Options array size: %d"), Options.Num());
-
 		ApplyMetadataFilters();
 
 		const TSharedPtr<IPropertyHandle> WorldNameHandle
@@ -94,7 +92,7 @@ private:
 			PropertyHandle->NotifyPreChange();
 
 			PropertyHandle->EnumerateRawData(
-				[&](void* RawData, const int32 DataIndex, MAYBE_UNUSED const int32 NumDatas)
+				[&](void* RawData, MAYBE_UNUSED const int32 DataIndex, MAYBE_UNUSED const int32 NumDatas)
 				{
 					if UNLIKELY_IF(RawData == nullptr)
 					{

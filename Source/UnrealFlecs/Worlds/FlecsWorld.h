@@ -545,6 +545,51 @@ public:
 		const FFlecsEntityHandle Handle(ScriptStructComponent);
 		GetSingletonRef<FFlecsTypeMapComponent>()->ScriptStructMap.emplace(ScriptStruct, Handle);
 
+		#if WITH_EDITOR
+
+		flecs::untyped_component* UntypedComponent = ScriptStructComponent.get_mut<flecs::untyped_component>();
+
+		for (TFieldIterator<FProperty> PropertyIt(ScriptStruct); PropertyIt; ++PropertyIt)
+		{
+			const FProperty* Property = *PropertyIt;
+			checkf(Property != nullptr, TEXT("Property is nullptr"));
+			
+			if (Property->IsA<FBoolProperty>())
+			{
+				UntypedComponent->member<bool>(TCHAR_TO_ANSI(*Property->GetName()));
+			}
+			else if (Property->IsA<FByteProperty>())
+			{
+				UntypedComponent->member<uint8>(TCHAR_TO_ANSI(*Property->GetName()));
+			}
+			else if (Property->IsA<FIntProperty>())
+			{
+				UntypedComponent->member<int32>(TCHAR_TO_ANSI(*Property->GetName()));
+			}
+			else if (Property->IsA<FFloatProperty>())
+			{
+				UntypedComponent->member<float>(TCHAR_TO_ANSI(*Property->GetName()));
+			}
+			else if (Property->IsA<FDoubleProperty>())
+			{
+				UntypedComponent->member<double>(TCHAR_TO_ANSI(*Property->GetName()));
+			}
+			else if (Property->IsA<FStrProperty>())
+			{
+				UntypedComponent->member<FString>(TCHAR_TO_ANSI(*Property->GetName()));
+			}
+			else if (Property->IsA<FNameProperty>())
+			{
+				UntypedComponent->member<FName>(TCHAR_TO_ANSI(*Property->GetName()));
+			}
+			else if (Property->IsA<FTextProperty>())
+			{
+				UntypedComponent->member<FText>(TCHAR_TO_ANSI(*Property->GetName()));
+			}
+		}
+
+		#endif // WITH_EDITOR
+
 		if (ScriptStruct->GetSuperStruct())
 		{
 			if (!HasScriptStruct(static_cast<UScriptStruct*>(ScriptStruct->GetSuperStruct())))

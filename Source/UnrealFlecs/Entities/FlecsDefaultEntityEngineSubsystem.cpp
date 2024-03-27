@@ -67,6 +67,8 @@ void UFlecsDefaultEntityEngineSubsystem::Initialize(FSubsystemCollectionBase& Co
 	REGISTER_FLECS_ENTITY_OPTION("PredLookup", flecs::PredLookup);
 	REGISTER_FLECS_ENTITY_OPTION("ScopeOpen", flecs::ScopeOpen);
 	REGISTER_FLECS_ENTITY_OPTION("ScopeClose", flecs::ScopeClose);
+	REGISTER_FLECS_ENTITY_OPTION("AndFrom", flecs::Union);
+	REGISTER_FLECS_ENTITY_OPTION("OrFrom", flecs::Exclusive);
 
 	UFlecsDefaultEntitiesDeveloperSettings* Settings = GetMutableDefault<UFlecsDefaultEntitiesDeveloperSettings>();
 	checkf(Settings, TEXT("Default Entities Developer Settings not found"));
@@ -85,8 +87,6 @@ void UFlecsDefaultEntityEngineSubsystem::Initialize(FSubsystemCollectionBase& Co
 void UFlecsDefaultEntityEngineSubsystem::RegisterEntityOption(const FName& EntityName,
                                                               const flecs::entity_t& EntityHandle)
 {
-	UE_LOG(LogTemp, Log, TEXT("Entity %s registered"), *EntityName.ToString());
-	UE_LOG(LogTemp, Log, TEXT("Option Count: %d"), EntityOptionMap.Num());
 	EntityOptionMap.Emplace(EntityName, EntityHandle);
 }
 
@@ -109,7 +109,6 @@ void UFlecsDefaultEntityEngineSubsystem::UpdateDefaultEntities()
 
 	for (const TTuple<FName, flecs::entity_t>& Entity : DefaultEntityMap)
 	{
-		UE_LOG(LogTemp, Log, TEXT("Entity %s registered"), *Entity.Key.ToString());
 		EntityOptionMap.Emplace(Entity.Key, Entity.Value);
 	}
 }

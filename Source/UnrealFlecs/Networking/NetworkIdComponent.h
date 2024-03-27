@@ -7,28 +7,32 @@
 #include "NetworkIdComponent.generated.h"
 
 USTRUCT(BlueprintType)
-struct UNREALFLECS_API FNetworkIdComponent
+struct UNREALFLECS_API FFlecsNetworkIdComponent
 {
 	GENERATED_BODY()
 
-	FORCEINLINE NO_DISCARD friend uint32 GetTypeHash(const FNetworkIdComponent& InComponent)
+	FORCEINLINE NO_DISCARD friend uint32 GetTypeHash(const FFlecsNetworkIdComponent& InComponent)
 	{
 		return GetTypeHash(InComponent.GetNetworkId());
 	}
 
 public:
-	FORCEINLINE FNetworkIdComponent() = default;
-	FORCEINLINE FNetworkIdComponent(const uint64 InNetworkId) : NetworkId(InNetworkId) {}
+	FORCEINLINE FFlecsNetworkIdComponent() = default;
+	FORCEINLINE FFlecsNetworkIdComponent(const uint64 InNetworkId) : NetworkId(InNetworkId) {}
 
-	FORCEINLINE NO_DISCARD uint64 GetNetworkId() const { return NetworkId; }
+	FORCEINLINE NO_DISCARD uint64 GetNetworkId() const { return NetworkId.Get(std::numeric_limits<uint64>::max()); }
 	FORCEINLINE void SetNetworkId(const uint64 InNetworkId) { NetworkId = InNetworkId; }
 
-	FORCEINLINE bool operator==(const FNetworkIdComponent& Other) const
+	FORCEINLINE NO_DISCARD bool IsValid() const { return NetworkId.IsSet(); }
+
+	FORCEINLINE void Reset() { NetworkId.Reset(); }
+
+	FORCEINLINE bool operator==(const FFlecsNetworkIdComponent& Other) const
 	{
 		return NetworkId == Other.NetworkId;
 	}
 
-	FORCEINLINE bool operator!=(const FNetworkIdComponent& Other) const
+	FORCEINLINE bool operator!=(const FFlecsNetworkIdComponent& Other) const
 	{
 		return !(*this == Other);
 	}
@@ -42,9 +46,8 @@ public:
 	{
 		return !(*this == Other);
 	}
-
-private:
+	
 	UPROPERTY()
-	uint64 NetworkId = std::numeric_limits<uint64>::max();
+	TOptional<uint64> NetworkId;
 	
 }; // struct FNetworkIdComponent

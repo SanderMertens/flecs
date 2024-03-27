@@ -161,6 +161,16 @@ public:
 		return GetEntity().has(flecs::Prefab);
 	}
 
+	FORCEINLINE NO_DISCARD bool IsComponent() const
+	{
+		return GetEntity().has<flecs::Component>();
+	}
+
+	FORCEINLINE NO_DISCARD flecs::untyped_component* GetUntypedComponent() const
+	{
+		return GetEntity().get_mut<flecs::untyped_component>();
+	}
+
 	FORCEINLINE void Flatten(const FFlecsEntityHandle& RelationshipEntity) const
 	{
 		GetEntity().flatten(RelationshipEntity, nullptr);
