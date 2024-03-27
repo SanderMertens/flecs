@@ -12,6 +12,7 @@ struct UNREALFLECS_API FFlecsReplicatedTrait
 
 public:
 
-private:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Replicated Trait")
+	uint8 bPushModel : 1 = true;
 	
 }; // struct FFlecsReplicatedTrait

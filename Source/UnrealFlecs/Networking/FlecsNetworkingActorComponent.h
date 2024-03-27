@@ -4,12 +4,25 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "NetworkIdComponent.h"
+#include "FlecsNetworkIdComponent.h"
 #include "Components/ActorComponent.h"
 #include "Entities/FlecsEntityHandle.h"
 #include "Net/UnrealNetwork.h"
 #include "Net/Core/PushModel/PushModel.h"
 #include "FlecsNetworkingActorComponent.generated.h"
+
+USTRUCT()
+struct FNetworkedEntityInfo
+{
+	UPROPERTY()
+	FFlecsNetworkIdComponent NetworkId;
+
+	UPROPERTY()
+	FName WorldName = FName("DefaultFlecsWorld");
+
+	UPROPERTY()
+	FName EntityName;
+}; // struct FNetworkedEntityInfo
 
 UCLASS(BlueprintType, ClassGroup=(Flecs), meta=(BlueprintSpawnableComponent))
 class UNREALFLECS_API UFlecsNetworkingActorComponent final : public UActorComponent
@@ -92,6 +105,9 @@ public:
 private:
 	UPROPERTY(Replicated)
 	TArray<FFlecsNetworkIdComponent> NetworkOwnedEntities;
+
+	UFUNCTION(Client, Reliable)
+	void Client_UpdateNetworkedEntities(const TArray<FNetworkedEntityInfo>& Entities);
 
 	FORCEINLINE void SortNetworkOwnedEntities()
 	{

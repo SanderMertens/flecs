@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "SolidMacros/Macros.h"
-#include "NetworkIdComponent.generated.h"
+#include "FlecsNetworkIdComponent.generated.h"
 
 USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsNetworkIdComponent

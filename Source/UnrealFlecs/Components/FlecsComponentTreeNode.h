@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "Entities/FlecsEntityHandle.h"
 #include "FlecsComponentTreeNode.generated.h"
 
@@ -13,6 +14,7 @@ enum class EFlecsComponentTreeNodeType : uint8
 {
 	ScriptStruct = 0,
 	EntityHandle = 1,
+	FGameplayTag = 2,
 }; // enum class EFlecsComponentTreeNodeType
 
 USTRUCT(BlueprintType)
@@ -30,6 +32,10 @@ struct UNREALFLECS_API FFlecsComponentTypeInfo final
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree",
 		meta = (EditCondition = "NodeType == EFlecsComponentTreeNodeType::EntityHandle", EditConditionHides))
 	FFlecsEntityHandle EntityHandle;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree",
+		meta = (EditCondition = "NodeType == EFlecsComponentTreeNodeType::FGameplayTag", EditConditionHides))
+	FGameplayTagContainer GameplayTag;
 	
 }; // struct FFlecsComponentTypeInfo
 

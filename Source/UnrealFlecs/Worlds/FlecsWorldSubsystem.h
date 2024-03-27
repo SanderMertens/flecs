@@ -17,7 +17,7 @@
 #include "Components/FlecsWorldPtrComponent.h"
 #include "Entities/FlecsDefaultEntityEngineSubsystem.h"
 #include "General/FlecsDeveloperSettings.h"
-#include "Networking/NetworkIdComponent.h"
+#include "..\Networking\FlecsNetworkIdComponent.h"
 #include "SolidMacros/Concepts/SolidConcepts.h"
 #include "SolidMacros/Standard/Hashing.h"
 #include "Standard/robin_hood.h"

@@ -250,10 +250,27 @@ public:
 		return FString(GetEntity().to_json().c_str());
 	}
 
-	FORCEINLINE bool NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess) const
+	FORCEINLINE void FromJson(const FString& InJson) const
 	{
-		FString Json = ToJson();
-		Ar << Json;
+		GetEntity().from_json(TCHAR_TO_ANSI(*InJson));
+	}
+
+	FORCEINLINE bool NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess)
+	{
+		if (Ar.IsLoading())
+		{
+			FString Json;
+			Ar << Json;
+			FromJson(Json);
+		}
+		else
+		{
+			FString Json = ToJson();
+			Ar << Json;
+		}
+		
+		NetSerializeOptionalValue(Ar.IsSaving(), Ar, WorldName, FName("DefaultFlecsWorld"), Map);
+			
 		bOutSuccess = true;
 		return true;
 	}

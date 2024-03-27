@@ -8,18 +8,20 @@
 #include "FlecsNetworkingManager.generated.h"
 
 UCLASS(NotPlaceable)
-class UNREALFLECS_API AFlecsNetworkingManager final : public AActor
+class UNREALFLECS_API UFlecsNetworkingManager final : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:
-	AFlecsNetworkingManager(const FObjectInitializer& ObjectInitializer);
+	UFlecsNetworkingManager(const FObjectInitializer& ObjectInitializer);
 	
 	virtual void BeginPlay() override;
 
 private:
+	UPROPERTY()
 	FFlecsEntityHandle Observer;
 
+	UPROPERTY()
 	uint64 NextNetworkId = 0;
 
 	FORCEINLINE NO_DISCARD uint64 GetNextNetworkId() { return ++NextNetworkId; }
