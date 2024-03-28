@@ -10043,3 +10043,45 @@ void Basic_no_results_after_delete_tree_deferred(void) {
 
     ecs_fini(world);
 }
+
+void Basic_add_on_self_ref(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t qe = ecs_new_id(world);
+
+    ecs_query_t *q = ecs_query(world, {
+        .entity = qe,
+        .terms = {{ TagA, .src.id = qe }},
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    test_assert(ecs_has(world, qe, TagA));
+    test_bool(true, ecs_query_is_true(q));
+
+    ecs_fini(world);
+}
+
+void Basic_add_on_self_ref_by_name(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t qe = ecs_entity(world, { .name = "q" });
+
+    ecs_query_t *q = ecs_query(world, {
+        .entity = qe,
+        .expr = "TagA(q)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    test_assert(ecs_has(world, qe, TagA));
+    test_bool(true, ecs_query_is_true(q));
+
+    ecs_fini(world);
+}

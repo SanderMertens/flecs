@@ -35921,6 +35921,23 @@ void flecs_query_populate_tokens(
     }
 }
 
+static
+void flecs_query_add_self_ref(
+    ecs_query_t *q)
+{
+    if (q->entity) {
+        int32_t t, term_count = q->term_count;
+        ecs_term_t *terms = q->terms;
+
+        for (t = 0; t < term_count; t ++) {
+            ecs_term_t *term = &terms[t];
+            if (ECS_TERM_REF_ID(&term->src) == q->entity) {
+                ecs_add_id(q->world, q->entity, term->id);
+            }
+        }
+    }
+}
+
 void ecs_query_fini(
     ecs_query_t *q)
 {
@@ -35955,6 +35972,9 @@ ecs_query_t* ecs_query_init(
     if (flecs_query_finalize_query(world, &result->pub, &desc)) {
         goto error;
     }
+
+    /* If query terms have itself as source, add term ids to self */
+    flecs_query_add_self_ref(&result->pub);
 
     /* Initialize static context & mixins */
     result->pub.stage = stage;
@@ -36091,6 +36111,19 @@ bool ecs_query_is_true(
     } else {
         ecs_iter_t it = flecs_query_iter(q->world, q);
         return ecs_iter_is_true(&it);
+    }
+}
+
+int32_t ecs_query_match_count(
+    const ecs_query_t *q)
+{
+    ecs_poly_assert(q, ecs_query_impl_t);
+
+    ecs_query_impl_t *impl = flecs_query_impl(q);
+    if (!impl->cache) {
+        return 0;
+    } else {
+        return impl->cache->match_count;
     }
 }
 
@@ -37411,20 +37444,6 @@ ecs_query_cache_t* flecs_query_cache_init(
         result->on_group_create = const_desc->on_group_create;
         result->on_group_delete = const_desc->on_group_delete;
         result->group_by_ctx_free = const_desc->group_by_ctx_free;
-    }
-
-    /* If the query refers to itself, add the components that were queried for
-     * to the query itself. */
-    if (entity)  {
-        int32_t t, term_count = result->query->term_count;
-        ecs_term_t *terms = result->query->terms;
-
-        for (t = 0; t < term_count; t ++) {
-            ecs_term_t *term = &terms[t];
-            if (ECS_TERM_REF_ID(&term->src) == entity) {
-                ecs_add_id(world, entity, term->id);
-            }
-        }
     }
 
     /* Ensure that while initially populating the query with tables, they are
@@ -67070,12 +67089,12 @@ bool flecs_pipeline_build(
 {
     ecs_iter_t it = ecs_query_iter(world, pq->query);
 
-    /* TODO */
-    // if (pq->match_count == pq->query->match_count) {
-    //     /* No need to rebuild the pipeline */
-    //     ecs_iter_fini(&it);
-    //     return false;
-    // }
+    int32_t new_match_count = ecs_query_match_count(pq->query);
+    if (pq->match_count == new_match_count) {
+        /* No need to rebuild the pipeline */
+        ecs_iter_fini(&it);
+        return false;
+    }
 
     world->info.pipeline_build_count_total ++;
     pq->rebuild_count ++;
@@ -67263,8 +67282,7 @@ bool flecs_pipeline_build(
         ecs_log_pop_1();
     }
 
-    // TODO
-    // pq->match_count = pq->query->match_count;
+    pq->match_count = new_match_count;
 
     ecs_assert(pq->cur_op <= ecs_vec_last_t(&pq->ops, ecs_pipeline_op_t),
         ECS_INTERNAL_ERROR, NULL);

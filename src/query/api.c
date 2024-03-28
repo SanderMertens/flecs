@@ -319,6 +319,23 @@ void flecs_query_populate_tokens(
     }
 }
 
+static
+void flecs_query_add_self_ref(
+    ecs_query_t *q)
+{
+    if (q->entity) {
+        int32_t t, term_count = q->term_count;
+        ecs_term_t *terms = q->terms;
+
+        for (t = 0; t < term_count; t ++) {
+            ecs_term_t *term = &terms[t];
+            if (ECS_TERM_REF_ID(&term->src) == q->entity) {
+                ecs_add_id(q->world, q->entity, term->id);
+            }
+        }
+    }
+}
+
 void ecs_query_fini(
     ecs_query_t *q)
 {
@@ -353,6 +370,9 @@ ecs_query_t* ecs_query_init(
     if (flecs_query_finalize_query(world, &result->pub, &desc)) {
         goto error;
     }
+
+    /* If query terms have itself as source, add term ids to self */
+    flecs_query_add_self_ref(&result->pub);
 
     /* Initialize static context & mixins */
     result->pub.stage = stage;
@@ -489,5 +509,18 @@ bool ecs_query_is_true(
     } else {
         ecs_iter_t it = flecs_query_iter(q->world, q);
         return ecs_iter_is_true(&it);
+    }
+}
+
+int32_t ecs_query_match_count(
+    const ecs_query_t *q)
+{
+    ecs_poly_assert(q, ecs_query_impl_t);
+
+    ecs_query_impl_t *impl = flecs_query_impl(q);
+    if (!impl->cache) {
+        return 0;
+    } else {
+        return impl->cache->match_count;
     }
 }

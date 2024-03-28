@@ -258,12 +258,12 @@ bool flecs_pipeline_build(
 {
     ecs_iter_t it = ecs_query_iter(world, pq->query);
 
-    /* TODO */
-    // if (pq->match_count == pq->query->match_count) {
-    //     /* No need to rebuild the pipeline */
-    //     ecs_iter_fini(&it);
-    //     return false;
-    // }
+    int32_t new_match_count = ecs_query_match_count(pq->query);
+    if (pq->match_count == new_match_count) {
+        /* No need to rebuild the pipeline */
+        ecs_iter_fini(&it);
+        return false;
+    }
 
     world->info.pipeline_build_count_total ++;
     pq->rebuild_count ++;
@@ -451,8 +451,7 @@ bool flecs_pipeline_build(
         ecs_log_pop_1();
     }
 
-    // TODO
-    // pq->match_count = pq->query->match_count;
+    pq->match_count = new_match_count;
 
     ecs_assert(pq->cur_op <= ecs_vec_last_t(&pq->ops, ecs_pipeline_op_t),
         ECS_INTERNAL_ERROR, NULL);

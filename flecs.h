@@ -14651,7 +14651,7 @@ int32_t ecs_query_var_count(
  */
 FLECS_API
 int32_t ecs_query_find_var(
-    const ecs_query_t *rule,
+    const ecs_query_t *query,
     const char *name);    
 
 /** Get variable name.
@@ -14662,7 +14662,7 @@ int32_t ecs_query_find_var(
  */
 FLECS_API
 const char* ecs_query_var_name(
-    const ecs_query_t *rule,
+    const ecs_query_t *query,
     int32_t var_id);
 
 /** Test if variable is an entity.
@@ -14676,7 +14676,7 @@ const char* ecs_query_var_name(
  */
 FLECS_API
 bool ecs_query_var_is_entity(
-    const ecs_query_t *rule,
+    const ecs_query_t *query,
     int32_t var_id);  
 
 /** Iterate a rule.
@@ -14714,23 +14714,31 @@ bool ecs_query_next_instanced(
 /** Returns true if rule matches with entity. */
 FLECS_API
 bool ecs_query_has(
-    ecs_query_t *rule,
+    ecs_query_t *query,
     ecs_entity_t entity,
     ecs_iter_t *it);
 
 /** Returns true if rule matches with table. */
 FLECS_API
 bool ecs_query_has_table(
-    ecs_query_t *rule,
+    ecs_query_t *query,
     ecs_table_t *table,
     ecs_iter_t *it);
 
 /** Returns true if rule matches with table. */
 FLECS_API
 bool ecs_query_has_range(
-    ecs_query_t *rule,
+    ecs_query_t *query,
     ecs_table_range_t *range,
     ecs_iter_t *it);
+
+/** Returns how often a match event happened for a cached query. 
+ * This operation can be used to determine whether the query cache has been 
+ * updated with new tables.
+ */
+FLECS_API
+int32_t ecs_query_match_count(
+    const ecs_query_t *query);
 
 /** Convert rule to a string.
  * This will convert the rule program to a string which can aid in debugging
@@ -14755,7 +14763,7 @@ char* ecs_query_plan(
  */
 FLECS_API
 char* ecs_query_str_w_profile(
-    const ecs_query_t *rule,
+    const ecs_query_t *query,
     const ecs_iter_t *it);
 
 /** Populate variables from key-value string.
@@ -14771,7 +14779,7 @@ char* ecs_query_str_w_profile(
  */
 FLECS_API
 const char* ecs_query_parse_vars(
-    ecs_query_t *rule,
+    ecs_query_t *query,
     ecs_iter_t *it,
     const char *expr);
 

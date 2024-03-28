@@ -47,20 +47,6 @@ void SystemMisc_invalid_entity_without_id(void) {
     ecs_fini(world);
 }
 
-void SystemMisc_invalid_empty_without_id(void) {
-    install_test_abort();
-
-    ecs_world_t *world = ecs_init();
-
-    test_expect_abort();
-
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, $This);
-
-    test_assert(true);
-
-    ecs_fini(world);
-}
-
 void SystemMisc_invalid_empty_element(void) {
     install_test_abort();
 

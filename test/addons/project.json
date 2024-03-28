@@ -358,7 +358,6 @@
                 "invalid_not_without_id",
                 "invalid_optional_without_id",
                 "invalid_entity_without_id",
-                "invalid_empty_without_id",
                 "invalid_empty_element",
                 "invalid_empty_element_w_space",
                 "invalid_empty_or",

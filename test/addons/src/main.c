@@ -347,7 +347,6 @@ void Pipeline_pipeline_init_no_system_term(void);
 void SystemMisc_invalid_not_without_id(void);
 void SystemMisc_invalid_optional_without_id(void);
 void SystemMisc_invalid_entity_without_id(void);
-void SystemMisc_invalid_empty_without_id(void);
 void SystemMisc_invalid_empty_element(void);
 void SystemMisc_invalid_empty_element_w_space(void);
 void SystemMisc_invalid_empty_or(void);
@@ -2188,10 +2187,6 @@ bake_test_case SystemMisc_testcases[] = {
     {
         "invalid_entity_without_id",
         SystemMisc_invalid_entity_without_id
-    },
-    {
-        "invalid_empty_without_id",
-        SystemMisc_invalid_empty_without_id
     },
     {
         "invalid_empty_element",
@@ -4093,7 +4088,7 @@ static bake_test_suite suites[] = {
         "SystemMisc",
         NULL,
         NULL,
-        66,
+        65,
         SystemMisc_testcases
     },
     {

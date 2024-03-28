@@ -546,6 +546,8 @@ void Basic_delete_query_by_entity(void);
 void Basic_eval_count(void);
 void Basic_no_results_after_delete_tree(void);
 void Basic_no_results_after_delete_tree_deferred(void);
+void Basic_add_on_self_ref(void);
+void Basic_add_on_self_ref_by_name(void);
 
 // Testsuite 'Plan'
 void Plan_reordered_plan_1(void);
@@ -3848,6 +3850,14 @@ bake_test_case Basic_testcases[] = {
     {
         "no_results_after_delete_tree_deferred",
         Basic_no_results_after_delete_tree_deferred
+    },
+    {
+        "add_on_self_ref",
+        Basic_add_on_self_ref
+    },
+    {
+        "add_on_self_ref_by_name",
+        Basic_add_on_self_ref_by_name
     }
 };
 
@@ -8446,7 +8456,7 @@ static bake_test_suite suites[] = {
         "Basic",
         Basic_setup,
         NULL,
-        188,
+        190,
         Basic_testcases,
         1,
         Basic_params

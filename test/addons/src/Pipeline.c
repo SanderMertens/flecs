@@ -78,6 +78,8 @@ void Pipeline_system_order_same_phase(void) {
     ECS_SYSTEM(world, SysC, EcsOnUpdate, Position);
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
+    
+    test_int(stats->pipeline_build_count_total, 0);
 
     ecs_progress(world, 1);
 

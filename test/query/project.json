@@ -557,7 +557,9 @@
                 "delete_query_by_entity",
                 "eval_count",
                 "no_results_after_delete_tree",
-                "no_results_after_delete_tree_deferred"
+                "no_results_after_delete_tree_deferred",
+                "add_on_self_ref",
+                "add_on_self_ref_by_name"
             ]
         }, {
             "id": "Plan",

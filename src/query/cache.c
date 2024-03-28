@@ -1318,20 +1318,6 @@ ecs_query_cache_t* flecs_query_cache_init(
         result->group_by_ctx_free = const_desc->group_by_ctx_free;
     }
 
-    /* If the query refers to itself, add the components that were queried for
-     * to the query itself. */
-    if (entity)  {
-        int32_t t, term_count = result->query->term_count;
-        ecs_term_t *terms = result->query->terms;
-
-        for (t = 0; t < term_count; t ++) {
-            ecs_term_t *term = &terms[t];
-            if (ECS_TERM_REF_ID(&term->src) == entity) {
-                ecs_add_id(world, entity, term->id);
-            }
-        }
-    }
-
     /* Ensure that while initially populating the query with tables, they are
      * in the right empty/non-empty list. This ensures the query won't miss
      * empty/non-empty events for tables that are currently out of sync, but
