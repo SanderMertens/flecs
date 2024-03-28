@@ -153,17 +153,18 @@ typedef struct ecs_world_stats_t {
 } ecs_world_stats_t;
 
 /** Statistics for a single query (use ecs_query_cache_stats_get) */
-typedef struct ecs_query_cache_stats_t {
+typedef struct ecs_query_stats_t {
     int64_t first_;
-    ecs_metric_t matched_table_count;       /**< Matched non-empty tables */
-    ecs_metric_t matched_empty_table_count; /**< Matched empty tables */
+    ecs_metric_t result_count;              /**< Number of query results */
+    ecs_metric_t matched_table_count;       /**< Number of matched tables */
+    ecs_metric_t matched_empty_table_count; /**< Number of matched empty tables */
     ecs_metric_t matched_entity_count;      /**< Number of matched entities */
     ecs_metric_t eval_count;                /**< Number of times query is evaluated */
     int64_t last_;
 
     /** Current position in ringbuffer */
     int32_t t; 
-} ecs_query_cache_stats_t;
+} ecs_query_stats_t;
 
 /** Statistics for a single system (use ecs_system_stats_get()) */
 typedef struct ecs_system_stats_t {
@@ -173,7 +174,7 @@ typedef struct ecs_system_stats_t {
 
     bool task;                     /**< Is system a task */
 
-    ecs_query_cache_stats_t query;
+    ecs_query_stats_t query;
 } ecs_system_stats_t;
 
 /** Statistics for sync point */
@@ -262,31 +263,31 @@ FLECS_API
 void ecs_query_stats_get(
     const ecs_world_t *world,
     const ecs_query_t *query,
-    ecs_query_cache_stats_t *stats);
+    ecs_query_stats_t *stats);
 
 /** Reduce source measurement window into single destination measurement. */
 FLECS_API 
 void ecs_query_cache_stats_reduce(
-    ecs_query_cache_stats_t *dst,
-    const ecs_query_cache_stats_t *src);
+    ecs_query_stats_t *dst,
+    const ecs_query_stats_t *src);
 
 /** Reduce last measurement into previous measurement, restore old value. */
 FLECS_API
 void ecs_query_cache_stats_reduce_last(
-    ecs_query_cache_stats_t *stats,
-    const ecs_query_cache_stats_t *old,
+    ecs_query_stats_t *stats,
+    const ecs_query_stats_t *old,
     int32_t count);
 
 /** Repeat last measurement. */
 FLECS_API
 void ecs_query_cache_stats_repeat_last(
-    ecs_query_cache_stats_t *stats);
+    ecs_query_stats_t *stats);
 
 /** Copy last measurement from source to destination. */
 FLECS_API
 void ecs_query_cache_stats_copy_last(
-    ecs_query_cache_stats_t *dst,
-    const ecs_query_cache_stats_t *src);
+    ecs_query_stats_t *dst,
+    const ecs_query_stats_t *src);
 
 #ifdef FLECS_SYSTEM
 /** Get system statistics.
