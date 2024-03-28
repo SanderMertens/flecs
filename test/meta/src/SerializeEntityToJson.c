@@ -1506,20 +1506,20 @@ void SerializeEntityToJson_serialize_matches_query(void) {
     ecs_entity_t e2 = ecs_new_entity(world, "e2");
     ecs_add(world, e2, TagB);
 
-    ecs_query_cache_t *f_a = ecs_query(world, {
-        .filter.entity = ecs_entity(world, { .name = "f_a"} ),
+    ecs_query_t *f_a = ecs_query(world, {
+        .entity = ecs_entity(world, { .name = "f_a"} ),
         .terms = {{ TagA }}
     });
     test_assert(f_a != NULL);
 
-    ecs_query_cache_t *f_b = ecs_query(world, {
-        .filter.entity = ecs_entity(world, { .name = "f_b"} ),
+    ecs_query_t *f_b = ecs_query(world, {
+        .entity = ecs_entity(world, { .name = "f_b"} ),
         .terms = {{ TagB }}
     });
     test_assert(f_b != NULL);
 
-    ecs_query_cache_t *f_c = ecs_query(world, {
-        .filter.entity = ecs_entity(world, { .name = "f_c"} ),
+    ecs_query_t *f_c = ecs_query(world, {
+        .entity = ecs_entity(world, { .name = "f_c"} ),
         .terms = {{ TagC }}
     });
     test_assert(f_c != NULL);
@@ -1537,9 +1537,9 @@ void SerializeEntityToJson_serialize_matches_query(void) {
         "}");
     ecs_os_free(json);
 
-    ecs_query_cache_fini(f_a);
-    ecs_query_cache_fini(f_b);
-    ecs_query_cache_fini(f_c);
+    ecs_query_fini(f_a);
+    ecs_query_fini(f_b);
+    ecs_query_fini(f_c);
 
     ecs_fini(world);
 }

@@ -1892,13 +1892,13 @@ void SerializeIterToJson_serialize_variable_anonymous(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_rule_t *q = ecs_rule_new(world, "Tag($Entity)");
+    ecs_query_t *q = ecs_query(world, { .expr = "Tag($Entity)" });
 
     ecs_entity_t e = 10000;
     ecs_make_alive(world, 10000);
     ecs_add(world, e, Tag);
 
-    ecs_iter_t it = ecs_rule_iter(world, q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
     desc.serialize_ids = false;
     desc.serialize_values = false;
@@ -1915,7 +1915,7 @@ void SerializeIterToJson_serialize_variable_anonymous(void) {
     ecs_os_free(json);
     ecs_os_free(expect);
 
-    ecs_rule_fini(q);
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -1925,13 +1925,13 @@ void SerializeIterToJson_serialize_variable_anonymous_ids(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_rule_t *q = ecs_rule_new(world, "Tag($Entity)");
+    ecs_query_t *q = ecs_query(world, { .expr = "Tag($Entity)" });
 
     ecs_entity_t e = 10000;
     ecs_make_alive(world, 10000);
     ecs_add(world, e, Tag);
 
-    ecs_iter_t it = ecs_rule_iter(world, q);
+    ecs_iter_t it = ecs_query_iter(world, q);
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
     desc.serialize_ids = false;
     desc.serialize_variables = false;
@@ -1950,7 +1950,7 @@ void SerializeIterToJson_serialize_variable_anonymous_ids(void) {
     ecs_os_free(json);
     ecs_os_free(expect);
 
-    ecs_rule_fini(q);
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -3263,11 +3263,13 @@ void SerializeIterToJson_serialize_entity_w_flecs_core_parent(void) {
         ecs_new_from_fullpath(world, "flecs.core.bob");
     ecs_add_pair(world, e1, EcsChildOf, flecs_core_parent);
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
+    ecs_query_t *q = ecs_query(world, {
         .expr = "Foo"
     });
 
-    ecs_iter_t it = ecs_rule_iter(world, r);
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
 
     char *json = ecs_iter_to_json(world, &it, NULL);
     test_str(json, 
@@ -3285,7 +3287,7 @@ void SerializeIterToJson_serialize_entity_w_flecs_core_parent(void) {
 
     ecs_os_free(json);
 
-    ecs_rule_fini(r);
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }

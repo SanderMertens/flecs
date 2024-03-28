@@ -3397,7 +3397,7 @@ void DeserializeFromJson_ser_deser_restore_1_deleted_anon_entity_to_empty_table(
     test_str(r, "");
     ecs_os_free(json);
 
-    ecs_iter_t it = ecs_each(world, ecs_id(Position));
+    ecs_iter_t it = ecs_each(world, Position);
     e1 = ecs_iter_first(&it);
     test_assert(e1 != 0);
 
@@ -3440,15 +3440,15 @@ void DeserializeFromJson_ser_deser_restore_1_deleted_anon_entity_to_non_empty_ta
     test_str(r, "");
     ecs_os_free(json);
 
-    ecs_iter_t it = ecs_each(world, ecs_id(Position));
-    test_assert(ecs_term_next(&it) == true);
+    ecs_iter_t it = ecs_each(world, Position);
+    test_assert(ecs_each_next(&it) == true);
     test_int(it.count, 2);
     if (it.entities[0] == e2) {
         e1 = it.entities[1];
     } else {
         e1 = it.entities[0];
     }
-    test_assert(ecs_term_next(&it) == false);
+    test_assert(ecs_each_next(&it) == false);
 
     test_assert(ecs_has(world, e1, Position));
     test_assert(ecs_is_alive(world, e2));
@@ -3871,7 +3871,7 @@ void DeserializeFromJson_ser_deser_on_set_3_entities(void) {
     int32_t count = 0;
 
     ecs_observer(world, {
-        .terms[0].id = ecs_id(Position),
+        .query.terms[0].id = ecs_id(Position),
         .events = { EcsOnSet },
         .callback = OnSet_count,
         .ctx = &count
@@ -3914,7 +3914,7 @@ void DeserializeFromJson_ser_deser_on_set_3_entities_2_restored(void) {
     int32_t count = 0;
 
     ecs_observer(world, {
-        .terms[0].id = ecs_id(Position),
+        .query.terms[0].id = ecs_id(Position),
         .events = { EcsOnSet },
         .callback = OnSet_count,
         .ctx = &count
@@ -3961,7 +3961,7 @@ void DeserializeFromJson_ser_deser_on_set_3_entities_1_restored(void) {
     int32_t count = 0;
 
     ecs_observer(world, {
-        .terms[0].id = ecs_id(Position),
+        .query.terms[0].id = ecs_id(Position),
         .events = { EcsOnSet },
         .callback = OnSet_count,
         .ctx = &count
@@ -5654,7 +5654,7 @@ void DeserializeFromJson_ser_deser_w_alerts(void) {
 
         ecs_entity_t alert = ecs_alert(world, {
             .entity = ecs_new_entity(world, "module.my_alert"),
-            .filter.expr = "Foo, !Bar"
+            .query.expr = "Foo, !Bar"
         });
         test_assert(alert != 0);
 
@@ -5758,7 +5758,7 @@ void DeserializeFromJson_ser_deser_w_alerts_w_progress(void) {
 
         ecs_entity_t alert = ecs_alert(world, {
             .entity = ecs_new_entity(world, "module.my_alert"),
-            .filter.expr = "Foo, !Bar"
+            .query.expr = "Foo, !Bar"
         });
         test_assert(alert != 0);
 
