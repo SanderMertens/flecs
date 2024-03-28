@@ -683,6 +683,24 @@ void Variables_2_set_src_this_w_exclusive_wildcard(void);
 void Variables_2_set_src_this_self_w_exclusive_wildcard(void);
 void Variables_2_set_src_this_self_w_exclusive_wildcard_w_up(void);
 void Variables_1_set_src_this_is_true(void);
+void Variables_3_set_src_this_w_uncacheable_tag_tag_tag(void);
+void Variables_3_set_src_this_w_uncacheable_tag_component_tag(void);
+void Variables_3_set_src_this_w_uncacheable_tag_component_component(void);
+void Variables_3_set_src_this_w_tag_uncacheable_tag_tag(void);
+void Variables_3_set_src_this_w_component_uncacheable_tag_tag(void);
+void Variables_3_set_src_this_w_component_uncacheable_tag_component(void);
+void Variables_3_set_src_this_w_tag_tag_uncacheable_tag(void);
+void Variables_3_set_src_this_w_component_tag_uncacheable_tag(void);
+void Variables_3_set_src_this_w_component_component_uncacheable_tag(void);
+void Variables_3_set_src_this_w_uncacheable_component_tag_tag(void);
+void Variables_3_set_src_this_w_uncacheable_component_component_tag(void);
+void Variables_3_set_src_this_w_uncacheable_component_component_component(void);
+void Variables_3_set_src_this_w_tag_uncacheable_component_tag(void);
+void Variables_3_set_src_this_w_component_uncacheable_component_tag(void);
+void Variables_3_set_src_this_w_component_uncacheable_component_component(void);
+void Variables_3_set_src_this_w_tag_tag_uncacheable_component(void);
+void Variables_3_set_src_this_w_component_tag_uncacheable_component(void);
+void Variables_3_set_src_this_w_component_component_uncacheable_component(void);
 void Variables_2_set_src_this_w_wildcard(void);
 void Variables_1_src_this_var_as_entity(void);
 void Variables_1_src_this_var_as_table(void);
@@ -4384,6 +4402,78 @@ bake_test_case Variables_testcases[] = {
     {
         "1_set_src_this_is_true",
         Variables_1_set_src_this_is_true
+    },
+    {
+        "3_set_src_this_w_uncacheable_tag_tag_tag",
+        Variables_3_set_src_this_w_uncacheable_tag_tag_tag
+    },
+    {
+        "3_set_src_this_w_uncacheable_tag_component_tag",
+        Variables_3_set_src_this_w_uncacheable_tag_component_tag
+    },
+    {
+        "3_set_src_this_w_uncacheable_tag_component_component",
+        Variables_3_set_src_this_w_uncacheable_tag_component_component
+    },
+    {
+        "3_set_src_this_w_tag_uncacheable_tag_tag",
+        Variables_3_set_src_this_w_tag_uncacheable_tag_tag
+    },
+    {
+        "3_set_src_this_w_component_uncacheable_tag_tag",
+        Variables_3_set_src_this_w_component_uncacheable_tag_tag
+    },
+    {
+        "3_set_src_this_w_component_uncacheable_tag_component",
+        Variables_3_set_src_this_w_component_uncacheable_tag_component
+    },
+    {
+        "3_set_src_this_w_tag_tag_uncacheable_tag",
+        Variables_3_set_src_this_w_tag_tag_uncacheable_tag
+    },
+    {
+        "3_set_src_this_w_component_tag_uncacheable_tag",
+        Variables_3_set_src_this_w_component_tag_uncacheable_tag
+    },
+    {
+        "3_set_src_this_w_component_component_uncacheable_tag",
+        Variables_3_set_src_this_w_component_component_uncacheable_tag
+    },
+    {
+        "3_set_src_this_w_uncacheable_component_tag_tag",
+        Variables_3_set_src_this_w_uncacheable_component_tag_tag
+    },
+    {
+        "3_set_src_this_w_uncacheable_component_component_tag",
+        Variables_3_set_src_this_w_uncacheable_component_component_tag
+    },
+    {
+        "3_set_src_this_w_uncacheable_component_component_component",
+        Variables_3_set_src_this_w_uncacheable_component_component_component
+    },
+    {
+        "3_set_src_this_w_tag_uncacheable_component_tag",
+        Variables_3_set_src_this_w_tag_uncacheable_component_tag
+    },
+    {
+        "3_set_src_this_w_component_uncacheable_component_tag",
+        Variables_3_set_src_this_w_component_uncacheable_component_tag
+    },
+    {
+        "3_set_src_this_w_component_uncacheable_component_component",
+        Variables_3_set_src_this_w_component_uncacheable_component_component
+    },
+    {
+        "3_set_src_this_w_tag_tag_uncacheable_component",
+        Variables_3_set_src_this_w_tag_tag_uncacheable_component
+    },
+    {
+        "3_set_src_this_w_component_tag_uncacheable_component",
+        Variables_3_set_src_this_w_component_tag_uncacheable_component
+    },
+    {
+        "3_set_src_this_w_component_component_uncacheable_component",
+        Variables_3_set_src_this_w_component_component_uncacheable_component
     },
     {
         "2_set_src_this_w_wildcard",
@@ -8472,7 +8562,7 @@ static bake_test_suite suites[] = {
         "Variables",
         Variables_setup,
         NULL,
-        165,
+        183,
         Variables_testcases,
         1,
         Variables_params

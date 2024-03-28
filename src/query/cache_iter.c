@@ -24,6 +24,33 @@ ecs_query_cache_table_match_t* flecs_query_next(
 }
 
 static
+ecs_query_cache_table_match_t* flecs_query_test(
+    const ecs_query_impl_t *impl,
+    const ecs_query_run_ctx_t *ctx,
+    bool first)
+{
+    ecs_iter_t *it = ctx->it;
+    if (first) {
+        ecs_var_t *var = &ctx->vars[0];
+        ecs_table_t *table = var->range.table;
+        ecs_assert(table != NULL, ECS_INVALID_OPERATION, NULL);
+
+        ecs_query_cache_table_t *qt = flecs_query_cache_get_table(
+            impl->cache, table);
+        if (!qt) {
+            return NULL;
+        }
+
+        ecs_query_iter_t *qit = &it->priv.iter.rule;
+        qit->prev = NULL;
+        qit->node = qt->first;
+        qit->last = qt->last;
+    }
+
+    return flecs_query_next(ctx);
+}
+
+static
 void flecs_query_populate_ptrs(
     ecs_iter_t *it,
     ecs_table_t *table,
@@ -123,60 +150,6 @@ void flecs_query_populate_ptrs_w_shared(
     }
 }
 
-bool flecs_query_cache_search(
-    const ecs_query_impl_t *impl,
-    const ecs_query_run_ctx_t *ctx)
-{
-    ecs_query_cache_table_match_t *node = flecs_query_next(ctx);
-    if (!node) {
-        return false;
-    }
-
-    ecs_iter_t *it = ctx->it;
-    ecs_query_cache_t *cache = impl->cache;
-    int32_t i, field_count = cache->query->field_count;
-    int8_t *field_map = impl->field_map;
-
-    for (i = 0; i < field_count; i ++) {
-        int8_t field_index = field_map[i];
-        it->columns[field_index] = node->columns[i];
-        it->ids[field_index] = node->ids[i];
-        it->sources[field_index] = node->sources[i];
-
-        ECS_BIT_CONDN(
-            it->set_fields, field_index, node->set_fields & (1llu << i));
-        ECS_BIT_CONDN(
-            it->up_fields, field_index, node->up_fields & (1llu << i));
-    }
-
-    ctx->vars[0].range.count = node->count;
-    ctx->vars[0].range.offset = node->offset;
-    return true;
-}
-
-bool flecs_query_is_cache_search(
-    const ecs_query_impl_t *impl,
-    const ecs_query_run_ctx_t *ctx)
-{
-    (void)impl;
-
-    ecs_query_cache_table_match_t *node = flecs_query_next(ctx);
-    if (!node) {
-        return false;
-    }
-
-    ecs_iter_t *it = ctx->it;
-    it->columns = node->columns;
-    it->ids = node->ids;
-    it->sources = node->sources;
-    it->set_fields = node->set_fields;
-    it->up_fields = node->up_fields;
-
-    ctx->vars[0].range.count = node->count;
-    ctx->vars[0].range.offset = node->offset;
-    return true;
-}
-
 /* Populate for query that is partially cached.
  * This requires a mapping from cached fields to query fields. */
 static
@@ -238,6 +211,72 @@ void flecs_query_is_cache_data_populate(
     }
 }
 
+static
+void flecs_query_cache_init_mapped_fields(
+    const ecs_query_impl_t *impl,
+    const ecs_query_run_ctx_t *ctx,
+    ecs_query_cache_table_match_t *node)
+{
+    ecs_iter_t *it = ctx->it;
+    ecs_query_cache_t *cache = impl->cache;
+    int32_t i, field_count = cache->query->field_count;
+    int8_t *field_map = impl->field_map;
+
+    for (i = 0; i < field_count; i ++) {
+        int8_t field_index = field_map[i];
+        it->columns[field_index] = node->columns[i];
+        it->ids[field_index] = node->ids[i];
+        it->sources[field_index] = node->sources[i];
+
+        ECS_BIT_CONDN(
+            it->set_fields, field_index, node->set_fields & (1llu << i));
+        ECS_BIT_CONDN(
+            it->up_fields, field_index, node->up_fields & (1llu << i));
+    }
+}
+
+/* Iterate cache for query that's partially cached */
+bool flecs_query_cache_search(
+    const ecs_query_impl_t *impl,
+    const ecs_query_run_ctx_t *ctx)
+{
+    ecs_query_cache_table_match_t *node = flecs_query_next(ctx);
+    if (!node) {
+        return false;
+    }
+
+    flecs_query_cache_init_mapped_fields(impl, ctx, node);
+
+    ctx->vars[0].range.count = node->count;
+    ctx->vars[0].range.offset = node->offset;
+    return true;
+}
+
+/* Iterate cache for query that's entirely cached */
+bool flecs_query_is_cache_search(
+    const ecs_query_impl_t *impl,
+    const ecs_query_run_ctx_t *ctx)
+{
+    (void)impl;
+
+    ecs_query_cache_table_match_t *node = flecs_query_next(ctx);
+    if (!node) {
+        return false;
+    }
+
+    ecs_iter_t *it = ctx->it;
+    it->columns = node->columns;
+    it->ids = node->ids;
+    it->sources = node->sources;
+    it->set_fields = node->set_fields;
+    it->up_fields = node->up_fields;
+
+    ctx->vars[0].range.count = node->count;
+    ctx->vars[0].range.offset = node->offset;
+    return true;
+}
+
+/* Iterate cache for query that's partially cached with data */
 bool flecs_query_cache_data_search(
     const ecs_query_impl_t *impl,
     const ecs_query_run_ctx_t *ctx)
@@ -252,7 +291,7 @@ bool flecs_query_cache_data_search(
     return true;
 }
 
-
+/* Iterate cache for query that's entirely cached with data */
 bool flecs_query_is_cache_data_search(
     const ecs_query_impl_t *impl,
     const ecs_query_run_ctx_t *ctx)
@@ -267,34 +306,34 @@ bool flecs_query_is_cache_data_search(
     return true;
 }
 
+/* Test if query that is entirely cached matches constrained $this */
+bool flecs_query_cache_test(
+    const ecs_query_impl_t *impl,
+    const ecs_query_run_ctx_t *ctx,
+    bool first)
+{
+    ecs_query_cache_table_match_t *node = flecs_query_test(impl, ctx, first);
+    if (!node) {
+        return false;
+    }
+
+    flecs_query_cache_init_mapped_fields(impl, ctx, node);
+
+    return true;
+}
+
+/* Test if query that is entirely cached matches constrained $this */
 bool flecs_query_is_cache_test(
     const ecs_query_impl_t *impl,
     const ecs_query_run_ctx_t *ctx,
     bool first)
 {
-    ecs_iter_t *it = ctx->it;
-    if (first) {
-        ecs_var_t *var = &ctx->vars[0];
-        ecs_table_t *table = var->range.table;
-        ecs_assert(table != NULL, ECS_INVALID_OPERATION, NULL);
-
-        ecs_query_cache_table_t *qt = flecs_query_cache_get_table(
-            impl->cache, table);
-        if (!qt) {
-            return false;
-        }
-
-        ecs_query_iter_t *qit = &it->priv.iter.rule;
-        qit->prev = NULL;
-        qit->node = qt->first;
-        qit->last = qt->last;
-    }
-
-    ecs_query_cache_table_match_t *node = flecs_query_next(ctx);
+    ecs_query_cache_table_match_t *node = flecs_query_test(impl, ctx, first);
     if (!node) {
         return false;
     }
 
+    ecs_iter_t *it = ctx->it;
     it->columns = node->columns;
     it->ids = node->ids;
     it->sources = node->sources;
@@ -302,6 +341,23 @@ bool flecs_query_is_cache_test(
     return true;
 }
 
+/* Test if query that is partially cached matches constrained $this */
+bool flecs_query_cache_data_test(
+    const ecs_query_impl_t *impl,
+    const ecs_query_run_ctx_t *ctx,
+    bool first)
+{
+    if (!flecs_query_cache_test(impl, ctx, first)) {
+        return false;
+    }
+
+    ecs_iter_t *it = ctx->it;
+    ecs_query_iter_t *qit = &it->priv.iter.rule;
+    flecs_query_cache_data_populate(impl, it, ctx, qit->prev);
+    return true;
+}
+
+/* Test if query that is entirely cached matches constrained $this with data */
 bool flecs_query_is_cache_data_test(
     const ecs_query_impl_t *impl,
     const ecs_query_run_ctx_t *ctx,

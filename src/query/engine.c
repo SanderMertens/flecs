@@ -1115,8 +1115,7 @@ bool flecs_query_cache(
     uint64_t written = ctx->written[ctx->op_index];
     ctx->written[ctx->op_index + 1] |= 1ull;
     if (written & 1ull) {
-        /* TODO */
-        return false;
+        return flecs_query_cache_test(ctx->rule, ctx, !redo);
     } else {
         return flecs_query_cache_search(ctx->rule, ctx);
     }
@@ -1134,8 +1133,7 @@ bool flecs_query_cache_data(
     uint64_t written = ctx->written[ctx->op_index];
     ctx->written[ctx->op_index + 1] |= 1ull;
     if (written & 1ull) {
-        /* TODO */
-        return false;
+        return flecs_query_cache_data_test(ctx->rule, ctx, !redo);
     } else {
         return flecs_query_cache_data_search(ctx->rule, ctx);
     }

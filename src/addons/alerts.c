@@ -480,7 +480,7 @@ void MonitorAlertInstances(ecs_iter_t *it) {
             }
         }
 
-        /* Alert instance no longer matches rule, remove it */        
+        /* Alert instance no longer matches rule, remove it */ 
         flecs_alerts_remove_alert_from_src(world, e, parent);
         ecs_map_remove(&alert->instances, e);
         ecs_delete(world, ai);

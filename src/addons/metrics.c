@@ -338,7 +338,7 @@ static void UpdateOneOfInstance(ecs_iter_t *it, bool counter) {
     ecs_world_t *world = it->real_world;
     ecs_table_t *table = it->table;
     void *m = ecs_table_get_column(table, 
-        ecs_table_type_to_column_index(table, it->columns[0] - 1), it->offset);
+        ecs_table_type_to_column_index(table, it->columns[0]), it->offset);
     EcsMetricOneOfInstance *mi = ecs_field(it, EcsMetricOneOfInstance, 2);
     ecs_ftime_t dt = it->delta_time;
 

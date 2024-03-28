@@ -5603,6 +5603,1842 @@ void Variables_2_set_src_this_w_wildcard(void) {
     ecs_fini(ecs);
 }
 
+void Variables_3_set_src_this_w_uncacheable_tag_tag_tag(void) {
+    ecs_world_t* ecs = ecs_mini();
+
+    ECS_TAG(ecs, TagA);
+    ECS_TAG(ecs, TagB);
+
+    ecs_entity_t p1 = ecs_new_id(ecs);
+    ecs_entity_t p2 = ecs_new_id(ecs);
+    ecs_entity_t e1 = ecs_new(ecs, TagA);
+    ecs_entity_t e2 = ecs_new(ecs, TagA);
+    ecs_entity_t e3 = ecs_new(ecs, TagA);
+    ecs_add(ecs, e1, TagB);
+    ecs_add(ecs, e2, TagB);
+    ecs_add(ecs, e3, TagB);
+    ecs_add_pair(ecs, e1, EcsChildOf, p1);
+    ecs_add_pair(ecs, e2, EcsChildOf, p1);
+    ecs_add_pair(ecs, e3, EcsChildOf, p2);
+
+    ecs_query_t *q = ecs_query(ecs, {
+        .terms = {
+            { .first.id = EcsChildOf, .second.name = "$parent" },
+            { TagA },
+            { TagB }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int32_t parent_var = ecs_query_find_var(q, "parent");
+    test_assert(parent_var != -1);
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e1);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e1);
+        test_uint(ecs_childof(p1), ecs_field_id(&it, 1));
+        test_uint(TagA, ecs_field_id(&it, 2));
+        test_uint(TagB, ecs_field_id(&it, 3));
+        test_uint(p1, ecs_iter_get_var(&it, parent_var));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e2);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_uint(ecs_childof(p1), ecs_field_id(&it, 1));
+        test_uint(TagA, ecs_field_id(&it, 2));
+        test_uint(TagB, ecs_field_id(&it, 3));
+        test_uint(p1, ecs_iter_get_var(&it, parent_var));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e3);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e3);
+        test_uint(ecs_childof(p2), ecs_field_id(&it, 1));
+        test_uint(TagA, ecs_field_id(&it, 2));
+        test_uint(TagB, ecs_field_id(&it, 3));
+        test_uint(p2, ecs_iter_get_var(&it, parent_var));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(ecs);
+}
+
+void Variables_3_set_src_this_w_uncacheable_tag_component_tag(void) {
+    ecs_world_t* ecs = ecs_mini();
+
+    ECS_COMPONENT(ecs, Position);
+    ECS_TAG(ecs, TagB);
+
+    ecs_entity_t p1 = ecs_new_id(ecs);
+    ecs_entity_t p2 = ecs_new_id(ecs);
+    ecs_entity_t e1 = ecs_set(ecs, 0, Position, {11, 21});
+    ecs_entity_t e2 = ecs_set(ecs, 0, Position, {12, 22});
+    ecs_entity_t e3 = ecs_set(ecs, 0, Position, {13, 23});
+    ecs_add(ecs, e1, TagB);
+    ecs_add(ecs, e2, TagB);
+    ecs_add(ecs, e3, TagB);
+    ecs_add_pair(ecs, e1, EcsChildOf, p1);
+    ecs_add_pair(ecs, e2, EcsChildOf, p1);
+    ecs_add_pair(ecs, e3, EcsChildOf, p2);
+
+    ecs_query_t *q = ecs_query(ecs, {
+        .terms = {
+            { .first.id = EcsChildOf, .second.name = "$parent" },
+            { ecs_id(Position) },
+            { TagB }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int32_t parent_var = ecs_query_find_var(q, "parent");
+    test_assert(parent_var != -1);
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e1);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e1);
+        test_uint(ecs_childof(p1), ecs_field_id(&it, 1));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+        test_uint(TagB, ecs_field_id(&it, 3));
+        test_uint(p1, ecs_iter_get_var(&it, parent_var));
+        {
+            Position *p = ecs_field(&it, Position, 2);
+            test_assert(p != NULL);
+            test_int(p->x, 11);
+            test_int(p->y, 21);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e2);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_uint(ecs_childof(p1), ecs_field_id(&it, 1));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+        test_uint(TagB, ecs_field_id(&it, 3));
+        test_uint(p1, ecs_iter_get_var(&it, parent_var));
+        {
+            Position *p = ecs_field(&it, Position, 2);
+            test_assert(p != NULL);
+            test_int(p->x, 12);
+            test_int(p->y, 22);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e3);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e3);
+        test_uint(ecs_childof(p2), ecs_field_id(&it, 1));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+        test_uint(TagB, ecs_field_id(&it, 3));
+        test_uint(p2, ecs_iter_get_var(&it, parent_var));
+        {
+            Position *p = ecs_field(&it, Position, 2);
+            test_assert(p != NULL);
+            test_int(p->x, 13);
+            test_int(p->y, 23);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(ecs);
+}
+
+void Variables_3_set_src_this_w_uncacheable_tag_component_component(void) {
+    ecs_world_t* ecs = ecs_mini();
+
+    ECS_COMPONENT(ecs, Position);
+    ECS_COMPONENT(ecs, Velocity);
+
+    ecs_entity_t p1 = ecs_new_id(ecs);
+    ecs_entity_t p2 = ecs_new_id(ecs);
+    ecs_entity_t e1 = ecs_set(ecs, 0, Position, {11, 21});
+    ecs_entity_t e2 = ecs_set(ecs, 0, Position, {12, 22});
+    ecs_entity_t e3 = ecs_set(ecs, 0, Position, {13, 23});
+    ecs_set(ecs, e1, Velocity, {1, 1});
+    ecs_set(ecs, e2, Velocity, {2, 2});
+    ecs_set(ecs, e3, Velocity, {3, 3});
+    ecs_add_pair(ecs, e1, EcsChildOf, p1);
+    ecs_add_pair(ecs, e2, EcsChildOf, p1);
+    ecs_add_pair(ecs, e3, EcsChildOf, p2);
+
+    ecs_query_t *q = ecs_query(ecs, {
+        .terms = {
+            { .first.id = EcsChildOf, .second.name = "$parent" },
+            { ecs_id(Position) },
+            { ecs_id(Velocity) }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int32_t parent_var = ecs_query_find_var(q, "parent");
+    test_assert(parent_var != -1);
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e1);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e1);
+        test_uint(ecs_childof(p1), ecs_field_id(&it, 1));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
+        test_uint(p1, ecs_iter_get_var(&it, parent_var));
+        {
+            Position *p = ecs_field(&it, Position, 2);
+            test_assert(p != NULL);
+            test_int(p->x, 11);
+            test_int(p->y, 21);
+        }
+        {
+            Velocity *v = ecs_field(&it, Velocity, 3);
+            test_assert(v != NULL);
+            test_int(v->x, 1);
+            test_int(v->y, 1);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e2);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_uint(ecs_childof(p1), ecs_field_id(&it, 1));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
+        test_uint(p1, ecs_iter_get_var(&it, parent_var));
+        {
+            Position *p = ecs_field(&it, Position, 2);
+            test_assert(p != NULL);
+            test_int(p->x, 12);
+            test_int(p->y, 22);
+        }
+        {
+            Velocity *v = ecs_field(&it, Velocity, 3);
+            test_assert(v != NULL);
+            test_int(v->x, 2);
+            test_int(v->y, 2);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e3);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e3);
+        test_uint(ecs_childof(p2), ecs_field_id(&it, 1));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
+        test_uint(p2, ecs_iter_get_var(&it, parent_var));
+        {
+            Position *p = ecs_field(&it, Position, 2);
+            test_assert(p != NULL);
+            test_int(p->x, 13);
+            test_int(p->y, 23);
+        }
+        {
+            Velocity *v = ecs_field(&it, Velocity, 3);
+            test_assert(v != NULL);
+            test_int(v->x, 3);
+            test_int(v->y, 3);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(ecs);
+}
+
+void Variables_3_set_src_this_w_tag_uncacheable_tag_tag(void) {
+    ecs_world_t* ecs = ecs_mini();
+
+    ECS_TAG(ecs, TagA);
+    ECS_TAG(ecs, TagB);
+
+    ecs_entity_t p1 = ecs_new_id(ecs);
+    ecs_entity_t p2 = ecs_new_id(ecs);
+    ecs_entity_t e1 = ecs_new(ecs, TagA);
+    ecs_entity_t e2 = ecs_new(ecs, TagA);
+    ecs_entity_t e3 = ecs_new(ecs, TagA);
+    ecs_add(ecs, e1, TagB);
+    ecs_add(ecs, e2, TagB);
+    ecs_add(ecs, e3, TagB);
+    ecs_add_pair(ecs, e1, EcsChildOf, p1);
+    ecs_add_pair(ecs, e2, EcsChildOf, p1);
+    ecs_add_pair(ecs, e3, EcsChildOf, p2);
+
+    ecs_query_t *q = ecs_query(ecs, {
+        .terms = {
+            { TagA },
+            { .first.id = EcsChildOf, .second.name = "$parent" },
+            { TagB }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int32_t parent_var = ecs_query_find_var(q, "parent");
+    test_assert(parent_var != -1);
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e1);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e1);
+        test_uint(TagA, ecs_field_id(&it, 1));
+        test_uint(ecs_childof(p1), ecs_field_id(&it, 2));
+        test_uint(TagB, ecs_field_id(&it, 3));
+        test_uint(p1, ecs_iter_get_var(&it, parent_var));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e2);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_uint(TagA, ecs_field_id(&it, 1));
+        test_uint(ecs_childof(p1), ecs_field_id(&it, 2));
+        test_uint(TagB, ecs_field_id(&it, 3));
+        test_uint(p1, ecs_iter_get_var(&it, parent_var));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e3);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e3);
+        test_uint(TagA, ecs_field_id(&it, 1));
+        test_uint(ecs_childof(p2), ecs_field_id(&it, 2));
+        test_uint(TagB, ecs_field_id(&it, 3));
+        test_uint(p2, ecs_iter_get_var(&it, parent_var));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(ecs);
+}
+
+void Variables_3_set_src_this_w_component_uncacheable_tag_tag(void) {
+    ecs_world_t* ecs = ecs_mini();
+
+    ECS_COMPONENT(ecs, Position);
+    ECS_TAG(ecs, TagB);
+
+    ecs_entity_t p1 = ecs_new_id(ecs);
+    ecs_entity_t p2 = ecs_new_id(ecs);
+    ecs_entity_t e1 = ecs_set(ecs, 0, Position, {11, 21});
+    ecs_entity_t e2 = ecs_set(ecs, 0, Position, {12, 22});
+    ecs_entity_t e3 = ecs_set(ecs, 0, Position, {13, 23});
+    ecs_add(ecs, e1, TagB);
+    ecs_add(ecs, e2, TagB);
+    ecs_add(ecs, e3, TagB);
+    ecs_add_pair(ecs, e1, EcsChildOf, p1);
+    ecs_add_pair(ecs, e2, EcsChildOf, p1);
+    ecs_add_pair(ecs, e3, EcsChildOf, p2);
+
+    ecs_query_t *q = ecs_query(ecs, {
+        .terms = {
+            { ecs_id(Position) },
+            { .first.id = EcsChildOf, .second.name = "$parent" },
+            { TagB }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int32_t parent_var = ecs_query_find_var(q, "parent");
+    test_assert(parent_var != -1);
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e1);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e1);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ecs_childof(p1), ecs_field_id(&it, 2));
+        test_uint(TagB, ecs_field_id(&it, 3));
+        test_uint(p1, ecs_iter_get_var(&it, parent_var));
+        {
+            Position *p = ecs_field(&it, Position, 1);
+            test_assert(p != NULL);
+            test_int(p->x, 11);
+            test_int(p->y, 21);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e2);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ecs_childof(p1), ecs_field_id(&it, 2));
+        test_uint(TagB, ecs_field_id(&it, 3));
+        test_uint(p1, ecs_iter_get_var(&it, parent_var));
+        {
+            Position *p = ecs_field(&it, Position, 1);
+            test_assert(p != NULL);
+            test_int(p->x, 12);
+            test_int(p->y, 22);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e3);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e3);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ecs_childof(p2), ecs_field_id(&it, 2));
+        test_uint(TagB, ecs_field_id(&it, 3));
+        test_uint(p2, ecs_iter_get_var(&it, parent_var));
+        {
+            Position *p = ecs_field(&it, Position, 1);
+            test_assert(p != NULL);
+            test_int(p->x, 13);
+            test_int(p->y, 23);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(ecs);
+}
+
+void Variables_3_set_src_this_w_component_uncacheable_tag_component(void) {
+    ecs_world_t* ecs = ecs_mini();
+
+    ECS_COMPONENT(ecs, Position);
+    ECS_COMPONENT(ecs, Velocity);
+
+    ecs_entity_t p1 = ecs_new_id(ecs);
+    ecs_entity_t p2 = ecs_new_id(ecs);
+    ecs_entity_t e1 = ecs_set(ecs, 0, Position, {11, 21});
+    ecs_entity_t e2 = ecs_set(ecs, 0, Position, {12, 22});
+    ecs_entity_t e3 = ecs_set(ecs, 0, Position, {13, 23});
+    ecs_set(ecs, e1, Velocity, {1, 1});
+    ecs_set(ecs, e2, Velocity, {2, 2});
+    ecs_set(ecs, e3, Velocity, {3, 3});
+    ecs_add_pair(ecs, e1, EcsChildOf, p1);
+    ecs_add_pair(ecs, e2, EcsChildOf, p1);
+    ecs_add_pair(ecs, e3, EcsChildOf, p2);
+
+    ecs_query_t *q = ecs_query(ecs, {
+        .terms = {
+            { ecs_id(Position) },
+            { .first.id = EcsChildOf, .second.name = "$parent" },
+            { ecs_id(Velocity) }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int32_t parent_var = ecs_query_find_var(q, "parent");
+    test_assert(parent_var != -1);
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e1);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e1);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ecs_childof(p1), ecs_field_id(&it, 2));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
+        test_uint(p1, ecs_iter_get_var(&it, parent_var));
+        {
+            Position *p = ecs_field(&it, Position, 1);
+            test_assert(p != NULL);
+            test_int(p->x, 11);
+            test_int(p->y, 21);
+        }
+        {
+            Velocity *v = ecs_field(&it, Velocity, 3);
+            test_assert(v != NULL);
+            test_int(v->x, 1);
+            test_int(v->y, 1);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e2);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ecs_childof(p1), ecs_field_id(&it, 2));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
+        test_uint(p1, ecs_iter_get_var(&it, parent_var));
+        {
+            Position *p = ecs_field(&it, Position, 1);
+            test_assert(p != NULL);
+            test_int(p->x, 12);
+            test_int(p->y, 22);
+        }
+        {
+            Velocity *v = ecs_field(&it, Velocity, 3);
+            test_assert(v != NULL);
+            test_int(v->x, 2);
+            test_int(v->y, 2);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e3);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e3);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ecs_childof(p2), ecs_field_id(&it, 2));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
+        test_uint(p2, ecs_iter_get_var(&it, parent_var));
+        {
+            Position *p = ecs_field(&it, Position, 1);
+            test_assert(p != NULL);
+            test_int(p->x, 13);
+            test_int(p->y, 23);
+        }
+        {
+            Velocity *v = ecs_field(&it, Velocity, 3);
+            test_assert(v != NULL);
+            test_int(v->x, 3);
+            test_int(v->y, 3);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(ecs);
+}
+
+void Variables_3_set_src_this_w_tag_tag_uncacheable_tag(void) {
+    ecs_world_t* ecs = ecs_mini();
+
+    ECS_TAG(ecs, TagA);
+    ECS_TAG(ecs, TagB);
+
+    ecs_entity_t p1 = ecs_new_id(ecs);
+    ecs_entity_t p2 = ecs_new_id(ecs);
+    ecs_entity_t e1 = ecs_new(ecs, TagA);
+    ecs_entity_t e2 = ecs_new(ecs, TagA);
+    ecs_entity_t e3 = ecs_new(ecs, TagA);
+    ecs_add(ecs, e1, TagB);
+    ecs_add(ecs, e2, TagB);
+    ecs_add(ecs, e3, TagB);
+    ecs_add_pair(ecs, e1, EcsChildOf, p1);
+    ecs_add_pair(ecs, e2, EcsChildOf, p1);
+    ecs_add_pair(ecs, e3, EcsChildOf, p2);
+
+    ecs_query_t *q = ecs_query(ecs, {
+        .terms = {
+            { TagA },
+            { TagB },
+            { .first.id = EcsChildOf, .second.name = "$parent" }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int32_t parent_var = ecs_query_find_var(q, "parent");
+    test_assert(parent_var != -1);
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e1);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e1);
+        test_uint(TagA, ecs_field_id(&it, 1));
+        test_uint(TagB, ecs_field_id(&it, 2));
+        test_uint(ecs_childof(p1), ecs_field_id(&it, 3));
+        test_uint(p1, ecs_iter_get_var(&it, parent_var));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e2);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_uint(TagA, ecs_field_id(&it, 1));
+        test_uint(TagB, ecs_field_id(&it, 2));
+        test_uint(ecs_childof(p1), ecs_field_id(&it, 3));
+        test_uint(p1, ecs_iter_get_var(&it, parent_var));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e3);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e3);
+        test_uint(TagA, ecs_field_id(&it, 1));
+        test_uint(TagB, ecs_field_id(&it, 2));
+        test_uint(ecs_childof(p2), ecs_field_id(&it, 3));
+        test_uint(p2, ecs_iter_get_var(&it, parent_var));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(ecs);
+}
+
+void Variables_3_set_src_this_w_component_tag_uncacheable_tag(void) {
+    ecs_world_t* ecs = ecs_mini();
+
+    ECS_COMPONENT(ecs, Position);
+    ECS_TAG(ecs, TagB);
+
+    ecs_entity_t p1 = ecs_new_id(ecs);
+    ecs_entity_t p2 = ecs_new_id(ecs);
+    ecs_entity_t e1 = ecs_set(ecs, 0, Position, {11, 21});
+    ecs_entity_t e2 = ecs_set(ecs, 0, Position, {12, 22});
+    ecs_entity_t e3 = ecs_set(ecs, 0, Position, {13, 23});
+    ecs_add(ecs, e1, TagB);
+    ecs_add(ecs, e2, TagB);
+    ecs_add(ecs, e3, TagB);
+    ecs_add_pair(ecs, e1, EcsChildOf, p1);
+    ecs_add_pair(ecs, e2, EcsChildOf, p1);
+    ecs_add_pair(ecs, e3, EcsChildOf, p2);
+
+    ecs_query_t *q = ecs_query(ecs, {
+        .terms = {
+            { ecs_id(Position) },
+            { TagB },
+            { .first.id = EcsChildOf, .second.name = "$parent" }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int32_t parent_var = ecs_query_find_var(q, "parent");
+    test_assert(parent_var != -1);
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e1);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e1);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(TagB, ecs_field_id(&it, 2));
+        test_uint(ecs_childof(p1), ecs_field_id(&it, 3));
+        test_uint(p1, ecs_iter_get_var(&it, parent_var));
+        {
+            Position *p = ecs_field(&it, Position, 1);
+            test_assert(p != NULL);
+            test_int(p->x, 11);
+            test_int(p->y, 21);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e2);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(TagB, ecs_field_id(&it, 2));
+        test_uint(ecs_childof(p1), ecs_field_id(&it, 3));
+        test_uint(p1, ecs_iter_get_var(&it, parent_var));
+        {
+            Position *p = ecs_field(&it, Position, 1);
+            test_assert(p != NULL);
+            test_int(p->x, 12);
+            test_int(p->y, 22);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e3);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e3);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(TagB, ecs_field_id(&it, 2));
+        test_uint(ecs_childof(p2), ecs_field_id(&it, 3));
+        test_uint(p2, ecs_iter_get_var(&it, parent_var));
+        {
+            Position *p = ecs_field(&it, Position, 1);
+            test_assert(p != NULL);
+            test_int(p->x, 13);
+            test_int(p->y, 23);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(ecs);
+}
+
+void Variables_3_set_src_this_w_component_component_uncacheable_tag(void) {
+    ecs_world_t* ecs = ecs_mini();
+
+    ECS_COMPONENT(ecs, Position);
+    ECS_COMPONENT(ecs, Velocity);
+
+    ecs_entity_t p1 = ecs_new_id(ecs);
+    ecs_entity_t p2 = ecs_new_id(ecs);
+    ecs_entity_t e1 = ecs_set(ecs, 0, Position, {11, 21});
+    ecs_entity_t e2 = ecs_set(ecs, 0, Position, {12, 22});
+    ecs_entity_t e3 = ecs_set(ecs, 0, Position, {13, 23});
+    ecs_set(ecs, e1, Velocity, {1, 1});
+    ecs_set(ecs, e2, Velocity, {2, 2});
+    ecs_set(ecs, e3, Velocity, {3, 3});
+    ecs_add_pair(ecs, e1, EcsChildOf, p1);
+    ecs_add_pair(ecs, e2, EcsChildOf, p1);
+    ecs_add_pair(ecs, e3, EcsChildOf, p2);
+
+    ecs_query_t *q = ecs_query(ecs, {
+        .terms = {
+            { ecs_id(Position) },
+            { ecs_id(Velocity) },
+            { .first.id = EcsChildOf, .second.name = "$parent" }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int32_t parent_var = ecs_query_find_var(q, "parent");
+    test_assert(parent_var != -1);
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e1);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e1);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+        test_uint(ecs_childof(p1), ecs_field_id(&it, 3));
+        test_uint(p1, ecs_iter_get_var(&it, parent_var));
+        {
+            Position *p = ecs_field(&it, Position, 1);
+            test_assert(p != NULL);
+            test_int(p->x, 11);
+            test_int(p->y, 21);
+        }
+        {
+            Velocity *v = ecs_field(&it, Velocity, 2);
+            test_assert(v != NULL);
+            test_int(v->x, 1);
+            test_int(v->y, 1);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e2);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+        test_uint(ecs_childof(p1), ecs_field_id(&it, 3));
+        test_uint(p1, ecs_iter_get_var(&it, parent_var));
+        {
+            Position *p = ecs_field(&it, Position, 1);
+            test_assert(p != NULL);
+            test_int(p->x, 12);
+            test_int(p->y, 22);
+        }
+        {
+            Velocity *v = ecs_field(&it, Velocity, 2);
+            test_assert(v != NULL);
+            test_int(v->x, 2);
+            test_int(v->y, 2);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e3);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e3);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+        test_uint(ecs_childof(p2), ecs_field_id(&it, 3));
+        test_uint(p2, ecs_iter_get_var(&it, parent_var));
+        {
+            Position *p = ecs_field(&it, Position, 1);
+            test_assert(p != NULL);
+            test_int(p->x, 13);
+            test_int(p->y, 23);
+        }
+        {
+            Velocity *v = ecs_field(&it, Velocity, 2);
+            test_assert(v != NULL);
+            test_int(v->x, 3);
+            test_int(v->y, 3);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(ecs);
+}
+
+void Variables_3_set_src_this_w_uncacheable_component_tag_tag(void) {
+    ecs_world_t* ecs = ecs_mini();
+
+    ECS_TAG(ecs, TagA);
+    ECS_TAG(ecs, TagB);
+    ECS_COMPONENT(ecs, Mass);
+
+    ecs_entity_t p1 = ecs_new_id(ecs);
+    ecs_entity_t p2 = ecs_new_id(ecs);
+    ecs_entity_t e1 = ecs_new(ecs, TagA);
+    ecs_entity_t e2 = ecs_new(ecs, TagA);
+    ecs_entity_t e3 = ecs_new(ecs, TagA);
+    ecs_add(ecs, e1, TagB);
+    ecs_add(ecs, e2, TagB);
+    ecs_add(ecs, e3, TagB);
+    ecs_set_pair(ecs, e1, Mass, p1, {100});
+    ecs_set_pair(ecs, e2, Mass, p1, {200});
+    ecs_set_pair(ecs, e3, Mass, p2, {300});
+
+    ecs_query_t *q = ecs_query(ecs, {
+        .terms = {
+            { .first.id = ecs_id(Mass), .second.name = "$parent" },
+            { TagA },
+            { TagB }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int32_t parent_var = ecs_query_find_var(q, "parent");
+    test_assert(parent_var != -1);
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e1);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e1);
+        test_uint(ecs_pair_t(Mass, p1), ecs_field_id(&it, 1));
+        test_uint(TagA, ecs_field_id(&it, 2));
+        test_uint(TagB, ecs_field_id(&it, 3));
+        test_uint(p1, ecs_iter_get_var(&it, parent_var));
+        {
+            Mass *m = ecs_field(&it, Mass, 1);
+            test_assert(m != NULL);
+            test_int(*m, 100);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e2);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_uint(ecs_pair_t(Mass, p1), ecs_field_id(&it, 1));
+        test_uint(TagA, ecs_field_id(&it, 2));
+        test_uint(TagB, ecs_field_id(&it, 3));
+        test_uint(p1, ecs_iter_get_var(&it, parent_var));
+        {
+            Mass *m = ecs_field(&it, Mass, 1);
+            test_assert(m != NULL);
+            test_int(*m, 200);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e3);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e3);
+        test_uint(ecs_pair_t(Mass, p2), ecs_field_id(&it, 1));
+        test_uint(TagA, ecs_field_id(&it, 2));
+        test_uint(TagB, ecs_field_id(&it, 3));
+        test_uint(p2, ecs_iter_get_var(&it, parent_var));
+        {
+            Mass *m = ecs_field(&it, Mass, 1);
+            test_assert(m != NULL);
+            test_int(*m, 300);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(ecs);
+}
+
+void Variables_3_set_src_this_w_uncacheable_component_component_tag(void) {
+    ecs_world_t* ecs = ecs_mini();
+
+    ECS_COMPONENT(ecs, Mass);
+    ECS_COMPONENT(ecs, Position);
+    ECS_TAG(ecs, TagB);
+
+    ecs_entity_t p1 = ecs_new_id(ecs);
+    ecs_entity_t p2 = ecs_new_id(ecs);
+    ecs_entity_t e1 = ecs_set(ecs, 0, Position, {11, 21});
+    ecs_entity_t e2 = ecs_set(ecs, 0, Position, {12, 22});
+    ecs_entity_t e3 = ecs_set(ecs, 0, Position, {13, 23});
+    ecs_add(ecs, e1, TagB);
+    ecs_add(ecs, e2, TagB);
+    ecs_add(ecs, e3, TagB);
+    ecs_set_pair(ecs, e1, Mass, p1, {100});
+    ecs_set_pair(ecs, e2, Mass, p1, {200});
+    ecs_set_pair(ecs, e3, Mass, p2, {300});
+
+    ecs_query_t *q = ecs_query(ecs, {
+        .terms = {
+            { .first.id = ecs_id(Mass), .second.name = "$parent" },
+            { ecs_id(Position) },
+            { TagB }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int32_t parent_var = ecs_query_find_var(q, "parent");
+    test_assert(parent_var != -1);
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e1);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e1);
+        test_uint(ecs_pair_t(Mass, p1), ecs_field_id(&it, 1));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+        test_uint(TagB, ecs_field_id(&it, 3));
+        test_uint(p1, ecs_iter_get_var(&it, parent_var));
+        {
+            Mass *m = ecs_field(&it, Mass, 1);
+            test_assert(m != NULL);
+            test_int(*m, 100);
+        }
+        {
+            Position *p = ecs_field(&it, Position, 2);
+            test_assert(p != NULL);
+            test_int(p->x, 11);
+            test_int(p->y, 21);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e2);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_uint(ecs_pair_t(Mass, p1), ecs_field_id(&it, 1));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+        test_uint(TagB, ecs_field_id(&it, 3));
+        test_uint(p1, ecs_iter_get_var(&it, parent_var));
+        {
+            Mass *m = ecs_field(&it, Mass, 1);
+            test_assert(m != NULL);
+            test_int(*m, 200);
+        }
+        {
+            Position *p = ecs_field(&it, Position, 2);
+            test_assert(p != NULL);
+            test_int(p->x, 12);
+            test_int(p->y, 22);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e3);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e3);
+        test_uint(ecs_pair_t(Mass, p2), ecs_field_id(&it, 1));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+        test_uint(TagB, ecs_field_id(&it, 3));
+        test_uint(p2, ecs_iter_get_var(&it, parent_var));
+        {
+            Mass *m = ecs_field(&it, Mass, 1);
+            test_assert(m != NULL);
+            test_int(*m, 300);
+        }
+        {
+            Position *p = ecs_field(&it, Position, 2);
+            test_assert(p != NULL);
+            test_int(p->x, 13);
+            test_int(p->y, 23);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(ecs);
+}
+
+void Variables_3_set_src_this_w_uncacheable_component_component_component(void) {
+    ecs_world_t* ecs = ecs_mini();
+
+    ECS_COMPONENT(ecs, Mass);
+    ECS_COMPONENT(ecs, Position);
+    ECS_COMPONENT(ecs, Velocity);
+
+    ecs_entity_t p1 = ecs_new_id(ecs);
+    ecs_entity_t p2 = ecs_new_id(ecs);
+    ecs_entity_t e1 = ecs_set(ecs, 0, Position, {11, 21});
+    ecs_entity_t e2 = ecs_set(ecs, 0, Position, {12, 22});
+    ecs_entity_t e3 = ecs_set(ecs, 0, Position, {13, 23});
+    ecs_set(ecs, e1, Velocity, {1, 1});
+    ecs_set(ecs, e2, Velocity, {2, 2});
+    ecs_set(ecs, e3, Velocity, {3, 3});
+    ecs_set_pair(ecs, e1, Mass, p1, {100});
+    ecs_set_pair(ecs, e2, Mass, p1, {200});
+    ecs_set_pair(ecs, e3, Mass, p2, {300});
+
+    ecs_query_t *q = ecs_query(ecs, {
+        .terms = {
+            { .first.id = ecs_id(Mass), .second.name = "$parent" },
+            { ecs_id(Position) },
+            { ecs_id(Velocity) }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int32_t parent_var = ecs_query_find_var(q, "parent");
+    test_assert(parent_var != -1);
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e1);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e1);
+        test_uint(ecs_pair_t(Mass, p1), ecs_field_id(&it, 1));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
+        test_uint(p1, ecs_iter_get_var(&it, parent_var));
+        {
+            Mass *m = ecs_field(&it, Mass, 1);
+            test_assert(m != NULL);
+            test_int(*m, 100);
+        }
+        {
+            Position *p = ecs_field(&it, Position, 2);
+            test_assert(p != NULL);
+            test_int(p->x, 11);
+            test_int(p->y, 21);
+        }
+        {
+            Velocity *v = ecs_field(&it, Velocity, 3);
+            test_assert(v != NULL);
+            test_int(v->x, 1);
+            test_int(v->y, 1);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e2);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_uint(ecs_pair_t(Mass, p1), ecs_field_id(&it, 1));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
+        test_uint(p1, ecs_iter_get_var(&it, parent_var));
+        {
+            Mass *m = ecs_field(&it, Mass, 1);
+            test_assert(m != NULL);
+            test_int(*m, 200);
+        }
+        {
+            Position *p = ecs_field(&it, Position, 2);
+            test_assert(p != NULL);
+            test_int(p->x, 12);
+            test_int(p->y, 22);
+        }
+        {
+            Velocity *v = ecs_field(&it, Velocity, 3);
+            test_assert(v != NULL);
+            test_int(v->x, 2);
+            test_int(v->y, 2);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e3);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e3);
+        test_uint(ecs_pair_t(Mass, p2), ecs_field_id(&it, 1));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
+        test_uint(p2, ecs_iter_get_var(&it, parent_var));
+        {
+            Mass *m = ecs_field(&it, Mass, 1);
+            test_assert(m != NULL);
+            test_int(*m, 300);
+        }
+        {
+            Position *p = ecs_field(&it, Position, 2);
+            test_assert(p != NULL);
+            test_int(p->x, 13);
+            test_int(p->y, 23);
+        }
+        {
+            Velocity *v = ecs_field(&it, Velocity, 3);
+            test_assert(v != NULL);
+            test_int(v->x, 3);
+            test_int(v->y, 3);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(ecs);
+}
+
+void Variables_3_set_src_this_w_tag_uncacheable_component_tag(void) {
+    ecs_world_t* ecs = ecs_mini();
+
+    ECS_TAG(ecs, TagA);
+    ECS_TAG(ecs, TagB);
+    ECS_COMPONENT(ecs, Mass);
+
+    ecs_entity_t p1 = ecs_new_id(ecs);
+    ecs_entity_t p2 = ecs_new_id(ecs);
+    ecs_entity_t e1 = ecs_new(ecs, TagA);
+    ecs_entity_t e2 = ecs_new(ecs, TagA);
+    ecs_entity_t e3 = ecs_new(ecs, TagA);
+    ecs_add(ecs, e1, TagB);
+    ecs_add(ecs, e2, TagB);
+    ecs_add(ecs, e3, TagB);
+    ecs_set_pair(ecs, e1, Mass, p1, {100});
+    ecs_set_pair(ecs, e2, Mass, p1, {200});
+    ecs_set_pair(ecs, e3, Mass, p2, {300});
+
+    ecs_query_t *q = ecs_query(ecs, {
+        .terms = {
+            { TagA },
+            { .first.id = ecs_id(Mass), .second.name = "$parent" },
+            { TagB }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int32_t parent_var = ecs_query_find_var(q, "parent");
+    test_assert(parent_var != -1);
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e1);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e1);
+        test_uint(TagA, ecs_field_id(&it, 1));
+        test_uint(ecs_pair_t(Mass, p1), ecs_field_id(&it, 2));
+        test_uint(TagB, ecs_field_id(&it, 3));
+        test_uint(p1, ecs_iter_get_var(&it, parent_var));
+        {
+            Mass *m = ecs_field(&it, Mass, 2);
+            test_assert(m != NULL);
+            test_int(*m, 100);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e2);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_uint(TagA, ecs_field_id(&it, 1));
+        test_uint(ecs_pair_t(Mass, p1), ecs_field_id(&it, 2));
+        test_uint(TagB, ecs_field_id(&it, 3));
+        test_uint(p1, ecs_iter_get_var(&it, parent_var));
+        {
+            Mass *m = ecs_field(&it, Mass, 2);
+            test_assert(m != NULL);
+            test_int(*m, 200);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e3);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e3);
+        test_uint(TagA, ecs_field_id(&it, 1));
+        test_uint(ecs_pair_t(Mass, p2), ecs_field_id(&it, 2));
+        test_uint(TagB, ecs_field_id(&it, 3));
+        test_uint(p2, ecs_iter_get_var(&it, parent_var));
+        {
+            Mass *m = ecs_field(&it, Mass, 2);
+            test_assert(m != NULL);
+            test_int(*m, 300);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(ecs);
+}
+
+void Variables_3_set_src_this_w_component_uncacheable_component_tag(void) {
+    ecs_world_t* ecs = ecs_mini();
+
+    ECS_COMPONENT(ecs, Mass);
+    ECS_COMPONENT(ecs, Position);
+    ECS_TAG(ecs, TagB);
+
+    ecs_entity_t p1 = ecs_new_id(ecs);
+    ecs_entity_t p2 = ecs_new_id(ecs);
+    ecs_entity_t e1 = ecs_set(ecs, 0, Position, {11, 21});
+    ecs_entity_t e2 = ecs_set(ecs, 0, Position, {12, 22});
+    ecs_entity_t e3 = ecs_set(ecs, 0, Position, {13, 23});
+    ecs_add(ecs, e1, TagB);
+    ecs_add(ecs, e2, TagB);
+    ecs_add(ecs, e3, TagB);
+    ecs_set_pair(ecs, e1, Mass, p1, {100});
+    ecs_set_pair(ecs, e2, Mass, p1, {200});
+    ecs_set_pair(ecs, e3, Mass, p2, {300});
+
+    ecs_query_t *q = ecs_query(ecs, {
+        .terms = {
+            { ecs_id(Position) },
+            { .first.id = ecs_id(Mass), .second.name = "$parent" },
+            { TagB }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int32_t parent_var = ecs_query_find_var(q, "parent");
+    test_assert(parent_var != -1);
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e1);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e1);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ecs_pair_t(Mass, p1), ecs_field_id(&it, 2));
+        test_uint(TagB, ecs_field_id(&it, 3));
+        test_uint(p1, ecs_iter_get_var(&it, parent_var));
+        {
+            Mass *m = ecs_field(&it, Mass, 2);
+            test_assert(m != NULL);
+            test_int(*m, 100);
+        }
+        {
+            Position *p = ecs_field(&it, Position, 1);
+            test_assert(p != NULL);
+            test_int(p->x, 11);
+            test_int(p->y, 21);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e2);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ecs_pair_t(Mass, p1), ecs_field_id(&it, 2));
+        test_uint(TagB, ecs_field_id(&it, 3));
+        test_uint(p1, ecs_iter_get_var(&it, parent_var));
+        {
+            Mass *m = ecs_field(&it, Mass, 2);
+            test_assert(m != NULL);
+            test_int(*m, 200);
+        }
+        {
+            Position *p = ecs_field(&it, Position, 1);
+            test_assert(p != NULL);
+            test_int(p->x, 12);
+            test_int(p->y, 22);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e3);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e3);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ecs_pair_t(Mass, p2), ecs_field_id(&it, 2));
+        test_uint(TagB, ecs_field_id(&it, 3));
+        test_uint(p2, ecs_iter_get_var(&it, parent_var));
+        {
+            Mass *m = ecs_field(&it, Mass, 2);
+            test_assert(m != NULL);
+            test_int(*m, 300);
+        }
+        {
+            Position *p = ecs_field(&it, Position, 1);
+            test_assert(p != NULL);
+            test_int(p->x, 13);
+            test_int(p->y, 23);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(ecs);
+}
+
+void Variables_3_set_src_this_w_component_uncacheable_component_component(void) {
+    ecs_world_t* ecs = ecs_mini();
+
+    ECS_COMPONENT(ecs, Mass);
+    ECS_COMPONENT(ecs, Position);
+    ECS_COMPONENT(ecs, Velocity);
+
+    ecs_entity_t p1 = ecs_new_id(ecs);
+    ecs_entity_t p2 = ecs_new_id(ecs);
+    ecs_entity_t e1 = ecs_set(ecs, 0, Position, {11, 21});
+    ecs_entity_t e2 = ecs_set(ecs, 0, Position, {12, 22});
+    ecs_entity_t e3 = ecs_set(ecs, 0, Position, {13, 23});
+    ecs_set(ecs, e1, Velocity, {1, 1});
+    ecs_set(ecs, e2, Velocity, {2, 2});
+    ecs_set(ecs, e3, Velocity, {3, 3});
+    ecs_set_pair(ecs, e1, Mass, p1, {100});
+    ecs_set_pair(ecs, e2, Mass, p1, {200});
+    ecs_set_pair(ecs, e3, Mass, p2, {300});
+
+    ecs_query_t *q = ecs_query(ecs, {
+        .terms = {
+            { ecs_id(Position) },
+            { .first.id = ecs_id(Mass), .second.name = "$parent" },
+            { ecs_id(Velocity) }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int32_t parent_var = ecs_query_find_var(q, "parent");
+    test_assert(parent_var != -1);
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e1);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e1);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ecs_pair_t(Mass, p1), ecs_field_id(&it, 2));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
+        test_uint(p1, ecs_iter_get_var(&it, parent_var));
+        {
+            Mass *m = ecs_field(&it, Mass, 2);
+            test_assert(m != NULL);
+            test_int(*m, 100);
+        }
+        {
+            Position *p = ecs_field(&it, Position, 1);
+            test_assert(p != NULL);
+            test_int(p->x, 11);
+            test_int(p->y, 21);
+        }
+        {
+            Velocity *v = ecs_field(&it, Velocity, 3);
+            test_assert(v != NULL);
+            test_int(v->x, 1);
+            test_int(v->y, 1);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e2);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ecs_pair_t(Mass, p1), ecs_field_id(&it, 2));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
+        test_uint(p1, ecs_iter_get_var(&it, parent_var));
+        {
+            Mass *m = ecs_field(&it, Mass, 2);
+            test_assert(m != NULL);
+            test_int(*m, 200);
+        }
+        {
+            Position *p = ecs_field(&it, Position, 1);
+            test_assert(p != NULL);
+            test_int(p->x, 12);
+            test_int(p->y, 22);
+        }
+        {
+            Velocity *v = ecs_field(&it, Velocity, 3);
+            test_assert(v != NULL);
+            test_int(v->x, 2);
+            test_int(v->y, 2);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e3);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e3);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ecs_pair_t(Mass, p2), ecs_field_id(&it, 2));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
+        test_uint(p2, ecs_iter_get_var(&it, parent_var));
+        {
+            Mass *m = ecs_field(&it, Mass, 2);
+            test_assert(m != NULL);
+            test_int(*m, 300);
+        }
+        {
+            Position *p = ecs_field(&it, Position, 1);
+            test_assert(p != NULL);
+            test_int(p->x, 13);
+            test_int(p->y, 23);
+        }
+        {
+            Velocity *v = ecs_field(&it, Velocity, 3);
+            test_assert(v != NULL);
+            test_int(v->x, 3);
+            test_int(v->y, 3);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(ecs);
+}
+
+void Variables_3_set_src_this_w_tag_tag_uncacheable_component(void) {
+    ecs_world_t* ecs = ecs_mini();
+
+    ECS_TAG(ecs, TagA);
+    ECS_TAG(ecs, TagB);
+    ECS_COMPONENT(ecs, Mass);
+
+    ecs_entity_t p1 = ecs_new_id(ecs);
+    ecs_entity_t p2 = ecs_new_id(ecs);
+    ecs_entity_t e1 = ecs_new(ecs, TagA);
+    ecs_entity_t e2 = ecs_new(ecs, TagA);
+    ecs_entity_t e3 = ecs_new(ecs, TagA);
+    ecs_add(ecs, e1, TagB);
+    ecs_add(ecs, e2, TagB);
+    ecs_add(ecs, e3, TagB);
+    ecs_set_pair(ecs, e1, Mass, p1, {100});
+    ecs_set_pair(ecs, e2, Mass, p1, {200});
+    ecs_set_pair(ecs, e3, Mass, p2, {300});
+
+    ecs_query_t *q = ecs_query(ecs, {
+        .terms = {
+            { TagA },
+            { TagB },
+            { .first.id = ecs_id(Mass), .second.name = "$parent" }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int32_t parent_var = ecs_query_find_var(q, "parent");
+    test_assert(parent_var != -1);
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e1);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e1);
+        test_uint(TagA, ecs_field_id(&it, 1));
+        test_uint(TagB, ecs_field_id(&it, 2));
+        test_uint(ecs_pair_t(Mass, p1), ecs_field_id(&it, 3));
+        test_uint(p1, ecs_iter_get_var(&it, parent_var));
+        {
+            Mass *m = ecs_field(&it, Mass, 3);
+            test_assert(m != NULL);
+            test_int(*m, 100);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e2);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_uint(TagA, ecs_field_id(&it, 1));
+        test_uint(TagB, ecs_field_id(&it, 2));
+        test_uint(ecs_pair_t(Mass, p1), ecs_field_id(&it, 3));
+        test_uint(p1, ecs_iter_get_var(&it, parent_var));
+        {
+            Mass *m = ecs_field(&it, Mass, 3);
+            test_assert(m != NULL);
+            test_int(*m, 200);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e3);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e3);
+        test_uint(TagA, ecs_field_id(&it, 1));
+        test_uint(TagB, ecs_field_id(&it, 2));
+        test_uint(ecs_pair_t(Mass, p2), ecs_field_id(&it, 3));
+        test_uint(p2, ecs_iter_get_var(&it, parent_var));
+        {
+            Mass *m = ecs_field(&it, Mass, 3);
+            test_assert(m != NULL);
+            test_int(*m, 300);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(ecs);
+}
+
+void Variables_3_set_src_this_w_component_tag_uncacheable_component(void) {
+    ecs_world_t* ecs = ecs_mini();
+
+    ECS_COMPONENT(ecs, Mass);
+    ECS_COMPONENT(ecs, Position);
+    ECS_TAG(ecs, TagB);
+
+    ecs_entity_t p1 = ecs_new_id(ecs);
+    ecs_entity_t p2 = ecs_new_id(ecs);
+    ecs_entity_t e1 = ecs_set(ecs, 0, Position, {11, 21});
+    ecs_entity_t e2 = ecs_set(ecs, 0, Position, {12, 22});
+    ecs_entity_t e3 = ecs_set(ecs, 0, Position, {13, 23});
+    ecs_add(ecs, e1, TagB);
+    ecs_add(ecs, e2, TagB);
+    ecs_add(ecs, e3, TagB);
+    ecs_set_pair(ecs, e1, Mass, p1, {100});
+    ecs_set_pair(ecs, e2, Mass, p1, {200});
+    ecs_set_pair(ecs, e3, Mass, p2, {300});
+
+    ecs_query_t *q = ecs_query(ecs, {
+        .terms = {
+            { ecs_id(Position) },
+            { TagB },
+            { .first.id = ecs_id(Mass), .second.name = "$parent" }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int32_t parent_var = ecs_query_find_var(q, "parent");
+    test_assert(parent_var != -1);
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e1);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e1);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(TagB, ecs_field_id(&it, 2));
+        test_uint(ecs_pair_t(Mass, p1), ecs_field_id(&it, 3));
+        test_uint(p1, ecs_iter_get_var(&it, parent_var));
+        {
+            Mass *m = ecs_field(&it, Mass, 3);
+            test_assert(m != NULL);
+            test_int(*m, 100);
+        }
+        {
+            Position *p = ecs_field(&it, Position, 1);
+            test_assert(p != NULL);
+            test_int(p->x, 11);
+            test_int(p->y, 21);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e2);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(TagB, ecs_field_id(&it, 2));
+        test_uint(ecs_pair_t(Mass, p1), ecs_field_id(&it, 3));
+        test_uint(p1, ecs_iter_get_var(&it, parent_var));
+        {
+            Mass *m = ecs_field(&it, Mass, 3);
+            test_assert(m != NULL);
+            test_int(*m, 200);
+        }
+        {
+            Position *p = ecs_field(&it, Position, 1);
+            test_assert(p != NULL);
+            test_int(p->x, 12);
+            test_int(p->y, 22);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e3);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e3);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(TagB, ecs_field_id(&it, 2));
+        test_uint(ecs_pair_t(Mass, p2), ecs_field_id(&it, 3));
+        test_uint(p2, ecs_iter_get_var(&it, parent_var));
+        {
+            Mass *m = ecs_field(&it, Mass, 3);
+            test_assert(m != NULL);
+            test_int(*m, 300);
+        }
+        {
+            Position *p = ecs_field(&it, Position, 1);
+            test_assert(p != NULL);
+            test_int(p->x, 13);
+            test_int(p->y, 23);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(ecs);
+}
+
+void Variables_3_set_src_this_w_component_component_uncacheable_component(void) {
+    ecs_world_t* ecs = ecs_mini();
+
+    ECS_COMPONENT(ecs, Mass);
+    ECS_COMPONENT(ecs, Position);
+    ECS_COMPONENT(ecs, Velocity);
+
+    ecs_entity_t p1 = ecs_new_id(ecs);
+    ecs_entity_t p2 = ecs_new_id(ecs);
+    ecs_entity_t e1 = ecs_set(ecs, 0, Position, {11, 21});
+    ecs_entity_t e2 = ecs_set(ecs, 0, Position, {12, 22});
+    ecs_entity_t e3 = ecs_set(ecs, 0, Position, {13, 23});
+    ecs_set(ecs, e1, Velocity, {1, 1});
+    ecs_set(ecs, e2, Velocity, {2, 2});
+    ecs_set(ecs, e3, Velocity, {3, 3});
+    ecs_set_pair(ecs, e1, Mass, p1, {100});
+    ecs_set_pair(ecs, e2, Mass, p1, {200});
+    ecs_set_pair(ecs, e3, Mass, p2, {300});
+
+    ecs_query_t *q = ecs_query(ecs, {
+        .terms = {
+            { ecs_id(Position) },
+            { ecs_id(Velocity) },
+            { .first.id = ecs_id(Mass), .second.name = "$parent" }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    int32_t parent_var = ecs_query_find_var(q, "parent");
+    test_assert(parent_var != -1);
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e1);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e1);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+        test_uint(ecs_pair_t(Mass, p1), ecs_field_id(&it, 3));
+        test_uint(p1, ecs_iter_get_var(&it, parent_var));
+        {
+            Mass *m = ecs_field(&it, Mass, 3);
+            test_assert(m != NULL);
+            test_int(*m, 100);
+        }
+        {
+            Position *p = ecs_field(&it, Position, 1);
+            test_assert(p != NULL);
+            test_int(p->x, 11);
+            test_int(p->y, 21);
+        }
+        {
+            Velocity *v = ecs_field(&it, Velocity, 2);
+            test_assert(v != NULL);
+            test_int(v->x, 1);
+            test_int(v->y, 1);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e2);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+        test_uint(ecs_pair_t(Mass, p1), ecs_field_id(&it, 3));
+        test_uint(p1, ecs_iter_get_var(&it, parent_var));
+        {
+            Mass *m = ecs_field(&it, Mass, 3);
+            test_assert(m != NULL);
+            test_int(*m, 200);
+        }
+        {
+            Position *p = ecs_field(&it, Position, 1);
+            test_assert(p != NULL);
+            test_int(p->x, 12);
+            test_int(p->y, 22);
+        }
+        {
+            Velocity *v = ecs_field(&it, Velocity, 2);
+            test_assert(v != NULL);
+            test_int(v->x, 2);
+            test_int(v->y, 2);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(ecs, q);
+        ecs_iter_set_var(&it, 0, e3);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e3);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+        test_uint(ecs_pair_t(Mass, p2), ecs_field_id(&it, 3));
+        test_uint(p2, ecs_iter_get_var(&it, parent_var));
+        {
+            Mass *m = ecs_field(&it, Mass, 3);
+            test_assert(m != NULL);
+            test_int(*m, 300);
+        }
+        {
+            Position *p = ecs_field(&it, Position, 1);
+            test_assert(p != NULL);
+            test_int(p->x, 13);
+            test_int(p->y, 23);
+        }
+        {
+            Velocity *v = ecs_field(&it, Velocity, 2);
+            test_assert(v != NULL);
+            test_int(v->x, 3);
+            test_int(v->y, 3);
+        }
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(ecs);
+}
+
 void Variables_1_src_this_var_as_entity(void) {
     ecs_world_t *world = ecs_mini();
 
