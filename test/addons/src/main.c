@@ -367,7 +367,6 @@ void SystemMisc_system_w_or_disabled_and_prefab(void);
 void SystemMisc_table_columns_access(void);
 void SystemMisc_dont_enable_after_rematch(void);
 void SystemMisc_ensure_single_merge(void);
-void SystemMisc_table_count(void);
 void SystemMisc_match_system(void);
 void SystemMisc_system_initial_state(void);
 void SystemMisc_add_own_component(void);
@@ -2269,10 +2268,6 @@ bake_test_case SystemMisc_testcases[] = {
         SystemMisc_ensure_single_merge
     },
     {
-        "table_count",
-        SystemMisc_table_count
-    },
-    {
         "match_system",
         SystemMisc_match_system
     },
@@ -4088,7 +4083,7 @@ static bake_test_suite suites[] = {
         "SystemMisc",
         NULL,
         NULL,
-        65,
+        64,
         SystemMisc_testcases
     },
     {

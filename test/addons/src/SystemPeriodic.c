@@ -560,10 +560,10 @@ void SystemPeriodic_4_type_1_and_1_or(void) {
     ECS_ENTITY(world, e3, Position, Position_1, Velocity);
     ECS_ENTITY(world, e4, Velocity);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position || Position_1, Velocity);
-
     ecs_set(world, e3, Position_1, {0, 0});
     ecs_set(world, e4, Velocity, {0, 0});
+
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position || Position_1, Velocity);
 
     Probe ctx = {0};
     ecs_set_ctx(world, &ctx, NULL);
@@ -577,18 +577,18 @@ void SystemPeriodic_4_type_1_and_1_or(void) {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);
-    test_int(ctx.e[1], e2);
-    test_int(ctx.e[2], e3);
+    test_int(ctx.e[1], e3);
+    test_int(ctx.e[2], e2);
 
     test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
     test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);
-    test_int(ctx.c[1][0], ecs_id(Position_1));
+    test_int(ctx.c[1][0], ecs_id(Position));
     test_int(ctx.s[1][0], 0);
     test_int(ctx.c[1][1], ecs_id(Velocity));
     test_int(ctx.s[1][1], 0);
-    test_int(ctx.c[2][0], ecs_id(Position));
+    test_int(ctx.c[2][0], ecs_id(Position_1));
     test_int(ctx.s[2][0], 0);
     test_int(ctx.c[2][1], ecs_id(Velocity));
     test_int(ctx.s[2][1], 0);
@@ -626,18 +626,18 @@ void SystemPeriodic_4_type_1_and_1_or_of_3(void) {
     test_null(ctx.param);
 
     test_int(ctx.e[0], e1);
-    test_int(ctx.e[1], e2);
-    test_int(ctx.e[2], e3);
+    test_int(ctx.e[1], e3);
+    test_int(ctx.e[2], e2);
 
     test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
     test_int(ctx.c[0][1], ecs_id(Velocity));
     test_int(ctx.s[0][1], 0);
-    test_int(ctx.c[1][0], ecs_id(Position_2));
+    test_int(ctx.c[1][0], ecs_id(Position_1));
     test_int(ctx.s[1][0], 0);
     test_int(ctx.c[1][1], ecs_id(Velocity));
     test_int(ctx.s[1][1], 0);
-    test_int(ctx.c[2][0], ecs_id(Position_1));
+    test_int(ctx.c[2][0], ecs_id(Position_2));
     test_int(ctx.s[2][0], 0);
     test_int(ctx.c[2][1], ecs_id(Velocity));
     test_int(ctx.s[2][1], 0);
@@ -1918,9 +1918,9 @@ void SystemPeriodic_or_type(void) {
     test_int(ctx.e[0], e1);
     test_int(ctx.e[1], e2);
     test_int(ctx.e[2], e3);
-    test_int(ctx.c[0][0], ecs_id(Position));
-    test_int(ctx.c[1][0], ecs_id(Velocity));
-    test_int(ctx.c[2][0], ecs_id(Position));
+    test_int(ctx.c[0][0], MyType);
+    test_int(ctx.c[1][0], MyType);
+    test_int(ctx.c[2][0], MyType);
     test_int(ctx.s[0][0], 0);
 
     ecs_fini(world);

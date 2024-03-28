@@ -1651,7 +1651,3 @@ void SystemMisc_system_same_interval_same_tick(void) {
 
     ecs_fini(world);
 }
-
-void SystemMisc_table_count(void) {
-    // Implement testcase
-}

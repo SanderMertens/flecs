@@ -378,7 +378,6 @@
                 "table_columns_access",
                 "dont_enable_after_rematch",
                 "ensure_single_merge",
-                "table_count",
                 "match_system",
                 "system_initial_state",
                 "add_own_component",
