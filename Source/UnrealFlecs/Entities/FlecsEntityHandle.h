@@ -66,6 +66,12 @@ public:
 	template <typename T>
 	FORCEINLINE NO_DISCARD bool Has() const { return GetEntity().has<T>(); }
 
+	template <typename First, typename Second>
+	FORCEINLINE NO_DISCARD bool Has() const { return GetEntity().has<First, Second>(); }
+
+	template <typename TSecond>
+	FORCEINLINE NO_DISCARD bool Has(const FFlecsEntityHandle& InFirst) const { return GetEntity().has<TSecond>(InFirst); }
+
 	FORCEINLINE NO_DISCARD bool Has(UScriptStruct* StructType) const;
 
 	FORCEINLINE void Add(const FFlecsEntityHandle& InEntity) const { GetEntity().add(InEntity); }
@@ -95,6 +101,24 @@ public:
 	FORCEINLINE void Set(UScriptStruct* StructType, const void* InValue) const;
 
 	FORCEINLINE void Set(const FInstancedStruct& InValue) const;
+
+	template <typename T>
+	FORCEINLINE NO_DISCARD T Get() const { return GetEntity().get<T>(); }
+
+	template <typename T>
+	FORCEINLINE NO_DISCARD T* GetPtr() { return GetEntity().get_mut<T>(); }
+
+	template <typename T>
+	FORCEINLINE NO_DISCARD const T* GetPtr() const { return GetEntity().get<T>(); }
+
+	template <typename T>
+	FORCEINLINE NO_DISCARD T& GetRef() { return GetEntity().get_ref<T>(); }
+
+	template <typename T>
+	FORCEINLINE NO_DISCARD const T& GetRef() const { return GetEntity().get_ref<T>(); }
+
+	template <typename T>
+	FORCEINLINE NO_DISCARD bool Has() { return GetEntity().has<T>(); }
 
 	FORCEINLINE void Clear() const { GetEntity().clear(); }
 
@@ -158,17 +182,24 @@ public:
 
 	FORCEINLINE NO_DISCARD bool IsPrefab() const
 	{
-		return GetEntity().has(flecs::Prefab);
+		return Has(flecs::Prefab);
 	}
 
 	FORCEINLINE NO_DISCARD bool IsComponent() const
 	{
-		return GetEntity().has<flecs::Component>();
+		return Has<flecs::Component>();
 	}
 
-	FORCEINLINE NO_DISCARD flecs::untyped_component* GetUntypedComponent() const
+	FORCEINLINE NO_DISCARD flecs::untyped_component& GetUntypedComponent()
 	{
-		return GetEntity().get_mut<flecs::untyped_component>();
+		checkf(IsComponent(), TEXT("Entity is not a component"));
+		return GetRef<flecs::untyped_component>();
+	}
+
+	FORCEINLINE NO_DISCARD const flecs::untyped_component* GetUntypedComponent() const
+	{
+		checkf(IsComponent(), TEXT("Entity is not a component"));
+		return GetPtr<flecs::untyped_component>();
 	}
 
 	FORCEINLINE void Flatten(const FFlecsEntityHandle& RelationshipEntity) const

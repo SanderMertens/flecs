@@ -25,7 +25,7 @@ void UFlecsNetworkingManager::BeginPlay()
 
 	if (GetOwner()->HasAuthority())
 	{
-		Observer = FlecsWorld->CreateObserver<FFlecsNetworkIdComponent>(TEXT("NetworkingObserver"))
+		NetworkIdObserver = FlecsWorld->CreateObserver<FFlecsNetworkIdComponent>(TEXT("NetworkingIdObserver"))
 		.event(flecs::OnAdd)
 		.yield_existing(true)
 		.term(flecs::Name).and_()
@@ -42,6 +42,7 @@ void UFlecsNetworkingManager::BeginPlay()
 				"Assigned network ID %llu to entity %s",
 				NetworkId.GetNetworkId(),
 				*Entity.GetEntity().path().c_str());
+			
 		});
 	}
 

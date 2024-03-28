@@ -19,7 +19,7 @@ public:
 
 private:
 	UPROPERTY()
-	FFlecsEntityHandle Observer;
+	FFlecsEntityHandle NetworkIdObserver;
 
 	UPROPERTY()
 	uint64 NextNetworkId = 0;

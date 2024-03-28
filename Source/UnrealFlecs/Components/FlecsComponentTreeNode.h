@@ -61,4 +61,5 @@ class UNREALFLECS_API UFlecsComponentTreeObject final : public UObject
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree")
 	FFlecsComponentTreeNode TreeNode;
+	
 }; // class UFlecsComponentTreeObject

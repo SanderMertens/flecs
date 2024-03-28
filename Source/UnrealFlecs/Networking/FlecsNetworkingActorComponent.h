@@ -9,6 +9,7 @@
 #include "Entities/FlecsEntityHandle.h"
 #include "Net/UnrealNetwork.h"
 #include "Net/Core/PushModel/PushModel.h"
+#include "Worlds/FlecsWorldSubsystem.h"
 #include "FlecsNetworkingActorComponent.generated.h"
 
 USTRUCT()
@@ -45,7 +46,11 @@ public:
 
 		if (GetOwner()->HasAuthority())
 		{
-			
+			UFlecsWorld* FlecsWorld = UFlecsWorldSubsystem::GetDefaultWorld(GetOwner());
+			checkf(FlecsWorld, TEXT("FlecsWorld must be valid"));
+
+			TArray<FNetworkedEntityInfo> Entities;
+			FlecsWorld->
 		}
 		else
 		{
@@ -107,7 +112,7 @@ private:
 	TArray<FFlecsNetworkIdComponent> NetworkOwnedEntities;
 
 	UFUNCTION(Client, Reliable)
-	void Client_UpdateNetworkedEntities(const TArray<FNetworkedEntityInfo>& Entities);
+	void Client_UpdateCreatedNetworkedEntities(const TArray<FNetworkedEntityInfo>& Entities);
 
 	FORCEINLINE void SortNetworkOwnedEntities()
 	{

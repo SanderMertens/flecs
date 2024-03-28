@@ -8,15 +8,15 @@
 
 UNLOG_CATEGORY(LogFlecsNetworkingActorComponent);
 
-void UFlecsNetworkingActorComponent::Client_UpdateNetworkedEntities_Implementation(
+void UFlecsNetworkingActorComponent::Client_UpdateCreatedNetworkedEntities_Implementation(
 	const TArray<FNetworkedEntityInfo>& Entities)
 {
 	for (const FNetworkedEntityInfo& NetworkedEntity : Entities)
 	{
 		checkf(!NetworkedEntity.EntityName.IsNone(),TEXT("Networked Entity Name must not be None"));
 
-		const FName& WorldName = NetworkedEntity.WorldName;
-		const FName& EntityName = NetworkedEntity.EntityName;
+		const FName WorldName = NetworkedEntity.WorldName;
+		const FName EntityName = NetworkedEntity.EntityName;
 
 		const UFlecsWorld* FlecsWorld = GetWorld()->GetSubsystem<UFlecsWorldSubsystem>()->GetFlecsWorld(WorldName);
 		

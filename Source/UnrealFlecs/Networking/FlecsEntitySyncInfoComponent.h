@@ -11,8 +11,7 @@ struct UNREALFLECS_API FFlecsEntitySyncInfoComponent final
 	GENERATED_BODY()
 
 public:
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Entity Sync Info Component")
-	uint8 bSyncAllComponents : 1 = true;
+	uint32 bAlwaysRelevant : 1 = false;
 	
 }; // struct FFlecsEntitySyncInfoComponent
