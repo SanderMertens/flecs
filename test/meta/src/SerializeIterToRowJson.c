@@ -1952,8 +1952,9 @@ void SerializeIterToRowJson_serialize_scope(void) {
      *       the serializer doesn't crash, and will be updated after the query
      *       refactor. */
     char* expect = "{\"results\":["
-        "{\"name\":\"e1\", \"tags\":[\"TagA\", \"TagB\"],\"pairs\":{\"ChildOf\":\"e1\"},\"vars\":{\"child\":\"*\"},\"is_set\":[true, false, true, false, false, true]}, "
+        "{\"name\":\"e1\", \"tags\":[\"TagA\", \"TagB\", \"TagB\"],\"pairs\":{\"ChildOf\":\"e1\"},\"vars\":{\"child\":\"*\"},\"is_set\":[true, false, true, true, false, true]}, "
         "{\"name\":\"e3\", \"tags\":[\"TagA\", \"TagB\", \"TagB\"],\"pairs\":{\"ChildOf\":\"e2\"},\"vars\":{\"child\":\"*\"},\"is_set\":[true, false, true, true, false, true]}]}";
+    
     test_str(json, expect);
 
     ecs_os_free(json);

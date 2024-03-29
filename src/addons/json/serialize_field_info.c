@@ -41,7 +41,7 @@ void flecs_json_serialize_field(
 
             if (ECS_IS_PAIR(term->id)) {
                 if ((term->first.id & EcsIsEntity) && ECS_TERM_REF_ID(&term->first)) {
-                    if (ecs_has_id(world, term->first.id, EcsExclusive)) {
+                    if (ecs_has_id(world, ECS_TERM_REF_ID(&term->first), EcsExclusive)) {
                         flecs_json_memberl(buf, "exclusive");
                         flecs_json_bool(buf, true);
                     }

@@ -69,16 +69,16 @@ void flecs_json_serialize_term_ref(
 {
     flecs_json_object_push(buf);
     if (ref->id & EcsIsEntity) {
-        flecs_json_serialize_term_entity(world, ref->id, buf);
+        flecs_json_serialize_term_entity(world, ECS_TERM_REF_ID(ref), buf);
     } else if (ref->id & EcsIsVariable) {
         flecs_json_memberl(buf, "var");
         if (ref->name) {
             flecs_json_string(buf, ref->name);
         } else if (ref->id) {
-            if (ref->id == EcsThis) {
+            if (ECS_TERM_REF_ID(ref) == EcsThis) {
                 flecs_json_string(buf, "this");
             } else {
-                flecs_json_path(buf, world, ref->id);
+                flecs_json_path(buf, world, ECS_TERM_REF_ID(ref));
             }
         }
     } else if (ref->id & EcsIsName) {
@@ -135,7 +135,7 @@ void flecs_json_serialize_term(
     flecs_json_bool(buf, 0 == (term->flags & EcsTermNoData));
 
     if (term->first.id & EcsIsEntity && term->first.id) {
-        if (ecs_has_id(world, term->first.id, EcsDontInherit)) {
+        if (ecs_has_id(world, ECS_TERM_REF_ID(&term->first), EcsDontInherit)) {
             flecs_json_memberl(buf, "dont_inherit");
             flecs_json_true(buf);
         }

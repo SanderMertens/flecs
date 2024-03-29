@@ -247,8 +247,12 @@ void MonitorAlerts(ecs_iter_t *it) {
         ecs_entity_t a = it->entities[i]; /* Alert entity */
         ecs_entity_t default_severity = ecs_get_target(
             world, a, ecs_id(EcsAlert), 0);
-        ecs_query_t *rule = poly[i].poly;
-        ecs_poly_assert(rule, ecs_query_impl_t);
+        ecs_query_t *q = poly[i].poly;
+        if (!q) {
+            continue;
+        }
+
+        ecs_poly_assert(q, ecs_query_impl_t);
 
         ecs_id_t member_id = alert[i].id;
         const EcsMemberRanges *ranges = NULL;
@@ -256,7 +260,7 @@ void MonitorAlerts(ecs_iter_t *it) {
             ranges = ecs_ref_get(world, &alert[i].ranges, EcsMemberRanges);
         }
 
-        ecs_iter_t rit = ecs_query_iter(world, rule);
+        ecs_iter_t rit = ecs_query_iter(world, q);
         rit.flags |= EcsIterNoData;
         rit.flags |= EcsIterIsInstanced;
 
@@ -369,6 +373,10 @@ void MonitorAlertInstances(ecs_iter_t *it) {
         "alert entity does not have (Poly, Query) component");
 
     ecs_query_t *rule = poly->poly;
+    if (!rule) {
+        return;
+    }
+
     ecs_poly_assert(rule, ecs_query_impl_t);
 
     ecs_id_t member_id = alert->id;

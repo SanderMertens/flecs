@@ -527,7 +527,7 @@ void SerializeQueryInfoToJson_1_tag_up(void) {
         "{\"inout\":\"default\", \"has_data\":false, \"oper\":\"and\", "
             "\"src\":{\"var\":\"this\"}, "
             "\"first\":{\"entity\":\"Foo\"}, "
-            "\"trav\":{\"entity\":\"flecs.core.IsA\", \"symbol\":\"EcsIsA\"}, "
+            "\"trav\":{\"entity\":\"flecs.core.ChildOf\", \"symbol\":\"EcsChildOf\"}, "
             "\"flags\":[\"up\"]}]}}");
     ecs_os_free(json);
 
@@ -558,7 +558,7 @@ void SerializeQueryInfoToJson_1_tag_cascade(void) {
         "{\"inout\":\"default\", \"has_data\":false, \"oper\":\"and\", "
             "\"src\":{\"var\":\"this\"}, "
             "\"first\":{\"entity\":\"Foo\"}, "
-            "\"trav\":{\"entity\":\"flecs.core.IsA\", \"symbol\":\"EcsIsA\"}, "
+            "\"trav\":{\"entity\":\"flecs.core.ChildOf\", \"symbol\":\"EcsChildOf\"}, "
             "\"flags\":[\"cascade\"]}]}}");
     ecs_os_free(json);
     

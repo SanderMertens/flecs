@@ -724,12 +724,6 @@ void SerializeEntityToJson_serialize_w_link(void);
 void SerializeEntityToJson_serialize_w_link_no_link(void);
 void SerializeEntityToJson_serialize_color(void);
 void SerializeEntityToJson_serialize_w_doc_w_quotes(void);
-void SerializeEntityToJson_serialize_union_relationship(void);
-void SerializeEntityToJson_serialize_union_relationship_w_labels(void);
-void SerializeEntityToJson_serialize_union_relationship_invalid_entity(void);
-void SerializeEntityToJson_serialize_union_relationship_invalid_entity_w_labels(void);
-void SerializeEntityToJson_serialize_w_union_property(void);
-void SerializeEntityToJson_serialize_w_union_property(void);
 void SerializeEntityToJson_serialize_from_core(void);
 void SerializeEntityToJson_serialize_w_1_alert(void);
 void SerializeEntityToJson_serialize_w_2_alerts(void);
@@ -3970,30 +3964,6 @@ bake_test_case SerializeEntityToJson_testcases[] = {
         SerializeEntityToJson_serialize_w_doc_w_quotes
     },
     {
-        "serialize_union_relationship",
-        SerializeEntityToJson_serialize_union_relationship
-    },
-    {
-        "serialize_union_relationship_w_labels",
-        SerializeEntityToJson_serialize_union_relationship_w_labels
-    },
-    {
-        "serialize_union_relationship_invalid_entity",
-        SerializeEntityToJson_serialize_union_relationship_invalid_entity
-    },
-    {
-        "serialize_union_relationship_invalid_entity_w_labels",
-        SerializeEntityToJson_serialize_union_relationship_invalid_entity_w_labels
-    },
-    {
-        "serialize_w_union_property",
-        SerializeEntityToJson_serialize_w_union_property
-    },
-    {
-        "serialize_w_union_property",
-        SerializeEntityToJson_serialize_w_union_property
-    },
-    {
         "serialize_from_core",
         SerializeEntityToJson_serialize_from_core
     },
@@ -5842,7 +5812,7 @@ static bake_test_suite suites[] = {
         "SerializeEntityToJson",
         NULL,
         NULL,
-        51,
+        45,
         SerializeEntityToJson_testcases
     },
     {

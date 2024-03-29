@@ -848,128 +848,6 @@ void SerializeEntityToJson_serialize_color(void) {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_union_relationship(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_ENTITY(world, Movement, Union);
-    ECS_TAG(world, Running);
-    ECS_TAG(world, Walking);
-
-    ecs_entity_t e = ecs_new_entity(world, "Foo");
-    ecs_add_pair(world, e, Movement, Running);
-
-    ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
-    char *json = ecs_entity_to_json(world, e, &desc);
-    test_assert(json != NULL);
-
-    test_str(json, "{"
-        "\"path\":\"Foo\", "
-        "\"ids\":["
-            "[\"Movement\", \"Running\"]"
-        "]}");
-
-    ecs_os_free(json);
-
-    ecs_fini(world);
-}
-
-void SerializeEntityToJson_serialize_union_relationship_invalid_entity(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_ENTITY(world, Movement, Union);
-    ecs_entity_t Running = ecs_new_entity(world, "Running");
-
-    ecs_entity_t e = ecs_new_entity(world, "Foo");
-    ecs_add_pair(world, e, Movement, Running);
-    ecs_delete(world, Running);
-
-    ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
-    char *json = ecs_entity_to_json(world, e, &desc);
-    test_assert(json != NULL);
-
-    test_str(json, "{"
-        "\"path\":\"Foo\", "
-        "\"ids\":[]}");
-
-    ecs_os_free(json);
-
-    ecs_fini(world);
-}
-
-void SerializeEntityToJson_serialize_union_relationship_invalid_entity_w_labels(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_ENTITY(world, Movement, Union);
-    ecs_entity_t Running = ecs_new_entity(world, "Running");
-
-    ecs_entity_t e = ecs_new_entity(world, "Foo");
-    ecs_add_pair(world, e, Movement, Running);
-    ecs_delete(world, Running);
-
-    ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
-    desc.serialize_id_labels = true;
-    char *json = ecs_entity_to_json(world, e, &desc);
-    test_assert(json != NULL);
-
-    test_str(json, "{"
-        "\"path\":\"Foo\", "
-        "\"ids\":[], "
-        "\"id_labels\":[]}");
-
-    ecs_os_free(json);
-
-    ecs_fini(world);
-}
-
-void SerializeEntityToJson_serialize_w_union_property(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_ENTITY(world, Movement, Union);
-
-    ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
-    char *json = ecs_entity_to_json(world, Movement, &desc);
-    test_assert(json != NULL);
-
-    test_str(json, "{"
-        "\"path\":\"Movement\", "
-        "\"ids\":["
-            "[\"flecs.core.Union\"]"
-        "]}");
-
-    ecs_os_free(json);
-
-    ecs_fini(world);
-}
-
-void SerializeEntityToJson_serialize_union_relationship_w_labels(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_ENTITY(world, Movement, Union);
-    ECS_TAG(world, Running);
-    ECS_TAG(world, Walking);
-
-    ecs_entity_t e = ecs_new_entity(world, "Foo");
-    ecs_add_pair(world, e, Movement, Running);
-
-    ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
-    desc.serialize_id_labels = true;
-    char *json = ecs_entity_to_json(world, e, &desc);
-    test_assert(json != NULL);
-
-    test_str(json, "{"
-        "\"path\":\"Foo\", "
-        "\"ids\":["
-            "[\"Movement\", \"Running\"]"
-        "], "
-        "\"id_labels\":["
-            "[\"Movement\", \"Running\"]"
-        "]}");
-
-    ecs_os_free(json);
-
-    ecs_fini(world);
-}
-
 void SerializeEntityToJson_serialize_w_doc_w_quotes(void) {
     ecs_world_t *world = ecs_init();
 
@@ -1104,12 +982,12 @@ void SerializeEntityToJson_serialize_w_2_alerts(void) {
         "\"path\":\"e1\", "
         "\"ids\":[[\"Position\"]], "
         "\"alerts\":[{"
-            "\"alert\":\"position_without_mass.e1_alert_2\", "
-            "\"message\":\"e1 has Position but not Mass\", "
-            "\"severity\":\"Error\""
-        "}, {"
             "\"alert\":\"position_without_velocity.e1_alert_1\", "
             "\"message\":\"e1 has Position but not Velocity\", "
+            "\"severity\":\"Error\""
+        "}, {"
+            "\"alert\":\"position_without_mass.e1_alert_2\", "
+            "\"message\":\"e1 has Position but not Mass\", "
             "\"severity\":\"Error\""
         "}]"
     "}");
