@@ -4,6 +4,556 @@ struct Pair {
     float value;
 };
 
+void Query_term_each_component(void) {
+    flecs::world ecs;
+
+    auto e_1 = ecs.entity().set<Position>({1, 2});
+    auto e_2 = ecs.entity().set<Position>({3, 4});
+    auto e_3 = ecs.entity().set<Position>({5, 6});
+
+    e_3.add<Tag>();
+
+    int32_t count = 0;
+    ecs.each<Position>([&](flecs::entity e, Position& p) {
+        if (e == e_1) {
+            test_int(p.x, 1);
+            test_int(p.y, 2);
+            count ++;
+        }
+        if (e == e_2) {
+            test_int(p.x, 3);
+            test_int(p.y, 4);
+            count ++;
+        }
+        if (e == e_3) {
+            test_int(p.x, 5);
+            test_int(p.y, 6);
+            count ++;
+        }                
+    });
+
+    test_int(count, 3);
+}
+
+void Query_term_each_tag(void) {
+    flecs::world ecs;
+
+    struct Foo { };
+
+    auto e_1 = ecs.entity().add<Foo>();
+    auto e_2 = ecs.entity().add<Foo>();
+    auto e_3 = ecs.entity().add<Foo>();
+
+    e_3.add<Tag>();
+
+    int32_t count = 0;
+    ecs.each<Foo>([&](flecs::entity e, Foo) {
+        if (e == e_1 || e == e_2 || e == e_3) {
+            count ++;
+        }            
+    });
+
+    test_int(count, 3);
+}
+
+void Query_term_each_id(void) {
+    flecs::world ecs;
+
+    auto foo = ecs.entity();
+
+    auto e_1 = ecs.entity().add(foo);
+    auto e_2 = ecs.entity().add(foo);
+    auto e_3 = ecs.entity().add(foo);
+
+    e_3.add<Tag>();
+
+    int32_t count = 0;
+    ecs.each(foo, [&](flecs::entity e) {
+        if (e == e_1 || e == e_2 || e == e_3) {
+            count ++;
+        }            
+    });
+
+    test_int(count, 3);
+}
+
+void Query_term_each_pair_type(void) {
+    flecs::world ecs;
+
+    struct Rel { };
+    struct Obj { };
+
+    auto e_1 = ecs.entity().add<Rel, Obj>();
+    auto e_2 = ecs.entity().add<Rel, Obj>();
+    auto e_3 = ecs.entity().add<Rel, Obj>();
+
+    e_3.add<Tag>();
+
+    int32_t count = 0;
+    ecs.each<flecs::pair<Rel, Obj>>([&](flecs::entity e, flecs::pair<Rel,Obj>) {
+        if (e == e_1 || e == e_2 || e == e_3) {
+            count ++;
+        }
+    });
+
+    test_int(count, 3);
+}
+
+void Query_term_each_pair_id(void) {
+    flecs::world ecs;
+
+    auto rel = ecs.entity();
+    auto obj = ecs.entity();
+
+    auto e_1 = ecs.entity().add(rel, obj);
+    auto e_2 = ecs.entity().add(rel, obj);
+    auto e_3 = ecs.entity().add(rel, obj);
+
+    e_3.add<Tag>();
+
+    int32_t count = 0;
+    ecs.each(ecs.pair(rel, obj), [&](flecs::entity e) {
+        if (e == e_1 || e == e_2 || e == e_3) {
+            count ++;
+        }
+    });
+
+    test_int(count, 3);
+}
+
+void Query_term_each_pair_relation_wildcard(void) {
+    flecs::world ecs;
+
+    auto rel_1 = ecs.entity();
+    auto rel_2 = ecs.entity();
+    auto obj = ecs.entity();
+
+    auto e_1 = ecs.entity().add(rel_1, obj);
+    auto e_2 = ecs.entity().add(rel_1, obj);
+    auto e_3 = ecs.entity().add(rel_2, obj);
+
+    e_3.add<Tag>();
+
+    int32_t count = 0;
+    ecs.each(ecs.pair(flecs::Wildcard, obj), [&](flecs::entity e) {
+        if (e == e_1 || e == e_2 || e == e_3) {
+            count ++;
+        }
+    });
+
+    test_int(count, 3);
+}
+
+void Query_term_each_pair_object_wildcard(void) {
+    flecs::world ecs;
+
+    auto rel = ecs.entity();
+    auto obj_1 = ecs.entity();
+    auto obj_2 = ecs.entity();
+
+    auto e_1 = ecs.entity().add(rel, obj_1);
+    auto e_2 = ecs.entity().add(rel, obj_1);
+    auto e_3 = ecs.entity().add(rel, obj_2);
+
+    e_3.add<Tag>();
+
+    int32_t count = 0;
+    ecs.each(ecs.pair(rel, flecs::Wildcard), [&](flecs::entity e) {
+        if (e == e_1 || e == e_2 || e == e_3) {
+            count ++;
+        }
+    });
+
+    test_int(count, 3);
+}
+
+void Query_default_ctor_no_assign(void) {
+    flecs::query<> f;
+    
+    // Make sure code compiles & works
+    test_assert(true);
+}
+
+void Query_term_get_id(void) {
+    flecs::world ecs;
+
+    auto Foo = ecs.entity();
+    auto Bar = ecs.entity();
+
+    auto q = ecs.query_builder()
+        .term<Position>()
+        .term<Velocity>()
+        .term(Foo, Bar)
+        .build();
+
+    test_int(q.field_count(), 3);
+    
+    flecs::term 
+    t = q.term(0);
+    test_assert(t.id() == ecs.id<Position>());
+    t = q.term(1);
+    test_assert(t.id() == ecs.id<Velocity>());
+    t = q.term(2);
+    test_assert(t.id() == ecs.pair(Foo, Bar));
+}
+
+void Query_term_get_subj(void) {
+    flecs::world ecs;
+
+    auto Foo = ecs.entity();
+    auto Bar = ecs.entity();
+    auto Src = ecs.entity();
+
+    auto q = ecs.query_builder()
+        .term<Position>()
+        .term<Velocity>().src(Src)
+        .term(Foo, Bar)
+        .build();
+
+    test_int(q.field_count(), 3);
+    
+    flecs::term 
+    t = q.term(0);
+    test_assert(t.get_src() == flecs::This);
+    t = q.term(1);
+    test_assert(t.get_src() == Src);
+    t = q.term(2);
+    test_assert(t.get_src() == flecs::This);
+}
+
+void Query_term_get_pred(void) {
+    flecs::world ecs;
+
+    auto Foo = ecs.entity();
+    auto Bar = ecs.entity();
+    auto Src = ecs.entity();
+
+    auto q = ecs.query_builder()
+        .term<Position>()
+        .term<Velocity>().src(Src)
+        .term(Foo, Bar)
+        .build();
+
+    test_int(q.field_count(), 3);
+    
+    flecs::term 
+    t = q.term(0);
+    test_assert(t.get_first() == ecs.id<Position>());
+    t = q.term(1);
+    test_assert(t.get_first() == ecs.id<Velocity>());
+    t = q.term(2);
+    test_assert(t.get_first() == Foo);
+}
+
+void Query_term_get_obj(void) {
+    flecs::world ecs;
+
+    auto Foo = ecs.entity();
+    auto Bar = ecs.entity();
+    auto Src = ecs.entity();
+
+    auto q = ecs.query_builder()
+        .term<Position>()
+        .term<Velocity>().src(Src)
+        .term(Foo, Bar)
+        .build();
+
+    test_int(q.field_count(), 3);
+    
+    flecs::term 
+    t = q.term(0);
+    test_assert(t.get_second() == 0);
+    t = q.term(1);
+    test_assert(t.get_second() == 0);
+    t = q.term(2);
+    test_assert(t.get_second() == Bar);
+}
+
+void Query_get_first(void) {
+    flecs::world ecs;
+
+    struct A {};
+
+    auto e1 = ecs.entity().add<A>();
+    ecs.entity().add<A>();
+    ecs.entity().add<A>();
+
+    auto q = ecs.query<A>();
+
+    auto first = q.iter().first();
+    test_assert(first != 0);
+    test_assert(first == e1);
+}
+
+void Query_get_count_direct(void) {
+    flecs::world ecs;
+
+    struct A {};
+
+    ecs.entity().add<A>();
+    ecs.entity().add<A>();
+    ecs.entity().add<A>();
+
+    auto q = ecs.query<A>();
+
+    test_int(3, q.count());
+}
+
+void Query_get_is_true_direct(void) {
+    flecs::world ecs;
+
+    struct A {};
+    struct B {};
+
+    ecs.entity().add<A>();
+    ecs.entity().add<A>();
+    ecs.entity().add<A>();
+
+    auto q_1 = ecs.query<A>();
+    auto q_2 = ecs.query<B>();
+
+    test_bool(true, q_1.is_true());
+    test_bool(false, q_2.is_true());
+}
+
+void Query_get_first_direct(void) {
+    flecs::world ecs;
+
+    struct A {};
+
+    auto e1 = ecs.entity().add<A>();
+    ecs.entity().add<A>();
+    ecs.entity().add<A>();
+
+    auto q = ecs.query<A>();
+
+    auto first = q.first();
+    test_assert(first != 0);
+    test_assert(first == e1);
+}
+
+void Query_each_w_no_this(void) {
+    flecs::world ecs;
+
+    auto e = ecs.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto f = ecs.query_builder<Position, Velocity>()
+        .term_at(1).src(e)
+        .term_at(2).src(e)
+        .build();
+
+    int32_t count = 0;
+
+    f.each([&](Position& p, Velocity& v) {
+        count ++;
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+        test_int(v.x, 1);
+        test_int(v.y, 2);
+    });
+
+    test_int(count, 1);
+}
+
+void Query_each_w_iter_no_this(void) {
+    flecs::world ecs;
+
+    auto e = ecs.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto f = ecs.query_builder<Position, Velocity>()
+        .term_at(1).src(e)
+        .term_at(2).src(e)
+        .build();
+
+    int32_t count = 0;
+
+    f.each([&](flecs::iter& it, size_t index, Position& p, Velocity& v) {
+        count ++;
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+        test_int(v.x, 1);
+        test_int(v.y, 2);
+        test_int(index, 0);
+        test_int(it.count(), 0);
+    });
+
+    test_int(count, 1);
+}
+
+void Query_invalid_each_w_no_this(void) {
+    install_test_abort();
+
+    flecs::world ecs;
+
+    auto e = ecs.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto f = ecs.query_builder<Position, Velocity>()
+        .term_at(1).src(e)
+        .term_at(2).src(e)
+        .build();
+
+    test_expect_abort();
+
+    f.each([&](flecs::entity e, Position& p, Velocity& v) { });
+}
+
+void Query_named_query(void) {
+    flecs::world ecs;
+
+    auto e1 = ecs.entity().add<Position>();
+    auto e2 = ecs.entity().add<Position>();
+
+    auto q = ecs.query<Position>("my_query");
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e, Position&) {
+        test_assert(e == e1 || e == e2);
+        count ++;
+    });
+    test_int(count, 2);
+
+    flecs::entity qe = q.entity();
+    test_assert(qe != 0);
+    test_str(qe.name(), "my_query");
+}
+
+void Query_named_scoped_query(void) {
+    flecs::world ecs;
+
+    auto e1 = ecs.entity().add<Position>();
+    auto e2 = ecs.entity().add<Position>();
+
+    auto q = ecs.query<Position>("my::query");
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e, Position&) {
+        test_assert(e == e1 || e == e2);
+        count ++;
+    });
+    test_int(count, 2);
+
+    flecs::entity qe = q.entity();
+    test_assert(qe != 0);
+    test_str(qe.name(), "query");
+    test_str(qe.path(), "::my::query");
+}
+
+void Query_set_this_var(void) {
+    flecs::world ecs;
+
+    /* auto e_1 = */ ecs.entity().set<Position>({1, 2});
+    auto e_2 = ecs.entity().set<Position>({3, 4});
+    /* auto e_3 = */ ecs.entity().set<Position>({5, 6});
+
+    auto q = ecs.query<Position>("my::query");
+
+    int32_t count = 0;
+    q.iter().set_var(0, e_2).each([&](flecs::entity e, Position&) {
+        test_assert(e == e_2);
+        count ++;
+    });
+    test_int(count, 1);
+}
+
+void Query_inspect_terms_w_expr(void) {
+    flecs::world ecs;
+
+    flecs::query<> f = ecs.query_builder()
+        .expr("(ChildOf,0)")
+        .build();
+
+    int32_t count = 0;
+    f.each_term([&](flecs::term &term) {
+        test_assert(term.id().is_pair());
+        count ++;
+    });
+
+    test_int(count, 1);
+}
+
+void Query_find(void) {
+    flecs::world ecs;
+
+    /* auto e1 = */ ecs.entity().set<Position>({10, 20});
+    auto e2 = ecs.entity().set<Position>({20, 30});
+
+    auto q = ecs.query<Position>();
+
+    auto r = q.find([](Position& p) {
+        return p.x == 20;
+    });
+
+    test_assert(r == e2);
+}
+
+void Query_find_not_found(void) {
+    flecs::world ecs;
+
+    /* auto e1 = */ ecs.entity().set<Position>({10, 20});
+    /* auto e2 = */ ecs.entity().set<Position>({20, 30});
+
+    auto q = ecs.query<Position>();
+
+    auto r = q.find([](Position& p) {
+        return p.x == 30;
+    });
+
+    test_assert(!r);
+}
+
+void Query_find_w_entity(void) {
+    flecs::world ecs;
+
+    /* auto e1 = */ ecs.entity().set<Position>({10, 20}).set<Velocity>({20, 30});
+    auto e2 = ecs.entity().set<Position>({20, 30}).set<Velocity>({20, 30});
+
+    auto q = ecs.query<Position>();
+
+    auto r = q.find([](flecs::entity e, Position& p) {
+        return p.x == e.get<Velocity>()->x &&
+               p.y == e.get<Velocity>()->y;
+    });
+
+    test_assert(r == e2);
+}
+
+void Query_optional_pair_term(void) {
+    flecs::world ecs;
+
+    ecs.entity()
+        .add<TagA>()
+        .emplace<Position, Tag>(1.0f, 2.0f);
+    ecs.entity()
+        .add<TagA>();
+
+    int32_t with_pair = 0, without_pair = 0;
+
+    auto f = ecs.query_builder<flecs::pair<Position, Tag>*>()
+        .with<TagA>()
+        .build();
+        
+    f.each([&](flecs::entity e, Position* p) {
+        if (p) {
+            with_pair++;
+            test_flt(1.0f, p->x);
+            test_flt(2.0f, p->y);
+        } else {
+            without_pair++;
+        }
+    });
+
+    ecs.progress(1.0);
+
+    test_int(1, with_pair);
+    test_int(1, without_pair);
+}
+
 void Query_action(void) {
     flecs::world world;
 
@@ -754,22 +1304,6 @@ void Query_inspect_terms_w_each(void) {
     });
 
     test_int(count, 3);
-}
-
-void Query_inspect_terms_w_expr(void) {
-    flecs::world ecs;
-
-    flecs::query<> f = ecs.query_builder()
-        .expr("(ChildOf,0)")
-        .build();
-
-    int32_t count = 0;
-    f.each_term([&](flecs::term &term) {
-        test_assert(term.id().is_pair());
-        count ++;
-    });
-
-    test_int(count, 1);
 }
 
 void Query_comp_to_str(void) {
@@ -1607,13 +2141,6 @@ void Query_un_instanced_query_w_base_iter(void) {
     }));
 }
 
-void Query_default_ctor_no_assign(void) {
-    flecs::query<> q;
-
-    // Make sure code compiles & works
-    test_assert(true);
-}
-
 void Query_query_each_from_component(void) {
     flecs::world w;
 
@@ -1767,33 +2294,6 @@ void Query_query_each_w_iter(void) {
     ptr = e2.get<Position>();
     test_int(ptr->x, 21);
     test_int(ptr->y, 31);
-}
-
-void Query_each_w_iter_no_this(void) {
-    flecs::world ecs;
-
-    auto e = ecs.entity()
-        .set<Position>({10, 20})
-        .set<Velocity>({1, 2});
-
-    auto q = ecs.query_builder<Position, Velocity>()
-        .term_at(1).src(e)
-        .term_at(2).src(e)
-        .build();
-
-    int32_t count = 0;
-
-    q.each([&](flecs::iter& it, size_t index, Position& p, Velocity& v) {
-        count ++;
-        test_int(p.x, 10);
-        test_int(p.y, 20);
-        test_int(v.x, 1);
-        test_int(v.y, 2);
-        test_int(index, 0);
-        test_int(it.count(), 0);
-    });
-
-    test_int(count, 1);
 }
 
 void Query_invalid_field_from_each_w_iter(void) {
@@ -2084,154 +2584,6 @@ void Query_not_w_write(void) {
     test_int(1, count);
 }
 
-void Query_get_first(void) {
-    flecs::world ecs;
-
-    struct A {};
-
-    auto e1 = ecs.entity().add<A>();
-    ecs.entity().add<A>();
-    ecs.entity().add<A>();
-
-    auto q = ecs.query<A>();
-
-    auto first = q.iter().first();
-    test_assert(first != 0);
-    test_assert(first == e1);
-}
-
-void Query_get_first_direct(void) {
-    flecs::world ecs;
-
-    struct A {};
-
-    auto e1 = ecs.entity().add<A>();
-    ecs.entity().add<A>();
-    ecs.entity().add<A>();
-
-    auto q = ecs.query<A>();
-
-    auto first = q.first();
-    test_assert(first != 0);
-    test_assert(first == e1);
-}
-
-void Query_get_count_direct(void) {
-    flecs::world ecs;
-
-    struct A {};
-
-    ecs.entity().add<A>();
-    ecs.entity().add<A>();
-    ecs.entity().add<A>();
-
-    auto q = ecs.query<A>();
-
-    test_int(3, q.count());
-}
-
-void Query_get_is_true_direct(void) {
-    flecs::world ecs;
-
-    struct A {};
-    struct B {};
-
-    ecs.entity().add<A>();
-    ecs.entity().add<A>();
-    ecs.entity().add<A>();
-
-    auto q_1 = ecs.query<A>();
-    auto q_2 = ecs.query<B>();
-
-    test_bool(true, q_1.is_true());
-    test_bool(false, q_2.is_true());
-}
-
-void Query_each_w_no_this(void) {
-    flecs::world ecs;
-
-    auto e = ecs.entity()
-        .set<Position>({10, 20})
-        .set<Velocity>({1, 2});
-
-    auto q = ecs.query_builder<Position, Velocity>()
-        .term_at(1).src(e)
-        .term_at(2).src(e)
-        .build();
-
-    int32_t count = 0;
-
-    q.each([&](Position& p, Velocity& v) {
-        count ++;
-        test_int(p.x, 10);
-        test_int(p.y, 20);
-        test_int(v.x, 1);
-        test_int(v.y, 2);
-    });
-
-    test_int(count, 1);
-}
-
-void Query_invalid_each_w_no_this(void) {
-    install_test_abort();
-
-    flecs::world ecs;
-
-    auto e = ecs.entity()
-        .set<Position>({10, 20})
-        .set<Velocity>({1, 2});
-
-    auto q = ecs.query_builder<Position, Velocity>()
-        .term_at(1).src(e)
-        .term_at(2).src(e)
-        .build();
-
-    test_expect_abort();
-
-    q.each([&](flecs::entity e, Position& p, Velocity& v) { });
-}
-
-void Query_named_query(void) {
-    flecs::world ecs;
-
-    auto e1 = ecs.entity().add<Position>();
-    auto e2 = ecs.entity().add<Position>();
-
-    auto q = ecs.query<Position>("my_query");
-
-    int32_t count = 0;
-    q.each([&](flecs::entity e, Position&) {
-        test_assert(e == e1 || e == e2);
-        count ++;
-    });
-    test_int(count, 2);
-
-    flecs::entity qe = q.entity();
-    test_assert(qe != 0);
-    test_str(qe.name(), "my_query");
-}
-
-void Query_named_scoped_query(void) {
-    flecs::world ecs;
-
-    auto e1 = ecs.entity().add<Position>();
-    auto e2 = ecs.entity().add<Position>();
-
-    auto q = ecs.query<Position>("my::query");
-
-    int32_t count = 0;
-    q.each([&](flecs::entity e, Position&) {
-        test_assert(e == e1 || e == e2);
-        count ++;
-    });
-    test_int(count, 2);
-
-    flecs::entity qe = q.entity();
-    test_assert(qe != 0);
-    test_str(qe.name(), "query");
-    test_str(qe.path(), "::my::query");
-}
-
 void Query_instanced_nested_query_w_iter(void) {
     flecs::world ecs;
 
@@ -2417,137 +2769,4 @@ void Query_iter_get_pair_w_id(void) {
     });
 
     test_int(count, 1);
-}
-
-void Query_find(void) {
-    flecs::world ecs;
-
-    /* auto e1 = */ ecs.entity().set<Position>({10, 20});
-    auto e2 = ecs.entity().set<Position>({20, 30});
-
-    auto q = ecs.query<Position>();
-
-    auto r = q.find([](Position& p) {
-        return p.x == 20;
-    });
-
-    test_assert(r == e2);
-}
-
-void Query_find_not_found(void) {
-    flecs::world ecs;
-
-    /* auto e1 = */ ecs.entity().set<Position>({10, 20});
-    /* auto e2 = */ ecs.entity().set<Position>({20, 30});
-
-    auto q = ecs.query<Position>();
-
-    auto r = q.find([](Position& p) {
-        return p.x == 30;
-    });
-
-    test_assert(!r);
-}
-
-void Query_find_w_entity(void) {
-    flecs::world ecs;
-
-    /* auto e1 = */ ecs.entity().set<Position>({10, 20}).set<Velocity>({20, 30});
-    auto e2 = ecs.entity().set<Position>({20, 30}).set<Velocity>({20, 30});
-
-    auto q = ecs.query<Position>();
-
-    auto r = q.find([](flecs::entity e, Position& p) {
-        return p.x == e.get<Velocity>()->x &&
-               p.y == e.get<Velocity>()->y;
-    });
-
-    test_assert(r == e2);
-}
-
-void Query_optional_pair_term(void) {
-    flecs::world ecs;
-
-    ecs.entity()
-        .add<TagA>()
-        .emplace<Position, Tag>(1.0f, 2.0f);
-    ecs.entity()
-        .add<TagA>();
-
-    int32_t with_pair = 0, without_pair = 0;
-
-    auto f = ecs.query_builder<flecs::pair<Position, Tag>*>()
-        .with<TagA>()
-        .build();
-        
-    f.each([&](flecs::entity e, Position* p) {
-        if (p) {
-            with_pair++;
-            test_flt(1.0f, p->x);
-            test_flt(2.0f, p->y);
-        } else {
-            without_pair++;
-        }
-    });
-
-    ecs.progress(1.0);
-
-    test_int(1, with_pair);
-    test_int(1, without_pair);
-}
-
-void Query_term_each_component(void) {
-    // Implement testcase
-}
-
-void Query_term_each_tag(void) {
-    // Implement testcase
-}
-
-void Query_term_each_id(void) {
-    // Implement testcase
-}
-
-void Query_term_each_pair_type(void) {
-    // Implement testcase
-}
-
-void Query_term_each_pair_id(void) {
-    // Implement testcase
-}
-
-void Query_term_each_pair_relation_wildcard(void) {
-    // Implement testcase
-}
-
-void Query_term_each_pair_object_wildcard(void) {
-    // Implement testcase
-}
-
-void Query_term_get_id(void) {
-    // Implement testcase
-}
-
-void Query_term_get_subj(void) {
-    // Implement testcase
-}
-
-void Query_term_get_pred(void) {
-    // Implement testcase
-}
-
-void Query_term_get_obj(void) {
-    // Implement testcase
-}
-
-void Query_named_filter(void) {
-    // Implement testcase
-}
-
-void Query_named_scoped_filter(void) {
-    // Implement testcase
-}
-
-void Query_set_this_var(void) {
-    // Implement testcase
 }

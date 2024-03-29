@@ -4,6 +4,10 @@ struct Other {
     int32_t value;
 };
 
+enum Color {
+    Red, Green, Blue
+};
+
 void QueryBuilder_builder_assign_same_type(void) {
     flecs::world ecs;
 
@@ -129,6 +133,446 @@ void QueryBuilder_1_type(void) {
     });
     
     test_int(count, 1);
+}
+
+void QueryBuilder_2_types(void) {
+    flecs::world ecs;
+
+    auto e1 = ecs.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    ecs.entity().set<Velocity>({10, 20});
+
+    auto r = ecs.query<Position, const Velocity>();
+
+    int count = 0;
+    r.each([&](flecs::entity e, Position& p, const Velocity& v) {
+        count ++;
+        test_assert(e == e1);
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+
+        test_int(v.x, 1);
+        test_int(v.y, 2);
+    });
+
+    test_int(count, 1);
+
+    r.destruct();
+}
+
+void QueryBuilder_id_term(void) {
+    flecs::world ecs;
+
+    auto Tag = ecs.entity();
+
+    auto e1 = ecs.entity()
+        .add(Tag);
+
+    ecs.entity().set<Velocity>({10, 20});
+
+    auto r = ecs.query_builder()
+        .term(Tag)
+        .build();
+
+    int count = 0;
+    r.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e1);
+    });
+
+    test_int(count, 1);
+
+    r.destruct();
+}
+
+void QueryBuilder_type_term(void) {
+    flecs::world ecs;
+
+    auto e1 = ecs.entity()
+        .set<Position>({10, 20});
+
+    ecs.entity().set<Velocity>({10, 20});
+
+    auto r = ecs.query_builder()
+        .term<Position>()
+        .build();
+
+    int count = 0;
+    r.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e1);
+    });
+
+    test_int(count, 1);
+
+    r.destruct();
+}
+
+void QueryBuilder_id_pair_term(void) {
+    flecs::world ecs;
+
+    auto Likes = ecs.entity();
+    auto Apples = ecs.entity();
+    auto Pears = ecs.entity();
+
+    auto e1 = ecs.entity()
+        .add(Likes, Apples);
+
+    ecs.entity()
+        .add(Likes, Pears);
+
+    auto r = ecs.query_builder()
+        .term(Likes, Apples)
+        .build();
+
+    int count = 0;
+    r.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e1);
+    });
+
+    test_int(count, 1);
+
+    r.destruct();
+}
+
+void QueryBuilder_id_pair_wildcard_term(void) {
+    flecs::world ecs;
+
+    auto Likes = ecs.entity();
+    auto Apples = ecs.entity();
+    auto Pears = ecs.entity();
+
+    auto e1 = ecs.entity()
+        .add(Likes, Apples);
+
+    auto e2 = ecs.entity()
+        .add(Likes, Pears);
+
+    auto r = ecs.query_builder()
+        .term(Likes, flecs::Wildcard)
+        .build();
+
+    int count = 0;
+    r.each([&](flecs::iter& it, size_t index) {
+        if (it.entity(index) == e1) {
+            test_assert(it.id(1) == ecs.pair(Likes, Apples));
+            count ++;
+        }
+        if (it.entity(index) == e2) {
+            test_assert(it.id(1) == ecs.pair(Likes, Pears));
+            count ++;
+        }
+    });
+    test_int(count, 2);
+
+    r.destruct();
+}
+
+void QueryBuilder_type_pair_term(void) {
+    flecs::world ecs;
+
+    struct Likes { };
+    struct Apples { };
+    struct Pears { };
+
+    auto e1 = ecs.entity()
+        .add<Likes, Apples>();
+
+    auto e2 = ecs.entity()
+        .add<Likes, Pears>();
+
+    auto r = ecs.query_builder()
+        .term<Likes>(flecs::Wildcard)
+        .build();
+
+    int count = 0;
+    r.each([&](flecs::iter& it, size_t index) {
+        if (it.entity(index) == e1) {
+            test_assert((it.id(1) == ecs.pair<Likes, Apples>()));
+            count ++;
+        }
+        if (it.entity(index) == e2) {
+            test_assert((it.id(1) == ecs.pair<Likes, Pears>()));
+            count ++;
+        }
+    });
+    test_int(count, 2);
+
+    r.destruct();
+}
+
+void QueryBuilder_pair_term_w_var(void) {
+    flecs::world ecs;
+
+    struct Likes { };
+    struct Apples { };
+    struct Pears { };
+
+    auto e1 = ecs.entity()
+        .add<Likes, Apples>();
+
+    auto e2 = ecs.entity()
+        .add<Likes, Pears>();
+
+    auto r = ecs.query_builder()
+        .term<Likes>().second().var("Food")
+        .build();
+
+    int food_var = r.find_var("Food");
+
+    int count = 0;
+    r.each([&](flecs::iter& it, size_t index) {
+        if (it.entity(index) == e1) {
+            test_assert((it.id(1) == ecs.pair<Likes, Apples>()));
+            test_assert(it.get_var("Food") == ecs.id<Apples>());
+            test_assert(it.get_var(food_var) == ecs.id<Apples>());
+            count ++;
+        }
+        if (it.entity(index) == e2) {
+            test_assert((it.id(1) == ecs.pair<Likes, Pears>()));
+            test_assert(it.get_var("Food") == ecs.id<Pears>());
+            test_assert(it.get_var(food_var) == ecs.id<Pears>());
+            count ++;
+        }
+    });
+    test_int(count, 2);
+
+    r.destruct();
+}
+
+void QueryBuilder_2_pair_terms_w_var(void) {
+    flecs::world ecs;
+
+    struct Likes { };
+    struct Eats { };
+    struct Apples { };
+    struct Pears { };
+
+    auto Bob = ecs.entity()
+        .add<Eats, Apples>();
+
+    auto Alice = ecs.entity()
+        .add<Eats, Pears>()
+        .add<Likes>(Bob);
+
+    Bob.add<Likes>(Alice);
+
+    auto r = ecs.query_builder()
+        .term<Eats>().second().var("Food")
+        .term<Likes>().second().var("Person")
+        .build();
+
+    int food_var = r.find_var("Food");
+    int person_var = r.find_var("Person");
+
+    int count = 0;
+    r.each([&](flecs::iter& it, size_t index) {
+        if (it.entity(index) == Bob) {
+            test_assert((it.id(1) == ecs.pair<Eats, Apples>()));
+            test_assert(it.get_var("Food") == ecs.id<Apples>());
+            test_assert(it.get_var(food_var) == ecs.id<Apples>());
+
+            test_assert((it.id(2) == ecs.pair<Likes>(Alice)));
+            test_assert(it.get_var("Person") == Alice);
+            test_assert(it.get_var(person_var) == Alice);
+            count ++;
+        }
+        if (it.entity(index) == Alice) {
+            test_assert((it.id(1) == ecs.pair<Eats, Pears>()));
+            test_assert(it.get_var("Food") == ecs.id<Pears>());
+            test_assert(it.get_var(food_var) == ecs.id<Pears>());
+
+            test_assert((it.id(2) == ecs.pair<Likes>(Bob)));
+            test_assert(it.get_var("Person") == Bob);
+            test_assert(it.get_var(person_var) == Bob);
+            count ++;
+        }
+    });
+    test_int(count, 2);
+
+    r.destruct();
+}
+
+void QueryBuilder_set_var(void) {
+    flecs::world ecs;
+
+    struct Likes { };
+    auto Apples = ecs.entity();
+    auto Pears = ecs.entity();
+
+    ecs.entity()
+        .add<Likes>(Apples);
+
+    auto e2 = ecs.entity()
+        .add<Likes>(Pears);
+
+    auto r = ecs.query_builder()
+        .term<Likes>().second().var("Food")
+        .build();
+
+    int food_var = r.find_var("Food");
+
+    int count = 0;
+    r.iter()
+        .set_var(food_var, Pears)
+        .each([&](flecs::iter& it, size_t index) {
+            test_assert(it.entity(index) == e2);
+            test_assert((it.id(1) == ecs.pair<Likes>(Pears)));
+            test_assert(it.get_var("Food") == Pears);
+            test_assert(it.get_var(food_var) == Pears);
+            count ++;
+        });
+
+    test_int(count, 1);
+
+    r.destruct();
+}
+
+void QueryBuilder_set_2_vars(void) {
+    flecs::world ecs;
+
+    struct Likes { };
+    struct Eats { };
+    auto Apples = ecs.entity();
+    auto Pears = ecs.entity();
+
+    auto Bob = ecs.entity()
+        .add<Eats>(Apples);
+
+    auto Alice = ecs.entity()
+        .add<Eats>(Pears)
+        .add<Likes>(Bob);
+
+    Bob.add<Likes>(Alice);
+
+    auto r = ecs.query_builder()
+        .term<Eats>().second().var("Food")
+        .term<Likes>().second().var("Person")
+        .build();
+
+    int food_var = r.find_var("Food");
+    int person_var = r.find_var("Person");
+
+    int count = 0;
+    r.iter()
+        .set_var(food_var, Pears)
+        .set_var(person_var, Bob)
+        .each([&](flecs::iter& it, size_t index) {
+            test_assert(it.entity(index) == Alice);
+            test_assert((it.id(1) == ecs.pair<Eats>(Pears)));
+            test_assert((it.id(2) == ecs.pair<Likes>(Bob)));
+            test_assert(it.get_var("Food") == Pears);
+            test_assert(it.get_var(food_var) == Pears);
+            test_assert(it.get_var("Person") == Bob);
+            test_assert(it.get_var(person_var) == Bob);
+            count ++;
+        });
+    test_int(count, 1);
+
+    r.destruct();
+}
+
+void QueryBuilder_set_var_by_name(void) {
+    flecs::world ecs;
+
+    struct Likes { };
+    auto Apples = ecs.entity();
+    auto Pears = ecs.entity();
+
+    ecs.entity()
+        .add<Likes>(Apples);
+
+    auto e2 = ecs.entity()
+        .add<Likes>(Pears);
+
+    auto r = ecs.query_builder()
+        .term<Likes>().second().var("Food")
+        .build();
+
+    int count = 0;
+    r.iter()
+        .set_var("Food", Pears)
+        .each([&](flecs::iter& it, size_t index) {
+            test_assert(it.entity(index) == e2);
+            test_assert((it.id(1) == ecs.pair<Likes>(Pears)));
+            count ++;
+        });
+    test_int(count, 1);
+
+    r.destruct();
+}
+
+void QueryBuilder_set_2_vars_by_name(void) {
+    flecs::world ecs;
+
+    struct Likes { };
+    struct Eats { };
+    auto Apples = ecs.entity();
+    auto Pears = ecs.entity();
+
+    auto Bob = ecs.entity()
+        .add<Eats>(Apples);
+
+    auto Alice = ecs.entity()
+        .add<Eats>(Pears)
+        .add<Likes>(Bob);
+
+    Bob.add<Likes>(Alice);
+
+    auto r = ecs.query_builder()
+        .term<Eats>().second().var("Food")
+        .term<Likes>().second().var("Person")
+        .build();
+
+    int food_var = r.find_var("Food");
+    int person_var = r.find_var("Person");
+
+    int count = 0;
+    r.iter()
+        .set_var("Food", Pears)
+        .set_var("Person", Bob)
+        .each([&](flecs::iter& it, size_t index) {
+            test_assert(it.entity(index) == Alice);
+            test_assert((it.id(1) == ecs.pair<Eats>(Pears)));
+            test_assert((it.id(2) == ecs.pair<Likes>(Bob)));
+            test_assert(it.get_var("Food") == Pears);
+            test_assert(it.get_var(food_var) == Pears);
+            test_assert(it.get_var("Person") == Bob);
+            test_assert(it.get_var(person_var) == Bob);
+            count ++;
+        });
+    test_int(count, 1);
+
+    r.destruct();
+}
+
+void QueryBuilder_expr_w_var(void) {
+    flecs::world ecs;
+
+    auto rel = ecs.entity("Rel");
+    auto obj = ecs.entity();
+    auto e = ecs.entity().add(rel, obj);
+
+    auto r = ecs.query_builder()
+        .expr("(Rel, $X)")
+        .build();
+
+    int x_var = r.find_var("X");
+    test_assert(x_var != -1);
+
+    int32_t count = 0;
+    r.each([&](flecs::iter& it, size_t index) {
+        test_assert(it.entity(index) == e);
+        test_assert(it.pair(1).second() == obj);
+        count ++;
+    });
+
+    test_int(count, 1);
+
+    r.destruct();
 }
 
 void QueryBuilder_add_1_type(void) {
@@ -2086,250 +2530,1801 @@ void QueryBuilder_iter_w_stage(void) {
     test_int(count, 1);
 }
 
+template<typename ... Components>
+struct QueryWrapper
+{
+    QueryWrapper(flecs::query<Components...> f) : f_(f) {}
+    flecs::query<Components...> f_;
+};
+
 void QueryBuilder_builder_force_assign_operator(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    auto e1 = ecs.entity().set<Position>({10, 20});
+
+    auto f = ecs.entity().emplace<QueryWrapper<>>(
+        ecs.query_builder().term<Position>().build()
+    );
+
+    int32_t count = 0;
+    f.get<QueryWrapper<>>()->f_.each([&](flecs::entity e) {
+        test_assert(e == e1);
+        count ++;
+    });
 }
 
-void QueryBuilder_filter_as_arg(void) {
-    // Implement testcase
+static
+int query_arg(flecs::query<Self> f) {
+    int32_t count = 0;
+
+    f.each([&](flecs::entity e, Self& s) {
+        test_assert(e == s.value);
+        count ++;
+    });
+
+    return count;
 }
 
-void QueryBuilder_filter_as_move_arg(void) {
-    // Implement testcase
+void QueryBuilder_query_as_arg(void) {
+    flecs::world ecs;
+
+    auto f = ecs.query<Self>();
+
+    auto e = ecs.entity();
+    e.set<Self>({e});
+
+    e = ecs.entity();
+    e.set<Self>({e});
+
+    e = ecs.entity();
+    e.set<Self>({e});
+
+    test_int(query_arg(f), 3);
 }
 
-void QueryBuilder_filter_as_return(void) {
-    // Implement testcase
+static
+int query_move_arg(flecs::query<Self>&& f) {
+    int32_t count = 0;
+
+    f.each([&](flecs::entity e, Self& s) {
+        test_assert(e == s.value);
+        count ++;
+    });
+
+    return count;
 }
 
-void QueryBuilder_filter_copy(void) {
-    // Implement testcase
+void QueryBuilder_query_as_move_arg(void) {
+    flecs::world ecs;
+
+    auto f = ecs.query<Self>();
+
+    auto e = ecs.entity();
+    e.set<Self>({e});
+
+    e = ecs.entity();
+    e.set<Self>({e});
+
+    e = ecs.entity();
+    e.set<Self>({e});
+
+    test_int(query_move_arg(ecs.query<Self>()), 3);
 }
 
-void QueryBuilder_world_each_filter_1_component(void) {
-    // Implement testcase
+static
+flecs::query<Self> query_return(flecs::world& ecs) {
+    return ecs.query<Self>();
 }
 
-void QueryBuilder_world_each_filter_2_components(void) {
-    // Implement testcase
+void QueryBuilder_query_as_return(void) {
+    flecs::world ecs;
+
+    auto e = ecs.entity();
+    e.set<Self>({e});
+
+    e = ecs.entity();
+    e.set<Self>({e});
+
+    e = ecs.entity();
+    e.set<Self>({e});
+
+    auto f = query_return(ecs);
+
+    int32_t count = 0;
+
+    f.each([&](flecs::entity e, Self& s) {
+        test_assert(e == s.value);
+        count ++;
+    });
+
+    test_int(count, 3);
 }
 
-void QueryBuilder_world_each_filter_1_component_no_entity(void) {
-    // Implement testcase
+void QueryBuilder_query_copy(void) {
+    flecs::world ecs;
+
+    auto e = ecs.entity();
+    e.set<Self>({e});
+
+    e = ecs.entity();
+    e.set<Self>({e});
+
+    e = ecs.entity();
+    e.set<Self>({e});
+
+    auto f = ecs.query<Self>();
+
+    auto f_2 = f;
+
+    int32_t count = 0;
+
+    f_2.each([&](flecs::entity e, Self& s) {
+        test_assert(e == s.value);
+        count ++;
+    });
+
+    test_int(count, 3);
 }
 
-void QueryBuilder_world_each_filter_2_components_no_entity(void) {
-    // Implement testcase
+void QueryBuilder_world_each_query_1_component(void) {
+    flecs::world ecs;
+
+    auto e = ecs.entity();
+    e.set<Self>({e});
+
+    e = ecs.entity();
+    e.set<Self>({e});
+
+    e = ecs.entity();
+    e.set<Self>({e});
+
+    int32_t count = 0;
+
+    ecs.each([&](flecs::entity e, Self& s) {
+        test_assert(e == s.value);
+        count ++;
+    });
+
+    test_int(count, 3);
+}
+
+void QueryBuilder_world_each_query_2_components(void) {
+    flecs::world ecs;
+
+    auto e = ecs.entity();
+    e.set<Self>({e})
+     .set<Position>({10, 20});
+
+    e = ecs.entity();
+    e.set<Self>({e})
+        .set<Position>({10, 20});
+
+    e = ecs.entity();
+    e.set<Self>({e})
+     .set<Position>({10, 20});
+
+    int32_t count = 0;
+
+    ecs.each([&](flecs::entity e, Self& s, Position& p) {
+        test_assert(e == s.value);
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+        count ++;
+    });
+
+    test_int(count, 3);
+}
+
+void QueryBuilder_world_each_query_1_component_no_entity(void) {
+    flecs::world ecs;
+
+    ecs.entity()
+        .set<Position>({10, 20});
+
+    ecs.entity()
+        .set<Position>({10, 20});
+
+    ecs.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    int32_t count = 0;
+
+    ecs.each([&](Position& p) {
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+        count ++;
+    });
+
+    test_int(count, 3);
+}
+
+void QueryBuilder_world_each_query_2_components_no_entity(void) {
+    flecs::world ecs;
+
+    ecs.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    ecs.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    ecs.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    ecs.entity()
+        .set<Position>({3, 5});
+
+    ecs.entity()
+        .set<Velocity>({20, 40});
+
+    int32_t count = 0;
+
+    ecs.each([&](Position& p, Velocity& v) {
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+        test_int(v.x, 1);
+        test_int(v.y, 2);        
+        count ++;
+    });
+
+    test_int(count, 3);
 }
 
 void QueryBuilder_term_after_arg(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    auto e_1 = ecs.entity()
+        .add<TagA>()
+        .add<TagB>()
+        .add<TagC>();
+
+    ecs.entity()
+        .add<TagA>()
+        .add<TagB>();
+
+    auto f = ecs.query_builder<TagA, TagB>()
+        .term_at(1).src(flecs::This) // dummy
+        .term<TagC>()
+        .build();
+
+    test_int(f.field_count(), 3);
+
+    int count = 0;
+    f.each([&](flecs::entity e, TagA, TagB) {
+        test_assert(e == e_1);
+        count ++;
+    });
+
+    test_int(count, 1);
 }
 
 void QueryBuilder_name_arg(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    auto e = ecs.entity("Foo").set<Position>({10, 20});
+
+    auto f = ecs.query_builder<Position>()
+        .term_at(1).src().name("Foo")
+        .build();
+
+    int32_t count = 0;
+    f.iter([&](flecs::iter& it, Position* p) {
+        count ++;
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        test_assert(it.src(1) == e);
+    });
+
+    test_int(count, 1);
 }
 
 void QueryBuilder_const_in_term(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    ecs.entity().set<Position>({10, 20});
+
+    auto f = ecs.query_builder<>()
+        .term<const Position>()
+        .build();
+
+    int32_t count = 0;
+    f.iter([&](flecs::iter& it) {
+        auto p = it.field<const Position>(1);
+        test_assert(it.is_readonly(1));
+        for (auto i : it) {
+            count ++;
+            test_int(p[i].x, 10);
+            test_int(p[i].y, 20);
+        }
+    });
+
+    test_int(count, 1);
 }
 
 void QueryBuilder_const_optional(void) {
-    // Implement testcase
+    flecs::world ecs;
+	
+	ecs.entity().set<Position>({10, 20}).add<TagA>();
+    ecs.entity().add<TagA>();
+
+    auto f = ecs.query_builder<TagA, const Position*>().build();
+	
+    int32_t count = 0, set_count = 0;
+    f.iter([&](flecs::iter& it) {
+        test_int(it.count(), 1);
+        if (it.is_set(2)) {
+            auto p = it.field<const Position>(2);
+            test_assert(it.is_readonly(2));
+            test_int(p->x, 10);
+            test_int(p->y, 20);
+            set_count ++;
+        }
+        count++;
+	});
+	
+    test_int(count, 2);
+    test_int(set_count, 1);
 }
 
 void QueryBuilder_2_terms_w_expr(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    auto a = ecs.entity("A");
+    auto b = ecs.entity("B");
+
+    auto e1 = ecs.entity().add(a).add(b);
+
+    auto f = ecs.query_builder()
+        .expr("A, B")
+        .build();
+    
+    test_int(f.field_count(), 2);
+
+    int32_t count = 0;
+    f.each([&](flecs::iter& it, size_t index) {
+        if (it.entity(index) == e1) {
+            test_assert(it.id(1) == a);
+            test_assert(it.id(2) == b);
+            count ++;
+        }
+    });
+
+    test_int(count, 1);
 }
 
 void QueryBuilder_assert_on_uninitialized_term(void) {
-    // Implement testcase
+    install_test_abort();
+
+    flecs::world ecs;
+
+    ecs.entity("A");
+    ecs.entity("B");
+
+    test_expect_abort();
+
+    auto f = ecs.query_builder()
+        .term()
+        .term()
+        .build();
 }
 
 void QueryBuilder_operator_shortcuts(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    flecs::entity a = ecs.entity();
+    flecs::entity b = ecs.entity();
+    flecs::entity c = ecs.entity();
+    flecs::entity d = ecs.entity();
+    flecs::entity e = ecs.entity();
+    flecs::entity f = ecs.entity();
+    flecs::entity g = ecs.entity();
+    flecs::entity h = ecs.entity();
+
+    auto query = ecs.query_builder()
+        .term(a).and_()
+        .term(b).or_()
+        .term(c)
+        .term(d).not_()
+        .term(e).optional()
+        .term(f).and_from()
+        .term(g).or_from()
+        .term(h).not_from()
+        .build();
+
+    auto t = query.term(0);
+    test_int(t.id(), a);
+    test_int(t.oper(), flecs::And);
+
+    t = query.term(1);
+    test_int(t.id(), b);
+    test_int(t.oper(), flecs::Or);
+
+    t = query.term(2);
+    test_int(t.id(), c);
+    test_int(t.oper(), flecs::And);
+
+    t = query.term(3);
+    test_int(t.id(), d);
+    test_int(t.oper(), flecs::Not);
+
+    t = query.term(4);
+    test_int(t.id(), e);
+    test_int(t.oper(), flecs::Optional);
+
+    t = query.term(5);
+    test_int(t.id(), f);
+    test_int(t.oper(), flecs::AndFrom);
+
+    t = query.term(6);
+    test_int(t.id(), g);
+    test_int(t.oper(), flecs::OrFrom);
+
+    t = query.term(7);
+    test_int(t.id(), h);
+    test_int(t.oper(), flecs::NotFrom);
 }
 
 void QueryBuilder_inout_shortcuts(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    flecs::entity a = ecs.entity();
+    flecs::entity b = ecs.entity();
+    flecs::entity c = ecs.entity();
+    flecs::entity d = ecs.entity();
+
+    auto query = ecs.query_builder()
+        .term(a).in()
+        .term(b).out()
+        .term(c).inout()
+        .term(d).inout_none()
+        .build();
+
+    auto t = query.term(0);
+    test_int(t.id(), a);
+    test_int(t.inout(), flecs::In);
+
+    t = query.term(1);
+    test_int(t.id(), b);
+    test_int(t.inout(), flecs::Out);
+
+    t = query.term(2);
+    test_int(t.id(), c);
+    test_int(t.inout(), flecs::InOut);
+
+    t = query.term(3);
+    test_int(t.id(), d);
+    test_int(t.inout(), flecs::InOutNone);
 }
 
 void QueryBuilder_iter_column_w_const_as_array(void) {
-    // Implement testcase
+    flecs::world world;
+
+    auto f = world.query<Position>();
+
+    auto e1 = world.entity().set<Position>({10, 20});
+    auto e2 = world.entity().set<Position>({20, 30});
+
+    int32_t count = 0;
+    f.iter([&](flecs::iter& it) {
+        const auto p = it.field<Position>(1);
+        for (auto i : it) {
+            p[i].x += 1;
+            p[i].y += 2;
+
+            count ++;
+        }
+    });
+
+    test_int(count, 2);
+
+    const Position *p = e1.get<Position>();
+    test_int(p->x, 11);
+    test_int(p->y, 22);
+
+    p = e2.get<Position>();
+    test_int(p->x, 21);
+    test_int(p->y, 32);
 }
 
 void QueryBuilder_iter_column_w_const_as_ptr(void) {
-    // Implement testcase
+    flecs::world world;
+
+    auto f = world.query<Position>();
+    
+    auto base = world.prefab().set<Position>({10, 20});
+    world.entity().is_a(base);
+    world.entity().is_a(base);
+
+    int32_t count = 0;
+    f.iter([&](flecs::iter& it) {
+        const auto p = it.field<Position>(1);
+        for (size_t i = 0; i < it.count(); i ++) {
+            test_int(p->x, 10);
+            test_int(p->y, 20);
+            count ++;
+        }
+    });
+
+    test_int(count, 2);
 }
 
 void QueryBuilder_iter_column_w_const_deref(void) {
-    // Implement testcase
+    flecs::world world;
+
+    auto f = world.query<Position>();
+    
+    auto base = world.prefab().set<Position>({10, 20});
+    world.entity().is_a(base);
+    world.entity().is_a(base);
+
+    int32_t count = 0;
+    f.iter([&](flecs::iter& it) {
+        const auto p = it.field<Position>(1);
+        Position pv = *p;
+        for (size_t i = 0; i < it.count(); i ++) {
+            test_int(pv.x, 10);
+            test_int(pv.y, 20);
+            count ++;
+        }
+    });
+
+    test_int(count, 2);
 }
 
 void QueryBuilder_with_id(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    flecs::query<> q = 
+        ecs.query_builder()
+            .with(ecs.id<Position>())
+            .with(ecs.id<Velocity>())
+            .build();
+
+    auto e1 = ecs.entity().add<Position>().add<Velocity>();
+    ecs.entity().add<Position>();
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e1);
+    });
+    
+    test_int(count, 1);
 }
 
 void QueryBuilder_with_name(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    ecs.component<Velocity>();
+
+    flecs::query<> q = 
+        ecs.query_builder()
+            .with<Position>()
+            .with("Velocity")
+            .build();
+
+    auto e1 = ecs.entity().add<Position>().add<Velocity>();
+    ecs.entity().add<Position>();
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e1);
+    });
+    
+    test_int(count, 1);
 }
 
 void QueryBuilder_with_component(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    flecs::query<> q = 
+        ecs.query_builder()
+            .with<Position>()
+            .with<Velocity>()
+            .build();
+
+    auto e1 = ecs.entity().add<Position>().add<Velocity>();
+    ecs.entity().add<Position>();
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e1);
+    });
+    
+    test_int(count, 1);
 }
 
 void QueryBuilder_with_pair_id(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    flecs::entity Likes = ecs.entity();
+    flecs::entity Apples = ecs.entity();
+    flecs::entity Pears = ecs.entity();
+
+    flecs::query<> q = 
+        ecs.query_builder()
+            .with<Position>()
+            .with(Likes, Apples)
+            .build();
+
+    auto e1 = ecs.entity().add<Position>().add(Likes, Apples);
+    ecs.entity().add<Position>().add(Likes, Pears);
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e1);
+    });
+    
+    test_int(count, 1);
 }
 
 void QueryBuilder_with_pair_name(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    flecs::entity Likes = ecs.entity("Likes");
+    flecs::entity Apples = ecs.entity("Apples");
+    flecs::entity Pears = ecs.entity("Pears");
+
+    flecs::query<> q = 
+        ecs.query_builder()
+            .with<Position>()
+            .with("Likes", "Apples")
+            .build();
+
+    auto e1 = ecs.entity().add<Position>().add(Likes, Apples);
+    ecs.entity().add<Position>().add(Likes, Pears);
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e1);
+    });
+    
+    test_int(count, 1);
 }
 
 void QueryBuilder_with_pair_components(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    struct Likes { };
+    struct Apples { };
+    struct Pears { };
+
+    flecs::query<> q = 
+        ecs.query_builder()
+            .with<Position>()
+            .with<Likes, Apples>()
+            .build();
+
+    auto e1 = ecs.entity().add<Position>().add<Likes, Apples>();
+    ecs.entity().add<Position>().add<Likes, Pears>();
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e1);
+    });
+    
+    test_int(count, 1);
 }
 
 void QueryBuilder_with_pair_component_id(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    struct Likes { };
+    flecs::entity Apples = ecs.entity();
+    flecs::entity Pears = ecs.entity();
+
+    flecs::query<> q = 
+        ecs.query_builder()
+            .with<Position>()
+            .with<Likes>(Apples)
+            .build();
+
+    auto e1 = ecs.entity().add<Position>().add<Likes>(Apples);
+    ecs.entity().add<Position>().add<Likes>(Pears);
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e1);
+    });
+    
+    test_int(count, 1);
 }
 
 void QueryBuilder_with_pair_component_name(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    struct Likes { };
+    flecs::entity Apples = ecs.entity("Apples");
+    flecs::entity Pears = ecs.entity("Pears");
+
+    flecs::query<> q = 
+        ecs.query_builder()
+            .with<Position>()
+            .with<Likes>("Apples")
+            .build();
+
+    auto e1 = ecs.entity().add<Position>().add<Likes>(Apples);
+    ecs.entity().add<Position>().add<Likes>(Pears);
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e1);
+    });
+    
+    test_int(count, 1);
 }
 
 void QueryBuilder_with_enum(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    flecs::query<> q = 
+        ecs.query_builder()
+            .with<Position>()
+            .with(Green)
+            .build();
+
+    auto e1 = ecs.entity().add<Position>().add(Green);
+    ecs.entity().add<Position>().add(Red);
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e1);
+    });
+    
+    test_int(count, 1);
 }
 
 void QueryBuilder_without_id(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    flecs::query<> q = 
+        ecs.query_builder()
+            .with(ecs.id<Position>())
+            .without(ecs.id<Velocity>())
+            .build();
+
+    ecs.entity().add<Position>().add<Velocity>();
+    auto e2 = ecs.entity().add<Position>();
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e2);
+    });
+    
+    test_int(count, 1);
 }
 
 void QueryBuilder_without_name(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    ecs.component<Velocity>();
+
+    flecs::query<> q = 
+        ecs.query_builder()
+            .with(ecs.id<Position>())
+            .without("Velocity")
+            .build();
+
+    ecs.entity().add<Position>().add<Velocity>();
+    auto e2 = ecs.entity().add<Position>();
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e2);
+    });
+    
+    test_int(count, 1);
 }
 
 void QueryBuilder_without_component(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    flecs::query<> q = 
+        ecs.query_builder()
+            .with<Position>()
+            .without<Velocity>()
+            .build();
+
+    ecs.entity().add<Position>().add<Velocity>();
+    auto e2 = ecs.entity().add<Position>();
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e2);
+    });
+    
+    test_int(count, 1);
 }
 
 void QueryBuilder_without_pair_id(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    flecs::entity Likes = ecs.entity();
+    flecs::entity Apples = ecs.entity();
+    flecs::entity Pears = ecs.entity();
+
+    flecs::query<> q = 
+        ecs.query_builder()
+            .with<Position>()
+            .without(Likes, Apples)
+            .build();
+
+    ecs.entity().add<Position>().add(Likes, Apples);
+    auto e2 = ecs.entity().add<Position>().add(Likes, Pears);
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e2);
+    });
+    
+    test_int(count, 1);
 }
 
 void QueryBuilder_without_pair_name(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    flecs::entity Likes = ecs.entity("Likes");
+    flecs::entity Apples = ecs.entity("Apples");
+    flecs::entity Pears = ecs.entity("Pears");
+
+    flecs::query<> q = 
+        ecs.query_builder()
+            .with<Position>()
+            .without("Likes", "Apples")
+            .build();
+
+    ecs.entity().add<Position>().add(Likes, Apples);
+    auto e2 = ecs.entity().add<Position>().add(Likes, Pears);
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e2);
+    });
+    
+    test_int(count, 1);
 }
 
 void QueryBuilder_without_pair_components(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    struct Likes { };
+    struct Apples { };
+    struct Pears { };
+
+    flecs::query<> q = 
+        ecs.query_builder()
+            .with<Position>()
+            .without<Likes, Apples>()
+            .build();
+
+    ecs.entity().add<Position>().add<Likes, Apples>();
+    auto e2 = ecs.entity().add<Position>().add<Likes, Pears>();
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e2);
+    });
+    
+    test_int(count, 1);
 }
 
 void QueryBuilder_without_pair_component_id(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    struct Likes { };
+    flecs::entity Apples = ecs.entity();
+    flecs::entity Pears = ecs.entity();
+
+    flecs::query<> q = 
+        ecs.query_builder()
+            .with<Position>()
+            .without<Likes>(Apples)
+            .build();
+
+    ecs.entity().add<Position>().add<Likes>(Apples);
+    auto e2 = ecs.entity().add<Position>().add<Likes>(Pears);
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e2);
+    });
+    
+    test_int(count, 1);
 }
 
 void QueryBuilder_without_pair_component_name(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    struct Likes { };
+    flecs::entity Apples = ecs.entity("Apples");
+    flecs::entity Pears = ecs.entity("Pears");
+
+    flecs::query<> q = 
+        ecs.query_builder()
+            .with<Position>()
+            .without<Likes>("Apples")
+            .build();
+
+    ecs.entity().add<Position>().add<Likes>(Apples);
+    auto e2 = ecs.entity().add<Position>().add<Likes>(Pears);
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e2);
+    });
+    
+    test_int(count, 1);
 }
 
 void QueryBuilder_without_enum(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    flecs::query<> q = 
+        ecs.query_builder()
+            .with<Position>()
+            .without(Green)
+            .build();
+
+    ecs.entity().add<Position>().add(Green);
+    auto e2 = ecs.entity().add<Position>().add(Red);
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e2);
+    });
+    
+    test_int(count, 1);
 }
 
 void QueryBuilder_write_id(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    auto q = 
+        ecs.query_builder()
+            .with<Position>()
+            .write(ecs.id<Position>())
+            .build();
+
+    test_assert(q.term(1).inout() == flecs::Out);
+    test_assert(q.term(1).get_first() == ecs.id<Position>());
+    test_assert(q.term(1).get_src() == 0);
 }
 
 void QueryBuilder_write_name(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    ecs.component<Position>();
+
+    auto q = 
+        ecs.query_builder()
+            .with<Position>()
+            .write("Position")
+            .build();
+
+    test_assert(q.term(1).inout() == flecs::Out);
+    test_assert(q.term(1).get_first() == ecs.id<Position>());
+    test_assert(q.term(1).get_src() == 0);
 }
 
 void QueryBuilder_write_component(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    ecs.component<Position>();
+
+    auto q = 
+        ecs.query_builder()
+            .with<Position>()
+            .write<Position>()
+            .build();
+
+    test_assert(q.term(1).inout() == flecs::Out);
+    test_assert(q.term(1).get_first() == ecs.id<Position>());
+    test_assert(q.term(1).get_src() == 0);
 }
 
 void QueryBuilder_write_pair_id(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    flecs::entity Likes = ecs.entity();
+    flecs::entity Apples = ecs.entity();
+
+    flecs::query<> q = 
+        ecs.query_builder()
+            .with<Position>()
+            .write(Likes, Apples)
+            .build();
+
+    test_assert(q.term(1).inout() == flecs::Out);
+    test_assert(q.term(1).get_first() == Likes);
+    test_assert(q.term(1).get_second() == Apples);
+    test_assert(q.term(1).get_src() == 0);
 }
 
 void QueryBuilder_write_pair_name(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    flecs::entity Likes = ecs.entity("Likes");
+    flecs::entity Apples = ecs.entity("Apples");
+
+    flecs::query<> q = 
+        ecs.query_builder()
+            .with<Position>()
+            .write("Likes", "Apples")
+            .build();
+
+    test_assert(q.term(1).inout() == flecs::Out);
+    test_assert(q.term(1).get_first() == Likes);
+    test_assert(q.term(1).get_second() == Apples);
+    test_assert(q.term(1).get_src() == 0);
 }
 
 void QueryBuilder_write_pair_components(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    struct Likes { };
+    struct Apples { };
+
+    flecs::query<> q = 
+        ecs.query_builder()
+            .with<Position>()
+            .write<Likes, Apples>()
+            .build();
+
+    test_assert(q.term(1).inout() == flecs::Out);
+    test_assert(q.term(1).get_first() == ecs.id<Likes>());
+    test_assert(q.term(1).get_second() == ecs.id<Apples>());
+    test_assert(q.term(1).get_src() == 0);
 }
 
 void QueryBuilder_write_pair_component_id(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    struct Likes { };
+    flecs::entity Apples = ecs.entity();
+
+    flecs::query<> q = 
+        ecs.query_builder()
+            .with<Position>()
+            .write<Likes>(Apples)
+            .build();
+
+    test_assert(q.term(1).inout() == flecs::Out);
+    test_assert(q.term(1).get_first() == ecs.id<Likes>());
+    test_assert(q.term(1).get_second() == Apples);
+    test_assert(q.term(1).get_src() == 0);
 }
 
 void QueryBuilder_write_pair_component_name(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    struct Likes { };
+    flecs::entity Apples = ecs.entity("Apples");
+
+    flecs::query<> q = 
+        ecs.query_builder()
+            .with<Position>()
+            .write<Likes>("Apples")
+            .build();
+
+    test_assert(q.term(1).inout() == flecs::Out);
+    test_assert(q.term(1).get_first() == ecs.id<Likes>());
+    test_assert(q.term(1).get_second() == Apples);
+    test_assert(q.term(1).get_src() == 0);
 }
 
 void QueryBuilder_write_enum(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    flecs::query<> q = 
+        ecs.query_builder()
+            .with<Position>()
+            .write(Green)
+            .build();
+
+    test_assert(q.term(1).inout() == flecs::Out);
+    test_assert(q.term(1).get_first() == ecs.id<Color>());
+    test_assert(q.term(1).get_second() == ecs.to_entity<Color>(Green));
+    test_assert(q.term(1).get_src() == 0);
 }
 
 void QueryBuilder_read_id(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    auto q = 
+        ecs.query_builder()
+            .with<Position>()
+            .read(ecs.id<Position>())
+            .build();
+
+    test_assert(q.term(1).inout() == flecs::In);
+    test_assert(q.term(1).get_first() == ecs.id<Position>());
+    test_assert(q.term(1).get_src() == 0);
 }
 
 void QueryBuilder_read_name(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    ecs.component<Position>();
+
+    auto q = 
+        ecs.query_builder()
+            .with<Position>()
+            .read("Position")
+            .build();
+
+    test_assert(q.term(1).inout() == flecs::In);
+    test_assert(q.term(1).get_first() == ecs.id<Position>());
+    test_assert(q.term(1).get_src() == 0);
 }
 
 void QueryBuilder_read_component(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    ecs.component<Position>();
+
+    auto q = 
+        ecs.query_builder()
+            .with<Position>()
+            .read<Position>()
+            .build();
+
+    test_assert(q.term(1).inout() == flecs::In);
+    test_assert(q.term(1).get_first() == ecs.id<Position>());
+    test_assert(q.term(1).get_src() == 0);
 }
 
 void QueryBuilder_read_pair_id(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    flecs::entity Likes = ecs.entity();
+    flecs::entity Apples = ecs.entity();
+
+    flecs::query<> q = 
+        ecs.query_builder()
+            .with<Position>()
+            .read(Likes, Apples)
+            .build();
+
+    test_assert(q.term(1).inout() == flecs::In);
+    test_assert(q.term(1).get_first() == Likes);
+    test_assert(q.term(1).get_second() == Apples);
+    test_assert(q.term(1).get_src() == 0);
 }
 
 void QueryBuilder_read_pair_name(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    flecs::entity Likes = ecs.entity("Likes");
+    flecs::entity Apples = ecs.entity("Apples");
+
+    flecs::query<> q = 
+        ecs.query_builder()
+            .with<Position>()
+            .read("Likes", "Apples")
+            .build();
+
+    test_assert(q.term(1).inout() == flecs::In);
+    test_assert(q.term(1).get_first() == Likes);
+    test_assert(q.term(1).get_second() == Apples);
+    test_assert(q.term(1).get_src() == 0);
 }
 
 void QueryBuilder_read_pair_components(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    struct Likes { };
+    struct Apples { };
+
+    flecs::query<> q = 
+        ecs.query_builder()
+            .with<Position>()
+            .read<Likes, Apples>()
+            .build();
+
+    test_assert(q.term(1).inout() == flecs::In);
+    test_assert(q.term(1).get_first() == ecs.id<Likes>());
+    test_assert(q.term(1).get_second() == ecs.id<Apples>());
+    test_assert(q.term(1).get_src() == 0);
 }
 
 void QueryBuilder_read_pair_component_id(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    struct Likes { };
+    flecs::entity Apples = ecs.entity();
+
+    flecs::query<> q = 
+        ecs.query_builder()
+            .with<Position>()
+            .read<Likes>(Apples)
+            .build();
+
+    test_assert(q.term(1).inout() == flecs::In);
+    test_assert(q.term(1).get_first() == ecs.id<Likes>());
+    test_assert(q.term(1).get_second() == Apples);
+    test_assert(q.term(1).get_src() == 0);
 }
 
 void QueryBuilder_read_pair_component_name(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    struct Likes { };
+    flecs::entity Apples = ecs.entity("Apples");
+
+    flecs::query<> q = 
+        ecs.query_builder()
+            .with<Position>()
+            .read<Likes>("Apples")
+            .build();
+
+    test_assert(q.term(1).inout() == flecs::In);
+    test_assert(q.term(1).get_first() == ecs.id<Likes>());
+    test_assert(q.term(1).get_second() == Apples);
+
+    test_assert(q.term(1).get_src() == 0);
 }
 
 void QueryBuilder_read_enum(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    flecs::query<> q = 
+        ecs.query_builder()
+            .with<Position>()
+            .read(Green)
+            .build();
+
+    test_assert(q.term(1).inout() == flecs::In);
+    test_assert(q.term(1).get_first() == ecs.id<Color>());
+    test_assert(q.term(1).get_second() == ecs.to_entity<Color>(Green));
+    test_assert(q.term(1).get_src() == 0);
 }
 
 void QueryBuilder_assign_after_init(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    flecs::query<> f;
+    flecs::query_builder<> fb = ecs.query_builder();
+    fb.with<Position>();
+    f = fb.build();
+
+    flecs::entity e1 = ecs.entity().set<Position>({10, 20});
+
+    int32_t count = 0;
+    f.each([&](flecs::entity e) {
+        test_assert(e == e1);
+        count ++;
+    });
+
+    test_int(count, 1);
 }
 
 void QueryBuilder_with_t_inout(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    flecs::query<> f = ecs.query_builder()
+        .with(ecs.id<Position>())
+        .build();
+
+    test_assert(f.term(0).inout() == flecs::InOutNone);
 }
 
 void QueryBuilder_with_T_inout(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    flecs::query<> f = ecs.query_builder()
+        .with<Position>()
+        .build();
+
+    test_assert(f.term(0).inout() == flecs::InOutNone);
 }
 
 void QueryBuilder_with_R_T_inout(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    flecs::query<> f = ecs.query_builder()
+        .with<Position, Velocity>()
+        .build();
+
+    test_assert(f.term(0).inout() == flecs::InOutNone);
 }
 
 void QueryBuilder_with_R_t_inout(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    flecs::query<> f = ecs.query_builder()
+        .with<Position>(ecs.id<Velocity>())
+        .build();
+
+    test_assert(f.term(0).inout() == flecs::InOutNone);
 }
 
 void QueryBuilder_with_r_t_inout(void) {
-    // Implement testcase
+    flecs::world ecs;
+
+    flecs::query<> f = ecs.query_builder()
+        .with(ecs.id<Position>(), ecs.id<Velocity>())
+        .build();
+
+    test_assert(f.term(0).inout() == flecs::InOutNone);
+}
+
+static
+int filter_arg(flecs::query<Self> f) {
+    int32_t count = 0;
+
+    f.each([&](flecs::entity e, Self& s) {
+        test_assert(e == s.value);
+        count ++;
+    });
+
+    return count;
+}
+
+void QueryBuilder_filter_as_arg(void) {
+    flecs::world ecs;
+
+    auto f = ecs.query<Self>();
+
+    auto e = ecs.entity();
+    e.set<Self>({e});
+
+    e = ecs.entity();
+    e.set<Self>({e});
+
+    e = ecs.entity();
+    e.set<Self>({e});
+
+    test_int(filter_arg(f), 3);
+}
+
+static
+int filter_move_arg(flecs::query<Self>&& f) {
+    int32_t count = 0;
+
+    f.each([&](flecs::entity e, Self& s) {
+        test_assert(e == s.value);
+        count ++;
+    });
+
+    return count;
+}
+
+void QueryBuilder_filter_as_move_arg(void) {
+    flecs::world ecs;
+
+    auto f = ecs.query<Self>();
+
+    auto e = ecs.entity();
+    e.set<Self>({e});
+
+    e = ecs.entity();
+    e.set<Self>({e});
+
+    e = ecs.entity();
+    e.set<Self>({e});
+
+    test_int(filter_move_arg(ecs.query<Self>()), 3);
+}
+
+static
+flecs::query<Self> filter_return(flecs::world& ecs) {
+    return ecs.query<Self>();
+}
+
+void QueryBuilder_filter_as_return(void) {
+    flecs::world ecs;
+
+    auto e = ecs.entity();
+    e.set<Self>({e});
+
+    e = ecs.entity();
+    e.set<Self>({e});
+
+    e = ecs.entity();
+    e.set<Self>({e});
+
+    auto f = filter_return(ecs);
+
+    int32_t count = 0;
+
+    f.each([&](flecs::entity e, Self& s) {
+        test_assert(e == s.value);
+        count ++;
+    });
+
+    test_int(count, 3);
+}
+
+void QueryBuilder_filter_copy(void) {
+    flecs::world ecs;
+
+    auto e = ecs.entity();
+    e.set<Self>({e});
+
+    e = ecs.entity();
+    e.set<Self>({e});
+
+    e = ecs.entity();
+    e.set<Self>({e});
+
+    auto f = ecs.query<Self>();
+
+    auto f_2 = f;
+
+    int32_t count = 0;
+
+    f_2.each([&](flecs::entity e, Self& s) {
+        test_assert(e == s.value);
+        count ++;
+    });
+
+    test_int(count, 3);
+}
+
+void QueryBuilder_world_each_filter_1_component(void) {
+    flecs::world ecs;
+
+    auto e = ecs.entity();
+    e.set<Self>({e});
+
+    e = ecs.entity();
+    e.set<Self>({e});
+
+    e = ecs.entity();
+    e.set<Self>({e});
+
+    int32_t count = 0;
+
+    ecs.each([&](flecs::entity e, Self& s) {
+        test_assert(e == s.value);
+        count ++;
+    });
+
+    test_int(count, 3);
+}
+
+void QueryBuilder_world_each_filter_2_components(void) {
+    flecs::world ecs;
+
+    auto e = ecs.entity();
+    e.set<Self>({e})
+     .set<Position>({10, 20});
+
+    e = ecs.entity();
+    e.set<Self>({e})
+        .set<Position>({10, 20});
+
+    e = ecs.entity();
+    e.set<Self>({e})
+     .set<Position>({10, 20});
+
+    int32_t count = 0;
+
+    ecs.each([&](flecs::entity e, Self& s, Position& p) {
+        test_assert(e == s.value);
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+        count ++;
+    });
+
+    test_int(count, 3);
+}
+
+void QueryBuilder_world_each_filter_1_component_no_entity(void) {
+    flecs::world ecs;
+
+    ecs.entity()
+        .set<Position>({10, 20});
+
+    ecs.entity()
+        .set<Position>({10, 20});
+
+    ecs.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    int32_t count = 0;
+
+    ecs.each([&](Position& p) {
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+        count ++;
+    });
+
+    test_int(count, 3);
+}
+
+void QueryBuilder_world_each_filter_2_components_no_entity(void) {
+    flecs::world ecs;
+
+    ecs.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    ecs.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    ecs.entity()
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    ecs.entity()
+        .set<Position>({3, 5});
+
+    ecs.entity()
+        .set<Velocity>({20, 40});
+
+    int32_t count = 0;
+
+    ecs.each([&](Position& p, Velocity& v) {
+        test_int(p.x, 10);
+        test_int(p.y, 20);
+        test_int(v.x, 1);
+        test_int(v.y, 2);        
+        count ++;
+    });
+
+    test_int(count, 3);
+}
+
+void QueryBuilder_var_src_w_prefixed_name(void) {
+    flecs::world ecs;
+
+    struct Foo { };
+
+    auto r = ecs.query_builder()
+        .term<Foo>().src("$Var")
+        .build();
+
+    auto e = ecs.entity().add<Foo>();
+
+    int32_t count = 0;
+    r.iter([&](flecs::iter& it) {
+        test_assert(it.get_var("Var") == e);
+        count ++;
+    });
+
+    test_int(count, 1);
+
+    r.destruct();
+}
+
+void QueryBuilder_var_first_w_prefixed_name(void) {
+    flecs::world ecs;
+
+    struct Foo { };
+
+    auto r = ecs.query_builder()
+        .term<Foo>()
+        .term().first("$Var")
+        .build();
+
+    auto e = ecs.entity().add<Foo>();
+
+    int32_t count = 0;
+    r.iter([&](flecs::iter& it) {
+        test_int(it.count(), 1);
+        test_uint(it.entity(0), e);
+        test_assert(it.get_var("Var") == ecs.id<Foo>());
+        count ++;
+    });
+
+    test_int(count, 1);
+
+    r.destruct();
+}
+
+void QueryBuilder_var_second_w_prefixed_name(void) {
+    flecs::world ecs;
+
+    struct Foo { };
+
+    auto r = ecs.query_builder()
+        .term<Foo>().second("$Var")
+        .build();
+
+    auto t = ecs.entity();
+    auto e = ecs.entity().add<Foo>(t);
+
+    int32_t count = 0;
+    r.iter([&](flecs::iter& it) {
+        test_int(it.count(), 1);
+        test_uint(it.entity(0), e);
+        test_assert(it.get_var("Var") == t);
+        count ++;
+    });
+
+    test_int(count, 1);
+
+    r.destruct();
+}
+
+void QueryBuilder_term_w_second_var_string(void) {
+    flecs::world ecs;
+
+    flecs::entity Foo = ecs.entity();
+
+    auto r = ecs.query_builder()
+        .term(Foo, "$Var")
+        .build();
+
+    auto t = ecs.entity();
+    auto e = ecs.entity().add(Foo, t);
+
+    int32_t count = 0;
+    r.iter([&](flecs::iter& it) {
+        test_int(it.count(), 1);
+        test_uint(it.entity(0), e);
+        test_assert(it.get_var("Var") == t);
+        count ++;
+    });
+
+    test_int(count, 1);
+
+    r.destruct();
+}
+
+void QueryBuilder_term_type_w_second_var_string(void) {
+    flecs::world ecs;
+
+    struct Foo { };
+
+    auto r = ecs.query_builder()
+        .term<Foo>("$Var")
+        .build();
+
+    auto t = ecs.entity();
+    auto e = ecs.entity().add<Foo>(t);
+
+    int32_t count = 0;
+    r.iter([&](flecs::iter& it) {
+        test_int(it.count(), 1);
+        test_uint(it.entity(0), e);
+        test_assert(it.get_var("Var") == t);
+        count ++;
+    });
+
+    test_int(count, 1);
+
+    r.destruct();
+}
+
+void QueryBuilder_named_rule(void) {
+    flecs::world ecs;
+
+    auto e1 = ecs.entity().add<Position>();
+    auto e2 = ecs.entity().add<Position>();
+
+    auto q = ecs.query<Position>("my_query");
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e, Position&) {
+        test_assert(e == e1 || e == e2);
+        count ++;
+    });
+    test_int(count, 2);
+
+    flecs::entity qe = q.entity();
+    test_assert(qe != 0);
+    test_str(qe.name(), "my_query");
+
+    q.destruct();
+}
+
+void QueryBuilder_named_scoped_rule(void) {
+    flecs::world ecs;
+
+    auto e1 = ecs.entity().add<Position>();
+    auto e2 = ecs.entity().add<Position>();
+
+    auto q = ecs.query<Position>("my::query");
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e, Position&) {
+        test_assert(e == e1 || e == e2);
+        count ++;
+    });
+    test_int(count, 2);
+
+    flecs::entity qe = q.entity();
+    test_assert(qe != 0);
+    test_str(qe.name(), "query");
+    test_str(qe.path(), "::my::query");
+
+    q.destruct();
+}
+
+void QueryBuilder_is_valid(void) {
+    flecs::world ecs;
+
+    auto q_1 = ecs.query<Position>();
+    test_assert(q_1);
+
+    flecs::log::set_level(-4);
+    auto q_2 = ecs.query_builder().expr("foo").build();
+    test_assert(!q_2);
+
+    q_1.destruct();
+}
+
+void QueryBuilder_unresolved_by_name(void) {
+    flecs::world ecs;
+
+    auto q = ecs.query_builder()
+        .flags(EcsQueryAllowUnresolvedByName)
+        .expr("$this == Foo")
+        .build();
+
+    test_assert(q);
+
+    test_false(q.iter().is_true());
+
+    ecs.entity("Foo");
+
+    test_true(q.iter().is_true());
+
+    q.destruct();
+}
+
+void QueryBuilder_scope(void) {
+    flecs::world ecs;
+
+    flecs::entity Root = ecs.entity();
+    flecs::entity TagA = ecs.entity();
+    flecs::entity TagB = ecs.entity();
+
+    ecs.entity()
+        .add(Root)
+        .add(TagA)
+        .add(TagB);
+
+    auto e2 = ecs.entity()
+        .add(Root)
+        .add(TagA);
+
+    ecs.entity()
+        .add(Root)
+        .add(TagB);
+
+    ecs.entity()
+        .add(Root);
+
+    auto r = ecs.query_builder()
+        .with(Root)
+        .scope_open().not_()
+            .with(TagA)
+            .without(TagB)
+        .scope_close()
+        .build();
+
+    int32_t count = 0;
+    r.each([&](flecs::entity e) {
+        test_assert(e != e2);
+        count ++;
+    });
+
+    test_int(count, 3);
+
+    r.destruct();
 }

@@ -17,7 +17,7 @@ namespace _ {
 
     template <typename T, if_t< is_reference<T>::value > = 0>
     static constexpr flecs::inout_kind_t type_to_inout() {
-        return flecs::Out;
+        return flecs::InOut;
     }
 
     template <typename T, if_not_t< 

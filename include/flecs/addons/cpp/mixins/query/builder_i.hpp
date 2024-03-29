@@ -12,7 +12,7 @@ namespace flecs
 
 /** Query builder interface.
  * 
- * @ingroup cpp_core_filters
+ * @ingroup cpp_core_queries
  */
 template<typename Base, typename ... Components>
 struct query_builder_i : term_builder_i<Base> {
@@ -29,6 +29,15 @@ struct query_builder_i : term_builder_i<Base> {
     Base& flags(ecs_flags32_t flags) {
         m_desc->flags |= flags;
         return *this;
+    }
+
+    Base& cache_kind(query_cache_kind_t kind) {
+        m_desc->cache_kind = static_cast<ecs_query_cache_kind_t>(kind);
+        return *this;
+    }
+
+    Base& cached() {
+        return cache_kind(flecs::QueryCacheAuto);
     }
 
     Base& expr(const char *expr) {

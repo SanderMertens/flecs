@@ -15433,16 +15433,16 @@ namespace flecs {
 
 using world_t = ecs_world_t;
 using world_info_t = ecs_world_info_t;
-using query_group_info_t = ecs_query_group_info_t;
 using id_t = ecs_id_t;
 using entity_t = ecs_entity_t;
 using type_t = ecs_type_t;
 using table_t = ecs_table_t;
-using observer_t = ecs_observer_t;
 using term_t = ecs_term_t;
 using query_t = ecs_query_t;
-using ref_t = ecs_ref_t;
+using query_group_info_t = ecs_query_group_info_t;
+using observer_t = ecs_observer_t;
 using iter_t = ecs_iter_t;
+using ref_t = ecs_ref_t;
 using type_info_t = ecs_type_info_t;
 using type_hooks_t = ecs_type_hooks_t;
 using flags32_t = ecs_flags32_t;
@@ -15464,6 +15464,13 @@ enum oper_kind_t {
     AndFrom = EcsAndFrom,
     OrFrom = EcsOrFrom,
     NotFrom = EcsNotFrom
+};
+
+enum query_cache_kind_t {
+    QueryCacheDefault = EcsQueryCacheDefault,
+    QueryCacheAuto = EcsQueryCacheAuto,
+    QueryCacheAll = EcsQueryCacheAll,
+    QueryCacheNone = EcsQueryCacheNone
 };
 
 /** Id flags */
@@ -16836,7 +16843,7 @@ protected:
 namespace flecs {
 
 /**
- * @ingroup cpp_core_filters
+ * @ingroup cpp_core_queries
  *
  * @{
  */
@@ -20370,7 +20377,7 @@ flecs::event_builder_typed<E> event() const;
 
 /**
  * @memberof flecs::world
- * @ingroup cpp_core_filters
+ * @ingroup cpp_core_queries
  *
  * @{
  */
@@ -27071,7 +27078,7 @@ namespace _ {
 
     template <typename T, if_t< is_reference<T>::value > = 0>
     static constexpr flecs::inout_kind_t type_to_inout() {
-        return flecs::Out;
+        return flecs::InOut;
     }
 
     template <typename T, if_not_t< 
@@ -27126,7 +27133,7 @@ namespace flecs
  * descriptions can reference entities by id, name or by variable, which means
  * the entity will be resolved when the term is evaluated.
  * 
- * @ingroup cpp_core_filters
+ * @ingroup cpp_core_queries
  */
 template<typename Base>
 struct term_id_builder_i {
@@ -27204,7 +27211,7 @@ private:
 /** Term builder interface. 
  * A term is a single element of a query expression. 
  * 
- * @ingroup cpp_core_filters
+ * @ingroup cpp_core_queries
  */
 template<typename Base>
 struct term_builder_i : term_id_builder_i<Base> {
@@ -27549,7 +27556,7 @@ namespace flecs {
 
 /** Class that describes a term.
  * 
- * @ingroup cpp_core_filters
+ * @ingroup cpp_core_queries
  */
 struct term final : term_builder_i<term> {
     term()
@@ -27758,7 +27765,7 @@ namespace flecs
 
 /** Query builder interface.
  * 
- * @ingroup cpp_core_filters
+ * @ingroup cpp_core_queries
  */
 template<typename Base, typename ... Components>
 struct query_builder_i : term_builder_i<Base> {
@@ -27775,6 +27782,15 @@ struct query_builder_i : term_builder_i<Base> {
     Base& flags(ecs_flags32_t flags) {
         m_desc->flags |= flags;
         return *this;
+    }
+
+    Base& cache_kind(query_cache_kind_t kind) {
+        m_desc->cache_kind = static_cast<ecs_query_cache_kind_t>(kind);
+        return *this;
+    }
+
+    Base& cached() {
+        return cache_kind(flecs::QueryCacheAuto);
     }
 
     Base& expr(const char *expr) {
@@ -28115,7 +28131,7 @@ namespace _ {
 
 /** Query builder.
  * 
- * @ingroup cpp_core_filters
+ * @ingroup cpp_core_queries
  */
 template <typename ... Components>
 struct query_builder final : _::query_builder_base<Components...> {

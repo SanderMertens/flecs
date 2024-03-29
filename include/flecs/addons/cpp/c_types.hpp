@@ -17,16 +17,16 @@ namespace flecs {
 
 using world_t = ecs_world_t;
 using world_info_t = ecs_world_info_t;
-using query_group_info_t = ecs_query_group_info_t;
 using id_t = ecs_id_t;
 using entity_t = ecs_entity_t;
 using type_t = ecs_type_t;
 using table_t = ecs_table_t;
-using observer_t = ecs_observer_t;
 using term_t = ecs_term_t;
 using query_t = ecs_query_t;
-using ref_t = ecs_ref_t;
+using query_group_info_t = ecs_query_group_info_t;
+using observer_t = ecs_observer_t;
 using iter_t = ecs_iter_t;
+using ref_t = ecs_ref_t;
 using type_info_t = ecs_type_info_t;
 using type_hooks_t = ecs_type_hooks_t;
 using flags32_t = ecs_flags32_t;
@@ -48,6 +48,13 @@ enum oper_kind_t {
     AndFrom = EcsAndFrom,
     OrFrom = EcsOrFrom,
     NotFrom = EcsNotFrom
+};
+
+enum query_cache_kind_t {
+    QueryCacheDefault = EcsQueryCacheDefault,
+    QueryCacheAuto = EcsQueryCacheAuto,
+    QueryCacheAll = EcsQueryCacheAll,
+    QueryCacheNone = EcsQueryCacheNone
 };
 
 /** Id flags */
