@@ -31,7 +31,7 @@ struct FFlecsScriptStructComponent
     FORCEINLINE FFlecsScriptStructComponent(UScriptStruct* InScriptStruct = nullptr) : ScriptStruct(InScriptStruct) {}
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs")
-    TObjectPtr<UScriptStruct> ScriptStruct;
+    TWeakObjectPtr<UScriptStruct> ScriptStruct;
     
 }; // struct FFlecsScriptStructComponent
 
