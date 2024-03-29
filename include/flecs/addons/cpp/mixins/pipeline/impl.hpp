@@ -19,10 +19,6 @@ struct pipeline : entity {
         if (!m_id) {
             ecs_abort(ECS_INVALID_PARAMETER, NULL);
         }
-
-        if (desc->query.terms_buffer) {
-            ecs_os_free(desc->query.terms_buffer);
-        }
     }
 };
 

@@ -46,7 +46,7 @@ int main(int, char *[]) {
     // Instead of using variables we could have created a rule that referred the
     // entities directly, but then we would have to create a rule for each
     // fact, vs reusing a single rule for multiple facts.
-    flecs::rule<> friends = ecs.rule_builder()
+    flecs::query<> friends = ecs.query_builder()
         .with<Likes>("$Y").src("$X")
         .with<Likes>("$X").src("$Y")
         .build();

@@ -4065,13 +4065,13 @@ void ecs_iter_skip(
  *
  * The group to iterate must be set before the first call to ecs_query_next(). No
  * operations that can add/remove components should be invoked between calling
- * ecs_query_set_group() and ecs_query_next().
+ * ecs_iter_set_group() and ecs_query_next().
  *
  * @param it The query iterator.
  * @param group_id The group to iterate.
  */
 FLECS_API
-void ecs_query_set_group(
+void ecs_iter_set_group(
     ecs_iter_t *it,
     uint64_t group_id);
 

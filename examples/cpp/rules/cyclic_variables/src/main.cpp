@@ -33,7 +33,7 @@ int main(int, char *[]) {
     //
     // Because this query does not use This at all, the entities array will not
     // be populated, and it.count() will always be 0.
-    flecs::rule<> r = ecs.rule_builder()
+    flecs::query<> r = ecs.query_builder()
         .with<Likes>("$Y").src("$X")
         .with<Likes>("$X").src("$Y")
         .build();

@@ -294,15 +294,10 @@ public:
         return flecs::field<const flecs::entity_t>(m_iter->entities, static_cast<size_t>(m_iter->count), false);
     }
 
-    /** Obtain the total number of tables the iterator will iterate over. */
-    int32_t table_count() const {
-        return m_iter->table_count;
-    }
-
     /** Check if the current table has changed since the last iteration.
      * Can only be used when iterating queries and/or systems. */
     bool changed() {
-        return ecs_query_changed(nullptr, m_iter);
+        return ecs_iter_changed(m_iter);
     }
 
     /** Skip current table.
@@ -313,7 +308,7 @@ public:
      * When this operation is invoked, the components of the current table will
      * not be marked dirty. */
     void skip() {
-        ecs_query_cache_skip(m_iter);
+        ecs_iter_skip(m_iter);
     }
 
     /* Return group id for current table (grouped queries only) */

@@ -8,7 +8,7 @@ void RuleBuilder_1_type(void) {
 
     ecs.entity().set<Velocity>({10, 20});
 
-    auto r = ecs.rule<Position>();
+    auto r = ecs.query<Position>();
 
     int count = 0;
     r.each([&](flecs::entity e, Position& p) {
@@ -32,7 +32,7 @@ void RuleBuilder_2_types(void) {
 
     ecs.entity().set<Velocity>({10, 20});
 
-    auto r = ecs.rule<Position, const Velocity>();
+    auto r = ecs.query<Position, const Velocity>();
 
     int count = 0;
     r.each([&](flecs::entity e, Position& p, const Velocity& v) {
@@ -60,7 +60,7 @@ void RuleBuilder_id_term(void) {
 
     ecs.entity().set<Velocity>({10, 20});
 
-    auto r = ecs.rule_builder()
+    auto r = ecs.query_builder()
         .term(Tag)
         .build();
 
@@ -83,7 +83,7 @@ void RuleBuilder_type_term(void) {
 
     ecs.entity().set<Velocity>({10, 20});
 
-    auto r = ecs.rule_builder()
+    auto r = ecs.query_builder()
         .term<Position>()
         .build();
 
@@ -111,7 +111,7 @@ void RuleBuilder_id_pair_term(void) {
     ecs.entity()
         .add(Likes, Pears);
 
-    auto r = ecs.rule_builder()
+    auto r = ecs.query_builder()
         .term(Likes, Apples)
         .build();
 
@@ -139,7 +139,7 @@ void RuleBuilder_id_pair_wildcard_term(void) {
     auto e2 = ecs.entity()
         .add(Likes, Pears);
 
-    auto r = ecs.rule_builder()
+    auto r = ecs.query_builder()
         .term(Likes, flecs::Wildcard)
         .build();
 
@@ -172,7 +172,7 @@ void RuleBuilder_type_pair_term(void) {
     auto e2 = ecs.entity()
         .add<Likes, Pears>();
 
-    auto r = ecs.rule_builder()
+    auto r = ecs.query_builder()
         .term<Likes>(flecs::Wildcard)
         .build();
 
@@ -205,7 +205,7 @@ void RuleBuilder_pair_term_w_var(void) {
     auto e2 = ecs.entity()
         .add<Likes, Pears>();
 
-    auto r = ecs.rule_builder()
+    auto r = ecs.query_builder()
         .term<Likes>().second().var("Food")
         .build();
 
@@ -248,7 +248,7 @@ void RuleBuilder_2_pair_terms_w_var(void) {
 
     Bob.add<Likes>(Alice);
 
-    auto r = ecs.rule_builder()
+    auto r = ecs.query_builder()
         .term<Eats>().second().var("Food")
         .term<Likes>().second().var("Person")
         .build();
@@ -297,7 +297,7 @@ void RuleBuilder_set_var(void) {
     auto e2 = ecs.entity()
         .add<Likes>(Pears);
 
-    auto r = ecs.rule_builder()
+    auto r = ecs.query_builder()
         .term<Likes>().second().var("Food")
         .build();
 
@@ -336,7 +336,7 @@ void RuleBuilder_set_2_vars(void) {
 
     Bob.add<Likes>(Alice);
 
-    auto r = ecs.rule_builder()
+    auto r = ecs.query_builder()
         .term<Eats>().second().var("Food")
         .term<Likes>().second().var("Person")
         .build();
@@ -376,7 +376,7 @@ void RuleBuilder_set_var_by_name(void) {
     auto e2 = ecs.entity()
         .add<Likes>(Pears);
 
-    auto r = ecs.rule_builder()
+    auto r = ecs.query_builder()
         .term<Likes>().second().var("Food")
         .build();
 
@@ -410,7 +410,7 @@ void RuleBuilder_set_2_vars_by_name(void) {
 
     Bob.add<Likes>(Alice);
 
-    auto r = ecs.rule_builder()
+    auto r = ecs.query_builder()
         .term<Eats>().second().var("Food")
         .term<Likes>().second().var("Person")
         .build();
@@ -444,7 +444,7 @@ void RuleBuilder_expr_w_var(void) {
     auto obj = ecs.entity();
     auto e = ecs.entity().add(rel, obj);
 
-    auto r = ecs.rule_builder()
+    auto r = ecs.query_builder()
         .expr("(Rel, $X)")
         .build();
 
@@ -472,7 +472,7 @@ void RuleBuilder_get_first(void) {
     ecs.entity().add<A>();
     ecs.entity().add<A>();
 
-    auto q = ecs.rule<A>();
+    auto q = ecs.query<A>();
 
     auto first = q.iter().first();
     test_assert(first != 0);
@@ -490,7 +490,7 @@ void RuleBuilder_get_count_direct(void) {
     ecs.entity().add<A>();
     ecs.entity().add<A>();
 
-    auto q = ecs.rule<A>();
+    auto q = ecs.query<A>();
 
     test_int(3, q.count());
 
@@ -507,8 +507,8 @@ void RuleBuilder_get_is_true_direct(void) {
     ecs.entity().add<A>();
     ecs.entity().add<A>();
 
-    auto q_1 = ecs.rule<A>();
-    auto q_2 = ecs.rule<B>();
+    auto q_1 = ecs.query<A>();
+    auto q_2 = ecs.query<B>();
 
     test_bool(true, q_1.is_true());
     test_bool(false, q_2.is_true());
@@ -526,7 +526,7 @@ void RuleBuilder_get_first_direct(void) {
     ecs.entity().add<A>();
     ecs.entity().add<A>();
 
-    auto q = ecs.rule<A>();
+    auto q = ecs.query<A>();
 
     auto first = q.first();
     test_assert(first != 0);
@@ -540,7 +540,7 @@ void RuleBuilder_var_src_w_prefixed_name(void) {
 
     struct Foo { };
 
-    auto r = ecs.rule_builder()
+    auto r = ecs.query_builder()
         .term<Foo>().src("$Var")
         .build();
 
@@ -562,7 +562,7 @@ void RuleBuilder_var_first_w_prefixed_name(void) {
 
     struct Foo { };
 
-    auto r = ecs.rule_builder()
+    auto r = ecs.query_builder()
         .term<Foo>()
         .term().first("$Var")
         .build();
@@ -587,7 +587,7 @@ void RuleBuilder_var_second_w_prefixed_name(void) {
 
     struct Foo { };
 
-    auto r = ecs.rule_builder()
+    auto r = ecs.query_builder()
         .term<Foo>().second("$Var")
         .build();
 
@@ -612,7 +612,7 @@ void RuleBuilder_term_w_second_var_string(void) {
 
     flecs::entity Foo = ecs.entity();
 
-    auto r = ecs.rule_builder()
+    auto r = ecs.query_builder()
         .term(Foo, "$Var")
         .build();
 
@@ -637,7 +637,7 @@ void RuleBuilder_term_type_w_second_var_string(void) {
 
     struct Foo { };
 
-    auto r = ecs.rule_builder()
+    auto r = ecs.query_builder()
         .term<Foo>("$Var")
         .build();
 
@@ -663,7 +663,7 @@ void RuleBuilder_named_rule(void) {
     auto e1 = ecs.entity().add<Position>();
     auto e2 = ecs.entity().add<Position>();
 
-    auto q = ecs.rule<Position>("my_query");
+    auto q = ecs.query<Position>("my_query");
 
     int32_t count = 0;
     q.each([&](flecs::entity e, Position&) {
@@ -685,7 +685,7 @@ void RuleBuilder_named_scoped_rule(void) {
     auto e1 = ecs.entity().add<Position>();
     auto e2 = ecs.entity().add<Position>();
 
-    auto q = ecs.rule<Position>("my::query");
+    auto q = ecs.query<Position>("my::query");
 
     int32_t count = 0;
     q.each([&](flecs::entity e, Position&) {
@@ -705,12 +705,12 @@ void RuleBuilder_named_scoped_rule(void) {
 void RuleBuilder_is_valid(void) {
     flecs::world ecs;
 
-    auto q_1 = ecs.rule<Position>();
-    test_assert(q_1.is_valid());
+    auto q_1 = ecs.query<Position>();
+    test_assert(q_1);
 
     flecs::log::set_level(-4);
-    auto q_2 = ecs.rule_builder().expr("foo").build();
-    test_assert(!q_2.is_valid());
+    auto q_2 = ecs.query_builder().expr("foo").build();
+    test_assert(!q_2);
 
     q_1.destruct();
 }
@@ -718,12 +718,12 @@ void RuleBuilder_is_valid(void) {
 void RuleBuilder_unresolved_by_name(void) {
     flecs::world ecs;
 
-    auto q = ecs.rule_builder()
-        .filter_flags(EcsQueryAllowUnresolvedByName)
+    auto q = ecs.query_builder()
+        .flags(EcsQueryAllowUnresolvedByName)
         .expr("$this == Foo")
         .build();
 
-    test_assert(q.is_valid());
+    test_assert(q);
 
     test_false(q.iter().is_true());
 
@@ -757,7 +757,7 @@ void RuleBuilder_scope(void) {
     ecs.entity()
         .add(Root);
 
-    auto r = ecs.rule_builder()
+    auto r = ecs.query_builder()
         .with(Root)
         .scope_open().not_()
             .with(TagA)
@@ -784,7 +784,7 @@ void RuleBuilder_iter_w_stage(void) {
 
     auto e1 = ecs.entity().add<Position>();
 
-    auto q = ecs.rule<Position>();
+    auto q = ecs.query<Position>();
 
     int32_t count = 0;
     q.each(stage, [&](flecs::iter& it, size_t i, Position&) {
@@ -801,7 +801,7 @@ void RuleBuilder_iter_w_stage(void) {
 void RuleBuilder_inspect_terms_w_expr(void) {
     flecs::world ecs;
 
-    flecs::rule<> f = ecs.rule_builder()
+    flecs::query<> f = ecs.query_builder()
         .expr("(ChildOf,0)")
         .build();
 
@@ -822,7 +822,7 @@ void RuleBuilder_find(void) {
     /* auto e1 = */ ecs.entity().set<Position>({10, 20});
     auto e2 = ecs.entity().set<Position>({20, 30});
 
-    auto q = ecs.rule<Position>();
+    auto q = ecs.query<Position>();
 
     auto r = q.find([](Position& p) {
         return p.x == 20;
@@ -839,7 +839,7 @@ void RuleBuilder_find_not_found(void) {
     /* auto e1 = */ ecs.entity().set<Position>({10, 20});
     /* auto e2 = */ ecs.entity().set<Position>({20, 30});
 
-    auto q = ecs.rule<Position>();
+    auto q = ecs.query<Position>();
 
     auto r = q.find([](Position& p) {
         return p.x == 30;
@@ -856,7 +856,7 @@ void RuleBuilder_find_w_entity(void) {
     /* auto e1 = */ ecs.entity().set<Position>({10, 20}).set<Velocity>({20, 30});
     auto e2 = ecs.entity().set<Position>({20, 30}).set<Velocity>({20, 30});
 
-    auto q = ecs.rule<Position>();
+    auto q = ecs.query<Position>();
 
     auto r = q.find([](flecs::entity e, Position& p) {
         return p.x == e.get<Velocity>()->x &&

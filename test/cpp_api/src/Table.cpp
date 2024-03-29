@@ -6,7 +6,7 @@ void Table_each(void) {
     ecs.entity().add<Position>();
     auto e2 = ecs.entity().add<Velocity>();
 
-    ecs.filter<Position>()
+    ecs.query<Position>()
         .each([&](flecs::entity e, Position& p) {
             e2.add<Mass>();
         });
@@ -21,7 +21,7 @@ void Table_each_locked(void) {
 
     auto e1 = ecs.entity().add<Position>();
 
-    ecs.filter<Position>()
+    ecs.query<Position>()
         .each([&](flecs::entity e, Position& p) {
             test_expect_abort();
             e1.add<Mass>();
@@ -36,7 +36,7 @@ void Table_each_without_entity(void) {
     ecs.entity().add<Position>();
     auto e2 = ecs.entity().add<Velocity>();
 
-    ecs.filter<Position>()
+    ecs.query<Position>()
         .each([&](Position& p) {
             e2.add<Mass>();
         });
@@ -51,7 +51,7 @@ void Table_each_without_entity_locked(void) {
 
     auto e1 = ecs.entity().add<Position>();
 
-    ecs.filter<Position>()
+    ecs.query<Position>()
         .each([&](Position& p) {
             test_expect_abort();
             e1.add<Mass>();
@@ -66,7 +66,7 @@ void Table_iter(void) {
     ecs.entity().add<Position>();
     auto e2 = ecs.entity().add<Velocity>();
 
-    ecs.filter<Position>()
+    ecs.query<Position>()
         .iter([&](flecs::iter& it, Position* p) {
             e2.add<Mass>();
         });
@@ -81,7 +81,7 @@ void Table_iter_locked(void) {
 
     auto e1 = ecs.entity().add<Position>();
 
-    ecs.filter<Position>()
+    ecs.query<Position>()
         .iter([&](flecs::iter& it, Position* p) {
             test_expect_abort();
             e1.add<Mass>();
@@ -96,7 +96,7 @@ void Table_iter_without_components(void) {
     ecs.entity().add<Position>();
     auto e2 = ecs.entity().add<Velocity>();
 
-    ecs.filter<Position>()
+    ecs.query<Position>()
         .iter([&](flecs::iter& it) {
             e2.add<Mass>();
         });
@@ -111,7 +111,7 @@ void Table_iter_without_components_locked(void) {
 
     auto e1 = ecs.entity().add<Position>();
 
-    ecs.filter<Position>()
+    ecs.query<Position>()
         .iter([&](flecs::iter& it) {
             test_expect_abort();
             e1.add<Mass>();

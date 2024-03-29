@@ -197,7 +197,7 @@ void GroupBy_group_by_iter_one(void) {
     });
 
     ecs_iter_t it = ecs_query_iter(world, q);
-    ecs_query_set_group(&it, TgtB);
+    ecs_iter_set_group(&it, TgtB);
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
@@ -244,7 +244,7 @@ void GroupBy_group_by_iter_one_all_groups(void) {
     });
 
     ecs_iter_t it = ecs_query_iter(world, q);
-    ecs_query_set_group(&it, TgtB);
+    ecs_iter_set_group(&it, TgtB);
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
@@ -260,7 +260,7 @@ void GroupBy_group_by_iter_one_all_groups(void) {
     test_bool(false, ecs_query_next(&it));
 
     it = ecs_query_iter(world, q);
-    ecs_query_set_group(&it, TgtA);
+    ecs_iter_set_group(&it, TgtA);
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
@@ -276,7 +276,7 @@ void GroupBy_group_by_iter_one_all_groups(void) {
     test_bool(false, ecs_query_next(&it));
 
     it = ecs_query_iter(world, q);
-    ecs_query_set_group(&it, TgtC);
+    ecs_iter_set_group(&it, TgtC);
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
@@ -324,7 +324,7 @@ void GroupBy_group_by_iter_one_empty(void) {
     });
 
     ecs_iter_t it = ecs_query_iter(world, q);
-    ecs_query_set_group(&it, TgtD);
+    ecs_iter_set_group(&it, TgtD);
     test_bool(false, ecs_query_next(&it));
 
     ecs_fini(world);
@@ -345,7 +345,7 @@ void GroupBy_group_by_iter_one_empty_query(void) {
     });
 
     ecs_iter_t it = ecs_query_iter(world, q);
-    ecs_query_set_group(&it, TgtA);
+    ecs_iter_set_group(&it, TgtA);
     test_bool(false, ecs_query_next(&it));
 
     ecs_fini(world);
@@ -383,7 +383,7 @@ void GroupBy_group_by_iter_one_empty_table(void) {
     ecs_delete(world, e6);
 
     ecs_iter_t it = ecs_query_iter(world, q);
-    ecs_query_set_group(&it, TgtC);
+    ecs_iter_set_group(&it, TgtC);
     test_bool(false, ecs_query_next(&it));
 
     ecs_fini(world);
@@ -406,7 +406,7 @@ void GroupBy_group_by_w_deleted_group_id(void) {
     ecs_entity_t e = ecs_new_w_pair(world, Rel, tgt);
 
     ecs_iter_t it = ecs_query_iter(world, q);
-    ecs_query_set_group(&it, tgt);
+    ecs_iter_set_group(&it, tgt);
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e, it.entities[0]);
@@ -422,7 +422,7 @@ void GroupBy_group_by_w_deleted_group_id(void) {
     e = ecs_new_w_pair(world, Rel, tgt);
 
     it = ecs_query_iter(world, q);
-    ecs_query_set_group(&it, tgt);
+    ecs_iter_set_group(&it, tgt);
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e, it.entities[0]);

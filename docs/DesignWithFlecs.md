@@ -44,7 +44,7 @@ There is a misconception that ECS components can only be plain data types, and s
 Queries are the primary method in Flecs for finding the entities for a set of components (or more specifically: a component expression). Queries are easy to use, but there a few things to keep in mind.
 
 ### Use the right query
-Flecs has cached queries and uncached queries. Cached queries (`ecs_query_cache_t` and `flecs::query`) are expensive to create but very cheap to iterate. Uncached queries (`ecs_query_t`, `flecs::filter`) are fast to create, but more expensive to iterate. If you need to do a quick ad-hoc query for which you couldn't know in advance what you had to query for, an uncached query is the best option. If you have a query that you know in advance and need to iterate many times, a cached query is preferred.
+Flecs has cached queries and uncached queries. Cached queries (`ecs_query_cache_t` and `flecs::query`) are expensive to create but very cheap to iterate. Uncached queries (`ecs_query_t`, `flecs::query`) are fast to create, but more expensive to iterate. If you need to do a quick ad-hoc query for which you couldn't know in advance what you had to query for, an uncached query is the best option. If you have a query that you know in advance and need to iterate many times, a cached query is preferred.
 
 Another difference is that uncached queries can be created from systems, while cached queries cannot. If you need a cached query in a system, it has to be created in advance and passed into the system, either by setting it as system context, adding a component to the system with the query, or passing it in the lambda capture list (C++ only). Systems themselves use cached queries.
 

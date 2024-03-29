@@ -58,7 +58,7 @@ int main(int, char *[]) {
     ecs.entity().add(Tile::Sand).add(TileStatus::Occupied);
 
     // Iterate all entities with a Tile relationship
-    ecs.filter_builder()
+    ecs.query_builder()
         .with<Tile>(flecs::Wildcard)
         .build()
         .each([&](flecs::iter& it, size_t) {
@@ -72,7 +72,7 @@ int main(int, char *[]) {
     //  ::Tile::Sand
 
     // Iterate only occupied tiles
-    ecs.filter_builder()
+    ecs.query_builder()
         .with<Tile>(flecs::Wildcard)
         .with(TileStatus::Occupied)
         .build()

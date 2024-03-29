@@ -203,7 +203,7 @@ while (ecs_query_next(&it)) {
 ecs_query_fini(f);
 ```
 ```cpp
-world.filter_builder()
+world.query_builder()
   .term(Eats, Apples)
   .build()
   .each([](flecs::entity e) {
@@ -228,7 +228,7 @@ while (ecs_query_next(&it)) {
 ecs_query_fini(f);
 ```
 ```cpp
-world.filter_builder()
+world.query_builder()
   .term(Eats, flecs::Wildcard)
   .build()
   .each([](flecs::iter& it, size_t i) {

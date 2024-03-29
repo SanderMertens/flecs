@@ -96,7 +96,7 @@ int main(int, char *[]) {
     // 
     // The equivalent of this query in the DSL is:
     //   Person, (LocatedIn, $Location), Country($Location)
-    flecs::rule<> r = ecs.rule_builder()
+    flecs::query<> r = ecs.query_builder()
         .with<Person>()
         .with<LocatedIn>("$Location")
         .with<Country>().src("$Location")

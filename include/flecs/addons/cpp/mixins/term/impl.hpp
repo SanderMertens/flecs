@@ -17,12 +17,12 @@ struct term final : term_builder_i<term> {
     term()
         : term_builder_i<term>(&value)
         , value({})
-        , m_world(nullptr) { value.flags |= EcsTermMove; }
+        , m_world(nullptr) { }
 
     term(flecs::world_t *world_ptr) 
         : term_builder_i<term>(&value)
         , value({})
-        , m_world(world_ptr) { value.flags |= EcsTermMove; }
+        , m_world(world_ptr) { }
 
     term(flecs::world_t *world_ptr, ecs_term_t t)
         : term_builder_i<term>(&value)
@@ -61,7 +61,6 @@ struct term final : term_builder_i<term> {
             } else {
                 value.first.id = id;
             }
-            value.flags |= EcsTermMove;
         }
 
     term(id_t r, id_t o) 
@@ -69,50 +68,11 @@ struct term final : term_builder_i<term> {
         , value({})
         , m_world(nullptr) { 
             value.id = ecs_pair(r, o);
-            value.flags |= EcsTermMove;
         }
-
-    term(const term& t) : term_builder_i<term>(&value) {
-        m_world = t.m_world;
-        value = ecs_term_copy(&t.value);
-        this->set_term(&value);
-    }
-
-    term(term&& t) noexcept : term_builder_i<term>(&value) {
-        m_world = t.m_world;
-        value = ecs_term_move(&t.value);
-        t.reset();
-        this->set_term(&value);
-    }
-
-    term& operator=(const term& t) {
-        ecs_assert(m_world == t.m_world, ECS_INVALID_PARAMETER, NULL);
-        ecs_term_fini(&value);
-        value = ecs_term_copy(&t.value);
-        this->set_term(&value);
-        return *this;
-    }
-
-    term& operator=(term&& t) noexcept {
-        ecs_assert(m_world == t.m_world, ECS_INVALID_PARAMETER, NULL);
-        ecs_term_fini(&value);
-        value = t.value;
-        this->set_term(&value);
-        t.reset();
-        return *this;
-    }   
-
-    ~term() {
-        ecs_term_fini(&value);
-    }
 
     void reset() {
         value = {};
         this->set_term(nullptr);
-    }
-
-    int finalize() {
-        return ecs_term_finalize(m_world, &value);
     }
 
     bool is_set() {
@@ -143,11 +103,11 @@ struct term final : term_builder_i<term> {
         return flecs::entity(m_world, ECS_TERM_REF_ID(&value.second));
     }
 
-    ecs_term_t move() { /* explicit move to ecs_term_t */
-        return ecs_term_move(&value);
+    operator flecs::term_t() const {
+        return value;
     }
 
-    ecs_term_t value;
+    flecs::term_t value;
 
 protected:
     flecs::world_t* world_v() override { return m_world; }

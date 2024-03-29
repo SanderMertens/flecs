@@ -77,8 +77,8 @@ while (ecs_query_next(&it)) {
 }
 ```
 ```cpp
-flecs::filter<Position, Velocity> f = 
-    world.filter<Position, Velocity>();
+flecs::query<Position, Velocity> f = 
+    world.query<Position, Velocity>();
 
 f.each([](Position& p, Velocity& v) {
     p.x += v.x;
@@ -139,8 +139,8 @@ while (ecs_query_next(&it)) {
 }
 ```
 ```cpp
-flecs::rule<Position, Velocity> r = 
-    world.rule<Position, Velocity>();
+flecs::query<Position, Velocity> r = 
+    world.query<Position, Velocity>();
 
 r.each([](Position& p, Velocity& v) {
     p.x += v.x;
@@ -197,8 +197,8 @@ Additionally the descriptor types for systems (`ecs_system_desc_t`) and observer
 Query builders are the C++ API for creating queries. The builder API is built on top of the descriptor API, and adds a layer of convenience and type safety that matches modern idiomatic C++. The builder API is implemented for all query kinds (filters, cached queries, rules). An example of a simple query:
 
 ```cpp
-flecs::filter<Position, const Velocity> f = 
-    world.filter<Position, const Velocity>();
+flecs::query<Position, const Velocity> f = 
+    world.query<Position, const Velocity>();
 ```
 
 Queries created with template arguments provide a type safe way to iterate components:
@@ -213,7 +213,7 @@ f.each([](Position& p, const Velocity& v) {
 The builder API allows for incrementally constructing queries:
 
 ```cpp
-flecs::filter<Position> q = world.filter_builder<Position>();
+flecs::query<Position> q = world.query_builder<Position>();
 f.term<const Velocity>();
 
 if (add_npc) {
@@ -227,9 +227,9 @@ The following table provides an overview of the query types with the factory fun
 
 | Kind   | Type            | Factory                 |
 |--------|-----------------|-------------------------|
-| Query | `flecs::filter` | `world::filter_builder` |
+| Query | `flecs::query` | `world::filter_builder` |
 | Query  | `flecs::query`  | `world::query_builder`  |
-| Rule   | `flecs::rule`   | `world::rule_builder`   |
+| Rule   | `flecs::query`   | `world::rule_builder`   |
 
 Additional helper methods have been added to the C++ API to replace combinations of the `term` method with other methods. They are the following:
 
@@ -261,7 +261,7 @@ ecs_query_t *f = ecs_query(world, {
 });
 ```
 ```cpp
-flecs::filter<> f = world.filter_builder()
+flecs::query<> f = world.query_builder()
   .expr("Position, [in] Velocity")
   .build();
 ```
@@ -305,10 +305,10 @@ Iteration is split up into two loops: the outer loop which iterates tables, and 
 The indices provided to the `ecs_field` function must correspond with the order in which terms have been specified in the query. This index starts counting from `1`, with index `0` reserved for the array containing entity ids.
 
 ### Each (C++)
-The `each` function is the default and often fastest approach for iterating a query in C++. `each` can be called directly on a `flecs::filter`, `flecs::query` and `flecs::rule`. An example:
+The `each` function is the default and often fastest approach for iterating a query in C++. `each` can be called directly on a `flecs::query`, `flecs::query` and `flecs::query`. An example:
 
 ```cpp
-auto f = world.filter<Position, const Velocity>();
+auto f = world.query<Position, const Velocity>();
 
 f.each([](Position& p, const Velocity& v) {
     p.x += v.x;
@@ -319,7 +319,7 @@ f.each([](Position& p, const Velocity& v) {
 A `flecs::entity` can be added as first argument:
 
 ```cpp
-auto f = world.filter<Position>();
+auto f = world.query<Position>();
 
 f.each([](flecs::entity e, Position& p) {
     std::cout << e.name() << ": " 
@@ -331,7 +331,7 @@ f.each([](flecs::entity e, Position& p) {
 A `flecs::iter` and `size_t` argument can be added as first arguments. This variant of `each` provides access to the `flecs::iter` object, which contains more information about the object being iterated. The `size_t` argument contains the index of the entity being iterated, which can be used to obtain entity-specific data from the `flecs::iter` object. An example:
 
 ```cpp
-auto f = world.filter_builder<Position>()
+auto f = world.query_builder<Position>()
   .term(Likes, flecs::Wildcard)
   .build();
 
@@ -348,7 +348,7 @@ When a query contains a template argument that is an empty type (a struct withou
 ```cpp
 struct Tag { };
 
-auto f = world.filter<Tag>();
+auto f = world.query<Tag>();
 
 f.each([](flecs::entity e, Tag) {
     std::cout << e.name() << std::endl;
@@ -360,7 +360,7 @@ Alternatively an empty type can be specified outside of the query type, which re
 ```cpp
 struct Tag { };
 
-auto f = world.filter_builder()
+auto f = world.query_builder()
   .term<Tag>()
   .build();
 
@@ -375,7 +375,7 @@ The `iter` function has an outer and inner loop (similar to C iterators) which p
 An example:
 
 ```cpp
-auto f = world.filter<Position, const Velocity>();
+auto f = world.query<Position, const Velocity>();
 
 f.iter([](flecs::iter& it, Position *p, Velocity *v) {
     // Inner loop
@@ -403,7 +403,7 @@ f.iter([](flecs::iter& it, Position *p, Velocity *v) {
 The component arguments may be omitted, and can be obtained from the iterator object:
 
 ```cpp
-auto f = world.filter<Position, const Velocity>();
+auto f = world.query<Position, const Velocity>();
 
 f.iter([](flecs::iter& it) {
     auto p = it.field<Position>(1);
@@ -419,7 +419,7 @@ f.iter([](flecs::iter& it) {
 This can be combined with an untyped variant of the `field` method to access component data without having to know component types at compile time. This can be useful for generic code, like serializers:
 
 ```cpp
-auto f = world.filter<Position, const Velocity>();
+auto f = world.query<Position, const Velocity>();
 
 f.iter([](flecs::iter& it) {
     void *ptr = it.field(1);
@@ -435,7 +435,7 @@ Entities can be moved between tables when components are added or removed. This 
 When an application attempts to add or remove components to an entity in a table being iterated over, this can throw a runtime assert. An example:
 
 ```cpp
-auto f = world.filter<Position>();
+auto f = world.query<Position>();
 
 f.each([](flecs::entity e, Position&) {
     e.add<Velocity>(); // throws locked table assert
@@ -445,7 +445,7 @@ f.each([](flecs::entity e, Position&) {
 This can be addressed by deferring operations while the query is being iterated:
 
 ```cpp
-auto f = world.filter<Position>();
+auto f = world.query<Position>();
 
 world.defer([&]{
     f.each([](flecs::entity e, Position&) {
@@ -457,7 +457,7 @@ world.defer([&]{
 An application can also use the `defer_begin` and `defer_end` functions which achieve the same goal:
 
 ```cpp
-auto f = world.filter<Position>();
+auto f = world.query<Position>();
 
 world.defer_begin();
 
@@ -556,8 +556,8 @@ ecs_query_t *f = ecs_query(world, {
 An easy way to query for components in C++ is to pass them as template arguments to the query factory function:
 
 ```cpp
-flecs::filter<Position, const Velocity> f = 
-    world.filter<Position, const Velocity>();
+flecs::query<Position, const Velocity> f = 
+    world.query<Position, const Velocity>();
 ```
 
 This changes the returned query type, which determines the type of the function used to iterate the query:
@@ -569,8 +569,8 @@ f.each([](Position& p, const Velocity& v) { });
 The builder API makes it possible to add components to a query without modifying the query type:
 
 ```cpp
-flecs::filter<Position> f = 
-  world.filter_builder<Position>()
+flecs::query<Position> f = 
+  world.query_builder<Position>()
     .term<const Velocity>()
     .build();
 ```
@@ -583,7 +583,7 @@ The builder API makes it possible to query for regular entity ids created at run
 flecs::entity Npc = world.entity();
 flecs::entity Platoon_01 = world.entity();
 
-flecs::filter<> f = world.filter_builder()
+flecs::query<> f = world.query_builder()
   .term(Npc)
   .term(Platoon_01)
   .build();
@@ -598,7 +598,7 @@ world.component<Position>();
 // Create entity with name so we can look it up
 flecs::entity Npc = world.entity("Npc");
 
-flecs::filter<> f = world.filter_builder()
+flecs::query<> f = world.query_builder()
   .term("Position")
   .term("Npc")
   .build();
@@ -671,7 +671,7 @@ flecs::entity e = world.entity()
     .add<Position>()
     .add<Velocity>();
 
-flecs::filter<> f = world.filter_builder()
+flecs::query<> f = world.query_builder()
     .term(flecs::Wildcard)
     .build();
 ```
@@ -697,7 +697,7 @@ flecs::entity e = world.entity()
     .add<Position>()
     .add<Velocity>();
 
-flecs::filter<> f = world.filter_builder()
+flecs::query<> f = world.query_builder()
     .term(flecs::Any)
     .build();
 ```
@@ -832,8 +832,8 @@ struct Apples { };
 // Alias to save typing
 using EatsApples = flecs::pair<Eats, Apples>;
 
-flecs::filter<EatsApples> f = 
-    world.filter<EatsApples>();
+flecs::query<EatsApples> f = 
+    world.query<EatsApples>();
 
 // Do not use reference argument for pair
 f.each([](EatsApples v) {
@@ -845,8 +845,8 @@ f.each([](EatsApples v) {
 When using the `iter` function to iterate a query with a pair template, the argument type assumes the type of the pair. This is required as the component array being passed directly to the `iter` function. An example:
 
 ```cpp
-flecs::filter<EatsApples> f = 
-    world.filter<EatsApples>();
+flecs::query<EatsApples> f = 
+    world.query<EatsApples>();
 
 f.iter([](flecs::iter& it, Eats *v) {
     for (auto i : it) {
@@ -864,15 +864,15 @@ struct Apples { };
 flecs::entity eats = world.component<Eats>();
 flecs::entity apples = world.component<Apples>();
 
-flecs::filter<> f_1 = world.filter_builder()
+flecs::query<> f_1 = world.query_builder()
     .term<Eats, Apples>()
     .build();
 
-flecs::filter<> f_2 = world.filter_builder()
+flecs::query<> f_2 = world.query_builder()
     .term<Eats>(apples)
     .build();
 
-flecs::filter<> f_3 = world.filter_builder()
+flecs::query<> f_3 = world.query_builder()
     .term(eats, apples)
     .build();
 ```
@@ -880,7 +880,7 @@ flecs::filter<> f_3 = world.filter_builder()
 Individual elements of a pair can be specified with the `first` and `second` methods. The methods apply to the last added term. An example:
 
 ```cpp
-flecs::filter<> f = world.filter_builder()
+flecs::query<> f = world.query_builder()
     .term().first<Eats>().second(apples)
     .build();
 ```
@@ -888,7 +888,7 @@ flecs::filter<> f = world.filter_builder()
 Individual elements of a pair can be resolved by name by using the `first` and `second` methods:
 
 ```cpp
-flecs::filter<> f = world.filter_builder()
+flecs::query<> f = world.query_builder()
     .term().first("Eats").second("Apples")
     .build();
 ```
@@ -896,7 +896,7 @@ flecs::filter<> f = world.filter_builder()
 When a query pair contains a wildcard, the `flecs::iter::pair` method can be used to determine the id of the pair element that matched the query:
 
 ```cpp
-flecs::filter<> f = world.filter_builder()
+flecs::query<> f = world.query_builder()
     .term<Eats>(flecs::Wildcard)
     .build();
 
@@ -981,7 +981,7 @@ ecs_query_t *f = ecs_query(world, {
 Access modifiers can be set using the `inout` method:
 
 ```cpp
-flecs::filter<> f = world.filter_builder()
+flecs::query<> f = world.query_builder()
     .term<Position>()
     .term<Velocity>().inout(flecs::In)
     .build();
@@ -991,14 +991,14 @@ When the `const` modifier is added to a type, the `flecs::In` modifier is automa
 
 ```c
 // Velocity term will be added with flecs::In modifier
-flecs::filter<Position, const Velocity> f = 
-    world.filter<Position, const Velocity>();
+flecs::query<Position, const Velocity> f = 
+    world.query<Position, const Velocity>();
 ```
 
 This also applies to types added with `term`:
 
 ```c
-flecs::filter<> f = world.filter_builder()
+flecs::query<> f = world.query_builder()
     .term<Position>()
     .term<const Velocity>() // uses flecs::In modifier
     .build();
@@ -1007,7 +1007,7 @@ flecs::filter<> f = world.filter_builder()
 When a component is added by the `term` method and retrieved from a `flecs::iter` object during iteration, it must meet the constraints of the access modifiers. If the constraints are not met, a runtime assert may be thrown:
 
 ```cpp
-flecs::filter<> f = world.filter_builder()
+flecs::query<> f = world.query_builder()
     .term<Position>()
     .term<Velocity>().inout(flecs::In)
     .build();
@@ -1023,7 +1023,7 @@ f.iter([](flecs::iter& it) {
 The builder API has `in()`, `inout()`, `out()` and `inout_none()` convenience methods:
 
 ```cpp
-flecs::filter<> f = world.filter_builder()
+flecs::query<> f = world.query_builder()
     .term<Position>().inout()
     .term<Velocity>().in()
     .build();
@@ -1082,14 +1082,14 @@ ecs_query_t *f_2 = ecs_query(world, {
 When no operator is specified, `And` is assumed. The following two queries are equivalent:
 
 ```cpp
-flecs::filter<Position, Velocity> f_1 = world.filter<Position, Velocity>();
+flecs::query<Position, Velocity> f_1 = world.query<Position, Velocity>();
 
-flecs::filter<> f_2 = world.filter_builder()
+flecs::query<> f_2 = world.query_builder()
     .term<Position>()
     .term<Velocity>()
     .build();
 
-flecs::filter<> f_2 = world.filter_builder()
+flecs::query<> f_2 = world.query_builder()
     .term<Position>().oper(flecs::And)
     .term<Velocity>().oper(flecs::And)
     .build();
@@ -1098,7 +1098,7 @@ flecs::filter<> f_2 = world.filter_builder()
 The builder API has a `and_` convenience method:
 
 ```cpp
-flecs::filter<> f = world.filter_builder()
+flecs::query<> f = world.query_builder()
     .term<Position>().and_(); // note escaping, 'and' is a C++ keyword
     .term<Velocity>().and_();
     .build();
@@ -1163,7 +1163,7 @@ To create a query with `Or` terms, use the `oper` method with `flecs::Or`:
 
 ```cpp
 // Position, Velocity || Speed, Mass
-flecs::filter<> f = world.filter_builder()
+flecs::query<> f = world.query_builder()
     .term<Position>()
     .term<Velocity>().oper(flecs::Or)
     .term<Speed>()
@@ -1190,7 +1190,7 @@ f.iter([&](flecs::iter& it) {
 The builder API has a `or_` convenience method:
 
 ```cpp
-flecs::filter<> f = world.filter_builder()
+flecs::query<> f = world.query_builder()
     .term<Position>() 
     .term<Velocity>().or_(); // note escaping, 'or' is a C++ keyword
     .term<Speed>()
@@ -1230,7 +1230,7 @@ ecs_query_t *f = ecs_query(world, {
 To create a query with `Not` terms, use the `oper` method with `flecs::Not`:
 
 ```cpp
-flecs::filter<> f = world.filter_builder()
+flecs::query<> f = world.query_builder()
     .term<Position>()
     .term<Velocity>().oper(flecs::Not)
     .build();
@@ -1239,7 +1239,7 @@ flecs::filter<> f = world.filter_builder()
 The builder API has a `not_` convenience method:
 
 ```cpp
-flecs::filter<> f = world.filter_builder()
+flecs::query<> f = world.query_builder()
     .term<Position>() 
     .term<Velocity>().not_(); // note escaping, 'not' is a C++ keyword
     .build();
@@ -1296,7 +1296,7 @@ while (ecs_query_next(&it)) {
 To create a query with `Optional` terms, call the `oper` method with `flecs::Optional`:
 
 ```cpp
-flecs::filter<> f = world.filter_builder()
+flecs::query<> f = world.query_builder()
     .term<Position>()
     .term<Velocity>().oper(flecs::Optional)
     .build();
@@ -1316,7 +1316,7 @@ f.iter([&](flecs::iter& it) {
 The builder API has an `optional` convenience method:
 
 ```cpp
-flecs::filter<> f = world.filter_builder()
+flecs::query<> f = world.query_builder()
     .term<Position>() 
     .term<Velocity>().optional();
     .build();
@@ -1378,7 +1378,7 @@ ecs_query_impl_t *r = ecs_query(world, {
 
 #### Query Builder (C++)
 ```cpp
-world.rule_builder()
+world.query_builder()
   // $this == Foo
   .with(flecs::PredEq, Foo)
   // $this != Foo
@@ -1436,7 +1436,7 @@ flecs::entity type_list = world.prefab()
   .add<Position>()
   .add<Velocity>();
 
-flecs::filter<> f = world.filter_builder()
+flecs::query<> f = world.query_builder()
     .term(type_list).oper(flecs::AndFrom) // match Position, Velocity
     .term(type_list).oper(flecs::OrFrom)  // match Position || Velocity
     .term(type_list).oper(flecs::NotFrom) // match !Position, !Velocity
@@ -1446,7 +1446,7 @@ flecs::filter<> f = world.filter_builder()
 The builder API has the `and_from`, `or_from` and `not_from` convenience methods:
 
 ```cpp
-flecs::filter<> f = world.filter_builder()
+flecs::query<> f = world.query_builder()
     .term(type_list).and_from()
     .term(type_list).or_from()
     .term(type_list).not_from()
@@ -1518,7 +1518,7 @@ ecs_query_impl_t *r = ecs_query(world, {
 
 #### Query Builder (C++)
 ```cpp
-world.rule_builder()
+world.query_builder()
   // Position, !{ Velocity || Speed }
   .with<Position>()
   .scope_open().not_()
@@ -1620,7 +1620,7 @@ To specify a fixed source, call the `src` method to the entity to match. The fol
 flecs::entity Game = world.entity()
   .add<SimTime>();
 
-flecs::filter<> f = world.filter_builder()
+flecs::query<> f = world.query_builder()
   .term<Position>()  // normal term, uses $This source
   .term<Velocity>()  // normal term, also uses $This source
   .term<SimTime>().src(Game) // fixed source, match SimTime on Game
@@ -1645,9 +1645,9 @@ Returning entities one at a time can negatively affect performance, especially f
 The next example shows how queries with mixed `$This` and fixed sources can be iterated with `each`. The `each` function does not have the performance drawback of the last `iter` example, as it uses [instancing](#instancing) by default.
 
 ```cpp
-flecs::filter<Position, Velocity, SimTime> f = 
-  world.filter_builder<Position, Velocity, SimTime>()
-    .arg(3).src(Game) // set fixed source for 3rd template argument (SimTime)
+flecs::query<Position, Velocity, SimTime> f = 
+  world.query_builder<Position, Velocity, SimTime>()
+    .term_at(3).src(Game) // set fixed source for 3rd template argument (SimTime)
     .build();
 
 // Because all components are now part of the filter type, we can use each
@@ -1660,10 +1660,10 @@ f.each([](flecs::entity e, Position& p, Velocity& v, SimTime& st) {
 When a query has no terms for the `$This` source, it must be iterated with the `iter` function or with a variant of `each` that does not have a signature with `flecs::entity` as first argument:
 
 ```cpp
-flecs::filter<SimConfig, SimTime> f = 
-  world.filter_builder<SimConfig, SimTime>()
-    .arg(1).src(Cfg)
-    .arg(2).src(Game)
+flecs::query<SimConfig, SimTime> f = 
+  world.query_builder<SimConfig, SimTime>()
+    .term_at(1).src(Cfg)
+    .term_at(2).src(Game)
     .build();
 
 // Ok (note that it.count() will be 0)
@@ -1690,10 +1690,10 @@ f.each([](flecs::entity e, SimConfig& sc, SimTime& st) {
 A source may also be specified by name:
 
 ```cpp
-flecs::filter<SimConfig, SimTime> f = 
-  world.filter_builder<SimConfig, SimTime>()
-    .arg(1).src("Cfg")
-    .arg(2).src("Game")
+flecs::query<SimConfig, SimTime> f = 
+  world.query_builder<SimConfig, SimTime>()
+    .term_at(1).src("Cfg")
+    .term_at(2).src("Game")
     .build();
 ```
 
@@ -1748,7 +1748,7 @@ The singleton component data is accessed in the same way a component from a stat
 A singleton query can be created by specifying the same id as component and source:
 
 ```cpp
-flecs::filter<Player, Position> f = world.filter_builder<Player, Position>()
+flecs::query<Player, Position> f = world.query_builder<Player, Position>()
   .term<Input>().src<Input>() // match Input on itself
   .build();
 ```
@@ -1756,7 +1756,7 @@ flecs::filter<Player, Position> f = world.filter_builder<Player, Position>()
 The builder API provides a `singleton` convenience function:
 
 ```cpp
-flecs::filter<Player, Position> f = world.filter_builder<Player, Position>()
+flecs::query<Player, Position> f = world.query_builder<Player, Position>()
   .term<Input>().singleton() // match Input on itself
   .build();
 ```
@@ -1818,7 +1818,7 @@ flecs::entity child = world.entity()
   .add(flecs::ChildOf, parent);
 
 // This filter matches 'child', because it has a parent that inherits Mass
-flecs::filter<> f = world.filter_builder()
+flecs::query<> f = world.query_builder()
   .term<Mass>().up(flecs::ChildOf)
   .build();
 ```
@@ -1957,13 +1957,13 @@ flecs::entity base = world.entity()
 flecs::entity inst = world.entity()
   .is_a(base); // short for .add(flecs::IsA, base)
 
-flecs::filter<> f = world.filter<Position>();
+flecs::query<> f = world.query<Position>();
 ```
 
 Implicit traversal can be disabled by calling the `self` method for the term. The following example only matches `base`:
 
 ```cpp
-flecs::filter<> f = world.filter_builder()
+flecs::query<> f = world.query_builder()
   .term<Position>().self()
   .build();
 ```
@@ -1977,7 +1977,7 @@ flecs::entity parent = world.entity()
 flecs::entity child = world.entity()
   .child_of(parent);  // short for .add(flecs::ChildOf, parent)
 
-flecs::filter<> f = world.filter_builder()
+flecs::query<> f = world.query_builder()
   // term matches parent & child
   .term<Position>()
   // term just matches child, parent does not have a parent with Position
@@ -1988,7 +1988,7 @@ flecs::filter<> f = world.filter_builder()
 The `parent` method can be used which is shorthand for `up(flecs::ChildOf)`. The query in the following example is equivalent to the one in the previous example:
 
 ```cpp
-flecs::filter<> f = world.filter_builder()
+flecs::query<> f = world.query_builder()
   .term<Position>()
   .term<Position>().parent()
   .build();
@@ -1997,7 +1997,7 @@ flecs::filter<> f = world.filter_builder()
 If a query needs to match a component from both child and parent, but must also include the root of the tree, the term that traverses the relationship can be made optional. The following example matches both `parent` and `child`. The second term is not set for the result that contains `parent`.
 
 ```cpp
-flecs::filter<> f = world.filter_builder()
+flecs::query<> f = world.query_builder()
   .term<Position>()
   .term<Position>().parent().optional()
   .build();
@@ -2015,7 +2015,7 @@ flecs::query<> q = world.query_builder()
 Relationship traversal can be combined with fixed [source](#source) terms. The following query matches if the `my_widget` entity has a parent with the `Window` component:
 
 ```cpp
-flecs::filter<> f = world.filter_builder()
+flecs::query<> f = world.query_builder()
   .term<Window>().src(my_widget).parent()
   .build();
 ```
@@ -2023,9 +2023,9 @@ flecs::filter<> f = world.filter_builder()
 The two queries in the following example are equivalent, and show how the implicit traversal of the `IsA` relationship is implemented:
 
 ```cpp
-flecs::filter<> f = world.filter<Position>();
+flecs::query<> f = world.query<Position>();
 
-flecs::filter<> f = world.filter_builder()
+flecs::query<> f = world.query_builder()
   .term<Position>() // match Position
     .self()         // first match self
     .up(flecs::IsA) // traverse IsA upwards while not found
@@ -2119,7 +2119,7 @@ flecs::entity ent_2 = world.entity("ent_2")
   .set<Mass>({30})
   .set<Position>({50, 60});
 
-flecs::filter<Position, Mass> f = world.filter<Position, Mass>();
+flecs::query<Position, Mass> f = world.query<Position, Mass>();
 ```
 
 The filter in this example will match both `inst_1`, `inst_2` because they inherit `Mass`, and `ent_1` and `ent_2` because they own `Mass`. The following example shows an example of code that iterates the filter:
@@ -2236,9 +2236,9 @@ Note how the `ecs_field_is_self` test is moved outside of the for loops. This ke
 Queries can be instanced by calling the `instanced` method:
 
 ```cpp
-flecs::filter<Position, Mass> f = world.filter_builder<Position, Mass>()
+flecs::query<Position, Mass> f = world.query_builder<Position, Mass>()
   // Never inherit Position
-  .arg(1).self()
+  .term_at(1).self()
   // Instancing is a property of the iterator, but by setting it on the query
   // all iterators created for the query will be instanced.
   .instanced()
@@ -2373,7 +2373,7 @@ ecs_iter_set_var(&it, location_var, earth);
 Query variables can be specified by specifying a name with a `$` prefix:
 
 ```cpp
-auto r = world.rule_builder()
+auto r = world.query_builder()
   .term<SpaceShip>()
   .term<DockedTo>().second("$Location")
   .term<Planet>().src("$Location")
@@ -2383,7 +2383,7 @@ auto r = world.rule_builder()
 Alternatively, variables can also be specified using the `var` method:
 
 ```cpp
-auto r = world.rule_builder()
+auto r = world.query_builder()
   .term<SpaceShip>()
   .term<DockedTo>().second().var("Location")
   .term<Planet>().src().var("Location")
@@ -2471,7 +2471,7 @@ while (ecs_query_next(&it)) {
   if (dont_change) {
     // If no changes are made to the iterated table, the skip function can be
     // called to prevent marking the matched components as dirty.
-    ecs_query_cache_skip(&it);
+    ecs_iter_skip(&it);
   } else {
     // Iterate as usual. It does not matter whether the code actually writes the
     // components or not: when a table is not skipped, components matched with
@@ -2799,7 +2799,7 @@ flecs::entity unit_01 = world.entity().add(MeleeUnit);
 flecs::entity unit_02 = world.entity().add(RangedUnit);
 
 // Matches entities with Unit, MeleeUnit and RangedUnit
-flecs::rule<Unit> r = world.rule<Unit>();
+flecs::query<Unit> r = world.query<Unit>();
 
 // Iterate as usual
 ```
@@ -2885,7 +2885,7 @@ flecs::entity CentralPark = world.entity().add<LocatedIn>(Manhattan);
 flecs::entity Bob = world.entity().add<LocatedIn>(CentralPark);
 
 // Matches ManHattan, CentralPark, Bob
-flecs::rule<> r = world.rule_builder()
+flecs::query<> r = world.query_builder()
   .term<LocatedIn>(NewYork)
   .build();
 
@@ -2899,7 +2899,7 @@ Queries for transitive relationships can be compared with variables. This query 
 //  - ManHattan (Place = NewYork)
 //  - CentralPark (Place = ManHattan, NewYork)
 //  - Bob (Place = CentralPark, ManHattan, NewYork)
-flecs::rule<> r = world.rule_builder()
+flecs::query<> r = world.query_builder()
   .term<LocatedIn>().second("$Place")
   .build();
 ```
@@ -2916,7 +2916,7 @@ NewYork.add(City);
 //  - ManHattan (Place = NewYork)
 //  - CentralPark (Place = NewYork)
 //  - Bob (Place = NewYork)
-flecs::rule<> r = world.rule_builder()
+flecs::query<> r = world.query_builder()
   .term<LocatedIn>().second("$Place")
   .term<City>().src("$Place")
   .build();
@@ -2975,7 +2975,7 @@ flecs::entity Tree = world.entity();
 flecs::entity Oak = world.entity().is_a(Tree);
 
 // Matches Tree, Oak
-flecs::rule<> r = world.rule_builder()
+flecs::query<> r = world.query_builder()
   .term(flecs::IsA, Tree)
   .build();
 ```
@@ -3033,7 +3033,7 @@ while (ecs_query_next(&child_it)) {
 ecs_query_fini(f);
 ```
 ```cpp
-auto f = world.filter_builder()
+auto f = world.query_builder()
   .term(flecs::ChildOf, e)
   .build();
 

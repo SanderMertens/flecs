@@ -11,9 +11,7 @@ namespace flecs
 inline void world::init_builtin_components() {
     this->component<Component>();
     this->component<Identifier>();
-    this->component<Iterable>("flecs::core::Iterable");
     this->component<Poly>();
-    this->component<Target>();
 
 #   ifdef FLECS_SYSTEM
     _::system_init(*this);
@@ -271,7 +269,7 @@ inline flecs::entity enum_data<E>::entity(underlying_type_t<E> value) const {
 #ifdef FLECS_META
     // Reflection data lookup failed. Try value lookup amongst flecs::Constant relationships
     flecs::world world = flecs::world(world_);
-    return world.filter_builder()
+    return world.query_builder()
         .with(flecs::ChildOf, world.id<E>())
         .with(flecs::Constant, world.id<int32_t>())
         .build()

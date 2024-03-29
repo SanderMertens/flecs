@@ -1373,7 +1373,7 @@ int32_t ecs_query_entity_count(
     return flecs_query_cache_entity_count(flecs_query_impl(query)->cache);
 }
 
-void ecs_query_set_group(
+void ecs_iter_set_group(
     ecs_iter_t *it,
     uint64_t group_id)
 {

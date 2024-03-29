@@ -27,7 +27,7 @@ int main(int, char *[]) {
 
     // Ad hoc queries are bit slower to iterate than flecs::query, but are 
     // faster to create, and in most cases require no allocations. Under the
-    // hood this API uses flecs::filter, which can be used directly for more
+    // hood this API uses flecs::query, which can be used directly for more
     // complex queries.
     ecs.each([](flecs::entity e, Position& p, Velocity& v) {
         p.x += v.x;

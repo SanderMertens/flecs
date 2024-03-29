@@ -28,7 +28,7 @@ int main(int, char *[]) {
     //
     // Rules are similar to queries, but support more advanced features. This
     // example shows how the basics of how to use rules & variables.
-    flecs::rule<> r = ecs.rule_builder()
+    flecs::query<> r = ecs.query_builder()
         // Identifiers that start with _ are query variables. Query variables
         // are like wildcards, but enforce that the entity substituted by the
         // wildcard is the same across terms.

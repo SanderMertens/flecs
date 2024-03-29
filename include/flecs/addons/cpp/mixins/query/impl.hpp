@@ -7,37 +7,73 @@
 
 #include "builder.hpp"
 
-namespace flecs {
-
-////////////////////////////////////////////////////////////////////////////////
-//// Persistent queries
-////////////////////////////////////////////////////////////////////////////////
+namespace flecs 
+{
 
 struct query_base {
     query_base()
         : m_world(nullptr)
-        , m_query(nullptr) { }    
-    
-    query_base(world_t *world, query_t *query = nullptr)
+        , m_query(nullptr) { }
+
+    query_base(world_t *world, ecs_query_t *query)
         : m_world(world)
         , m_query(query) { }
+
+    query_base(world_t *world, const ecs_query_t *query)
+        : m_world(world)
+        , m_query(ECS_CONST_CAST(ecs_query_t*, query)) { }
 
     query_base(world_t *world, ecs_query_desc_t *desc) 
         : m_world(world)
     {
-        m_query = ecs_query_cache_init(world, desc);
-
-        if (!m_query) {
-            ecs_abort(ECS_INVALID_PARAMETER, NULL);
-        }
-
-        if (desc->filter.terms_buffer) {
-            ecs_os_free(desc->filter.terms_buffer);
-        }
+        m_query = ecs_query_init(world, desc);
     }
 
-    operator query_t*() const {
+    query_base(const query_base& obj) {
+        this->m_world = obj.m_world;
+        this->m_query = obj.m_query;
+    }
+
+    query_base& operator=(const query_base& obj) {
+        this->m_world = obj.m_world;
+        this->m_query = obj.m_query;
+        return *this; 
+    }
+
+    query_base(query_base&& obj) noexcept {
+        this->m_world = obj.m_world;
+        this->m_query = obj.m_query;
+        obj.m_query = nullptr;
+    }
+
+    query_base& operator=(query_base&& obj) noexcept {
+        this->m_world = obj.m_world;
+        this->m_query = obj.m_query;
+        obj.m_query = nullptr;
+        return *this; 
+    }
+
+    flecs::entity entity() {
+        return flecs::entity(m_world, m_query->entity);
+    }
+
+    operator const flecs::query_t*() const {
         return m_query;
+    }
+
+    operator bool() const {
+        return m_query != nullptr;
+    }
+
+    void destruct() {
+        ecs_query_fini(m_query);
+        m_query = nullptr;
+    }
+
+    /** Free the query.
+     */
+    ~query_base() {
+        ecs_query_fini(m_query);
     }
 
     /** Returns whether the query data changed since the last iteration.
@@ -50,18 +86,7 @@ struct query_base {
      * @return true if entities changed, otherwise false.
      */
     bool changed() const {
-        return ecs_query_changed(m_query, 0);
-    }
-
-    /** Returns whether query is orphaned.
-     * When the parent query of a subquery is deleted, it is left in an orphaned
-     * state. The only valid operation on an orphaned query is deleting it. Only
-     * subqueries can be orphaned.
-     *
-     * @return true if query is orphaned, otherwise false.
-     */
-    bool orphaned() const {
-        return ecs_query_cache_orphaned(m_query);
+        return ecs_query_changed(m_query);
     }
 
     /** Get info for group. 
@@ -70,7 +95,7 @@ struct query_base {
      * @return The group info.
      */
     const flecs::query_group_info_t* group_info(uint64_t group_id) const {
-        return ecs_query_cache_get_group_info(m_query, group_id);
+        return ecs_query_get_group_info(m_query, group_id);
     }
 
     /** Get context for group. 
@@ -87,61 +112,77 @@ struct query_base {
         }
     }
 
-    /** Free the query.
-     */
-    void destruct() {
-        ecs_query_cache_fini(m_query);
-        m_world = nullptr;
-        m_query = nullptr;
-    }
-
     template <typename Func>
-    void each_term(const Func& func) const {
-        this->filter().each_term(func);
+    void each_term(const Func& func) {
+        for (int i = 0; i < m_query->term_count; i ++) {
+            flecs::term t(m_world, m_query->terms[i]);
+            func(t);
+            t.reset(); // prevent freeing resources
+        }
     }
 
-    filter_base filter() const {
-        return filter_base(m_world, ecs_query_cache_get_filter(m_query));
+    flecs::term term(int32_t index) {
+        return flecs::term(m_world, m_query->terms[index]);
     }
 
-    flecs::term term(int32_t index) const {
-        const ecs_query_t *f = ecs_query_cache_get_filter(m_query);
-        ecs_assert(f != NULL, ECS_INVALID_PARAMETER, NULL);
-        return flecs::term(m_world, f->terms[index]);
+    int32_t term_count() {
+        return m_query->term_count;
     }
 
-    int32_t field_count() const {
-        const ecs_query_t *f = ecs_query_cache_get_filter(m_query);
-        return f->term_count;   
+    int32_t field_count() {
+        return m_query->field_count;
     }
 
-    flecs::string str() const {
-        const ecs_query_t *f = ecs_query_cache_get_filter(m_query);
-        char *result = ecs_query_str(m_world, f);
+    int32_t find_var(const char *name) {
+        return ecs_query_find_var(m_query, name);
+    }
+
+    flecs::string str() {
+        char *result = ecs_query_str(m_query);
         return flecs::string(result);
     }
 
-    flecs::entity entity() const {
-        return flecs::entity(m_world, ecs_get_entity(m_query));
+    /** Returns a string representing the query plan.
+     * This can be used to analyze the behavior & performance of the query.
+     * @see ecs_query_plan
+     */
+    flecs::string plan() const {
+        char *result = ecs_query_plan(m_query);
+        return flecs::string(result);
     }
-    
+
     operator query<>() const;
 
 protected:
-    world_t *m_world;
+    world_t *m_world = nullptr;
     query_t *m_query;
 };
 
 template<typename ... Components>
-struct query final : query_base, iterable<Components...> {
-public:
-    flecs::world world() const {
-        return flecs::world(m_world);
-    }
-    
+struct query : query_base, iterable<Components...> {
 private:
     using Terms = typename _::term_ptrs<Components...>::array;
 
+public:
+    using query_base::query_base;
+
+    query() : query_base() { } // necessary not to confuse msvc
+
+    query(const query& obj) : query_base(obj) { }
+
+    query& operator=(const query& obj) {
+        query_base::operator=(obj);
+        return *this;
+    }
+
+    query(query&& obj) noexcept : query_base(FLECS_MOV(obj)) { }
+
+    query& operator=(query&& obj) noexcept {
+        query_base::operator=(FLECS_FWD(obj));
+        return *this;
+    }
+
+private:
     ecs_iter_t get_iter(flecs::world_t *world) const override {
         if (!world) {
             world = m_world;
@@ -156,12 +197,9 @@ private:
     ecs_iter_next_action_t next_each_action() const override {
         return ecs_query_next_instanced;
     }
-
-public:
-    using query_base::query_base;
 };
 
-// Mixin implementation
+// World mixin implementation
 template <typename... Comps, typename... Args>
 inline flecs::query<Comps...> world::query(Args &&... args) const {
     return flecs::query_builder<Comps...>(m_world, FLECS_FWD(args)...)
@@ -173,16 +211,81 @@ inline flecs::query_builder<Comps...> world::query_builder(Args &&... args) cons
     return flecs::query_builder<Comps...>(m_world, FLECS_FWD(args)...);
 }
 
-// Builder implementation
-template <typename Base, typename ... Components>
-inline Base& query_builder_i<Base, Components ...>::observable(const query_base& parent) {
-    m_desc->parent = parent;
-    return *static_cast<Base*>(this);
+// world::each
+namespace _ {
+
+// Each with entity parameter
+template<typename Func, typename ... Args>
+struct query_delegate_w_ent;
+
+template<typename Func, typename E, typename ... Args>
+struct query_delegate_w_ent<Func, arg_list<E, Args ...> >
+{
+    query_delegate_w_ent(const flecs::world& world, Func&& func) {
+        auto f = world.query<Args ...>();
+        f.each(FLECS_MOV(func));
+    }
+};
+
+// Each without entity parameter
+template<typename Func, typename ... Args>
+struct query_delegate_no_ent;
+
+template<typename Func, typename ... Args>
+struct query_delegate_no_ent<Func, arg_list<Args ...> >
+{
+    query_delegate_no_ent(const flecs::world& world, Func&& func) {
+        auto f = world.query<Args ...>();
+        f.each(FLECS_MOV(func));
+    }
+};
+
+// Switch between function with & without entity parameter
+template<typename Func, typename T = int>
+struct query_delegate;
+
+template <typename Func>
+struct query_delegate<Func, if_t<is_same<first_arg_t<Func>, flecs::entity>::value> > {
+    query_delegate(const flecs::world& world, Func&& func) {
+        query_delegate_w_ent<Func, arg_list_t<Func>>(world, FLECS_MOV(func));
+    }
+};
+
+template <typename Func>
+struct query_delegate<Func, if_not_t<is_same<first_arg_t<Func>, flecs::entity>::value> > {
+    query_delegate(const flecs::world& world, Func&& func) {
+        query_delegate_no_ent<Func, arg_list_t<Func>>(world, FLECS_MOV(func));
+    }
+};
+
+}
+
+template <typename Func>
+inline void world::each(Func&& func) const {
+    _::query_delegate<Func> f_delegate(*this, FLECS_MOV(func));
+}
+
+template <typename T, typename Func>
+inline void world::each(Func&& func) const {
+    ecs_iter_t it = ecs_each_id(m_world, _::cpp_type<T>::id());
+
+    while (ecs_each_next(&it)) {
+        _::each_delegate<Func, T>(func).invoke(&it);
+    }
+}
+
+template <typename Func>
+inline void world::each(flecs::id_t each_id, Func&& func) const {
+    ecs_iter_t it = ecs_each_id(m_world, each_id);
+
+    while (ecs_each_next(&it)) {
+        _::each_delegate<Func>(func).invoke(&it);
+    }
 }
 
 // query_base implementation
-inline query_base::operator query<>() const {
+inline query_base::operator flecs::query<> () const {
     return flecs::query<>(m_world, m_query);
 }
 
-} // namespace flecs
+}

@@ -324,9 +324,9 @@ void Module_lookup_module_after_reparent(void) {
 
     // Tests if symbol resolving (used by query DSL) interferes with getting the
     // correct object
-    test_int(world.filter_builder()
+    test_int(world.query_builder()
         .expr("(ChildOf, p.NestedModule)").build().count(), 1);
-    test_int(world.filter_builder()
+    test_int(world.query_builder()
         .expr("(ChildOf, ns.NestedModule)").build().count(), 0);
 }
 

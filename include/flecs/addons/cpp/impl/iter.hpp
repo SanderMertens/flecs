@@ -91,8 +91,8 @@ inline flecs::entity iter::get_var(int var_id) const {
  */
 inline flecs::entity iter::get_var(const char *name) const {
     ecs_query_iter_t *rit = &m_iter->priv.iter.rule;
-    const flecs::rule_t *r = rit->rule;
-    int var_id = ecs_query_find_var(r, name);
+    const flecs::query_t *q = rit->rule;
+    int var_id = ecs_query_find_var(q, name);
     ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, name);
     return flecs::entity(m_iter->world, ecs_iter_get_var(m_iter, var_id));
 }

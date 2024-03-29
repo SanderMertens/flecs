@@ -1038,7 +1038,6 @@ struct world {
 #   include "mixins/entity/mixin.inl"
 #   include "mixins/event/mixin.inl"
 #   include "mixins/term/mixin.inl"
-#   include "mixins/filter/mixin.inl"
 #   include "mixins/observer/mixin.inl"
 #   include "mixins/query/mixin.inl"
 #   include "mixins/enum/mixin.inl"
@@ -1057,9 +1056,6 @@ struct world {
 #   endif
 #   ifdef FLECS_TIMER
 #   include "mixins/timer/mixin.inl"
-#   endif
-#   ifdef FLECS_RULES
-#   include "mixins/rule/mixin.inl"
 #   endif
 #   ifdef FLECS_PLECS
 #   include "mixins/plecs/mixin.inl"

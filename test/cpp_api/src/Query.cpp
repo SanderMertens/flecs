@@ -452,64 +452,6 @@ void Query_signature_optional(void) {
     test_int(p->y, 81); 
 }
 
-void Query_subquery(void) {
-    flecs::world world;
-
-    auto e1 = flecs::entity(world)
-        .set<Position>({10, 20})
-        .set<Velocity>({1, 2});
-
-    auto e2 = flecs::entity(world)
-        .set<Velocity>({1, 2});        
-
-    auto q = world.query<Position>();
-    auto sq = world.query_builder<Velocity>().observable(q).build();
-
-    sq.each([](flecs::entity e, Velocity& v) {
-        v.x ++;
-        v.y ++;
-    });
-
-    const Velocity *v = e1.get<Velocity>();
-    test_int(v->x, 2);
-    test_int(v->y, 3);
-
-    v = e2.get<Velocity>();
-    test_int(v->x, 1);
-    test_int(v->y, 2);
-}
-
-void Query_subquery_w_expr(void) {
-    flecs::world world;
-
-    auto e1 = flecs::entity(world)
-        .set<Position>({10, 20})
-        .set<Velocity>({1, 2});
-
-    auto e2 = flecs::entity(world)
-        .set<Velocity>({1, 2});        
-
-    auto q = world.query<Position>();
-    auto sq = world.query_builder<>().observable(q).expr("Velocity").build();
-
-    sq.iter([](flecs::iter it) {
-        auto v = it.field<Velocity>(1);
-
-        for (auto i : it) {
-            v[i].x ++;
-            v[i].y ++;
-        }
-    });
-
-    const Velocity *v = e1.get<Velocity>();
-    test_int(v->x, 2);
-    test_int(v->y, 3);
-
-    v = e2.get<Velocity>();
-    test_int(v->x, 1);
-    test_int(v->y, 2);
-}
-
 void Query_query_single_pair(void) {
     flecs::world world;
 
@@ -618,20 +560,6 @@ void Query_changed(void) {
 
     q_w.each([](Position& p) { }); // Query has out term
     test_bool(q.changed(), true);
-}
-
-void Query_orphaned(void) {
-    flecs::world world;
-
-    auto q = world.query<Position>();
-    auto sq = world.query_builder<Position>().observable(q).build();
-    
-    test_assert(!q.orphaned());
-    test_assert(!sq.orphaned());
-
-    q.destruct();
-
-    test_assert(sq.orphaned());
 }
 
 void Query_default_ctor(void) {
@@ -1206,7 +1134,7 @@ void Query_instanced_query_w_singleton_each(void) {
     e5.add<Tag>();
 
     auto q = ecs.query_builder<Self, Position, const Velocity>()
-        .arg(3).singleton()
+        .term_at(3).singleton()
         .instanced()
         .build();
 
@@ -1324,7 +1252,7 @@ void Query_un_instanced_query_w_singleton_each(void) {
     e5.add<Tag>();
 
     auto q = ecs.query_builder<Self, Position, const Velocity>()
-        .arg(3).singleton()
+        .term_at(3).singleton()
         .build();
 
     int32_t count = 0;
@@ -1440,7 +1368,7 @@ void Query_instanced_query_w_singleton_iter(void) {
     e5.add<Tag>();
 
     auto q = ecs.query_builder<Self, Position, const Velocity>()
-        .arg(3).singleton()
+        .term_at(3).singleton()
         .instanced()
         .build();
 
@@ -1572,7 +1500,7 @@ void Query_un_instanced_query_w_singleton_iter(void) {
     e5.add<Tag>();
 
     auto q = ecs.query_builder<Self, Position, const Velocity>()
-        .arg(3).singleton()
+        .term_at(3).singleton()
         .build();
 
     int32_t count = 0;
@@ -1849,8 +1777,8 @@ void Query_each_w_iter_no_this(void) {
         .set<Velocity>({1, 2});
 
     auto q = ecs.query_builder<Position, Velocity>()
-        .arg(1).src(e)
-        .arg(2).src(e)
+        .term_at(1).src(e)
+        .term_at(2).src(e)
         .build();
 
     int32_t count = 0;
@@ -2227,8 +2155,8 @@ void Query_each_w_no_this(void) {
         .set<Velocity>({1, 2});
 
     auto q = ecs.query_builder<Position, Velocity>()
-        .arg(1).src(e)
-        .arg(2).src(e)
+        .term_at(1).src(e)
+        .term_at(2).src(e)
         .build();
 
     int32_t count = 0;
@@ -2254,8 +2182,8 @@ void Query_invalid_each_w_no_this(void) {
         .set<Velocity>({1, 2});
 
     auto q = ecs.query_builder<Position, Velocity>()
-        .arg(1).src(e)
-        .arg(2).src(e)
+        .term_at(1).src(e)
+        .term_at(2).src(e)
         .build();
 
     test_expect_abort();
@@ -2566,4 +2494,60 @@ void Query_optional_pair_term(void) {
 
     test_int(1, with_pair);
     test_int(1, without_pair);
+}
+
+void Query_term_each_component(void) {
+    // Implement testcase
+}
+
+void Query_term_each_tag(void) {
+    // Implement testcase
+}
+
+void Query_term_each_id(void) {
+    // Implement testcase
+}
+
+void Query_term_each_pair_type(void) {
+    // Implement testcase
+}
+
+void Query_term_each_pair_id(void) {
+    // Implement testcase
+}
+
+void Query_term_each_pair_relation_wildcard(void) {
+    // Implement testcase
+}
+
+void Query_term_each_pair_object_wildcard(void) {
+    // Implement testcase
+}
+
+void Query_term_get_id(void) {
+    // Implement testcase
+}
+
+void Query_term_get_subj(void) {
+    // Implement testcase
+}
+
+void Query_term_get_pred(void) {
+    // Implement testcase
+}
+
+void Query_term_get_obj(void) {
+    // Implement testcase
+}
+
+void Query_named_filter(void) {
+    // Implement testcase
+}
+
+void Query_named_scoped_filter(void) {
+    // Implement testcase
+}
+
+void Query_set_this_var(void) {
+    // Implement testcase
 }

@@ -17,15 +17,14 @@ namespace flecs {
 
 using world_t = ecs_world_t;
 using world_info_t = ecs_world_info_t;
-using query_group_info_t = ecs_query_cache_group_info_t;
+using query_group_info_t = ecs_query_group_info_t;
 using id_t = ecs_id_t;
 using entity_t = ecs_entity_t;
 using type_t = ecs_type_t;
 using table_t = ecs_table_t;
-using filter_t = ecs_query_t;
 using observer_t = ecs_observer_t;
-using query_t = ecs_query_cache_t;
-using rule_t = ecs_query_impl_t;
+using term_t = ecs_term_t;
+using query_t = ecs_query_t;
 using ref_t = ecs_ref_t;
 using iter_t = ecs_iter_t;
 using type_info_t = ecs_type_info_t;
@@ -138,7 +137,6 @@ static const flecs::entity_t Delete = EcsDelete;
 static const flecs::entity_t Panic = EcsPanic;
 
 /* Misc */
-static const flecs::entity_t Flatten = EcsFlatten;
 static const flecs::entity_t DefaultChildComponent = EcsDefaultChildComponent;
 
 /* Builtin predicates for comparing entity ids in queries. Only supported by rules */

@@ -1093,7 +1093,7 @@ world.QueryBuilder<Velocity, Gravity>()
 
 <<<<<<< HEAD
 ### Filter
-Filters are a kind of uncached query that are cheap to create. This makes them a good fit for scenarios where an application doesn't know in advance what it has to query for, like when finding the children for a parent. The following example shows a simple filter:
+Queries are a kind of uncached query that are cheap to create. This makes them a good fit for scenarios where an application doesn't know in advance what it has to query for, like when finding the children for a parent. The following example shows a simple filter:
 <div class="flecs-snippet-tabs">
 <ul>
 <li><b class="tab-title">C</b>
@@ -1139,7 +1139,7 @@ world.each([](Position& p, Velocity& v) { // flecs::entity argument is optional
 });
 
 // More complex filters can first be created, then iterated
-auto f = world.filter_builder<Position>()
+auto f = world.query_builder<Position>()
     .term(flecs::ChildOf, parent)
     .build();
 
@@ -1210,7 +1210,7 @@ ecs_query_t *f = ecs_query_init(world, &(ecs_query_desc_t){
 <li><b class="tab-title">C++</b>
 
 ```cpp
-auto f = world.filter_builder<>()
+auto f = world.query_builder<>()
     .term(flecs::ChildOf, flecs::Wildcard)
     .term<Position>().oper(flecs::Not)
     .build();

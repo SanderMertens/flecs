@@ -185,9 +185,14 @@ struct iter_iterable final : iterable<Components...> {
         return *this;
     }
 
-#   ifdef FLECS_RULES
-#   include "../mixins/rule/iterable.inl"
-#   endif
+    iter_iterable<Components...>& set_var(const char *name, flecs::entity_t value) {
+        ecs_query_iter_t *rit = &m_it.priv.iter.rule;
+        int var_id = ecs_query_find_var(rit->rule, name);
+        ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, name);
+        ecs_iter_set_var(&m_it, var_id, value);
+        return *this;
+    }
+
 #   ifdef FLECS_JSON
 #   include "../mixins/json/iterable.inl"
 #   endif
@@ -222,14 +227,14 @@ struct iter_iterable final : iterable<Components...> {
 
     // Limit results to tables with specified group id (grouped queries only)
     iter_iterable<Components...>& set_group(uint64_t group_id) {
-        ecs_query_cache_set_group(&m_it, group_id);
+        ecs_iter_set_group(&m_it, group_id);
         return *this;
     }
 
     // Limit results to tables with specified group id (grouped queries only)
     template <typename Group>
     iter_iterable<Components...>& set_group() {
-        ecs_query_cache_set_group(&m_it, _::cpp_type<Group>().id(m_it.real_world));
+        ecs_iter_set_group(&m_it, _::cpp_type<Group>().id(m_it.real_world));
         return *this;
     }
 

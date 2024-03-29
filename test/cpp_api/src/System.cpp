@@ -1203,7 +1203,7 @@ void System_instanced_query_w_singleton_each(void) {
     int32_t count = 0;
 
     auto s = ecs.system<Self, Position, const Velocity>()
-        .arg(3).singleton()
+        .term_at(3).singleton()
         .instanced()
         .each([&](flecs::entity e, Self& s, Position&p, const Velocity& v) {
             test_assert(e == s.value);
@@ -1322,7 +1322,7 @@ void System_un_instanced_query_w_singleton_each(void) {
     int32_t count = 0;
 
     auto s = ecs.system<Self, Position, const Velocity>()
-        .arg(3).singleton()
+        .term_at(3).singleton()
         .each([&](flecs::entity e, Self& s, Position&p, const Velocity& v) {
             test_assert(e == s.value);
             p.x += v.x;
@@ -1440,7 +1440,7 @@ void System_instanced_query_w_singleton_iter(void) {
     int32_t count = 0;
 
     auto s = ecs.system<Self, Position, const Velocity>()
-        .arg(3).singleton()
+        .term_at(3).singleton()
         .instanced()
         .iter([&](flecs::iter it, Self* s, Position* p, const Velocity* v) {
             test_assert(it.count() > 1);
@@ -1574,7 +1574,7 @@ void System_un_instanced_query_w_singleton_iter(void) {
     int32_t count = 0;
 
     auto s = ecs.system<Self, Position, const Velocity>()
-        .arg(3).singleton()
+        .term_at(3).singleton()
         .iter([&](flecs::iter it, Self* s, Position* p, const Velocity* v) {
             test_assert(it.count() == 1);
 
@@ -1802,8 +1802,7 @@ void System_ensure_instanced_w_each(void) {
         });
 
     auto q = sys.query();
-    auto f = q.filter();
-    const ecs_query_t *c_f = f;
+    const ecs_query_t *c_f = q;
     test_assert(c_f->flags & EcsIterIsInstanced);
 
     test_int(count, 0);

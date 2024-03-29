@@ -19,14 +19,9 @@ struct alert final : entity
         m_world = nullptr;
     }
 
-    explicit alert(flecs::world_t *world, ecs_alert_desc_t *desc) 
-    {
+    explicit alert(flecs::world_t *world, ecs_alert_desc_t *desc) {
         m_world = world;
         m_id = ecs_alert_init(world, desc);
-
-        if (desc->filter.terms_buffer) {
-            ecs_os_free(desc->filter.terms_buffer);
-        }
     }
 };
 

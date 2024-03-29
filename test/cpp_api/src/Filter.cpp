@@ -1,6 +1,6 @@
 #include <cpp_api.h>
 
-void Query_term_each_component(void) {
+void Filter_term_each_component(void) {
     flecs::world ecs;
 
     auto e_1 = ecs.entity().set<Position>({1, 2});
@@ -31,7 +31,7 @@ void Query_term_each_component(void) {
     test_int(count, 3);
 }
 
-void Query_term_each_tag(void) {
+void Filter_term_each_tag(void) {
     flecs::world ecs;
 
     struct Foo { };
@@ -52,7 +52,7 @@ void Query_term_each_tag(void) {
     test_int(count, 3);
 }
 
-void Query_term_each_id(void) {
+void Filter_term_each_id(void) {
     flecs::world ecs;
 
     auto foo = ecs.entity();
@@ -73,7 +73,7 @@ void Query_term_each_id(void) {
     test_int(count, 3);
 }
 
-void Query_term_each_pair_type(void) {
+void Filter_term_each_pair_type(void) {
     flecs::world ecs;
 
     struct Rel { };
@@ -95,7 +95,7 @@ void Query_term_each_pair_type(void) {
     test_int(count, 3);
 }
 
-void Query_term_each_pair_id(void) {
+void Filter_term_each_pair_id(void) {
     flecs::world ecs;
 
     auto rel = ecs.entity();
@@ -117,7 +117,7 @@ void Query_term_each_pair_id(void) {
     test_int(count, 3);
 }
 
-void Query_term_each_pair_relation_wildcard(void) {
+void Filter_term_each_pair_relation_wildcard(void) {
     flecs::world ecs;
 
     auto rel_1 = ecs.entity();
@@ -140,7 +140,7 @@ void Query_term_each_pair_relation_wildcard(void) {
     test_int(count, 3);
 }
 
-void Query_term_each_pair_object_wildcard(void) {
+void Filter_term_each_pair_object_wildcard(void) {
     flecs::world ecs;
 
     auto rel = ecs.entity();
@@ -163,14 +163,14 @@ void Query_term_each_pair_object_wildcard(void) {
     test_int(count, 3);
 }
 
-void Query_default_ctor_no_assign(void) {
-    flecs::filter<> f;
+void Filter_default_ctor_no_assign(void) {
+    flecs::query<> f;
     
     // Make sure code compiles & works
     test_assert(true);
 }
 
-void Query_term_get_id(void) {
+void Filter_term_get_id(void) {
     flecs::world ecs;
 
     auto Foo = ecs.entity();
@@ -193,7 +193,7 @@ void Query_term_get_id(void) {
     test_assert(t.id() == ecs.pair(Foo, Bar));
 }
 
-void Query_term_get_subj(void) {
+void Filter_term_get_subj(void) {
     flecs::world ecs;
 
     auto Foo = ecs.entity();
@@ -217,7 +217,7 @@ void Query_term_get_subj(void) {
     test_assert(t.get_src() == flecs::This);
 }
 
-void Query_term_get_pred(void) {
+void Filter_term_get_pred(void) {
     flecs::world ecs;
 
     auto Foo = ecs.entity();
@@ -241,7 +241,7 @@ void Query_term_get_pred(void) {
     test_assert(t.get_first() == Foo);
 }
 
-void Query_term_get_obj(void) {
+void Filter_term_get_obj(void) {
     flecs::world ecs;
 
     auto Foo = ecs.entity();
@@ -265,7 +265,7 @@ void Query_term_get_obj(void) {
     test_assert(t.get_second() == Bar);
 }
 
-void Query_get_first(void) {
+void Filter_get_first(void) {
     flecs::world ecs;
 
     struct A {};
@@ -274,14 +274,14 @@ void Query_get_first(void) {
     ecs.entity().add<A>();
     ecs.entity().add<A>();
 
-    auto q = ecs.filter<A>();
+    auto q = ecs.query<A>();
 
     auto first = q.iter().first();
     test_assert(first != 0);
     test_assert(first == e1);
 }
 
-void Query_get_count_direct(void) {
+void Filter_get_count_direct(void) {
     flecs::world ecs;
 
     struct A {};
@@ -290,12 +290,12 @@ void Query_get_count_direct(void) {
     ecs.entity().add<A>();
     ecs.entity().add<A>();
 
-    auto q = ecs.filter<A>();
+    auto q = ecs.query<A>();
 
     test_int(3, q.count());
 }
 
-void Query_get_is_true_direct(void) {
+void Filter_get_is_true_direct(void) {
     flecs::world ecs;
 
     struct A {};
@@ -305,14 +305,14 @@ void Query_get_is_true_direct(void) {
     ecs.entity().add<A>();
     ecs.entity().add<A>();
 
-    auto q_1 = ecs.filter<A>();
-    auto q_2 = ecs.filter<B>();
+    auto q_1 = ecs.query<A>();
+    auto q_2 = ecs.query<B>();
 
     test_bool(true, q_1.is_true());
     test_bool(false, q_2.is_true());
 }
 
-void Query_get_first_direct(void) {
+void Filter_get_first_direct(void) {
     flecs::world ecs;
 
     struct A {};
@@ -321,23 +321,23 @@ void Query_get_first_direct(void) {
     ecs.entity().add<A>();
     ecs.entity().add<A>();
 
-    auto q = ecs.filter<A>();
+    auto q = ecs.query<A>();
 
     auto first = q.first();
     test_assert(first != 0);
     test_assert(first == e1);
 }
 
-void Query_each_w_no_this(void) {
+void Filter_each_w_no_this(void) {
     flecs::world ecs;
 
     auto e = ecs.entity()
         .set<Position>({10, 20})
         .set<Velocity>({1, 2});
 
-    auto f = ecs.filter_builder<Position, Velocity>()
-        .arg(1).src(e)
-        .arg(2).src(e)
+    auto f = ecs.query_builder<Position, Velocity>()
+        .term_at(1).src(e)
+        .term_at(2).src(e)
         .build();
 
     int32_t count = 0;
@@ -353,16 +353,16 @@ void Query_each_w_no_this(void) {
     test_int(count, 1);
 }
 
-void Query_each_w_iter_no_this(void) {
+void Filter_each_w_iter_no_this(void) {
     flecs::world ecs;
 
     auto e = ecs.entity()
         .set<Position>({10, 20})
         .set<Velocity>({1, 2});
 
-    auto f = ecs.filter_builder<Position, Velocity>()
-        .arg(1).src(e)
-        .arg(2).src(e)
+    auto f = ecs.query_builder<Position, Velocity>()
+        .term_at(1).src(e)
+        .term_at(2).src(e)
         .build();
 
     int32_t count = 0;
@@ -380,7 +380,7 @@ void Query_each_w_iter_no_this(void) {
     test_int(count, 1);
 }
 
-void Query_invalid_each_w_no_this(void) {
+void Filter_invalid_each_w_no_this(void) {
     install_test_abort();
 
     flecs::world ecs;
@@ -389,9 +389,9 @@ void Query_invalid_each_w_no_this(void) {
         .set<Position>({10, 20})
         .set<Velocity>({1, 2});
 
-    auto f = ecs.filter_builder<Position, Velocity>()
-        .arg(1).src(e)
-        .arg(2).src(e)
+    auto f = ecs.query_builder<Position, Velocity>()
+        .term_at(1).src(e)
+        .term_at(2).src(e)
         .build();
 
     test_expect_abort();
@@ -399,13 +399,13 @@ void Query_invalid_each_w_no_this(void) {
     f.each([&](flecs::entity e, Position& p, Velocity& v) { });
 }
 
-void Query_named_filter(void) {
+void Filter_named_query(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity().add<Position>();
     auto e2 = ecs.entity().add<Position>();
 
-    auto q = ecs.filter<Position>("my_query");
+    auto q = ecs.query<Position>("my_query");
 
     int32_t count = 0;
     q.each([&](flecs::entity e, Position&) {
@@ -419,13 +419,13 @@ void Query_named_filter(void) {
     test_str(qe.name(), "my_query");
 }
 
-void Query_named_scoped_filter(void) {
+void Filter_named_scoped_query(void) {
     flecs::world ecs;
 
     auto e1 = ecs.entity().add<Position>();
     auto e2 = ecs.entity().add<Position>();
 
-    auto q = ecs.filter<Position>("my::query");
+    auto q = ecs.query<Position>("my::query");
 
     int32_t count = 0;
     q.each([&](flecs::entity e, Position&) {
@@ -440,14 +440,14 @@ void Query_named_scoped_filter(void) {
     test_str(qe.path(), "::my::query");
 }
 
-void Query_set_this_var(void) {
+void Filter_set_this_var(void) {
     flecs::world ecs;
 
     /* auto e_1 = */ ecs.entity().set<Position>({1, 2});
     auto e_2 = ecs.entity().set<Position>({3, 4});
     /* auto e_3 = */ ecs.entity().set<Position>({5, 6});
 
-    auto q = ecs.filter<Position>("my::query");
+    auto q = ecs.query<Position>("my::query");
 
     int32_t count = 0;
     q.iter().set_var(0, e_2).each([&](flecs::entity e, Position&) {
@@ -457,10 +457,10 @@ void Query_set_this_var(void) {
     test_int(count, 1);
 }
 
-void Query_inspect_terms_w_expr(void) {
+void Filter_inspect_terms_w_expr(void) {
     flecs::world ecs;
 
-    flecs::filter<> f = ecs.filter_builder()
+    flecs::query<> f = ecs.query_builder()
         .expr("(ChildOf,0)")
         .build();
 
@@ -473,13 +473,13 @@ void Query_inspect_terms_w_expr(void) {
     test_int(count, 1);
 }
 
-void Query_find(void) {
+void Filter_find(void) {
     flecs::world ecs;
 
     /* auto e1 = */ ecs.entity().set<Position>({10, 20});
     auto e2 = ecs.entity().set<Position>({20, 30});
 
-    auto q = ecs.filter<Position>();
+    auto q = ecs.query<Position>();
 
     auto r = q.find([](Position& p) {
         return p.x == 20;
@@ -488,13 +488,13 @@ void Query_find(void) {
     test_assert(r == e2);
 }
 
-void Query_find_not_found(void) {
+void Filter_find_not_found(void) {
     flecs::world ecs;
 
     /* auto e1 = */ ecs.entity().set<Position>({10, 20});
     /* auto e2 = */ ecs.entity().set<Position>({20, 30});
 
-    auto q = ecs.filter<Position>();
+    auto q = ecs.query<Position>();
 
     auto r = q.find([](Position& p) {
         return p.x == 30;
@@ -503,13 +503,13 @@ void Query_find_not_found(void) {
     test_assert(!r);
 }
 
-void Query_find_w_entity(void) {
+void Filter_find_w_entity(void) {
     flecs::world ecs;
 
     /* auto e1 = */ ecs.entity().set<Position>({10, 20}).set<Velocity>({20, 30});
     auto e2 = ecs.entity().set<Position>({20, 30}).set<Velocity>({20, 30});
 
-    auto q = ecs.filter<Position>();
+    auto q = ecs.query<Position>();
 
     auto r = q.find([](flecs::entity e, Position& p) {
         return p.x == e.get<Velocity>()->x &&
@@ -519,7 +519,7 @@ void Query_find_w_entity(void) {
     test_assert(r == e2);
 }
 
-void Query_optional_pair_term(void) {
+void Filter_optional_pair_term(void) {
     flecs::world ecs;
 
     ecs.entity()
@@ -530,7 +530,7 @@ void Query_optional_pair_term(void) {
 
     int32_t with_pair = 0, without_pair = 0;
 
-    auto f = ecs.filter_builder<flecs::pair<Position, Tag>*>()
+    auto f = ecs.query_builder<flecs::pair<Position, Tag>*>()
         .with<TagA>()
         .build();
         
@@ -548,4 +548,308 @@ void Query_optional_pair_term(void) {
 
     test_int(1, with_pair);
     test_int(1, without_pair);
+}
+
+void Filter_action(void) {
+    // Implement testcase
+}
+
+void Filter_action_const(void) {
+    // Implement testcase
+}
+
+void Filter_action_shared(void) {
+    // Implement testcase
+}
+
+void Filter_action_optional(void) {
+    // Implement testcase
+}
+
+void Filter_each(void) {
+    // Implement testcase
+}
+
+void Filter_each_const(void) {
+    // Implement testcase
+}
+
+void Filter_each_shared(void) {
+    // Implement testcase
+}
+
+void Filter_each_optional(void) {
+    // Implement testcase
+}
+
+void Filter_signature(void) {
+    // Implement testcase
+}
+
+void Filter_signature_const(void) {
+    // Implement testcase
+}
+
+void Filter_signature_shared(void) {
+    // Implement testcase
+}
+
+void Filter_signature_optional(void) {
+    // Implement testcase
+}
+
+void Filter_query_single_pair(void) {
+    // Implement testcase
+}
+
+void Filter_tag_w_each(void) {
+    // Implement testcase
+}
+
+void Filter_shared_tag_w_each(void) {
+    // Implement testcase
+}
+
+void Filter_sort_by(void) {
+    // Implement testcase
+}
+
+void Filter_changed(void) {
+    // Implement testcase
+}
+
+void Filter_default_ctor(void) {
+    // Implement testcase
+}
+
+void Filter_expr_w_template(void) {
+    // Implement testcase
+}
+
+void Filter_query_type_w_template(void) {
+    // Implement testcase
+}
+
+void Filter_compare_term_id(void) {
+    // Implement testcase
+}
+
+void Filter_test_no_defer_each(void) {
+    // Implement testcase
+}
+
+void Filter_test_no_defer_iter(void) {
+    // Implement testcase
+}
+
+void Filter_inspect_terms(void) {
+    // Implement testcase
+}
+
+void Filter_inspect_terms_w_each(void) {
+    // Implement testcase
+}
+
+void Filter_comp_to_str(void) {
+    // Implement testcase
+}
+
+void Filter_pair_to_str(void) {
+    // Implement testcase
+}
+
+void Filter_oper_not_to_str(void) {
+    // Implement testcase
+}
+
+void Filter_oper_optional_to_str(void) {
+    // Implement testcase
+}
+
+void Filter_oper_or_to_str(void) {
+    // Implement testcase
+}
+
+void Filter_each_pair_type(void) {
+    // Implement testcase
+}
+
+void Filter_iter_pair_type(void) {
+    // Implement testcase
+}
+
+void Filter_term_pair_type(void) {
+    // Implement testcase
+}
+
+void Filter_each_no_entity_1_comp(void) {
+    // Implement testcase
+}
+
+void Filter_each_no_entity_2_comps(void) {
+    // Implement testcase
+}
+
+void Filter_iter_no_comps_1_comp(void) {
+    // Implement testcase
+}
+
+void Filter_iter_no_comps_2_comps(void) {
+    // Implement testcase
+}
+
+void Filter_iter_no_comps_no_comps(void) {
+    // Implement testcase
+}
+
+void Filter_each_pair_object(void) {
+    // Implement testcase
+}
+
+void Filter_iter_pair_object(void) {
+    // Implement testcase
+}
+
+void Filter_iter_query_in_system(void) {
+    // Implement testcase
+}
+
+void Filter_iter_type(void) {
+    // Implement testcase
+}
+
+void Filter_instanced_query_w_singleton_each(void) {
+    // Implement testcase
+}
+
+void Filter_instanced_query_w_base_each(void) {
+    // Implement testcase
+}
+
+void Filter_un_instanced_query_w_singleton_each(void) {
+    // Implement testcase
+}
+
+void Filter_un_instanced_query_w_base_each(void) {
+    // Implement testcase
+}
+
+void Filter_instanced_query_w_singleton_iter(void) {
+    // Implement testcase
+}
+
+void Filter_instanced_query_w_base_iter(void) {
+    // Implement testcase
+}
+
+void Filter_un_instanced_query_w_singleton_iter(void) {
+    // Implement testcase
+}
+
+void Filter_un_instanced_query_w_base_iter(void) {
+    // Implement testcase
+}
+
+void Filter_query_each_from_component(void) {
+    // Implement testcase
+}
+
+void Filter_query_iter_from_component(void) {
+    // Implement testcase
+}
+
+void Filter_query_each_w_func_ptr(void) {
+    // Implement testcase
+}
+
+void Filter_query_iter_w_func_ptr(void) {
+    // Implement testcase
+}
+
+void Filter_query_each_w_func_no_ptr(void) {
+    // Implement testcase
+}
+
+void Filter_query_iter_w_func_no_ptr(void) {
+    // Implement testcase
+}
+
+void Filter_query_each_w_iter(void) {
+    // Implement testcase
+}
+
+void Filter_invalid_field_from_each_w_iter(void) {
+    // Implement testcase
+}
+
+void Filter_invalid_field_T_from_each_w_iter(void) {
+    // Implement testcase
+}
+
+void Filter_invalid_field_const_T_from_each_w_iter(void) {
+    // Implement testcase
+}
+
+void Filter_field_at_from_each_w_iter(void) {
+    // Implement testcase
+}
+
+void Filter_field_at_T_from_each_w_iter(void) {
+    // Implement testcase
+}
+
+void Filter_field_at_const_T_from_each_w_iter(void) {
+    // Implement testcase
+}
+
+void Filter_field_at_from_each_w_iter_w_base_type(void) {
+    // Implement testcase
+}
+
+void Filter_change_tracking(void) {
+    // Implement testcase
+}
+
+void Filter_not_w_write(void) {
+    // Implement testcase
+}
+
+void Filter_instanced_nested_query_w_iter(void) {
+    // Implement testcase
+}
+
+void Filter_instanced_nested_query_w_entity(void) {
+    // Implement testcase
+}
+
+void Filter_instanced_nested_query_w_world(void) {
+    // Implement testcase
+}
+
+void Filter_captured_query(void) {
+    // Implement testcase
+}
+
+void Filter_page_iter_captured_query(void) {
+    // Implement testcase
+}
+
+void Filter_worker_iter_captured_query(void) {
+    // Implement testcase
+}
+
+void Filter_iter_entities(void) {
+    // Implement testcase
+}
+
+void Filter_iter_get_pair_w_id(void) {
+    // Implement testcase
+}
+
+void Filter_named_filter(void) {
+    // Implement testcase
+}
+
+void Filter_named_scoped_filter(void) {
+    // Implement testcase
 }

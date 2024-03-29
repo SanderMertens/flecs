@@ -70,7 +70,7 @@ int main(int, char *[]) {
     // The way to read how this query is evaluated is:
     // - find all entities with (Platoon, *), store * in _Platoon
     // - check if _Platoon has (Player, *), store * in _Player
-    flecs::rule<RangedUnit> r = ecs.rule_builder<RangedUnit>()
+    flecs::query<RangedUnit> r = ecs.query_builder<RangedUnit>()
         .with<Platoon>().second("$Platoon")
         .with<Player>("$Player").src("$Platoon")
         .build();

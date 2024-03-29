@@ -286,7 +286,7 @@ void Misc_member_gauge_metric(void) {
     ecs.progress();
 
     int32_t count = 0;
-    ecs.filter<flecs::metrics::Source, flecs::metrics::Value>()
+    ecs.query<flecs::metrics::Source, flecs::metrics::Value>()
         .iter([&](flecs::iter& it, flecs::metrics::Source *s, flecs::metrics::Value *i) {
             count += it.count();
 
@@ -319,7 +319,7 @@ void Misc_id_gauge_metric(void) {
     ecs.progress(1.0);
 
     int32_t count = 0;
-    ecs.filter<flecs::metrics::Source, flecs::metrics::Value>()
+    ecs.query<flecs::metrics::Source, flecs::metrics::Value>()
         .iter([&](flecs::iter& it, flecs::metrics::Source *s, flecs::metrics::Value *i) {
             count += it.count();
             test_int(count, 2);
@@ -337,7 +337,7 @@ void Misc_id_gauge_metric(void) {
     test_int(count, 2);
     count = 0;
 
-    ecs.filter<flecs::metrics::Source, flecs::metrics::Value>()
+    ecs.query<flecs::metrics::Source, flecs::metrics::Value>()
         .iter([&](flecs::iter& it, flecs::metrics::Source *s, flecs::metrics::Value *i) {
             count += it.count();
             test_int(count, 2);
@@ -375,7 +375,7 @@ void Misc_oneof_gauge_metric(void) {
     ecs.progress(1.0);
 
     int32_t count = 0;
-    ecs.filter<flecs::metrics::Source>()
+    ecs.query<flecs::metrics::Source>()
         .iter([&](flecs::iter& it, flecs::metrics::Source *s) {
             ColorMetric *i = static_cast<ColorMetric*>(it.range().get(m, ecs.id<flecs::metrics::Value>()));
             test_assert(i != nullptr);
@@ -398,7 +398,7 @@ void Misc_oneof_gauge_metric(void) {
     test_int(count, 3);
     count = 0;
 
-    ecs.filter<flecs::metrics::Source>()
+    ecs.query<flecs::metrics::Source>()
         .iter([&](flecs::iter& it, flecs::metrics::Source *s) {
             ColorMetric *i = static_cast<ColorMetric*>(it.range().get(m, ecs.id<flecs::metrics::Value>()));
             test_assert(i != nullptr);
@@ -436,7 +436,7 @@ void Misc_id_counter_metric(void) {
     ecs.progress(1.0);
 
     int32_t count = 0;
-    ecs.filter<flecs::metrics::Source, flecs::metrics::Value>()
+    ecs.query<flecs::metrics::Source, flecs::metrics::Value>()
         .iter([&](flecs::iter& it, flecs::metrics::Source *s, flecs::metrics::Value *i) {
             count += it.count();
             test_int(count, 2);
@@ -454,7 +454,7 @@ void Misc_id_counter_metric(void) {
     test_int(count, 2);
     count = 0;
 
-    ecs.filter<flecs::metrics::Source, flecs::metrics::Value>()
+    ecs.query<flecs::metrics::Source, flecs::metrics::Value>()
         .iter([&](flecs::iter& it, flecs::metrics::Source *s, flecs::metrics::Value *i) {
             count += it.count();
             test_int(count, 2);
@@ -492,7 +492,7 @@ void Misc_oneof_counter_metric(void) {
     ecs.progress(1.0);
 
     int32_t count = 0;
-    ecs.filter<flecs::metrics::Source>()
+    ecs.query<flecs::metrics::Source>()
         .iter([&](flecs::iter& it, flecs::metrics::Source *s) {
             ColorMetric *i = static_cast<ColorMetric*>(it.range().get(m, ecs.id<flecs::metrics::Value>()));
             test_assert(i != nullptr);
@@ -516,7 +516,7 @@ void Misc_oneof_counter_metric(void) {
     ecs.progress(1.0);
     count = 0;
 
-    ecs.filter<flecs::metrics::Source>()
+    ecs.query<flecs::metrics::Source>()
         .iter([&](flecs::iter& it, flecs::metrics::Source *s) {
             ColorMetric *i = static_cast<ColorMetric*>(it.range().get(m, ecs.id<flecs::metrics::Value>()));
             test_assert(i != nullptr);
@@ -554,7 +554,7 @@ void Misc_component_mixin_member_metric(void) {
     ecs.progress();
 
     int32_t count = 0;
-    ecs.filter<flecs::metrics::Source, flecs::metrics::Value>()
+    ecs.query<flecs::metrics::Source, flecs::metrics::Value>()
         .iter([&](flecs::iter& it, flecs::metrics::Source *s, flecs::metrics::Value *i) {
             count += it.count();
 
@@ -591,7 +591,7 @@ void Misc_component_mixin_member_metric_custom_parent_entity(void) {
     ecs.progress();
 
     int32_t count = 0;
-    ecs.filter<flecs::metrics::Source, flecs::metrics::Value>()
+    ecs.query<flecs::metrics::Source, flecs::metrics::Value>()
         .iter([&](flecs::iter& it, flecs::metrics::Source *s, flecs::metrics::Value *i) {
             count += it.count();
 
@@ -634,7 +634,7 @@ void Misc_metric_description(void) {
     ecs.progress();
 
     int32_t count = 0;
-    ecs.filter<flecs::metrics::Source, flecs::metrics::Value>()
+    ecs.query<flecs::metrics::Source, flecs::metrics::Value>()
         .iter([&](flecs::iter& it, flecs::metrics::Source *s, flecs::metrics::Value *i) {
             count += it.count();
 
@@ -670,7 +670,7 @@ void Misc_component_mixin_member_metric_description(void) {
     ecs.progress();
 
     int32_t count = 0;
-    ecs.filter<flecs::metrics::Source, flecs::metrics::Value>()
+    ecs.query<flecs::metrics::Source, flecs::metrics::Value>()
         .iter([&](flecs::iter& it, flecs::metrics::Source *s, flecs::metrics::Value *i) {
             count += it.count();
 
@@ -707,7 +707,7 @@ void Misc_member_metric_w_value_name(void) {
     ecs.progress();
 
     int32_t count = 0;
-    ecs.filter<flecs::metrics::Source, flecs::metrics::Value>()
+    ecs.query<flecs::metrics::Source, flecs::metrics::Value>()
         .iter([&](flecs::iter& it, flecs::metrics::Source *s, flecs::metrics::Value *i) {
             count += it.count();
 
@@ -751,7 +751,7 @@ void Misc_member_metric_w_value_name_camel_case_type(void) {
     ecs.progress();
 
     int32_t count = 0;
-    ecs.filter<flecs::metrics::Source, flecs::metrics::Value>()
+    ecs.query<flecs::metrics::Source, flecs::metrics::Value>()
         .iter([&](flecs::iter& it, flecs::metrics::Source *s, flecs::metrics::Value *i) {
             count += it.count();
 
@@ -791,7 +791,7 @@ void Misc_member_metric_w_custom_name(void) {
     ecs.progress();
 
     int32_t count = 0;
-    ecs.filter<flecs::metrics::Source, flecs::metrics::Value>()
+    ecs.query<flecs::metrics::Source, flecs::metrics::Value>()
         .iter([&](flecs::iter& it, flecs::metrics::Source *s, flecs::metrics::Value *i) {
             count += it.count();
 
@@ -844,7 +844,7 @@ void Misc_dotmember_metric(void) {
     ecs.progress();
 
     int32_t count = 0;
-    ecs.filter<flecs::metrics::Source, flecs::metrics::Value>()
+    ecs.query<flecs::metrics::Source, flecs::metrics::Value>()
         .iter([&](flecs::iter& it, flecs::metrics::Source *s, flecs::metrics::Value *i) {
             count += it.count();
 
@@ -957,7 +957,7 @@ void Misc_alert(void) {
     test_int(e2.alert_count(a), 1);
 
     {
-        flecs::entity ai = ecs.filter_builder()
+        flecs::entity ai = ecs.query_builder()
             .with<flecs::alerts::Instance>()
             .build()
             .first();
@@ -973,7 +973,7 @@ void Misc_alert(void) {
     ecs.progress(1.0);
 
     {
-        flecs::entity ai = ecs.filter_builder()
+        flecs::entity ai = ecs.query_builder()
             .with<flecs::alerts::Instance>()
             .build()
             .first();
@@ -1006,7 +1006,7 @@ void Misc_alert_w_message(void) {
     test_int(e2.alert_count(a), 1);
 
     {
-        flecs::entity ai = ecs.filter_builder()
+        flecs::entity ai = ecs.query_builder()
             .with<flecs::alerts::Instance>()
             .build()
             .first();
@@ -1024,7 +1024,7 @@ void Misc_alert_w_message(void) {
     ecs.progress(1.0);
 
     {
-        flecs::entity ai = ecs.filter_builder()
+        flecs::entity ai = ecs.query_builder()
             .with<flecs::alerts::Instance>()
             .build()
             .first();
@@ -1147,7 +1147,7 @@ void Misc_alert_w_retain_period(void) {
 
     flecs::entity ai;
     {
-        ai = ecs.filter_builder()
+        ai = ecs.query_builder()
             .with<flecs::alerts::Instance>()
             .build()
             .first();
@@ -1198,7 +1198,7 @@ void Misc_alert_w_severity_filter(void) {
     test_int(e1.alert_count(a), 1);
 
     {
-        flecs::entity ai = ecs.filter_builder()
+        flecs::entity ai = ecs.query_builder()
             .with<flecs::alerts::Instance>()
             .build()
             .first();
@@ -1219,7 +1219,7 @@ void Misc_alert_w_severity_filter(void) {
     test_int(e1.alert_count(a), 1);
 
     {
-        flecs::entity ai = ecs.filter_builder()
+        flecs::entity ai = ecs.query_builder()
             .with<flecs::alerts::Instance>()
             .build()
             .first();
@@ -1240,7 +1240,7 @@ void Misc_alert_w_severity_filter(void) {
     test_int(e1.alert_count(a), 1);
 
     {
-        flecs::entity ai = ecs.filter_builder()
+        flecs::entity ai = ecs.query_builder()
             .with<flecs::alerts::Instance>()
             .build()
             .first();
@@ -1275,7 +1275,7 @@ void Misc_alert_w_severity_filter_severity_type(void) {
     test_int(e1.alert_count(a), 1);
 
     {
-        flecs::entity ai = ecs.filter_builder()
+        flecs::entity ai = ecs.query_builder()
             .with<flecs::alerts::Instance>()
             .build()
             .first();
@@ -1296,7 +1296,7 @@ void Misc_alert_w_severity_filter_severity_type(void) {
     test_int(e1.alert_count(a), 1);
 
     {
-        flecs::entity ai = ecs.filter_builder()
+        flecs::entity ai = ecs.query_builder()
             .with<flecs::alerts::Instance>()
             .build()
             .first();
@@ -1317,7 +1317,7 @@ void Misc_alert_w_severity_filter_severity_type(void) {
     test_int(e1.alert_count(a), 1);
 
     {
-        flecs::entity ai = ecs.filter_builder()
+        flecs::entity ai = ecs.query_builder()
             .with<flecs::alerts::Instance>()
             .build()
             .first();
@@ -1352,7 +1352,7 @@ void Misc_alert_w_severity_filter_severity_type_id_type(void) {
     test_int(e1.alert_count(a), 1);
 
     {
-        flecs::entity ai = ecs.filter_builder()
+        flecs::entity ai = ecs.query_builder()
             .with<flecs::alerts::Instance>()
             .build()
             .first();
@@ -1373,7 +1373,7 @@ void Misc_alert_w_severity_filter_severity_type_id_type(void) {
     test_int(e1.alert_count(a), 1);
 
     {
-        flecs::entity ai = ecs.filter_builder()
+        flecs::entity ai = ecs.query_builder()
             .with<flecs::alerts::Instance>()
             .build()
             .first();
@@ -1394,7 +1394,7 @@ void Misc_alert_w_severity_filter_severity_type_id_type(void) {
     test_int(e1.alert_count(a), 1);
 
     {
-        flecs::entity ai = ecs.filter_builder()
+        flecs::entity ai = ecs.query_builder()
             .with<flecs::alerts::Instance>()
             .build()
             .first();
@@ -1429,7 +1429,7 @@ void Misc_alert_w_severity_filter_severity_type_enum_constant(void) {
     test_int(e1.alert_count(a), 1);
 
     {
-        flecs::entity ai = ecs.filter_builder()
+        flecs::entity ai = ecs.query_builder()
             .with<flecs::alerts::Instance>()
             .build()
             .first();
@@ -1450,7 +1450,7 @@ void Misc_alert_w_severity_filter_severity_type_enum_constant(void) {
     test_int(e1.alert_count(a), 1);
 
     {
-        flecs::entity ai = ecs.filter_builder()
+        flecs::entity ai = ecs.query_builder()
             .with<flecs::alerts::Instance>()
             .build()
             .first();
@@ -1471,7 +1471,7 @@ void Misc_alert_w_severity_filter_severity_type_enum_constant(void) {
     test_int(e1.alert_count(a), 1);
 
     {
-        flecs::entity ai = ecs.filter_builder()
+        flecs::entity ai = ecs.query_builder()
             .with<flecs::alerts::Instance>()
             .build()
             .first();
@@ -1492,7 +1492,7 @@ void Misc_alert_w_severity_filter_severity_type_enum_constant(void) {
     test_int(e1.alert_count(a), 1);
 
     {
-        flecs::entity ai = ecs.filter_builder()
+        flecs::entity ai = ecs.query_builder()
             .with<flecs::alerts::Instance>()
             .build()
             .first();
@@ -1529,7 +1529,7 @@ void Misc_alert_w_severity_filter_w_var(void) {
     test_int(e1.alert_count(a), 1);
 
     {
-        flecs::entity ai = ecs.filter_builder()
+        flecs::entity ai = ecs.query_builder()
             .with<flecs::alerts::Instance>()
             .build()
             .first();
@@ -1550,7 +1550,7 @@ void Misc_alert_w_severity_filter_w_var(void) {
     test_int(e1.alert_count(a), 1);
 
     {
-        flecs::entity ai = ecs.filter_builder()
+        flecs::entity ai = ecs.query_builder()
             .with<flecs::alerts::Instance>()
             .build()
             .first();
@@ -1571,7 +1571,7 @@ void Misc_alert_w_severity_filter_w_var(void) {
     test_int(e1.alert_count(a), 1);
 
     {
-        flecs::entity ai = ecs.filter_builder()
+        flecs::entity ai = ecs.query_builder()
             .with<flecs::alerts::Instance>()
             .build()
             .first();
@@ -1608,7 +1608,7 @@ void Misc_alert_w_severity_filter_severity_type_w_var(void) {
     test_int(e1.alert_count(a), 1);
 
     {
-        flecs::entity ai = ecs.filter_builder()
+        flecs::entity ai = ecs.query_builder()
             .with<flecs::alerts::Instance>()
             .build()
             .first();
@@ -1629,7 +1629,7 @@ void Misc_alert_w_severity_filter_severity_type_w_var(void) {
     test_int(e1.alert_count(a), 1);
 
     {
-        flecs::entity ai = ecs.filter_builder()
+        flecs::entity ai = ecs.query_builder()
             .with<flecs::alerts::Instance>()
             .build()
             .first();
@@ -1650,7 +1650,7 @@ void Misc_alert_w_severity_filter_severity_type_w_var(void) {
     test_int(e1.alert_count(a), 1);
 
     {
-        flecs::entity ai = ecs.filter_builder()
+        flecs::entity ai = ecs.query_builder()
             .with<flecs::alerts::Instance>()
             .build()
             .first();
@@ -1687,7 +1687,7 @@ void Misc_alert_w_severity_filter_severity_type_id_type_w_var(void) {
     test_int(e1.alert_count(a), 1);
 
     {
-        flecs::entity ai = ecs.filter_builder()
+        flecs::entity ai = ecs.query_builder()
             .with<flecs::alerts::Instance>()
             .build()
             .first();
@@ -1708,7 +1708,7 @@ void Misc_alert_w_severity_filter_severity_type_id_type_w_var(void) {
     test_int(e1.alert_count(a), 1);
 
     {
-        flecs::entity ai = ecs.filter_builder()
+        flecs::entity ai = ecs.query_builder()
             .with<flecs::alerts::Instance>()
             .build()
             .first();
@@ -1729,7 +1729,7 @@ void Misc_alert_w_severity_filter_severity_type_id_type_w_var(void) {
     test_int(e1.alert_count(a), 1);
 
     {
-        flecs::entity ai = ecs.filter_builder()
+        flecs::entity ai = ecs.query_builder()
             .with<flecs::alerts::Instance>()
             .build()
             .first();
@@ -1766,7 +1766,7 @@ void Misc_alert_w_severity_filter_severity_type_enum_constant_w_var(void) {
     test_int(e1.alert_count(a), 1);
 
     {
-        flecs::entity ai = ecs.filter_builder()
+        flecs::entity ai = ecs.query_builder()
             .with<flecs::alerts::Instance>()
             .build()
             .first();
@@ -1787,7 +1787,7 @@ void Misc_alert_w_severity_filter_severity_type_enum_constant_w_var(void) {
     test_int(e1.alert_count(a), 1);
 
     {
-        flecs::entity ai = ecs.filter_builder()
+        flecs::entity ai = ecs.query_builder()
             .with<flecs::alerts::Instance>()
             .build()
             .first();
@@ -1808,7 +1808,7 @@ void Misc_alert_w_severity_filter_severity_type_enum_constant_w_var(void) {
     test_int(e1.alert_count(a), 1);
 
     {
-        flecs::entity ai = ecs.filter_builder()
+        flecs::entity ai = ecs.query_builder()
             .with<flecs::alerts::Instance>()
             .build()
             .first();
@@ -1853,7 +1853,7 @@ void Misc_alert_for_member_range(void) {
     test_int(e1.alert_count(a), 1);
 
     {
-        flecs::entity ai = ecs.filter_builder()
+        flecs::entity ai = ecs.query_builder()
             .with<flecs::alerts::Instance>()
             .build()
             .first();
@@ -1871,7 +1871,7 @@ void Misc_alert_for_member_range(void) {
     ecs.progress(1.0);
 
     {
-        flecs::entity ai = ecs.filter_builder()
+        flecs::entity ai = ecs.query_builder()
             .with<flecs::alerts::Instance>()
             .build()
             .first();
@@ -1913,7 +1913,7 @@ void Misc_alert_w_member_range_from_var(void) {
     test_int(e1.alert_count(a), 1);
 
     {
-        flecs::entity ai = ecs.filter_builder()
+        flecs::entity ai = ecs.query_builder()
             .with<flecs::alerts::Instance>()
             .build()
             .first();
@@ -1929,7 +1929,7 @@ void Misc_alert_w_member_range_from_var(void) {
     ecs.progress(1.0);
 
     {
-        flecs::entity ai = ecs.filter_builder()
+        flecs::entity ai = ecs.query_builder()
             .with<flecs::alerts::Instance>()
             .build()
             .first();
@@ -1994,7 +1994,7 @@ void Misc_member_metric_w_pair_R_T(void) {
     ecs.progress();
 
     int32_t count = 0;
-    ecs.filter<flecs::metrics::Source, flecs::metrics::Value>()
+    ecs.query<flecs::metrics::Source, flecs::metrics::Value>()
         .iter([&](flecs::iter& it, flecs::metrics::Source *s, flecs::metrics::Value *i) {
             count += it.count();
 
@@ -2034,7 +2034,7 @@ void Misc_member_metric_w_pair_R_t(void) {
     ecs.progress();
 
     int32_t count = 0;
-    ecs.filter<flecs::metrics::Source, flecs::metrics::Value>()
+    ecs.query<flecs::metrics::Source, flecs::metrics::Value>()
         .iter([&](flecs::iter& it, flecs::metrics::Source *s, flecs::metrics::Value *i) {
             count += it.count();
 
@@ -2074,7 +2074,7 @@ void Misc_member_metric_w_pair_r_t(void) {
     ecs.progress();
 
     int32_t count = 0;
-    ecs.filter<flecs::metrics::Source, flecs::metrics::Value>()
+    ecs.query<flecs::metrics::Source, flecs::metrics::Value>()
         .iter([&](flecs::iter& it, flecs::metrics::Source *s, flecs::metrics::Value *i) {
             count += it.count();
 
@@ -2114,7 +2114,7 @@ void Misc_member_metric_w_pair_r_T(void) {
     ecs.progress();
 
     int32_t count = 0;
-    ecs.filter<flecs::metrics::Source, flecs::metrics::Value>()
+    ecs.query<flecs::metrics::Source, flecs::metrics::Value>()
         .iter([&](flecs::iter& it, flecs::metrics::Source *s, flecs::metrics::Value *i) {
             count += it.count();
 

@@ -49,9 +49,8 @@ struct each_delegate;
 // Mixin forward declarations
 #include "mixins/id/decl.hpp"
 #include "mixins/term/decl.hpp"
-#include "mixins/filter/decl.hpp"
-#include "mixins/event/decl.hpp"
 #include "mixins/query/decl.hpp"
+#include "mixins/event/decl.hpp"
 #include "mixins/observer/decl.hpp"
 #ifdef FLECS_SYSTEM
 #include "mixins/system/decl.hpp"
@@ -70,9 +69,6 @@ struct each_delegate;
 #endif
 #ifdef FLECS_REST
 #include "mixins/rest/decl.hpp"
-#endif
-#ifdef FLECS_RULES
-#include "mixins/rule/decl.hpp"
 #endif
 #ifdef FLECS_META
 #include "mixins/meta/decl.hpp"
@@ -115,7 +111,6 @@ struct each_delegate;
 #include "mixins/entity/impl.hpp"
 #include "mixins/component/impl.hpp"
 #include "mixins/term/impl.hpp"
-#include "mixins/filter/impl.hpp"
 #include "mixins/query/impl.hpp"
 #include "mixins/observer/impl.hpp"
 #include "mixins/event/impl.hpp"
@@ -143,9 +138,6 @@ struct each_delegate;
 #endif
 #ifdef FLECS_REST
 #include "mixins/rest/impl.hpp"
-#endif
-#ifdef FLECS_RULES
-#include "mixins/rule/impl.hpp"
 #endif
 #ifdef FLECS_META
 #include "mixins/meta/impl.hpp"

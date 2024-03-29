@@ -390,20 +390,6 @@
                 "enum_child_count"
             ]
         }, {
-            "id": "Switch",
-            "testcases": [
-                "add_case",
-                "get_case",
-                "system_w_case",
-                "system_w_case_builder",
-                "system_w_sw_type_builder",
-                "system_w_switch",
-                "add_case_w_type",
-                "add_switch_w_type",
-                "add_remove_switch_w_type",
-                "switch_enum_type"
-            ]
-        }, {
             "id": "Paths",
             "testcases": [
                 "name",
@@ -554,14 +540,11 @@
                 "signature_const",
                 "signature_shared",
                 "signature_optional",
-                "subquery",
-                "subquery_w_expr",
                 "query_single_pair",
                 "tag_w_each",
                 "shared_tag_w_each",
                 "sort_by",
                 "changed",
-                "orphaned",
                 "default_ctor",
                 "default_ctor_no_assign",
                 "expr_w_template",
@@ -709,7 +692,7 @@
                 "iter_w_stage"
             ]
         }, {
-            "id": "QueryBuilder",
+            "id": "FilterBuilder",
             "testcases": [
                 "builder_assign_same_type",
                 "builder_assign_from_empty",
@@ -925,7 +908,7 @@
                 "name_from_root"
             ]
         }, {
-            "id": "Query",
+            "id": "Filter",
             "testcases": [
                 "term_each_component",
                 "term_each_tag",

@@ -1,5 +1,5 @@
 /**
- * @file addons/cpp/mixins/query/builder.hpp
+ * @file addons/cpp/mixins/filter/builder.hpp
  * @brief Query builder.
  */
 
@@ -18,7 +18,7 @@ namespace _ {
 
 /** Query builder.
  * 
- * @ingroup cpp_core_queries
+ * @ingroup cpp_core_filters
  */
 template <typename ... Components>
 struct query_builder final : _::query_builder_base<Components...> {
@@ -31,8 +31,13 @@ struct query_builder final : _::query_builder_base<Components...> {
             entity_desc.name = name;
             entity_desc.sep = "::";
             entity_desc.root_sep = "::";
-            this->m_desc.filter.entity = ecs_entity_init(world, &entity_desc);
+            this->m_desc.entity = ecs_entity_init(world, &entity_desc);
         }
+    }
+
+    template <typename Func>
+    void each(Func&& func) {
+        this->build().each(FLECS_FWD(func));
     }
 };
 

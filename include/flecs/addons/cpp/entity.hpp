@@ -250,13 +250,6 @@ struct entity : entity_builder<entity>
             ecs_pair(first, _::cpp_type<Second>::id(m_world)));
     }
 
-    /** Recursively flatten relationship.
-     * @see ecs_flatten
-     */
-    void flatten(flecs::entity_t r, const ecs_flatten_desc_t *desc = nullptr) {
-        ecs_flatten(m_world, ecs_pair(r, m_id), desc);
-    }
-
     /** Clear an entity.
      * This operation removes all components from an entity without recycling
      * the entity id.

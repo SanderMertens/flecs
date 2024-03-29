@@ -75,16 +75,12 @@ struct system final : entity
 
     explicit system(flecs::world_t *world, ecs_system_desc_t *desc, bool instanced) 
     {
-        if (!desc->query.filter.instanced) {
-            desc->query.filter.instanced = instanced;
+        if (!(desc->query.flags & EcsQueryIsInstanced)) {
+            ECS_BIT_COND(desc->query.flags, EcsQueryIsInstanced, instanced);
         }
 
         m_world = world;
         m_id = ecs_system_init(world, desc);
-
-        if (desc->query.terms_buffer) {
-            ecs_os_free(desc->query.terms_buffer);
-        }
     }
 
     void ctx(void *ctx) {

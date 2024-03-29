@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "../filter/builder_i.hpp"
+#include "../query/builder_i.hpp"
 
 namespace flecs {
 
@@ -14,17 +14,17 @@ namespace flecs {
  * @ingroup cpp_addons_alerts
  */
 template<typename Base, typename ... Components>
-struct alert_builder_i : filter_builder_i<Base, Components ...> {
+struct alert_builder_i : query_builder_i<Base, Components ...> {
 private:
-    using BaseClass = filter_builder_i<Base, Components ...>;
-    
+    using BaseClass = query_builder_i<Base, Components ...>;
+
 public:
     alert_builder_i()
         : BaseClass(nullptr)
         , m_desc(nullptr) { }
 
     alert_builder_i(ecs_alert_desc_t *desc, int32_t term_index = 0) 
-        : BaseClass(&desc->filter, term_index)
+        : BaseClass(&desc->query, term_index)
         , m_desc(desc) { }
 
     /** Alert message.

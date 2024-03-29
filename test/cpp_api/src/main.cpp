@@ -377,18 +377,6 @@ void Enum_mixed_auto_manual_constants(void);
 void Enum_enum_class_mixed_auto_manual_constants(void);
 void Enum_enum_child_count(void);
 
-// Testsuite 'Switch'
-void Switch_add_case(void);
-void Switch_get_case(void);
-void Switch_system_w_case(void);
-void Switch_system_w_case_builder(void);
-void Switch_system_w_sw_type_builder(void);
-void Switch_system_w_switch(void);
-void Switch_add_case_w_type(void);
-void Switch_add_switch_w_type(void);
-void Switch_add_remove_switch_w_type(void);
-void Switch_switch_enum_type(void);
-
 // Testsuite 'Paths'
 void Paths_name(void);
 void Paths_path_depth_1(void);
@@ -530,14 +518,11 @@ void Query_signature(void);
 void Query_signature_const(void);
 void Query_signature_shared(void);
 void Query_signature_optional(void);
-void Query_subquery(void);
-void Query_subquery_w_expr(void);
 void Query_query_single_pair(void);
 void Query_tag_w_each(void);
 void Query_shared_tag_w_each(void);
 void Query_sort_by(void);
 void Query_changed(void);
-void Query_orphaned(void);
 void Query_default_ctor(void);
 void Query_default_ctor_no_assign(void);
 void Query_expr_w_template(void);
@@ -682,120 +667,120 @@ void QueryBuilder_term_w_write(void);
 void QueryBuilder_term_w_read(void);
 void QueryBuilder_iter_w_stage(void);
 
-// Testsuite 'QueryBuilder'
-void QueryBuilder_builder_assign_same_type(void);
-void QueryBuilder_builder_assign_from_empty(void);
-void QueryBuilder_builder_assign_to_empty(void);
-void QueryBuilder_builder_build(void);
-void QueryBuilder_builder_build_to_auto(void);
-void QueryBuilder_builder_build_n_statements(void);
-void QueryBuilder_builder_force_assign_operator(void);
-void QueryBuilder_1_type(void);
-void QueryBuilder_add_1_type(void);
-void QueryBuilder_add_2_types(void);
-void QueryBuilder_add_1_type_w_1_type(void);
-void QueryBuilder_add_2_types_w_1_type(void);
-void QueryBuilder_add_pair(void);
-void QueryBuilder_add_not(void);
-void QueryBuilder_add_or(void);
-void QueryBuilder_add_optional(void);
-void QueryBuilder_ptr_type(void);
-void QueryBuilder_const_type(void);
-void QueryBuilder_string_term(void);
-void QueryBuilder_singleton_term(void);
-void QueryBuilder_isa_superset_term(void);
-void QueryBuilder_isa_self_superset_term(void);
-void QueryBuilder_childof_superset_term(void);
-void QueryBuilder_childof_self_superset_term(void);
-void QueryBuilder_isa_superset_term_w_each(void);
-void QueryBuilder_isa_self_superset_term_w_each(void);
-void QueryBuilder_childof_superset_term_w_each(void);
-void QueryBuilder_childof_self_superset_term_w_each(void);
-void QueryBuilder_isa_superset_shortcut(void);
-void QueryBuilder_isa_superset_shortcut_w_self(void);
-void QueryBuilder_childof_superset_shortcut(void);
-void QueryBuilder_childof_superset_shortcut_w_self(void);
-void QueryBuilder_relation(void);
-void QueryBuilder_relation_w_object_wildcard(void);
-void QueryBuilder_relation_w_predicate_wildcard(void);
-void QueryBuilder_add_pair_w_rel_type(void);
-void QueryBuilder_template_term(void);
-void QueryBuilder_explicit_subject_w_id(void);
-void QueryBuilder_explicit_subject_w_type(void);
-void QueryBuilder_explicit_object_w_id(void);
-void QueryBuilder_explicit_object_w_type(void);
-void QueryBuilder_explicit_term(void);
-void QueryBuilder_explicit_term_w_type(void);
-void QueryBuilder_explicit_term_w_pair_type(void);
-void QueryBuilder_explicit_term_w_id(void);
-void QueryBuilder_explicit_term_w_pair_id(void);
-void QueryBuilder_1_term_to_empty(void);
-void QueryBuilder_2_subsequent_args(void);
-void QueryBuilder_filter_as_arg(void);
-void QueryBuilder_filter_as_move_arg(void);
-void QueryBuilder_filter_as_return(void);
-void QueryBuilder_filter_copy(void);
-void QueryBuilder_world_each_filter_1_component(void);
-void QueryBuilder_world_each_filter_2_components(void);
-void QueryBuilder_world_each_filter_1_component_no_entity(void);
-void QueryBuilder_world_each_filter_2_components_no_entity(void);
-void QueryBuilder_10_terms(void);
-void QueryBuilder_20_terms(void);
-void QueryBuilder_term_after_arg(void);
-void QueryBuilder_name_arg(void);
-void QueryBuilder_const_in_term(void);
-void QueryBuilder_const_optional(void);
-void QueryBuilder_create_w_no_template_args(void);
-void QueryBuilder_2_terms_w_expr(void);
-void QueryBuilder_assert_on_uninitialized_term(void);
-void QueryBuilder_operator_shortcuts(void);
-void QueryBuilder_inout_shortcuts(void);
-void QueryBuilder_iter_column_w_const_as_array(void);
-void QueryBuilder_iter_column_w_const_as_ptr(void);
-void QueryBuilder_iter_column_w_const_deref(void);
-void QueryBuilder_with_id(void);
-void QueryBuilder_with_name(void);
-void QueryBuilder_with_component(void);
-void QueryBuilder_with_pair_id(void);
-void QueryBuilder_with_pair_name(void);
-void QueryBuilder_with_pair_components(void);
-void QueryBuilder_with_pair_component_id(void);
-void QueryBuilder_with_pair_component_name(void);
-void QueryBuilder_with_enum(void);
-void QueryBuilder_without_id(void);
-void QueryBuilder_without_name(void);
-void QueryBuilder_without_component(void);
-void QueryBuilder_without_pair_id(void);
-void QueryBuilder_without_pair_name(void);
-void QueryBuilder_without_pair_components(void);
-void QueryBuilder_without_pair_component_id(void);
-void QueryBuilder_without_pair_component_name(void);
-void QueryBuilder_without_enum(void);
-void QueryBuilder_write_id(void);
-void QueryBuilder_write_name(void);
-void QueryBuilder_write_component(void);
-void QueryBuilder_write_pair_id(void);
-void QueryBuilder_write_pair_name(void);
-void QueryBuilder_write_pair_components(void);
-void QueryBuilder_write_pair_component_id(void);
-void QueryBuilder_write_pair_component_name(void);
-void QueryBuilder_write_enum(void);
-void QueryBuilder_read_id(void);
-void QueryBuilder_read_name(void);
-void QueryBuilder_read_component(void);
-void QueryBuilder_read_pair_id(void);
-void QueryBuilder_read_pair_name(void);
-void QueryBuilder_read_pair_components(void);
-void QueryBuilder_read_pair_component_id(void);
-void QueryBuilder_read_pair_component_name(void);
-void QueryBuilder_read_enum(void);
-void QueryBuilder_assign_after_init(void);
-void QueryBuilder_iter_w_stage(void);
-void QueryBuilder_with_t_inout(void);
-void QueryBuilder_with_T_inout(void);
-void QueryBuilder_with_R_T_inout(void);
-void QueryBuilder_with_R_t_inout(void);
-void QueryBuilder_with_r_t_inout(void);
+// Testsuite 'FilterBuilder'
+void FilterBuilder_builder_assign_same_type(void);
+void FilterBuilder_builder_assign_from_empty(void);
+void FilterBuilder_builder_assign_to_empty(void);
+void FilterBuilder_builder_build(void);
+void FilterBuilder_builder_build_to_auto(void);
+void FilterBuilder_builder_build_n_statements(void);
+void FilterBuilder_builder_force_assign_operator(void);
+void FilterBuilder_1_type(void);
+void FilterBuilder_add_1_type(void);
+void FilterBuilder_add_2_types(void);
+void FilterBuilder_add_1_type_w_1_type(void);
+void FilterBuilder_add_2_types_w_1_type(void);
+void FilterBuilder_add_pair(void);
+void FilterBuilder_add_not(void);
+void FilterBuilder_add_or(void);
+void FilterBuilder_add_optional(void);
+void FilterBuilder_ptr_type(void);
+void FilterBuilder_const_type(void);
+void FilterBuilder_string_term(void);
+void FilterBuilder_singleton_term(void);
+void FilterBuilder_isa_superset_term(void);
+void FilterBuilder_isa_self_superset_term(void);
+void FilterBuilder_childof_superset_term(void);
+void FilterBuilder_childof_self_superset_term(void);
+void FilterBuilder_isa_superset_term_w_each(void);
+void FilterBuilder_isa_self_superset_term_w_each(void);
+void FilterBuilder_childof_superset_term_w_each(void);
+void FilterBuilder_childof_self_superset_term_w_each(void);
+void FilterBuilder_isa_superset_shortcut(void);
+void FilterBuilder_isa_superset_shortcut_w_self(void);
+void FilterBuilder_childof_superset_shortcut(void);
+void FilterBuilder_childof_superset_shortcut_w_self(void);
+void FilterBuilder_relation(void);
+void FilterBuilder_relation_w_object_wildcard(void);
+void FilterBuilder_relation_w_predicate_wildcard(void);
+void FilterBuilder_add_pair_w_rel_type(void);
+void FilterBuilder_template_term(void);
+void FilterBuilder_explicit_subject_w_id(void);
+void FilterBuilder_explicit_subject_w_type(void);
+void FilterBuilder_explicit_object_w_id(void);
+void FilterBuilder_explicit_object_w_type(void);
+void FilterBuilder_explicit_term(void);
+void FilterBuilder_explicit_term_w_type(void);
+void FilterBuilder_explicit_term_w_pair_type(void);
+void FilterBuilder_explicit_term_w_id(void);
+void FilterBuilder_explicit_term_w_pair_id(void);
+void FilterBuilder_1_term_to_empty(void);
+void FilterBuilder_2_subsequent_args(void);
+void FilterBuilder_filter_as_arg(void);
+void FilterBuilder_filter_as_move_arg(void);
+void FilterBuilder_filter_as_return(void);
+void FilterBuilder_filter_copy(void);
+void FilterBuilder_world_each_filter_1_component(void);
+void FilterBuilder_world_each_filter_2_components(void);
+void FilterBuilder_world_each_filter_1_component_no_entity(void);
+void FilterBuilder_world_each_filter_2_components_no_entity(void);
+void FilterBuilder_10_terms(void);
+void FilterBuilder_20_terms(void);
+void FilterBuilder_term_after_arg(void);
+void FilterBuilder_name_arg(void);
+void FilterBuilder_const_in_term(void);
+void FilterBuilder_const_optional(void);
+void FilterBuilder_create_w_no_template_args(void);
+void FilterBuilder_2_terms_w_expr(void);
+void FilterBuilder_assert_on_uninitialized_term(void);
+void FilterBuilder_operator_shortcuts(void);
+void FilterBuilder_inout_shortcuts(void);
+void FilterBuilder_iter_column_w_const_as_array(void);
+void FilterBuilder_iter_column_w_const_as_ptr(void);
+void FilterBuilder_iter_column_w_const_deref(void);
+void FilterBuilder_with_id(void);
+void FilterBuilder_with_name(void);
+void FilterBuilder_with_component(void);
+void FilterBuilder_with_pair_id(void);
+void FilterBuilder_with_pair_name(void);
+void FilterBuilder_with_pair_components(void);
+void FilterBuilder_with_pair_component_id(void);
+void FilterBuilder_with_pair_component_name(void);
+void FilterBuilder_with_enum(void);
+void FilterBuilder_without_id(void);
+void FilterBuilder_without_name(void);
+void FilterBuilder_without_component(void);
+void FilterBuilder_without_pair_id(void);
+void FilterBuilder_without_pair_name(void);
+void FilterBuilder_without_pair_components(void);
+void FilterBuilder_without_pair_component_id(void);
+void FilterBuilder_without_pair_component_name(void);
+void FilterBuilder_without_enum(void);
+void FilterBuilder_write_id(void);
+void FilterBuilder_write_name(void);
+void FilterBuilder_write_component(void);
+void FilterBuilder_write_pair_id(void);
+void FilterBuilder_write_pair_name(void);
+void FilterBuilder_write_pair_components(void);
+void FilterBuilder_write_pair_component_id(void);
+void FilterBuilder_write_pair_component_name(void);
+void FilterBuilder_write_enum(void);
+void FilterBuilder_read_id(void);
+void FilterBuilder_read_name(void);
+void FilterBuilder_read_component(void);
+void FilterBuilder_read_pair_id(void);
+void FilterBuilder_read_pair_name(void);
+void FilterBuilder_read_pair_components(void);
+void FilterBuilder_read_pair_component_id(void);
+void FilterBuilder_read_pair_component_name(void);
+void FilterBuilder_read_enum(void);
+void FilterBuilder_assign_after_init(void);
+void FilterBuilder_iter_w_stage(void);
+void FilterBuilder_with_t_inout(void);
+void FilterBuilder_with_T_inout(void);
+void FilterBuilder_with_R_T_inout(void);
+void FilterBuilder_with_R_t_inout(void);
+void FilterBuilder_with_r_t_inout(void);
 
 // Testsuite 'RuleBuilder'
 void RuleBuilder_1_type(void);
@@ -890,34 +875,34 @@ void Observer_add_in_yield_existing(void);
 void Observer_add_in_yield_existing_multi(void);
 void Observer_name_from_root(void);
 
-// Testsuite 'Query'
-void Query_term_each_component(void);
-void Query_term_each_tag(void);
-void Query_term_each_id(void);
-void Query_term_each_pair_type(void);
-void Query_term_each_pair_id(void);
-void Query_term_each_pair_relation_wildcard(void);
-void Query_term_each_pair_object_wildcard(void);
-void Query_default_ctor_no_assign(void);
-void Query_term_get_id(void);
-void Query_term_get_subj(void);
-void Query_term_get_pred(void);
-void Query_term_get_obj(void);
-void Query_get_first(void);
-void Query_get_count_direct(void);
-void Query_get_is_true_direct(void);
-void Query_get_first_direct(void);
-void Query_each_w_no_this(void);
-void Query_each_w_iter_no_this(void);
-void Query_invalid_each_w_no_this(void);
-void Query_named_filter(void);
-void Query_named_scoped_filter(void);
-void Query_set_this_var(void);
-void Query_inspect_terms_w_expr(void);
-void Query_find(void);
-void Query_find_not_found(void);
-void Query_find_w_entity(void);
-void Query_optional_pair_term(void);
+// Testsuite 'Filter'
+void Filter_term_each_component(void);
+void Filter_term_each_tag(void);
+void Filter_term_each_id(void);
+void Filter_term_each_pair_type(void);
+void Filter_term_each_pair_id(void);
+void Filter_term_each_pair_relation_wildcard(void);
+void Filter_term_each_pair_object_wildcard(void);
+void Filter_default_ctor_no_assign(void);
+void Filter_term_get_id(void);
+void Filter_term_get_subj(void);
+void Filter_term_get_pred(void);
+void Filter_term_get_obj(void);
+void Filter_get_first(void);
+void Filter_get_count_direct(void);
+void Filter_get_is_true_direct(void);
+void Filter_get_first_direct(void);
+void Filter_each_w_no_this(void);
+void Filter_each_w_iter_no_this(void);
+void Filter_invalid_each_w_no_this(void);
+void Filter_named_filter(void);
+void Filter_named_scoped_filter(void);
+void Filter_set_this_var(void);
+void Filter_inspect_terms_w_expr(void);
+void Filter_find(void);
+void Filter_find_not_found(void);
+void Filter_find_w_entity(void);
+void Filter_optional_pair_term(void);
 
 // Testsuite 'ComponentLifecycle'
 void ComponentLifecycle_ctor_on_add(void);
@@ -2819,49 +2804,6 @@ bake_test_case Enum_testcases[] = {
     }
 };
 
-bake_test_case Switch_testcases[] = {
-    {
-        "add_case",
-        Switch_add_case
-    },
-    {
-        "get_case",
-        Switch_get_case
-    },
-    {
-        "system_w_case",
-        Switch_system_w_case
-    },
-    {
-        "system_w_case_builder",
-        Switch_system_w_case_builder
-    },
-    {
-        "system_w_sw_type_builder",
-        Switch_system_w_sw_type_builder
-    },
-    {
-        "system_w_switch",
-        Switch_system_w_switch
-    },
-    {
-        "add_case_w_type",
-        Switch_add_case_w_type
-    },
-    {
-        "add_switch_w_type",
-        Switch_add_switch_w_type
-    },
-    {
-        "add_remove_switch_w_type",
-        Switch_add_remove_switch_w_type
-    },
-    {
-        "switch_enum_type",
-        Switch_switch_enum_type
-    }
-};
-
 bake_test_case Paths_testcases[] = {
     {
         "name",
@@ -3404,14 +3346,6 @@ bake_test_case Query_testcases[] = {
         Query_signature_optional
     },
     {
-        "subquery",
-        Query_subquery
-    },
-    {
-        "subquery_w_expr",
-        Query_subquery_w_expr
-    },
-    {
         "query_single_pair",
         Query_query_single_pair
     },
@@ -3430,10 +3364,6 @@ bake_test_case Query_testcases[] = {
     {
         "changed",
         Query_changed
-    },
-    {
-        "orphaned",
-        Query_orphaned
     },
     {
         "default_ctor",
@@ -4004,458 +3934,458 @@ bake_test_case QueryBuilder_testcases[] = {
     }
 };
 
-bake_test_case QueryBuilder_testcases[] = {
+bake_test_case FilterBuilder_testcases[] = {
     {
         "builder_assign_same_type",
-        QueryBuilder_builder_assign_same_type
+        FilterBuilder_builder_assign_same_type
     },
     {
         "builder_assign_from_empty",
-        QueryBuilder_builder_assign_from_empty
+        FilterBuilder_builder_assign_from_empty
     },
     {
         "builder_assign_to_empty",
-        QueryBuilder_builder_assign_to_empty
+        FilterBuilder_builder_assign_to_empty
     },
     {
         "builder_build",
-        QueryBuilder_builder_build
+        FilterBuilder_builder_build
     },
     {
         "builder_build_to_auto",
-        QueryBuilder_builder_build_to_auto
+        FilterBuilder_builder_build_to_auto
     },
     {
         "builder_build_n_statements",
-        QueryBuilder_builder_build_n_statements
+        FilterBuilder_builder_build_n_statements
     },
     {
         "builder_force_assign_operator",
-        QueryBuilder_builder_force_assign_operator
+        FilterBuilder_builder_force_assign_operator
     },
     {
         "1_type",
-        QueryBuilder_1_type
+        FilterBuilder_1_type
     },
     {
         "add_1_type",
-        QueryBuilder_add_1_type
+        FilterBuilder_add_1_type
     },
     {
         "add_2_types",
-        QueryBuilder_add_2_types
+        FilterBuilder_add_2_types
     },
     {
         "add_1_type_w_1_type",
-        QueryBuilder_add_1_type_w_1_type
+        FilterBuilder_add_1_type_w_1_type
     },
     {
         "add_2_types_w_1_type",
-        QueryBuilder_add_2_types_w_1_type
+        FilterBuilder_add_2_types_w_1_type
     },
     {
         "add_pair",
-        QueryBuilder_add_pair
+        FilterBuilder_add_pair
     },
     {
         "add_not",
-        QueryBuilder_add_not
+        FilterBuilder_add_not
     },
     {
         "add_or",
-        QueryBuilder_add_or
+        FilterBuilder_add_or
     },
     {
         "add_optional",
-        QueryBuilder_add_optional
+        FilterBuilder_add_optional
     },
     {
         "ptr_type",
-        QueryBuilder_ptr_type
+        FilterBuilder_ptr_type
     },
     {
         "const_type",
-        QueryBuilder_const_type
+        FilterBuilder_const_type
     },
     {
         "string_term",
-        QueryBuilder_string_term
+        FilterBuilder_string_term
     },
     {
         "singleton_term",
-        QueryBuilder_singleton_term
+        FilterBuilder_singleton_term
     },
     {
         "isa_superset_term",
-        QueryBuilder_isa_superset_term
+        FilterBuilder_isa_superset_term
     },
     {
         "isa_self_superset_term",
-        QueryBuilder_isa_self_superset_term
+        FilterBuilder_isa_self_superset_term
     },
     {
         "childof_superset_term",
-        QueryBuilder_childof_superset_term
+        FilterBuilder_childof_superset_term
     },
     {
         "childof_self_superset_term",
-        QueryBuilder_childof_self_superset_term
+        FilterBuilder_childof_self_superset_term
     },
     {
         "isa_superset_term_w_each",
-        QueryBuilder_isa_superset_term_w_each
+        FilterBuilder_isa_superset_term_w_each
     },
     {
         "isa_self_superset_term_w_each",
-        QueryBuilder_isa_self_superset_term_w_each
+        FilterBuilder_isa_self_superset_term_w_each
     },
     {
         "childof_superset_term_w_each",
-        QueryBuilder_childof_superset_term_w_each
+        FilterBuilder_childof_superset_term_w_each
     },
     {
         "childof_self_superset_term_w_each",
-        QueryBuilder_childof_self_superset_term_w_each
+        FilterBuilder_childof_self_superset_term_w_each
     },
     {
         "isa_superset_shortcut",
-        QueryBuilder_isa_superset_shortcut
+        FilterBuilder_isa_superset_shortcut
     },
     {
         "isa_superset_shortcut_w_self",
-        QueryBuilder_isa_superset_shortcut_w_self
+        FilterBuilder_isa_superset_shortcut_w_self
     },
     {
         "childof_superset_shortcut",
-        QueryBuilder_childof_superset_shortcut
+        FilterBuilder_childof_superset_shortcut
     },
     {
         "childof_superset_shortcut_w_self",
-        QueryBuilder_childof_superset_shortcut_w_self
+        FilterBuilder_childof_superset_shortcut_w_self
     },
     {
         "relation",
-        QueryBuilder_relation
+        FilterBuilder_relation
     },
     {
         "relation_w_object_wildcard",
-        QueryBuilder_relation_w_object_wildcard
+        FilterBuilder_relation_w_object_wildcard
     },
     {
         "relation_w_predicate_wildcard",
-        QueryBuilder_relation_w_predicate_wildcard
+        FilterBuilder_relation_w_predicate_wildcard
     },
     {
         "add_pair_w_rel_type",
-        QueryBuilder_add_pair_w_rel_type
+        FilterBuilder_add_pair_w_rel_type
     },
     {
         "template_term",
-        QueryBuilder_template_term
+        FilterBuilder_template_term
     },
     {
         "explicit_subject_w_id",
-        QueryBuilder_explicit_subject_w_id
+        FilterBuilder_explicit_subject_w_id
     },
     {
         "explicit_subject_w_type",
-        QueryBuilder_explicit_subject_w_type
+        FilterBuilder_explicit_subject_w_type
     },
     {
         "explicit_object_w_id",
-        QueryBuilder_explicit_object_w_id
+        FilterBuilder_explicit_object_w_id
     },
     {
         "explicit_object_w_type",
-        QueryBuilder_explicit_object_w_type
+        FilterBuilder_explicit_object_w_type
     },
     {
         "explicit_term",
-        QueryBuilder_explicit_term
+        FilterBuilder_explicit_term
     },
     {
         "explicit_term_w_type",
-        QueryBuilder_explicit_term_w_type
+        FilterBuilder_explicit_term_w_type
     },
     {
         "explicit_term_w_pair_type",
-        QueryBuilder_explicit_term_w_pair_type
+        FilterBuilder_explicit_term_w_pair_type
     },
     {
         "explicit_term_w_id",
-        QueryBuilder_explicit_term_w_id
+        FilterBuilder_explicit_term_w_id
     },
     {
         "explicit_term_w_pair_id",
-        QueryBuilder_explicit_term_w_pair_id
+        FilterBuilder_explicit_term_w_pair_id
     },
     {
         "1_term_to_empty",
-        QueryBuilder_1_term_to_empty
+        FilterBuilder_1_term_to_empty
     },
     {
         "2_subsequent_args",
-        QueryBuilder_2_subsequent_args
+        FilterBuilder_2_subsequent_args
     },
     {
         "filter_as_arg",
-        QueryBuilder_filter_as_arg
+        FilterBuilder_filter_as_arg
     },
     {
         "filter_as_move_arg",
-        QueryBuilder_filter_as_move_arg
+        FilterBuilder_filter_as_move_arg
     },
     {
         "filter_as_return",
-        QueryBuilder_filter_as_return
+        FilterBuilder_filter_as_return
     },
     {
         "filter_copy",
-        QueryBuilder_filter_copy
+        FilterBuilder_filter_copy
     },
     {
         "world_each_filter_1_component",
-        QueryBuilder_world_each_filter_1_component
+        FilterBuilder_world_each_filter_1_component
     },
     {
         "world_each_filter_2_components",
-        QueryBuilder_world_each_filter_2_components
+        FilterBuilder_world_each_filter_2_components
     },
     {
         "world_each_filter_1_component_no_entity",
-        QueryBuilder_world_each_filter_1_component_no_entity
+        FilterBuilder_world_each_filter_1_component_no_entity
     },
     {
         "world_each_filter_2_components_no_entity",
-        QueryBuilder_world_each_filter_2_components_no_entity
+        FilterBuilder_world_each_filter_2_components_no_entity
     },
     {
         "10_terms",
-        QueryBuilder_10_terms
+        FilterBuilder_10_terms
     },
     {
         "20_terms",
-        QueryBuilder_20_terms
+        FilterBuilder_20_terms
     },
     {
         "term_after_arg",
-        QueryBuilder_term_after_arg
+        FilterBuilder_term_after_arg
     },
     {
         "name_arg",
-        QueryBuilder_name_arg
+        FilterBuilder_name_arg
     },
     {
         "const_in_term",
-        QueryBuilder_const_in_term
+        FilterBuilder_const_in_term
     },
     {
         "const_optional",
-        QueryBuilder_const_optional
+        FilterBuilder_const_optional
     },
     {
         "create_w_no_template_args",
-        QueryBuilder_create_w_no_template_args
+        FilterBuilder_create_w_no_template_args
     },
     {
         "2_terms_w_expr",
-        QueryBuilder_2_terms_w_expr
+        FilterBuilder_2_terms_w_expr
     },
     {
         "assert_on_uninitialized_term",
-        QueryBuilder_assert_on_uninitialized_term
+        FilterBuilder_assert_on_uninitialized_term
     },
     {
         "operator_shortcuts",
-        QueryBuilder_operator_shortcuts
+        FilterBuilder_operator_shortcuts
     },
     {
         "inout_shortcuts",
-        QueryBuilder_inout_shortcuts
+        FilterBuilder_inout_shortcuts
     },
     {
         "iter_column_w_const_as_array",
-        QueryBuilder_iter_column_w_const_as_array
+        FilterBuilder_iter_column_w_const_as_array
     },
     {
         "iter_column_w_const_as_ptr",
-        QueryBuilder_iter_column_w_const_as_ptr
+        FilterBuilder_iter_column_w_const_as_ptr
     },
     {
         "iter_column_w_const_deref",
-        QueryBuilder_iter_column_w_const_deref
+        FilterBuilder_iter_column_w_const_deref
     },
     {
         "with_id",
-        QueryBuilder_with_id
+        FilterBuilder_with_id
     },
     {
         "with_name",
-        QueryBuilder_with_name
+        FilterBuilder_with_name
     },
     {
         "with_component",
-        QueryBuilder_with_component
+        FilterBuilder_with_component
     },
     {
         "with_pair_id",
-        QueryBuilder_with_pair_id
+        FilterBuilder_with_pair_id
     },
     {
         "with_pair_name",
-        QueryBuilder_with_pair_name
+        FilterBuilder_with_pair_name
     },
     {
         "with_pair_components",
-        QueryBuilder_with_pair_components
+        FilterBuilder_with_pair_components
     },
     {
         "with_pair_component_id",
-        QueryBuilder_with_pair_component_id
+        FilterBuilder_with_pair_component_id
     },
     {
         "with_pair_component_name",
-        QueryBuilder_with_pair_component_name
+        FilterBuilder_with_pair_component_name
     },
     {
         "with_enum",
-        QueryBuilder_with_enum
+        FilterBuilder_with_enum
     },
     {
         "without_id",
-        QueryBuilder_without_id
+        FilterBuilder_without_id
     },
     {
         "without_name",
-        QueryBuilder_without_name
+        FilterBuilder_without_name
     },
     {
         "without_component",
-        QueryBuilder_without_component
+        FilterBuilder_without_component
     },
     {
         "without_pair_id",
-        QueryBuilder_without_pair_id
+        FilterBuilder_without_pair_id
     },
     {
         "without_pair_name",
-        QueryBuilder_without_pair_name
+        FilterBuilder_without_pair_name
     },
     {
         "without_pair_components",
-        QueryBuilder_without_pair_components
+        FilterBuilder_without_pair_components
     },
     {
         "without_pair_component_id",
-        QueryBuilder_without_pair_component_id
+        FilterBuilder_without_pair_component_id
     },
     {
         "without_pair_component_name",
-        QueryBuilder_without_pair_component_name
+        FilterBuilder_without_pair_component_name
     },
     {
         "without_enum",
-        QueryBuilder_without_enum
+        FilterBuilder_without_enum
     },
     {
         "write_id",
-        QueryBuilder_write_id
+        FilterBuilder_write_id
     },
     {
         "write_name",
-        QueryBuilder_write_name
+        FilterBuilder_write_name
     },
     {
         "write_component",
-        QueryBuilder_write_component
+        FilterBuilder_write_component
     },
     {
         "write_pair_id",
-        QueryBuilder_write_pair_id
+        FilterBuilder_write_pair_id
     },
     {
         "write_pair_name",
-        QueryBuilder_write_pair_name
+        FilterBuilder_write_pair_name
     },
     {
         "write_pair_components",
-        QueryBuilder_write_pair_components
+        FilterBuilder_write_pair_components
     },
     {
         "write_pair_component_id",
-        QueryBuilder_write_pair_component_id
+        FilterBuilder_write_pair_component_id
     },
     {
         "write_pair_component_name",
-        QueryBuilder_write_pair_component_name
+        FilterBuilder_write_pair_component_name
     },
     {
         "write_enum",
-        QueryBuilder_write_enum
+        FilterBuilder_write_enum
     },
     {
         "read_id",
-        QueryBuilder_read_id
+        FilterBuilder_read_id
     },
     {
         "read_name",
-        QueryBuilder_read_name
+        FilterBuilder_read_name
     },
     {
         "read_component",
-        QueryBuilder_read_component
+        FilterBuilder_read_component
     },
     {
         "read_pair_id",
-        QueryBuilder_read_pair_id
+        FilterBuilder_read_pair_id
     },
     {
         "read_pair_name",
-        QueryBuilder_read_pair_name
+        FilterBuilder_read_pair_name
     },
     {
         "read_pair_components",
-        QueryBuilder_read_pair_components
+        FilterBuilder_read_pair_components
     },
     {
         "read_pair_component_id",
-        QueryBuilder_read_pair_component_id
+        FilterBuilder_read_pair_component_id
     },
     {
         "read_pair_component_name",
-        QueryBuilder_read_pair_component_name
+        FilterBuilder_read_pair_component_name
     },
     {
         "read_enum",
-        QueryBuilder_read_enum
+        FilterBuilder_read_enum
     },
     {
         "assign_after_init",
-        QueryBuilder_assign_after_init
+        FilterBuilder_assign_after_init
     },
     {
         "iter_w_stage",
-        QueryBuilder_iter_w_stage
+        FilterBuilder_iter_w_stage
     },
     {
         "with_t_inout",
-        QueryBuilder_with_t_inout
+        FilterBuilder_with_t_inout
     },
     {
         "with_T_inout",
-        QueryBuilder_with_T_inout
+        FilterBuilder_with_T_inout
     },
     {
         "with_R_T_inout",
-        QueryBuilder_with_R_T_inout
+        FilterBuilder_with_R_T_inout
     },
     {
         "with_R_t_inout",
-        QueryBuilder_with_R_t_inout
+        FilterBuilder_with_R_t_inout
     },
     {
         "with_r_t_inout",
-        QueryBuilder_with_r_t_inout
+        FilterBuilder_with_r_t_inout
     }
 };
 
@@ -4816,114 +4746,114 @@ bake_test_case Observer_testcases[] = {
     }
 };
 
-bake_test_case Query_testcases[] = {
+bake_test_case Filter_testcases[] = {
     {
         "term_each_component",
-        Query_term_each_component
+        Filter_term_each_component
     },
     {
         "term_each_tag",
-        Query_term_each_tag
+        Filter_term_each_tag
     },
     {
         "term_each_id",
-        Query_term_each_id
+        Filter_term_each_id
     },
     {
         "term_each_pair_type",
-        Query_term_each_pair_type
+        Filter_term_each_pair_type
     },
     {
         "term_each_pair_id",
-        Query_term_each_pair_id
+        Filter_term_each_pair_id
     },
     {
         "term_each_pair_relation_wildcard",
-        Query_term_each_pair_relation_wildcard
+        Filter_term_each_pair_relation_wildcard
     },
     {
         "term_each_pair_object_wildcard",
-        Query_term_each_pair_object_wildcard
+        Filter_term_each_pair_object_wildcard
     },
     {
         "default_ctor_no_assign",
-        Query_default_ctor_no_assign
+        Filter_default_ctor_no_assign
     },
     {
         "term_get_id",
-        Query_term_get_id
+        Filter_term_get_id
     },
     {
         "term_get_subj",
-        Query_term_get_subj
+        Filter_term_get_subj
     },
     {
         "term_get_pred",
-        Query_term_get_pred
+        Filter_term_get_pred
     },
     {
         "term_get_obj",
-        Query_term_get_obj
+        Filter_term_get_obj
     },
     {
         "get_first",
-        Query_get_first
+        Filter_get_first
     },
     {
         "get_count_direct",
-        Query_get_count_direct
+        Filter_get_count_direct
     },
     {
         "get_is_true_direct",
-        Query_get_is_true_direct
+        Filter_get_is_true_direct
     },
     {
         "get_first_direct",
-        Query_get_first_direct
+        Filter_get_first_direct
     },
     {
         "each_w_no_this",
-        Query_each_w_no_this
+        Filter_each_w_no_this
     },
     {
         "each_w_iter_no_this",
-        Query_each_w_iter_no_this
+        Filter_each_w_iter_no_this
     },
     {
         "invalid_each_w_no_this",
-        Query_invalid_each_w_no_this
+        Filter_invalid_each_w_no_this
     },
     {
         "named_filter",
-        Query_named_filter
+        Filter_named_filter
     },
     {
         "named_scoped_filter",
-        Query_named_scoped_filter
+        Filter_named_scoped_filter
     },
     {
         "set_this_var",
-        Query_set_this_var
+        Filter_set_this_var
     },
     {
         "inspect_terms_w_expr",
-        Query_inspect_terms_w_expr
+        Filter_inspect_terms_w_expr
     },
     {
         "find",
-        Query_find
+        Filter_find
     },
     {
         "find_not_found",
-        Query_find_not_found
+        Filter_find_not_found
     },
     {
         "find_w_entity",
-        Query_find_w_entity
+        Filter_find_w_entity
     },
     {
         "optional_pair_term",
-        Query_optional_pair_term
+        Filter_optional_pair_term
     }
 };
 
@@ -6670,13 +6600,6 @@ static bake_test_suite suites[] = {
         Enum_testcases
     },
     {
-        "Switch",
-        NULL,
-        NULL,
-        10,
-        Switch_testcases
-    },
-    {
         "Paths",
         NULL,
         NULL,
@@ -6708,7 +6631,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        92,
+        89,
         Query_testcases
     },
     {
@@ -6719,11 +6642,11 @@ static bake_test_suite suites[] = {
         QueryBuilder_testcases
     },
     {
-        "QueryBuilder",
+        "FilterBuilder",
         NULL,
         NULL,
         113,
-        QueryBuilder_testcases
+        FilterBuilder_testcases
     },
     {
         "RuleBuilder",
@@ -6747,11 +6670,11 @@ static bake_test_suite suites[] = {
         Observer_testcases
     },
     {
-        "Query",
+        "Filter",
         NULL,
         NULL,
         27,
-        Query_testcases
+        Filter_testcases
     },
     {
         "ComponentLifecycle",
@@ -6840,5 +6763,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("cpp_api", argc, argv, suites, 28);
+    return bake_test_run("cpp_api", argc, argv, suites, 27);
 }

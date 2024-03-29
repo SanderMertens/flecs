@@ -18,16 +18,12 @@ struct observer final : entity
 
     observer(flecs::world_t *world, ecs_observer_desc_t *desc, bool instanced) 
     {
-        if (!desc->filter.instanced) {
-            desc->filter.instanced = instanced;
+        if (!(desc->query.flags & EcsQueryIsInstanced)) {
+            ECS_BIT_COND(desc->query.flags, EcsQueryIsInstanced, instanced);
         }
 
         m_world = world;
         m_id = ecs_observer_init(world, desc);
-
-        if (desc->filter.terms_buffer) {
-            ecs_os_free(desc->filter.terms_buffer);
-        }
     }
 
     void ctx(void *ctx) {
@@ -41,10 +37,8 @@ struct observer final : entity
         return ecs_observer_get_ctx(m_world, m_id);
     }
 
-    flecs::filter<> query() const {
-        const flecs::Poly *poly = this->get<flecs::Poly>(flecs::Observer);
-        const ecs_observer_t *ob = static_cast<const flecs::observer_t*>(poly->poly);
-        return flecs::filter<>(m_world, &ob->filter);
+    flecs::query<> query() const {
+        return flecs::query<>(m_world, ecs_observer_get_query(m_world, m_id));
     }
 };
 

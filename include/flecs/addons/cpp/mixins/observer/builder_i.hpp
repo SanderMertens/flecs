@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "../filter/builder_i.hpp"
+#include "../query/builder_i.hpp"
 
 namespace flecs {
 
@@ -14,15 +14,15 @@ namespace flecs {
  * @ingroup cpp_observers
  */
 template<typename Base, typename ... Components>
-struct observer_builder_i : filter_builder_i<Base, Components ...> {
-    using BaseClass = filter_builder_i<Base, Components ...>;
+struct observer_builder_i : query_builder_i<Base, Components ...> {
+    using BaseClass = query_builder_i<Base, Components ...>;
     observer_builder_i()
         : BaseClass(nullptr)
         , m_desc(nullptr)
         , m_event_count(0) { }
 
     observer_builder_i(ecs_observer_desc_t *desc) 
-        : BaseClass(&desc->filter)
+        : BaseClass(&desc->query)
         , m_desc(desc)
         , m_event_count(0) { }
 

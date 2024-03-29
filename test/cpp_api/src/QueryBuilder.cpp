@@ -528,7 +528,7 @@ void QueryBuilder_isa_superset_term_w_each(void) {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Self, Other>()
-        .arg(2).src().up(flecs::IsA)
+        .term_at(2).src().up(flecs::IsA)
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -553,7 +553,7 @@ void QueryBuilder_isa_self_superset_term_w_each(void) {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Self, Other>()
-        .arg(2).src().self().up(flecs::IsA)
+        .term_at(2).src().self().up(flecs::IsA)
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -580,7 +580,7 @@ void QueryBuilder_childof_superset_term_w_each(void) {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Self, Other>()
-        .arg(2).src().up()
+        .term_at(2).src().up()
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -605,7 +605,7 @@ void QueryBuilder_childof_self_superset_term_w_each(void) {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Self, Other>()
-        .arg(2).src().self().up()
+        .term_at(2).src().self().up()
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -632,7 +632,7 @@ void QueryBuilder_isa_superset_shortcut(void) {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Self, Other>()
-        .arg(2).up(flecs::IsA)
+        .term_at(2).up(flecs::IsA)
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -657,7 +657,7 @@ void QueryBuilder_isa_superset_shortcut_w_self(void) {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Self, Other>()
-        .arg(2).self().up(flecs::IsA)
+        .term_at(2).self().up(flecs::IsA)
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -684,7 +684,7 @@ void QueryBuilder_childof_superset_shortcut(void) {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Self, Other>()
-        .arg(2).up()
+        .term_at(2).up()
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -709,7 +709,7 @@ void QueryBuilder_childof_superset_shortcut_w_self(void) {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Self, Other>()
-        .arg(2).self().up()
+        .term_at(2).self().up()
         .build();
 
     auto base = ecs.entity().set<Other>({10});
@@ -1086,8 +1086,8 @@ void QueryBuilder_2_subsequent_args(void) {
     int32_t count = 0;
 
     auto s = ecs.system<Rel, const Velocity>()
-        .arg(1).second(flecs::Wildcard)
-        .arg(2).singleton()
+        .term_at(1).second(flecs::Wildcard)
+        .term_at(2).singleton()
         .iter([&](flecs::iter it){
             count += it.count();
         });
@@ -2046,11 +2046,10 @@ void QueryBuilder_term_w_write(void) {
         .term<Position>().write()
         .build();
 
-    auto f = q.filter();
-    test_assert(f.term(0).inout() == flecs::InOutDefault);
-    test_assert(f.term(0).get_src() == flecs::This);
-    test_assert(f.term(1).inout() == flecs::Out);
-    test_assert(f.term(1).get_src() == 0);
+    test_assert(q.term(0).inout() == flecs::InOutDefault);
+    test_assert(q.term(0).get_src() == flecs::This);
+    test_assert(q.term(1).inout() == flecs::Out);
+    test_assert(q.term(1).get_src() == 0);
 }
 
 void QueryBuilder_term_w_read(void) {
@@ -2061,11 +2060,10 @@ void QueryBuilder_term_w_read(void) {
         .term<Position>().read()
         .build();
 
-    auto f = q.filter();
-    test_assert(f.term(0).inout() == flecs::InOutDefault);
-    test_assert(f.term(0).get_src() == flecs::This);
-    test_assert(f.term(1).inout() == flecs::In);
-    test_assert(f.term(1).get_src() == 0);
+    test_assert(q.term(0).inout() == flecs::InOutDefault);
+    test_assert(q.term(0).get_src() == flecs::This);
+    test_assert(q.term(1).inout() == flecs::In);
+    test_assert(q.term(1).get_src() == 0);
 }
 
 void QueryBuilder_iter_w_stage(void) {
@@ -2086,4 +2084,252 @@ void QueryBuilder_iter_w_stage(void) {
     });
 
     test_int(count, 1);
+}
+
+void QueryBuilder_builder_force_assign_operator(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_filter_as_arg(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_filter_as_move_arg(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_filter_as_return(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_filter_copy(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_world_each_filter_1_component(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_world_each_filter_2_components(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_world_each_filter_1_component_no_entity(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_world_each_filter_2_components_no_entity(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_term_after_arg(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_name_arg(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_const_in_term(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_const_optional(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_2_terms_w_expr(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_assert_on_uninitialized_term(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_operator_shortcuts(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_inout_shortcuts(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_iter_column_w_const_as_array(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_iter_column_w_const_as_ptr(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_iter_column_w_const_deref(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_with_id(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_with_name(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_with_component(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_with_pair_id(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_with_pair_name(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_with_pair_components(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_with_pair_component_id(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_with_pair_component_name(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_with_enum(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_without_id(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_without_name(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_without_component(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_without_pair_id(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_without_pair_name(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_without_pair_components(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_without_pair_component_id(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_without_pair_component_name(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_without_enum(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_write_id(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_write_name(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_write_component(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_write_pair_id(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_write_pair_name(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_write_pair_components(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_write_pair_component_id(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_write_pair_component_name(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_write_enum(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_read_id(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_read_name(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_read_component(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_read_pair_id(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_read_pair_name(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_read_pair_components(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_read_pair_component_id(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_read_pair_component_name(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_read_enum(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_assign_after_init(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_with_t_inout(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_with_T_inout(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_with_R_T_inout(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_with_R_t_inout(void) {
+    // Implement testcase
+}
+
+void QueryBuilder_with_r_t_inout(void) {
+    // Implement testcase
 }
