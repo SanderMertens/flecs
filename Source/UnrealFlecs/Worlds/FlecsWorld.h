@@ -530,7 +530,7 @@ public:
 			return FFlecsEntityHandle();
 		}
 		
-		const flecs::entity ScriptStructComponent
+		const FFlecsEntityHandle ScriptStructComponent
 			= World.entity(TCHAR_TO_ANSI(*ScriptStruct->GetFName().ToString()))
 			                                         .set<flecs::Component>(
 			                                         {
@@ -545,10 +545,11 @@ public:
 		const FFlecsEntityHandle Handle(ScriptStructComponent);
 		GetSingletonRef<FFlecsTypeMapComponent>()->ScriptStructMap.emplace(ScriptStruct, Handle);
 
+		MAYBE_UNUSED flecs::untyped_component* UntypedComponent
+			= const_cast<flecs::untyped_component*>(ScriptStructComponent.GetUntypedComponent());
+
 		#if WITH_EDITOR
-
-		flecs::untyped_component* UntypedComponent = ScriptStructComponent.get_mut<flecs::untyped_component>();
-
+		
 		for (TFieldIterator<FProperty> PropertyIt(ScriptStruct); PropertyIt; ++PropertyIt)
 		{
 			const FProperty* Property = *PropertyIt;
@@ -592,10 +593,18 @@ public:
 
 		if (ScriptStruct->GetSuperStruct())
 		{
+			FFlecsEntityHandle ParentEntity;
+			
 			if (!HasScriptStruct(static_cast<UScriptStruct*>(ScriptStruct->GetSuperStruct())))
 			{
-				RegisterScriptStruct(static_cast<UScriptStruct*>(ScriptStruct->GetSuperStruct()));
+				ParentEntity = RegisterScriptStruct(static_cast<UScriptStruct*>(ScriptStruct->GetSuperStruct()));
 			}
+			else
+			{
+				ParentEntity = GetScriptStructEntity(static_cast<UScriptStruct*>(ScriptStruct->GetSuperStruct()));
+			}
+			
+			ScriptStructComponent.SetParent(ParentEntity, true);
 		}
 		
 		return Handle;
@@ -615,7 +624,7 @@ public:
 			return FFlecsEntityHandle();
 		}
 		
-		const flecs::entity ScriptClassComponent
+		const FFlecsEntityHandle ScriptClassComponent
 			= World.entity(TCHAR_TO_ANSI(*ScriptClass->GetFName().ToString()))
 			                                        .set<flecs::Component>(
 			                                        {
@@ -632,10 +641,18 @@ public:
 
 		if (ScriptClass->GetSuperClass())
 		{
+			FFlecsEntityHandle ParentEntity;
+			
 			if (!HasScriptClass(ScriptClass->GetSuperClass()))
 			{
-				MAYBE_UNUSED FFlecsEntityHandle Entity = RegisterScriptClass(ScriptClass->GetSuperClass());
+				ParentEntity = RegisterScriptClass(ScriptClass->GetSuperClass());
 			}
+			else
+			{
+				ParentEntity = GetScriptClassEntity(ScriptClass->GetSuperClass());
+			}
+
+			ScriptClassComponent.SetParent(ParentEntity, true);
 		}
 		
 		return Handle;
@@ -761,6 +778,13 @@ public:
 	FORCEINLINE bool HasEntityWithName(const FString& Name, const bool bSearchPath = true) const
 	{
 		return World.lookup(TCHAR_TO_ANSI(*Name), bSearchPath).is_valid();
+	}
+
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
+	FORCEINLINE FFlecsEntityHandle GetTagEntity(const FGameplayTag& Tag) const
+	{
+		checkf(Tag.IsValid(), TEXT("Tag is not valid"));
+		return World.lookup(TCHAR_TO_ANSI(*Tag.ToString()), true);
 	}
 	
 	flecs::world World;

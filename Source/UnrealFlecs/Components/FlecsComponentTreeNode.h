@@ -35,7 +35,10 @@ struct UNREALFLECS_API FFlecsComponentTypeInfo final
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree",
 		meta = (EditCondition = "NodeType == EFlecsComponentTreeNodeType::FGameplayTag", EditConditionHides))
-	FGameplayTagContainer GameplayTag;
+	FGameplayTag GameplayTag;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree")
+	TOptional<FName> ComponentName;
 	
 }; // struct FFlecsComponentTypeInfo
 

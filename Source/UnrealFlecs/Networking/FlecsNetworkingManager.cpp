@@ -2,6 +2,9 @@
 
 #include "FlecsNetworkingManager.h"
 #include "FlecsNetworkIdComponent.h"
+#include "FlecsNetworkingActorComponent.h"
+#include "FlecsPushModelTrait.h"
+#include "FlecsReplicatedTrait.h"
 #include "Unlog/Unlog.h"
 #include "Worlds/FlecsWorldSubsystem.h"
 
@@ -28,7 +31,9 @@ void UFlecsNetworkingManager::BeginPlay()
 		NetworkIdObserver = FlecsWorld->CreateObserver<FFlecsNetworkIdComponent>(TEXT("NetworkingIdObserver"))
 		.event(flecs::OnAdd)
 		.yield_existing(true)
-		.term(flecs::Name).and_()
+		.term(flecs::Name)
+			.and_()
+			.inout_none()
 		.each([this](const FFlecsEntityHandle& Entity, FFlecsNetworkIdComponent& NetworkId)
 		{
 			if UNLIKELY_IF(NetworkId.IsValid())
@@ -44,7 +49,32 @@ void UFlecsNetworkingManager::BeginPlay()
 				*Entity.GetEntity().path().c_str());
 			
 		});
+
+		NetworkPushModelObserver = FlecsWorld
+			->CreateObserver<FFlecsReplicatedTrait, FFlecsPushModelTrait>(TEXT("NetworkingPushModelObserver"))
+			.event(flecs::OnAdd)
+			.event(flecs::OnRemove)
+			.event(flecs::OnSet)
+			.event(flecs::UnSet)
+			.yield_existing(true)
+			.each([this](const FFlecsEntityHandle& Entity,
+				FFlecsReplicatedTrait& Replicated, FFlecsPushModelTrait& PushModel)
+			{
+			
+			});
 	}
 
 	#endif // WITH_SERVER_CODE
+}
+
+void UFlecsNetworkingManager::AddNetworkingActorComponent(UFlecsNetworkingActorComponent* NetworkingActorComponent)
+{
+	checkf(IsValid(NetworkingActorComponent), TEXT("NetworkingActorComponent must be valid"));
+
+	NetworkingActorComponents.Add(NetworkingActorComponent);
+}
+
+void UFlecsNetworkingManager::RemoveNetworkingActorComponent(UFlecsNetworkingActorComponent* NetworkingActorComponent)
+{
+	NetworkingActorComponents.Remove(NetworkingActorComponent);
 }

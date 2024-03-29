@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "flecs.h"
 #include "FlecsType.h"
+#include "GameplayTagContainer.h"
 #include "InstancedStruct.h"
 #include "SolidMacros/Macros.h"
 #include "FlecsEntityHandle.generated.h"
@@ -74,9 +75,13 @@ public:
 
 	FORCEINLINE NO_DISCARD bool Has(UScriptStruct* StructType) const;
 
+	FORCEINLINE NO_DISCARD bool Has(const FGameplayTag& InTag) const;
+
 	FORCEINLINE void Add(const FFlecsEntityHandle& InEntity) const { GetEntity().add(InEntity); }
 
 	FORCEINLINE void Add(UScriptStruct* StructType) const;
+
+	FORCEINLINE void Add(const FGameplayTag& InTag) const;
 	
 	template <typename T>
 	FORCEINLINE void Add() const { GetEntity().template add<T>(); }
@@ -84,6 +89,8 @@ public:
 	FORCEINLINE void Remove(const FFlecsEntityHandle& InEntity) const { GetEntity().remove(InEntity); }
 
 	FORCEINLINE void Remove(UScriptStruct* StructType) const;
+
+	FORCEINLINE void Remove(const FGameplayTag& InTag) const;
 
 	template <typename T>
 	FORCEINLINE void Remove() const { GetEntity().template remove<T>(); }
@@ -175,9 +182,14 @@ public:
 		return GetEntity().parent();
 	}
 
-	FORCEINLINE void SetParent(const FFlecsEntityHandle& InParent) const
+	FORCEINLINE void SetParent(const FFlecsEntityHandle& InParent, const bool bIsA = false) const
 	{
 		GetEntity().child_of(InParent);
+
+		if (bIsA)
+		{
+			GetEntity().is_a(InParent);
+		}
 	}
 
 	FORCEINLINE NO_DISCARD bool IsPrefab() const

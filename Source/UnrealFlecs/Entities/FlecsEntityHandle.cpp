@@ -63,15 +63,33 @@ bool FFlecsEntityHandle::Has(UScriptStruct* StructType) const
     return Has(TypeHandle);
 }
 
+bool FFlecsEntityHandle::Has(const FGameplayTag& InTag) const
+{
+    const FFlecsEntityHandle TypeHandle = GetFlecsWorld()->GetTagEntity(InTag);
+    return Has(TypeHandle);
+}
+
 void FFlecsEntityHandle::Add(UScriptStruct* StructType) const
 {
     const FFlecsEntityHandle TypeHandle = GetFlecsWorld()->ObtainComponentTypeStruct(StructType);
     Add(TypeHandle);
 }
 
+void FFlecsEntityHandle::Add(const FGameplayTag& InTag) const
+{
+    const FFlecsEntityHandle TypeHandle = GetFlecsWorld()->GetTagEntity(InTag);
+    Add(TypeHandle);
+}
+
 void FFlecsEntityHandle::Remove(UScriptStruct* StructType) const
 {
     const FFlecsEntityHandle TypeHandle = GetFlecsWorld()->ObtainComponentTypeStruct(StructType);
+    Remove(TypeHandle);
+}
+
+void FFlecsEntityHandle::Remove(const FGameplayTag& InTag) const
+{
+    const FFlecsEntityHandle TypeHandle = GetFlecsWorld()->GetTagEntity(InTag);
     Remove(TypeHandle);
 }
 

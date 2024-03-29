@@ -7,6 +7,8 @@
 #include "GameFramework/Actor.h"
 #include "FlecsNetworkingManager.generated.h"
 
+class UFlecsNetworkingActorComponent;
+
 UCLASS(NotPlaceable)
 class UNREALFLECS_API UFlecsNetworkingManager final : public UActorComponent
 {
@@ -17,9 +19,15 @@ public:
 	
 	virtual void BeginPlay() override;
 
+	void AddNetworkingActorComponent(UFlecsNetworkingActorComponent* NetworkingActorComponent);
+	void RemoveNetworkingActorComponent(UFlecsNetworkingActorComponent* NetworkingActorComponent);
+
 private:
 	UPROPERTY()
 	FFlecsEntityHandle NetworkIdObserver;
+
+	UPROPERTY()
+	FFlecsEntityHandle NetworkPushModelObserver;
 
 	UPROPERTY()
 	uint64 NextNetworkId = 0;
@@ -28,5 +36,8 @@ private:
 
 	UPROPERTY()
 	TWeakObjectPtr<UFlecsWorld> FlecsWorld;
+
+	UPROPERTY()
+	TArray<TWeakObjectPtr<UFlecsNetworkingActorComponent>> NetworkingActorComponents;
 	
 }; // class AFlecsNetworkingManager

@@ -5,8 +5,10 @@
 
 #include "CoreMinimal.h"
 #include "FlecsNetworkIdComponent.h"
+#include "FlecsNetworkingManager.h"
 #include "Components/ActorComponent.h"
 #include "Entities/FlecsEntityHandle.h"
+#include "GameFramework/GameState.h"
 #include "Net/UnrealNetwork.h"
 #include "Net/Core/PushModel/PushModel.h"
 #include "Worlds/FlecsWorldSubsystem.h"
@@ -44,17 +46,53 @@ public:
 		checkf(GetOwner()->IsA<APlayerController>(),
 			TEXT("Owner of UFlecsNetworkingActorComponent must be a APlayerController"));
 
+		const AGameStateBase* GameState = GetWorld()->GetGameState();
+		checkf(IsValid(GameState), TEXT("GameState must be valid"));
+
+		UFlecsNetworkingManager* NetworkingManager = GameState->FindComponentByClass<UFlecsNetworkingManager>();
+		checkf(IsValid(NetworkingManager), TEXT("NetworkingManager must be valid"));
+
+		NetworkingManager->AddNetworkingActorComponent(this);
+
+		#if WITH_SERVER_CODE
+
 		if (GetOwner()->HasAuthority())
 		{
-			UFlecsWorld* FlecsWorld = UFlecsWorldSubsystem::GetDefaultWorld(GetOwner());
+			const UFlecsWorld* FlecsWorld = UFlecsWorldSubsystem::GetDefaultWorld(GetOwner());
 			checkf(FlecsWorld, TEXT("FlecsWorld must be valid"));
 
 			TArray<FNetworkedEntityInfo> Entities;
-			FlecsWorld->
+			FlecsWorld->World.query_builder<FFlecsNetworkIdComponent>()
+			.term(flecs::Name)
+				.and_()
+				.inout_none()
+			.build()
+			.each([&](const FFlecsEntityHandle& Entity, const FFlecsNetworkIdComponent& NetworkId)
+			{
+				Entities.Add(FNetworkedEntityInfo{ NetworkId,
+					FlecsWorld->GetWorldName(), Entity.GetName() });
+			});
+
+			Client_UpdateCreatedNetworkedEntities(Entities);
 		}
-		else
+
+		#endif // WITH_SERVER_CODE
+
+		
+		
+	}
+
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override
+	{
+		Super::EndPlay(EndPlayReason);
+
+		if LIKELY_IF(const AGameStateBase* GameState = GetWorld()->GetGameState())
 		{
-			
+			if LIKELY_IF(UFlecsNetworkingManager* NetworkingManager
+				= GameState->FindComponentByClass<UFlecsNetworkingManager>())
+			{
+				NetworkingManager->RemoveNetworkingActorComponent(this);
+			}
 		}
 	}
 

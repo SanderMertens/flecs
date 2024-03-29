@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "FlecsId.h"
+#include "flecs.h"
 #include "Subsystems/EngineSubsystem.h"
 #include "FlecsDefaultEntityEngineSubsystem.generated.h"
 
@@ -12,7 +12,7 @@ class UNREALFLECS_API UFlecsDefaultEntityEngineSubsystem : public UEngineSubsyst
 {
 	GENERATED_BODY()
 
-	static constexpr flecs::entity_t StartingDefaultEntityId = FLECS_HI_COMPONENT_ID * 5;
+	static constexpr flecs::entity_t StartingDefaultEntityId = FLECS_HI_COMPONENT_ID * 2;
 
 public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;

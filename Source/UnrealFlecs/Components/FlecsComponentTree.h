@@ -18,7 +18,7 @@ struct FFlecsComponentTree
 	{
 		for (const FFlecsComponentTreeNode& Node : ComponentTree)
 		{
-			
+			ApplyTreeNodeToEntity(Node, EntityHandle);
 		}
 	}
 
@@ -29,17 +29,23 @@ private:
 		switch (Node.TypeInfo.NodeType)
 		{
 		case EFlecsComponentTreeNodeType::ScriptStruct:
+			EntityHandle.Set(Node.TypeInfo.ScriptStruct);
 			break;
 		case EFlecsComponentTreeNodeType::EntityHandle:
+			EntityHandle.Add(Node.TypeInfo.EntityHandle);
 			break;
 		case EFlecsComponentTreeNodeType::FGameplayTag:
+			EntityHandle.Add(Node.TypeInfo.GameplayTag);
 			break;
 		}
-	}
 
-	FORCEINLINE void ApplyTreeObjectToEntity(const UFlecsComponentTreeObject* TreeObject, const FFlecsEntityHandle& EntityHandle) const
-	{
-		
+		if (Node.Children.Num() > 0)
+		{
+			for (const UFlecsComponentTreeObject* Child : Node.Children)
+			{
+				ApplyTreeNodeToEntity(Child->TreeNode, EntityHandle);
+			}
+		}
 	}
 	
 }; // struct FFlecsComponentTree

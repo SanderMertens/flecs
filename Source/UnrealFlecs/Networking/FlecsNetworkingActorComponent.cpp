@@ -11,12 +11,9 @@ UNLOG_CATEGORY(LogFlecsNetworkingActorComponent);
 void UFlecsNetworkingActorComponent::Client_UpdateCreatedNetworkedEntities_Implementation(
 	const TArray<FNetworkedEntityInfo>& Entities)
 {
-	for (const FNetworkedEntityInfo& NetworkedEntity : Entities)
+	for (const auto& [NetworkId, WorldName, EntityName] : Entities)
 	{
-		checkf(!NetworkedEntity.EntityName.IsNone(),TEXT("Networked Entity Name must not be None"));
-
-		const FName WorldName = NetworkedEntity.WorldName;
-		const FName EntityName = NetworkedEntity.EntityName;
+		checkf(!EntityName.IsNone(),TEXT("Networked Entity Name must not be None"));
 
 		const UFlecsWorld* FlecsWorld = GetWorld()->GetSubsystem<UFlecsWorldSubsystem>()->GetFlecsWorld(WorldName);
 		
@@ -37,11 +34,11 @@ void UFlecsNetworkingActorComponent::Client_UpdateCreatedNetworkedEntities_Imple
 			continue;
 		}
 
-		Entity.Set<FFlecsNetworkIdComponent>(NetworkedEntity.NetworkId);
+		Entity.Set<FFlecsNetworkIdComponent>(NetworkId);
 
 		UN_LOG(LogFlecsNetworkingActorComponent, Log,
 			"Added network ID %llu to entity %s in world %s",
-			NetworkedEntity.NetworkId.GetNetworkId(),
+			NetworkId.GetNetworkId(),
 			*EntityName.ToString(),
 			*WorldName.ToString());
 	}

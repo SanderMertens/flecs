@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Entities/FlecsDefaultEntityEngineSubsystem.h"
 #include "Entities/FlecsEntityHandle.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Worlds/FlecsWorldSubsystem.h"
