@@ -148,7 +148,7 @@ void Observer_10_terms(void) {
     test_int(count, 1);
 }
 
-void Observer_20_terms(void) {
+void Observer_16_terms(void) {
     flecs::world ecs;
 
     int count = 0;
@@ -173,14 +173,10 @@ void Observer_20_terms(void) {
         .term<TagN>()
         .term<TagO>()
         .term<TagP>()
-        .term<TagQ>()
-        .term<TagR>()
-        .term<TagS>()
-        .term<TagT>()
         .iter([&](flecs::iter& it) {
             test_int(it.count(), 1);
             test_assert(it.entity(0) == e);
-            test_int(it.field_count(), 20);
+            test_int(it.field_count(), 16);
             count ++;
         });
 

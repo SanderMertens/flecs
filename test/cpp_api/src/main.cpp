@@ -679,7 +679,7 @@ void QueryBuilder_world_each_filter_2_components(void);
 void QueryBuilder_world_each_filter_1_component_no_entity(void);
 void QueryBuilder_world_each_filter_2_components_no_entity(void);
 void QueryBuilder_10_terms(void);
-void QueryBuilder_20_terms(void);
+void QueryBuilder_16_terms(void);
 void QueryBuilder_term_after_arg(void);
 void QueryBuilder_name_arg(void);
 void QueryBuilder_const_in_term(void);
@@ -783,7 +783,7 @@ void SystemBuilder_const_type(void);
 void SystemBuilder_string_term(void);
 void SystemBuilder_singleton_term(void);
 void SystemBuilder_10_terms(void);
-void SystemBuilder_20_terms(void);
+void SystemBuilder_16_terms(void);
 void SystemBuilder_name_arg(void);
 void SystemBuilder_create_w_no_template_args(void);
 void SystemBuilder_write_annotation(void);
@@ -795,7 +795,7 @@ void Observer_2_terms_on_remove(void);
 void Observer_2_terms_on_set(void);
 void Observer_2_terms_un_set(void);
 void Observer_10_terms(void);
-void Observer_20_terms(void);
+void Observer_16_terms(void);
 void Observer_2_entities_iter(void);
 void Observer_2_entities_table_column(void);
 void Observer_2_entities_each(void);
@@ -3900,8 +3900,8 @@ bake_test_case QueryBuilder_testcases[] = {
         QueryBuilder_10_terms
     },
     {
-        "20_terms",
-        QueryBuilder_20_terms
+        "16_terms",
+        QueryBuilder_16_terms
     },
     {
         "term_after_arg",
@@ -4311,8 +4311,8 @@ bake_test_case SystemBuilder_testcases[] = {
         SystemBuilder_10_terms
     },
     {
-        "20_terms",
-        SystemBuilder_20_terms
+        "16_terms",
+        SystemBuilder_16_terms
     },
     {
         "name_arg",
@@ -4354,8 +4354,8 @@ bake_test_case Observer_testcases[] = {
         Observer_10_terms
     },
     {
-        "20_terms",
-        Observer_20_terms
+        "16_terms",
+        Observer_16_terms
     },
     {
         "2_entities_iter",

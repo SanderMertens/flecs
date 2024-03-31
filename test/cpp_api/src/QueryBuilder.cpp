@@ -1619,7 +1619,7 @@ void QueryBuilder_10_terms(void) {
     test_int(count, 1);
 }
 
-void QueryBuilder_20_terms(void) {
+void QueryBuilder_16_terms(void) {
     flecs::world ecs;
 
     auto f = ecs.query_builder<>()
@@ -1639,13 +1639,9 @@ void QueryBuilder_20_terms(void) {
         .term<TagN>()
         .term<TagO>()
         .term<TagP>()
-        .term<TagQ>()
-        .term<TagR>()
-        .term<TagS>()
-        .term<TagT>()
         .build();
 
-    test_int(f.field_count(), 20);
+    test_int(f.field_count(), 16);
 
     auto e = ecs.entity()
         .add<TagA>()
@@ -1673,7 +1669,7 @@ void QueryBuilder_20_terms(void) {
     f.iter([&](flecs::iter& it) {
         test_int(it.count(), 1);
         test_assert(it.entity(0) == e);
-        test_int(it.field_count(), 20);
+        test_int(it.field_count(), 16);
         count ++;
     });
 

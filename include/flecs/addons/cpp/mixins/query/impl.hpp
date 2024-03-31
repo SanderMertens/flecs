@@ -11,50 +11,45 @@ namespace flecs
 {
 
 struct query_base {
-    query_base()
-        : m_world(nullptr)
-        , m_query(nullptr) { }
+    query_base() { }
 
-    query_base(world_t *world, ecs_query_t *query)
-        : m_world(world)
-        , m_query(query) { }
+    query_base(world_t *world, query_t *q)
+        : m_query(q) { }
 
-    query_base(world_t *world, const ecs_query_t *query)
-        : m_world(world)
-        , m_query(ECS_CONST_CAST(ecs_query_t*, query)) { }
+    query_base(world_t *world, const query_t *q)
+        : m_query(ECS_CONST_CAST(query_t*, q)) { }
 
-    query_base(world_t *world, ecs_query_desc_t *desc) 
-        : m_world(world)
-    {
+    query_base(world_t *world, ecs_query_desc_t *desc) {
         m_query = ecs_query_init(world, desc);
+        m_owned = true;
     }
 
     query_base(const query_base& obj) {
-        this->m_world = obj.m_world;
         this->m_query = obj.m_query;
+        this->m_owned = obj.m_owned;
     }
 
     query_base& operator=(const query_base& obj) {
-        this->m_world = obj.m_world;
         this->m_query = obj.m_query;
+        this->m_owned = obj.m_owned;
         return *this; 
     }
 
     query_base(query_base&& obj) noexcept {
-        this->m_world = obj.m_world;
         this->m_query = obj.m_query;
+        this->m_owned = obj.m_owned;
         obj.m_query = nullptr;
     }
 
     query_base& operator=(query_base&& obj) noexcept {
-        this->m_world = obj.m_world;
         this->m_query = obj.m_query;
+        this->m_owned = obj.m_owned;
         obj.m_query = nullptr;
         return *this; 
     }
 
     flecs::entity entity() {
-        return flecs::entity(m_world, m_query->entity);
+        return flecs::entity(m_query->world, m_query->entity);
     }
 
     operator const flecs::query_t*() const {
@@ -66,14 +61,20 @@ struct query_base {
     }
 
     void destruct() {
-        ecs_query_fini(m_query);
-        m_query = nullptr;
+        if (m_query) {
+            ecs_assert(m_owned, ECS_INVALID_OPERATION, 
+                "cannot destruct: object does not own query");
+            ecs_query_fini(m_query);
+            m_query = nullptr;
+        }
     }
 
     /** Free the query.
      */
     ~query_base() {
-        ecs_query_fini(m_query);
+        if (m_owned && m_query) {
+            ecs_query_fini(m_query);
+        }
     }
 
     /** Returns whether the query data changed since the last iteration.
@@ -115,14 +116,14 @@ struct query_base {
     template <typename Func>
     void each_term(const Func& func) {
         for (int i = 0; i < m_query->term_count; i ++) {
-            flecs::term t(m_world, m_query->terms[i]);
+            flecs::term t(m_query->world, m_query->terms[i]);
             func(t);
             t.reset(); // prevent freeing resources
         }
     }
 
     flecs::term term(int32_t index) {
-        return flecs::term(m_world, m_query->terms[index]);
+        return flecs::term(m_query->world, m_query->terms[index]);
     }
 
     int32_t term_count() {
@@ -154,8 +155,8 @@ struct query_base {
     operator query<>() const;
 
 protected:
-    world_t *m_world = nullptr;
-    query_t *m_query;
+    query_t *m_query = nullptr;
+    bool m_owned = false;
 };
 
 template<typename ... Components>
@@ -185,7 +186,7 @@ public:
 private:
     ecs_iter_t get_iter(flecs::world_t *world) const override {
         if (!world) {
-            world = m_world;
+            world = m_query->world;
         }
         return ecs_query_iter(world, m_query);
     }
@@ -285,7 +286,7 @@ inline void world::each(flecs::id_t each_id, Func&& func) const {
 
 // query_base implementation
 inline query_base::operator flecs::query<> () const {
-    return flecs::query<>(m_world, m_query);
+    return flecs::query<>(m_query->world, m_query);
 }
 
 }
