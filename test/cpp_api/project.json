@@ -1001,11 +1001,6 @@
                 "vector_elem_type"
             ]
         }, {
-            "id": "Snapshot",
-            "testcases": [
-                "simple_snapshot"
-            ]
-        }, {
             "id": "WorldFactory",
             "testcases": [
                 "entity",
@@ -1018,7 +1013,6 @@
                 "system_w_expr",
                 "query",
                 "query_w_expr",
-                "snapshot",
                 "module"
             ]
         }, {

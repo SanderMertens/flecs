@@ -1048,9 +1048,6 @@ struct world {
 #   ifdef FLECS_PIPELINE
 #   include "mixins/pipeline/mixin.inl"
 #   endif
-#   ifdef FLECS_SNAPSHOT
-#   include "mixins/snapshot/mixin.inl"
-#   endif
 #   ifdef FLECS_SYSTEM
 #   include "mixins/system/mixin.inl"
 #   endif

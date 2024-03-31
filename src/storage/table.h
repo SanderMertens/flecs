@@ -122,12 +122,6 @@ void flecs_table_clear_entities_silent(
     ecs_world_t *world,
     ecs_table_t *table);
 
-/* Clear table data. Don't call OnRemove handlers. */
-void flecs_table_clear_data(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_data_t *data);    
-
 /* Return number of entities in data */
 int32_t flecs_table_data_count(
     const ecs_data_t *data);
@@ -206,20 +200,12 @@ void flecs_table_free(
 void flecs_table_free_type(
     ecs_world_t *world,
     ecs_table_t *table);     
-    
-/* Replace data */
-void flecs_table_replace_data(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_data_t *data);
 
 /* Merge data of one table into another table */
 void flecs_table_merge(
     ecs_world_t *world,
     ecs_table_t *new_table,
-    ecs_table_t *old_table,
-    ecs_data_t *new_data,
-    ecs_data_t *old_data);
+    ecs_table_t *old_table);
 
 void flecs_table_swap(
     ecs_world_t *world,

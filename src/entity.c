@@ -2315,8 +2315,7 @@ void flecs_remove_from_table(
                 ecs_log_pop_3();
             }
 
-            flecs_table_merge(world, dst_table, table, 
-                &dst_table->data, &table->data);
+            flecs_table_merge(world, dst_table, table);
         }
     }
 

@@ -188,7 +188,6 @@
 #define FLECS_PARSER        /**< String parser for queries */
 #define FLECS_PLECS         /**< ECS data definition format */
 #define FLECS_RULES         /**< Constraint solver for advanced queries */
-#define FLECS_SNAPSHOT      /**< Snapshot & restore ECS data */
 #define FLECS_STATS         /**< Access runtime statistics */
 #define FLECS_MONITOR       /**< Track runtime statistics periodically */
 #define FLECS_METRICS       /**< Expose component data as statistics */
@@ -3228,13 +3227,6 @@ typedef struct ecs_query_cache_iter_t {
     int32_t skip_count;
 } ecs_query_cache_iter_t;
 
-/** Snapshot-iterator specific data */
-typedef struct ecs_snapshot_iter_t {
-    ecs_query_t filter;
-    ecs_vec_t tables; /* ecs_table_leaf_t */
-    int32_t index;
-} ecs_snapshot_iter_t;
-
 typedef struct ecs_query_op_profile_t {
     int32_t count[2]; /* 0 = enter, 1 = redo */
 } ecs_query_op_profile_t;
@@ -3281,7 +3273,6 @@ typedef struct ecs_iter_private_t {
     union {
         ecs_query_cache_iter_t query;
         ecs_query_iter_t rule;
-        ecs_snapshot_iter_t snapshot;
         ecs_page_iter_t page;
         ecs_worker_iter_t worker;
         ecs_each_iter_t each;
@@ -8942,9 +8933,6 @@ int ecs_value_move_ctor(
 #endif
 #ifdef FLECS_NO_RULES
 #undef FLECS_RULES
-#endif
-#ifdef FLECS_NO_SNAPSHOT
-#undef FLECS_SNAPSHOT
 #endif
 #ifdef FLECS_NO_MONITOR
 #undef FLECS_MONITOR
@@ -14796,120 +14784,6 @@ const char* ecs_query_parse_vars(
 
 #endif
 
-#ifdef FLECS_SNAPSHOT
-#ifdef FLECS_NO_SNAPSHOT
-#error "FLECS_NO_SNAPSHOT failed: SNAPSHOT is required by other addons"
-#endif
-/**
- * @file addons/snapshot.h
- * @brief Snapshot addon.
- *
- * A snapshot records the state of a world in a way so that it can be restored
- * later. Snapshots work with POD components and non-POD components, provided
- * that the appropriate lifecycle actions are registered for non-POD components.
- *
- * A snapshot is tightly coupled to a world. It is not possible to restore a
- * snapshot from world A into world B.
- */
-
-#ifdef FLECS_SNAPSHOT
-
-/**
- * @defgroup c_addons_snapshot Snapshot
- * @ingroup c_addons
- * @brief Save & restore world.
- *
- * @{
- */
-
-#ifndef FLECS_SNAPSHOT_H
-#define FLECS_SNAPSHOT_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/** A snapshot stores the state of a world in a particular point in time. */
-typedef struct ecs_snapshot_t ecs_snapshot_t;
-
-/** Create a snapshot.
- * This operation makes a copy of the current state of the world.
- *
- * @param world The world to snapshot.
- * @return The snapshot.
- */
-FLECS_API
-ecs_snapshot_t* ecs_snapshot_take(
-    ecs_world_t *world);
-
-/** Create a filtered snapshot.
- * This operation is the same as ecs_snapshot_take(), but accepts an iterator so
- * an application can control what is stored by the snapshot.
- *
- * @param iter An iterator to the data to be stored by the snapshot.
- * @return The snapshot.
- */
-FLECS_API
-ecs_snapshot_t* ecs_snapshot_take_w_iter(
-    ecs_iter_t *iter);
-
-/** Restore a snapshot.
- * This operation restores the world to the state it was in when the specified
- * snapshot was taken. A snapshot can only be used once for restoring, as its
- * data replaces the data that is currently in the world.
- * This operation also resets the last issued entity handle, so any calls to
- * ecs_new() may return entity ids that have been issued before restoring the
- * snapshot.
- *
- * The world in which the snapshot is restored must be the same as the world in
- * which the snapshot is taken.
- *
- * @param world The world to restore the snapshot to.
- * @param snapshot The snapshot to restore.
- */
-FLECS_API
-void ecs_snapshot_restore(
-    ecs_world_t *world,
-    ecs_snapshot_t *snapshot);
-
-/** Obtain iterator to snapshot data.
- *
- * @param snapshot The snapshot to iterate over.
- * @return Iterator to snapshot data. */
-FLECS_API
-ecs_iter_t ecs_snapshot_iter(
-    ecs_snapshot_t *snapshot);
-
-/** Progress snapshot iterator.
- *
- * @param iter The snapshot iterator.
- * @return True if more data is available, otherwise false.
- */
-FLECS_API
-bool ecs_snapshot_next(
-    ecs_iter_t *iter);
-
-/** Free snapshot resources.
- * This frees resources associated with a snapshot without restoring it.
- *
- * @param snapshot The snapshot to free.
- */
-FLECS_API
-void ecs_snapshot_free(
-    ecs_snapshot_t *snapshot);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
-
-/** @} */
-
-#endif
-
-#endif
-
 #ifdef FLECS_PARSER
 #ifdef FLECS_NO_PARSER
 #error "FLECS_NO_PARSER failed: PARSER is required by other addons"
@@ -15541,6 +15415,7 @@ static const flecs::entity_t Traversable = EcsTraversable;
 static const flecs::entity_t Symmetric = EcsSymmetric;
 static const flecs::entity_t With = EcsWith;
 static const flecs::entity_t OneOf = EcsOneOf;
+static const flecs::entity_t CanToggle = EcsCanToggle;
 
 /* Builtin relationships */
 static const flecs::entity_t IsA = EcsIsA;
@@ -17207,33 +17082,6 @@ void timer_init(flecs::world& world);
 
 } // namespace _
 } // namespace flecs
-
-#endif
-#ifdef FLECS_SNAPSHOT
-/**
- * @file addons/cpp/mixins/snapshot/decl.hpp
- * @brief Snapshot module declarations.
- */
-
-#pragma once
-
-namespace flecs {
-
-/**
- * @defgroup cpp_addons_snapshots Snapshots
- * @ingroup cpp_addons
- * Save & restore world.
- *
- * @{
- */
-
-using snapshot_t = ecs_snapshot_t;
-
-struct snapshot;
-
-/** @} */
-
-}
 
 #endif
 #ifdef FLECS_DOC
@@ -20640,27 +20488,6 @@ void set_task_threads(int32_t task_threads) const;
  * @see ecs_using_task_threads
  */
 bool using_task_threads() const;
-
-/** @} */
-
-#   endif
-#   ifdef FLECS_SNAPSHOT
-/**
- * @file addons/cpp/mixins/snapshot/mixin.inl
- * @brief Snapshot world mixin.
- */
-
-/**
- * @memberof flecs::world
- * @ingroup cpp_addons_snapshots
- *
- * @{
- */
-
-/** Create a snapshot.
- */
-template <typename... Args>
-flecs::snapshot snapshot(Args &&... args) const;
 
 /** @} */
 
@@ -29552,99 +29379,6 @@ inline void timer_init(flecs::world& world) {
 }
 
 }
-}
-
-#endif
-#ifdef FLECS_SNAPSHOT
-/**
- * @file addons/cpp/mixins/snapshot/impl.hpp
- * @brief Snapshot module implementation.
- */
-
-#pragma once
-
-namespace flecs {
-
-struct snapshot final {
-    explicit snapshot(const world& world)
-        : m_world( world )
-        , m_snapshot( nullptr ) { }
-
-    snapshot(const snapshot& obj) 
-        : m_world( obj.m_world )
-    { 
-        ecs_iter_t it = ecs_snapshot_iter(obj.m_snapshot);
-        m_snapshot = ecs_snapshot_take_w_iter(&it);
-    }
-
-    snapshot(snapshot&& obj) noexcept
-        : m_world(obj.m_world)
-        , m_snapshot(obj.m_snapshot)
-    {
-        obj.m_snapshot = nullptr;
-    }
-
-    snapshot& operator=(const snapshot& obj) {
-        ecs_assert(m_world.c_ptr() == obj.m_world.c_ptr(), ECS_INVALID_PARAMETER, NULL);
-        ecs_iter_t it = ecs_snapshot_iter(obj.m_snapshot);
-        m_snapshot = ecs_snapshot_take_w_iter(&it);        
-        return *this;
-    }
-
-    snapshot& operator=(snapshot&& obj) noexcept {
-        ecs_assert(m_world.c_ptr() == obj.m_world.c_ptr(), ECS_INVALID_PARAMETER, NULL);
-        m_snapshot = obj.m_snapshot;
-        obj.m_snapshot = nullptr;
-        return *this;
-    }
-
-    void take() {
-        if (m_snapshot) {
-            ecs_snapshot_free(m_snapshot);
-        }
-
-        m_snapshot = ecs_snapshot_take(m_world.c_ptr());
-    }
-
-    template <typename F>
-    void take(const F& f) {
-        if (m_snapshot) {
-            ecs_snapshot_free(m_snapshot);
-        }
-
-        ecs_iter_t it = ecs_query_iter(m_world, f.c_ptr());
-
-        m_snapshot = ecs_snapshot_take_w_iter(&it);
-    }    
-
-    void restore() {
-        if (m_snapshot) {
-            ecs_snapshot_restore(m_world.c_ptr(), m_snapshot);
-            m_snapshot = nullptr;
-        }
-    }
-
-    ~snapshot() {
-        if (m_snapshot) {
-            ecs_snapshot_free(m_snapshot);
-        }
-    }
-
-    snapshot_t* c_ptr() const {
-        return m_snapshot;
-    }
-
-private:
-    const world& m_world;
-    snapshot_t *m_snapshot;
-};
-
-// Snapshot mixin implementation
-template <typename... Args>
-inline flecs::snapshot world::snapshot(Args &&... args) const {
-    return flecs::snapshot(*this, FLECS_FWD(args)...);
-}
-
 }
 
 #endif

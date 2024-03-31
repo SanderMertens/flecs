@@ -810,9 +810,6 @@ void ComponentLifecycle_copy_on_set(void);
 void ComponentLifecycle_copy_on_override(void);
 void ComponentLifecycle_copy_on_clone(void);
 void ComponentLifecycle_no_copy_on_move(void);
-void ComponentLifecycle_ctor_copy_on_snapshot(void);
-void ComponentLifecycle_copy_on_snapshot(void);
-void ComponentLifecycle_dtor_on_restore(void);
 void ComponentLifecycle_ctor_on_tag(void);
 void ComponentLifecycle_dtor_on_tag(void);
 void ComponentLifecycle_copy_on_tag(void);
@@ -1366,7 +1363,6 @@ void TriggerOnSet_on_set_after_override(void);
 void TriggerOnSet_on_set_after_override_w_new(void);
 void TriggerOnSet_on_set_after_override_w_new_w_count(void);
 void TriggerOnSet_on_set_after_override_1_of_2_overridden(void);
-void TriggerOnSet_on_set_after_snapshot_restore(void);
 void TriggerOnSet_on_set_after_remove_override(void);
 void TriggerOnSet_emplace(void);
 void TriggerOnSet_un_set_tag_w_remove(void);
@@ -4957,18 +4953,6 @@ bake_test_case ComponentLifecycle_testcases[] = {
         ComponentLifecycle_no_copy_on_move
     },
     {
-        "ctor_copy_on_snapshot",
-        ComponentLifecycle_ctor_copy_on_snapshot
-    },
-    {
-        "copy_on_snapshot",
-        ComponentLifecycle_copy_on_snapshot
-    },
-    {
-        "dtor_on_restore",
-        ComponentLifecycle_dtor_on_restore
-    },
-    {
         "ctor_on_tag",
         ComponentLifecycle_ctor_on_tag
     },
@@ -7140,10 +7124,6 @@ bake_test_case TriggerOnSet_testcases[] = {
     {
         "on_set_after_override_1_of_2_overridden",
         TriggerOnSet_on_set_after_override_1_of_2_overridden
-    },
-    {
-        "on_set_after_snapshot_restore",
-        TriggerOnSet_on_set_after_snapshot_restore
     },
     {
         "on_set_after_remove_override",
@@ -9325,7 +9305,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        89,
+        86,
         ComponentLifecycle_testcases
     },
     {
@@ -9374,7 +9354,7 @@ static bake_test_suite suites[] = {
         "TriggerOnSet",
         NULL,
         NULL,
-        16,
+        15,
         TriggerOnSet_testcases
     },
     {

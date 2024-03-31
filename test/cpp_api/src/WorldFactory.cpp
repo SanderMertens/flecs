@@ -162,27 +162,6 @@ void WorldFactory_query_w_expr(void) {
     test_int(p->y, 22);
 }
 
-void WorldFactory_snapshot(void) {
-    flecs::world ecs;
-
-    ecs.component<Position>();
-    ecs.component<Velocity>();
-
-    auto e = ecs.entity()
-        .set<Position>({10, 20})
-        .set<Velocity>({1, 2});
-
-    auto s = ecs.snapshot();
-
-    e.set<Position>({11, 22});
-
-    s.restore();
-
-    const Position *p = e.get<Position>();
-    test_int(p->x, 11);
-    test_int(p->y, 22);
-}
-
 class MyModule {
 public:
     MyModule(flecs::world& ecs) {

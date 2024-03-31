@@ -58,7 +58,6 @@ flecs_src = files(
     'src/addons/rules/trav_down_cache.c',
     'src/addons/rules/trav_up_cache.c',
     'src/addons/rules/trivial_iter.c',
-    'src/addons/snapshot.c',
     'src/addons/stats.c',
     'src/addons/system/system.c',
     'src/addons/timer.c',

@@ -186,7 +186,6 @@
 #define FLECS_PARSER        /**< String parser for queries */
 #define FLECS_PLECS         /**< ECS data definition format */
 #define FLECS_RULES         /**< Constraint solver for advanced queries */
-#define FLECS_SNAPSHOT      /**< Snapshot & restore ECS data */
 #define FLECS_STATS         /**< Access runtime statistics */
 #define FLECS_MONITOR       /**< Track runtime statistics periodically */
 #define FLECS_METRICS       /**< Expose component data as statistics */

@@ -141,13 +141,6 @@ typedef struct ecs_query_cache_iter_t {
     int32_t skip_count;
 } ecs_query_cache_iter_t;
 
-/** Snapshot-iterator specific data */
-typedef struct ecs_snapshot_iter_t {
-    ecs_query_t filter;
-    ecs_vec_t tables; /* ecs_table_leaf_t */
-    int32_t index;
-} ecs_snapshot_iter_t;
-
 typedef struct ecs_query_op_profile_t {
     int32_t count[2]; /* 0 = enter, 1 = redo */
 } ecs_query_op_profile_t;
@@ -194,7 +187,6 @@ typedef struct ecs_iter_private_t {
     union {
         ecs_query_cache_iter_t query;
         ecs_query_iter_t rule;
-        ecs_snapshot_iter_t snapshot;
         ecs_page_iter_t page;
         ecs_worker_iter_t worker;
         ecs_each_iter_t each;

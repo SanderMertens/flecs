@@ -124,7 +124,6 @@ Addon         | Description                                      | Define       
 [Parser](/flecs/group__c__addons__parser.html)             | Create entities & queries from strings           | FLECS_PARSER        |
 [Plecs](/flecs/group__c__addons__plecs.html)               | Small utility language for asset/scene loading   | FLECS_PLECS         |
 [Rules](/flecs/group__c__addons__rules.html)               | Powerful prolog-like query language              | FLECS_RULES         |
-[Snapshot](/flecs/group__c__addons__snapshot.html)         | Take snapshots of the world & restore them       | FLECS_SNAPSHOT      |
 [Stats](/flecs/group__c__addons__stats.html)               | Functions for collecting statistics              | FLECS_STATS         |
 [Monitor](/flecs/group__c__addons__monitor.html)           | Periodically collect & store flecs statistics    | FLECS_MONITOR       |
 [Metrics](/flecs/group__c__addons__metrics.html)           | Create metrics from user-defined components      | FLECS_METRICS       |

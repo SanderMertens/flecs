@@ -964,9 +964,6 @@ void ImplicitComponents_implicit_ptr(void);
 void ImplicitComponents_implicit_const_ref(void);
 void ImplicitComponents_vector_elem_type(void);
 
-// Testsuite 'Snapshot'
-void Snapshot_simple_snapshot(void);
-
 // Testsuite 'WorldFactory'
 void WorldFactory_entity(void);
 void WorldFactory_entity_w_name(void);
@@ -978,7 +975,6 @@ void WorldFactory_system_w_name(void);
 void WorldFactory_system_w_expr(void);
 void WorldFactory_query(void);
 void WorldFactory_query_w_expr(void);
-void WorldFactory_snapshot(void);
 void WorldFactory_module(void);
 
 // Testsuite 'World'
@@ -5011,13 +5007,6 @@ bake_test_case ImplicitComponents_testcases[] = {
     }
 };
 
-bake_test_case Snapshot_testcases[] = {
-    {
-        "simple_snapshot",
-        Snapshot_simple_snapshot
-    }
-};
-
 bake_test_case WorldFactory_testcases[] = {
     {
         "entity",
@@ -5058,10 +5047,6 @@ bake_test_case WorldFactory_testcases[] = {
     {
         "query_w_expr",
         WorldFactory_query_w_expr
-    },
-    {
-        "snapshot",
-        WorldFactory_snapshot
     },
     {
         "module",
@@ -6294,17 +6279,10 @@ static bake_test_suite suites[] = {
         ImplicitComponents_testcases
     },
     {
-        "Snapshot",
-        NULL,
-        NULL,
-        1,
-        Snapshot_testcases
-    },
-    {
         "WorldFactory",
         NULL,
         NULL,
-        12,
+        11,
         WorldFactory_testcases
     },
     {
@@ -6352,5 +6330,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("cpp_api", argc, argv, suites, 24);
+    return bake_test_run("cpp_api", argc, argv, suites, 23);
 }

@@ -339,11 +339,6 @@ jobs:
           bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_MODULE
           bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_MODULE
 
-      - name: FLECS_SNAPSHOT
-        run: |
-          bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_SNAPSHOT
-          bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_SNAPSHOT
-
       - name: FLECS_STATS
         run: |
           bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_STATS

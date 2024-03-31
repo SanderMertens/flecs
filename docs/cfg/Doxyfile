@@ -2443,7 +2443,6 @@ PREDEFINED             = FLECS_APP \
                          FLECS_PLECS \
                          FLECS_REST \
                          FLECS_RULES \
-                         FLECS_SNAPSHOT \
                          FLECS_STATS \
                          FLECS_SYSTEM \
                          FLECS_TIMER \

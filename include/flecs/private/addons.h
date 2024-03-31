@@ -24,9 +24,6 @@
 #ifdef FLECS_NO_RULES
 #undef FLECS_RULES
 #endif
-#ifdef FLECS_NO_SNAPSHOT
-#undef FLECS_SNAPSHOT
-#endif
 #ifdef FLECS_NO_MONITOR
 #undef FLECS_MONITOR
 #endif
@@ -233,13 +230,6 @@
 #error "FLECS_NO_RULES failed: RULES is required by other addons"
 #endif
 #include "../addons/rules.h"
-#endif
-
-#ifdef FLECS_SNAPSHOT
-#ifdef FLECS_NO_SNAPSHOT
-#error "FLECS_NO_SNAPSHOT failed: SNAPSHOT is required by other addons"
-#endif
-#include "../addons/snapshot.h"
 #endif
 
 #ifdef FLECS_PARSER

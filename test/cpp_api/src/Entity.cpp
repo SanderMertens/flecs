@@ -1301,6 +1301,8 @@ void Entity_get_parent(void) {
 void Entity_is_component_enabled(void) {
     flecs::world world;
 
+    world.component<Position>().add(flecs::CanToggle);
+
     auto e = world.entity()
         .add<Position>();
 
@@ -1310,6 +1312,8 @@ void Entity_is_component_enabled(void) {
 
 void Entity_is_enabled_component_enabled(void) {
     flecs::world world;
+    
+    world.component<Position>().add(flecs::CanToggle);
 
     auto e = world.entity()
         .add<Position>()
@@ -1321,6 +1325,8 @@ void Entity_is_enabled_component_enabled(void) {
 void Entity_is_disabled_component_enabled(void) {
     flecs::world world;
 
+    world.component<Position>().add(flecs::CanToggle);
+
     auto e = world.entity()
         .add<Position>()
         .disable<Position>();
@@ -1330,6 +1336,8 @@ void Entity_is_disabled_component_enabled(void) {
 
 void Entity_is_pair_enabled(void) {
     flecs::world world;
+
+    world.component<Position>().add(flecs::CanToggle);
 
     struct TgtA { };
     struct TgtB { };
@@ -1344,7 +1352,11 @@ void Entity_is_pair_enabled(void) {
 void Entity_is_enabled_pair_enabled(void) {
     flecs::world world;
 
+    world.component<Position>().add(flecs::CanToggle);
+
     struct Tgt { };
+
+    world.component<Position>().add(flecs::CanToggle);
 
     auto e = world.entity()
         .add<Position, Tgt>()
@@ -1355,6 +1367,8 @@ void Entity_is_enabled_pair_enabled(void) {
 
 void Entity_is_disabled_pair_enabled(void) {
     flecs::world world;
+
+    world.component<Position>().add(flecs::CanToggle);
 
     struct Tgt { };
 
@@ -1367,6 +1381,8 @@ void Entity_is_disabled_pair_enabled(void) {
 
 void Entity_is_pair_enabled_w_ids(void) {
     flecs::world world;
+
+    world.component<Position>().add(flecs::CanToggle);
 
     auto rel = world.entity();
     auto tgt_a = world.entity();
@@ -1382,7 +1398,7 @@ void Entity_is_pair_enabled_w_ids(void) {
 void Entity_is_enabled_pair_enabled_w_ids(void) {
     flecs::world world;
 
-    auto rel = world.entity();
+    auto rel = world.entity().add(flecs::CanToggle);
     auto tgt = world.entity();
 
     auto e = world.entity()
@@ -1395,7 +1411,7 @@ void Entity_is_enabled_pair_enabled_w_ids(void) {
 void Entity_is_disabled_pair_enabled_w_ids(void) {
     flecs::world world;
 
-    auto rel = world.entity();
+    auto rel = world.entity().add(flecs::CanToggle);
     auto tgt = world.entity();
 
     auto e = world.entity()
@@ -1407,6 +1423,8 @@ void Entity_is_disabled_pair_enabled_w_ids(void) {
 
 void Entity_is_pair_enabled_w_tgt_id(void) {
     flecs::world world;
+
+    world.component<Position>().add(flecs::CanToggle);
 
     auto tgt_a = world.entity();
     auto tgt_b = world.entity();
@@ -1421,6 +1439,8 @@ void Entity_is_pair_enabled_w_tgt_id(void) {
 void Entity_is_enabled_pair_enabled_w_tgt_id(void) {
     flecs::world world;
 
+    world.component<Position>().add(flecs::CanToggle);
+
     auto tgt = world.entity();
 
     auto e = world.entity()
@@ -1432,6 +1452,8 @@ void Entity_is_enabled_pair_enabled_w_tgt_id(void) {
 
 void Entity_is_disabled_pair_enabled_w_tgt_id(void) {
     flecs::world world;
+
+    world.component<Position>().add(flecs::CanToggle);
 
     auto tgt = world.entity();
 
