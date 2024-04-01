@@ -2708,6 +2708,7 @@ typedef struct ecs_mixins_t ecs_mixins_t;
 typedef struct ecs_header_t {
     int32_t magic;    /* Magic number verifying it's a flecs object */
     int32_t type;     /* Magic number indicating which type of flecs object */
+    int32_t refcount; /* Refcount, to enable RAII handles */
     ecs_mixins_t *mixins; /* Table with offsets to (optional) mixins */
 } ecs_header_t;
 
@@ -3427,6 +3428,19 @@ int32_t flecs_table_observed_count(
 FLECS_DBG_API
 void flecs_dump_backtrace(
     void *stream);
+
+FLECS_API
+int32_t ecs_poly_claim_(
+    ecs_poly_t *poly);
+
+FLECS_API
+int32_t ecs_poly_release_(
+    ecs_poly_t *poly);
+
+#define ecs_poly_claim(poly) \
+    ecs_poly_claim_(ECS_CONST_CAST(void*, reinterpret_cast<const void*>(poly)))
+#define ecs_poly_release(poly) \
+    ecs_poly_release_(ECS_CONST_CAST(void*, reinterpret_cast<const void*>(poly)))
 
 /** Calculate offset from address */
 #ifdef __cplusplus
@@ -27987,36 +28001,37 @@ struct query_base {
     query_base() { }
 
     query_base(world_t *world, query_t *q)
-        : m_query(q) { }
+        : m_query(q) { 
+            ecs_poly_claim(q);
+        }
 
     query_base(world_t *world, const query_t *q)
-        : m_query(ECS_CONST_CAST(query_t*, q)) { }
+        : m_query(ECS_CONST_CAST(query_t*, q)) { 
+            ecs_poly_claim(q);
+        }
 
     query_base(world_t *world, ecs_query_desc_t *desc) {
         m_query = ecs_query_init(world, desc);
-        m_owned = true;
     }
 
     query_base(const query_base& obj) {
         this->m_query = obj.m_query;
-        this->m_owned = obj.m_owned;
+        ecs_poly_claim(this->m_query);
     }
 
     query_base& operator=(const query_base& obj) {
         this->m_query = obj.m_query;
-        this->m_owned = obj.m_owned;
+        ecs_poly_claim(this->m_query);
         return *this; 
     }
 
     query_base(query_base&& obj) noexcept {
         this->m_query = obj.m_query;
-        this->m_owned = obj.m_owned;
         obj.m_query = nullptr;
     }
 
     query_base& operator=(query_base&& obj) noexcept {
         this->m_query = obj.m_query;
-        this->m_owned = obj.m_owned;
         obj.m_query = nullptr;
         return *this; 
     }
@@ -28033,20 +28048,13 @@ struct query_base {
         return m_query != nullptr;
     }
 
-    void destruct() {
-        if (m_query) {
-            ecs_assert(m_owned, ECS_INVALID_OPERATION, 
-                "cannot destruct: object does not own query");
-            ecs_query_fini(m_query);
-            m_query = nullptr;
-        }
-    }
-
     /** Free the query.
      */
     ~query_base() {
-        if (m_owned && m_query) {
-            ecs_query_fini(m_query);
+        if (m_query) {
+            if (!ecs_poly_release(m_query)) {
+                ecs_query_fini(m_query);
+            }
         }
     }
 
@@ -28129,7 +28137,6 @@ struct query_base {
 
 protected:
     query_t *m_query = nullptr;
-    bool m_owned = false;
 };
 
 template<typename ... Components>

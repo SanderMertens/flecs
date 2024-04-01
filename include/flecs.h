@@ -489,6 +489,7 @@ typedef struct ecs_mixins_t ecs_mixins_t;
 typedef struct ecs_header_t {
     int32_t magic;    /* Magic number verifying it's a flecs object */
     int32_t type;     /* Magic number indicating which type of flecs object */
+    int32_t refcount; /* Refcount, to enable RAII handles */
     ecs_mixins_t *mixins; /* Table with offsets to (optional) mixins */
 } ecs_header_t;
 

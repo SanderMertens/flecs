@@ -159,7 +159,6 @@ void QueryBuilder_2_types(void) {
 
     test_int(count, 1);
 
-    r.destruct();
 }
 
 void QueryBuilder_id_term(void) {
@@ -184,7 +183,6 @@ void QueryBuilder_id_term(void) {
 
     test_int(count, 1);
 
-    r.destruct();
 }
 
 void QueryBuilder_type_term(void) {
@@ -207,7 +205,6 @@ void QueryBuilder_type_term(void) {
 
     test_int(count, 1);
 
-    r.destruct();
 }
 
 void QueryBuilder_id_pair_term(void) {
@@ -235,7 +232,6 @@ void QueryBuilder_id_pair_term(void) {
 
     test_int(count, 1);
 
-    r.destruct();
 }
 
 void QueryBuilder_id_pair_wildcard_term(void) {
@@ -268,7 +264,6 @@ void QueryBuilder_id_pair_wildcard_term(void) {
     });
     test_int(count, 2);
 
-    r.destruct();
 }
 
 void QueryBuilder_type_pair_term(void) {
@@ -301,7 +296,6 @@ void QueryBuilder_type_pair_term(void) {
     });
     test_int(count, 2);
 
-    r.destruct();
 }
 
 void QueryBuilder_pair_term_w_var(void) {
@@ -340,7 +334,6 @@ void QueryBuilder_pair_term_w_var(void) {
     });
     test_int(count, 2);
 
-    r.destruct();
 }
 
 void QueryBuilder_2_pair_terms_w_var(void) {
@@ -393,7 +386,6 @@ void QueryBuilder_2_pair_terms_w_var(void) {
     });
     test_int(count, 2);
 
-    r.destruct();
 }
 
 void QueryBuilder_set_var(void) {
@@ -428,7 +420,6 @@ void QueryBuilder_set_var(void) {
 
     test_int(count, 1);
 
-    r.destruct();
 }
 
 void QueryBuilder_set_2_vars(void) {
@@ -472,7 +463,6 @@ void QueryBuilder_set_2_vars(void) {
         });
     test_int(count, 1);
 
-    r.destruct();
 }
 
 void QueryBuilder_set_var_by_name(void) {
@@ -502,7 +492,6 @@ void QueryBuilder_set_var_by_name(void) {
         });
     test_int(count, 1);
 
-    r.destruct();
 }
 
 void QueryBuilder_set_2_vars_by_name(void) {
@@ -546,7 +535,6 @@ void QueryBuilder_set_2_vars_by_name(void) {
         });
     test_int(count, 1);
 
-    r.destruct();
 }
 
 void QueryBuilder_expr_w_var(void) {
@@ -572,7 +560,6 @@ void QueryBuilder_expr_w_var(void) {
 
     test_int(count, 1);
 
-    r.destruct();
 }
 
 void QueryBuilder_add_1_type(void) {
@@ -4103,7 +4090,6 @@ void QueryBuilder_var_src_w_prefixed_name(void) {
 
     test_int(count, 1);
 
-    r.destruct();
 }
 
 void QueryBuilder_var_first_w_prefixed_name(void) {
@@ -4128,7 +4114,6 @@ void QueryBuilder_var_first_w_prefixed_name(void) {
 
     test_int(count, 1);
 
-    r.destruct();
 }
 
 void QueryBuilder_var_second_w_prefixed_name(void) {
@@ -4153,7 +4138,6 @@ void QueryBuilder_var_second_w_prefixed_name(void) {
 
     test_int(count, 1);
 
-    r.destruct();
 }
 
 void QueryBuilder_term_w_second_var_string(void) {
@@ -4178,7 +4162,6 @@ void QueryBuilder_term_w_second_var_string(void) {
 
     test_int(count, 1);
 
-    r.destruct();
 }
 
 void QueryBuilder_term_type_w_second_var_string(void) {
@@ -4203,7 +4186,6 @@ void QueryBuilder_term_type_w_second_var_string(void) {
 
     test_int(count, 1);
 
-    r.destruct();
 }
 
 void QueryBuilder_named_rule(void) {
@@ -4225,7 +4207,6 @@ void QueryBuilder_named_rule(void) {
     test_assert(qe != 0);
     test_str(qe.name(), "my_query");
 
-    q.destruct();
 }
 
 void QueryBuilder_named_scoped_rule(void) {
@@ -4248,7 +4229,6 @@ void QueryBuilder_named_scoped_rule(void) {
     test_str(qe.name(), "query");
     test_str(qe.path(), "::my::query");
 
-    q.destruct();
 }
 
 void QueryBuilder_is_valid(void) {
@@ -4260,8 +4240,6 @@ void QueryBuilder_is_valid(void) {
     flecs::log::set_level(-4);
     auto q_2 = ecs.query_builder().expr("foo").build();
     test_assert(!q_2);
-
-    q_1.destruct();
 }
 
 void QueryBuilder_unresolved_by_name(void) {
@@ -4280,7 +4258,6 @@ void QueryBuilder_unresolved_by_name(void) {
 
     test_true(q.iter().is_true());
 
-    q.destruct();
 }
 
 void QueryBuilder_scope(void) {
@@ -4322,5 +4299,4 @@ void QueryBuilder_scope(void) {
 
     test_int(count, 3);
 
-    r.destruct();
 }

@@ -14208,6 +14208,7 @@ void* ecs_poly_init_(
 
     hdr->magic = ECS_OBJECT_MAGIC;
     hdr->type = type;
+    hdr->refcount = 1;
     hdr->mixins = mixins;
 
     return poly;
@@ -14226,6 +14227,24 @@ void ecs_poly_fini_(
     ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(hdr->type == type, ECS_INVALID_PARAMETER, NULL);
     hdr->magic = 0;
+}
+
+int32_t ecs_poly_claim_(
+    ecs_poly_t *poly)
+{
+    ecs_assert(poly != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_header_t *hdr = poly;
+    ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER, NULL);
+    return ecs_os_ainc(&hdr->refcount);
+}
+
+int32_t ecs_poly_release_(
+    ecs_poly_t *poly)
+{
+    ecs_assert(poly != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_header_t *hdr = poly;
+    ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER, NULL);
+    return ecs_os_adec(&hdr->refcount);
 }
 
 EcsPoly* ecs_poly_bind_(

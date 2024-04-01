@@ -74,6 +74,19 @@ FLECS_DBG_API
 void flecs_dump_backtrace(
     void *stream);
 
+FLECS_API
+int32_t ecs_poly_claim_(
+    ecs_poly_t *poly);
+
+FLECS_API
+int32_t ecs_poly_release_(
+    ecs_poly_t *poly);
+
+#define ecs_poly_claim(poly) \
+    ecs_poly_claim_(ECS_CONST_CAST(void*, reinterpret_cast<const void*>(poly)))
+#define ecs_poly_release(poly) \
+    ecs_poly_release_(ECS_CONST_CAST(void*, reinterpret_cast<const void*>(poly)))
+
 /** Calculate offset from address */
 #ifdef __cplusplus
 #define ECS_OFFSET(o, offset) reinterpret_cast<void*>((reinterpret_cast<uintptr_t>(o)) + (static_cast<uintptr_t>(offset)))
