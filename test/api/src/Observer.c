@@ -2294,6 +2294,120 @@ void Observer_or_from(void) {
     ecs_fini(world);
 }
 
+void Observer_and_from_empty(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t Type = ecs_new_id(world);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .query.terms = {
+            { Type, .oper = EcsAndFrom }
+        },
+        .events = {EcsOnAdd, EcsOnRemove, EcsOnSet},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    test_assert(o != 0);
+
+    ecs_fini(world);
+
+    test_int(ctx.invoked, 0);
+}
+
+void Observer_or_from_empty(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t Type = ecs_new_id(world);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .query.terms = {
+            { Type, .oper = EcsOrFrom }
+        },
+        .events = {EcsOnAdd, EcsOnRemove, EcsOnSet},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    test_assert(o != 0);
+
+    ecs_fini(world);
+
+    test_int(ctx.invoked, 0);
+}
+
+void Observer_and_from_empty_w_tag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ecs_entity_t Type = ecs_new_id(world);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .query.terms = {
+            { Type, .oper = EcsAndFrom },
+            { TagA }
+        },
+        .events = {EcsOnAdd, EcsOnRemove, EcsOnSet},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    test_assert(o != 0);
+
+    ecs_entity_t e = ecs_new(world, TagA);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, TagA);
+    test_int(ctx.term_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][1], TagA);
+
+    ecs_fini(world);
+}
+
+void Observer_or_from_empty_w_tag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ecs_entity_t Type = ecs_new_id(world);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .query.terms = {
+            { Type, .oper = EcsOrFrom },
+            { TagA }
+        },
+        .events = {EcsOnAdd, EcsOnRemove, EcsOnSet},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    test_assert(o != 0);
+
+    ecs_entity_t e = ecs_new(world, TagA);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, TagA);
+    test_int(ctx.term_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][1], TagA);
+
+    ecs_fini(world);
+}
+
 static int invoke_count = 0;
 static ecs_entity_t base_ent = 0;
 static ecs_entity_t inst_ent_a = 0;

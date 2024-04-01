@@ -787,6 +787,10 @@ int flecs_multi_observer_init(
         /* AndFrom & OrFrom terms insert multiple observers */
         if (oper == EcsAndFrom || oper == EcsOrFrom) {
             const ecs_type_t *type = ecs_get_type(world, id);
+            if (!type) {
+                continue;
+            }
+
             int32_t ti, ti_count = type->count;
             ecs_id_t *ti_ids = type->array;
 
@@ -945,7 +949,7 @@ ecs_observer_t* flecs_observer_init(
         multi |= (term->oper == EcsAndFrom) || (term->oper == EcsOrFrom);
         
         /* An observer with only optional terms is a special case that is
-            * only handled by multi observers */
+         * only handled by multi observers */
         multi |= term->oper == EcsOptional;
     }
 
@@ -1096,7 +1100,7 @@ void flecs_observer_fini(
             flecs_observer_fini(children[i]);
         }
         ecs_os_free(observer->last_event_id);
-    } else {
+    } else if (!(observer->flags & EcsObserverIsMulti)) {
         if (observer->query->term_count) {
             flecs_unregister_observer(
                 world, observer->observable, observer);

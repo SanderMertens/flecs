@@ -1112,8 +1112,11 @@ int flecs_query_compile(
         }
     }
 
+    ecs_assert((term_count - ctx.skipped) >= 0, ECS_INTERNAL_ERROR, NULL);
+
     /* If filter is empty, insert Nothing instruction */
-    if (!term_count) {
+    if (!(term_count - ctx.skipped)) {
+        ecs_vec_clear(ctx.ops);
         ecs_query_op_t nothing = {0};
         nothing.kind = EcsRuleNothing;
         flecs_query_op_insert(&nothing, &ctx);

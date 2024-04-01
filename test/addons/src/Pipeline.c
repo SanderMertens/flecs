@@ -2982,7 +2982,7 @@ void Pipeline_builtin_pipeline_w_self_system_term(void) {
 
     const EcsPoly *p = ecs_get_pair(world, pipeline, EcsPoly, EcsQuery);
     test_assert(p != NULL);
-    test_assert(ecs_poly_is(p->poly, ecs_query_impl_t));
+    test_assert(ecs_poly_is(p->poly, ecs_query_t));
 
     ecs_query_t *q = p->poly;
     test_assert(q != NULL);
@@ -3006,7 +3006,7 @@ void Pipeline_custom_pipeline_w_self_system_term(void) {
 
     const EcsPoly *p = ecs_get_pair(world, pipeline, EcsPoly, EcsQuery);
     test_assert(p != NULL);
-    test_assert(ecs_poly_is(p->poly, ecs_query_impl_t));
+    test_assert(ecs_poly_is(p->poly, ecs_query_t));
 
     ecs_query_t *q = p->poly;
     test_assert(q != NULL);

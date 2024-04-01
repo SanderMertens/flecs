@@ -8576,3 +8576,153 @@ void Operators_or_from_this_written(void) {
 
     ecs_fini(world);
 }
+
+void Operators_and_from_empty(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity(world, { .name = "Type" });
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "AND | Type",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Operators_not_from_empty(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity(world, { .name = "Type" });
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "NOT | Type",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Operators_or_from_empty(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity(world, { .name = "Type" });
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "OR | Type",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Operators_and_from_empty_w_tag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity(world, { .name = "Type" });
+
+    ecs_entity_t e = ecs_new(world, TagA);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "AND | Type, TagA",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(0, ecs_field_src(&it, 2));
+    test_uint(TagA, ecs_field_id(&it, 2));
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Operators_not_from_empty_w_tag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity(world, { .name = "Type" });
+
+    ecs_entity_t e = ecs_new(world, TagA);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "NOT | Type, TagA",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(0, ecs_field_src(&it, 2));
+    test_uint(TagA, ecs_field_id(&it, 2));
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Operators_or_from_empty_w_tag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity(world, { .name = "Type" });
+
+    ecs_entity_t e = ecs_new(world, TagA);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "OR | Type, TagA",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(0, ecs_field_src(&it, 2));
+    test_uint(TagA, ecs_field_id(&it, 2));
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

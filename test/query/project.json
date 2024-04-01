@@ -944,7 +944,13 @@
                 "or_from_this",
                 "and_from_this_written",
                 "not_from_this_written",
-                "or_from_this_written"
+                "or_from_this_written",
+                "and_from_empty",
+                "not_from_empty",
+                "or_from_empty",
+                "and_from_empty_w_tag",
+                "not_from_empty_w_tag",
+                "or_from_empty_w_tag"
             ]
         }, {
             "id": "Transitive",

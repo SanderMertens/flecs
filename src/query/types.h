@@ -309,6 +309,7 @@ typedef struct {
     int32_t scope; /* Nesting level of query scopes */
     ecs_flags32_t scope_is_not; /* Whether scope is prefixed with not */
     ecs_oper_kind_t oper; /* Temp storage to track current operator for term */
+    int32_t skipped; /* Term skipped during compilation */
 } ecs_query_compile_ctx_t;    
 
 /* Rule run state */

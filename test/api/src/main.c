@@ -1179,6 +1179,10 @@ void Observer_2_terms_1_filter(void);
 void Observer_3_terms_2_filter(void);
 void Observer_and_from(void);
 void Observer_or_from(void);
+void Observer_and_from_empty(void);
+void Observer_or_from_empty(void);
+void Observer_and_from_empty_w_tag(void);
+void Observer_or_from_empty_w_tag(void);
 void Observer_notify_propagated_twice(void);
 void Observer_on_add_yield_existing(void);
 void Observer_on_add_yield_existing_2_tables(void);
@@ -6414,6 +6418,22 @@ bake_test_case Observer_testcases[] = {
         Observer_or_from
     },
     {
+        "and_from_empty",
+        Observer_and_from_empty
+    },
+    {
+        "or_from_empty",
+        Observer_or_from_empty
+    },
+    {
+        "and_from_empty_w_tag",
+        Observer_and_from_empty_w_tag
+    },
+    {
+        "or_from_empty_w_tag",
+        Observer_or_from_empty_w_tag
+    },
+    {
         "notify_propagated_twice",
         Observer_notify_propagated_twice
     },
@@ -9326,7 +9346,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        153,
+        157,
         Observer_testcases
     },
     {

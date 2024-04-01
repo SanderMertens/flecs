@@ -1668,6 +1668,7 @@ typedef struct {
     int32_t scope; /* Nesting level of query scopes */
     ecs_flags32_t scope_is_not; /* Whether scope is prefixed with not */
     ecs_oper_kind_t oper; /* Temp storage to track current operator for term */
+    int32_t skipped; /* Term skipped during compilation */
 } ecs_query_compile_ctx_t;    
 
 /* Rule run state */
@@ -13223,6 +13224,10 @@ int flecs_multi_observer_init(
         /* AndFrom & OrFrom terms insert multiple observers */
         if (oper == EcsAndFrom || oper == EcsOrFrom) {
             const ecs_type_t *type = ecs_get_type(world, id);
+            if (!type) {
+                continue;
+            }
+
             int32_t ti, ti_count = type->count;
             ecs_id_t *ti_ids = type->array;
 
@@ -13381,7 +13386,7 @@ ecs_observer_t* flecs_observer_init(
         multi |= (term->oper == EcsAndFrom) || (term->oper == EcsOrFrom);
         
         /* An observer with only optional terms is a special case that is
-            * only handled by multi observers */
+         * only handled by multi observers */
         multi |= term->oper == EcsOptional;
     }
 
@@ -13532,7 +13537,7 @@ void flecs_observer_fini(
             flecs_observer_fini(children[i]);
         }
         ecs_os_free(observer->last_event_id);
-    } else {
+    } else if (!(observer->flags & EcsObserverIsMulti)) {
         if (observer->query->term_count) {
             flecs_unregister_observer(
                 world, observer->observable, observer);
@@ -38376,6 +38381,9 @@ bool ecs_query_changed(
     ecs_poly_assert(q, ecs_query_t);
     ecs_query_impl_t *impl = flecs_query_impl(q);
 
+    ecs_assert(q->cache_kind != EcsQueryCacheNone, ECS_INVALID_OPERATION, 
+        "change detection is only supported on cached queries");
+
     /* If query reads terms with fixed sources, check those first as that's 
      * cheaper than checking entries in the cache. */
     if (impl->monitor) {
@@ -39574,8 +39582,11 @@ int flecs_query_compile(
         }
     }
 
+    ecs_assert((term_count - ctx.skipped) >= 0, ECS_INTERNAL_ERROR, NULL);
+
     /* If filter is empty, insert Nothing instruction */
-    if (!term_count) {
+    if (!(term_count - ctx.skipped)) {
+        ecs_vec_clear(ctx.ops);
         ecs_query_op_t nothing = {0};
         nothing.kind = EcsRuleNothing;
         flecs_query_op_insert(&nothing, &ctx);
@@ -40701,6 +40712,34 @@ int flecs_query_compile_term(
     if (is_or) {
         first_or = first_term || (term[-1].oper != EcsOr);
         last_or = term->oper != EcsOr;
+    }
+
+    if (term->oper == EcsAndFrom || term->oper == EcsOrFrom || 
+        term->oper == EcsNotFrom) 
+    {
+        const ecs_type_t *type = ecs_get_type(world, term->id);
+        if (!type) {
+            /* Empty type for id in *From operation is a noop */
+            ctx->skipped ++;
+            return 0;
+        }
+
+        int32_t i, count = type->count;
+        ecs_id_t *ti_ids = type->array;
+
+        for (i = 0; i < count; i ++) {
+            ecs_id_t ti_id = ti_ids[i];
+            ecs_id_record_t *idr = flecs_id_record_get(world, ti_id);
+            if (!(idr->flags & EcsIdDontInherit)) {
+                break;
+            }
+        }
+
+        if (i == count) {
+            /* Type did not contain any ids to perform operation on */
+            ctx->skipped ++;
+            return 0;
+        }
     }
 
     /* !_ (don't match anything) terms always return nothing. */

@@ -921,6 +921,12 @@ void Operators_or_from_this(void);
 void Operators_and_from_this_written(void);
 void Operators_not_from_this_written(void);
 void Operators_or_from_this_written(void);
+void Operators_and_from_empty(void);
+void Operators_not_from_empty(void);
+void Operators_or_from_empty(void);
+void Operators_and_from_empty_w_tag(void);
+void Operators_not_from_empty_w_tag(void);
+void Operators_or_from_empty_w_tag(void);
 
 // Testsuite 'Transitive'
 void Transitive_1_fact_0_lvl_true(void);
@@ -5345,6 +5351,30 @@ bake_test_case Operators_testcases[] = {
     {
         "or_from_this_written",
         Operators_or_from_this_written
+    },
+    {
+        "and_from_empty",
+        Operators_and_from_empty
+    },
+    {
+        "not_from_empty",
+        Operators_not_from_empty
+    },
+    {
+        "or_from_empty",
+        Operators_or_from_empty
+    },
+    {
+        "and_from_empty_w_tag",
+        Operators_and_from_empty_w_tag
+    },
+    {
+        "not_from_empty_w_tag",
+        Operators_not_from_empty_w_tag
+    },
+    {
+        "or_from_empty_w_tag",
+        Operators_or_from_empty_w_tag
     }
 };
 
@@ -8571,7 +8601,7 @@ static bake_test_suite suites[] = {
         "Operators",
         Operators_setup,
         NULL,
-        130,
+        136,
         Operators_testcases,
         1,
         Operators_params

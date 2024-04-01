@@ -1096,6 +1096,34 @@ int flecs_query_compile_term(
         last_or = term->oper != EcsOr;
     }
 
+    if (term->oper == EcsAndFrom || term->oper == EcsOrFrom || 
+        term->oper == EcsNotFrom) 
+    {
+        const ecs_type_t *type = ecs_get_type(world, term->id);
+        if (!type) {
+            /* Empty type for id in *From operation is a noop */
+            ctx->skipped ++;
+            return 0;
+        }
+
+        int32_t i, count = type->count;
+        ecs_id_t *ti_ids = type->array;
+
+        for (i = 0; i < count; i ++) {
+            ecs_id_t ti_id = ti_ids[i];
+            ecs_id_record_t *idr = flecs_id_record_get(world, ti_id);
+            if (!(idr->flags & EcsIdDontInherit)) {
+                break;
+            }
+        }
+
+        if (i == count) {
+            /* Type did not contain any ids to perform operation on */
+            ctx->skipped ++;
+            return 0;
+        }
+    }
+
     /* !_ (don't match anything) terms always return nothing. */
     if (is_not && term->id == EcsAny) {
         op.kind = EcsRuleNothing;
