@@ -47565,6 +47565,11 @@ int flecs_query_finalize_terms(
             return -1;
         }
 
+        if (scope_nesting) {
+            /* Terms inside a scope are not cacheable */
+            term->flags &= ~EcsTermIsCacheable;
+        }
+
         /* If one of the terms in an OR chain isn't cacheable, none are */
         if (term->flags & EcsTermIsCacheable) {
             /* Current term is marked as cacheable. Check if it is part of an OR

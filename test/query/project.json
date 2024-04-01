@@ -1158,6 +1158,10 @@
             ]
         }, {
             "id": "Scopes",
+            "setup": true,
+            "params": {
+                "cache_kind": ["default", "auto"]
+            },
             "testcases": [
                 "term_w_not_scope_1_term",
                 "term_w_not_scope_2_terms",

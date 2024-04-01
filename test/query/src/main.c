@@ -1122,6 +1122,7 @@ void BuiltinPredicates_2_or_w_eq_lookup_var(void);
 void BuiltinPredicates_3_or_w_eq_lookup_var(void);
 
 // Testsuite 'Scopes'
+void Scopes_setup(void);
 void Scopes_term_w_not_scope_1_term(void);
 void Scopes_term_w_not_scope_2_terms(void);
 void Scopes_term_w_not_scope_1_term_w_not(void);
@@ -8547,6 +8548,9 @@ bake_test_param Operators_params[] = {
 bake_test_param Recycled_params[] = {
     {"cache_kind", (char*[]){"default", "auto"}, 2}
 };
+bake_test_param Scopes_params[] = {
+    {"cache_kind", (char*[]){"default", "auto"}, 2}
+};
 bake_test_param Traversal_params[] = {
     {"cache_kind", (char*[]){"default", "auto"}, 2}
 };
@@ -8638,10 +8642,12 @@ static bake_test_suite suites[] = {
     },
     {
         "Scopes",
-        NULL,
+        Scopes_setup,
         NULL,
         10,
-        Scopes_testcases
+        Scopes_testcases,
+        1,
+        Scopes_params
     },
     {
         "Traversal",
