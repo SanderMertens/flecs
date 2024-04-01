@@ -1,12 +1,28 @@
 #include <query.h>
 
+static ecs_query_cache_kind_t cache_kind = EcsQueryCacheDefault;
+
+void BuiltinPredicates_setup(void) {
+    const char *cache_param = test_param("cache_kind");
+    if (cache_param) {
+        if (!strcmp(cache_param, "default")) {
+            // already set to default
+        } else if (!strcmp(cache_param, "auto")) {
+            cache_kind = EcsQueryCacheAuto;
+        } else {
+            printf("unexpected value for cache_param '%s'\n", cache_param);
+        }
+    }
+}
+
 void BuiltinPredicates_this_eq_id(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t ent = ecs_new_entity(world, "ent");
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "$this == ent"
+        .expr = "$this == ent",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -31,7 +47,8 @@ void BuiltinPredicates_this_eq_name(void) {
     ecs_entity_t ent = ecs_new_entity(world, "ent");
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "$this == \"ent\""
+        .expr = "$this == \"ent\"",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -55,7 +72,8 @@ void BuiltinPredicates_this_eq_var(void) {
 
     ecs_log_set_level(-4);
     ecs_query_t *q = ecs_query(world, {
-        .expr = "$this == $x"
+        .expr = "$this == $x",
+        .cache_kind = cache_kind
     });
 
     test_assert(q == NULL);
@@ -76,7 +94,8 @@ void BuiltinPredicates_this_eq_id_written(void) {
     ecs_add(world, ent_3, RelA);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "RelA($this), $this == ent_2"
+        .expr = "RelA($this), $this == ent_2",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -113,7 +132,8 @@ void BuiltinPredicates_this_eq_id_written_no_match(void) {
     ecs_add(world, ent_4, RelB);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "RelB($this), $this == ent_2"
+        .expr = "RelB($this), $this == ent_2",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -141,7 +161,8 @@ void BuiltinPredicates_this_eq_name_written(void) {
     ecs_add(world, ent_3, RelA);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "RelA($this), $this == \"ent_2\""
+        .expr = "RelA($this), $this == \"ent_2\"",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -178,7 +199,8 @@ void BuiltinPredicates_this_eq_name_written_no_match(void) {
     ecs_add(world, ent_4, RelB);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "RelB($this), $this == \"ent_2\""
+        .expr = "RelB($this), $this == \"ent_2\"",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -206,7 +228,8 @@ void BuiltinPredicates_this_eq_var_written(void) {
     ecs_add_pair(world, ent_3, RelA, ent_2);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "RelA($this, $x), $this == $x"
+        .expr = "RelA($this, $x), $this == $x",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -236,7 +259,8 @@ void BuiltinPredicates_var_eq_id(void) {
     ecs_entity_t ent = ecs_new_entity(world, "ent");
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "$x == ent"
+        .expr = "$x == ent",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -264,7 +288,8 @@ void BuiltinPredicates_var_eq_name(void) {
     ecs_entity_t ent = ecs_new_entity(world, "ent");
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "$x == \"ent\""
+        .expr = "$x == \"ent\"",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -291,7 +316,8 @@ void BuiltinPredicates_var_eq_var(void) {
 
     ecs_log_set_level(-4);
     ecs_query_t *q = ecs_query(world, {
-        .expr = "$x == $y"
+        .expr = "$x == $y",
+        .cache_kind = cache_kind
     });
 
     test_assert(q == NULL);
@@ -310,7 +336,8 @@ void BuiltinPredicates_var_eq_this(void) {
     /* ecs_entity_t e2 = */ ecs_new(world, Foo);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Foo($this), $x == $this, Bar($x)"
+        .expr = "Foo($this), $x == $this, Bar($x)",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -347,7 +374,8 @@ void BuiltinPredicates_var_eq_id_written(void) {
     ecs_add(world, ent_3, RelA);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "RelA($x), $x == ent_2"
+        .expr = "RelA($x), $x == ent_2",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -387,7 +415,8 @@ void BuiltinPredicates_var_eq_id_written_no_match(void) {
     ecs_add(world, ent_4, RelB);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "RelB($x), $x == ent_2"
+        .expr = "RelB($x), $x == ent_2",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -418,7 +447,8 @@ void BuiltinPredicates_var_eq_name_written(void) {
     ecs_add(world, ent_3, RelA);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "RelA($x), $x == \"ent_2\""
+        .expr = "RelA($x), $x == \"ent_2\"",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -458,7 +488,8 @@ void BuiltinPredicates_var_eq_name_written_no_match(void) {
     ecs_add(world, ent_4, RelB);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "RelB($x), $x == \"ent_2\""
+        .expr = "RelB($x), $x == \"ent_2\"",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -489,7 +520,8 @@ void BuiltinPredicates_var_eq_var_written(void) {
     ecs_add_pair(world, ent_3, RelA, ent_2);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "RelA($x, $y), $x == $y"
+        .expr = "RelA($x, $y), $x == $y",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -528,7 +560,8 @@ void BuiltinPredicates_this_neq_id(void) {
     ecs_add(world, ent_4, Tag);
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "$this != ent_2"
+        .expr = "$this != ent_2",
+        .cache_kind = cache_kind
     });
 
     test_assert(r != NULL);
@@ -574,7 +607,8 @@ void BuiltinPredicates_this_neq_name(void) {
     ecs_add(world, ent_4, Tag);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "$this != \"ent_2\""
+        .expr = "$this != \"ent_2\"",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -613,7 +647,8 @@ void BuiltinPredicates_this_neq_var(void) {
 
     ecs_log_set_level(-4);
     ecs_query_t *q = ecs_query(world, {
-        .expr = "$this != $x"
+        .expr = "$this != $x",
+        .cache_kind = cache_kind
     });
 
     test_assert(q == NULL);
@@ -634,7 +669,8 @@ void BuiltinPredicates_this_neq_id_written(void) {
     ecs_add(world, ent_3, RelA);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "RelA($this), $this != ent_2"
+        .expr = "RelA($this), $this != ent_2",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -679,7 +715,8 @@ void BuiltinPredicates_this_neq_id_written_no_match(void) {
     ecs_add(world, ent_4, RelB);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "RelB($this), $this != ent_2"
+        .expr = "RelB($this), $this != ent_2",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -714,7 +751,8 @@ void BuiltinPredicates_this_neq_name_written(void) {
     ecs_add(world, ent_3, RelA);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "RelA($this), $this != \"ent_2\""
+        .expr = "RelA($this), $this != \"ent_2\"",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -759,7 +797,8 @@ void BuiltinPredicates_this_neq_name_written_no_match(void) {
     ecs_add(world, ent_4, RelB);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "RelB($this), $this != \"ent_2\""
+        .expr = "RelB($this), $this != \"ent_2\"",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -794,7 +833,8 @@ void BuiltinPredicates_this_neq_var_written(void) {
     ecs_add_pair(world, ent_3, RelA, ent_2);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "RelA($this, $x), $this != $x"
+        .expr = "RelA($this, $x), $this != $x",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -839,7 +879,8 @@ void BuiltinPredicates_var_neq_id(void) {
     ecs_add(world, ent_4, Tag);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "$x != ent_2"
+        .expr = "$x != ent_2",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -888,7 +929,8 @@ void BuiltinPredicates_var_neq_name(void) {
     ecs_add(world, ent_4, Tag);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "$x != \"ent_2\""
+        .expr = "$x != \"ent_2\"",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -930,7 +972,8 @@ void BuiltinPredicates_var_neq_var(void) {
 
     ecs_log_set_level(-4);
     ecs_query_t *q = ecs_query(world, {
-        .expr = "$x != $y"
+        .expr = "$x != $y",
+        .cache_kind = cache_kind
     });
 
     test_assert(q == NULL);
@@ -950,7 +993,8 @@ void BuiltinPredicates_var_neq_this(void) {
     ecs_add_pair(world, e2, Rel, e2);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Rel($this, $x), $x != $this"
+        .expr = "Rel($this, $x), $x != $this",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -987,7 +1031,8 @@ void BuiltinPredicates_var_neq_id_written(void) {
     ecs_add(world, ent_3, RelA);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "RelA($x), $x != ent_2"
+        .expr = "RelA($x), $x != ent_2",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -1035,7 +1080,8 @@ void BuiltinPredicates_var_neq_id_written_no_match(void) {
     ecs_add(world, ent_4, RelB);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "RelB($x), $x != ent_2"
+        .expr = "RelB($x), $x != ent_2",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -1073,7 +1119,8 @@ void BuiltinPredicates_var_neq_name_written(void) {
     ecs_add(world, ent_3, RelA);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "RelA($x), $x != \"ent_2\""
+        .expr = "RelA($x), $x != \"ent_2\"",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -1121,7 +1168,8 @@ void BuiltinPredicates_var_neq_name_written_no_match(void) {
     ecs_add(world, ent_4, RelB);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "RelB($x), $x != \"ent_2\""
+        .expr = "RelB($x), $x != \"ent_2\"",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -1159,7 +1207,8 @@ void BuiltinPredicates_var_neq_var_written(void) {
     ecs_add_pair(world, ent_3, RelA, ent_2);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "RelA($x, $y), $x != $y"
+        .expr = "RelA($x, $y), $x != $y",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -1208,7 +1257,8 @@ void BuiltinPredicates_this_2_neq_id(void) {
     ecs_add(world, ent_5, Tag);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "$this != ent_2, $this != ent_3"
+        .expr = "$this != ent_2, $this != ent_3",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -1256,7 +1306,8 @@ void BuiltinPredicates_this_2_neq_name(void) {
     ecs_add(world, ent_5, Tag);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "$this != \"ent_2\", $this != \"ent_3\""
+        .expr = "$this != \"ent_2\", $this != \"ent_3\"",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -1304,7 +1355,8 @@ void BuiltinPredicates_var_2_neq_id(void) {
     ecs_add(world, ent_5, Tag);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "$x != ent_2, $x != ent_3"
+        .expr = "$x != ent_2, $x != ent_3",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -1355,7 +1407,8 @@ void BuiltinPredicates_var_2_neq_name(void) {
     ecs_add(world, ent_5, Tag);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "$x != \"ent_2\", $x != \"ent_3\""
+        .expr = "$x != \"ent_2\", $x != \"ent_3\"",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -1410,7 +1463,8 @@ void BuiltinPredicates_this_2_neq_id_written(void) {
     ecs_add(world, ent_5, RelA);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "RelA($this), $this != ent_2, $this != ent_3"
+        .expr = "RelA($this), $this != ent_2, $this != ent_3",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -1457,7 +1511,8 @@ void BuiltinPredicates_this_2_neq_name_written(void) {
     ecs_add(world, ent_5, RelA);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "RelA($this), $this != \"ent_2\", $this != \"ent_3\""
+        .expr = "RelA($this), $this != \"ent_2\", $this != \"ent_3\"",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -1504,7 +1559,8 @@ void BuiltinPredicates_var_2_neq_id_written(void) {
     ecs_add(world, ent_5, RelA);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "RelA($x), $x != ent_2, $x != ent_3"
+        .expr = "RelA($x), $x != ent_2, $x != ent_3",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -1560,7 +1616,8 @@ void BuiltinPredicates_var_2_neq_name_written(void) {
     ecs_add(world, ent_5, RelA);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "RelA($x), $x != \"ent_2\", $x != \"ent_3\""
+        .expr = "RelA($x), $x != \"ent_2\", $x != \"ent_3\"",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -1611,7 +1668,8 @@ void BuiltinPredicates_this_2_or_id(void) {
     /* ecs_entity_t ent_5 = */ ecs_new_entity(world, "ent_5");
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "$this == ent_2 || $this == ent_3"
+        .expr = "$this == ent_2 || $this == ent_3",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -1648,7 +1706,8 @@ void BuiltinPredicates_this_3_or_id(void) {
     /* ecs_entity_t ent_5 = */ ecs_new_entity(world, "ent_5");
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "$this == ent_2 || $this == ent_3 || $this == ent_4"
+        .expr = "$this == ent_2 || $this == ent_3 || $this == ent_4",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -1690,7 +1749,8 @@ void BuiltinPredicates_this_2_or_name(void) {
     /* ecs_entity_t ent_5 = */ ecs_new_entity(world, "ent_5");
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "$this == \"ent_2\" || $this == \"ent_3\""
+        .expr = "$this == \"ent_2\" || $this == \"ent_3\"",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -1727,7 +1787,8 @@ void BuiltinPredicates_this_3_or_name(void) {
     /* ecs_entity_t ent_5 = */ ecs_new_entity(world, "ent_5");
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "$this == \"ent_2\" || $this == \"ent_3\" || $this == \"ent_4\""
+        .expr = "$this == \"ent_2\" || $this == \"ent_3\" || $this == \"ent_4\"",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -1771,7 +1832,8 @@ void BuiltinPredicates_this_2_or_match(void) {
     /* ecs_entity_t ent_5 = */ ecs_new_entity(world, "ent_5");
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "$this ~= \"ent_2\" || $this ~= \"ent_3\""
+        .expr = "$this ~= \"ent_2\" || $this ~= \"ent_3\"",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -1821,7 +1883,8 @@ void BuiltinPredicates_this_3_or_match(void) {
     /* ecs_entity_t ent_5 = */ ecs_new_entity(world, "ent_5");
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "$this ~= \"ent_2\" || $this ~= \"ent_3\" || $this ~= \"ent_4\""
+        .expr = "$this ~= \"ent_2\" || $this ~= \"ent_3\" || $this ~= \"ent_4\"",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -1878,7 +1941,8 @@ void BuiltinPredicates_var_2_or_id(void) {
     /* ecs_entity_t ent_5 = */ ecs_new_entity(world, "ent_5");
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "$x == ent_2 || $x == ent_3"
+        .expr = "$x == ent_2 || $x == ent_3",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -1917,7 +1981,8 @@ void BuiltinPredicates_var_2_or_name(void) {
     /* ecs_entity_t ent_5 = */ ecs_new_entity(world, "ent_5");
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "$x == \"ent_2\" || $x == \"ent_3\""
+        .expr = "$x == \"ent_2\" || $x == \"ent_3\"",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -1961,7 +2026,8 @@ void BuiltinPredicates_this_2_or_id_written(void) {
     ecs_add(world, ent_5, RelA);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "RelA($this), $this == ent_2 || $this == ent_3"
+        .expr = "RelA($this), $this == ent_2 || $this == ent_3",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -2007,7 +2073,8 @@ void BuiltinPredicates_this_3_or_id_written(void) {
     ecs_add(world, ent_5, RelA);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "RelA($this), $this == ent_2 || $this == ent_3 || $this == ent_4"
+        .expr = "RelA($this), $this == ent_2 || $this == ent_3 || $this == ent_4",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -2060,7 +2127,8 @@ void BuiltinPredicates_this_2_or_name_written(void) {
     ecs_add(world, ent_5, RelA);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "RelA($this), $this == \"ent_2\" || $this == \"ent_3\""
+        .expr = "RelA($this), $this == \"ent_2\" || $this == \"ent_3\"",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -2106,7 +2174,8 @@ void BuiltinPredicates_var_2_or_id_written(void) {
     ecs_add(world, ent_5, RelA);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "RelA($x), $x == ent_2 || $x == ent_3"
+        .expr = "RelA($x), $x == ent_2 || $x == ent_3",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -2155,7 +2224,8 @@ void BuiltinPredicates_var_2_or_name_written(void) {
     ecs_add(world, ent_5, RelA);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "RelA($x), $x == \"ent_2\" || $x == \"ent_3\""
+        .expr = "RelA($x), $x == \"ent_2\" || $x == \"ent_3\"",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -2202,7 +2272,8 @@ void BuiltinPredicates_this_match_eq(void) {
     ecs_add(world, ent_6, Tag);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "$this ~= \"nt_\""
+        .expr = "$this ~= \"nt_\"",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -2248,7 +2319,8 @@ void BuiltinPredicates_var_match_eq(void) {
     ecs_add(world, ent_6, Tag);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "$x ~= \"nt_\""
+        .expr = "$x ~= \"nt_\"",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -2307,7 +2379,8 @@ void BuiltinPredicates_this_match_eq_written(void) {
     ecs_add(world, ent_6, Tag);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "RelA($this), $this ~= \"nt_\""
+        .expr = "RelA($this), $this ~= \"nt_\"",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -2362,7 +2435,8 @@ void BuiltinPredicates_this_match_eq_written_self(void) {
     ecs_add(world, ent_6, Tag);
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "RelA($this:self), $this ~= \"nt_\""
+        .expr = "RelA($this:self), $this ~= \"nt_\"",
+        .cache_kind = cache_kind
     });
 
     test_assert(r != NULL);
@@ -2417,7 +2491,8 @@ void BuiltinPredicates_var_match_eq_written(void) {
     ecs_add(world, ent_6, Tag);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "RelA($x), $x ~= \"nt_\""
+        .expr = "RelA($x), $x ~= \"nt_\"",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -2474,7 +2549,8 @@ void BuiltinPredicates_this_match_neq(void) {
     ecs_add(world, ent_6, Tag);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "$this ~= \"!nt_\""
+        .expr = "$this ~= \"!nt_\"",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -2521,7 +2597,8 @@ void BuiltinPredicates_var_match_neq(void) {
     ecs_add(world, ent_6, Tag);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "$x ~= \"!nt_\""
+        .expr = "$x ~= \"!nt_\"",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -2577,7 +2654,8 @@ void BuiltinPredicates_this_match_neq_written(void) {
     ecs_add(world, ent_6, Tag);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "RelA($this), $this ~= \"!nt_\""
+        .expr = "RelA($this), $this ~= \"!nt_\"",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -2630,7 +2708,8 @@ void BuiltinPredicates_var_match_neq_written(void) {
     ecs_add(world, ent_6, Tag);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "$x ~= \"!nt_\""
+        .expr = "$x ~= \"!nt_\"",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -2680,7 +2759,8 @@ void BuiltinPredicates_this_match_2_neq(void) {
     ecs_add(world, ent_6, Tag);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "$this ~= \"!nt_\", $this ~= \"!_3\""
+        .expr = "$this ~= \"!nt_\", $this ~= \"!_3\"",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -2727,7 +2807,8 @@ void BuiltinPredicates_var_match_2_neq(void) {
     ecs_add(world, ent_6, Tag);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "$x ~= \"!nt_\", $x ~= \"!_3\""
+        .expr = "$x ~= \"!nt_\", $x ~= \"!_3\"",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -2782,7 +2863,8 @@ void BuiltinPredicates_this_match_2_neq_written(void) {
     ecs_add(world, ent_6, Tag);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "RelA($this), $this ~= \"!nt_\", $this ~= \"!_3\""
+        .expr = "RelA($this), $this ~= \"!nt_\", $this ~= \"!_3\"",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -2835,7 +2917,8 @@ void BuiltinPredicates_var_match_2_neq_written(void) {
     ecs_add(world, ent_6, Tag);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "RelA($x), $x ~= \"!nt_\", $x ~= \"!_3\""
+        .expr = "RelA($x), $x ~= \"!nt_\", $x ~= \"!_3\"",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -2884,7 +2967,8 @@ void BuiltinPredicates_this_match_2_or(void) {
     ecs_add(world, ent_6, Tag);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "$this ~= \"1\" || $this ~= \"_3\""
+        .expr = "$this ~= \"1\" || $this ~= \"_3\"",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -2930,7 +3014,8 @@ void BuiltinPredicates_this_match_2_or_written(void) {
     ecs_add(world, ent_6, Tag);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "RelA($this), $this ~= \"1\" || $this ~= \"_3\""
+        .expr = "RelA($this), $this ~= \"1\" || $this ~= \"_3\"",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -2972,7 +3057,8 @@ void BuiltinPredicates_this_match_3_or(void) {
     ecs_add(world, ent_6, Tag);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "$this ~= \"1\" || $this ~= \"_3\" || $this ~= \"nt_6\""
+        .expr = "$this ~= \"1\" || $this ~= \"_3\" || $this ~= \"nt_6\"",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -3023,7 +3109,8 @@ void BuiltinPredicates_this_match_3_or_written(void) {
     ecs_add(world, ent_6, Tag);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "RelA($this), $this ~= \"1\" || $this ~= \"_3\" || $this ~= \"nt_6\""
+        .expr = "RelA($this), $this ~= \"1\" || $this ~= \"_3\" || $this ~= \"nt_6\"",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -3061,6 +3148,7 @@ void BuiltinPredicates_unresolved_by_name(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "$this == ent",
+        .cache_kind = cache_kind,
         .flags = EcsQueryAllowUnresolvedByName
     });
 
@@ -3096,7 +3184,8 @@ void BuiltinPredicates_var_eq_wildcard(void) {
     ecs_entity_t e = ecs_new_w_pair(world, Rel, tgt);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "$x == *, (Rel, $x)"
+        .expr = "$x == *, (Rel, $x)",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -3127,7 +3216,8 @@ void BuiltinPredicates_var_eq_any(void) {
     ecs_entity_t e = ecs_new_w_pair(world, Rel, tgt);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "$x == _, (Rel, $x)"
+        .expr = "$x == _, (Rel, $x)",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -3158,7 +3248,8 @@ void BuiltinPredicates_var_eq_wildcard_after_write(void) {
     ecs_entity_t e = ecs_new_w_pair(world, Rel, tgt);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "(Rel, $x), $x == *"
+        .expr = "(Rel, $x), $x == *",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -3189,7 +3280,8 @@ void BuiltinPredicates_var_eq_any_after_write(void) {
     ecs_entity_t e = ecs_new_w_pair(world, Rel, tgt);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "(Rel, $x), $x == _"
+        .expr = "(Rel, $x), $x == _",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -3215,7 +3307,8 @@ void BuiltinPredicates_var_eq_after_var_0_src(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "$x(), $x == flecs"
+        .expr = "$x(), $x == flecs",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -3266,7 +3359,8 @@ void BuiltinPredicates_2_or_w_eq_lookup_var(void) {
     ecs_add(world, child3_2, Bar);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Foo($this), $x == $this.hello || $x == $this.world, Bar($x)"
+        .expr = "Foo($this), $x == $this.hello || $x == $this.world, Bar($x)",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -3344,7 +3438,8 @@ void BuiltinPredicates_3_or_w_eq_lookup_var(void) {
     ecs_add(world, child4, Bar);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Foo($this), $x == $this.hello || $x == $this.world || $x == $this.zoo, Bar($x)"
+        .expr = "Foo($this), $x == $this.hello || $x == $this.world || $x == $this.zoo, Bar($x)",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -3417,7 +3512,8 @@ void BuiltinPredicates_2_or_w_eq_this(void) {
     ecs_add_pair(world, e3, Rel, Rel);
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Rel($this, $x), $x == $this || $x == Rel"
+        .expr = "Rel($this, $x), $x == $this || $x == Rel",
+        .cache_kind = cache_kind
     });
 
     test_assert(r != NULL);

@@ -1073,6 +1073,10 @@
             ]
         }, {
             "id": "BuiltinPredicates",
+            "setup": true,
+            "params": {
+                "cache_kind": ["default", "auto"]
+            },
             "testcases": [
                 "this_eq_id",
                 "this_eq_name",

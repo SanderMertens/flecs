@@ -865,6 +865,9 @@ void Enum_enum_w_incorrect_size(void) {
 }
 
 void Enum_add_union_enum(void) {
+    // Quarantined until the Union trait is reintroduced
+    test_quarantine("1 Apr 2024");
+
     // flecs::world ecs;
 
     // ecs.component<StandardEnum>().add(flecs::Union);
@@ -884,6 +887,9 @@ void Enum_add_union_enum(void) {
 }
 
 void Enum_add_2_union_enums(void) {
+    // Quarantined until the Union trait is reintroduced
+    test_quarantine("1 Apr 2024");
+
     // flecs::world ecs;
 
     // ecs.component<StandardEnum>().add(flecs::Union);
@@ -908,6 +914,9 @@ void Enum_add_2_union_enums(void) {
 }
 
 void Enum_add_2_union_enums_reverse(void) {
+    // Quarantined until the Union trait is reintroduced
+    test_quarantine("1 Apr 2024");
+
     // flecs::world ecs;
 
     // ecs.component<StandardEnum>().add(flecs::Union);
@@ -978,6 +987,9 @@ void Enum_add_if_other(void) {
 }
 
 void Enum_query_union_enum(void) {
+    // Quarantined until the Union trait is reintroduced
+    test_quarantine("1 Apr 2024");
+
     // flecs::world ecs;
 
     // enum Color {
@@ -1010,6 +1022,9 @@ void Enum_query_union_enum(void) {
 }
 
 void Enum_query_union_enum_invalid_query_type(void) {
+    // Quarantined until the Union trait is reintroduced
+    test_quarantine("1 Apr 2024");
+
     // install_test_abort();
 
     // flecs::world ecs;

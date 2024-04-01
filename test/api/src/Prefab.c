@@ -3866,6 +3866,9 @@ void Prefab_prefab_variant_w_mixed_slots(void) {
 }
 
 void Prefab_override_slot(void) {
+    // Quarantined until Union trait is reintroduced
+    test_quarantine("1 Apr 2024");
+
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t base = ecs_new_prefab(world, "Base");
@@ -3893,6 +3896,9 @@ void Prefab_override_slot(void) {
 }
 
 void Prefab_2_instances_w_slots_same_table(void) {
+    // Quarantined until Union trait is reintroduced
+    test_quarantine("1 Apr 2024");
+
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t base = ecs_new_prefab(world, "Base");

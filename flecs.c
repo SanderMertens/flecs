@@ -47431,10 +47431,12 @@ int flecs_term_finalize(
         trivial_term = false;
     }
     if (((ECS_TERM_REF_ID(&term->first) == EcsPredEq) || 
-         (ECS_TERM_REF_ID(&term->first) == EcsPredMatch)) && 
+         (ECS_TERM_REF_ID(&term->first) == EcsPredMatch) || 
+         (ECS_TERM_REF_ID(&term->first) == EcsPredLookup)) && 
         (term->first.id & EcsIsEntity)) 
     {
         trivial_term = false;
+        cacheable_term = false;
     }
     if (ECS_TERM_REF_ID(src) != EcsThis) {
         cacheable_term = false;

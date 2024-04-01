@@ -1039,6 +1039,7 @@ void Recycled_recycled_pair(void);
 void Recycled_recycled_component_id(void);
 
 // Testsuite 'BuiltinPredicates'
+void BuiltinPredicates_setup(void);
 void BuiltinPredicates_this_eq_id(void);
 void BuiltinPredicates_this_eq_name(void);
 void BuiltinPredicates_this_eq_var(void);
@@ -8548,6 +8549,9 @@ bake_test_param Operators_params[] = {
 bake_test_param Recycled_params[] = {
     {"cache_kind", (char*[]){"default", "auto"}, 2}
 };
+bake_test_param BuiltinPredicates_params[] = {
+    {"cache_kind", (char*[]){"default", "auto"}, 2}
+};
 bake_test_param Scopes_params[] = {
     {"cache_kind", (char*[]){"default", "auto"}, 2}
 };
@@ -8635,10 +8639,12 @@ static bake_test_suite suites[] = {
     },
     {
         "BuiltinPredicates",
-        NULL,
+        BuiltinPredicates_setup,
         NULL,
         81,
-        BuiltinPredicates_testcases
+        BuiltinPredicates_testcases,
+        1,
+        BuiltinPredicates_params
     },
     {
         "Scopes",
