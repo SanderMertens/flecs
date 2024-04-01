@@ -1501,7 +1501,7 @@ void flecs_json_serialize_query_plan(
     }
 
     const ecs_query_t *q = desc->query;
-    ecs_poly_assert(q, ecs_query_impl_t);
+    ecs_poly_assert(q, ecs_query_t);
 
     flecs_json_memberl(buf, "query_plan");
 

@@ -469,9 +469,6 @@ typedef struct ecs_table_record_t ecs_table_record_t;
  * - ecs_world_t
  * - ecs_stage_t
  * - ecs_query_t
- * - ecs_query_t
- * - ecs_query_impl_t
- * - (more to come)
  *
  * Functions that accept an ecs_poly_t argument can accept objects of these
  * types. If the object does not have the requested mixin the API will throw an
@@ -490,8 +487,8 @@ typedef struct ecs_mixins_t ecs_mixins_t;
 
 /** Header for ecs_poly_t objects. */
 typedef struct ecs_header_t {
-    int32_t magic; /* Magic number verifying it's a flecs object */
-    int32_t type;  /* Magic number indicating which type of flecs object */
+    int32_t magic;    /* Magic number verifying it's a flecs object */
+    int32_t type;     /* Magic number indicating which type of flecs object */
     ecs_mixins_t *mixins; /* Table with offsets to (optional) mixins */
 } ecs_header_t;
 

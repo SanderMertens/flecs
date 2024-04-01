@@ -736,10 +736,7 @@ extern const ecs_entity_t EcsFlag;
 /* Tags associated with poly for (Poly, tag) components */
 #define ecs_world_t_tag     invalid
 #define ecs_stage_t_tag     invalid
-#define ecs_query_cache_t_tag     EcsQuery
-#define ecs_query_impl_t_tag      EcsQuery
-#define ecs_table_t_tag     invalid
-#define ecs_query_t_tag    EcsQuery
+#define ecs_query_t_tag     EcsQuery
 #define ecs_observer_t_tag  EcsObserver
 
 /* Mixin kinds */
@@ -764,8 +761,6 @@ struct ecs_mixins_t {
 extern ecs_mixins_t ecs_world_t_mixins;
 extern ecs_mixins_t ecs_stage_t_mixins;
 extern ecs_mixins_t ecs_query_t_mixins;
-extern ecs_mixins_t ecs_query_cache_t_mixins;
-extern ecs_mixins_t ecs_trigger_t_mixins;
 extern ecs_mixins_t ecs_observer_t_mixins;
 
 /* Types that have no mixins */
@@ -1481,9 +1476,9 @@ typedef struct ecs_query_op_t {
     ecs_flags8_t flags;        /* Flags storing whether 1st/2nd are variables */
     int8_t field_index;        /* Query field corresponding with operation */
     int8_t term_index;         /* Query term corresponding with operation */
-    ecs_query_lbl_t prev;       /* Backtracking label (no data) */
-    ecs_query_lbl_t next;       /* Forwarding label. Must come after prev */
-    ecs_query_lbl_t other;      /* Misc register used for control flow */
+    ecs_query_lbl_t prev;      /* Backtracking label (no data) */
+    ecs_query_lbl_t next;      /* Forwarding label. Must come after prev */
+    ecs_query_lbl_t other;     /* Misc register used for control flow */
     ecs_flags16_t match_flags; /* Flags that modify matching behavior */
     ecs_query_ref_t src;
     ecs_query_ref_t first;
@@ -13329,7 +13324,7 @@ ecs_observer_t* flecs_observer_init(
         return 0;
     }
 
-    ecs_poly_assert(query, ecs_query_impl_t);
+    ecs_poly_assert(query, ecs_query_t);
 
     /* Observer must have at least one term */
     ecs_check(observer->query->term_count > 0, ECS_INVALID_PARAMETER, NULL);
@@ -16319,7 +16314,7 @@ void flecs_eval_component_monitor(
         ecs_query_t **elems = ecs_vec_first(&m->queries);
         for (i = 0; i < count; i ++) {
             ecs_query_t *q = elems[i];
-            ecs_poly_assert(q, ecs_query_impl_t);
+            ecs_poly_assert(q, ecs_query_t);
             flecs_query_cache_notify(world, q, &(ecs_query_cache_event_t) {
                 .kind = EcsQueryTableRematch
             });
@@ -16355,7 +16350,7 @@ void flecs_monitor_register(
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(id != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(query != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_poly_assert(query, ecs_query_impl_t);
+    ecs_poly_assert(query, ecs_query_t);
 
     ecs_map_t *monitors = &world->monitors.monitors;
     ecs_map_init_if(monitors, &world->allocator);
@@ -16374,7 +16369,7 @@ void flecs_monitor_unregister(
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(id != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(query != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_poly_assert(query, ecs_query_impl_t);
+    ecs_poly_assert(query, ecs_query_t);
 
     ecs_map_t *monitors = &world->monitors.monitors;
     if (!ecs_map_is_init(monitors)) {
@@ -18349,7 +18344,7 @@ void MonitorAlerts(ecs_iter_t *it) {
             continue;
         }
 
-        ecs_poly_assert(q, ecs_query_impl_t);
+        ecs_poly_assert(q, ecs_query_t);
 
         ecs_id_t member_id = alert[i].id;
         const EcsMemberRanges *ranges = NULL;
@@ -18469,12 +18464,12 @@ void MonitorAlertInstances(ecs_iter_t *it) {
     ecs_assert(poly != NULL, ECS_INVALID_OPERATION, 
         "alert entity does not have (Poly, Query) component");
 
-    ecs_query_t *rule = poly->poly;
-    if (!rule) {
+    ecs_query_t *query = poly->poly;
+    if (!query) {
         return;
     }
 
-    ecs_poly_assert(rule, ecs_query_impl_t);
+    ecs_poly_assert(query, ecs_query_t);
 
     ecs_id_t member_id = alert->id;
     const EcsMemberRanges *ranges = NULL;
@@ -18497,8 +18492,8 @@ void MonitorAlertInstances(ecs_iter_t *it) {
             continue;
         }
 
-        /* Check if alert instance still matches rule */
-        ecs_iter_t rit = ecs_query_iter(world, rule);
+        /* Check if alert instance still matches query */
+        ecs_iter_t rit = ecs_query_iter(world, query);
         rit.flags |= EcsIterNoData;
         rit.flags |= EcsIterIsInstanced;
         ecs_iter_set_var(&rit, 0, e);
@@ -18535,7 +18530,7 @@ void MonitorAlertInstances(ecs_iter_t *it) {
                 if (generate_message) {
                     if (alert_instance[i].message) {
                         /* If a message was already generated, only regenerate if
-                        * rule has multiple variables. Variable values could have 
+                        * query has multiple variables. Variable values could have 
                         * changed, this ensures the message remains up to date. */
                         generate_message = rit.variable_count > 1;
                     }
@@ -18560,7 +18555,7 @@ void MonitorAlertInstances(ecs_iter_t *it) {
                     timeout[i].inactive_time = 0;
                 }
 
-                /* Alert instance still matches rule, keep it alive */
+                /* Alert instance still matches query, keep it alive */
                 ecs_iter_fini(&rit);
                 continue;
             }
@@ -18579,13 +18574,13 @@ void MonitorAlertInstances(ecs_iter_t *it) {
             ecs_ftime_t t = timeout[i].inactive_time;
             timeout[i].inactive_time += it->delta_system_time;
             if (t < timeout[i].expire_time) {
-                /* Alert instance no longer matches rule, but is still
+                /* Alert instance no longer matches query, but is still
                     * within the timeout period. Keep it alive. */
                 continue;
             }
         }
 
-        /* Alert instance no longer matches rule, remove it */ 
+        /* Alert instance no longer matches query, remove it */ 
         flecs_alerts_remove_alert_from_src(world, e, parent);
         ecs_map_remove(&alert->instances, e);
         ecs_delete(world, ai);
@@ -35159,8 +35154,8 @@ void* ecs_vec_first(
 
 #include <ctype.h>
 
-static ecs_mixins_t ecs_query_impl_t_mixins = {
-    .type_name = "ecs_query_impl_t",
+ecs_mixins_t ecs_query_t_mixins = {
+    .type_name = "ecs_query_t",
     .elems = {
         [EcsMixinWorld] = offsetof(ecs_query_impl_t, pub.world),
         [EcsMixinEntity] = offsetof(ecs_query_impl_t, pub.entity),
@@ -35171,7 +35166,7 @@ static ecs_mixins_t ecs_query_impl_t_mixins = {
 int32_t ecs_query_var_count(
     const ecs_query_t *q)
 {
-    ecs_poly_assert(q, ecs_query_impl_t);
+    ecs_poly_assert(q, ecs_query_t);
     return flecs_query_impl(q)->var_pub_count;
 }
 
@@ -35179,7 +35174,7 @@ int32_t ecs_query_find_var(
     const ecs_query_t *q,
     const char *name)
 {
-    ecs_poly_assert(q, ecs_query_impl_t);
+    ecs_poly_assert(q, ecs_query_t);
 
     ecs_query_impl_t *impl = flecs_query_impl(q);
     ecs_var_id_t var_id = flecs_query_find_var_id(impl, name, EcsVarEntity);
@@ -35203,7 +35198,7 @@ const char* ecs_query_var_name(
     const ecs_query_t *q,
     int32_t var_id)
 {
-    ecs_poly_assert(q, ecs_query_impl_t);
+    ecs_poly_assert(q, ecs_query_t);
 
     if (var_id) {
         ecs_assert(var_id < flecs_query_impl(q)->var_count, 
@@ -35218,7 +35213,7 @@ bool ecs_query_var_is_entity(
     const ecs_query_t *q,
     int32_t var_id)
 {
-    ecs_poly_assert(q, ecs_query_impl_t);
+    ecs_poly_assert(q, ecs_query_t);
 
     return flecs_query_impl(q)->vars[var_id].kind == EcsVarEntity;
 }
@@ -35230,7 +35225,7 @@ void flecs_query_iter_mixin_init(
     const ecs_poly_t *poly,
     ecs_iter_t *iter)
 {
-    ecs_poly_assert(poly, ecs_query_impl_t);
+    ecs_poly_assert(poly, ecs_query_t);
     iter[0] = ecs_query_iter(world, ECS_CONST_CAST(ecs_query_t*, poly));
 }
 
@@ -35409,7 +35404,7 @@ void flecs_query_fini(
         flecs_query_cache_fini(impl);
     }
 
-    ecs_poly_free(impl, ecs_query_impl_t);
+    ecs_poly_free(impl, ecs_query_t);
 }
 
 static
@@ -35492,7 +35487,7 @@ void flecs_query_add_self_ref(
 void ecs_query_fini(
     ecs_query_t *q)
 {
-    ecs_poly_assert(q, ecs_query_impl_t);
+    ecs_poly_assert(q, ecs_query_t);
 
     if (q->entity) {
         /* If filter is associated with entity, use poly dtor path */
@@ -35506,7 +35501,8 @@ ecs_query_t* ecs_query_init(
     ecs_world_t *world, 
     const ecs_query_desc_t *const_desc)
 {
-    ecs_query_impl_t *result = ecs_poly_new(ecs_query_impl_t);
+    ecs_query_impl_t *result = ecs_os_calloc_t(ecs_query_impl_t);
+    ecs_poly_init(result, ecs_query_t);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
     ecs_query_desc_t desc = *const_desc;
@@ -35553,9 +35549,9 @@ ecs_query_t* ecs_query_init(
     /* Entity could've been set by finalize query if query is cached */
     entity = result->pub.entity;
     if (entity) {
-        EcsPoly *poly = ecs_poly_bind(world, entity, ecs_query_impl_t);
+        EcsPoly *poly = ecs_poly_bind(world, entity, ecs_query_t);
         poly->poly = result;
-        ecs_poly_modified(world, entity, ecs_query_impl_t);
+        ecs_poly_modified(world, entity, ecs_query_t);
     }
 
     return &result->pub;
@@ -35569,7 +35565,7 @@ bool ecs_query_has(
     ecs_entity_t entity,
     ecs_iter_t *it)
 {
-    ecs_poly_assert(q, ecs_query_impl_t);
+    ecs_poly_assert(q, ecs_query_t);
     ecs_check(q->flags & EcsQueryMatchThis, ECS_INVALID_PARAMETER, NULL);
 
     *it = ecs_query_iter(q->world, q);
@@ -35584,7 +35580,7 @@ bool ecs_query_has_table(
     ecs_table_t *table,
     ecs_iter_t *it)
 {
-    ecs_poly_assert(q, ecs_query_impl_t);
+    ecs_poly_assert(q, ecs_query_t);
     ecs_check(q->flags & EcsQueryMatchThis, ECS_INVALID_PARAMETER, NULL);
 
     *it = ecs_query_iter(q->world, q);
@@ -35599,7 +35595,7 @@ bool ecs_query_has_range(
     ecs_table_range_t *range,
     ecs_iter_t *it)
 {
-    ecs_poly_assert(q, ecs_query_impl_t);
+    ecs_poly_assert(q, ecs_query_t);
 
     if (q->flags & EcsQueryMatchThis) {
         if (range->table) {
@@ -35620,7 +35616,7 @@ bool ecs_query_has_range(
 ecs_query_count_t ecs_query_count(
     const ecs_query_t *q)
 {
-    ecs_poly_assert(q, ecs_query_impl_t);
+    ecs_poly_assert(q, ecs_query_t);
     ecs_query_count_t result = {0};
 
     if (!(q->flags & EcsQueryMatchThis)) {
@@ -35652,7 +35648,7 @@ ecs_query_count_t ecs_query_count(
 bool ecs_query_is_true(
     const ecs_query_t *q)
 {
-    ecs_poly_assert(q, ecs_query_impl_t);
+    ecs_poly_assert(q, ecs_query_t);
 
     ecs_run_aperiodic(q->world, EcsAperiodicEmptyTables);
 
@@ -35668,7 +35664,7 @@ bool ecs_query_is_true(
 int32_t ecs_query_match_count(
     const ecs_query_t *q)
 {
-    ecs_poly_assert(q, ecs_query_impl_t);
+    ecs_poly_assert(q, ecs_query_t);
 
     ecs_query_impl_t *impl = flecs_query_impl(q);
     if (!impl->cache) {
@@ -36652,7 +36648,7 @@ void flecs_query_cache_notify(
     ecs_query_t *q,
     ecs_query_cache_event_t *event)
 {
-    ecs_poly_assert(q, ecs_query_impl_t);
+    ecs_poly_assert(q, ecs_query_t);
     ecs_query_impl_t *impl = flecs_query_impl(q);
     ecs_query_cache_t *cache = impl->cache;
 
@@ -36767,7 +36763,7 @@ void flecs_query_cache_on_event(
     }
 
     ecs_query_impl_t *impl = o->ctx;
-    ecs_poly_assert(impl, ecs_query_impl_t);
+    ecs_poly_assert(impl, ecs_query_t);
     ecs_query_cache_t *cache = impl->cache;
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_table_t *table = it->table;
@@ -37063,7 +37059,7 @@ void ecs_iter_set_group(
     ecs_query_iter_t *qit = &it->priv.iter.rule;
     ecs_query_impl_t *q = flecs_query_impl(qit->rule);
     ecs_check(q != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_poly_assert(q, ecs_query_impl_t);
+    ecs_poly_assert(q, ecs_query_t);
     ecs_query_cache_t *cache = q->cache;
     ecs_check(cache != NULL, ECS_INVALID_PARAMETER, NULL);
 
@@ -37092,7 +37088,7 @@ const ecs_query_group_info_t* ecs_query_get_group_info(
     const ecs_query_t *query,
     uint64_t group_id)
 {
-    ecs_poly_assert(query, ecs_query_impl_t);
+    ecs_poly_assert(query, ecs_query_t);
     ecs_query_cache_table_list_t *node = flecs_query_cache_get_group(
         flecs_query_impl(query)->cache, group_id);
     if (!node) {
@@ -37106,7 +37102,7 @@ void* ecs_query_get_group_ctx(
     const ecs_query_t *query,
     uint64_t group_id)
 {
-    ecs_poly_assert(query, ecs_query_impl_t);
+    ecs_poly_assert(query, ecs_query_t);
     const ecs_query_group_info_t *info = ecs_query_get_group_info(
         query, group_id);
     if (!info) {
@@ -38358,7 +38354,7 @@ void flecs_query_sync_match_monitor(
 bool ecs_query_changed(
     ecs_query_t *q)
 {
-    ecs_poly_assert(q, ecs_query_impl_t);
+    ecs_poly_assert(q, ecs_query_t);
     ecs_query_impl_t *impl = flecs_query_impl(q);
 
     /* If query reads terms with fixed sources, check those first as that's 
@@ -44664,7 +44660,7 @@ void flecs_query_iter_fini(
 {
     ecs_query_iter_t *qit = &it->priv.iter.rule;
     ecs_assert(qit->rule != NULL, ECS_INVALID_OPERATION, NULL);
-    ecs_poly_assert(qit->rule, ecs_query_impl_t);
+    ecs_poly_assert(qit->rule, ecs_query_t);
     int32_t op_count = flecs_query_impl(qit->rule)->op_count;
     int32_t var_count = flecs_query_impl(qit->rule)->var_count;
 
@@ -44696,7 +44692,7 @@ ecs_iter_t flecs_query_iter(
     ecs_query_iter_t *qit = &it.priv.iter.rule;
     ecs_check(q != NULL, ECS_INVALID_PARAMETER, NULL);
     
-    ecs_poly_assert(q, ecs_query_impl_t);
+    ecs_poly_assert(q, ecs_query_t);
     ecs_query_impl_t *impl = flecs_query_impl(q);
 
     int32_t i, var_count = impl->var_count, op_count = impl->op_count;
@@ -45976,7 +45972,7 @@ char* ecs_query_str_w_profile(
     const ecs_query_t *q,
     const ecs_iter_t *it)
 {
-    ecs_poly_assert(q, ecs_query_impl_t);
+    ecs_poly_assert(q, ecs_query_t);
     ecs_query_impl_t *impl = flecs_query_impl(q);
 
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
@@ -46422,7 +46418,7 @@ const char* ecs_query_parse_vars(
     ecs_iter_t *it,
     const char *expr)
 {
-    ecs_poly_assert(q, ecs_query_impl_t);
+    ecs_poly_assert(q, ecs_query_t);
 
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(expr != NULL, ECS_INVALID_PARAMETER, NULL)
@@ -58930,7 +58926,7 @@ void flecs_json_serialize_query_plan(
     }
 
     const ecs_query_t *q = desc->query;
-    ecs_poly_assert(q, ecs_query_impl_t);
+    ecs_poly_assert(q, ecs_query_t);
 
     flecs_json_memberl(buf, "query_plan");
 

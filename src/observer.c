@@ -888,7 +888,7 @@ ecs_observer_t* flecs_observer_init(
         return 0;
     }
 
-    ecs_poly_assert(query, ecs_query_impl_t);
+    ecs_poly_assert(query, ecs_query_t);
 
     /* Observer must have at least one term */
     ecs_check(observer->query->term_count > 0, ECS_INVALID_PARAMETER, NULL);

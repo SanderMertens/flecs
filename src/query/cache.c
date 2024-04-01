@@ -973,7 +973,7 @@ void flecs_query_cache_notify(
     ecs_query_t *q,
     ecs_query_cache_event_t *event)
 {
-    ecs_poly_assert(q, ecs_query_impl_t);
+    ecs_poly_assert(q, ecs_query_t);
     ecs_query_impl_t *impl = flecs_query_impl(q);
     ecs_query_cache_t *cache = impl->cache;
 
@@ -1088,7 +1088,7 @@ void flecs_query_cache_on_event(
     }
 
     ecs_query_impl_t *impl = o->ctx;
-    ecs_poly_assert(impl, ecs_query_impl_t);
+    ecs_poly_assert(impl, ecs_query_t);
     ecs_query_cache_t *cache = impl->cache;
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_table_t *table = it->table;
@@ -1384,7 +1384,7 @@ void ecs_iter_set_group(
     ecs_query_iter_t *qit = &it->priv.iter.rule;
     ecs_query_impl_t *q = flecs_query_impl(qit->rule);
     ecs_check(q != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_poly_assert(q, ecs_query_impl_t);
+    ecs_poly_assert(q, ecs_query_t);
     ecs_query_cache_t *cache = q->cache;
     ecs_check(cache != NULL, ECS_INVALID_PARAMETER, NULL);
 
@@ -1413,7 +1413,7 @@ const ecs_query_group_info_t* ecs_query_get_group_info(
     const ecs_query_t *query,
     uint64_t group_id)
 {
-    ecs_poly_assert(query, ecs_query_impl_t);
+    ecs_poly_assert(query, ecs_query_t);
     ecs_query_cache_table_list_t *node = flecs_query_cache_get_group(
         flecs_query_impl(query)->cache, group_id);
     if (!node) {
@@ -1427,7 +1427,7 @@ void* ecs_query_get_group_ctx(
     const ecs_query_t *query,
     uint64_t group_id)
 {
-    ecs_poly_assert(query, ecs_query_impl_t);
+    ecs_poly_assert(query, ecs_query_t);
     const ecs_query_group_info_t *info = ecs_query_get_group_info(
         query, group_id);
     if (!info) {

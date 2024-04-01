@@ -6,8 +6,8 @@
 #include "../private_api.h"
 #include <ctype.h>
 
-static ecs_mixins_t ecs_query_impl_t_mixins = {
-    .type_name = "ecs_query_impl_t",
+ecs_mixins_t ecs_query_t_mixins = {
+    .type_name = "ecs_query_t",
     .elems = {
         [EcsMixinWorld] = offsetof(ecs_query_impl_t, pub.world),
         [EcsMixinEntity] = offsetof(ecs_query_impl_t, pub.entity),
@@ -18,7 +18,7 @@ static ecs_mixins_t ecs_query_impl_t_mixins = {
 int32_t ecs_query_var_count(
     const ecs_query_t *q)
 {
-    ecs_poly_assert(q, ecs_query_impl_t);
+    ecs_poly_assert(q, ecs_query_t);
     return flecs_query_impl(q)->var_pub_count;
 }
 
@@ -26,7 +26,7 @@ int32_t ecs_query_find_var(
     const ecs_query_t *q,
     const char *name)
 {
-    ecs_poly_assert(q, ecs_query_impl_t);
+    ecs_poly_assert(q, ecs_query_t);
 
     ecs_query_impl_t *impl = flecs_query_impl(q);
     ecs_var_id_t var_id = flecs_query_find_var_id(impl, name, EcsVarEntity);
@@ -50,7 +50,7 @@ const char* ecs_query_var_name(
     const ecs_query_t *q,
     int32_t var_id)
 {
-    ecs_poly_assert(q, ecs_query_impl_t);
+    ecs_poly_assert(q, ecs_query_t);
 
     if (var_id) {
         ecs_assert(var_id < flecs_query_impl(q)->var_count, 
@@ -65,7 +65,7 @@ bool ecs_query_var_is_entity(
     const ecs_query_t *q,
     int32_t var_id)
 {
-    ecs_poly_assert(q, ecs_query_impl_t);
+    ecs_poly_assert(q, ecs_query_t);
 
     return flecs_query_impl(q)->vars[var_id].kind == EcsVarEntity;
 }
@@ -77,7 +77,7 @@ void flecs_query_iter_mixin_init(
     const ecs_poly_t *poly,
     ecs_iter_t *iter)
 {
-    ecs_poly_assert(poly, ecs_query_impl_t);
+    ecs_poly_assert(poly, ecs_query_t);
     iter[0] = ecs_query_iter(world, ECS_CONST_CAST(ecs_query_t*, poly));
 }
 
@@ -256,7 +256,7 @@ void flecs_query_fini(
         flecs_query_cache_fini(impl);
     }
 
-    ecs_poly_free(impl, ecs_query_impl_t);
+    ecs_poly_free(impl, ecs_query_t);
 }
 
 static
@@ -339,7 +339,7 @@ void flecs_query_add_self_ref(
 void ecs_query_fini(
     ecs_query_t *q)
 {
-    ecs_poly_assert(q, ecs_query_impl_t);
+    ecs_poly_assert(q, ecs_query_t);
 
     if (q->entity) {
         /* If filter is associated with entity, use poly dtor path */
@@ -353,7 +353,8 @@ ecs_query_t* ecs_query_init(
     ecs_world_t *world, 
     const ecs_query_desc_t *const_desc)
 {
-    ecs_query_impl_t *result = ecs_poly_new(ecs_query_impl_t);
+    ecs_query_impl_t *result = ecs_os_calloc_t(ecs_query_impl_t);
+    ecs_poly_init(result, ecs_query_t);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
     ecs_query_desc_t desc = *const_desc;
@@ -400,9 +401,9 @@ ecs_query_t* ecs_query_init(
     /* Entity could've been set by finalize query if query is cached */
     entity = result->pub.entity;
     if (entity) {
-        EcsPoly *poly = ecs_poly_bind(world, entity, ecs_query_impl_t);
+        EcsPoly *poly = ecs_poly_bind(world, entity, ecs_query_t);
         poly->poly = result;
-        ecs_poly_modified(world, entity, ecs_query_impl_t);
+        ecs_poly_modified(world, entity, ecs_query_t);
     }
 
     return &result->pub;
@@ -416,7 +417,7 @@ bool ecs_query_has(
     ecs_entity_t entity,
     ecs_iter_t *it)
 {
-    ecs_poly_assert(q, ecs_query_impl_t);
+    ecs_poly_assert(q, ecs_query_t);
     ecs_check(q->flags & EcsQueryMatchThis, ECS_INVALID_PARAMETER, NULL);
 
     *it = ecs_query_iter(q->world, q);
@@ -431,7 +432,7 @@ bool ecs_query_has_table(
     ecs_table_t *table,
     ecs_iter_t *it)
 {
-    ecs_poly_assert(q, ecs_query_impl_t);
+    ecs_poly_assert(q, ecs_query_t);
     ecs_check(q->flags & EcsQueryMatchThis, ECS_INVALID_PARAMETER, NULL);
 
     *it = ecs_query_iter(q->world, q);
@@ -446,7 +447,7 @@ bool ecs_query_has_range(
     ecs_table_range_t *range,
     ecs_iter_t *it)
 {
-    ecs_poly_assert(q, ecs_query_impl_t);
+    ecs_poly_assert(q, ecs_query_t);
 
     if (q->flags & EcsQueryMatchThis) {
         if (range->table) {
@@ -467,7 +468,7 @@ bool ecs_query_has_range(
 ecs_query_count_t ecs_query_count(
     const ecs_query_t *q)
 {
-    ecs_poly_assert(q, ecs_query_impl_t);
+    ecs_poly_assert(q, ecs_query_t);
     ecs_query_count_t result = {0};
 
     if (!(q->flags & EcsQueryMatchThis)) {
@@ -499,7 +500,7 @@ ecs_query_count_t ecs_query_count(
 bool ecs_query_is_true(
     const ecs_query_t *q)
 {
-    ecs_poly_assert(q, ecs_query_impl_t);
+    ecs_poly_assert(q, ecs_query_t);
 
     ecs_run_aperiodic(q->world, EcsAperiodicEmptyTables);
 
@@ -515,7 +516,7 @@ bool ecs_query_is_true(
 int32_t ecs_query_match_count(
     const ecs_query_t *q)
 {
-    ecs_poly_assert(q, ecs_query_impl_t);
+    ecs_poly_assert(q, ecs_query_t);
 
     ecs_query_impl_t *impl = flecs_query_impl(q);
     if (!impl->cache) {

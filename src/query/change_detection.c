@@ -545,7 +545,7 @@ void flecs_query_sync_match_monitor(
 bool ecs_query_changed(
     ecs_query_t *q)
 {
-    ecs_poly_assert(q, ecs_query_impl_t);
+    ecs_poly_assert(q, ecs_query_t);
     ecs_query_impl_t *impl = flecs_query_impl(q);
 
     /* If query reads terms with fixed sources, check those first as that's 

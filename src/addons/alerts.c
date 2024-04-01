@@ -252,7 +252,7 @@ void MonitorAlerts(ecs_iter_t *it) {
             continue;
         }
 
-        ecs_poly_assert(q, ecs_query_impl_t);
+        ecs_poly_assert(q, ecs_query_t);
 
         ecs_id_t member_id = alert[i].id;
         const EcsMemberRanges *ranges = NULL;
@@ -372,12 +372,12 @@ void MonitorAlertInstances(ecs_iter_t *it) {
     ecs_assert(poly != NULL, ECS_INVALID_OPERATION, 
         "alert entity does not have (Poly, Query) component");
 
-    ecs_query_t *rule = poly->poly;
-    if (!rule) {
+    ecs_query_t *query = poly->poly;
+    if (!query) {
         return;
     }
 
-    ecs_poly_assert(rule, ecs_query_impl_t);
+    ecs_poly_assert(query, ecs_query_t);
 
     ecs_id_t member_id = alert->id;
     const EcsMemberRanges *ranges = NULL;
@@ -400,8 +400,8 @@ void MonitorAlertInstances(ecs_iter_t *it) {
             continue;
         }
 
-        /* Check if alert instance still matches rule */
-        ecs_iter_t rit = ecs_query_iter(world, rule);
+        /* Check if alert instance still matches query */
+        ecs_iter_t rit = ecs_query_iter(world, query);
         rit.flags |= EcsIterNoData;
         rit.flags |= EcsIterIsInstanced;
         ecs_iter_set_var(&rit, 0, e);
@@ -438,7 +438,7 @@ void MonitorAlertInstances(ecs_iter_t *it) {
                 if (generate_message) {
                     if (alert_instance[i].message) {
                         /* If a message was already generated, only regenerate if
-                        * rule has multiple variables. Variable values could have 
+                        * query has multiple variables. Variable values could have 
                         * changed, this ensures the message remains up to date. */
                         generate_message = rit.variable_count > 1;
                     }
@@ -463,7 +463,7 @@ void MonitorAlertInstances(ecs_iter_t *it) {
                     timeout[i].inactive_time = 0;
                 }
 
-                /* Alert instance still matches rule, keep it alive */
+                /* Alert instance still matches query, keep it alive */
                 ecs_iter_fini(&rit);
                 continue;
             }
@@ -482,13 +482,13 @@ void MonitorAlertInstances(ecs_iter_t *it) {
             ecs_ftime_t t = timeout[i].inactive_time;
             timeout[i].inactive_time += it->delta_system_time;
             if (t < timeout[i].expire_time) {
-                /* Alert instance no longer matches rule, but is still
+                /* Alert instance no longer matches query, but is still
                     * within the timeout period. Keep it alive. */
                 continue;
             }
         }
 
-        /* Alert instance no longer matches rule, remove it */ 
+        /* Alert instance no longer matches query, remove it */ 
         flecs_alerts_remove_alert_from_src(world, e, parent);
         ecs_map_remove(&alert->instances, e);
         ecs_delete(world, ai);

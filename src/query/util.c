@@ -297,7 +297,7 @@ char* ecs_query_str_w_profile(
     const ecs_query_t *q,
     const ecs_iter_t *it)
 {
-    ecs_poly_assert(q, ecs_query_impl_t);
+    ecs_poly_assert(q, ecs_query_t);
     ecs_query_impl_t *impl = flecs_query_impl(q);
 
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
@@ -743,7 +743,7 @@ const char* ecs_query_parse_vars(
     ecs_iter_t *it,
     const char *expr)
 {
-    ecs_poly_assert(q, ecs_query_impl_t);
+    ecs_poly_assert(q, ecs_query_t);
 
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(expr != NULL, ECS_INVALID_PARAMETER, NULL)
