@@ -609,6 +609,7 @@ void Query_find_w_entity(void);
 void Query_optional_pair_term(void);
 
 // Testsuite 'QueryBuilder'
+void QueryBuilder_setup(void);
 void QueryBuilder_builder_assign_same_type(void);
 void QueryBuilder_builder_assign_from_empty(void);
 void QueryBuilder_builder_assign_to_empty(void);
@@ -670,7 +671,6 @@ void QueryBuilder_explicit_term_w_id(void);
 void QueryBuilder_explicit_term_w_pair_id(void);
 void QueryBuilder_1_term_to_empty(void);
 void QueryBuilder_2_subsequent_args(void);
-void QueryBuilder_filter_as_arg(void);
 void QueryBuilder_filter_as_move_arg(void);
 void QueryBuilder_filter_as_return(void);
 void QueryBuilder_filter_copy(void);
@@ -3864,10 +3864,6 @@ bake_test_case QueryBuilder_testcases[] = {
         QueryBuilder_2_subsequent_args
     },
     {
-        "filter_as_arg",
-        QueryBuilder_filter_as_arg
-    },
-    {
         "filter_as_move_arg",
         QueryBuilder_filter_as_move_arg
     },
@@ -6164,6 +6160,9 @@ bake_test_case Doc_testcases[] = {
     }
 };
 
+bake_test_param QueryBuilder_params[] = {
+    {"cache_kind", (char*[]){"default", "auto"}, 2}
+};
 
 static bake_test_suite suites[] = {
     {
@@ -6231,10 +6230,12 @@ static bake_test_suite suites[] = {
     },
     {
         "QueryBuilder",
+        QueryBuilder_setup,
         NULL,
-        NULL,
-        155,
-        QueryBuilder_testcases
+        154,
+        QueryBuilder_testcases,
+        1,
+        QueryBuilder_params
     },
     {
         "SystemBuilder",

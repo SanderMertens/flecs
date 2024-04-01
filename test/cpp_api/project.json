@@ -632,6 +632,10 @@
             ]
         }, {
             "id": "QueryBuilder",
+            "params": {
+                "cache_kind": ["default", "auto"]
+            },
+            "setup": true,
             "testcases": [
                 "builder_assign_same_type",
                 "builder_assign_from_empty",
@@ -694,7 +698,6 @@
                 "explicit_term_w_pair_id",
                 "1_term_to_empty",
                 "2_subsequent_args",
-                "filter_as_arg",
                 "filter_as_move_arg",
                 "filter_as_return",
                 "filter_copy",

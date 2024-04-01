@@ -548,6 +548,9 @@ bool ecs_query_changed(
     ecs_poly_assert(q, ecs_query_t);
     ecs_query_impl_t *impl = flecs_query_impl(q);
 
+    ecs_assert(q->cache_kind != EcsQueryCacheNone, ECS_INVALID_OPERATION, 
+        "change detection is only supported on cached queries");
+
     /* If query reads terms with fixed sources, check those first as that's 
      * cheaper than checking entries in the cache. */
     if (impl->monitor) {

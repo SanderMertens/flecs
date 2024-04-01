@@ -1094,7 +1094,10 @@ void Query_changed(void) {
 
     auto e = world.entity().set<Position>({1, 0});
 
-    auto q = world.query<const Position>();
+    auto q = world.query_builder<const Position>()
+        .cached()
+        .build();
+
     auto q_w = world.query<Position>();
 
     test_bool(q.changed(), true);
@@ -2504,7 +2507,9 @@ void Query_change_tracking(void) {
     flecs::world w;
 
     auto qw = w.query<Position>();
-    auto qr = w.query<const Position>();
+    auto qr = w.query_builder<const Position>()
+        .cached()
+        .build();
 
     auto e1 = w.entity().add<Tag>().set<Position>({10, 20});
     w.entity().set<Position>({20, 30});
