@@ -103,7 +103,7 @@ ecs_flags16_t flecs_query_ref_flags(
     ecs_flags16_t flags,
     ecs_flags16_t kind)
 {
-    return (flags >> kind) & (EcsRuleIsVar | EcsRuleIsEntity);
+    return (flags >> kind) & (EcsQueryIsVar | EcsQueryIsEntity);
 }
 
 bool flecs_query_is_written(
@@ -114,7 +114,7 @@ bool flecs_query_is_written(
         return true;
     }
 
-    ecs_assert(var_id < EcsRuleMaxVarCount, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(var_id < EcsQueryMaxVarCount, ECS_INTERNAL_ERROR, NULL);
     return (written & (1ull << var_id)) != 0;
 }
 
@@ -122,7 +122,7 @@ void flecs_query_write(
     ecs_var_id_t var_id,
     uint64_t *written)
 {
-    ecs_assert(var_id < EcsRuleMaxVarCount, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(var_id < EcsQueryMaxVarCount, ECS_INTERNAL_ERROR, NULL);
     *written |= (1ull << var_id);
 }
 
@@ -147,12 +147,12 @@ bool flecs_ref_is_written(
     uint64_t written)
 {
     ecs_flags16_t flags = flecs_query_ref_flags(op->flags, kind);
-    if (flags & EcsRuleIsEntity) {
-        ecs_assert(!(flags & EcsRuleIsVar), ECS_INTERNAL_ERROR, NULL);
+    if (flags & EcsQueryIsEntity) {
+        ecs_assert(!(flags & EcsQueryIsVar), ECS_INTERNAL_ERROR, NULL);
         if (ref->entity) {
             return true;
         }
-    } else if (flags & EcsRuleIsVar) {
+    } else if (flags & EcsQueryIsVar) {
         return flecs_query_is_written(ref->var, written);
     }
     return false;
@@ -174,60 +174,60 @@ const char* flecs_query_op_str(
     uint16_t kind)
 {
     switch(kind) {
-    case EcsRuleAnd:           return "and       ";
-    case EcsRuleAndId:         return "andid     ";
-    case EcsRuleAndAny:        return "andany    ";
-    case EcsRuleTriv:          return "triv      ";
-    case EcsRuleTrivData:      return "trivpop   ";
-    case EcsRuleTrivWildcard:  return "trivwc    ";
-    case EcsRuleCache:         return "cache     ";
-    case EcsRuleCacheData:     return "cachepop  ";
-    case EcsRuleIsCache:       return "xcache    ";
-    case EcsRuleIsCacheData:   return "xcachepop ";
-    case EcsRuleSelectAny:     return "any       ";
-    case EcsRuleUp:            return "up        ";
-    case EcsRuleUpId:          return "upid      ";
-    case EcsRuleSelfUp:        return "selfup    ";
-    case EcsRuleSelfUpId:      return "selfupid  ";
-    case EcsRuleWith:          return "with      ";
-    case EcsRuleTrav:          return "trav      ";
-    case EcsRuleAndFrom:       return "andfrom   ";
-    case EcsRuleOrFrom:        return "orfrom    ";
-    case EcsRuleNotFrom:       return "notfrom   ";
-    case EcsRuleIds:           return "ids       ";
-    case EcsRuleIdsRight:      return "idsr      ";
-    case EcsRuleIdsLeft:       return "idsl      ";
-    case EcsRuleEach:          return "each      ";
-    case EcsRuleStore:         return "store     ";
-    case EcsRuleReset:         return "reset     ";
-    case EcsRuleOr:            return "or        ";
-    case EcsRuleOptional:      return "option    ";
-    case EcsRuleIfVar:         return "ifvar     ";
-    case EcsRuleIfSet:         return "ifset     ";
-    case EcsRuleEnd:           return "end       ";
-    case EcsRuleNot:           return "not       ";
-    case EcsRulePredEq:        return "eq        ";
-    case EcsRulePredNeq:       return "neq       ";
-    case EcsRulePredEqName:    return "eq_nm     ";
-    case EcsRulePredNeqName:   return "neq_nm    ";
-    case EcsRulePredEqMatch:   return "eq_m      ";
-    case EcsRulePredNeqMatch:  return "neq_m     ";
-    case EcsRuleMemberEq:      return "membereq  ";
-    case EcsRuleMemberNeq:     return "memberneq ";
-    case EcsRuleToggle:        return "toggle    ";
-    case EcsRuleToggleOption:  return "togglopt  ";
-    case EcsRuleLookup:        return "lookup    ";
-    case EcsRuleSetVars:       return "setvars   ";
-    case EcsRuleSetThis:       return "setthis   ";
-    case EcsRuleSetFixed:      return "setfix    ";
-    case EcsRuleSetIds:        return "setids    ";
-    case EcsRuleSetId:         return "setid     ";
-    case EcsRuleContain:       return "contain   ";
-    case EcsRulePairEq:        return "pair_eq   ";
-    case EcsRulePopulate:      return "pop       ";
-    case EcsRulePopulateSelf:  return "popself   ";
-    case EcsRuleYield:         return "yield     ";
-    case EcsRuleNothing:       return "nothing   ";
+    case EcsQueryAnd:           return "and       ";
+    case EcsQueryAndId:         return "andid     ";
+    case EcsQueryAndAny:        return "andany    ";
+    case EcsQueryTriv:          return "triv      ";
+    case EcsQueryTrivData:      return "trivpop   ";
+    case EcsQueryTrivWildcard:  return "trivwc    ";
+    case EcsQueryCache:         return "cache     ";
+    case EcsQueryCacheData:     return "cachepop  ";
+    case EcsQueryIsCache:       return "xcache    ";
+    case EcsQueryIsCacheData:   return "xcachepop ";
+    case EcsQuerySelectAny:     return "any       ";
+    case EcsQueryUp:            return "up        ";
+    case EcsQueryUpId:          return "upid      ";
+    case EcsQuerySelfUp:        return "selfup    ";
+    case EcsQuerySelfUpId:      return "selfupid  ";
+    case EcsQueryWith:          return "with      ";
+    case EcsQueryTrav:          return "trav      ";
+    case EcsQueryAndFrom:       return "andfrom   ";
+    case EcsQueryOrFrom:        return "orfrom    ";
+    case EcsQueryNotFrom:       return "notfrom   ";
+    case EcsQueryIds:           return "ids       ";
+    case EcsQueryIdsRight:      return "idsr      ";
+    case EcsQueryIdsLeft:       return "idsl      ";
+    case EcsQueryEach:          return "each      ";
+    case EcsQueryStore:         return "store     ";
+    case EcsQueryReset:         return "reset     ";
+    case EcsQueryOr:            return "or        ";
+    case EcsQueryOptional:      return "option    ";
+    case EcsQueryIfVar:         return "ifvar     ";
+    case EcsQueryIfSet:         return "ifset     ";
+    case EcsQueryEnd:           return "end       ";
+    case EcsQueryNot:           return "not       ";
+    case EcsQueryPredEq:        return "eq        ";
+    case EcsQueryPredNeq:       return "neq       ";
+    case EcsQueryPredEqName:    return "eq_nm     ";
+    case EcsQueryPredNeqName:   return "neq_nm    ";
+    case EcsQueryPredEqMatch:   return "eq_m      ";
+    case EcsQueryPredNeqMatch:  return "neq_m     ";
+    case EcsQueryMemberEq:      return "membereq  ";
+    case EcsQueryMemberNeq:     return "memberneq ";
+    case EcsQueryToggle:        return "toggle    ";
+    case EcsQueryToggleOption:  return "togglopt  ";
+    case EcsQueryLookup:        return "lookup    ";
+    case EcsQuerySetVars:       return "setvars   ";
+    case EcsQuerySetThis:       return "setthis   ";
+    case EcsQuerySetFixed:      return "setfix    ";
+    case EcsQuerySetIds:        return "setids    ";
+    case EcsQuerySetId:         return "setid     ";
+    case EcsQueryContain:       return "contain   ";
+    case EcsQueryPairEq:        return "pair_eq   ";
+    case EcsQueryPopulate:      return "pop       ";
+    case EcsQueryPopulateSelf:  return "popself   ";
+    case EcsQueryYield:         return "yield     ";
+    case EcsQueryNothing:       return "nothing   ";
     default:                   return "!invalid  ";
     }
 }
@@ -240,7 +240,7 @@ int32_t flecs_query_op_ref_str(
     ecs_strbuf_t *buf)
 {
     int32_t color_chars = 0;
-    if (flags & EcsRuleIsVar) {
+    if (flags & EcsQueryIsVar) {
         ecs_assert(ref->var < rule->var_count, ECS_INTERNAL_ERROR, NULL);
         ecs_query_var_t *var = &rule->vars[ref->var];
         ecs_strbuf_appendlit(buf, "#[green]$#[reset]");
@@ -268,7 +268,7 @@ int32_t flecs_query_op_ref_str(
             ecs_strbuf_appendch(buf, ']');
         }
         color_chars = ecs_os_strlen("#[green]#[reset]#[green]#[reset]");
-    } else if (flags & EcsRuleIsEntity) {
+    } else if (flags & EcsQueryIsEntity) {
         char *path = ecs_get_fullpath(rule->pub.world, ref->entity);
         ecs_strbuf_appendlit(buf, "#[blue]");
         ecs_strbuf_appendstr(buf, path);
@@ -306,9 +306,9 @@ char* ecs_query_str_w_profile(
     for (i = 0; i < count; i ++) {
         ecs_query_op_t *op = &ops[i];
         ecs_flags16_t flags = op->flags;
-        ecs_flags16_t src_flags = flecs_query_ref_flags(flags, EcsRuleSrc);
-        ecs_flags16_t first_flags = flecs_query_ref_flags(flags, EcsRuleFirst);
-        ecs_flags16_t second_flags = flecs_query_ref_flags(flags, EcsRuleSecond);
+        ecs_flags16_t src_flags = flecs_query_ref_flags(flags, EcsQuerySrc);
+        ecs_flags16_t first_flags = flecs_query_ref_flags(flags, EcsQueryFirst);
+        ecs_flags16_t second_flags = flecs_query_ref_flags(flags, EcsQuerySecond);
 
         if (it) {
 #ifdef FLECS_DEBUG
@@ -324,7 +324,7 @@ char* ecs_query_str_w_profile(
             "#[normal]%2d. [#[grey]%2d#[reset], #[green]%2d#[reset]]  ", 
                 i, op->prev, op->next);
         int32_t hidden_chars, start = ecs_strbuf_written(&buf);
-        if (op->kind == EcsRuleEnd) {
+        if (op->kind == EcsQueryEnd) {
             indent --;
         }
 
@@ -339,31 +339,31 @@ char* ecs_query_str_w_profile(
     
         hidden_chars = flecs_query_op_ref_str(impl, &op->src, src_flags, &buf);
 
-        if (op->kind == EcsRuleNot || 
-            op->kind == EcsRuleOr || 
-            op->kind == EcsRuleOptional || 
-            op->kind == EcsRuleIfVar ||
-            op->kind == EcsRuleIfSet) 
+        if (op->kind == EcsQueryNot || 
+            op->kind == EcsQueryOr || 
+            op->kind == EcsQueryOptional || 
+            op->kind == EcsQueryIfVar ||
+            op->kind == EcsQueryIfSet) 
         {
             indent ++;
         }
 
-        if (op->kind == EcsRulePopulate || 
-            op->kind == EcsRulePopulateSelf ||
-            op->kind == EcsRuleTriv ||
-            op->kind == EcsRuleTrivData ||
-            op->kind == EcsRuleTrivWildcard)
+        if (op->kind == EcsQueryPopulate || 
+            op->kind == EcsQueryPopulateSelf ||
+            op->kind == EcsQueryTriv ||
+            op->kind == EcsQueryTrivData ||
+            op->kind == EcsQueryTrivWildcard)
         {
             flecs_query_str_append_bitset(&buf, op->src.entity);
         }
 
-        if (op->kind == EcsRuleIfSet) {
+        if (op->kind == EcsQueryIfSet) {
             ecs_strbuf_append(&buf, "[%d]\n", op->other);
             continue;
         }
 
-        bool is_toggle = op->kind == EcsRuleToggle || 
-            op->kind == EcsRuleToggleOption;
+        bool is_toggle = op->kind == EcsQueryToggle || 
+            op->kind == EcsQueryToggleOption;
 
         if (!first_flags && !second_flags && !is_toggle) {
             ecs_strbuf_appendstr(&buf, "\n");
@@ -390,7 +390,7 @@ char* ecs_query_str_w_profile(
         }
 
         ecs_strbuf_appendstr(&buf, "(");
-        if (op->kind == EcsRuleMemberEq || op->kind == EcsRuleMemberNeq) {
+        if (op->kind == EcsQueryMemberEq || op->kind == EcsQueryMemberNeq) {
             uint32_t offset = (uint32_t)op->first.entity;
             uint32_t size = (uint32_t)(op->first.entity >> 32);
             ecs_strbuf_append(&buf, "#[yellow]elem#[reset]([%d], 0x%x, 0x%x)", 
@@ -404,17 +404,17 @@ char* ecs_query_str_w_profile(
             flecs_query_op_ref_str(impl, &op->second, second_flags, &buf);
         } else {
             switch (op->kind) {
-            case EcsRulePredEqName:
-            case EcsRulePredNeqName:
-            case EcsRulePredEqMatch:
-            case EcsRulePredNeqMatch: {
+            case EcsQueryPredEqName:
+            case EcsQueryPredNeqName:
+            case EcsQueryPredEqMatch:
+            case EcsQueryPredNeqMatch: {
                 int8_t term_index = op->term_index;
                 ecs_strbuf_appendstr(&buf, ", #[yellow]\"");
                 ecs_strbuf_appendstr(&buf, q->terms[term_index].second.name);
                 ecs_strbuf_appendstr(&buf, "\"#[reset]");
                 break;
             }
-            case EcsRuleLookup: {
+            case EcsQueryLookup: {
                 ecs_var_id_t src_id = op->src.var;
                 ecs_strbuf_appendstr(&buf, ", #[yellow]\"");
                 ecs_strbuf_appendstr(&buf, impl->vars[src_id].lookup);

@@ -13,7 +13,7 @@ typedef ecs_flags64_t ecs_write_flags_t;
 
 #define flecs_query_impl(query) (ECS_CONST_CAST(ecs_query_impl_t*, query))
 
-#define EcsRuleMaxVarCount      (64)
+#define EcsQueryMaxVarCount     (64)
 #define EcsVarNone              ((ecs_var_id_t)-1)
 #define EcsThisName             "this"
 
@@ -39,71 +39,71 @@ typedef struct ecs_query_var_t {
 
 /* -- Instruction kinds -- */
 typedef enum {
-    EcsRuleAnd,            /* And operator: find or match id against variable source */
-    EcsRuleAndId,          /* And operator for fixed id (no wildcards/variables) */
-    EcsRuleAndAny,         /* And operator with support for matching Any src/id */
-    EcsRuleSelectAny,      /* Dedicated instruction for _ queries where the src is unknown */
-    EcsRuleTriv,           /* Trivial search (batches multiple terms) */
-    EcsRuleTrivData,       /* Trivial search with setting data fields */
-    EcsRuleTrivWildcard,   /* Trivial search with (exclusive) wildcard ids */
-    EcsRuleCache,          /* Cached search */
-    EcsRuleCacheData,      /* Cached search with setting data fields */
-    EcsRuleIsCache,        /* Cached search for queries that are entirely cached */
-    EcsRuleIsCacheData,    /* Same as EcsRuleIsCache with data fields */
-    EcsRuleUp,             /* Up traversal */
-    EcsRuleUpId,           /* Up traversal for fixed id (like AndId) */
-    EcsRuleSelfUp,         /* Self|up traversal */
-    EcsRuleSelfUpId,       /* Self|up traversal for fixed id (like AndId) */
-    EcsRuleWith,           /* Match id against fixed or variable source */
-    EcsRuleTrav,           /* Support for transitive/reflexive queries */
-    EcsRuleAndFrom,        /* AndFrom operator */
-    EcsRuleOrFrom,         /* OrFrom operator */
-    EcsRuleNotFrom,        /* NotFrom operator */
-    EcsRuleIds,            /* Test for existence of ids matching wildcard */
-    EcsRuleIdsRight,       /* Find ids in use that match (R, *) wildcard */
-    EcsRuleIdsLeft,        /* Find ids in use that match (*, T) wildcard */
-    EcsRuleEach,           /* Iterate entities in table, populate entity variable */
-    EcsRuleStore,          /* Store table or entity in variable */
-    EcsRuleReset,          /* Reset value of variable to wildcard (*) */
-    EcsRuleOr,             /* Or operator */
-    EcsRuleOptional,       /* Optional operator */
-    EcsRuleIfVar,          /* Conditional execution on whether variable is set */
-    EcsRuleIfSet,          /* Conditional execution on whether term is set */
-    EcsRuleNot,            /* Sets iterator state after term was not matched */
-    EcsRuleEnd,            /* End of control flow block */
-    EcsRulePredEq,         /* Test if variable is equal to, or assign to if not set */
-    EcsRulePredNeq,        /* Test if variable is not equal to */
-    EcsRulePredEqName,     /* Same as EcsRulePredEq but with matching by name */
-    EcsRulePredNeqName,    /* Same as EcsRulePredNeq but with matching by name */
-    EcsRulePredEqMatch,    /* Same as EcsRulePredEq but with fuzzy matching by name */
-    EcsRulePredNeqMatch,   /* Same as EcsRulePredNeq but with fuzzy matching by name */
-    EcsRuleMemberEq,       /* Compare member value */
-    EcsRuleMemberNeq,      /* Compare member value */
-    EcsRuleToggle,         /* Evaluate toggle bitset, if present */
-    EcsRuleToggleOption,   /* Toggle for optional terms */
-    EcsRuleLookup,         /* Lookup relative to variable */
-    EcsRuleSetVars,        /* Populate it.sources from variables */
-    EcsRuleSetThis,        /* Populate This entity variable */
-    EcsRuleSetFixed,       /* Set fixed source entity ids */
-    EcsRuleSetIds,         /* Set fixed (component) ids */
-    EcsRuleSetId,          /* Set id if not set */
-    EcsRuleContain,        /* Test if table contains entity */
-    EcsRulePairEq,         /* Test if both elements of pair are the same */
-    EcsRulePopulate,       /* Populate any data fields */
-    EcsRulePopulateSelf,   /* Populate only self (owned) data fields */
-    EcsRuleYield,          /* Yield result back to application */
-    EcsRuleNothing         /* Must be last */
+    EcsQueryAnd,            /* And operator: find or match id against variable source */
+    EcsQueryAndId,          /* And operator for fixed id (no wildcards/variables) */
+    EcsQueryAndAny,         /* And operator with support for matching Any src/id */
+    EcsQuerySelectAny,      /* Dedicated instruction for _ queries where the src is unknown */
+    EcsQueryTriv,           /* Trivial search (batches multiple terms) */
+    EcsQueryTrivData,       /* Trivial search with setting data fields */
+    EcsQueryTrivWildcard,   /* Trivial search with (exclusive) wildcard ids */
+    EcsQueryCache,          /* Cached search */
+    EcsQueryCacheData,      /* Cached search with setting data fields */
+    EcsQueryIsCache,        /* Cached search for queries that are entirely cached */
+    EcsQueryIsCacheData,    /* Same as EcsQueryIsCache with data fields */
+    EcsQueryUp,             /* Up traversal */
+    EcsQueryUpId,           /* Up traversal for fixed id (like AndId) */
+    EcsQuerySelfUp,         /* Self|up traversal */
+    EcsQuerySelfUpId,       /* Self|up traversal for fixed id (like AndId) */
+    EcsQueryWith,           /* Match id against fixed or variable source */
+    EcsQueryTrav,           /* Support for transitive/reflexive queries */
+    EcsQueryAndFrom,        /* AndFrom operator */
+    EcsQueryOrFrom,         /* OrFrom operator */
+    EcsQueryNotFrom,        /* NotFrom operator */
+    EcsQueryIds,            /* Test for existence of ids matching wildcard */
+    EcsQueryIdsRight,       /* Find ids in use that match (R, *) wildcard */
+    EcsQueryIdsLeft,        /* Find ids in use that match (*, T) wildcard */
+    EcsQueryEach,           /* Iterate entities in table, populate entity variable */
+    EcsQueryStore,          /* Store table or entity in variable */
+    EcsQueryReset,          /* Reset value of variable to wildcard (*) */
+    EcsQueryOr,             /* Or operator */
+    EcsQueryOptional,       /* Optional operator */
+    EcsQueryIfVar,          /* Conditional execution on whether variable is set */
+    EcsQueryIfSet,          /* Conditional execution on whether term is set */
+    EcsQueryNot,            /* Sets iterator state after term was not matched */
+    EcsQueryEnd,            /* End of control flow block */
+    EcsQueryPredEq,         /* Test if variable is equal to, or assign to if not set */
+    EcsQueryPredNeq,        /* Test if variable is not equal to */
+    EcsQueryPredEqName,     /* Same as EcsQueryPredEq but with matching by name */
+    EcsQueryPredNeqName,    /* Same as EcsQueryPredNeq but with matching by name */
+    EcsQueryPredEqMatch,    /* Same as EcsQueryPredEq but with fuzzy matching by name */
+    EcsQueryPredNeqMatch,   /* Same as EcsQueryPredNeq but with fuzzy matching by name */
+    EcsQueryMemberEq,       /* Compare member value */
+    EcsQueryMemberNeq,      /* Compare member value */
+    EcsQueryToggle,         /* Evaluate toggle bitset, if present */
+    EcsQueryToggleOption,   /* Toggle for optional terms */
+    EcsQueryLookup,         /* Lookup relative to variable */
+    EcsQuerySetVars,        /* Populate it.sources from variables */
+    EcsQuerySetThis,        /* Populate This entity variable */
+    EcsQuerySetFixed,       /* Set fixed source entity ids */
+    EcsQuerySetIds,         /* Set fixed (component) ids */
+    EcsQuerySetId,          /* Set id if not set */
+    EcsQueryContain,        /* Test if table contains entity */
+    EcsQueryPairEq,         /* Test if both elements of pair are the same */
+    EcsQueryPopulate,       /* Populate any data fields */
+    EcsQueryPopulateSelf,   /* Populate only self (owned) data fields */
+    EcsQueryYield,          /* Yield result back to application */
+    EcsQueryNothing         /* Must be last */
 } ecs_query_op_kind_t;
 
 /* Op flags to indicate if ecs_query_ref_t is entity or variable */
-#define EcsRuleIsEntity  (1 << 0)
-#define EcsRuleIsVar     (1 << 1)
-#define EcsRuleIsSelf    (1 << 6)
+#define EcsQueryIsEntity  (1 << 0)
+#define EcsQueryIsVar     (1 << 1)
+#define EcsQueryIsSelf    (1 << 6)
 
-/* Op flags used to shift EcsRuleIsEntity and EcsRuleIsVar */
-#define EcsRuleSrc     0
-#define EcsRuleFirst   2
-#define EcsRuleSecond  4
+/* Op flags used to shift EcsQueryIsEntity and EcsQueryIsVar */
+#define EcsQuerySrc     0
+#define EcsQueryFirst   2
+#define EcsQuerySecond  4
 
 /* References to variable or entity */
 typedef union {
