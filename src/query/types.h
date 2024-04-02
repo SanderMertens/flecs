@@ -314,14 +314,14 @@ typedef struct {
 
 /* Rule run state */
 typedef struct {
-    uint64_t *written;                /* Bitset to check which variables have been written */
-    ecs_query_lbl_t op_index;         /* Currently evaluated operation */
-    ecs_var_t *vars;                  /* Variable storage */
-    ecs_iter_t *it;                   /* Iterator */
-    ecs_query_op_ctx_t *op_ctx;       /* Operation context (stack) */
-    ecs_world_t *world;               /* Reference to world */
-    const ecs_query_impl_t *rule;     /* Reference to rule */
-    const ecs_query_var_t *rule_vars; /* Reference to rule variable array */
+    uint64_t *written;                 /* Bitset to check which variables have been written */
+    ecs_query_lbl_t op_index;          /* Currently evaluated operation */
+    ecs_var_t *vars;                   /* Variable storage */
+    ecs_iter_t *it;                    /* Iterator */
+    ecs_query_op_ctx_t *op_ctx;        /* Operation context (stack) */
+    ecs_world_t *world;                /* Reference to world */
+    const ecs_query_impl_t *query;     /* Reference to query */
+    const ecs_query_var_t *query_vars; /* Reference to query variable array */
     ecs_query_iter_t *qit;
 } ecs_query_run_ctx_t;
 
@@ -337,10 +337,10 @@ struct ecs_query_impl_t {
     ecs_query_var_t *vars;        /* Variables */
     int32_t var_count;            /* Number of variables */
     int32_t var_pub_count;        /* Number of public variables */
-    bool has_table_this;          /* Does rule have [$this] */
+    bool has_table_this;          /* Does query have [$this] */
     ecs_hashmap_t tvar_index;     /* Name index for table variables */
     ecs_hashmap_t evar_index;     /* Name index for entity variables */
-    ecs_query_var_cache_t vars_cache; /* For trivial rules with only This variables */
+    ecs_query_var_cache_t vars_cache; /* For trivial queries with only This variables */
     char **var_names;             /* Array with variable names for iterator */
     ecs_var_id_t *src_vars;       /* Array with ids to source variables for fields */
 

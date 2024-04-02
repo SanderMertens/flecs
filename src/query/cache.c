@@ -1381,8 +1381,8 @@ void ecs_iter_set_group(
     ecs_check(it->next == ecs_query_next, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!(it->flags & EcsIterIsValid), ECS_INVALID_PARAMETER, NULL);
 
-    ecs_query_iter_t *qit = &it->priv.iter.rule;
-    ecs_query_impl_t *q = flecs_query_impl(qit->rule);
+    ecs_query_iter_t *qit = &it->priv.iter.query;
+    ecs_query_impl_t *q = flecs_query_impl(qit->query);
     ecs_check(q != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_poly_assert(q, ecs_query_t);
     ecs_query_cache_t *cache = q->cache;

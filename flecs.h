@@ -3104,9 +3104,6 @@ extern "C" {
 /** Table data */
 typedef struct ecs_data_t ecs_data_t;
 
-/* Switch list */
-typedef struct ecs_switch_t ecs_switch_t;
-
 /* Cached query table data */
 typedef struct ecs_query_cache_table_match_t ecs_query_cache_table_match_t;
 
@@ -3114,7 +3111,6 @@ typedef struct ecs_query_cache_table_match_t ecs_query_cache_table_match_t;
 //// Non-opaque types
 ////////////////////////////////////////////////////////////////////////////////
 
-/** Mixin for emitting events to triggers/observers */
 /** All observers for a specific event */
 typedef struct ecs_event_record_t {
     struct ecs_event_id_record_t *any;
@@ -3138,7 +3134,7 @@ struct ecs_record_t {
     ecs_id_record_t *idr; /* Id record to (*, entity) for target entities */
     ecs_table_t *table;   /* Identifies a type (and table) in world */
     uint32_t row;         /* Table row of the entity */
-    int32_t dense;        /* Index in dense array */    
+    int32_t dense;        /* Index in dense array of entity index */    
 };
 
 /** Range in table */
@@ -3212,25 +3208,15 @@ typedef struct ecs_each_iter_t {
     void *ptrs;
 } ecs_each_iter_t;
 
-/** Query-iterator specific data */
-typedef struct ecs_query_cache_iter_t {
-    struct ecs_query_cache_t *query;
-    ecs_query_cache_table_match_t *node, *prev, *last;
-    int32_t sparse_smallest;
-    int32_t sparse_first;
-    int32_t bitset_first;
-    int32_t skip_count;
-} ecs_query_cache_iter_t;
-
 typedef struct ecs_query_op_profile_t {
     int32_t count[2]; /* 0 = enter, 1 = redo */
 } ecs_query_op_profile_t;
 
 /** Rule-iterator specific data */
 typedef struct ecs_query_iter_t {
-    const ecs_query_t *rule;
-    struct ecs_var_t *vars;              /* Variable storage */
-    const struct ecs_query_var_t *rule_vars;
+    const ecs_query_t *query;
+    struct ecs_var_t *vars;               /* Variable storage */
+    const struct ecs_query_var_t *query_vars;
     const struct ecs_query_op_t *ops;
     struct ecs_query_op_ctx_t *op_ctx;    /* Operation-specific state */
     ecs_query_cache_table_match_t *node, *prev, *last; /* For cached iteration */
@@ -3266,8 +3252,7 @@ typedef struct ecs_iter_cache_t {
  * progress & to provide builtin storage. */
 typedef struct ecs_iter_private_t {
     union {
-        ecs_query_cache_iter_t query;
-        ecs_query_iter_t rule;
+        ecs_query_iter_t query;
         ecs_page_iter_t page;
         ecs_worker_iter_t worker;
         ecs_each_iter_t each;
@@ -25070,8 +25055,8 @@ struct iter_iterable final : iterable<Components...> {
     }
 
     iter_iterable<Components...>& set_var(const char *name, flecs::entity_t value) {
-        ecs_query_iter_t *rit = &m_it.priv.iter.rule;
-        int var_id = ecs_query_find_var(rit->rule, name);
+        ecs_query_iter_t *qit = &m_it.priv.iter.query;
+        int var_id = ecs_query_find_var(qit->query, name);
         ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, name);
         ecs_iter_set_var(&m_it, var_id, value);
         return *this;
@@ -30449,8 +30434,8 @@ inline flecs::entity iter::get_var(int var_id) const {
  * Get value of a query variable for current result.
  */
 inline flecs::entity iter::get_var(const char *name) const {
-    ecs_query_iter_t *rit = &m_iter->priv.iter.rule;
-    const flecs::query_t *q = rit->rule;
+    ecs_query_iter_t *qit = &m_iter->priv.iter.query;
+    const flecs::query_t *q = qit->query;
     int var_id = ecs_query_find_var(q, name);
     ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, name);
     return flecs::entity(m_iter->world, ecs_iter_get_var(m_iter, var_id));

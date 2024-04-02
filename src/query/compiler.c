@@ -1,21 +1,21 @@
 /**
- * @file addons/rules/compile.c
- * @brief Compile rule program from filter.
+ * @file addons/querys/compile.c
+ * @brief Compile query program from filter.
  */
 
 #include "../private_api.h"
 
 static
 bool flecs_query_var_is_anonymous(
-    const ecs_query_impl_t *rule,
+    const ecs_query_impl_t *query,
     ecs_var_id_t var_id)
 {
-    ecs_query_var_t *var = &rule->vars[var_id];
+    ecs_query_var_t *var = &query->vars[var_id];
     return var->anonymous;
 }
 
 ecs_var_id_t flecs_query_add_var(
-    ecs_query_impl_t *rule,
+    ecs_query_impl_t *query,
     const char *name,
     ecs_vec_t *vars,
     ecs_var_kind_t kind)
@@ -32,33 +32,33 @@ ecs_var_id_t flecs_query_add_var(
     ecs_var_id_t var_id = EcsVarNone;
     if (name) {
         if (kind == EcsVarAny) {
-            var_id = flecs_query_find_var_id(rule, name, EcsVarEntity);
+            var_id = flecs_query_find_var_id(query, name, EcsVarEntity);
             if (var_id != EcsVarNone) {
                 return var_id;
             }
 
-            var_id = flecs_query_find_var_id(rule, name, EcsVarTable);
+            var_id = flecs_query_find_var_id(query, name, EcsVarTable);
             if (var_id != EcsVarNone) {
                 return var_id;
             }
 
             kind = EcsVarTable;
         } else {
-            var_id = flecs_query_find_var_id(rule, name, kind);
+            var_id = flecs_query_find_var_id(query, name, kind);
             if (var_id != EcsVarNone) {
                 return var_id;
             }
         }
 
         if (kind == EcsVarTable) {
-            var_index = &rule->tvar_index;
+            var_index = &query->tvar_index;
         } else {
-            var_index = &rule->evar_index;
+            var_index = &query->evar_index;
         }
 
         /* If we're creating an entity var, check if it has a table variant */
         if (kind == EcsVarEntity && var_id == EcsVarNone) {
-            var_id = flecs_query_find_var_id(rule, name, EcsVarTable);
+            var_id = flecs_query_find_var_id(query, name, EcsVarTable);
         }
     }
 
@@ -68,11 +68,11 @@ ecs_var_id_t flecs_query_add_var(
         var = ecs_vec_append_t(NULL, vars, ecs_query_var_t);
         result = var->id = flecs_itovar(ecs_vec_count(vars));
     } else {
-        ecs_dbg_assert(rule->var_count < rule->var_size, 
+        ecs_dbg_assert(query->var_count < query->var_size, 
             ECS_INTERNAL_ERROR, NULL);
-        var = &rule->vars[rule->var_count];
-        result = var->id = flecs_itovar(rule->var_count);
-        rule->var_count ++;
+        var = &query->vars[query->var_count];
+        result = var->id = flecs_itovar(query->var_count);
+        query->var_count ++;
     }
 
     var->kind = flecs_ito(int8_t, kind);
@@ -99,7 +99,7 @@ ecs_var_id_t flecs_query_add_var(
 
 static
 ecs_var_id_t flecs_query_add_var_for_term_id(
-    ecs_query_impl_t *rule,
+    ecs_query_impl_t *query,
     ecs_term_ref_t *term_id,
     ecs_vec_t *vars,
     ecs_var_kind_t kind)
@@ -109,7 +109,7 @@ ecs_var_id_t flecs_query_add_var_for_term_id(
         return EcsVarNone;
     }
 
-    return flecs_query_add_var(rule, name, vars, kind);
+    return flecs_query_add_var(query, name, vars, kind);
 }
 
 /* This function walks over terms to discover which variables are used in the
@@ -128,19 +128,19 @@ ecs_var_id_t flecs_query_add_var_for_term_id(
 static
 int flecs_query_discover_vars(
     ecs_stage_t *stage,
-    ecs_query_impl_t *rule)
+    ecs_query_impl_t *query)
 {
     ecs_vec_t *vars = &stage->variables; /* Buffer to reduce allocs */
     ecs_vec_reset_t(NULL, vars, ecs_query_var_t);
 
-    ecs_term_t *terms = rule->pub.terms;
-    int32_t a, i, anonymous_count = 0, count = rule->pub.term_count;
+    ecs_term_t *terms = query->pub.terms;
+    int32_t a, i, anonymous_count = 0, count = query->pub.term_count;
     int32_t anonymous_table_count = 0, scope = 0, scoped_var_index = 0;
     bool table_this = false, entity_before_table_this = false;
 
     /* For This table lookups during discovery. This will be overwritten after
-     * discovery with whether the rule actually has a This table variable. */
-    rule->has_table_this = true;
+     * discovery with whether the query actually has a This table variable. */
+    query->has_table_this = true;
 
     for (i = 0; i < count; i ++) {
         ecs_term_t *term = &terms[i];
@@ -171,7 +171,7 @@ int flecs_query_discover_vars(
         }
 
         ecs_var_id_t first_var_id = flecs_query_add_var_for_term_id(
-            rule, first, vars, EcsVarEntity);
+            query, first, vars, EcsVarEntity);
         if (first_var_id == EcsVarNone) {
             /* If first is not a variable, check if we need to insert anonymous
              * variable for resolving component inheritance */
@@ -189,10 +189,10 @@ int flecs_query_discover_vars(
             const char *var_name = flecs_term_ref_var_name(src);
             if (var_name) {
                 ecs_var_id_t var_id = flecs_query_find_var_id(
-                    rule, var_name, EcsVarEntity);
+                    query, var_name, EcsVarEntity);
                 if (var_id == EcsVarNone || var_id == first_var_id) {
                     var_id = flecs_query_add_var(
-                        rule, var_name, vars, EcsVarEntity);
+                        query, var_name, vars, EcsVarEntity);
                 }
 
                 if (var_id != EcsVarNone) {
@@ -222,12 +222,12 @@ int flecs_query_discover_vars(
                     }
 
                     /* Track which variable ids are used as field source */
-                    if (!rule->src_vars) {
-                        rule->src_vars = ecs_os_calloc_n(ecs_var_id_t,
-                            rule->pub.field_count);
+                    if (!query->src_vars) {
+                        query->src_vars = ecs_os_calloc_n(ecs_var_id_t,
+                            query->pub.field_count);
                     }
 
-                    rule->src_vars[term->field_index] = var_id;
+                    query->src_vars[term->field_index] = var_id;
                 }
             } else {
                 if (flecs_term_ref_is_wildcard(src)) {
@@ -236,12 +236,12 @@ int flecs_query_discover_vars(
             }
         } else if ((src->id & EcsIsVariable) && (ECS_TERM_REF_ID(src) == EcsThis)) {
             if (flecs_term_is_builtin_pred(term) && term->oper == EcsOr) {
-                flecs_query_add_var(rule, EcsThisName, vars, EcsVarEntity);
+                flecs_query_add_var(query, EcsThisName, vars, EcsVarEntity);
             }
         }
 
         if (flecs_query_add_var_for_term_id(
-            rule, second, vars, EcsVarEntity) == EcsVarNone)
+            query, second, vars, EcsVarEntity) == EcsVarNone)
         {
             /* If second is a wildcard, insert anonymous variable */
             if (flecs_term_ref_is_wildcard(second)) {
@@ -259,11 +259,11 @@ int flecs_query_discover_vars(
 
         /* If member term, make sure source is available as entity */
         if (term->flags & EcsTermIsMember) {
-            flecs_query_add_var_for_term_id(rule, src, vars, EcsVarEntity);
+            flecs_query_add_var_for_term_id(query, src, vars, EcsVarEntity);
         }
 
         /* Track if a This entity variable is used before a potential This table 
-         * variable. If this happens, the rule has no This table variable */
+         * variable. If this happens, the query has no This table variable */
         if (ECS_TERM_REF_ID(src) == EcsThis) {
             table_this = true;
         }
@@ -287,7 +287,7 @@ int flecs_query_discover_vars(
             var_name[var->lookup - var->name - 1] = '\0';
 
             ecs_var_id_t base_table_id = flecs_query_find_var_id(
-                rule, var_name, EcsVarTable);
+                query, var_name, EcsVarTable);
             if (base_table_id != EcsVarNone) {
                 var->table_id = base_table_id;
             } else if (anonymous_table_count) {
@@ -314,7 +314,7 @@ int flecs_query_discover_vars(
             }
 
             ecs_var_id_t base_entity_id = flecs_query_find_var_id(
-                rule, var_name, EcsVarEntity);
+                query, var_name, EcsVarEntity);
             if (base_entity_id == EcsVarNone) {
                 /* Get name from table var (must exist). We can't use allocated
                  * name since variables don't own names. */
@@ -328,7 +328,7 @@ int flecs_query_discover_vars(
                 }
 
                 base_entity_id = flecs_query_add_var(
-                    rule, base_name, vars, EcsVarEntity);
+                    query, base_name, vars, EcsVarEntity);
                 var = ecs_vec_get_t(vars, ecs_query_var_t, i);
             }
 
@@ -348,7 +348,7 @@ int flecs_query_discover_vars(
                 var->kind = EcsVarEntity;
 
                 ecs_var_id_t var_id = flecs_query_add_var(
-                    rule, var->name, vars, EcsVarTable);
+                    query, var->name, vars, EcsVarTable);
                 ecs_vec_get_t(vars, ecs_query_var_t, i)->table_id = var_id;
                 anonymous_table_count ++;
             }
@@ -367,7 +367,7 @@ int flecs_query_discover_vars(
                 var_name[var->lookup - var->name - 1] = '\0';
 
                 var->table_id = flecs_query_find_var_id(
-                    rule, var_name, EcsVarTable);
+                    query, var_name, EcsVarTable);
                 ecs_assert(var->table_id != EcsVarNone, 
                     ECS_INTERNAL_ERROR, NULL);
 
@@ -376,56 +376,56 @@ int flecs_query_discover_vars(
         }
     }
 
-    /* Always include spot for This variable, even if rule doesn't use it */
+    /* Always include spot for This variable, even if query doesn't use it */
     var_count ++;
 
-    ecs_query_var_t *rule_vars = &rule->vars_cache.var;
+    ecs_query_var_t *query_vars = &query->vars_cache.var;
     if ((var_count + anonymous_count) > 1) {
-        rule_vars = ecs_os_malloc(
+        query_vars = ecs_os_malloc(
             (ECS_SIZEOF(ecs_query_var_t) + ECS_SIZEOF(char*)) * 
                 (var_count + anonymous_count));
     }
 
-    rule->vars = rule_vars;
-    rule->var_count = var_count;
-    rule->var_pub_count = var_count;
-    rule->has_table_this = !entity_before_table_this;
+    query->vars = query_vars;
+    query->var_count = var_count;
+    query->var_pub_count = var_count;
+    query->has_table_this = !entity_before_table_this;
 
 #ifdef FLECS_DEBUG
-    rule->var_size = var_count + anonymous_count;
+    query->var_size = var_count + anonymous_count;
 #endif
 
-    char **var_names = ECS_ELEM(rule_vars, ECS_SIZEOF(ecs_query_var_t), 
+    char **var_names = ECS_ELEM(query_vars, ECS_SIZEOF(ecs_query_var_t), 
         var_count + anonymous_count);
-    rule->var_names = (char**)var_names;
+    query->var_names = (char**)var_names;
 
-    rule_vars[0].kind = EcsVarTable;
-    rule_vars[0].name = NULL;
-    flecs_set_var_label(&rule_vars[0], NULL);
-    rule_vars[0].id = 0;
-    rule_vars[0].table_id = EcsVarNone;
-    rule_vars[0].lookup = NULL;
-    var_names[0] = ECS_CONST_CAST(char*, rule_vars[0].name);
-    rule_vars ++;
+    query_vars[0].kind = EcsVarTable;
+    query_vars[0].name = NULL;
+    flecs_set_var_label(&query_vars[0], NULL);
+    query_vars[0].id = 0;
+    query_vars[0].table_id = EcsVarNone;
+    query_vars[0].lookup = NULL;
+    var_names[0] = ECS_CONST_CAST(char*, query_vars[0].name);
+    query_vars ++;
     var_names ++;
     var_count --;
 
     if (var_count) {
         ecs_query_var_t *user_vars = ecs_vec_first_t(vars, ecs_query_var_t);
-        ecs_os_memcpy_n(rule_vars, user_vars, ecs_query_var_t, var_count);
+        ecs_os_memcpy_n(query_vars, user_vars, ecs_query_var_t, var_count);
         for (i = 0; i < var_count; i ++) {
-            var_names[i] = ECS_CONST_CAST(char*, rule_vars[i].name);
+            var_names[i] = ECS_CONST_CAST(char*, query_vars[i].name);
         }
     }
 
     /* Hide anonymous table variables from application */
-    rule->var_pub_count -= anonymous_table_count;
+    query->var_pub_count -= anonymous_table_count;
 
     /* Sanity check to make sure that the public part of the variable array only
      * contains entity variables. */
 #ifdef FLECS_DEBUG
-    for (i = 1 /* first element = $this */; i < rule->var_pub_count; i ++) {
-        ecs_assert(rule->vars[i].kind == EcsVarEntity, ECS_INTERNAL_ERROR, NULL);
+    for (i = 1 /* first element = $this */; i < query->var_pub_count; i ++) {
+        ecs_assert(query->vars[i].kind == EcsVarEntity, ECS_INTERNAL_ERROR, NULL);
     }
 #endif
 
@@ -436,17 +436,17 @@ error:
 
 static
 bool flecs_query_var_is_unknown(
-    ecs_query_impl_t *rule,
+    ecs_query_impl_t *query,
     ecs_var_id_t var_id,
     ecs_query_compile_ctx_t *ctx)
 {
-    ecs_query_var_t *vars = rule->vars;
+    ecs_query_var_t *vars = query->vars;
     if (ctx->written & (1ull << var_id)) {
         return false;
     } else {
         ecs_var_id_t table_var = vars[var_id].table_id;
         if (table_var != EcsVarNone) {
-            return flecs_query_var_is_unknown(rule, table_var, ctx);
+            return flecs_query_var_is_unknown(query, table_var, ctx);
         }
     }
     return true;
@@ -456,16 +456,16 @@ bool flecs_query_var_is_unknown(
  * elements (first, second, src) that are all unknown. */
 static
 bool flecs_query_term_is_unknown(
-    ecs_query_impl_t *rule, 
+    ecs_query_impl_t *query, 
     ecs_term_t *term, 
     ecs_query_compile_ctx_t *ctx) 
 {
     ecs_query_op_t dummy = {0};
-    flecs_query_compile_term_ref(NULL, rule, &dummy, &term->first, 
+    flecs_query_compile_term_ref(NULL, query, &dummy, &term->first, 
         &dummy.first, EcsQueryFirst, EcsVarEntity, ctx, false);
-    flecs_query_compile_term_ref(NULL, rule, &dummy, &term->second, 
+    flecs_query_compile_term_ref(NULL, query, &dummy, &term->second, 
         &dummy.second, EcsQuerySecond, EcsVarEntity, ctx, false);
-    flecs_query_compile_term_ref(NULL, rule, &dummy, &term->src, 
+    flecs_query_compile_term_ref(NULL, query, &dummy, &term->src, 
         &dummy.src, EcsQuerySrc, EcsVarAny, ctx, false);
 
     bool has_vars = dummy.flags & 
@@ -479,17 +479,17 @@ bool flecs_query_term_is_unknown(
     }
 
     if (dummy.flags & (EcsQueryIsVar << EcsQueryFirst)) {
-        if (!flecs_query_var_is_unknown(rule, dummy.first.var, ctx)) {
+        if (!flecs_query_var_is_unknown(query, dummy.first.var, ctx)) {
             return false;
         }
     }
     if (dummy.flags & (EcsQueryIsVar << EcsQuerySecond)) {
-        if (!flecs_query_var_is_unknown(rule, dummy.second.var, ctx)) {
+        if (!flecs_query_var_is_unknown(query, dummy.second.var, ctx)) {
             return false;
         }
     }
     if (dummy.flags & (EcsQueryIsVar << EcsQuerySrc)) {
-        if (!flecs_query_var_is_unknown(rule, dummy.src.var, ctx)) {
+        if (!flecs_query_var_is_unknown(query, dummy.src.var, ctx)) {
             return false;
         }
     }
@@ -502,12 +502,12 @@ bool flecs_query_term_is_unknown(
  * before unknown terms can significantly decrease the search space. */
 static
 int32_t flecs_query_term_next_known(
-    ecs_query_impl_t *rule, 
+    ecs_query_impl_t *query, 
     ecs_query_compile_ctx_t *ctx,
     int32_t offset,
     ecs_flags64_t compiled) 
 {
-    ecs_query_t *q = &rule->pub;
+    ecs_query_t *q = &query->pub;
     ecs_term_t *terms = q->terms;
     int32_t i, count = q->term_count;
 
@@ -527,7 +527,7 @@ int32_t flecs_query_term_next_known(
             continue;
         }
 
-        if (flecs_query_term_is_unknown(rule, term, ctx)) {
+        if (flecs_query_term_is_unknown(query, term, ctx)) {
             continue;
         }
 
@@ -541,18 +541,18 @@ int32_t flecs_query_term_next_known(
  * special instruction which batch-evaluates multiple terms. */
 static
 void flecs_query_insert_trivial_search(
-    ecs_query_impl_t *rule,
+    ecs_query_impl_t *query,
     ecs_flags64_t *compiled,
     ecs_flags64_t *populated,
     ecs_query_compile_ctx_t *ctx)
 {
-    ecs_query_t *q = &rule->pub;
+    ecs_query_t *q = &query->pub;
     ecs_term_t *terms = q->terms;
     int32_t i, term_count = q->term_count;
     ecs_flags64_t trivial_set = 0;
 
     /* Trivial search always ignores prefabs and disabled entities */
-    if (rule->pub.flags & (EcsQueryMatchPrefab|EcsQueryMatchDisabled)) {
+    if (query->pub.flags & (EcsQueryMatchPrefab|EcsQueryMatchDisabled)) {
         return;
     }
 
@@ -619,16 +619,16 @@ void flecs_query_insert_trivial_search(
 
 static
 void flecs_query_insert_cache_search(
-    ecs_query_impl_t *rule,
+    ecs_query_impl_t *query,
     ecs_flags64_t *compiled,
     ecs_flags64_t *populated,
     ecs_query_compile_ctx_t *ctx)
 {
-    if (!rule->cache) {
+    if (!query->cache) {
         return;
     }
 
-    ecs_query_t *q = &rule->pub;
+    ecs_query_t *q = &query->pub;
     bool populate = true;
 
     if (q->cache_kind == EcsQueryCacheAll) {
@@ -707,11 +707,11 @@ bool flecs_term_match_multiple(
 
 /* Insert instruction to populate data fields. */
 void flecs_query_insert_populate(
-    ecs_query_impl_t *rule,
+    ecs_query_impl_t *query,
     ecs_query_compile_ctx_t *ctx,
     ecs_flags64_t populated)
 {
-    ecs_query_t *q = &rule->pub;
+    ecs_query_t *q = &query->pub;
     int32_t i, term_count = q->term_count;
 
     if (populated && !(q->flags & EcsQueryNoData)) {
@@ -927,9 +927,9 @@ int flecs_query_insert_fixed_src_terms(
 int flecs_query_compile(
     ecs_world_t *world,
     ecs_stage_t *stage,
-    ecs_query_impl_t *rule)
+    ecs_query_impl_t *query)
 {
-    ecs_query_t *q = &rule->pub;
+    ecs_query_t *q = &query->pub;
     ecs_term_t *terms = q->terms;
     ecs_query_compile_ctx_t ctx = {0};
     ecs_vec_reset_t(NULL, &stage->operations, ecs_query_op_t);
@@ -940,11 +940,11 @@ int flecs_query_compile(
     ecs_vec_clear(ctx.ops);
 
     /* Find all variables defined in query */
-    if (flecs_query_discover_vars(stage, rule)) {
+    if (flecs_query_discover_vars(stage, query)) {
         return -1;
     }
 
-    /* If rule contains fixed source terms, insert operation to set sources */
+    /* If query contains fixed source terms, insert operation to set sources */
     int32_t i, term_count = q->term_count;
     for (i = 0; i < term_count; i ++) {
         ecs_term_t *term = &terms[i];
@@ -956,7 +956,7 @@ int flecs_query_compile(
         }
     }
 
-    /* If the rule contains terms with fixed ids (no wildcards, variables), 
+    /* If the query contains terms with fixed ids (no wildcards, variables), 
      * insert instruction that initializes ecs_iter_t::ids. This allows for the
      * insertion of simpler instructions later on. 
      * If the query is entirely cacheable, ids are populated by the cache. */
@@ -980,15 +980,15 @@ int flecs_query_compile(
 
     /* Always evaluate terms with fixed source before other terms */
     flecs_query_insert_fixed_src_terms(
-        world, rule, &compiled, &populated, &ctx);
+        world, query, &compiled, &populated, &ctx);
 
     /* Compile cacheable terms */
     flecs_query_insert_cache_search(
-        rule, &compiled, &populated, &ctx);
+        query, &compiled, &populated, &ctx);
 
     /* Insert trivial term search if query allows for it */
     flecs_query_insert_trivial_search(
-        rule, &compiled, &populated, &ctx);
+        query, &compiled, &populated, &ctx);
 
     /* Compile remaining query terms to instructions */
     for (i = 0; i < term_count; i ++) {
@@ -1010,10 +1010,10 @@ int flecs_query_compile(
          * Only perform this optimization after at least one variable has been
          * written to, as all terms are unknown otherwise. */
         if (can_reorder && ctx.written && 
-            flecs_query_term_is_unknown(rule, term, &ctx)) 
+            flecs_query_term_is_unknown(query, term, &ctx)) 
         {
             int32_t term_index = flecs_query_term_next_known(
-                rule, &ctx, i + 1, compiled);
+                query, &ctx, i + 1, compiled);
             if (term_index != -1) {
                 term = &q->terms[term_index];
                 compile = term_index;
@@ -1021,14 +1021,14 @@ int flecs_query_compile(
             }
         }
 
-        if (flecs_query_compile_term(world, rule, term, &populated, &ctx)) {
+        if (flecs_query_compile_term(world, query, term, &populated, &ctx)) {
             return -1;
         }
 
         compiled |= (1ull << compile);
     }
 
-    ecs_var_id_t this_id = flecs_query_find_var_id(rule, "This", EcsVarEntity);
+    ecs_var_id_t this_id = flecs_query_find_var_id(query, "This", EcsVarEntity);
 
     /* If This variable has been written as entity, insert an operation to 
      * assign it to it.entities for consistency. */
@@ -1041,15 +1041,15 @@ int flecs_query_compile(
     }
 
     /* Make sure non-This variables are written as entities */
-    if (rule->vars) {
-        for (i = 0; i < rule->var_count; i ++) {
-            ecs_query_var_t *var = &rule->vars[i];
+    if (query->vars) {
+        for (i = 0; i < query->var_count; i ++) {
+            ecs_query_var_t *var = &query->vars[i];
             if (var->id && var->kind == EcsVarTable && var->name) {
-                ecs_var_id_t var_id = flecs_query_find_var_id(rule, var->name,
+                ecs_var_id_t var_id = flecs_query_find_var_id(query, var->name,
                     EcsVarEntity);
                 if (!flecs_query_is_written(var_id, ctx.written)) {
                     /* Skip anonymous variables */
-                    if (!flecs_query_var_is_anonymous(rule, var_id)) {
+                    if (!flecs_query_var_is_anonymous(query, var_id)) {
                         flecs_query_insert_each(var->id, var_id, &ctx, false);
                     }
                 }
@@ -1057,18 +1057,18 @@ int flecs_query_compile(
         }
     }
 
-    /* If rule contains non-This variables as term source, build lookup array */
-    if (rule->src_vars) {
-        ecs_assert(rule->vars != NULL, ECS_INTERNAL_ERROR, NULL);
+    /* If query contains non-This variables as term source, build lookup array */
+    if (query->src_vars) {
+        ecs_assert(query->vars != NULL, ECS_INTERNAL_ERROR, NULL);
         bool only_anonymous = true;
 
         for (i = 0; i < q->field_count; i ++) {
-            ecs_var_id_t var_id = rule->src_vars[i];
+            ecs_var_id_t var_id = query->src_vars[i];
             if (!var_id) {
                 continue;
             }
 
-            if (!flecs_query_var_is_anonymous(rule, var_id)) {
+            if (!flecs_query_var_is_anonymous(query, var_id)) {
                 only_anonymous = false;
                 break;
             } else {
@@ -1095,20 +1095,20 @@ int flecs_query_compile(
         }
 
         for (i = 0; i < q->field_count; i ++) {
-            ecs_var_id_t var_id = rule->src_vars[i];
+            ecs_var_id_t var_id = query->src_vars[i];
             if (!var_id) {
                 continue;
             }
 
-            if (rule->vars[var_id].kind == EcsVarTable) {
-                var_id = flecs_query_find_var_id(rule, rule->vars[var_id].name,
+            if (query->vars[var_id].kind == EcsVarTable) {
+                var_id = flecs_query_find_var_id(query, query->vars[var_id].name,
                     EcsVarEntity);
 
                 /* Variables used as source that aren't This must be entities */
                 ecs_assert(var_id != EcsVarNone, ECS_INTERNAL_ERROR, NULL);
             }
 
-            rule->src_vars[i] = var_id;
+            query->src_vars[i] = var_id;
         }
     }
 
@@ -1123,12 +1123,12 @@ int flecs_query_compile(
     } else {
         /* If query contains terms for toggleable components, insert toggle */
         if (!(q->flags & EcsQueryTableOnly)) {
-            flecs_query_insert_toggle(rule, &ctx);
+            flecs_query_insert_toggle(query, &ctx);
         }
 
         /* Insert instruction to populate remaining data fields */
         ecs_flags64_t remaining = q->data_fields & ~populated;
-        flecs_query_insert_populate(rule, &ctx, remaining);
+        flecs_query_insert_populate(query, &ctx, remaining);
 
         /* Insert yield. If program reaches this operation, a result was found */
         ecs_query_op_t yield = {0};
@@ -1138,10 +1138,10 @@ int flecs_query_compile(
 
     int32_t op_count = ecs_vec_count(ctx.ops);
     if (op_count) {
-        rule->op_count = op_count;
-        rule->ops = ecs_os_malloc_n(ecs_query_op_t, op_count);
-        ecs_query_op_t *rule_ops = ecs_vec_first_t(ctx.ops, ecs_query_op_t);
-        ecs_os_memcpy_n(rule->ops, rule_ops, ecs_query_op_t, op_count);
+        query->op_count = op_count;
+        query->ops = ecs_os_malloc_n(ecs_query_op_t, op_count);
+        ecs_query_op_t *query_ops = ecs_vec_first_t(ctx.ops, ecs_query_op_t);
+        ecs_os_memcpy_n(query->ops, query_ops, ecs_query_op_t, op_count);
     }
 
     return 0;

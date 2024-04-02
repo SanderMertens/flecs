@@ -1,5 +1,5 @@
 /**
- * @file addons/rules/engine.c
+ * @file addons/querys/engine.c
  * @brief Iterator for trivial queries.
  */
 
@@ -54,16 +54,16 @@ bool flecs_query_trivial_search_init(
 }
 
 bool flecs_query_trivial_search(
-    const ecs_query_impl_t *rule,
+    const ecs_query_impl_t *query,
     const ecs_query_run_ctx_t *ctx,
     ecs_query_trivial_ctx_t *op_ctx,
     bool first,
     ecs_flags64_t term_set)
 {
-    const ecs_query_t *q = &rule->pub;
+    const ecs_query_t *q = &query->pub;
     const ecs_term_t *terms = q->terms;
     ecs_iter_t *it = ctx->it;
-    int32_t t, term_count = rule->pub.term_count;
+    int32_t t, term_count = query->pub.term_count;
 
     if (!flecs_query_trivial_search_init(ctx, op_ctx, q, first, term_set)) {
         return false;
@@ -122,18 +122,18 @@ bool flecs_query_trivial_search(
 }
 
 bool flecs_query_trivial_search_w_wildcards(
-    const ecs_query_impl_t *rule,
+    const ecs_query_impl_t *query,
     const ecs_query_run_ctx_t *ctx,
     ecs_query_trivial_ctx_t *op_ctx,
     bool first,
     ecs_flags64_t term_set)
 {
     bool result = flecs_query_trivial_search(
-        rule, ctx, op_ctx, first, term_set);
+        query, ctx, op_ctx, first, term_set);
     if (result) {
         ecs_iter_t *it = ctx->it;
         ecs_table_t *table = ctx->vars[0].range.table;
-        int32_t t, term_count = rule->pub.term_count;
+        int32_t t, term_count = query->pub.term_count;
         for (t = 0; t < term_count; t ++) {
             if (term_set & (1llu << t)) {
                 int32_t column = it->columns[t];
@@ -147,16 +147,16 @@ bool flecs_query_trivial_search_w_wildcards(
 }
 
 bool flecs_query_trivial_search_nodata(
-    const ecs_query_impl_t *rule,
+    const ecs_query_impl_t *query,
     const ecs_query_run_ctx_t *ctx,
     ecs_query_trivial_ctx_t *op_ctx,
     bool first,
     ecs_flags64_t term_set)
 {
-    const ecs_query_t *q = &rule->pub;
+    const ecs_query_t *q = &query->pub;
     const ecs_term_t *terms = q->terms;
     ecs_iter_t *it = ctx->it;
-    int32_t t, term_count = rule->pub.term_count;
+    int32_t t, term_count = query->pub.term_count;
 
     if (!flecs_query_trivial_search_init(ctx, op_ctx, q, first, term_set)) {
         return false;
@@ -258,14 +258,14 @@ bool flecs_query_trivial_test(
 }
 
 bool flecs_query_trivial_test_w_wildcards(
-    const ecs_query_impl_t *rule,
+    const ecs_query_impl_t *query,
     const ecs_query_run_ctx_t *ctx,
     bool first,
     ecs_flags64_t term_set)
 {
-    int32_t t, term_count = rule->pub.term_count;
+    int32_t t, term_count = query->pub.term_count;
     bool result = flecs_query_trivial_test(
-        rule, ctx, first, term_set);
+        query, ctx, first, term_set);
     if (result) {
         ecs_iter_t *it = ctx->it;
         ecs_table_t *table = ctx->vars[0].range.table;

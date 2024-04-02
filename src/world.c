@@ -90,7 +90,7 @@ const ecs_entity_t EcsPanic =                       FLECS_HI_COMPONENT_ID + 52;
 /* Misc */
 const ecs_entity_t EcsDefaultChildComponent =       FLECS_HI_COMPONENT_ID + 55;
 
-/* Builtin predicate ids (used by rule engine) */
+/* Builtin predicate ids (used by query engine) */
 const ecs_entity_t EcsPredEq =                      FLECS_HI_COMPONENT_ID + 56;
 const ecs_entity_t EcsPredMatch =                   FLECS_HI_COMPONENT_ID + 57;
 const ecs_entity_t EcsPredLookup =                  FLECS_HI_COMPONENT_ID + 58;

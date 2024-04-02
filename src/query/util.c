@@ -234,15 +234,15 @@ const char* flecs_query_op_str(
 
 static
 int32_t flecs_query_op_ref_str(
-    const ecs_query_impl_t *rule,
+    const ecs_query_impl_t *query,
     ecs_query_ref_t *ref,
     ecs_flags16_t flags,
     ecs_strbuf_t *buf)
 {
     int32_t color_chars = 0;
     if (flags & EcsQueryIsVar) {
-        ecs_assert(ref->var < rule->var_count, ECS_INTERNAL_ERROR, NULL);
-        ecs_query_var_t *var = &rule->vars[ref->var];
+        ecs_assert(ref->var < query->var_count, ECS_INTERNAL_ERROR, NULL);
+        ecs_query_var_t *var = &query->vars[ref->var];
         ecs_strbuf_appendlit(buf, "#[green]$#[reset]");
         if (var->kind == EcsVarTable) {
             ecs_strbuf_appendch(buf, '[');
@@ -269,7 +269,7 @@ int32_t flecs_query_op_ref_str(
         }
         color_chars = ecs_os_strlen("#[green]#[reset]#[green]#[reset]");
     } else if (flags & EcsQueryIsEntity) {
-        char *path = ecs_get_fullpath(rule->pub.world, ref->entity);
+        char *path = ecs_get_fullpath(query->pub.world, ref->entity);
         ecs_strbuf_appendlit(buf, "#[blue]");
         ecs_strbuf_appendstr(buf, path);
         ecs_strbuf_appendlit(buf, "#[reset]");
@@ -312,7 +312,7 @@ char* ecs_query_str_w_profile(
 
         if (it) {
 #ifdef FLECS_DEBUG
-            const ecs_query_iter_t *rit = &it->priv.iter.rule;
+            const ecs_query_iter_t *rit = &it->priv.iter.query;
             ecs_strbuf_append(&buf, 
                 "#[green]%4d -> #[red]%4d <- #[grey]  |   ",
                 rit->profile[i].count[0],

@@ -96,31 +96,6 @@ typedef struct ecs_table_cache_t {
     ecs_table_cache_list_t empty_tables;
 } ecs_table_cache_t;
 
-/* Sparse query term */
-typedef struct flecs_switch_term_t {
-    ecs_switch_t *sw_column;
-    ecs_entity_t sw_case; 
-    int32_t signature_column_index;
-} flecs_switch_term_t;
-
-/* Bitset query term */
-typedef struct flecs_bitset_term_t {
-    ecs_bitset_t *bs_column;
-    int32_t column_index;
-} flecs_bitset_term_t;
-
-typedef struct flecs_flat_monitor_t {
-    int32_t table_state;
-    int32_t monitor;
-} flecs_flat_monitor_t;
-
-/* Flat table term */
-typedef struct flecs_flat_table_term_t {
-    int32_t field_index; /* Iterator field index */
-    const ecs_term_t *term;
-    ecs_vec_t monitor;
-} flecs_flat_table_term_t;
-
 /** All observers for a specific (component) id */
 typedef struct ecs_event_id_record_t {
     /* Triggers for Self */
@@ -276,7 +251,7 @@ struct ecs_stage_t {
     ecs_stage_allocators_t allocators;
     ecs_allocator_t allocator;
 
-    /* Caches for rule creation */
+    /* Caches for query creation */
     ecs_vec_t variables;
     ecs_vec_t operations;
 

@@ -9,12 +9,12 @@
 int flecs_query_compile(
     ecs_world_t *world,
     ecs_stage_t *stage,
-    ecs_query_impl_t *rule);
+    ecs_query_impl_t *query);
 
 /* Compile single term */
 int flecs_query_compile_term(
     ecs_world_t *world,
-    ecs_query_impl_t *rule,
+    ecs_query_impl_t *query,
     ecs_term_t *term,
     ecs_flags64_t *populated,
     ecs_query_compile_ctx_t *ctx);
@@ -22,7 +22,7 @@ int flecs_query_compile_term(
 /* Compile term ref (first, second or src) */
 void flecs_query_compile_term_ref(
     ecs_world_t *world,
-    ecs_query_impl_t *rule,
+    ecs_query_impl_t *query,
     ecs_query_op_t *op,
     ecs_term_ref_t *term_ref,
     ecs_query_ref_t *ref,
@@ -56,20 +56,20 @@ void flecs_query_insert_each(
 
 /* Insert instruction that populates field */
 void flecs_query_insert_populate(
-    ecs_query_impl_t *rule,
+    ecs_query_impl_t *query,
     ecs_query_compile_ctx_t *ctx,
     ecs_flags64_t populated);
 
 /* Add discovered variable */
 ecs_var_id_t flecs_query_add_var(
-    ecs_query_impl_t *rule,
+    ecs_query_impl_t *query,
     const char *name,
     ecs_vec_t *vars,
     ecs_var_kind_t kind);
 
 /* Find variable by name/kind */
 ecs_var_id_t flecs_query_find_var_id(
-    const ecs_query_impl_t *rule,
+    const ecs_query_impl_t *query,
     const char *name,
     ecs_var_kind_t kind);
 

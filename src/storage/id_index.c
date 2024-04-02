@@ -306,7 +306,7 @@ void flecs_id_record_free(
 
     flecs_id_record_assert_empty(idr);
 
-    /* Id is still in use by a filter, query, rule or observer */
+    /* Id is still in use by a query */
     ecs_assert((world->flags & EcsWorldQuit) || (idr->keep_alive == 0), 
         ECS_ID_IN_USE, "cannot delete id that is queried for");
 
