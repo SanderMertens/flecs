@@ -82,6 +82,10 @@ FLECS_API
 int32_t ecs_poly_release_(
     ecs_poly_t *poly);
 
+FLECS_API
+int32_t ecs_poly_refcount(
+    ecs_poly_t *poly);
+
 #define ecs_poly_claim(poly) \
     ecs_poly_claim_(ECS_CONST_CAST(void*, reinterpret_cast<const void*>(poly)))
 #define ecs_poly_release(poly) \

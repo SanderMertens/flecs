@@ -1130,7 +1130,8 @@
                 "make_pair_of_pair_type",
                 "delta_time",
                 "atfini",
-                "atfini_w_ctx"
+                "atfini_w_ctx",
+                "copy_world"
             ]
         }, {
             "id": "Singleton",

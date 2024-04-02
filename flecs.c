@@ -14252,6 +14252,15 @@ int32_t ecs_poly_release_(
     return ecs_os_adec(&hdr->refcount);
 }
 
+int32_t ecs_poly_refcount(
+    ecs_poly_t *poly)
+{
+    ecs_assert(poly != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_header_t *hdr = poly;
+    ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER, NULL);
+    return hdr->refcount;
+}
+
 EcsPoly* ecs_poly_bind_(
     ecs_world_t *world,
     ecs_entity_t entity,

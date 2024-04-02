@@ -17,8 +17,9 @@
  * required for frameworks like emscripten.
  */
 flecs::app_builder app() {
-    m_owned = false; // App takes ownership of world
-    return flecs::app_builder(m_world);
+    flecs::world_t *w = m_world;
+    m_world = nullptr; // Take ownership
+    return flecs::app_builder(w);
 }
 
 /** @} */

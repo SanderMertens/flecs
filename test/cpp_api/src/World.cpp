@@ -1893,3 +1893,10 @@ void World_atfini_w_ctx(void) {
     test_int(atfini_invoked, 1);
     test_assert(atfini_ctx == &ctx);
 }
+
+void World_copy_world(void) {
+    flecs::world world_1;
+    flecs::world world_2 = world_1;
+
+    test_assert(world_1.c_ptr() == world_2.c_ptr());
+}

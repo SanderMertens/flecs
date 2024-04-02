@@ -133,64 +133,72 @@ struct world {
     /** Create world.
      */
     explicit world()
-        : m_world( ecs_init() )
-        , m_owned( true ) { init_builtin_components(); }
+        : m_world( ecs_init() ) { 
+            init_builtin_components(); 
+        }
 
     /** Create world with command line arguments.
      * Currently command line arguments are not interpreted, but they may be
      * used in the future to configure Flecs parameters.
      */
     explicit world(int argc, char *argv[])
-        : m_world( ecs_init_w_args(argc, argv) )
-        , m_owned( true ) { init_builtin_components(); }
+        : m_world( ecs_init_w_args(argc, argv) ) { 
+            init_builtin_components(); 
+        }
 
     /** Create world from C world.
      */
     explicit world(world_t *w)
-        : m_world( w )
-        , m_owned( false ) { }
+        : m_world( w ) { 
+            if (w) {
+                ecs_poly_claim(w);
+            }
+        }
 
     /** Not allowed to copy a world. May only take a reference.
      */
-    world(const world& obj) = delete;
+    world(const world& obj) {
+        this->m_world = obj.m_world;
+        ecs_poly_claim(this->m_world);
+    }
+
+    world& operator=(const world& obj) noexcept {
+        this->m_world = obj.m_world;
+        ecs_poly_claim(this->m_world);
+        return *this;
+    }
 
     world(world&& obj) noexcept {
         m_world = obj.m_world;
-        m_owned = obj.m_owned;
         obj.m_world = nullptr;
-        obj.m_owned = false;
+    }
+
+    world& operator=(world&& obj) noexcept {
+        m_world = obj.m_world;
+        obj.m_world = nullptr;
+        return *this;
+    }
+
+    ~world() {
+        if (m_world) {
+            if (!ecs_poly_release(m_world)) {
+                if (ecs_stage_is_async(m_world)) {
+                    ecs_async_stage_free(m_world);
+                } else {
+                    ecs_fini(m_world);
+                }
+            }
+        }
     }
 
     /* Implicit conversion to world_t* */
     operator world_t*() const { return m_world; }
 
-    /** Not allowed to copy a world. May only take a reference.
-     */
-    world& operator=(const world& obj) = delete;
-
-    world& operator=(world&& obj) noexcept {
-        this->~world();
-
-        m_world = obj.m_world;
-        m_owned = obj.m_owned;
-        obj.m_world = nullptr;
-        obj.m_owned = false;
-        return *this;
-    }
-
-    ~world() {
-        if (m_owned && ecs_stage_is_async(m_world)) {
-            ecs_async_stage_free(m_world);
-        } else
-        if (m_owned && m_world) {
-            ecs_fini(m_world);
-        }
-    }
-
     /** Deletes and recreates the world. */
     void reset() {
-        // Can only reset the world if we own the world object.
-        ecs_assert(this->m_owned, ECS_INVALID_OPERATION, NULL);
+        /* Make sure there's only one reference to the world */
+        ecs_assert(ecs_poly_refcount(m_world) == 1, ECS_INVALID_OPERATION,
+            "reset would invalidate other handles");
         ecs_fini(m_world);
         m_world = ecs_init();
     }
@@ -412,9 +420,7 @@ struct world {
      * @return The stage.
      */
     flecs::world async_stage() const {
-        auto result = flecs::world(ecs_async_stage_new(m_world));
-        result.m_owned = true;
-        return result;
+        return flecs::world(ecs_async_stage_new(m_world));
     }
 
     /** Get actual world.
@@ -1077,7 +1083,6 @@ public:
     void init_builtin_components();
 
     world_t *m_world;
-    bool m_owned;
 };
 
 /** Scoped world.
@@ -1086,11 +1091,9 @@ public:
 struct scoped_world : world {
     scoped_world(
         flecs::world_t *w,
-        flecs::entity_t s) : world(nullptr)
+        flecs::entity_t s) : world(w)
     {
         m_prev_scope = ecs_set_scope(w, s);
-        m_world = w;
-        m_owned = false;
     }
 
     ~scoped_world() {
@@ -1100,7 +1103,7 @@ struct scoped_world : world {
     scoped_world(const scoped_world& obj) : world(nullptr) {
         m_prev_scope = obj.m_prev_scope;
         m_world = obj.m_world;
-        m_owned = obj.m_owned;
+        ecs_poly_claim(m_world);
     }
 
     flecs::entity_t m_prev_scope;
