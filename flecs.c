@@ -18817,9 +18817,15 @@ void FlecsAlertsImport(ecs_world_t *world) {
         }
     });
 
-    ECS_SYSTEM(world, MonitorAlerts, EcsPreStore, Alert, (Poly, Query));
+    ECS_SYSTEM(world, MonitorAlerts, EcsPreStore, 
+        Alert, 
+        (Poly, Query));
+
     ECS_SYSTEM(world, MonitorAlertInstances, EcsOnStore, Instance, 
-        flecs.metrics.Source, flecs.metrics.Value, ?EcsAlertTimeout, ?Disabled);
+        flecs.metrics.Source, 
+        flecs.metrics.Value, 
+        ?Timeout,
+        ?Disabled);
 
     ecs_system(world, {
         .entity = ecs_id(MonitorAlerts),
@@ -23932,7 +23938,8 @@ void FlecsMetricsImport(ecs_world_t *world) {
     ecs_add_id(world, EcsMetric, EcsOneOf);
 
 #ifdef FLECS_DOC
-    ECS_OBSERVER(world, SetMetricDocName, EcsOnSet, EcsMetricSource);
+    ECS_OBSERVER(world, SetMetricDocName, EcsOnSet, 
+        Source);
 #endif
 
     ECS_SYSTEM(world, ClearMetricInstance, EcsPreStore,
@@ -27260,7 +27267,6 @@ void flecs_rest_reply_set_captured_log(
 
 static
 void flecs_rest_iter_to_reply(
-    ecs_world_t *world,
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply,
     ecs_poly_t *query,
@@ -27342,7 +27348,7 @@ bool flecs_rest_reply_existing_query(
         }
     }
 
-    flecs_rest_iter_to_reply(world, req, reply, q, &it);
+    flecs_rest_iter_to_reply(req, reply, q, &it);
 
     ecs_os_api.log_ = rest_prev_log;
     ecs_log_enable_colors(prev_color);    
@@ -27385,7 +27391,7 @@ bool flecs_rest_reply_query(
         }
     } else {
         ecs_iter_t it = ecs_query_iter(world, q);
-        flecs_rest_iter_to_reply(world, req, reply, q, &it);
+        flecs_rest_iter_to_reply(req, reply, q, &it);
         ecs_query_fini(q);
     }
 
@@ -28253,7 +28259,7 @@ void FlecsRestImport(
         .on_set = flecs_on_set_rest
     });
 
-    ECS_SYSTEM(world, DequeueRest, EcsPostFrame, EcsRest);
+    ECS_SYSTEM(world, DequeueRest, EcsPostFrame, Rest);
 
     ecs_system(world, {
         .entity = ecs_id(DequeueRest),
@@ -46649,15 +46655,13 @@ int flecs_term_ref_lookup(
         return 0;
     }
 
-    ecs_entity_t e;
+    ecs_entity_t e = 0;
     if (scope) {
         e = ecs_lookup_child(world, scope, name);
-        if (!e) {
-            /* Support wildcards and fully qualified paths */
-            e = ecs_lookup_symbol(world, name, true, true);
-        }
-    } else {
-        e = ecs_lookup_symbol(world, name, true, true);
+    }
+
+    if (!e) {
+        e = ecs_lookup(world, name);
     }
 
     if (!e) {

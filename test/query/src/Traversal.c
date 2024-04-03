@@ -7448,7 +7448,7 @@ void Traversal_up_2_rel_instances_match_2nd(void) {
 void Traversal_up_only_w_owned(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, R, EcsTraversable);
+    ECS_ENTITY(world, R, Traversable);
     ECS_COMPONENT(world, Position);
 
     ecs_entity_t e_0 = ecs_set(world, 0, Position, {10, 20});

@@ -102,15 +102,13 @@ int flecs_term_ref_lookup(
         return 0;
     }
 
-    ecs_entity_t e;
+    ecs_entity_t e = 0;
     if (scope) {
         e = ecs_lookup_child(world, scope, name);
-        if (!e) {
-            /* Support wildcards and fully qualified paths */
-            e = ecs_lookup_symbol(world, name, true, true);
-        }
-    } else {
-        e = ecs_lookup_symbol(world, name, true, true);
+    }
+
+    if (!e) {
+        e = ecs_lookup(world, name);
     }
 
     if (!e) {

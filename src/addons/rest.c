@@ -392,7 +392,6 @@ void flecs_rest_reply_set_captured_log(
 
 static
 void flecs_rest_iter_to_reply(
-    ecs_world_t *world,
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply,
     ecs_poly_t *query,
@@ -474,7 +473,7 @@ bool flecs_rest_reply_existing_query(
         }
     }
 
-    flecs_rest_iter_to_reply(world, req, reply, q, &it);
+    flecs_rest_iter_to_reply(req, reply, q, &it);
 
     ecs_os_api.log_ = rest_prev_log;
     ecs_log_enable_colors(prev_color);    
@@ -517,7 +516,7 @@ bool flecs_rest_reply_query(
         }
     } else {
         ecs_iter_t it = ecs_query_iter(world, q);
-        flecs_rest_iter_to_reply(world, req, reply, q, &it);
+        flecs_rest_iter_to_reply(req, reply, q, &it);
         ecs_query_fini(q);
     }
 
@@ -1385,7 +1384,7 @@ void FlecsRestImport(
         .on_set = flecs_on_set_rest
     });
 
-    ECS_SYSTEM(world, DequeueRest, EcsPostFrame, EcsRest);
+    ECS_SYSTEM(world, DequeueRest, EcsPostFrame, Rest);
 
     ecs_system(world, {
         .entity = ecs_id(DequeueRest),

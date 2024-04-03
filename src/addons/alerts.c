@@ -772,9 +772,15 @@ void FlecsAlertsImport(ecs_world_t *world) {
         }
     });
 
-    ECS_SYSTEM(world, MonitorAlerts, EcsPreStore, Alert, (Poly, Query));
+    ECS_SYSTEM(world, MonitorAlerts, EcsPreStore, 
+        Alert, 
+        (Poly, Query));
+
     ECS_SYSTEM(world, MonitorAlertInstances, EcsOnStore, Instance, 
-        flecs.metrics.Source, flecs.metrics.Value, ?EcsAlertTimeout, ?Disabled);
+        flecs.metrics.Source, 
+        flecs.metrics.Value, 
+        ?Timeout,
+        ?Disabled);
 
     ecs_system(world, {
         .entity = ecs_id(MonitorAlerts),

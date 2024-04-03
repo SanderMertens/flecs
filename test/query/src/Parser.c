@@ -2922,27 +2922,18 @@ void Parser_expr_w_symbol(void) {
 
     ECS_TAG(world, Pred);
 
-    ecs_entity_t comp = ecs_component_init(world, &(ecs_component_desc_t){
+    ecs_component_init(world, &(ecs_component_desc_t){
         .entity = ecs_entity(world, {
             .name = "Foo",
             .symbol = "FooBar"
         })
     });
 
+    ecs_log_set_level(-4);
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
         .expr = "FooBar"
     });
-    test_assert(q != NULL);
-    test_int(term_count(q), 1);
-
-    ecs_term_t *terms = query_terms(q);
-    test_first(terms[0], comp, EcsSelf|EcsIsEntity);
-    test_src(terms[0], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
-    test_int(terms[0].oper, EcsAnd);
-    test_int(terms[0].inout, EcsInOutDefault);  
-
-
-    ecs_query_fini(q);
+    test_assert(q == NULL);
 
     ecs_fini(world);
 }

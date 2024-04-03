@@ -2597,7 +2597,7 @@ void OnDelete_delete_tree_w_query(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
-    ECS_ENTITY(world, Rel, EcsTraversable);
+    ECS_ENTITY(world, Rel, Traversable);
     ECS_TAG(world, Foo);
 
     ecs_query_t *q = ecs_query_new(world, "Tag(up(Rel))");

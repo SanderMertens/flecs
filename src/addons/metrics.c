@@ -914,7 +914,8 @@ void FlecsMetricsImport(ecs_world_t *world) {
     ecs_add_id(world, EcsMetric, EcsOneOf);
 
 #ifdef FLECS_DOC
-    ECS_OBSERVER(world, SetMetricDocName, EcsOnSet, EcsMetricSource);
+    ECS_OBSERVER(world, SetMetricDocName, EcsOnSet, 
+        Source);
 #endif
 
     ECS_SYSTEM(world, ClearMetricInstance, EcsPreStore,

@@ -2271,7 +2271,7 @@ void Cached_childof_superset(void) {
 void Cached_superset_2_targets(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, R, EcsTraversable);
+    ECS_ENTITY(world, R, Traversable);
     ECS_COMPONENT(world, Position);
 
     ecs_entity_t e_0 = ecs_set(world, 0, Position, {10, 20});

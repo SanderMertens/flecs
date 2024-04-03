@@ -977,7 +977,7 @@ void Cascade_existing_custom_rel_cascade(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
-    ECS_ENTITY(world, Rel, EcsTraversable);
+    ECS_ENTITY(world, Rel, Traversable);
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
@@ -1021,7 +1021,7 @@ void Cascade_new_custom_rel_cascade(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
-    ECS_ENTITY(world, Rel, EcsTraversable);
+    ECS_ENTITY(world, Rel, Traversable);
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
@@ -1065,7 +1065,7 @@ void Cascade_cascade_w_2_depths(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
-    ECS_ENTITY(world, Rel, EcsTraversable);
+    ECS_ENTITY(world, Rel, Traversable);
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
@@ -1113,7 +1113,7 @@ void Cascade_cascade_w_3_depths(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
-    ECS_ENTITY(world, Rel, EcsTraversable);
+    ECS_ENTITY(world, Rel, Traversable);
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
@@ -1161,7 +1161,7 @@ void Cascade_cascade_w_2_depths_desc(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
-    ECS_ENTITY(world, Rel, EcsTraversable);
+    ECS_ENTITY(world, Rel, Traversable);
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
@@ -1209,7 +1209,7 @@ void Cascade_cascade_w_3_depths_desc(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
-    ECS_ENTITY(world, Rel, EcsTraversable);
+    ECS_ENTITY(world, Rel, Traversable);
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
@@ -1358,7 +1358,7 @@ void Cascade_cascade_rematch_2_lvls(void) {
 void Cascade_cascade_rematch_2_lvls_2_relations(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, R, EcsTraversable);
+    ECS_ENTITY(world, R, Traversable);
     ECS_COMPONENT(world, Position);
 
     ecs_entity_t e_0 = ecs_set(world, 0, Position, {10, 20});
@@ -1557,7 +1557,7 @@ void Cascade_cascade_desc_rematch_2_lvls(void) {
 void Cascade_cascade_desc_rematch_2_lvls_2_relations(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, R, EcsTraversable);
+    ECS_ENTITY(world, R, Traversable);
     ECS_COMPONENT(world, Position);
 
     ecs_entity_t e_0 = ecs_set(world, 0, Position, {10, 20});
