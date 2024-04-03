@@ -116,7 +116,7 @@ void flecs_invoke_hook(
 
 void flecs_query_apply_iter_flags(
     ecs_iter_t *it,
-    const ecs_query_t *filter);
+    const ecs_query_t *query);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Safe(r) integer casting
@@ -281,6 +281,6 @@ int ecs_term_finalize(
 
 int32_t flecs_query_pivot_term(
     const ecs_world_t *world,
-    const ecs_query_t *filter);
+    const ecs_query_t *query);
 
 #endif

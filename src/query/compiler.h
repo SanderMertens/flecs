@@ -5,7 +5,7 @@
 
 #include "types.h"
 
-/* Compile filter to list of operations */
+/* Compile query to list of operations */
 int flecs_query_compile(
     ecs_world_t *world,
     ecs_stage_t *stage,

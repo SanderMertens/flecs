@@ -342,7 +342,7 @@ void ecs_query_fini(
     ecs_poly_assert(q, ecs_query_t);
 
     if (q->entity) {
-        /* If filter is associated with entity, use poly dtor path */
+        /* If query is associated with entity, use poly dtor path */
         ecs_delete(q->world, q->entity);
     } else {
         flecs_query_fini(flecs_query_impl(q));
@@ -389,7 +389,7 @@ ecs_query_t* ecs_query_init(
         goto error;
     }
 
-    /* Compile filter to operations */
+    /* Compile query to operations */
     if (flecs_query_compile(world, stage, result)) {
         goto error;
     }

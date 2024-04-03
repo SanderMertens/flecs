@@ -10,10 +10,6 @@
  * Mixins are like a vtable, but for members. Each type populates the table with
  * offsets to the members that correspond with the mixin. If an entry in the
  * mixin table is not set, the type does not support the mixin.
- * 
- * An example is the Iterable mixin, which makes it possible to create an 
- * iterator for any poly object (like filters, queries, the world) that 
- * implements the Iterable mixin.
  */
 
 #include "private_api.h"

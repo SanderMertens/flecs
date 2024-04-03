@@ -294,9 +294,9 @@ bool flecs_query_check_match_monitor(
     }
 
     bool is_this = false;
-    const ecs_query_t *filter = cache->query;
-    ecs_world_t *world = filter->world;
-    int32_t i, j, field_count = filter->field_count;
+    const ecs_query_t *query = cache->query;
+    ecs_world_t *world = query->world;
+    int32_t i, j, field_count = query->field_count;
     int32_t *storage_columns = match->storage_columns;
     ecs_entity_t *sources = match->sources;
     int32_t *columns = it ? it->columns : match->columns;
@@ -335,16 +335,16 @@ bool flecs_query_check_match_monitor(
 
         /* Find term index from field index, which differ when using || */
         int32_t term_index = i;
-        if (filter->terms[i].field_index != i) {
-            for (j = i; j < filter->term_count; j ++) {
-                if (filter->terms[j].field_index == i) {
+        if (query->terms[i].field_index != i) {
+            for (j = i; j < query->term_count; j ++) {
+                if (query->terms[j].field_index == i) {
                     term_index = j;
                     break;
                 }
             }
         }
 
-        is_this = ecs_term_match_this(&filter->terms[term_index]);
+        is_this = ecs_term_match_this(&query->terms[term_index]);
 
         /* Flattened fields are encoded by adding field_count to the column
          * index of the parent component. */

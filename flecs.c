@@ -1817,7 +1817,7 @@ typedef struct ecs_query_cache_t {
 #endif
 
 
-/* Compile filter to list of operations */
+/* Compile query to list of operations */
 int flecs_query_compile(
     ecs_world_t *world,
     ecs_stage_t *stage,
@@ -2137,7 +2137,7 @@ bool flecs_query_trivial_test_w_wildcards(
 /* Helper type for passing around context required for error messages */
 typedef struct {
     const ecs_world_t *world;
-    ecs_query_t *filter;
+    ecs_query_t *query;
     ecs_term_t *term;
     int32_t term_index;
 } ecs_query_validator_ctx_t;
@@ -2200,7 +2200,7 @@ ecs_allocator_t* flecs_query_get_allocator(
 /* Convert query to string */
 char* flecs_query_str(
     const ecs_world_t *world,
-    const ecs_query_t *filter,
+    const ecs_query_t *query,
     const ecs_query_validator_ctx_t *ctx,
     int32_t *term_start_out);
 
@@ -2867,7 +2867,7 @@ void flecs_invoke_hook(
 
 void flecs_query_apply_iter_flags(
     ecs_iter_t *it,
-    const ecs_query_t *filter);
+    const ecs_query_t *query);
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Safe(r) integer casting
@@ -3032,7 +3032,7 @@ int ecs_term_finalize(
 
 int32_t flecs_query_pivot_term(
     const ecs_world_t *world,
-    const ecs_query_t *filter);
+    const ecs_query_t *query);
 
 #endif
 
@@ -12675,12 +12675,12 @@ bool flecs_ignore_observer(
         return true;
     }
 
-    ecs_flags32_t table_flags = table->flags, filter_flags = observer->query->flags;
+    ecs_flags32_t table_flags = table->flags, query_flags = observer->query->flags;
 
     bool result = (table_flags & EcsTableIsPrefab) &&
-        !(filter_flags & EcsQueryMatchPrefab);
+        !(query_flags & EcsQueryMatchPrefab);
     result = result || ((table_flags & EcsTableIsDisabled) &&
-        !(filter_flags & EcsQueryMatchDisabled));
+        !(query_flags & EcsQueryMatchDisabled));
 
     return result;
 }
@@ -12915,7 +12915,7 @@ bool flecs_multi_observer_invoke(
     }
 
     if (match) {
-        /* Monitor observers only invoke when the filter matches for the first
+        /* Monitor observers only invoke when the query matches for the first
          * time with an entity */
         if (o->flags & EcsObserverIsMonitor) {
             ecs_iter_t table_it;
@@ -13141,7 +13141,7 @@ int flecs_multi_observer_init(
     /* Vector that stores a single-component observer for each query term */
     ecs_vec_init_t(&world->allocator, &observer->children, ecs_observer_t*, 2);
 
-    /* Create a child observer for each term in the filter */
+    /* Create a child observer for each term in the query */
     ecs_query_t *query = observer->query;
     ecs_observer_desc_t child_desc = *desc;
     child_desc.last_event_id = observer->last_event_id;
@@ -13289,14 +13289,14 @@ ecs_observer_t* flecs_observer_init(
     observer->id = flecs_sparse_last_id(&world->store.observers);
     observer->dtor = (ecs_poly_dtor_t)flecs_observer_fini;
 
-    /* Make writeable copy of filter desc so that we can set name. This will
+    /* Make writeable copy of query desc so that we can set name. This will
      * make debugging easier, as any error messages related to creating the
-     * filter will have the name of the observer. */
+     * query will have the name of the observer. */
     ecs_query_desc_t query_desc = desc->query;
     query_desc.entity = 0;
     query_desc.cache_kind = EcsQueryCacheNone;
 
-    /* Parse filter */
+    /* Create query */
     ecs_query_t *query = observer->query = ecs_query_init(
         world, &query_desc);
     if (query == NULL) {
@@ -13325,8 +13325,8 @@ ecs_observer_t* flecs_observer_init(
     observer->entity = entity;
 
     /* Check if observer is monitor. Monitors are created as multi observers
-        * since they require pre/post checking of the filter to test if the
-        * entity is entering/leaving the monitor. */
+     * since they require pre/post checking of the filter to test if the
+     * entity is entering/leaving the monitor. */
     int i;
     for (i = 0; i < FLECS_EVENT_DESC_MAX; i ++) {
         ecs_entity_t event = desc->events[i];
@@ -13356,7 +13356,7 @@ ecs_observer_t* flecs_observer_init(
 
     if (query->term_count == 1 && !desc->last_event_id) {
         ecs_term_t *term = &query->terms[0];
-        /* If the filter has a single term but it is a *From operator, we
+        /* If the query has a single term but it is a *From operator, we
          * need to create a multi observer */
         multi |= (term->oper == EcsAndFrom) || (term->oper == EcsOrFrom);
         
@@ -13517,13 +13517,13 @@ void flecs_observer_fini(
             flecs_unregister_observer(
                 world, observer->observable, observer);
         } else {
-            /* Observer creation failed while creating filter */
+            /* Observer creation failed while creating query */
         }
     }
 
     ecs_vec_fini_t(&world->allocator, &observer->children, ecs_observer_t*);
 
-    /* Cleanup filters */
+    /* Cleanup queries */
     ecs_query_fini(observer->query);
     if (observer->not_query) {
         ecs_query_fini(observer->not_query);
@@ -14111,10 +14111,6 @@ const char* ecs_os_strerror(int err) {
  * Mixins are like a vtable, but for members. Each type populates the table with
  * offsets to the members that correspond with the mixin. If an entry in the
  * mixin table is not set, the type does not support the mixin.
- * 
- * An example is the Iterable mixin, which makes it possible to create an 
- * iterator for any poly object (like filters, queries, the world) that 
- * implements the Iterable mixin.
  */
 
 
@@ -35496,7 +35492,7 @@ void ecs_query_fini(
     ecs_poly_assert(q, ecs_query_t);
 
     if (q->entity) {
-        /* If filter is associated with entity, use poly dtor path */
+        /* If query is associated with entity, use poly dtor path */
         ecs_delete(q->world, q->entity);
     } else {
         flecs_query_fini(flecs_query_impl(q));
@@ -35543,7 +35539,7 @@ ecs_query_t* ecs_query_init(
         goto error;
     }
 
-    /* Compile filter to operations */
+    /* Compile query to operations */
     if (flecs_query_compile(world, stage, result)) {
         goto error;
     }
@@ -35683,16 +35679,6 @@ int32_t ecs_query_match_count(
 /**
  * @file query/cache.c
  * @brief Cached query implementation.
- * 
- * Cached queries store a list of matched tables. The inputs for a cached query
- * are a filter and an observer. The filter is used to initially populate the
- * cache, and an observer is used to keep the cacne up to date.
- * 
- * Cached queries additionally support features like sorting and grouping. 
- * With sorting, an application can iterate over entities that can be sorted by
- * a component. Grouping allows an application to group matched tables, which is
- * used internally to implement the cascade feature, and can additionally be 
- * used to implement things like world cells.
  */
 
 
@@ -36218,10 +36204,10 @@ void flecs_query_cache_set_table_match(
     ecs_iter_t *it)
 {
     ecs_allocator_t *a = &world->allocator;
-    ecs_query_t *filter = cache->query;
-    int32_t i, term_count = filter->term_count;
-    int32_t field_count = filter->field_count;
-    ecs_term_t *terms = filter->terms;
+    ecs_query_t *query = cache->query;
+    int32_t i, term_count = query->term_count;
+    int32_t field_count = query->field_count;
+    ecs_term_t *terms = query->terms;
 
     /* Reset resources in case this is an existing record */
     ecs_vec_reset_t(a, &qm->refs, ecs_ref_t);
@@ -36689,13 +36675,13 @@ int flecs_query_cache_order_by(
         ECS_INVALID_PARAMETER, NULL);
 
     /* Find order_by_component term & make sure it is queried for */
-    const ecs_query_t *filter = cache->query;
-    int32_t i, count = filter->term_count;
+    const ecs_query_t *query = cache->query;
+    int32_t i, count = query->term_count;
     int32_t order_by_term = -1;
 
     if (order_by_component) {
         for (i = 0; i < count; i ++) {
-            const ecs_term_t *term = &filter->terms[i];
+            const ecs_term_t *term = &query->terms[i];
             
             /* Only And terms are supported */
             if (term->id == order_by_component && term->oper == EcsAnd) {
@@ -36953,7 +36939,7 @@ ecs_query_cache_t* flecs_query_cache_init(
         observer_desc.query.flags |= EcsQueryNoData|EcsQueryIsInstanced;
 
         /* ecs_query_init could have moved away resources from the terms array
-         * in the descriptor, so use the terms array from the filter. */
+         * in the descriptor, so use the terms array from the query. */
         ecs_os_memcpy_n(observer_desc.query.terms, q->terms, 
             ecs_term_t, FLECS_TERM_COUNT_MAX);
         observer_desc.query.expr = NULL; /* Already parsed */
@@ -36967,10 +36953,10 @@ ecs_query_cache_t* flecs_query_cache_init(
     result->prev_match_count = -1;
 
     if (ecs_should_log_1()) {
-        char *filter_expr = ecs_query_str(result->query);
+        char *query_expr = ecs_query_str(result->query);
         ecs_dbg_1("#[green]query#[normal] [%s] created", 
-            filter_expr ? filter_expr : "");
-        ecs_os_free(filter_expr);
+            query_expr ? query_expr : "");
+        ecs_os_free(query_expr);
     }
 
     ecs_log_push_1();
@@ -38109,9 +38095,9 @@ bool flecs_query_check_match_monitor(
     }
 
     bool is_this = false;
-    const ecs_query_t *filter = cache->query;
-    ecs_world_t *world = filter->world;
-    int32_t i, j, field_count = filter->field_count;
+    const ecs_query_t *query = cache->query;
+    ecs_world_t *world = query->world;
+    int32_t i, j, field_count = query->field_count;
     int32_t *storage_columns = match->storage_columns;
     ecs_entity_t *sources = match->sources;
     int32_t *columns = it ? it->columns : match->columns;
@@ -38150,16 +38136,16 @@ bool flecs_query_check_match_monitor(
 
         /* Find term index from field index, which differ when using || */
         int32_t term_index = i;
-        if (filter->terms[i].field_index != i) {
-            for (j = i; j < filter->term_count; j ++) {
-                if (filter->terms[j].field_index == i) {
+        if (query->terms[i].field_index != i) {
+            for (j = i; j < query->term_count; j ++) {
+                if (query->terms[j].field_index == i) {
                     term_index = j;
                     break;
                 }
             }
         }
 
-        is_this = ecs_term_match_this(&filter->terms[term_index]);
+        is_this = ecs_term_match_this(&query->terms[term_index]);
 
         /* Flattened fields are encoded by adding field_count to the column
          * index of the parent component. */
@@ -38453,7 +38439,7 @@ void ecs_iter_skip(
 
 /**
  * @file addons/querys/compile.c
- * @brief Compile query program from filter.
+ * @brief Compile query program from query.
  */
 
 
@@ -39566,7 +39552,7 @@ int flecs_query_compile(
 
     ecs_assert((term_count - ctx.skipped) >= 0, ECS_INTERNAL_ERROR, NULL);
 
-    /* If filter is empty, insert Nothing instruction */
+    /* If query is empty, insert Nothing instruction */
     if (!(term_count - ctx.skipped)) {
         ecs_vec_clear(ctx.ops);
         ecs_query_op_t nothing = {0};
@@ -40935,20 +40921,20 @@ int flecs_query_compile_term(
     }
 
     /* If we're writing the $this variable, filter out disabled/prefab entities
-     * unless the filter explicitly matches them.
+     * unless the query explicitly matches them.
      * This could've been done with regular With instructions, but since 
      * filtering out disabled/prefab entities is the default and this check is
      * cheap to perform on table flags, it's worth special casing. */
     if (!src_written && op.src.var == 0) {
-        ecs_flags32_t filter_flags = q->flags;
-        if (!(filter_flags & EcsQueryMatchDisabled) || 
-            !(filter_flags & EcsQueryMatchPrefab)) 
+        ecs_flags32_t query_flags = q->flags;
+        if (!(query_flags & EcsQueryMatchDisabled) || 
+            !(query_flags & EcsQueryMatchPrefab)) 
         {
             ecs_flags32_t table_flags = EcsTableNotQueryable;
-            if (!(filter_flags & EcsQueryMatchDisabled)) {
+            if (!(query_flags & EcsQueryMatchDisabled)) {
                 table_flags |= EcsTableIsDisabled;
             }
-            if (!(filter_flags & EcsQueryMatchPrefab)) {
+            if (!(query_flags & EcsQueryMatchPrefab)) {
                 table_flags |= EcsTableIsPrefab;
             }
 
@@ -46404,16 +46390,16 @@ char* ecs_term_str(
 
 char* flecs_query_str(
     const ecs_world_t *world,
-    const ecs_query_t *filter,
+    const ecs_query_t *query,
     const ecs_query_validator_ctx_t *ctx,
     int32_t *term_start_out)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(filter != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(query != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
-    const ecs_term_t *terms = filter->terms;
-    int32_t i, count = filter->term_count;
+    const ecs_term_t *terms = query->terms;
+    int32_t i, count = query->term_count;
 
     for (i = 0; i < count; i ++) {
         const ecs_term_t *term = &terms[i];
@@ -46553,13 +46539,13 @@ error:
 
 int32_t flecs_query_pivot_term(
     const ecs_world_t *world,
-    const ecs_query_t *filter)
+    const ecs_query_t *query)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(filter != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(query != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    const ecs_term_t *terms = filter->terms;
-    int32_t i, term_count = filter->term_count;
+    const ecs_term_t *terms = query->terms;
+    int32_t i, term_count = query->term_count;
     int32_t pivot_term = -1, min_count = -1, self_pivot_term = -1;
 
     for (i = 0; i < term_count; i ++) {
@@ -46578,7 +46564,7 @@ int32_t flecs_query_pivot_term(
         if (!idr) {
             /* If one of the terms does not match with any data, iterator 
              * should not return anything */
-            return -2; /* -2 indicates filter doesn't match anything */
+            return -2; /* -2 indicates query doesn't match anything */
         }
 
         int32_t table_count = flecs_table_cache_count(&idr->cache);
@@ -46602,33 +46588,19 @@ error:
 
 void flecs_query_apply_iter_flags(
     ecs_iter_t *it,
-    const ecs_query_t *filter)
+    const ecs_query_t *query)
 {
     ECS_BIT_COND(it->flags, EcsIterIsInstanced, 
-        ECS_BIT_IS_SET(filter->flags, EcsQueryIsInstanced));
+        ECS_BIT_IS_SET(query->flags, EcsQueryIsInstanced));
     ECS_BIT_COND(it->flags, EcsIterNoData,
-        ECS_BIT_IS_SET(filter->flags, EcsQueryNoData));
+        ECS_BIT_IS_SET(query->flags, EcsQueryNoData));
     ECS_BIT_COND(it->flags, EcsIterHasCondSet, 
-        ECS_BIT_IS_SET(filter->flags, EcsQueryHasCondSet));
+        ECS_BIT_IS_SET(query->flags, EcsQueryHasCondSet));
 }
 
 /**
- * @file filter.c
- * @brief Uncached query implementation.
- * 
- * Uncached queries (filters) are stateless objects that do not cache their 
- * results. This file contains the creation and validation of uncached queries
- * and code for query iteration.
- * 
- * There file contains the implementation for term queries and filters. Term 
- * queries are uncached queries that only apply to a single term. Querys are
- * uncached queries that support multiple terms. Querys are built on top of
- * term queries: before iteration a filter will first find a "pivot" term (the
- * term with the smallest number of elements), and create a term iterator for
- * it. The output of that term iterator is then evaluated against the rest of
- * the terms of the filter.
- * 
- * Cached queries and observers are built using filters.
+ * @file validator.c
+ * @brief Validate and finalize queries.
  */
 
 #include <ctype.h>
@@ -46645,14 +46617,14 @@ void flecs_query_validator_error(
     int32_t term_start = 0;
 
     char *expr = NULL;
-    if (ctx->filter) {
-        expr = flecs_query_str(ctx->world, ctx->filter, ctx, &term_start);
+    if (ctx->query) {
+        expr = flecs_query_str(ctx->world, ctx->query, ctx, &term_start);
     } else {
         expr = ecs_term_str(ctx->world, ctx->term);
     }
     const char *name = NULL;
-    if (ctx->filter && ctx->filter->entity) {
-        name = ecs_get_name(ctx->filter->world, ctx->filter->entity);
+    if (ctx->query && ctx->query->entity) {
+        name = ecs_get_name(ctx->query->world, ctx->query->entity);
     }
     ecs_parser_errorv(name, expr, term_start, fmt, args);
     ecs_os_free(expr);
@@ -46741,7 +46713,7 @@ int flecs_term_ref_lookup(
     }
 
     if (!e) {
-        if (ctx->filter && (ctx->filter->flags & EcsQueryAllowUnresolvedByName)) {
+        if (ctx->query && (ctx->query->flags & EcsQueryAllowUnresolvedByName)) {
             ref->id |= EcsIsName;
             ref->id &= ~EcsIsEntity;
             return 0;
@@ -46949,7 +46921,7 @@ int flecs_term_populate_from_id(
                 flecs_query_validator_error(ctx, "missing second element in term.id");
                 return -1;
             } else {
-                /* (ChildOf, 0) is allowed so filter can be used to efficiently
+                /* (ChildOf, 0) is allowed so query can be used to efficiently
                  * query for root entities */
             }
         }
@@ -47298,7 +47270,7 @@ int flecs_term_finalize(
 
     if (first_id) {
         /* Only enable inheritance for ids which are inherited from at the time
-         * of filter creation. To force component inheritance to be evaluated,
+         * of query creation. To force component inheritance to be evaluated,
          * an application can explicitly set traversal flags. */
         if (flecs_id_record_get(world, ecs_pair(EcsIsA, first->id))) {
             if (!((first_flags & EcsTraverseFlags) == EcsSelf)) {
@@ -47535,7 +47507,7 @@ int flecs_query_finalize_terms(
 
     ecs_query_validator_ctx_t ctx = {0};
     ctx.world = world;
-    ctx.filter = q;
+    ctx.query = q;
 
     q->flags |= EcsQueryMatchOnlyThis;
 
@@ -47769,7 +47741,7 @@ int flecs_query_finalize_terms(
 
     if (term_count && (terms[term_count - 1].oper == EcsOr)) {
         flecs_query_validator_error(&ctx, 
-            "last term of filter can't have OR operator");
+            "last term of query can't have OR operator");
         return -1;
     }
 
@@ -47822,7 +47794,7 @@ int flecs_query_finalize_terms(
 
     ECS_BIT_COND(q->flags, EcsQueryHasCondSet, cond_set);
 
-    /* Check if this is a trivial filter */
+    /* Check if this is a trivial query */
     if ((q->flags & EcsQueryMatchOnlyThis)) {
         if (!(q->flags & 
             (EcsQueryHasPred|EcsQueryMatchDisabled|EcsQueryMatchPrefab))) 
@@ -47889,7 +47861,7 @@ int flecs_query_query_populate_terms(
         term_count ++;
     }
 
-    /* Copy terms from array to filter */
+    /* Copy terms from array to query */
     if (term_count) {
         ecs_os_memcpy_n(&q->terms, desc->terms, ecs_term_t, term_count);
     }
@@ -47899,7 +47871,7 @@ int flecs_query_query_populate_terms(
     if (expr && expr[0]) {
 #ifdef FLECS_PARSER
         ecs_entity_t entity = desc->entity;
-        const char *filter_name = entity ? ecs_get_name(world, entity) : NULL;
+        const char *query_name = entity ? ecs_get_name(world, entity) : NULL;
         const char *ptr = desc->expr;
         ecs_oper_kind_t extra_oper = 0;
         ecs_term_ref_t extra_args[FLECS_TERM_ARG_COUNT_MAX];
@@ -47916,7 +47888,7 @@ int flecs_query_query_populate_terms(
 
             /* Parse next term */
             ecs_term_t *term = &q->terms[term_count];
-            ptr = ecs_parse_term(world, stage, filter_name, expr, ptr, 
+            ptr = ecs_parse_term(world, stage, query_name, expr, ptr, 
                 term, &extra_oper, extra_args, true);
             if (!ptr) {
                 /* Parser error */
@@ -59899,31 +59871,31 @@ int ecs_world_to_json_buf(
     ecs_strbuf_t *buf_out,
     const ecs_world_to_json_desc_t *desc)
 {
-    ecs_query_desc_t filter_desc = {0};
+    ecs_query_desc_t query_desc = {0};
 
     if (desc && desc->serialize_builtin && desc->serialize_modules) {
-        filter_desc.terms[0].id = EcsAny;
+        query_desc.terms[0].id = EcsAny;
     } else {
         bool serialize_builtin = desc && desc->serialize_builtin;
         bool serialize_modules = desc && desc->serialize_modules;
         int32_t term_id = 0;
 
         if (!serialize_builtin) {
-            filter_desc.terms[term_id].id = ecs_pair(EcsChildOf, EcsFlecs);
-            filter_desc.terms[term_id].oper = EcsNot;
-            filter_desc.terms[term_id].src.id = EcsSelf | EcsUp;
+            query_desc.terms[term_id].id = ecs_pair(EcsChildOf, EcsFlecs);
+            query_desc.terms[term_id].oper = EcsNot;
+            query_desc.terms[term_id].src.id = EcsSelf | EcsUp;
             term_id ++;
         }
         if (!serialize_modules) {
-            filter_desc.terms[term_id].id = EcsModule;
-            filter_desc.terms[term_id].oper = EcsNot;
-            filter_desc.terms[term_id].src.id = EcsSelf | EcsUp;
+            query_desc.terms[term_id].id = EcsModule;
+            query_desc.terms[term_id].oper = EcsNot;
+            query_desc.terms[term_id].src.id = EcsSelf | EcsUp;
         }
     }
 
-    filter_desc.flags = EcsQueryMatchDisabled|EcsQueryMatchPrefab;
+    query_desc.flags = EcsQueryMatchDisabled|EcsQueryMatchPrefab;
 
-    ecs_query_t *q = ecs_query_init(world, &filter_desc);
+    ecs_query_t *q = ecs_query_init(world, &query_desc);
     if (!q) {
         return -1;
     }
@@ -66612,13 +66584,13 @@ bool flecs_pipeline_check_term(
 static
 bool flecs_pipeline_check_terms(
     ecs_world_t *world,
-    ecs_query_t *filter,
+    ecs_query_t *query,
     bool is_active,
     ecs_write_state_t *ws)
 {
     bool needs_merge = false;
-    ecs_term_t *terms = filter->terms;
-    int32_t t, term_count = filter->term_count;
+    ecs_term_t *terms = query->terms;
+    int32_t t, term_count = query->term_count;
 
     /* Check This terms first. This way if a term indicating writing to a stage
      * was added before the term, it won't cause merging. */

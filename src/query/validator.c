@@ -1,20 +1,6 @@
 /**
- * @file filter.c
- * @brief Uncached query implementation.
- * 
- * Uncached queries (filters) are stateless objects that do not cache their 
- * results. This file contains the creation and validation of uncached queries
- * and code for query iteration.
- * 
- * There file contains the implementation for term queries and filters. Term 
- * queries are uncached queries that only apply to a single term. Querys are
- * uncached queries that support multiple terms. Querys are built on top of
- * term queries: before iteration a filter will first find a "pivot" term (the
- * term with the smallest number of elements), and create a term iterator for
- * it. The output of that term iterator is then evaluated against the rest of
- * the terms of the filter.
- * 
- * Cached queries and observers are built using filters.
+ * @file validator.c
+ * @brief Validate and finalize queries.
  */
 
 #include "../private_api.h"
@@ -32,14 +18,14 @@ void flecs_query_validator_error(
     int32_t term_start = 0;
 
     char *expr = NULL;
-    if (ctx->filter) {
-        expr = flecs_query_str(ctx->world, ctx->filter, ctx, &term_start);
+    if (ctx->query) {
+        expr = flecs_query_str(ctx->world, ctx->query, ctx, &term_start);
     } else {
         expr = ecs_term_str(ctx->world, ctx->term);
     }
     const char *name = NULL;
-    if (ctx->filter && ctx->filter->entity) {
-        name = ecs_get_name(ctx->filter->world, ctx->filter->entity);
+    if (ctx->query && ctx->query->entity) {
+        name = ecs_get_name(ctx->query->world, ctx->query->entity);
     }
     ecs_parser_errorv(name, expr, term_start, fmt, args);
     ecs_os_free(expr);
@@ -128,7 +114,7 @@ int flecs_term_ref_lookup(
     }
 
     if (!e) {
-        if (ctx->filter && (ctx->filter->flags & EcsQueryAllowUnresolvedByName)) {
+        if (ctx->query && (ctx->query->flags & EcsQueryAllowUnresolvedByName)) {
             ref->id |= EcsIsName;
             ref->id &= ~EcsIsEntity;
             return 0;
@@ -336,7 +322,7 @@ int flecs_term_populate_from_id(
                 flecs_query_validator_error(ctx, "missing second element in term.id");
                 return -1;
             } else {
-                /* (ChildOf, 0) is allowed so filter can be used to efficiently
+                /* (ChildOf, 0) is allowed so query can be used to efficiently
                  * query for root entities */
             }
         }
@@ -685,7 +671,7 @@ int flecs_term_finalize(
 
     if (first_id) {
         /* Only enable inheritance for ids which are inherited from at the time
-         * of filter creation. To force component inheritance to be evaluated,
+         * of query creation. To force component inheritance to be evaluated,
          * an application can explicitly set traversal flags. */
         if (flecs_id_record_get(world, ecs_pair(EcsIsA, first->id))) {
             if (!((first_flags & EcsTraverseFlags) == EcsSelf)) {
@@ -922,7 +908,7 @@ int flecs_query_finalize_terms(
 
     ecs_query_validator_ctx_t ctx = {0};
     ctx.world = world;
-    ctx.filter = q;
+    ctx.query = q;
 
     q->flags |= EcsQueryMatchOnlyThis;
 
@@ -1156,7 +1142,7 @@ int flecs_query_finalize_terms(
 
     if (term_count && (terms[term_count - 1].oper == EcsOr)) {
         flecs_query_validator_error(&ctx, 
-            "last term of filter can't have OR operator");
+            "last term of query can't have OR operator");
         return -1;
     }
 
@@ -1209,7 +1195,7 @@ int flecs_query_finalize_terms(
 
     ECS_BIT_COND(q->flags, EcsQueryHasCondSet, cond_set);
 
-    /* Check if this is a trivial filter */
+    /* Check if this is a trivial query */
     if ((q->flags & EcsQueryMatchOnlyThis)) {
         if (!(q->flags & 
             (EcsQueryHasPred|EcsQueryMatchDisabled|EcsQueryMatchPrefab))) 
@@ -1276,7 +1262,7 @@ int flecs_query_query_populate_terms(
         term_count ++;
     }
 
-    /* Copy terms from array to filter */
+    /* Copy terms from array to query */
     if (term_count) {
         ecs_os_memcpy_n(&q->terms, desc->terms, ecs_term_t, term_count);
     }
@@ -1286,7 +1272,7 @@ int flecs_query_query_populate_terms(
     if (expr && expr[0]) {
 #ifdef FLECS_PARSER
         ecs_entity_t entity = desc->entity;
-        const char *filter_name = entity ? ecs_get_name(world, entity) : NULL;
+        const char *query_name = entity ? ecs_get_name(world, entity) : NULL;
         const char *ptr = desc->expr;
         ecs_oper_kind_t extra_oper = 0;
         ecs_term_ref_t extra_args[FLECS_TERM_ARG_COUNT_MAX];
@@ -1303,7 +1289,7 @@ int flecs_query_query_populate_terms(
 
             /* Parse next term */
             ecs_term_t *term = &q->terms[term_count];
-            ptr = ecs_parse_term(world, stage, filter_name, expr, ptr, 
+            ptr = ecs_parse_term(world, stage, query_name, expr, ptr, 
                 term, &extra_oper, extra_args, true);
             if (!ptr) {
                 /* Parser error */

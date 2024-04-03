@@ -1,5 +1,5 @@
 /**
- * @file addons/cpp/mixins/filter/builder.hpp
+ * @file addons/cpp/mixins/query/builder.hpp
  * @brief Query builder.
  */
 

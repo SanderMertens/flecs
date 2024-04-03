@@ -2632,10 +2632,9 @@ typedef struct ecs_query_t ecs_query_t;
  *   });
  * @endcode
  *
- * Observer queries can be as complex as filters. Observers only trigger when
- * the source of the event matches the full observer query. For example, an
- * OnAdd observer for Position, Velocity will only trigger after both components
- * have been added to the entity. */
+ * Observers only trigger when the source of the event matches the full observer 
+ * query. For example, an OnAdd observer for Position, Velocity will only 
+ * trigger after both components have been added to the entity. */
 typedef struct ecs_observer_t ecs_observer_t;
 
 /** An observable produces events that can be listened for by an observer.
@@ -3694,7 +3693,7 @@ typedef struct ecs_component_desc_t {
 
 /** Used with ecs_query_init. 
  * 
- * \ingroup filters
+ * \ingroup queries
  */
 typedef struct ecs_query_desc_t {
     int32_t _canary;
@@ -7108,7 +7107,7 @@ ecs_entity_t ecs_observer_init(
 /** Default run action for observer.
  * This function can be called from a custom observer run action (see
  * ecs_observer_desc_t::run for more details). This function ensures that the
- * observer's filter is applied to the iterator's table, filters out duplicate
+ * observer's query is applied to the iterator's table, filters out duplicate
  * events and implements EcsMonitor logic.
  *
  * @param it The iterator.
@@ -10892,9 +10891,8 @@ typedef struct ecs_system_desc_t {
      *
      * It should not be assumed that the input iterator can always be iterated
      * with ecs_query_next(). When a system is multithreaded and/or paged, the
-     * iterator can be either a worker or paged iterator. Future use cases may
-     * introduce additional inputs for a system, such as rules and filters. The
-     * correct function to use for iteration is ecs_iter_next().
+     * iterator can be either a worker or paged iterator. The correct function 
+     * to use for iteration is ecs_iter_next().
      *
      * An implementation can test whether the iterator is a query iterator by
      * testing whether the it->next value is equal to ecs_query_next(). */
@@ -14708,7 +14706,7 @@ void FlecsScriptImport(
  * @brief Parser addon.
  *
  * The parser addon parses string expressions into lists of terms, and can be
- * used to construct filters, queries and types.
+ * used to construct queries.
  */
 
 #ifdef FLECS_PARSER
@@ -27437,7 +27435,7 @@ inline flecs::term world::term() const {
 #pragma once
 
 /**
- * @file addons/cpp/mixins/filter/builder.hpp
+ * @file addons/cpp/mixins/query/builder.hpp
  * @brief Query builder.
  */
 
@@ -27501,7 +27499,7 @@ protected:
 } // namespace flecs
 
 /**
- * @file addons/cpp/mixins/filter/builder_i.hpp
+ * @file addons/cpp/mixins/query/builder_i.hpp
  * @brief Query builder interface.
  */
 
@@ -27543,7 +27541,7 @@ struct query_builder_i : term_builder_i<Base> {
 
     Base& expr(const char *expr) {
         ecs_check(m_expr_count == 0, ECS_INVALID_OPERATION,
-            "filter_builder::expr() called more than once");
+            "query_builder::expr() called more than once");
         m_desc->expr = expr;
         m_expr_count ++;
 
@@ -27640,7 +27638,7 @@ struct query_builder_i : term_builder_i<Base> {
         if (this->m_term) {
             ecs_check(ecs_term_is_initialized(this->m_term), 
                 ECS_INVALID_OPERATION, 
-                    "filter_builder::term() called without initializing term");
+                    "query_builder::term() called without initializing term");
         }
 
         ecs_check(m_term_index < FLECS_TERM_COUNT_MAX, 
@@ -28316,7 +28314,7 @@ struct observer_builder_i : query_builder_i<Base, Components ...> {
         return *this;
     }
 
-    /** Invoke observer for anything that matches its filter on creation */
+    /** Invoke observer for anything that matches its query on creation */
     Base& yield_existing(bool value = true) {
         m_desc->yield_existing = value;
         return *this;

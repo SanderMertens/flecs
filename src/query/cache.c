@@ -1,16 +1,6 @@
 /**
  * @file query/cache.c
  * @brief Cached query implementation.
- * 
- * Cached queries store a list of matched tables. The inputs for a cached query
- * are a filter and an observer. The filter is used to initially populate the
- * cache, and an observer is used to keep the cacne up to date.
- * 
- * Cached queries additionally support features like sorting and grouping. 
- * With sorting, an application can iterate over entities that can be sorted by
- * a component. Grouping allows an application to group matched tables, which is
- * used internally to implement the cascade feature, and can additionally be 
- * used to implement things like world cells.
  */
 
 #include "../private_api.h"
@@ -537,10 +527,10 @@ void flecs_query_cache_set_table_match(
     ecs_iter_t *it)
 {
     ecs_allocator_t *a = &world->allocator;
-    ecs_query_t *filter = cache->query;
-    int32_t i, term_count = filter->term_count;
-    int32_t field_count = filter->field_count;
-    ecs_term_t *terms = filter->terms;
+    ecs_query_t *query = cache->query;
+    int32_t i, term_count = query->term_count;
+    int32_t field_count = query->field_count;
+    ecs_term_t *terms = query->terms;
 
     /* Reset resources in case this is an existing record */
     ecs_vec_reset_t(a, &qm->refs, ecs_ref_t);
@@ -1008,13 +998,13 @@ int flecs_query_cache_order_by(
         ECS_INVALID_PARAMETER, NULL);
 
     /* Find order_by_component term & make sure it is queried for */
-    const ecs_query_t *filter = cache->query;
-    int32_t i, count = filter->term_count;
+    const ecs_query_t *query = cache->query;
+    int32_t i, count = query->term_count;
     int32_t order_by_term = -1;
 
     if (order_by_component) {
         for (i = 0; i < count; i ++) {
-            const ecs_term_t *term = &filter->terms[i];
+            const ecs_term_t *term = &query->terms[i];
             
             /* Only And terms are supported */
             if (term->id == order_by_component && term->oper == EcsAnd) {
@@ -1272,7 +1262,7 @@ ecs_query_cache_t* flecs_query_cache_init(
         observer_desc.query.flags |= EcsQueryNoData|EcsQueryIsInstanced;
 
         /* ecs_query_init could have moved away resources from the terms array
-         * in the descriptor, so use the terms array from the filter. */
+         * in the descriptor, so use the terms array from the query. */
         ecs_os_memcpy_n(observer_desc.query.terms, q->terms, 
             ecs_term_t, FLECS_TERM_COUNT_MAX);
         observer_desc.query.expr = NULL; /* Already parsed */
@@ -1286,10 +1276,10 @@ ecs_query_cache_t* flecs_query_cache_init(
     result->prev_match_count = -1;
 
     if (ecs_should_log_1()) {
-        char *filter_expr = ecs_query_str(result->query);
+        char *query_expr = ecs_query_str(result->query);
         ecs_dbg_1("#[green]query#[normal] [%s] created", 
-            filter_expr ? filter_expr : "");
-        ecs_os_free(filter_expr);
+            query_expr ? query_expr : "");
+        ecs_os_free(query_expr);
     }
 
     ecs_log_push_1();

@@ -1,5 +1,5 @@
 /**
- * @file addons/cpp/mixins/filter/builder_i.hpp
+ * @file addons/cpp/mixins/query/builder_i.hpp
  * @brief Query builder interface.
  */
 
@@ -42,7 +42,7 @@ struct query_builder_i : term_builder_i<Base> {
 
     Base& expr(const char *expr) {
         ecs_check(m_expr_count == 0, ECS_INVALID_OPERATION,
-            "filter_builder::expr() called more than once");
+            "query_builder::expr() called more than once");
         m_desc->expr = expr;
         m_expr_count ++;
 
@@ -139,7 +139,7 @@ struct query_builder_i : term_builder_i<Base> {
         if (this->m_term) {
             ecs_check(ecs_term_is_initialized(this->m_term), 
                 ECS_INVALID_OPERATION, 
-                    "filter_builder::term() called without initializing term");
+                    "query_builder::term() called without initializing term");
         }
 
         ecs_check(m_term_index < FLECS_TERM_COUNT_MAX, 

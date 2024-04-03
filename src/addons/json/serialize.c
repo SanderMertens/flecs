@@ -2427,31 +2427,31 @@ int ecs_world_to_json_buf(
     ecs_strbuf_t *buf_out,
     const ecs_world_to_json_desc_t *desc)
 {
-    ecs_query_desc_t filter_desc = {0};
+    ecs_query_desc_t query_desc = {0};
 
     if (desc && desc->serialize_builtin && desc->serialize_modules) {
-        filter_desc.terms[0].id = EcsAny;
+        query_desc.terms[0].id = EcsAny;
     } else {
         bool serialize_builtin = desc && desc->serialize_builtin;
         bool serialize_modules = desc && desc->serialize_modules;
         int32_t term_id = 0;
 
         if (!serialize_builtin) {
-            filter_desc.terms[term_id].id = ecs_pair(EcsChildOf, EcsFlecs);
-            filter_desc.terms[term_id].oper = EcsNot;
-            filter_desc.terms[term_id].src.id = EcsSelf | EcsUp;
+            query_desc.terms[term_id].id = ecs_pair(EcsChildOf, EcsFlecs);
+            query_desc.terms[term_id].oper = EcsNot;
+            query_desc.terms[term_id].src.id = EcsSelf | EcsUp;
             term_id ++;
         }
         if (!serialize_modules) {
-            filter_desc.terms[term_id].id = EcsModule;
-            filter_desc.terms[term_id].oper = EcsNot;
-            filter_desc.terms[term_id].src.id = EcsSelf | EcsUp;
+            query_desc.terms[term_id].id = EcsModule;
+            query_desc.terms[term_id].oper = EcsNot;
+            query_desc.terms[term_id].src.id = EcsSelf | EcsUp;
         }
     }
 
-    filter_desc.flags = EcsQueryMatchDisabled|EcsQueryMatchPrefab;
+    query_desc.flags = EcsQueryMatchDisabled|EcsQueryMatchPrefab;
 
-    ecs_query_t *q = ecs_query_init(world, &filter_desc);
+    ecs_query_t *q = ecs_query_init(world, &query_desc);
     if (!q) {
         return -1;
     }

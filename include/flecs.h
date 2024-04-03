@@ -413,10 +413,9 @@ typedef struct ecs_query_t ecs_query_t;
  *   });
  * @endcode
  *
- * Observer queries can be as complex as filters. Observers only trigger when
- * the source of the event matches the full observer query. For example, an
- * OnAdd observer for Position, Velocity will only trigger after both components
- * have been added to the entity. */
+ * Observers only trigger when the source of the event matches the full observer 
+ * query. For example, an OnAdd observer for Position, Velocity will only 
+ * trigger after both components have been added to the entity. */
 typedef struct ecs_observer_t ecs_observer_t;
 
 /** An observable produces events that can be listened for by an observer.
@@ -953,7 +952,7 @@ typedef struct ecs_component_desc_t {
 
 /** Used with ecs_query_init. 
  * 
- * \ingroup filters
+ * \ingroup queries
  */
 typedef struct ecs_query_desc_t {
     int32_t _canary;
@@ -4346,7 +4345,7 @@ ecs_entity_t ecs_observer_init(
 /** Default run action for observer.
  * This function can be called from a custom observer run action (see
  * ecs_observer_desc_t::run for more details). This function ensures that the
- * observer's filter is applied to the iterator's table, filters out duplicate
+ * observer's query is applied to the iterator's table, filters out duplicate
  * events and implements EcsMonitor logic.
  *
  * @param it The iterator.

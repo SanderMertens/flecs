@@ -1,6 +1,6 @@
 /**
  * @file addons/querys/compile.c
- * @brief Compile query program from filter.
+ * @brief Compile query program from query.
  */
 
 #include "../private_api.h"
@@ -1114,7 +1114,7 @@ int flecs_query_compile(
 
     ecs_assert((term_count - ctx.skipped) >= 0, ECS_INTERNAL_ERROR, NULL);
 
-    /* If filter is empty, insert Nothing instruction */
+    /* If query is empty, insert Nothing instruction */
     if (!(term_count - ctx.skipped)) {
         ecs_vec_clear(ctx.ops);
         ecs_query_op_t nothing = {0};

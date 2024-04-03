@@ -3,7 +3,7 @@
  * @brief Parser addon.
  *
  * The parser addon parses string expressions into lists of terms, and can be
- * used to construct filters, queries and types.
+ * used to construct queries.
  */
 
 #ifdef FLECS_PARSER

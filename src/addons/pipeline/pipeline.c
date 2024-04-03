@@ -211,13 +211,13 @@ bool flecs_pipeline_check_term(
 static
 bool flecs_pipeline_check_terms(
     ecs_world_t *world,
-    ecs_query_t *filter,
+    ecs_query_t *query,
     bool is_active,
     ecs_write_state_t *ws)
 {
     bool needs_merge = false;
-    ecs_term_t *terms = filter->terms;
-    int32_t t, term_count = filter->term_count;
+    ecs_term_t *terms = query->terms;
+    int32_t t, term_count = query->term_count;
 
     /* Check This terms first. This way if a term indicating writing to a stage
      * was added before the term, it won't cause merging. */

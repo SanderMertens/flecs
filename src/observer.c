@@ -263,12 +263,12 @@ bool flecs_ignore_observer(
         return true;
     }
 
-    ecs_flags32_t table_flags = table->flags, filter_flags = observer->query->flags;
+    ecs_flags32_t table_flags = table->flags, query_flags = observer->query->flags;
 
     bool result = (table_flags & EcsTableIsPrefab) &&
-        !(filter_flags & EcsQueryMatchPrefab);
+        !(query_flags & EcsQueryMatchPrefab);
     result = result || ((table_flags & EcsTableIsDisabled) &&
-        !(filter_flags & EcsQueryMatchDisabled));
+        !(query_flags & EcsQueryMatchDisabled));
 
     return result;
 }
@@ -503,7 +503,7 @@ bool flecs_multi_observer_invoke(
     }
 
     if (match) {
-        /* Monitor observers only invoke when the filter matches for the first
+        /* Monitor observers only invoke when the query matches for the first
          * time with an entity */
         if (o->flags & EcsObserverIsMonitor) {
             ecs_iter_t table_it;
@@ -729,7 +729,7 @@ int flecs_multi_observer_init(
     /* Vector that stores a single-component observer for each query term */
     ecs_vec_init_t(&world->allocator, &observer->children, ecs_observer_t*, 2);
 
-    /* Create a child observer for each term in the filter */
+    /* Create a child observer for each term in the query */
     ecs_query_t *query = observer->query;
     ecs_observer_desc_t child_desc = *desc;
     child_desc.last_event_id = observer->last_event_id;
@@ -877,14 +877,14 @@ ecs_observer_t* flecs_observer_init(
     observer->id = flecs_sparse_last_id(&world->store.observers);
     observer->dtor = (ecs_poly_dtor_t)flecs_observer_fini;
 
-    /* Make writeable copy of filter desc so that we can set name. This will
+    /* Make writeable copy of query desc so that we can set name. This will
      * make debugging easier, as any error messages related to creating the
-     * filter will have the name of the observer. */
+     * query will have the name of the observer. */
     ecs_query_desc_t query_desc = desc->query;
     query_desc.entity = 0;
     query_desc.cache_kind = EcsQueryCacheNone;
 
-    /* Parse filter */
+    /* Create query */
     ecs_query_t *query = observer->query = ecs_query_init(
         world, &query_desc);
     if (query == NULL) {
@@ -913,8 +913,8 @@ ecs_observer_t* flecs_observer_init(
     observer->entity = entity;
 
     /* Check if observer is monitor. Monitors are created as multi observers
-        * since they require pre/post checking of the filter to test if the
-        * entity is entering/leaving the monitor. */
+     * since they require pre/post checking of the filter to test if the
+     * entity is entering/leaving the monitor. */
     int i;
     for (i = 0; i < FLECS_EVENT_DESC_MAX; i ++) {
         ecs_entity_t event = desc->events[i];
@@ -944,7 +944,7 @@ ecs_observer_t* flecs_observer_init(
 
     if (query->term_count == 1 && !desc->last_event_id) {
         ecs_term_t *term = &query->terms[0];
-        /* If the filter has a single term but it is a *From operator, we
+        /* If the query has a single term but it is a *From operator, we
          * need to create a multi observer */
         multi |= (term->oper == EcsAndFrom) || (term->oper == EcsOrFrom);
         
@@ -1105,13 +1105,13 @@ void flecs_observer_fini(
             flecs_unregister_observer(
                 world, observer->observable, observer);
         } else {
-            /* Observer creation failed while creating filter */
+            /* Observer creation failed while creating query */
         }
     }
 
     ecs_vec_fini_t(&world->allocator, &observer->children, ecs_observer_t*);
 
-    /* Cleanup filters */
+    /* Cleanup queries */
     ecs_query_fini(observer->query);
     if (observer->not_query) {
         ecs_query_fini(observer->not_query);

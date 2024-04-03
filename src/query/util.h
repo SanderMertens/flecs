@@ -8,7 +8,7 @@
 /* Helper type for passing around context required for error messages */
 typedef struct {
     const ecs_world_t *world;
-    ecs_query_t *filter;
+    ecs_query_t *query;
     ecs_term_t *term;
     int32_t term_index;
 } ecs_query_validator_ctx_t;
@@ -71,7 +71,7 @@ ecs_allocator_t* flecs_query_get_allocator(
 /* Convert query to string */
 char* flecs_query_str(
     const ecs_world_t *world,
-    const ecs_query_t *filter,
+    const ecs_query_t *query,
     const ecs_query_validator_ctx_t *ctx,
     int32_t *term_start_out);
 

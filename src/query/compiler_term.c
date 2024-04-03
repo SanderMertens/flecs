@@ -1335,20 +1335,20 @@ int flecs_query_compile_term(
     }
 
     /* If we're writing the $this variable, filter out disabled/prefab entities
-     * unless the filter explicitly matches them.
+     * unless the query explicitly matches them.
      * This could've been done with regular With instructions, but since 
      * filtering out disabled/prefab entities is the default and this check is
      * cheap to perform on table flags, it's worth special casing. */
     if (!src_written && op.src.var == 0) {
-        ecs_flags32_t filter_flags = q->flags;
-        if (!(filter_flags & EcsQueryMatchDisabled) || 
-            !(filter_flags & EcsQueryMatchPrefab)) 
+        ecs_flags32_t query_flags = q->flags;
+        if (!(query_flags & EcsQueryMatchDisabled) || 
+            !(query_flags & EcsQueryMatchPrefab)) 
         {
             ecs_flags32_t table_flags = EcsTableNotQueryable;
-            if (!(filter_flags & EcsQueryMatchDisabled)) {
+            if (!(query_flags & EcsQueryMatchDisabled)) {
                 table_flags |= EcsTableIsDisabled;
             }
-            if (!(filter_flags & EcsQueryMatchPrefab)) {
+            if (!(query_flags & EcsQueryMatchPrefab)) {
                 table_flags |= EcsTableIsPrefab;
             }
 

@@ -689,16 +689,16 @@ char* ecs_term_str(
 
 char* flecs_query_str(
     const ecs_world_t *world,
-    const ecs_query_t *filter,
+    const ecs_query_t *query,
     const ecs_query_validator_ctx_t *ctx,
     int32_t *term_start_out)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(filter != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(query != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
-    const ecs_term_t *terms = filter->terms;
-    int32_t i, count = filter->term_count;
+    const ecs_term_t *terms = query->terms;
+    int32_t i, count = query->term_count;
 
     for (i = 0; i < count; i ++) {
         const ecs_term_t *term = &terms[i];
@@ -838,13 +838,13 @@ error:
 
 int32_t flecs_query_pivot_term(
     const ecs_world_t *world,
-    const ecs_query_t *filter)
+    const ecs_query_t *query)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(filter != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(query != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    const ecs_term_t *terms = filter->terms;
-    int32_t i, term_count = filter->term_count;
+    const ecs_term_t *terms = query->terms;
+    int32_t i, term_count = query->term_count;
     int32_t pivot_term = -1, min_count = -1, self_pivot_term = -1;
 
     for (i = 0; i < term_count; i ++) {
@@ -863,7 +863,7 @@ int32_t flecs_query_pivot_term(
         if (!idr) {
             /* If one of the terms does not match with any data, iterator 
              * should not return anything */
-            return -2; /* -2 indicates filter doesn't match anything */
+            return -2; /* -2 indicates query doesn't match anything */
         }
 
         int32_t table_count = flecs_table_cache_count(&idr->cache);
@@ -887,12 +887,12 @@ error:
 
 void flecs_query_apply_iter_flags(
     ecs_iter_t *it,
-    const ecs_query_t *filter)
+    const ecs_query_t *query)
 {
     ECS_BIT_COND(it->flags, EcsIterIsInstanced, 
-        ECS_BIT_IS_SET(filter->flags, EcsQueryIsInstanced));
+        ECS_BIT_IS_SET(query->flags, EcsQueryIsInstanced));
     ECS_BIT_COND(it->flags, EcsIterNoData,
-        ECS_BIT_IS_SET(filter->flags, EcsQueryNoData));
+        ECS_BIT_IS_SET(query->flags, EcsQueryNoData));
     ECS_BIT_COND(it->flags, EcsIterHasCondSet, 
-        ECS_BIT_IS_SET(filter->flags, EcsQueryHasCondSet));
+        ECS_BIT_IS_SET(query->flags, EcsQueryHasCondSet));
 }
