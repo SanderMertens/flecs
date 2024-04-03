@@ -19,7 +19,7 @@ void SerializeIterToJson_serialize_1_comps_empty(void) {
     ecs_query_t *q = ecs_query_new(world, "Position");
     ecs_iter_t it = ecs_query_iter(world, q);
 
-    char *json = ecs_iter_to_json(world, &it, NULL);
+    char *json = ecs_iter_to_json(&it, NULL);
     test_assert(json != NULL);
     test_str(json, "{\"ids\":[[\"Position\"]], \"results\":[]}");
 
@@ -50,7 +50,7 @@ void SerializeIterToJson_serialize_1_comps_2_ents_same_table(void) {
     ecs_query_t *q = ecs_query_new(world, "Position");
     ecs_iter_t it = ecs_query_iter(world, q);
 
-    char *json = ecs_iter_to_json(world, &it, NULL);
+    char *json = ecs_iter_to_json(&it, NULL);
     test_str(json, 
     "{"
         "\"ids\":[[\"Position\"]], "
@@ -105,7 +105,7 @@ void SerializeIterToJson_serialize_2_comps_2_ents_same_table(void) {
     ecs_query_t *q = ecs_query_new(world, "Position, Mass");
     ecs_iter_t it = ecs_query_iter(world, q);
 
-    char *json = ecs_iter_to_json(world, &it, NULL);
+    char *json = ecs_iter_to_json(&it, NULL);
     test_str(json, 
     "{"
         "\"ids\":[[\"Position\"], [\"Mass\"]], "
@@ -144,7 +144,7 @@ void SerializeIterToJson_serialize_1_tag_2_ents_same_table(void) {
     ecs_query_t *q = ecs_query_new(world, "MyTag");
     ecs_iter_t it = ecs_query_iter(world, q);
 
-    char *json = ecs_iter_to_json(world, &it, NULL);
+    char *json = ecs_iter_to_json(&it, NULL);
     test_str(json, 
     "{"
         "\"ids\":[[\"MyTag\"]], "
@@ -188,7 +188,7 @@ void SerializeIterToJson_serialize_1_tag_1_comp_2_ents_same_table(void) {
     ecs_query_t *q = ecs_query_new(world, "Position, MyTag");
     ecs_iter_t it = ecs_query_iter(world, q);
 
-    char *json = ecs_iter_to_json(world, &it, NULL);
+    char *json = ecs_iter_to_json(&it, NULL);
     test_str(json, 
     "{"
         "\"ids\":[[\"Position\"], [\"MyTag\"]], "
@@ -247,7 +247,7 @@ void SerializeIterToJson_serialize_1_tag_1_comp_4_ents_two_tables(void) {
     ecs_query_t *q = ecs_query_new(world, "Position, TagA");
     ecs_iter_t it = ecs_query_iter(world, q);
 
-    char *json = ecs_iter_to_json(world, &it, NULL);
+    char *json = ecs_iter_to_json(&it, NULL);
     test_str(json, 
     "{"
         "\"ids\":[[\"Position\"], [\"TagA\"]], "
@@ -314,7 +314,7 @@ void SerializeIterToJson_serialize_2_comps_1_owned_2_ents(void) {
     ecs_query_t *q = ecs_query_new(world, "Position, Mass(up(IsA))");
     ecs_iter_t it = ecs_query_iter(world, q);
 
-    char *json = ecs_iter_to_json(world, &it, NULL);
+    char *json = ecs_iter_to_json(&it, NULL);
     test_str(json, 
     "{"
         "\"ids\":[[\"Position\"], [\"Mass\"]], "
@@ -354,7 +354,7 @@ void SerializeIterToJson_serialize_w_pair_wildcard(void) {
     ecs_query_t *q = ecs_query_new(world, "(Rel, *)");
     ecs_iter_t it = ecs_query_iter(world, q);
 
-    char *json = ecs_iter_to_json(world, &it, NULL);
+    char *json = ecs_iter_to_json(&it, NULL);
     test_str(json, 
     "{"
         "\"ids\":[[\"Rel\",\"*\"]], "
@@ -397,7 +397,7 @@ void SerializeIterToJson_serialize_w_var(void) {
 
     ecs_iter_t it = ecs_query_iter(world, r);
 
-    char *json = ecs_iter_to_json(world, &it, NULL);
+    char *json = ecs_iter_to_json(&it, NULL);
     test_str(json, 
     "{"
         "\"ids\":[[\"Rel\",\"*\"]], "
@@ -452,7 +452,7 @@ void SerializeIterToJson_serialize_w_2_vars(void) {
 
     ecs_iter_t it = ecs_query_iter(world, r);
 
-    char *json = ecs_iter_to_json(world, &it, NULL);
+    char *json = ecs_iter_to_json(&it, NULL);
     test_str(json, 
     "{"
         "\"ids\":[[\"RelX\",\"*\"], [\"RelY\",\"*\"]], "
@@ -497,7 +497,7 @@ void SerializeIterToJson_serialize_type_info_1_tags(void) {
 
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
     desc.serialize_type_info = true;
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
 
     test_str(json, 
     "{"
@@ -535,7 +535,7 @@ void SerializeIterToJson_serialize_type_info_2_tags(void) {
 
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
     desc.serialize_type_info = true;
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
 
     test_str(json, 
     "{"
@@ -570,7 +570,7 @@ void SerializeIterToJson_serialize_type_info_1_component(void) {
 
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
     desc.serialize_type_info = true;
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
 
     test_str(json, 
     "{"
@@ -611,7 +611,7 @@ void SerializeIterToJson_serialize_type_info_2_components(void) {
 
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
     desc.serialize_type_info = true;
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
 
     test_str(json, 
     "{"
@@ -658,7 +658,7 @@ void SerializeIterToJson_serialize_type_info_1_struct(void) {
 
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
     desc.serialize_type_info = true;
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
 
     test_str(json, 
     "{"
@@ -712,7 +712,7 @@ void SerializeIterToJson_serialize_type_info_1_component_1_struct(void) {
 
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
     desc.serialize_type_info = true;
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
 
     test_str(json, 
     "{"
@@ -777,7 +777,7 @@ void SerializeIterToJson_serialize_type_info_2_structs(void) {
 
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
     desc.serialize_type_info = true;
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
 
     test_str(json, 
     "{"
@@ -839,7 +839,7 @@ void SerializeIterToJson_serialize_type_info_w_unit(void) {
 
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
     desc.serialize_type_info = true;
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
 
     test_str(json, 
     "{"
@@ -905,7 +905,7 @@ void SerializeIterToJson_serialize_type_info_w_unit_quantity(void) {
 
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
     desc.serialize_type_info = true;
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
 
     test_str(json, 
     "{"
@@ -978,7 +978,7 @@ void SerializeIterToJson_serialize_type_info_w_unit_over(void) {
 
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
     desc.serialize_type_info = true;
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
 
     test_str(json, 
     "{"
@@ -1023,7 +1023,7 @@ void SerializeIterToJson_serialize_w_entity_label(void) {
 
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
     desc.serialize_entity_labels = true;
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
 
     test_str(json, 
     "{"
@@ -1068,7 +1068,7 @@ void SerializeIterToJson_serialize_w_entity_label_w_str(void) {
 
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
     desc.serialize_entity_labels = true;
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
 
     test_str(json, 
     "{"
@@ -1119,7 +1119,7 @@ void SerializeIterToJson_serialize_w_var_labels(void) {
 
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
     desc.serialize_variable_labels = true;
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
 
     test_str(json, 
     "{"
@@ -1168,7 +1168,7 @@ void SerializeIterToJson_serialize_color(void) {
 
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
     desc.serialize_colors = true;
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
 
     test_str(json, 
     "{"
@@ -1223,7 +1223,7 @@ void SerializeIterToJson_serialize_w_var_component(void) {
 
     ecs_iter_t it = ecs_query_iter(world, r);
 
-    char *json = ecs_iter_to_json(world, &it, NULL);
+    char *json = ecs_iter_to_json(&it, NULL);
 
     test_str(json, 
     "{"
@@ -1263,7 +1263,7 @@ void SerializeIterToJson_serialize_w_optional_tag(void) {
     ecs_query_t *q = ecs_query_new(world, "TagA, ?TagB");
     ecs_iter_t it = ecs_query_iter(world, q);
 
-    char *json = ecs_iter_to_json(world, &it, NULL);
+    char *json = ecs_iter_to_json(&it, NULL);
 
     test_str(json, 
     "{"
@@ -1306,7 +1306,7 @@ void SerializeIterToJson_serialize_w_optional_component(void) {
     ecs_query_t *q = ecs_query_new(world, "Position, ?Velocity");
     ecs_iter_t it = ecs_query_iter(world, q);
 
-    char *json = ecs_iter_to_json(world, &it, NULL);
+    char *json = ecs_iter_to_json(&it, NULL);
 
     test_str(json, 
     "{"
@@ -1364,7 +1364,7 @@ void SerializeIterToJson_serialize_w_optional_reflected_component(void) {
     ecs_query_t *q = ecs_query_new(world, "Position, ?Velocity");
     ecs_iter_t it = ecs_query_iter(world, q);
 
-    char *json = ecs_iter_to_json(world, &it, NULL);
+    char *json = ecs_iter_to_json(&it, NULL);
 
     test_str(json, 
     "{"
@@ -1405,7 +1405,7 @@ void SerializeIterToJson_serialize_w_inout_filter_tag(void) {
     ecs_query_t *q = ecs_query_new(world, "[none] TagA");
     ecs_iter_t it = ecs_query_iter(world, q);
 
-    char *json = ecs_iter_to_json(world, &it, NULL);
+    char *json = ecs_iter_to_json(&it, NULL);
 
     test_str(json, 
     "{"
@@ -1446,7 +1446,7 @@ void SerializeIterToJson_serialize_w_inout_filter_component(void) {
     ecs_query_t *q = ecs_query_new(world, "[none] Position, Velocity");
     ecs_iter_t it = ecs_query_iter(world, q);
 
-    char *json = ecs_iter_to_json(world, &it, NULL);
+    char *json = ecs_iter_to_json(&it, NULL);
 
     test_str(json, 
     "{"
@@ -1496,7 +1496,7 @@ void SerializeIterToJson_serialize_w_inout_filter_reflected_component(void) {
     ecs_query_t *q = ecs_query_new(world, "[none] Position, Velocity");
     ecs_iter_t it = ecs_query_iter(world, q);
 
-    char *json = ecs_iter_to_json(world, &it, NULL);
+    char *json = ecs_iter_to_json(&it, NULL);
 
     test_str(json, 
     "{"
@@ -1528,7 +1528,7 @@ void SerializeIterToJson_serialize_w_inout_out_tag(void) {
     ecs_query_t *q = ecs_query_new(world, "[out] TagA");
     ecs_iter_t it = ecs_query_iter(world, q);
 
-    char *json = ecs_iter_to_json(world, &it, NULL);
+    char *json = ecs_iter_to_json(&it, NULL);
 
     test_str(json, 
     "{"
@@ -1569,7 +1569,7 @@ void SerializeIterToJson_serialize_w_inout_out_component(void) {
     ecs_query_t *q = ecs_query_new(world, "[out] Position, Velocity");
     ecs_iter_t it = ecs_query_iter(world, q);
 
-    char *json = ecs_iter_to_json(world, &it, NULL);
+    char *json = ecs_iter_to_json(&it, NULL);
 
     test_str(json, 
     "{"
@@ -1619,7 +1619,7 @@ void SerializeIterToJson_serialize_w_inout_out_reflected_component(void) {
     ecs_query_t *q = ecs_query_new(world, "[out] Position, Velocity");
     ecs_iter_t it = ecs_query_iter(world, q);
 
-    char *json = ecs_iter_to_json(world, &it, NULL);
+    char *json = ecs_iter_to_json(&it, NULL);
 
     test_str(json, 
     "{"
@@ -1660,7 +1660,7 @@ void SerializeIterToJson_serialize_component_from_var(void) {
     ecs_query_t *r = ecs_query_new(world, "Position($E)");
     ecs_iter_t it = ecs_query_iter(world, r);
 
-    char *json = ecs_iter_to_json(world, &it, NULL);
+    char *json = ecs_iter_to_json(&it, NULL);
 
     test_str(json, 
     "{"
@@ -1698,7 +1698,7 @@ void SerializeIterToJson_serialize_ids(void) {
     desc.serialize_values = false;
     desc.serialize_is_set = false;
     desc.serialize_sources = false;
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
     char *expect = ecs_asprintf(
@@ -1732,7 +1732,7 @@ void SerializeIterToJson_serialize_ids_2_entities(void) {
     desc.serialize_values = false;
     desc.serialize_is_set = false;
     desc.serialize_sources = false;
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
     char *expect = ecs_asprintf(
@@ -1769,7 +1769,7 @@ void SerializeIterToJson_serialize_anonymous(void) {
     ecs_iter_t it = ecs_query_iter(world, q);
     ecs_iter_to_json_desc_t desc = {0};
     desc.serialize_entities = true;
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
     char *expect = ecs_asprintf(
@@ -1805,7 +1805,7 @@ void SerializeIterToJson_serialize_anonymous_ids(void) {
     ecs_iter_t it = ecs_query_iter(world, q);
     ecs_iter_to_json_desc_t desc = {0};
     desc.serialize_entity_ids = true;
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
     char *expect = ecs_asprintf(
@@ -1835,7 +1835,7 @@ void SerializeIterToJson_serialize_variable_ids(void) {
     desc.serialize_values = false;
     desc.serialize_is_set = false;
     desc.serialize_sources = false;
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
     char *expect = ecs_asprintf(
@@ -1871,7 +1871,7 @@ void SerializeIterToJson_serialize_variable_ids_2_entities(void) {
     desc.serialize_values = false;
     desc.serialize_is_set = false;
     desc.serialize_sources = false;
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
     char *expect = ecs_asprintf(
@@ -1904,7 +1904,7 @@ void SerializeIterToJson_serialize_variable_anonymous(void) {
     desc.serialize_values = false;
     desc.serialize_is_set = false;
     desc.serialize_sources = false;
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
     char *expect = ecs_asprintf(
@@ -1939,7 +1939,7 @@ void SerializeIterToJson_serialize_variable_anonymous_ids(void) {
     desc.serialize_values = false;
     desc.serialize_is_set = false;
     desc.serialize_sources = false;
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
     char *expect = ecs_asprintf(
@@ -1970,7 +1970,7 @@ void SerializeIterToJson_serialize_anonymous_tag(void) {
     desc.serialize_term_ids = true;
     desc.serialize_ids = true;
     desc.serialize_entities = true;
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
     char *expect = ecs_asprintf(
@@ -2008,7 +2008,7 @@ void SerializeIterToJson_serialize_anonymous_component(void) {
     desc.serialize_entities = true;
     desc.serialize_values = true;
     desc.serialize_type_info = true;
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
     char *expect = ecs_asprintf(
@@ -2039,7 +2039,7 @@ void SerializeIterToJson_serialize_anonymous_pair(void) {
     desc.serialize_term_ids = true;
     desc.serialize_ids = true;
     desc.serialize_entities = true;
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
     char *expect = ecs_asprintf(
@@ -2086,7 +2086,7 @@ void SerializeIterToJson_serialize_invalid_value(void) {
     ecs_iter_t it = ecs_query_iter(world, q);
 
     ecs_log_set_level(-4);
-    char *json = ecs_iter_to_json(world, &it, NULL);
+    char *json = ecs_iter_to_json(&it, NULL);
     test_assert(json == NULL);
 
     ecs_fini(world);
@@ -2111,7 +2111,7 @@ void SerializeIterToJson_serialize_recycled_pair_id(void) {
     });
 
     ecs_iter_t it = ecs_query_iter(world, q);
-    char *json = ecs_iter_to_json(world, &it, NULL);
+    char *json = ecs_iter_to_json(&it, NULL);
     test_assert(json != NULL);
     test_str(json, "{\"ids\":[[\"Rel\",\"Tgt\"]], \"results\":["
         "{\"ids\":[[\"Rel\",\"Tgt\"]], \"sources\":[0], \"entities\":[\"ent\"]}"
@@ -2154,7 +2154,7 @@ void SerializeIterToJson_serialize_w_alert(void) {
     desc.serialize_values = false;
     desc.serialize_is_set = false;
     desc.serialize_sources = false;
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
     test_str(json, "{\"ids\":[[\"Position\"]], \"results\":["
         "{\"entities\":[\"e1\"]}, "
@@ -2188,7 +2188,7 @@ void SerializeIterToJson_serialize_no_this_alert_imported(void) {
     });
     ecs_iter_t it = ecs_query_iter(world, q);
 
-    char *json = ecs_iter_to_json(world, &it, NULL);
+    char *json = ecs_iter_to_json(&it, NULL);
     test_str(json, 
     "{"
         "\"ids\":[[\"Position\"]], "
@@ -2464,7 +2464,7 @@ void SerializeIterToJson_serialize_table(void) {
     desc.serialize_table = true;
     desc.serialize_ids = true;
     desc.serialize_entities = true;
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
     test_str(json, "{\"results\":["
@@ -2552,7 +2552,7 @@ void SerializeIterToJson_serialize_table_w_id_labels(void) {
     desc.serialize_table = true;
     desc.serialize_entities = true;
     desc.serialize_id_labels = true;
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
     test_str(json, "{\"results\":["
@@ -2645,7 +2645,7 @@ void SerializeIterToJson_serialize_table_w_var_labels(void) {
     desc.serialize_entities = true;
     desc.serialize_variable_labels = true;
     desc.serialize_ids = true;
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
     test_str(json, "{\"vars\":[\"p\"], \"results\":["
@@ -2745,7 +2745,7 @@ void SerializeIterToJson_serialize_table_w_private(void) {
     desc.serialize_variable_labels = true;
     desc.serialize_ids = true;
     desc.serialize_private = true;
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
     test_str(json, "{\"vars\":[\"p\"], \"results\":["
@@ -2813,7 +2813,7 @@ void SerializeIterToJson_serialize_w_offset(void) {
 
     ecs_iter_to_json_desc_t desc = {0};
     desc.serialize_entities = true;
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
 
     test_str(json, 
         "{\"results\":[{\"entities\":[\"e1\"]}, {\"entities\":[\"e2\"]}]}");
@@ -2843,7 +2843,7 @@ void SerializeIterToJson_serialize_labels_w_offset(void) {
 
     ecs_iter_to_json_desc_t desc = {0};
     desc.serialize_entity_labels = true;
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
 
     test_str(json, 
         "{\"results\":[{\"entity_labels\":[\"e1\"]}, {\"entity_labels\":[\"e2\"]}]}");
@@ -2873,7 +2873,7 @@ void SerializeIterToJson_serialize_colors_w_offset(void) {
 
     ecs_iter_to_json_desc_t desc = {0};
     desc.serialize_colors = true;
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
 
     test_str(json, 
         "{\"results\":[{\"colors\":[\"e1\"]}, {\"colors\":[\"e2\"]}]}");
@@ -2901,7 +2901,7 @@ void SerializeIterToJson_serialize_anonymous_entities_w_offset(void) {
 
     ecs_iter_to_json_desc_t desc = {0};
     desc.serialize_entities = true;
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
 
     char *expect = ecs_asprintf(
         "{\"results\":[{\"entities\":[%u]}, {\"entities\":[%u]}]}",
@@ -2937,7 +2937,7 @@ void SerializeIterToJson_serialize_term_labels(void) {
 
     ecs_iter_to_json_desc_t desc = {0};
     desc.serialize_term_labels = true;
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
     test_str(json, "{\"id_labels\":[[\"position\"]], \"results\":[]}");
 
@@ -2969,7 +2969,7 @@ void SerializeIterToJson_serialize_id_labels(void) {
 
     ecs_iter_to_json_desc_t desc = {0};
     desc.serialize_id_labels = true;
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
     test_str(json, "{\"results\":[{\"id_labels\":[[\"position\"]]}]}");
 
@@ -3001,7 +3001,7 @@ void SerializeIterToJson_serialize_id_labels_w_str(void) {
 
     ecs_iter_to_json_desc_t desc = {0};
     desc.serialize_id_labels = true;
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
     test_str(json, "{\"results\":[{\"id_labels\":[[\"\\\"position\\\"\"]]}]}");
 
@@ -3030,7 +3030,7 @@ void SerializeIterToJson_serialize_vars_for_query(void) {
     desc.serialize_entities = true;
     desc.serialize_variables = true;
     ecs_iter_t it = ecs_query_iter(world, q);
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
     test_str(json, "{\"results\":[{\"entities\":[\"e1\", \"e2\"]}]}");
 
@@ -3059,7 +3059,7 @@ void SerializeIterToJson_serialize_var_labels_for_query(void) {
     desc.serialize_entities = true;
     desc.serialize_variable_labels = true;
     ecs_iter_t it = ecs_query_iter(world, q);
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
     test_str(json, "{\"results\":[{\"entities\":[\"e1\", \"e2\"]}]}");
 
@@ -3088,7 +3088,7 @@ void SerializeIterToJson_serialize_var_ids_for_query(void) {
     desc.serialize_entities = true;
     desc.serialize_variable_ids = true;
     ecs_iter_t it = ecs_query_iter(world, q);
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
     test_str(json, "{\"results\":[{\"entities\":[\"e1\", \"e2\"]}]}");
 
@@ -3119,7 +3119,7 @@ void SerializeIterToJson_serialize_null_doc_name(void) {
     desc.serialize_entity_labels = true;
 
     ecs_iter_t it = ecs_query_iter(world, q);
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
     test_str(json, "{\"results\":[{\"entities\":[\"foo\"]}]}");
     ecs_os_free(json);
@@ -3145,7 +3145,7 @@ void SerializeIterToJson_serialize_rule_w_optional(void) {
 
     ecs_iter_t it = ecs_query_iter(world, r);
 
-    char *json = ecs_iter_to_json(world, &it, NULL);
+    char *json = ecs_iter_to_json(&it, NULL);
     test_str(json, 
     "{"
         "\"ids\":[[\"Foo\"], [\"Bar\"]], "
@@ -3213,7 +3213,7 @@ void SerializeIterToJson_serialize_rule_w_optional_component(void) {
 
     ecs_iter_t it = ecs_query_iter(world, r);
 
-    char *json = ecs_iter_to_json(world, &it, NULL);
+    char *json = ecs_iter_to_json(&it, NULL);
     test_str(json, 
     "{"
         "\"ids\":[[\"Position\"], [\"Velocity\"]], "
@@ -3271,7 +3271,7 @@ void SerializeIterToJson_serialize_entity_w_flecs_core_parent(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
 
-    char *json = ecs_iter_to_json(world, &it, NULL);
+    char *json = ecs_iter_to_json(&it, NULL);
     test_str(json, 
     "{"
         "\"ids\":[[\"Foo\"]], "

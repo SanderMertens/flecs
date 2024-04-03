@@ -416,7 +416,7 @@ void flecs_rest_iter_to_reply(
     }
 
     ecs_iter_t pit = ecs_page_iter(it, offset, limit);
-    if (ecs_iter_to_json_buf(world, &pit, &reply->body, &desc)) {
+    if (ecs_iter_to_json_buf(&pit, &reply->body, &desc)) {
         flecs_rest_reply_set_captured_log(reply);
     }
 

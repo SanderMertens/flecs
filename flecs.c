@@ -27284,7 +27284,7 @@ void flecs_rest_iter_to_reply(
     }
 
     ecs_iter_t pit = ecs_page_iter(it, offset, limit);
-    if (ecs_iter_to_json_buf(world, &pit, &reply->body, &desc)) {
+    if (ecs_iter_to_json_buf(&pit, &reply->body, &desc)) {
         flecs_rest_reply_set_captured_log(reply);
     }
 
@@ -59688,11 +59688,11 @@ int flecs_json_serialize_iter_result(
 }
 
 int ecs_iter_to_json_buf(
-    const ecs_world_t *world,
     ecs_iter_t *it,
     ecs_strbuf_t *buf,
     const ecs_iter_to_json_desc_t *desc)
 {
+    ecs_world_t *world = it->real_world;
     ecs_time_t duration = {0};
     if (desc && desc->measure_eval_duration) {
         ecs_time_measure(&duration);
@@ -59796,13 +59796,12 @@ int ecs_iter_to_json_buf(
 }
 
 char* ecs_iter_to_json(
-    const ecs_world_t *world,
     ecs_iter_t *it,
     const ecs_iter_to_json_desc_t *desc)
 {
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
 
-    if (ecs_iter_to_json_buf(world, it, &buf, desc)) {
+    if (ecs_iter_to_json_buf(it, &buf, desc)) {
         ecs_strbuf_reset(&buf);
         return NULL;
     }
@@ -59852,7 +59851,7 @@ int ecs_world_to_json_buf(
         .serialize_private = true
     };
 
-    int ret = ecs_iter_to_json_buf(world, &it, buf_out, &json_desc);
+    int ret = ecs_iter_to_json_buf(&it, buf_out, &json_desc);
     ecs_query_fini(q);
     return ret;
 }

@@ -323,27 +323,23 @@ typedef struct ecs_iter_to_json_desc_t {
  * This operation will iterate the contents of the iterator and serialize them
  * to JSON. The function accepts iterators from any source.
  *
- * @param world The world.
  * @param iter The iterator to serialize to JSON.
  * @return A JSON string with the serialized iterator data, or NULL if failed.
  */
 FLECS_API
 char* ecs_iter_to_json(
-    const ecs_world_t *world,
     ecs_iter_t *iter,
     const ecs_iter_to_json_desc_t *desc);
 
 /** Serialize iterator into JSON string buffer.
  * Same as ecs_iter_to_json(), but serializes to an ecs_strbuf_t instance.
  *
- * @param world The world.
  * @param iter The iterator to serialize.
  * @param buf_out The strbuf to append the string to.
  * @return Zero if success, non-zero if failed.
  */
 FLECS_API
 int ecs_iter_to_json_buf(
-    const ecs_world_t *world,
     ecs_iter_t *iter,
     ecs_strbuf_t *buf_out,
     const ecs_iter_to_json_desc_t *desc);
@@ -365,7 +361,7 @@ typedef struct ecs_world_to_json_desc_t {
  * 
  * ecs_iter_t it = ecs_query_init(world, &f);
  * ecs_iter_to_json_desc_t desc = { .serialize_table = true };
- * ecs_iter_to_json(world, iter, &desc);
+ * ecs_iter_to_json(iter, &desc);
  * @endcode
  *
  * @param world The world to serialize.

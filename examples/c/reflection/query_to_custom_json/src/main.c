@@ -76,7 +76,7 @@ int main(int argc, char *argv[]) {
         .serialize_entities = true,
         .serialize_values = true
     };
-    char *json = ecs_iter_to_json(ecs, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
     printf("%s\n", json);
     ecs_os_free(json);
 

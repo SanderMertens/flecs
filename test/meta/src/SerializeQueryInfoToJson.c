@@ -17,7 +17,7 @@ void SerializeQueryInfoToJson_1_tag(void) {
         .dont_serialize_results = true
     };
 
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
     test_str(json, "{\"query_info\":""{\"terms\":["
         "{\"inout\":\"default\", \"has_data\":false, \"oper\":\"and\", "
             "\"src\":{\"var\":\"this\"}, "
@@ -48,7 +48,7 @@ void SerializeQueryInfoToJson_1_component(void) {
         .dont_serialize_results = true
     };
 
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
     test_str(json, "{\"query_info\":""{\"terms\":["
         "{\"inout\":\"default\", \"has_data\":true, \"oper\":\"and\", "
             "\"src\":{\"var\":\"this\"}, "
@@ -80,7 +80,7 @@ void SerializeQueryInfoToJson_1_pair(void) {
         .dont_serialize_results = true
     };
 
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
     test_str(json, "{\"query_info\":{\"terms\":["
         "{\"inout\":\"default\", \"has_data\":false, \"oper\":\"and\", "
             "\"src\":{\"var\":\"this\"}, "
@@ -112,7 +112,7 @@ void SerializeQueryInfoToJson_1_pair_w_wildcard(void) {
         .dont_serialize_results = true
     };
 
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
     test_str(json, "{\"query_info\":{\"terms\":["
         "{\"inout\":\"default\", \"has_data\":false, \"oper\":\"and\", "
             "\"src\":{\"var\":\"this\"}, "
@@ -144,7 +144,7 @@ void SerializeQueryInfoToJson_1_pair_w_any(void) {
         .dont_serialize_results = true
     };
 
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
     test_str(json, "{\"query_info\":{\"terms\":["
         "{\"inout\":\"default\", \"has_data\":false, \"oper\":\"and\", "
             "\"src\":{\"var\":\"this\"}, "
@@ -177,7 +177,7 @@ void SerializeQueryInfoToJson_1_tag_fixed_src(void) {
         .dont_serialize_results = true
     };
 
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
     test_str(json, "{\"query_info\":""{\"terms\":["
         "{\"inout\":\"default\", \"has_data\":false, \"oper\":\"and\", "
             "\"src\":{\"entity\":\"e\"}, "
@@ -208,7 +208,7 @@ void SerializeQueryInfoToJson_1_tag_var_src(void) {
         .dont_serialize_results = true
     };
 
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
     test_str(json, "{\"vars\":[\"v\"], \"query_info\":{\"terms\":["
         "{\"inout\":\"default\", \"has_data\":false, \"oper\":\"and\", "
             "\"src\":{\"var\":\"v\"}, "
@@ -239,7 +239,7 @@ void SerializeQueryInfoToJson_1_component_in(void) {
         .dont_serialize_results = true
     };
 
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
     test_str(json, "{\"query_info\":""{\"terms\":["
         "{\"inout\":\"in\", \"has_data\":true, \"oper\":\"and\", "
             "\"src\":{\"var\":\"this\"}, "
@@ -270,7 +270,7 @@ void SerializeQueryInfoToJson_1_component_inout(void) {
         .dont_serialize_results = true
     };
 
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
     test_str(json, "{\"query_info\":""{\"terms\":["
         "{\"inout\":\"inout\", \"has_data\":true, \"oper\":\"and\", "
             "\"src\":{\"var\":\"this\"}, "
@@ -301,7 +301,7 @@ void SerializeQueryInfoToJson_1_component_out(void) {
         .dont_serialize_results = true
     };
 
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
     test_str(json, "{\"query_info\":""{\"terms\":["
         "{\"inout\":\"out\", \"has_data\":true, \"oper\":\"and\", "
             "\"src\":{\"var\":\"this\"}, "
@@ -332,7 +332,7 @@ void SerializeQueryInfoToJson_1_component_none(void) {
         .dont_serialize_results = true
     };
 
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
     test_str(json, "{\"query_info\":""{\"terms\":["
         "{\"inout\":\"none\", \"has_data\":false, \"oper\":\"and\", "
             "\"src\":{\"var\":\"this\"}, "
@@ -363,7 +363,7 @@ void SerializeQueryInfoToJson_1_tag_not(void) {
         .dont_serialize_results = true
     };
 
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
     test_str(json, "{\"query_info\":""{\"terms\":["
         "{\"inout\":\"none\", \"has_data\":false, \"oper\":\"not\", "
             "\"src\":{\"var\":\"this\"}, "
@@ -395,7 +395,7 @@ void SerializeQueryInfoToJson_2_tags_or(void) {
         .dont_serialize_results = true
     };
 
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
     test_str(json, "{\"query_info\":{\"terms\":["
         "{\"inout\":\"default\", \"has_data\":false, \"oper\":\"or\", "
             "\"src\":{\"var\":\"this\"}, "
@@ -431,7 +431,7 @@ void SerializeQueryInfoToJson_1_tag_optional(void) {
         .dont_serialize_results = true
     };
 
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
     test_str(json, "{\"query_info\":""{\"terms\":["
         "{\"inout\":\"default\", \"has_data\":false, \"oper\":\"optional\", "
             "\"src\":{\"var\":\"this\"}, "
@@ -462,7 +462,7 @@ void SerializeQueryInfoToJson_1_tag_self(void) {
         .dont_serialize_results = true
     };
 
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
     test_str(json, "{\"query_info\":""{\"terms\":["
         "{\"inout\":\"default\", \"has_data\":false, \"oper\":\"and\", "
             "\"src\":{\"var\":\"this\"}, "
@@ -492,7 +492,7 @@ void SerializeQueryInfoToJson_1_tag_self_dont_inherit(void) {
         .dont_serialize_results = true
     };
 
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
     test_str(json, "{\"query_info\":""{\"terms\":["
         "{\"inout\":\"default\", \"has_data\":false, \"dont_inherit\":true, \"oper\":\"and\", "
             "\"src\":{\"var\":\"this\"}, "
@@ -522,7 +522,7 @@ void SerializeQueryInfoToJson_1_tag_up(void) {
         .dont_serialize_results = true
     };
 
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
     test_str(json, "{\"query_info\":""{\"terms\":["
         "{\"inout\":\"default\", \"has_data\":false, \"oper\":\"and\", "
             "\"src\":{\"var\":\"this\"}, "
@@ -553,7 +553,7 @@ void SerializeQueryInfoToJson_1_tag_cascade(void) {
         .dont_serialize_results = true
     };
 
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
     test_str(json, "{\"query_info\":""{\"terms\":["
         "{\"inout\":\"default\", \"has_data\":false, \"oper\":\"and\", "
             "\"src\":{\"var\":\"this\"}, "
@@ -584,7 +584,7 @@ void SerializeQueryInfoToJson_0_term(void) {
         .dont_serialize_results = true
     };
 
-    char *json = ecs_iter_to_json(world, &it, &desc);
+    char *json = ecs_iter_to_json(&it, &desc);
     test_str(json, "{\"query_info\":{\"terms\":["
         "{\"inout\":\"default\", \"has_data\":false, \"oper\":\"and\", "
             "\"src\":{\"entity\":\"0\"}, "
