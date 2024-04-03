@@ -187,6 +187,41 @@
     (void)ecs_id(id);\
     (void)id
 
+/* Forward declare a query. */
+#define ECS_QUERY_DECLARE(name)         ecs_query_t* name
+
+/** Define a forward declared observer.
+ *
+ * Example:
+ *
+ * @code
+ * ECS_QUERY_DEFINE(world, AddPosition, Position);
+ * @endcode
+ */
+#define ECS_QUERY_DEFINE(world, name_, ...)\
+    {\
+        ecs_query_desc_t desc = {0};\
+        ecs_entity_desc_t edesc = {0}; \
+        edesc.name = #name_; \
+        desc.entity = ecs_entity_init(world, &edesc); \
+        desc.expr = #__VA_ARGS__;\
+        name_ = ecs_query_init(world, &desc);\
+        ecs_assert(name_ != NULL, ECS_INVALID_PARAMETER, NULL);\
+    }
+
+/** Declare & define an observer.
+ *
+ * Example:
+ *
+ * @code
+ * ECS_OBSERVER(world, AddPosition, EcsOnAdd, Position);
+ * @endcode
+ */
+#define ECS_QUERY(world, name, ...)\
+    ecs_query_t* name = NULL; \
+    ECS_QUERY_DEFINE(world, name, __VA_ARGS__);\
+    (void)name
+
 /** Shorthand for creating an entity with ecs_entity_init().
  *
  * Example:

@@ -29549,7 +29549,7 @@ void ecs_system_activate(
     const ecs_system_t *system_data);
 
 /* Internal function to run a system */
-ecs_entity_t ecs_run_intern(
+ecs_entity_t flecs_run_intern(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t system,
@@ -29557,8 +29557,6 @@ ecs_entity_t ecs_run_intern(
     int32_t stage_current,
     int32_t stage_count,
     ecs_ftime_t delta_time,
-    int32_t offset,
-    int32_t limit,
     void *param);
 
 #endif
@@ -66973,8 +66971,8 @@ int32_t flecs_run_pipeline_ops(
             s = stage;
         }
 
-        ecs_run_intern(world, s, system, sys, stage_index,
-            stage_count, delta_time, 0, 0, NULL);
+        flecs_run_intern(world, s, system, sys, stage_index,
+            stage_count, delta_time, NULL);
 
         world->info.systems_ran_frame++;
         ran_since_merge++;
@@ -67671,7 +67669,7 @@ ecs_mixins_t ecs_system_t_mixins = {
 
 /* -- Public API -- */
 
-ecs_entity_t ecs_run_intern(
+ecs_entity_t flecs_run_intern(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t system,
@@ -67679,8 +67677,6 @@ ecs_entity_t ecs_run_intern(
     int32_t stage_index,
     int32_t stage_count,    
     ecs_ftime_t delta_time,
-    int32_t offset,
-    int32_t limit,
     void *param) 
 {
     ecs_ftime_t time_elapsed = delta_time;
@@ -67731,23 +67727,17 @@ ecs_entity_t ecs_run_intern(
     }
 
     /* Prepare the query iterator */
-    ecs_iter_t pit, wit, qit = ecs_query_iter(thread_ctx, system_data->query);
+    ecs_iter_t wit, qit = ecs_query_iter(thread_ctx, system_data->query);
     ecs_iter_t *it = &qit;
 
     qit.system = system;
     qit.delta_time = delta_time;
     qit.delta_system_time = time_elapsed;
-    qit.frame_offset = offset;
     qit.param = param;
     qit.ctx = system_data->ctx;
     qit.binding_ctx = system_data->binding_ctx;
 
     flecs_defer_begin(world, stage);
-
-    if (offset || limit) {
-        pit = ecs_page_iter(it, offset, limit);
-        it = &pit;
-    }
 
     if (stage_count > 1 && system_data->multi_threaded) {
         wit = ecs_worker_iter(it, stage_index, stage_count);
@@ -67789,21 +67779,6 @@ ecs_entity_t ecs_run_intern(
 
 /* -- Public API -- */
 
-ecs_entity_t ecs_run_w_filter(
-    ecs_world_t *world,
-    ecs_entity_t system,
-    ecs_ftime_t delta_time,
-    int32_t offset,
-    int32_t limit,
-    void *param)
-{
-    ecs_stage_t *stage = flecs_stage_from_world(&world);
-    ecs_system_t *system_data = ecs_poly_get(world, system, ecs_system_t);
-    ecs_assert(system_data != NULL, ECS_INVALID_PARAMETER, NULL);
-    return ecs_run_intern(world, stage, system, system_data, 0, 0, delta_time, 
-        offset, limit, param);
-}
-
 ecs_entity_t ecs_run_worker(
     ecs_world_t *world,
     ecs_entity_t system,
@@ -67816,9 +67791,9 @@ ecs_entity_t ecs_run_worker(
     ecs_system_t *system_data = ecs_poly_get(world, system, ecs_system_t);
     ecs_assert(system_data != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    return ecs_run_intern(
+    return flecs_run_intern(
         world, stage, system, system_data, stage_index, stage_count, 
-        delta_time, 0, 0, param);
+        delta_time, param);
 }
 
 ecs_entity_t ecs_run(
@@ -67827,7 +67802,11 @@ ecs_entity_t ecs_run(
     ecs_ftime_t delta_time,
     void *param)
 {
-    return ecs_run_w_filter(world, system, delta_time, 0, 0, param);
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
+    ecs_system_t *system_data = ecs_poly_get(world, system, ecs_system_t);
+    ecs_assert(system_data != NULL, ECS_INVALID_PARAMETER, NULL);
+    return flecs_run_intern(
+        world, stage, system, system_data, 0, 0, delta_time, param);
 }
 
 ecs_query_t* ecs_system_get_query(

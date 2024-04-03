@@ -399,7 +399,6 @@ void SystemMisc_delete_pipeline_system(void);
 void SystemMisc_delete_system_w_ctx(void);
 void SystemMisc_update_ctx(void);
 void SystemMisc_run_custom_run_action(void);
-void SystemMisc_run_w_offset_limit_custom_run_action(void);
 void SystemMisc_pipeline_custom_run_action(void);
 void SystemMisc_change_custom_run_action(void);
 void SystemMisc_custom_run_action_call_next(void);
@@ -557,22 +556,6 @@ void Run_setup(void);
 void Run_run(void);
 void Run_run_w_param(void);
 void Run_run_no_match(void);
-void Run_run_w_offset(void);
-void Run_run_w_offset_skip_1_archetype(void);
-void Run_run_w_offset_skip_1_archetype_plus_one(void);
-void Run_run_w_offset_skip_2_archetypes(void);
-void Run_run_w_limit_skip_1_archetype(void);
-void Run_run_w_limit_skip_1_archetype_minus_one(void);
-void Run_run_w_limit_skip_2_archetypes(void);
-void Run_run_w_offset_1_limit_max(void);
-void Run_run_w_offset_1_limit_minus_1(void);
-void Run_run_w_offset_2_type_limit_max(void);
-void Run_run_w_offset_2_type_limit_minus_1(void);
-void Run_run_w_limit_1_all_offsets(void);
-void Run_run_w_offset_out_of_bounds(void);
-void Run_run_w_limit_out_of_bounds(void);
-void Run_run_comb_10_entities_1_type(void);
-void Run_run_comb_10_entities_2_types(void);
 void Run_run_w_interrupt(void);
 void Run_run_staging(void);
 
@@ -645,76 +628,6 @@ void MultiThreadStaging_set_pair_w_new_target_readonly(void);
 void MultiThreadStaging_set_pair_w_new_target_tgt_component_readonly(void);
 void MultiThreadStaging_set_pair_w_new_target_defer(void);
 void MultiThreadStaging_set_pair_w_new_target_tgt_component_defer(void);
-
-// Testsuite 'MultiTaskThread'
-void MultiTaskThread_setup(void);
-void MultiTaskThread_2_thread_1_entity(void);
-void MultiTaskThread_2_thread_2_entity(void);
-void MultiTaskThread_2_thread_5_entity(void);
-void MultiTaskThread_2_thread_10_entity(void);
-void MultiTaskThread_3_thread_1_entity(void);
-void MultiTaskThread_3_thread_2_entity(void);
-void MultiTaskThread_3_thread_5_entity(void);
-void MultiTaskThread_3_thread_10_entity(void);
-void MultiTaskThread_4_thread_1_entity(void);
-void MultiTaskThread_4_thread_2_entity(void);
-void MultiTaskThread_4_thread_5_entity(void);
-void MultiTaskThread_4_thread_10_entity(void);
-void MultiTaskThread_5_thread_1_entity(void);
-void MultiTaskThread_5_thread_2_entity(void);
-void MultiTaskThread_5_thread_5_entity(void);
-void MultiTaskThread_5_thread_10_entity(void);
-void MultiTaskThread_6_thread_1_entity(void);
-void MultiTaskThread_6_thread_2_entity(void);
-void MultiTaskThread_6_thread_5_entity(void);
-void MultiTaskThread_6_thread_10_entity(void);
-void MultiTaskThread_2_thread_1_entity_instanced(void);
-void MultiTaskThread_2_thread_5_entity_instanced(void);
-void MultiTaskThread_2_thread_10_entity_instanced(void);
-void MultiTaskThread_2_thread_test_combs_100_entity_w_next_worker(void);
-void MultiTaskThread_2_thread_test_combs_100_entity(void);
-void MultiTaskThread_3_thread_test_combs_100_entity(void);
-void MultiTaskThread_4_thread_test_combs_100_entity(void);
-void MultiTaskThread_5_thread_test_combs_100_entity(void);
-void MultiTaskThread_6_thread_test_combs_100_entity(void);
-void MultiTaskThread_2_thread_test_combs_100_entity_2_types(void);
-void MultiTaskThread_3_thread_test_combs_100_entity_2_types(void);
-void MultiTaskThread_4_thread_test_combs_100_entity_2_types(void);
-void MultiTaskThread_5_thread_test_combs_100_entity_2_types(void);
-void MultiTaskThread_6_thread_test_combs_100_entity_2_types(void);
-void MultiTaskThread_change_thread_count(void);
-void MultiTaskThread_multithread_quit(void);
-void MultiTaskThread_schedule_w_tasks(void);
-void MultiTaskThread_reactive_system(void);
-void MultiTaskThread_fini_after_set_threads(void);
-void MultiTaskThread_2_threads_single_threaded_system(void);
-void MultiTaskThread_no_staging_w_multithread(void);
-void MultiTaskThread_multithread_w_monitor_addon(void);
-void MultiTaskThread_get_ctx(void);
-void MultiTaskThread_get_binding_ctx(void);
-void MultiTaskThread_get_ctx_w_run(void);
-void MultiTaskThread_get_binding_ctx_w_run(void);
-void MultiTaskThread_bulk_new_in_no_readonly_w_multithread(void);
-void MultiTaskThread_bulk_new_in_no_readonly_w_multithread_2(void);
-void MultiTaskThread_run_first_worker_on_main(void);
-void MultiTaskThread_run_single_thread_on_main(void);
-
-// Testsuite 'MultiTaskThreadStaging'
-void MultiTaskThreadStaging_setup(void);
-void MultiTaskThreadStaging_2_threads_add_to_current(void);
-void MultiTaskThreadStaging_3_threads_add_to_current(void);
-void MultiTaskThreadStaging_4_threads_add_to_current(void);
-void MultiTaskThreadStaging_5_threads_add_to_current(void);
-void MultiTaskThreadStaging_6_threads_add_to_current(void);
-void MultiTaskThreadStaging_2_threads_on_add(void);
-void MultiTaskThreadStaging_new_w_count(void);
-void MultiTaskThreadStaging_custom_thread_auto_merge(void);
-void MultiTaskThreadStaging_custom_thread_manual_merge(void);
-void MultiTaskThreadStaging_custom_thread_partial_manual_merge(void);
-void MultiTaskThreadStaging_set_pair_w_new_target_readonly(void);
-void MultiTaskThreadStaging_set_pair_w_new_target_tgt_component_readonly(void);
-void MultiTaskThreadStaging_set_pair_w_new_target_defer(void);
-void MultiTaskThreadStaging_set_pair_w_new_target_tgt_component_defer(void);
 
 // Testsuite 'Modules'
 void Modules_setup(void);
@@ -2396,10 +2309,6 @@ bake_test_case SystemMisc_testcases[] = {
         SystemMisc_run_custom_run_action
     },
     {
-        "run_w_offset_limit_custom_run_action",
-        SystemMisc_run_w_offset_limit_custom_run_action
-    },
-    {
         "pipeline_custom_run_action",
         SystemMisc_pipeline_custom_run_action
     },
@@ -2961,70 +2870,6 @@ bake_test_case Run_testcases[] = {
         Run_run_no_match
     },
     {
-        "run_w_offset",
-        Run_run_w_offset
-    },
-    {
-        "run_w_offset_skip_1_archetype",
-        Run_run_w_offset_skip_1_archetype
-    },
-    {
-        "run_w_offset_skip_1_archetype_plus_one",
-        Run_run_w_offset_skip_1_archetype_plus_one
-    },
-    {
-        "run_w_offset_skip_2_archetypes",
-        Run_run_w_offset_skip_2_archetypes
-    },
-    {
-        "run_w_limit_skip_1_archetype",
-        Run_run_w_limit_skip_1_archetype
-    },
-    {
-        "run_w_limit_skip_1_archetype_minus_one",
-        Run_run_w_limit_skip_1_archetype_minus_one
-    },
-    {
-        "run_w_limit_skip_2_archetypes",
-        Run_run_w_limit_skip_2_archetypes
-    },
-    {
-        "run_w_offset_1_limit_max",
-        Run_run_w_offset_1_limit_max
-    },
-    {
-        "run_w_offset_1_limit_minus_1",
-        Run_run_w_offset_1_limit_minus_1
-    },
-    {
-        "run_w_offset_2_type_limit_max",
-        Run_run_w_offset_2_type_limit_max
-    },
-    {
-        "run_w_offset_2_type_limit_minus_1",
-        Run_run_w_offset_2_type_limit_minus_1
-    },
-    {
-        "run_w_limit_1_all_offsets",
-        Run_run_w_limit_1_all_offsets
-    },
-    {
-        "run_w_offset_out_of_bounds",
-        Run_run_w_offset_out_of_bounds
-    },
-    {
-        "run_w_limit_out_of_bounds",
-        Run_run_w_limit_out_of_bounds
-    },
-    {
-        "run_comb_10_entities_1_type",
-        Run_run_comb_10_entities_1_type
-    },
-    {
-        "run_comb_10_entities_2_types",
-        Run_run_comb_10_entities_2_types
-    },
-    {
         "run_w_interrupt",
         Run_run_w_interrupt
     },
@@ -3293,268 +3138,6 @@ bake_test_case MultiThreadStaging_testcases[] = {
     {
         "set_pair_w_new_target_tgt_component_defer",
         MultiThreadStaging_set_pair_w_new_target_tgt_component_defer
-    }
-};
-
-bake_test_case MultiTaskThread_testcases[] = {
-    {
-        "2_thread_1_entity",
-        MultiTaskThread_2_thread_1_entity
-    },
-    {
-        "2_thread_2_entity",
-        MultiTaskThread_2_thread_2_entity
-    },
-    {
-        "2_thread_5_entity",
-        MultiTaskThread_2_thread_5_entity
-    },
-    {
-        "2_thread_10_entity",
-        MultiTaskThread_2_thread_10_entity
-    },
-    {
-        "3_thread_1_entity",
-        MultiTaskThread_3_thread_1_entity
-    },
-    {
-        "3_thread_2_entity",
-        MultiTaskThread_3_thread_2_entity
-    },
-    {
-        "3_thread_5_entity",
-        MultiTaskThread_3_thread_5_entity
-    },
-    {
-        "3_thread_10_entity",
-        MultiTaskThread_3_thread_10_entity
-    },
-    {
-        "4_thread_1_entity",
-        MultiTaskThread_4_thread_1_entity
-    },
-    {
-        "4_thread_2_entity",
-        MultiTaskThread_4_thread_2_entity
-    },
-    {
-        "4_thread_5_entity",
-        MultiTaskThread_4_thread_5_entity
-    },
-    {
-        "4_thread_10_entity",
-        MultiTaskThread_4_thread_10_entity
-    },
-    {
-        "5_thread_1_entity",
-        MultiTaskThread_5_thread_1_entity
-    },
-    {
-        "5_thread_2_entity",
-        MultiTaskThread_5_thread_2_entity
-    },
-    {
-        "5_thread_5_entity",
-        MultiTaskThread_5_thread_5_entity
-    },
-    {
-        "5_thread_10_entity",
-        MultiTaskThread_5_thread_10_entity
-    },
-    {
-        "6_thread_1_entity",
-        MultiTaskThread_6_thread_1_entity
-    },
-    {
-        "6_thread_2_entity",
-        MultiTaskThread_6_thread_2_entity
-    },
-    {
-        "6_thread_5_entity",
-        MultiTaskThread_6_thread_5_entity
-    },
-    {
-        "6_thread_10_entity",
-        MultiTaskThread_6_thread_10_entity
-    },
-    {
-        "2_thread_1_entity_instanced",
-        MultiTaskThread_2_thread_1_entity_instanced
-    },
-    {
-        "2_thread_5_entity_instanced",
-        MultiTaskThread_2_thread_5_entity_instanced
-    },
-    {
-        "2_thread_10_entity_instanced",
-        MultiTaskThread_2_thread_10_entity_instanced
-    },
-    {
-        "2_thread_test_combs_100_entity_w_next_worker",
-        MultiTaskThread_2_thread_test_combs_100_entity_w_next_worker
-    },
-    {
-        "2_thread_test_combs_100_entity",
-        MultiTaskThread_2_thread_test_combs_100_entity
-    },
-    {
-        "3_thread_test_combs_100_entity",
-        MultiTaskThread_3_thread_test_combs_100_entity
-    },
-    {
-        "4_thread_test_combs_100_entity",
-        MultiTaskThread_4_thread_test_combs_100_entity
-    },
-    {
-        "5_thread_test_combs_100_entity",
-        MultiTaskThread_5_thread_test_combs_100_entity
-    },
-    {
-        "6_thread_test_combs_100_entity",
-        MultiTaskThread_6_thread_test_combs_100_entity
-    },
-    {
-        "2_thread_test_combs_100_entity_2_types",
-        MultiTaskThread_2_thread_test_combs_100_entity_2_types
-    },
-    {
-        "3_thread_test_combs_100_entity_2_types",
-        MultiTaskThread_3_thread_test_combs_100_entity_2_types
-    },
-    {
-        "4_thread_test_combs_100_entity_2_types",
-        MultiTaskThread_4_thread_test_combs_100_entity_2_types
-    },
-    {
-        "5_thread_test_combs_100_entity_2_types",
-        MultiTaskThread_5_thread_test_combs_100_entity_2_types
-    },
-    {
-        "6_thread_test_combs_100_entity_2_types",
-        MultiTaskThread_6_thread_test_combs_100_entity_2_types
-    },
-    {
-        "change_thread_count",
-        MultiTaskThread_change_thread_count
-    },
-    {
-        "multithread_quit",
-        MultiTaskThread_multithread_quit
-    },
-    {
-        "schedule_w_tasks",
-        MultiTaskThread_schedule_w_tasks
-    },
-    {
-        "reactive_system",
-        MultiTaskThread_reactive_system
-    },
-    {
-        "fini_after_set_threads",
-        MultiTaskThread_fini_after_set_threads
-    },
-    {
-        "2_threads_single_threaded_system",
-        MultiTaskThread_2_threads_single_threaded_system
-    },
-    {
-        "no_staging_w_multithread",
-        MultiTaskThread_no_staging_w_multithread
-    },
-    {
-        "multithread_w_monitor_addon",
-        MultiTaskThread_multithread_w_monitor_addon
-    },
-    {
-        "get_ctx",
-        MultiTaskThread_get_ctx
-    },
-    {
-        "get_binding_ctx",
-        MultiTaskThread_get_binding_ctx
-    },
-    {
-        "get_ctx_w_run",
-        MultiTaskThread_get_ctx_w_run
-    },
-    {
-        "get_binding_ctx_w_run",
-        MultiTaskThread_get_binding_ctx_w_run
-    },
-    {
-        "bulk_new_in_no_readonly_w_multithread",
-        MultiTaskThread_bulk_new_in_no_readonly_w_multithread
-    },
-    {
-        "bulk_new_in_no_readonly_w_multithread_2",
-        MultiTaskThread_bulk_new_in_no_readonly_w_multithread_2
-    },
-    {
-        "run_first_worker_on_main",
-        MultiTaskThread_run_first_worker_on_main
-    },
-    {
-        "run_single_thread_on_main",
-        MultiTaskThread_run_single_thread_on_main
-    }
-};
-
-bake_test_case MultiTaskThreadStaging_testcases[] = {
-    {
-        "2_threads_add_to_current",
-        MultiTaskThreadStaging_2_threads_add_to_current
-    },
-    {
-        "3_threads_add_to_current",
-        MultiTaskThreadStaging_3_threads_add_to_current
-    },
-    {
-        "4_threads_add_to_current",
-        MultiTaskThreadStaging_4_threads_add_to_current
-    },
-    {
-        "5_threads_add_to_current",
-        MultiTaskThreadStaging_5_threads_add_to_current
-    },
-    {
-        "6_threads_add_to_current",
-        MultiTaskThreadStaging_6_threads_add_to_current
-    },
-    {
-        "2_threads_on_add",
-        MultiTaskThreadStaging_2_threads_on_add
-    },
-    {
-        "new_w_count",
-        MultiTaskThreadStaging_new_w_count
-    },
-    {
-        "custom_thread_auto_merge",
-        MultiTaskThreadStaging_custom_thread_auto_merge
-    },
-    {
-        "custom_thread_manual_merge",
-        MultiTaskThreadStaging_custom_thread_manual_merge
-    },
-    {
-        "custom_thread_partial_manual_merge",
-        MultiTaskThreadStaging_custom_thread_partial_manual_merge
-    },
-    {
-        "set_pair_w_new_target_readonly",
-        MultiTaskThreadStaging_set_pair_w_new_target_readonly
-    },
-    {
-        "set_pair_w_new_target_tgt_component_readonly",
-        MultiTaskThreadStaging_set_pair_w_new_target_tgt_component_readonly
-    },
-    {
-        "set_pair_w_new_target_defer",
-        MultiTaskThreadStaging_set_pair_w_new_target_defer
-    },
-    {
-        "set_pair_w_new_target_tgt_component_defer",
-        MultiTaskThreadStaging_set_pair_w_new_target_tgt_component_defer
     }
 };
 
@@ -4056,6 +3639,12 @@ bake_test_case Alerts_testcases[] = {
     }
 };
 
+bake_test_param MultiThread_params[] = {
+    {"worker_kind", (char*[]){"thread", "task"}, 2}
+};
+bake_test_param MultiThreadStaging_params[] = {
+    {"worker_kind", (char*[]){"thread", "task"}, 2}
+};
 
 static bake_test_suite suites[] = {
     {
@@ -4083,7 +3672,7 @@ static bake_test_suite suites[] = {
         "SystemMisc",
         NULL,
         NULL,
-        64,
+        63,
         SystemMisc_testcases
     },
     {
@@ -4160,7 +3749,7 @@ static bake_test_suite suites[] = {
         "Run",
         Run_setup,
         NULL,
-        21,
+        5,
         Run_testcases
     },
     {
@@ -4168,28 +3757,18 @@ static bake_test_suite suites[] = {
         MultiThread_setup,
         NULL,
         50,
-        MultiThread_testcases
+        MultiThread_testcases,
+        1,
+        MultiThread_params
     },
     {
         "MultiThreadStaging",
         MultiThreadStaging_setup,
         NULL,
         14,
-        MultiThreadStaging_testcases
-    },
-    {
-        "MultiTaskThread",
-        MultiTaskThread_setup,
-        NULL,
-        50,
-        MultiTaskThread_testcases
-    },
-    {
-        "MultiTaskThreadStaging",
-        MultiTaskThreadStaging_setup,
-        NULL,
-        14,
-        MultiTaskThreadStaging_testcases
+        MultiThreadStaging_testcases,
+        1,
+        MultiThreadStaging_params
     },
     {
         "Modules",
@@ -4236,5 +3815,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("addons", argc, argv, suites, 25);
+    return bake_test_run("addons", argc, argv, suites, 23);
 }

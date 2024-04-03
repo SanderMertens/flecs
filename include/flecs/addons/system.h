@@ -216,35 +216,6 @@ ecs_entity_t ecs_run_worker(
     ecs_ftime_t delta_time,
     void *param);
 
-/** Run system with offset/limit and type filter.
- * This operation is the same as ecs_run(), but filters the entities that will be
- * iterated by the system.
- *
- * Entities can be filtered in two ways. Offset and limit control the range of
- * entities that is iterated over. The range is applied to all entities matched
- * with the system, thus may cover multiple archetypes.
- *
- * The type filter controls which entity types the system will evaluate. Only
- * types that contain all components in the type filter will be iterated over. A
- * type filter is only evaluated once per table, which makes filtering cheap if
- * the number of entities is large and the number of tables is small, but not as
- * cheap as filtering in the system signature.
- *
- * @param world The world.
- * @param system The system to invoke.
- * @param delta_time The time passed since the last system invocation.
- * @param param A user-defined parameter to pass to the system.
- * @return handle to last evaluated entity if system was interrupted.
- */
-FLECS_API
-ecs_entity_t ecs_run_w_filter(
-    ecs_world_t *world,
-    ecs_entity_t system,
-    ecs_ftime_t delta_time,
-    int32_t offset,
-    int32_t limit,
-    void *param);
-
 /** Get the query object for a system.
  * Systems use queries under the hood. This enables an application to get access
  * to the underlying query object of a system. This can be useful when, for

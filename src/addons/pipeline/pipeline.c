@@ -570,8 +570,8 @@ int32_t flecs_run_pipeline_ops(
             s = stage;
         }
 
-        ecs_run_intern(world, s, system, sys, stage_index,
-            stage_count, delta_time, 0, 0, NULL);
+        flecs_run_intern(world, s, system, sys, stage_index,
+            stage_count, delta_time, NULL);
 
         world->info.systems_ran_frame++;
         ran_since_merge++;

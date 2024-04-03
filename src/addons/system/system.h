@@ -53,7 +53,7 @@ void ecs_system_activate(
     const ecs_system_t *system_data);
 
 /* Internal function to run a system */
-ecs_entity_t ecs_run_intern(
+ecs_entity_t flecs_run_intern(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t system,
@@ -61,8 +61,6 @@ ecs_entity_t ecs_run_intern(
     int32_t stage_current,
     int32_t stage_count,
     ecs_ftime_t delta_time,
-    int32_t offset,
-    int32_t limit,
     void *param);
 
 #endif

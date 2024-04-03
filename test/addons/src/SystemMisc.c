@@ -1358,38 +1358,6 @@ void SystemMisc_run_custom_run_action(void) {
     ecs_fini(world);
 }
 
-void SystemMisc_run_w_offset_limit_custom_run_action(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_TAG(world, TagA);
-    ECS_TAG(world, TagB);
-
-    Probe ctx = {0};
-    ecs_entity_t system = ecs_system_init(world, &(ecs_system_desc_t){
-        .query.terms = {{ .id = TagA }},
-        .run = Run,
-        .callback = Dummy,
-        .ctx = &ctx,
-    });
-    test_assert(system != 0);
-
-    ecs_new(world, TagA);
-    ecs_entity_t e2 = ecs_new(world, TagA);
-    ecs_entity_t e3 = ecs_new(world, TagA);
-    ecs_add(world, e3, TagB); // 2 tables
-
-    ecs_run_w_filter(world, system, 0, 1, 1, NULL);
-
-    test_bool(dummy_invoked, false);
-    test_int(run_invoked, 1);
-
-    test_int(ctx.invoked, 1);
-    test_int(ctx.count, 1);
-    test_int(ctx.e[0], e2);
-
-    ecs_fini(world);
-}
-
 void SystemMisc_pipeline_custom_run_action(void) {
     ecs_world_t *world = ecs_init();
 

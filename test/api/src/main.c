@@ -187,6 +187,21 @@ void Iter_paged_iter_w_singleton(void);
 void Iter_paged_iter_w_singleton_component(void);
 void Iter_paged_iter_w_singleton_instanced(void);
 void Iter_paged_iter_w_singleton_component_instanced(void);
+void Iter_page_iter_w_offset_skip_1_archetype(void);
+void Iter_page_iter_w_offset_skip_1_archetype_plus_one(void);
+void Iter_page_iter_w_offset_skip_2_archetypes(void);
+void Iter_page_iter_w_limit_skip_1_archetype(void);
+void Iter_page_iter_w_limit_skip_1_archetype_minus_one(void);
+void Iter_page_iter_w_limit_skip_2_archetypes(void);
+void Iter_page_iter_w_offset_1_limit_max(void);
+void Iter_page_iter_w_offset_1_limit_minus_1(void);
+void Iter_page_iter_w_offset_2_type_limit_max(void);
+void Iter_page_iter_w_offset_2_type_limit_minus_1(void);
+void Iter_page_iter_w_limit_1_all_offsets(void);
+void Iter_page_iter_w_offset_out_of_bounds(void);
+void Iter_page_iter_w_limit_out_of_bounds(void);
+void Iter_page_iter_comb_10_entities_1_type(void);
+void Iter_page_iter_comb_10_entities_2_types(void);
 void Iter_count(void);
 void Iter_iter_restore_stack_iter(void);
 void Iter_interleaved_iter(void);
@@ -2591,6 +2606,66 @@ bake_test_case Iter_testcases[] = {
     {
         "paged_iter_w_singleton_component_instanced",
         Iter_paged_iter_w_singleton_component_instanced
+    },
+    {
+        "page_iter_w_offset_skip_1_archetype",
+        Iter_page_iter_w_offset_skip_1_archetype
+    },
+    {
+        "page_iter_w_offset_skip_1_archetype_plus_one",
+        Iter_page_iter_w_offset_skip_1_archetype_plus_one
+    },
+    {
+        "page_iter_w_offset_skip_2_archetypes",
+        Iter_page_iter_w_offset_skip_2_archetypes
+    },
+    {
+        "page_iter_w_limit_skip_1_archetype",
+        Iter_page_iter_w_limit_skip_1_archetype
+    },
+    {
+        "page_iter_w_limit_skip_1_archetype_minus_one",
+        Iter_page_iter_w_limit_skip_1_archetype_minus_one
+    },
+    {
+        "page_iter_w_limit_skip_2_archetypes",
+        Iter_page_iter_w_limit_skip_2_archetypes
+    },
+    {
+        "page_iter_w_offset_1_limit_max",
+        Iter_page_iter_w_offset_1_limit_max
+    },
+    {
+        "page_iter_w_offset_1_limit_minus_1",
+        Iter_page_iter_w_offset_1_limit_minus_1
+    },
+    {
+        "page_iter_w_offset_2_type_limit_max",
+        Iter_page_iter_w_offset_2_type_limit_max
+    },
+    {
+        "page_iter_w_offset_2_type_limit_minus_1",
+        Iter_page_iter_w_offset_2_type_limit_minus_1
+    },
+    {
+        "page_iter_w_limit_1_all_offsets",
+        Iter_page_iter_w_limit_1_all_offsets
+    },
+    {
+        "page_iter_w_offset_out_of_bounds",
+        Iter_page_iter_w_offset_out_of_bounds
+    },
+    {
+        "page_iter_w_limit_out_of_bounds",
+        Iter_page_iter_w_limit_out_of_bounds
+    },
+    {
+        "page_iter_comb_10_entities_1_type",
+        Iter_page_iter_comb_10_entities_1_type
+    },
+    {
+        "page_iter_comb_10_entities_2_types",
+        Iter_page_iter_comb_10_entities_2_types
     },
     {
         "count",
@@ -9185,7 +9260,7 @@ static bake_test_suite suites[] = {
         "Iter",
         NULL,
         NULL,
-        45,
+        60,
         Iter_testcases
     },
     {

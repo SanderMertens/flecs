@@ -22,8 +22,6 @@ struct system_runner_fluent {
         , m_id(id)
         , m_delta_time(delta_time)
         , m_param(param)
-        , m_offset(0)
-        , m_limit(0)
         , m_stage_current(stage_current)
         , m_stage_count(stage_count) { }
 
@@ -48,8 +46,7 @@ struct system_runner_fluent {
                 m_stage, m_id, m_stage_current, m_stage_count, m_delta_time,
                 m_param);            
         } else {
-            ecs_run_w_filter(
-                m_stage, m_id, m_delta_time, m_offset, m_limit, m_param);
+            ecs_run(m_stage, m_id, m_delta_time, m_param);
         }
     }
 

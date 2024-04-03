@@ -2894,7 +2894,7 @@ typedef enum ecs_query_cache_kind_t {
 #define EcsTraverseFlags              (EcsSelf|EcsUp|EcsTrav|EcsCascade|EcsDesc)
 #define EcsTermRefFlags               (EcsTraverseFlags|EcsIsVariable|EcsIsEntity|EcsIsName)
 
-/* Term flags discovered & set during filter creation. Mostly used internally to
+/* Term flags discovered & set during query creation. Mostly used internally to
  * store information relevant to queries. */
 #define EcsTermMatchAny               (1u << 0)
 #define EcsTermMatchAnySrc            (1u << 1)
@@ -2954,8 +2954,8 @@ struct ecs_query_t {
     ecs_id_t ids[FLECS_TERM_COUNT_MAX]; /**< Component ids. Indexed by field */
 
     ecs_flags32_t flags;        /**< Query flags */
-    int8_t term_count;          /**< Number of elements in terms array */
-    int8_t field_count;         /**< Number of fields in iterator for filter */
+    int8_t term_count;          /**< Number of query terms */
+    int8_t field_count;         /**< Number of fields returned by query */
 
     /* Bitmasks for quick field information lookups */
     ecs_termset_t fixed_fields; /**< Fields with a fixed source */
@@ -2977,11 +2977,11 @@ struct ecs_query_t {
     int32_t eval_count;        /**< Number of times query is evaluated */
 };
 
-/* An observer reacts to events matching a filter */
+/* An observer reacts to events matching a query */
 struct ecs_observer_t {
     ecs_header_t hdr;
     
-    ecs_query_t *query;        /**< Query for observer */
+    ecs_query_t *query;        /**< Observer query */
 
     /* Observer events */
     ecs_entity_t events[FLECS_EVENT_DESC_MAX];
@@ -3789,7 +3789,7 @@ typedef struct ecs_observer_desc_t {
     ecs_iter_action_t callback;
 
     /** Callback invoked on an event. When left to NULL the default runner
-     * is used which matches the event with the observer's filter, and calls
+     * is used which matches the event with the observer's query, and calls
      * 'callback' when it matches.
      * A reason to override the run function is to improve performance, if there
      * are more efficient way to test whether an event matches the observer than
@@ -4537,7 +4537,7 @@ void ecs_set_target_fps(
  * multithreaded applications the world needs to be entirely immutable. For this
  * purpose multi threaded readonly mode exists, which disallows all mutations on
  * the world. This means that in multi threaded applications, entity liveliness
- * operations, implicit component registration, and on-the-fly filter creation
+ * operations, implicit component registration, and on-the-fly query creation
  * are not guaranteed to work.
  * 
  * While in readonly mode, applications can still enqueue ECS operations on a
@@ -6713,16 +6713,16 @@ char* ecs_term_str(
     const ecs_world_t *world,
     const ecs_term_t *term);
 
-/** Convert filter to string expression.
- * Convert filter terms to a string expression. The resulting expression can be
- * parsed to create the same filter.
+/** Convert query to string expression.
+ * Convert query to a string expression. The resulting expression can be
+ * parsed to create the same query.
  * 
- * @param filter The filter.
- * @return The filter converted to a string.
+ * @param query The query.
+ * @return The query converted to a string.
  */
 FLECS_API 
 char* ecs_query_str(
-    const ecs_query_t *filter); 
+    const ecs_query_t *query); 
 
 /** @} */
 
@@ -6760,45 +6760,6 @@ bool ecs_children_next(
  */
 
 /** Create a query.
- * A query accepts the same descriptor as a filter, but has the additional
- * ability to use query variables.
- *
- * Query variables can be used to constrain wildcards across multiple terms to
- * the same entity. Regular ECS queries do this in a limited form, as querying
- * for Position, Velocity only returns entities that have both components.
- *
- * Query variables expand this to constrain entities that are resolved while the
- * query is being matched. Consider a query for all entities and the mission
- * they are on:
- *   (Mission, *)
- *
- * If an entity is on multiple missions, the wildcard will match it multiple
- * times. Now say we want to only list combat missions. Naively we could try:
- *   (Mission, *), CombatMission(*)
- *
- * But this doesn't work, as term 1 returns entities with missions, and term 2
- * returns all combat missions for all entities. Query variables make it
- * possible to apply CombatMission to the found mission:
- *   (Mission, $M), CombatMission($M)
- *
- * By using the same variable ('M') we ensure that CombatMission is applied to
- * the mission found in the current result.
- *
- * Variables can be used in each part of the term (predicate, subject, object).
- * This is a valid query:
- *   Likes($X, $Y), Likes($Y, $X)
- *
- * This is also a valid query:
- *   _Component, Serializable(_Component)
- *
- * In the query expression syntax, variables are prefixed with a $. When using
- * the descriptor, specify the variable kind:
- *   desc.terms[0].second = { .name = "X", .var = EcsVarIsVariable }
- *
- * Different terms with the same variable name are automatically correlated by
- * the query engine.
- * 
- * A query needs to be explicitly deleted with ecs_query_fini.
  * 
  * @param world The world.
  * @param desc The descriptor (see ecs_query_desc_t)
@@ -8442,6 +8403,41 @@ int ecs_value_move_ctor(
     ecs_entity_t id = ecs_id(id);\
     (void)ecs_id(id);\
     (void)id
+
+/* Forward declare a query. */
+#define ECS_QUERY_DECLARE(name)         ecs_query_t* name
+
+/** Define a forward declared observer.
+ *
+ * Example:
+ *
+ * @code
+ * ECS_QUERY_DEFINE(world, AddPosition, Position);
+ * @endcode
+ */
+#define ECS_QUERY_DEFINE(world, name_, ...)\
+    {\
+        ecs_query_desc_t desc = {0};\
+        ecs_entity_desc_t edesc = {0}; \
+        edesc.name = #name_; \
+        desc.entity = ecs_entity_init(world, &edesc); \
+        desc.expr = #__VA_ARGS__;\
+        name_ = ecs_query_init(world, &desc);\
+        ecs_assert(name_ != NULL, ECS_INVALID_PARAMETER, NULL);\
+    }
+
+/** Declare & define an observer.
+ *
+ * Example:
+ *
+ * @code
+ * ECS_OBSERVER(world, AddPosition, EcsOnAdd, Position);
+ * @endcode
+ */
+#define ECS_QUERY(world, name, ...)\
+    ecs_query_t* name = NULL; \
+    ECS_QUERY_DEFINE(world, name, __VA_ARGS__);\
+    (void)name
 
 /** Shorthand for creating an entity with ecs_entity_init().
  *
@@ -11060,35 +11056,6 @@ ecs_entity_t ecs_run_worker(
     int32_t stage_current,
     int32_t stage_count,
     ecs_ftime_t delta_time,
-    void *param);
-
-/** Run system with offset/limit and type filter.
- * This operation is the same as ecs_run(), but filters the entities that will be
- * iterated by the system.
- *
- * Entities can be filtered in two ways. Offset and limit control the range of
- * entities that is iterated over. The range is applied to all entities matched
- * with the system, thus may cover multiple archetypes.
- *
- * The type filter controls which entity types the system will evaluate. Only
- * types that contain all components in the type filter will be iterated over. A
- * type filter is only evaluated once per table, which makes filtering cheap if
- * the number of entities is large and the number of tables is small, but not as
- * cheap as filtering in the system signature.
- *
- * @param world The world.
- * @param system The system to invoke.
- * @param delta_time The time passed since the last system invocation.
- * @param param A user-defined parameter to pass to the system.
- * @return handle to last evaluated entity if system was interrupted.
- */
-FLECS_API
-ecs_entity_t ecs_run_w_filter(
-    ecs_world_t *world,
-    ecs_entity_t system,
-    ecs_ftime_t delta_time,
-    int32_t offset,
-    int32_t limit,
     void *param);
 
 /** Get the query object for a system.
@@ -28899,8 +28866,6 @@ struct system_runner_fluent {
         , m_id(id)
         , m_delta_time(delta_time)
         , m_param(param)
-        , m_offset(0)
-        , m_limit(0)
         , m_stage_current(stage_current)
         , m_stage_count(stage_count) { }
 
@@ -28925,8 +28890,7 @@ struct system_runner_fluent {
                 m_stage, m_id, m_stage_current, m_stage_count, m_delta_time,
                 m_param);            
         } else {
-            ecs_run_w_filter(
-                m_stage, m_id, m_delta_time, m_offset, m_limit, m_param);
+            ecs_run(m_stage, m_id, m_delta_time, m_param);
         }
     }
 

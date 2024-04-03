@@ -1600,6 +1600,808 @@ void Iter_paged_iter_w_singleton_component_instanced(void) {
     ecs_fini(world);
 }
 
+static
+void Iter(ecs_world_t *world, ecs_query_t *q, int32_t offset, int32_t limit) {
+    ecs_iter_t it = ecs_query_iter(world, q);
+    ecs_iter_t pit = ecs_page_iter(&it, offset, limit);
+    while (ecs_page_next(&pit)) {
+        Position *p = ecs_field(&pit, Position, 1);
+        Velocity *v = NULL;
+        Mass *m = NULL;
+
+        if (pit.field_count >= 2) {
+            v = ecs_field(&pit, Velocity, 2);
+        }
+
+        if (pit.field_count >= 3) {
+            m = ecs_field(&pit, Mass, 3);
+        }
+
+        int *param = pit.param;
+
+        probe_iter(&pit);
+
+        int i;
+        for (i = 0; i < pit.count; i ++) {
+            p[i].x = 10;
+            p[i].y = 20;
+
+            if (param) {
+                p[i].x += *param;
+                p[i].y += *param;
+            }
+
+            if (v) {
+                v[i].x = 30;
+                v[i].y = 40;
+            }
+
+            if (m) {
+                m[i] = 50;
+            }
+        }
+    }
+}
+
+void Iter_page_iter_w_offset_skip_1_archetype(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+    ECS_COMPONENT(world, Rotation);
+
+    ECS_ENTITY(world, e1, Position, Velocity);
+    ECS_ENTITY(world, e2, Position, Velocity);
+    ECS_ENTITY(world, e3, Position, Velocity);
+    ECS_ENTITY(world, e4, Position, Velocity, Mass);
+    ECS_ENTITY(world, e5, Position, Velocity, Mass);
+    ECS_ENTITY(world, e6, Position, Velocity, Rotation);
+    ECS_ENTITY(world, e7, Position);
+
+    ECS_QUERY(world, q, Position, Velocity);
+
+    Probe ctx = {0};
+    ecs_set_ctx(world, &ctx, NULL);
+
+    Iter(world, q, 3, 0);
+
+    test_int(ctx.count, 3);
+    test_int(ctx.term_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e4);
+    test_int(ctx.e[1], e5);
+    test_int(ctx.e[2], e6);
+
+    int i;
+    for (i = 0; i < ctx.invoked; i ++) {
+        test_int(ctx.c[i][0], ecs_id(Position));
+        test_int(ctx.s[i][0], 0);
+        test_int(ctx.c[i][1], ecs_id(Velocity));
+        test_int(ctx.s[i][1], 0);
+    }
+
+    for (i = 0; i < ctx.count; i ++) {
+        const Position *p = ecs_get(world, ctx.e[i], Position);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        const Velocity *v = ecs_get(world, ctx.e[i], Velocity);
+        test_int(v->x, 30);
+        test_int(v->y, 40);        
+    }
+
+    ecs_fini(world);
+}
+
+void Iter_page_iter_w_offset_skip_1_archetype_plus_one(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+    ECS_COMPONENT(world, Rotation);
+
+    ECS_ENTITY(world, e1, Position, Velocity);
+    ECS_ENTITY(world, e2, Position, Velocity);
+    ECS_ENTITY(world, e3, Position, Velocity);
+    ECS_ENTITY(world, e4, Position, Velocity, Mass);
+    ECS_ENTITY(world, e5, Position, Velocity, Mass);
+    ECS_ENTITY(world, e6, Position, Velocity, Rotation);
+    ECS_ENTITY(world, e7, Position);
+
+    ECS_QUERY(world, q, Position, Velocity);
+
+    Probe ctx = {0};
+    ecs_set_ctx(world, &ctx, NULL);
+
+    Iter(world, q, 4, 0);
+
+    test_int(ctx.count, 2);
+    test_int(ctx.term_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e5);
+    test_int(ctx.e[1], e6);
+
+    int i;
+    for (i = 0; i < ctx.invoked; i ++) {
+        test_int(ctx.c[i][0], ecs_id(Position));
+        test_int(ctx.s[i][0], 0);
+        test_int(ctx.c[i][1], ecs_id(Velocity));
+        test_int(ctx.s[i][1], 0);
+    }
+
+    for (i = 0; i < ctx.count; i ++) {
+        const Position *p = ecs_get(world, ctx.e[i], Position);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        const Velocity *v = ecs_get(world, ctx.e[i], Velocity);
+        test_int(v->x, 30);
+        test_int(v->y, 40);        
+    }
+
+    ecs_fini(world);
+}
+
+void Iter_page_iter_w_offset_skip_2_archetypes(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+    ECS_COMPONENT(world, Rotation);
+
+    ECS_ENTITY(world, e1, Position, Velocity);
+    ECS_ENTITY(world, e2, Position, Velocity);
+    ECS_ENTITY(world, e3, Position, Velocity);
+    ECS_ENTITY(world, e4, Position, Velocity, Mass);
+    ECS_ENTITY(world, e5, Position, Velocity, Mass);
+    ECS_ENTITY(world, e6, Position, Velocity, Rotation);
+    ECS_ENTITY(world, e7, Position);
+
+    ECS_QUERY(world, q, Position, Velocity);
+
+    Probe ctx = {0};
+    ecs_set_ctx(world, &ctx, NULL);
+
+    Iter(world, q, 5, 0);
+
+    test_int(ctx.count, 1);
+    test_int(ctx.term_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e6);
+
+    test_int(ctx.c[0][0], ecs_id(Position));
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.c[0][1], ecs_id(Velocity));
+    test_int(ctx.s[0][1], 0);
+
+    const Position *p = ecs_get(world, e6, Position);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+    const Velocity *v = ecs_get(world, e6, Velocity);
+    test_int(v->x, 30);
+    test_int(v->y, 40);        
+
+    ecs_fini(world);
+}
+
+void Iter_page_iter_w_limit_skip_1_archetype(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+    ECS_COMPONENT(world, Rotation);
+
+    ECS_ENTITY(world, e1, Position, Velocity);
+    ECS_ENTITY(world, e2, Position, Velocity);
+    ECS_ENTITY(world, e3, Position, Velocity);
+    ECS_ENTITY(world, e4, Position, Velocity, Mass);
+    ECS_ENTITY(world, e5, Position, Velocity, Mass);
+    ECS_ENTITY(world, e6, Position, Velocity, Rotation);
+    ECS_ENTITY(world, e7, Position);
+
+    ECS_QUERY(world, q, Position, Velocity);
+
+    Probe ctx = {0};
+    ecs_set_ctx(world, &ctx, NULL);
+
+    Iter(world, q, 0, 5);
+
+    test_int(ctx.count, 5);
+    test_int(ctx.term_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
+    test_int(ctx.e[2], e3);
+    test_int(ctx.e[3], e4);
+    test_int(ctx.e[4], e5);
+
+    int i;
+    for (i = 0; i < ctx.invoked; i ++) {
+        test_int(ctx.c[i][0], ecs_id(Position));
+        test_int(ctx.s[i][0], 0);
+        test_int(ctx.c[i][1], ecs_id(Velocity));
+        test_int(ctx.s[i][1], 0);
+    }
+
+    for (i = 0; i < ctx.count; i ++) {
+        const Position *p = ecs_get(world, ctx.e[i], Position);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        const Velocity *v = ecs_get(world, ctx.e[i], Velocity);
+        test_int(v->x, 30);
+        test_int(v->y, 40);        
+    }
+
+    ecs_fini(world);
+}
+
+void Iter_page_iter_w_limit_skip_1_archetype_minus_one(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+    ECS_COMPONENT(world, Rotation);
+
+    ECS_ENTITY(world, e1, Position, Velocity);
+    ECS_ENTITY(world, e2, Position, Velocity);
+    ECS_ENTITY(world, e3, Position, Velocity);
+    ECS_ENTITY(world, e4, Position, Velocity, Mass);
+    ECS_ENTITY(world, e5, Position, Velocity, Mass);
+    ECS_ENTITY(world, e6, Position, Velocity, Rotation);
+    ECS_ENTITY(world, e7, Position);
+
+    ECS_QUERY(world, q, Position, Velocity);
+
+    Probe ctx = {0};
+    ecs_set_ctx(world, &ctx, NULL);
+
+    Iter(world, q, 0, 4);
+
+    test_int(ctx.count, 4);
+    test_int(ctx.term_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
+    test_int(ctx.e[2], e3);
+    test_int(ctx.e[3], e4);
+
+    int i;
+    for (i = 0; i < ctx.invoked; i ++) {
+        test_int(ctx.c[i][0], ecs_id(Position));
+        test_int(ctx.s[i][0], 0);
+        test_int(ctx.c[i][1], ecs_id(Velocity));
+        test_int(ctx.s[i][1], 0);
+    }
+
+    for (i = 0; i < ctx.count; i ++) {
+        const Position *p = ecs_get(world, ctx.e[i], Position);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        const Velocity *v = ecs_get(world, ctx.e[i], Velocity);
+        test_int(v->x, 30);
+        test_int(v->y, 40);        
+    }
+
+    ecs_fini(world);
+}
+
+void Iter_page_iter_w_limit_skip_2_archetypes(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+    ECS_COMPONENT(world, Rotation);
+
+    ECS_ENTITY(world, e1, Position, Velocity);
+    ECS_ENTITY(world, e2, Position, Velocity);
+    ECS_ENTITY(world, e3, Position, Velocity);
+    ECS_ENTITY(world, e4, Position, Velocity, Mass);
+    ECS_ENTITY(world, e5, Position, Velocity, Mass);
+    ECS_ENTITY(world, e6, Position, Velocity, Rotation);
+    ECS_ENTITY(world, e7, Position);
+
+    ECS_QUERY(world, q, Position, Velocity);
+
+    Probe ctx = {0};
+    ecs_set_ctx(world, &ctx, NULL);
+
+    Iter(world, q, 0, 3);
+
+    test_int(ctx.count, 3);
+    test_int(ctx.term_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
+    test_int(ctx.e[2], e3);
+
+    int i;
+    for (i = 0; i < ctx.invoked; i ++) {
+        test_int(ctx.c[i][0], ecs_id(Position));
+        test_int(ctx.s[i][0], 0);
+        test_int(ctx.c[i][1], ecs_id(Velocity));
+        test_int(ctx.s[i][1], 0);
+    }
+
+    for (i = 0; i < ctx.count; i ++) {
+        const Position *p = ecs_get(world, ctx.e[i], Position);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        const Velocity *v = ecs_get(world, ctx.e[i], Velocity);
+        test_int(v->x, 30);
+        test_int(v->y, 40);        
+    }
+
+    ecs_fini(world);
+}
+
+void Iter_page_iter_w_offset_1_limit_max(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+    ECS_COMPONENT(world, Rotation);
+
+    ECS_ENTITY(world, e1, Position, Velocity);
+    ECS_ENTITY(world, e2, Position, Velocity);
+    ECS_ENTITY(world, e3, Position, Velocity);
+    ECS_ENTITY(world, e4, Position, Velocity, Mass);
+    ECS_ENTITY(world, e5, Position, Velocity, Mass);
+    ECS_ENTITY(world, e6, Position, Velocity, Rotation);
+    ECS_ENTITY(world, e7, Position);
+
+    ECS_QUERY(world, q, Position, Velocity);
+
+    Probe ctx = {0};
+    ecs_set_ctx(world, &ctx, NULL);
+
+    Iter(world, q, 1, 5);
+
+    test_int(ctx.count, 5);
+    test_int(ctx.term_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e2);
+    test_int(ctx.e[1], e3);
+    test_int(ctx.e[2], e4);
+    test_int(ctx.e[3], e5);
+    test_int(ctx.e[4], e6);
+
+    int i;
+    for (i = 0; i < ctx.invoked; i ++) {
+        test_int(ctx.c[i][0], ecs_id(Position));
+        test_int(ctx.s[i][0], 0);
+        test_int(ctx.c[i][1], ecs_id(Velocity));
+        test_int(ctx.s[i][1], 0);
+    }
+
+    for (i = 0; i < ctx.count; i ++) {
+        const Position *p = ecs_get(world, ctx.e[i], Position);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        const Velocity *v = ecs_get(world, ctx.e[i], Velocity);
+        test_int(v->x, 30);
+        test_int(v->y, 40);        
+    }
+
+    ecs_fini(world);
+}
+
+void Iter_page_iter_w_offset_1_limit_minus_1(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+    ECS_COMPONENT(world, Rotation);
+
+    ECS_ENTITY(world, e1, Position, Velocity);
+    ECS_ENTITY(world, e2, Position, Velocity);
+    ECS_ENTITY(world, e3, Position, Velocity);
+    ECS_ENTITY(world, e4, Position, Velocity, Mass);
+    ECS_ENTITY(world, e5, Position, Velocity, Mass);
+    ECS_ENTITY(world, e6, Position, Velocity, Rotation);
+    ECS_ENTITY(world, e7, Position);
+
+    ECS_QUERY(world, q, Position, Velocity);
+
+    Probe ctx = {0};
+    ecs_set_ctx(world, &ctx, NULL);
+
+    Iter(world, q, 1, 4);
+
+    test_int(ctx.count, 4);
+    test_int(ctx.term_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e2);
+    test_int(ctx.e[1], e3);
+    test_int(ctx.e[2], e4);
+    test_int(ctx.e[3], e5);
+
+    int i;
+    for (i = 0; i < ctx.invoked; i ++) {
+        test_int(ctx.c[i][0], ecs_id(Position));
+        test_int(ctx.s[i][0], 0);
+        test_int(ctx.c[i][1], ecs_id(Velocity));
+        test_int(ctx.s[i][1], 0);
+    }
+
+    for (i = 0; i < ctx.count; i ++) {
+        const Position *p = ecs_get(world, ctx.e[i], Position);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        const Velocity *v = ecs_get(world, ctx.e[i], Velocity);
+        test_int(v->x, 30);
+        test_int(v->y, 40);        
+    }
+
+    ecs_fini(world);
+}
+
+void Iter_page_iter_w_offset_2_type_limit_max(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+    ECS_COMPONENT(world, Rotation);
+
+    ECS_ENTITY(world, e1, Position, Velocity);
+    ECS_ENTITY(world, e2, Position, Velocity);
+    ECS_ENTITY(world, e3, Position, Velocity);
+    ECS_ENTITY(world, e4, Position, Velocity, Mass);
+    ECS_ENTITY(world, e5, Position, Velocity, Mass);
+    ECS_ENTITY(world, e6, Position, Velocity, Rotation);
+    ECS_ENTITY(world, e7, Position);
+
+    ECS_QUERY(world, q, Position, Velocity);
+
+    Probe ctx = {0};
+    ecs_set_ctx(world, &ctx, NULL);
+
+    Iter(world, q, 3, 3);
+
+    test_int(ctx.count, 3);
+    test_int(ctx.term_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e4);
+    test_int(ctx.e[1], e5);
+    test_int(ctx.e[2], e6);
+
+    int i;
+    for (i = 0; i < ctx.invoked; i ++) {
+        test_int(ctx.c[i][0], ecs_id(Position));
+        test_int(ctx.s[i][0], 0);
+        test_int(ctx.c[i][1], ecs_id(Velocity));
+        test_int(ctx.s[i][1], 0);
+    }
+
+    for (i = 0; i < ctx.count; i ++) {
+        const Position *p = ecs_get(world, ctx.e[i], Position);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        const Velocity *v = ecs_get(world, ctx.e[i], Velocity);
+        test_int(v->x, 30);
+        test_int(v->y, 40);        
+    }
+
+    ecs_fini(world);
+}
+
+void Iter_page_iter_w_offset_2_type_limit_minus_1(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+    ECS_COMPONENT(world, Rotation);
+
+    ECS_ENTITY(world, e1, Position, Velocity);
+    ECS_ENTITY(world, e2, Position, Velocity);
+    ECS_ENTITY(world, e3, Position, Velocity);
+    ECS_ENTITY(world, e4, Position, Velocity, Mass);
+    ECS_ENTITY(world, e5, Position, Velocity, Mass);
+    ECS_ENTITY(world, e6, Position, Velocity, Rotation);
+    ECS_ENTITY(world, e7, Position);
+
+    ECS_QUERY(world, q, Position, Velocity);
+
+    Probe ctx = {0};
+    ecs_set_ctx(world, &ctx, NULL);
+
+    Iter(world, q, 3, 2);
+
+    test_int(ctx.count, 2);
+    test_int(ctx.term_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e4);
+    test_int(ctx.e[1], e5);
+
+    int i;
+    for (i = 0; i < ctx.invoked; i ++) {
+        test_int(ctx.c[i][0], ecs_id(Position));
+        test_int(ctx.s[i][0], 0);
+        test_int(ctx.c[i][1], ecs_id(Velocity));
+        test_int(ctx.s[i][1], 0);
+    }
+
+    for (i = 0; i < ctx.count; i ++) {
+        const Position *p = ecs_get(world, ctx.e[i], Position);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        const Velocity *v = ecs_get(world, ctx.e[i], Velocity);
+        test_int(v->x, 30);
+        test_int(v->y, 40);        
+    }
+
+    ecs_fini(world);
+}
+
+void Iter_page_iter_w_limit_1_all_offsets(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+    ECS_COMPONENT(world, Rotation);
+
+    ECS_ENTITY(world, e1, Position, Velocity);
+    ECS_ENTITY(world, e2, Position, Velocity);
+    ECS_ENTITY(world, e3, Position, Velocity);
+    ECS_ENTITY(world, e4, Position, Velocity, Mass);
+    ECS_ENTITY(world, e5, Position, Velocity, Mass);
+    ECS_ENTITY(world, e6, Position, Velocity, Rotation);
+    ECS_ENTITY(world, e7, Position);
+
+    ECS_QUERY(world, q, Position, Velocity);
+
+    Probe ctx = {0};
+    ecs_set_ctx(world, &ctx, NULL);
+
+    Iter(world, q, 0, 1);
+    Iter(world, q, 2, 1);
+    Iter(world, q, 1, 1);
+    Iter(world, q, 3, 1);
+    Iter(world, q, 5, 1);
+    Iter(world, q, 4, 1);
+
+    test_int(ctx.count, 6);
+    test_int(ctx.term_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e3);
+    test_int(ctx.e[2], e2);
+    test_int(ctx.e[3], e4);
+    test_int(ctx.e[4], e6);
+    test_int(ctx.e[5], e5);
+
+    int i;
+    for (i = 0; i < ctx.invoked; i ++) {
+        test_int(ctx.c[i][0], ecs_id(Position));
+        test_int(ctx.s[i][0], 0);
+        test_int(ctx.c[i][1], ecs_id(Velocity));
+        test_int(ctx.s[i][1], 0);
+    }
+
+    for (i = 0; i < ctx.count; i ++) {
+        const Position *p = ecs_get(world, ctx.e[i], Position);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        const Velocity *v = ecs_get(world, ctx.e[i], Velocity);
+        test_int(v->x, 30);
+        test_int(v->y, 40);        
+    }
+
+    ecs_fini(world);
+}
+
+void Iter_page_iter_w_offset_out_of_bounds(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+    ECS_COMPONENT(world, Rotation);
+
+    ECS_ENTITY(world, e1, Position, Velocity);
+    ECS_ENTITY(world, e2, Position, Velocity);
+    ECS_ENTITY(world, e3, Position, Velocity);
+    ECS_ENTITY(world, e4, Position, Velocity, Mass);
+    ECS_ENTITY(world, e5, Position, Velocity, Mass);
+    ECS_ENTITY(world, e6, Position, Velocity, Rotation);
+    ECS_ENTITY(world, e7, Position);
+
+    ECS_QUERY(world, q, Position, Velocity);
+
+    Probe ctx = {0};
+    ecs_set_ctx(world, &ctx, NULL);
+
+    Iter(world, q, 6, 1);
+
+    test_int(ctx.count, 0);
+
+    ecs_fini(world);
+}
+
+void Iter_page_iter_w_limit_out_of_bounds(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+    ECS_COMPONENT(world, Rotation);
+
+    ECS_ENTITY(world, e1, Position, Velocity);
+    ECS_ENTITY(world, e2, Position, Velocity);
+    ECS_ENTITY(world, e3, Position, Velocity);
+    ECS_ENTITY(world, e4, Position, Velocity, Mass);
+    ECS_ENTITY(world, e5, Position, Velocity, Mass);
+    ECS_ENTITY(world, e6, Position, Velocity, Rotation);
+    ECS_ENTITY(world, e7, Position);
+
+    ECS_QUERY(world, q, Position, Velocity);
+
+    Probe ctx = {0};
+    ecs_set_ctx(world, &ctx, NULL);
+
+    Iter(world, q, 5, 2);
+
+    test_int(ctx.count, 1);
+    test_int(ctx.term_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e6);
+
+    int i;
+    for (i = 0; i < ctx.invoked; i ++) {
+        test_int(ctx.c[i][0], ecs_id(Position));
+        test_int(ctx.s[i][0], 0);
+        test_int(ctx.c[i][1], ecs_id(Velocity));
+        test_int(ctx.s[i][1], 0);
+    }
+
+    for (i = 0; i < ctx.count; i ++) {
+        const Position *p = ecs_get(world, ctx.e[i], Position);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        const Velocity *v = ecs_get(world, ctx.e[i], Velocity);
+        test_int(v->x, 30);
+        test_int(v->y, 40);        
+    }
+
+    ecs_fini(world);
+}
+
+void Iter_page_iter_no_match(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_ENTITY(world, e1, Position);
+
+    ECS_QUERY(world, q, Position, Velocity);
+
+    Probe ctx = {0};
+    ecs_set_ctx(world, &ctx, NULL);
+
+    Iter(world, q, 0, 0);
+
+    test_int(ctx.count, 0);
+
+    ecs_fini(world);
+}
+
+typedef struct Param {
+    ecs_entity_t entity;
+    int count;
+} Param;
+
+static ECS_QUERY_DECLARE(qTestSubset);
+
+static
+void TestSubset(ecs_world_t *world, ecs_query_t *query, int32_t offset, 
+    int32_t limit, Param *param) 
+{
+    ecs_iter_t it = ecs_query_iter(world, query);
+    ecs_iter_t pit = ecs_page_iter(&it, offset, limit);
+    while (ecs_page_next(&pit)) {
+        int i;
+        for (i = 0; i < pit.count; i ++) {
+            test_assert(param->entity != pit.entities[i]);
+            param->count ++;
+        }
+    }
+}
+
+static
+void TestAll(ecs_world_t *world, ecs_query_t *query) {
+    ecs_iter_t it = ecs_query_iter(world, query);
+    while (ecs_query_next(&it)) {
+        Position *p = ecs_field(&it, Position, 1);
+
+        int i;
+        for (i = 0; i < it.count; i ++) {
+            Param param = {.entity = it.entities[i], 0};
+            TestSubset(world, qTestSubset, it.frame_offset + i + 1, 0, &param);
+            p[i].x += param.count;
+        }
+    }
+}
+
+void Iter_page_iter_comb_10_entities_1_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ECS_QUERY_DEFINE(world, qTestSubset, Position);
+    ECS_QUERY(world, qTestAll, Position);
+
+    int i, ENTITIES = 10;
+
+    const ecs_entity_t *ids = ecs_bulk_new(world, Position, ENTITIES);
+
+    for (i = 0; i < ENTITIES; i ++) {
+        ecs_set(world, ids[i], Position, {1, 2});
+    }
+
+    TestAll(world, qTestAll);
+
+    for (i = 0; i < ENTITIES; i ++) {
+        const Position *p = ecs_get(world, ids[i], Position);
+        test_int(p->x, ENTITIES - i);
+    }
+
+    ecs_fini(world);
+}
+
+void Iter_page_iter_comb_10_entities_2_types(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_QUERY_DEFINE(world, qTestSubset, Position);
+    ECS_QUERY(world, qTestAll, Position);
+
+    int i, ENTITIES = 10;
+    ecs_entity_t ids_1[5], ids_2[5];
+
+    for (int i = 0; i < ENTITIES / 2; i ++) {
+        ids_1[i] = ecs_set(world, 0, Position, {1, 2});
+    }
+    for (int i = 0; i < ENTITIES / 2; i ++) {
+        ids_2[i] = ecs_set(world, 0, Position, {1, 2});
+        ecs_add(world, ids_2[i], Velocity);
+    } 
+
+    TestAll(world, qTestAll);
+
+    for (i = 0; i < 5; i ++) {
+        const Position *p = ecs_get(world, ids_1[i], Position);
+        test_int(p->x, ENTITIES - i);
+
+        p = ecs_get(world, ids_2[i], Position);
+        test_int(p->x, ENTITIES - (i + 5));
+    }
+
+    ecs_fini(world);
+}
+
 void Iter_count(void) {
     ecs_world_t *world = ecs_mini();
 
