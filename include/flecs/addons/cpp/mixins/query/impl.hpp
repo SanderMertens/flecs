@@ -276,7 +276,7 @@ inline void world::each(Func&& func) const {
 
 template <typename T, typename Func>
 inline void world::each(Func&& func) const {
-    ecs_iter_t it = ecs_each_id(m_world, _::cpp_type<T>::id());
+    ecs_iter_t it = ecs_each_id(m_world, _::type<T>::id());
 
     while (ecs_each_next(&it)) {
         _::each_delegate<Func, T>(func).invoke(&it);

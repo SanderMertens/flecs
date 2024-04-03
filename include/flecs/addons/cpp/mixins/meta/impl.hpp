@@ -65,7 +65,7 @@ inline void init(flecs::world& world) {
     // specific types.
 
     if (!flecs::is_same<i32_t, iptr_t>() && !flecs::is_same<i64_t, iptr_t>()) {
-        flecs::_::cpp_type<iptr_t>::init(flecs::Iptr, true);
+        flecs::_::type<iptr_t>::init(flecs::Iptr, true);
         ecs_assert(flecs::type_id<iptr_t>() == flecs::Iptr, 
             ECS_INTERNAL_ERROR, NULL);
         // Remove symbol to prevent validation errors, as it doesn't match with 
@@ -74,7 +74,7 @@ inline void init(flecs::world& world) {
     }
 
     if (!flecs::is_same<u32_t, uptr_t>() && !flecs::is_same<u64_t, uptr_t>()) {
-        flecs::_::cpp_type<uptr_t>::init(flecs::Uptr, true);
+        flecs::_::type<uptr_t>::init(flecs::Uptr, true);
         ecs_assert(flecs::type_id<uptr_t>() == flecs::Uptr, 
             ECS_INTERNAL_ERROR, NULL);
         // Remove symbol to prevent validation errors, as it doesn't match with 
@@ -130,7 +130,7 @@ inline flecs::entity world::array(flecs::entity_t elem_id, int32_t array_count) 
 /** Create array type. */
 template <typename T>
 inline flecs::entity world::array(int32_t array_count) {
-    return this->array(_::cpp_type<T>::id(m_world), array_count);
+    return this->array(_::type<T>::id(m_world), array_count);
 }
 
 inline flecs::entity world::vector(flecs::entity_t elem_id) {
@@ -143,7 +143,7 @@ inline flecs::entity world::vector(flecs::entity_t elem_id) {
 
 template <typename T>
 inline flecs::entity world::vector() {
-    return this->vector(_::cpp_type<T>::id(m_world));
+    return this->vector(_::type<T>::id(m_world));
 }
 
 } // namespace flecs
@@ -154,7 +154,7 @@ inline int ecs_serializer_t::value(ecs_entity_t type, const void *v) const {
 
 template <typename T>
 inline int ecs_serializer_t::value(const T& v) const {
-    return this->value(flecs::_::cpp_type<T>::id(
+    return this->value(flecs::_::type<T>::id(
         const_cast<flecs::world_t*>(this->world)), &v);
 }
 

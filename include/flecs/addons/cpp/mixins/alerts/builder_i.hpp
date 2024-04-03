@@ -78,7 +78,7 @@ public:
      */
     template <typename Severity>
     Base& severity() {
-        return severity(_::cpp_type<Severity>::id(world_v()));
+        return severity(_::type<Severity>::id(world_v()));
     }
 
     /** Add severity filter */
@@ -98,14 +98,14 @@ public:
     /** Add severity filter */
     template <typename Severity>
     Base& severity_filter(flecs::id_t with, const char *var = nullptr) {
-        return severity_filter(_::cpp_type<Severity>::id(world_v()), with, var);
+        return severity_filter(_::type<Severity>::id(world_v()), with, var);
     }
 
     /** Add severity filter */
     template <typename Severity, typename T, if_not_t< is_enum<T>::value > = 0>
     Base& severity_filter(const char *var = nullptr) {
-        return severity_filter(_::cpp_type<Severity>::id(world_v()), 
-            _::cpp_type<T>::id(world_v()), var);
+        return severity_filter(_::type<Severity>::id(world_v()), 
+            _::type<T>::id(world_v()), var);
     }
 
     /** Add severity filter */
@@ -113,7 +113,7 @@ public:
     Base& severity_filter(T with, const char *var = nullptr) {
         flecs::world w(world_v());
         flecs::entity constant = w.to_entity<T>(with);
-        return severity_filter(_::cpp_type<Severity>::id(world_v()), 
+        return severity_filter(_::type<Severity>::id(world_v()), 
             w.pair<T>(constant), var);
     }
 
@@ -133,7 +133,7 @@ public:
     /** Set member to create an alert for out of range values */
     template <typename T>
     Base& member(const char *m, const char *v = nullptr) {
-        flecs::entity_t id = _::cpp_type<T>::id(world_v());
+        flecs::entity_t id = _::type<T>::id(world_v());
         flecs::entity_t mid = ecs_lookup_path_w_sep(
             world_v(), id, m, "::", "::", false);
         ecs_assert(m != 0, ECS_INVALID_PARAMETER, NULL);

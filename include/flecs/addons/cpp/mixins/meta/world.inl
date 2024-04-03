@@ -19,7 +19,7 @@ flecs::string to_expr(flecs::entity_t tid, const void* value) {
 /** Convert value to string */
 template <typename T>
 flecs::string to_expr(const T* value) {
-    flecs::entity_t tid = _::cpp_type<T>::id(m_world);
+    flecs::entity_t tid = _::type<T>::id(m_world);
     return to_expr(tid, value);
 }
 
@@ -31,7 +31,7 @@ flecs::cursor cursor(flecs::entity_t tid, void *ptr) {
 /** Return meta cursor to value */
 template <typename T>
 flecs::cursor cursor(void *ptr) {
-    flecs::entity_t tid = _::cpp_type<T>::id(m_world);
+    flecs::entity_t tid = _::type<T>::id(m_world);
     return cursor(tid, ptr);
 }
 

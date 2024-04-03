@@ -336,7 +336,7 @@ private:
 #ifndef FLECS_NDEBUG
         ecs_entity_t term_id = ecs_field_id(m_iter, index);
         ecs_assert(ECS_HAS_ID_FLAG(term_id, PAIR) ||
-            term_id == _::cpp_type<T>::id(m_iter->world),
+            term_id == _::type<T>::id(m_iter->world),
             ECS_COLUMN_TYPE_MISMATCH, NULL);
 #endif
 

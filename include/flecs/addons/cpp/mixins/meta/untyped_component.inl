@@ -38,29 +38,29 @@ untyped_component& member(flecs::entity_t type_id, const char* name, int32_t cou
 /** Add member. */
 template <typename MemberType>
 untyped_component& member(const char *name, int32_t count = 0, size_t offset = 0) {
-    flecs::entity_t type_id = _::cpp_type<MemberType>::id(m_world);
+    flecs::entity_t type_id = _::type<MemberType>::id(m_world);
     return member(type_id, name, count, offset);
 }
 
 /** Add member with unit. */
 template <typename MemberType>
 untyped_component& member(flecs::entity_t unit, const char *name, int32_t count = 0, size_t offset = 0) {
-    flecs::entity_t type_id = _::cpp_type<MemberType>::id(m_world);
+    flecs::entity_t type_id = _::type<MemberType>::id(m_world);
     return member(type_id, unit, name, count, offset);
 }
 
 /** Add member with unit. */
 template <typename MemberType, typename UnitType>
 untyped_component& member(const char *name, int32_t count = 0, size_t offset = 0) {
-    flecs::entity_t type_id = _::cpp_type<MemberType>::id(m_world);
-    flecs::entity_t unit_id = _::cpp_type<UnitType>::id(m_world);
+    flecs::entity_t type_id = _::type<MemberType>::id(m_world);
+    flecs::entity_t unit_id = _::type<UnitType>::id(m_world);
     return member(type_id, unit_id, name, count, offset);
 }
 
 /** Add member using pointer-to-member. */
 template <typename MemberType, typename ComponentType, typename RealType = typename std::remove_extent<MemberType>::type>
 untyped_component& member(const char* name, const MemberType ComponentType::* ptr) {
-    flecs::entity_t type_id = _::cpp_type<RealType>::id(m_world);
+    flecs::entity_t type_id = _::type<RealType>::id(m_world);
     size_t offset = reinterpret_cast<size_t>(&(static_cast<ComponentType*>(nullptr)->*ptr));
     return member(type_id, name, std::extent<MemberType>::value, offset);
 }
@@ -68,7 +68,7 @@ untyped_component& member(const char* name, const MemberType ComponentType::* pt
 /** Add member with unit using pointer-to-member. */
 template <typename MemberType, typename ComponentType, typename RealType = typename std::remove_extent<MemberType>::type>
 untyped_component& member(flecs::entity_t unit, const char* name, const MemberType ComponentType::* ptr) {
-    flecs::entity_t type_id = _::cpp_type<RealType>::id(m_world);
+    flecs::entity_t type_id = _::type<RealType>::id(m_world);
     size_t offset = reinterpret_cast<size_t>(&(static_cast<ComponentType*>(nullptr)->*ptr));
     return member(type_id, unit, name, std::extent<MemberType>::value, offset);
 }
@@ -76,15 +76,15 @@ untyped_component& member(flecs::entity_t unit, const char* name, const MemberTy
 /** Add member with unit using pointer-to-member. */
 template <typename UnitType, typename MemberType, typename ComponentType, typename RealType = typename std::remove_extent<MemberType>::type>
 untyped_component& member(const char* name, const MemberType ComponentType::* ptr) {
-    flecs::entity_t type_id = _::cpp_type<RealType>::id(m_world);
-    flecs::entity_t unit_id = _::cpp_type<UnitType>::id(m_world);
+    flecs::entity_t type_id = _::type<RealType>::id(m_world);
+    flecs::entity_t unit_id = _::type<UnitType>::id(m_world);
     size_t offset = reinterpret_cast<size_t>(&(static_cast<ComponentType*>(nullptr)->*ptr));
     return member(type_id, unit_id, name, std::extent<MemberType>::value, offset);
 }
 
 /** Add constant. */
 untyped_component& constant(const char *name, int32_t value) {
-    ecs_add_id(m_world, m_id, _::cpp_type<flecs::Enum>::id(m_world));
+    ecs_add_id(m_world, m_id, _::type<flecs::Enum>::id(m_world));
 
     ecs_entity_desc_t desc = {};
     desc.name = name;
@@ -101,7 +101,7 @@ untyped_component& constant(const char *name, int32_t value) {
 
 /** Add bitmask constant. */
 untyped_component& bit(const char *name, uint32_t value) {
-    ecs_add_id(m_world, m_id, _::cpp_type<flecs::Bitmask>::id(m_world));
+    ecs_add_id(m_world, m_id, _::type<flecs::Bitmask>::id(m_world));
 
     ecs_entity_desc_t desc = {};
     desc.name = name;
@@ -121,7 +121,7 @@ template <typename Elem>
 untyped_component& array(int32_t elem_count) {
     ecs_array_desc_t desc = {};
     desc.entity = m_id;
-    desc.type = _::cpp_type<Elem>::id(m_world);
+    desc.type = _::type<Elem>::id(m_world);
     desc.count = elem_count;
     ecs_array_init(m_world, &desc);
     return *this;

@@ -13,7 +13,7 @@ namespace flecs
 // set(T&&), T = constructible
 template <typename T, if_t< is_flecs_constructible<T>::value > = 0>
 inline void set(world_t *world, flecs::entity_t entity, T&& value, flecs::id_t id) {
-    ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
 
     if (!ecs_is_deferred(world)) {
         T& dst = *static_cast<T*>(ecs_ensure_id(world, entity, id));
@@ -29,7 +29,7 @@ inline void set(world_t *world, flecs::entity_t entity, T&& value, flecs::id_t i
 // set(const T&), T = constructible
 template <typename T, if_t< is_flecs_constructible<T>::value > = 0>
 inline void set(world_t *world, flecs::entity_t entity, const T& value, flecs::id_t id) {
-    ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
 
     if (!ecs_is_deferred(world)) {
         T& dst = *static_cast<T*>(ecs_ensure_id(world, entity, id));
@@ -45,7 +45,7 @@ inline void set(world_t *world, flecs::entity_t entity, const T& value, flecs::i
 // set(T&&), T = not constructible
 template <typename T, if_not_t< is_flecs_constructible<T>::value > = 0>
 inline void set(world_t *world, flecs::entity_t entity, T&& value, flecs::id_t id) {
-    ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
 
     if (!ecs_is_deferred(world)) {
         T& dst = *static_cast<remove_reference_t<T>*>(ecs_ensure_id(world, entity, id));
@@ -61,7 +61,7 @@ inline void set(world_t *world, flecs::entity_t entity, T&& value, flecs::id_t i
 // set(const T&), T = not constructible
 template <typename T, if_not_t< is_flecs_constructible<T>::value > = 0>
 inline void set(world_t *world, flecs::entity_t entity, const T& value, flecs::id_t id) {
-    ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
 
     if (!ecs_is_deferred(world)) {
         T& dst = *static_cast<remove_reference_t<T>*>(ecs_ensure_id(world, entity, id));
@@ -79,7 +79,7 @@ template <typename T, typename ... Args, if_t<
     std::is_constructible<actual_type_t<T>, Args...>::value ||
     std::is_default_constructible<actual_type_t<T>>::value > = 0>
 inline void emplace(world_t *world, flecs::entity_t entity, flecs::id_t id, Args&&... args) {
-    ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
     T& dst = *static_cast<T*>(ecs_emplace_id(world, entity, id));
 
     FLECS_PLACEMENT_NEW(&dst, T{FLECS_FWD(args)...});
@@ -90,14 +90,14 @@ inline void emplace(world_t *world, flecs::entity_t entity, flecs::id_t id, Args
 // set(T&&)
 template <typename T, typename A>
 inline void set(world_t *world, entity_t entity, A&& value) {
-    id_t id = _::cpp_type<T>::id(world);
+    id_t id = _::type<T>::id(world);
     flecs::set(world, entity, FLECS_FWD(value), id);
 }
 
 // set(const T&)
 template <typename T, typename A>
 inline void set(world_t *world, entity_t entity, const A& value) {
-    id_t id = _::cpp_type<T>::id(world);
+    id_t id = _::type<T>::id(world);
     flecs::set(world, entity, value, id);
 }
 
@@ -552,14 +552,14 @@ struct world {
      */
     template <typename T, if_t< !is_callable<T>::value > = 0>
     void set(const T& value) const {
-        flecs::set<T>(m_world, _::cpp_type<T>::id(m_world), value);
+        flecs::set<T>(m_world, _::type<T>::id(m_world), value);
     }
 
     /** Set singleton component.
      */
     template <typename T, if_t< !is_callable<T>::value > = 0>
     void set(T&& value) const {
-        flecs::set<T>(m_world, _::cpp_type<T>::id(m_world),
+        flecs::set<T>(m_world, _::type<T>::id(m_world),
             FLECS_FWD(value));
     }
 
@@ -568,7 +568,7 @@ struct world {
     template <typename First, typename Second, typename P = flecs::pair<First, Second>,
         typename A = actual_type_t<P>, if_not_t< flecs::is_pair<First>::value> = 0>
     void set(const A& value) const {
-        flecs::set<P>(m_world, _::cpp_type<First>::id(m_world), value);
+        flecs::set<P>(m_world, _::type<First>::id(m_world), value);
     }
 
     /** Set singleton pair.
@@ -576,7 +576,7 @@ struct world {
     template <typename First, typename Second, typename P = flecs::pair<First, Second>,
         typename A = actual_type_t<P>, if_not_t< flecs::is_pair<First>::value> = 0>
     void set(A&& value) const {
-        flecs::set<P>(m_world, _::cpp_type<First>::id(m_world), FLECS_FWD(value));
+        flecs::set<P>(m_world, _::type<First>::id(m_world), FLECS_FWD(value));
     }
 
     /** Set singleton pair.
@@ -596,7 +596,7 @@ struct world {
 
     template <typename T, typename ... Args>
     void emplace(Args&&... args) const {
-        flecs::id_t component_id = _::cpp_type<T>::id(m_world);
+        flecs::id_t component_id = _::type<T>::id(m_world);
         flecs::emplace<T>(m_world, component_id, component_id,
             FLECS_FWD(args)...);
     }
@@ -816,7 +816,7 @@ struct world {
      */
     template <typename T>
     int count() const {
-        return count(_::cpp_type<T>::id(m_world));
+        return count(_::type<T>::id(m_world));
     }
 
     /** Count entities matching a pair.
@@ -826,7 +826,7 @@ struct world {
      */
     template <typename First>
     int count(flecs::entity_t second) const {
-        return count(_::cpp_type<First>::id(m_world), second);
+        return count(_::type<First>::id(m_world), second);
     }
 
     /** Count entities matching a pair.
@@ -837,8 +837,8 @@ struct world {
     template <typename First, typename Second>
     int count() const {
         return count(
-            _::cpp_type<First>::id(m_world),
-            _::cpp_type<Second>::id(m_world));
+            _::type<First>::id(m_world),
+            _::type<Second>::id(m_world));
     }
 
     /** All entities created in function are created with id.
@@ -892,7 +892,7 @@ struct world {
      */
     template <typename T, typename Func>
     void scope(const Func& func) const {
-        flecs::id_t parent = _::cpp_type<T>::id(m_world);
+        flecs::id_t parent = _::type<T>::id(m_world);
         scope(parent, func);
     }
 
@@ -919,19 +919,19 @@ struct world {
     /** Delete all entities with specified component. */
     template <typename T>
     void delete_with() const {
-        delete_with(_::cpp_type<T>::id(m_world));
+        delete_with(_::type<T>::id(m_world));
     }
 
     /** Delete all entities with specified pair. */
     template <typename First, typename Second>
     void delete_with() const {
-        delete_with(_::cpp_type<First>::id(m_world), _::cpp_type<Second>::id(m_world));
+        delete_with(_::type<First>::id(m_world), _::type<Second>::id(m_world));
     }
 
     /** Delete all entities with specified pair. */
     template <typename First>
     void delete_with(entity_t second) const {
-        delete_with(_::cpp_type<First>::id(m_world), second);
+        delete_with(_::type<First>::id(m_world), second);
     }
 
     /** Remove all instances of specified id. */
@@ -947,19 +947,19 @@ struct world {
     /** Remove all instances of specified component. */
     template <typename T>
     void remove_all() const {
-        remove_all(_::cpp_type<T>::id(m_world));
+        remove_all(_::type<T>::id(m_world));
     }
 
     /** Remove all instances of specified pair. */
     template <typename First, typename Second>
     void remove_all() const {
-        remove_all(_::cpp_type<First>::id(m_world), _::cpp_type<Second>::id(m_world));
+        remove_all(_::type<First>::id(m_world), _::type<Second>::id(m_world));
     }
 
     /** Remove all instances of specified pair. */
     template <typename First>
     void remove_all(entity_t second) const {
-        remove_all(_::cpp_type<First>::id(m_world), second);
+        remove_all(_::type<First>::id(m_world), second);
     }
 
     /** Defer all operations called in function. If the world is already in

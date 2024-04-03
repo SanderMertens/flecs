@@ -51,7 +51,7 @@ Self& set_json(
     const char *json, 
     flecs::from_json_desc_t *desc = nullptr) 
 {
-    return set_json(_::cpp_type<T>::id(m_world), json, desc);
+    return set_json(_::type<T>::id(m_world), json, desc);
 }
 
 /** Set pair from JSON.
@@ -65,8 +65,8 @@ Self& set_json(
     flecs::from_json_desc_t *desc = nullptr) 
 {
     return set_json(
-        _::cpp_type<R>::id(m_world), 
-        _::cpp_type<T>::id(m_world),
+        _::type<R>::id(m_world), 
+        _::type<T>::id(m_world),
         json, desc);
 }
 
@@ -82,7 +82,7 @@ Self& set_json(
     flecs::from_json_desc_t *desc = nullptr) 
 {
     return set_json(
-        _::cpp_type<R>::id(m_world), t,
+        _::type<R>::id(m_world), t,
         json, desc);
 }
 
@@ -98,6 +98,6 @@ Self& set_json_second(
     flecs::from_json_desc_t *desc = nullptr) 
 {
     return set_json(
-        r, _::cpp_type<T>::id(m_world),
+        r, _::type<T>::id(m_world),
         json, desc);
 }

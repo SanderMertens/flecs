@@ -32,7 +32,7 @@ template <typename T, typename ElemType = void>
 struct opaque {
     opaque(flecs::world_t *w = nullptr) : world(w) {
         if (world) {
-            desc.entity = _::cpp_type<T>::id(world);
+            desc.entity = _::type<T>::id(world);
         }
     }
 

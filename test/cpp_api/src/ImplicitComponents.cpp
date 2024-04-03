@@ -227,7 +227,7 @@ void ImplicitComponents_reinit(void) {
 
     // Reset component id using internals (currently the only way to simulate
     // registration across translation units)
-    flecs::_::cpp_type<Position>::reset();
+    flecs::_::type<Position>::reset();
 
     world.entity()
         .add<Position>();
@@ -251,7 +251,7 @@ void ImplicitComponents_reinit_scoped(void) {
 
     // Reset component id using internals (currently the only way to simulate
     // registration across translation units)
-    flecs::_::cpp_type<Foo::Position>::reset();
+    flecs::_::type<Foo::Position>::reset();
 
     world.entity()
         .add<Foo::Position>();
@@ -284,7 +284,7 @@ void ImplicitComponents_reinit_w_lifecycle(void) {
 
     // Reset component id using internals (currently the only way to simulate
     // registration across translation units)
-    flecs::_::cpp_type<Position>::reset();
+    flecs::_::type<Position>::reset();
 
     e = world.entity()
         .add<Position>();

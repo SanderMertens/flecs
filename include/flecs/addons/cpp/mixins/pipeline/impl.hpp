@@ -28,7 +28,7 @@ inline flecs::pipeline_builder<> world::pipeline() const {
 
 template <typename Pipeline, if_not_t< is_enum<Pipeline>::value >>
 inline flecs::pipeline_builder<> world::pipeline() const {
-    return flecs::pipeline_builder<>(m_world, _::cpp_type<Pipeline>::id(m_world));
+    return flecs::pipeline_builder<>(m_world, _::type<Pipeline>::id(m_world));
 }
 
 inline void world::set_pipeline(const flecs::entity pip) const {
@@ -37,7 +37,7 @@ inline void world::set_pipeline(const flecs::entity pip) const {
 
 template <typename Pipeline>
 inline void world::set_pipeline() const {
-    return ecs_set_pipeline(m_world, _::cpp_type<Pipeline>::id(m_world));
+    return ecs_set_pipeline(m_world, _::type<Pipeline>::id(m_world));
 }
 
 inline flecs::entity world::get_pipeline() const {
@@ -54,7 +54,7 @@ inline void world::run_pipeline(const flecs::entity_t pip, ecs_ftime_t delta_tim
 
 template <typename Pipeline, if_not_t< is_enum<Pipeline>::value >>
 inline void world::run_pipeline(ecs_ftime_t delta_time) const {
-    return ecs_run_pipeline(m_world, _::cpp_type<Pipeline>::id(m_world), delta_time);
+    return ecs_run_pipeline(m_world, _::type<Pipeline>::id(m_world), delta_time);
 }
 
 inline void world::set_time_scale(ecs_ftime_t mul) const {

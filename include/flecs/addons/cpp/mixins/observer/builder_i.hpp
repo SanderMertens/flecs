@@ -39,7 +39,7 @@ struct observer_builder_i : query_builder_i<Base, Components ...> {
      */
     template <typename E>
     Base& event() {
-        m_desc->events[m_event_count ++] = _::cpp_type<E>().id(world_v());
+        m_desc->events[m_event_count ++] = _::type<E>().id(world_v());
         return *this;
     }
 

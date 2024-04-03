@@ -32,7 +32,7 @@ struct component;
 namespace _
 {
 template <typename T, typename U = int>
-struct cpp_type;
+struct type;
 
 template <typename Func, typename ... Components>
 struct each_delegate;

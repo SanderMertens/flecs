@@ -41,11 +41,11 @@ flecs::entity import(world& world) {
 
     ecs_entity_t m = ecs_lookup_symbol(world, symbol, true, false);
 
-    if (!_::cpp_type<T>::registered(world)) {
+    if (!_::type<T>::registered(world)) {
 
         /* Module is registered with world, initialize static data */
         if (m) {
-            _::cpp_type<T>::init(m, false);
+            _::type<T>::init(m, false);
 
         /* Module is not yet registered, register it now */
         } else {
@@ -73,7 +73,7 @@ flecs::entity import(world& world) {
 
 template <typename Module>
 inline flecs::entity world::module(const char *name) const {
-    flecs::id_t result = _::cpp_type<Module>::id(m_world, nullptr, false);
+    flecs::id_t result = _::type<Module>::id(m_world, nullptr, false);
     if (name) {
         ecs_add_path_w_sep(m_world, result, 0, name, "::", "::");
     }

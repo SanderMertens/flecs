@@ -4,7 +4,7 @@ template <typename Func>
 component& opaque(const Func& type_support) {
     flecs::world world(m_world);
     auto ts = type_support(world);
-    ts.desc.entity = _::cpp_type<T>::id(m_world);
+    ts.desc.entity = _::type<T>::id(m_world);
     ecs_opaque_init(m_world, &ts.desc);
     return *this;
 }

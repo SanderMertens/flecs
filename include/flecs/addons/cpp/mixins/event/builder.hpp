@@ -30,7 +30,7 @@ struct event_builder_base {
     template <typename T>
     Base& id() {
         m_ids.array = m_ids_array;
-        m_ids.array[m_ids.count] = _::cpp_type<T>().id(m_world);
+        m_ids.array[m_ids.count] = _::type<T>().id(m_world);
         m_ids.count ++;
         return *this;
     }
@@ -43,8 +43,8 @@ struct event_builder_base {
     template <typename First, typename Second>
     Base& id() {
         return id(
-            ecs_pair(_::cpp_type<First>::id(this->m_world), 
-                _::cpp_type<Second>::id(this->m_world)));
+            ecs_pair(_::type<First>::id(this->m_world), 
+                _::type<Second>::id(this->m_world)));
     }
 
     /** 
@@ -54,7 +54,7 @@ struct event_builder_base {
      */
     template <typename First>
     Base& id(entity_t second) {
-        return id(ecs_pair(_::cpp_type<First>::id(this->m_world), second));
+        return id(ecs_pair(_::type<First>::id(this->m_world), second));
     }
 
     /** 

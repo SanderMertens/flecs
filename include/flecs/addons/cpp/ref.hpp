@@ -31,10 +31,10 @@ struct ref {
         m_world = world ? const_cast<flecs::world_t *>(ecs_get_world(world))
             : nullptr;
         if (!id) {
-            id = _::cpp_type<T>::id(world);
+            id = _::type<T>::id(world);
         }
 
-        ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
 
         m_ref = ecs_ref_init_id(m_world, entity, id);
     }

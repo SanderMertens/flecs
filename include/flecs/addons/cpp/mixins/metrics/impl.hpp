@@ -46,7 +46,7 @@ inline metric_builder& metric_builder::member(const char *name) {
 
 template <typename T>
 inline metric_builder& metric_builder::member(const char *name) {
-    flecs::entity e (m_world, _::cpp_type<T>::id(m_world));
+    flecs::entity e (m_world, _::type<T>::id(m_world));
     flecs::entity_t m = e.lookup(name);
     if (!m) {
         flecs::log::err("member '%s' not found in type '%s'", 
@@ -64,7 +64,7 @@ inline metric_builder& metric_builder::dotmember(const char *expr) {
 template <typename T>
 inline metric_builder& metric_builder::dotmember(const char *expr) {
     m_desc.dotmember = expr;
-    m_desc.id = _::cpp_type<T>::id(m_world);
+    m_desc.id = _::type<T>::id(m_world);
     return *this;
 }
 

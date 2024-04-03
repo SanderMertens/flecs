@@ -234,7 +234,7 @@ struct iter_iterable final : iterable<Components...> {
     // Limit results to tables with specified group id (grouped queries only)
     template <typename Group>
     iter_iterable<Components...>& set_group() {
-        ecs_iter_set_group(&m_it, _::cpp_type<Group>().id(m_it.real_world));
+        ecs_iter_set_group(&m_it, _::type<Group>().id(m_it.real_world));
         return *this;
     }
 

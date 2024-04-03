@@ -56,7 +56,7 @@ public:
      */
     template <typename Phase>
     Base& kind() {
-        return this->kind(_::cpp_type<Phase>::id(world_v()));
+        return this->kind(_::type<Phase>::id(world_v()));
     }
 
     /** Specify whether system can run on multiple threads.
@@ -122,7 +122,7 @@ public:
      */
     template<typename T>
     Base& tick_source() {
-        m_desc->tick_source = _::cpp_type<T>::id(world_v());
+        m_desc->tick_source = _::type<T>::id(world_v());
         return *this;
     }
 

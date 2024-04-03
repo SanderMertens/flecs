@@ -22,7 +22,7 @@ inline Self& entity_builder<Self>::set(const Func& func) {
 
 template <typename T, if_t< is_enum<T>::value > >
 const T* entity_view::get() const {
-    entity_t r = _::cpp_type<T>::id(m_world);
+    entity_t r = _::type<T>::id(m_world);
     entity_t c = ecs_get_target(m_world, m_id, r, 0);
 
     if (c) {
@@ -41,7 +41,7 @@ template<typename First>
 inline flecs::entity entity_view::target(int32_t index) const 
 {
     return flecs::entity(m_world, 
-        ecs_get_target(m_world, m_id, _::cpp_type<First>::id(m_world), index));
+        ecs_get_target(m_world, m_id, _::type<First>::id(m_world), index));
 }
 
 inline flecs::entity entity_view::target(
@@ -62,12 +62,12 @@ inline flecs::entity entity_view::target_for(
 
 template <typename T>
 inline flecs::entity entity_view::target_for(flecs::entity_t relationship) const {
-    return target_for(relationship, _::cpp_type<T>::id(m_world));
+    return target_for(relationship, _::type<T>::id(m_world));
 }
 
 template <typename First, typename Second>
 inline flecs::entity entity_view::target_for(flecs::entity_t relationship) const {
-    return target_for(relationship, _::cpp_type<First, Second>::id(m_world));
+    return target_for(relationship, _::type<First, Second>::id(m_world));
 }
 
 inline flecs::entity entity_view::parent() const {
@@ -211,7 +211,7 @@ inline flecs::entity world::entity(E value) const {
 template <typename T>
 inline flecs::entity world::entity(const char *name) const {
     return flecs::entity(m_world, 
-        _::cpp_type<T>::id_explicit(m_world, name, true, 0, false) );
+        _::type<T>::id_explicit(m_world, name, true, 0, false) );
 }
 
 template <typename... Args>

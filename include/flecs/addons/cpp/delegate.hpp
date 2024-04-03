@@ -696,7 +696,7 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
         /* Get column indices for components */
         ColumnArray columns ({
             ecs_table_get_column_index(real_world, table, 
-                _::cpp_type<Args>().id(world))...
+                _::type<Args>().id(world))...
         });
 
         /* Get pointers for columns for entity */
@@ -717,7 +717,7 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
         size_t i = 0;
         DummyArray dummy ({
             (ptrs[i ++] = ecs_ensure_id(world, e, 
-                _::cpp_type<Args>().id(world)), 0)...
+                _::type<Args>().id(world)), 0)...
         });
 
         return true;

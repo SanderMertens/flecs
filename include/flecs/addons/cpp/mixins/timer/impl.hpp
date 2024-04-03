@@ -45,7 +45,7 @@ struct timer final : entity {
 
 template <typename T>
 inline flecs::timer world::timer() const {
-    return flecs::timer(m_world, _::cpp_type<T>::id(m_world));
+    return flecs::timer(m_world, _::type<T>::id(m_world));
 }
 
 template <typename... Args>
@@ -87,7 +87,7 @@ inline void system::stop() {
 
 template<typename T>
 inline void system::set_tick_source() {
-    ecs_set_tick_source(m_world, m_id, _::cpp_type<T>::id(m_world));
+    ecs_set_tick_source(m_world, m_id, _::type<T>::id(m_world));
 }
 
 inline void system::set_tick_source(flecs::entity e) {

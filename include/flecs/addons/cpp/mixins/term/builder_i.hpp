@@ -141,7 +141,7 @@ struct term_builder_i : term_id_builder_i<Base> {
     /* Select src identifier, initialize it with id associated with type */
     template<typename T>
     Base& src() {
-        this->src(_::cpp_type<T>::id(this->world_v()));
+        this->src(_::type<T>::id(this->world_v()));
         return *this;
     }
 
@@ -168,7 +168,7 @@ struct term_builder_i : term_id_builder_i<Base> {
     /* Select first identifier, initialize it with id associated with type */
     template<typename T>
     Base& first() {
-        this->first(_::cpp_type<T>::id(this->world_v()));
+        this->first(_::type<T>::id(this->world_v()));
         return *this;
     }
 
@@ -195,7 +195,7 @@ struct term_builder_i : term_id_builder_i<Base> {
     /* Select second identifier, initialize it with id associated with type */
     template<typename T>
     Base& second() {
-        this->second(_::cpp_type<T>::id(this->world_v()));
+        this->second(_::type<T>::id(this->world_v()));
         return *this;
     }
 
@@ -226,7 +226,7 @@ struct term_builder_i : term_id_builder_i<Base> {
 
     template <typename Trav>
     Base& up() {
-        return this->up(_::cpp_type<Trav>::id(this->world_v()));
+        return this->up(_::type<Trav>::id(this->world_v()));
     }
 
     /* The cascade flag is like up, but returns results in breadth-first order.
@@ -242,7 +242,7 @@ struct term_builder_i : term_id_builder_i<Base> {
 
     template <typename Trav>
     Base& cascade() {
-        return this->cascade(_::cpp_type<Trav>::id(this->world_v()));
+        return this->cascade(_::type<Trav>::id(this->world_v()));
     }
 
     /* Use with cascade to iterate results in descending (bottom -> top) order */

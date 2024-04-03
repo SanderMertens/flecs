@@ -18,7 +18,7 @@ inline flecs::event_builder world::event(flecs::entity_t evt) const {
 
 template <typename E>
 inline flecs::event_builder_typed<E> world::event() const {
-    return flecs::event_builder_typed<E>(m_world, _::cpp_type<E>().id(m_world));
+    return flecs::event_builder_typed<E>(m_world, _::type<E>().id(m_world));
 }
 
 namespace _ {
@@ -52,7 +52,7 @@ namespace _ {
         {
             using Delegate = _::entity_observer_delegate<Func>;
             auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(f));
-            entity_observer_create(world, _::cpp_type<Evt>::id(world), entity, Delegate::run, ctx, 
+            entity_observer_create(world, _::type<Evt>::id(world), entity, Delegate::run, ctx, 
                 reinterpret_cast<ecs_ctx_free_t>(_::free_obj<Delegate>));
         }
 
@@ -64,7 +64,7 @@ namespace _ {
         {
             using Delegate = _::entity_payload_observer_delegate<Func, Evt>;
             auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(f));
-            entity_observer_create(world, _::cpp_type<Evt>::id(world), entity, Delegate::run, ctx, 
+            entity_observer_create(world, _::type<Evt>::id(world), entity, Delegate::run, ctx, 
                 reinterpret_cast<ecs_ctx_free_t>(_::free_obj<Delegate>));
         }
     };

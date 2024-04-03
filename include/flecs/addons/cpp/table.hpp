@@ -55,7 +55,7 @@ struct table {
      */
     template <typename T>
     int32_t type_index() const {
-        return type_index(_::cpp_type<T>::id(m_world));
+        return type_index(_::type<T>::id(m_world));
     }
 
     /** Find type index for pair.
@@ -74,7 +74,7 @@ struct table {
      */
     template <typename First>
     int32_t type_index(flecs::entity_t second) const {
-        return type_index(_::cpp_type<First>::id(m_world), second);
+        return type_index(_::type<First>::id(m_world), second);
     }
 
     /** Find type index for pair.
@@ -84,7 +84,7 @@ struct table {
      */
     template <typename First, typename Second>
     int32_t type_index() const {
-        return type_index<First>(_::cpp_type<Second>::id(m_world));
+        return type_index<First>(_::type<Second>::id(m_world));
     }
 
     /** Find column index for (component) id.
@@ -103,7 +103,7 @@ struct table {
      */
     template <typename T>
     int32_t column_index() const {
-        return column_index(_::cpp_type<T>::id(m_world));
+        return column_index(_::type<T>::id(m_world));
     }
 
     /** Find column index for pair.
@@ -122,7 +122,7 @@ struct table {
      */
     template <typename First>
     int32_t column_index(flecs::entity_t second) const {
-        return column_index(_::cpp_type<First>::id(m_world), second);
+        return column_index(_::type<First>::id(m_world), second);
     }
 
     /** Find column index for pair.
@@ -132,7 +132,7 @@ struct table {
      */
     template <typename First, typename Second>
     int32_t column_index() const {
-        return column_index<First>(_::cpp_type<Second>::id(m_world));
+        return column_index<First>(_::type<Second>::id(m_world));
     }
 
     /** Test if table has (component) id.
@@ -225,7 +225,7 @@ struct table {
      */
     template <typename T, if_t< is_actual<T>::value > = 0>
     T* get() const {
-        return static_cast<T*>(get(_::cpp_type<T>::id(m_world)));
+        return static_cast<T*>(get(_::type<T>::id(m_world)));
     }
 
     /** Get pointer to component array by (enum) component.
@@ -235,7 +235,7 @@ struct table {
      */
     template <typename T, if_t< is_enum<T>::value > = 0>
     T* get() const {
-        return static_cast<T*>(get(_::cpp_type<T>::id(m_world)));
+        return static_cast<T*>(get(_::type<T>::id(m_world)));
     }
 
     /** Get pointer to component array by component.
@@ -246,7 +246,7 @@ struct table {
     template <typename T, typename A = actual_type_t<T>,
         if_t< flecs::is_pair<T>::value > = 0>
     A* get() const {
-        return static_cast<A*>(get(_::cpp_type<T>::id(m_world)));
+        return static_cast<A*>(get(_::type<T>::id(m_world)));
     }
 
     /** Get pointer to component array by pair.
@@ -257,7 +257,7 @@ struct table {
      */
     template <typename First>
     First* get(flecs::entity_t second) const {
-        return static_cast<First*>(get(_::cpp_type<First>::id(m_world), second));
+        return static_cast<First*>(get(_::type<First>::id(m_world), second));
     }
 
     /** Get pointer to component array by pair.
@@ -269,7 +269,7 @@ struct table {
     template <typename First, typename Second, typename P = flecs::pair<First, Second>,
         typename A = actual_type_t<P>, if_not_t< flecs::is_pair<First>::value> = 0>
     A* get() const {
-        return static_cast<A*>(get<First>(_::cpp_type<Second>::id(m_world)));
+        return static_cast<A*>(get<First>(_::type<Second>::id(m_world)));
     }
 
     /** Get column size */
@@ -293,7 +293,7 @@ struct table {
      */
     template <typename Rel>
     int32_t depth() {
-        return depth(_::cpp_type<Rel>::id(m_world));
+        return depth(_::type<Rel>::id(m_world));
     }
 
     /* Implicit conversion to table_t */

@@ -20,7 +20,7 @@ flecs::string to_json(flecs::entity_t tid, const void* value) {
  */
 template <typename T>
 flecs::string to_json(const T* value) {
-    flecs::entity_t tid = _::cpp_type<T>::id(m_world);
+    flecs::entity_t tid = _::type<T>::id(m_world);
     return to_json(tid, value);
 }
 
@@ -49,7 +49,7 @@ const char* from_json(flecs::entity_t tid, void* value, const char *json, flecs:
  */
 template <typename T>
 const char* from_json(T* value, const char *json, flecs::from_json_desc_t *desc = nullptr) {
-    return ecs_ptr_from_json(m_world, _::cpp_type<T>::id(m_world),
+    return ecs_ptr_from_json(m_world, _::type<T>::id(m_world),
         value, json, desc);
 }
 

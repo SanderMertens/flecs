@@ -167,7 +167,7 @@ struct query_builder_i : term_builder_i<Base> {
     template<typename T>
     Base& term() {
         this->term();
-        *this->m_term = flecs::term(_::cpp_type<T>::id(this->world_v()));
+        *this->m_term = flecs::term(_::type<T>::id(this->world_v()));
         this->m_term->inout = static_cast<ecs_inout_kind_t>(
             _::type_to_inout<T>());
         return *this;
@@ -205,22 +205,22 @@ struct query_builder_i : term_builder_i<Base> {
 
     template<typename First>
     Base& term(id_t o) {
-        return this->term(_::cpp_type<First>::id(this->world_v()), o);
+        return this->term(_::type<First>::id(this->world_v()), o);
     }
 
     template<typename First>
     Base& term(const char *second) {
-        return this->term(_::cpp_type<First>::id(this->world_v())).second(second);
+        return this->term(_::type<First>::id(this->world_v())).second(second);
     }
 
     template<typename First, typename Second>
     Base& term() {
-        return this->term<First>(_::cpp_type<Second>::id(this->world_v()));
+        return this->term<First>(_::type<Second>::id(this->world_v()));
     }
 
     template <typename E, if_t< is_enum<E>::value > = 0>
     Base& term(E value) {
-        flecs::entity_t r = _::cpp_type<E>::id(this->world_v());
+        flecs::entity_t r = _::type<E>::id(this->world_v());
         auto o = enum_type<E>(this->world_v()).entity(value);
         return this->term(r, o);
     }
@@ -258,7 +258,7 @@ struct query_builder_i : term_builder_i<Base> {
     template <typename T>
     Base& order_by(int(*compare)(flecs::entity_t, const T*, flecs::entity_t, const T*)) {
         ecs_order_by_action_t cmp = reinterpret_cast<ecs_order_by_action_t>(compare);
-        return this->order_by(_::cpp_type<T>::id(this->world_v()), cmp);
+        return this->order_by(_::type<T>::id(this->world_v()), cmp);
     }
 
     /** Sort the output of a query.
@@ -293,7 +293,7 @@ struct query_builder_i : term_builder_i<Base> {
     template <typename T>
     Base& group_by(uint64_t(*group_by_action)(flecs::world_t*, flecs::table_t *table, flecs::id_t id, void* ctx)) {
         ecs_group_by_action_t action = reinterpret_cast<ecs_group_by_action_t>(group_by_action);
-        return this->group_by(_::cpp_type<T>::id(this->world_v()), action);
+        return this->group_by(_::type<T>::id(this->world_v()), action);
     }
 
     /** Group and sort matched tables.
@@ -315,7 +315,7 @@ struct query_builder_i : term_builder_i<Base> {
      */
     template <typename T>
     Base& group_by() {
-        return this->group_by(_::cpp_type<T>::id(this->world_v()), nullptr);
+        return this->group_by(_::type<T>::id(this->world_v()), nullptr);
     }
 
     /** Group and sort matched tables.

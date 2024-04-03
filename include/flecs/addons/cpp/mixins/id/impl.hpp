@@ -68,7 +68,7 @@ inline flecs::entity id::type_id() const {
 
 template <typename T>
 inline flecs::id world::id() const {
-    return flecs::id(m_world, _::cpp_type<T>::id(m_world));
+    return flecs::id(m_world, _::type<T>::id(m_world));
 }
 
 template <typename ... Args>
@@ -81,8 +81,8 @@ inline flecs::id world::pair() const {
     return flecs::id(
         m_world, 
         ecs_pair(
-            _::cpp_type<First>::id(m_world), 
-            _::cpp_type<Second>::id(m_world)));
+            _::type<First>::id(m_world), 
+            _::type<Second>::id(m_world)));
 }
 
 template <typename First>
@@ -93,7 +93,7 @@ inline flecs::id world::pair(entity_t o) const {
     return flecs::id(
         m_world,
         ecs_pair(
-            _::cpp_type<First>::id(m_world), 
+            _::type<First>::id(m_world), 
             o));
 }
 

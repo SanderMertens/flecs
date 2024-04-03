@@ -77,7 +77,7 @@ Self& quantity(flecs::entity_t quantity) {
 /** Make entity a unity prefix */
 template <typename Quantity>
 Self& quantity() {
-    return this->quantity(_::cpp_type<Quantity>::id(this->world()));
+    return this->quantity(_::type<Quantity>::id(this->world()));
 }
 
 /** Make entity a quantity */

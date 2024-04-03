@@ -51,22 +51,22 @@ struct metric_builder {
 
     template <typename T>
     metric_builder& id() {
-        return id(_::cpp_type<T>::id(m_world));
+        return id(_::type<T>::id(m_world));
     }
 
     template <typename First>
     metric_builder& id(flecs::entity_t second) {
-        return id(_::cpp_type<First>::id(m_world), second);
+        return id(_::type<First>::id(m_world), second);
     }
 
     template <typename Second>
     metric_builder& id_second(flecs::entity_t first) {
-        return id(first, _::cpp_type<Second>::id(m_world));
+        return id(first, _::type<Second>::id(m_world));
     }
 
     template <typename First, typename Second>
     metric_builder& id() {
-        return id<First>(_::cpp_type<Second>::id(m_world));
+        return id<First>(_::type<Second>::id(m_world));
     }
 
     metric_builder& targets(bool value = true) {
@@ -81,7 +81,7 @@ struct metric_builder {
 
     template <typename Kind>
     metric_builder& kind() {
-        return kind(_::cpp_type<Kind>::id(m_world));
+        return kind(_::type<Kind>::id(m_world));
     }
 
     metric_builder& brief(const char *b) {

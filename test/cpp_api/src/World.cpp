@@ -221,7 +221,7 @@ void World_reregister_after_reset(void) {
     auto p1 = ecs.component<Position>("Position");
 
     // Simulate different binary
-    flecs::_::cpp_type<Position>::reset();
+    flecs::_::type<Position>::reset();
 
     auto p2 = ecs.component<Position>("Position");
 
@@ -236,7 +236,7 @@ void World_implicit_reregister_after_reset(void) {
     flecs::entity_t p_id_1 = flecs::type_id<Position>();
 
     // Simulate different binary
-    flecs::_::cpp_type<Position>::reset();
+    flecs::_::type<Position>::reset();
 
     ecs.entity().add<Position>();
 
@@ -253,7 +253,7 @@ void World_reregister_after_reset_w_namespace(void) {
     flecs::entity_t p_id_1 = flecs::type_id<ns::FooComp>();
 
     // Simulate different binary
-    flecs::_::cpp_type<ns::FooComp>::reset();
+    flecs::_::type<ns::FooComp>::reset();
 
     ecs.component<ns::FooComp>();
 
@@ -286,7 +286,7 @@ void World_reregister_after_reset_different_name(void) {
     ecs.component<Position>("Position");
 
     // Simulate different binary
-    flecs::_::cpp_type<Position>::reset();
+    flecs::_::type<Position>::reset();
 
     ecs.component<Position>("Velocity");
 }
@@ -299,7 +299,7 @@ void World_register_component_w_reset_in_multithreaded(void) {
     flecs::entity pos = ecs.component<Position>();
     flecs::entity e = ecs.entity();
 
-    flecs::_::cpp_type<Position>::reset();
+    flecs::_::type<Position>::reset();
 
     ecs.readonly_begin();
     e.set<Position>({10, 20});
@@ -356,7 +356,7 @@ void World_reimport_module_after_reset(void) {
     auto m1 = ecs.import<FooModule>();
 
     // Simulate different binary
-    flecs::_::cpp_type<FooModule>::reset();
+    flecs::_::type<FooModule>::reset();
 
     auto m2 = ecs.import<FooModule>();
     
@@ -414,7 +414,7 @@ void World_c_interop_after_reset(void) {
     auto e_pos = ecs.lookup("test::interop::module::Position");
     test_assert(e_pos.id() != 0);
 
-    flecs::_::cpp_type<test::interop::module>::reset();
+    flecs::_::type<test::interop::module>::reset();
 
     ecs.import<test::interop::module>();
 }
