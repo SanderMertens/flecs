@@ -977,17 +977,16 @@ typedef struct ecs_query_desc_t {
      * order_by_table_callback. */
     ecs_entity_t order_by;
 
-    /** Id to be used by group_by. This id is passed to the group_by function and
-     * can be used identify the part of an entity type that should be used for
-     * grouping. */
-    ecs_id_t group_by_id;
+    /** Component id to be used for grouping. Used together with the
+     * group_by_callback. */
+    ecs_id_t group_by;
 
     /** Callback used for grouping results. If the callback is not set, results
      * will not be grouped. When set, this callback will be used to calculate a
      * "rank" for each entity (table) based on its components. This rank is then
      * used to sort entities (tables), so that entities (tables) of the same
      * rank are "grouped" together when iterated. */
-    ecs_group_by_action_t group_by;
+    ecs_group_by_action_t group_by_callback;
 
     /** Callback that is invoked when a new group is created. The return value of
      * the callback is stored as context for a group. */

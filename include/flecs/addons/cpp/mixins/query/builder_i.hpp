@@ -303,8 +303,8 @@ struct query_builder_i : term_builder_i<Base> {
      * @param group_by_action Callback that determines group id for table.
      */
     Base& group_by(flecs::entity_t component, uint64_t(*group_by_action)(flecs::world_t*, flecs::table_t *table, flecs::id_t id, void* ctx)) {
-        m_desc->group_by = reinterpret_cast<ecs_group_by_action_t>(group_by_action);
-        m_desc->group_by_id = component;
+        m_desc->group_by_callback = reinterpret_cast<ecs_group_by_action_t>(group_by_action);
+        m_desc->group_by = component;
         return *this;
     }
 

@@ -65,7 +65,7 @@ int main(int argc, char *argv[]) {
         .terms = {
             { .id = ecs_id(Position) }
         },
-        .group_by_id = Group,
+        .group_by = Group,
         .on_group_create = on_group_create,
         .on_group_delete = on_group_delete
     });

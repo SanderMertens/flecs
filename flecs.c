@@ -1793,8 +1793,8 @@ typedef struct ecs_query_cache_t {
     int32_t order_by_term;
 
     /* Table grouping */
-    ecs_entity_t group_by_id;
-    ecs_group_by_action_t group_by;
+    ecs_entity_t group_by;
+    ecs_group_by_action_t group_by_callback;
     ecs_group_create_action_t on_group_create;
     ecs_group_delete_action_t on_group_delete;
     void *group_by_ctx;
@@ -34023,7 +34023,7 @@ int flecs_query_set_caching_policy(
     /* If caching policy is default, try to pick a policy that does the right
      * thing in most cases. */
     if (kind == EcsQueryCacheDefault) {
-        if (desc->entity || desc->group_by_id || desc->group_by || 
+        if (desc->entity || desc->group_by || desc->group_by || 
             desc->order_by || desc->order_by_callback)
         {
             /* If the query is created with an entity handle (typically 
@@ -34044,7 +34044,7 @@ int flecs_query_set_caching_policy(
     /* Don't cache query, even if it has cacheable terms */
     if (kind == EcsQueryCacheNone) {
         impl->pub.cache_kind = EcsQueryCacheNone;
-        if (desc->group_by_id || desc->order_by) {
+        if (desc->group_by || desc->order_by) {
             ecs_err("cannot create uncached query with group_by/order_by");
             return -1;
         }
@@ -34501,9 +34501,9 @@ uint64_t flecs_query_cache_get_group_id(
     ecs_query_cache_t *cache,
     ecs_table_t *table)
 {
-    if (cache->group_by) {
-        return cache->group_by(cache->query->world, table, 
-            cache->group_by_id, cache->group_by_ctx);
+    if (cache->group_by_callback) {
+        return cache->group_by_callback(cache->query->world, table, 
+            cache->group_by, cache->group_by_ctx);
     } else {
         return 0;
     }
@@ -34516,7 +34516,7 @@ void flecs_query_cache_compute_group_id(
 {
     ecs_assert(match != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    if (cache->group_by) {
+    if (cache->group_by_callback) {
         ecs_table_t *table = match->table;
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -34596,7 +34596,7 @@ ecs_query_cache_table_match_t* flecs_query_cache_find_group_insertion_node(
     uint64_t group_id)
 {
     /* Grouping must be enabled */
-    ecs_assert(cache->group_by != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(cache->group_by_callback != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_map_iter_t it = ecs_map_iter(&cache->groups);
     ecs_query_cache_table_list_t *list, *closest_list = NULL;
@@ -34703,7 +34703,7 @@ ecs_query_cache_table_list_t* flecs_query_cache_get_node_list(
     ecs_query_cache_t *cache,
     ecs_query_cache_table_match_t *match)
 {
-    if (cache->group_by) {
+    if (cache->group_by_callback) {
         return flecs_query_cache_get_group(cache, match->group_id);
     } else {
         return &cache->list;
@@ -34716,7 +34716,7 @@ ecs_query_cache_table_list_t* flecs_query_cache_ensure_node_list(
     ecs_query_cache_t *cache,
     ecs_query_cache_table_match_t *match)
 {
-    if (cache->group_by) {
+    if (cache->group_by_callback) {
         return flecs_query_cache_ensure_group(cache, match->group_id);
     } else {
         return &cache->list;
@@ -34762,7 +34762,7 @@ void flecs_query_cache_remove_table_node(
     ecs_assert(list->info.table_count > 0, ECS_INTERNAL_ERROR, NULL);
     list->info.table_count --;
 
-    if (cache->group_by) {
+    if (cache->group_by_callback) {
         uint64_t group_id = match->group_id;
 
         /* Make sure query.list is updated if this is the first or last group */
@@ -34851,7 +34851,7 @@ void flecs_query_cache_insert_table_node(
 
         list->last = match;
 
-        if (cache->group_by) {
+        if (cache->group_by_callback) {
             /* Make sure to update query list if this is the last group */
             if (cache->list.last == last) {
                 cache->list.last = match;
@@ -34863,13 +34863,13 @@ void flecs_query_cache_insert_table_node(
         list->first = match;
         list->last = match;
 
-        if (cache->group_by) {
+        if (cache->group_by_callback) {
             /* Initialize group with its first node */
             flecs_query_cache_create_group(cache, match);
         }
     }
 
-    if (cache->group_by) {
+    if (cache->group_by_callback) {
         list->info.table_count ++;
         list->info.match_count ++;
     }
@@ -35386,7 +35386,7 @@ void flecs_query_cache_rematch_tables(
 
         flecs_query_cache_set_table_match(world, impl, cache, qm, table, &it);
 
-        if (table && ecs_table_count(table) && cache->group_by) {
+        if (table && ecs_table_count(table) && cache->group_by_callback) {
             if (flecs_query_cache_get_group_id(cache, table) != qm->group_id) {
                 /* Update table group */
                 flecs_query_cache_remove_table_node(cache, qm);
@@ -35504,16 +35504,16 @@ void flecs_query_cache_group_by(
     ecs_group_by_action_t group_by)
 {   
     /* Cannot change grouping once a query has been created */
-    ecs_check(cache->group_by_id == 0, ECS_INVALID_OPERATION, NULL);
     ecs_check(cache->group_by == 0, ECS_INVALID_OPERATION, NULL);
+    ecs_check(cache->group_by_callback == 0, ECS_INVALID_OPERATION, NULL);
 
     if (!group_by) {
         /* Builtin function that groups by relationship */
         group_by = flecs_query_cache_default_group_by;   
     }
 
-    cache->group_by_id = sort_component;
-    cache->group_by = group_by;
+    cache->group_by = sort_component;
+    cache->group_by_callback = group_by;
 
     ecs_map_init_w_params(&cache->groups, 
         &cache->query->world->allocators.query_table_list);
@@ -35691,8 +35691,8 @@ ecs_query_cache_t* flecs_query_cache_init(
     ecs_query_desc_t desc = *const_desc;
     ecs_entity_t entity = desc.entity;
     desc.cache_kind = EcsQueryCacheNone; /* Don't create caches recursively */
-    desc.group_by = NULL;
-    desc.group_by_id = 0;
+    desc.group_by_callback = NULL;
+    desc.group_by = 0;
     desc.order_by_callback = NULL;
     desc.order_by = 0;
     desc.entity = 0;
@@ -35755,12 +35755,12 @@ ecs_query_cache_t* flecs_query_cache_init(
         result->group_by_ctx = &result->query->terms[cascade_by - 1];
     }
 
-    if (const_desc->group_by || const_desc->group_by_id) {
+    if (const_desc->group_by_callback || const_desc->group_by) {
         /* Can't have a cascade term and group by at the same time, as cascade
          * uses the group_by mechanism */
         ecs_check(!result->cascade_by, ECS_INVALID_PARAMETER, NULL);
         flecs_query_cache_group_by(result, 
-            const_desc->group_by_id, const_desc->group_by);
+            const_desc->group_by, const_desc->group_by_callback);
         result->group_by_ctx = const_desc->group_by_ctx;
         result->on_group_create = const_desc->on_group_create;
         result->on_group_delete = const_desc->on_group_delete;

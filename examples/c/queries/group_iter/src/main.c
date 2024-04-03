@@ -80,8 +80,8 @@ int main(int argc, char *argv[]) {
         .terms = {
             { .id = Npc }
         },
-        .group_by = group_by_relation,
-        .group_by_id = WorldCell
+        .group_by_callback = group_by_relation,
+        .group_by = WorldCell
     });
 
     // Iterate all tables

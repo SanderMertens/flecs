@@ -80,7 +80,7 @@ int flecs_query_set_caching_policy(
     /* If caching policy is default, try to pick a policy that does the right
      * thing in most cases. */
     if (kind == EcsQueryCacheDefault) {
-        if (desc->entity || desc->group_by_id || desc->group_by || 
+        if (desc->entity || desc->group_by || desc->group_by || 
             desc->order_by || desc->order_by_callback)
         {
             /* If the query is created with an entity handle (typically 
@@ -101,7 +101,7 @@ int flecs_query_set_caching_policy(
     /* Don't cache query, even if it has cacheable terms */
     if (kind == EcsQueryCacheNone) {
         impl->pub.cache_kind = EcsQueryCacheNone;
-        if (desc->group_by_id || desc->order_by) {
+        if (desc->group_by || desc->order_by) {
             ecs_err("cannot create uncached query with group_by/order_by");
             return -1;
         }

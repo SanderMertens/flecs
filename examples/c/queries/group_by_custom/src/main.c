@@ -43,8 +43,8 @@ int main(int argc, char *argv[]) {
         .terms = {
             { .id = ecs_id(Position) }
         },
-        .group_by = group_by_relation,
-        .group_by_id = Group // Passed to id argument of group_by function
+        .group_by_callback = group_by_relation,
+        .group_by = Group // Passed to id argument of group_by function
     });
 
     // Create entities in 6 different tables with 3 group ids

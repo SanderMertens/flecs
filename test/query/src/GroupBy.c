@@ -45,7 +45,7 @@ void GroupBy_group_by(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{TagX}},
-        .group_by = group_by_first_id
+        .group_by_callback = group_by_first_id
     });
 
     ecs_entity_t e1 = ecs_new(world, TagX);
@@ -92,7 +92,7 @@ void GroupBy_group_by_w_ctx(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{TagX}},
-        .group_by = group_by_first_id,
+        .group_by_callback = group_by_first_id,
         .group_by_ctx = &ctx_value,
         .group_by_ctx_free = ctx_value_free
     });
@@ -139,7 +139,7 @@ void GroupBy_group_by_w_sort_reverse_group_creation(void) {
     ecs_query_t *q = ecs_query(world, {
         .terms = {{TagX}},
         .order_by_callback = order_by_entity,
-        .group_by = group_by_first_id
+        .group_by_callback = group_by_first_id
     });
 
     ecs_entity_t e1 = ecs_new_w_id(world, TagX);
@@ -192,8 +192,8 @@ void GroupBy_group_by_iter_one(void) {
         .terms = {
             { ecs_pair(Rel, EcsWildcard) }
         },
-        .group_by = group_by_rel,
-        .group_by_id = Rel
+        .group_by_callback = group_by_rel,
+        .group_by = Rel
     });
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -239,8 +239,8 @@ void GroupBy_group_by_iter_one_all_groups(void) {
         .terms = {
             { ecs_pair(Rel, EcsWildcard) }
         },
-        .group_by = group_by_rel,
-        .group_by_id = Rel
+        .group_by_callback = group_by_rel,
+        .group_by = Rel
     });
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -319,8 +319,8 @@ void GroupBy_group_by_iter_one_empty(void) {
         .terms = {
             { ecs_pair(Rel, EcsWildcard) }
         },
-        .group_by = group_by_rel,
-        .group_by_id = Rel
+        .group_by_callback = group_by_rel,
+        .group_by = Rel
     });
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -340,8 +340,8 @@ void GroupBy_group_by_iter_one_empty_query(void) {
         .terms = {
             { ecs_pair(Rel, EcsWildcard) }
         },
-        .group_by = group_by_rel,
-        .group_by_id = Rel
+        .group_by_callback = group_by_rel,
+        .group_by = Rel
     });
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -375,8 +375,8 @@ void GroupBy_group_by_iter_one_empty_table(void) {
         .terms = {
             { ecs_pair(Rel, EcsWildcard) }
         },
-        .group_by = group_by_rel,
-        .group_by_id = Rel
+        .group_by_callback = group_by_rel,
+        .group_by = Rel
     });
 
     ecs_delete(world, e3);
@@ -398,8 +398,8 @@ void GroupBy_group_by_w_deleted_group_id(void) {
         .terms = {
             { ecs_pair(Rel, EcsWildcard) }
         },
-        .group_by = group_by_rel,
-        .group_by_id = Rel
+        .group_by_callback = group_by_rel,
+        .group_by = Rel
     });
 
     ecs_entity_t tgt = ecs_new_id(world);
@@ -468,8 +468,8 @@ void GroupBy_group_by_callbacks(void) {
         .terms = {
             { ecs_pair(Rel, EcsWildcard) }
         },
-        .group_by = group_by_rel,
-        .group_by_id = Rel,
+        .group_by_callback = group_by_rel,
+        .group_by = Rel,
         .on_group_create = on_group_create,
         .on_group_delete = on_group_delete,
         .group_by_ctx = &group_by_ctx
@@ -546,8 +546,8 @@ void GroupBy_group_by_default_action(void) {
         .terms = {
             { ecs_pair(Rel, EcsWildcard) }
         },
-        // .group_by = group_by_rel, default action groups by relationship
-        .group_by_id = Rel
+        // .group_by_callback = group_by_rel, default action groups by relationship
+        .group_by = Rel
     });
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -587,7 +587,7 @@ void GroupBy_group_table_count(void) {
         .terms = {
             { ecs_pair(Rel, EcsWildcard) }
         },
-        .group_by_id = Rel
+        .group_by = Rel
     });
 
     ecs_run_aperiodic(world, 0);

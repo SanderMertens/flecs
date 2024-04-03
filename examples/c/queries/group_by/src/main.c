@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
         // Group tables by the relationship target of the "Group" relationship.
         // A custom group_by function can be provided to derive a group id from
         // a table, see the group_by_custom example for more details.
-        .group_by_id = Group
+        .group_by = Group
     });
 
     // Create entities in 6 different tables with 3 group ids

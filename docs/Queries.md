@@ -2693,8 +2693,8 @@ ecs_add_pair(world, unit_02, Region, Region_02);
 // Create query that groups entities that are in the same region
 ecs_query(world, {
   .terms = {{ Unit }},
-  .group_by = group_by_target, // function that groups by relationship target
-  .group_by_id = Region // optional, passed to group_by function
+  .group_by_callback = group_by_target, // function that groups by relationship target
+  .group_by = Region // optional, passed to group_by function
 });
 ```
 

@@ -459,8 +459,8 @@ typedef struct ecs_query_cache_t {
     int32_t order_by_term;
 
     /* Table grouping */
-    ecs_entity_t group_by_id;
-    ecs_group_by_action_t group_by;
+    ecs_entity_t group_by;
+    ecs_group_by_action_t group_by_callback;
     ecs_group_create_action_t on_group_create;
     ecs_group_delete_action_t on_group_delete;
     void *group_by_ctx;
