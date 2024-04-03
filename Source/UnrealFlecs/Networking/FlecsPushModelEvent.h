@@ -3,11 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "FlecsPushModelTrait.generated.h"
+#include "FlecsPushModelEvent.generated.h"
 
 USTRUCT(BlueprintType)
-struct UNREALFLECS_API FFlecsPushModelTrait
+struct UNREALFLECS_API FFlecsPushModelEvent
 {
 	GENERATED_BODY()
-	
-}; // struct FFlecsPushModelTrait
+}; // struct FFlecsPushModelEvent

@@ -3,19 +3,17 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameplayTagContainer.h"
+#include "InstancedStruct.h"
 #include "Entities/FlecsEntityHandle.h"
-#include "FlecsComponentTreeNode.generated.h"
-
-class UFlecsComponentTreeObject;
+#include "FlecsEntityRecord.generated.h"
 
 UENUM(BlueprintType)
-enum class EFlecsComponentTreeNodeType : uint8
+enum class EFlecsComponentNodeType : uint8
 {
 	ScriptStruct = 0,
 	EntityHandle = 1,
 	FGameplayTag = 2,
-}; // enum class EFlecsComponentTreeNodeType
+}; // enum class EFlecsComponentNodeType
 
 USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsComponentTypeInfo final
@@ -23,7 +21,7 @@ struct UNREALFLECS_API FFlecsComponentTypeInfo final
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree")
-	EFlecsComponentTreeNodeType NodeType = EFlecsComponentTreeNodeType::ScriptStruct;
+	EFlecsComponentNodeType NodeType = EFlecsComponentNodeType::ScriptStruct;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree",
 		meta = (EditCondition = "NodeType == EFlecsComponentTreeNodeType::ScriptStruct", EditConditionHides))
@@ -36,33 +34,42 @@ struct UNREALFLECS_API FFlecsComponentTypeInfo final
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree",
 		meta = (EditCondition = "NodeType == EFlecsComponentTreeNodeType::FGameplayTag", EditConditionHides))
 	FGameplayTag GameplayTag;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree")
-	TOptional<FName> ComponentName;
 	
 }; // struct FFlecsComponentTypeInfo
 
 USTRUCT(BlueprintType)
-struct UNREALFLECS_API FFlecsComponentTreeNode final
+struct UNREALFLECS_API FFlecsEntityRecord
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree",
-		meta = (ShowOnlyInnerProperties))
-	FFlecsComponentTypeInfo TypeInfo;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree")
-	TArray<TObjectPtr<UFlecsComponentTreeObject>> Children;
-	
-}; // struct FFlecsComponentTreeNode
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Entity Record")
+	FString Name;
 
-UCLASS(BlueprintType, EditInlineNew, DefaultToInstanced, meta = (DisplayName = "Flecs Component Tree Object"))
-class UNREALFLECS_API UFlecsComponentTreeObject final : public UObject
-{
-	GENERATED_BODY()
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Entity Record")
+	TArray<FFlecsComponentTypeInfo> Components;
 
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree")
-	FFlecsComponentTreeNode TreeNode;
-	
-}; // class UFlecsComponentTreeObject
+	FORCEINLINE void ApplyRecordToEntity(const FFlecsEntityHandle& EntityHandle) const
+	{
+		if (!Name.IsEmpty())
+		{
+			EntityHandle.SetName(Name);
+		}
+
+		for (const auto& [NodeType, ScriptStruct, EntityHandle, GameplayTag] : Components)
+		{
+			switch (NodeType)
+			{
+			case EFlecsComponentNodeType::ScriptStruct:
+				EntityHandle.Set(ScriptStruct);
+				break;
+			case EFlecsComponentNodeType::EntityHandle:
+				EntityHandle.Add(EntityHandle);
+				break;
+			case EFlecsComponentNodeType::FGameplayTag:
+				EntityHandle.Add(GameplayTag);
+				break;
+			}
+		}
+	}
+
+}; // struct FFlecsEntityRecord

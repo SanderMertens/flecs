@@ -1,10 +1,9 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "FlecsNetworkingManager.h"
+#include "FlecsEntitySyncInfoComponent.h"
 #include "FlecsNetworkIdComponent.h"
 #include "FlecsNetworkingActorComponent.h"
-#include "FlecsPushModelTrait.h"
-#include "FlecsReplicatedTrait.h"
 #include "Unlog/Unlog.h"
 #include "Worlds/FlecsWorldSubsystem.h"
 
@@ -26,15 +25,22 @@ void UFlecsNetworkingManager::BeginPlay()
 
 	#if WITH_SERVER_CODE
 
+	/* Networked Entities require a Stable Name to begin with,
+	 this name can be changed after the entity's network ID is assigned */
+
 	if (GetOwner()->HasAuthority())
 	{
-		NetworkIdObserver = FlecsWorld->CreateObserver<FFlecsNetworkIdComponent>(TEXT("NetworkingIdObserver"))
+		NetworkIdObserver =
+			FlecsWorld->CreateObserver<FFlecsNetworkIdComponent>(TEXT("NetworkingIdObserver"))
 		.event(flecs::OnAdd)
 		.yield_existing(true)
+		.term<FFlecsEntitySyncInfoComponent>()
+			.optional()
 		.term(flecs::Name)
 			.and_()
 			.inout_none()
-		.each([this](const FFlecsEntityHandle& Entity, FFlecsNetworkIdComponent& NetworkId)
+		.each([this](const FFlecsEntityHandle& Entity, FFlecsNetworkIdComponent& NetworkId,
+			FFlecsEntitySyncInfoComponent* EntitySyncInfo)
 		{
 			if UNLIKELY_IF(NetworkId.IsValid())
 			{
@@ -47,20 +53,34 @@ void UFlecsNetworkingManager::BeginPlay()
 				"Assigned network ID %llu to entity %s",
 				NetworkId.GetNetworkId(),
 				*Entity.GetEntity().path().c_str());
+
+			if (EntitySyncInfo != nullptr)
+			{
+				EntitySyncInfo->bInitialized = true;
+
+				
+			}
 			
 		});
 
-		NetworkPushModelObserver = FlecsWorld
-			->CreateObserver<FFlecsReplicatedTrait, FFlecsPushModelTrait>(TEXT("NetworkingPushModelObserver"))
-			.event(flecs::OnAdd)
-			.event(flecs::OnRemove)
-			.event(flecs::OnSet)
-			.event(flecs::UnSet)
-			.yield_existing(true)
+		NetworkInitializedObserver = FlecsWorld->CreateObserver<FFlecsNetworkIdComponent, FFlecsEntitySyncInfoComponent>
+			(TEXT("NetworkInitializedObserver"))
+			.term_at(1)
+				.event(flecs::OnAdd)
+			.yield_existing(false)
+			.term(flecs::Name)
+				.and_()
+				.inout_none()
 			.each([this](const FFlecsEntityHandle& Entity,
-				FFlecsReplicatedTrait& Replicated, FFlecsPushModelTrait& PushModel)
+				FFlecsNetworkIdComponent& NetworkId, FFlecsEntitySyncInfoComponent& EntitySyncInfo)
 			{
-			
+				if (EntitySyncInfo.bInitialized)
+				{
+					return;
+				}
+
+				EntitySyncInfo.bInitialized = true;
+				
 			});
 	}
 

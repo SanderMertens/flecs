@@ -13,7 +13,7 @@ void UFlecsNetworkingActorComponent::Client_UpdateCreatedNetworkedEntities_Imple
 {
 	for (const auto& [NetworkId, WorldName, EntityName] : Entities)
 	{
-		checkf(!EntityName.IsNone(),TEXT("Networked Entity Name must not be None"));
+		checkf(!EntityName.IsEmpty(),TEXT("Networked Entity Name must not be None"));
 
 		const UFlecsWorld* FlecsWorld = GetWorld()->GetSubsystem<UFlecsWorldSubsystem>()->GetFlecsWorld(WorldName);
 		
@@ -22,13 +22,13 @@ void UFlecsNetworkingActorComponent::Client_UpdateCreatedNetworkedEntities_Imple
 			continue;
 		}
 		
-		FFlecsEntityHandle Entity = FlecsWorld->GetEntityWithName(EntityName.ToString());
+		FFlecsEntityHandle Entity = FlecsWorld->GetEntityWithName(EntityName);
 		
 		if UNLIKELY_IF(!Entity.IsValid())
 		{
 			UN_LOG(LogFlecsNetworkingActorComponent, Error,
 				"Entity %s not found in world %s",
-				*EntityName.ToString(),
+				*EntityName,
 				*WorldName.ToString());
 			
 			continue;
@@ -39,7 +39,7 @@ void UFlecsNetworkingActorComponent::Client_UpdateCreatedNetworkedEntities_Imple
 		UN_LOG(LogFlecsNetworkingActorComponent, Log,
 			"Added network ID %llu to entity %s in world %s",
 			NetworkId.GetNetworkId(),
-			*EntityName.ToString(),
+			*EntityName,
 			*WorldName.ToString());
 	}
 }

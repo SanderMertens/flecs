@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "flecs.h"
+#include "SolidMacros/Macros.h"
 #include "Subsystems/EngineSubsystem.h"
 #include "FlecsDefaultEntityEngineSubsystem.generated.h"
 
@@ -19,7 +20,7 @@ public:
 	
 	void RegisterEntityOption(const FName& EntityName, const flecs::entity_t& EntityHandle);
 	
-	const TMap<FName, flecs::entity_t>& GetEntityOptions() const;
+	NO_DISCARD const TMap<FName, flecs::entity_t>& GetEntityOptions() const;
 
 	UFUNCTION()
 	void UpdateDefaultEntities();

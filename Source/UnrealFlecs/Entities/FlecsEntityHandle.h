@@ -84,21 +84,26 @@ public:
 	FORCEINLINE void Add(const FGameplayTag& InTag) const;
 	
 	template <typename T>
-	FORCEINLINE void Add() const { GetEntity().template add<T>(); }
+	FORCEINLINE void Add() const { GetEntity().add<T>(); }
 	
 	FORCEINLINE void Remove(const FFlecsEntityHandle& InEntity) const { GetEntity().remove(InEntity); }
+
+	FORCEINLINE void Remove(const FFlecsEntityHandle InFirst, const FFlecsEntityHandle InSecond) const
+	{
+		GetEntity().remove(InFirst, InSecond);
+	}
 
 	FORCEINLINE void Remove(UScriptStruct* StructType) const;
 
 	FORCEINLINE void Remove(const FGameplayTag& InTag) const;
 
 	template <typename T>
-	FORCEINLINE void Remove() const { GetEntity().template remove<T>(); }
+	FORCEINLINE void Remove() const { GetEntity().remove<T>(); }
 
 	FORCEINLINE void Set(const FFlecsEntityHandle& InEntity) const { GetEntity().set(InEntity); }
 
 	template <typename T>
-	FORCEINLINE void Set(const T& InValue) const { GetEntity().template set<T>(InValue); }
+	FORCEINLINE void Set(const T& InValue) const { GetEntity().set<T>(InValue); }
 
 	FORCEINLINE void Set(const FFlecsEntityHandle& InEntity, const void* InValue) const
 	{
@@ -111,6 +116,8 @@ public:
 
 	template <typename T>
 	FORCEINLINE NO_DISCARD T Get() const { return GetEntity().get<T>(); }
+
+	FORCEINLINE NO_DISCARD const void* Get(const FFlecsEntityHandle& InEntity) const { return GetEntity().get(InEntity); }
 
 	template <typename T>
 	FORCEINLINE NO_DISCARD T* GetPtr() { return GetEntity().get_mut<T>(); }
@@ -133,10 +140,10 @@ public:
 	FORCEINLINE void Disable() const { GetEntity().disable(); }
 
 	template <typename T>
-	FORCEINLINE void Enable() const { GetEntity().template enable<T>(); }
+	FORCEINLINE void Enable() const { GetEntity().enable<T>(); }
 
 	template <typename T>
-	FORCEINLINE void Disable() const { GetEntity().template disable<T>(); }
+	FORCEINLINE void Disable() const { GetEntity().disable<T>(); }
 
 	FORCEINLINE void Toggle() const { GetEntity().enable(!IsEnabled()); }
 
@@ -149,8 +156,8 @@ public:
 		return GetEntity().clone(bCloneValue, DestinationId);
 	}
 
-	FORCEINLINE void SetName(const FName& InName) const { GetEntity().set_name(TCHAR_TO_ANSI(*InName.ToString())); }
-	FORCEINLINE NO_DISCARD FName GetName() const { return FName(GetEntity().name().c_str()); }
+	FORCEINLINE void SetName(const FString& InName) const { GetEntity().set_name(TCHAR_TO_ANSI(*InName)); }
+	FORCEINLINE NO_DISCARD FString GetName() const { return FString(GetEntity().name()); }
 
 	FORCEINLINE void SetDocBrief(const FString& InDocBrief) const { GetEntity().set_doc_brief(TCHAR_TO_ANSI(*InDocBrief)); }
 	FORCEINLINE NO_DISCARD FString GetDocBrief() const { return FString(GetEntity().doc_brief()); }
@@ -222,13 +229,13 @@ public:
 	template <typename T>
 	FORCEINLINE void Emit() const
 	{
-		GetEntity().template emit<T>();
+		GetEntity().emit<T>();
 	}
 
 	template <typename T>
 	FORCEINLINE void Emit(const T& InValue) const
 	{
-		GetEntity().template emit<T>(InValue);
+		GetEntity().emit<T>(InValue);
 	}
 
 	FORCEINLINE void Emit(const FFlecsEntityHandle& InEntity) const
@@ -245,7 +252,7 @@ public:
 	template <typename TEvent, typename FunctionType>
 	FORCEINLINE void Observe(FunctionType&& InFunction) const
 	{
-		GetEntity().template observe<TEvent>(InFunction);
+		GetEntity().observe<TEvent>(InFunction);
 	}
 
 	template <typename FunctionType>

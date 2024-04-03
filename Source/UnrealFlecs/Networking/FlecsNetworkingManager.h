@@ -3,11 +3,33 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "FlecsNetworkIdComponent.h"
 #include "Entities/FlecsEntityHandle.h"
 #include "GameFramework/Actor.h"
 #include "FlecsNetworkingManager.generated.h"
 
 class UFlecsNetworkingActorComponent;
+
+UENUM()
+enum class EFlecsNetworkingEvent : uint8
+{
+	None = 0,
+	
+	NetworkIdAssigned,
+	NetworkIdRemoved,
+	NetworkInitialized,
+
+	
+}; // enum class EFlecsNetworkingEvent
+
+USTRUCT()
+struct FFlecsNetworkEntityInitData
+{
+	UPROPERTY()
+	FFlecsNetworkIdComponent NetworkId;
+
+	
+}; // struct FFlecsNetworkEntityInitData
 
 UCLASS(NotPlaceable)
 class UNREALFLECS_API UFlecsNetworkingManager final : public UActorComponent
@@ -27,7 +49,7 @@ private:
 	FFlecsEntityHandle NetworkIdObserver;
 
 	UPROPERTY()
-	FFlecsEntityHandle NetworkPushModelObserver;
+	FFlecsEntityHandle NetworkInitializedObserver;
 
 	UPROPERTY()
 	uint64 NextNetworkId = 0;

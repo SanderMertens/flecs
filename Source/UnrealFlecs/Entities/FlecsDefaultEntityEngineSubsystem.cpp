@@ -76,7 +76,7 @@ void UFlecsDefaultEntityEngineSubsystem::Initialize(FSubsystemCollectionBase& Co
 
 	#if WITH_EDITOR
 	
-	Settings->OnSettingChanged().AddLambda([this](UObject*, struct FPropertyChangedEvent&)
+	Settings->OnSettingChanged().AddLambda([this](UObject*, FPropertyChangedEvent&)
 	{
 		UpdateDefaultEntities();
 	});

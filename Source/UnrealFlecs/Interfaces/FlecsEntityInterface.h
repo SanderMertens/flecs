@@ -7,7 +7,7 @@
 #include "UObject/Interface.h"
 #include "FlecsEntityInterface.generated.h"
 
-UINTERFACE(BlueprintType)
+UINTERFACE(BlueprintType, meta = (CannotImplementInterfaceInBlueprint))
 class UFlecsEntityInterface : public UInterface
 {
 	GENERATED_BODY()
@@ -19,7 +19,7 @@ class UNREALFLECS_API IFlecsEntityInterface
 
 public:
 
-	virtual FFlecsEntityHandle GetEntityHandle() const
+	virtual [[nodiscard]] FFlecsEntityHandle GetEntityHandle() const
 		PURE_VIRTUAL(IFlecsEntityInterface::GetEntityHandle, return FFlecsEntityHandle(););
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Entity", meta = (DisplayName = "Get Entity Handle"))

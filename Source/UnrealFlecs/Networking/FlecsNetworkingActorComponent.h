@@ -24,7 +24,7 @@ struct FNetworkedEntityInfo
 	FName WorldName = FName("DefaultFlecsWorld");
 
 	UPROPERTY()
-	FName EntityName;
+	FString EntityName;
 }; // struct FNetworkedEntityInfo
 
 UCLASS(BlueprintType, ClassGroup=(Flecs), meta=(BlueprintSpawnableComponent))
@@ -66,6 +66,7 @@ public:
 			.term(flecs::Name)
 				.and_()
 				.inout_none()
+			.read<FFlecsNetworkIdComponent>()
 			.build()
 			.each([&](const FFlecsEntityHandle& Entity, const FFlecsNetworkIdComponent& NetworkId)
 			{
@@ -77,15 +78,10 @@ public:
 		}
 
 		#endif // WITH_SERVER_CODE
-
-		
-		
 	}
 
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override
 	{
-		Super::EndPlay(EndPlayReason);
-
 		if LIKELY_IF(const AGameStateBase* GameState = GetWorld()->GetGameState())
 		{
 			if LIKELY_IF(UFlecsNetworkingManager* NetworkingManager
@@ -94,6 +90,8 @@ public:
 				NetworkingManager->RemoveNetworkingActorComponent(this);
 			}
 		}
+
+		Super::EndPlay(EndPlayReason);
 	}
 
 	FORCEINLINE virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override

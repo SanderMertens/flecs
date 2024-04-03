@@ -21,13 +21,13 @@ public:
     }
 
     UFUNCTION(BlueprintCallable, Category = "Flecs | Entity")
-    static FORCEINLINE void SetEntityName(const FFlecsEntityHandle& Entity, const FName& EntityName)
+    static FORCEINLINE void SetEntityName(const FFlecsEntityHandle& Entity, const FString& EntityName)
     {
         Entity.SetName(EntityName);
     }
 
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs | Entity")
-    static FORCEINLINE FName GetEntityName(const FFlecsEntityHandle& Entity)
+    static FORCEINLINE FString GetEntityName(const FFlecsEntityHandle& Entity)
     {
         return Entity.GetName();
     }
