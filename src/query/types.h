@@ -262,7 +262,7 @@ typedef struct {
     int32_t cur;
     int32_t block_index;
     ecs_flags64_t block;
-    ecs_flags64_t prev_set_fields;
+    ecs_termset_t prev_set_fields;
     bool optional_not;
     bool has_bitset;
 } ecs_query_toggle_ctx_t;
@@ -389,8 +389,8 @@ struct ecs_query_cache_table_match_t {
     ecs_id_t *ids;                   /* Resolved (component) ids for current table */
     ecs_entity_t *sources;           /* Subjects (sources) of ids */
     ecs_vec_t refs;                  /* Cached components for non-this terms */
-    ecs_flags64_t set_fields;        /* Fields that are set */
-    ecs_flags64_t up_fields;         /* Fields that are matched through traversal */
+    ecs_termset_t set_fields;        /* Fields that are set */
+    ecs_termset_t up_fields;         /* Fields that are matched through traversal */
     uint64_t group_id;               /* Value used to organize tables in groups */
     int32_t *monitor;                /* Used to monitor table for changes */
 

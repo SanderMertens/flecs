@@ -2113,7 +2113,7 @@ bool flecs_query_member_cmp(
 {
     ecs_table_range_t range;
     if (op->other) {
-        ecs_var_id_t table_var = op->other - 1;
+        ecs_var_id_t table_var = flecs_itovar(op->other - 1);
         range = flecs_query_var_get_range(table_var, ctx);
     } else {
         range = flecs_query_get_range(op, &op->src, EcsQuerySrc, ctx);
@@ -2167,8 +2167,8 @@ bool flecs_query_member_cmp(
         data = op_ctx->data;
     }
 
-    uint32_t offset = (uint32_t)op->first.entity;
-    uint32_t size = (uint32_t)(op->first.entity >> 32);
+    int32_t offset = (int32_t)op->first.entity;
+    int32_t size = (int32_t)(op->first.entity >> 32);
     ecs_entity_t *entities = table->data.entities.array;
     ecs_entity_t e = 0;
     ecs_entity_t *val;
@@ -2258,7 +2258,7 @@ flecs_query_row_mask_t flecs_query_get_row_mask(
     ecs_query_toggle_ctx_t *op_ctx)
 {
     ecs_flags64_t mask = UINT64_MAX;
-    uint32_t i, field_count = it->field_count;
+    int32_t i, field_count = it->field_count;
     ecs_flags64_t fields = and_fields | not_fields;
     bool has_bitset = false;
 
@@ -2304,11 +2304,10 @@ flecs_query_row_mask_t flecs_query_get_row_mask(
 static
 bool flecs_query_toggle_for_up(
     ecs_iter_t *it,
-    ecs_query_run_ctx_t *ctx,
     ecs_flags64_t and_fields,
     ecs_flags64_t not_fields)
 {
-    uint32_t i, field_count = it->field_count;
+    int32_t i, field_count = it->field_count;
     ecs_flags64_t fields = (and_fields | not_fields) & it->up_fields;
 
     for (i = 0; i < field_count; i ++) {
@@ -2360,9 +2359,7 @@ bool flecs_query_toggle_cmp(
         if (up_fields & (and_fields|not_fields)) {
             /* If there are toggle fields that were matched with query 
              * traversal, evaluate those separately. */
-            if (!flecs_query_toggle_for_up(
-                it, ctx, and_fields, not_fields)) 
-            {
+            if (!flecs_query_toggle_for_up(it, and_fields, not_fields)) {
                 return false;
             }
 
@@ -2399,7 +2396,7 @@ bool flecs_query_toggle_cmp(
 
     int32_t i, j;
     int32_t first, last, block_index, cur;
-    uint64_t block;
+    uint64_t block = 0;
     if (!redo) {
         op_ctx->range = range;
         cur = op_ctx->cur = range.offset;
@@ -2904,7 +2901,7 @@ bool flecs_query_run_until_for_select_or(
     int32_t last)
 {
     ecs_query_lbl_t last_for_cur = flecs_query_last_op_for_or_cond(
-        ops, cur, last);
+        ops, cur, flecs_itolbl(last));
     if (redo) {
         /* If redoing, start from the last instruction of the last executed 
          * sequence */
@@ -2970,7 +2967,7 @@ bool flecs_query_select_or(
              * variable. When checking for duplicates, copy the entity variable
              * to the table, to ensure we're only testing the found entity. */
             const ecs_query_op_t *prev_op = &ops[cur - 1];
-            ecs_var_t old_table_var;
+            ecs_var_t old_table_var = {0};
             bool restore_table_var = false;
             
             if (prev_op->flags & (EcsQueryIsVar << EcsQuerySrc)) {
@@ -3136,7 +3133,7 @@ bool flecs_query_if_set(
     ecs_query_run_ctx_t *ctx)
 {
     ecs_iter_t *it = ctx->it;
-    uint8_t field_index = op->other;
+    uint8_t field_index = flecs_ito(uint8_t, op->other);
 
     ecs_query_ctrl_ctx_t *op_ctx = flecs_op_ctx(ctx, ctrl);
     if (!redo) {
@@ -3227,7 +3224,7 @@ bool flecs_query_populate(
 
         const ecs_query_impl_t *query = ctx->query;
         const ecs_query_t *q = &query->pub;
-        int32_t i, field_count = q->field_count;
+        int8_t i, field_count = q->field_count;
         ecs_flags64_t data_fields = op->src.entity; /* Bitset with fields to set */
         ecs_table_range_t *range = &ctx->vars[0].range;
         ecs_table_t *table = range->table;

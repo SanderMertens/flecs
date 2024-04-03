@@ -841,12 +841,9 @@ bool flecs_query_select_all(
 #ifdef FLECS_META
 int flecs_query_compile_begin_member_term(
     ecs_world_t *world,
-    ecs_query_impl_t *impl,
     ecs_term_t *term,
     ecs_query_compile_ctx_t *ctx,
-    ecs_id_t term_id,
-    ecs_entity_t first_id,
-    ecs_entity_t second_id)
+    ecs_entity_t first_id)
 {
     ecs_assert(first_id != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(first_id & EcsIsEntity, ECS_INTERNAL_ERROR, NULL);
@@ -875,7 +872,7 @@ int flecs_query_compile_begin_member_term(
     term->second.id = 0;
     term->id = component;
 
-    ctx->oper = term->oper;
+    ctx->oper = (ecs_oper_kind_t)term->oper;
     if (term->oper == EcsNot && !second_wildcard) {
         /* When matching a member term with not operator, we need to cover both
          * the case where an entity doesn't have the component, and where it 
@@ -906,7 +903,7 @@ int flecs_query_compile_end_member_term(
     term->first.id = first_id;
     term->second.id = second_id;
     term->flags |= EcsTermIsMember;
-    term->oper = ctx->oper;
+    term->oper = flecs_ito(int16_t, ctx->oper);
 
     first_id = ECS_TERM_REF_ID(&term->first);
     const EcsMember *member = ecs_get(world, first_id, EcsMember);
@@ -1070,8 +1067,7 @@ int flecs_query_compile_term(
     bool member_term = (term->flags & EcsTermIsMember) != 0;
     if (member_term) {
         (*populated) |= (1llu << term->field_index);
-        flecs_query_compile_begin_member_term(
-            world, query, term, ctx, term_id, first_id, second_id);
+        flecs_query_compile_begin_member_term(world, term, ctx, first_id);
     }
 
     ecs_query_t *q = &query->pub;
@@ -1146,8 +1142,8 @@ int flecs_query_compile_term(
     }
 
     if (builtin_pred) {
-        ecs_entity_t second_id = ECS_TERM_REF_ID(&term->second);
-        if (second_id == EcsWildcard || second_id == EcsAny) {
+        ecs_entity_t id_noflags = ECS_TERM_REF_ID(&term->second);
+        if (id_noflags == EcsWildcard || id_noflags == EcsAny) {
             /* Noop */
             return 0;
         }

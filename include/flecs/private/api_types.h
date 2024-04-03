@@ -199,9 +199,9 @@ struct ecs_iter_t {
     ecs_entity_t *sources;        /* Entity on which the id was matched (0 if same as entities) */
     ecs_ref_t *references;        /* Cached refs to components (if iterating a cache) */
     ecs_flags64_t constrained_vars; /* Bitset that marks constrained variables */
-    ecs_flags64_t set_fields;     /* Fields that are set */
     uint64_t group_id;            /* Group id for table, if group_by is used */
     int32_t field_count;          /* Number of fields in iterator */
+    ecs_termset_t set_fields;     /* Fields that are set */
     ecs_termset_t shared_fields;  /* Bitset with shared fields */
     ecs_termset_t up_fields;      /* Bitset with fields matched through up traversal */
 
