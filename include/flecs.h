@@ -967,14 +967,15 @@ typedef struct ecs_query_desc_t {
     /** Callback used for ordering query results. If order_by_id is 0, the
      * pointer provided to the callback will be NULL. If the callback is not
      * set, results will not be ordered. */
-    ecs_order_by_action_t order_by;
+    ecs_order_by_action_t order_by_callback;
 
-    /** Callback used for ordering query results. Same as order_by,
+    /** Callback used for ordering query results. Same as order_by_callback,
      * but more efficient. */
-    ecs_sort_table_action_t sort_table;
+    ecs_sort_table_action_t order_by_table_callback;
 
-    /** Component to sort on, used together with order_by */
-    ecs_entity_t order_by_component;
+    /** Component to sort on, used together with order_by_callback or
+     * order_by_table_callback. */
+    ecs_entity_t order_by;
 
     /** Id to be used by group_by. This id is passed to the group_by function and
      * can be used identify the part of an entity type that should be used for

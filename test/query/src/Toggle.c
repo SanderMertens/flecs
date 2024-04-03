@@ -4067,8 +4067,8 @@ void Toggle_this_sort(void) {
     
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position",
-        .order_by_component = ecs_id(Position),
-        .order_by = compare_position,
+        .order_by = ecs_id(Position),
+        .order_by_callback = compare_position,
         .cache_kind = cache_kind
     });
 

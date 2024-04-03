@@ -706,7 +706,7 @@ void flecs_run_startup_systems(
                 { .id = EcsDisabled, .src.id = EcsUp, .trav = EcsDependsOn, .oper = EcsNot },
                 { .id = EcsDisabled, .src.id = EcsUp, .trav = EcsChildOf, .oper = EcsNot }
             },
-            .order_by = flecs_entity_compare
+            .order_by_callback = flecs_entity_compare
         }
     });
     ecs_log_pop_2();
@@ -817,8 +817,8 @@ ecs_entity_t ecs_pipeline_init(
     }
 
     ecs_query_desc_t qd = desc->query;
-    if (!qd.order_by) {
-        qd.order_by = flecs_entity_compare;
+    if (!qd.order_by_callback) {
+        qd.order_by_callback = flecs_entity_compare;
     }
     qd.entity = result;
 
@@ -931,7 +931,7 @@ void FlecsPipelineImport(
                 { .id = EcsDisabled, .src.id = EcsUp, .trav = EcsDependsOn, .oper = EcsNot },
                 { .id = EcsDisabled, .src.id = EcsUp, .trav = EcsChildOf, .oper = EcsNot }
             },
-            .order_by = flecs_entity_compare
+            .order_by_callback = flecs_entity_compare
         }
     });
 

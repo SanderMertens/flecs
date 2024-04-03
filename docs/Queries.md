@@ -2580,8 +2580,8 @@ ecs_query_t *q = ecs_query(world, {
       { ecs_id(Depth), .inout = EcsIn }
       { ecs_id(Position) },
     },
-    .order_by_component = ecs_id(Position), // The component to use for sorting
-    .order_by = compare_position,
+    .order_by = ecs_id(Position), // The component to use for sorting
+    .order_by_callback = compare_position,
 });
 ```
 
@@ -2595,14 +2595,14 @@ int compare_position(ecs_entity_t e1, const void *v1, ecs_entity_t e2, const voi
 }
 ```
 
-A query may only use entity identifiers to sort by not setting the `order_by_component` member:
+A query may only use entity identifiers to sort by not setting the `order_by` member:
 
 ```c
 ecs_query_t *q = ecs_query(world, {
     .terms = {
       { ecs_id(Position) },
     },
-    .order_by = compare_entity,
+    .order_by_callback = compare_entity,
 });
 ```
 

@@ -3724,7 +3724,7 @@ ecs_iter_t flecs_query_iter(
         qit->node = cache->list.first;
         qit->last = cache->list.last;
 
-        if (cache->order_by && cache->list.info.table_count) {
+        if (cache->order_by_callback && cache->list.info.table_count) {
             flecs_query_cache_sort_tables(it.real_world, impl);
             qit->node = ecs_vec_first(&cache->table_slices);
             qit->last = ecs_vec_last_t(

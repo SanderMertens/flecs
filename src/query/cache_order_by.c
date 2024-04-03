@@ -90,8 +90,8 @@ void flecs_query_cache_build_sorted_table_range(
     ecs_assert(!(world->flags & EcsWorldMultiThreaded), ECS_UNSUPPORTED,
         "cannot sort query in multithreaded mode");
 
-    ecs_entity_t id = cache->order_by_component;
-    ecs_order_by_action_t compare = cache->order_by;
+    ecs_entity_t id = cache->order_by;
+    ecs_order_by_action_t compare = cache->order_by_callback;
     int32_t table_count = list->info.table_count;
     if (!table_count) {
         return;
@@ -254,14 +254,14 @@ void flecs_query_cache_sort_tables(
     ecs_query_impl_t *impl)
 {
     ecs_query_cache_t *cache = impl->cache;
-    ecs_order_by_action_t compare = cache->order_by;
+    ecs_order_by_action_t compare = cache->order_by_callback;
     if (!compare) {
         return;
     }
 
-    ecs_sort_table_action_t sort = cache->sort_table;
+    ecs_sort_table_action_t sort = cache->order_by_table_callback;
     
-    ecs_entity_t order_by_component = cache->order_by_component;
+    ecs_entity_t order_by = cache->order_by;
     int32_t order_by_term = cache->order_by_term;
 
     /* Iterate over non-empty tables. Don't bother with empty tables as they
@@ -269,7 +269,7 @@ void flecs_query_cache_sort_tables(
 
     bool tables_sorted = false;
 
-    ecs_id_record_t *idr = flecs_id_record_get(world, order_by_component);
+    ecs_id_record_t *idr = flecs_id_record_get(world, order_by);
     ecs_table_cache_iter_t it;
     ecs_query_cache_table_t *qt;
     flecs_table_cache_iter(&cache->cache, &it);
@@ -284,7 +284,7 @@ void flecs_query_cache_sort_tables(
         }
 
         int32_t column = -1;
-        if (order_by_component) {
+        if (order_by) {
             if (flecs_query_check_table_monitor(impl, qt, order_by_term + 1)) {
                 dirty = true;
             }

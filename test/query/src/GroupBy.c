@@ -138,7 +138,7 @@ void GroupBy_group_by_w_sort_reverse_group_creation(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{TagX}},
-        .order_by = order_by_entity,
+        .order_by_callback = order_by_entity,
         .group_by = group_by_first_id
     });
 

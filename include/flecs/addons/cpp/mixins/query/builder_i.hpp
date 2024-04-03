@@ -268,8 +268,8 @@ struct query_builder_i : term_builder_i<Base> {
      * @param compare The compare function used to sort the components.
      */    
     Base& order_by(flecs::entity_t component, int(*compare)(flecs::entity_t, const void*, flecs::entity_t, const void*)) {
-        m_desc->order_by = reinterpret_cast<ecs_order_by_action_t>(compare);
-        m_desc->order_by_component = component;
+        m_desc->order_by_callback = reinterpret_cast<ecs_order_by_action_t>(compare);
+        m_desc->order_by = component;
         return *this;
     }
 

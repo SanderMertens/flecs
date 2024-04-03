@@ -452,9 +452,9 @@ typedef struct ecs_query_cache_t {
     ecs_map_t groups;
 
     /* Table sorting */
-    ecs_entity_t order_by_component;
-    ecs_order_by_action_t order_by;
-    ecs_sort_table_action_t sort_table;
+    ecs_entity_t order_by;
+    ecs_order_by_action_t order_by_callback;
+    ecs_sort_table_action_t order_by_table_callback;
     ecs_vec_t table_slices;
     int32_t order_by_term;
 

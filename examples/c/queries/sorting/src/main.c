@@ -47,8 +47,8 @@ int main(int argc, char *argv[]) {
     ecs_entity_t sys = ecs_system(ecs, {
         .query = {
             .terms = {{ .id = ecs_id(Position) }},
-            .order_by = (ecs_order_by_action_t)compare_position,
-            .order_by_component = ecs_id(Position) 
+            .order_by_callback = (ecs_order_by_action_t)compare_position,
+            .order_by = ecs_id(Position) 
         },
         .callback = print_position
     });
@@ -56,8 +56,8 @@ int main(int argc, char *argv[]) {
     // Create sorted query
     ecs_query_t *q = ecs_query(ecs, {
         .terms = {{ .id = ecs_id(Position) }},
-        .order_by = (ecs_order_by_action_t)compare_position,
-        .order_by_component = ecs_id(Position)
+        .order_by_callback = (ecs_order_by_action_t)compare_position,
+        .order_by = ecs_id(Position)
     });
 
     // Iterate query, print values of Position

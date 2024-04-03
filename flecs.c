@@ -1786,9 +1786,9 @@ typedef struct ecs_query_cache_t {
     ecs_map_t groups;
 
     /* Table sorting */
-    ecs_entity_t order_by_component;
-    ecs_order_by_action_t order_by;
-    ecs_sort_table_action_t sort_table;
+    ecs_entity_t order_by;
+    ecs_order_by_action_t order_by_callback;
+    ecs_sort_table_action_t order_by_table_callback;
     ecs_vec_t table_slices;
     int32_t order_by_term;
 
@@ -34024,7 +34024,7 @@ int flecs_query_set_caching_policy(
      * thing in most cases. */
     if (kind == EcsQueryCacheDefault) {
         if (desc->entity || desc->group_by_id || desc->group_by || 
-            desc->order_by_component || desc->order_by)
+            desc->order_by || desc->order_by_callback)
         {
             /* If the query is created with an entity handle (typically 
              * indicating that the query is named or belongs to a system) the
@@ -34044,7 +34044,7 @@ int flecs_query_set_caching_policy(
     /* Don't cache query, even if it has cacheable terms */
     if (kind == EcsQueryCacheNone) {
         impl->pub.cache_kind = EcsQueryCacheNone;
-        if (desc->group_by_id || desc->order_by_component) {
+        if (desc->group_by_id || desc->order_by) {
             ecs_err("cannot create uncached query with group_by/order_by");
             return -1;
         }
@@ -35446,44 +35446,44 @@ static
 int flecs_query_cache_order_by(
     ecs_world_t *world,
     ecs_query_impl_t *impl,
-    ecs_entity_t order_by_component,
-    ecs_order_by_action_t order_by,
+    ecs_entity_t order_by,
+    ecs_order_by_action_t order_by_callback,
     ecs_sort_table_action_t action)
 {
     ecs_check(impl != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_query_cache_t *cache = impl->cache;
     ecs_check(cache != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(!ecs_id_is_wildcard(order_by_component), 
+    ecs_check(!ecs_id_is_wildcard(order_by), 
         ECS_INVALID_PARAMETER, NULL);
 
-    /* Find order_by_component term & make sure it is queried for */
+    /* Find order_by term & make sure it is queried for */
     const ecs_query_t *query = cache->query;
     int32_t i, count = query->term_count;
     int32_t order_by_term = -1;
 
-    if (order_by_component) {
+    if (order_by) {
         for (i = 0; i < count; i ++) {
             const ecs_term_t *term = &query->terms[i];
             
             /* Only And terms are supported */
-            if (term->id == order_by_component && term->oper == EcsAnd) {
+            if (term->id == order_by && term->oper == EcsAnd) {
                 order_by_term = i;
                 break;
             }
         }
 
         if (order_by_term == -1) {
-            char *id_str = ecs_id_str(world, order_by_component);
-            ecs_err("order_by component '%s' not is queried for", id_str);
+            char *id_str = ecs_id_str(world, order_by);
+            ecs_err("order_by component '%s' is not queried for", id_str);
             ecs_os_free(id_str);
             goto error;
         }
     }
 
-    cache->order_by_component = order_by_component;
     cache->order_by = order_by;
+    cache->order_by_callback = order_by_callback;
     cache->order_by_term = order_by_term;
-    cache->sort_table = action;
+    cache->order_by_table_callback = action;
 
     ecs_vec_fini_t(NULL, &cache->table_slices, ecs_query_cache_table_match_t);
     flecs_query_cache_sort_tables(world, impl);
@@ -35693,8 +35693,8 @@ ecs_query_cache_t* flecs_query_cache_init(
     desc.cache_kind = EcsQueryCacheNone; /* Don't create caches recursively */
     desc.group_by = NULL;
     desc.group_by_id = 0;
-    desc.order_by = NULL;
-    desc.order_by_component = 0;
+    desc.order_by_callback = NULL;
+    desc.order_by = 0;
     desc.entity = 0;
 
     ecs_query_cache_t *result = ecs_os_calloc_t(ecs_query_cache_t);
@@ -35775,10 +35775,10 @@ ecs_query_cache_t* flecs_query_cache_init(
     ecs_table_cache_init(world, &result->cache);
     flecs_query_cache_match_tables(world, impl, result);
 
-    if (const_desc->order_by) {
-        if (flecs_query_cache_order_by(
-            world, impl, const_desc->order_by_component, const_desc->order_by,
-            const_desc->sort_table))
+    if (const_desc->order_by_callback) {
+        if (flecs_query_cache_order_by(world, impl, 
+            const_desc->order_by, const_desc->order_by_callback,
+            const_desc->order_by_table_callback))
         {
             goto error;
         }
@@ -36334,8 +36334,8 @@ void flecs_query_cache_build_sorted_table_range(
     ecs_assert(!(world->flags & EcsWorldMultiThreaded), ECS_UNSUPPORTED,
         "cannot sort query in multithreaded mode");
 
-    ecs_entity_t id = cache->order_by_component;
-    ecs_order_by_action_t compare = cache->order_by;
+    ecs_entity_t id = cache->order_by;
+    ecs_order_by_action_t compare = cache->order_by_callback;
     int32_t table_count = list->info.table_count;
     if (!table_count) {
         return;
@@ -36498,14 +36498,14 @@ void flecs_query_cache_sort_tables(
     ecs_query_impl_t *impl)
 {
     ecs_query_cache_t *cache = impl->cache;
-    ecs_order_by_action_t compare = cache->order_by;
+    ecs_order_by_action_t compare = cache->order_by_callback;
     if (!compare) {
         return;
     }
 
-    ecs_sort_table_action_t sort = cache->sort_table;
+    ecs_sort_table_action_t sort = cache->order_by_table_callback;
     
-    ecs_entity_t order_by_component = cache->order_by_component;
+    ecs_entity_t order_by = cache->order_by;
     int32_t order_by_term = cache->order_by_term;
 
     /* Iterate over non-empty tables. Don't bother with empty tables as they
@@ -36513,7 +36513,7 @@ void flecs_query_cache_sort_tables(
 
     bool tables_sorted = false;
 
-    ecs_id_record_t *idr = flecs_id_record_get(world, order_by_component);
+    ecs_id_record_t *idr = flecs_id_record_get(world, order_by);
     ecs_table_cache_iter_t it;
     ecs_query_cache_table_t *qt;
     flecs_table_cache_iter(&cache->cache, &it);
@@ -36528,7 +36528,7 @@ void flecs_query_cache_sort_tables(
         }
 
         int32_t column = -1;
-        if (order_by_component) {
+        if (order_by) {
             if (flecs_query_check_table_monitor(impl, qt, order_by_term + 1)) {
                 dirty = true;
             }
@@ -43541,7 +43541,7 @@ ecs_iter_t flecs_query_iter(
         qit->node = cache->list.first;
         qit->last = cache->list.last;
 
-        if (cache->order_by && cache->list.info.table_count) {
+        if (cache->order_by_callback && cache->list.info.table_count) {
             flecs_query_cache_sort_tables(it.real_world, impl);
             qit->node = ecs_vec_first(&cache->table_slices);
             qit->last = ecs_vec_last_t(
@@ -67013,7 +67013,7 @@ void flecs_run_startup_systems(
                 { .id = EcsDisabled, .src.id = EcsUp, .trav = EcsDependsOn, .oper = EcsNot },
                 { .id = EcsDisabled, .src.id = EcsUp, .trav = EcsChildOf, .oper = EcsNot }
             },
-            .order_by = flecs_entity_compare
+            .order_by_callback = flecs_entity_compare
         }
     });
     ecs_log_pop_2();
@@ -67124,8 +67124,8 @@ ecs_entity_t ecs_pipeline_init(
     }
 
     ecs_query_desc_t qd = desc->query;
-    if (!qd.order_by) {
-        qd.order_by = flecs_entity_compare;
+    if (!qd.order_by_callback) {
+        qd.order_by_callback = flecs_entity_compare;
     }
     qd.entity = result;
 
@@ -67238,7 +67238,7 @@ void FlecsPipelineImport(
                 { .id = EcsDisabled, .src.id = EcsUp, .trav = EcsDependsOn, .oper = EcsNot },
                 { .id = EcsDisabled, .src.id = EcsUp, .trav = EcsChildOf, .oper = EcsNot }
             },
-            .order_by = flecs_entity_compare
+            .order_by_callback = flecs_entity_compare
         }
     });
 

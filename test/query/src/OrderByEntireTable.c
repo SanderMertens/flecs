@@ -34,9 +34,9 @@ void OrderByEntireTable_sort_by_component(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position",
-        .order_by_component = ecs_id(Position),
-        .order_by = ecs_compare(Position),
-        .sort_table = ecs_sort_table(Position)
+        .order_by = ecs_id(Position),
+        .order_by_callback = ecs_compare(Position),
+        .order_by_table_callback = ecs_sort_table(Position)
     });
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -70,9 +70,9 @@ void OrderByEntireTable_sort_by_component_same_value_1(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position",
-        .order_by_component = ecs_id(Position),
-        .order_by = ecs_compare(Position),
-        .sort_table = ecs_sort_table(Position)
+        .order_by = ecs_id(Position),
+        .order_by_callback = ecs_compare(Position),
+        .order_by_table_callback = ecs_sort_table(Position)
     });
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -108,9 +108,9 @@ void OrderByEntireTable_sort_by_component_same_value_2(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position",
-        .order_by_component = ecs_id(Position),
-        .order_by = ecs_compare(Position),
-        .sort_table = ecs_sort_table(Position)
+        .order_by = ecs_id(Position),
+        .order_by_callback = ecs_compare(Position),
+        .order_by_table_callback = ecs_sort_table(Position)
     });
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -150,9 +150,9 @@ void OrderByEntireTable_sort_by_component_2_tables(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position",
-        .order_by_component = ecs_id(Position),
-        .order_by = ecs_compare(Position),
-        .sort_table = ecs_sort_table(Position)
+        .order_by = ecs_id(Position),
+        .order_by_callback = ecs_compare(Position),
+        .order_by_table_callback = ecs_sort_table(Position)
     });
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -202,9 +202,9 @@ void OrderByEntireTable_sort_by_component_3_tables(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position",
-        .order_by_component = ecs_id(Position),
-        .order_by = ecs_compare(Position),
-        .sort_table = ecs_sort_table(Position)
+        .order_by = ecs_id(Position),
+        .order_by_callback = ecs_compare(Position),
+        .order_by_table_callback = ecs_sort_table(Position)
     });
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -257,8 +257,8 @@ void OrderByEntireTable_sort_by_entity(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position",
-        .order_by = compare_entity,
-        .sort_table = PositionSortByEntity
+        .order_by_callback = compare_entity,
+        .order_by_table_callback = PositionSortByEntity
     });
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -308,9 +308,9 @@ void OrderByEntireTable_sort_after_add(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position, Velocity",
-        .order_by_component = ecs_id(Position),
-        .order_by = ecs_compare(Position),
-        .sort_table = ecs_sort_table(Position)
+        .order_by = ecs_id(Position),
+        .order_by_callback = ecs_compare(Position),
+        .order_by_table_callback = ecs_sort_table(Position)
     });
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -393,9 +393,9 @@ void OrderByEntireTable_sort_after_remove(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position, Velocity",
-        .order_by_component = ecs_id(Position),
-        .order_by = ecs_compare(Position),
-        .sort_table = ecs_sort_table(Position)
+        .order_by = ecs_id(Position),
+        .order_by_callback = ecs_compare(Position),
+        .order_by_table_callback = ecs_sort_table(Position)
     });
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -496,9 +496,9 @@ void OrderByEntireTable_sort_after_delete(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position, Velocity",
-        .order_by_component = ecs_id(Position),
-        .order_by = ecs_compare(Position),
-        .sort_table = ecs_sort_table(Position)
+        .order_by = ecs_id(Position),
+        .order_by_callback = ecs_compare(Position),
+        .order_by_table_callback = ecs_sort_table(Position)
     });
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -583,9 +583,9 @@ void OrderByEntireTable_sort_after_set(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position, Velocity",
-        .order_by_component = ecs_id(Position),
-        .order_by = ecs_compare(Position),
-        .sort_table = ecs_sort_table(Position)
+        .order_by = ecs_id(Position),
+        .order_by_callback = ecs_compare(Position),
+        .order_by_table_callback = ecs_sort_table(Position)
     });
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -673,9 +673,9 @@ void OrderByEntireTable_sort_after_system(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position, [in] Velocity",
-        .order_by_component = ecs_id(Position),
-        .order_by = ecs_compare(Position),
-        .sort_table = ecs_sort_table(Position)
+        .order_by = ecs_id(Position),
+        .order_by_callback = ecs_compare(Position),
+        .order_by_table_callback = ecs_sort_table(Position)
     });
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -772,9 +772,9 @@ void OrderByEntireTable_sort_after_query(void) {
     ecs_query_t *flip_q = ecs_query_new(world, "Position");
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position, [in] Velocity",
-        .order_by_component = ecs_id(Position),
-        .order_by = ecs_compare(Position),
-        .sort_table = ecs_sort_table(Position)
+        .order_by = ecs_id(Position),
+        .order_by_callback = ecs_compare(Position),
+        .order_by_table_callback = ecs_sort_table(Position)
     });
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -865,9 +865,9 @@ void OrderByEntireTable_sort_by_component_move_pivot(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position",
-        .order_by_component = ecs_id(Position),
-        .order_by = ecs_compare(Position),
-        .sort_table = ecs_sort_table(Position)
+        .order_by = ecs_id(Position),
+        .order_by_callback = ecs_compare(Position),
+        .order_by_table_callback = ecs_sort_table(Position)
     });
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -894,8 +894,8 @@ void OrderByEntireTable_sort_1000_entities(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position",
-        .order_by_component = ecs_id(Position),
-        .order_by = ecs_compare(Position)
+        .order_by = ecs_id(Position),
+        .order_by_callback = ecs_compare(Position)
     });
 
     for (int i = 0; i < 1000; i ++) {
@@ -930,8 +930,8 @@ void OrderByEntireTable_sort_1000_entities_w_duplicates(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position",
-        .order_by_component = ecs_id(Position),
-        .order_by = ecs_compare(Position)
+        .order_by = ecs_id(Position),
+        .order_by_callback = ecs_compare(Position)
     });
 
     for (int i = 0; i < 500; i ++) {
@@ -967,9 +967,9 @@ void OrderByEntireTable_sort_1000_entities_again(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position",
-        .order_by_component = ecs_id(Position),
-        .order_by = ecs_compare(Position),
-        .sort_table = ecs_sort_table(Position)
+        .order_by = ecs_id(Position),
+        .order_by_callback = ecs_compare(Position),
+        .order_by_table_callback = ecs_sort_table(Position)
     });
 
     ecs_entity_t start = ecs_new(world, 0);
@@ -1026,9 +1026,9 @@ void OrderByEntireTable_sort_1000_entities_2_types(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position",
-        .order_by_component = ecs_id(Position),
-        .order_by = ecs_compare(Position),
-        .sort_table = ecs_sort_table(Position)
+        .order_by = ecs_id(Position),
+        .order_by_callback = ecs_compare(Position),
+        .order_by_table_callback = ecs_sort_table(Position)
     });
 
     for (int i = 0; i < 500; i ++) {
@@ -1067,9 +1067,9 @@ void OrderByEntireTable_sort_1000_entities_2_types_again(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position",
-        .order_by_component = ecs_id(Position),
-        .order_by = ecs_compare(Position),
-        .sort_table = ecs_sort_table(Position)
+        .order_by = ecs_id(Position),
+        .order_by_callback = ecs_compare(Position),
+        .order_by_table_callback = ecs_sort_table(Position)
     });
 
     ecs_entity_t start = ecs_new(world, 0);
@@ -1129,9 +1129,9 @@ void OrderByEntireTable_sort_1000_entities_add_type_after_sort(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position",
-        .order_by_component = ecs_id(Position),
-        .order_by = ecs_compare(Position),
-        .sort_table = ecs_sort_table(Position)
+        .order_by = ecs_id(Position),
+        .order_by_callback = ecs_compare(Position),
+        .order_by_table_callback = ecs_sort_table(Position)
     });
 
     ecs_entity_t start = ecs_new(world, 0);
@@ -1200,9 +1200,9 @@ void OrderByEntireTable_sort_1500_entities_3_types(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position",
-        .order_by_component = ecs_id(Position),
-        .order_by = ecs_compare(Position),
-        .sort_table = ecs_sort_table(Position)
+        .order_by = ecs_id(Position),
+        .order_by_callback = ecs_compare(Position),
+        .order_by_table_callback = ecs_sort_table(Position)
     });
 
     for (int i = 0; i < 500; i ++) {
@@ -1244,9 +1244,9 @@ void OrderByEntireTable_sort_2000_entities_4_types(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position",
-        .order_by_component = ecs_id(Position),
-        .order_by = ecs_compare(Position),
-        .sort_table = ecs_sort_table(Position)
+        .order_by = ecs_id(Position),
+        .order_by_callback = ecs_compare(Position),
+        .order_by_table_callback = ecs_sort_table(Position)
     });
 
     for (int i = 0; i < 500; i ++) {
@@ -1306,8 +1306,8 @@ void OrderByEntireTable_sort_shared_component(void) {
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position(self|up(IsA))",
         .flags = EcsQueryIsInstanced,
-        .order_by_component = ecs_id(Position),
-        .order_by = ecs_compare(Position),
+        .order_by = ecs_id(Position),
+        .order_by_callback = ecs_compare(Position),
     });
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -1356,9 +1356,9 @@ void OrderByEntireTable_sort_2_entities_2_types(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position",
-        .order_by_component = ecs_id(Position),
-        .order_by = ecs_compare(Position),
-        .sort_table = ecs_sort_table(Position)
+        .order_by = ecs_id(Position),
+        .order_by_callback = ecs_compare(Position),
+        .order_by_table_callback = ecs_sort_table(Position)
     });
 
     ecs_set(world, 0, Position, {rand()});
@@ -1396,9 +1396,9 @@ void OrderByEntireTable_sort_3_entities_3_types(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position",
-        .order_by_component = ecs_id(Position),
-        .order_by = ecs_compare(Position),
-        .sort_table = ecs_sort_table(Position)
+        .order_by = ecs_id(Position),
+        .order_by_callback = ecs_compare(Position),
+        .order_by_table_callback = ecs_sort_table(Position)
     });
 
     ecs_set(world, 0, Position, {rand()});
@@ -1439,8 +1439,8 @@ void OrderByEntireTable_sort_3_entities_3_types_2(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Tag",
-        .order_by = compare_entity,
-        .sort_table = PositionSortByEntity
+        .order_by_callback = compare_entity,
+        .order_by_table_callback = PositionSortByEntity
     });
 
     ecs_entity_t e1 = ecs_new(world, Tag);
@@ -1480,9 +1480,9 @@ void OrderByEntireTable_sort_4_entities_4_types(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position",
-        .order_by_component = ecs_id(Position),
-        .order_by = ecs_compare(Position),
-        .sort_table = ecs_sort_table(Position)
+        .order_by = ecs_id(Position),
+        .order_by_callback = ecs_compare(Position),
+        .order_by_table_callback = ecs_sort_table(Position)
     });
 
     ecs_set(world, 0, Position, {rand()});
@@ -1525,8 +1525,8 @@ void OrderByEntireTable_sort_w_tags_only(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{Tag}},
-        .order_by = compare_entity,
-        .sort_table = PositionSortByEntity
+        .order_by_callback = compare_entity,
+        .order_by_table_callback = PositionSortByEntity
     });
 
     ecs_entity_t root = ecs_new_id(world);
@@ -1555,8 +1555,8 @@ void OrderByEntireTable_sort_childof_marked(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{Tag}},
-        .order_by = compare_entity,
-        .sort_table = PositionSortByEntity
+        .order_by_callback = compare_entity,
+        .order_by_table_callback = PositionSortByEntity
     });
 
     ecs_entity_t root = ecs_new_id(world);
@@ -1590,8 +1590,8 @@ void OrderByEntireTable_sort_isa_marked(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{Tag}},
-        .order_by = compare_entity,
-        .sort_table = PositionSortByEntity
+        .order_by_callback = compare_entity,
+        .order_by_table_callback = PositionSortByEntity
     });
 
     ecs_entity_t root = ecs_new_id(world);
@@ -1629,8 +1629,8 @@ void OrderByEntireTable_sort_relation_marked(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{Tag}},
-        .order_by = compare_entity,
-        .sort_table = PositionSortByEntity
+        .order_by_callback = compare_entity,
+        .order_by_table_callback = PositionSortByEntity
     });
 
     ecs_entity_t root = ecs_new_id(world);
@@ -1681,8 +1681,8 @@ void OrderByEntireTable_dont_resort_after_set_unsorted_component(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "[in] Position",
-        .order_by_component = ecs_id(Position),
-        .order_by = dummy_compare
+        .order_by = ecs_id(Position),
+        .order_by_callback = dummy_compare
     });
 
     ecs_entity_t e1 = ecs_new(world, 0);
@@ -1738,8 +1738,8 @@ void OrderByEntireTable_dont_resort_after_set_unsorted_component_w_tag(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "[in] Position",
-        .order_by_component = ecs_id(Position),
-        .order_by = dummy_compare
+        .order_by = ecs_id(Position),
+        .order_by_callback = dummy_compare
     });
 
     ecs_entity_t e1 = ecs_new_w_id(world, Tag);
@@ -1794,8 +1794,8 @@ void OrderByEntireTable_dont_resort_after_set_unsorted_component_w_tag_w_out_ter
     // Sorted query
     ecs_query_t *q = ecs_query(world, {
         .expr = "[in] Position",
-        .order_by_component = ecs_id(Position),
-        .order_by = dummy_compare,
+        .order_by = ecs_id(Position),
+        .order_by_callback = dummy_compare,
     });
 
     // Dummy queries that mutate
@@ -1855,9 +1855,9 @@ void OrderByEntireTable_sort_not_term(void) {
     ecs_log_set_level(-4);
     ecs_query_t *q = ecs_query(world, {
         .expr = "!Position",
-        .order_by_component = ecs_id(Position),
-        .order_by = ecs_compare(Position),
-        .sort_table = ecs_sort_table(Position)
+        .order_by = ecs_id(Position),
+        .order_by_callback = ecs_compare(Position),
+        .order_by_table_callback = ecs_sort_table(Position)
     });
 
     test_assert(q == NULL);
@@ -1874,9 +1874,9 @@ void OrderByEntireTable_sort_or_term(void) {
     ecs_log_set_level(-4);
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position || Velocity",
-        .order_by_component = ecs_id(Position),
-        .order_by = ecs_compare(Position),
-        .sort_table = ecs_sort_table(Position)
+        .order_by = ecs_id(Position),
+        .order_by_callback = ecs_compare(Position),
+        .order_by_table_callback = ecs_sort_table(Position)
     });
 
     test_assert(q == NULL);
@@ -1892,9 +1892,9 @@ void OrderByEntireTable_sort_optional_term(void) {
     ecs_log_set_level(-4);
     ecs_query_t *q = ecs_query(world, {
         .expr = "?Position",
-        .order_by_component = ecs_id(Position),
-        .order_by = ecs_compare(Position),
-        .sort_table = ecs_sort_table(Position)
+        .order_by = ecs_id(Position),
+        .order_by_callback = ecs_compare(Position),
+        .order_by_table_callback = ecs_sort_table(Position)
     });
 
     test_assert(q == NULL);
@@ -1912,9 +1912,9 @@ void SortingEntireTable_sort_shared_w_delete(void) {
             { .id = ecs_id(Position), .inout = EcsIn }
         },
         .flags = EcsQueryIsInstanced,
-        .order_by_component = ecs_id(Position),
-        .order_by = ecs_compare(Position),
-        .sort_table = ecs_sort_table(Position)
+        .order_by = ecs_id(Position),
+        .order_by_callback = ecs_compare(Position),
+        .order_by_table_callback = ecs_sort_table(Position)
     });
 
     ecs_entity_t base = ecs_set(world, 0, Position, {0, 0});
@@ -1964,9 +1964,9 @@ void OrderByEntireTable_sort_shared_w_delete(void) {
             { .id = ecs_id(Position), .inout = EcsIn }
         },
         .flags = EcsQueryIsInstanced,
-        .order_by_component = ecs_id(Position),
-        .order_by = ecs_compare(Position),
-        .sort_table = ecs_sort_table(Position)
+        .order_by = ecs_id(Position),
+        .order_by_callback = ecs_compare(Position),
+        .order_by_table_callback = ecs_sort_table(Position)
     });
 
     ecs_entity_t base = ecs_set(world, 0, Position, {0, 0});

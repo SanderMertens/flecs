@@ -987,44 +987,44 @@ static
 int flecs_query_cache_order_by(
     ecs_world_t *world,
     ecs_query_impl_t *impl,
-    ecs_entity_t order_by_component,
-    ecs_order_by_action_t order_by,
+    ecs_entity_t order_by,
+    ecs_order_by_action_t order_by_callback,
     ecs_sort_table_action_t action)
 {
     ecs_check(impl != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_query_cache_t *cache = impl->cache;
     ecs_check(cache != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(!ecs_id_is_wildcard(order_by_component), 
+    ecs_check(!ecs_id_is_wildcard(order_by), 
         ECS_INVALID_PARAMETER, NULL);
 
-    /* Find order_by_component term & make sure it is queried for */
+    /* Find order_by term & make sure it is queried for */
     const ecs_query_t *query = cache->query;
     int32_t i, count = query->term_count;
     int32_t order_by_term = -1;
 
-    if (order_by_component) {
+    if (order_by) {
         for (i = 0; i < count; i ++) {
             const ecs_term_t *term = &query->terms[i];
             
             /* Only And terms are supported */
-            if (term->id == order_by_component && term->oper == EcsAnd) {
+            if (term->id == order_by && term->oper == EcsAnd) {
                 order_by_term = i;
                 break;
             }
         }
 
         if (order_by_term == -1) {
-            char *id_str = ecs_id_str(world, order_by_component);
-            ecs_err("order_by component '%s' not is queried for", id_str);
+            char *id_str = ecs_id_str(world, order_by);
+            ecs_err("order_by component '%s' is not queried for", id_str);
             ecs_os_free(id_str);
             goto error;
         }
     }
 
-    cache->order_by_component = order_by_component;
     cache->order_by = order_by;
+    cache->order_by_callback = order_by_callback;
     cache->order_by_term = order_by_term;
-    cache->sort_table = action;
+    cache->order_by_table_callback = action;
 
     ecs_vec_fini_t(NULL, &cache->table_slices, ecs_query_cache_table_match_t);
     flecs_query_cache_sort_tables(world, impl);
@@ -1234,8 +1234,8 @@ ecs_query_cache_t* flecs_query_cache_init(
     desc.cache_kind = EcsQueryCacheNone; /* Don't create caches recursively */
     desc.group_by = NULL;
     desc.group_by_id = 0;
-    desc.order_by = NULL;
-    desc.order_by_component = 0;
+    desc.order_by_callback = NULL;
+    desc.order_by = 0;
     desc.entity = 0;
 
     ecs_query_cache_t *result = ecs_os_calloc_t(ecs_query_cache_t);
@@ -1316,10 +1316,10 @@ ecs_query_cache_t* flecs_query_cache_init(
     ecs_table_cache_init(world, &result->cache);
     flecs_query_cache_match_tables(world, impl, result);
 
-    if (const_desc->order_by) {
-        if (flecs_query_cache_order_by(
-            world, impl, const_desc->order_by_component, const_desc->order_by,
-            const_desc->sort_table))
+    if (const_desc->order_by_callback) {
+        if (flecs_query_cache_order_by(world, impl, 
+            const_desc->order_by, const_desc->order_by_callback,
+            const_desc->order_by_table_callback))
         {
             goto error;
         }
