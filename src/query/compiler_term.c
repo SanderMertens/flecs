@@ -996,6 +996,34 @@ int flecs_query_compile_end_member_term(
 error:
     return -1;
 }
+#else
+static
+int flecs_query_compile_begin_member_term(
+    ecs_world_t *world,
+    ecs_term_t *term,
+    ecs_query_compile_ctx_t *ctx,
+    ecs_entity_t first_id)
+{
+    (void)world; (void)term; (void)ctx; (void)first_id;
+    return 0;
+}
+
+static
+int flecs_query_compile_end_member_term(
+    ecs_world_t *world,
+    ecs_query_impl_t *impl,
+    ecs_query_op_t *op,
+    ecs_term_t *term,
+    ecs_query_compile_ctx_t *ctx,
+    ecs_id_t term_id,
+    ecs_entity_t first_id,
+    ecs_entity_t second_id,
+    bool cond_write)
+{
+    (void)world; (void)impl; (void)op; (void)term; (void)ctx; (void)term_id;
+    (void)first_id; (void)second_id; (void)cond_write;
+    return 0;
+}
 #endif
 
 static

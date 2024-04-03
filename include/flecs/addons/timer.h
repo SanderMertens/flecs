@@ -42,12 +42,12 @@ typedef struct EcsTimer {
 } EcsTimer;
 
 /** Apply a rate filter to a tick source */
-typedef struct EcsRateQuery {
+typedef struct EcsRateFilter {
     ecs_entity_t src;            /**< Source of the rate filter */
     int32_t rate;                /**< Rate of the rate filter */
     int32_t tick_count;          /**< Number of times the rate filter ticked */
     ecs_ftime_t time_elapsed;    /**< Time elapsed since last tick */
-} EcsRateQuery;
+} EcsRateFilter;
 
 
 /** Set timer timeout.

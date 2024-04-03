@@ -7,9 +7,6 @@
 #include <ctype.h>
 
 #ifdef FLECS_META
-#ifdef FLECS_PARSER
-#include "flecs/addons/parser.h"
-#endif
 
 static
 const char* flecs_meta_op_kind_str(
@@ -322,7 +319,6 @@ int ecs_meta_dotmember(
     ecs_meta_cursor_t *cursor,
     const char *name)
 {
-#ifdef FLECS_PARSER
     ecs_meta_scope_t *cur_scope = flecs_meta_cursor_get_scope(cursor);
     flecs_meta_cursor_restore_scope(cursor, cur_scope);
 
@@ -363,12 +359,6 @@ int ecs_meta_dotmember(
     return 0;
 error:
     return -1;
-#else
-    (void)cursor;
-    (void)name;
-    ecs_err("the FLECS_PARSER addon is required for ecs_meta_dotmember");
-    return -1;
-#endif
 }
 
 int ecs_meta_push(
@@ -1366,7 +1356,6 @@ int ecs_meta_set_string(
     }
     case EcsOpId: {
         ecs_id_t id = 0;
-#ifdef FLECS_PARSER
         ecs_term_t term = {0};
         ecs_stage_t *stage = flecs_stage_from_readonly_world(cursor->world);
         if (ecs_parse_term(
@@ -1379,7 +1368,7 @@ int ecs_meta_set_string(
         } else {
             goto error;
         }
-#endif
+
         set_T(ecs_id_t, ptr, id);
 
         break;

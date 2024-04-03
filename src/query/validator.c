@@ -1271,7 +1271,6 @@ int flecs_query_query_populate_terms(
     /* Parse query expression if set */
     const char *expr = desc->expr;
     if (expr && expr[0]) {
-#ifdef FLECS_PARSER
         ecs_entity_t entity = desc->entity;
         const char *query_name = entity ? ecs_get_name(world, entity) : NULL;
         const char *ptr = desc->expr;
@@ -1345,10 +1344,6 @@ int flecs_query_query_populate_terms(
                     FLECS_TERM_ARG_COUNT_MAX);
             }
         } while (ptr[0] && ptr[0] != '\n');
-#else
-        (void)expr;
-        ecs_abort(ECS_UNSUPPORTED, "parser addon is not available");
-#endif
     }
 
     q->term_count = flecs_ito(int8_t, term_count);

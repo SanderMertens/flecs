@@ -57,8 +57,8 @@ void ProgressTimers(ecs_iter_t *it) {
 }
 
 static
-void ProgressRateQuerys(ecs_iter_t *it) {
-    EcsRateQuery *filter = ecs_field(it, EcsRateQuery, 1);
+void ProgressRateFilters(ecs_iter_t *it) {
+    EcsRateFilter *filter = ecs_field(it, EcsRateFilter, 1);
     EcsTickSource *tick_dst = ecs_field(it, EcsTickSource, 2);
 
     int i;
@@ -229,7 +229,7 @@ ecs_entity_t ecs_set_rate(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    filter = ecs_set(world, filter, EcsRateQuery, {
+    filter = ecs_set(world, filter, EcsRateFilter, {
         .rate = rate,
         .src = source
     });
@@ -298,7 +298,7 @@ void FlecsTimerImport(
     ecs_set_name_prefix(world, "Ecs");
 
     flecs_bootstrap_component(world, EcsTimer);
-    flecs_bootstrap_component(world, EcsRateQuery);
+    flecs_bootstrap_component(world, EcsRateFilter);
 
     ecs_set_hooks(world, EcsTimer, {
         .ctor = ecs_default_ctor
@@ -309,7 +309,7 @@ void FlecsTimerImport(
         .entity = ecs_entity(world, {.name = "AddTickSource", .add = { ecs_dependson(EcsPreFrame) }}),
         .query.terms = {
             { .id = ecs_id(EcsTimer), .oper = EcsOr, .inout = EcsIn },
-            { .id = ecs_id(EcsRateQuery), .oper = EcsAnd, .inout = EcsIn },
+            { .id = ecs_id(EcsRateFilter), .oper = EcsAnd, .inout = EcsIn },
             { .id = ecs_id(EcsTickSource), .oper = EcsNot, .inout = EcsOut}
         },
         .callback = AddTickSource
@@ -327,12 +327,12 @@ void FlecsTimerImport(
 
     /* Rate filter handling */
     ecs_system(world, {
-        .entity = ecs_entity(world, {.name = "ProgressRateQuerys", .add = { ecs_dependson(EcsPreFrame)}}),
+        .entity = ecs_entity(world, {.name = "ProgressRateFilters", .add = { ecs_dependson(EcsPreFrame)}}),
         .query.terms = {
-            { .id = ecs_id(EcsRateQuery), .inout = EcsIn },
+            { .id = ecs_id(EcsRateFilter), .inout = EcsIn },
             { .id = ecs_id(EcsTickSource), .inout = EcsOut }
         },
-        .callback = ProgressRateQuerys
+        .callback = ProgressRateFilters
     });
 
     /* TickSource without a timer or rate filter just increases each frame */
@@ -340,7 +340,7 @@ void FlecsTimerImport(
         .entity = ecs_entity(world, { .name = "ProgressTickSource", .add = { ecs_dependson(EcsPreFrame)}}),
         .query.terms = {
             { .id = ecs_id(EcsTickSource), .inout = EcsOut },
-            { .id = ecs_id(EcsRateQuery), .oper = EcsNot },
+            { .id = ecs_id(EcsRateFilter), .oper = EcsNot },
             { .id = ecs_id(EcsTimer), .oper = EcsNot }
         },
         .callback = ProgressTickSource

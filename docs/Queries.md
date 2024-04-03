@@ -266,8 +266,6 @@ flecs::query<> f = world.query_builder()
   .build();
 ```
 
-The query DSL requires the `FLECS_PARSER` addon to be included in a build.
-
 ## Iteration
 This section describes the different ways queries can be iterated. The code examples use filters, but also apply to cached queries and rules.
 

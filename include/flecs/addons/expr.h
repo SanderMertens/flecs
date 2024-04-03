@@ -40,10 +40,6 @@
 #define FLECS_META
 #endif
 
-#ifndef FLECS_PARSER
-#define FLECS_PARSER
-#endif
-
 #ifndef FLECS_EXPR_H
 #define FLECS_EXPR_H
 

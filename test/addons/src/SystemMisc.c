@@ -1515,14 +1515,14 @@ void SystemMisc_update_rate_w_system_init(void) {
         .callback = Dummy,
     });
     test_assert(system != 0);
-    test_assert(ecs_get(world, system, EcsRateQuery) == NULL);
+    test_assert(ecs_get(world, system, EcsRateFilter) == NULL);
 
     ecs_system(world, {
         .entity = system,
         .rate = 2.0
     });
 
-    const EcsRateQuery *r = ecs_get(world, system, EcsRateQuery);
+    const EcsRateFilter *r = ecs_get(world, system, EcsRateFilter);
     test_assert(r != NULL);
     test_int(r->rate, 2.0);
 

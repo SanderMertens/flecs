@@ -92,7 +92,7 @@ void World_builtin_components(void) {
     test_assert(ecs.component<flecs::Component>() == ecs_id(EcsComponent));
     test_assert(ecs.component<flecs::Identifier>() == ecs_id(EcsIdentifier));
     test_assert(ecs.component<flecs::Poly>() == ecs_id(EcsPoly));
-    test_assert(ecs.component<flecs::RateQuery>() == ecs_id(EcsRateQuery));
+    test_assert(ecs.component<flecs::RateFilter>() == ecs_id(EcsRateFilter));
     test_assert(ecs.component<flecs::TickSource>() == ecs_id(EcsTickSource));
     test_assert(flecs::Name == EcsName);
     test_assert(flecs::Symbol == EcsSymbol);

@@ -16,7 +16,7 @@ namespace flecs {
  */
 
 using Timer = EcsTimer;
-using RateQuery = EcsRateQuery;
+using RateFilter = EcsRateFilter;
 
 struct timer;
 

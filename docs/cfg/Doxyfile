@@ -2438,7 +2438,6 @@ PREDEFINED             = FLECS_APP \
                          FLECS_MODULE \
                          FLECS_MONITOR \
                          FLECS_OS_API_IMPL \
-                         FLECS_PARSER \
                          FLECS_PIPELINE \
                          FLECS_PLECS \
                          FLECS_REST \

@@ -15,9 +15,6 @@
 #ifdef FLECS_NO_MODULE
 #undef FLECS_MODULE
 #endif
-#ifdef FLECS_NO_PARSER
-#undef FLECS_PARSER
-#endif
 #ifdef FLECS_NO_PLECS
 #undef FLECS_PLECS
 #endif
@@ -220,13 +217,6 @@
 #error "FLECS_NO_PLECS failed: PLECS is required by other addons"
 #endif
 #include "../addons/plecs.h"
-#endif
-
-#ifdef FLECS_PARSER
-#ifdef FLECS_NO_PARSER
-#error "FLECS_NO_PARSER failed: PARSER is required by other addons"
-#endif
-#include "../addons/parser.h"
 #endif
 
 #ifdef FLECS_OS_API_IMPL

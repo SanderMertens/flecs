@@ -5,8 +5,6 @@
 
 #include "flecs.h"
 
-#ifdef FLECS_PARSER
-
 #include "../private_api.h"
 #include <ctype.h>
 
@@ -57,55 +55,6 @@ const ecs_id_t ECS_NOT =                                           (1ull << 58);
 
 typedef char ecs_token_t[ECS_MAX_TOKEN_SIZE];
 
-const char* ecs_parse_ws_eol(
-    const char *ptr)
-{
-    while (isspace(*ptr)) {
-        ptr ++;
-    }
-
-    return ptr;
-}
-
-const char* ecs_parse_ws(
-    const char *ptr)
-{
-    while ((*ptr != '\n') && isspace(*ptr)) {
-        ptr ++;
-    }
-
-    return ptr;
-}
-
-const char* ecs_parse_digit(
-    const char *ptr,
-    char *token)
-{
-    char *tptr = token;
-    char ch = ptr[0];
-
-    if (!isdigit(ch) && ch != '-') {
-        ecs_parser_error(NULL, NULL, 0, "invalid start of number '%s'", ptr);
-        return NULL;
-    }
-
-    tptr[0] = ch;
-    tptr ++;
-    ptr ++;
-
-    for (; (ch = *ptr); ptr ++) {
-        if (!isdigit(ch) && (ch != '.') && (ch != 'e')) {
-            break;
-        }
-
-        tptr[0] = ch;
-        tptr ++;
-    }
-
-    tptr[0] = '\0';
-    
-    return ptr;
-}
 
 /* -- Private functions -- */
 
@@ -1159,4 +1108,52 @@ error:
     return NULL;
 }
 
-#endif
+const char* ecs_parse_ws_eol(
+    const char *ptr)
+{
+    while (isspace(*ptr)) {
+        ptr ++;
+    }
+
+    return ptr;
+}
+
+const char* ecs_parse_ws(
+    const char *ptr)
+{
+    while ((*ptr != '\n') && isspace(*ptr)) {
+        ptr ++;
+    }
+
+    return ptr;
+}
+
+const char* ecs_parse_digit(
+    const char *ptr,
+    char *token)
+{
+    char *tptr = token;
+    char ch = ptr[0];
+
+    if (!isdigit(ch) && ch != '-') {
+        ecs_parser_error(NULL, NULL, 0, "invalid start of number '%s'", ptr);
+        return NULL;
+    }
+
+    tptr[0] = ch;
+    tptr ++;
+    ptr ++;
+
+    for (; (ch = *ptr); ptr ++) {
+        if (!isdigit(ch) && (ch != '.') && (ch != 'e')) {
+            break;
+        }
+
+        tptr[0] = ch;
+        tptr ++;
+    }
+
+    tptr[0] = '\0';
+    
+    return ptr;
+}

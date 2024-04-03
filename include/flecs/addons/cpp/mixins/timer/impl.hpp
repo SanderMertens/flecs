@@ -97,7 +97,7 @@ inline void system::set_tick_source(flecs::entity e) {
 namespace _ {
 
 inline void timer_init(flecs::world& world) {
-    world.component<RateQuery>("flecs::timer::RateQuery");
+    world.component<RateFilter>("flecs::timer::RateFilter");
     world.component<Timer>("flecs::timer::Timer");
 }
 

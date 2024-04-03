@@ -1315,8 +1315,6 @@ error:
     return 0;
 }
 
-#ifdef FLECS_PARSER
-
 /* Traverse table graph by either adding or removing identifiers parsed from the
  * passed in expression. */
 static
@@ -1422,7 +1420,6 @@ void flecs_defer_from_expr(
         }
     }
 }
-#endif
 
 /* If operation is not deferred, add components by finding the target
  * table and moving the entity towards it. */
@@ -1489,7 +1486,6 @@ int flecs_traverse_add(
 
     /* Add components from the 'add_expr' expression */
     if (desc->add_expr && ecs_os_strcmp(desc->add_expr, "0")) {
-#ifdef FLECS_PARSER
         bool error = false;
         table = flecs_traverse_from_expr(
             world, table, name, desc->add_expr, &diff, true, &error);
@@ -1497,9 +1493,6 @@ int flecs_traverse_add(
             flecs_table_diff_builder_fini(world, &diff);
             return -1;
         }
-#else
-        ecs_abort(ECS_UNSUPPORTED, "parser addon is not available");
-#endif
     }
 
     /* Commit entity to destination table */
@@ -1582,12 +1575,8 @@ void flecs_deferred_add_remove(
 
     /* Add components from the 'add_expr' expression */
     if (desc->add_expr) {
-#ifdef FLECS_PARSER
         flecs_defer_from_expr(world, (ecs_stage_t*)world , entity, name,
             desc->add_expr, true, true);
-#else
-        ecs_abort(ECS_UNSUPPORTED, "parser addon is not available");
-#endif
     }
 
     int32_t thread_count = ecs_get_stage_count(world);

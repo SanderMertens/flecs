@@ -13,9 +13,7 @@ int main(int, char *[]) {
     // core
     world.id<flecs::Component>();
     world.id<flecs::Identifier>();
-    world.id<flecs::Iterable>();
     world.id<flecs::Poly>();
-    world.id<flecs::Target>();
 
     // alerts
     world.id<flecs::alerts::AlertsActive>();

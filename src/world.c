@@ -80,7 +80,7 @@ const ecs_entity_t EcsOnTableFill =                 FLECS_HI_COMPONENT_ID + 43;
 /* Timers */
 const ecs_entity_t ecs_id(EcsTickSource) =          FLECS_HI_COMPONENT_ID + 47;
 const ecs_entity_t ecs_id(EcsTimer) =               FLECS_HI_COMPONENT_ID + 48;
-const ecs_entity_t ecs_id(EcsRateQuery) =           FLECS_HI_COMPONENT_ID + 49;
+const ecs_entity_t ecs_id(EcsRateFilter) =           FLECS_HI_COMPONENT_ID + 49;
 
 /* Actions */
 const ecs_entity_t EcsRemove =                      FLECS_HI_COMPONENT_ID + 50;
@@ -739,9 +739,6 @@ static const char *flecs_addons_info[] = {
 #endif
 #ifdef FLECS_MODULE
     "FLECS_MODULE",
-#endif
-#ifdef FLECS_PARSER
-    "FLECS_PARSER",
 #endif
 #ifdef FLECS_PLECS
     "FLECS_PLECS",

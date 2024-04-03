@@ -1,16 +1,13 @@
 /**
  * @file addons/parser.h
- * @brief Parser addon.
+ * @brief Query parser.
  *
- * The parser addon parses string expressions into lists of terms, and can be
+ * The query parser parses string expressions into lists of terms, and can be
  * used to construct queries.
  */
 
-#ifdef FLECS_PARSER
-
 /**
- * @defgroup c_addons_parser Parser
- * @ingroup c_addons
+ * @defgroup c_queries Queries
  * Query DSL parser and parsing utilities.
  *
  * @{
@@ -133,5 +130,3 @@ char* ecs_parse_term(
 #endif // FLECS_PARSER_H
 
 /** @} */
-
-#endif // FLECS_PARSER

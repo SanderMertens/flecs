@@ -18,7 +18,6 @@
             "FLECS_SYSTEM",
             "FLECS_PIPELINE", 
             "FLECS_EXPR", 
-            "FLECS_PARSER", 
             "FLECS_LOG"
         ]
     }

@@ -19,10 +19,6 @@
 #define FLECS_MODULE
 #endif
 
-#ifndef FLECS_PARSER
-#define FLECS_PARSER
-#endif
-
 #ifndef FLECS_EXPR
 #define FLECS_EXPR
 #endif

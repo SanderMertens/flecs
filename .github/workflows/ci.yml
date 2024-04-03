@@ -344,11 +344,6 @@ jobs:
           bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_STATS
           bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_STATS
 
-      - name: FLECS_PARSER
-        run: |
-          bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_PARSER
-          bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_PARSER
-
       - name: FLECS_PLECS
         run: |
           bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_PLECS

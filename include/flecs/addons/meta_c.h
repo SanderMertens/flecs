@@ -17,10 +17,6 @@
 #define FLECS_META
 #endif
 
-#ifndef FLECS_PARSER
-#define FLECS_PARSER
-#endif
-
 #ifndef FLECS_META_C_H
 #define FLECS_META_C_H
 

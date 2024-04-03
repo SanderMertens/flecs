@@ -178,7 +178,6 @@
 // #define FLECS_C          /**< C API convenience macros, always enabled */
 #define FLECS_CPP           /**< C++ API */
 #define FLECS_MODULE        /**< Module support */
-#define FLECS_PARSER        /**< String parser for queries */
 #define FLECS_PLECS         /**< ECS data definition format */
 #define FLECS_STATS         /**< Access runtime statistics */
 #define FLECS_MONITOR       /**< Track runtime statistics periodically */
@@ -859,6 +858,7 @@ struct ecs_type_info_t {
 #include "flecs/private/api_support.h"      /* Supporting API functions */
 #include "flecs/private/vec.h"              /* Vector */
 #include "flecs/private/hashmap.h"          /* Hashmap */
+#include "flecs/private/parser.h"           /* Query DSL parser */
 
 /** Used with ecs_entity_init().
  *
@@ -1298,7 +1298,7 @@ FLECS_API extern const ecs_entity_t ecs_id(EcsPipelineQuery);
 
 /* Timer module component ids */
 FLECS_API extern const ecs_entity_t ecs_id(EcsTimer);
-FLECS_API extern const ecs_entity_t ecs_id(EcsRateQuery);
+FLECS_API extern const ecs_entity_t ecs_id(EcsRateFilter);
 
 /** Root scope for builtin flecs entities */
 FLECS_API extern const ecs_entity_t EcsFlecs;
