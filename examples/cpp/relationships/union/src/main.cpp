@@ -31,8 +31,9 @@ enum Direction {
 int main(int argc, char *argv[]) {
     flecs::world ecs(argc, argv);
 
-    ecs.component<Movement>().add(flecs::Union);
-    ecs.component<Direction>().add(flecs::Union);
+    // TODO
+    // ecs.component<Movement>().add(flecs::Union);
+    // ecs.component<Direction>().add(flecs::Union);
 
     // Create a query that subscribes for all entities that have a Direction
     // and that are walking.

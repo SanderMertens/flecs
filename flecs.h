@@ -64,11 +64,6 @@
  */
 // #define FLECS_LEGACY
 
-/** @def FLECS_NO_DEPRECATED_WARNINGS
- * disables deprecated warnings
- */
-#define FLECS_NO_DEPRECATED_WARNINGS
-
 /** @def FLECS_ACCURATE_COUNTERS
  * Define to ensure that global counters used for statistics (such as the
  * allocation counters in the OS API) are accurate in multithreaded

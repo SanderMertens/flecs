@@ -188,7 +188,7 @@ The following table provides an overview of the query types with the init/fini f
 | Kind   | Type           | Init              | Fini              | Descriptor type     |
 |--------|----------------|-------------------|-------------------|---------------------|
 | Query | `ecs_query_t` | `ecs_query_init` | `ecs_query_fini` | `ecs_query_desc_t` |
-| Query  | `ecs_query_cache_t`  | `ecs_query_cache_init`  | `ecs_query_cache_fini`  | `ecs_query_desc_t`  |
+| Query  | `ecs_query_cache_t`  | `ecs_query_cache_init`  | `ecs_query_fini`  | `ecs_query_desc_t`  |
 | Rule   | `ecs_query_impl_t`   | `ecs_query_init`   | `ecs_query_fini`   | `ecs_query_desc_t` |
 
 Additionally the descriptor types for systems (`ecs_system_desc_t`) and observers (`ecs_observer_desc_t`) embed the `ecs_query_desc_t` descriptor type.

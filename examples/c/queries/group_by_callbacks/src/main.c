@@ -114,7 +114,7 @@ int main(int argc, char *argv[]) {
         Position *p = ecs_field(&it, Position, 1);
         char *table_str = ecs_table_str(ecs, it.table);
         char *group_str = ecs_get_fullpath(ecs, it.group_id);
-        group_ctx *ctx = ecs_query_cache_get_group_ctx(q, it.group_id);
+        group_ctx *ctx = ecs_query_get_group_ctx(q, it.group_id);
 
         printf(" - group %s: table [%s]\n", group_str, table_str);
         printf("   counter: %d\n", ctx->counter);
@@ -129,7 +129,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Deleting the query will call the on_group_deleted callback
-    ecs_query_cache_fini(q);
+    ecs_query_fini(q);
 
     // Output:
     //   Group Third created

@@ -28,24 +28,23 @@ int main(int argc, char *argv[]) {
     // when query::changed() is called.
     // Each query has its own private dirty state which is reset only when the
     // query is iterated.
-    ecs_query_cache_t *q_read = ecs_query(world, {
+    ecs_query_t *q_read = ecs_query(world, {
         .terms = {{ .id = ecs_id(Position), .inout = EcsIn }}
     });
 
     // Create a query that writes the component based on a Dirty state.
-    ecs_query_cache_t *q_write = ecs_query(world, {
-        .filter = {
-            .terms = {
-                // Only match if Dirty is shared from prefab
-                { 
-                    .id = ecs_id(Dirty), 
-                    .inout = EcsIn,
-                    .src.id = EcsUp 
-                },
-                { .id = ecs_id(Position) }
+    ecs_query_t *q_write = ecs_query(world, {
+        .terms = {
+            // Only match if Dirty is shared from prefab
+            { 
+                .id = ecs_id(Dirty), 
+                .inout = EcsIn,
+                .src.id = EcsUp,
+                .trav = EcsIsA
             },
-            .instanced = true // Instanced iteration is faster (see example)
-        }
+            { .id = ecs_id(Position) }
+        },
+        .flags = EcsQueryIsInstanced // Instanced iteration is faster (see example)
     });
 
     // Create two prefabs with a Dirty component. We can use this to share a
@@ -78,7 +77,7 @@ int main(int argc, char *argv[]) {
     // tables it is matched with has changed. Since this is the first time that
     // we check this and the query is matched with the tables we just created,
     // the function will return true.
-    printf("q_read changed: %d\n", ecs_query_changed(q_read, NULL));
+    printf("q_read changed: %d\n", ecs_query_changed(q_read));
 
     // The changed state will remain true until we have iterated each table.
     ecs_iter_t it = ecs_query_iter(world, q_read);
@@ -89,12 +88,12 @@ int main(int argc, char *argv[]) {
         // will show up as changed.
         char *table_str = ecs_table_str(world, it.table);
         printf("it.changed for table [%s]: %d\n", table_str,
-            ecs_query_changed(q_read, &it));
+            ecs_iter_changed(&it));
         ecs_os_free(table_str);
     }
 
     // Now that we have iterated all tables, the dirty state is reset.
-    printf("q_read changed: %d\n\n", ecs_query_changed(q_read, NULL));
+    printf("q_read changed: %d\n\n", ecs_query_changed(q_read));
 
     // Iterate the write query. Because the Position term is InOut (default)
     // iterating the query will write to the dirty state of iterated tables.
@@ -126,14 +125,14 @@ int main(int argc, char *argv[]) {
     }
 
     // One of the tables has changed, so q_read.changed() will return true
-    printf("\nq_read changed: %d\n", ecs_query_changed(q_read, NULL));
+    printf("\nq_read changed: %d\n", ecs_query_changed(q_read));
 
     // When we iterate the read query, we'll see that one table has changed.
     it = ecs_query_iter(world, q_read);
     while (ecs_query_next(&it)) {
         char *table_str = ecs_table_str(world, it.table);
         printf("it.changed for table [%s]: %d\n", table_str,
-            ecs_query_changed(q_read, &it));
+            ecs_iter_changed(&it));
         ecs_os_free(table_str);
     }
 

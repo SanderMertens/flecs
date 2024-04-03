@@ -80,11 +80,8 @@ int main(int argc, char *argv[]) {
     }
 
     // Print ecs positions
-    it = ecs_term_iter(ecs, &(ecs_term_t) {
-        .id = ecs_pair(ecs_id(Position), World)
-    });
-
-    while (ecs_term_next(&it)) {
+    it = ecs_each_pair_t(ecs, Position, World);
+    while (ecs_each_next(&it)) {
         Position *p = ecs_field(&it, Position, 1);
         for (int i = 0; i < it.count; i ++) {
             printf("%s: {%f, %f}\n", ecs_get_name(ecs, it.entities[i]),

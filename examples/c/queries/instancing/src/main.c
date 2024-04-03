@@ -40,14 +40,12 @@ int main(int argc, char *argv[]) {
     // Create a query for Position, Velocity. We'll create a few entities that
     // have Velocity as owned and shared component.
     ecs_query_t *q = ecs_query(world, {
-        .filter = {
-            .terms = {
-                // Position must always be owned by the entity
-                { .id = ecs_id(Position), .src.id = EcsSelf }, 
-                { .id = ecs_id(Velocity) } // Velocity may be shared (default)
-            },
-            .instanced = true
-        }
+        .terms = {
+            // Position must always be owned by the entity
+            { .id = ecs_id(Position), .src.id = EcsSelf }, 
+            { .id = ecs_id(Velocity) } // Velocity may be shared (default)
+        },
+        .flags = EcsQueryIsInstanced
     });
 
     // Create a prefab with Velocity. Prefabs are not matched with queries.

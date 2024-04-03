@@ -25,7 +25,7 @@ double distance_sqr(const Position *p1, const Position *p2) {
 }
 
 void Collide(ecs_iter_t *it) {
-    ecs_query_cache_t *q_collide = it->ctx; // Get query from system context
+    ecs_query_t *q_collide = it->ctx; // Get query from system context
     const Position *p1 = ecs_field(it, Position, 1);
     const Radius *r1 = ecs_field(it, Radius, 2);
 
@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
 
     // Create a query for Position that we can use inside the collide system to
     // check each entity with each other entity.
-    ecs_query_cache_t  *q_position = ecs_query(ecs, {
+    ecs_query_t  *q_position = ecs_query(ecs, {
         .terms = {
             { ecs_id(Position), .inout = EcsIn },
             { ecs_id(Radius), .inout = EcsIn }

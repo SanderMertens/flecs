@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
 
         // Optional, but lets us iterate entities in bulk even though the query
         // returns fields with mixed counts (see query manual).
-        .filter.instanced = true
+        .flags = EcsQueryIsInstanced
     });
 
     // In a query string expression you can use the $ shortcut for singletons:

@@ -25,7 +25,7 @@ void print_position(ecs_iter_t *it) {
 }
 
 // Iterate query, printed values will be ordered
-void print_query(ecs_world_t *ecs, ecs_query_cache_t *q) {
+void print_query(ecs_world_t *ecs, ecs_query_t *q) {
     ecs_iter_t it = ecs_query_iter(ecs, q);
     while (ecs_query_next(&it)) {
         print_position(&it);
