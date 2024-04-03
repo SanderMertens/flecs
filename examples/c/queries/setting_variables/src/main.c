@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 // This example extends the component_inheritance example, and shows how
-// we can use a single rule to match units from different players and platoons
+// we can use a single query to match units from different players and platoons
 // by setting query variables before we iterate.
 //
 // The units in this example belong to a platoon, with the platoons belonging
@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    // Create a rule to find all RangedUnits for a platoon/player. The 
+    // Create a query to find all RangedUnits for a platoon/player. The 
     // equivalent query in the query DSL would look like this:
     //   (Platoon, $Platoon), Player($Platoon, $Player)
     //
@@ -76,7 +76,7 @@ int main(int argc, char *argv[]) {
         }
     });
 
-    // If we would iterate this rule it would return all ranged units for all
+    // If we would iterate this query it would return all ranged units for all
     // platoons & for all players. We can limit the results to just a single
     // platoon or a single player setting a variable beforehand. In this example
     // we'll just find all platoons & ranged units for a single player.
@@ -84,7 +84,7 @@ int main(int argc, char *argv[]) {
     int player_var = ecs_query_find_var(q, "player");
     int platoon_var = ecs_query_find_var(q, "platoon");
 
-    // Iterate rule, limit the results to units of MyPlayer
+    // Iterate query, limit the results to units of MyPlayer
     ecs_iter_t it = ecs_query_iter(ecs, q);
     ecs_iter_set_var(&it, player_var, ecs_lookup(ecs, "MyPlayer"));
 

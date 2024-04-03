@@ -1,7 +1,7 @@
 #include <cyclic_variables.h>
 #include <iostream>
 
-// This example shows how a rule may have terms with cyclic dependencies on
+// This example shows how a query may have terms with cyclic dependencies on
 // variables.
 
 struct Likes { };
@@ -20,7 +20,7 @@ int main(int, char *[]) {
     jane.add<Likes>(john);
     bob.add<Likes>(jane); // inserting a bit of drama
 
-    // The following rule will only return entities that have a cyclic Likes
+    // The following query will only return entities that have a cyclic Likes
     // relationship- that is they must both like each other.
     //
     // The equivalent query in the DSL is:
@@ -57,9 +57,9 @@ int main(int, char *[]) {
     //  Jane likes John
     //  John likes Jane
 
-    // Note that the rule returns each pair twice. The reason for this is that
-    // the goal of the rule engine is to return all "facts" that are true
+    // Note that the query returns each pair twice. The reason for this is that
+    // the goal of the query engine is to return all "facts" that are true
     // within the given constraints. Since we did not give it any constraints
-    // that would favor a person being matched by X or Y, the rule engine
+    // that would favor a person being matched by X or Y, the query engine
     // returns both.
 }

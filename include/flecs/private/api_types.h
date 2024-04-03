@@ -131,7 +131,7 @@ typedef struct ecs_query_op_profile_t {
     int32_t count[2]; /* 0 = enter, 1 = redo */
 } ecs_query_op_profile_t;
 
-/** Rule-iterator specific data */
+/** Query iterator */
 typedef struct ecs_query_iter_t {
     const ecs_query_t *query;
     struct ecs_var_t *vars;               /* Variable storage */

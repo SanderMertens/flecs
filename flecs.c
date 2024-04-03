@@ -1630,7 +1630,7 @@ typedef struct {
     bool in_or; /* Whether we're in an or chain */
 } ecs_query_compile_ctrlflow_t;
 
-/* Rule compiler state */
+/* Query compiler state */
 typedef struct {
     ecs_vec_t *ops;
     ecs_write_flags_t written; /* Bitmask to check which variables have been written */
@@ -1646,7 +1646,7 @@ typedef struct {
     int32_t skipped; /* Term skipped during compilation */
 } ecs_query_compile_ctx_t;    
 
-/* Rule run state */
+/* Query run state */
 typedef struct {
     uint64_t *written;                 /* Bitset to check which variables have been written */
     ecs_query_lbl_t op_index;          /* Currently evaluated operation */

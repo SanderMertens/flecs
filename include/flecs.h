@@ -4475,8 +4475,8 @@ ecs_entity_t ecs_iter_first(
  * Example:
  *
  * @code
- * // Rule that matches (Eats, *)
- * ecs_query_impl_t *r = ecs_query_init(world, &(ecs_query_desc_t){
+ * // Query that matches (Eats, *)
+ * ecs_query_t *q = ecs_query(world, {
  *   .terms = {
  *     { .first.id = Eats, .second.name = "$food" }
  *   }
@@ -4485,7 +4485,7 @@ ecs_entity_t ecs_iter_first(
  * int food_var = ecs_query_find_var(r, "food");
  * 
  * // Set Food to Apples, so we're only matching (Eats, Apples)
- * ecs_iter_t it = ecs_query_iter(world, r);
+ * ecs_iter_t it = ecs_query_iter(world, q);
  * ecs_iter_set_var(&it, food_var, Apples);
  * 
  * while (ecs_query_next(&it)) {

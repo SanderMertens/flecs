@@ -40,10 +40,10 @@ int main(int, char *[]) {
     ecs.entity("builder_1").add<Builder>();
     ecs.entity("builder_2").add<Builder>();
 
-    // Create a rule to find all ranged units
+    // Create a query to find all ranged units
     flecs::query<RangedUnit> q = ecs.query<RangedUnit>();
 
-    // Iterate the rule
+    // Iterate the query
     q.each([](flecs::entity e, RangedUnit) {
         std::cout << "Unit " << e.name() << " found\n";
     });

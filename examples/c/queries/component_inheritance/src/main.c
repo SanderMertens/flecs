@@ -43,12 +43,12 @@ int main(int argc, char *argv[]) {
     ecs_entity_t builder_2 = ecs_new_entity(ecs, "builder_2");
     ecs_add(ecs, builder_2, Builder);
 
-    // Create a rule to find all ranged units
+    // Create a query to find all ranged units
     ecs_query_t *q = ecs_query(ecs, {
         .terms = {{ .id = RangedUnit }}
     });
 
-    // Iterate the rule
+    // Iterate the query
     ecs_iter_t it = ecs_query_iter(ecs, q);
     while (ecs_query_next(&it)) {
         for (int i = 0; i < it.count; i ++) {

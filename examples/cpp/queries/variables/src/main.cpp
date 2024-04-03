@@ -23,7 +23,7 @@ int main(int, char *[]) {
         .add<Eats>(Chocolate)
         .add<Eats>(Apples);
 
-    // Here we're creating a rule that in the query DSL would look like this:
+    // Here we're creating a query that in the query DSL would look like this:
     //   Eats($this, $Food), Healthy($Food)
     //
     // Rules are similar to queries, but support more advanced features. This
@@ -47,7 +47,7 @@ int main(int, char *[]) {
     // value while we're iterating.
     int food_var = q.find_var("food");
 
-    // Iterate the rule
+    // Iterate the query
     q.each([&](flecs::iter& it, size_t index) {
         std::cout 
             << it.entity(index).name()

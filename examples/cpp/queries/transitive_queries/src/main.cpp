@@ -91,7 +91,7 @@ int main(int, char *[]) {
 
     // Create a query that finds the countries persons live in. Note that these
     // have not been explicitly added to the Person entities, but because the
-    // LocatedIn is transitive, the rule engine will traverse the relationship
+    // LocatedIn is transitive, the query engine will traverse the relationship
     // until it found something that is a country.
     // 
     // The equivalent of this query in the DSL is:
@@ -106,7 +106,7 @@ int main(int, char *[]) {
     // value while we're iterating.
     int location_var = q.find_var("location");
 
-    // Iterate the rule
+    // Iterate the query
     q.each([&](flecs::iter& it, size_t index) {
         std::cout 
             << it.entity(index).name()

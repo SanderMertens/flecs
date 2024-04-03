@@ -1,7 +1,7 @@
 #include <cyclic_variables.h>
 #include <stdio.h>
 
-// This example shows how a rule may have terms with cyclic dependencies on
+// This example shows how a query may have terms with cyclic dependencies on
 // variables.
 
 int main(int argc, char *argv[]) {
@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
     ecs_add_pair(ecs, jane, Likes, john);
     ecs_add_pair(ecs, bob, Likes, jane); // inserting a bit of drama
 
-    // The following rule will only return entities that have a cyclic Likes
+    // The following query will only return entities that have a cyclic Likes
     // relationship- that is they must both like each other.
     //
     // The equivalent query in the DSL is:
@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
     //
     // Because this query does not use This at all, the entities array will not
     // be populated, and it.count() will always be 0.
-    // Create a rule to find all ranged units
+    // Create a query to find all ranged units
     ecs_query_t *q = ecs_query(ecs, {
         .terms = {
             { .first.id = Likes, .src.name = "$x", .second.name = "$y" },
@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
     int x_var = ecs_query_find_var(q, "x");
     int y_var = ecs_query_find_var(q, "y");
 
-    // Iterate the rule
+    // Iterate the query
     ecs_iter_t it = ecs_query_iter(ecs, q);
     while (ecs_query_next(&it)) {
         ecs_entity_t x = ecs_iter_get_var(&it, x_var);
@@ -62,10 +62,10 @@ int main(int argc, char *argv[]) {
     //  John likes Jane
     //  Alice likes Bob
 
-    // Note that the rule returns each pair twice. The reason for this is that
-    // the goal of the rule engine is to return all "facts" that are true
+    // Note that the query returns each pair twice. The reason for this is that
+    // the goal of the query engine is to return all "facts" that are true
     // within the given constraints. Since we did not give it any constraints
-    // that would favor a person being matched by X or Y, the rule engine
+    // that would favor a person being matched by X or Y, the query
     // returns both.
 
     return ecs_fini(ecs);

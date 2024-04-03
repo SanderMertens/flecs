@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
     ecs_add_pair(ecs, alice, Eats, Chocolate);
     ecs_add_pair(ecs, alice, Eats, Apples);
 
-    // Here we're creating a rule that in the query DSL would look like this:
+    // Here we're creating a query that in the query DSL would look like this:
     //   Eats($this, $Food), Healthy($Food)
     //
     // Rules are similar to queries, but support more advanced features. This
@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
     // value while we're iterating.
     int food_var = ecs_query_find_var(q, "food");
 
-    // Iterate the rule
+    // Iterate the query
     ecs_iter_t it = ecs_query_iter(ecs, q);
     while (ecs_query_next(&it)) {
         ecs_entity_t food = ecs_iter_get_var(&it, food_var);

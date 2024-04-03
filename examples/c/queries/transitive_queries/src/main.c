@@ -92,7 +92,7 @@ int main(int argc, char *argv[]) {
 
     // Create a query that finds the countries persons live in. Note that these
     // have not been explicitly added to the Person entities, but because the
-    // LocatedIn is transitive, the rule engine will traverse the relationship
+    // LocatedIn is transitive, the query engine will traverse the relationship
     // until it found something that is a country.
     // 
     // The equivalent of this query in the DSL is:
@@ -109,7 +109,7 @@ int main(int argc, char *argv[]) {
     // value while we're iterating.
     int location_var = ecs_query_find_var(q, "location");
 
-    // Iterate the rule
+    // Iterate the query
     ecs_iter_t it = ecs_query_iter(ecs, q);
     while (ecs_query_next(&it)) {
         ecs_entity_t location = ecs_iter_get_var(&it, location_var);
