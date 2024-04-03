@@ -31,9 +31,9 @@
  */
 
 /* Flecs version macro */
-#define FLECS_VERSION_MAJOR 3
-#define FLECS_VERSION_MINOR 2
-#define FLECS_VERSION_PATCH 12
+#define FLECS_VERSION_MAJOR 4
+#define FLECS_VERSION_MINOR 0
+#define FLECS_VERSION_PATCH 0
 #define FLECS_VERSION FLECS_VERSION_IMPL(\
     FLECS_VERSION_MAJOR, FLECS_VERSION_MINOR, FLECS_VERSION_PATCH)
 
@@ -749,7 +749,7 @@ struct ecs_query_t {
     ecs_world_t *world;         /**< World mixin */
     ecs_stage_t *stage;
 
-    int32_t eval_count;        /**< Number of times query is evaluated */
+    int32_t eval_count;         /**< Number of times query is evaluated */
 };
 
 /* An observer reacts to events matching a query */
