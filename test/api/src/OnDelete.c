@@ -954,6 +954,8 @@ void OnDelete_component_throw(void) {
 
     ECS_COMPONENT(world, Position);
 
+    ecs_add_pair(world, ecs_id(Position), EcsOnDelete, EcsPanic);
+
     ecs_set(world, 0, Position, {10, 20});
 
     test_expect_abort();
@@ -2449,10 +2451,6 @@ void OnDelete_remove_on_delete_action(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
-
-    test_assert( ecs_has_pair(world, ecs_id(Position), EcsOnDelete, EcsPanic));
-
-    ecs_remove_pair(world, ecs_id(Position), EcsOnDelete, EcsWildcard);
 
     test_assert( !ecs_has_pair(world, ecs_id(Position), EcsOnDelete, EcsPanic));
 
