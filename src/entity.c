@@ -3241,7 +3241,7 @@ error:
     return 0;
 }
 
-#ifdef FLECS_DEBUG
+#if defined(FLECS_DEBUG) || defined(FLECS_KEEP_ASSERT)
 static
 bool flecs_can_toggle(
     ecs_world_t *world,

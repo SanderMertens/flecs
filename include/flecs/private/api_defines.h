@@ -199,6 +199,13 @@ typedef uint64_t ecs_flags64_t;
 /* Bitset type that can store exactly as many bits as there are terms */
 #define ecs_termset_t ecs_flagsn_t(FLECS_TERM_COUNT_MAX)
 
+/* Utility macro's for setting/clearing termset bits */
+#define ECS_TERMSET_SET(set, flag) ((set) |= (ecs_termset_t)(flag))
+#define ECS_TERMSET_CLEAR(set, flag) ((set) &= (ecs_termset_t)~(flag))
+#define ECS_TERMSET_COND(set, flag, cond) ((cond) \
+    ? (ECS_TERMSET_SET(set, flag)) \
+    : (ECS_TERMSET_CLEAR(set, flag)))
+
 /* Keep unsigned integers out of the codebase as they do more harm than good */
 typedef int32_t ecs_size_t;
 

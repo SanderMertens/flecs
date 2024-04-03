@@ -5881,11 +5881,6 @@ void Observer_cache_test_8(void) {
     ecs_fini(world);
 }
 
-static
-void testobserver(ecs_iter_t *it) {
-    printf("%s\n", ecs_iter_str(it));
-}
-
 void Observer_cache_test_9(void) {
     ecs_world_t *world = ecs_mini();
 

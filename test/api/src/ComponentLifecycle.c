@@ -1552,39 +1552,6 @@ void other_type_dtor(
     other_dtor_invoked ++;
 }
 
-static
-void other_comp_dtor(
-    void *ptr,
-    int32_t count,
-    const ecs_type_info_t *info)
-{
-    test_int(count, 1);
-    test_assert(ptr != NULL);
-
-    Entity *comp = ptr;
-
-    ecs_world_t *world = comp->world;
-    ecs_entity_t e = comp->e;
-    test_assert(e != 0);
-    test_assert(ecs_is_valid(world, e));
-
-    test_assert(comp->other != 0);
-
-    if (ecs_is_valid(world, comp->other)) {
-        if (ecs_has(world, comp->other, String)) {
-            const String *str_ptr = ecs_get(world, comp->other, String);
-            test_assert(str_ptr != NULL);
-            test_assert(str_ptr->str != NULL);
-            test_str(str_ptr->str, "Foo");
-            other_dtor_valid_entity ++;
-        } else {
-            test_assert(ecs_get(world, comp->other, String) == NULL);
-        }
-    }
-
-    other_dtor_invoked ++;
-}
-
 ECS_MOVE(Entity, dst, src, {
     dst->world = src->world;
     dst->e = src->e;

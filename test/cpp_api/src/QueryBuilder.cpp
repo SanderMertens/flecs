@@ -4013,18 +4013,6 @@ void QueryBuilder_with_r_t_inout(void) {
 }
 
 static
-int filter_arg(flecs::query<Self> f) {
-    int32_t count = 0;
-
-    f.each([&](flecs::entity e, Self& s) {
-        test_assert(e == s.value);
-        count ++;
-    });
-
-    return count;
-}
-
-static
 int filter_move_arg(flecs::query<Self>&& f) {
     int32_t count = 0;
 

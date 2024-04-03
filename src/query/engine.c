@@ -78,7 +78,7 @@ void flecs_reset_source_set_flag(
     int32_t field_index)
 {
     ecs_assert(field_index != -1, ECS_INTERNAL_ERROR, NULL);
-    it->up_fields &= (ecs_termset_t)~(1llu << field_index);
+    ECS_TERMSET_CLEAR(it->up_fields, 1u << field_index);
 }
 
 static
@@ -87,7 +87,7 @@ void flecs_set_source_set_flag(
     int32_t field_index)
 {
     ecs_assert(field_index != -1, ECS_INTERNAL_ERROR, NULL);
-    it->up_fields |= (1u << field_index);
+    ECS_TERMSET_SET(it->up_fields, 1u << field_index);
 }
 
 static
@@ -1706,7 +1706,7 @@ bool flecs_query_idsright(
         ecs_id_t id = flecs_query_op_get_id_w_written(op, op->written, ctx);
         it->ids[op->field_index] = id;
         it->sources[op->field_index] = EcsWildcard;
-        it->set_fields |= (1llu << op->field_index);
+        ECS_TERMSET_SET(it->set_fields, 1u << op->field_index);
     }
 
     return true;
@@ -1756,7 +1756,7 @@ bool flecs_query_idsleft(
         ecs_id_t id = flecs_query_op_get_id_w_written(op, op->written, ctx);
         it->ids[op->field_index] = id;
         it->sources[op->field_index] = EcsWildcard;
-        it->set_fields |= (1llu << op->field_index);
+        ECS_TERMSET_SET(it->set_fields, 1u << op->field_index);
     }
 
     return true;
@@ -2806,16 +2806,15 @@ void flecs_query_reset_after_block(
 
     /* Set/unset field */
     ecs_iter_t *it = ctx->it;
-    ecs_termset_t bit = (ecs_termset_t)(1u << field);
     if (result) {
-        it->set_fields |= bit;
+        ECS_TERMSET_SET(it->set_fields, 1u << field);
         return;
     }
 
     /* Reset state after a field was not matched */
     ctx->written[op_index] = ctx->written[ctx->op_index];
     ctx->op_index = op_index;
-    it->set_fields &= ~bit;
+    ECS_TERMSET_CLEAR(it->set_fields, 1u << field);
 
     /* Ignore variables written by Not operation */
     uint64_t *written = ctx->written;
@@ -2871,7 +2870,7 @@ bool flecs_query_run_block(
     bool result = flecs_query_run_until(
         redo, ctx, qit->ops, ctx->op_index, op_ctx->op_index, op->next);
 
-    op_ctx->op_index = ctx->op_index - 1;
+    op_ctx->op_index = flecs_itolbl(ctx->op_index - 1);
     return result;
 }
 
@@ -2905,7 +2904,7 @@ bool flecs_query_run_until_for_select_or(
     if (redo) {
         /* If redoing, start from the last instruction of the last executed 
          * sequence */
-        cur = last_for_cur - 1;
+        cur = flecs_itolbl(last_for_cur - 1);
     }
 
     flecs_query_run_until(redo, ctx, ops, first, cur, last_for_cur);
@@ -2944,7 +2943,7 @@ bool flecs_query_select_or(
         ctx->written[cur] = op->written;
 
         result = flecs_query_run_until_for_select_or(
-            redo, ctx, ops, first - 1, cur, last);
+            redo, ctx, ops, flecs_itolbl(first - 1), cur, last);
 
         if (result) {
             if (first == cur) {
@@ -2983,7 +2982,8 @@ bool flecs_query_select_or(
             do {
                 ctx->written[prev] = ctx->written[last];
 
-                flecs_query_run_until(false, ctx, ops, first - 1, prev, cur);
+                flecs_query_run_until(false, ctx, ops, flecs_itolbl(first - 1), 
+                    prev, cur);
 
                 if (ctx->op_index == last) {
                     /* Duplicate match was found, find next result */
@@ -3192,7 +3192,7 @@ void flecs_query_populate_field(
     ecs_entity_t src = it->sources[field_index];
     if (!src) {
         flecs_query_populate_field_from_range(it, range, field_index, index);
-        ECS_BIT_CLEAR(it->shared_fields, (ecs_termset_t)(1u << field_index));
+        ECS_TERMSET_CLEAR(it->shared_fields, 1u << field_index);
     } else {
         ecs_record_t *r = flecs_entities_get(ctx->world, src);
         ecs_table_t *src_table = r->table;
@@ -3204,7 +3204,7 @@ void flecs_query_populate_field(
                     it->sizes[field_index],
                     ECS_RECORD_TO_ROW(r->row));
 
-                ECS_BIT_SETN(it->shared_fields, (ecs_termset_t)field_index);
+                ECS_TERMSET_SET(it->shared_fields, 1u << field_index);
             }
         }
     }

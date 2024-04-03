@@ -685,41 +685,6 @@ void flecs_fini_store(ecs_world_t *world) {
     ecs_map_fini(&world->store.entity_to_depth);
 }
 
-/* Implementation for iterable mixin */
-static
-bool flecs_world_iter_next(
-    ecs_iter_t *it)
-{
-    if (ECS_BIT_IS_SET(it->flags, EcsIterIsValid)) {
-        ECS_BIT_CLEAR(it->flags, EcsIterIsValid);
-        ecs_iter_fini(it);
-        return false;
-    }
-
-    ecs_world_t *world = it->real_world;
-    it->entities = ECS_CONST_CAST(ecs_entity_t*, flecs_entities_ids(world));
-    it->count = flecs_entities_count(world);
-    flecs_iter_validate(it);
-
-    return true;
-}
-
-static
-void flecs_world_iter_init(
-    const ecs_world_t *world,
-    const ecs_poly_t *poly,
-    ecs_iter_t *iter)
-{
-    ecs_poly_assert(poly, ecs_world_t);
-    (void)poly;
-
-    iter[0] = (ecs_iter_t){
-        .world = ECS_CONST_CAST(ecs_world_t*, world),
-        .real_world = ECS_CONST_CAST(ecs_world_t*, ecs_get_world(world)),
-        .next = flecs_world_iter_next
-    };
-}
-
 static 
 void flecs_world_allocators_init(
     ecs_world_t *world)

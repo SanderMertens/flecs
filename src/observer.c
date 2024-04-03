@@ -463,7 +463,6 @@ bool flecs_multi_observer_invoke(
     int32_t pivot_term = it->term_index;
     ecs_term_t *term = &o->query->terms[pivot_term];
 
-    int32_t column = it->columns[0];
     bool is_not = term->oper == EcsNot;
     if (is_not) {
         table = it->other_table;
@@ -472,10 +471,6 @@ bool flecs_multi_observer_invoke(
 
     table = table ? table : &world->store.root;
     prev_table = prev_table ? prev_table : &world->store.root;
-
-    if (column < 0) {
-        column = -column;
-    }
 
     ecs_iter_t user_it;
 
@@ -749,6 +744,7 @@ int flecs_multi_observer_init(
 
     int i, term_count = query->term_count;
     ecs_assert(term_count < FLECS_TERM_COUNT_MAX, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(term_count > 0, ECS_INTERNAL_ERROR, NULL);
 
     bool optional_only = query->flags & EcsQueryMatchThis;
     bool has_not = false;
@@ -848,8 +844,10 @@ int flecs_multi_observer_init(
     if (has_not) {
         ecs_query_desc_t not_desc = desc->query;
         not_desc.expr = NULL;
+
         ecs_os_memcpy_n(not_desc.terms, observer->query->terms, 
-            ecs_term_t, term_count);
+            ecs_term_t, term_count); /* cast suppresses warning */
+  
         for (i = 0; i < term_count; i ++) {
             if (not_desc.terms[i].oper == EcsNot) {
                 not_desc.terms[i].oper = EcsOptional;
@@ -979,12 +977,13 @@ ecs_entity_t ecs_observer_init(
     ecs_world_t *world,
     const ecs_observer_desc_t *desc)
 {
+    ecs_entity_t entity = 0;
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!(world->flags & EcsWorldFini), ECS_INVALID_OPERATION, NULL);
 
-    ecs_entity_t entity = desc->entity;
+    entity = desc->entity;
     if (!entity) {
         entity = ecs_new(world, 0);
     }
@@ -1046,7 +1045,9 @@ ecs_entity_t ecs_observer_init(
 
     return entity;
 error:
-    ecs_delete(world, entity);
+    if (entity) {
+        ecs_delete(world, entity);
+    }
     return 0;
 }
 
@@ -1093,6 +1094,7 @@ void flecs_observer_fini(
     ecs_observer_t *observer)
 {
     ecs_assert(observer != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(observer->query != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_world_t *world = observer->query->world;
 
     ecs_observer_t **children = ecs_vec_first(&observer->children);

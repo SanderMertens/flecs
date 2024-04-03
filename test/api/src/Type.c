@@ -1,13 +1,6 @@
 #include <api.h>
 #include <stdio.h>
 
-static
-char* type_str(ecs_world_t *world, ecs_entity_t type_ent) {
-    const ecs_type_t *t = ecs_get_type(world, type_ent);
-    test_assert(t != NULL);
-    return ecs_type_str(world, t);
-}
-
 void Type_setup(void) {
     ecs_log_set_level(-2);
 }

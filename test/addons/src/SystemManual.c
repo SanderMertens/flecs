@@ -85,11 +85,6 @@ void SystemManual_1_type_1_component(void) {
 static int normal_count;
 
 static
-void NormalSystem(ecs_iter_t *it) {
-    normal_count ++;
-}
-
-static
 void AddVelocity(ecs_iter_t *it) {
     ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 2);
 

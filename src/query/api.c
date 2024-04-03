@@ -254,7 +254,7 @@ char* flecs_query_append_token(
     const char *src)
 {
     int32_t len = ecs_os_strlen(src);
-    ecs_os_strncpy(dst, src, len + 1);
+    ecs_os_memcpy(dst, src, len + 1);
     return dst + len + 1;
 }
 

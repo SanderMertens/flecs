@@ -1068,21 +1068,22 @@ int flecs_query_finalize_terms(
             nodata_terms ++;
             term->flags |= EcsTermNoData;
         } else if (term->oper != EcsNot) {
-            q->data_fields |= (1llu << term->field_index);
+            ECS_TERMSET_SET(q->data_fields, 1u << term->field_index);
 
             if (term->inout != EcsIn) {
-                q->write_fields |= (1llu << term->field_index);
+                ECS_TERMSET_SET(q->write_fields, 1u << term->field_index);
             }
             if (term->inout != EcsOut) {
-                q->read_fields |= (1llu << term->field_index);
+                ECS_TERMSET_SET(q->read_fields, 1u << term->field_index);
             }
             if (term->inout == EcsInOutDefault) {
-                q->shared_readonly_fields |= (1llu << term->field_index);
+                ECS_TERMSET_SET(q->shared_readonly_fields, 
+                    1u << term->field_index);
             }
         }
 
         if (ECS_TERM_REF_ID(&term->src) && (term->src.id & EcsIsEntity)) {
-            q->fixed_fields |= (1llu << term->field_index);
+            ECS_TERMSET_SET(q->fixed_fields, 1u << term->field_index);
         }
 
         ecs_id_record_t *idr = flecs_id_record_get(world, term->id);
@@ -1107,7 +1108,7 @@ int flecs_query_finalize_terms(
             if (!ecs_term_match_0(term) && term->oper != EcsNot && 
                 term->oper != EcsNotFrom) 
             {
-                q->set_fields |= (1llu << term->field_index);
+                ECS_TERMSET_SET(q->set_fields, 1u << term->field_index);
             }
         }
 
