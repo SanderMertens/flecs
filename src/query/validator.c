@@ -807,8 +807,8 @@ int flecs_term_finalize(
         trivial_term = false;
     }
 
-    ECS_BIT_COND(term->flags, EcsTermIsTrivial, trivial_term);
-    ECS_BIT_COND(term->flags, EcsTermIsCacheable, cacheable_term);
+    ECS_BIT_COND16(term->flags, EcsTermIsTrivial, trivial_term);
+    ECS_BIT_COND16(term->flags, EcsTermIsCacheable, cacheable_term);
 
     if (flecs_term_verify(world, term, ctx)) {
         return -1;
@@ -924,7 +924,7 @@ int flecs_query_finalize_terms(
 
         if (scope_nesting) {
             /* Terms inside a scope are not cacheable */
-            term->flags &= ~EcsTermIsCacheable;
+            ECS_BIT_CLEAR16(term->flags, EcsTermIsCacheable);
         }
 
         /* If one of the terms in an OR chain isn't cacheable, none are */
@@ -935,7 +935,7 @@ int flecs_query_finalize_terms(
                 if (term[-1].flags & EcsTermIsCacheable) {
                     cacheable_terms ++;
                 } else {
-                    term->flags &= ~EcsTermIsCacheable;
+                    ECS_BIT_CLEAR16(term->flags, EcsTermIsCacheable);
                 }
             } else {
                 cacheable_terms ++;
@@ -956,7 +956,7 @@ int flecs_query_finalize_terms(
                 }
                 if (terms[j].flags & EcsTermIsCacheable) {
                     cacheable_terms --;
-                    terms[j].flags &= ~EcsTermIsCacheable;
+                    ECS_BIT_CLEAR16(terms[j].flags, EcsTermIsCacheable);
                 }
             }
         }
@@ -1056,7 +1056,7 @@ int flecs_query_finalize_terms(
                     }
                     nodata_term = true;
                 }
-                q->data_fields &= ~(1llu << term->field_index);
+                q->data_fields &= (ecs_termset_t)~(1llu << term->field_index);
             }
         }
 

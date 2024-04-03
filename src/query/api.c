@@ -70,17 +70,6 @@ bool ecs_query_var_is_entity(
     return flecs_query_impl(q)->vars[var_id].kind == EcsVarEntity;
 }
 
-/* Implementation for iterable mixin */
-static
-void flecs_query_iter_mixin_init(
-    const ecs_world_t *world,
-    const ecs_poly_t *poly,
-    ecs_iter_t *iter)
-{
-    ecs_poly_assert(poly, ecs_query_t);
-    iter[0] = ecs_query_iter(world, ECS_CONST_CAST(ecs_query_t*, poly));
-}
-
 static
 int flecs_query_set_caching_policy(
     ecs_query_impl_t *impl,

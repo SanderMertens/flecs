@@ -261,14 +261,12 @@ int32_t ecs_search_relation(
 int32_t flecs_search_w_idr(
     const ecs_world_t *world,
     const ecs_table_t *table,
-    ecs_id_t id,
     ecs_id_t *id_out,
     ecs_id_record_t *idr)
 {
     if (!table) return -1;
 
     ecs_poly_assert(world, ecs_world_t);
-    ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
     (void)world;
 
     ecs_type_t type = table->type;

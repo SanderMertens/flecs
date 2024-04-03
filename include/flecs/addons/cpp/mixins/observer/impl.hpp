@@ -38,7 +38,7 @@ struct observer final : entity
     }
 
     flecs::query<> query() const {
-        return flecs::query<>(m_world, ecs_observer_get_query(m_world, m_id));
+        return flecs::query<>(ecs_observer_get_query(m_world, m_id));
     }
 };
 

@@ -253,7 +253,6 @@ bool flecs_isident(
 int32_t flecs_search_w_idr(
     const ecs_world_t *world,
     const ecs_table_t *table,
-    ecs_id_t id,
     ecs_id_t *id_out,
     ecs_id_record_t *idr);
 

@@ -1345,24 +1345,6 @@ ecs_query_cache_table_t* flecs_query_cache_get_table(
     return ecs_table_cache_get(&cache->cache, table);
 }
 
-int32_t ecs_query_table_count(
-    const ecs_query_t *query)
-{
-    return flecs_query_cache_table_count(flecs_query_impl(query)->cache);
-}
-
-int32_t ecs_query_empty_table_count(
-    const ecs_query_t *query)
-{
-    return flecs_query_cache_empty_table_count(flecs_query_impl(query)->cache);
-}
-
-int32_t ecs_query_entity_count(
-    const ecs_query_t *query)
-{
-    return flecs_query_cache_entity_count(flecs_query_impl(query)->cache);
-}
-
 void ecs_iter_set_group(
     ecs_iter_t *it,
     uint64_t group_id)

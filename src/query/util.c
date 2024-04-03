@@ -279,6 +279,7 @@ int32_t flecs_query_op_ref_str(
     return color_chars;
 }
 
+static
 void flecs_query_str_append_bitset(
     ecs_strbuf_t *buf,
     ecs_flags64_t bitset)

@@ -60,7 +60,7 @@ void flecs_query_populate_ptrs(
     int32_t i, field_count = it->field_count;
     ecs_data_t *data = &table->data;
     for (i = 0; i < field_count; i ++) {
-        ECS_BIT_CLEARN(it->shared_fields, i);
+        ECS_BIT_CLEAR(it->shared_fields, (ecs_termset_t)(1u << i));
 
         int32_t storage_column = node->storage_columns[i];
         ecs_size_t size = it->sizes[i];
@@ -145,7 +145,7 @@ void flecs_query_populate_ptrs_w_shared(
             ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
             it->ptrs[field_index] = ecs_vec_get(
                 &table->data.columns[storage_column].data, size, offset);
-            ECS_BIT_CLEARN(it->shared_fields, i);
+            ECS_BIT_CLEAR(it->shared_fields, (ecs_termset_t)(1u << i));
         }
     }
 }
@@ -228,10 +228,11 @@ void flecs_query_cache_init_mapped_fields(
         it->ids[field_index] = node->ids[i];
         it->sources[field_index] = node->sources[i];
 
-        ECS_BIT_CONDN(
-            it->set_fields, field_index, node->set_fields & (1llu << i));
-        ECS_BIT_CONDN(
-            it->up_fields, field_index, node->up_fields & (1llu << i));
+        ecs_termset_t bit = (ecs_termset_t)(1u << i);
+        ecs_termset_t field_bit = (ecs_termset_t)(1u << field_index);
+
+        ECS_BIT_COND(it->set_fields, field_bit, node->set_fields & bit);
+        ECS_BIT_COND(it->up_fields, field_bit, node->up_fields & bit);
     }
 }
 

@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
 
     // Create observer that listens for events from both self and parent
     ecs_observer(ecs, {
-        .filter = { .terms = {
+        .query = { .terms = {
             // Listen for Position events from self
             { .id = ecs_id(Position) },
             // Listen for Position events from parent

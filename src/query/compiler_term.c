@@ -665,6 +665,7 @@ int flecs_query_compile_builtin_pred(
     }
 
     ecs_assert(flags_src & EcsQueryIsVar, ECS_INTERNAL_ERROR, NULL);
+    (void)flags_src;
 
     if (!(write_state & (1ull << op->src.var))) {
         /* If this is an == operator with a right-hand side that resolves to a
@@ -839,6 +840,7 @@ bool flecs_query_select_all(
 }
 
 #ifdef FLECS_META
+static
 int flecs_query_compile_begin_member_term(
     ecs_world_t *world,
     ecs_term_t *term,
@@ -851,7 +853,7 @@ int flecs_query_compile_begin_member_term(
     first_id = ECS_TERM_REF_ID(&term->first);
 
     /* First compile as if it's a regular term, to match the component */
-    term->flags &= ~EcsTermIsMember;
+    term->flags &= (ecs_termset_t)~EcsTermIsMember;
 
     /* Replace term id with member parent (the component) */
     ecs_entity_t component = ecs_get_parent(world, first_id);
@@ -883,6 +885,7 @@ int flecs_query_compile_begin_member_term(
     return 0;
 }
 
+static
 int flecs_query_compile_end_member_term(
     ecs_world_t *world,
     ecs_query_impl_t *impl,
@@ -954,7 +957,7 @@ int flecs_query_compile_end_member_term(
          * This causes MemberEq to do double duty as 'each' instruction,
          * which is faster than having to go back & forth between instructions
          * while finding matching values. */
-        mbr_op.other = op->src.var + 1;
+        mbr_op.other = flecs_itolbl(op->src.var + 1);
 
         /* Mark entity variable as written */
         flecs_query_write_ctx(evar, ctx, cond_write);

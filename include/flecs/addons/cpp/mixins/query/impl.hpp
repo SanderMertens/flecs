@@ -13,12 +13,12 @@ namespace flecs
 struct query_base {
     query_base() { }
 
-    query_base(world_t *world, query_t *q)
+    query_base(query_t *q)
         : m_query(q) { 
             ecs_poly_claim(q);
         }
 
-    query_base(world_t *world, const query_t *q)
+    query_base(const query_t *q)
         : m_query(ECS_CONST_CAST(query_t*, q)) { 
             ecs_poly_claim(q);
         }
@@ -294,7 +294,7 @@ inline void world::each(flecs::id_t each_id, Func&& func) const {
 
 // query_base implementation
 inline query_base::operator flecs::query<> () const {
-    return flecs::query<>(m_query->world, m_query);
+    return flecs::query<>(m_query);
 }
 
 }

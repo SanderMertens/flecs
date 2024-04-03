@@ -3440,6 +3440,12 @@ int32_t ecs_poly_refcount(
 #define ECS_BIT_COND(flags, bit, cond) ((cond) \
     ? (ECS_BIT_SET(flags, bit)) \
     : (ECS_BIT_CLEAR(flags, bit)))
+
+#define ECS_BIT_CLEAR16(flags, bit) (flags) &= (ecs_flags16_t)~(bit)   
+#define ECS_BIT_COND16(flags, bit, cond) ((cond) \
+    ? (ECS_BIT_SET(flags, bit)) \
+    : (ECS_BIT_CLEAR16(flags, bit)))
+
 #define ECS_BIT_IS_SET(flags, bit) ((flags) & (bit))
 
 #define ECS_BIT_SETN(flags, n) ECS_BIT_SET(flags, 1llu << n)
@@ -27904,12 +27910,12 @@ namespace flecs
 struct query_base {
     query_base() { }
 
-    query_base(world_t *world, query_t *q)
+    query_base(query_t *q)
         : m_query(q) { 
             ecs_poly_claim(q);
         }
 
-    query_base(world_t *world, const query_t *q)
+    query_base(const query_t *q)
         : m_query(ECS_CONST_CAST(query_t*, q)) { 
             ecs_poly_claim(q);
         }
@@ -28185,7 +28191,7 @@ inline void world::each(flecs::id_t each_id, Func&& func) const {
 
 // query_base implementation
 inline query_base::operator flecs::query<> () const {
-    return flecs::query<>(m_query->world, m_query);
+    return flecs::query<>(m_query);
 }
 
 }
@@ -28412,7 +28418,7 @@ struct observer final : entity
     }
 
     flecs::query<> query() const {
-        return flecs::query<>(m_world, ecs_observer_get_query(m_world, m_id));
+        return flecs::query<>(ecs_observer_get_query(m_world, m_id));
     }
 };
 
@@ -28944,7 +28950,7 @@ struct system final : entity
     }
 
     flecs::query<> query() const {
-        return flecs::query<>(m_world, ecs_system_get_query(m_world, m_id));
+        return flecs::query<>(ecs_system_get_query(m_world, m_id));
     }
 
     system_runner_fluent run(ecs_ftime_t delta_time = 0.0f, void *param = nullptr) const {

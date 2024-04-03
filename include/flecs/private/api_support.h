@@ -108,6 +108,12 @@ int32_t ecs_poly_refcount(
 #define ECS_BIT_COND(flags, bit, cond) ((cond) \
     ? (ECS_BIT_SET(flags, bit)) \
     : (ECS_BIT_CLEAR(flags, bit)))
+
+#define ECS_BIT_CLEAR16(flags, bit) (flags) &= (ecs_flags16_t)~(bit)   
+#define ECS_BIT_COND16(flags, bit, cond) ((cond) \
+    ? (ECS_BIT_SET(flags, bit)) \
+    : (ECS_BIT_CLEAR16(flags, bit)))
+
 #define ECS_BIT_IS_SET(flags, bit) ((flags) & (bit))
 
 #define ECS_BIT_SETN(flags, n) ECS_BIT_SET(flags, 1llu << n)

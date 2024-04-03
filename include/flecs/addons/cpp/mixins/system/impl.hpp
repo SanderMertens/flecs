@@ -92,7 +92,7 @@ struct system final : entity
     }
 
     flecs::query<> query() const {
-        return flecs::query<>(m_world, ecs_system_get_query(m_world, m_id));
+        return flecs::query<>(ecs_system_get_query(m_world, m_id));
     }
 
     system_runner_fluent run(ecs_ftime_t delta_time = 0.0f, void *param = nullptr) const {

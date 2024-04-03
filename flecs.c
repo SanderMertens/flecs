@@ -3004,7 +3004,6 @@ bool flecs_isident(
 int32_t flecs_search_w_idr(
     const ecs_world_t *world,
     const ecs_table_t *table,
-    ecs_id_t id,
     ecs_id_t *id_out,
     ecs_id_record_t *idr);
 
@@ -13160,6 +13159,8 @@ int flecs_multi_observer_init(
         ecs_entity_t, observer->event_count);
 
     int i, term_count = query->term_count;
+    ecs_assert(term_count < FLECS_TERM_COUNT_MAX, ECS_INTERNAL_ERROR, NULL);
+
     bool optional_only = query->flags & EcsQueryMatchThis;
     bool has_not = false;
     for (i = 0; i < term_count; i ++) {
@@ -14589,14 +14590,12 @@ int32_t ecs_search_relation(
 int32_t flecs_search_w_idr(
     const ecs_world_t *world,
     const ecs_table_t *table,
-    ecs_id_t id,
     ecs_id_t *id_out,
     ecs_id_record_t *idr)
 {
     if (!table) return -1;
 
     ecs_poly_assert(world, ecs_world_t);
-    ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
     (void)world;
 
     ecs_type_t type = table->type;
@@ -23382,7 +23381,7 @@ static void UpdateIdInstance(ecs_iter_t *it, bool counter) {
 
         ecs_id_metric_ctx_t *ctx = mi[i].ctx;
         ecs_id_record_t *idr = ctx->idr;
-        if (flecs_search_w_idr(world, table, idr->id, NULL, idr) != -1) {
+        if (flecs_search_w_idr(world, table, NULL, idr) != -1) {
             if (!counter) {
                 m[i].value = 1.0;
             } else {
@@ -23433,7 +23432,7 @@ static void UpdateOneOfInstance(ecs_iter_t *it, bool counter) {
 
         ecs_id_record_t *idr = ctx->idr;
         ecs_id_t id;
-        if (flecs_search_w_idr(world, mtable, idr->id, &id, idr) == -1) {
+        if (flecs_search_w_idr(world, mtable, &id, idr) == -1) {
             ecs_delete(it->world, it->entities[i]);
             continue;
         }
@@ -35220,17 +35219,6 @@ bool ecs_query_var_is_entity(
     return flecs_query_impl(q)->vars[var_id].kind == EcsVarEntity;
 }
 
-/* Implementation for iterable mixin */
-static
-void flecs_query_iter_mixin_init(
-    const ecs_world_t *world,
-    const ecs_poly_t *poly,
-    ecs_iter_t *iter)
-{
-    ecs_poly_assert(poly, ecs_query_t);
-    iter[0] = ecs_query_iter(world, ECS_CONST_CAST(ecs_query_t*, poly));
-}
-
 static
 int flecs_query_set_caching_policy(
     ecs_query_impl_t *impl,
@@ -37022,24 +37010,6 @@ ecs_query_cache_table_t* flecs_query_cache_get_table(
     return ecs_table_cache_get(&cache->cache, table);
 }
 
-int32_t ecs_query_table_count(
-    const ecs_query_t *query)
-{
-    return flecs_query_cache_table_count(flecs_query_impl(query)->cache);
-}
-
-int32_t ecs_query_empty_table_count(
-    const ecs_query_t *query)
-{
-    return flecs_query_cache_empty_table_count(flecs_query_impl(query)->cache);
-}
-
-int32_t ecs_query_entity_count(
-    const ecs_query_t *query)
-{
-    return flecs_query_cache_entity_count(flecs_query_impl(query)->cache);
-}
-
 void ecs_iter_set_group(
     ecs_iter_t *it,
     uint64_t group_id)
@@ -37165,7 +37135,7 @@ void flecs_query_populate_ptrs(
     int32_t i, field_count = it->field_count;
     ecs_data_t *data = &table->data;
     for (i = 0; i < field_count; i ++) {
-        ECS_BIT_CLEARN(it->shared_fields, i);
+        ECS_BIT_CLEAR(it->shared_fields, (ecs_termset_t)(1u << i));
 
         int32_t storage_column = node->storage_columns[i];
         ecs_size_t size = it->sizes[i];
@@ -37250,7 +37220,7 @@ void flecs_query_populate_ptrs_w_shared(
             ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
             it->ptrs[field_index] = ecs_vec_get(
                 &table->data.columns[storage_column].data, size, offset);
-            ECS_BIT_CLEARN(it->shared_fields, i);
+            ECS_BIT_CLEAR(it->shared_fields, (ecs_termset_t)(1u << i));
         }
     }
 }
@@ -37333,10 +37303,11 @@ void flecs_query_cache_init_mapped_fields(
         it->ids[field_index] = node->ids[i];
         it->sources[field_index] = node->sources[i];
 
-        ECS_BIT_CONDN(
-            it->set_fields, field_index, node->set_fields & (1llu << i));
-        ECS_BIT_CONDN(
-            it->up_fields, field_index, node->up_fields & (1llu << i));
+        ecs_termset_t bit = (ecs_termset_t)(1u << i);
+        ecs_termset_t field_bit = (ecs_termset_t)(1u << field_index);
+
+        ECS_BIT_COND(it->set_fields, field_bit, node->set_fields & bit);
+        ECS_BIT_COND(it->up_fields, field_bit, node->up_fields & bit);
     }
 }
 
@@ -37891,6 +37862,7 @@ bool flecs_query_get_match_monitor(
         ecs_assert(match->columns != NULL, ECS_INTERNAL_ERROR, NULL);
         int32_t column = match->columns[field];
         ecs_assert(column >= 0, ECS_INTERNAL_ERROR, NULL);
+        (void)column;
 
         flecs_query_get_column_for_field(q, match, field, &tc);
         if (tc.column == -1) {
@@ -38069,6 +38041,7 @@ void flecs_query_init_query_monitors(
     }
 }
 
+static
 bool flecs_query_check_match_monitor(
     ecs_query_impl_t *impl,
     ecs_query_cache_table_match_t *match,
@@ -40251,6 +40224,7 @@ int flecs_query_compile_builtin_pred(
     }
 
     ecs_assert(flags_src & EcsQueryIsVar, ECS_INTERNAL_ERROR, NULL);
+    (void)flags_src;
 
     if (!(write_state & (1ull << op->src.var))) {
         /* If this is an == operator with a right-hand side that resolves to a
@@ -40425,6 +40399,7 @@ bool flecs_query_select_all(
 }
 
 #ifdef FLECS_META
+static
 int flecs_query_compile_begin_member_term(
     ecs_world_t *world,
     ecs_term_t *term,
@@ -40437,7 +40412,7 @@ int flecs_query_compile_begin_member_term(
     first_id = ECS_TERM_REF_ID(&term->first);
 
     /* First compile as if it's a regular term, to match the component */
-    term->flags &= ~EcsTermIsMember;
+    term->flags &= (ecs_termset_t)~EcsTermIsMember;
 
     /* Replace term id with member parent (the component) */
     ecs_entity_t component = ecs_get_parent(world, first_id);
@@ -40469,6 +40444,7 @@ int flecs_query_compile_begin_member_term(
     return 0;
 }
 
+static
 int flecs_query_compile_end_member_term(
     ecs_world_t *world,
     ecs_query_impl_t *impl,
@@ -40540,7 +40516,7 @@ int flecs_query_compile_end_member_term(
          * This causes MemberEq to do double duty as 'each' instruction,
          * which is faster than having to go back & forth between instructions
          * while finding matching values. */
-        mbr_op.other = op->src.var + 1;
+        mbr_op.other = flecs_itolbl(op->src.var + 1);
 
         /* Mark entity variable as written */
         flecs_query_write_ctx(evar, ctx, cond_write);
@@ -41097,7 +41073,7 @@ void flecs_reset_source_set_flag(
     int32_t field_index)
 {
     ecs_assert(field_index != -1, ECS_INTERNAL_ERROR, NULL);
-    it->up_fields &= ~(1u << field_index);
+    it->up_fields &= (ecs_termset_t)~(1llu << field_index);
 }
 
 static
@@ -43288,7 +43264,7 @@ flecs_query_row_mask_t flecs_query_get_row_mask(
         }
 
         if (not_fields & field_bit) {
-            it->set_fields &= ~field_bit;
+            it->set_fields &= (ecs_termset_t)~field_bit;
         } else if (and_fields & field_bit) {
             ecs_assert(it->set_fields & field_bit, ECS_INTERNAL_ERROR, NULL);
         } else {
@@ -43382,7 +43358,7 @@ bool flecs_query_toggle_cmp(
                 return false;
             }
 
-            it->set_fields &= ~(not_fields & up_fields);
+            it->set_fields &= (ecs_termset_t)~(not_fields & up_fields);
         }
     }
 
@@ -43825,7 +43801,7 @@ void flecs_query_reset_after_block(
 
     /* Set/unset field */
     ecs_iter_t *it = ctx->it;
-    ecs_flags64_t bit = (1llu << field);
+    ecs_termset_t bit = (ecs_termset_t)(1u << field);
     if (result) {
         it->set_fields |= bit;
         return;
@@ -43986,7 +43962,8 @@ bool flecs_query_select_or(
              * variable. When checking for duplicates, copy the entity variable
              * to the table, to ensure we're only testing the found entity. */
             const ecs_query_op_t *prev_op = &ops[cur - 1];
-            ecs_var_t old_table_var = {0};
+            ecs_var_t old_table_var;
+            ecs_os_memset_t(&old_table_var, 0, ecs_var_t);
             bool restore_table_var = false;
             
             if (prev_op->flags & (EcsQueryIsVar << EcsQuerySrc)) {
@@ -44210,7 +44187,7 @@ void flecs_query_populate_field(
     ecs_entity_t src = it->sources[field_index];
     if (!src) {
         flecs_query_populate_field_from_range(it, range, field_index, index);
-        ECS_BIT_CLEARN(it->shared_fields, field_index);
+        ECS_BIT_CLEAR(it->shared_fields, (ecs_termset_t)(1u << field_index));
     } else {
         ecs_record_t *r = flecs_entities_get(ctx->world, src);
         ecs_table_t *src_table = r->table;
@@ -44222,7 +44199,7 @@ void flecs_query_populate_field(
                     it->sizes[field_index],
                     ECS_RECORD_TO_ROW(r->row));
 
-                ECS_BIT_SETN(it->shared_fields, field_index);
+                ECS_BIT_SETN(it->shared_fields, (ecs_termset_t)field_index);
             }
         }
     }
@@ -45973,6 +45950,7 @@ int32_t flecs_query_op_ref_str(
     return color_chars;
 }
 
+static
 void flecs_query_str_append_bitset(
     ecs_strbuf_t *buf,
     ecs_flags64_t bitset)
@@ -47399,8 +47377,8 @@ int flecs_term_finalize(
         trivial_term = false;
     }
 
-    ECS_BIT_COND(term->flags, EcsTermIsTrivial, trivial_term);
-    ECS_BIT_COND(term->flags, EcsTermIsCacheable, cacheable_term);
+    ECS_BIT_COND16(term->flags, EcsTermIsTrivial, trivial_term);
+    ECS_BIT_COND16(term->flags, EcsTermIsCacheable, cacheable_term);
 
     if (flecs_term_verify(world, term, ctx)) {
         return -1;
@@ -47516,7 +47494,7 @@ int flecs_query_finalize_terms(
 
         if (scope_nesting) {
             /* Terms inside a scope are not cacheable */
-            term->flags &= ~EcsTermIsCacheable;
+            ECS_BIT_CLEAR16(term->flags, EcsTermIsCacheable);
         }
 
         /* If one of the terms in an OR chain isn't cacheable, none are */
@@ -47527,7 +47505,7 @@ int flecs_query_finalize_terms(
                 if (term[-1].flags & EcsTermIsCacheable) {
                     cacheable_terms ++;
                 } else {
-                    term->flags &= ~EcsTermIsCacheable;
+                    ECS_BIT_CLEAR16(term->flags, EcsTermIsCacheable);
                 }
             } else {
                 cacheable_terms ++;
@@ -47548,7 +47526,7 @@ int flecs_query_finalize_terms(
                 }
                 if (terms[j].flags & EcsTermIsCacheable) {
                     cacheable_terms --;
-                    terms[j].flags &= ~EcsTermIsCacheable;
+                    ECS_BIT_CLEAR16(terms[j].flags, EcsTermIsCacheable);
                 }
             }
         }
@@ -47648,7 +47626,7 @@ int flecs_query_finalize_terms(
                     }
                     nodata_term = true;
                 }
-                q->data_fields &= ~(1llu << term->field_index);
+                q->data_fields &= (ecs_termset_t)~(1llu << term->field_index);
             }
         }
 

@@ -90,6 +90,7 @@ bool flecs_query_get_match_monitor(
         ecs_assert(match->columns != NULL, ECS_INTERNAL_ERROR, NULL);
         int32_t column = match->columns[field];
         ecs_assert(column >= 0, ECS_INTERNAL_ERROR, NULL);
+        (void)column;
 
         flecs_query_get_column_for_field(q, match, field, &tc);
         if (tc.column == -1) {
@@ -268,6 +269,7 @@ void flecs_query_init_query_monitors(
     }
 }
 
+static
 bool flecs_query_check_match_monitor(
     ecs_query_impl_t *impl,
     ecs_query_cache_table_match_t *match,

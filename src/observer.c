@@ -748,6 +748,8 @@ int flecs_multi_observer_init(
         ecs_entity_t, observer->event_count);
 
     int i, term_count = query->term_count;
+    ecs_assert(term_count < FLECS_TERM_COUNT_MAX, ECS_INTERNAL_ERROR, NULL);
+
     bool optional_only = query->flags & EcsQueryMatchThis;
     bool has_not = false;
     for (i = 0; i < term_count; i ++) {

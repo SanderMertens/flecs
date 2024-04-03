@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
     ECS_COMPONENT(ecs, Velocity);
 
     ecs_observer(ecs, {
-        .filter = { .terms = {{ .id = ecs_id(Position) }, { .id = ecs_id(Velocity) }}},
+        .query  = { .terms = {{ .id = ecs_id(Position) }, { .id = ecs_id(Velocity) }}},
         .events = { EcsMonitor }, // Monitor entities entering/leaving the query
         .callback = Observer,
     });

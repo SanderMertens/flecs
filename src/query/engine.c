@@ -78,7 +78,7 @@ void flecs_reset_source_set_flag(
     int32_t field_index)
 {
     ecs_assert(field_index != -1, ECS_INTERNAL_ERROR, NULL);
-    it->up_fields &= ~(1u << field_index);
+    it->up_fields &= (ecs_termset_t)~(1llu << field_index);
 }
 
 static
@@ -2269,7 +2269,7 @@ flecs_query_row_mask_t flecs_query_get_row_mask(
         }
 
         if (not_fields & field_bit) {
-            it->set_fields &= ~field_bit;
+            it->set_fields &= (ecs_termset_t)~field_bit;
         } else if (and_fields & field_bit) {
             ecs_assert(it->set_fields & field_bit, ECS_INTERNAL_ERROR, NULL);
         } else {
@@ -2363,7 +2363,7 @@ bool flecs_query_toggle_cmp(
                 return false;
             }
 
-            it->set_fields &= ~(not_fields & up_fields);
+            it->set_fields &= (ecs_termset_t)~(not_fields & up_fields);
         }
     }
 
@@ -2806,7 +2806,7 @@ void flecs_query_reset_after_block(
 
     /* Set/unset field */
     ecs_iter_t *it = ctx->it;
-    ecs_flags64_t bit = (1llu << field);
+    ecs_termset_t bit = (ecs_termset_t)(1u << field);
     if (result) {
         it->set_fields |= bit;
         return;
@@ -2967,7 +2967,8 @@ bool flecs_query_select_or(
              * variable. When checking for duplicates, copy the entity variable
              * to the table, to ensure we're only testing the found entity. */
             const ecs_query_op_t *prev_op = &ops[cur - 1];
-            ecs_var_t old_table_var = {0};
+            ecs_var_t old_table_var;
+            ecs_os_memset_t(&old_table_var, 0, ecs_var_t);
             bool restore_table_var = false;
             
             if (prev_op->flags & (EcsQueryIsVar << EcsQuerySrc)) {
@@ -3191,7 +3192,7 @@ void flecs_query_populate_field(
     ecs_entity_t src = it->sources[field_index];
     if (!src) {
         flecs_query_populate_field_from_range(it, range, field_index, index);
-        ECS_BIT_CLEARN(it->shared_fields, field_index);
+        ECS_BIT_CLEAR(it->shared_fields, (ecs_termset_t)(1u << field_index));
     } else {
         ecs_record_t *r = flecs_entities_get(ctx->world, src);
         ecs_table_t *src_table = r->table;
@@ -3203,7 +3204,7 @@ void flecs_query_populate_field(
                     it->sizes[field_index],
                     ECS_RECORD_TO_ROW(r->row));
 
-                ECS_BIT_SETN(it->shared_fields, field_index);
+                ECS_BIT_SETN(it->shared_fields, (ecs_termset_t)field_index);
             }
         }
     }
