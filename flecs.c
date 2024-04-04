@@ -14199,7 +14199,11 @@ int32_t ecs_poly_claim_(
     ecs_assert(poly != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_header_t *hdr = poly;
     ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER, NULL);
-    return ecs_os_ainc(&hdr->refcount);
+    if (ecs_os_has_threading()) {
+        return ecs_os_ainc(&hdr->refcount);
+    } else {
+        return ++hdr->refcount;
+    }
 }
 
 int32_t ecs_poly_release_(
@@ -14208,7 +14212,11 @@ int32_t ecs_poly_release_(
     ecs_assert(poly != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_header_t *hdr = poly;
     ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER, NULL);
-    return ecs_os_adec(&hdr->refcount);
+    if (ecs_os_has_threading()) {
+        return ecs_os_adec(&hdr->refcount);
+    } else {
+        return --hdr->refcount;
+    }
 }
 
 int32_t ecs_poly_refcount(
