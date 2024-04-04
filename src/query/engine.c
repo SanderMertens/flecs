@@ -2158,7 +2158,11 @@ bool flecs_query_member_cmp(
         it->ptrs[field_index] = old_data;
 
         /* Member fields are of type ecs_entity_t */
+        #ifdef FLECS_META
         it->ids[field_index] = ecs_id(ecs_entity_t);
+        #else
+        it->ids[field_index] = 0;
+        #endif
     } else {
         row = ++ op_ctx->each.row;
         if (op_ctx->each.row >= end) {
