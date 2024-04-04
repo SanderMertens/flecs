@@ -733,7 +733,7 @@ void FlecsAlertsImport(ecs_world_t *world) {
     ECS_TAG_DEFINE(world, EcsAlertError);
     ECS_TAG_DEFINE(world, EcsAlertCritical);
 
-    ecs_add_id(world, ecs_id(EcsAlert), EcsTag);
+    ecs_add_id(world, ecs_id(EcsAlert), EcsPairIsTag);
     ecs_add_id(world, ecs_id(EcsAlert), EcsExclusive);
     ecs_add_id(world, ecs_id(EcsAlertsActive), EcsPrivate);
 

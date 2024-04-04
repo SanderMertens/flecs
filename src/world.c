@@ -47,7 +47,7 @@ const ecs_entity_t EcsSymmetric =                   FLECS_HI_COMPONENT_ID + 17;
 const ecs_entity_t EcsFinal =                       FLECS_HI_COMPONENT_ID + 18;
 const ecs_entity_t EcsDontInherit =                 FLECS_HI_COMPONENT_ID + 19;
 const ecs_entity_t EcsAlwaysOverride =              FLECS_HI_COMPONENT_ID + 20;
-const ecs_entity_t EcsTag =                         FLECS_HI_COMPONENT_ID + 21;
+const ecs_entity_t EcsPairIsTag =                   FLECS_HI_COMPONENT_ID + 21;
 const ecs_entity_t EcsExclusive =                   FLECS_HI_COMPONENT_ID + 22;
 const ecs_entity_t EcsAcyclic =                     FLECS_HI_COMPONENT_ID + 23;
 const ecs_entity_t EcsTraversable =                 FLECS_HI_COMPONENT_ID + 24;
@@ -327,7 +327,7 @@ ecs_stage_t* flecs_stage_from_readonly_world(
                NULL);
 
     if (ecs_poly_is(world, ecs_world_t)) {
-        return ECS_CONST_CAST(ecs_stage_t*, &world->stages[0]);
+        return ECS_CONST_CAST(ecs_stage_t*, world->stages[0]);
     } else if (ecs_poly_is(world, ecs_stage_t)) {
         return ECS_CONST_CAST(ecs_stage_t*, world);
     }
@@ -346,7 +346,7 @@ ecs_stage_t* flecs_stage_from_world(
                NULL);
 
     if (ecs_poly_is(world, ecs_world_t)) {
-        return &world->stages[0];
+        return world->stages[0];
     }
 
     *world_ptr = ((ecs_stage_t*)world)->world;
@@ -663,13 +663,13 @@ void flecs_fini_roots(
      * regular entities first, which reduces the chance of components getting
      * destructed in random order because it got deleted before entities,
      * thereby bypassing the OnDeleteTarget policy. */
-    flecs_defer_begin(world, &world->stages[0]);
+    flecs_defer_begin(world, world->stages[0]);
     flecs_fini_root_tables(world, idr, true);
-    flecs_defer_end(world, &world->stages[0]);
+    flecs_defer_end(world, world->stages[0]);
 
-    flecs_defer_begin(world, &world->stages[0]);
+    flecs_defer_begin(world, world->stages[0]);
     flecs_fini_root_tables(world, idr, false);
-    flecs_defer_end(world, &world->stages[0]);
+    flecs_defer_end(world, world->stages[0]);
 }
 
 static
@@ -1386,7 +1386,7 @@ int ecs_fini(
     ecs_poly_assert(world, ecs_world_t);
     ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, NULL);
     ecs_assert(!(world->flags & EcsWorldFini), ECS_INVALID_OPERATION, NULL);
-    ecs_assert(world->stages[0].defer == 0, ECS_INVALID_OPERATION, 
+    ecs_assert(world->stages[0]->defer == 0, ECS_INVALID_OPERATION, 
         "call defer_end before destroying world");
 
     ecs_trace("#[bold]shutting down world");
@@ -1415,7 +1415,7 @@ int ecs_fini(
 
     /* Operations invoked during UnSet/OnRemove/destructors are deferred and
      * will be discarded after world cleanup */
-    flecs_defer_begin(world, &world->stages[0]);
+    flecs_defer_begin(world, world->stages[0]);
 
     /* Run UnSet/OnRemove actions for components while the store is still
      * unmodified by cleanup. */
@@ -1426,7 +1426,7 @@ int ecs_fini(
 
     /* Purge deferred operations from the queue. This discards operations but
      * makes sure that any resources in the queue are freed */
-    flecs_defer_purge(world, &world->stages[0]);
+    flecs_defer_purge(world, world->stages[0]);
     ecs_log_pop_1();
 
     /* All queries are cleaned up, so monitors should've been cleaned up too */
@@ -1917,10 +1917,9 @@ void ecs_frame_end(
 
     world->info.frame_count_total ++;
     
-    ecs_stage_t *stages = world->stages;
     int32_t i, count = world->stage_count;
     for (i = 0; i < count; i ++) {
-        flecs_stage_merge_post_frame(world, &stages[i]);
+        flecs_stage_merge_post_frame(world, world->stages[i]);
     }
 
     flecs_stop_measure_frame(world);
@@ -1956,7 +1955,7 @@ void flecs_process_empty_queries(
 
     /* Make sure that we defer adding the inactive tags until after iterating
      * the query */
-    flecs_defer_begin(world, &world->stages[0]);
+    flecs_defer_begin(world, world->stages[0]);
 
     ecs_table_cache_iter_t it;
     const ecs_table_record_t *tr;
@@ -1976,7 +1975,7 @@ void flecs_process_empty_queries(
         }
     }
 
-    flecs_defer_end(world, &world->stages[0]);
+    flecs_defer_end(world, world->stages[0]);
 }
 
 /** Walk over tables that had a state change which requires bookkeeping */
@@ -2026,7 +2025,7 @@ void flecs_process_pending_tables(
         /* Make sure that any ECS operations that occur while delivering the
          * events does not cause inconsistencies, like sending an Empty 
          * notification for a table that just became non-empty. */
-        flecs_defer_begin(world, &world->stages[0]);
+        flecs_defer_begin(world, world->stages[0]);
 
         for (i = 0; i < count; i ++) {
             ecs_table_t *table = flecs_sparse_get_dense_t(

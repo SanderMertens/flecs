@@ -492,7 +492,6 @@ void SystemCascade_custom_relation_adopt_after_match(void);
 // Testsuite 'SystemManual'
 void SystemManual_setup(void);
 void SystemManual_1_type_1_component(void);
-void SystemManual_no_automerge(void);
 void SystemManual_dont_run_w_unmatching_entity_query(void);
 
 // Testsuite 'Tasks'
@@ -622,8 +621,6 @@ void MultiThreadStaging_6_threads_add_to_current(void);
 void MultiThreadStaging_2_threads_on_add(void);
 void MultiThreadStaging_new_w_count(void);
 void MultiThreadStaging_custom_thread_auto_merge(void);
-void MultiThreadStaging_custom_thread_manual_merge(void);
-void MultiThreadStaging_custom_thread_partial_manual_merge(void);
 void MultiThreadStaging_set_pair_w_new_target_readonly(void);
 void MultiThreadStaging_set_pair_w_new_target_tgt_component_readonly(void);
 void MultiThreadStaging_set_pair_w_new_target_defer(void);
@@ -2657,10 +2654,6 @@ bake_test_case SystemManual_testcases[] = {
         SystemManual_1_type_1_component
     },
     {
-        "no_automerge",
-        SystemManual_no_automerge
-    },
-    {
         "dont_run_w_unmatching_entity_query",
         SystemManual_dont_run_w_unmatching_entity_query
     }
@@ -3114,14 +3107,6 @@ bake_test_case MultiThreadStaging_testcases[] = {
     {
         "custom_thread_auto_merge",
         MultiThreadStaging_custom_thread_auto_merge
-    },
-    {
-        "custom_thread_manual_merge",
-        MultiThreadStaging_custom_thread_manual_merge
-    },
-    {
-        "custom_thread_partial_manual_merge",
-        MultiThreadStaging_custom_thread_partial_manual_merge
     },
     {
         "set_pair_w_new_target_readonly",
@@ -3639,11 +3624,13 @@ bake_test_case Alerts_testcases[] = {
     }
 };
 
+const char* MultiThread_worker_kind_param[] = {"thread", "task"};
 bake_test_param MultiThread_params[] = {
-    {"worker_kind", (char*[]){"thread", "task"}, 2}
+    {"worker_kind", (char**)MultiThread_worker_kind_param, 2}
 };
+const char* MultiThreadStaging_worker_kind_param[] = {"thread", "task"};
 bake_test_param MultiThreadStaging_params[] = {
-    {"worker_kind", (char*[]){"thread", "task"}, 2}
+    {"worker_kind", (char**)MultiThreadStaging_worker_kind_param, 2}
 };
 
 static bake_test_suite suites[] = {
@@ -3700,7 +3687,7 @@ static bake_test_suite suites[] = {
         "SystemManual",
         SystemManual_setup,
         NULL,
-        3,
+        2,
         SystemManual_testcases
     },
     {
@@ -3765,7 +3752,7 @@ static bake_test_suite suites[] = {
         "MultiThreadStaging",
         MultiThreadStaging_setup,
         NULL,
-        14,
+        12,
         MultiThreadStaging_testcases,
         1,
         MultiThreadStaging_params

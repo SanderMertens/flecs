@@ -4305,7 +4305,7 @@ FLECS_API extern const ecs_entity_t EcsCanToggle;
 
 /** Can be added to relationship to indicate that it should never hold data, 
  * even when it or the relationship target is a component. */
-FLECS_API extern const ecs_entity_t EcsTag;
+FLECS_API extern const ecs_entity_t EcsPairIsTag;
 
 /** Tag to indicate name identifier */
 FLECS_API extern const ecs_entity_t EcsName;
@@ -4807,27 +4807,6 @@ FLECS_API
 void ecs_defer_resume(
     ecs_world_t *world);
 
-/** Enable/disable auto-merging for world or stage.
- * When auto-merging is enabled, staged data will automatically be merged with
- * the world when staging ends. This happens at the end of ecs_progress(), at a
- * sync point or when ecs_readonly_end() is called.
- *
- * Applications can exercise more control over when data from a stage is merged
- * by disabling auto-merging. This requires an application to explicitly call
- * ecs_merge() on the stage.
- *
- * When this function is invoked on the world, it sets all current stages to
- * the provided value and sets the default for new stages. When this function is
- * invoked on a stage, auto-merging is only set for that specific stage.
- *
- * @param world The world.
- * @param automerge Whether to enable or disable auto-merging.
- */
-FLECS_API
-void ecs_set_automerge(
-    ecs_world_t *world,
-    bool automerge);
-
 /** Configure world to have N stages.
  * This initializes N stages, which allows applications to defer operations to
  * multiple isolated defer queues. This is typically used for applications with
@@ -4854,17 +4833,6 @@ void ecs_set_stage_count(
  */
 FLECS_API
 int32_t ecs_get_stage_count(
-    const ecs_world_t *world);
-
-/** Get current stage id.
- * The stage id can be used by an application to learn about which stage it is
- * using, which typically corresponds with the worker thread id.
- *
- * @param world The world.
- * @return The stage id.
- */
-FLECS_API
-int32_t ecs_get_stage_id(
     const ecs_world_t *world);
 
 /** Get stage-specific world pointer.
@@ -4898,47 +4866,35 @@ FLECS_API
 bool ecs_stage_is_readonly(
     const ecs_world_t *world);
 
-/** Create asynchronous stage.
- * An asynchronous stage can be used to asynchronously queue operations for
- * later merging with the world. An asynchronous stage is similar to a regular
- * stage, except that it does not allow reading from the world.
- *
- * Asynchronous stages are never merged automatically, and must therefore be
- * manually merged with the ecs_merge() function. It is not necessary to call
- * ecs_defer_begin() or ecs_defer_end() before and after enqueuing commands, as an
- * asynchronous stage unconditionally defers operations.
- *
- * The application must ensure that no commands are added to the stage while the
- * stage is being merged.
- *
- * An asynchronous stage must be cleaned up by ecs_async_stage_free().
+/** Create unmanaged stage.
+ * Create a stage who's lifecycle is not managed by the world. Must be freed
+ * with ecs_stage_free.
  *
  * @param world The world.
  * @return The stage.
  */
 FLECS_API
-ecs_world_t* ecs_async_stage_new(
+ecs_world_t* ecs_stage_new(
     ecs_world_t *world);
 
-/** Free asynchronous stage.
- * The provided stage must be an asynchronous stage. If a non-asynchronous stage
- * is provided, the operation will fail.
+/** Free unmanaged stage.
  *
  * @param stage The stage to free.
  */
 FLECS_API
-void ecs_async_stage_free(
+void ecs_stage_free(
     ecs_world_t *stage);
 
-/** Test whether provided stage is asynchronous.
+/** Get stage id.
+ * The stage id can be used by an application to learn about which stage it is
+ * using, which typically corresponds with the worker thread id.
  *
- * @param stage The stage.
- * @return True when the stage is asynchronous, false for a regular stage or
- *         world.
+ * @param world The world.
+ * @return The stage id.
  */
 FLECS_API
-bool ecs_stage_is_async(
-    ecs_world_t *stage);
+int32_t ecs_stage_get_id(
+    const ecs_world_t *world);
 
 /** @} */
 
@@ -6629,7 +6585,7 @@ const ecs_type_hooks_t* ecs_get_hooks_id(
  * - it is an entity without the EcsComponent component
  * - it has an EcsComponent with size member set to 0
  * - it is a pair where both elements are a tag
- * - it is a pair where the first element has the EcsTag tag
+ * - it is a pair where the first element has the EcsPairIsTag tag
  *
  * @param world The world.
  * @param id The id.
@@ -15298,7 +15254,7 @@ static const flecs::entity_t Reflexive = EcsReflexive;
 static const flecs::entity_t Final = EcsFinal;
 static const flecs::entity_t DontInherit = EcsDontInherit;
 static const flecs::entity_t AlwaysOverride = EcsAlwaysOverride;
-static const flecs::entity_t Tag = EcsTag;
+static const flecs::entity_t PairIsTag = EcsPairIsTag;
 static const flecs::entity_t Exclusive = EcsExclusive;
 static const flecs::entity_t Acyclic = EcsAcyclic;
 static const flecs::entity_t Traversable = EcsTraversable;
@@ -19111,8 +19067,8 @@ struct world {
     ~world() {
         if (m_world) {
             if (!ecs_poly_release(m_world)) {
-                if (ecs_stage_is_async(m_world)) {
-                    ecs_async_stage_free(m_world);
+                if (ecs_stage_get_id(m_world) == -1) {
+                    ecs_stage_free(m_world);
                 } else {
                     ecs_fini(m_world);
                 }
@@ -19264,7 +19220,7 @@ struct world {
      * @return The stage id.
      */
     int32_t get_stage_id() const {
-        return ecs_get_stage_id(m_world);
+        return ecs_stage_get_id(m_world);
     }
 
     /** Test if is a stage.
@@ -19279,26 +19235,6 @@ struct world {
             ecs_poly_is(m_world, ecs_stage_t),
                 ECS_INVALID_PARAMETER, NULL);
         return ecs_poly_is(m_world, ecs_stage_t);
-    }
-
-    /** Enable/disable auto-merging for world or stage.
-     * When auto-merging is enabled, staged data will automatically be merged
-     * with the world when staging ends. This happens at the end of progress(),
-     * at a sync point or when readonly_end() is called.
-     *
-     * Applications can exercise more control over when data from a stage is
-     * merged by disabling auto-merging. This requires an application to
-     * explicitly call merge() on the stage.
-     *
-     * When this function is invoked on the world, it sets all current stages to
-     * the provided value and sets the default for new stages. When this
-     * function is invoked on a stage, auto-merging is only set for that specific
-     * stage.
-     *
-     * @param automerge Whether to enable or disable auto-merging.
-     */
-    void set_automerge(bool automerge) const {
-        ecs_set_automerge(m_world, automerge);
     }
 
     /** Merge world or stage.
@@ -19347,7 +19283,7 @@ struct world {
      * @return The stage.
      */
     flecs::world async_stage() const {
-        ecs_world_t *as = ecs_async_stage_new(m_world);
+        ecs_world_t *as = ecs_stage_new(m_world);
         ecs_poly_release(as); // world object will claim
         return flecs::world(as);
     }

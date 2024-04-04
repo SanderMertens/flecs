@@ -1378,7 +1378,7 @@ void Event_enqueue_event_not_deferred_to_async(void) {
         .ctx = &ctx
     });
 
-    ecs_world_t *my_stage = ecs_async_stage_new(world);
+    ecs_world_t *my_stage = ecs_stage_new(world);
 
     ecs_enqueue(my_stage, &(ecs_event_desc_t){
         .event = evt,
@@ -1397,7 +1397,7 @@ void Event_enqueue_event_not_deferred_to_async(void) {
     test_int(ctx.count, 1);
     test_assert(ctx.e[0] == e);
 
-    ecs_async_stage_free(my_stage);
+    ecs_stage_free(my_stage);
 
     ecs_fini(world);
 }

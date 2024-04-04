@@ -6,16 +6,6 @@
 #ifndef FLECS_STAGE_H
 #define FLECS_STAGE_H
 
-/* Initialize stage data structures */
-void flecs_stage_init(
-    ecs_world_t *world,
-    ecs_stage_t *stage);
-
-/* Deinitialize stage */
-void flecs_stage_fini(
-    ecs_world_t *world,
-    ecs_stage_t *stage);
-
 /* Post-frame merge actions */
 void flecs_stage_merge_post_frame(
     ecs_world_t *world,

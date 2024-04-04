@@ -186,10 +186,9 @@ void flecs_join_worker_threads(
 
     /* Test if threads are created. Cannot use workers_running, since this is
      * a potential race if threads haven't spun up yet. */
-    ecs_stage_t *stages = world->stages;
     int i, count = world->stage_count;
     for (i = 1; i < count; i ++) {
-        ecs_stage_t *stage = &stages[i];
+        ecs_stage_t *stage = world->stages[i];
         if (stage->thread) {
             threads_active = true;
             break;
@@ -210,12 +209,13 @@ void flecs_join_worker_threads(
 
     /* Join all threads with main */
     for (i = 1; i < count; i ++) {
+        ecs_stage_t *stage = world->stages[i];
         if (ecs_using_task_threads(world)) {
-            ecs_os_task_join(stages[i].thread);
+            ecs_os_task_join(stage->thread);
         } else {
-            ecs_os_thread_join(stages[i].thread);
+            ecs_os_thread_join(stage->thread);
         }
-        stages[i].thread = 0;
+        stage->thread = 0;
     }
 
     world->flags &= ~EcsWorldQuitWorkers;

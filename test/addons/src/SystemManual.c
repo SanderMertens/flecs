@@ -92,36 +92,6 @@ void AddVelocity(ecs_iter_t *it) {
     }
 }
 
-void SystemManual_no_automerge(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-
-    ECS_SYSTEM(world, AddVelocity, 0, Position, Velocity());
-
-    ECS_ENTITY(world, e1, Position);
-
-    ecs_set_automerge(world, false);
-
-    ecs_readonly_begin(world, false);
-    ecs_world_t *stage = ecs_get_stage(world, 0);
-
-    ecs_run(stage, AddVelocity, 1, NULL);
-
-    test_assert(!ecs_has(stage, e1, Velocity));
-
-    ecs_readonly_end(world);
-
-    test_assert(!ecs_has(world, e1, Velocity));
-
-    ecs_merge(world);
-
-    test_assert(ecs_has(world, e1, Velocity));
-
-    ecs_fini(world);
-}
-
 static int dummy_ran = 0;
 
 void DummySystem(ecs_iter_t *it) {

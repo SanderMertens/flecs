@@ -176,7 +176,7 @@ void flecs_doc_import_core_definitions(
     ecs_doc_set_brief(world, EcsReflexive, "Trait that enables reflexive evaluation of relationships");
     ecs_doc_set_brief(world, EcsFinal, "Trait that indicates an entity cannot be inherited from");
     ecs_doc_set_brief(world, EcsDontInherit, "Trait that indicates it should not be inherited");
-    ecs_doc_set_brief(world, EcsTag, "Trait that ensures a pair cannot contain a value");
+    ecs_doc_set_brief(world, EcsPairIsTag, "Trait that ensures a pair cannot contain a value");
     ecs_doc_set_brief(world, EcsAcyclic, "Trait that indicates a relationship is acyclic");
     ecs_doc_set_brief(world, EcsTraversable, "Trait that indicates a relationship is traversable");
     ecs_doc_set_brief(world, EcsExclusive, "Trait that ensures a relationship can only have one target");

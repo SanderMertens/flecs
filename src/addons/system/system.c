@@ -75,7 +75,7 @@ ecs_entity_t flecs_run_intern(
     if (stage) {
         thread_ctx = stage->thread_ctx;
     } else {
-        stage = &world->stages[0];
+        stage = world->stages[0];
     }
 
     /* Prepare the query iterator */
@@ -256,6 +256,7 @@ ecs_entity_t ecs_system_init(
     if (!entity) {
         entity = ecs_new(world, 0);
     }
+
     EcsPoly *poly = ecs_poly_bind(world, entity, ecs_system_t);
     if (!poly->poly) {
         ecs_system_t *system = ecs_poly_new(ecs_system_t);
@@ -276,7 +277,7 @@ ecs_entity_t ecs_system_init(
         }
 
         /* Prevent the system from moving while we're initializing */
-        flecs_defer_begin(world, &world->stages[0]);
+        flecs_defer_begin(world, world->stages[0]);
 
         system->query = query;
         system->query_entity = query->entity;

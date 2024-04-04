@@ -1683,9 +1683,7 @@ void Commands_async_stage_remove(void);
 void Commands_async_stage_clear(void);
 void Commands_async_stage_delete(void);
 void Commands_async_stage_new(void);
-void Commands_async_stage_no_get(void);
 void Commands_async_stage_readonly(void);
-void Commands_async_stage_is_async(void);
 void Commands_register_component_while_in_progress(void);
 void Commands_register_component_while_staged(void);
 void Commands_register_component_while_deferred(void);
@@ -8383,16 +8381,8 @@ bake_test_case Commands_testcases[] = {
         Commands_async_stage_new
     },
     {
-        "async_stage_no_get",
-        Commands_async_stage_no_get
-    },
-    {
         "async_stage_readonly",
         Commands_async_stage_readonly
-    },
-    {
-        "async_stage_is_async",
-        Commands_async_stage_is_async
     },
     {
         "register_component_while_in_progress",
@@ -9233,6 +9223,7 @@ bake_test_case StackAlloc_testcases[] = {
     }
 };
 
+
 static bake_test_suite suites[] = {
     {
         "Id",
@@ -9490,7 +9481,7 @@ static bake_test_suite suites[] = {
         "Commands",
         NULL,
         NULL,
-        129,
+        127,
         Commands_testcases
     },
     {

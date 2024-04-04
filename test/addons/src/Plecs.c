@@ -2341,7 +2341,7 @@ void Plecs_create_subject_in_root_scope_w_resolvable_id(void) {
     test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
     ecs_entity_t tag = ecs_lookup_child(world, 0, "Tag");
     test_assert(tag != 0);
-    test_assert(tag != EcsTag);
+    test_assert(tag != EcsPairIsTag);
 
     ecs_fini(world);
 }
@@ -2360,7 +2360,7 @@ void Plecs_create_subject_in_scope_w_resolvable_id(void) {
 
     ecs_entity_t tag = ecs_lookup(world, "Foo.Tag");
     test_assert(tag != 0);
-    test_assert(tag != EcsTag);
+    test_assert(tag != EcsPairIsTag);
 
     test_assert(ecs_has_pair(world, tag, EcsChildOf, foo));
 

@@ -983,7 +983,7 @@ void World_type_w_tag_name(void) {
     auto c = ecs.component<Tag>();
     test_assert(c != flecs::entity());
     test_str(c.path().c_str(), "::Tag");
-    test_assert(c != flecs::Tag);
+    test_assert(c != flecs::PairIsTag);
 }
 
 void World_entity_w_tag_name(void) {
@@ -992,7 +992,7 @@ void World_entity_w_tag_name(void) {
     auto c = ecs.entity("Tag");
     test_assert(c != flecs::entity());
     test_str(c.path().c_str(), "::Tag");
-    test_assert(c != flecs::Tag);
+    test_assert(c != flecs::PairIsTag);
 }
 
 template <typename T>

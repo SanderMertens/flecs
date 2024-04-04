@@ -299,7 +299,7 @@ void flecs_register_traversable(ecs_iter_t *it) {
 
 static
 void flecs_register_tag(ecs_iter_t *it) {
-    flecs_register_id_flag_for_relation(it, EcsTag, EcsIdTag, ~EcsIdTag, 0);
+    flecs_register_id_flag_for_relation(it, EcsPairIsTag, EcsIdTag, ~EcsIdTag, 0);
 
     /* Ensure that all id records for tag have type info set to NULL */
     ecs_world_t *world = it->real_world;
@@ -313,7 +313,7 @@ void flecs_register_tag(ecs_iter_t *it) {
             ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
             do {
                 if (idr->type_info != NULL) {
-                    flecs_assert_relation_unused(world, e, EcsTag);
+                    flecs_assert_relation_unused(world, e, EcsPairIsTag);
                 }
                 idr->type_info = NULL;
             } while ((idr = idr->first.next));
@@ -660,7 +660,7 @@ void flecs_bootstrap(
     ecs_make_alive(world, EcsIsA);
     ecs_make_alive(world, EcsWildcard);
     ecs_make_alive(world, EcsAny);
-    ecs_make_alive(world, EcsTag);
+    ecs_make_alive(world, EcsPairIsTag);
 
     /* Register type information for builtin components */
     flecs_type_info_init(world, EcsComponent, { 
@@ -705,10 +705,10 @@ void flecs_bootstrap(
     world->info.min_id = 0;
     world->info.max_id = 0;
     
-    /* Register observer for tag property before adding EcsTag */
+    /* Register observer for tag property before adding EcsPairIsTag */
     ecs_observer(world, {
         .entity = ecs_entity(world, {.add = { ecs_childof(EcsFlecsInternals)}}),
-        .query.terms[0] = { .id = EcsTag, .src.id = EcsSelf },
+        .query.terms[0] = { .id = EcsPairIsTag, .src.id = EcsSelf },
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = flecs_register_tag,
         .yield_existing = true
@@ -767,7 +767,7 @@ void flecs_bootstrap(
     flecs_bootstrap_tag(world, EcsFinal);
     flecs_bootstrap_tag(world, EcsDontInherit);
     flecs_bootstrap_tag(world, EcsAlwaysOverride);
-    flecs_bootstrap_tag(world, EcsTag);
+    flecs_bootstrap_tag(world, EcsPairIsTag);
     flecs_bootstrap_tag(world, EcsExclusive);
     flecs_bootstrap_tag(world, EcsAcyclic);
     flecs_bootstrap_tag(world, EcsTraversable);
@@ -812,13 +812,13 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsAny, EcsNotQueryable);
 
     /* Tag relationships (relationships that should never have data) */
-    ecs_add_id(world, EcsIsA, EcsTag);
-    ecs_add_id(world, EcsChildOf, EcsTag);
-    ecs_add_id(world, EcsSlotOf, EcsTag);
-    ecs_add_id(world, EcsDependsOn, EcsTag);
-    ecs_add_id(world, EcsDefaultChildComponent, EcsTag);
-    ecs_add_id(world, EcsFlag, EcsTag);
-    ecs_add_id(world, EcsWith, EcsTag);
+    ecs_add_id(world, EcsIsA, EcsPairIsTag);
+    ecs_add_id(world, EcsChildOf, EcsPairIsTag);
+    ecs_add_id(world, EcsSlotOf, EcsPairIsTag);
+    ecs_add_id(world, EcsDependsOn, EcsPairIsTag);
+    ecs_add_id(world, EcsDefaultChildComponent, EcsPairIsTag);
+    ecs_add_id(world, EcsFlag, EcsPairIsTag);
+    ecs_add_id(world, EcsWith, EcsPairIsTag);
 
     /* Exclusive properties */
     ecs_add_id(world, EcsChildOf, EcsExclusive);

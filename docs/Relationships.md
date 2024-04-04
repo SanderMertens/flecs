@@ -877,8 +877,8 @@ The last step will delete all remaining entities. At this point cleanup policies
 ## Relationship properties
 Relationship properties are tags that can be added to relationships to modify their behavior.
 
-### Tag property
-A relationship can be marked as a tag in which case it will never contain data. By default the data associated with a pair is determined by whether either the relationship or target are components. For some relationships however, even if the target is a component, no data should be added to the relationship. Consider the following example:
+### PairIsTag property
+A relationship can be marked with PairIsTag in which case a pair with the relationship will never contain data. By default the data associated with a pair is determined by whether either the relationship or target are components. For some relationships however, even if the target is a component, no data should be added to the relationship. Consider the following example:
 
 ```c
 typedef struct {
@@ -922,7 +922,7 @@ To prevent data from being associated with pairs that can apply to components, t
 
 ```c
 // Ensure that Serializable never contains data
-ecs_add_id(world, Serializable, EcsTag);
+ecs_add_id(world, Serializable, EcsPairIsTag);
 
 // Because Serializable is marked as a Tag, no data is added for the pair
 // even though Position is a component
@@ -937,7 +937,7 @@ const Position *p = ecs_get_pair_object(world, e, Serializable, Position);
 ```cpp
 // Ensure that Serializable never contains data
 ecs.component<Serializable>()
-  .add<flecs::Tag>();
+  .add<flecs::PairIsTag>();
 
 auto e = ecs.entity()
   .set<Position>({10, 20})

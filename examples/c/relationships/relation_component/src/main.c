@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
 
     // You can prevent a pair from assuming the type of a component by adding
     // the Tag property to a relationship:
-    ecs_add_id(ecs, MustHave, EcsTag);
+    ecs_add_id(ecs, MustHave, EcsPairIsTag);
 
     // Even though Position is a component, <MustHave, Position> contains no
     // data because MustHave has the Tag property.

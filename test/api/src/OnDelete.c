@@ -2911,7 +2911,7 @@ void OnDelete_delete_observed_symmetric_relation(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new_id(world);
-    ecs_add_id(world, e, EcsTag);
+    ecs_add_id(world, e, EcsPairIsTag);
 
     ecs_add_id(world, e, EcsSymmetric);
     ecs_delete(world, e);

@@ -511,7 +511,6 @@
             "setup": true,
             "testcases": [
                 "1_type_1_component",
-                "no_automerge",
                 "dont_run_w_unmatching_entity_query"
             ]
         }, {
@@ -665,8 +664,6 @@
                 "2_threads_on_add",
                 "new_w_count",
                 "custom_thread_auto_merge",
-                "custom_thread_manual_merge",
-                "custom_thread_partial_manual_merge",
                 "set_pair_w_new_target_readonly",
                 "set_pair_w_new_target_tgt_component_readonly",
                 "set_pair_w_new_target_defer",

@@ -182,8 +182,8 @@ struct world {
     ~world() {
         if (m_world) {
             if (!ecs_poly_release(m_world)) {
-                if (ecs_stage_is_async(m_world)) {
-                    ecs_async_stage_free(m_world);
+                if (ecs_stage_get_id(m_world) == -1) {
+                    ecs_stage_free(m_world);
                 } else {
                     ecs_fini(m_world);
                 }
@@ -335,7 +335,7 @@ struct world {
      * @return The stage id.
      */
     int32_t get_stage_id() const {
-        return ecs_get_stage_id(m_world);
+        return ecs_stage_get_id(m_world);
     }
 
     /** Test if is a stage.
@@ -350,26 +350,6 @@ struct world {
             ecs_poly_is(m_world, ecs_stage_t),
                 ECS_INVALID_PARAMETER, NULL);
         return ecs_poly_is(m_world, ecs_stage_t);
-    }
-
-    /** Enable/disable auto-merging for world or stage.
-     * When auto-merging is enabled, staged data will automatically be merged
-     * with the world when staging ends. This happens at the end of progress(),
-     * at a sync point or when readonly_end() is called.
-     *
-     * Applications can exercise more control over when data from a stage is
-     * merged by disabling auto-merging. This requires an application to
-     * explicitly call merge() on the stage.
-     *
-     * When this function is invoked on the world, it sets all current stages to
-     * the provided value and sets the default for new stages. When this
-     * function is invoked on a stage, auto-merging is only set for that specific
-     * stage.
-     *
-     * @param automerge Whether to enable or disable auto-merging.
-     */
-    void set_automerge(bool automerge) const {
-        ecs_set_automerge(m_world, automerge);
     }
 
     /** Merge world or stage.
@@ -418,7 +398,7 @@ struct world {
      * @return The stage.
      */
     flecs::world async_stage() const {
-        ecs_world_t *as = ecs_async_stage_new(m_world);
+        ecs_world_t *as = ecs_stage_new(m_world);
         ecs_poly_release(as); // world object will claim
         return flecs::world(as);
     }

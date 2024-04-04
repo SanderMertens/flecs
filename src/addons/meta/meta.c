@@ -832,7 +832,7 @@ void flecs_add_enum(ecs_iter_t *it) {
 
         ecs_add_id(world, e, EcsExclusive);
         ecs_add_id(world, e, EcsOneOf);
-        ecs_add_id(world, e, EcsTag);
+        ecs_add_id(world, e, EcsPairIsTag);
     }
 }
 
@@ -1359,7 +1359,7 @@ void FlecsMetaImport(
 
     /* Relationship properties */
     ecs_add_id(world, EcsQuantity, EcsExclusive);
-    ecs_add_id(world, EcsQuantity, EcsTag);
+    ecs_add_id(world, EcsQuantity, EcsPairIsTag);
 
     /* Import reflection definitions for builtin types */
     flecs_meta_import_definitions(world);

@@ -2239,7 +2239,7 @@ void FlecsScriptImport(
         .dtor = ecs_dtor(EcsScript)
     });
 
-    ecs_add_id(world, ecs_id(EcsScript), EcsTag);
+    ecs_add_id(world, ecs_id(EcsScript), EcsPairIsTag);
     ecs_add_id(world, ecs_id(EcsScript), EcsPrivate);
 
     ecs_struct(world, {

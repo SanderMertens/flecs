@@ -300,7 +300,7 @@ void flecs_observer_invoke(
     ecs_log_push_3();
 
     ecs_entity_t old_system = flecs_stage_set_system(
-        &world->stages[0], observer->entity);
+        world->stages[0], observer->entity);
     world->info.observers_ran_frame ++;
 
     ecs_query_t *query = observer->query;
@@ -351,7 +351,7 @@ void flecs_observer_invoke(
         it->count = count;
     }
 
-    flecs_stage_set_system(&world->stages[0], old_system);
+    flecs_stage_set_system(world->stages[0], old_system);
 
     ecs_log_pop_3();
 }
@@ -534,13 +534,13 @@ bool flecs_multi_observer_invoke(
         user_it.other_table = it->other_table;
 
         ecs_entity_t old_system = flecs_stage_set_system(
-            &world->stages[0], o->entity);
+            world->stages[0], o->entity);
         ecs_table_lock(it->world, table);
 
         user_it.callback(&user_it);
 
         ecs_table_unlock(it->world, table);
-        flecs_stage_set_system(&world->stages[0], old_system);
+        flecs_stage_set_system(world->stages[0], old_system);
 
         ecs_iter_fini(&user_it);
         return true;

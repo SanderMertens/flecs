@@ -1333,7 +1333,7 @@ void ComponentLifecycle_merge_async_stage_w_emplace(void) {
 
     ecs_entity_t e = ecs_new_id(world);
 
-    ecs_world_t *async = ecs_async_stage_new(world);
+    ecs_world_t *async = ecs_stage_new(world);
 
     Position *p = ecs_emplace(async, e, Position);
     test_assert(!ecs_has(world, e, Position));
@@ -1357,7 +1357,7 @@ void ComponentLifecycle_merge_async_stage_w_emplace(void) {
     test_int(ptr->x, 10);
     test_int(ptr->y, 20);
 
-    ecs_async_stage_free(async);
+    ecs_stage_free(async);
 
     ecs_fini(world);
 }
@@ -1374,7 +1374,7 @@ void ComponentLifecycle_merge_async_stage_w_emplace_to_deferred_world(void) {
 
     ecs_entity_t e = ecs_new_id(world);
 
-    ecs_world_t *async = ecs_async_stage_new(world);
+    ecs_world_t *async = ecs_stage_new(world);
 
     Position *p = ecs_emplace(async, e, Position);
     test_assert(!ecs_has(world, e, Position));
@@ -1395,7 +1395,7 @@ void ComponentLifecycle_merge_async_stage_w_emplace_to_deferred_world(void) {
     test_int(ptr->x, 10);
     test_int(ptr->y, 20);
 
-    ecs_async_stage_free(async);
+    ecs_stage_free(async);
 
     ecs_fini(world);
 }
@@ -2756,7 +2756,7 @@ void ComponentLifecycle_ctor_move_dtor_from_move_ctor(void) {
 
     ecs_entity_t e = ecs_new_id(world);
 
-    ecs_world_t *async = ecs_async_stage_new(world);
+    ecs_world_t *async = ecs_stage_new(world);
 
     Position *p = ecs_emplace(async, e, Position);
     test_assert(!ecs_has(world, e, Position));
@@ -2776,7 +2776,7 @@ void ComponentLifecycle_ctor_move_dtor_from_move_ctor(void) {
     test_int(ptr->x, 10);
     test_int(ptr->y, 20);
 
-    ecs_async_stage_free(async);
+    ecs_stage_free(async);
 
     ecs_fini(world);
 }

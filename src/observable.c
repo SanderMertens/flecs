@@ -1120,9 +1120,9 @@ void flecs_emit(
     ecs_flags32_t table_flags = table->flags;
 
     /* Deferring cannot be suspended for observers */
-    int32_t defer = world->stages[0].defer;
+    int32_t defer = world->stages[0]->defer;
     if (defer < 0) {
-        world->stages[0].defer *= -1;
+        world->stages[0]->defer *= -1;
     }
 
     /* Table events are emitted for internal table operations only, and do not
@@ -1253,7 +1253,7 @@ repeat_event:
                 const ecs_event_record_t *er_fwd = NULL;
                 if (ECS_PAIR_FIRST(id) == EcsIsA) {
                     if (event == EcsOnAdd) {
-                        if (!world->stages[0].base) {
+                        if (!world->stages[0]->base) {
                             /* Adding an IsA relationship can trigger prefab
                              * instantiation, which can instantiate prefab 
                              * hierarchies for the entity to which the 
@@ -1263,9 +1263,9 @@ repeat_event:
                             /* Setting this value prevents flecs_instantiate 
                              * from being called recursively, in case prefab
                              * children also have IsA relationships. */
-                            world->stages[0].base = tgt;
+                            world->stages[0]->base = tgt;
                             flecs_instantiate(world, tgt, table, offset, count);
-                            world->stages[0].base = 0;
+                            world->stages[0]->base = 0;
                         }
 
                         /* Adding an IsA relationship will emit OnSet events for
@@ -1440,7 +1440,7 @@ repeat_event:
     }
 
 error:
-    world->stages[0].defer = defer;
+    world->stages[0]->defer = defer;
 
     if (measure_time) {
         world->info.emit_time_total += (ecs_ftime_t)ecs_time_measure(&t);

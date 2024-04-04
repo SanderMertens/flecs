@@ -596,7 +596,7 @@ void flecs_run_pipeline(
     ecs_poly_assert(world, ecs_stage_t);
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);  
-    int32_t stage_index = ecs_get_stage_id(stage->thread_ctx);
+    int32_t stage_index = ecs_stage_get_id(stage->thread_ctx);
     int32_t stage_count = ecs_get_stage_count(world);
     bool multi_threaded = world->worker_cond != 0;
 
@@ -658,7 +658,7 @@ void flecs_run_pipeline(
 
             int32_t si;
             for (si = 0; si < stage_count; si ++) {
-                ecs_stage_t *s = &world->stages[si];
+                ecs_stage_t *s = world->stages[si];
                 pq->cur_op->commands_enqueued += ecs_vec_count(&s->cmd->queue);
             }
 

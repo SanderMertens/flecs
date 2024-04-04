@@ -1830,7 +1830,7 @@ void Pairs_tag_pair_w_rel_comp(void) {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Obj);
 
-    ecs_add_id(world, ecs_id(Position), EcsTag);
+    ecs_add_id(world, ecs_id(Position), EcsPairIsTag);
 
     ecs_entity_t e = ecs_new_id(world);
     ecs_id_t pair_id = ecs_pair(ecs_id(Position), Obj);
@@ -1849,7 +1849,7 @@ void Pairs_tag_pair_w_obj_comp(void) {
     ECS_TAG(world, Rel);
     ECS_COMPONENT(world, Position);
 
-    ecs_add_id(world, Rel, EcsTag);
+    ecs_add_id(world, Rel, EcsPairIsTag);
 
     ecs_entity_t e = ecs_new_id(world);
     ecs_id_t pair_id = ecs_pair(Rel, ecs_id(Position));
@@ -1868,7 +1868,7 @@ void Pairs_tag_pair_w_rel_obj_comp(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_add_id(world, ecs_id(Position), EcsTag);
+    ecs_add_id(world, ecs_id(Position), EcsPairIsTag);
 
     ecs_entity_t e = ecs_new_id(world);
     ecs_id_t pair_id = ecs_pair(ecs_id(Position), ecs_id(Velocity));
@@ -1889,7 +1889,7 @@ void Pairs_get_tag_pair_w_rel_comp(void) {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Obj);
 
-    ecs_add_id(world, ecs_id(Position), EcsTag);
+    ecs_add_id(world, ecs_id(Position), EcsPairIsTag);
 
     ecs_entity_t e = ecs_new_id(world);
     ecs_id_t pair_id = ecs_pair(ecs_id(Position), Obj);
@@ -1908,7 +1908,7 @@ void Pairs_get_tag_pair_w_obj_comp(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_add_id(world, ecs_id(Position), EcsTag);
+    ecs_add_id(world, ecs_id(Position), EcsPairIsTag);
 
     ecs_entity_t e = ecs_new_id(world);
     ecs_id_t pair_id = ecs_pair(ecs_id(Position), ecs_id(Velocity));
@@ -1927,7 +1927,7 @@ void Pairs_get_tag_pair_w_rel_obj_comp(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_add_id(world, ecs_id(Position), EcsTag);
+    ecs_add_id(world, ecs_id(Position), EcsPairIsTag);
 
     ecs_entity_t e = ecs_new_id(world);
     ecs_id_t pair_id = ecs_pair(ecs_id(Position), ecs_id(Velocity));

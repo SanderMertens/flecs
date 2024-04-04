@@ -251,10 +251,6 @@ struct ecs_stage_t {
     /* Running system */
     ecs_entity_t system;
 
-    /* Properties */
-    bool auto_merge;                 /* Should this stage automatically merge? */
-    bool async;                      /* Is stage asynchronous? (write only) */
-
     /* Thread specific allocators */
     ecs_stage_allocators_t allocators;
     ecs_allocator_t allocator;
@@ -371,7 +367,7 @@ struct ecs_world_t {
     ecs_hashmap_t symbols;
 
     /* -- Staging -- */
-    ecs_stage_t *stages;             /* Stages */
+    ecs_stage_t **stages;            /* Stages */
     int32_t stage_count;             /* Number of stages */
 
     /* Internal callback for command inspection. Only one callback can be set at

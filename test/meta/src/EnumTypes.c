@@ -209,7 +209,7 @@ void EnumTypes_enum_relation(void) {
     test_assert(e != 0);
     test_assert(ecs_has(world, e, EcsComponent));
     test_assert(ecs_has_id(world, e, EcsExclusive));
-    test_assert(ecs_has_id(world, e, EcsTag));
+    test_assert(ecs_has_id(world, e, EcsPairIsTag));
 
     ecs_entity_t red = ecs_lookup_child(world, e, "Red");
     ecs_entity_t green = ecs_lookup_child(world, e, "Green");

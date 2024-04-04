@@ -1346,7 +1346,7 @@ static int invoked_count = 0;
 static int invoked_main_count = 0;
 
 static void dummy(ecs_iter_t *it) {
-    int stage_id = ecs_get_stage_id(it->world);
+    int stage_id = ecs_stage_get_id(it->world);
 
     if (stage_id == 0) {
         test_assert(main_thread == ecs_os_thread_self());

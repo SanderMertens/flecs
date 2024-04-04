@@ -48,7 +48,7 @@ int main(int, char*[]) {
 
     // You can prevent a pair from assuming the type of a component by adding
     // the Tag property to a relationship:
-    ecs.component<MustHave>().add(flecs::Tag);
+    ecs.component<MustHave>().add(flecs::PairIsTag);
 
     // Even though Position is a component, <MustHave, Position> contains no
     // data because MustHave has the Tag property.

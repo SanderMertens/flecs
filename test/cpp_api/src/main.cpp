@@ -6165,8 +6165,9 @@ bake_test_case Doc_testcases[] = {
     }
 };
 
+const char* QueryBuilder_cache_kind_param[] = {"default", "auto"};
 bake_test_param QueryBuilder_params[] = {
-    {"cache_kind", (char*[]){"default", "auto"}, 2}
+    {"cache_kind", (char**)QueryBuilder_cache_kind_param, 2}
 };
 
 static bake_test_suite suites[] = {
