@@ -9451,6 +9451,7 @@ void Basic_implicit_cleanup_2_queries_1_cleanup(void) {
     test_assert(q_2 != NULL);
 
     ecs_query_fini(q_1);
+    ecs_query_fini(q_2);
 
     ecs_fini(world);
 }
@@ -10040,6 +10041,8 @@ void Basic_no_results_after_delete_tree_deferred(void) {
     test_bool(ecs_is_alive(world, grand_child), false);
 
     test_int(0, ecs_query_count(q).results);
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }

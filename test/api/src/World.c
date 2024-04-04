@@ -1040,6 +1040,8 @@ void World_ensure_empty_root(void) {
 
     test_assert(!ecs_query_next(&it));
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 

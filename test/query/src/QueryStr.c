@@ -491,7 +491,7 @@ void QueryStr_pred_eq(void) {
     test_str(str, "$this == TagA");
     ecs_os_free(str);
 
-    ecs_query_str(q);
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -511,7 +511,7 @@ void QueryStr_pred_neq(void) {
     test_str(str, "$this != TagA");
     ecs_os_free(str);
 
-    ecs_query_str(q);
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -531,7 +531,7 @@ void QueryStr_pred_eq_name(void) {
     test_str(str, "$this == \"TagA\"");
     ecs_os_free(str);
 
-    ecs_query_str(q);
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -551,7 +551,7 @@ void QueryStr_pred_neq_name(void) {
     test_str(str, "$this != \"TagA\"");
     ecs_os_free(str);
 
-    ecs_query_str(q);
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -571,7 +571,7 @@ void QueryStr_pred_eq_m(void) {
     test_str(str, "$this ~= \"TagA\"");
     ecs_os_free(str);
 
-    ecs_query_str(q);
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -591,7 +591,7 @@ void QueryStr_pred_neq_m(void) {
     test_str(str, "$this ~= \"!TagA\"");
     ecs_os_free(str);
 
-    ecs_query_str(q);
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }

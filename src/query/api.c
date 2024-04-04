@@ -80,7 +80,7 @@ int flecs_query_set_caching_policy(
     /* If caching policy is default, try to pick a policy that does the right
      * thing in most cases. */
     if (kind == EcsQueryCacheDefault) {
-        if (desc->entity || desc->group_by || desc->group_by || 
+        if (desc->entity || desc->group_by || desc->group_by_callback || 
             desc->order_by || desc->order_by_callback)
         {
             /* If the query is created with an entity handle (typically 
@@ -194,7 +194,6 @@ int flecs_query_create_cache(
 
     return 0;
 error:
-    flecs_query_cache_fini(impl);
     return -1;
 }
 
@@ -397,6 +396,7 @@ ecs_query_t* ecs_query_init(
 
     return &result->pub;
 error:
+    result->pub.entity = 0;
     ecs_query_fini(&result->pub);
     return NULL;
 }

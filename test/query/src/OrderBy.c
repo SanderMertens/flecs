@@ -839,6 +839,7 @@ void OrderBy_sort_after_query(void) {
     test_assert(!ecs_query_next(&it));
 
     ecs_query_fini(q);
+    ecs_query_fini(flip_q);
 
     ecs_fini(world);
 }

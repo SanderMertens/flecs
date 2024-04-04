@@ -82,8 +82,6 @@ void SystemManual_1_type_1_component(void) {
     ecs_fini(world);
 }
 
-static int normal_count;
-
 static
 void AddVelocity(ecs_iter_t *it) {
     ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 2);

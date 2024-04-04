@@ -254,6 +254,8 @@ void Recycled_recycled_pair(void) {
     test_uint(ecs_field_id(&it, 1), ecs_pair(rel, tgt));
     test_bool(false, ecs_query_next(&it));
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 

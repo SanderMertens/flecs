@@ -226,7 +226,7 @@ void flecs_query_cache_build_sorted_tables(
 {
     ecs_vec_clear(&cache->table_slices);
 
-    if (cache->group_by) {
+    if (cache->group_by_callback) {
         /* Populate sorted node list in grouping order */
         ecs_query_cache_table_match_t *cur = cache->list.first;
         if (cur) {

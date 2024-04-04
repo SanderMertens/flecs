@@ -1072,7 +1072,8 @@ void Cached_rematch_after_add_to_recycled_parent(void) {
     ECS_TAG(world, Tag);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Tag, Position(up)"
+        .expr = "Tag, Position(up)",
+        .cache_kind = EcsQueryCacheAuto
     });
 
     test_assert(q != NULL);
@@ -3362,6 +3363,8 @@ void Cached_query_w_pair_id_and_subj(void) {
     test_uint(it.ids[0], ecs_pair(Rel, Obj));
     test_bool(false, ecs_query_next(&it));
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -3396,6 +3399,8 @@ void Cached_rematch_after_delete_inherited_tag(void) {
 
     it = ecs_query_iter(world, q);
     test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }

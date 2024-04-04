@@ -1094,14 +1094,16 @@ void flecs_observer_fini(
     ecs_assert(observer->query != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_world_t *world = observer->query->world;
 
-    ecs_observer_t **children = ecs_vec_first(&observer->children);
-    int32_t i, children_count = ecs_vec_count(&observer->children);
-    if (children_count) {
+    if (observer->flags & EcsObserverIsMulti) {
+        ecs_observer_t **children = ecs_vec_first(&observer->children);
+        int32_t i, children_count = ecs_vec_count(&observer->children);
+
         for (i = 0; i < children_count; i ++) {
             flecs_observer_fini(children[i]);
         }
+
         ecs_os_free(observer->last_event_id);
-    } else if (!(observer->flags & EcsObserverIsMulti)) {
+    } else {
         if (observer->query->term_count) {
             flecs_unregister_observer(
                 world, observer->observable, observer);

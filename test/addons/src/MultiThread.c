@@ -814,6 +814,8 @@ void MultiThread_2_thread_test_combs_100_entity_w_next_worker(void) {
         test_int(p->x, ENTITIES - i);
     }
 
+    ecs_query_fini(q);
+
     ecs_fini(world); 
 }
 
@@ -1104,7 +1106,8 @@ static int create_query_invoked = 0;
 
 static
 void CreateQuery(ecs_iter_t *it) {
-    ecs_query_new(it->world, "0");
+    ecs_query_t *q = ecs_query_new(it->world, "0");
+    ecs_query_fini(q);
     create_query_invoked ++;
 }
 
@@ -1332,6 +1335,8 @@ void MultiThread_bulk_new_in_no_readonly_w_multithread_2(void) {
     ecs_progress(world, 0);
 
     test_int(ecs_count(world, Position), 1);
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }

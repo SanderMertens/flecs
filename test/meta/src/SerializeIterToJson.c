@@ -25,6 +25,8 @@ void SerializeIterToJson_serialize_1_comps_empty(void) {
 
     ecs_os_free(json);
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -68,6 +70,8 @@ void SerializeIterToJson_serialize_1_comps_2_ents_same_table(void) {
     "}");
 
     ecs_os_free(json);
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -127,6 +131,8 @@ void SerializeIterToJson_serialize_2_comps_2_ents_same_table(void) {
 
     ecs_os_free(json);
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -158,6 +164,8 @@ void SerializeIterToJson_serialize_1_tag_2_ents_same_table(void) {
     "}");
 
     ecs_os_free(json);
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -206,6 +214,8 @@ void SerializeIterToJson_serialize_1_tag_1_comp_2_ents_same_table(void) {
     "}");
 
     ecs_os_free(json);
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -276,6 +286,8 @@ void SerializeIterToJson_serialize_1_tag_1_comp_4_ents_two_tables(void) {
 
     ecs_os_free(json);
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -335,6 +347,8 @@ void SerializeIterToJson_serialize_2_comps_1_owned_2_ents(void) {
 
     ecs_os_free(json);
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -374,6 +388,8 @@ void SerializeIterToJson_serialize_w_pair_wildcard(void) {
     "}");
 
     ecs_os_free(json);
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -513,6 +529,8 @@ void SerializeIterToJson_serialize_type_info_1_tags(void) {
 
     ecs_os_free(json);
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -551,6 +569,8 @@ void SerializeIterToJson_serialize_type_info_2_tags(void) {
 
     ecs_os_free(json);
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -587,6 +607,8 @@ void SerializeIterToJson_serialize_type_info_1_component(void) {
     "}");
 
     ecs_os_free(json);
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -628,6 +650,8 @@ void SerializeIterToJson_serialize_type_info_2_components(void) {
     "}");
 
     ecs_os_free(json);
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -678,6 +702,8 @@ void SerializeIterToJson_serialize_type_info_1_struct(void) {
     "}");
 
     ecs_os_free(json);
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -735,6 +761,8 @@ void SerializeIterToJson_serialize_type_info_1_component_1_struct(void) {
     "}");
 
     ecs_os_free(json);
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -804,6 +832,8 @@ void SerializeIterToJson_serialize_type_info_2_structs(void) {
 
     ecs_os_free(json);
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -863,6 +893,8 @@ void SerializeIterToJson_serialize_type_info_w_unit(void) {
     "}");
 
     ecs_os_free(json);
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -929,6 +961,8 @@ void SerializeIterToJson_serialize_type_info_w_unit_quantity(void) {
     "}");
 
     ecs_os_free(json);
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -1003,6 +1037,8 @@ void SerializeIterToJson_serialize_type_info_w_unit_over(void) {
 
     ecs_os_free(json);
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -1048,6 +1084,8 @@ void SerializeIterToJson_serialize_w_entity_label(void) {
 
     ecs_os_free(json);
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -1092,6 +1130,8 @@ void SerializeIterToJson_serialize_w_entity_label_w_str(void) {
     "}");
 
     ecs_os_free(json);
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -1193,6 +1233,8 @@ void SerializeIterToJson_serialize_color(void) {
 
     ecs_os_free(json);
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -1287,6 +1329,8 @@ void SerializeIterToJson_serialize_w_optional_tag(void) {
 
     ecs_os_free(json);
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -1331,6 +1375,8 @@ void SerializeIterToJson_serialize_w_optional_component(void) {
     "}");
 
     ecs_os_free(json);
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -1390,6 +1436,8 @@ void SerializeIterToJson_serialize_w_optional_reflected_component(void) {
 
     ecs_os_free(json);
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -1420,6 +1468,8 @@ void SerializeIterToJson_serialize_w_inout_filter_tag(void) {
     "}");
 
     ecs_os_free(json);
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -1462,6 +1512,8 @@ void SerializeIterToJson_serialize_w_inout_filter_component(void) {
     "}");
 
     ecs_os_free(json);
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -1513,6 +1565,8 @@ void SerializeIterToJson_serialize_w_inout_filter_reflected_component(void) {
 
     ecs_os_free(json);
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -1543,6 +1597,8 @@ void SerializeIterToJson_serialize_w_inout_out_tag(void) {
     "}");
 
     ecs_os_free(json);
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -1585,6 +1641,8 @@ void SerializeIterToJson_serialize_w_inout_out_component(void) {
     "}");
 
     ecs_os_free(json);
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -1635,6 +1693,8 @@ void SerializeIterToJson_serialize_w_inout_out_reflected_component(void) {
     "}");
 
     ecs_os_free(json);
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -1709,6 +1769,8 @@ void SerializeIterToJson_serialize_ids(void) {
     ecs_os_free(json);
     ecs_os_free(expect);
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -1742,6 +1804,8 @@ void SerializeIterToJson_serialize_ids_2_entities(void) {
 
     ecs_os_free(json);
     ecs_os_free(expect);
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -1779,6 +1843,8 @@ void SerializeIterToJson_serialize_anonymous(void) {
     ecs_os_free(json);
     ecs_os_free(expect);
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -1814,6 +1880,8 @@ void SerializeIterToJson_serialize_anonymous_ids(void) {
 
     ecs_os_free(json);
     ecs_os_free(expect);
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -1980,6 +2048,8 @@ void SerializeIterToJson_serialize_anonymous_tag(void) {
     ecs_os_free(json);
     ecs_os_free(expect);
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -2019,6 +2089,8 @@ void SerializeIterToJson_serialize_anonymous_component(void) {
     ecs_os_free(json);
     ecs_os_free(expect);
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -2048,6 +2120,8 @@ void SerializeIterToJson_serialize_anonymous_pair(void) {
 
     ecs_os_free(json);
     ecs_os_free(expect);
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -2089,6 +2163,8 @@ void SerializeIterToJson_serialize_invalid_value(void) {
     char *json = ecs_iter_to_json(&it, NULL);
     test_assert(json == NULL);
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -2118,6 +2194,8 @@ void SerializeIterToJson_serialize_recycled_pair_id(void) {
     "]}");
 
     ecs_os_free(json);
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -2161,6 +2239,8 @@ void SerializeIterToJson_serialize_w_alert(void) {
         "{\"entities\":[\"e2\"], \"alerts\":true}]}");
 
     ecs_os_free(json);
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -2943,6 +3023,8 @@ void SerializeIterToJson_serialize_term_labels(void) {
 
     ecs_os_free(json);
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -2974,6 +3056,8 @@ void SerializeIterToJson_serialize_id_labels(void) {
     test_str(json, "{\"results\":[{\"id_labels\":[[\"position\"]]}]}");
 
     ecs_os_free(json);
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -3007,6 +3091,8 @@ void SerializeIterToJson_serialize_id_labels_w_str(void) {
 
     ecs_os_free(json);
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -3035,6 +3121,8 @@ void SerializeIterToJson_serialize_vars_for_query(void) {
     test_str(json, "{\"results\":[{\"entities\":[\"e1\", \"e2\"]}]}");
 
     ecs_os_free(json);
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -3065,6 +3153,8 @@ void SerializeIterToJson_serialize_var_labels_for_query(void) {
 
     ecs_os_free(json);
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -3093,6 +3183,8 @@ void SerializeIterToJson_serialize_var_ids_for_query(void) {
     test_str(json, "{\"results\":[{\"entities\":[\"e1\", \"e2\"]}]}");
 
     ecs_os_free(json);
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -3123,6 +3215,8 @@ void SerializeIterToJson_serialize_null_doc_name(void) {
     test_assert(json != NULL);
     test_str(json, "{\"results\":[{\"entities\":[\"foo\"]}]}");
     ecs_os_free(json);
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }

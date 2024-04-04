@@ -19344,12 +19344,12 @@ struct world {
      * The application must ensure that no commands are added to the stage while the
      * stage is being merged.
      *
-     * An asynchronous stage must be cleaned up by ecs_async_stage_free.
-     *
      * @return The stage.
      */
     flecs::world async_stage() const {
-        return flecs::world(ecs_async_stage_new(m_world));
+        ecs_world_t *as = ecs_async_stage_new(m_world);
+        ecs_poly_release(as); // world object will claim
+        return flecs::world(as);
     }
 
     /** Get actual world.

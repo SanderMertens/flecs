@@ -1059,6 +1059,8 @@ void Validator_validate_1_w_pred_name(void) {
     test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
     test_uint(q->terms[0].trav, EcsIsA);
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -1076,6 +1078,8 @@ void Validator_validate_1_w_final_pred_name(void) {
     test_uint(q->terms[0].first.id, Tag|EcsSelf|EcsIsEntity);
     test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
     test_uint(q->terms[0].trav, EcsIsA);
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -1096,6 +1100,8 @@ void Validator_validate_1_w_subj_name(void) {
     test_assert(q->terms[0].src.name ==  NULL);
     test_uint(q->terms[0].src.id, Src|EcsSelf|EcsUp|EcsIsEntity);
     test_uint(q->terms[0].trav, EcsIsA);
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -1118,6 +1124,8 @@ void Validator_validate_1_w_obj_name(void) {
     test_assert(q->terms[0].second.name ==  NULL);
     test_int(q->terms[0].second.id, Tgt|EcsSelf|EcsIsEntity);
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -1136,6 +1144,8 @@ void Validator_validate_w_this_implicit_variable(void) {
     test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
     test_uint(q->terms[0].trav, EcsIsA);
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -1153,6 +1163,8 @@ void Validator_validate_w_this_explicit_entity(void) {
     test_uint(q->terms[0].first.id, Tag|EcsSelf|EcsIsEntity);
     test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsEntity);
     test_uint(q->terms[0].trav, EcsIsA);
+    
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -1172,6 +1184,8 @@ void Validator_validate_w_first_this_implicit_variable(void) {
     test_uint(q->terms[0].src.id, Src|EcsSelf|EcsUp|EcsIsEntity);
     test_uint(q->terms[0].trav, EcsIsA);
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -1189,6 +1203,8 @@ void Validator_validate_w_first_this_explicit_entity(void) {
     test_uint(q->terms[0].first.id, EcsThis|EcsSelf|EcsIsEntity);
     test_uint(q->terms[0].src.id, Src|EcsSelf|EcsUp|EcsIsEntity);
     test_uint(q->terms[0].trav, EcsIsA);
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -1209,6 +1225,8 @@ void Validator_validate_w_second_this_implicit_variable(void) {
     test_uint(q->terms[0].trav, EcsIsA);
     test_int(q->terms[0].second.id, EcsThis|EcsSelf|EcsIsVariable);
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -1227,6 +1245,8 @@ void Validator_validate_w_second_this_explicit_entity(void) {
     test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
     test_uint(q->terms[0].trav, EcsIsA);
     test_int(q->terms[0].second.id, EcsThis|EcsSelf|EcsIsEntity);
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -1248,6 +1268,8 @@ void Validator_validate_w_this_variable_name(void) {
     test_uint(q->terms[0].trav, EcsIsA);
     test_assert(q->terms[0].src.name == NULL);
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -1266,6 +1288,8 @@ void Validator_validate_w_0_source(void) {
     test_uint(q->terms[0].src.id, EcsIsEntity);
     test_uint(q->terms[0].trav, 0);
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -1282,6 +1306,8 @@ void Validator_validate_w_0_target(void) {
     test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
     test_uint(q->terms[0].trav, 0);
     test_uint(q->terms[0].second.id, EcsSelf|EcsIsEntity);
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -2212,11 +2238,15 @@ void Validator_validate_filter_flag(void) {
 
     ECS_COMPONENT(world, Position);
 
-    test_assert(NULL != ecs_query(world, {
+    ecs_query_t *q = ecs_query(world, {
         .terms = {
             { .inout = EcsInOutFilter, .id = ecs_id(Position) }
         }
-    }));
+    });
+
+    test_assert(q != NULL);
+    
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }

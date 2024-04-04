@@ -481,6 +481,9 @@ jobs:
       - name: test api
         run: bake run test/api -- -j 8
 
+      - name: test query
+        run: bake run test/query -- -j 8
+
       - name: test addons
         run: bake run test/addons -- -j 8
 
@@ -660,6 +663,9 @@ jobs:
       - name: test api
         run: bake/bake run test/api -- -j 8
 
+      - name: test query
+        run: bake/bake run test/query -- -j 8
+
       - name: test addons
         run: bake/bake run test/addons -- -j 8
 
@@ -695,6 +701,30 @@ jobs:
       - name: run tests
         run: |
           bake run test/api --cfg sanitize -- -j 8
+
+  test-sanitized-query:
+    needs: [ build-linux ]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-20.04 ]
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: install bake
+        run: |
+          git clone -b test_params https://github.com/SanderMertens/bake
+          make -C bake/build-$(uname)
+          bake/bake setup
+
+      - name: build flecs
+        run: bake --strict
+
+      - name: run tests
+        run: |
+          bake run test/query --cfg sanitize -- -j 8
 
   test-sanitized-addons:
     needs: [ build-linux ]

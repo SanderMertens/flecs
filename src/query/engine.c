@@ -252,6 +252,7 @@ void flecs_query_var_narrow_range(
         .offset = offset,
         .count = count
     };
+
     if (ctx->query_vars[var_id].kind != EcsVarTable) {    
         ecs_assert(count == 1, ECS_INTERNAL_ERROR, NULL);
         var->entity = flecs_table_entities_array(table)[offset];
@@ -2496,15 +2497,19 @@ next_block:
         goto done;
     }
 
-    flecs_query_var_narrow_range(op->src.var, table, row, cur - row, ctx);
+    if (op->flags & (EcsQueryIsVar << EcsQuerySrc)) {
+        flecs_query_var_narrow_range(op->src.var, table, row, cur - row, ctx);
+    }
     op_ctx->cur = cur;
 
     return true;
 
 done:
     /* Restore range & set fields */
-    flecs_query_var_narrow_range(op->src.var, 
-        table, op_ctx->range.offset, op_ctx->range.count, ctx);
+    if (op->flags & (EcsQueryIsVar << EcsQuerySrc)) {
+        flecs_query_var_narrow_range(op->src.var, 
+            table, op_ctx->range.offset, op_ctx->range.count, ctx);
+    }
 
     it->set_fields = op_ctx->prev_set_fields;
     return false;

@@ -13491,14 +13491,16 @@ void flecs_observer_fini(
     ecs_assert(observer->query != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_world_t *world = observer->query->world;
 
-    ecs_observer_t **children = ecs_vec_first(&observer->children);
-    int32_t i, children_count = ecs_vec_count(&observer->children);
-    if (children_count) {
+    if (observer->flags & EcsObserverIsMulti) {
+        ecs_observer_t **children = ecs_vec_first(&observer->children);
+        int32_t i, children_count = ecs_vec_count(&observer->children);
+
         for (i = 0; i < children_count; i ++) {
             flecs_observer_fini(children[i]);
         }
+
         ecs_os_free(observer->last_event_id);
-    } else if (!(observer->flags & EcsObserverIsMulti)) {
+    } else {
         if (observer->query->term_count) {
             flecs_unregister_observer(
                 world, observer->observable, observer);
@@ -34023,7 +34025,7 @@ int flecs_query_set_caching_policy(
     /* If caching policy is default, try to pick a policy that does the right
      * thing in most cases. */
     if (kind == EcsQueryCacheDefault) {
-        if (desc->entity || desc->group_by || desc->group_by || 
+        if (desc->entity || desc->group_by || desc->group_by_callback || 
             desc->order_by || desc->order_by_callback)
         {
             /* If the query is created with an entity handle (typically 
@@ -34137,7 +34139,6 @@ int flecs_query_create_cache(
 
     return 0;
 error:
-    flecs_query_cache_fini(impl);
     return -1;
 }
 
@@ -34340,6 +34341,7 @@ ecs_query_t* ecs_query_init(
 
     return &result->pub;
 error:
+    result->pub.entity = 0;
     ecs_query_fini(&result->pub);
     return NULL;
 }
@@ -36470,7 +36472,7 @@ void flecs_query_cache_build_sorted_tables(
 {
     ecs_vec_clear(&cache->table_slices);
 
-    if (cache->group_by) {
+    if (cache->group_by_callback) {
         /* Populate sorted node list in grouping order */
         ecs_query_cache_table_match_t *cur = cache->list.first;
         if (cur) {
@@ -40069,6 +40071,7 @@ void flecs_query_var_narrow_range(
         .offset = offset,
         .count = count
     };
+
     if (ctx->query_vars[var_id].kind != EcsVarTable) {    
         ecs_assert(count == 1, ECS_INTERNAL_ERROR, NULL);
         var->entity = flecs_table_entities_array(table)[offset];
@@ -42313,15 +42316,19 @@ next_block:
         goto done;
     }
 
-    flecs_query_var_narrow_range(op->src.var, table, row, cur - row, ctx);
+    if (op->flags & (EcsQueryIsVar << EcsQuerySrc)) {
+        flecs_query_var_narrow_range(op->src.var, table, row, cur - row, ctx);
+    }
     op_ctx->cur = cur;
 
     return true;
 
 done:
     /* Restore range & set fields */
-    flecs_query_var_narrow_range(op->src.var, 
-        table, op_ctx->range.offset, op_ctx->range.count, ctx);
+    if (op->flags & (EcsQueryIsVar << EcsQuerySrc)) {
+        flecs_query_var_narrow_range(op->src.var, 
+            table, op_ctx->range.offset, op_ctx->range.count, ctx);
+    }
 
     it->set_fields = op_ctx->prev_set_fields;
     return false;

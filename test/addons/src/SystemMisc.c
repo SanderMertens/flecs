@@ -813,6 +813,8 @@ void SystemMisc_rw_in_implicit_any(void) {
     test_assert(ecs_field_is_readonly(&it, 2) == false);
     test_assert(ecs_query_next(&it) == false);
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -834,6 +836,8 @@ void SystemMisc_rw_in_implicit_shared(void) {
     test_assert(ecs_field_is_readonly(&it, 2) == true);
     test_assert(ecs_query_next(&it) == false);
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -853,6 +857,8 @@ void SystemMisc_rw_in_implicit_from_empty(void) {
     test_assert(ecs_field_is_readonly(&it, 1) == false);
     test_assert(ecs_field_is_readonly(&it, 2) == true);
     test_assert(ecs_query_next(&it) == false);
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -875,6 +881,8 @@ void SystemMisc_rw_in_implicit_from_entity(void) {
     test_assert(ecs_field_is_readonly(&it, 2) == true);
     test_assert(ecs_query_next(&it) == false);
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -894,6 +902,8 @@ void SystemMisc_rw_out_explicit_any(void) {
     test_assert(ecs_field_is_readonly(&it, 1) == false);
     test_assert(ecs_field_is_readonly(&it, 2) == false);
     test_assert(ecs_query_next(&it) == false);
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -916,6 +926,8 @@ void SystemMisc_rw_out_explicit_shared(void) {
     test_assert(ecs_field_is_readonly(&it, 2) == false);
     test_assert(ecs_query_next(&it) == false);
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -935,6 +947,8 @@ void SystemMisc_rw_out_explicit_from_empty(void) {
     test_assert(ecs_field_is_readonly(&it, 1) == false);
     test_assert(ecs_field_is_readonly(&it, 2) == false);
     test_assert(ecs_query_next(&it) == false);
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -956,6 +970,8 @@ void SystemMisc_rw_out_explicit_from_entity(void) {
     test_assert(ecs_field_is_readonly(&it, 1) == false);
     test_assert(ecs_field_is_readonly(&it, 2) == false);
     test_assert(ecs_query_next(&it) == false);
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -1020,6 +1036,8 @@ void SystemMisc_get_query(void) {
     }
 
     test_int(count, 3);
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }

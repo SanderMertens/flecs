@@ -849,6 +849,7 @@ void OrderByEntireTable_sort_after_query(void) {
     test_assert(!ecs_query_next(&it));
 
     ecs_query_fini(q);
+    ecs_query_fini(flip_q);
 
     ecs_fini(world);
 }
@@ -1843,6 +1844,9 @@ void OrderByEntireTable_dont_resort_after_set_unsorted_component_w_tag_w_out_ter
     ecs_iter_fini(&itq);
 
     ecs_query_fini(q);
+    ecs_query_fini(q_a);
+    ecs_query_fini(q_b);
+    ecs_query_fini(q_c);
 
     ecs_fini(world);
 }

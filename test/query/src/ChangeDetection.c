@@ -1161,6 +1161,7 @@ void ChangeDetection_query_changed_w_only_singleton_after_out_term(void) {
     }
 
     ecs_query_fini(q);
+    ecs_query_fini(q_write);
 
     ecs_fini(world);
 }
@@ -1225,6 +1226,7 @@ void ChangeDetection_query_changed_w_only_singleton_after_singleton_out_term(voi
     }
 
     ecs_query_fini(q);
+    ecs_query_fini(q_write);
 
     ecs_fini(world);
 }
@@ -1392,6 +1394,7 @@ void ChangeDetection_query_changed_w_only_parent_after_out_term(void) {
     }
 
     ecs_query_fini(q);
+    ecs_query_fini(q_write);
 
     ecs_fini(world);
 }
@@ -1461,6 +1464,7 @@ void ChangeDetection_query_changed_w_only_parent_after_parent_out_term(void) {
     }
 
     ecs_query_fini(q);
+    ecs_query_fini(q_write);
 
     ecs_fini(world);
 }
