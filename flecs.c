@@ -42168,6 +42168,7 @@ bool flecs_query_toggle_cmp(
     ecs_table_range_t range = flecs_query_get_range(
         op, &op->src, EcsQuerySrc, ctx);
     ecs_table_t *table = range.table;
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if ((and_fields & op_ctx->prev_set_fields) != and_fields) {
         /* If not all fields matching and toggles are set, table can't match */
