@@ -2493,7 +2493,9 @@ void Entity_with_self(void) {
     test_assert(!self.has(Tag));
 
     int count = 0;
-    auto q = ecs.query_builder<>().term(Tag).build();
+    auto q = ecs.query_builder<>()
+        .with(Tag)
+        .build();
 
     q.each([&](flecs::entity e) {
         test_assert(e.has(Tag));
@@ -2525,7 +2527,9 @@ void Entity_with_relation_type_self(void) {
     test_assert(!self.has<Likes>(Bob));
 
     int count = 0;
-    auto q = ecs.query_builder<>().term<Likes>(Bob).build();
+    auto q = ecs.query_builder<>()
+        .with<Likes>(Bob)
+        .build();
 
     q.each([&](flecs::entity e) {
         test_assert(e.has<Likes>(Bob));
@@ -2557,7 +2561,9 @@ void Entity_with_relation_self(void) {
     test_assert(!self.has(Likes, Bob));
 
     int count = 0;
-    auto q = ecs.query_builder<>().term(Likes, Bob).build();
+    auto q = ecs.query_builder<>()
+        .with(Likes, Bob)
+        .build();
 
     q.each([&](flecs::entity e) {
         test_assert(e.has(Likes, Bob));
@@ -2642,7 +2648,9 @@ void Entity_with_scope(void) {
     test_assert(!self.has(flecs::ChildOf, parent));
 
     int count = 0;
-    auto q = ecs.query_builder<>().term(flecs::ChildOf, parent).build();
+    auto q = ecs.query_builder<>()
+        .with(flecs::ChildOf, parent)
+        .build();
 
     q.each([&](flecs::entity e) {
         test_assert(e.has(flecs::ChildOf, parent));

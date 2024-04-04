@@ -48,8 +48,8 @@ void SystemBuilder_builder_build_n_statements(void) {
     int32_t count = 0;
 
     auto qb = ecs.system<>();
-    qb.term<Position>();
-    qb.term<Velocity>();
+    qb.with<Position>();
+    qb.with<Velocity>();
     auto s = qb.each([&](flecs::entity e) {
         count ++;
         test_assert(e == e1);
@@ -88,7 +88,7 @@ void SystemBuilder_add_1_type(void) {
     int32_t count = 0;
 
     auto s = ecs.system<>()
-        .term<Position>()
+        .with<Position>()
         .each([&](flecs::entity e) {
             count ++;
             test_assert(e == e1);
@@ -108,8 +108,8 @@ void SystemBuilder_add_2_types(void) {
     int32_t count = 0;
 
     auto s = ecs.system<>()
-        .term<Position>()
-        .term<Velocity>()
+        .with<Position>()
+        .with<Velocity>()
         .each([&](flecs::entity e) {
             count ++;
             test_assert(e == e1);
@@ -129,7 +129,7 @@ void SystemBuilder_add_1_type_w_1_type(void) {
     int32_t count = 0;
 
     auto s = ecs.system<Position>()
-        .term<Velocity>()
+        .with<Velocity>()
         .each([&](flecs::entity e, Position& p) {
             count ++;
             test_assert(e == e1);
@@ -149,8 +149,8 @@ void SystemBuilder_add_2_types_w_1_type(void) {
     int32_t count = 0;
 
     auto s = ecs.system<Position>()
-        .term<Velocity>()
-        .term<Mass>()
+        .with<Velocity>()
+        .with<Mass>()
         .each([&](flecs::entity e, Position& p) {
             count ++;
             test_assert(e == e1);
@@ -174,7 +174,7 @@ void SystemBuilder_add_pair(void) {
     int32_t count = 0;
 
     auto s = ecs.system<>()
-        .term(Likes, Bob)
+        .with(Likes, Bob)
         .each([&](flecs::entity e) {
             count ++;
             test_assert(e == e1);
@@ -194,7 +194,7 @@ void SystemBuilder_add_not(void) {
     int32_t count = 0;
 
     auto s = ecs.system<Position>()
-        .term<Velocity>().oper(flecs::Not)
+        .with<Velocity>().oper(flecs::Not)
         .each([&](flecs::entity e, Position& p) {
             count ++;
             test_assert(e == e1);
@@ -215,8 +215,8 @@ void SystemBuilder_add_or(void) {
     int32_t count = 0;
 
     auto s = ecs.system<>()
-        .term<Position>().oper(flecs::Or)
-        .term<Velocity>()
+        .with<Position>().oper(flecs::Or)
+        .with<Velocity>()
         .each([&](flecs::entity e) {
             count ++;
             test_assert(e == e1 || e == e2);
@@ -237,8 +237,8 @@ void SystemBuilder_add_optional(void) {
     int32_t count = 0;
 
     auto s = ecs.system<>()
-        .term<Position>()
-        .term<Velocity>().oper(flecs::Optional)
+        .with<Position>()
+        .with<Velocity>().oper(flecs::Optional)
         .each([&](flecs::entity e) {
             count ++;
             test_assert(e == e1 || e == e2);
@@ -324,7 +324,7 @@ void SystemBuilder_singleton_term(void) {
     int32_t count = 0;
 
     auto s = ecs.system<Entity>()
-        .term<Singleton>().singleton()
+        .with<Singleton>().singleton().in()
         .iter([&](flecs::iter& it, Entity *e) {
             auto s = it.field<const Singleton>(2);
             test_assert(!it.is_self(2));
@@ -367,16 +367,16 @@ void SystemBuilder_10_terms(void) {
         .add<TagJ>();
 
     auto s = ecs.system<>()
-        .term<TagA>()
-        .term<TagB>()
-        .term<TagC>()
-        .term<TagD>()
-        .term<TagE>()
-        .term<TagF>()
-        .term<TagG>()
-        .term<TagH>()
-        .term<TagI>()
-        .term<TagJ>()
+        .with<TagA>()
+        .with<TagB>()
+        .with<TagC>()
+        .with<TagD>()
+        .with<TagE>()
+        .with<TagF>()
+        .with<TagG>()
+        .with<TagH>()
+        .with<TagI>()
+        .with<TagJ>()
         .iter([&](flecs::iter& it) {
             test_int(it.count(), 1);
             test_assert(it.entity(0) == e);
@@ -413,22 +413,22 @@ void SystemBuilder_16_terms(void) {
         .add<TagP>();
 
     auto s = ecs.system<>()
-        .term<TagA>()
-        .term<TagB>()
-        .term<TagC>()
-        .term<TagD>()
-        .term<TagE>()
-        .term<TagF>()
-        .term<TagG>()
-        .term<TagH>()
-        .term<TagI>()
-        .term<TagJ>()
-        .term<TagK>()
-        .term<TagL>()
-        .term<TagM>()
-        .term<TagN>()
-        .term<TagO>()
-        .term<TagP>()
+        .with<TagA>()
+        .with<TagB>()
+        .with<TagC>()
+        .with<TagD>()
+        .with<TagE>()
+        .with<TagF>()
+        .with<TagG>()
+        .with<TagH>()
+        .with<TagI>()
+        .with<TagJ>()
+        .with<TagK>()
+        .with<TagL>()
+        .with<TagM>()
+        .with<TagN>()
+        .with<TagO>()
+        .with<TagP>()
         .iter([&](flecs::iter& it) {
             test_int(it.count(), 1);
             test_assert(it.entity(0) == e);
@@ -460,7 +460,7 @@ void SystemBuilder_create_w_no_template_args(void) {
     int32_t count = 0;
 
     auto s = ecs.system()
-        .term<Position>()
+        .with<Position>()
         .each([&](flecs::entity e) {
             count ++;
             test_assert(e == e1);
@@ -482,7 +482,7 @@ void SystemBuilder_write_annotation(void) {
     int32_t a_count = 0, b_count = 0;
 
     ecs.system<TagA>()
-        .term<TagB>().write()
+        .with<TagB>().write()
         .each([&](flecs::entity e, TagA) {
             a_count ++;
             test_assert(e == e1);

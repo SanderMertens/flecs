@@ -54,7 +54,7 @@ namespace _ {
         void populate(const Builder& b) {
             size_t i = 0;
             for (auto id : ids) {
-                b->term(id).inout(inout[i]).oper(oper[i]);
+                b->with(id).inout(inout[i]).oper(oper[i]);
                 i ++;
             }
         }

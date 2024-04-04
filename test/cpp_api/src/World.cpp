@@ -641,7 +641,7 @@ void World_with_tag(void) {
     auto self = ecs.component<Self>();
     test_assert(!self.has(Tag));    
 
-    auto q = ecs.query_builder<>().term(Tag).build();
+    auto q = ecs.query_builder<>().with(Tag).build();
 
     int32_t count = 0;
 
@@ -674,7 +674,7 @@ void World_with_tag_type(void) {
     auto self = ecs.component<Self>();
     test_assert(!self.has<Tag>());
 
-    auto q = ecs.query_builder<>().term<Tag>().build();
+    auto q = ecs.query_builder<>().with<Tag>().build();
 
     int32_t count = 0;
 
@@ -708,7 +708,7 @@ void World_with_relation(void) {
     auto self = ecs.component<Self>();
     test_assert(!self.has(Likes, Bob));
 
-    auto q = ecs.query_builder<>().term(Likes, Bob).build();
+    auto q = ecs.query_builder<>().with(Likes, Bob).build();
 
     int32_t count = 0;
 
@@ -742,7 +742,7 @@ void World_with_relation_type(void) {
     auto self = ecs.component<Self>();
     test_assert(!self.has<Likes>(Bob));
 
-    auto q = ecs.query_builder<>().term<Likes>(Bob).build();
+    auto q = ecs.query_builder<>().with<Likes>(Bob).build();
 
     int32_t count = 0;
 
@@ -776,7 +776,7 @@ void World_with_relation_object_type(void) {
     auto self = ecs.component<Self>();
     test_assert(!(self.has<Likes, Bob>()));
 
-    auto q = ecs.query_builder<>().term<Likes, Bob>().build();
+    auto q = ecs.query_builder<>().with<Likes, Bob>().build();
 
     int32_t count = 0;
 
@@ -831,7 +831,7 @@ void World_with_scope(void) {
     test_assert(!self.has(flecs::ChildOf, parent));
 
     int count = 0;
-    auto q = ecs.query_builder<>().term(flecs::ChildOf, parent).build();
+    auto q = ecs.query_builder<>().with(flecs::ChildOf, parent).build();
 
     q.each([&](flecs::entity e) {
         test_assert(e.has(flecs::ChildOf, parent));

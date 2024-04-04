@@ -50,39 +50,117 @@ struct query_builder_i : term_builder_i<Base> {
         return *this;
     }
 
-    /* With/without shorthand notation. */
+    /* With methods */
 
-    template <typename ... Args>
-    Base& with(Args&&... args) {
-        return this->term(FLECS_FWD(args)...).inout_none();
-    }
-
-    template <typename T, typename ... Args>
-    Base& with(Args&&... args) {
-        return this->term<T>(FLECS_FWD(args)...).inout_none();
-    }
-
-    template <typename First, typename Second>
+    template<typename T>
     Base& with() {
-        return this->term<First, Second>().inout_none();
+        this->term();
+        *this->m_term = flecs::term(_::type<T>::id(this->world_v()));
+        this->m_term->inout = static_cast<ecs_inout_kind_t>(
+            _::type_to_inout<T>());
+            if (this->m_term->inout == EcsInOutDefault) {
+            this->inout_none();
+        }
+        return *this;
     }
+
+    Base& with(id_t id) {
+        this->term();
+        *this->m_term = flecs::term(id);
+        if (this->m_term->inout == EcsInOutDefault) {
+            this->inout_none();
+        }
+        return *this;
+    }
+
+    Base& with(const char *name) {
+        this->term();
+        *this->m_term = flecs::term().first(name);
+        if (this->m_term->inout == EcsInOutDefault) {
+            this->inout_none();
+        }
+        return *this;
+    }
+
+    Base& with(const char *first, const char *second) {
+        this->term();
+        *this->m_term = flecs::term().first(first).second(second);
+        if (this->m_term->inout == EcsInOutDefault) {
+            this->inout_none();
+        }
+        return *this;
+    }
+
+    Base& with(entity_t r, entity_t o) {
+        this->term();
+        *this->m_term = flecs::term(r, o);
+        if (this->m_term->inout == EcsInOutDefault) {
+            this->inout_none();
+        }
+        return *this;
+    }
+
+    Base& with(entity_t r, const char *o) {
+        this->term();
+        *this->m_term = flecs::term(r).second(o);
+        if (this->m_term->inout == EcsInOutDefault) {
+            this->inout_none();
+        }
+        return *this;
+    }
+
+    template<typename First>
+    Base& with(id_t o) {
+        return this->with(_::type<First>::id(this->world_v()), o);
+    }
+
+    template<typename First>
+    Base& with(const char *second) {
+        return this->with(_::type<First>::id(this->world_v())).second(second);
+    }
+
+    template<typename First, typename Second>
+    Base& with() {
+        return this->with<First>(_::type<Second>::id(this->world_v()));
+    }
+
+    template <typename E, if_t< is_enum<E>::value > = 0>
+    Base& with(E value) {
+        flecs::entity_t r = _::type<E>::id(this->world_v());
+        auto o = enum_type<E>(this->world_v()).entity(value);
+        return this->with(r, o);
+    }
+
+    Base& with(flecs::term& term) {
+        this->term();
+        *this->m_term = term;
+        return *this;
+    }
+
+    Base& with(flecs::term&& term) {
+        this->term();
+        *this->m_term = term;
+        return *this;
+    }
+
+    /* Without methods, shorthand for .with(...).not_(). */
 
     template <typename ... Args>
     Base& without(Args&&... args) {
-        return this->term(FLECS_FWD(args)...).not_();
+        return this->with(FLECS_FWD(args)...).not_();
     }
 
     template <typename T, typename ... Args>
     Base& without(Args&&... args) {
-        return this->term<T>(FLECS_FWD(args)...).not_();
+        return this->with<T>(FLECS_FWD(args)...).not_();
     }
 
     template <typename First, typename Second>
     Base& without() {
-        return this->term<First, Second>().not_();
+        return this->with<First, Second>().not_();
     }
 
-    /* Write/read shorthand notation */
+    /* Write/read methods */
 
     Base& write() {
         term_builder_i<Base>::write();
@@ -91,17 +169,17 @@ struct query_builder_i : term_builder_i<Base> {
 
     template <typename ... Args>
     Base& write(Args&&... args) {
-        return this->term(FLECS_FWD(args)...).write();
+        return this->with(FLECS_FWD(args)...).write();
     }
 
     template <typename T, typename ... Args>
     Base& write(Args&&... args) {
-        return this->term<T>(FLECS_FWD(args)...).write();
+        return this->with<T>(FLECS_FWD(args)...).write();
     }
 
     template <typename First, typename Second>
     Base& write() {
-        return this->term<First, Second>().write();
+        return this->with<First, Second>().write();
     }
 
     Base& read() {
@@ -111,17 +189,17 @@ struct query_builder_i : term_builder_i<Base> {
 
     template <typename ... Args>
     Base& read(Args&&... args) {
-        return this->term(FLECS_FWD(args)...).read();
+        return this->with(FLECS_FWD(args)...).read();
     }
 
     template <typename T, typename ... Args>
     Base& read(Args&&... args) {
-        return this->term<T>(FLECS_FWD(args)...).read();
+        return this->with<T>(FLECS_FWD(args)...).read();
     }
 
     template <typename First, typename Second>
     Base& read() {
-        return this->term<First, Second>().read();
+        return this->with<First, Second>().read();
     }
 
     /* Scope_open/scope_close shorthand notation. */
@@ -161,79 +239,6 @@ struct query_builder_i : term_builder_i<Base> {
         m_term_index = prev_index;
         ecs_assert(ecs_term_is_initialized(this->m_term), 
             ECS_INVALID_PARAMETER, NULL);
-        return *this;
-    }
-
-    template<typename T>
-    Base& term() {
-        this->term();
-        *this->m_term = flecs::term(_::type<T>::id(this->world_v()));
-        this->m_term->inout = static_cast<ecs_inout_kind_t>(
-            _::type_to_inout<T>());
-        return *this;
-    }
-
-    Base& term(id_t id) {
-        this->term();
-        *this->m_term = flecs::term(id);
-        return *this;
-    }
-
-    Base& term(const char *name) {
-        this->term();
-        *this->m_term = flecs::term().first(name);
-        return *this;
-    }
-
-    Base& term(const char *first, const char *second) {
-        this->term();
-        *this->m_term = flecs::term().first(first).second(second);
-        return *this;
-    }
-
-    Base& term(entity_t r, entity_t o) {
-        this->term();
-        *this->m_term = flecs::term(r, o);
-        return *this;
-    }
-
-    Base& term(entity_t r, const char *o) {
-        this->term();
-        *this->m_term = flecs::term(r).second(o);
-        return *this;
-    }
-
-    template<typename First>
-    Base& term(id_t o) {
-        return this->term(_::type<First>::id(this->world_v()), o);
-    }
-
-    template<typename First>
-    Base& term(const char *second) {
-        return this->term(_::type<First>::id(this->world_v())).second(second);
-    }
-
-    template<typename First, typename Second>
-    Base& term() {
-        return this->term<First>(_::type<Second>::id(this->world_v()));
-    }
-
-    template <typename E, if_t< is_enum<E>::value > = 0>
-    Base& term(E value) {
-        flecs::entity_t r = _::type<E>::id(this->world_v());
-        auto o = enum_type<E>(this->world_v()).entity(value);
-        return this->term(r, o);
-    }
-
-    Base& term(flecs::term& term) {
-        this->term();
-        *this->m_term = term;
-        return *this;
-    }
-
-    Base& term(flecs::term&& term) {
-        this->term();
-        *this->m_term = term;
         return *this;
     }
 

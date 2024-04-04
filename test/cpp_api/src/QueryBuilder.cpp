@@ -67,8 +67,8 @@ void QueryBuilder_builder_assign_from_empty(void) {
 
     flecs::query<> q = ecs.query_builder<>()
         .cache_kind(cache_kind)
-        .term<Position>()
-        .term<Velocity>()
+        .with<Position>()
+        .with<Velocity>()
         .build();
 
     auto e1 = ecs.entity().add<Position>().add<Velocity>();
@@ -126,8 +126,8 @@ void QueryBuilder_builder_build_n_statements(void) {
     flecs::world ecs;
 
     auto qb = ecs.query_builder<>();
-    qb.term<Position>();
-    qb.term<Velocity>();
+    qb.with<Position>();
+    qb.with<Velocity>();
     qb.cache_kind(cache_kind);
     auto q = qb.build();
 
@@ -201,7 +201,7 @@ void QueryBuilder_id_term(void) {
     ecs.entity().set<Velocity>({10, 20});
 
     auto r = ecs.query_builder()
-        .term(Tag)
+        .with(Tag)
         .cache_kind(cache_kind)
         .build();
 
@@ -224,7 +224,7 @@ void QueryBuilder_type_term(void) {
     ecs.entity().set<Velocity>({10, 20});
 
     auto r = ecs.query_builder()
-        .term<Position>()
+        .with<Position>()
         .cache_kind(cache_kind)
         .build();
 
@@ -252,7 +252,7 @@ void QueryBuilder_id_pair_term(void) {
         .add(Likes, Pears);
 
     auto r = ecs.query_builder()
-        .term(Likes, Apples)
+        .with(Likes, Apples)
         .cache_kind(cache_kind)
         .build();
 
@@ -280,7 +280,7 @@ void QueryBuilder_id_pair_wildcard_term(void) {
         .add(Likes, Pears);
 
     auto r = ecs.query_builder()
-        .term(Likes, flecs::Wildcard)
+        .with(Likes, flecs::Wildcard)
         .cache_kind(cache_kind)
         .build();
 
@@ -313,7 +313,7 @@ void QueryBuilder_type_pair_term(void) {
         .add<Likes, Pears>();
 
     auto r = ecs.query_builder()
-        .term<Likes>(flecs::Wildcard)
+        .with<Likes>(flecs::Wildcard)
         .cache_kind(cache_kind)
         .build();
 
@@ -346,7 +346,7 @@ void QueryBuilder_pair_term_w_var(void) {
         .add<Likes, Pears>();
 
     auto r = ecs.query_builder()
-        .term<Likes>().second().var("Food")
+        .with<Likes>().second().var("Food")
         .cache_kind(cache_kind)
         .build();
 
@@ -389,8 +389,8 @@ void QueryBuilder_2_pair_terms_w_var(void) {
     Bob.add<Likes>(Alice);
 
     auto r = ecs.query_builder()
-        .term<Eats>().second().var("Food")
-        .term<Likes>().second().var("Person")
+        .with<Eats>().second().var("Food")
+        .with<Likes>().second().var("Person")
         .cache_kind(cache_kind)
         .build();
 
@@ -438,7 +438,7 @@ void QueryBuilder_set_var(void) {
         .add<Likes>(Pears);
 
     auto r = ecs.query_builder()
-        .term<Likes>().second().var("Food")
+        .with<Likes>().second().var("Food")
         .cache_kind(cache_kind)
         .build();
 
@@ -477,8 +477,8 @@ void QueryBuilder_set_2_vars(void) {
     Bob.add<Likes>(Alice);
 
     auto r = ecs.query_builder()
-        .term<Eats>().second().var("Food")
-        .term<Likes>().second().var("Person")
+        .with<Eats>().second().var("Food")
+        .with<Likes>().second().var("Person")
         .cache_kind(cache_kind)
         .build();
 
@@ -517,7 +517,7 @@ void QueryBuilder_set_var_by_name(void) {
         .add<Likes>(Pears);
 
     auto r = ecs.query_builder()
-        .term<Likes>().second().var("Food")
+        .with<Likes>().second().var("Food")
         .cache_kind(cache_kind)
         .build();
 
@@ -551,8 +551,8 @@ void QueryBuilder_set_2_vars_by_name(void) {
     Bob.add<Likes>(Alice);
 
     auto r = ecs.query_builder()
-        .term<Eats>().second().var("Food")
-        .term<Likes>().second().var("Person")
+        .with<Eats>().second().var("Food")
+        .with<Likes>().second().var("Person")
         .cache_kind(cache_kind)
         .build();
 
@@ -607,7 +607,7 @@ void QueryBuilder_add_1_type(void) {
     flecs::world ecs;
 
     auto q = ecs.query_builder<>()
-        .term<Position>()
+        .with<Position>()
         .cache_kind(cache_kind)
         .build();
 
@@ -627,8 +627,8 @@ void QueryBuilder_add_2_types(void) {
     flecs::world ecs;
 
     auto q = ecs.query_builder<>()
-        .term<Position>()
-        .term<Velocity>()
+        .with<Position>()
+        .with<Velocity>()
         .cache_kind(cache_kind)
         .build();
 
@@ -648,7 +648,7 @@ void QueryBuilder_add_1_type_w_1_type(void) {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Position>()
-        .term<Velocity>()
+        .with<Velocity>()
         .cache_kind(cache_kind)
         .build();
 
@@ -668,8 +668,8 @@ void QueryBuilder_add_2_types_w_1_type(void) {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Position>()
-        .term<Velocity>()
-        .term<Mass>()
+        .with<Velocity>()
+        .with<Mass>()
         .cache_kind(cache_kind)
         .build();
 
@@ -693,7 +693,7 @@ void QueryBuilder_add_pair(void) {
     auto Alice = ecs.entity();
 
     auto q = ecs.query_builder<>()
-        .term(Likes, Bob)
+        .with(Likes, Bob)
         .cache_kind(cache_kind)
         .build();
 
@@ -713,7 +713,7 @@ void QueryBuilder_add_not(void) {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Position>()
-        .term<Velocity>().oper(flecs::Not)
+        .with<Velocity>().oper(flecs::Not)
         .cache_kind(cache_kind)
         .build();
 
@@ -733,8 +733,8 @@ void QueryBuilder_add_or(void) {
     flecs::world ecs;
 
     auto q = ecs.query_builder<>()
-        .term<Position>().oper(flecs::Or)
-        .term<Velocity>()
+        .with<Position>().oper(flecs::Or)
+        .with<Velocity>()
         .cache_kind(cache_kind)
         .build();
 
@@ -755,8 +755,8 @@ void QueryBuilder_add_optional(void) {
     flecs::world ecs;
 
     auto q = ecs.query_builder<>()
-        .term<Position>()
-        .term<Velocity>().oper(flecs::Optional)
+        .with<Position>()
+        .with<Velocity>().oper(flecs::Optional)
         .cache_kind(cache_kind)
         .build();
 
@@ -840,7 +840,7 @@ void QueryBuilder_singleton_term(void) {
     ecs.set<Other>({10});
 
     auto q = ecs.query_builder<Self>()
-        .term<Other>().singleton()
+        .with<Other>().singleton().inout()
         .cache_kind(cache_kind)
         .build();
 
@@ -872,7 +872,7 @@ void QueryBuilder_isa_superset_term(void) {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Self>()
-        .term<Other>().src().up(flecs::IsA)
+        .with<Other>().src().up(flecs::IsA).in()
         .cache_kind(cache_kind)
         .build();
 
@@ -903,7 +903,7 @@ void QueryBuilder_isa_self_superset_term(void) {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Self>()
-        .term<Other>().src().self().up(flecs::IsA)
+        .with<Other>().src().self().up(flecs::IsA).in()
         .cache_kind(cache_kind)
         .build();
 
@@ -945,7 +945,7 @@ void QueryBuilder_childof_superset_term(void) {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Self>()
-        .term<Other>().src().up()
+        .with<Other>().src().up().in()
         .cache_kind(cache_kind)
         .build();
 
@@ -976,7 +976,7 @@ void QueryBuilder_childof_self_superset_term(void) {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Self>()
-        .term<Other>().src().self().up()
+        .with<Other>().src().self().up().in()
         .cache_kind(cache_kind)
         .build();
 
@@ -1238,7 +1238,7 @@ void QueryBuilder_relation(void) {
     auto Alice = ecs.entity();
 
     auto q = ecs.query_builder<Self>()
-        .term(Likes, Bob)
+        .with(Likes, Bob)
         .cache_kind(cache_kind)
         .build();
 
@@ -1267,7 +1267,7 @@ void QueryBuilder_relation_w_object_wildcard(void) {
     auto Alice = ecs.entity();
 
     auto q = ecs.query_builder<Self>()
-        .term(Likes, flecs::Wildcard)
+        .with(Likes, flecs::Wildcard)
         .cache_kind(cache_kind)
         .build();
 
@@ -1300,7 +1300,7 @@ void QueryBuilder_relation_w_predicate_wildcard(void) {
     auto Alice = ecs.entity();
 
     auto q = ecs.query_builder<Self>()
-        .term(flecs::Wildcard, Alice)
+        .with(flecs::Wildcard, Alice)
         .cache_kind(cache_kind)
         .build();
 
@@ -1331,7 +1331,7 @@ void QueryBuilder_add_pair_w_rel_type(void) {
     auto Alice = ecs.entity();
 
     auto q = ecs.query_builder<Self>()
-        .term<Likes>(flecs::Wildcard)
+        .with<Likes>(flecs::Wildcard)
         .cache_kind(cache_kind)
         .build();
 
@@ -1356,7 +1356,7 @@ void QueryBuilder_template_term(void) {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Position>()
-        .term<Template<int>>()
+        .with<Template<int>>()
         .cache_kind(cache_kind)
         .build();
 
@@ -1376,7 +1376,7 @@ void QueryBuilder_explicit_subject_w_id(void) {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Position>()
-        .term<Position>().id(flecs::This)
+        .with<Position>().id(flecs::This)
         .cache_kind(cache_kind)
         .build();
 
@@ -1398,7 +1398,7 @@ void QueryBuilder_explicit_subject_w_type(void) {
     ecs.set<Position>({10, 20});
 
     auto q = ecs.query_builder<Position>()
-        .term<Position>().src<Position>()
+        .with<Position>().src<Position>()
         .cache_kind(cache_kind)
         .build();
 
@@ -1421,7 +1421,7 @@ void QueryBuilder_explicit_object_w_id(void) {
     auto Bob = ecs.entity();
 
     auto q = ecs.query_builder<>()
-        .term(Likes).second(Alice)
+        .with(Likes).second(Alice)
         .cache_kind(cache_kind)
         .build();
 
@@ -1445,7 +1445,7 @@ void QueryBuilder_explicit_object_w_type(void) {
     auto Bob = ecs.entity();
 
     auto q = ecs.query_builder<>()
-        .term(Likes).second<Alice>()
+        .with(Likes).second<Alice>()
         .cache_kind(cache_kind)
         .build();
 
@@ -1465,7 +1465,7 @@ void QueryBuilder_explicit_term(void) {
     flecs::world ecs;
 
     auto q = ecs.query_builder<>()
-        .term(ecs.term(ecs.id<Position>()))
+        .with(ecs.term(ecs.id<Position>()))
         .cache_kind(cache_kind)
         .build();
 
@@ -1485,7 +1485,7 @@ void QueryBuilder_explicit_term_w_type(void) {
     flecs::world ecs;
 
     auto q = ecs.query_builder<>()
-        .term(ecs.term<Position>())
+        .with(ecs.term<Position>())
         .cache_kind(cache_kind)
         .build();
 
@@ -1509,7 +1509,7 @@ void QueryBuilder_explicit_term_w_pair_type(void) {
     struct Bob { };
 
     auto q = ecs.query_builder<>()
-        .term(ecs.term<Likes, Alice>())
+        .with(ecs.term<Likes, Alice>())
         .cache_kind(cache_kind)
         .build();
 
@@ -1532,7 +1532,7 @@ void QueryBuilder_explicit_term_w_id(void) {
     auto Pears = ecs.entity();
 
     auto q = ecs.query_builder<>()
-        .term(ecs.term(Apples))
+        .with(ecs.term(Apples))
         .cache_kind(cache_kind)
         .build();
 
@@ -1556,7 +1556,7 @@ void QueryBuilder_explicit_term_w_pair_id(void) {
     auto Pears = ecs.entity();
 
     auto q = ecs.query_builder<>()
-        .term(ecs.term(Likes, Apples))
+        .with(ecs.term(Likes, Apples))
         .cache_kind(cache_kind)
         .build();
 
@@ -1579,10 +1579,10 @@ void QueryBuilder_1_term_to_empty(void) {
     auto Apples = ecs.entity();
 
     auto qb = ecs.query_builder<>()
-        .term<Position>()
+        .with<Position>()
         .cache_kind(cache_kind);
 
-    qb.term(Likes, Apples);
+    qb.with(Likes, Apples);
 
     auto q = qb.build();
 
@@ -1620,8 +1620,8 @@ void QueryBuilder_optional_tag_is_set(void) {
     struct TagB { };
 
     auto q = ecs.query_builder()
-        .term<TagA>()
-        .term<TagB>().oper(flecs::Optional)
+        .with<TagA>()
+        .with<TagB>().oper(flecs::Optional)
         .cache_kind(cache_kind)
         .build();
 
@@ -1652,16 +1652,16 @@ void QueryBuilder_10_terms(void) {
     flecs::world ecs;
 
     auto f = ecs.query_builder<>()
-        .term<TagA>()
-        .term<TagB>()
-        .term<TagC>()
-        .term<TagD>()
-        .term<TagE>()
-        .term<TagF>()
-        .term<TagG>()
-        .term<TagH>()
-        .term<TagI>()
-        .term<TagJ>()
+        .with<TagA>()
+        .with<TagB>()
+        .with<TagC>()
+        .with<TagD>()
+        .with<TagE>()
+        .with<TagF>()
+        .with<TagG>()
+        .with<TagH>()
+        .with<TagI>()
+        .with<TagJ>()
         .cache_kind(cache_kind)
         .build();
 
@@ -1694,22 +1694,22 @@ void QueryBuilder_16_terms(void) {
     flecs::world ecs;
 
     auto f = ecs.query_builder<>()
-        .term<TagA>()
-        .term<TagB>()
-        .term<TagC>()
-        .term<TagD>()
-        .term<TagE>()
-        .term<TagF>()
-        .term<TagG>()
-        .term<TagH>()
-        .term<TagI>()
-        .term<TagJ>()
-        .term<TagK>()
-        .term<TagL>()
-        .term<TagM>()
-        .term<TagN>()
-        .term<TagO>()
-        .term<TagP>()
+        .with<TagA>()
+        .with<TagB>()
+        .with<TagC>()
+        .with<TagD>()
+        .with<TagE>()
+        .with<TagF>()
+        .with<TagG>()
+        .with<TagH>()
+        .with<TagI>()
+        .with<TagJ>()
+        .with<TagK>()
+        .with<TagL>()
+        .with<TagM>()
+        .with<TagN>()
+        .with<TagO>()
+        .with<TagP>()
         .cache_kind(cache_kind)
         .build();
 
@@ -1781,12 +1781,12 @@ void QueryBuilder_group_by_raw(void) {
     ecs.component<TagX>();
 
     auto q = ecs.query_builder()
-        .term<TagX>()
+        .with<TagX>()
         .group_by(flecs::type_id<TagX>(), group_by_first_id)
         .build();
 
     auto q_reverse = ecs.query_builder()
-        .term<TagX>()
+        .with<TagX>()
         .group_by(flecs::type_id<TagX>(), group_by_first_id_negated)
         .build();
 
@@ -1842,12 +1842,12 @@ void QueryBuilder_group_by_template(void) {
     ecs.component<TagX>();
 
     auto q = ecs.query_builder()
-        .term<TagX>()
+        .with<TagX>()
         .group_by<TagX>(group_by_first_id)
         .build();
 
     auto q_reverse = ecs.query_builder()
-        .term<TagX>()
+        .with<TagX>()
         .group_by<TagX>( group_by_first_id_negated)
         .build();
 
@@ -1916,7 +1916,7 @@ void QueryBuilder_group_by_iter_one(void) {
     ecs.entity().add(Rel, TgtC).add(Tag);
 
     auto q = ecs.query_builder()
-        .term(Rel, flecs::Wildcard)
+        .with(Rel, flecs::Wildcard)
         .group_by(Rel, group_by_rel)
         .build();
 
@@ -1956,7 +1956,7 @@ void QueryBuilder_group_by_iter_one_template(void) {
     ecs.entity().add<Rel, TgtC>().add<Tag>();
 
     auto q = ecs.query_builder()
-        .term<Rel>(flecs::Wildcard)
+        .with<Rel>(flecs::Wildcard)
         .group_by<Rel>(group_by_rel)
         .build();
 
@@ -1996,7 +1996,7 @@ void QueryBuilder_group_by_iter_one_all_groups(void) {
     auto e6 = ecs.entity().add(Rel, TgtC).add(Tag);
 
     auto q = ecs.query_builder()
-        .term(Rel, flecs::Wildcard)
+        .with(Rel, flecs::Wildcard)
         .group_by(Rel, group_by_rel)
         .build();
 
@@ -2060,7 +2060,7 @@ void QueryBuilder_group_by_default_func_w_id(void) {
     auto e3 = ecs.entity().add(Rel, TgtA);
 
     auto q = ecs.query_builder()
-        .term(Rel, flecs::Wildcard)
+        .with(Rel, flecs::Wildcard)
         .group_by(Rel)
         .build();
 
@@ -2114,7 +2114,7 @@ void QueryBuilder_group_by_default_func_w_type(void) {
     auto e3 = ecs.entity().add<Rel>(TgtA);
 
     auto q = ecs.query_builder()
-        .term<Rel>(flecs::Wildcard)
+        .with<Rel>(flecs::Wildcard)
         .group_by<Rel>()
         .build();
 
@@ -2170,7 +2170,7 @@ void QueryBuilder_group_by_callbacks(void) {
     auto e3 = ecs.entity().add<Rel>(TgtA);
 
     auto q = ecs.query_builder()
-        .term<Rel>(flecs::Wildcard)
+        .with<Rel>(flecs::Wildcard)
         .group_by<Rel>()
         .group_by_ctx(&group_by_ctx)
         .on_group_create(
@@ -2242,7 +2242,7 @@ void QueryBuilder_create_w_no_template_args(void) {
     flecs::world ecs;
 
     auto q = ecs.query_builder()
-        .term<Position>()
+        .with<Position>()
         .cache_kind(cache_kind)
         .build();
 
@@ -2269,7 +2269,7 @@ void QueryBuilder_any_wildcard(void) {
         .add(Likes, Mango);
 
     auto q = ecs.query_builder()
-        .term(Likes, flecs::Any)
+        .with(Likes, flecs::Any)
         .cache_kind(cache_kind)
         .build();
 
@@ -2295,7 +2295,7 @@ void QueryBuilder_cascade(void) {
     auto e3 = ecs.entity().is_a(e2);
 
     auto q = ecs.query_builder()
-        .term(Tag).cascade(flecs::IsA)
+        .with(Tag).cascade(flecs::IsA)
         .cached()
         .build();
 
@@ -2349,7 +2349,7 @@ void QueryBuilder_cascade_desc(void) {
     auto e3 = ecs.entity().is_a(e2);
 
     auto q = ecs.query_builder()
-        .term(Tag).cascade(flecs::IsA).desc()
+        .with(Tag).cascade(flecs::IsA).desc()
         .cached()
         .build();
 
@@ -2403,7 +2403,7 @@ void QueryBuilder_cascade_w_relationship(void) {
     auto e3 = ecs.entity().child_of(e2);
 
     auto q = ecs.query_builder()
-        .term(Tag).cascade(flecs::ChildOf)
+        .with(Tag).cascade(flecs::ChildOf)
         .cached()
         .build();
 
@@ -2452,7 +2452,7 @@ void QueryBuilder_up_w_type(void) {
     ecs.component<Rel>().add(flecs::Traversable);
 
     auto q = ecs.query_builder<Self>()
-        .term<Other>().src().up<Rel>()
+        .with<Other>().src().up<Rel>().in()
         .cache_kind(cache_kind)
         .build();
 
@@ -2496,7 +2496,7 @@ void QueryBuilder_cascade_w_type(void) {
     auto e3 = ecs.entity().add<Rel>(e2);
 
     auto q = ecs.query_builder()
-        .term(Tag).cascade<Rel>()
+        .with(Tag).cascade<Rel>()
         .cached()
         .build();
 
@@ -2544,7 +2544,7 @@ void QueryBuilder_named_query(void) {
     auto e2 = ecs.entity().add<Position>();
 
     auto q = ecs.query_builder("my_query")
-        .term<Position>()
+        .with<Position>()
         .cache_kind(cache_kind)
         .build();
 
@@ -2564,12 +2564,12 @@ void QueryBuilder_term_w_write(void) {
     flecs::world ecs;
 
     auto q = ecs.query_builder()
-        .term<Position>()
-        .term<Position>().write()
+        .with<Position>()
+        .with<Position>().write()
         .cache_kind(cache_kind)
         .build();
 
-    test_assert(q.term(0).inout() == flecs::InOutDefault);
+    test_assert(q.term(0).inout() == flecs::InOutNone);
     test_assert(q.term(0).get_src() == flecs::This);
     test_assert(q.term(1).inout() == flecs::Out);
     test_assert(q.term(1).get_src() == 0);
@@ -2579,12 +2579,12 @@ void QueryBuilder_term_w_read(void) {
     flecs::world ecs;
 
     auto q = ecs.query_builder()
-        .term<Position>()
-        .term<Position>().read()
+        .with<Position>()
+        .with<Position>().read()
         .cache_kind(cache_kind)
         .build();
 
-    test_assert(q.term(0).inout() == flecs::InOutDefault);
+    test_assert(q.term(0).inout() == flecs::InOutNone);
     test_assert(q.term(0).get_src() == flecs::This);
     test_assert(q.term(1).inout() == flecs::In);
     test_assert(q.term(1).get_src() == 0);
@@ -2624,7 +2624,7 @@ void QueryBuilder_builder_force_assign_operator(void) {
 
     auto f = ecs.entity().emplace<QueryWrapper<>>(
         ecs.query_builder()
-            .term<Position>()
+            .with<Position>()
             .cache_kind(cache_kind)
             .build()
     );
@@ -2874,7 +2874,7 @@ void QueryBuilder_term_after_arg(void) {
 
     auto f = ecs.query_builder<TagA, TagB>()
         .term_at(1).src(flecs::This) // dummy
-        .term<TagC>()
+        .with<TagC>()
         .cache_kind(cache_kind)
         .build();
 
@@ -2916,7 +2916,7 @@ void QueryBuilder_const_in_term(void) {
     ecs.entity().set<Position>({10, 20});
 
     auto f = ecs.query_builder<>()
-        .term<const Position>()
+        .with<const Position>()
         .cache_kind(cache_kind)
         .build();
 
@@ -3018,14 +3018,14 @@ void QueryBuilder_operator_shortcuts(void) {
     flecs::entity h = ecs.entity();
 
     auto query = ecs.query_builder()
-        .term(a).and_()
-        .term(b).or_()
-        .term(c)
-        .term(d).not_()
-        .term(e).optional()
-        .term(f).and_from()
-        .term(g).or_from()
-        .term(h).not_from()
+        .with(a).and_()
+        .with(b).or_()
+        .with(c)
+        .with(d).not_()
+        .with(e).optional()
+        .with(f).and_from()
+        .with(g).or_from()
+        .with(h).not_from()
         .cache_kind(cache_kind)
         .build();
 
@@ -3071,10 +3071,10 @@ void QueryBuilder_inout_shortcuts(void) {
     flecs::entity d = ecs.entity();
 
     auto query = ecs.query_builder()
-        .term(a).in()
-        .term(b).out()
-        .term(c).inout()
-        .term(d).inout_none()
+        .with(a).in()
+        .with(b).out()
+        .with(c).inout()
+        .with(d).inout_none()
         .cache_kind(cache_kind)
         .build();
 
@@ -4215,7 +4215,7 @@ void QueryBuilder_var_src_w_prefixed_name(void) {
     struct Foo { };
 
     auto r = ecs.query_builder()
-        .term<Foo>().src("$Var")
+        .with<Foo>().src("$Var")
         .cache_kind(cache_kind)
         .build();
 
@@ -4237,7 +4237,7 @@ void QueryBuilder_var_first_w_prefixed_name(void) {
     struct Foo { };
 
     auto r = ecs.query_builder()
-        .term<Foo>()
+        .with<Foo>()
         .term().first("$Var")
         .cache_kind(cache_kind)
         .build();
@@ -4262,7 +4262,7 @@ void QueryBuilder_var_second_w_prefixed_name(void) {
     struct Foo { };
 
     auto r = ecs.query_builder()
-        .term<Foo>().second("$Var")
+        .with<Foo>().second("$Var")
         .cache_kind(cache_kind)
         .build();
 
@@ -4287,7 +4287,7 @@ void QueryBuilder_term_w_second_var_string(void) {
     flecs::entity Foo = ecs.entity();
 
     auto r = ecs.query_builder()
-        .term(Foo, "$Var")
+        .with(Foo, "$Var")
         .cache_kind(cache_kind)
         .build();
 
@@ -4312,7 +4312,7 @@ void QueryBuilder_term_type_w_second_var_string(void) {
     struct Foo { };
 
     auto r = ecs.query_builder()
-        .term<Foo>("$Var")
+        .with<Foo>("$Var")
         .cache_kind(cache_kind)
         .build();
 

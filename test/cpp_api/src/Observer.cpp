@@ -117,16 +117,16 @@ void Observer_10_terms(void) {
 
     ecs.observer<>()
         .event(flecs::OnAdd)
-        .term<TagA>()
-        .term<TagB>()
-        .term<TagC>()
-        .term<TagD>()
-        .term<TagE>()
-        .term<TagF>()
-        .term<TagG>()
-        .term<TagH>()
-        .term<TagI>()
-        .term<TagJ>()
+        .with<TagA>()
+        .with<TagB>()
+        .with<TagC>()
+        .with<TagD>()
+        .with<TagE>()
+        .with<TagF>()
+        .with<TagG>()
+        .with<TagH>()
+        .with<TagI>()
+        .with<TagJ>()
         .iter([&](flecs::iter& it) {
             test_int(it.count(), 1);
             test_assert(it.entity(0) == e);
@@ -157,22 +157,22 @@ void Observer_16_terms(void) {
 
     ecs.observer<>()
         .event(flecs::OnAdd)
-        .term<TagA>()
-        .term<TagB>()
-        .term<TagC>()
-        .term<TagD>()
-        .term<TagE>()
-        .term<TagF>()
-        .term<TagG>()
-        .term<TagH>()
-        .term<TagI>()
-        .term<TagJ>()
-        .term<TagK>()
-        .term<TagL>()
-        .term<TagM>()
-        .term<TagN>()
-        .term<TagO>()
-        .term<TagP>()
+        .with<TagA>()
+        .with<TagB>()
+        .with<TagC>()
+        .with<TagD>()
+        .with<TagE>()
+        .with<TagF>()
+        .with<TagG>()
+        .with<TagH>()
+        .with<TagI>()
+        .with<TagJ>()
+        .with<TagK>()
+        .with<TagL>()
+        .with<TagM>()
+        .with<TagN>()
+        .with<TagO>()
+        .with<TagP>()
         .iter([&](flecs::iter& it) {
             test_int(it.count(), 1);
             test_assert(it.entity(0) == e);
@@ -323,7 +323,7 @@ void Observer_create_w_no_template_args(void) {
     int32_t count = 0;
 
     ecs.observer()
-        .term<Position>()
+        .with<Position>()
         .event(flecs::OnAdd)
         .each([&](flecs::entity e) {
             test_assert(e == e1);
@@ -541,8 +541,8 @@ void Observer_observer_w_filter_term(void) {
     int invoked = 0;
 
     world.observer()
-        .term(TagA)
-        .term(TagB).filter()
+        .with(TagA)
+        .with(TagB).filter()
         .event(flecs::OnAdd)
         .each([&](flecs::entity e) {
             invoked ++;

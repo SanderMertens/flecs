@@ -615,7 +615,7 @@ void Enum_query_enum_wildcard(void) {
     auto e3 = ecs.entity().add(StandardEnum::Blue);
 
     auto q = ecs.query_builder()
-        .term<StandardEnum>(flecs::Wildcard)
+        .with<StandardEnum>(flecs::Wildcard)
         .build();
 
     int32_t count = 0;
@@ -645,7 +645,7 @@ void Enum_query_enum_constant(void) {
     auto e1 = ecs.entity().add(StandardEnum::Blue);
 
     auto q = ecs.query_builder()
-        .term<StandardEnum>(StandardEnum::Blue)
+        .with<StandardEnum>(StandardEnum::Blue)
         .build();
 
     int32_t count = 0;
@@ -1005,7 +1005,7 @@ void Enum_query_union_enum(void) {
     // flecs::entity e3 = ecs.entity().add(StandardEnum::Blue);
 
     // auto q = ecs.query_builder()
-    //     .term<StandardEnum>().second(flecs::Wildcard)
+    //     .with<StandardEnum>().second(flecs::Wildcard)
     //     .build();
 
     // q.iter([&](flecs::iter& it) {

@@ -1041,7 +1041,7 @@ void System_test_auto_defer_each(void) {
     auto e3 = world.entity().add<Tag>().set<Value>({30});
 
     auto s = world.system<Value>()
-        .term<Tag>()
+        .with<Tag>()
         .each([](flecs::entity e, Value& v) {
             v.value ++;
             e.remove<Tag>();
@@ -1072,7 +1072,7 @@ void System_test_auto_defer_iter(void) {
     auto e3 = world.entity().add<Tag>().set<Value>({30});
 
     auto s = world.system<Value>()
-        .term<Tag>()
+        .with<Tag>()
         .iter([](flecs::iter& it, Value *v) {
             for (auto i : it) {
                 v[i].value ++;
@@ -1104,9 +1104,9 @@ void System_custom_pipeline(void) {
     auto Tag = world.entity();
 
     flecs::entity pip = world.pipeline()
-        .term(flecs::System)
-        .term(flecs::Phase).cascade(flecs::DependsOn)
-        .term(Tag)
+        .with(flecs::System)
+        .with(flecs::Phase).cascade(flecs::DependsOn)
+        .with(Tag)
         .build();
 
     int count = 0;
@@ -1150,8 +1150,8 @@ void System_custom_pipeline_w_kind(void) {
     auto Tag = world.entity();
 
     flecs::entity pip = world.pipeline()
-        .term(flecs::System)
-        .term(Tag)
+        .with(flecs::System)
+        .with(Tag)
         .build();
 
     int count = 0;
@@ -1690,7 +1690,7 @@ void System_create_w_no_template_args(void) {
     int32_t count = 0;
 
     auto s = world.system()
-        .term<Position>()
+        .with<Position>()
         .each([&](flecs::entity e) {
             test_assert(e == entity);
             count ++;
@@ -1716,8 +1716,8 @@ void System_system_w_type_kind_type_pipeline(void) {
         );
 
     world.pipeline<PipelineType>()
-        .term(flecs::System)
-        .term(flecs::Phase).cascade(flecs::DependsOn)
+        .with(flecs::System)
+        .with(flecs::Phase).cascade(flecs::DependsOn)
         .build();
 
     world.set_pipeline<PipelineType>();
