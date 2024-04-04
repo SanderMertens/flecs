@@ -787,7 +787,7 @@ void MultiThread_2_thread_test_combs_100_entity_w_next_worker(void) {
 
     ECS_QUERY_DEFINE(world, qTestSubset, Position);
 
-    ecs_query_t *q = ecs_query_new(world, "Position");
+    ecs_query_t *q = ecs_query(world, { .expr = "Position" });
 
     int i, ENTITIES = 100;
 
@@ -1106,7 +1106,7 @@ static int create_query_invoked = 0;
 
 static
 void CreateQuery(ecs_iter_t *it) {
-    ecs_query_t *q = ecs_query_new(it->world, "0");
+    ecs_query_t *q = ecs_query(it->world, { .expr = "0" });
     ecs_query_fini(q);
     create_query_invoked ++;
 }

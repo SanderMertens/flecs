@@ -769,7 +769,7 @@ void OrderByEntireTable_sort_after_query(void) {
     ecs_add(world, e2, Mass);
     ecs_add(world, e3, Mass);
 
-    ecs_query_t *flip_q = ecs_query_new(world, "Position");
+    ecs_query_t *flip_q = ecs_query(world, { .expr = "Position" });
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position, [in] Velocity",
         .order_by = ecs_id(Position),
@@ -1800,9 +1800,9 @@ void OrderByEntireTable_dont_resort_after_set_unsorted_component_w_tag_w_out_ter
     });
 
     // Dummy queries that mutate
-    ecs_query_t *q_a = ecs_query_new(world, "Position"); // [inout]
-    ecs_query_t *q_b = ecs_query_new(world, "[out] Position");
-    ecs_query_t *q_c = ecs_query_new(world, "[out] Velocity");
+    ecs_query_t *q_a = ecs_query(world, { .expr = "Position"); // [inou }t]
+    ecs_query_t *q_b = ecs_query(world, { .expr = "[out] Position" });
+    ecs_query_t *q_c = ecs_query(world, { .expr = "[out] Velocity" });
 
     ecs_entity_t e1 = ecs_new_w_id(world, Tag);
     ecs_set(world, e1, Position, {0, 0});

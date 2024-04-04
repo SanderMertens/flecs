@@ -1167,7 +1167,7 @@ void Iter_worker_iter_w_singleton(void) {
     ecs_entity_t e3 = ecs_set(world, 0, Position, {30, 40});
     ecs_entity_t e4 = ecs_set(world, 0, Position, {40, 50});
 
-    ecs_query_t *q = ecs_query_new(world, "Position, Singleton($)");
+    ecs_query_t *q = ecs_query(world, { .expr = "Position, Singleton($)" });
 
     Position *p;
 
@@ -1215,7 +1215,7 @@ void Iter_worker_iter_w_singleton_component(void) {
     ecs_entity_t e3 = ecs_set(world, 0, Position, {30, 40});
     ecs_entity_t e4 = ecs_set(world, 0, Position, {40, 50});
 
-    ecs_query_t *q = ecs_query_new(world, "Position, Velocity($)");
+    ecs_query_t *q = ecs_query(world, { .expr = "Position, Velocity($)" });
 
     Position *p;
     Velocity *v;
@@ -1392,7 +1392,7 @@ void Iter_paged_iter_w_singleton(void) {
     ecs_entity_t e3 = ecs_set(world, 0, Position, {30, 40});
     ecs_entity_t e4 = ecs_set(world, 0, Position, {40, 50});
 
-    ecs_query_t *q = ecs_query_new(world, "Position, Singleton($)");
+    ecs_query_t *q = ecs_query(world, { .expr = "Position, Singleton($)" });
 
     Position *p;
 
@@ -1439,7 +1439,7 @@ void Iter_paged_iter_w_singleton_component(void) {
     ecs_entity_t e3 = ecs_set(world, 0, Position, {30, 40});
     ecs_entity_t e4 = ecs_set(world, 0, Position, {40, 50});
 
-    ecs_query_t *q = ecs_query_new(world, "Position, Velocity($)");
+    ecs_query_t *q = ecs_query(world, { .expr = "Position, Velocity($)" });
 
     Position *p;
     Velocity *v;
@@ -2419,7 +2419,7 @@ void Iter_count(void) {
         }
     }
 
-    ecs_query_t *q = ecs_query_new(world, "TagA");
+    ecs_query_t *q = ecs_query(world, { .expr = "TagA" });
     test_assert(q != NULL);
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -2968,7 +2968,7 @@ void Iter_to_str_before_next(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_query_t *q = ecs_query_new(world, "Tag");
+    ecs_query_t *q = ecs_query(world, { .expr = "Tag" });
     test_assert(q != NULL);
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -2989,7 +2989,7 @@ void Iter_to_str(void) {
     ecs_entity_t e = ecs_new_entity(world, "foo");
     ecs_add(world, e, Tag);
 
-    ecs_query_t *q = ecs_query_new(world, "Tag");
+    ecs_query_t *q = ecs_query(world, { .expr = "Tag" });
     test_assert(q != NULL);
 
     ecs_iter_t it = ecs_query_iter(world, q);

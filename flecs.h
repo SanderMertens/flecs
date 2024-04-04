@@ -9184,11 +9184,7 @@ int ecs_value_move_ctor(
 #define ecs_isa(e)       ecs_pair(EcsIsA, e)
 #define ecs_childof(e)   ecs_pair(EcsChildOf, e)
 #define ecs_dependson(e) ecs_pair(EcsDependsOn, e)
-
-#define ecs_query_new(world, q_expr)\
-    ecs_query_init(world, &(ecs_query_desc_t){\
-        .expr = q_expr\
-    })
+#define ecs_with(e)      ecs_pair(EcsWith, e)
 
 #define ecs_each(world, id) ecs_each_id(world, ecs_id(id))
 #define ecs_each_pair(world, r, t) ecs_each_id(world, ecs_pair(r, t))

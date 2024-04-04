@@ -1554,7 +1554,7 @@ static ecs_query_t *q_result;
 static
 void CreateQuery(ecs_iter_t *it) {
     test_assert(it->real_world == it->world);
-    q_result = ecs_query_new(it->world, "Position");
+    q_result = ecs_query(it->world, { .expr = "Position" });
 }
 
 void Pipeline_no_staging_system_create_query(void) {

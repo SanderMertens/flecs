@@ -802,7 +802,7 @@ void SystemMisc_rw_in_implicit_any(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, Velocity(self|up)");
+    ecs_query_t *q = ecs_query(world, { .expr = "Position, Velocity(self|up)" });
 
     ecs_entity_t e = ecs_new(world, Position);
     ecs_add(world, e, Velocity);
@@ -824,7 +824,7 @@ void SystemMisc_rw_in_implicit_shared(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, Velocity(up(IsA))");
+    ecs_query_t *q = ecs_query(world, { .expr = "Position, Velocity(up(IsA))" });
 
     ecs_entity_t base = ecs_new(world, Velocity);
     ecs_entity_t e = ecs_new(world, Position);
@@ -847,7 +847,7 @@ void SystemMisc_rw_in_implicit_from_empty(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, Velocity()");
+    ecs_query_t *q = ecs_query(world, { .expr = "Position, Velocity()" });
 
     ecs_entity_t e = ecs_new(world, Position);
     ecs_add(world, e, Velocity);
@@ -870,7 +870,7 @@ void SystemMisc_rw_in_implicit_from_entity(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_ENTITY(world, f, Velocity);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, Velocity(f)");
+    ecs_query_t *q = ecs_query(world, { .expr = "Position, Velocity(f)" });
 
     ecs_entity_t e = ecs_new(world, Position);
     ecs_add(world, e, Velocity);
@@ -892,7 +892,7 @@ void SystemMisc_rw_out_explicit_any(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, [out] Velocity(self|up(IsA))");
+    ecs_query_t *q = ecs_query(world, { .expr = "Position, [out] Velocity(self|up(IsA))" });
 
     ecs_entity_t e = ecs_new(world, Position);
     ecs_add(world, e, Velocity);
@@ -914,7 +914,7 @@ void SystemMisc_rw_out_explicit_shared(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, [out] Velocity(up(IsA))");
+    ecs_query_t *q = ecs_query(world, { .expr = "Position, [out] Velocity(up(IsA))" });
 
     ecs_entity_t base = ecs_new(world, Velocity);
     ecs_entity_t e = ecs_new(world, Position);
@@ -937,7 +937,7 @@ void SystemMisc_rw_out_explicit_from_empty(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, [out] Velocity()");
+    ecs_query_t *q = ecs_query(world, { .expr = "Position, [out] Velocity()" });
 
     ecs_entity_t e = ecs_new(world, Position);
     ecs_add(world, e, Velocity);
@@ -960,7 +960,7 @@ void SystemMisc_rw_out_explicit_from_entity(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_ENTITY(world, f, Velocity);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, [out] Velocity(f)");
+    ecs_query_t *q = ecs_query(world, { .expr = "Position, [out] Velocity(f)" });
 
     ecs_entity_t e = ecs_new(world, Position);
     ecs_add(world, e, Velocity);

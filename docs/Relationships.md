@@ -82,10 +82,10 @@ An application can query for relationships with the `(Relationship, Target)` not
 
 ```c
 // Find all entities that eat apples
-ecs_query_t *q = ecs_query_new(world, "(Eats, Apples)");
+ecs_query_t *q = ecs_query(world, { .expr = "(Eats, Apples)" });
 
 // Find all entities that eat anything
-ecs_query_t *q = ecs_query_new(world, "(Eats, *)");
+ecs_query_t *q = ecs_query(world, { .expr = "(Eats, *)" });
 
 // Or with the ecs_query_cache_init function:
 ecs_query_t *q = ecs_query(world, {
