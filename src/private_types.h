@@ -138,6 +138,8 @@ typedef struct ecs_stage_allocators_t {
     ecs_stack_t iter_stack;
     ecs_stack_t deser_stack;
     ecs_block_allocator_t cmd_entry_chunk;
+    ecs_block_allocator_t query_impl;
+    ecs_block_allocator_t query_cache;
 } ecs_stage_allocators_t;
 
 /** Types for deferred operations */
@@ -211,7 +213,13 @@ typedef void (*ecs_on_commands_action_t)(
 /** A stage is a context that allows for safely using the API from multiple 
  * threads. Stage pointers can be passed to the world argument of API 
  * operations, which causes the operation to be ran on the stage instead of the
- * world. */
+ * world. The features provided by a stage are:
+ * 
+ *  - A command queue for deferred ECS operations and events
+ *  - Thread specific allocators
+ *  - Thread specific world state (like current scope, with, current system)
+ *  - Thread specific buffers for preventing allocations
+ */
 struct ecs_stage_t {
     ecs_header_t hdr;
 

@@ -628,6 +628,8 @@ void flecs_stage_init(
     flecs_allocator_init(&stage->allocator);
     flecs_ballocator_init_n(&stage->allocators.cmd_entry_chunk, ecs_cmd_entry_t,
         FLECS_SPARSE_PAGE_SIZE);
+    flecs_ballocator_init_t(&stage->allocators.query_impl, ecs_query_impl_t);
+    flecs_ballocator_init_t(&stage->allocators.query_cache, ecs_query_cache_t);
 
     ecs_allocator_t *a = &stage->allocator;
     ecs_vec_init_t(a, &stage->post_frame_actions, ecs_action_elem_t, 0);
@@ -664,6 +666,8 @@ void flecs_stage_fini(
     flecs_stack_fini(&stage->allocators.iter_stack);
     flecs_stack_fini(&stage->allocators.deser_stack);
     flecs_ballocator_fini(&stage->allocators.cmd_entry_chunk);
+    flecs_ballocator_fini(&stage->allocators.query_impl);
+    flecs_ballocator_fini(&stage->allocators.query_cache);
     flecs_allocator_fini(&stage->allocator);
 }
 

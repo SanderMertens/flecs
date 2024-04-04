@@ -337,6 +337,7 @@ struct ecs_query_impl_t {
     ecs_query_var_t *vars;        /* Variables */
     int32_t var_count;            /* Number of variables */
     int32_t var_pub_count;        /* Number of public variables */
+    int32_t var_size;             /* Size of variable array */
     bool has_table_this;          /* Does query have [$this] */
     ecs_hashmap_t tvar_index;     /* Name index for table variables */
     ecs_hashmap_t evar_index;     /* Name index for entity variables */
@@ -365,10 +366,6 @@ struct ecs_query_impl_t {
 
     /* Mixins */
     ecs_poly_dtor_t dtor;
-
-#ifdef FLECS_DEBUG
-    int32_t var_size;             /* Used for out of bounds check during compilation */
-#endif
 };
 
 

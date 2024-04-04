@@ -223,8 +223,8 @@ int flecs_query_discover_vars(
 
                     /* Track which variable ids are used as field source */
                     if (!query->src_vars) {
-                        query->src_vars = ecs_os_calloc_n(ecs_var_id_t,
-                            query->pub.field_count);
+                        query->src_vars = flecs_calloc_n(&stage->allocator,
+                            ecs_var_id_t, query->pub.field_count);
                     }
 
                     query->src_vars[term->field_index] = var_id;
@@ -381,7 +381,7 @@ int flecs_query_discover_vars(
 
     ecs_query_var_t *query_vars = &query->vars_cache.var;
     if ((var_count + anonymous_count) > 1) {
-        query_vars = ecs_os_malloc(
+        query_vars = flecs_alloc(&stage->allocator,
             (ECS_SIZEOF(ecs_query_var_t) + ECS_SIZEOF(char*)) * 
                 (var_count + anonymous_count));
     }
@@ -390,10 +390,7 @@ int flecs_query_discover_vars(
     query->var_count = var_count;
     query->var_pub_count = var_count;
     query->has_table_this = !entity_before_table_this;
-
-#ifdef FLECS_DEBUG
     query->var_size = var_count + anonymous_count;
-#endif
 
     char **var_names = ECS_ELEM(query_vars, ECS_SIZEOF(ecs_query_var_t), 
         var_count + anonymous_count);
@@ -1139,7 +1136,7 @@ int flecs_query_compile(
     int32_t op_count = ecs_vec_count(ctx.ops);
     if (op_count) {
         query->op_count = op_count;
-        query->ops = ecs_os_malloc_n(ecs_query_op_t, op_count);
+        query->ops = flecs_alloc_n(&stage->allocator, ecs_query_op_t, op_count);
         ecs_query_op_t *query_ops = ecs_vec_first_t(ctx.ops, ecs_query_op_t);
         ecs_os_memcpy_n(query->ops, query_ops, ecs_query_op_t, op_count);
     }

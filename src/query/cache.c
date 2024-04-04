@@ -1176,6 +1176,7 @@ void flecs_query_cache_fini(
     ecs_query_impl_t *impl)
 {
     ecs_world_t *world = impl->pub.world;
+    ecs_stage_t *stage = impl->pub.stage;
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_query_cache_t *cache = impl->cache;
@@ -1212,7 +1213,7 @@ void flecs_query_cache_fini(
     flecs_query_cache_allocators_fini(cache);
     ecs_query_fini(cache->query);
 
-    ecs_os_free(cache);
+    flecs_bfree(&stage->allocators.query_cache, cache);
 }
 
 /* -- Public API -- */
@@ -1222,6 +1223,7 @@ ecs_query_cache_t* flecs_query_cache_init(
     const ecs_query_desc_t *const_desc)
 {
     ecs_world_t *world = impl->pub.world;
+    ecs_stage_t *stage = impl->pub.stage;
     ecs_check(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_check(const_desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(const_desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
@@ -1238,7 +1240,7 @@ ecs_query_cache_t* flecs_query_cache_init(
     desc.order_by = 0;
     desc.entity = 0;
 
-    ecs_query_cache_t *result = ecs_os_calloc_t(ecs_query_cache_t);
+    ecs_query_cache_t *result = flecs_bcalloc(&stage->allocators.query_cache);
     result->entity = entity;
     impl->cache = result;
 

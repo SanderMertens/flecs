@@ -746,7 +746,7 @@ struct ecs_query_t {
 
     ecs_entity_t entity;        /**< Entity associated with query (optional) */
     ecs_world_t *world;         /**< World mixin */
-    ecs_stage_t *stage;
+    ecs_stage_t *stage;         /**< Stage the query was created with */
 
     int32_t eval_count;         /**< Number of times query is evaluated */
 };

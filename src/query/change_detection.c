@@ -120,7 +120,8 @@ bool flecs_query_get_fixed_monitor(
     int32_t i, term_count = q->term_count;
 
     if (!impl->monitor) {
-        impl->monitor = ecs_os_calloc_n(int32_t, q->field_count);
+        impl->monitor = flecs_alloc_n(&impl->pub.stage->allocator, 
+            int32_t, q->field_count);
         check = false; /* If the monitor is new, initialize it with dirty state */
     }
 

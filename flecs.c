@@ -840,6 +840,8 @@ typedef struct ecs_stage_allocators_t {
     ecs_stack_t iter_stack;
     ecs_stack_t deser_stack;
     ecs_block_allocator_t cmd_entry_chunk;
+    ecs_block_allocator_t query_impl;
+    ecs_block_allocator_t query_cache;
 } ecs_stage_allocators_t;
 
 /** Types for deferred operations */
@@ -913,7 +915,13 @@ typedef void (*ecs_on_commands_action_t)(
 /** A stage is a context that allows for safely using the API from multiple 
  * threads. Stage pointers can be passed to the world argument of API 
  * operations, which causes the operation to be ran on the stage instead of the
- * world. */
+ * world. The features provided by a stage are:
+ * 
+ *  - A command queue for deferred ECS operations and events
+ *  - Thread specific allocators
+ *  - Thread specific world state (like current scope, with, current system)
+ *  - Thread specific buffers for preventing allocations
+ */
 struct ecs_stage_t {
     ecs_header_t hdr;
 
@@ -1671,6 +1679,7 @@ struct ecs_query_impl_t {
     ecs_query_var_t *vars;        /* Variables */
     int32_t var_count;            /* Number of variables */
     int32_t var_pub_count;        /* Number of public variables */
+    int32_t var_size;             /* Size of variable array */
     bool has_table_this;          /* Does query have [$this] */
     ecs_hashmap_t tvar_index;     /* Name index for table variables */
     ecs_hashmap_t evar_index;     /* Name index for entity variables */
@@ -1699,10 +1708,6 @@ struct ecs_query_impl_t {
 
     /* Mixins */
     ecs_poly_dtor_t dtor;
-
-#ifdef FLECS_DEBUG
-    int32_t var_size;             /* Used for out of bounds check during compilation */
-#endif
 };
 
 
@@ -15315,6 +15320,8 @@ void flecs_stage_init(
     flecs_allocator_init(&stage->allocator);
     flecs_ballocator_init_n(&stage->allocators.cmd_entry_chunk, ecs_cmd_entry_t,
         FLECS_SPARSE_PAGE_SIZE);
+    flecs_ballocator_init_t(&stage->allocators.query_impl, ecs_query_impl_t);
+    flecs_ballocator_init_t(&stage->allocators.query_cache, ecs_query_cache_t);
 
     ecs_allocator_t *a = &stage->allocator;
     ecs_vec_init_t(a, &stage->post_frame_actions, ecs_action_elem_t, 0);
@@ -15351,6 +15358,8 @@ void flecs_stage_fini(
     flecs_stack_fini(&stage->allocators.iter_stack);
     flecs_stack_fini(&stage->allocators.deser_stack);
     flecs_ballocator_fini(&stage->allocators.cmd_entry_chunk);
+    flecs_ballocator_fini(&stage->allocators.query_impl);
+    flecs_ballocator_fini(&stage->allocators.query_cache);
     flecs_allocator_fini(&stage->allocator);
 }
 
@@ -34147,7 +34156,11 @@ int flecs_query_create_cache(
             if (!flecs_query_cache_init(impl, &cache_desc)) {
                 goto error;
             }
-            impl->field_map = ecs_os_memdup_n(field_map, int8_t, dst_count);
+
+            impl->field_map = flecs_alloc_n(&impl->pub.stage->allocator,
+                int8_t, FLECS_TERM_COUNT_MAX);
+
+            ecs_os_memcpy_n(impl->field_map, field_map, int8_t, dst_count);
         }
     }
 
@@ -34160,6 +34173,10 @@ static
 void flecs_query_fini(
     ecs_query_impl_t *impl)
 {
+    ecs_stage_t *stage = impl->pub.stage;
+    ecs_assert(stage != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_allocator_t *a = &stage->allocator;
+
     if (impl->ctx_free) {
         impl->ctx_free(impl->pub.ctx);
     }
@@ -34169,13 +34186,14 @@ void flecs_query_fini(
     }
 
     if (impl->vars != &impl->vars_cache.var) {
-        ecs_os_free(impl->vars);
+        flecs_free(a, (ECS_SIZEOF(ecs_query_var_t) + ECS_SIZEOF(char*)) * 
+            impl->var_size, impl->vars);
     }
 
-    ecs_os_free(impl->ops);
-    ecs_os_free(impl->src_vars);
-    ecs_os_free(impl->monitor);
-    ecs_os_free(impl->field_map);
+    flecs_free_n(a, ecs_query_op_t, impl->op_count, impl->ops);
+    flecs_free_n(a, ecs_var_id_t, impl->pub.field_count, impl->src_vars);
+    flecs_free_n(a, int32_t, impl->pub.field_count, impl->monitor);
+    flecs_free_n(a, int8_t, FLECS_TERM_COUNT_MAX, impl->field_map);
     flecs_name_index_fini(&impl->tvar_index);
     flecs_name_index_fini(&impl->evar_index);
 
@@ -34203,7 +34221,8 @@ void flecs_query_fini(
         flecs_query_cache_fini(impl);
     }
 
-    ecs_poly_free(impl, ecs_query_t);
+    ecs_poly_fini(impl, ecs_query_t);
+    flecs_bfree(&stage->allocators.query_impl, impl);
 }
 
 static
@@ -34300,10 +34319,10 @@ ecs_query_t* ecs_query_init(
     ecs_world_t *world, 
     const ecs_query_desc_t *const_desc)
 {
-    ecs_query_impl_t *result = ecs_os_calloc_t(ecs_query_impl_t);
-    ecs_poly_init(result, ecs_query_t);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
-
+    ecs_query_impl_t *result = flecs_bcalloc(&stage->allocators.query_impl);
+    ecs_poly_init(result, ecs_query_t);
+    
     ecs_query_desc_t desc = *const_desc;
     ecs_entity_t entity = const_desc->entity;
 
@@ -34315,6 +34334,7 @@ ecs_query_t* ecs_query_init(
     /* Initialize the query */
     result->pub.entity = entity;
     result->pub.world = world;
+    result->pub.stage = stage;
     if (flecs_query_finalize_query(world, &result->pub, &desc)) {
         goto error;
     }
@@ -35651,6 +35671,7 @@ void flecs_query_cache_fini(
     ecs_query_impl_t *impl)
 {
     ecs_world_t *world = impl->pub.world;
+    ecs_stage_t *stage = impl->pub.stage;
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_query_cache_t *cache = impl->cache;
@@ -35687,7 +35708,7 @@ void flecs_query_cache_fini(
     flecs_query_cache_allocators_fini(cache);
     ecs_query_fini(cache->query);
 
-    ecs_os_free(cache);
+    flecs_bfree(&stage->allocators.query_cache, cache);
 }
 
 /* -- Public API -- */
@@ -35697,6 +35718,7 @@ ecs_query_cache_t* flecs_query_cache_init(
     const ecs_query_desc_t *const_desc)
 {
     ecs_world_t *world = impl->pub.world;
+    ecs_stage_t *stage = impl->pub.stage;
     ecs_check(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_check(const_desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(const_desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
@@ -35713,7 +35735,7 @@ ecs_query_cache_t* flecs_query_cache_init(
     desc.order_by = 0;
     desc.entity = 0;
 
-    ecs_query_cache_t *result = ecs_os_calloc_t(ecs_query_cache_t);
+    ecs_query_cache_t *result = flecs_bcalloc(&stage->allocators.query_cache);
     result->entity = entity;
     impl->cache = result;
 
@@ -36702,7 +36724,8 @@ bool flecs_query_get_fixed_monitor(
     int32_t i, term_count = q->term_count;
 
     if (!impl->monitor) {
-        impl->monitor = ecs_os_calloc_n(int32_t, q->field_count);
+        impl->monitor = flecs_alloc_n(&impl->pub.stage->allocator, 
+            int32_t, q->field_count);
         check = false; /* If the monitor is new, initialize it with dirty state */
     }
 
@@ -37444,8 +37467,8 @@ int flecs_query_discover_vars(
 
                     /* Track which variable ids are used as field source */
                     if (!query->src_vars) {
-                        query->src_vars = ecs_os_calloc_n(ecs_var_id_t,
-                            query->pub.field_count);
+                        query->src_vars = flecs_calloc_n(&stage->allocator,
+                            ecs_var_id_t, query->pub.field_count);
                     }
 
                     query->src_vars[term->field_index] = var_id;
@@ -37602,7 +37625,7 @@ int flecs_query_discover_vars(
 
     ecs_query_var_t *query_vars = &query->vars_cache.var;
     if ((var_count + anonymous_count) > 1) {
-        query_vars = ecs_os_malloc(
+        query_vars = flecs_alloc(&stage->allocator,
             (ECS_SIZEOF(ecs_query_var_t) + ECS_SIZEOF(char*)) * 
                 (var_count + anonymous_count));
     }
@@ -37611,10 +37634,7 @@ int flecs_query_discover_vars(
     query->var_count = var_count;
     query->var_pub_count = var_count;
     query->has_table_this = !entity_before_table_this;
-
-#ifdef FLECS_DEBUG
     query->var_size = var_count + anonymous_count;
-#endif
 
     char **var_names = ECS_ELEM(query_vars, ECS_SIZEOF(ecs_query_var_t), 
         var_count + anonymous_count);
@@ -38360,7 +38380,7 @@ int flecs_query_compile(
     int32_t op_count = ecs_vec_count(ctx.ops);
     if (op_count) {
         query->op_count = op_count;
-        query->ops = ecs_os_malloc_n(ecs_query_op_t, op_count);
+        query->ops = flecs_alloc_n(&stage->allocator, ecs_query_op_t, op_count);
         ecs_query_op_t *query_ops = ecs_vec_first_t(ctx.ops, ecs_query_op_t);
         ecs_os_memcpy_n(query->ops, query_ops, ecs_query_op_t, op_count);
     }

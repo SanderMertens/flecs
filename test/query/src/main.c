@@ -8537,32 +8537,41 @@ bake_test_case QueryStr_testcases[] = {
     }
 };
 
+const char* Basic_cache_kind_param[] = {"default", "auto"};
 bake_test_param Basic_params[] = {
-    {"cache_kind", (char*[]){"default", "auto"}, 2}
+    {"cache_kind", (char**)Basic_cache_kind_param, 2}
 };
+const char* Variables_cache_kind_param[] = {"default", "auto"};
 bake_test_param Variables_params[] = {
-    {"cache_kind", (char*[]){"default", "auto"}, 2}
+    {"cache_kind", (char**)Variables_cache_kind_param, 2}
 };
+const char* Operators_cache_kind_param[] = {"default", "auto"};
 bake_test_param Operators_params[] = {
-    {"cache_kind", (char*[]){"default", "auto"}, 2}
+    {"cache_kind", (char**)Operators_cache_kind_param, 2}
 };
+const char* Recycled_cache_kind_param[] = {"default", "auto"};
 bake_test_param Recycled_params[] = {
-    {"cache_kind", (char*[]){"default", "auto"}, 2}
+    {"cache_kind", (char**)Recycled_cache_kind_param, 2}
 };
+const char* BuiltinPredicates_cache_kind_param[] = {"default", "auto"};
 bake_test_param BuiltinPredicates_params[] = {
-    {"cache_kind", (char*[]){"default", "auto"}, 2}
+    {"cache_kind", (char**)BuiltinPredicates_cache_kind_param, 2}
 };
+const char* Scopes_cache_kind_param[] = {"default", "auto"};
 bake_test_param Scopes_params[] = {
-    {"cache_kind", (char*[]){"default", "auto"}, 2}
+    {"cache_kind", (char**)Scopes_cache_kind_param, 2}
 };
+const char* Traversal_cache_kind_param[] = {"default", "auto"};
 bake_test_param Traversal_params[] = {
-    {"cache_kind", (char*[]){"default", "auto"}, 2}
+    {"cache_kind", (char**)Traversal_cache_kind_param, 2}
 };
+const char* MemberTarget_cache_kind_param[] = {"default", "auto"};
 bake_test_param MemberTarget_params[] = {
-    {"cache_kind", (char*[]){"default", "auto"}, 2}
+    {"cache_kind", (char**)MemberTarget_cache_kind_param, 2}
 };
+const char* Toggle_cache_kind_param[] = {"default", "auto"};
 bake_test_param Toggle_params[] = {
-    {"cache_kind", (char*[]){"default", "auto"}, 2}
+    {"cache_kind", (char**)Toggle_cache_kind_param, 2}
 };
 
 static bake_test_suite suites[] = {
