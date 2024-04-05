@@ -1838,7 +1838,7 @@ void OrderBy_dont_resort_after_set_unsorted_component_w_tag_w_out_term(void) {
     });
 
     // Dummy queries that mutate
-    ecs_query_t *q_a = ecs_query(world, { .expr = "Position"); // [inou }t]
+    ecs_query_t *q_a = ecs_query(world, { .expr = "Position" }); // [inout]
     ecs_query_t *q_b = ecs_query(world, { .expr = "[out] Position" });
     ecs_query_t *q_c = ecs_query(world, { .expr = "[out] Velocity" });
 

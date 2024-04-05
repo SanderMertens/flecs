@@ -601,6 +601,7 @@ ecs_entity_t flecs_stage_set_system(
     return old;
 }
 
+static
 ecs_stage_t* flecs_stage_new(
     ecs_world_t *world)
 {
@@ -631,6 +632,7 @@ ecs_stage_t* flecs_stage_new(
     return stage;
 }
 
+static
 void flecs_stage_free(
     ecs_world_t *world,
     ecs_stage_t *stage)
