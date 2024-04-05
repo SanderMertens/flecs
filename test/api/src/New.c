@@ -216,11 +216,12 @@ void New_new_hi_component_id(void) {
 }
 
 void New_new_w_entity_0(void) {
+    install_test_abort();
+
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new_w_id(world, 0);
-    test_assert(e != 0);
-    test_assert(ecs_get_type(world, e) == NULL);
+    test_expect_abort();
+    ecs_new_w_id(world, 0);
 
     ecs_fini(world);
 }
@@ -253,19 +254,16 @@ void New_create_w_explicit_id_2_worlds(void) {
 }
 
 void New_new_w_id_0_w_with(void) {
+    install_test_abort();
+
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 
     ecs_set_with(world, Tag);
 
-    ecs_entity_t e = ecs_new_w_id(world, 0);
-    test_assert(e != 0);
-    test_assert(ecs_has(world, e, Tag));
-
-    test_int(ecs_set_with(world, 0), Tag);
-
-    ecs_fini(world);
+    test_expect_abort();
+    ecs_new_w_id(world, 0);
 }
 
 void New_new_w_id_w_with(void) {
@@ -278,7 +276,7 @@ void New_new_w_id_w_with(void) {
 
     ecs_entity_t e = ecs_new_w_id(world, Tag2);
     test_assert(e != 0);
-    test_assert(ecs_has(world, e, Tag));
+    test_assert(!ecs_has(world, e, Tag));
     test_assert(ecs_has(world, e, Tag2));
 
     test_int(ecs_set_with(world, 0), Tag);
@@ -299,9 +297,9 @@ void New_new_w_id_w_with_w_scope(void) {
 
     ecs_entity_t e = ecs_new_w_id(world, Tag2);
     test_assert(e != 0);
-    test_assert(ecs_has(world, e, Tag));
+    test_assert(!ecs_has(world, e, Tag));
     test_assert(ecs_has(world, e, Tag2));
-    test_assert(ecs_has_pair(world, e, EcsChildOf, parent));
+    test_assert(!ecs_has_pair(world, e, EcsChildOf, parent));
 
     test_int(ecs_set_with(world, 0), Tag);
     test_int(ecs_set_scope(world, 0), parent);
@@ -327,7 +325,7 @@ void New_new_w_id_w_with_defer(void) {
 
     ecs_defer_end(world);
 
-    test_assert(ecs_has(world, e, Tag));
+    test_assert(!ecs_has(world, e, Tag));
     test_assert(ecs_has(world, e, Tag2));
 
     test_int(ecs_set_with(world, 0), Tag);
@@ -357,9 +355,9 @@ void New_new_w_id_w_with_defer_w_scope(void) {
 
     ecs_defer_end(world);
 
-    test_assert(ecs_has(world, e, Tag));
+    test_assert(!ecs_has(world, e, Tag));
     test_assert(ecs_has(world, e, Tag2));
-    test_assert(ecs_has_pair(world, e, EcsChildOf, parent));
+    test_assert(!ecs_has_pair(world, e, EcsChildOf, parent));
 
     test_int(ecs_set_with(world, 0), Tag);
     test_int(ecs_set_scope(world, 0), parent);
@@ -377,7 +375,7 @@ void New_new_w_type_w_with(void) {
 
     ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
-    test_assert(ecs_has(world, e, Tag));
+    test_assert(!ecs_has(world, e, Tag));
     test_assert(ecs_has(world, e, Position));
 
     test_int(ecs_set_with(world, 0), Tag);
@@ -398,9 +396,9 @@ void New_new_w_type_w_with_w_scope(void) {
 
     ecs_entity_t e = ecs_new(world, Position);
     test_assert(e != 0);
-    test_assert(ecs_has(world, e, Tag));
+    test_assert(!ecs_has(world, e, Tag));
     test_assert(ecs_has(world, e, Position));
-    test_assert(ecs_has_pair(world, e, EcsChildOf, parent));
+    test_assert(!ecs_has_pair(world, e, EcsChildOf, parent));
 
     test_int(ecs_set_with(world, 0), Tag);
     test_int(ecs_set_scope(world, 0), parent);
@@ -426,7 +424,7 @@ void New_new_w_type_w_with_defer(void) {
 
     ecs_defer_end(world);
 
-    test_assert(ecs_has(world, e, Tag));
+    test_assert(!ecs_has(world, e, Tag));
     test_assert(ecs_has(world, e, Position));
 
     test_int(ecs_set_with(world, 0), Tag);
@@ -456,9 +454,9 @@ void New_new_w_type_w_with_defer_w_scope(void) {
 
     ecs_defer_end(world);
 
-    test_assert(ecs_has(world, e, Tag));
+    test_assert(!ecs_has(world, e, Tag));
     test_assert(ecs_has(world, e, Position));
-    test_assert(ecs_has_pair(world, e, EcsChildOf, parent));
+    test_assert(!ecs_has_pair(world, e, EcsChildOf, parent));
 
     test_int(ecs_set_with(world, 0), Tag);
     test_int(ecs_set_scope(world, 0), parent);

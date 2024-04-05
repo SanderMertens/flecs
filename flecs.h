@@ -23544,7 +23544,12 @@ struct entity : entity_builder<entity>
         : entity_builder()
     {
         m_world = world;
-        m_id = ecs_new_id(world);
+        if (!ecs_get_scope(m_world) && !ecs_get_with(m_world)) {
+            m_id = ecs_new_id(world);
+        } else {
+            ecs_entity_desc_t desc = {};
+            m_id = ecs_entity_init(m_world, &desc);
+        }
     }
 
     /** Wrap an existing entity id.

@@ -5322,60 +5322,23 @@ ecs_entity_t ecs_new_w_id(
     ecs_id_t id)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(!id || ecs_id_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_id_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);    
     ecs_entity_t entity = ecs_new_id(world);
 
-    ecs_id_t ids[3];
-    ecs_type_t to_add = { .array = ids, .count = 0 };
-
-    if (id) {
-        ids[to_add.count ++] = id;
+    if (flecs_defer_add(stage, entity, id)) {
+        return entity;
     }
 
-    ecs_id_t with = stage->with;
-    if (with) {
-        ids[to_add.count ++] = with;
-    }
+    ecs_table_diff_builder_t diff = ECS_TABLE_DIFF_INIT;
+    ecs_table_t *table = flecs_find_table_add(
+        world, &world->store.root, id, &diff);
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_entity_t scope = stage->scope;
-    if (scope) {
-        if (!id || !ECS_HAS_RELATION(id, EcsChildOf)) {
-            ids[to_add.count ++] = ecs_pair(EcsChildOf, scope);
-        }
-    }
-    if (to_add.count) {
-        if (flecs_defer_add(stage, entity, to_add.array[0])) {
-            int i;
-            for (i = 1; i < to_add.count; i ++) {
-                flecs_defer_add(stage, entity, to_add.array[i]);
-            }
-            return entity;
-        }
+    ecs_record_t *r = flecs_entities_get(world, entity);
+    flecs_new_entity(world, entity, r, table, &diff, true, 0);
 
-        int32_t i, count = to_add.count;
-        ecs_table_t *table = &world->store.root;
-        
-        ecs_table_diff_builder_t diff = ECS_TABLE_DIFF_INIT;
-        flecs_table_diff_builder_init(world, &diff);
-        for (i = 0; i < count; i ++) {
-            table = flecs_find_table_add(
-                world, table, to_add.array[i], &diff);
-        }
-
-        ecs_table_diff_t table_diff;
-        flecs_table_diff_build_noalloc(&diff, &table_diff);
-        ecs_record_t *r = flecs_entities_get(world, entity);
-        flecs_new_entity(world, entity, r, table, &table_diff, true, true);
-        flecs_table_diff_builder_fini(world, &diff);
-    } else {
-        if (flecs_defer_cmd(stage)) {
-            return entity;
-        }
-
-        flecs_entities_ensure(world, entity);
-    }
     flecs_defer_end(world, stage);
 
     return entity;
@@ -5394,7 +5357,7 @@ ecs_entity_t ecs_new_w_table(
     ecs_record_t *r = flecs_entities_get(world, entity);
 
     ecs_table_diff_t table_diff = { .added = table->type };
-    flecs_new_entity(world, entity, r, table, &table_diff, true, true);
+    flecs_new_entity(world, entity, r, table, &table_diff, true, 0);
     return entity;
 error:
     return 0;
@@ -6725,7 +6688,7 @@ ecs_entity_t ecs_clone(
     ecs_type_t dst_type = dst_table->type;
     ecs_table_diff_t diff = { .added = dst_type };
     ecs_record_t *dst_r = flecs_entities_get(world, dst);
-    flecs_new_entity(world, dst, dst_r, dst_table, &diff, true, true);
+    flecs_new_entity(world, dst, dst_r, dst_table, &diff, true, 0);
     int32_t row = ECS_RECORD_TO_ROW(dst_r->row);
 
     if (copy_value) {
@@ -67178,17 +67141,17 @@ void FlecsPipelineImport(
      * relationships. This ensures that, for example, EcsOnUpdate doesn't have a
      * direct DependsOn relationship on EcsPreUpdate, which ensures that when
      * the EcsPreUpdate phase is disabled, EcsOnUpdate still runs. */
-    ecs_entity_t phase_0 = ecs_new_id(world);
-    ecs_entity_t phase_1 = ecs_new_w_pair(world, EcsDependsOn, phase_0);
-    ecs_entity_t phase_2 = ecs_new_w_pair(world, EcsDependsOn, phase_1);
-    ecs_entity_t phase_3 = ecs_new_w_pair(world, EcsDependsOn, phase_2);
-    ecs_entity_t phase_4 = ecs_new_w_pair(world, EcsDependsOn, phase_3);
-    ecs_entity_t phase_5 = ecs_new_w_pair(world, EcsDependsOn, phase_4);
-    ecs_entity_t phase_6 = ecs_new_w_pair(world, EcsDependsOn, phase_5);
-    ecs_entity_t phase_7 = ecs_new_w_pair(world, EcsDependsOn, phase_6);
-    ecs_entity_t phase_8 = ecs_new_w_pair(world, EcsDependsOn, phase_7);
+    ecs_entity_t phase_0 = ecs_entity(world, {0});
+    ecs_entity_t phase_1 = ecs_entity(world, { .add = {ecs_dependson(phase_0)} });
+    ecs_entity_t phase_2 = ecs_entity(world, { .add = {ecs_dependson(phase_1)} });
+    ecs_entity_t phase_3 = ecs_entity(world, { .add = {ecs_dependson(phase_2)} });
+    ecs_entity_t phase_4 = ecs_entity(world, { .add = {ecs_dependson(phase_3)} });
+    ecs_entity_t phase_5 = ecs_entity(world, { .add = {ecs_dependson(phase_4)} });
+    ecs_entity_t phase_6 = ecs_entity(world, { .add = {ecs_dependson(phase_5)} });
+    ecs_entity_t phase_7 = ecs_entity(world, { .add = {ecs_dependson(phase_6)} });
+    ecs_entity_t phase_8 = ecs_entity(world, { .add = {ecs_dependson(phase_7)} });
 
-    flecs_bootstrap_phase(world, EcsOnStart,   0);
+    flecs_bootstrap_phase(world, EcsOnStart,    0);
     flecs_bootstrap_phase(world, EcsPreFrame,   0);
     flecs_bootstrap_phase(world, EcsOnLoad,     phase_0);
     flecs_bootstrap_phase(world, EcsPostLoad,   phase_1);
