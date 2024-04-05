@@ -7,11 +7,11 @@ void Iter_page_iter_0_0(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    ecs_entity_t e1 = ecs_new_id(world); ecs_set(world, e1, Self, {e1});
-    ecs_entity_t e2 = ecs_new_id(world); ecs_set(world, e2, Self, {e2});
-    ecs_entity_t e3 = ecs_new_id(world); ecs_set(world, e3, Self, {e3});
-    ecs_entity_t e4 = ecs_new_id(world); ecs_set(world, e4, Self, {e4});
-    ecs_entity_t e5 = ecs_new_id(world); ecs_set(world, e5, Self, {e5});
+    ecs_entity_t e1 = ecs_new(world); ecs_set(world, e1, Self, {e1});
+    ecs_entity_t e2 = ecs_new(world); ecs_set(world, e2, Self, {e2});
+    ecs_entity_t e3 = ecs_new(world); ecs_set(world, e3, Self, {e3});
+    ecs_entity_t e4 = ecs_new(world); ecs_set(world, e4, Self, {e4});
+    ecs_entity_t e5 = ecs_new(world); ecs_set(world, e5, Self, {e5});
 
     ecs_add(world, e3, TagA);
     ecs_add(world, e4, TagA);
@@ -78,11 +78,11 @@ void Iter_page_iter_1_0(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    ecs_entity_t e1 = ecs_new_id(world); ecs_set(world, e1, Self, {e1});
-    ecs_entity_t e2 = ecs_new_id(world); ecs_set(world, e2, Self, {e2});
-    ecs_entity_t e3 = ecs_new_id(world); ecs_set(world, e3, Self, {e3});
-    ecs_entity_t e4 = ecs_new_id(world); ecs_set(world, e4, Self, {e4});
-    ecs_entity_t e5 = ecs_new_id(world); ecs_set(world, e5, Self, {e5});
+    ecs_entity_t e1 = ecs_new(world); ecs_set(world, e1, Self, {e1});
+    ecs_entity_t e2 = ecs_new(world); ecs_set(world, e2, Self, {e2});
+    ecs_entity_t e3 = ecs_new(world); ecs_set(world, e3, Self, {e3});
+    ecs_entity_t e4 = ecs_new(world); ecs_set(world, e4, Self, {e4});
+    ecs_entity_t e5 = ecs_new(world); ecs_set(world, e5, Self, {e5});
 
     ecs_add(world, e3, TagA);
     ecs_add(world, e4, TagA);
@@ -144,11 +144,11 @@ void Iter_page_iter_0_1(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    ecs_entity_t e1 = ecs_new_id(world); ecs_set(world, e1, Self, {e1});
-    ecs_entity_t e2 = ecs_new_id(world); ecs_set(world, e2, Self, {e2});
-    ecs_entity_t e3 = ecs_new_id(world); ecs_set(world, e3, Self, {e3});
-    ecs_entity_t e4 = ecs_new_id(world); ecs_set(world, e4, Self, {e4});
-    ecs_entity_t e5 = ecs_new_id(world); ecs_set(world, e5, Self, {e5});
+    ecs_entity_t e1 = ecs_new(world); ecs_set(world, e1, Self, {e1});
+    ecs_entity_t e2 = ecs_new(world); ecs_set(world, e2, Self, {e2});
+    ecs_entity_t e3 = ecs_new(world); ecs_set(world, e3, Self, {e3});
+    ecs_entity_t e4 = ecs_new(world); ecs_set(world, e4, Self, {e4});
+    ecs_entity_t e5 = ecs_new(world); ecs_set(world, e5, Self, {e5});
 
     ecs_add(world, e3, TagA);
     ecs_add(world, e4, TagA);
@@ -186,11 +186,11 @@ void Iter_page_iter_n_0(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    ecs_entity_t e1 = ecs_new_id(world); ecs_set(world, e1, Self, {e1});
-    ecs_entity_t e2 = ecs_new_id(world); ecs_set(world, e2, Self, {e2});
-    ecs_entity_t e3 = ecs_new_id(world); ecs_set(world, e3, Self, {e3});
-    ecs_entity_t e4 = ecs_new_id(world); ecs_set(world, e4, Self, {e4});
-    ecs_entity_t e5 = ecs_new_id(world); ecs_set(world, e5, Self, {e5});
+    ecs_entity_t e1 = ecs_new(world); ecs_set(world, e1, Self, {e1});
+    ecs_entity_t e2 = ecs_new(world); ecs_set(world, e2, Self, {e2});
+    ecs_entity_t e3 = ecs_new(world); ecs_set(world, e3, Self, {e3});
+    ecs_entity_t e4 = ecs_new(world); ecs_set(world, e4, Self, {e4});
+    ecs_entity_t e5 = ecs_new(world); ecs_set(world, e5, Self, {e5});
 
     ecs_add(world, e4, TagA);
     ecs_add(world, e5, TagB);
@@ -249,11 +249,11 @@ void Iter_page_iter_0_n(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    ecs_entity_t e1 = ecs_new_id(world); ecs_set(world, e1, Self, {e1});
-    ecs_entity_t e2 = ecs_new_id(world); ecs_set(world, e2, Self, {e2});
-    ecs_entity_t e3 = ecs_new_id(world); ecs_set(world, e3, Self, {e3});
-    ecs_entity_t e4 = ecs_new_id(world); ecs_set(world, e4, Self, {e4});
-    ecs_entity_t e5 = ecs_new_id(world); ecs_set(world, e5, Self, {e5});
+    ecs_entity_t e1 = ecs_new(world); ecs_set(world, e1, Self, {e1});
+    ecs_entity_t e2 = ecs_new(world); ecs_set(world, e2, Self, {e2});
+    ecs_entity_t e3 = ecs_new(world); ecs_set(world, e3, Self, {e3});
+    ecs_entity_t e4 = ecs_new(world); ecs_set(world, e4, Self, {e4});
+    ecs_entity_t e5 = ecs_new(world); ecs_set(world, e5, Self, {e5});
 
     ecs_add(world, e4, TagA);
     ecs_add(world, e5, TagB);
@@ -292,12 +292,12 @@ void Iter_page_iter_m_n(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    ecs_entity_t e1 = ecs_new_id(world); ecs_set(world, e1, Self, {e1});
-    ecs_entity_t e2 = ecs_new_id(world); ecs_set(world, e2, Self, {e2});
-    ecs_entity_t e3 = ecs_new_id(world); ecs_set(world, e3, Self, {e3});
-    ecs_entity_t e4 = ecs_new_id(world); ecs_set(world, e4, Self, {e4});
-    ecs_entity_t e5 = ecs_new_id(world); ecs_set(world, e5, Self, {e5});
-    ecs_entity_t e6 = ecs_new_id(world); ecs_set(world, e6, Self, {e6});
+    ecs_entity_t e1 = ecs_new(world); ecs_set(world, e1, Self, {e1});
+    ecs_entity_t e2 = ecs_new(world); ecs_set(world, e2, Self, {e2});
+    ecs_entity_t e3 = ecs_new(world); ecs_set(world, e3, Self, {e3});
+    ecs_entity_t e4 = ecs_new(world); ecs_set(world, e4, Self, {e4});
+    ecs_entity_t e5 = ecs_new(world); ecs_set(world, e5, Self, {e5});
+    ecs_entity_t e6 = ecs_new(world); ecs_set(world, e6, Self, {e6});
 
     ecs_add(world, e4, TagA);
     ecs_add(world, e5, TagA);
@@ -347,11 +347,11 @@ void Iter_page_iter_skip_1_table(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    ecs_entity_t e1 = ecs_new_id(world); ecs_set(world, e1, Self, {e1});
-    ecs_entity_t e2 = ecs_new_id(world); ecs_set(world, e2, Self, {e2});
-    ecs_entity_t e3 = ecs_new_id(world); ecs_set(world, e3, Self, {e3});
-    ecs_entity_t e4 = ecs_new_id(world); ecs_set(world, e4, Self, {e4});
-    ecs_entity_t e5 = ecs_new_id(world); ecs_set(world, e5, Self, {e5});
+    ecs_entity_t e1 = ecs_new(world); ecs_set(world, e1, Self, {e1});
+    ecs_entity_t e2 = ecs_new(world); ecs_set(world, e2, Self, {e2});
+    ecs_entity_t e3 = ecs_new(world); ecs_set(world, e3, Self, {e3});
+    ecs_entity_t e4 = ecs_new(world); ecs_set(world, e4, Self, {e4});
+    ecs_entity_t e5 = ecs_new(world); ecs_set(world, e5, Self, {e5});
 
     ecs_add(world, e3, TagA);
     ecs_add(world, e4, TagA);
@@ -402,11 +402,11 @@ void Iter_page_iter_skip_2_tables(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    ecs_entity_t e1 = ecs_new_id(world); ecs_set(world, e1, Self, {e1});
-    ecs_entity_t e2 = ecs_new_id(world); ecs_set(world, e2, Self, {e2});
-    ecs_entity_t e3 = ecs_new_id(world); ecs_set(world, e3, Self, {e3});
-    ecs_entity_t e4 = ecs_new_id(world); ecs_set(world, e4, Self, {e4});
-    ecs_entity_t e5 = ecs_new_id(world); ecs_set(world, e5, Self, {e5});
+    ecs_entity_t e1 = ecs_new(world); ecs_set(world, e1, Self, {e1});
+    ecs_entity_t e2 = ecs_new(world); ecs_set(world, e2, Self, {e2});
+    ecs_entity_t e3 = ecs_new(world); ecs_set(world, e3, Self, {e3});
+    ecs_entity_t e4 = ecs_new(world); ecs_set(world, e4, Self, {e4});
+    ecs_entity_t e5 = ecs_new(world); ecs_set(world, e5, Self, {e5});
 
     ecs_add(world, e3, TagA);
     ecs_add(world, e4, TagB);
@@ -446,11 +446,11 @@ void Iter_worker_iter_1(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    ecs_entity_t e1 = ecs_new_id(world); ecs_set(world, e1, Self, {e1});
-    ecs_entity_t e2 = ecs_new_id(world); ecs_set(world, e2, Self, {e2});
-    ecs_entity_t e3 = ecs_new_id(world); ecs_set(world, e3, Self, {e3});
-    ecs_entity_t e4 = ecs_new_id(world); ecs_set(world, e4, Self, {e4});
-    ecs_entity_t e5 = ecs_new_id(world); ecs_set(world, e5, Self, {e5});
+    ecs_entity_t e1 = ecs_new(world); ecs_set(world, e1, Self, {e1});
+    ecs_entity_t e2 = ecs_new(world); ecs_set(world, e2, Self, {e2});
+    ecs_entity_t e3 = ecs_new(world); ecs_set(world, e3, Self, {e3});
+    ecs_entity_t e4 = ecs_new(world); ecs_set(world, e4, Self, {e4});
+    ecs_entity_t e5 = ecs_new(world); ecs_set(world, e5, Self, {e5});
 
     ecs_add(world, e3, TagA);
     ecs_add(world, e4, TagA);
@@ -514,11 +514,11 @@ void Iter_worker_iter_2(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    ecs_entity_t e1 = ecs_new_id(world); ecs_set(world, e1, Self, {e1});
-    ecs_entity_t e2 = ecs_new_id(world); ecs_set(world, e2, Self, {e2});
-    ecs_entity_t e3 = ecs_new_id(world); ecs_set(world, e3, Self, {e3});
-    ecs_entity_t e4 = ecs_new_id(world); ecs_set(world, e4, Self, {e4});
-    ecs_entity_t e5 = ecs_new_id(world); ecs_set(world, e5, Self, {e5});
+    ecs_entity_t e1 = ecs_new(world); ecs_set(world, e1, Self, {e1});
+    ecs_entity_t e2 = ecs_new(world); ecs_set(world, e2, Self, {e2});
+    ecs_entity_t e3 = ecs_new(world); ecs_set(world, e3, Self, {e3});
+    ecs_entity_t e4 = ecs_new(world); ecs_set(world, e4, Self, {e4});
+    ecs_entity_t e5 = ecs_new(world); ecs_set(world, e5, Self, {e5});
 
     ecs_add(world, e3, TagA);
     ecs_add(world, e4, TagA);
@@ -606,12 +606,12 @@ void Iter_worker_iter_3(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    ecs_entity_t e1 = ecs_new_id(world); ecs_set(world, e1, Self, {e1});
-    ecs_entity_t e2 = ecs_new_id(world); ecs_set(world, e2, Self, {e2});
-    ecs_entity_t e3 = ecs_new_id(world); ecs_set(world, e3, Self, {e3});
-    ecs_entity_t e4 = ecs_new_id(world); ecs_set(world, e4, Self, {e4});
-    ecs_entity_t e5 = ecs_new_id(world); ecs_set(world, e5, Self, {e5});
-    ecs_entity_t e6 = ecs_new_id(world); ecs_set(world, e6, Self, {e6});
+    ecs_entity_t e1 = ecs_new(world); ecs_set(world, e1, Self, {e1});
+    ecs_entity_t e2 = ecs_new(world); ecs_set(world, e2, Self, {e2});
+    ecs_entity_t e3 = ecs_new(world); ecs_set(world, e3, Self, {e3});
+    ecs_entity_t e4 = ecs_new(world); ecs_set(world, e4, Self, {e4});
+    ecs_entity_t e5 = ecs_new(world); ecs_set(world, e5, Self, {e5});
+    ecs_entity_t e6 = ecs_new(world); ecs_set(world, e6, Self, {e6});
 
     ecs_add(world, e4, TagA);
     ecs_add(world, e5, TagA);
@@ -715,15 +715,15 @@ void Iter_worker_iter_4(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    ecs_entity_t e1 = ecs_new_id(world); ecs_set(world, e1, Self, {e1});
-    ecs_entity_t e2 = ecs_new_id(world); ecs_set(world, e2, Self, {e2});
-    ecs_entity_t e3 = ecs_new_id(world); ecs_set(world, e3, Self, {e3});
-    ecs_entity_t e4 = ecs_new_id(world); ecs_set(world, e4, Self, {e4});
-    ecs_entity_t e5 = ecs_new_id(world); ecs_set(world, e5, Self, {e5});
-    ecs_entity_t e6 = ecs_new_id(world); ecs_set(world, e6, Self, {e6});
-    ecs_entity_t e7 = ecs_new_id(world); ecs_set(world, e7, Self, {e7});
-    ecs_entity_t e8 = ecs_new_id(world); ecs_set(world, e8, Self, {e8});
-    ecs_entity_t e9 = ecs_new_id(world); ecs_set(world, e9, Self, {e9});
+    ecs_entity_t e1 = ecs_new(world); ecs_set(world, e1, Self, {e1});
+    ecs_entity_t e2 = ecs_new(world); ecs_set(world, e2, Self, {e2});
+    ecs_entity_t e3 = ecs_new(world); ecs_set(world, e3, Self, {e3});
+    ecs_entity_t e4 = ecs_new(world); ecs_set(world, e4, Self, {e4});
+    ecs_entity_t e5 = ecs_new(world); ecs_set(world, e5, Self, {e5});
+    ecs_entity_t e6 = ecs_new(world); ecs_set(world, e6, Self, {e6});
+    ecs_entity_t e7 = ecs_new(world); ecs_set(world, e7, Self, {e7});
+    ecs_entity_t e8 = ecs_new(world); ecs_set(world, e8, Self, {e8});
+    ecs_entity_t e9 = ecs_new(world); ecs_set(world, e9, Self, {e9});
 
     ecs_add(world, e5, TagA);
     ecs_add(world, e6, TagA);
@@ -870,11 +870,11 @@ void Iter_paged_iter_w_shared_comp(void) {
 
     ecs_entity_t foo = ecs_set(world, 0, Position, {10, 20});
 
-    ecs_entity_t e1 = ecs_new_id(world); ecs_set(world, e1, Self, {e1});
-    ecs_entity_t e2 = ecs_new_id(world); ecs_set(world, e2, Self, {e2});
-    ecs_entity_t e3 = ecs_new_id(world); ecs_set(world, e3, Self, {e3});
-    ecs_entity_t e4 = ecs_new_id(world); ecs_set(world, e4, Self, {e4});
-    ecs_entity_t e5 = ecs_new_id(world); ecs_set(world, e5, Self, {e5});
+    ecs_entity_t e1 = ecs_new(world); ecs_set(world, e1, Self, {e1});
+    ecs_entity_t e2 = ecs_new(world); ecs_set(world, e2, Self, {e2});
+    ecs_entity_t e3 = ecs_new(world); ecs_set(world, e3, Self, {e3});
+    ecs_entity_t e4 = ecs_new(world); ecs_set(world, e4, Self, {e4});
+    ecs_entity_t e5 = ecs_new(world); ecs_set(world, e5, Self, {e5});
 
     ecs_add(world, e3, TagA);
     ecs_add(world, e4, TagA);
@@ -963,11 +963,11 @@ void Iter_worker_iter_w_shared_comp(void) {
 
     ecs_entity_t foo = ecs_set(world, 0, Position, {10, 20});
 
-    ecs_entity_t e1 = ecs_new_id(world); ecs_set(world, e1, Self, {e1});
-    ecs_entity_t e2 = ecs_new_id(world); ecs_set(world, e2, Self, {e2});
-    ecs_entity_t e3 = ecs_new_id(world); ecs_set(world, e3, Self, {e3});
-    ecs_entity_t e4 = ecs_new_id(world); ecs_set(world, e4, Self, {e4});
-    ecs_entity_t e5 = ecs_new_id(world); ecs_set(world, e5, Self, {e5});
+    ecs_entity_t e1 = ecs_new(world); ecs_set(world, e1, Self, {e1});
+    ecs_entity_t e2 = ecs_new(world); ecs_set(world, e2, Self, {e2});
+    ecs_entity_t e3 = ecs_new(world); ecs_set(world, e3, Self, {e3});
+    ecs_entity_t e4 = ecs_new(world); ecs_set(world, e4, Self, {e4});
+    ecs_entity_t e5 = ecs_new(world); ecs_set(world, e5, Self, {e5});
 
     ecs_add(world, e3, TagA);
     ecs_add(world, e4, TagA);
@@ -1089,7 +1089,7 @@ void Iter_paged_iter_w_task_query(void) {
 
     ECS_COMPONENT(world, Self);
 
-    ecs_entity_t foo = ecs_new_id(world); ecs_set(world, foo, Self, {foo});
+    ecs_entity_t foo = ecs_new(world); ecs_set(world, foo, Self, {foo});
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ ecs_id(Self), .src.id = foo }}
@@ -1121,7 +1121,7 @@ void Iter_worker_iter_w_task_query(void) {
 
     ECS_COMPONENT(world, Self);
 
-    ecs_entity_t foo = ecs_new_id(world); ecs_set(world, foo, Self, {foo});
+    ecs_entity_t foo = ecs_new(world); ecs_set(world, foo, Self, {foo});
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ ecs_id(Self), .src.id = foo }}
@@ -2410,7 +2410,7 @@ void Iter_count(void) {
     ECS_TAG(world, TagC);
 
     for (int i = 0; i < 500; i ++) {
-        ecs_entity_t e = ecs_new(world, TagA);
+        ecs_entity_t e = ecs_new_w(world, TagA);
         if (!(i % 2)) {
             ecs_add(world, e, TagB);
         }
@@ -2440,8 +2440,8 @@ void Iter_interleaved_iter(void) {
         .terms = {{ TagA }}
     });
 
-    ecs_entity_t e1 = ecs_new(world, TagA);
-    ecs_entity_t e2 = ecs_new(world, TagA);
+    ecs_entity_t e1 = ecs_new_w(world, TagA);
+    ecs_entity_t e2 = ecs_new_w(world, TagA);
     ecs_add(world, e2, TagB);
 
     /* Bit of whitebox testing, check whether the stack cursor is restored to
@@ -2501,9 +2501,9 @@ void Iter_get_first(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e = ecs_new(world, Tag);
-    ecs_new(world, Tag);
-    ecs_new(world, Tag);
+    ecs_entity_t e = ecs_new_w(world, Tag);
+    ecs_new_w(world, Tag);
+    ecs_new_w(world, Tag);
 
     ecs_query_t *f = ecs_query_init(world, &(ecs_query_desc_t){
         .terms = {{ Tag }}
@@ -2527,8 +2527,8 @@ void Iter_page_iter_w_only_tag(void) {
         .terms = {{ Tag }}
     });
     
-    ecs_new(world, Tag);
-    ecs_entity_t e2 = ecs_new(world, Tag);
+    ecs_new_w(world, Tag);
+    ecs_entity_t e2 = ecs_new_w(world, Tag);
 
     ecs_iter_t it = ecs_query_iter(world, f);
     ecs_iter_t pit = ecs_page_iter(&it, 1, 0);
@@ -2552,8 +2552,8 @@ void Iter_worker_iter_w_only_tag(void) {
         .terms = {{ Tag }}
     });
     
-    ecs_new(world, Tag);
-    ecs_entity_t e2 = ecs_new(world, Tag);
+    ecs_new_w(world, Tag);
+    ecs_entity_t e2 = ecs_new_w(world, Tag);
 
     ecs_iter_t it = ecs_query_iter(world, f);
     ecs_iter_t pit = ecs_worker_iter(&it, 1, 2);
@@ -2577,8 +2577,8 @@ void Iter_page_iter_w_inout_none(void) {
         .terms = {{ ecs_id(Position), .inout = EcsInOutNone }}
     });
     
-    ecs_new(world, Position);
-    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_new_w(world, Position);
+    ecs_entity_t e2 = ecs_new_w(world, Position);
 
     ecs_iter_t it = ecs_query_iter(world, f);
     ecs_iter_t pit = ecs_page_iter(&it, 1, 0);
@@ -2602,8 +2602,8 @@ void Iter_worker_iter_w_inout_none(void) {
         .terms = {{ ecs_id(Position), .inout = EcsInOutNone }}
     });
     
-    ecs_new(world, Position);
-    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_new_w(world, Position);
+    ecs_entity_t e2 = ecs_new_w(world, Position);
 
     ecs_iter_t it = ecs_query_iter(world, f);
     ecs_iter_t pit = ecs_worker_iter(&it, 1, 2);
@@ -2627,7 +2627,7 @@ void Iter_page_iter_w_ctx(void) {
         .terms = {{ TagA  }}
     });
     
-    ecs_new(world, TagA);
+    ecs_new_w(world, TagA);
 
     int ctx;
 
@@ -2654,7 +2654,7 @@ void Iter_page_iter_w_binding_ctx(void) {
         .terms = {{ TagA  }}
     });
     
-    ecs_new(world, TagA);
+    ecs_new_w(world, TagA);
 
     int ctx;
 
@@ -2681,7 +2681,7 @@ void Iter_worker_iter_w_ctx(void) {
         .terms = {{ TagA  }}
     });
     
-    ecs_new(world, TagA);
+    ecs_new_w(world, TagA);
 
     int ctx;
 
@@ -2708,7 +2708,7 @@ void Iter_worker_iter_w_binding_ctx(void) {
         .terms = {{ TagA  }}
     });
     
-    ecs_new(world, TagA);
+    ecs_new_w(world, TagA);
 
     int ctx;
 
@@ -2738,12 +2738,12 @@ void Iter_column_index_owned(void) {
         .terms = {{ TagB }, { TagC }, { TagA }}
     });
 
-    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
     ecs_add(world, e1, TagA);
     ecs_add(world, e1, TagB);
     ecs_add(world, e1, TagC);
 
-    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new_w(world, Position);
     ecs_add(world, e2, TagA);
     ecs_add(world, e2, TagB);
     ecs_add(world, e2, TagC);
@@ -2782,14 +2782,14 @@ void Iter_column_index_shared(void) {
         .terms = {{ TagB }, { TagC }, { TagA }}
     });
 
-    ecs_entity_t base = ecs_new(world, TagA);
+    ecs_entity_t base = ecs_new_w(world, TagA);
 
-    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
     ecs_add_pair(world, e1, EcsIsA, base);
     ecs_add(world, e1, TagB);
     ecs_add(world, e1, TagC);
 
-    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new_w(world, Position);
     ecs_add_pair(world, e2, EcsIsA, base);
     ecs_add(world, e2, TagB);
     ecs_add(world, e2, TagC);
@@ -2828,11 +2828,11 @@ void Iter_column_index_not(void) {
         .terms = {{ TagB }, { TagC }, { TagA, .oper = EcsNot }}
     });
 
-    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
     ecs_add(world, e1, TagB);
     ecs_add(world, e1, TagC);
 
-    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new_w(world, Position);
     ecs_add(world, e2, TagB);
     ecs_add(world, e2, TagC);
 

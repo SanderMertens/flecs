@@ -1268,7 +1268,7 @@ void Traversal_ent_self_up_childof(void) {
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t parent = ecs_new(world);
     ecs_entity_t e = ecs_entity(world, { .name = "ent" });
 
     ecs_query_t *r = ecs_query(world, {
@@ -1325,7 +1325,7 @@ void Traversal_ent_up_childof(void) {
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t parent = ecs_new(world);
     ecs_entity_t e = ecs_entity(world, { .name = "ent" });
 
     ecs_query_t *r = ecs_query(world, {
@@ -1753,7 +1753,7 @@ void Traversal_implicit_ent_self_up_isa(void) {
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t parent = ecs_new(world);
     ecs_entity_t e = ecs_entity(world, { .name = "ent" });
 
     ecs_query_t *r = ecs_query(world, {
@@ -1810,7 +1810,7 @@ void Traversal_implicit_ent_up_isa(void) {
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t parent = ecs_new(world);
     ecs_entity_t e = ecs_entity(world, { .name = "ent" });
 
     ecs_query_t *r = ecs_query(world, {
@@ -1868,7 +1868,7 @@ void Traversal_self_up_2_targets(void) {
 
     test_assert(r != NULL);
 
-    ecs_entity_t parent_a = ecs_new_id(world);
+    ecs_entity_t parent_a = ecs_new(world);
     ecs_entity_t parent_b = ecs_entity(world, { .add = {Foo} });
     ecs_entity_t parent_c = ecs_entity(world, { .add = {Foo} });
     ecs_entity_t e_1 = ecs_entity(world, { .add = {ecs_isa(parent_a)} });
@@ -1923,7 +1923,7 @@ void Traversal_up_2_targets(void) {
 
     test_assert(r != NULL);
 
-    ecs_entity_t parent_a = ecs_new_id(world);
+    ecs_entity_t parent_a = ecs_new(world);
     ecs_entity_t parent_b = ecs_entity(world, { .add = {Foo} });
     ecs_entity_t parent_c = ecs_entity(world, { .add = {Foo} });
     ecs_entity_t e_1 = ecs_entity(world, { .add = {ecs_isa(parent_a)} });
@@ -2101,7 +2101,7 @@ void Traversal_written_self_up_2_targets(void) {
     test_assert(r != NULL);
     
     ecs_set_with(world, Tag);
-    ecs_entity_t parent_a = ecs_new_id(world);
+    ecs_entity_t parent_a = ecs_new(world);
     ecs_entity_t parent_b = ecs_entity(world, { .add = {Foo} });
     ecs_entity_t parent_c = ecs_entity(world, { .add = {Foo} });
     ecs_entity_t e_1 = ecs_entity(world, { .add = {ecs_isa(parent_a)} });
@@ -2166,7 +2166,7 @@ void Traversal_written_up_2_targets(void) {
     test_assert(r != NULL);
     
     ecs_set_with(world, Tag);
-    ecs_entity_t parent_a = ecs_new_id(world);
+    ecs_entity_t parent_a = ecs_new(world);
     ecs_entity_t parent_b = ecs_entity(world, { .add = {Foo} });
     ecs_entity_t parent_c = ecs_entity(world, { .add = {Foo} });
     ecs_entity_t e_1 = ecs_entity(world, { .add = {ecs_isa(parent_a)} });
@@ -2372,7 +2372,7 @@ void Traversal_2_self_up_terms(void) {
     ECS_TAG(world, Tag);
 
     ecs_set_with(world, Tag);
-    ecs_entity_t parent_a = ecs_new_id(world);
+    ecs_entity_t parent_a = ecs_new(world);
     ecs_entity_t parent_b = ecs_entity(world, { .add = {Foo} });
     ecs_entity(world, { .add = {ecs_isa(parent_a)} });
     ecs_entity_t e_2 = ecs_entity(world, { .add = {ecs_isa(parent_b)} });
@@ -2425,7 +2425,7 @@ void Traversal_2_self_up_terms_2_targets(void) {
     ECS_TAG(world, Tag);
 
     ecs_set_with(world, Tag);
-    ecs_entity_t parent_a = ecs_new_id(world);
+    ecs_entity_t parent_a = ecs_new(world);
     ecs_entity_t parent_b = ecs_entity(world, { .add = {Foo} });
     ecs_entity_t parent_c = ecs_entity(world, { .add = {Foo} });
     ecs_entity_t e_1 = ecs_entity(world, { .add = {ecs_isa(parent_a)} });
@@ -3445,9 +3445,9 @@ void Traversal_this_written_self_up_childof_component(void) {
 
     ecs_set_with(world, Tag);
     ecs_entity_t p0 = ecs_entity(world, {0});
-    ecs_entity_t p1 = ecs_set(world, ecs_new(world, Tag), Position, {10, 20});
-    ecs_entity_t p2 = ecs_set(world, ecs_new(world, Tag), Position, {20, 30});
-    ecs_entity_t p3 = ecs_set(world, ecs_new(world, Tag), Position, {30, 40});
+    ecs_entity_t p1 = ecs_set(world, ecs_new_w(world, Tag), Position, {10, 20});
+    ecs_entity_t p2 = ecs_set(world, ecs_new_w(world, Tag), Position, {20, 30});
+    ecs_entity_t p3 = ecs_set(world, ecs_new_w(world, Tag), Position, {30, 40});
     ecs_add(world, p3, Bar);
 
     ecs_entity_t e1 = ecs_entity(world, { .add = {ecs_childof(p1)} });
@@ -3621,9 +3621,9 @@ void Traversal_this_written_up_childof_component(void) {
 
     ecs_set_with(world, Tag);
     ecs_entity_t p0 = ecs_entity(world, {0});
-    ecs_entity_t p1 = ecs_set(world, ecs_new(world, Tag), Position, {10, 20});
-    ecs_entity_t p2 = ecs_set(world, ecs_new(world, Tag), Position, {20, 30});
-    ecs_entity_t p3 = ecs_set(world, ecs_new(world, Tag), Position, {30, 40});
+    ecs_entity_t p1 = ecs_set(world, ecs_new_w(world, Tag), Position, {10, 20});
+    ecs_entity_t p2 = ecs_set(world, ecs_new_w(world, Tag), Position, {20, 30});
+    ecs_entity_t p3 = ecs_set(world, ecs_new_w(world, Tag), Position, {30, 40});
     ecs_add(world, p3, Bar);
 
     ecs_entity_t e1 = ecs_entity(world, { .add = {ecs_childof(p1)} });
@@ -4063,9 +4063,9 @@ void Traversal_var_written_self_up_childof_component(void) {
 
     ecs_set_with(world, Tag);
     ecs_entity_t p0 = ecs_entity(world, {0});
-    ecs_entity_t p1 = ecs_set(world, ecs_new(world, Tag), Position, {10, 20});
-    ecs_entity_t p2 = ecs_set(world, ecs_new(world, Tag), Position, {20, 30});
-    ecs_entity_t p3 = ecs_set(world, ecs_new(world, Tag), Position, {30, 40});
+    ecs_entity_t p1 = ecs_set(world, ecs_new_w(world, Tag), Position, {10, 20});
+    ecs_entity_t p2 = ecs_set(world, ecs_new_w(world, Tag), Position, {20, 30});
+    ecs_entity_t p3 = ecs_set(world, ecs_new_w(world, Tag), Position, {30, 40});
     ecs_add(world, p3, Bar);
 
     ecs_entity_t e1 = ecs_entity(world, { .add = {ecs_childof(p1)} });
@@ -4252,9 +4252,9 @@ void Traversal_var_written_up_childof_component(void) {
 
     ecs_set_with(world, Tag);
     ecs_entity_t p0 = ecs_entity(world, {0});
-    ecs_entity_t p1 = ecs_set(world, ecs_new(world, Tag), Position, {10, 20});
-    ecs_entity_t p2 = ecs_set(world, ecs_new(world, Tag), Position, {20, 30});
-    ecs_entity_t p3 = ecs_set(world, ecs_new(world, Tag), Position, {30, 40});
+    ecs_entity_t p1 = ecs_set(world, ecs_new_w(world, Tag), Position, {10, 20});
+    ecs_entity_t p2 = ecs_set(world, ecs_new_w(world, Tag), Position, {20, 30});
+    ecs_entity_t p3 = ecs_set(world, ecs_new_w(world, Tag), Position, {30, 40});
     ecs_add(world, p3, Bar);
 
     ecs_entity_t e1 = ecs_entity(world, { .add = {ecs_childof(p1)} });
@@ -4386,13 +4386,13 @@ void Traversal_this_self_up_childof_recycled_parent(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_delete(world, ecs_new_id(world));
+    ecs_delete(world, ecs_new(world));
     ecs_entity_t p0 = ecs_entity(world, {0});
-    ecs_delete(world, ecs_new_id(world));
+    ecs_delete(world, ecs_new(world));
     ecs_entity_t p1 = ecs_entity(world, { .add = {Foo} });
-    ecs_delete(world, ecs_new_id(world));
+    ecs_delete(world, ecs_new(world));
     ecs_entity_t p2 = ecs_entity(world, { .add = {Foo} });
-    ecs_delete(world, ecs_new_id(world));
+    ecs_delete(world, ecs_new(world));
     ecs_entity_t p3 = ecs_entity(world, { .add = {Foo} });
     ecs_add(world, p3, Bar);
 
@@ -4493,13 +4493,13 @@ void Traversal_this_up_childof_recycled_parent(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_delete(world, ecs_new_id(world));
+    ecs_delete(world, ecs_new(world));
     ecs_entity_t p0 = ecs_entity(world, {0});
-    ecs_delete(world, ecs_new_id(world));
+    ecs_delete(world, ecs_new(world));
     ecs_entity_t p1 = ecs_entity(world, { .add = {Foo} });
-    ecs_delete(world, ecs_new_id(world));
+    ecs_delete(world, ecs_new(world));
     ecs_entity_t p2 = ecs_entity(world, { .add = {Foo} });
-    ecs_delete(world, ecs_new_id(world));
+    ecs_delete(world, ecs_new(world));
     ecs_entity_t p3 = ecs_entity(world, { .add = {Foo} });
     ecs_add(world, p3, Bar);
 
@@ -4596,13 +4596,13 @@ void Traversal_this_written_self_up_childof_recycled_parent(void) {
     test_assert(r != NULL);
 
     ecs_set_with(world, Tag);
-    ecs_delete(world, ecs_new_id(world));
+    ecs_delete(world, ecs_new(world));
     ecs_entity_t p0 = ecs_entity(world, {0});
-    ecs_delete(world, ecs_new_id(world));
+    ecs_delete(world, ecs_new(world));
     ecs_entity_t p1 = ecs_entity(world, { .add = {Foo} });
-    ecs_delete(world, ecs_new_id(world));
+    ecs_delete(world, ecs_new(world));
     ecs_entity_t p2 = ecs_entity(world, { .add = {Foo} });
-    ecs_delete(world, ecs_new_id(world));
+    ecs_delete(world, ecs_new(world));
     ecs_entity_t p3 = ecs_entity(world, { .add = {Foo} });
     ecs_add(world, p3, Bar);
 
@@ -4724,13 +4724,13 @@ void Traversal_this_written_up_childof_recycled_parent(void) {
     test_assert(r != NULL);
 
     ecs_set_with(world, Tag);
-    ecs_delete(world, ecs_new_id(world));
+    ecs_delete(world, ecs_new(world));
     ecs_entity_t p0 = ecs_entity(world, {0});
-    ecs_delete(world, ecs_new_id(world));
+    ecs_delete(world, ecs_new(world));
     ecs_entity_t p1 = ecs_entity(world, { .add = {Foo} });
-    ecs_delete(world, ecs_new_id(world));
+    ecs_delete(world, ecs_new(world));
     ecs_entity_t p2 = ecs_entity(world, { .add = {Foo} });
-    ecs_delete(world, ecs_new_id(world));
+    ecs_delete(world, ecs_new(world));
     ecs_entity_t p3 = ecs_entity(world, { .add = {Foo} });
     ecs_add(world, p3, Bar);
 
@@ -4826,13 +4826,13 @@ void Traversal_this_self_up_childof_recycled_parent_component(void) {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Bar);
 
-    ecs_delete(world, ecs_new_id(world));
+    ecs_delete(world, ecs_new(world));
     ecs_entity_t p0 = ecs_entity(world, {0});
-    ecs_delete(world, ecs_new_id(world));
+    ecs_delete(world, ecs_new(world));
     ecs_entity_t p1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_delete(world, ecs_new_id(world));
+    ecs_delete(world, ecs_new(world));
     ecs_entity_t p2 = ecs_set(world, 0, Position, {20, 30});
-    ecs_delete(world, ecs_new_id(world));
+    ecs_delete(world, ecs_new(world));
     ecs_entity_t p3 = ecs_set(world, 0, Position, {30, 40});
     ecs_add(world, p3, Bar);
 
@@ -4989,13 +4989,13 @@ void Traversal_this_up_childof_recycled_parent_component(void) {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Bar);
 
-    ecs_delete(world, ecs_new_id(world));
+    ecs_delete(world, ecs_new(world));
     ecs_entity_t p0 = ecs_entity(world, {0});
-    ecs_delete(world, ecs_new_id(world));
+    ecs_delete(world, ecs_new(world));
     ecs_entity_t p1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_delete(world, ecs_new_id(world));
+    ecs_delete(world, ecs_new(world));
     ecs_entity_t p2 = ecs_set(world, 0, Position, {20, 30});
-    ecs_delete(world, ecs_new_id(world));
+    ecs_delete(world, ecs_new(world));
     ecs_entity_t p3 = ecs_set(world, 0, Position, {30, 40});
     ecs_add(world, p3, Bar);
 
@@ -5134,14 +5134,14 @@ void Traversal_this_written_self_up_childof_recycled_parent_component(void) {
     test_assert(r != NULL);
 
     ecs_set_with(world, Tag);
-    ecs_delete(world, ecs_new_id(world));
+    ecs_delete(world, ecs_new(world));
     ecs_entity_t p0 = ecs_entity(world, {0});
-    ecs_delete(world, ecs_new_id(world));
-    ecs_entity_t p1 = ecs_set(world, ecs_new(world, Tag), Position, {10, 20});
-    ecs_delete(world, ecs_new_id(world));
-    ecs_entity_t p2 = ecs_set(world, ecs_new(world, Tag), Position, {20, 30});
-    ecs_delete(world, ecs_new_id(world));
-    ecs_entity_t p3 = ecs_set(world, ecs_new(world, Tag), Position, {30, 40});
+    ecs_delete(world, ecs_new(world));
+    ecs_entity_t p1 = ecs_set(world, ecs_new_w(world, Tag), Position, {10, 20});
+    ecs_delete(world, ecs_new(world));
+    ecs_entity_t p2 = ecs_set(world, ecs_new_w(world, Tag), Position, {20, 30});
+    ecs_delete(world, ecs_new(world));
+    ecs_entity_t p3 = ecs_set(world, ecs_new_w(world, Tag), Position, {30, 40});
     ecs_add(world, p3, Bar);
 
     test_assert((uint32_t)p0 != p0);
@@ -5319,14 +5319,14 @@ void Traversal_this_written_up_childof_recycled_parent_component(void) {
     test_assert(r != NULL);
 
     ecs_set_with(world, Tag);
-    ecs_delete(world, ecs_new_id(world));
+    ecs_delete(world, ecs_new(world));
     ecs_entity_t p0 = ecs_entity(world, {0});
-    ecs_delete(world, ecs_new_id(world));
-    ecs_entity_t p1 = ecs_set(world, ecs_new(world, Tag), Position, {10, 20});
-    ecs_delete(world, ecs_new_id(world));
-    ecs_entity_t p2 = ecs_set(world, ecs_new(world, Tag), Position, {20, 30});
-    ecs_delete(world, ecs_new_id(world));
-    ecs_entity_t p3 = ecs_set(world, ecs_new(world, Tag), Position, {30, 40});
+    ecs_delete(world, ecs_new(world));
+    ecs_entity_t p1 = ecs_set(world, ecs_new_w(world, Tag), Position, {10, 20});
+    ecs_delete(world, ecs_new(world));
+    ecs_entity_t p2 = ecs_set(world, ecs_new_w(world, Tag), Position, {20, 30});
+    ecs_delete(world, ecs_new(world));
+    ecs_entity_t p3 = ecs_set(world, ecs_new_w(world, Tag), Position, {30, 40});
     ecs_add(world, p3, Bar);
 
     test_assert((uint32_t)p0 != p0);
@@ -6858,9 +6858,9 @@ void Traversal_this_self_up_childof_pair_for_var_written(void) {
     int x_var = ecs_query_find_var(r, "x");
     test_assert(x_var != -1);
 
-    ecs_entity_t p1 = ecs_new(world, TagA);
-    ecs_entity_t p2 = ecs_new(world, TagB);
-    ecs_entity_t p3 = ecs_new(world, TagC);
+    ecs_entity_t p1 = ecs_new_w(world, TagA);
+    ecs_entity_t p2 = ecs_new_w(world, TagB);
+    ecs_entity_t p3 = ecs_new_w(world, TagC);
 
     ecs_entity_t e1 = ecs_entity(world, { .add = {ecs_isa(p1)} });
     ecs_add_pair(world, e1, EcsIsA, p2);
@@ -6948,9 +6948,9 @@ void Traversal_this_up_childof_pair_for_var_written(void) {
     int x_var = ecs_query_find_var(r, "x");
     test_assert(x_var != -1);
 
-    ecs_entity_t p1 = ecs_new(world, TagA);
-    ecs_entity_t p2 = ecs_new(world, TagB);
-    ecs_entity_t p3 = ecs_new(world, TagC);
+    ecs_entity_t p1 = ecs_new_w(world, TagA);
+    ecs_entity_t p2 = ecs_new_w(world, TagB);
+    ecs_entity_t p3 = ecs_new_w(world, TagC);
 
     ecs_entity_t e1 = ecs_entity(world, { .add = {ecs_isa(p1)} });
     ecs_add_pair(world, e1, EcsIsA, p2);
@@ -7010,9 +7010,9 @@ void Traversal_this_written_self_up_childof_pair_for_var_written(void) {
     test_assert(x_var != -1);
 
     ecs_entity_t p0 = ecs_entity(world, {0});
-    ecs_entity_t p1 = ecs_new(world, TagA);
-    ecs_entity_t p2 = ecs_new(world, TagB);
-    ecs_entity_t p3 = ecs_new(world, TagC);
+    ecs_entity_t p1 = ecs_new_w(world, TagA);
+    ecs_entity_t p2 = ecs_new_w(world, TagB);
+    ecs_entity_t p3 = ecs_new_w(world, TagC);
 
     ecs_entity_t e0 = ecs_entity(world, { .add = {ecs_childof(p0)} });
     ecs_add_pair(world, e0, Rel, TagA);
@@ -7094,13 +7094,13 @@ void Traversal_this_self_up_childof_pair_for_var_written_n_targets(void) {
     test_assert(x_var != -1);
 
     ecs_entity_t p0 = ecs_entity(world, {0});
-    ecs_entity_t p0_a = ecs_new(world, TagA);
-    ecs_entity_t p0_b = ecs_new(world, TagB);
+    ecs_entity_t p0_a = ecs_new_w(world, TagA);
+    ecs_entity_t p0_b = ecs_new_w(world, TagB);
     ecs_add(world, p0_b, Foo);
-    ecs_entity_t p0_c = ecs_new(world, TagC);
+    ecs_entity_t p0_c = ecs_new_w(world, TagC);
     ecs_add(world, p0_c, Foo);
     ecs_add(world, p0_c, Bar);
-    ecs_entity_t p1 = ecs_new_id(world);
+    ecs_entity_t p1 = ecs_new(world);
     ecs_add_pair(world, p1, EcsIsA, p0_a);
     ecs_add_pair(world, p1, EcsIsA, p0_b);
     ecs_add_pair(world, p1, EcsIsA, p0_c);
@@ -7225,9 +7225,9 @@ void Traversal_this_written_self_up_childof_pair_for_var_written_n_targets(void)
     test_assert(r != NULL);
 
     ecs_entity_t p0 = ecs_entity(world, {0});
-    ecs_entity_t p1 = ecs_new(world, TagA);
-    ecs_entity_t p2 = ecs_new(world, TagB);
-    ecs_entity_t p3 = ecs_new(world, TagC);
+    ecs_entity_t p1 = ecs_new_w(world, TagA);
+    ecs_entity_t p2 = ecs_new_w(world, TagB);
+    ecs_entity_t p3 = ecs_new_w(world, TagC);
 
     ecs_entity_t e0 = ecs_entity(world, { .add = {ecs_isa(p0)} });
     ecs_add_pair(world, e0, Rel, TagA);
@@ -7344,10 +7344,10 @@ void Traversal_not_up_disabled(void) {
 
     ecs_entity_t parent = ecs_new_w_id(world, EcsDisabled);
 
-    ecs_entity_t e1 = ecs_new(world, TagA);
-    ecs_entity_t e2 = ecs_new(world, TagA);
+    ecs_entity_t e1 = ecs_new_w(world, TagA);
+    ecs_entity_t e2 = ecs_new_w(world, TagA);
     ecs_add_id(world, e2, EcsDisabled);
-    ecs_entity_t e3 = ecs_new(world, TagA);
+    ecs_entity_t e3 = ecs_new_w(world, TagA);
     ecs_add_pair(world, e3, EcsChildOf, parent);
     
     ecs_iter_t it = ecs_query_iter(world, f);
@@ -7374,14 +7374,14 @@ void Traversal_up_2_rel_instances(void) {
 
     ecs_add_id(world, Rel, EcsTraversable);
 
-    ecs_entity_t b1 = ecs_new(world, TagA);
-    ecs_entity_t b2 = ecs_new(world, TagA);
+    ecs_entity_t b1 = ecs_new_w(world, TagA);
+    ecs_entity_t b2 = ecs_new_w(world, TagA);
     ecs_add(world, b1, TagB);
     ecs_add(world, b2, TagB);
     ecs_add(world, b1, TagC);
     ecs_add(world, b2, TagC);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_add_pair(world, e, Rel, b1);
     ecs_add_pair(world, e, Rel, b2);
 
@@ -7415,13 +7415,13 @@ void Traversal_up_2_rel_instances_match_2nd(void) {
 
     ecs_add_id(world, Rel, EcsTraversable);
 
-    ecs_entity_t b1 = ecs_new(world, TagA);
-    ecs_entity_t b2 = ecs_new(world, TagA);
+    ecs_entity_t b1 = ecs_new_w(world, TagA);
+    ecs_entity_t b2 = ecs_new_w(world, TagA);
     ecs_add(world, b1, TagB);
     ecs_add(world, b2, TagB);
     ecs_add(world, b2, TagC);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_add_pair(world, e, Rel, b1);
     ecs_add_pair(world, e, Rel, b2);
 
@@ -7532,15 +7532,15 @@ void Traversal_this_optional_self(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t base = ecs_new(world, Velocity);
+    ecs_entity_t base = ecs_new_w(world, Velocity);
     
-    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e1 = ecs_new_w(world, Position);
     ecs_add_pair(world, e1, EcsIsA, base);
 
-    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new_w(world, Position);
     ecs_add(world, e2, Velocity);
 
-    ecs_entity_t e3 = ecs_new(world, Position);
+    ecs_entity_t e3 = ecs_new_w(world, Position);
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "?Velocity(self), Position",
@@ -7586,15 +7586,15 @@ void Traversal_this_optional_up(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t base = ecs_new(world, Velocity);
+    ecs_entity_t base = ecs_new_w(world, Velocity);
     
-    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e1 = ecs_new_w(world, Position);
     ecs_add_pair(world, e1, EcsIsA, base);
 
-    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new_w(world, Position);
     ecs_add(world, e2, Velocity);
 
-    ecs_entity_t e3 = ecs_new(world, Position);
+    ecs_entity_t e3 = ecs_new_w(world, Position);
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "?Velocity(up(IsA)), Position",
@@ -7640,15 +7640,15 @@ void Traversal_this_optional_self_up(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t base = ecs_new(world, Velocity);
+    ecs_entity_t base = ecs_new_w(world, Velocity);
     
-    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e1 = ecs_new_w(world, Position);
     ecs_add_pair(world, e1, EcsIsA, base);
 
-    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new_w(world, Position);
     ecs_add(world, e2, Velocity);
 
-    ecs_entity_t e3 = ecs_new(world, Position);
+    ecs_entity_t e3 = ecs_new_w(world, Position);
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "?Velocity(self|up(IsA)), Position",
@@ -7695,15 +7695,15 @@ void Traversal_this_written_optional_self(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t base = ecs_new(world, Velocity);
+    ecs_entity_t base = ecs_new_w(world, Velocity);
     
-    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e1 = ecs_new_w(world, Position);
     ecs_add_pair(world, e1, EcsIsA, base);
 
-    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new_w(world, Position);
     ecs_add(world, e2, Velocity);
 
-    ecs_entity_t e3 = ecs_new(world, Position);
+    ecs_entity_t e3 = ecs_new_w(world, Position);
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position, ?Velocity(self)",
@@ -7751,15 +7751,15 @@ void Traversal_this_written_optional_up(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t base = ecs_new(world, Velocity);
+    ecs_entity_t base = ecs_new_w(world, Velocity);
     
-    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e1 = ecs_new_w(world, Position);
     ecs_add_pair(world, e1, EcsIsA, base);
 
-    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new_w(world, Position);
     ecs_add(world, e2, Velocity);
 
-    ecs_entity_t e3 = ecs_new(world, Position);
+    ecs_entity_t e3 = ecs_new_w(world, Position);
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position, ?Velocity(up(IsA))",
@@ -7805,15 +7805,15 @@ void Traversal_this_written_optional_self_up(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t base = ecs_new(world, Velocity);
+    ecs_entity_t base = ecs_new_w(world, Velocity);
     
-    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e1 = ecs_new_w(world, Position);
     ecs_add_pair(world, e1, EcsIsA, base);
 
-    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new_w(world, Position);
     ecs_add(world, e2, Velocity);
 
-    ecs_entity_t e3 = ecs_new(world, Position);
+    ecs_entity_t e3 = ecs_new_w(world, Position);
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position, ?Velocity(self|up(IsA))",

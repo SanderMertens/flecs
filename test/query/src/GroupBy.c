@@ -48,9 +48,9 @@ void GroupBy_group_by(void) {
         .group_by_callback = group_by_first_id
     });
 
-    ecs_entity_t e1 = ecs_new(world, TagX);
-    ecs_entity_t e2 = ecs_new(world, TagX);
-    ecs_entity_t e3 = ecs_new(world, TagX);
+    ecs_entity_t e1 = ecs_new_w(world, TagX);
+    ecs_entity_t e2 = ecs_new_w(world, TagX);
+    ecs_entity_t e3 = ecs_new_w(world, TagX);
 
     ecs_add_id(world, e1, TagC);
     ecs_add_id(world, e2, TagB);
@@ -97,9 +97,9 @@ void GroupBy_group_by_w_ctx(void) {
         .group_by_ctx_free = ctx_value_free
     });
 
-    ecs_entity_t e1 = ecs_new(world, TagX);
-    ecs_entity_t e2 = ecs_new(world, TagX);
-    ecs_entity_t e3 = ecs_new(world, TagX);
+    ecs_entity_t e1 = ecs_new_w(world, TagX);
+    ecs_entity_t e2 = ecs_new_w(world, TagX);
+    ecs_entity_t e3 = ecs_new_w(world, TagX);
 
     ecs_add_id(world, e1, TagC);
     ecs_add_id(world, e2, TagB);
@@ -130,11 +130,11 @@ void GroupBy_group_by_w_ctx(void) {
 void GroupBy_group_by_w_sort_reverse_group_creation(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t TagA = ecs_new_id(world);
-    ecs_entity_t TagB = ecs_new_id(world);
-    ecs_entity_t TagC = ecs_new_id(world);
+    ecs_entity_t TagA = ecs_new(world);
+    ecs_entity_t TagB = ecs_new(world);
+    ecs_entity_t TagC = ecs_new(world);
 
-    ecs_entity_t TagX = ecs_new_id(world);
+    ecs_entity_t TagX = ecs_new(world);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{TagX}},
@@ -402,7 +402,7 @@ void GroupBy_group_by_w_deleted_group_id(void) {
         .group_by = Rel
     });
 
-    ecs_entity_t tgt = ecs_new_id(world);
+    ecs_entity_t tgt = ecs_new(world);
     ecs_entity_t e = ecs_new_w_pair(world, Rel, tgt);
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -418,7 +418,7 @@ void GroupBy_group_by_w_deleted_group_id(void) {
     it = ecs_query_iter(world, q);
     test_bool(false, ecs_query_next(&it));
 
-    tgt = ecs_new_id(world);
+    tgt = ecs_new(world);
     e = ecs_new_w_pair(world, Rel, tgt);
 
     it = ecs_query_iter(world, q);
@@ -475,8 +475,8 @@ void GroupBy_group_by_callbacks(void) {
         .group_by_ctx = &group_by_ctx
     });
 
-    ecs_entity_t tgt_a = ecs_new_id(world);
-    ecs_entity_t tgt_b = ecs_new_id(world);
+    ecs_entity_t tgt_a = ecs_new(world);
+    ecs_entity_t tgt_b = ecs_new(world);
 
     test_int(on_group_create_invoked, 0);
     test_int(on_group_delete_invoked, 0);

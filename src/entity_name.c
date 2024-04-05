@@ -560,7 +560,7 @@ ecs_entity_t ecs_add_path_w_sep(
 
     if (!path) {
         if (!entity) {
-            entity = ecs_new_id(world);
+            entity = ecs_new(world);
         }
 
         if (parent) {
@@ -626,7 +626,7 @@ ecs_entity_t ecs_add_path_w_sep(
                         e = ecs_entity(world, {0});
                         ecs_set_scope(world, prev);
                     } else {
-                        e = ecs_new_id(world);
+                        e = ecs_new(world);
                     }
                 }
 

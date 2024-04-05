@@ -16,9 +16,9 @@ void Recycled_setup(void) {
 }
 
 static ecs_entity_t recycled_id(ecs_world_t *world, const char *name) {
-    ecs_entity_t result = ecs_new_id(world);
+    ecs_entity_t result = ecs_new(world);
     ecs_delete(world, result);
-    ecs_entity_t result_2 = ecs_new_id(world);
+    ecs_entity_t result_2 = ecs_new(world);
     test_assert(result_2 != (uint32_t)result);
     ecs_set_name(world, result_2, name);
     return result_2;
@@ -266,7 +266,7 @@ void Recycled_recycled_component_id(void) {
         ecs_new_low_id(ecs);
     }
 
-    ecs_entity_t e = ecs_new_id(ecs);
+    ecs_entity_t e = ecs_new(ecs);
     ecs_delete(ecs, e);
 
     ECS_COMPONENT(ecs, Position);

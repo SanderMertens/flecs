@@ -487,7 +487,7 @@ ecs_entity_t plecs_ensure_entity(
     bool is_new = false;
     if (is_anonymous) {
         path = NULL;
-        e = ecs_new_id(world);
+        e = ecs_new(world);
         is_new = true;
     }
 
@@ -2186,7 +2186,7 @@ ecs_entity_t ecs_script_init(
         if (desc->filename) {
             e = ecs_new_from_path_w_sep(world, 0, desc->filename, "/", NULL);
         } else {
-            e = ecs_new_id(world);
+            e = ecs_new(world);
         }
     }
 

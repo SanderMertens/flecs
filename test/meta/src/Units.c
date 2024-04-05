@@ -106,7 +106,7 @@ void Units_cursor_get_unit(void) {
         }
     });
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     void *ptr = ecs_ensure_id(world, e, s);
     test_assert(ptr != NULL);
 
@@ -139,7 +139,7 @@ void Units_cursor_get_unit_type(void) {
         }
     });
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     void *ptr = ecs_ensure_id(world, e, s);
     test_assert(ptr != NULL);
 
@@ -351,7 +351,7 @@ void Units_unit_w_over(void) {
 void Units_member_w_invalid_unit(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t u = ecs_new_id(world); /* not a unit */
+    ecs_entity_t u = ecs_new(world); /* not a unit */
     test_assert(u != 0);
 
     ecs_log_set_level(-4);
@@ -369,7 +369,7 @@ void Units_member_w_invalid_unit(void) {
 void Units_unit_w_invalid_quantity(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t q = ecs_new_id(world); /* not a quantity */
+    ecs_entity_t q = ecs_new(world); /* not a quantity */
     test_assert(q != 0);
 
     ecs_log_set_level(-4);
@@ -387,7 +387,7 @@ void Units_unit_w_invalid_quantity(void) {
 void Units_unit_w_invalid_derived(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t u_1 = ecs_new_id(world); /* not a unit */
+    ecs_entity_t u_1 = ecs_new(world); /* not a unit */
     test_assert(u_1 != 0);
 
     ecs_log_set_level(-4);
@@ -405,7 +405,7 @@ void Units_unit_w_invalid_derived(void) {
 void Units_unit_w_invalid_over(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t u_1 = ecs_new_id(world); /* not a unit */
+    ecs_entity_t u_1 = ecs_new(world); /* not a unit */
     test_assert(u_1 != 0);
 
     ecs_entity_t u_2 = ecs_unit_init(world, &(ecs_unit_desc_t){
@@ -635,7 +635,7 @@ void Units_set_unit(void) {
     });
     test_assert(q != 0);
 
-    ecs_entity_t u = ecs_new_id(world);
+    ecs_entity_t u = ecs_new(world);
     test_assert(u != 0);
 
     ecs_set(world, u, EcsUnit, {
@@ -683,14 +683,14 @@ void Units_set_unit_w_derived(void) {
     });
     test_assert(q != 0);
 
-    ecs_entity_t d = ecs_new_id(world);
+    ecs_entity_t d = ecs_new(world);
     test_assert(d != 0);
 
     ecs_set(world, d, EcsUnit, {
         .symbol = "d"
     });
 
-    ecs_entity_t u = ecs_new_id(world);
+    ecs_entity_t u = ecs_new(world);
     test_assert(u != 0);
 
     ecs_set(world, u, EcsUnit, {
@@ -740,21 +740,21 @@ void Units_set_unit_w_over(void) {
     });
     test_assert(q != 0);
 
-    ecs_entity_t d = ecs_new_id(world);
+    ecs_entity_t d = ecs_new(world);
     test_assert(d != 0);
 
     ecs_set(world, d, EcsUnit, {
         .symbol = "d"
     });
 
-    ecs_entity_t o = ecs_new_id(world);
+    ecs_entity_t o = ecs_new(world);
     test_assert(o != 0);
 
     ecs_set(world, o, EcsUnit, {
         .symbol = "o"
     });
 
-    ecs_entity_t u = ecs_new_id(world);
+    ecs_entity_t u = ecs_new(world);
     test_assert(u != 0);
 
     ecs_set(world, u, EcsUnit, {
@@ -805,14 +805,14 @@ void Units_set_unit_w_prefix(void) {
     });
     test_assert(q != 0);
 
-    ecs_entity_t d = ecs_new_id(world);
+    ecs_entity_t d = ecs_new(world);
     test_assert(d != 0);
 
     ecs_set(world, d, EcsUnit, {
         .symbol = "d"
     });
 
-    ecs_entity_t p = ecs_new_id(world);
+    ecs_entity_t p = ecs_new(world);
     test_assert(p != 0);
 
     ecs_set(world, p, EcsUnitPrefix, {
@@ -821,7 +821,7 @@ void Units_set_unit_w_prefix(void) {
         .translation.power = 2
     });
 
-    ecs_entity_t u = ecs_new_id(world);
+    ecs_entity_t u = ecs_new(world);
     test_assert(u != 0);
 
     ecs_set(world, u, EcsUnit, {

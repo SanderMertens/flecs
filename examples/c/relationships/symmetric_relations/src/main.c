@@ -11,8 +11,8 @@ int main(int argc, char *argv[]) {
     ecs_add_id(ecs, TradesWith, EcsSymmetric);
 
     // Create two players
-    ecs_entity_t player_1 = ecs_new_id(ecs);
-    ecs_entity_t player_2 = ecs_new_id(ecs);
+    ecs_entity_t player_1 = ecs_new(ecs);
+    ecs_entity_t player_2 = ecs_new(ecs);
 
     // Add (TradesWith, player_2) to player_1. This also adds 
     // (TradesWith, player_1) to player_2.

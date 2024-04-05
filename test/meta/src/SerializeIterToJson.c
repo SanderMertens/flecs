@@ -2151,7 +2151,7 @@ void SerializeIterToJson_serialize_invalid_value(void) {
     });
 
     for (int i = 0; i < 10; i ++) {
-        ecs_entity_t p = ecs_new_id(world);
+        ecs_entity_t p = ecs_new(world);
         ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p);
         ecs_set(world, e, T, {4});
     }
@@ -2910,11 +2910,11 @@ void SerializeIterToJson_serialize_labels_w_offset(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
     ecs_add(world, e1, Tag);
     ecs_doc_set_name(world, e1, "e1");
 
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e2 = ecs_new(world);
     ecs_add(world, e2, Tag);
     ecs_doc_set_name(world, e2, "e2");
 
@@ -2940,11 +2940,11 @@ void SerializeIterToJson_serialize_colors_w_offset(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
     ecs_add(world, e1, Tag);
     ecs_doc_set_color(world, e1, "e1");
 
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e2 = ecs_new(world);
     ecs_add(world, e2, Tag);
     ecs_doc_set_color(world, e2, "e2");
 
@@ -2970,10 +2970,10 @@ void SerializeIterToJson_serialize_anonymous_entities_w_offset(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
     ecs_add(world, e1, Tag);
 
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e2 = ecs_new(world);
     ecs_add(world, e2, Tag);
 
     ecs_query_t *r = ecs_query(world, { .expr = "Tag($this), ?$this(_)" });
@@ -3227,9 +3227,9 @@ void SerializeIterToJson_serialize_rule_w_optional(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t e1 = ecs_new(world, Foo);
+    ecs_entity_t e1 = ecs_new_w(world, Foo);
     ecs_set_name(world, e1, "e1");
-    ecs_entity_t e2 = ecs_new(world, Foo);
+    ecs_entity_t e2 = ecs_new_w(world, Foo);
     ecs_set_name(world, e2, "e2");
     ecs_add(world, e2, Bar);
 
@@ -3350,7 +3350,7 @@ void SerializeIterToJson_serialize_entity_w_flecs_core_parent(void) {
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t e1 = ecs_new(world, Foo);
+    ecs_entity_t e1 = ecs_new_w(world, Foo);
     ecs_set_name(world, e1, "e1");
 
     ecs_entity_t flecs_core_parent = 

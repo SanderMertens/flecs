@@ -152,7 +152,7 @@ ecs_entity_t ecs_set_interval(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
     if (!timer) {
-        timer = ecs_new(world, EcsTimer);
+        timer = ecs_new_w(world, EcsTimer);
     }
 
     EcsTimer *t = ecs_ensure(world, timer, EcsTimer);

@@ -15,7 +15,7 @@ void Monitor_1_comp(void) {
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, OnPosition);
@@ -47,7 +47,7 @@ void Monitor_2_comps(void) {
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_int(ctx.invoked, 0);
 
     ecs_add(world, e, Velocity);
@@ -94,7 +94,7 @@ void Monitor_1_comp_1_not(void) {
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, OnPosition);
@@ -138,10 +138,10 @@ void Monitor_1_parent(void) {
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t parent = ecs_new(world, Position);
+    ecs_entity_t parent = ecs_new_w(world, Position);
     test_int(ctx.invoked, 0);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     test_int(ctx.invoked, 0);
 
     ecs_add_pair(world, e, EcsChildOf, parent);
@@ -169,10 +169,10 @@ void Monitor_1_comp_1_parent(void) {
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t parent = ecs_new(world, Position);
+    ecs_entity_t parent = ecs_new_w(world, Position);
     test_int(ctx.invoked, 0);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_int(ctx.invoked, 0);
 
     ecs_add_pair(world, e, EcsChildOf, parent);
@@ -278,7 +278,7 @@ void Monitor_monitor_w_and(void) {
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e != 0);
     test_int(ctx.invoked, 0);
 
@@ -318,7 +318,7 @@ void Monitor_monitor_w_or(void) {
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e != 0);
     test_int(ctx.invoked, 0); // No match, filter doesn't match yet
 
@@ -355,7 +355,7 @@ void Monitor_monitor_w_not(void) {
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e != 0);
     test_int(ctx.invoked, 0);
 
@@ -389,7 +389,7 @@ void Monitor_monitor_w_optional(void) {
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e != 0);
 
     test_int(ctx.invoked, 1); // First match, trigger OnAdd
@@ -429,15 +429,15 @@ void Monitor_monitor_w_superset(void) {
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t base_1 = ecs_new(world, Velocity);
+    ecs_entity_t base_1 = ecs_new_w(world, Velocity);
     test_assert(base_1 != 0);
     test_int(ctx.invoked, 0);
 
-    ecs_entity_t base_2 = ecs_new(world, Velocity);
+    ecs_entity_t base_2 = ecs_new_w(world, Velocity);
     test_assert(base_2 != 0);
     test_int(ctx.invoked, 0);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e != 0);
     test_int(ctx.invoked, 0);
 
@@ -476,15 +476,15 @@ void Monitor_monitor_w_self_superset(void) {
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t base_1 = ecs_new(world, Velocity);
+    ecs_entity_t base_1 = ecs_new_w(world, Velocity);
     test_assert(base_1 != 0);
     test_int(ctx.invoked, 0);
 
-    ecs_entity_t base_2 = ecs_new(world, Velocity);
+    ecs_entity_t base_2 = ecs_new_w(world, Velocity);
     test_assert(base_2 != 0);
     test_int(ctx.invoked, 0);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e != 0);
     test_int(ctx.invoked, 0);
 
@@ -537,7 +537,7 @@ void Monitor_monitor_w_wildcard(void) {
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e != 0);
     test_int(ctx.invoked, 0);
 
@@ -593,7 +593,7 @@ void Monitor_monitor_at_fini(void) {
 
     test_int(ctx.invoked, 0);
 
-	ecs_entity_t e = ecs_new_id(world);
+	ecs_entity_t e = ecs_new(world);
     ecs_add(world, e, TagA);
 
     test_int(ctx.invoked, 1);
@@ -630,8 +630,8 @@ void Monitor_monitor_other_table(void) {
     ECS_TAG(world, X);
     ECS_TAG(world, Y);
 
-    ecs_entity_t x = ecs_new(world, X);
-    ecs_entity_t xy = ecs_new(world, X);
+    ecs_entity_t x = ecs_new_w(world, X);
+    ecs_entity_t xy = ecs_new_w(world, X);
     ecs_add(world, xy, Y);
 
     check_table_t ctx = {0};
@@ -648,7 +648,7 @@ void Monitor_monitor_other_table(void) {
     ctx.table = ecs_get_table(world, x);
     ctx.other_table = NULL;
     ctx.event = EcsOnAdd;
-    ecs_entity_t e = ecs_new(world, X);
+    ecs_entity_t e = ecs_new_w(world, X);
     test_int(ctx.invoked, 1);
 
     ctx.table = ecs_get_table(world, xy);
@@ -703,7 +703,7 @@ void Monitor_monitor_component(void) {
     });
 
     ctx.event = EcsOnAdd;
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     const Position *expect = ecs_get(world, e, Position);
     test_int(ctx.invoked, 1);
     test_assert(ctx.result == expect);

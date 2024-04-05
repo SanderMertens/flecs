@@ -11,7 +11,7 @@ void Commands_defer_new(void) {
 
     ecs_defer_begin(world);
     
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e != 0);
 
     test_assert(!ecs_has(world, e, Position));
@@ -76,7 +76,7 @@ void Commands_defer_add(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     ecs_frame_begin(world, 1);
 
@@ -109,7 +109,7 @@ void Commands_defer_add_two(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     ecs_frame_begin(world, 1);
 
@@ -146,7 +146,7 @@ void Commands_defer_remove(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
 
     ecs_frame_begin(world, 1);
 
@@ -179,7 +179,7 @@ void Commands_defer_remove_two(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_add(world, e, Position);
     ecs_add(world, e, Velocity);
 
@@ -218,7 +218,7 @@ void Commands_defer_set(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     ecs_set(world, e, Position, {1, 2});
 
     const Position *p = ecs_get(world, e, Position);
@@ -273,7 +273,7 @@ void Commands_defer_delete(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
 
     ecs_frame_begin(world, 1);
 
@@ -306,7 +306,7 @@ void Commands_defer_twice(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
 
     ecs_defer_begin(world);
     ecs_defer_begin(world);
@@ -332,7 +332,7 @@ void Commands_defer_twice_in_progress(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
 
     ecs_frame_begin(world, 0);
     ecs_readonly_begin(world, false);
@@ -383,7 +383,7 @@ void Commands_run_w_defer(void) {
 
     ECS_SYSTEM(world, AddVelocity, 0, Position, [in] Velocity());
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
 
     ecs_run(world, AddVelocity, 0, NULL);
 
@@ -400,7 +400,7 @@ void Commands_system_in_progress_w_defer(void) {
 
     ECS_SYSTEM(world, AddVelocity, EcsOnUpdate, Position, [in] Velocity());
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
 
     ecs_progress(world, 0);
 
@@ -424,7 +424,7 @@ void Commands_defer_ensure_no_modify(void) {
 
     ECS_OBSERVER(world, OnSetTestInvoked, EcsOnSet, Velocity);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
 
     ecs_defer_begin(world);
 
@@ -454,7 +454,7 @@ void Commands_defer_ensure_w_modify(void) {
 
     ECS_OBSERVER(world, OnSetTestInvoked, EcsOnSet, Velocity);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
 
     ecs_defer_begin(world);
 
@@ -486,7 +486,7 @@ void Commands_defer_modify(void) {
 
     ECS_OBSERVER(world, OnSetTestInvoked, EcsOnSet, Velocity);
 
-    ecs_entity_t e = ecs_new(world, Velocity);
+    ecs_entity_t e = ecs_new_w(world, Velocity);
 
     ecs_defer_begin(world);
 
@@ -507,7 +507,7 @@ void Commands_defer_set_pair(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     ecs_defer_begin(world);
 
@@ -525,7 +525,7 @@ void Commands_defer_clear(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
 
     ecs_frame_begin(world, 1);
 
@@ -558,7 +558,7 @@ void Commands_defer_add_after_delete(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
 
     ecs_frame_begin(world, 1);
 
@@ -591,7 +591,7 @@ void Commands_defer_set_after_delete(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
 
     ecs_frame_begin(world, 1);
 
@@ -624,7 +624,7 @@ void Commands_defer_ensure_after_delete(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
 
     ecs_frame_begin(world, 1);
 
@@ -659,11 +659,11 @@ void Commands_defer_ensure_after_delete_2nd_to_last(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
 
     /* Create 2nd position. This will cause deletion of the entity in the sparse
      * set to take a different path since it's not the last. */
-    ecs_new(world, Position);
+    ecs_new_w(world, Position);
 
     ecs_frame_begin(world, 1);
 
@@ -698,7 +698,7 @@ void Commands_defer_add_child_to_deleted_parent(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t parent = ecs_new(world);
 
     ecs_frame_begin(world, 1);
 
@@ -723,7 +723,7 @@ void Commands_recreate_deleted_entity_while_deferred(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e_old = ecs_new_id(world);
+    ecs_entity_t e_old = ecs_new(world);
     test_assert(e_old != 0);
 
     ecs_delete(world, e_old);
@@ -735,7 +735,7 @@ void Commands_recreate_deleted_entity_while_deferred(void) {
 
     ecs_defer_begin(world);
     
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e != 0);
     test_assert(e != e_old);
     test_assert((e & ECS_ENTITY_MASK) == (e_old & ECS_ENTITY_MASK));
@@ -763,12 +763,12 @@ void Commands_defer_add_to_recycled_id(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t id = ecs_new_id(world);
+    ecs_entity_t id = ecs_new(world);
     test_assert(id != 0);
 
     ecs_delete(world, id);
 
-    ecs_entity_t id_2 = ecs_new_id(world);
+    ecs_entity_t id_2 = ecs_new(world);
     test_assert(id != id_2);
     test_assert((int32_t)id == (int32_t)id_2);
     
@@ -797,12 +797,12 @@ void Commands_defer_add_to_recycled_id_w_role(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t id = ecs_new_id(world);
+    ecs_entity_t id = ecs_new(world);
     test_assert(id != 0);
 
     ecs_delete(world, id);
 
-    ecs_entity_t id_2 = ecs_new_id(world);
+    ecs_entity_t id_2 = ecs_new(world);
     test_assert(id != id_2);
     test_assert((int32_t)id == (int32_t)id_2);
     
@@ -831,15 +831,15 @@ void Commands_defer_add_to_recycled_relation(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t target = ecs_new_id(world);
+    ecs_entity_t target = ecs_new(world);
     test_assert(target != 0);
 
-    ecs_entity_t rel = ecs_new_id(world);
+    ecs_entity_t rel = ecs_new(world);
     test_assert(rel != 0);
 
     ecs_delete(world, rel);
 
-    ecs_entity_t rel_2 = ecs_new_id(world);
+    ecs_entity_t rel_2 = ecs_new(world);
     test_assert(rel != rel_2);
     test_assert((int32_t)rel == (int32_t)rel_2);
     
@@ -870,12 +870,12 @@ void Commands_defer_add_to_recycled_object(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_TAG(world, Rel);
 
-    ecs_entity_t target = ecs_new_id(world);
+    ecs_entity_t target = ecs_new(world);
     test_assert(target != 0);
 
     ecs_delete(world, target);
 
-    ecs_entity_t object_2 = ecs_new_id(world);
+    ecs_entity_t object_2 = ecs_new(world);
     test_assert(target != object_2);
     test_assert((int32_t)target == (int32_t)object_2);
     
@@ -904,12 +904,12 @@ void Commands_defer_add_to_recycled_object_childof(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t parent = ecs_new(world);
     test_assert(parent != 0);
 
     ecs_delete(world, parent);
 
-    ecs_entity_t parent_2 = ecs_new_id(world);
+    ecs_entity_t parent_2 = ecs_new(world);
     test_assert(parent != parent_2);
     test_assert((int32_t)parent == (int32_t)parent_2);
     
@@ -938,7 +938,7 @@ void Commands_defer_add_to_deleted_id(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t id = ecs_new_id(world);
+    ecs_entity_t id = ecs_new(world);
     test_assert(id != 0);
     
     ecs_frame_begin(world, 1);
@@ -964,7 +964,7 @@ void Commands_defer_add_to_deleted_id_w_role(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t id = ecs_new_id(world);
+    ecs_entity_t id = ecs_new(world);
     test_assert(id != 0);
     
     ecs_frame_begin(world, 1);
@@ -992,10 +992,10 @@ void Commands_defer_add_to_deleted_relation(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t target = ecs_new_id(world);
+    ecs_entity_t target = ecs_new(world);
     test_assert(target != 0);
 
-    ecs_entity_t rel = ecs_new_id(world);
+    ecs_entity_t rel = ecs_new(world);
     test_assert(rel != 0);
 
     ecs_frame_begin(world, 1);
@@ -1026,7 +1026,7 @@ void Commands_defer_add_to_deleted_object(void) {
 
     ECS_TAG(world, Rel);
 
-    ecs_entity_t target = ecs_new_id(world);
+    ecs_entity_t target = ecs_new(world);
 
     ecs_frame_begin(world, 1);
 
@@ -1053,7 +1053,7 @@ void Commands_defer_add_to_deleted_object_childof(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t parent = ecs_new(world);
 
     ecs_frame_begin(world, 1);
 
@@ -1079,7 +1079,7 @@ void Commands_defer_delete_added_id(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t id = ecs_new_id(world);
+    ecs_entity_t id = ecs_new(world);
     test_assert(id != 0);
     
     ecs_frame_begin(world, 1);
@@ -1107,7 +1107,7 @@ void Commands_defer_delete_added_id_w_role(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t id = ecs_new_id(world);
+    ecs_entity_t id = ecs_new(world);
     test_assert(id != 0);
     
     ecs_frame_begin(world, 1);
@@ -1135,10 +1135,10 @@ void Commands_defer_delete_added_relation(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t target = ecs_new_id(world);
+    ecs_entity_t target = ecs_new(world);
     test_assert(target != 0);
 
-    ecs_entity_t rel = ecs_new_id(world);
+    ecs_entity_t rel = ecs_new(world);
     test_assert(rel != 0);
 
     ecs_frame_begin(world, 1);
@@ -1169,7 +1169,7 @@ void Commands_defer_delete_added_object(void) {
 
     ECS_TAG(world, Rel);
 
-    ecs_entity_t target = ecs_new_id(world);
+    ecs_entity_t target = ecs_new(world);
 
     ecs_frame_begin(world, 1);
 
@@ -1196,7 +1196,7 @@ void Commands_defer_delete_added_object_childof(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t parent = ecs_new(world);
 
     ecs_frame_begin(world, 1);
 
@@ -1221,7 +1221,7 @@ void Commands_discard_add(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     ecs_frame_begin(world, 1);
 
@@ -1258,7 +1258,7 @@ void Commands_discard_remove(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
 
     ecs_frame_begin(world, 1);
 
@@ -1296,7 +1296,7 @@ void Commands_discard_add_two(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     ecs_frame_begin(world, 1);
 
@@ -1337,7 +1337,7 @@ void Commands_discard_remove_two(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_add(world, e, Position);
     ecs_add(world, e, Velocity);
 
@@ -1385,7 +1385,7 @@ void Commands_discard_child(void) {
 
     ecs_defer_begin(world);
     
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
     test_assert(!ecs_has(world, e, Position));
     ecs_delete(world, e);
@@ -1426,13 +1426,13 @@ void Commands_discard_child_w_add(void) {
 
     ecs_defer_begin(world);
     
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
     test_assert(!ecs_has(world, e, Position));
     ecs_delete(world, e);
     test_assert(ecs_is_alive(world, e));    
 
-    ecs_entity_t child = ecs_new_id(world);
+    ecs_entity_t child = ecs_new(world);
     test_assert(child != 0);
 
     ecs_add_pair(world, child, EcsChildOf, e);
@@ -1476,7 +1476,7 @@ void Commands_defer_ensure_pair(void) {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Pair);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     ecs_defer_begin(world);
 
@@ -1500,7 +1500,7 @@ void Commands_async_stage_add(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     ecs_world_t *async = ecs_stage_new(world);
     ecs_add(async, e, Position);
@@ -1519,7 +1519,7 @@ void Commands_async_stage_add_twice(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     ecs_world_t *async = ecs_stage_new(world);
     ecs_add(async, e, Position);
@@ -1543,7 +1543,7 @@ void Commands_async_stage_remove(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
 
     ecs_world_t *async = ecs_stage_new(world);
     ecs_remove(async, e, Position);
@@ -1562,7 +1562,7 @@ void Commands_async_stage_clear(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     ecs_add(world, e, Velocity);
 
     ecs_world_t *async = ecs_stage_new(world);
@@ -1584,7 +1584,7 @@ void Commands_async_stage_delete(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     ecs_add(world, e, Velocity);
 
     ecs_world_t *async = ecs_stage_new(world);
@@ -1607,7 +1607,7 @@ void Commands_async_stage_new(void) {
     ECS_COMPONENT(world, Velocity);
 
     ecs_world_t *async = ecs_stage_new(world);
-    ecs_entity_t e = ecs_new_id(async);
+    ecs_entity_t e = ecs_new(async);
     ecs_add(async, e, Position);
     ecs_add(async, e, Velocity);
     test_assert(!ecs_has(world, e, Position));
@@ -1655,7 +1655,7 @@ void Commands_register_component_while_in_progress(void) {
     test_assert(ecs_id(Position) != 0);
     test_assert(ecs_has(world, ecs_id(Position), EcsComponent));
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_set(world, e, Position, {10, 20});
     test_assert(ecs_has_id(world, e, ecs_id(Position)));
 
@@ -1672,8 +1672,8 @@ void Commands_register_component_while_staged(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e = ecs_new_id(world);
-    ecs_entity_t canary = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
+    ecs_entity_t canary = ecs_new(world);
 
     ecs_readonly_begin(world, false);
 
@@ -1711,8 +1711,8 @@ void Commands_register_component_while_deferred(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e = ecs_new_id(world);
-    ecs_entity_t canary = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
+    ecs_entity_t canary = ecs_new(world);
 
     ecs_defer_begin(world);
 
@@ -1739,7 +1739,7 @@ void Commands_register_component_while_deferred(void) {
 void Commands_defer_enable(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     ecs_defer_begin(world);
     ecs_enable(world, e, false);
@@ -1772,9 +1772,9 @@ void Commands_defer_delete_with(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    ecs_entity_t e_1 = ecs_new(world, TagA);
-    ecs_entity_t e_2 = ecs_new(world, TagA);
-    ecs_entity_t e_3 = ecs_new(world, TagA);
+    ecs_entity_t e_1 = ecs_new_w(world, TagA);
+    ecs_entity_t e_2 = ecs_new_w(world, TagA);
+    ecs_entity_t e_3 = ecs_new_w(world, TagA);
     ecs_add(world, e_1, TagB);
 
     ecs_defer_begin(world);
@@ -1797,9 +1797,9 @@ void Commands_defer_remove_all(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    ecs_entity_t e_1 = ecs_new(world, TagA);
-    ecs_entity_t e_2 = ecs_new(world, TagA);
-    ecs_entity_t e_3 = ecs_new(world, TagA);
+    ecs_entity_t e_1 = ecs_new_w(world, TagA);
+    ecs_entity_t e_2 = ecs_new_w(world, TagA);
+    ecs_entity_t e_3 = ecs_new_w(world, TagA);
     ecs_add(world, e_1, TagB);
 
     ecs_defer_begin(world);
@@ -1832,7 +1832,7 @@ void Commands_deferred_modified_after_remove(void) {
         .callback = OnSetTestInvoked
     });
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
 
     ecs_modified(world, e, Position);
 
@@ -1912,7 +1912,7 @@ void Commands_merge_cleanup_ops_before_delete(void) {
         .callback = remove_counter
     });
 
-    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t parent = ecs_new(world);
     ecs_set(world, parent, Counter, {0});
 
     ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
@@ -1956,7 +1956,7 @@ void Commands_merge_nested_cleanup_ops_before_delete(void) {
         .callback = remove_counter
     });
 
-    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t parent = ecs_new(world);
     ecs_set(world, parent, Counter, {0});
 
     ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
@@ -1990,7 +1990,7 @@ void Commands_defer_suspend_resume(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     
     ecs_defer_begin(world);
     ecs_add(world, e, TagA);
@@ -2043,7 +2043,7 @@ void Commands_create_observer_while_deferred(void) {
     test_assert(observer != 0);
     test_int(ctx.invoked, 0);
 
-    ecs_new(world, TagA);
+    ecs_new_w(world, TagA);
     test_int(ctx.invoked, 1);
 
     ecs_fini(world);
@@ -2061,7 +2061,7 @@ void Commands_create_query_while_deferred(void) {
     ecs_defer_end(world);
     test_assert(query != 0);
 
-    ecs_entity_t e = ecs_new(world, TagA);
+    ecs_entity_t e = ecs_new_w(world, TagA);
 
     ecs_iter_t it = ecs_query_iter(world, query);
     test_bool(true, ecs_query_next(&it));
@@ -2091,7 +2091,7 @@ void Commands_update_observer_while_deferred(void) {
     test_assert(observer != 0);
     test_int(ctx.invoked, 0);
 
-    ecs_new(world, TagA);
+    ecs_new_w(world, TagA);
     test_int(ctx.invoked, 1);
 
     test_int(system_2_invoked, 0);
@@ -2103,7 +2103,7 @@ void Commands_update_observer_while_deferred(void) {
     });
     ecs_defer_end(world);
 
-    ecs_new(world, TagA);
+    ecs_new_w(world, TagA);
     test_int(ctx.invoked, 2);
     test_int(system_2_invoked, 1);
 
@@ -2119,7 +2119,7 @@ void Commands_defer_set_large_component(void) {
 
     ECS_COMPONENT(world, LargeComponent);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     ecs_defer_begin(world);
     LargeComponent *ptr = ecs_ensure(world, e, LargeComponent);
@@ -2142,7 +2142,7 @@ void Commands_defer_set_large_component(void) {
 static ECS_COMPONENT_DECLARE(Position);
 
 static void CreatePosition(ecs_iter_t *it) {
-    ecs_entity_t e = ecs_new_id(it->world);
+    ecs_entity_t e = ecs_new(it->world);
     ecs_set(it->world, e, Position, {999, 1000});
 }
 
@@ -2254,7 +2254,7 @@ void Commands_defer_remove_after_set(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     ecs_defer_begin(world);
     ecs_set(world, e, Position, {10, 20});
@@ -2281,7 +2281,7 @@ void Commands_defer_remove_after_set_w_observer(void) {
     ECS_COMPONENT(world, Position);
     ECS_OBSERVER(world, PositionObserver, EcsOnSet, Position);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     ecs_defer_begin(world);
     ecs_set(world, e, Position, {10, 20});
@@ -2350,7 +2350,7 @@ void Commands_flush_stage_to_deferred_world(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     ecs_world_t *async = ecs_stage_new(world);
     ecs_add(async, e, Tag);
@@ -2381,7 +2381,7 @@ void Commands_add_in_observer_during_merge(void) {
 
     ECS_OBSERVER(world, AddPosition, EcsOnAdd, TagA);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     ecs_defer_begin(world);
     ecs_add(world, e, TagA);
@@ -2409,7 +2409,7 @@ void Commands_add_in_observer_during_merge_2_commands(void) {
 
     ECS_OBSERVER(world, AddPosition, EcsOnAdd, TagB);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     ecs_log_set_level(0);
 
@@ -2454,7 +2454,7 @@ void Commands_add_2_in_observer_while_on_remove_for_delete(void) {
 
     ECS_OBSERVER(world, AddTwoTags, EcsOnRemove, TagA);
 
-    ecs_entity_t e = ecs_new(world, TagA);
+    ecs_entity_t e = ecs_new_w(world, TagA);
     ecs_delete(world, e);
 
     test_assert(!ecs_is_alive(world, e));
@@ -2471,8 +2471,8 @@ void Commands_add_2_in_observer_while_on_remove_for_delete_child(void) {
 
     ECS_OBSERVER(world, AddTwoTags, EcsOnRemove, TagA);
 
-    ecs_entity_t parent = ecs_new_id(world);
-    ecs_entity_t e = ecs_new(world, TagA);
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t e = ecs_new_w(world, TagA);
     ecs_add_pair(world, e, EcsChildOf, parent);
     ecs_delete(world, e);
 
@@ -2490,9 +2490,9 @@ void Commands_add_2_in_observer_while_on_remove_for_delete_recycled_id(void) {
 
     ECS_OBSERVER(world, AddTwoTags, EcsOnRemove, TagA);
 
-    ecs_delete(world, ecs_new_id(world));
+    ecs_delete(world, ecs_new(world));
 
-    ecs_entity_t e = ecs_new(world, TagA);
+    ecs_entity_t e = ecs_new_w(world, TagA);
     ecs_delete(world, e);
 
     test_assert(!ecs_is_alive(world, e));
@@ -2509,9 +2509,9 @@ void Commands_add_2_in_observer_while_on_remove_for_deferred_delete_recycled_id(
 
     ECS_OBSERVER(world, AddTwoTags, EcsOnRemove, TagA);
 
-    ecs_delete(world, ecs_new_id(world));
+    ecs_delete(world, ecs_new(world));
 
-    ecs_entity_t e = ecs_new(world, TagA);
+    ecs_entity_t e = ecs_new_w(world, TagA);
     ecs_defer_begin(world);
     ecs_delete(world, e);
     ecs_defer_end(world);
@@ -2527,7 +2527,7 @@ void Commands_defer_add_after_clear(void) {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     ecs_defer_begin(world);
     ecs_clear(world, e);
@@ -2544,8 +2544,8 @@ void Commands_defer_cmd_after_modified(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
     
     ecs_defer_begin(world);
     ecs_set(world, e1, Position, {10, 20});
@@ -2577,7 +2577,7 @@ void Commands_defer_remove_after_emplace_different_id(void) {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_add(world, e, Tag);
 
     ecs_defer_begin(world);
@@ -2607,7 +2607,7 @@ void Commands_defer_remove_after_set_and_emplace_different_id(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_add(world, e, Tag);
 
     ecs_defer_begin(world);
@@ -2644,7 +2644,7 @@ void Commands_clear_after_add_to_nonempty(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    ecs_entity_t e = ecs_new(world, TagA);
+    ecs_entity_t e = ecs_new_w(world, TagA);
 
     ecs_defer_begin(world);
     ecs_add(world, e, TagB);
@@ -2666,7 +2666,7 @@ void Commands_remove_after_add_to_nonempty(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    ecs_entity_t e = ecs_new(world, TagA);
+    ecs_entity_t e = ecs_new_w(world, TagA);
 
     ecs_defer_begin(world);
     ecs_add(world, e, TagB);
@@ -2729,7 +2729,7 @@ void Commands_defer_2_sets_w_multi_observer(void) {
         .events = { EcsOnSet }
     });
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     ecs_defer_begin(world);
     ecs_set(world, e, Position, {10, 20});
@@ -2760,7 +2760,7 @@ void Commands_defer_2_ensures_w_multi_observer(void) {
         .events = { EcsOnSet }
     });
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     ecs_defer_begin(world);
     {
@@ -2799,7 +2799,7 @@ void Commands_defer_2_ensures_no_modified_w_multi_observer(void) {
         .events = { EcsOnSet }
     });
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     ecs_defer_begin(world);
     {
@@ -2829,7 +2829,7 @@ void Commands_exists_remove_set(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_set(world, e, Position, {1, 2});
 
     ecs_defer_begin(world);
@@ -2850,7 +2850,7 @@ void Commands_absent_remove_set(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     ecs_defer_begin(world);
     ecs_remove(world, e, Position);
@@ -2870,7 +2870,7 @@ void Commands_exists_set_remove(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_set(world, e, Position, {1, 2});
 
     ecs_defer_begin(world);
@@ -2889,7 +2889,7 @@ void Commands_absent_set_remove(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     ecs_defer_begin(world);
     ecs_set(world, e, Position, {5, 6});
@@ -2907,7 +2907,7 @@ void Commands_exists_set_w_ensure(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_set(world, e, Position, {1, 2});
 
     ecs_defer_begin(world);
@@ -2931,7 +2931,7 @@ void Commands_exists_remove_ensure(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_set(world, e, Position, {1, 2});
 
     ecs_defer_begin(world);
@@ -2957,7 +2957,7 @@ void Commands_absent_remove_ensure(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     ecs_defer_begin(world);
     ecs_remove(world, e, Position);
@@ -2983,7 +2983,7 @@ void Commands_exists_ensure_remove(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_set(world, e, Position, {1, 2});
 
     ecs_defer_begin(world);
@@ -3007,7 +3007,7 @@ void Commands_absent_ensure_remove(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     ecs_defer_begin(world);
     {
@@ -3033,7 +3033,7 @@ void Commands_absent_set_invoke_on_set(void) {
     ECS_COMPONENT(world, Position);
     ECS_OBSERVER(world, OnSetTestInvoked, EcsOnSet, Position);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     /* create the component */
     ecs_defer_begin(world);
@@ -3057,7 +3057,7 @@ void Commands_exists_set_invoke_on_set(void) {
     ECS_COMPONENT(world, Position);
     ECS_OBSERVER(world, OnSetTestInvoked, EcsOnSet, Position);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_set(world, e, Position, {1, 2});
     on_set_invoked = 0;
 
@@ -3084,7 +3084,7 @@ void Commands_defer_ensure_no_on_set(void) {
     ECS_COMPONENT(world, Position);
     ECS_OBSERVER(world, OnSetTestInvoked, EcsOnSet, Position);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     /* create the component */
     ecs_defer_begin(world);
@@ -3112,7 +3112,7 @@ void Commands_defer_existing_ensure_no_on_set(void) {
     ECS_COMPONENT(world, Position);
     ECS_OBSERVER(world, OnSetTestInvoked, EcsOnSet, Position);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
 
     /* create the component */
     ecs_defer_begin(world);
@@ -3206,7 +3206,7 @@ void Commands_absent_ensure_for_entity_w_tag(void) {
     ECS_TAG(world, Tag);
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new(world, Tag);
+    ecs_entity_t e = ecs_new_w(world, Tag);
     test_assert(e != 0);
     
     ecs_defer_begin(world);
@@ -3262,7 +3262,7 @@ void Commands_on_set_hook_before_on_add_for_existing_component(void) {
         .callback = add_tag
     });
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
 
     ecs_defer_begin(world);
     ecs_add(world, e, TagB); /* 2 add commands, to trigger batching */
@@ -3290,7 +3290,7 @@ void Commands_defer_2_sets_w_observer_same_component(void) {
         .callback = set_position_hook
     });
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
 
     ecs_defer_begin(world);
     ecs_set(world, e, Position, {10, 20});
@@ -3325,7 +3325,7 @@ void Commands_defer_2_sets_w_observer_other_component(void) {
         .callback = set_velocity_hook
     });
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
 
     ecs_defer_begin(world);
     ecs_set(world, e, Position, {10, 20});
@@ -3366,7 +3366,7 @@ void Commands_on_remove_after_deferred_clear_and_add(void) {
         .callback = remove_tag
     });
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_add(world, e, TagA);
     ecs_add(world, e, TagB);
 
@@ -3385,8 +3385,8 @@ void Commands_on_remove_after_deferred_clear_and_add(void) {
 }
 
 static void Recycle(ecs_iter_t *it) {
-    ecs_new_id(it->world);
-    *(ecs_entity_t*)it->ctx = ecs_new_id(it->world);
+    ecs_new(it->world);
+    *(ecs_entity_t*)it->ctx = ecs_new(it->world);
 }
 
 void Commands_defer_delete_recycle_same_id(void) {
@@ -3395,9 +3395,9 @@ void Commands_defer_delete_recycle_same_id(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t parent = ecs_new(world);
     ecs_entity_t e1 = ecs_new_w_pair(world, EcsChildOf, parent);
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e2 = ecs_new(world);
 
     ecs_observer(world, {
         .query.terms = {
@@ -3449,7 +3449,7 @@ void Commands_observer_while_defer_suspended(void) {
     ecs_defer_begin(world);
     ecs_defer_suspend(world);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Position));
     test_assert(!ecs_has(world, e, Velocity));
@@ -3476,7 +3476,7 @@ void Commands_on_add_hook_while_defer_suspended(void) {
     ecs_defer_begin(world);
     ecs_defer_suspend(world);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Position));
     test_assert(!ecs_has(world, e, Velocity));
@@ -3527,7 +3527,7 @@ void Commands_on_remove_hook_while_defer_suspended(void) {
         .on_remove = AddWhileSuspended
     });
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Position));
     test_assert(!ecs_has(world, e, Velocity));
@@ -3583,7 +3583,7 @@ void Commands_on_set_hook_batched_is_deferred(void) {
 
     ECS_OBSERVER(world, DummyObserver, EcsOnSet, Position);
 
-    ecs_entity_t e = ecs_new(world, Bar);
+    ecs_entity_t e = ecs_new_w(world, Bar);
     ecs_add(world, e, Position);
 
     test_int(on_set_is_deferred_invoked, 0);

@@ -961,7 +961,7 @@ void OrderBy_sort_1000_entities_again(void) {
         .order_by_callback = compare_position
     });
 
-    ecs_entity_t start = ecs_new_id(world);
+    ecs_entity_t start = ecs_new(world);
 
     for (int i = 0; i < 1000; i ++) {
         int32_t v = rand();
@@ -1059,7 +1059,7 @@ void OrderBy_sort_1000_entities_2_types_again(void) {
         .order_by_callback = compare_position
     });
 
-    ecs_entity_t start = ecs_new_id(world);
+    ecs_entity_t start = ecs_new(world);
 
     for (int i = 0; i < 1000; i ++) {
         int32_t v = rand();
@@ -1120,7 +1120,7 @@ void OrderBy_sort_1000_entities_add_type_after_sort(void) {
         .order_by_callback = compare_position
     });
 
-    ecs_entity_t start = ecs_new_id(world);
+    ecs_entity_t start = ecs_new(world);
 
     for (int i = 0; i < 500; i ++) {
         int32_t v = rand();
@@ -1488,9 +1488,9 @@ void OrderBy_sort_3_entities_3_types_2(void) {
         .order_by_callback = compare_entity
     });
 
-    ecs_entity_t e1 = ecs_new(world, Tag);
-    ecs_entity_t e2 = ecs_new(world, Tag);
-    ecs_entity_t e3 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
+    ecs_entity_t e2 = ecs_new_w(world, Tag);
+    ecs_entity_t e3 = ecs_new_w(world, Tag);
 
     ecs_add_id(world, e1, Foo);
     ecs_add_id(world, e2, Bar);
@@ -1572,7 +1572,7 @@ void OrderBy_sort_w_tags_only(void) {
         .order_by_callback = compare_entity
     });
 
-    ecs_entity_t root = ecs_new_id(world);
+    ecs_entity_t root = ecs_new(world);
     ecs_entity_t e1 = ecs_new_w_pair(world, EcsChildOf, root);
     ecs_entity_t e2 = ecs_new_w_pair(world, EcsChildOf, root);
 
@@ -1601,7 +1601,7 @@ void OrderBy_sort_childof_marked(void) {
         .order_by_callback = compare_entity
     });
 
-    ecs_entity_t root = ecs_new_id(world);
+    ecs_entity_t root = ecs_new(world);
     ecs_entity_t e1 = ecs_new_w_pair(world, EcsChildOf, root);
     ecs_entity_t e2 = ecs_new_w_pair(world, EcsChildOf, e1);
     ecs_entity_t e3 = ecs_new_w_pair(world, EcsChildOf, root);
@@ -1635,7 +1635,7 @@ void OrderBy_sort_isa_marked(void) {
         .order_by_callback = compare_entity
     });
 
-    ecs_entity_t root = ecs_new_id(world);
+    ecs_entity_t root = ecs_new(world);
     ecs_entity_t e1 = ecs_new_w_pair(world, EcsIsA, root);
     ecs_entity_t e2 = ecs_new_w_pair(world, EcsIsA, e1);
     ecs_entity_t e3 = ecs_new_w_pair(world, EcsIsA, root);
@@ -1672,7 +1672,7 @@ void OrderBy_sort_relation_marked(void) {
         .order_by_callback = compare_entity
     });
 
-    ecs_entity_t root = ecs_new_id(world);
+    ecs_entity_t root = ecs_new(world);
     ecs_entity_t e1 = ecs_new_w_pair(world, Rel, root);
     ecs_entity_t e2 = ecs_new_w_pair(world, Rel, e1);
     ecs_entity_t e3 = ecs_new_w_pair(world, Rel, root);
@@ -1724,11 +1724,11 @@ void OrderBy_dont_resort_after_set_unsorted_component(void) {
         .order_by_callback = dummy_compare
     });
 
-    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
     ecs_set(world, e1, Position, {0, 0});
     ecs_set(world, e1, Velocity, {0, 0});
 
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e2 = ecs_new(world);
     ecs_set(world, e2, Position, {0, 0});
     ecs_set(world, e2, Velocity, {0, 0});
 

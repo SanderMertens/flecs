@@ -264,7 +264,7 @@ bool flecs_defer_bulk_new(
         /* Use ecs_new_id as this is thread safe */
         int i;
         for (i = 0; i < count; i ++) {
-            ids[i] = ecs_new_id(world);
+            ids[i] = ecs_new(world);
         }
 
         *ids_out = ids;

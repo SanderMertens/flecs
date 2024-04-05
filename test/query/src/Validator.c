@@ -1352,8 +1352,8 @@ void Validator_validate_2_terms_w_or_mixed_src_flags(void) {
         }
     });
 
-    ecs_entity_t base = ecs_new(world, TagB);
-    ecs_entity_t e1 = ecs_new(world, TagA);
+    ecs_entity_t base = ecs_new_w(world, TagB);
+    ecs_entity_t e1 = ecs_new_w(world, TagA);
     ecs_entity_t e2 = ecs_new_w_pair(world, EcsIsA, base);
 
     ecs_iter_t it = ecs_query_iter(world, q);

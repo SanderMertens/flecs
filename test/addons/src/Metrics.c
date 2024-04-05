@@ -493,7 +493,7 @@ void Metrics_id_gauge_1_entity(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_new(world, Foo);
+    ecs_entity_t e1 = ecs_new_w(world, Foo);
 
     ecs_progress(world, 0);
     
@@ -529,8 +529,8 @@ void Metrics_id_gauge_2_entities(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_new(world, Foo);
-    ecs_entity_t e2 = ecs_new(world, Foo);
+    ecs_entity_t e1 = ecs_new_w(world, Foo);
+    ecs_entity_t e2 = ecs_new_w(world, Foo);
 
     ecs_progress(world, 0);
     
@@ -569,7 +569,7 @@ void Metrics_id_gauge_2_entities_1_existing(void) {
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t e1 = ecs_new(world, Foo);
+    ecs_entity_t e1 = ecs_new_w(world, Foo);
 
     ecs_entity_t m = ecs_metric(world, {
         .entity = ecs_entity(world, { .name = "metrics.has_foo" }),
@@ -578,7 +578,7 @@ void Metrics_id_gauge_2_entities_1_existing(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e2 = ecs_new(world, Foo);
+    ecs_entity_t e2 = ecs_new_w(world, Foo);
 
     ecs_progress(world, 0);
     
@@ -625,8 +625,8 @@ void Metrics_id_gauge_w_remove(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_new(world, Foo);
-    ecs_entity_t e2 = ecs_new(world, Foo);
+    ecs_entity_t e1 = ecs_new_w(world, Foo);
+    ecs_entity_t e2 = ecs_new_w(world, Foo);
     ecs_add(world, e1, Bar);
     ecs_add(world, e2, Bar);
 
@@ -696,8 +696,8 @@ void Metrics_id_gauge_w_clear(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_new(world, Foo);
-    ecs_entity_t e2 = ecs_new(world, Foo);
+    ecs_entity_t e1 = ecs_new_w(world, Foo);
+    ecs_entity_t e2 = ecs_new_w(world, Foo);
     ecs_add(world, e1, Bar);
     ecs_add(world, e2, Bar);
 
@@ -767,8 +767,8 @@ void Metrics_id_gauge_w_delete(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_new(world, Foo);
-    ecs_entity_t e2 = ecs_new(world, Foo);
+    ecs_entity_t e1 = ecs_new_w(world, Foo);
+    ecs_entity_t e2 = ecs_new_w(world, Foo);
     ecs_add(world, e1, Bar);
     ecs_add(world, e2, Bar);
 
@@ -1478,7 +1478,7 @@ void Metrics_id_counter(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_new(world, Foo);
+    ecs_entity_t e1 = ecs_new_w(world, Foo);
 
     ecs_progress(world, 1.0);
 
@@ -1739,12 +1739,12 @@ void Metrics_id_target_count(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
     ecs_add_pair(world, e1, Color, Red);
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e2 = ecs_new(world);
     ecs_add_pair(world, e2, Color, Green);
     ecs_add_pair(world, e2, Color, Blue);
-    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_entity_t e3 = ecs_new(world);
     ecs_add_pair(world, e3, Color, Blue);
 
     ecs_progress(world, 1);

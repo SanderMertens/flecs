@@ -5,7 +5,7 @@ void Set_set_empty(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
 
     ecs_set(world, e, Position, {10, 20});
@@ -25,7 +25,7 @@ void Set_set_nonempty(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e != 0);
 
     ecs_set(world, e, Velocity, {10, 20});
@@ -45,7 +45,7 @@ void Set_set_non_empty_override(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e != 0);
 
     ecs_set(world, e, Position, {10, 20});
@@ -64,7 +64,7 @@ void Set_set_again(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
 
     ecs_set(world, e, Position, {10, 20});
@@ -92,7 +92,7 @@ void Set_set_2(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
 
     ecs_set(world, e, Position, {10, 20});
@@ -125,7 +125,7 @@ void Set_add_set(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
 
     ecs_add(world, e, Position);
@@ -147,7 +147,7 @@ void Set_set_add(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
 
     ecs_set(world, e, Position, {10, 20});
@@ -175,7 +175,7 @@ void Set_set_add_other(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
 
     ecs_set(world, e, Position, {10, 20});
@@ -203,7 +203,7 @@ void Set_set_remove(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
 
     ecs_set(world, e, Position, {10, 20});
@@ -229,7 +229,7 @@ void Set_set_remove_other(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e = ecs_new(world, Velocity);
+    ecs_entity_t e = ecs_new_w(world, Velocity);
     test_assert(e != 0);
 
     ecs_set(world, e, Position, {10, 20});
@@ -258,7 +258,7 @@ void Set_set_remove_twice(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
 
     ecs_set(world, e, Position, {10, 20});
@@ -308,7 +308,7 @@ void Set_set_null(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_set_ptr(world, e, Position, NULL);
     test_assert(e != 0);
 
@@ -326,7 +326,7 @@ void Set_ensure_new(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
 
     Position *p = ecs_ensure(world, e, Position);
@@ -342,7 +342,7 @@ void Set_ensure_existing(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e != 0);
     test_assert( ecs_has(world, e, Position));
     const Position *p_prev = ecs_get(world, e, Position);
@@ -362,7 +362,7 @@ void Set_ensure_tag_new(void) {
 
     ECS_TAG(world, MyTag);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
 
     test_expect_abort();
@@ -377,7 +377,7 @@ void Set_ensure_tag_existing(void) {
 
     ECS_TAG(world, MyTag);
 
-    ecs_entity_t e = ecs_new(world, MyTag);
+    ecs_entity_t e = ecs_new_w(world, MyTag);
     test_assert(e != 0);
     test_assert( ecs_has(world, e, MyTag));
 
@@ -394,7 +394,7 @@ void Set_ensure_tag_new_w_comp(void) {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, MyTag);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e != 0);
 
     test_expect_abort();
@@ -410,7 +410,7 @@ void Set_ensure_tag_existing_w_comp(void) {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, MyTag);
 
-    ecs_entity_t e = ecs_new(world, MyTag);
+    ecs_entity_t e = ecs_new_w(world, MyTag);
     test_assert(e != 0);
     test_assert( ecs_has(world, e, MyTag));
     ecs_add(world, e, Position);
@@ -446,7 +446,7 @@ void Set_ensure_tag_existing_w_pair(void) {
     ECS_TAG(world, Pair);
     ECS_TAG(world, MyTag);
 
-    ecs_entity_t e = ecs_new(world, MyTag);
+    ecs_entity_t e = ecs_new_w(world, MyTag);
     test_assert(e != 0);
     test_assert( ecs_has(world, e, MyTag));
     ecs_add_pair(world, e, Pair, ecs_id(Position));
@@ -461,7 +461,7 @@ void Set_get_mut_not_existing(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     Position *p = ecs_get_mut(world, e, Position);
     test_assert(p == NULL);
     
@@ -487,7 +487,7 @@ void Set_get_mut_tag(void) {
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t e = ecs_new(world, Foo);
+    ecs_entity_t e = ecs_new_w(world, Foo);
     test_assert(NULL == ecs_get_mut_id(world, e, Foo));
     
     ecs_fini(world);
@@ -535,7 +535,7 @@ void Set_modified_w_on_set(void) {
     ECS_COMPONENT(world, Position);
     ECS_OBSERVER(world, OnSetPosition, EcsOnSet, Position);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
 
     Position *p = ecs_ensure(world, e, Position);
@@ -558,7 +558,7 @@ void Set_modified_no_component(void) {
     ECS_COMPONENT(world, Position);
     ECS_OBSERVER(world, OnSetPosition, EcsOnSet, Position);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
 
     test_expect_abort();
@@ -596,7 +596,7 @@ void Set_ensure_w_add_in_on_add(void) {
 
     ECS_OBSERVER(world, OnAdd, EcsOnAdd, Position);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     Position *p = ecs_ensure(world, e, Position);
     test_assert(p != NULL);
@@ -618,7 +618,7 @@ void Set_ensure_w_remove_in_on_add(void) {
     ECS_COMPONENT_DEFINE(world, Position);
     ECS_OBSERVER(world, OnAddRemove, EcsOnAdd, Position);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     test_expect_abort();
 
@@ -645,7 +645,7 @@ void Set_ensure_w_realloc_in_on_add(void) {
 
     ecs_entity_t *entities = ecs_os_malloc_n(ecs_entity_t, 1000);
     for (int i = 0; i < 1000; i ++) {
-        entities[i] = ecs_new(world, Position);
+        entities[i] = ecs_new_w(world, Position);
     }
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
@@ -655,7 +655,7 @@ void Set_ensure_w_realloc_in_on_add(void) {
         .ctx = entities
     });
 
-    ecs_entity_t e = ecs_new(world, Velocity);
+    ecs_entity_t e = ecs_new_w(world, Velocity);
     const Position *ptr = ecs_ensure(world, e, Position);
     test_assert(ptr == ecs_get(world, e, Position));
 
@@ -680,7 +680,7 @@ void Set_emplace(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
 
     Position *p = ecs_emplace(world, e, Position);
@@ -697,7 +697,7 @@ void Set_emplace_2(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
 
     Position *p = ecs_emplace(world, e, Position);
@@ -720,7 +720,7 @@ void Set_emplace_existing(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(ecs_has(world, e, Position));
     test_assert(e != 0);
 
@@ -768,7 +768,7 @@ void Set_emplace_w_observer_w_add(void) {
         .query.terms[0].id = ecs_id(Position)
     });
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
 
     Position *p = ecs_emplace(world, e, Position);

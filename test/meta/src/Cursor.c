@@ -454,7 +454,7 @@ void Cursor_set_entity_as_signed(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t value = 0;
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_entity_t), &value);
     test_ok( ecs_meta_set_int(&cur, (int64_t)e) );
@@ -468,7 +468,7 @@ void Cursor_set_entity_as_unsigned(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t value = 0;
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_entity_t), &value);
     test_ok( ecs_meta_set_uint(&cur, e) );
@@ -496,7 +496,7 @@ void Cursor_set_id_as_signed(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_id_t value = 0;
-    ecs_id_t e = ecs_new_id(world);
+    ecs_id_t e = ecs_new(world);
 
     ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_id_t), &value);
     test_ok( ecs_meta_set_int(&cur, (int64_t)e) );
@@ -510,7 +510,7 @@ void Cursor_set_id_as_unsigned(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_id_t value = 0;
-    ecs_id_t e = ecs_new_id(world);
+    ecs_id_t e = ecs_new(world);
 
     ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_id_t), &value);
     test_ok( ecs_meta_set_uint(&cur, e) );
@@ -2973,8 +2973,8 @@ void Cursor_opaque_set_entity(void) {
     });
 
     Opaque_entity v = { 0 };
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
 
     ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(Opaque_entity), &v);
     test_int(0, ecs_meta_set_entity(&cur, e1));
@@ -2997,8 +2997,8 @@ void Cursor_opaque_set_id(void) {
     });
 
     Opaque_id v = { 0 };
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
 
     ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(Opaque_id), &v);
     test_int(0, ecs_meta_set_id(&cur, e1));

@@ -480,7 +480,7 @@ ecs_entity_t meta_lookup_array(
     }
 
     if (!e) {
-        e = ecs_new_id(world);
+        e = ecs_new(world);
     }
 
     ecs_check(params.count <= INT32_MAX, ECS_INVALID_PARAMETER, NULL);
@@ -517,7 +517,7 @@ ecs_entity_t meta_lookup_vector(
         world, &params.type, params_decl, 1, &param_ctx);
 
     if (!e) {
-        e = ecs_new_id(world);
+        e = ecs_new(world);
     }
 
     return ecs_set(world, e, EcsVector, { element_type });

@@ -6,7 +6,7 @@
 void SerializeEntityToJson_serialize_empty(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     char *str = ecs_os_strdup("{\"path\":\"446\", \"ids\":[]}");
     ecs_os_sprintf(
@@ -660,7 +660,7 @@ void SerializeEntityToJson_serialize_w_label_no_name(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_add(world, e, Tag);
 
     char *str = ecs_os_malloc(

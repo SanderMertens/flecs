@@ -196,7 +196,7 @@ void Stats_get_pipeline_stats_after_progress_2_systems_one_merge(void) {
 
     ECS_COMPONENT(world, Position);
     
-    ecs_new(world, Position); // Make sure systems are active
+    ecs_new_w(world, Position); // Make sure systems are active
 
     ECS_SYSTEM(world, FooSys, EcsOnUpdate, [out] Position());
     ECS_SYSTEM(world, BarSys, EcsOnUpdate, Position);
@@ -270,7 +270,7 @@ void Stats_get_entity_count(void) {
     float prev = count = stats.entities.count.gauge.avg[stats.t];
     test_assert(count != 0);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     ecs_world_stats_get(world, &stats);
     count = stats.entities.count.gauge.avg[stats.t];
@@ -296,7 +296,7 @@ void Stats_get_not_alive_entity_count(void) {
     float prev = count = stats.entities.not_alive_count.gauge.avg[stats.t];
     test_int(count, 0);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     prev = count;
     ecs_world_stats_get(world, &stats);

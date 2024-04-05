@@ -150,7 +150,7 @@ int flecs_query_create_cache(
 
     if ((q->cache_kind != EcsQueryCacheNone) && !q->entity) {
         /* Cached queries need an entity handle for observer components */
-        q->entity = ecs_new_id(q->world);
+        q->entity = ecs_new(q->world);
         desc->entity = q->entity;
     }
 

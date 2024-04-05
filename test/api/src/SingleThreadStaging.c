@@ -12,7 +12,7 @@ void NewEmpty(ecs_iter_t *it) {
 
     int i;
     for (i = 0; i < it->count; i ++) {
-        ctx->new_entities[ctx->entity_count] = ecs_new_id(it->world);
+        ctx->new_entities[ctx->entity_count] = ecs_new(it->world);
         ctx->entity_count ++;
     }
 }
@@ -157,7 +157,7 @@ void Add_to_new_empty(ecs_iter_t *it) {
     IterData *ctx = ecs_get_ctx(it->world);
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_entity_t e = ecs_new_id(it->world);
+        ecs_entity_t e = ecs_new(it->world);
         if (ctx->component) {
             ecs_add_id(it->world, e, ctx->component);
         }
@@ -232,7 +232,7 @@ void Add_remove_same_from_new(ecs_iter_t *it) {
     IterData *ctx = ecs_get_ctx(it->world);
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_entity_t e = ecs_new_id(it->world);
+        ecs_entity_t e = ecs_new(it->world);
 
         test_assert( !ecs_get_type(it->world, e));
 
@@ -356,7 +356,7 @@ void Add_remove_different_from_new_empty(ecs_iter_t *it) {
     IterData *ctx = ecs_get_ctx(it->world);
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_entity_t e = ecs_new_id(it->world);
+        ecs_entity_t e = ecs_new(it->world);
 
         if (ctx->component_3) {
             ecs_add_id(it->world, e, ctx->component_3);
@@ -500,9 +500,9 @@ void SingleThreadStaging_clone_w_value(void) {
     ECS_COMPONENT(world, Rotation);
     ECS_SYSTEM(world, Clone_current_w_value, EcsOnUpdate, Position);
 
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
-    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
 
     ecs_set(world, e1, Position, {10, 20});
 
@@ -662,9 +662,9 @@ void SingleThreadStaging_remove_from_current(void) {
     ecs_set_ctx(world, &ctx, NULL);
 
     /* Create entities from scratch so they don't have the EcsName component */
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
-    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
 
     ecs_add(world, e1, Position);
     ecs_add(world, e2, Position);
@@ -701,9 +701,9 @@ void SingleThreadStaging_remove_2_from_current(void) {
     ecs_set_ctx(world, &ctx, NULL);
 
     /* Create entities from scratch so they don't have the EcsName component */
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
-    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
 
     ecs_add(world, e1, Position);
     ecs_add(world, e1, Velocity);
@@ -764,9 +764,9 @@ void SingleThreadStaging_add_remove_same_to_current(void) {
     ecs_set_ctx(world, &ctx, NULL);
 
     /* Create entities from scratch so they don't have the EcsName component */
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
-    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
 
     ecs_add(world, e1, Position);
     ecs_add(world, e2, Position);
@@ -805,9 +805,9 @@ void SingleThreadStaging_add_remove_same_existing_to_current(void) {
     ecs_set_ctx(world, &ctx, NULL);
 
     /* Create entities from scratch so they don't have the EcsName component */
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
-    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
 
     ecs_add(world, e1, Position);
     ecs_add(world, e2, Position);
@@ -863,9 +863,9 @@ void SingleThreadStaging_remove_add_same_to_current(void) {
     ecs_set_ctx(world, &ctx, NULL);
 
     /* Create entities from scratch so they don't have the EcsName component */
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
-    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
 
     ecs_add(world, e1, Position);
     ecs_add(world, e2, Position);
@@ -904,9 +904,9 @@ void SingleThreadStaging_remove_add_same_existing_to_current(void) {
     ecs_set_ctx(world, &ctx, NULL);
 
     /* Create entities from scratch so they don't have the EcsName component */
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
-    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
 
     ecs_add(world, e1, Position);
     ecs_add(world, e2, Position);
@@ -942,9 +942,9 @@ void SingleThreadStaging_add_remove_2_same_to_current(void) {
     ecs_set_ctx(world, &ctx, NULL);
 
     /* Create entities from scratch so they don't have the EcsName component */
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
-    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
 
     ecs_add(world, e1, Position);
     ecs_add(world, e2, Position);
@@ -985,9 +985,9 @@ void SingleThreadStaging_add_remove_2_same_existing_to_current(void) {
     ecs_set_ctx(world, &ctx, NULL);
 
     /* Create entities from scratch so they don't have the EcsName component */
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
-    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
 
     ecs_add(world, e1, Position);
     ecs_add(world, e1, Velocity);
@@ -1029,9 +1029,9 @@ void SingleThreadStaging_remove_add_2_same_to_current(void) {
     ecs_set_ctx(world, &ctx, NULL);
 
     /* Create entities from scratch so they don't have the EcsName component */
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
-    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
 
     ecs_add(world, e1, Position);
     ecs_add(world, e2, Position);
@@ -1080,9 +1080,9 @@ void SingleThreadStaging_add_remove_add_same_to_current(void) {
     ECS_SYSTEM(world, AddRemoveAdd, EcsOnUpdate, Position, Velocity());
 
     /* Create entities from scratch so they don't have the EcsName component */
-    ecs_entity_t e1 = ecs_new(world, Position);
-    ecs_entity_t e2 = ecs_new(world, Position);
-    ecs_entity_t e3 = ecs_new(world, Position);
+    ecs_entity_t e1 = ecs_new_w(world, Position);
+    ecs_entity_t e2 = ecs_new_w(world, Position);
+    ecs_entity_t e3 = ecs_new_w(world, Position);
 
     ecs_progress(world, 1);
 
@@ -1106,9 +1106,9 @@ void SingleThreadStaging_remove_add_2_same_existing_to_current(void) {
     ecs_set_ctx(world, &ctx, NULL);
 
     /* Create entities from scratch so they don't have the EcsName component */
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
-    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
 
     ecs_add(world, e1, Position);
     ecs_add(world, e2, Position);
@@ -1168,9 +1168,9 @@ void SingleThreadStaging_add_remove_different_to_current(void) {
     ecs_set_ctx(world, &ctx, NULL);
 
     /* Create entities from scratch so they don't have the EcsName component */
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
-    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
 
     ecs_add(world, e1, Position);
     ecs_add(world, e2, Position);
@@ -1211,9 +1211,9 @@ void SingleThreadStaging_2_add_1_remove_to_current(void) {
     ecs_set_ctx(world, &ctx, NULL);
 
     /* Create entities from scratch so they don't have the EcsName component */
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
-    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
 
     ecs_add(world, e1, Position);
     ecs_add(world, e2, Position);
@@ -1277,9 +1277,9 @@ void SingleThreadStaging_1_add_2_remove_to_current(void) {
     ecs_set_ctx(world, &ctx, NULL);
 
     /* Create entities from scratch so they don't have the EcsName component */
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
-    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
 
     ecs_add(world, e1, Position);
     ecs_add(world, e2, Position);
@@ -1426,7 +1426,7 @@ void Delete_new_empty(ecs_iter_t *it) {
     IterData *ctx = ecs_get_ctx(it->world);
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_entity_t e = ecs_new_id(it->world);
+        ecs_entity_t e = ecs_new(it->world);
         ecs_delete(it->world, e);
         ctx->new_entities[ctx->entity_count] = e;
         ctx->entity_count ++;
@@ -1524,9 +1524,9 @@ void SingleThreadStaging_set_current(void) {
     ecs_set_ctx(world, &ctx, NULL);
 
     /* Create entities from scratch so they don't have the EcsName component */
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
-    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
 
     ecs_add(world, e1, Position);
     ecs_add(world, e2, Position);
@@ -1564,7 +1564,7 @@ void Set_new_empty(ecs_iter_t *it) {
 
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_entity_t e = ecs_new_id(it->world);
+        ecs_entity_t e = ecs_new(it->world);
         ecs_set(it->world, e, Rotation, {10 + e});
         ctx->new_entities[ctx->entity_count] = e;
         ctx->entity_count ++;
@@ -1584,9 +1584,9 @@ void SingleThreadStaging_set_new_empty(void) {
     ecs_set_ctx(world, &ctx, NULL);
 
     /* Create entities from scratch so they don't have the EcsName component */
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
-    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
 
     ecs_add(world, e1, Position);
     ecs_add(world, e2, Position);
@@ -1638,9 +1638,9 @@ void SingleThreadStaging_set_new_w_component(void) {
     ecs_set_ctx(world, &ctx, NULL);
 
     /* Create entities from scratch so they don't have the EcsName component */
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
-    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
 
     ecs_add(world, e1, Position);
     ecs_add(world, e2, Position);
@@ -1693,9 +1693,9 @@ void SingleThreadStaging_set_existing_new_w_component(void) {
     ecs_set_ctx(world, &ctx, NULL);
 
     /* Create entities from scratch so they don't have the EcsName component */
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
-    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
 
     ecs_add(world, e1, Position);
     ecs_add(world, e2, Position);
@@ -1728,7 +1728,7 @@ void Set_new_after_add(ecs_iter_t *it) {
 
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_entity_t e = ecs_new_id(it->world);
+        ecs_entity_t e = ecs_new(it->world);
         ecs_add_id(it->world, e, ctx->component);
         ecs_set(it->world, e, Position, {10 + e, 20 + e});
         ctx->new_entities[ctx->entity_count] = e;
@@ -1749,9 +1749,9 @@ void SingleThreadStaging_set_new_after_add(void) {
     ecs_set_ctx(world, &ctx, NULL);
 
     /* Create entities from scratch so they don't have the EcsName component */
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
-    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
 
     ecs_add(world, e1, Position);
     ecs_add(world, e2, Position);
@@ -1784,7 +1784,7 @@ void Remove_after_set(ecs_iter_t *it) {
 
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_entity_t e = ecs_new_id(it->world);
+        ecs_entity_t e = ecs_new(it->world);
         ecs_set(it->world, e, Position, {10 + e, 20 + e});
         ecs_remove_id(it->world, e, ctx->component);
 
@@ -1806,9 +1806,9 @@ void SingleThreadStaging_remove_after_set(void) {
     ecs_set_ctx(world, &ctx, NULL);
 
     /* Create entities from scratch so they don't have the EcsName component */
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
-    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
 
     ecs_add(world, e1, Position);
     ecs_add(world, e2, Position);
@@ -1839,7 +1839,7 @@ void Delete_after_set(ecs_iter_t *it) {
 
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_entity_t e = ecs_new_id(it->world);
+        ecs_entity_t e = ecs_new(it->world);
         test_assert( !ecs_get_type(it->world, e));
 
         ecs_set(it->world, e, Position, {10 + e, 20 + e});
@@ -1863,9 +1863,9 @@ void SingleThreadStaging_delete_after_set(void) {
     ecs_set_ctx(world, &ctx, NULL);
 
     /* Create entities from scratch so they don't have the EcsName component */
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
-    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
 
     ecs_add(world, e1, Position);
     ecs_add(world, e2, Position);
@@ -1898,9 +1898,9 @@ void SingleThreadStaging_add_to_current_in_on_add(void) {
     ecs_set_ctx(world, &ctx, NULL);
 
     /* Create entities from scratch so they don't have the EcsName component */
-    ecs_entity_t e1 = ecs_new(world, Position);
-    ecs_entity_t e2 = ecs_new(world, Position);
-    ecs_entity_t e3 = ecs_new(world, Position);
+    ecs_entity_t e1 = ecs_new_w(world, Position);
+    ecs_entity_t e2 = ecs_new_w(world, Position);
+    ecs_entity_t e3 = ecs_new_w(world, Position);
 
     test_assert( ecs_has(world, e1, Position));
     test_assert( ecs_has(world, e2, Position));
@@ -1994,9 +1994,9 @@ void SingleThreadStaging_match_table_created_in_progress(void) {
     IterData add_ctx = {.component = ecs_id(Velocity)};
     ecs_set_ctx(world, &add_ctx, NULL);
 
-    ecs_entity_t e1 = ecs_new(world, Position);
-    ecs_entity_t e2 = ecs_new(world, Position);
-    ecs_entity_t e3 = ecs_new(world, Position);
+    ecs_entity_t e1 = ecs_new_w(world, Position);
+    ecs_entity_t e2 = ecs_new_w(world, Position);
+    ecs_entity_t e3 = ecs_new_w(world, Position);
 
     ecs_progress(world, 1);
 
@@ -2173,8 +2173,8 @@ void Create_container_reverse(ecs_iter_t *it) {
 
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_entity_t child = ecs_new_id(world);
-        ecs_entity_t parent = ecs_new_id(world);
+        ecs_entity_t child = ecs_new(world);
+        ecs_entity_t parent = ecs_new(world);
         test_assert(child != 0);
         test_assert(parent != 0);
 
@@ -2232,7 +2232,7 @@ void SingleThreadStaging_merge_after_tasks(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     ECS_SYSTEM(world, Task, EcsOnUpdate, Position());
 
@@ -2293,7 +2293,7 @@ void GetParentInProgress(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
 
     /* Create parent */
-    ecs_entity_t parent = ecs_new(world, Velocity);
+    ecs_entity_t parent = ecs_new_w(world, Velocity);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -2310,7 +2310,7 @@ void SingleThreadStaging_get_parent_in_progress(void) {
 
     ECS_SYSTEM(world, GetParentInProgress, EcsOnUpdate, Position, Velocity());
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
 
     ecs_progress(world, 1);
 
@@ -2397,7 +2397,7 @@ void SingleThreadStaging_clear_stage_after_merge(void) {
         .move = ecs_move(Position)
     });
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     ecs_defer_begin(world);
     ecs_set(world, e, Position, {10, 20});
@@ -2462,7 +2462,7 @@ void SingleThreadStaging_ensureable(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_SYSTEM(world, MutableTest, EcsOnUpdate, Position, ?Velocity);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e != 0);
 
     ecs_progress(world, 0);
@@ -2491,7 +2491,7 @@ void SingleThreadStaging_ensureable_from_main(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_SYSTEM(world, MutableTest, EcsOnUpdate, Position, ?Velocity);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e != 0);
 
     // Add velocity on main stage
@@ -2562,7 +2562,7 @@ void SingleThreadStaging_ensureable_w_add(void) {
     ECS_COMPONENT(world, MyBool);
     ECS_SYSTEM(world, MutableTest_w_Add, EcsOnUpdate, Position, ?Velocity, MyBool());
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e != 0);
 
     ecs_progress(world, 0);
@@ -2621,7 +2621,7 @@ void SingleThreadStaging_on_add_after_new_type_in_progress(void) {
     ECS_SYSTEM(world, AddInProgress2, EcsOnUpdate, Position, Velocity());
     ECS_OBSERVER(world, OnAdd, EcsOnAdd, Velocity);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
 
     ecs_progress(world, 1);
 
@@ -2641,7 +2641,7 @@ void SingleThreadStaging_lock_table(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ecs_id(Position)}}
@@ -2668,7 +2668,7 @@ void SingleThreadStaging_recursive_lock_table(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ecs_id(Position)}}
@@ -2695,7 +2695,7 @@ void SingleThreadStaging_modify_after_lock(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ecs_id(Position)}}
@@ -2726,7 +2726,7 @@ void SingleThreadStaging_modify_after_lock(void) {
 void SingleThreadStaging_get_object_from_stage(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t parent = ecs_new(world);
     ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, parent);
 
     ecs_readonly_begin(world, false);
@@ -2745,7 +2745,7 @@ void SingleThreadStaging_add_to_world_while_readonly(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     ecs_readonly_begin(world, false);
     ecs_add(world, e, Tag);
@@ -2763,7 +2763,7 @@ void SingleThreadStaging_add_to_world_and_stage_while_readonly(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_world_t *stage = ecs_get_stage(world, 0);
 
     ecs_readonly_begin(world, false);
@@ -2813,7 +2813,7 @@ void SingleThreadStaging_lookup_w_scope_after_stage_count_change(void) {
 void SingleThreadStaging_with_after_stage_count_change(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t tag = ecs_new_id(world);
+    ecs_entity_t tag = ecs_new(world);
     ecs_set_with(world, tag);
 
     ecs_entity_t e1 = ecs_entity(world, { 0 });

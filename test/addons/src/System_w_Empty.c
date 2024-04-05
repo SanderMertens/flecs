@@ -24,7 +24,7 @@ void System_w_Empty_2_column_1_from_id(void) {
     Probe ctx = {0};
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
 
     ecs_progress(world, 1);
     
@@ -55,7 +55,7 @@ void System_w_Empty_3_column_2_from_id(void) {
     Probe ctx = {0};
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
 
     ecs_progress(world, 1);
     
@@ -97,7 +97,7 @@ void System_w_Empty_column_type(void) {
     Probe ctx = {0};
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_new(world, Position);
+    ecs_new_w(world, Position);
 
     ecs_progress(world, 1);
 

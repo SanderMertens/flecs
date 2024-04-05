@@ -331,9 +331,9 @@ void BuiltinPredicates_var_eq_this(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t e1 = ecs_new(world, Foo);
+    ecs_entity_t e1 = ecs_new_w(world, Foo);
     ecs_add(world, e1, Bar);
-    /* ecs_entity_t e2 = */ ecs_new(world, Foo);
+    /* ecs_entity_t e2 = */ ecs_new_w(world, Foo);
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Foo($this), $x == $this, Bar($x)",
@@ -989,7 +989,7 @@ void BuiltinPredicates_var_neq_this(void) {
     ECS_TAG(world, Tgt);
 
     ecs_entity_t e1 = ecs_new_w_pair(world, Rel, Tgt);
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e2 = ecs_new(world);
     ecs_add_pair(world, e2, Rel, e2);
 
     ecs_query_t *q = ecs_query(world, {
@@ -3180,7 +3180,7 @@ void BuiltinPredicates_var_eq_wildcard(void) {
 
     ECS_TAG(world, Rel);
 
-    ecs_entity_t tgt = ecs_new_id(world);
+    ecs_entity_t tgt = ecs_new(world);
     ecs_entity_t e = ecs_new_w_pair(world, Rel, tgt);
 
     ecs_query_t *q = ecs_query(world, {
@@ -3212,7 +3212,7 @@ void BuiltinPredicates_var_eq_any(void) {
 
     ECS_TAG(world, Rel);
 
-    ecs_entity_t tgt = ecs_new_id(world);
+    ecs_entity_t tgt = ecs_new(world);
     ecs_entity_t e = ecs_new_w_pair(world, Rel, tgt);
 
     ecs_query_t *q = ecs_query(world, {
@@ -3244,7 +3244,7 @@ void BuiltinPredicates_var_eq_wildcard_after_write(void) {
 
     ECS_TAG(world, Rel);
 
-    ecs_entity_t tgt = ecs_new_id(world);
+    ecs_entity_t tgt = ecs_new(world);
     ecs_entity_t e = ecs_new_w_pair(world, Rel, tgt);
 
     ecs_query_t *q = ecs_query(world, {
@@ -3276,7 +3276,7 @@ void BuiltinPredicates_var_eq_any_after_write(void) {
 
     ECS_TAG(world, Rel);
 
-    ecs_entity_t tgt = ecs_new_id(world);
+    ecs_entity_t tgt = ecs_new(world);
     ecs_entity_t e = ecs_new_w_pair(world, Rel, tgt);
 
     ecs_query_t *q = ecs_query(world, {
@@ -3337,10 +3337,10 @@ void BuiltinPredicates_2_or_w_eq_lookup_var(void) {
     ECS_TAG(world, Bar);
     ECS_TAG(world, Hello);
 
-    ecs_entity_t e1 = ecs_new(world, Foo);
-    ecs_entity_t e2 = ecs_new(world, Foo);
-    ecs_entity_t e3 = ecs_new(world, Foo);
-    ecs_new(world, Foo);
+    ecs_entity_t e1 = ecs_new_w(world, Foo);
+    ecs_entity_t e2 = ecs_new_w(world, Foo);
+    ecs_entity_t e3 = ecs_new_w(world, Foo);
+    ecs_new_w(world, Foo);
 
     ecs_entity_t child1 = ecs_entity(world, { .name = "hello" });
     ecs_add_pair(world, child1, EcsChildOf, e1);
@@ -3411,11 +3411,11 @@ void BuiltinPredicates_3_or_w_eq_lookup_var(void) {
     ECS_TAG(world, Bar);
     ECS_TAG(world, Hello);
 
-    ecs_entity_t e1 = ecs_new(world, Foo);
-    ecs_entity_t e2 = ecs_new(world, Foo);
-    ecs_entity_t e3 = ecs_new(world, Foo);
-    ecs_entity_t e4 = ecs_new(world, Foo);
-    ecs_new(world, Foo);
+    ecs_entity_t e1 = ecs_new_w(world, Foo);
+    ecs_entity_t e2 = ecs_new_w(world, Foo);
+    ecs_entity_t e3 = ecs_new_w(world, Foo);
+    ecs_entity_t e4 = ecs_new_w(world, Foo);
+    ecs_new_w(world, Foo);
 
     ecs_entity_t child1 = ecs_entity(world, { .name = "hello" });
     ecs_add_pair(world, child1, EcsChildOf, e1);
@@ -3502,13 +3502,13 @@ void BuiltinPredicates_2_or_w_eq_this(void) {
     ECS_TAG(world, Rel);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
     ecs_add_pair(world, e1, Rel, e1);
 
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e2 = ecs_new(world);
     ecs_add_pair(world, e2, Rel, e1);
 
-    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_entity_t e3 = ecs_new(world);
     ecs_add_pair(world, e3, Rel, Rel);
 
     ecs_query_t *r = ecs_query(world, {

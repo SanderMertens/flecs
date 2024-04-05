@@ -21,10 +21,10 @@ void Scopes_term_w_not_scope_1_term(void) {
     ECS_TAG(world, Root);
     ECS_TAG(world, TagA);
 
-    ecs_entity_t parent_1 = ecs_new(world, Root);
+    ecs_entity_t parent_1 = ecs_new_w(world, Root);
     ecs_add(world, parent_1, TagA);
 
-    ecs_entity_t parent_2 = ecs_new(world, Root);
+    ecs_entity_t parent_2 = ecs_new_w(world, Root);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Root, !{ TagA }",
@@ -55,13 +55,13 @@ void Scopes_term_w_not_scope_2_terms(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    ecs_entity_t parent_1 = ecs_new(world, Root);
+    ecs_entity_t parent_1 = ecs_new_w(world, Root);
     ecs_add(world, parent_1, TagA);
 
-    ecs_entity_t parent_2 = ecs_new(world, Root);
+    ecs_entity_t parent_2 = ecs_new_w(world, Root);
     ecs_add(world, parent_2, TagB);
 
-    ecs_entity_t parent_3 = ecs_new(world, Root);
+    ecs_entity_t parent_3 = ecs_new_w(world, Root);
     ecs_add(world, parent_3, TagA);
     ecs_add(world, parent_3, TagB);
 
@@ -101,10 +101,10 @@ void Scopes_term_w_not_scope_1_term_w_not(void) {
     ECS_TAG(world, Root);
     ECS_TAG(world, TagA);
 
-    ecs_entity_t parent_1 = ecs_new(world, Root);
+    ecs_entity_t parent_1 = ecs_new_w(world, Root);
     ecs_add(world, parent_1, TagA);
 
-    ecs_new(world, Root);
+    ecs_new_w(world, Root);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Root, !{ !TagA }",
@@ -135,13 +135,13 @@ void Scopes_term_w_not_scope_2_terms_w_not(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    ecs_entity_t parent_1 = ecs_new(world, Root);
+    ecs_entity_t parent_1 = ecs_new_w(world, Root);
     ecs_add(world, parent_1, TagA);
 
-    ecs_entity_t parent_2 = ecs_new(world, Root);
+    ecs_entity_t parent_2 = ecs_new_w(world, Root);
     ecs_add(world, parent_2, TagB);
 
-    ecs_entity_t parent_3 = ecs_new(world, Root);
+    ecs_entity_t parent_3 = ecs_new_w(world, Root);
     ecs_add(world, parent_3, TagA);
     ecs_add(world, parent_3, TagB);
 
@@ -180,14 +180,14 @@ void Scopes_term_w_not_scope_1_term_w_var(void) {
 
     ECS_TAG(world, Root);
 
-    ecs_entity_t parent_1 = ecs_new(world, Root);
+    ecs_entity_t parent_1 = ecs_new_w(world, Root);
     ecs_new_w_pair(world, EcsChildOf, parent_1);
     ecs_new_w_pair(world, EcsChildOf, parent_1);
 
-    ecs_entity_t parent_2 = ecs_new(world, Root);
+    ecs_entity_t parent_2 = ecs_new_w(world, Root);
     ecs_new_w_pair(world, EcsChildOf, parent_2);
 
-    ecs_entity_t parent_3 = ecs_new(world, Root);
+    ecs_entity_t parent_3 = ecs_new_w(world, Root);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Root, !{ ChildOf($child, $this) }",
@@ -217,7 +217,7 @@ void Scopes_term_w_not_scope_2_terms_w_var(void) {
     ECS_TAG(world, Root);
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t parent_0 = ecs_new(world, Root);
+    ecs_entity_t parent_0 = ecs_new_w(world, Root);
     {
         ecs_entity_t child_1 = ecs_new_w_pair(world, EcsChildOf, parent_0);
         ecs_set(world, child_1, Position, {10, 20});
@@ -225,14 +225,14 @@ void Scopes_term_w_not_scope_2_terms_w_var(void) {
         ecs_set(world, child_2, Position, {10, 20});
     }
 
-    ecs_entity_t parent_1 = ecs_new(world, Root);
+    ecs_entity_t parent_1 = ecs_new_w(world, Root);
     {
         ecs_entity_t child_1 = ecs_new_w_pair(world, EcsChildOf, parent_1);
         ecs_set(world, child_1, Position, {10, 20});
         ecs_new_w_pair(world, EcsChildOf, parent_1);
     }
 
-    ecs_entity_t parent_2 = ecs_new(world, Root);
+    ecs_entity_t parent_2 = ecs_new_w(world, Root);
     {
         ecs_new_w_pair(world, EcsChildOf, parent_2);
         ecs_new_w_pair(world, EcsChildOf, parent_2);
@@ -265,13 +265,13 @@ void Scopes_term_w_not_scope_1_term_w_not_w_var(void) {
 
     ECS_TAG(world, Root);
 
-    ecs_entity_t parent_0 = ecs_new(world, Root);
+    ecs_entity_t parent_0 = ecs_new_w(world, Root);
     {
         ecs_new_w_pair(world, EcsChildOf, parent_0);
         ecs_new_w_pair(world, EcsChildOf, parent_0);
     }
 
-    ecs_new(world, Root);
+    ecs_new_w(world, Root);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Root, !{ !ChildOf($child, $this) }",
@@ -296,7 +296,7 @@ void Scopes_term_w_not_scope_2_terms_w_not_w_var(void) {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Foo);
 
-    ecs_entity_t parent_0 = ecs_new(world, Root);
+    ecs_entity_t parent_0 = ecs_new_w(world, Root);
     {
         ecs_entity_t child_1 = ecs_new_w_pair(world, EcsChildOf, parent_0);
         ecs_set(world, child_1, Position, {10, 20});
@@ -307,14 +307,14 @@ void Scopes_term_w_not_scope_2_terms_w_not_w_var(void) {
         ecs_add(world, child_3, Foo);
     }
 
-    ecs_entity_t parent_1 = ecs_new(world, Root);
+    ecs_entity_t parent_1 = ecs_new_w(world, Root);
     {
         ecs_entity_t child_1 = ecs_new_w_pair(world, EcsChildOf, parent_1);
         ecs_set(world, child_1, Position, {10, 20});
         ecs_new_w_pair(world, EcsChildOf, parent_1);
     }
 
-    ecs_entity_t parent_2 = ecs_new(world, Root);
+    ecs_entity_t parent_2 = ecs_new_w(world, Root);
     {
         ecs_entity_t child_1 = ecs_new_w_pair(world, EcsChildOf, parent_2);
         ecs_add(world, child_1, Foo);
@@ -350,14 +350,14 @@ void Scopes_term_w_not_scope_2_terms_w_or(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    ecs_entity_t e1 = ecs_new(world, Root);
+    ecs_entity_t e1 = ecs_new_w(world, Root);
     ecs_add(world, e1, TagA);
-    ecs_entity_t e2 = ecs_new(world, Root);
+    ecs_entity_t e2 = ecs_new_w(world, Root);
     ecs_add(world, e2, TagB);
-    ecs_entity_t e3 = ecs_new(world, Root);
+    ecs_entity_t e3 = ecs_new_w(world, Root);
     ecs_add(world, e3, TagA);
     ecs_add(world, e3, TagB);
-    ecs_entity_t e4 = ecs_new(world, Root);
+    ecs_entity_t e4 = ecs_new_w(world, Root);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Root, !{ TagA || TagB }",
@@ -389,16 +389,16 @@ void Scopes_term_w_not_scope_3_terms_w_or(void) {
     ECS_TAG(world, TagB);
     ECS_TAG(world, TagC);
 
-    ecs_entity_t e1 = ecs_new(world, Root);
+    ecs_entity_t e1 = ecs_new_w(world, Root);
     ecs_add(world, e1, TagA);
-    ecs_entity_t e2 = ecs_new(world, Root);
+    ecs_entity_t e2 = ecs_new_w(world, Root);
     ecs_add(world, e2, TagB);
-    ecs_entity_t e3 = ecs_new(world, Root);
+    ecs_entity_t e3 = ecs_new_w(world, Root);
     ecs_add(world, e3, TagA);
     ecs_add(world, e3, TagB);
-    ecs_entity_t e4 = ecs_new(world, Root);
+    ecs_entity_t e4 = ecs_new_w(world, Root);
     ecs_add(world, e4, TagC);
-    ecs_entity_t e5 = ecs_new(world, Root);
+    ecs_entity_t e5 = ecs_new_w(world, Root);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Root, !{ TagA || TagB || TagC }",

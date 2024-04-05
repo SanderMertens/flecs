@@ -18,7 +18,7 @@ int main(int argc, char *argv[]) {
     ecs_world_t *ecs = ecs_init_w_args(argc, argv);
 
     // LocatedIn relationship
-    ecs_entity_t LocatedIn = ecs_new_id(ecs);
+    ecs_entity_t LocatedIn = ecs_new(ecs);
     ecs_add_id(ecs, LocatedIn, EcsTransitive);
 
     // Tags

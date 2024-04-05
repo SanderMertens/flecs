@@ -813,7 +813,7 @@ ecs_entity_t ecs_pipeline_init(
 
     ecs_entity_t result = desc->entity;
     if (!result) {
-        result = ecs_new_id(world);
+        result = ecs_new(world);
     }
 
     ecs_query_desc_t qd = desc->query;

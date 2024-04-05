@@ -1068,8 +1068,8 @@ void Basic_1_this_src_w_tag(void) {
 
     ECS_TAG(world, RelA);
 
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "RelA($this)",
@@ -1108,8 +1108,8 @@ void Basic_1_this_src_w_component(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Position($this)",
@@ -1153,8 +1153,8 @@ void Basic_1_this_src_w_tag_pair(void) {
     ECS_TAG(world, RelA);
     ECS_TAG(world, TgtA);
 
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "RelA($this, TgtA)",
@@ -1194,8 +1194,8 @@ void Basic_1_this_src_w_component_pair(void) {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, TgtA);
 
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Position($this, TgtA)",
@@ -1240,8 +1240,8 @@ void Basic_1_this_src_w_tag_2_tables(void) {
     ECS_TAG(world, FragmentA);
     ECS_TAG(world, FragmentB);
 
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
 
     ecs_add(world, e1, FragmentA);
     ecs_add(world, e2, FragmentB);
@@ -1291,8 +1291,8 @@ void Basic_1_this_src_w_component_2_tables(void) {
     ECS_TAG(world, FragmentA);
     ECS_TAG(world, FragmentB);
 
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
 
     ecs_add(world, e1, FragmentA);
     ecs_add(world, e2, FragmentB);
@@ -1354,8 +1354,8 @@ void Basic_1_this_src_w_tag_pair_2_tables(void) {
     ECS_TAG(world, FragmentA);
     ECS_TAG(world, FragmentB);
 
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
 
     ecs_add(world, e1, FragmentA);
     ecs_add(world, e2, FragmentB);
@@ -1406,8 +1406,8 @@ void Basic_1_this_src_w_component_pair_2_tables(void) {
     ECS_TAG(world, FragmentA);
     ECS_TAG(world, FragmentB);
 
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
 
     ecs_add(world, e1, FragmentA);
     ecs_add(world, e2, FragmentB);
@@ -1467,8 +1467,8 @@ void Basic_2_this_src_w_tag(void) {
     ECS_TAG(world, RelA);
     ECS_TAG(world, RelB);
 
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "RelA($this), RelB($this)",
@@ -1513,8 +1513,8 @@ void Basic_2_this_src_w_component(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Position($this), Velocity($this)",
@@ -1568,8 +1568,8 @@ void Basic_2_this_src_ent_src_w_tag(void) {
     ECS_TAG(world, RelA);
     ECS_TAG(world, RelB);
 
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
     ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
 
     ecs_query_t *r = ecs_query(world, {
@@ -1614,8 +1614,8 @@ void Basic_2_this_src_ent_src_w_component(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
     ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
 
     ecs_query_t *r = ecs_query(world, {
@@ -1668,8 +1668,8 @@ void Basic_2_ent_src_this_src_w_tag(void) {
     ECS_TAG(world, RelA);
     ECS_TAG(world, RelB);
 
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
     ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
 
     ecs_query_t *r = ecs_query(world, {
@@ -1714,8 +1714,8 @@ void Basic_2_ent_src_this_src_w_component(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
     ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
 
     ecs_query_t *r = ecs_query(world, {
@@ -1765,7 +1765,7 @@ void Basic_2_ent_src_this_src_w_component(void) {
 void Basic_recycled_tag(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_delete(world, ecs_new_id(world));
+    ecs_delete(world, ecs_new(world));
     ECS_TAG(world, RelA);
     test_assert((uint32_t)RelA != RelA);
 
@@ -1805,7 +1805,7 @@ void Basic_recycled_src(void) {
 
     ECS_TAG(world, RelA);
 
-    ecs_delete(world, ecs_new_id(world));
+    ecs_delete(world, ecs_new(world));
     ecs_entity_t ent = ecs_entity(world, { .name = "ent" });
     test_assert((uint32_t)ent != ent);
 
@@ -1841,7 +1841,7 @@ void Basic_recycled_src(void) {
 void Basic_recycled_pair_rel(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_delete(world, ecs_new_id(world));
+    ecs_delete(world, ecs_new(world));
     ECS_TAG(world, RelA);
     test_assert((uint32_t)RelA != RelA);
     ECS_TAG(world, TgtA);
@@ -1881,7 +1881,7 @@ void Basic_recycled_pair_tgt(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, RelA);
-    ecs_delete(world, ecs_new_id(world));
+    ecs_delete(world, ecs_new(world));
     ECS_TAG(world, TgtA);
     test_assert((uint32_t)TgtA != TgtA);
 
@@ -1923,9 +1923,9 @@ void Basic_this_src_w_wildcard(void) {
     ECS_TAG(world, RelB);
     ECS_TAG(world, RelC);
 
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
-    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "RelA($this), *($this)",
@@ -2012,9 +2012,9 @@ void Basic_this_src_w_pair_rel_wildcard(void) {
     ECS_TAG(world, TgtA);
     ECS_TAG(world, TgtB);
 
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
-    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "RelA($this, TgtA), *($this, TgtA)",
@@ -2104,9 +2104,9 @@ void Basic_this_src_w_pair_tgt_wildcard(void) {
     ECS_TAG(world, TgtB);
     ECS_TAG(world, TgtC);
 
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
-    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "RelA($this, TgtA), RelA($this, *)",
@@ -2195,9 +2195,9 @@ void Basic_this_src_w_pair_rel_tgt_wildcard(void) {
     ECS_TAG(world, TgtA);
     ECS_TAG(world, TgtB);
 
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
-    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "RelA($this, TgtA), *($this, *)",
@@ -2332,9 +2332,9 @@ void Basic_this_src_w_any_written(void) {
     ECS_TAG(world, RelB);
     ECS_TAG(world, RelC);
 
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
-    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "RelA($this), _($this)",
@@ -2395,9 +2395,9 @@ void Basic_this_src_w_pair_rel_any(void) {
     ECS_TAG(world, TgtA);
     ECS_TAG(world, TgtB);
 
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
-    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "RelA($this, TgtA), _($this, TgtA)",
@@ -2461,9 +2461,9 @@ void Basic_this_src_w_pair_tgt_any(void) {
     ECS_TAG(world, TgtB);
     ECS_TAG(world, TgtC);
 
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
-    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "RelA($this, TgtA), RelA($this, _)",
@@ -2526,9 +2526,9 @@ void Basic_this_src_w_pair_rel_tgt_any(void) {
     ECS_TAG(world, TgtA);
     ECS_TAG(world, TgtB);
 
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
-    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "RelA($this, TgtA), _($this, _)",
@@ -2818,10 +2818,10 @@ void Basic_1_wildcard_src(void) {
         test_bool(false, ecs_query_next(&it));
     }
 
-    ecs_entity_t e1 = ecs_new(world, RelA);
+    ecs_entity_t e1 = ecs_new_w(world, RelA);
     ecs_add_id(world, e1, Tag);
-    ecs_new(world, RelA);
-    ecs_new(world, RelA);
+    ecs_new_w(world, RelA);
+    ecs_new_w(world, RelA);
 
     {
         ecs_iter_t it = ecs_query_iter(world, r);
@@ -2906,10 +2906,10 @@ void Basic_2_wildcard_src(void) {
         test_bool(false, ecs_query_next(&it));
     }
 
-    ecs_entity_t e1 = ecs_new(world, RelA);
+    ecs_entity_t e1 = ecs_new_w(world, RelA);
     ecs_add_id(world, e1, Tag);
-    ecs_entity_t e2 = ecs_new(world, RelA);
-    ecs_entity_t e3 = ecs_new(world, RelA);
+    ecs_entity_t e2 = ecs_new_w(world, RelA);
+    ecs_entity_t e3 = ecs_new_w(world, RelA);
 
     {
         ecs_iter_t it = ecs_query_iter(world, r);
@@ -3310,10 +3310,10 @@ void Basic_1_any_src(void) {
         test_bool(false, ecs_query_next(&it));
     }
 
-    ecs_entity_t e1 = ecs_new(world, RelA);
+    ecs_entity_t e1 = ecs_new_w(world, RelA);
     ecs_add_id(world, e1, Tag);
-    ecs_new(world, RelA);
-    ecs_new(world, RelA);
+    ecs_new_w(world, RelA);
+    ecs_new_w(world, RelA);
 
     {
         ecs_iter_t it = ecs_query_iter(world, r);
@@ -3348,10 +3348,10 @@ void Basic_1_any_src_component(void) {
         test_bool(false, ecs_query_next(&it));
     }
 
-    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e1 = ecs_new_w(world, Position);
     ecs_add_id(world, e1, Tag);
-    ecs_new(world, Position);
-    ecs_new(world, Position);
+    ecs_new_w(world, Position);
+    ecs_new_w(world, Position);
 
     {
         ecs_iter_t it = ecs_query_iter(world, r);
@@ -3390,10 +3390,10 @@ void Basic_1_any_src_component_w_this_component(void) {
         test_bool(false, ecs_query_next(&it));
     }
 
-    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e1 = ecs_new_w(world, Position);
     ecs_add_id(world, e1, Tag);
-    ecs_new(world, Position);
-    ecs_new(world, Position);
+    ecs_new_w(world, Position);
+    ecs_new_w(world, Position);
 
     {
         ecs_iter_t it = ecs_query_iter(world, r);
@@ -3477,10 +3477,10 @@ void Basic_2_any_src(void) {
         test_bool(false, ecs_query_next(&it));
     }
 
-    ecs_entity_t e1 = ecs_new(world, RelA);
+    ecs_entity_t e1 = ecs_new_w(world, RelA);
     ecs_add_id(world, e1, Tag);
-    ecs_entity_t e2 = ecs_new(world, RelA);
-    ecs_entity_t e3 = ecs_new(world, RelA);
+    ecs_entity_t e2 = ecs_new_w(world, RelA);
+    ecs_entity_t e3 = ecs_new_w(world, RelA);
 
     {
         ecs_iter_t it = ecs_query_iter(world, r);
@@ -3936,7 +3936,7 @@ void Basic_1_any_src_empty(void) {
         test_bool(false, ecs_query_next(&it));
     }
 
-    ecs_entity_t e1 = ecs_new(world, RelA);
+    ecs_entity_t e1 = ecs_new_w(world, RelA);
 
     {
         ecs_iter_t it = ecs_query_iter(world, r);
@@ -4284,7 +4284,7 @@ void Basic_1_any_src_tag_w_pair_query_empty(void) {
         test_bool(false, ecs_query_next(&it));
     }
 
-    ecs_entity_t e1 = ecs_new(world, RelA);
+    ecs_entity_t e1 = ecs_new_w(world, RelA);
 
     {
         ecs_iter_t it = ecs_query_iter(world, r);
@@ -5308,7 +5308,7 @@ void Basic_iter_empty_source_2_terms_mixed(void) {
 
     test_assert(r != NULL);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_add(world, e, Foo);
 
     {
@@ -5342,7 +5342,7 @@ void Basic_iter_empty_source_2_terms_mixed_pair(void) {
 
     test_assert(r != NULL);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_add_pair(world, e, Foo, Tgt);
 
     {
@@ -5376,7 +5376,7 @@ void Basic_iter_empty_source_2_terms_mixed_pair_wildcard(void) {
 
     test_assert(r != NULL);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_add_pair(world, e, Foo, Tgt);
 
     {
@@ -5401,7 +5401,7 @@ void Basic_this_var_w_empty_entity(void) {
 
     ECS_TAG(world, Rel);
 
-    ecs_entity_t t = ecs_new_id(world);
+    ecs_entity_t t = ecs_new(world);
     ecs_entity_t e = ecs_new_w_pair(world, Rel, t);
 
     ecs_query_t *r = ecs_query(world, { 
@@ -5433,10 +5433,10 @@ void Basic_match_disabled(void) {
 
     ECS_TAG(world, TagA);
 
-    ecs_entity_t e_1 = ecs_new(world, TagA);
-    ecs_entity_t e_2 = ecs_new(world, TagA);
+    ecs_entity_t e_1 = ecs_new_w(world, TagA);
+    ecs_entity_t e_2 = ecs_new_w(world, TagA);
     ecs_add_id(world, e_2, EcsDisabled);
-    ecs_entity_t e_3 = ecs_new(world, TagA);
+    ecs_entity_t e_3 = ecs_new_w(world, TagA);
     ecs_add_id(world, e_3, EcsPrefab);
 
     ecs_query_t *r_1 = ecs_query(world, {
@@ -5484,10 +5484,10 @@ void Basic_match_prefab(void) {
 
     ECS_TAG(world, TagA);
 
-    ecs_entity_t e_1 = ecs_new(world, TagA);
-    ecs_entity_t e_2 = ecs_new(world, TagA);
+    ecs_entity_t e_1 = ecs_new_w(world, TagA);
+    ecs_entity_t e_2 = ecs_new_w(world, TagA);
     ecs_add_id(world, e_2, EcsDisabled);
-    ecs_entity_t e_3 = ecs_new(world, TagA);
+    ecs_entity_t e_3 = ecs_new_w(world, TagA);
     ecs_add_id(world, e_3, EcsPrefab);
 
     ecs_query_t *r_1 = ecs_query(world, {
@@ -5535,12 +5535,12 @@ void Basic_match_disabled_prefab(void) {
 
     ECS_TAG(world, TagA);
 
-    ecs_entity_t e_1 = ecs_new(world, TagA);
-    ecs_entity_t e_2 = ecs_new(world, TagA);
+    ecs_entity_t e_1 = ecs_new_w(world, TagA);
+    ecs_entity_t e_2 = ecs_new_w(world, TagA);
     ecs_add_id(world, e_2, EcsDisabled);
-    ecs_entity_t e_3 = ecs_new(world, TagA);
+    ecs_entity_t e_3 = ecs_new_w(world, TagA);
     ecs_add_id(world, e_3, EcsPrefab);
-    ecs_entity_t e_4 = ecs_new(world, TagA);
+    ecs_entity_t e_4 = ecs_new_w(world, TagA);
     ecs_add_id(world, e_4, EcsPrefab);
     ecs_add_id(world, e_4, EcsDisabled);
 
@@ -5633,10 +5633,10 @@ void Basic_match_disabled_this_tgt(void) {
 
     ECS_TAG(world, TagA);
 
-    ecs_entity_t e_1 = ecs_new(world, TagA);
-    ecs_entity_t e_2 = ecs_new(world, TagA);
+    ecs_entity_t e_1 = ecs_new_w(world, TagA);
+    ecs_entity_t e_2 = ecs_new_w(world, TagA);
     ecs_add_id(world, e_2, EcsDisabled);
-    ecs_entity_t e_3 = ecs_new(world, TagA);
+    ecs_entity_t e_3 = ecs_new_w(world, TagA);
     ecs_add_id(world, e_3, EcsPrefab);
 
     ecs_new_w_pair(world, EcsChildOf, e_1);
@@ -5690,10 +5690,10 @@ void Basic_match_prefab_this_tgt(void) {
 
     ECS_TAG(world, TagA);
 
-    ecs_entity_t e_1 = ecs_new(world, TagA);
-    ecs_entity_t e_2 = ecs_new(world, TagA);
+    ecs_entity_t e_1 = ecs_new_w(world, TagA);
+    ecs_entity_t e_2 = ecs_new_w(world, TagA);
     ecs_add_id(world, e_2, EcsDisabled);
-    ecs_entity_t e_3 = ecs_new(world, TagA);
+    ecs_entity_t e_3 = ecs_new_w(world, TagA);
     ecs_add_id(world, e_3, EcsPrefab);
 
     ecs_new_w_pair(world, EcsChildOf, e_1);
@@ -5746,12 +5746,12 @@ void Basic_match_disabled_prefab_this_tgt(void) {
 
     ECS_TAG(world, TagA);
 
-    ecs_entity_t e_1 = ecs_new(world, TagA);
-    ecs_entity_t e_2 = ecs_new(world, TagA);
+    ecs_entity_t e_1 = ecs_new_w(world, TagA);
+    ecs_entity_t e_2 = ecs_new_w(world, TagA);
     ecs_add_id(world, e_2, EcsDisabled);
-    ecs_entity_t e_3 = ecs_new(world, TagA);
+    ecs_entity_t e_3 = ecs_new_w(world, TagA);
     ecs_add_id(world, e_3, EcsPrefab);
-    ecs_entity_t e_4 = ecs_new(world, TagA);
+    ecs_entity_t e_4 = ecs_new_w(world, TagA);
     ecs_add_id(world, e_4, EcsPrefab);
     ecs_add_id(world, e_4, EcsDisabled);
 
@@ -5849,10 +5849,10 @@ void Basic_match_self_disabled(void) {
 
     ECS_TAG(world, TagA);
 
-    ecs_entity_t e_1 = ecs_new(world, TagA);
-    ecs_entity_t e_2 = ecs_new(world, TagA);
+    ecs_entity_t e_1 = ecs_new_w(world, TagA);
+    ecs_entity_t e_2 = ecs_new_w(world, TagA);
     ecs_add_id(world, e_2, EcsDisabled);
-    ecs_entity_t e_3 = ecs_new(world, TagA);
+    ecs_entity_t e_3 = ecs_new_w(world, TagA);
     ecs_add_id(world, e_3, EcsPrefab);
 
     ecs_query_t *r_1 = ecs_query(world, {
@@ -5900,10 +5900,10 @@ void Basic_match_self_prefab(void) {
 
     ECS_TAG(world, TagA);
 
-    ecs_entity_t e_1 = ecs_new(world, TagA);
-    ecs_entity_t e_2 = ecs_new(world, TagA);
+    ecs_entity_t e_1 = ecs_new_w(world, TagA);
+    ecs_entity_t e_2 = ecs_new_w(world, TagA);
     ecs_add_id(world, e_2, EcsDisabled);
-    ecs_entity_t e_3 = ecs_new(world, TagA);
+    ecs_entity_t e_3 = ecs_new_w(world, TagA);
     ecs_add_id(world, e_3, EcsPrefab);
 
     ecs_query_t *r_1 = ecs_query(world, {
@@ -5951,12 +5951,12 @@ void Basic_match_self_disabled_prefab(void) {
 
     ECS_TAG(world, TagA);
 
-    ecs_entity_t e_1 = ecs_new(world, TagA);
-    ecs_entity_t e_2 = ecs_new(world, TagA);
+    ecs_entity_t e_1 = ecs_new_w(world, TagA);
+    ecs_entity_t e_2 = ecs_new_w(world, TagA);
     ecs_add_id(world, e_2, EcsDisabled);
-    ecs_entity_t e_3 = ecs_new(world, TagA);
+    ecs_entity_t e_3 = ecs_new_w(world, TagA);
     ecs_add_id(world, e_3, EcsPrefab);
-    ecs_entity_t e_4 = ecs_new(world, TagA);
+    ecs_entity_t e_4 = ecs_new_w(world, TagA);
     ecs_add_id(world, e_4, EcsPrefab);
     ecs_add_id(world, e_4, EcsDisabled);
 
@@ -6046,10 +6046,10 @@ void Basic_match_optional_disabled(void) {
 
     ECS_TAG(world, TagA);
 
-    ecs_entity_t e_1 = ecs_new(world, TagA);
-    ecs_entity_t e_2 = ecs_new(world, TagA);
+    ecs_entity_t e_1 = ecs_new_w(world, TagA);
+    ecs_entity_t e_2 = ecs_new_w(world, TagA);
     ecs_add_id(world, e_2, EcsDisabled);
-    ecs_entity_t e_3 = ecs_new(world, TagA);
+    ecs_entity_t e_3 = ecs_new_w(world, TagA);
     ecs_add_id(world, e_3, EcsPrefab);
 
     ecs_query_t *r_1 = ecs_query(world, {
@@ -6103,10 +6103,10 @@ void Basic_match_optional_prefab(void) {
 
     ECS_TAG(world, TagA);
 
-    ecs_entity_t e_1 = ecs_new(world, TagA);
-    ecs_entity_t e_2 = ecs_new(world, TagA);
+    ecs_entity_t e_1 = ecs_new_w(world, TagA);
+    ecs_entity_t e_2 = ecs_new_w(world, TagA);
     ecs_add_id(world, e_2, EcsDisabled);
-    ecs_entity_t e_3 = ecs_new(world, TagA);
+    ecs_entity_t e_3 = ecs_new_w(world, TagA);
     ecs_add_id(world, e_3, EcsPrefab);
 
     ecs_query_t *r_1 = ecs_query(world, {
@@ -6160,12 +6160,12 @@ void Basic_match_optional_disabled_prefab(void) {
 
     ECS_TAG(world, TagA);
 
-    ecs_entity_t e_1 = ecs_new(world, TagA);
-    ecs_entity_t e_2 = ecs_new(world, TagA);
+    ecs_entity_t e_1 = ecs_new_w(world, TagA);
+    ecs_entity_t e_2 = ecs_new_w(world, TagA);
     ecs_add_id(world, e_2, EcsDisabled);
-    ecs_entity_t e_3 = ecs_new(world, TagA);
+    ecs_entity_t e_3 = ecs_new_w(world, TagA);
     ecs_add_id(world, e_3, EcsPrefab);
-    ecs_entity_t e_4 = ecs_new(world, TagA);
+    ecs_entity_t e_4 = ecs_new_w(world, TagA);
     ecs_add_id(world, e_4, EcsPrefab);
     ecs_add_id(world, e_4, EcsDisabled);
 
@@ -6285,10 +6285,10 @@ void Basic_match_optional_disabled_this_tgt(void) {
 
     ECS_TAG(world, TagA);
 
-    ecs_entity_t e_1 = ecs_new(world, TagA);
-    ecs_entity_t e_2 = ecs_new(world, TagA);
+    ecs_entity_t e_1 = ecs_new_w(world, TagA);
+    ecs_entity_t e_2 = ecs_new_w(world, TagA);
     ecs_add_id(world, e_2, EcsDisabled);
-    ecs_entity_t e_3 = ecs_new(world, TagA);
+    ecs_entity_t e_3 = ecs_new_w(world, TagA);
     ecs_add_id(world, e_3, EcsPrefab);
 
     ecs_new_w_pair(world, EcsChildOf, e_1);
@@ -6349,10 +6349,10 @@ void Basic_match_optional_prefab_this_tgt(void) {
 
     ECS_TAG(world, TagA);
 
-    ecs_entity_t e_1 = ecs_new(world, TagA);
-    ecs_entity_t e_2 = ecs_new(world, TagA);
+    ecs_entity_t e_1 = ecs_new_w(world, TagA);
+    ecs_entity_t e_2 = ecs_new_w(world, TagA);
     ecs_add_id(world, e_2, EcsDisabled);
-    ecs_entity_t e_3 = ecs_new(world, TagA);
+    ecs_entity_t e_3 = ecs_new_w(world, TagA);
     ecs_add_id(world, e_3, EcsPrefab);
 
     ecs_new_w_pair(world, EcsChildOf, e_1);
@@ -6412,12 +6412,12 @@ void Basic_match_optional_disabled_prefab_this_tgt(void) {
 
     ECS_TAG(world, TagA);
 
-    ecs_entity_t e_1 = ecs_new(world, TagA);
-    ecs_entity_t e_2 = ecs_new(world, TagA);
+    ecs_entity_t e_1 = ecs_new_w(world, TagA);
+    ecs_entity_t e_2 = ecs_new_w(world, TagA);
     ecs_add_id(world, e_2, EcsDisabled);
-    ecs_entity_t e_3 = ecs_new(world, TagA);
+    ecs_entity_t e_3 = ecs_new_w(world, TagA);
     ecs_add_id(world, e_3, EcsPrefab);
-    ecs_entity_t e_4 = ecs_new(world, TagA);
+    ecs_entity_t e_4 = ecs_new_w(world, TagA);
     ecs_add_id(world, e_4, EcsPrefab);
     ecs_add_id(world, e_4, EcsDisabled);
 
@@ -6542,10 +6542,10 @@ void Basic_match_optional_self_disabled(void) {
 
     ECS_TAG(world, TagA);
 
-    ecs_entity_t e_1 = ecs_new(world, TagA);
-    ecs_entity_t e_2 = ecs_new(world, TagA);
+    ecs_entity_t e_1 = ecs_new_w(world, TagA);
+    ecs_entity_t e_2 = ecs_new_w(world, TagA);
     ecs_add_id(world, e_2, EcsDisabled);
-    ecs_entity_t e_3 = ecs_new(world, TagA);
+    ecs_entity_t e_3 = ecs_new_w(world, TagA);
     ecs_add_id(world, e_3, EcsPrefab);
 
     ecs_query_t *r_1 = ecs_query(world, {
@@ -6599,10 +6599,10 @@ void Basic_match_optional_self_prefab(void) {
 
     ECS_TAG(world, TagA);
 
-    ecs_entity_t e_1 = ecs_new(world, TagA);
-    ecs_entity_t e_2 = ecs_new(world, TagA);
+    ecs_entity_t e_1 = ecs_new_w(world, TagA);
+    ecs_entity_t e_2 = ecs_new_w(world, TagA);
     ecs_add_id(world, e_2, EcsDisabled);
-    ecs_entity_t e_3 = ecs_new(world, TagA);
+    ecs_entity_t e_3 = ecs_new_w(world, TagA);
     ecs_add_id(world, e_3, EcsPrefab);
 
     ecs_query_t *r_1 = ecs_query(world, {
@@ -6656,12 +6656,12 @@ void Basic_match_optional_self_disabled_prefab(void) {
 
     ECS_TAG(world, TagA);
 
-    ecs_entity_t e_1 = ecs_new(world, TagA);
-    ecs_entity_t e_2 = ecs_new(world, TagA);
+    ecs_entity_t e_1 = ecs_new_w(world, TagA);
+    ecs_entity_t e_2 = ecs_new_w(world, TagA);
     ecs_add_id(world, e_2, EcsDisabled);
-    ecs_entity_t e_3 = ecs_new(world, TagA);
+    ecs_entity_t e_3 = ecs_new_w(world, TagA);
     ecs_add_id(world, e_3, EcsPrefab);
-    ecs_entity_t e_4 = ecs_new(world, TagA);
+    ecs_entity_t e_4 = ecs_new_w(world, TagA);
     ecs_add_id(world, e_4, EcsPrefab);
     ecs_add_id(world, e_4, EcsDisabled);
 
@@ -6790,7 +6790,7 @@ void Basic_inout_none_first_term(void) {
         .cache_kind = cache_kind
     });
 
-    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
     ecs_set(world, e1, Position, {10, 20});
     ecs_set(world, e1, Velocity, {1, 2});
 
@@ -6834,7 +6834,7 @@ void Basic_inout_none_second_term(void) {
         .cache_kind = cache_kind
     });
 
-    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
     ecs_set(world, e1, Position, {10, 20});
     ecs_set(world, e1, Velocity, {1, 2});
 
@@ -6993,7 +6993,7 @@ void Basic_no_data_rule(void) {
         .cache_kind = cache_kind
     });
 
-    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
     ecs_set(world, e1, Position, {10, 20});
     ecs_set(world, e1, Velocity, {1, 2});
 
@@ -7035,11 +7035,11 @@ void Basic_frame_offset(void) {
         .cache_kind = cache_kind
     });
 
-    ecs_entity_t e1 = ecs_new(world, Position);
-    ecs_entity_t e2 = ecs_new(world, Position);
-    ecs_entity_t e3 = ecs_new(world, Position);
-    ecs_entity_t e4 = ecs_new(world, Position);
-    ecs_entity_t e5 = ecs_new(world, Position);
+    ecs_entity_t e1 = ecs_new_w(world, Position);
+    ecs_entity_t e2 = ecs_new_w(world, Position);
+    ecs_entity_t e3 = ecs_new_w(world, Position);
+    ecs_entity_t e4 = ecs_new_w(world, Position);
+    ecs_entity_t e5 = ecs_new_w(world, Position);
 
     ecs_add(world, e3, TagB);
     ecs_add(world, e4, TagB);
@@ -7094,11 +7094,11 @@ void Basic_frame_offset_no_data(void) {
         .cache_kind = cache_kind
     });
 
-    ecs_entity_t e1 = ecs_new(world, TagA);
-    ecs_entity_t e2 = ecs_new(world, TagA);
-    ecs_entity_t e3 = ecs_new(world, TagA);
-    ecs_entity_t e4 = ecs_new(world, TagA);
-    ecs_entity_t e5 = ecs_new(world, TagA);
+    ecs_entity_t e1 = ecs_new_w(world, TagA);
+    ecs_entity_t e2 = ecs_new_w(world, TagA);
+    ecs_entity_t e3 = ecs_new_w(world, TagA);
+    ecs_entity_t e4 = ecs_new_w(world, TagA);
+    ecs_entity_t e5 = ecs_new_w(world, TagA);
 
     ecs_add(world, e3, TagB);
     ecs_add(world, e4, TagB);
@@ -7148,10 +7148,10 @@ void Basic_match_empty_tables(void) {
     ECS_TAG(world, TagB);
     ECS_TAG(world, TagC);
 
-    ecs_entity_t e1 = ecs_new(world, Position);
-    ecs_entity_t e2 = ecs_new(world, Position);
-    ecs_entity_t e3 = ecs_new(world, Position);
-    ecs_entity_t e4 = ecs_new(world, Position);
+    ecs_entity_t e1 = ecs_new_w(world, Position);
+    ecs_entity_t e2 = ecs_new_w(world, Position);
+    ecs_entity_t e3 = ecs_new_w(world, Position);
+    ecs_entity_t e4 = ecs_new_w(world, Position);
 
     ecs_add(world, e2, TagA);
     ecs_add(world, e3, TagB);
@@ -7219,10 +7219,10 @@ void Basic_match_empty_tables_no_data(void) {
     ECS_TAG(world, TagB);
     ECS_TAG(world, TagC);
 
-    ecs_entity_t e1 = ecs_new(world, Foo);
-    ecs_entity_t e2 = ecs_new(world, Foo);
-    ecs_entity_t e3 = ecs_new(world, Foo);
-    ecs_entity_t e4 = ecs_new(world, Foo);
+    ecs_entity_t e1 = ecs_new_w(world, Foo);
+    ecs_entity_t e2 = ecs_new_w(world, Foo);
+    ecs_entity_t e3 = ecs_new_w(world, Foo);
+    ecs_entity_t e4 = ecs_new_w(world, Foo);
 
     ecs_add(world, e2, TagA);
     ecs_add(world, e3, TagB);
@@ -7286,10 +7286,10 @@ void Basic_match_empty_tables_w_not(void) {
     ECS_TAG(world, TagB);
     ECS_TAG(world, TagC);
 
-    ecs_entity_t e1 = ecs_new(world, Foo);
-    ecs_entity_t e2 = ecs_new(world, Foo);
-    ecs_entity_t e3 = ecs_new(world, Foo);
-    ecs_entity_t e4 = ecs_new(world, Foo);
+    ecs_entity_t e1 = ecs_new_w(world, Foo);
+    ecs_entity_t e2 = ecs_new_w(world, Foo);
+    ecs_entity_t e3 = ecs_new_w(world, Foo);
+    ecs_entity_t e4 = ecs_new_w(world, Foo);
 
     ecs_add(world, e2, TagA);
     ecs_add(world, e3, TagB);
@@ -7415,8 +7415,8 @@ void Basic_match_empty_tables_w_no_empty_tables(void) {
         .cache_kind = cache_kind
     });
 
-    ecs_entity_t e1 = ecs_new(world, Foo);
-    ecs_entity_t e2 = ecs_new(world, Foo);
+    ecs_entity_t e1 = ecs_new_w(world, Foo);
+    ecs_entity_t e2 = ecs_new_w(world, Foo);
     ecs_add(world, e2, Bar);
 
     ecs_iter_t it = ecs_query_iter(world, f);
@@ -7446,10 +7446,10 @@ void Basic_match_empty_tables_trivial(void) {
     ECS_TAG(world, TagB);
     ECS_TAG(world, TagC);
 
-    ecs_entity_t e1 = ecs_new(world, Position);
-    ecs_entity_t e2 = ecs_new(world, Position);
-    ecs_entity_t e3 = ecs_new(world, Position);
-    ecs_entity_t e4 = ecs_new(world, Position);
+    ecs_entity_t e1 = ecs_new_w(world, Position);
+    ecs_entity_t e2 = ecs_new_w(world, Position);
+    ecs_entity_t e3 = ecs_new_w(world, Position);
+    ecs_entity_t e4 = ecs_new_w(world, Position);
 
     ecs_add(world, e2, TagA);
     ecs_add(world, e3, TagB);
@@ -8156,7 +8156,7 @@ void Basic_unknown_before_known(void) {
     int gc_var = ecs_query_find_var(r, "gc");
     test_assert(gc_var != -1);
 
-    ecs_entity_t p = ecs_new(world, Foo);
+    ecs_entity_t p = ecs_new_w(world, Foo);
     ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
     /* ecs_entity_t c2 = */ ecs_new_w_pair(world, EcsChildOf, p);
     ecs_entity_t gc = ecs_new_w_pair(world, EcsChildOf, c);
@@ -8198,7 +8198,7 @@ void Basic_unknown_before_known_after_or(void) {
     int gc_var = ecs_query_find_var(r, "gc");
     test_assert(gc_var != -1);
 
-    ecs_entity_t p = ecs_new(world, Foo);
+    ecs_entity_t p = ecs_new_w(world, Foo);
     ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
     /* ecs_entity_t c2 = */ ecs_new_w_pair(world, EcsChildOf, p);
     ecs_entity_t gc1 = ecs_new_w_pair(world, EcsChildOf, c);
@@ -8255,7 +8255,7 @@ void Basic_unknown_before_known_after_not(void) {
     int gc_var = ecs_query_find_var(r, "gc");
     test_assert(gc_var != -1);
 
-    ecs_entity_t p = ecs_new(world, Foo);
+    ecs_entity_t p = ecs_new_w(world, Foo);
     ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
     /* ecs_entity_t c2 = */ ecs_new_w_pair(world, EcsChildOf, p);
     ecs_entity_t gc1 = ecs_new_w_pair(world, EcsChildOf, c);
@@ -8300,7 +8300,7 @@ void Basic_unknown_before_known_after_optional(void) {
     int gc_var = ecs_query_find_var(r, "gc");
     test_assert(gc_var != -1);
 
-    ecs_entity_t p = ecs_new(world, Foo);
+    ecs_entity_t p = ecs_new_w(world, Foo);
     ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
     /* ecs_entity_t c2 = */ ecs_new_w_pair(world, EcsChildOf, p);
     ecs_entity_t gc1 = ecs_new_w_pair(world, EcsChildOf, c);
@@ -8360,7 +8360,7 @@ void Basic_unknown_before_known_after_scope(void) {
     int gc_var = ecs_query_find_var(r, "gc");
     test_assert(gc_var != -1);
 
-    ecs_entity_t p = ecs_new(world, Foo);
+    ecs_entity_t p = ecs_new_w(world, Foo);
     ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
     /* ecs_entity_t c2 = */ ecs_new_w_pair(world, EcsChildOf, p);
     ecs_entity_t gc1 = ecs_new_w_pair(world, EcsChildOf, c);
@@ -8403,15 +8403,15 @@ void Basic_2_trivial_mixed_2_tables(void) {
 
     test_assert(r != NULL);
 
-    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
     ecs_add(world, e1, Foo);
     ecs_add(world, e1, Bar);
 
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e2 = ecs_new(world);
     ecs_add(world, e2, Foo);
     ecs_add(world, e2, Bar);
 
-    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_entity_t e3 = ecs_new(world);
     ecs_add(world, e3, Foo);
     ecs_add(world, e3, Bar);
     ecs_add(world, e3, Tag);
@@ -8486,15 +8486,15 @@ void Basic_2_trivial_mixed_2_tables_component(void) {
 
     test_assert(r != NULL);
 
-    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
     ecs_set(world, e1, Position, {10, 20});
     ecs_set(world, e1, Velocity, {1, 2});
 
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e2 = ecs_new(world);
     ecs_set(world, e2, Position, {20, 30});
     ecs_set(world, e2, Velocity, {2, 3});
 
-    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_entity_t e3 = ecs_new(world);
     ecs_set(world, e3, Position, {30, 40});
     ecs_set(world, e3, Velocity, {3, 4});
     ecs_add(world, e3, Tag);
@@ -8588,15 +8588,15 @@ void Basic_2_trivial_mixed_2_tables_wildcard(void) {
 
     test_assert(r != NULL);
 
-    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
     ecs_add(world, e1, Foo);
     ecs_add_pair(world, e1, EcsChildOf, TgtA);
 
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e2 = ecs_new(world);
     ecs_add(world, e2, Foo);
     ecs_add_pair(world, e2, EcsChildOf, TgtA);
 
-    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_entity_t e3 = ecs_new(world);
     ecs_add(world, e3, Foo);
     ecs_add_pair(world, e3, EcsChildOf, TgtA);
     ecs_add(world, e3, Tag);
@@ -8686,11 +8686,11 @@ void Basic_2_trivial_one_regular(void) {
     ECS_TAG(world, TagB);
     ECS_TAG(world, TagC);
 
-    ecs_entity_t e1 = ecs_new(world, TagA);
+    ecs_entity_t e1 = ecs_new_w(world, TagA);
     ecs_add(world, e1, TagB);
     ecs_add(world, e1, TagC);
 
-    ecs_entity_t e2 = ecs_new(world, TagA);
+    ecs_entity_t e2 = ecs_new_w(world, TagA);
     ecs_add(world, e2, TagB);
     ecs_add_pair(world, e2, EcsChildOf, e1);
 
@@ -8738,11 +8738,11 @@ void Basic_1_trivial_one_regular_one_trivial(void) {
     ECS_TAG(world, TagB);
     ECS_TAG(world, TagC);
 
-    ecs_entity_t e1 = ecs_new(world, TagA);
+    ecs_entity_t e1 = ecs_new_w(world, TagA);
     ecs_add(world, e1, TagB);
     ecs_add(world, e1, TagC);
 
-    ecs_entity_t e2 = ecs_new(world, TagA);
+    ecs_entity_t e2 = ecs_new_w(world, TagA);
     ecs_add_pair(world, e2, EcsChildOf, e1);
     ecs_add(world, e2, TagC);
 
@@ -8790,11 +8790,11 @@ void Basic_one_regular_2_trivial(void) {
     ECS_TAG(world, TagB);
     ECS_TAG(world, TagC);
 
-    ecs_entity_t e1 = ecs_new(world, TagA);
+    ecs_entity_t e1 = ecs_new_w(world, TagA);
     ecs_add(world, e1, TagB);
     ecs_add(world, e1, TagC);
 
-    ecs_entity_t e2 = ecs_new(world, TagB);
+    ecs_entity_t e2 = ecs_new_w(world, TagB);
     ecs_add(world, e2, TagC);
     ecs_add_pair(world, e2, EcsChildOf, e1);
 
@@ -8897,7 +8897,7 @@ void Basic_3_trivial_w_prefab(void) {
     ecs_add(world, e2, TagB);
     ecs_add(world, e2, TagC);
 
-    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_entity_t e3 = ecs_new(world);
     ecs_add(world, e3, TagA);
     ecs_add(world, e3, TagB);
 
@@ -8998,7 +8998,7 @@ void Basic_3_trivial_w_disabled(void) {
     ecs_add(world, e2, TagB);
     ecs_add(world, e2, TagC);
 
-    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_entity_t e3 = ecs_new(world);
     ecs_add(world, e3, TagA);
     ecs_add(world, e3, TagB);
 
@@ -9051,8 +9051,8 @@ void Basic_2_this_w_fixed_src(void) {
         .cache_kind = cache_kind
     });
 
-    ecs_entity_t e1 = ecs_new(world, Foo);
-    ecs_entity_t e2 = ecs_new(world, Foo);
+    ecs_entity_t e1 = ecs_new_w(world, Foo);
+    ecs_entity_t e2 = ecs_new_w(world, Foo);
 
     test_assert(q != NULL);
 
@@ -9090,8 +9090,8 @@ void Basic_2_fixed_src_w_this(void) {
         .cache_kind = cache_kind
     });
 
-    ecs_entity_t e1 = ecs_new(world, Foo);
-    ecs_entity_t e2 = ecs_new(world, Foo);
+    ecs_entity_t e1 = ecs_new_w(world, Foo);
+    ecs_entity_t e2 = ecs_new_w(world, Foo);
 
     test_assert(q != NULL);
 
@@ -9128,8 +9128,8 @@ void Basic_2_this_w_fixed_src_no_match_fixed(void) {
         .cache_kind = cache_kind
     });
 
-    ecs_new(world, Foo);
-    ecs_new(world, Foo);
+    ecs_new_w(world, Foo);
+    ecs_new_w(world, Foo);
 
     test_assert(q != NULL);
 
@@ -9156,8 +9156,8 @@ void Basic_2_fixed_src_w_this_no_match_fixed(void) {
         .cache_kind = cache_kind
     });
 
-    ecs_new(world, Foo);
-    ecs_new(world, Foo);
+    ecs_new_w(world, Foo);
+    ecs_new_w(world, Foo);
 
     test_assert(q != NULL);
 
@@ -9237,11 +9237,11 @@ void Basic_query_count_results(void) {
 
     test_int(0, ecs_query_count(q).results);
 
-    ecs_new(world, TagA);
+    ecs_new_w(world, TagA);
 
     test_int(1, ecs_query_count(q).results);
 
-    ecs_entity_t e = ecs_new(world, TagA);
+    ecs_entity_t e = ecs_new_w(world, TagA);
 
     test_int(1, ecs_query_count(q).results);
 
@@ -9276,11 +9276,11 @@ void Basic_query_count_entities(void) {
 
     test_int(0, ecs_query_count(q).entities);
 
-    ecs_entity_t e1 = ecs_new(world, TagA);
+    ecs_entity_t e1 = ecs_new_w(world, TagA);
 
     test_int(1, ecs_query_count(q).entities);
 
-    ecs_entity_t e2 = ecs_new(world, TagA);
+    ecs_entity_t e2 = ecs_new_w(world, TagA);
 
     test_int(2, ecs_query_count(q).entities);
 
@@ -9315,7 +9315,7 @@ void Basic_query_is_true(void) {
 
     test_bool(false, ecs_query_is_true(q));
 
-    ecs_entity_t e = ecs_new(world, TagA);
+    ecs_entity_t e = ecs_new_w(world, TagA);
 
     test_bool(true, ecs_query_is_true(q));
 
@@ -9334,10 +9334,10 @@ void Basic_implicit_cleanup_1_term(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    ecs_new(world, TagA);
+    ecs_new_w(world, TagA);
 
     ecs_query_t *q = ecs_query(world, {
-        .entity = ecs_new_id(world),
+        .entity = ecs_new(world),
         .expr = "TagA",
         .cache_kind = cache_kind
     });
@@ -9352,10 +9352,10 @@ void Basic_implicit_cleanup_2_terms(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
     
-    ecs_add(world, ecs_new(world, TagA), TagB);
+    ecs_add(world, ecs_new_w(world, TagA), TagB);
 
     ecs_query_t *q = ecs_query(world, {
-        .entity = ecs_new_id(world),
+        .entity = ecs_new(world),
         .expr = "TagA, TagB",
         .cache_kind = cache_kind
     });
@@ -9370,10 +9370,10 @@ void Basic_implicit_cleanup_1_term_w_up(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    ecs_new_w_pair(world, EcsChildOf, ecs_new(world, TagA));
+    ecs_new_w_pair(world, EcsChildOf, ecs_new_w(world, TagA));
 
     ecs_query_t *q = ecs_query(world, {
-        .entity = ecs_new_id(world),
+        .entity = ecs_new(world),
         .expr = "TagA(up)",
         .cache_kind = cache_kind
     });
@@ -9390,10 +9390,10 @@ void Basic_implicit_cleanup_2_terms_w_up(void) {
 
     ecs_add(world, 
         ecs_new_w_pair(world, EcsChildOf, 
-            ecs_new(world, TagB)), TagA);
+            ecs_new_w(world, TagB)), TagA);
 
     ecs_query_t *q = ecs_query(world, {
-        .entity = ecs_new_id(world),
+        .entity = ecs_new(world),
         .expr = "TagA, TagB(up)",
         .cache_kind = cache_kind
     });
@@ -9409,7 +9409,7 @@ void Basic_implicit_cleanup_2_queries(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_TAG(world, Tag);
 
-    ecs_new_w_pair(world, EcsIsA, ecs_new(world, Position));
+    ecs_new_w_pair(world, EcsIsA, ecs_new_w(world, Position));
 
     ecs_query_t *q_1 = ecs_query(world, {
         .expr = "Position",
@@ -9436,7 +9436,7 @@ void Basic_implicit_cleanup_2_queries_1_cleanup(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_TAG(world, Tag);
     
-    ecs_new_w_pair(world, EcsIsA, ecs_new(world, Position));
+    ecs_new_w_pair(world, EcsIsA, ecs_new_w(world, Position));
 
     ecs_query_t *q_1 = ecs_query(world, {
         .expr = "Position",
@@ -9461,7 +9461,7 @@ void Basic_iter_valid(void) {
 
     ECS_COMPONENT(world, Position);
     
-    ecs_new(world, Position);
+    ecs_new_w(world, Position);
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position",
@@ -9495,11 +9495,11 @@ void Basic_iter_frame_offset(void) {
         .cache_kind = cache_kind
     });
 
-    ecs_entity_t e1 = ecs_new(world, TagA);
-    ecs_entity_t e2 = ecs_new(world, TagA);
-    ecs_entity_t e3 = ecs_new(world, TagA);
-    ecs_entity_t e4 = ecs_new(world, TagA);
-    ecs_entity_t e5 = ecs_new(world, TagA);
+    ecs_entity_t e1 = ecs_new_w(world, TagA);
+    ecs_entity_t e2 = ecs_new_w(world, TagA);
+    ecs_entity_t e3 = ecs_new_w(world, TagA);
+    ecs_entity_t e4 = ecs_new_w(world, TagA);
+    ecs_entity_t e5 = ecs_new_w(world, TagA);
 
     ecs_add(world, e3, TagB);
     ecs_add(world, e4, TagB);
@@ -9556,7 +9556,7 @@ void Basic_iter_nested_1(void) {
     });
 
     ecs_singleton_add(ecs, Singleton);
-    ecs_entity_t e = ecs_new(ecs, Tag);
+    ecs_entity_t e = ecs_new_w(ecs, Tag);
 
     ecs_iter_t qit = ecs_query_iter(ecs, qa);
     test_bool(true, ecs_query_next(&qit));
@@ -9601,8 +9601,8 @@ void Basic_iter_nested_2(void) {
 
     ecs_singleton_add(ecs, Singleton);
 
-    ecs_entity_t ea = ecs_new(ecs, TagA);
-    ecs_entity_t eb = ecs_new(ecs, TagB);
+    ecs_entity_t ea = ecs_new_w(ecs, TagA);
+    ecs_entity_t eb = ecs_new_w(ecs, TagB);
 
     ecs_iter_t qita = ecs_query_iter(ecs, qa);
     ecs_iter_t qitb = ecs_query_iter(ecs, qb);
@@ -9658,9 +9658,9 @@ void Basic_iter_interleaved(void) {
 
     ecs_singleton_add(ecs, Singleton);
 
-    ecs_entity_t ea = ecs_new(ecs, TagA);
-    ecs_entity_t eb = ecs_new(ecs, TagB);
-    ecs_entity_t ec = ecs_new(ecs, TagC);
+    ecs_entity_t ea = ecs_new_w(ecs, TagA);
+    ecs_entity_t eb = ecs_new_w(ecs, TagB);
+    ecs_entity_t ec = ecs_new_w(ecs, TagC);
 
     ecs_iter_t qita = ecs_query_iter(ecs, qa);
     ecs_iter_t qitb = ecs_query_iter(ecs, qb);
@@ -9976,7 +9976,7 @@ void Basic_no_results_after_delete_tree(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t parent = ecs_new(world, Position);
+    ecs_entity_t parent = ecs_new_w(world, Position);
     test_assert(parent != 0);
 
     ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
@@ -10014,7 +10014,7 @@ void Basic_no_results_after_delete_tree_deferred(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t parent = ecs_new(world, Position);
+    ecs_entity_t parent = ecs_new_w(world, Position);
     test_assert(parent != 0);
 
     ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
@@ -10052,7 +10052,7 @@ void Basic_add_on_self_ref(void) {
 
     ECS_TAG(world, TagA);
 
-    ecs_entity_t qe = ecs_new_id(world);
+    ecs_entity_t qe = ecs_new(world);
 
     ecs_query_t *q = ecs_query(world, {
         .entity = qe,

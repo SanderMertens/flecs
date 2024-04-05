@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
     EcsTimer *timer = ecs_ensure(world, s, EcsTimer);
     timer->time = 0;
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_set(world, e, Position, {10, 20});
     ecs_set(world, e, Velocity, {1, 2});
 

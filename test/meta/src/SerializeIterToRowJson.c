@@ -102,9 +102,9 @@ void SerializeIterToRowJson_serialize_this_w_1_tag_no_name(void) {
     ecs_entity_t p1 = ecs_entity(world, { .name = "p1" });
     ecs_entity_t p2 = ecs_entity(world, { .name = "p1" });
 
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
-    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
     
     ecs_add_pair(world, e1, EcsChildOf, p1);
     ecs_add_pair(world, e2, EcsChildOf, p1);
@@ -3185,9 +3185,9 @@ void SerializeIterToRowJson_serialize_recycled_id(void) {
 
     test_assert(q != NULL);
 
-    ecs_entity_t _e1 = ecs_new_id(world);
+    ecs_entity_t _e1 = ecs_new(world);
     ecs_delete(world, _e1);
-    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
     test_assert(e1 != _e1);
     test_assert((uint32_t)e1 == _e1);
 
@@ -3216,7 +3216,7 @@ void SerializeIterToRowJson_serialize_entity_w_flecs_core_parent(void) {
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t e1 = ecs_new(world, Foo);
+    ecs_entity_t e1 = ecs_new_w(world, Foo);
     ecs_set_name(world, e1, "e1");
 
     ecs_entity_t flecs_core_parent = 

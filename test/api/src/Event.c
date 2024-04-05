@@ -20,8 +20,8 @@ void system_w_param_callback(ecs_iter_t *it) {
 void Event_table_1_id_w_trigger(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t evt = ecs_new_id(world);
-    ecs_entity_t id = ecs_new_id(world);
+    ecs_entity_t evt = ecs_new(world);
+    ecs_entity_t id = ecs_new(world);
     ecs_entity_t e = ecs_new_w_id(world, id);
     ecs_table_t *table = ecs_get_table(world, e);
 
@@ -54,9 +54,9 @@ void Event_table_1_id_w_trigger(void) {
 void Event_table_2_ids_w_trigger(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t evt = ecs_new_id(world);
-    ecs_entity_t id_a = ecs_new_id(world);
-    ecs_entity_t id_b = ecs_new_id(world);
+    ecs_entity_t evt = ecs_new(world);
+    ecs_entity_t id_a = ecs_new(world);
+    ecs_entity_t id_b = ecs_new(world);
     ecs_entity_t e = ecs_new_w_id(world, id_a);
     ecs_add_id(world, e, id_b);
     ecs_table_t *table = ecs_get_table(world, e);
@@ -115,8 +115,8 @@ void Event_table_2_ids_w_trigger(void) {
 void Event_table_1_id_w_observer(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t evt = ecs_new_id(world);
-    ecs_entity_t id = ecs_new_id(world);
+    ecs_entity_t evt = ecs_new(world);
+    ecs_entity_t id = ecs_new(world);
     ecs_entity_t e = ecs_new_w_id(world, id);
     ecs_table_t *table = ecs_get_table(world, e);
 
@@ -149,9 +149,9 @@ void Event_table_1_id_w_observer(void) {
 void Event_table_2_ids_w_observer(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t evt = ecs_new_id(world);
-    ecs_entity_t id_a = ecs_new_id(world);
-    ecs_entity_t id_b = ecs_new_id(world);
+    ecs_entity_t evt = ecs_new(world);
+    ecs_entity_t id_a = ecs_new(world);
+    ecs_entity_t id_b = ecs_new(world);
     ecs_entity_t e = ecs_new_w_id(world, id_a);
     ecs_add_id(world, e, id_b);
     ecs_table_t *table = ecs_get_table(world, e);
@@ -196,9 +196,9 @@ void Event_emit_event_for_empty_table(void) {
 
     ECS_TAG(world, TagA);
 
-    ecs_entity_t evt = ecs_new_id(world);
+    ecs_entity_t evt = ecs_new(world);
 
-    ecs_entity_t e = ecs_new(world, TagA);
+    ecs_entity_t e = ecs_new_w(world, TagA);
     ecs_table_t *table = ecs_get_table(world, e);
     ecs_delete(world, e);
 
@@ -231,13 +231,13 @@ void Event_emit_table_event(void) {
     ecs_entity_t base = ecs_new_w_id(world, TagA);
     ecs_table_t *base_table = ecs_get_table(world, base);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_add_pair(world, e, EcsIsA, base);
 
     Probe ctx_a = {0};
     Probe ctx_b = {0};
 
-    ecs_entity_t evt = ecs_new_id(world);
+    ecs_entity_t evt = ecs_new(world);
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
         .query.terms[0].id = TagA,
@@ -283,8 +283,8 @@ void Event_emit_table_event(void) {
 void Event_emit_staged_from_world(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t evt = ecs_new_id(world);
-    ecs_entity_t id = ecs_new_id(world);
+    ecs_entity_t evt = ecs_new(world);
+    ecs_entity_t id = ecs_new(world);
     ecs_entity_t e = ecs_new_w_id(world, id);
     ecs_table_t *table = ecs_get_table(world, e);
 
@@ -318,8 +318,8 @@ void Event_emit_staged_from_world(void) {
 void Event_emit_staged_from_stage(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t evt = ecs_new_id(world);
-    ecs_entity_t id = ecs_new_id(world);
+    ecs_entity_t evt = ecs_new(world);
+    ecs_entity_t id = ecs_new(world);
     ecs_entity_t e = ecs_new_w_id(world, id);
     ecs_table_t *table = ecs_get_table(world, e);
 
@@ -354,8 +354,8 @@ void Event_emit_staged_from_stage(void) {
 void Event_emit_staged_from_world_observer(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t evt = ecs_new_id(world);
-    ecs_entity_t id = ecs_new_id(world);
+    ecs_entity_t evt = ecs_new(world);
+    ecs_entity_t id = ecs_new(world);
     ecs_entity_t e = ecs_new_w_id(world, id);
     ecs_table_t *table = ecs_get_table(world, e);
 
@@ -389,8 +389,8 @@ void Event_emit_staged_from_world_observer(void) {
 void Event_emit_staged_from_stage_observer(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t evt = ecs_new_id(world);
-    ecs_entity_t id = ecs_new_id(world);
+    ecs_entity_t evt = ecs_new(world);
+    ecs_entity_t id = ecs_new(world);
     ecs_entity_t e = ecs_new_w_id(world, id);
     ecs_table_t *table = ecs_get_table(world, e);
 
@@ -427,8 +427,8 @@ void Event_emit_staged_from_stage_observer(void) {
 void Event_emit_for_entity(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t evt = ecs_new_id(world);
-    ecs_entity_t id = ecs_new_id(world);
+    ecs_entity_t evt = ecs_new(world);
+    ecs_entity_t id = ecs_new(world);
     ecs_entity_t e = ecs_new_w_id(world, id);
 
     Probe ctx = {0};
@@ -471,10 +471,10 @@ void Event_emit_custom_for_any(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t MyEvent = ecs_new_id(world);
+    ecs_entity_t MyEvent = ecs_new(world);
 
-    ecs_entity_t e1 = ecs_new(world, Tag);
-    ecs_entity_t e2 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
+    ecs_entity_t e2 = ecs_new_w(world, Tag);
 
     ecs_observer(world, {
         .query.terms = {{ .id = EcsAny, .src.id = e1 }},
@@ -514,10 +514,10 @@ void Event_emit_custom_implicit_any(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t MyEvent = ecs_new_id(world);
+    ecs_entity_t MyEvent = ecs_new(world);
 
-    ecs_entity_t e1 = ecs_new(world, Tag);
-    ecs_entity_t e2 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
+    ecs_entity_t e2 = ecs_new_w(world, Tag);
 
     ecs_observer(world, {
         .query.terms = {{ .id = EcsAny, .src.id = e1 }},
@@ -555,10 +555,10 @@ void Event_emit_custom_empty_type(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t MyEvent = ecs_new_id(world);
+    ecs_entity_t MyEvent = ecs_new(world);
 
-    ecs_entity_t e1 = ecs_new(world, Tag);
-    ecs_entity_t e2 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
+    ecs_entity_t e2 = ecs_new_w(world, Tag);
 
     ecs_observer(world, {
         .query.terms = {{ .id = EcsAny, .src.id = e1 }},
@@ -598,7 +598,7 @@ void Event_emit_w_param(void) {
 
     ECS_COMPONENT(world, Position);
     
-    ecs_entity_t id = ecs_new_id(world);
+    ecs_entity_t id = ecs_new(world);
     ecs_entity_t e = ecs_new_w_id(world, id);
 
     Probe ctx = {0};
@@ -634,7 +634,7 @@ void Event_emit_w_const_param(void) {
 
     ECS_COMPONENT(world, Position);
     
-    ecs_entity_t id = ecs_new_id(world);
+    ecs_entity_t id = ecs_new(world);
     ecs_entity_t e = ecs_new_w_id(world, id);
 
     Probe ctx = {0};
@@ -698,8 +698,8 @@ void Event_emit_nested(void) {
     int ctx_1 = 0;
     int ctx_2 = 0;
 
-    ecs_entity_t e1 = ecs_new_id(world);
-    other = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    other = ecs_new(world);
 
     ecs_add(world, e1, Foo);
     ecs_add(world, e1, Bar);
@@ -738,8 +738,8 @@ void Event_emit_nested(void) {
 void Event_enqueue_event_1_id(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t evt = ecs_new_id(world);
-    ecs_entity_t id = ecs_new_id(world);
+    ecs_entity_t evt = ecs_new(world);
+    ecs_entity_t id = ecs_new(world);
     ecs_entity_t e = ecs_new_w_id(world, id);
 
     Probe ctx = {0};
@@ -776,9 +776,9 @@ void Event_enqueue_event_1_id(void) {
 void Event_enqueue_event_2_ids(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t evt = ecs_new_id(world);
-    ecs_entity_t id_a = ecs_new_id(world);
-    ecs_entity_t id_b = ecs_new_id(world);
+    ecs_entity_t evt = ecs_new(world);
+    ecs_entity_t id_a = ecs_new(world);
+    ecs_entity_t id_b = ecs_new(world);
     ecs_entity_t e = ecs_new_w_id(world, id_a);
     ecs_add_id(world, e, id_b);
 
@@ -837,7 +837,7 @@ void Event_enqueue_event_w_data(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t id = ecs_new_id(world);
+    ecs_entity_t id = ecs_new(world);
     ecs_entity_t e = ecs_new_w_id(world, id);
 
     Probe ctx = {0};
@@ -906,7 +906,7 @@ void Event_enqueue_event_w_data_move(void) {
         .dtor = ecs_dtor(Position)
     });
 
-    ecs_entity_t id = ecs_new_id(world);
+    ecs_entity_t id = ecs_new(world);
     ecs_entity_t e = ecs_new_w_id(world, id);
 
     Probe ctx = {0};
@@ -959,7 +959,7 @@ void Event_enqueue_event_w_data_copy(void) {
         .dtor = ecs_dtor(Position)
     });
 
-    ecs_entity_t id = ecs_new_id(world);
+    ecs_entity_t id = ecs_new(world);
     ecs_entity_t e = ecs_new_w_id(world, id);
 
     Probe ctx = {0};
@@ -1007,7 +1007,7 @@ void Event_enqueue_event_w_const_data_no_copy(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t id = ecs_new_id(world);
+    ecs_entity_t id = ecs_new(world);
     ecs_entity_t e = ecs_new_w_id(world, id);
 
     Probe ctx = {0};
@@ -1051,8 +1051,8 @@ void Event_enqueue_event_w_const_data_no_copy(void) {
 void Event_enqueue_event_not_alive(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t evt = ecs_new_id(world);
-    ecs_entity_t id = ecs_new_id(world);
+    ecs_entity_t evt = ecs_new(world);
+    ecs_entity_t id = ecs_new(world);
     ecs_entity_t e = ecs_new_w_id(world, id);
 
     Probe ctx = {0};
@@ -1094,7 +1094,7 @@ void Event_enqueue_event_not_alive_w_data_move(void) {
         .dtor = ecs_dtor(Position)
     });
 
-    ecs_entity_t id = ecs_new_id(world);
+    ecs_entity_t id = ecs_new(world);
     ecs_entity_t e = ecs_new_w_id(world, id);
 
     Probe ctx = {0};
@@ -1138,7 +1138,7 @@ void Event_enqueue_event_not_alive_w_data_copy(void) {
         .dtor = ecs_dtor(Position)
     });
 
-    ecs_entity_t id = ecs_new_id(world);
+    ecs_entity_t id = ecs_new(world);
     ecs_entity_t e = ecs_new_w_id(world, id);
 
     Probe ctx = {0};
@@ -1183,9 +1183,9 @@ void system_delete_callback(ecs_iter_t *it) {
 void Event_enqueue_event_not_alive_after_delete_during_merge(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t evt = ecs_new_id(world);
-    ecs_entity_t delete_evt = ecs_new_id(world);
-    ecs_entity_t id = ecs_new_id(world);
+    ecs_entity_t evt = ecs_new(world);
+    ecs_entity_t delete_evt = ecs_new(world);
+    ecs_entity_t id = ecs_new(world);
     ecs_entity_t e = ecs_new_w_id(world, id);
 
     Probe ctx = {0};
@@ -1237,8 +1237,8 @@ void Event_enqueue_event_not_alive_w_data_move_after_delete_during_merge(void) {
         .dtor = ecs_dtor(Position)
     });
 
-    ecs_entity_t delete_evt = ecs_new_id(world);
-    ecs_entity_t id = ecs_new_id(world);
+    ecs_entity_t delete_evt = ecs_new(world);
+    ecs_entity_t id = ecs_new(world);
     ecs_entity_t e = ecs_new_w_id(world, id);
 
     Probe ctx = {0};
@@ -1295,8 +1295,8 @@ void Event_enqueue_event_not_alive_w_data_copy_after_delete_during_merge(void) {
         .dtor = ecs_dtor(Position)
     });
 
-    ecs_entity_t delete_evt = ecs_new_id(world);
-    ecs_entity_t id = ecs_new_id(world);
+    ecs_entity_t delete_evt = ecs_new(world);
+    ecs_entity_t id = ecs_new(world);
     ecs_entity_t e = ecs_new_w_id(world, id);
 
     Probe ctx = {0};
@@ -1349,8 +1349,8 @@ void Event_enqueue_event_not_deferred(void) {
 
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t evt = ecs_new_id(world);
-    ecs_entity_t id = ecs_new_id(world);
+    ecs_entity_t evt = ecs_new(world);
+    ecs_entity_t id = ecs_new(world);
     ecs_entity_t e = ecs_new_w_id(world, id);
 
     test_expect_abort();
@@ -1365,8 +1365,8 @@ void Event_enqueue_event_not_deferred(void) {
 void Event_enqueue_event_not_deferred_to_async(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t evt = ecs_new_id(world);
-    ecs_entity_t id = ecs_new_id(world);
+    ecs_entity_t evt = ecs_new(world);
+    ecs_entity_t id = ecs_new(world);
     ecs_entity_t e = ecs_new_w_id(world, id);
 
     Probe ctx = {0};
@@ -1407,10 +1407,10 @@ void Event_enqueue_custom_implicit_any(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t MyEvent = ecs_new_id(world);
+    ecs_entity_t MyEvent = ecs_new(world);
 
-    ecs_entity_t e1 = ecs_new(world, Tag);
-    ecs_entity_t e2 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
+    ecs_entity_t e2 = ecs_new_w(world, Tag);
 
     ecs_observer(world, {
         .query.terms = {{ .id = EcsAny, .src.id = e1 }},
@@ -1503,8 +1503,8 @@ void Event_enqueue_custom_after_large_cmd(void) {
 void Event_enqueue_on_readonly_world(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t evt = ecs_new_id(world);
-    ecs_entity_t id = ecs_new_id(world);
+    ecs_entity_t evt = ecs_new(world);
+    ecs_entity_t id = ecs_new(world);
     ecs_entity_t e = ecs_new_w_id(world, id);
 
     Probe ctx = {0};

@@ -27,8 +27,8 @@ void WorldInfo_table_count(void) {
 
     ecs_world_info_t prev = *cur;
 
-    ecs_entity_t c = ecs_new_id(world);
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t c = ecs_new(world);
+    ecs_entity_t e = ecs_new(world);
     test_delta(&prev, cur, table_count, 0);
 
     ecs_add_id(world, e, c);
@@ -48,8 +48,8 @@ void WorldInfo_empty_table_count(void) {
 
     ecs_world_info_t prev = *cur;
 
-    ecs_entity_t c = ecs_new_id(world);
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t c = ecs_new(world);
+    ecs_entity_t e = ecs_new(world);
 
     ecs_add_id(world, e, c);
     ecs_run_aperiodic(world, 0);
@@ -74,9 +74,9 @@ void WorldInfo_table_create_count(void) {
 
     ecs_world_info_t prev = *cur;
 
-    ecs_entity_t c_1 = ecs_new_id(world);
-    ecs_entity_t c_2 = ecs_new_id(world);
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t c_1 = ecs_new(world);
+    ecs_entity_t c_2 = ecs_new(world);
+    ecs_entity_t e = ecs_new(world);
     test_delta(&prev, cur, table_create_total, 0);
 
     ecs_add_id(world, e, c_1);
@@ -100,16 +100,16 @@ void WorldInfo_table_delete_count(void) {
 
     ecs_world_info_t prev = *cur;
 
-    ecs_entity_t c_1 = ecs_new_id(world);
-    ecs_entity_t c_2 = ecs_new_id(world);
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t c_1 = ecs_new(world);
+    ecs_entity_t c_2 = ecs_new(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_add_id(world, e, c_1);
     test_delta(&prev, cur, table_delete_total, 0);
 
     ecs_add_id(world, e, c_2);
     test_delta(&prev, cur, table_delete_total, 0);
 
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e2 = ecs_new(world);
     ecs_add_id(world, e2, c_2);
     test_delta(&prev, cur, table_delete_total, 0);
 
@@ -135,9 +135,9 @@ void WorldInfo_id_tag_component_count(void) {
     ecs_world_info_t prev_1 = *cur;
     ecs_world_info_t prev_2 = *cur;
 
-    ecs_entity_t c_1 = ecs_new_id(world);
-    ecs_entity_t c_2 = ecs_new_id(world);
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t c_1 = ecs_new(world);
+    ecs_entity_t c_2 = ecs_new(world);
+    ecs_entity_t e = ecs_new(world);
     test_delta(&prev_1, cur, tag_id_count, 0);
     test_delta(&prev_2, cur, component_id_count, 0);
 
@@ -176,9 +176,9 @@ void WorldInfo_id_pair_count(void) {
 
     ecs_world_info_t prev = *cur;
 
-    ecs_entity_t c_1 = ecs_new_id(world);
-    ecs_entity_t c_2 = ecs_new_id(world);
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t c_1 = ecs_new(world);
+    ecs_entity_t c_2 = ecs_new(world);
+    ecs_entity_t e = ecs_new(world);
     test_delta(&prev, cur, pair_id_count, 0);
 
     ecs_add_id(world, e, c_1);

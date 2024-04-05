@@ -368,7 +368,7 @@ void StructTypes_incomplete_member(void) {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_new_id(world);
+    ecs_entity_t t = ecs_new(world);
 
     ecs_entity_t m_x = ecs_new_w_pair(world, EcsChildOf, t);
     ecs_set_name(world, m_x, "x");

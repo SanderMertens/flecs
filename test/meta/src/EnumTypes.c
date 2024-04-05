@@ -183,7 +183,7 @@ void EnumTypes_zero_initialized(void) {
     test_assert(e != 0);
     test_assert(ecs_has(world, e, EcsComponent));
 
-    ecs_entity_t ent = ecs_new_id(world);
+    ecs_entity_t ent = ecs_new(world);
     ecs_add_id(world, ent, e);
 
     const int32_t *ptr = ecs_get_id(world, ent, e);
@@ -221,7 +221,7 @@ void EnumTypes_enum_relation(void) {
 
     test_assert(ecs_get_typeid(world, ecs_pair(e, red)) == 0);
 
-    ecs_entity_t ent = ecs_new_id(world);
+    ecs_entity_t ent = ecs_new(world);
     ecs_add_pair(world, ent, e, red);
     test_assert( ecs_has_pair(world, ent, e, red));
 

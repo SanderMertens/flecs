@@ -16,7 +16,7 @@ void PolyTrigger(ecs_iter_t *it) {
 void Poly_on_set_poly_observer(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t tag = ecs_new_id(world);
+    ecs_entity_t tag = ecs_new(world);
 
     Probe ctx = {0};
     ecs_observer(world, {
@@ -46,7 +46,7 @@ void Poly_on_set_poly_observer(void) {
 void Poly_on_set_poly_query(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t tag = ecs_new_id(world);
+    ecs_entity_t tag = ecs_new(world);
 
     Probe ctx = {0};
     ecs_observer(world, {
@@ -60,7 +60,7 @@ void Poly_on_set_poly_query(void) {
 
     ecs_query(world, {
         .terms = {{ tag }},
-        .entity = ecs_new_id(world)
+        .entity = ecs_new(world)
     });
 
     test_int(1, ctx.invoked);
@@ -72,7 +72,7 @@ void Poly_on_set_poly_query(void) {
 void Poly_on_set_poly_system(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t tag = ecs_new_id(world);
+    ecs_entity_t tag = ecs_new(world);
 
     Probe ctx = {0};
     ecs_observer(world, {
@@ -101,7 +101,7 @@ void Poly_free_query_entity(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t qe = ecs_new_id(world);
+    ecs_entity_t qe = ecs_new(world);
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ Tag }},
         .entity = qe

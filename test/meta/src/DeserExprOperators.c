@@ -2364,8 +2364,8 @@ void DeserExprOperators_iter_to_vars_no_data(void) {
     ecs_query_t *query = ecs_query(world, { .expr = "Foo" });
     test_assert(query != NULL);
 
-    ecs_entity_t e1 = ecs_new(world, Foo);
-    ecs_entity_t e2 = ecs_new(world, Foo);
+    ecs_entity_t e1 = ecs_new_w(world, Foo);
+    ecs_entity_t e2 = ecs_new_w(world, Foo);
 
     ecs_vars_t vars = {0};
     ecs_vars_init(world, &vars);
@@ -2410,8 +2410,8 @@ void DeserExprOperators_iter_to_vars_1_comp(void) {
     ecs_query_t *query = ecs_query(world, { .expr = "Position" });
     test_assert(query != NULL);
 
-    ecs_entity_t e1 = ecs_new(world, Position);
-    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_entity_t e1 = ecs_new_w(world, Position);
+    ecs_entity_t e2 = ecs_new_w(world, Position);
 
     ecs_vars_t vars = {0};
     ecs_vars_init(world, &vars);
@@ -2471,8 +2471,8 @@ void DeserExprOperators_iter_to_vars_2_comps(void) {
     ecs_query_t *query = ecs_query(world, { .expr = "Position, Velocity" });
     test_assert(query != NULL);
 
-    ecs_entity_t e1 = ecs_new(world, Position);
-    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_entity_t e1 = ecs_new_w(world, Position);
+    ecs_entity_t e2 = ecs_new_w(world, Position);
     ecs_add(world, e1, Velocity);
     ecs_add(world, e2, Velocity);
 
@@ -2549,8 +2549,8 @@ void DeserExprOperators_iter_to_vars_1_comp_1_tag(void) {
     ecs_query_t *query = ecs_query(world, { .expr = "Position, Foo, Velocity" });
     test_assert(query != NULL);
 
-    ecs_entity_t e1 = ecs_new(world, Position);
-    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_entity_t e1 = ecs_new_w(world, Position);
+    ecs_entity_t e2 = ecs_new_w(world, Position);
     ecs_add(world, e1, Velocity);
     ecs_add(world, e2, Velocity);
     ecs_add(world, e1, Foo);
@@ -2629,8 +2629,8 @@ void DeserExprOperators_iter_to_vars_w_1_query_var(void) {
     ecs_query_t *query = ecs_query(world, { .expr = "Position($x)" });
     test_assert(query != NULL);
 
-    ecs_entity_t e1 = ecs_new(world, Position);
-    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_entity_t e1 = ecs_new_w(world, Position);
+    ecs_entity_t e2 = ecs_new_w(world, Position);
 
     ecs_vars_t vars = {0};
     ecs_vars_init(world, &vars);
@@ -2692,9 +2692,9 @@ void DeserExprOperators_iter_to_vars_w_2_query_vars(void) {
     ecs_query_t *query = ecs_query(world, { .expr = "Position($x), ChildOf($x, $y)" });
     test_assert(query != NULL);
 
-    ecs_entity_t parent = ecs_new_id(world);
-    ecs_entity_t e1 = ecs_new(world, Position);
-    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_entity_t parent = ecs_new(world);
+    ecs_entity_t e1 = ecs_new_w(world, Position);
+    ecs_entity_t e2 = ecs_new_w(world, Position);
     ecs_add_pair(world, e1, EcsChildOf, parent);
     ecs_add_pair(world, e2, EcsChildOf, parent);
 

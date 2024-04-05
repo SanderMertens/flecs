@@ -43,7 +43,7 @@ void TriggerOnSet_set(void) {
     Probe ctx = {0};
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_int(ctx.count, 0);
 
     ecs_set(world, e, Position, {10, 20});
@@ -106,7 +106,7 @@ void TriggerOnSet_set_again(void) {
     Probe ctx = {0};
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_int(ctx.count, 0);
 
     ecs_set(world, e, Position, {10, 20});
@@ -272,7 +272,7 @@ void TriggerOnSet_set_and_add_system(void) {
     Probe ctx = {0};
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     test_int(ctx.count, 0);
 
     ecs_set(world, e, Position, {10, 20});
@@ -509,7 +509,7 @@ void TriggerOnSet_emplace(void) {
         .callback = Dummy
     });
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
     test_int(dummy_called, 0);
 
@@ -534,7 +534,7 @@ void TriggerOnSet_un_set_tag_w_remove(void) {
         .callback = Dummy
     });
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
     test_int(dummy_called, 0);
 
@@ -558,7 +558,7 @@ void TriggerOnSet_un_set_tag_w_clear(void) {
         .callback = Dummy
     });
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
     test_int(dummy_called, 0);
 
@@ -582,7 +582,7 @@ void TriggerOnSet_un_set_tag_w_delete(void) {
         .callback = Dummy
     });
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
     test_int(dummy_called, 0);
 
@@ -606,7 +606,7 @@ void TriggerOnSet_on_set_after_remove_override(void) {
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_int(ctx.invoked, 0);
 
     ecs_add_pair(world, e, EcsIsA, Base);

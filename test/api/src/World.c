@@ -101,7 +101,7 @@ void World_entity_range_offset(void) {
 
     ecs_set_entity_range(world, 5000, 0);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     test_int(e, 5000);
 
     ecs_fini(world);
@@ -152,7 +152,7 @@ void World_entity_range_out_of_range_check_disabled(void) {
     ecs_set_entity_range(world, 5000, 10000);
 
     /* Validate that range is being used when issuing new ids */
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     test_int(e, 5000);
 
     /* Validate that application does not abort when changing out of range */
@@ -176,13 +176,13 @@ void World_entity_range_check_after_delete(void) {
     ecs_enable_range_check(world, true);
     ecs_set_entity_range(world, 5000, 10000);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
     test_assert(e == 5000);
 
     ecs_delete(world, e);
 
-    e = ecs_new_id(world);
+    e = ecs_new(world);
     test_assert(e != 0);
     test_assert((uint32_t)e == 5000);
 
@@ -195,7 +195,7 @@ void World_entity_range_add_existing_staged(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e != 0);
     test_assert(e < 1000);
 
@@ -217,7 +217,7 @@ void World_entity_range_add_in_range_staged(void) {
 
     ecs_set_entity_range(world, 500, 1000);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e == 500);
 
     ecs_readonly_begin(world, false);
@@ -250,7 +250,7 @@ void World_entity_range_add_out_of_range_staged(void) {
     ecs_set_entity_range(world, 500, 1000);
 
     /* Dummy entity to invoke the system */
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e == 500);
 
     ecs_readonly_begin(world, false);
@@ -312,7 +312,7 @@ void World_dim(void) {
 
     /* Create single entity so that the table exists. This makes the allocation
      * counts more predictable, as new_w_count won't trigger table creation */
-    ecs_new(world, Position);
+    ecs_new_w(world, Position);
 
     ecs_dim(world, 1100);
 
@@ -436,7 +436,7 @@ void World_phases(void) {
     ECS_SYSTEM(world, TOnStore, EcsOnStore, Position);
     ECS_SYSTEM(world, TManual, 0, Position);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e != 0);
 
     ecs_set(world, e, Position, {0, 0});
@@ -458,7 +458,7 @@ void World_phases_match_in_create(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e != 0);
 
     ecs_set(world, e, Position, {0, 0});
@@ -608,7 +608,7 @@ void World_phases_w_merging(void) {
     ECS_SYSTEM(world, TMergeOnStore, EcsOnStore, Position, [out] Position());
     ECS_SYSTEM(world, TMergeManual, 0, Position);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e != 0);
 
     ecs_set(world, e, Position, {0, 0});
@@ -638,7 +638,7 @@ void World_measure_time(void) {
 
     ECS_SYSTEM(world, TimeCheck, EcsOnLoad, Position);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e != 0);
 
     int i = 0;
@@ -658,7 +658,7 @@ void World_control_fps(void) {
 
     ECS_SYSTEM(world, TimeCheck, EcsOnLoad, Position);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e != 0);
 
     double start, now = 0;
@@ -991,7 +991,7 @@ void World_no_time(void) {
 void World_is_entity_enabled(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     test_assert( ecs_has_id(world, e, EcsDisabled) == false);
 
@@ -1048,7 +1048,7 @@ void World_ensure_empty_root(void) {
 void World_register_alias_twice_same_entity(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     ecs_set_alias(world, e, "Foo");
     ecs_set_alias(world, e, "Foo");
@@ -1064,8 +1064,8 @@ void World_register_alias_twice_different_entity(void) {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t e = ecs_new_id(world);
-    ecs_entity_t f = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
+    ecs_entity_t f = ecs_new(world);
 
     ecs_set_alias(world, e, "Foo");
     
@@ -1129,9 +1129,9 @@ void World_delete_1000_empty_tables(void) {
     const ecs_world_info_t *info = ecs_get_world_info(world);
     int32_t old_empty_table_count = info->empty_table_count;
 
-    ecs_entity_t e = ecs_new(world, Tag);
+    ecs_entity_t e = ecs_new_w(world, Tag);
     for (int i = 0; i < 1000; i ++) {
-        ecs_add_id(world, e, ecs_new_id(world));
+        ecs_add_id(world, e, ecs_new(world));
     }
 
     ecs_run_aperiodic(world, 0);
@@ -1160,14 +1160,14 @@ void World_delete_empty_tables_for_id(void) {
     const ecs_world_info_t *info = ecs_get_world_info(world);
     int32_t old_empty_table_count = info->empty_table_count;
 
-    ecs_entity_t e1 = ecs_new(world, TagA);
+    ecs_entity_t e1 = ecs_new_w(world, TagA);
     for (int i = 0; i < 500; i ++) {
-        ecs_add_id(world, e1, ecs_new_id(world));
+        ecs_add_id(world, e1, ecs_new(world));
     }
 
-    ecs_entity_t e2 = ecs_new(world, TagB);
+    ecs_entity_t e2 = ecs_new_w(world, TagB);
     for (int i = 0; i < 500; i ++) {
-        ecs_add_id(world, e2, ecs_new_id(world));
+        ecs_add_id(world, e2, ecs_new(world));
     }
 
     ecs_run_aperiodic(world, 0);
@@ -1193,7 +1193,7 @@ void World_use_after_delete_empty(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_add(world, e, TagA);
     ecs_add(world, e, TagB);
 
@@ -1217,7 +1217,7 @@ void World_use_after_clear_empty(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_add(world, e, TagA);
     ecs_add(world, e, TagB);
 
@@ -1241,7 +1241,7 @@ void World_use_after_delete_empty_w_component(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_add(world, e, Position);
     ecs_add(world, e, Velocity);
 
@@ -1278,7 +1278,7 @@ void World_use_after_clear_empty_w_component(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_add(world, e, Position);
     ecs_add(world, e, Velocity);
 
@@ -1322,7 +1322,7 @@ void World_use_after_clear_empty_w_component_w_lifecycle(void) {
         .ctor = ecs_default_ctor 
     });
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_add(world, e, Position);
     ecs_add(world, e, Velocity);
 
@@ -1365,7 +1365,7 @@ void World_use_after_clear_unused(void) {
     deleted = ecs_delete_empty_tables(world, 0, 1, 0, 0, 0);
     test_assert(deleted == 0);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_add(world, e, TagA);
     ecs_add(world, e, TagB);
 
@@ -1442,7 +1442,7 @@ void World_get_type_info_after_reuse(void) {
 
     ecs_delete_with(world, ecs_id(Position));
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e != 0);
     test_assert( ecs_has(world, e, Position));
 

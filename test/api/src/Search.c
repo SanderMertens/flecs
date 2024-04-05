@@ -164,7 +164,7 @@ void Search_search_follow_relation_lvl_0(void) {
     ECS_TAG(world, TagB);
     ECS_TAG(world, Rel);
 
-    ecs_entity_t e_0 = ecs_new(world, TagA);
+    ecs_entity_t e_0 = ecs_new_w(world, TagA);
     ecs_add(world, e_0, TagB);
 
     ecs_table_t *t = ecs_get_table(world, e_0);
@@ -186,7 +186,7 @@ void Search_search_follow_relation_lvl_1(void) {
     ECS_TAG(world, TagB);
     ECS_TAG(world, Rel);
 
-    ecs_entity_t e_0 = ecs_new(world, TagA);
+    ecs_entity_t e_0 = ecs_new_w(world, TagA);
     ecs_add(world, e_0, TagB);
     ecs_entity_t e_1 = ecs_new_w_pair(world, Rel, e_0);
 
@@ -209,7 +209,7 @@ void Search_search_follow_relation_lvl_2(void) {
     ECS_TAG(world, TagB);
     ECS_TAG(world, Rel);
 
-    ecs_entity_t e_0 = ecs_new(world, TagA);
+    ecs_entity_t e_0 = ecs_new_w(world, TagA);
     ecs_add(world, e_0, TagB);
     ecs_entity_t e_1 = ecs_new_w_pair(world, Rel, e_0);
     ecs_entity_t e_2 = ecs_new_w_pair(world, Rel, e_1);
@@ -233,7 +233,7 @@ void Search_search_follow_relation_lvl_3(void) {
     ECS_TAG(world, TagB);
     ECS_TAG(world, Rel);
 
-    ecs_entity_t e_0 = ecs_new(world, TagA);
+    ecs_entity_t e_0 = ecs_new_w(world, TagA);
     ecs_add(world, e_0, TagB);
     ecs_entity_t e_1 = ecs_new_w_pair(world, Rel, e_0);
     ecs_entity_t e_2 = ecs_new_w_pair(world, Rel, e_1);
@@ -258,7 +258,7 @@ void Search_search_first_lvl_0(void) {
     ECS_TAG(world, TagB);
     ECS_TAG(world, Rel);
 
-    ecs_entity_t e_0 = ecs_new(world, TagA);
+    ecs_entity_t e_0 = ecs_new_w(world, TagA);
     ecs_add(world, e_0, TagB);
 
     ecs_table_t *t = ecs_get_table(world, e_0);
@@ -280,7 +280,7 @@ void Search_search_first_lvl_1(void) {
     ECS_TAG(world, TagB);
     ECS_TAG(world, Rel);
 
-    ecs_entity_t e_0 = ecs_new(world, TagA);
+    ecs_entity_t e_0 = ecs_new_w(world, TagA);
     ecs_entity_t e_1 = ecs_new_w_pair(world, Rel, e_0);
     ecs_add(world, e_0, TagB);
 
@@ -303,7 +303,7 @@ void Search_search_first_lvl_2(void) {
     ECS_TAG(world, TagB);
     ECS_TAG(world, Rel);
 
-    ecs_entity_t e_0 = ecs_new(world, TagA);
+    ecs_entity_t e_0 = ecs_new_w(world, TagA);
     ecs_entity_t e_1 = ecs_new_w_pair(world, Rel, e_0);
     ecs_entity_t e_2 = ecs_new_w_pair(world, Rel, e_1);
     ecs_add(world, e_0, TagB);
@@ -328,7 +328,7 @@ void Search_search_first_lvl_3(void) {
     ECS_TAG(world, TagB);
     ECS_TAG(world, Rel);
 
-    ecs_entity_t e_0 = ecs_new(world, TagA);
+    ecs_entity_t e_0 = ecs_new_w(world, TagA);
     ecs_entity_t e_1 = ecs_new_w_pair(world, Rel, e_0);
     ecs_entity_t e_2 = ecs_new_w_pair(world, Rel, e_1);
     ecs_entity_t e_3 = ecs_new_w_pair(world, Rel, e_2);
@@ -356,12 +356,12 @@ void Search_search_relation_wildcard(void) {
     ECS_TAG(world, TgtB);
     ECS_TAG(world, Rel);
 
-    ecs_entity_t b = ecs_new(world, Tag);
+    ecs_entity_t b = ecs_new_w(world, Tag);
     ecs_add(world, b, Tag);
     ecs_add_pair(world, b, Rel, TgtA);
     ecs_add_pair(world, b, Rel, TgtB);
     
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_add_pair(world, e, EcsChildOf, b);
 
     ecs_table_t *table = ecs_get_table(world, e);
@@ -384,10 +384,10 @@ void Search_search_relation_at_offset(void) {
     ECS_TAG(world, Tag);
     ECS_TAG(world, Rel);
 
-    ecs_entity_t b1 = ecs_new(world, Tag);
-    ecs_entity_t b2 = ecs_new(world, Tag);
+    ecs_entity_t b1 = ecs_new_w(world, Tag);
+    ecs_entity_t b2 = ecs_new_w(world, Tag);
     
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_add_pair(world, e, Rel, b1);
     ecs_add_pair(world, e, Rel, b2);
 
@@ -418,15 +418,15 @@ void Search_search_relation_inherit_from_parent(void) {
     ECS_TAG(world, TagB);
     ECS_TAG(world, TagC);
 
-    ecs_entity_t b = ecs_new_id(world);
+    ecs_entity_t b = ecs_new(world);
     ecs_add(world, b, TagA);
     ecs_add(world, b, TagB);
 
-    ecs_entity_t p = ecs_new_id(world);
+    ecs_entity_t p = ecs_new(world);
     ecs_add_pair(world, p, EcsIsA, b);
     ecs_add(world, p, TagC);
     
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_add(world, e, TagA);
     ecs_add(world, e, TagB);
     ecs_add(world, e, TagC);
@@ -462,12 +462,12 @@ void Search_search_relation_dont_inherit(void) {
     
     ecs_add_id(world, TagB, EcsDontInherit);
 
-    ecs_entity_t b = ecs_new_id(world);
+    ecs_entity_t b = ecs_new(world);
     ecs_add(world, b, TagA);
     ecs_add(world, b, TagB);
     ecs_add(world, b, TagC);
     
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_add(world, e, TagA);
     ecs_add(world, e, TagB);
     ecs_add(world, e, TagC);
@@ -512,15 +512,15 @@ void Search_search_relation_dont_inherit_from_parent(void) {
     
     ecs_add_id(world, TagB, EcsDontInherit);
 
-    ecs_entity_t b = ecs_new_id(world);
+    ecs_entity_t b = ecs_new(world);
     ecs_add(world, b, TagA);
     ecs_add(world, b, TagB);
 
-    ecs_entity_t p = ecs_new_id(world);
+    ecs_entity_t p = ecs_new(world);
     ecs_add_pair(world, p, EcsIsA, b);
     ecs_add(world, p, TagC);
     
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_add(world, e, TagA);
     ecs_add(world, e, TagB);
     ecs_add(world, e, TagC);
@@ -564,10 +564,10 @@ void Search_search_relation_exclusive(void) {
     
     ecs_add_id(world, Rel, EcsExclusive);
 
-    ecs_entity_t b = ecs_new_id(world);
+    ecs_entity_t b = ecs_new(world);
     ecs_add_pair(world, b, Rel, TagA);
     
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_add_pair(world, e, Rel, TagB);
     ecs_add_pair(world, e, EcsIsA, b);
 

@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
         }
     });
 
-    ecs_entity_t ent = ecs_new_id(ecs);
+    ecs_entity_t ent = ecs_new(ecs);
     ecs_set(ecs, ent, Line, {{10, 20}, {30, 40}});
 
     const Line *ptr = ecs_get(ecs, ent, Line);

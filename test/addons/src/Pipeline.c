@@ -269,7 +269,7 @@ void Pipeline_system_order_after_new_system_lower_id(void) {
 
     ECS_ENTITY(world, E, Position);
 
-    ecs_entity_t Sys = ecs_new_id(world);
+    ecs_entity_t Sys = ecs_new(world);
     ECS_SYSTEM(world, SysB, EcsOnUpdate, Position);
     ECS_SYSTEM(world, SysC, EcsOnUpdate, Position);
 
@@ -307,7 +307,7 @@ void Pipeline_system_order_after_new_system_inbetween_id(void) {
     ECS_ENTITY(world, E, Position);
 
     ECS_SYSTEM(world, SysA, EcsOnUpdate, Position);
-    ecs_entity_t Sys = ecs_new_id(world);
+    ecs_entity_t Sys = ecs_new(world);
     ECS_SYSTEM(world, SysC, EcsOnUpdate, Position);
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
@@ -345,7 +345,7 @@ void Pipeline_system_order_after_new_system_higher_id(void) {
 
     ECS_SYSTEM(world, SysA, EcsOnUpdate, Position);
     ECS_SYSTEM(world, SysB, EcsOnUpdate, Position);
-    ecs_entity_t Sys = ecs_new_id(world);
+    ecs_entity_t Sys = ecs_new(world);
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
 
@@ -737,7 +737,7 @@ void Pipeline_3_systems_3_types(void) {
 
     ecs_add_id(world, s3, Tag);
 
-    ecs_new(world, Position);
+    ecs_new_w(world, Position);
 
     ecs_progress(world, 1);  
 
@@ -820,7 +820,7 @@ void Pipeline_random_read_after_random_write_out_in(void) {
     ECS_SYSTEM(world, RandomWrite, EcsOnUpdate, Tag, [out] Position());
     ECS_SYSTEM(world, RandomRead, EcsOnUpdate, Tag, [in] Position());
     
-    ecs_entity_t e = ecs_new(world, Tag);
+    ecs_entity_t e = ecs_new_w(world, Tag);
 
     ecs_progress(world, 1);  
 
@@ -841,7 +841,7 @@ void Pipeline_random_read_after_random_write_inout_in(void) {
     ECS_SYSTEM(world, RandomWrite, EcsOnUpdate, Tag, [inout] Position());
     ECS_SYSTEM(world, RandomRead, EcsOnUpdate, Tag, [in] Position());
     
-    ecs_entity_t e = ecs_new(world, Tag);
+    ecs_entity_t e = ecs_new_w(world, Tag);
 
     ecs_progress(world, 1);  
 
@@ -862,7 +862,7 @@ void Pipeline_random_read_after_random_write_out_inout(void) {
     ECS_SYSTEM(world, RandomWrite, EcsOnUpdate, Tag, [out] Position());
     ECS_SYSTEM(world, RandomRead, EcsOnUpdate, Tag, [inout] Position());
     
-    ecs_entity_t e = ecs_new(world, Tag);
+    ecs_entity_t e = ecs_new_w(world, Tag);
 
     ecs_progress(world, 1);  
 
@@ -883,7 +883,7 @@ void Pipeline_random_read_after_random_write_inout_inout(void) {
     ECS_SYSTEM(world, RandomWrite, EcsOnUpdate, Tag, [inout] Position());
     ECS_SYSTEM(world, RandomRead, EcsOnUpdate, Tag, [inout] Position());
     
-    ecs_entity_t e = ecs_new(world, Tag);
+    ecs_entity_t e = ecs_new_w(world, Tag);
 
     ecs_progress(world, 1);  
 
@@ -904,7 +904,7 @@ void Pipeline_random_read_after_random_write_w_not_write(void) {
     ECS_SYSTEM(world, RandomWrite, EcsOnUpdate, Tag, [out] !Position);
     ECS_SYSTEM(world, RandomRead, EcsOnUpdate, Tag, [in] Position());
     
-    ecs_entity_t e = ecs_new(world, Tag);
+    ecs_entity_t e = ecs_new_w(world, Tag);
 
     ecs_progress(world, 1);  
 
@@ -925,7 +925,7 @@ void Pipeline_random_read_after_random_write_w_not_read(void) {
     ECS_SYSTEM(world, RandomWrite, EcsOnUpdate, Tag, [out] Position());
     ECS_SYSTEM(world, RandomRead_Not, EcsOnUpdate, Tag, [in] !Position);
     
-    ecs_entity_t e = ecs_new(world, Tag);
+    ecs_entity_t e = ecs_new_w(world, Tag);
 
     ecs_progress(world, 1);
 
@@ -946,7 +946,7 @@ void Pipeline_random_read_after_random_write_w_wildcard(void) {
     ECS_SYSTEM(world, RandomWrite, EcsOnUpdate, Tag, [out] Position());
     ECS_SYSTEM(world, RandomRead, EcsOnUpdate, Tag, [in] *());
     
-    ecs_entity_t e = ecs_new(world, Tag);
+    ecs_entity_t e = ecs_new_w(world, Tag);
 
     ecs_progress(world, 1);
 
@@ -968,7 +968,7 @@ void Pipeline_random_in_after_random_inout_after_random_out(void) {
     ECS_SYSTEM(world, RandomReadWrite, EcsOnUpdate, Tag, [inout] Position());
     ECS_SYSTEM(world, RandomReadAfterRW, EcsOnUpdate, Tag, [in] Position());
     
-    ecs_entity_t e = ecs_new(world, Tag);
+    ecs_entity_t e = ecs_new_w(world, Tag);
 
     ecs_progress(world, 1);
 
@@ -1074,7 +1074,7 @@ void Pipeline_stage_write_before_read(void) {
     test_assert(s2 != 0);
     test_assert(s3 != 0);
 
-    ecs_new(world, Position);
+    ecs_new_w(world, Position);
 
     ecs_progress(world, 1);  
 
@@ -1149,8 +1149,8 @@ void Pipeline_mixed_multithreaded_internal(bool task_threads) {
     test_assert(s5 != 0);
     test_assert(s6 != 0);
 
-    ecs_new(world, Position);
-    ecs_new(world, Position);
+    ecs_new_w(world, Position);
+    ecs_new_w(world, Position);
 
     if (task_threads)
     {
@@ -1249,8 +1249,8 @@ void Pipeline_mixed_staging(void) {
     test_assert(s5 != 0);
     test_assert(s6 != 0);
 
-    ecs_new(world, Position);
-    ecs_new(world, Position);
+    ecs_new_w(world, Position);
+    ecs_new_w(world, Position);
 
     ecs_progress(world, 1);
     test_int(sys_a_invoked, 1);
@@ -1369,8 +1369,8 @@ void Pipeline_single_threaded_pipeline_change(void) {
     sys_c_invoked = 1;
     sys_d_invoked = 1;
 
-    ecs_new(world, Tag);
-    ecs_new(world, Tag);
+    ecs_new_w(world, Tag);
+    ecs_new_w(world, Tag);
 
     test_assert(s1 != 0);
     test_assert(s2 != 0);
@@ -1463,8 +1463,8 @@ void Pipeline_multi_threaded_pipeline_change_internal(bool task_threads) {
     sys_c_invoked = 1;
     sys_d_invoked = 1;
 
-    ecs_new(world, Tag);
-    ecs_new(world, Tag);
+    ecs_new_w(world, Tag);
+    ecs_new_w(world, Tag);
 
     test_assert(s1 != 0);
     test_assert(s2 != 0);
@@ -1529,7 +1529,7 @@ void Pipeline_activate_after_add(void) {
         .callback = SysA
     });
 
-    ecs_new(world, Tag);
+    ecs_new_w(world, Tag);
 
     test_assert(s1 != 0);
     test_assert(s2 != 0);
@@ -1785,7 +1785,7 @@ void Pipeline_iter_from_world_in_singlethread_system_multitead_app_internal(bool
 
     ECS_COMPONENT(world, Position);
 
-    ecs_new(world, Position);
+    ecs_new_w(world, Position);
 
     ECS_SYSTEM(world, Sys_w_MainWorldIter, EcsOnUpdate, Position());
 
@@ -1876,7 +1876,7 @@ static int no_staging_create_velocity_invoked = 0;
 static void NoStagingSystemCreatePosition(ecs_iter_t *it) {
     ecs_defer_end(it->world);
     
-    create_position_e = ecs_new_id(it->world);
+    create_position_e = ecs_new(it->world);
     ecs_set(it->world, create_position_e, Position, {0, 0});
     
     ecs_query_t *f = ecs_query(it->world, {
@@ -1898,7 +1898,7 @@ static void NoStagingSystemCreatePosition(ecs_iter_t *it) {
 static void NoStagingSystemCreateVelocity(ecs_iter_t *it) {
     ecs_defer_end(it->world);
     
-    create_velocity_e = ecs_new_id(it->world);
+    create_velocity_e = ecs_new(it->world);
     ecs_set(it->world, create_velocity_e, Velocity, {0, 0});
     
     ecs_query_t *f = ecs_query(it->world, {
@@ -2226,7 +2226,7 @@ void Pipeline_multi_threaded_pipeline_change_w_only_singlethreaded_internal(bool
         ecs_set_threads(world, 2);
     }
 
-    ecs_entity_t e = ecs_new(world, Tag);
+    ecs_entity_t e = ecs_new_w(world, Tag);
 
     ecs_progress(world, 0);
 
@@ -2263,7 +2263,7 @@ void Pipeline_sync_after_not_out_for_out(void) {
     ECS_SYSTEM(world, AddId,       EcsOnUpdate, [out] !Position, Tag);
     ECS_SYSTEM(world, SetPosition, EcsOnUpdate, [out] Position);
 
-    ecs_entity_t e = ecs_new(world, Tag);
+    ecs_entity_t e = ecs_new_w(world, Tag);
 
     const ecs_world_info_t *wi = ecs_get_world_info(world);
 
@@ -2289,7 +2289,7 @@ void Pipeline_pair_wildcard_read_after_staged_write(void) {
     ECS_SYSTEM(world, AddId, EcsOnUpdate, [out] !(Rel, Position), Tag);
     ECS_SYSTEM(world, SysA,  EcsOnUpdate, [in]  (Rel, *));
 
-    ecs_new(world, Tag);
+    ecs_new_w(world, Tag);
 
     const ecs_world_info_t *wi = ecs_get_world_info(world);
 
@@ -2328,7 +2328,7 @@ void Pipeline_pair_read_after_staged_wildcard_write(void) {
     ECS_SYSTEM(world, AddPair, EcsOnUpdate, [out] !(Rel, *), Tag);
     ECS_SYSTEM(world, SysA,    EcsOnUpdate, [in]  (Rel, Position));
 
-    ecs_new(world, Tag);
+    ecs_new_w(world, Tag);
 
     const ecs_world_info_t *wi = ecs_get_world_info(world);
 
@@ -2353,7 +2353,7 @@ void Pipeline_no_sync_after_pair_wildcard_read_after_unmatching_staged_write(voi
     ECS_SYSTEM(world, AddPair, EcsOnUpdate, [out] !(Rel2, Position), Tag);
     ECS_SYSTEM(world, SysA,    EcsOnUpdate, [in] (Rel, *));
 
-    ecs_new(world, Tag);
+    ecs_new_w(world, Tag);
 
     const ecs_world_info_t *wi = ecs_get_world_info(world);
 
@@ -2378,7 +2378,7 @@ void Pipeline_no_merge_after_from_nothing_w_default_inout(void) {
     ECS_SYSTEM(world, SysA, EcsOnUpdate, Tag, Position());
     ECS_SYSTEM(world, SysB, EcsOnUpdate, Tag, Position);
 
-    ecs_new(world, Tag);
+    ecs_new_w(world, Tag);
     
     const ecs_world_info_t *wi = ecs_get_world_info(world);
 
@@ -2396,8 +2396,8 @@ static int sys_add_tag_invoked = 0;
 static int sys_no_readonly_invoked = 0;
 
 static void sys_add_tag(ecs_iter_t *it) {
-  ecs_new(it->world, TagA);
-  ecs_new(it->world, TagB);
+  ecs_new_w(it->world, TagA);
+  ecs_new_w(it->world, TagB);
   sys_add_tag_invoked ++;
   test_assert(sys_a_invoked == 0);
 }
@@ -2495,8 +2495,8 @@ void Pipeline_disable_phase(void) {
 void Pipeline_disable_parent(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p1 = ecs_new_id(world);
-    ecs_entity_t p2 = ecs_new_id(world);
+    ecs_entity_t p1 = ecs_new(world);
+    ecs_entity_t p2 = ecs_new(world);
 
     ecs_system(world, {
         .entity = ecs_entity(world, { .add = { ecs_childof(p1), ecs_dependson(EcsOnUpdate) }}),
@@ -2544,7 +2544,7 @@ static void NoReadonlyAddPosition(ecs_iter_t *it) {
     test_assert(it->world == it->real_world);
     no_staging_add_position_invoked ++;
 
-    ecs_entity_t e = ecs_new_id(it->world);
+    ecs_entity_t e = ecs_new(it->world);
     ecs_add(it->world, e, Position);
 }
 
@@ -2721,7 +2721,7 @@ void Pipeline_2_startup_systems_w_merge(void) {
 
     ECS_COMPONENT(world, Position);
     
-    ecs_new(world, Position);
+    ecs_new_w(world, Position);
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
 
@@ -2794,7 +2794,7 @@ void Pipeline_inactive_last_system_merge_count(void) {
 
     test_int(stats->merge_count_total, 0);
 
-    ecs_new(world, TagA);
+    ecs_new_w(world, TagA);
 
     ecs_progress(world, 0);
 
@@ -2861,8 +2861,8 @@ void Pipeline_inactive_middle_system_merge_count(void) {
 
     test_int(stats->merge_count_total, 0);
 
-    ecs_new(world, TagA);
-    ecs_new(world, TagD);
+    ecs_new_w(world, TagA);
+    ecs_new_w(world, TagD);
 
     ecs_progress(world, 0);
 
@@ -2916,8 +2916,8 @@ void Pipeline_last_no_readonly_system_merge_count(void) {
 
     test_int(stats->merge_count_total, 0);
 
-    ecs_new(world, TagA);
-    ecs_new(world, TagD);
+    ecs_new_w(world, TagA);
+    ecs_new_w(world, TagD);
 
     test_int(1, ecs_count(world, TagD));
 
@@ -3137,8 +3137,8 @@ void Pipeline_run_pipeline_multithreaded_internal(bool task_threads) {
     test_assert(s5 != 0);
     test_assert(s6 != 0);
 
-    ecs_new(world, Position);
-    ecs_new(world, Position);
+    ecs_new_w(world, Position);
+    ecs_new_w(world, Position);
 
     if (task_threads)
     {

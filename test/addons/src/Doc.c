@@ -3,7 +3,7 @@
 void Doc_get_set_name(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     ecs_doc_set_name(world, e, "Human readable name");
 
@@ -66,7 +66,7 @@ void Doc_get_set_link(void) {
 void Doc_set_name_nullptr(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     ecs_doc_set_name(world, e, "foo");
     test_assert( ecs_has_pair(world, e, ecs_id(EcsDocDescription), EcsName));
@@ -80,7 +80,7 @@ void Doc_set_name_nullptr(void) {
 void Doc_set_brief_nullptr(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     ecs_doc_set_brief(world, e, "foo");
     test_assert( ecs_has_pair(world, e, ecs_id(EcsDocDescription), EcsDocBrief));
@@ -94,7 +94,7 @@ void Doc_set_brief_nullptr(void) {
 void Doc_set_detail_nullptr(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     ecs_doc_set_detail(world, e, "foo");
     test_assert( ecs_has_pair(world, e, ecs_id(EcsDocDescription), EcsDocDetail));
@@ -108,7 +108,7 @@ void Doc_set_detail_nullptr(void) {
 void Doc_set_link_nullptr(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     ecs_doc_set_link(world, e, "foo");
     test_assert( ecs_has_pair(world, e, ecs_id(EcsDocDescription), EcsDocLink));
@@ -122,7 +122,7 @@ void Doc_set_link_nullptr(void) {
 void Doc_set_color_nullptr(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     ecs_doc_set_color(world, e, "foo");
     test_assert( ecs_has_pair(world, e, ecs_id(EcsDocDescription), EcsDocColor));

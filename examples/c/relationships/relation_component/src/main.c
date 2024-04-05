@@ -31,13 +31,13 @@ int main(int argc, char *argv[]) {
 
     // When one element of a pair is a component and the other element is a tag, 
     // the pair assumes the type of the component. 
-    ecs_entity_t e1 = ecs_new_id(ecs);
+    ecs_entity_t e1 = ecs_new(ecs);
     ecs_set_pair(ecs, e1, Requires, Gigawatts, {1.21});
     const Requires *r = ecs_get_pair(ecs, e1, Requires, Gigawatts);
     printf("requires: %.2f\n", r->amount);
 
     // The component can be either the first or second part of a pair:
-    ecs_entity_t e2 = ecs_new_id(ecs);
+    ecs_entity_t e2 = ecs_new(ecs);
     ecs_set_pair_second(ecs, e2, Gigawatts, Requires, {1.21});
     r = ecs_get_pair_second(ecs, e2, Gigawatts, Requires);
     printf("requires: %.2f\n", r->amount);
@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
 
     // If both parts of a pair are components, the pair assumes the type of
     // the first element:
-    ecs_entity_t e3 = ecs_new_id(ecs);
+    ecs_entity_t e3 = ecs_new(ecs);
     ecs_set_pair(ecs, e3, Expires, ecs_id(Position), {0.5});
     const Expires *e = ecs_get_pair(ecs, e3, Expires, ecs_id(Position));
     printf("expires: %.1f\n", e->timeout);

@@ -113,7 +113,7 @@ void Lookup_get_name_no_name(void) {
     ECS_COMPONENT(world, Position);
 
     /* Ensure this doesn't crash the lookup function */
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     const char *id = ecs_get_name(world, e);
     test_assert(id == NULL);
 
@@ -124,7 +124,7 @@ void Lookup_get_name_from_empty(void) {
     ecs_world_t *world = ecs_mini();
 
     /* Ensure this doesn't crash the lookup function */
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     const char *id = ecs_get_name(world, e);
     test_assert(id == NULL);
 
@@ -148,7 +148,7 @@ void Lookup_lookup_by_id(void) {
 void Lookup_lookup_recycled_by_id(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
 
     char buf[20];
@@ -159,7 +159,7 @@ void Lookup_lookup_recycled_by_id(void) {
     test_assert(l == e);
 
     ecs_delete(world, e);
-    ecs_entity_t r = ecs_new_id(world);
+    ecs_entity_t r = ecs_new(world);
     test_assert((uint32_t)r == e);
     test_assert(r != e);
 
@@ -242,7 +242,7 @@ void Lookup_lookup_path_w_spaces(void) {
 void Lookup_set_name_of_existing(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
     test_assert(ecs_get_name(world, e) == NULL);
 
@@ -397,7 +397,7 @@ void Lookup_lookup_path_wildcard(void) {
 void Lookup_lookup_path_this_from_scope(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t scope = ecs_new_id(world);
+    ecs_entity_t scope = ecs_new(world);
 
     ecs_entity_t lookup = ecs_lookup_path_w_sep(world, scope, ".", NULL, NULL, false);
     test_assert(lookup != 0);
@@ -409,7 +409,7 @@ void Lookup_lookup_path_this_from_scope(void) {
 void Lookup_lookup_path_wildcard_from_scope(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t scope = ecs_new_id(world);
+    ecs_entity_t scope = ecs_new(world);
 
     ecs_entity_t lookup = ecs_lookup_path_w_sep(world, scope, ".", NULL, NULL, false);
     test_assert(lookup != 0);

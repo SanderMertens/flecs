@@ -2074,7 +2074,7 @@ void ecs_dim(
     int32_t entity_count);
 
 /** Set a range for issuing new entity ids.
- * This function constrains the entity identifiers returned by ecs_new() to the
+ * This function constrains the entity identifiers returned by ecs_new_w() to the
  * specified range. This operation can be used to ensure that multiple processes
  * can run in the same simulation without requiring a central service that
  * coordinates issuing identifiers.
@@ -2255,7 +2255,7 @@ ecs_id_t ecs_make_pair(
  * @return The new entity id.
  */
 FLECS_API
-ecs_entity_t ecs_new_id(
+ecs_entity_t ecs_new(
     ecs_world_t *world);
 
 /** Create new low id.
@@ -2910,7 +2910,7 @@ ecs_entity_t ecs_set_id(
  * An entity is valid if it is not 0 and if it is alive.
  *
  * ecs_is_valid() will return true for ids that don't exist (alive or not alive). This
- * allows for using ids that have never been created by ecs_new() or similar. In
+ * allows for using ids that have never been created by ecs_new_w() or similar. In
  * this the function differs from ecs_is_alive(), which will return false for
  * entities that do not yet exist.
  *
@@ -2928,7 +2928,7 @@ bool ecs_is_valid(
 
 /** Test whether an entity is alive.
  * Entities are alive after they are created, and become not alive when they are
- * deleted. Operations that return alive ids are (amongst others) ecs_new_id(),
+ * deleted. Operations that return alive ids are (amongst others) ecs_new(),
  * ecs_new_low_id() and ecs_entity_init(). Ids can be made alive with the ecs_make_alive()
  * function.
  *
@@ -2937,12 +2937,12 @@ bool ecs_is_valid(
  * possible for the API to distinguish between the two. An example:
  *
  * @code
- * ecs_entity_t e1 = ecs_new_id(world);
+ * ecs_entity_t e1 = ecs_new(world);
  * ecs_is_alive(world, e1);             // true
  * ecs_delete(world, e1);
  * ecs_is_alive(world, e1);             // false
  *
- * ecs_entity_t e2 = ecs_new_id(world); // recycles e1
+ * ecs_entity_t e2 = ecs_new(world); // recycles e1
  * ecs_is_alive(world, e2);             // true
  * ecs_is_alive(world, e1);             // false
  * @endcode
@@ -3005,7 +3005,7 @@ ecs_entity_t ecs_get_alive(
 /** Ensure id is alive.
  * This operation ensures that the provided id is alive. This is useful in
  * scenarios where an application has an existing id that has not been created
- * with ecs_new() (such as a global constant or an id from a remote application).
+ * with ecs_new_w() (such as a global constant or an id from a remote application).
  *
  * When this operation is successful it guarantees that the provided id exists,
  * is valid and is alive.

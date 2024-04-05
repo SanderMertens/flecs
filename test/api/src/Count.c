@@ -34,8 +34,8 @@ void Count_count_disabled(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e1 = ecs_new(world, Position);
-    ecs_new(world, Position);
+    ecs_entity_t e1 = ecs_new_w(world, Position);
+    ecs_new_w(world, Position);
 
     test_int(ecs_count(world, Position), 2);
 
@@ -51,8 +51,8 @@ void Count_count_prefab(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e1 = ecs_new(world, Position);
-    ecs_new(world, Position);
+    ecs_entity_t e1 = ecs_new_w(world, Position);
+    ecs_new_w(world, Position);
 
     test_int(ecs_count(world, Position), 2);
 

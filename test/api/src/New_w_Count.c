@@ -545,7 +545,7 @@ void New_w_Count_add_after_bulk(void) {
         test_assert(ecs_has_id(world, e, Tag));
     }
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_add(world, e, Tag);
     test_assert(ecs_has(world, e, Tag));
 
@@ -568,7 +568,7 @@ void New_w_Count_add_after_bulk_w_component(void) {
         test_assert(ecs_has(world, e, Position));
     }
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_add(world, e, Position);
     test_assert(ecs_has(world, e, Position));
 
@@ -595,7 +595,7 @@ void New_w_Count_add_after_bulk_w_ctor(void) {
         test_assert(ecs_has(world, e, Position));
     }
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     ecs_add(world, e, Position);
     test_assert(ecs_has(world, e, Position));
@@ -606,10 +606,10 @@ void New_w_Count_add_after_bulk_w_ctor(void) {
 void New_w_Count_recycle_1_of_2(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t tag = ecs_new_id(world);
+    ecs_entity_t tag = ecs_new(world);
 
-    /* ecs_entity_t e0 = */ ecs_new_id(world);
-    ecs_entity_t e1 = ecs_new_id(world);
+    /* ecs_entity_t e0 = */ ecs_new(world);
+    ecs_entity_t e1 = ecs_new(world);
     ecs_delete(world, e1);
 
     const ecs_entity_t *ids = ecs_bulk_new_w_id(world, tag, 2);
@@ -624,10 +624,10 @@ void New_w_Count_recycle_1_of_2(void) {
 void New_w_Count_recycle_1_of_3(void) {
   ecs_world_t *world = ecs_init();
 
-  ecs_entity_t tag = ecs_new_id(world);
+  ecs_entity_t tag = ecs_new(world);
 
-  /* ecs_entity_t e0 = */ ecs_new_id(world);
-  ecs_entity_t e1 = ecs_new_id(world);
+  /* ecs_entity_t e0 = */ ecs_new(world);
+  ecs_entity_t e1 = ecs_new(world);
   ecs_delete(world, e1);
 
   const ecs_entity_t *ids = ecs_bulk_new_w_id(world, tag, 3);
@@ -643,10 +643,10 @@ void New_w_Count_recycle_1_of_3(void) {
 void New_w_Count_recycle_2_of_3(void) {
   ecs_world_t *world = ecs_init();
 
-  ecs_entity_t tag = ecs_new_id(world);
+  ecs_entity_t tag = ecs_new(world);
 
-  ecs_entity_t e0 = ecs_new_id(world);
-  ecs_entity_t e1 = ecs_new_id(world);
+  ecs_entity_t e0 = ecs_new(world);
+  ecs_entity_t e1 = ecs_new(world);
   ecs_delete(world, e1);
   ecs_delete(world, e0);
 

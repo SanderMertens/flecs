@@ -178,7 +178,7 @@ An entity is a unique thing in the world, and is represented by a 64 bit id. Ent
 <li><b class="tab-title">C</b>
 
 ```c
-ecs_entity_t e = ecs_new_id(world);
+ecs_entity_t e = ecs_new(world);
 ecs_is_alive(world, e); // true!
 
 ecs_delete(world, e);
@@ -278,7 +278,7 @@ A component is a type of which instances can be added and removed to entities. E
 ECS_COMPONENT(world, Position);
 ECS_COMPONENT(world, Velocity);
 
-ecs_entity_t e = ecs_new_id(world);
+ecs_entity_t e = ecs_new(world);
 
 // Add a component. This creates the component in the ECS storage, but does not
 // assign it with a value.
@@ -427,10 +427,10 @@ A tag is a component that does not have any data. In Flecs tags can be either em
 
 ```c
 // Create Enemy tag
-ecs_entity_t Enemy = ecs_new_id(world);
+ecs_entity_t Enemy = ecs_new(world);
 
 // Create entity, add Enemy tag
-ecs_entity_t e = ecs_new_id(world);
+ecs_entity_t e = ecs_new(world);
 
 ecs_add_id(world, e, Enemy);
 ecs_has_id(world, e, Enemy); // true!
@@ -504,11 +504,11 @@ A pair is a combination of two entity ids. Pairs can be used to store entity rel
 
 ```c
 // Create Likes relationship
-ecs_entity_t Likes = ecs_new_id(world);
+ecs_entity_t Likes = ecs_new(world);
 
 // Create a small graph with two entities that like each other
-ecs_entity_t Bob = ecs_new_id(world);
-ecs_entity_t Alice = ecs_new_id(world);
+ecs_entity_t Bob = ecs_new(world);
+ecs_entity_t Alice = ecs_new(world);
 
 ecs_add_pair(world, Bob, Likes, Alice); // Bob likes Alice
 ecs_add_pair(world, Alice, Likes, Bob); // Alice likes Bob
@@ -696,7 +696,7 @@ Flecs has builtin support for hierarchies with the builtin `EcsChildOf` (or `fle
 <li><b class="tab-title">C</b>
 
 ```c
-ecs_entity_t parent = ecs_new_id(world);
+ecs_entity_t parent = ecs_new(world);
 
 // ecs_new_w_pair is the same as ecs_new_id + ecs_add_pair
 ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
@@ -908,7 +908,7 @@ The type (often referred to as "archetype") is the list of ids an entity has. Ty
 ECS_COMPONENT(world, Position);
 ECS_COMPONENT(world, Velocity);
 
-ecs_entity_t e = ecs_new_id(world);
+ecs_entity_t e = ecs_new(world);
 ecs_add(world, e, Position);
 ecs_add(world, e, Velocity);
 
@@ -1518,7 +1518,7 @@ ecs_observer(world, {
 
 // Callback code is same as system
 
-ecs_entity_t e = ecs_new_id(world);    // Doesn't invoke the observer
+ecs_entity_t e = ecs_new(world);    // Doesn't invoke the observer
 ecs_set(world, e, Position, {10, 20}); // Doesn't invoke the observer
 ecs_set(world, e, Velocity, {1, 2});   // Invokes the observer
 ecs_set(world, e, Position, {20, 40}); // Invokes the observer

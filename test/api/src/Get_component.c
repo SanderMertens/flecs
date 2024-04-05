@@ -7,7 +7,7 @@ void Get_component_setup(void) {
 void Get_component_get_empty(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
 
     test_assert(ecs_get_type(world, e) == NULL);
@@ -20,7 +20,7 @@ void Get_component_get_1_from_1(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e != 0);
 
     test_assert(ecs_get_type(world, e)->array[0] == ecs_id(Position));
@@ -86,7 +86,7 @@ void Get_component_get_1_from_2_in_progress_from_main_stage(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e != 0);
 
     ECS_SYSTEM(world, Test_main_stage, EcsOnUpdate, Position);
@@ -117,7 +117,7 @@ void Get_component_get_1_from_2_add_in_progress(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e != 0);
 
     ECS_SYSTEM(world, Add_in_progress, EcsOnUpdate, Position, Velocity());
@@ -147,7 +147,7 @@ void Get_component_get_both_from_2_add_in_progress(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e != 0);
 
     ECS_SYSTEM(world, Add_in_progress_test_main, EcsOnUpdate, Position, Velocity());
@@ -180,7 +180,7 @@ void Get_component_get_both_from_2_add_remove_in_progress(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e != 0);
 
     ECS_SYSTEM(world, Add_remove_in_progress_test_main, EcsOnUpdate, Position, Velocity());
@@ -231,7 +231,7 @@ void Get_component_get_tag(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e = ecs_new(world, Tag);
+    ecs_entity_t e = ecs_new_w(world, Tag);
     test_assert(e != 0);
 
     test_expect_abort();
@@ -244,7 +244,7 @@ void Get_component_get_pair_tag(void) {
     install_test_abort();
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t parent = ecs_new(world);
     ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, parent);
     test_assert(e != 0);
 

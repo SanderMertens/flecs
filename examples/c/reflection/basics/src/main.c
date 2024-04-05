@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
     });
 
     // Create entity with Position as usual
-    ecs_entity_t ent = ecs_new_id(ecs);
+    ecs_entity_t ent = ecs_new(ecs);
     ecs_set(ecs, ent, Position, {10, 20});
 
     // Convert position component to flecs expression string

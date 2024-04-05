@@ -1261,7 +1261,7 @@ void Alerts_severity_filter_w_var(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
-    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t parent = ecs_new(world);
 
     ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_add_pair(world, e1, EcsChildOf, parent);
@@ -1372,8 +1372,8 @@ void Alerts_severity_filter_w_var_change_var(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
-    ecs_entity_t parent_1 = ecs_new_id(world);
-    ecs_entity_t parent_2 = ecs_new_id(world);
+    ecs_entity_t parent_1 = ecs_new(world);
+    ecs_entity_t parent_2 = ecs_new(world);
     ecs_add(world, parent_2, Mass);
 
     ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });

@@ -454,7 +454,7 @@ ecs_entity_t flecs_json_new_id(
     if (ser_id < FLECS_HI_COMPONENT_ID) {
         return ecs_new_low_id(world);
     } else {
-        return ecs_new_id(world);
+        return ecs_new(world);
     }
 }
 

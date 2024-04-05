@@ -27,9 +27,9 @@ Make sure to check out the code examples in the repository:
 The following code is a simple example that uses relationships:
 
 ```c
-ecs_entity_t Likes = ecs_new_id(world);
-ecs_entity_t Bob = ecs_new_id(world);
-ecs_entity_t Alice = ecs_new_id(world);
+ecs_entity_t Likes = ecs_new(world);
+ecs_entity_t Bob = ecs_new(world);
+ecs_entity_t Alice = ecs_new(world);
 
 // Bob Likes Alice
 ecs_add_pair(world, Bob, Likes, Alice);
@@ -54,10 +54,10 @@ In this example, we refer to `Bob` as the "source", `Likes` as the "relationship
 The same relationship can be added multiple times to an entity, as long as its target is different:
 
 ```c
-ecs_entity_t Bob = ecs_new_id(world);
-ecs_entity_t Eats = ecs_new_id(world);
-ecs_entity_t Apples = ecs_new_id(world);
-ecs_entity_t Pears = ecs_new_id(world);
+ecs_entity_t Bob = ecs_new(world);
+ecs_entity_t Eats = ecs_new(world);
+ecs_entity_t Apples = ecs_new(world);
+ecs_entity_t Pears = ecs_new(world);
 
 ecs_add_pair(world, Bob, Eats, Apples);
 ecs_add_pair(world, Bob, Eats, Pears);
@@ -280,12 +280,12 @@ ECS_COMPONENT(world, Position);
 ECS_COMPONENT(world, Eats);
 
 // Tags
-ecs_entity_t Likes = ecs_new_id(world);
-ecs_entity_t Begin = ecs_new_id(world);
-ecs_entity_t End = ecs_new_id(world);
-ecs_entity_t Apples = ecs_new_id(world);
+ecs_entity_t Likes = ecs_new(world);
+ecs_entity_t Begin = ecs_new(world);
+ecs_entity_t End = ecs_new(world);
+ecs_entity_t Apples = ecs_new(world);
 
-ecs_entity_t e = ecs_new_id(world);
+ecs_entity_t e = ecs_new(world);
 
 // Both Likes and Apples are tags, so (Likes, Apples) is a tag
 ecs_add_pair(world, e, Likes, Apples);
@@ -344,11 +344,11 @@ typedef struct {
   float y;
 } Position;
 
-ecs_entity_t e = ecs_new_id(world);
+ecs_entity_t e = ecs_new(world);
 
-ecs_entity_t first = ecs_new_id(world);
-ecs_entity_t second = ecs_new_id(world);
-ecs_entity_t third = ecs_new_id(world);
+ecs_entity_t first = ecs_new(world);
+ecs_entity_t second = ecs_new(world);
+ecs_entity_t third = ecs_new(world);
 
 // Add component position 3 times, for 3 different objects
 ecs_add_pair(world, e, Position, first, {1, 2});
@@ -444,7 +444,7 @@ ecs_entity_t Eats = ecs_entity(world, { .name = "Eats" });
 ecs_entity_t Apples = ecs_entity(world, { .name = "Apples" });
 ecs_entity_t Pears = ecs_entity(world, { .name = "Pears" });
 
-ecs_entity_t Bob = ecs_new_id(world);
+ecs_entity_t Bob = ecs_new(world);
 ecs_add_pair(world, Bob, Eats, Apples);
 ecs_add_pair(world, Bob, Eats, Pears);
 
@@ -488,8 +488,8 @@ Flecs comes with a few builtin relationships that have special meaning within th
 The `IsA` relationship is a builtin relationship that allows applications to express that one entity is equivalent to another. This relationship is at the core of component sharing and plays a large role in queries. The `IsA` relationship can be used like any other relationship, as is shown here:
 
 ```c
-ecs_entity_t Apple = ecs_new_id(world);
-ecs_entity_t Fruit = ecs_new_id(world);
+ecs_entity_t Apple = ecs_new(world);
+ecs_entity_t Fruit = ecs_new(world);
 ecs_add_pair(world, Apple, EcsIsA, Fruit);
 ```
 ```cpp
@@ -509,7 +509,7 @@ This indicates to Flecs that an `Apple` is equivalent to a `Fruit` and should be
 We can also add `IsA` relationships to `Apple`:
 
 ```c
-ecs_entity_t GrannySmith = ecs_new_id(world);
+ecs_entity_t GrannySmith = ecs_new(world);
 ecs_add_pair(world, GrannySmith, EcsIsA, Apple);
 ```
 ```cpp
@@ -523,11 +523,11 @@ This specifies that `GrannySmith` is a subset of `Apple`. A key thing to note he
 An entity with an `IsA` relationship to another entity is equivalent to the other entity. So far the examples showed how querying for an `IsA` relationship will find the subsets of the thing that was queried for. In order for entities to be treated as true equivalents though, everything the superset contains (its components, tags, relationships) must also be found on the subsets. Consider:
 
 ```c
-ecs_entity_t Spaceship = ecs_new_id(world);
+ecs_entity_t Spaceship = ecs_new(world);
 ecs_set(world, Spaceship, MaxSpeed, {100});
 ecs_set(world, SpaceShip, Defense, {50});
 
-ecs_entity_t Frigate = ecs_new_id(world);
+ecs_entity_t Frigate = ecs_new(world);
 ecs_add(world, Frigate, EcsIsA, Spaceship);
 ecs_set(world, Frigate, Defense, {100});
 ```
@@ -570,7 +570,7 @@ v->value == 75; // true
 The ability to share components is also applied transitively, so `Frigate` could be specialized further into a `FastFrigate`:
 
 ```c
-ecs_entity_t FastFrigate = ecs_new_id(world);
+ecs_entity_t FastFrigate = ecs_new(world);
 ecs_add(world, FastFrigate, EcsIsA, Frigate);
 ecs_set(world, FastFrigate, MaxSpeed, {200});
 
@@ -602,8 +602,8 @@ This ability to inherit and override components is one of the key enabling featu
 The `ChildOf` relationship is the builtin relationship that allows for the creation of entity hierarchies. The following example shows how hierarchies can be created with `ChildOf`:
 
 ```c
-ecs_entity_t Spaceship = ecs_new_id(world);
-ecs_entity_t Cockpit = ecs_new_id(world);
+ecs_entity_t Spaceship = ecs_new(world);
+ecs_entity_t Cockpit = ecs_new(world);
 
 ecs_add_pair(world, Cockpit, EcsChildOf, Spaceship);
 ```
@@ -656,13 +656,13 @@ child == parent.lookup("Child"); // true
 In some scenarios a number of entities all need to be created with the same parent. Rather than adding the relationship to each entity, it is possible to configure the parent as a scope, which ensures that all entities created afterwards are created in the scope. The following example shows how:
 
 ```c
-ecs_entity_t parent = ecs_new_id(world);
+ecs_entity_t parent = ecs_new(world);
 ecs_entity_t prev = ecs_set_scope(world, parent);
 
 // Note that we're not using the ecs_new_id function for the children. This
 // function only generates a new id, and does not add the scope to the entity.
-ecs_entity_t child_a = ecs_new_id(world);
-ecs_entity_t child_b = ecs_new_id(world);
+ecs_entity_t child_a = ecs_new(world);
+ecs_entity_t child_b = ecs_new(world);
 
 // Restore the previous scope
 ecs_set_scope(world, prev);
@@ -808,7 +808,7 @@ world.component<Archer>().destruct();
 ECS_TAG(world, ChildOf);
 ecs_add_pair(world, ChildOf, EcsOnDeleteTarget, EcsDelete);
 
-ecs_entity_t p = ecs_new_id(world);
+ecs_entity_t p = ecs_new(world);
 ecs_entity_t e = ecs_new_w_pair(world, ChildOf, p);
 
 // This will delete both p and e
@@ -889,7 +889,7 @@ typedef struct {
 ECS_TAG(world, Serializable);
 ECS_COMPONENT(world, Position);
 
-ecs_entity_t e = ecs_new_id(world);
+ecs_entity_t e = ecs_new(world);
 ecs_set(world, e, Position, {10, 20});
 ecs_add_pair(world, e, Serializable, ecs_id(Position));
 
@@ -958,10 +958,10 @@ The `Tag` property is only interpreted when it is added to the relationship part
 Entities can be annotated with the `Final` property, which prevents using them with `IsA` relationship. This is similar to the concept of a final class as something that cannot be extended. The following example shows how use `Final`:
 
 ```c
-ecs_entity_t e = ecs_new_id(world);
+ecs_entity_t e = ecs_new(world);
 ecs_add_id(world, e, EcsFinal);
 
-ecs_entity_t i = ecs_new_id(world);
+ecs_entity_t i = ecs_new(world);
 ecs_add_pair(world, e, i, EcsIsA, e); // not allowed
 ```
 ```cpp
@@ -978,11 +978,11 @@ Queries may use the final property to optimize, as they do not have to explore s
 The `DontInherit` property prevents inheriting a component from a base entity (`IsA` target). Consider the following example:
 
 ```c
-ecs_entity_t TagA = ecs_new_id(world);
-ecs_entity_t TagB = ecs_new_id(world);
+ecs_entity_t TagA = ecs_new(world);
+ecs_entity_t TagB = ecs_new(world);
 ecs_add_id(world, TagB, EcsDontInherit);
 
-ecs_entity_t base = ecs_new_id(world);
+ecs_entity_t base = ecs_new(world);
 ecs_add_id(world, base, TagA);
 ecs_add_id(world, base, TagB);
 
@@ -1016,7 +1016,7 @@ ECS_COMPONENT(world, Velocity);
 
 ecs_add_id(world, ecs_id(Position), EcsAlwaysOverride);
 
-ecs_entity_t base = ecs_new_id(world);
+ecs_entity_t base = ecs_new(world);
 ecs_set(world, base, Position, {10, 20});
 ecs_set(world, base, Velocity, {1, 2});
 
@@ -1064,10 +1064,10 @@ In this example `IsA` is the relationship and `Square`, `Rectangle` and `Shape` 
 When relationships in Flecs are marked as transitive, queries can follow the transitive relationship to see if an entity matches. Consider this example dataset:
 
 ```c
-ecs_entity_t LocatedIn = ecs_new_id(world);
-ecs_entity_t Manhattan = ecs_new_id(world);
-ecs_entity_t NewYork = ecs_new_id(world);
-ecs_entity_t USA = ecs_new_id(world);
+ecs_entity_t LocatedIn = ecs_new(world);
+ecs_entity_t Manhattan = ecs_new(world);
+ecs_entity_t NewYork = ecs_new(world);
+ecs_entity_t USA = ecs_new(world);
 
 ecs_add_pair(world, Manhattan, LocatedIn, NewYork);
 ecs_add_pair(world, NewYork, LocatedIn, USA);
@@ -1151,7 +1151,7 @@ e.child_of(parent_b); // replaces (ChildOf, parent_a)
 
 To create a custom exclusive relationship, add the `Exclusive` property:
 ```c
-ecs_entity_t MarriedTo = ecs_new_id(world);
+ecs_entity_t MarriedTo = ecs_new(world);
 ecs_add_id(world, MarriedTo, EcsExclusive);
 ```
 ```cpp
@@ -1165,13 +1165,13 @@ The `Union` is similar to `Exclusive` in that it enforces that an entity can hav
 The API for using the `Union` property is similar to regular relationships, as this example shows:
 
 ```c
-ecs_entity_t Movement = ecs_new_id(world);
+ecs_entity_t Movement = ecs_new(world);
 ecs_add_id(world, Movement, EcsUnion);
 
-ecs_entity_t Walking = ecs_new_id(world);
-ecs_entity_t Running = ecs_new_id(world);
+ecs_entity_t Walking = ecs_new(world);
+ecs_entity_t Running = ecs_new(world);
 
-ecs_entity_t e = ecs_new_id(world);
+ecs_entity_t e = ecs_new(world);
 ecs_add_pair(world, e, Movement, Running);
 ecs_add_pair(world, e, Movement, Walking); // replaces (Movement, Running)
 ```
@@ -1199,8 +1199,8 @@ The symmetric property is useful for relationships that do not make sense unless
 
 ```c
 ecs_entity_t MarriedTo = ecs_new_w_id(world, EcsSymmetric);
-ecs_entity_t Bob = ecs_new_id(world);
-ecs_entity_t Alice = ecs_new_id(world);
+ecs_entity_t Bob = ecs_new(world);
+ecs_entity_t Alice = ecs_new(world);
 ecs_add_pair(world, Bob, MarriedTo, Alice); // Also adds (MarriedTo, Bob) to Alice
 ```
 ```cpp
@@ -1214,7 +1214,7 @@ Bob.add(MarriedTo, Alice); // Also adds (MarriedTo, Bob) to Alice
 The `With` relationship can be added to components to indicate that it must always come together with another component. The following example shows how `With` can be used with regular components/tags:
 
 ```c
-ecs_entity_t Responsibility = ecs_new_id(world);
+ecs_entity_t Responsibility = ecs_new(world);
 ecs_entity_t Power = ecs_new_w_pair(world, EcsWith, Responsibility);
 
 // Create new entity that has both Power and Responsibility
@@ -1231,9 +1231,9 @@ auto e = world.entity().add(Power);
 When the `With` relationship is added to a relationship, the additional id added to the entity will be a relationship pair as well, with the same target as the original relationship:
 
 ```c
-ecs_entity_t Likes = ecs_new_id(world);
+ecs_entity_t Likes = ecs_new(world);
 ecs_entity_t Loves = ecs_new_w_pair(world, EcsWith, Likes);
-ecs_entity_t Pears = ecs_new_id(world);
+ecs_entity_t Pears = ecs_new(world);
 
 // Create new entity with both (Loves, Pears) and (Likes, Pears)
 ecs_entity_t e = ecs_new_w_pair(world, Loves, Pears);
@@ -1253,13 +1253,13 @@ The `OneOf` property enforces that the target of the relationship is a child of 
 The following example shows how to constrain the relationship target to a child of the relationship:
 
 ```c
-ecs_entity_t Food = ecs_new_id(world);
+ecs_entity_t Food = ecs_new(world);
 
 // Enforce that target of relationship is child of Food
 ecs_add_id(world, Food, EcsOneOf);
 
 ecs_entity_t Apples = ecs_new_w_pair(world, EcsChildOf, Food);
-ecs_entity_t Fork = ecs_new_id(world);
+ecs_entity_t Fork = ecs_new(world);
 
 // This is ok, Apples is a child of Food
 ecs_entity_t a = ecs_new_w_pair(world, Food, Apples);
@@ -1283,14 +1283,14 @@ auto b = world.entity().add(Food, Fork);
 The following example shows how `OneOf` can be used to enforce that the relationship target is the child of an entity other than the relationship:
 
 ```c
-ecs_entity_t Food = ecs_new_id(world);
-ecs_entity_t Eats = ecs_new_id(world);
+ecs_entity_t Food = ecs_new(world);
+ecs_entity_t Eats = ecs_new(world);
 
 // Enforce that target of relationship is child of Food
 ecs_add_pair(world, Eats, EcsOneOf, Food);
 
 ecs_entity_t Apples = ecs_new_w_pair(world, EcsChildOf, Food);
-ecs_entity_t Fork = ecs_new_id(world);
+ecs_entity_t Fork = ecs_new(world);
 
 // This is ok, Apples is a child of Food
 ecs_entity_t a = ecs_new_w_pair(world, Eats, Apples);
@@ -1333,11 +1333,11 @@ Because of this, adding/removing relationships to entities has the same performa
 ECS_COMPONENT(world, Position);
 
 // Tags
-ecs_entity_t Likes = ecs_new_id(world);
-ecs_entity_t Apples = ecs_new_id(world);
-ecs_entity_t Npc = ecs_new_id(world);
+ecs_entity_t Likes = ecs_new(world);
+ecs_entity_t Apples = ecs_new(world);
+ecs_entity_t Npc = ecs_new(world);
 
-ecs_entity_t e = ecs_new_id(world);
+ecs_entity_t e = ecs_new(world);
 
 // The ecs_add_id function can be used to add one id to another
 ecs_add_id(world, e, Npc);

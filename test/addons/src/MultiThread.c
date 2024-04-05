@@ -48,7 +48,7 @@ void MultiThread_2_thread_10_entity(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 
@@ -76,7 +76,7 @@ void MultiThread_2_thread_1_entity(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 
@@ -103,7 +103,7 @@ void MultiThread_2_thread_2_entity(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 
@@ -130,7 +130,7 @@ void MultiThread_2_thread_5_entity(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 
@@ -158,7 +158,7 @@ void MultiThread_3_thread_10_entity(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 
@@ -186,7 +186,7 @@ void MultiThread_3_thread_1_entity(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 
@@ -214,7 +214,7 @@ void MultiThread_3_thread_2_entity(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 
@@ -242,7 +242,7 @@ void MultiThread_3_thread_5_entity(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 
@@ -270,7 +270,7 @@ void MultiThread_4_thread_10_entity(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 
@@ -298,7 +298,7 @@ void MultiThread_4_thread_1_entity(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 
@@ -326,7 +326,7 @@ void MultiThread_4_thread_2_entity(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 
@@ -354,7 +354,7 @@ void MultiThread_4_thread_5_entity(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 
@@ -382,7 +382,7 @@ void MultiThread_5_thread_10_entity(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 
@@ -410,7 +410,7 @@ void MultiThread_5_thread_1_entity(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 
@@ -438,7 +438,7 @@ void MultiThread_5_thread_2_entity(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 
@@ -466,7 +466,7 @@ void MultiThread_5_thread_5_entity(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 
@@ -494,7 +494,7 @@ void MultiThread_6_thread_10_entity(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 
@@ -522,7 +522,7 @@ void MultiThread_6_thread_1_entity(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 
@@ -550,7 +550,7 @@ void MultiThread_6_thread_2_entity(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 
@@ -577,7 +577,7 @@ void MultiThread_6_thread_5_entity(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 
@@ -616,7 +616,7 @@ void MultiThread_2_thread_1_entity_instanced(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 
@@ -655,7 +655,7 @@ void MultiThread_2_thread_5_entity_instanced(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 
@@ -694,7 +694,7 @@ void MultiThread_2_thread_10_entity_instanced(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 

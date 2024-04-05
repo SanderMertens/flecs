@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
         if (p == 0) {
             player = ecs_entity(ecs, { .name = "MyPlayer" });
         } else {
-            player = ecs_new_id(ecs);
+            player = ecs_new(ecs);
         }
 
         // Add player tag so we can query for all players if we want to
@@ -50,13 +50,13 @@ int main(int argc, char *argv[]) {
             ecs_add(ecs, platoon, Platoon);
 
             // Add warriors, wizards and marksmen to the platoon
-            ecs_entity_t warrior = ecs_new(ecs, Warrior);
+            ecs_entity_t warrior = ecs_new_w(ecs, Warrior);
             ecs_add_pair(ecs, warrior, Platoon, platoon);
 
-            ecs_entity_t marksman = ecs_new(ecs, Marksman);
+            ecs_entity_t marksman = ecs_new_w(ecs, Marksman);
             ecs_add_pair(ecs, marksman, Platoon, platoon);
 
-            ecs_entity_t wizard = ecs_new(ecs, Wizard);
+            ecs_entity_t wizard = ecs_new_w(ecs, Wizard);
             ecs_add_pair(ecs, wizard, Platoon, platoon);
         }
     }

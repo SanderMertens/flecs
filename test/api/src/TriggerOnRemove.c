@@ -52,7 +52,7 @@ void TriggerOnRemove_remove(void) {
     Probe ctx = {0};
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e != 0);
 
     test_int(ctx.count, 0);
@@ -80,7 +80,7 @@ void TriggerOnRemove_remove_no_match(void) {
     Probe ctx = {0};
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e != 0);
 
     test_int(ctx.count, 0);
@@ -101,7 +101,7 @@ void TriggerOnRemove_delete(void) {
     Probe ctx = {0};
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e != 0);
 
     test_int(ctx.count, 0);
@@ -129,7 +129,7 @@ void TriggerOnRemove_delete_no_match(void) {
     Probe ctx = {0};
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_new(world, Velocity);
+    ecs_entity_t e = ecs_new_w(world, Velocity);
     test_assert(e != 0);
 
     test_int(ctx.count, 0);
@@ -256,7 +256,7 @@ void TriggerOnRemove_valid_entity_after_delete(void) {
     ECS_COMPONENT(world, DummyComp);
     ECS_OBSERVER(world, RemoveDummyComp, EcsOnRemove, DummyComp);
 
-    ecs_entity_t e = ecs_new(world, DummyComp);
+    ecs_entity_t e = ecs_new_w(world, DummyComp);
     test_assert(e != 0);
 
     ecs_delete(world, e);
@@ -279,7 +279,7 @@ void TriggerOnRemove_remove_after_delete_trigger(void) {
         .callback = Dummy
     });
 
-    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e1 = ecs_new_w(world, Position);
     test_assert(e1 != 0);
     test_assert(ecs_has(world, e1, Position));
     test_int(dummy_called, 0);
@@ -292,7 +292,7 @@ void TriggerOnRemove_remove_after_delete_trigger(void) {
     ecs_delete(world, trigger);
     test_int(dummy_called, 0);
 
-    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new_w(world, Position);
     test_assert(e2 != 0);
     test_assert(ecs_has(world, e2, Position));
     test_int(dummy_called, 0);
@@ -314,7 +314,7 @@ void TriggerOnRemove_remove_after_delete_wildcard_id_trigger(void) {
         .callback = Dummy
     });
 
-    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e1 = ecs_new_w(world, Position);
     test_assert(e1 != 0);
     test_assert(ecs_has(world, e1, Position));
     test_int(dummy_called, 0);
@@ -330,7 +330,7 @@ void TriggerOnRemove_remove_after_delete_wildcard_id_trigger(void) {
 
     dummy_called = 0;
 
-    ecs_entity_t e2 = ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new_w(world, Position);
     test_assert(e2 != 0);
     test_assert(ecs_has(world, e2, Position));
     test_int(dummy_called, 0);
@@ -364,7 +364,7 @@ void TriggerOnRemove_has_removed_tag_trigger_1_tag(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e = ecs_new(world, Tag);
+    ecs_entity_t e = ecs_new_w(world, Tag);
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Tag));
 
@@ -393,7 +393,7 @@ void TriggerOnRemove_has_removed_tag_trigger_2_tags(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    ecs_entity_t e = ecs_new(world, TagA);
+    ecs_entity_t e = ecs_new_w(world, TagA);
     test_assert(e != 0);
     test_assert(ecs_has(world, e, TagA));
 

@@ -79,7 +79,7 @@ int main(int argc, char *argv[]) {
 
   ECS_SYSTEM(ecs, Move, EcsOnUpdate, Position, Velocity);
 
-  ecs_entity_t e = ecs_new_id(ecs);
+  ecs_entity_t e = ecs_new(ecs);
   ecs_set(ecs, e, Position, {10, 20});
   ecs_set(ecs, e, Velocity, {1, 2});
 

@@ -59,7 +59,7 @@ void Hierarchies_get_object_from_0(void) {
 void Hierarchies_delete_children(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t parent = ecs_new(world);
     test_assert(parent != 0);
 
     ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
@@ -632,7 +632,7 @@ void Hierarchies_scope_component(void) {
 void Hierarchies_scope_component_no_macro(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t Scope = ecs_new_id(world);
+    ecs_entity_t Scope = ecs_new(world);
 
     ecs_entity_t old_scope = ecs_set_scope(world, Scope);
     test_assert(old_scope == 0);
@@ -767,7 +767,7 @@ void Hierarchies_new_from_path_existing_depth_2(void) {
 void Hierarchies_add_path_depth_0(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t id = ecs_new_id(world);
+    ecs_entity_t id = ecs_new(world);
     test_assert(id != 0);
 
     ecs_entity_t e = ecs_add_path(world, id, 0, "foo");
@@ -789,7 +789,7 @@ void Hierarchies_add_path_depth_0(void) {
 void Hierarchies_add_path_depth_1(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t id = ecs_new_id(world);
+    ecs_entity_t id = ecs_new(world);
     test_assert(id != 0);
 
     ecs_entity_t e = ecs_add_path(world, id, 0, "foo.bar");
@@ -811,7 +811,7 @@ void Hierarchies_add_path_depth_1(void) {
 void Hierarchies_add_path_depth_2(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t id = ecs_new_id(world);
+    ecs_entity_t id = ecs_new(world);
     test_assert(id != 0);
 
     ecs_entity_t e = ecs_add_path(world, id, 0, "foo.bar.hello");
@@ -839,7 +839,7 @@ void Hierarchies_add_path_existing_depth_0(void) {
     test_assert(e != 0);
     test_str(ecs_get_name(world, e), "foo");    
 
-    ecs_entity_t id = ecs_new_id(world);
+    ecs_entity_t id = ecs_new(world);
     test_assert(id != 0);
 
     test_expect_abort();
@@ -854,7 +854,7 @@ void Hierarchies_add_path_existing_depth_1(void) {
     test_assert(e != 0);
     test_str(ecs_get_name(world, e), "bar");    
 
-    ecs_entity_t id = ecs_new_id(world);
+    ecs_entity_t id = ecs_new(world);
     test_assert(id != 0);
 
     test_expect_abort();
@@ -869,7 +869,7 @@ void Hierarchies_add_path_existing_depth_2(void) {
     test_assert(e != 0);
     test_str(ecs_get_name(world, e), "hello");    
 
-    ecs_entity_t id = ecs_new_id(world);
+    ecs_entity_t id = ecs_new(world);
     test_assert(id != 0);
 
     test_expect_abort();
@@ -885,7 +885,7 @@ void Hierarchies_add_path_from_scope(void) {
 
     ecs_set_scope(world, e);
 
-    ecs_entity_t id = ecs_new_id(world);
+    ecs_entity_t id = ecs_new(world);
     test_assert(id != 0);
 
     ecs_entity_t f = ecs_add_path(world, id, 0, "hello.world");
@@ -958,7 +958,7 @@ void Hierarchies_add_parent_path_from_root_to_child(void) {
 void Hierarchies_delete_child(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t parent = ecs_new(world);
     test_assert(parent != 0);
 
     ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
@@ -977,7 +977,7 @@ void Hierarchies_delete_child(void) {
 void Hierarchies_delete_2_children(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t parent = ecs_new(world);
     test_assert(parent != 0);
 
     ecs_entity_t child_1 = ecs_new_w_pair(world, EcsChildOf, parent);
@@ -1003,7 +1003,7 @@ void Hierarchies_delete_2_children_different_type(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t parent = ecs_new(world);
     test_assert(parent != 0);
 
     ecs_entity_t child_1 = ecs_new_w_pair(world, EcsChildOf, parent);
@@ -1028,7 +1028,7 @@ void Hierarchies_delete_2_children_different_type(void) {
 void Hierarchies_delete_tree_2_levels(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t parent = ecs_new(world);
     test_assert(parent != 0);
 
     ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
@@ -1049,7 +1049,7 @@ void Hierarchies_delete_tree_2_levels(void) {
 void Hierarchies_delete_tree_3_levels(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t parent = ecs_new(world);
     test_assert(parent != 0);
 
     ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
@@ -1092,7 +1092,7 @@ void Hierarchies_delete_tree_recreate(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t parent = ecs_new(world);
     ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
     test_assert(parent != 0);
     test_assert(child != 0);
@@ -1103,7 +1103,7 @@ void Hierarchies_delete_tree_recreate(void) {
     ecs_iter_t it = ecs_children(world, parent);
     test_assert(!ecs_children_next(&it));
 
-    ecs_new(world, Position);
+    ecs_new_w(world, Position);
 
     ecs_entity_t child_2  = ecs_new_w_pair(world, EcsChildOf, parent);
     test_assert(child_2 != 0);
@@ -1159,7 +1159,7 @@ void Hierarchies_scope_iter_after_delete_tree(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t parent = ecs_new(world);
     ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
     test_assert(parent != 0);
     test_assert(child != 0);
@@ -1178,7 +1178,7 @@ void Hierarchies_add_child_after_delete_tree(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t parent = ecs_new(world);
     ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
     test_assert(parent != 0);
     test_assert(child != 0);
@@ -1211,7 +1211,7 @@ void Hierarchies_delete_tree_w_onremove(void) {
 
     ECS_OBSERVER(world, RemovePosition, EcsOnRemove, Position);
 
-    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t parent = ecs_new(world);
     test_assert(parent != 0);
     ecs_entity_t child_1 = ecs_new_w_pair(world, EcsChildOf, parent);
     ecs_entity_t child_2 = ecs_new_w_pair(world, EcsChildOf, parent);
@@ -1250,7 +1250,7 @@ void Hierarchies_delete_tree_w_dtor(void) {
         .dtor = ecs_dtor(Position)
     });
 
-    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t parent = ecs_new(world);
     test_assert(parent != 0);
     ecs_entity_t child_1 = ecs_new_w_pair(world, EcsChildOf, parent);
     ecs_entity_t child_2 = ecs_new_w_pair(world, EcsChildOf, parent);
@@ -1279,7 +1279,7 @@ void Hierarchies_add_child_to_recycled_parent(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t parent = ecs_new(world);
     test_assert(parent != 0);
 
     ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
@@ -1290,7 +1290,7 @@ void Hierarchies_add_child_to_recycled_parent(void) {
     test_assert( !ecs_is_alive(world, parent));
     test_assert( !ecs_is_alive(world, child));
 
-    ecs_entity_t new_parent = ecs_new_id(world);
+    ecs_entity_t new_parent = ecs_new(world);
     test_assert(new_parent != 0);
     /* Make sure we have a recycled identifier */
     test_assert(ecs_entity_t_lo(new_parent) != new_parent);
@@ -1309,14 +1309,14 @@ void Hierarchies_get_type_after_recycled_parent_add(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t parent = ecs_new(world);
     test_assert(parent != 0);
     test_assert( ecs_get_type(world, parent) == NULL);
 
     ecs_delete(world, parent);
     test_assert( !ecs_is_alive(world, parent));
 
-    parent = ecs_new(world, Position);
+    parent = ecs_new_w(world, Position);
     test_assert(parent != 0);
     test_assert(ecs_entity_t_lo(parent) != parent); // Ensure recycled
     test_assert( ecs_get_type(world, parent) != NULL);
@@ -1431,10 +1431,10 @@ void Hierarchies_long_name_depth_2(void) {
 void Hierarchies_ensure_1_parent_after_adding_2(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t parent_1 = ecs_new_id(world);
+    ecs_entity_t parent_1 = ecs_new(world);
     test_assert(parent_1 != 0);
 
-    ecs_entity_t parent_2 = ecs_new_id(world);
+    ecs_entity_t parent_2 = ecs_new(world);
     test_assert(parent_2 != 0);
 
     ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent_1);
@@ -1451,10 +1451,10 @@ void Hierarchies_ensure_1_parent_after_adding_2(void) {
 void Hierarchies_ensure_child_alive_after_deleting_prev_parent(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t parent_1 = ecs_new_id(world);
+    ecs_entity_t parent_1 = ecs_new(world);
     test_assert(parent_1 != 0);
 
-    ecs_entity_t parent_2 = ecs_new_id(world);
+    ecs_entity_t parent_2 = ecs_new(world);
     test_assert(parent_2 != 0);
 
     ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent_1);
@@ -1685,7 +1685,7 @@ void Hierarchies_defer_batch_remove_name_w_add_childof(void) {
     test_str("e", ecs_get_name(world, e));
     test_assert(ecs_lookup(world, "e") == e);
 
-    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t parent = ecs_new(world);
     ecs_defer_begin(world);
     ecs_clear(world, e);
     ecs_add_pair(world, e, EcsChildOf, parent);
@@ -1701,7 +1701,7 @@ void Hierarchies_defer_batch_remove_name_w_add_childof(void) {
 void Hierarchies_defer_batch_remove_childof_w_add_name(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t parent = ecs_new(world);
     ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, parent);
     test_assert(e != 0);
     

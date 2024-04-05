@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
     ECS_TAG(ecs, Apples);
 
     // Create an entity which all of the above
-    ecs_entity_t Bob = ecs_new_id(ecs);
+    ecs_entity_t Bob = ecs_new(ecs);
 
     ecs_set(ecs, Bob, Position, {10, 20});
     ecs_set(ecs, Bob, Velocity, {1, 1});

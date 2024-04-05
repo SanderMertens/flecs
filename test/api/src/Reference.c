@@ -74,7 +74,7 @@ void Reference_get_ref_after_delete(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t dummy = ecs_new(world, Position);
+    ecs_entity_t dummy = ecs_new_w(world, Position);
     ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
     
     ecs_ref_t ref = ecs_ref_init(world, e, Position);
@@ -109,7 +109,7 @@ void Reference_get_ref_after_realloc(void) {
     int i;
     for (i = 0; i < 1000; i ++) {
         // Creating lots of entities which will trigger allocations
-        ecs_new(world, Position);
+        ecs_new_w(world, Position);
     }
 
     p = ecs_ref_get(world, &ref, Position);
@@ -168,7 +168,7 @@ void Reference_get_ref_after_new_in_stage(void) {
 
     ecs_defer_begin(world);
 
-    ecs_new(world, Position);
+    ecs_new_w(world, Position);
 
     /* ecs_set() makes immediate changes */
     ecs_set(world, e, Position, {30, 40});
@@ -212,7 +212,7 @@ void Reference_get_nonexisting(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     
     ecs_ref_t ref = ecs_ref_init(world, e, Velocity);
     const Velocity *p = ecs_ref_get(world, &ref, Velocity);
@@ -269,7 +269,7 @@ void Reference_get_ref_w_low_id_tag(void) {
         .type.alignment = 4
     });
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_add_id(world, e, tag);
     ecs_add_id(world, e, comp);
 
@@ -297,7 +297,7 @@ void Reference_get_ref_w_low_id_tag_after_add(void) {
         .type.alignment = 4
     });
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_add_id(world, e, tag);
     ecs_add_id(world, e, comp);
 
@@ -318,10 +318,10 @@ void Reference_aba_table(void) {
 
   ECS_COMPONENT(world, Position);
 
-  ecs_entity_t t1 = ecs_new_id(world);
-  ecs_entity_t t2 = ecs_new_id(world);
-  ecs_entity_t t3 = ecs_new_id(world);
-  ecs_entity_t e = ecs_new_id(world);
+  ecs_entity_t t1 = ecs_new(world);
+  ecs_entity_t t2 = ecs_new(world);
+  ecs_entity_t t3 = ecs_new(world);
+  ecs_entity_t e = ecs_new(world);
 
   ecs_set_pair(world, e, Position, t1, {10, 20});
   ecs_set_pair(world, e, Position, t2, {20, 30});

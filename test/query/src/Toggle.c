@@ -697,9 +697,9 @@ void Toggle_this(void) {
 
     ecs_add_id(world, ecs_id(Position), EcsCanToggle);
 
-    ecs_entity_t e1 = ecs_new(world, Position);
-    ecs_entity_t e2 = ecs_new(world, Position);
-    ecs_entity_t e3 = ecs_new(world, Position);
+    ecs_entity_t e1 = ecs_new_w(world, Position);
+    ecs_entity_t e2 = ecs_new_w(world, Position);
+    ecs_entity_t e3 = ecs_new_w(world, Position);
 
     ecs_enable_component(world, e1, Position, true);
     ecs_enable_component(world, e2, Position, false);
@@ -779,9 +779,9 @@ void Toggle_this_skip_initial(void) {
     
     ecs_add_id(world, ecs_id(Position), EcsCanToggle);
 
-    ecs_entity_t e1 = ecs_new(world, Position);
-    ecs_entity_t e2 = ecs_new(world, Position);
-    ecs_entity_t e3 = ecs_new(world, Position);
+    ecs_entity_t e1 = ecs_new_w(world, Position);
+    ecs_entity_t e2 = ecs_new_w(world, Position);
+    ecs_entity_t e3 = ecs_new_w(world, Position);
 
     ecs_enable_component(world, e1, Position, false);
     ecs_enable_component(world, e2, Position, true);
@@ -858,9 +858,9 @@ void Toggle_this_tag(void) {
 
     ecs_add_id(world, Foo, EcsCanToggle);
 
-    ecs_entity_t e1 = ecs_new(world, Foo);
-    ecs_entity_t e2 = ecs_new(world, Foo);
-    ecs_entity_t e3 = ecs_new(world, Foo);
+    ecs_entity_t e1 = ecs_new_w(world, Foo);
+    ecs_entity_t e2 = ecs_new_w(world, Foo);
+    ecs_entity_t e3 = ecs_new_w(world, Foo);
 
     ecs_enable_id(world, e1, Foo, true);
     ecs_enable_id(world, e2, Foo, false);
@@ -992,7 +992,7 @@ void Toggle_this_toggle_shared_self_up(void) {
 
     ecs_add_id(world, ecs_id(Position), EcsCanToggle);
 
-    ecs_entity_t p = ecs_new_id(world);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p);
 
     ecs_query_t *q = ecs_query(world, {
@@ -1092,7 +1092,7 @@ void Toggle_this_toggle_shared_up(void) {
 
     ecs_add_id(world, ecs_id(Position), EcsCanToggle);
 
-    ecs_entity_t p = ecs_new_id(world);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p);
 
     ecs_query_t *q = ecs_query(world, {
@@ -1168,7 +1168,7 @@ void Toggle_this_toggle_shared_self_up_w_self(void) {
     ecs_add_id(world, ecs_id(Position), EcsCanToggle);
     ecs_add_id(world, ecs_id(Velocity), EcsCanToggle);
 
-    ecs_entity_t p = ecs_new_id(world);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p);
 
     ecs_query_t *q = ecs_query(world, {
@@ -1308,7 +1308,7 @@ void Toggle_this_toggle_shared_up_w_self(void) {
     ecs_add_id(world, ecs_id(Position), EcsCanToggle);
     ecs_add_id(world, ecs_id(Velocity), EcsCanToggle);
 
-    ecs_entity_t p = ecs_new_id(world);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p);
 
     ecs_query_t *q = ecs_query(world, {
@@ -1404,7 +1404,7 @@ void Toggle_this_toggle_shared_self_up_w_self_reverse(void) {
     ecs_add_id(world, ecs_id(Position), EcsCanToggle);
     ecs_add_id(world, ecs_id(Velocity), EcsCanToggle);
 
-    ecs_entity_t p = ecs_new_id(world);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p);
 
     ecs_query_t *q = ecs_query(world, {
@@ -1544,7 +1544,7 @@ void Toggle_this_toggle_shared_up_w_self_reverse(void) {
     ecs_add_id(world, ecs_id(Position), EcsCanToggle);
     ecs_add_id(world, ecs_id(Velocity), EcsCanToggle);
 
-    ecs_entity_t p = ecs_new_id(world);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p);
 
     ecs_query_t *q = ecs_query(world, {
@@ -1640,7 +1640,7 @@ void Toggle_this_toggle_shared_self_up_w_self_toggle(void) {
     ecs_add_id(world, ecs_id(Position), EcsCanToggle);
     ecs_add_id(world, ecs_id(Velocity), EcsCanToggle);
 
-    ecs_entity_t p = ecs_new_id(world);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p);
 
     ecs_query_t *q = ecs_query(world, {
@@ -1783,7 +1783,7 @@ void Toggle_this_toggle_shared_up_w_self_toggle(void) {
     ecs_add_id(world, ecs_id(Position), EcsCanToggle);
     ecs_add_id(world, ecs_id(Velocity), EcsCanToggle);
 
-    ecs_entity_t p = ecs_new_id(world);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p);
 
     ecs_query_t *q = ecs_query(world, {
@@ -1882,7 +1882,7 @@ void Toggle_this_toggle_shared_self_up_w_self_toggle_reverse(void) {
     ecs_add_id(world, ecs_id(Position), EcsCanToggle);
     ecs_add_id(world, ecs_id(Velocity), EcsCanToggle);
 
-    ecs_entity_t p = ecs_new_id(world);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p);
 
     ecs_query_t *q = ecs_query(world, {
@@ -2025,7 +2025,7 @@ void Toggle_this_toggle_shared_up_w_self_toggle_reverse(void) {
     ecs_add_id(world, ecs_id(Position), EcsCanToggle);
     ecs_add_id(world, ecs_id(Velocity), EcsCanToggle);
 
-    ecs_entity_t p = ecs_new_id(world);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p);
 
     ecs_query_t *q = ecs_query(world, {
@@ -2123,7 +2123,7 @@ void Toggle_this_toggle_not_shared_self_up(void) {
 
     ecs_add_id(world, ecs_id(Position), EcsCanToggle);
 
-    ecs_entity_t p = ecs_new_id(world);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p);
     ecs_add(world, p, Foo);
     ecs_add(world, e, Foo);
@@ -2212,7 +2212,7 @@ void Toggle_this_toggle_not_shared_up(void) {
 
     ecs_add_id(world, ecs_id(Position), EcsCanToggle);
 
-    ecs_entity_t p = ecs_new_id(world);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p);
     ecs_add(world, p, Foo);
     ecs_add(world, e, Foo);
@@ -2319,7 +2319,7 @@ void Toggle_this_toggle_optional_shared_self_up(void) {
 
     ecs_add_id(world, ecs_id(Position), EcsCanToggle);
 
-    ecs_entity_t p = ecs_new_id(world);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p);
     ecs_add(world, p, Foo);
     ecs_add(world, e, Foo);
@@ -2445,7 +2445,7 @@ void Toggle_this_toggle_optional_shared_up(void) {
 
     ecs_add_id(world, ecs_id(Position), EcsCanToggle);
 
-    ecs_entity_t p = ecs_new_id(world);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p);
     ecs_add(world, p, Foo);
     ecs_add(world, e, Foo);
@@ -2573,7 +2573,7 @@ void test_disable_toggle_mod(int32_t total, int32_t mod) {
 
     int32_t i, total_count = 0, total_toggle_count = 0;
     for (i = 0; i < total; i ++) {
-        ecs_entity_t e = ecs_new(world, Position);
+        ecs_entity_t e = ecs_new_w(world, Position);
         ecs_set(world, e, Position, {e, e});
 
         if (!(e % mod)) {
@@ -2586,7 +2586,7 @@ void test_disable_toggle_mod(int32_t total, int32_t mod) {
     }
 
     for (i = 0; i < total; i ++) {
-        ecs_entity_t e = ecs_new(world, Position);
+        ecs_entity_t e = ecs_new_w(world, Position);
         ecs_set(world, e, Position, {e, e});
         total_count ++;
     }
@@ -2635,7 +2635,7 @@ void test_enable_toggle_mod(int32_t total, int32_t mod) {
 
     int32_t i, total_count = 0, total_toggle_count = 0;
     for (i = 0; i < total; i ++) {
-        ecs_entity_t e = ecs_new(world, Position);
+        ecs_entity_t e = ecs_new_w(world, Position);
         ecs_set(world, e, Position, {e, e});
         if (e % mod) {
             ecs_enable_component(world, e, Position, false);
@@ -2647,7 +2647,7 @@ void test_enable_toggle_mod(int32_t total, int32_t mod) {
     }
 
     for (i = 0; i < total; i ++) {
-        ecs_entity_t e = ecs_new(world, Position);
+        ecs_entity_t e = ecs_new_w(world, Position);
         ecs_set(world, e, Position, {e, e});
         total_count ++;
     }
@@ -3058,7 +3058,7 @@ void Toggle_this_mod_2_2_bitsets(void) {
 
     int32_t i, total_count = 0;
     for (i = 0; i < 65536; i ++) {
-        ecs_entity_t e = ecs_new(world, Position);
+        ecs_entity_t e = ecs_new_w(world, Position);
         ecs_add(world, e, Velocity);
         if (!(e % 2)) {
             ecs_enable_component(world, e, Position, true);
@@ -3115,7 +3115,7 @@ void Toggle_this_mod_8_2_bitsets(void) {
 
     int32_t i, total_count = 0;
     for (i = 0; i < 65536; i ++) {
-        ecs_entity_t e = ecs_new(world, Position);
+        ecs_entity_t e = ecs_new_w(world, Position);
         ecs_add(world, e, Velocity);
         if (!(e % 8)) {
             ecs_enable_component(world, e, Position, true);
@@ -3172,7 +3172,7 @@ void Toggle_this_mod_64_2_bitsets(void) {
 
     int32_t i, total_count = 0;
     for (i = 0; i < 65536; i ++) {
-        ecs_entity_t e = ecs_new(world, Position);
+        ecs_entity_t e = ecs_new_w(world, Position);
         ecs_add(world, e, Velocity);
         if (!(e % 64)) {
             ecs_enable_component(world, e, Position, true);
@@ -3229,7 +3229,7 @@ void Toggle_this_mod_256_2_bitsets(void) {
 
     int32_t i, total_count = 0;
     for (i = 0; i < 65536; i ++) {
-        ecs_entity_t e = ecs_new(world, Position);
+        ecs_entity_t e = ecs_new_w(world, Position);
         ecs_add(world, e, Velocity);
         if (!(e % 256)) {
             ecs_enable_component(world, e, Position, true);
@@ -3286,7 +3286,7 @@ void Toggle_this_mod_1024_2_bitsets(void) {
 
     int32_t i, total_count = 0;
     for (i = 0; i < 65536; i ++) {
-        ecs_entity_t e = ecs_new(world, Position);
+        ecs_entity_t e = ecs_new_w(world, Position);
         ecs_add(world, e, Velocity);
         if (!(e % 1024)) {
             ecs_enable_component(world, e, Position, true);
@@ -3343,7 +3343,7 @@ void Toggle_this_randomized_2_bitsets(void) {
 
     int32_t i, total_count = 0;
     for (i = 0; i < 65536; i ++) {
-        ecs_entity_t e = ecs_new(world, Position);
+        ecs_entity_t e = ecs_new_w(world, Position);
         ecs_add(world, e, Velocity);
 
         bool enable_1 = rand() % 2;
@@ -3359,11 +3359,11 @@ void Toggle_this_randomized_2_bitsets(void) {
     test_assert(total_count != 0);
 
     for (i = 0; i < 65536; i ++) {
-        ecs_new(world, Position); // no match
-        ecs_new(world, Velocity); // no match
+        ecs_new_w(world, Position); // no match
+        ecs_new_w(world, Velocity); // no match
 
         { // match
-            ecs_entity_t e = ecs_new(world, Position);
+            ecs_entity_t e = ecs_new_w(world, Position);
             ecs_add(world, e, Velocity);
             total_count ++;
         }
@@ -3406,7 +3406,7 @@ void Toggle_this_randomized_3_bitsets(void) {
 
     int32_t i, total_count = 0;
     for (i = 0; i < 65536; i ++) {
-        ecs_entity_t e = ecs_new(world, Position);
+        ecs_entity_t e = ecs_new_w(world, Position);
         ecs_add(world, e, Velocity);
         ecs_add(world, e, Mass);
 
@@ -3425,12 +3425,12 @@ void Toggle_this_randomized_3_bitsets(void) {
     test_assert(total_count != 0);
 
     for (i = 0; i < 65536; i ++) {
-        ecs_new(world, Position); // no match
-        ecs_new(world, Velocity); // no match
-        ecs_new(world, Mass); // no match
+        ecs_new_w(world, Position); // no match
+        ecs_new_w(world, Velocity); // no match
+        ecs_new_w(world, Mass); // no match
 
         { // match
-            ecs_entity_t e = ecs_new(world, Position);
+            ecs_entity_t e = ecs_new_w(world, Position);
             ecs_add(world, e, Velocity);
             ecs_add(world, e, Mass);
             total_count ++;
@@ -3477,7 +3477,7 @@ void Toggle_this_randomized_4_bitsets(void) {
 
     int32_t i, total_count = 0;
     for (i = 0; i < 65536; i ++) {
-        ecs_entity_t e = ecs_new(world, Position);
+        ecs_entity_t e = ecs_new_w(world, Position);
         ecs_add(world, e, Velocity);
         ecs_add(world, e, Mass);
         ecs_add(world, e, Rotation);
@@ -3499,13 +3499,13 @@ void Toggle_this_randomized_4_bitsets(void) {
     test_assert(total_count != 0);
 
     for (i = 0; i < 65536; i ++) {
-        ecs_new(world, Position); // no match
-        ecs_new(world, Velocity); // no match
-        ecs_new(world, Mass); // no match
-        ecs_new(world, Rotation); // no match
+        ecs_new_w(world, Position); // no match
+        ecs_new_w(world, Velocity); // no match
+        ecs_new_w(world, Mass); // no match
+        ecs_new_w(world, Rotation); // no match
 
         { // match
-            ecs_entity_t e = ecs_new(world, Position);
+            ecs_entity_t e = ecs_new_w(world, Position);
             ecs_add(world, e, Velocity);
             ecs_add(world, e, Mass);
             ecs_add(world, e, Rotation);
@@ -3550,7 +3550,7 @@ void Toggle_this_w_other_tag(void) {
 
     int32_t i, total_count = 0;
     for (i = 0; i < 1024; i ++) {
-        ecs_entity_t e = ecs_new(world, Position);
+        ecs_entity_t e = ecs_new_w(world, Position);
         ecs_set(world, e, Position, {e, e});
 
         if (!(e % 3)) {
@@ -3613,7 +3613,7 @@ void Toggle_this_w_other_component(void) {
 
     int32_t i, total_count = 0;
     for (i = 0; i < 1024; i ++) {
-        ecs_entity_t e = ecs_new(world, Position);
+        ecs_entity_t e = ecs_new_w(world, Position);
         ecs_set(world, e, Position, {e, e});
 
         if (!(e % 3)) {
@@ -3677,7 +3677,7 @@ void Toggle_this_not(void) {
     ecs_add_id(world, ecs_id(Position), EcsCanToggle);
 
     for (int i = 0; i < 1024; i ++) {
-        ecs_entity_t e = ecs_new(world, Position);
+        ecs_entity_t e = ecs_new_w(world, Position);
         ecs_set(world, e, Position, {e, e});
 
         if (!(e % 3)) {
@@ -3731,7 +3731,7 @@ void this_written_not(int total, int mod) {
 
     int i, total_without_pos = 0;
     for (i = 0; i < total; i ++) {
-        ecs_entity_t e = ecs_new(world, Position);
+        ecs_entity_t e = ecs_new_w(world, Position);
         ecs_set(world, e, Position, {e, e});
 
         if (!(e % mod)) {
@@ -3745,12 +3745,12 @@ void this_written_not(int total, int mod) {
     }
 
     for (int i = 0; i < total; i ++) {
-        ecs_new(world, Tag);
+        ecs_new_w(world, Tag);
         total_without_pos ++;
     }
 
     for (int i = 0; i < total; i ++) {
-        ecs_entity_t e = ecs_new(world, Position);
+        ecs_entity_t e = ecs_new_w(world, Position);
         ecs_set(world, e, Position, {e, e});
         ecs_add(world, e, Tag);
     }
@@ -3834,7 +3834,7 @@ void this_optional(int total, int mod) {
 
     int i, total_with_pos = 0;
     for (i = 0; i < total; i ++) {
-        ecs_entity_t e = ecs_new(world, Position);
+        ecs_entity_t e = ecs_new_w(world, Position);
         ecs_set(world, e, Position, {e, e});
 
         if (!(e % mod)) {
@@ -3846,7 +3846,7 @@ void this_optional(int total, int mod) {
     }
 
     for (int i = 0; i < total; i ++) {
-        ecs_entity_t e = ecs_new(world, Position);
+        ecs_entity_t e = ecs_new_w(world, Position);
         ecs_set(world, e, Position, {e, e});
         total_with_pos ++;
     }
@@ -3915,7 +3915,7 @@ void this_written_optional(int total, int mod) {
 
     int i, total_with_pos = 0, total_without_pos = 0;
     for (i = 0; i < total; i ++) {
-        ecs_entity_t e = ecs_new(world, Position);
+        ecs_entity_t e = ecs_new_w(world, Position);
         ecs_set(world, e, Position, {e, e});
 
         if (!(e % mod)) {
@@ -3930,12 +3930,12 @@ void this_written_optional(int total, int mod) {
     }
 
     for (int i = 0; i < total; i ++) {
-        ecs_new(world, Tag);
+        ecs_new_w(world, Tag);
         total_without_pos ++;
     }
 
     for (int i = 0; i < total; i ++) {
-        ecs_entity_t e = ecs_new(world, Position);
+        ecs_entity_t e = ecs_new_w(world, Position);
         ecs_set(world, e, Position, {e, e});
         ecs_add(world, e, Tag);
         total_with_pos ++;
@@ -4155,62 +4155,62 @@ void Toggle_this_written_toggle_w_not_toggle(void) {
     ecs_add_id(world, ecs_id(Velocity), EcsCanToggle);
 
     /* No toggles */
-    ecs_entity_t e1 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
     ecs_add(world, e1, Position);
 
     /* No components */
-    /* ecs_entity_t e2 = */ ecs_new(world, Tag);
+    /* ecs_entity_t e2 = */ ecs_new_w(world, Tag);
 
     /* Components, No toggles */
-    ecs_entity_t e3 = ecs_new(world, Tag);
+    ecs_entity_t e3 = ecs_new_w(world, Tag);
     ecs_add(world, e3, Position);
     ecs_add(world, e3, Velocity);
 
     /* Toggle Position == true */
-    ecs_entity_t e4 = ecs_new(world, Tag);
+    ecs_entity_t e4 = ecs_new_w(world, Tag);
     ecs_add(world, e4, Position);
     ecs_enable_component(world, e4, Position, true);
 
     /* Toggle Position == false */
-    ecs_entity_t e5 = ecs_new(world, Tag);
+    ecs_entity_t e5 = ecs_new_w(world, Tag);
     ecs_add(world, e5, Position);
     ecs_enable_component(world, e5, Position, false);
 
     /* Toggle Velocity == true */
-    ecs_entity_t e6 = ecs_new(world, Tag);
+    ecs_entity_t e6 = ecs_new_w(world, Tag);
     ecs_add(world, e6, Position);
     ecs_add(world, e6, Velocity);
     ecs_enable_component(world, e6, Velocity, true);
 
     /* Toggle Velocity == false */
-    ecs_entity_t e7 = ecs_new(world, Tag);
+    ecs_entity_t e7 = ecs_new_w(world, Tag);
     ecs_add(world, e7, Position);
     ecs_add(world, e7, Velocity);
     ecs_enable_component(world, e7, Velocity, false);
 
     /* Toggle Position == true, Velocity == true */
-    ecs_entity_t e8 = ecs_new(world, Tag);
+    ecs_entity_t e8 = ecs_new_w(world, Tag);
     ecs_add(world, e8, Position);
     ecs_add(world, e8, Velocity);
     ecs_enable_component(world, e8, Position, true);
     ecs_enable_component(world, e8, Velocity, true);
 
     /* Toggle Position == true, Velocity == false */
-    ecs_entity_t e9 = ecs_new(world, Tag);
+    ecs_entity_t e9 = ecs_new_w(world, Tag);
     ecs_add(world, e9, Position);
     ecs_add(world, e9, Velocity);
     ecs_enable_component(world, e9, Position, true);
     ecs_enable_component(world, e9, Velocity, false);
 
     /* Toggle Position == false, Velocity == true */
-    ecs_entity_t e10 = ecs_new(world, Tag);
+    ecs_entity_t e10 = ecs_new_w(world, Tag);
     ecs_add(world, e10, Position);
     ecs_add(world, e10, Velocity);
     ecs_enable_component(world, e10, Position, false);
     ecs_enable_component(world, e10, Velocity, true);
 
     /* Toggle Position == false, Velocity == false */
-    ecs_entity_t e11 = ecs_new(world, Tag);
+    ecs_entity_t e11 = ecs_new_w(world, Tag);
     ecs_add(world, e11, Position);
     ecs_add(world, e11, Velocity);
     ecs_enable_component(world, e11, Position, false);
@@ -4281,62 +4281,62 @@ void Toggle_this_written_not_toggle_w_toggle(void) {
     ecs_add_id(world, ecs_id(Velocity), EcsCanToggle);
 
     /* No toggles */
-    ecs_entity_t e1 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
     ecs_add(world, e1, Position);
 
     /* No components */
-    /* ecs_entity_t e2 = */ ecs_new(world, Tag);
+    /* ecs_entity_t e2 = */ ecs_new_w(world, Tag);
 
     /* Components, No toggles */
-    ecs_entity_t e3 = ecs_new(world, Tag);
+    ecs_entity_t e3 = ecs_new_w(world, Tag);
     ecs_add(world, e3, Position);
     ecs_add(world, e3, Velocity);
 
     /* Toggle Position == true */
-    ecs_entity_t e4 = ecs_new(world, Tag);
+    ecs_entity_t e4 = ecs_new_w(world, Tag);
     ecs_add(world, e4, Position);
     ecs_enable_component(world, e4, Position, true);
 
     /* Toggle Position == false */
-    ecs_entity_t e5 = ecs_new(world, Tag);
+    ecs_entity_t e5 = ecs_new_w(world, Tag);
     ecs_add(world, e5, Position);
     ecs_enable_component(world, e5, Position, false);
 
     /* Toggle Velocity == true */
-    ecs_entity_t e6 = ecs_new(world, Tag);
+    ecs_entity_t e6 = ecs_new_w(world, Tag);
     ecs_add(world, e6, Position);
     ecs_add(world, e6, Velocity);
     ecs_enable_component(world, e6, Velocity, true);
 
     /* Toggle Velocity == false */
-    ecs_entity_t e7 = ecs_new(world, Tag);
+    ecs_entity_t e7 = ecs_new_w(world, Tag);
     ecs_add(world, e7, Position);
     ecs_add(world, e7, Velocity);
     ecs_enable_component(world, e7, Velocity, false);
 
     /* Toggle Position == true, Velocity == true */
-    ecs_entity_t e8 = ecs_new(world, Tag);
+    ecs_entity_t e8 = ecs_new_w(world, Tag);
     ecs_add(world, e8, Position);
     ecs_add(world, e8, Velocity);
     ecs_enable_component(world, e8, Position, true);
     ecs_enable_component(world, e8, Velocity, true);
 
     /* Toggle Position == true, Velocity == false */
-    ecs_entity_t e9 = ecs_new(world, Tag);
+    ecs_entity_t e9 = ecs_new_w(world, Tag);
     ecs_add(world, e9, Position);
     ecs_add(world, e9, Velocity);
     ecs_enable_component(world, e9, Position, true);
     ecs_enable_component(world, e9, Velocity, false);
 
     /* Toggle Position == false, Velocity == true */
-    ecs_entity_t e10 = ecs_new(world, Tag);
+    ecs_entity_t e10 = ecs_new_w(world, Tag);
     ecs_add(world, e10, Position);
     ecs_add(world, e10, Velocity);
     ecs_enable_component(world, e10, Position, false);
     ecs_enable_component(world, e10, Velocity, true);
 
     /* Toggle Position == false, Velocity == false */
-    ecs_entity_t e11 = ecs_new(world, Tag);
+    ecs_entity_t e11 = ecs_new_w(world, Tag);
     ecs_add(world, e11, Position);
     ecs_add(world, e11, Velocity);
     ecs_enable_component(world, e11, Position, false);
@@ -4407,62 +4407,62 @@ void Toggle_this_written_toggle_w_optional_toggle(void) {
     ecs_add_id(world, ecs_id(Velocity), EcsCanToggle);
 
     /* No toggles */
-    ecs_entity_t e1 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
     ecs_add(world, e1, Position);
 
     /* No components */
-    /* ecs_entity_t e2 = */ ecs_new(world, Tag);
+    /* ecs_entity_t e2 = */ ecs_new_w(world, Tag);
 
     /* Components, No toggles */
-    ecs_entity_t e3 = ecs_new(world, Tag);
+    ecs_entity_t e3 = ecs_new_w(world, Tag);
     ecs_add(world, e3, Position);
     ecs_add(world, e3, Velocity);
 
     /* Toggle Position == true */
-    ecs_entity_t e4 = ecs_new(world, Tag);
+    ecs_entity_t e4 = ecs_new_w(world, Tag);
     ecs_add(world, e4, Position);
     ecs_enable_component(world, e4, Position, true);
 
     /* Toggle Position == false */
-    ecs_entity_t e5 = ecs_new(world, Tag);
+    ecs_entity_t e5 = ecs_new_w(world, Tag);
     ecs_add(world, e5, Position);
     ecs_enable_component(world, e5, Position, false);
 
     /* Toggle Velocity == true */
-    ecs_entity_t e6 = ecs_new(world, Tag);
+    ecs_entity_t e6 = ecs_new_w(world, Tag);
     ecs_add(world, e6, Position);
     ecs_add(world, e6, Velocity);
     ecs_enable_component(world, e6, Velocity, true);
 
     /* Toggle Velocity == false */
-    ecs_entity_t e7 = ecs_new(world, Tag);
+    ecs_entity_t e7 = ecs_new_w(world, Tag);
     ecs_add(world, e7, Position);
     ecs_add(world, e7, Velocity);
     ecs_enable_component(world, e7, Velocity, false);
 
     /* Toggle Position == true, Velocity == true */
-    ecs_entity_t e8 = ecs_new(world, Tag);
+    ecs_entity_t e8 = ecs_new_w(world, Tag);
     ecs_add(world, e8, Position);
     ecs_add(world, e8, Velocity);
     ecs_enable_component(world, e8, Position, true);
     ecs_enable_component(world, e8, Velocity, true);
 
     /* Toggle Position == true, Velocity == false */
-    ecs_entity_t e9 = ecs_new(world, Tag);
+    ecs_entity_t e9 = ecs_new_w(world, Tag);
     ecs_add(world, e9, Position);
     ecs_add(world, e9, Velocity);
     ecs_enable_component(world, e9, Position, true);
     ecs_enable_component(world, e9, Velocity, false);
 
     /* Toggle Position == false, Velocity == true */
-    ecs_entity_t e10 = ecs_new(world, Tag);
+    ecs_entity_t e10 = ecs_new_w(world, Tag);
     ecs_add(world, e10, Position);
     ecs_add(world, e10, Velocity);
     ecs_enable_component(world, e10, Position, false);
     ecs_enable_component(world, e10, Velocity, true);
 
     /* Toggle Position == false, Velocity == false */
-    ecs_entity_t e11 = ecs_new(world, Tag);
+    ecs_entity_t e11 = ecs_new_w(world, Tag);
     ecs_add(world, e11, Position);
     ecs_add(world, e11, Velocity);
     ecs_enable_component(world, e11, Position, false);
@@ -4563,62 +4563,62 @@ void Toggle_this_written_optional_toggle_w_toggle(void) {
     ecs_add_id(world, ecs_id(Velocity), EcsCanToggle);
 
     /* No toggles */
-    ecs_entity_t e1 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
     ecs_add(world, e1, Position);
 
     /* No components */
-    /* ecs_entity_t e2 = */ ecs_new(world, Tag);
+    /* ecs_entity_t e2 = */ ecs_new_w(world, Tag);
 
     /* Components, No toggles */
-    ecs_entity_t e3 = ecs_new(world, Tag);
+    ecs_entity_t e3 = ecs_new_w(world, Tag);
     ecs_add(world, e3, Position);
     ecs_add(world, e3, Velocity);
 
     /* Toggle Position == true */
-    ecs_entity_t e4 = ecs_new(world, Tag);
+    ecs_entity_t e4 = ecs_new_w(world, Tag);
     ecs_add(world, e4, Position);
     ecs_enable_component(world, e4, Position, true);
 
     /* Toggle Position == false */
-    ecs_entity_t e5 = ecs_new(world, Tag);
+    ecs_entity_t e5 = ecs_new_w(world, Tag);
     ecs_add(world, e5, Position);
     ecs_enable_component(world, e5, Position, false);
 
     /* Toggle Velocity == true */
-    ecs_entity_t e6 = ecs_new(world, Tag);
+    ecs_entity_t e6 = ecs_new_w(world, Tag);
     ecs_add(world, e6, Position);
     ecs_add(world, e6, Velocity);
     ecs_enable_component(world, e6, Velocity, true);
 
     /* Toggle Velocity == false */
-    ecs_entity_t e7 = ecs_new(world, Tag);
+    ecs_entity_t e7 = ecs_new_w(world, Tag);
     ecs_add(world, e7, Position);
     ecs_add(world, e7, Velocity);
     ecs_enable_component(world, e7, Velocity, false);
 
     /* Toggle Position == true, Velocity == true */
-    ecs_entity_t e8 = ecs_new(world, Tag);
+    ecs_entity_t e8 = ecs_new_w(world, Tag);
     ecs_add(world, e8, Position);
     ecs_add(world, e8, Velocity);
     ecs_enable_component(world, e8, Position, true);
     ecs_enable_component(world, e8, Velocity, true);
 
     /* Toggle Position == true, Velocity == false */
-    ecs_entity_t e9 = ecs_new(world, Tag);
+    ecs_entity_t e9 = ecs_new_w(world, Tag);
     ecs_add(world, e9, Position);
     ecs_add(world, e9, Velocity);
     ecs_enable_component(world, e9, Position, true);
     ecs_enable_component(world, e9, Velocity, false);
 
     /* Toggle Position == false, Velocity == true */
-    ecs_entity_t e10 = ecs_new(world, Tag);
+    ecs_entity_t e10 = ecs_new_w(world, Tag);
     ecs_add(world, e10, Position);
     ecs_add(world, e10, Velocity);
     ecs_enable_component(world, e10, Position, false);
     ecs_enable_component(world, e10, Velocity, true);
 
     /* Toggle Position == false, Velocity == false */
-    ecs_entity_t e11 = ecs_new(world, Tag);
+    ecs_entity_t e11 = ecs_new_w(world, Tag);
     ecs_add(world, e11, Position);
     ecs_add(world, e11, Velocity);
     ecs_enable_component(world, e11, Position, false);
@@ -4719,62 +4719,62 @@ void Toggle_this_written_not_w_optional_toggle(void) {
     ecs_add_id(world, ecs_id(Velocity), EcsCanToggle);
 
     /* No toggles */
-    ecs_entity_t e1 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
     ecs_add(world, e1, Position);
 
     /* No components */
-    ecs_entity_t e2 = ecs_new(world, Tag);
+    ecs_entity_t e2 = ecs_new_w(world, Tag);
 
     /* Components, No toggles */
-    ecs_entity_t e3 = ecs_new(world, Tag);
+    ecs_entity_t e3 = ecs_new_w(world, Tag);
     ecs_add(world, e3, Position);
     ecs_add(world, e3, Velocity);
 
     /* Toggle Position == true */
-    ecs_entity_t e4 = ecs_new(world, Tag);
+    ecs_entity_t e4 = ecs_new_w(world, Tag);
     ecs_add(world, e4, Position);
     ecs_enable_component(world, e4, Position, true);
 
     /* Toggle Position == false */
-    ecs_entity_t e5 = ecs_new(world, Tag);
+    ecs_entity_t e5 = ecs_new_w(world, Tag);
     ecs_add(world, e5, Position);
     ecs_enable_component(world, e5, Position, false);
 
     /* Toggle Velocity == true */
-    ecs_entity_t e6 = ecs_new(world, Tag);
+    ecs_entity_t e6 = ecs_new_w(world, Tag);
     ecs_add(world, e6, Position);
     ecs_add(world, e6, Velocity);
     ecs_enable_component(world, e6, Velocity, true);
 
     /* Toggle Velocity == false */
-    ecs_entity_t e7 = ecs_new(world, Tag);
+    ecs_entity_t e7 = ecs_new_w(world, Tag);
     ecs_add(world, e7, Position);
     ecs_add(world, e7, Velocity);
     ecs_enable_component(world, e7, Velocity, false);
 
     /* Toggle Position == true, Velocity == true */
-    ecs_entity_t e8 = ecs_new(world, Tag);
+    ecs_entity_t e8 = ecs_new_w(world, Tag);
     ecs_add(world, e8, Position);
     ecs_add(world, e8, Velocity);
     ecs_enable_component(world, e8, Position, true);
     ecs_enable_component(world, e8, Velocity, true);
 
     /* Toggle Position == true, Velocity == false */
-    ecs_entity_t e9 = ecs_new(world, Tag);
+    ecs_entity_t e9 = ecs_new_w(world, Tag);
     ecs_add(world, e9, Position);
     ecs_add(world, e9, Velocity);
     ecs_enable_component(world, e9, Position, true);
     ecs_enable_component(world, e9, Velocity, false);
 
     /* Toggle Position == false, Velocity == true */
-    ecs_entity_t e10 = ecs_new(world, Tag);
+    ecs_entity_t e10 = ecs_new_w(world, Tag);
     ecs_add(world, e10, Position);
     ecs_add(world, e10, Velocity);
     ecs_enable_component(world, e10, Position, false);
     ecs_enable_component(world, e10, Velocity, true);
 
     /* Toggle Position == false, Velocity == false */
-    ecs_entity_t e11 = ecs_new(world, Tag);
+    ecs_entity_t e11 = ecs_new_w(world, Tag);
     ecs_add(world, e11, Position);
     ecs_add(world, e11, Velocity);
     ecs_enable_component(world, e11, Position, false);
@@ -4875,62 +4875,62 @@ void Toggle_this_written_optional_w_not_toggle(void) {
     ecs_add_id(world, ecs_id(Velocity), EcsCanToggle);
 
     /* No toggles */
-    ecs_entity_t e1 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
     ecs_add(world, e1, Position);
 
     /* No components */
-    ecs_entity_t e2 = ecs_new(world, Tag);
+    ecs_entity_t e2 = ecs_new_w(world, Tag);
 
     /* Components, No toggles */
-    ecs_entity_t e3 = ecs_new(world, Tag);
+    ecs_entity_t e3 = ecs_new_w(world, Tag);
     ecs_add(world, e3, Position);
     ecs_add(world, e3, Velocity);
 
     /* Toggle Position == true */
-    ecs_entity_t e4 = ecs_new(world, Tag);
+    ecs_entity_t e4 = ecs_new_w(world, Tag);
     ecs_add(world, e4, Position);
     ecs_enable_component(world, e4, Position, true);
 
     /* Toggle Position == false */
-    ecs_entity_t e5 = ecs_new(world, Tag);
+    ecs_entity_t e5 = ecs_new_w(world, Tag);
     ecs_add(world, e5, Position);
     ecs_enable_component(world, e5, Position, false);
 
     /* Toggle Velocity == true */
-    ecs_entity_t e6 = ecs_new(world, Tag);
+    ecs_entity_t e6 = ecs_new_w(world, Tag);
     ecs_add(world, e6, Position);
     ecs_add(world, e6, Velocity);
     ecs_enable_component(world, e6, Velocity, true);
 
     /* Toggle Velocity == false */
-    ecs_entity_t e7 = ecs_new(world, Tag);
+    ecs_entity_t e7 = ecs_new_w(world, Tag);
     ecs_add(world, e7, Position);
     ecs_add(world, e7, Velocity);
     ecs_enable_component(world, e7, Velocity, false);
 
     /* Toggle Position == true, Velocity == true */
-    ecs_entity_t e8 = ecs_new(world, Tag);
+    ecs_entity_t e8 = ecs_new_w(world, Tag);
     ecs_add(world, e8, Position);
     ecs_add(world, e8, Velocity);
     ecs_enable_component(world, e8, Position, true);
     ecs_enable_component(world, e8, Velocity, true);
 
     /* Toggle Position == true, Velocity == false */
-    ecs_entity_t e9 = ecs_new(world, Tag);
+    ecs_entity_t e9 = ecs_new_w(world, Tag);
     ecs_add(world, e9, Position);
     ecs_add(world, e9, Velocity);
     ecs_enable_component(world, e9, Position, true);
     ecs_enable_component(world, e9, Velocity, false);
 
     /* Toggle Position == false, Velocity == true */
-    ecs_entity_t e10 = ecs_new(world, Tag);
+    ecs_entity_t e10 = ecs_new_w(world, Tag);
     ecs_add(world, e10, Position);
     ecs_add(world, e10, Velocity);
     ecs_enable_component(world, e10, Position, false);
     ecs_enable_component(world, e10, Velocity, true);
 
     /* Toggle Position == false, Velocity == false */
-    ecs_entity_t e11 = ecs_new(world, Tag);
+    ecs_entity_t e11 = ecs_new_w(world, Tag);
     ecs_add(world, e11, Position);
     ecs_add(world, e11, Velocity);
     ecs_enable_component(world, e11, Position, false);
@@ -5031,62 +5031,62 @@ void Toggle_this_written_2_not_toggle(void) {
     ecs_add_id(world, ecs_id(Velocity), EcsCanToggle);
 
     /* No toggles */
-    ecs_entity_t e1 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
     ecs_add(world, e1, Position);
 
     /* No components */
-    ecs_entity_t e2 = ecs_new(world, Tag);
+    ecs_entity_t e2 = ecs_new_w(world, Tag);
 
     /* Components, No toggles */
-    ecs_entity_t e3 = ecs_new(world, Tag);
+    ecs_entity_t e3 = ecs_new_w(world, Tag);
     ecs_add(world, e3, Position);
     ecs_add(world, e3, Velocity);
 
     /* Toggle Position == true */
-    ecs_entity_t e4 = ecs_new(world, Tag);
+    ecs_entity_t e4 = ecs_new_w(world, Tag);
     ecs_add(world, e4, Position);
     ecs_enable_component(world, e4, Position, true);
 
     /* Toggle Position == false */
-    ecs_entity_t e5 = ecs_new(world, Tag);
+    ecs_entity_t e5 = ecs_new_w(world, Tag);
     ecs_add(world, e5, Position);
     ecs_enable_component(world, e5, Position, false);
 
     /* Toggle Velocity == true */
-    ecs_entity_t e6 = ecs_new(world, Tag);
+    ecs_entity_t e6 = ecs_new_w(world, Tag);
     ecs_add(world, e6, Position);
     ecs_add(world, e6, Velocity);
     ecs_enable_component(world, e6, Velocity, true);
 
     /* Toggle Velocity == false */
-    ecs_entity_t e7 = ecs_new(world, Tag);
+    ecs_entity_t e7 = ecs_new_w(world, Tag);
     ecs_add(world, e7, Position);
     ecs_add(world, e7, Velocity);
     ecs_enable_component(world, e7, Velocity, false);
 
     /* Toggle Position == true, Velocity == true */
-    ecs_entity_t e8 = ecs_new(world, Tag);
+    ecs_entity_t e8 = ecs_new_w(world, Tag);
     ecs_add(world, e8, Position);
     ecs_add(world, e8, Velocity);
     ecs_enable_component(world, e8, Position, true);
     ecs_enable_component(world, e8, Velocity, true);
 
     /* Toggle Position == true, Velocity == false */
-    ecs_entity_t e9 = ecs_new(world, Tag);
+    ecs_entity_t e9 = ecs_new_w(world, Tag);
     ecs_add(world, e9, Position);
     ecs_add(world, e9, Velocity);
     ecs_enable_component(world, e9, Position, true);
     ecs_enable_component(world, e9, Velocity, false);
 
     /* Toggle Position == false, Velocity == true */
-    ecs_entity_t e10 = ecs_new(world, Tag);
+    ecs_entity_t e10 = ecs_new_w(world, Tag);
     ecs_add(world, e10, Position);
     ecs_add(world, e10, Velocity);
     ecs_enable_component(world, e10, Position, false);
     ecs_enable_component(world, e10, Velocity, true);
 
     /* Toggle Position == false, Velocity == false */
-    ecs_entity_t e11 = ecs_new(world, Tag);
+    ecs_entity_t e11 = ecs_new_w(world, Tag);
     ecs_add(world, e11, Position);
     ecs_add(world, e11, Velocity);
     ecs_enable_component(world, e11, Position, false);
@@ -5147,62 +5147,62 @@ void Toggle_this_written_2_optional_toggle(void) {
     ecs_add_id(world, ecs_id(Velocity), EcsCanToggle);
 
     /* No toggles */
-    ecs_entity_t e1 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
     ecs_add(world, e1, Position);
 
     /* No components */
-    ecs_entity_t e2 = ecs_new(world, Tag);
+    ecs_entity_t e2 = ecs_new_w(world, Tag);
 
     /* Components, No toggles */
-    ecs_entity_t e3 = ecs_new(world, Tag);
+    ecs_entity_t e3 = ecs_new_w(world, Tag);
     ecs_add(world, e3, Position);
     ecs_add(world, e3, Velocity);
 
     /* Toggle Position == true */
-    ecs_entity_t e4 = ecs_new(world, Tag);
+    ecs_entity_t e4 = ecs_new_w(world, Tag);
     ecs_add(world, e4, Position);
     ecs_enable_component(world, e4, Position, true);
 
     /* Toggle Position == false */
-    ecs_entity_t e5 = ecs_new(world, Tag);
+    ecs_entity_t e5 = ecs_new_w(world, Tag);
     ecs_add(world, e5, Position);
     ecs_enable_component(world, e5, Position, false);
 
     /* Toggle Velocity == true */
-    ecs_entity_t e6 = ecs_new(world, Tag);
+    ecs_entity_t e6 = ecs_new_w(world, Tag);
     ecs_add(world, e6, Position);
     ecs_add(world, e6, Velocity);
     ecs_enable_component(world, e6, Velocity, true);
 
     /* Toggle Velocity == false */
-    ecs_entity_t e7 = ecs_new(world, Tag);
+    ecs_entity_t e7 = ecs_new_w(world, Tag);
     ecs_add(world, e7, Position);
     ecs_add(world, e7, Velocity);
     ecs_enable_component(world, e7, Velocity, false);
 
     /* Toggle Position == true, Velocity == true */
-    ecs_entity_t e8 = ecs_new(world, Tag);
+    ecs_entity_t e8 = ecs_new_w(world, Tag);
     ecs_add(world, e8, Position);
     ecs_add(world, e8, Velocity);
     ecs_enable_component(world, e8, Position, true);
     ecs_enable_component(world, e8, Velocity, true);
 
     /* Toggle Position == true, Velocity == false */
-    ecs_entity_t e9 = ecs_new(world, Tag);
+    ecs_entity_t e9 = ecs_new_w(world, Tag);
     ecs_add(world, e9, Position);
     ecs_add(world, e9, Velocity);
     ecs_enable_component(world, e9, Position, true);
     ecs_enable_component(world, e9, Velocity, false);
 
     /* Toggle Position == false, Velocity == true */
-    ecs_entity_t e10 = ecs_new(world, Tag);
+    ecs_entity_t e10 = ecs_new_w(world, Tag);
     ecs_add(world, e10, Position);
     ecs_add(world, e10, Velocity);
     ecs_enable_component(world, e10, Position, false);
     ecs_enable_component(world, e10, Velocity, true);
 
     /* Toggle Position == false, Velocity == false */
-    ecs_entity_t e11 = ecs_new(world, Tag);
+    ecs_entity_t e11 = ecs_new_w(world, Tag);
     ecs_add(world, e11, Position);
     ecs_add(world, e11, Velocity);
     ecs_enable_component(world, e11, Position, false);
@@ -5345,30 +5345,30 @@ void Toggle_this_written_toggle_w_2_not_toggle(void) {
     ecs_add_id(world, ecs_id(Mass), EcsCanToggle);
 
     /* No toggles */
-    ecs_entity_t e1 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
     ecs_add(world, e1, Position);
 
     /* No components */
-    /* ecs_entity_t e2 = */ ecs_new(world, Tag);
+    /* ecs_entity_t e2 = */ ecs_new_w(world, Tag);
 
     /* Components, No toggles */
-    ecs_entity_t e3 = ecs_new(world, Tag);
+    ecs_entity_t e3 = ecs_new_w(world, Tag);
     ecs_add(world, e3, Position);
     ecs_add(world, e3, Velocity);
     ecs_add(world, e3, Mass);
 
     /* Toggle Position == true */
-    ecs_entity_t e4 = ecs_new(world, Tag);
+    ecs_entity_t e4 = ecs_new_w(world, Tag);
     ecs_add(world, e4, Position);
     ecs_enable_component(world, e4, Position, true);
 
     /* Toggle Position == false */
-    ecs_entity_t e5 = ecs_new(world, Tag);
+    ecs_entity_t e5 = ecs_new_w(world, Tag);
     ecs_add(world, e5, Position);
     ecs_enable_component(world, e5, Position, false);
 
     /* Toggle Velocity == true, Mass = true */
-    ecs_entity_t e6 = ecs_new(world, Tag);
+    ecs_entity_t e6 = ecs_new_w(world, Tag);
     ecs_add(world, e6, Position);
     ecs_add(world, e6, Velocity);
     ecs_enable_component(world, e6, Velocity, true);
@@ -5376,7 +5376,7 @@ void Toggle_this_written_toggle_w_2_not_toggle(void) {
     ecs_enable_component(world, e6, Mass, true);
 
     /* Toggle Velocity == false, Mass == false */
-    ecs_entity_t e7 = ecs_new(world, Tag);
+    ecs_entity_t e7 = ecs_new_w(world, Tag);
     ecs_add(world, e7, Position);
     ecs_add(world, e7, Velocity);
     ecs_enable_component(world, e7, Velocity, false);
@@ -5384,7 +5384,7 @@ void Toggle_this_written_toggle_w_2_not_toggle(void) {
     ecs_enable_component(world, e7, Mass, false);
 
     /* Toggle Position == true, Velocity == true, Mass == true */
-    ecs_entity_t e8 = ecs_new(world, Tag);
+    ecs_entity_t e8 = ecs_new_w(world, Tag);
     ecs_add(world, e8, Position);
     ecs_add(world, e8, Velocity);
     ecs_add(world, e8, Mass);
@@ -5393,7 +5393,7 @@ void Toggle_this_written_toggle_w_2_not_toggle(void) {
     ecs_enable_component(world, e8, Mass, true);
 
     /* Toggle Position == true, Velocity == false, Mass == false */
-    ecs_entity_t e9 = ecs_new(world, Tag);
+    ecs_entity_t e9 = ecs_new_w(world, Tag);
     ecs_add(world, e9, Position);
     ecs_add(world, e9, Velocity);
     ecs_add(world, e9, Mass);
@@ -5402,7 +5402,7 @@ void Toggle_this_written_toggle_w_2_not_toggle(void) {
     ecs_enable_component(world, e9, Mass, false);
 
     /* Toggle Position == false, Velocity == true, Mass == true */
-    ecs_entity_t e10 = ecs_new(world, Tag);
+    ecs_entity_t e10 = ecs_new_w(world, Tag);
     ecs_add(world, e10, Position);
     ecs_add(world, e10, Velocity);
     ecs_add(world, e10, Mass);
@@ -5411,7 +5411,7 @@ void Toggle_this_written_toggle_w_2_not_toggle(void) {
     ecs_enable_component(world, e10, Mass, true);
 
     /* Toggle Position == false, Velocity == false, Mass == false */
-    ecs_entity_t e11 = ecs_new(world, Tag);
+    ecs_entity_t e11 = ecs_new_w(world, Tag);
     ecs_add(world, e11, Position);
     ecs_add(world, e11, Velocity);
     ecs_add(world, e11, Mass);
@@ -5420,7 +5420,7 @@ void Toggle_this_written_toggle_w_2_not_toggle(void) {
     ecs_enable_component(world, e11, Mass, false);
 
     /* Toggle Position == true, Velocity == true, Mass == true */
-    ecs_entity_t e12 = ecs_new(world, Tag);
+    ecs_entity_t e12 = ecs_new_w(world, Tag);
     ecs_add(world, e12, Position);
     ecs_add(world, e12, Velocity);
     ecs_add(world, e12, Mass);
@@ -5429,7 +5429,7 @@ void Toggle_this_written_toggle_w_2_not_toggle(void) {
     ecs_enable_component(world, e12, Mass, false);
 
     /* Toggle Position == true, Velocity == false, Mass == true */
-    ecs_entity_t e13 = ecs_new(world, Tag);
+    ecs_entity_t e13 = ecs_new_w(world, Tag);
     ecs_add(world, e13, Position);
     ecs_add(world, e13, Velocity);
     ecs_add(world, e13, Mass);
@@ -5438,7 +5438,7 @@ void Toggle_this_written_toggle_w_2_not_toggle(void) {
     ecs_enable_component(world, e13, Mass, true);
 
     /* Toggle Position == false, Velocity == true, Mass == false */
-    ecs_entity_t e14 = ecs_new(world, Tag);
+    ecs_entity_t e14 = ecs_new_w(world, Tag);
     ecs_add(world, e14, Position);
     ecs_add(world, e14, Velocity);
     ecs_add(world, e14, Mass);
@@ -5447,7 +5447,7 @@ void Toggle_this_written_toggle_w_2_not_toggle(void) {
     ecs_enable_component(world, e14, Mass, false);
 
     /* Toggle Position == false, Velocity == false, Mass == true */
-    ecs_entity_t e15 = ecs_new(world, Tag);
+    ecs_entity_t e15 = ecs_new_w(world, Tag);
     ecs_add(world, e15, Position);
     ecs_add(world, e15, Velocity);
     ecs_add(world, e15, Mass);
@@ -5530,30 +5530,30 @@ void Toggle_this_written_toggle_w_2_optional_toggle(void) {
     ecs_add_id(world, ecs_id(Mass), EcsCanToggle);
 
     /* No toggles */
-    ecs_entity_t e1 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
     ecs_add(world, e1, Position);
 
     /* No components */
-    /* ecs_entity_t e2 = */ ecs_new(world, Tag);
+    /* ecs_entity_t e2 = */ ecs_new_w(world, Tag);
 
     /* Components, No toggles */
-    ecs_entity_t e3 = ecs_new(world, Tag);
+    ecs_entity_t e3 = ecs_new_w(world, Tag);
     ecs_add(world, e3, Position);
     ecs_add(world, e3, Velocity);
     ecs_add(world, e3, Mass);
 
     /* Toggle Position == true */
-    ecs_entity_t e4 = ecs_new(world, Tag);
+    ecs_entity_t e4 = ecs_new_w(world, Tag);
     ecs_add(world, e4, Position);
     ecs_enable_component(world, e4, Position, true);
 
     /* Toggle Position == false */
-    ecs_entity_t e5 = ecs_new(world, Tag);
+    ecs_entity_t e5 = ecs_new_w(world, Tag);
     ecs_add(world, e5, Position);
     ecs_enable_component(world, e5, Position, false);
 
     /* Toggle Velocity == true, Mass = true */
-    ecs_entity_t e6 = ecs_new(world, Tag);
+    ecs_entity_t e6 = ecs_new_w(world, Tag);
     ecs_add(world, e6, Position);
     ecs_add(world, e6, Velocity);
     ecs_enable_component(world, e6, Velocity, true);
@@ -5561,7 +5561,7 @@ void Toggle_this_written_toggle_w_2_optional_toggle(void) {
     ecs_enable_component(world, e6, Mass, true);
 
     /* Toggle Velocity == false, Mass == false */
-    ecs_entity_t e7 = ecs_new(world, Tag);
+    ecs_entity_t e7 = ecs_new_w(world, Tag);
     ecs_add(world, e7, Position);
     ecs_add(world, e7, Velocity);
     ecs_enable_component(world, e7, Velocity, false);
@@ -5569,7 +5569,7 @@ void Toggle_this_written_toggle_w_2_optional_toggle(void) {
     ecs_enable_component(world, e7, Mass, false);
 
     /* Toggle Position == true, Velocity == true, Mass == true */
-    ecs_entity_t e8 = ecs_new(world, Tag);
+    ecs_entity_t e8 = ecs_new_w(world, Tag);
     ecs_add(world, e8, Position);
     ecs_add(world, e8, Velocity);
     ecs_add(world, e8, Mass);
@@ -5578,7 +5578,7 @@ void Toggle_this_written_toggle_w_2_optional_toggle(void) {
     ecs_enable_component(world, e8, Mass, true);
 
     /* Toggle Position == true, Velocity == false, Mass == false */
-    ecs_entity_t e9 = ecs_new(world, Tag);
+    ecs_entity_t e9 = ecs_new_w(world, Tag);
     ecs_add(world, e9, Position);
     ecs_add(world, e9, Velocity);
     ecs_add(world, e9, Mass);
@@ -5587,7 +5587,7 @@ void Toggle_this_written_toggle_w_2_optional_toggle(void) {
     ecs_enable_component(world, e9, Mass, false);
 
     /* Toggle Position == false, Velocity == true, Mass == true */
-    ecs_entity_t e10 = ecs_new(world, Tag);
+    ecs_entity_t e10 = ecs_new_w(world, Tag);
     ecs_add(world, e10, Position);
     ecs_add(world, e10, Velocity);
     ecs_add(world, e10, Mass);
@@ -5596,7 +5596,7 @@ void Toggle_this_written_toggle_w_2_optional_toggle(void) {
     ecs_enable_component(world, e10, Mass, true);
 
     /* Toggle Position == false, Velocity == false, Mass == false */
-    ecs_entity_t e11 = ecs_new(world, Tag);
+    ecs_entity_t e11 = ecs_new_w(world, Tag);
     ecs_add(world, e11, Position);
     ecs_add(world, e11, Velocity);
     ecs_add(world, e11, Mass);
@@ -5605,7 +5605,7 @@ void Toggle_this_written_toggle_w_2_optional_toggle(void) {
     ecs_enable_component(world, e11, Mass, false);
 
     /* Toggle Position == true, Velocity == true, Mass == true */
-    ecs_entity_t e12 = ecs_new(world, Tag);
+    ecs_entity_t e12 = ecs_new_w(world, Tag);
     ecs_add(world, e12, Position);
     ecs_add(world, e12, Velocity);
     ecs_add(world, e12, Mass);
@@ -5614,7 +5614,7 @@ void Toggle_this_written_toggle_w_2_optional_toggle(void) {
     ecs_enable_component(world, e12, Mass, false);
 
     /* Toggle Position == true, Velocity == false, Mass == true */
-    ecs_entity_t e13 = ecs_new(world, Tag);
+    ecs_entity_t e13 = ecs_new_w(world, Tag);
     ecs_add(world, e13, Position);
     ecs_add(world, e13, Velocity);
     ecs_add(world, e13, Mass);
@@ -5623,7 +5623,7 @@ void Toggle_this_written_toggle_w_2_optional_toggle(void) {
     ecs_enable_component(world, e13, Mass, true);
 
     /* Toggle Position == false, Velocity == true, Mass == false */
-    ecs_entity_t e14 = ecs_new(world, Tag);
+    ecs_entity_t e14 = ecs_new_w(world, Tag);
     ecs_add(world, e14, Position);
     ecs_add(world, e14, Velocity);
     ecs_add(world, e14, Mass);
@@ -5632,7 +5632,7 @@ void Toggle_this_written_toggle_w_2_optional_toggle(void) {
     ecs_enable_component(world, e14, Mass, false);
 
     /* Toggle Position == false, Velocity == false, Mass == true */
-    ecs_entity_t e15 = ecs_new(world, Tag);
+    ecs_entity_t e15 = ecs_new_w(world, Tag);
     ecs_add(world, e15, Position);
     ecs_add(world, e15, Velocity);
     ecs_add(world, e15, Mass);
@@ -5775,30 +5775,30 @@ void Toggle_this_written_2_toggle_w_not_toggle(void) {
     ecs_add_id(world, ecs_id(Mass), EcsCanToggle);
 
     /* No toggles */
-    ecs_entity_t e1 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
     ecs_add(world, e1, Position);
 
     /* No components */
-    /* ecs_entity_t e2 = */ ecs_new(world, Tag);
+    /* ecs_entity_t e2 = */ ecs_new_w(world, Tag);
 
     /* Components, No toggles */
-    ecs_entity_t e3 = ecs_new(world, Tag);
+    ecs_entity_t e3 = ecs_new_w(world, Tag);
     ecs_add(world, e3, Position);
     ecs_add(world, e3, Velocity);
     ecs_add(world, e3, Mass);
 
     /* Toggle Position == true */
-    ecs_entity_t e4 = ecs_new(world, Tag);
+    ecs_entity_t e4 = ecs_new_w(world, Tag);
     ecs_add(world, e4, Position);
     ecs_enable_component(world, e4, Position, true);
 
     /* Toggle Position == false */
-    ecs_entity_t e5 = ecs_new(world, Tag);
+    ecs_entity_t e5 = ecs_new_w(world, Tag);
     ecs_add(world, e5, Position);
     ecs_enable_component(world, e5, Position, false);
 
     /* Toggle Velocity == true, Mass = true */
-    ecs_entity_t e6 = ecs_new(world, Tag);
+    ecs_entity_t e6 = ecs_new_w(world, Tag);
     ecs_add(world, e6, Position);
     ecs_add(world, e6, Velocity);
     ecs_enable_component(world, e6, Velocity, true);
@@ -5806,7 +5806,7 @@ void Toggle_this_written_2_toggle_w_not_toggle(void) {
     ecs_enable_component(world, e6, Mass, true);
 
     /* Toggle Velocity == false, Mass == false */
-    ecs_entity_t e7 = ecs_new(world, Tag);
+    ecs_entity_t e7 = ecs_new_w(world, Tag);
     ecs_add(world, e7, Position);
     ecs_add(world, e7, Velocity);
     ecs_enable_component(world, e7, Velocity, false);
@@ -5814,7 +5814,7 @@ void Toggle_this_written_2_toggle_w_not_toggle(void) {
     ecs_enable_component(world, e7, Mass, false);
 
     /* Toggle Position == true, Velocity == true, Mass == true */
-    ecs_entity_t e8 = ecs_new(world, Tag);
+    ecs_entity_t e8 = ecs_new_w(world, Tag);
     ecs_add(world, e8, Position);
     ecs_add(world, e8, Velocity);
     ecs_add(world, e8, Mass);
@@ -5823,7 +5823,7 @@ void Toggle_this_written_2_toggle_w_not_toggle(void) {
     ecs_enable_component(world, e8, Mass, true);
 
     /* Toggle Position == true, Velocity == false, Mass == false */
-    ecs_entity_t e9 = ecs_new(world, Tag);
+    ecs_entity_t e9 = ecs_new_w(world, Tag);
     ecs_add(world, e9, Position);
     ecs_add(world, e9, Velocity);
     ecs_add(world, e9, Mass);
@@ -5832,7 +5832,7 @@ void Toggle_this_written_2_toggle_w_not_toggle(void) {
     ecs_enable_component(world, e9, Mass, false);
 
     /* Toggle Position == false, Velocity == true, Mass == true */
-    ecs_entity_t e10 = ecs_new(world, Tag);
+    ecs_entity_t e10 = ecs_new_w(world, Tag);
     ecs_add(world, e10, Position);
     ecs_add(world, e10, Velocity);
     ecs_add(world, e10, Mass);
@@ -5841,7 +5841,7 @@ void Toggle_this_written_2_toggle_w_not_toggle(void) {
     ecs_enable_component(world, e10, Mass, true);
 
     /* Toggle Position == false, Velocity == false, Mass == false */
-    ecs_entity_t e11 = ecs_new(world, Tag);
+    ecs_entity_t e11 = ecs_new_w(world, Tag);
     ecs_add(world, e11, Position);
     ecs_add(world, e11, Velocity);
     ecs_add(world, e11, Mass);
@@ -5850,7 +5850,7 @@ void Toggle_this_written_2_toggle_w_not_toggle(void) {
     ecs_enable_component(world, e11, Mass, false);
 
     /* Toggle Position == true, Velocity == true, Mass == true */
-    ecs_entity_t e12 = ecs_new(world, Tag);
+    ecs_entity_t e12 = ecs_new_w(world, Tag);
     ecs_add(world, e12, Position);
     ecs_add(world, e12, Velocity);
     ecs_add(world, e12, Mass);
@@ -5859,7 +5859,7 @@ void Toggle_this_written_2_toggle_w_not_toggle(void) {
     ecs_enable_component(world, e12, Mass, false);
 
     /* Toggle Position == true, Velocity == false, Mass == true */
-    ecs_entity_t e13 = ecs_new(world, Tag);
+    ecs_entity_t e13 = ecs_new_w(world, Tag);
     ecs_add(world, e13, Position);
     ecs_add(world, e13, Velocity);
     ecs_add(world, e13, Mass);
@@ -5868,7 +5868,7 @@ void Toggle_this_written_2_toggle_w_not_toggle(void) {
     ecs_enable_component(world, e13, Mass, true);
 
     /* Toggle Position == false, Velocity == true, Mass == false */
-    ecs_entity_t e14 = ecs_new(world, Tag);
+    ecs_entity_t e14 = ecs_new_w(world, Tag);
     ecs_add(world, e14, Position);
     ecs_add(world, e14, Velocity);
     ecs_add(world, e14, Mass);
@@ -5877,7 +5877,7 @@ void Toggle_this_written_2_toggle_w_not_toggle(void) {
     ecs_enable_component(world, e14, Mass, false);
 
     /* Toggle Position == false, Velocity == false, Mass == true */
-    ecs_entity_t e15 = ecs_new(world, Tag);
+    ecs_entity_t e15 = ecs_new_w(world, Tag);
     ecs_add(world, e15, Position);
     ecs_add(world, e15, Velocity);
     ecs_add(world, e15, Mass);
@@ -5924,30 +5924,30 @@ void Toggle_this_written_2_toggle_w_optional_toggle(void) {
     ecs_add_id(world, ecs_id(Mass), EcsCanToggle);
 
     /* No toggles */
-    ecs_entity_t e1 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
     ecs_add(world, e1, Position);
 
     /* No components */
-    /* ecs_entity_t e2 = */ ecs_new(world, Tag);
+    /* ecs_entity_t e2 = */ ecs_new_w(world, Tag);
 
     /* Components, No toggles */
-    ecs_entity_t e3 = ecs_new(world, Tag);
+    ecs_entity_t e3 = ecs_new_w(world, Tag);
     ecs_add(world, e3, Position);
     ecs_add(world, e3, Velocity);
     ecs_add(world, e3, Mass);
 
     /* Toggle Position == true */
-    ecs_entity_t e4 = ecs_new(world, Tag);
+    ecs_entity_t e4 = ecs_new_w(world, Tag);
     ecs_add(world, e4, Position);
     ecs_enable_component(world, e4, Position, true);
 
     /* Toggle Position == false */
-    ecs_entity_t e5 = ecs_new(world, Tag);
+    ecs_entity_t e5 = ecs_new_w(world, Tag);
     ecs_add(world, e5, Position);
     ecs_enable_component(world, e5, Position, false);
 
     /* Toggle Velocity == true, Mass = true */
-    ecs_entity_t e6 = ecs_new(world, Tag);
+    ecs_entity_t e6 = ecs_new_w(world, Tag);
     ecs_add(world, e6, Position);
     ecs_add(world, e6, Velocity);
     ecs_enable_component(world, e6, Velocity, true);
@@ -5955,7 +5955,7 @@ void Toggle_this_written_2_toggle_w_optional_toggle(void) {
     ecs_enable_component(world, e6, Mass, true);
 
     /* Toggle Velocity == false, Mass == false */
-    ecs_entity_t e7 = ecs_new(world, Tag);
+    ecs_entity_t e7 = ecs_new_w(world, Tag);
     ecs_add(world, e7, Position);
     ecs_add(world, e7, Velocity);
     ecs_enable_component(world, e7, Velocity, false);
@@ -5963,7 +5963,7 @@ void Toggle_this_written_2_toggle_w_optional_toggle(void) {
     ecs_enable_component(world, e7, Mass, false);
 
     /* Toggle Position == true, Velocity == true, Mass == true */
-    ecs_entity_t e8 = ecs_new(world, Tag);
+    ecs_entity_t e8 = ecs_new_w(world, Tag);
     ecs_add(world, e8, Position);
     ecs_add(world, e8, Velocity);
     ecs_add(world, e8, Mass);
@@ -5972,7 +5972,7 @@ void Toggle_this_written_2_toggle_w_optional_toggle(void) {
     ecs_enable_component(world, e8, Mass, true);
 
     /* Toggle Position == true, Velocity == false, Mass == false */
-    ecs_entity_t e9 = ecs_new(world, Tag);
+    ecs_entity_t e9 = ecs_new_w(world, Tag);
     ecs_add(world, e9, Position);
     ecs_add(world, e9, Velocity);
     ecs_add(world, e9, Mass);
@@ -5981,7 +5981,7 @@ void Toggle_this_written_2_toggle_w_optional_toggle(void) {
     ecs_enable_component(world, e9, Mass, false);
 
     /* Toggle Position == false, Velocity == true, Mass == true */
-    ecs_entity_t e10 = ecs_new(world, Tag);
+    ecs_entity_t e10 = ecs_new_w(world, Tag);
     ecs_add(world, e10, Position);
     ecs_add(world, e10, Velocity);
     ecs_add(world, e10, Mass);
@@ -5990,7 +5990,7 @@ void Toggle_this_written_2_toggle_w_optional_toggle(void) {
     ecs_enable_component(world, e10, Mass, true);
 
     /* Toggle Position == false, Velocity == false, Mass == false */
-    ecs_entity_t e11 = ecs_new(world, Tag);
+    ecs_entity_t e11 = ecs_new_w(world, Tag);
     ecs_add(world, e11, Position);
     ecs_add(world, e11, Velocity);
     ecs_add(world, e11, Mass);
@@ -5999,7 +5999,7 @@ void Toggle_this_written_2_toggle_w_optional_toggle(void) {
     ecs_enable_component(world, e11, Mass, false);
 
     /* Toggle Position == true, Velocity == true, Mass == true */
-    ecs_entity_t e12 = ecs_new(world, Tag);
+    ecs_entity_t e12 = ecs_new_w(world, Tag);
     ecs_add(world, e12, Position);
     ecs_add(world, e12, Velocity);
     ecs_add(world, e12, Mass);
@@ -6008,7 +6008,7 @@ void Toggle_this_written_2_toggle_w_optional_toggle(void) {
     ecs_enable_component(world, e12, Mass, false);
 
     /* Toggle Position == true, Velocity == false, Mass == true */
-    ecs_entity_t e13 = ecs_new(world, Tag);
+    ecs_entity_t e13 = ecs_new_w(world, Tag);
     ecs_add(world, e13, Position);
     ecs_add(world, e13, Velocity);
     ecs_add(world, e13, Mass);
@@ -6017,7 +6017,7 @@ void Toggle_this_written_2_toggle_w_optional_toggle(void) {
     ecs_enable_component(world, e13, Mass, true);
 
     /* Toggle Position == false, Velocity == true, Mass == false */
-    ecs_entity_t e14 = ecs_new(world, Tag);
+    ecs_entity_t e14 = ecs_new_w(world, Tag);
     ecs_add(world, e14, Position);
     ecs_add(world, e14, Velocity);
     ecs_add(world, e14, Mass);
@@ -6026,7 +6026,7 @@ void Toggle_this_written_2_toggle_w_optional_toggle(void) {
     ecs_enable_component(world, e14, Mass, false);
 
     /* Toggle Position == false, Velocity == false, Mass == true */
-    ecs_entity_t e15 = ecs_new(world, Tag);
+    ecs_entity_t e15 = ecs_new_w(world, Tag);
     ecs_add(world, e15, Position);
     ecs_add(world, e15, Velocity);
     ecs_add(world, e15, Mass);

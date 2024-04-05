@@ -333,8 +333,8 @@ void MultiThreadStaging_custom_thread_auto_merge(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
 
     ecs_set_stage_count(world, 2);
 
@@ -386,14 +386,14 @@ void MultiThreadStaging_set_pair_w_new_target_readonly(void) {
 
     ecs_set_threads(world, 2);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     ecs_world_t *thr_1 = ecs_get_stage(world, 0);
 
     ecs_frame_begin(world, 0);
     ecs_readonly_begin(world, true);
 
-    ecs_entity_t tgt = ecs_new_id(thr_1);
+    ecs_entity_t tgt = ecs_new(thr_1);
     ecs_set_pair(thr_1, e, Position, tgt, {10, 20});
 
     ecs_readonly_end(world);
@@ -416,14 +416,14 @@ void MultiThreadStaging_set_pair_w_new_target_tgt_component_readonly(void) {
 
     ecs_set_threads(world, 2);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     ecs_world_t *thr_1 = ecs_get_stage(world, 0);
 
     ecs_frame_begin(world, 0);
     ecs_readonly_begin(world, true);
 
-    ecs_entity_t tgt = ecs_new_id(thr_1);
+    ecs_entity_t tgt = ecs_new(thr_1);
     ecs_set_pair_second(thr_1, e, tgt, Position, {10, 20});
 
     ecs_readonly_end(world);
@@ -446,11 +446,11 @@ void MultiThreadStaging_set_pair_w_new_target_defer(void) {
 
     ecs_set_threads(world, 2);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     ecs_defer_begin(world);
 
-    ecs_entity_t tgt = ecs_new_id(world);
+    ecs_entity_t tgt = ecs_new(world);
     ecs_set_pair(world, e, Position, tgt, {10, 20});
 
     ecs_defer_end(world);
@@ -472,11 +472,11 @@ void MultiThreadStaging_set_pair_w_new_target_tgt_component_defer(void) {
 
     ecs_set_threads(world, 2);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     ecs_defer_begin(world);
 
-    ecs_entity_t tgt = ecs_new_id(world);
+    ecs_entity_t tgt = ecs_new(world);
     ecs_set_pair_second(world, e, tgt, Position, {10, 20});
 
     ecs_defer_end(world);

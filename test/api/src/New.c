@@ -7,7 +7,7 @@ void New_setup(void) {
 void New_empty(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
     test_assert(!ecs_get_type(world, e));
 
@@ -19,7 +19,7 @@ void New_component(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Position));
 
@@ -59,11 +59,11 @@ void New_redefine_component(void) {
 void New_recycle_id_empty(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
     test_assert(e1 != 0);
     ecs_delete(world, e1);
 
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e2 = ecs_new(world);
     test_assert(e2 != 0);
     test_assert(e1 != e2);
     test_assert((e1 & ECS_ENTITY_MASK) == (e2 & ECS_ENTITY_MASK));
@@ -74,7 +74,7 @@ void New_recycle_id_empty(void) {
 void New_recycle_id_w_entity(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t tag = ecs_new_id(world);
+    ecs_entity_t tag = ecs_new(world);
 
     ecs_entity_t e1 = ecs_new_w_id(world, tag);
     test_assert(e1 != 0);
@@ -91,14 +91,14 @@ void New_recycle_id_w_entity(void) {
 void New_recycle_empty_staged_delete(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
     test_assert(e1 != 0);
 
     ecs_defer_begin(world);
     ecs_delete(world, e1);
     ecs_defer_end(world);
 
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e2 = ecs_new(world);
     test_assert(e2 != 0);
     test_assert(e1 != e2);
     test_assert((e1 & ECS_ENTITY_MASK) == (e2 & ECS_ENTITY_MASK));
@@ -111,14 +111,14 @@ void New_recycle_staged_delete(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e1 = ecs_new_w(world, Position);
     test_assert(e1 != 0);
 
     ecs_defer_begin(world);
     ecs_delete(world, e1);
     ecs_defer_end(world);
 
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e2 = ecs_new(world);
     test_assert(e2 != 0);
     test_assert(e1 != e2);
     test_assert((e1 & ECS_ENTITY_MASK) == (e2 & ECS_ENTITY_MASK));
@@ -129,7 +129,7 @@ void New_recycle_staged_delete(void) {
 void New_new_id(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
     test_assert(!ecs_get_type(world, e));
 
@@ -190,7 +190,7 @@ void New_new_component_id_skip_to_hi_id(void) {
     test_assert(e2 > FLECS_HI_COMPONENT_ID);
     test_assert(!ecs_get_type(world, e2));
 
-    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_entity_t e3 = ecs_new(world);
     test_assert(e3 != e2);
     test_assert(e3 > e2);
     test_assert(!ecs_get_type(world, e3));
@@ -201,7 +201,7 @@ void New_new_component_id_skip_to_hi_id(void) {
 void New_new_hi_component_id(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
 
     ecs_entity_t c;
@@ -292,7 +292,7 @@ void New_new_w_id_w_with_w_scope(void) {
 
     ecs_set_with(world, Tag);
 
-    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t parent = ecs_new(world);
     ecs_set_scope(world, parent);
 
     ecs_entity_t e = ecs_new_w_id(world, Tag2);
@@ -341,7 +341,7 @@ void New_new_w_id_w_with_defer_w_scope(void) {
 
     ecs_set_with(world, Tag);
 
-    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t parent = ecs_new(world);
     ecs_set_scope(world, parent);
 
     ecs_defer_begin(world);
@@ -373,7 +373,7 @@ void New_new_w_type_w_with(void) {
 
     ecs_set_with(world, Tag);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e != 0);
     test_assert(!ecs_has(world, e, Tag));
     test_assert(ecs_has(world, e, Position));
@@ -391,10 +391,10 @@ void New_new_w_type_w_with_w_scope(void) {
 
     ecs_set_with(world, Tag);
 
-    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t parent = ecs_new(world);
     ecs_set_scope(world, parent);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e != 0);
     test_assert(!ecs_has(world, e, Tag));
     test_assert(ecs_has(world, e, Position));
@@ -416,7 +416,7 @@ void New_new_w_type_w_with_defer(void) {
 
     ecs_defer_begin(world);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e != 0);
     
     test_assert(!ecs_has(world, e, Tag));
@@ -440,12 +440,12 @@ void New_new_w_type_w_with_defer_w_scope(void) {
 
     ecs_set_with(world, Tag);
 
-    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t parent = ecs_new(world);
     ecs_set_scope(world, parent);
 
     ecs_defer_begin(world);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e != 0);
 
     test_assert(!ecs_has(world, e, Tag));

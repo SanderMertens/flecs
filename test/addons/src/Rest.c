@@ -242,8 +242,8 @@ void Rest_request_commands(void) {
         ecs_os_free(reply_str);
     }
 
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
 
     ecs_frame_begin(world, 0);
     ecs_defer_begin(world);
@@ -288,8 +288,8 @@ void Rest_request_commands_2_syncs(void) {
         ecs_os_free(reply_str);
     }
 
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
 
     ecs_frame_begin(world, 0);
     ecs_defer_begin(world);
@@ -401,8 +401,8 @@ void Rest_request_commands_garbage_collect(void) {
         ecs_os_free(reply_str);
     }
 
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
 
     ecs_frame_begin(world, 0);
     ecs_defer_begin(world);

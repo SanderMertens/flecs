@@ -191,7 +191,7 @@ void Internals_recreate_deleted_table(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t parent_A = ecs_new_id(world);
+    ecs_entity_t parent_A = ecs_new(world);
     ecs_entity_t child_A = ecs_new_w_pair(world, EcsChildOf, parent_A);
     test_assert(parent_A != 0);
     test_assert(child_A != 0);
@@ -200,7 +200,7 @@ void Internals_recreate_deleted_table(void) {
     test_assert( !ecs_is_alive(world, parent_A));
     test_assert( !ecs_is_alive(world, child_A));
 
-    ecs_entity_t parent_B = ecs_new_id(world);
+    ecs_entity_t parent_B = ecs_new(world);
     ecs_entity_t child_B = ecs_new_w_pair(world, EcsChildOf, parent_B);
     test_assert(parent_B != 0);
     test_assert(child_B != 0);
@@ -213,7 +213,7 @@ void Internals_create_65k_tables(void) {
 
     int32_t i;
     for (i = 0; i <= 65536; i ++) {
-        ecs_entity_t e = ecs_new_id(world);
+        ecs_entity_t e = ecs_new(world);
         ecs_add_id(world, e, e);
         test_assert(ecs_has_id(world, e, e));
         test_int(ecs_get_type(world, e)->count, 1);
@@ -231,7 +231,7 @@ void Internals_no_duplicate_root_table_id(void) {
 
     int32_t i;
     for (i = 0; i <= 50; i ++) {
-        ecs_entity_t e = ecs_new_id(world);
+        ecs_entity_t e = ecs_new(world);
         ecs_add_id(world, e, i + 1000);
         test_assert(e != 0);
         test_assert(ecs_has_id(world, e, i + 1000));
@@ -265,26 +265,26 @@ void Internals_override_os_api_w_addon(void) {
 void Internals_records_resize_on_override(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t TagA = ecs_new_id(world);
-    ecs_entity_t TagB = ecs_new_id(world);
-    ecs_entity_t TagC = ecs_new_id(world);
-    ecs_entity_t TagD = ecs_new_id(world);
-    ecs_entity_t TagE = ecs_new_id(world);
-    ecs_entity_t TagF = ecs_new_id(world);
-    ecs_entity_t TagG = ecs_new_id(world);
-    ecs_entity_t TagH = ecs_new_id(world);
+    ecs_entity_t TagA = ecs_new(world);
+    ecs_entity_t TagB = ecs_new(world);
+    ecs_entity_t TagC = ecs_new(world);
+    ecs_entity_t TagD = ecs_new(world);
+    ecs_entity_t TagE = ecs_new(world);
+    ecs_entity_t TagF = ecs_new(world);
+    ecs_entity_t TagG = ecs_new(world);
+    ecs_entity_t TagH = ecs_new(world);
 
-    ecs_entity_t RelA = ecs_new_id(world);
-    ecs_entity_t RelB = ecs_new_id(world);
-    ecs_entity_t RelC = ecs_new_id(world);
-    ecs_entity_t RelD = ecs_new_id(world);
-    ecs_entity_t RelE = ecs_new_id(world);
-    ecs_entity_t RelF = ecs_new_id(world);
-    ecs_entity_t RelG = ecs_new_id(world);
-    ecs_entity_t TgtA = ecs_new_id(world);
-    ecs_entity_t TgtB = ecs_new_id(world);
+    ecs_entity_t RelA = ecs_new(world);
+    ecs_entity_t RelB = ecs_new(world);
+    ecs_entity_t RelC = ecs_new(world);
+    ecs_entity_t RelD = ecs_new(world);
+    ecs_entity_t RelE = ecs_new(world);
+    ecs_entity_t RelF = ecs_new(world);
+    ecs_entity_t RelG = ecs_new(world);
+    ecs_entity_t TgtA = ecs_new(world);
+    ecs_entity_t TgtB = ecs_new(world);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_add_id(world, e, TagA);
     ecs_add_id(world, e, TagB);
     ecs_add_id(world, e, TagC);
@@ -325,7 +325,7 @@ void Internals_table_observed_after_add(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    ecs_entity_t p = ecs_new_id(world);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
     ecs_table_t *pt = ecs_get_table(world, p);
     ecs_table_t *ct = ecs_get_table(world, c);
@@ -353,7 +353,7 @@ void Internals_table_observed_after_remove(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    ecs_entity_t p = ecs_new_id(world);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
     ecs_table_t *pt = ecs_get_table(world, p);
     ecs_table_t *ct = ecs_get_table(world, c);
@@ -388,7 +388,7 @@ void Internals_table_observed_after_clear(void) {
 
     ECS_TAG(world, TagA);
 
-    ecs_entity_t p = ecs_new_id(world);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
     ecs_table_t *pt = ecs_get_table(world, p);
     ecs_table_t *ct = ecs_get_table(world, c);
@@ -415,7 +415,7 @@ void Internals_table_observed_after_delete(void) {
 
     ECS_TAG(world, TagA);
 
-    ecs_entity_t p = ecs_new_id(world);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
     ecs_table_t *pt = ecs_get_table(world, p);
     ecs_table_t *ct = ecs_get_table(world, c);
@@ -439,7 +439,7 @@ void Internals_table_observed_after_on_remove(void) {
 
     ECS_TAG(world, TagA);
 
-    ecs_entity_t p = ecs_new_id(world);
+    ecs_entity_t p = ecs_new(world);
     ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
     ecs_table_t *pt = ecs_get_table(world, p);
     ecs_table_t *ct = ecs_get_table(world, c);
@@ -447,7 +447,7 @@ void Internals_table_observed_after_on_remove(void) {
     test_assert(ct != NULL);
     test_int(flecs_table_observed_count(ct), 0);
 
-    ecs_entity_t t = ecs_new_id(world);
+    ecs_entity_t t = ecs_new(world);
     ecs_add_id(world, p, t);
     ecs_table_t *pt_t = ecs_get_table(world, p);
     test_assert(pt_t != NULL);
@@ -476,7 +476,7 @@ void Internals_table_observed_after_entity_flag(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    ecs_entity_t p = ecs_new_id(world);
+    ecs_entity_t p = ecs_new(world);
 
     ecs_add(world, p, TagA);
     ecs_table_t *p_a = ecs_get_table(world, p);
@@ -498,7 +498,7 @@ void Internals_table_create_leak_check(void) {
 
     int64_t max_block_count;
 
-    ecs_entity_t tag = ecs_new_id(world);
+    ecs_entity_t tag = ecs_new(world);
     ecs_entity_t e = ecs_new_w_id(world, tag);
     ecs_delete(world, tag);
 
@@ -506,7 +506,7 @@ void Internals_table_create_leak_check(void) {
         ecs_block_allocator_free_count;
 
     for (int i = 0; i < 25000; i ++) {
-        tag = ecs_new_id(world);
+        tag = ecs_new(world);
         ecs_add_id(world, e, tag);
         ecs_delete(world, tag);
     }

@@ -39,7 +39,7 @@ struct entity : entity_builder<entity>
     {
         m_world = world;
         if (!ecs_get_scope(m_world) && !ecs_get_with(m_world)) {
-            m_id = ecs_new_id(world);
+            m_id = ecs_new(world);
         } else {
             ecs_entity_desc_t desc = {};
             m_id = ecs_entity_init(m_world, &desc);

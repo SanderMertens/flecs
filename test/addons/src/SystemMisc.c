@@ -343,7 +343,7 @@ void SystemMisc_table_columns_access(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_add(world, e, Position);
     ecs_add(world, e, Velocity);
 
@@ -510,7 +510,7 @@ void SystemMisc_change_system_action(void) {
         .callback = ActionA
     });
 
-    ecs_new(world, Position);
+    ecs_new_w(world, Position);
 
     test_bool(action_a_invoked, false);
     test_bool(action_b_invoked, false);
@@ -545,7 +545,7 @@ void SystemMisc_system_readeactivate(void) {
     /* No entities, system should be deactivated */
     test_assert( ecs_has_id(world, Dummy, EcsEmpty));
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     ecs_run_aperiodic(world, 0);
 
     /* System should be active, one entity is matched */
@@ -585,8 +585,8 @@ void SystemMisc_system_readeactivate_w_2_systems(void) {
     test_assert( ecs_has_id(world, Dummy1, EcsEmpty));
     test_assert( ecs_has_id(world, Dummy2, EcsEmpty));
 
-    ecs_entity_t e1 = ecs_new(world, Position);
-    ecs_new(world, Mass);
+    ecs_entity_t e1 = ecs_new_w(world, Position);
+    ecs_new_w(world, Mass);
     ecs_run_aperiodic(world, 0);
 
     /* Systems should be active, one entity is matched */
@@ -618,7 +618,7 @@ void SystemMisc_add_to_system_in_progress(void) {
 
     ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position);
 
-    ecs_new(world, Position);
+    ecs_new_w(world, Position);
 
     ecs_defer_begin(world);
 
@@ -750,8 +750,8 @@ void SystemMisc_declare_different_id_same_name(void) {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
 
     ecs_entity_t s_1 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.id = e1, .name = "Move", .add = {ecs_dependson(EcsOnUpdate)}}),
@@ -774,11 +774,11 @@ void SystemMisc_declare_different_id_same_name_w_scope(void) {
     
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t scope = ecs_new_id(world);
+    ecs_entity_t scope = ecs_new(world);
     ecs_set_scope(world, scope);
 
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
 
     ecs_entity_t s_1 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.id = e1, .name = "Move", .add = {ecs_dependson(EcsOnUpdate)}}),
@@ -804,7 +804,7 @@ void SystemMisc_rw_in_implicit_any(void) {
 
     ecs_query_t *q = ecs_query(world, { .expr = "Position, Velocity(self|up)" });
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     ecs_add(world, e, Velocity);
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -826,8 +826,8 @@ void SystemMisc_rw_in_implicit_shared(void) {
 
     ecs_query_t *q = ecs_query(world, { .expr = "Position, Velocity(up(IsA))" });
 
-    ecs_entity_t base = ecs_new(world, Velocity);
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t base = ecs_new_w(world, Velocity);
+    ecs_entity_t e = ecs_new_w(world, Position);
     ecs_add_pair(world, e, EcsIsA, base);
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -849,7 +849,7 @@ void SystemMisc_rw_in_implicit_from_empty(void) {
 
     ecs_query_t *q = ecs_query(world, { .expr = "Position, Velocity()" });
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     ecs_add(world, e, Velocity);
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -872,7 +872,7 @@ void SystemMisc_rw_in_implicit_from_entity(void) {
 
     ecs_query_t *q = ecs_query(world, { .expr = "Position, Velocity(f)" });
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     ecs_add(world, e, Velocity);
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -894,7 +894,7 @@ void SystemMisc_rw_out_explicit_any(void) {
 
     ecs_query_t *q = ecs_query(world, { .expr = "Position, [out] Velocity(self|up(IsA))" });
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     ecs_add(world, e, Velocity);
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -916,8 +916,8 @@ void SystemMisc_rw_out_explicit_shared(void) {
 
     ecs_query_t *q = ecs_query(world, { .expr = "Position, [out] Velocity(up(IsA))" });
 
-    ecs_entity_t base = ecs_new(world, Velocity);
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t base = ecs_new_w(world, Velocity);
+    ecs_entity_t e = ecs_new_w(world, Position);
     ecs_add_pair(world, e, EcsIsA, base);
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -939,7 +939,7 @@ void SystemMisc_rw_out_explicit_from_empty(void) {
 
     ecs_query_t *q = ecs_query(world, { .expr = "Position, [out] Velocity()" });
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     ecs_add(world, e, Velocity);
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -962,7 +962,7 @@ void SystemMisc_rw_out_explicit_from_entity(void) {
 
     ecs_query_t *q = ecs_query(world, { .expr = "Position, [out] Velocity(f)" });
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     ecs_add(world, e, Velocity);
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -1136,7 +1136,7 @@ void SystemMisc_delete_system(void) {
 
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_add_id(world, e, Tag);
 
     ecs_run(world, system, 0, NULL);
@@ -1179,7 +1179,7 @@ void SystemMisc_delete_pipeline_system(void) {
 
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_add_id(world, e, Tag);
 
     ecs_progress(world, 0);
@@ -1245,7 +1245,7 @@ void SystemMisc_delete_system_w_ctx(void) {
 
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_add_id(world, e, Tag);
 
     ecs_run(world, system, 0, NULL);
@@ -1357,9 +1357,9 @@ void SystemMisc_run_custom_run_action(void) {
     });
     test_assert(system != 0);
 
-    ecs_entity_t e1 = ecs_new(world, TagA);
-    ecs_entity_t e2 = ecs_new(world, TagA);
-    ecs_entity_t e3 = ecs_new(world, TagA);
+    ecs_entity_t e1 = ecs_new_w(world, TagA);
+    ecs_entity_t e2 = ecs_new_w(world, TagA);
+    ecs_entity_t e3 = ecs_new_w(world, TagA);
     ecs_add(world, e3, TagB); // 2 tables
 
     ecs_run(world, system, 0, NULL);
@@ -1392,9 +1392,9 @@ void SystemMisc_pipeline_custom_run_action(void) {
     });
     test_assert(system != 0);
 
-    ecs_entity_t e1 = ecs_new(world, TagA);
-    ecs_entity_t e2 = ecs_new(world, TagA);
-    ecs_entity_t e3 = ecs_new(world, TagA);
+    ecs_entity_t e1 = ecs_new_w(world, TagA);
+    ecs_entity_t e2 = ecs_new_w(world, TagA);
+    ecs_entity_t e3 = ecs_new_w(world, TagA);
     ecs_add(world, e3, TagB); // 2 tables
 
     ecs_progress(world, 0);
@@ -1426,7 +1426,7 @@ void SystemMisc_change_custom_run_action(void) {
     });
     test_assert(system != 0);
 
-    ecs_new(world, TagA);
+    ecs_new_w(world, TagA);
 
     ecs_run(world, system, 0, NULL);
     test_bool(dummy_invoked, false);
@@ -1462,9 +1462,9 @@ void SystemMisc_custom_run_action_call_next(void) {
     });
     test_assert(system != 0);
 
-    ecs_entity_t e1 = ecs_new(world, TagA);
-    ecs_entity_t e2 = ecs_new(world, TagA);
-    ecs_entity_t e3 = ecs_new(world, TagA);
+    ecs_entity_t e1 = ecs_new_w(world, TagA);
+    ecs_entity_t e2 = ecs_new_w(world, TagA);
+    ecs_entity_t e3 = ecs_new_w(world, TagA);
     ecs_add(world, e3, TagB); // 2 tables
 
     ecs_progress(world, 0);
@@ -1495,7 +1495,7 @@ void SystemMisc_system_w_short_notation(void) {
     });
     test_assert(system != 0);
 
-    ecs_entity_t e = ecs_new(world, Tag);
+    ecs_entity_t e = ecs_new_w(world, Tag);
 
     ecs_progress(world, 0);
 
@@ -1643,7 +1643,7 @@ void SystemMisc_system_no_id_in_scope(void) {
     
     ECS_TAG(world, TagA);
 
-    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t parent = ecs_new(world);
 
     ecs_set_scope(world, parent);
 

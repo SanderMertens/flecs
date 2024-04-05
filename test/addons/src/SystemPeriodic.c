@@ -1792,7 +1792,7 @@ void SystemPeriodic_owned_only(void) {
 
     ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position(self));
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
 
     ecs_progress(world, 0);
 
@@ -1815,7 +1815,7 @@ void SystemPeriodic_shared_only(void) {
 
     ECS_SYSTEM(world, AssertReadonly, EcsOnUpdate, Position(up(IsA)));
 
-    ecs_entity_t base = ecs_new(world, Position);
+    ecs_entity_t base = ecs_new_w(world, Position);
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
 
     ecs_progress(world, 0);
@@ -1832,7 +1832,7 @@ void SystemPeriodic_is_in_readonly(void) {
 
     ECS_SYSTEM(world, AssertReadonly, EcsOnUpdate, [in] Position);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
 
     ecs_progress(world, 0);
 
@@ -1868,8 +1868,8 @@ void SystemPeriodic_and_type(void) {
 
     ECS_SYSTEM(world, TypeSystem, EcsOnUpdate, AND | MyType);
 
-    ecs_new(world, Position);
-    ecs_new(world, Velocity);
+    ecs_new_w(world, Position);
+    ecs_new_w(world, Velocity);
     ECS_ENTITY(world, e, Position, Velocity);
 
     Probe ctx = {0};
@@ -1899,9 +1899,9 @@ void SystemPeriodic_or_type(void) {
 
     ECS_SYSTEM(world, TypeSystem, EcsOnUpdate, OR | MyType);
 
-    ecs_entity_t e1 = ecs_new(world, Position);
-    ecs_entity_t e2 = ecs_new(world, Velocity);
-    ecs_entity_t e3 = ecs_new(world, Position);
+    ecs_entity_t e1 = ecs_new_w(world, Position);
+    ecs_entity_t e2 = ecs_new_w(world, Velocity);
+    ecs_entity_t e3 = ecs_new_w(world, Position);
     ecs_add(world, e3, Velocity);
 
     Probe ctx = {0};

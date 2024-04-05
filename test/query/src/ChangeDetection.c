@@ -5,7 +5,7 @@ void ChangeDetection_query_changed_after_new(void) {
 
     ECS_COMPONENT(world, Position);
     
-    ecs_new(world, Position);
+    ecs_new_w(world, Position);
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "[in] Position",
@@ -20,7 +20,7 @@ void ChangeDetection_query_changed_after_new(void) {
     while (ecs_query_next(&it)) { }
     test_bool(false, ecs_query_changed(q));
 
-    ecs_new(world, Position);
+    ecs_new_w(world, Position);
     test_bool(true, ecs_query_changed(q));
 
     it = ecs_query_iter(world, q);
@@ -39,7 +39,7 @@ void ChangeDetection_query_changed_after_delete(void) {
 
     ECS_COMPONENT(world, Position);
     
-    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e1 = ecs_new_w(world, Position);
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "[in] Position",
@@ -73,7 +73,7 @@ void ChangeDetection_query_changed_after_add(void) {
 
     ECS_COMPONENT(world, Position);
     
-    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "[in] Position",
@@ -106,7 +106,7 @@ void ChangeDetection_query_changed_after_remove(void) {
 
     ECS_COMPONENT(world, Position);
     
-    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e1 = ecs_new_w(world, Position);
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "[in] Position",
@@ -139,7 +139,7 @@ void ChangeDetection_query_changed_after_set(void) {
 
     ECS_COMPONENT(world, Position);
     
-    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e1 = ecs_new_w(world, Position);
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "[in] Position",
@@ -172,7 +172,7 @@ void ChangeDetection_query_change_after_modified(void) {
 
     ECS_COMPONENT(world, Position);
     
-    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e1 = ecs_new_w(world, Position);
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "[in] Position",
@@ -212,7 +212,7 @@ void ChangeDetection_query_change_after_out_system(void) {
 
     ECS_SYSTEM(world, Sys, EcsOnUpdate, [out] Position);
 
-    ecs_new(world, Position);
+    ecs_new_w(world, Position);
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "[in] Position",
@@ -250,7 +250,7 @@ void ChangeDetection_query_change_after_in_system(void) {
 
     ECS_SYSTEM(world, Sys, EcsOnUpdate, [in] Position);
     
-    ecs_new(world, Position);
+    ecs_new_w(world, Position);
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "[in] Position",
@@ -283,7 +283,7 @@ void ChangeDetection_query_change_after_modified_out_term(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     ecs_add(world, e, Velocity);
 
     ecs_query_t *q = ecs_query(world, {
@@ -323,9 +323,9 @@ void ChangeDetection_query_change_check_iter(void) {
     ECS_TAG(world, TagB);
     ECS_TAG(world, TagC);
     
-    ecs_entity_t e1 = ecs_new(world, Position);
-    ecs_entity_t e2 = ecs_new(world, Position);
-    ecs_entity_t e3 = ecs_new(world, Position);
+    ecs_entity_t e1 = ecs_new_w(world, Position);
+    ecs_entity_t e2 = ecs_new_w(world, Position);
+    ecs_entity_t e3 = ecs_new_w(world, Position);
 
     ecs_add(world, e1, TagA);
     ecs_add(world, e2, TagB);
@@ -409,7 +409,7 @@ void ChangeDetection_query_change_check_iter_after_skip_read(void) {
 
     ECS_COMPONENT(world, Position);
     
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "[in] Position",
@@ -451,7 +451,7 @@ void ChangeDetection_query_change_check_iter_after_skip_write(void) {
 
     ECS_COMPONENT(world, Position);
     
-    ecs_new(world, Position);
+    ecs_new_w(world, Position);
 
     ecs_query_t *qw = ecs_query(world, {
         .expr = "[out] Position",
@@ -504,7 +504,7 @@ void ChangeDetection_query_change_parent_term(void) {
 
     ECS_COMPONENT(world, Position);
     
-    ecs_entity_t parent = ecs_new(world, Position);
+    ecs_entity_t parent = ecs_new_w(world, Position);
     ecs_new_w_pair(world, EcsChildOf, parent);
 
     ecs_query_t *q = ecs_query(world, {
@@ -542,7 +542,7 @@ void ChangeDetection_query_change_prefab_term(void) {
 
     ECS_COMPONENT(world, Position);
     
-    ecs_entity_t base = ecs_new(world, Position);
+    ecs_entity_t base = ecs_new_w(world, Position);
     ecs_new_w_pair(world, EcsIsA, base);
 
     ecs_query_t *q = ecs_query(world, {
@@ -578,7 +578,7 @@ void ChangeDetection_query_change_parent_term_w_tag(void) {
 
     ECS_COMPONENT(world, Position);
     
-    ecs_entity_t parent = ecs_new(world, Position);
+    ecs_entity_t parent = ecs_new_w(world, Position);
     ecs_add_id(world, parent, EcsPrefab);
     ecs_new_w_pair(world, EcsChildOf, parent);
 
@@ -615,7 +615,7 @@ void ChangeDetection_query_change_prefab_term_w_tag(void) {
 
     ECS_COMPONENT(world, Position);
     
-    ecs_entity_t base = ecs_new(world, Position);
+    ecs_entity_t base = ecs_new_w(world, Position);
     ecs_add_id(world, base, EcsPrefab);
     ecs_new_w_pair(world, EcsIsA, base);
 
@@ -654,7 +654,7 @@ void ChangeDetection_query_change_skip_non_instanced(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_TAG(world, Tag);
     
-    ecs_entity_t base = ecs_new(world, Position);
+    ecs_entity_t base = ecs_new_w(world, Position);
     ecs_entity_t e1 = ecs_new_w_pair(world, EcsIsA, base);
     ecs_entity_t e2 = ecs_new_w_pair(world, EcsIsA, base);
     ecs_entity_t e3 = ecs_new_w_pair(world, EcsIsA, base);
@@ -741,7 +741,7 @@ void ChangeDetection_query_changed_w_or(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_add(world, e, Position);
     ecs_add(world, e, Velocity);
     ecs_add(world, e, TagA);
@@ -789,12 +789,12 @@ void ChangeDetection_query_changed_or(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
     ecs_add(world, e1, Position);
     ecs_add(world, e1, TagA);
     ecs_add(world, e1, TagB);
 
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e2 = ecs_new(world);
     ecs_add(world, e2, Velocity);
     ecs_add(world, e2, TagA);
     ecs_add(world, e2, TagB);
@@ -841,7 +841,7 @@ void ChangeDetection_query_changed_tag(void) {
 
     ECS_TAG(world, TagA);
 
-    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
     ecs_add(world, e1, TagA);
 
     ecs_query_t *q = ecs_query(world, {
@@ -868,7 +868,7 @@ void ChangeDetection_query_changed_no_source(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
     ecs_add(world, e1, TagA);
 
     ecs_query_t *q = ecs_query(world, {
@@ -895,7 +895,7 @@ void ChangeDetection_query_changed_no_source_component(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
     ecs_add(world, e1, Position);
 
     ecs_query_t *q = ecs_query(world, {
@@ -922,7 +922,7 @@ void ChangeDetection_query_changed_w_not_out(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
     ecs_add(world, e1, Position);
 
     ecs_query_t *q = ecs_query(world, {

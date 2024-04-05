@@ -71,7 +71,7 @@ void ObserverOnSet_set_1_of_1(void) {
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_int(ctx.invoked, 0);
 
     ecs_set(world, e, Position, {10, 20});
@@ -117,7 +117,7 @@ void ObserverOnSet_set_1_of_2(void) {
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_int(ctx.invoked, 0);
 
     ecs_set(world, e, Position, {10, 20});
@@ -168,7 +168,7 @@ void ObserverOnSet_set_1_of_3(void) {
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_int(ctx.invoked, 0);
 
     ecs_set(world, e, Position, {10, 20});
@@ -332,7 +332,7 @@ void ObserverOnSet_add_base(void) {
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_new(world, Velocity);
+    ecs_entity_t e = ecs_new_w(world, Velocity);
     test_int(ctx.invoked, 0);
 
     ecs_add_pair(world, e, EcsIsA, Base);
@@ -361,7 +361,7 @@ void ObserverOnSet_add_base_to_1_overridden(void) {
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_int(ctx.invoked, 0);
 
     ecs_add_pair(world, e, EcsIsA, Base);
@@ -381,7 +381,7 @@ void ObserverOnSet_add_base_to_2_overridden(void) {
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     ecs_add(world, e, Velocity);
     test_int(ctx.invoked, 0);
 
@@ -402,7 +402,7 @@ void ObserverOnSet_add_base_to_1_of_2_overridden(void) {
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_new(world, Velocity);
+    ecs_entity_t e = ecs_new_w(world, Velocity);
     test_int(ctx.invoked, 0);
 
     ecs_add_pair(world, e, EcsIsA, Base);
@@ -418,7 +418,7 @@ void ObserverOnSet_add_base_to_1_of_2_overridden(void) {
 
     ecs_os_zeromem(&ctx);
 
-    e = ecs_new(world, Position);
+    e = ecs_new_w(world, Position);
     test_int(ctx.invoked, 0);
 
     ecs_add_pair(world, e, EcsIsA, Base);
@@ -438,7 +438,7 @@ void ObserverOnSet_on_set_after_remove_override(void) {
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_int(ctx.invoked, 0);
 
     ecs_add_pair(world, e, EcsIsA, Base);
@@ -469,7 +469,7 @@ void ObserverOnSet_no_set_after_remove_base(void) {
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_int(ctx.invoked, 0);
 
     ecs_add_pair(world, e, EcsIsA, Base);
@@ -490,7 +490,7 @@ void ObserverOnSet_un_set_after_remove(void) {
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_int(ctx.invoked, 0);
 
     ecs_remove(world, e, Position);
@@ -509,7 +509,7 @@ void ObserverOnSet_un_set_after_remove_base(void) {
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     test_int(ctx.invoked, 0);
 
     ecs_add_pair(world, e, EcsIsA, Base);
@@ -677,7 +677,7 @@ void ObserverOnSet_set_optional(void) {
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_int(ctx.invoked, 0);
 
     ecs_set(world, e, Position, {10, 20});

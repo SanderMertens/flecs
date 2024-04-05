@@ -6,7 +6,7 @@ void Cascade_this_self_cascade_childof_uncached(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t p0 = ecs_new_id(world);
+    ecs_entity_t p0 = ecs_new(world);
     ecs_entity_t p1 = ecs_entity(world, { .add = {Foo} });
     ecs_entity_t p2 = ecs_entity(world, { .add = {Foo} });
     ecs_entity_t p3 = ecs_entity(world, { .add = {Foo} });
@@ -109,7 +109,7 @@ void Cascade_this_cascade_childof_uncached(void) {
 
     test_assert(r != NULL);
 
-    ecs_entity_t p0 = ecs_new_id(world);
+    ecs_entity_t p0 = ecs_new(world);
     ecs_entity_t p1 = ecs_entity(world, { .add = {Foo} });
     ecs_entity_t p2 = ecs_entity(world, { .add = {Foo} });
     ecs_entity_t p3 = ecs_entity(world, { .add = {Foo} });
@@ -195,7 +195,7 @@ void Cascade_this_written_self_cascade_childof_uncached(void) {
     test_assert(r != NULL);
 
     ecs_set_with(world, Tag);
-    ecs_entity_t p0 = ecs_new_id(world);
+    ecs_entity_t p0 = ecs_new(world);
     ecs_entity_t p1 = ecs_entity(world, { .add = {Foo} });
     ecs_entity_t p2 = ecs_entity(world, { .add = {Foo} });
     ecs_entity_t p3 = ecs_entity(world, { .add = {Foo} });
@@ -313,7 +313,7 @@ void Cascade_this_written_cascade_childof_uncached(void) {
     test_assert(r != NULL);
 
     ecs_set_with(world, Tag);
-    ecs_entity_t p0 = ecs_new_id(world);
+    ecs_entity_t p0 = ecs_new(world);
     ecs_entity_t p1 = ecs_entity(world, { .add = {Foo} });
     ecs_entity_t p2 = ecs_entity(world, { .add = {Foo} });
     ecs_entity_t p3 = ecs_entity(world, { .add = {Foo} });
@@ -412,7 +412,7 @@ void Cascade_this_self_cascade_childof_w_parent_flag_uncached(void) {
 
     test_assert(r != NULL);
 
-    ecs_entity_t p0 = ecs_new_id(world);
+    ecs_entity_t p0 = ecs_new(world);
     ecs_entity_t p1 = ecs_entity(world, { .add = {Foo} });
     ecs_entity_t p2 = ecs_entity(world, { .add = {Foo} });
     ecs_entity_t p3 = ecs_entity(world, { .add = {Foo} });
@@ -509,7 +509,7 @@ void Cascade_this_cascade_childof_w_parent_flag_uncached(void) {
 
     test_assert(r != NULL);
 
-    ecs_entity_t p0 = ecs_new_id(world);
+    ecs_entity_t p0 = ecs_new(world);
     ecs_entity_t p1 = ecs_entity(world, { .add = {Foo} });
     ecs_entity_t p2 = ecs_entity(world, { .add = {Foo} });
     ecs_entity_t p3 = ecs_entity(world, { .add = {Foo} });
@@ -713,7 +713,7 @@ void Cascade_this_written_cascade_childof_w_parent_flag_uncached(void) {
     test_assert(r != NULL);
 
     ecs_set_with(world, Tag);
-    ecs_entity_t p0 = ecs_new_id(world);
+    ecs_entity_t p0 = ecs_new(world);
     ecs_entity_t p1 = ecs_entity(world, { .add = {Foo} });
     ecs_entity_t p2 = ecs_entity(world, { .add = {Foo} });
     ecs_entity_t p3 = ecs_entity(world, { .add = {Foo} });
@@ -807,7 +807,7 @@ void Cascade_existing_isa_cascade(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t e0 = ecs_new(world, Tag);
+    ecs_entity_t e0 = ecs_new_w(world, Tag);
     ecs_entity_t e1 = ecs_entity(world, { .add = { ecs_pair(EcsIsA, e0)} });
     ecs_entity_t e2 = ecs_entity(world, { .add = { ecs_pair(EcsIsA, e1)} });
     ecs_entity_t e3 = ecs_entity(world, { .add = { ecs_pair(EcsIsA, e2)} });
@@ -857,7 +857,7 @@ void Cascade_new_isa_cascade(void) {
     });
     test_assert(q != NULL);
 
-    ecs_entity_t e0 = ecs_new(world, Tag);
+    ecs_entity_t e0 = ecs_new_w(world, Tag);
     ecs_entity_t e1 = ecs_entity(world, { .add = { ecs_pair(EcsIsA, e0)} });
     ecs_entity_t e2 = ecs_entity(world, { .add = { ecs_pair(EcsIsA, e1)} });
     ecs_entity_t e3 = ecs_entity(world, { .add = { ecs_pair(EcsIsA, e2)} });
@@ -900,7 +900,7 @@ void Cascade_childof_cascade(void) {
     });
     test_assert(q != NULL);
 
-    ecs_entity_t e0 = ecs_new(world, Tag);
+    ecs_entity_t e0 = ecs_new_w(world, Tag);
     ecs_entity_t e1 = ecs_entity(world, { .add = { ecs_pair(EcsChildOf, e0)} });
     ecs_entity_t e2 = ecs_entity(world, { .add = { ecs_pair(EcsChildOf, e1)} });
     ecs_entity_t e3 = ecs_entity(world, { .add = { ecs_pair(EcsChildOf, e2)} });
@@ -943,7 +943,7 @@ void Cascade_parent_cascade(void) {
     });
     test_assert(q != NULL);
 
-    ecs_entity_t e0 = ecs_new(world, Tag);
+    ecs_entity_t e0 = ecs_new_w(world, Tag);
     ecs_entity_t e1 = ecs_entity(world, { .add = { ecs_pair(EcsChildOf, e0)} });
     ecs_entity_t e2 = ecs_entity(world, { .add = { ecs_pair(EcsChildOf, e1)} });
     ecs_entity_t e3 = ecs_entity(world, { .add = { ecs_pair(EcsChildOf, e2)} });
@@ -981,7 +981,7 @@ void Cascade_existing_custom_rel_cascade(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t e0 = ecs_new(world, Tag);
+    ecs_entity_t e0 = ecs_new_w(world, Tag);
     ecs_entity_t e1 = ecs_entity(world, { .add = { ecs_pair(Rel, e0)} });
     ecs_entity_t e2 = ecs_entity(world, { .add = { ecs_pair(Rel, e1)} });
     ecs_entity_t e3 = ecs_entity(world, { .add = { ecs_pair(Rel, e2)} });
@@ -1031,7 +1031,7 @@ void Cascade_new_custom_rel_cascade(void) {
     });
     test_assert(q != NULL);
 
-    ecs_entity_t e0 = ecs_new(world, Tag);
+    ecs_entity_t e0 = ecs_new_w(world, Tag);
     ecs_entity_t e1 = ecs_entity(world, { .add = { ecs_pair(Rel, e0)} });
     ecs_entity_t e2 = ecs_entity(world, { .add = { ecs_pair(Rel, e1)} });
     ecs_entity_t e3 = ecs_entity(world, { .add = { ecs_pair(Rel, e2)} });
@@ -1075,10 +1075,10 @@ void Cascade_cascade_w_2_depths(void) {
     });
     test_assert(q != NULL);
 
-    ecs_entity_t e0 = ecs_new(world, Tag);
-    ecs_entity_t e1 = ecs_new(world, Tag);
-    ecs_entity_t e2 = ecs_new_id(world);
-    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_entity_t e0 = ecs_new_w(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
 
     ecs_add_pair(world, e1, Rel, e0);
     ecs_add_pair(world, e2, Rel, e1);
@@ -1123,10 +1123,10 @@ void Cascade_cascade_w_3_depths(void) {
     });
     test_assert(q != NULL);
 
-    ecs_entity_t e0 = ecs_new(world, Tag);
-    ecs_entity_t e1 = ecs_new(world, Tag);
-    ecs_entity_t e2 = ecs_new(world, Tag);
-    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_entity_t e0 = ecs_new_w(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
+    ecs_entity_t e2 = ecs_new_w(world, Tag);
+    ecs_entity_t e3 = ecs_new(world);
 
     ecs_add_pair(world, e1, Rel, e0);
     ecs_add_pair(world, e2, Rel, e1);
@@ -1171,10 +1171,10 @@ void Cascade_cascade_w_2_depths_desc(void) {
     });
     test_assert(q != NULL);
 
-    ecs_entity_t e0 = ecs_new(world, Tag);
-    ecs_entity_t e1 = ecs_new(world, Tag);
-    ecs_entity_t e2 = ecs_new_id(world);
-    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_entity_t e0 = ecs_new_w(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
 
     ecs_add_pair(world, e1, Rel, e0);
     ecs_add_pair(world, e2, Rel, e1);
@@ -1219,10 +1219,10 @@ void Cascade_cascade_w_3_depths_desc(void) {
     });
     test_assert(q != NULL);
 
-    ecs_entity_t e0 = ecs_new(world, Tag);
-    ecs_entity_t e1 = ecs_new(world, Tag);
-    ecs_entity_t e2 = ecs_new(world, Tag);
-    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_entity_t e0 = ecs_new_w(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
+    ecs_entity_t e2 = ecs_new_w(world, Tag);
+    ecs_entity_t e3 = ecs_new(world);
 
     ecs_add_pair(world, e1, Rel, e0);
     ecs_add_pair(world, e2, Rel, e1);
@@ -1370,7 +1370,7 @@ void Cascade_cascade_rematch_2_lvls_2_relations(void) {
     ecs_add_pair(world, e_2, R, e_1);
     ecs_add_pair(world, e_1, R, e_0);
 
-    ecs_entity_t t = ecs_new_id(world);
+    ecs_entity_t t = ecs_new(world);
     ecs_add(world, t, Position);
     ecs_add_pair(world, t, R, e_2);
     ecs_add_pair(world, t, R, e_1);
@@ -1418,12 +1418,12 @@ void Cascade_cascade_topological(void) {
     ECS_ENTITY(world, R, Traversable);
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e1 = ecs_new(world, Tag);
-    ecs_entity_t e2 = ecs_new(world, Tag);
-    ecs_entity_t e3 = ecs_new(world, Tag);
-    ecs_entity_t e4 = ecs_new(world, Tag);
-    ecs_entity_t e5 = ecs_new(world, Tag);
-    ecs_entity_t e6 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
+    ecs_entity_t e2 = ecs_new_w(world, Tag);
+    ecs_entity_t e3 = ecs_new_w(world, Tag);
+    ecs_entity_t e4 = ecs_new_w(world, Tag);
+    ecs_entity_t e5 = ecs_new_w(world, Tag);
+    ecs_entity_t e6 = ecs_new_w(world, Tag);
 
     ecs_add_pair(world, e3, R, e1);
     ecs_add_pair(world, e3, R, e2);
@@ -1569,7 +1569,7 @@ void Cascade_cascade_desc_rematch_2_lvls_2_relations(void) {
     ecs_add_pair(world, e_2, R, e_1);
     ecs_add_pair(world, e_1, R, e_0);
 
-    ecs_entity_t t = ecs_new_id(world);
+    ecs_entity_t t = ecs_new(world);
     ecs_add(world, t, Position);
     ecs_add_pair(world, t, R, e_2);
     ecs_add_pair(world, t, R, e_1);
@@ -1617,12 +1617,12 @@ void Cascade_cascade_desc_topological(void) {
     ECS_ENTITY(world, R, Traversable);
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e1 = ecs_new(world, Tag);
-    ecs_entity_t e2 = ecs_new(world, Tag);
-    ecs_entity_t e3 = ecs_new(world, Tag);
-    ecs_entity_t e4 = ecs_new(world, Tag);
-    ecs_entity_t e5 = ecs_new(world, Tag);
-    ecs_entity_t e6 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
+    ecs_entity_t e2 = ecs_new_w(world, Tag);
+    ecs_entity_t e3 = ecs_new_w(world, Tag);
+    ecs_entity_t e4 = ecs_new_w(world, Tag);
+    ecs_entity_t e5 = ecs_new_w(world, Tag);
+    ecs_entity_t e6 = ecs_new_w(world, Tag);
 
     ecs_add_pair(world, e3, R, e1);
     ecs_add_pair(world, e3, R, e2);
@@ -1679,9 +1679,9 @@ void Cascade_cascade_after_recycled_parent_change(void) {
 
     test_assert(q != NULL);
 
-    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t parent = ecs_new(world);
     test_assert(parent != 0);
-    ecs_entity_t child = ecs_new_id(world);
+    ecs_entity_t child = ecs_new(world);
     test_assert(child != 0);
 
     ecs_delete(world, parent);

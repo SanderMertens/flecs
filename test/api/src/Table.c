@@ -6,7 +6,7 @@ void Table_get_index(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_set(world, e, Position, {10, 20});
     ecs_set(world, e, Velocity, {10, 20});
 
@@ -25,7 +25,7 @@ void Table_get_index_not_in_table(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_set(world, e, Position, {10, 20});
     ecs_set(world, e, Velocity, {10, 20});
 
@@ -44,11 +44,11 @@ void Table_get_column(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
     ecs_set(world, e1, Position, {10, 20});
     ecs_set(world, e1, Velocity, {1, 2});
 
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e2 = ecs_new(world);
     ecs_set(world, e2, Position, {20, 30});
     ecs_set(world, e2, Velocity, {2, 3});
 
@@ -82,7 +82,7 @@ void Table_get_column_for_tag(void) {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
     ecs_set(world, e1, Position, {10, 20});
     ecs_add(world, e1, Tag);
 
@@ -107,12 +107,12 @@ void Table_get_column_for_component_after_tag(void) {
 
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
     ecs_set(world, e1, Position, {10, 20});
     ecs_set(world, e1, Velocity, {1, 2});
     ecs_add_id(world, e1, tag_w_low_id);
 
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e2 = ecs_new(world);
     ecs_set(world, e2, Position, {20, 30});
     ecs_set(world, e2, Velocity, {2, 3});
     ecs_add_id(world, e2, tag_w_low_id);
@@ -148,11 +148,11 @@ void Table_get_column_w_offset(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
     ecs_set(world, e1, Position, {10, 20});
     ecs_set(world, e1, Velocity, {1, 2});
 
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e2 = ecs_new(world);
     ecs_set(world, e2, Position, {20, 30});
     ecs_set(world, e2, Velocity, {2, 3});
 
@@ -180,11 +180,11 @@ void Table_get_id(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
     ecs_set(world, e1, Position, {10, 20});
     ecs_set(world, e1, Velocity, {1, 2});
 
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e2 = ecs_new(world);
     ecs_set(world, e2, Position, {20, 30});
     ecs_set(world, e2, Velocity, {2, 3});
 
@@ -212,11 +212,11 @@ void Table_get_component(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
     ecs_set(world, e1, Position, {10, 20});
     ecs_set(world, e1, Velocity, {1, 2});
 
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e2 = ecs_new(world);
     ecs_set(world, e2, Position, {20, 30});
     ecs_set(world, e2, Velocity, {2, 3});
 
@@ -245,11 +245,11 @@ void Table_get_pair(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_TAG(world, Tgt);
 
-    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
     ecs_set_pair(world, e1, Position, Tgt, {10, 20});
     ecs_set_pair(world, e1, Velocity, Tgt, {1, 2});
 
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e2 = ecs_new(world);
     ecs_set_pair(world, e2, Position, Tgt, {20, 30});
     ecs_set_pair(world, e2, Velocity, Tgt, {2, 3});
 
@@ -277,11 +277,11 @@ void Table_get_from_stage(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
     ecs_set(world, e1, Position, {10, 20});
     ecs_set(world, e1, Velocity, {1, 2});
 
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e2 = ecs_new(world);
     ecs_set(world, e2, Position, {20, 30});
     ecs_set(world, e2, Velocity, {2, 3});
 
@@ -310,7 +310,7 @@ void Table_get_from_stage(void) {
 void Table_get_depth(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
     ecs_entity_t e2 = ecs_new_w_pair(world, EcsChildOf, e1);
     ecs_entity_t e3 = ecs_new_w_pair(world, EcsChildOf, e2);
     ecs_entity_t e4 = ecs_new_w_pair(world, EcsChildOf, e3);
@@ -339,7 +339,7 @@ void Table_get_depth_non_acyclic(void) {
 void Table_get_depth_2_paths(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
     ecs_entity_t e2 = ecs_new_w_pair(world, EcsIsA, e1);
     ecs_entity_t e3 = ecs_new_w_pair(world, EcsIsA, e2);
     ecs_entity_t e4 = ecs_new_w_pair(world, EcsIsA, e2);
@@ -359,12 +359,12 @@ void Table_get_column_size(void) {
     ECS_TAG(world, Tag);
 
     ecs_entity_t ecs_id(Mass) = ecs_component(world, {
-        .entity = ecs_new_id(world),
+        .entity = ecs_new(world),
         .type.size = 4,
         .type.alignment = 4
     });
 
-    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
     ecs_set(world, e1, Position, {10, 20});
     ecs_add(world, e1, Tag);
     ecs_set(world, e1, Mass, {1});

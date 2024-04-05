@@ -77,7 +77,7 @@ void Entity_init_id_add_2_comp(void) {
 void Entity_init_id_w_scope(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t scope = ecs_new_id(world);
+    ecs_entity_t scope = ecs_new(world);
     test_assert(scope != 0);
 
     ecs_set_scope(world, scope);
@@ -289,7 +289,7 @@ void Entity_id_add_1_comp(void) {
 
     ECS_TAG(world, TagA);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
 
     ecs_entity_t r = ecs_entity_init(world, &(ecs_entity_desc_t){
@@ -309,7 +309,7 @@ void Entity_id_add_2_comp(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
 
     ecs_entity_t r = ecs_entity_init(world, &(ecs_entity_desc_t){
@@ -363,7 +363,7 @@ void Entity_find_id_name(void) {
 void Entity_find_w_existing_id_name(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t id = ecs_new_id(world);
+    ecs_entity_t id = ecs_new(world);
 
     ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
         .id = id,
@@ -817,7 +817,7 @@ void Entity_init_w_with_w_scope(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t parent = ecs_new(world);
 
     ecs_set_with(world, Tag);
     ecs_set_scope(world, parent);
@@ -838,7 +838,7 @@ void Entity_init_w_with_w_name_scope(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t parent = ecs_new(world);
 
     ecs_set_with(world, Tag);
     ecs_set_scope(world, parent);
@@ -861,7 +861,7 @@ void Entity_init_w_with_w_name_scope(void) {
 void Entity_is_valid(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
     test_bool(ecs_is_valid(world, e), true);
 
@@ -871,14 +871,14 @@ void Entity_is_valid(void) {
 void Entity_is_recycled_valid(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
     test_bool(ecs_is_valid(world, e), true);
 
     ecs_delete(world, e);
     test_bool(ecs_is_valid(world, e), false);
 
-    e = ecs_new_id(world);
+    e = ecs_new(world);
     test_assert(e != 0);
     test_assert((uint32_t)e != e);
     test_bool(ecs_is_valid(world, e), true);
@@ -915,7 +915,7 @@ void Entity_is_junk_valid(void) {
 void Entity_is_not_alive_valid(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
     test_bool(ecs_is_valid(world, e), true);
     test_bool(ecs_is_alive(world, e), true);
@@ -1126,7 +1126,7 @@ void Entity_init_w_name_staged(void) {
 void Entity_record_find_for_empty(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
 
     ecs_record_t *r = ecs_record_find(world, e);
@@ -1141,7 +1141,7 @@ void Entity_record_find(void) {
 
     ECS_TAG(world, TagA);
 
-    ecs_entity_t e = ecs_new(world, TagA);
+    ecs_entity_t e = ecs_new_w(world, TagA);
     test_assert(e != 0);
 
     ecs_record_t *r = ecs_record_find(world, e);
@@ -1156,7 +1156,7 @@ void Entity_record_find_from_stage(void) {
 
     ECS_TAG(world, TagA);
 
-    ecs_entity_t e = ecs_new(world, TagA);
+    ecs_entity_t e = ecs_new_w(world, TagA);
     test_assert(e != 0);
 
     ecs_readonly_begin(world, false);
@@ -1208,7 +1208,7 @@ void Entity_make_alive_nonzero_gen(void) {
 void Entity_make_alive_zero_gen_exists(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_delete(world, e);
     test_assert(ecs_exists(world, e));
     test_assert(!ecs_is_valid(world, e));
@@ -1225,7 +1225,7 @@ void Entity_make_alive_zero_gen_exists(void) {
 void Entity_make_alive_nonzero_gen_exists(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_delete(world, e);
     test_assert(ecs_exists(world, e));
     test_assert(!ecs_is_valid(world, e));
@@ -1250,14 +1250,14 @@ void Entity_make_alive_zero_gen_exists_alive(void) {
 
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_delete(world, e);
     test_assert(ecs_exists(world, e));
     test_assert(!ecs_is_valid(world, e));
     test_assert(!ecs_is_alive(world, e));
     ecs_delete(world, e);
 
-    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
     test_assert(e1 != e);
     test_assert(ecs_strip_generation(e1) == e);
 
@@ -1270,14 +1270,14 @@ void Entity_make_alive_nonzero_gen_exists_alive(void) {
     
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_delete(world, e);
     test_assert(ecs_exists(world, e));
     test_assert(!ecs_is_valid(world, e));
     test_assert(!ecs_is_alive(world, e));
     ecs_delete(world, e);
 
-    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
     test_assert(e1 != e);
     test_assert(ecs_strip_generation(e1) == e);
 
@@ -1449,7 +1449,7 @@ void Entity_entity_init_w_childof_and_scope_and_scoped_name(void) {
 void Entity_entity_init_w_childof_and_no_name(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t parent = ecs_new(world);
 
     ecs_entity_t child = ecs_entity_init(world, &(ecs_entity_desc_t){
         .add = { ecs_pair(EcsChildOf, parent) }
@@ -1524,7 +1524,7 @@ void Entity_deferred_entity_init_w_childof_and_scope_and_scoped_name(void) {
 void Entity_deferred_entity_init_w_childof_and_no_name(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t parent = ecs_new(world);
 
     ecs_defer_begin(world);
     ecs_entity_t child = ecs_entity_init(world, &(ecs_entity_desc_t){
@@ -1722,7 +1722,7 @@ void Entity_staged_set_symbol_n_stages(void) {
 void Entity_entity_init_w_add_childof_no_name(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t parent = ecs_new(world);
 
     ecs_entity_t e = ecs_entity_init(world, &(ecs_entity_desc_t){
         .add = { ecs_childof(parent) }
@@ -1781,7 +1781,7 @@ void Entity_use_low_id_for_component(void) {
 void Entity_get_depth(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
     ecs_entity_t e2 = ecs_new_w_pair(world, EcsChildOf, e1);
     ecs_entity_t e3 = ecs_new_w_pair(world, EcsChildOf, e2);
     ecs_entity_t e4 = ecs_new_w_pair(world, EcsChildOf, e3);
@@ -1800,7 +1800,7 @@ void Entity_get_depth_non_acyclic(void) {
 
     ECS_TAG(world, Rel);
 
-    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
 
     test_expect_abort();
     ecs_get_depth(world, e1, Rel);
@@ -1809,7 +1809,7 @@ void Entity_get_depth_non_acyclic(void) {
 void Entity_get_depth_empty(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
     test_int(0, ecs_get_depth(world, e1, EcsChildOf));
 
     ecs_fini(world);
@@ -1818,7 +1818,7 @@ void Entity_get_depth_empty(void) {
 void Entity_get_depth_2_paths(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
     ecs_entity_t e2 = ecs_new_w_pair(world, EcsIsA, e1);
     ecs_entity_t e3 = ecs_new_w_pair(world, EcsIsA, e2);
     ecs_entity_t e4 = ecs_new_w_pair(world, EcsIsA, e2);
@@ -1957,9 +1957,9 @@ void Entity_make_alive_from_stage(void) {
 void Entity_make_alive_after_deleted_1_entity(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
     ecs_delete(world, e1);
-    e1 = ecs_new_id(world);
+    e1 = ecs_new(world);
     ecs_delete(world, e1);
 
     test_assert(!ecs_is_alive(world, e1));
@@ -1972,10 +1972,10 @@ void Entity_make_alive_after_deleted_1_entity(void) {
 void Entity_make_alive_after_deleted_2_entities(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
     ecs_delete(world, e1);
-    e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
+    e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
     ecs_delete(world, e1);
     ecs_delete(world, e2);
 
@@ -1993,7 +1993,7 @@ void Entity_make_alive_after_deleted_2_entities(void) {
 void Entity_defer_entity_init_w_set_name_w_add_childof(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
 
     ecs_defer_begin(world);
@@ -2076,7 +2076,7 @@ void Entity_set_generation_while_deferred(void) {
     install_test_abort();
 
     ecs_world_t* world = ecs_mini();
-    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
 
     ecs_defer_begin(world);    
     test_expect_abort();
@@ -2113,7 +2113,7 @@ void Entity_commit_w_on_add(void) {
         .count = 1
     };
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_commit(world, e, NULL, dst, &added, NULL);
 
     test_assert(ecs_has(world, e, Tag));
@@ -2147,7 +2147,7 @@ void Entity_commit_w_on_remove(void) {
     ecs_table_t *dst = ecs_table_add_id(world, NULL, Foo);
     test_assert(dst != NULL);
 
-    ecs_entity_t e = ecs_new(world, Tag);
+    ecs_entity_t e = ecs_new_w(world, Tag);
     ecs_add_id(world, e, Foo);
     ecs_commit(world, e, NULL, dst, NULL, &removed);
 
@@ -2199,7 +2199,7 @@ void Entity_commit_w_cmd_in_observer(void) {
         .count = 1
     };
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
     ecs_commit(world, e, NULL, dst, &added, NULL);
 
     test_assert(ecs_has(world, e, Tag));

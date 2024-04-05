@@ -526,7 +526,7 @@ The `ecs_id` macro converts the component typename into the variable name that h
 
 ```c
 ECS_TAG(world, Npc);
-ecs_entity_t Platoon_01 = ecs_new_id(world);
+ecs_entity_t Platoon_01 = ecs_new(world);
 
 ecs_query_t *f = ecs_query(world, {
   .terms = {
@@ -654,7 +654,7 @@ The `Wildcard` wildcard returns an individual result for anything that it matche
 ECS_COMPONENT(world, Position);
 ECS_COMPONENT(world, Velocity);
 
-ecs_entity_t e = ecs_new_id(world);
+ecs_entity_t e = ecs_new(world);
 ecs_add(world, e, Position);
 ecs_add(world, e, Velocity);
 
@@ -680,7 +680,7 @@ The `Any` wildcard returns a single result for the first component that it match
 ECS_COMPONENT(world, Position);
 ECS_COMPONENT(world, Velocity);
 
-ecs_entity_t e = ecs_new_id(world);
+ecs_entity_t e = ecs_new(world);
 ecs_add(world, e, Position);
 ecs_add(world, e, Velocity);
 
@@ -717,8 +717,8 @@ The following sections describe how to create queries for pairs in the different
 To query for a pair in C, the `id` field of a term can be set to a pair using the `ecs_pair` macro:
 
 ```c
-ecs_entity_t Likes = ecs_new_id(world);
-ecs_entity_t Bob = ecs_new_id(world);
+ecs_entity_t Likes = ecs_new(world);
+ecs_entity_t Bob = ecs_new(world);
 
 ecs_query_t *f = ecs_query(world, {
   .terms = {
@@ -730,8 +730,8 @@ ecs_query_t *f = ecs_query(world, {
 The `id` field is guaranteed to be the first member of a term, which allows the previous code to be rewritten in this shorter form:
 
 ```c
-ecs_entity_t Likes = ecs_new_id(world);
-ecs_entity_t Bob = ecs_new_id(world);
+ecs_entity_t Likes = ecs_new(world);
+ecs_entity_t Bob = ecs_new(world);
 
 ecs_query_t *f = ecs_query(world, {
   .terms = {
@@ -744,7 +744,7 @@ When an element of the pair is a component type, use the `ecs_id` macro to obtai
 
 ```c
 ECS_COMPONENT(world, Eats);
-ecs_entity_t Apples = ecs_new_id(world);
+ecs_entity_t Apples = ecs_new(world);
 
 ecs_query_t *f = ecs_query(world, {
   .terms = {
@@ -1546,7 +1546,7 @@ The following sections show how to use variable and fixed sources with the diffe
 To specify a fixed source, set the `src.id` member to the entity to match. The following example shows how to set a source, and how to access the value provided by a term with a fixed source:
 
 ```c
-ecs_entity_t Game = ecs_new_id(world);
+ecs_entity_t Game = ecs_new(world);
 ecs_add(world, Game, SimTime);
 
 ecs_query_t *f = ecs_query(world, {
@@ -1846,7 +1846,7 @@ The following sections show how to use traversal in the different language bindi
 By default queries traverse the `IsA` relationship if a component cannot be found on the matched entity. In the following example, both `base` and `inst` match the query:
 
 ```c
-ecs_entity_t base = ecs_new(world, Position);
+ecs_entity_t base = ecs_new_w(world, Position);
 ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base); // Inherits Position
 
 ecs_query_t *f = ecs_query(world, {
@@ -1869,8 +1869,8 @@ ecs_query_t *f = ecs_query(world, {
 To use a different relationship for traversal, use the `trav` member in combination with the `EcsUp` flag. The following example only matches `child`:
 
 ```c
-ecs_entity_t parent = ecs_new(world, Position);
-ecs_entity_t child = ecs_new(world, Position);
+ecs_entity_t parent = ecs_new_w(world, Position);
+ecs_entity_t child = ecs_new_w(world, Position);
 
 ecs_add_pair(world, child, EcsChildOf, parent);
 
@@ -2355,7 +2355,7 @@ ecs_query_impl_t *r = ecs_query(world, {
 An application can constrain the results of the query by setting the variable before starting iteration:
 
 ```c
-ecs_entity_t earth = ecs_new(world, Planet);
+ecs_entity_t earth = ecs_new_w(world, Planet);
 
 // Find index for Location variable
 int32_t location_var = ecs_query_find_var(r, "Location");
@@ -2460,7 +2460,7 @@ ecs_query_cache_t *q_write = ecs_query(world, {
 bool changed = ecs_query_changed(q_read, NULL);
 
 // Setting a component will update the changed state
-ecs_entity_t e = ecs_new_id(world);
+ecs_entity_t e = ecs_new(world);
 ecs_set(world, e, Position, {10, 20});
 
 // Iterating a query with inout/out terms will update the change state
@@ -2677,11 +2677,11 @@ The following sections show how to use sorting in the different language binding
 The following example shows how grouping can be used to group entities that are in the same game region.
 
 ```c
-ecs_entity_t Region = ecs_new_id(world);
-ecs_entity_t Unit = ecs_new_id(world);
+ecs_entity_t Region = ecs_new(world);
+ecs_entity_t Unit = ecs_new(world);
 
-ecs_entity_t Region_01 = ecs_new_id(world);
-ecs_entity_t Region_02 = ecs_new_id(world);
+ecs_entity_t Region_01 = ecs_new(world);
+ecs_entity_t Region_02 = ecs_new(world);
 
 // Example of entities created in different regions
 ecs_entity_t unit_01 = ecs_new_w_id(world, Unit);
@@ -2770,7 +2770,7 @@ The following sections show how to use component inheritance in the different la
 The following example shows a rule that uses component inheritance to match entities:
 
 ```c
-ecs_entity_t Unit = ecs_new_id(world);
+ecs_entity_t Unit = ecs_new(world);
 ecs_entity_t MeleeUnit = ecs_new_w_pair(world, EcsIsA, Unit);
 ecs_entity_t RangedUnit = ecs_new_w_pair(world, EcsIsA, Unit);
 
@@ -2789,7 +2789,7 @@ ecs_query_impl_t *r = ecs_query(world, {
 The following example shows a rule that uses component inheritance to match entities:
 
 ```cpp
-flecs::entity Unit = ecs_new_id(world);
+flecs::entity Unit = ecs_new(world);
 flecs::entity MeleeUnit = world.entity().is_a(Unit);
 flecs::entity RangedUnit = world.entity().is_a(Unit);
 
@@ -2824,7 +2824,7 @@ The following example shows a rule that uses transitivity to match entities that
 // Create LocatedIn relationship with transitive property
 ecs_entity_t LocatedIn = ecs_new_w_id(world, EcsTransitive);
 
-ecs_entity_t NewYork = ecs_new_id(world);
+ecs_entity_t NewYork = ecs_new(world);
 ecs_entity_t Manhattan = ecs_new_w_pair(world, LocatedIn, NewYork);
 ecs_entity_t CentralPark = ecs_new_w_pair(world, LocatedIn, Manhattan);
 ecs_entity_t Bob = ecs_new_w_pair(world, LocatedIn, CentralPark);
@@ -2853,7 +2853,7 @@ Variables can be used to constrain the results of a transitive query. The follow
 
 ```c
 // Add City property to NewYork
-ecs_entity_t City = ecs_new_id(world);
+ecs_entity_t City = ecs_new(world);
 ecs_add_id(world, NewYork, City);
 
 // Matches:
@@ -2956,7 +2956,7 @@ The following sections show how to use transitive relationships in the different
 The following example shows a rule that uses the `IsA` reflexive relationship:
 
 ```c
-ecs_entity_t Tree = ecs_new_id(world);
+ecs_entity_t Tree = ecs_new(world);
 ecs_entity_t Oak = ecs_new_w_pair(world, EcsIsA, Tree);
 
 // Matches Tree, Oak
@@ -3067,7 +3067,7 @@ ecs_query_t *q = ecs_query(world, {
 
 // When a new table is created that matches the query, it is
 // added to the cache
-ecs_entity_t e = ecs_new_id(world);
+ecs_entity_t e = ecs_new(world);
 ecs_add(world, e, Position);
 ecs_add(world, e, Velocity);
 

@@ -151,13 +151,13 @@ void ComponentInheritance_1_this_0_lvl(void) {
 
     populate_facts(world);
 
-    ecs_entity_t e1 = ecs_new(world, Warlock);
-    ecs_entity_t e2 = ecs_new(world, Wizard);
-    ecs_entity_t e3 = ecs_new(world, Warrior);
-    ecs_entity_t e4 = ecs_new(world, Archer);
-    ecs_entity_t e5 = ecs_new(world, MeleeUnit);
-    ecs_entity_t e6 = ecs_new(world, RangedUnit);
-    ecs_entity_t e7 = ecs_new(world, Unit);
+    ecs_entity_t e1 = ecs_new_w(world, Warlock);
+    ecs_entity_t e2 = ecs_new_w(world, Wizard);
+    ecs_entity_t e3 = ecs_new_w(world, Warrior);
+    ecs_entity_t e4 = ecs_new_w(world, Archer);
+    ecs_entity_t e5 = ecs_new_w(world, MeleeUnit);
+    ecs_entity_t e6 = ecs_new_w(world, RangedUnit);
+    ecs_entity_t e7 = ecs_new_w(world, Unit);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Unit($this)"
@@ -236,13 +236,13 @@ void ComponentInheritance_1_this_1_lvl(void) {
 
     populate_facts(world);
 
-    ecs_entity_t e1 = ecs_new(world, Warlock);
-    /* ecs_entity_t e2 = */ ecs_new(world, Wizard);
-    ecs_entity_t e3 = ecs_new(world, Warrior);
-    /* ecs_entity_t e4 = */ ecs_new(world, Archer);
-    ecs_entity_t e5 = ecs_new(world, MeleeUnit);
-    /* ecs_entity_t e6 = */ ecs_new(world, RangedUnit);
-    /* ecs_entity_t e7 = */ ecs_new(world, Unit);
+    ecs_entity_t e1 = ecs_new_w(world, Warlock);
+    /* ecs_entity_t e2 = */ ecs_new_w(world, Wizard);
+    ecs_entity_t e3 = ecs_new_w(world, Warrior);
+    /* ecs_entity_t e4 = */ ecs_new_w(world, Archer);
+    ecs_entity_t e5 = ecs_new_w(world, MeleeUnit);
+    /* ecs_entity_t e6 = */ ecs_new_w(world, RangedUnit);
+    /* ecs_entity_t e7 = */ ecs_new_w(world, Unit);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "MeleeUnit($this)"
@@ -286,13 +286,13 @@ void ComponentInheritance_1_this_2_lvl(void) {
 
     populate_facts(world);
 
-    ecs_entity_t e1 = ecs_new(world, Warlock);
-    /* ecs_entity_t e2 = */ ecs_new(world, Wizard);
-    ecs_entity_t e3 = ecs_new(world, Warrior);
-    /* ecs_entity_t e4 = */ ecs_new(world, Archer);
-    /* ecs_entity_t e5 = */ ecs_new(world, MeleeUnit);
-    /* ecs_entity_t e6 = */ ecs_new(world, RangedUnit);
-    /* ecs_entity_t e7 = */ ecs_new(world, Unit);
+    ecs_entity_t e1 = ecs_new_w(world, Warlock);
+    /* ecs_entity_t e2 = */ ecs_new_w(world, Wizard);
+    ecs_entity_t e3 = ecs_new_w(world, Warrior);
+    /* ecs_entity_t e4 = */ ecs_new_w(world, Archer);
+    /* ecs_entity_t e5 = */ ecs_new_w(world, MeleeUnit);
+    /* ecs_entity_t e6 = */ ecs_new_w(world, RangedUnit);
+    /* ecs_entity_t e7 = */ ecs_new_w(world, Unit);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Warrior($this)"
@@ -329,13 +329,13 @@ void ComponentInheritance_1_this_3_lvl(void) {
 
     populate_facts(world);
 
-    ecs_entity_t e1 = ecs_new(world, Warlock);
-    /* ecs_entity_t e2 = */ ecs_new(world, Wizard);
-    /* ecs_entity_t e3 = */ ecs_new(world, Warrior);
-    /* ecs_entity_t e4 = */ ecs_new(world, Archer);
-    /* ecs_entity_t e5 = */ ecs_new(world, MeleeUnit);
-    /* ecs_entity_t e6 = */ ecs_new(world, RangedUnit);
-    /* ecs_entity_t e7 = */ ecs_new(world, Unit);
+    ecs_entity_t e1 = ecs_new_w(world, Warlock);
+    /* ecs_entity_t e2 = */ ecs_new_w(world, Wizard);
+    /* ecs_entity_t e3 = */ ecs_new_w(world, Warrior);
+    /* ecs_entity_t e4 = */ ecs_new_w(world, Archer);
+    /* ecs_entity_t e5 = */ ecs_new_w(world, MeleeUnit);
+    /* ecs_entity_t e6 = */ ecs_new_w(world, RangedUnit);
+    /* ecs_entity_t e7 = */ ecs_new_w(world, Unit);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Warlock($this)"
@@ -367,13 +367,13 @@ void ComponentInheritance_1_this_0_lvl_written(void) {
 
     populate_facts(world);
 
-    ecs_entity_t e1 = ecs_new(world, Tag);
-    ecs_entity_t e2 = ecs_new(world, Tag);
-    ecs_entity_t e3 = ecs_new(world, Tag);
-    ecs_entity_t e4 = ecs_new(world, Tag);
-    ecs_entity_t e5 = ecs_new(world, Tag);
-    ecs_entity_t e6 = ecs_new(world, Tag);
-    ecs_entity_t e7 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
+    ecs_entity_t e2 = ecs_new_w(world, Tag);
+    ecs_entity_t e3 = ecs_new_w(world, Tag);
+    ecs_entity_t e4 = ecs_new_w(world, Tag);
+    ecs_entity_t e5 = ecs_new_w(world, Tag);
+    ecs_entity_t e6 = ecs_new_w(world, Tag);
+    ecs_entity_t e7 = ecs_new_w(world, Tag);
 
     ecs_add(world, e1, Warlock);
     ecs_add(world, e2, Wizard);
@@ -384,10 +384,10 @@ void ComponentInheritance_1_this_0_lvl_written(void) {
     ecs_add(world, e7, Unit);
 
     /* entities that don't match query */
-    ecs_new(world, Unit);
-    ecs_new(world, MeleeUnit);
-    ecs_new(world, Warrior);
-    ecs_new(world, Warlock);
+    ecs_new_w(world, Unit);
+    ecs_new_w(world, MeleeUnit);
+    ecs_new_w(world, Warrior);
+    ecs_new_w(world, Warlock);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Tag($this), Unit($this)"
@@ -492,13 +492,13 @@ void ComponentInheritance_1_this_1_lvl_written(void) {
 
     populate_facts(world);
 
-    ecs_entity_t e1 = ecs_new(world, Tag);
-    ecs_entity_t e2 = ecs_new(world, Tag);
-    ecs_entity_t e3 = ecs_new(world, Tag);
-    ecs_entity_t e4 = ecs_new(world, Tag);
-    ecs_entity_t e5 = ecs_new(world, Tag);
-    ecs_entity_t e6 = ecs_new(world, Tag);
-    ecs_entity_t e7 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
+    ecs_entity_t e2 = ecs_new_w(world, Tag);
+    ecs_entity_t e3 = ecs_new_w(world, Tag);
+    ecs_entity_t e4 = ecs_new_w(world, Tag);
+    ecs_entity_t e5 = ecs_new_w(world, Tag);
+    ecs_entity_t e6 = ecs_new_w(world, Tag);
+    ecs_entity_t e7 = ecs_new_w(world, Tag);
 
     ecs_add(world, e1, Warlock);
     ecs_add(world, e2, Wizard);
@@ -509,10 +509,10 @@ void ComponentInheritance_1_this_1_lvl_written(void) {
     ecs_add(world, e7, Unit);
 
     /* entities that don't match query */
-    ecs_new(world, Unit);
-    ecs_new(world, MeleeUnit);
-    ecs_new(world, Warrior);
-    ecs_new(world, Warlock);
+    ecs_new_w(world, Unit);
+    ecs_new_w(world, MeleeUnit);
+    ecs_new_w(world, Warrior);
+    ecs_new_w(world, Warlock);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Tag($this), MeleeUnit($this)"
@@ -567,13 +567,13 @@ void ComponentInheritance_1_this_2_lvl_written(void) {
 
     populate_facts(world);
 
-    ecs_entity_t e1 = ecs_new(world, Tag);
-    ecs_entity_t e2 = ecs_new(world, Tag);
-    ecs_entity_t e3 = ecs_new(world, Tag);
-    ecs_entity_t e4 = ecs_new(world, Tag);
-    ecs_entity_t e5 = ecs_new(world, Tag);
-    ecs_entity_t e6 = ecs_new(world, Tag);
-    ecs_entity_t e7 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
+    ecs_entity_t e2 = ecs_new_w(world, Tag);
+    ecs_entity_t e3 = ecs_new_w(world, Tag);
+    ecs_entity_t e4 = ecs_new_w(world, Tag);
+    ecs_entity_t e5 = ecs_new_w(world, Tag);
+    ecs_entity_t e6 = ecs_new_w(world, Tag);
+    ecs_entity_t e7 = ecs_new_w(world, Tag);
 
     ecs_add(world, e1, Warlock);
     ecs_add(world, e2, Wizard);
@@ -584,10 +584,10 @@ void ComponentInheritance_1_this_2_lvl_written(void) {
     ecs_add(world, e7, Unit);
 
     /* entities that don't match query */
-    ecs_new(world, Unit);
-    ecs_new(world, MeleeUnit);
-    ecs_new(world, Warrior);
-    ecs_new(world, Warlock);
+    ecs_new_w(world, Unit);
+    ecs_new_w(world, MeleeUnit);
+    ecs_new_w(world, Warrior);
+    ecs_new_w(world, Warlock);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Tag($this), Warrior($this)"
@@ -632,13 +632,13 @@ void ComponentInheritance_1_this_3_lvl_written(void) {
 
     populate_facts(world);
 
-    ecs_entity_t e1 = ecs_new(world, Tag);
-    ecs_entity_t e2 = ecs_new(world, Tag);
-    ecs_entity_t e3 = ecs_new(world, Tag);
-    ecs_entity_t e4 = ecs_new(world, Tag);
-    ecs_entity_t e5 = ecs_new(world, Tag);
-    ecs_entity_t e6 = ecs_new(world, Tag);
-    ecs_entity_t e7 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
+    ecs_entity_t e2 = ecs_new_w(world, Tag);
+    ecs_entity_t e3 = ecs_new_w(world, Tag);
+    ecs_entity_t e4 = ecs_new_w(world, Tag);
+    ecs_entity_t e5 = ecs_new_w(world, Tag);
+    ecs_entity_t e6 = ecs_new_w(world, Tag);
+    ecs_entity_t e7 = ecs_new_w(world, Tag);
 
     ecs_add(world, e1, Warlock);
     ecs_add(world, e2, Wizard);
@@ -649,10 +649,10 @@ void ComponentInheritance_1_this_3_lvl_written(void) {
     ecs_add(world, e7, Unit);
 
     /* entities that don't match query */
-    ecs_new(world, Unit);
-    ecs_new(world, MeleeUnit);
-    ecs_new(world, Warrior);
-    ecs_new(world, Warlock);
+    ecs_new_w(world, Unit);
+    ecs_new_w(world, MeleeUnit);
+    ecs_new_w(world, Warrior);
+    ecs_new_w(world, Warlock);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Tag($this), Warlock($this)"
@@ -685,13 +685,13 @@ void ComponentInheritance_1_var_0_lvl(void) {
 
     populate_facts(world);
 
-    ecs_entity_t e1 = ecs_new(world, Warlock);
-    ecs_entity_t e2 = ecs_new(world, Wizard);
-    ecs_entity_t e3 = ecs_new(world, Warrior);
-    ecs_entity_t e4 = ecs_new(world, Archer);
-    ecs_entity_t e5 = ecs_new(world, MeleeUnit);
-    ecs_entity_t e6 = ecs_new(world, RangedUnit);
-    ecs_entity_t e7 = ecs_new(world, Unit);
+    ecs_entity_t e1 = ecs_new_w(world, Warlock);
+    ecs_entity_t e2 = ecs_new_w(world, Wizard);
+    ecs_entity_t e3 = ecs_new_w(world, Warrior);
+    ecs_entity_t e4 = ecs_new_w(world, Archer);
+    ecs_entity_t e5 = ecs_new_w(world, MeleeUnit);
+    ecs_entity_t e6 = ecs_new_w(world, RangedUnit);
+    ecs_entity_t e7 = ecs_new_w(world, Unit);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Unit($x)"
@@ -773,13 +773,13 @@ void ComponentInheritance_1_var_1_lvl(void) {
 
     populate_facts(world);
 
-    ecs_entity_t e1 = ecs_new(world, Warlock);
-    /* ecs_entity_t e2 = */ ecs_new(world, Wizard);
-    ecs_entity_t e3 = ecs_new(world, Warrior);
-    /* ecs_entity_t e4 = */ ecs_new(world, Archer);
-    ecs_entity_t e5 = ecs_new(world, MeleeUnit);
-    /* ecs_entity_t e6 = */ ecs_new(world, RangedUnit);
-    /* ecs_entity_t e7 = */ ecs_new(world, Unit);
+    ecs_entity_t e1 = ecs_new_w(world, Warlock);
+    /* ecs_entity_t e2 = */ ecs_new_w(world, Wizard);
+    ecs_entity_t e3 = ecs_new_w(world, Warrior);
+    /* ecs_entity_t e4 = */ ecs_new_w(world, Archer);
+    ecs_entity_t e5 = ecs_new_w(world, MeleeUnit);
+    /* ecs_entity_t e6 = */ ecs_new_w(world, RangedUnit);
+    /* ecs_entity_t e7 = */ ecs_new_w(world, Unit);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "MeleeUnit($x)"
@@ -826,13 +826,13 @@ void ComponentInheritance_1_var_2_lvl(void) {
 
     populate_facts(world);
 
-    ecs_entity_t e1 = ecs_new(world, Warlock);
-    /* ecs_entity_t e2 = */ ecs_new(world, Wizard);
-    ecs_entity_t e3 = ecs_new(world, Warrior);
-    /* ecs_entity_t e4 = */ ecs_new(world, Archer);
-    /* ecs_entity_t e5 = */ ecs_new(world, MeleeUnit);
-    /* ecs_entity_t e6 = */ ecs_new(world, RangedUnit);
-    /* ecs_entity_t e7 = */ ecs_new(world, Unit);
+    ecs_entity_t e1 = ecs_new_w(world, Warlock);
+    /* ecs_entity_t e2 = */ ecs_new_w(world, Wizard);
+    ecs_entity_t e3 = ecs_new_w(world, Warrior);
+    /* ecs_entity_t e4 = */ ecs_new_w(world, Archer);
+    /* ecs_entity_t e5 = */ ecs_new_w(world, MeleeUnit);
+    /* ecs_entity_t e6 = */ ecs_new_w(world, RangedUnit);
+    /* ecs_entity_t e7 = */ ecs_new_w(world, Unit);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Warrior($x)"
@@ -870,13 +870,13 @@ void ComponentInheritance_1_var_3_lvl(void) {
 
     populate_facts(world);
 
-    ecs_entity_t e1 = ecs_new(world, Warlock);
-    /* ecs_entity_t e2 = */ ecs_new(world, Wizard);
-    /* ecs_entity_t e3 = */ ecs_new(world, Warrior);
-    /* ecs_entity_t e4 = */ ecs_new(world, Archer);
-    /* ecs_entity_t e5 = */ ecs_new(world, MeleeUnit);
-    /* ecs_entity_t e6 = */ ecs_new(world, RangedUnit);
-    /* ecs_entity_t e7 = */ ecs_new(world, Unit);
+    ecs_entity_t e1 = ecs_new_w(world, Warlock);
+    /* ecs_entity_t e2 = */ ecs_new_w(world, Wizard);
+    /* ecs_entity_t e3 = */ ecs_new_w(world, Warrior);
+    /* ecs_entity_t e4 = */ ecs_new_w(world, Archer);
+    /* ecs_entity_t e5 = */ ecs_new_w(world, MeleeUnit);
+    /* ecs_entity_t e6 = */ ecs_new_w(world, RangedUnit);
+    /* ecs_entity_t e7 = */ ecs_new_w(world, Unit);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Warlock($x)"
@@ -910,13 +910,13 @@ void ComponentInheritance_1_var_0_lvl_written(void) {
 
     populate_facts(world);
 
-    ecs_entity_t e1 = ecs_new(world, Tag);
-    ecs_entity_t e2 = ecs_new(world, Tag);
-    ecs_entity_t e3 = ecs_new(world, Tag);
-    ecs_entity_t e4 = ecs_new(world, Tag);
-    ecs_entity_t e5 = ecs_new(world, Tag);
-    ecs_entity_t e6 = ecs_new(world, Tag);
-    ecs_entity_t e7 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
+    ecs_entity_t e2 = ecs_new_w(world, Tag);
+    ecs_entity_t e3 = ecs_new_w(world, Tag);
+    ecs_entity_t e4 = ecs_new_w(world, Tag);
+    ecs_entity_t e5 = ecs_new_w(world, Tag);
+    ecs_entity_t e6 = ecs_new_w(world, Tag);
+    ecs_entity_t e7 = ecs_new_w(world, Tag);
 
     ecs_add(world, e1, Warlock);
     ecs_add(world, e2, Wizard);
@@ -927,10 +927,10 @@ void ComponentInheritance_1_var_0_lvl_written(void) {
     ecs_add(world, e7, Unit);
 
     /* entities that don't match query */
-    ecs_new(world, Unit);
-    ecs_new(world, MeleeUnit);
-    ecs_new(world, Warrior);
-    ecs_new(world, Warlock);
+    ecs_new_w(world, Unit);
+    ecs_new_w(world, MeleeUnit);
+    ecs_new_w(world, Warrior);
+    ecs_new_w(world, Warlock);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Tag($x), Unit($x)"
@@ -1038,13 +1038,13 @@ void ComponentInheritance_1_var_1_lvl_written(void) {
 
     populate_facts(world);
 
-    ecs_entity_t e1 = ecs_new(world, Tag);
-    ecs_entity_t e2 = ecs_new(world, Tag);
-    ecs_entity_t e3 = ecs_new(world, Tag);
-    ecs_entity_t e4 = ecs_new(world, Tag);
-    ecs_entity_t e5 = ecs_new(world, Tag);
-    ecs_entity_t e6 = ecs_new(world, Tag);
-    ecs_entity_t e7 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
+    ecs_entity_t e2 = ecs_new_w(world, Tag);
+    ecs_entity_t e3 = ecs_new_w(world, Tag);
+    ecs_entity_t e4 = ecs_new_w(world, Tag);
+    ecs_entity_t e5 = ecs_new_w(world, Tag);
+    ecs_entity_t e6 = ecs_new_w(world, Tag);
+    ecs_entity_t e7 = ecs_new_w(world, Tag);
 
     ecs_add(world, e1, Warlock);
     ecs_add(world, e2, Wizard);
@@ -1055,10 +1055,10 @@ void ComponentInheritance_1_var_1_lvl_written(void) {
     ecs_add(world, e7, Unit);
 
     /* entities that don't match query */
-    ecs_new(world, Unit);
-    ecs_new(world, MeleeUnit);
-    ecs_new(world, Warrior);
-    ecs_new(world, Warlock);
+    ecs_new_w(world, Unit);
+    ecs_new_w(world, MeleeUnit);
+    ecs_new_w(world, Warrior);
+    ecs_new_w(world, Warlock);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Tag($x), MeleeUnit($x)"
@@ -1116,13 +1116,13 @@ void ComponentInheritance_1_var_2_lvl_written(void) {
 
     populate_facts(world);
 
-    ecs_entity_t e1 = ecs_new(world, Tag);
-    ecs_entity_t e2 = ecs_new(world, Tag);
-    ecs_entity_t e3 = ecs_new(world, Tag);
-    ecs_entity_t e4 = ecs_new(world, Tag);
-    ecs_entity_t e5 = ecs_new(world, Tag);
-    ecs_entity_t e6 = ecs_new(world, Tag);
-    ecs_entity_t e7 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
+    ecs_entity_t e2 = ecs_new_w(world, Tag);
+    ecs_entity_t e3 = ecs_new_w(world, Tag);
+    ecs_entity_t e4 = ecs_new_w(world, Tag);
+    ecs_entity_t e5 = ecs_new_w(world, Tag);
+    ecs_entity_t e6 = ecs_new_w(world, Tag);
+    ecs_entity_t e7 = ecs_new_w(world, Tag);
 
     ecs_add(world, e1, Warlock);
     ecs_add(world, e2, Wizard);
@@ -1133,10 +1133,10 @@ void ComponentInheritance_1_var_2_lvl_written(void) {
     ecs_add(world, e7, Unit);
 
     /* entities that don't match query */
-    ecs_new(world, Unit);
-    ecs_new(world, MeleeUnit);
-    ecs_new(world, Warrior);
-    ecs_new(world, Warlock);
+    ecs_new_w(world, Unit);
+    ecs_new_w(world, MeleeUnit);
+    ecs_new_w(world, Warrior);
+    ecs_new_w(world, Warlock);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Tag($x), Warrior($x)"
@@ -1184,13 +1184,13 @@ void ComponentInheritance_1_var_3_lvl_written(void) {
 
     populate_facts(world);
 
-    ecs_entity_t e1 = ecs_new(world, Tag);
-    ecs_entity_t e2 = ecs_new(world, Tag);
-    ecs_entity_t e3 = ecs_new(world, Tag);
-    ecs_entity_t e4 = ecs_new(world, Tag);
-    ecs_entity_t e5 = ecs_new(world, Tag);
-    ecs_entity_t e6 = ecs_new(world, Tag);
-    ecs_entity_t e7 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
+    ecs_entity_t e2 = ecs_new_w(world, Tag);
+    ecs_entity_t e3 = ecs_new_w(world, Tag);
+    ecs_entity_t e4 = ecs_new_w(world, Tag);
+    ecs_entity_t e5 = ecs_new_w(world, Tag);
+    ecs_entity_t e6 = ecs_new_w(world, Tag);
+    ecs_entity_t e7 = ecs_new_w(world, Tag);
 
     ecs_add(world, e1, Warlock);
     ecs_add(world, e2, Wizard);
@@ -1201,10 +1201,10 @@ void ComponentInheritance_1_var_3_lvl_written(void) {
     ecs_add(world, e7, Unit);
 
     /* entities that don't match query */
-    ecs_new(world, Unit);
-    ecs_new(world, MeleeUnit);
-    ecs_new(world, Warrior);
-    ecs_new(world, Warlock);
+    ecs_new_w(world, Unit);
+    ecs_new_w(world, MeleeUnit);
+    ecs_new_w(world, Warrior);
+    ecs_new_w(world, Warlock);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Tag($x), Warlock($x)"
@@ -1270,13 +1270,13 @@ void ComponentInheritance_1_this_1_lvl_self(void) {
 
     populate_facts(world);
 
-    ecs_entity_t e1 = ecs_new(world, Warlock);
-    /* ecs_entity_t e2 = */ ecs_new(world, Wizard);
-    ecs_entity_t e3 = ecs_new(world, Warrior);
-    /* ecs_entity_t e4 = */ ecs_new(world, Archer);
-    ecs_entity_t e5 = ecs_new(world, MeleeUnit);
-    /* ecs_entity_t e6 = */ ecs_new(world, RangedUnit);
-    /* ecs_entity_t e7 = */ ecs_new(world, Unit);
+    ecs_entity_t e1 = ecs_new_w(world, Warlock);
+    /* ecs_entity_t e2 = */ ecs_new_w(world, Wizard);
+    ecs_entity_t e3 = ecs_new_w(world, Warrior);
+    /* ecs_entity_t e4 = */ ecs_new_w(world, Archer);
+    ecs_entity_t e5 = ecs_new_w(world, MeleeUnit);
+    /* ecs_entity_t e6 = */ ecs_new_w(world, RangedUnit);
+    /* ecs_entity_t e7 = */ ecs_new_w(world, Unit);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "MeleeUnit(self)"
@@ -1322,13 +1322,13 @@ void ComponentInheritance_1_this_1_lvl_written_self(void) {
 
     populate_facts(world);
 
-    ecs_entity_t e1 = ecs_new(world, Tag);
-    ecs_entity_t e2 = ecs_new(world, Tag);
-    ecs_entity_t e3 = ecs_new(world, Tag);
-    ecs_entity_t e4 = ecs_new(world, Tag);
-    ecs_entity_t e5 = ecs_new(world, Tag);
-    ecs_entity_t e6 = ecs_new(world, Tag);
-    ecs_entity_t e7 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
+    ecs_entity_t e2 = ecs_new_w(world, Tag);
+    ecs_entity_t e3 = ecs_new_w(world, Tag);
+    ecs_entity_t e4 = ecs_new_w(world, Tag);
+    ecs_entity_t e5 = ecs_new_w(world, Tag);
+    ecs_entity_t e6 = ecs_new_w(world, Tag);
+    ecs_entity_t e7 = ecs_new_w(world, Tag);
 
     ecs_add(world, e1, Warlock);
     ecs_add(world, e2, Wizard);
@@ -1339,10 +1339,10 @@ void ComponentInheritance_1_this_1_lvl_written_self(void) {
     ecs_add(world, e7, Unit);
 
     /* entities that don't match query */
-    ecs_new(world, Unit);
-    ecs_new(world, MeleeUnit);
-    ecs_new(world, Warrior);
-    ecs_new(world, Warlock);
+    ecs_new_w(world, Unit);
+    ecs_new_w(world, MeleeUnit);
+    ecs_new_w(world, Warrior);
+    ecs_new_w(world, Warlock);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Tag(self), MeleeUnit(self)"
@@ -1395,13 +1395,13 @@ void ComponentInheritance_1_var_1_lvl_self(void) {
 
     populate_facts(world);
 
-    ecs_entity_t e1 = ecs_new(world, Warlock);
-    /* ecs_entity_t e2 = */ ecs_new(world, Wizard);
-    ecs_entity_t e3 = ecs_new(world, Warrior);
-    /* ecs_entity_t e4 = */ ecs_new(world, Archer);
-    ecs_entity_t e5 = ecs_new(world, MeleeUnit);
-    /* ecs_entity_t e6 = */ ecs_new(world, RangedUnit);
-    /* ecs_entity_t e7 = */ ecs_new(world, Unit);
+    ecs_entity_t e1 = ecs_new_w(world, Warlock);
+    /* ecs_entity_t e2 = */ ecs_new_w(world, Wizard);
+    ecs_entity_t e3 = ecs_new_w(world, Warrior);
+    /* ecs_entity_t e4 = */ ecs_new_w(world, Archer);
+    ecs_entity_t e5 = ecs_new_w(world, MeleeUnit);
+    /* ecs_entity_t e6 = */ ecs_new_w(world, RangedUnit);
+    /* ecs_entity_t e7 = */ ecs_new_w(world, Unit);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "MeleeUnit($x:self)"
@@ -1450,13 +1450,13 @@ void ComponentInheritance_1_var_1_lvl_written_self(void) {
 
     populate_facts(world);
 
-    ecs_entity_t e1 = ecs_new(world, Tag);
-    ecs_entity_t e2 = ecs_new(world, Tag);
-    ecs_entity_t e3 = ecs_new(world, Tag);
-    ecs_entity_t e4 = ecs_new(world, Tag);
-    ecs_entity_t e5 = ecs_new(world, Tag);
-    ecs_entity_t e6 = ecs_new(world, Tag);
-    ecs_entity_t e7 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
+    ecs_entity_t e2 = ecs_new_w(world, Tag);
+    ecs_entity_t e3 = ecs_new_w(world, Tag);
+    ecs_entity_t e4 = ecs_new_w(world, Tag);
+    ecs_entity_t e5 = ecs_new_w(world, Tag);
+    ecs_entity_t e6 = ecs_new_w(world, Tag);
+    ecs_entity_t e7 = ecs_new_w(world, Tag);
 
     ecs_add(world, e1, Warlock);
     ecs_add(world, e2, Wizard);
@@ -1467,10 +1467,10 @@ void ComponentInheritance_1_var_1_lvl_written_self(void) {
     ecs_add(world, e7, Unit);
 
     /* entities that don't match query */
-    ecs_new(world, Unit);
-    ecs_new(world, MeleeUnit);
-    ecs_new(world, Warrior);
-    ecs_new(world, Warlock);
+    ecs_new_w(world, Unit);
+    ecs_new_w(world, MeleeUnit);
+    ecs_new_w(world, Warrior);
+    ecs_new_w(world, Warlock);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Tag($x), MeleeUnit($x)"
@@ -1643,13 +1643,13 @@ void ComponentInheritance_1_this_src_not(void) {
 
     populate_facts(world);
 
-    ecs_entity_t e1 = ecs_new(world, Tag);
-    ecs_entity_t e2 = ecs_new(world, Tag);
-    ecs_entity_t e3 = ecs_new(world, Tag);
-    ecs_entity_t e4 = ecs_new(world, Tag);
-    ecs_entity_t e5 = ecs_new(world, Tag);
-    ecs_entity_t e6 = ecs_new(world, Tag);
-    ecs_entity_t e7 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
+    ecs_entity_t e2 = ecs_new_w(world, Tag);
+    ecs_entity_t e3 = ecs_new_w(world, Tag);
+    ecs_entity_t e4 = ecs_new_w(world, Tag);
+    ecs_entity_t e5 = ecs_new_w(world, Tag);
+    ecs_entity_t e6 = ecs_new_w(world, Tag);
+    ecs_entity_t e7 = ecs_new_w(world, Tag);
 
     ecs_add(world, e1, Unit);
     ecs_add(world, e2, MeleeUnit);
@@ -2043,13 +2043,13 @@ void ComponentInheritance_1_var_src_not(void) {
 
     populate_facts(world);
 
-    ecs_entity_t e1 = ecs_new(world, Tag);
-    ecs_entity_t e2 = ecs_new(world, Tag);
-    ecs_entity_t e3 = ecs_new(world, Tag);
-    ecs_entity_t e4 = ecs_new(world, Tag);
-    ecs_entity_t e5 = ecs_new(world, Tag);
-    ecs_entity_t e6 = ecs_new(world, Tag);
-    ecs_entity_t e7 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
+    ecs_entity_t e2 = ecs_new_w(world, Tag);
+    ecs_entity_t e3 = ecs_new_w(world, Tag);
+    ecs_entity_t e4 = ecs_new_w(world, Tag);
+    ecs_entity_t e5 = ecs_new_w(world, Tag);
+    ecs_entity_t e6 = ecs_new_w(world, Tag);
+    ecs_entity_t e7 = ecs_new_w(world, Tag);
 
     ecs_add(world, e1, Unit);
     ecs_add(world, e2, MeleeUnit);
@@ -2464,13 +2464,13 @@ void ComponentInheritance_1_this_src_not_written(void) {
 
     populate_facts(world);
 
-    ecs_entity_t e1 = ecs_new(world, Tag);
-    ecs_entity_t e2 = ecs_new(world, Tag);
-    ecs_entity_t e3 = ecs_new(world, Tag);
-    ecs_entity_t e4 = ecs_new(world, Tag);
-    ecs_entity_t e5 = ecs_new(world, Tag);
-    ecs_entity_t e6 = ecs_new(world, Tag);
-    ecs_entity_t e7 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
+    ecs_entity_t e2 = ecs_new_w(world, Tag);
+    ecs_entity_t e3 = ecs_new_w(world, Tag);
+    ecs_entity_t e4 = ecs_new_w(world, Tag);
+    ecs_entity_t e5 = ecs_new_w(world, Tag);
+    ecs_entity_t e6 = ecs_new_w(world, Tag);
+    ecs_entity_t e7 = ecs_new_w(world, Tag);
 
     ecs_add(world, e1, Unit);
     ecs_add(world, e2, MeleeUnit);
@@ -2865,13 +2865,13 @@ void ComponentInheritance_1_var_src_not_written(void) {
 
     populate_facts(world);
 
-    ecs_entity_t e1 = ecs_new(world, Tag);
-    ecs_entity_t e2 = ecs_new(world, Tag);
-    ecs_entity_t e3 = ecs_new(world, Tag);
-    ecs_entity_t e4 = ecs_new(world, Tag);
-    ecs_entity_t e5 = ecs_new(world, Tag);
-    ecs_entity_t e6 = ecs_new(world, Tag);
-    ecs_entity_t e7 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
+    ecs_entity_t e2 = ecs_new_w(world, Tag);
+    ecs_entity_t e3 = ecs_new_w(world, Tag);
+    ecs_entity_t e4 = ecs_new_w(world, Tag);
+    ecs_entity_t e5 = ecs_new_w(world, Tag);
+    ecs_entity_t e6 = ecs_new_w(world, Tag);
+    ecs_entity_t e7 = ecs_new_w(world, Tag);
 
     ecs_add(world, e1, Unit);
     ecs_add(world, e2, MeleeUnit);

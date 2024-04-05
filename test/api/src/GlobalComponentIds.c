@@ -7,7 +7,7 @@ static ECS_COMPONENT_DECLARE(Velocity);
 
 static
 ecs_entity_t create_entity(ecs_world_t *world) {
-    return ecs_new(world, Position);
+    return ecs_new_w(world, Position);
 }
 
 static
@@ -17,7 +17,7 @@ ecs_entity_t create_entity_w_entity(ecs_world_t *world) {
 
 static
 ecs_entity_t create_tag_entity(ecs_world_t *world) {
-    return ecs_new(world, MyTag);
+    return ecs_new_w(world, MyTag);
 }
 
 static
@@ -128,7 +128,7 @@ void GlobalComponentIds_reuse_300_component_ids(void) {
     const ecs_world_info_t *info = ecs_get_world_info(world);
     ecs_entity_t info_last_component_id = info->last_component_id;
     ecs_entity_t info_last_id = ecs_get_max_id(world);
-    ecs_entity_t next_id = ecs_new_id(world);
+    ecs_entity_t next_id = ecs_new(world);
 
     ecs_fini(world);
 
@@ -145,7 +145,7 @@ void GlobalComponentIds_reuse_300_component_ids(void) {
     info = ecs_get_world_info(world);
     test_int(info->last_component_id, info_last_component_id);
     test_int(ecs_get_max_id(world), info_last_id);
-    test_int(next_id, ecs_new_id(world));
+    test_int(next_id, ecs_new(world));
 
     ecs_os_free(ids);
 

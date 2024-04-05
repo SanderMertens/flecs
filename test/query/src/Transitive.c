@@ -331,11 +331,11 @@ void Transitive_1_this_src_written_0_lvl(void) {
 
     populate_facts(world);
 
-    ecs_entity_t e1 = ecs_new(world, Tag);
-    ecs_entity_t e2 = ecs_new(world, Tag);
-    ecs_entity_t e3 = ecs_new(world, Tag);
-    ecs_entity_t e4 = ecs_new(world, Tag);
-    ecs_entity_t e5 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
+    ecs_entity_t e2 = ecs_new_w(world, Tag);
+    ecs_entity_t e3 = ecs_new_w(world, Tag);
+    ecs_entity_t e4 = ecs_new_w(world, Tag);
+    ecs_entity_t e5 = ecs_new_w(world, Tag);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Tag($this), LocatedIn($this, SanFrancisco)"
@@ -380,11 +380,11 @@ void Transitive_1_this_src_written_1_lvl(void) {
 
     populate_facts(world);
 
-    ecs_entity_t e1 = ecs_new(world, Tag);
-    ecs_entity_t e2 = ecs_new(world, Tag);
-    ecs_entity_t e3 = ecs_new(world, Tag);
-    ecs_entity_t e4 = ecs_new(world, Tag);
-    ecs_entity_t e5 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
+    ecs_entity_t e2 = ecs_new_w(world, Tag);
+    ecs_entity_t e3 = ecs_new_w(world, Tag);
+    ecs_entity_t e4 = ecs_new_w(world, Tag);
+    ecs_entity_t e5 = ecs_new_w(world, Tag);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Tag($this), LocatedIn($this, California)"
@@ -437,11 +437,11 @@ void Transitive_1_this_src_written_2_lvl(void) {
 
     populate_facts(world);
 
-    ecs_entity_t e1 = ecs_new(world, Tag);
-    ecs_entity_t e2 = ecs_new(world, Tag);
-    ecs_entity_t e3 = ecs_new(world, Tag);
-    ecs_entity_t e4 = ecs_new(world, Tag);
-    ecs_entity_t e5 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
+    ecs_entity_t e2 = ecs_new_w(world, Tag);
+    ecs_entity_t e3 = ecs_new_w(world, Tag);
+    ecs_entity_t e4 = ecs_new_w(world, Tag);
+    ecs_entity_t e5 = ecs_new_w(world, Tag);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Tag($this), LocatedIn($this, UnitedStates)"
@@ -504,14 +504,14 @@ void Transitive_1_this_src_written_reflexive(void) {
 
     ecs_add_id(world, LocatedIn, EcsReflexive);
 
-    ecs_entity_t e1 = ecs_new(world, Tag);
-    ecs_entity_t e2 = ecs_new(world, Tag);
-    ecs_entity_t e3 = ecs_new(world, Tag);
-    ecs_entity_t e4 = ecs_new(world, Tag);
-    ecs_entity_t e5 = ecs_new(world, Tag);
-    ecs_entity_t e6 = ecs_new(world, Tag);
-    ecs_entity_t e7 = ecs_new(world, Tag);
-    ecs_entity_t e8 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
+    ecs_entity_t e2 = ecs_new_w(world, Tag);
+    ecs_entity_t e3 = ecs_new_w(world, Tag);
+    ecs_entity_t e4 = ecs_new_w(world, Tag);
+    ecs_entity_t e5 = ecs_new_w(world, Tag);
+    ecs_entity_t e6 = ecs_new_w(world, Tag);
+    ecs_entity_t e7 = ecs_new_w(world, Tag);
+    ecs_entity_t e8 = ecs_new_w(world, Tag);
 
     ecs_set_name(world, e1, "e1");
     ecs_set_name(world, e2, "e2");
@@ -579,12 +579,12 @@ void Transitive_1_this_src_0_lvl(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
-    ecs_entity_t e3 = ecs_new_id(world);
-    ecs_entity_t e4 = ecs_new_id(world);
-    ecs_entity_t e5 = ecs_new_id(world);
-    ecs_entity_t e6 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_entity_t e4 = ecs_new(world);
+    ecs_entity_t e5 = ecs_new(world);
+    ecs_entity_t e6 = ecs_new(world);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "LocatedIn($this, SanFrancisco)"
@@ -636,12 +636,12 @@ void Transitive_1_this_src_1_lvl(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
-    ecs_entity_t e3 = ecs_new_id(world);
-    ecs_entity_t e4 = ecs_new_id(world);
-    ecs_entity_t e5 = ecs_new_id(world);
-    ecs_entity_t e6 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_entity_t e4 = ecs_new(world);
+    ecs_entity_t e5 = ecs_new(world);
+    ecs_entity_t e6 = ecs_new(world);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "LocatedIn($this, California)"
@@ -701,12 +701,12 @@ void Transitive_1_this_src_2_lvl(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
-    ecs_entity_t e3 = ecs_new_id(world);
-    ecs_entity_t e4 = ecs_new_id(world);
-    ecs_entity_t e5 = ecs_new_id(world);
-    ecs_entity_t e6 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_entity_t e4 = ecs_new(world);
+    ecs_entity_t e5 = ecs_new(world);
+    ecs_entity_t e6 = ecs_new(world);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "LocatedIn($this, UnitedStates)"
@@ -787,12 +787,12 @@ void Transitive_1_this_src_reflexive(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
-    ecs_entity_t e3 = ecs_new_id(world);
-    ecs_entity_t e4 = ecs_new_id(world);
-    ecs_entity_t e5 = ecs_new_id(world);
-    ecs_entity_t e6 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_entity_t e4 = ecs_new(world);
+    ecs_entity_t e5 = ecs_new(world);
+    ecs_entity_t e6 = ecs_new(world);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "LocatedIn($this, California)"
@@ -1405,11 +1405,11 @@ void Transitive_1_var_src_written_0_lvl(void) {
 
     populate_facts(world);
 
-    ecs_entity_t e1 = ecs_new(world, Tag);
-    ecs_entity_t e2 = ecs_new(world, Tag);
-    ecs_entity_t e3 = ecs_new(world, Tag);
-    ecs_entity_t e4 = ecs_new(world, Tag);
-    ecs_entity_t e5 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
+    ecs_entity_t e2 = ecs_new_w(world, Tag);
+    ecs_entity_t e3 = ecs_new_w(world, Tag);
+    ecs_entity_t e4 = ecs_new_w(world, Tag);
+    ecs_entity_t e5 = ecs_new_w(world, Tag);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Tag($r), LocatedIn($r, SanFrancisco)"
@@ -1464,11 +1464,11 @@ void Transitive_1_var_src_written_1_lvl(void) {
 
     populate_facts(world);
 
-    ecs_entity_t e1 = ecs_new(world, Tag);
-    ecs_entity_t e2 = ecs_new(world, Tag);
-    ecs_entity_t e3 = ecs_new(world, Tag);
-    ecs_entity_t e4 = ecs_new(world, Tag);
-    ecs_entity_t e5 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
+    ecs_entity_t e2 = ecs_new_w(world, Tag);
+    ecs_entity_t e3 = ecs_new_w(world, Tag);
+    ecs_entity_t e4 = ecs_new_w(world, Tag);
+    ecs_entity_t e5 = ecs_new_w(world, Tag);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Tag($r), LocatedIn($r, California)"
@@ -1531,11 +1531,11 @@ void Transitive_1_var_src_written_2_lvl(void) {
 
     populate_facts(world);
 
-    ecs_entity_t e1 = ecs_new(world, Tag);
-    ecs_entity_t e2 = ecs_new(world, Tag);
-    ecs_entity_t e3 = ecs_new(world, Tag);
-    ecs_entity_t e4 = ecs_new(world, Tag);
-    ecs_entity_t e5 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
+    ecs_entity_t e2 = ecs_new_w(world, Tag);
+    ecs_entity_t e3 = ecs_new_w(world, Tag);
+    ecs_entity_t e4 = ecs_new_w(world, Tag);
+    ecs_entity_t e5 = ecs_new_w(world, Tag);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Tag($r), LocatedIn($r, UnitedStates)"
@@ -1608,14 +1608,14 @@ void Transitive_1_var_src_written_reflexive(void) {
 
     ecs_add_id(world, LocatedIn, EcsReflexive);
 
-    ecs_entity_t e1 = ecs_new(world, Tag);
-    ecs_entity_t e2 = ecs_new(world, Tag);
-    ecs_entity_t e3 = ecs_new(world, Tag);
-    ecs_entity_t e4 = ecs_new(world, Tag);
-    ecs_entity_t e5 = ecs_new(world, Tag);
-    ecs_entity_t e6 = ecs_new(world, Tag);
-    ecs_entity_t e7 = ecs_new(world, Tag);
-    ecs_entity_t e8 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
+    ecs_entity_t e2 = ecs_new_w(world, Tag);
+    ecs_entity_t e3 = ecs_new_w(world, Tag);
+    ecs_entity_t e4 = ecs_new_w(world, Tag);
+    ecs_entity_t e5 = ecs_new_w(world, Tag);
+    ecs_entity_t e6 = ecs_new_w(world, Tag);
+    ecs_entity_t e7 = ecs_new_w(world, Tag);
+    ecs_entity_t e8 = ecs_new_w(world, Tag);
 
     ecs_set_name(world, e1, "e1");
     ecs_set_name(world, e2, "e2");
@@ -1693,12 +1693,12 @@ void Transitive_1_var_src_0_lvl(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
-    ecs_entity_t e3 = ecs_new_id(world);
-    ecs_entity_t e4 = ecs_new_id(world);
-    ecs_entity_t e5 = ecs_new_id(world);
-    ecs_entity_t e6 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_entity_t e4 = ecs_new(world);
+    ecs_entity_t e5 = ecs_new(world);
+    ecs_entity_t e6 = ecs_new(world);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "LocatedIn($r, SanFrancisco)"
@@ -1758,12 +1758,12 @@ void Transitive_1_var_src_1_lvl(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
-    ecs_entity_t e3 = ecs_new_id(world);
-    ecs_entity_t e4 = ecs_new_id(world);
-    ecs_entity_t e5 = ecs_new_id(world);
-    ecs_entity_t e6 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_entity_t e4 = ecs_new(world);
+    ecs_entity_t e5 = ecs_new(world);
+    ecs_entity_t e6 = ecs_new(world);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "LocatedIn($r, California)"
@@ -1836,12 +1836,12 @@ void Transitive_1_var_src_2_lvl(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
-    ecs_entity_t e3 = ecs_new_id(world);
-    ecs_entity_t e4 = ecs_new_id(world);
-    ecs_entity_t e5 = ecs_new_id(world);
-    ecs_entity_t e6 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_entity_t e4 = ecs_new(world);
+    ecs_entity_t e5 = ecs_new(world);
+    ecs_entity_t e6 = ecs_new(world);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "LocatedIn($r, UnitedStates)"
@@ -1940,12 +1940,12 @@ void Transitive_1_var_src_reflexive(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
-    ecs_entity_t e3 = ecs_new_id(world);
-    ecs_entity_t e4 = ecs_new_id(world);
-    ecs_entity_t e5 = ecs_new_id(world);
-    ecs_entity_t e6 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_entity_t e4 = ecs_new(world);
+    ecs_entity_t e5 = ecs_new(world);
+    ecs_entity_t e6 = ecs_new(world);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "LocatedIn($r, California)"
@@ -4491,10 +4491,10 @@ void Transitive_optional_transitive_var_tgt(void) {
         test_bool(false, ecs_query_next(&it));
     }
 
-    ecs_entity_t e1 = ecs_new(world, Tag);
-    ecs_entity_t e2 = ecs_new(world, Tag);
-    ecs_entity_t e3 = ecs_new(world, Tag);
-    ecs_entity_t e4 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
+    ecs_entity_t e2 = ecs_new_w(world, Tag);
+    ecs_entity_t e3 = ecs_new_w(world, Tag);
+    ecs_entity_t e4 = ecs_new_w(world, Tag);
 
     ecs_add_pair(world, e2, LocatedIn, Earth);
     ecs_add_pair(world, e3, LocatedIn, SanFrancisco);
@@ -4759,10 +4759,10 @@ void Transitive_optional_transitive_var_tgt_written(void) {
         test_bool(false, ecs_query_next(&it));
     }
 
-    ecs_entity_t e1 = ecs_new(world, Tag);
-    ecs_entity_t e2 = ecs_new(world, Tag);
-    ecs_entity_t e3 = ecs_new(world, Tag);
-    ecs_entity_t e4 = ecs_new(world, Tag);
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
+    ecs_entity_t e2 = ecs_new_w(world, Tag);
+    ecs_entity_t e3 = ecs_new_w(world, Tag);
+    ecs_entity_t e4 = ecs_new_w(world, Tag);
 
     ecs_add_pair(world, e2, LocatedIn, Earth);
     ecs_add_pair(world, e3, LocatedIn, SanFrancisco);

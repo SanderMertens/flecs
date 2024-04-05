@@ -88,7 +88,7 @@ int main(int argc, char *argv[]) {
 
     // Create a few test entities
     for (int i = 0; i < 10; i ++) {
-        ecs_entity_t e = ecs_new_id(ecs);
+        ecs_entity_t e = ecs_new(ecs);
         ecs_set(ecs, e, Position, { .x = rand() % 100, .y = rand() % 100 });
         ecs_set(ecs, e, Radius, { rand() % 10 + 1 });
     }
