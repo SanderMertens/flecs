@@ -621,15 +621,15 @@ void Enum_query_enum_wildcard(void) {
     int32_t count = 0;
     q.each([&](flecs::iter& it, size_t index) {
         if (it.entity(index) == e1) {
-            test_assert(it.pair(1).second() == ecs.id(StandardEnum::Red));
+            test_assert(it.pair(0).second() == ecs.id(StandardEnum::Red));
             count ++;
         }
         if (it.entity(index) == e2) {
-            test_assert(it.pair(1).second() == ecs.id(StandardEnum::Green));
+            test_assert(it.pair(0).second() == ecs.id(StandardEnum::Green));
             count ++;
         }
         if (it.entity(index) == e3) {
-            test_assert(it.pair(1).second() == ecs.id(StandardEnum::Blue));
+            test_assert(it.pair(0).second() == ecs.id(StandardEnum::Blue));
             count ++;
         }
     });
@@ -651,7 +651,7 @@ void Enum_query_enum_constant(void) {
     int32_t count = 0;
     q.each([&](flecs::iter& it, size_t index) {
         test_assert(it.entity(index) == e1);
-        test_assert(it.pair(1).second() == ecs.id(StandardEnum::Blue));
+        test_assert(it.pair(0).second() == ecs.id(StandardEnum::Blue));
         count ++;
     });
 
@@ -1009,7 +1009,7 @@ void Enum_query_union_enum(void) {
     //     .build();
 
     // q.iter([&](flecs::iter& it) {
-    //     flecs::field<flecs::entity_t> colors = it.field<flecs::entity_t>(1);
+    //     flecs::field<flecs::entity_t> colors = it.field<flecs::entity_t>(0);
     //     test_int(it.count(), 3);
     //     test_uint(it.entity(0), e1);
     //     test_uint(it.entity(1), e2);

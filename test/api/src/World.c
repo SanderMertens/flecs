@@ -7,8 +7,8 @@ void World_setup(void) {
 
 static
 void Move(ecs_iter_t *it) {
-    Position *pos = ecs_field(it, Position, 1);
-    Velocity *vel = ecs_field(it, Velocity, 2);
+    Position *pos = ecs_field(it, Position, 0);
+    Velocity *vel = ecs_field(it, Velocity, 1);
     probe_iter(it);
 
     int row;
@@ -229,7 +229,7 @@ void World_entity_range_add_in_range_staged(void) {
 }
 
 void AddOutOfRange(ecs_iter_t *it) {
-    ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 2);
+    ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 1);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -333,7 +333,7 @@ void World_dim(void) {
 
 static
 void TOnLoad(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
     int i;
     for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 0);
@@ -343,7 +343,7 @@ void TOnLoad(ecs_iter_t *it) {
 
 static
 void TPostLoad(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
     int i;
     for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 1);
@@ -353,7 +353,7 @@ void TPostLoad(ecs_iter_t *it) {
 
 static
 void TPreUpdate(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
     int i;
     for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 2);
@@ -363,7 +363,7 @@ void TPreUpdate(ecs_iter_t *it) {
 
 static
 void TOnUpdate(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
     int i;
     for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 3);
@@ -373,7 +373,7 @@ void TOnUpdate(ecs_iter_t *it) {
 
 static
 void TOnValidate(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
     int i;
     for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 4);
@@ -383,7 +383,7 @@ void TOnValidate(ecs_iter_t *it) {
 
 static
 void TPostUpdate(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
     int i;
     for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 5);
@@ -393,7 +393,7 @@ void TPostUpdate(ecs_iter_t *it) {
 
 static
 void TPreStore(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
     int i;
     for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 6);
@@ -403,7 +403,7 @@ void TPreStore(ecs_iter_t *it) {
 
 static
 void TOnStore(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
     int i;
     for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 7);
@@ -413,7 +413,7 @@ void TOnStore(ecs_iter_t *it) {
 
 static
 void TManual(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
     int i;
     for (i = 0; i < it->count; i ++) {
         test_int(p[i].x, 8);
@@ -487,8 +487,8 @@ void World_phases_match_in_create(void) {
 
 static
 void TMergeOnLoad(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
-    ecs_id_t ecs_id(Position) = ecs_field_id(it, 1);
+    Position *p = ecs_field(it, Position, 0);
+    ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -499,8 +499,8 @@ void TMergeOnLoad(ecs_iter_t *it) {
 
 static
 void TMergePostLoad(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
-    ecs_id_t ecs_id(Position) = ecs_field_id(it, 1);
+    Position *p = ecs_field(it, Position, 0);
+    ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -511,8 +511,8 @@ void TMergePostLoad(ecs_iter_t *it) {
 
 static
 void TMergePreUpdate(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
-    ecs_id_t ecs_id(Position) = ecs_field_id(it, 1);
+    Position *p = ecs_field(it, Position, 0);
+    ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -523,8 +523,8 @@ void TMergePreUpdate(ecs_iter_t *it) {
 
 static
 void TMergeOnUpdate(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
-    ecs_id_t ecs_id(Position) = ecs_field_id(it, 1);
+    Position *p = ecs_field(it, Position, 0);
+    ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -535,8 +535,8 @@ void TMergeOnUpdate(ecs_iter_t *it) {
 
 static
 void TMergeOnValidate(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
-    ecs_id_t ecs_id(Position) = ecs_field_id(it, 1);
+    Position *p = ecs_field(it, Position, 0);
+    ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -547,8 +547,8 @@ void TMergeOnValidate(ecs_iter_t *it) {
 
 static
 void TMergePostUpdate(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
-    ecs_id_t ecs_id(Position) = ecs_field_id(it, 1);
+    Position *p = ecs_field(it, Position, 0);
+    ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -559,8 +559,8 @@ void TMergePostUpdate(ecs_iter_t *it) {
 
 static
 void TMergePreStore(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
-    ecs_id_t ecs_id(Position) = ecs_field_id(it, 1);
+    Position *p = ecs_field(it, Position, 0);
+    ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -571,8 +571,8 @@ void TMergePreStore(ecs_iter_t *it) {
 
 static
 void TMergeOnStore(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
-    ecs_id_t ecs_id(Position) = ecs_field_id(it, 1);
+    Position *p = ecs_field(it, Position, 0);
+    ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -583,8 +583,8 @@ void TMergeOnStore(ecs_iter_t *it) {
 
 static
 void TMergeManual(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
-    ecs_id_t ecs_id(Position) = ecs_field_id(it, 1);
+    Position *p = ecs_field(it, Position, 0);
+    ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
 
     int i;
     for (i = 0; i < it->count; i ++) {

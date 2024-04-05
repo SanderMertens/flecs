@@ -128,7 +128,7 @@ static void ecs_on_add(Position)(ecs_iter_t *it) {
     test_assert(it->count >= 1);
     test_assert(it->event == EcsOnAdd);
 
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
     for (int i = 0; i < it->count; i ++) {
         on_add_position ++;
         test_int(p[i].x, 0);
@@ -1941,7 +1941,7 @@ static void ecs_on_remove(Position)(ecs_iter_t *it) {
     test_assert(it->count >= 1);
     test_assert(it->event == EcsOnRemove);
 
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
     for (int i = 0; i < it->count; i ++) {
         on_remove_position ++;
         test_int(p[i].x, 10);
@@ -2787,7 +2787,7 @@ static Position hook_w_offset_position;
 
 static
 void hook_w_offset(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
     test_int(it->count, 1);
     hook_w_offset_offset = it->offset;
     hook_w_offset_invoked ++;
@@ -2887,7 +2887,7 @@ static int on_set_position_invoked = 0;
 
 static
 void on_set_position(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
     test_int(it->count, 1);
 
     test_int(p->x, 10);

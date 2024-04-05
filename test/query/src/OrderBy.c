@@ -627,7 +627,7 @@ void OrderBy_sort_after_set(void) {
 
 static
 void FlipP(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
 
     int32_t i;
     for (i = 0; i < it->count; i ++) {
@@ -896,7 +896,7 @@ void OrderBy_sort_1000_entities(void) {
 
         ecs_iter_t it = ecs_query_iter(world, q);
         while (ecs_query_next(&it)) {
-            Position *p = ecs_field(&it, Position, 1);
+            Position *p = ecs_field(&it, Position, 0);
 
             test_assert(it.count == (i + 1));
 
@@ -933,7 +933,7 @@ void OrderBy_sort_1000_entities_w_duplicates(void) {
 
         ecs_iter_t it = ecs_query_iter(world, q);
         while (ecs_query_next(&it)) {
-            Position *p = ecs_field(&it, Position, 1);
+            Position *p = ecs_field(&it, Position, 0);
 
             test_assert(it.count == (i + 1) * 2);
 
@@ -970,7 +970,7 @@ void OrderBy_sort_1000_entities_again(void) {
 
         ecs_iter_t it = ecs_query_iter(world, q);
         while (ecs_query_next(&it)) {
-            Position *p = ecs_field(&it, Position, 1);
+            Position *p = ecs_field(&it, Position, 0);
 
             test_assert(it.count == (i + 1));
 
@@ -991,7 +991,7 @@ void OrderBy_sort_1000_entities_again(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     while (ecs_query_next(&it)) {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
 
         test_assert(it.count == 1000);
 
@@ -1028,7 +1028,7 @@ void OrderBy_sort_1000_entities_2_types(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         int32_t count = 0, x = 0;
         while (ecs_query_next(&it)) {
-            Position *p = ecs_field(&it, Position, 1);
+            Position *p = ecs_field(&it, Position, 0);
 
             count += it.count;
 
@@ -1072,7 +1072,7 @@ void OrderBy_sort_1000_entities_2_types_again(void) {
 
         ecs_iter_t it = ecs_query_iter(world, q);
         while (ecs_query_next(&it)) {
-            Position *p = ecs_field(&it, Position, 1);
+            Position *p = ecs_field(&it, Position, 0);
 
             int32_t j, x = 0;
             for (j = 0; j < it.count; j ++) {  
@@ -1090,7 +1090,7 @@ void OrderBy_sort_1000_entities_2_types_again(void) {
     ecs_iter_t it = ecs_query_iter(world, q);
     int32_t count = 0, x = 0;
     while (ecs_query_next(&it)) {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
 
         count += it.count;
 
@@ -1130,7 +1130,7 @@ void OrderBy_sort_1000_entities_add_type_after_sort(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         int32_t count = 0;
         while (ecs_query_next(&it)) {
-            Position *p = ecs_field(&it, Position, 1);
+            Position *p = ecs_field(&it, Position, 0);
 
             count += it.count;
 
@@ -1158,7 +1158,7 @@ void OrderBy_sort_1000_entities_add_type_after_sort(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         int32_t count = 0, x = 0;
         while (ecs_query_next(&it)) {
-            Position *p = ecs_field(&it, Position, 1);
+            Position *p = ecs_field(&it, Position, 0);
 
             count += it.count;
 
@@ -1201,7 +1201,7 @@ void OrderBy_sort_1500_entities_3_types(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         int32_t count = 0, x = 0;
         while (ecs_query_next(&it)) {
-            Position *p = ecs_field(&it, Position, 1);
+            Position *p = ecs_field(&it, Position, 0);
 
             count += it.count;
 
@@ -1249,7 +1249,7 @@ void OrderBy_sort_2000_entities_4_types(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         int32_t count = 0, x = 0;
         while (ecs_query_next(&it)) {
-            Position *p = ecs_field(&it, Position, 1);
+            Position *p = ecs_field(&it, Position, 0);
 
             count += it.count;
 
@@ -1416,7 +1416,7 @@ void OrderBy_sort_2_entities_2_types(void) {
     ecs_iter_t it = ecs_query_iter(world, q);
     int32_t count = 0;
     while (ecs_query_next(&it)) {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
 
         count += it.count;
 
@@ -1458,7 +1458,7 @@ void OrderBy_sort_3_entities_3_types(void) {
     ecs_iter_t it = ecs_query_iter(world, q);
     int32_t count = 0;
     while (ecs_query_next(&it)) {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
 
         count += it.count;
 
@@ -1544,7 +1544,7 @@ void OrderBy_sort_4_entities_4_types(void) {
     ecs_iter_t it = ecs_query_iter(world, q);
     int32_t count = 0;
     while (ecs_query_next(&it)) {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
 
         count += it.count;
 

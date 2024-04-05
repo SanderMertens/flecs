@@ -16,14 +16,14 @@ void Each_each_tag(void) {
     test_int(2, it.count);
     test_uint(e1, it.entities[0]);
     test_uint(e2, it.entities[1]);
-    test_uint(Foo, ecs_field_id(&it, 1));
-    test_bool(true, ecs_field_is_set(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 0));
+    test_bool(true, ecs_field_is_set(&it, 0));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(Foo, ecs_field_id(&it, 1));
-    test_bool(true, ecs_field_is_set(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 0));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(false, ecs_iter_next(&it));
 
     ecs_fini(world);
@@ -45,10 +45,10 @@ void Each_each_component(void) {
     test_int(2, it.count);
     test_uint(e1, it.entities[0]);
     test_uint(e2, it.entities[1]);
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
-    test_bool(true, ecs_field_is_set(&it, 1));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+    test_bool(true, ecs_field_is_set(&it, 0));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 10); test_int(p[0].y, 20);
         test_int(p[1].x, 20); test_int(p[1].y, 30);
@@ -57,11 +57,11 @@ void Each_each_component(void) {
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
-    test_bool(true, ecs_field_is_set(&it, 1));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(false, ecs_iter_next(&it));
     {    
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 30); test_int(p[0].y, 40);
     }
@@ -88,14 +88,14 @@ void Each_each_pair(void) {
     test_int(2, it.count);
     test_uint(e1, it.entities[0]);
     test_uint(e2, it.entities[1]);
-    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 1));
-    test_bool(true, ecs_field_is_set(&it, 1));
+    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 0));
+    test_bool(true, ecs_field_is_set(&it, 0));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 1));
-    test_bool(true, ecs_field_is_set(&it, 1));
+    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 0));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(false, ecs_iter_next(&it));
 
     ecs_fini(world);
@@ -120,20 +120,20 @@ void Each_each_pair_rel_wildcard(void) {
     test_int(2, it.count);
     test_uint(e1, it.entities[0]);
     test_uint(e2, it.entities[1]);
-    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 1));
-    test_bool(true, ecs_field_is_set(&it, 1));
+    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 0));
+    test_bool(true, ecs_field_is_set(&it, 0));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 1));
-    test_bool(true, ecs_field_is_set(&it, 1));
+    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 0));
+    test_bool(true, ecs_field_is_set(&it, 0));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 1));
-    test_bool(true, ecs_field_is_set(&it, 1));
+    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 0));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(false, ecs_iter_next(&it));
 
     ecs_fini(world);
@@ -158,20 +158,20 @@ void Each_each_pair_tgt_wildcard(void) {
     test_int(2, it.count);
     test_uint(e1, it.entities[0]);
     test_uint(e2, it.entities[1]);
-    test_uint(ecs_pair(RelA, Tgt), ecs_field_id(&it, 1));
-    test_bool(true, ecs_field_is_set(&it, 1));
+    test_uint(ecs_pair(RelA, Tgt), ecs_field_id(&it, 0));
+    test_bool(true, ecs_field_is_set(&it, 0));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(ecs_pair(RelA, Tgt), ecs_field_id(&it, 1));
-    test_bool(true, ecs_field_is_set(&it, 1));
+    test_uint(ecs_pair(RelA, Tgt), ecs_field_id(&it, 0));
+    test_bool(true, ecs_field_is_set(&it, 0));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(ecs_pair(RelB, Tgt), ecs_field_id(&it, 1));
-    test_bool(true, ecs_field_is_set(&it, 1));
+    test_uint(ecs_pair(RelB, Tgt), ecs_field_id(&it, 0));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(false, ecs_iter_next(&it));
 
     ecs_fini(world);

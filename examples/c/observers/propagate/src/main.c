@@ -26,8 +26,8 @@ void Observer(ecs_iter_t *it) {
     ecs_entity_t event_id = it->event_id;
 
     // Grab Position from self and parent
-    Position *p_self = ecs_field(it, Position, 1);
-    Position *p_parent = ecs_field(it, Position, 2);
+    Position *p_self = ecs_field(it, Position, 0);
+    Position *p_parent = ecs_field(it, Position, 1);
 
     for (int i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];

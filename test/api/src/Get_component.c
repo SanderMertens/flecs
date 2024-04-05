@@ -73,7 +73,7 @@ void Get_component_get_2_from_3(void) {
 
 static
 void Test_main_stage(ecs_iter_t *it) {
-    ecs_id_t ecs_id(Position) = ecs_field_id(it, 1);
+    ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
 
     for (int i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];
@@ -101,7 +101,7 @@ void Add_in_progress(ecs_iter_t *it) {
     ecs_id_t ecs_id(Velocity) = 0;
 
     if (it->field_count >= 2) {
-        ecs_id(Velocity) = ecs_field_id(it, 2);
+        ecs_id(Velocity) = ecs_field_id(it, 1);
     }
 
     for (int i = 0; i < it->count; i ++) {
@@ -131,8 +131,8 @@ void Get_component_get_1_from_2_add_in_progress(void) {
 
 static
 void Add_in_progress_test_main(ecs_iter_t *it) {
-    ecs_id_t ecs_id(Position) = ecs_field_id(it, 1);
-    ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 2);
+    ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
+    ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 1);
 
     for (int i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];
@@ -163,8 +163,8 @@ void Get_component_get_both_from_2_add_in_progress(void) {
 
 static
 void Add_remove_in_progress_test_main(ecs_iter_t *it) {
-    ecs_id_t ecs_id(Position) = ecs_field_id(it, 1);
-    ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 2);
+    ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
+    ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 1);
 
     for (int i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];

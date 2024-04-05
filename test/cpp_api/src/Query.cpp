@@ -624,9 +624,9 @@ void Query_action_shared(void) {
         .build();
 
     q.iter([](flecs::iter&it, Position *p) {
-            auto v = it.field<const Velocity>(2);
+            auto v = it.field<const Velocity>(1);
 
-            if (!it.is_self(2)) {
+            if (!it.is_self(1)) {
                 for (auto i : it) {
                     p[i].x += v->x;
                     p[i].y += v->y;
@@ -674,7 +674,7 @@ void Query_action_optional(void) {
     auto q = world.query<Position, Velocity*, Mass*>();
 
     q.iter([](flecs::iter& it, Position *p, Velocity *v, Mass *m) {
-        if (it.is_set(2) && it.is_set(3)) {
+        if (it.is_set(1) && it.is_set(2)) {
             for (auto i : it) {
                 p[i].x += v[i].x * m[i].value;
                 p[i].y += v[i].y * m[i].value;
@@ -854,8 +854,8 @@ void Query_signature(void) {
     auto q = world.query_builder<>().expr("Position, Velocity").build();
 
     q.iter([](flecs::iter& it) {
-        auto p = it.field<Position>(1);
-        auto v = it.field<Velocity>(2);
+        auto p = it.field<Position>(0);
+        auto v = it.field<Velocity>(1);
 
         for (auto i : it) {
             p[i].x += v[i].x;
@@ -881,8 +881,8 @@ void Query_signature_const(void) {
     auto q = world.query_builder<>().expr("Position, [in] Velocity").build();
 
     q.iter([](flecs::iter& it) {
-        auto p = it.field<Position>(1);
-        auto v = it.field<const Velocity>(2);
+        auto p = it.field<Position>(0);
+        auto v = it.field<const Velocity>(1);
         
         for (auto i : it) {
             p[i].x += v[i].x;
@@ -917,10 +917,10 @@ void Query_signature_shared(void) {
         .build();
     
     q.iter([](flecs::iter&it) {
-        auto p = it.field<Position>(1);
-        auto v = it.field<const Velocity>(2);
+        auto p = it.field<Position>(0);
+        auto v = it.field<const Velocity>(1);
 
-        if (!it.is_self(2)) {
+        if (!it.is_self(1)) {
             for (auto i : it) {
                 p[i].x += v->x;
                 p[i].y += v->y;
@@ -968,11 +968,11 @@ void Query_signature_optional(void) {
     auto q = world.query_builder<>().expr("Position, ?Velocity, ?Mass").build();
 
     q.iter([](flecs::iter& it) {
-        auto p = it.field<Position>(1);
-        auto v = it.field<const Velocity>(2);
-        auto m = it.field<const Mass>(3);
+        auto p = it.field<Position>(0);
+        auto v = it.field<const Velocity>(1);
+        auto m = it.field<const Mass>(2);
 
-        if (it.is_set(2) && it.is_set(3)) {
+        if (it.is_set(1) && it.is_set(2)) {
             for (auto i : it) {
                 p[i].x += v[i].x * m[i].value;
                 p[i].y += v[i].y * m[i].value;
@@ -1200,7 +1200,7 @@ void Query_compare_term_id(void) {
         .build();
     
     q.iter([&](flecs::iter& it) {
-        test_assert(it.id(1) == it.world().id<Tag>());
+        test_assert(it.id(0) == it.world().id<Tag>());
         test_assert(it.entity(0) == e);
         count ++;
     });
@@ -1441,7 +1441,7 @@ void Query_term_pair_type(void) {
     q.iter([&](flecs::iter& it) {
         test_int(it.count(), 1);
 
-        auto a = it.field<EatsApples>(1);
+        auto a = it.field<EatsApples>(0);
 
         test_int(a->amount, 10);
         test_assert(it.entity(0) == e1);
@@ -1977,7 +1977,7 @@ void Query_instanced_query_w_base_iter(void) {
         test_assert(it.count() > 1);
 
         for (auto i : it) {
-            if (it.is_self(3)) {
+            if (it.is_self(2)) {
                 p[i].x += v[i].x;
                 p[i].y += v[i].y;
             } else {
@@ -2321,7 +2321,7 @@ void Query_invalid_field_from_each_w_iter(void) {
     test_expect_abort();
 
     q.each([&](flecs::iter& it, size_t index, Position& p) {
-        it.field(2); // not allowed from each
+        it.field(1); // not allowed from each
     });
 }
 
@@ -2341,7 +2341,7 @@ void Query_invalid_field_T_from_each_w_iter(void) {
     test_expect_abort();
 
     q.each([&](flecs::iter& it, size_t index, Position& p) {
-        it.field<Velocity>(2); // not allowed from each
+        it.field<Velocity>(1); // not allowed from each
     });
 }
 
@@ -2361,7 +2361,7 @@ void Query_invalid_field_const_T_from_each_w_iter(void) {
     test_expect_abort();
 
     q.each([&](flecs::iter& it, size_t index, Position& p) {
-        it.field<const Velocity>(2); // not allowed from each
+        it.field<const Velocity>(1); // not allowed from each
     });
 }
 
@@ -2383,7 +2383,7 @@ void Query_field_at_from_each_w_iter(void) {
     int32_t count = 0;
 
     q.each([&](flecs::iter& it, size_t row, Position& p) {
-        Velocity* v = static_cast<Velocity*>(it.field_at(2, row));
+        Velocity* v = static_cast<Velocity*>(it.field_at(1, row));
         if (it.entity(row) == e1) {
             test_int(v->x, 1);
             test_int(v->y, 2);
@@ -2416,7 +2416,7 @@ void Query_field_at_T_from_each_w_iter(void) {
     int32_t count = 0;
 
     q.each([&](flecs::iter& it, size_t row, Position& p) {
-        Velocity& v = it.field_at<Velocity>(2, row);
+        Velocity& v = it.field_at<Velocity>(1, row);
         if (it.entity(row) == e1) {
             test_int(v.x, 1);
             test_int(v.y, 2);
@@ -2449,7 +2449,7 @@ void Query_field_at_const_T_from_each_w_iter(void) {
     int32_t count = 0;
 
     q.each([&](flecs::iter& it, size_t row, Position& p) {
-        const Velocity& v = it.field_at<const Velocity>(2, row);
+        const Velocity& v = it.field_at<const Velocity>(1, row);
         if (it.entity(row) == e1) {
             test_int(v.x, 1);
             test_int(v.y, 2);
@@ -2494,7 +2494,7 @@ void Query_field_at_from_each_w_iter_w_base_type(void) {
     int32_t count = 0;
 
     q.each([&](flecs::iter& it, size_t row, Position& p) {
-        Velocity* v = static_cast<Velocity*>(it.field_at(2, row));
+        Velocity* v = static_cast<Velocity*>(it.field_at(1, row));
         if (it.entity(row) == e1) {
             test_int(v->x, 1);
             test_int(v->y, 2);
@@ -2772,9 +2772,9 @@ void Query_iter_get_pair_w_id(void) {
     int32_t count = 0;
 
     q.each([&](flecs::iter& it, size_t i) {
-        test_bool(true, it.id(1).is_pair());
-        test_assert(it.id(1).first() == Rel);
-        test_assert(it.id(1).second() == Tgt);
+        test_bool(true, it.id(0).is_pair());
+        test_assert(it.id(0).first() == Rel);
+        test_assert(it.id(0).second() == Tgt);
         test_assert(e == it.entity(i));
         count ++;
     });

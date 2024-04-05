@@ -230,7 +230,7 @@ void Delete_delete_3_of_3(void) {
 
 static
 void CreateEntity(ecs_iter_t *it) {
-    ecs_id_t ecs_id(Position) = ecs_field_id(it, 1);
+    ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
     const ecs_entity_t *ids = ecs_bulk_new(it->world, Position, 10);
     test_assert(ids != NULL);
 }

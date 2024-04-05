@@ -26,7 +26,7 @@ ECS_COMPONENT_DECLARE(Resize);
 void OnClick(ecs_iter_t *it) {
     // The event source can be obtained with ecs_field_src(1). This allows the
     // same event function to be used for different entities.
-    char *path = ecs_get_fullpath(it->world, ecs_field_src(it, 1));
+    char *path = ecs_get_fullpath(it->world, ecs_field_src(it, 0));
     printf("clicked on %s!\n", path);
     ecs_os_free(path);
 }
@@ -34,7 +34,7 @@ void OnClick(ecs_iter_t *it) {
 void OnResize(ecs_iter_t *it) {
     // Event payload can be obtained from the it->param member
     Resize *p = it->param;
-    char *path = ecs_get_fullpath(it->world, ecs_field_src(it, 1));
+    char *path = ecs_get_fullpath(it->world, ecs_field_src(it, 0));
     printf("resized %s to {%.0f, %.0f}!\n", path, p->width, p->height);
     ecs_os_free(path);
 }

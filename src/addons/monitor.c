@@ -42,7 +42,7 @@ ECS_DTOR(EcsPipelineStats, ptr, {
 
 static
 void UpdateWorldSummary(ecs_iter_t *it) {
-    EcsWorldSummary *summary = ecs_field(it, EcsWorldSummary, 1);
+    EcsWorldSummary *summary = ecs_field(it, EcsWorldSummary, 0);
 
     const ecs_world_info_t *info = ecs_get_world_info(it->world);
 
@@ -79,8 +79,8 @@ static
 void MonitorStats(ecs_iter_t *it) {
     ecs_world_t *world = it->real_world;
 
-    EcsStatsHeader *hdr = ecs_field_w_size(it, 0, 1);
-    ecs_id_t kind = ecs_pair_first(it->world, ecs_field_id(it, 1));
+    EcsStatsHeader *hdr = ecs_field_w_size(it, 0, 0);
+    ecs_id_t kind = ecs_pair_first(it->world, ecs_field_id(it, 0));
     void *stats = ECS_OFFSET_T(hdr, EcsStatsHeader);
 
     ecs_ftime_t elapsed = hdr->elapsed;
@@ -138,10 +138,10 @@ void MonitorStats(ecs_iter_t *it) {
 
 static
 void ReduceStats(ecs_iter_t *it) {
-    void *dst = ecs_field_w_size(it, 0, 1);
-    void *src = ecs_field_w_size(it, 0, 2);
+    void *dst = ecs_field_w_size(it, 0, 0);
+    void *src = ecs_field_w_size(it, 0, 1);
 
-    ecs_id_t kind = ecs_pair_first(it->world, ecs_field_id(it, 1));
+    ecs_id_t kind = ecs_pair_first(it->world, ecs_field_id(it, 0));
 
     dst = ECS_OFFSET_T(dst, EcsStatsHeader);
     src = ECS_OFFSET_T(src, EcsStatsHeader);
@@ -157,13 +157,13 @@ static
 void AggregateStats(ecs_iter_t *it) {
     int32_t interval = *(int32_t*)it->ctx;
 
-    EcsStatsHeader *dst_hdr = ecs_field_w_size(it, 0, 1);
-    EcsStatsHeader *src_hdr = ecs_field_w_size(it, 0, 2);
+    EcsStatsHeader *dst_hdr = ecs_field_w_size(it, 0, 0);
+    EcsStatsHeader *src_hdr = ecs_field_w_size(it, 0, 1);
 
     void *dst = ECS_OFFSET_T(dst_hdr, EcsStatsHeader);
     void *src = ECS_OFFSET_T(src_hdr, EcsStatsHeader);
 
-    ecs_id_t kind = ecs_pair_first(it->world, ecs_field_id(it, 1));
+    ecs_id_t kind = ecs_pair_first(it->world, ecs_field_id(it, 0));
 
     ecs_world_stats_t last_world = {0};
     ecs_pipeline_stats_t last_pipeline = {0};

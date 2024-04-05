@@ -544,7 +544,7 @@ void flecs_query_cache_set_table_match(
         /* Initialize storage columns for faster access to component storage */
         for (i = 0; i < field_count; i ++) {
             int32_t column = it->columns[i];
-            if (!ecs_field_is_set(it, i + 1) || terms[i].inout == EcsInOutNone) {
+            if (!ecs_field_is_set(it, i) || terms[i].inout == EcsInOutNone) {
                 qm->storage_columns[i] = -1;
                 continue;
             }

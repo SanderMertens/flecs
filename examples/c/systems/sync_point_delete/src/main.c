@@ -6,7 +6,7 @@ typedef struct {
 } Position, Velocity;
 
 void Move(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
     const Velocity *v = ecs_field(it, const Velocity, 2);
 
     for (int i = 0; i < it->count; i ++) {
@@ -16,7 +16,7 @@ void Move(ecs_iter_t *it) {
 }
 
 void DeleteEntity(ecs_iter_t *it) {
-    const Position *p = ecs_field(it, Position, 1);
+    const Position *p = ecs_field(it, Position, 0);
 
     for (int i = 0; i < it->count; i ++) {
         if (p[i].x >= 3) {

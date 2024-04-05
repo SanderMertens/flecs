@@ -99,7 +99,7 @@ int main(int argc, char *argv[]) {
     // iterating the query will write to the dirty state of iterated tables.
     it = ecs_query_iter(world, q_write);
     while (ecs_query_next(&it)) {
-        Dirty *dirty = ecs_field(&it, Dirty, 1);
+        Dirty *dirty = ecs_field(&it, Dirty, 0);
 
         char *table_str = ecs_table_str(world, it.table);
         printf("iterate table [%s]\n", table_str);
@@ -115,7 +115,7 @@ int main(int argc, char *argv[]) {
             continue;
         }
 
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
 
         // For all other tables the dirty state will be set.
         for (int i = 0; i < it.count; i ++) {

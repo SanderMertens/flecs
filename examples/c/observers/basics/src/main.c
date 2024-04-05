@@ -37,7 +37,7 @@ void Observer(ecs_iter_t *it) {
     ecs_entity_t event_id = it->event_id;
 
     // Get component values as usual
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
 
     for (int i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];

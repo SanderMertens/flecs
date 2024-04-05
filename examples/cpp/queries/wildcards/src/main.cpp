@@ -31,7 +31,7 @@ int main(int, char *[]) {
     // the pair that we are currently matched with.
     q.each([](flecs::iter& it, size_t index, Eats& eats) {
         flecs::entity e = it.entity(index);
-        flecs::entity food = it.pair(1).second();
+        flecs::entity food = it.pair(0).second();
 
         std::cout << e.name() << " eats " 
             << eats.amount << " " << food.name() << std::endl;

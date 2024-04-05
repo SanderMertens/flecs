@@ -1,7 +1,7 @@
 #include <addons.h>
 
 void InitVelocity(ecs_iter_t *it) {
-    Velocity *v = ecs_field(it, Velocity, 1);
+    Velocity *v = ecs_field(it, Velocity, 0);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -11,7 +11,7 @@ void InitVelocity(ecs_iter_t *it) {
 }
 
 void InitMass(ecs_iter_t *it) {
-    Mass *m = ecs_field(it, Mass, 1);    
+    Mass *m = ecs_field(it, Mass, 0);    
     int i;
     for (i = 0; i < it->count; i ++) {
         m[i] = 3;
@@ -19,19 +19,19 @@ void InitMass(ecs_iter_t *it) {
 }
 
 void Iter(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
 
     Velocity *v = NULL;
     Mass *m = NULL;
 
     if (it->field_count >= 2) {
-        v = ecs_field(it, Velocity, 2);
-        test_assert(!ecs_field_is_self(it, 2));
+        v = ecs_field(it, Velocity, 1);
+        test_assert(!ecs_field_is_self(it, 1));
     }
 
     if (it->field_count >= 3) {
-        m = ecs_field(it, Mass, 3);
-        test_assert(!m || !ecs_field_is_self(it, 3));
+        m = ecs_field(it, Mass, 2);
+        test_assert(!m || !ecs_field_is_self(it, 2));
     }
 
     probe_iter(it);
@@ -152,14 +152,14 @@ void System_w_FromSystem_3_column_2_from_system(void) {
 }
 
 void Iter_reactive(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
 
     Velocity *v = it->param;
     Mass *m = NULL;
 
     if (it->field_count >= 2) {
-        v = ecs_field(it, Velocity, 2);
-        test_assert(!ecs_field_is_self(it, 2));
+        v = ecs_field(it, Velocity, 1);
+        test_assert(!ecs_field_is_self(it, 1));
     }
 
     probe_iter(it);

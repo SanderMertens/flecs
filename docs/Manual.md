@@ -60,8 +60,8 @@ typedef struct Velocity {
 // System names ('Move') use PascalCase. API types use snake_case_t
 void Move(ecs_iter_t *it) {
     // Functions use snake_case
-    Position *p = ecs_field(it, Position, 1);
-    Velocity *v = ecs_field(it, Velocity, 2);
+    Position *p = ecs_field(it, Position, 0);
+    Velocity *v = ecs_field(it, Velocity, 1);
 
     for (int i = 0; i < it->count; i++) {
         p[i].x += v[i].x;
@@ -710,7 +710,7 @@ The implementation of the observer looks similar to a system:
 
 ```c
 void AddPosition(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
 
     for (int i = 0; i < it->count; i++) {
         p[i].x = 10;

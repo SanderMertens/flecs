@@ -48,7 +48,7 @@ static ECS_MOVE(EcsIdentifier, dst, src, {
 
 static
 void ecs_on_set(EcsIdentifier)(ecs_iter_t *it) {
-    EcsIdentifier *ptr = ecs_field(it, EcsIdentifier, 1);
+    EcsIdentifier *ptr = ecs_field(it, EcsIdentifier, 0);
     
     ecs_world_t *world = it->real_world;
     ecs_entity_t evt = it->event;
@@ -275,7 +275,7 @@ void flecs_register_final(ecs_iter_t *it) {
 
 static
 void flecs_register_on_delete(ecs_iter_t *it) {
-    ecs_id_t id = ecs_field_id(it, 1);
+    ecs_id_t id = ecs_field_id(it, 0);
     flecs_register_id_flag_for_relation(it, EcsOnDelete, 
         ECS_ID_ON_DELETE_FLAG(ECS_PAIR_SECOND(id)),
         EcsIdOnDeleteMask,
@@ -284,7 +284,7 @@ void flecs_register_on_delete(ecs_iter_t *it) {
 
 static
 void flecs_register_on_delete_object(ecs_iter_t *it) {
-    ecs_id_t id = ecs_field_id(it, 1);
+    ecs_id_t id = ecs_field_id(it, 0);
     flecs_register_id_flag_for_relation(it, EcsOnDeleteTarget, 
         ECS_ID_ON_DELETE_TARGET_FLAG(ECS_PAIR_SECOND(id)),
         EcsIdOnDeleteObjectMask,
@@ -352,7 +352,7 @@ void flecs_register_with(ecs_iter_t *it) {
 
 static
 void flecs_on_symmetric_add_remove(ecs_iter_t *it) {
-    ecs_entity_t pair = ecs_field_id(it, 1);
+    ecs_entity_t pair = ecs_field_id(it, 0);
 
     if (!ECS_HAS_ID_FLAG(pair, PAIR)) {
         /* If relationship was not added as a pair, there's nothing to do */
@@ -402,7 +402,7 @@ void flecs_register_symmetric(ecs_iter_t *it) {
 static
 void flecs_on_component(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    EcsComponent *c = ecs_field(it, EcsComponent, 1);
+    EcsComponent *c = ecs_field(it, EcsComponent, 0);
 
     int i, count = it->count;
     for (i = 0; i < count; i ++) {

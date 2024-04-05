@@ -64,9 +64,9 @@ int main(int argc, char *argv[]) {
     // Do the transform
     ecs_iter_t it = ecs_query_iter(ecs, q);
     while (ecs_query_next(&it)) {
-        const Position *p = ecs_field(&it, Position, 1);
-        Position *p_out = ecs_field(&it, Position, 2);
-        const Position *p_parent = ecs_field(&it, Position, 3);
+        const Position *p = ecs_field(&it, Position, 0);
+        Position *p_out = ecs_field(&it, Position, 1);
+        const Position *p_parent = ecs_field(&it, Position, 2);
         
         // Inner loop, iterates entities in archetype
         for (int i = 0; i < it.count; i ++) {
@@ -82,7 +82,7 @@ int main(int argc, char *argv[]) {
     // Print ecs positions
     it = ecs_each_pair_t(ecs, Position, World);
     while (ecs_each_next(&it)) {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         for (int i = 0; i < it.count; i ++) {
             printf("%s: {%f, %f}\n", ecs_get_name(ecs, it.entities[i]),
                 p[i].x, p[i].y);

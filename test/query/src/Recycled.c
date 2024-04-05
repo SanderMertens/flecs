@@ -49,19 +49,19 @@ void Recycled_recycled_vars(void) {
     ecs_iter_t it = ecs_query_iter(world, r);
     test_bool(true, ecs_query_next(&it));
     test_uint(0, it.count);
+    test_uint(Tag, ecs_field_id(&it, 0));
     test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Tag, ecs_field_id(&it, 2));
+    test_uint(src, ecs_field_src(&it, 0));
     test_uint(src, ecs_field_src(&it, 1));
-    test_uint(src, ecs_field_src(&it, 2));
     test_uint(Tag, ecs_iter_get_var(&it, x_var));
     test_uint(src, ecs_iter_get_var(&it, y_var));
 
     test_bool(true, ecs_query_next(&it));
     test_uint(0, it.count);
-    test_uint(rel, ecs_field_id(&it, 1));
-    test_uint(Tag, ecs_field_id(&it, 2));
+    test_uint(rel, ecs_field_id(&it, 0));
+    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(src, ecs_field_src(&it, 0));
     test_uint(src, ecs_field_src(&it, 1));
-    test_uint(src, ecs_field_src(&it, 2));
     test_uint(rel, ecs_iter_get_var(&it, x_var));
     test_uint(src, ecs_iter_get_var(&it, y_var));
 
@@ -100,20 +100,20 @@ void Recycled_recycled_pair_vars(void) {
     ecs_iter_t it = ecs_query_iter(world, r);
     test_bool(true, ecs_query_next(&it));
     test_uint(0, it.count);
-    test_uint(ecs_pair(ecs_id(EcsIdentifier), EcsName), ecs_field_id(&it, 1));
-    test_uint(Tag, ecs_field_id(&it, 2));
+    test_uint(ecs_pair(ecs_id(EcsIdentifier), EcsName), ecs_field_id(&it, 0));
+    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(src, ecs_field_src(&it, 0));
     test_uint(src, ecs_field_src(&it, 1));
-    test_uint(src, ecs_field_src(&it, 2));
     test_uint(ecs_id(EcsIdentifier), ecs_iter_get_var(&it, x_var));
     test_uint(src, ecs_iter_get_var(&it, y_var));
     test_uint(EcsName, ecs_iter_get_var(&it, z_var));
 
     test_bool(true, ecs_query_next(&it));
     test_uint(0, it.count);
-    test_uint(ecs_pair(rel, tgt), ecs_field_id(&it, 1));
-    test_uint(Tag, ecs_field_id(&it, 2));
+    test_uint(ecs_pair(rel, tgt), ecs_field_id(&it, 0));
+    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(src, ecs_field_src(&it, 0));
     test_uint(src, ecs_field_src(&it, 1));
-    test_uint(src, ecs_field_src(&it, 2));
     test_uint(rel, ecs_iter_get_var(&it, x_var));
     test_uint(src, ecs_iter_get_var(&it, y_var));
     test_uint(tgt, ecs_iter_get_var(&it, z_var));
@@ -153,10 +153,10 @@ void Recycled_recycled_this_ent_var(void) {
     ecs_iter_t it = ecs_query_iter(world, r);
     test_bool(true, ecs_query_next(&it));
     test_uint(1, it.count);
-    test_uint(ecs_pair(ecs_id(EcsIdentifier), EcsName), ecs_field_id(&it, 1));
-    test_uint(Tag, ecs_field_id(&it, 2));
+    test_uint(ecs_pair(ecs_id(EcsIdentifier), EcsName), ecs_field_id(&it, 0));
+    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(src, ecs_field_src(&it, 0));
     test_uint(src, ecs_field_src(&it, 1));
-    test_uint(src, ecs_field_src(&it, 2));
     test_uint(ecs_id(EcsIdentifier), ecs_iter_get_var(&it, x_var));
     test_uint(src, ecs_iter_get_var(&it, y_var));
     test_uint(EcsName, ecs_iter_get_var(&it, this_var));
@@ -164,10 +164,10 @@ void Recycled_recycled_this_ent_var(void) {
 
     test_bool(true, ecs_query_next(&it));
     test_uint(1, it.count);
-    test_uint(ecs_pair(rel, tgt), ecs_field_id(&it, 1));
-    test_uint(Tag, ecs_field_id(&it, 2));
+    test_uint(ecs_pair(rel, tgt), ecs_field_id(&it, 0));
+    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(src, ecs_field_src(&it, 0));
     test_uint(src, ecs_field_src(&it, 1));
-    test_uint(src, ecs_field_src(&it, 2));
     test_uint(rel, ecs_iter_get_var(&it, x_var));
     test_uint(src, ecs_iter_get_var(&it, y_var));
     test_uint(tgt, ecs_iter_get_var(&it, this_var));
@@ -209,12 +209,12 @@ void Recycled_has_recycled_id_from_pair(void) {
     ecs_iter_t it = ecs_query_iter(world, r);
     test_bool(true, ecs_query_next(&it));
     test_uint(0, it.count);
-    test_uint(ecs_pair(rel, tgt), ecs_field_id(&it, 1));
-    test_uint(tgt, ecs_field_id(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 3));
+    test_uint(ecs_pair(rel, tgt), ecs_field_id(&it, 0));
+    test_uint(tgt, ecs_field_id(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 2));
+    test_uint(src, ecs_field_src(&it, 0));
     test_uint(src, ecs_field_src(&it, 1));
     test_uint(src, ecs_field_src(&it, 2));
-    test_uint(src, ecs_field_src(&it, 3));
     test_uint(rel, ecs_iter_get_var(&it, x_var));
     test_uint(src, ecs_iter_get_var(&it, y_var));
     test_uint(tgt, ecs_iter_get_var(&it, z_var));
@@ -251,7 +251,7 @@ void Recycled_recycled_pair(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(it.count, 1);
     test_uint(it.entities[0], e);
-    test_uint(ecs_field_id(&it, 1), ecs_pair(rel, tgt));
+    test_uint(ecs_field_id(&it, 0), ecs_pair(rel, tgt));
     test_bool(false, ecs_query_next(&it));
 
     ecs_query_fini(q);
@@ -287,7 +287,7 @@ void Recycled_recycled_component_id(void) {
     test_int(it.count, 2);
     test_uint(it.entities[0], e1);
     test_uint(it.entities[1], e2);
-    Position *p = ecs_field(&it, Position, 1);
+    Position *p = ecs_field(&it, Position, 0);
     test_int(p[0].x, 10);
     test_int(p[0].y, 20);
     test_int(p[1].x, 20);

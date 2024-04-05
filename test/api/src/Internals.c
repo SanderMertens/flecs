@@ -6,9 +6,9 @@ void Internals_setup(void) {
 
 static
 void Iter(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
-    Velocity *v = ecs_field(it, Velocity, 2);
-    Mass *m = ecs_field(it, Mass, 3);
+    Position *p = ecs_field(it, Position, 0);
+    Velocity *v = ecs_field(it, Velocity, 1);
+    Mass *m = ecs_field(it, Mass, 2);
 
     probe_iter(it);
 
@@ -140,7 +140,7 @@ static int invoked = 0;
 
 static
 void CreateNewTable(ecs_iter_t *it) {
-    ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 2);
+    ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 1);
 
     int32_t i;
     for (i = 0; i < it->count; i ++) {

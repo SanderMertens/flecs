@@ -19,8 +19,8 @@ void Move(ecs_iter_t *it) {
     // Note that this code looks the same as iterating a query.
     while (ecs_query_next(it)) {
         // Inside the loop the code looks the same as for a regular system
-        Position *p = ecs_field(it, Position, 1);
-        const Velocity *v = ecs_field(it, Velocity, 2);
+        Position *p = ecs_field(it, Position, 0);
+        const Velocity *v = ecs_field(it, Velocity, 1);
 
         for (int i = 0; i < it->count; i ++) {
             p[i].x += v[i].x;

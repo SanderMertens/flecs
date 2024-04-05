@@ -55,56 +55,56 @@ void Traversal_this_self_up_childof(void) {
     test_int(2, it.count);
     test_uint(p1, it.entities[0]);
     test_uint(p2, it.entities[1]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(p3, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(p3, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p3, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -152,44 +152,44 @@ void Traversal_this_up_childof(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(p3, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p3, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -241,74 +241,74 @@ void Traversal_this_written_self_up_childof(void) {
     test_int(2, it.count);
     test_uint(p1, it.entities[0]);
     test_uint(p2, it.entities[1]);
+    test_uint(0, ecs_field_src(&it, 0));
     test_uint(0, ecs_field_src(&it, 1));
-    test_uint(0, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(p3, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 0));
     test_uint(0, ecs_field_src(&it, 1));
-    test_uint(0, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p3, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p3, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -359,58 +359,58 @@ void Traversal_this_written_up_childof(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p3, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p3, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -460,63 +460,63 @@ void Traversal_var_self_up_childof(void) {
     ecs_iter_t it = ecs_query_iter(world, r);
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
     test_uint(p1, ecs_iter_get_var(&it, x_var));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
     test_uint(p2, ecs_iter_get_var(&it, x_var));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
     test_uint(e1, ecs_iter_get_var(&it, x_var));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
     test_uint(e2, ecs_iter_get_var(&it, x_var));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
     test_uint(e5, ecs_iter_get_var(&it, x_var));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
     test_uint(e6, ecs_iter_get_var(&it, x_var));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
     test_uint(e3, ecs_iter_get_var(&it, x_var));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
     test_uint(e4, ecs_iter_get_var(&it, x_var));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p3, ecs_field_src(&it, 1));
+    test_uint(p3, ecs_field_src(&it, 0));
     test_uint(p3, ecs_iter_get_var(&it, x_var));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p3, ecs_field_src(&it, 1));
+    test_uint(p3, ecs_field_src(&it, 0));
     test_uint(e7, ecs_iter_get_var(&it, x_var));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -566,44 +566,44 @@ void Traversal_var_up_childof(void) {
     ecs_iter_t it = ecs_query_iter(world, r);
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
     test_uint(e1, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
     test_uint(e2, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
     test_uint(e5, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
     test_uint(e6, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
     test_uint(e3, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
     test_uint(e4, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p3, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p3, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
     test_uint(e7, ecs_iter_get_var(&it, x_var));
 
     test_bool(false, ecs_query_next(&it));
@@ -657,82 +657,82 @@ void Traversal_var_written_self_up_childof(void) {
     ecs_iter_t it = ecs_query_iter(world, r);
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
+    test_uint(p1, ecs_field_src(&it, 0));
     test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
     test_uint(p1, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
+    test_uint(p2, ecs_field_src(&it, 0));
     test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
     test_uint(p2, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
+    test_uint(p3, ecs_field_src(&it, 0));
     test_uint(p3, ecs_field_src(&it, 1));
-    test_uint(p3, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
     test_uint(p3, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(e1, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(e1, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
     test_uint(e1, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(e2, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(e2, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
     test_uint(e2, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(e3, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(e3, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
     test_uint(e3, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(e4, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(e4, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
     test_uint(e4, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(e5, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(e5, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
     test_uint(e5, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(e6, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(e6, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
     test_uint(e6, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(e7, ecs_field_src(&it, 1));
-    test_uint(p3, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(e7, ecs_field_src(&it, 0));
+    test_uint(p3, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
     test_uint(e7, ecs_iter_get_var(&it, x_var));
 
     test_bool(false, ecs_query_next(&it));
@@ -786,58 +786,58 @@ void Traversal_var_written_up_childof(void) {
     ecs_iter_t it = ecs_query_iter(world, r);
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(e1, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(e1, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
     test_uint(e1, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(e2, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(e2, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
     test_uint(e2, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(e3, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(e3, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
     test_uint(e3, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(e4, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(e4, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
     test_uint(e4, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(e5, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(e5, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
     test_uint(e5, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(e6, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(e6, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
     test_uint(e6, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(e7, ecs_field_src(&it, 1));
-    test_uint(p3, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(e7, ecs_field_src(&it, 0));
+    test_uint(p3, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
     test_uint(e7, ecs_iter_get_var(&it, x_var));
 
     test_bool(false, ecs_query_next(&it));
@@ -891,8 +891,8 @@ void Traversal_set_var_self_up_childof(void) {
 
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
-        test_uint(p2, ecs_field_src(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 1));
+        test_uint(p2, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 0));
         test_uint(p2, ecs_iter_get_var(&it, x_var));
 
         test_bool(false, ecs_query_next(&it));
@@ -904,8 +904,8 @@ void Traversal_set_var_self_up_childof(void) {
 
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
-        test_uint(p1, ecs_field_src(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 1));
+        test_uint(p1, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 0));
         test_uint(e1, ecs_iter_get_var(&it, x_var));
 
         test_bool(false, ecs_query_next(&it));
@@ -917,8 +917,8 @@ void Traversal_set_var_self_up_childof(void) {
 
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
-        test_uint(p2, ecs_field_src(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 1));
+        test_uint(p2, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 0));
         test_uint(e3, ecs_iter_get_var(&it, x_var));
 
         test_bool(false, ecs_query_next(&it));
@@ -930,8 +930,8 @@ void Traversal_set_var_self_up_childof(void) {
 
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
-        test_uint(p1, ecs_field_src(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 1));
+        test_uint(p1, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 0));
         test_uint(e5, ecs_iter_get_var(&it, x_var));
 
         test_bool(false, ecs_query_next(&it));
@@ -1000,8 +1000,8 @@ void Traversal_set_var_up_childof(void) {
 
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
-        test_uint(p1, ecs_field_src(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 1));
+        test_uint(p1, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 0));
         test_uint(e1, ecs_iter_get_var(&it, x_var));
 
         test_bool(false, ecs_query_next(&it));
@@ -1013,8 +1013,8 @@ void Traversal_set_var_up_childof(void) {
 
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
-        test_uint(p2, ecs_field_src(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 1));
+        test_uint(p2, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 0));
         test_uint(e3, ecs_iter_get_var(&it, x_var));
 
         test_bool(false, ecs_query_next(&it));
@@ -1026,8 +1026,8 @@ void Traversal_set_var_up_childof(void) {
 
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
-        test_uint(p1, ecs_field_src(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 1));
+        test_uint(p1, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 0));
         test_uint(e5, ecs_iter_get_var(&it, x_var));
 
         test_bool(false, ecs_query_next(&it));
@@ -1092,10 +1092,10 @@ void Traversal_set_var_written_self_up_childof(void) {
 
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
+        test_uint(p2, ecs_field_src(&it, 0));
         test_uint(p2, ecs_field_src(&it, 1));
-        test_uint(p2, ecs_field_src(&it, 2));
-        test_uint(Tag, ecs_field_id(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 2));
+        test_uint(Tag, ecs_field_id(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 1));
         test_uint(p2, ecs_iter_get_var(&it, x_var));
 
         test_bool(false, ecs_query_next(&it));
@@ -1107,10 +1107,10 @@ void Traversal_set_var_written_self_up_childof(void) {
 
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
-        test_uint(e1, ecs_field_src(&it, 1));
-        test_uint(p1, ecs_field_src(&it, 2));
-        test_uint(Tag, ecs_field_id(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 2));
+        test_uint(e1, ecs_field_src(&it, 0));
+        test_uint(p1, ecs_field_src(&it, 1));
+        test_uint(Tag, ecs_field_id(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 1));
         test_uint(e1, ecs_iter_get_var(&it, x_var));
 
         test_bool(false, ecs_query_next(&it));
@@ -1122,10 +1122,10 @@ void Traversal_set_var_written_self_up_childof(void) {
 
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
-        test_uint(e3, ecs_field_src(&it, 1));
-        test_uint(p2, ecs_field_src(&it, 2));
-        test_uint(Tag, ecs_field_id(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 2));
+        test_uint(e3, ecs_field_src(&it, 0));
+        test_uint(p2, ecs_field_src(&it, 1));
+        test_uint(Tag, ecs_field_id(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 1));
         test_uint(e3, ecs_iter_get_var(&it, x_var));
 
         test_bool(false, ecs_query_next(&it));
@@ -1137,10 +1137,10 @@ void Traversal_set_var_written_self_up_childof(void) {
 
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
-        test_uint(e5, ecs_field_src(&it, 1));
-        test_uint(p1, ecs_field_src(&it, 2));
-        test_uint(Tag, ecs_field_id(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 2));
+        test_uint(e5, ecs_field_src(&it, 0));
+        test_uint(p1, ecs_field_src(&it, 1));
+        test_uint(Tag, ecs_field_id(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 1));
         test_uint(e5, ecs_iter_get_var(&it, x_var));
 
         test_bool(false, ecs_query_next(&it));
@@ -1212,10 +1212,10 @@ void Traversal_set_var_written_up_childof(void) {
 
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
-        test_uint(e1, ecs_field_src(&it, 1));
-        test_uint(p1, ecs_field_src(&it, 2));
-        test_uint(Tag, ecs_field_id(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 2));
+        test_uint(e1, ecs_field_src(&it, 0));
+        test_uint(p1, ecs_field_src(&it, 1));
+        test_uint(Tag, ecs_field_id(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 1));
         test_uint(e1, ecs_iter_get_var(&it, x_var));
 
         test_bool(false, ecs_query_next(&it));
@@ -1227,10 +1227,10 @@ void Traversal_set_var_written_up_childof(void) {
 
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
-        test_uint(e3, ecs_field_src(&it, 1));
-        test_uint(p2, ecs_field_src(&it, 2));
-        test_uint(Tag, ecs_field_id(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 2));
+        test_uint(e3, ecs_field_src(&it, 0));
+        test_uint(p2, ecs_field_src(&it, 1));
+        test_uint(Tag, ecs_field_id(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 1));
         test_uint(e3, ecs_iter_get_var(&it, x_var));
 
         test_bool(false, ecs_query_next(&it));
@@ -1242,10 +1242,10 @@ void Traversal_set_var_written_up_childof(void) {
 
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
-        test_uint(e5, ecs_field_src(&it, 1));
-        test_uint(p1, ecs_field_src(&it, 2));
-        test_uint(Tag, ecs_field_id(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 2));
+        test_uint(e5, ecs_field_src(&it, 0));
+        test_uint(p1, ecs_field_src(&it, 1));
+        test_uint(Tag, ecs_field_id(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 1));
         test_uint(e5, ecs_iter_get_var(&it, x_var));
 
         test_bool(false, ecs_query_next(&it));
@@ -1289,8 +1289,8 @@ void Traversal_ent_self_up_childof(void) {
         ecs_iter_t it = ecs_query_iter(world, r);
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
-        test_uint(e, ecs_field_src(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 1));
+        test_uint(e, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 0));
 
         test_bool(false, ecs_query_next(&it));
     }
@@ -1309,8 +1309,8 @@ void Traversal_ent_self_up_childof(void) {
         ecs_iter_t it = ecs_query_iter(world, r);
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
-        test_uint(parent, ecs_field_src(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 1));
+        test_uint(parent, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 0));
 
         test_bool(false, ecs_query_next(&it));
     }
@@ -1360,8 +1360,8 @@ void Traversal_ent_up_childof(void) {
         ecs_iter_t it = ecs_query_iter(world, r);
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
-        test_uint(parent, ecs_field_src(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 1));
+        test_uint(parent, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 0));
 
         test_bool(false, ecs_query_next(&it));
     }
@@ -1411,56 +1411,56 @@ void Traversal_implicit_this_self_up_isa(void) {
     test_int(2, it.count);
     test_uint(p1, it.entities[0]);
     test_uint(p2, it.entities[1]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(p3, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(p3, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p3, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -1508,44 +1508,44 @@ void Traversal_implicit_this_up_isa(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(p3, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p3, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -1595,62 +1595,62 @@ void Traversal_implicit_var_self_up_isa(void) {
     ecs_iter_t it = ecs_query_iter(world, r);
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
     test_uint(p1, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
     test_uint(p2, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
     test_uint(e1, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
     test_uint(e2, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
     test_uint(e5, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
     test_uint(e6, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
     test_uint(e3, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
     test_uint(e4, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p3, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p3, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
     test_uint(p3, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p3, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p3, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
     test_uint(e7, ecs_iter_get_var(&it, x_var));
 
     test_bool(false, ecs_query_next(&it));
@@ -1701,44 +1701,44 @@ void Traversal_implicit_var_up_isa(void) {
     ecs_iter_t it = ecs_query_iter(world, r);
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
     test_uint(e1, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
     test_uint(e2, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
     test_uint(e5, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
     test_uint(e6, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
     test_uint(e3, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
     test_uint(e4, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p3, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p3, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
     test_uint(e7, ecs_iter_get_var(&it, x_var));
 
     test_bool(false, ecs_query_next(&it));
@@ -1774,8 +1774,8 @@ void Traversal_implicit_ent_self_up_isa(void) {
         ecs_iter_t it = ecs_query_iter(world, r);
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
-        test_uint(e, ecs_field_src(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 1));
+        test_uint(e, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 0));
 
         test_bool(false, ecs_query_next(&it));
     }
@@ -1794,8 +1794,8 @@ void Traversal_implicit_ent_self_up_isa(void) {
         ecs_iter_t it = ecs_query_iter(world, r);
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
-        test_uint(parent, ecs_field_src(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 1));
+        test_uint(parent, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 0));
 
         test_bool(false, ecs_query_next(&it));
     }
@@ -1845,8 +1845,8 @@ void Traversal_implicit_ent_up_isa(void) {
         ecs_iter_t it = ecs_query_iter(world, r);
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
-        test_uint(parent, ecs_field_src(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 1));
+        test_uint(parent, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 0));
 
         test_bool(false, ecs_query_next(&it));
     }
@@ -1883,26 +1883,26 @@ void Traversal_self_up_2_targets(void) {
     test_int(2, it.count);
     test_uint(parent_b, it.entities[0]);
     test_uint(parent_c, it.entities[1]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e_1, it.entities[0]);
-    test_uint(parent_b, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(parent_b, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e_2, it.entities[0]);
-    test_uint(parent_b, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(parent_b, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e_4, it.entities[0]);
-    test_uint(parent_b, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(parent_b, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -1937,20 +1937,20 @@ void Traversal_up_2_targets(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e_1, it.entities[0]);
-    test_uint(parent_b, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(parent_b, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e_2, it.entities[0]);
-    test_uint(parent_b, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(parent_b, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e_4, it.entities[0]);
-    test_uint(parent_b, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(parent_b, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -1985,39 +1985,39 @@ void Traversal_self_up_2_targets_diamond(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(parent_root, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(2, it.count);
     test_uint(parent_a, it.entities[0]);
     test_uint(parent_b, it.entities[1]);
-    test_uint(parent_root, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(parent_root, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e_1, it.entities[0]);
-    test_uint(parent_root, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(parent_root, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(parent_c, it.entities[0]);
-    test_uint(parent_root, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(parent_root, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e_3, it.entities[0]);
-    test_uint(parent_root, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(parent_root, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e_2, it.entities[0]);
-    test_uint(parent_root, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(parent_root, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -2053,32 +2053,32 @@ void Traversal_up_2_targets_diamond(void) {
     test_int(2, it.count);
     test_uint(parent_a, it.entities[0]);
     test_uint(parent_b, it.entities[1]);
-    test_uint(parent_root, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(parent_root, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e_1, it.entities[0]);
-    test_uint(parent_root, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(parent_root, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(parent_c, it.entities[0]);
-    test_uint(parent_root, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(parent_root, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e_3, it.entities[0]);
-    test_uint(parent_root, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(parent_root, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e_2, it.entities[0]);
-    test_uint(parent_root, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(parent_root, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -2117,33 +2117,33 @@ void Traversal_written_self_up_2_targets(void) {
     test_int(2, it.count);
     test_uint(parent_b, it.entities[0]);
     test_uint(parent_c, it.entities[1]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e_1, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(parent_b, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(parent_b, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e_2, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(parent_b, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(parent_b, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e_4, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(parent_b, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(parent_b, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -2181,26 +2181,26 @@ void Traversal_written_up_2_targets(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e_1, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(parent_b, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(parent_b, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e_2, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(parent_b, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(parent_b, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e_4, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(parent_b, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(parent_b, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -2238,51 +2238,51 @@ void Traversal_written_self_up_2_targets_diamond(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(parent_root, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 0));
     test_uint(0, ecs_field_src(&it, 1));
-    test_uint(0, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(2, it.count);
     test_uint(parent_a, it.entities[0]);
     test_uint(parent_b, it.entities[1]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(parent_root, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(parent_root, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e_1, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(parent_root, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(parent_root, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(parent_c, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(parent_root, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(parent_root, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e_2, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(parent_root, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(parent_root, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e_3, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(parent_root, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(parent_root, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -2321,42 +2321,42 @@ void Traversal_written_up_2_targets_diamond(void) {
     test_int(2, it.count);
     test_uint(parent_a, it.entities[0]);
     test_uint(parent_b, it.entities[1]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(parent_root, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(parent_root, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e_1, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(parent_root, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(parent_root, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(parent_c, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(parent_root, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(parent_root, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e_2, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(parent_root, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(parent_root, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e_3, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(parent_root, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(parent_root, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -2390,26 +2390,26 @@ void Traversal_2_self_up_terms(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(parent_b, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e_2, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(parent_b, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(parent_b, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e_3, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(parent_b, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(parent_b, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -2448,34 +2448,34 @@ void Traversal_2_self_up_terms_2_targets(void) {
     test_int(2, it.count);
     test_uint(parent_b, it.entities[0]);
     test_uint(parent_c, it.entities[1]);
+    test_uint(0, ecs_field_src(&it, 0));
     test_uint(0, ecs_field_src(&it, 1));
-    test_uint(0, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e_1, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(parent_b, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(parent_b, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e_2, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(parent_b, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(parent_b, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e_4, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(parent_b, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(parent_b, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -2504,8 +2504,8 @@ void Traversal_self_up_empty_table(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -2566,39 +2566,39 @@ void Traversal_self_up_all_owned(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(parent_root, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(Tag, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(2, it.count);
     test_uint(parent_a, it.entities[0]);
     test_uint(parent_b, it.entities[1]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(Tag, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e_1, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(Tag, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(parent_c, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(Tag, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e_2, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(Tag, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e_3, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(Tag, ecs_field_id(&it, 0));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -2636,32 +2636,32 @@ void Traversal_up_all_owned(void) {
     test_int(2, it.count);
     test_uint(parent_a, it.entities[0]);
     test_uint(parent_b, it.entities[1]);
-    test_uint(parent_root, ecs_field_src(&it, 1));
-    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(parent_root, ecs_field_src(&it, 0));
+    test_uint(Tag, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e_1, it.entities[0]);
-    test_uint(parent_a, ecs_field_src(&it, 1));
-    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(parent_a, ecs_field_src(&it, 0));
+    test_uint(Tag, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(parent_c, it.entities[0]);
-    test_uint(parent_a, ecs_field_src(&it, 1));
-    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(parent_a, ecs_field_src(&it, 0));
+    test_uint(Tag, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e_2, it.entities[0]);
-    test_uint(parent_b, ecs_field_src(&it, 1));
-    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(parent_b, ecs_field_src(&it, 0));
+    test_uint(Tag, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e_3, it.entities[0]);
-    test_uint(parent_c, ecs_field_src(&it, 1));
-    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(parent_c, ecs_field_src(&it, 0));
+    test_uint(Tag, ecs_field_id(&it, 0));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -2690,14 +2690,14 @@ void Traversal_this_self_up_childof_inherited(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(base, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(child, it.entities[0]);
-    test_uint(base, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(base, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -2726,8 +2726,8 @@ void Traversal_this_up_childof_inherited(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(child, it.entities[0]);
-    test_uint(base, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(base, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -2759,18 +2759,18 @@ void Traversal_this_written_self_up_childof_inherited(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(base, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 0));
     test_uint(0, ecs_field_src(&it, 1));
-    test_uint(0, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(child, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(base, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(base, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -2802,10 +2802,10 @@ void Traversal_this_written_up_childof_inherited(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(child, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(base, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(base, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -2836,14 +2836,14 @@ void Traversal_var_self_up_childof_inherited(void) {
     ecs_iter_t it = ecs_query_iter(world, r);
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(base, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(base, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
     test_uint(base, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(base, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(base, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
     test_uint(child, ecs_iter_get_var(&it, x_var));
 
     test_bool(false, ecs_query_next(&it));
@@ -2875,8 +2875,8 @@ void Traversal_var_up_childof_inherited(void) {
     ecs_iter_t it = ecs_query_iter(world, r);
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(base, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(base, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
     test_uint(child, ecs_iter_get_var(&it, x_var));
 
     test_bool(false, ecs_query_next(&it));
@@ -2911,18 +2911,18 @@ void Traversal_var_written_self_up_childof_inherited(void) {
     ecs_iter_t it = ecs_query_iter(world, r);
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
+    test_uint(base, ecs_field_src(&it, 0));
     test_uint(base, ecs_field_src(&it, 1));
-    test_uint(base, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
     test_uint(base, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(child, ecs_field_src(&it, 1));
-    test_uint(base, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(child, ecs_field_src(&it, 0));
+    test_uint(base, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
     test_uint(child, ecs_iter_get_var(&it, x_var));
 
     test_bool(false, ecs_query_next(&it));
@@ -2957,10 +2957,10 @@ void Traversal_var_written_up_childof_inherited(void) {
     ecs_iter_t it = ecs_query_iter(world, r);
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(child, ecs_field_src(&it, 1));
-    test_uint(base, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(child, ecs_field_src(&it, 0));
+    test_uint(base, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
     test_uint(child, ecs_iter_get_var(&it, x_var));
 
     test_bool(false, ecs_query_next(&it));
@@ -2992,8 +2992,8 @@ void Traversal_ent_self_up_childof_inherited(void) {
         ecs_iter_t it = ecs_query_iter(world, r);
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
-        test_uint(base, ecs_field_src(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 1));
+        test_uint(base, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -3003,8 +3003,8 @@ void Traversal_ent_self_up_childof_inherited(void) {
         ecs_iter_t it = ecs_query_iter(world, r);
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
-        test_uint(child, ecs_field_src(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 1));
+        test_uint(child, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -3035,8 +3035,8 @@ void Traversal_ent_up_childof_inherited(void) {
         ecs_iter_t it = ecs_query_iter(world, r);
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
-        test_uint(base, ecs_field_src(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 1));
+        test_uint(base, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -3046,8 +3046,8 @@ void Traversal_ent_up_childof_inherited(void) {
         ecs_iter_t it = ecs_query_iter(world, r);
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
-        test_uint(base, ecs_field_src(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 1));
+        test_uint(base, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -3081,8 +3081,8 @@ void Traversal_ent_written_self_up_childof_inherited(void) {
         ecs_iter_t it = ecs_query_iter(world, r);
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
-        test_uint(base, ecs_field_src(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 1));
+        test_uint(base, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -3092,8 +3092,8 @@ void Traversal_ent_written_self_up_childof_inherited(void) {
         ecs_iter_t it = ecs_query_iter(world, r);
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
-        test_uint(child, ecs_field_src(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 1));
+        test_uint(child, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -3127,8 +3127,8 @@ void Traversal_ent_written_up_childof_inherited(void) {
         ecs_iter_t it = ecs_query_iter(world, r);
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
-        test_uint(base, ecs_field_src(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 1));
+        test_uint(base, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -3138,8 +3138,8 @@ void Traversal_ent_written_up_childof_inherited(void) {
         ecs_iter_t it = ecs_query_iter(world, r);
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
-        test_uint(base, ecs_field_src(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 1));
+        test_uint(base, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -3188,10 +3188,10 @@ void Traversal_this_self_up_childof_component(void) {
     test_int(2, it.count);
     test_uint(p1, it.entities[0]);
     test_uint(p2, it.entities[1]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -3202,10 +3202,10 @@ void Traversal_this_self_up_childof_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -3214,10 +3214,10 @@ void Traversal_this_self_up_childof_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -3226,10 +3226,10 @@ void Traversal_this_self_up_childof_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -3238,10 +3238,10 @@ void Traversal_this_self_up_childof_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -3250,10 +3250,10 @@ void Traversal_this_self_up_childof_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 20);
         test_int(p[0].y, 30);
@@ -3262,10 +3262,10 @@ void Traversal_this_self_up_childof_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 20);
         test_int(p[0].y, 30);
@@ -3274,10 +3274,10 @@ void Traversal_this_self_up_childof_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(p3, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 30);
         test_int(p[0].y, 40);
@@ -3286,10 +3286,10 @@ void Traversal_this_self_up_childof_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(p3, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(p3, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 30);
         test_int(p[0].y, 40);
@@ -3341,10 +3341,10 @@ void Traversal_this_up_childof_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -3353,10 +3353,10 @@ void Traversal_this_up_childof_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -3365,10 +3365,10 @@ void Traversal_this_up_childof_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -3377,10 +3377,10 @@ void Traversal_this_up_childof_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -3389,10 +3389,10 @@ void Traversal_this_up_childof_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 20);
         test_int(p[0].y, 30);
@@ -3401,10 +3401,10 @@ void Traversal_this_up_childof_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 20);
         test_int(p[0].y, 30);
@@ -3413,10 +3413,10 @@ void Traversal_this_up_childof_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(p3, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(p3, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 30);
         test_int(p[0].y, 40);
@@ -3473,12 +3473,12 @@ void Traversal_this_written_self_up_childof_component(void) {
     test_int(2, it.count);
     test_uint(p1, it.entities[0]);
     test_uint(p2, it.entities[1]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -3489,12 +3489,12 @@ void Traversal_this_written_self_up_childof_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(p3, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 30);
         test_int(p[0].y, 40);
@@ -3503,12 +3503,12 @@ void Traversal_this_written_self_up_childof_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -3517,12 +3517,12 @@ void Traversal_this_written_self_up_childof_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -3531,12 +3531,12 @@ void Traversal_this_written_self_up_childof_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 20);
         test_int(p[0].y, 30);
@@ -3545,12 +3545,12 @@ void Traversal_this_written_self_up_childof_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 20);
         test_int(p[0].y, 30);
@@ -3559,12 +3559,12 @@ void Traversal_this_written_self_up_childof_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -3573,12 +3573,12 @@ void Traversal_this_written_self_up_childof_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -3587,12 +3587,12 @@ void Traversal_this_written_self_up_childof_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p3, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p3, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 30);
         test_int(p[0].y, 40);
@@ -3648,12 +3648,12 @@ void Traversal_this_written_up_childof_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -3662,12 +3662,12 @@ void Traversal_this_written_up_childof_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -3676,12 +3676,12 @@ void Traversal_this_written_up_childof_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 20);
         test_int(p[0].y, 30);
@@ -3690,12 +3690,12 @@ void Traversal_this_written_up_childof_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 20);
         test_int(p[0].y, 30);
@@ -3704,12 +3704,12 @@ void Traversal_this_written_up_childof_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -3718,12 +3718,12 @@ void Traversal_this_written_up_childof_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -3732,12 +3732,12 @@ void Traversal_this_written_up_childof_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p3, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p3, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 30);
         test_int(p[0].y, 40);
@@ -3791,10 +3791,10 @@ void Traversal_var_self_up_childof_component(void) {
     ecs_iter_t it = ecs_query_iter(world, r);
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -3802,10 +3802,10 @@ void Traversal_var_self_up_childof_component(void) {
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 20);
         test_int(p[0].y, 30);
@@ -3813,11 +3813,11 @@ void Traversal_var_self_up_childof_component(void) {
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     test_uint(e1, ecs_iter_get_var(&it, x_var));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -3825,11 +3825,11 @@ void Traversal_var_self_up_childof_component(void) {
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     test_uint(e2, ecs_iter_get_var(&it, x_var));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -3837,11 +3837,11 @@ void Traversal_var_self_up_childof_component(void) {
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     test_uint(e5, ecs_iter_get_var(&it, x_var));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -3849,11 +3849,11 @@ void Traversal_var_self_up_childof_component(void) {
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     test_uint(e6, ecs_iter_get_var(&it, x_var));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -3861,11 +3861,11 @@ void Traversal_var_self_up_childof_component(void) {
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     test_uint(e3, ecs_iter_get_var(&it, x_var));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 20);
         test_int(p[0].y, 30);
@@ -3873,11 +3873,11 @@ void Traversal_var_self_up_childof_component(void) {
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     test_uint(e4, ecs_iter_get_var(&it, x_var));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 20);
         test_int(p[0].y, 30);
@@ -3885,11 +3885,11 @@ void Traversal_var_self_up_childof_component(void) {
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p3, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(p3, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     test_uint(p3, ecs_iter_get_var(&it, x_var));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 30);
         test_int(p[0].y, 40);
@@ -3897,11 +3897,11 @@ void Traversal_var_self_up_childof_component(void) {
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p3, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(p3, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     test_uint(e7, ecs_iter_get_var(&it, x_var));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 30);
         test_int(p[0].y, 40);
@@ -3955,11 +3955,11 @@ void Traversal_var_up_childof_component(void) {
     ecs_iter_t it = ecs_query_iter(world, r);
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     test_uint(e1, ecs_iter_get_var(&it, x_var));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -3967,11 +3967,11 @@ void Traversal_var_up_childof_component(void) {
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     test_uint(e2, ecs_iter_get_var(&it, x_var));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -3979,11 +3979,11 @@ void Traversal_var_up_childof_component(void) {
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     test_uint(e5, ecs_iter_get_var(&it, x_var));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -3991,11 +3991,11 @@ void Traversal_var_up_childof_component(void) {
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     test_uint(e6, ecs_iter_get_var(&it, x_var));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -4003,11 +4003,11 @@ void Traversal_var_up_childof_component(void) {
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     test_uint(e3, ecs_iter_get_var(&it, x_var));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 20);
         test_int(p[0].y, 30);
@@ -4015,11 +4015,11 @@ void Traversal_var_up_childof_component(void) {
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     test_uint(e4, ecs_iter_get_var(&it, x_var));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 20);
         test_int(p[0].y, 30);
@@ -4027,11 +4027,11 @@ void Traversal_var_up_childof_component(void) {
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p3, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(p3, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     test_uint(e7, ecs_iter_get_var(&it, x_var));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 30);
         test_int(p[0].y, 40);
@@ -4088,13 +4088,13 @@ void Traversal_var_written_self_up_childof_component(void) {
     ecs_iter_t it = ecs_query_iter(world, r);
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     test_uint(p1, ecs_iter_get_var(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -4102,13 +4102,13 @@ void Traversal_var_written_self_up_childof_component(void) {
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     test_uint(p2, ecs_iter_get_var(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 20);
         test_int(p[0].y, 30);
@@ -4116,13 +4116,13 @@ void Traversal_var_written_self_up_childof_component(void) {
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(p3, ecs_field_src(&it, 1));
-    test_uint(p3, ecs_field_src(&it, 1));
-    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(p3, ecs_field_src(&it, 0));
+    test_uint(p3, ecs_field_src(&it, 0));
+    test_uint(Tag, ecs_field_id(&it, 0));
     test_uint(p3, ecs_iter_get_var(&it, x_var));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 30);
         test_int(p[0].y, 40);
@@ -4130,13 +4130,13 @@ void Traversal_var_written_self_up_childof_component(void) {
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(e1, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(e1, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
     test_uint(e1, ecs_iter_get_var(&it, x_var));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -4144,13 +4144,13 @@ void Traversal_var_written_self_up_childof_component(void) {
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(e2, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(e2, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
     test_uint(e2, ecs_iter_get_var(&it, x_var));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -4158,13 +4158,13 @@ void Traversal_var_written_self_up_childof_component(void) {
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(e3, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(e3, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
     test_uint(e3, ecs_iter_get_var(&it, x_var));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 20);
         test_int(p[0].y, 30);
@@ -4172,13 +4172,13 @@ void Traversal_var_written_self_up_childof_component(void) {
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(e4, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(e4, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
     test_uint(e4, ecs_iter_get_var(&it, x_var));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 20);
         test_int(p[0].y, 30);
@@ -4186,13 +4186,13 @@ void Traversal_var_written_self_up_childof_component(void) {
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(e5, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(e5, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
     test_uint(e5, ecs_iter_get_var(&it, x_var));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -4200,13 +4200,13 @@ void Traversal_var_written_self_up_childof_component(void) {
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(e6, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(e6, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
     test_uint(e6, ecs_iter_get_var(&it, x_var));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -4214,13 +4214,13 @@ void Traversal_var_written_self_up_childof_component(void) {
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(e7, ecs_field_src(&it, 1));
-    test_uint(p3, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(e7, ecs_field_src(&it, 0));
+    test_uint(p3, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
     test_uint(e7, ecs_iter_get_var(&it, x_var));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 30);
         test_int(p[0].y, 40);
@@ -4277,13 +4277,13 @@ void Traversal_var_written_up_childof_component(void) {
     ecs_iter_t it = ecs_query_iter(world, r);
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(e1, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(e1, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
     test_uint(e1, ecs_iter_get_var(&it, x_var));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -4291,13 +4291,13 @@ void Traversal_var_written_up_childof_component(void) {
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(e2, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(e2, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
     test_uint(e2, ecs_iter_get_var(&it, x_var));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -4305,13 +4305,13 @@ void Traversal_var_written_up_childof_component(void) {
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(e3, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(e3, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
     test_uint(e3, ecs_iter_get_var(&it, x_var));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 20);
         test_int(p[0].y, 30);
@@ -4319,13 +4319,13 @@ void Traversal_var_written_up_childof_component(void) {
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(e4, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(e4, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
     test_uint(e4, ecs_iter_get_var(&it, x_var));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 20);
         test_int(p[0].y, 30);
@@ -4333,13 +4333,13 @@ void Traversal_var_written_up_childof_component(void) {
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(e5, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(e5, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
     test_uint(e5, ecs_iter_get_var(&it, x_var));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -4347,13 +4347,13 @@ void Traversal_var_written_up_childof_component(void) {
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(e6, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(e6, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
     test_uint(e6, ecs_iter_get_var(&it, x_var));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -4361,13 +4361,13 @@ void Traversal_var_written_up_childof_component(void) {
 
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
-    test_uint(e7, ecs_field_src(&it, 1));
-    test_uint(p3, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
+    test_uint(e7, ecs_field_src(&it, 0));
+    test_uint(p3, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
     test_uint(e7, ecs_iter_get_var(&it, x_var));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 30);
         test_int(p[0].y, 40);
@@ -4429,56 +4429,56 @@ void Traversal_this_self_up_childof_recycled_parent(void) {
     test_int(2, it.count);
     test_uint(p1, it.entities[0]);
     test_uint(p2, it.entities[1]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(p3, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(p3, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p3, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -4535,44 +4535,44 @@ void Traversal_this_up_childof_recycled_parent(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(p3, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p3, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -4633,74 +4633,74 @@ void Traversal_this_written_self_up_childof_recycled_parent(void) {
     test_int(2, it.count);
     test_uint(p1, it.entities[0]);
     test_uint(p2, it.entities[1]);
+    test_uint(0, ecs_field_src(&it, 0));
     test_uint(0, ecs_field_src(&it, 1));
-    test_uint(0, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(p3, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 0));
     test_uint(0, ecs_field_src(&it, 1));
-    test_uint(0, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p3, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p3, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -4760,58 +4760,58 @@ void Traversal_this_written_up_childof_recycled_parent(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p3, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p3, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -4869,10 +4869,10 @@ void Traversal_this_self_up_childof_recycled_parent_component(void) {
     test_int(2, it.count);
     test_uint(p1, it.entities[0]);
     test_uint(p2, it.entities[1]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -4883,10 +4883,10 @@ void Traversal_this_self_up_childof_recycled_parent_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -4895,10 +4895,10 @@ void Traversal_this_self_up_childof_recycled_parent_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -4907,10 +4907,10 @@ void Traversal_this_self_up_childof_recycled_parent_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -4919,10 +4919,10 @@ void Traversal_this_self_up_childof_recycled_parent_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -4931,10 +4931,10 @@ void Traversal_this_self_up_childof_recycled_parent_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 20);
         test_int(p[0].y, 30);
@@ -4943,10 +4943,10 @@ void Traversal_this_self_up_childof_recycled_parent_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 20);
         test_int(p[0].y, 30);
@@ -4955,10 +4955,10 @@ void Traversal_this_self_up_childof_recycled_parent_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(p3, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 30);
         test_int(p[0].y, 40);
@@ -4967,10 +4967,10 @@ void Traversal_this_self_up_childof_recycled_parent_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(p3, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(p3, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 30);
         test_int(p[0].y, 40);
@@ -5031,10 +5031,10 @@ void Traversal_this_up_childof_recycled_parent_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -5043,10 +5043,10 @@ void Traversal_this_up_childof_recycled_parent_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -5055,10 +5055,10 @@ void Traversal_this_up_childof_recycled_parent_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -5067,10 +5067,10 @@ void Traversal_this_up_childof_recycled_parent_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -5079,10 +5079,10 @@ void Traversal_this_up_childof_recycled_parent_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 20);
         test_int(p[0].y, 30);
@@ -5091,10 +5091,10 @@ void Traversal_this_up_childof_recycled_parent_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 20);
         test_int(p[0].y, 30);
@@ -5103,10 +5103,10 @@ void Traversal_this_up_childof_recycled_parent_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(p3, ecs_field_src(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(p3, ecs_field_src(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 30);
         test_int(p[0].y, 40);
@@ -5172,12 +5172,12 @@ void Traversal_this_written_self_up_childof_recycled_parent_component(void) {
     test_int(2, it.count);
     test_uint(p1, it.entities[0]);
     test_uint(p2, it.entities[1]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -5188,12 +5188,12 @@ void Traversal_this_written_self_up_childof_recycled_parent_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(p3, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 30);
         test_int(p[0].y, 40);
@@ -5202,12 +5202,12 @@ void Traversal_this_written_self_up_childof_recycled_parent_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -5216,12 +5216,12 @@ void Traversal_this_written_self_up_childof_recycled_parent_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -5230,12 +5230,12 @@ void Traversal_this_written_self_up_childof_recycled_parent_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 20);
         test_int(p[0].y, 30);
@@ -5244,12 +5244,12 @@ void Traversal_this_written_self_up_childof_recycled_parent_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 20);
         test_int(p[0].y, 30);
@@ -5258,12 +5258,12 @@ void Traversal_this_written_self_up_childof_recycled_parent_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -5272,12 +5272,12 @@ void Traversal_this_written_self_up_childof_recycled_parent_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -5286,12 +5286,12 @@ void Traversal_this_written_self_up_childof_recycled_parent_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p3, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p3, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 30);
         test_int(p[0].y, 40);
@@ -5356,12 +5356,12 @@ void Traversal_this_written_up_childof_recycled_parent_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -5370,12 +5370,12 @@ void Traversal_this_written_up_childof_recycled_parent_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -5384,12 +5384,12 @@ void Traversal_this_written_up_childof_recycled_parent_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 20);
         test_int(p[0].y, 30);
@@ -5398,12 +5398,12 @@ void Traversal_this_written_up_childof_recycled_parent_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 20);
         test_int(p[0].y, 30);
@@ -5412,12 +5412,12 @@ void Traversal_this_written_up_childof_recycled_parent_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -5426,12 +5426,12 @@ void Traversal_this_written_up_childof_recycled_parent_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 10);
         test_int(p[0].y, 20);
@@ -5440,12 +5440,12 @@ void Traversal_this_written_up_childof_recycled_parent_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p3, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p3, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p[0].x, 30);
         test_int(p[0].y, 40);
@@ -5499,56 +5499,56 @@ void Traversal_this_self_up_childof_pair(void) {
     test_int(2, it.count);
     test_uint(p1, it.entities[0]);
     test_uint(p2, it.entities[1]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(p3, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(p3, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 1));
+    test_uint(p3, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 0));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -5597,44 +5597,44 @@ void Traversal_this_up_childof_pair(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(p3, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 1));
+    test_uint(p3, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 0));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -5687,74 +5687,74 @@ void Traversal_this_written_self_up_childof_pair(void) {
     test_int(2, it.count);
     test_uint(p1, it.entities[0]);
     test_uint(p2, it.entities[1]);
+    test_uint(0, ecs_field_src(&it, 0));
     test_uint(0, ecs_field_src(&it, 1));
-    test_uint(0, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(p3, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 0));
     test_uint(0, ecs_field_src(&it, 1));
-    test_uint(0, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p3, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p3, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 1));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -5806,58 +5806,58 @@ void Traversal_this_written_up_childof_pair(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p3, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p3, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 1));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -5909,62 +5909,62 @@ void Traversal_this_self_up_childof_pair_wildcard(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(p1, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(p2, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(p3, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(Rel, TgtC), ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(Rel, TgtC), ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(p3, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(Rel, TgtC), ecs_field_id(&it, 1));
+    test_uint(p3, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(Rel, TgtC), ecs_field_id(&it, 0));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -6016,50 +6016,50 @@ void Traversal_this_up_childof_pair_wildcard(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(p3, it.entities[0]);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(p3, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(Rel, TgtC), ecs_field_id(&it, 1));
+    test_uint(p3, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(Rel, TgtC), ecs_field_id(&it, 0));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -6114,82 +6114,82 @@ void Traversal_this_written_self_up_childof_pair_wildcard(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(p1, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 0));
     test_uint(0, ecs_field_src(&it, 1));
-    test_uint(0, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(p2, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 0));
     test_uint(0, ecs_field_src(&it, 1));
-    test_uint(0, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(p3, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 0));
     test_uint(0, ecs_field_src(&it, 1));
-    test_uint(0, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(Rel, TgtC), ecs_field_id(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, TgtC), ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p3, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(Rel, TgtC), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p3, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, TgtC), ecs_field_id(&it, 1));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -6244,66 +6244,66 @@ void Traversal_this_written_up_childof_pair_wildcard(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(p3, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p3, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(Rel, TgtC), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p3, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, TgtC), ecs_field_id(&it, 1));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -6358,71 +6358,71 @@ void Traversal_this_self_up_childof_pair_tgt_var(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(p1, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 0));
     test_uint(TgtA, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 0));
     test_uint(TgtA, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 0));
     test_uint(TgtA, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 0));
     test_uint(TgtA, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 0));
     test_uint(TgtA, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(p2, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 0));
     test_uint(TgtB, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 0));
     test_uint(TgtB, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 0));
     test_uint(TgtB, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(p3, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(Rel, TgtC), ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(Rel, TgtC), ecs_field_id(&it, 0));
     test_uint(TgtC, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(p3, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(Rel, TgtC), ecs_field_id(&it, 1));
+    test_uint(p3, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(Rel, TgtC), ecs_field_id(&it, 0));
     test_uint(TgtC, ecs_iter_get_var(&it, x_var));
 
     test_bool(false, ecs_query_next(&it));
@@ -6481,91 +6481,91 @@ void Traversal_this_written_self_up_childof_pair_tgt_var(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(p1, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 0));
     test_uint(0, ecs_field_src(&it, 1));
-    test_uint(0, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 1));
     test_uint(TgtA, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(p2, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 0));
     test_uint(0, ecs_field_src(&it, 1));
-    test_uint(0, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 1));
     test_uint(TgtB, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(p3, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 0));
     test_uint(0, ecs_field_src(&it, 1));
-    test_uint(0, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(Rel, TgtC), ecs_field_id(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, TgtC), ecs_field_id(&it, 1));
     test_uint(TgtC, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 1));
     test_uint(TgtA, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 1));
     test_uint(TgtA, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 1));
     test_uint(TgtB, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 1));
     test_uint(TgtB, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 1));
     test_uint(TgtA, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 1));
     test_uint(TgtA, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p3, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(Rel, TgtC), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p3, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(Rel, TgtC), ecs_field_id(&it, 1));
     test_uint(TgtC, ecs_iter_get_var(&it, x_var));
 
     test_bool(false, ecs_query_next(&it));
@@ -6621,71 +6621,71 @@ void Traversal_this_self_up_childof_pair_rel_var(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(p1, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(RelA, Tgt), ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(RelA, Tgt), ecs_field_id(&it, 0));
     test_uint(RelA, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(RelA, Tgt), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(RelA, Tgt), ecs_field_id(&it, 0));
     test_uint(RelA, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(RelA, Tgt), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(RelA, Tgt), ecs_field_id(&it, 0));
     test_uint(RelA, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(RelA, Tgt), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(RelA, Tgt), ecs_field_id(&it, 0));
     test_uint(RelA, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(RelA, Tgt), ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(RelA, Tgt), ecs_field_id(&it, 0));
     test_uint(RelA, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(p2, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(RelB, Tgt), ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(RelB, Tgt), ecs_field_id(&it, 0));
     test_uint(RelB, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(RelB, Tgt), ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(RelB, Tgt), ecs_field_id(&it, 0));
     test_uint(RelB, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(RelB, Tgt), ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(RelB, Tgt), ecs_field_id(&it, 0));
     test_uint(RelB, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(p3, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(RelC, Tgt), ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(RelC, Tgt), ecs_field_id(&it, 0));
     test_uint(RelC, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(p3, ecs_field_src(&it, 1));
-    test_uint(ecs_pair(RelC, Tgt), ecs_field_id(&it, 1));
+    test_uint(p3, ecs_field_src(&it, 0));
+    test_uint(ecs_pair(RelC, Tgt), ecs_field_id(&it, 0));
     test_uint(RelC, ecs_iter_get_var(&it, x_var));
 
     test_bool(false, ecs_query_next(&it));
@@ -6744,91 +6744,91 @@ void Traversal_this_written_self_up_childof_pair_rel_var(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(p1, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 0));
     test_uint(0, ecs_field_src(&it, 1));
-    test_uint(0, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(RelA, Tgt), ecs_field_id(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(RelA, Tgt), ecs_field_id(&it, 1));
     test_uint(RelA, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(p2, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 0));
     test_uint(0, ecs_field_src(&it, 1));
-    test_uint(0, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(RelB, Tgt), ecs_field_id(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(RelB, Tgt), ecs_field_id(&it, 1));
     test_uint(RelB, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(p3, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 0));
     test_uint(0, ecs_field_src(&it, 1));
-    test_uint(0, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(RelC, Tgt), ecs_field_id(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(RelC, Tgt), ecs_field_id(&it, 1));
     test_uint(RelC, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(RelA, Tgt), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(RelA, Tgt), ecs_field_id(&it, 1));
     test_uint(RelA, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(RelA, Tgt), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(RelA, Tgt), ecs_field_id(&it, 1));
     test_uint(RelA, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(RelB, Tgt), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(RelB, Tgt), ecs_field_id(&it, 1));
     test_uint(RelB, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(RelB, Tgt), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(RelB, Tgt), ecs_field_id(&it, 1));
     test_uint(RelB, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(RelA, Tgt), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(RelA, Tgt), ecs_field_id(&it, 1));
     test_uint(RelA, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(RelA, Tgt), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(RelA, Tgt), ecs_field_id(&it, 1));
     test_uint(RelA, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p3, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_pair(RelC, Tgt), ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p3, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_pair(RelC, Tgt), ecs_field_id(&it, 1));
     test_uint(RelC, ecs_iter_get_var(&it, x_var));
 
     test_bool(false, ecs_query_next(&it));
@@ -6870,55 +6870,55 @@ void Traversal_this_self_up_childof_pair_for_var_written(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(p1, it.entities[0]);
-    test_uint(ent, ecs_field_src(&it, 1));
-    test_uint(0, ecs_field_src(&it, 2));
-    test_uint(ecs_pair(Rel, TagA), ecs_field_id(&it, 1));
-    test_uint(TagA, ecs_field_id(&it, 2));
+    test_uint(ent, ecs_field_src(&it, 0));
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(ecs_pair(Rel, TagA), ecs_field_id(&it, 0));
+    test_uint(TagA, ecs_field_id(&it, 1));
     test_uint(TagA, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(ent, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(ecs_pair(Rel, TagA), ecs_field_id(&it, 1));
-    test_uint(TagA, ecs_field_id(&it, 2));
+    test_uint(ent, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(ecs_pair(Rel, TagA), ecs_field_id(&it, 0));
+    test_uint(TagA, ecs_field_id(&it, 1));
     test_uint(TagA, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(p2, it.entities[0]);
-    test_uint(ent, ecs_field_src(&it, 1));
-    test_uint(0, ecs_field_src(&it, 2));
-    test_uint(ecs_pair(Rel, TagB), ecs_field_id(&it, 1));
-    test_uint(TagB, ecs_field_id(&it, 2));
+    test_uint(ent, ecs_field_src(&it, 0));
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(ecs_pair(Rel, TagB), ecs_field_id(&it, 0));
+    test_uint(TagB, ecs_field_id(&it, 1));
     test_uint(TagB, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(ent, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(ecs_pair(Rel, TagB), ecs_field_id(&it, 1));
-    test_uint(TagB, ecs_field_id(&it, 2));
+    test_uint(ent, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(ecs_pair(Rel, TagB), ecs_field_id(&it, 0));
+    test_uint(TagB, ecs_field_id(&it, 1));
     test_uint(TagB, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(p3, it.entities[0]);
-    test_uint(ent, ecs_field_src(&it, 1));
-    test_uint(0, ecs_field_src(&it, 2));
-    test_uint(ecs_pair(Rel, TagC), ecs_field_id(&it, 1));
-    test_uint(TagC, ecs_field_id(&it, 2));
+    test_uint(ent, ecs_field_src(&it, 0));
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(ecs_pair(Rel, TagC), ecs_field_id(&it, 0));
+    test_uint(TagC, ecs_field_id(&it, 1));
     test_uint(TagC, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(ent, ecs_field_src(&it, 1));
-    test_uint(p3, ecs_field_src(&it, 2));
-    test_uint(ecs_pair(Rel, TagC), ecs_field_id(&it, 1));
-    test_uint(TagC, ecs_field_id(&it, 2));
+    test_uint(ent, ecs_field_src(&it, 0));
+    test_uint(p3, ecs_field_src(&it, 1));
+    test_uint(ecs_pair(Rel, TagC), ecs_field_id(&it, 0));
+    test_uint(TagC, ecs_field_id(&it, 1));
     test_uint(TagC, ecs_iter_get_var(&it, x_var));
 
     test_bool(false, ecs_query_next(&it));
@@ -6960,28 +6960,28 @@ void Traversal_this_up_childof_pair_for_var_written(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(ent, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(ecs_pair(Rel, TagA), ecs_field_id(&it, 1));
-    test_uint(TagA, ecs_field_id(&it, 2));
+    test_uint(ent, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(ecs_pair(Rel, TagA), ecs_field_id(&it, 0));
+    test_uint(TagA, ecs_field_id(&it, 1));
     test_uint(TagA, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(ent, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(ecs_pair(Rel, TagB), ecs_field_id(&it, 1));
-    test_uint(TagB, ecs_field_id(&it, 2));
+    test_uint(ent, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(ecs_pair(Rel, TagB), ecs_field_id(&it, 0));
+    test_uint(TagB, ecs_field_id(&it, 1));
     test_uint(TagB, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(ent, ecs_field_src(&it, 1));
-    test_uint(p3, ecs_field_src(&it, 2));
-    test_uint(ecs_pair(Rel, TagC), ecs_field_id(&it, 1));
-    test_uint(TagC, ecs_field_id(&it, 2));
+    test_uint(ent, ecs_field_src(&it, 0));
+    test_uint(p3, ecs_field_src(&it, 1));
+    test_uint(ecs_pair(Rel, TagC), ecs_field_id(&it, 0));
+    test_uint(TagC, ecs_field_id(&it, 1));
     test_uint(TagC, ecs_iter_get_var(&it, x_var));
 
     test_bool(false, ecs_query_next(&it));
@@ -7031,37 +7031,37 @@ void Traversal_this_written_self_up_childof_pair_for_var_written(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(ecs_pair(Rel, TagA), ecs_field_id(&it, 1));
-    test_uint(TagA, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(ecs_pair(Rel, TagA), ecs_field_id(&it, 0));
+    test_uint(TagA, ecs_field_id(&it, 1));
     test_uint(TagA, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(ecs_pair(Rel, TagB), ecs_field_id(&it, 1));
-    test_uint(TagB, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(ecs_pair(Rel, TagB), ecs_field_id(&it, 0));
+    test_uint(TagB, ecs_field_id(&it, 1));
     test_uint(TagB, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p3, ecs_field_src(&it, 2));
-    test_uint(ecs_pair(Rel, TagC), ecs_field_id(&it, 1));
-    test_uint(TagC, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p3, ecs_field_src(&it, 1));
+    test_uint(ecs_pair(Rel, TagC), ecs_field_id(&it, 0));
+    test_uint(TagC, ecs_field_id(&it, 1));
     test_uint(TagC, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 0));
     test_uint(0, ecs_field_src(&it, 1));
-    test_uint(0, ecs_field_src(&it, 2));
-    test_uint(ecs_pair(Rel, TagA), ecs_field_id(&it, 1));
-    test_uint(TagA, ecs_field_id(&it, 2));
+    test_uint(ecs_pair(Rel, TagA), ecs_field_id(&it, 0));
+    test_uint(TagA, ecs_field_id(&it, 1));
     test_uint(TagA, ecs_iter_get_var(&it, x_var));
 
     test_bool(false, ecs_query_next(&it));
@@ -7115,91 +7115,91 @@ void Traversal_this_self_up_childof_pair_for_var_written_n_targets(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(p0_a, it.entities[0]);
-    test_uint(ent, ecs_field_src(&it, 1));
-    test_uint(0, ecs_field_src(&it, 2));
-    test_uint(ecs_pair(Rel, TagA), ecs_field_id(&it, 1));
-    test_uint(TagA, ecs_field_id(&it, 2));
+    test_uint(ent, ecs_field_src(&it, 0));
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(ecs_pair(Rel, TagA), ecs_field_id(&it, 0));
+    test_uint(TagA, ecs_field_id(&it, 1));
     test_uint(TagA, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(p1, it.entities[0]);
-    test_uint(ent, ecs_field_src(&it, 1));
-    test_uint(p0_a, ecs_field_src(&it, 2));
-    test_uint(ecs_pair(Rel, TagA), ecs_field_id(&it, 1));
-    test_uint(TagA, ecs_field_id(&it, 2));
+    test_uint(ent, ecs_field_src(&it, 0));
+    test_uint(p0_a, ecs_field_src(&it, 1));
+    test_uint(ecs_pair(Rel, TagA), ecs_field_id(&it, 0));
+    test_uint(TagA, ecs_field_id(&it, 1));
     test_uint(TagA, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(ent, ecs_field_src(&it, 1));
-    test_uint(p0_a, ecs_field_src(&it, 2));
-    test_uint(ecs_pair(Rel, TagA), ecs_field_id(&it, 1));
-    test_uint(TagA, ecs_field_id(&it, 2));
+    test_uint(ent, ecs_field_src(&it, 0));
+    test_uint(p0_a, ecs_field_src(&it, 1));
+    test_uint(ecs_pair(Rel, TagA), ecs_field_id(&it, 0));
+    test_uint(TagA, ecs_field_id(&it, 1));
     test_uint(TagA, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(ent, ecs_field_src(&it, 1));
-    test_uint(0, ecs_field_src(&it, 2));
-    test_uint(ecs_pair(Rel, TagA), ecs_field_id(&it, 1));
-    test_uint(TagA, ecs_field_id(&it, 2));
+    test_uint(ent, ecs_field_src(&it, 0));
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(ecs_pair(Rel, TagA), ecs_field_id(&it, 0));
+    test_uint(TagA, ecs_field_id(&it, 1));
     test_uint(TagA, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(p0_b, it.entities[0]);
-    test_uint(ent, ecs_field_src(&it, 1));
-    test_uint(0, ecs_field_src(&it, 2));
-    test_uint(ecs_pair(Rel, TagB), ecs_field_id(&it, 1));
-    test_uint(TagB, ecs_field_id(&it, 2));
+    test_uint(ent, ecs_field_src(&it, 0));
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(ecs_pair(Rel, TagB), ecs_field_id(&it, 0));
+    test_uint(TagB, ecs_field_id(&it, 1));
     test_uint(TagB, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(p1, it.entities[0]);
-    test_uint(ent, ecs_field_src(&it, 1));
-    test_uint(p0_b, ecs_field_src(&it, 2));
-    test_uint(ecs_pair(Rel, TagB), ecs_field_id(&it, 1));
-    test_uint(TagB, ecs_field_id(&it, 2));
+    test_uint(ent, ecs_field_src(&it, 0));
+    test_uint(p0_b, ecs_field_src(&it, 1));
+    test_uint(ecs_pair(Rel, TagB), ecs_field_id(&it, 0));
+    test_uint(TagB, ecs_field_id(&it, 1));
     test_uint(TagB, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(ent, ecs_field_src(&it, 1));
-    test_uint(p0_b, ecs_field_src(&it, 2));
-    test_uint(ecs_pair(Rel, TagB), ecs_field_id(&it, 1));
-    test_uint(TagB, ecs_field_id(&it, 2));
+    test_uint(ent, ecs_field_src(&it, 0));
+    test_uint(p0_b, ecs_field_src(&it, 1));
+    test_uint(ecs_pair(Rel, TagB), ecs_field_id(&it, 0));
+    test_uint(TagB, ecs_field_id(&it, 1));
     test_uint(TagB, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(p0_c, it.entities[0]);
-    test_uint(ent, ecs_field_src(&it, 1));
-    test_uint(0, ecs_field_src(&it, 2));
-    test_uint(ecs_pair(Rel, TagC), ecs_field_id(&it, 1));
-    test_uint(TagC, ecs_field_id(&it, 2));
+    test_uint(ent, ecs_field_src(&it, 0));
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(ecs_pair(Rel, TagC), ecs_field_id(&it, 0));
+    test_uint(TagC, ecs_field_id(&it, 1));
     test_uint(TagC, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(p1, it.entities[0]);
-    test_uint(ent, ecs_field_src(&it, 1));
-    test_uint(p0_c, ecs_field_src(&it, 2));
-    test_uint(ecs_pair(Rel, TagC), ecs_field_id(&it, 1));
-    test_uint(TagC, ecs_field_id(&it, 2));
+    test_uint(ent, ecs_field_src(&it, 0));
+    test_uint(p0_c, ecs_field_src(&it, 1));
+    test_uint(ecs_pair(Rel, TagC), ecs_field_id(&it, 0));
+    test_uint(TagC, ecs_field_id(&it, 1));
     test_uint(TagC, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(ent, ecs_field_src(&it, 1));
-    test_uint(p0_c, ecs_field_src(&it, 2));
-    test_uint(ecs_pair(Rel, TagC), ecs_field_id(&it, 1));
-    test_uint(TagC, ecs_field_id(&it, 2));
+    test_uint(ent, ecs_field_src(&it, 0));
+    test_uint(p0_c, ecs_field_src(&it, 1));
+    test_uint(ecs_pair(Rel, TagC), ecs_field_id(&it, 0));
+    test_uint(TagC, ecs_field_id(&it, 1));
     test_uint(TagC, ecs_iter_get_var(&it, x_var));
 
     test_bool(false, ecs_query_next(&it));
@@ -7255,37 +7255,37 @@ void Traversal_this_written_self_up_childof_pair_for_var_written_n_targets(void)
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(ecs_pair(Rel, TagA), ecs_field_id(&it, 1));
-    test_uint(TagA, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(ecs_pair(Rel, TagA), ecs_field_id(&it, 0));
+    test_uint(TagA, ecs_field_id(&it, 1));
     test_uint(TagA, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(ecs_pair(Rel, TagB), ecs_field_id(&it, 1));
-    test_uint(TagB, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(ecs_pair(Rel, TagB), ecs_field_id(&it, 0));
+    test_uint(TagB, ecs_field_id(&it, 1));
     test_uint(TagB, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p3, ecs_field_src(&it, 2));
-    test_uint(ecs_pair(Rel, TagC), ecs_field_id(&it, 1));
-    test_uint(TagC, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p3, ecs_field_src(&it, 1));
+    test_uint(ecs_pair(Rel, TagC), ecs_field_id(&it, 0));
+    test_uint(TagC, ecs_field_id(&it, 1));
     test_uint(TagC, ecs_iter_get_var(&it, x_var));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 0));
     test_uint(0, ecs_field_src(&it, 1));
-    test_uint(0, ecs_field_src(&it, 2));
-    test_uint(ecs_pair(Rel, TagA), ecs_field_id(&it, 1));
-    test_uint(TagA, ecs_field_id(&it, 2));
+    test_uint(ecs_pair(Rel, TagA), ecs_field_id(&it, 0));
+    test_uint(TagA, ecs_field_id(&it, 1));
     test_uint(TagA, ecs_iter_get_var(&it, x_var));
 
     test_bool(false, ecs_query_next(&it));
@@ -7317,8 +7317,8 @@ void Traversal_self_up_2_levels(void) {
     test_int(1, it.count);
     test_uint(inst, it.entities[0]);
     test_uint(base, it.sources[0]);
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
-    Position *p = ecs_field(&it, Position, 1);
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+    Position *p = ecs_field(&it, Position, 0);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -7470,7 +7470,7 @@ void Traversal_up_only_w_owned(void) {
     test_int(it.count, 1);
     test_uint(it.entities[0], e_1);
     test_uint(it.sources[0], e_0);
-    Position *p = ecs_field(&it, Position, 1);
+    Position *p = ecs_field(&it, Position, 0);
     test_int(p[0].x, 10);
     test_int(p[0].y, 20);
 
@@ -7478,7 +7478,7 @@ void Traversal_up_only_w_owned(void) {
     test_int(it.count, 1);
     test_uint(it.entities[0], e_3);
     test_uint(it.sources[0], e_2);
-    p = ecs_field(&it, Position, 1);
+    p = ecs_field(&it, Position, 0);
     test_int(p[0].x, 50);
     test_int(p[0].y, 60);
 
@@ -7486,7 +7486,7 @@ void Traversal_up_only_w_owned(void) {
     test_int(it.count, 1);
     test_uint(it.entities[0], e_2);
     test_uint(it.sources[0], e_1);
-    p = ecs_field(&it, Position, 1);
+    p = ecs_field(&it, Position, 0);
     test_int(p[0].x, 30);
     test_int(p[0].y, 40);
     test_bool(false, ecs_query_next(&it));
@@ -7552,22 +7552,22 @@ void Traversal_this_optional_self(void) {
     int32_t count = 0;
 
     while (ecs_query_next(&it)) {
-        Velocity *v = ecs_field(&it, Velocity, 1);
-        Position *p = ecs_field(&it, Position, 2);
+        Velocity *v = ecs_field(&it, Velocity, 0);
+        Position *p = ecs_field(&it, Position, 1);
         
         test_int(it.count, 1);
         test_assert(p != NULL);
 
         if (it.entities[0] == e1) {
-            test_bool(ecs_field_is_set(&it, 1), false); 
-            test_bool(ecs_field_is_set(&it, 2), true);
+            test_bool(ecs_field_is_set(&it, 0), false); 
+            test_bool(ecs_field_is_set(&it, 1), true);
         } else if (it.entities[0] == e2) {
-            test_bool(ecs_field_is_set(&it, 1), true); 
-            test_bool(ecs_field_is_set(&it, 2), true);
+            test_bool(ecs_field_is_set(&it, 0), true); 
+            test_bool(ecs_field_is_set(&it, 1), true);
             test_assert(v != NULL);
         } else if (it.entities[0] == e3) {
-            test_bool(ecs_field_is_set(&it, 1), false);
-            test_bool(ecs_field_is_set(&it, 2), true);
+            test_bool(ecs_field_is_set(&it, 0), false);
+            test_bool(ecs_field_is_set(&it, 1), true);
         }
 
         count ++;
@@ -7606,22 +7606,22 @@ void Traversal_this_optional_up(void) {
     int32_t count = 0;
     
     while (ecs_query_next(&it)) {
-        Velocity *v = ecs_field(&it, Velocity, 1);
-        Position *p = ecs_field(&it, Position, 2);
+        Velocity *v = ecs_field(&it, Velocity, 0);
+        Position *p = ecs_field(&it, Position, 1);
         
         test_int(it.count, 1);
         test_assert(p != NULL);
         
         if (it.entities[0] == e1) {
+            test_bool(ecs_field_is_set(&it, 0), true);
             test_bool(ecs_field_is_set(&it, 1), true);
-            test_bool(ecs_field_is_set(&it, 2), true);
             test_assert(v != NULL);
         } else if (it.entities[0] == e2) {
-            test_bool(ecs_field_is_set(&it, 1), false);            
-            test_bool(ecs_field_is_set(&it, 2), true);
+            test_bool(ecs_field_is_set(&it, 0), false);            
+            test_bool(ecs_field_is_set(&it, 1), true);
         } else if (it.entities[0] == e3) {
-            test_bool(ecs_field_is_set(&it, 1), false); 
-            test_bool(ecs_field_is_set(&it, 2), true);
+            test_bool(ecs_field_is_set(&it, 0), false); 
+            test_bool(ecs_field_is_set(&it, 1), true);
         }
 
         count ++;
@@ -7660,23 +7660,23 @@ void Traversal_this_optional_self_up(void) {
     int32_t count = 0;
     
     while (ecs_query_next(&it)) {
-        Velocity *v = ecs_field(&it, Velocity, 1);
-        Position *p = ecs_field(&it, Position, 2);
+        Velocity *v = ecs_field(&it, Velocity, 0);
+        Position *p = ecs_field(&it, Position, 1);
         
         test_int(it.count, 1);
         test_assert(p != NULL);
         
         if (it.entities[0] == e1) {
+            test_bool(ecs_field_is_set(&it, 0), true);
             test_bool(ecs_field_is_set(&it, 1), true);
-            test_bool(ecs_field_is_set(&it, 2), true);
             test_assert(v != NULL);
         } else if (it.entities[0] == e2) {
-            test_bool(ecs_field_is_set(&it, 1), true);
-            test_bool(ecs_field_is_set(&it, 2), true);            
+            test_bool(ecs_field_is_set(&it, 0), true);
+            test_bool(ecs_field_is_set(&it, 1), true);            
             test_assert(v != NULL);
         } else if (it.entities[0] == e3) {
-            test_bool(ecs_field_is_set(&it, 1), false); 
-            test_bool(ecs_field_is_set(&it, 2), true);
+            test_bool(ecs_field_is_set(&it, 0), false); 
+            test_bool(ecs_field_is_set(&it, 1), true);
         }
 
         count ++;
@@ -7715,23 +7715,23 @@ void Traversal_this_written_optional_self(void) {
     int32_t count = 0;
 
     while (ecs_query_next(&it)) {
-        Position *p = ecs_field(&it, Position, 1);
-        Velocity *v = ecs_field(&it, Velocity, 2);
+        Position *p = ecs_field(&it, Position, 0);
+        Velocity *v = ecs_field(&it, Velocity, 1);
         
         test_int(it.count, 1);
         test_assert(p != NULL);
 
         if (it.entities[0] == e1) {
-            test_bool(ecs_field_is_set(&it, 1), true);
-            test_bool(ecs_field_is_set(&it, 2), false); 
+            test_bool(ecs_field_is_set(&it, 0), true);
+            test_bool(ecs_field_is_set(&it, 1), false); 
             test_assert(v == NULL);
         } else if (it.entities[0] == e2) {
-            test_bool(ecs_field_is_set(&it, 1), true);
-            test_bool(ecs_field_is_set(&it, 2), true); 
+            test_bool(ecs_field_is_set(&it, 0), true);
+            test_bool(ecs_field_is_set(&it, 1), true); 
             test_assert(v != NULL);
         } else if (it.entities[0] == e3) {
-            test_bool(ecs_field_is_set(&it, 1), true);
-            test_bool(ecs_field_is_set(&it, 2), false);
+            test_bool(ecs_field_is_set(&it, 0), true);
+            test_bool(ecs_field_is_set(&it, 1), false);
             test_assert(v == NULL);
         }
 
@@ -7771,22 +7771,22 @@ void Traversal_this_written_optional_up(void) {
     int32_t count = 0;
     
     while (ecs_query_next(&it)) {
-        Position *p = ecs_field(&it, Position, 1);
-        Velocity *v = ecs_field(&it, Velocity, 2);
+        Position *p = ecs_field(&it, Position, 0);
+        Velocity *v = ecs_field(&it, Velocity, 1);
         
         test_int(it.count, 1);
         test_assert(p != NULL);
         
         if (it.entities[0] == e1) {
+            test_bool(ecs_field_is_set(&it, 0), true);
             test_bool(ecs_field_is_set(&it, 1), true);
-            test_bool(ecs_field_is_set(&it, 2), true);
             test_assert(v != NULL);
         } else if (it.entities[0] == e2) {
-            test_bool(ecs_field_is_set(&it, 1), true);
-            test_bool(ecs_field_is_set(&it, 2), false);            
+            test_bool(ecs_field_is_set(&it, 0), true);
+            test_bool(ecs_field_is_set(&it, 1), false);            
         } else if (it.entities[0] == e3) {
-            test_bool(ecs_field_is_set(&it, 1), true);
-            test_bool(ecs_field_is_set(&it, 2), false); 
+            test_bool(ecs_field_is_set(&it, 0), true);
+            test_bool(ecs_field_is_set(&it, 1), false); 
         }
 
         count ++;
@@ -7825,23 +7825,23 @@ void Traversal_this_written_optional_self_up(void) {
     int32_t count = 0;
     
     while (ecs_query_next(&it)) {
-        Position *p = ecs_field(&it, Position, 1);
-        Velocity *v = ecs_field(&it, Velocity, 2);
+        Position *p = ecs_field(&it, Position, 0);
+        Velocity *v = ecs_field(&it, Velocity, 1);
         
         test_int(it.count, 1);
         test_assert(p != NULL);
         
         if (it.entities[0] == e1) {
+            test_bool(ecs_field_is_set(&it, 0), true);
             test_bool(ecs_field_is_set(&it, 1), true);
-            test_bool(ecs_field_is_set(&it, 2), true);
             test_assert(v != NULL);
         } else if (it.entities[0] == e2) {
-            test_bool(ecs_field_is_set(&it, 1), true);
-            test_bool(ecs_field_is_set(&it, 2), true);            
+            test_bool(ecs_field_is_set(&it, 0), true);
+            test_bool(ecs_field_is_set(&it, 1), true);            
             test_assert(v != NULL);
         } else if (it.entities[0] == e3) {
-            test_bool(ecs_field_is_set(&it, 1), true);
-            test_bool(ecs_field_is_set(&it, 2), false); 
+            test_bool(ecs_field_is_set(&it, 0), true);
+            test_bool(ecs_field_is_set(&it, 1), false); 
         }
 
         count ++;
@@ -7880,10 +7880,10 @@ void Traversal_fixed_src_w_up(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e, it.entities[0]);
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
-    test_uint(ecs_id(Mass), ecs_field_id(&it, 2));
-    test_uint(Game, ecs_field_src(&it, 1));
-    test_uint(p, ecs_field_src(&it, 2));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 0));
+    test_uint(ecs_id(Mass), ecs_field_id(&it, 1));
+    test_uint(Game, ecs_field_src(&it, 0));
+    test_uint(p, ecs_field_src(&it, 1));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -7917,17 +7917,17 @@ void Traversal_match_empty_table_up(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
     test_assert(it.table == t1);
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
-    test_uint(p, ecs_field_src(&it, 1));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+    test_uint(p, ecs_field_src(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_assert(it.table == t2);
     test_uint(e1, it.entities[0]);
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
-    test_uint(p, ecs_field_src(&it, 1));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+    test_uint(p, ecs_field_src(&it, 0));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p->x, 10);
         test_int(p->y, 20);
@@ -7966,21 +7966,21 @@ void Traversal_match_empty_table_up_written(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
     test_assert(it.table == t1);
-    test_uint(TagB, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p, ecs_field_src(&it, 2));
+    test_uint(TagB, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p, ecs_field_src(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_assert(it.table == t2);
     test_uint(e1, it.entities[0]);
-    test_uint(TagB, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p, ecs_field_src(&it, 2));
+    test_uint(TagB, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p, ecs_field_src(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p->x, 10);
         test_int(p->y, 20);
@@ -8018,17 +8018,17 @@ void Traversal_match_empty_table_up_implicit_isa(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
     test_assert(it.table == t1);
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
-    test_uint(b, ecs_field_src(&it, 1));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+    test_uint(b, ecs_field_src(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_assert(it.table == t2);
     test_uint(e1, it.entities[0]);
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
-    test_uint(b, ecs_field_src(&it, 1));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+    test_uint(b, ecs_field_src(&it, 0));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p->x, 10);
         test_int(p->y, 20);
@@ -8068,21 +8068,21 @@ void Traversal_match_empty_table_up_written_implicit_isa(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
     test_assert(it.table == t1);
-    test_uint(TagB, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(b, ecs_field_src(&it, 2));
+    test_uint(TagB, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(b, ecs_field_src(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_assert(it.table == t2);
     test_uint(e1, it.entities[0]);
-    test_uint(TagB, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(b, ecs_field_src(&it, 2));
+    test_uint(TagB, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(b, ecs_field_src(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p->x, 10);
         test_int(p->y, 20);
@@ -8119,17 +8119,17 @@ void Traversal_match_empty_table_up_isa(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
     test_assert(it.table == t1);
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
-    test_uint(p, ecs_field_src(&it, 1));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+    test_uint(p, ecs_field_src(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_assert(it.table == t2);
     test_uint(e1, it.entities[0]);
-    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
-    test_uint(p, ecs_field_src(&it, 1));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+    test_uint(p, ecs_field_src(&it, 0));
     {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p->x, 10);
         test_int(p->y, 20);
@@ -8168,21 +8168,21 @@ void Traversal_match_empty_table_up_written_isa(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
     test_assert(it.table == t1);
-    test_uint(TagB, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p, ecs_field_src(&it, 2));
+    test_uint(TagB, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p, ecs_field_src(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_assert(it.table == t2);
     test_uint(e1, it.entities[0]);
-    test_uint(TagB, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p, ecs_field_src(&it, 2));
+    test_uint(TagB, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p, ecs_field_src(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 2);
+        Position *p = ecs_field(&it, Position, 1);
         test_assert(p != NULL);
         test_int(p->x, 10);
         test_int(p->y, 20);

@@ -36,9 +36,9 @@ void Scopes_term_w_not_scope_1_term(void) {
         ecs_iter_t it = ecs_query_iter(world, r);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(Root, ecs_field_id(&it, 1));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(Root, ecs_field_id(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_uint(parent_2, it.entities[0]);
         test_bool(false, ecs_query_next(&it));
     }
@@ -75,16 +75,16 @@ void Scopes_term_w_not_scope_2_terms(void) {
         ecs_iter_t it = ecs_query_iter(world, r);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(Root, ecs_field_id(&it, 1));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(Root, ecs_field_id(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_uint(parent_1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(Root, ecs_field_id(&it, 1));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(Root, ecs_field_id(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_uint(parent_2, it.entities[0]);
 
         test_bool(false, ecs_query_next(&it));
@@ -116,9 +116,9 @@ void Scopes_term_w_not_scope_1_term_w_not(void) {
         ecs_iter_t it = ecs_query_iter(world, r);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(Root, ecs_field_id(&it, 1));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(Root, ecs_field_id(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_uint(parent_1, it.entities[0]);
         test_bool(false, ecs_query_next(&it));
     }
@@ -155,16 +155,16 @@ void Scopes_term_w_not_scope_2_terms_w_not(void) {
         ecs_iter_t it = ecs_query_iter(world, r);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(Root, ecs_field_id(&it, 1));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(Root, ecs_field_id(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_uint(parent_2, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(Root, ecs_field_id(&it, 1));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(Root, ecs_field_id(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_uint(parent_3, it.entities[0]);
 
         test_bool(false, ecs_query_next(&it));
@@ -199,9 +199,9 @@ void Scopes_term_w_not_scope_1_term_w_var(void) {
         ecs_iter_t it = ecs_query_iter(world, r);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(Root, ecs_field_id(&it, 1));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(Root, ecs_field_id(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_uint(parent_3, it.entities[0]);
         test_bool(false, ecs_query_next(&it));
     }
@@ -248,9 +248,9 @@ void Scopes_term_w_not_scope_2_terms_w_var(void) {
         ecs_iter_t it = ecs_query_iter(world, r);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(Root, ecs_field_id(&it, 1));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(Root, ecs_field_id(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_uint(parent_2, it.entities[0]);
         test_bool(false, ecs_query_next(&it));
     }
@@ -332,9 +332,9 @@ void Scopes_term_w_not_scope_2_terms_w_not_w_var(void) {
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
         test_uint(parent_0, it.entities[0]);
-        test_uint(Root, ecs_field_id(&it, 1));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(Root, ecs_field_id(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -369,9 +369,9 @@ void Scopes_term_w_not_scope_2_terms_w_or(void) {
         ecs_iter_t it = ecs_query_iter(world, r);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(Root, ecs_field_id(&it, 1));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(Root, ecs_field_id(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_uint(e4, it.entities[0]);
         test_bool(false, ecs_query_next(&it));
     }
@@ -410,9 +410,9 @@ void Scopes_term_w_not_scope_3_terms_w_or(void) {
         ecs_iter_t it = ecs_query_iter(world, r);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(Root, ecs_field_id(&it, 1));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(Root, ecs_field_id(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_uint(e5, it.entities[0]);
         test_bool(false, ecs_query_next(&it));
     }

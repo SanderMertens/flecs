@@ -3148,7 +3148,7 @@ bool flecs_query_if_set(
 
     ecs_query_ctrl_ctx_t *op_ctx = flecs_op_ctx(ctx, ctrl);
     if (!redo) {
-        op_ctx->is_set = ecs_field_is_set(it, field_index + 1);
+        op_ctx->is_set = ecs_field_is_set(it, field_index);
     }
 
     if (!op_ctx->is_set) {
@@ -3197,7 +3197,7 @@ void flecs_query_populate_field(
 {
     int32_t index = it->columns[field_index];
     ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(ecs_field_is_set(it, field_index + 1), ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_field_is_set(it, field_index), ECS_INTERNAL_ERROR, NULL);
 
     ecs_entity_t src = it->sources[field_index];
     if (!src) {

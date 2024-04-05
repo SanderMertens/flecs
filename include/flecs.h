@@ -4733,7 +4733,7 @@ ecs_id_t ecs_field_id(
  * @return The index of the matched column, -1 if not matched.
  */
 FLECS_API
-int32_t ecs_field_column_index(
+int32_t ecs_field_column(
     const ecs_iter_t *it,
     int32_t index);
 

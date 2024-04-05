@@ -49,12 +49,12 @@ void Operators_2_and_not(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(RelB, ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(RelB, ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(e1, it.entities[0]);
         test_bool(false, ecs_query_next(&it));
     }
@@ -98,12 +98,12 @@ void Operators_2_and_not_component(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(e1, it.entities[0]);
         test_bool(false, ecs_query_next(&it));
     }
@@ -147,12 +147,12 @@ void Operators_2_and_out_not(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(RelB, ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(RelB, ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(e1, it.entities[0]);
         test_bool(false, ecs_query_next(&it));
     }
@@ -196,12 +196,12 @@ void Operators_2_and_out_not_component(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(e1, it.entities[0]);
         test_bool(false, ecs_query_next(&it));
     }
@@ -262,13 +262,13 @@ void Operators_3_and_not_not(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(RelB, ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(RelB, ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_bool(false, ecs_field_is_set(&it, 2));
-        test_bool(false, ecs_field_is_set(&it, 3));
         test_uint(e1, it.entities[0]);
         test_bool(false, ecs_query_next(&it));
     }
@@ -322,12 +322,12 @@ void Operators_2_and_not_pair_rel_wildcard(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(EcsWildcard, TgtA), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(EcsWildcard, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(e1, it.entities[0]);
         test_bool(false, ecs_query_next(&it));
     }
@@ -381,12 +381,12 @@ void Operators_2_and_not_pair_tgt_wildcard(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(e1, it.entities[0]);
         test_bool(false, ecs_query_next(&it));
     }
@@ -450,12 +450,12 @@ void Operators_2_and_not_pair_rel_tgt_wildcard(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(EcsWildcard, EcsWildcard), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(EcsWildcard, EcsWildcard), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(e1, it.entities[0]);
         test_bool(false, ecs_query_next(&it));
     }
@@ -512,12 +512,12 @@ void Operators_2_and_not_pair_rel_var(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(EcsWildcard, TgtA), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(EcsWildcard, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(EcsWildcard, ecs_iter_get_var(&it, x_var));
         test_uint(e1, it.entities[0]);
         test_bool(false, ecs_query_next(&it));
@@ -575,12 +575,12 @@ void Operators_2_and_not_pair_tgt_var(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(EcsWildcard, ecs_iter_get_var(&it, x_var));
         test_uint(e1, it.entities[0]);
         test_bool(false, ecs_query_next(&it));
@@ -641,12 +641,12 @@ void Operators_2_and_not_pair_rel_tgt_var(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(EcsWildcard, EcsWildcard), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(EcsWildcard, EcsWildcard), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(EcsWildcard, ecs_iter_get_var(&it, x_var));
         test_uint(EcsWildcard, ecs_iter_get_var(&it, y_var));
         test_uint(e1, it.entities[0]);
@@ -704,12 +704,12 @@ void Operators_2_and_not_pair_rel_tgt_same_var(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(EcsWildcard, EcsWildcard), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(EcsWildcard, EcsWildcard), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(EcsWildcard, ecs_iter_get_var(&it, x_var));
         test_uint(e1, it.entities[0]);
         test_bool(false, ecs_query_next(&it));
@@ -768,12 +768,12 @@ void Operators_2_and_not_pair_rel_var_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, RelA), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
+        test_uint(ecs_pair(Tag, RelA), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(RelA, ecs_iter_get_var(&it, x_var));
         test_uint(e1, it.entities[0]);
         test_bool(false, ecs_query_next(&it));
@@ -785,23 +785,23 @@ void Operators_2_and_not_pair_rel_var_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, RelA), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
+        test_uint(ecs_pair(Tag, RelA), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(RelA, ecs_iter_get_var(&it, x_var));
         test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, RelB), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelB, TgtA), ecs_field_id(&it, 2));
+        test_uint(ecs_pair(Tag, RelB), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelB, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(RelB, ecs_iter_get_var(&it, x_var));
         test_uint(e2, it.entities[0]);
         test_bool(false, ecs_query_next(&it));
@@ -853,12 +853,12 @@ void Operators_2_and_not_pair_tgt_var_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, TgtA), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
+        test_uint(ecs_pair(Tag, TgtA), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(TgtA, ecs_iter_get_var(&it, x_var));
         test_uint(e1, it.entities[0]);
         test_bool(false, ecs_query_next(&it));
@@ -870,23 +870,23 @@ void Operators_2_and_not_pair_tgt_var_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, TgtA), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
+        test_uint(ecs_pair(Tag, TgtA), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(TgtA, ecs_iter_get_var(&it, x_var));
         test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, TgtB), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtB), ecs_field_id(&it, 2));
+        test_uint(ecs_pair(Tag, TgtB), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtB), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(TgtB, ecs_iter_get_var(&it, x_var));
         test_uint(e2, it.entities[0]);
 
@@ -939,12 +939,12 @@ void Operators_2_and_not_pair_rel_tgt_var_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, TgtA), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(TgtA, TgtA), ecs_field_id(&it, 2));
+        test_uint(ecs_pair(Tag, TgtA), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(TgtA, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(TgtA, ecs_iter_get_var(&it, x_var));
         test_uint(e1, it.entities[0]);
         test_bool(false, ecs_query_next(&it));
@@ -956,23 +956,23 @@ void Operators_2_and_not_pair_rel_tgt_var_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, TgtA), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(TgtA, TgtA), ecs_field_id(&it, 2));
+        test_uint(ecs_pair(Tag, TgtA), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(TgtA, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(TgtA, ecs_iter_get_var(&it, x_var));
         test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, TgtB), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(TgtB, TgtB), ecs_field_id(&it, 2));
+        test_uint(ecs_pair(Tag, TgtB), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(TgtB, TgtB), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(TgtB, ecs_iter_get_var(&it, x_var));
         test_uint(e2, it.entities[0]);
 
@@ -1025,12 +1025,12 @@ void Operators_2_and_not_pair_rel_tgt_same_var_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, TgtA), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(TgtA, e1), ecs_field_id(&it, 2));
+        test_uint(ecs_pair(Tag, TgtA), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(TgtA, e1), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(TgtA, ecs_iter_get_var(&it, x_var));
         test_uint(e1, it.entities[0]);
         test_bool(false, ecs_query_next(&it));
@@ -1042,23 +1042,23 @@ void Operators_2_and_not_pair_rel_tgt_same_var_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, TgtA), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(TgtA, e1), ecs_field_id(&it, 2));
+        test_uint(ecs_pair(Tag, TgtA), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(TgtA, e1), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(TgtA, ecs_iter_get_var(&it, x_var));
         test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, TgtB), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(TgtB, e2), ecs_field_id(&it, 2));
+        test_uint(ecs_pair(Tag, TgtB), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(TgtB, e2), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(TgtB, ecs_iter_get_var(&it, x_var));
         test_uint(e2, it.entities[0]);
 
@@ -1108,12 +1108,12 @@ void Operators_2_and_not_pair_rel_src_tgt_same_var_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(e1, e1), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(e1, e1), ecs_field_id(&it, 1));
+        test_uint(e1, ecs_field_src(&it, 0));
         test_uint(e1, ecs_field_src(&it, 1));
-        test_uint(e1, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(e1, ecs_iter_get_var(&it, x_var));
         test_bool(false, ecs_query_next(&it));
     }
@@ -1124,22 +1124,22 @@ void Operators_2_and_not_pair_rel_src_tgt_same_var_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(e1, e1), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(e1, e1), ecs_field_id(&it, 1));
+        test_uint(e1, ecs_field_src(&it, 0));
         test_uint(e1, ecs_field_src(&it, 1));
-        test_uint(e1, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(e1, ecs_iter_get_var(&it, x_var));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(e2, e2), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(e2, e2), ecs_field_id(&it, 1));
+        test_uint(e2, ecs_field_src(&it, 0));
         test_uint(e2, ecs_field_src(&it, 1));
-        test_uint(e2, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(e2, ecs_iter_get_var(&it, x_var));
 
         test_bool(false, ecs_query_next(&it));
@@ -1181,12 +1181,12 @@ void Operators_2_and_not_pair_any_rel(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(EcsWildcard, TgtA), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(EcsWildcard, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(e1, it.entities[0]);
 
         test_bool(false, ecs_query_next(&it));
@@ -1228,12 +1228,12 @@ void Operators_2_and_not_pair_any_tgt(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(e1, it.entities[0]);
 
         test_bool(false, ecs_query_next(&it));
@@ -1277,12 +1277,12 @@ void Operators_2_and_not_pair_any_src(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, TgtA), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
+        test_uint(ecs_pair(Tag, TgtA), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(e1, it.entities[0]);
 
         test_bool(false, ecs_query_next(&it));
@@ -1310,9 +1310,9 @@ void Operators_1_not_any_src_fixed_first(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 1));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -1352,9 +1352,9 @@ void Operators_1_not_any_src_any_tgt_fixed_first(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 1));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 1));
+        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -1364,9 +1364,9 @@ void Operators_1_not_any_src_any_tgt_fixed_first(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 1));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 1));
+        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -1406,9 +1406,9 @@ void Operators_1_not_any_src_any_first_fixed_tgt(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(ecs_pair(EcsWildcard, TgtA), ecs_field_id(&it, 1));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 1));
+        test_uint(ecs_pair(EcsWildcard, TgtA), ecs_field_id(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -1418,9 +1418,9 @@ void Operators_1_not_any_src_any_first_fixed_tgt(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(ecs_pair(EcsWildcard, TgtA), ecs_field_id(&it, 1));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 1));
+        test_uint(ecs_pair(EcsWildcard, TgtA), ecs_field_id(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -1477,9 +1477,9 @@ void Operators_1_not_any_src_any_isa_pair_any_tgt(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(ecs_pair(EcsIsA, EcsWildcard), ecs_field_id(&it, 1));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 1));
+        test_uint(ecs_pair(EcsIsA, EcsWildcard), ecs_field_id(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -1521,22 +1521,22 @@ void Operators_2_and_optional(void) {
         ecs_iter_t it = ecs_query_iter(world, q);   
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(RelB, ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(RelB, ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(RelB, ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(RelB, ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(e2, it.entities[0]);
         test_bool(false, ecs_query_next(&it));
     }
@@ -1575,41 +1575,41 @@ void Operators_3_and_optional_optional(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(RelB, ecs_field_id(&it, 2));
-        test_uint(RelC, ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(RelB, ecs_field_id(&it, 1));
+        test_uint(RelC, ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
         test_uint(0, ecs_field_src(&it, 2));
-        test_uint(0, ecs_field_src(&it, 3));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_bool(false, ecs_field_is_set(&it, 2));
-        test_bool(false, ecs_field_is_set(&it, 3));
         test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(RelB, ecs_field_id(&it, 2));
-        test_uint(RelC, ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(RelB, ecs_field_id(&it, 1));
+        test_uint(RelC, ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
         test_uint(0, ecs_field_src(&it, 2));
-        test_uint(0, ecs_field_src(&it, 3));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
-        test_bool(false, ecs_field_is_set(&it, 3));
+        test_bool(false, ecs_field_is_set(&it, 2));
         test_uint(e2, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(RelB, ecs_field_id(&it, 2));
-        test_uint(RelC, ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(RelB, ecs_field_id(&it, 1));
+        test_uint(RelC, ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
         test_uint(0, ecs_field_src(&it, 2));
-        test_uint(0, ecs_field_src(&it, 3));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 3));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(e3, it.entities[0]);
 
         test_bool(false, ecs_query_next(&it));
@@ -1650,42 +1650,42 @@ void Operators_2_and_optional_pair_rel_wildcard(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(EcsWildcard, TgtA), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(EcsWildcard, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(e2, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(e3, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelB, TgtA), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelB, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(e3, it.entities[0]);
 
         test_bool(false, ecs_query_next(&it));
@@ -1726,42 +1726,42 @@ void Operators_2_and_optional_pair_tgt_wildcard(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(e2, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(e3, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtB), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtB), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(e3, it.entities[0]);
 
         test_bool(false, ecs_query_next(&it));
@@ -1805,45 +1805,45 @@ void Operators_2_and_optional_pair_rel_var(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(EcsWildcard, TgtA), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(EcsWildcard, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(EcsWildcard, ecs_iter_get_var(&it, x_var));
         test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(RelA, ecs_iter_get_var(&it, x_var));
         test_uint(e2, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(RelA, ecs_iter_get_var(&it, x_var));
         test_uint(e3, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelB, TgtA), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelB, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(RelB, ecs_iter_get_var(&it, x_var));
         test_uint(e3, it.entities[0]);
 
@@ -1888,45 +1888,45 @@ void Operators_2_and_optional_pair_tgt_var(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(EcsWildcard, ecs_iter_get_var(&it, x_var));
         test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(TgtA, ecs_iter_get_var(&it, x_var));
         test_uint(e2, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(TgtA, ecs_iter_get_var(&it, x_var));
         test_uint(e3, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtB), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtB), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(TgtB, ecs_iter_get_var(&it, x_var));
         test_uint(e3, it.entities[0]);
 
@@ -1976,60 +1976,60 @@ void Operators_2_and_optional_pair_rel_tgt_var(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(EcsWildcard, EcsWildcard), ecs_field_id(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(EcsWildcard, EcsWildcard), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
         test_uint(EcsWildcard, ecs_iter_get_var(&it, x_var));
         test_uint(EcsWildcard, ecs_iter_get_var(&it, y_var));
         test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
         test_uint(RelA, ecs_iter_get_var(&it, x_var));
         test_uint(TgtA, ecs_iter_get_var(&it, y_var));
         test_uint(e2, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
         test_uint(RelA, ecs_iter_get_var(&it, x_var));
         test_uint(TgtA, ecs_iter_get_var(&it, y_var));
         test_uint(e3, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtB), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtB), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
         test_uint(RelA, ecs_iter_get_var(&it, x_var));
         test_uint(TgtB, ecs_iter_get_var(&it, y_var));
         test_uint(e3, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelB, TgtA), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelB, TgtA), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
         test_uint(RelB, ecs_iter_get_var(&it, x_var));
         test_uint(TgtA, ecs_iter_get_var(&it, y_var));
         test_uint(e3, it.entities[0]);
@@ -2083,45 +2083,45 @@ void Operators_2_and_optional_pair_rel_tgt_same_var(void) {
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
         test_uint(e1, it.entities[0]);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(EcsWildcard, EcsWildcard), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(EcsWildcard, EcsWildcard), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(EcsWildcard, ecs_iter_get_var(&it, x_var));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
         test_uint(e2, it.entities[0]);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(TgtA, TgtA), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(TgtA, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(TgtA, ecs_iter_get_var(&it, x_var));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
         test_uint(e3, it.entities[0]);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, RelA), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, RelA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(RelA, ecs_iter_get_var(&it, x_var));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
         test_uint(e3, it.entities[0]);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(TgtA, TgtA), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(TgtA, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(TgtA, ecs_iter_get_var(&it, x_var));
 
         test_bool(false, ecs_query_next(&it));
@@ -2170,45 +2170,45 @@ void Operators_2_and_optional_pair_rel_var_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, RelA), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
+        test_uint(ecs_pair(Tag, RelA), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(RelA, ecs_iter_get_var(&it, x_var));
         test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, RelA), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
+        test_uint(ecs_pair(Tag, RelA), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(RelA, ecs_iter_get_var(&it, x_var));
         test_uint(e2, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, RelA), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
+        test_uint(ecs_pair(Tag, RelA), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(RelA, ecs_iter_get_var(&it, x_var));
         test_uint(e3, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, RelB), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelB, TgtA), ecs_field_id(&it, 2));
+        test_uint(ecs_pair(Tag, RelB), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelB, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(RelB, ecs_iter_get_var(&it, x_var));
         test_uint(e3, it.entities[0]);
 
@@ -2258,45 +2258,45 @@ void Operators_2_and_optional_pair_tgt_var_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, TgtA), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
+        test_uint(ecs_pair(Tag, TgtA), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(TgtA, ecs_iter_get_var(&it, x_var));
         test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, TgtA), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
+        test_uint(ecs_pair(Tag, TgtA), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(TgtA, ecs_iter_get_var(&it, x_var));
         test_uint(e2, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, TgtA), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
+        test_uint(ecs_pair(Tag, TgtA), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(TgtA, ecs_iter_get_var(&it, x_var));
         test_uint(e3, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, TgtB), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtB), ecs_field_id(&it, 2));
+        test_uint(ecs_pair(Tag, TgtB), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtB), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(TgtB, ecs_iter_get_var(&it, x_var));
         test_uint(e3, it.entities[0]);
 
@@ -2351,60 +2351,60 @@ void Operators_2_and_optional_pair_rel_tgt_var_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, RelA), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 2));
+        test_uint(ecs_pair(Tag, RelA), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(RelA, ecs_iter_get_var(&it, x_var));
         test_uint(EcsWildcard, ecs_iter_get_var(&it, y_var));
         test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, RelA), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
+        test_uint(ecs_pair(Tag, RelA), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(RelA, ecs_iter_get_var(&it, x_var));
         test_uint(TgtA, ecs_iter_get_var(&it, y_var));
         test_uint(e2, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, RelA), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
+        test_uint(ecs_pair(Tag, RelA), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(RelA, ecs_iter_get_var(&it, x_var));
         test_uint(TgtA, ecs_iter_get_var(&it, y_var));
         test_uint(e3, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, RelA), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtB), ecs_field_id(&it, 2));
+        test_uint(ecs_pair(Tag, RelA), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtB), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(RelA, ecs_iter_get_var(&it, x_var));
         test_uint(TgtB, ecs_iter_get_var(&it, y_var));
         test_uint(e3, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, RelB), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelB, TgtA), ecs_field_id(&it, 2));
+        test_uint(ecs_pair(Tag, RelB), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelB, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(RelB, ecs_iter_get_var(&it, x_var));
         test_uint(TgtA, ecs_iter_get_var(&it, y_var));
         test_uint(e3, it.entities[0]);
@@ -2458,45 +2458,45 @@ void Operators_2_and_optional_pair_rel_tgt_same_var_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, TgtA), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(TgtA, TgtA), ecs_field_id(&it, 2));
+        test_uint(ecs_pair(Tag, TgtA), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(TgtA, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(TgtA, ecs_iter_get_var(&it, x_var));
         test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, TgtA), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(TgtA, TgtA), ecs_field_id(&it, 2));
+        test_uint(ecs_pair(Tag, TgtA), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(TgtA, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(TgtA, ecs_iter_get_var(&it, x_var));
         test_uint(e2, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, RelA), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, RelA), ecs_field_id(&it, 2));
+        test_uint(ecs_pair(Tag, RelA), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, RelA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(RelA, ecs_iter_get_var(&it, x_var));
         test_uint(e3, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, TgtA), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(TgtA, TgtA), ecs_field_id(&it, 2));
+        test_uint(ecs_pair(Tag, TgtA), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(TgtA, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(TgtA, ecs_iter_get_var(&it, x_var));
         test_uint(e3, it.entities[0]);
 
@@ -2539,32 +2539,32 @@ void Operators_2_and_optional_pair_rel_src_tgt_same_var_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(e1, e1), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(e1, e1), ecs_field_id(&it, 1));
+        test_uint(e1, ecs_field_src(&it, 0));
         test_uint(e1, ecs_field_src(&it, 1));
-        test_uint(e1, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(e1, ecs_iter_get_var(&it, x_var));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(e2, e2), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(e2, e2), ecs_field_id(&it, 1));
+        test_uint(e2, ecs_field_src(&it, 0));
         test_uint(e2, ecs_field_src(&it, 1));
-        test_uint(e2, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(e2, ecs_iter_get_var(&it, x_var));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(e3, e3), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(e3, e3), ecs_field_id(&it, 1));
+        test_uint(e3, ecs_field_src(&it, 0));
         test_uint(e3, ecs_field_src(&it, 1));
-        test_uint(e3, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(e3, ecs_iter_get_var(&it, x_var));
 
         test_bool(false, ecs_query_next(&it));
@@ -2612,45 +2612,45 @@ void Operators_3_and_optional_optional_pair_w_var(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelB, EcsWildcard), ecs_field_id(&it, 2));
-        test_uint(ecs_pair(RelC, EcsWildcard), ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelB, EcsWildcard), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(RelC, EcsWildcard), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
         test_uint(0, ecs_field_src(&it, 2));
-        test_uint(0, ecs_field_src(&it, 3));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_bool(false, ecs_field_is_set(&it, 2));
-        test_bool(false, ecs_field_is_set(&it, 3));
         test_uint(EcsWildcard, ecs_iter_get_var(&it, x_var));
         test_uint(EcsWildcard, ecs_iter_get_var(&it, y_var));
         test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelB, TgtA), ecs_field_id(&it, 2));
-        test_uint(ecs_pair(RelC, EcsWildcard), ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelB, TgtA), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(RelC, EcsWildcard), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
         test_uint(0, ecs_field_src(&it, 2));
-        test_uint(0, ecs_field_src(&it, 3));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
-        test_bool(false, ecs_field_is_set(&it, 3));
+        test_bool(false, ecs_field_is_set(&it, 2));
         test_uint(TgtA, ecs_iter_get_var(&it, x_var));
         test_uint(EcsWildcard, ecs_iter_get_var(&it, y_var));
         test_uint(e2, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelB, EcsWildcard), ecs_field_id(&it, 2));
-        test_uint(ecs_pair(RelC, TgtB), ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelB, EcsWildcard), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(RelC, TgtB), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
         test_uint(0, ecs_field_src(&it, 2));
-        test_uint(0, ecs_field_src(&it, 3));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 3));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(EcsWildcard, ecs_iter_get_var(&it, x_var));
         test_uint(TgtB, ecs_iter_get_var(&it, y_var));
         test_uint(e3, it.entities[0]);
@@ -2694,32 +2694,32 @@ void Operators_2_and_optional_pair_any_rel(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(EcsWildcard, TgtA), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(EcsWildcard, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(EcsWildcard, TgtA), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(EcsWildcard, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(e2, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(EcsWildcard, TgtA), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(EcsWildcard, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(e3, it.entities[0]);
 
         test_bool(false, ecs_query_next(&it));
@@ -2761,32 +2761,32 @@ void Operators_2_and_optional_pair_any_tgt(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(e2, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(e3, it.entities[0]);
 
         test_bool(false, ecs_query_next(&it));
@@ -2833,34 +2833,34 @@ void Operators_2_and_optional_pair_any_src(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, TgtA), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
+        test_uint(ecs_pair(Tag, TgtA), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(TgtA, ecs_iter_get_var(&it, x_var));
         test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, TgtB), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtB), ecs_field_id(&it, 2));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_uint(EcsWildcard, ecs_field_src(&it, 2));
+        test_uint(ecs_pair(Tag, TgtB), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtB), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(EcsWildcard, ecs_field_src(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(TgtB, ecs_iter_get_var(&it, x_var));
         test_uint(e2, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, TgtC), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtC), ecs_field_id(&it, 2));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_uint(EcsWildcard, ecs_field_src(&it, 2));
+        test_uint(ecs_pair(Tag, TgtC), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtC), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(EcsWildcard, ecs_field_src(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(TgtC, ecs_iter_get_var(&it, x_var));
         test_uint(e3, it.entities[0]);
 
@@ -2917,57 +2917,57 @@ void Operators_3_and_optional_dependent_and_pair_rel(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(EcsWildcard, TgtA), ecs_field_id(&it, 2));
-        test_uint(ecs_pair(EcsWildcard, TgtB), ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(EcsWildcard, TgtA), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(EcsWildcard, TgtB), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
         test_uint(0, ecs_field_src(&it, 2));
-        test_uint(0, ecs_field_src(&it, 3));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_bool(false, ecs_field_is_set(&it, 2));
-        test_bool(false, ecs_field_is_set(&it, 3));
         test_uint(EcsWildcard, ecs_iter_get_var(&it, x_var));
         test_uint(e2, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
-        test_uint(ecs_pair(RelA, TgtB), ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(RelA, TgtB), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
         test_uint(0, ecs_field_src(&it, 2));
-        test_uint(0, ecs_field_src(&it, 3));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
         test_bool(true, ecs_field_is_set(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 3));
         test_uint(RelA, ecs_iter_get_var(&it, x_var));
         test_uint(e3, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
-        test_uint(ecs_pair(RelA, TgtB), ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(RelA, TgtB), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
         test_uint(0, ecs_field_src(&it, 2));
-        test_uint(0, ecs_field_src(&it, 3));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
         test_bool(true, ecs_field_is_set(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 3));
         test_uint(RelA, ecs_iter_get_var(&it, x_var));
         test_uint(e4, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelB, TgtA), ecs_field_id(&it, 2));
-        test_uint(ecs_pair(RelB, TgtB), ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelB, TgtA), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(RelB, TgtB), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
         test_uint(0, ecs_field_src(&it, 2));
-        test_uint(0, ecs_field_src(&it, 3));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
         test_bool(true, ecs_field_is_set(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 3));
         test_uint(RelB, ecs_iter_get_var(&it, x_var));
         test_uint(e4, it.entities[0]);
 
@@ -3024,57 +3024,57 @@ void Operators_3_and_optional_dependent_and_pair_tgt(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 2));
-        test_uint(ecs_pair(RelB, EcsWildcard), ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(RelB, EcsWildcard), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
         test_uint(0, ecs_field_src(&it, 2));
-        test_uint(0, ecs_field_src(&it, 3));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_bool(false, ecs_field_is_set(&it, 2));
-        test_bool(false, ecs_field_is_set(&it, 3));
         test_uint(EcsWildcard, ecs_iter_get_var(&it, x_var));
         test_uint(e2, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
-        test_uint(ecs_pair(RelB, TgtA), ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(RelB, TgtA), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
         test_uint(0, ecs_field_src(&it, 2));
-        test_uint(0, ecs_field_src(&it, 3));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
         test_bool(true, ecs_field_is_set(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 3));
         test_uint(TgtA, ecs_iter_get_var(&it, x_var));
         test_uint(e3, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
-        test_uint(ecs_pair(RelB, TgtA), ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(RelB, TgtA), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
         test_uint(0, ecs_field_src(&it, 2));
-        test_uint(0, ecs_field_src(&it, 3));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
         test_bool(true, ecs_field_is_set(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 3));
         test_uint(TgtA, ecs_iter_get_var(&it, x_var));
         test_uint(e4, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtB), ecs_field_id(&it, 2));
-        test_uint(ecs_pair(RelB, TgtB), ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtB), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(RelB, TgtB), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
         test_uint(0, ecs_field_src(&it, 2));
-        test_uint(0, ecs_field_src(&it, 3));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
         test_bool(true, ecs_field_is_set(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 3));
         test_uint(TgtB, ecs_iter_get_var(&it, x_var));
         test_uint(e4, it.entities[0]);
 
@@ -3124,45 +3124,45 @@ void Operators_3_and_optional_dependent_and_pair_rel_tgt(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(EcsWildcard, EcsWildcard), ecs_field_id(&it, 1));
         test_uint(ecs_pair(EcsWildcard, EcsWildcard), ecs_field_id(&it, 2));
-        test_uint(ecs_pair(EcsWildcard, EcsWildcard), ecs_field_id(&it, 3));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
         test_uint(0, ecs_field_src(&it, 2));
-        test_uint(0, ecs_field_src(&it, 3));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_bool(false, ecs_field_is_set(&it, 2));
-        test_bool(false, ecs_field_is_set(&it, 3));
         test_uint(EcsWildcard, ecs_iter_get_var(&it, x_var));
         test_uint(EcsWildcard, ecs_iter_get_var(&it, y_var));
         test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
-        test_uint(ecs_pair(TgtA, RelA), ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(TgtA, RelA), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
         test_uint(0, ecs_field_src(&it, 2));
-        test_uint(0, ecs_field_src(&it, 3));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
         test_bool(true, ecs_field_is_set(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 3));
         test_uint(RelA, ecs_iter_get_var(&it, x_var));
         test_uint(TgtA, ecs_iter_get_var(&it, y_var));
         test_uint(e3, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(TgtA, RelA), ecs_field_id(&it, 2));
-        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(TgtA, RelA), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
         test_uint(0, ecs_field_src(&it, 2));
-        test_uint(0, ecs_field_src(&it, 3));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
         test_bool(true, ecs_field_is_set(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 3));
         test_uint(TgtA, ecs_iter_get_var(&it, x_var));
         test_uint(RelA, ecs_iter_get_var(&it, y_var));
         test_uint(e3, it.entities[0]);
@@ -3210,29 +3210,29 @@ void Operators_3_and_optional_dependent_and_pair_rel_tgt_same_var(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 2));
-        test_uint(ecs_pair(EcsWildcard, EcsWildcard), ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(EcsWildcard, EcsWildcard), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
         test_uint(0, ecs_field_src(&it, 2));
-        test_uint(0, ecs_field_src(&it, 3));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_bool(false, ecs_field_is_set(&it, 2));
-        test_bool(false, ecs_field_is_set(&it, 3));
         test_uint(EcsWildcard, ecs_iter_get_var(&it, x_var));
         test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
-        test_uint(ecs_pair(TgtA, TgtA), ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(TgtA, TgtA), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
         test_uint(0, ecs_field_src(&it, 2));
-        test_uint(0, ecs_field_src(&it, 3));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
         test_bool(true, ecs_field_is_set(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 3));
         test_uint(TgtA, ecs_iter_get_var(&it, x_var));
         test_uint(e3, it.entities[0]);
 
@@ -3287,57 +3287,57 @@ void Operators_3_and_optional_dependent_and_pair_rel_tgt_same_other_var(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 2));
-        test_uint(ecs_pair(EcsWildcard, EcsWildcard), ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(EcsWildcard, EcsWildcard), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(EcsWildcard, ecs_field_src(&it, 3));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(EcsWildcard, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_bool(false, ecs_field_is_set(&it, 2));
-        test_bool(false, ecs_field_is_set(&it, 3));
         test_uint(EcsWildcard, ecs_iter_get_var(&it, x_var));
         test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, t2), ecs_field_id(&it, 2));
-        test_uint(ecs_pair(TgtA, TgtA), ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, t2), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(TgtA, TgtA), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(t2, ecs_field_src(&it, 3));
+        test_uint(t2, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
         test_bool(true, ecs_field_is_set(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 3));
         test_uint(t2, ecs_iter_get_var(&it, x_var));
         test_uint(e3, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, t3), ecs_field_id(&it, 2));
-        test_uint(ecs_pair(TgtB, TgtB), ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, t3), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(TgtB, TgtB), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(t3, ecs_field_src(&it, 3));
+        test_uint(t3, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
         test_bool(true, ecs_field_is_set(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 3));
         test_uint(t3, ecs_iter_get_var(&it, x_var));
         test_uint(e3, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, t3), ecs_field_id(&it, 2));
-        test_uint(ecs_pair(TgtC, TgtC), ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, t3), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(TgtC, TgtC), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(t3, ecs_field_src(&it, 3));
+        test_uint(t3, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
         test_bool(true, ecs_field_is_set(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 3));
         test_uint(t3, ecs_iter_get_var(&it, x_var));
         test_uint(e3, it.entities[0]);
 
@@ -3389,43 +3389,43 @@ void Operators_3_and_optional_dependent_and_pair_src(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 2));
-        test_uint(Tag, ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 1));
+        test_uint(Tag, ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(EcsWildcard, ecs_field_src(&it, 3));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(EcsWildcard, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_bool(false, ecs_field_is_set(&it, 2));
-        test_bool(false, ecs_field_is_set(&it, 3));
         test_uint(EcsWildcard, ecs_iter_get_var(&it, x_var));
         test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, t2), ecs_field_id(&it, 2));
-        test_uint(Tag, ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, t2), ecs_field_id(&it, 1));
+        test_uint(Tag, ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(t2, ecs_field_src(&it, 3));
+        test_uint(t2, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
         test_bool(true, ecs_field_is_set(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 3));
         test_uint(t2, ecs_iter_get_var(&it, x_var));
         test_uint(e3, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, t3), ecs_field_id(&it, 2));
-        test_uint(Tag, ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, t3), ecs_field_id(&it, 1));
+        test_uint(Tag, ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(t3, ecs_field_src(&it, 3));
+        test_uint(t3, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
         test_bool(true, ecs_field_is_set(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 3));
         test_uint(t3, ecs_iter_get_var(&it, x_var));
         test_uint(e3, it.entities[0]);
 
@@ -3483,71 +3483,71 @@ void Operators_3_and_optional_dependent_optional_pair_rel(void) {
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
         test_uint(e1, it.entities[0]);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
-        test_uint(ecs_pair(RelA, TgtB), ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(RelA, TgtB), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
         test_uint(0, ecs_field_src(&it, 2));
-        test_uint(0, ecs_field_src(&it, 3));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
-        test_bool(false, ecs_field_is_set(&it, 3));
+        test_bool(false, ecs_field_is_set(&it, 2));
         test_uint(RelA, ecs_iter_get_var(&it, x_var));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
         test_uint(e2, it.entities[0]);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(EcsWildcard, TgtA), ecs_field_id(&it, 2));
-        test_uint(ecs_pair(EcsWildcard, TgtB), ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(EcsWildcard, TgtA), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(EcsWildcard, TgtB), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
         test_uint(0, ecs_field_src(&it, 2));
-        test_uint(0, ecs_field_src(&it, 3));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_bool(false, ecs_field_is_set(&it, 2));
-        test_bool(false, ecs_field_is_set(&it, 3));
         test_uint(EcsWildcard, ecs_iter_get_var(&it, x_var));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
         test_uint(e3, it.entities[0]);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
-        test_uint(ecs_pair(RelA, TgtB), ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(RelA, TgtB), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
         test_uint(0, ecs_field_src(&it, 2));
-        test_uint(0, ecs_field_src(&it, 3));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
         test_bool(true, ecs_field_is_set(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 3));
         test_uint(RelA, ecs_iter_get_var(&it, x_var));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
         test_uint(e4, it.entities[0]);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
-        test_uint(ecs_pair(RelA, TgtB), ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(RelA, TgtB), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
         test_uint(0, ecs_field_src(&it, 2));
-        test_uint(0, ecs_field_src(&it, 3));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
         test_bool(true, ecs_field_is_set(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 3));
         test_uint(RelA, ecs_iter_get_var(&it, x_var));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
         test_uint(e4, it.entities[0]);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelB, TgtA), ecs_field_id(&it, 2));
-        test_uint(ecs_pair(RelB, TgtB), ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelB, TgtA), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(RelB, TgtB), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
         test_uint(0, ecs_field_src(&it, 2));
-        test_uint(0, ecs_field_src(&it, 3));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
         test_bool(true, ecs_field_is_set(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 3));
         test_uint(RelB, ecs_iter_get_var(&it, x_var));
 
         test_bool(false, ecs_query_next(&it));
@@ -3603,71 +3603,71 @@ void Operators_3_and_optional_dependent_optional_pair_tgt(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
-        test_uint(ecs_pair(RelB, TgtA), ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(RelB, TgtA), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
         test_uint(0, ecs_field_src(&it, 2));
-        test_uint(0, ecs_field_src(&it, 3));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
-        test_bool(false, ecs_field_is_set(&it, 3));
+        test_bool(false, ecs_field_is_set(&it, 2));
         test_uint(TgtA, ecs_iter_get_var(&it, x_var));
         test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 2));
-        test_uint(ecs_pair(RelB, EcsWildcard), ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(RelB, EcsWildcard), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
         test_uint(0, ecs_field_src(&it, 2));
-        test_uint(0, ecs_field_src(&it, 3));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_bool(false, ecs_field_is_set(&it, 2));
-        test_bool(false, ecs_field_is_set(&it, 3));
         test_uint(EcsWildcard, ecs_iter_get_var(&it, x_var));
         test_uint(e2, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
-        test_uint(ecs_pair(RelB, TgtA), ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(RelB, TgtA), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
         test_uint(0, ecs_field_src(&it, 2));
-        test_uint(0, ecs_field_src(&it, 3));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
         test_bool(true, ecs_field_is_set(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 3));
         test_uint(TgtA, ecs_iter_get_var(&it, x_var));
         test_uint(e3, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
-        test_uint(ecs_pair(RelB, TgtA), ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(RelB, TgtA), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
         test_uint(0, ecs_field_src(&it, 2));
-        test_uint(0, ecs_field_src(&it, 3));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
         test_bool(true, ecs_field_is_set(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 3));
         test_uint(TgtA, ecs_iter_get_var(&it, x_var));
         test_uint(e4, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtB), ecs_field_id(&it, 2));
-        test_uint(ecs_pair(RelB, TgtB), ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtB), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(RelB, TgtB), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
         test_uint(0, ecs_field_src(&it, 2));
-        test_uint(0, ecs_field_src(&it, 3));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
         test_bool(true, ecs_field_is_set(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 3));
         test_uint(TgtB, ecs_iter_get_var(&it, x_var));
         test_uint(e4, it.entities[0]);
 
@@ -3719,57 +3719,57 @@ void Operators_3_and_optional_dependent_optional_pair_src(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 2));
-        test_uint(Tag, ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 1));
+        test_uint(Tag, ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(EcsWildcard, ecs_field_src(&it, 3));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(EcsWildcard, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_bool(false, ecs_field_is_set(&it, 2));
-        test_bool(false, ecs_field_is_set(&it, 3));
         test_uint(EcsWildcard, ecs_iter_get_var(&it, x_var));
         test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, t1), ecs_field_id(&it, 2));
-        test_uint(Tag, ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, t1), ecs_field_id(&it, 1));
+        test_uint(Tag, ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(t1, ecs_field_src(&it, 3));
+        test_uint(t1, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
-        test_bool(false, ecs_field_is_set(&it, 3));
+        test_bool(false, ecs_field_is_set(&it, 2));
         test_uint(t1, ecs_iter_get_var(&it, x_var));
         test_uint(e2, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, t2), ecs_field_id(&it, 2));
-        test_uint(Tag, ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, t2), ecs_field_id(&it, 1));
+        test_uint(Tag, ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(t2, ecs_field_src(&it, 3));
+        test_uint(t2, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
         test_bool(true, ecs_field_is_set(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 3));
         test_uint(t2, ecs_iter_get_var(&it, x_var));
         test_uint(e3, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, t3), ecs_field_id(&it, 2));
-        test_uint(Tag, ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, t3), ecs_field_id(&it, 1));
+        test_uint(Tag, ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(t3, ecs_field_src(&it, 3));
+        test_uint(t3, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
         test_bool(true, ecs_field_is_set(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 3));
         test_uint(t3, ecs_iter_get_var(&it, x_var));
         test_uint(e3, it.entities[0]);
 
@@ -3844,15 +3844,15 @@ void Operators_3_and_optional_dependent_not_pair_rel(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
-        test_uint(ecs_pair(RelA, TgtB), ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(RelA, TgtB), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
         test_uint(0, ecs_field_src(&it, 2));
-        test_uint(0, ecs_field_src(&it, 3));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
-        test_bool(false, ecs_field_is_set(&it, 3));
+        test_bool(false, ecs_field_is_set(&it, 2));
         test_uint(RelA, ecs_iter_get_var(&it, x_var));
         test_uint(e1, it.entities[0]);
 
@@ -3927,15 +3927,15 @@ void Operators_3_and_optional_dependent_not_pair_tgt(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
-        test_uint(ecs_pair(RelB, TgtA), ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(RelB, TgtA), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
         test_uint(0, ecs_field_src(&it, 2));
-        test_uint(0, ecs_field_src(&it, 3));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
-        test_bool(false, ecs_field_is_set(&it, 3));
+        test_bool(false, ecs_field_is_set(&it, 2));
         test_uint(TgtA, ecs_iter_get_var(&it, x_var));
         test_uint(e1, it.entities[0]);
 
@@ -3988,15 +3988,15 @@ void Operators_3_and_optional_dependent_not_pair_src(void) {
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
         test_uint(e1, it.entities[0]);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 2));
-        test_uint(Tag, ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 1));
+        test_uint(Tag, ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(EcsWildcard, ecs_field_src(&it, 3));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(EcsWildcard, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_bool(false, ecs_field_is_set(&it, 2));
-        test_bool(false, ecs_field_is_set(&it, 3));
         test_uint(EcsWildcard, ecs_iter_get_var(&it, x_var));
 
         test_bool(false, ecs_query_next(&it));
@@ -4009,29 +4009,29 @@ void Operators_3_and_optional_dependent_not_pair_src(void) {
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
         test_uint(e1, it.entities[0]);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 2));
-        test_uint(Tag, ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 1));
+        test_uint(Tag, ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(EcsWildcard, ecs_field_src(&it, 3));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(EcsWildcard, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_bool(false, ecs_field_is_set(&it, 2));
-        test_bool(false, ecs_field_is_set(&it, 3));
         test_uint(EcsWildcard, ecs_iter_get_var(&it, x_var));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
         test_uint(e2, it.entities[0]);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, t1), ecs_field_id(&it, 2));
-        test_uint(Tag, ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, t1), ecs_field_id(&it, 1));
+        test_uint(Tag, ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(t1, ecs_field_src(&it, 3));
+        test_uint(t1, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
-        test_bool(false, ecs_field_is_set(&it, 3));
+        test_bool(false, ecs_field_is_set(&it, 2));
         test_uint(t1, ecs_iter_get_var(&it, x_var));
 
         test_bool(false, ecs_query_next(&it));
@@ -4044,29 +4044,29 @@ void Operators_3_and_optional_dependent_not_pair_src(void) {
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
         test_uint(e1, it.entities[0]);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 2));
-        test_uint(Tag, ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 1));
+        test_uint(Tag, ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(EcsWildcard, ecs_field_src(&it, 3));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(EcsWildcard, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_bool(false, ecs_field_is_set(&it, 2));
-        test_bool(false, ecs_field_is_set(&it, 3));
         test_uint(EcsWildcard, ecs_iter_get_var(&it, x_var));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
         test_uint(e2, it.entities[0]);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, t1), ecs_field_id(&it, 2));
-        test_uint(Tag, ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, t1), ecs_field_id(&it, 1));
+        test_uint(Tag, ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(t1, ecs_field_src(&it, 3));
+        test_uint(t1, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
-        test_bool(false, ecs_field_is_set(&it, 3));
+        test_bool(false, ecs_field_is_set(&it, 2));
         test_uint(t1, ecs_iter_get_var(&it, x_var));
 
         test_bool(false, ecs_query_next(&it));
@@ -4080,29 +4080,29 @@ void Operators_3_and_optional_dependent_not_pair_src(void) {
         test_uint(2, it.count);
         test_uint(e1, it.entities[0]);
         test_uint(e3, it.entities[1]);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 2));
-        test_uint(Tag, ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 1));
+        test_uint(Tag, ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(EcsWildcard, ecs_field_src(&it, 3));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(EcsWildcard, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_bool(false, ecs_field_is_set(&it, 2));
-        test_bool(false, ecs_field_is_set(&it, 3));
         test_uint(EcsWildcard, ecs_iter_get_var(&it, x_var));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
         test_uint(e2, it.entities[0]);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, t1), ecs_field_id(&it, 2));
-        test_uint(Tag, ecs_field_id(&it, 3));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, t1), ecs_field_id(&it, 1));
+        test_uint(Tag, ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(t1, ecs_field_src(&it, 3));
+        test_uint(t1, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
-        test_bool(false, ecs_field_is_set(&it, 3));
+        test_bool(false, ecs_field_is_set(&it, 2));
         test_uint(t1, ecs_iter_get_var(&it, x_var));
 
         test_bool(false, ecs_query_next(&it));
@@ -4130,9 +4130,9 @@ void Operators_1_optional_any_src_fixed_first(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 1));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -4142,9 +4142,9 @@ void Operators_1_optional_any_src_fixed_first(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(EcsWildcard, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(EcsWildcard, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -4154,9 +4154,9 @@ void Operators_1_optional_any_src_fixed_first(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(EcsWildcard, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(EcsWildcard, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -4182,9 +4182,9 @@ void Operators_1_optional_any_src_any_tgt_fixed_first(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 1));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 1));
+        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -4194,9 +4194,9 @@ void Operators_1_optional_any_src_any_tgt_fixed_first(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 1));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 1));
+        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -4206,9 +4206,9 @@ void Operators_1_optional_any_src_any_tgt_fixed_first(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 1));
-        test_uint(EcsWildcard, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 0));
+        test_uint(EcsWildcard, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -4218,9 +4218,9 @@ void Operators_1_optional_any_src_any_tgt_fixed_first(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 1));
-        test_uint(EcsWildcard, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 0));
+        test_uint(EcsWildcard, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -4246,9 +4246,9 @@ void Operators_1_optional_any_src_any_first_fixed_tgt(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(ecs_pair(EcsWildcard, TgtA), ecs_field_id(&it, 1));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 1));
+        test_uint(ecs_pair(EcsWildcard, TgtA), ecs_field_id(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -4258,9 +4258,9 @@ void Operators_1_optional_any_src_any_first_fixed_tgt(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(ecs_pair(EcsWildcard, TgtA), ecs_field_id(&it, 1));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 1));
+        test_uint(ecs_pair(EcsWildcard, TgtA), ecs_field_id(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -4270,9 +4270,9 @@ void Operators_1_optional_any_src_any_first_fixed_tgt(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(ecs_pair(EcsWildcard, TgtA), ecs_field_id(&it, 1));
-        test_uint(EcsWildcard, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(ecs_pair(EcsWildcard, TgtA), ecs_field_id(&it, 0));
+        test_uint(EcsWildcard, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -4282,9 +4282,9 @@ void Operators_1_optional_any_src_any_first_fixed_tgt(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(ecs_pair(EcsWildcard, TgtA), ecs_field_id(&it, 1));
-        test_uint(EcsWildcard, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(ecs_pair(EcsWildcard, TgtA), ecs_field_id(&it, 0));
+        test_uint(EcsWildcard, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -4306,9 +4306,9 @@ void Operators_1_optional_any_src_any_childof_pair_any_tgt(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(ecs_pair(EcsChildOf, EcsWildcard), ecs_field_id(&it, 1));
-        test_uint(EcsWildcard, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(ecs_pair(EcsChildOf, EcsWildcard), ecs_field_id(&it, 0));
+        test_uint(EcsWildcard, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -4332,9 +4332,9 @@ void Operators_1_optional_any_src_any_isa_pair_any_tgt(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(ecs_pair(EcsIsA, EcsWildcard), ecs_field_id(&it, 1));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 1));
+        test_uint(ecs_pair(EcsIsA, EcsWildcard), ecs_field_id(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -4344,9 +4344,9 @@ void Operators_1_optional_any_src_any_isa_pair_any_tgt(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(ecs_pair(EcsIsA, EcsWildcard), ecs_field_id(&it, 1));
-        test_uint(EcsWildcard, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(ecs_pair(EcsIsA, EcsWildcard), ecs_field_id(&it, 0));
+        test_uint(EcsWildcard, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -4389,30 +4389,30 @@ void Operators_2_or(void) {
         test_bool(true, ecs_query_next(&it));
         test_uint(e1, it.entities[0]);
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(e2, it.entities[0]);
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(e3, it.entities[0]);
         test_uint(1, it.count);
-        test_uint(RelB, ecs_field_id(&it, 1));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(RelB, ecs_field_id(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(e4, it.entities[0]);
         test_uint(1, it.count);
-        test_uint(RelB, ecs_field_id(&it, 1));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(RelB, ecs_field_id(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
 
         test_bool(false, ecs_query_next(&it));
     }
@@ -4451,23 +4451,23 @@ void Operators_3_or(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelB, ecs_field_id(&it, 1));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(RelB, ecs_field_id(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_uint(e2, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelC, ecs_field_id(&it, 1));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(RelC, ecs_field_id(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_uint(e3, it.entities[0]);
 
         test_bool(false, ecs_query_next(&it));
@@ -4509,20 +4509,20 @@ void Operators_2_or_w_and(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(TagA, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(TagA, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(TagA, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(TagA, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(TagB, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(TagB, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
     test_bool(false, ecs_query_next(&it));
 
     ecs_query_fini(q);
@@ -4564,26 +4564,26 @@ void Operators_3_or_w_and(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(TagA, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(TagA, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(TagA, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(TagA, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(TagB, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(TagB, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(TagC, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(TagC, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -4626,26 +4626,26 @@ void Operators_2_or_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(Tag, ecs_field_id(&it, 1));
-        test_uint(RelA, ecs_field_id(&it, 2));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(Tag, ecs_field_id(&it, 0));
+        test_uint(RelA, ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(Tag, ecs_field_id(&it, 1));
-        test_uint(RelA, ecs_field_id(&it, 2));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(Tag, ecs_field_id(&it, 0));
+        test_uint(RelA, ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_uint(e2, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(Tag, ecs_field_id(&it, 1));
-        test_uint(RelB, ecs_field_id(&it, 2));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(Tag, ecs_field_id(&it, 0));
+        test_uint(RelB, ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_uint(e3, it.entities[0]);
 
         test_bool(false, ecs_query_next(&it));
@@ -4693,34 +4693,34 @@ void Operators_3_or_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(Tag, ecs_field_id(&it, 1));
-        test_uint(RelA, ecs_field_id(&it, 2));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(Tag, ecs_field_id(&it, 0));
+        test_uint(RelA, ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(Tag, ecs_field_id(&it, 1));
-        test_uint(RelB, ecs_field_id(&it, 2));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(Tag, ecs_field_id(&it, 0));
+        test_uint(RelB, ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_uint(e2, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(Tag, ecs_field_id(&it, 1));
-        test_uint(RelB, ecs_field_id(&it, 2));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(Tag, ecs_field_id(&it, 0));
+        test_uint(RelB, ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_uint(e3, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(Tag, ecs_field_id(&it, 1));
-        test_uint(RelC, ecs_field_id(&it, 2));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(Tag, ecs_field_id(&it, 0));
+        test_uint(RelC, ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_uint(e4, it.entities[0]);
 
         test_bool(false, ecs_query_next(&it));
@@ -4772,28 +4772,28 @@ void Operators_2_or_written_w_rel_var(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, RelA), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(ecs_pair(Tag, RelA), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_uint(RelA, ecs_iter_get_var(&it, x_var));
         test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, RelB), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelB, TgtB), ecs_field_id(&it, 2));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(ecs_pair(Tag, RelB), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelB, TgtB), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_uint(RelB, ecs_iter_get_var(&it, x_var));
         test_uint(e2, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, RelC), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelC, TgtA), ecs_field_id(&it, 2));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(ecs_pair(Tag, RelC), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelC, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_uint(RelC, ecs_iter_get_var(&it, x_var));
         test_uint(e3, it.entities[0]);
 
@@ -4849,37 +4849,37 @@ void Operators_3_or_written_w_rel_var(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, RelA), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(ecs_pair(Tag, RelA), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_uint(RelA, ecs_iter_get_var(&it, x_var));
         test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, RelB), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelB, TgtB), ecs_field_id(&it, 2));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(ecs_pair(Tag, RelB), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelB, TgtB), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_uint(RelB, ecs_iter_get_var(&it, x_var));
         test_uint(e2, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, RelC), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelC, TgtA), ecs_field_id(&it, 2));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(ecs_pair(Tag, RelC), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelC, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_uint(RelC, ecs_iter_get_var(&it, x_var));
         test_uint(e3, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, RelD), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelD, TgtC), ecs_field_id(&it, 2));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(ecs_pair(Tag, RelD), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelD, TgtC), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_uint(RelD, ecs_iter_get_var(&it, x_var));
         test_uint(e4, it.entities[0]);
 
@@ -4932,28 +4932,28 @@ void Operators_2_or_written_w_tgt_var(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, TgtA), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(ecs_pair(Tag, TgtA), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_uint(TgtA, ecs_iter_get_var(&it, x_var));
         test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, TgtB), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelB, TgtB), ecs_field_id(&it, 2));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(ecs_pair(Tag, TgtB), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelB, TgtB), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_uint(TgtB, ecs_iter_get_var(&it, x_var));
         test_uint(e2, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, TgtC), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtC), ecs_field_id(&it, 2));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(ecs_pair(Tag, TgtC), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtC), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_uint(TgtC, ecs_iter_get_var(&it, x_var));
         test_uint(e3, it.entities[0]);
 
@@ -5013,36 +5013,36 @@ void Operators_2_or_written_w_rel_tgt_var(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(RelA, TgtB), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelB, TgtC), ecs_field_id(&it, 2));
-        test_uint(ecs_pair(TgtB, TgtC), ecs_field_id(&it, 3));
-        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(ecs_pair(RelA, TgtB), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelB, TgtC), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(TgtB, TgtC), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(TgtB, ecs_iter_get_var(&it, x_var));
         test_uint(TgtC, ecs_iter_get_var(&it, y_var));
         test_uint(e2, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(RelA, TgtC), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelB, TgtB), ecs_field_id(&it, 2));
-        test_uint(ecs_pair(TgtB, TgtC), ecs_field_id(&it, 3));
-        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(ecs_pair(RelA, TgtC), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelB, TgtB), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(TgtB, TgtC), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(TgtC, ecs_iter_get_var(&it, x_var));
         test_uint(TgtB, ecs_iter_get_var(&it, y_var));
         test_uint(e3, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(RelA, TgtD), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelB, TgtA), ecs_field_id(&it, 2));
-        test_uint(ecs_pair(TgtD, TgtA), ecs_field_id(&it, 3));
-        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(ecs_pair(RelA, TgtD), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelB, TgtA), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(TgtD, TgtA), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(TgtD, ecs_iter_get_var(&it, x_var));
         test_uint(TgtA, ecs_iter_get_var(&it, y_var));
         test_uint(e4, it.entities[0]);
@@ -5095,31 +5095,31 @@ void Operators_2_or_written_w_rel_tgt_same_var(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(TgtA, TgtA), ecs_field_id(&it, 2));
-        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(TgtA, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(TgtA, ecs_iter_get_var(&it, x_var));
         test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(RelA, TgtB), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelB, TgtB), ecs_field_id(&it, 2));
-        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(ecs_pair(RelA, TgtB), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelB, TgtB), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(TgtB, ecs_iter_get_var(&it, x_var));
         test_uint(e2, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(RelA, TgtC), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(TgtC, TgtC), ecs_field_id(&it, 2));
-        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(ecs_pair(RelA, TgtC), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(TgtC, TgtC), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(TgtC, ecs_iter_get_var(&it, x_var));
         test_uint(e3, it.entities[0]);
 
@@ -5175,37 +5175,37 @@ void Operators_3_or_written_w_tgt_var(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, TgtA), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 2));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(ecs_pair(Tag, TgtA), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtA), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_uint(TgtA, ecs_iter_get_var(&it, x_var));
         test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, TgtB), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelB, TgtB), ecs_field_id(&it, 2));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(ecs_pair(Tag, TgtB), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelB, TgtB), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_uint(TgtB, ecs_iter_get_var(&it, x_var));
         test_uint(e2, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, TgtC), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtC), ecs_field_id(&it, 2));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(ecs_pair(Tag, TgtC), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtC), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_uint(TgtC, ecs_iter_get_var(&it, x_var));
         test_uint(e3, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(Tag, TgtD), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelC, TgtD), ecs_field_id(&it, 2));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(ecs_pair(Tag, TgtD), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelC, TgtD), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_uint(TgtD, ecs_iter_get_var(&it, x_var));
         test_uint(e4, it.entities[0]);
 
@@ -5264,38 +5264,38 @@ void Operators_2_or_chains_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(Tag, ecs_field_id(&it, 1));
-        test_uint(RelA, ecs_field_id(&it, 2));
-        test_uint(RelC, ecs_field_id(&it, 3));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(Tag, ecs_field_id(&it, 0));
+        test_uint(RelA, ecs_field_id(&it, 1));
+        test_uint(RelC, ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_uint(e3, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(Tag, ecs_field_id(&it, 1));
-        test_uint(RelA, ecs_field_id(&it, 2));
-        test_uint(RelD, ecs_field_id(&it, 3));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(Tag, ecs_field_id(&it, 0));
+        test_uint(RelA, ecs_field_id(&it, 1));
+        test_uint(RelD, ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_uint(e4, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(Tag, ecs_field_id(&it, 1));
-        test_uint(RelB, ecs_field_id(&it, 2));
-        test_uint(RelC, ecs_field_id(&it, 3));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(Tag, ecs_field_id(&it, 0));
+        test_uint(RelB, ecs_field_id(&it, 1));
+        test_uint(RelC, ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_uint(e5, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(Tag, ecs_field_id(&it, 1));
-        test_uint(RelB, ecs_field_id(&it, 2));
-        test_uint(RelD, ecs_field_id(&it, 3));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(Tag, ecs_field_id(&it, 0));
+        test_uint(RelB, ecs_field_id(&it, 1));
+        test_uint(RelD, ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_uint(e6, it.entities[0]);
 
         test_bool(false, ecs_query_next(&it));
@@ -5349,34 +5349,34 @@ void Operators_2_or_chains(void) {
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
         test_uint(e3, it.entities[0]);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(RelC, ecs_field_id(&it, 2));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(RelC, ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
         test_uint(e4, it.entities[0]);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(RelD, ecs_field_id(&it, 2));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(RelD, ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
         test_uint(e5, it.entities[0]);
-        test_uint(RelB, ecs_field_id(&it, 1));
-        test_uint(RelC, ecs_field_id(&it, 2));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(RelB, ecs_field_id(&it, 0));
+        test_uint(RelC, ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
         test_uint(e6, it.entities[0]);
-        test_uint(RelB, ecs_field_id(&it, 1));
-        test_uint(RelD, ecs_field_id(&it, 2));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(RelB, ecs_field_id(&it, 0));
+        test_uint(RelD, ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
 
         test_bool(false, ecs_query_next(&it));
     }
@@ -5424,28 +5424,28 @@ void Operators_2_or_dependent(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelB, ecs_field_id(&it, 1));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_uint(RelB, ecs_field_id(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(e1, it.entities[0]);
         test_uint(EcsWildcard, ecs_iter_get_var(&it, tgt_var));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelB, ecs_field_id(&it, 1));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_uint(RelB, ecs_field_id(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(e3, it.entities[0]);
         test_uint(EcsWildcard, ecs_iter_get_var(&it, tgt_var));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(RelA, tgt), ecs_field_id(&it, 1));
-        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(ecs_pair(RelA, tgt), ecs_field_id(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(e2, it.entities[0]);
         test_uint(tgt, ecs_iter_get_var(&it, tgt_var));
 
@@ -5495,28 +5495,28 @@ void Operators_2_or_dependent_reverse(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(RelA, tgt), ecs_field_id(&it, 1));
-        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(ecs_pair(RelA, tgt), ecs_field_id(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(e2, it.entities[0]);
         test_uint(tgt, ecs_iter_get_var(&it, tgt_var));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelB, ecs_field_id(&it, 1));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_uint(RelB, ecs_field_id(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(e1, it.entities[0]);
         test_uint(EcsWildcard, ecs_iter_get_var(&it, tgt_var));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelB, ecs_field_id(&it, 1));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_uint(RelB, ecs_field_id(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(e3, it.entities[0]);
         test_uint(EcsWildcard, ecs_iter_get_var(&it, tgt_var));
 
@@ -5572,26 +5572,26 @@ void Operators_2_or_dependent_2_vars(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(RelA, tgt_a), ecs_field_id(&it, 1));
-        test_uint(RelC, ecs_field_id(&it, 2));
-        test_uint(RelD, ecs_field_id(&it, 3));
-        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(ecs_pair(RelA, tgt_a), ecs_field_id(&it, 0));
+        test_uint(RelC, ecs_field_id(&it, 1));
+        test_uint(RelD, ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
-        test_bool(false, ecs_field_is_set(&it, 3));
+        test_bool(false, ecs_field_is_set(&it, 2));
         test_uint(e1, it.entities[0]);
         test_uint(tgt_a, ecs_iter_get_var(&it, x_var));
         test_uint(EcsWildcard, ecs_iter_get_var(&it, y_var));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(RelB, tgt_b), ecs_field_id(&it, 1));
-        test_uint(RelC, ecs_field_id(&it, 2));
-        test_uint(RelD, ecs_field_id(&it, 3));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 3));
+        test_uint(ecs_pair(RelB, tgt_b), ecs_field_id(&it, 0));
+        test_uint(RelC, ecs_field_id(&it, 1));
+        test_uint(RelD, ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(e2, it.entities[0]);
         test_uint(EcsWildcard, ecs_iter_get_var(&it, x_var));
         test_uint(tgt_b, ecs_iter_get_var(&it, y_var));
@@ -5643,34 +5643,34 @@ void Operators_2_or_written_dependent(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(Tag, ecs_field_id(&it, 1));
-        test_uint(RelB, ecs_field_id(&it, 2));
-        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(Tag, ecs_field_id(&it, 0));
+        test_uint(RelB, ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
-        test_bool(false, ecs_field_is_set(&it, 3));
+        test_bool(false, ecs_field_is_set(&it, 2));
         test_uint(e1, it.entities[0]);
         test_uint(EcsWildcard, ecs_iter_get_var(&it, tgt_var));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(Tag, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, tgt), ecs_field_id(&it, 2));
-        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(Tag, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, tgt), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
         test_bool(true, ecs_field_is_set(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 3));
         test_uint(e2, it.entities[0]);
         test_uint(tgt, ecs_iter_get_var(&it, tgt_var));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(Tag, ecs_field_id(&it, 1));
-        test_uint(RelB, ecs_field_id(&it, 2));
-        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(Tag, ecs_field_id(&it, 0));
+        test_uint(RelB, ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
-        test_bool(false, ecs_field_is_set(&it, 3));
+        test_bool(false, ecs_field_is_set(&it, 2));
         test_uint(e3, it.entities[0]);
         test_uint(EcsWildcard, ecs_iter_get_var(&it, tgt_var));
 
@@ -5727,30 +5727,30 @@ void Operators_2_or_written_dependent_2_vars(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(Tag, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, tgt_a), ecs_field_id(&it, 2));
-        test_uint(RelC, ecs_field_id(&it, 3));
-        test_uint(RelD, ecs_field_id(&it, 4));
-        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(Tag, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, tgt_a), ecs_field_id(&it, 1));
+        test_uint(RelC, ecs_field_id(&it, 2));
+        test_uint(RelD, ecs_field_id(&it, 3));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
         test_bool(true, ecs_field_is_set(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 3));
-        test_bool(false, ecs_field_is_set(&it, 4));
+        test_bool(false, ecs_field_is_set(&it, 3));
         test_uint(e1, it.entities[0]);
         test_uint(tgt_a, ecs_iter_get_var(&it, x_var));
         test_uint(EcsWildcard, ecs_iter_get_var(&it, y_var));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(Tag, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelB, tgt_b), ecs_field_id(&it, 2));
-        test_uint(RelC, ecs_field_id(&it, 3));
-        test_uint(RelD, ecs_field_id(&it, 4));
-        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(Tag, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelB, tgt_b), ecs_field_id(&it, 1));
+        test_uint(RelC, ecs_field_id(&it, 2));
+        test_uint(RelD, ecs_field_id(&it, 3));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
-        test_bool(false, ecs_field_is_set(&it, 3));
-        test_bool(true, ecs_field_is_set(&it, 4));
+        test_bool(false, ecs_field_is_set(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 3));
         test_uint(e2, it.entities[0]);
         test_uint(EcsWildcard, ecs_iter_get_var(&it, x_var));
         test_uint(tgt_b, ecs_iter_get_var(&it, y_var));
@@ -5805,37 +5805,37 @@ void Operators_2_or_w_dependent(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(Tag, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 2));
-        // test_uint(RelC, ecs_field_id(&it, 3));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(Tag, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 1));
+        // test_uint(RelC, ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_bool(false, ecs_field_is_set(&it, 2));
-        test_bool(false, ecs_field_is_set(&it, 3));
         test_uint(e1, it.entities[0]);
         test_uint(EcsWildcard, ecs_iter_get_var(&it, x_var));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(Tag, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, tgt_a), ecs_field_id(&it, 2));
-        test_uint(RelB, ecs_field_id(&it, 3));
-        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(Tag, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, tgt_a), ecs_field_id(&it, 1));
+        test_uint(RelB, ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
         test_bool(true, ecs_field_is_set(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 3));
         test_uint(e2, it.entities[0]);
         test_uint(tgt_a, ecs_iter_get_var(&it, x_var));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(Tag, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, tgt_b), ecs_field_id(&it, 2));
-        test_uint(RelC, ecs_field_id(&it, 3));
-        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(Tag, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, tgt_b), ecs_field_id(&it, 1));
+        test_uint(RelC, ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
         test_bool(true, ecs_field_is_set(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 3));
         test_uint(e3, it.entities[0]);
         test_uint(tgt_b, ecs_iter_get_var(&it, x_var));
 
@@ -5872,17 +5872,17 @@ void Operators_2_or_w_both(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(RelA, ecs_field_id(&it, 1));
+    test_uint(RelA, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(RelA, ecs_field_id(&it, 1));
+    test_uint(RelA, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(RelB, ecs_field_id(&it, 1));
+    test_uint(RelB, ecs_field_id(&it, 0));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -5926,42 +5926,42 @@ void Operators_3_or_w_both(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(RelA, ecs_field_id(&it, 1));
+    test_uint(RelA, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(RelA, ecs_field_id(&it, 1));
+    test_uint(RelA, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(RelA, ecs_field_id(&it, 1));
+    test_uint(RelA, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(RelB, ecs_field_id(&it, 1));
+    test_uint(RelB, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
-    test_uint(RelB, ecs_field_id(&it, 1));
+    test_uint(RelB, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
-    test_uint(RelB, ecs_field_id(&it, 1));
+    test_uint(RelB, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(RelC, ecs_field_id(&it, 1));
+    test_uint(RelC, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e8, it.entities[0]);
-    test_uint(RelC, ecs_field_id(&it, 1));
+    test_uint(RelC, ecs_field_id(&it, 0));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -5995,12 +5995,12 @@ void Operators_2_or_w_not(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(RelA, ecs_field_id(&it, 1));
+    test_uint(RelA, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(RelB, ecs_field_id(&it, 1));
+    test_uint(RelB, ecs_field_id(&it, 0));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -6034,12 +6034,12 @@ void Operators_2_or_w_not_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(RelA, ecs_field_id(&it, 1));
+    test_uint(RelA, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(RelB, ecs_field_id(&it, 1));
+    test_uint(RelB, ecs_field_id(&it, 0));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -6073,12 +6073,12 @@ void Operators_2_or_w_not_out_component(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(RelA, ecs_field_id(&it, 1));
+    test_uint(RelA, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(RelB, ecs_field_id(&it, 1));
+    test_uint(RelB, ecs_field_id(&it, 0));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -6112,12 +6112,12 @@ void Operators_2_or_w_not_out_all_components(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(ecs_id(Mass), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Mass), ecs_field_id(&it, 0));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -6158,12 +6158,12 @@ void Operators_2_not_first(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(TagB, ecs_field_id(&it, 1));
-        test_uint(TagA, ecs_field_id(&it, 2));
+        test_uint(TagB, ecs_field_id(&it, 0));
+        test_uint(TagA, ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_bool(false, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
+        test_bool(false, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
         test_uint(e1, it.entities[0]);
 
         test_bool(false, ecs_query_next(&it));
@@ -6175,12 +6175,12 @@ void Operators_2_not_first(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(2, it.count);
-        test_uint(TagB, ecs_field_id(&it, 1));
-        test_uint(TagA, ecs_field_id(&it, 2));
+        test_uint(TagB, ecs_field_id(&it, 0));
+        test_uint(TagA, ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_bool(false, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
+        test_bool(false, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
         test_uint(e1, it.entities[0]);
         test_uint(e2, it.entities[1]);
 
@@ -6217,12 +6217,12 @@ void Operators_2_optional_first(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(3, it.count);
-        test_uint(TagB, ecs_field_id(&it, 1));
-        test_uint(TagA, ecs_field_id(&it, 2));
+        test_uint(TagB, ecs_field_id(&it, 0));
+        test_uint(TagA, ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(e1, it.entities[0]);
         test_uint(e2, it.entities[1]);
         test_uint(e3, it.entities[2]);
@@ -6236,23 +6236,23 @@ void Operators_2_optional_first(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(2, it.count);
-        test_uint(TagB, ecs_field_id(&it, 1));
-        test_uint(TagA, ecs_field_id(&it, 2));
+        test_uint(TagB, ecs_field_id(&it, 0));
+        test_uint(TagA, ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(e1, it.entities[0]);
         test_uint(e2, it.entities[1]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(TagB, ecs_field_id(&it, 1));
-        test_uint(TagA, ecs_field_id(&it, 2));
+        test_uint(TagB, ecs_field_id(&it, 0));
+        test_uint(TagA, ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_bool(false, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
+        test_bool(false, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
         test_uint(e3, it.entities[0]);
 
         test_bool(false, ecs_query_next(&it));
@@ -6546,7 +6546,7 @@ void Operators_root_entities_empty(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(EcsChildOf, 0), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(EcsChildOf, 0), ecs_field_id(&it, 0));
         test_uint(EcsFlecs, it.entities[0]);
 
         if (ecs_query_next(&it)) {
@@ -6578,12 +6578,12 @@ void Operators_root_entities(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(EcsChildOf, 0), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(EcsChildOf, 0), ecs_field_id(&it, 0));
         test_uint(EcsFlecs, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(EcsChildOf, 0), ecs_field_id(&it, 1));
+        test_uint(ecs_pair(EcsChildOf, 0), ecs_field_id(&it, 0));
         test_uint(e1, it.entities[0]);
 
         if (ecs_query_next(&it)) {
@@ -6623,19 +6623,19 @@ void Operators_root_entities_w_children(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(EcsChildOf, 0), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(EcsChildOf, EcsFlecs), ecs_field_id(&it, 2));
+        test_uint(ecs_pair(EcsChildOf, 0), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(EcsChildOf, EcsFlecs), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(EcsFlecs, ecs_iter_get_var(&it, this_var));
         test_uint(EcsFlecs, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(EcsChildOf, 0), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(EcsChildOf, e2), ecs_field_id(&it, 2));
+        test_uint(ecs_pair(EcsChildOf, 0), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(EcsChildOf, e2), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(e2, ecs_iter_get_var(&it, this_var));
         test_uint(e2, it.entities[0]);
 
@@ -6673,46 +6673,46 @@ void Operators_root_entities_w_optional_children(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(EcsChildOf, 0), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(EcsChildOf, EcsFlecs), ecs_field_id(&it, 2));
+        test_uint(ecs_pair(EcsChildOf, 0), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(EcsChildOf, EcsFlecs), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(EcsFlecs, ecs_iter_get_var(&it, this_var));
         test_uint(EcsFlecs, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(EcsChildOf, 0), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(EcsChildOf, Tag), ecs_field_id(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_uint(ecs_pair(EcsChildOf, 0), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(EcsChildOf, Tag), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(Tag, ecs_iter_get_var(&it, this_var));
         test_uint(Tag, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(EcsChildOf, 0), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(EcsChildOf, e1), ecs_field_id(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_uint(ecs_pair(EcsChildOf, 0), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(EcsChildOf, e1), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(e1, ecs_iter_get_var(&it, this_var));
         test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(EcsChildOf, 0), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(EcsChildOf, e2), ecs_field_id(&it, 2));
+        test_uint(ecs_pair(EcsChildOf, 0), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(EcsChildOf, e2), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_uint(e2, ecs_iter_get_var(&it, this_var));
         test_uint(e2, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(EcsChildOf, 0), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(EcsChildOf, e4), ecs_field_id(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_uint(ecs_pair(EcsChildOf, 0), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(EcsChildOf, e4), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(e4, ecs_iter_get_var(&it, this_var));
         test_uint(e4, it.entities[0]);
 
@@ -6747,11 +6747,11 @@ void Operators_core_entities_w_optional_children(void) {
     {
         ecs_iter_t it = ecs_query_iter(world, q);
         while (ecs_query_next(&it)) {
-            test_assert(ecs_field_is_set(&it, 1));
+            test_assert(ecs_field_is_set(&it, 0));
             for (int i = 0; i < it.count; i ++) {
                 test_assert(ecs_has_pair(
                     world, it.entities[i], EcsChildOf, EcsFlecsCore));
-                if (ecs_field_is_set(&it, 2)) {
+                if (ecs_field_is_set(&it, 1)) {
                     test_assert(ecs_count_id(
                         world, ecs_pair(EcsChildOf, it.entities[i])) != 0);
                 } else {
@@ -6793,28 +6793,28 @@ void Operators_root_entities_w_not_children(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(EcsChildOf, 0), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(EcsChildOf, Tag), ecs_field_id(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_uint(ecs_pair(EcsChildOf, 0), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(EcsChildOf, Tag), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(Tag, ecs_iter_get_var(&it, this_var));
         test_uint(Tag, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(EcsChildOf, 0), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(EcsChildOf, e1), ecs_field_id(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_uint(ecs_pair(EcsChildOf, 0), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(EcsChildOf, e1), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(e1, ecs_iter_get_var(&it, this_var));
         test_uint(e1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(EcsChildOf, 0), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(EcsChildOf, e4), ecs_field_id(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_uint(ecs_pair(EcsChildOf, 0), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(EcsChildOf, e4), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(e4, ecs_iter_get_var(&it, this_var));
         test_uint(e4, it.entities[0]);
 
@@ -6849,8 +6849,8 @@ void Operators_core_entities_w_not_children(void) {
     {
         ecs_iter_t it = ecs_query_iter(world, q);
         while (ecs_query_next(&it)) {
-            test_assert(ecs_field_is_set(&it, 1));
-            test_assert(!ecs_field_is_set(&it, 2));
+            test_assert(ecs_field_is_set(&it, 0));
+            test_assert(!ecs_field_is_set(&it, 1));
             for (int i = 0; i < it.count; i ++) {
                 test_assert(ecs_has_pair(
                     world, it.entities[i], EcsChildOf, EcsFlecsCore));
@@ -6902,9 +6902,9 @@ void Operators_1_ent_src_not(void) {
             ecs_iter_t it = ecs_query_iter(world, q);
             test_bool(true, ecs_query_next(&it));
             test_uint(0, it.count);
-            test_uint(RelB, ecs_field_id(&it, 1));
-            test_uint(e1, ecs_field_src(&it, 1));
-            test_bool(false, ecs_field_is_set(&it, 1));
+            test_uint(RelB, ecs_field_id(&it, 0));
+            test_uint(e1, ecs_field_src(&it, 0));
+            test_bool(false, ecs_field_is_set(&it, 0));
             test_bool(false, ecs_query_next(&it));
         }
 
@@ -6952,9 +6952,9 @@ void Operators_1_ent_src_not_pair(void) {
             ecs_iter_t it = ecs_query_iter(world, q);
             test_bool(true, ecs_query_next(&it));
             test_uint(0, it.count);
-            test_uint(ecs_pair(RelB, Tgt), ecs_field_id(&it, 1));
-            test_uint(e1, ecs_field_src(&it, 1));
-            test_bool(false, ecs_field_is_set(&it, 1));
+            test_uint(ecs_pair(RelB, Tgt), ecs_field_id(&it, 0));
+            test_uint(e1, ecs_field_src(&it, 0));
+            test_bool(false, ecs_field_is_set(&it, 0));
             test_bool(false, ecs_query_next(&it));
         }
 
@@ -7004,9 +7004,9 @@ void Operators_1_ent_src_not_pair_rel_wildcard(void) {
             ecs_iter_t it = ecs_query_iter(world, q);
             test_bool(true, ecs_query_next(&it));
             test_uint(0, it.count);
-            test_uint(ecs_pair(EcsWildcard, TgtB), ecs_field_id(&it, 1));
-            test_uint(e1, ecs_field_src(&it, 1));
-            test_bool(false, ecs_field_is_set(&it, 1));
+            test_uint(ecs_pair(EcsWildcard, TgtB), ecs_field_id(&it, 0));
+            test_uint(e1, ecs_field_src(&it, 0));
+            test_bool(false, ecs_field_is_set(&it, 0));
             test_bool(false, ecs_query_next(&it));
         }
 
@@ -7056,9 +7056,9 @@ void Operators_1_ent_src_not_pair_tgt_wildcard(void) {
             ecs_iter_t it = ecs_query_iter(world, q);
             test_bool(true, ecs_query_next(&it));
             test_uint(0, it.count);
-            test_uint(ecs_pair(RelB, EcsWildcard), ecs_field_id(&it, 1));
-            test_uint(e1, ecs_field_src(&it, 1));
-            test_bool(false, ecs_field_is_set(&it, 1));
+            test_uint(ecs_pair(RelB, EcsWildcard), ecs_field_id(&it, 0));
+            test_uint(e1, ecs_field_src(&it, 0));
+            test_bool(false, ecs_field_is_set(&it, 0));
             test_bool(false, ecs_query_next(&it));
         }
 
@@ -7139,9 +7139,9 @@ void Operators_1_ent_src_not_pair_rel_any(void) {
             ecs_iter_t it = ecs_query_iter(world, q);
             test_bool(true, ecs_query_next(&it));
             test_uint(0, it.count);
-            test_uint(ecs_pair(EcsWildcard, TgtB), ecs_field_id(&it, 1));
-            test_uint(e1, ecs_field_src(&it, 1));
-            test_bool(false, ecs_field_is_set(&it, 1));
+            test_uint(ecs_pair(EcsWildcard, TgtB), ecs_field_id(&it, 0));
+            test_uint(e1, ecs_field_src(&it, 0));
+            test_bool(false, ecs_field_is_set(&it, 0));
             test_bool(false, ecs_query_next(&it));
         }
 
@@ -7191,9 +7191,9 @@ void Operators_1_ent_src_not_pair_tgt_any(void) {
             ecs_iter_t it = ecs_query_iter(world, q);
             test_bool(true, ecs_query_next(&it));
             test_uint(0, it.count);
-            test_uint(ecs_pair(RelB, EcsWildcard), ecs_field_id(&it, 1));
-            test_uint(e1, ecs_field_src(&it, 1));
-            test_bool(false, ecs_field_is_set(&it, 1));
+            test_uint(ecs_pair(RelB, EcsWildcard), ecs_field_id(&it, 0));
+            test_uint(e1, ecs_field_src(&it, 0));
+            test_bool(false, ecs_field_is_set(&it, 0));
             test_bool(false, ecs_query_next(&it));
         }
 
@@ -7280,9 +7280,9 @@ void Operators_1_ent_src_not_pair_rel_var(void) {
             ecs_iter_t it = ecs_query_iter(world, q);
             test_bool(true, ecs_query_next(&it));
             test_uint(0, it.count);
-            test_uint(ecs_pair(EcsWildcard, TgtB), ecs_field_id(&it, 1));
-            test_uint(e1, ecs_field_src(&it, 1));
-            test_bool(false, ecs_field_is_set(&it, 1));
+            test_uint(ecs_pair(EcsWildcard, TgtB), ecs_field_id(&it, 0));
+            test_uint(e1, ecs_field_src(&it, 0));
+            test_bool(false, ecs_field_is_set(&it, 0));
             test_uint(EcsWildcard, ecs_iter_get_var(&it, x_var));
             test_bool(false, ecs_query_next(&it));
         }
@@ -7339,9 +7339,9 @@ void Operators_1_ent_src_not_pair_tgt_var(void) {
             ecs_iter_t it = ecs_query_iter(world, q);
             test_bool(true, ecs_query_next(&it));
             test_uint(0, it.count);
-            test_uint(ecs_pair(RelB, EcsWildcard), ecs_field_id(&it, 1));
-            test_uint(e1, ecs_field_src(&it, 1));
-            test_bool(false, ecs_field_is_set(&it, 1));
+            test_uint(ecs_pair(RelB, EcsWildcard), ecs_field_id(&it, 0));
+            test_uint(e1, ecs_field_src(&it, 0));
+            test_bool(false, ecs_field_is_set(&it, 0));
             test_uint(EcsWildcard, ecs_iter_get_var(&it, x_var));
             test_bool(false, ecs_query_next(&it));
         }
@@ -7415,9 +7415,9 @@ void Operators_1_ent_src_not_pair_rel_tgt_same_var(void) {
             ecs_iter_t it = ecs_query_iter(world, q);
             test_bool(true, ecs_query_next(&it));
             test_uint(0, it.count);
-            test_uint(ecs_pair(EcsWildcard, EcsWildcard), ecs_field_id(&it, 1));
-            test_uint(e1, ecs_field_src(&it, 1));
-            test_bool(false, ecs_field_is_set(&it, 1));
+            test_uint(ecs_pair(EcsWildcard, EcsWildcard), ecs_field_id(&it, 0));
+            test_uint(e1, ecs_field_src(&it, 0));
+            test_bool(false, ecs_field_is_set(&it, 0));
             test_uint(EcsWildcard, ecs_iter_get_var(&it, x_var));
             test_bool(false, ecs_query_next(&it));
         }
@@ -7465,9 +7465,9 @@ void Operators_1_this_src_not_pair_rel_var(void) {
             }
         }
 
-        test_uint(ecs_pair(EcsWildcard, TgtA), ecs_field_id(&it, 1));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 1));
+        test_uint(ecs_pair(EcsWildcard, TgtA), ecs_field_id(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 0));
         test_uint(EcsWildcard, ecs_iter_get_var(&it, x_var));
     }
 
@@ -7515,9 +7515,9 @@ void Operators_1_this_src_not_pair_tgt_var(void) {
             }
         }
 
-        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 1));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 1));
+        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 0));
         test_uint(EcsWildcard, ecs_iter_get_var(&it, x_var));
     }
 
@@ -7567,9 +7567,9 @@ void Operators_1_this_src_not_pair_rel_tgt_var(void) {
             }
         }
 
-        test_uint(ecs_pair(EcsWildcard, EcsWildcard), ecs_field_id(&it, 1));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 1));
+        test_uint(ecs_pair(EcsWildcard, EcsWildcard), ecs_field_id(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 0));
         test_uint(EcsWildcard, ecs_iter_get_var(&it, x_var));
         test_uint(EcsWildcard, ecs_iter_get_var(&it, y_var));
     }
@@ -7622,9 +7622,9 @@ void Operators_1_this_src_not_pair_rel_tgt_same_var(void) {
             }
         }
 
-        test_uint(ecs_pair(EcsWildcard, EcsWildcard), ecs_field_id(&it, 1));
-        test_uint(0, ecs_field_src(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 1));
+        test_uint(ecs_pair(EcsWildcard, EcsWildcard), ecs_field_id(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 0));
         test_uint(EcsWildcard, ecs_iter_get_var(&it, x_var));
     }
 
@@ -7665,12 +7665,12 @@ void Operators_1_ent_src_not_pair_rel_var_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(Tag, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelC, TgtA), ecs_field_id(&it, 2));
-        test_uint(RelC, ecs_field_src(&it, 1));
-        test_uint(e1, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_uint(Tag, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelC, TgtA), ecs_field_id(&it, 1));
+        test_uint(RelC, ecs_field_src(&it, 0));
+        test_uint(e1, ecs_field_src(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(RelC, ecs_iter_get_var(&it, x_var));
 
         test_bool(false, ecs_query_next(&it));
@@ -7711,12 +7711,12 @@ void Operators_1_ent_src_not_pair_tgt_var_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(Tag, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelA, TgtC), ecs_field_id(&it, 2));
-        test_uint(TgtC, ecs_field_src(&it, 1));
-        test_uint(e1, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_uint(Tag, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, TgtC), ecs_field_id(&it, 1));
+        test_uint(TgtC, ecs_field_src(&it, 0));
+        test_uint(e1, ecs_field_src(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(TgtC, ecs_iter_get_var(&it, x_var));
 
         test_bool(false, ecs_query_next(&it));
@@ -7758,12 +7758,12 @@ void Operators_1_ent_src_not_pair_rel_tgt_var_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(ecs_pair(Tag, TgtB), ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelC, TgtB), ecs_field_id(&it, 2));
-        test_uint(RelC, ecs_field_src(&it, 1));
-        test_uint(e1, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_uint(ecs_pair(Tag, TgtB), ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelC, TgtB), ecs_field_id(&it, 1));
+        test_uint(RelC, ecs_field_src(&it, 0));
+        test_uint(e1, ecs_field_src(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(RelC, ecs_iter_get_var(&it, x_var));
         test_uint(TgtB, ecs_iter_get_var(&it, y_var));
 
@@ -7805,12 +7805,12 @@ void Operators_1_ent_src_not_pair_rel_tgt_same_var_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(Tag, ecs_field_id(&it, 1));
-        test_uint(ecs_pair(RelB, RelB), ecs_field_id(&it, 2));
-        test_uint(RelB, ecs_field_src(&it, 1));
-        test_uint(e1, ecs_field_src(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_uint(Tag, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelB, RelB), ecs_field_id(&it, 1));
+        test_uint(RelB, ecs_field_src(&it, 0));
+        test_uint(e1, ecs_field_src(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
         test_uint(RelB, ecs_iter_get_var(&it, x_var));
 
         test_bool(false, ecs_query_next(&it));
@@ -7855,7 +7855,7 @@ void Operators_and_from_fixed_src(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
-        test_uint(e, ecs_field_src(&it, 1));
+        test_uint(e, ecs_field_src(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -7884,7 +7884,7 @@ void Operators_not_from_fixed_src(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
-        test_uint(e, ecs_field_src(&it, 1));
+        test_uint(e, ecs_field_src(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -7915,7 +7915,7 @@ void Operators_not_from_fixed_src(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
-        test_uint(e, ecs_field_src(&it, 1));
+        test_uint(e, ecs_field_src(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -7951,7 +7951,7 @@ void Operators_or_from_fixed_src(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
-        test_uint(e, ecs_field_src(&it, 1));
+        test_uint(e, ecs_field_src(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -7961,7 +7961,7 @@ void Operators_or_from_fixed_src(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
-        test_uint(e, ecs_field_src(&it, 1));
+        test_uint(e, ecs_field_src(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -7971,7 +7971,7 @@ void Operators_or_from_fixed_src(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
-        test_uint(e, ecs_field_src(&it, 1));
+        test_uint(e, ecs_field_src(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -8027,12 +8027,12 @@ void Operators_and_from_this(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e1, it.entities[0]);
-        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
 
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e2, it.entities[0]);
-        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -8077,7 +8077,7 @@ void Operators_not_from_this(void) {
                 e1_found |= it.entities[i] == e1;
                 e2_found |= it.entities[i] == e2;
             }
-            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
         }
         test_assert(e1_found == true);
         test_assert(e2_found == true);
@@ -8095,7 +8095,7 @@ void Operators_not_from_this(void) {
                 e1_found |= it.entities[i] == e1;
                 e2_found |= it.entities[i] == e2;
             }
-            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
         }
         test_assert(e1_found == false);
         test_assert(e2_found == false);
@@ -8114,7 +8114,7 @@ void Operators_not_from_this(void) {
                 e1_found |= it.entities[i] == e1;
                 e2_found |= it.entities[i] == e2;
             }
-            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
         }
         test_assert(e1_found == false);
         test_assert(e2_found == false);
@@ -8132,7 +8132,7 @@ void Operators_not_from_this(void) {
                 e1_found |= it.entities[i] == e1;
                 e2_found |= it.entities[i] == e2;
             }
-            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
         }
         test_assert(e1_found == false);
         test_assert(e2_found == false);
@@ -8150,7 +8150,7 @@ void Operators_not_from_this(void) {
                 e1_found |= it.entities[i] == e1;
                 e2_found |= it.entities[i] == e2;
             }
-            test_uint(0, ecs_field_src(&it, 1));
+            test_uint(0, ecs_field_src(&it, 0));
         }
         test_assert(e1_found == true);
         test_assert(e2_found == true);
@@ -8193,12 +8193,12 @@ void Operators_or_from_this(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e1, it.entities[0]);
-        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
 
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e2, it.entities[0]);
-        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -8210,12 +8210,12 @@ void Operators_or_from_this(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e1, it.entities[0]);
-        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
 
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e2, it.entities[0]);
-        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -8226,12 +8226,12 @@ void Operators_or_from_this(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e1, it.entities[0]);
-        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
 
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e2, it.entities[0]);
-        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -8242,12 +8242,12 @@ void Operators_or_from_this(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e2, it.entities[0]);
-        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
 
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e1, it.entities[0]);
-        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
 
         test_bool(false, ecs_query_next(&it));
     }
@@ -8308,14 +8308,14 @@ void Operators_and_from_this_written(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e1, it.entities[0]);
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
 
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e2, it.entities[0]);
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -8363,10 +8363,10 @@ void Operators_not_from_this_written(void) {
                 e1_found |= it.entities[i] == e1;
                 e2_found |= it.entities[i] == e2;
             }
-            test_uint(0, ecs_field_src(&it, 1));
-            test_uint(0, ecs_field_src(&it, 1));
-            test_bool(true, ecs_field_is_set(&it, 1));
-            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_bool(true, ecs_field_is_set(&it, 0));
+            test_bool(false, ecs_field_is_set(&it, 1));
         }
         test_assert(e1_found == true);
         test_assert(e2_found == true);
@@ -8384,10 +8384,10 @@ void Operators_not_from_this_written(void) {
                 e1_found |= it.entities[i] == e1;
                 e2_found |= it.entities[i] == e2;
             }
-            test_uint(0, ecs_field_src(&it, 1));
-            test_uint(0, ecs_field_src(&it, 1));
-            test_bool(true, ecs_field_is_set(&it, 1));
-            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_bool(true, ecs_field_is_set(&it, 0));
+            test_bool(false, ecs_field_is_set(&it, 1));
         }
         test_assert(e1_found == false);
         test_assert(e2_found == false);
@@ -8406,10 +8406,10 @@ void Operators_not_from_this_written(void) {
                 e1_found |= it.entities[i] == e1;
                 e2_found |= it.entities[i] == e2;
             }
-            test_uint(0, ecs_field_src(&it, 1));
-            test_uint(0, ecs_field_src(&it, 1));
-            test_bool(true, ecs_field_is_set(&it, 1));
-            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_bool(true, ecs_field_is_set(&it, 0));
+            test_bool(false, ecs_field_is_set(&it, 1));
         }
         test_assert(e1_found == false);
         test_assert(e2_found == false);
@@ -8427,10 +8427,10 @@ void Operators_not_from_this_written(void) {
                 e1_found |= it.entities[i] == e1;
                 e2_found |= it.entities[i] == e2;
             }
-            test_uint(0, ecs_field_src(&it, 1));
-            test_uint(0, ecs_field_src(&it, 1));
-            test_bool(true, ecs_field_is_set(&it, 1));
-            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_bool(true, ecs_field_is_set(&it, 0));
+            test_bool(false, ecs_field_is_set(&it, 1));
         }
         test_assert(e1_found == false);
         test_assert(e2_found == false);
@@ -8448,10 +8448,10 @@ void Operators_not_from_this_written(void) {
                 e1_found |= it.entities[i] == e1;
                 e2_found |= it.entities[i] == e2;
             }
-            test_uint(0, ecs_field_src(&it, 1));
-            test_uint(0, ecs_field_src(&it, 1));
-            test_bool(true, ecs_field_is_set(&it, 1));
-            test_bool(false, ecs_field_is_set(&it, 2));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_uint(0, ecs_field_src(&it, 0));
+            test_bool(true, ecs_field_is_set(&it, 0));
+            test_bool(false, ecs_field_is_set(&it, 1));
         }
         test_assert(e1_found == true);
         test_assert(e2_found == true);
@@ -8497,14 +8497,14 @@ void Operators_or_from_this_written(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e1, it.entities[0]);
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
 
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e2, it.entities[0]);
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -8516,14 +8516,14 @@ void Operators_or_from_this_written(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e1, it.entities[0]);
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
 
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e2, it.entities[0]);
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -8534,14 +8534,14 @@ void Operators_or_from_this_written(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e1, it.entities[0]);
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
 
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e2, it.entities[0]);
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -8552,14 +8552,14 @@ void Operators_or_from_this_written(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e2, it.entities[0]);
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
 
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e1, it.entities[0]);
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
 
         test_bool(false, ecs_query_next(&it));
     }
@@ -8657,9 +8657,9 @@ void Operators_and_from_empty_w_tag(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 0));
     test_uint(0, ecs_field_src(&it, 1));
-    test_uint(0, ecs_field_src(&it, 2));
-    test_uint(TagA, ecs_field_id(&it, 2));
+    test_uint(TagA, ecs_field_id(&it, 1));
     test_bool(false, ecs_query_next(&it));
 
     ecs_query_fini(q);
@@ -8687,9 +8687,9 @@ void Operators_not_from_empty_w_tag(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 0));
     test_uint(0, ecs_field_src(&it, 1));
-    test_uint(0, ecs_field_src(&it, 2));
-    test_uint(TagA, ecs_field_id(&it, 2));
+    test_uint(TagA, ecs_field_id(&it, 1));
     test_bool(false, ecs_query_next(&it));
 
     ecs_query_fini(q);
@@ -8717,9 +8717,9 @@ void Operators_or_from_empty_w_tag(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 0));
     test_uint(0, ecs_field_src(&it, 1));
-    test_uint(0, ecs_field_src(&it, 2));
-    test_uint(TagA, ecs_field_id(&it, 2));
+    test_uint(TagA, ecs_field_id(&it, 1));
     test_bool(false, ecs_query_next(&it));
 
     ecs_query_fini(q);

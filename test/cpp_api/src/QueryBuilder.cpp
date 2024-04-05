@@ -287,11 +287,11 @@ void QueryBuilder_id_pair_wildcard_term(void) {
     int count = 0;
     r.each([&](flecs::iter& it, size_t index) {
         if (it.entity(index) == e1) {
-            test_assert(it.id(1) == ecs.pair(Likes, Apples));
+            test_assert(it.id(0) == ecs.pair(Likes, Apples));
             count ++;
         }
         if (it.entity(index) == e2) {
-            test_assert(it.id(1) == ecs.pair(Likes, Pears));
+            test_assert(it.id(0) == ecs.pair(Likes, Pears));
             count ++;
         }
     });
@@ -320,11 +320,11 @@ void QueryBuilder_type_pair_term(void) {
     int count = 0;
     r.each([&](flecs::iter& it, size_t index) {
         if (it.entity(index) == e1) {
-            test_assert((it.id(1) == ecs.pair<Likes, Apples>()));
+            test_assert((it.id(0) == ecs.pair<Likes, Apples>()));
             count ++;
         }
         if (it.entity(index) == e2) {
-            test_assert((it.id(1) == ecs.pair<Likes, Pears>()));
+            test_assert((it.id(0) == ecs.pair<Likes, Pears>()));
             count ++;
         }
     });
@@ -355,13 +355,13 @@ void QueryBuilder_pair_term_w_var(void) {
     int count = 0;
     r.each([&](flecs::iter& it, size_t index) {
         if (it.entity(index) == e1) {
-            test_assert((it.id(1) == ecs.pair<Likes, Apples>()));
+            test_assert((it.id(0) == ecs.pair<Likes, Apples>()));
             test_assert(it.get_var("Food") == ecs.id<Apples>());
             test_assert(it.get_var(food_var) == ecs.id<Apples>());
             count ++;
         }
         if (it.entity(index) == e2) {
-            test_assert((it.id(1) == ecs.pair<Likes, Pears>()));
+            test_assert((it.id(0) == ecs.pair<Likes, Pears>()));
             test_assert(it.get_var("Food") == ecs.id<Pears>());
             test_assert(it.get_var(food_var) == ecs.id<Pears>());
             count ++;
@@ -400,21 +400,21 @@ void QueryBuilder_2_pair_terms_w_var(void) {
     int count = 0;
     r.each([&](flecs::iter& it, size_t index) {
         if (it.entity(index) == Bob) {
-            test_assert((it.id(1) == ecs.pair<Eats, Apples>()));
+            test_assert((it.id(0) == ecs.pair<Eats, Apples>()));
             test_assert(it.get_var("Food") == ecs.id<Apples>());
             test_assert(it.get_var(food_var) == ecs.id<Apples>());
 
-            test_assert((it.id(2) == ecs.pair<Likes>(Alice)));
+            test_assert((it.id(1) == ecs.pair<Likes>(Alice)));
             test_assert(it.get_var("Person") == Alice);
             test_assert(it.get_var(person_var) == Alice);
             count ++;
         }
         if (it.entity(index) == Alice) {
-            test_assert((it.id(1) == ecs.pair<Eats, Pears>()));
+            test_assert((it.id(0) == ecs.pair<Eats, Pears>()));
             test_assert(it.get_var("Food") == ecs.id<Pears>());
             test_assert(it.get_var(food_var) == ecs.id<Pears>());
 
-            test_assert((it.id(2) == ecs.pair<Likes>(Bob)));
+            test_assert((it.id(1) == ecs.pair<Likes>(Bob)));
             test_assert(it.get_var("Person") == Bob);
             test_assert(it.get_var(person_var) == Bob);
             count ++;
@@ -449,7 +449,7 @@ void QueryBuilder_set_var(void) {
         .set_var(food_var, Pears)
         .each([&](flecs::iter& it, size_t index) {
             test_assert(it.entity(index) == e2);
-            test_assert((it.id(1) == ecs.pair<Likes>(Pears)));
+            test_assert((it.id(0) == ecs.pair<Likes>(Pears)));
             test_assert(it.get_var("Food") == Pears);
             test_assert(it.get_var(food_var) == Pears);
             count ++;
@@ -491,8 +491,8 @@ void QueryBuilder_set_2_vars(void) {
         .set_var(person_var, Bob)
         .each([&](flecs::iter& it, size_t index) {
             test_assert(it.entity(index) == Alice);
-            test_assert((it.id(1) == ecs.pair<Eats>(Pears)));
-            test_assert((it.id(2) == ecs.pair<Likes>(Bob)));
+            test_assert((it.id(0) == ecs.pair<Eats>(Pears)));
+            test_assert((it.id(1) == ecs.pair<Likes>(Bob)));
             test_assert(it.get_var("Food") == Pears);
             test_assert(it.get_var(food_var) == Pears);
             test_assert(it.get_var("Person") == Bob);
@@ -526,7 +526,7 @@ void QueryBuilder_set_var_by_name(void) {
         .set_var("Food", Pears)
         .each([&](flecs::iter& it, size_t index) {
             test_assert(it.entity(index) == e2);
-            test_assert((it.id(1) == ecs.pair<Likes>(Pears)));
+            test_assert((it.id(0) == ecs.pair<Likes>(Pears)));
             count ++;
         });
     test_int(count, 1);
@@ -565,8 +565,8 @@ void QueryBuilder_set_2_vars_by_name(void) {
         .set_var("Person", Bob)
         .each([&](flecs::iter& it, size_t index) {
             test_assert(it.entity(index) == Alice);
-            test_assert((it.id(1) == ecs.pair<Eats>(Pears)));
-            test_assert((it.id(2) == ecs.pair<Likes>(Bob)));
+            test_assert((it.id(0) == ecs.pair<Eats>(Pears)));
+            test_assert((it.id(1) == ecs.pair<Likes>(Bob)));
             test_assert(it.get_var("Food") == Pears);
             test_assert(it.get_var(food_var) == Pears);
             test_assert(it.get_var("Person") == Bob);
@@ -595,7 +595,7 @@ void QueryBuilder_expr_w_var(void) {
     int32_t count = 0;
     r.each([&](flecs::iter& it, size_t index) {
         test_assert(it.entity(index) == e);
-        test_assert(it.pair(1).second() == obj);
+        test_assert(it.pair(0).second() == obj);
         count ++;
     });
 
@@ -852,8 +852,8 @@ void QueryBuilder_singleton_term(void) {
     int32_t count = 0;
 
     q.iter([&](flecs::iter& it, Self *s) {
-        auto o = it.field<const Other>(2);
-        test_assert(!it.is_self(2));
+        auto o = it.field<const Other>(1);
+        test_assert(!it.is_self(1));
         test_int(o->value, 10);
         
         const Other& o_ref = *o;
@@ -886,8 +886,8 @@ void QueryBuilder_isa_superset_term(void) {
     int32_t count = 0;
 
     q.iter([&](flecs::iter& it, Self *s) {
-        auto o = it.field<const Other>(2);
-        test_assert(!it.is_self(2));
+        auto o = it.field<const Other>(1);
+        test_assert(!it.is_self(1));
         test_int(o->value, 10);
 
         for (auto i : it) {
@@ -920,9 +920,9 @@ void QueryBuilder_isa_self_superset_term(void) {
     int32_t owned_count = 0;
 
     q.iter([&](flecs::iter& it, Self *s) {
-        auto o = it.field<const Other>(2);
+        auto o = it.field<const Other>(1);
 
-        if (!it.is_self(2)) {
+        if (!it.is_self(1)) {
             test_int(o->value, 10);
         } else {
             for (auto i : it) {
@@ -959,8 +959,8 @@ void QueryBuilder_childof_superset_term(void) {
     int32_t count = 0;
 
     q.iter([&](flecs::iter& it, Self *s) {
-        auto o = it.field<const Other>(2);
-        test_assert(!it.is_self(2));
+        auto o = it.field<const Other>(1);
+        test_assert(!it.is_self(1));
         test_int(o->value, 10);
 
         for (auto i : it) {
@@ -993,9 +993,9 @@ void QueryBuilder_childof_self_superset_term(void) {
     int32_t owned_count = 0;
 
     q.iter([&](flecs::iter& it, Self *s) {
-        auto o = it.field<const Other>(2);
+        auto o = it.field<const Other>(1);
 
-        if (!it.is_self(2)) {
+        if (!it.is_self(1)) {
             test_int(o->value, 10);
         } else {
             for (auto i : it) {
@@ -1636,12 +1636,12 @@ void QueryBuilder_optional_tag_is_set(void) {
         count += it.count();
         
         if (it.entity(0) == e_1) {
+            test_bool(it.is_set(0), true);
             test_bool(it.is_set(1), true);
-            test_bool(it.is_set(2), true);
         } else {
             test_assert(it.entity(0) == e_2);
-            test_bool(it.is_set(1), true);
-            test_bool(it.is_set(2), false);
+            test_bool(it.is_set(0), true);
+            test_bool(it.is_set(1), false);
         }
     });
 
@@ -2466,8 +2466,8 @@ void QueryBuilder_up_w_type(void) {
     int32_t count = 0;
 
     q.iter([&](flecs::iter& it, Self *s) {
-        auto o = it.field<const Other>(2);
-        test_assert(!it.is_self(2));
+        auto o = it.field<const Other>(1);
+        test_assert(!it.is_self(1));
         test_int(o->value, 10);
 
         for (auto i : it) {
@@ -2904,7 +2904,7 @@ void QueryBuilder_name_arg(void) {
         count ++;
         test_int(p->x, 10);
         test_int(p->y, 20);
-        test_assert(it.src(1) == e);
+        test_assert(it.src(0) == e);
     });
 
     test_int(count, 1);
@@ -2922,8 +2922,8 @@ void QueryBuilder_const_in_term(void) {
 
     int32_t count = 0;
     f.iter([&](flecs::iter& it) {
-        auto p = it.field<const Position>(1);
-        test_assert(it.is_readonly(1));
+        auto p = it.field<const Position>(0);
+        test_assert(it.is_readonly(0));
         for (auto i : it) {
             count ++;
             test_int(p[i].x, 10);
@@ -2947,9 +2947,9 @@ void QueryBuilder_const_optional(void) {
     int32_t count = 0, set_count = 0;
     f.iter([&](flecs::iter& it) {
         test_int(it.count(), 1);
-        if (it.is_set(2)) {
-            auto p = it.field<const Position>(2);
-            test_assert(it.is_readonly(2));
+        if (it.is_set(1)) {
+            auto p = it.field<const Position>(1);
+            test_assert(it.is_readonly(1));
             test_int(p->x, 10);
             test_int(p->y, 20);
             set_count ++;
@@ -2979,8 +2979,8 @@ void QueryBuilder_2_terms_w_expr(void) {
     int32_t count = 0;
     f.each([&](flecs::iter& it, size_t index) {
         if (it.entity(index) == e1) {
-            test_assert(it.id(1) == a);
-            test_assert(it.id(2) == b);
+            test_assert(it.id(0) == a);
+            test_assert(it.id(1) == b);
             count ++;
         }
     });
@@ -3107,7 +3107,7 @@ void QueryBuilder_iter_column_w_const_as_array(void) {
 
     int32_t count = 0;
     f.iter([&](flecs::iter& it) {
-        const auto p = it.field<Position>(1);
+        const auto p = it.field<Position>(0);
         for (auto i : it) {
             p[i].x += 1;
             p[i].y += 2;
@@ -3140,7 +3140,7 @@ void QueryBuilder_iter_column_w_const_as_ptr(void) {
 
     int32_t count = 0;
     f.iter([&](flecs::iter& it) {
-        const auto p = it.field<Position>(1);
+        const auto p = it.field<Position>(0);
         for (size_t i = 0; i < it.count(); i ++) {
             test_int(p->x, 10);
             test_int(p->y, 20);
@@ -3164,7 +3164,7 @@ void QueryBuilder_iter_column_w_const_deref(void) {
 
     int32_t count = 0;
     f.iter([&](flecs::iter& it) {
-        const auto p = it.field<Position>(1);
+        const auto p = it.field<Position>(0);
         Position pv = *p;
         for (size_t i = 0; i < it.count(); i ++) {
             test_int(pv.x, 10);

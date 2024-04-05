@@ -49,8 +49,8 @@ int main(int argc, char *argv[]) {
 
     ecs_iter_t it = ecs_query_iter(ecs, q);
     while (ecs_query_next(&it)) {
-        Velocity *v = ecs_field(&it, Velocity, 1);
-        Gravity *g = ecs_field(&it, Gravity, 2);
+        Velocity *v = ecs_field(&it, Velocity, 0);
+        Gravity *g = ecs_field(&it, Gravity, 1);
 
         for (int i = 0; i < it.count; i ++) {
             // Make sure to access g as a pointer, as we only have a single

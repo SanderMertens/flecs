@@ -76,12 +76,12 @@ int main(int argc, char *argv[]) {
     // in the case of a shared field, it is accessed as a pointer.
     ecs_iter_t it = ecs_query_iter(world, q);
     while (ecs_query_next(&it)) {
-        Position *p = ecs_field(&it, Position, 1);
-        Velocity *v = ecs_field(&it, Velocity, 2);
+        Position *p = ecs_field(&it, Position, 0);
+        Velocity *v = ecs_field(&it, Velocity, 1);
 
         // Check if Velocity is owned, in which case it's accessed as array.
         // Position will always be owned, since we set the term to Self.
-        if (ecs_field_is_self(&it, 2)) { // Velocity is term 2
+        if (ecs_field_is_self(&it, 1)) { // Velocity is term 2
             printf("Velocity is owned\n");
             for (int i = 0; i < it.count; i ++) {
                 // If Velocity is shared, access the field as an array.

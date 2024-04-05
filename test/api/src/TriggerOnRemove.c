@@ -1,11 +1,11 @@
 #include <api.h>
 
 void Deinit(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
 
     Velocity *v = NULL;
     if (it->field_count >= 2) {
-        v = ecs_field(it, Velocity, 2);
+        v = ecs_field(it, Velocity, 1);
     }
 
     probe_iter(it);
@@ -145,7 +145,7 @@ static Position old_position = {0};
 
 static
 void RemovePosition(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
 
     test_assert(it->count == 1);
 
@@ -353,7 +353,7 @@ void OnRemoveHasTag(ecs_iter_t *it) {
 
     test_int(it->count, 1);
     test_assert(it->entities[0] == ctx->ent);
-    test_assert(ecs_field_id(it, 1) == ctx->tag);
+    test_assert(ecs_field_id(it, 0) == ctx->tag);
     test_bool(ecs_has_id(it->world, ctx->ent, ctx->tag), true);
 
     dummy_called = true;

@@ -1310,7 +1310,7 @@ void flecs_on_set_rest(ecs_iter_t *it) {
 
 static
 void DequeueRest(ecs_iter_t *it) {
-    EcsRest *rest = ecs_field(it, EcsRest, 1);
+    EcsRest *rest = ecs_field(it, EcsRest, 0);
 
     if (it->delta_system_time > (ecs_ftime_t)1.0) {
         ecs_warn(
@@ -1337,7 +1337,7 @@ void DisableRest(ecs_iter_t *it) {
     if (it->event == EcsOnAdd) {
         /* REST module was disabled */
         while (ecs_each_next(&rit)) {
-            EcsRest *rest = ecs_field(&rit, EcsRest, 1);
+            EcsRest *rest = ecs_field(&rit, EcsRest, 0);
             int i;
             for (i = 0; i < rit.count; i ++) {
                 ecs_rest_ctx_t *ctx = rest[i].impl;
@@ -1347,7 +1347,7 @@ void DisableRest(ecs_iter_t *it) {
     } else if (it->event == EcsOnRemove) {
         /* REST module was enabled */
         while (ecs_each_next(&rit)) {
-            EcsRest *rest = ecs_field(&rit, EcsRest, 1);
+            EcsRest *rest = ecs_field(&rit, EcsRest, 0);
             int i;
             for (i = 0; i < rit.count; i ++) {
                 ecs_rest_ctx_t *ctx = rest[i].impl;

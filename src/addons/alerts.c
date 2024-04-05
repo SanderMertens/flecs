@@ -239,8 +239,8 @@ ecs_entity_t flecs_alert_out_of_range_kind(
 static
 void MonitorAlerts(ecs_iter_t *it) {
     ecs_world_t *world = it->real_world;
-    EcsAlert *alert = ecs_field(it, EcsAlert, 1);
-    EcsPoly *poly = ecs_field(it, EcsPoly, 2);
+    EcsAlert *alert = ecs_field(it, EcsAlert, 0);
+    EcsPoly *poly = ecs_field(it, EcsPoly, 1);
 
     int32_t i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -350,10 +350,10 @@ void MonitorAlerts(ecs_iter_t *it) {
 static
 void MonitorAlertInstances(ecs_iter_t *it) {
     ecs_world_t *world = it->real_world;
-    EcsAlertInstance *alert_instance = ecs_field(it, EcsAlertInstance, 1);
-    EcsMetricSource *source = ecs_field(it, EcsMetricSource, 2);
-    EcsMetricValue *value = ecs_field(it, EcsMetricValue, 3);
-    EcsAlertTimeout *timeout = ecs_field(it, EcsAlertTimeout, 4);
+    EcsAlertInstance *alert_instance = ecs_field(it, EcsAlertInstance, 0);
+    EcsMetricSource *source = ecs_field(it, EcsMetricSource, 1);
+    EcsMetricValue *value = ecs_field(it, EcsMetricValue, 2);
+    EcsAlertTimeout *timeout = ecs_field(it, EcsAlertTimeout, 3);
 
     /* Get alert component from alert instance parent (the alert) */
     ecs_id_t childof_pair;

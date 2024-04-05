@@ -18,7 +18,7 @@ int compare_position(
 }
 
 void print_position(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
     for (int i = 0; i < it->count; i ++) {
         printf("{%.1f, %.1f}\n", p[i].x, p[i].y);
     }

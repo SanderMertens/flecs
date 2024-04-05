@@ -7640,7 +7640,7 @@ ecs_id_t ecs_field_id(
  * @return The index of the matched column, -1 if not matched.
  */
 FLECS_API
-int32_t ecs_field_column_index(
+int32_t ecs_field_column(
     const ecs_iter_t *it,
     int32_t index);
 
@@ -20960,7 +20960,7 @@ public:
      * @param index The field index.
      */
     int32_t column_index(int32_t index) const {
-        return ecs_field_column_index(m_iter, index);
+        return ecs_field_column(m_iter, index);
     }
 
     /** Convert current iterator result to string.
@@ -24442,7 +24442,7 @@ private:
     static void invoke(ecs_iter_t *iter) {
         auto self = static_cast<const entity_observer_delegate*>(iter->binding_ctx);
         ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
-        self->m_func(flecs::entity(iter->world, ecs_field_src(iter, 1)));
+        self->m_func(flecs::entity(iter->world, ecs_field_src(iter, 0)));
     }
 
     template <typename F, if_t<arity<F>::value == 0> = 0>
@@ -24487,7 +24487,7 @@ private:
             "entity observer invoked without payload");
 
         Event *data = static_cast<Event*>(iter->param);
-        self->m_func(flecs::entity(iter->world, ecs_field_src(iter, 1)), *data);
+        self->m_func(flecs::entity(iter->world, ecs_field_src(iter, 0)), *data);
     }
 
     Func m_func;

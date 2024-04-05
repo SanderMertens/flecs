@@ -18,7 +18,7 @@ void set_worker_kind(ecs_world_t *world, int32_t thread_count) {
 }
 
 void Progress(ecs_iter_t *it) {
-    Position *pos = ecs_field(it, Position, 1);
+    Position *pos = ecs_field(it, Position, 0);
     int row;
     for (row = 0; row < it->count; row ++) {
         Position *p = &pos[row];
@@ -736,7 +736,7 @@ void TestSubset(ecs_world_t *world, ecs_query_t *q, int32_t offset, int32_t coun
 
 static
 void TestAll(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -1017,7 +1017,7 @@ void ReactiveDummySystem(ecs_iter_t * it) {
 
 static
 void PeriodicDummySystem(ecs_iter_t * it) {
-    ecs_id_t ecs_id(Position) = ecs_field_id(it, 1);
+    ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
     
     int i;
     for (i = 0; i < it->count; i++ ) {
@@ -1062,7 +1062,7 @@ void MultiThread_fini_after_set_threads(void) {
 
 static
 void SingleThreadedSystem(ecs_iter_t * it) {
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
     
     int i;
     for (i = 0; i < it->count; i++ ) {

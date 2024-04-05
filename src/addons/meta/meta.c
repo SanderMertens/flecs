@@ -709,7 +709,7 @@ int flecs_add_constant_to_bitmask(
 static
 void flecs_set_primitive(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    EcsPrimitive *type = ecs_field(it, EcsPrimitive, 1);
+    EcsPrimitive *type = ecs_field(it, EcsPrimitive, 0);
 
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -776,7 +776,7 @@ void flecs_set_primitive(ecs_iter_t *it) {
 static
 void flecs_set_member(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    EcsMember *member = ecs_field(it, EcsMember, 1);
+    EcsMember *member = ecs_field(it, EcsMember, 0);
     EcsMemberRanges *ranges = ecs_table_get_id(world, it->table, 
         ecs_id(EcsMemberRanges), it->offset);
 
@@ -797,7 +797,7 @@ void flecs_set_member(ecs_iter_t *it) {
 static
 void flecs_set_member_ranges(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    EcsMemberRanges *ranges = ecs_field(it, EcsMemberRanges, 1);
+    EcsMemberRanges *ranges = ecs_field(it, EcsMemberRanges, 0);
     EcsMember *member = ecs_table_get_id(world, it->table, 
         ecs_id(EcsMember), it->offset);
     if (!member) {
@@ -874,7 +874,7 @@ void flecs_add_constant(ecs_iter_t *it) {
 static
 void flecs_set_array(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    EcsArray *array = ecs_field(it, EcsArray, 1);
+    EcsArray *array = ecs_field(it, EcsArray, 0);
 
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -904,7 +904,7 @@ void flecs_set_array(ecs_iter_t *it) {
 static
 void flecs_set_vector(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    EcsVector *array = ecs_field(it, EcsVector, 1);
+    EcsVector *array = ecs_field(it, EcsVector, 0);
 
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -925,7 +925,7 @@ void flecs_set_vector(ecs_iter_t *it) {
 static
 void flecs_set_custom_type(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    EcsOpaque *serialize = ecs_field(it, EcsOpaque, 1);
+    EcsOpaque *serialize = ecs_field(it, EcsOpaque, 0);
 
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -1074,7 +1074,7 @@ error:
 
 static
 void flecs_set_unit(ecs_iter_t *it) {
-    EcsUnit *u = ecs_field(it, EcsUnit, 1);
+    EcsUnit *u = ecs_field(it, EcsUnit, 0);
 
     ecs_world_t *world = it->world;
 
@@ -1106,7 +1106,7 @@ void flecs_unit_quantity_monitor(ecs_iter_t *it) {
 static
 void ecs_meta_type_init_default_ctor(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    EcsMetaType *type = ecs_field(it, EcsMetaType, 1);
+    EcsMetaType *type = ecs_field(it, EcsMetaType, 0);
 
     int i;
     for (i = 0; i < it->count; i ++) {

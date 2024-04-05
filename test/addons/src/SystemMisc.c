@@ -315,11 +315,11 @@ void SystemMisc_system_w_or_disabled_and_prefab(void) {
 
 static
 void TableColumns(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
-    Velocity *v = ecs_field(it, Velocity, 2);
+    Position *p = ecs_field(it, Position, 0);
+    Velocity *v = ecs_field(it, Velocity, 1);
 
-    ecs_id_t ecs_id(Position) = ecs_field_id(it, 1);
-    ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 2);
+    ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
+    ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 1);
 
     const ecs_type_t *type = ecs_table_get_type(it->table);
     test_int(2, type->count);
@@ -405,7 +405,7 @@ void SystemMisc_dont_enable_after_rematch(void) {
 
 static void SysA(ecs_iter_t *it)
 {
-    ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 2);
+    ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 1);
     ecs_add(it->world, it->entities[0], Velocity);
 }
 
@@ -809,8 +809,8 @@ void SystemMisc_rw_in_implicit_any(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_assert(ecs_query_next(&it) == true);
+    test_assert(ecs_field_is_readonly(&it, 0) == false);
     test_assert(ecs_field_is_readonly(&it, 1) == false);
-    test_assert(ecs_field_is_readonly(&it, 2) == false);
     test_assert(ecs_query_next(&it) == false);
 
     ecs_query_fini(q);
@@ -832,8 +832,8 @@ void SystemMisc_rw_in_implicit_shared(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_assert(ecs_query_next(&it) == true);
-    test_assert(ecs_field_is_readonly(&it, 1) == false);
-    test_assert(ecs_field_is_readonly(&it, 2) == true);
+    test_assert(ecs_field_is_readonly(&it, 0) == false);
+    test_assert(ecs_field_is_readonly(&it, 1) == true);
     test_assert(ecs_query_next(&it) == false);
 
     ecs_query_fini(q);
@@ -854,8 +854,8 @@ void SystemMisc_rw_in_implicit_from_empty(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_assert(ecs_query_next(&it) == true);
-    test_assert(ecs_field_is_readonly(&it, 1) == false);
-    test_assert(ecs_field_is_readonly(&it, 2) == true);
+    test_assert(ecs_field_is_readonly(&it, 0) == false);
+    test_assert(ecs_field_is_readonly(&it, 1) == true);
     test_assert(ecs_query_next(&it) == false);
 
     ecs_query_fini(q);
@@ -877,8 +877,8 @@ void SystemMisc_rw_in_implicit_from_entity(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_assert(ecs_query_next(&it) == true);
-    test_assert(ecs_field_is_readonly(&it, 1) == false);
-    test_assert(ecs_field_is_readonly(&it, 2) == true);
+    test_assert(ecs_field_is_readonly(&it, 0) == false);
+    test_assert(ecs_field_is_readonly(&it, 1) == true);
     test_assert(ecs_query_next(&it) == false);
 
     ecs_query_fini(q);
@@ -899,8 +899,8 @@ void SystemMisc_rw_out_explicit_any(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_assert(ecs_query_next(&it) == true);
+    test_assert(ecs_field_is_readonly(&it, 0) == false);
     test_assert(ecs_field_is_readonly(&it, 1) == false);
-    test_assert(ecs_field_is_readonly(&it, 2) == false);
     test_assert(ecs_query_next(&it) == false);
 
     ecs_query_fini(q);
@@ -922,8 +922,8 @@ void SystemMisc_rw_out_explicit_shared(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_assert(ecs_query_next(&it) == true);
+    test_assert(ecs_field_is_readonly(&it, 0) == false);
     test_assert(ecs_field_is_readonly(&it, 1) == false);
-    test_assert(ecs_field_is_readonly(&it, 2) == false);
     test_assert(ecs_query_next(&it) == false);
 
     ecs_query_fini(q);
@@ -944,8 +944,8 @@ void SystemMisc_rw_out_explicit_from_empty(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_assert(ecs_query_next(&it) == true);
+    test_assert(ecs_field_is_readonly(&it, 0) == false);
     test_assert(ecs_field_is_readonly(&it, 1) == false);
-    test_assert(ecs_field_is_readonly(&it, 2) == false);
     test_assert(ecs_query_next(&it) == false);
 
     ecs_query_fini(q);
@@ -967,8 +967,8 @@ void SystemMisc_rw_out_explicit_from_entity(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_assert(ecs_query_next(&it) == true);
+    test_assert(ecs_field_is_readonly(&it, 0) == false);
     test_assert(ecs_field_is_readonly(&it, 1) == false);
-    test_assert(ecs_field_is_readonly(&it, 2) == false);
     test_assert(ecs_query_next(&it) == false);
 
     ecs_query_fini(q);
@@ -1025,7 +1025,7 @@ void SystemMisc_get_query(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     while (ecs_query_next(&it)) {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
 
         int i;

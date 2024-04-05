@@ -67,8 +67,8 @@ Flecs has different query types, which are optimized for different kinds of use 
 
 ecs_iter_t it = ecs_query_iter(world, f);
 while (ecs_query_next(&it)) {
-    Position *p = ecs_field(&it, Position, 1);
-    Velocity *v = ecs_field(&it, Velocity, 2);
+    Position *p = ecs_field(&it, Position, 0);
+    Velocity *v = ecs_field(&it, Velocity, 1);
 
     for (int i = 0; i < it.count; i ++) {
         p[i].x += v[i].x;
@@ -98,8 +98,8 @@ ecs_query_t *q = ecs_query(world, {
 
 ecs_iter_t it = ecs_query_iter(world, q);
 while (ecs_query_next(&it)) {
-    Position *p = ecs_field(&it, Position, 1);
-    Velocity *v = ecs_field(&it, Velocity, 2);
+    Position *p = ecs_field(&it, Position, 0);
+    Velocity *v = ecs_field(&it, Velocity, 1);
 
     for (int i = 0; i < it.count; i ++) {
         p[i].x += v[i].x;
@@ -129,8 +129,8 @@ ecs_query_impl_t *r = ecs_query(world, {
 
 ecs_iter_t it = ecs_query_iter(world, r);
 while (ecs_query_next(&it)) {
-    Position *p = ecs_field(&it, Position, 1);
-    Velocity *v = ecs_field(&it, Velocity, 2);
+    Position *p = ecs_field(&it, Position, 0);
+    Velocity *v = ecs_field(&it, Velocity, 1);
 
     for (int i = 0; i < it.count; i ++) {
         p[i].x += v[i].x;
@@ -287,8 +287,8 @@ ecs_iter_t it = ecs_query_iter(world, f);
 
 // Outer loop: matching tables
 while (ecs_query_next(&it)) {
-  Position *p = ecs_field(&it, Position, 1); // 1st term
-  Velocity *v = ecs_field(&it, Velocity, 2); // 2nd term
+  Position *p = ecs_field(&it, Position, 0); // 1st term
+  Velocity *v = ecs_field(&it, Velocity, 1); // 2nd term
 
   // Inner loop: entities in table
   for (int i = 0; i < it.count; i ++) {
@@ -336,7 +336,7 @@ auto f = world.query_builder<Position>()
 f.each([](flecs::iter& it, size_t index, Position& p) {
     flecs::entity e = it.entity(index);
     std::cout << e.name() << ": " 
-              << it.id(2).str() // prints pair
+              << it.id(1).str() // prints pair
               << std::endl;
 });
 ```
@@ -404,8 +404,8 @@ The component arguments may be omitted, and can be obtained from the iterator ob
 auto f = world.query<Position, const Velocity>();
 
 f.iter([](flecs::iter& it) {
-    auto p = it.field<Position>(1);
-    auto v = it.field<const Velocity>(2);
+    auto p = it.field<Position>(0);
+    auto v = it.field<const Velocity>(1);
 
     for (auto i : it) {
         p[i].x += v[i].x;
@@ -420,8 +420,8 @@ This can be combined with an untyped variant of the `field` method to access com
 auto f = world.query<Position, const Velocity>();
 
 f.iter([](flecs::iter& it) {
-    void *ptr = it.field(1);
-    flecs::id type_id = it.id(1);
+    void *ptr = it.field(0);
+    flecs::id type_id = it.id(0);
 
     // ...
 });
@@ -810,7 +810,7 @@ ecs_query_t *f = ecs_query(world, {
 
 ecs_iter_t it = ecs_query_iter(world, f);
 while (ecs_query_next(&it)) {
-    ecs_id_t id = ecs_field_id(&it, 1);
+    ecs_id_t id = ecs_field_id(&it, 0);
     ecs_entity_t second = ecs_pair_second(world, id);
 
     for (int i = 0; i < it.count; i ++) {
@@ -899,7 +899,7 @@ flecs::query<> f = world.query_builder()
     .build();
 
 f.each([](flecs::iter& it, size_t index) {
-    flecs::entity second = it.pair(1).second();
+    flecs::entity second = it.pair(0).second();
     flecs::entity e = it.entity(index);
     
     std::cout << "entity " << e.name() 
@@ -1011,10 +1011,10 @@ flecs::query<> f = world.query_builder()
     .build();
 
 f.iter([](flecs::iter& it) {
-    auto p = it.field<Position>(1);       // OK
-    auto p = it.field<const Position>(1); // OK
-    auto v = it.field<const Velocity>(2); // OK
-    auto v = it.field<Velocity>(2);       // Throws assert
+    auto p = it.field<Position>(0);       // OK
+    auto p = it.field<const Position>(0); // OK
+    auto v = it.field<const Velocity>(1); // OK
+    auto v = it.field<Velocity>(1);       // Throws assert
 });
 ```
 
@@ -1140,10 +1140,10 @@ ecs_query_t *f = ecs_query(world, {
 
 ecs_iter_t it = ecs_query_iter(world, f);
 while (ecs_query_next(&it)) {
-  Position *p = ecs_field(&it, Position, 1);
-  Mass *m = ecs_field(&it, Mass, 3); // not 4, because of the Or expression
+  Position *p = ecs_field(&it, Position, 0);
+  Mass *m = ecs_field(&it, Mass, 2); // not 4, because of the Or expression
 
-  ecs_id_t vs_id = ecs_field_id(&it, 2);
+  ecs_id_t vs_id = ecs_field_id(&it, 1);
   if (vs_id == ecs_id(Velocity)) {
     // We can only use ecs_field if the field type is the same for all results,
     // but we can get the table column directly.
@@ -1169,10 +1169,10 @@ flecs::query<> f = world.query_builder()
     .build();
 
 f.iter([&](flecs::iter& it) {
-  auto p = it.field<Position>(1);
-  auto v = it.field<Mass>(3); // not 4, because of the Or expression
+  auto p = it.field<Position>(0);
+  auto v = it.field<Mass>(2); // not 4, because of the Or expression
   
-  flecs::id vs_id = it.id(2);
+  flecs::id vs_id = it.id(1);
   if (vs_id == world.id<Velocity>()) {
     // We can only use ecs_field if the field type is the same for all results,
     // but we can use range() to get the table column directly.
@@ -1280,9 +1280,9 @@ ecs_query_t *f = ecs_query(world, {
 
 ecs_iter_t it = ecs_query_iter(world, f);
 while (ecs_query_next(&it)) {
-  Position *p = ecs_field(&it, Position, 1);
-  if (ecs_field_is_set(&it, 2)) {
-    Velocity *v = ecs_field(&it, Velocity, 2);
+  Position *p = ecs_field(&it, Position, 0);
+  if (ecs_field_is_set(&it, 1)) {
+    Velocity *v = ecs_field(&it, Velocity, 1);
     // iterate as usual
   } else {
     // iterate as usual
@@ -1300,10 +1300,10 @@ flecs::query<> f = world.query_builder()
     .build();
 
 f.iter([&](flecs::iter& it) {
-  auto p = it.field<Position>(1);
+  auto p = it.field<Position>(0);
   
-  if (it.is_set(2)) {
-    auto v = it.field<Velocity>(2);
+  if (it.is_set(1)) {
+    auto v = it.field<Velocity>(1);
     // iterate as usual
   } else if (vs_id == world.id<Speed>()) {
     // iterate as usual
@@ -1559,9 +1559,9 @@ ecs_query_t *f = ecs_query(world, {
 
 ecs_iter_t it = ecs_query_iter(world, f);
 while (ecs_query_next(&it)) {
-  Position *p = ecs_field(&it, Position, 1);
-  Velocity *v = ecs_field(&it, Velocity, 2);
-  SimTime *st = ecs_field(&it, SimTime, 3);
+  Position *p = ecs_field(&it, Position, 0);
+  Velocity *v = ecs_field(&it, Velocity, 1);
+  SimTime *st = ecs_field(&it, SimTime, 2);
   
   for (int i = 0; i < it.count; i ++) {
     p[i].x += v[i].x * st[i].value;
@@ -1598,8 +1598,8 @@ ecs_query_t *f = ecs_query(world, {
 });
 
 while (ecs_query_next(&it)) {
-  ecs_entity_t src_1 = ecs_field_src(&it, 1); // Returns 0, meaning entity is stored in it.entities
-  ecs_entity_t src_2 = ecs_field_src(&it, 2); // Returns Game
+  ecs_entity_t src_1 = ecs_field_src(&it, 0); // Returns 0, meaning entity is stored in it.entities
+  ecs_entity_t src_2 = ecs_field_src(&it, 1); // Returns Game
 
   for (int i = 0; i < it.count; i ++) {
     printf("$This = %s, src_2 = %s\n", 
@@ -1625,9 +1625,9 @@ flecs::query<> f = world.query_builder()
   .build();
 
 f.iter([](flecs::iter& it) {
-  auto p = it.field<Position>(1);
-  auto v = it.field<Velocity>(2);
-  auto st = it.field<SimTime>(3);
+  auto p = it.field<Position>(0);
+  auto v = it.field<Velocity>(1);
+  auto st = it.field<SimTime>(2);
   
   for (auto i : it) {
     p[i].x += v[i].x * st[i].value;
@@ -2209,10 +2209,10 @@ ecs_query_t *f = ecs_query(world, {
 ecs_iter_t it = ecs_query_iter(world, &it);
 while (ecs_query_next(&it)) {
   // Fetch components as usual
-  Position *p = ecs_field(&it, Position, 1);
-  Mass *m = ecs_field(&it, Mass, 2);
+  Position *p = ecs_field(&it, Position, 0);
+  Mass *m = ecs_field(&it, Mass, 1);
 
-  if (ecs_field_is_self(&it, 2)) {
+  if (ecs_field_is_self(&it, 1)) {
     // Mass is matched on self, access as array
     for (int i = 0; i < it.count; i ++) {
       p[i].x += 1.0 / m[i].value;
@@ -2243,7 +2243,7 @@ flecs::query<Position, Mass> f = world.query_builder<Position, Mass>()
   .build();
 
 f.iter([](flecs::iter& it, Position *p, Mass *v) {
-  if (it.is_self(2)) {
+  if (it.is_self(1)) {
     // Mass is matched on self, access as array
     for (auto i : it) {
       p[i].x += 1.0 / m[i].value;
@@ -3074,8 +3074,8 @@ ecs_add(world, e, Velocity);
 // Iterate the tables in the cache
 ecs_iter_t it = ecs_query_iter(world, q);
 while (ecs_query_next(&it)) {
-    Position *p = ecs_field(&it, Position, 1);
-    Velocity *v = ecs_field(&it, Velocity, 2);
+    Position *p = ecs_field(&it, Position, 0);
+    Velocity *v = ecs_field(&it, Velocity, 1);
 
     for (int i = 0; i < it.count; i ++) {
         p[i].x += v[i].x;

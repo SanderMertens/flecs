@@ -120,7 +120,7 @@ void flecs_query_populate_ptrs_w_shared(
         }
 
         ecs_size_t size = it->sizes[field_index];
-        if (!ecs_field_is_set(it, i + 1) || !size) {
+        if (!ecs_field_is_set(it, i) || !size) {
             /* Tag / no data */
             it->ptrs[field_index] = NULL;
             continue;

@@ -49,8 +49,8 @@ static Probe pv_probe;
 
 static
 void On_PV(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
-    Velocity *v = ecs_field(it, Velocity, 2);
+    Position *p = ecs_field(it, Position, 0);
+    Velocity *v = ecs_field(it, Velocity, 1);
 
     probe_system_w_ctx(it, &pv_probe);
 

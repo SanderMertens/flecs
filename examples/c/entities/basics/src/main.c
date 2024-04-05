@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
     // Iterate all entities with Position
     ecs_iter_t it = ecs_each(ecs, Position);
     while (ecs_each_next(&it)) {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         for (int i = 0; i < it.count; i ++) {
             printf("%s: {%f, %f}\n", ecs_get_name(ecs, it.entities[i]),
                 p[i].x, p[i].y);

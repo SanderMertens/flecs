@@ -94,7 +94,7 @@ int main(int argc, char *argv[]) {
     // When iterating, always use the pair type:
     ecs_iter_t it = ecs_query_iter(ecs, q);
     while (ecs_query_next(&it)) {
-        r = ecs_field(&it, Requires, 1);
+        r = ecs_field(&it, Requires, 0);
         for (int i = 0; i < it.count; i ++) {
             printf("requires %.2f gigawatts\n", r[i].amount);
         }

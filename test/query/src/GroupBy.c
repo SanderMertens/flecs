@@ -202,13 +202,13 @@ void GroupBy_group_by_iter_one(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 1));
+    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 0));
     test_uint(TgtB, it.group_id);
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
-    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 1));
+    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 0));
     test_uint(TgtB, it.group_id);
     test_bool(false, ecs_query_next(&it));
 
@@ -249,13 +249,13 @@ void GroupBy_group_by_iter_one_all_groups(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 1));
+    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 0));
     test_uint(TgtB, it.group_id);
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
-    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 1));
+    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 0));
     test_uint(TgtB, it.group_id);
     test_bool(false, ecs_query_next(&it));
 
@@ -265,13 +265,13 @@ void GroupBy_group_by_iter_one_all_groups(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 1));
+    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 0));
     test_uint(TgtA, it.group_id);
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 1));
+    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 0));
     test_uint(TgtA, it.group_id);
     test_bool(false, ecs_query_next(&it));
 
@@ -281,13 +281,13 @@ void GroupBy_group_by_iter_one_all_groups(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(ecs_pair(Rel, TgtC), ecs_field_id(&it, 1));
+    test_uint(ecs_pair(Rel, TgtC), ecs_field_id(&it, 0));
     test_uint(TgtC, it.group_id);
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
-    test_uint(ecs_pair(Rel, TgtC), ecs_field_id(&it, 1));
+    test_uint(ecs_pair(Rel, TgtC), ecs_field_id(&it, 0));
     test_uint(TgtC, it.group_id);
     test_bool(false, ecs_query_next(&it));
 
@@ -554,19 +554,19 @@ void GroupBy_group_by_default_action(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 1));
+    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 0));
     test_uint(TgtA, it.group_id);
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 1));
+    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 0));
     test_uint(TgtB, it.group_id);
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(ecs_pair(Rel, TgtC), ecs_field_id(&it, 1));
+    test_uint(ecs_pair(Rel, TgtC), ecs_field_id(&it, 0));
     test_uint(TgtC, it.group_id);
     test_bool(false, ecs_query_next(&it));
 

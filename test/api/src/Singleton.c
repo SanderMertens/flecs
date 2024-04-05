@@ -66,7 +66,7 @@ void Singleton_ensure_singleton(void) {
 
 static
 void IncSingleton(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
     p->x ++;
     p->y ++;
 }

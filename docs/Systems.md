@@ -10,8 +10,8 @@ An example of a simple system:
 // System implementation
 void Move(ecs_iter_t *it) {
     // Get fields from system query
-    Position *p = ecs_field(it, Position, 1);
-    Velocity *v = ecs_field(it, Velocity, 2);
+    Position *p = ecs_field(it, Position, 0);
+    Velocity *v = ecs_field(it, Velocity, 1);
 
     // Iterate matched entities
     for (int i = 0; i < it->count, i++) {
@@ -161,8 +161,8 @@ ecs_iter_t it = ecs_query_iter(world, q);
 // Iterate tables matched by query
 while (ecs_query_next(&it)) {
     // Get fields from query
-    Position *p = ecs_field(it, Position, 1);
-    Velocity *v = ecs_field(it, Velocity, 2);
+    Position *p = ecs_field(it, Position, 0);
+    Velocity *v = ecs_field(it, Velocity, 1);
 
     // Iterate matched entities
     for (int i = 0; i < it->count, i++) {
@@ -174,8 +174,8 @@ while (ecs_query_next(&it)) {
 // System code
 void Move(ecs_iter_t *it) {
     // Get fields from system query
-    Position *p = ecs_field(it, Position, 1);
-    Velocity *v = ecs_field(it, Velocity, 2);
+    Position *p = ecs_field(it, Position, 0);
+    Velocity *v = ecs_field(it, Velocity, 1);
 
     // Iterate matched entities
     for (int i = 0; i < it->count, i++) {
@@ -265,8 +265,8 @@ A system provides a `delta_time` which contains the time passed since the last f
 <li><b class="tab-title">C</b>
 
 ```c
-Position *p = ecs_field(it, Position, 1);
-Velocity *v = ecs_field(it, Velocity, 2);
+Position *p = ecs_field(it, Position, 0);
+Velocity *v = ecs_field(it, Velocity, 1);
 
 for (int i = 0; i < it->count, i++) {
     p[i].x += v[i].x * it->delta_time;
@@ -433,7 +433,7 @@ Tasks may query for components from a fixed source or singleton:
 // System function
 void PrintTime(ecs_iter_t *it) {
     // Get singleton component
-    Game *g = ecs_field(it, Game, 1);
+    Game *g = ecs_field(it, Game, 0);
 
     printf("Time: %f\n", g->time);
 }

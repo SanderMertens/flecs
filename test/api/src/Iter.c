@@ -32,7 +32,7 @@ void Iter_page_iter_0_0(void) {
         test_int(pit.entities[1], e2);
         test_int(pit.ids[0], ecs_id(Self));
 
-        Self *ptr = ecs_field(&pit, Self, 1);
+        Self *ptr = ecs_field(&pit, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e1);
         test_int(ptr[1].value, e2);
@@ -46,7 +46,7 @@ void Iter_page_iter_0_0(void) {
         test_int(pit.entities[1], e4);
         test_int(pit.ids[0], ecs_id(Self));
 
-        Self *ptr = ecs_field(&pit, Self, 1);
+        Self *ptr = ecs_field(&pit, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e3);
         test_int(ptr[1].value, e4);
@@ -59,7 +59,7 @@ void Iter_page_iter_0_0(void) {
         test_int(pit.entities[0], e5);
         test_int(pit.ids[0], ecs_id(Self));
 
-        Self *ptr = ecs_field(&pit, Self, 1);
+        Self *ptr = ecs_field(&pit, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e5);
     }
@@ -101,7 +101,7 @@ void Iter_page_iter_1_0(void) {
         test_int(pit.entities[0], e2);
         test_int(pit.ids[0], ecs_id(Self));
 
-        Self *ptr = ecs_field(&pit, Self, 1);
+        Self *ptr = ecs_field(&pit, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e2);
     }
@@ -113,7 +113,7 @@ void Iter_page_iter_1_0(void) {
         test_int(pit.entities[1], e4);
         test_int(pit.ids[0], ecs_id(Self));
 
-        Self *ptr = ecs_field(&pit, Self, 1);
+        Self *ptr = ecs_field(&pit, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e3);
         test_int(ptr[1].value, e4);
@@ -125,7 +125,7 @@ void Iter_page_iter_1_0(void) {
         test_int(pit.entities[0], e5);
         test_int(pit.ids[0], ecs_id(Self));
 
-        Self *ptr = ecs_field(&pit, Self, 1);
+        Self *ptr = ecs_field(&pit, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e5);
     }
@@ -167,7 +167,7 @@ void Iter_page_iter_0_1(void) {
         test_int(pit.entities[0], e1);
         test_int(pit.ids[0], ecs_id(Self));
 
-        Self *ptr = ecs_field(&pit, Self, 1);
+        Self *ptr = ecs_field(&pit, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e1);
     }
@@ -208,7 +208,7 @@ void Iter_page_iter_n_0(void) {
         test_int(pit.entities[0], e3);
         test_int(pit.ids[0], ecs_id(Self));
 
-        Self *ptr = ecs_field(&pit, Self, 1);
+        Self *ptr = ecs_field(&pit, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e3);
     }
@@ -219,7 +219,7 @@ void Iter_page_iter_n_0(void) {
         test_int(pit.entities[0], e4);
         test_int(pit.ids[0], ecs_id(Self));
 
-        Self *ptr = ecs_field(&pit, Self, 1);
+        Self *ptr = ecs_field(&pit, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e4);
     }
@@ -230,7 +230,7 @@ void Iter_page_iter_n_0(void) {
         test_int(pit.entities[0], e5);
         test_int(pit.ids[0], ecs_id(Self));
 
-        Self *ptr = ecs_field(&pit, Self, 1);
+        Self *ptr = ecs_field(&pit, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e5);
     }
@@ -272,7 +272,7 @@ void Iter_page_iter_0_n(void) {
         test_int(pit.entities[1], e2);
         test_int(pit.ids[0], ecs_id(Self));
 
-        Self *ptr = ecs_field(&pit, Self, 1);
+        Self *ptr = ecs_field(&pit, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e1);
         test_int(ptr[1].value, e2);
@@ -316,7 +316,7 @@ void Iter_page_iter_m_n(void) {
         test_int(pit.entities[0], e3);
         test_int(pit.ids[0], ecs_id(Self));
 
-        Self *ptr = ecs_field(&pit, Self, 1);
+        Self *ptr = ecs_field(&pit, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e3);
     }
@@ -327,7 +327,7 @@ void Iter_page_iter_m_n(void) {
         test_int(pit.entities[1], e5);
         test_int(pit.ids[0], ecs_id(Self));
 
-        Self *ptr = ecs_field(&pit, Self, 1);
+        Self *ptr = ecs_field(&pit, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e4);
         test_int(ptr[1].value, e5);
@@ -371,7 +371,7 @@ void Iter_page_iter_skip_1_table(void) {
         test_int(pit.entities[1], e4);
         test_int(pit.ids[0], ecs_id(Self));
 
-        Self *ptr = ecs_field(&pit, Self, 1);
+        Self *ptr = ecs_field(&pit, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e3);
         test_int(ptr[1].value, e4);
@@ -383,7 +383,7 @@ void Iter_page_iter_skip_1_table(void) {
         test_int(pit.entities[0], e5);
         test_int(pit.ids[0], ecs_id(Self));
 
-        Self *ptr = ecs_field(&pit, Self, 1);
+        Self *ptr = ecs_field(&pit, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e5);
     }
@@ -426,7 +426,7 @@ void Iter_page_iter_skip_2_tables(void) {
         test_int(pit.entities[1], e5);
         test_int(pit.ids[0], ecs_id(Self));
 
-        Self *ptr = ecs_field(&pit, Self, 1);
+        Self *ptr = ecs_field(&pit, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e4);
         test_int(ptr[1].value, e5);
@@ -470,7 +470,7 @@ void Iter_worker_iter_1(void) {
         test_int(pit.entities[1], e2);
         test_int(pit.ids[0], ecs_id(Self));
 
-        Self *ptr = ecs_field(&pit, Self, 1);
+        Self *ptr = ecs_field(&pit, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e1);
         test_int(ptr[1].value, e2);
@@ -483,7 +483,7 @@ void Iter_worker_iter_1(void) {
         test_int(pit.entities[1], e4);
         test_int(pit.ids[0], ecs_id(Self));
 
-        Self *ptr = ecs_field(&pit, Self, 1);
+        Self *ptr = ecs_field(&pit, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e3);
         test_int(ptr[1].value, e4);
@@ -495,7 +495,7 @@ void Iter_worker_iter_1(void) {
         test_int(pit.entities[0], e5);
         test_int(pit.ids[0], ecs_id(Self));
 
-        Self *ptr = ecs_field(&pit, Self, 1);
+        Self *ptr = ecs_field(&pit, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e5);
     }
@@ -540,7 +540,7 @@ void Iter_worker_iter_2(void) {
         test_int(pit_1.entities[0], e1);
         test_int(pit_1.ids[0], ecs_id(Self));
 
-        Self *ptr = ecs_field(&pit_1, Self, 1);
+        Self *ptr = ecs_field(&pit_1, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e1);
     }
@@ -551,7 +551,7 @@ void Iter_worker_iter_2(void) {
         test_int(pit_1.entities[0], e3);
         test_int(pit_1.ids[0], ecs_id(Self));
 
-        Self *ptr = ecs_field(&pit_1, Self, 1);
+        Self *ptr = ecs_field(&pit_1, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e3);
     }
@@ -562,7 +562,7 @@ void Iter_worker_iter_2(void) {
         test_int(pit_1.entities[0], e5);
         test_int(pit_1.ids[0], ecs_id(Self));
 
-        Self *ptr = ecs_field(&pit_1, Self, 1);
+        Self *ptr = ecs_field(&pit_1, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e5);
     }
@@ -576,7 +576,7 @@ void Iter_worker_iter_2(void) {
         test_int(pit_2.entities[0], e2);
         test_int(pit_2.ids[0], ecs_id(Self));
 
-        Self *ptr = ecs_field(&pit_2, Self, 1);
+        Self *ptr = ecs_field(&pit_2, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e2);
     }
@@ -587,7 +587,7 @@ void Iter_worker_iter_2(void) {
         test_int(pit_2.entities[0], e4);
         test_int(pit_2.ids[0], ecs_id(Self));
 
-        Self *ptr = ecs_field(&pit_2, Self, 1);
+        Self *ptr = ecs_field(&pit_2, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e4);
     }
@@ -635,7 +635,7 @@ void Iter_worker_iter_3(void) {
         test_int(pit_1.entities[0], e1);
         test_int(pit_1.ids[0], ecs_id(Self));
 
-        Self *ptr = ecs_field(&pit_1, Self, 1);
+        Self *ptr = ecs_field(&pit_1, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e1);
     }
@@ -646,7 +646,7 @@ void Iter_worker_iter_3(void) {
         test_int(pit_1.entities[0], e4);
         test_int(pit_1.ids[0], ecs_id(Self));
 
-        Self *ptr = ecs_field(&pit_1, Self, 1);
+        Self *ptr = ecs_field(&pit_1, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e4);
     }
@@ -657,7 +657,7 @@ void Iter_worker_iter_3(void) {
         test_int(pit_1.entities[0], e6);
         test_int(pit_1.ids[0], ecs_id(Self));
 
-        Self *ptr = ecs_field(&pit_1, Self, 1);
+        Self *ptr = ecs_field(&pit_1, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e6);
     }
@@ -671,7 +671,7 @@ void Iter_worker_iter_3(void) {
         test_int(pit_2.entities[0], e2);
         test_int(pit_2.ids[0], ecs_id(Self));
 
-        Self *ptr = ecs_field(&pit_2, Self, 1);
+        Self *ptr = ecs_field(&pit_2, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e2);
     }
@@ -682,7 +682,7 @@ void Iter_worker_iter_3(void) {
         test_int(pit_2.entities[0], e5);
         test_int(pit_2.ids[0], ecs_id(Self));
 
-        Self *ptr = ecs_field(&pit_2, Self, 1);
+        Self *ptr = ecs_field(&pit_2, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e5);
     }
@@ -696,7 +696,7 @@ void Iter_worker_iter_3(void) {
         test_int(pit_3.entities[0], e3);
         test_int(pit_3.ids[0], ecs_id(Self));
 
-        Self *ptr = ecs_field(&pit_3, Self, 1);
+        Self *ptr = ecs_field(&pit_3, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e3);
     }
@@ -751,7 +751,7 @@ void Iter_worker_iter_4(void) {
         test_int(pit_1.entities[0], e1);
         test_int(pit_1.ids[0], ecs_id(Self));
 
-        Self *ptr = ecs_field(&pit_1, Self, 1);
+        Self *ptr = ecs_field(&pit_1, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e1);
     }
@@ -762,7 +762,7 @@ void Iter_worker_iter_4(void) {
         test_int(pit_1.entities[0], e5);
         test_int(pit_1.ids[0], ecs_id(Self));
 
-        Self *ptr = ecs_field(&pit_1, Self, 1);
+        Self *ptr = ecs_field(&pit_1, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e5);
     }
@@ -773,7 +773,7 @@ void Iter_worker_iter_4(void) {
         test_int(pit_1.entities[0], e8);
         test_int(pit_1.ids[0], ecs_id(Self));
 
-        Self *ptr = ecs_field(&pit_1, Self, 1);
+        Self *ptr = ecs_field(&pit_1, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e8);
     }
@@ -787,7 +787,7 @@ void Iter_worker_iter_4(void) {
         test_int(pit_2.entities[0], e2);
         test_int(pit_2.ids[0], ecs_id(Self));
 
-        Self *ptr = ecs_field(&pit_2, Self, 1);
+        Self *ptr = ecs_field(&pit_2, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e2);
     }
@@ -798,7 +798,7 @@ void Iter_worker_iter_4(void) {
         test_int(pit_2.entities[0], e6);
         test_int(pit_2.ids[0], ecs_id(Self));
 
-        Self *ptr = ecs_field(&pit_2, Self, 1);
+        Self *ptr = ecs_field(&pit_2, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e6);
     }
@@ -809,7 +809,7 @@ void Iter_worker_iter_4(void) {
         test_int(pit_2.entities[0], e9);
         test_int(pit_2.ids[0], ecs_id(Self));
 
-        Self *ptr = ecs_field(&pit_2, Self, 1);
+        Self *ptr = ecs_field(&pit_2, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e9);
     }
@@ -823,7 +823,7 @@ void Iter_worker_iter_4(void) {
         test_int(pit_3.entities[0], e3);
         test_int(pit_3.ids[0], ecs_id(Self));
 
-        Self *ptr = ecs_field(&pit_3, Self, 1);
+        Self *ptr = ecs_field(&pit_3, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e3);
     }
@@ -834,7 +834,7 @@ void Iter_worker_iter_4(void) {
         test_int(pit_3.entities[0], e7);
         test_int(pit_3.ids[0], ecs_id(Self));
 
-        Self *ptr = ecs_field(&pit_3, Self, 1);
+        Self *ptr = ecs_field(&pit_3, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e7);
     }
@@ -848,7 +848,7 @@ void Iter_worker_iter_4(void) {
         test_int(pit_4.entities[0], e4);
         test_int(pit_4.ids[0], ecs_id(Self));
 
-        Self *ptr = ecs_field(&pit_4, Self, 1);
+        Self *ptr = ecs_field(&pit_4, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e4);
     }
@@ -898,12 +898,12 @@ void Iter_paged_iter_w_shared_comp(void) {
         test_int(pit.sources[0], 0);
         test_int(pit.sources[1], foo);
 
-        Self *ptr = ecs_field(&pit, Self, 1);
+        Self *ptr = ecs_field(&pit, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e1);
         test_int(ptr[1].value, e2);
 
-        Position *pptr = ecs_field(&pit, Position, 2);
+        Position *pptr = ecs_field(&pit, Position, 1);
         test_int(pptr->x, 10);
         test_int(pptr->y, 20);
     }
@@ -918,12 +918,12 @@ void Iter_paged_iter_w_shared_comp(void) {
         test_int(pit.sources[0], 0);
         test_int(pit.sources[1], foo);
 
-        Self *ptr = ecs_field(&pit, Self, 1);
+        Self *ptr = ecs_field(&pit, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e3);
         test_int(ptr[1].value, e4);
 
-        Position *pptr = ecs_field(&pit, Position, 2);
+        Position *pptr = ecs_field(&pit, Position, 1);
         test_int(pptr->x, 10);
         test_int(pptr->y, 20);
     }
@@ -937,11 +937,11 @@ void Iter_paged_iter_w_shared_comp(void) {
         test_int(pit.sources[0], 0);
         test_int(pit.sources[1], foo);
 
-        Self *ptr = ecs_field(&pit, Self, 1);
+        Self *ptr = ecs_field(&pit, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e5);
 
-        Position *pptr = ecs_field(&pit, Position, 2);
+        Position *pptr = ecs_field(&pit, Position, 1);
         test_int(pptr->x, 10);
         test_int(pptr->y, 20);
     }
@@ -993,11 +993,11 @@ void Iter_worker_iter_w_shared_comp(void) {
         test_int(pit_1.sources[0], 0);
         test_int(pit_1.sources[1], foo);
 
-        Self *ptr = ecs_field(&pit_1, Self, 1);
+        Self *ptr = ecs_field(&pit_1, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e1);
 
-        Position *pptr = ecs_field(&pit_1, Position, 2);
+        Position *pptr = ecs_field(&pit_1, Position, 1);
         test_int(pptr->x, 10);
         test_int(pptr->y, 20);
     }
@@ -1011,11 +1011,11 @@ void Iter_worker_iter_w_shared_comp(void) {
         test_int(pit_1.sources[0], 0);
         test_int(pit_1.sources[1], foo);
 
-        Self *ptr = ecs_field(&pit_1, Self, 1);
+        Self *ptr = ecs_field(&pit_1, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e3);
 
-        Position *pptr = ecs_field(&pit_1, Position, 2);
+        Position *pptr = ecs_field(&pit_1, Position, 1);
         test_int(pptr->x, 10);
         test_int(pptr->y, 20);
     }
@@ -1029,11 +1029,11 @@ void Iter_worker_iter_w_shared_comp(void) {
         test_int(pit_1.sources[0], 0);
         test_int(pit_1.sources[1], foo);
 
-        Self *ptr = ecs_field(&pit_1, Self, 1);
+        Self *ptr = ecs_field(&pit_1, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e5);
 
-        Position *pptr = ecs_field(&pit_1, Position, 2);
+        Position *pptr = ecs_field(&pit_1, Position, 1);
         test_int(pptr->x, 10);
         test_int(pptr->y, 20);
     }
@@ -1050,11 +1050,11 @@ void Iter_worker_iter_w_shared_comp(void) {
         test_int(pit_2.sources[0], 0);
         test_int(pit_2.sources[1], foo);
 
-        Self *ptr = ecs_field(&pit_2, Self, 1);
+        Self *ptr = ecs_field(&pit_2, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e2);
 
-        Position *pptr = ecs_field(&pit_2, Position, 2);
+        Position *pptr = ecs_field(&pit_2, Position, 1);
         test_int(pptr->x, 10);
         test_int(pptr->y, 20);
     }
@@ -1068,11 +1068,11 @@ void Iter_worker_iter_w_shared_comp(void) {
         test_int(pit_2.sources[0], 0);
         test_int(pit_2.sources[1], foo);
 
-        Self *ptr = ecs_field(&pit_2, Self, 1);
+        Self *ptr = ecs_field(&pit_2, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, e4);
 
-        Position *pptr = ecs_field(&pit_2, Position, 2);
+        Position *pptr = ecs_field(&pit_2, Position, 1);
         test_int(pptr->x, 10);
         test_int(pptr->y, 20);
     }
@@ -1104,7 +1104,7 @@ void Iter_paged_iter_w_task_query(void) {
         test_int(pit.ids[0], ecs_id(Self));
         test_int(pit.sources[0], foo);
 
-        Self *ptr = ecs_field(&pit, Self, 1);
+        Self *ptr = ecs_field(&pit, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, foo);
     }
@@ -1139,7 +1139,7 @@ void Iter_worker_iter_w_task_query(void) {
         test_int(pit_1.ids[0], ecs_id(Self));
         test_int(pit_1.sources[0], foo);
 
-        Self *ptr = ecs_field(&pit_1, Self, 1);
+        Self *ptr = ecs_field(&pit_1, Self, 0);
         test_assert(ptr != NULL);
         test_int(ptr[0].value, foo);
     }
@@ -1177,7 +1177,7 @@ void Iter_worker_iter_w_singleton(void) {
     test_int(wit_1.count, 2);
     test_int(wit_1.entities[0], e1);
     test_int(wit_1.entities[1], e2);
-    p = ecs_field(&wit_1, Position, 1);
+    p = ecs_field(&wit_1, Position, 0);
     test_int(p[0].x, 10);
     test_int(p[0].y, 20);
     test_int(p[1].x, 20);
@@ -1189,7 +1189,7 @@ void Iter_worker_iter_w_singleton(void) {
     test_int(wit_2.count, 2);
     test_int(wit_2.entities[0], e3);
     test_int(wit_2.entities[1], e4);
-    p = ecs_field(&wit_2, Position, 1);
+    p = ecs_field(&wit_2, Position, 0);
     test_int(p[0].x, 30);
     test_int(p[0].y, 40);
     test_int(p[1].x, 40);
@@ -1225,20 +1225,20 @@ void Iter_worker_iter_w_singleton_component(void) {
     test_bool(ecs_worker_next(&wit_1), true);
     test_int(wit_1.count, 1);
     test_int(wit_1.entities[0], e1);
-    p = ecs_field(&wit_1, Position, 1);
+    p = ecs_field(&wit_1, Position, 0);
     test_int(p[0].x, 10);
     test_int(p[0].y, 20);
-    v = ecs_field(&wit_1, Velocity, 2);
+    v = ecs_field(&wit_1, Velocity, 1);
     test_int(v[0].x, 1);
     test_int(v[0].y, 2);
 
     test_bool(ecs_worker_next(&wit_1), true);
     test_int(wit_1.count, 1);
     test_int(wit_1.entities[0], e2);
-    p = ecs_field(&wit_1, Position, 1);
+    p = ecs_field(&wit_1, Position, 0);
     test_int(p[0].x, 20);
     test_int(p[0].y, 30);
-    v = ecs_field(&wit_1, Velocity, 2);
+    v = ecs_field(&wit_1, Velocity, 1);
     test_int(v[0].x, 1);
     test_int(v[0].y, 2);
 
@@ -1249,20 +1249,20 @@ void Iter_worker_iter_w_singleton_component(void) {
     test_bool(ecs_worker_next(&wit_2), true);
     test_int(wit_2.count, 1);
     test_int(wit_2.entities[0], e3);
-    p = ecs_field(&wit_2, Position, 1);
+    p = ecs_field(&wit_2, Position, 0);
     test_int(p[0].x, 30);
     test_int(p[0].y, 40);
-    v = ecs_field(&wit_2, Velocity, 2);
+    v = ecs_field(&wit_2, Velocity, 1);
     test_int(v[0].x, 1);
     test_int(v[0].y, 2);
 
     test_bool(ecs_worker_next(&wit_2), true);
     test_int(wit_2.count, 1);
     test_int(wit_2.entities[0], e4);
-    p = ecs_field(&wit_2, Position, 1);
+    p = ecs_field(&wit_2, Position, 0);
     test_int(p[0].x, 40);
     test_int(p[0].y, 50);
-    v = ecs_field(&wit_2, Velocity, 2);
+    v = ecs_field(&wit_2, Velocity, 1);
     test_int(v[0].x, 1);
     test_int(v[0].y, 2);
 
@@ -1298,7 +1298,7 @@ void Iter_worker_iter_w_singleton_instanced(void) {
     test_int(wit_1.count, 2);
     test_int(wit_1.entities[0], e1);
     test_int(wit_1.entities[1], e2);
-    p = ecs_field(&wit_1, Position, 1);
+    p = ecs_field(&wit_1, Position, 0);
     test_int(p[0].x, 10);
     test_int(p[0].y, 20);
     test_int(p[1].x, 20);
@@ -1311,7 +1311,7 @@ void Iter_worker_iter_w_singleton_instanced(void) {
     test_int(wit_2.count, 2);
     test_int(wit_2.entities[0], e3);
     test_int(wit_2.entities[1], e4);
-    p = ecs_field(&wit_2, Position, 1);
+    p = ecs_field(&wit_2, Position, 0);
     test_int(p[0].x, 30);
     test_int(p[0].y, 40);
     test_int(p[1].x, 40);
@@ -1349,12 +1349,12 @@ void Iter_worker_iter_w_singleton_component_instanced(void) {
     test_int(wit_1.count, 2);
     test_int(wit_1.entities[0], e1);
     test_int(wit_1.entities[1], e2);
-    p = ecs_field(&wit_1, Position, 1);
+    p = ecs_field(&wit_1, Position, 0);
     test_int(p[0].x, 10);
     test_int(p[0].y, 20);
     test_int(p[1].x, 20);
     test_int(p[1].y, 30);
-    v = ecs_field(&wit_1, Velocity, 2);
+    v = ecs_field(&wit_1, Velocity, 1);
     test_int(v[0].x, 1);
     test_int(v[0].y, 2);
     test_bool(ecs_worker_next(&wit_1), false);
@@ -1365,12 +1365,12 @@ void Iter_worker_iter_w_singleton_component_instanced(void) {
     test_int(wit_2.count, 2);
     test_int(wit_2.entities[0], e3);
     test_int(wit_2.entities[1], e4);
-    p = ecs_field(&wit_2, Position, 1);
+    p = ecs_field(&wit_2, Position, 0);
     test_int(p[0].x, 30);
     test_int(p[0].y, 40);
     test_int(p[1].x, 40);
     test_int(p[1].y, 50);
-    v = ecs_field(&wit_2, Velocity, 2);
+    v = ecs_field(&wit_2, Velocity, 1);
     test_int(v[0].x, 1);
     test_int(v[0].y, 2);
     test_bool(ecs_worker_next(&wit_2), false);
@@ -1402,7 +1402,7 @@ void Iter_paged_iter_w_singleton(void) {
     test_int(pit_1.count, 2);
     test_int(pit_1.entities[0], e1);
     test_int(pit_1.entities[1], e2);
-    p = ecs_field(&pit_1, Position, 1);
+    p = ecs_field(&pit_1, Position, 0);
     test_int(p[0].x, 10);
     test_int(p[0].y, 20);
     test_int(p[1].x, 20);
@@ -1415,7 +1415,7 @@ void Iter_paged_iter_w_singleton(void) {
     test_int(pit_2.count, 2);
     test_int(pit_2.entities[0], e3);
     test_int(pit_2.entities[1], e4);
-    p = ecs_field(&pit_2, Position, 1);
+    p = ecs_field(&pit_2, Position, 0);
     test_int(p[0].x, 30);
     test_int(p[0].y, 40);
     test_int(p[1].x, 40);
@@ -1449,19 +1449,19 @@ void Iter_paged_iter_w_singleton_component(void) {
     test_bool(ecs_page_next(&pit_1), true);
     test_int(pit_1.count, 1);
     test_int(pit_1.entities[0], e1);
-    p = ecs_field(&pit_1, Position, 1);
+    p = ecs_field(&pit_1, Position, 0);
     test_int(p[0].x, 10);
     test_int(p[0].y, 20);
-    v = ecs_field(&pit_1, Velocity, 2);
+    v = ecs_field(&pit_1, Velocity, 1);
     test_int(v[0].x, 1);
     test_int(v[0].y, 2);
     test_bool(ecs_page_next(&pit_1), true);
     test_int(pit_1.count, 1);
     test_int(pit_1.entities[0], e2);
-    p = ecs_field(&pit_1, Position, 1);
+    p = ecs_field(&pit_1, Position, 0);
     test_int(p[0].x, 20);
     test_int(p[0].y, 30);
-    v = ecs_field(&pit_1, Velocity, 2);
+    v = ecs_field(&pit_1, Velocity, 1);
     test_int(v[0].x, 1);
     test_int(v[0].y, 2);
     test_bool(ecs_page_next(&pit_1), false);
@@ -1471,19 +1471,19 @@ void Iter_paged_iter_w_singleton_component(void) {
     test_bool(ecs_page_next(&pit_2), true);
     test_int(pit_2.count, 1);
     test_int(pit_2.entities[0], e3);
-    p = ecs_field(&pit_2, Position, 1);
+    p = ecs_field(&pit_2, Position, 0);
     test_int(p[0].x, 30);
     test_int(p[0].y, 40);
-    v = ecs_field(&pit_2, Velocity, 2);
+    v = ecs_field(&pit_2, Velocity, 1);
     test_int(v[0].x, 1);
     test_int(v[0].y, 2);
     test_bool(ecs_page_next(&pit_2), true);
     test_int(pit_2.count, 1);
     test_int(pit_2.entities[0], e4);
-    p = ecs_field(&pit_2, Position, 1);
+    p = ecs_field(&pit_2, Position, 0);
     test_int(p[0].x, 40);
     test_int(p[0].y, 50);
-    v = ecs_field(&pit_2, Velocity, 2);
+    v = ecs_field(&pit_2, Velocity, 1);
     test_int(v[0].x, 1);
     test_int(v[0].y, 2);
     test_bool(ecs_page_next(&pit_2), false);
@@ -1518,7 +1518,7 @@ void Iter_paged_iter_w_singleton_instanced(void) {
     test_int(pit_1.count, 2);
     test_int(pit_1.entities[0], e1);
     test_int(pit_1.entities[1], e2);
-    p = ecs_field(&pit_1, Position, 1);
+    p = ecs_field(&pit_1, Position, 0);
     test_int(p[0].x, 10);
     test_int(p[0].y, 20);
     test_int(p[1].x, 20);
@@ -1531,7 +1531,7 @@ void Iter_paged_iter_w_singleton_instanced(void) {
     test_int(pit_2.count, 2);
     test_int(pit_2.entities[0], e3);
     test_int(pit_2.entities[1], e4);
-    p = ecs_field(&pit_2, Position, 1);
+    p = ecs_field(&pit_2, Position, 0);
     test_int(p[0].x, 30);
     test_int(p[0].y, 40);
     test_int(p[1].x, 40);
@@ -1569,12 +1569,12 @@ void Iter_paged_iter_w_singleton_component_instanced(void) {
     test_int(pit_1.count, 2);
     test_int(pit_1.entities[0], e1);
     test_int(pit_1.entities[1], e2);
-    p = ecs_field(&pit_1, Position, 1);
+    p = ecs_field(&pit_1, Position, 0);
     test_int(p[0].x, 10);
     test_int(p[0].y, 20);
     test_int(p[1].x, 20);
     test_int(p[1].y, 30);
-    v = ecs_field(&pit_1, Velocity, 2);
+    v = ecs_field(&pit_1, Velocity, 1);
     test_int(v[0].x, 1);
     test_int(v[0].y, 2);
     test_bool(ecs_page_next(&pit_1), false);
@@ -1585,12 +1585,12 @@ void Iter_paged_iter_w_singleton_component_instanced(void) {
     test_int(pit_2.count, 2);
     test_int(pit_2.entities[0], e3);
     test_int(pit_2.entities[1], e4);
-    p = ecs_field(&pit_2, Position, 1);
+    p = ecs_field(&pit_2, Position, 0);
     test_int(p[0].x, 30);
     test_int(p[0].y, 40);
     test_int(p[1].x, 40);
     test_int(p[1].y, 50);
-    v = ecs_field(&pit_2, Velocity, 2);
+    v = ecs_field(&pit_2, Velocity, 1);
     test_int(v[0].x, 1);
     test_int(v[0].y, 2);
     test_bool(ecs_page_next(&pit_2), false);
@@ -1605,16 +1605,16 @@ void Iter(ecs_world_t *world, ecs_query_t *q, int32_t offset, int32_t limit) {
     ecs_iter_t it = ecs_query_iter(world, q);
     ecs_iter_t pit = ecs_page_iter(&it, offset, limit);
     while (ecs_page_next(&pit)) {
-        Position *p = ecs_field(&pit, Position, 1);
+        Position *p = ecs_field(&pit, Position, 0);
         Velocity *v = NULL;
         Mass *m = NULL;
 
         if (pit.field_count >= 2) {
-            v = ecs_field(&pit, Velocity, 2);
+            v = ecs_field(&pit, Velocity, 1);
         }
 
         if (pit.field_count >= 3) {
-            m = ecs_field(&pit, Mass, 3);
+            m = ecs_field(&pit, Mass, 2);
         }
 
         int *param = pit.param;
@@ -2332,7 +2332,7 @@ static
 void TestAll(ecs_world_t *world, ecs_query_t *query) {
     ecs_iter_t it = ecs_query_iter(world, query);
     while (ecs_query_next(&it)) {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
 
         int i;
         for (i = 0; i < it.count; i ++) {
@@ -2752,16 +2752,16 @@ void Iter_column_index_owned(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_int(1, ecs_field_column_index(&it, 1));
-    test_int(2, ecs_field_column_index(&it, 2));
-    test_int(0, ecs_field_column_index(&it, 3));
+    test_int(1, ecs_field_column(&it, 0));
+    test_int(2, ecs_field_column(&it, 1));
+    test_int(0, ecs_field_column(&it, 2));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_int(2, ecs_field_column_index(&it, 1));
-    test_int(3, ecs_field_column_index(&it, 2));
-    test_int(1, ecs_field_column_index(&it, 3));
+    test_int(2, ecs_field_column(&it, 0));
+    test_int(3, ecs_field_column(&it, 1));
+    test_int(1, ecs_field_column(&it, 2));
     
     test_bool(false, ecs_query_next(&it));
 
@@ -2798,16 +2798,16 @@ void Iter_column_index_shared(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_int(0, ecs_field_column_index(&it, 1));
-    test_int(1, ecs_field_column_index(&it, 2));
-    test_int(0, ecs_field_column_index(&it, 3));
+    test_int(0, ecs_field_column(&it, 0));
+    test_int(1, ecs_field_column(&it, 1));
+    test_int(0, ecs_field_column(&it, 2));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_int(1, ecs_field_column_index(&it, 1));
-    test_int(2, ecs_field_column_index(&it, 2));
-    test_int(0, ecs_field_column_index(&it, 3));
+    test_int(1, ecs_field_column(&it, 0));
+    test_int(2, ecs_field_column(&it, 1));
+    test_int(0, ecs_field_column(&it, 2));
     
     test_bool(false, ecs_query_next(&it));
 
@@ -2840,16 +2840,16 @@ void Iter_column_index_not(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_int(0, ecs_field_column_index(&it, 1));
-    test_int(1, ecs_field_column_index(&it, 2));
-    test_int(0, ecs_field_column_index(&it, 3));
+    test_int(0, ecs_field_column(&it, 0));
+    test_int(1, ecs_field_column(&it, 1));
+    test_int(0, ecs_field_column(&it, 2));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_int(1, ecs_field_column_index(&it, 1));
-    test_int(2, ecs_field_column_index(&it, 2));
-    test_int(0, ecs_field_column_index(&it, 3));
+    test_int(1, ecs_field_column(&it, 0));
+    test_int(2, ecs_field_column(&it, 1));
+    test_int(0, ecs_field_column(&it, 2));
     
     test_bool(false, ecs_query_next(&it));
 

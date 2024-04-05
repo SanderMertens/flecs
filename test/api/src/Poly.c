@@ -7,7 +7,7 @@ static
 void PolyTrigger(ecs_iter_t *it) {
     probe_system_w_ctx(it, it->ctx);
 
-    EcsPoly *poly = ecs_field(it, EcsPoly, 1);
+    EcsPoly *poly = ecs_field(it, EcsPoly, 0);
 
     test_int(1, it->count);
     test_assert(poly->poly != NULL);

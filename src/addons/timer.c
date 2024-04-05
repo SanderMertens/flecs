@@ -19,8 +19,8 @@ void AddTickSource(ecs_iter_t *it) {
 
 static
 void ProgressTimers(ecs_iter_t *it) {
-    EcsTimer *timer = ecs_field(it, EcsTimer, 1);
-    EcsTickSource *tick_source = ecs_field(it, EcsTickSource, 2);
+    EcsTimer *timer = ecs_field(it, EcsTimer, 0);
+    EcsTickSource *tick_source = ecs_field(it, EcsTickSource, 1);
 
     ecs_assert(timer != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -58,8 +58,8 @@ void ProgressTimers(ecs_iter_t *it) {
 
 static
 void ProgressRateFilters(ecs_iter_t *it) {
-    EcsRateFilter *filter = ecs_field(it, EcsRateFilter, 1);
-    EcsTickSource *tick_dst = ecs_field(it, EcsTickSource, 2);
+    EcsRateFilter *filter = ecs_field(it, EcsRateFilter, 0);
+    EcsTickSource *tick_dst = ecs_field(it, EcsTickSource, 1);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -97,7 +97,7 @@ void ProgressRateFilters(ecs_iter_t *it) {
 
 static
 void ProgressTickSource(ecs_iter_t *it) {
-    EcsTickSource *tick_src = ecs_field(it, EcsTickSource, 1);
+    EcsTickSource *tick_src = ecs_field(it, EcsTickSource, 0);
 
     /* If tick source has no filters, tick unconditionally */
     int i;
@@ -262,7 +262,7 @@ error:
 
 static
 void RandomizeTimers(ecs_iter_t *it) {
-    EcsTimer *timer = ecs_field(it, EcsTimer, 1);
+    EcsTimer *timer = ecs_field(it, EcsTimer, 0);
     int32_t i;
     for (i = 0; i < it->count; i ++) {
         timer[i].time = 

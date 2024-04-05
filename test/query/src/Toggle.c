@@ -43,9 +43,9 @@ void Toggle_fixed_src_1_tag_toggle(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
-        test_uint(e, ecs_field_src(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(e, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -62,9 +62,9 @@ void Toggle_fixed_src_1_tag_toggle(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
-        test_uint(e, ecs_field_src(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_uint(e, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -100,15 +100,15 @@ void Toggle_fixed_src_1_component_toggle(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
-        test_uint(e, ecs_field_src(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(e, ecs_field_src(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
         {
-            const Position *p = ecs_field(&it, Position, 1);
+            const Position *p = ecs_field(&it, Position, 0);
             test_assert(p != NULL);
             test_int(p->x, 10);
             test_int(p->y, 20);
         }
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -125,15 +125,15 @@ void Toggle_fixed_src_1_component_toggle(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
-        test_uint(e, ecs_field_src(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(e, ecs_field_src(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
         {
-            const Position *p = ecs_field(&it, Position, 1);
+            const Position *p = ecs_field(&it, Position, 0);
             test_assert(p != NULL);
             test_int(p->x, 10);
             test_int(p->y, 20);
         }
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -172,12 +172,12 @@ void Toggle_fixed_src_2_tag_toggle(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
+        test_uint(e, ecs_field_src(&it, 0));
         test_uint(e, ecs_field_src(&it, 1));
-        test_uint(e, ecs_field_src(&it, 2));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_uint(Bar, ecs_field_id(&it, 2));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(Bar, ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -194,12 +194,12 @@ void Toggle_fixed_src_2_tag_toggle(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
+        test_uint(e, ecs_field_src(&it, 0));
         test_uint(e, ecs_field_src(&it, 1));
-        test_uint(e, ecs_field_src(&it, 2));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_uint(Bar, ecs_field_id(&it, 2));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(Bar, ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -216,12 +216,12 @@ void Toggle_fixed_src_2_tag_toggle(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
+        test_uint(e, ecs_field_src(&it, 0));
         test_uint(e, ecs_field_src(&it, 1));
-        test_uint(e, ecs_field_src(&it, 2));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_uint(Bar, ecs_field_id(&it, 2));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(Bar, ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -267,24 +267,24 @@ void Toggle_fixed_src_2_component_toggle(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
+        test_uint(e, ecs_field_src(&it, 0));
         test_uint(e, ecs_field_src(&it, 1));
-        test_uint(e, ecs_field_src(&it, 2));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
-        test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
         {
-            const Position *p = ecs_field(&it, Position, 1);
+            const Position *p = ecs_field(&it, Position, 0);
             test_assert(p != NULL);
             test_int(p->x, 10);
             test_int(p->y, 20);
         }
         {
-            const Velocity *v = ecs_field(&it, Velocity, 2);
+            const Velocity *v = ecs_field(&it, Velocity, 1);
             test_assert(v != NULL);
             test_int(v->x, 1);
             test_int(v->y, 2);
         }
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -301,24 +301,24 @@ void Toggle_fixed_src_2_component_toggle(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
+        test_uint(e, ecs_field_src(&it, 0));
         test_uint(e, ecs_field_src(&it, 1));
-        test_uint(e, ecs_field_src(&it, 2));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
-        test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
         {
-            const Position *p = ecs_field(&it, Position, 1);
+            const Position *p = ecs_field(&it, Position, 0);
             test_assert(p != NULL);
             test_int(p->x, 10);
             test_int(p->y, 20);
         }
         {
-            const Velocity *v = ecs_field(&it, Velocity, 2);
+            const Velocity *v = ecs_field(&it, Velocity, 1);
             test_assert(v != NULL);
             test_int(v->x, 1);
             test_int(v->y, 2);
         }
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -335,24 +335,24 @@ void Toggle_fixed_src_2_component_toggle(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
+        test_uint(e, ecs_field_src(&it, 0));
         test_uint(e, ecs_field_src(&it, 1));
-        test_uint(e, ecs_field_src(&it, 2));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
-        test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
         {
-            const Position *p = ecs_field(&it, Position, 1);
+            const Position *p = ecs_field(&it, Position, 0);
             test_assert(p != NULL);
             test_int(p->x, 10);
             test_int(p->y, 20);
         }
         {
-            const Velocity *v = ecs_field(&it, Velocity, 2);
+            const Velocity *v = ecs_field(&it, Velocity, 1);
             test_assert(v != NULL);
             test_int(v->x, 1);
             test_int(v->y, 2);
         }
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -399,12 +399,12 @@ void Toggle_fixed_2_src_w_toggle(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
-        test_uint(e1, ecs_field_src(&it, 1));
-        test_uint(e2, ecs_field_src(&it, 2));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_uint(Bar, ecs_field_id(&it, 2));
+        test_uint(e1, ecs_field_src(&it, 0));
+        test_uint(e2, ecs_field_src(&it, 1));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(Bar, ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -421,12 +421,12 @@ void Toggle_fixed_2_src_w_toggle(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
-        test_uint(e1, ecs_field_src(&it, 1));
-        test_uint(e2, ecs_field_src(&it, 2));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_uint(Bar, ecs_field_id(&it, 2));
+        test_uint(e1, ecs_field_src(&it, 0));
+        test_uint(e2, ecs_field_src(&it, 1));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(Bar, ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -443,12 +443,12 @@ void Toggle_fixed_2_src_w_toggle(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
-        test_uint(e1, ecs_field_src(&it, 1));
-        test_uint(e2, ecs_field_src(&it, 2));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_uint(Bar, ecs_field_id(&it, 2));
+        test_uint(e1, ecs_field_src(&it, 0));
+        test_uint(e2, ecs_field_src(&it, 1));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(Bar, ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -496,11 +496,11 @@ void Toggle_this_w_fixed_src_w_toggle(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e1, it.entities[0]);
-        test_uint(e2, ecs_field_src(&it, 2));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_uint(Bar, ecs_field_id(&it, 2));
+        test_uint(e2, ecs_field_src(&it, 1));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(Bar, ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -518,11 +518,11 @@ void Toggle_this_w_fixed_src_w_toggle(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e1, it.entities[0]);
-        test_uint(e2, ecs_field_src(&it, 2));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_uint(Bar, ecs_field_id(&it, 2));
+        test_uint(e2, ecs_field_src(&it, 1));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(Bar, ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -540,11 +540,11 @@ void Toggle_this_w_fixed_src_w_toggle(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e1, it.entities[0]);
-        test_uint(e2, ecs_field_src(&it, 2));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_uint(Bar, ecs_field_id(&it, 2));
+        test_uint(e2, ecs_field_src(&it, 1));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(Bar, ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -592,11 +592,11 @@ void Toggle_fixed_src_w_this_w_toggle(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e2, it.entities[0]);
-        test_uint(e1, ecs_field_src(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_uint(Bar, ecs_field_id(&it, 2));
+        test_uint(e1, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(Bar, ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -614,11 +614,11 @@ void Toggle_fixed_src_w_this_w_toggle(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e2, it.entities[0]);
-        test_uint(e1, ecs_field_src(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_uint(Bar, ecs_field_id(&it, 2));
+        test_uint(e1, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(Bar, ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -636,11 +636,11 @@ void Toggle_fixed_src_w_this_w_toggle(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e2, it.entities[0]);
-        test_uint(e1, ecs_field_src(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_uint(Bar, ecs_field_id(&it, 2));
+        test_uint(e1, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(Bar, ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -679,10 +679,10 @@ void Toggle_this_from_nothing(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(it.count, 1);
     test_uint(it.entities[0], e1);
-    test_uint(ecs_field_id(&it, 1), TagA);
-    test_uint(ecs_field_id(&it, 2), TagB);
-    test_bool(true, ecs_field_is_set(&it, 1));
-    test_bool(false, ecs_field_is_set(&it, 2));
+    test_uint(ecs_field_id(&it, 0), TagA);
+    test_uint(ecs_field_id(&it, 1), TagB);
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
     test_bool(false, ecs_query_next(&it));
 
     ecs_query_fini(q);
@@ -965,18 +965,18 @@ void Toggle_this_tag_pair_wildcard(void) {
     ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(true, ecs_query_next(&it));
     test_uint(e1, it.entities[0]);
-    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 1));
-    test_bool(true, ecs_field_is_set(&it, 1));
+    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 0));
+    test_bool(true, ecs_field_is_set(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_uint(e3, it.entities[0]);
-    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 1));
-    test_bool(true, ecs_field_is_set(&it, 1));
+    test_uint(ecs_pair(Rel, TgtA), ecs_field_id(&it, 0));
+    test_bool(true, ecs_field_is_set(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_uint(e5, it.entities[0]);
-    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 1));
-    test_bool(true, ecs_field_is_set(&it, 1));
+    test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 0));
+    test_bool(true, ecs_field_is_set(&it, 0));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -1014,28 +1014,28 @@ void Toggle_this_toggle_shared_self_up(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(p, it.entities[0]);
-        test_uint(0, ecs_field_src(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
         {
-            const Position *p = ecs_field(&it, Position, 1);
+            const Position *p = ecs_field(&it, Position, 0);
             test_assert(p != NULL);
             test_int(p->x, 10);
             test_int(p->y, 20);
         }
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
 
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e, it.entities[0]);
-        test_uint(p, ecs_field_src(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(p, ecs_field_src(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
         {
-            const Position *p = ecs_field(&it, Position, 1);
+            const Position *p = ecs_field(&it, Position, 0);
             test_assert(p != NULL);
             test_int(p->x, 10);
             test_int(p->y, 20);
         }
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
 
         test_bool(false, ecs_query_next(&it));
     }
@@ -1054,28 +1054,28 @@ void Toggle_this_toggle_shared_self_up(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(cache_kind == EcsQueryCacheDefault ? p : e, it.entities[0]);
-        test_uint(cache_kind == EcsQueryCacheDefault ? 0 : p, ecs_field_src(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(cache_kind == EcsQueryCacheDefault ? 0 : p, ecs_field_src(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
         {
-            const Position *p = ecs_field(&it, Position, 1);
+            const Position *p = ecs_field(&it, Position, 0);
             test_assert(p != NULL);
             test_int(p->x, 10);
             test_int(p->y, 20);
         }
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
 
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(cache_kind == EcsQueryCacheDefault ? e : p, it.entities[0]);
-        test_uint(cache_kind == EcsQueryCacheDefault ? p : 0, ecs_field_src(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(cache_kind == EcsQueryCacheDefault ? p : 0, ecs_field_src(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
         {
-            const Position *p = ecs_field(&it, Position, 1);
+            const Position *p = ecs_field(&it, Position, 0);
             test_assert(p != NULL);
             test_int(p->x, 10);
             test_int(p->y, 20);
         }
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
 
         test_bool(false, ecs_query_next(&it));
     }
@@ -1114,15 +1114,15 @@ void Toggle_this_toggle_shared_up(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e, it.entities[0]);
-        test_uint(p, ecs_field_src(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(p, ecs_field_src(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
         {
-            const Position *p = ecs_field(&it, Position, 1);
+            const Position *p = ecs_field(&it, Position, 0);
             test_assert(p != NULL);
             test_int(p->x, 10);
             test_int(p->y, 20);
         }
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
 
         test_bool(false, ecs_query_next(&it));
     }
@@ -1141,15 +1141,15 @@ void Toggle_this_toggle_shared_up(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e, it.entities[0]);
-        test_uint(p, ecs_field_src(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(p, ecs_field_src(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
         {
-            const Position *p = ecs_field(&it, Position, 1);
+            const Position *p = ecs_field(&it, Position, 0);
             test_assert(p != NULL);
             test_int(p->x, 10);
             test_int(p->y, 20);
         }
-        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
 
         test_bool(false, ecs_query_next(&it));
     }
@@ -1192,46 +1192,46 @@ void Toggle_this_toggle_shared_self_up_w_self(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(p, it.entities[0]);
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
-        test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
         {
-            const Position *p = ecs_field(&it, Position, 1);
+            const Position *p = ecs_field(&it, Position, 0);
             test_assert(p != NULL);
             test_int(p->x, 10);
             test_int(p->y, 20);
         }
         {
-            const Velocity *v = ecs_field(&it, Velocity, 2);
+            const Velocity *v = ecs_field(&it, Velocity, 1);
             test_assert(v != NULL);
             test_int(v->x, 1);
             test_int(v->y, 2);
         }
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
 
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e, it.entities[0]);
-        test_uint(p, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
-        test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+        test_uint(p, ecs_field_src(&it, 0));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
         {
-            const Position *p = ecs_field(&it, Position, 1);
+            const Position *p = ecs_field(&it, Position, 0);
             test_assert(p != NULL);
             test_int(p->x, 10);
             test_int(p->y, 20);
         }
         {
-            const Velocity *v = ecs_field(&it, Velocity, 2);
+            const Velocity *v = ecs_field(&it, Velocity, 1);
             test_assert(v != NULL);
             test_int(v->x, 2);
             test_int(v->y, 4);
         }
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
 
         test_bool(false, ecs_query_next(&it));
     }
@@ -1250,46 +1250,46 @@ void Toggle_this_toggle_shared_self_up_w_self(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(cache_kind == EcsQueryCacheDefault ? p : e, it.entities[0]);
-        test_uint(cache_kind == EcsQueryCacheDefault ? 0 : p, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
-        test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+        test_uint(cache_kind == EcsQueryCacheDefault ? 0 : p, ecs_field_src(&it, 0));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
         {
-            const Position *p = ecs_field(&it, Position, 1);
+            const Position *p = ecs_field(&it, Position, 0);
             test_assert(p != NULL);
             test_int(p->x, 10);
             test_int(p->y, 20);
         }
         {
-            const Velocity *v = ecs_field(&it, Velocity, 2);
+            const Velocity *v = ecs_field(&it, Velocity, 1);
             test_assert(v != NULL);
             test_int(cache_kind == EcsQueryCacheDefault ? 1 : 2, v->x);
             test_int(cache_kind == EcsQueryCacheDefault ? 2 : 4, v->y);
         }
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
 
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(cache_kind == EcsQueryCacheDefault ? e : p, it.entities[0]);
-        test_uint(cache_kind == EcsQueryCacheDefault ? p : 0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
-        test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+        test_uint(cache_kind == EcsQueryCacheDefault ? p : 0, ecs_field_src(&it, 0));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
         {
-            const Position *p = ecs_field(&it, Position, 1);
+            const Position *p = ecs_field(&it, Position, 0);
             test_assert(p != NULL);
             test_int(p->x, 10);
             test_int(p->y, 20);
         }
         {
-            const Velocity *v = ecs_field(&it, Velocity, 2);
+            const Velocity *v = ecs_field(&it, Velocity, 1);
             test_assert(v != NULL);
             test_int(cache_kind == EcsQueryCacheDefault ? 2 : 1, v->x);
             test_int(cache_kind == EcsQueryCacheDefault ? 4 : 2, v->y);
         }
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
 
         test_bool(false, ecs_query_next(&it));
     }
@@ -1332,24 +1332,24 @@ void Toggle_this_toggle_shared_up_w_self(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e, it.entities[0]);
-        test_uint(p, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
-        test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+        test_uint(p, ecs_field_src(&it, 0));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
         {
-            const Position *p = ecs_field(&it, Position, 1);
+            const Position *p = ecs_field(&it, Position, 0);
             test_assert(p != NULL);
             test_int(p->x, 10);
             test_int(p->y, 20);
         }
         {
-            const Velocity *v = ecs_field(&it, Velocity, 2);
+            const Velocity *v = ecs_field(&it, Velocity, 1);
             test_assert(v != NULL);
             test_int(v->x, 2);
             test_int(v->y, 4);
         }
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
 
         test_bool(false, ecs_query_next(&it));
     }
@@ -1368,24 +1368,24 @@ void Toggle_this_toggle_shared_up_w_self(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e, it.entities[0]);
-        test_uint(p, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
-        test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+        test_uint(p, ecs_field_src(&it, 0));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
         {
-            const Position *p = ecs_field(&it, Position, 1);
+            const Position *p = ecs_field(&it, Position, 0);
             test_assert(p != NULL);
             test_int(p->x, 10);
             test_int(p->y, 20);
         }
         {
-            const Velocity *v = ecs_field(&it, Velocity, 2);
+            const Velocity *v = ecs_field(&it, Velocity, 1);
             test_assert(v != NULL);
             test_int(v->x, 2);
             test_int(v->y, 4);
         }
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
 
         test_bool(false, ecs_query_next(&it));
     }
@@ -1428,46 +1428,46 @@ void Toggle_this_toggle_shared_self_up_w_self_reverse(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(p, it.entities[0]);
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
         {
-            const Velocity *v = ecs_field(&it, Velocity, 1);
+            const Velocity *v = ecs_field(&it, Velocity, 0);
             test_assert(v != NULL);
             test_int(v->x, 1);
             test_int(v->y, 2);
         }
         {
-            const Position *p = ecs_field(&it, Position, 2);
+            const Position *p = ecs_field(&it, Position, 1);
             test_assert(p != NULL);
             test_int(p->x, 10);
             test_int(p->y, 20);
         }
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
 
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e, it.entities[0]);
-        test_uint(0, ecs_field_src(&it, 1));
-        test_uint(p, ecs_field_src(&it, 2));
-        test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(p, ecs_field_src(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
         {
-            const Velocity *v = ecs_field(&it, Velocity, 1);
+            const Velocity *v = ecs_field(&it, Velocity, 0);
             test_assert(v != NULL);
             test_int(v->x, 2);
             test_int(v->y, 4);
         }
         {
-            const Position *p = ecs_field(&it, Position, 2);
+            const Position *p = ecs_field(&it, Position, 1);
             test_assert(p != NULL);
             test_int(p->x, 10);
             test_int(p->y, 20);
         }
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
 
         test_bool(false, ecs_query_next(&it));
     }
@@ -1486,46 +1486,46 @@ void Toggle_this_toggle_shared_self_up_w_self_reverse(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e, it.entities[0]);
-        test_uint(0, ecs_field_src(&it, 1));
-        test_uint(p, ecs_field_src(&it, 2));
-        test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(p, ecs_field_src(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
         {
-            const Velocity *v = ecs_field(&it, Velocity, 1);
+            const Velocity *v = ecs_field(&it, Velocity, 0);
             test_assert(v != NULL);
             test_int(v->x, 2);
             test_int(v->y, 4);
         }
         {
-            const Position *p = ecs_field(&it, Position, 2);
+            const Position *p = ecs_field(&it, Position, 1);
             test_assert(p != NULL);
             test_int(p->x, 10);
             test_int(p->y, 20);
         }
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
 
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(p, it.entities[0]);
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
         {
-            const Velocity *v = ecs_field(&it, Velocity, 1);
+            const Velocity *v = ecs_field(&it, Velocity, 0);
             test_assert(v != NULL);
             test_int(v->x, 1);
             test_int(v->y, 2);
         }
         {
-            const Position *p = ecs_field(&it, Position, 2);
+            const Position *p = ecs_field(&it, Position, 1);
             test_assert(p != NULL);
             test_int(p->x, 10);
             test_int(p->y, 20);
         }
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
 
         test_bool(false, ecs_query_next(&it));
     }
@@ -1568,24 +1568,24 @@ void Toggle_this_toggle_shared_up_w_self_reverse(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e, it.entities[0]);
-        test_uint(0, ecs_field_src(&it, 1));
-        test_uint(p, ecs_field_src(&it, 2));
-        test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(p, ecs_field_src(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
         {
-            const Velocity *v = ecs_field(&it, Velocity, 1);
+            const Velocity *v = ecs_field(&it, Velocity, 0);
             test_assert(v != NULL);
             test_int(v->x, 2);
             test_int(v->y, 4);
         }
         {
-            const Position *p = ecs_field(&it, Position, 2);
+            const Position *p = ecs_field(&it, Position, 1);
             test_assert(p != NULL);
             test_int(p->x, 10);
             test_int(p->y, 20);
         }
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
 
         test_bool(false, ecs_query_next(&it));
     }
@@ -1604,24 +1604,24 @@ void Toggle_this_toggle_shared_up_w_self_reverse(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e, it.entities[0]);
-        test_uint(0, ecs_field_src(&it, 1));
-        test_uint(p, ecs_field_src(&it, 2));
-        test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(p, ecs_field_src(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
         {
-            const Velocity *v = ecs_field(&it, Velocity, 1);
+            const Velocity *v = ecs_field(&it, Velocity, 0);
             test_assert(v != NULL);
             test_int(v->x, 2);
             test_int(v->y, 4);
         }
         {
-            const Position *p = ecs_field(&it, Position, 2);
+            const Position *p = ecs_field(&it, Position, 1);
             test_assert(p != NULL);
             test_int(p->x, 10);
             test_int(p->y, 20);
         }
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
 
         test_bool(false, ecs_query_next(&it));
     }
@@ -1667,46 +1667,46 @@ void Toggle_this_toggle_shared_self_up_w_self_toggle(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(p, it.entities[0]);
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
-        test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
         {
-            const Position *p = ecs_field(&it, Position, 1);
+            const Position *p = ecs_field(&it, Position, 0);
             test_assert(p != NULL);
             test_int(p->x, 10);
             test_int(p->y, 20);
         }
         {
-            const Velocity *v = ecs_field(&it, Velocity, 2);
+            const Velocity *v = ecs_field(&it, Velocity, 1);
             test_assert(v != NULL);
             test_int(v->x, 1);
             test_int(v->y, 2);
         }
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
 
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e, it.entities[0]);
-        test_uint(p, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
-        test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+        test_uint(p, ecs_field_src(&it, 0));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
         {
-            const Position *p = ecs_field(&it, Position, 1);
+            const Position *p = ecs_field(&it, Position, 0);
             test_assert(p != NULL);
             test_int(p->x, 10);
             test_int(p->y, 20);
         }
         {
-            const Velocity *v = ecs_field(&it, Velocity, 2);
+            const Velocity *v = ecs_field(&it, Velocity, 1);
             test_assert(v != NULL);
             test_int(v->x, 2);
             test_int(v->y, 4);
         }
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
 
         test_bool(false, ecs_query_next(&it));
     }
@@ -1725,46 +1725,46 @@ void Toggle_this_toggle_shared_self_up_w_self_toggle(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(cache_kind == EcsQueryCacheDefault ? p : e, it.entities[0]);
-        test_uint(cache_kind == EcsQueryCacheDefault ? 0 : p, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
-        test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+        test_uint(cache_kind == EcsQueryCacheDefault ? 0 : p, ecs_field_src(&it, 0));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
         {
-            const Position *p = ecs_field(&it, Position, 1);
+            const Position *p = ecs_field(&it, Position, 0);
             test_assert(p != NULL);
             test_int(p->x, 10);
             test_int(p->y, 20);
         }
         {
-            const Velocity *v = ecs_field(&it, Velocity, 2);
+            const Velocity *v = ecs_field(&it, Velocity, 1);
             test_assert(v != NULL);
             test_int(cache_kind == EcsQueryCacheDefault ? 1 : 2, v->x);
             test_int(cache_kind == EcsQueryCacheDefault ? 2 : 4, v->y);
         }
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
 
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(cache_kind == EcsQueryCacheDefault ? e : p, it.entities[0]);
-        test_uint(cache_kind == EcsQueryCacheDefault ? p : 0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
-        test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+        test_uint(cache_kind == EcsQueryCacheDefault ? p : 0, ecs_field_src(&it, 0));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
         {
-            const Position *p = ecs_field(&it, Position, 1);
+            const Position *p = ecs_field(&it, Position, 0);
             test_assert(p != NULL);
             test_int(p->x, 10);
             test_int(p->y, 20);
         }
         {
-            const Velocity *v = ecs_field(&it, Velocity, 2);
+            const Velocity *v = ecs_field(&it, Velocity, 1);
             test_assert(v != NULL);
             test_int(cache_kind == EcsQueryCacheDefault ? 2 : 1, v->x);
             test_int(cache_kind == EcsQueryCacheDefault ? 4 : 2, v->y);
         }
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
 
         test_bool(false, ecs_query_next(&it));
     }
@@ -1810,24 +1810,24 @@ void Toggle_this_toggle_shared_up_w_self_toggle(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e, it.entities[0]);
-        test_uint(p, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
-        test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+        test_uint(p, ecs_field_src(&it, 0));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
         {
-            const Position *p = ecs_field(&it, Position, 1);
+            const Position *p = ecs_field(&it, Position, 0);
             test_assert(p != NULL);
             test_int(p->x, 10);
             test_int(p->y, 20);
         }
         {
-            const Velocity *v = ecs_field(&it, Velocity, 2);
+            const Velocity *v = ecs_field(&it, Velocity, 1);
             test_assert(v != NULL);
             test_int(v->x, 2);
             test_int(v->y, 4);
         }
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
 
         test_bool(false, ecs_query_next(&it));
     }
@@ -1846,24 +1846,24 @@ void Toggle_this_toggle_shared_up_w_self_toggle(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e, it.entities[0]);
-        test_uint(p, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
-        test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+        test_uint(p, ecs_field_src(&it, 0));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
         {
-            const Position *p = ecs_field(&it, Position, 1);
+            const Position *p = ecs_field(&it, Position, 0);
             test_assert(p != NULL);
             test_int(p->x, 10);
             test_int(p->y, 20);
         }
         {
-            const Velocity *v = ecs_field(&it, Velocity, 2);
+            const Velocity *v = ecs_field(&it, Velocity, 1);
             test_assert(v != NULL);
             test_int(v->x, 2);
             test_int(v->y, 4);
         }
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
 
         test_bool(false, ecs_query_next(&it));
     }
@@ -1909,46 +1909,46 @@ void Toggle_this_toggle_shared_self_up_w_self_toggle_reverse(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(p, it.entities[0]);
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
         {
-            const Velocity *v = ecs_field(&it, Velocity, 1);
+            const Velocity *v = ecs_field(&it, Velocity, 0);
             test_assert(v != NULL);
             test_int(v->x, 1);
             test_int(v->y, 2);
         }
         {
-            const Position *p = ecs_field(&it, Position, 2);
+            const Position *p = ecs_field(&it, Position, 1);
             test_assert(p != NULL);
             test_int(p->x, 10);
             test_int(p->y, 20);
         }
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
 
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e, it.entities[0]);
-        test_uint(0, ecs_field_src(&it, 1));
-        test_uint(p, ecs_field_src(&it, 2));
-        test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(p, ecs_field_src(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
         {
-            const Velocity *v = ecs_field(&it, Velocity, 1);
+            const Velocity *v = ecs_field(&it, Velocity, 0);
             test_assert(v != NULL);
             test_int(v->x, 2);
             test_int(v->y, 4);
         }
         {
-            const Position *p = ecs_field(&it, Position, 2);
+            const Position *p = ecs_field(&it, Position, 1);
             test_assert(p != NULL);
             test_int(p->x, 10);
             test_int(p->y, 20);
         }
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
 
         test_bool(false, ecs_query_next(&it));
     }
@@ -1967,46 +1967,46 @@ void Toggle_this_toggle_shared_self_up_w_self_toggle_reverse(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e, it.entities[0]);
-        test_uint(0, ecs_field_src(&it, 1));
-        test_uint(p, ecs_field_src(&it, 2));
-        test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(p, ecs_field_src(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
         {
-            const Velocity *v = ecs_field(&it, Velocity, 1);
+            const Velocity *v = ecs_field(&it, Velocity, 0);
             test_assert(v != NULL);
             test_int(v->x, 2);
             test_int(v->y, 4);
         }
         {
-            const Position *p = ecs_field(&it, Position, 2);
+            const Position *p = ecs_field(&it, Position, 1);
             test_assert(p != NULL);
             test_int(p->x, 10);
             test_int(p->y, 20);
         }
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
 
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(p, it.entities[0]);
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
         {
-            const Velocity *v = ecs_field(&it, Velocity, 1);
+            const Velocity *v = ecs_field(&it, Velocity, 0);
             test_assert(v != NULL);
             test_int(v->x, 1);
             test_int(v->y, 2);
         }
         {
-            const Position *p = ecs_field(&it, Position, 2);
+            const Position *p = ecs_field(&it, Position, 1);
             test_assert(p != NULL);
             test_int(p->x, 10);
             test_int(p->y, 20);
         }
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
 
         test_bool(false, ecs_query_next(&it));
     }
@@ -2052,24 +2052,24 @@ void Toggle_this_toggle_shared_up_w_self_toggle_reverse(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e, it.entities[0]);
-        test_uint(0, ecs_field_src(&it, 1));
-        test_uint(p, ecs_field_src(&it, 2));
-        test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(p, ecs_field_src(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
         {
-            const Velocity *v = ecs_field(&it, Velocity, 1);
+            const Velocity *v = ecs_field(&it, Velocity, 0);
             test_assert(v != NULL);
             test_int(v->x, 2);
             test_int(v->y, 4);
         }
         {
-            const Position *p = ecs_field(&it, Position, 2);
+            const Position *p = ecs_field(&it, Position, 1);
             test_assert(p != NULL);
             test_int(p->x, 10);
             test_int(p->y, 20);
         }
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
 
         test_bool(false, ecs_query_next(&it));
     }
@@ -2088,24 +2088,24 @@ void Toggle_this_toggle_shared_up_w_self_toggle_reverse(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e, it.entities[0]);
-        test_uint(0, ecs_field_src(&it, 1));
-        test_uint(p, ecs_field_src(&it, 2));
-        test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(p, ecs_field_src(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
         {
-            const Velocity *v = ecs_field(&it, Velocity, 1);
+            const Velocity *v = ecs_field(&it, Velocity, 0);
             test_assert(v != NULL);
             test_int(v->x, 2);
             test_int(v->y, 4);
         }
         {
-            const Position *p = ecs_field(&it, Position, 2);
+            const Position *p = ecs_field(&it, Position, 1);
             test_assert(p != NULL);
             test_int(p->x, 10);
             test_int(p->y, 20);
         }
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
 
         test_bool(false, ecs_query_next(&it));
     }
@@ -2140,22 +2140,22 @@ void Toggle_this_toggle_not_shared_self_up(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(p, it.entities[0]);
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
 
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e, it.entities[0]);
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
 
         test_bool(false, ecs_query_next(&it));
     }
@@ -2174,20 +2174,20 @@ void Toggle_this_toggle_not_shared_self_up(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e, it.entities[0]);
-        test_uint(0, ecs_field_src(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
 
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(p, it.entities[0]);
-        test_uint(0, ecs_field_src(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
 
         test_bool(false, ecs_query_next(&it));
     }
@@ -2229,22 +2229,22 @@ void Toggle_this_toggle_not_shared_up(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(p, it.entities[0]);
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
 
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e, it.entities[0]);
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
 
         test_bool(false, ecs_query_next(&it));
     }
@@ -2256,11 +2256,11 @@ void Toggle_this_toggle_not_shared_up(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(p, it.entities[0]);
-        test_uint(0, ecs_field_src(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
 
         test_bool(false, ecs_query_next(&it));
     }
@@ -2272,20 +2272,20 @@ void Toggle_this_toggle_not_shared_up(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e, it.entities[0]);
-        test_uint(0, ecs_field_src(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
 
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(p, it.entities[0]);
-        test_uint(0, ecs_field_src(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
 
         test_bool(false, ecs_query_next(&it));
     }
@@ -2297,11 +2297,11 @@ void Toggle_this_toggle_not_shared_up(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(p, it.entities[0]);
-        test_uint(0, ecs_field_src(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
 
         test_bool(false, ecs_query_next(&it));
     }
@@ -2336,21 +2336,21 @@ void Toggle_this_toggle_optional_shared_self_up(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(p, it.entities[0]);
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
 
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e, it.entities[0]);
-        test_uint(0, ecs_field_src(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
 
         test_bool(false, ecs_query_next(&it));
     }
@@ -2362,21 +2362,21 @@ void Toggle_this_toggle_optional_shared_self_up(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e, it.entities[0]);
-        test_uint(0, ecs_field_src(&it, 1));
-        test_uint(p, ecs_field_src(&it, 2));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(p, ecs_field_src(&it, 1));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
 
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(p, it.entities[0]);
-        test_uint(0, ecs_field_src(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
 
         test_bool(false, ecs_query_next(&it));
     }
@@ -2388,20 +2388,20 @@ void Toggle_this_toggle_optional_shared_self_up(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e, it.entities[0]);
-        test_uint(0, ecs_field_src(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
 
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(p, it.entities[0]);
-        test_uint(0, ecs_field_src(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
 
         test_bool(false, ecs_query_next(&it));
     }
@@ -2413,21 +2413,21 @@ void Toggle_this_toggle_optional_shared_self_up(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e, it.entities[0]);
-        test_uint(0, ecs_field_src(&it, 1));
-        test_uint(p, ecs_field_src(&it, 2));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(p, ecs_field_src(&it, 1));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
 
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(p, it.entities[0]);
-        test_uint(0, ecs_field_src(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
 
         test_bool(false, ecs_query_next(&it));
     }
@@ -2462,21 +2462,21 @@ void Toggle_this_toggle_optional_shared_up(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(p, it.entities[0]);
+        test_uint(0, ecs_field_src(&it, 0));
         test_uint(0, ecs_field_src(&it, 1));
-        test_uint(0, ecs_field_src(&it, 2));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
 
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e, it.entities[0]);
-        test_uint(0, ecs_field_src(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
 
         test_bool(false, ecs_query_next(&it));
     }
@@ -2488,21 +2488,21 @@ void Toggle_this_toggle_optional_shared_up(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e, it.entities[0]);
-        test_uint(0, ecs_field_src(&it, 1));
-        test_uint(p, ecs_field_src(&it, 2));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(p, ecs_field_src(&it, 1));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
 
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(p, it.entities[0]);
-        test_uint(0, ecs_field_src(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
 
         test_bool(false, ecs_query_next(&it));
     }
@@ -2514,20 +2514,20 @@ void Toggle_this_toggle_optional_shared_up(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e, it.entities[0]);
-        test_uint(0, ecs_field_src(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
 
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(p, it.entities[0]);
-        test_uint(0, ecs_field_src(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
 
         test_bool(false, ecs_query_next(&it));
     }
@@ -2539,21 +2539,21 @@ void Toggle_this_toggle_optional_shared_up(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e, it.entities[0]);
-        test_uint(0, ecs_field_src(&it, 1));
-        test_uint(p, ecs_field_src(&it, 2));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(p, ecs_field_src(&it, 1));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 2));
 
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(p, it.entities[0]);
-        test_uint(0, ecs_field_src(&it, 1));
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 1));
 
         test_bool(false, ecs_query_next(&it));
     }
@@ -2600,8 +2600,8 @@ void test_disable_toggle_mod(int32_t total, int32_t mod) {
     int32_t count = 0, toggle_count = 0;
 
     while (ecs_query_next(&it)) {
-        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
-        Position *p = ecs_field(&it, Position, 1);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
 
         int32_t i;
@@ -2661,8 +2661,8 @@ void test_enable_toggle_mod(int32_t total, int32_t mod) {
     int32_t count = 0, toggle_count = 0;
 
     while (ecs_query_next(&it)) {
-        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
-        Position *p = ecs_field(&it, Position, 1);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
 
         int32_t i;
@@ -3579,9 +3579,9 @@ void Toggle_this_w_other_tag(void) {
     int32_t count = 0;
 
     while (ecs_query_next(&it)) {
-        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
-        test_uint(Tag, ecs_field_id(&it, 2));
-        Position *p = ecs_field(&it, Position, 1);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(Tag, ecs_field_id(&it, 1));
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
 
         int32_t i;
@@ -3642,11 +3642,11 @@ void Toggle_this_w_other_component(void) {
     int32_t count = 0;
 
     while (ecs_query_next(&it)) {
-        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
-        test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
-        Position *p = ecs_field(&it, Position, 1);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
+        Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
-        Velocity *v = ecs_field(&it, Velocity, 2);
+        Velocity *v = ecs_field(&it, Velocity, 1);
         test_assert(v != NULL);
 
         int32_t i;
@@ -3696,8 +3696,8 @@ void Toggle_this_not(void) {
     int32_t count = 0, pos_count = 0;
 
     while (ecs_query_next(&it)) {
-        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
-        test_bool(false, ecs_field_is_set(&it, 1));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_bool(false, ecs_field_is_set(&it, 0));
 
         int32_t i;
         for (i = 0; i < it.count; i ++) {
@@ -3764,10 +3764,10 @@ void this_written_not(int total, int mod) {
     int32_t count = 0, pos_count = 0;
 
     while (ecs_query_next(&it)) {
-        test_uint(Tag, ecs_field_id(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-        test_bool(false, ecs_field_is_set(&it, 2));
+        test_uint(Tag, ecs_field_id(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_bool(false, ecs_field_is_set(&it, 1));
 
         int32_t i;
         for (i = 0; i < it.count; i ++) {
@@ -3860,24 +3860,24 @@ void this_optional(int total, int mod) {
     int32_t count = 0, with_pos_count = 0;
 
     while (ecs_query_next(&it)) {
-        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
-        Position *ptr = ecs_field(&it, Position, 1);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        Position *ptr = ecs_field(&it, Position, 0);
 
         if (ecs_table_has_id(world, it.table, ECS_TOGGLE | ecs_id(Position))) {
             for (int32_t i = 0; i < it.count; i ++) {
                 if (ecs_is_enabled(world, it.entities[i], Position)) {
-                    test_bool(true, ecs_field_is_set(&it, 1));
+                    test_bool(true, ecs_field_is_set(&it, 0));
                     test_assert(ptr != NULL);
                     test_assert(ptr[i].x == it.entities[i]);
                     test_assert(ptr[i].y == it.entities[i]);
                     with_pos_count ++;
                 } else {
-                    test_bool(false, ecs_field_is_set(&it, 1));
+                    test_bool(false, ecs_field_is_set(&it, 0));
                 }
             }
         } else {
             if (ecs_table_has_id(world, it.table, ecs_id(Position))) {
-                test_bool(true, ecs_field_is_set(&it, 1));
+                test_bool(true, ecs_field_is_set(&it, 0));
                 test_assert(ptr != NULL);
                 for (int32_t i = 0; i < it.count; i ++) {
                     test_assert(ecs_is_enabled(world, it.entities[i], Position));
@@ -3886,7 +3886,7 @@ void this_optional(int total, int mod) {
                     with_pos_count ++;
                 }
             } else {
-                test_bool(false, ecs_field_is_set(&it, 1));
+                test_bool(false, ecs_field_is_set(&it, 0));
                 for (int32_t i = 0; i < it.count; i ++) {
                     test_assert(!ecs_is_enabled(world, it.entities[i], Position));
                 }
@@ -3950,27 +3950,27 @@ void this_written_optional(int total, int mod) {
     int32_t count = 0, with_pos_count = 0, without_pos_count = 0;
 
     while (ecs_query_next(&it)) {
-        test_uint(Tag, ecs_field_id(&it, 1));
-        test_bool(true, ecs_field_is_set(&it, 1));
-        test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-        Position *ptr = ecs_field(&it, Position, 2);
+        test_uint(Tag, ecs_field_id(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        Position *ptr = ecs_field(&it, Position, 1);
 
         if (ecs_table_has_id(world, it.table, ECS_TOGGLE | ecs_id(Position))) {
             for (int32_t i = 0; i < it.count; i ++) {
                 if (ecs_is_enabled(world, it.entities[i], Position)) {
-                    test_bool(true, ecs_field_is_set(&it, 2));
+                    test_bool(true, ecs_field_is_set(&it, 1));
                     test_assert(ptr != NULL);
                     test_assert(ptr[i].x == it.entities[i]);
                     test_assert(ptr[i].y == it.entities[i]);
                     with_pos_count ++;
                 } else {
-                    test_bool(false, ecs_field_is_set(&it, 2));
+                    test_bool(false, ecs_field_is_set(&it, 1));
                     without_pos_count ++;
                 }
             }
         } else {
             if (ecs_table_has_id(world, it.table, ecs_id(Position))) {
-                test_bool(true, ecs_field_is_set(&it, 2));
+                test_bool(true, ecs_field_is_set(&it, 1));
                 test_assert(ptr != NULL);
                 for (int32_t i = 0; i < it.count; i ++) {
                     test_assert(ecs_is_enabled(world, it.entities[i], Position));
@@ -3979,7 +3979,7 @@ void this_written_optional(int total, int mod) {
                     with_pos_count ++;
                 }
             } else {
-                test_bool(false, ecs_field_is_set(&it, 2));
+                test_bool(false, ecs_field_is_set(&it, 1));
                 for (int32_t i = 0; i < it.count; i ++) {
                     test_assert(!ecs_is_enabled(world, it.entities[i], Position));
                     without_pos_count ++;
@@ -4127,14 +4127,14 @@ void Toggle_this_table_move_2_from_3(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e1, it.entities[0]);
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_int(p->x, 10); test_int(p->y, 20);
     }
     {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(e3, it.entities[0]);
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_int(p->x, 30); test_int(p->y, 40);
     }
     test_bool(false, ecs_query_next(&it));
@@ -4226,42 +4226,42 @@ void Toggle_this_written_toggle_w_not_toggle(void) {
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
-    test_bool(true, ecs_field_is_set(&it, 2));
-    test_bool(false, ecs_field_is_set(&it, 3));
+    test_bool(false, ecs_field_is_set(&it, 2));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
-    test_bool(true, ecs_field_is_set(&it, 2));
-    test_bool(false, ecs_field_is_set(&it, 3));
+    test_bool(false, ecs_field_is_set(&it, 2));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
-    test_bool(true, ecs_field_is_set(&it, 2));
-    test_bool(false, ecs_field_is_set(&it, 3));
+    test_bool(false, ecs_field_is_set(&it, 2));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e9, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
-    test_bool(true, ecs_field_is_set(&it, 2));
-    test_bool(false, ecs_field_is_set(&it, 3));
+    test_bool(false, ecs_field_is_set(&it, 2));
 
     test_bool(false, ecs_iter_next(&it));
 
@@ -4352,42 +4352,42 @@ void Toggle_this_written_not_toggle_w_toggle(void) {
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 3));
-    test_bool(true, ecs_field_is_set(&it, 1));
-    test_bool(false, ecs_field_is_set(&it, 2));
-    test_bool(true, ecs_field_is_set(&it, 3));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 2));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 3));
-    test_bool(true, ecs_field_is_set(&it, 1));
-    test_bool(false, ecs_field_is_set(&it, 2));
-    test_bool(true, ecs_field_is_set(&it, 3));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 2));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 3));
-    test_bool(true, ecs_field_is_set(&it, 1));
-    test_bool(false, ecs_field_is_set(&it, 2));
-    test_bool(true, ecs_field_is_set(&it, 3));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 2));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e9, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 3));
-    test_bool(true, ecs_field_is_set(&it, 1));
-    test_bool(false, ecs_field_is_set(&it, 2));
-    test_bool(true, ecs_field_is_set(&it, 3));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 2));
 
     test_bool(false, ecs_iter_next(&it));
 
@@ -4478,72 +4478,72 @@ void Toggle_this_written_toggle_w_optional_toggle(void) {
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
-    test_bool(true, ecs_field_is_set(&it, 2));
-    test_bool(false, ecs_field_is_set(&it, 3));
+    test_bool(false, ecs_field_is_set(&it, 2));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
     test_bool(true, ecs_field_is_set(&it, 2));
-    test_bool(true, ecs_field_is_set(&it, 3));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
-    test_bool(true, ecs_field_is_set(&it, 2));
-    test_bool(false, ecs_field_is_set(&it, 3));
+    test_bool(false, ecs_field_is_set(&it, 2));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
     test_bool(true, ecs_field_is_set(&it, 2));
-    test_bool(true, ecs_field_is_set(&it, 3));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
-    test_bool(true, ecs_field_is_set(&it, 2));
-    test_bool(false, ecs_field_is_set(&it, 3));
+    test_bool(false, ecs_field_is_set(&it, 2));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e8, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
     test_bool(true, ecs_field_is_set(&it, 2));
-    test_bool(true, ecs_field_is_set(&it, 3));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e9, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
-    test_bool(true, ecs_field_is_set(&it, 2));
-    test_bool(false, ecs_field_is_set(&it, 3));
+    test_bool(false, ecs_field_is_set(&it, 2));
 
     test_bool(false, ecs_iter_next(&it));
 
@@ -4634,72 +4634,72 @@ void Toggle_this_written_optional_toggle_w_toggle(void) {
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 3));
-    test_bool(true, ecs_field_is_set(&it, 1));
-    test_bool(false, ecs_field_is_set(&it, 2));
-    test_bool(true, ecs_field_is_set(&it, 3));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 2));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 3));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
     test_bool(true, ecs_field_is_set(&it, 2));
-    test_bool(true, ecs_field_is_set(&it, 3));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 3));
-    test_bool(true, ecs_field_is_set(&it, 1));
-    test_bool(false, ecs_field_is_set(&it, 2));
-    test_bool(true, ecs_field_is_set(&it, 3));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 2));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 3));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
     test_bool(true, ecs_field_is_set(&it, 2));
-    test_bool(true, ecs_field_is_set(&it, 3));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 3));
-    test_bool(true, ecs_field_is_set(&it, 1));
-    test_bool(false, ecs_field_is_set(&it, 2));
-    test_bool(true, ecs_field_is_set(&it, 3));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 2));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e8, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 3));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
     test_bool(true, ecs_field_is_set(&it, 2));
-    test_bool(true, ecs_field_is_set(&it, 3));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e9, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 3));
-    test_bool(true, ecs_field_is_set(&it, 1));
-    test_bool(false, ecs_field_is_set(&it, 2));
-    test_bool(true, ecs_field_is_set(&it, 3));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 2));
 
     test_bool(false, ecs_iter_next(&it));
 
@@ -4790,72 +4790,72 @@ void Toggle_this_written_not_w_optional_toggle(void) {
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 3));
-    test_bool(true, ecs_field_is_set(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
     test_bool(false, ecs_field_is_set(&it, 2));
-    test_bool(false, ecs_field_is_set(&it, 3));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 3));
-    test_bool(true, ecs_field_is_set(&it, 1));
-    test_bool(false, ecs_field_is_set(&it, 2));
-    test_bool(true, ecs_field_is_set(&it, 3));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 2));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 3));
-    test_bool(true, ecs_field_is_set(&it, 1));
-    test_bool(false, ecs_field_is_set(&it, 2));
-    test_bool(true, ecs_field_is_set(&it, 3));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 2));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 3));
-    test_bool(true, ecs_field_is_set(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
     test_bool(false, ecs_field_is_set(&it, 2));
-    test_bool(false, ecs_field_is_set(&it, 3));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 3));
-    test_bool(true, ecs_field_is_set(&it, 1));
-    test_bool(false, ecs_field_is_set(&it, 2));
-    test_bool(true, ecs_field_is_set(&it, 3));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 2));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e9, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 3));
-    test_bool(true, ecs_field_is_set(&it, 1));
-    test_bool(false, ecs_field_is_set(&it, 2));
-    test_bool(true, ecs_field_is_set(&it, 3));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 2));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e11, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 3));
-    test_bool(true, ecs_field_is_set(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
     test_bool(false, ecs_field_is_set(&it, 2));
-    test_bool(false, ecs_field_is_set(&it, 3));
 
     test_bool(false, ecs_iter_next(&it));
 
@@ -4946,72 +4946,72 @@ void Toggle_this_written_optional_w_not_toggle(void) {
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
-    test_bool(true, ecs_field_is_set(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
     test_bool(false, ecs_field_is_set(&it, 2));
-    test_bool(false, ecs_field_is_set(&it, 3));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
-    test_bool(true, ecs_field_is_set(&it, 2));
-    test_bool(false, ecs_field_is_set(&it, 3));
+    test_bool(false, ecs_field_is_set(&it, 2));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
-    test_bool(true, ecs_field_is_set(&it, 2));
-    test_bool(false, ecs_field_is_set(&it, 3));
+    test_bool(false, ecs_field_is_set(&it, 2));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
-    test_bool(true, ecs_field_is_set(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
     test_bool(false, ecs_field_is_set(&it, 2));
-    test_bool(false, ecs_field_is_set(&it, 3));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
-    test_bool(true, ecs_field_is_set(&it, 2));
-    test_bool(false, ecs_field_is_set(&it, 3));
+    test_bool(false, ecs_field_is_set(&it, 2));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e9, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
-    test_bool(true, ecs_field_is_set(&it, 2));
-    test_bool(false, ecs_field_is_set(&it, 3));
+    test_bool(false, ecs_field_is_set(&it, 2));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e11, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
-    test_bool(true, ecs_field_is_set(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
     test_bool(false, ecs_field_is_set(&it, 2));
-    test_bool(false, ecs_field_is_set(&it, 3));
 
     test_bool(false, ecs_iter_next(&it));
 
@@ -5102,32 +5102,32 @@ void Toggle_this_written_2_not_toggle(void) {
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
-    test_bool(true, ecs_field_is_set(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
     test_bool(false, ecs_field_is_set(&it, 2));
-    test_bool(false, ecs_field_is_set(&it, 3));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
-    test_bool(true, ecs_field_is_set(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
     test_bool(false, ecs_field_is_set(&it, 2));
-    test_bool(false, ecs_field_is_set(&it, 3));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e11, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
-    test_bool(true, ecs_field_is_set(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
     test_bool(false, ecs_field_is_set(&it, 2));
-    test_bool(false, ecs_field_is_set(&it, 3));
 
     test_bool(false, ecs_iter_next(&it));
 
@@ -5218,112 +5218,112 @@ void Toggle_this_written_2_optional_toggle(void) {
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
-    test_bool(true, ecs_field_is_set(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
     test_bool(false, ecs_field_is_set(&it, 2));
-    test_bool(false, ecs_field_is_set(&it, 3));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
-    test_bool(true, ecs_field_is_set(&it, 2));
-    test_bool(false, ecs_field_is_set(&it, 3));
+    test_bool(false, ecs_field_is_set(&it, 2));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
     test_bool(true, ecs_field_is_set(&it, 2));
-    test_bool(true, ecs_field_is_set(&it, 3));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
-    test_bool(true, ecs_field_is_set(&it, 2));
-    test_bool(false, ecs_field_is_set(&it, 3));
+    test_bool(false, ecs_field_is_set(&it, 2));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
-    test_bool(true, ecs_field_is_set(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
     test_bool(false, ecs_field_is_set(&it, 2));
-    test_bool(false, ecs_field_is_set(&it, 3));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
     test_bool(true, ecs_field_is_set(&it, 2));
-    test_bool(true, ecs_field_is_set(&it, 3));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
-    test_bool(true, ecs_field_is_set(&it, 2));
-    test_bool(false, ecs_field_is_set(&it, 3));
+    test_bool(false, ecs_field_is_set(&it, 2));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e8, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
     test_bool(true, ecs_field_is_set(&it, 2));
-    test_bool(true, ecs_field_is_set(&it, 3));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e9, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
-    test_bool(true, ecs_field_is_set(&it, 2));
-    test_bool(false, ecs_field_is_set(&it, 3));
+    test_bool(false, ecs_field_is_set(&it, 2));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e10, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
-    test_bool(true, ecs_field_is_set(&it, 1));
-    test_bool(false, ecs_field_is_set(&it, 2));
-    test_bool(true, ecs_field_is_set(&it, 3));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 2));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e11, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
-    test_bool(true, ecs_field_is_set(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
     test_bool(false, ecs_field_is_set(&it, 2));
-    test_bool(false, ecs_field_is_set(&it, 3));
 
     test_bool(false, ecs_iter_next(&it));
 
@@ -5465,50 +5465,50 @@ void Toggle_this_written_toggle_w_2_not_toggle(void) {
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
-    test_uint(ecs_id(Mass), ecs_field_id(&it, 4));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_uint(ecs_id(Mass), ecs_field_id(&it, 3));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
-    test_bool(true, ecs_field_is_set(&it, 2));
+    test_bool(false, ecs_field_is_set(&it, 2));
     test_bool(false, ecs_field_is_set(&it, 3));
-    test_bool(false, ecs_field_is_set(&it, 4));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
-    test_uint(ecs_id(Mass), ecs_field_id(&it, 4));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_uint(ecs_id(Mass), ecs_field_id(&it, 3));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
-    test_bool(true, ecs_field_is_set(&it, 2));
+    test_bool(false, ecs_field_is_set(&it, 2));
     test_bool(false, ecs_field_is_set(&it, 3));
-    test_bool(false, ecs_field_is_set(&it, 4));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
-    test_uint(ecs_id(Mass), ecs_field_id(&it, 4));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_uint(ecs_id(Mass), ecs_field_id(&it, 3));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
-    test_bool(true, ecs_field_is_set(&it, 2));
+    test_bool(false, ecs_field_is_set(&it, 2));
     test_bool(false, ecs_field_is_set(&it, 3));
-    test_bool(false, ecs_field_is_set(&it, 4));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e9, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
-    test_uint(ecs_id(Mass), ecs_field_id(&it, 4));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_uint(ecs_id(Mass), ecs_field_id(&it, 3));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
-    test_bool(true, ecs_field_is_set(&it, 2));
+    test_bool(false, ecs_field_is_set(&it, 2));
     test_bool(false, ecs_field_is_set(&it, 3));
-    test_bool(false, ecs_field_is_set(&it, 4));
 
     test_bool(false, ecs_iter_next(&it));
 
@@ -5650,110 +5650,110 @@ void Toggle_this_written_toggle_w_2_optional_toggle(void) {
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
-    test_uint(ecs_id(Mass), ecs_field_id(&it, 4));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_uint(ecs_id(Mass), ecs_field_id(&it, 3));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
-    test_bool(true, ecs_field_is_set(&it, 2));
+    test_bool(false, ecs_field_is_set(&it, 2));
     test_bool(false, ecs_field_is_set(&it, 3));
-    test_bool(false, ecs_field_is_set(&it, 4));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
-    test_uint(ecs_id(Mass), ecs_field_id(&it, 4));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_uint(ecs_id(Mass), ecs_field_id(&it, 3));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
     test_bool(true, ecs_field_is_set(&it, 2));
     test_bool(true, ecs_field_is_set(&it, 3));
-    test_bool(true, ecs_field_is_set(&it, 4));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
-    test_uint(ecs_id(Mass), ecs_field_id(&it, 4));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_uint(ecs_id(Mass), ecs_field_id(&it, 3));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
-    test_bool(true, ecs_field_is_set(&it, 2));
+    test_bool(false, ecs_field_is_set(&it, 2));
     test_bool(false, ecs_field_is_set(&it, 3));
-    test_bool(false, ecs_field_is_set(&it, 4));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
-    test_uint(ecs_id(Mass), ecs_field_id(&it, 4));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_uint(ecs_id(Mass), ecs_field_id(&it, 3));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
     test_bool(true, ecs_field_is_set(&it, 2));
     test_bool(true, ecs_field_is_set(&it, 3));
-    test_bool(true, ecs_field_is_set(&it, 4));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
-    test_uint(ecs_id(Mass), ecs_field_id(&it, 4));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_uint(ecs_id(Mass), ecs_field_id(&it, 3));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
-    test_bool(true, ecs_field_is_set(&it, 2));
+    test_bool(false, ecs_field_is_set(&it, 2));
     test_bool(false, ecs_field_is_set(&it, 3));
-    test_bool(false, ecs_field_is_set(&it, 4));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e8, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
-    test_uint(ecs_id(Mass), ecs_field_id(&it, 4));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_uint(ecs_id(Mass), ecs_field_id(&it, 3));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
     test_bool(true, ecs_field_is_set(&it, 2));
     test_bool(true, ecs_field_is_set(&it, 3));
-    test_bool(true, ecs_field_is_set(&it, 4));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e9, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
-    test_uint(ecs_id(Mass), ecs_field_id(&it, 4));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_uint(ecs_id(Mass), ecs_field_id(&it, 3));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
-    test_bool(true, ecs_field_is_set(&it, 2));
+    test_bool(false, ecs_field_is_set(&it, 2));
     test_bool(false, ecs_field_is_set(&it, 3));
-    test_bool(false, ecs_field_is_set(&it, 4));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e12, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
-    test_uint(ecs_id(Mass), ecs_field_id(&it, 4));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_uint(ecs_id(Mass), ecs_field_id(&it, 3));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
     test_bool(true, ecs_field_is_set(&it, 2));
-    test_bool(true, ecs_field_is_set(&it, 3));
-    test_bool(false, ecs_field_is_set(&it, 4));
+    test_bool(false, ecs_field_is_set(&it, 3));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e13, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
-    test_uint(ecs_id(Mass), ecs_field_id(&it, 4));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_uint(ecs_id(Mass), ecs_field_id(&it, 3));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
-    test_bool(true, ecs_field_is_set(&it, 2));
-    test_bool(false, ecs_field_is_set(&it, 3));
-    test_bool(true, ecs_field_is_set(&it, 4));
+    test_bool(false, ecs_field_is_set(&it, 2));
+    test_bool(true, ecs_field_is_set(&it, 3));
 
     test_bool(false, ecs_iter_next(&it));
 
@@ -5895,14 +5895,14 @@ void Toggle_this_written_2_toggle_w_not_toggle(void) {
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e12, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
-    test_uint(ecs_id(Mass), ecs_field_id(&it, 4));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_uint(ecs_id(Mass), ecs_field_id(&it, 3));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
     test_bool(true, ecs_field_is_set(&it, 2));
-    test_bool(true, ecs_field_is_set(&it, 3));
-    test_bool(false, ecs_field_is_set(&it, 4));
+    test_bool(false, ecs_field_is_set(&it, 3));
 
     test_bool(false, ecs_iter_next(&it));
 
@@ -6044,50 +6044,50 @@ void Toggle_this_written_2_toggle_w_optional_toggle(void) {
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
-    test_uint(ecs_id(Mass), ecs_field_id(&it, 4));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_uint(ecs_id(Mass), ecs_field_id(&it, 3));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
     test_bool(true, ecs_field_is_set(&it, 2));
     test_bool(true, ecs_field_is_set(&it, 3));
-    test_bool(true, ecs_field_is_set(&it, 4));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
-    test_uint(ecs_id(Mass), ecs_field_id(&it, 4));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_uint(ecs_id(Mass), ecs_field_id(&it, 3));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
     test_bool(true, ecs_field_is_set(&it, 2));
     test_bool(true, ecs_field_is_set(&it, 3));
-    test_bool(true, ecs_field_is_set(&it, 4));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e8, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
-    test_uint(ecs_id(Mass), ecs_field_id(&it, 4));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_uint(ecs_id(Mass), ecs_field_id(&it, 3));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
     test_bool(true, ecs_field_is_set(&it, 2));
     test_bool(true, ecs_field_is_set(&it, 3));
-    test_bool(true, ecs_field_is_set(&it, 4));
 
     test_bool(true, ecs_iter_next(&it));
     test_int(1, it.count);
     test_uint(e12, it.entities[0]);
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(ecs_id(Position), ecs_field_id(&it, 2));
-    test_uint(ecs_id(Velocity), ecs_field_id(&it, 3));
-    test_uint(ecs_id(Mass), ecs_field_id(&it, 4));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+    test_uint(ecs_id(Mass), ecs_field_id(&it, 3));
+    test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
     test_bool(true, ecs_field_is_set(&it, 2));
-    test_bool(true, ecs_field_is_set(&it, 3));
-    test_bool(false, ecs_field_is_set(&it, 4));
+    test_bool(false, ecs_field_is_set(&it, 3));
 
     test_bool(false, ecs_iter_next(&it));
 

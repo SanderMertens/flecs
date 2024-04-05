@@ -75,7 +75,7 @@ int main(int, char *[]) {
 
         // Check if Velocity is owned, in which case it's accessed as array.
         // Position will always be owned, since we set the term to Self.
-        if (it.is_self(2)) { // Velocity is term 2
+        if (it.is_self(1)) { // Velocity is term 2
             std::cout << "Velocity is owned\n";
             for (auto i : it) {
                 p[i].x += v[i].x;

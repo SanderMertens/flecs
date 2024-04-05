@@ -611,7 +611,7 @@ void Observer_get_query(void) {
     auto q = sys.query();
 
     q.iter([&](flecs::iter &it) {
-        auto pos = it.field<const Position>(1);
+        auto pos = it.field<const Position>(0);
         for (auto i : it) {
             test_int(i, pos[i].x);
             count ++;

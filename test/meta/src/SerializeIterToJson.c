@@ -2313,7 +2313,7 @@ void SerializeIterToJson_serialize_paged_iterator(void) {
     test_uint(e3, pit.entities[1]);
     test_uint(e4, pit.entities[2]);
 
-    Position *p = ecs_field(&pit, Position, 1);
+    Position *p = ecs_field(&pit, Position, 0);
     test_int(p[0].x, 10);
     test_int(p[0].y, 20);
     test_int(p[1].x, 20);
@@ -2355,12 +2355,12 @@ void SerializeIterToJson_serialize_paged_iterator_w_optional_component(void) {
 
     test_bool(true, ecs_page_next(&pit));
     test_int(2, pit.count);
-    test_bool(true, ecs_field_is_set(&pit, 1));
-    test_bool(false, ecs_field_is_set(&pit, 2));
+    test_bool(true, ecs_field_is_set(&pit, 0));
+    test_bool(false, ecs_field_is_set(&pit, 1));
     test_uint(e2, pit.entities[0]);
     test_uint(e3, pit.entities[1]);
 
-    Position *p = ecs_field(&pit, Position, 1);
+    Position *p = ecs_field(&pit, Position, 0);
     test_int(p[0].x, 10);
     test_int(p[0].y, 20);
     test_int(p[1].x, 20);
@@ -2368,15 +2368,15 @@ void SerializeIterToJson_serialize_paged_iterator_w_optional_component(void) {
 
     test_bool(true, ecs_page_next(&pit));
     test_int(1, pit.count);
+    test_bool(true, ecs_field_is_set(&pit, 0));
     test_bool(true, ecs_field_is_set(&pit, 1));
-    test_bool(true, ecs_field_is_set(&pit, 2));
 
     test_uint(e4, pit.entities[0]);
-    p = ecs_field(&pit, Position, 1);
+    p = ecs_field(&pit, Position, 0);
     test_int(p[0].x, 30);
     test_int(p[0].y, 40);
 
-    Velocity *v = ecs_field(&pit, Velocity, 2);
+    Velocity *v = ecs_field(&pit, Velocity, 1);
     test_int(v[0].x, 1);
     test_int(v[0].y, 2);
 
@@ -2414,12 +2414,12 @@ void SerializeIterToJson_serialize_paged_iterator_w_optional_tag(void) {
 
     test_bool(true, ecs_page_next(&pit));
     test_int(2, pit.count);
-    test_bool(true, ecs_field_is_set(&pit, 1));
-    test_bool(false, ecs_field_is_set(&pit, 2));
+    test_bool(true, ecs_field_is_set(&pit, 0));
+    test_bool(false, ecs_field_is_set(&pit, 1));
     test_uint(e2, pit.entities[0]);
     test_uint(e3, pit.entities[1]);
 
-    Position *p = ecs_field(&pit, Position, 1);
+    Position *p = ecs_field(&pit, Position, 0);
     test_int(p[0].x, 10);
     test_int(p[0].y, 20);
     test_int(p[1].x, 20);
@@ -2427,11 +2427,11 @@ void SerializeIterToJson_serialize_paged_iterator_w_optional_tag(void) {
 
     test_bool(true, ecs_page_next(&pit));
     test_int(1, pit.count);
+    test_bool(true, ecs_field_is_set(&pit, 0));
     test_bool(true, ecs_field_is_set(&pit, 1));
-    test_bool(true, ecs_field_is_set(&pit, 2));
 
     test_uint(e4, pit.entities[0]);
-    p = ecs_field(&pit, Position, 1);
+    p = ecs_field(&pit, Position, 0);
     test_int(p[0].x, 30);
     test_int(p[0].y, 40);
 

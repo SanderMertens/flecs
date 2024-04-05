@@ -73,10 +73,10 @@ int main(int argc, char *argv[]) {
 
     ecs_iter_t it = ecs_query_iter(ecs, q);
     while (ecs_query_next(&it)) {
-        Position  *p = ecs_field(&it, Position, 1);
-        ImpulseSpeed *s = ecs_field(&it, ImpulseSpeed, 2);
-        Defense *d = ecs_field(&it, Defense, 3);
-        FreightCapacity *c = ecs_field(&it, FreightCapacity, 4);
+        Position  *p = ecs_field(&it, Position, 0);
+        ImpulseSpeed *s = ecs_field(&it, ImpulseSpeed, 1);
+        Defense *d = ecs_field(&it, Defense, 2);
+        FreightCapacity *c = ecs_field(&it, FreightCapacity, 3);
 
         for (int i = 0; i < it.count; i ++) {
             printf("%s:\n", ecs_get_name(ecs, it.entities[i]));

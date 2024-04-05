@@ -6,7 +6,7 @@ typedef struct {
 } Position, Velocity;
 
 void Move(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
     const Velocity *v = ecs_field(it, const Velocity, 2);
 
     for (int i = 0; i < it->count; i ++) {

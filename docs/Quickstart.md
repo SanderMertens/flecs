@@ -795,8 +795,8 @@ ecs_query_t *q = ecs_query(world, {
 
 ecs_iter_t it = ecs_query_iter(world, q);
 while (ecs_query_next(&it)) {
-    Position *p = ecs_field(&it, Position, 1);
-    Position *p_parent = ecs_field(&it, Position, 2);
+    Position *p = ecs_field(&it, Position, 0);
+    Position *p_parent = ecs_field(&it, Position, 1);
     for (int i = 0; i < it.count; i++) {
         // Do the thing
     }
@@ -1116,7 +1116,7 @@ ecs_query_t *f = ecs_query_init(world, &(ecs_query_desc_t){
 ecs_iter_t it = ecs_query_iter(world, f);
 while (ecs_query_next(&it)) {
     // Each type has its own set of component arrays
-    Position *p = ecs_field(&it, Position, 1);
+    Position *p = ecs_field(&it, Position, 0);
 
     // Iterate all entities for the type
     for (int i = 0; i < it.count; i++) {
@@ -1307,8 +1307,8 @@ ecs_run(world, move_sys, delta_time, NULL); // Run system
 
 // The callback code (same for both options)
 void Move(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
-    Velocity *v = ecs_field(it, Velocity, 2);
+    Position *p = ecs_field(it, Position, 0);
+    Velocity *v = ecs_field(it, Velocity, 1);
 
     for (int i = 0; i < it->count; i++) {
         p[i].x += v[i].x * it->delta_time;

@@ -1544,9 +1544,9 @@ void flecs_json_serialize_query_profile(
 
             int32_t f, field_count = qit.field_count;
             for (f = 0; f < field_count; f ++) {
-                size_t size = ecs_field_size(&qit, f + 1);
-                if (ecs_field_is_set(&qit, f + 1) && size) {
-                    if (ecs_field_is_self(&qit, f + 1)) {
+                size_t size = ecs_field_size(&qit, f);
+                if (ecs_field_is_set(&qit, f) && size) {
+                    if (ecs_field_is_self(&qit, f)) {
                         component_bytes += 
                             flecs_uto(ecs_size_t, size) * qit.count;
                     } else {
@@ -1642,7 +1642,7 @@ void flecs_json_serialize_iter_result_ids(
 
     for (int i = 0; i < it->field_count; i ++) {
         flecs_json_next(buf);
-        flecs_json_serialize_id(world, ecs_field_id(it, i + 1), buf);
+        flecs_json_serialize_id(world, ecs_field_id(it, i), buf);
     }
 
     flecs_json_array_pop(buf);
@@ -1659,7 +1659,7 @@ void flecs_json_serialize_iter_result_id_labels(
 
     for (int i = 0; i < it->field_count; i ++) {
         flecs_json_next(buf);
-        flecs_json_serialize_id_label(world, ecs_field_id(it, i + 1), buf);
+        flecs_json_serialize_id_label(world, ecs_field_id(it, i), buf);
     }
 
     flecs_json_array_pop(buf);
@@ -1757,7 +1757,7 @@ bool flecs_json_serialize_iter_result_is_set(
 
     for (int i = 0; i < it->field_count; i ++) {
         ecs_strbuf_list_next(buf);
-        if (ecs_field_is_set(it, i + 1)) {
+        if (ecs_field_is_set(it, i)) {
             flecs_json_true(buf);
         } else {
             flecs_json_false(buf);
@@ -2062,13 +2062,13 @@ int flecs_json_serialize_iter_result_values(
 
         if (!ptr) {
             /* No data in column. Append 0 if this is not an optional term */
-            if (ecs_field_is_set(it, i + 1)) {
+            if (ecs_field_is_set(it, i)) {
                 ecs_strbuf_appendch(buf, '0');
                 continue;
             }
         }
 
-        if (ecs_field_is_writeonly(it, i + 1)) {
+        if (ecs_field_is_writeonly(it, i)) {
             ecs_strbuf_appendch(buf, '0');
             continue;
         }
@@ -2099,13 +2099,13 @@ int flecs_json_serialize_iter_result_values(
 
         /* If term is not set, append empty array. This indicates that the term
          * could have had data but doesn't */
-        if (!ecs_field_is_set(it, i + 1)) {
+        if (!ecs_field_is_set(it, i)) {
             flecs_json_array_push(buf);
             flecs_json_array_pop(buf);
             continue;
         }
 
-        if (ecs_field_is_self(it, i + 1)) {
+        if (ecs_field_is_self(it, i)) {
             int32_t count = it->count;
             if (array_to_json_buf_w_type_data(world, ptr, count, buf, comp, ser)) {
                 return -1;

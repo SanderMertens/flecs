@@ -153,7 +153,7 @@ static ECS_MOVE(EcsMetricCountTargets, dst, src, {
 static void flecs_metrics_on_member_metric(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
     ecs_member_metric_ctx_t *ctx = it->ctx;
-    ecs_id_t id = ecs_field_id(it, 1);
+    ecs_id_t id = ecs_field_id(it, 0);
 
     int32_t i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -222,7 +222,7 @@ static void flecs_metrics_on_oneof_metric(ecs_iter_t *it) {
 #ifdef FLECS_DOC
 static void SetMetricDocName(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    EcsMetricSource *src = ecs_field(it, EcsMetricSource, 1);
+    EcsMetricSource *src = ecs_field(it, EcsMetricSource, 0);
 
     int32_t i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -238,7 +238,7 @@ static void SetMetricDocName(ecs_iter_t *it) {
 /** Delete metric instances for entities that are no longer alive */
 static void ClearMetricInstance(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    EcsMetricSource *src = ecs_field(it, EcsMetricSource, 1);
+    EcsMetricSource *src = ecs_field(it, EcsMetricSource, 0);
 
     int32_t i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -252,8 +252,8 @@ static void ClearMetricInstance(ecs_iter_t *it) {
 /** Update member metric */
 static void UpdateMemberInstance(ecs_iter_t *it, bool counter) {
     ecs_world_t *world = it->real_world;
-    EcsMetricValue *m = ecs_field(it, EcsMetricValue, 1);
-    EcsMetricMemberInstance *mi = ecs_field(it, EcsMetricMemberInstance, 2);
+    EcsMetricValue *m = ecs_field(it, EcsMetricValue, 0);
+    EcsMetricMemberInstance *mi = ecs_field(it, EcsMetricMemberInstance, 1);
     ecs_ftime_t dt = it->delta_time;
 
     int32_t i, count = it->count;
@@ -294,8 +294,8 @@ static void UpdateCounterIncrementMemberInstance(ecs_iter_t *it) {
 /** Update id metric */
 static void UpdateIdInstance(ecs_iter_t *it, bool counter) {
     ecs_world_t *world = it->real_world;
-    EcsMetricValue *m = ecs_field(it, EcsMetricValue, 1);
-    EcsMetricIdInstance *mi = ecs_field(it, EcsMetricIdInstance, 2);
+    EcsMetricValue *m = ecs_field(it, EcsMetricValue, 0);
+    EcsMetricIdInstance *mi = ecs_field(it, EcsMetricIdInstance, 1);
     ecs_ftime_t dt = it->delta_time;
 
     int32_t i, count = it->count;
@@ -339,7 +339,7 @@ static void UpdateOneOfInstance(ecs_iter_t *it, bool counter) {
     ecs_table_t *table = it->table;
     void *m = ecs_table_get_column(table, 
         ecs_table_type_to_column_index(table, it->columns[0]), it->offset);
-    EcsMetricOneOfInstance *mi = ecs_field(it, EcsMetricOneOfInstance, 2);
+    EcsMetricOneOfInstance *mi = ecs_field(it, EcsMetricOneOfInstance, 1);
     ecs_ftime_t dt = it->delta_time;
 
     int32_t i, count = it->count;
@@ -396,7 +396,7 @@ static void UpdateCounterOneOfInstance(ecs_iter_t *it) {
 
 static void UpdateCountTargets(ecs_iter_t *it) {
     ecs_world_t *world = it->real_world;
-    EcsMetricCountTargets *m = ecs_field(it, EcsMetricCountTargets, 1);
+    EcsMetricCountTargets *m = ecs_field(it, EcsMetricCountTargets, 0);
 
     int32_t i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -427,8 +427,8 @@ static void UpdateCountTargets(ecs_iter_t *it) {
 
 static void UpdateCountIds(ecs_iter_t *it) {
     ecs_world_t *world = it->real_world;
-    EcsMetricCountIds *m = ecs_field(it, EcsMetricCountIds, 1);
-    EcsMetricValue *v = ecs_field(it, EcsMetricValue, 2);
+    EcsMetricCountIds *m = ecs_field(it, EcsMetricCountIds, 0);
+    EcsMetricValue *v = ecs_field(it, EcsMetricValue, 1);
 
     int32_t i, count = it->count;
     for (i = 0; i < count; i ++) {

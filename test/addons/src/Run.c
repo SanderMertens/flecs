@@ -6,16 +6,16 @@ void Run_setup(void) {
 
 static
 void Iter(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
     Velocity *v = NULL;
     Mass *m = NULL;
 
     if (it->field_count >= 2) {
-        v = ecs_field(it, Velocity, 2);
+        v = ecs_field(it, Velocity, 1);
     }
 
     if (it->field_count >= 3) {
-        m = ecs_field(it, Mass, 3);
+        m = ecs_field(it, Mass, 2);
     }
 
     int *param = it->param;
@@ -178,9 +178,9 @@ static
 void AddVelocity(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
 
-    Position *p = ecs_field(it, Position, 1);
-    ecs_id_t ecs_id(Position) = ecs_field_id(it, 1);
-    ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 2);
+    Position *p = ecs_field(it, Position, 0);
+    ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
+    ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 1);
 
     int i;
     for (i = 0; i < it->count; i ++) {

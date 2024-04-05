@@ -175,7 +175,7 @@ void flecs_assembly_on_set(
     }
 
     ecs_world_t *world = it->world;
-    ecs_entity_t assembly = ecs_field_id(it, 1);
+    ecs_entity_t assembly = ecs_field_id(it, 0);
     const char *name = ecs_get_name(world, assembly);
     ecs_record_t *r = ecs_record_find(world, assembly);
 
@@ -198,7 +198,7 @@ void flecs_assembly_on_set(
         return;
     }
 
-    void *data = ecs_field_w_size(it, flecs_ito(size_t, ct->size), 1);
+    void *data = ecs_field_w_size(it, flecs_ito(size_t, ct->size), 0);
 
     int32_t i, m;
     for (i = 0; i < it->count; i ++) {

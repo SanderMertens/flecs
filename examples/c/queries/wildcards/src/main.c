@@ -31,8 +31,8 @@ int main(int argc, char *argv[]) {
     // Iterate the query
     ecs_iter_t it = ecs_query_iter(ecs, q);
     while (ecs_query_next(&it)) {
-        Eats *eats = ecs_field(&it, Eats, 1);
-        ecs_id_t pair = ecs_field_id(&it, 1);
+        Eats *eats = ecs_field(&it, Eats, 0);
+        ecs_id_t pair = ecs_field_id(&it, 0);
         ecs_entity_t food = ecs_pair_second(ecs, pair);
 
         for (int i = 0; i < it.count; i ++) {

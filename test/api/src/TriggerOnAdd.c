@@ -5,11 +5,11 @@ void TriggerOnAdd_setup(void) {
 }
 
 void Init(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
     
     Velocity *v = NULL;
     if (it->field_count >= 2) {
-        v = ecs_field(it, Velocity, 2);
+        v = ecs_field(it, Velocity, 1);
     }
 
     probe_iter(it);
@@ -473,7 +473,7 @@ void TriggerOnAdd_new_w_count_match_1_of_1(void) {
 
 static
 void AddVelocity(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
 
     ecs_id_t v = 0;
     if (it->ctx) {
@@ -481,7 +481,7 @@ void AddVelocity(ecs_iter_t *it) {
     }
     
     if (!v) {
-        v = ecs_field_id(it, 2);
+        v = ecs_field_id(it, 1);
     }
 
     probe_iter(it);
@@ -540,7 +540,7 @@ void TriggerOnAdd_override_after_add_in_on_add(void) {
 
 static
 void OnSetPosition(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -593,7 +593,7 @@ void TriggerOnAdd_set_after_add_in_on_add(void) {
 
 static
 void AddAgain(ecs_iter_t *it) {
-    ecs_id_t ecs_id(Position) = ecs_field_id(it, 1);
+    ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -625,7 +625,7 @@ void TriggerOnAdd_add_again_in_progress(void) {
 
 static
 void AddMass(ecs_iter_t *it) {
-    Mass *m = ecs_field(it, Mass, 1);
+    Mass *m = ecs_field(it, Mass, 0);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -673,7 +673,7 @@ void SystemA(ecs_iter_t *it) {
 }
 
 void SystemB(ecs_iter_t *it) {
-    ecs_id_t ecs_id(Position) = ecs_field_id(it, 1);
+    ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -695,7 +695,7 @@ void TriggerOnAdd_2_systems_w_table_creation(void) {
 }
 
 void NewWithPosition(ecs_iter_t *it) {
-    ecs_id_t ecs_id(Position) = ecs_field_id(it, 1);
+    ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
 
     ecs_entity_t e = ecs_new(it->world, Position);
     test_assert(e != 0); 

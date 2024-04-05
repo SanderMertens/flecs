@@ -973,8 +973,8 @@ void ChangeDetection_query_changed_w_singleton(void) {
         test_bool(true, ecs_query_next(&it));
         test_bool(true, ecs_iter_changed(&it));
         test_uint(e, it.entities[0]);
-        Position *p = ecs_field(&it, Position, 1);
-        Velocity *v = ecs_field(&it, Velocity, 2);
+        Position *p = ecs_field(&it, Position, 0);
+        Velocity *v = ecs_field(&it, Velocity, 1);
         test_int(p->x, 10);
         test_int(p->y, 20);
         test_int(v->x, 1);
@@ -994,8 +994,8 @@ void ChangeDetection_query_changed_w_singleton(void) {
         test_bool(true, ecs_query_changed(q));
         test_bool(true, ecs_iter_changed(&it));
         test_uint(e, it.entities[0]);
-        Position *p = ecs_field(&it, Position, 1);
-        Velocity *v = ecs_field(&it, Velocity, 2);
+        Position *p = ecs_field(&it, Position, 0);
+        Velocity *v = ecs_field(&it, Velocity, 1);
         test_int(p->x, 10);
         test_int(p->y, 20);
         test_int(v->x, 2);
@@ -1027,7 +1027,7 @@ void ChangeDetection_query_changed_w_only_singleton(void) {
         test_bool(true, ecs_query_next(&it));
         test_bool(true, ecs_iter_changed(&it));
         test_int(0, it.count);
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_int(p->x, 1);
         test_int(p->y, 2);
         test_bool(false, ecs_query_next(&it));
@@ -1038,7 +1038,7 @@ void ChangeDetection_query_changed_w_only_singleton(void) {
         test_bool(true, ecs_query_next(&it));
         test_bool(false, ecs_iter_changed(&it));
         test_int(0, it.count);
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_int(p->x, 1);
         test_int(p->y, 2);
         test_bool(false, ecs_query_next(&it));
@@ -1066,7 +1066,7 @@ void ChangeDetection_query_changed_w_only_singleton_after_set(void) {
         test_bool(true, ecs_query_next(&it));
         test_bool(true, ecs_iter_changed(&it));
         test_int(0, it.count);
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_int(p->x, 1);
         test_int(p->y, 2);
         test_bool(false, ecs_query_next(&it));
@@ -1077,7 +1077,7 @@ void ChangeDetection_query_changed_w_only_singleton_after_set(void) {
         test_bool(true, ecs_query_next(&it));
         test_bool(false, ecs_iter_changed(&it));
         test_int(0, it.count);
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_int(p->x, 1);
         test_int(p->y, 2);
         test_bool(false, ecs_query_next(&it));
@@ -1090,7 +1090,7 @@ void ChangeDetection_query_changed_w_only_singleton_after_set(void) {
         test_bool(true, ecs_query_next(&it));
         test_bool(true, ecs_iter_changed(&it));
         test_int(0, it.count);
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_int(p->x, 3);
         test_int(p->y, 4);
         test_bool(false, ecs_query_next(&it));
@@ -1122,7 +1122,7 @@ void ChangeDetection_query_changed_w_only_singleton_after_out_term(void) {
         test_bool(true, ecs_query_next(&it));
         test_bool(true, ecs_iter_changed(&it));
         test_int(0, it.count);
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_int(p->x, 1);
         test_int(p->y, 2);
         test_bool(false, ecs_query_next(&it));
@@ -1133,7 +1133,7 @@ void ChangeDetection_query_changed_w_only_singleton_after_out_term(void) {
         test_bool(true, ecs_query_next(&it));
         test_bool(false, ecs_iter_changed(&it));
         test_int(0, it.count);
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_int(p->x, 1);
         test_int(p->y, 2);
         test_bool(false, ecs_query_next(&it));
@@ -1143,7 +1143,7 @@ void ChangeDetection_query_changed_w_only_singleton_after_out_term(void) {
         ecs_iter_t it = ecs_query_iter(world, q_write);
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         p->x = 3;
         p->y = 4;
         test_bool(false, ecs_query_next(&it));
@@ -1154,7 +1154,7 @@ void ChangeDetection_query_changed_w_only_singleton_after_out_term(void) {
         test_bool(true, ecs_query_next(&it));
         test_bool(true, ecs_iter_changed(&it));
         test_int(0, it.count);
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_int(p->x, 3);
         test_int(p->y, 4);
         test_bool(false, ecs_query_next(&it));
@@ -1187,7 +1187,7 @@ void ChangeDetection_query_changed_w_only_singleton_after_singleton_out_term(voi
         test_bool(true, ecs_query_next(&it));
         test_bool(true, ecs_iter_changed(&it));
         test_int(0, it.count);
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_int(p->x, 1);
         test_int(p->y, 2);
         test_bool(false, ecs_query_next(&it));
@@ -1198,7 +1198,7 @@ void ChangeDetection_query_changed_w_only_singleton_after_singleton_out_term(voi
         test_bool(true, ecs_query_next(&it));
         test_bool(false, ecs_iter_changed(&it));
         test_int(0, it.count);
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_int(p->x, 1);
         test_int(p->y, 2);
         test_bool(false, ecs_query_next(&it));
@@ -1208,7 +1208,7 @@ void ChangeDetection_query_changed_w_only_singleton_after_singleton_out_term(voi
         ecs_iter_t it = ecs_query_iter(world, q_write);
         test_bool(true, ecs_query_next(&it));
         test_int(0, it.count);
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         p->x = 3;
         p->y = 4;
         test_bool(false, ecs_query_next(&it));
@@ -1219,7 +1219,7 @@ void ChangeDetection_query_changed_w_only_singleton_after_singleton_out_term(voi
         test_bool(true, ecs_query_next(&it));
         test_bool(true, ecs_iter_changed(&it));
         test_int(0, it.count);
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_int(p->x, 3);
         test_int(p->y, 4);
         test_bool(false, ecs_query_next(&it));
@@ -1250,7 +1250,7 @@ void ChangeDetection_query_changed_w_only_parent(void) {
         test_bool(true, ecs_iter_changed(&it));
         test_int(1, it.count);
         test_uint(child, it.entities[0]);
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_int(p->x, 1);
         test_int(p->y, 2);
         test_bool(false, ecs_query_next(&it));
@@ -1262,7 +1262,7 @@ void ChangeDetection_query_changed_w_only_parent(void) {
         test_bool(false, ecs_iter_changed(&it));
         test_int(1, it.count);
         test_uint(child, it.entities[0]);
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_int(p->x, 1);
         test_int(p->y, 2);
         test_bool(false, ecs_query_next(&it));
@@ -1292,7 +1292,7 @@ void ChangeDetection_query_changed_w_only_parent_after_set(void) {
         test_bool(true, ecs_iter_changed(&it));
         test_int(1, it.count);
         test_uint(child, it.entities[0]);
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_int(p->x, 1);
         test_int(p->y, 2);
         test_bool(false, ecs_query_next(&it));
@@ -1304,7 +1304,7 @@ void ChangeDetection_query_changed_w_only_parent_after_set(void) {
         test_bool(false, ecs_iter_changed(&it));
         test_int(1, it.count);
         test_uint(child, it.entities[0]);
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_int(p->x, 1);
         test_int(p->y, 2);
         test_bool(false, ecs_query_next(&it));
@@ -1318,7 +1318,7 @@ void ChangeDetection_query_changed_w_only_parent_after_set(void) {
         test_bool(true, ecs_iter_changed(&it));
         test_int(1, it.count);
         test_uint(child, it.entities[0]);
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_int(p->x, 3);
         test_int(p->y, 4);
         test_bool(false, ecs_query_next(&it));
@@ -1352,7 +1352,7 @@ void ChangeDetection_query_changed_w_only_parent_after_out_term(void) {
         test_bool(true, ecs_iter_changed(&it));
         test_int(1, it.count);
         test_uint(child, it.entities[0]);
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_int(p->x, 1);
         test_int(p->y, 2);
         test_bool(false, ecs_query_next(&it));
@@ -1364,7 +1364,7 @@ void ChangeDetection_query_changed_w_only_parent_after_out_term(void) {
         test_bool(false, ecs_iter_changed(&it));
         test_int(1, it.count);
         test_uint(child, it.entities[0]);
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_int(p->x, 1);
         test_int(p->y, 2);
         test_bool(false, ecs_query_next(&it));
@@ -1375,7 +1375,7 @@ void ChangeDetection_query_changed_w_only_parent_after_out_term(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(parent, it.entities[0]);
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         p->x = 3;
         p->y = 4;
         test_bool(false, ecs_query_next(&it));
@@ -1387,7 +1387,7 @@ void ChangeDetection_query_changed_w_only_parent_after_out_term(void) {
         test_bool(true, ecs_iter_changed(&it));
         test_int(1, it.count);
         test_uint(child, it.entities[0]);
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_int(p->x, 3);
         test_int(p->y, 4);
         test_bool(false, ecs_query_next(&it));
@@ -1422,7 +1422,7 @@ void ChangeDetection_query_changed_w_only_parent_after_parent_out_term(void) {
         test_bool(true, ecs_iter_changed(&it));
         test_int(1, it.count);
         test_uint(child, it.entities[0]);
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_int(p->x, 1);
         test_int(p->y, 2);
         test_bool(false, ecs_query_next(&it));
@@ -1434,7 +1434,7 @@ void ChangeDetection_query_changed_w_only_parent_after_parent_out_term(void) {
         test_bool(false, ecs_iter_changed(&it));
         test_int(1, it.count);
         test_uint(child, it.entities[0]);
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_int(p->x, 1);
         test_int(p->y, 2);
         test_bool(false, ecs_query_next(&it));
@@ -1445,7 +1445,7 @@ void ChangeDetection_query_changed_w_only_parent_after_parent_out_term(void) {
         test_bool(true, ecs_query_next(&it));
         test_int(1, it.count);
         test_uint(child, it.entities[0]);
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         p->x = 3;
         p->y = 4;
         test_bool(false, ecs_query_next(&it));
@@ -1457,7 +1457,7 @@ void ChangeDetection_query_changed_w_only_parent_after_parent_out_term(void) {
         test_bool(true, ecs_iter_changed(&it));
         test_int(1, it.count);
         test_uint(child, it.entities[0]);
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         test_int(p->x, 3);
         test_int(p->y, 4);
         test_bool(false, ecs_query_next(&it));

@@ -88,7 +88,7 @@ int main(int, char *[]) {
         .each([&](flecs::iter& it, size_t index, RangedUnit) {
             flecs::entity unit = it.entity(index);
             std::cout << "Unit " << unit.path() << " of class " 
-                      << it.id(1).str() << " in platoon "
+                      << it.id(0).str() << " in platoon "
                       << it.get_var(platoon_var).path() << " for player "
                       << it.get_var(player_var).path() << "\n";
         });

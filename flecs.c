@@ -3057,7 +3057,7 @@ static ECS_MOVE(EcsIdentifier, dst, src, {
 
 static
 void ecs_on_set(EcsIdentifier)(ecs_iter_t *it) {
-    EcsIdentifier *ptr = ecs_field(it, EcsIdentifier, 1);
+    EcsIdentifier *ptr = ecs_field(it, EcsIdentifier, 0);
     
     ecs_world_t *world = it->real_world;
     ecs_entity_t evt = it->event;
@@ -3284,7 +3284,7 @@ void flecs_register_final(ecs_iter_t *it) {
 
 static
 void flecs_register_on_delete(ecs_iter_t *it) {
-    ecs_id_t id = ecs_field_id(it, 1);
+    ecs_id_t id = ecs_field_id(it, 0);
     flecs_register_id_flag_for_relation(it, EcsOnDelete, 
         ECS_ID_ON_DELETE_FLAG(ECS_PAIR_SECOND(id)),
         EcsIdOnDeleteMask,
@@ -3293,7 +3293,7 @@ void flecs_register_on_delete(ecs_iter_t *it) {
 
 static
 void flecs_register_on_delete_object(ecs_iter_t *it) {
-    ecs_id_t id = ecs_field_id(it, 1);
+    ecs_id_t id = ecs_field_id(it, 0);
     flecs_register_id_flag_for_relation(it, EcsOnDeleteTarget, 
         ECS_ID_ON_DELETE_TARGET_FLAG(ECS_PAIR_SECOND(id)),
         EcsIdOnDeleteObjectMask,
@@ -3361,7 +3361,7 @@ void flecs_register_with(ecs_iter_t *it) {
 
 static
 void flecs_on_symmetric_add_remove(ecs_iter_t *it) {
-    ecs_entity_t pair = ecs_field_id(it, 1);
+    ecs_entity_t pair = ecs_field_id(it, 0);
 
     if (!ECS_HAS_ID_FLAG(pair, PAIR)) {
         /* If relationship was not added as a pair, there's nothing to do */
@@ -3411,7 +3411,7 @@ void flecs_register_symmetric(ecs_iter_t *it) {
 static
 void flecs_on_component(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    EcsComponent *c = ecs_field(it, EcsComponent, 1);
+    EcsComponent *c = ecs_field(it, EcsComponent, 0);
 
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -9113,7 +9113,7 @@ ecs_entity_t flecs_get_parent_from_path(
 
 static
 void flecs_on_set_symbol(ecs_iter_t *it) {
-    EcsIdentifier *n = ecs_field(it, EcsIdentifier, 1);
+    EcsIdentifier *n = ecs_field(it, EcsIdentifier, 0);
     ecs_world_t *world = it->world;
 
     int i;
@@ -9868,14 +9868,14 @@ void* ecs_field_w_size(
     int32_t index)
 {
     ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(index >= 1, ECS_INVALID_PARAMETER, NULL);
-
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!size || ecs_field_size(it, index) == size ||
-        (!ecs_field_size(it, index) && (!it->ptrs[index - 1])),
+        (!ecs_field_size(it, index) && (!it->ptrs[index])),
             ECS_INVALID_PARAMETER, NULL);
     (void)size;
 
-    return it->ptrs[index - 1];
+    return it->ptrs[index];
 error:
     return NULL;
 }
@@ -9887,8 +9887,9 @@ bool ecs_field_is_readonly(
     ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER, NULL);
     ecs_check(it->query != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(it->query->terms != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(index >= 1, ECS_INVALID_PARAMETER, NULL);
-    const ecs_term_t *term = &it->query->terms[index - 1];
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, NULL);
+    const ecs_term_t *term = &it->query->terms[index];
 
     if (term->inout == EcsIn) {
         return true;
@@ -9913,8 +9914,10 @@ bool ecs_field_is_writeonly(
     ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER, NULL);
     ecs_check(it->query != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(it->query->terms != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(index >= 1, ECS_INVALID_PARAMETER, NULL);
-    const ecs_term_t *term = &it->query->terms[index - 1];
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, NULL);
+
+    const ecs_term_t *term = &it->query->terms[index];
     return term->inout == EcsOut;
 error:
     return false;
@@ -9925,9 +9928,10 @@ bool ecs_field_is_set(
     int32_t index)
 {
     ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(index >= 1, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(index <= it->field_count, ECS_INVALID_PARAMETER, NULL);
-    return it->set_fields & (1llu << (index - 1));
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, NULL);
+
+    return it->set_fields & (1llu << (index));
 error:
     return false;
 }
@@ -9936,44 +9940,64 @@ bool ecs_field_is_self(
     const ecs_iter_t *it,
     int32_t index)
 {
-    ecs_assert(index >= 1, ECS_INVALID_PARAMETER, NULL);
-    return it->sources == NULL || it->sources[index - 1] == 0;
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, NULL);
+
+    return it->sources == NULL || it->sources[index] == 0;
+error:
+    return false;
 }
 
 ecs_id_t ecs_field_id(
     const ecs_iter_t *it,
     int32_t index)
 {
-    ecs_assert(index >= 1, ECS_INVALID_PARAMETER, NULL);
-    return it->ids[index - 1];
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, NULL);
+
+    return it->ids[index];
+error:
+    return 0;
 }
 
-int32_t ecs_field_column_index(
+int32_t ecs_field_column(
     const ecs_iter_t *it,
     int32_t index)
 {
-    ecs_assert(index >= 1, ECS_INVALID_PARAMETER, NULL);
-    return it->columns[index - 1];
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, NULL);
+
+    return it->columns[index];
+error:
+    return 0;
 }
 
 ecs_entity_t ecs_field_src(
     const ecs_iter_t *it,
     int32_t index)
 {
-    ecs_assert(index >= 1, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, NULL);
+
     if (it->sources) {
-        return it->sources[index - 1];
+        return it->sources[index];
     } else {
         return 0;
     }
+error:
+    return 0;
 }
 
 size_t ecs_field_size(
     const ecs_iter_t *it,
     int32_t index)
 {
-    ecs_assert(index >= 1, ECS_INVALID_PARAMETER, NULL);
-    return (size_t)it->sizes[index - 1];
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, NULL);
+
+    return (size_t)it->sizes[index];
+error:
+    return 0;
 }
 
 char* ecs_iter_str(
@@ -9990,7 +10014,7 @@ char* ecs_iter_str(
     if (it->field_count) {
         ecs_strbuf_list_push(&buf, "id:  ", ",");
         for (i = 0; i < it->field_count; i ++) {
-            ecs_id_t id = ecs_field_id(it, i + 1);
+            ecs_id_t id = ecs_field_id(it, i);
             char *str = ecs_id_str(world, id);
             ecs_strbuf_list_appendstr(&buf, str);
             ecs_os_free(str);
@@ -9999,7 +10023,7 @@ char* ecs_iter_str(
 
         ecs_strbuf_list_push(&buf, "src: ", ",");
         for (i = 0; i < it->field_count; i ++) {
-            ecs_entity_t subj = ecs_field_src(it, i + 1);
+            ecs_entity_t subj = ecs_field_src(it, i);
             char *str = ecs_get_fullpath(world, subj);
             ecs_strbuf_list_appendstr(&buf, str);
             ecs_os_free(str);
@@ -10008,7 +10032,7 @@ char* ecs_iter_str(
 
         ecs_strbuf_list_push(&buf, "set: ", ",");
         for (i = 0; i < it->field_count; i ++) {
-            if (ecs_field_is_set(it, i + 1)) {
+            if (ecs_field_is_set(it, i)) {
                 ecs_strbuf_list_appendlit(&buf, "true");
             } else {
                 ecs_strbuf_list_appendlit(&buf, "false");
@@ -18214,8 +18238,8 @@ ecs_entity_t flecs_alert_out_of_range_kind(
 static
 void MonitorAlerts(ecs_iter_t *it) {
     ecs_world_t *world = it->real_world;
-    EcsAlert *alert = ecs_field(it, EcsAlert, 1);
-    EcsPoly *poly = ecs_field(it, EcsPoly, 2);
+    EcsAlert *alert = ecs_field(it, EcsAlert, 0);
+    EcsPoly *poly = ecs_field(it, EcsPoly, 1);
 
     int32_t i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -18325,10 +18349,10 @@ void MonitorAlerts(ecs_iter_t *it) {
 static
 void MonitorAlertInstances(ecs_iter_t *it) {
     ecs_world_t *world = it->real_world;
-    EcsAlertInstance *alert_instance = ecs_field(it, EcsAlertInstance, 1);
-    EcsMetricSource *source = ecs_field(it, EcsMetricSource, 2);
-    EcsMetricValue *value = ecs_field(it, EcsMetricValue, 3);
-    EcsAlertTimeout *timeout = ecs_field(it, EcsAlertTimeout, 4);
+    EcsAlertInstance *alert_instance = ecs_field(it, EcsAlertInstance, 0);
+    EcsMetricSource *source = ecs_field(it, EcsMetricSource, 1);
+    EcsMetricValue *value = ecs_field(it, EcsMetricValue, 2);
+    EcsAlertTimeout *timeout = ecs_field(it, EcsAlertTimeout, 3);
 
     /* Get alert component from alert instance parent (the alert) */
     ecs_id_t childof_pair;
@@ -23107,7 +23131,7 @@ static ECS_MOVE(EcsMetricCountTargets, dst, src, {
 static void flecs_metrics_on_member_metric(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
     ecs_member_metric_ctx_t *ctx = it->ctx;
-    ecs_id_t id = ecs_field_id(it, 1);
+    ecs_id_t id = ecs_field_id(it, 0);
 
     int32_t i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -23176,7 +23200,7 @@ static void flecs_metrics_on_oneof_metric(ecs_iter_t *it) {
 #ifdef FLECS_DOC
 static void SetMetricDocName(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    EcsMetricSource *src = ecs_field(it, EcsMetricSource, 1);
+    EcsMetricSource *src = ecs_field(it, EcsMetricSource, 0);
 
     int32_t i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -23192,7 +23216,7 @@ static void SetMetricDocName(ecs_iter_t *it) {
 /** Delete metric instances for entities that are no longer alive */
 static void ClearMetricInstance(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    EcsMetricSource *src = ecs_field(it, EcsMetricSource, 1);
+    EcsMetricSource *src = ecs_field(it, EcsMetricSource, 0);
 
     int32_t i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -23206,8 +23230,8 @@ static void ClearMetricInstance(ecs_iter_t *it) {
 /** Update member metric */
 static void UpdateMemberInstance(ecs_iter_t *it, bool counter) {
     ecs_world_t *world = it->real_world;
-    EcsMetricValue *m = ecs_field(it, EcsMetricValue, 1);
-    EcsMetricMemberInstance *mi = ecs_field(it, EcsMetricMemberInstance, 2);
+    EcsMetricValue *m = ecs_field(it, EcsMetricValue, 0);
+    EcsMetricMemberInstance *mi = ecs_field(it, EcsMetricMemberInstance, 1);
     ecs_ftime_t dt = it->delta_time;
 
     int32_t i, count = it->count;
@@ -23248,8 +23272,8 @@ static void UpdateCounterIncrementMemberInstance(ecs_iter_t *it) {
 /** Update id metric */
 static void UpdateIdInstance(ecs_iter_t *it, bool counter) {
     ecs_world_t *world = it->real_world;
-    EcsMetricValue *m = ecs_field(it, EcsMetricValue, 1);
-    EcsMetricIdInstance *mi = ecs_field(it, EcsMetricIdInstance, 2);
+    EcsMetricValue *m = ecs_field(it, EcsMetricValue, 0);
+    EcsMetricIdInstance *mi = ecs_field(it, EcsMetricIdInstance, 1);
     ecs_ftime_t dt = it->delta_time;
 
     int32_t i, count = it->count;
@@ -23293,7 +23317,7 @@ static void UpdateOneOfInstance(ecs_iter_t *it, bool counter) {
     ecs_table_t *table = it->table;
     void *m = ecs_table_get_column(table, 
         ecs_table_type_to_column_index(table, it->columns[0]), it->offset);
-    EcsMetricOneOfInstance *mi = ecs_field(it, EcsMetricOneOfInstance, 2);
+    EcsMetricOneOfInstance *mi = ecs_field(it, EcsMetricOneOfInstance, 1);
     ecs_ftime_t dt = it->delta_time;
 
     int32_t i, count = it->count;
@@ -23350,7 +23374,7 @@ static void UpdateCounterOneOfInstance(ecs_iter_t *it) {
 
 static void UpdateCountTargets(ecs_iter_t *it) {
     ecs_world_t *world = it->real_world;
-    EcsMetricCountTargets *m = ecs_field(it, EcsMetricCountTargets, 1);
+    EcsMetricCountTargets *m = ecs_field(it, EcsMetricCountTargets, 0);
 
     int32_t i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -23381,8 +23405,8 @@ static void UpdateCountTargets(ecs_iter_t *it) {
 
 static void UpdateCountIds(ecs_iter_t *it) {
     ecs_world_t *world = it->real_world;
-    EcsMetricCountIds *m = ecs_field(it, EcsMetricCountIds, 1);
-    EcsMetricValue *v = ecs_field(it, EcsMetricValue, 2);
+    EcsMetricCountIds *m = ecs_field(it, EcsMetricCountIds, 0);
+    EcsMetricValue *v = ecs_field(it, EcsMetricValue, 1);
 
     int32_t i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -24195,7 +24219,7 @@ ECS_DTOR(EcsPipelineStats, ptr, {
 
 static
 void UpdateWorldSummary(ecs_iter_t *it) {
-    EcsWorldSummary *summary = ecs_field(it, EcsWorldSummary, 1);
+    EcsWorldSummary *summary = ecs_field(it, EcsWorldSummary, 0);
 
     const ecs_world_info_t *info = ecs_get_world_info(it->world);
 
@@ -24232,8 +24256,8 @@ static
 void MonitorStats(ecs_iter_t *it) {
     ecs_world_t *world = it->real_world;
 
-    EcsStatsHeader *hdr = ecs_field_w_size(it, 0, 1);
-    ecs_id_t kind = ecs_pair_first(it->world, ecs_field_id(it, 1));
+    EcsStatsHeader *hdr = ecs_field_w_size(it, 0, 0);
+    ecs_id_t kind = ecs_pair_first(it->world, ecs_field_id(it, 0));
     void *stats = ECS_OFFSET_T(hdr, EcsStatsHeader);
 
     ecs_ftime_t elapsed = hdr->elapsed;
@@ -24291,10 +24315,10 @@ void MonitorStats(ecs_iter_t *it) {
 
 static
 void ReduceStats(ecs_iter_t *it) {
-    void *dst = ecs_field_w_size(it, 0, 1);
-    void *src = ecs_field_w_size(it, 0, 2);
+    void *dst = ecs_field_w_size(it, 0, 0);
+    void *src = ecs_field_w_size(it, 0, 1);
 
-    ecs_id_t kind = ecs_pair_first(it->world, ecs_field_id(it, 1));
+    ecs_id_t kind = ecs_pair_first(it->world, ecs_field_id(it, 0));
 
     dst = ECS_OFFSET_T(dst, EcsStatsHeader);
     src = ECS_OFFSET_T(src, EcsStatsHeader);
@@ -24310,13 +24334,13 @@ static
 void AggregateStats(ecs_iter_t *it) {
     int32_t interval = *(int32_t*)it->ctx;
 
-    EcsStatsHeader *dst_hdr = ecs_field_w_size(it, 0, 1);
-    EcsStatsHeader *src_hdr = ecs_field_w_size(it, 0, 2);
+    EcsStatsHeader *dst_hdr = ecs_field_w_size(it, 0, 0);
+    EcsStatsHeader *src_hdr = ecs_field_w_size(it, 0, 1);
 
     void *dst = ECS_OFFSET_T(dst_hdr, EcsStatsHeader);
     void *src = ECS_OFFSET_T(src_hdr, EcsStatsHeader);
 
-    ecs_id_t kind = ecs_pair_first(it->world, ecs_field_id(it, 1));
+    ecs_id_t kind = ecs_pair_first(it->world, ecs_field_id(it, 0));
 
     ecs_world_stats_t last_world = {0};
     ecs_pipeline_stats_t last_pipeline = {0};
@@ -24721,7 +24745,7 @@ void flecs_assembly_on_set(
     }
 
     ecs_world_t *world = it->world;
-    ecs_entity_t assembly = ecs_field_id(it, 1);
+    ecs_entity_t assembly = ecs_field_id(it, 0);
     const char *name = ecs_get_name(world, assembly);
     ecs_record_t *r = ecs_record_find(world, assembly);
 
@@ -24744,7 +24768,7 @@ void flecs_assembly_on_set(
         return;
     }
 
-    void *data = ecs_field_w_size(it, flecs_ito(size_t, ct->size), 1);
+    void *data = ecs_field_w_size(it, flecs_ito(size_t, ct->size), 0);
 
     int32_t i, m;
     for (i = 0; i < it->count; i ++) {
@@ -28115,7 +28139,7 @@ void flecs_on_set_rest(ecs_iter_t *it) {
 
 static
 void DequeueRest(ecs_iter_t *it) {
-    EcsRest *rest = ecs_field(it, EcsRest, 1);
+    EcsRest *rest = ecs_field(it, EcsRest, 0);
 
     if (it->delta_system_time > (ecs_ftime_t)1.0) {
         ecs_warn(
@@ -28142,7 +28166,7 @@ void DisableRest(ecs_iter_t *it) {
     if (it->event == EcsOnAdd) {
         /* REST module was disabled */
         while (ecs_each_next(&rit)) {
-            EcsRest *rest = ecs_field(&rit, EcsRest, 1);
+            EcsRest *rest = ecs_field(&rit, EcsRest, 0);
             int i;
             for (i = 0; i < rit.count; i ++) {
                 ecs_rest_ctx_t *ctx = rest[i].impl;
@@ -28152,7 +28176,7 @@ void DisableRest(ecs_iter_t *it) {
     } else if (it->event == EcsOnRemove) {
         /* REST module was enabled */
         while (ecs_each_next(&rit)) {
-            EcsRest *rest = ecs_field(&rit, EcsRest, 1);
+            EcsRest *rest = ecs_field(&rit, EcsRest, 0);
             int i;
             for (i = 0; i < rit.count; i ++) {
                 ecs_rest_ctx_t *ctx = rest[i].impl;
@@ -29210,8 +29234,8 @@ void AddTickSource(ecs_iter_t *it) {
 
 static
 void ProgressTimers(ecs_iter_t *it) {
-    EcsTimer *timer = ecs_field(it, EcsTimer, 1);
-    EcsTickSource *tick_source = ecs_field(it, EcsTickSource, 2);
+    EcsTimer *timer = ecs_field(it, EcsTimer, 0);
+    EcsTickSource *tick_source = ecs_field(it, EcsTickSource, 1);
 
     ecs_assert(timer != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -29249,8 +29273,8 @@ void ProgressTimers(ecs_iter_t *it) {
 
 static
 void ProgressRateFilters(ecs_iter_t *it) {
-    EcsRateFilter *filter = ecs_field(it, EcsRateFilter, 1);
-    EcsTickSource *tick_dst = ecs_field(it, EcsTickSource, 2);
+    EcsRateFilter *filter = ecs_field(it, EcsRateFilter, 0);
+    EcsTickSource *tick_dst = ecs_field(it, EcsTickSource, 1);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -29288,7 +29312,7 @@ void ProgressRateFilters(ecs_iter_t *it) {
 
 static
 void ProgressTickSource(ecs_iter_t *it) {
-    EcsTickSource *tick_src = ecs_field(it, EcsTickSource, 1);
+    EcsTickSource *tick_src = ecs_field(it, EcsTickSource, 0);
 
     /* If tick source has no filters, tick unconditionally */
     int i;
@@ -29453,7 +29477,7 @@ error:
 
 static
 void RandomizeTimers(ecs_iter_t *it) {
-    EcsTimer *timer = ecs_field(it, EcsTimer, 1);
+    EcsTimer *timer = ecs_field(it, EcsTimer, 0);
     int32_t i;
     for (i = 0; i < it->count; i ++) {
         timer[i].time = 
@@ -34947,7 +34971,7 @@ void flecs_query_cache_set_table_match(
         /* Initialize storage columns for faster access to component storage */
         for (i = 0; i < field_count; i ++) {
             int32_t column = it->columns[i];
-            if (!ecs_field_is_set(it, i + 1) || terms[i].inout == EcsInOutNone) {
+            if (!ecs_field_is_set(it, i) || terms[i].inout == EcsInOutNone) {
                 qm->storage_columns[i] = -1;
                 continue;
             }
@@ -35935,7 +35959,7 @@ void flecs_query_populate_ptrs_w_shared(
         }
 
         ecs_size_t size = it->sizes[field_index];
-        if (!ecs_field_is_set(it, i + 1) || !size) {
+        if (!ecs_field_is_set(it, i) || !size) {
             /* Tag / no data */
             it->ptrs[field_index] = NULL;
             continue;
@@ -42909,7 +42933,7 @@ bool flecs_query_if_set(
 
     ecs_query_ctrl_ctx_t *op_ctx = flecs_op_ctx(ctx, ctrl);
     if (!redo) {
-        op_ctx->is_set = ecs_field_is_set(it, field_index + 1);
+        op_ctx->is_set = ecs_field_is_set(it, field_index);
     }
 
     if (!op_ctx->is_set) {
@@ -42958,7 +42982,7 @@ void flecs_query_populate_field(
 {
     int32_t index = it->columns[field_index];
     ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(ecs_field_is_set(it, field_index + 1), ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_field_is_set(it, field_index), ECS_INTERNAL_ERROR, NULL);
 
     ecs_entity_t src = it->sources[field_index];
     if (!src) {
@@ -58887,9 +58911,9 @@ void flecs_json_serialize_query_profile(
 
             int32_t f, field_count = qit.field_count;
             for (f = 0; f < field_count; f ++) {
-                size_t size = ecs_field_size(&qit, f + 1);
-                if (ecs_field_is_set(&qit, f + 1) && size) {
-                    if (ecs_field_is_self(&qit, f + 1)) {
+                size_t size = ecs_field_size(&qit, f);
+                if (ecs_field_is_set(&qit, f) && size) {
+                    if (ecs_field_is_self(&qit, f)) {
                         component_bytes += 
                             flecs_uto(ecs_size_t, size) * qit.count;
                     } else {
@@ -58985,7 +59009,7 @@ void flecs_json_serialize_iter_result_ids(
 
     for (int i = 0; i < it->field_count; i ++) {
         flecs_json_next(buf);
-        flecs_json_serialize_id(world, ecs_field_id(it, i + 1), buf);
+        flecs_json_serialize_id(world, ecs_field_id(it, i), buf);
     }
 
     flecs_json_array_pop(buf);
@@ -59002,7 +59026,7 @@ void flecs_json_serialize_iter_result_id_labels(
 
     for (int i = 0; i < it->field_count; i ++) {
         flecs_json_next(buf);
-        flecs_json_serialize_id_label(world, ecs_field_id(it, i + 1), buf);
+        flecs_json_serialize_id_label(world, ecs_field_id(it, i), buf);
     }
 
     flecs_json_array_pop(buf);
@@ -59100,7 +59124,7 @@ bool flecs_json_serialize_iter_result_is_set(
 
     for (int i = 0; i < it->field_count; i ++) {
         ecs_strbuf_list_next(buf);
-        if (ecs_field_is_set(it, i + 1)) {
+        if (ecs_field_is_set(it, i)) {
             flecs_json_true(buf);
         } else {
             flecs_json_false(buf);
@@ -59405,13 +59429,13 @@ int flecs_json_serialize_iter_result_values(
 
         if (!ptr) {
             /* No data in column. Append 0 if this is not an optional term */
-            if (ecs_field_is_set(it, i + 1)) {
+            if (ecs_field_is_set(it, i)) {
                 ecs_strbuf_appendch(buf, '0');
                 continue;
             }
         }
 
-        if (ecs_field_is_writeonly(it, i + 1)) {
+        if (ecs_field_is_writeonly(it, i)) {
             ecs_strbuf_appendch(buf, '0');
             continue;
         }
@@ -59442,13 +59466,13 @@ int flecs_json_serialize_iter_result_values(
 
         /* If term is not set, append empty array. This indicates that the term
          * could have had data but doesn't */
-        if (!ecs_field_is_set(it, i + 1)) {
+        if (!ecs_field_is_set(it, i)) {
             flecs_json_array_push(buf);
             flecs_json_array_pop(buf);
             continue;
         }
 
-        if (ecs_field_is_self(it, i + 1)) {
+        if (ecs_field_is_self(it, i)) {
             int32_t count = it->count;
             if (array_to_json_buf_w_type_data(world, ptr, count, buf, comp, ser)) {
                 return -1;
@@ -59924,7 +59948,7 @@ bool flecs_json_serialize_row_tags(
     
     int32_t tag_count = 0;
     for (f = 0; f < field_count; f ++) {
-        if (!ecs_field_is_set(it, f + 1)) {
+        if (!ecs_field_is_set(it, f)) {
             continue;
         }
 
@@ -59966,7 +59990,7 @@ bool flecs_json_serialize_row_pairs(
     
     int32_t pair_count = 0;
     for (f = 0; f < field_count; f ++) {
-        if (!ecs_field_is_set(it, f + 1)) {
+        if (!ecs_field_is_set(it, f)) {
             continue;
         }
 
@@ -60260,7 +60284,7 @@ int flecs_json_serialize_row_components(
 
     int32_t f, field_count = it->field_count, component_count = 0;
     for (f = 0; f < field_count; f ++) {
-        if (!ecs_field_is_set(it, f + 1)) {
+        if (!ecs_field_is_set(it, f)) {
             continue;
         }
 
@@ -60269,7 +60293,7 @@ int flecs_json_serialize_row_components(
             continue;
         }
 
-        if (ecs_field_is_self(it, f + 1)) {
+        if (ecs_field_is_self(it, f)) {
             ptr = ECS_ELEM(ptr, it->sizes[f], row);
         }
 
@@ -64672,7 +64696,7 @@ int flecs_add_constant_to_bitmask(
 static
 void flecs_set_primitive(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    EcsPrimitive *type = ecs_field(it, EcsPrimitive, 1);
+    EcsPrimitive *type = ecs_field(it, EcsPrimitive, 0);
 
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -64739,7 +64763,7 @@ void flecs_set_primitive(ecs_iter_t *it) {
 static
 void flecs_set_member(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    EcsMember *member = ecs_field(it, EcsMember, 1);
+    EcsMember *member = ecs_field(it, EcsMember, 0);
     EcsMemberRanges *ranges = ecs_table_get_id(world, it->table, 
         ecs_id(EcsMemberRanges), it->offset);
 
@@ -64760,7 +64784,7 @@ void flecs_set_member(ecs_iter_t *it) {
 static
 void flecs_set_member_ranges(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    EcsMemberRanges *ranges = ecs_field(it, EcsMemberRanges, 1);
+    EcsMemberRanges *ranges = ecs_field(it, EcsMemberRanges, 0);
     EcsMember *member = ecs_table_get_id(world, it->table, 
         ecs_id(EcsMember), it->offset);
     if (!member) {
@@ -64837,7 +64861,7 @@ void flecs_add_constant(ecs_iter_t *it) {
 static
 void flecs_set_array(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    EcsArray *array = ecs_field(it, EcsArray, 1);
+    EcsArray *array = ecs_field(it, EcsArray, 0);
 
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -64867,7 +64891,7 @@ void flecs_set_array(ecs_iter_t *it) {
 static
 void flecs_set_vector(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    EcsVector *array = ecs_field(it, EcsVector, 1);
+    EcsVector *array = ecs_field(it, EcsVector, 0);
 
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -64888,7 +64912,7 @@ void flecs_set_vector(ecs_iter_t *it) {
 static
 void flecs_set_custom_type(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    EcsOpaque *serialize = ecs_field(it, EcsOpaque, 1);
+    EcsOpaque *serialize = ecs_field(it, EcsOpaque, 0);
 
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -65037,7 +65061,7 @@ error:
 
 static
 void flecs_set_unit(ecs_iter_t *it) {
-    EcsUnit *u = ecs_field(it, EcsUnit, 1);
+    EcsUnit *u = ecs_field(it, EcsUnit, 0);
 
     ecs_world_t *world = it->world;
 
@@ -65069,7 +65093,7 @@ void flecs_unit_quantity_monitor(ecs_iter_t *it) {
 static
 void ecs_meta_type_init_default_ctor(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    EcsMetaType *type = ecs_field(it, EcsMetaType, 1);
+    EcsMetaType *type = ecs_field(it, EcsMetaType, 0);
 
     int i;
     for (i = 0; i < it->count; i ++) {

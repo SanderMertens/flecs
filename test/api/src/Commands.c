@@ -363,7 +363,7 @@ void Commands_defer_twice_in_progress(void) {
 
 static
 void AddVelocity(ecs_iter_t *it) {
-    ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 2);
+    ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 1);
 
     ecs_defer_begin(it->world);
 
@@ -1883,7 +1883,7 @@ static void update_counter(ecs_iter_t *it) {
 }
 
 static void remove_counter(ecs_iter_t *it) {
-    Counter *ptr = ecs_field(it, Counter, 1);
+    Counter *ptr = ecs_field(it, Counter, 0);
 
     for (int i = 0; i < it->count; i ++) {
         test_int(ptr[i].value, 0);
@@ -2704,8 +2704,8 @@ void PositionVelocityObserver(ecs_iter_t *it) {
     position_velocity_observer_invoked ++;
     test_int(it->count, 1);
     
-    Position *p = ecs_field(it, Position, 1);
-    Velocity *v = ecs_field(it, Velocity, 2);
+    Position *p = ecs_field(it, Position, 0);
+    Velocity *v = ecs_field(it, Velocity, 1);
 
     test_assert(p != NULL);
     test_assert(v != NULL);

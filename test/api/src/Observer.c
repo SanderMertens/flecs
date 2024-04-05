@@ -13,12 +13,12 @@ void Observer_w_value(ecs_iter_t *it) {
     test_assert(it->entities != NULL);
     test_assert(it->entities[0] != 0);
 
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
     test_int(p->x, 10);
     test_int(p->y, 20);
 
     if (it->field_count > 1) {
-        Velocity *v = ecs_field(it, Velocity, 2);
+        Velocity *v = ecs_field(it, Velocity, 1);
         test_int(v->x, 1);
         test_int(v->y, 2);
     }
@@ -32,7 +32,7 @@ void Observer_w_1_value(ecs_iter_t *it) {
     test_assert(it->entities != NULL);
     test_assert(it->entities[0] != 0);
 
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
     test_int(p->x, 10);
     test_int(p->y, 20);
 }
@@ -62,7 +62,7 @@ void Observer_w_1_filter_term(ecs_iter_t *it) {
     // test_assert(it->ptrs[0] == NULL);
     test_assert(it->ptrs[1] != NULL);
 
-    Velocity *v = ecs_field(it, Velocity, 2);
+    Velocity *v = ecs_field(it, Velocity, 1);
     test_int(v->x, 1);
     test_int(v->y, 2);
 }
@@ -83,7 +83,7 @@ void Observer_w_2_filter_terms(ecs_iter_t *it) {
     // test_assert(it->ptrs[1] == NULL);
     test_assert(it->ptrs[2] != NULL);
 
-    Mass *m = ecs_field(it, Mass, 3);
+    Mass *m = ecs_field(it, Mass, 2);
     test_int(m[0], 100);
 }
 
@@ -1403,7 +1403,7 @@ void Observer_iter_type_set(void) {
 
 void ObserverReadonly(ecs_iter_t *it) {
     probe_system_w_ctx(it, it->ctx);
-    test_bool(ecs_field_is_readonly(it, 1), true);
+    test_bool(ecs_field_is_readonly(it, 0), true);
 }
 
 void Observer_readonly_term(void) {
@@ -1995,7 +1995,7 @@ void UnSet_TestComp(ecs_iter_t *it) {
 
     test_int(it->count, 1);
 
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -2056,10 +2056,10 @@ void UnSet_WriteComp(ecs_iter_t *it) {
 
     test_int(it->count, 1);
 
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
     test_assert(p != NULL);
 
-    Velocity *v = ecs_field(it, Velocity, 2);
+    Velocity *v = ecs_field(it, Velocity, 1);
 
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -4172,7 +4172,7 @@ void OnTagPair(ecs_iter_t *it) {
 static
 void OnPair(ecs_iter_t *it) {
     test_int(it->count, 1);
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
     pair_x = p->x;
     pair_column = it->columns[0];
     probe_iter(it);
@@ -4402,7 +4402,7 @@ void Observer_on_remove_target_from_base_at_offset(void) {
 static void Observer_base_component(ecs_iter_t *it) {
     probe_system_w_ctx(it, it->ctx);
 
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
     test_assert(p != NULL);
     test_int(p->x, 30);
     test_int(p->y, 40);

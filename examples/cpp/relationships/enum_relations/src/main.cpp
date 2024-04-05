@@ -62,7 +62,7 @@ int main(int, char *[]) {
         .with<Tile>(flecs::Wildcard)
         .build()
         .each([&](flecs::iter& it, size_t) {
-            flecs::entity tile_constant = it.pair(1).second();
+            flecs::entity tile_constant = it.pair(0).second();
             printf("%s\n", tile_constant.path().c_str());
         });
 
@@ -77,7 +77,7 @@ int main(int, char *[]) {
         .with(TileStatus::Occupied)
         .build()
         .each([&](flecs::iter& it, size_t) {
-            flecs::entity tile_constant = it.pair(1).second();
+            flecs::entity tile_constant = it.pair(0).second();
             printf("%s\n", tile_constant.path().c_str());
         });
 

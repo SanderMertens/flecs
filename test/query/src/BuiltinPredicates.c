@@ -31,7 +31,7 @@ void BuiltinPredicates_this_eq_id(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(false, ecs_field_is_set(&it, 1));
+        test_uint(false, ecs_field_is_set(&it, 0));
         test_uint(ent, it.entities[0]);
         test_bool(false, ecs_query_next(&it));
     }
@@ -57,7 +57,7 @@ void BuiltinPredicates_this_eq_name(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(false, ecs_field_is_set(&it, 1));
+        test_uint(false, ecs_field_is_set(&it, 0));
         test_uint(ent, it.entities[0]);
         test_bool(false, ecs_query_next(&it));
     }
@@ -104,9 +104,9 @@ void BuiltinPredicates_this_eq_id_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_2, it.entities[0]);
         test_bool(false, ecs_query_next(&it));
     }
@@ -171,9 +171,9 @@ void BuiltinPredicates_this_eq_name_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_2, it.entities[0]);
         test_bool(false, ecs_query_next(&it));
     }
@@ -240,9 +240,9 @@ void BuiltinPredicates_this_eq_var_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(RelA, ent_2), ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(ecs_pair(RelA, ent_2), ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_2, ecs_iter_get_var(&it, x_var));
         test_uint(ent_2, it.entities[0]);
         test_bool(false, ecs_query_next(&it));
@@ -272,7 +272,7 @@ void BuiltinPredicates_var_eq_id(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(false, ecs_field_is_set(&it, 1));
+        test_uint(false, ecs_field_is_set(&it, 0));
         test_uint(ent, ecs_iter_get_var(&it, x_var));
         test_bool(false, ecs_query_next(&it));
     }
@@ -301,7 +301,7 @@ void BuiltinPredicates_var_eq_name(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(false, ecs_field_is_set(&it, 1));
+        test_uint(false, ecs_field_is_set(&it, 0));
         test_uint(ent, ecs_iter_get_var(&it, x_var));
         test_bool(false, ecs_query_next(&it));
     }
@@ -350,8 +350,8 @@ void BuiltinPredicates_var_eq_this(void) {
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
         test_uint(e1, it.entities[0]);
-        test_uint(Foo, ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
         test_uint(e1, ecs_iter_get_var(&it, x_var));
         test_bool(false, ecs_query_next(&it));
     }
@@ -387,9 +387,9 @@ void BuiltinPredicates_var_eq_id_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_2, ecs_iter_get_var(&it, x_var));
         test_bool(false, ecs_query_next(&it));
     }
@@ -460,9 +460,9 @@ void BuiltinPredicates_var_eq_name_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_2, ecs_iter_get_var(&it, x_var));
         test_bool(false, ecs_query_next(&it));
     }
@@ -535,9 +535,9 @@ void BuiltinPredicates_var_eq_var_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(ecs_pair(RelA, ent_2), ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(ecs_pair(RelA, ent_2), ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_2, ecs_iter_get_var(&it, x_var));
         test_uint(ent_2, ecs_iter_get_var(&it, y_var));
         test_bool(false, ecs_query_next(&it));
@@ -679,16 +679,16 @@ void BuiltinPredicates_this_neq_id_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_3, it.entities[0]);
 
         test_bool(false, ecs_query_next(&it));
@@ -725,9 +725,9 @@ void BuiltinPredicates_this_neq_id_written_no_match(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelB, ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(RelB, ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_4, it.entities[0]);
 
         test_bool(false, ecs_query_next(&it));
@@ -761,16 +761,16 @@ void BuiltinPredicates_this_neq_name_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_3, it.entities[0]);
 
         test_bool(false, ecs_query_next(&it));
@@ -807,9 +807,9 @@ void BuiltinPredicates_this_neq_name_written_no_match(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelB, ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(RelB, ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_4, it.entities[0]);
 
         test_bool(false, ecs_query_next(&it));
@@ -845,17 +845,17 @@ void BuiltinPredicates_this_neq_var_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(RelA, ent_2), ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(ecs_pair(RelA, ent_2), ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_2, ecs_iter_get_var(&it, x_var));
         test_uint(ent_1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(ecs_pair(RelA, ent_2), ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(ecs_pair(RelA, ent_2), ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_2, ecs_iter_get_var(&it, x_var));
         test_uint(ent_3, it.entities[0]);
 
@@ -1007,8 +1007,8 @@ void BuiltinPredicates_var_neq_this(void) {
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
         test_uint(e1, it.entities[0]);
-        test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
+        test_uint(ecs_pair(Rel, Tgt), ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
         test_uint(Tgt, ecs_iter_get_var(&it, x_var));
         test_bool(false, ecs_query_next(&it));
     }
@@ -1044,16 +1044,16 @@ void BuiltinPredicates_var_neq_id_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_1, ecs_iter_get_var(&it, x_var));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_3, ecs_iter_get_var(&it, x_var));
 
         test_bool(false, ecs_query_next(&it));
@@ -1093,9 +1093,9 @@ void BuiltinPredicates_var_neq_id_written_no_match(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(RelB, ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(RelB, ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_4, ecs_iter_get_var(&it, x_var));
 
         test_bool(false, ecs_query_next(&it));
@@ -1132,16 +1132,16 @@ void BuiltinPredicates_var_neq_name_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_1, ecs_iter_get_var(&it, x_var));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_3, ecs_iter_get_var(&it, x_var));
 
         test_bool(false, ecs_query_next(&it));
@@ -1181,9 +1181,9 @@ void BuiltinPredicates_var_neq_name_written_no_match(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(RelB, ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(RelB, ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_4, ecs_iter_get_var(&it, x_var));
 
         test_bool(false, ecs_query_next(&it));
@@ -1222,17 +1222,17 @@ void BuiltinPredicates_var_neq_var_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(ecs_pair(RelA, ent_2), ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(ecs_pair(RelA, ent_2), ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_1, ecs_iter_get_var(&it, x_var));
         test_uint(ent_2, ecs_iter_get_var(&it, y_var));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(ecs_pair(RelA, ent_2), ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(ecs_pair(RelA, ent_2), ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_3, ecs_iter_get_var(&it, x_var));
         test_uint(ent_2, ecs_iter_get_var(&it, y_var));
 
@@ -1473,16 +1473,16 @@ void BuiltinPredicates_this_2_neq_id_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(2, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_4, it.entities[0]);
         test_uint(ent_5, it.entities[1]);
 
@@ -1521,16 +1521,16 @@ void BuiltinPredicates_this_2_neq_name_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(2, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_4, it.entities[0]);
         test_uint(ent_5, it.entities[1]);
 
@@ -1572,23 +1572,23 @@ void BuiltinPredicates_var_2_neq_id_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_1, ecs_iter_get_var(&it, x_var));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_4, ecs_iter_get_var(&it, x_var));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_5, ecs_iter_get_var(&it, x_var));
 
         test_bool(false, ecs_query_next(&it));
@@ -1629,23 +1629,23 @@ void BuiltinPredicates_var_2_neq_name_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_1, ecs_iter_get_var(&it, x_var));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_4, ecs_iter_get_var(&it, x_var));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_5, ecs_iter_get_var(&it, x_var));
 
         test_bool(false, ecs_query_next(&it));
@@ -1678,12 +1678,12 @@ void BuiltinPredicates_this_2_or_id(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(false, ecs_field_is_set(&it, 1));
+        test_uint(false, ecs_field_is_set(&it, 0));
         test_uint(ent_2, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(false, ecs_field_is_set(&it, 1));
+        test_uint(false, ecs_field_is_set(&it, 0));
         test_uint(ent_3, it.entities[0]);
 
         test_bool(false, ecs_query_next(&it));
@@ -1716,17 +1716,17 @@ void BuiltinPredicates_this_3_or_id(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(false, ecs_field_is_set(&it, 1));
+        test_uint(false, ecs_field_is_set(&it, 0));
         test_uint(ent_2, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(false, ecs_field_is_set(&it, 1));
+        test_uint(false, ecs_field_is_set(&it, 0));
         test_uint(ent_3, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(false, ecs_field_is_set(&it, 1));
+        test_uint(false, ecs_field_is_set(&it, 0));
         test_uint(ent_4, it.entities[0]);
 
         test_bool(false, ecs_query_next(&it));
@@ -1759,12 +1759,12 @@ void BuiltinPredicates_this_2_or_name(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(false, ecs_field_is_set(&it, 1));
+        test_uint(false, ecs_field_is_set(&it, 0));
         test_uint(ent_2, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(false, ecs_field_is_set(&it, 1));
+        test_uint(false, ecs_field_is_set(&it, 0));
         test_uint(ent_3, it.entities[0]);
 
         test_bool(false, ecs_query_next(&it));
@@ -1797,17 +1797,17 @@ void BuiltinPredicates_this_3_or_name(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(false, ecs_field_is_set(&it, 1));
+        test_uint(false, ecs_field_is_set(&it, 0));
         test_uint(ent_2, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(false, ecs_field_is_set(&it, 1));
+        test_uint(false, ecs_field_is_set(&it, 0));
         test_uint(ent_3, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(false, ecs_field_is_set(&it, 1));
+        test_uint(false, ecs_field_is_set(&it, 0));
         test_uint(ent_4, it.entities[0]);
 
         test_bool(false, ecs_query_next(&it));
@@ -1842,22 +1842,22 @@ void BuiltinPredicates_this_2_or_match(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(false, ecs_field_is_set(&it, 1));
+        test_uint(false, ecs_field_is_set(&it, 0));
         test_uint(ent_2, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(false, ecs_field_is_set(&it, 1));
+        test_uint(false, ecs_field_is_set(&it, 0));
         test_uint(ent_2_5, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(false, ecs_field_is_set(&it, 1));
+        test_uint(false, ecs_field_is_set(&it, 0));
         test_uint(ent_3, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(false, ecs_field_is_set(&it, 1));
+        test_uint(false, ecs_field_is_set(&it, 0));
         test_uint(ent_3_5, it.entities[0]);
 
         test_bool(false, ecs_query_next(&it));
@@ -1893,32 +1893,32 @@ void BuiltinPredicates_this_3_or_match(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(false, ecs_field_is_set(&it, 1));
+        test_uint(false, ecs_field_is_set(&it, 0));
         test_uint(ent_2, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(false, ecs_field_is_set(&it, 1));
+        test_uint(false, ecs_field_is_set(&it, 0));
         test_uint(ent_2_5, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(false, ecs_field_is_set(&it, 1));
+        test_uint(false, ecs_field_is_set(&it, 0));
         test_uint(ent_3, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(false, ecs_field_is_set(&it, 1));
+        test_uint(false, ecs_field_is_set(&it, 0));
         test_uint(ent_3_5, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(false, ecs_field_is_set(&it, 1));
+        test_uint(false, ecs_field_is_set(&it, 0));
         test_uint(ent_4, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(false, ecs_field_is_set(&it, 1));
+        test_uint(false, ecs_field_is_set(&it, 0));
         test_uint(ent_4_5, it.entities[0]);
 
         test_bool(false, ecs_query_next(&it));
@@ -1953,12 +1953,12 @@ void BuiltinPredicates_var_2_or_id(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(false, ecs_field_is_set(&it, 1));
+        test_uint(false, ecs_field_is_set(&it, 0));
         test_uint(ent_2, ecs_iter_get_var(&it, x_var));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(false, ecs_field_is_set(&it, 1));
+        test_uint(false, ecs_field_is_set(&it, 0));
         test_uint(ent_3, ecs_iter_get_var(&it, x_var));
 
         test_bool(false, ecs_query_next(&it));
@@ -1993,12 +1993,12 @@ void BuiltinPredicates_var_2_or_name(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(false, ecs_field_is_set(&it, 1));
+        test_uint(false, ecs_field_is_set(&it, 0));
         test_uint(ent_2, ecs_iter_get_var(&it, x_var));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(false, ecs_field_is_set(&it, 1));
+        test_uint(false, ecs_field_is_set(&it, 0));
         test_uint(ent_3, ecs_iter_get_var(&it, x_var));
 
         test_bool(false, ecs_query_next(&it));
@@ -2036,16 +2036,16 @@ void BuiltinPredicates_this_2_or_id_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_2, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_3, it.entities[0]);
 
         test_bool(false, ecs_query_next(&it));
@@ -2083,23 +2083,23 @@ void BuiltinPredicates_this_3_or_id_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_2, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_3, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_4, it.entities[0]);
 
         test_bool(false, ecs_query_next(&it));
@@ -2137,16 +2137,16 @@ void BuiltinPredicates_this_2_or_name_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_2, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_3, it.entities[0]);
 
         test_bool(false, ecs_query_next(&it));
@@ -2187,16 +2187,16 @@ void BuiltinPredicates_var_2_or_id_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_2, ecs_iter_get_var(&it, x_var));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_3, ecs_iter_get_var(&it, x_var));
 
         test_bool(false, ecs_query_next(&it));
@@ -2237,16 +2237,16 @@ void BuiltinPredicates_var_2_or_name_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_2, ecs_iter_get_var(&it, x_var));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(RelA, ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(RelA, ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_3, ecs_iter_get_var(&it, x_var));
 
         test_bool(false, ecs_query_next(&it));
@@ -2282,18 +2282,18 @@ void BuiltinPredicates_this_match_eq(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(false, ecs_field_is_set(&it, 1));
+        test_uint(false, ecs_field_is_set(&it, 0));
         test_uint(ent_1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(2, it.count);
-        test_uint(false, ecs_field_is_set(&it, 1));
+        test_uint(false, ecs_field_is_set(&it, 0));
         test_uint(ent_3, it.entities[0]);
         test_uint(ent_4, it.entities[1]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(false, ecs_field_is_set(&it, 1));
+        test_uint(false, ecs_field_is_set(&it, 0));
         test_uint(ent_6, it.entities[0]);
 
         test_bool(false, ecs_query_next(&it));
@@ -2332,22 +2332,22 @@ void BuiltinPredicates_var_match_eq(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(false, ecs_field_is_set(&it, 1));
+        test_uint(false, ecs_field_is_set(&it, 0));
         test_uint(ent_1, ecs_iter_get_var(&it, x_var));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(false, ecs_field_is_set(&it, 1));
+        test_uint(false, ecs_field_is_set(&it, 0));
         test_uint(ent_3, ecs_iter_get_var(&it, x_var));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(false, ecs_field_is_set(&it, 1));
+        test_uint(false, ecs_field_is_set(&it, 0));
         test_uint(ent_4, ecs_iter_get_var(&it, x_var));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(false, ecs_field_is_set(&it, 1));
+        test_uint(false, ecs_field_is_set(&it, 0));
         test_uint(ent_6, ecs_iter_get_var(&it, x_var));
 
         test_bool(false, ecs_query_next(&it));
@@ -2389,21 +2389,21 @@ void BuiltinPredicates_this_match_eq_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(2, it.count);
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_3, it.entities[0]);
         test_uint(ent_4, it.entities[1]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_6, it.entities[0]);
 
         test_bool(false, ecs_query_next(&it));
@@ -2445,21 +2445,21 @@ void BuiltinPredicates_this_match_eq_written_self(void) {
         ecs_iter_t it = ecs_query_iter(world, r);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(2, it.count);
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_3, it.entities[0]);
         test_uint(ent_4, it.entities[1]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_6, it.entities[0]);
 
         test_bool(false, ecs_query_next(&it));
@@ -2504,26 +2504,26 @@ void BuiltinPredicates_var_match_eq_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_1, ecs_iter_get_var(&it, x_var));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_3, ecs_iter_get_var(&it, x_var));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_4, ecs_iter_get_var(&it, x_var));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(0, it.count);
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_6, ecs_iter_get_var(&it, x_var));
 
         test_bool(false, ecs_query_next(&it));
@@ -2977,12 +2977,12 @@ void BuiltinPredicates_this_match_2_or(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(false, ecs_field_is_set(&it, 1));
+        test_uint(false, ecs_field_is_set(&it, 0));
         test_uint(ent_1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(false, ecs_field_is_set(&it, 1));
+        test_uint(false, ecs_field_is_set(&it, 0));
         test_uint(ent_3, it.entities[0]);
 
         test_bool(false, ecs_query_next(&it));
@@ -3024,14 +3024,14 @@ void BuiltinPredicates_this_match_2_or_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_3, it.entities[0]);
 
         test_bool(false, ecs_query_next(&it));
@@ -3067,17 +3067,17 @@ void BuiltinPredicates_this_match_3_or(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(false, ecs_field_is_set(&it, 1));
+        test_uint(false, ecs_field_is_set(&it, 0));
         test_uint(ent_1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(false, ecs_field_is_set(&it, 1));
+        test_uint(false, ecs_field_is_set(&it, 0));
         test_uint(ent_3, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(false, ecs_field_is_set(&it, 1));
+        test_uint(false, ecs_field_is_set(&it, 0));
         test_uint(ent_6, it.entities[0]);
 
         test_bool(false, ecs_query_next(&it));
@@ -3119,20 +3119,20 @@ void BuiltinPredicates_this_match_3_or_written(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_1, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_3, it.entities[0]);
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(true, ecs_field_is_set(&it, 1));
-        test_uint(false, ecs_field_is_set(&it, 2));
+        test_uint(true, ecs_field_is_set(&it, 0));
+        test_uint(false, ecs_field_is_set(&it, 1));
         test_uint(ent_6, it.entities[0]);
 
         test_bool(false, ecs_query_next(&it));
@@ -3165,7 +3165,7 @@ void BuiltinPredicates_unresolved_by_name(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
-        test_uint(false, ecs_field_is_set(&it, 1));
+        test_uint(false, ecs_field_is_set(&it, 0));
         test_uint(ent, it.entities[0]);
         test_bool(false, ecs_query_next(&it));
     }
@@ -3526,15 +3526,15 @@ void BuiltinPredicates_2_or_w_eq_this(void) {
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
         test_uint(e1, it.entities[0]);
-        test_uint(ecs_pair(Rel, e1), ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
+        test_uint(ecs_pair(Rel, e1), ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
         test_uint(e1, ecs_iter_get_var(&it, x_var));
 
         test_bool(true, ecs_query_next(&it));
         test_uint(1, it.count);
         test_uint(e3, it.entities[0]);
-        test_uint(ecs_pair(Rel, Rel), ecs_field_id(&it, 1));
-        test_uint(true, ecs_field_is_set(&it, 1));
+        test_uint(ecs_pair(Rel, Rel), ecs_field_id(&it, 0));
+        test_uint(true, ecs_field_is_set(&it, 0));
         test_uint(Rel, ecs_iter_get_var(&it, x_var));
 
         test_bool(false, ecs_query_next(&it));

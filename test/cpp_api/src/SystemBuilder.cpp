@@ -326,8 +326,8 @@ void SystemBuilder_singleton_term(void) {
     auto s = ecs.system<Entity>()
         .with<Singleton>().singleton().in()
         .iter([&](flecs::iter& it, Entity *e) {
-            auto s = it.field<const Singleton>(2);
-            test_assert(!it.is_self(2));
+            auto s = it.field<const Singleton>(1);
+            test_assert(!it.is_self(1));
             test_int(s->value, 10);
             
             const Singleton& s_ref = *s;

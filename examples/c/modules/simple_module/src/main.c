@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 void PrintPosition(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
 
     for (int i = 0; i < it->count; i ++) {
         printf("p = {%f, %f} (system)\n", p[i].x, p[i].y);

@@ -39,56 +39,56 @@ void Cascade_this_self_cascade_childof_uncached(void) {
     test_int(2, it.count);
     test_uint(p1, it.entities[0]);
     test_uint(p2, it.entities[1]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(p3, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(p3, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p3, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -135,44 +135,44 @@ void Cascade_this_cascade_childof_uncached(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(p3, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p3, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -223,74 +223,74 @@ void Cascade_this_written_self_cascade_childof_uncached(void) {
     test_int(2, it.count);
     test_uint(p1, it.entities[0]);
     test_uint(p2, it.entities[1]);
+    test_uint(0, ecs_field_src(&it, 0));
     test_uint(0, ecs_field_src(&it, 1));
-    test_uint(0, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(p3, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 0));
     test_uint(0, ecs_field_src(&it, 1));
-    test_uint(0, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p3, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p3, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -340,58 +340,58 @@ void Cascade_this_written_cascade_childof_uncached(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p3, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p3, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -439,56 +439,56 @@ void Cascade_this_self_cascade_childof_w_parent_flag_uncached(void) {
     test_int(2, it.count);
     test_uint(p1, it.entities[0]);
     test_uint(p2, it.entities[1]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(p3, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(p3, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p3, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -535,44 +535,44 @@ void Cascade_this_cascade_childof_w_parent_flag_uncached(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
-    test_uint(p1, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p1, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(p2, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p2, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(p3, ecs_field_src(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 1));
+    test_uint(p3, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -623,74 +623,74 @@ void Cascade_this_written_self_cascade_childof_w_parent_flag_uncached(void) {
     test_int(2, it.count);
     test_uint(p1, it.entities[0]);
     test_uint(p2, it.entities[1]);
+    test_uint(0, ecs_field_src(&it, 0));
     test_uint(0, ecs_field_src(&it, 1));
-    test_uint(0, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(p3, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 0));
     test_uint(0, ecs_field_src(&it, 1));
-    test_uint(0, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p3, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p3, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -740,58 +740,58 @@ void Cascade_this_written_cascade_childof_w_parent_flag_uncached(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e1, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e4, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p2, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p2, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e5, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e6, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p1, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p1, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e7, it.entities[0]);
-    test_uint(0, ecs_field_src(&it, 1));
-    test_uint(p3, ecs_field_src(&it, 2));
-    test_uint(Tag, ecs_field_id(&it, 1));
-    test_uint(Foo, ecs_field_id(&it, 2));
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(p3, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -1280,7 +1280,7 @@ void Cascade_cascade_rematch_2_lvls(void) {
         test_uint(it.entities[0], e_1);
         test_uint(it.sources[0], e_0);
         {
-            Position *p = ecs_field(&it, Position, 1);
+            Position *p = ecs_field(&it, Position, 0);
             test_int(p[0].x, 10);
             test_int(p[0].y, 20);
         }
@@ -1290,7 +1290,7 @@ void Cascade_cascade_rematch_2_lvls(void) {
         test_uint(it.entities[0], e_2);
         test_uint(it.sources[0], e_1);
         {
-            Position *p = ecs_field(&it, Position, 1);
+            Position *p = ecs_field(&it, Position, 0);
             test_int(p[0].x, 30);
             test_int(p[0].y, 40);
         }
@@ -1300,7 +1300,7 @@ void Cascade_cascade_rematch_2_lvls(void) {
         test_uint(it.entities[0], e_3);
         test_uint(it.sources[0], e_2);
         {
-            Position *p = ecs_field(&it, Position, 1);
+            Position *p = ecs_field(&it, Position, 0);
             test_int(p[0].x, 50);
             test_int(p[0].y, 60);
             test_bool(false, ecs_query_next(&it));
@@ -1322,7 +1322,7 @@ void Cascade_cascade_rematch_2_lvls(void) {
         test_uint(it.entities[0], e_2);
         test_uint(it.sources[0], e_3);
         {
-            Position *p = ecs_field(&it, Position, 1);
+            Position *p = ecs_field(&it, Position, 0);
             test_int(p[0].x, 70);
             test_int(p[0].y, 80);
         }
@@ -1332,7 +1332,7 @@ void Cascade_cascade_rematch_2_lvls(void) {
         test_uint(it.entities[0], e_1);
         test_uint(it.sources[0], e_2);
         {
-            Position *p = ecs_field(&it, Position, 1);
+            Position *p = ecs_field(&it, Position, 0);
             test_int(p[0].x, 50);
             test_int(p[0].y, 60);
         }
@@ -1342,7 +1342,7 @@ void Cascade_cascade_rematch_2_lvls(void) {
         test_uint(it.entities[0], e_0);
         test_uint(it.sources[0], e_1);
         {
-            Position *p = ecs_field(&it, Position, 1);
+            Position *p = ecs_field(&it, Position, 0);
             test_int(p[0].x, 30);
             test_int(p[0].y, 40);
         }
@@ -1386,7 +1386,7 @@ void Cascade_cascade_rematch_2_lvls_2_relations(void) {
     test_int(it.count, 1);
     test_uint(it.entities[0], e_1);
     test_uint(it.sources[0], e_0);
-    Position *p = ecs_field(&it, Position, 1);
+    Position *p = ecs_field(&it, Position, 0);
     test_int(p[0].x, 10);
     test_int(p[0].y, 20);
 
@@ -1394,7 +1394,7 @@ void Cascade_cascade_rematch_2_lvls_2_relations(void) {
     test_int(it.count, 1);
     test_uint(it.entities[0], e_2);
     test_uint(it.sources[0], e_1);
-    p = ecs_field(&it, Position, 1);
+    p = ecs_field(&it, Position, 0);
     test_int(p[0].x, 30);
     test_int(p[0].y, 40);
 
@@ -1402,7 +1402,7 @@ void Cascade_cascade_rematch_2_lvls_2_relations(void) {
     test_int(it.count, 1);
     test_uint(it.entities[0], e_3);
     test_uint(it.sources[0], e_2);
-    p = ecs_field(&it, Position, 1);
+    p = ecs_field(&it, Position, 0);
     test_int(p[0].x, 50);
     test_int(p[0].y, 60);
     test_bool(false, ecs_query_next(&it));
@@ -1493,7 +1493,7 @@ void Cascade_cascade_desc_rematch_2_lvls(void) {
     test_int(it.count, 1);
     test_uint(it.entities[0], e_3);
     test_uint(it.sources[0], e_2);
-    Position *p = ecs_field(&it, Position, 1);
+    Position *p = ecs_field(&it, Position, 0);
     test_int(p[0].x, 50);
     test_int(p[0].y, 60);
 
@@ -1501,7 +1501,7 @@ void Cascade_cascade_desc_rematch_2_lvls(void) {
     test_int(it.count, 1);
     test_uint(it.entities[0], e_2);
     test_uint(it.sources[0], e_1);
-    p = ecs_field(&it, Position, 1);
+    p = ecs_field(&it, Position, 0);
     test_int(p[0].x, 30);
     test_int(p[0].y, 40);
 
@@ -1509,7 +1509,7 @@ void Cascade_cascade_desc_rematch_2_lvls(void) {
     test_int(it.count, 1);
     test_uint(it.entities[0], e_1);
     test_uint(it.sources[0], e_0);
-    p = ecs_field(&it, Position, 1);
+    p = ecs_field(&it, Position, 0);
     test_int(p[0].x, 10);
     test_int(p[0].y, 20);
 
@@ -1528,7 +1528,7 @@ void Cascade_cascade_desc_rematch_2_lvls(void) {
     test_int(it.count, 1);
     test_uint(it.entities[0], e_0);
     test_uint(it.sources[0], e_1);
-    p = ecs_field(&it, Position, 1);
+    p = ecs_field(&it, Position, 0);
     test_int(p[0].x, 30);
     test_int(p[0].y, 40);
 
@@ -1536,7 +1536,7 @@ void Cascade_cascade_desc_rematch_2_lvls(void) {
     test_int(it.count, 1);
     test_uint(it.entities[0], e_1);
     test_uint(it.sources[0], e_2);
-    p = ecs_field(&it, Position, 1);
+    p = ecs_field(&it, Position, 0);
     test_int(p[0].x, 50);
     test_int(p[0].y, 60);
 
@@ -1544,7 +1544,7 @@ void Cascade_cascade_desc_rematch_2_lvls(void) {
     test_int(it.count, 1);
     test_uint(it.entities[0], e_2);
     test_uint(it.sources[0], e_3);
-    p = ecs_field(&it, Position, 1);
+    p = ecs_field(&it, Position, 0);
     test_int(p[0].x, 70);
     test_int(p[0].y, 80);
     test_bool(false, ecs_query_next(&it));
@@ -1585,7 +1585,7 @@ void Cascade_cascade_desc_rematch_2_lvls_2_relations(void) {
     test_int(it.count, 1);
     test_uint(it.entities[0], e_3);
     test_uint(it.sources[0], e_2);
-    Position *p = ecs_field(&it, Position, 1);
+    Position *p = ecs_field(&it, Position, 0);
     test_int(p[0].x, 50);
     test_int(p[0].y, 60);
 
@@ -1593,7 +1593,7 @@ void Cascade_cascade_desc_rematch_2_lvls_2_relations(void) {
     test_int(it.count, 1);
     test_uint(it.entities[0], e_2);
     test_uint(it.sources[0], e_1);
-    p = ecs_field(&it, Position, 1);
+    p = ecs_field(&it, Position, 0);
     test_int(p[0].x, 30);
     test_int(p[0].y, 40);
 
@@ -1601,7 +1601,7 @@ void Cascade_cascade_desc_rematch_2_lvls_2_relations(void) {
     test_int(it.count, 1);
     test_uint(it.entities[0], e_1);
     test_uint(it.sources[0], e_0);
-    p = ecs_field(&it, Position, 1);
+    p = ecs_field(&it, Position, 0);
     test_int(p[0].x, 10);
     test_int(p[0].y, 20);
     test_bool(false, ecs_query_next(&it));
@@ -1705,22 +1705,22 @@ void Cascade_cascade_after_recycled_parent_change(void) {
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
     test_uint(it.entities[0], parent);
-    test_assert(ecs_field_src(&it, 2) == 0);
-    const Position *p = ecs_field(&it, Position, 2);
+    test_assert(ecs_field_src(&it, 1) == 0);
+    const Position *p = ecs_field(&it, Position, 1);
     test_assert(p == NULL);
 
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
     test_uint(it.entities[0], child);
-    test_assert(ecs_field_src(&it, 2) == 0);
-    p = ecs_field(&it, Position, 2);
+    test_assert(ecs_field_src(&it, 1) == 0);
+    p = ecs_field(&it, Position, 1);
     test_assert(p == NULL);
 
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
     test_uint(it.entities[0], e);
-    test_assert(ecs_field_src(&it, 2) == 0);
-    p = ecs_field(&it, Position, 2);
+    test_assert(ecs_field_src(&it, 1) == 0);
+    p = ecs_field(&it, Position, 1);
     test_assert(p == NULL);
 
     test_bool(ecs_query_next(&it), false);
@@ -1734,15 +1734,15 @@ void Cascade_cascade_after_recycled_parent_change(void) {
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
     test_uint(it.entities[0], parent);
-    test_assert(ecs_field_is_set(&it, 2) == false);
-    p = ecs_field(&it, Position, 2);
+    test_assert(ecs_field_is_set(&it, 1) == false);
+    p = ecs_field(&it, Position, 1);
     test_assert(p == NULL);
 
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
     test_uint(it.entities[0], child);
-    test_assert(ecs_field_src(&it, 2) == parent);
-    p = ecs_field(&it, Position, 2);
+    test_assert(ecs_field_src(&it, 1) == parent);
+    p = ecs_field(&it, Position, 1);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -1750,8 +1750,8 @@ void Cascade_cascade_after_recycled_parent_change(void) {
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
     test_uint(it.entities[0], e);
-    test_assert(ecs_field_src(&it, 2) == child);
-    p = ecs_field(&it, Position, 2);
+    test_assert(ecs_field_src(&it, 1) == child);
+    p = ecs_field(&it, Position, 1);
     test_assert(p != NULL);
     test_int(p->x, 20);
     test_int(p->y, 30);

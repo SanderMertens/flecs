@@ -681,7 +681,7 @@ static void CheckComponent(ecs_iter_t *it) {
 
     test_assert(it->event == ctx->event);
 
-    ctx->result = ecs_field(it, Position, 1);
+    ctx->result = ecs_field(it, Position, 0);
     ctx->invoked ++;
 }
 

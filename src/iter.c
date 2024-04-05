@@ -168,14 +168,14 @@ void* ecs_field_w_size(
     int32_t index)
 {
     ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(index >= 1, ECS_INVALID_PARAMETER, NULL);
-
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!size || ecs_field_size(it, index) == size ||
-        (!ecs_field_size(it, index) && (!it->ptrs[index - 1])),
+        (!ecs_field_size(it, index) && (!it->ptrs[index])),
             ECS_INVALID_PARAMETER, NULL);
     (void)size;
 
-    return it->ptrs[index - 1];
+    return it->ptrs[index];
 error:
     return NULL;
 }
@@ -187,8 +187,9 @@ bool ecs_field_is_readonly(
     ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER, NULL);
     ecs_check(it->query != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(it->query->terms != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(index >= 1, ECS_INVALID_PARAMETER, NULL);
-    const ecs_term_t *term = &it->query->terms[index - 1];
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, NULL);
+    const ecs_term_t *term = &it->query->terms[index];
 
     if (term->inout == EcsIn) {
         return true;
@@ -213,8 +214,10 @@ bool ecs_field_is_writeonly(
     ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER, NULL);
     ecs_check(it->query != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(it->query->terms != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(index >= 1, ECS_INVALID_PARAMETER, NULL);
-    const ecs_term_t *term = &it->query->terms[index - 1];
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, NULL);
+
+    const ecs_term_t *term = &it->query->terms[index];
     return term->inout == EcsOut;
 error:
     return false;
@@ -225,9 +228,10 @@ bool ecs_field_is_set(
     int32_t index)
 {
     ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(index >= 1, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(index <= it->field_count, ECS_INVALID_PARAMETER, NULL);
-    return it->set_fields & (1llu << (index - 1));
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, NULL);
+
+    return it->set_fields & (1llu << (index));
 error:
     return false;
 }
@@ -236,44 +240,64 @@ bool ecs_field_is_self(
     const ecs_iter_t *it,
     int32_t index)
 {
-    ecs_assert(index >= 1, ECS_INVALID_PARAMETER, NULL);
-    return it->sources == NULL || it->sources[index - 1] == 0;
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, NULL);
+
+    return it->sources == NULL || it->sources[index] == 0;
+error:
+    return false;
 }
 
 ecs_id_t ecs_field_id(
     const ecs_iter_t *it,
     int32_t index)
 {
-    ecs_assert(index >= 1, ECS_INVALID_PARAMETER, NULL);
-    return it->ids[index - 1];
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, NULL);
+
+    return it->ids[index];
+error:
+    return 0;
 }
 
-int32_t ecs_field_column_index(
+int32_t ecs_field_column(
     const ecs_iter_t *it,
     int32_t index)
 {
-    ecs_assert(index >= 1, ECS_INVALID_PARAMETER, NULL);
-    return it->columns[index - 1];
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, NULL);
+
+    return it->columns[index];
+error:
+    return 0;
 }
 
 ecs_entity_t ecs_field_src(
     const ecs_iter_t *it,
     int32_t index)
 {
-    ecs_assert(index >= 1, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, NULL);
+
     if (it->sources) {
-        return it->sources[index - 1];
+        return it->sources[index];
     } else {
         return 0;
     }
+error:
+    return 0;
 }
 
 size_t ecs_field_size(
     const ecs_iter_t *it,
     int32_t index)
 {
-    ecs_assert(index >= 1, ECS_INVALID_PARAMETER, NULL);
-    return (size_t)it->sizes[index - 1];
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, NULL);
+
+    return (size_t)it->sizes[index];
+error:
+    return 0;
 }
 
 char* ecs_iter_str(
@@ -290,7 +314,7 @@ char* ecs_iter_str(
     if (it->field_count) {
         ecs_strbuf_list_push(&buf, "id:  ", ",");
         for (i = 0; i < it->field_count; i ++) {
-            ecs_id_t id = ecs_field_id(it, i + 1);
+            ecs_id_t id = ecs_field_id(it, i);
             char *str = ecs_id_str(world, id);
             ecs_strbuf_list_appendstr(&buf, str);
             ecs_os_free(str);
@@ -299,7 +323,7 @@ char* ecs_iter_str(
 
         ecs_strbuf_list_push(&buf, "src: ", ",");
         for (i = 0; i < it->field_count; i ++) {
-            ecs_entity_t subj = ecs_field_src(it, i + 1);
+            ecs_entity_t subj = ecs_field_src(it, i);
             char *str = ecs_get_fullpath(world, subj);
             ecs_strbuf_list_appendstr(&buf, str);
             ecs_os_free(str);
@@ -308,7 +332,7 @@ char* ecs_iter_str(
 
         ecs_strbuf_list_push(&buf, "set: ", ",");
         for (i = 0; i < it->field_count; i ++) {
-            if (ecs_field_is_set(it, i + 1)) {
+            if (ecs_field_is_set(it, i)) {
                 ecs_strbuf_list_appendlit(&buf, "true");
             } else {
                 ecs_strbuf_list_appendlit(&buf, "false");

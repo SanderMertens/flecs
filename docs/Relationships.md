@@ -219,7 +219,7 @@ ecs_query_t *f = ecs_query(world, {
 
 ecs_iter_t it = ecs_query_iter(world, f);
 while (ecs_query_next(&it)) {
-  ecs_id_t pair_id = ecs_field_id(&it, 1);
+  ecs_id_t pair_id = ecs_field_id(&it, 0);
   ecs_entity_t food = ecs_pair_second(world, pair_id); // Apples, ...
   for (int i = 0; i < it.count; i ++) {
     // Iterate as usual
@@ -232,7 +232,7 @@ world.query_builder()
   .term(Eats, flecs::Wildcard)
   .build()
   .each([](flecs::iter& it, size_t i) {
-    flecs::entity food = it.pair(1).second(); // Apples, ...
+    flecs::entity food = it.pair(0).second(); // Apples, ...
     flecs::entity e = it.entity(i);
     // Iterate as usual
   });
@@ -386,7 +386,7 @@ ecs_query_t *q = ecs_query(world, {
 ecs_iter_t it = ecs_query_iter(world, q);
 
 while (ecs_query_next(&it)) {
-  ecs_id_t id = ecs_field_id(&it, 1); // Obtain pair id
+  ecs_id_t id = ecs_field_id(&it, 0); // Obtain pair id
 
   // Get relationship & target
   ecs_entity_t rel = ecs_pair_first(world, id);
@@ -406,7 +406,7 @@ auto q = world.query_builder()
   .build();
 
 q.iter([](flecs::iter& it) {
-  auto id = it.pair(1);
+  auto id = it.pair(0);
 
   for (auto i : it) {
     cout << "entity " << it.entity(i) << " has relationship "

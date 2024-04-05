@@ -217,7 +217,7 @@ public:
      * @param index The field index.
      */
     int32_t column_index(int32_t index) const {
-        return ecs_field_column_index(m_iter, index);
+        return ecs_field_column(m_iter, index);
     }
 
     /** Convert current iterator result to string.

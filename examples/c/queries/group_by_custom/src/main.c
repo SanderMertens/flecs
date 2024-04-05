@@ -86,7 +86,7 @@ int main(int argc, char *argv[]) {
     // Iterate query, print position & table components
     ecs_iter_t it = ecs_query_iter(ecs, q);
     while (ecs_query_next(&it)) {
-        Position *p = ecs_field(&it, Position, 1);
+        Position *p = ecs_field(&it, Position, 0);
         char *table_str = ecs_table_str(ecs, it.table);
         char *group_str = ecs_get_fullpath(ecs, it.group_id);
 

@@ -92,7 +92,7 @@ int main(int argc, char *argv[]) {
         ecs_entity_t player = ecs_iter_get_var(&it, player_var);
         ecs_entity_t platoon = ecs_iter_get_var(&it, platoon_var);
         char *platoon_str = ecs_get_fullpath(ecs, platoon);
-        char *class_str = ecs_id_str(ecs, ecs_field_id(&it, 1));
+        char *class_str = ecs_id_str(ecs, ecs_field_id(&it, 0));
 
         for (int i = 0; i < it.count; i ++) {
             char *unit_str = ecs_get_fullpath(ecs, it.entities[i]);

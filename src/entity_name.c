@@ -212,7 +212,7 @@ ecs_entity_t flecs_get_parent_from_path(
 
 static
 void flecs_on_set_symbol(ecs_iter_t *it) {
-    EcsIdentifier *n = ecs_field(it, EcsIdentifier, 1);
+    EcsIdentifier *n = ecs_field(it, EcsIdentifier, 0);
     ecs_world_t *world = it->world;
 
     int i;

@@ -57,8 +57,8 @@ int main(int argc, char *argv[]) {
     // Iterate query as usual
     ecs_iter_t it = ecs_query_iter(world, q);
     while (ecs_iter_next(&it)) {
-        ecs_entity_t *movement = ecs_field(&it, ecs_entity_t, 1);
-        ecs_entity_t *direction = ecs_field(&it, ecs_entity_t, 2);
+        ecs_entity_t *movement = ecs_field(&it, ecs_entity_t, 0);
+        ecs_entity_t *direction = ecs_field(&it, ecs_entity_t, 1);
 
         for (int i = 0; i < it.count; i ++) {
             printf("%s: Movement: %s, Direction: %s\n",
