@@ -306,7 +306,7 @@ void FlecsTimerImport(
 
     /* Add EcsTickSource to timers and rate filters */
     ecs_system(world, {
-        .entity = ecs_entity(world, {.name = "AddTickSource", .add = { ecs_dependson(EcsPreFrame) }}),
+        .entity = ecs_entity(world, {.name = "AddTickSource", .add = ecs_ids( ecs_dependson(EcsPreFrame) )}),
         .query.terms = {
             { .id = ecs_id(EcsTimer), .oper = EcsOr, .inout = EcsIn },
             { .id = ecs_id(EcsRateFilter), .oper = EcsAnd, .inout = EcsIn },
@@ -317,7 +317,7 @@ void FlecsTimerImport(
 
     /* Timer handling */
     ecs_system(world, {
-        .entity = ecs_entity(world, {.name = "ProgressTimers", .add = { ecs_dependson(EcsPreFrame)}}),
+        .entity = ecs_entity(world, {.name = "ProgressTimers", .add = ecs_ids( ecs_dependson(EcsPreFrame))}),
         .query.terms = {
             { .id = ecs_id(EcsTimer) },
             { .id = ecs_id(EcsTickSource) }
@@ -327,7 +327,7 @@ void FlecsTimerImport(
 
     /* Rate filter handling */
     ecs_system(world, {
-        .entity = ecs_entity(world, {.name = "ProgressRateFilters", .add = { ecs_dependson(EcsPreFrame)}}),
+        .entity = ecs_entity(world, {.name = "ProgressRateFilters", .add = ecs_ids( ecs_dependson(EcsPreFrame))}),
         .query.terms = {
             { .id = ecs_id(EcsRateFilter), .inout = EcsIn },
             { .id = ecs_id(EcsTickSource), .inout = EcsOut }
@@ -337,7 +337,7 @@ void FlecsTimerImport(
 
     /* TickSource without a timer or rate filter just increases each frame */
     ecs_system(world, {
-        .entity = ecs_entity(world, { .name = "ProgressTickSource", .add = { ecs_dependson(EcsPreFrame)}}),
+        .entity = ecs_entity(world, { .name = "ProgressTickSource", .add = ecs_ids( ecs_dependson(EcsPreFrame))}),
         .query.terms = {
             { .id = ecs_id(EcsTickSource), .inout = EcsOut },
             { .id = ecs_id(EcsRateFilter), .oper = EcsNot },

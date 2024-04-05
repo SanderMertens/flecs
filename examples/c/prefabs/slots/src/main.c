@@ -29,12 +29,12 @@ int main(int argc, char *argv[]) {
 
     // Create the same prefab hierarchy as from the hierarchy example, but now
     // with the SlotOf relationship.
-    ecs_entity_t SpaceShip = ecs_entity(ecs, { .name = "SpaceShip", .add = { EcsPrefab } });
-        ecs_entity_t Engine = ecs_entity(ecs, { .name = "Engine", .add = { EcsPrefab } });
+    ecs_entity_t SpaceShip = ecs_entity(ecs, { .name = "SpaceShip", .add = ecs_ids( EcsPrefab ) });
+        ecs_entity_t Engine = ecs_entity(ecs, { .name = "Engine", .add = ecs_ids( EcsPrefab ) });
         ecs_add_pair(ecs, Engine, EcsChildOf, SpaceShip);
         ecs_add_pair(ecs, Engine, EcsSlotOf, SpaceShip);
     
-        ecs_entity_t Cockpit = ecs_entity(ecs, { .name = "Cockpit", .add = { EcsPrefab } });
+        ecs_entity_t Cockpit = ecs_entity(ecs, { .name = "Cockpit", .add = ecs_ids( EcsPrefab ) });
         ecs_add_pair(ecs, Cockpit, EcsChildOf, SpaceShip);
         ecs_add_pair(ecs, Cockpit, EcsSlotOf, SpaceShip);
 
@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
         // slots can be different from the parent. This slot could have been
         // added to the Cockpit prefab, but instead we register it on the top
         // level SpaceShip prefab.
-        ecs_entity_t PilotSeat = ecs_entity(ecs, { .name = "PilotSeat", .add = { EcsPrefab } });
+        ecs_entity_t PilotSeat = ecs_entity(ecs, { .name = "PilotSeat", .add = ecs_ids( EcsPrefab ) });
         ecs_add_pair(ecs, PilotSeat, EcsChildOf, Cockpit);
         ecs_add_pair(ecs, PilotSeat, EcsSlotOf, SpaceShip);
 

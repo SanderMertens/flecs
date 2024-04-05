@@ -3400,7 +3400,7 @@ void flecs_register_symmetric(ecs_iter_t *it) {
         /* Create observer that adds the reverse relationship when R(X, Y) is
          * added, or remove the reverse relationship when R(X, Y) is removed. */
         ecs_observer(world, {
-            .entity = ecs_entity(world, {.add = {ecs_childof(r)}}),
+            .entity = ecs_entity(world, {.add = ecs_ids(ecs_childof(r))}),
             .query.terms[0] = { .id = ecs_pair(r, EcsWildcard) },
             .callback = flecs_on_symmetric_add_remove,
             .events = {EcsOnAdd, EcsOnRemove}
@@ -3716,7 +3716,7 @@ void flecs_bootstrap(
     
     /* Register observer for tag property before adding EcsPairIsTag */
     ecs_observer(world, {
-        .entity = ecs_entity(world, {.add = { ecs_childof(EcsFlecsInternals)}}),
+        .entity = ecs_entity(world, {.add = ecs_ids( ecs_childof(EcsFlecsInternals))}),
         .query.terms[0] = { .id = EcsPairIsTag, .src.id = EcsSelf },
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = flecs_register_tag,
@@ -5331,11 +5331,13 @@ ecs_entity_t ecs_new_w_id(
         return entity;
     }
 
-    ecs_table_diff_builder_t diff = ECS_TABLE_DIFF_INIT;
+    ecs_table_diff_builder_t diff_builder = ECS_TABLE_DIFF_INIT;
     ecs_table_t *table = flecs_find_table_add(
-        world, &world->store.root, id, &diff);
+        world, &world->store.root, id, &diff_builder);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    ecs_table_diff_t diff;
+    flecs_table_diff_build_noalloc(&diff_builder, &diff);
     ecs_record_t *r = flecs_entities_get(world, entity);
     flecs_new_entity(world, entity, r, table, &diff, true, 0);
 
@@ -5499,23 +5501,25 @@ int flecs_traverse_add(
     }
 
     /* Add components from the 'add' id array */
-    int32_t i = 0;
-    ecs_id_t id;
-    const ecs_id_t *ids = desc->add;
-    while ((i < FLECS_ID_DESC_MAX) && (id = ids[i ++])) {
-        bool should_add = true;
-        if (ECS_HAS_ID_FLAG(id, PAIR) && ECS_PAIR_FIRST(id) == EcsChildOf) {
-            scope = ECS_PAIR_SECOND(id);
-            if ((!desc->id && desc->name) || (name && !name_assigned)) {
-                /* If name is added to entity, pass scope to add_path instead
-                 * of adding it to the table. The provided name may have nested
-                 * elements, in which case the parent provided here is not the
-                 * parent the entity will end up with. */
-                should_add = false;
+    if (desc->add) {
+        int32_t i = 0;
+        ecs_id_t id;
+
+        while ((id = desc->add[i ++])) {
+            bool should_add = true;
+            if (ECS_HAS_ID_FLAG(id, PAIR) && ECS_PAIR_FIRST(id) == EcsChildOf) {
+                scope = ECS_PAIR_SECOND(id);
+                if ((!desc->id && desc->name) || (name && !name_assigned)) {
+                    /* If name is added to entity, pass scope to add_path instead
+                    * of adding it to the table. The provided name may have nested
+                    * elements, in which case the parent provided here is not the
+                    * parent the entity will end up with. */
+                    should_add = false;
+                }
             }
-        }
-        if (should_add) {
-            table = flecs_find_table_add(world, table, id, &diff);
+            if (should_add) {
+                table = flecs_find_table_add(world, table, id, &diff);
+            }
         }
     }
 
@@ -5603,21 +5607,23 @@ void flecs_deferred_add_remove(
     }
 
     /* Add components from the 'add' id array */
-    int32_t i = 0;
-    ecs_id_t id;
-    const ecs_id_t *ids = desc->add;
-    while ((i < FLECS_ID_DESC_MAX) && (id = ids[i ++])) {
-        bool defer = true;
-        if (ECS_HAS_ID_FLAG(id, PAIR) && ECS_PAIR_FIRST(id) == EcsChildOf) {
-            scope = ECS_PAIR_SECOND(id);
-            if (name && (!desc->id || !name_assigned)) {
-                /* New named entities are created by temporarily going out of
-                 * readonly mode to ensure no duplicates are created. */
-                defer = false;
+    if (desc->add) {
+        int32_t i = 0;
+        ecs_id_t id;
+
+        while ((id = desc->add[i ++])) {
+            bool defer = true;
+            if (ECS_HAS_ID_FLAG(id, PAIR) && ECS_PAIR_FIRST(id) == EcsChildOf) {
+                scope = ECS_PAIR_SECOND(id);
+                if (name && (!desc->id || !name_assigned)) {
+                    /* New named entities are created by temporarily going out of
+                     * readonly mode to ensure no duplicates are created. */
+                    defer = false;
+                }
             }
-        }
-        if (defer) {
-            ecs_add_id(world, entity, id);
+            if (defer) {
+                ecs_add_id(world, entity, id);
+            }
         }
     }
 
@@ -5715,14 +5721,15 @@ ecs_entity_t ecs_entity_init(
     if (!result) {
         if (name) {
             /* If add array contains a ChildOf pair, use it as scope instead */
-            const ecs_id_t *ids = desc->add;
-            ecs_id_t id;
-            int32_t i = 0;
-            while ((i < FLECS_ID_DESC_MAX) && (id = ids[i ++])) {
-                if (ECS_HAS_ID_FLAG(id, PAIR) && 
-                    (ECS_PAIR_FIRST(id) == EcsChildOf))
-                {
-                    scope = ECS_PAIR_SECOND(id);
+            if (desc->add) {
+                ecs_id_t id;
+                int32_t i = 0;
+                while ((id = desc->add[i ++])) {
+                    if (ECS_HAS_ID_FLAG(id, PAIR) && 
+                        (ECS_PAIR_FIRST(id) == EcsChildOf))
+                    {
+                        scope = ECS_PAIR_SECOND(id);
+                    }
                 }
             }
 
@@ -9089,7 +9096,7 @@ void flecs_on_set_symbol(ecs_iter_t *it) {
 
 void flecs_bootstrap_hierarchy(ecs_world_t *world) {
     ecs_observer(world, {
-        .entity = ecs_entity(world, {.add = {ecs_childof(EcsFlecsInternals)}}),
+        .entity = ecs_entity(world, {.add = ecs_ids(ecs_childof(EcsFlecsInternals))}),
         .query.terms[0] = {
             .id = ecs_pair(ecs_id(EcsIdentifier), EcsSymbol), 
             .src.id = EcsSelf 
@@ -23598,7 +23605,7 @@ int flecs_oneof_metric_init(
 
             ecs_entity_t mbr = ecs_entity(world, {
                 .name = to_snake_case,
-                .add = { ecs_childof(metric) }
+                .add = ecs_ids( ecs_childof(metric) )
             });
 
             ecs_os_free(to_snake_case);
@@ -24358,7 +24365,7 @@ void flecs_stats_monitor_import(
 
     // Called each frame, collects 60 measurements per second
     ecs_system(world, {
-        .entity = ecs_entity(world, { .name = "Monitor1s", .add = {ecs_dependson(EcsPreFrame)} }),
+        .entity = ecs_entity(world, { .name = "Monitor1s", .add = ecs_ids(ecs_dependson(EcsPreFrame)) }),
         .query.terms = {{
             .id = ecs_pair(kind, EcsPeriod1s),
             .src.id = EcsWorld 
@@ -24368,7 +24375,7 @@ void flecs_stats_monitor_import(
 
     // Called each second, reduces into 60 measurements per minute
     ecs_entity_t mw1m = ecs_system(world, {
-        .entity = ecs_entity(world, { .name = "Monitor1m", .add = {ecs_dependson(EcsPreFrame)} }),
+        .entity = ecs_entity(world, { .name = "Monitor1m", .add = ecs_ids(ecs_dependson(EcsPreFrame)) }),
         .query.terms = {{
             .id = ecs_pair(kind, EcsPeriod1m),
             .src.id = EcsWorld 
@@ -24382,7 +24389,7 @@ void flecs_stats_monitor_import(
 
     // Called each minute, reduces into 60 measurements per hour
     ecs_system(world, {
-        .entity = ecs_entity(world, { .name = "Monitor1h", .add = {ecs_dependson(EcsPreFrame)} }),
+        .entity = ecs_entity(world, { .name = "Monitor1h", .add = ecs_ids(ecs_dependson(EcsPreFrame)) }),
         .query.terms = {{
             .id = ecs_pair(kind, EcsPeriod1h),
             .src.id = EcsWorld 
@@ -24397,7 +24404,7 @@ void flecs_stats_monitor_import(
 
     // Called each minute, reduces into 60 measurements per day
     ecs_system(world, {
-        .entity = ecs_entity(world, { .name = "Monitor1d", .add = {ecs_dependson(EcsPreFrame)} }),
+        .entity = ecs_entity(world, { .name = "Monitor1d", .add = ecs_ids(ecs_dependson(EcsPreFrame)) }),
         .query.terms = {{
             .id = ecs_pair(kind, EcsPeriod1d),
             .src.id = EcsWorld 
@@ -24413,7 +24420,7 @@ void flecs_stats_monitor_import(
 
     // Called each hour, reduces into 60 measurements per week
     ecs_system(world, {
-        .entity = ecs_entity(world, { .name = "Monitor1w", .add = {ecs_dependson(EcsPreFrame)} }),
+        .entity = ecs_entity(world, { .name = "Monitor1w", .add = ecs_ids(ecs_dependson(EcsPreFrame)) }),
         .query.terms = {{
             .id = ecs_pair(kind, EcsPeriod1w),
             .src.id = EcsWorld 
@@ -24513,7 +24520,7 @@ void FlecsMonitorImport(
     ecs_system(world, {
         .entity = ecs_entity(world, { 
             .name = "UpdateWorldSummary", 
-            .add = {ecs_dependson(EcsPreFrame)} 
+            .add = ecs_ids(ecs_dependson(EcsPreFrame)) 
         }),
         .query.terms[0] = { .id = ecs_id(EcsWorldSummary) },
         .callback = UpdateWorldSummary
@@ -26004,7 +26011,7 @@ const char* plecs_parse_prop_stmt(
     if (!state->assembly_instance) {
         ecs_entity_t prop_member = ecs_entity(world, {
             .name = prop_name,
-            .add = { ecs_childof(assembly) }
+            .add = ecs_ids( ecs_childof(assembly) )
         });
 
         if (!prop_member) {
@@ -29484,7 +29491,7 @@ void FlecsTimerImport(
 
     /* Add EcsTickSource to timers and rate filters */
     ecs_system(world, {
-        .entity = ecs_entity(world, {.name = "AddTickSource", .add = { ecs_dependson(EcsPreFrame) }}),
+        .entity = ecs_entity(world, {.name = "AddTickSource", .add = ecs_ids( ecs_dependson(EcsPreFrame) )}),
         .query.terms = {
             { .id = ecs_id(EcsTimer), .oper = EcsOr, .inout = EcsIn },
             { .id = ecs_id(EcsRateFilter), .oper = EcsAnd, .inout = EcsIn },
@@ -29495,7 +29502,7 @@ void FlecsTimerImport(
 
     /* Timer handling */
     ecs_system(world, {
-        .entity = ecs_entity(world, {.name = "ProgressTimers", .add = { ecs_dependson(EcsPreFrame)}}),
+        .entity = ecs_entity(world, {.name = "ProgressTimers", .add = ecs_ids( ecs_dependson(EcsPreFrame))}),
         .query.terms = {
             { .id = ecs_id(EcsTimer) },
             { .id = ecs_id(EcsTickSource) }
@@ -29505,7 +29512,7 @@ void FlecsTimerImport(
 
     /* Rate filter handling */
     ecs_system(world, {
-        .entity = ecs_entity(world, {.name = "ProgressRateFilters", .add = { ecs_dependson(EcsPreFrame)}}),
+        .entity = ecs_entity(world, {.name = "ProgressRateFilters", .add = ecs_ids( ecs_dependson(EcsPreFrame))}),
         .query.terms = {
             { .id = ecs_id(EcsRateFilter), .inout = EcsIn },
             { .id = ecs_id(EcsTickSource), .inout = EcsOut }
@@ -29515,7 +29522,7 @@ void FlecsTimerImport(
 
     /* TickSource without a timer or rate filter just increases each frame */
     ecs_system(world, {
-        .entity = ecs_entity(world, { .name = "ProgressTickSource", .add = { ecs_dependson(EcsPreFrame)}}),
+        .entity = ecs_entity(world, { .name = "ProgressTickSource", .add = ecs_ids( ecs_dependson(EcsPreFrame))}),
         .query.terms = {
             { .id = ecs_id(EcsTickSource), .inout = EcsOut },
             { .id = ecs_id(EcsRateFilter), .oper = EcsNot },
@@ -29550,7 +29557,7 @@ void FlecsUnitsImport(
 
     EcsUnitPrefixes = ecs_entity(world, {
         .name = "prefixes",
-        .add = { EcsModule }
+        .add = ecs_ids( EcsModule )
     });
 
     /* Initialize unit prefixes */
@@ -67142,14 +67149,14 @@ void FlecsPipelineImport(
      * direct DependsOn relationship on EcsPreUpdate, which ensures that when
      * the EcsPreUpdate phase is disabled, EcsOnUpdate still runs. */
     ecs_entity_t phase_0 = ecs_entity(world, {0});
-    ecs_entity_t phase_1 = ecs_entity(world, { .add = {ecs_dependson(phase_0)} });
-    ecs_entity_t phase_2 = ecs_entity(world, { .add = {ecs_dependson(phase_1)} });
-    ecs_entity_t phase_3 = ecs_entity(world, { .add = {ecs_dependson(phase_2)} });
-    ecs_entity_t phase_4 = ecs_entity(world, { .add = {ecs_dependson(phase_3)} });
-    ecs_entity_t phase_5 = ecs_entity(world, { .add = {ecs_dependson(phase_4)} });
-    ecs_entity_t phase_6 = ecs_entity(world, { .add = {ecs_dependson(phase_5)} });
-    ecs_entity_t phase_7 = ecs_entity(world, { .add = {ecs_dependson(phase_6)} });
-    ecs_entity_t phase_8 = ecs_entity(world, { .add = {ecs_dependson(phase_7)} });
+    ecs_entity_t phase_1 = ecs_entity(world, { .add = ecs_ids(ecs_dependson(phase_0)) });
+    ecs_entity_t phase_2 = ecs_entity(world, { .add = ecs_ids(ecs_dependson(phase_1)) });
+    ecs_entity_t phase_3 = ecs_entity(world, { .add = ecs_ids(ecs_dependson(phase_2)) });
+    ecs_entity_t phase_4 = ecs_entity(world, { .add = ecs_ids(ecs_dependson(phase_3)) });
+    ecs_entity_t phase_5 = ecs_entity(world, { .add = ecs_ids(ecs_dependson(phase_4)) });
+    ecs_entity_t phase_6 = ecs_entity(world, { .add = ecs_ids(ecs_dependson(phase_5)) });
+    ecs_entity_t phase_7 = ecs_entity(world, { .add = ecs_ids(ecs_dependson(phase_6)) });
+    ecs_entity_t phase_8 = ecs_entity(world, { .add = ecs_ids(ecs_dependson(phase_7)) });
 
     flecs_bootstrap_phase(world, EcsOnStart,    0);
     flecs_bootstrap_phase(world, EcsPreFrame,   0);

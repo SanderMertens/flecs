@@ -3529,10 +3529,10 @@ void Cached_2_self_up_terms_new_tables(void) {
 
     ecs_set_with(world, Tag);
     ecs_entity_t parent_a = ecs_entity(world, {0});
-    ecs_entity_t parent_b = ecs_entity(world, { .add = {Foo} });
-    ecs_entity(world, { . add = { ecs_isa(parent_a) } });
-    ecs_entity_t e_2 = ecs_entity(world, { .add = {ecs_isa(parent_b)} });
-    ecs_entity_t e_3 = ecs_entity(world, { .add = {ecs_isa(e_2)} });
+    ecs_entity_t parent_b = ecs_entity(world, { .add = ecs_ids(Foo) });
+    ecs_entity(world, { .add = ecs_ids(ecs_isa(parent_a)) });
+    ecs_entity_t e_2 = ecs_entity(world, { .add = ecs_ids(ecs_isa(parent_b)) });
+    ecs_entity_t e_3 = ecs_entity(world, { .add = ecs_ids(ecs_isa(e_2)) });
     ecs_set_with(world, 0);
 
     ecs_iter_t it = ecs_query_iter(world, r);

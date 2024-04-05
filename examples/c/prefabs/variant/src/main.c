@@ -25,23 +25,23 @@ int main(int argc, char *argv[]) {
     ECS_COMPONENT(ecs, ImpulseSpeed);
 
     // Create a base prefab for SpaceShips.
-    ecs_entity_t SpaceShip = ecs_entity(ecs, { .name = "SpaceShip", .add = { EcsPrefab } });
+    ecs_entity_t SpaceShip = ecs_entity(ecs, { .name = "SpaceShip", .add = ecs_ids( EcsPrefab ) });
     ecs_set(ecs, SpaceShip, ImpulseSpeed, {50});
     ecs_set(ecs, SpaceShip, Defense, {25});
 
         // Create a Freighter variant which inherits from SpaceShip
-        ecs_entity_t Freighter = ecs_entity(ecs, { .name = "Freighter", .add = { EcsPrefab } });
+        ecs_entity_t Freighter = ecs_entity(ecs, { .name = "Freighter", .add = ecs_ids( EcsPrefab ) });
         ecs_add_pair(ecs, Freighter, EcsIsA, SpaceShip);
         ecs_set(ecs, Freighter, FreightCapacity, {100});
         ecs_set(ecs, Freighter, Defense, {50});
 
             // Create a MammothFreighter variant which inherits from Freighter
-            ecs_entity_t MammothFreighter = ecs_entity(ecs, { .name = "MammothFreighter", .add = { EcsPrefab } });
+            ecs_entity_t MammothFreighter = ecs_entity(ecs, { .name = "MammothFreighter", .add = ecs_ids( EcsPrefab ) });
             ecs_add_pair(ecs, MammothFreighter, EcsIsA, Freighter);
             ecs_set(ecs, MammothFreighter, FreightCapacity, {500});
 
         // Create a Frigate variant which inherits from SpaceShip
-        ecs_entity_t Frigate = ecs_entity(ecs, { .name = "Frigate", .add = { EcsPrefab } });
+        ecs_entity_t Frigate = ecs_entity(ecs, { .name = "Frigate", .add = ecs_ids( EcsPrefab ) });
         ecs_add_pair(ecs, Frigate, EcsIsA, SpaceShip);
         ecs_set(ecs, Frigate, Attack, {100});
         ecs_set(ecs, Frigate, Defense, {75});

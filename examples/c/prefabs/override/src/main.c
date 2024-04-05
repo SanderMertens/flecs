@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
     ECS_COMPONENT(ecs, Defense);
     ECS_COMPONENT(ecs, Damage);
 
-    ecs_entity_t SpaceShip = ecs_entity(ecs, { .name = "SpaceShip", .add = { EcsPrefab } });
+    ecs_entity_t SpaceShip = ecs_entity(ecs, { .name = "SpaceShip", .add = ecs_ids( EcsPrefab ) });
 
     // Attack and Defense are properties that can be shared across many 
     // spaceships. This saves memory, and speeds up prefab creation as we don't

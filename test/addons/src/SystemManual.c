@@ -82,16 +82,6 @@ void SystemManual_1_type_1_component(void) {
     ecs_fini(world);
 }
 
-static
-void AddVelocity(ecs_iter_t *it) {
-    ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 1);
-
-    int i;
-    for (i = 0; i < it->count; i ++) {
-        ecs_add(it->world, it->entities[i], Velocity);
-    }
-}
-
 static int dummy_ran = 0;
 
 void DummySystem(ecs_iter_t *it) {

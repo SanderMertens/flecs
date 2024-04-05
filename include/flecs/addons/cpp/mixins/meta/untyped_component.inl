@@ -13,8 +13,9 @@
 /** Add member with unit. */
 untyped_component& member(flecs::entity_t type_id, flecs::entity_t unit, const char *name, int32_t count = 0, size_t offset = 0) {
     ecs_entity_desc_t desc = {};
+    ecs_id_t add_ids[2] = { ecs_pair(flecs::ChildOf, m_id), 0 };
     desc.name = name;
-    desc.add[0] = ecs_pair(flecs::ChildOf, m_id);
+    desc.add = add_ids;
     ecs_entity_t eid = ecs_entity_init(m_world, &desc);
     ecs_assert(eid != 0, ECS_INTERNAL_ERROR, NULL);
 
@@ -86,9 +87,10 @@ untyped_component& member(const char* name, const MemberType ComponentType::* pt
 untyped_component& constant(const char *name, int32_t value) {
     ecs_add_id(m_world, m_id, _::type<flecs::Enum>::id(m_world));
 
+    ecs_id_t add_ids[2] = { ecs_pair(flecs::ChildOf, m_id), 0 };
     ecs_entity_desc_t desc = {};
     desc.name = name;
-    desc.add[0] = ecs_pair(flecs::ChildOf, m_id);
+    desc.add = add_ids;
     ecs_entity_t eid = ecs_entity_init(m_world, &desc);
     ecs_assert(eid != 0, ECS_INTERNAL_ERROR, NULL);
 
@@ -103,9 +105,10 @@ untyped_component& constant(const char *name, int32_t value) {
 untyped_component& bit(const char *name, uint32_t value) {
     ecs_add_id(m_world, m_id, _::type<flecs::Bitmask>::id(m_world));
 
+    ecs_id_t add_ids[2] = { ecs_pair(flecs::ChildOf, m_id), 0 };
     ecs_entity_desc_t desc = {};
     desc.name = name;
-    desc.add[0] = ecs_pair(flecs::ChildOf, m_id);
+    desc.add = add_ids;
     ecs_entity_t eid = ecs_entity_init(m_world, &desc);
     ecs_assert(eid != 0, ECS_INTERNAL_ERROR, NULL);
 

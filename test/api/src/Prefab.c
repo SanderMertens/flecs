@@ -3589,8 +3589,8 @@ void Prefab_prefab_child_w_dont_inherit_component(void) {
     ECS_ENTITY(world, TagA, DontInherit);
     ECS_TAG(world, TagB);
 
-    ecs_entity_t base = ecs_entity(world, { .name = "Base", .add = { EcsPrefab } });
-    ecs_entity_t base_child = ecs_entity(world, { .name = "Base.Child", .add = { EcsPrefab } });
+    ecs_entity_t base = ecs_entity(world, { .name = "Base", .add = ecs_ids( EcsPrefab ) });
+    ecs_entity_t base_child = ecs_entity(world, { .name = "Base.Child", .add = ecs_ids( EcsPrefab ) });
     ecs_add(world, base_child, TagA);
     ecs_add(world, base_child, TagB);
     test_assert(base != 0);
@@ -3613,13 +3613,13 @@ void Prefab_prefab_child_override(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t turret = ecs_entity(world, { .name = "Turret", .add = { EcsPrefab } });
-    ecs_entity_t turret_head = ecs_entity(world, { .name = "Turret.Head", .add = { EcsPrefab } });
+    ecs_entity_t turret = ecs_entity(world, { .name = "Turret", .add = ecs_ids( EcsPrefab ) });
+    ecs_entity_t turret_head = ecs_entity(world, { .name = "Turret.Head", .add = ecs_ids( EcsPrefab ) });
     ecs_add(world, turret_head, Foo);
 
-    ecs_entity_t railgun = ecs_entity(world, { .name = "Railgun", .add = { EcsPrefab } });
+    ecs_entity_t railgun = ecs_entity(world, { .name = "Railgun", .add = ecs_ids( EcsPrefab ) });
     ecs_add_pair(world, railgun, EcsIsA, turret);
-    ecs_entity_t railgun_head = ecs_entity(world, { .name = "Railgun.Head", .add = { EcsPrefab } });
+    ecs_entity_t railgun_head = ecs_entity(world, { .name = "Railgun.Head", .add = ecs_ids( EcsPrefab ) });
     ecs_add(world, railgun_head, Bar);
 
     ecs_entity_t inst = ecs_entity(world, { .name = "inst" });
@@ -3640,14 +3640,14 @@ void Prefab_prefab_child_override_w_exclusive_pair(void) {
     ECS_TAG(world, ObjA);
     ECS_TAG(world, ObjB);
 
-    ecs_entity_t turret = ecs_entity(world, { .name = "Turret", .add = { EcsPrefab } });
-    ecs_entity_t turret_head = ecs_entity(world, { .name = "Turret.Head", .add = { EcsPrefab } });
+    ecs_entity_t turret = ecs_entity(world, { .name = "Turret", .add = ecs_ids( EcsPrefab ) });
+    ecs_entity_t turret_head = ecs_entity(world, { .name = "Turret.Head", .add = ecs_ids( EcsPrefab ) });
     ecs_add_pair(world, turret_head, Rel, ObjA);
     test_assert(ecs_has_pair(world, turret_head, Rel, ObjA));
 
-    ecs_entity_t railgun = ecs_entity(world, { .name = "Railgun", .add = { EcsPrefab } });
+    ecs_entity_t railgun = ecs_entity(world, { .name = "Railgun", .add = ecs_ids( EcsPrefab ) });
     ecs_add_pair(world, railgun, EcsIsA, turret);
-    ecs_entity_t railgun_head = ecs_entity(world, { .name = "Railgun.Head", .add = { EcsPrefab } });
+    ecs_entity_t railgun_head = ecs_entity(world, { .name = "Railgun.Head", .add = ecs_ids( EcsPrefab ) });
     ecs_add_pair(world, railgun_head, Rel, ObjB);
     test_assert(!ecs_has_pair(world, railgun_head, Rel, ObjA));
     test_assert(ecs_has_pair(world, railgun_head, Rel, ObjB));
@@ -3666,8 +3666,8 @@ void Prefab_prefab_child_override_w_exclusive_pair(void) {
 void Prefab_prefab_1_slot(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t base = ecs_entity(world, { .name = "Base", .add = { EcsPrefab } });
-    ecs_entity_t base_slot = ecs_entity(world, { .name = "Base.Slot", .add = { EcsPrefab } });
+    ecs_entity_t base = ecs_entity(world, { .name = "Base", .add = ecs_ids( EcsPrefab ) });
+    ecs_entity_t base_slot = ecs_entity(world, { .name = "Base.Slot", .add = ecs_ids( EcsPrefab ) });
     ecs_add_pair(world, base_slot, EcsSlotOf, base);
     test_assert(ecs_has_pair(world, base_slot, EcsChildOf, base));
     test_assert(ecs_has_pair(world, base_slot, EcsSlotOf, base));
@@ -3687,9 +3687,9 @@ void Prefab_prefab_1_slot(void) {
 void Prefab_prefab_2_slots(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t base = ecs_entity(world, { .name = "Base", .add = { EcsPrefab } });
-    ecs_entity_t base_slot_a = ecs_entity(world, { .name = "Base.SlotA", .add = { EcsPrefab } });
-    ecs_entity_t base_slot_b = ecs_entity(world, { .name = "Base.SlotB", .add = { EcsPrefab } });
+    ecs_entity_t base = ecs_entity(world, { .name = "Base", .add = ecs_ids( EcsPrefab ) });
+    ecs_entity_t base_slot_a = ecs_entity(world, { .name = "Base.SlotA", .add = ecs_ids( EcsPrefab ) });
+    ecs_entity_t base_slot_b = ecs_entity(world, { .name = "Base.SlotB", .add = ecs_ids( EcsPrefab ) });
     ecs_add_pair(world, base_slot_a, EcsSlotOf, base);
     ecs_add_pair(world, base_slot_b, EcsSlotOf, base);
     test_assert(ecs_has_pair(world, base_slot_a, EcsChildOf, base));
@@ -3718,9 +3718,9 @@ void Prefab_prefab_2_slots(void) {
 void Prefab_prefab_w_nested_slot(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t base = ecs_entity(world, { .name = "Base", .add = { EcsPrefab } });
-    ecs_entity_t base_slot = ecs_entity(world, { .name = "Base.Slot", .add = { EcsPrefab } });
-    ecs_entity_t base_slot_slot = ecs_entity(world, { .name = "Base.Slot.Slot", .add = { EcsPrefab } });
+    ecs_entity_t base = ecs_entity(world, { .name = "Base", .add = ecs_ids( EcsPrefab ) });
+    ecs_entity_t base_slot = ecs_entity(world, { .name = "Base.Slot", .add = ecs_ids( EcsPrefab ) });
+    ecs_entity_t base_slot_slot = ecs_entity(world, { .name = "Base.Slot.Slot", .add = ecs_ids( EcsPrefab ) });
     ecs_add_pair(world, base_slot, EcsSlotOf, base);
     ecs_add_pair(world, base_slot_slot, EcsSlotOf, base);
     test_assert(ecs_has_pair(world, base_slot, EcsChildOf, base));
@@ -3750,9 +3750,9 @@ void Prefab_prefab_w_nested_slot(void) {
 void Prefab_prefab_w_mixed_slots(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t base = ecs_entity(world, { .name = "Base", .add = { EcsPrefab } });
-    ecs_entity_t base_slot = ecs_entity(world, { .name = "Base.Slot", .add = { EcsPrefab } });
-    ecs_entity_t base_slot_slot = ecs_entity(world, { .name = "Base.Slot.Slot", .add = { EcsPrefab } });
+    ecs_entity_t base = ecs_entity(world, { .name = "Base", .add = ecs_ids( EcsPrefab ) });
+    ecs_entity_t base_slot = ecs_entity(world, { .name = "Base.Slot", .add = ecs_ids( EcsPrefab ) });
+    ecs_entity_t base_slot_slot = ecs_entity(world, { .name = "Base.Slot.Slot", .add = ecs_ids( EcsPrefab ) });
     ecs_add_pair(world, base_slot, EcsSlotOf, base);
     ecs_add_pair(world, base_slot_slot, EcsSlotOf, base_slot);
     test_assert(ecs_has_pair(world, base_slot, EcsChildOf, base));
@@ -3785,9 +3785,9 @@ void Prefab_prefab_w_mixed_slots(void) {
 void Prefab_prefab_variant_w_slot(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t base = ecs_entity(world, { .name = "Base", .add = { EcsPrefab } });
-    ecs_entity_t variant = ecs_entity(world, { .name = "Variant", .add = { EcsPrefab } });
-    ecs_entity_t variant_slot = ecs_entity(world, { .name = "Variant.Slot", .add = { EcsPrefab } });
+    ecs_entity_t base = ecs_entity(world, { .name = "Base", .add = ecs_ids( EcsPrefab ) });
+    ecs_entity_t variant = ecs_entity(world, { .name = "Variant", .add = ecs_ids( EcsPrefab ) });
+    ecs_entity_t variant_slot = ecs_entity(world, { .name = "Variant.Slot", .add = ecs_ids( EcsPrefab ) });
     ecs_add_pair(world, variant, EcsIsA, base);
     ecs_add_pair(world, variant_slot, EcsSlotOf, variant);
     test_assert(ecs_has_pair(world, variant_slot, EcsChildOf, variant));
@@ -3808,13 +3808,13 @@ void Prefab_prefab_variant_w_slot(void) {
 void Prefab_prefab_variant_w_base_slot(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t base = ecs_entity(world, { .name = "Base", .add = { EcsPrefab } });
-    ecs_entity_t base_slot = ecs_entity(world, { .name = "Base.Slot", .add = { EcsPrefab } });
+    ecs_entity_t base = ecs_entity(world, { .name = "Base", .add = ecs_ids( EcsPrefab ) });
+    ecs_entity_t base_slot = ecs_entity(world, { .name = "Base.Slot", .add = ecs_ids( EcsPrefab ) });
     ecs_add_pair(world, base_slot, EcsSlotOf, base);
     test_assert(ecs_has_pair(world, base_slot, EcsChildOf, base));
     test_assert(ecs_has_pair(world, base_slot, EcsSlotOf, base));
 
-    ecs_entity_t variant = ecs_entity(world, { .name = "Variant", .add = { EcsPrefab } });
+    ecs_entity_t variant = ecs_entity(world, { .name = "Variant", .add = ecs_ids( EcsPrefab ) });
     ecs_add_pair(world, variant, EcsIsA, base);
 
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, variant);
@@ -3832,15 +3832,15 @@ void Prefab_prefab_variant_w_base_slot(void) {
 void Prefab_prefab_variant_w_mixed_slots(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t base = ecs_entity(world, { .name = "Base", .add = { EcsPrefab } });
-    ecs_entity_t base_slot = ecs_entity(world, { .name = "Base.BaseSlot", .add = { EcsPrefab } });
+    ecs_entity_t base = ecs_entity(world, { .name = "Base", .add = ecs_ids( EcsPrefab ) });
+    ecs_entity_t base_slot = ecs_entity(world, { .name = "Base.BaseSlot", .add = ecs_ids( EcsPrefab ) });
     ecs_add_pair(world, base_slot, EcsSlotOf, base);
     test_assert(ecs_has_pair(world, base_slot, EcsChildOf, base));
     test_assert(ecs_has_pair(world, base_slot, EcsSlotOf, base));
 
-    ecs_entity_t variant = ecs_entity(world, { .name = "Variant", .add = { EcsPrefab } });
+    ecs_entity_t variant = ecs_entity(world, { .name = "Variant", .add = ecs_ids( EcsPrefab ) });
     ecs_add_pair(world, variant, EcsIsA, base);
-    ecs_entity_t variant_slot = ecs_entity(world, { .name = "Variant.VariantSlot", .add = { EcsPrefab } });
+    ecs_entity_t variant_slot = ecs_entity(world, { .name = "Variant.VariantSlot", .add = ecs_ids( EcsPrefab ) });
     ecs_add_pair(world, variant, EcsIsA, base);
     ecs_add_pair(world, variant_slot, EcsSlotOf, variant);
     test_assert(ecs_has_pair(world, variant_slot, EcsChildOf, variant));
@@ -3871,8 +3871,8 @@ void Prefab_override_slot(void) {
 
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t base = ecs_entity(world, { .name = "Base", .add = { EcsPrefab } });
-    ecs_entity_t base_slot = ecs_entity(world, { .name = "Base.Slot", .add = { EcsPrefab } });
+    ecs_entity_t base = ecs_entity(world, { .name = "Base", .add = ecs_ids( EcsPrefab ) });
+    ecs_entity_t base_slot = ecs_entity(world, { .name = "Base.Slot", .add = ecs_ids( EcsPrefab ) });
     ecs_add_pair(world, base_slot, EcsSlotOf, base);
     test_assert(ecs_has_pair(world, base_slot, EcsChildOf, base));
     test_assert(ecs_has_pair(world, base_slot, EcsSlotOf, base));
@@ -3901,8 +3901,8 @@ void Prefab_2_instances_w_slots_same_table(void) {
 
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t base = ecs_entity(world, { .name = "Base", .add = { EcsPrefab } });
-    ecs_entity_t base_slot = ecs_entity(world, { .name = "Base.Slot", .add = { EcsPrefab } });
+    ecs_entity_t base = ecs_entity(world, { .name = "Base", .add = ecs_ids( EcsPrefab ) });
+    ecs_entity_t base_slot = ecs_entity(world, { .name = "Base.Slot", .add = ecs_ids( EcsPrefab ) });
     ecs_add_pair(world, base_slot, EcsSlotOf, base);
     test_assert(ecs_has_pair(world, base_slot, EcsChildOf, base));
     test_assert(ecs_has_pair(world, base_slot, EcsSlotOf, base));
@@ -3927,8 +3927,8 @@ void Prefab_2_instances_w_slots_same_table(void) {
 void Prefab_slot_has_union(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t base = ecs_entity(world, { .name = "Base", .add = { EcsPrefab } });
-    ecs_entity_t base_slot = ecs_entity(world, { .name = "Base.Slot", .add = { EcsPrefab } });
+    ecs_entity_t base = ecs_entity(world, { .name = "Base", .add = ecs_ids( EcsPrefab ) });
+    ecs_entity_t base_slot = ecs_entity(world, { .name = "Base.Slot", .add = ecs_ids( EcsPrefab ) });
     ecs_add_pair(world, base_slot, EcsSlotOf, base);
     test_assert(ecs_has_pair(world, base_slot, EcsChildOf, base));
     test_assert(ecs_has_pair(world, base_slot, EcsSlotOf, base));
@@ -3949,22 +3949,22 @@ void Prefab_slot_has_union(void) {
 void Prefab_slot_override(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t turret = ecs_entity(world, { .name = "Turret", .add = { EcsPrefab } });
-    ecs_entity_t turret_base = ecs_entity(world, { .name = "Turret.Base", .add = { EcsPrefab } });
+    ecs_entity_t turret = ecs_entity(world, { .name = "Turret", .add = ecs_ids( EcsPrefab ) });
+    ecs_entity_t turret_base = ecs_entity(world, { .name = "Turret.Base", .add = ecs_ids( EcsPrefab ) });
     ecs_add_pair(world, turret_base, EcsSlotOf, turret);
-    ecs_entity_t turret_head = ecs_entity(world, { .name = "Turret.Head", .add = { EcsPrefab } });
+    ecs_entity_t turret_head = ecs_entity(world, { .name = "Turret.Head", .add = ecs_ids( EcsPrefab ) });
     ecs_add_pair(world, turret_head, EcsSlotOf, turret);
 
-    ecs_entity_t railgun = ecs_entity(world, { .name = "Railgun", .add = { EcsPrefab } });
+    ecs_entity_t railgun = ecs_entity(world, { .name = "Railgun", .add = ecs_ids( EcsPrefab ) });
     ecs_add_pair(world, railgun, EcsIsA, turret);
-    ecs_entity_t railgun_head = ecs_entity(world, { .name = "Railgun.Head", .add = { EcsPrefab } });
+    ecs_entity_t railgun_head = ecs_entity(world, { .name = "Railgun.Head", .add = ecs_ids( EcsPrefab ) });
 
     test_assert(ecs_has_pair(world, railgun_head, EcsSlotOf, turret));
     ecs_add_pair(world, railgun_head, EcsSlotOf, railgun);
     test_assert(ecs_has_pair(world, railgun_head, EcsSlotOf, railgun));
     test_assert(!ecs_has_pair(world, railgun_head, EcsSlotOf, turret));
 
-    ecs_entity_t railgun_beam = ecs_entity(world, { .name = "Railgun.Beam", .add = { EcsPrefab } });
+    ecs_entity_t railgun_beam = ecs_entity(world, { .name = "Railgun.Beam", .add = ecs_ids( EcsPrefab ) });
     ecs_add_pair(world, railgun_beam, EcsSlotOf, railgun);
 
     ecs_entity_t inst = ecs_entity(world, { .name = "inst" });
@@ -3998,18 +3998,18 @@ void Prefab_slot_override(void) {
 void Prefab_base_slot_override(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t turret = ecs_entity(world, { .name = "Turret", .add = { EcsPrefab } });
-    ecs_entity_t turret_base = ecs_entity(world, { .name = "Turret.Base", .add = { EcsPrefab } });
+    ecs_entity_t turret = ecs_entity(world, { .name = "Turret", .add = ecs_ids( EcsPrefab ) });
+    ecs_entity_t turret_base = ecs_entity(world, { .name = "Turret.Base", .add = ecs_ids( EcsPrefab ) });
     ecs_add_pair(world, turret_base, EcsSlotOf, turret);
-    ecs_entity_t turret_head = ecs_entity(world, { .name = "Turret.Head", .add = { EcsPrefab } });
+    ecs_entity_t turret_head = ecs_entity(world, { .name = "Turret.Head", .add = ecs_ids( EcsPrefab ) });
     ecs_add_pair(world, turret_head, EcsSlotOf, turret);
 
-    ecs_entity_t railgun = ecs_entity(world, { .name = "Railgun", .add = { EcsPrefab } });
+    ecs_entity_t railgun = ecs_entity(world, { .name = "Railgun", .add = ecs_ids( EcsPrefab ) });
     ecs_add_pair(world, railgun, EcsIsA, turret);
-    ecs_entity_t railgun_head = ecs_entity(world, { .name = "Railgun.Head", .add = { EcsPrefab } });
+    ecs_entity_t railgun_head = ecs_entity(world, { .name = "Railgun.Head", .add = ecs_ids( EcsPrefab ) });
     test_assert(ecs_has_pair(world, railgun_head, EcsSlotOf, turret));
 
-    ecs_entity_t railgun_beam = ecs_entity(world, { .name = "Railgun.Beam", .add = { EcsPrefab } });
+    ecs_entity_t railgun_beam = ecs_entity(world, { .name = "Railgun.Beam", .add = ecs_ids( EcsPrefab ) });
     ecs_add_pair(world, railgun_beam, EcsSlotOf, railgun);
 
     ecs_entity_t inst = ecs_entity(world, { .name = "inst" });

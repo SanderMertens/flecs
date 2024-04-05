@@ -657,7 +657,7 @@ int flecs_oneof_metric_init(
 
             ecs_entity_t mbr = ecs_entity(world, {
                 .name = to_snake_case,
-                .add = { ecs_childof(metric) }
+                .add = ecs_ids( ecs_childof(metric) )
             });
 
             ecs_os_free(to_snake_case);

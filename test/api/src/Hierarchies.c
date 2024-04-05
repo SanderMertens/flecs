@@ -1366,7 +1366,7 @@ void Hierarchies_long_name_depth_1(void) {
     test_assert(strlen(child_name) >= 64);
     ecs_entity_t child = ecs_entity_init(world, &(ecs_entity_desc_t){
         .name = child_name,
-        .add = { ecs_pair(EcsChildOf, parent) }
+        .add = ecs_ids( ecs_pair(EcsChildOf, parent) )
     });    
     test_str(ecs_get_name(world, child), child_name);
 
@@ -1400,7 +1400,7 @@ void Hierarchies_long_name_depth_2(void) {
     test_assert(strlen(child_name) >= 64);
     ecs_entity_t child = ecs_entity_init(world, &(ecs_entity_desc_t){
         .name = child_name,
-        .add = { ecs_pair(EcsChildOf, parent) }
+        .add = ecs_ids( ecs_pair(EcsChildOf, parent) )
     });    
     test_str(ecs_get_name(world, child), child_name);
 
@@ -1409,7 +1409,7 @@ void Hierarchies_long_name_depth_2(void) {
     test_assert(strlen(grand_child_name) >= 64);
     ecs_entity_t grand_child = ecs_entity_init(world, &(ecs_entity_desc_t){
         .name = grand_child_name,
-        .add = { ecs_pair(EcsChildOf, child) }
+        .add = ecs_ids( ecs_pair(EcsChildOf, child) )
     });    
     test_str(ecs_get_name(world, grand_child), grand_child_name);
 

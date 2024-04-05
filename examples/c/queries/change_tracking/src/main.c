@@ -49,10 +49,10 @@ int main(int argc, char *argv[]) {
 
     // Create two prefabs with a Dirty component. We can use this to share a
     // single Dirty value for all entities in a table.
-    ecs_entity_t p1 = ecs_entity(world, { .name = "p1", .add = { EcsPrefab } });
+    ecs_entity_t p1 = ecs_entity(world, { .name = "p1", .add = ecs_ids( EcsPrefab ) });
     ecs_set(world, p1, Dirty, {false});
 
-    ecs_entity_t p2 = ecs_entity(world, { .name = "p2", .add = { EcsPrefab } });
+    ecs_entity_t p2 = ecs_entity(world, { .name = "p2", .add = ecs_ids( EcsPrefab ) });
     ecs_set(world, p2, Dirty, {true});
 
     // Create instances of p1 and p2. Because the entities have different

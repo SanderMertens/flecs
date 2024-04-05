@@ -894,14 +894,14 @@ void FlecsPipelineImport(
      * direct DependsOn relationship on EcsPreUpdate, which ensures that when
      * the EcsPreUpdate phase is disabled, EcsOnUpdate still runs. */
     ecs_entity_t phase_0 = ecs_entity(world, {0});
-    ecs_entity_t phase_1 = ecs_entity(world, { .add = {ecs_dependson(phase_0)} });
-    ecs_entity_t phase_2 = ecs_entity(world, { .add = {ecs_dependson(phase_1)} });
-    ecs_entity_t phase_3 = ecs_entity(world, { .add = {ecs_dependson(phase_2)} });
-    ecs_entity_t phase_4 = ecs_entity(world, { .add = {ecs_dependson(phase_3)} });
-    ecs_entity_t phase_5 = ecs_entity(world, { .add = {ecs_dependson(phase_4)} });
-    ecs_entity_t phase_6 = ecs_entity(world, { .add = {ecs_dependson(phase_5)} });
-    ecs_entity_t phase_7 = ecs_entity(world, { .add = {ecs_dependson(phase_6)} });
-    ecs_entity_t phase_8 = ecs_entity(world, { .add = {ecs_dependson(phase_7)} });
+    ecs_entity_t phase_1 = ecs_entity(world, { .add = ecs_ids(ecs_dependson(phase_0)) });
+    ecs_entity_t phase_2 = ecs_entity(world, { .add = ecs_ids(ecs_dependson(phase_1)) });
+    ecs_entity_t phase_3 = ecs_entity(world, { .add = ecs_ids(ecs_dependson(phase_2)) });
+    ecs_entity_t phase_4 = ecs_entity(world, { .add = ecs_ids(ecs_dependson(phase_3)) });
+    ecs_entity_t phase_5 = ecs_entity(world, { .add = ecs_ids(ecs_dependson(phase_4)) });
+    ecs_entity_t phase_6 = ecs_entity(world, { .add = ecs_ids(ecs_dependson(phase_5)) });
+    ecs_entity_t phase_7 = ecs_entity(world, { .add = ecs_ids(ecs_dependson(phase_6)) });
+    ecs_entity_t phase_8 = ecs_entity(world, { .add = ecs_ids(ecs_dependson(phase_7)) });
 
     flecs_bootstrap_phase(world, EcsOnStart,    0);
     flecs_bootstrap_phase(world, EcsPreFrame,   0);

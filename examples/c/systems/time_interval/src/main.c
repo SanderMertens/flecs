@@ -14,7 +14,7 @@ int main(int argc, char *argv[]) {
     ecs_system(ecs, {
         .entity = ecs_entity(ecs, { 
             .name = "Tick",
-            .add = { ecs_dependson(EcsOnUpdate) } // run in OnUpdate phase
+            .add = ecs_ids( ecs_dependson(EcsOnUpdate) ) // run in OnUpdate phase
         }),
         .callback = Tick,
         .interval = 1.0  // time in seconds
@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
     ecs_system(ecs, {
         .entity = ecs_entity(ecs, { 
             .name = "FastTick",
-            .add = { ecs_dependson(EcsOnUpdate) }
+            .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
         }),
         .callback = Tick,
         .interval = 0.5

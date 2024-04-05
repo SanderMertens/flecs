@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
     });
 
     // Create a prefab with Velocity. Prefabs are not matched with queries.
-    ecs_entity_t prefab = ecs_entity(world, { .name = "p", .add = { EcsPrefab } });
+    ecs_entity_t prefab = ecs_entity(world, { .name = "p", .add = ecs_ids( EcsPrefab ) });
     ecs_set(world, prefab, Velocity, {1, 2});
 
     // Create a few entities that own Position & share Velocity from the prefab.

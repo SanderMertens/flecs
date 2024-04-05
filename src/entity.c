@@ -1244,11 +1244,13 @@ ecs_entity_t ecs_new_w_id(
         return entity;
     }
 
-    ecs_table_diff_builder_t diff = ECS_TABLE_DIFF_INIT;
+    ecs_table_diff_builder_t diff_builder = ECS_TABLE_DIFF_INIT;
     ecs_table_t *table = flecs_find_table_add(
-        world, &world->store.root, id, &diff);
+        world, &world->store.root, id, &diff_builder);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    ecs_table_diff_t diff;
+    flecs_table_diff_build_noalloc(&diff_builder, &diff);
     ecs_record_t *r = flecs_entities_get(world, entity);
     flecs_new_entity(world, entity, r, table, &diff, true, 0);
 
@@ -1412,23 +1414,25 @@ int flecs_traverse_add(
     }
 
     /* Add components from the 'add' id array */
-    int32_t i = 0;
-    ecs_id_t id;
-    const ecs_id_t *ids = desc->add;
-    while ((i < FLECS_ID_DESC_MAX) && (id = ids[i ++])) {
-        bool should_add = true;
-        if (ECS_HAS_ID_FLAG(id, PAIR) && ECS_PAIR_FIRST(id) == EcsChildOf) {
-            scope = ECS_PAIR_SECOND(id);
-            if ((!desc->id && desc->name) || (name && !name_assigned)) {
-                /* If name is added to entity, pass scope to add_path instead
-                 * of adding it to the table. The provided name may have nested
-                 * elements, in which case the parent provided here is not the
-                 * parent the entity will end up with. */
-                should_add = false;
+    if (desc->add) {
+        int32_t i = 0;
+        ecs_id_t id;
+
+        while ((id = desc->add[i ++])) {
+            bool should_add = true;
+            if (ECS_HAS_ID_FLAG(id, PAIR) && ECS_PAIR_FIRST(id) == EcsChildOf) {
+                scope = ECS_PAIR_SECOND(id);
+                if ((!desc->id && desc->name) || (name && !name_assigned)) {
+                    /* If name is added to entity, pass scope to add_path instead
+                    * of adding it to the table. The provided name may have nested
+                    * elements, in which case the parent provided here is not the
+                    * parent the entity will end up with. */
+                    should_add = false;
+                }
             }
-        }
-        if (should_add) {
-            table = flecs_find_table_add(world, table, id, &diff);
+            if (should_add) {
+                table = flecs_find_table_add(world, table, id, &diff);
+            }
         }
     }
 
@@ -1516,21 +1520,23 @@ void flecs_deferred_add_remove(
     }
 
     /* Add components from the 'add' id array */
-    int32_t i = 0;
-    ecs_id_t id;
-    const ecs_id_t *ids = desc->add;
-    while ((i < FLECS_ID_DESC_MAX) && (id = ids[i ++])) {
-        bool defer = true;
-        if (ECS_HAS_ID_FLAG(id, PAIR) && ECS_PAIR_FIRST(id) == EcsChildOf) {
-            scope = ECS_PAIR_SECOND(id);
-            if (name && (!desc->id || !name_assigned)) {
-                /* New named entities are created by temporarily going out of
-                 * readonly mode to ensure no duplicates are created. */
-                defer = false;
+    if (desc->add) {
+        int32_t i = 0;
+        ecs_id_t id;
+
+        while ((id = desc->add[i ++])) {
+            bool defer = true;
+            if (ECS_HAS_ID_FLAG(id, PAIR) && ECS_PAIR_FIRST(id) == EcsChildOf) {
+                scope = ECS_PAIR_SECOND(id);
+                if (name && (!desc->id || !name_assigned)) {
+                    /* New named entities are created by temporarily going out of
+                     * readonly mode to ensure no duplicates are created. */
+                    defer = false;
+                }
             }
-        }
-        if (defer) {
-            ecs_add_id(world, entity, id);
+            if (defer) {
+                ecs_add_id(world, entity, id);
+            }
         }
     }
 
@@ -1628,14 +1634,15 @@ ecs_entity_t ecs_entity_init(
     if (!result) {
         if (name) {
             /* If add array contains a ChildOf pair, use it as scope instead */
-            const ecs_id_t *ids = desc->add;
-            ecs_id_t id;
-            int32_t i = 0;
-            while ((i < FLECS_ID_DESC_MAX) && (id = ids[i ++])) {
-                if (ECS_HAS_ID_FLAG(id, PAIR) && 
-                    (ECS_PAIR_FIRST(id) == EcsChildOf))
-                {
-                    scope = ECS_PAIR_SECOND(id);
+            if (desc->add) {
+                ecs_id_t id;
+                int32_t i = 0;
+                while ((id = desc->add[i ++])) {
+                    if (ECS_HAS_ID_FLAG(id, PAIR) && 
+                        (ECS_PAIR_FIRST(id) == EcsChildOf))
+                    {
+                        scope = ECS_PAIR_SECOND(id);
+                    }
                 }
             }
 

@@ -3743,6 +3743,9 @@ char* ecs_parse_term(
 /** @} */
 
 
+/** Convenience macro for creating compound literal id array */
+#define ecs_ids(...) (ecs_id_t[]){ __VA_ARGS__, 0 }
+
 /** Used with ecs_entity_init().
  *
  * @ingroup entities
@@ -3777,8 +3780,8 @@ typedef struct ecs_entity_desc_t {
                            * components) will be used to create the entity, if
                            * no id is specified. */
 
-    /** Array of ids to add to the new or existing entity. */
-    ecs_id_t add[FLECS_ID_DESC_MAX];
+    /** 0-terminated array of ids to add to the new or existing entity. */
+    const ecs_id_t *add;
 
     /** String expression with components to add */
     const char *add_expr;
@@ -11027,10 +11030,14 @@ ecs_entity_t ecs_system_init(
     { \
         ecs_system_desc_t desc = {0}; \
         ecs_entity_desc_t edesc = {0}; \
+        ecs_id_t add_ids[3] = {\
+            ((phase) ? ecs_pair(EcsDependsOn, (phase)) : 0), \
+            (phase), \
+            0 \
+        };\
         edesc.id = ecs_id(id_);\
         edesc.name = #id_;\
-        edesc.add[0] = ((phase) ? ecs_pair(EcsDependsOn, (phase)) : 0); \
-        edesc.add[1] = (phase); \
+        edesc.add = add_ids;\
         desc.entity = ecs_entity_init(world, &edesc);\
         desc.query.expr = #__VA_ARGS__; \
         desc.callback = id_; \
@@ -11060,7 +11067,7 @@ ecs_entity_t ecs_system_init(
  * ecs_system(world, {
  *   .entity = ecs_entity(world, {
  *     .name = "MyEntity",
- *     .add = { ecs_dependson(EcsOnUpdate) }
+ *     .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
  *   }),
  *   .query.terms = {
  *     { ecs_id(Position) },
@@ -25447,8 +25454,9 @@ struct untyped_component : entity {
 /** Add member with unit. */
 untyped_component& member(flecs::entity_t type_id, flecs::entity_t unit, const char *name, int32_t count = 0, size_t offset = 0) {
     ecs_entity_desc_t desc = {};
+    ecs_id_t add_ids[2] = { ecs_pair(flecs::ChildOf, m_id), 0 };
     desc.name = name;
-    desc.add[0] = ecs_pair(flecs::ChildOf, m_id);
+    desc.add = add_ids;
     ecs_entity_t eid = ecs_entity_init(m_world, &desc);
     ecs_assert(eid != 0, ECS_INTERNAL_ERROR, NULL);
 
@@ -25520,9 +25528,10 @@ untyped_component& member(const char* name, const MemberType ComponentType::* pt
 untyped_component& constant(const char *name, int32_t value) {
     ecs_add_id(m_world, m_id, _::type<flecs::Enum>::id(m_world));
 
+    ecs_id_t add_ids[2] = { ecs_pair(flecs::ChildOf, m_id), 0 };
     ecs_entity_desc_t desc = {};
     desc.name = name;
-    desc.add[0] = ecs_pair(flecs::ChildOf, m_id);
+    desc.add = add_ids;
     ecs_entity_t eid = ecs_entity_init(m_world, &desc);
     ecs_assert(eid != 0, ECS_INTERNAL_ERROR, NULL);
 
@@ -25537,9 +25546,10 @@ untyped_component& constant(const char *name, int32_t value) {
 untyped_component& bit(const char *name, uint32_t value) {
     ecs_add_id(m_world, m_id, _::type<flecs::Bitmask>::id(m_world));
 
+    ecs_id_t add_ids[2] = { ecs_pair(flecs::ChildOf, m_id), 0 };
     ecs_entity_desc_t desc = {};
     desc.name = name;
-    desc.add[0] = ecs_pair(flecs::ChildOf, m_id);
+    desc.add = add_ids;
     ecs_entity_t eid = ecs_entity_init(m_world, &desc);
     ecs_assert(eid != 0, ECS_INTERNAL_ERROR, NULL);
 

@@ -30,24 +30,24 @@ int main(int argc, char *argv[]) {
 
     // Create a Wheel prefab, make sure each instantiated wheel has a private
     // copy of the TirePressure component.
-    ecs_entity_t Wheel = ecs_entity(ecs, { .name = "Wheel", .add = { EcsPrefab } });
+    ecs_entity_t Wheel = ecs_entity(ecs, { .name = "Wheel", .add = ecs_ids( EcsPrefab ) });
     ecs_set(ecs, Wheel, TirePressure, { 32 });
     ecs_override(ecs, Wheel, TirePressure);
 
     // Create a Car prefab with four wheels. Note how the wheel names are
     // prefixed with 'Car.', this is has the same effect as adding the
     // (ChildOf, Car) relationship.
-    ecs_entity_t Car = ecs_entity(ecs, { .name = "Car", .add = { EcsPrefab } });
-        ecs_entity_t WheelFrontLeft = ecs_entity(ecs, { .name = "Car.FrontLeft", .add = { EcsPrefab } });
+    ecs_entity_t Car = ecs_entity(ecs, { .name = "Car", .add = ecs_ids( EcsPrefab ) });
+        ecs_entity_t WheelFrontLeft = ecs_entity(ecs, { .name = "Car.FrontLeft", .add = ecs_ids( EcsPrefab ) });
         ecs_add_pair(ecs, WheelFrontLeft, EcsIsA, Wheel);
 
-        ecs_entity_t WheelFrontRight = ecs_entity(ecs, { .name = "Car.FrontRight", .add = { EcsPrefab } });
+        ecs_entity_t WheelFrontRight = ecs_entity(ecs, { .name = "Car.FrontRight", .add = ecs_ids( EcsPrefab ) });
         ecs_add_pair(ecs, WheelFrontRight, EcsIsA, Wheel);
 
-        ecs_entity_t WheelBackLeft = ecs_entity(ecs, { .name = "Car.BackLeft", .add = { EcsPrefab } });
+        ecs_entity_t WheelBackLeft = ecs_entity(ecs, { .name = "Car.BackLeft", .add = ecs_ids( EcsPrefab ) });
         ecs_add_pair(ecs, WheelBackLeft, EcsIsA, Wheel);
 
-        ecs_entity_t WheelBackRight = ecs_entity(ecs, { .name = "Car.BackRight", .add = { EcsPrefab } });
+        ecs_entity_t WheelBackRight = ecs_entity(ecs, { .name = "Car.BackRight", .add = ecs_ids( EcsPrefab ) });
         ecs_add_pair(ecs, WheelBackRight, EcsIsA, Wheel);
 
     // Create a prefab instance.

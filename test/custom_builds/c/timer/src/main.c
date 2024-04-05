@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
     ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t){
         .query.terms = {{ .id = ecs_id(Position) }, { .id = ecs_id(Velocity) }},
         .callback = Move,
-        .entity = ecs_entity(world, {.add = {ecs_dependson(EcsOnUpdate)}}),
+        .entity = ecs_entity(world, {.add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
         .interval = 2.9f
     });
     assert(s != 0);

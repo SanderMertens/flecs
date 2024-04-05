@@ -30,7 +30,7 @@ In C, a system can also be created with the `ecs_system_init` function / `ecs_sy
 ecs_entity_t ecs_id(Move) = ecs_system(world, {
     .entity = ecs_entity(world, { /* ecs_entity_desc_t */
         .name = "Move",
-        .add = { ecs_dependson(EcsOnUpdate) }
+        .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
     }),
     .query.terms = { /* ecs_query_desc_t::terms */
         { ecs_id(Position) },
@@ -385,7 +385,7 @@ ECS_SYSTEM(world, PrintTime, EcsOnUpdate, 0);
 ecs_system(world, {
     .entity = ecs_entity(world, {
         .name = "PrintTime",
-        .add = { ecs_dependson(EcsOnUpdate) }
+        .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
     }),
     .callback = PrintTime
 });
@@ -445,7 +445,7 @@ ECS_SYSTEM(world, PrintTime, EcsOnUpdate, Game($));
 ecs_system(world, {
     .entity = ecs_entity(world, {
         .name = "PrintTime",
-        .add = { ecs_dependson(EcsOnUpdate) }
+        .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
     }),
     .query.terms = {
         { .id = ecs_id(Game), .src.id = ecs_id(Game) } // Singleton source
@@ -967,7 +967,7 @@ The following example shows how to create a `no_readonly` system:
 ecs_system(ecs, {
     .entity = ecs_entity(ecs, {
         .name = "AssignPlate",
-        .add = { ecs_dependson(EcsOnUpdate) }
+        .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
     }),
     .query.terms = {
         { .id = Plate },
@@ -1083,7 +1083,7 @@ To create a multithreaded system, use the `multi_threaded` flag:
 ```c
 ecs_system(ecs, {
     .entity = ecs_entity(ecs, {
-        .add = { ecs_dependson(EcsOnUpdate) }
+        .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
     }),
     .query.terms = {
         { .id = ecs_id(Position) }
@@ -1168,7 +1168,7 @@ ecs_set_interval(world, ecs_id(Move), 1.0); // Run at 1Hz
 ecs_system(world, {
     .entity = ecs_entity(world, {
         .name = "Move",
-        .add = { ecs_dependson(EcsOnUpdate) }
+        .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
     }),
     .query.terms = {
         { ecs_id(Position) }, 
@@ -1214,7 +1214,7 @@ ecs_set_rate(world, ecs_id(Move), 2); // Run every other frame
 ecs_system(world, {
     .entity = ecs_entity(world, {
         .name = "Move",
-        .add = { ecs_dependson(EcsOnUpdate) }
+        .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
     }),
     .query.terms = {
         { ecs_id(Position) }, 
@@ -1270,7 +1270,7 @@ ecs_entity_t tick_source = ecs_set_interval(world, 0, 1.0);
 ecs_system(world, {
     .entity = ecs_entity(world, {
         .name = "Move",
-        .add = { ecs_dependson(EcsOnUpdate) }
+        .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
     }),
     .query.terms = {
         { ecs_id(Position) }, 
@@ -1410,7 +1410,7 @@ Systems can also act as each others tick source:
 ecs_entity_t each_second = ecs_system(world, {
     .entity = ecs_entity(world, {
         .name = "EachSecond",
-        .add = { ecs_dependson(EcsOnUpdate) }
+        .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
     }),
     .callback = Dummy,
     .interval = 1.0
@@ -1420,7 +1420,7 @@ ecs_entity_t each_second = ecs_system(world, {
 ecs_entity_t each_minute = ecs_system(world, {
     .entity = ecs_entity(world, {
         .name = "EachMinute",
-        .add = { ecs_dependson(EcsOnUpdate) }
+        .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
     }),
     .callback = Dummy,
     .tick_source = each_second,
@@ -1431,7 +1431,7 @@ ecs_entity_t each_minute = ecs_system(world, {
 ecs_entity_t each_hour = ecs_system(world, {
     .entity = ecs_entity(world, {
         .name = "EachHour",
-        .add = { ecs_dependson(EcsOnUpdate) }
+        .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
     }),
     .callback = Dummy,
     .tick_source = each_minute,

@@ -1471,7 +1471,7 @@ const char* plecs_parse_prop_stmt(
     if (!state->assembly_instance) {
         ecs_entity_t prop_member = ecs_entity(world, {
             .name = prop_name,
-            .add = { ecs_childof(assembly) }
+            .add = ecs_ids( ecs_childof(assembly) )
         });
 
         if (!prop_member) {

@@ -191,7 +191,7 @@ void SystemMisc_invalid_null_string(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "Dummy", .add = {ecs_dependson(EcsOnUpdate)}}),
+        .entity = ecs_entity(world, { .name = "Dummy", .add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
         .callback = Dummy
     });
 
@@ -206,7 +206,7 @@ void SystemMisc_invalid_empty_string(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "Dummy", .add = {ecs_dependson(EcsOnUpdate)}}),
+        .entity = ecs_entity(world, { .name = "Dummy", .add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
         .query.expr = "",
         .callback = Dummy
     });
@@ -222,7 +222,7 @@ void SystemMisc_invalid_empty_string_w_space(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "Dummy", .add = {ecs_dependson(EcsOnUpdate)}}),
+        .entity = ecs_entity(world, { .name = "Dummy", .add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
         .query.expr = "  ",
         .callback = Dummy
     });
@@ -505,7 +505,7 @@ void SystemMisc_change_system_action(void) {
     ECS_COMPONENT(world, Position);
     
     ecs_entity_t sys = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "Sys", .add = {ecs_dependson(EcsOnUpdate)}}),
+        .entity = ecs_entity(world, { .name = "Sys", .add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
         .query.expr = "Position",
         .callback = ActionA
     });
@@ -639,13 +639,13 @@ void SystemMisc_redefine_null_signature(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t s_1 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "System", .add = {ecs_dependson(EcsOnUpdate)}}),
+        .entity = ecs_entity(world, { .name = "System", .add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
         .query.expr = NULL,
         .callback = Action
     });
 
     ecs_entity_t s_2 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "System", .add = {ecs_dependson(EcsOnUpdate)}}),
+        .entity = ecs_entity(world, { .name = "System", .add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
         .query.expr = NULL,
         .callback = Action
     });      
@@ -659,13 +659,13 @@ void SystemMisc_redefine_0_signature(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t s_1 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "System", .add = {ecs_dependson(EcsOnUpdate)}}),
+        .entity = ecs_entity(world, { .name = "System", .add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
         .query.expr = "0",
         .callback = Action
     });
 
     ecs_entity_t s_2 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "System", .add = {ecs_dependson(EcsOnUpdate)}}),
+        .entity = ecs_entity(world, { .name = "System", .add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
         .query.expr = "0",
         .callback = Action
     }); 
@@ -682,13 +682,13 @@ void SystemMisc_redeclare_system_explicit_id(void) {
     ECS_COMPONENT(world, Velocity);
 
     ecs_entity_t s1 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, {.name = "Move", .add = {ecs_dependson(EcsOnUpdate)}}), 
+        .entity = ecs_entity(world, {.name = "Move", .add = ecs_ids(ecs_dependson(EcsOnUpdate))}), 
         .query.expr = "Position, Velocity", 
         .callback = Dummy
     });
 
     ecs_entity_t s2 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, {.id = s1, .name = "Move", .add = {ecs_dependson(EcsOnUpdate)}}),
+        .entity = ecs_entity(world, {.id = s1, .name = "Move", .add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
         .query.expr = "Position, Velocity", 
         .callback = Dummy
     });
@@ -705,13 +705,13 @@ void SystemMisc_redeclare_system_explicit_id_null_expr(void) {
     ECS_COMPONENT(world, Velocity);
 
     ecs_entity_t s1 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, {.name = "Move", .add = {ecs_dependson(EcsOnUpdate)}}), 
+        .entity = ecs_entity(world, {.name = "Move", .add = ecs_ids(ecs_dependson(EcsOnUpdate))}), 
         .query.expr = NULL, 
         .callback = Dummy
     });
 
     ecs_entity_t s2 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, {.id = s1, .name = "Move", .add = {ecs_dependson(EcsOnUpdate)}}),
+        .entity = ecs_entity(world, {.id = s1, .name = "Move", .add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
         .query.expr = NULL, 
         .callback = Dummy
     });
@@ -728,13 +728,13 @@ void SystemMisc_redeclare_system_explicit_id_no_name(void) {
     ECS_COMPONENT(world, Velocity);
 
     ecs_entity_t s1 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, {.name = "Move", .add = {ecs_dependson(EcsOnUpdate)}}), 
+        .entity = ecs_entity(world, {.name = "Move", .add = ecs_ids(ecs_dependson(EcsOnUpdate))}), 
         .query.expr = "Position, Velocity", 
         .callback = Dummy
     });
 
     ecs_entity_t s2 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, {.id = s1, .add = {ecs_dependson(EcsOnUpdate)}}),
+        .entity = ecs_entity(world, {.id = s1, .add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
         .query.expr = "Position, Velocity", 
         .callback = Dummy
     });
@@ -754,7 +754,7 @@ void SystemMisc_declare_different_id_same_name(void) {
     ecs_entity_t e2 = ecs_new(world);
 
     ecs_entity_t s_1 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, {.id = e1, .name = "Move", .add = {ecs_dependson(EcsOnUpdate)}}),
+        .entity = ecs_entity(world, {.id = e1, .name = "Move", .add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
         .query.expr = "0", 
         .callback = Dummy
     });
@@ -763,7 +763,7 @@ void SystemMisc_declare_different_id_same_name(void) {
     test_expect_abort();
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, {.id = e2, .name = "Move", .add = {ecs_dependson(EcsOnUpdate)}}),
+        .entity = ecs_entity(world, {.id = e2, .name = "Move", .add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
         .query.expr = "0", 
         .callback = Dummy
     });
@@ -781,7 +781,7 @@ void SystemMisc_declare_different_id_same_name_w_scope(void) {
     ecs_entity_t e2 = ecs_new(world);
 
     ecs_entity_t s_1 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, {.id = e1, .name = "Move", .add = {ecs_dependson(EcsOnUpdate)}}),
+        .entity = ecs_entity(world, {.id = e1, .name = "Move", .add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
         .query.expr = "0", 
         .callback = Dummy
     });
@@ -790,7 +790,7 @@ void SystemMisc_declare_different_id_same_name_w_scope(void) {
     test_expect_abort();
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, {.id = e2, .name = "Move", .add = {ecs_dependson(EcsOnUpdate)}}),
+        .entity = ecs_entity(world, {.id = e2, .name = "Move", .add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
         .query.expr = "0", 
         .callback = Dummy
     });
@@ -1158,13 +1158,13 @@ void SystemMisc_delete_pipeline_system(void) {
 
     // Create system before
     test_assert(ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, {.add = {ecs_dependson(EcsOnUpdate)}}),
+        .entity = ecs_entity(world, {.add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
         .query.terms = {{.id = Tag}},
         .callback = Dummy
     }) != 0);
 
     ecs_entity_t system = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, {.add = {ecs_dependson(EcsOnUpdate)}}),
+        .entity = ecs_entity(world, {.add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
         .query.terms = {{.id = Tag}},
         .callback = Dummy
     });
@@ -1172,7 +1172,7 @@ void SystemMisc_delete_pipeline_system(void) {
 
     // Create system after
     test_assert(ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, {.add = {ecs_dependson(EcsOnUpdate)}}),
+        .entity = ecs_entity(world, {.add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
         .query.terms = {{.id = Tag}},
         .callback = Dummy
     }) != 0);
@@ -1384,7 +1384,7 @@ void SystemMisc_pipeline_custom_run_action(void) {
 
     Probe ctx = {0};
     ecs_entity_t system = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, {.add = {ecs_dependson(EcsOnUpdate)}}),
+        .entity = ecs_entity(world, {.add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
         .query.terms = {{ .id = TagA }},
         .run = Run,
         .callback = Dummy,
@@ -1458,7 +1458,7 @@ void SystemMisc_custom_run_action_call_next(void) {
         .run = Run_call_callback,
         .callback = Dummy,
         .ctx = &ctx,
-        .entity = ecs_entity(world, {.add = {ecs_dependson(EcsOnUpdate)}})
+        .entity = ecs_entity(world, {.add = ecs_ids(ecs_dependson(EcsOnUpdate))})
     });
     test_assert(system != 0);
 
@@ -1491,7 +1491,7 @@ void SystemMisc_system_w_short_notation(void) {
         .query.terms = {{ .id = Tag }},
         .callback = Dummy,
         .ctx = &ctx,
-        .entity = ecs_entity(world, {.add = {ecs_dependson(EcsOnUpdate)}})
+        .entity = ecs_entity(world, {.add = ecs_ids(ecs_dependson(EcsOnUpdate))})
     });
     test_assert(system != 0);
 
@@ -1551,7 +1551,7 @@ void SystemMisc_system_w_interval_rate_stop_timer(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t system = ecs_system(world, {
-        .entity = ecs_entity(world, { .add = {ecs_dependson(EcsOnUpdate)} }),
+        .entity = ecs_entity(world, { .add = ecs_ids(ecs_dependson(EcsOnUpdate)) }),
         .interval = 1.0,
         .rate = 3.0,
         .callback = Dummy
@@ -1609,19 +1609,19 @@ void SystemMisc_system_same_interval_same_tick(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_system(world, {
-        .entity = ecs_entity(world, { .add = {ecs_dependson(EcsOnUpdate)} }),
+        .entity = ecs_entity(world, { .add = ecs_ids(ecs_dependson(EcsOnUpdate)) }),
         .interval = 1.0,
         .callback = SA
     });
 
     ecs_system(world, {
-        .entity = ecs_entity(world, { .add = {ecs_dependson(EcsOnUpdate)} }),
+        .entity = ecs_entity(world, { .add = ecs_ids(ecs_dependson(EcsOnUpdate)) }),
         .interval = 1.0,
         .callback = SB
     });
 
     ecs_system(world, {
-        .entity = ecs_entity(world, { .add = {ecs_dependson(EcsOnUpdate)} }),
+        .entity = ecs_entity(world, { .add = ecs_ids(ecs_dependson(EcsOnUpdate)) }),
         .interval = 1.0,
         .callback = SC
     });

@@ -602,7 +602,7 @@ void MultiThread_2_thread_1_entity_instanced(void) {
     ECS_COMPONENT_DEFINE(world, Position);
 
     ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, {.add = {ecs_dependson(EcsOnUpdate)}}),
+        .entity = ecs_entity(world, {.add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
         .callback = Progress,
         .query = {
             .expr = "Position",
@@ -641,7 +641,7 @@ void MultiThread_2_thread_5_entity_instanced(void) {
     ECS_COMPONENT_DEFINE(world, Position);
 
     ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, {.add = {ecs_dependson(EcsOnUpdate)}}),
+        .entity = ecs_entity(world, {.add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
         .callback = Progress,
         .query = {
             .expr = "Position",
@@ -680,7 +680,7 @@ void MultiThread_2_thread_10_entity_instanced(void) {
     ECS_COMPONENT_DEFINE(world, Position);
 
     ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, {.add = {ecs_dependson(EcsOnUpdate)}}),
+        .entity = ecs_entity(world, {.add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
         .callback = Progress,
         .query = {
             .expr = "Position",
@@ -1120,7 +1120,7 @@ void MultiThread_no_staging_w_multithread(void) {
         ecs_system_init(world, &(ecs_system_desc_t){
             .callback = CreateQuery,
             .no_readonly = true,
-            .entity = ecs_entity(world, {.add = {ecs_dependson(EcsOnUpdate)}})
+            .entity = ecs_entity(world, {.add = ecs_ids(ecs_dependson(EcsOnUpdate))})
         });
 
         create_query_invoked = 0;
@@ -1180,7 +1180,7 @@ void MultiThread_get_ctx(void) {
     set_worker_kind(world, 2);
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) } }),
+        .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnUpdate) ) }),
         .callback = System_w_ctx,
         .multi_threaded = true,
         .ctx = &system_ctx
@@ -1199,7 +1199,7 @@ void MultiThread_get_binding_ctx(void) {
     set_worker_kind(world, 2);
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) } }),
+        .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnUpdate) ) }),
         .callback = System_w_binding_ctx,
         .multi_threaded = true,
         .binding_ctx = &system_ctx
@@ -1218,7 +1218,7 @@ void MultiThread_get_ctx_w_run(void) {
     set_worker_kind(world, 2);
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) } }),
+        .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnUpdate) ) }),
         .run = System_run_w_ctx,
         .multi_threaded = true,
         .ctx = &system_ctx
@@ -1237,7 +1237,7 @@ void MultiThread_get_binding_ctx_w_run(void) {
     set_worker_kind(world, 2);
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) } }),
+        .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnUpdate) ) }),
         .run = System_run_w_binding_ctx,
         .multi_threaded = true,
         .binding_ctx = &system_ctx
@@ -1265,13 +1265,13 @@ void MultiThread_bulk_new_in_no_readonly_w_multithread(void) {
     ECS_TAG_DEFINE(world, Tag);
 
     ecs_system(world, {
-        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) }}),
+        .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnUpdate) )}),
         .no_readonly = true,
         .callback = sys_bulk_init
     });
 
     ecs_system(world, {
-        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) }}),
+        .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnUpdate) )}),
         .multi_threaded = true,
         .callback = sys
     });
@@ -1306,7 +1306,7 @@ void MultiThread_bulk_new_in_no_readonly_w_multithread_2(void) {
 
     ecs_system(world, {
         .entity = ecs_entity(world, {
-            .add = { ecs_dependson(EcsOnUpdate) }
+            .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
         }),
         .query.terms = {{ ecs_id(Position) }},
         .callback = sys
@@ -1318,7 +1318,7 @@ void MultiThread_bulk_new_in_no_readonly_w_multithread_2(void) {
 
     ecs_system(world, {
         .entity = ecs_entity(world, {
-            .add = { ecs_dependson(EcsOnUpdate) }
+            .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
         }),
         .callback = sys_bulk_init_2,
         .no_readonly = true,
@@ -1327,7 +1327,7 @@ void MultiThread_bulk_new_in_no_readonly_w_multithread_2(void) {
 
     ecs_system(world, {
         .entity = ecs_entity(world, {
-            .add = { ecs_dependson(EcsOnUpdate) }
+            .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
         }),
         .callback = sys
     });
@@ -1362,7 +1362,7 @@ void MultiThread_run_first_worker_on_main(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_system(world, {
-        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) }}),
+        .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnUpdate) )}),
         .multi_threaded = true,
         .callback = dummy
     });
@@ -1383,7 +1383,7 @@ void MultiThread_run_single_thread_on_main(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_system(world, {
-        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) }}),
+        .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnUpdate) )}),
         .multi_threaded = false,
         .callback = dummy
     });

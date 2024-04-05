@@ -8,11 +8,11 @@ int main(int argc, char *argv[]) {
     ecs_world_t *ecs = ecs_init_w_args(argc, argv);
 
     // Create a prefab hierarchy.
-    ecs_entity_t SpaceShip = ecs_entity(ecs, { .name = "SpaceShip", .add = { EcsPrefab } });
-        ecs_entity_t SpaceShipEngine = ecs_entity(ecs, { .name = "Engine", .add = { EcsPrefab } });
+    ecs_entity_t SpaceShip = ecs_entity(ecs, { .name = "SpaceShip", .add = ecs_ids( EcsPrefab ) });
+        ecs_entity_t SpaceShipEngine = ecs_entity(ecs, { .name = "Engine", .add = ecs_ids( EcsPrefab ) });
         ecs_add_pair(ecs, SpaceShipEngine, EcsChildOf, SpaceShip);
     
-        ecs_entity_t SpaceShipCockpit = ecs_entity(ecs, { .name = "Cockpit", .add = { EcsPrefab } });
+        ecs_entity_t SpaceShipCockpit = ecs_entity(ecs, { .name = "Cockpit", .add = ecs_ids( EcsPrefab ) });
         ecs_add_pair(ecs, SpaceShipCockpit, EcsChildOf, SpaceShip);
 
     // Instantiate the prefab. This also creates an Engine and Cockpit child

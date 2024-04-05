@@ -860,6 +860,9 @@ struct ecs_type_info_t {
 #include "flecs/private/hashmap.h"          /* Hashmap */
 #include "flecs/private/parser.h"           /* Query DSL parser */
 
+/** Convenience macro for creating compound literal id array */
+#define ecs_ids(...) (ecs_id_t[]){ __VA_ARGS__, 0 }
+
 /** Used with ecs_entity_init().
  *
  * @ingroup entities
@@ -894,8 +897,8 @@ typedef struct ecs_entity_desc_t {
                            * components) will be used to create the entity, if
                            * no id is specified. */
 
-    /** Array of ids to add to the new or existing entity. */
-    ecs_id_t add[FLECS_ID_DESC_MAX];
+    /** 0-terminated array of ids to add to the new or existing entity. */
+    const ecs_id_t *add;
 
     /** String expression with components to add */
     const char *add_expr;

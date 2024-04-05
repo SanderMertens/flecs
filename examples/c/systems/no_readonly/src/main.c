@@ -81,7 +81,7 @@ int main(int argc, char *argv[]) {
     ecs_system(ecs, {
         .entity = ecs_entity(ecs, {
             .name = "AssignPlate",
-            .add = { ecs_dependson(EcsOnUpdate) }
+            .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
         }),
         .query.terms = {
             { .id = Plate },
@@ -95,28 +95,28 @@ int main(int argc, char *argv[]) {
     // Create a few plates and waiters
     ecs_entity_t waiter_1 = ecs_entity(ecs, {
         .name = "waiter_1",
-        .add = { Waiter }
+        .add = ecs_ids( Waiter )
     });
     /* ecs_entity_t waiter_2 = */ ecs_entity(ecs, { // silence unused warning
         .name = "waiter_2",
-        .add = { Waiter }
+        .add = ecs_ids( Waiter )
     });
     /* ecs_entity_t waiter_3 = */ ecs_entity(ecs, {
         .name = "waiter_3",
-        .add = { Waiter }
+        .add = ecs_ids( Waiter )
     });
 
     /* ecs_entity_t plate_1 = */ ecs_entity(ecs, {
         .name = "plate_1",
-        .add = { Plate }
+        .add = ecs_ids( Plate )
     });
     ecs_entity_t plate_2 = ecs_entity(ecs, {
         .name = "plate_2",
-        .add = { Plate, ecs_pair(Waiter, waiter_1) } // already assigned
+        .add = ecs_ids( Plate, ecs_pair(Waiter, waiter_1) ) // already assigned
     });
     /* ecs_entity_t plate_3 = */ ecs_entity(ecs, {
         .name = "plate_3",
-        .add = { Plate }
+        .add = ecs_ids( Plate )
     });
 
     // Also assign plate_2 to waiter_1
