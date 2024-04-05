@@ -199,7 +199,7 @@ struct factories {
 
     // System that transfers resource and resets factory for next item
     world.system<FactorySupply, FactoryProduction, Stores>("Transfer")
-      .term_at(3).second(Wildcard)
+      .term_at(2).second(Wildcard)
       .with(FactoryState::TransferResource)
       .interval(1.0f)
       .each([](entity factory, FactorySupply& s, FactoryProduction& p, Stores& out) {

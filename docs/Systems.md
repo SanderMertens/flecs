@@ -458,7 +458,7 @@ ecs_system(world, {
 
 ```cpp
 world.system<Game>("PrintTime")
-    .term_at(1).singleton()
+    .term_at(0).singleton()
     .kind(flecs::OnUpdate)
     .iter([](flecs::iter& it, Game *g) {
         printf("Time: %f\n", g->time);

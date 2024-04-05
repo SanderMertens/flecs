@@ -1645,7 +1645,7 @@ The next example shows how queries with mixed `$This` and fixed sources can be i
 ```cpp
 flecs::query<Position, Velocity, SimTime> f = 
   world.query_builder<Position, Velocity, SimTime>()
-    .term_at(3).src(Game) // set fixed source for 3rd template argument (SimTime)
+    .term_at(2).src(Game) // set fixed source for 3rd template argument (SimTime)
     .build();
 
 // Because all components are now part of the filter type, we can use each
@@ -1660,8 +1660,8 @@ When a query has no terms for the `$This` source, it must be iterated with the `
 ```cpp
 flecs::query<SimConfig, SimTime> f = 
   world.query_builder<SimConfig, SimTime>()
-    .term_at(1).src(Cfg)
-    .term_at(2).src(Game)
+    .term_at(0).src(Cfg)
+    .term_at(1).src(Game)
     .build();
 
 // Ok (note that it.count() will be 0)
@@ -1690,8 +1690,8 @@ A source may also be specified by name:
 ```cpp
 flecs::query<SimConfig, SimTime> f = 
   world.query_builder<SimConfig, SimTime>()
-    .term_at(1).src("Cfg")
-    .term_at(2).src("Game")
+    .term_at(0).src("Cfg")
+    .term_at(1).src("Game")
     .build();
 ```
 
@@ -2236,7 +2236,7 @@ Queries can be instanced by calling the `instanced` method:
 ```cpp
 flecs::query<Position, Mass> f = world.query_builder<Position, Mass>()
   // Never inherit Position
-  .term_at(1).self()
+  .term_at(0).self()
   // Instancing is a property of the iterator, but by setting it on the query
   // all iterators created for the query will be instanced.
   .instanced()

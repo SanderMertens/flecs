@@ -340,8 +340,8 @@ void Query_each_w_no_this(void) {
         .set<Velocity>({1, 2});
 
     auto f = ecs.query_builder<Position, Velocity>()
+        .term_at(0).src(e)
         .term_at(1).src(e)
-        .term_at(2).src(e)
         .build();
 
     int32_t count = 0;
@@ -365,8 +365,8 @@ void Query_each_w_iter_no_this(void) {
         .set<Velocity>({1, 2});
 
     auto f = ecs.query_builder<Position, Velocity>()
+        .term_at(0).src(e)
         .term_at(1).src(e)
-        .term_at(2).src(e)
         .build();
 
     int32_t count = 0;
@@ -394,8 +394,8 @@ void Query_invalid_each_w_no_this(void) {
         .set<Velocity>({1, 2});
 
     auto f = ecs.query_builder<Position, Velocity>()
+        .term_at(0).src(e)
         .term_at(1).src(e)
-        .term_at(2).src(e)
         .build();
 
     test_expect_abort();
@@ -1677,7 +1677,7 @@ void Query_instanced_query_w_singleton_each(void) {
     e5.add<Tag>();
 
     auto q = ecs.query_builder<Self, Position, const Velocity>()
-        .term_at(3).singleton()
+        .term_at(2).singleton()
         .instanced()
         .build();
 
@@ -1795,7 +1795,7 @@ void Query_un_instanced_query_w_singleton_each(void) {
     e5.add<Tag>();
 
     auto q = ecs.query_builder<Self, Position, const Velocity>()
-        .term_at(3).singleton()
+        .term_at(2).singleton()
         .build();
 
     int32_t count = 0;
@@ -1911,7 +1911,7 @@ void Query_instanced_query_w_singleton_iter(void) {
     e5.add<Tag>();
 
     auto q = ecs.query_builder<Self, Position, const Velocity>()
-        .term_at(3).singleton()
+        .term_at(2).singleton()
         .instanced()
         .build();
 
@@ -2043,7 +2043,7 @@ void Query_un_instanced_query_w_singleton_iter(void) {
     e5.add<Tag>();
 
     auto q = ecs.query_builder<Self, Position, const Velocity>()
-        .term_at(3).singleton()
+        .term_at(2).singleton()
         .build();
 
     int32_t count = 0;

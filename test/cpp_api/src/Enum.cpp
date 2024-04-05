@@ -1034,7 +1034,7 @@ void Enum_query_union_enum_invalid_query_type(void) {
     // test_expect_abort();
 
     // ecs.query_builder<StandardEnum>()
-    //     .term_at(1).second(flecs::Wildcard)
+    //     .term_at(0).second(flecs::Wildcard)
     //     .build();
 }
 

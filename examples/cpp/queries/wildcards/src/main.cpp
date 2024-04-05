@@ -16,7 +16,7 @@ int main(int, char *[]) {
 
     // Create a query that matches edible components
     flecs::query<Eats> q = ecs.query_builder<Eats>()
-        .term_at(1).second(flecs::Wildcard) // Change first argument to (Eats, *)
+        .term_at(0).second(flecs::Wildcard) // Change first argument to (Eats, *)
         .build();
 
     // Create a few entities that match the query

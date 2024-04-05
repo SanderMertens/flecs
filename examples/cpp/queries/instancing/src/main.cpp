@@ -42,7 +42,7 @@ int main(int, char *[]) {
     // have Velocity as owned and shared component.
     flecs::query<Position, const Velocity> q = 
         ecs.query_builder<Position, const Velocity>()
-            .term_at(1).self()   // Position must always be owned by the entity
+            .term_at(0).self()   // Position must always be owned by the entity
             .instanced()         // create instanced query
             .build();
 

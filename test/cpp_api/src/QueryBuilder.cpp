@@ -1018,7 +1018,7 @@ void QueryBuilder_isa_superset_term_w_each(void) {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Self, Other>()
-        .term_at(2).src().up(flecs::IsA)
+        .term_at(1).src().up(flecs::IsA)
         .cache_kind(cache_kind)
         .build();
 
@@ -1044,7 +1044,7 @@ void QueryBuilder_isa_self_superset_term_w_each(void) {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Self, Other>()
-        .term_at(2).src().self().up(flecs::IsA)
+        .term_at(1).src().self().up(flecs::IsA)
         .cache_kind(cache_kind)
         .build();
 
@@ -1072,7 +1072,7 @@ void QueryBuilder_childof_superset_term_w_each(void) {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Self, Other>()
-        .term_at(2).src().up()
+        .term_at(1).src().up()
         .cache_kind(cache_kind)
         .build();
 
@@ -1098,7 +1098,7 @@ void QueryBuilder_childof_self_superset_term_w_each(void) {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Self, Other>()
-        .term_at(2).src().self().up()
+        .term_at(1).src().self().up()
         .cache_kind(cache_kind)
         .build();
 
@@ -1126,7 +1126,7 @@ void QueryBuilder_isa_superset_shortcut(void) {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Self, Other>()
-        .term_at(2).up(flecs::IsA)
+        .term_at(1).up(flecs::IsA)
         .cache_kind(cache_kind)
         .build();
 
@@ -1152,7 +1152,7 @@ void QueryBuilder_isa_superset_shortcut_w_self(void) {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Self, Other>()
-        .term_at(2).self().up(flecs::IsA)
+        .term_at(1).self().up(flecs::IsA)
         .cache_kind(cache_kind)
         .build();
 
@@ -1180,7 +1180,7 @@ void QueryBuilder_childof_superset_shortcut(void) {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Self, Other>()
-        .term_at(2).up()
+        .term_at(1).up()
         .cache_kind(cache_kind)
         .build();
 
@@ -1206,7 +1206,7 @@ void QueryBuilder_childof_superset_shortcut_w_self(void) {
     flecs::world ecs;
 
     auto q = ecs.query_builder<Self, Other>()
-        .term_at(2).self().up()
+        .term_at(1).self().up()
         .cache_kind(cache_kind)
         .build();
 
@@ -1599,8 +1599,8 @@ void QueryBuilder_2_subsequent_args(void) {
     int32_t count = 0;
 
     auto s = ecs.system<Rel, const Velocity>()
-        .term_at(1).second(flecs::Wildcard)
-        .term_at(2).singleton()
+        .term_at(0).second(flecs::Wildcard)
+        .term_at(1).singleton()
         .iter([&](flecs::iter it){
             count += it.count();
         });
@@ -2873,7 +2873,7 @@ void QueryBuilder_term_after_arg(void) {
         .add<TagB>();
 
     auto f = ecs.query_builder<TagA, TagB>()
-        .term_at(1).src(flecs::This) // dummy
+        .term_at(0).src(flecs::This) // dummy
         .with<TagC>()
         .cache_kind(cache_kind)
         .build();
@@ -2895,7 +2895,7 @@ void QueryBuilder_name_arg(void) {
     auto e = ecs.entity("Foo").set<Position>({10, 20});
 
     auto f = ecs.query_builder<Position>()
-        .term_at(1).src().name("Foo")
+        .term_at(0).src().name("Foo")
         .cache_kind(cache_kind)
         .build();
 

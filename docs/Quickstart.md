@@ -807,7 +807,7 @@ while (ecs_query_next(&it)) {
 
 ```cpp
 auto q = world.query_builder<Position, Position>()
-    .term_at(2).parent().cascade()
+    .term_at(1).parent().cascade()
     .build();
 
 q.each([](Position& p, Position& p_parent) {
@@ -1075,7 +1075,7 @@ ECS_SYSTEM(world, ApplyGravity, EcsOnUpdate, Velocity, Gravity($));
 
 ```cpp
 world.query_builder<Velocity, Gravity>()
-    .term_at(2).singleton()
+    .term_at(1).singleton()
     .build();
 ```
 </li>

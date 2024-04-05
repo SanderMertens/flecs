@@ -445,7 +445,7 @@ void SystemBuilder_name_arg(void) {
     flecs::world ecs;
 
     auto s = ecs.system<const Position>("MySystem")
-        .term_at(1).src().name("MySystem")
+        .term_at(0).src().name("MySystem")
         .iter([](flecs::iter& Iter, const Position* Config)
         { });
 

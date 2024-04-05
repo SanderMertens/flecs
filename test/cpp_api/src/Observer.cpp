@@ -670,7 +670,7 @@ void Observer_on_add_singleton(void) {
     int32_t count = 0;
 
     world.observer<Position>()
-        .term_at(1).singleton()
+        .term_at(0).singleton()
         .event(flecs::OnSet)
         .each([&](Position& p) {
             test_int(p.x, 10);
@@ -691,7 +691,7 @@ void Observer_on_add_pair_singleton(void) {
     flecs::entity tgt = world.entity();
 
     world.observer<Position>()
-        .term_at(1).second(tgt).singleton()
+        .term_at(0).second(tgt).singleton()
         .event(flecs::OnSet)
         .each([&](Position& p) {
             test_int(p.x, 10);
@@ -713,7 +713,7 @@ void Observer_on_add_pair_wildcard_singleton(void) {
     flecs::entity tgt_2 = world.entity();
 
     world.observer<Position>()
-        .term_at(1).second(flecs::Wildcard).singleton()
+        .term_at(0).second(flecs::Wildcard).singleton()
         .event(flecs::OnSet)
         .each([&](Position& p) {
             test_int(p.x, 10);
