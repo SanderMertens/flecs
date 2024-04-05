@@ -38,7 +38,7 @@ ECS_DECLARE(Wizard);
 ecs_entity_t Platoon_1;
 
 ecs_entity_t create_npc(ecs_world_t *world) {
-    ecs_entity_t result = ecs_new(world, 0);
+    ecs_entity_t result = ecs_new_id(world);
     
     // Without the forward declaration, this would have thrown a compiler error
     ecs_set(world, result, Position, {10, 20});

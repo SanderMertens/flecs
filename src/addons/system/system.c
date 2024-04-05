@@ -254,7 +254,7 @@ ecs_entity_t ecs_system_init(
 
     ecs_entity_t entity = desc->entity;
     if (!entity) {
-        entity = ecs_new(world, 0);
+        entity = ecs_entity(world, {0});
     }
 
     EcsPoly *poly = ecs_poly_bind(world, entity, ecs_system_t);

@@ -124,7 +124,7 @@ void Lookup_get_name_from_empty(void) {
     ecs_world_t *world = ecs_mini();
 
     /* Ensure this doesn't crash the lookup function */
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     const char *id = ecs_get_name(world, e);
     test_assert(id == NULL);
 
@@ -242,7 +242,7 @@ void Lookup_lookup_path_w_spaces(void) {
 void Lookup_set_name_of_existing(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_assert(e != 0);
     test_assert(ecs_get_name(world, e) == NULL);
 

@@ -3,7 +3,7 @@
 void Count_count_empty(void) {
     ecs_world_t *world = ecs_mini();
 
-    test_int(ecs_count(world, 0), 0);
+    test_int(ecs_count_id(world, 0), 0);
 
     ecs_fini(world);
 }

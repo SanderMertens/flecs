@@ -283,7 +283,7 @@ void SystemCascade_add_after_match(void) {
         .query.flags = EcsQueryIsInstanced
     });
 
-    ecs_entity_t parent = ecs_new(world, 0);
+    ecs_entity_t parent = ecs_new_id(world);
     ecs_set(world, e1, Position, {1, 2});
     ecs_set(world, e2, Position, {1, 2});
     ecs_set(world, e3, Position, {1, 2});
@@ -581,7 +581,7 @@ void SystemCascade_custom_relation_add_after_match(void) {
         .query.flags = EcsQueryIsInstanced
     });
 
-    ecs_entity_t parent = ecs_new(world, 0);
+    ecs_entity_t parent = ecs_new_id(world);
     ecs_set(world, e1, Position, {1, 2});
     ecs_set(world, e2, Position, {1, 2});
     ecs_set(world, e3, Position, {1, 2});

@@ -7,7 +7,7 @@ void Get_component_setup(void) {
 void Get_component_get_empty(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_assert(e != 0);
 
     test_assert(ecs_get_type(world, e) == NULL);

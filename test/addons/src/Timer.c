@@ -564,7 +564,7 @@ void Timer_nested_rate_entity_empty_src(void) {
     ecs_world_t *world = ecs_init();
 
     /* Rate filter with source that is not a tick source */
-    ecs_entity_t parent = ecs_new(world, 0);
+    ecs_entity_t parent = ecs_new_id(world);
     ecs_entity_t rate = ecs_set_rate(world, 0, 4, parent);
 
     int i;

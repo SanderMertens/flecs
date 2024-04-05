@@ -1126,7 +1126,7 @@ void Entity_init_w_name_staged(void) {
 void Entity_record_find_for_empty(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_assert(e != 0);
 
     ecs_record_t *r = ecs_record_find(world, e);

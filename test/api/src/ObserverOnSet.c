@@ -509,7 +509,7 @@ void ObserverOnSet_un_set_after_remove_base(void) {
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_int(ctx.invoked, 0);
 
     ecs_add_pair(world, e, EcsIsA, Base);

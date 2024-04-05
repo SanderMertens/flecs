@@ -102,7 +102,7 @@ void Pairs_type_w_two_pairs(void) {
     ECS_SYSTEM(world, ProcessPairs, EcsOnUpdate, (Rel, *));
 
     /* Ensure that pair is matched against different components on same entity */
-    ecs_entity_t e1 = ecs_new(world, 0);
+    ecs_entity_t e1 = ecs_new_id(world);
     ecs_set_pair(world, e1, Rel, ecs_id(Position), {
         .value = 10
     });  
@@ -113,7 +113,7 @@ void Pairs_type_w_two_pairs(void) {
     });      
     test_assert( ecs_has_pair(world, e1, ecs_id(Rel), ecs_id(Velocity)));
 
-    ecs_entity_t e2 = ecs_new(world, 0);
+    ecs_entity_t e2 = ecs_new_id(world);
     ecs_set_pair(world, e2, Rel, ecs_id(Position), {
         .value = 30
     });
@@ -183,7 +183,7 @@ void Pairs_add_pair(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Rel);
 
-    ecs_entity_t e1 = ecs_new(world, 0);
+    ecs_entity_t e1 = ecs_new_id(world);
     test_assert(e1 != 0);
 
     ecs_add_pair(world, e1, ecs_id(Rel), ecs_id(Position));
@@ -225,12 +225,12 @@ void Pairs_add_tag_pair_for_tag(void) {
     ECS_SYSTEM(world, ProcessPairTags, EcsOnUpdate, (Rel, *));
 
     /* Ensure that pair is matched against different components */
-    ecs_entity_t e1 = ecs_new(world, 0);
+    ecs_entity_t e1 = ecs_new_id(world);
     ecs_add_pair(world, e1, Rel, Tag1);
     test_assert(e1 != 0);
     test_assert( ecs_has_pair(world, e1, Rel, Tag1));
 
-    ecs_entity_t e2 = ecs_new(world, 0);
+    ecs_entity_t e2 = ecs_new_id(world);
     ecs_add_pair(world, e2, Rel, Tag2);
     test_assert(e2 != 0);
     test_assert( ecs_has_pair(world, e2, Rel, Tag2));
@@ -483,7 +483,7 @@ void Pairs_override_pair(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Rel);
 
-    ecs_entity_t base = ecs_new(world, 0);
+    ecs_entity_t base = ecs_new_id(world);
     ecs_set_pair(world, base, Rel, ecs_id(Position), {.value = 10});
 
     ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, base);
@@ -512,7 +512,7 @@ void Pairs_override_tag_pair(void) {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Rel);
 
-    ecs_entity_t base = ecs_new(world, 0);
+    ecs_entity_t base = ecs_new_id(world);
     ecs_set_pair_object(world, base, Rel, Position, {.x = 10, .y = 20});
 
     ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, base);
@@ -554,7 +554,7 @@ void Pairs_on_add_pair(void) {
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     ecs_add_pair(world, e, ecs_id(Rel), ecs_id(Position));
 
     test_int(ctx.count, 1);
@@ -600,7 +600,7 @@ void Pairs_on_add_pair_tag(void) {
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     ecs_add_pair(world, e, Rel, ecs_id(Position));
 
     test_int(ctx.count, 1);
@@ -631,7 +631,7 @@ void Pairs_on_remove_pair(void) {
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     ecs_add_pair(world, e, ecs_id(Rel), ecs_id(Position));
     ecs_add_pair(world, e, ecs_id(Rel), ecs_id(Velocity));
     test_int(ctx.count, 0);
@@ -679,7 +679,7 @@ void Pairs_on_remove_pair_tag(void) {
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     ecs_add_pair(world, e, Rel, ecs_id(Position));
     test_int(ctx.count, 0);
 
@@ -712,7 +712,7 @@ void Pairs_on_remove_pair_on_delete(void) {
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     ecs_add_pair(world, e, ecs_id(Rel), ecs_id(Position));
     ecs_add_pair(world, e, ecs_id(Rel), ecs_id(Velocity));
     test_int(ctx.count, 0);
@@ -765,7 +765,7 @@ void Pairs_on_remove_pair_tag_on_delete(void) {
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     ecs_add_pair(world, e, Rel, ecs_id(Position));
     ecs_add_pair(world, e, Rel, ecs_id(Velocity));
     test_int(ctx.count, 0);
@@ -801,7 +801,7 @@ void Pairs_pair_w_component_query(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Rel);
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     ecs_add_pair(world, e, ecs_id(Rel), ecs_id(Position));
 
     ecs_query_t *q = ecs_query(world, { .expr = "(Rel, Position)" });
@@ -832,7 +832,7 @@ void Pairs_query_pair_or_component(void) {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Rel);
 
-    ecs_entity_t e1 = ecs_new(world, 0);
+    ecs_entity_t e1 = ecs_new_id(world);
     ecs_add_pair(world, e1, Rel, ecs_id(Position));
     ecs_entity_t e2 = ecs_new(world, Position);
 
@@ -862,7 +862,7 @@ void Pairs_query_pair_or_pair(void) {
     ECS_TAG(world, RelA);
     ECS_TAG(world, RelB);
 
-    ecs_entity_t e1 = ecs_new(world, 0);
+    ecs_entity_t e1 = ecs_new_id(world);
     ecs_add_pair(world, e1, RelA, ecs_id(Position));
     ecs_entity_t e2 = ecs_new(world, Position);
     ecs_add_pair(world, e2, RelB, ecs_id(Position));
@@ -2476,7 +2476,7 @@ void Pairs_add_pair_to_entity_w_scope(void) {
 
     ecs_set_scope(world, ObjA);
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
 
     ecs_add_pair(world, e, RelA, ObjA);
     test_assert( ecs_has_pair(world, e, RelA, ObjA));

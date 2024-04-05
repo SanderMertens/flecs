@@ -509,7 +509,7 @@ ecs_entity_t ecs_alert_init(
 
     ecs_entity_t result = desc->entity;
     if (!result) {
-        result = ecs_new(world, 0);
+        result = ecs_new_id(world);
     }
 
     ecs_query_desc_t private_desc = desc->query;

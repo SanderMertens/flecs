@@ -38,7 +38,7 @@ struct entity : entity_builder<entity>
         : entity_builder()
     {
         m_world = world;
-        m_id = ecs_new(world, 0);
+        m_id = ecs_new_id(world);
     }
 
     /** Wrap an existing entity id.

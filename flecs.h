@@ -3370,9 +3370,6 @@ extern "C" {
 //// Global type handles
 ////////////////////////////////////////////////////////////////////////////////
 
-/** This allows passing 0 as type to functions that accept ids */
-#define FLECS_ID0ID_ 0
-
 FLECS_API
 char* ecs_module_path_from_c(
     const char *c_name);
@@ -23547,7 +23544,7 @@ struct entity : entity_builder<entity>
         : entity_builder()
     {
         m_world = world;
-        m_id = ecs_new(world, 0);
+        m_id = ecs_new_id(world);
     }
 
     /** Wrap an existing entity id.

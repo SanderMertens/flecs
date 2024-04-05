@@ -623,7 +623,7 @@ ecs_entity_t ecs_add_path_w_sep(
                 if (!e) {
                     if (last_elem) {
                         ecs_entity_t prev = ecs_set_scope(world, 0);
-                        e = ecs_new(world, 0);
+                        e = ecs_entity(world, {0});
                         ecs_set_scope(world, prev);
                     } else {
                         e = ecs_new_id(world);

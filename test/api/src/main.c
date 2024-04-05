@@ -301,7 +301,6 @@ void New_new_w_entity_0(void);
 void New_create_w_explicit_id_2_worlds(void);
 void New_new_w_id_0_w_with(void);
 void New_new_w_id_w_with(void);
-void New_new_w_type_0_w_with(void);
 void New_new_w_type_w_with(void);
 void New_new_w_id_w_with_w_scope(void);
 void New_new_w_type_w_with_w_scope(void);
@@ -427,8 +426,6 @@ void Hierarchies_lookup_number(void);
 void Hierarchies_delete_children(void);
 void Hierarchies_scope_set(void);
 void Hierarchies_scope_set_again(void);
-void Hierarchies_scope_set_w_new(void);
-void Hierarchies_scope_set_w_new_staged(void);
 void Hierarchies_scope_set_w_lookup(void);
 void Hierarchies_scope_component(void);
 void Hierarchies_scope_component_no_macro(void);
@@ -448,7 +445,6 @@ void Hierarchies_add_path_from_scope(void);
 void Hierarchies_add_path_from_scope_new_entity(void);
 void Hierarchies_add_root_path_to_child(void);
 void Hierarchies_add_parent_path_from_root_to_child(void);
-void Hierarchies_new_w_child_in_root(void);
 void Hierarchies_delete_child(void);
 void Hierarchies_delete_2_children(void);
 void Hierarchies_delete_2_children_different_type(void);
@@ -1284,6 +1280,7 @@ void Observer_uni_observer_eval_count(void);
 void Observer_multi_observer_eval_count(void);
 void Observer_yield_existing_uni_no_this(void);
 void Observer_yield_existing_multi_no_this(void);
+void Observer_observer_no_id_in_scope(void);
 void Observer_cache_test_1(void);
 void Observer_cache_test_2(void);
 void Observer_cache_test_3(void);
@@ -3043,10 +3040,6 @@ bake_test_case New_testcases[] = {
         New_new_w_id_w_with
     },
     {
-        "new_w_type_0_w_with",
-        New_new_w_type_0_w_with
-    },
-    {
         "new_w_type_w_with",
         New_new_w_type_w_with
     },
@@ -3518,14 +3511,6 @@ bake_test_case Hierarchies_testcases[] = {
         Hierarchies_scope_set_again
     },
     {
-        "scope_set_w_new",
-        Hierarchies_scope_set_w_new
-    },
-    {
-        "scope_set_w_new_staged",
-        Hierarchies_scope_set_w_new_staged
-    },
-    {
         "scope_set_w_lookup",
         Hierarchies_scope_set_w_lookup
     },
@@ -3600,10 +3585,6 @@ bake_test_case Hierarchies_testcases[] = {
     {
         "add_parent_path_from_root_to_child",
         Hierarchies_add_parent_path_from_root_to_child
-    },
-    {
-        "new_w_child_in_root",
-        Hierarchies_new_w_child_in_root
     },
     {
         "delete_child",
@@ -6851,6 +6832,10 @@ bake_test_case Observer_testcases[] = {
         Observer_yield_existing_multi_no_this
     },
     {
+        "observer_no_id_in_scope",
+        Observer_observer_no_id_in_scope
+    },
+    {
         "cache_test_1",
         Observer_cache_test_1
     },
@@ -9271,7 +9256,7 @@ static bake_test_suite suites[] = {
         "New",
         New_setup,
         NULL,
-        25,
+        24,
         New_testcases
     },
     {
@@ -9306,7 +9291,7 @@ static bake_test_suite suites[] = {
         "Hierarchies",
         Hierarchies_setup,
         NULL,
-        96,
+        93,
         Hierarchies_testcases
     },
     {
@@ -9411,7 +9396,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        157,
+        158,
         Observer_testcases
     },
     {

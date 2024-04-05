@@ -141,7 +141,7 @@ void Monitor_1_parent(void) {
     ecs_entity_t parent = ecs_new(world, Position);
     test_int(ctx.invoked, 0);
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_int(ctx.invoked, 0);
 
     ecs_add_pair(world, e, EcsChildOf, parent);

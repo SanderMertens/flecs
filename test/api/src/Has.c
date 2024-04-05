@@ -5,11 +5,11 @@ void Has_zero(void) {
 
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_assert(e != 0);
 
     test_expect_abort();
-    ecs_has(world, e, 0);
+    ecs_has_id(world, e, 0);
 }
 
 void Has_1_of_0(void) {
@@ -17,7 +17,7 @@ void Has_1_of_0(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_assert(e != 0);
 
     test_assert(!ecs_has(world, e, Position));
@@ -58,7 +58,7 @@ void Has_1_of_empty(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_assert(e != 0);
 
     test_assert(!ecs_has(world, e, Position));
@@ -97,7 +97,7 @@ void Has_has_of_zero(void) {
 
     test_expect_abort();
 
-    ecs_has(world, 0, 0);
+    ecs_has_id(world, 0, 0);
 }
 
 void Has_owns(void) {
@@ -172,10 +172,10 @@ void Has_owns_wildcard_pair(void) {
 void Has_has_entity(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_assert(e != 0);
 
-    ecs_entity_t base = ecs_new(world, 0);
+    ecs_entity_t base = ecs_new_id(world);
     test_assert(base != 0);
 
     ecs_add_pair(world, e, EcsIsA, base);
@@ -190,7 +190,7 @@ void Has_has_entity_0(void) {
 
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t base = ecs_new(world, 0);
+    ecs_entity_t base = ecs_new_id(world);
     test_assert(base != 0);
 
     test_expect_abort();
@@ -203,7 +203,7 @@ void Has_has_entity_0_component(void) {
 
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_assert(e != 0);
 
     test_expect_abort();
@@ -213,16 +213,16 @@ void Has_has_entity_0_component(void) {
 void Has_has_entity_owned(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_assert(e != 0);
     
-    ecs_entity_t f = ecs_new(world, 0);
+    ecs_entity_t f = ecs_new_id(world);
     test_assert(f != 0);
 
-    ecs_entity_t g = ecs_new(world, 0);
+    ecs_entity_t g = ecs_new_id(world);
     test_assert(g != 0);
 
-    ecs_entity_t base = ecs_new(world, 0);
+    ecs_entity_t base = ecs_new_id(world);
     test_assert(base != 0);
 
     ecs_add_id(world, e, f);
@@ -247,7 +247,7 @@ void Has_has_entity_owned_0(void) {
 
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_assert(e != 0);
 
     test_expect_abort();
@@ -258,7 +258,7 @@ void Has_has_entity_owned_0(void) {
 void Has_has_entity_owned_0_component(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_assert(e != 0);
 
     test_assert( ecs_owns_id(world, e, 0) == false);

@@ -591,7 +591,7 @@ void System_w_FromParent_add_component_after_match(void) {
         .query.flags = EcsQueryIsInstanced
     });
 
-    ecs_entity_t parent = ecs_new(world, 0);
+    ecs_entity_t parent = ecs_new_id(world);
     ecs_add_pair(world, e1, EcsChildOf, parent);
     ecs_add_pair(world, e2, EcsChildOf, parent);
 
@@ -645,7 +645,7 @@ void System_w_FromParent_add_component_after_match_and_rematch(void) {
         .query.flags = EcsQueryIsInstanced
     });
 
-    ecs_entity_t parent = ecs_new(world, 0);
+    ecs_entity_t parent = ecs_new_id(world);
     ecs_add_pair(world, e1, EcsChildOf, parent);
     ecs_add_pair(world, e2, EcsChildOf, parent);
 
@@ -823,7 +823,7 @@ void System_w_FromParent_add_component_after_match_unmatch(void) {
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, !Mass(up), Position);
 
-    ecs_entity_t parent = ecs_new(world, 0);
+    ecs_entity_t parent = ecs_new_id(world);
     ecs_add_pair(world, e1, EcsChildOf, parent);
     ecs_add_pair(world, e2, EcsChildOf, parent);
 
@@ -871,7 +871,7 @@ void System_w_FromParent_add_component_after_match_unmatch_match(void) {
 
     ECS_SYSTEM(world, Dummy, EcsOnUpdate, !Mass(up), Position);
 
-    ecs_entity_t parent = ecs_new(world, 0);
+    ecs_entity_t parent = ecs_new_id(world);
     ecs_add_pair(world, e1, EcsChildOf, parent);
     ecs_add_pair(world, e2, EcsChildOf, parent);
 
@@ -930,7 +930,7 @@ void System_w_FromParent_add_component_after_match_2_systems(void) {
         .query.flags = EcsQueryIsInstanced
     });
 
-    ecs_entity_t parent = ecs_new(world, 0);
+    ecs_entity_t parent = ecs_new_id(world);
     ecs_add_pair(world, e1, EcsChildOf, parent);
     ecs_add_pair(world, e2, EcsChildOf, parent);
 
@@ -1005,7 +1005,7 @@ void System_w_FromParent_add_component_in_progress_after_match(void) {
         .ctx = &ecs_id(Mass)
     });
 
-    ecs_entity_t parent = ecs_new(world, 0);
+    ecs_entity_t parent = ecs_new_id(world);
     ecs_add_pair(world, e1, EcsChildOf, parent);
     ecs_add_pair(world, e2, EcsChildOf, parent);
 

@@ -109,7 +109,7 @@ void Type_get_type(void) {
 void Type_get_type_from_empty(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
 
     const ecs_type_t *t = ecs_get_type(world, e);
     test_assert(t == NULL);

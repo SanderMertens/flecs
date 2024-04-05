@@ -661,8 +661,8 @@ ecs_entity_t prev = ecs_set_scope(world, parent);
 
 // Note that we're not using the ecs_new_id function for the children. This
 // function only generates a new id, and does not add the scope to the entity.
-ecs_entity_t child_a = ecs_new(world, 0);
-ecs_entity_t child_b = ecs_new(world, 0);
+ecs_entity_t child_a = ecs_new_id(world);
+ecs_entity_t child_b = ecs_new_id(world);
 
 // Restore the previous scope
 ecs_set_scope(world, prev);

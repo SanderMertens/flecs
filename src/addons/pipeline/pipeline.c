@@ -813,7 +813,7 @@ ecs_entity_t ecs_pipeline_init(
 
     ecs_entity_t result = desc->entity;
     if (!result) {
-        result = ecs_new(world, 0);
+        result = ecs_new_id(world);
     }
 
     ecs_query_desc_t qd = desc->query;
@@ -893,7 +893,7 @@ void FlecsPipelineImport(
      * relationships. This ensures that, for example, EcsOnUpdate doesn't have a
      * direct DependsOn relationship on EcsPreUpdate, which ensures that when
      * the EcsPreUpdate phase is disabled, EcsOnUpdate still runs. */
-    ecs_entity_t phase_0 = ecs_new(world, 0);
+    ecs_entity_t phase_0 = ecs_new_id(world);
     ecs_entity_t phase_1 = ecs_new_w_pair(world, EcsDependsOn, phase_0);
     ecs_entity_t phase_2 = ecs_new_w_pair(world, EcsDependsOn, phase_1);
     ecs_entity_t phase_3 = ecs_new_w_pair(world, EcsDependsOn, phase_2);

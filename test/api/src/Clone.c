@@ -3,7 +3,7 @@
 void Clone_empty(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e1 = ecs_new(world, 0);
+    ecs_entity_t e1 = ecs_new_id(world);
     test_assert(e1 != 0);
 
     ecs_entity_t e2 = ecs_clone(world, 0, e1, false);
@@ -19,7 +19,7 @@ void Clone_empty(void) {
 void Clone_empty_w_value(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e1 = ecs_new(world, 0);
+    ecs_entity_t e1 = ecs_new_id(world);
     test_assert(e1 != 0);
 
     ecs_entity_t e2 = ecs_clone(world, 0, e1, true);
@@ -132,7 +132,7 @@ void Clone_1_component_w_value(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e1 = ecs_new(world, 0);
+    ecs_entity_t e1 = ecs_new_id(world);
     test_assert(e1 != 0);
 
     ecs_set(world, e1, Position, {10, 20});
@@ -164,7 +164,7 @@ void Clone_2_component_w_value(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e1 = ecs_new(world, 0);
+    ecs_entity_t e1 = ecs_new_id(world);
     test_assert(e1 != 0);
 
     ecs_set(world, e1, Position, {10, 20});
@@ -211,7 +211,7 @@ void Clone_3_component_w_value(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
-    ecs_entity_t e1 = ecs_new(world, 0);
+    ecs_entity_t e1 = ecs_new_id(world);
     test_assert(e1 != 0);
 
     ecs_set(world, e1, Position, {10, 20});

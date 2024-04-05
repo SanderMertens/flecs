@@ -973,7 +973,7 @@ void OrderByEntireTable_sort_1000_entities_again(void) {
         .order_by_table_callback = ecs_sort_table(Position)
     });
 
-    ecs_entity_t start = ecs_new(world, 0);
+    ecs_entity_t start = ecs_new_id(world);
 
     for (int i = 0; i < 1000; i ++) {
         int32_t v = rand();
@@ -1073,7 +1073,7 @@ void OrderByEntireTable_sort_1000_entities_2_types_again(void) {
         .order_by_table_callback = ecs_sort_table(Position)
     });
 
-    ecs_entity_t start = ecs_new(world, 0);
+    ecs_entity_t start = ecs_new_id(world);
 
     for (int i = 0; i < 1000; i ++) {
         int32_t v = rand();
@@ -1135,7 +1135,7 @@ void OrderByEntireTable_sort_1000_entities_add_type_after_sort(void) {
         .order_by_table_callback = ecs_sort_table(Position)
     });
 
-    ecs_entity_t start = ecs_new(world, 0);
+    ecs_entity_t start = ecs_new_id(world);
 
     for (int i = 0; i < 500; i ++) {
         int32_t v = rand();
@@ -1686,11 +1686,11 @@ void OrderByEntireTable_dont_resort_after_set_unsorted_component(void) {
         .order_by_callback = dummy_compare
     });
 
-    ecs_entity_t e1 = ecs_new(world, 0);
+    ecs_entity_t e1 = ecs_new_id(world);
     ecs_set(world, e1, Position, {0, 0});
     ecs_set(world, e1, Velocity, {0, 0});
 
-    ecs_entity_t e2 = ecs_new(world, 0);
+    ecs_entity_t e2 = ecs_new_id(world);
     ecs_set(world, e2, Position, {0, 0});
     ecs_set(world, e2, Velocity, {0, 0});
 

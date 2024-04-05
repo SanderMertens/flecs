@@ -1078,13 +1078,13 @@ void Cached_rematch_after_add_to_recycled_parent(void) {
 
     test_assert(q != NULL);
 
-    ecs_entity_t parent = ecs_new(world, 0);
+    ecs_entity_t parent = ecs_new_id(world);
     test_assert(parent != 0);
 
     ecs_delete(world, parent);
     test_assert( !ecs_is_alive(world, parent));
 
-    parent = ecs_new(world, 0);
+    parent = ecs_new_id(world);
     test_assert(parent != 0);
 
     ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, parent);
@@ -1120,7 +1120,7 @@ void Cached_query_rematch_optional_after_add(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t base = ecs_new(world, 0);
+    ecs_entity_t base = ecs_new_id(world);
     
     ecs_entity_t e1 = ecs_new(world, Position);
     ecs_add_pair(world, e1, EcsIsA, base);

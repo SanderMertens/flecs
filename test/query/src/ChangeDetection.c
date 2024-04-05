@@ -73,7 +73,7 @@ void ChangeDetection_query_changed_after_add(void) {
 
     ECS_COMPONENT(world, Position);
     
-    ecs_entity_t e1 = ecs_new(world, 0);
+    ecs_entity_t e1 = ecs_new_id(world);
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "[in] Position",

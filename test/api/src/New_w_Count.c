@@ -3,7 +3,7 @@
 void New_w_Count_empty(void) {
     ecs_world_t *world = ecs_mini();
 
-    const ecs_entity_t *ids = ecs_bulk_new(world, 0, 1000);
+    const ecs_entity_t *ids = ecs_bulk_new_w_id(world, 0, 1000);
     test_assert(ids != NULL);
 
     int i;

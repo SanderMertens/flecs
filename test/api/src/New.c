@@ -7,7 +7,7 @@ void New_setup(void) {
 void New_empty(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_assert(e != 0);
     test_assert(!ecs_get_type(world, e));
 
@@ -59,11 +59,11 @@ void New_redefine_component(void) {
 void New_recycle_id_empty(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e1 = ecs_new(world, 0);
+    ecs_entity_t e1 = ecs_new_id(world);
     test_assert(e1 != 0);
     ecs_delete(world, e1);
 
-    ecs_entity_t e2 = ecs_new(world, 0);
+    ecs_entity_t e2 = ecs_new_id(world);
     test_assert(e2 != 0);
     test_assert(e1 != e2);
     test_assert((e1 & ECS_ENTITY_MASK) == (e2 & ECS_ENTITY_MASK));
@@ -74,7 +74,7 @@ void New_recycle_id_empty(void) {
 void New_recycle_id_w_entity(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t tag = ecs_new(world, 0);
+    ecs_entity_t tag = ecs_new_id(world);
 
     ecs_entity_t e1 = ecs_new_w_id(world, tag);
     test_assert(e1 != 0);
@@ -91,14 +91,14 @@ void New_recycle_id_w_entity(void) {
 void New_recycle_empty_staged_delete(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e1 = ecs_new(world, 0);
+    ecs_entity_t e1 = ecs_new_id(world);
     test_assert(e1 != 0);
 
     ecs_defer_begin(world);
     ecs_delete(world, e1);
     ecs_defer_end(world);
 
-    ecs_entity_t e2 = ecs_new(world, 0);
+    ecs_entity_t e2 = ecs_new_id(world);
     test_assert(e2 != 0);
     test_assert(e1 != e2);
     test_assert((e1 & ECS_ENTITY_MASK) == (e2 & ECS_ENTITY_MASK));
@@ -118,7 +118,7 @@ void New_recycle_staged_delete(void) {
     ecs_delete(world, e1);
     ecs_defer_end(world);
 
-    ecs_entity_t e2 = ecs_new(world, 0);
+    ecs_entity_t e2 = ecs_new_id(world);
     test_assert(e2 != 0);
     test_assert(e1 != e2);
     test_assert((e1 & ECS_ENTITY_MASK) == (e2 & ECS_ENTITY_MASK));
@@ -363,22 +363,6 @@ void New_new_w_id_w_with_defer_w_scope(void) {
 
     test_int(ecs_set_with(world, 0), Tag);
     test_int(ecs_set_scope(world, 0), parent);
-
-    ecs_fini(world);
-}
-
-void New_new_w_type_0_w_with(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_TAG(world, Tag);
-
-    ecs_set_with(world, Tag);
-
-    ecs_entity_t e = ecs_new(world, 0);
-    test_assert(e != 0);
-    test_assert(ecs_has(world, e, Tag));
-
-    test_int(ecs_set_with(world, 0), Tag);
 
     ecs_fini(world);
 }

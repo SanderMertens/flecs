@@ -3000,8 +3000,8 @@ void OnDelete_match_marked_for_deletion(void) {
     ecs_entity_t ns = ecs_entity(world, { .name = "ns" });
     ecs_set_scope(world, ns);
     ECS_COMPONENT(world, Position);
-    ecs_entity_t Foo = ecs_component(world, { .entity = ecs_new(world, 0) });
-    ecs_entity_t Bar = ecs_component(world, { .entity = ecs_new(world, 0) });
+    ecs_entity_t Foo = ecs_component(world, { .entity = ecs_new_id(world) });
+    ecs_entity_t Bar = ecs_component(world, { .entity = ecs_new_id(world) });
     ecs_set_scope(world, 0);
 
     /* During cleanup a new table will be created that matches the query */

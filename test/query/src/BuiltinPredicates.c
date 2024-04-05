@@ -3502,13 +3502,13 @@ void BuiltinPredicates_2_or_w_eq_this(void) {
     ECS_TAG(world, Rel);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t e1 = ecs_new(world, 0);
+    ecs_entity_t e1 = ecs_new_id(world);
     ecs_add_pair(world, e1, Rel, e1);
 
-    ecs_entity_t e2 = ecs_new(world, 0);
+    ecs_entity_t e2 = ecs_new_id(world);
     ecs_add_pair(world, e2, Rel, e1);
 
-    ecs_entity_t e3 = ecs_new(world, 0);
+    ecs_entity_t e3 = ecs_new_id(world);
     ecs_add_pair(world, e3, Rel, Rel);
 
     ecs_query_t *r = ecs_query(world, {

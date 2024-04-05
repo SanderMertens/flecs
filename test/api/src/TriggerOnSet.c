@@ -272,7 +272,7 @@ void TriggerOnSet_set_and_add_system(void) {
     Probe ctx = {0};
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_int(ctx.count, 0);
 
     ecs_set(world, e, Position, {10, 20});

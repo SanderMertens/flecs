@@ -101,7 +101,7 @@ void World_entity_range_offset(void) {
 
     ecs_set_entity_range(world, 5000, 0);
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_int(e, 5000);
 
     ecs_fini(world);
@@ -152,7 +152,7 @@ void World_entity_range_out_of_range_check_disabled(void) {
     ecs_set_entity_range(world, 5000, 10000);
 
     /* Validate that range is being used when issuing new ids */
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_int(e, 5000);
 
     /* Validate that application does not abort when changing out of range */
@@ -176,13 +176,13 @@ void World_entity_range_check_after_delete(void) {
     ecs_enable_range_check(world, true);
     ecs_set_entity_range(world, 5000, 10000);
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_assert(e != 0);
     test_assert(e == 5000);
 
     ecs_delete(world, e);
 
-    e = ecs_new(world, 0);
+    e = ecs_new_id(world);
     test_assert(e != 0);
     test_assert((uint32_t)e == 5000);
 
@@ -991,7 +991,7 @@ void World_no_time(void) {
 void World_is_entity_enabled(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
 
     test_assert( ecs_has_id(world, e, EcsDisabled) == false);
 

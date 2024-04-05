@@ -4221,7 +4221,7 @@ void Trigger_on_add_superset_w_component(void) {
         .ctx = &ctx
 	});
 
-	ecs_entity_t b = ecs_new(world, 0);
+	ecs_entity_t b = ecs_new_id(world);
 	ecs_set(world, b, Position, {10, 20});
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
@@ -4252,7 +4252,7 @@ void Trigger_on_set_superset_w_component(void) {
         .ctx = &ctx
 	});
 
-	ecs_entity_t b = ecs_new(world, 0);
+	ecs_entity_t b = ecs_new_id(world);
 	ecs_set(world, b, Position, {10, 20});
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
@@ -4287,7 +4287,7 @@ void Trigger_on_add_base_superset_w_owned(void) {
         .ctx = &ctx
 	});
 
-	ecs_entity_t b = ecs_new(world, 0);
+	ecs_entity_t b = ecs_new_id(world);
 	ecs_add(world, b, Tag);
     test_int(ctx.invoked, 0);
 	
@@ -4320,7 +4320,7 @@ void Trigger_on_add_base_self_superset_w_owned(void) {
         .ctx = &ctx
 	});
 
-	ecs_entity_t b = ecs_new(world, 0);
+	ecs_entity_t b = ecs_new_id(world);
 	ecs_add(world, b, Tag);
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);

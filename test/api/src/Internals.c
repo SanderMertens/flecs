@@ -191,7 +191,7 @@ void Internals_recreate_deleted_table(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t parent_A = ecs_new(world, 0);
+    ecs_entity_t parent_A = ecs_new_id(world);
     ecs_entity_t child_A = ecs_new_w_pair(world, EcsChildOf, parent_A);
     test_assert(parent_A != 0);
     test_assert(child_A != 0);
@@ -200,7 +200,7 @@ void Internals_recreate_deleted_table(void) {
     test_assert( !ecs_is_alive(world, parent_A));
     test_assert( !ecs_is_alive(world, child_A));
 
-    ecs_entity_t parent_B = ecs_new(world, 0);
+    ecs_entity_t parent_B = ecs_new_id(world);
     ecs_entity_t child_B = ecs_new_w_pair(world, EcsChildOf, parent_B);
     test_assert(parent_B != 0);
     test_assert(child_B != 0);

@@ -343,7 +343,7 @@ void SystemMisc_table_columns_access(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     ecs_add(world, e, Position);
     ecs_add(world, e, Velocity);
 
@@ -750,8 +750,8 @@ void SystemMisc_declare_different_id_same_name(void) {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t e1 = ecs_new(world, 0);
-    ecs_entity_t e2 = ecs_new(world, 0);
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e2 = ecs_new_id(world);
 
     ecs_entity_t s_1 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.id = e1, .name = "Move", .add = {ecs_dependson(EcsOnUpdate)}}),
@@ -774,11 +774,11 @@ void SystemMisc_declare_different_id_same_name_w_scope(void) {
     
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t scope = ecs_new(world, 0);
+    ecs_entity_t scope = ecs_new_id(world);
     ecs_set_scope(world, scope);
 
-    ecs_entity_t e1 = ecs_new(world, 0);
-    ecs_entity_t e2 = ecs_new(world, 0);
+    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e2 = ecs_new_id(world);
 
     ecs_entity_t s_1 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, {.id = e1, .name = "Move", .add = {ecs_dependson(EcsOnUpdate)}}),
@@ -1634,6 +1634,29 @@ void SystemMisc_system_same_interval_same_tick(void) {
 
     test_assert(sys_b_invoked);
     test_assert(sys_c_invoked);
+
+    ecs_fini(world);
+}
+
+void SystemMisc_system_no_id_in_scope(void) {
+    ecs_world_t* world = ecs_mini();
+    
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t parent = ecs_new_id(world);
+
+    ecs_set_scope(world, parent);
+
+    ecs_entity_t s = ecs_system(world, {
+        .query.terms = {
+            { .id = TagA },
+        },
+        .callback = SA
+    });
+
+    ecs_set_scope(world, 0);
+
+    test_assert(ecs_has_pair(world, s, EcsChildOf, parent));
 
     ecs_fini(world);
 }

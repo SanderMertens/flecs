@@ -9524,7 +9524,7 @@ ecs_entity_t ecs_add_path_w_sep(
                 if (!e) {
                     if (last_elem) {
                         ecs_entity_t prev = ecs_set_scope(world, 0);
-                        e = ecs_new(world, 0);
+                        e = ecs_entity(world, {0});
                         ecs_set_scope(world, prev);
                     } else {
                         e = ecs_new_id(world);
@@ -13388,7 +13388,7 @@ ecs_entity_t ecs_observer_init(
 
     entity = desc->entity;
     if (!entity) {
-        entity = ecs_new(world, 0);
+        entity = ecs_entity(world, {0});
     }
 
     EcsPoly *poly = ecs_poly_bind(world, entity, ecs_observer_t);
@@ -18508,7 +18508,7 @@ ecs_entity_t ecs_alert_init(
 
     ecs_entity_t result = desc->entity;
     if (!result) {
-        result = ecs_new(world, 0);
+        result = ecs_new_id(world);
     }
 
     ecs_query_desc_t private_desc = desc->query;
@@ -67098,7 +67098,7 @@ ecs_entity_t ecs_pipeline_init(
 
     ecs_entity_t result = desc->entity;
     if (!result) {
-        result = ecs_new(world, 0);
+        result = ecs_new_id(world);
     }
 
     ecs_query_desc_t qd = desc->query;
@@ -67178,7 +67178,7 @@ void FlecsPipelineImport(
      * relationships. This ensures that, for example, EcsOnUpdate doesn't have a
      * direct DependsOn relationship on EcsPreUpdate, which ensures that when
      * the EcsPreUpdate phase is disabled, EcsOnUpdate still runs. */
-    ecs_entity_t phase_0 = ecs_new(world, 0);
+    ecs_entity_t phase_0 = ecs_new_id(world);
     ecs_entity_t phase_1 = ecs_new_w_pair(world, EcsDependsOn, phase_0);
     ecs_entity_t phase_2 = ecs_new_w_pair(world, EcsDependsOn, phase_1);
     ecs_entity_t phase_3 = ecs_new_w_pair(world, EcsDependsOn, phase_2);
@@ -67786,7 +67786,7 @@ ecs_entity_t ecs_system_init(
 
     ecs_entity_t entity = desc->entity;
     if (!entity) {
-        entity = ecs_new(world, 0);
+        entity = ecs_entity(world, {0});
     }
 
     EcsPoly *poly = ecs_poly_bind(world, entity, ecs_system_t);

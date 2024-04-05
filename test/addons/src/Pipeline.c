@@ -269,7 +269,7 @@ void Pipeline_system_order_after_new_system_lower_id(void) {
 
     ECS_ENTITY(world, E, Position);
 
-    ecs_entity_t Sys = ecs_new(world, 0);
+    ecs_entity_t Sys = ecs_new_id(world);
     ECS_SYSTEM(world, SysB, EcsOnUpdate, Position);
     ECS_SYSTEM(world, SysC, EcsOnUpdate, Position);
 
@@ -307,7 +307,7 @@ void Pipeline_system_order_after_new_system_inbetween_id(void) {
     ECS_ENTITY(world, E, Position);
 
     ECS_SYSTEM(world, SysA, EcsOnUpdate, Position);
-    ecs_entity_t Sys = ecs_new(world, 0);
+    ecs_entity_t Sys = ecs_new_id(world);
     ECS_SYSTEM(world, SysC, EcsOnUpdate, Position);
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
@@ -345,7 +345,7 @@ void Pipeline_system_order_after_new_system_higher_id(void) {
 
     ECS_SYSTEM(world, SysA, EcsOnUpdate, Position);
     ECS_SYSTEM(world, SysB, EcsOnUpdate, Position);
-    ecs_entity_t Sys = ecs_new(world, 0);
+    ecs_entity_t Sys = ecs_new_id(world);
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
 

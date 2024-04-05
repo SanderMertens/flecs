@@ -5,11 +5,11 @@ void Remove_zero(void) {
 
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_assert(e != 0);
 
     test_expect_abort();
-    ecs_remove(world, e, 0);
+    ecs_remove_id(world, e, 0);
 }
 
 void Remove_1_of_1(void) {
@@ -147,7 +147,7 @@ void Remove_1_from_empty(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_assert(e != 0);
 
     ecs_remove(world, e, Position);

@@ -230,7 +230,7 @@ void ComponentLifecycle_ctor_on_add(void) {
         .ctx = &ctx
     });
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_int(ctx.ctor.invoked, 0);
 
     ecs_add(world, e, Position);
@@ -323,7 +323,7 @@ void ComponentLifecycle_copy_on_set(void) {
         .ctx = &ctx
     });
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_int(ctx.copy.invoked, 0);
     
     ecs_set(world, e, Position, {0, 0});
@@ -604,7 +604,7 @@ void ComponentLifecycle_merge_to_new_table(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
 
     ecs_set_hooks(world, Position, {
         .ctor = ecs_ctor(Position),
@@ -723,7 +723,7 @@ void ComponentLifecycle_ctor_on_add_pair(void) {
         .ctx = &ctx
     });
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_int(ctx.ctor.invoked, 0);
 
     ecs_add_pair(world, e, ecs_id(Pair), ecs_id(Position));
@@ -748,7 +748,7 @@ void ComponentLifecycle_ctor_on_add_pair_tag(void) {
         .ctx = &ctx
     });
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_int(ctx.ctor.invoked, 0);
 
     ecs_add_pair(world, e, Pair, ecs_id(Position));
@@ -802,7 +802,7 @@ void ComponentLifecycle_move_on_realloc(void) {
         .ctx = &ctx
     });
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_int(ctx.ctor.invoked, 0);
 
     ecs_add(world, e, Position);
@@ -836,7 +836,7 @@ void ComponentLifecycle_move_on_bulk_new(void) {
         .ctx = &ctx
     });
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_int(ctx.ctor.invoked, 0);
 
     ecs_add(world, e, Position);
@@ -950,7 +950,7 @@ void ComponentLifecycle_copy_on_override_pair(void) {
         .ctx = &ctx
     });
 
-    ecs_entity_t base = ecs_new(world, 0);
+    ecs_entity_t base = ecs_new_id(world);
     ecs_add_pair(world, base, ecs_id(Pair), ecs_id(Position));
     test_assert(ctx.ctor.invoked != 0);
     test_int(ctx.copy.invoked, 0);
@@ -987,7 +987,7 @@ void ComponentLifecycle_copy_on_override_pair_tag(void) {
         .ctx = &ctx
     });
 
-    ecs_entity_t base = ecs_new(world, 0);
+    ecs_entity_t base = ecs_new_id(world);
     ecs_add_pair(world, base, Pair, ecs_id(Position));
     test_assert(ctx.ctor.invoked != 0);
     test_int(ctx.copy.invoked, 0);
@@ -1023,7 +1023,7 @@ void ComponentLifecycle_copy_on_set_pair(void) {
         .ctx = &ctx
     });
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_int(ctx.copy.invoked, 0);
     
     ecs_set_pair(world, e, Pair, ecs_id(Position), {0, 0});
@@ -1048,7 +1048,7 @@ void ComponentLifecycle_copy_on_set_pair_tag(void) {
         .ctx = &ctx
     });
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_int(ctx.copy.invoked, 0);
     
     ecs_set_pair_object(world, e, Pair, Position, {0, 0});

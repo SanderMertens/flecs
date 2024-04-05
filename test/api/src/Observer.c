@@ -2241,7 +2241,7 @@ void Observer_and_from(void) {
         .ctx = &ctx
     });
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_int(ctx.invoked, 0);
 
     ecs_add(world, e, TagA);
@@ -2276,7 +2276,7 @@ void Observer_or_from(void) {
         .ctx = &ctx
     });
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_int(ctx.invoked, 0);
 
     ecs_add(world, e, TagA);
@@ -5373,6 +5373,30 @@ void Observer_yield_existing_multi_no_this(void) {
     test_int(ctx.s[0][0], e1);
     test_int(ctx.c[0][0], TagA);
     test_int(ctx.event, EcsOnAdd);
+
+    ecs_fini(world);
+}
+
+void Observer_observer_no_id_in_scope(void) {
+    ecs_world_t* world = ecs_mini();
+    
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t parent = ecs_new_id(world);
+
+    ecs_set_scope(world, parent);
+
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {
+            { .id = TagA },
+        },
+        .callback = Observer,
+        .events = { EcsOnAdd },
+    });
+
+    ecs_set_scope(world, 0);
+
+    test_assert(ecs_has_pair(world, o, EcsChildOf, parent));
 
     ecs_fini(world);
 }

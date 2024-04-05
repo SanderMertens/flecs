@@ -76,7 +76,7 @@ void Delete_delete_empty(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_assert(e != 0);
 
     ecs_delete(world, e);
@@ -281,7 +281,7 @@ void Delete_clear_1_component(void) {
     ecs_clear(world, e);
     test_assert(!ecs_get_type(world, e));
 
-    ecs_entity_t e2 = ecs_new(world, 0);
+    ecs_entity_t e2 = ecs_new_id(world);
     test_assert(e2 > e);
     
     ecs_fini(world);
@@ -300,7 +300,7 @@ void Delete_clear_2_components(void) {
     ecs_clear(world, e);
     test_assert(!ecs_get_type(world, e));
 
-    ecs_entity_t e2 = ecs_new(world, 0);
+    ecs_entity_t e2 = ecs_new_id(world);
     test_assert(e2 > e);
     
     ecs_fini(world);
@@ -407,7 +407,7 @@ void Delete_alive_while_staged_w_delete_recycled_id(void) {
     test_assert(ecs_is_alive(world, e));
 
     ecs_delete(world, e);
-    e = ecs_new(world, 0);
+    e = ecs_new_id(world);
     test_assert(ecs_is_alive(world, e));
 
     ecs_defer_begin(world);
@@ -435,7 +435,7 @@ void Delete_alive_after_recycle(void) {
     test_assert(!ecs_is_alive(world, e));
     test_assert(ecs_exists(world, e));
 
-    ecs_entity_t e2 = ecs_new(world, 0);
+    ecs_entity_t e2 = ecs_new_id(world);
     test_assert(e2 != 0);
     test_assert(ecs_is_alive(world, e2));
     test_assert(e != e2);
@@ -447,12 +447,12 @@ void Delete_alive_after_recycle(void) {
 void Delete_delete_recycled(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     ecs_delete(world, e);
     test_assert(!ecs_is_alive(world, e));
     test_assert(ecs_exists(world, e));
 
-    ecs_entity_t e2 = ecs_new(world, 0);
+    ecs_entity_t e2 = ecs_new_id(world);
     test_assert(e != e2);
     test_assert((e2 & ECS_ENTITY_MASK) == (e & ECS_ENTITY_MASK));
     test_assert(!ecs_is_alive(world, e));
@@ -468,7 +468,7 @@ void Delete_delete_recycled(void) {
 void Delete_get_alive_for_alive(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_assert(e != 0);
     test_assert(ecs_is_alive(world, e));
     test_assert(ecs_exists(world, e));
@@ -483,14 +483,14 @@ void Delete_get_alive_for_alive(void) {
 void Delete_get_alive_for_recycled(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_assert(e != 0);
     
     ecs_delete(world, e);
     test_assert(!ecs_is_alive(world, e));
     test_assert(ecs_exists(world, e));
 
-    e = ecs_new(world, 0);
+    e = ecs_new_id(world);
     test_assert(ecs_entity_t_lo(e) != e); // Ensure id is recycled
 
     ecs_entity_t a = ecs_get_alive(world, ecs_entity_t_lo(e));
@@ -503,7 +503,7 @@ void Delete_get_alive_for_recycled(void) {
 void Delete_get_alive_for_not_alive(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_assert(e != 0);
     
     ecs_delete(world, e);
@@ -522,14 +522,14 @@ void Delete_get_alive_for_not_alive(void) {
 void Delete_get_alive_w_generation_for_recycled_alive(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_assert(e != 0);
     
     ecs_delete(world, e);
     test_assert(!ecs_is_alive(world, e));
     test_assert(ecs_exists(world, e));
 
-    e = ecs_new(world, 0);
+    e = ecs_new_id(world);
     test_assert(ecs_entity_t_lo(e) != e);
 
     ecs_entity_t a = ecs_get_alive(world, e);
@@ -542,14 +542,14 @@ void Delete_get_alive_w_generation_for_recycled_alive(void) {
 void Delete_get_alive_w_generation_for_recycled_not_alive(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_assert(e != 0);
     
     ecs_delete(world, e);
     test_assert(!ecs_is_alive(world, e));
     test_assert(ecs_exists(world, e));
 
-    e = ecs_new(world, 0);
+    e = ecs_new_id(world);
     test_assert(ecs_entity_t_lo(e) != e);
 
     ecs_delete(world, e);

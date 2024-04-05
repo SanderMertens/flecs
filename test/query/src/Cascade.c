@@ -1679,9 +1679,9 @@ void Cascade_cascade_after_recycled_parent_change(void) {
 
     test_assert(q != NULL);
 
-    ecs_entity_t parent = ecs_new(world, 0);
+    ecs_entity_t parent = ecs_new_id(world);
     test_assert(parent != 0);
-    ecs_entity_t child = ecs_new(world, 0);
+    ecs_entity_t child = ecs_new_id(world);
     test_assert(child != 0);
 
     ecs_delete(world, parent);

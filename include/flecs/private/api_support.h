@@ -32,9 +32,6 @@ extern "C" {
 //// Global type handles
 ////////////////////////////////////////////////////////////////////////////////
 
-/** This allows passing 0 as type to functions that accept ids */
-#define FLECS_ID0ID_ 0
-
 FLECS_API
 char* ecs_module_path_from_c(
     const char *c_name);

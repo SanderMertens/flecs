@@ -407,6 +407,7 @@ void SystemMisc_update_interval_w_system_init(void);
 void SystemMisc_update_rate_w_system_init(void);
 void SystemMisc_system_w_interval_rate_stop_timer(void);
 void SystemMisc_system_same_interval_same_tick(void);
+void SystemMisc_system_no_id_in_scope(void);
 
 // Testsuite 'SystemPeriodic'
 void SystemPeriodic_1_type_1_component(void);
@@ -2336,6 +2337,10 @@ bake_test_case SystemMisc_testcases[] = {
     {
         "system_same_interval_same_tick",
         SystemMisc_system_same_interval_same_tick
+    },
+    {
+        "system_no_id_in_scope",
+        SystemMisc_system_no_id_in_scope
     }
 };
 
@@ -3659,7 +3664,7 @@ static bake_test_suite suites[] = {
         "SystemMisc",
         NULL,
         NULL,
-        63,
+        64,
         SystemMisc_testcases
     },
     {

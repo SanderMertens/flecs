@@ -6,11 +6,11 @@ void Add_zero(void) {
 
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_assert(e != 0);
 
     test_expect_abort();
-    ecs_add(world, e, 0);
+    ecs_add_id(world, e, 0);
 }
 
 void Add_component(void) {
@@ -18,7 +18,7 @@ void Add_component(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_assert(e != 0);
 
     ecs_add(world, e, Position);
@@ -32,7 +32,7 @@ void Add_component_again(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_assert(e != 0);
 
     ecs_add(world, e, Position);
@@ -50,7 +50,7 @@ void Add_2_components(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_assert(e != 0);
 
     ecs_add(world, e, Position);
@@ -70,7 +70,7 @@ void Add_2_components_again(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_assert(e != 0);
 
     ecs_add(world, e, Position);
@@ -93,7 +93,7 @@ void Add_2_components_overlap(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_assert(e != 0);
 
     ecs_add(world, e, Position);
@@ -167,7 +167,7 @@ void Add_tag(void) {
 
     ECS_ENTITY(world, Tag, 0);
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_assert(e != 0);
 
     ecs_add_id(world, e, Tag);
@@ -179,10 +179,10 @@ void Add_tag(void) {
 void Add_add_entity(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_assert(e != 0);
 
-    ecs_entity_t f = ecs_new(world, 0);
+    ecs_entity_t f = ecs_new_id(world);
     test_assert(f != 0);
 
     ecs_add_id(world, e, f);
@@ -194,10 +194,10 @@ void Add_add_entity(void) {
 void Add_remove_entity(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_assert(e != 0);
 
-    ecs_entity_t f = ecs_new(world, 0);
+    ecs_entity_t f = ecs_new_id(world);
     test_assert(f != 0);
 
     ecs_add_id(world, e, f);
@@ -214,7 +214,7 @@ void Add_add_0_entity(void) {
 
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new_id(world);
     test_assert(e != 0);
 
     test_expect_abort();

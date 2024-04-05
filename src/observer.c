@@ -982,7 +982,7 @@ ecs_entity_t ecs_observer_init(
 
     entity = desc->entity;
     if (!entity) {
-        entity = ecs_new(world, 0);
+        entity = ecs_entity(world, {0});
     }
 
     EcsPoly *poly = ecs_poly_bind(world, entity, ecs_observer_t);
