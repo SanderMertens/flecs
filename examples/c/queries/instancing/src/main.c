@@ -49,24 +49,24 @@ int main(int argc, char *argv[]) {
     });
 
     // Create a prefab with Velocity. Prefabs are not matched with queries.
-    ecs_entity_t prefab = ecs_new_prefab(world, "p");
+    ecs_entity_t prefab = ecs_entity(world, { .name = "p", .add = { EcsPrefab } });
     ecs_set(world, prefab, Velocity, {1, 2});
 
     // Create a few entities that own Position & share Velocity from the prefab.
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_add_pair(world, e1, EcsIsA, prefab);
     ecs_set(world, e1, Position, {10, 20});
 
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
     ecs_add_pair(world, e2, EcsIsA, prefab);
     ecs_set(world, e2, Position, {10, 20});
 
     // Create a few entities that own all components
-    ecs_entity_t e3 = ecs_new_entity(world, "e3");
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
     ecs_set(world, e3, Position, {10, 20});
     ecs_set(world, e3, Velocity, {3, 4});
 
-    ecs_entity_t e4 = ecs_new_entity(world, "e4");
+    ecs_entity_t e4 = ecs_entity(world, { .name = "e4" });
     ecs_set(world, e4, Position, {10, 20});
     ecs_set(world, e4, Velocity, {4, 5});
 

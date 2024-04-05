@@ -975,8 +975,8 @@ void Hierarchies_add_path_from_scope_new_entity(void) {
 void Hierarchies_add_root_path_to_child(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t parent = ecs_new_entity(world, "parent");
-    ecs_entity_t child = ecs_new_entity(world, "parent.child");
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    ecs_entity_t child = ecs_entity(world, { .name = "parent.child" });
     test_assert(ecs_get_target(world, child, EcsChildOf, 0) == parent);
     test_str(ecs_get_name(world, child), "child");
 
@@ -990,10 +990,10 @@ void Hierarchies_add_root_path_to_child(void) {
 void Hierarchies_add_parent_path_from_root_to_child(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t gparent = ecs_new_entity(world, "gparent");
-    ecs_entity_t parent = ecs_new_entity(world, "gparent.parent");
+    ecs_entity_t gparent = ecs_entity(world, { .name = "gparent" });
+    ecs_entity_t parent = ecs_entity(world, { .name = "gparent.parent" });
     test_assert(ecs_get_target(world, parent, EcsChildOf, 0) == gparent);
-    ecs_entity_t child = ecs_new_entity(world, "gparent.parent.child");
+    ecs_entity_t child = ecs_entity(world, { .name = "gparent.parent.child" });
     test_assert(ecs_get_target(world, child, EcsChildOf, 0) == parent);
     test_str(ecs_get_name(world, child), "child");
 
@@ -1166,7 +1166,10 @@ void Hierarchies_delete_tree_recreate(void) {
     test_assert(child != 0);
     test_assert(ecs_has_pair(world, child, EcsChildOf, parent));
 
-    ecs_delete_children(world, parent);
+    ecs_delete_with(world, ecs_childof(parent));
+
+    ecs_iter_t it = ecs_children(world, parent);
+    test_assert(!ecs_children_next(&it));
 
     ecs_new(world, Position);
 
@@ -1230,7 +1233,7 @@ void Hierarchies_scope_iter_after_delete_tree(void) {
     test_assert(child != 0);
     test_assert(ecs_has_pair(world, child, EcsChildOf, parent));
 
-    ecs_delete_children(world, parent);
+    ecs_delete_with(world, ecs_childof(parent));
 
     ecs_iter_t it = ecs_children(world, parent);
     test_assert(!ecs_children_next(&it));
@@ -1249,7 +1252,10 @@ void Hierarchies_add_child_after_delete_tree(void) {
     test_assert(child != 0);
     test_assert(ecs_has_pair(world, child, EcsChildOf, parent));
 
-    ecs_delete_children(world, parent);
+    ecs_delete_with(world, ecs_childof(parent));
+
+    ecs_iter_t it = ecs_children(world, parent);
+    test_assert(!ecs_children_next(&it));
 
     child = ecs_new_w_pair(world, EcsChildOf, parent);
 
@@ -1537,8 +1543,8 @@ void Hierarchies_ensure_child_alive_after_deleting_prev_parent(void) {
 void Hierarchies_lookup_after_root_to_parent_move(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t p = ecs_new_entity(world, "Parent");
-    ecs_entity_t c = ecs_new_entity(world, "Child");
+    ecs_entity_t p = ecs_entity(world, { .name = "Parent" });
+    ecs_entity_t c = ecs_entity(world, { .name = "Child" });
 
     test_str("Parent", ecs_get_name(world, p));
     test_str("Child", ecs_get_name(world, c));
@@ -1570,8 +1576,8 @@ void Hierarchies_lookup_after_root_to_parent_move(void) {
 void Hierarchies_lookup_after_parent_to_root_move(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t p = ecs_new_entity(world, "Parent");
-    ecs_entity_t c = ecs_new_entity(world, "Parent.Child");
+    ecs_entity_t p = ecs_entity(world, { .name = "Parent" });
+    ecs_entity_t c = ecs_entity(world, { .name = "Parent.Child" });
 
     test_str("Parent", ecs_get_name(world, p));
     test_str("Child", ecs_get_name(world, c));
@@ -1604,9 +1610,9 @@ void Hierarchies_lookup_after_parent_to_root_move(void) {
 void Hierarchies_lookup_after_parent_to_parent_move(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t p = ecs_new_entity(world, "Parent");
-    ecs_entity_t p2 = ecs_new_entity(world, "Parent2");
-    ecs_entity_t c = ecs_new_entity(world, "Parent.Child");
+    ecs_entity_t p = ecs_entity(world, { .name = "Parent" });
+    ecs_entity_t p2 = ecs_entity(world, { .name = "Parent2" });
+    ecs_entity_t c = ecs_entity(world, { .name = "Parent.Child" });
 
     test_str("Parent", ecs_get_name(world, p));
     test_str("Parent2", ecs_get_name(world, p2));
@@ -1642,7 +1648,7 @@ void Hierarchies_lookup_after_parent_to_parent_move(void) {
 void Hierarchies_lookup_after_clear_from_root(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t c = ecs_new_entity(world, "Child");
+    ecs_entity_t c = ecs_entity(world, { .name = "Child" });
 
     test_str("Child", ecs_get_name(world, c));
 
@@ -1663,8 +1669,8 @@ void Hierarchies_lookup_after_clear_from_root(void) {
 void Hierarchies_lookup_after_clear_from_parent(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t p = ecs_new_entity(world, "Parent");
-    ecs_entity_t c = ecs_new_entity(world, "Parent.Child");
+    ecs_entity_t p = ecs_entity(world, { .name = "Parent" });
+    ecs_entity_t c = ecs_entity(world, { .name = "Parent.Child" });
 
     test_str("Parent", ecs_get_name(world, p));
     test_str("Child", ecs_get_name(world, c));
@@ -1693,7 +1699,7 @@ void Hierarchies_lookup_after_clear_from_parent(void) {
 void Hierarchies_lookup_after_delete_from_root(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t c = ecs_new_entity(world, "Child");
+    ecs_entity_t c = ecs_entity(world, { .name = "Child" });
 
     test_str("Child", ecs_get_name(world, c));
 
@@ -1713,8 +1719,8 @@ void Hierarchies_lookup_after_delete_from_root(void) {
 void Hierarchies_lookup_after_delete_from_parent(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t p = ecs_new_entity(world, "Parent");
-    ecs_entity_t c = ecs_new_entity(world, "Parent.Child");
+    ecs_entity_t p = ecs_entity(world, { .name = "Parent" });
+    ecs_entity_t c = ecs_entity(world, { .name = "Parent.Child" });
 
     test_str("Parent", ecs_get_name(world, p));
     test_str("Child", ecs_get_name(world, c));
@@ -1742,7 +1748,7 @@ void Hierarchies_lookup_after_delete_from_parent(void) {
 void Hierarchies_defer_batch_remove_name_w_add_childof(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new_entity(world, "e");
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
     test_assert(e != 0);
     test_str("e", ecs_get_name(world, e));
     test_assert(ecs_lookup(world, "e") == e);

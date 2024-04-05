@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
     ECS_OBSERVER(ecs, Observer, EcsOnSet, Position, Velocity);
 
     // Create entity
-    ecs_entity_t e = ecs_new_entity(ecs, "e");
+    ecs_entity_t e = ecs_entity(ecs, { .name = "e" });
     
     // Set Position (emits EcsOnSet, does not yet match observer)
     ecs_set(ecs, e, Position, {10, 20});

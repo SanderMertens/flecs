@@ -22,9 +22,9 @@ int main(int argc, char *argv[]) {
     // Set singleton
     ecs_singleton_set(ecs, Gravity, { 9.81 });
 
-    ecs_entity_t e1 = ecs_new_entity(ecs, "e1");
-    ecs_entity_t e2 = ecs_new_entity(ecs, "e2");
-    ecs_entity_t e3 = ecs_new_entity(ecs, "e3");
+    ecs_entity_t e1 = ecs_entity(ecs, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(ecs, { .name = "e2" });
+    ecs_entity_t e3 = ecs_entity(ecs, { .name = "e3" });
 
     // Set Velocity
     ecs_set(ecs, e1, Velocity, {0, 0});

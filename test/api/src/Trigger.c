@@ -4355,7 +4355,7 @@ void Trigger_on_set_self_from_child_of_prefab(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
-    ecs_entity_t base_child = ecs_new_entity(world, "Child");
+    ecs_entity_t base_child = ecs_entity(world, { .name = "Child" });
     ecs_add_id(world, base_child, EcsPrefab);
     ecs_add_pair(world, base_child, EcsChildOf, base);
     ecs_set(world, base_child, Position, {10, 20});
@@ -4393,7 +4393,7 @@ void Trigger_on_set_self_superset_from_child_of_prefab(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
-    ecs_entity_t base_child = ecs_new_entity(world, "Child");
+    ecs_entity_t base_child = ecs_entity(world, { .name = "Child" });
     ecs_add_id(world, base_child, EcsPrefab);
     ecs_add_pair(world, base_child, EcsChildOf, base);
     ecs_set(world, base_child, Position, {10, 20});
@@ -4434,7 +4434,7 @@ void Trigger_on_set_self_from_child_base_of_prefab(void) {
     ecs_add_id(world, base_child_base, EcsPrefab);
     ecs_set(world, base_child_base, Position, {10, 20});
 
-    ecs_entity_t base_child = ecs_new_entity(world, "Child");
+    ecs_entity_t base_child = ecs_entity(world, { .name = "Child" });
     ecs_add_pair(world, base_child, EcsChildOf, base);
     ecs_add_pair(world, base_child, EcsIsA, base_child_base);
 
@@ -4470,7 +4470,7 @@ void Trigger_on_set_self_superset_from_child_base_of_prefab(void) {
     ecs_add_id(world, base_child_base, EcsPrefab);
     ecs_set(world, base_child_base, Position, {10, 20});
 
-    ecs_entity_t base_child = ecs_new_entity(world, "Child");
+    ecs_entity_t base_child = ecs_entity(world, { .name = "Child" });
     ecs_add_pair(world, base_child, EcsChildOf, base);
     ecs_add_pair(world, base_child, EcsIsA, base_child_base);
 

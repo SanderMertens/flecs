@@ -35,7 +35,7 @@ void Lookup_lookup_w_null_name(void) {
 void Lookup_lookup_after_name_reset(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new_entity(world, "foo");
+    ecs_entity_t e = ecs_entity(world, { .name = "foo" });
     ecs_entity_t lookup = ecs_lookup(world, "foo");
     test_assert(e == lookup);
 
@@ -574,7 +574,7 @@ void Lookup_lookup_custom_search_path_n_elems(void) {
 void Lookup_set_same_name(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new_entity(world, "MyName");
+    ecs_entity_t e = ecs_entity(world, { .name = "MyName" });
     test_assert(e != 0);
     test_str("MyName", ecs_get_name(world, e));
     test_uint(e, ecs_lookup(world, "MyName"));
@@ -589,8 +589,8 @@ void Lookup_set_same_name(void) {
 void Lookup_set_same_name_after_reparenting(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t parent = ecs_new_entity(world, "parent");
-    ecs_entity_t e = ecs_new_entity(world, "MyName");
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    ecs_entity_t e = ecs_entity(world, { .name = "MyName" });
     test_assert(e != 0);
     test_str("MyName", ecs_get_name(world, e));
     test_uint(e, ecs_lookup(world, "MyName"));
@@ -609,7 +609,7 @@ void Lookup_set_same_name_after_reparenting(void) {
 void Lookup_defer_set_name(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new_entity(world, "Foo");
+    ecs_entity_t e = ecs_entity(world, { .name = "Foo" });
     test_assert(e != 0);
     test_str("Foo", ecs_get_name(world, e));
     test_uint(e, ecs_lookup(world, "Foo"));
@@ -627,7 +627,7 @@ void Lookup_defer_set_name(void) {
 void Lookup_defer_set_same_name(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new_entity(world, "MyName");
+    ecs_entity_t e = ecs_entity(world, { .name = "MyName" });
     test_assert(e != 0);
     test_str("MyName", ecs_get_name(world, e));
     test_uint(e, ecs_lookup(world, "MyName"));
@@ -654,7 +654,7 @@ void Lookup_lookup_invalid_digit(void) {
 void Lookup_lookup_child_invalid_digit(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t parent = ecs_new_entity(world, "p");
+    ecs_entity_t parent = ecs_entity(world, { .name = "p" });
     test_assert(parent != 0);
     ecs_entity_t child = ecs_lookup_child(world, parent, "111111111111");
     test_assert(child == 0);
@@ -665,7 +665,7 @@ void Lookup_lookup_child_invalid_digit(void) {
 void Lookup_lookup_digit_from_wrong_scope(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t parent = ecs_new_entity(world, "p");
+    ecs_entity_t parent = ecs_entity(world, { .name = "p" });
     test_assert(parent != 0);
     ecs_entity_t child = ecs_lookup(world, "p.1");
     test_assert(child == 0);
@@ -676,7 +676,7 @@ void Lookup_lookup_digit_from_wrong_scope(void) {
 void Lookup_lookup_core_entity_from_wrong_scope(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t parent = ecs_new_entity(world, "p");
+    ecs_entity_t parent = ecs_entity(world, { .name = "p" });
     test_assert(parent != 0);
     ecs_entity_t child = ecs_lookup(world, "p.10.Component");
     test_assert(child == 0);
@@ -687,7 +687,7 @@ void Lookup_lookup_core_entity_from_wrong_scope(void) {
 void Lookup_lookup_alias_w_number(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t parent = ecs_new_entity(world, "p");
+    ecs_entity_t parent = ecs_entity(world, { .name = "p" });
     test_assert(parent != 0);
     ecs_set_alias(world, parent, "10p");
 
@@ -700,8 +700,8 @@ void Lookup_lookup_alias_w_number(void) {
 void Lookup_lookup_symbol_path(void) {
     ecs_world_t *world = ecs_mini();
     
-    ecs_entity_t foo = ecs_new_entity(world, "foo");
-    ecs_entity_t bar = ecs_new_entity(world, "bar");
+    ecs_entity_t foo = ecs_entity(world, { .name = "foo" });
+    ecs_entity_t bar = ecs_entity(world, { .name = "bar" });
     ecs_add_pair(world, bar, EcsChildOf, foo);
 
     ecs_entity_t e = ecs_set_symbol(world, 0, "foo.bar");

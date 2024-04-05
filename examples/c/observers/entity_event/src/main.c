@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
     ECS_COMPONENT_DEFINE(ecs, Resize);
 
     // Create a widget entity
-    ecs_entity_t widget = ecs_new_entity(ecs, "MyWidget");
+    ecs_entity_t widget = ecs_entity(ecs, { .name = "MyWidget" });
 
     // Create entity observer. Use EcsAny to indicate we're not interested in
     // matching specific components.

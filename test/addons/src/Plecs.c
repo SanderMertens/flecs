@@ -6734,8 +6734,8 @@ void Plecs_assembly_with_with(void) {
 void Plecs_using_wildcard(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p1 = ecs_new_entity(world, "foo.p1");
-    ecs_entity_t p2 = ecs_new_entity(world, "foo.p2");
+    ecs_entity_t p1 = ecs_entity(world, { .name = "foo.p1" });
+    ecs_entity_t p2 = ecs_entity(world, { .name = "foo.p2" });
 
     ecs_set_scope(world, p1);
     ECS_COMPONENT(world, Position);

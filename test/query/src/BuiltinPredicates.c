@@ -18,7 +18,7 @@ void BuiltinPredicates_setup(void) {
 void BuiltinPredicates_this_eq_id(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t ent = ecs_new_entity(world, "ent");
+    ecs_entity_t ent = ecs_entity(world, { .name = "ent" });
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "$this == ent",
@@ -44,7 +44,7 @@ void BuiltinPredicates_this_eq_id(void) {
 void BuiltinPredicates_this_eq_name(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t ent = ecs_new_entity(world, "ent");
+    ecs_entity_t ent = ecs_entity(world, { .name = "ent" });
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "$this == \"ent\"",
@@ -86,11 +86,11 @@ void BuiltinPredicates_this_eq_id_written(void) {
 
     ECS_TAG(world, RelA);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
     ecs_add(world, ent_1, RelA);
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent_2");
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
     ecs_add(world, ent_2, RelA);
-    ecs_entity_t ent_3 = ecs_new_entity(world, "ent_3");
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
     ecs_add(world, ent_3, RelA);
 
     ecs_query_t *q = ecs_query(world, {
@@ -122,13 +122,13 @@ void BuiltinPredicates_this_eq_id_written_no_match(void) {
     ECS_TAG(world, RelA);
     ECS_TAG(world, RelB);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
     ecs_add(world, ent_1, RelA);
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent_2");
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
     ecs_add(world, ent_2, RelA);
-    ecs_entity_t ent_3 = ecs_new_entity(world, "ent_3");
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
     ecs_add(world, ent_3, RelA);
-    ecs_entity_t ent_4 = ecs_new_entity(world, "ent_4");
+    ecs_entity_t ent_4 = ecs_entity(world, { .name = "ent_4" });
     ecs_add(world, ent_4, RelB);
 
     ecs_query_t *q = ecs_query(world, {
@@ -153,11 +153,11 @@ void BuiltinPredicates_this_eq_name_written(void) {
 
     ECS_TAG(world, RelA);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
     ecs_add(world, ent_1, RelA);
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent_2");
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
     ecs_add(world, ent_2, RelA);
-    ecs_entity_t ent_3 = ecs_new_entity(world, "ent_3");
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
     ecs_add(world, ent_3, RelA);
 
     ecs_query_t *q = ecs_query(world, {
@@ -189,13 +189,13 @@ void BuiltinPredicates_this_eq_name_written_no_match(void) {
     ECS_TAG(world, RelA);
     ECS_TAG(world, RelB);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
     ecs_add(world, ent_1, RelA);
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent_2");
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
     ecs_add(world, ent_2, RelA);
-    ecs_entity_t ent_3 = ecs_new_entity(world, "ent_3");
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
     ecs_add(world, ent_3, RelA);
-    ecs_entity_t ent_4 = ecs_new_entity(world, "ent_4");
+    ecs_entity_t ent_4 = ecs_entity(world, { .name = "ent_4" });
     ecs_add(world, ent_4, RelB);
 
     ecs_query_t *q = ecs_query(world, {
@@ -220,11 +220,11 @@ void BuiltinPredicates_this_eq_var_written(void) {
 
     ECS_TAG(world, RelA);
 
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent_2");
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
     ecs_add_pair(world, ent_1, RelA, ent_2);
     ecs_add_pair(world, ent_2, RelA, ent_2);
-    ecs_entity_t ent_3 = ecs_new_entity(world, "ent_3");
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
     ecs_add_pair(world, ent_3, RelA, ent_2);
 
     ecs_query_t *q = ecs_query(world, {
@@ -256,7 +256,7 @@ void BuiltinPredicates_this_eq_var_written(void) {
 void BuiltinPredicates_var_eq_id(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t ent = ecs_new_entity(world, "ent");
+    ecs_entity_t ent = ecs_entity(world, { .name = "ent" });
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "$x == ent",
@@ -285,7 +285,7 @@ void BuiltinPredicates_var_eq_id(void) {
 void BuiltinPredicates_var_eq_name(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t ent = ecs_new_entity(world, "ent");
+    ecs_entity_t ent = ecs_entity(world, { .name = "ent" });
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "$x == \"ent\"",
@@ -366,11 +366,11 @@ void BuiltinPredicates_var_eq_id_written(void) {
 
     ECS_TAG(world, RelA);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
     ecs_add(world, ent_1, RelA);
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent_2");
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
     ecs_add(world, ent_2, RelA);
-    ecs_entity_t ent_3 = ecs_new_entity(world, "ent_3");
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
     ecs_add(world, ent_3, RelA);
 
     ecs_query_t *q = ecs_query(world, {
@@ -405,13 +405,13 @@ void BuiltinPredicates_var_eq_id_written_no_match(void) {
     ECS_TAG(world, RelA);
     ECS_TAG(world, RelB);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
     ecs_add(world, ent_1, RelA);
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent_2");
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
     ecs_add(world, ent_2, RelA);
-    ecs_entity_t ent_3 = ecs_new_entity(world, "ent_3");
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
     ecs_add(world, ent_3, RelA);
-    ecs_entity_t ent_4 = ecs_new_entity(world, "ent_4");
+    ecs_entity_t ent_4 = ecs_entity(world, { .name = "ent_4" });
     ecs_add(world, ent_4, RelB);
 
     ecs_query_t *q = ecs_query(world, {
@@ -439,11 +439,11 @@ void BuiltinPredicates_var_eq_name_written(void) {
 
     ECS_TAG(world, RelA);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
     ecs_add(world, ent_1, RelA);
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent_2");
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
     ecs_add(world, ent_2, RelA);
-    ecs_entity_t ent_3 = ecs_new_entity(world, "ent_3");
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
     ecs_add(world, ent_3, RelA);
 
     ecs_query_t *q = ecs_query(world, {
@@ -478,13 +478,13 @@ void BuiltinPredicates_var_eq_name_written_no_match(void) {
     ECS_TAG(world, RelA);
     ECS_TAG(world, RelB);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
     ecs_add(world, ent_1, RelA);
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent_2");
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
     ecs_add(world, ent_2, RelA);
-    ecs_entity_t ent_3 = ecs_new_entity(world, "ent_3");
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
     ecs_add(world, ent_3, RelA);
-    ecs_entity_t ent_4 = ecs_new_entity(world, "ent_4");
+    ecs_entity_t ent_4 = ecs_entity(world, { .name = "ent_4" });
     ecs_add(world, ent_4, RelB);
 
     ecs_query_t *q = ecs_query(world, {
@@ -512,11 +512,11 @@ void BuiltinPredicates_var_eq_var_written(void) {
 
     ECS_TAG(world, RelA);
 
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent_2");
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
     ecs_add_pair(world, ent_1, RelA, ent_2);
     ecs_add_pair(world, ent_2, RelA, ent_2);
-    ecs_entity_t ent_3 = ecs_new_entity(world, "ent_3");
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
     ecs_add_pair(world, ent_3, RelA, ent_2);
 
     ecs_query_t *q = ecs_query(world, {
@@ -553,10 +553,10 @@ void BuiltinPredicates_this_neq_id(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent_2");
-    ecs_entity_t ent_3 = ecs_new_entity(world, "ent_3");
-    ecs_entity_t ent_4 = ecs_new_entity(world, "ent_4");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
+    ecs_entity_t ent_4 = ecs_entity(world, { .name = "ent_4" });
     ecs_add(world, ent_4, Tag);
 
     ecs_query_t *r = ecs_query(world, {
@@ -600,10 +600,10 @@ void BuiltinPredicates_this_neq_name(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent_2");
-    ecs_entity_t ent_3 = ecs_new_entity(world, "ent_3");
-    ecs_entity_t ent_4 = ecs_new_entity(world, "ent_4");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
+    ecs_entity_t ent_4 = ecs_entity(world, { .name = "ent_4" });
     ecs_add(world, ent_4, Tag);
 
     ecs_query_t *q = ecs_query(world, {
@@ -661,11 +661,11 @@ void BuiltinPredicates_this_neq_id_written(void) {
 
     ECS_TAG(world, RelA);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
     ecs_add(world, ent_1, RelA);
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent_2");
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
     ecs_add(world, ent_2, RelA);
-    ecs_entity_t ent_3 = ecs_new_entity(world, "ent_3");
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
     ecs_add(world, ent_3, RelA);
 
     ecs_query_t *q = ecs_query(world, {
@@ -705,13 +705,13 @@ void BuiltinPredicates_this_neq_id_written_no_match(void) {
     ECS_TAG(world, RelA);
     ECS_TAG(world, RelB);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
     ecs_add(world, ent_1, RelA);
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent_2");
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
     ecs_add(world, ent_2, RelA);
-    ecs_entity_t ent_3 = ecs_new_entity(world, "ent_3");
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
     ecs_add(world, ent_3, RelA);
-    ecs_entity_t ent_4 = ecs_new_entity(world, "ent_4");
+    ecs_entity_t ent_4 = ecs_entity(world, { .name = "ent_4" });
     ecs_add(world, ent_4, RelB);
 
     ecs_query_t *q = ecs_query(world, {
@@ -743,11 +743,11 @@ void BuiltinPredicates_this_neq_name_written(void) {
 
     ECS_TAG(world, RelA);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
     ecs_add(world, ent_1, RelA);
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent_2");
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
     ecs_add(world, ent_2, RelA);
-    ecs_entity_t ent_3 = ecs_new_entity(world, "ent_3");
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
     ecs_add(world, ent_3, RelA);
 
     ecs_query_t *q = ecs_query(world, {
@@ -787,13 +787,13 @@ void BuiltinPredicates_this_neq_name_written_no_match(void) {
     ECS_TAG(world, RelA);
     ECS_TAG(world, RelB);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
     ecs_add(world, ent_1, RelA);
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent_2");
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
     ecs_add(world, ent_2, RelA);
-    ecs_entity_t ent_3 = ecs_new_entity(world, "ent_3");
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
     ecs_add(world, ent_3, RelA);
-    ecs_entity_t ent_4 = ecs_new_entity(world, "ent_4");
+    ecs_entity_t ent_4 = ecs_entity(world, { .name = "ent_4" });
     ecs_add(world, ent_4, RelB);
 
     ecs_query_t *q = ecs_query(world, {
@@ -825,11 +825,11 @@ void BuiltinPredicates_this_neq_var_written(void) {
 
     ECS_TAG(world, RelA);
 
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent_2");
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
     ecs_add_pair(world, ent_1, RelA, ent_2);
     ecs_add_pair(world, ent_2, RelA, ent_2);
-    ecs_entity_t ent_3 = ecs_new_entity(world, "ent_3");
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
     ecs_add_pair(world, ent_3, RelA, ent_2);
 
     ecs_query_t *q = ecs_query(world, {
@@ -872,10 +872,10 @@ void BuiltinPredicates_var_neq_id(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent_2");
-    ecs_entity_t ent_3 = ecs_new_entity(world, "ent_3");
-    ecs_entity_t ent_4 = ecs_new_entity(world, "ent_4");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
+    ecs_entity_t ent_4 = ecs_entity(world, { .name = "ent_4" });
     ecs_add(world, ent_4, Tag);
 
     ecs_query_t *q = ecs_query(world, {
@@ -922,10 +922,10 @@ void BuiltinPredicates_var_neq_name(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent_2");
-    ecs_entity_t ent_3 = ecs_new_entity(world, "ent_3");
-    ecs_entity_t ent_4 = ecs_new_entity(world, "ent_4");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
+    ecs_entity_t ent_4 = ecs_entity(world, { .name = "ent_4" });
     ecs_add(world, ent_4, Tag);
 
     ecs_query_t *q = ecs_query(world, {
@@ -1023,11 +1023,11 @@ void BuiltinPredicates_var_neq_id_written(void) {
 
     ECS_TAG(world, RelA);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
     ecs_add(world, ent_1, RelA);
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent_2");
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
     ecs_add(world, ent_2, RelA);
-    ecs_entity_t ent_3 = ecs_new_entity(world, "ent_3");
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
     ecs_add(world, ent_3, RelA);
 
     ecs_query_t *q = ecs_query(world, {
@@ -1070,13 +1070,13 @@ void BuiltinPredicates_var_neq_id_written_no_match(void) {
     ECS_TAG(world, RelA);
     ECS_TAG(world, RelB);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
     ecs_add(world, ent_1, RelA);
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent_2");
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
     ecs_add(world, ent_2, RelA);
-    ecs_entity_t ent_3 = ecs_new_entity(world, "ent_3");
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
     ecs_add(world, ent_3, RelA);
-    ecs_entity_t ent_4 = ecs_new_entity(world, "ent_4");
+    ecs_entity_t ent_4 = ecs_entity(world, { .name = "ent_4" });
     ecs_add(world, ent_4, RelB);
 
     ecs_query_t *q = ecs_query(world, {
@@ -1111,11 +1111,11 @@ void BuiltinPredicates_var_neq_name_written(void) {
 
     ECS_TAG(world, RelA);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
     ecs_add(world, ent_1, RelA);
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent_2");
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
     ecs_add(world, ent_2, RelA);
-    ecs_entity_t ent_3 = ecs_new_entity(world, "ent_3");
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
     ecs_add(world, ent_3, RelA);
 
     ecs_query_t *q = ecs_query(world, {
@@ -1158,13 +1158,13 @@ void BuiltinPredicates_var_neq_name_written_no_match(void) {
     ECS_TAG(world, RelA);
     ECS_TAG(world, RelB);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
     ecs_add(world, ent_1, RelA);
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent_2");
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
     ecs_add(world, ent_2, RelA);
-    ecs_entity_t ent_3 = ecs_new_entity(world, "ent_3");
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
     ecs_add(world, ent_3, RelA);
-    ecs_entity_t ent_4 = ecs_new_entity(world, "ent_4");
+    ecs_entity_t ent_4 = ecs_entity(world, { .name = "ent_4" });
     ecs_add(world, ent_4, RelB);
 
     ecs_query_t *q = ecs_query(world, {
@@ -1199,11 +1199,11 @@ void BuiltinPredicates_var_neq_var_written(void) {
 
     ECS_TAG(world, RelA);
 
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent_2");
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
     ecs_add_pair(world, ent_1, RelA, ent_2);
     ecs_add_pair(world, ent_2, RelA, ent_2);
-    ecs_entity_t ent_3 = ecs_new_entity(world, "ent_3");
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
     ecs_add_pair(world, ent_3, RelA, ent_2);
 
     ecs_query_t *q = ecs_query(world, {
@@ -1249,11 +1249,11 @@ void BuiltinPredicates_this_2_neq_id(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent_2");
-    ecs_entity_t ent_3 = ecs_new_entity(world, "ent_3");
-    ecs_entity_t ent_4 = ecs_new_entity(world, "ent_4");
-    ecs_entity_t ent_5 = ecs_new_entity(world, "ent_5");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
+    ecs_entity_t ent_4 = ecs_entity(world, { .name = "ent_4" });
+    ecs_entity_t ent_5 = ecs_entity(world, { .name = "ent_5" });
     ecs_add(world, ent_5, Tag);
 
     ecs_query_t *q = ecs_query(world, {
@@ -1298,11 +1298,11 @@ void BuiltinPredicates_this_2_neq_name(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent_2");
-    ecs_entity_t ent_3 = ecs_new_entity(world, "ent_3");
-    ecs_entity_t ent_4 = ecs_new_entity(world, "ent_4");
-    ecs_entity_t ent_5 = ecs_new_entity(world, "ent_5");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
+    ecs_entity_t ent_4 = ecs_entity(world, { .name = "ent_4" });
+    ecs_entity_t ent_5 = ecs_entity(world, { .name = "ent_5" });
     ecs_add(world, ent_5, Tag);
 
     ecs_query_t *q = ecs_query(world, {
@@ -1347,11 +1347,11 @@ void BuiltinPredicates_var_2_neq_id(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent_2");
-    ecs_entity_t ent_3 = ecs_new_entity(world, "ent_3");
-    ecs_entity_t ent_4 = ecs_new_entity(world, "ent_4");
-    ecs_entity_t ent_5 = ecs_new_entity(world, "ent_5");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
+    ecs_entity_t ent_4 = ecs_entity(world, { .name = "ent_4" });
+    ecs_entity_t ent_5 = ecs_entity(world, { .name = "ent_5" });
     ecs_add(world, ent_5, Tag);
 
     ecs_query_t *q = ecs_query(world, {
@@ -1399,11 +1399,11 @@ void BuiltinPredicates_var_2_neq_name(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent_2");
-    ecs_entity_t ent_3 = ecs_new_entity(world, "ent_3");
-    ecs_entity_t ent_4 = ecs_new_entity(world, "ent_4");
-    ecs_entity_t ent_5 = ecs_new_entity(world, "ent_5");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
+    ecs_entity_t ent_4 = ecs_entity(world, { .name = "ent_4" });
+    ecs_entity_t ent_5 = ecs_entity(world, { .name = "ent_5" });
     ecs_add(world, ent_5, Tag);
 
     ecs_query_t *q = ecs_query(world, {
@@ -1451,15 +1451,15 @@ void BuiltinPredicates_this_2_neq_id_written(void) {
 
     ECS_TAG(world, RelA);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
     ecs_add(world, ent_1, RelA);
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent_2");
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
     ecs_add(world, ent_2, RelA);
-    ecs_entity_t ent_3 = ecs_new_entity(world, "ent_3");
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
     ecs_add(world, ent_3, RelA);
-    ecs_entity_t ent_4 = ecs_new_entity(world, "ent_4");
+    ecs_entity_t ent_4 = ecs_entity(world, { .name = "ent_4" });
     ecs_add(world, ent_4, RelA);
-    ecs_entity_t ent_5 = ecs_new_entity(world, "ent_5");
+    ecs_entity_t ent_5 = ecs_entity(world, { .name = "ent_5" });
     ecs_add(world, ent_5, RelA);
 
     ecs_query_t *q = ecs_query(world, {
@@ -1499,15 +1499,15 @@ void BuiltinPredicates_this_2_neq_name_written(void) {
 
     ECS_TAG(world, RelA);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
     ecs_add(world, ent_1, RelA);
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent_2");
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
     ecs_add(world, ent_2, RelA);
-    ecs_entity_t ent_3 = ecs_new_entity(world, "ent_3");
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
     ecs_add(world, ent_3, RelA);
-    ecs_entity_t ent_4 = ecs_new_entity(world, "ent_4");
+    ecs_entity_t ent_4 = ecs_entity(world, { .name = "ent_4" });
     ecs_add(world, ent_4, RelA);
-    ecs_entity_t ent_5 = ecs_new_entity(world, "ent_5");
+    ecs_entity_t ent_5 = ecs_entity(world, { .name = "ent_5" });
     ecs_add(world, ent_5, RelA);
 
     ecs_query_t *q = ecs_query(world, {
@@ -1547,15 +1547,15 @@ void BuiltinPredicates_var_2_neq_id_written(void) {
 
     ECS_TAG(world, RelA);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
     ecs_add(world, ent_1, RelA);
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent_2");
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
     ecs_add(world, ent_2, RelA);
-    ecs_entity_t ent_3 = ecs_new_entity(world, "ent_3");
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
     ecs_add(world, ent_3, RelA);
-    ecs_entity_t ent_4 = ecs_new_entity(world, "ent_4");
+    ecs_entity_t ent_4 = ecs_entity(world, { .name = "ent_4" });
     ecs_add(world, ent_4, RelA);
-    ecs_entity_t ent_5 = ecs_new_entity(world, "ent_5");
+    ecs_entity_t ent_5 = ecs_entity(world, { .name = "ent_5" });
     ecs_add(world, ent_5, RelA);
 
     ecs_query_t *q = ecs_query(world, {
@@ -1604,15 +1604,15 @@ void BuiltinPredicates_var_2_neq_name_written(void) {
 
     ECS_TAG(world, RelA);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
     ecs_add(world, ent_1, RelA);
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent_2");
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
     ecs_add(world, ent_2, RelA);
-    ecs_entity_t ent_3 = ecs_new_entity(world, "ent_3");
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
     ecs_add(world, ent_3, RelA);
-    ecs_entity_t ent_4 = ecs_new_entity(world, "ent_4");
+    ecs_entity_t ent_4 = ecs_entity(world, { .name = "ent_4" });
     ecs_add(world, ent_4, RelA);
-    ecs_entity_t ent_5 = ecs_new_entity(world, "ent_5");
+    ecs_entity_t ent_5 = ecs_entity(world, { .name = "ent_5" });
     ecs_add(world, ent_5, RelA);
 
     ecs_query_t *q = ecs_query(world, {
@@ -1661,11 +1661,11 @@ void BuiltinPredicates_this_2_or_id(void) {
 
     ECS_TAG(world, RelA);
 
-    /* ecs_entity_t ent_1 = */ ecs_new_entity(world, "ent_1");
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent_2");
-    ecs_entity_t ent_3 = ecs_new_entity(world, "ent_3");
-    /* ecs_entity_t ent_4 = */ ecs_new_entity(world, "ent_4");
-    /* ecs_entity_t ent_5 = */ ecs_new_entity(world, "ent_5");
+    /* ecs_entity_t ent_1 = */ ecs_entity(world, { .name = "ent_1" });
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
+    /* ecs_entity_t ent_4 = */ ecs_entity(world, { .name = "ent_4" });
+    /* ecs_entity_t ent_5 = */ ecs_entity(world, { .name = "ent_5" });
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "$this == ent_2 || $this == ent_3",
@@ -1699,11 +1699,11 @@ void BuiltinPredicates_this_3_or_id(void) {
 
     ECS_TAG(world, RelA);
 
-    /* ecs_entity_t ent_1 = */ ecs_new_entity(world, "ent_1");
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent_2");
-    ecs_entity_t ent_3 = ecs_new_entity(world, "ent_3");
-    ecs_entity_t ent_4 = ecs_new_entity(world, "ent_4");
-    /* ecs_entity_t ent_5 = */ ecs_new_entity(world, "ent_5");
+    /* ecs_entity_t ent_1 = */ ecs_entity(world, { .name = "ent_1" });
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
+    ecs_entity_t ent_4 = ecs_entity(world, { .name = "ent_4" });
+    /* ecs_entity_t ent_5 = */ ecs_entity(world, { .name = "ent_5" });
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "$this == ent_2 || $this == ent_3 || $this == ent_4",
@@ -1742,11 +1742,11 @@ void BuiltinPredicates_this_2_or_name(void) {
 
     ECS_TAG(world, RelA);
 
-    /* ecs_entity_t ent_1 = */ ecs_new_entity(world, "ent_1");
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent_2");
-    ecs_entity_t ent_3 = ecs_new_entity(world, "ent_3");
-    /* ecs_entity_t ent_4 = */ ecs_new_entity(world, "ent_4");
-    /* ecs_entity_t ent_5 = */ ecs_new_entity(world, "ent_5");
+    /* ecs_entity_t ent_1 = */ ecs_entity(world, { .name = "ent_1" });
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
+    /* ecs_entity_t ent_4 = */ ecs_entity(world, { .name = "ent_4" });
+    /* ecs_entity_t ent_5 = */ ecs_entity(world, { .name = "ent_5" });
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "$this == \"ent_2\" || $this == \"ent_3\"",
@@ -1780,11 +1780,11 @@ void BuiltinPredicates_this_3_or_name(void) {
 
     ECS_TAG(world, RelA);
 
-    /* ecs_entity_t ent_1 = */ ecs_new_entity(world, "ent_1");
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent_2");
-    ecs_entity_t ent_3 = ecs_new_entity(world, "ent_3");
-    ecs_entity_t ent_4 = ecs_new_entity(world, "ent_4");
-    /* ecs_entity_t ent_5 = */ ecs_new_entity(world, "ent_5");
+    /* ecs_entity_t ent_1 = */ ecs_entity(world, { .name = "ent_1" });
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
+    ecs_entity_t ent_4 = ecs_entity(world, { .name = "ent_4" });
+    /* ecs_entity_t ent_5 = */ ecs_entity(world, { .name = "ent_5" });
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "$this == \"ent_2\" || $this == \"ent_3\" || $this == \"ent_4\"",
@@ -1823,13 +1823,13 @@ void BuiltinPredicates_this_2_or_match(void) {
 
     ECS_TAG(world, RelA);
 
-    /* ecs_entity_t ent_1 = */ ecs_new_entity(world, "ent_1");
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent_2");
-    ecs_entity_t ent_2_5 = ecs_new_entity(world, "ent_25");
-    ecs_entity_t ent_3 = ecs_new_entity(world, "ent_3");
-    ecs_entity_t ent_3_5 = ecs_new_entity(world, "ent_35");
-    /* ecs_entity_t ent_4 = */ ecs_new_entity(world, "ent_4");
-    /* ecs_entity_t ent_5 = */ ecs_new_entity(world, "ent_5");
+    /* ecs_entity_t ent_1 = */ ecs_entity(world, { .name = "ent_1" });
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
+    ecs_entity_t ent_2_5 = ecs_entity(world, { .name = "ent_25" });
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
+    ecs_entity_t ent_3_5 = ecs_entity(world, { .name = "ent_35" });
+    /* ecs_entity_t ent_4 = */ ecs_entity(world, { .name = "ent_4" });
+    /* ecs_entity_t ent_5 = */ ecs_entity(world, { .name = "ent_5" });
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "$this ~= \"ent_2\" || $this ~= \"ent_3\"",
@@ -1873,14 +1873,14 @@ void BuiltinPredicates_this_3_or_match(void) {
 
     ECS_TAG(world, RelA);
 
-    /* ecs_entity_t ent_1 = */ ecs_new_entity(world, "ent_1");
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent_2");
-    ecs_entity_t ent_2_5 = ecs_new_entity(world, "ent_25");
-    ecs_entity_t ent_3 = ecs_new_entity(world, "ent_3");
-    ecs_entity_t ent_3_5 = ecs_new_entity(world, "ent_35");
-    ecs_entity_t ent_4 = ecs_new_entity(world, "ent_4");
-    ecs_entity_t ent_4_5 = ecs_new_entity(world, "ent_45");
-    /* ecs_entity_t ent_5 = */ ecs_new_entity(world, "ent_5");
+    /* ecs_entity_t ent_1 = */ ecs_entity(world, { .name = "ent_1" });
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
+    ecs_entity_t ent_2_5 = ecs_entity(world, { .name = "ent_25" });
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
+    ecs_entity_t ent_3_5 = ecs_entity(world, { .name = "ent_35" });
+    ecs_entity_t ent_4 = ecs_entity(world, { .name = "ent_4" });
+    ecs_entity_t ent_4_5 = ecs_entity(world, { .name = "ent_45" });
+    /* ecs_entity_t ent_5 = */ ecs_entity(world, { .name = "ent_5" });
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "$this ~= \"ent_2\" || $this ~= \"ent_3\" || $this ~= \"ent_4\"",
@@ -1934,11 +1934,11 @@ void BuiltinPredicates_var_2_or_id(void) {
 
     ECS_TAG(world, RelA);
 
-    /* ecs_entity_t ent_1 = */ ecs_new_entity(world, "ent_1");
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent_2");
-    ecs_entity_t ent_3 = ecs_new_entity(world, "ent_3");
-    /* ecs_entity_t ent_4 = */ ecs_new_entity(world, "ent_4");
-    /* ecs_entity_t ent_5 = */ ecs_new_entity(world, "ent_5");
+    /* ecs_entity_t ent_1 = */ ecs_entity(world, { .name = "ent_1" });
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
+    /* ecs_entity_t ent_4 = */ ecs_entity(world, { .name = "ent_4" });
+    /* ecs_entity_t ent_5 = */ ecs_entity(world, { .name = "ent_5" });
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "$x == ent_2 || $x == ent_3",
@@ -1974,11 +1974,11 @@ void BuiltinPredicates_var_2_or_name(void) {
 
     ECS_TAG(world, RelA);
 
-    /* ecs_entity_t ent_1 = */ ecs_new_entity(world, "ent_1");
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent_2");
-    ecs_entity_t ent_3 = ecs_new_entity(world, "ent_3");
-    /* ecs_entity_t ent_4 = */ ecs_new_entity(world, "ent_4");
-    /* ecs_entity_t ent_5 = */ ecs_new_entity(world, "ent_5");
+    /* ecs_entity_t ent_1 = */ ecs_entity(world, { .name = "ent_1" });
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
+    /* ecs_entity_t ent_4 = */ ecs_entity(world, { .name = "ent_4" });
+    /* ecs_entity_t ent_5 = */ ecs_entity(world, { .name = "ent_5" });
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "$x == \"ent_2\" || $x == \"ent_3\"",
@@ -2014,15 +2014,15 @@ void BuiltinPredicates_this_2_or_id_written(void) {
 
     ECS_TAG(world, RelA);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
     ecs_add(world, ent_1, RelA);
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent_2");
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
     ecs_add(world, ent_2, RelA);
-    ecs_entity_t ent_3 = ecs_new_entity(world, "ent_3");
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
     ecs_add(world, ent_3, RelA);
-    ecs_entity_t ent_4 = ecs_new_entity(world, "ent_4");
+    ecs_entity_t ent_4 = ecs_entity(world, { .name = "ent_4" });
     ecs_add(world, ent_4, RelA);
-    ecs_entity_t ent_5 = ecs_new_entity(world, "ent_5");
+    ecs_entity_t ent_5 = ecs_entity(world, { .name = "ent_5" });
     ecs_add(world, ent_5, RelA);
 
     ecs_query_t *q = ecs_query(world, {
@@ -2061,15 +2061,15 @@ void BuiltinPredicates_this_3_or_id_written(void) {
 
     ECS_TAG(world, RelA);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
     ecs_add(world, ent_1, RelA);
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent_2");
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
     ecs_add(world, ent_2, RelA);
-    ecs_entity_t ent_3 = ecs_new_entity(world, "ent_3");
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
     ecs_add(world, ent_3, RelA);
-    ecs_entity_t ent_4 = ecs_new_entity(world, "ent_4");
+    ecs_entity_t ent_4 = ecs_entity(world, { .name = "ent_4" });
     ecs_add(world, ent_4, RelA);
-    ecs_entity_t ent_5 = ecs_new_entity(world, "ent_5");
+    ecs_entity_t ent_5 = ecs_entity(world, { .name = "ent_5" });
     ecs_add(world, ent_5, RelA);
 
     ecs_query_t *q = ecs_query(world, {
@@ -2115,15 +2115,15 @@ void BuiltinPredicates_this_2_or_name_written(void) {
 
     ECS_TAG(world, RelA);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
     ecs_add(world, ent_1, RelA);
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent_2");
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
     ecs_add(world, ent_2, RelA);
-    ecs_entity_t ent_3 = ecs_new_entity(world, "ent_3");
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
     ecs_add(world, ent_3, RelA);
-    ecs_entity_t ent_4 = ecs_new_entity(world, "ent_4");
+    ecs_entity_t ent_4 = ecs_entity(world, { .name = "ent_4" });
     ecs_add(world, ent_4, RelA);
-    ecs_entity_t ent_5 = ecs_new_entity(world, "ent_5");
+    ecs_entity_t ent_5 = ecs_entity(world, { .name = "ent_5" });
     ecs_add(world, ent_5, RelA);
 
     ecs_query_t *q = ecs_query(world, {
@@ -2162,15 +2162,15 @@ void BuiltinPredicates_var_2_or_id_written(void) {
 
     ECS_TAG(world, RelA);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
     ecs_add(world, ent_1, RelA);
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent_2");
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
     ecs_add(world, ent_2, RelA);
-    ecs_entity_t ent_3 = ecs_new_entity(world, "ent_3");
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
     ecs_add(world, ent_3, RelA);
-    ecs_entity_t ent_4 = ecs_new_entity(world, "ent_4");
+    ecs_entity_t ent_4 = ecs_entity(world, { .name = "ent_4" });
     ecs_add(world, ent_4, RelA);
-    ecs_entity_t ent_5 = ecs_new_entity(world, "ent_5");
+    ecs_entity_t ent_5 = ecs_entity(world, { .name = "ent_5" });
     ecs_add(world, ent_5, RelA);
 
     ecs_query_t *q = ecs_query(world, {
@@ -2212,15 +2212,15 @@ void BuiltinPredicates_var_2_or_name_written(void) {
 
     ECS_TAG(world, RelA);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
     ecs_add(world, ent_1, RelA);
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent_2");
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent_2" });
     ecs_add(world, ent_2, RelA);
-    ecs_entity_t ent_3 = ecs_new_entity(world, "ent_3");
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "ent_3" });
     ecs_add(world, ent_3, RelA);
-    ecs_entity_t ent_4 = ecs_new_entity(world, "ent_4");
+    ecs_entity_t ent_4 = ecs_entity(world, { .name = "ent_4" });
     ecs_add(world, ent_4, RelA);
-    ecs_entity_t ent_5 = ecs_new_entity(world, "ent_5");
+    ecs_entity_t ent_5 = ecs_entity(world, { .name = "ent_5" });
     ecs_add(world, ent_5, RelA);
 
     ecs_query_t *q = ecs_query(world, {
@@ -2262,13 +2262,13 @@ void BuiltinPredicates_this_match_eq(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
-    /* ecs_entity_t ent_2 = */ ecs_new_entity(world, "ent2");
-    ecs_entity_t ent_3 = ecs_new_entity(world, "nt_3");
-    ecs_entity_t ent_4 = ecs_new_entity(world, "ent_4");
-    ecs_entity_t ent_5 = ecs_new_entity(world, "ent5");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
+    /* ecs_entity_t ent_2 = */ ecs_entity(world, { .name = "ent2" });
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "nt_3" });
+    ecs_entity_t ent_4 = ecs_entity(world, { .name = "ent_4" });
+    ecs_entity_t ent_5 = ecs_entity(world, { .name = "ent5" });
     ecs_add(world, ent_5, Tag);
-    ecs_entity_t ent_6 = ecs_new_entity(world, "ent_6");
+    ecs_entity_t ent_6 = ecs_entity(world, { .name = "ent_6" });
     ecs_add(world, ent_6, Tag);
 
     ecs_query_t *q = ecs_query(world, {
@@ -2309,13 +2309,13 @@ void BuiltinPredicates_var_match_eq(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
-    /* ecs_entity_t ent_2 = */ ecs_new_entity(world, "ent2");
-    ecs_entity_t ent_3 = ecs_new_entity(world, "nt_3");
-    ecs_entity_t ent_4 = ecs_new_entity(world, "ent_4");
-    ecs_entity_t ent_5 = ecs_new_entity(world, "ent5");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
+    /* ecs_entity_t ent_2 = */ ecs_entity(world, { .name = "ent2" });
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "nt_3" });
+    ecs_entity_t ent_4 = ecs_entity(world, { .name = "ent_4" });
+    ecs_entity_t ent_5 = ecs_entity(world, { .name = "ent5" });
     ecs_add(world, ent_5, Tag);
-    ecs_entity_t ent_6 = ecs_new_entity(world, "ent_6");
+    ecs_entity_t ent_6 = ecs_entity(world, { .name = "ent_6" });
     ecs_add(world, ent_6, Tag);
 
     ecs_query_t *q = ecs_query(world, {
@@ -2364,17 +2364,17 @@ void BuiltinPredicates_this_match_eq_written(void) {
     ECS_TAG(world, Tag);
     ECS_TAG(world, RelA);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
     ecs_add(world, ent_1, RelA);
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent2");
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent2" });
     ecs_add(world, ent_2, RelA);
-    ecs_entity_t ent_3 = ecs_new_entity(world, "nt_3");
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "nt_3" });
     ecs_add(world, ent_3, RelA);
-    ecs_entity_t ent_4 = ecs_new_entity(world, "ent_4");
+    ecs_entity_t ent_4 = ecs_entity(world, { .name = "ent_4" });
     ecs_add(world, ent_4, RelA);
-    ecs_entity_t ent_5 = ecs_new_entity(world, "ent5");
+    ecs_entity_t ent_5 = ecs_entity(world, { .name = "ent5" });
     ecs_add(world, ent_5, RelA);
-    ecs_entity_t ent_6 = ecs_new_entity(world, "ent_6");
+    ecs_entity_t ent_6 = ecs_entity(world, { .name = "ent_6" });
     ecs_add(world, ent_6, RelA);
     ecs_add(world, ent_6, Tag);
 
@@ -2420,17 +2420,17 @@ void BuiltinPredicates_this_match_eq_written_self(void) {
     ECS_TAG(world, Tag);
     ECS_TAG(world, RelA);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
     ecs_add(world, ent_1, RelA);
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent2");
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent2" });
     ecs_add(world, ent_2, RelA);
-    ecs_entity_t ent_3 = ecs_new_entity(world, "nt_3");
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "nt_3" });
     ecs_add(world, ent_3, RelA);
-    ecs_entity_t ent_4 = ecs_new_entity(world, "ent_4");
+    ecs_entity_t ent_4 = ecs_entity(world, { .name = "ent_4" });
     ecs_add(world, ent_4, RelA);
-    ecs_entity_t ent_5 = ecs_new_entity(world, "ent5");
+    ecs_entity_t ent_5 = ecs_entity(world, { .name = "ent5" });
     ecs_add(world, ent_5, RelA);
-    ecs_entity_t ent_6 = ecs_new_entity(world, "ent_6");
+    ecs_entity_t ent_6 = ecs_entity(world, { .name = "ent_6" });
     ecs_add(world, ent_6, RelA);
     ecs_add(world, ent_6, Tag);
 
@@ -2476,17 +2476,17 @@ void BuiltinPredicates_var_match_eq_written(void) {
     ECS_TAG(world, Tag);
     ECS_TAG(world, RelA);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
     ecs_add(world, ent_1, RelA);
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent2");
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent2" });
     ecs_add(world, ent_2, RelA);
-    ecs_entity_t ent_3 = ecs_new_entity(world, "nt_3");
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "nt_3" });
     ecs_add(world, ent_3, RelA);
-    ecs_entity_t ent_4 = ecs_new_entity(world, "ent_4");
+    ecs_entity_t ent_4 = ecs_entity(world, { .name = "ent_4" });
     ecs_add(world, ent_4, RelA);
-    ecs_entity_t ent_5 = ecs_new_entity(world, "ent5");
+    ecs_entity_t ent_5 = ecs_entity(world, { .name = "ent5" });
     ecs_add(world, ent_5, RelA);
-    ecs_entity_t ent_6 = ecs_new_entity(world, "ent_6");
+    ecs_entity_t ent_6 = ecs_entity(world, { .name = "ent_6" });
     ecs_add(world, ent_6, RelA);
     ecs_add(world, ent_6, Tag);
 
@@ -2539,13 +2539,13 @@ void BuiltinPredicates_this_match_neq(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent2");
-    ecs_entity_t ent_3 = ecs_new_entity(world, "nt_3");
-    ecs_entity_t ent_4 = ecs_new_entity(world, "ent_4");
-    ecs_entity_t ent_5 = ecs_new_entity(world, "ent5");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent2" });
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "nt_3" });
+    ecs_entity_t ent_4 = ecs_entity(world, { .name = "ent_4" });
+    ecs_entity_t ent_5 = ecs_entity(world, { .name = "ent5" });
     ecs_add(world, ent_5, Tag);
-    ecs_entity_t ent_6 = ecs_new_entity(world, "ent_6");
+    ecs_entity_t ent_6 = ecs_entity(world, { .name = "ent_6" });
     ecs_add(world, ent_6, Tag);
 
     ecs_query_t *q = ecs_query(world, {
@@ -2587,13 +2587,13 @@ void BuiltinPredicates_var_match_neq(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent2");
-    ecs_entity_t ent_3 = ecs_new_entity(world, "nt_3");
-    ecs_entity_t ent_4 = ecs_new_entity(world, "ent_4");
-    ecs_entity_t ent_5 = ecs_new_entity(world, "ent5");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent2" });
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "nt_3" });
+    ecs_entity_t ent_4 = ecs_entity(world, { .name = "ent_4" });
+    ecs_entity_t ent_5 = ecs_entity(world, { .name = "ent5" });
     ecs_add(world, ent_5, Tag);
-    ecs_entity_t ent_6 = ecs_new_entity(world, "ent_6");
+    ecs_entity_t ent_6 = ecs_entity(world, { .name = "ent_6" });
     ecs_add(world, ent_6, Tag);
 
     ecs_query_t *q = ecs_query(world, {
@@ -2639,17 +2639,17 @@ void BuiltinPredicates_this_match_neq_written(void) {
     ECS_TAG(world, Tag);
     ECS_TAG(world, RelA);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
     ecs_add(world, ent_1, RelA);
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent2");
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent2" });
     ecs_add(world, ent_2, RelA);
-    ecs_entity_t ent_3 = ecs_new_entity(world, "nt_3");
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "nt_3" });
     ecs_add(world, ent_3, RelA);
-    ecs_entity_t ent_4 = ecs_new_entity(world, "ent_4");
+    ecs_entity_t ent_4 = ecs_entity(world, { .name = "ent_4" });
     ecs_add(world, ent_4, RelA);
-    ecs_entity_t ent_5 = ecs_new_entity(world, "ent5");
+    ecs_entity_t ent_5 = ecs_entity(world, { .name = "ent5" });
     ecs_add(world, ent_5, RelA);
-    ecs_entity_t ent_6 = ecs_new_entity(world, "ent_6");
+    ecs_entity_t ent_6 = ecs_entity(world, { .name = "ent_6" });
     ecs_add(world, ent_6, RelA);
     ecs_add(world, ent_6, Tag);
 
@@ -2693,17 +2693,17 @@ void BuiltinPredicates_var_match_neq_written(void) {
     ECS_TAG(world, Tag);
     ECS_TAG(world, RelA);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
     ecs_add(world, ent_1, RelA);
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent2");
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent2" });
     ecs_add(world, ent_2, RelA);
-    ecs_entity_t ent_3 = ecs_new_entity(world, "nt_3");
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "nt_3" });
     ecs_add(world, ent_3, RelA);
-    ecs_entity_t ent_4 = ecs_new_entity(world, "ent_4");
+    ecs_entity_t ent_4 = ecs_entity(world, { .name = "ent_4" });
     ecs_add(world, ent_4, RelA);
-    ecs_entity_t ent_5 = ecs_new_entity(world, "ent5");
+    ecs_entity_t ent_5 = ecs_entity(world, { .name = "ent5" });
     ecs_add(world, ent_5, RelA);
-    ecs_entity_t ent_6 = ecs_new_entity(world, "ent_6");
+    ecs_entity_t ent_6 = ecs_entity(world, { .name = "ent_6" });
     ecs_add(world, ent_6, RelA);
     ecs_add(world, ent_6, Tag);
 
@@ -2749,13 +2749,13 @@ void BuiltinPredicates_this_match_2_neq(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent2");
-    ecs_entity_t ent_3 = ecs_new_entity(world, "nt_3");
-    ecs_entity_t ent_4 = ecs_new_entity(world, "ent_4");
-    ecs_entity_t ent_5 = ecs_new_entity(world, "ent5");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent2" });
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "nt_3" });
+    ecs_entity_t ent_4 = ecs_entity(world, { .name = "ent_4" });
+    ecs_entity_t ent_5 = ecs_entity(world, { .name = "ent5" });
     ecs_add(world, ent_5, Tag);
-    ecs_entity_t ent_6 = ecs_new_entity(world, "ent_6");
+    ecs_entity_t ent_6 = ecs_entity(world, { .name = "ent_6" });
     ecs_add(world, ent_6, Tag);
 
     ecs_query_t *q = ecs_query(world, {
@@ -2797,13 +2797,13 @@ void BuiltinPredicates_var_match_2_neq(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent2");
-    ecs_entity_t ent_3 = ecs_new_entity(world, "nt_3");
-    ecs_entity_t ent_4 = ecs_new_entity(world, "ent_4");
-    ecs_entity_t ent_5 = ecs_new_entity(world, "ent5");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent2" });
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "nt_3" });
+    ecs_entity_t ent_4 = ecs_entity(world, { .name = "ent_4" });
+    ecs_entity_t ent_5 = ecs_entity(world, { .name = "ent5" });
     ecs_add(world, ent_5, Tag);
-    ecs_entity_t ent_6 = ecs_new_entity(world, "ent_6");
+    ecs_entity_t ent_6 = ecs_entity(world, { .name = "ent_6" });
     ecs_add(world, ent_6, Tag);
 
     ecs_query_t *q = ecs_query(world, {
@@ -2848,17 +2848,17 @@ void BuiltinPredicates_this_match_2_neq_written(void) {
     ECS_TAG(world, Tag);
     ECS_TAG(world, RelA);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
     ecs_add(world, ent_1, RelA);
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent2");
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent2" });
     ecs_add(world, ent_2, RelA);
-    ecs_entity_t ent_3 = ecs_new_entity(world, "nt_3");
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "nt_3" });
     ecs_add(world, ent_3, RelA);
-    ecs_entity_t ent_4 = ecs_new_entity(world, "ent_4");
+    ecs_entity_t ent_4 = ecs_entity(world, { .name = "ent_4" });
     ecs_add(world, ent_4, RelA);
-    ecs_entity_t ent_5 = ecs_new_entity(world, "ent5");
+    ecs_entity_t ent_5 = ecs_entity(world, { .name = "ent5" });
     ecs_add(world, ent_5, RelA);
-    ecs_entity_t ent_6 = ecs_new_entity(world, "ent_6");
+    ecs_entity_t ent_6 = ecs_entity(world, { .name = "ent_6" });
     ecs_add(world, ent_6, RelA);
     ecs_add(world, ent_6, Tag);
 
@@ -2902,17 +2902,17 @@ void BuiltinPredicates_var_match_2_neq_written(void) {
     ECS_TAG(world, Tag);
     ECS_TAG(world, RelA);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
     ecs_add(world, ent_1, RelA);
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent2");
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent2" });
     ecs_add(world, ent_2, RelA);
-    ecs_entity_t ent_3 = ecs_new_entity(world, "nt_3");
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "nt_3" });
     ecs_add(world, ent_3, RelA);
-    ecs_entity_t ent_4 = ecs_new_entity(world, "ent_4");
+    ecs_entity_t ent_4 = ecs_entity(world, { .name = "ent_4" });
     ecs_add(world, ent_4, RelA);
-    ecs_entity_t ent_5 = ecs_new_entity(world, "ent5");
+    ecs_entity_t ent_5 = ecs_entity(world, { .name = "ent5" });
     ecs_add(world, ent_5, RelA);
-    ecs_entity_t ent_6 = ecs_new_entity(world, "ent_6");
+    ecs_entity_t ent_6 = ecs_entity(world, { .name = "ent_6" });
     ecs_add(world, ent_6, RelA);
     ecs_add(world, ent_6, Tag);
 
@@ -2957,13 +2957,13 @@ void BuiltinPredicates_this_match_2_or(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
-    /* ecs_entity_t ent_2 = */ ecs_new_entity(world, "ent2");
-    ecs_entity_t ent_3 = ecs_new_entity(world, "nt_3");
-    /* ecs_entity_t ent_4 = */ ecs_new_entity(world, "ent_4");
-    ecs_entity_t ent_5 = ecs_new_entity(world, "ent5");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
+    /* ecs_entity_t ent_2 = */ ecs_entity(world, { .name = "ent2" });
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "nt_3" });
+    /* ecs_entity_t ent_4 = */ ecs_entity(world, { .name = "ent_4" });
+    ecs_entity_t ent_5 = ecs_entity(world, { .name = "ent5" });
     ecs_add(world, ent_5, Tag);
-    ecs_entity_t ent_6 = ecs_new_entity(world, "ent_6");
+    ecs_entity_t ent_6 = ecs_entity(world, { .name = "ent_6" });
     ecs_add(world, ent_6, Tag);
 
     ecs_query_t *q = ecs_query(world, {
@@ -2999,17 +2999,17 @@ void BuiltinPredicates_this_match_2_or_written(void) {
     ECS_TAG(world, Tag);
     ECS_TAG(world, RelA);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
     ecs_add(world, ent_1, RelA);
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent2");
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent2" });
     ecs_add(world, ent_2, RelA);
-    ecs_entity_t ent_3 = ecs_new_entity(world, "nt_3");
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "nt_3" });
     ecs_add(world, ent_3, RelA);
-    ecs_entity_t ent_4 = ecs_new_entity(world, "ent_4");
+    ecs_entity_t ent_4 = ecs_entity(world, { .name = "ent_4" });
     ecs_add(world, ent_4, RelA);
-    ecs_entity_t ent_5 = ecs_new_entity(world, "ent5");
+    ecs_entity_t ent_5 = ecs_entity(world, { .name = "ent5" });
     ecs_add(world, ent_5, RelA);
-    ecs_entity_t ent_6 = ecs_new_entity(world, "ent_6");
+    ecs_entity_t ent_6 = ecs_entity(world, { .name = "ent_6" });
     ecs_add(world, ent_6, RelA);
     ecs_add(world, ent_6, Tag);
 
@@ -3047,13 +3047,13 @@ void BuiltinPredicates_this_match_3_or(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
-    /* ecs_entity_t ent_2 = */ ecs_new_entity(world, "ent2");
-    ecs_entity_t ent_3 = ecs_new_entity(world, "nt_3");
-    /* ecs_entity_t ent_4 = */ ecs_new_entity(world, "ent_4");
-    ecs_entity_t ent_5 = ecs_new_entity(world, "ent5");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
+    /* ecs_entity_t ent_2 = */ ecs_entity(world, { .name = "ent2" });
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "nt_3" });
+    /* ecs_entity_t ent_4 = */ ecs_entity(world, { .name = "ent_4" });
+    ecs_entity_t ent_5 = ecs_entity(world, { .name = "ent5" });
     ecs_add(world, ent_5, Tag);
-    ecs_entity_t ent_6 = ecs_new_entity(world, "ent_6");
+    ecs_entity_t ent_6 = ecs_entity(world, { .name = "ent_6" });
     ecs_add(world, ent_6, Tag);
 
     ecs_query_t *q = ecs_query(world, {
@@ -3094,17 +3094,17 @@ void BuiltinPredicates_this_match_3_or_written(void) {
     ECS_TAG(world, Tag);
     ECS_TAG(world, RelA);
 
-    ecs_entity_t ent_1 = ecs_new_entity(world, "ent_1");
+    ecs_entity_t ent_1 = ecs_entity(world, { .name = "ent_1" });
     ecs_add(world, ent_1, RelA);
-    ecs_entity_t ent_2 = ecs_new_entity(world, "ent2");
+    ecs_entity_t ent_2 = ecs_entity(world, { .name = "ent2" });
     ecs_add(world, ent_2, RelA);
-    ecs_entity_t ent_3 = ecs_new_entity(world, "nt_3");
+    ecs_entity_t ent_3 = ecs_entity(world, { .name = "nt_3" });
     ecs_add(world, ent_3, RelA);
-    ecs_entity_t ent_4 = ecs_new_entity(world, "ent_4");
+    ecs_entity_t ent_4 = ecs_entity(world, { .name = "ent_4" });
     ecs_add(world, ent_4, RelA);
-    ecs_entity_t ent_5 = ecs_new_entity(world, "ent5");
+    ecs_entity_t ent_5 = ecs_entity(world, { .name = "ent5" });
     ecs_add(world, ent_5, RelA);
-    ecs_entity_t ent_6 = ecs_new_entity(world, "ent_6");
+    ecs_entity_t ent_6 = ecs_entity(world, { .name = "ent_6" });
     ecs_add(world, ent_6, RelA);
     ecs_add(world, ent_6, Tag);
 
@@ -3159,7 +3159,7 @@ void BuiltinPredicates_unresolved_by_name(void) {
         test_bool(false, ecs_query_next(&it));
     }
 
-    ecs_entity_t ent = ecs_new_entity(world, "ent");
+    ecs_entity_t ent = ecs_entity(world, { .name = "ent" });
 
     {
         ecs_iter_t it = ecs_query_iter(world, q);
@@ -3342,19 +3342,19 @@ void BuiltinPredicates_2_or_w_eq_lookup_var(void) {
     ecs_entity_t e3 = ecs_new(world, Foo);
     ecs_new(world, Foo);
 
-    ecs_entity_t child1 = ecs_new_entity(world, "hello");
+    ecs_entity_t child1 = ecs_entity(world, { .name = "hello" });
     ecs_add_pair(world, child1, EcsChildOf, e1);
     ecs_add(world, child1, Bar);
 
-    ecs_entity_t child2 = ecs_new_entity(world, "world");
+    ecs_entity_t child2 = ecs_entity(world, { .name = "world" });
     ecs_add_pair(world, child2, EcsChildOf, e2);
     ecs_add(world, child2, Bar);
 
-    ecs_entity_t child3_1 = ecs_new_entity(world, "hello");
+    ecs_entity_t child3_1 = ecs_entity(world, { .name = "hello" });
     ecs_add_pair(world, child3_1, EcsChildOf, e3);
     ecs_add(world, child3_1, Bar);
 
-    ecs_entity_t child3_2 = ecs_new_entity(world, "world");
+    ecs_entity_t child3_2 = ecs_entity(world, { .name = "world" });
     ecs_add_pair(world, child3_2, EcsChildOf, e3);
     ecs_add(world, child3_2, Bar);
 
@@ -3417,23 +3417,23 @@ void BuiltinPredicates_3_or_w_eq_lookup_var(void) {
     ecs_entity_t e4 = ecs_new(world, Foo);
     ecs_new(world, Foo);
 
-    ecs_entity_t child1 = ecs_new_entity(world, "hello");
+    ecs_entity_t child1 = ecs_entity(world, { .name = "hello" });
     ecs_add_pair(world, child1, EcsChildOf, e1);
     ecs_add(world, child1, Bar);
 
-    ecs_entity_t child2 = ecs_new_entity(world, "world");
+    ecs_entity_t child2 = ecs_entity(world, { .name = "world" });
     ecs_add_pair(world, child2, EcsChildOf, e2);
     ecs_add(world, child2, Bar);
 
-    ecs_entity_t child3_1 = ecs_new_entity(world, "hello");
+    ecs_entity_t child3_1 = ecs_entity(world, { .name = "hello" });
     ecs_add_pair(world, child3_1, EcsChildOf, e3);
     ecs_add(world, child3_1, Bar);
 
-    ecs_entity_t child3_2 = ecs_new_entity(world, "world");
+    ecs_entity_t child3_2 = ecs_entity(world, { .name = "world" });
     ecs_add_pair(world, child3_2, EcsChildOf, e3);
     ecs_add(world, child3_2, Bar);
 
-    ecs_entity_t child4 = ecs_new_entity(world, "zoo");
+    ecs_entity_t child4 = ecs_entity(world, { .name = "zoo" });
     ecs_add_pair(world, child4, EcsChildOf, e4);
     ecs_add(world, child4, Bar);
 

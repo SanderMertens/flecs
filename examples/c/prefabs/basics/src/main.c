@@ -28,11 +28,11 @@ int main(int argc, char *argv[]) {
     ECS_COMPONENT(ecs, Defense);
 
     // Create a SpaceShip prefab with a Defense component.
-    ecs_entity_t SpaceShip = ecs_new_prefab(ecs, "SpaceShip");
+    ecs_entity_t SpaceShip = ecs_entity(ecs, { .name = "SpaceShip", .add = { EcsPrefab } });
     ecs_set(ecs, SpaceShip, Defense, {50});
 
     // Create a prefab instance
-    ecs_entity_t inst = ecs_new_entity(ecs, "my_spaceship");
+    ecs_entity_t inst = ecs_entity(ecs, { .name = "my_spaceship" });
     ecs_add_pair(ecs, inst, EcsIsA, SpaceShip);
 
     // Because of the IsA relationship, the instance now shares the Defense

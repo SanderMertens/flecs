@@ -2400,7 +2400,7 @@ void ComponentLifecycle_on_add_w_existing_component(void) {
         .ctx = (void*)&EcsOnAdd
     });
 
-    ecs_entity_t e = ecs_new_entity(world, "Foo");
+    ecs_entity_t e = ecs_entity(world, { .name = "Foo" });
     ecs_add(world, e, Position);
 
     test_int(1, test_on_event_invoked);
@@ -2420,7 +2420,7 @@ void ComponentLifecycle_on_remove_w_existing_component(void) {
         .ctx = (void*)&EcsOnRemove
     });
 
-    ecs_entity_t e = ecs_new_entity(world, "Foo");
+    ecs_entity_t e = ecs_entity(world, { .name = "Foo" });
     ecs_add(world, e, Position);
 
     test_int(0, test_on_event_invoked);
@@ -2722,7 +2722,7 @@ void ComponentLifecycle_ptr_to_self(void) {
         .dtor = ecs_dtor(TestSelf)
     });
 
-    ecs_entity_t role = ecs_new_entity(world, "MyRole");
+    ecs_entity_t role = ecs_entity(world, { .name = "MyRole" });
 
     ecs_entity_t e1 = ecs_new_id(world);
     ecs_set(world, e1, TestSelf, {"a"});

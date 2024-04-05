@@ -30,63 +30,63 @@ int main(int argc, char *argv[]) {
     ECS_TAG(ecs, Person);
 
     // Populate the store with locations
-    ecs_entity_t earth = ecs_new_entity(ecs, "Earth");
+    ecs_entity_t earth = ecs_entity(ecs, { .name = "Earth" });
     ecs_add(ecs, earth, Planet);
 
     // Continents
-    ecs_entity_t north_america = ecs_new_entity(ecs, "NorthAmerica");
+    ecs_entity_t north_america = ecs_entity(ecs, { .name = "NorthAmerica" });
     ecs_add(ecs, north_america, Continent);
     ecs_add_pair(ecs, north_america, LocatedIn, earth);
 
-    ecs_entity_t europe = ecs_new_entity(ecs, "Europe");
+    ecs_entity_t europe = ecs_entity(ecs, { .name = "Europe" });
     ecs_add(ecs, europe, Continent);
     ecs_add_pair(ecs, europe, LocatedIn, earth);
 
     // Countries
-    ecs_entity_t united_states = ecs_new_entity(ecs, "UnitedStates");
+    ecs_entity_t united_states = ecs_entity(ecs, { .name = "UnitedStates" });
     ecs_add(ecs, united_states, Country);
     ecs_add_pair(ecs, united_states, LocatedIn, north_america);
 
-    ecs_entity_t netherlands = ecs_new_entity(ecs, "Netherlands");
+    ecs_entity_t netherlands = ecs_entity(ecs, { .name = "Netherlands" });
     ecs_add(ecs, netherlands, Country);
     ecs_add_pair(ecs, netherlands, LocatedIn, europe);
 
     // States
-    ecs_entity_t california = ecs_new_entity(ecs, "California");
+    ecs_entity_t california = ecs_entity(ecs, { .name = "California" });
     ecs_add(ecs, california, State);
     ecs_add_pair(ecs, california, LocatedIn, united_states);
 
-    ecs_entity_t washington = ecs_new_entity(ecs, "Washington");
+    ecs_entity_t washington = ecs_entity(ecs, { .name = "Washington" });
     ecs_add(ecs, washington, State);
     ecs_add_pair(ecs, washington, LocatedIn, united_states);
 
-    ecs_entity_t noord_holland = ecs_new_entity(ecs, "NoordHolland");
+    ecs_entity_t noord_holland = ecs_entity(ecs, { .name = "NoordHolland" });
     ecs_add(ecs, noord_holland, State);
     ecs_add_pair(ecs, noord_holland, LocatedIn, netherlands);
 
     // Cities
-    ecs_entity_t san_francisco = ecs_new_entity(ecs, "SanFrancisco");
+    ecs_entity_t san_francisco = ecs_entity(ecs, { .name = "SanFrancisco" });
     ecs_add(ecs, san_francisco, City);
     ecs_add_pair(ecs, san_francisco, LocatedIn, california);
 
-    ecs_entity_t seattle = ecs_new_entity(ecs, "Seattle");
+    ecs_entity_t seattle = ecs_entity(ecs, { .name = "Seattle" });
     ecs_add(ecs, seattle, City);
     ecs_add_pair(ecs, seattle, LocatedIn, washington);
 
-    ecs_entity_t amsterdam = ecs_new_entity(ecs, "Amsterdam");
+    ecs_entity_t amsterdam = ecs_entity(ecs, { .name = "Amsterdam" });
     ecs_add(ecs, amsterdam, City);
     ecs_add_pair(ecs, amsterdam, LocatedIn, noord_holland);
 
     // Inhabitants
-    ecs_entity_t bob = ecs_new_entity(ecs, "Bob");
+    ecs_entity_t bob = ecs_entity(ecs, { .name = "Bob" });
     ecs_add(ecs, bob, Person);
     ecs_add_pair(ecs, bob, LocatedIn, san_francisco);
 
-    ecs_entity_t alice = ecs_new_entity(ecs, "Alice");
+    ecs_entity_t alice = ecs_entity(ecs, { .name = "Alice" });
     ecs_add(ecs, alice, Person);
     ecs_add_pair(ecs, alice, LocatedIn, seattle);
 
-    ecs_entity_t job = ecs_new_entity(ecs, "Job");
+    ecs_entity_t job = ecs_entity(ecs, { .name = "Job" });
     ecs_add(ecs, job, Person);
     ecs_add_pair(ecs, job, LocatedIn, amsterdam);
 

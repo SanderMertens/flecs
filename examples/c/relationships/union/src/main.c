@@ -39,15 +39,15 @@ int main(int argc, char *argv[]) {
     });
 
     // Create a few entities with various state combinations
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_add_pair(world, e1, Movement, Walking);
     ecs_add_pair(world, e1, Direction, Front);
 
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
     ecs_add_pair(world, e2, Movement, Running);
     ecs_add_pair(world, e2, Direction, Left);
 
-    ecs_entity_t e3 = ecs_new_entity(world, "e3");
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
     ecs_add_pair(world, e3, Movement, Running);
     ecs_add_pair(world, e3, Direction, Right);
 

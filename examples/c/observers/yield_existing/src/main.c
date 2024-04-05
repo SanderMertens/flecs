@@ -35,9 +35,9 @@ int main(int argc, char *argv[]) {
     ECS_COMPONENT(ecs, Position);
 
     // Create existing entities with Position component
-    ecs_entity_t e1 = ecs_new_entity(ecs, "e1");
+    ecs_entity_t e1 = ecs_entity(ecs, { .name = "e1" });
     ecs_set(ecs, e1, Position, {10, 20});
-    ecs_entity_t e2 = ecs_new_entity(ecs, "e2");
+    ecs_entity_t e2 = ecs_entity(ecs, { .name = "e2" });
     ecs_set(ecs, e2, Position, {20, 30});
 
     ecs_observer(ecs, {

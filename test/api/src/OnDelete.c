@@ -2952,12 +2952,12 @@ void OnDelete_deferred_delete_with_after_create_named(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_add(world, e1, Tag);
 
     ecs_defer_begin(world);
     ecs_delete_with(world, Tag);
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
     ecs_add(world, e2, Tag);
     ecs_defer_end(world);
 
@@ -2974,15 +2974,15 @@ void OnDelete_deferred_delete_with_childof_after_create_named(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t parent = ecs_new_entity(world, "parent");
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
     ecs_add(world, parent, Tag);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "parent.e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "parent.e1" });
     ecs_add(world, e1, Tag);
 
     ecs_defer_begin(world);
     ecs_delete_with(world, ecs_childof(parent));
-    ecs_entity_t e2 = ecs_new_entity(world, "parent.e2");
+    ecs_entity_t e2 = ecs_entity(world, { .name = "parent.e2" });
     ecs_add(world, e2, Tag);
     ecs_defer_end(world);
 
@@ -2997,7 +2997,7 @@ void OnDelete_deferred_delete_with_childof_after_create_named(void) {
 void OnDelete_match_marked_for_deletion(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ns = ecs_new_entity(world, "ns");
+    ecs_entity_t ns = ecs_entity(world, { .name = "ns" });
     ecs_set_scope(world, ns);
     ECS_COMPONENT(world, Position);
     ecs_entity_t Foo = ecs_component(world, { .entity = ecs_new(world, 0) });
@@ -3064,8 +3064,8 @@ void OnDelete_fini_query_w_singleton_in_scope_no_module(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t t = ecs_new_entity(world, "ns.foo");
-    ecs_entity_t s = ecs_new_entity(world, "ns.singleton");
+    ecs_entity_t t = ecs_entity(world, { .name = "ns.foo" });
+    ecs_entity_t s = ecs_entity(world, { .name = "ns.singleton" });
     ecs_add_id(world, s, s);
 
     ecs_query_t *q = ecs_query(world, { .expr = "Position, ns.singleton($)" });
@@ -3087,11 +3087,11 @@ void OnDelete_fini_query_w_singleton_in_module(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t n = ecs_new_entity(world, "ns");
+    ecs_entity_t n = ecs_entity(world, { .name = "ns" });
     ecs_add_id(world, n, EcsModule);
 
-    ecs_entity_t t = ecs_new_entity(world, "ns.foo");
-    ecs_entity_t s = ecs_new_entity(world, "ns.singleton");
+    ecs_entity_t t = ecs_entity(world, { .name = "ns.foo" });
+    ecs_entity_t s = ecs_entity(world, { .name = "ns.singleton" });
     ecs_add_id(world, s, s);
 
     ecs_query_t *q = ecs_query(world, { .expr = "Position, ns.singleton($)" });
@@ -3113,7 +3113,7 @@ void OnDelete_fini_observer_w_relationship_in_scope(void) {
 
     ecs_entity_t Tag = ecs_new_id(world);
 
-    ecs_entity_t ns = ecs_new_entity(world, "ns");
+    ecs_entity_t ns = ecs_entity(world, { .name = "ns" });
     ecs_entity_t Rel = ecs_component(world, {
         .entity = ecs_entity(world, { .name = "Rel" }),
     });

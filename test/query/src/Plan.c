@@ -193,7 +193,7 @@ void Plan_3_trivial_plan_w_pair(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_new_entity(world, "p");
+    ecs_entity(world, { .name = "p" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Foo(self), Bar(self), ChildOf(self, p)"
@@ -224,7 +224,7 @@ void Plan_3_trivial_plan_w_wildcard(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_new_entity(world, "p");
+    ecs_entity(world, { .name = "p" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Foo(self), Bar(self), ChildOf(self, *)"
@@ -255,7 +255,7 @@ void Plan_3_trivial_plan_w_any(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_new_entity(world, "p");
+    ecs_entity(world, { .name = "p" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Foo(self), Bar(self), ChildOf(self, _)"
@@ -287,7 +287,7 @@ void Plan_3_trivial_plan_w_pair_component(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_new_entity(world, "p");
+    ecs_entity(world, { .name = "p" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Position(self), Velocity(self), ChildOf(self, p)"
@@ -318,7 +318,7 @@ void Plan_3_trivial_plan_w_wildcard_component(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_new_entity(world, "p");
+    ecs_entity(world, { .name = "p" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Position(self), Velocity(self), ChildOf(self, *)"
@@ -349,7 +349,7 @@ void Plan_3_trivial_plan_w_any_component(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_new_entity(world, "p");
+    ecs_entity(world, { .name = "p" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Position(self), Velocity(self), ChildOf(self, _)"
@@ -381,7 +381,7 @@ void Plan_1_trivial_component_w_none(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_new_entity(world, "p");
+    ecs_entity(world, { .name = "p" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "[none] Position(self)"
@@ -412,7 +412,7 @@ void Plan_2_trivial_component_w_none(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_new_entity(world, "p");
+    ecs_entity(world, { .name = "p" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "[none] Position(self), [none] Velocity(self)"
@@ -471,7 +471,7 @@ void Plan_this_before_fixed_src(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_new_entity(world, "e");
+    ecs_entity(world, { .name = "e" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Foo, Bar(e)"
@@ -504,7 +504,7 @@ void Plan_fixed_src_before_this(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_new_entity(world, "e");
+    ecs_entity(world, { .name = "e" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Bar(e), Foo"
@@ -537,7 +537,7 @@ void Plan_var_before_fixed_src(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_new_entity(world, "e");
+    ecs_entity(world, { .name = "e" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Foo($var), Bar(e)"
@@ -572,7 +572,7 @@ void Plan_fixed_src_before_var(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_new_entity(world, "e");
+    ecs_entity(world, { .name = "e" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Bar(e), Foo($var)"
@@ -607,7 +607,7 @@ void Plan_this_before_fixed_src_w_not(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_new_entity(world, "e");
+    ecs_entity(world, { .name = "e" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Foo, !Bar(e)"
@@ -642,7 +642,7 @@ void Plan_this_before_fixed_src_w_first_var(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_new_entity(world, "e");
+    ecs_entity(world, { .name = "e" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Foo, $this(e)"
@@ -676,7 +676,7 @@ void Plan_this_before_fixed_src_w_first_var_w_not(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_new_entity(world, "e");
+    ecs_entity(world, { .name = "e" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Foo, !$this(e)"
@@ -713,7 +713,7 @@ void Plan_this_before_fixed_src_w_second_var(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_new_entity(world, "e");
+    ecs_entity(world, { .name = "e" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Foo, Bar(e, $this)"
@@ -747,7 +747,7 @@ void Plan_this_before_fixed_src_w_second_var_w_not(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
-    ecs_new_entity(world, "e");
+    ecs_entity(world, { .name = "e" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Foo, !Bar(e, $this)"
@@ -784,7 +784,7 @@ void Plan_populate_1_fixed(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_new_entity(world, "e");
+    ecs_entity(world, { .name = "e" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Position(e)"
@@ -817,7 +817,7 @@ void Plan_populate_2_fixed(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_new_entity(world, "e");
+    ecs_entity(world, { .name = "e" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Position(e), Velocity(e)"
@@ -851,7 +851,7 @@ void Plan_populate_1_fixed_1_this_self(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_new_entity(world, "e");
+    ecs_entity(world, { .name = "e" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Position(e), Velocity(self)"
@@ -888,7 +888,7 @@ void Plan_populate_2_fixed_2_this_self(void) {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ecs_new_entity(world, "e");
+    ecs_entity(world, { .name = "e" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Position(e), Velocity(e), Mass(self), Rotation(self)"
@@ -925,7 +925,7 @@ void Plan_populate_2_fixed_2_this_self_interleaved(void) {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ecs_new_entity(world, "e");
+    ecs_entity(world, { .name = "e" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Position(e), Mass(self), Velocity(e), Rotation(self)"
@@ -962,7 +962,7 @@ void Plan_populate_2_this_self_2_fixed(void) {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ecs_new_entity(world, "e");
+    ecs_entity(world, { .name = "e" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Mass(self), Rotation(self), Position(e), Velocity(e)"
@@ -997,7 +997,7 @@ void Plan_populate_1_fixed_1_this_up(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_new_entity(world, "e");
+    ecs_entity(world, { .name = "e" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Position(e), Velocity(up)"
@@ -1034,7 +1034,7 @@ void Plan_populate_2_fixed_2_this_up(void) {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ecs_new_entity(world, "e");
+    ecs_entity(world, { .name = "e" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Position(e), Velocity(e), Mass(up), Rotation(up)"
@@ -1073,7 +1073,7 @@ void Plan_populate_2_fixed_2_this_up_interleaved(void) {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ecs_new_entity(world, "e");
+    ecs_entity(world, { .name = "e" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Position(e), Mass(up), Velocity(e), Rotation(up)"
@@ -1112,7 +1112,7 @@ void Plan_populate_2_this_up_2_fixed(void) {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ecs_new_entity(world, "e");
+    ecs_entity(world, { .name = "e" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Mass(up), Rotation(up), Position(e), Velocity(e)"
@@ -1151,7 +1151,7 @@ void Plan_populate_1_fixed_1_this_self_cached(void) {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ecs_new_entity(world, "e");
+    ecs_entity(world, { .name = "e" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Position(e), Velocity(self)",
@@ -1188,7 +1188,7 @@ void Plan_populate_2_fixed_2_this_self_cached(void) {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ecs_new_entity(world, "e");
+    ecs_entity(world, { .name = "e" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Position(e), Velocity(e), Mass(self), Rotation(self)",
@@ -1226,7 +1226,7 @@ void Plan_populate_2_fixed_2_this_self_interleaved_cached(void) {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ecs_new_entity(world, "e");
+    ecs_entity(world, { .name = "e" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Position(e), Mass(self), Velocity(e), Rotation(self)",
@@ -1264,7 +1264,7 @@ void Plan_populate_2_this_self_2_fixed_cached(void) {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ecs_new_entity(world, "e");
+    ecs_entity(world, { .name = "e" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Mass(self), Rotation(self), Position(e), Velocity(e)",
@@ -1302,7 +1302,7 @@ void Plan_populate_1_fixed_1_this_up_cached(void) {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ecs_new_entity(world, "e");
+    ecs_entity(world, { .name = "e" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Position(e), Velocity(up)",
@@ -1339,7 +1339,7 @@ void Plan_populate_2_fixed_2_this_up_cached(void) {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ecs_new_entity(world, "e");
+    ecs_entity(world, { .name = "e" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Position(e), Velocity(e), Mass(up), Rotation(up)",
@@ -1377,7 +1377,7 @@ void Plan_populate_2_fixed_2_this_up_interleaved_cached(void) {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ecs_new_entity(world, "e");
+    ecs_entity(world, { .name = "e" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Position(e), Mass(up), Velocity(e), Rotation(up)",
@@ -1415,7 +1415,7 @@ void Plan_populate_2_this_up_2_fixed_cached(void) {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ecs_new_entity(world, "e");
+    ecs_entity(world, { .name = "e" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Mass(up), Rotation(up), Position(e), Velocity(e)",
@@ -1453,7 +1453,7 @@ void Plan_populate_1_fixed_1_var_self(void) {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ecs_new_entity(world, "e");
+    ecs_entity(world, { .name = "e" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Position(e), Velocity($var:self)",
@@ -1493,7 +1493,7 @@ void Plan_populate_2_fixed_2_var_self(void) {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ecs_new_entity(world, "e");
+    ecs_entity(world, { .name = "e" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Position(e), Velocity(e), Mass($var:self), Rotation($var:self)",
@@ -1535,7 +1535,7 @@ void Plan_populate_2_fixed_2_var_self_interleaved(void) {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ecs_new_entity(world, "e");
+    ecs_entity(world, { .name = "e" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Position(e), Mass($var:self), Velocity(e), Rotation($var:self)",
@@ -1577,7 +1577,7 @@ void Plan_populate_2_var_self_2_fixed(void) {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ecs_new_entity(world, "e");
+    ecs_entity(world, { .name = "e" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Mass($var:self), Rotation($var:self), Position(e), Velocity(e)",
@@ -1619,7 +1619,7 @@ void Plan_populate_1_fixed_1_var_up(void) {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ecs_new_entity(world, "e");
+    ecs_entity(world, { .name = "e" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Position(e), Velocity($var:up)",
@@ -1659,7 +1659,7 @@ void Plan_populate_2_fixed_2_var_up(void) {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ecs_new_entity(world, "e");
+    ecs_entity(world, { .name = "e" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Position(e), Velocity(e), Mass($var:up), Rotation($var:up)",
@@ -1701,7 +1701,7 @@ void Plan_populate_2_fixed_2_var_up_interleaved(void) {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ecs_new_entity(world, "e");
+    ecs_entity(world, { .name = "e" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Position(e), Mass($var:up), Velocity(e), Rotation($var:up)",
@@ -1743,7 +1743,7 @@ void Plan_populate_2_var_up_2_fixed(void) {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ecs_new_entity(world, "e");
+    ecs_entity(world, { .name = "e" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Mass($var:up), Rotation($var:up), Position(e), Velocity(e)",
@@ -1785,7 +1785,7 @@ void Plan_cache_2_or(void) {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ecs_new_entity(world, "e");
+    ecs_entity(world, { .name = "e" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Position || Velocity",
@@ -1818,7 +1818,7 @@ void Plan_cache_2_or_w_not(void) {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ecs_new_entity(world, "e");
+    ecs_entity(world, { .name = "e" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Position || Velocity, !Mass",

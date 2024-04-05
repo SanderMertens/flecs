@@ -24,7 +24,7 @@ void ComponentInheritance_1_ent_0_lvl(void) {
 
     populate_facts(world);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_add(world, e1, Warlock);
 
     ecs_query_t *r = ecs_query(world, {
@@ -54,7 +54,7 @@ void ComponentInheritance_1_ent_1_lvl(void) {
 
     populate_facts(world);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_add(world, e1, Warlock);
 
     ecs_query_t *r = ecs_query(world, {
@@ -84,7 +84,7 @@ void ComponentInheritance_1_ent_2_lvl(void) {
 
     populate_facts(world);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_add(world, e1, Warlock);
 
     ecs_query_t *r = ecs_query(world, {
@@ -114,7 +114,7 @@ void ComponentInheritance_1_ent_3_lvl(void) {
 
     populate_facts(world);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_add(world, e1, Warlock);
 
     ecs_query_t *r = ecs_query(world, {
@@ -1240,7 +1240,7 @@ void ComponentInheritance_1_ent_1_lvl_self(void) {
 
     populate_facts(world);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_add(world, e1, Warlock);
 
     ecs_query_t *r = ecs_query(world, {
@@ -1526,7 +1526,7 @@ void ComponentInheritance_1_ent_src_not(void) {
 
     populate_facts(world);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_add(world, e1, Warrior);
 
     {
@@ -3284,9 +3284,9 @@ void ComponentInheritance_first_self(void) {
 
     populate_facts(world);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_add(world, e1, Warlock);
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
     ecs_add(world, e2, Warrior);
 
     {

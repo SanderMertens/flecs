@@ -1580,8 +1580,8 @@ void Entity_set_name_w_0_twice(void) {
 void Entity_new_entity_twice(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e1 = ecs_new_entity(world, "Foo");
-    ecs_entity_t e2 = ecs_new_entity(world, "Foo");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "Foo" });
 
     test_str(ecs_get_name(world, e1), "Foo");
     test_assert(e1 == e2);
@@ -1592,8 +1592,8 @@ void Entity_new_entity_twice(void) {
 void Entity_new_entity_scoped_twice(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e1 = ecs_new_entity(world, "Foo.Bar");
-    ecs_entity_t e2 = ecs_new_entity(world, "Foo.Bar");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "Foo.Bar" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "Foo.Bar" });
 
     test_str(ecs_get_name(world, e1), "Bar");
     test_assert(e1 == e2);
@@ -1853,7 +1853,7 @@ void Entity_entity_init_w_empty_sep(void) {
 void Entity_entity_init_w_empty_sep_from_scope(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t parent = ecs_new_entity(world, "parent");
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
     ecs_set_scope(world, parent);
     ecs_entity_t child = ecs_entity_init(world, &(ecs_entity_desc_t){
         .name = "foo.bar",
@@ -1875,7 +1875,7 @@ void Entity_entity_init_w_empty_sep_from_scope(void) {
 void Entity_entity_init_w_empty_sep_w_prefix(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t parent = ecs_new_entity(world, "parent");
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
     ecs_entity_t child = ecs_entity_init(world, &(ecs_entity_desc_t){
         .name = "foo.bar",
         .sep = ""
@@ -1895,7 +1895,7 @@ void Entity_entity_init_w_empty_sep_w_prefix(void) {
 void Entity_set_name_w_same_ptr(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new_entity(world, "foo");
+    ecs_entity_t e = ecs_entity(world, { .name = "foo" });
     const char *name = ecs_get_name(world, e);
     test_assert(name != NULL);
     test_str(name, "foo");
@@ -1911,7 +1911,7 @@ void Entity_set_name_w_same_ptr(void) {
 void Entity_set_name_w_overlapping_ptr(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new_entity(world, "foo");
+    ecs_entity_t e = ecs_entity(world, { .name = "foo" });
     const char *name = ecs_get_name(world, e);
     test_assert(name != NULL);
     test_str(name, "foo");
@@ -1927,7 +1927,7 @@ void Entity_set_name_w_overlapping_ptr(void) {
 void Entity_defer_set_name_w_overlapping_ptr(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new_entity(world, "foo");
+    ecs_entity_t e = ecs_entity(world, { .name = "foo" });
     const char *name = ecs_get_name(world, e);
     test_assert(name != NULL);
     test_str(name, "foo");
@@ -1994,7 +1994,7 @@ void Entity_defer_entity_init_w_set_name_w_add_childof(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new_id(world);
-    ecs_entity_t parent = ecs_new_entity(world, "parent");
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
 
     ecs_defer_begin(world);
     ecs_entity(world, { .id = e, .name = "Foo" });

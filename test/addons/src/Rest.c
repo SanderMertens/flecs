@@ -149,7 +149,7 @@ void Rest_query(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new_entity(world, "e");
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Position, {10, 20});
 
     ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
@@ -183,7 +183,7 @@ void Rest_named_query(void) {
         }
     });
 
-    ecs_entity_t e = ecs_new_entity(world, "e");
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Position, {10, 20});
 
     ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;

@@ -1269,7 +1269,7 @@ void Traversal_ent_self_up_childof(void) {
     ECS_TAG(world, Foo);
 
     ecs_entity_t parent = ecs_new_id(world);
-    ecs_entity_t e = ecs_new_entity(world, "ent");
+    ecs_entity_t e = ecs_entity(world, { .name = "ent" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Foo(ent:self|up)",
@@ -1326,7 +1326,7 @@ void Traversal_ent_up_childof(void) {
     ECS_TAG(world, Foo);
 
     ecs_entity_t parent = ecs_new_id(world);
-    ecs_entity_t e = ecs_new_entity(world, "ent");
+    ecs_entity_t e = ecs_entity(world, { .name = "ent" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Foo(ent:up)",
@@ -1754,7 +1754,7 @@ void Traversal_implicit_ent_self_up_isa(void) {
     ECS_TAG(world, Foo);
 
     ecs_entity_t parent = ecs_new_id(world);
-    ecs_entity_t e = ecs_new_entity(world, "ent");
+    ecs_entity_t e = ecs_entity(world, { .name = "ent" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Foo(ent:self|up(IsA))",
@@ -1811,7 +1811,7 @@ void Traversal_implicit_ent_up_isa(void) {
     ECS_TAG(world, Foo);
 
     ecs_entity_t parent = ecs_new_id(world);
-    ecs_entity_t e = ecs_new_entity(world, "ent");
+    ecs_entity_t e = ecs_entity(world, { .name = "ent" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Foo(ent:up(IsA))",
@@ -7861,7 +7861,7 @@ void Traversal_fixed_src_w_up(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
-    ecs_entity_t Game = ecs_new_entity(world, "Game");
+    ecs_entity_t Game = ecs_entity(world, { .name = "Game" });
     ecs_set(world, Game, Position, {10, 20});
     ecs_set(world, Game, Velocity, {1, 2});
 

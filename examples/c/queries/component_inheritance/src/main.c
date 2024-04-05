@@ -23,24 +23,24 @@ int main(int argc, char *argv[]) {
     ECS_ENTITY(ecs, Builder,    (IsA, Unit));
 
     // Create a few units
-    ecs_entity_t warrior_1 = ecs_new_entity(ecs, "warrior_1");
+    ecs_entity_t warrior_1 = ecs_entity(ecs, { .name = "warrior_1" });
     ecs_add(ecs, warrior_1, Warrior);
-    ecs_entity_t warrior_2 = ecs_new_entity(ecs, "warrior_2");
+    ecs_entity_t warrior_2 = ecs_entity(ecs, { .name = "warrior_2" });
     ecs_add(ecs, warrior_2, Warrior);
 
-    ecs_entity_t marksman_1 = ecs_new_entity(ecs, "marksman_1");
+    ecs_entity_t marksman_1 = ecs_entity(ecs, { .name = "marksman_1" });
     ecs_add(ecs, marksman_1, Marksman);
-    ecs_entity_t marksman_2 = ecs_new_entity(ecs, "marksman_2");
+    ecs_entity_t marksman_2 = ecs_entity(ecs, { .name = "marksman_2" });
     ecs_add(ecs, marksman_2, Marksman);
 
-    ecs_entity_t wizard_1 = ecs_new_entity(ecs, "wizard_1");
+    ecs_entity_t wizard_1 = ecs_entity(ecs, { .name = "wizard_1" });
     ecs_add(ecs, wizard_1, Wizard);
-    ecs_entity_t wizard_2 = ecs_new_entity(ecs, "wizard_2");
+    ecs_entity_t wizard_2 = ecs_entity(ecs, { .name = "wizard_2" });
     ecs_add(ecs, wizard_2, Wizard);
 
-    ecs_entity_t builder_1 = ecs_new_entity(ecs, "builder_1");
+    ecs_entity_t builder_1 = ecs_entity(ecs, { .name = "builder_1" });
     ecs_add(ecs, builder_1, Builder);
-    ecs_entity_t builder_2 = ecs_new_entity(ecs, "builder_2");
+    ecs_entity_t builder_2 = ecs_entity(ecs, { .name = "builder_2" });
     ecs_add(ecs, builder_2, Builder);
 
     // Create a query to find all ranged units

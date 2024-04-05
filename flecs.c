@@ -24520,11 +24520,11 @@ void FlecsMonitorImport(
 
     ecs_set_name_prefix(world, "Ecs");
 
-    EcsPeriod1s = ecs_new_entity(world, "EcsPeriod1s");
-    EcsPeriod1m = ecs_new_entity(world, "EcsPeriod1m");
-    EcsPeriod1h = ecs_new_entity(world, "EcsPeriod1h");
-    EcsPeriod1d = ecs_new_entity(world, "EcsPeriod1d");
-    EcsPeriod1w = ecs_new_entity(world, "EcsPeriod1w");
+    EcsPeriod1s = ecs_entity(world, { .name = "EcsPeriod1s" });
+    EcsPeriod1m = ecs_entity(world, { .name = "EcsPeriod1m" });
+    EcsPeriod1h = ecs_entity(world, { .name = "EcsPeriod1h" });
+    EcsPeriod1d = ecs_entity(world, { .name = "EcsPeriod1d" });
+    EcsPeriod1w = ecs_entity(world, { .name = "EcsPeriod1w" });
 
     ECS_COMPONENT_DEFINE(world, EcsWorldSummary);
 

@@ -49,27 +49,27 @@ int main(int argc, char *argv[]) {
 
     // Create two prefabs with a Dirty component. We can use this to share a
     // single Dirty value for all entities in a table.
-    ecs_entity_t p1 = ecs_new_prefab(world, "p1");
+    ecs_entity_t p1 = ecs_entity(world, { .name = "p1", .add = { EcsPrefab } });
     ecs_set(world, p1, Dirty, {false});
 
-    ecs_entity_t p2 = ecs_new_prefab(world, "p2");
+    ecs_entity_t p2 = ecs_entity(world, { .name = "p2", .add = { EcsPrefab } });
     ecs_set(world, p2, Dirty, {true});
 
     // Create instances of p1 and p2. Because the entities have different
     // prefabs, they end up in different tables.
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_add_pair(world, e1, EcsIsA, p1);
     ecs_set(world, e1, Position, {10, 20});
 
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
     ecs_add_pair(world, e2, EcsIsA, p1);
     ecs_set(world, e2, Position, {30, 40});
 
-    ecs_entity_t e3 = ecs_new_entity(world, "e3");
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
     ecs_add_pair(world, e3, EcsIsA, p2);
     ecs_set(world, e3, Position, {50, 60});
 
-    ecs_entity_t e4 = ecs_new_entity(world, "e4");
+    ecs_entity_t e4 = ecs_entity(world, { .name = "e4" });
     ecs_add_pair(world, e4, EcsIsA, p2);
     ecs_set(world, e4, Position, {70, 80});
 

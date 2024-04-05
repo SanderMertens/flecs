@@ -9,10 +9,10 @@ int main(int argc, char *argv[]) {
 
     ECS_TAG(ecs, Likes); // Likes relationship
 
-    ecs_entity_t bob = ecs_new_entity(ecs, "Bob");
-    ecs_entity_t alice = ecs_new_entity(ecs, "Alice");
-    ecs_entity_t john = ecs_new_entity(ecs, "John");
-    ecs_entity_t jane = ecs_new_entity(ecs, "Jane");
+    ecs_entity_t bob = ecs_entity(ecs, { .name = "Bob" });
+    ecs_entity_t alice = ecs_entity(ecs, { .name = "Alice" });
+    ecs_entity_t john = ecs_entity(ecs, { .name = "John" });
+    ecs_entity_t jane = ecs_entity(ecs, { .name = "Jane" });
 
     ecs_add_pair(ecs, bob, Likes, alice);
     ecs_add_pair(ecs, alice, Likes, bob);

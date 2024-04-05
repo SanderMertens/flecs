@@ -8,15 +8,15 @@ void Alerts_one_active_alert(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
 
     ecs_add(world, e1, Position);
     ecs_add(world, e1, Velocity);
     ecs_add(world, e2, Position);
 
     ecs_entity_t alert = ecs_alert(world, {
-        .entity = ecs_new_entity(world, "position_without_velocity"),
+        .entity = ecs_entity(world, { .name = "position_without_velocity" }),
         .query.expr = "Position, !Velocity"
     });
     test_assert(alert != 0);
@@ -97,8 +97,8 @@ void Alerts_two_active_alerts(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
 
     ecs_add(world, e1, Position);
     ecs_add(world, e1, Velocity);
@@ -106,12 +106,12 @@ void Alerts_two_active_alerts(void) {
     ecs_add(world, e2, Position);
 
     ecs_entity_t alert_1 = ecs_alert(world, {
-        .entity = ecs_new_entity(world, "position_without_velocity"),
+        .entity = ecs_entity(world, { .name = "position_without_velocity" }),
         .query.expr = "Position, !Velocity"
     });
 
     ecs_entity_t alert_2 = ecs_alert(world, {
-        .entity = ecs_new_entity(world, "position_without_mass"),
+        .entity = ecs_entity(world, { .name = "position_without_mass" }),
         .query.expr = "Position, !Mass"
     });
 
@@ -252,15 +252,15 @@ void Alerts_alert_message(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
 
     ecs_add(world, e1, Position);
     ecs_add(world, e1, Velocity);
     ecs_add(world, e2, Position);
 
     ecs_entity_t alert = ecs_alert(world, {
-        .entity = ecs_new_entity(world, "position_without_velocity"),
+        .entity = ecs_entity(world, { .name = "position_without_velocity" }),
         .query.expr = "Position, !Velocity",
         .message = "missing velocity"
     });
@@ -305,15 +305,15 @@ void Alerts_alert_message_w_this_var(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
 
     ecs_add(world, e1, Position);
     ecs_add(world, e1, Velocity);
     ecs_add(world, e2, Position);
 
     ecs_entity_t alert = ecs_alert(world, {
-        .entity = ecs_new_entity(world, "position_without_velocity"),
+        .entity = ecs_entity(world, { .name = "position_without_velocity" }),
         .query.expr = "Position, !Velocity",
         .message = "$this: missing velocity"
     });
@@ -357,11 +357,11 @@ void Alerts_alert_message_w_var(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t parent_1 = ecs_new_entity(world, "p1");
+    ecs_entity_t parent_1 = ecs_entity(world, { .name = "p1" });
     ecs_add(world, parent_1, Position);
-    ecs_entity_t parent_2 = ecs_new_entity(world, "p2");
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_entity_t parent_2 = ecs_entity(world, { .name = "p2" });
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
     ecs_add_pair(world, e1, EcsChildOf, parent_1);
     ecs_add_pair(world, e2, EcsChildOf, parent_2);
 
@@ -369,7 +369,7 @@ void Alerts_alert_message_w_var(void) {
     ecs_add(world, e2, Position);
 
     ecs_entity_t alert = ecs_alert(world, {
-        .entity = ecs_new_entity(world, "position_without_velocity"),
+        .entity = ecs_entity(world, { .name = "position_without_velocity" }),
         .query.expr = "Position($this), ChildOf($this, $parent), !Position($parent)",
         .message = "$this: parent $parent does not have Position"
     });
@@ -413,12 +413,12 @@ void Alerts_alert_message_w_changed_var(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t parent_1 = ecs_new_entity(world, "p1");
+    ecs_entity_t parent_1 = ecs_entity(world, { .name = "p1" });
     ecs_add(world, parent_1, Position);
-    ecs_entity_t parent_2 = ecs_new_entity(world, "p2");
-    ecs_entity_t parent_3 = ecs_new_entity(world, "p3");
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_entity_t parent_2 = ecs_entity(world, { .name = "p2" });
+    ecs_entity_t parent_3 = ecs_entity(world, { .name = "p3" });
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
     ecs_add_pair(world, e1, EcsChildOf, parent_1);
     ecs_add_pair(world, e2, EcsChildOf, parent_2);
 
@@ -426,7 +426,7 @@ void Alerts_alert_message_w_changed_var(void) {
     ecs_add(world, e2, Position);
 
     ecs_entity_t alert = ecs_alert(world, {
-        .entity = ecs_new_entity(world, "position_without_velocity"),
+        .entity = ecs_entity(world, { .name = "position_without_velocity" }),
         .query.expr = "Position($this), ChildOf($this, $parent), !Position($parent)",
         .message = "$this: parent $parent does not have Position"
     });
@@ -500,7 +500,7 @@ void Alerts_set_brief(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_entity_t alert = ecs_alert(world, {
-        .entity = ecs_new_entity(world, "has_position"),
+        .entity = ecs_entity(world, { .name = "has_position" }),
         .query.expr = "Position",
         .brief = "Entity has Position"
     });
@@ -518,7 +518,7 @@ void Alerts_set_doc_name(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_entity_t alert = ecs_alert(world, {
-        .entity = ecs_new_entity(world, "has_position"),
+        .entity = ecs_entity(world, { .name = "has_position" }),
         .query.expr = "Position",
         .doc_name = "Has Position"
     });
@@ -536,11 +536,11 @@ void Alerts_alert_instance_has_doc_name(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
     ecs_add(world, e2, Position);
 
     ecs_entity_t alert = ecs_alert(world, {
-        .entity = ecs_new_entity(world, "position_without_velocity"),
+        .entity = ecs_entity(world, { .name = "position_without_velocity" }),
         .query.expr = "Position, !Velocity"
     });
     test_assert(alert != 0);
@@ -584,12 +584,12 @@ void Alerts_reraise_alert(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
 
     ecs_add(world, e1, Position);
 
     ecs_entity_t alert = ecs_alert(world, {
-        .entity = ecs_new_entity(world, "position_without_velocity"),
+        .entity = ecs_entity(world, { .name = "position_without_velocity" }),
         .query.expr = "Position, !Velocity"
     });
     test_assert(alert != 0);
@@ -669,11 +669,11 @@ void Alerts_info_severity(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_add(world, e1, Position);
 
     ecs_entity_t alert = ecs_alert(world, {
-        .entity = ecs_new_entity(world, "position_without_velocity"),
+        .entity = ecs_entity(world, { .name = "position_without_velocity" }),
         .query.expr = "Position, !Velocity",
         .severity = EcsAlertInfo
     });
@@ -717,11 +717,11 @@ void Alerts_warning_severity(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_add(world, e1, Position);
 
     ecs_entity_t alert = ecs_alert(world, {
-        .entity = ecs_new_entity(world, "position_without_velocity"),
+        .entity = ecs_entity(world, { .name = "position_without_velocity" }),
         .query.expr = "Position, !Velocity",
         .severity = EcsAlertWarning
     });
@@ -765,11 +765,11 @@ void Alerts_error_severity(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_add(world, e1, Position);
 
     ecs_entity_t alert = ecs_alert(world, {
-        .entity = ecs_new_entity(world, "position_without_velocity"),
+        .entity = ecs_entity(world, { .name = "position_without_velocity" }),
         .query.expr = "Position, !Velocity",
         .severity = EcsAlertError
     });
@@ -813,15 +813,15 @@ void Alerts_expire_after_retain(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
 
     ecs_add(world, e1, Position);
     ecs_add(world, e1, Velocity);
     ecs_add(world, e2, Position);
 
     ecs_entity_t alert = ecs_alert(world, {
-        .entity = ecs_new_entity(world, "position_without_velocity"),
+        .entity = ecs_entity(world, { .name = "position_without_velocity" }),
         .query.expr = "Position, !Velocity",
         .retain_period = 1.0
     });
@@ -905,15 +905,15 @@ void Alerts_revive_w_retain(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
 
     ecs_add(world, e1, Position);
     ecs_add(world, e1, Velocity);
     ecs_add(world, e2, Position);
 
     ecs_entity_t alert = ecs_alert(world, {
-        .entity = ecs_new_entity(world, "position_without_velocity"),
+        .entity = ecs_entity(world, { .name = "position_without_velocity" }),
         .query.expr = "Position, !Velocity",
         .retain_period = 1.0
     });
@@ -1015,11 +1015,11 @@ void Alerts_severity_filter(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_add(world, e1, Position);
 
     ecs_entity_t alert = ecs_alert(world, {
-        .entity = ecs_new_entity(world, "position_without_velocity"),
+        .entity = ecs_entity(world, { .name = "position_without_velocity" }),
         .query.expr = "Position, !Velocity",
         .severity_filters[0] = {
             .severity = EcsAlertWarning,
@@ -1122,11 +1122,11 @@ void Alerts_two_severity_filters(void) {
     ECS_COMPONENT(world, Mass);
     ECS_COMPONENT(world, Rotation);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_add(world, e1, Position);
 
     ecs_entity_t alert = ecs_alert(world, {
-        .entity = ecs_new_entity(world, "position_without_velocity"),
+        .entity = ecs_entity(world, { .name = "position_without_velocity" }),
         .query.expr = "Position, !Velocity",
         .severity_filters[0] = {
             .severity = EcsAlertWarning,
@@ -1263,13 +1263,13 @@ void Alerts_severity_filter_w_var(void) {
 
     ecs_entity_t parent = ecs_new_id(world);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_add_pair(world, e1, EcsChildOf, parent);
     ecs_add(world, e1, Position);
     ecs_add(world, e1, Mass);
 
     ecs_entity_t alert = ecs_alert(world, {
-        .entity = ecs_new_entity(world, "position_without_velocity"),
+        .entity = ecs_entity(world, { .name = "position_without_velocity" }),
         .query.expr = "Position, !Velocity, (ChildOf, $parent)",
         .severity_filters[0] = {
             .severity = EcsAlertWarning,
@@ -1376,13 +1376,13 @@ void Alerts_severity_filter_w_var_change_var(void) {
     ecs_entity_t parent_2 = ecs_new_id(world);
     ecs_add(world, parent_2, Mass);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_add_pair(world, e1, EcsChildOf, parent_1);
     ecs_add(world, e1, Position);
     ecs_add(world, e1, Mass);
 
     ecs_entity_t alert = ecs_alert(world, {
-        .entity = ecs_new_entity(world, "position_without_velocity"),
+        .entity = ecs_entity(world, { .name = "position_without_velocity" }),
         .query.expr = "Position, !Velocity, (ChildOf, $parent)",
         .severity_filters[0] = {
             .severity = EcsAlertWarning,
@@ -1488,14 +1488,14 @@ void Alerts_member_range_warning(void) {
         .members = {{ "value", ecs_id(ecs_f32_t), .warning_range = { 0, 100 }}}
     });
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_set(world, e1, Mass, {50});
 
     ecs_entity_t member = ecs_lookup(world, "Mass.value");
     test_assert(member != 0);
 
     ecs_entity_t alert = ecs_alert(world, {
-        .entity = ecs_new_entity(world, "high_mass"),
+        .entity = ecs_entity(world, { .name = "high_mass" }),
         .query.expr = "Mass",
         .member = member
     });
@@ -1556,14 +1556,14 @@ void Alerts_member_range_error(void) {
         .members = {{ "value", ecs_id(ecs_f32_t), .error_range = { 0, 100 }}}
     });
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_set(world, e1, Mass, {50});
 
     ecs_entity_t member = ecs_lookup(world, "Mass.value");
     test_assert(member != 0);
 
     ecs_entity_t alert = ecs_alert(world, {
-        .entity = ecs_new_entity(world, "high_mass"),
+        .entity = ecs_entity(world, { .name = "high_mass" }),
         .query.expr = "Mass",
         .member = member
     });
@@ -1624,14 +1624,14 @@ void Alerts_member_range_warning_error(void) {
         .members = {{ "value", ecs_id(ecs_f32_t), .warning_range = {0, 50}, .error_range = { 0, 100 }}}
     });
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_set(world, e1, Mass, {25});
 
     ecs_entity_t member = ecs_lookup(world, "Mass.value");
     test_assert(member != 0);
 
     ecs_entity_t alert = ecs_alert(world, {
-        .entity = ecs_new_entity(world, "high_mass"),
+        .entity = ecs_entity(world, { .name = "high_mass" }),
         .query.expr = "Mass",
         .member = member
     });
@@ -1720,14 +1720,14 @@ void Alerts_member_range_error_w_warning_severity(void) {
         .members = {{ "value", ecs_id(ecs_f32_t), .error_range = { 0, 100 }}}
     });
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_set(world, e1, Mass, {50});
 
     ecs_entity_t member = ecs_lookup(world, "Mass.value");
     test_assert(member != 0);
 
     ecs_entity_t alert = ecs_alert(world, {
-        .entity = ecs_new_entity(world, "high_mass"),
+        .entity = ecs_entity(world, { .name = "high_mass" }),
         .query.expr = "Mass",
         .severity = EcsAlertWarning,
         .member = member
@@ -1790,14 +1790,14 @@ void Alerts_member_range_error_w_severity_filter(void) {
         .members = {{ "value", ecs_id(ecs_f32_t), .error_range = { 0, 100 }}}
     });
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_set(world, e1, Mass, {50});
 
     ecs_entity_t member = ecs_lookup(world, "Mass.value");
     test_assert(member != 0);
 
     ecs_entity_t alert = ecs_alert(world, {
-        .entity = ecs_new_entity(world, "high_mass"),
+        .entity = ecs_entity(world, { .name = "high_mass" }),
         .query.expr = "Mass",
         .severity = EcsAlertWarning,
         .severity_filters[0] = {
@@ -1885,14 +1885,14 @@ void Alerts_member_range_warning_w_severity_filter(void) {
         .members = {{ "value", ecs_id(ecs_f32_t), .warning_range = { 0, 100 }}}
     });
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_set(world, e1, Mass, {50});
 
     ecs_entity_t member = ecs_lookup(world, "Mass.value");
     test_assert(member != 0);
 
     ecs_entity_t alert = ecs_alert(world, {
-        .entity = ecs_new_entity(world, "high_mass"),
+        .entity = ecs_entity(world, { .name = "high_mass" }),
         .query.expr = "Mass",
         .severity = EcsAlertWarning,
         .severity_filters[0] = {
@@ -1980,14 +1980,14 @@ void Alerts_member_range_pair_id(void) {
         .members = {{ "value", ecs_id(ecs_f32_t), .error_range = { 0, 100 }}}
     });
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_set(world, e1, Mass, {50});
 
     ecs_entity_t member = ecs_lookup(world, "Mass.value");
     test_assert(member != 0);
 
     ecs_entity_t alert = ecs_alert(world, {
-        .entity = ecs_new_entity(world, "high_mass"),
+        .entity = ecs_entity(world, { .name = "high_mass" }),
         .query.expr = "Mass",
         .member = member,
         .id = ecs_pair_t(Mass, Tag)
@@ -2055,7 +2055,7 @@ void Alerts_member_range_invalid_member(void) {
 
     ecs_log_set_level(-4);
     ecs_entity_t alert = ecs_alert(world, {
-        .entity = ecs_new_entity(world, "high_mass"),
+        .entity = ecs_entity(world, { .name = "high_mass" }),
         .query.expr = "Mass",
         .member = Tag,
     });
@@ -2083,7 +2083,7 @@ void Alerts_member_range_invalid_member_child(void) {
 
     ecs_log_set_level(-4);
     ecs_entity_t alert = ecs_alert(world, {
-        .entity = ecs_new_entity(world, "high_mass"),
+        .entity = ecs_entity(world, { .name = "high_mass" }),
         .query.expr = "Mass",
         .member = child,
     });
@@ -2110,7 +2110,7 @@ void Alerts_member_range_invalid_type(void) {
 
     ecs_log_set_level(-4);
     ecs_entity_t alert = ecs_alert(world, {
-        .entity = ecs_new_entity(world, "high_mass"),
+        .entity = ecs_entity(world, { .name = "high_mass" }),
         .query.expr = "Mass",
         .member = member,
         .id = Tag
@@ -2133,7 +2133,7 @@ void Alerts_member_range_invalid_member_type(void) {
     });
 
     ecs_struct(world, {
-        .entity = ecs_new_entity(world, "Foo"),
+        .entity = ecs_entity(world, { .name = "Foo" }),
         .members = {{ "value", ecs_id(Mass) }}
     });
 
@@ -2142,7 +2142,7 @@ void Alerts_member_range_invalid_member_type(void) {
 
     ecs_log_set_level(-4);
     ecs_entity_t alert = ecs_alert(world, {
-        .entity = ecs_new_entity(world, "high_mass"),
+        .entity = ecs_entity(world, { .name = "high_mass" }),
         .query.expr = "Mass",
         .member = member,
     });
@@ -2168,7 +2168,7 @@ void Alerts_member_range_no_range(void) {
 
     ecs_log_set_level(-4);
     ecs_entity_t alert = ecs_alert(world, {
-        .entity = ecs_new_entity(world, "high_mass"),
+        .entity = ecs_entity(world, { .name = "high_mass" }),
         .query.expr = "Mass",
         .member = member,
     });
@@ -2189,16 +2189,16 @@ void Alerts_member_range_alert_two_instances(void) {
         .members = {{ "value", ecs_id(ecs_f32_t), .error_range = { 0, 100 }}}
     });
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_set(world, e1, Mass, {50});
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
     ecs_set(world, e2, Mass, {50});
 
     ecs_entity_t member = ecs_lookup(world, "Mass.value");
     test_assert(member != 0);
 
     ecs_entity_t alert = ecs_alert(world, {
-        .entity = ecs_new_entity(world, "high_mass"),
+        .entity = ecs_entity(world, { .name = "high_mass" }),
         .query.expr = "Mass",
         .member = member,
     });
@@ -2306,7 +2306,7 @@ void Alerts_member_range_from_var(void) {
         .members = {{ "value", ecs_id(ecs_f32_t), .error_range = { 0, 100 }}}
     });
 
-    ecs_entity_t p = ecs_new_entity(world, "p");
+    ecs_entity_t p = ecs_entity(world, { .name = "p" });
     ecs_set(world, p, Mass, {50});
     ecs_entity_t e1 = ecs_new_w_pair(world, EcsChildOf, p);
 
@@ -2314,7 +2314,7 @@ void Alerts_member_range_from_var(void) {
     test_assert(member != 0);
 
     ecs_entity_t alert = ecs_alert(world, {
-        .entity = ecs_new_entity(world, "high_parent_mass"),
+        .entity = ecs_entity(world, { .name = "high_parent_mass" }),
         .query.expr = "(ChildOf, $parent), Mass($parent)",
         .member = member,
         .var = "parent"
@@ -2376,7 +2376,7 @@ void Alerts_member_range_from_var_after_remove(void) {
         .members = {{ "value", ecs_id(ecs_f32_t), .error_range = { 0, 100 }}}
     });
 
-    ecs_entity_t p = ecs_new_entity(world, "p");
+    ecs_entity_t p = ecs_entity(world, { .name = "p" });
     ecs_set(world, p, Mass, {50});
     ecs_entity_t e1 = ecs_new_w_pair(world, EcsChildOf, p);
 
@@ -2384,7 +2384,7 @@ void Alerts_member_range_from_var_after_remove(void) {
     test_assert(member != 0);
 
     ecs_entity_t alert = ecs_alert(world, {
-        .entity = ecs_new_entity(world, "high_parent_mass"),
+        .entity = ecs_entity(world, { .name = "high_parent_mass" }),
         .query.expr = "(ChildOf, $parent), Mass($parent)",
         .member = member,
         .var = "parent"
@@ -2442,11 +2442,11 @@ void Alerts_retained_alert_w_dead_source(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_add(world, e1, Position);
 
     ecs_entity_t alert = ecs_alert(world, {
-        .entity = ecs_new_entity(world, "position_without_velocity"),
+        .entity = ecs_entity(world, { .name = "position_without_velocity" }),
         .query.expr = "Position, !Velocity",
         .severity = EcsAlertError,
         .retain_period = 10
@@ -2529,17 +2529,17 @@ void Alerts_alert_counts(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_add(world, e1, Position);
 
     ecs_entity_t alert_1 = ecs_alert(world, {
-        .entity = ecs_new_entity(world, "position_without_velocity"),
+        .entity = ecs_entity(world, { .name = "position_without_velocity" }),
         .query.expr = "Position, !Velocity"
     });
     test_assert(alert_1 != 0);
 
     ecs_entity_t alert_2 = ecs_alert(world, {
-        .entity = ecs_new_entity(world, "position_without_mass"),
+        .entity = ecs_entity(world, { .name = "position_without_mass" }),
         .query.expr = "Position, !Mass",
         .severity = EcsAlertWarning
     });

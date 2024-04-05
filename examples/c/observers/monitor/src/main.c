@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
     });
 
     // Create entity
-    ecs_entity_t e = ecs_new_entity(ecs, "e");
+    ecs_entity_t e = ecs_entity(ecs, { .name = "e" });
 
     // This does not yet trigger the monitor, as the entity does not yet match.
     ecs_set(ecs, e, Position, {10, 20});

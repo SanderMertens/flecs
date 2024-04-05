@@ -440,9 +440,9 @@ An application can use pair wildcard expressions to find all instances of a rela
 
 ```c
 // Bob eats apples and pears
-ecs_entity_t Eats = ecs_new_entity(world, "Eats");
-ecs_entity_t Apples = ecs_new_entity(world, "Apples");
-ecs_entity_t Pears = ecs_new_entity(world, "Pears");
+ecs_entity_t Eats = ecs_entity(world, { .name = "Eats" });
+ecs_entity_t Apples = ecs_entity(world, { .name = "Apples" });
+ecs_entity_t Pears = ecs_entity(world, { .name = "Pears" });
 
 ecs_entity_t Bob = ecs_new_id(world);
 ecs_add_pair(world, Bob, Eats, Apples);

@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
     ECS_COMPONENT(ecs, Defense);
     ECS_COMPONENT(ecs, Damage);
 
-    ecs_entity_t SpaceShip = ecs_new_prefab(ecs, "SpaceShip");
+    ecs_entity_t SpaceShip = ecs_entity(ecs, { .name = "SpaceShip", .add = { EcsPrefab } });
 
     // Attack and Defense are properties that can be shared across many 
     // spaceships. This saves memory, and speeds up prefab creation as we don't
@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
     ecs_override(ecs, SpaceShip, Damage);
 
     // Create a prefab instance.
-    ecs_entity_t inst = ecs_new_entity(ecs, "my_instance");
+    ecs_entity_t inst = ecs_entity(ecs, { .name = "my_instance" });
     ecs_add_pair(ecs, inst, EcsIsA, SpaceShip);
     
     // The entity will now have a private copy of the Damage component, but not

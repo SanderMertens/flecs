@@ -34,7 +34,7 @@ void Transitive_1_fact_0_lvl_true(void) {
 
     populate_facts(world);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "LocatedIn(e1, SanFrancisco)"
@@ -70,7 +70,7 @@ void Transitive_1_fact_1_lvl_true(void) {
 
     populate_facts(world);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "LocatedIn(e1, California)"
@@ -106,7 +106,7 @@ void Transitive_1_fact_2_lvl_true(void) {
 
     populate_facts(world);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "LocatedIn(e1, UnitedStates)"
@@ -142,7 +142,7 @@ void Transitive_1_fact_0_lvl_false(void) {
 
     populate_facts(world);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "LocatedIn(e1, Seattle)"
@@ -172,7 +172,7 @@ void Transitive_1_fact_1_lvl_false(void) {
 
     populate_facts(world);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "LocatedIn(e1, Washington)"
@@ -202,7 +202,7 @@ void Transitive_1_fact_2_lvl_false(void) {
 
     populate_facts(world);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "LocatedIn(e1, Netherlands)"
@@ -234,7 +234,7 @@ void Transitive_1_fact_reflexive(void) {
 
     ecs_add_id(world, LocatedIn, EcsReflexive);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "LocatedIn(e1, e1)"
@@ -858,7 +858,7 @@ void Transitive_1_ent_src_tgt_var_0_lvl(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "LocatedIn(e1, $x)"
@@ -905,7 +905,7 @@ void Transitive_1_ent_src_tgt_var_1_lvl(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "LocatedIn(e1, $x)"
@@ -958,7 +958,7 @@ void Transitive_1_ent_src_tgt_var_2_lvl(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "LocatedIn(e1, $x)"
@@ -1019,7 +1019,7 @@ void Transitive_1_ent_src_tgt_var_reflexive(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "LocatedIn(e1, $x)"
@@ -2428,7 +2428,7 @@ void Transitive_1_ent_src_tgt_this_0_lvl(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "LocatedIn(e1, $this)"
@@ -2478,7 +2478,7 @@ void Transitive_1_ent_src_tgt_this_1_lvl(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "LocatedIn(e1, $this)"
@@ -2535,7 +2535,7 @@ void Transitive_1_ent_src_tgt_this_2_lvl(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "LocatedIn(e1, $this)"
@@ -2601,7 +2601,7 @@ void Transitive_1_ent_src_tgt_this_reflexive(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "LocatedIn(e1, $this)"
@@ -3126,9 +3126,9 @@ void Transitive_2_ent_src_constrain_tgt_var_before_0_lvl(void) {
     ecs_add(world, Seattle, City);
     ecs_add(world, Amsterdam, City);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
-    ecs_entity_t e3 = ecs_new_entity(world, "e3");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
     ecs_add_pair(world, e1, LocatedIn, SanFrancisco);
     ecs_add_pair(world, e2, LocatedIn, SanFrancisco);
     ecs_add_pair(world, e3, LocatedIn, LosAngeles);
@@ -3171,9 +3171,9 @@ void Transitive_2_ent_src_constrain_tgt_var_before_1_lvl(void) {
     ecs_add(world, Washington, State);
     ecs_add(world, NoordHolland, State);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
-    ecs_entity_t e3 = ecs_new_entity(world, "e3");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
     ecs_add_pair(world, e1, LocatedIn, SanFrancisco);
     ecs_add_pair(world, e2, LocatedIn, SanFrancisco);
     ecs_add_pair(world, e3, LocatedIn, LosAngeles);
@@ -3215,9 +3215,9 @@ void Transitive_2_ent_src_constrain_tgt_var_before_2_lvl(void) {
     ecs_add(world, UnitedStates, Country);
     ecs_add(world, Netherlands, Country);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
-    ecs_entity_t e3 = ecs_new_entity(world, "e3");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
     ecs_add_pair(world, e1, LocatedIn, SanFrancisco);
     ecs_add_pair(world, e2, LocatedIn, SanFrancisco);
     ecs_add_pair(world, e3, LocatedIn, Amsterdam);
@@ -3261,9 +3261,9 @@ void Transitive_2_ent_src_constrain_tgt_var_after_0_lvl(void) {
     ecs_add(world, Seattle, City);
     ecs_add(world, Amsterdam, City);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
-    ecs_entity_t e3 = ecs_new_entity(world, "e3");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
     ecs_add_pair(world, e1, LocatedIn, SanFrancisco);
     ecs_add_pair(world, e2, LocatedIn, SanFrancisco);
     ecs_add_pair(world, e3, LocatedIn, LosAngeles);
@@ -3306,9 +3306,9 @@ void Transitive_2_ent_src_constrain_tgt_var_after_1_lvl(void) {
     ecs_add(world, Washington, State);
     ecs_add(world, NoordHolland, State);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
-    ecs_entity_t e3 = ecs_new_entity(world, "e3");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
     ecs_add_pair(world, e1, LocatedIn, SanFrancisco);
     ecs_add_pair(world, e2, LocatedIn, SanFrancisco);
     ecs_add_pair(world, e3, LocatedIn, LosAngeles);
@@ -3350,9 +3350,9 @@ void Transitive_2_ent_src_constrain_tgt_var_after_2_lvl(void) {
     ecs_add(world, UnitedStates, Country);
     ecs_add(world, Netherlands, Country);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
-    ecs_entity_t e3 = ecs_new_entity(world, "e3");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
     ecs_add_pair(world, e1, LocatedIn, SanFrancisco);
     ecs_add_pair(world, e2, LocatedIn, SanFrancisco);
     ecs_add_pair(world, e3, LocatedIn, Amsterdam);
@@ -3396,10 +3396,10 @@ void Transitive_2_this_src_constrain_tgt_var_before_0_lvl(void) {
     ecs_add(world, Seattle, City);
     ecs_add(world, Amsterdam, City);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
-    ecs_entity_t e3 = ecs_new_entity(world, "e3");
-    ecs_entity_t e4 = ecs_new_entity(world, "e4");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_entity_t e4 = ecs_entity(world, { .name = "e4" });
     ecs_add_pair(world, e1, LocatedIn, SanFrancisco);
     ecs_add_pair(world, e2, LocatedIn, SanFrancisco);
     ecs_add_pair(world, e3, LocatedIn, LosAngeles);
@@ -3463,10 +3463,10 @@ void Transitive_2_this_src_constrain_tgt_var_before_1_lvl(void) {
     ecs_add(world, Washington, State);
     ecs_add(world, NoordHolland, State);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
-    ecs_entity_t e3 = ecs_new_entity(world, "e3");
-    ecs_entity_t e4 = ecs_new_entity(world, "e4");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_entity_t e4 = ecs_entity(world, { .name = "e4" });
     ecs_add_pair(world, e1, LocatedIn, SanFrancisco);
     ecs_add_pair(world, e2, LocatedIn, SanFrancisco);
     ecs_add_pair(world, e3, LocatedIn, LosAngeles);
@@ -3557,10 +3557,10 @@ void Transitive_2_this_src_constrain_tgt_var_before_2_lvl(void) {
     ecs_add(world, UnitedStates, Country);
     ecs_add(world, Netherlands, Country);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
-    ecs_entity_t e3 = ecs_new_entity(world, "e3");
-    ecs_entity_t e4 = ecs_new_entity(world, "e4");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_entity_t e4 = ecs_entity(world, { .name = "e4" });
     ecs_add_pair(world, e1, LocatedIn, SanFrancisco);
     ecs_add_pair(world, e2, LocatedIn, SanFrancisco);
     ecs_add_pair(world, e3, LocatedIn, LosAngeles);
@@ -3672,10 +3672,10 @@ void Transitive_2_this_src_constrain_tgt_var_after_0_lvl(void) {
     ecs_add(world, Seattle, City);
     ecs_add(world, Amsterdam, City);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
-    ecs_entity_t e3 = ecs_new_entity(world, "e3");
-    ecs_entity_t e4 = ecs_new_entity(world, "e4");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_entity_t e4 = ecs_entity(world, { .name = "e4" });
     ecs_add_pair(world, e1, LocatedIn, SanFrancisco);
     ecs_add_pair(world, e2, LocatedIn, SanFrancisco);
     ecs_add_pair(world, e3, LocatedIn, LosAngeles);
@@ -3739,10 +3739,10 @@ void Transitive_2_this_src_constrain_tgt_var_after_1_lvl(void) {
     ecs_add(world, Washington, State);
     ecs_add(world, NoordHolland, State);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
-    ecs_entity_t e3 = ecs_new_entity(world, "e3");
-    ecs_entity_t e4 = ecs_new_entity(world, "e4");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_entity_t e4 = ecs_entity(world, { .name = "e4" });
     ecs_add_pair(world, e1, LocatedIn, SanFrancisco);
     ecs_add_pair(world, e2, LocatedIn, SanFrancisco);
     ecs_add_pair(world, e3, LocatedIn, LosAngeles);
@@ -3833,10 +3833,10 @@ void Transitive_2_this_src_constrain_tgt_var_after_2_lvl(void) {
     ecs_add(world, UnitedStates, Country);
     ecs_add(world, Netherlands, Country);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
-    ecs_entity_t e3 = ecs_new_entity(world, "e3");
-    ecs_entity_t e4 = ecs_new_entity(world, "e4");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_entity_t e4 = ecs_entity(world, { .name = "e4" });
     ecs_add_pair(world, e1, LocatedIn, SanFrancisco);
     ecs_add_pair(world, e2, LocatedIn, SanFrancisco);
     ecs_add_pair(world, e3, LocatedIn, LosAngeles);

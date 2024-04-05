@@ -2793,8 +2793,8 @@ void SingleThreadStaging_lookup_after_stage_count_change(void) {
 void SingleThreadStaging_lookup_w_scope_after_stage_count_change(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t parent = ecs_new_entity(world, "parent");
-    ecs_entity_t child = ecs_new_entity(world, "child");
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    ecs_entity_t child = ecs_entity(world, { .name = "child" });
     ecs_add_pair(world, child, EcsChildOf, parent);
 
     test_assert(ecs_lookup(world, "parent.child") != 0);

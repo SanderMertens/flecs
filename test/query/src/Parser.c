@@ -2941,7 +2941,7 @@ void Parser_expr_w_symbol(void) {
 void Parser_expr_w_newline(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_new_entity(world, "Foo");
+    ecs_entity(world, { .name = "Foo" });
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
         .expr = "Foo\n"
@@ -4005,7 +4005,7 @@ void Parser_oneof_w_other_entity_w_same_name(void) {
 
     ECS_ENTITY(world, Rel, OneOf);
     ECS_ENTITY(world, Obj, (ChildOf, Rel));
-    ecs_entity_t obj_2 = ecs_new_entity(world, "Obj");
+    ecs_entity_t obj_2 = ecs_entity(world, { .name = "Obj" });
 
     test_uint( ecs_lookup_child(world, 0, "Obj"), obj_2 );
     test_uint( ecs_lookup(world, "Rel.Obj"), Obj );
@@ -4035,8 +4035,8 @@ void Parser_oneof_w_other_entity_w_same_name_w_set_scope(void) {
     ECS_ENTITY(world, Rel, OneOf);
     ECS_ENTITY(world, Obj, (ChildOf, Rel));
 
-    ecs_entity_t p = ecs_new_entity(world, "parent");
-    ecs_entity_t obj_2 = ecs_new_entity(world, "Obj");
+    ecs_entity_t p = ecs_entity(world, { .name = "parent" });
+    ecs_entity_t obj_2 = ecs_entity(world, { .name = "Obj" });
     ecs_add_pair(world, obj_2, EcsChildOf, p);
 
     ecs_set_scope(world, p);
@@ -4118,7 +4118,7 @@ void Parser_oneof_w_fullpath(void) {
 
     ECS_ENTITY(world, Rel, OneOf);
     ECS_ENTITY(world, Obj, (ChildOf, Rel));
-    ecs_entity_t obj_2 = ecs_new_entity(world, "Obj");
+    ecs_entity_t obj_2 = ecs_entity(world, { .name = "Obj" });
 
     test_uint( ecs_lookup_child(world, 0, "Obj"), obj_2 );
     test_uint( ecs_lookup(world, "Rel.Obj"), Obj );

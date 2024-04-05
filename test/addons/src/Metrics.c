@@ -1797,7 +1797,7 @@ void Metrics_metric_instance_has_doc_name(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_set(world, e1, Position, {10, 20});
 
     ecs_progress(world, 0);
@@ -1864,7 +1864,7 @@ void Metrics_metric_nested_member(void) {
 
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_set(world, e1, Position, {10, {20, 30}});
 
     ecs_progress(world, 0);
@@ -1931,7 +1931,7 @@ void Metrics_metric_nested_member_counter(void) {
 
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_set(world, e1, Position, {10, {20, 30}});
 
     ecs_progress(world, 0);
@@ -1998,7 +1998,7 @@ void Metrics_metric_nested_member_counter_increment(void) {
 
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_set(world, e1, Position, {10, {20, 30}});
 
     ecs_progress(world, 1);

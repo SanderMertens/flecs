@@ -7,21 +7,21 @@ int main(int argc, char *argv[]) {
     ECS_TAG(ecs, Eats);
     ECS_TAG(ecs, Healthy);
 
-    ecs_entity_t Apples = ecs_new_entity(ecs, "Apples");
-    ecs_entity_t Salad = ecs_new_entity(ecs, "Salad");
-    ecs_entity_t Burgers = ecs_new_entity(ecs, "Burgers");
-    ecs_entity_t Pizza = ecs_new_entity(ecs, "Pizza");
-    ecs_entity_t Chocolate = ecs_new_entity(ecs, "Chocolate");
+    ecs_entity_t Apples = ecs_entity(ecs, { .name = "Apples" });
+    ecs_entity_t Salad = ecs_entity(ecs, { .name = "Salad" });
+    ecs_entity_t Burgers = ecs_entity(ecs, { .name = "Burgers" });
+    ecs_entity_t Pizza = ecs_entity(ecs, { .name = "Pizza" });
+    ecs_entity_t Chocolate = ecs_entity(ecs, { .name = "Chocolate" });
 
     ecs_add(ecs, Apples, Healthy);
     ecs_add(ecs, Salad, Healthy);
 
-    ecs_entity_t bob = ecs_new_entity(ecs, "Bob");
+    ecs_entity_t bob = ecs_entity(ecs, { .name = "Bob" });
     ecs_add_pair(ecs, bob, Eats, Apples);
     ecs_add_pair(ecs, bob, Eats, Burgers);
     ecs_add_pair(ecs, bob, Eats, Pizza);
 
-    ecs_entity_t alice = ecs_new_entity(ecs, "Alice");
+    ecs_entity_t alice = ecs_entity(ecs, { .name = "Alice" });
     ecs_add_pair(ecs, alice, Eats, Salad);
     ecs_add_pair(ecs, alice, Eats, Chocolate);
     ecs_add_pair(ecs, alice, Eats, Apples);

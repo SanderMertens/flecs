@@ -1421,7 +1421,7 @@ void DeserializeFromExpr_discover_type_multiline_string(void) {
 void DeserializeFromExpr_discover_type_entity(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t foo = ecs_new_entity(world, "foo");
+    ecs_entity_t foo = ecs_entity(world, { .name = "foo" });
 
     ecs_value_t v = {0};
     test_assert(ecs_parse_expr(world, "foo", &v, NULL) != NULL);

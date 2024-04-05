@@ -23,7 +23,7 @@ void Toggle_fixed_src_1_tag_toggle(void) {
 
     ecs_add_id(world, Foo, EcsCanToggle);
 
-    ecs_entity_t e = ecs_new_entity(world, "e");
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Foo(e)",
@@ -80,7 +80,7 @@ void Toggle_fixed_src_1_component_toggle(void) {
 
     ecs_add_id(world, ecs_id(Position), EcsCanToggle);
 
-    ecs_entity_t e = ecs_new_entity(world, "e");
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position(e)",
@@ -151,7 +151,7 @@ void Toggle_fixed_src_2_tag_toggle(void) {
     ecs_add_id(world, Foo, EcsCanToggle);
     ecs_add_id(world, Bar, EcsCanToggle);
 
-    ecs_entity_t e = ecs_new_entity(world, "e");
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Foo(e), Bar(e)",
@@ -246,7 +246,7 @@ void Toggle_fixed_src_2_component_toggle(void) {
     ecs_add_id(world, ecs_id(Position), EcsCanToggle);
     ecs_add_id(world, ecs_id(Velocity), EcsCanToggle);
 
-    ecs_entity_t e = ecs_new_entity(world, "e");
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position(e), Velocity(e)",
@@ -377,8 +377,8 @@ void Toggle_fixed_2_src_w_toggle(void) {
     ecs_add_id(world, Foo, EcsCanToggle);
     ecs_add_id(world, Bar, EcsCanToggle);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Foo(e1), Bar(e2)",
@@ -473,8 +473,8 @@ void Toggle_this_w_fixed_src_w_toggle(void) {
     ecs_add_id(world, Foo, EcsCanToggle);
     ecs_add_id(world, Bar, EcsCanToggle);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Foo($this), Bar(e2)",
@@ -569,8 +569,8 @@ void Toggle_fixed_src_w_this_w_toggle(void) {
     ecs_add_id(world, Foo, EcsCanToggle);
     ecs_add_id(world, Bar, EcsCanToggle);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Foo(e1), Bar($this)",

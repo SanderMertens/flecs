@@ -21,11 +21,11 @@ int main(int argc, char *argv[]) {
     });
 
     // Create a few entities that match the query
-    ecs_entity_t bob = ecs_new_entity(ecs, "Bob");
+    ecs_entity_t bob = ecs_entity(ecs, { .name = "Bob" });
     ecs_set_pair(ecs, bob, Eats, Apples, {10});
     ecs_set_pair(ecs, bob, Eats, Pears, {5});
 
-    ecs_entity_t alice = ecs_new_entity(ecs, "Alice");
+    ecs_entity_t alice = ecs_entity(ecs, { .name = "Alice" });
     ecs_set_pair(ecs, alice, Eats, Apples, {4});
 
     // Iterate the query

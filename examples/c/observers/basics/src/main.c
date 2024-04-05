@@ -80,7 +80,7 @@ int main(int argc, char *argv[]) {
     ECS_OBSERVER(ecs, Observer, EcsOnSet, Position);
 
     // Create entity
-    ecs_entity_t e = ecs_new_entity(ecs, "e");
+    ecs_entity_t e = ecs_entity(ecs, { .name = "e" });
     
     // Set Position (emits EcsOnAdd and EcsOnSet)
     ecs_set(ecs, e, Position, {10, 20});

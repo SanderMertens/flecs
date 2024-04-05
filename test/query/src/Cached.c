@@ -1010,7 +1010,7 @@ void Cached_query_w_from_entity_match_after(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e" });
     ecs_entity_t e2 = ecs_new(world, TagA);
 
     ecs_query_t *q = ecs_query(world, {
@@ -3310,7 +3310,7 @@ void Cached_query_long_or_w_ref(void) {
     ECS_TAG(world, M);
     ECS_TAG(world, N);
 
-    ecs_entity_t e = ecs_new_entity(world, "e");
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Position, {10, 20});
 
     ecs_entity_t e2 = ecs_new(world, A);

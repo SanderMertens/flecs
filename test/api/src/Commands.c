@@ -3610,8 +3610,8 @@ void Commands_on_set_hook_batched_is_deferred(void) {
 void Commands_add_path(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t p = ecs_new_entity(world, "p");
-    ecs_entity_t e = ecs_new_entity(world, "e");
+    ecs_entity_t p = ecs_entity(world, { .name = "p" });
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
 
     ecs_defer_begin(world);
     ecs_add_path(world, e, p, "foo");
@@ -3631,8 +3631,8 @@ void Commands_add_path(void) {
 void Commands_add_path_to_deleted_parent(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t p = ecs_new_entity(world, "p");
-    ecs_entity_t e = ecs_new_entity(world, "e");
+    ecs_entity_t p = ecs_entity(world, { .name = "p" });
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
 
     ecs_defer_begin(world);
     ecs_delete(world, p);
@@ -3651,8 +3651,8 @@ void Commands_add_path_to_deleted_parent(void) {
 void Commands_add_path_nested(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t p = ecs_new_entity(world, "p");
-    ecs_entity_t e = ecs_new_entity(world, "e");
+    ecs_entity_t p = ecs_entity(world, { .name = "p" });
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
 
     ecs_defer_begin(world);
     ecs_add_path(world, e, p, "foo.bar");
@@ -3672,8 +3672,8 @@ void Commands_add_path_nested(void) {
 void Commands_add_path_nested_to_deleted_parent(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t p = ecs_new_entity(world, "p");
-    ecs_entity_t e = ecs_new_entity(world, "e");
+    ecs_entity_t p = ecs_entity(world, { .name = "p" });
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
 
     ecs_defer_begin(world);
     ecs_delete(world, p);
@@ -3692,11 +3692,11 @@ void Commands_add_path_nested_to_deleted_parent(void) {
 void Commands_add_path_nested_to_created_deleted_parent(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t p = ecs_new_entity(world, "p");
-    ecs_entity_t e = ecs_new_entity(world, "e");
+    ecs_entity_t p = ecs_entity(world, { .name = "p" });
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
 
     ecs_defer_begin(world);
-    ecs_entity_t foo = ecs_new_entity(world, "p.foo");
+    ecs_entity_t foo = ecs_entity(world, { .name = "p.foo" });
     ecs_delete(world, foo);
     ecs_add_path(world, e, p, "foo.bar");
     ecs_defer_end(world);
@@ -3711,8 +3711,8 @@ void Commands_add_path_nested_to_created_deleted_parent(void) {
 void Commands_add_path_w_stage(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t p = ecs_new_entity(world, "p");
-    ecs_entity_t e = ecs_new_entity(world, "e");
+    ecs_entity_t p = ecs_entity(world, { .name = "p" });
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
 
     ecs_world_t *s = ecs_get_stage(world, 0);
 
@@ -3734,8 +3734,8 @@ void Commands_add_path_w_stage(void) {
 void Commands_add_path_to_deleted_parent_w_stage(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t p = ecs_new_entity(world, "p");
-    ecs_entity_t e = ecs_new_entity(world, "e");
+    ecs_entity_t p = ecs_entity(world, { .name = "p" });
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
 
     ecs_world_t *s = ecs_get_stage(world, 0);
 
@@ -3756,8 +3756,8 @@ void Commands_add_path_to_deleted_parent_w_stage(void) {
 void Commands_add_path_nested_w_stage(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t p = ecs_new_entity(world, "p");
-    ecs_entity_t e = ecs_new_entity(world, "e");
+    ecs_entity_t p = ecs_entity(world, { .name = "p" });
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
 
     ecs_world_t *s = ecs_get_stage(world, 0);
 
@@ -3779,8 +3779,8 @@ void Commands_add_path_nested_w_stage(void) {
 void Commands_add_path_nested_to_deleted_parent_w_stage(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t p = ecs_new_entity(world, "p");
-    ecs_entity_t e = ecs_new_entity(world, "e");
+    ecs_entity_t p = ecs_entity(world, { .name = "p" });
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
 
     ecs_world_t *s = ecs_get_stage(world, 0);
 
@@ -3801,13 +3801,13 @@ void Commands_add_path_nested_to_deleted_parent_w_stage(void) {
 void Commands_add_path_nested_to_created_deleted_parent_w_stage(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t p = ecs_new_entity(world, "p");
-    ecs_entity_t e = ecs_new_entity(world, "e");
+    ecs_entity_t p = ecs_entity(world, { .name = "p" });
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
 
     ecs_world_t *s = ecs_get_stage(world, 0);
 
     ecs_defer_begin(world);
-    ecs_entity_t foo = ecs_new_entity(s, "p.foo");
+    ecs_entity_t foo = ecs_entity(s, { .name = "p.foo" });
     ecs_delete(s, foo);
     ecs_add_path(s, e, p, "foo.bar");
     ecs_defer_end(world);

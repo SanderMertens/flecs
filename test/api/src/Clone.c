@@ -355,7 +355,7 @@ void Clone_clone_w_name(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t t = ecs_new_entity(world, "template");
+    ecs_entity_t t = ecs_entity(world, { .name = "template" });
     ecs_set(world, t, Position, {10, 20});
     ecs_set(world, t, Velocity, {1, 2});
 

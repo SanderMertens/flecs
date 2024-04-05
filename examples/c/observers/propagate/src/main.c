@@ -59,8 +59,8 @@ int main(int argc, char *argv[]) {
     });
 
     // Create entity and parent
-    ecs_entity_t p = ecs_new_entity(ecs, "p");
-    ecs_entity_t e = ecs_new_entity(ecs, "p.e"); // Create as child of p
+    ecs_entity_t p = ecs_entity(ecs, { .name = "p" });
+    ecs_entity_t e = ecs_entity(ecs, { .name = "p.e" }); // Create as child of p
 
     // Set Position on entity. This doesn't trigger the observer yet, since the
     // parent doesn't have Position yet.

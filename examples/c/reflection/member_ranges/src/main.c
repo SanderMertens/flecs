@@ -23,13 +23,13 @@ int main(int argc, char *argv[]) {
         }}
     });
 
-    ecs_entity_t m1 = ecs_new_entity(ecs, "MachineA");
+    ecs_entity_t m1 = ecs_entity(ecs, { .name = "MachineA" });
     ecs_set(ecs, m1, CpuUtilization, {50});
 
-    ecs_entity_t m2 = ecs_new_entity(ecs, "MachineB");
+    ecs_entity_t m2 = ecs_entity(ecs, { .name = "MachineB" });
     ecs_set(ecs, m2, CpuUtilization, {75});
 
-    ecs_entity_t m3 = ecs_new_entity(ecs, "MachineC");
+    ecs_entity_t m3 = ecs_entity(ecs, { .name = "MachineC" });
     ecs_set(ecs, m3, CpuUtilization, {90});
 
     // Open https://www.flecs.dev/explorer?show=query&query=CpuUtilization to 

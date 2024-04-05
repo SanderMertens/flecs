@@ -37,11 +37,11 @@ int main(int argc, char *argv[]) {
     ECS_SYSTEM(ecs, PrintPosition, EcsPostUpdate, [in] Position);
 
     // Create a few test entities for a Position, Velocity query
-    ecs_entity_t e1 = ecs_new_entity(ecs, "e1");
+    ecs_entity_t e1 = ecs_entity(ecs, { .name = "e1" });
     ecs_set(ecs, e1, Position, {10, 20});
     ecs_set(ecs, e1, Velocity, {1, 2});
 
-    ecs_entity_t e2 = ecs_new_entity(ecs, "e2");
+    ecs_entity_t e2 = ecs_entity(ecs, { .name = "e2" });
     ecs_set(ecs, e2, Position, {10, 20});
     ecs_set(ecs, e2, Velocity, {3, 4});
 

@@ -43,8 +43,8 @@ void SerializeIterToJson_serialize_1_comps_2_ents_same_table(void) {
         }
     });
 
-    ecs_entity_t e1 = ecs_new_entity(world, "Foo");
-    ecs_entity_t e2 = ecs_new_entity(world, "Bar");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "Bar" });
 
     ecs_set(world, e1, Position, {10, 20});
     ecs_set(world, e2, Position, {30, 40});
@@ -97,8 +97,8 @@ void SerializeIterToJson_serialize_2_comps_2_ents_same_table(void) {
         }
     });
 
-    ecs_entity_t e1 = ecs_new_entity(world, "Foo");
-    ecs_entity_t e2 = ecs_new_entity(world, "Bar");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "Bar" });
 
     ecs_set(world, e1, Position, {10, 20});
     ecs_set(world, e2, Position, {30, 40});
@@ -141,8 +141,8 @@ void SerializeIterToJson_serialize_1_tag_2_ents_same_table(void) {
 
     ECS_TAG(world, MyTag);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "Foo");
-    ecs_entity_t e2 = ecs_new_entity(world, "Bar");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "Bar" });
 
     ecs_add(world, e1, MyTag);
     ecs_add(world, e2, MyTag);
@@ -184,8 +184,8 @@ void SerializeIterToJson_serialize_1_tag_1_comp_2_ents_same_table(void) {
         }
     });
 
-    ecs_entity_t e1 = ecs_new_entity(world, "Foo");
-    ecs_entity_t e2 = ecs_new_entity(world, "Bar");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "Bar" });
 
     ecs_set(world, e1, Position, {10, 20});
     ecs_set(world, e2, Position, {30, 40});
@@ -235,10 +235,10 @@ void SerializeIterToJson_serialize_1_tag_1_comp_4_ents_two_tables(void) {
         }
     });
 
-    ecs_entity_t e1 = ecs_new_entity(world, "Foo");
-    ecs_entity_t e2 = ecs_new_entity(world, "Bar");
-    ecs_entity_t e3 = ecs_new_entity(world, "Hello");
-    ecs_entity_t e4 = ecs_new_entity(world, "World");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "Bar" });
+    ecs_entity_t e3 = ecs_entity(world, { .name = "Hello" });
+    ecs_entity_t e4 = ecs_entity(world, { .name = "World" });
 
     ecs_set(world, e1, Position, {10, 20});
     ecs_set(world, e2, Position, {30, 40});
@@ -312,9 +312,9 @@ void SerializeIterToJson_serialize_2_comps_1_owned_2_ents(void) {
         }
     });
 
-    ecs_entity_t base = ecs_new_entity(world, "Base");
-    ecs_entity_t e1 = ecs_new_entity(world, "Foo");
-    ecs_entity_t e2 = ecs_new_entity(world, "Bar");
+    ecs_entity_t base = ecs_entity(world, { .name = "Base" });
+    ecs_entity_t e1 = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "Bar" });
 
     ecs_set(world, base, Mass, {100});
     ecs_set(world, e1, Position, {10, 20});
@@ -359,8 +359,8 @@ void SerializeIterToJson_serialize_w_pair_wildcard(void) {
     ECS_TAG(world, ObjA);
     ECS_TAG(world, ObjB);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "Foo");
-    ecs_entity_t e2 = ecs_new_entity(world, "Bar");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "Bar" });
 
     ecs_add_pair(world, e1, Rel, ObjA);
     ecs_add_pair(world, e2, Rel, ObjB);
@@ -401,8 +401,8 @@ void SerializeIterToJson_serialize_w_var(void) {
     ECS_TAG(world, ObjA);
     ECS_TAG(world, ObjB);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "Foo");
-    ecs_entity_t e2 = ecs_new_entity(world, "Bar");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "Bar" });
 
     ecs_add_pair(world, e1, Rel, ObjA);
     ecs_add_pair(world, e2, Rel, ObjB);
@@ -453,8 +453,8 @@ void SerializeIterToJson_serialize_w_2_vars(void) {
     ECS_TAG(world, ObjC);
     ECS_TAG(world, ObjD);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "Foo");
-    ecs_entity_t e2 = ecs_new_entity(world, "Bar");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "Bar" });
 
     ecs_add_pair(world, e1, RelX, ObjA);
     ecs_add_pair(world, e2, RelX, ObjB);
@@ -502,8 +502,8 @@ void SerializeIterToJson_serialize_type_info_1_tags(void) {
 
     ECS_TAG(world, TagA);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "Foo");
-    ecs_entity_t e2 = ecs_new_entity(world, "Bar");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "Bar" });
 
     ecs_add(world, e1, TagA);
     ecs_add(world, e2, TagA);
@@ -540,8 +540,8 @@ void SerializeIterToJson_serialize_type_info_2_tags(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "Foo");
-    ecs_entity_t e2 = ecs_new_entity(world, "Bar");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "Bar" });
 
     ecs_add(world, e1, TagA);
     ecs_add(world, e1, TagB);
@@ -579,8 +579,8 @@ void SerializeIterToJson_serialize_type_info_1_component(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "Foo");
-    ecs_entity_t e2 = ecs_new_entity(world, "Bar");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "Bar" });
 
     ecs_add(world, e1, Position);
     ecs_add(world, e2, Position);
@@ -619,8 +619,8 @@ void SerializeIterToJson_serialize_type_info_2_components(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "Foo");
-    ecs_entity_t e2 = ecs_new_entity(world, "Bar");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "Bar" });
 
     ecs_add(world, e1, Position);
     ecs_add(world, e2, Position);
@@ -671,8 +671,8 @@ void SerializeIterToJson_serialize_type_info_1_struct(void) {
 
     test_assert(t == ecs_id(Position));
 
-    ecs_entity_t e1 = ecs_new_entity(world, "Foo");
-    ecs_entity_t e2 = ecs_new_entity(world, "Bar");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "Bar" });
 
     ecs_add(world, e1, Position);
     ecs_add(world, e2, Position);
@@ -724,8 +724,8 @@ void SerializeIterToJson_serialize_type_info_1_component_1_struct(void) {
 
     test_assert(t == ecs_id(Position));
 
-    ecs_entity_t e1 = ecs_new_entity(world, "Foo");
-    ecs_entity_t e2 = ecs_new_entity(world, "Bar");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "Bar" });
 
     ecs_add(world, e1, Position);
     ecs_add(world, e2, Position);
@@ -791,8 +791,8 @@ void SerializeIterToJson_serialize_type_info_2_structs(void) {
     });
     test_assert(t == ecs_id(Velocity));
 
-    ecs_entity_t e1 = ecs_new_entity(world, "Foo");
-    ecs_entity_t e2 = ecs_new_entity(world, "Bar");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "Bar" });
 
     ecs_add(world, e1, Position);
     ecs_add(world, e2, Position);
@@ -858,8 +858,8 @@ void SerializeIterToJson_serialize_type_info_w_unit(void) {
     });
     test_assert(ecs_id(T) != 0);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "Foo");
-    ecs_entity_t e2 = ecs_new_entity(world, "Bar");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "Bar" });
 
     ecs_set(world, e1, T, {24});
     ecs_set(world, e2, T, {16});
@@ -926,8 +926,8 @@ void SerializeIterToJson_serialize_type_info_w_unit_quantity(void) {
     });
     test_assert(ecs_id(T) != 0);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "Foo");
-    ecs_entity_t e2 = ecs_new_entity(world, "Bar");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "Bar" });
 
     ecs_set(world, e1, T, {24});
     ecs_set(world, e2, T, {16});
@@ -1001,8 +1001,8 @@ void SerializeIterToJson_serialize_type_info_w_unit_over(void) {
     });
     test_assert(ecs_id(T) != 0);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "Foo");
-    ecs_entity_t e2 = ecs_new_entity(world, "Bar");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "Bar" });
 
     ecs_set(world, e1, T, {24});
     ecs_set(world, e2, T, {16});
@@ -1047,8 +1047,8 @@ void SerializeIterToJson_serialize_w_entity_label(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "foo_bar");
-    ecs_entity_t e2 = ecs_new_entity(world, "hello_world");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "foo_bar" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "hello_world" });
     ecs_doc_set_name(world, e2, "Hello World");
 
     ecs_add(world, e1, Tag);
@@ -1094,8 +1094,8 @@ void SerializeIterToJson_serialize_w_entity_label_w_str(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "foo_bar");
-    ecs_entity_t e2 = ecs_new_entity(world, "hello_world");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "foo_bar" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "hello_world" });
     ecs_doc_set_name(world, e2, "Hello \"World\"");
 
     ecs_add(world, e1, Tag);
@@ -1143,8 +1143,8 @@ void SerializeIterToJson_serialize_w_var_labels(void) {
     ECS_TAG(world, ObjA);
     ECS_TAG(world, ObjB);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "Foo");
-    ecs_entity_t e2 = ecs_new_entity(world, "Bar");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "Bar" });
 
     ecs_add_pair(world, e1, Rel, ObjA);
     ecs_add_pair(world, e2, Rel, ObjB);
@@ -1196,8 +1196,8 @@ void SerializeIterToJson_serialize_color(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "foo_bar");
-    ecs_entity_t e2 = ecs_new_entity(world, "hello_world");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "foo_bar" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "hello_world" });
     ecs_doc_set_color(world, e2, "#47B576");
 
     ecs_add(world, e1, Tag);
@@ -1255,7 +1255,7 @@ void SerializeIterToJson_serialize_w_var_component(void) {
         }
     });
 
-    ecs_entity_t e = ecs_new_entity(world, "Foo");
+    ecs_entity_t e = ecs_entity(world, { .name = "Foo" });
     ecs_add_pair(world, e, Rel, Obj);
     ecs_set(world, Obj, T, {10});
 
@@ -1295,8 +1295,8 @@ void SerializeIterToJson_serialize_w_optional_tag(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
 
     ecs_add(world, e1, TagB);
     ecs_add(world, e1, TagA);
@@ -1340,8 +1340,8 @@ void SerializeIterToJson_serialize_w_optional_component(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
 
     ecs_add(world, e1, Velocity);
     ecs_add(world, e1, Position);
@@ -1400,8 +1400,8 @@ void SerializeIterToJson_serialize_w_optional_reflected_component(void) {
         }
     });
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
 
     ecs_set(world, e1, Velocity, {1, 2});
     ecs_set(world, e1, Position, {10, 20});
@@ -1446,7 +1446,7 @@ void SerializeIterToJson_serialize_w_inout_filter_tag(void) {
 
     ECS_TAG(world, TagA);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
 
     ecs_add(world, e1, TagA);
 
@@ -1488,7 +1488,7 @@ void SerializeIterToJson_serialize_w_inout_filter_component(void) {
         }
     });
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
 
     ecs_set(world, e1, Position, {10, 20});
     ecs_set(world, e1, Velocity, {1, 2});
@@ -1540,7 +1540,7 @@ void SerializeIterToJson_serialize_w_inout_filter_reflected_component(void) {
         }
     });
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
 
     ecs_set(world, e1, Position, {10, 20});
     ecs_set(world, e1, Velocity, {1, 2});
@@ -1575,7 +1575,7 @@ void SerializeIterToJson_serialize_w_inout_out_tag(void) {
 
     ECS_TAG(world, TagA);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
 
     ecs_add(world, e1, TagA);
 
@@ -1617,7 +1617,7 @@ void SerializeIterToJson_serialize_w_inout_out_component(void) {
         }
     });
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
 
     ecs_set(world, e1, Position, {10, 20});
     ecs_set(world, e1, Velocity, {1, 2});
@@ -1669,7 +1669,7 @@ void SerializeIterToJson_serialize_w_inout_out_reflected_component(void) {
         }
     });
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
 
     ecs_set(world, e1, Position, {10, 20});
     ecs_set(world, e1, Velocity, {1, 2});
@@ -1713,7 +1713,7 @@ void SerializeIterToJson_serialize_component_from_var(void) {
         }
     });
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
 
     ecs_set(world, e1, Position, {10, 20});
 
@@ -1748,7 +1748,7 @@ void SerializeIterToJson_serialize_ids(void) {
 
     ecs_query_t *q = ecs_query(world, { .expr = "Tag" });
 
-    ecs_entity_t e = ecs_new_entity(world, "e");
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_add(world, e, Tag);
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -1781,10 +1781,10 @@ void SerializeIterToJson_serialize_ids_2_entities(void) {
 
     ecs_query_t *q = ecs_query(world, { .expr = "Tag" });
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_add(world, e1, Tag);
 
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
     ecs_add(world, e2, Tag);
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -1893,7 +1893,7 @@ void SerializeIterToJson_serialize_variable_ids(void) {
 
     ecs_query_t *q = ecs_query(world, { .expr = "Tag($Entity)" });
 
-    ecs_entity_t e = ecs_new_entity(world, "e");
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_add(world, e, Tag);
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -1926,10 +1926,10 @@ void SerializeIterToJson_serialize_variable_ids_2_entities(void) {
 
     ecs_query_t *q = ecs_query(world, { .expr = "Tag($Entity)" });
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_add(world, e1, Tag);
 
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
     ecs_add(world, e2, Tag);
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -2030,7 +2030,7 @@ void SerializeIterToJson_serialize_anonymous_tag(void) {
     ecs_make_alive(world, tag);
     ecs_query_t *q = ecs_query(world, { .expr = "10000" });
 
-    ecs_entity_t e = ecs_new_entity(world, "e");
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_add_id(world, e, tag);
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -2067,7 +2067,7 @@ void SerializeIterToJson_serialize_anonymous_component(void) {
 
     ecs_query_t *q = ecs_query(world, { .expr = "10000" });
 
-    ecs_entity_t e = ecs_new_entity(world, "e");
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
     int32_t *ptr = ecs_ensure_id(world, e, tag);
     *ptr = 10;
 
@@ -2103,7 +2103,7 @@ void SerializeIterToJson_serialize_anonymous_pair(void) {
     ecs_make_alive(world, tgt);
     ecs_query_t *q = ecs_query(world, { .expr = "(10000, 20000)" });
 
-    ecs_entity_t e = ecs_new_entity(world, "e");
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_add_id(world, e, ecs_pair(rel, tgt));
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -2171,10 +2171,10 @@ void SerializeIterToJson_serialize_invalid_value(void) {
 void SerializeIterToJson_serialize_recycled_pair_id(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t rel = ecs_new_entity(world, "Rel");
-    ecs_entity_t tgt = ecs_new_entity(world, "Tgt");
+    ecs_entity_t rel = ecs_entity(world, { .name = "Rel" });
+    ecs_entity_t tgt = ecs_entity(world, { .name = "Tgt" });
     ecs_delete(world, tgt);
-    tgt = ecs_new_entity(world, "Tgt");
+    tgt = ecs_entity(world, { .name = "Tgt" });
 
     ecs_entity_t e = ecs_new_w_pair(world, rel, tgt);
     ecs_set_name(world, e, "ent");
@@ -2208,11 +2208,11 @@ void SerializeIterToJson_serialize_w_alert(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
 
     ecs_alert(world, {
-        .entity = ecs_new_entity(world, "position_without_velocity"),
+        .entity = ecs_entity(world, { .name = "position_without_velocity" }),
         .query.expr = "Position, !Velocity",
     });
 
@@ -2260,7 +2260,7 @@ void SerializeIterToJson_serialize_no_this_alert_imported(void) {
         }
     });
 
-    ecs_entity_t e1 = ecs_new_entity(world, "Foo");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "Foo" });
     ecs_set(world, e1, Position, {10, 20});
 
     ecs_query_t *q = ecs_query(world, {
@@ -2517,9 +2517,9 @@ void SerializeIterToJson_serialize_table(void) {
         }
     });
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
-    ecs_entity_t e3 = ecs_new_entity(world, "e3");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
 
     ecs_set(world, e1, Position, {10, 20});
     ecs_set(world, e2, Position, {20, 30});
@@ -2605,9 +2605,9 @@ void SerializeIterToJson_serialize_table_w_id_labels(void) {
     ecs_doc_set_name(world, ecs_id(Velocity), "velocity");
     ecs_doc_set_name(world, ecs_id(Mass), "mass");
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
-    ecs_entity_t e3 = ecs_new_entity(world, "e3");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
 
     ecs_set(world, e1, Position, {10, 20});
     ecs_set(world, e2, Position, {20, 30});
@@ -2689,12 +2689,12 @@ void SerializeIterToJson_serialize_table_w_var_labels(void) {
         }
     });
 
-    ecs_entity_t parent = ecs_new_entity(world, "Parent");
+    ecs_entity_t parent = ecs_entity(world, { .name = "Parent" });
     ecs_doc_set_name(world, parent, "parent");
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
-    ecs_entity_t e3 = ecs_new_entity(world, "e3");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
 
     ecs_add_pair(world, e1, EcsChildOf, parent);
     ecs_add_pair(world, e2, EcsChildOf, parent);
@@ -2788,12 +2788,12 @@ void SerializeIterToJson_serialize_table_w_private(void) {
         }
     });
 
-    ecs_entity_t parent = ecs_new_entity(world, "Parent");
+    ecs_entity_t parent = ecs_entity(world, { .name = "Parent" });
     ecs_doc_set_name(world, parent, "parent");
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
-    ecs_entity_t e3 = ecs_new_entity(world, "e3");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
 
     ecs_add_pair(world, e1, EcsChildOf, parent);
     ecs_add_pair(world, e2, EcsChildOf, parent);
@@ -2882,10 +2882,10 @@ void SerializeIterToJson_serialize_w_offset(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_add(world, e1, Tag);
 
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
     ecs_add(world, e2, Tag);
 
     ecs_query_t *r = ecs_query(world, { .expr = "Tag($this), ?$this(_)" });
@@ -3043,7 +3043,7 @@ void SerializeIterToJson_serialize_id_labels(void) {
         }
     });
 
-    ecs_entity_t e = ecs_new_entity(world, "ent");
+    ecs_entity_t e = ecs_entity(world, { .name = "ent" });
     ecs_set(world, e, Position, {1, 2});
 
     ecs_query_t *q = ecs_query(world, { .expr = "Position" });
@@ -3077,7 +3077,7 @@ void SerializeIterToJson_serialize_id_labels_w_str(void) {
         }
     });
 
-    ecs_entity_t e = ecs_new_entity(world, "ent");
+    ecs_entity_t e = ecs_entity(world, { .name = "ent" });
     ecs_set(world, e, Position, {1, 2});
 
     ecs_query_t *q = ecs_query(world, { .expr = "Position" });
@@ -3107,9 +3107,9 @@ void SerializeIterToJson_serialize_vars_for_query(void) {
         }
     });
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_set(world, e1, Position, {1, 2});
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
     ecs_set(world, e2, Position, {3, 4});
 
     ecs_iter_to_json_desc_t desc = {0};
@@ -3138,9 +3138,9 @@ void SerializeIterToJson_serialize_var_labels_for_query(void) {
         }
     });
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_set(world, e1, Position, {1, 2});
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
     ecs_set(world, e2, Position, {3, 4});
 
     ecs_iter_to_json_desc_t desc = {0};
@@ -3169,9 +3169,9 @@ void SerializeIterToJson_serialize_var_ids_for_query(void) {
         }
     });
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_set(world, e1, Position, {1, 2});
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
     ecs_set(world, e2, Position, {3, 4});
 
     ecs_iter_to_json_desc_t desc = {0};
@@ -3194,7 +3194,7 @@ void SerializeIterToJson_serialize_null_doc_name(void) {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e = ecs_new_entity(world, "foo");
+    ecs_entity_t e = ecs_entity(world, { .name = "foo" });
     ecs_doc_set_name(world, e, "bar");
     ecs_doc_set_name(world, e, NULL);
     ecs_add(world, e, Tag);

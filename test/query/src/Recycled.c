@@ -229,12 +229,12 @@ void Recycled_has_recycled_id_from_pair(void) {
 void Recycled_recycled_pair(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t rel = ecs_new_entity(world, "Rel");
-    ecs_entity_t tgt = ecs_new_entity(world, "Tgt");
+    ecs_entity_t rel = ecs_entity(world, { .name = "Rel" });
+    ecs_entity_t tgt = ecs_entity(world, { .name = "Tgt" });
     ecs_delete(world, rel);
     ecs_delete(world, tgt);
-    rel = ecs_new_entity(world, "Rel");
-    tgt = ecs_new_entity(world, "Tgt");
+    rel = ecs_entity(world, { .name = "Rel" });
+    tgt = ecs_entity(world, { .name = "Tgt" });
 
     ecs_entity_t e = ecs_new_w_pair(world, rel, tgt);
 

@@ -25,23 +25,23 @@ int main(int argc, char *argv[]) {
     ECS_COMPONENT(ecs, ImpulseSpeed);
 
     // Create a base prefab for SpaceShips.
-    ecs_entity_t SpaceShip = ecs_new_prefab(ecs, "SpaceShip");
+    ecs_entity_t SpaceShip = ecs_entity(ecs, { .name = "SpaceShip", .add = { EcsPrefab } });
     ecs_set(ecs, SpaceShip, ImpulseSpeed, {50});
     ecs_set(ecs, SpaceShip, Defense, {25});
 
         // Create a Freighter variant which inherits from SpaceShip
-        ecs_entity_t Freighter = ecs_new_prefab(ecs, "Freighter");
+        ecs_entity_t Freighter = ecs_entity(ecs, { .name = "Freighter", .add = { EcsPrefab } });
         ecs_add_pair(ecs, Freighter, EcsIsA, SpaceShip);
         ecs_set(ecs, Freighter, FreightCapacity, {100});
         ecs_set(ecs, Freighter, Defense, {50});
 
             // Create a MammothFreighter variant which inherits from Freighter
-            ecs_entity_t MammothFreighter = ecs_new_prefab(ecs, "MammothFreighter");
+            ecs_entity_t MammothFreighter = ecs_entity(ecs, { .name = "MammothFreighter", .add = { EcsPrefab } });
             ecs_add_pair(ecs, MammothFreighter, EcsIsA, Freighter);
             ecs_set(ecs, MammothFreighter, FreightCapacity, {500});
 
         // Create a Frigate variant which inherits from SpaceShip
-        ecs_entity_t Frigate = ecs_new_prefab(ecs, "Frigate");
+        ecs_entity_t Frigate = ecs_entity(ecs, { .name = "Frigate", .add = { EcsPrefab } });
         ecs_add_pair(ecs, Frigate, EcsIsA, SpaceShip);
         ecs_set(ecs, Frigate, Attack, {100});
         ecs_set(ecs, Frigate, Defense, {75});
@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
     // Create an instance of the MammothFreighter. This entity will inherit the
     // ImpulseSpeed from SpaceShip, Defense from Freighter and FreightCapacity
     // from MammothFreighter.
-    ecs_entity_t inst = ecs_new_entity(ecs, "my_freighter");
+    ecs_entity_t inst = ecs_entity(ecs, { .name = "my_freighter" });
     ecs_add_pair(ecs, inst, EcsIsA, MammothFreighter);
 
     // Add a private Position component.

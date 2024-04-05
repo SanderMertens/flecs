@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
 
         // Give first player a name so we can look it up later
         if (p == 0) {
-            player = ecs_new_entity(ecs, "MyPlayer");
+            player = ecs_entity(ecs, { .name = "MyPlayer" });
         } else {
             player = ecs_new_id(ecs);
         }

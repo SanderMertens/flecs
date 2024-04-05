@@ -2986,7 +2986,7 @@ void Iter_to_str(void) {
 
     ECS_TAG(world, Tag);
     
-    ecs_entity_t e = ecs_new_entity(world, "foo");
+    ecs_entity_t e = ecs_entity(world, { .name = "foo" });
     ecs_add(world, e, Tag);
 
     ecs_query_t *q = ecs_query(world, { .expr = "Tag" });
