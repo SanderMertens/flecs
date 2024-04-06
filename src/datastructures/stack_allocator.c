@@ -108,9 +108,9 @@ ecs_stack_cursor_t* flecs_stack_get_cursor(
     return result;
 }
 
-static const char *flecs_stack_leak_msg = 
-    "a stack allocator leak is most likely due to an unterminated "
-    "iteration: call ecs_iter_fini to fix";
+#define FLECS_STACK_LEAK_MSG \
+    "a stack allocator leak is most likely due to an unterminated " \
+    "iteration: call ecs_iter_fini to fix"
 
 void flecs_stack_restore_cursor(
     ecs_stack_t *stack,
@@ -155,14 +155,14 @@ void flecs_stack_restore_cursor(
      * if the cursor count is non-zero, stack should not be empty */
     ecs_dbg_assert((stack->cursor_count == 0) == 
         (stack->tail_page == &stack->first && stack->tail_page->sp == 0), 
-            ECS_LEAK_DETECTED, flecs_stack_leak_msg);
+            ECS_LEAK_DETECTED, FLECS_STACK_LEAK_MSG);
 }
 
 void flecs_stack_reset(
     ecs_stack_t *stack)
 {
     ecs_dbg_assert(stack->cursor_count == 0, ECS_LEAK_DETECTED, 
-        flecs_stack_leak_msg);
+        FLECS_STACK_LEAK_MSG);
     stack->tail_page = &stack->first;
     stack->first.sp = 0;
     stack->tail_cursor = NULL;
@@ -181,11 +181,11 @@ void flecs_stack_fini(
 {
     ecs_stack_page_t *next, *cur = &stack->first;
     ecs_dbg_assert(stack->cursor_count == 0, ECS_LEAK_DETECTED, 
-        flecs_stack_leak_msg);
+        FLECS_STACK_LEAK_MSG);
     ecs_assert(stack->tail_page == &stack->first, ECS_LEAK_DETECTED, 
-        flecs_stack_leak_msg);
+        FLECS_STACK_LEAK_MSG);
     ecs_assert(stack->tail_page->sp == 0, ECS_LEAK_DETECTED, 
-        flecs_stack_leak_msg);
+        FLECS_STACK_LEAK_MSG);
 
     do {
         next = cur->next;
