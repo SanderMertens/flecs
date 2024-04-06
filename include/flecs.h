@@ -299,12 +299,12 @@
 /** @} */
 
 #include "flecs/private/api_defines.h"
-#include "flecs/private/vec.h"              /* Vector datatype */
-#include "flecs/private/sparse.h"           /* Sparse set */
-#include "flecs/private/block_allocator.h"  /* Block allocator */
-#include "flecs/private/map.h"              /* Map */
-#include "flecs/private/allocator.h"        /* Allocator */
-#include "flecs/private/strbuf.h"           /* String builder */
+#include "flecs/datastructures/vec.h"              /* Vector datatype */
+#include "flecs/datastructures/sparse.h"           /* Sparse set */
+#include "flecs/datastructures/block_allocator.h"  /* Block allocator */
+#include "flecs/datastructures/map.h"              /* Map */
+#include "flecs/datastructures/allocator.h"        /* Allocator */
+#include "flecs/datastructures/strbuf.h"           /* String builder */
 #include "flecs/os_api.h"  /* Abstraction for operating system functions */
 
 #ifdef __cplusplus
@@ -888,9 +888,8 @@ struct ecs_type_info_t {
 
 #include "flecs/private/api_types.h"        /* Supporting API types */
 #include "flecs/private/api_support.h"      /* Supporting API functions */
-#include "flecs/private/vec.h"              /* Vector */
-#include "flecs/private/hashmap.h"          /* Hashmap */
-#include "flecs/private/parser.h"           /* Query DSL parser */
+#include "flecs/datastructures/hashmap.h"   /* Hashmap */
+#include "flecs/private/parser.h"           /* Parser utilities */
 
 /* Utility to hold a value of a dynamic type */
 typedef struct ecs_value_t {

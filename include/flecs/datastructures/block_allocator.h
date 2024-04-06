@@ -6,7 +6,7 @@
 #ifndef FLECS_BLOCK_ALLOCATOR_H
 #define FLECS_BLOCK_ALLOCATOR_H
 
-#include "api_defines.h"
+#include "../private/api_defines.h"
 
 typedef struct ecs_block_allocator_block_t {
     void *memory;

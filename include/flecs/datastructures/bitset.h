@@ -6,7 +6,7 @@
 #ifndef FLECS_BITSET_H
 #define FLECS_BITSET_H
 
-#include "flecs/private/api_defines.h"
+#include "../private/api_defines.h"
 
 #ifdef __cplusplus
 extern "C" {

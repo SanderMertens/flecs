@@ -6,7 +6,7 @@
 #ifndef FLECS_HASHMAP_H
 #define FLECS_HASHMAP_H
 
-#include "api_defines.h"
+#include "../private/api_defines.h"
 
 #ifdef __cplusplus
 extern "C" {

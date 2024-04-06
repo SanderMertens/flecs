@@ -6,7 +6,7 @@
 #ifndef FLECS_SPARSE_H
 #define FLECS_SPARSE_H
 
-#include "flecs/private/api_defines.h"
+#include "../private/api_defines.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -6,7 +6,7 @@
 #ifndef FLECS_ALLOCATOR_H
 #define FLECS_ALLOCATOR_H
 
-#include "api_defines.h"
+#include "../private/api_defines.h"
 
 FLECS_DBG_API extern int64_t ecs_block_allocator_alloc_count;
 FLECS_DBG_API extern int64_t ecs_block_allocator_free_count;
