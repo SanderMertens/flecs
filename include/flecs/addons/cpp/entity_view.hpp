@@ -48,7 +48,7 @@ struct entity_view : public id {
      * @return The integer entity id.
      */
     entity_t id() const {
-        return m_id;
+        return id_;
     }
 
     /** Check if entity is valid.
@@ -56,7 +56,7 @@ struct entity_view : public id {
      * @return True if the entity is alive, false otherwise.
      */
     bool is_valid() const {
-        return m_world && ecs_is_valid(m_world, m_id);
+        return world_ && ecs_is_valid(world_, id_);
     }
   
     explicit operator bool() const {
@@ -68,7 +68,7 @@ struct entity_view : public id {
      * @return True if the entity is alive, false otherwise.
      */
     bool is_alive() const {
-        return m_world && ecs_is_alive(m_world, m_id);
+        return world_ && ecs_is_alive(world_, id_);
     }
 
     /** Return the entity name.
@@ -76,7 +76,7 @@ struct entity_view : public id {
      * @return The entity name.
      */
     flecs::string_view name() const {
-        return flecs::string_view(ecs_get_name(m_world, m_id));
+        return flecs::string_view(ecs_get_name(world_, id_));
     }
 
     /** Return the entity symbol.
@@ -84,7 +84,7 @@ struct entity_view : public id {
      * @return The entity symbol.
      */
     flecs::string_view symbol() const {
-        return flecs::string_view(ecs_get_symbol(m_world, m_id));
+        return flecs::string_view(ecs_get_symbol(world_, id_));
     }
 
     /** Return the entity path.
@@ -100,7 +100,7 @@ struct entity_view : public id {
      * @return The relative hierarchical entity path.
      */
     flecs::string path_from(flecs::entity_t parent, const char *sep = "::", const char *init_sep = "::") const {
-        char *path = ecs_get_path_w_sep(m_world, parent, m_id, sep, init_sep);
+        char *path = ecs_get_path_w_sep(world_, parent, id_, sep, init_sep);
         return flecs::string(path);
     }
 
@@ -110,11 +110,11 @@ struct entity_view : public id {
      */
     template <typename Parent>
     flecs::string path_from(const char *sep = "::", const char *init_sep = "::") const {
-        return path_from(_::type<Parent>::id(m_world), sep, init_sep);
+        return path_from(_::type<Parent>::id(world_), sep, init_sep);
     }
 
     bool enabled() const {
-        return !ecs_has_id(m_world, m_id, flecs::Disabled);
+        return !ecs_has_id(world_, id_, flecs::Disabled);
     }
 
     /** Get the entity's type.
@@ -187,7 +187,7 @@ struct entity_view : public id {
      */
     template <typename First, typename Func>
     void each(const Func& func) const { 
-        return each(_::type<First>::id(m_world), func);
+        return each(_::type<First>::id(world_), func);
     }
 
     /** Iterate children for entity.
@@ -205,14 +205,14 @@ struct entity_view : public id {
         /* When the entity is a wildcard, this would attempt to query for all
          * entities with (ChildOf, *) or (ChildOf, _) instead of querying for
          * the children of the wildcard entity. */
-        if (m_id == flecs::Wildcard || m_id == flecs::Any) {
+        if (id_ == flecs::Wildcard || id_ == flecs::Any) {
             /* This is correct, wildcard entities don't have children */
             return;
         }
 
-        flecs::world world(m_world);
+        flecs::world world(world_);
 
-        ecs_iter_t it = ecs_each_id(m_world, ecs_pair(rel, m_id));
+        ecs_iter_t it = ecs_each_id(world_, ecs_pair(rel, id_));
         while (ecs_each_next(&it)) {
             _::each_delegate<Func>(FLECS_MOV(func)).invoke(&it);
         }
@@ -230,7 +230,7 @@ struct entity_view : public id {
      */
     template <typename Rel, typename Func>
     void children(Func&& func) const {
-        children(_::type<Rel>::id(m_world), FLECS_MOV(func));
+        children(_::type<Rel>::id(world_), FLECS_MOV(func));
     }
 
     /** Iterate children for entity.
@@ -257,9 +257,9 @@ struct entity_view : public id {
      */
     template <typename T, if_t< is_actual<T>::value > = 0>
     const T* get() const {
-        auto comp_id = _::type<T>::id(m_world);
+        auto comp_id = _::type<T>::id(world_);
         ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
-        return static_cast<const T*>(ecs_get_id(m_world, m_id, comp_id));
+        return static_cast<const T*>(ecs_get_id(world_, id_, comp_id));
     }
 
     /** Get component value.
@@ -273,9 +273,9 @@ struct entity_view : public id {
     template <typename T, typename A = actual_type_t<T>, 
         if_t< flecs::is_pair<T>::value > = 0>
     const A* get() const {
-        auto comp_id = _::type<T>::id(m_world);
+        auto comp_id = _::type<T>::id(world_);
         ecs_assert(_::type<A>::size() != 0, ECS_INVALID_PARAMETER, NULL);
-        return static_cast<const A*>(ecs_get_id(m_world, m_id, comp_id));
+        return static_cast<const A*>(ecs_get_id(world_, id_, comp_id));
     }
 
     /** Get a pair.
@@ -298,10 +298,10 @@ struct entity_view : public id {
      */
     template<typename First, typename Second, if_not_t< is_enum<Second>::value> = 0>
     const First* get(Second second) const {
-        auto comp_id = _::type<First>::id(m_world);
+        auto comp_id = _::type<First>::id(world_);
         ecs_assert(_::type<First>::size() != 0, ECS_INVALID_PARAMETER, NULL);
         return static_cast<const First*>(
-            ecs_get_id(m_world, m_id, ecs_pair(comp_id, second)));
+            ecs_get_id(world_, id_, ecs_pair(comp_id, second)));
     }
 
     /** Get a pair.
@@ -312,7 +312,7 @@ struct entity_view : public id {
      */
     template<typename First, typename Second, if_t<is_enum<Second>::value> = 0>
     const First* get(Second constant) const {
-        const auto& et = enum_type<Second>(this->m_world);
+        const auto& et = enum_type<Second>(this->world_);
         flecs::entity_t target = et.entity(constant);
         return get<First>(target);
     }
@@ -324,7 +324,7 @@ struct entity_view : public id {
      *         have the component.
      */
     const void* get(flecs::id_t comp) const {
-        return ecs_get_id(m_world, m_id, comp);
+        return ecs_get_id(world_, id_, comp);
     }
 
     /** Get a pair (untyped).
@@ -336,7 +336,7 @@ struct entity_view : public id {
      * @param second The second element of the pair.
      */
     const void* get(flecs::entity_t first, flecs::entity_t second) const {
-        return ecs_get_id(m_world, m_id, ecs_pair(first, second));
+        return ecs_get_id(world_, id_, ecs_pair(first, second));
     }
 
     /** Get 1..N components.
@@ -393,10 +393,10 @@ struct entity_view : public id {
      */
     template<typename Second>
     const Second* get_second(flecs::entity_t first) const {
-        auto second = _::type<Second>::id(m_world);
+        auto second = _::type<Second>::id(world_);
         ecs_assert(_::type<Second>::size() != 0, ECS_INVALID_PARAMETER, NULL);
         return static_cast<const Second*>(
-            ecs_get_id(m_world, m_id, ecs_pair(first, second)));
+            ecs_get_id(world_, id_, ecs_pair(first, second)));
     }
 
     /** Get the second part for a pair.
@@ -419,9 +419,9 @@ struct entity_view : public id {
      */
     template <typename T, if_t< is_actual<T>::value > = 0>
     T* get_mut() const {
-        auto comp_id = _::type<T>::id(m_world);
+        auto comp_id = _::type<T>::id(world_);
         ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
-        return static_cast<T*>(ecs_get_mut_id(m_world, m_id, comp_id));
+        return static_cast<T*>(ecs_get_mut_id(world_, id_, comp_id));
     }
 
     /** Get mutable component value.
@@ -435,9 +435,9 @@ struct entity_view : public id {
     template <typename T, typename A = actual_type_t<T>, 
         if_t< flecs::is_pair<T>::value > = 0>
     A* get_mut() const {
-        auto comp_id = _::type<T>::id(m_world);
+        auto comp_id = _::type<T>::id(world_);
         ecs_assert(_::type<A>::size() != 0, ECS_INVALID_PARAMETER, NULL);
-        return static_cast<A*>(ecs_get_mut_id(m_world, m_id, comp_id));
+        return static_cast<A*>(ecs_get_mut_id(world_, id_, comp_id));
     }
 
     /** Get a mutable pair.
@@ -460,10 +460,10 @@ struct entity_view : public id {
      */
     template<typename First, typename Second, if_not_t< is_enum<Second>::value> = 0>
     First* get_mut(Second second) const {
-        auto comp_id = _::type<First>::id(m_world);
+        auto comp_id = _::type<First>::id(world_);
         ecs_assert(_::type<First>::size() != 0, ECS_INVALID_PARAMETER, NULL);
         return static_cast<First*>(
-            ecs_get_mut_id(m_world, m_id, ecs_pair(comp_id, second)));
+            ecs_get_mut_id(world_, id_, ecs_pair(comp_id, second)));
     }
 
     /** Get a mutable pair.
@@ -474,7 +474,7 @@ struct entity_view : public id {
      */
     template<typename First, typename Second, if_t<is_enum<Second>::value> = 0>
     First* get_mut(Second constant) const {
-        const auto& et = enum_type<Second>(this->m_world);
+        const auto& et = enum_type<Second>(this->world_);
         flecs::entity_t target = et.entity(constant);
         return get_mut<First>(target);
     }
@@ -486,7 +486,7 @@ struct entity_view : public id {
      *         have the component.
      */
     void* get_mut(flecs::id_t comp) const {
-        return ecs_get_mut_id(m_world, m_id, comp);
+        return ecs_get_mut_id(world_, id_, comp);
     }
 
     /** Get a mutable pair (untyped).
@@ -498,7 +498,7 @@ struct entity_view : public id {
      * @param second The second element of the pair.
      */
     void* get_mut(flecs::entity_t first, flecs::entity_t second) const {
-        return ecs_get_mut_id(m_world, m_id, ecs_pair(first, second));
+        return ecs_get_mut_id(world_, id_, ecs_pair(first, second));
     }
 
     /** Get the second part for a pair.
@@ -510,10 +510,10 @@ struct entity_view : public id {
      */
     template<typename Second>
     Second* get_mut_second(flecs::entity_t first) const {
-        auto second = _::type<Second>::id(m_world);
+        auto second = _::type<Second>::id(world_);
         ecs_assert(_::type<Second>::size() != 0, ECS_INVALID_PARAMETER, NULL);
         return static_cast<Second*>(
-            ecs_get_mut_id(m_world, m_id, ecs_pair(first, second)));
+            ecs_get_mut_id(world_, id_, ecs_pair(first, second)));
     }
 
     /** Get the second part for a pair.
@@ -581,7 +581,7 @@ struct entity_view : public id {
      * @return The depth.
      */
     int32_t depth(flecs::entity_t rel) const {
-        return ecs_get_depth(m_world, m_id, rel);
+        return ecs_get_depth(world_, id_, rel);
     }
 
     /** Get depth for given relationship.
@@ -591,7 +591,7 @@ struct entity_view : public id {
      */
     template<typename Rel>
     int32_t depth() const {
-        return this->depth(_::type<Rel>::id(m_world));
+        return this->depth(_::type<Rel>::id(world_));
     }
 
     /** Get parent of entity.
@@ -617,7 +617,7 @@ struct entity_view : public id {
      * @return True if the entity has the provided entity, false otherwise.
      */
     bool has(flecs::id_t e) const {
-        return ecs_has_id(m_world, m_id, e);
+        return ecs_has_id(world_, id_, e);
     }     
 
     /** Check if entity has the provided component.
@@ -627,14 +627,14 @@ struct entity_view : public id {
      */
     template <typename T>
     bool has() const {
-        flecs::id_t cid = _::type<T>::id(m_world);
-        bool result = ecs_has_id(m_world, m_id, cid);
+        flecs::id_t cid = _::type<T>::id(world_);
+        bool result = ecs_has_id(world_, id_, cid);
         if (result) {
             return result;
         }
 
         if (is_enum<T>::value) {
-            return ecs_has_pair(m_world, m_id, cid, flecs::Wildcard);
+            return ecs_has_pair(world_, id_, cid, flecs::Wildcard);
         }
 
         return false;
@@ -648,12 +648,12 @@ struct entity_view : public id {
      */
     template <typename E, if_t< is_enum<E>::value > = 0>
     bool has(E value) const {
-        auto r = _::type<E>::id(m_world);
-        auto o = enum_type<E>(m_world).entity(value);
+        auto r = _::type<E>::id(world_);
+        auto o = enum_type<E>(world_).entity(value);
         ecs_assert(o, ECS_INVALID_PARAMETER,
             "Constant was not found in Enum reflection data."
             " Did you mean to use has<E>() instead of has(E)?");
-        return ecs_has_pair(m_world, m_id, r, o);
+        return ecs_has_pair(world_, id_, r, o);
     }
 
     /** Check if entity has the provided pair.
@@ -664,7 +664,7 @@ struct entity_view : public id {
      */
     template <typename First, typename Second>
     bool has() const {
-        return this->has<First>(_::type<Second>::id(m_world));
+        return this->has<First>(_::type<Second>::id(world_));
     }
 
     /** Check if entity has the provided pair.
@@ -675,8 +675,8 @@ struct entity_view : public id {
      */
     template<typename First, typename Second, if_not_t< is_enum<Second>::value > = 0>
     bool has(Second second) const {
-        auto comp_id = _::type<First>::id(m_world);
-        return ecs_has_id(m_world, m_id, ecs_pair(comp_id, second));
+        auto comp_id = _::type<First>::id(world_);
+        return ecs_has_id(world_, id_, ecs_pair(comp_id, second));
     }
 
     /** Check if entity has the provided pair.
@@ -687,7 +687,7 @@ struct entity_view : public id {
      */
     template <typename Second>
     bool has_second(flecs::entity_t first) const {
-        return this->has(first, _::type<Second>::id(m_world));
+        return this->has(first, _::type<Second>::id(world_));
     }
 
     /** Check if entity has the provided pair.
@@ -698,7 +698,7 @@ struct entity_view : public id {
      */
     template<typename First, typename E, if_t< is_enum<E>::value > = 0>
     bool has(E value) const {
-        const auto& et = enum_type<E>(this->m_world);
+        const auto& et = enum_type<E>(this->world_);
         flecs::entity_t second = et.entity(value);
         return has<First>(second);
     }
@@ -710,7 +710,7 @@ struct entity_view : public id {
      * @return True if the entity has the provided component, false otherwise.
      */
     bool has(flecs::id_t first, flecs::id_t second) const {
-        return ecs_has_id(m_world, m_id, ecs_pair(first, second));
+        return ecs_has_id(world_, id_, ecs_pair(first, second));
     }
 
     /** Check if entity owns the provided entity.
@@ -720,7 +720,7 @@ struct entity_view : public id {
      * @return True if the entity owns the provided entity, false otherwise.
      */
     bool owns(flecs::id_t e) const {
-        return ecs_owns_id(m_world, m_id, e);
+        return ecs_owns_id(world_, id_, e);
     }
 
     /** Check if entity owns the provided pair.
@@ -731,7 +731,7 @@ struct entity_view : public id {
      */
     template <typename First>
     bool owns(flecs::id_t second) const {
-        auto comp_id = _::type<First>::id(m_world);
+        auto comp_id = _::type<First>::id(world_);
         return owns(ecs_pair(comp_id, second));
     }
 
@@ -753,7 +753,7 @@ struct entity_view : public id {
      */
     template <typename T>
     bool owns() const {
-        return owns(_::type<T>::id(m_world));
+        return owns(_::type<T>::id(world_));
     }
 
     /** Check if entity owns the provided pair.
@@ -766,8 +766,8 @@ struct entity_view : public id {
     template <typename First, typename Second>
     bool owns() const {
         return owns(
-            _::type<First>::id(m_world),
-            _::type<Second>::id(m_world));
+            _::type<First>::id(world_),
+            _::type<Second>::id(world_));
     }
 
     /** Test if id is enabled.
@@ -776,7 +776,7 @@ struct entity_view : public id {
      * @return True if enabled, false if not.
      */
     bool enabled(flecs::id_t id) const {
-        return ecs_is_enabled_id(m_world, m_id, id);
+        return ecs_is_enabled_id(world_, id_, id);
     }
 
     /** Test if component is enabled.
@@ -786,7 +786,7 @@ struct entity_view : public id {
      */
     template<typename T>
     bool enabled() const {
-        return this->enabled(_::type<T>::id(m_world));
+        return this->enabled(_::type<T>::id(world_));
     }
 
     /** Test if pair is enabled.
@@ -807,7 +807,7 @@ struct entity_view : public id {
      */
     template <typename First>
     bool enabled(flecs::id_t second) const {
-        return this->enabled(_::type<First>::id(m_world), second);
+        return this->enabled(_::type<First>::id(world_), second);
     }
 
     /** Test if pair is enabled.
@@ -818,7 +818,7 @@ struct entity_view : public id {
      */
     template <typename First, typename Second>
     bool enabled() const {
-        return this->enabled<First>(_::type<Second>::id(m_world));
+        return this->enabled<First>(_::type<Second>::id(world_));
     }
 
     flecs::entity clone(bool clone_value = true, flecs::entity_t dst_id = 0) const;

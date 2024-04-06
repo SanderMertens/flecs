@@ -13,16 +13,16 @@ Self& set_json(
     const char *json, 
     flecs::from_json_desc_t *desc = nullptr) 
 {
-    flecs::entity_t type = ecs_get_typeid(m_world, e);
+    flecs::entity_t type = ecs_get_typeid(world_, e);
     if (!type) {
         ecs_err("id is not a type");
         return to_base();
     }
 
-    void *ptr = ecs_ensure_id(m_world, m_id, e);
+    void *ptr = ecs_ensure_id(world_, id_, e);
     ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_ptr_from_json(m_world, type, ptr, json, desc);
-    ecs_modified_id(m_world, m_id, e);
+    ecs_ptr_from_json(world_, type, ptr, json, desc);
+    ecs_modified_id(world_, id_, e);
 
     return to_base();
 }
@@ -51,7 +51,7 @@ Self& set_json(
     const char *json, 
     flecs::from_json_desc_t *desc = nullptr) 
 {
-    return set_json(_::type<T>::id(m_world), json, desc);
+    return set_json(_::type<T>::id(world_), json, desc);
 }
 
 /** Set pair from JSON.
@@ -65,8 +65,8 @@ Self& set_json(
     flecs::from_json_desc_t *desc = nullptr) 
 {
     return set_json(
-        _::type<R>::id(m_world), 
-        _::type<T>::id(m_world),
+        _::type<R>::id(world_), 
+        _::type<T>::id(world_),
         json, desc);
 }
 
@@ -82,7 +82,7 @@ Self& set_json(
     flecs::from_json_desc_t *desc = nullptr) 
 {
     return set_json(
-        _::type<R>::id(m_world), t,
+        _::type<R>::id(world_), t,
         json, desc);
 }
 
@@ -98,6 +98,6 @@ Self& set_json_second(
     flecs::from_json_desc_t *desc = nullptr) 
 {
     return set_json(
-        r, _::type<T>::id(m_world),
+        r, _::type<T>::id(world_),
         json, desc);
 }

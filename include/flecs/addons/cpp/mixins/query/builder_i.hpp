@@ -17,22 +17,22 @@ namespace flecs
 template<typename Base, typename ... Components>
 struct query_builder_i : term_builder_i<Base> {
     query_builder_i(ecs_query_desc_t *desc, int32_t term_index = 0) 
-        : m_term_index(term_index)
-        , m_expr_count(0)
-        , m_desc(desc) { }
+        : term_index_(term_index)
+        , expr_count_(0)
+        , desc_(desc) { }
 
     Base& instanced() {
-        m_desc->flags |= EcsQueryIsInstanced;
+        desc_->flags |= EcsQueryIsInstanced;
         return *this;
     }
 
     Base& flags(ecs_flags32_t flags) {
-        m_desc->flags |= flags;
+        desc_->flags |= flags;
         return *this;
     }
 
     Base& cache_kind(query_cache_kind_t kind) {
-        m_desc->cache_kind = static_cast<ecs_query_cache_kind_t>(kind);
+        desc_->cache_kind = static_cast<ecs_query_cache_kind_t>(kind);
         return *this;
     }
 
@@ -41,10 +41,10 @@ struct query_builder_i : term_builder_i<Base> {
     }
 
     Base& expr(const char *expr) {
-        ecs_check(m_expr_count == 0, ECS_INVALID_OPERATION,
+        ecs_check(expr_count_ == 0, ECS_INVALID_OPERATION,
             "query_builder::expr() called more than once");
-        m_desc->expr = expr;
-        m_expr_count ++;
+        desc_->expr = expr;
+        expr_count_ ++;
 
     error:
         return *this;
@@ -55,10 +55,10 @@ struct query_builder_i : term_builder_i<Base> {
     template<typename T>
     Base& with() {
         this->term();
-        *this->m_term = flecs::term(_::type<T>::id(this->world_v()));
-        this->m_term->inout = static_cast<ecs_inout_kind_t>(
+        *this->term_ = flecs::term(_::type<T>::id(this->world_v()));
+        this->term_->inout = static_cast<ecs_inout_kind_t>(
             _::type_to_inout<T>());
-            if (this->m_term->inout == EcsInOutDefault) {
+            if (this->term_->inout == EcsInOutDefault) {
             this->inout_none();
         }
         return *this;
@@ -66,8 +66,8 @@ struct query_builder_i : term_builder_i<Base> {
 
     Base& with(id_t id) {
         this->term();
-        *this->m_term = flecs::term(id);
-        if (this->m_term->inout == EcsInOutDefault) {
+        *this->term_ = flecs::term(id);
+        if (this->term_->inout == EcsInOutDefault) {
             this->inout_none();
         }
         return *this;
@@ -75,8 +75,8 @@ struct query_builder_i : term_builder_i<Base> {
 
     Base& with(const char *name) {
         this->term();
-        *this->m_term = flecs::term().first(name);
-        if (this->m_term->inout == EcsInOutDefault) {
+        *this->term_ = flecs::term().first(name);
+        if (this->term_->inout == EcsInOutDefault) {
             this->inout_none();
         }
         return *this;
@@ -84,8 +84,8 @@ struct query_builder_i : term_builder_i<Base> {
 
     Base& with(const char *first, const char *second) {
         this->term();
-        *this->m_term = flecs::term().first(first).second(second);
-        if (this->m_term->inout == EcsInOutDefault) {
+        *this->term_ = flecs::term().first(first).second(second);
+        if (this->term_->inout == EcsInOutDefault) {
             this->inout_none();
         }
         return *this;
@@ -93,8 +93,8 @@ struct query_builder_i : term_builder_i<Base> {
 
     Base& with(entity_t r, entity_t o) {
         this->term();
-        *this->m_term = flecs::term(r, o);
-        if (this->m_term->inout == EcsInOutDefault) {
+        *this->term_ = flecs::term(r, o);
+        if (this->term_->inout == EcsInOutDefault) {
             this->inout_none();
         }
         return *this;
@@ -102,8 +102,8 @@ struct query_builder_i : term_builder_i<Base> {
 
     Base& with(entity_t r, const char *o) {
         this->term();
-        *this->m_term = flecs::term(r).second(o);
-        if (this->m_term->inout == EcsInOutDefault) {
+        *this->term_ = flecs::term(r).second(o);
+        if (this->term_->inout == EcsInOutDefault) {
             this->inout_none();
         }
         return *this;
@@ -133,13 +133,13 @@ struct query_builder_i : term_builder_i<Base> {
 
     Base& with(flecs::term& term) {
         this->term();
-        *this->m_term = term;
+        *this->term_ = term;
         return *this;
     }
 
     Base& with(flecs::term&& term) {
         this->term();
-        *this->m_term = term;
+        *this->term_ = term;
         return *this;
     }
 
@@ -214,18 +214,18 @@ struct query_builder_i : term_builder_i<Base> {
     /* Term notation for more complex query features */
 
     Base& term() {
-        if (this->m_term) {
-            ecs_check(ecs_term_is_initialized(this->m_term), 
+        if (this->term_) {
+            ecs_check(ecs_term_is_initialized(this->term_), 
                 ECS_INVALID_OPERATION, 
                     "query_builder::term() called without initializing term");
         }
 
-        ecs_check(m_term_index < FLECS_TERM_COUNT_MAX, 
+        ecs_check(term_index_ < FLECS_TERM_COUNT_MAX, 
             ECS_INVALID_PARAMETER, "maximum number of terms exceeded");
 
-        this->set_term(&m_desc->terms[m_term_index]);
+        this->set_term(&desc_->terms[term_index_]);
 
-        m_term_index ++;
+        term_index_ ++;
     
     error:
         return *this;
@@ -233,11 +233,11 @@ struct query_builder_i : term_builder_i<Base> {
 
     Base& term_at(int32_t term_index) {
         ecs_assert(term_index >= 0, ECS_INVALID_PARAMETER, NULL);
-        int32_t prev_index = m_term_index;
-        m_term_index = term_index;
+        int32_t prev_index = term_index_;
+        term_index_ = term_index;
         this->term();
-        m_term_index = prev_index;
-        ecs_assert(ecs_term_is_initialized(this->m_term), 
+        term_index_ = prev_index;
+        ecs_assert(ecs_term_is_initialized(this->term_), 
             ECS_INVALID_PARAMETER, NULL);
         return *this;
     }
@@ -273,8 +273,8 @@ struct query_builder_i : term_builder_i<Base> {
      * @param compare The compare function used to sort the components.
      */    
     Base& order_by(flecs::entity_t component, int(*compare)(flecs::entity_t, const void*, flecs::entity_t, const void*)) {
-        m_desc->order_by_callback = reinterpret_cast<ecs_order_by_action_t>(compare);
-        m_desc->order_by = component;
+        desc_->order_by_callback = reinterpret_cast<ecs_order_by_action_t>(compare);
+        desc_->order_by = component;
         return *this;
     }
 
@@ -308,8 +308,8 @@ struct query_builder_i : term_builder_i<Base> {
      * @param group_by_action Callback that determines group id for table.
      */
     Base& group_by(flecs::entity_t component, uint64_t(*group_by_action)(flecs::world_t*, flecs::table_t *table, flecs::id_t id, void* ctx)) {
-        m_desc->group_by_callback = reinterpret_cast<ecs_group_by_action_t>(group_by_action);
-        m_desc->group_by = component;
+        desc_->group_by_callback = reinterpret_cast<ecs_group_by_action_t>(group_by_action);
+        desc_->group_by = component;
         return *this;
     }
 
@@ -338,36 +338,36 @@ struct query_builder_i : term_builder_i<Base> {
      * @param ctx_free Function to cleanup context (called when query is deleted).
      */
     Base& group_by_ctx(void *ctx, ecs_ctx_free_t ctx_free = nullptr) {
-        m_desc->group_by_ctx = ctx;
-        m_desc->group_by_ctx_free = ctx_free;
+        desc_->group_by_ctx = ctx;
+        desc_->group_by_ctx_free = ctx_free;
         return *this;
     }
 
     /** Specify on_group_create action.
      */
     Base& on_group_create(ecs_group_create_action_t action) {
-        m_desc->on_group_create = action;
+        desc_->on_group_create = action;
         return *this;
     }
 
     /** Specify on_group_delete action.
      */
     Base& on_group_delete(ecs_group_delete_action_t action) {
-        m_desc->on_group_delete = action;
+        desc_->on_group_delete = action;
         return *this;
     }
 
 protected:
     virtual flecs::world_t* world_v() = 0;
-    int32_t m_term_index;
-    int32_t m_expr_count;
+    int32_t term_index_;
+    int32_t expr_count_;
 
 private:
     operator Base&() {
         return *static_cast<Base*>(this);
     }
 
-    ecs_query_desc_t *m_desc;
+    ecs_query_desc_t *desc_;
 };
 
 }

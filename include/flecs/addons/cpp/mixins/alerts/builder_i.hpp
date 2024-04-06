@@ -21,18 +21,18 @@ private:
 public:
     alert_builder_i()
         : BaseClass(nullptr)
-        , m_desc(nullptr) { }
+        , desc_(nullptr) { }
 
     alert_builder_i(ecs_alert_desc_t *desc, int32_t term_index = 0) 
         : BaseClass(&desc->query, term_index)
-        , m_desc(desc) { }
+        , desc_(desc) { }
 
     /** Alert message.
      *
      * @see ecs_alert_desc_t::message
      */      
     Base& message(const char *message) {
-        m_desc->message = message;
+        desc_->message = message;
         return *this;
     }
 
@@ -41,7 +41,7 @@ public:
      * @see ecs_alert_desc_t::brief
      */
     Base& brief(const char *brief) {
-        m_desc->brief = brief;
+        desc_->brief = brief;
         return *this;
     }
 
@@ -50,7 +50,7 @@ public:
      * @see ecs_alert_desc_t::doc_name
      */
     Base& doc_name(const char *doc_name) {
-        m_desc->doc_name = doc_name;
+        desc_->doc_name = doc_name;
         return *this;
     }
 
@@ -59,7 +59,7 @@ public:
      * @see ecs_alert_desc_t::severity
      */
     Base& severity(flecs::entity_t kind) {
-        m_desc->severity = kind;
+        desc_->severity = kind;
         return *this;
     }
 
@@ -68,7 +68,7 @@ public:
      * @see ecs_alert_desc_t::retain_period
      */
     Base& retain_period(ecs_ftime_t period) {
-        m_desc->retain_period = period;
+        desc_->retain_period = period;
         return *this;
     }
 
@@ -87,7 +87,7 @@ public:
             ECS_INVALID_PARAMETER, "Maximum number of severity filters reached");
 
         ecs_alert_severity_filter_t *filter = 
-            &m_desc->severity_filters[severity_filter_count ++];
+            &desc_->severity_filters[severity_filter_count ++];
 
         filter->severity = kind;
         filter->with = with;
@@ -119,14 +119,14 @@ public:
 
     /** Set member to create an alert for out of range values */
     Base& member(flecs::entity_t m) {
-        m_desc->member = m;
+        desc_->member = m;
         return *this;
     }
 
     /** Set (component) id for member (optional). If .member() is set and id
      * is not set, the id will default to the member parent. */
     Base& id(flecs::id_t id) {
-        m_desc->id = id;
+        desc_->id = id;
         return *this;
     }
 
@@ -137,13 +137,13 @@ public:
         flecs::entity_t mid = ecs_lookup_path_w_sep(
             world_v(), id, m, "::", "::", false);
         ecs_assert(m != 0, ECS_INVALID_PARAMETER, NULL);
-        m_desc->var = v;
+        desc_->var = v;
         return this->member(mid);
     }
 
     /** Set source variable for member (optional, defaults to $this) */
     Base& var(const char *v) {
-        m_desc->var = v;
+        desc_->var = v;
         return *this;
     }
 
@@ -155,7 +155,7 @@ private:
         return *static_cast<Base*>(this);
     }
 
-    ecs_alert_desc_t *m_desc;
+    ecs_alert_desc_t *desc_;
     int32_t severity_filter_count = 0;
 };
 

@@ -10,9 +10,9 @@
  * @param evt The event to emit.
  */
 void emit(flecs::entity_t evt) {
-    flecs::world(m_world)
+    flecs::world(world_)
         .event(evt)
-        .entity(m_id)
+        .entity(id_)
         .emit();
 }
 
@@ -32,7 +32,7 @@ void emit(flecs::entity evt);
  */
 template <typename Evt, if_t<is_empty<Evt>::value> = 0>
 void emit() {
-    this->emit(_::type<Evt>::id(m_world));
+    this->emit(_::type<Evt>::id(world_));
 }
 
 /** Emit event with payload for entity.
@@ -43,9 +43,9 @@ void emit() {
  */
 template <typename Evt, if_not_t<is_empty<Evt>::value> = 0>
 void emit(const Evt& payload) {
-    flecs::world(m_world)
-        .event(_::type<Evt>::id(m_world))
-        .entity(m_id)
+    flecs::world(world_)
+        .event(_::type<Evt>::id(world_))
+        .entity(id_)
         .ctx(&payload)
         .emit();
 }
@@ -58,9 +58,9 @@ void emit(const Evt& payload) {
  * @param evt The event to enqueue.
  */
 void enqueue(flecs::entity_t evt) {
-    flecs::world(m_world)
+    flecs::world(world_)
         .event(evt)
-        .entity(m_id)
+        .entity(id_)
         .enqueue();
 }
 
@@ -80,7 +80,7 @@ void enqueue(flecs::entity evt);
  */
 template <typename Evt, if_t<is_empty<Evt>::value> = 0>
 void enqueue() {
-    this->enqueue(_::type<Evt>::id(m_world));
+    this->enqueue(_::type<Evt>::id(world_));
 }
 
 /** Enqueue event with payload for entity.
@@ -91,9 +91,9 @@ void enqueue() {
  */
 template <typename Evt, if_not_t<is_empty<Evt>::value> = 0>
 void enqueue(const Evt& payload) {
-    flecs::world(m_world)
-        .event(_::type<Evt>::id(m_world))
-        .entity(m_id)
+    flecs::world(world_)
+        .event(_::type<Evt>::id(world_))
+        .entity(id_)
         .ctx(&payload)
         .enqueue();
 }

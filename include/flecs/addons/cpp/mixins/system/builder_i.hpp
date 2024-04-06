@@ -22,7 +22,7 @@ private:
 public:
     system_builder_i(ecs_system_desc_t *desc) 
         : BaseClass(&desc->query)
-        , m_desc(desc) { }
+        , desc_(desc) { }
 
     /** Specify in which phase the system should run.
      *
@@ -30,14 +30,14 @@ public:
      */
     Base& kind(entity_t phase) {
         flecs::entity_t cur_phase = ecs_get_target(
-            world_v(), m_desc->entity, EcsDependsOn, 0);
+            world_v(), desc_->entity, EcsDependsOn, 0);
         if (cur_phase) {
-            ecs_remove_id(world_v(), m_desc->entity, ecs_dependson(cur_phase));
-            ecs_remove_id(world_v(), m_desc->entity, cur_phase);
+            ecs_remove_id(world_v(), desc_->entity, ecs_dependson(cur_phase));
+            ecs_remove_id(world_v(), desc_->entity, cur_phase);
         }
         if (phase) {
-            ecs_add_id(world_v(), m_desc->entity, ecs_dependson(phase));
-            ecs_add_id(world_v(), m_desc->entity, phase);
+            ecs_add_id(world_v(), desc_->entity, ecs_dependson(phase));
+            ecs_add_id(world_v(), desc_->entity, phase);
         }
         return *this;
     }
@@ -64,7 +64,7 @@ public:
      * @param value If false system will always run on a single thread.
      */
     Base& multi_threaded(bool value = true) {
-        m_desc->multi_threaded = value;
+        desc_->multi_threaded = value;
         return *this;
     }
 
@@ -73,7 +73,7 @@ public:
      * @param value If false system will always run staged.
      */
     Base& immediate(bool value = true) {
-        m_desc->immediate = value;
+        desc_->immediate = value;
         return *this;
     }
 
@@ -85,7 +85,7 @@ public:
      * @param interval The interval value.
      */
     Base& interval(ecs_ftime_t interval) {
-        m_desc->interval = interval;
+        desc_->interval = interval;
         return *this;
     }
 
@@ -98,8 +98,8 @@ public:
      * @param rate The multiple at which to run the system.
      */
     Base& rate(const entity_t tick_source, int32_t rate) {
-        m_desc->rate = rate;
-        m_desc->tick_source = tick_source;
+        desc_->rate = rate;
+        desc_->tick_source = tick_source;
         return *this;
     }
 
@@ -111,7 +111,7 @@ public:
      * @param rate The multiple at which to run the system.
      */
     Base& rate(int32_t rate) {
-        m_desc->rate = rate;
+        desc_->rate = rate;
         return *this;
     }
 
@@ -122,7 +122,7 @@ public:
      */
     template<typename T>
     Base& tick_source() {
-        m_desc->tick_source = _::type<T>::id(world_v());
+        desc_->tick_source = _::type<T>::id(world_v());
         return *this;
     }
 
@@ -132,19 +132,19 @@ public:
      * @param tick_source The tick source to use for the system.
      */
     Base& tick_source(flecs::entity_t tick_source) {
-        m_desc->tick_source = tick_source;
+        desc_->tick_source = tick_source;
         return *this;
     }
 
     /** Set system context */
     Base& ctx(void *ptr) {
-        m_desc->ctx = ptr;
+        desc_->ctx = ptr;
         return *this;
     }
 
     /** Set system run callback */
     Base& run(ecs_iter_action_t action) {
-        m_desc->run = action;
+        desc_->run = action;
         return *this;
     }
 
@@ -156,7 +156,7 @@ private:
         return *static_cast<Base*>(this);
     }
 
-    ecs_system_desc_t *m_desc;
+    ecs_system_desc_t *desc_;
 };
 
 }

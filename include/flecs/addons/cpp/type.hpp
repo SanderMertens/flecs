@@ -19,58 +19,58 @@ namespace flecs {
  * A type is a vector of component ids which can be requested from entities or tables.
  */
 struct type {
-    type() : m_world(nullptr), m_type(nullptr) { }
+    type() : world_(nullptr), type_(nullptr) { }
 
     type(world_t *world, const type_t *t)
-        : m_world(world)
-        , m_type(t) { }
+        : world_(world)
+        , type_(t) { }
 
     /** Convert type to comma-separated string */
     flecs::string str() const {
-        return flecs::string(ecs_type_str(m_world, m_type));
+        return flecs::string(ecs_type_str(world_, type_));
     }
 
     /** Return number of ids in type */
     int32_t count() const {
-        if (!m_type) {
+        if (!type_) {
             return 0;
         }
-        return m_type->count;
+        return type_->count;
     }
 
     /** Return pointer to array. */
     flecs::id_t* array() const {
-        if (!m_type) {
+        if (!type_) {
             return nullptr;
         }
-        return m_type->array;
+        return type_->array;
     }
 
     /** Get id at specified index in type */
     flecs::id get(int32_t index) const {
-        ecs_assert(m_type != NULL, ECS_INVALID_PARAMETER, NULL);
-        ecs_assert(m_type->count > index, ECS_OUT_OF_RANGE, NULL);
-        if (!m_type) {
+        ecs_assert(type_ != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(type_->count > index, ECS_OUT_OF_RANGE, NULL);
+        if (!type_) {
             return flecs::id();
         }
-        return flecs::id(m_world, m_type->array[index]);
+        return flecs::id(world_, type_->array[index]);
     }
 
     flecs::id_t* begin() const {
-        return m_type->array;
+        return type_->array;
     }
 
     flecs::id_t* end() const {
-        return &m_type->array[m_type->count];
+        return &type_->array[type_->count];
     }
 
     /** Implicit conversion to type_t */
     operator const type_t*() const {
-        return m_type;
+        return type_;
     }
 private:
-    world_t *m_world;
-    const type_t *m_type;
+    world_t *world_;
+    const type_t *type_;
 };
 
 /** #} */

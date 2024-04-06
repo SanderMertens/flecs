@@ -39,13 +39,13 @@ namespace _ {
     template <typename ... Components>
     struct sig {
         sig(flecs::world_t *world) 
-            : m_world(world)
+            : world_(world)
             , ids({ (_::type<Components>::id(world))... })
             , inout ({ (type_to_inout<Components>())... })
             , oper ({ (type_to_oper<Components>())... }) 
         { }
 
-        flecs::world_t *m_world;
+        flecs::world_t *world_;
         flecs::array<flecs::id_t, sizeof...(Components)> ids;
         flecs::array<flecs::inout_kind_t, sizeof...(Components)> inout;
         flecs::array<flecs::oper_kind_t, sizeof...(Components)> oper;

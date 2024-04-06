@@ -26,42 +26,42 @@ struct entity;
  */
 struct id {
     id()
-        : m_world(nullptr)
-        , m_id(0) { }
+        : world_(nullptr)
+        , id_(0) { }
 
     explicit id(flecs::id_t value)
-        : m_world(nullptr)
-        , m_id(value) { }
+        : world_(nullptr)
+        , id_(value) { }
 
     explicit id(flecs::world_t *world, flecs::id_t value = 0)
-        : m_world(world)
-        , m_id(value) { }
+        : world_(world)
+        , id_(value) { }
 
     explicit id(flecs::world_t *world, flecs::id_t first, flecs::id_t second)
-        : m_world(world)
-        , m_id(ecs_pair(first, second)) { }
+        : world_(world)
+        , id_(ecs_pair(first, second)) { }
 
     explicit id(flecs::id_t first, flecs::id_t second)
-        : m_world(nullptr)
-        , m_id(ecs_pair(first, second)) { }
+        : world_(nullptr)
+        , id_(ecs_pair(first, second)) { }
 
     explicit id(const flecs::id& first, const flecs::id& second)
-        : m_world(first.m_world)
-        , m_id(ecs_pair(first.m_id, second.m_id)) { }
+        : world_(first.world_)
+        , id_(ecs_pair(first.id_, second.id_)) { }
 
     /** Test if id is pair (has first, second) */
     bool is_pair() const {
-        return (m_id & ECS_ID_FLAGS_MASK) == flecs::Pair;
+        return (id_ & ECS_ID_FLAGS_MASK) == flecs::Pair;
     }
 
     /** Test if id is a wildcard */
     bool is_wildcard() const {
-        return ecs_id_is_wildcard(m_id);
+        return ecs_id_is_wildcard(id_);
     }
 
     /** Test if id is entity */
     bool is_entity() const {
-        return !(m_id & ECS_ID_FLAGS_MASK);
+        return !(id_ & ECS_ID_FLAGS_MASK);
     }
 
     /** Return id as entity (only allowed when id is valid entity) */
@@ -84,12 +84,12 @@ struct id {
 
     /** Test if id has specified role */
     bool has_flags(flecs::id_t flags) const {
-        return ((m_id & flags) == flags);
+        return ((id_ & flags) == flags);
     }
 
     /** Test if id has any role */
     bool has_flags() const {
-        return (m_id & ECS_ID_FLAGS_MASK) != 0;
+        return (id_ & ECS_ID_FLAGS_MASK) != 0;
     }
 
     /** Return id flags set on id */
@@ -100,7 +100,7 @@ struct id {
         if (!is_pair()) {
             return false;
         }
-        return ECS_PAIR_FIRST(m_id) == first;
+        return ECS_PAIR_FIRST(id_) == first;
     }
 
     /** Get first element from a pair.
@@ -117,21 +117,21 @@ struct id {
 
     /* Convert id to string */
     flecs::string str() const {
-        return flecs::string(ecs_id_str(m_world, m_id));
+        return flecs::string(ecs_id_str(world_, id_));
     }
 
     /** Convert role of id to string. */
     flecs::string flags_str() const {
-        return flecs::string_view( ecs_id_flag_str(m_id & ECS_ID_FLAGS_MASK));
+        return flecs::string_view( ecs_id_flag_str(id_ & ECS_ID_FLAGS_MASK));
     }
 
     /** Return flecs::id_t value */
     flecs::id_t raw_id() const {
-        return m_id;
+        return id_;
     }
 
     operator flecs::id_t() const {
-        return m_id;
+        return id_;
     }
 
     flecs::world world() const;
@@ -139,8 +139,8 @@ struct id {
 protected:
     /* World is optional, but guarantees that entity identifiers extracted from
      * the id are valid */
-    flecs::world_t *m_world;
-    flecs::id_t m_id;
+    flecs::world_t *world_;
+    flecs::id_t id_;
 };
 
 /** @} */

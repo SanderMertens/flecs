@@ -430,8 +430,8 @@ struct component : untyped_component {
             }
         }
 
-        m_world = world;
-        m_id = id;
+        world_ = world;
+        id_ = id;
     }
 
     /** Register on_add hook. */
@@ -446,7 +446,7 @@ struct component : untyped_component {
         ctx->on_add = FLECS_NEW(Delegate)(FLECS_FWD(func));
         ctx->free_on_add = reinterpret_cast<ecs_ctx_free_t>(
             _::free_obj<Delegate>);
-        ecs_set_hooks_id(m_world, m_id, &h);
+        ecs_set_hooks_id(world_, id_, &h);
         return *this;
     }
 
@@ -463,7 +463,7 @@ struct component : untyped_component {
         ctx->on_remove = FLECS_NEW(Delegate)(FLECS_FWD(func));
         ctx->free_on_remove = reinterpret_cast<ecs_ctx_free_t>(
             _::free_obj<Delegate>);
-        ecs_set_hooks_id(m_world, m_id, &h);
+        ecs_set_hooks_id(world_, id_, &h);
         return *this;
     }
 
@@ -480,7 +480,7 @@ struct component : untyped_component {
         ctx->on_set = FLECS_NEW(Delegate)(FLECS_FWD(func));
         ctx->free_on_set = reinterpret_cast<ecs_ctx_free_t>(
             _::free_obj<Delegate>);
-        ecs_set_hooks_id(m_world, m_id, &h);
+        ecs_set_hooks_id(world_, id_, &h);
         return *this;
     }
 
@@ -503,7 +503,7 @@ private:
     }
 
     flecs::type_hooks_t get_hooks() {
-        const flecs::type_hooks_t* h = ecs_get_hooks_id(m_world, m_id);
+        const flecs::type_hooks_t* h = ecs_get_hooks_id(world_, id_);
         if (h) {
             return *h;
         } else {

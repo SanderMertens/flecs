@@ -174,22 +174,22 @@ struct iter_iterable final : iterable<Components...> {
     template <typename Iterable>
     iter_iterable(Iterable *it, flecs::world_t *world) 
     {
-        m_it = it->get_iter(world);
-        m_next = it->next_action();
-        m_next_each = it->next_action();
+        it_ = it->get_iter(world);
+        next_ = it->next_action();
+        next_each_ = it->next_action();
     }
 
     iter_iterable<Components...>& set_var(int var_id, flecs::entity_t value) {
         ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, 0);
-        ecs_iter_set_var(&m_it, var_id, value);
+        ecs_iter_set_var(&it_, var_id, value);
         return *this;
     }
 
     iter_iterable<Components...>& set_var(const char *name, flecs::entity_t value) {
-        ecs_query_iter_t *qit = &m_it.priv.iter.query;
+        ecs_query_iter_t *qit = &it_.priv.iter.query;
         int var_id = ecs_query_find_var(qit->query, name);
         ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, name);
-        ecs_iter_set_var(&m_it, var_id, value);
+        ecs_iter_set_var(&it_, var_id, value);
         return *this;
     }
 
@@ -200,17 +200,17 @@ struct iter_iterable final : iterable<Components...> {
     // Return total number of entities in result.
     int32_t count() {
         int32_t result = 0;
-        while (m_next_each(&m_it)) {
-            result += m_it.count;
+        while (next_each_(&it_)) {
+            result += it_.count;
         }
         return result;
     }
 
     // Returns true if iterator yields at least once result.
     bool is_true() {
-        bool result = m_next_each(&m_it);
+        bool result = next_each_(&it_);
         if (result) {
-            ecs_iter_fini(&m_it);
+            ecs_iter_fini(&it_);
         }
         return result;
     }
@@ -218,48 +218,48 @@ struct iter_iterable final : iterable<Components...> {
     // Return first matching entity.
     flecs::entity first() {
         flecs::entity result;
-        if (m_next_each(&m_it) && m_it.count) {
-            result = flecs::entity(m_it.world, m_it.entities[0]);
-            ecs_iter_fini(&m_it);
+        if (next_each_(&it_) && it_.count) {
+            result = flecs::entity(it_.world, it_.entities[0]);
+            ecs_iter_fini(&it_);
         }
         return result;
     }
 
     // Limit results to tables with specified group id (grouped queries only)
     iter_iterable<Components...>& set_group(uint64_t group_id) {
-        ecs_iter_set_group(&m_it, group_id);
+        ecs_iter_set_group(&it_, group_id);
         return *this;
     }
 
     // Limit results to tables with specified group id (grouped queries only)
     template <typename Group>
     iter_iterable<Components...>& set_group() {
-        ecs_iter_set_group(&m_it, _::type<Group>().id(m_it.real_world));
+        ecs_iter_set_group(&it_, _::type<Group>().id(it_.real_world));
         return *this;
     }
 
 protected:
     ecs_iter_t get_iter(flecs::world_t *world) const {
         if (world) {
-            ecs_iter_t result = m_it;
+            ecs_iter_t result = it_;
             result.world = world;
             return result;
         }
-        return m_it;
+        return it_;
     }
 
     ecs_iter_next_action_t next_action() const {
-        return m_next;
+        return next_;
     }
 
     ecs_iter_next_action_t next_each_action() const {
-        return m_next_each;
+        return next_each_;
     }
 
 private:
-    ecs_iter_t m_it;
-    ecs_iter_next_action_t m_next;
-    ecs_iter_next_action_t m_next_each;
+    ecs_iter_t it_;
+    ecs_iter_next_action_t next_;
+    ecs_iter_next_action_t next_each_;
 };
 
 template <typename ... Components>
@@ -272,15 +272,15 @@ template <typename ... Components>
 struct page_iterable final : iterable<Components...> {
     template <typename Iterable>
     page_iterable(int32_t offset, int32_t limit, Iterable *it) 
-        : m_offset(offset)
-        , m_limit(limit)
+        : offset_(offset)
+        , limit_(limit)
     {
-        m_chain_it = it->get_iter(nullptr);
+        chain_it_ = it->get_iter(nullptr);
     }
 
 protected:
     ecs_iter_t get_iter(flecs::world_t*) const {
-        return ecs_page_iter(&m_chain_it, m_offset, m_limit);
+        return ecs_page_iter(&chain_it_, offset_, limit_);
     }
 
     ecs_iter_next_action_t next_action() const {
@@ -292,9 +292,9 @@ protected:
     }
 
 private:
-    ecs_iter_t m_chain_it;
-    int32_t m_offset;
-    int32_t m_limit;
+    ecs_iter_t chain_it_;
+    int32_t offset_;
+    int32_t limit_;
 };
 
 template <typename ... Components>
@@ -308,15 +308,15 @@ page_iterable<Components...> iterable<Components...>::page(
 template <typename ... Components>
 struct worker_iterable final : iterable<Components...> {
     worker_iterable(int32_t offset, int32_t limit, iterable<Components...> *it) 
-        : m_offset(offset)
-        , m_limit(limit)
+        : offset_(offset)
+        , limit_(limit)
     {
-        m_chain_it = it->get_iter(nullptr);
+        chain_it_ = it->get_iter(nullptr);
     }
 
 protected:
     ecs_iter_t get_iter(flecs::world_t*) const {
-        return ecs_worker_iter(&m_chain_it, m_offset, m_limit);
+        return ecs_worker_iter(&chain_it_, offset_, limit_);
     }
 
     ecs_iter_next_action_t next_action() const {
@@ -328,9 +328,9 @@ protected:
     }
 
 private:
-    ecs_iter_t m_chain_it;
-    int32_t m_offset;
-    int32_t m_limit;
+    ecs_iter_t chain_it_;
+    int32_t offset_;
+    int32_t limit_;
 };
 
 template <typename ... Components>

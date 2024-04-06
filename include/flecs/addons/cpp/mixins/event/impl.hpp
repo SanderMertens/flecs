@@ -13,12 +13,12 @@ namespace flecs
 // Mixin implementation
 
 inline flecs::event_builder world::event(flecs::entity_t evt) const {
-    return flecs::event_builder(m_world, evt);
+    return flecs::event_builder(world_, evt);
 }
 
 template <typename E>
 inline flecs::event_builder_typed<E> world::event() const {
-    return flecs::event_builder_typed<E>(m_world, _::type<E>().id(m_world));
+    return flecs::event_builder_typed<E>(world_, _::type<E>().id(world_));
 }
 
 namespace _ {
@@ -76,7 +76,7 @@ inline Self& entity_builder<Self>::observe(flecs::entity_t evt, Func&& f) {
     using Delegate = _::entity_observer_delegate<Func>;
     auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(f));
 
-    _::entity_observer_create(m_world, evt, m_id, Delegate::run, ctx,
+    _::entity_observer_create(world_, evt, id_, Delegate::run, ctx,
         reinterpret_cast<ecs_ctx_free_t>(_::free_obj<Delegate>));
 
     return to_base();
@@ -86,7 +86,7 @@ template <typename Self>
 template <typename Evt, typename Func>
 inline Self& entity_builder<Self>::observe(Func&& f) {
     _::entity_observer_factory<Func>::template create<Evt>(
-        m_world, m_id, FLECS_FWD(f));
+        world_, id_, FLECS_FWD(f));
     return to_base();
 }
 

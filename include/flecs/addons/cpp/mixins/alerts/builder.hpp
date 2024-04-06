@@ -31,7 +31,7 @@ struct alert_builder final : _::alert_builder_base<Components...> {
             entity_desc.name = name;
             entity_desc.sep = "::";
             entity_desc.root_sep = "::";
-            this->m_desc.entity = ecs_entity_init(world, &entity_desc);
+            this->desc_.entity = ecs_entity_init(world, &entity_desc);
         }
     }
 };

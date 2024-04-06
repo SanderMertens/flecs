@@ -25,10 +25,10 @@ namespace flecs
  */
 struct untyped_field {
     untyped_field(void* array, size_t size, size_t count, bool is_shared = false)
-        : m_data(array)
-        , m_size(size)
-        , m_count(count)
-        , m_is_shared(is_shared) {}
+        : data_(array)
+        , size_(size)
+        , count_(count)
+        , is_shared_(is_shared) {}
 
     /** Return element in component array.
      * This operator may only be used if the field is not shared.
@@ -37,18 +37,18 @@ struct untyped_field {
      * @return Reference to element.
      */
     void* operator[](size_t index) const {
-        ecs_assert(!m_is_shared, ECS_INVALID_PARAMETER,
+        ecs_assert(!is_shared_, ECS_INVALID_PARAMETER,
             "invalid usage of [] operator for shared component field");
-        ecs_assert(index < m_count, ECS_COLUMN_INDEX_OUT_OF_RANGE,
+        ecs_assert(index < count_, ECS_COLUMN_INDEX_OUT_OF_RANGE,
             "index %d out of range for field", index);
-        return ECS_OFFSET(m_data, m_size * index);
+        return ECS_OFFSET(data_, size_ * index);
     }
 
 protected:
-    void* m_data;
-    size_t m_size;
-    size_t m_count;
-    bool m_is_shared;
+    void* data_;
+    size_t size_;
+    size_t count_;
+    bool is_shared_;
 };
 
 /** Wrapper class around a field.
@@ -69,9 +69,9 @@ struct field {
      * @param is_shared Is the component shared or not.
      */
     field(T* array, size_t count, bool is_shared = false)
-        : m_data(array)
-        , m_count(count)
-        , m_is_shared(is_shared) {}
+        : data_(array)
+        , count_(count)
+        , is_shared_(is_shared) {}
 
     /** Create field from iterator.
      *
@@ -103,9 +103,9 @@ struct field {
     T* operator->() const;
 
 protected:
-    T* m_data;
-    size_t m_count;
-    bool m_is_shared;
+    T* data_;
+    size_t count_;
+    bool is_shared_;
 };
 
 }

@@ -14,7 +14,7 @@
  * @ingroup cpp_addons_doc
  */
 Self& set_doc_name(const char *name) {
-    ecs_doc_set_name(m_world, m_id, name);
+    ecs_doc_set_name(world_, id_, name);
     return to_base();
 }
 
@@ -29,7 +29,7 @@ Self& set_doc_name(const char *name) {
  * @ingroup cpp_addons_doc
  */
 Self& set_doc_brief(const char *brief) {
-    ecs_doc_set_brief(m_world, m_id, brief);
+    ecs_doc_set_brief(world_, id_, brief);
     return to_base();
 }
 
@@ -44,7 +44,7 @@ Self& set_doc_brief(const char *brief) {
  * @ingroup cpp_addons_doc
  */
 Self& set_doc_detail(const char *detail) {
-    ecs_doc_set_detail(m_world, m_id, detail);
+    ecs_doc_set_detail(world_, id_, detail);
     return to_base();
 }
 
@@ -59,7 +59,7 @@ Self& set_doc_detail(const char *detail) {
  * @ingroup cpp_addons_doc
  */
 Self& set_doc_link(const char *link) {
-    ecs_doc_set_link(m_world, m_id, link);
+    ecs_doc_set_link(world_, id_, link);
     return to_base();
 }
 
@@ -74,6 +74,6 @@ Self& set_doc_link(const char *link) {
  * @ingroup cpp_addons_doc
  */
 Self& set_doc_color(const char *link) {
-    ecs_doc_set_color(m_world, m_id, link);
+    ecs_doc_set_color(world_, id_, link);
     return to_base();
 }

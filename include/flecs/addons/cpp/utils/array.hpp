@@ -12,29 +12,29 @@ template <typename T>
 struct array_iterator
 {
     explicit array_iterator(T* value, int index) {
-        m_value = value;
-        m_index = index;
+        value_ = value;
+        index_ = index;
     }
 
     bool operator!=(array_iterator const& other) const
     {
-        return m_index != other.m_index;
+        return index_ != other.index_;
     }
 
     T & operator*() const
     {
-        return m_value[m_index];
+        return value_[index_];
     }
 
     array_iterator& operator++()
     {
-        ++m_index;
+        ++index_;
         return *this;
     }
 
 private:
-    T* m_value;
-    int m_index;
+    T* value_;
+    int index_;
 };
 
 template <typename T, size_t Size, class Enable = void> 
@@ -52,19 +52,19 @@ struct array<T, Size, enable_if_t<Size != 0> > final {
     }
 
     T& operator[](int index) {
-        return m_array[index];
+        return array_[index];
     }
 
     T& operator[](size_t index) {
-        return m_array[index];
+        return array_[index];
     }
 
     array_iterator<T> begin() {
-        return array_iterator<T>(m_array, 0);
+        return array_iterator<T>(array_, 0);
     }
 
     array_iterator<T> end() {
-        return array_iterator<T>(m_array, Size);
+        return array_iterator<T>(array_, Size);
     }
 
     size_t size() {
@@ -72,7 +72,7 @@ struct array<T, Size, enable_if_t<Size != 0> > final {
     }
 
     T* ptr() {
-        return m_array;
+        return array_;
     }
 
     template <typename Func>
@@ -83,7 +83,7 @@ struct array<T, Size, enable_if_t<Size != 0> > final {
     }
 
 private:
-    T m_array[Size];
+    T array_[Size];
 };
 
 template<typename T, size_t Size>

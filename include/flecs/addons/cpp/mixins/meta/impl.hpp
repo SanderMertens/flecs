@@ -97,24 +97,24 @@ inline void init(flecs::world& world) {
 
 
 inline flecs::entity cursor::get_type() const {
-    return flecs::entity(m_cursor.world, ecs_meta_get_type(&m_cursor));
+    return flecs::entity(cursor_.world, ecs_meta_get_type(&cursor_));
 }
 
 inline flecs::entity cursor::get_unit() const {
-    return flecs::entity(m_cursor.world, ecs_meta_get_unit(&m_cursor));
+    return flecs::entity(cursor_.world, ecs_meta_get_unit(&cursor_));
 }
 
 inline flecs::entity cursor::get_entity() const {
-    return flecs::entity(m_cursor.world, ecs_meta_get_entity(&m_cursor));
+    return flecs::entity(cursor_.world, ecs_meta_get_entity(&cursor_));
 }
 
 /** Create primitive type */
 inline flecs::entity world::primitive(flecs::meta::primitive_kind_t kind) {
     ecs_primitive_desc_t desc = {};
     desc.kind = kind;
-    flecs::entity_t eid = ecs_primitive_init(m_world, &desc);
+    flecs::entity_t eid = ecs_primitive_init(world_, &desc);
     ecs_assert(eid != 0, ECS_INVALID_OPERATION, NULL);
-    return flecs::entity(m_world, eid);
+    return flecs::entity(world_, eid);
 }
 
 /** Create array type. */
@@ -122,28 +122,28 @@ inline flecs::entity world::array(flecs::entity_t elem_id, int32_t array_count) 
     ecs_array_desc_t desc = {};
     desc.type = elem_id;
     desc.count = array_count;
-    flecs::entity_t eid = ecs_array_init(m_world, &desc);
+    flecs::entity_t eid = ecs_array_init(world_, &desc);
     ecs_assert(eid != 0, ECS_INVALID_OPERATION, NULL);
-    return flecs::entity(m_world, eid);
+    return flecs::entity(world_, eid);
 }
 
 /** Create array type. */
 template <typename T>
 inline flecs::entity world::array(int32_t array_count) {
-    return this->array(_::type<T>::id(m_world), array_count);
+    return this->array(_::type<T>::id(world_), array_count);
 }
 
 inline flecs::entity world::vector(flecs::entity_t elem_id) {
     ecs_vector_desc_t desc = {};
     desc.type = elem_id;
-    flecs::entity_t eid = ecs_vector_init(m_world, &desc);
+    flecs::entity_t eid = ecs_vector_init(world_, &desc);
     ecs_assert(eid != 0, ECS_INVALID_OPERATION, NULL);
-    return flecs::entity(m_world, eid);
+    return flecs::entity(world_, eid);
 }
 
 template <typename T>
 inline flecs::entity world::vector() {
-    return this->vector(_::type<T>::id(m_world));
+    return this->vector(_::type<T>::id(world_));
 }
 
 } // namespace flecs
