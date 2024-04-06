@@ -2063,7 +2063,7 @@ void Entity_set_generation_on_nonempty_entity(void) {
     ecs_add(world, e1, Tag);
 
     e1 |= 0x200000000ul;
-    ecs_set_entity_generation(world, e1);
+    ecs_set_generation(world, e1);
 
     ecs_iter_t it = ecs_each(world, Tag);
     ecs_entity_t first = ecs_iter_first(&it);
@@ -2080,7 +2080,7 @@ void Entity_set_generation_while_deferred(void) {
 
     ecs_defer_begin(world);    
     test_expect_abort();
-    ecs_set_entity_generation(world, e1 |= 0x200000000ul);
+    ecs_set_generation(world, e1 |= 0x200000000ul);
 }
 
 static

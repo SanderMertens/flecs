@@ -3132,22 +3132,6 @@ FLECS_API
 ecs_id_t ecs_strip_generation(
     ecs_entity_t e);
 
-/** Override the generation of an entity.
- * The generation count of an entity is increased each time an entity is deleted
- * and is used to test whether an entity id is alive.
- *
- * This operation overrides the current generation of an entity with the
- * specified generation, which can be useful if an entity is externally managed,
- * like for external pools, savefiles or netcode.
- *
- * @param world The world.
- * @param entity Entity for which to set the generation with the new generation.
- */
-FLECS_API
-void ecs_set_entity_generation(
-    ecs_world_t *world,
-    ecs_entity_t entity);
-
 /** Get alive identifier.
  * In some cases an application may need to work with identifiers from which
  * the generation has been stripped. A typical scenario in which this happens is
@@ -3227,6 +3211,25 @@ void ecs_make_alive_id(
 FLECS_API
 bool ecs_exists(
     const ecs_world_t *world,
+    ecs_entity_t entity);
+
+/** Override the generation of an entity.
+ * The generation count of an entity is increased each time an entity is deleted
+ * and is used to test whether an entity id is alive.
+ *
+ * This operation overrides the current generation of an entity with the
+ * specified generation, which can be useful if an entity is externally managed,
+ * like for external pools, savefiles or netcode.
+ * 
+ * This operation is similar to ecs_make_alive, except that it will also
+ * override the generation of an alive entity.
+ *
+ * @param world The world.
+ * @param entity Entity for which to set the generation with the new generation.
+ */
+FLECS_API
+void ecs_set_generation(
+    ecs_world_t *world,
     ecs_entity_t entity);
 
 /** @} */

@@ -1614,26 +1614,6 @@ error:
     return 0;
 }
 
-void ecs_set_entity_generation(
-    ecs_world_t *world,
-    ecs_entity_t entity_with_generation)
-{
-    ecs_poly_assert(world, ecs_world_t);
-    ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION,
-        "cannot change entity generation when world is in readonly mode");
-    ecs_assert(!(ecs_is_deferred(world)), ECS_INVALID_OPERATION, 
-        "cannot change entity generation while world is deferred");
-
-    flecs_entities_make_alive(world, entity_with_generation);
-
-    ecs_record_t *r = flecs_entities_get(world, entity_with_generation);
-    if (r && r->table) {
-        int32_t row = ECS_RECORD_TO_ROW(r->row);
-        ecs_entity_t *entities = r->table->data.entities.array;
-        entities[row] = entity_with_generation;
-    }
-}
-
 const ecs_type_info_t* flecs_type_info_get(
     const ecs_world_t *world,
     ecs_entity_t component)
