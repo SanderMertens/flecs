@@ -414,29 +414,31 @@ extern "C" {
 #define EcsIterIsValid                 (1u << 0u)  /* Does iterator contain valid result */
 #define EcsIterNoData                  (1u << 1u)  /* Does iterator provide (component) data */
 #define EcsIterIsInstanced             (1u << 2u)  /* Is iterator instanced */
-#define EcsIterTableOnly               (1u << 4u)  /* Result only populates table */
-#define EcsIterNoResults               (1u << 6u)  /* Iterator has no results */
-#define EcsIterIgnoreThis              (1u << 7u)  /* Only evaluate non-this terms */
-#define EcsIterMatchVar                (1u << 8u)  
-#define EcsIterHasCondSet              (1u << 10u) /* Does iterator have conditionally set fields */
-#define EcsIterProfile                 (1u << 11u) /* Profile iterator performance */
-#define EcsIterTrivialSearch           (1u << 12u) /* Trivial iterator mode */
-#define EcsIterTrivialSearchNoData     (1u << 13u) /* Trivial iterator w/no data */
-#define EcsIterTrivialTest             (1u << 14u) /* Trivial test mode (constrained $this) */
-#define EcsIterTrivialTestWildcard     (1u << 15u) /* Trivial test w/wildcards */
-#define EcsIterTrivialSearchWildcard   (1u << 16u) /* Trivial search with wildcard ids */
-#define EcsIterCacheSearch             (1u << 17u) /* Cache search */
-#define EcsIterFixedInChangeComputed   (1u << 18u) /* Change detection for fixed in terms is done */
-#define EcsIterFixedInChanged          (1u << 19u) /* Fixed in terms changed */
-#define EcsIterSkip                    (1u << 20u) /* Result was skipped for change detection */
-#define EcsIterCppEach                 (1u << 21u) /* Uses C++ 'each' iterator */
+#define EcsIterNoResults               (1u << 3u)  /* Iterator has no results */
+#define EcsIterIgnoreThis              (1u << 4u)  /* Only evaluate non-this terms */
+#define EcsIterHasCondSet              (1u << 6u)  /* Does iterator have conditionally set fields */
+#define EcsIterProfile                 (1u << 7u)  /* Profile iterator performance */
+#define EcsIterTrivialSearch           (1u << 8u)  /* Trivial iterator mode */
+#define EcsIterTrivialSearchNoData     (1u << 9u)  /* Trivial iterator w/no data */
+#define EcsIterTrivialTest             (1u << 10u) /* Trivial test mode (constrained $this) */
+#define EcsIterTrivialTestWildcard     (1u << 11u) /* Trivial test w/wildcards */
+#define EcsIterTrivialSearchWildcard   (1u << 12u) /* Trivial search with wildcard ids */
+#define EcsIterCacheSearch             (1u << 13u) /* Cache search */
+#define EcsIterFixedInChangeComputed   (1u << 14u) /* Change detection for fixed in terms is done */
+#define EcsIterFixedInChanged          (1u << 15u) /* Fixed in terms changed */
+#define EcsIterSkip                    (1u << 16u) /* Result was skipped for change detection */
+#define EcsIterCppEach                 (1u << 17u) /* Uses C++ 'each' iterator */
+
+/* Same as event flags */
+#define EcsIterTableOnly               (1u << 18u)  /* Result only populates table */
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Event flags (used by ecs_event_decs_t::flags)
 ////////////////////////////////////////////////////////////////////////////////
 
-#define EcsEventTableOnly              (1u << 4u)   /* Table event (no data, same as iter flags) */
-#define EcsEventNoOnSet                (1u << 16u)  /* Don't emit OnSet/UnSet for inherited ids */
+#define EcsEventTableOnly              (1u << 18u) /* Table event (no data, same as iter flags) */
+#define EcsEventNoOnSet                (1u << 16u) /* Don't emit OnSet/UnSet for inherited ids */
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -444,29 +446,20 @@ extern "C" {
 ////////////////////////////////////////////////////////////////////////////////
 
 /* Flags that can only be set by the query implementation */
-#define EcsQueryMatchThis             (1u << 1u)  /* Query has terms with $this source */
-#define EcsQueryMatchOnlyThis         (1u << 2u)  /* Query only has terms with $this source */
-#define EcsQueryMatchOnlySelf         (1u << 15u) /* Query has no terms with up traversal */
-#define EcsQueryMatchWildcards        (1u << 16u) /* Query matches wildcards */
-#define EcsQueryHasCondSet            (1u << 10u) /* Query has conditionally set fields */
-#define EcsQueryHasPred               (1u << 12u) /* Query has equality predicates */
-#define EcsQueryHasScopes             (1u << 13u) /* Query has query scopes */
-#define EcsQueryHasRefs               (1u << 17u) /* Query has terms with static source */
-#define EcsQueryHasOutTerms           (1u << 20u) /* Query has [out] terms */
-#define EcsQueryHasNonThisOutTerms    (1u << 21u) /* Query has [out] terms with no $this source */
-#define EcsQueryHasMonitor            (1u << 22u) /* Query has monitor for change detection */
-#define EcsQueryIsTrivial             (1u << 14u) /* Query can use trivial evaluation function */
-#define EcsQueryHasCacheable          (1u << 18u) /* Query has cacheable terms */
-#define EcsQueryIsCacheable           (1u << 19u) /* All terms of query are cacheable */
-
-/* Flags that may be set by the application to enable query features */
-#define EcsQueryMatchPrefab           (1u << 3u)  /* Query must match prefabs */
-#define EcsQueryMatchDisabled         (1u << 4u)  /* Query must match disabled entities */
-#define EcsQueryMatchEmptyTables      (1u << 5u)  /* Query must match empty tables */
-#define EcsQueryNoData                (1u << 7u)  /* Query won't provide component data */
-#define EcsQueryIsInstanced           (1u << 8u)  /* Query iteration is always instanced */
-#define EcsQueryAllowUnresolvedByName (1u << 11u) /* Query may have unresolved entity identifiers */
-#define EcsQueryTableOnly             (1u << 23u) /* Query only returns whole tables (ignores toggle/member fields) */
+#define EcsQueryMatchThis             (1u << 11u) /* Query has terms with $this source */
+#define EcsQueryMatchOnlyThis         (1u << 12u) /* Query only has terms with $this source */
+#define EcsQueryMatchOnlySelf         (1u << 13u) /* Query has no terms with up traversal */
+#define EcsQueryMatchWildcards        (1u << 14u) /* Query matches wildcards */
+#define EcsQueryHasCondSet            (1u << 15u) /* Query has conditionally set fields */
+#define EcsQueryHasPred               (1u << 16u) /* Query has equality predicates */
+#define EcsQueryHasScopes             (1u << 17u) /* Query has query scopes */
+#define EcsQueryHasRefs               (1u << 18u) /* Query has terms with static source */
+#define EcsQueryHasOutTerms           (1u << 19u) /* Query has [out] terms */
+#define EcsQueryHasNonThisOutTerms    (1u << 20u) /* Query has [out] terms with no $this source */
+#define EcsQueryHasMonitor            (1u << 21u) /* Query has monitor for change detection */
+#define EcsQueryIsTrivial             (1u << 22u) /* Query can use trivial evaluation function */
+#define EcsQueryHasCacheable          (1u << 23u) /* Query has cacheable terms */
+#define EcsQueryIsCacheable           (1u << 24u) /* All terms of query are cacheable */
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -490,7 +483,7 @@ extern "C" {
 #define EcsTableHasPairs               (1u << 6u)  /* Does the table type have pairs */
 #define EcsTableHasModule              (1u << 7u)  /* Does the table have module data */
 #define EcsTableIsDisabled             (1u << 8u)  /* Does the table type has EcsDisabled */
-#define EcsTableNotQueryable           (1u << 9u) /* Table should never be returned by queries */
+#define EcsTableNotQueryable           (1u << 9u)  /* Table should never be returned by queries */
 #define EcsTableHasCtors               (1u << 10u)
 #define EcsTableHasDtors               (1u << 11u)
 #define EcsTableHasCopy                (1u << 12u)
@@ -508,7 +501,6 @@ extern "C" {
 #define EcsTableHasOnTableDelete       (1u << 23u)
 
 #define EcsTableHasTraversable         (1u << 25u)
-
 #define EcsTableMarkedForDelete        (1u << 30u)
 
 /* Composite table flags */
@@ -2880,17 +2872,65 @@ typedef enum ecs_query_cache_kind_t {
 } ecs_query_cache_kind_t;
 
 /* Term id flags  */
-#define EcsSelf                       (1llu << 63)  /**< Match on self */
-#define EcsUp                         (1llu << 62)  /**< Match by traversing upwards */
-#define EcsTrav                       (1llu << 61)  /**< Traverse relationship transitively */
-#define EcsCascade                    (1llu << 60)  /**< Sort results breadth first */
-#define EcsDesc                       (1llu << 59)  /**< Iterate groups in descending order  */
-#define EcsIsVariable                 (1llu << 58)  /**< Term id is a variable */
-#define EcsIsEntity                   (1llu << 57)  /**< Term id is an entity */
-#define EcsIsName                     (1llu << 56)  /**< Term id is a name (don't attempt to lookup as entity) */
 
-/* Composite term flags */
+/** Match on self.
+ * Can be combined with other term flags on the ecs_term_t::flags field.
+ * \ingroup queries
+ */
+#define EcsSelf                       (1llu << 63)
+
+/** Match by traversing upwards.
+ * Can be combined with other term flags on the ecs_term_ref_t::id field.
+ * \ingroup queries
+ */
+#define EcsUp                         (1llu << 62)
+
+/** Traverse relationship transitively.
+ * Can be combined with other term flags on the ecs_term_ref_t::id field.
+ * \ingroup queries
+ */
+#define EcsTrav                       (1llu << 61)
+
+/** Sort results breadth first.
+ * Can be combined with other term flags on the ecs_term_ref_t::id field.
+ * \ingroup queries
+ */
+#define EcsCascade                    (1llu << 60)
+
+/** Iterate groups in descending order.
+ * Can be combined with other term flags on the ecs_term_ref_t::id field.
+ * \ingroup queries
+ */
+#define EcsDesc                       (1llu << 59)
+
+/** Term id is a variable.
+ * Can be combined with other term flags on the ecs_term_ref_t::id field.
+ * \ingroup queries
+ */
+#define EcsIsVariable                 (1llu << 58)
+
+/** Term id is an entity.
+ * Can be combined with other term flags on the ecs_term_ref_t::id field.
+ * \ingroup queries
+ */
+#define EcsIsEntity                   (1llu << 57)
+
+/** Term id is a name (don't attempt to lookup as entity).
+ * Can be combined with other term flags on the ecs_term_ref_t::id field.
+ * \ingroup queries
+ */
+#define EcsIsName                     (1llu << 56)
+
+/** All term traversal flags.
+ * Can be combined with other term flags on the ecs_term_ref_t::id field.
+ * \ingroup queries
+ */
 #define EcsTraverseFlags              (EcsSelf|EcsUp|EcsTrav|EcsCascade|EcsDesc)
+
+/** All term reference kind flags.
+ * Can be combined with other term flags on the ecs_term_ref_t::id field.
+ * \ingroup queries
+ */
 #define EcsTermRefFlags               (EcsTraverseFlags|EcsIsVariable|EcsIsEntity|EcsIsName)
 
 /* Term flags discovered & set during query creation. Mostly used internally to
@@ -3858,6 +3898,50 @@ struct ecs_iter_t {
     ecs_iter_fini_action_t fini;  /**< Function to cleanup iterator resources */
     ecs_iter_t *chain_it;         /**< Optional, allows for creating iterator chains */
 };
+
+
+/** Query must match prefabs.
+ * Can be combined with other query flags on the ecs_query_desc_t::flags field.
+ * \ingroup queries
+ */
+#define EcsQueryMatchPrefab           (1u << 1u)
+
+/** Query must match disabled entities.
+ * Can be combined with other query flags on the ecs_query_desc_t::flags field.
+ * \ingroup queries
+ */
+#define EcsQueryMatchDisabled         (1u << 2u)
+
+/** Query must match empty tables.
+ * Can be combined with other query flags on the ecs_query_desc_t::flags field.
+ * \ingroup queries
+ */
+#define EcsQueryMatchEmptyTables      (1u << 3u)
+
+/** Query won't provide component data.
+ * Can be combined with other query flags on the ecs_query_desc_t::flags field.
+ * \ingroup queries
+ */
+#define EcsQueryNoData                (1u << 4u)
+
+/** Query iteration is always instanced.
+ * Can be combined with other query flags on the ecs_query_desc_t::flags field.
+ * \ingroup queries
+ */
+#define EcsQueryIsInstanced           (1u << 5u)
+
+/** Query may have unresolved entity identifiers.
+ * Can be combined with other query flags on the ecs_query_desc_t::flags field.
+ * \ingroup queries
+ */
+#define EcsQueryAllowUnresolvedByName (1u << 6u)
+
+/** Query only returns whole tables (ignores toggle/member fields).
+ * Can be combined with other query flags on the ecs_query_desc_t::flags field.
+ * \ingroup queries
+ */
+#define EcsQueryTableOnly             (1u << 7u)
+
 
 /** Used with ecs_query_init. 
  * 

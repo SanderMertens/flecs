@@ -654,17 +654,65 @@ typedef enum ecs_query_cache_kind_t {
 } ecs_query_cache_kind_t;
 
 /* Term id flags  */
-#define EcsSelf                       (1llu << 63)  /**< Match on self */
-#define EcsUp                         (1llu << 62)  /**< Match by traversing upwards */
-#define EcsTrav                       (1llu << 61)  /**< Traverse relationship transitively */
-#define EcsCascade                    (1llu << 60)  /**< Sort results breadth first */
-#define EcsDesc                       (1llu << 59)  /**< Iterate groups in descending order  */
-#define EcsIsVariable                 (1llu << 58)  /**< Term id is a variable */
-#define EcsIsEntity                   (1llu << 57)  /**< Term id is an entity */
-#define EcsIsName                     (1llu << 56)  /**< Term id is a name (don't attempt to lookup as entity) */
 
-/* Composite term flags */
+/** Match on self.
+ * Can be combined with other term flags on the ecs_term_t::flags field.
+ * \ingroup queries
+ */
+#define EcsSelf                       (1llu << 63)
+
+/** Match by traversing upwards.
+ * Can be combined with other term flags on the ecs_term_ref_t::id field.
+ * \ingroup queries
+ */
+#define EcsUp                         (1llu << 62)
+
+/** Traverse relationship transitively.
+ * Can be combined with other term flags on the ecs_term_ref_t::id field.
+ * \ingroup queries
+ */
+#define EcsTrav                       (1llu << 61)
+
+/** Sort results breadth first.
+ * Can be combined with other term flags on the ecs_term_ref_t::id field.
+ * \ingroup queries
+ */
+#define EcsCascade                    (1llu << 60)
+
+/** Iterate groups in descending order.
+ * Can be combined with other term flags on the ecs_term_ref_t::id field.
+ * \ingroup queries
+ */
+#define EcsDesc                       (1llu << 59)
+
+/** Term id is a variable.
+ * Can be combined with other term flags on the ecs_term_ref_t::id field.
+ * \ingroup queries
+ */
+#define EcsIsVariable                 (1llu << 58)
+
+/** Term id is an entity.
+ * Can be combined with other term flags on the ecs_term_ref_t::id field.
+ * \ingroup queries
+ */
+#define EcsIsEntity                   (1llu << 57)
+
+/** Term id is a name (don't attempt to lookup as entity).
+ * Can be combined with other term flags on the ecs_term_ref_t::id field.
+ * \ingroup queries
+ */
+#define EcsIsName                     (1llu << 56)
+
+/** All term traversal flags.
+ * Can be combined with other term flags on the ecs_term_ref_t::id field.
+ * \ingroup queries
+ */
 #define EcsTraverseFlags              (EcsSelf|EcsUp|EcsTrav|EcsCascade|EcsDesc)
+
+/** All term reference kind flags.
+ * Can be combined with other term flags on the ecs_term_ref_t::id field.
+ * \ingroup queries
+ */
 #define EcsTermRefFlags               (EcsTraverseFlags|EcsIsVariable|EcsIsEntity|EcsIsName)
 
 /* Term flags discovered & set during query creation. Mostly used internally to
@@ -1043,6 +1091,50 @@ struct ecs_iter_t {
     ecs_iter_fini_action_t fini;  /**< Function to cleanup iterator resources */
     ecs_iter_t *chain_it;         /**< Optional, allows for creating iterator chains */
 };
+
+
+/** Query must match prefabs.
+ * Can be combined with other query flags on the ecs_query_desc_t::flags field.
+ * \ingroup queries
+ */
+#define EcsQueryMatchPrefab           (1u << 1u)
+
+/** Query must match disabled entities.
+ * Can be combined with other query flags on the ecs_query_desc_t::flags field.
+ * \ingroup queries
+ */
+#define EcsQueryMatchDisabled         (1u << 2u)
+
+/** Query must match empty tables.
+ * Can be combined with other query flags on the ecs_query_desc_t::flags field.
+ * \ingroup queries
+ */
+#define EcsQueryMatchEmptyTables      (1u << 3u)
+
+/** Query won't provide component data.
+ * Can be combined with other query flags on the ecs_query_desc_t::flags field.
+ * \ingroup queries
+ */
+#define EcsQueryNoData                (1u << 4u)
+
+/** Query iteration is always instanced.
+ * Can be combined with other query flags on the ecs_query_desc_t::flags field.
+ * \ingroup queries
+ */
+#define EcsQueryIsInstanced           (1u << 5u)
+
+/** Query may have unresolved entity identifiers.
+ * Can be combined with other query flags on the ecs_query_desc_t::flags field.
+ * \ingroup queries
+ */
+#define EcsQueryAllowUnresolvedByName (1u << 6u)
+
+/** Query only returns whole tables (ignores toggle/member fields).
+ * Can be combined with other query flags on the ecs_query_desc_t::flags field.
+ * \ingroup queries
+ */
+#define EcsQueryTableOnly             (1u << 7u)
+
 
 /** Used with ecs_query_init. 
  * 
