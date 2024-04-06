@@ -3261,74 +3261,6 @@ typedef struct ecs_iter_private_t {
     ecs_iter_cache_t cache;       /* Inline arrays to reduce allocations */
 } ecs_iter_private_t;
 
-/** Iterator */
-struct ecs_iter_t {
-    /* World */
-    ecs_world_t *world;           /* The world */
-    ecs_world_t *real_world;      /* Actual world. This differs from world when in readonly mode */
-
-    /* Matched data */
-    ecs_entity_t *entities;       /* Entity identifiers */
-    void **ptrs;                  /* Pointers to components. Array if from this, pointer if not. */
-    const ecs_size_t *sizes;      /* Component sizes */
-    ecs_table_t *table;           /* Current table */
-    ecs_table_t *other_table;     /* Prev or next table when adding/removing */
-    ecs_id_t *ids;                /* (Component) ids */
-    ecs_var_t *variables;         /* Values of variables (if any) */
-    int32_t *columns;             /* Query term to table column mapping */
-    ecs_entity_t *sources;        /* Entity on which the id was matched (0 if same as entities) */
-    ecs_ref_t *references;        /* Cached refs to components (if iterating a cache) */
-    ecs_flags64_t constrained_vars; /* Bitset that marks constrained variables */
-    uint64_t group_id;            /* Group id for table, if group_by is used */
-    int32_t field_count;          /* Number of fields in iterator */
-    ecs_termset_t set_fields;     /* Fields that are set */
-    ecs_termset_t shared_fields;  /* Bitset with shared fields */
-    ecs_termset_t up_fields;      /* Bitset with fields matched through up traversal */
-
-    /* Input information */
-    ecs_entity_t system;          /* The system (if applicable) */
-    ecs_entity_t event;           /* The event (if applicable) */
-    ecs_id_t event_id;            /* The (component) id for the event */
-    int32_t event_cur;            /* Unique event id. Used to dedup observer calls */
-
-    /* Query information */
-    const ecs_query_t *query;     /* Query being evaluated */
-    int32_t term_index;           /* Index of term that emitted an event.
-                                   * This field will be set to the 'index' field
-                                   * of an observer term. */
-    int32_t variable_count;       /* Number of variables for query */
-    char **variable_names;        /* Names of variables (if any) */
-
-    /* Context */
-    void *param;                  /* Param passed to ecs_run */
-    void *ctx;                    /* System context */
-    void *binding_ctx;            /* Binding context */
-
-    /* Time */
-    ecs_ftime_t delta_time;       /* Time elapsed since last frame */
-    ecs_ftime_t delta_system_time;/* Time elapsed since last system invocation */
-
-    /* Iterator counters */
-    int32_t frame_offset;         /* Offset relative to start of iteration */
-    int32_t offset;               /* Offset relative to current table */
-    int32_t count;                /* Number of entities to iterate */
-    int32_t instance_count;       /* Number of entities to iterate before next table */
-
-    /* Iterator flags */
-    ecs_flags32_t flags;
-
-    ecs_entity_t interrupted_by;  /* When set, system execution is interrupted */
-
-    ecs_iter_private_t priv;      /* Private data */
-
-    /* Chained iterators */
-    ecs_iter_next_action_t next;  /* Function to progress iterator */
-    ecs_iter_action_t callback;   /* Callback of system or observer */
-    ecs_iter_action_t set_var;    /* Invoked after setting variable (optionally set) */
-    ecs_iter_fini_action_t fini;  /* Function to cleanup iterator resources */
-    ecs_iter_t *chain_it;         /* Optional, allows for creating iterator chains */
-};
-
 #ifdef __cplusplus
 }
 #endif
@@ -3835,6 +3767,97 @@ typedef struct ecs_component_desc_t {
     /** Parameters for type (size, hooks, ...) */
     ecs_type_info_t type;
 } ecs_component_desc_t;
+
+/** Iterator.
+ * Used for iterating queries. The ecs_iter_t type contains all the information
+ * that is provided by a query, and contains all the state required for the
+ * iterator code.
+ * 
+ * Functions that create iterators accept as first argument the world, and as
+ * second argument the object they iterate. For example:
+ * 
+ * @code
+ * ecs_iter_t it = ecs_query_iter(world, q);
+ * @endcode
+ * 
+ * When this code is called from a system, it is important to use the world
+ * provided by its iterator object. For example:
+ * 
+ * @code
+ * void Collide(ecs_iter_t *it) {
+ *   ecs_iter_t qit = ecs_query_iter(it->world, Colliders);
+ * }
+ * @endcode
+ * 
+ * This ensures thread safe allocation and cleanup of any resources required by 
+ * the iterator.
+ *
+ * @ingroup queries
+ */
+struct ecs_iter_t {
+    /* World */
+    ecs_world_t *world;           /**< The world */
+    ecs_world_t *real_world;      /**< Actual world. This differs from world when in readonly mode */
+
+    /* Matched data */
+    ecs_entity_t *entities;       /**< Entity identifiers */
+    void **ptrs;                  /**< Pointers to components. Array if from this, pointer if not. */
+    const ecs_size_t *sizes;      /**< Component sizes */
+    ecs_table_t *table;           /**< Current table */
+    ecs_table_t *other_table;     /**< Prev or next table when adding/removing */
+    ecs_id_t *ids;                /**< (Component) ids */
+    ecs_var_t *variables;         /**< Values of variables (if any) */
+    int32_t *columns;             /**< Query term to table column mapping */
+    ecs_entity_t *sources;        /**< Entity on which the id was matched (0 if same as entities) */
+    ecs_ref_t *references;        /**< Cached refs to components (if iterating a cache) */
+    ecs_flags64_t constrained_vars; /**< Bitset that marks constrained variables */
+    uint64_t group_id;            /**< Group id for table, if group_by is used */
+    int32_t field_count;          /**< Number of fields in iterator */
+    ecs_termset_t set_fields;     /**< Fields that are set */
+    ecs_termset_t shared_fields;  /**< Bitset with shared fields */
+    ecs_termset_t up_fields;      /**< Bitset with fields matched through up traversal */
+
+    /* Input information */
+    ecs_entity_t system;          /**< The system (if applicable) */
+    ecs_entity_t event;           /**< The event (if applicable) */
+    ecs_id_t event_id;            /**< The (component) id for the event */
+    int32_t event_cur;            /**< Unique event id. Used to dedup observer calls */
+
+    /* Query information */
+    const ecs_query_t *query;     /**< Query being evaluated */
+    int32_t term_index;           /**< Index of term that emitted an event.
+                                   * This field will be set to the 'index' field
+                                   * of an observer term. */
+    int32_t variable_count;       /**< Number of variables for query */
+    char **variable_names;        /**< Names of variables (if any) */
+
+    /* Context */
+    void *param;                  /**< Param passed to ecs_run */
+    void *ctx;                    /**< System context */
+    void *binding_ctx;            /**< Binding context */
+
+    /* Time */
+    ecs_ftime_t delta_time;       /**< Time elapsed since last frame */
+    ecs_ftime_t delta_system_time;/**< Time elapsed since last system invocation */
+
+    /* Iterator counters */
+    int32_t frame_offset;         /**< Offset relative to start of iteration */
+    int32_t offset;               /**< Offset relative to current table */
+    int32_t count;                /**< Number of entities to iterate */
+    int32_t instance_count;       /**< Number of entities to iterate before next table */
+
+    /* Misc */
+    ecs_flags32_t flags;          /**< Iterator flags */
+    ecs_entity_t interrupted_by;  /**< When set, system execution is interrupted */
+    ecs_iter_private_t priv;      /**< Private data */
+
+    /* Chained iterators */
+    ecs_iter_next_action_t next;  /**< Function to progress iterator */
+    ecs_iter_action_t callback;   /**< Callback of system or observer */
+    ecs_iter_action_t set_var;    /**< Invoked after setting variable (optionally set) */
+    ecs_iter_fini_action_t fini;  /**< Function to cleanup iterator resources */
+    ecs_iter_t *chain_it;         /**< Optional, allows for creating iterator chains */
+};
 
 /** Used with ecs_query_init. 
  * 
