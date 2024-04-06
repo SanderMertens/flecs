@@ -3220,7 +3220,7 @@ void SerializeIterToRowJson_serialize_entity_w_flecs_core_parent(void) {
     ecs_set_name(world, e1, "e1");
 
     ecs_entity_t flecs_core_parent = 
-        ecs_new_from_fullpath(world, "flecs.core.bob");
+        ecs_entity(world, { .name = "flecs.core.bob" });
     ecs_add_pair(world, e1, EcsChildOf, flecs_core_parent);
 
     ecs_query_t *q = ecs_query(world, {
