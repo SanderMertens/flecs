@@ -538,7 +538,7 @@ jobs:
         run: bake --strict
 
       - name: test c++
-        run: bake run test/cpp_api -- -j 8
+        run: bake run test/cpp -- -j 8
 
   test-cpp-macos:
     needs: [build-macos]
@@ -578,7 +578,7 @@ jobs:
         run: bake --strict
 
       - name: test c++
-        run: bake run test/cpp_api -- -j 8
+        run: bake run test/cpp -- -j 8
 
   test-windows:
     needs: build-windows
@@ -614,7 +614,7 @@ jobs:
         run: bake/bake run test\collections -- -j 8
 
       - name: test c++
-        run: bake/bake run test\cpp_api -- -j 8
+        run: bake/bake run test\cpp -- -j 8
 
   test-msys:
     runs-on: windows-latest
@@ -671,7 +671,7 @@ jobs:
         run: bake/bake run test/collections -- -j 8
 
       - name: test c++
-        run: bake/bake run test/cpp_api -- -j 8
+        run: bake/bake run test/cpp -- -j 8
 
   test-sanitized-core:
     needs: [ build-linux ]
@@ -793,7 +793,7 @@ jobs:
         run: |
           bake run test/collections --cfg sanitize -- -j 8
 
-  test-sanitized-cpp_api:
+  test-sanitized-cpp:
     needs: [ build-linux ]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
@@ -815,7 +815,7 @@ jobs:
 
       - name: run tests
         run: |
-          bake run test/cpp_api --cfg sanitize -- -j 8
+          bake run test/cpp --cfg sanitize -- -j 8
 
   test-cmake:
     needs: [ build-linux, build-macos ]
