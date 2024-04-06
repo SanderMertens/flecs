@@ -597,10 +597,6 @@ void ecs_iter_set_var(
 
     it->constrained_vars |= flecs_ito(uint64_t, 1 << var_id);
 
-    if (it->set_var) {
-        it->set_var(it);
-    }
-
 error:
     return;
 }
