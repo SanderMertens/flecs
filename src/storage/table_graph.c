@@ -531,7 +531,7 @@ void flecs_init_table(
 }
 
 static
-ecs_table_t *flecs_create_table(
+ecs_table_t *flecs_table_new(
     ecs_world_t *world,
     ecs_type_t *type,
     flecs_hashmap_result_t table_elem,
@@ -622,11 +622,11 @@ ecs_table_t* flecs_table_ensure(
 
     /* If we get here, the table has not been found, so create it. */
     if (own_type) {
-        return flecs_create_table(world, type, elem, prev);
+        return flecs_table_new(world, type, elem, prev);
     }
 
     ecs_type_t copy = flecs_type_copy(world, type);
-    return flecs_create_table(world, &copy, elem, prev);
+    return flecs_table_new(world, &copy, elem, prev);
 }
 
 static

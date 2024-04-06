@@ -192,7 +192,7 @@ void flecs_table_remove_actions(
     ecs_table_t *table);
 
 /* Free table */
-void flecs_table_free(
+void flecs_table_fini(
     ecs_world_t *world,
     ecs_table_t *table); 
 

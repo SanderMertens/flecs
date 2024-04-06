@@ -447,7 +447,7 @@ void flecs_id_record_release_tables(
         ecs_table_record_t *tr;
         while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
             /* Release current table */
-            flecs_table_free(world, tr->hdr.table);
+            flecs_table_fini(world, tr->hdr.table);
         }
     }
 }

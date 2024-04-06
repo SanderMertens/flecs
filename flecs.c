@@ -662,7 +662,7 @@ void flecs_table_remove_actions(
     ecs_table_t *table);
 
 /* Free table */
-void flecs_table_free(
+void flecs_table_fini(
     ecs_world_t *world,
     ecs_table_t *table); 
 
@@ -16445,7 +16445,7 @@ void flecs_clean_tables(
     for (i = 1; i < count; i ++) {
         ecs_table_t *t = flecs_sparse_get_dense_t(&world->store.tables, 
             ecs_table_t, i);
-        flecs_table_free(world, t);
+        flecs_table_fini(world, t);
     }
 
     /* Free table types separately so that if application destructors rely on
@@ -16534,7 +16534,7 @@ static
 void flecs_fini_store(ecs_world_t *world) {
     flecs_clean_tables(world);
     flecs_sparse_fini(&world->store.tables);
-    flecs_table_free(world, &world->store.root);
+    flecs_table_fini(world, &world->store.root);
     flecs_entities_clear(world);
     flecs_hashmap_fini(&world->store.table_map);
 
@@ -17791,7 +17791,7 @@ void flecs_delete_table(
     ecs_table_t *table)
 {
     ecs_poly_assert(world, ecs_world_t); 
-    flecs_table_free(world, table);
+    flecs_table_fini(world, table);
 }
 
 static
@@ -18023,7 +18023,7 @@ int32_t ecs_delete_empty_tables(
 
             uint16_t gen = ++ table->_->generation;
             if (delete_generation && (gen > delete_generation)) {
-                flecs_table_free(world, table);
+                flecs_table_fini(world, table);
                 delete_count ++;
             } else if (clear_generation && (gen > clear_generation)) {
                 if (flecs_table_shrink(world, table)) {
@@ -47938,7 +47938,7 @@ void flecs_id_record_release_tables(
         ecs_table_record_t *tr;
         while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
             /* Release current table */
-            flecs_table_free(world, tr->hdr.table);
+            flecs_table_fini(world, tr->hdr.table);
         }
     }
 }
@@ -48996,7 +48996,7 @@ void flecs_table_remove_actions(
 }
 
 /* Free table resources. */
-void flecs_table_free(
+void flecs_table_fini(
     ecs_world_t *world,
     ecs_table_t *table)
 {
@@ -51241,7 +51241,7 @@ void flecs_init_table(
 }
 
 static
-ecs_table_t *flecs_create_table(
+ecs_table_t *flecs_table_new(
     ecs_world_t *world,
     ecs_type_t *type,
     flecs_hashmap_result_t table_elem,
@@ -51332,11 +51332,11 @@ ecs_table_t* flecs_table_ensure(
 
     /* If we get here, the table has not been found, so create it. */
     if (own_type) {
-        return flecs_create_table(world, type, elem, prev);
+        return flecs_table_new(world, type, elem, prev);
     }
 
     ecs_type_t copy = flecs_type_copy(world, type);
-    return flecs_create_table(world, &copy, elem, prev);
+    return flecs_table_new(world, &copy, elem, prev);
 }
 
 static

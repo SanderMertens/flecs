@@ -804,9 +804,9 @@ struct ecs_observer_t {
     
     ecs_query_t *query;        /**< Observer query */
 
-    /* Observer events */
+    /** Observer events */
     ecs_entity_t events[FLECS_EVENT_DESC_MAX];
-    int32_t event_count;
+    int32_t event_count;        /**< Number of events */
 
     ecs_iter_action_t callback; /**< See ecs_observer_desc_t::callback */
     ecs_run_action_t run;       /**< See ecs_observer_desc_t::run */
@@ -819,8 +819,8 @@ struct ecs_observer_t {
 
     ecs_observable_t *observable; /**< Observable for observer */
 
-    ecs_world_t *world;
-    ecs_entity_t entity;
+    ecs_world_t *world;         /**< The world */
+    ecs_entity_t entity;        /**< Entity associated with observer */
 };
 
 /** @} */
