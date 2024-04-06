@@ -756,7 +756,7 @@ int flecs_query_cache_process_signature(
         ecs_check(is_first_ok, ECS_UNSUPPORTED, NULL);
         ecs_check(is_second_ok,  ECS_UNSUPPORTED, NULL);
         ecs_check(term->inout != EcsInOutFilter, ECS_INVALID_PARAMETER,
-            "invalid usage of InOutQuery for query");
+            "invalid usage of InOutFilter for query");
 
         if (src->id & EcsCascade) {
             /* Query can only have one cascade column */
