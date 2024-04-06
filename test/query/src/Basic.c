@@ -9744,8 +9744,11 @@ void Basic_set_get_binding_context(void) {
     ecs_fini(ecs);
 }
 
+static int ctx_free_invoked = 0;
+
 static void ctx_free(void *ptr) {
     *(int*)ptr = 10;
+    ctx_free_invoked ++;
 }
 
 void Basic_set_get_context_w_free(void) {
@@ -9769,7 +9772,9 @@ void Basic_set_get_context_w_free(void) {
     test_assert(q->binding_ctx == NULL);
     test_int(ctx, 0);
 
+    test_int(ctx_free_invoked, 0);
     ecs_query_fini(q);
+    test_int(ctx_free_invoked, 1);
 
     test_int(ctx, 10);
 
@@ -9797,7 +9802,9 @@ void Basic_set_get_binding_context_w_free(void) {
     test_assert(q->ctx == NULL);
     test_int(ctx, 0);
 
+    test_int(ctx_free_invoked, 0);
     ecs_query_fini(q);
+    test_int(ctx_free_invoked, 1);
 
     test_int(ctx, 10);
 
