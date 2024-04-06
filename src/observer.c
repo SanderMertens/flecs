@@ -876,7 +876,8 @@ ecs_observer_t* flecs_observer_init(
     const ecs_observer_desc_t *desc)
 {
     ecs_check(desc->callback != NULL || desc->run != NULL, 
-        ECS_INVALID_OPERATION, NULL);
+        ECS_INVALID_OPERATION,
+            "cannot create observer: must at least specify callback or run");
 
     ecs_observer_impl_t *impl = flecs_sparse_add_t(
         &world->store.observers, ecs_observer_impl_t);
@@ -990,7 +991,8 @@ ecs_entity_t ecs_observer_init(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(!(world->flags & EcsWorldFini), ECS_INVALID_OPERATION, NULL);
+    ecs_check(!(world->flags & EcsWorldFini), ECS_INVALID_OPERATION, 
+        "cannot create observer while world is being deleted");
 
     entity = desc->entity;
     if (!entity) {

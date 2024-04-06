@@ -33,7 +33,8 @@ ecs_query_cache_table_match_t* flecs_query_test(
     if (first) {
         ecs_var_t *var = &ctx->vars[0];
         ecs_table_t *table = var->range.table;
-        ecs_assert(table != NULL, ECS_INVALID_OPERATION, NULL);
+        ecs_assert(table != NULL, ECS_INVALID_OPERATION, 
+            "the variable set on the iterator is missing a table");
 
         ecs_query_cache_table_t *qt = flecs_query_cache_get_table(
             impl->cache, table);

@@ -74,7 +74,8 @@ int ecs_vars_pop(
     ecs_vars_t *vars)
 {
     ecs_expr_var_scope_t *scope = vars->cur;
-    ecs_check(scope != &vars->root, ECS_INVALID_OPERATION, NULL);
+    ecs_check(scope != &vars->root, ECS_INVALID_OPERATION,
+        "cannot pop the root frame");
     vars->cur = scope->parent;
     flecs_expr_var_scope_fini(vars->world, scope);
     flecs_free_t(&vars->world->allocator, ecs_expr_var_scope_t, scope);

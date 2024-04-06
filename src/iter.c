@@ -626,8 +626,8 @@ void ecs_iter_set_var_as_range(
     ecs_check((range->offset + range->count) <= ecs_table_count(range->table), 
         ECS_INVALID_PARAMETER, NULL);
 
-    /* Can't set variable while iterating */
-    ecs_check(!(it->flags & EcsIterIsValid), ECS_INVALID_OPERATION, NULL);
+    ecs_check(!(it->flags & EcsIterIsValid), ECS_INVALID_OPERATION, 
+        "cannot set query variables while iterating");
 
     ecs_var_t *var = &it->variables[var_id];
     var->range = *range;

@@ -399,14 +399,16 @@ ecs_entity_t ecs_cpp_component_register_explicit(
             .symbol = symbol,
             .use_low_id = true
         });
-        ecs_assert(entity != 0, ECS_INVALID_OPERATION, NULL);
+        ecs_assert(entity != 0, ECS_INVALID_OPERATION, 
+            "registration failed for component %s", name);
 
         entity = ecs_component_init(world, &(ecs_component_desc_t){
             .entity = entity,
             .type.size = flecs_uto(int32_t, size),
             .type.alignment = flecs_uto(int32_t, alignment)
         });
-        ecs_assert(entity != 0, ECS_INVALID_OPERATION, NULL);
+        ecs_assert(entity != 0, ECS_INVALID_OPERATION, 
+            "registration failed for component %s", name);
     } else {
         entity = ecs_entity(world, {
             .id = s_id,

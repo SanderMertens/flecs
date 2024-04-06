@@ -76,7 +76,8 @@ static
 ecs_meta_type_op_t* flecs_meta_cursor_get_op(
     ecs_meta_scope_t *scope)
 {
-    ecs_assert(scope->ops != NULL, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(scope->ops != NULL, ECS_INVALID_OPERATION, 
+        "type serializer is missing instructions");
     return &scope->ops[scope->op_cur];
 }
 
@@ -907,7 +908,9 @@ int ecs_meta_set_char(
     cases_T_signed(ptr, value, ecs_meta_bounds_signed);
     case EcsOpOpaque: {
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
-        ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, NULL);
+        ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, 
+            "entity %s is not an opaque type but serializer thinks so",
+                ecs_get_name(cursor->world, op->type));
         if (opaque->assign_char) { /* preferred operation */
             opaque->assign_char(ptr, value);
             break;
@@ -964,7 +967,9 @@ int ecs_meta_set_int(
     cases_T_float(ptr, value);
     case EcsOpOpaque: {
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
-        ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, NULL);
+        ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, 
+            "entity %s is not an opaque type but serializer thinks so",
+                ecs_get_name(cursor->world, op->type));
         if (opaque->assign_int) { /* preferred operation */
             opaque->assign_int(ptr, value);
             break;
@@ -1015,7 +1020,9 @@ int ecs_meta_set_uint(
     cases_T_float(ptr, value);
     case EcsOpOpaque: {
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
-        ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, NULL);
+        ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, 
+            "entity %s is not an opaque type but serializer thinks so",
+                ecs_get_name(cursor->world, op->type));
         if (opaque->assign_uint) { /* preferred operation */
             opaque->assign_uint(ptr, value);
             break;
@@ -1071,7 +1078,9 @@ int ecs_meta_set_float(
     cases_T_float(ptr, value);
     case EcsOpOpaque: {
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
-        ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, NULL);
+        ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, 
+            "entity %s is not an opaque type but serializer thinks so",
+                ecs_get_name(cursor->world, op->type));
         if (opaque->assign_float) { /* preferred operation */
             opaque->assign_float(ptr, value);
             break;
@@ -1378,7 +1387,9 @@ int ecs_meta_set_string(
         goto error;
     case EcsOpOpaque: {
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
-        ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, NULL);
+        ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, 
+            "entity %s is not an opaque type but serializer thinks so",
+                ecs_get_name(cursor->world, op->type));
         if (opaque->assign_string) { /* preferred */
             opaque->assign_string(ptr, value);
             break;

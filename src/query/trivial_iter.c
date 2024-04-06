@@ -219,7 +219,8 @@ bool flecs_query_trivial_test(
         int32_t t, term_count = impl->pub.term_count;
 
         ecs_table_t *table = it->table;
-        ecs_assert(table != NULL, ECS_INVALID_OPERATION, NULL);
+        ecs_assert(table != NULL, ECS_INVALID_OPERATION,
+            "the variable set on the iterator is missing a table");
 
         for (t = 0; t < term_count; t ++) {
             if (!(term_set & (1llu << t))) {

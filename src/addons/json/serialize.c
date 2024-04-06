@@ -234,13 +234,20 @@ int json_ser_custom_type(
     ecs_strbuf_t *str)
 {
     const EcsOpaque *ct = ecs_get(world, op->type, EcsOpaque);
-    ecs_assert(ct != NULL, ECS_INVALID_OPERATION, NULL);
-    ecs_assert(ct->as_type != 0, ECS_INVALID_OPERATION, NULL);
-    ecs_assert(ct->serialize != NULL, ECS_INVALID_OPERATION, 
-        ecs_get_name(world, op->type));
+    ecs_assert(ct != NULL, ECS_INVALID_OPERATION, 
+        "entity %s in opaque type serializer instruction is not an opaque type",
+            ecs_get_name(world, op->type));
+    ecs_assert(ct->as_type != 0, ECS_INVALID_OPERATION, 
+        "opaque type %s has not populated as_type field",
+            ecs_get_name(world, op->type));
+    ecs_assert(ct->serialize != NULL, ECS_INVALID_OPERATION,
+        "opaque type %s does not have serialize interface", 
+            ecs_get_name(world, op->type));
 
     const EcsType *pt = ecs_get(world, ct->as_type, EcsType);
-    ecs_assert(pt != NULL, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(pt != NULL, ECS_INVALID_OPERATION, 
+        "opaque type %s is missing flecs.meta.Type component",
+            ecs_get_name(world, op->type));
 
     ecs_type_kind_t kind = pt->kind;
     bool is_collection = false;

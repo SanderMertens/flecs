@@ -1044,9 +1044,10 @@ void flecs_query_cache_group_by(
     ecs_entity_t sort_component,
     ecs_group_by_action_t group_by)
 {   
-    /* Cannot change grouping once a query has been created */
-    ecs_check(cache->group_by == 0, ECS_INVALID_OPERATION, NULL);
-    ecs_check(cache->group_by_callback == 0, ECS_INVALID_OPERATION, NULL);
+    ecs_check(cache->group_by == 0, ECS_INVALID_OPERATION,
+        "query is already grouped");
+    ecs_check(cache->group_by_callback == 0, ECS_INVALID_OPERATION,
+        "query is already grouped");
 
     if (!group_by) {
         /* Builtin function that groups by relationship */
@@ -1228,7 +1229,8 @@ ecs_query_cache_t* flecs_query_cache_init(
     ecs_check(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_check(const_desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(const_desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(!(world->flags & EcsWorldFini), ECS_INVALID_OPERATION, NULL);
+    ecs_check(!(world->flags & EcsWorldFini), ECS_INVALID_OPERATION, 
+        "cannot create query during world fini");
 
     /* Create private version of desc to create the uncached query that will
      * populate the query cache. */

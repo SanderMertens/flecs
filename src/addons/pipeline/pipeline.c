@@ -482,7 +482,8 @@ bool flecs_pipeline_update(
     bool start_of_frame)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, NULL);
+    ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, 
+        "cannot update pipeline while world is in readonly mode");
 
     /* If any entity mutations happened that could have affected query matching
      * notify appropriate queries so caches are up to date. This includes the
@@ -590,7 +591,7 @@ void flecs_run_pipeline(
     ecs_pipeline_state_t *pq,
     ecs_ftime_t delta_time)
 {
-    ecs_assert(world != NULL, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(pq->query != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_poly_assert(world, ecs_stage_t);
@@ -600,7 +601,8 @@ void flecs_run_pipeline(
     int32_t stage_count = ecs_get_stage_count(world);
     bool multi_threaded = world->worker_cond != 0;
 
-    ecs_assert(!stage_index, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(!stage_index, ECS_INVALID_OPERATION, 
+        "cannot run pipeline on stage");
 
     // Update the pipeline the workers will execute
     world->pq = pq;
@@ -716,7 +718,8 @@ void flecs_run_startup_systems(
     ecs_log_push_2();
     ecs_assert(start_pip != 0, ECS_INTERNAL_ERROR, NULL);
     const EcsPipeline *p = ecs_get(world, start_pip, EcsPipeline);
-    ecs_check(p != NULL, ECS_INVALID_OPERATION, NULL);
+    ecs_check(p != NULL, ECS_INVALID_OPERATION, 
+        "pipeline entity is missing flecs.pipeline.Pipeline component");
     flecs_workers_progress(world, p->state, 0);
     ecs_log_pop_2();
 
@@ -751,7 +754,8 @@ bool ecs_progress(
     ecs_dbg_3("#[bold]progress#[reset](dt = %.2f)", (double)delta_time);
     ecs_log_push_3();
     const EcsPipeline *p = ecs_get(world, world->pipeline, EcsPipeline);
-    ecs_check(p != NULL, ECS_INVALID_OPERATION, NULL);
+    ecs_check(p != NULL, ECS_INVALID_OPERATION,
+        "pipeline entity is missing flecs.pipeline.Pipeline component");
     flecs_workers_progress(world, p->state, delta_time);
     ecs_log_pop_3();
 

@@ -710,7 +710,8 @@ void ecs_set_stage_count(
              * not be mixed. */
             ecs_stage_t *stage = world->stages[i];
             ecs_poly_assert(stage, ecs_stage_t);
-            ecs_check(stage->thread == 0, ECS_INVALID_OPERATION, NULL);
+            ecs_check(stage->thread == 0, ECS_INVALID_OPERATION, 
+                "cannot mix using set_stage_count and set_threads");
             flecs_stage_free(world, stage);
         }
     }
@@ -817,7 +818,8 @@ void ecs_readonly_end(
     ecs_world_t *world)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_check(world->flags & EcsWorldReadonly, ECS_INVALID_OPERATION, NULL);
+    ecs_check(world->flags & EcsWorldReadonly, ECS_INVALID_OPERATION,
+        "world is not in readonly mode");
 
     /* After this it is safe again to mutate the world directly */
     ECS_BIT_CLEAR(world->flags, EcsWorldReadonly);

@@ -1381,8 +1381,10 @@ int ecs_fini(
     ecs_world_t *world)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, NULL);
-    ecs_assert(!(world->flags & EcsWorldFini), ECS_INVALID_OPERATION, NULL);
+    ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION,
+        "cannot fini world while it is in readonly mode");
+    ecs_assert(!(world->flags & EcsWorldFini), ECS_INVALID_OPERATION,
+        "cannot fini world when it is already being deleted");
     ecs_assert(world->stages[0]->defer == 0, ECS_INVALID_OPERATION, 
         "call defer_end before destroying world");
 
@@ -1617,8 +1619,10 @@ void ecs_set_entity_generation(
     ecs_entity_t entity_with_generation)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, NULL);
-    ecs_assert(!(ecs_is_deferred(world)), ECS_INVALID_OPERATION, NULL);
+    ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION,
+        "cannot change entity generation when world is in readonly mode");
+    ecs_assert(!(ecs_is_deferred(world)), ECS_INVALID_OPERATION, 
+        "cannot change entity generation while world is deferred");
 
     flecs_entities_make_alive(world, entity_with_generation);
 
@@ -1876,7 +1880,8 @@ ecs_ftime_t ecs_frame_begin(
     ecs_ftime_t user_delta_time)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_check(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, NULL);
+    ecs_check(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, 
+        "cannot begin frame while world is in readonly mode");
     ecs_check(ECS_NEQZERO(user_delta_time) || ecs_os_has_time(), 
         ECS_MISSING_OS_API, "get_time");
 
@@ -1910,7 +1915,8 @@ void ecs_frame_end(
     ecs_world_t *world)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_check(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, NULL);
+    ecs_check(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, 
+        "cannot end frame while world is in readonly mode");
 
     world->info.frame_count_total ++;
     

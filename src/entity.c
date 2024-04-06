@@ -1105,7 +1105,8 @@ bool ecs_commit(
     const ecs_type_t *removed)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(!ecs_is_deferred(world), ECS_INVALID_OPERATION, NULL);
+    ecs_check(!ecs_is_deferred(world), ECS_INVALID_OPERATION, 
+        "commit cannot be called on stage or while world is deferred");
 
     ecs_table_t *src_table = NULL;
     if (!record) {
@@ -1168,13 +1169,14 @@ ecs_entity_t ecs_new(
 
     ecs_entity_t entity;
     if (unsafe_world->flags & EcsWorldMultiThreaded) {
-        /* When using an async stage or world is in multithreading mode, make
-         * sure OS API has threading functions initialized */
-        ecs_assert(ecs_os_has_threading(), ECS_INVALID_OPERATION, NULL);
+        /* When world is in multithreading mode, make sure OS API has threading 
+         * functions initialized */
+        ecs_assert(ecs_os_has_threading(), ECS_INVALID_OPERATION, 
+            "thread safe id creation unavailable: threading API not available");
 
         /* Can't atomically increase number above max int */
         ecs_assert(flecs_entities_max_id(unsafe_world) < UINT_MAX, 
-            ECS_INVALID_OPERATION, NULL);
+            ECS_INVALID_OPERATION, "thread safe ids exhausted");
         entity = (ecs_entity_t)ecs_os_ainc(
             (int32_t*)&flecs_entities_max_id(unsafe_world));
     } else {
@@ -3765,7 +3767,8 @@ void ecs_make_alive(
     /* The entity index can be mutated while in staged/readonly mode, as long as
      * the world is not multithreaded. */
     ecs_assert(!(world->flags & EcsWorldMultiThreaded), 
-        ECS_INVALID_OPERATION, NULL);
+        ECS_INVALID_OPERATION, 
+            "cannot make entity alive while world is in multithreaded mode");
 
     /* Check if a version of the provided id is alive */
     ecs_entity_t any = ecs_get_alive(world, (uint32_t)entity);
@@ -4025,9 +4028,11 @@ void ecs_defer_suspend(
     ecs_world_t *world)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(ecs_is_deferred(world), ECS_INVALID_OPERATION, NULL);
+    ecs_check(ecs_is_deferred(world), ECS_INVALID_OPERATION, 
+        "world/stage must be deferred before it can be suspended");
     ecs_stage_t *stage = flecs_stage_from_world(&world);
-    ecs_check(stage->defer > 0, ECS_INVALID_OPERATION, NULL);
+    ecs_check(stage->defer > 0, ECS_INVALID_OPERATION, 
+        "world/stage is already suspended");
     stage->defer = -stage->defer;
 error:
     return;
@@ -4038,7 +4043,8 @@ void ecs_defer_resume(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
-    ecs_check(stage->defer < 0, ECS_INVALID_OPERATION, NULL);
+    ecs_check(stage->defer < 0, ECS_INVALID_OPERATION,
+        "world/stage must be suspended before it can be resumed");
     stage->defer = -stage->defer;
 error:
     return;

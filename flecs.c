@@ -5214,7 +5214,8 @@ bool ecs_commit(
     const ecs_type_t *removed)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(!ecs_is_deferred(world), ECS_INVALID_OPERATION, NULL);
+    ecs_check(!ecs_is_deferred(world), ECS_INVALID_OPERATION, 
+        "commit cannot be called on stage or while world is deferred");
 
     ecs_table_t *src_table = NULL;
     if (!record) {
@@ -5277,13 +5278,14 @@ ecs_entity_t ecs_new(
 
     ecs_entity_t entity;
     if (unsafe_world->flags & EcsWorldMultiThreaded) {
-        /* When using an async stage or world is in multithreading mode, make
-         * sure OS API has threading functions initialized */
-        ecs_assert(ecs_os_has_threading(), ECS_INVALID_OPERATION, NULL);
+        /* When world is in multithreading mode, make sure OS API has threading 
+         * functions initialized */
+        ecs_assert(ecs_os_has_threading(), ECS_INVALID_OPERATION, 
+            "thread safe id creation unavailable: threading API not available");
 
         /* Can't atomically increase number above max int */
         ecs_assert(flecs_entities_max_id(unsafe_world) < UINT_MAX, 
-            ECS_INVALID_OPERATION, NULL);
+            ECS_INVALID_OPERATION, "thread safe ids exhausted");
         entity = (ecs_entity_t)ecs_os_ainc(
             (int32_t*)&flecs_entities_max_id(unsafe_world));
     } else {
@@ -7874,7 +7876,8 @@ void ecs_make_alive(
     /* The entity index can be mutated while in staged/readonly mode, as long as
      * the world is not multithreaded. */
     ecs_assert(!(world->flags & EcsWorldMultiThreaded), 
-        ECS_INVALID_OPERATION, NULL);
+        ECS_INVALID_OPERATION, 
+            "cannot make entity alive while world is in multithreaded mode");
 
     /* Check if a version of the provided id is alive */
     ecs_entity_t any = ecs_get_alive(world, (uint32_t)entity);
@@ -8134,9 +8137,11 @@ void ecs_defer_suspend(
     ecs_world_t *world)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(ecs_is_deferred(world), ECS_INVALID_OPERATION, NULL);
+    ecs_check(ecs_is_deferred(world), ECS_INVALID_OPERATION, 
+        "world/stage must be deferred before it can be suspended");
     ecs_stage_t *stage = flecs_stage_from_world(&world);
-    ecs_check(stage->defer > 0, ECS_INVALID_OPERATION, NULL);
+    ecs_check(stage->defer > 0, ECS_INVALID_OPERATION, 
+        "world/stage is already suspended");
     stage->defer = -stage->defer;
 error:
     return;
@@ -8147,7 +8152,8 @@ void ecs_defer_resume(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
-    ecs_check(stage->defer < 0, ECS_INVALID_OPERATION, NULL);
+    ecs_check(stage->defer < 0, ECS_INVALID_OPERATION,
+        "world/stage must be suspended before it can be resumed");
     stage->defer = -stage->defer;
 error:
     return;
@@ -10370,8 +10376,8 @@ void ecs_iter_set_var_as_range(
     ecs_check((range->offset + range->count) <= ecs_table_count(range->table), 
         ECS_INVALID_PARAMETER, NULL);
 
-    /* Can't set variable while iterating */
-    ecs_check(!(it->flags & EcsIterIsValid), ECS_INVALID_OPERATION, NULL);
+    ecs_check(!(it->flags & EcsIterIsValid), ECS_INVALID_OPERATION, 
+        "cannot set query variables while iterating");
 
     ecs_var_t *var = &it->variables[var_id];
     var->range = *range;
@@ -13322,7 +13328,8 @@ ecs_observer_t* flecs_observer_init(
     const ecs_observer_desc_t *desc)
 {
     ecs_check(desc->callback != NULL || desc->run != NULL, 
-        ECS_INVALID_OPERATION, NULL);
+        ECS_INVALID_OPERATION,
+            "cannot create observer: must at least specify callback or run");
 
     ecs_observer_impl_t *impl = flecs_sparse_add_t(
         &world->store.observers, ecs_observer_impl_t);
@@ -13436,7 +13443,8 @@ ecs_entity_t ecs_observer_init(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(!(world->flags & EcsWorldFini), ECS_INVALID_OPERATION, NULL);
+    ecs_check(!(world->flags & EcsWorldFini), ECS_INVALID_OPERATION, 
+        "cannot create observer while world is being deleted");
 
     entity = desc->entity;
     if (!entity) {
@@ -15459,7 +15467,8 @@ void ecs_set_stage_count(
              * not be mixed. */
             ecs_stage_t *stage = world->stages[i];
             ecs_poly_assert(stage, ecs_stage_t);
-            ecs_check(stage->thread == 0, ECS_INVALID_OPERATION, NULL);
+            ecs_check(stage->thread == 0, ECS_INVALID_OPERATION, 
+                "cannot mix using set_stage_count and set_threads");
             flecs_stage_free(world, stage);
         }
     }
@@ -15566,7 +15575,8 @@ void ecs_readonly_end(
     ecs_world_t *world)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_check(world->flags & EcsWorldReadonly, ECS_INVALID_OPERATION, NULL);
+    ecs_check(world->flags & EcsWorldReadonly, ECS_INVALID_OPERATION,
+        "world is not in readonly mode");
 
     /* After this it is safe again to mutate the world directly */
     ECS_BIT_CLEAR(world->flags, EcsWorldReadonly);
@@ -17239,8 +17249,10 @@ int ecs_fini(
     ecs_world_t *world)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, NULL);
-    ecs_assert(!(world->flags & EcsWorldFini), ECS_INVALID_OPERATION, NULL);
+    ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION,
+        "cannot fini world while it is in readonly mode");
+    ecs_assert(!(world->flags & EcsWorldFini), ECS_INVALID_OPERATION,
+        "cannot fini world when it is already being deleted");
     ecs_assert(world->stages[0]->defer == 0, ECS_INVALID_OPERATION, 
         "call defer_end before destroying world");
 
@@ -17475,8 +17487,10 @@ void ecs_set_entity_generation(
     ecs_entity_t entity_with_generation)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, NULL);
-    ecs_assert(!(ecs_is_deferred(world)), ECS_INVALID_OPERATION, NULL);
+    ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION,
+        "cannot change entity generation when world is in readonly mode");
+    ecs_assert(!(ecs_is_deferred(world)), ECS_INVALID_OPERATION, 
+        "cannot change entity generation while world is deferred");
 
     flecs_entities_make_alive(world, entity_with_generation);
 
@@ -17734,7 +17748,8 @@ ecs_ftime_t ecs_frame_begin(
     ecs_ftime_t user_delta_time)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_check(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, NULL);
+    ecs_check(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, 
+        "cannot begin frame while world is in readonly mode");
     ecs_check(ECS_NEQZERO(user_delta_time) || ecs_os_has_time(), 
         ECS_MISSING_OS_API, "get_time");
 
@@ -17768,7 +17783,8 @@ void ecs_frame_end(
     ecs_world_t *world)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_check(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, NULL);
+    ecs_check(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, 
+        "cannot end frame while world is in readonly mode");
 
     world->info.frame_count_total ++;
     
@@ -19665,14 +19681,16 @@ ecs_entity_t ecs_cpp_component_register_explicit(
             .symbol = symbol,
             .use_low_id = true
         });
-        ecs_assert(entity != 0, ECS_INVALID_OPERATION, NULL);
+        ecs_assert(entity != 0, ECS_INVALID_OPERATION, 
+            "registration failed for component %s", name);
 
         entity = ecs_component_init(world, &(ecs_component_desc_t){
             .entity = entity,
             .type.size = flecs_uto(int32_t, size),
             .type.alignment = flecs_uto(int32_t, alignment)
         });
-        ecs_assert(entity != 0, ECS_INVALID_OPERATION, NULL);
+        ecs_assert(entity != 0, ECS_INVALID_OPERATION, 
+            "registration failed for component %s", name);
     } else {
         entity = ecs_entity(world, {
             .id = s_id,
@@ -21337,8 +21355,10 @@ void ecs_http_server_stop(
     ecs_http_server_t* srv) 
 {
     ecs_check(srv != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(srv->initialized, ECS_INVALID_OPERATION, NULL);
-    ecs_check(srv->should_run, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(srv->initialized, ECS_INVALID_OPERATION, 
+        "cannot stop HTTP server: not initialized");
+    ecs_check(srv->should_run, ECS_INVALID_PARAMETER, 
+        "cannot stop HTTP server: already stopped/stopping");
 
     /* Stop server thread */
     ecs_dbg("http: shutting down server thread");
@@ -32120,6 +32140,10 @@ ecs_stack_cursor_t* flecs_stack_get_cursor(
     return result;
 }
 
+static const char *flecs_stack_leak_msg = 
+    "a stack allocator leak is most likely due to an unterminated "
+    "iteration: call ecs_iter_fini to fix";
+
 void flecs_stack_restore_cursor(
     ecs_stack_t *stack,
     ecs_stack_cursor_t *cursor)
@@ -32128,9 +32152,12 @@ void flecs_stack_restore_cursor(
         return;
     }
 
-    ecs_dbg_assert(stack == cursor->owner, ECS_INVALID_OPERATION, NULL);
-    ecs_dbg_assert(stack->cursor_count > 0, ECS_DOUBLE_FREE, NULL);
-    ecs_assert(cursor->is_free == false, ECS_DOUBLE_FREE, NULL);
+    ecs_dbg_assert(stack == cursor->owner, ECS_INVALID_OPERATION, 
+        "attempting to restore a cursor for the wrong stack");
+    ecs_dbg_assert(stack->cursor_count > 0, ECS_DOUBLE_FREE, 
+        "double free detected in stack allocator");
+    ecs_assert(cursor->is_free == false, ECS_DOUBLE_FREE,
+        "double free detected in stack allocator");
 
     cursor->is_free = true;
 
@@ -32160,13 +32187,14 @@ void flecs_stack_restore_cursor(
      * if the cursor count is non-zero, stack should not be empty */
     ecs_dbg_assert((stack->cursor_count == 0) == 
         (stack->tail_page == &stack->first && stack->tail_page->sp == 0), 
-            ECS_LEAK_DETECTED, NULL);
+            ECS_LEAK_DETECTED, flecs_stack_leak_msg);
 }
 
 void flecs_stack_reset(
     ecs_stack_t *stack)
 {
-    ecs_dbg_assert(stack->cursor_count == 0, ECS_LEAK_DETECTED, NULL);
+    ecs_dbg_assert(stack->cursor_count == 0, ECS_LEAK_DETECTED, 
+        flecs_stack_leak_msg);
     stack->tail_page = &stack->first;
     stack->first.sp = 0;
     stack->tail_cursor = NULL;
@@ -32184,9 +32212,12 @@ void flecs_stack_fini(
     ecs_stack_t *stack)
 {
     ecs_stack_page_t *next, *cur = &stack->first;
-    ecs_dbg_assert(stack->cursor_count == 0, ECS_LEAK_DETECTED, NULL);
-    ecs_assert(stack->tail_page == &stack->first, ECS_LEAK_DETECTED, NULL);
-    ecs_assert(stack->tail_page->sp == 0, ECS_LEAK_DETECTED, NULL);
+    ecs_dbg_assert(stack->cursor_count == 0, ECS_LEAK_DETECTED, 
+        flecs_stack_leak_msg);
+    ecs_assert(stack->tail_page == &stack->first, ECS_LEAK_DETECTED, 
+        flecs_stack_leak_msg);
+    ecs_assert(stack->tail_page->sp == 0, ECS_LEAK_DETECTED, 
+        flecs_stack_leak_msg);
 
     do {
         next = cur->next;
@@ -32681,10 +32712,11 @@ void ecs_strbuf_list_push(
     ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(list_open != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(separator != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(b->list_sp >= 0, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(b->list_sp >= 0, ECS_INVALID_OPERATION, 
+        "strbuf list is corrupt");
     b->list_sp ++;
     ecs_assert(b->list_sp < ECS_STRBUF_MAX_LIST_DEPTH, 
-        ECS_INVALID_OPERATION, NULL);
+        ECS_INVALID_OPERATION, "max depth for strbuf list stack exceeded");
 
     b->list_stack[b->list_sp].count = 0;
     b->list_stack[b->list_sp].separator = separator;
@@ -32705,7 +32737,8 @@ void ecs_strbuf_list_pop(
 {
     ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(list_close != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(b->list_sp > 0, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(b->list_sp > 0, ECS_INVALID_OPERATION, 
+        "pop called more often than push for strbuf list");
 
     b->list_sp --;
     
@@ -34685,9 +34718,10 @@ void flecs_query_cache_group_by(
     ecs_entity_t sort_component,
     ecs_group_by_action_t group_by)
 {   
-    /* Cannot change grouping once a query has been created */
-    ecs_check(cache->group_by == 0, ECS_INVALID_OPERATION, NULL);
-    ecs_check(cache->group_by_callback == 0, ECS_INVALID_OPERATION, NULL);
+    ecs_check(cache->group_by == 0, ECS_INVALID_OPERATION,
+        "query is already grouped");
+    ecs_check(cache->group_by_callback == 0, ECS_INVALID_OPERATION,
+        "query is already grouped");
 
     if (!group_by) {
         /* Builtin function that groups by relationship */
@@ -34869,7 +34903,8 @@ ecs_query_cache_t* flecs_query_cache_init(
     ecs_check(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_check(const_desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(const_desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(!(world->flags & EcsWorldFini), ECS_INVALID_OPERATION, NULL);
+    ecs_check(!(world->flags & EcsWorldFini), ECS_INVALID_OPERATION, 
+        "cannot create query during world fini");
 
     /* Create private version of desc to create the uncached query that will
      * populate the query cache. */
@@ -35093,7 +35128,8 @@ ecs_query_cache_table_match_t* flecs_query_test(
     if (first) {
         ecs_var_t *var = &ctx->vars[0];
         ecs_table_t *table = var->range.table;
-        ecs_assert(table != NULL, ECS_INVALID_OPERATION, NULL);
+        ecs_assert(table != NULL, ECS_INVALID_OPERATION, 
+            "the variable set on the iterator is missing a table");
 
         ecs_query_cache_table_t *qt = flecs_query_cache_get_table(
             impl->cache, table);
@@ -42676,7 +42712,7 @@ void flecs_query_iter_fini(
     ecs_iter_t *it)
 {
     ecs_query_iter_t *qit = &it->priv_.iter.query;
-    ecs_assert(qit->query != NULL, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(qit->query != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_poly_assert(qit->query, ecs_query_t);
     int32_t op_count = flecs_query_impl(qit->query)->op_count;
     int32_t var_count = flecs_query_impl(qit->query)->var_count;
@@ -44762,7 +44798,8 @@ bool flecs_query_trivial_test(
         int32_t t, term_count = impl->pub.term_count;
 
         ecs_table_t *table = it->table;
-        ecs_assert(table != NULL, ECS_INVALID_OPERATION, NULL);
+        ecs_assert(table != NULL, ECS_INVALID_OPERATION,
+            "the variable set on the iterator is missing a table");
 
         for (t = 0; t < term_count; t ++) {
             if (!(term_set & (1llu << t))) {
@@ -50187,7 +50224,8 @@ void ecs_table_unlock(
     if (table) {
         if (ecs_poly_is(world, ecs_world_t) && !(world->flags & EcsWorldReadonly)) {
             table->_->lock --;
-            ecs_assert(table->_->lock >= 0, ECS_INVALID_OPERATION, NULL);
+            ecs_assert(table->_->lock >= 0, ECS_INVALID_OPERATION, 
+                "table_unlock called more often than table_lock");
         }
     }
 }
@@ -54440,7 +54478,8 @@ int ecs_vars_pop(
     ecs_vars_t *vars)
 {
     ecs_expr_var_scope_t *scope = vars->cur;
-    ecs_check(scope != &vars->root, ECS_INVALID_OPERATION, NULL);
+    ecs_check(scope != &vars->root, ECS_INVALID_OPERATION,
+        "cannot pop the root frame");
     vars->cur = scope->parent;
     flecs_expr_var_scope_fini(vars->world, scope);
     flecs_free_t(&vars->world->allocator, ecs_expr_var_scope_t, scope);
@@ -56797,13 +56836,20 @@ int json_ser_custom_type(
     ecs_strbuf_t *str)
 {
     const EcsOpaque *ct = ecs_get(world, op->type, EcsOpaque);
-    ecs_assert(ct != NULL, ECS_INVALID_OPERATION, NULL);
-    ecs_assert(ct->as_type != 0, ECS_INVALID_OPERATION, NULL);
-    ecs_assert(ct->serialize != NULL, ECS_INVALID_OPERATION, 
-        ecs_get_name(world, op->type));
+    ecs_assert(ct != NULL, ECS_INVALID_OPERATION, 
+        "entity %s in opaque type serializer instruction is not an opaque type",
+            ecs_get_name(world, op->type));
+    ecs_assert(ct->as_type != 0, ECS_INVALID_OPERATION, 
+        "opaque type %s has not populated as_type field",
+            ecs_get_name(world, op->type));
+    ecs_assert(ct->serialize != NULL, ECS_INVALID_OPERATION,
+        "opaque type %s does not have serialize interface", 
+            ecs_get_name(world, op->type));
 
     const EcsType *pt = ecs_get(world, ct->as_type, EcsType);
-    ecs_assert(pt != NULL, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(pt != NULL, ECS_INVALID_OPERATION, 
+        "opaque type %s is missing flecs.meta.Type component",
+            ecs_get_name(world, op->type));
 
     ecs_type_kind_t kind = pt->kind;
     bool is_collection = false;
@@ -61805,7 +61851,8 @@ static
 ecs_meta_type_op_t* flecs_meta_cursor_get_op(
     ecs_meta_scope_t *scope)
 {
-    ecs_assert(scope->ops != NULL, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(scope->ops != NULL, ECS_INVALID_OPERATION, 
+        "type serializer is missing instructions");
     return &scope->ops[scope->op_cur];
 }
 
@@ -62636,7 +62683,9 @@ int ecs_meta_set_char(
     cases_T_signed(ptr, value, ecs_meta_bounds_signed);
     case EcsOpOpaque: {
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
-        ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, NULL);
+        ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, 
+            "entity %s is not an opaque type but serializer thinks so",
+                ecs_get_name(cursor->world, op->type));
         if (opaque->assign_char) { /* preferred operation */
             opaque->assign_char(ptr, value);
             break;
@@ -62693,7 +62742,9 @@ int ecs_meta_set_int(
     cases_T_float(ptr, value);
     case EcsOpOpaque: {
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
-        ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, NULL);
+        ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, 
+            "entity %s is not an opaque type but serializer thinks so",
+                ecs_get_name(cursor->world, op->type));
         if (opaque->assign_int) { /* preferred operation */
             opaque->assign_int(ptr, value);
             break;
@@ -62744,7 +62795,9 @@ int ecs_meta_set_uint(
     cases_T_float(ptr, value);
     case EcsOpOpaque: {
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
-        ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, NULL);
+        ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, 
+            "entity %s is not an opaque type but serializer thinks so",
+                ecs_get_name(cursor->world, op->type));
         if (opaque->assign_uint) { /* preferred operation */
             opaque->assign_uint(ptr, value);
             break;
@@ -62800,7 +62853,9 @@ int ecs_meta_set_float(
     cases_T_float(ptr, value);
     case EcsOpOpaque: {
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
-        ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, NULL);
+        ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, 
+            "entity %s is not an opaque type but serializer thinks so",
+                ecs_get_name(cursor->world, op->type));
         if (opaque->assign_float) { /* preferred operation */
             opaque->assign_float(ptr, value);
             break;
@@ -63107,7 +63162,9 @@ int ecs_meta_set_string(
         goto error;
     case EcsOpOpaque: {
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
-        ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, NULL);
+        ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, 
+            "entity %s is not an opaque type but serializer thinks so",
+                ecs_get_name(cursor->world, op->type));
         if (opaque->assign_string) { /* preferred */
             opaque->assign_string(ptr, value);
             break;
@@ -66912,7 +66969,8 @@ bool flecs_pipeline_update(
     bool start_of_frame)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, NULL);
+    ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, 
+        "cannot update pipeline while world is in readonly mode");
 
     /* If any entity mutations happened that could have affected query matching
      * notify appropriate queries so caches are up to date. This includes the
@@ -67020,7 +67078,7 @@ void flecs_run_pipeline(
     ecs_pipeline_state_t *pq,
     ecs_ftime_t delta_time)
 {
-    ecs_assert(world != NULL, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(pq != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(pq->query != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_poly_assert(world, ecs_stage_t);
@@ -67030,7 +67088,8 @@ void flecs_run_pipeline(
     int32_t stage_count = ecs_get_stage_count(world);
     bool multi_threaded = world->worker_cond != 0;
 
-    ecs_assert(!stage_index, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(!stage_index, ECS_INVALID_OPERATION, 
+        "cannot run pipeline on stage");
 
     // Update the pipeline the workers will execute
     world->pq = pq;
@@ -67146,7 +67205,8 @@ void flecs_run_startup_systems(
     ecs_log_push_2();
     ecs_assert(start_pip != 0, ECS_INTERNAL_ERROR, NULL);
     const EcsPipeline *p = ecs_get(world, start_pip, EcsPipeline);
-    ecs_check(p != NULL, ECS_INVALID_OPERATION, NULL);
+    ecs_check(p != NULL, ECS_INVALID_OPERATION, 
+        "pipeline entity is missing flecs.pipeline.Pipeline component");
     flecs_workers_progress(world, p->state, 0);
     ecs_log_pop_2();
 
@@ -67181,7 +67241,8 @@ bool ecs_progress(
     ecs_dbg_3("#[bold]progress#[reset](dt = %.2f)", (double)delta_time);
     ecs_log_push_3();
     const EcsPipeline *p = ecs_get(world, world->pipeline, EcsPipeline);
-    ecs_check(p != NULL, ECS_INVALID_OPERATION, NULL);
+    ecs_check(p != NULL, ECS_INVALID_OPERATION,
+        "pipeline entity is missing flecs.pipeline.Pipeline component");
     flecs_workers_progress(world, p->state, delta_time);
     ecs_log_pop_3();
 
@@ -67599,7 +67660,8 @@ void flecs_workers_progress(
     ecs_ftime_t delta_time)
 {
     ecs_poly_assert(world, ecs_world_t);
-    ecs_assert(!ecs_is_deferred(world), ECS_INVALID_OPERATION, NULL);
+    ecs_assert(!ecs_is_deferred(world), ECS_INVALID_OPERATION, 
+        "cannot call progress while world is deferred");
 
     /* Make sure workers are running and ready */
     flecs_wait_for_workers(world);

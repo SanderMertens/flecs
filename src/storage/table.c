@@ -2117,7 +2117,8 @@ void ecs_table_unlock(
     if (table) {
         if (ecs_poly_is(world, ecs_world_t) && !(world->flags & EcsWorldReadonly)) {
             table->_->lock --;
-            ecs_assert(table->_->lock >= 0, ECS_INVALID_OPERATION, NULL);
+            ecs_assert(table->_->lock >= 0, ECS_INVALID_OPERATION, 
+                "table_unlock called more often than table_lock");
         }
     }
 }
