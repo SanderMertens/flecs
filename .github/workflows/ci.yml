@@ -473,8 +473,8 @@ jobs:
       - name: build flecs
         run: bake --strict
 
-      - name: test api
-        run: bake run test/api -- -j 8
+      - name: test core
+        run: bake run test/core -- -j 8
 
       - name: test query
         run: bake run test/query -- -j 8
@@ -601,8 +601,8 @@ jobs:
       - name: build flecs
         run: bake/bake
 
-      - name: test api
-        run: bake/bake run test\api -- -j 8
+      - name: test core
+        run: bake/bake run test\core -- -j 8
 
       - name: test addons
         run: bake/bake run test\addons -- -j 8
@@ -655,8 +655,8 @@ jobs:
       - name: build flecs
         run: bake/bake --strict
 
-      - name: test api
-        run: bake/bake run test/api -- -j 8
+      - name: test core
+        run: bake/bake run test/core -- -j 8
 
       - name: test query
         run: bake/bake run test/query -- -j 8
@@ -673,7 +673,7 @@ jobs:
       - name: test c++
         run: bake/bake run test/cpp_api -- -j 8
 
-  test-sanitized-api:
+  test-sanitized-core:
     needs: [ build-linux ]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
@@ -695,7 +695,7 @@ jobs:
 
       - name: run tests
         run: |
-          bake run test/api --cfg sanitize -- -j 8
+          bake run test/core --cfg sanitize -- -j 8
 
   test-sanitized-query:
     needs: [ build-linux ]
