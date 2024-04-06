@@ -1803,7 +1803,7 @@ void System_ensure_instanced_w_each(void) {
 
     auto q = sys.query();
     const ecs_query_t *c_f = q;
-    test_assert(c_f->flags & EcsIterIsInstanced);
+    test_assert(c_f->flags & EcsQueryIsInstanced);
 
     test_int(count, 0);
     sys.run();

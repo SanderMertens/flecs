@@ -62,7 +62,7 @@ int main(int, char *[]) {
     world.id<flecs::bitmask_constant_t>();
 
     world.id<flecs::Type>();
-    world.id<flecs::MetaTypeSerialized>();
+    world.id<flecs::TypeSerialized>();
     world.id<flecs::Primitive>();
     world.id<flecs::Enum>();
     world.id<flecs::Bitmask>();
