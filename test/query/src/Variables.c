@@ -5527,10 +5527,10 @@ void Variables_1_set_src_this_is_true(void) {
     });
     test_assert(q != NULL);
 
-    /* ecs_entity_t e1 = */ ecs_set(ecs, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(ecs, 0, Position, {20, 30});
-    /* ecs_entity_t e3 = */ ecs_set(ecs, 0, Position, {30, 40});
-    ecs_entity_t e4 = ecs_set(ecs, 0, Velocity, {20, 30});
+    /* ecs_entity_t e1 = */ ecs_insert(ecs, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(ecs, ecs_value(Position, {20, 30}));
+    /* ecs_entity_t e3 = */ ecs_insert(ecs, ecs_value(Position, {30, 40}));
+    ecs_entity_t e4 = ecs_insert(ecs, ecs_value(Velocity, {20, 30}));
 
     ecs_iter_t it = ecs_query_iter(ecs, q);
     ecs_iter_set_var(&it, 0, e2);
@@ -5562,9 +5562,9 @@ void Variables_2_set_src_this_w_wildcard(void) {
     });
     test_assert(q != NULL);
 
-    ecs_entity_t e1 = ecs_set(ecs, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(ecs, 0, Position, {20, 30});
-    ecs_entity_t e3 = ecs_set(ecs, 0, Position, {30, 40});
+    ecs_entity_t e1 = ecs_insert(ecs, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(ecs, ecs_value(Position, {20, 30}));
+    ecs_entity_t e3 = ecs_insert(ecs, ecs_value(Position, {30, 40}));
 
     ecs_add_pair(ecs, e1, Likes, Apples);
     ecs_add_pair(ecs, e2, Likes, Apples);
@@ -5687,9 +5687,9 @@ void Variables_3_set_src_this_w_uncacheable_tag_component_tag(void) {
 
     ecs_entity_t p1 = ecs_new(ecs);
     ecs_entity_t p2 = ecs_new(ecs);
-    ecs_entity_t e1 = ecs_set(ecs, 0, Position, {11, 21});
-    ecs_entity_t e2 = ecs_set(ecs, 0, Position, {12, 22});
-    ecs_entity_t e3 = ecs_set(ecs, 0, Position, {13, 23});
+    ecs_entity_t e1 = ecs_insert(ecs, ecs_value(Position, {11, 21}));
+    ecs_entity_t e2 = ecs_insert(ecs, ecs_value(Position, {12, 22}));
+    ecs_entity_t e3 = ecs_insert(ecs, ecs_value(Position, {13, 23}));
     ecs_add(ecs, e1, TagB);
     ecs_add(ecs, e2, TagB);
     ecs_add(ecs, e3, TagB);
@@ -5781,9 +5781,9 @@ void Variables_3_set_src_this_w_uncacheable_tag_component_component(void) {
 
     ecs_entity_t p1 = ecs_new(ecs);
     ecs_entity_t p2 = ecs_new(ecs);
-    ecs_entity_t e1 = ecs_set(ecs, 0, Position, {11, 21});
-    ecs_entity_t e2 = ecs_set(ecs, 0, Position, {12, 22});
-    ecs_entity_t e3 = ecs_set(ecs, 0, Position, {13, 23});
+    ecs_entity_t e1 = ecs_insert(ecs, ecs_value(Position, {11, 21}));
+    ecs_entity_t e2 = ecs_insert(ecs, ecs_value(Position, {12, 22}));
+    ecs_entity_t e3 = ecs_insert(ecs, ecs_value(Position, {13, 23}));
     ecs_set(ecs, e1, Velocity, {1, 1});
     ecs_set(ecs, e2, Velocity, {2, 2});
     ecs_set(ecs, e3, Velocity, {3, 3});
@@ -5969,9 +5969,9 @@ void Variables_3_set_src_this_w_component_uncacheable_tag_tag(void) {
 
     ecs_entity_t p1 = ecs_new(ecs);
     ecs_entity_t p2 = ecs_new(ecs);
-    ecs_entity_t e1 = ecs_set(ecs, 0, Position, {11, 21});
-    ecs_entity_t e2 = ecs_set(ecs, 0, Position, {12, 22});
-    ecs_entity_t e3 = ecs_set(ecs, 0, Position, {13, 23});
+    ecs_entity_t e1 = ecs_insert(ecs, ecs_value(Position, {11, 21}));
+    ecs_entity_t e2 = ecs_insert(ecs, ecs_value(Position, {12, 22}));
+    ecs_entity_t e3 = ecs_insert(ecs, ecs_value(Position, {13, 23}));
     ecs_add(ecs, e1, TagB);
     ecs_add(ecs, e2, TagB);
     ecs_add(ecs, e3, TagB);
@@ -6063,9 +6063,9 @@ void Variables_3_set_src_this_w_component_uncacheable_tag_component(void) {
 
     ecs_entity_t p1 = ecs_new(ecs);
     ecs_entity_t p2 = ecs_new(ecs);
-    ecs_entity_t e1 = ecs_set(ecs, 0, Position, {11, 21});
-    ecs_entity_t e2 = ecs_set(ecs, 0, Position, {12, 22});
-    ecs_entity_t e3 = ecs_set(ecs, 0, Position, {13, 23});
+    ecs_entity_t e1 = ecs_insert(ecs, ecs_value(Position, {11, 21}));
+    ecs_entity_t e2 = ecs_insert(ecs, ecs_value(Position, {12, 22}));
+    ecs_entity_t e3 = ecs_insert(ecs, ecs_value(Position, {13, 23}));
     ecs_set(ecs, e1, Velocity, {1, 1});
     ecs_set(ecs, e2, Velocity, {2, 2});
     ecs_set(ecs, e3, Velocity, {3, 3});
@@ -6251,9 +6251,9 @@ void Variables_3_set_src_this_w_component_tag_uncacheable_tag(void) {
 
     ecs_entity_t p1 = ecs_new(ecs);
     ecs_entity_t p2 = ecs_new(ecs);
-    ecs_entity_t e1 = ecs_set(ecs, 0, Position, {11, 21});
-    ecs_entity_t e2 = ecs_set(ecs, 0, Position, {12, 22});
-    ecs_entity_t e3 = ecs_set(ecs, 0, Position, {13, 23});
+    ecs_entity_t e1 = ecs_insert(ecs, ecs_value(Position, {11, 21}));
+    ecs_entity_t e2 = ecs_insert(ecs, ecs_value(Position, {12, 22}));
+    ecs_entity_t e3 = ecs_insert(ecs, ecs_value(Position, {13, 23}));
     ecs_add(ecs, e1, TagB);
     ecs_add(ecs, e2, TagB);
     ecs_add(ecs, e3, TagB);
@@ -6345,9 +6345,9 @@ void Variables_3_set_src_this_w_component_component_uncacheable_tag(void) {
 
     ecs_entity_t p1 = ecs_new(ecs);
     ecs_entity_t p2 = ecs_new(ecs);
-    ecs_entity_t e1 = ecs_set(ecs, 0, Position, {11, 21});
-    ecs_entity_t e2 = ecs_set(ecs, 0, Position, {12, 22});
-    ecs_entity_t e3 = ecs_set(ecs, 0, Position, {13, 23});
+    ecs_entity_t e1 = ecs_insert(ecs, ecs_value(Position, {11, 21}));
+    ecs_entity_t e2 = ecs_insert(ecs, ecs_value(Position, {12, 22}));
+    ecs_entity_t e3 = ecs_insert(ecs, ecs_value(Position, {13, 23}));
     ecs_set(ecs, e1, Velocity, {1, 1});
     ecs_set(ecs, e2, Velocity, {2, 2});
     ecs_set(ecs, e3, Velocity, {3, 3});
@@ -6550,9 +6550,9 @@ void Variables_3_set_src_this_w_uncacheable_component_component_tag(void) {
 
     ecs_entity_t p1 = ecs_new(ecs);
     ecs_entity_t p2 = ecs_new(ecs);
-    ecs_entity_t e1 = ecs_set(ecs, 0, Position, {11, 21});
-    ecs_entity_t e2 = ecs_set(ecs, 0, Position, {12, 22});
-    ecs_entity_t e3 = ecs_set(ecs, 0, Position, {13, 23});
+    ecs_entity_t e1 = ecs_insert(ecs, ecs_value(Position, {11, 21}));
+    ecs_entity_t e2 = ecs_insert(ecs, ecs_value(Position, {12, 22}));
+    ecs_entity_t e3 = ecs_insert(ecs, ecs_value(Position, {13, 23}));
     ecs_add(ecs, e1, TagB);
     ecs_add(ecs, e2, TagB);
     ecs_add(ecs, e3, TagB);
@@ -6660,9 +6660,9 @@ void Variables_3_set_src_this_w_uncacheable_component_component_component(void) 
 
     ecs_entity_t p1 = ecs_new(ecs);
     ecs_entity_t p2 = ecs_new(ecs);
-    ecs_entity_t e1 = ecs_set(ecs, 0, Position, {11, 21});
-    ecs_entity_t e2 = ecs_set(ecs, 0, Position, {12, 22});
-    ecs_entity_t e3 = ecs_set(ecs, 0, Position, {13, 23});
+    ecs_entity_t e1 = ecs_insert(ecs, ecs_value(Position, {11, 21}));
+    ecs_entity_t e2 = ecs_insert(ecs, ecs_value(Position, {12, 22}));
+    ecs_entity_t e3 = ecs_insert(ecs, ecs_value(Position, {13, 23}));
     ecs_set(ecs, e1, Velocity, {1, 1});
     ecs_set(ecs, e2, Velocity, {2, 2});
     ecs_set(ecs, e3, Velocity, {3, 3});
@@ -6880,9 +6880,9 @@ void Variables_3_set_src_this_w_component_uncacheable_component_tag(void) {
 
     ecs_entity_t p1 = ecs_new(ecs);
     ecs_entity_t p2 = ecs_new(ecs);
-    ecs_entity_t e1 = ecs_set(ecs, 0, Position, {11, 21});
-    ecs_entity_t e2 = ecs_set(ecs, 0, Position, {12, 22});
-    ecs_entity_t e3 = ecs_set(ecs, 0, Position, {13, 23});
+    ecs_entity_t e1 = ecs_insert(ecs, ecs_value(Position, {11, 21}));
+    ecs_entity_t e2 = ecs_insert(ecs, ecs_value(Position, {12, 22}));
+    ecs_entity_t e3 = ecs_insert(ecs, ecs_value(Position, {13, 23}));
     ecs_add(ecs, e1, TagB);
     ecs_add(ecs, e2, TagB);
     ecs_add(ecs, e3, TagB);
@@ -6990,9 +6990,9 @@ void Variables_3_set_src_this_w_component_uncacheable_component_component(void) 
 
     ecs_entity_t p1 = ecs_new(ecs);
     ecs_entity_t p2 = ecs_new(ecs);
-    ecs_entity_t e1 = ecs_set(ecs, 0, Position, {11, 21});
-    ecs_entity_t e2 = ecs_set(ecs, 0, Position, {12, 22});
-    ecs_entity_t e3 = ecs_set(ecs, 0, Position, {13, 23});
+    ecs_entity_t e1 = ecs_insert(ecs, ecs_value(Position, {11, 21}));
+    ecs_entity_t e2 = ecs_insert(ecs, ecs_value(Position, {12, 22}));
+    ecs_entity_t e3 = ecs_insert(ecs, ecs_value(Position, {13, 23}));
     ecs_set(ecs, e1, Velocity, {1, 1});
     ecs_set(ecs, e2, Velocity, {2, 2});
     ecs_set(ecs, e3, Velocity, {3, 3});
@@ -7210,9 +7210,9 @@ void Variables_3_set_src_this_w_component_tag_uncacheable_component(void) {
 
     ecs_entity_t p1 = ecs_new(ecs);
     ecs_entity_t p2 = ecs_new(ecs);
-    ecs_entity_t e1 = ecs_set(ecs, 0, Position, {11, 21});
-    ecs_entity_t e2 = ecs_set(ecs, 0, Position, {12, 22});
-    ecs_entity_t e3 = ecs_set(ecs, 0, Position, {13, 23});
+    ecs_entity_t e1 = ecs_insert(ecs, ecs_value(Position, {11, 21}));
+    ecs_entity_t e2 = ecs_insert(ecs, ecs_value(Position, {12, 22}));
+    ecs_entity_t e3 = ecs_insert(ecs, ecs_value(Position, {13, 23}));
     ecs_add(ecs, e1, TagB);
     ecs_add(ecs, e2, TagB);
     ecs_add(ecs, e3, TagB);
@@ -7320,9 +7320,9 @@ void Variables_3_set_src_this_w_component_component_uncacheable_component(void) 
 
     ecs_entity_t p1 = ecs_new(ecs);
     ecs_entity_t p2 = ecs_new(ecs);
-    ecs_entity_t e1 = ecs_set(ecs, 0, Position, {11, 21});
-    ecs_entity_t e2 = ecs_set(ecs, 0, Position, {12, 22});
-    ecs_entity_t e3 = ecs_set(ecs, 0, Position, {13, 23});
+    ecs_entity_t e1 = ecs_insert(ecs, ecs_value(Position, {11, 21}));
+    ecs_entity_t e2 = ecs_insert(ecs, ecs_value(Position, {12, 22}));
+    ecs_entity_t e3 = ecs_insert(ecs, ecs_value(Position, {13, 23}));
     ecs_set(ecs, e1, Velocity, {1, 1});
     ecs_set(ecs, e2, Velocity, {2, 2});
     ecs_set(ecs, e3, Velocity, {3, 3});

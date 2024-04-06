@@ -2167,9 +2167,9 @@ void Commands_defer_while_suspend_readonly(void) {
      * after they have been registered */
     ECS_COMPONENT(s, Velocity);
 
-    ecs_entity_t e = 
-    ecs_set(s, 0, Position, {10, 20});
-    ecs_set(s, e, Velocity, {1, 2});
+    ecs_entity_t e = ecs_insert(world, 
+        ecs_value(Position, {10, 20}),
+        ecs_value(Velocity, {1, 2}));
     test_assert(!ecs_has(s, e, Position));
     test_assert(!ecs_has(s, e, Velocity));
 
@@ -2210,16 +2210,16 @@ void Commands_defer_while_suspend_readonly_w_existing_commands(void) {
 
     ecs_readonly_begin(world, false);
 
-    ecs_entity_t e1 = ecs_set(s, 0, Position, {10, 20});
+    ecs_entity_t e1 = ecs_insert(s, ecs_value(Position, {10, 20}));
     test_assert(!ecs_has(s, e1, Position));
 
     /* Component creation suspends readonly mode so that they can be used right
      * after they have been registered */
     ECS_COMPONENT(s, Velocity);
 
-    ecs_entity_t e2 = 
-    ecs_set(s, 0, Position, {20, 30});
-    ecs_set(s, e2, Velocity, {1, 2});
+    ecs_entity_t e2 = ecs_insert(world,
+        ecs_value(Position, {20, 30}),
+        ecs_value(Velocity, {1, 2}));
     test_assert(!ecs_has(s, e2, Position));
     test_assert(!ecs_has(s, e2, Velocity));
 

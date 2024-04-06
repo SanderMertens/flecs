@@ -574,9 +574,9 @@ void ObserverOnSet_remove_from_current_in_on_set(void) {
     ECS_ENTITY(world, e2, Position, Velocity);
     ECS_ENTITY(world, e3, Position, Velocity);
 
-    e1 = ecs_set(world, e1, Position, {10, 20});
-    e2 = ecs_set(world, e2, Position, {11, 21});
-    e3 = ecs_set(world, e3, Position, {12, 22});
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_set(world, e2, Position, {11, 21});
+    ecs_set(world, e3, Position, {12, 22});
 
     test_assert( ecs_has(world, e1, Position));
     test_assert( ecs_has(world, e2, Position));
@@ -616,9 +616,9 @@ void ObserverOnSet_remove_set_component_in_on_set(void) {
     ECS_ENTITY(world, e2, Position, Velocity);
     ECS_ENTITY(world, e3, Position, Velocity);
 
-    e1 = ecs_set(world, e1, Position, {10, 20});
-    e2 = ecs_set(world, e2, Position, {11, 21});
-    e3 = ecs_set(world, e3, Position, {12, 22});
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_set(world, e2, Position, {11, 21});
+    ecs_set(world, e3, Position, {12, 22});
 
     test_assert( !ecs_has(world, e1, Position));
     test_assert( !ecs_has(world, e2, Position));

@@ -2887,10 +2887,9 @@ void ecs_modified_id(
  * @param id The id of the component to set.
  * @param size The size of the pointed-to value.
  * @param ptr The pointer to the value.
- * @return The entity. A new entity if no entity was provided.
  */
 FLECS_API
-ecs_entity_t ecs_set_id(
+void ecs_set_id(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id,

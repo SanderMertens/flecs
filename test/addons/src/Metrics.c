@@ -2144,7 +2144,7 @@ void Metrics_pair_member_rel_type(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_set_pair(world, 0, Position, Foo, {10, 20});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value_pair(Position, Foo, {10, 20}));
     ecs_set_pair(world, e1, Position, Bar, {1, 2});
 
     ecs_progress(world, 0);
@@ -2192,8 +2192,9 @@ void Metrics_pair_member_tgt_type(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_set_pair_second(world, 0, Foo, Position, {10, 20});
-    ecs_set_pair_second(world, e1, Bar, Position, {1, 2});
+    ecs_entity_t e1 = ecs_insert(world, 
+        ecs_value_pair_2nd(Foo, Position, {10, 20}),
+        ecs_value_pair_2nd(Bar, Position, {1, 2}));
 
     ecs_progress(world, 0);
     
@@ -2258,7 +2259,7 @@ void Metrics_pair_dotmember_rel_type(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_set_pair(world, 0, Position, Foo, {0, {10, 20}});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value_pair(Position, Foo, {0, {10, 20}}));
     ecs_set_pair(world, e1, Position, Bar, {0, {1, 2}});
 
     ecs_progress(world, 0);
@@ -2324,8 +2325,9 @@ void Metrics_pair_dotmember_tgt_type(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_set_pair_second(world, 0, Foo, Position, {0, {10, 20}});
-    ecs_set_pair_second(world, e1, Bar, Position, {0, {1, 2}});
+    ecs_entity_t e1 = ecs_insert(world, 
+        ecs_value_pair_2nd(Foo, Position, {0, {10, 20}}),
+        ecs_value_pair_2nd(Bar, Position, {0, {1, 2}}));
 
     ecs_progress(world, 0);
     
@@ -2372,7 +2374,7 @@ void Metrics_pair_member_counter_increment(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_set_pair(world, 0, Position, Foo, {10, 20});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value_pair(Position, Foo, {10, 20}));
     ecs_set_pair(world, e1, Position, Bar, {1, 2});
 
     ecs_progress(world, 1);

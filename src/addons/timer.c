@@ -114,7 +114,11 @@ ecs_entity_t ecs_set_timeout(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    timer = ecs_set(world, timer, EcsTimer, {
+    if (!timer) {
+        timer = ecs_entity(world, {0});
+    }
+
+    ecs_set(world, timer, EcsTimer, {
         .timeout = timeout,
         .single_shot = true,
         .active = true
@@ -229,7 +233,11 @@ ecs_entity_t ecs_set_rate(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    filter = ecs_set(world, filter, EcsRateFilter, {
+    if (!filter) {
+        filter = ecs_entity(world, {0});
+    }
+
+    ecs_set(world, filter, EcsRateFilter, {
         .rate = rate,
         .src = source
     });

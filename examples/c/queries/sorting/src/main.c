@@ -37,11 +37,11 @@ int main(int argc, char *argv[]) {
 
     ECS_COMPONENT(ecs, Position);
 
-    ecs_entity_t e = ecs_set(ecs, 0, Position, {1, 0});
-    ecs_set(ecs, 0, Position, {6, 0});
-    ecs_set(ecs, 0, Position, {2, 0});
-    ecs_set(ecs, 0, Position, {5, 0});
-    ecs_set(ecs, 0, Position, {4, 0});
+    ecs_entity_t e = ecs_insert(ecs, ecs_value(Position, {1, 0}));
+    ecs_insert(ecs, ecs_value(Position, {6, 0}));
+    ecs_insert(ecs, ecs_value(Position, {2, 0}));
+    ecs_insert(ecs, ecs_value(Position, {5, 0}));
+    ecs_insert(ecs, ecs_value(Position, {4, 0}));
 
     // Create a sorted system
     ecs_entity_t sys = ecs_system(ecs, {

@@ -6872,7 +6872,7 @@ void Basic_inout_none_singleton(void) {
     
     ecs_singleton_set(ecs, Position, {10, 20});
 
-    ecs_entity_t e = ecs_set(ecs, 0, Velocity, {20, 30});
+    ecs_entity_t e = ecs_insert(ecs, ecs_value(Velocity, {20, 30}));
 
     ecs_query_t *q = ecs_query(ecs, {
         .terms = {
@@ -6910,7 +6910,7 @@ void Basic_inout_none_singleton_w_or(void) {
 
     ecs_singleton_set(ecs, Position, {10, 20});
 
-    ecs_entity_t e = ecs_set(ecs, 0, Velocity, {20, 30});
+    ecs_entity_t e = ecs_insert(ecs, ecs_value(Velocity, {20, 30}));
 
     ecs_query_t *q = ecs_query(ecs, {
         .terms = {
@@ -6947,7 +6947,7 @@ void Basic_inout_none_component_w_or(void) {
     ECS_COMPONENT(ecs, Velocity);
     ECS_COMPONENT(ecs, Mass);
 
-    ecs_entity_t e = ecs_set(ecs, 0, Velocity, {20, 30});
+    ecs_entity_t e = ecs_insert(ecs, ecs_value(Velocity, {20, 30}));
     ecs_set(ecs, e, Position, {10, 20});
 
     ecs_query_t *q = ecs_query(ecs, {

@@ -39,16 +39,16 @@ void Pairs_type_w_one_pair(void) {
     ECS_SYSTEM(world, ProcessPairs, EcsOnUpdate, (Rel, *));
 
     /* Ensure that pair is matched against different components */
-    ecs_entity_t e1 = ecs_set_pair(world, 0, Rel, ecs_id(Position), {
+    ecs_entity_t e1 = ecs_insert(world, ecs_value_pair(Rel, ecs_id(Position), {
         .value = 10
-    });
+    }));
 
     test_assert(e1 != 0);
     test_assert( ecs_has_pair(world, e1, ecs_id(Rel), ecs_id(Position)));
 
-    ecs_entity_t e2 = ecs_set_pair(world, 0, Rel, ecs_id(Velocity), {
+    ecs_entity_t e2 = ecs_insert(world, ecs_value_pair(Rel, ecs_id(Velocity), {
         .value = 20
-    });
+    }));
     test_assert(e2 != 0);
     test_assert( ecs_has_pair(world, e2, ecs_id(Rel), ecs_id(Velocity)));
 
@@ -199,9 +199,9 @@ void Pairs_remove_pair(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Rel);
 
-    ecs_entity_t e1 = ecs_set_pair(world, 0, Rel, ecs_id(Position), {
+    ecs_entity_t e1 = ecs_insert(world, ecs_value_pair(Rel, ecs_id(Position), {
         .value = 10
-    });  
+    }));
     test_assert(e1 != 0);
     test_assert( ecs_has_pair(world, e1, ecs_id(Rel), ecs_id(Position)));
 
@@ -293,16 +293,16 @@ void Pairs_add_tag_pair_for_component(void) {
 
     ECS_SYSTEM(world, ProcessValuePairs, EcsOnUpdate, (Rel, *));
 
-    ecs_entity_t e1 = ecs_set_pair_object(world, 0, Rel, Position, {
+    ecs_entity_t e1 = ecs_insert(world, ecs_value_pair_2nd(Rel, Position, {
         .x = 1,
         .y = 2
-    });
+    }));
     test_assert( ecs_has_pair(world, e1, Rel, ecs_id(Position)));
 
-    ecs_entity_t e2 = ecs_set_pair_object(world, 0, Rel, Velocity, {
+    ecs_entity_t e2 = ecs_insert(world, ecs_value_pair_2nd(Rel, Velocity, {
         .x = 3,
         .y = 4
-    });
+    }));
     test_assert( ecs_has_pair(world, e2, Rel, ecs_id(Velocity)));
 
     Probe ctx = {0};
@@ -360,9 +360,9 @@ void Pairs_query_2_pairs(void) {
     ECS_SYSTEM(world, ProcessTwoPairs, EcsOnUpdate, (RelA, *), (RelB, *));
 
     /* Create entity with both RelA and RelB */
-    ecs_entity_t e1 = ecs_set_pair(world, 0, RelA, ecs_id(Position), {
+    ecs_entity_t e1 = ecs_insert(world, ecs_value_pair(RelA, ecs_id(Position), {
         .value = 1
-    });
+    }));
 
     ecs_set_pair(world, e1, RelB, ecs_id(Position), {
         .value = 2
@@ -372,9 +372,9 @@ void Pairs_query_2_pairs(void) {
     test_assert( ecs_has_pair(world, e1, ecs_id(RelB), ecs_id(Position)));
 
     /* Create entity with only RelA. Should not be matched with system */
-    ecs_entity_t e2 = ecs_set_pair(world, 0, RelA, ecs_id(Position), {
+    ecs_entity_t e2 = ecs_insert(world, ecs_value_pair(RelA, ecs_id(Position), {
         .value = 3
-    });
+    }));
     test_assert( ecs_has_pair(world, e2, ecs_id(RelA), ecs_id(Position)));
 
     /* Run system */
@@ -425,9 +425,9 @@ void Pairs_query_2_pairs_2_instances_per_type(void) {
     ECS_SYSTEM(world, ProcessTwoPairs, EcsOnUpdate, (RelA, *), (RelB, *));
 
     /* Create entity with both RelA and RelB, applied to two components*/
-    ecs_entity_t e1 = ecs_set_pair(world, 0, RelA, ecs_id(Position), {
+    ecs_entity_t e1 = ecs_insert(world, ecs_value_pair(RelA, ecs_id(Position), {
         .value = 1
-    });
+    }));
 
     ecs_set_pair(world, e1, RelB, ecs_id(Position), {
         .value = 2
@@ -1011,7 +1011,7 @@ void Pairs_set_object_w_zero_sized_rel_comp(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_set_pair_object(world, 0, r, Position, {10, 20});
+    ecs_entity_t e = ecs_insert(world, ecs_value_pair_2nd(r, Position, {10, 20}));
     
     const Position *p = ecs_get_pair_object(world, e, r, Position);
     test_assert(p != NULL);

@@ -3192,7 +3192,7 @@ void Observer_read_in_on_remove_after_add_other_w_not(void) {
         .ctx = &ctx
     });
 
-    ecs_entity_t e = ecs_set_pair(world, 0, Position, Tgt, { 10, 20 });
+    ecs_entity_t e = ecs_insert(world, ecs_value_pair(Position, Tgt, { 10, 20 }));
     test_int(ctx.invoked, 0);
 
     ecs_add(world, e, Tag);

@@ -3223,7 +3223,7 @@ error:
     return;
 }
 
-ecs_entity_t ecs_set_id(
+void ecs_set_id(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id,
@@ -3231,25 +3231,16 @@ ecs_entity_t ecs_set_id(
     const void *ptr)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(!entity || ecs_is_alive(world, entity), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_is_alive(world, entity), ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_id_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
-    if (!entity) {
-        entity = ecs_new(world);
-        ecs_entity_t scope = stage->scope;
-        if (scope) {
-            ecs_add_pair(world, entity, EcsChildOf, scope);
-        }
-    }
-
     /* Safe to cast away const: function won't modify if move arg is false */
     flecs_set_id_copy(world, stage, entity, id, size, 
         ECS_CONST_CAST(void*, ptr));
-    return entity;
 error:
-    return 0;
+    return;
 }
 
 #if defined(FLECS_DEBUG) || defined(FLECS_KEEP_ASSERT)

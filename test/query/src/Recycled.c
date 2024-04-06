@@ -279,8 +279,8 @@ void Recycled_recycled_component_id(void) {
     });
     test_assert(q != NULL);
 
-    ecs_entity_t e1 = ecs_set(ecs, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(ecs, 0, Position, {20, 30});
+    ecs_entity_t e1 = ecs_insert(ecs, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(ecs, ecs_value(Position, {20, 30}));
 
     ecs_iter_t it = ecs_query_iter(ecs, q);
     test_bool(true, ecs_query_next(&it));

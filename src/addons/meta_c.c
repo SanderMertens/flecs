@@ -485,7 +485,9 @@ ecs_entity_t meta_lookup_array(
 
     ecs_check(params.count <= INT32_MAX, ECS_INVALID_PARAMETER, NULL);
 
-    return ecs_set(world, e, EcsArray, { element_type, (int32_t)params.count });
+    ecs_set(world, e, EcsArray, { element_type, (int32_t)params.count });
+
+    return e;
 error:
     return 0;
 }
@@ -520,7 +522,9 @@ ecs_entity_t meta_lookup_vector(
         e = ecs_new(world);
     }
 
-    return ecs_set(world, e, EcsVector, { element_type });
+    ecs_set(world, e, EcsVector, { element_type });
+
+    return e;
 error:
     return 0;
 }

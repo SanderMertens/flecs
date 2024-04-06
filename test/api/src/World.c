@@ -156,8 +156,8 @@ void World_entity_range_out_of_range_check_disabled(void) {
     test_int(e, 5000);
 
     /* Validate that application does not abort when changing out of range */
-    ecs_entity_t e2 = ecs_set(world, 4999, Position, {10, 20});
-    test_int(e2, 4999);
+    ecs_entity_t e2 = 4999;
+    ecs_set(world, e2, Position, {10, 20});
     test_assert( ecs_has(world, e2, Position));
     
     const Position *p = ecs_get(world, e2, Position);

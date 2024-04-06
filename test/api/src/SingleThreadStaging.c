@@ -2021,7 +2021,7 @@ static
 void Set_velocity_on_new(ecs_iter_t *it) {
     int i;
     for (i = 0; i < it->count; i ++) {
-        ecs_set(it->world, 0, Velocity, {10, 20});
+        ecs_insert(it->world, ecs_value(Velocity, {10, 20}));
     }
 }
 

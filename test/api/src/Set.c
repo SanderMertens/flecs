@@ -494,12 +494,12 @@ void Set_get_mut_pair(void) {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Tgt);
 
-    ecs_entity_t e = ecs_set_pair(world, 0, Position, Tgt, {10, 20});
+    ecs_entity_t e = ecs_insert(world, ecs_value_pair(Position, Tgt, {10, 20}));
     Position *p = ecs_get_mut_pair(world, e, Position, Tgt);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
-    
+
     ecs_fini(world);
 }
 
@@ -509,7 +509,7 @@ void Set_get_mut_pair_second(void) {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Tgt);
 
-    ecs_entity_t e = ecs_set_pair_second(world, 0, Tgt, Position, {10, 20});
+    ecs_entity_t e = ecs_insert(world, ecs_value_pair_2nd(Tgt, Position, {10, 20}));
     Position *p = ecs_get_mut_pair_second(world, e, Tgt, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
