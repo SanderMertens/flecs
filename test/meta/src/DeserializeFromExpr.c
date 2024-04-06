@@ -5,7 +5,7 @@ void DeserializeFromExpr_bool(void) {
 
     bool value = false;
 
-    const char *ptr = ecs_parse_expr(world, "true", &ecs_value(ecs_bool_t, &value), NULL);
+    const char *ptr = ecs_parse_expr(world, "true", &ecs_value_ptr(ecs_bool_t, &value), NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');        
 
@@ -19,7 +19,7 @@ void DeserializeFromExpr_byte(void) {
 
     ecs_byte_t value = 0;
 
-    const char *ptr = ecs_parse_expr(world, "10", &ecs_value(ecs_byte_t, &value), NULL);
+    const char *ptr = ecs_parse_expr(world, "10", &ecs_value_ptr(ecs_byte_t, &value), NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');        
 
@@ -33,7 +33,7 @@ void DeserializeFromExpr_char(void) {
 
     ecs_char_t value = 0;
 
-    const char *ptr = ecs_parse_expr(world, "10", &ecs_value(ecs_char_t, &value), NULL);
+    const char *ptr = ecs_parse_expr(world, "10", &ecs_value_ptr(ecs_char_t, &value), NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');        
 
@@ -47,7 +47,7 @@ void DeserializeFromExpr_char_literal(void) {
 
     ecs_char_t value = 0;
 
-    const char *ptr = ecs_parse_expr(world, "\"a\"", &ecs_value(ecs_char_t, &value), NULL);
+    const char *ptr = ecs_parse_expr(world, "\"a\"", &ecs_value_ptr(ecs_char_t, &value), NULL);
     test_assert(ptr != NULL);
 
     test_int(value, 'a');
@@ -60,7 +60,7 @@ void DeserializeFromExpr_i8(void) {
 
     ecs_i8_t value = 0;
 
-    const char *ptr = ecs_parse_expr(world, "10", &ecs_value(ecs_i8_t, &value), NULL);
+    const char *ptr = ecs_parse_expr(world, "10", &ecs_value_ptr(ecs_i8_t, &value), NULL);
     test_assert(ptr != NULL);
 
     test_int(value, 10);
@@ -73,7 +73,7 @@ void DeserializeFromExpr_i16(void) {
 
     ecs_i16_t value = 0;
 
-    const char *ptr = ecs_parse_expr(world, "10", &ecs_value(ecs_i16_t, &value), NULL);
+    const char *ptr = ecs_parse_expr(world, "10", &ecs_value_ptr(ecs_i16_t, &value), NULL);
     test_assert(ptr != NULL);
 
     test_int(value, 10);
@@ -86,7 +86,7 @@ void DeserializeFromExpr_i32(void) {
 
     ecs_i32_t value = 0;
 
-    const char *ptr = ecs_parse_expr(world, "10", &ecs_value(ecs_i32_t, &value), NULL);
+    const char *ptr = ecs_parse_expr(world, "10", &ecs_value_ptr(ecs_i32_t, &value), NULL);
     test_assert(ptr != NULL);
 
     test_int(value, 10);
@@ -99,7 +99,7 @@ void DeserializeFromExpr_i64(void) {
 
     ecs_i64_t value = 0;
 
-    const char *ptr = ecs_parse_expr(world, "10", &ecs_value(ecs_i64_t, &value), NULL);
+    const char *ptr = ecs_parse_expr(world, "10", &ecs_value_ptr(ecs_i64_t, &value), NULL);
     test_assert(ptr != NULL);
 
     test_int(value, 10);
@@ -112,7 +112,7 @@ void DeserializeFromExpr_iptr(void) {
 
     ecs_iptr_t value = 0;
 
-    const char *ptr = ecs_parse_expr(world, "10", &ecs_value(ecs_iptr_t, &value), NULL);
+    const char *ptr = ecs_parse_expr(world, "10", &ecs_value_ptr(ecs_iptr_t, &value), NULL);
     test_assert(ptr != NULL);
 
     test_int(value, 10);
@@ -125,7 +125,7 @@ void DeserializeFromExpr_u8(void) {
 
     ecs_u8_t value = 0;
 
-    const char *ptr = ecs_parse_expr(world, "10", &ecs_value(ecs_u8_t, &value), NULL);
+    const char *ptr = ecs_parse_expr(world, "10", &ecs_value_ptr(ecs_u8_t, &value), NULL);
     test_assert(ptr != NULL);
 
     test_int(value, 10);
@@ -138,7 +138,7 @@ void DeserializeFromExpr_u16(void) {
 
     ecs_u16_t value = 0;
 
-    const char *ptr = ecs_parse_expr(world, "10", &ecs_value(ecs_u16_t, &value), NULL);
+    const char *ptr = ecs_parse_expr(world, "10", &ecs_value_ptr(ecs_u16_t, &value), NULL);
     test_assert(ptr != NULL);
 
     test_int(value, 10);
@@ -151,7 +151,7 @@ void DeserializeFromExpr_u32(void) {
 
     ecs_u32_t value = 0;
 
-    const char *ptr = ecs_parse_expr(world, "10", &ecs_value(ecs_u32_t, &value), NULL);
+    const char *ptr = ecs_parse_expr(world, "10", &ecs_value_ptr(ecs_u32_t, &value), NULL);
     test_assert(ptr != NULL);
 
     test_int(value, 10);
@@ -165,7 +165,7 @@ void DeserializeFromExpr_u64(void) {
     {
         ecs_u64_t value = 0;
         const char *ptr = ecs_parse_expr(
-            world, "0", &ecs_value(ecs_u64_t, &value), NULL);
+            world, "0", &ecs_value_ptr(ecs_u64_t, &value), NULL);
         test_assert(ptr != NULL);
         test_int(value, 0);
     }
@@ -173,7 +173,7 @@ void DeserializeFromExpr_u64(void) {
     {
         ecs_u64_t value = 0;
         const char *ptr = ecs_parse_expr(
-            world, "10", &ecs_value(ecs_u64_t, &value), NULL);
+            world, "10", &ecs_value_ptr(ecs_u64_t, &value), NULL);
         test_assert(ptr != NULL);
         test_int(value, 10);
     }
@@ -181,7 +181,7 @@ void DeserializeFromExpr_u64(void) {
     {
         ecs_u64_t value = 0;
         const char *ptr = ecs_parse_expr(
-            world, "2366700781656087864", &ecs_value(ecs_u64_t, &value), NULL);
+            world, "2366700781656087864", &ecs_value_ptr(ecs_u64_t, &value), NULL);
         test_assert(ptr != NULL);
         test_int(value, 2366700781656087864);
     }
@@ -194,7 +194,7 @@ void DeserializeFromExpr_uptr(void) {
 
     ecs_uptr_t value = 0;
 
-    const char *ptr = ecs_parse_expr(world, "10", &ecs_value(ecs_uptr_t, &value), NULL);
+    const char *ptr = ecs_parse_expr(world, "10", &ecs_value_ptr(ecs_uptr_t, &value), NULL);
     test_assert(ptr != NULL);
 
     test_int(value, 10);
@@ -207,7 +207,7 @@ void DeserializeFromExpr_float(void) {
 
     ecs_f32_t value = 0;
 
-    const char *ptr = ecs_parse_expr(world, "10.5", &ecs_value(ecs_f32_t, &value), NULL);
+    const char *ptr = ecs_parse_expr(world, "10.5", &ecs_value_ptr(ecs_f32_t, &value), NULL);
     test_assert(ptr != NULL);
 
     test_flt(value, 10.5);
@@ -220,7 +220,7 @@ void DeserializeFromExpr_double(void) {
 
     ecs_f64_t value = 0;
 
-    const char *ptr = ecs_parse_expr(world, "10.5", &ecs_value(ecs_f64_t, &value), NULL);
+    const char *ptr = ecs_parse_expr(world, "10.5", &ecs_value_ptr(ecs_f64_t, &value), NULL);
     test_assert(ptr != NULL);
 
     test_flt(value, 10.5);
@@ -233,7 +233,7 @@ void DeserializeFromExpr_negative_int(void) {
 
     ecs_i8_t value = 0;
 
-    const char *ptr = ecs_parse_expr(world, "-10", &ecs_value(ecs_i8_t, &value), NULL);
+    const char *ptr = ecs_parse_expr(world, "-10", &ecs_value_ptr(ecs_i8_t, &value), NULL);
     test_assert(ptr != NULL);
 
     test_int(value, -10);
@@ -246,7 +246,7 @@ void DeserializeFromExpr_negative_float(void) {
 
     ecs_f32_t value = 0;
 
-    const char *ptr = ecs_parse_expr(world, "-10.5", &ecs_value(ecs_f32_t, &value), NULL);
+    const char *ptr = ecs_parse_expr(world, "-10.5", &ecs_value_ptr(ecs_f32_t, &value), NULL);
     test_assert(ptr != NULL);
 
     test_flt(value, -10.5);
@@ -259,7 +259,7 @@ void DeserializeFromExpr_string(void) {
 
     ecs_string_t value = 0;
 
-    const char *ptr = ecs_parse_expr(world, "\"Hello World\"", &ecs_value(ecs_string_t, &value), NULL);
+    const char *ptr = ecs_parse_expr(world, "\"Hello World\"", &ecs_value_ptr(ecs_string_t, &value), NULL);
     test_assert(ptr != NULL);
 
     test_str(value, "Hello World");
@@ -273,11 +273,11 @@ void DeserializeFromExpr_entity(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t value = 0;
-    const char *ptr = ecs_parse_expr(world, "flecs.core", &ecs_value(ecs_entity_t, &value), NULL);
+    const char *ptr = ecs_parse_expr(world, "flecs.core", &ecs_value_ptr(ecs_entity_t, &value), NULL);
     test_assert(ptr != NULL);
     test_uint(value, EcsFlecsCore);
 
-    ptr = ecs_parse_expr(world, "0", &ecs_value(ecs_entity_t, &value), NULL);
+    ptr = ecs_parse_expr(world, "0", &ecs_value_ptr(ecs_entity_t, &value), NULL);
     test_assert(ptr != NULL);
     test_uint(value, 0);
 
@@ -288,11 +288,11 @@ void DeserializeFromExpr_id(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_id_t value = 0;
-    const char *ptr = ecs_parse_expr(world, "flecs.core", &ecs_value(ecs_id_t, &value), NULL);
+    const char *ptr = ecs_parse_expr(world, "flecs.core", &ecs_value_ptr(ecs_id_t, &value), NULL);
     test_assert(ptr != NULL);
     test_uint(value, EcsFlecsCore);
 
-    ptr = ecs_parse_expr(world, "0", &ecs_value(ecs_id_t, &value), NULL);
+    ptr = ecs_parse_expr(world, "0", &ecs_value_ptr(ecs_id_t, &value), NULL);
     test_assert(ptr != NULL);
     test_uint(value, 0);
 

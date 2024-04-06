@@ -354,6 +354,10 @@
  * @{
  */
 
+/* insert */
+#define ecs_insert(world, ...)\
+    ecs_entity(world, { .set = ecs_values(__VA_ARGS__)})
+
 /* set */
 
 #define ecs_set_ptr(world, entity, component, ptr)\
@@ -718,8 +722,20 @@
  * @{
  */
 
-#define ecs_value(T, ptr) ((ecs_value_t){ecs_id(T), ptr})
+/** Convenience macro for creating compound literal id array */
+#define ecs_ids(...) (ecs_id_t[]){ __VA_ARGS__, 0 }
+
+/** Convenience macro for creating compound literal values array */
+#define ecs_values(...) (ecs_value_t[]){ __VA_ARGS__, {0, 0}}
+
+/** Convenience macro for creating compound literal value */
+#define ecs_value_ptr(T, ptr) ((ecs_value_t){ecs_id(T), ptr})
+
+/** Convenience macro for creating heap allocated value */
 #define ecs_value_new_t(world, T) ecs_value_new(world, ecs_id(T))
+
+/** Convenience macro for creating compound literal value literal */
+#define ecs_value(T, ...) ((ecs_value_t){ecs_id(T), &(T)__VA_ARGS__})
 
 /** @} */
 

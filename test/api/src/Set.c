@@ -304,21 +304,16 @@ void Set_set_and_new(void) {
 }
 
 void Set_set_null(void) {
+    install_test_abort();
+
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
     ecs_entity_t e = ecs_new(world);
+
+    test_expect_abort();
     ecs_set_ptr(world, e, Position, NULL);
-    test_assert(e != 0);
-
-    test_assert(ecs_has(world, e, Position));
-    const Position *p = ecs_get(world, e, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 0);
-    test_int(p->y, 0);
-
-    ecs_fini(world);
 }
 
 void Set_ensure_new(void) {

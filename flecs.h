@@ -3743,8 +3743,11 @@ char* ecs_parse_term(
 /** @} */
 
 
-/** Convenience macro for creating compound literal id array */
-#define ecs_ids(...) (ecs_id_t[]){ __VA_ARGS__, 0 }
+/* Utility to hold a value of a dynamic type */
+typedef struct ecs_value_t {
+    ecs_entity_t type;
+    void *ptr;
+} ecs_value_t;
 
 /** Used with ecs_entity_init().
  *
@@ -3780,8 +3783,11 @@ typedef struct ecs_entity_desc_t {
                            * components) will be used to create the entity, if
                            * no id is specified. */
 
-    /** 0-terminated array of ids to add to the new or existing entity. */
+    /** 0-terminated array of ids to add to the entity. */
     const ecs_id_t *add;
+
+    /** 0-terminated array of values to set on the entity. */
+    const ecs_value_t *set;
 
     /** String expression with components to add */
     const char *add_expr;
@@ -4014,12 +4020,6 @@ typedef struct ecs_event_desc_t {
  *
  * @{
  */
-
-/* Utility to hold a value of a dynamic type */
-typedef struct ecs_value_t {
-    ecs_entity_t type;
-    void *ptr;
-} ecs_value_t;
 
 /** Type with information about the current Flecs build */
 typedef struct ecs_build_info_t {
@@ -8666,6 +8666,10 @@ int ecs_value_move_ctor(
  * @{
  */
 
+/* insert */
+#define ecs_insert(world, ...)\
+    ecs_entity(world, { .set = ecs_values(__VA_ARGS__)})
+
 /* set */
 
 #define ecs_set_ptr(world, entity, component, ptr)\
@@ -9030,8 +9034,20 @@ int ecs_value_move_ctor(
  * @{
  */
 
-#define ecs_value(T, ptr) ((ecs_value_t){ecs_id(T), ptr})
+/** Convenience macro for creating compound literal id array */
+#define ecs_ids(...) (ecs_id_t[]){ __VA_ARGS__, 0 }
+
+/** Convenience macro for creating compound literal values array */
+#define ecs_values(...) (ecs_value_t[]){ __VA_ARGS__, {0, 0}}
+
+/** Convenience macro for creating compound literal value */
+#define ecs_value_ptr(T, ptr) ((ecs_value_t){ecs_id(T), ptr})
+
+/** Convenience macro for creating heap allocated value */
 #define ecs_value_new_t(world, T) ecs_value_new(world, ecs_id(T))
+
+/** Convenience macro for creating compound literal value literal */
+#define ecs_value(T, ...) ((ecs_value_t){ecs_id(T), &(T)__VA_ARGS__})
 
 /** @} */
 

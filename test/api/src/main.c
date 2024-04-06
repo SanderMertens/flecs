@@ -154,6 +154,27 @@ void Entity_commit_w_on_add(void);
 void Entity_commit_w_on_remove(void);
 void Entity_commit_w_cmd_in_observer(void);
 void Entity_entity_init_existing_no_sep(void);
+void Entity_entity_init_w_set_1_comp(void);
+void Entity_entity_init_w_set_2_comp(void);
+void Entity_entity_init_w_set_1_comp_1_tag(void);
+void Entity_entity_init_w_set_2_comp_2_tag(void);
+void Entity_entity_init_w_set_1_comp_w_name(void);
+void Entity_entity_init_w_set_1_comp_existing(void);
+void Entity_entity_init_w_set_1_comp_existing_empty(void);
+void Entity_entity_init_w_set_1_comp_1_tag_w_set(void);
+void Entity_entity_init_w_set_w_hook(void);
+void Entity_entity_init_w_set_w_observer(void);
+void Entity_entity_init_w_set_1_comp_defer(void);
+void Entity_entity_init_w_set_2_comp_defer(void);
+void Entity_entity_init_w_set_1_comp_1_tag_defer(void);
+void Entity_entity_init_w_set_2_comp_2_tag_defer(void);
+void Entity_entity_init_w_set_1_comp_w_name_defer(void);
+void Entity_entity_init_w_set_1_comp_existing_defer(void);
+void Entity_entity_init_w_set_1_comp_existing_empty_defer(void);
+void Entity_entity_init_w_set_1_comp_1_tag_w_set_defer(void);
+void Entity_insert_1_comp(void);
+void Entity_insert_2_comp(void);
+void Entity_insert_1_comp_1_tag(void);
 
 // Testsuite 'Each'
 void Each_each_tag(void);
@@ -2479,6 +2500,90 @@ bake_test_case Entity_testcases[] = {
     {
         "entity_init_existing_no_sep",
         Entity_entity_init_existing_no_sep
+    },
+    {
+        "entity_init_w_set_1_comp",
+        Entity_entity_init_w_set_1_comp
+    },
+    {
+        "entity_init_w_set_2_comp",
+        Entity_entity_init_w_set_2_comp
+    },
+    {
+        "entity_init_w_set_1_comp_1_tag",
+        Entity_entity_init_w_set_1_comp_1_tag
+    },
+    {
+        "entity_init_w_set_2_comp_2_tag",
+        Entity_entity_init_w_set_2_comp_2_tag
+    },
+    {
+        "entity_init_w_set_1_comp_w_name",
+        Entity_entity_init_w_set_1_comp_w_name
+    },
+    {
+        "entity_init_w_set_1_comp_existing",
+        Entity_entity_init_w_set_1_comp_existing
+    },
+    {
+        "entity_init_w_set_1_comp_existing_empty",
+        Entity_entity_init_w_set_1_comp_existing_empty
+    },
+    {
+        "entity_init_w_set_1_comp_1_tag_w_set",
+        Entity_entity_init_w_set_1_comp_1_tag_w_set
+    },
+    {
+        "entity_init_w_set_w_hook",
+        Entity_entity_init_w_set_w_hook
+    },
+    {
+        "entity_init_w_set_w_observer",
+        Entity_entity_init_w_set_w_observer
+    },
+    {
+        "entity_init_w_set_1_comp_defer",
+        Entity_entity_init_w_set_1_comp_defer
+    },
+    {
+        "entity_init_w_set_2_comp_defer",
+        Entity_entity_init_w_set_2_comp_defer
+    },
+    {
+        "entity_init_w_set_1_comp_1_tag_defer",
+        Entity_entity_init_w_set_1_comp_1_tag_defer
+    },
+    {
+        "entity_init_w_set_2_comp_2_tag_defer",
+        Entity_entity_init_w_set_2_comp_2_tag_defer
+    },
+    {
+        "entity_init_w_set_1_comp_w_name_defer",
+        Entity_entity_init_w_set_1_comp_w_name_defer
+    },
+    {
+        "entity_init_w_set_1_comp_existing_defer",
+        Entity_entity_init_w_set_1_comp_existing_defer
+    },
+    {
+        "entity_init_w_set_1_comp_existing_empty_defer",
+        Entity_entity_init_w_set_1_comp_existing_empty_defer
+    },
+    {
+        "entity_init_w_set_1_comp_1_tag_w_set_defer",
+        Entity_entity_init_w_set_1_comp_1_tag_w_set_defer
+    },
+    {
+        "insert_1_comp",
+        Entity_insert_1_comp
+    },
+    {
+        "insert_2_comp",
+        Entity_insert_2_comp
+    },
+    {
+        "insert_1_comp_1_tag",
+        Entity_insert_1_comp_1_tag
     }
 };
 
@@ -9221,7 +9326,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        106,
+        127,
         Entity_testcases
     },
     {

@@ -860,8 +860,11 @@ struct ecs_type_info_t {
 #include "flecs/private/hashmap.h"          /* Hashmap */
 #include "flecs/private/parser.h"           /* Query DSL parser */
 
-/** Convenience macro for creating compound literal id array */
-#define ecs_ids(...) (ecs_id_t[]){ __VA_ARGS__, 0 }
+/* Utility to hold a value of a dynamic type */
+typedef struct ecs_value_t {
+    ecs_entity_t type;
+    void *ptr;
+} ecs_value_t;
 
 /** Used with ecs_entity_init().
  *
@@ -897,8 +900,11 @@ typedef struct ecs_entity_desc_t {
                            * components) will be used to create the entity, if
                            * no id is specified. */
 
-    /** 0-terminated array of ids to add to the new or existing entity. */
+    /** 0-terminated array of ids to add to the entity. */
     const ecs_id_t *add;
+
+    /** 0-terminated array of values to set on the entity. */
+    const ecs_value_t *set;
 
     /** String expression with components to add */
     const char *add_expr;
@@ -1131,12 +1137,6 @@ typedef struct ecs_event_desc_t {
  *
  * @{
  */
-
-/* Utility to hold a value of a dynamic type */
-typedef struct ecs_value_t {
-    ecs_entity_t type;
-    void *ptr;
-} ecs_value_t;
 
 /** Type with information about the current Flecs build */
 typedef struct ecs_build_info_t {

@@ -157,7 +157,7 @@ void Vars_i32_expr_w_i32_var(void) {
     int32_t v = 0;
     ecs_parse_expr_desc_t desc = { .vars = &vars };
     const char *ptr = ecs_parse_expr(
-        world, "$foo", &ecs_value(ecs_i32_t, &v), &desc);
+        world, "$foo", &ecs_value_ptr(ecs_i32_t, &v), &desc);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == 0);
     test_int(v, 10);
@@ -180,7 +180,7 @@ void Vars_i32_expr_w_f32_var(void) {
     int32_t v = 0;
     ecs_parse_expr_desc_t desc = { .vars = &vars };
     const char *ptr = ecs_parse_expr(
-        world, "$foo", &ecs_value(ecs_i32_t, &v), &desc);
+        world, "$foo", &ecs_value_ptr(ecs_i32_t, &v), &desc);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == 0);
     test_int(v, 10);
@@ -202,7 +202,7 @@ void Vars_i32_expr_w_string_var(void) {
     int32_t v = 0;
     ecs_parse_expr_desc_t desc = { .vars = &vars };
     const char *ptr = ecs_parse_expr(
-        world, "$foo", &ecs_value(ecs_i32_t, &v), &desc);
+        world, "$foo", &ecs_value_ptr(ecs_i32_t, &v), &desc);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == 0);
     test_int(v, 10);
@@ -225,7 +225,7 @@ void Vars_string_expr_w_string_var(void) {
     char* v = NULL;
     ecs_parse_expr_desc_t desc = { .vars = &vars };
     const char *ptr = ecs_parse_expr(
-        world, "$foo", &ecs_value(ecs_string_t, &v), &desc);
+        world, "$foo", &ecs_value_ptr(ecs_string_t, &v), &desc);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == 0);
     test_str(v, "Hello World");

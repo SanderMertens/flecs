@@ -5365,6 +5365,39 @@ error:
     return 0;
 }
 
+static
+void flecs_copy_id(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    ecs_record_t *r,
+    ecs_id_t id,
+    size_t size,
+    void *dst_ptr,
+    void *src_ptr,
+    const ecs_type_info_t *ti)
+{
+    ecs_check(dst_ptr != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(src_ptr != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_copy_t copy = ti->hooks.copy;
+    if (copy) {
+        copy(dst_ptr, src_ptr, 1, ti);
+    } else {
+        ecs_os_memcpy(dst_ptr, src_ptr, flecs_utosize(size));
+    }
+
+    flecs_table_mark_dirty(world, r->table, id);
+
+    ecs_table_t *table = r->table;
+    if (table->flags & EcsTableHasOnSet || ti->hooks.on_set) {
+        ecs_type_t ids = { .array = &id, .count = 1 };
+        flecs_notify_on_set(
+            world, table, ECS_RECORD_TO_ROW(r->row), 1, &ids, true);
+    }
+error:
+    return;
+}
+
 /* Traverse table graph by either adding or removing identifiers parsed from the
  * passed in expression. */
 static
@@ -5500,7 +5533,7 @@ int flecs_traverse_add(
             ecs_pair(ecs_id(EcsIdentifier), EcsName), &diff);
     }
 
-    /* Add components from the 'add' id array */
+    /* Add components from the 'add' array */
     if (desc->add) {
         int32_t i = 0;
         ecs_id_t id;
@@ -5520,6 +5553,16 @@ int flecs_traverse_add(
             if (should_add) {
                 table = flecs_find_table_add(world, table, id, &diff);
             }
+        }
+    }
+
+    /* Add components from the 'set' array */
+    if (desc->set) {
+        int32_t i = 0;
+        ecs_id_t id;
+
+        while ((id = desc->set[i ++].type)) {
+            table = flecs_find_table_add(world, table, id, &diff);
         }
     }
 
@@ -5564,6 +5607,7 @@ int flecs_traverse_add(
             ECS_INTERNAL_ERROR, NULL);
     }
 
+    /* Set symbol */
     if (desc->symbol && desc->symbol[0]) {
         const char *sym = ecs_get_symbol(world, result);
         if (sym) {
@@ -5574,7 +5618,27 @@ int flecs_traverse_add(
         }
     }
 
+    /* Set component values */
+    if (desc->set) {
+        ecs_assert(r->table == table, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(r->table != NULL, ECS_INTERNAL_ERROR, NULL);
+        int32_t i = 0, row = ECS_RECORD_TO_ROW(r->row);
+        const ecs_value_t *v;
+        while ((v = &desc->set[i ++]), v->type) {
+            if (!v->ptr) {
+                continue;
+            }
+            ecs_assert(ECS_RECORD_TO_ROW(r->row) == row, ECS_INTERNAL_ERROR, NULL);
+            flecs_component_ptr_t ptr = flecs_get_component_ptr(
+                world, table, row, v->type);
+            ecs_check(ptr.ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+            flecs_copy_id(world, result, r, v->type, ptr.ti->size, ptr.ptr, 
+                v->ptr, ptr.ti);
+        }
+    }
+
     flecs_table_diff_builder_fini(world, &diff);
+error:
     return 0;
 }
 
@@ -5623,6 +5687,19 @@ void flecs_deferred_add_remove(
             }
             if (defer) {
                 ecs_add_id(world, entity, id);
+            }
+        }
+    }
+
+    /* Set component values */
+    if (desc->set) {
+        int32_t i = 0;
+        const ecs_value_t *v;
+        while ((v = &desc->set[i ++]), v->type) {
+            if (v->ptr) {
+                ecs_set_id(world, entity, v->type, 0, v->ptr);
+            } else {
+                ecs_add_id(world, entity, v->type);
             }
         }
     }
@@ -7154,7 +7231,7 @@ error:
 }
 
 static
-void flecs_copy_ptr_w_id(
+void flecs_set_id_copy(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity,
@@ -7170,36 +7247,14 @@ void flecs_copy_ptr_w_id(
 
     ecs_record_t *r = flecs_entities_get(world, entity);
     flecs_component_ptr_t dst = flecs_ensure(world, entity, id, r);
-    const ecs_type_info_t *ti = dst.ti;
-    ecs_check(dst.ptr != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    if (ptr) {
-        ecs_copy_t copy = ti->hooks.copy;
-        if (copy) {
-            copy(dst.ptr, ptr, 1, ti);
-        } else {
-            ecs_os_memcpy(dst.ptr, ptr, flecs_utosize(size));
-        }
-    } else {
-        ecs_os_memset(dst.ptr, 0, size);
-    }
-
-    flecs_table_mark_dirty(world, r->table, id);
-
-    ecs_table_t *table = r->table;
-    if (table->flags & EcsTableHasOnSet || ti->hooks.on_set) {
-        ecs_type_t ids = { .array = &id, .count = 1 };
-        flecs_notify_on_set(
-            world, table, ECS_RECORD_TO_ROW(r->row), 1, &ids, true);
-    }
+    flecs_copy_id(world, entity, r, id, size, dst.ptr, ptr, dst.ti);
 
     flecs_defer_end(world, stage);
-error:
-    return;
 }
 
 static
-void flecs_move_ptr_w_id(
+void flecs_set_id_move(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t entity,
@@ -7271,7 +7326,7 @@ ecs_entity_t ecs_set_id(
     }
 
     /* Safe to cast away const: function won't modify if move arg is false */
-    flecs_copy_ptr_w_id(world, stage, entity, id, size, 
+    flecs_set_id_copy(world, stage, entity, id, size, 
         ECS_CONST_CAST(void*, ptr));
     return entity;
 error:
@@ -8723,7 +8778,7 @@ bool flecs_defer_end(
                     world->info.cmd.other_count ++;
                     break;
                 case EcsCmdSet:
-                    flecs_move_ptr_w_id(world, dst_stage, e, 
+                    flecs_set_id_move(world, dst_stage, e, 
                         cmd->id, flecs_itosize(cmd->is._1.size), 
                         cmd->is._1.value, kind);
                     world->info.cmd.set_count ++;
@@ -8732,13 +8787,13 @@ bool flecs_defer_end(
                     if (merge_to_world) {
                         ecs_emplace_id(world, e, id);
                     }
-                    flecs_move_ptr_w_id(world, dst_stage, e, 
+                    flecs_set_id_move(world, dst_stage, e, 
                         cmd->id, flecs_itosize(cmd->is._1.size), 
                         cmd->is._1.value, kind);
                     world->info.cmd.ensure_count ++;
                     break;
                 case EcsCmdEnsure:
-                    flecs_move_ptr_w_id(world, dst_stage, e, 
+                    flecs_set_id_move(world, dst_stage, e, 
                         cmd->id, flecs_itosize(cmd->is._1.size), 
                         cmd->is._1.value, kind);
                     world->info.cmd.ensure_count ++;
