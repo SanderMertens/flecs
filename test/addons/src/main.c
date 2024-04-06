@@ -682,6 +682,7 @@ void Rest_request_commands_2_syncs(void);
 void Rest_request_commands_no_frames(void);
 void Rest_request_commands_no_commands(void);
 void Rest_request_commands_garbage_collect(void);
+void Rest_script_error(void);
 
 // Testsuite 'Metrics'
 void Metrics_member_gauge_1_entity(void);
@@ -3328,6 +3329,10 @@ bake_test_case Rest_testcases[] = {
     {
         "request_commands_garbage_collect",
         Rest_request_commands_garbage_collect
+    },
+    {
+        "script_error",
+        Rest_script_error
     }
 };
 
@@ -3787,7 +3792,7 @@ static bake_test_suite suites[] = {
         "Rest",
         NULL,
         NULL,
-        13,
+        14,
         Rest_testcases
     },
     {

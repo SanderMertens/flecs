@@ -463,3 +463,27 @@ void Rest_request_commands_garbage_collect(void) {
 
     ecs_fini(world);
 }
+
+void Rest_script_error(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    {
+        ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+        test_int(-1, ecs_http_server_request(srv, "PUT",
+            "/script/?data=struct%20Position%20%7B%0A%20%20x%20%3A%0A%7D",
+            &reply));
+        test_int(reply.code, 400);
+        char *reply_str = ecs_strbuf_get(&reply.body);
+        test_assert(reply_str != NULL);
+        ecs_os_free(reply_str);
+    }
+
+    ecs_rest_server_fini(srv);
+
+    ecs_fini(world);
+}

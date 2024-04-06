@@ -360,7 +360,11 @@ bool flecs_rest_script(
     if (!script) {
         char *err = flecs_rest_get_captured_log();
         char *escaped_err = ecs_astresc('"', err);
-        flecs_reply_error(reply, escaped_err);
+        if (escaped_err) {
+            flecs_reply_error(reply, escaped_err);
+        } else {
+            flecs_reply_error(reply, "error parsing script");
+        }
         reply->code = 400; /* bad request */
         ecs_os_free(escaped_err);
         ecs_os_free(err);
