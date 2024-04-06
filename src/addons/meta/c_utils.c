@@ -777,10 +777,10 @@ int meta_parse_constants(
         });
 
         if (!is_bitmask) {
-            ecs_set_pair_object(world, c, EcsConstant, ecs_i32_t, 
+            ecs_set_pair_second(world, c, EcsConstant, ecs_i32_t, 
                 {(ecs_i32_t)last_value});
         } else {
-            ecs_set_pair_object(world, c, EcsConstant, ecs_u32_t, 
+            ecs_set_pair_second(world, c, EcsConstant, ecs_u32_t, 
                 {(ecs_u32_t)last_value});
         }
 

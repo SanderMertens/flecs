@@ -887,7 +887,7 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 #define ecs_pair_first(world, pair) ecs_get_alive(world, ECS_PAIR_FIRST(pair))
 #define ecs_pair_second(world, pair) ecs_get_alive(world, ECS_PAIR_SECOND(pair))
 #define ecs_pair_relation ecs_pair_first
-#define ecs_pair_object ecs_pair_second
+#define ecs_pair_target ecs_pair_second
 
 #define ecs_poly_id(tag) ecs_pair(ecs_id(EcsPoly), tag)
 
@@ -8777,8 +8777,6 @@ int ecs_value_move_ctor(
         ecs_pair(first, ecs_id(Second)),\
         sizeof(Second), &(Second)__VA_ARGS__)
 
-#define ecs_set_pair_object ecs_set_pair_second
-
 #define ecs_set_override(world, entity, T, ...)\
     ecs_add_id(world, entity, ECS_OVERRIDE | ecs_id(T));\
     ecs_set(world, entity, T, __VA_ARGS__)
@@ -8804,8 +8802,6 @@ int ecs_value_move_ctor(
     (ECS_CAST(const Second*, ecs_get_id(world, subject,\
         ecs_pair(first, ecs_id(Second)))))
 
-#define ecs_get_pair_object ecs_get_pair_second
-
 /* get_mut */
 
 #define ecs_get_mut(world, entity, T)\
@@ -8818,8 +8814,6 @@ int ecs_value_move_ctor(
 #define ecs_get_mut_pair_second(world, subject, first, Second)\
     (ECS_CAST(Second*, ecs_get_mut_id(world, subject,\
         ecs_pair(first, ecs_id(Second)))))
-
-#define ecs_get_mut_pair_object ecs_get_mut_pair_second
 
 #define ecs_get_mut(world, entity, T)\
     (ECS_CAST(T*, ecs_get_mut_id(world, entity, ecs_id(T))))
@@ -8837,8 +8831,6 @@ int ecs_value_move_ctor(
     (ECS_CAST(Second*, ecs_ensure_id(world, subject,\
         ecs_pair(first, ecs_id(Second)))))
 
-#define ecs_ensure_pair_object ecs_ensure_pair_second
-
 #define ecs_ensure(world, entity, T)\
     (ECS_CAST(T*, ecs_ensure_id(world, entity, ecs_id(T))))
 
@@ -8849,8 +8841,6 @@ int ecs_value_move_ctor(
 #define ecs_ensure_pair_second(world, subject, first, Second)\
     (ECS_CAST(Second*, ecs_ensure_id(world, subject,\
         ecs_pair(first, ecs_id(Second)))))
-
-#define ecs_ensure_pair_object ecs_ensure_pair_second
 
 /* modified */
 
@@ -8886,8 +8876,6 @@ int ecs_value_move_ctor(
 #define ecs_record_ensure_pair_second(world, record, first, Second)\
     (ECS_CAST(Second*, ecs_record_ensure_id(world, record,\
         ecs_pair(first, ecs_id(Second)))))
-
-#define ecs_record_ensure_pair_object ecs_record_ensure_pair_second
 
 #define ecs_ref_init(world, entity, T)\
     ecs_ref_init_id(world, entity, ecs_id(T))
@@ -13300,7 +13288,7 @@ extern "C" {
  * Or a more useful example (create an enum constant with a manual value):
  *
  * @code
- * ecs_set_pair_object(world, e, EcsConstant, ecs_i32_t, {10});
+ * ecs_set_pair_second(world, e, EcsConstant, ecs_i32_t, {10});
  * @endcode
  */
 typedef bool ecs_bool_t;

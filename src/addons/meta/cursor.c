@@ -1190,7 +1190,7 @@ int flecs_meta_add_bitmask_constant(
         return -1;
     }
 
-    const ecs_u32_t *v = ecs_get_pair_object(
+    const ecs_u32_t *v = ecs_get_pair_second(
         cursor->world, c, EcsConstant, ecs_u32_t);
     if (v == NULL) {
         char *path = ecs_get_fullpath(cursor->world, op->type);
@@ -1329,7 +1329,7 @@ int ecs_meta_set_string(
             goto error;
         }
 
-        const ecs_i32_t *v = ecs_get_pair_object(
+        const ecs_i32_t *v = ecs_get_pair_second(
             cursor->world, c, EcsConstant, ecs_i32_t);
         if (v == NULL) {
             char *path = ecs_get_fullpath(cursor->world, op->type);

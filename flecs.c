@@ -60493,7 +60493,7 @@ ecs_entity_t ecs_enum_init(
         if (!m_desc->value) {
             ecs_add_id(world, c, EcsConstant);
         } else {
-            ecs_set_pair_object(world, c, EcsConstant, ecs_i32_t, 
+            ecs_set_pair_second(world, c, EcsConstant, ecs_i32_t, 
                 {m_desc->value});
         }
     }
@@ -60540,7 +60540,7 @@ ecs_entity_t ecs_bitmask_init(
         if (!m_desc->value) {
             ecs_add_id(world, c, EcsConstant);
         } else {
-            ecs_set_pair_object(world, c, EcsConstant, ecs_u32_t, 
+            ecs_set_pair_second(world, c, EcsConstant, ecs_u32_t, 
                 {m_desc->value});
         }
     }
@@ -61653,10 +61653,10 @@ int meta_parse_constants(
         });
 
         if (!is_bitmask) {
-            ecs_set_pair_object(world, c, EcsConstant, ecs_i32_t, 
+            ecs_set_pair_second(world, c, EcsConstant, ecs_i32_t, 
                 {(ecs_i32_t)last_value});
         } else {
-            ecs_set_pair_object(world, c, EcsConstant, ecs_u32_t, 
+            ecs_set_pair_second(world, c, EcsConstant, ecs_u32_t, 
                 {(ecs_u32_t)last_value});
         }
 
@@ -62919,7 +62919,7 @@ int flecs_meta_add_bitmask_constant(
         return -1;
     }
 
-    const ecs_u32_t *v = ecs_get_pair_object(
+    const ecs_u32_t *v = ecs_get_pair_second(
         cursor->world, c, EcsConstant, ecs_u32_t);
     if (v == NULL) {
         char *path = ecs_get_fullpath(cursor->world, op->type);
@@ -63058,7 +63058,7 @@ int ecs_meta_set_string(
             goto error;
         }
 
-        const ecs_i32_t *v = ecs_get_pair_object(
+        const ecs_i32_t *v = ecs_get_pair_second(
             cursor->world, c, EcsConstant, ecs_i32_t);
         if (v == NULL) {
             char *path = ecs_get_fullpath(cursor->world, op->type);
@@ -64632,7 +64632,7 @@ int flecs_add_constant_to_enum(
             return -1;
         }
 
-        const int32_t *value_ptr = ecs_get_pair_object(
+        const int32_t *value_ptr = ecs_get_pair_second(
             world, e, EcsConstant, ecs_i32_t);
         ecs_assert(value_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
         value = *value_ptr;
@@ -64665,7 +64665,7 @@ int flecs_add_constant_to_enum(
     c->value = value;
     c->constant = e;
 
-    ecs_i32_t *cptr = ecs_ensure_pair_object(
+    ecs_i32_t *cptr = ecs_ensure_pair_second(
         world, e, EcsConstant, ecs_i32_t);
     ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
     cptr[0] = value;
@@ -64705,7 +64705,7 @@ int flecs_add_constant_to_bitmask(
             return -1;
         }
 
-        const uint32_t *value_ptr = ecs_get_pair_object(
+        const uint32_t *value_ptr = ecs_get_pair_second(
             world, e, EcsConstant, ecs_u32_t);
         ecs_assert(value_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
         value = *value_ptr;
@@ -64734,7 +64734,7 @@ int flecs_add_constant_to_bitmask(
     c->value = value;
     c->constant = e;
 
-    ecs_u32_t *cptr = ecs_ensure_pair_object(
+    ecs_u32_t *cptr = ecs_ensure_pair_second(
         world, e, EcsConstant, ecs_u32_t);
     ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
     cptr[0] = value;

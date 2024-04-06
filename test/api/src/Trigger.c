@@ -958,7 +958,7 @@ void Trigger_wildcard_pair_w_obj_component(void) {
     ecs_entity_t e = ecs_new(world);
     test_int(ctx.invoked, 0);
 
-    ecs_set_pair_object(world, e, RelA, Position, {10, 20});
+    ecs_set_pair_second(world, e, RelA, Position, {10, 20});
 
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
@@ -980,7 +980,7 @@ void Trigger_wildcard_pair_w_obj_component(void) {
 
     ecs_os_zeromem(&ctx);
 
-    ecs_set_pair_object(world, e, RelB, Position, {10, 20});
+    ecs_set_pair_second(world, e, RelB, Position, {10, 20});
 
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);

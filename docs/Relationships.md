@@ -897,7 +897,7 @@ ecs_add_pair(world, e, Serializable, ecs_id(Position));
 const Position *p = ecs_get(world, e, Position);
 
 // Gets (unintended) value from (Serializable, Position) pair
-const Position *p = ecs_get_pair_object(world, e, Serializable, Position);
+const Position *p = ecs_get_pair_second(world, e, Serializable, Position);
 ```
 ```cpp
 struct Serializable { }; // Tag, contains no data
@@ -932,7 +932,7 @@ ecs_add_pair(world, e, Serializable, ecs_id(Position));
 const Position *p = ecs_get(world, e, Position);
 
 // This no longer works, the pair has no data
-const Position *p = ecs_get_pair_object(world, e, Serializable, Position);
+const Position *p = ecs_get_pair_second(world, e, Serializable, Position);
 ```
 ```cpp
 // Ensure that Serializable never contains data

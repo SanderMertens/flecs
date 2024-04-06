@@ -92,7 +92,7 @@ ecs_entity_t ecs_enum_init(
         if (!m_desc->value) {
             ecs_add_id(world, c, EcsConstant);
         } else {
-            ecs_set_pair_object(world, c, EcsConstant, ecs_i32_t, 
+            ecs_set_pair_second(world, c, EcsConstant, ecs_i32_t, 
                 {m_desc->value});
         }
     }
@@ -139,7 +139,7 @@ ecs_entity_t ecs_bitmask_init(
         if (!m_desc->value) {
             ecs_add_id(world, c, EcsConstant);
         } else {
-            ecs_set_pair_object(world, c, EcsConstant, ecs_u32_t, 
+            ecs_set_pair_second(world, c, EcsConstant, ecs_u32_t, 
                 {m_desc->value});
         }
     }

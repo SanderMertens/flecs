@@ -89,7 +89,7 @@ extern "C" {
  * Or a more useful example (create an enum constant with a manual value):
  *
  * @code
- * ecs_set_pair_object(world, e, EcsConstant, ecs_i32_t, {10});
+ * ecs_set_pair_second(world, e, EcsConstant, ecs_i32_t, {10});
  * @endcode
  */
 typedef bool ecs_bool_t;

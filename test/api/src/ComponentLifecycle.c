@@ -1051,7 +1051,7 @@ void ComponentLifecycle_copy_on_set_pair_tag(void) {
     ecs_entity_t e = ecs_new(world);
     test_int(ctx.copy.invoked, 0);
     
-    ecs_set_pair_object(world, e, Pair, Position, {0, 0});
+    ecs_set_pair_second(world, e, Pair, Position, {0, 0});
     test_assert(ctx.copy.invoked != 0);
     test_int(ctx.copy.component, ecs_id(Position));
     test_int(ctx.copy.size, sizeof(Position));
@@ -2040,7 +2040,7 @@ void on_remove_tag_set_position_pair(ecs_iter_t *it) {
 static
 void on_remove_tag_set_position_obj_pair(ecs_iter_t *it) {
     for (int i = 0; i < it->count; i ++) {
-        ecs_set_pair_object(it->world, it->entities[i], 
+        ecs_set_pair_second(it->world, it->entities[i], 
             ecs_new(it->world), Position, {10, 20});
         on_remove_tag_set_position_invoked ++;
     }

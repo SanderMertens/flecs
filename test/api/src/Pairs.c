@@ -513,22 +513,22 @@ void Pairs_override_tag_pair(void) {
     ECS_TAG(world, Rel);
 
     ecs_entity_t base = ecs_new(world);
-    ecs_set_pair_object(world, base, Rel, Position, {.x = 10, .y = 20});
+    ecs_set_pair_second(world, base, Rel, Position, {.x = 10, .y = 20});
 
     ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, base);
     test_assert(ecs_has_pair(world, instance, Rel, ecs_id(Position)));
 
-    const Position *t = ecs_get_pair_object(world, instance, Rel, Position);
+    const Position *t = ecs_get_pair_second(world, instance, Rel, Position);
     test_assert(t != NULL);
     test_int(t->x, 10);
     test_int(t->y, 20);
 
-    const Position *t_2 = ecs_get_pair_object(world, base, Rel, Position);
+    const Position *t_2 = ecs_get_pair_second(world, base, Rel, Position);
     test_assert(t_2 != NULL);
     test_assert(t == t_2);
 
     ecs_add_pair(world, instance, Rel, ecs_id(Position));
-    t = ecs_get_pair_object(world, instance, Rel, Position);
+    t = ecs_get_pair_second(world, instance, Rel, Position);
     test_assert(t != NULL);
     test_int(t->x, 10);
     test_int(t->y, 20);
@@ -1013,7 +1013,7 @@ void Pairs_set_object_w_zero_sized_rel_comp(void) {
 
     ecs_entity_t e = ecs_insert(world, ecs_value_pair_2nd(r, Position, {10, 20}));
     
-    const Position *p = ecs_get_pair_object(world, e, r, Position);
+    const Position *p = ecs_get_pair_second(world, e, r, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);

@@ -48,7 +48,7 @@ void meta_test_constant(
         if (!ecs_os_strcmp(c->name, name)) {
             test_int(c->value, value);
 
-            const ecs_i32_t *vptr = ecs_get_pair_object(world, c->constant, 
+            const ecs_i32_t *vptr = ecs_get_pair_second(world, c->constant, 
                 EcsConstant, ecs_i32_t);
             if (vptr) {
                 test_int(*vptr, value);
