@@ -15,8 +15,8 @@
 #ifdef FLECS_NO_MODULE
 #undef FLECS_MODULE
 #endif
-#ifdef FLECS_NO_PLECS
-#undef FLECS_PLECS
+#ifdef FLECS_NO_SCRIPT
+#undef FLECS_SCRIPT
 #endif
 #ifdef FLECS_NO_MONITOR
 #undef FLECS_MONITOR
@@ -88,7 +88,7 @@
 #define FLECS_HTTP
 #endif
 
-#ifdef FLECS_PLECS
+#ifdef FLECS_SCRIPT
 #define FLECS_EXPR
 #endif
 
@@ -202,11 +202,11 @@
 #include "../addons/expr.h"
 #endif
 
-#ifdef FLECS_PLECS
-#ifdef FLECS_NO_PLECS
-#error "FLECS_NO_PLECS failed: PLECS is required by other addons"
+#ifdef FLECS_SCRIPT
+#ifdef FLECS_NO_SCRIPT
+#error "FLECS_NO_SCRIPT failed: SCRIPT is required by other addons"
 #endif
-#include "../addons/plecs.h"
+#include "../addons/script.h"
 #endif
 
 #ifdef FLECS_OS_API_IMPL

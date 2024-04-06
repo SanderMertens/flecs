@@ -8,244 +8,244 @@
 
 #include <addons.h>
 
-// Testsuite 'Plecs'
-void Plecs_null(void);
-void Plecs_empty(void);
-void Plecs_space(void);
-void Plecs_space_newline(void);
-void Plecs_two_empty_newlines(void);
-void Plecs_three_empty_newlines(void);
-void Plecs_newline_trailing_space(void);
-void Plecs_newline_trailing_spaces(void);
-void Plecs_multiple_trailing_newlines(void);
-void Plecs_entity(void);
-void Plecs_entity_w_entity(void);
-void Plecs_entity_w_pair(void);
-void Plecs_2_entities(void);
-void Plecs_2_entities_w_entities(void);
-void Plecs_3_entities_w_pairs(void);
-void Plecs_line_comment(void);
-void Plecs_line_comment_before_stmt(void);
-void Plecs_line_comment_after_stmt(void);
-void Plecs_line_comment_between_stmt(void);
-void Plecs_multiple_line_comment(void);
-void Plecs_line_comment_after_stmt_same_line(void);
-void Plecs_comma_separated_pred(void);
-void Plecs_comma_separated_pred_w_subj(void);
-void Plecs_comma_separated_pred_w_subj_obj(void);
-void Plecs_comma_separated_pred_trailing_comma(void);
-void Plecs_comma_separated_pred_trailing_comma_newline(void);
-void Plecs_comma_separated_pred_trailing_comma_newline_multiline(void);
-void Plecs_hierarchy_1_child(void);
-void Plecs_hierarchy_2_children(void);
-void Plecs_hierarchy_1_child_same_line(void);
-void Plecs_hierarchy_2_children_same_line(void);
-void Plecs_entity_after_hierarchy(void);
-void Plecs_newline_before_scope_open(void);
-void Plecs_comment_before_scope_open(void);
-void Plecs_comment_after_newline_before_scope_open(void);
-void Plecs_hierarchy_2_levels(void);
-void Plecs_hierarchy_2_levels_2_subtrees(void);
-void Plecs_missing_end_of_scope(void);
-void Plecs_missing_end_of_predicate_scope(void);
-void Plecs_create_in_scope(void);
-void Plecs_hierarchy_w_pred_subj(void);
-void Plecs_hierarchy_custom_relation(void);
-void Plecs_hierarchy_custom_relation_2_levels(void);
-void Plecs_hierarchy_custom_relation_apply_to_object(void);
-void Plecs_hierarchy_custom_relation_apply_to_object_2_levels(void);
-void Plecs_entity_after_hierarchy_custom_relation(void);
-void Plecs_entity_after_hierarchy_custom_relation_2_levels(void);
-void Plecs_pred_scope(void);
-void Plecs_pred_scope_2_levels(void);
-void Plecs_pred_scope_inside_with(void);
-void Plecs_pred_scope_nested_w_subj_scope(void);
-void Plecs_with_tag(void);
-void Plecs_with_tag_2_entities(void);
-void Plecs_with_tag_same_line(void);
-void Plecs_with_tag_2_entities_same_line(void);
-void Plecs_with_tag_2_levels(void);
-void Plecs_with_tag_2_levels_2_subtrees(void);
-void Plecs_with_n_tags(void);
-void Plecs_with_n_tags_2_levels(void);
-void Plecs_with_after_scope(void);
-void Plecs_with_after_with(void);
-void Plecs_scope_inside_with_inside_scope(void);
-void Plecs_with_inside_scope(void);
-void Plecs_assignment_w_1(void);
-void Plecs_assignment_w_2(void);
-void Plecs_assignment_w_pair(void);
-void Plecs_assignment_w_invalid_subject(void);
-void Plecs_assignment_w_invalid_with(void);
-void Plecs_inherit_w_colon(void);
-void Plecs_inherit_w_colon_w_scope(void);
-void Plecs_inherit_w_colon_w_assign(void);
-void Plecs_assign_component_value(void);
-void Plecs_assign_2_component_values(void);
-void Plecs_assign_component_value_in_assign_scope(void);
-void Plecs_assign_2_component_values_in_assign_scope(void);
-void Plecs_type_and_assign_in_plecs(void);
-void Plecs_type_and_assign_in_plecs_w_2_members(void);
-void Plecs_type_and_assign_in_plecs_w_3_members(void);
-void Plecs_type_and_assign_in_plecs_w_enum(void);
-void Plecs_type_and_assign_in_plecs_w_enum_using_meta(void);
-void Plecs_type_and_assign_in_plecs_w_enum_primitive_using_meta(void);
-void Plecs_type_and_assign_in_plecs_w_enum_primitive_and_struct(void);
-void Plecs_type_and_assign_in_plecs_nested_member(void);
-void Plecs_dot_assign_nested_member(void);
-void Plecs_dot_assign_binary_expr(void);
-void Plecs_open_scope_no_parent(void);
-void Plecs_create_subject_in_root_scope_w_resolvable_id(void);
-void Plecs_create_subject_in_scope_w_resolvable_id(void);
-void Plecs_create_subject_in_scope_w_resolvable_id_using(void);
-void Plecs_using_scope(void);
-void Plecs_using_nested_scope(void);
-void Plecs_using_nested_in_scope(void);
-void Plecs_using_with_scope(void);
-void Plecs_using_w_entity_ref_in_value_2_members(void);
-void Plecs_using_w_entity_ref_in_value_3_members(void);
-void Plecs_2_using_scope(void);
-void Plecs_2_using_in_different_scope(void);
-void Plecs_empty_scope_after_using(void);
-void Plecs_assignment_to_non_component(void);
-void Plecs_struct_w_member_w_assignment_to_nothing(void);
-void Plecs_struct_w_member_w_assignment_to_empty_scope(void);
-void Plecs_scope_after_assign(void);
-void Plecs_assign_after_inherit(void);
-void Plecs_multiple_assignments_single_line(void);
-void Plecs_2_stmts_in_scope_w_no_parent(void);
-void Plecs_scope_after_assign_1_tag(void);
-void Plecs_scope_after_assign_2_tags(void);
-void Plecs_invalid_nested_assignment(void);
-void Plecs_invalid_partial_pair_assignment(void);
-void Plecs_empty_assignment(void);
-void Plecs_assign_tag_to_parent(void);
-void Plecs_assign_component_to_parent(void);
-void Plecs_empty_assignment_before_end_of_scope(void);
-void Plecs_assign_to_parent_pair_w_new_entities_in_scope(void);
-void Plecs_assign_to_parent_pair_w_existing_entities_in_scope(void);
-void Plecs_default_child_component(void);
-void Plecs_default_child_component_w_assign(void);
-void Plecs_struct_type_w_default_child_component(void);
-void Plecs_struct_type_w_default_child_component_nested_member(void);
-void Plecs_enum_type_w_default_child_component(void);
-void Plecs_default_type_from_with(void);
-void Plecs_scope_w_1_subj_and_2_pairs(void);
-void Plecs_inherit_from_multiple(void);
-void Plecs_assign_pair_component(void);
-void Plecs_assign_pair_component_in_scope(void);
-void Plecs_assign_pair_component_in_script(void);
-void Plecs_assign_pair_component_in_script_update(void);
-void Plecs_set_entity_names(void);
-void Plecs_oneof(void);
-void Plecs_invalid_oneof(void);
-void Plecs_brief_annotation(void);
-void Plecs_name_annotation(void);
-void Plecs_link_annotation(void);
-void Plecs_color_annotation(void);
-void Plecs_multiple_annotations(void);
-void Plecs_annotation_w_trailing_space(void);
-void Plecs_multiline_string(void);
-void Plecs_unterminated_multiline_string(void);
-void Plecs_declaration_w_underscore_name(void);
-void Plecs_annotate_declaration(void);
-void Plecs_anonymous_entity(void);
-void Plecs_anonymous_entity_in_scope(void);
-void Plecs_anonymous_declaration(void);
-void Plecs_const_var_int(void);
-void Plecs_const_var_float(void);
-void Plecs_const_var_bool(void);
-void Plecs_const_var_string(void);
-void Plecs_const_var_struct(void);
-void Plecs_const_var_redeclare(void);
-void Plecs_const_var_scoped(void);
-void Plecs_assign_component_from_var(void);
-void Plecs_assign_component_from_var_in_scope(void);
-void Plecs_scope_w_component_after_const_var(void);
-void Plecs_component_after_const_paren_expr(void);
-void Plecs_component_after_const_add_expr(void);
-void Plecs_component_after_const_sub_expr(void);
-void Plecs_component_after_const_mul_expr(void);
-void Plecs_component_after_const_div_expr(void);
-void Plecs_parse_with(void);
-void Plecs_parse_with_w_with(void);
-void Plecs_parse_with_w_tag(void);
-void Plecs_parse_with_value(void);
-void Plecs_parse_with_2_values(void);
-void Plecs_parse_with_2_nested_values(void);
-void Plecs_parse_with_var(void);
-void Plecs_parse_with_2_vars(void);
-void Plecs_parse_with_2_nested_vars(void);
-void Plecs_parse_with_var_in_scope(void);
-void Plecs_assign_const_w_expr(void);
-void Plecs_const_w_type(void);
-void Plecs_assembly_no_scope(void);
-void Plecs_assembly_empty(void);
-void Plecs_assembly_no_props(void);
-void Plecs_assembly_prop_no_type(void);
-void Plecs_assembly_prop_no_default(void);
-void Plecs_assembly_prop(void);
-void Plecs_assembly_prop_space_colon(void);
-void Plecs_assembly_2_props(void);
-void Plecs_assembly_instance_w_default_values(void);
-void Plecs_assembly_instance_w_assign_default_values(void);
-void Plecs_assembly_instance_w_overridden_values(void);
-void Plecs_assembly_w_child(void);
-void Plecs_assembly_w_child_parse_script(void);
-void Plecs_assembly_w_child_parse_script_twice(void);
-void Plecs_assembly_w_child_update_after_parse(void);
-void Plecs_assembly_w_nested_child(void);
-void Plecs_assembly_w_prefab(void);
-void Plecs_assembly_w_prefab_tree(void);
-void Plecs_assembly_w_nested_assembly(void);
-void Plecs_instantiate_prefab_w_assembly(void);
-void Plecs_assembly_w_prefab_w_assembly(void);
-void Plecs_3_assemblies(void);
-void Plecs_assembly_nested_w_default_var(void);
-void Plecs_assembly_w_anonymous(void);
-void Plecs_assembly_w_anonymous_parse_again(void);
-void Plecs_typed_const_w_composite_type_invalid_assignment(void);
-void Plecs_typed_const_w_composite_type(void);
-void Plecs_assign_var_to_typed_const_w_composite_type(void);
-void Plecs_typed_const_w_composite_type_invalid_assignment(void);
-void Plecs_assembly_w_composite_prop_invalid_assignment(void);
-void Plecs_assembly_w_composite_prop(void);
-void Plecs_assembly_with_with(void);
-void Plecs_using_wildcard(void);
-void Plecs_single_line_comment_in_value(void);
-void Plecs_single_line_comment_in_value_after_scope(void);
-void Plecs_multi_line_comment_in_value(void);
-void Plecs_multi_line_comment_in_value_after_scope(void);
-void Plecs_unterminated_multi_line_comment_in_value(void);
-void Plecs_module_stmt(void);
-void Plecs_nested_module_stmt(void);
-void Plecs_module_stmt_w_scope(void);
-void Plecs_module_stmt_w_nested_scope(void);
-void Plecs_module_w_assembly(void);
-void Plecs_module_w_nested_assembly(void);
-void Plecs_assign_singleton_tag(void);
-void Plecs_assign_singleton_component(void);
-void Plecs_assign_singleton_tag_w_scope(void);
-void Plecs_assign_singleton_2_tags_w_scope(void);
-void Plecs_assign_singleton_component_w_scope(void);
-void Plecs_assign_singleton_2_components_w_scope(void);
-void Plecs_with_pair_in_scope(void);
-void Plecs_assembly_redeclare_prop_as_const(void);
-void Plecs_assembly_redeclare_prop_as_prop(void);
-void Plecs_assembly_redeclare_const_as_const(void);
-void Plecs_add_auto_override(void);
-void Plecs_add_auto_override_pair(void);
-void Plecs_scope_w_auto_override(void);
-void Plecs_scope_w_auto_override_pair(void);
-void Plecs_pair_w_rel_var(void);
-void Plecs_pair_w_tgt_var(void);
-void Plecs_assembly_w_pair_w_this_var(void);
-void Plecs_with_value_not_a_component(void);
-void Plecs_component_in_with_scope(void);
-void Plecs_component_in_with_scope_nested(void);
-void Plecs_component_in_with_scope_in_scope(void);
-void Plecs_assign_after_with_in_scope(void);
-void Plecs_array_component(void);
+// Testsuite 'Script'
+void Script_null(void);
+void Script_empty(void);
+void Script_space(void);
+void Script_space_newline(void);
+void Script_two_empty_newlines(void);
+void Script_three_empty_newlines(void);
+void Script_newline_trailing_space(void);
+void Script_newline_trailing_spaces(void);
+void Script_multiple_trailing_newlines(void);
+void Script_entity(void);
+void Script_entity_w_entity(void);
+void Script_entity_w_pair(void);
+void Script_2_entities(void);
+void Script_2_entities_w_entities(void);
+void Script_3_entities_w_pairs(void);
+void Script_line_comment(void);
+void Script_line_comment_before_stmt(void);
+void Script_line_comment_after_stmt(void);
+void Script_line_comment_between_stmt(void);
+void Script_multiple_line_comment(void);
+void Script_line_comment_after_stmt_same_line(void);
+void Script_comma_separated_pred(void);
+void Script_comma_separated_pred_w_subj(void);
+void Script_comma_separated_pred_w_subj_obj(void);
+void Script_comma_separated_pred_trailing_comma(void);
+void Script_comma_separated_pred_trailing_comma_newline(void);
+void Script_comma_separated_pred_trailing_comma_newline_multiline(void);
+void Script_hierarchy_1_child(void);
+void Script_hierarchy_2_children(void);
+void Script_hierarchy_1_child_same_line(void);
+void Script_hierarchy_2_children_same_line(void);
+void Script_entity_after_hierarchy(void);
+void Script_newline_before_scope_open(void);
+void Script_comment_before_scope_open(void);
+void Script_comment_after_newline_before_scope_open(void);
+void Script_hierarchy_2_levels(void);
+void Script_hierarchy_2_levels_2_subtrees(void);
+void Script_missing_end_of_scope(void);
+void Script_missing_end_of_predicate_scope(void);
+void Script_create_in_scope(void);
+void Script_hierarchy_w_pred_subj(void);
+void Script_hierarchy_custom_relation(void);
+void Script_hierarchy_custom_relation_2_levels(void);
+void Script_hierarchy_custom_relation_apply_to_object(void);
+void Script_hierarchy_custom_relation_apply_to_object_2_levels(void);
+void Script_entity_after_hierarchy_custom_relation(void);
+void Script_entity_after_hierarchy_custom_relation_2_levels(void);
+void Script_pred_scope(void);
+void Script_pred_scope_2_levels(void);
+void Script_pred_scope_inside_with(void);
+void Script_pred_scope_nested_w_subj_scope(void);
+void Script_with_tag(void);
+void Script_with_tag_2_entities(void);
+void Script_with_tag_same_line(void);
+void Script_with_tag_2_entities_same_line(void);
+void Script_with_tag_2_levels(void);
+void Script_with_tag_2_levels_2_subtrees(void);
+void Script_with_n_tags(void);
+void Script_with_n_tags_2_levels(void);
+void Script_with_after_scope(void);
+void Script_with_after_with(void);
+void Script_scope_inside_with_inside_scope(void);
+void Script_with_inside_scope(void);
+void Script_assignment_w_1(void);
+void Script_assignment_w_2(void);
+void Script_assignment_w_pair(void);
+void Script_assignment_w_invalid_subject(void);
+void Script_assignment_w_invalid_with(void);
+void Script_inherit_w_colon(void);
+void Script_inherit_w_colon_w_scope(void);
+void Script_inherit_w_colon_w_assign(void);
+void Script_assign_component_value(void);
+void Script_assign_2_component_values(void);
+void Script_assign_component_value_in_assign_scope(void);
+void Script_assign_2_component_values_in_assign_scope(void);
+void Script_type_and_assign_in_plecs(void);
+void Script_type_and_assign_in_plecs_w_2_members(void);
+void Script_type_and_assign_in_plecs_w_3_members(void);
+void Script_type_and_assign_in_plecs_w_enum(void);
+void Script_type_and_assign_in_plecs_w_enum_using_meta(void);
+void Script_type_and_assign_in_plecs_w_enum_primitive_using_meta(void);
+void Script_type_and_assign_in_plecs_w_enum_primitive_and_struct(void);
+void Script_type_and_assign_in_plecs_nested_member(void);
+void Script_dot_assign_nested_member(void);
+void Script_dot_assign_binary_expr(void);
+void Script_open_scope_no_parent(void);
+void Script_create_subject_in_root_scope_w_resolvable_id(void);
+void Script_create_subject_in_scope_w_resolvable_id(void);
+void Script_create_subject_in_scope_w_resolvable_id_using(void);
+void Script_using_scope(void);
+void Script_using_nested_scope(void);
+void Script_using_nested_in_scope(void);
+void Script_using_with_scope(void);
+void Script_using_w_entity_ref_in_value_2_members(void);
+void Script_using_w_entity_ref_in_value_3_members(void);
+void Script_2_using_scope(void);
+void Script_2_using_in_different_scope(void);
+void Script_empty_scope_after_using(void);
+void Script_assignment_to_non_component(void);
+void Script_struct_w_member_w_assignment_to_nothing(void);
+void Script_struct_w_member_w_assignment_to_empty_scope(void);
+void Script_scope_after_assign(void);
+void Script_assign_after_inherit(void);
+void Script_multiple_assignments_single_line(void);
+void Script_2_stmts_in_scope_w_no_parent(void);
+void Script_scope_after_assign_1_tag(void);
+void Script_scope_after_assign_2_tags(void);
+void Script_invalid_nested_assignment(void);
+void Script_invalid_partial_pair_assignment(void);
+void Script_empty_assignment(void);
+void Script_assign_tag_to_parent(void);
+void Script_assign_component_to_parent(void);
+void Script_empty_assignment_before_end_of_scope(void);
+void Script_assign_to_parent_pair_w_new_entities_in_scope(void);
+void Script_assign_to_parent_pair_w_existing_entities_in_scope(void);
+void Script_default_child_component(void);
+void Script_default_child_component_w_assign(void);
+void Script_struct_type_w_default_child_component(void);
+void Script_struct_type_w_default_child_component_nested_member(void);
+void Script_enum_type_w_default_child_component(void);
+void Script_default_type_from_with(void);
+void Script_scope_w_1_subj_and_2_pairs(void);
+void Script_inherit_from_multiple(void);
+void Script_assign_pair_component(void);
+void Script_assign_pair_component_in_scope(void);
+void Script_assign_pair_component_in_script(void);
+void Script_assign_pair_component_in_script_update(void);
+void Script_set_entity_names(void);
+void Script_oneof(void);
+void Script_invalid_oneof(void);
+void Script_brief_annotation(void);
+void Script_name_annotation(void);
+void Script_link_annotation(void);
+void Script_color_annotation(void);
+void Script_multiple_annotations(void);
+void Script_annotation_w_trailing_space(void);
+void Script_multiline_string(void);
+void Script_unterminated_multiline_string(void);
+void Script_declaration_w_underscore_name(void);
+void Script_annotate_declaration(void);
+void Script_anonymous_entity(void);
+void Script_anonymous_entity_in_scope(void);
+void Script_anonymous_declaration(void);
+void Script_const_var_int(void);
+void Script_const_var_float(void);
+void Script_const_var_bool(void);
+void Script_const_var_string(void);
+void Script_const_var_struct(void);
+void Script_const_var_redeclare(void);
+void Script_const_var_scoped(void);
+void Script_assign_component_from_var(void);
+void Script_assign_component_from_var_in_scope(void);
+void Script_scope_w_component_after_const_var(void);
+void Script_component_after_const_paren_expr(void);
+void Script_component_after_const_add_expr(void);
+void Script_component_after_const_sub_expr(void);
+void Script_component_after_const_mul_expr(void);
+void Script_component_after_const_div_expr(void);
+void Script_parse_with(void);
+void Script_parse_with_w_with(void);
+void Script_parse_with_w_tag(void);
+void Script_parse_with_value(void);
+void Script_parse_with_2_values(void);
+void Script_parse_with_2_nested_values(void);
+void Script_parse_with_var(void);
+void Script_parse_with_2_vars(void);
+void Script_parse_with_2_nested_vars(void);
+void Script_parse_with_var_in_scope(void);
+void Script_assign_const_w_expr(void);
+void Script_const_w_type(void);
+void Script_assembly_no_scope(void);
+void Script_assembly_empty(void);
+void Script_assembly_no_props(void);
+void Script_assembly_prop_no_type(void);
+void Script_assembly_prop_no_default(void);
+void Script_assembly_prop(void);
+void Script_assembly_prop_space_colon(void);
+void Script_assembly_2_props(void);
+void Script_assembly_instance_w_default_values(void);
+void Script_assembly_instance_w_assign_default_values(void);
+void Script_assembly_instance_w_overridden_values(void);
+void Script_assembly_w_child(void);
+void Script_assembly_w_child_parse_script(void);
+void Script_assembly_w_child_parse_script_twice(void);
+void Script_assembly_w_child_update_after_parse(void);
+void Script_assembly_w_nested_child(void);
+void Script_assembly_w_prefab(void);
+void Script_assembly_w_prefab_tree(void);
+void Script_assembly_w_nested_assembly(void);
+void Script_instantiate_prefab_w_assembly(void);
+void Script_assembly_w_prefab_w_assembly(void);
+void Script_3_assemblies(void);
+void Script_assembly_nested_w_default_var(void);
+void Script_assembly_w_anonymous(void);
+void Script_assembly_w_anonymous_parse_again(void);
+void Script_typed_const_w_composite_type_invalid_assignment(void);
+void Script_typed_const_w_composite_type(void);
+void Script_assign_var_to_typed_const_w_composite_type(void);
+void Script_typed_const_w_composite_type_invalid_assignment(void);
+void Script_assembly_w_composite_prop_invalid_assignment(void);
+void Script_assembly_w_composite_prop(void);
+void Script_assembly_with_with(void);
+void Script_using_wildcard(void);
+void Script_single_line_comment_in_value(void);
+void Script_single_line_comment_in_value_after_scope(void);
+void Script_multi_line_comment_in_value(void);
+void Script_multi_line_comment_in_value_after_scope(void);
+void Script_unterminated_multi_line_comment_in_value(void);
+void Script_module_stmt(void);
+void Script_nested_module_stmt(void);
+void Script_module_stmt_w_scope(void);
+void Script_module_stmt_w_nested_scope(void);
+void Script_module_w_assembly(void);
+void Script_module_w_nested_assembly(void);
+void Script_assign_singleton_tag(void);
+void Script_assign_singleton_component(void);
+void Script_assign_singleton_tag_w_scope(void);
+void Script_assign_singleton_2_tags_w_scope(void);
+void Script_assign_singleton_component_w_scope(void);
+void Script_assign_singleton_2_components_w_scope(void);
+void Script_with_pair_in_scope(void);
+void Script_assembly_redeclare_prop_as_const(void);
+void Script_assembly_redeclare_prop_as_prop(void);
+void Script_assembly_redeclare_const_as_const(void);
+void Script_add_auto_override(void);
+void Script_add_auto_override_pair(void);
+void Script_scope_w_auto_override(void);
+void Script_scope_w_auto_override_pair(void);
+void Script_pair_w_rel_var(void);
+void Script_pair_w_tgt_var(void);
+void Script_assembly_w_pair_w_this_var(void);
+void Script_with_value_not_a_component(void);
+void Script_component_in_with_scope(void);
+void Script_component_in_with_scope_nested(void);
+void Script_component_in_with_scope_in_scope(void);
+void Script_assign_after_with_in_scope(void);
+void Script_array_component(void);
 
 // Testsuite 'Doc'
 void Doc_get_set_name(void);
@@ -761,954 +761,954 @@ void Alerts_member_range_from_var_after_remove(void);
 void Alerts_retained_alert_w_dead_source(void);
 void Alerts_alert_counts(void);
 
-bake_test_case Plecs_testcases[] = {
+bake_test_case Script_testcases[] = {
     {
         "null",
-        Plecs_null
+        Script_null
     },
     {
         "empty",
-        Plecs_empty
+        Script_empty
     },
     {
         "space",
-        Plecs_space
+        Script_space
     },
     {
         "space_newline",
-        Plecs_space_newline
+        Script_space_newline
     },
     {
         "two_empty_newlines",
-        Plecs_two_empty_newlines
+        Script_two_empty_newlines
     },
     {
         "three_empty_newlines",
-        Plecs_three_empty_newlines
+        Script_three_empty_newlines
     },
     {
         "newline_trailing_space",
-        Plecs_newline_trailing_space
+        Script_newline_trailing_space
     },
     {
         "newline_trailing_spaces",
-        Plecs_newline_trailing_spaces
+        Script_newline_trailing_spaces
     },
     {
         "multiple_trailing_newlines",
-        Plecs_multiple_trailing_newlines
+        Script_multiple_trailing_newlines
     },
     {
         "entity",
-        Plecs_entity
+        Script_entity
     },
     {
         "entity_w_entity",
-        Plecs_entity_w_entity
+        Script_entity_w_entity
     },
     {
         "entity_w_pair",
-        Plecs_entity_w_pair
+        Script_entity_w_pair
     },
     {
         "2_entities",
-        Plecs_2_entities
+        Script_2_entities
     },
     {
         "2_entities_w_entities",
-        Plecs_2_entities_w_entities
+        Script_2_entities_w_entities
     },
     {
         "3_entities_w_pairs",
-        Plecs_3_entities_w_pairs
+        Script_3_entities_w_pairs
     },
     {
         "line_comment",
-        Plecs_line_comment
+        Script_line_comment
     },
     {
         "line_comment_before_stmt",
-        Plecs_line_comment_before_stmt
+        Script_line_comment_before_stmt
     },
     {
         "line_comment_after_stmt",
-        Plecs_line_comment_after_stmt
+        Script_line_comment_after_stmt
     },
     {
         "line_comment_between_stmt",
-        Plecs_line_comment_between_stmt
+        Script_line_comment_between_stmt
     },
     {
         "multiple_line_comment",
-        Plecs_multiple_line_comment
+        Script_multiple_line_comment
     },
     {
         "line_comment_after_stmt_same_line",
-        Plecs_line_comment_after_stmt_same_line
+        Script_line_comment_after_stmt_same_line
     },
     {
         "comma_separated_pred",
-        Plecs_comma_separated_pred
+        Script_comma_separated_pred
     },
     {
         "comma_separated_pred_w_subj",
-        Plecs_comma_separated_pred_w_subj
+        Script_comma_separated_pred_w_subj
     },
     {
         "comma_separated_pred_w_subj_obj",
-        Plecs_comma_separated_pred_w_subj_obj
+        Script_comma_separated_pred_w_subj_obj
     },
     {
         "comma_separated_pred_trailing_comma",
-        Plecs_comma_separated_pred_trailing_comma
+        Script_comma_separated_pred_trailing_comma
     },
     {
         "comma_separated_pred_trailing_comma_newline",
-        Plecs_comma_separated_pred_trailing_comma_newline
+        Script_comma_separated_pred_trailing_comma_newline
     },
     {
         "comma_separated_pred_trailing_comma_newline_multiline",
-        Plecs_comma_separated_pred_trailing_comma_newline_multiline
+        Script_comma_separated_pred_trailing_comma_newline_multiline
     },
     {
         "hierarchy_1_child",
-        Plecs_hierarchy_1_child
+        Script_hierarchy_1_child
     },
     {
         "hierarchy_2_children",
-        Plecs_hierarchy_2_children
+        Script_hierarchy_2_children
     },
     {
         "hierarchy_1_child_same_line",
-        Plecs_hierarchy_1_child_same_line
+        Script_hierarchy_1_child_same_line
     },
     {
         "hierarchy_2_children_same_line",
-        Plecs_hierarchy_2_children_same_line
+        Script_hierarchy_2_children_same_line
     },
     {
         "entity_after_hierarchy",
-        Plecs_entity_after_hierarchy
+        Script_entity_after_hierarchy
     },
     {
         "newline_before_scope_open",
-        Plecs_newline_before_scope_open
+        Script_newline_before_scope_open
     },
     {
         "comment_before_scope_open",
-        Plecs_comment_before_scope_open
+        Script_comment_before_scope_open
     },
     {
         "comment_after_newline_before_scope_open",
-        Plecs_comment_after_newline_before_scope_open
+        Script_comment_after_newline_before_scope_open
     },
     {
         "hierarchy_2_levels",
-        Plecs_hierarchy_2_levels
+        Script_hierarchy_2_levels
     },
     {
         "hierarchy_2_levels_2_subtrees",
-        Plecs_hierarchy_2_levels_2_subtrees
+        Script_hierarchy_2_levels_2_subtrees
     },
     {
         "missing_end_of_scope",
-        Plecs_missing_end_of_scope
+        Script_missing_end_of_scope
     },
     {
         "missing_end_of_predicate_scope",
-        Plecs_missing_end_of_predicate_scope
+        Script_missing_end_of_predicate_scope
     },
     {
         "create_in_scope",
-        Plecs_create_in_scope
+        Script_create_in_scope
     },
     {
         "hierarchy_w_pred_subj",
-        Plecs_hierarchy_w_pred_subj
+        Script_hierarchy_w_pred_subj
     },
     {
         "hierarchy_custom_relation",
-        Plecs_hierarchy_custom_relation
+        Script_hierarchy_custom_relation
     },
     {
         "hierarchy_custom_relation_2_levels",
-        Plecs_hierarchy_custom_relation_2_levels
+        Script_hierarchy_custom_relation_2_levels
     },
     {
         "hierarchy_custom_relation_apply_to_object",
-        Plecs_hierarchy_custom_relation_apply_to_object
+        Script_hierarchy_custom_relation_apply_to_object
     },
     {
         "hierarchy_custom_relation_apply_to_object_2_levels",
-        Plecs_hierarchy_custom_relation_apply_to_object_2_levels
+        Script_hierarchy_custom_relation_apply_to_object_2_levels
     },
     {
         "entity_after_hierarchy_custom_relation",
-        Plecs_entity_after_hierarchy_custom_relation
+        Script_entity_after_hierarchy_custom_relation
     },
     {
         "entity_after_hierarchy_custom_relation_2_levels",
-        Plecs_entity_after_hierarchy_custom_relation_2_levels
+        Script_entity_after_hierarchy_custom_relation_2_levels
     },
     {
         "pred_scope",
-        Plecs_pred_scope
+        Script_pred_scope
     },
     {
         "pred_scope_2_levels",
-        Plecs_pred_scope_2_levels
+        Script_pred_scope_2_levels
     },
     {
         "pred_scope_inside_with",
-        Plecs_pred_scope_inside_with
+        Script_pred_scope_inside_with
     },
     {
         "pred_scope_nested_w_subj_scope",
-        Plecs_pred_scope_nested_w_subj_scope
+        Script_pred_scope_nested_w_subj_scope
     },
     {
         "with_tag",
-        Plecs_with_tag
+        Script_with_tag
     },
     {
         "with_tag_2_entities",
-        Plecs_with_tag_2_entities
+        Script_with_tag_2_entities
     },
     {
         "with_tag_same_line",
-        Plecs_with_tag_same_line
+        Script_with_tag_same_line
     },
     {
         "with_tag_2_entities_same_line",
-        Plecs_with_tag_2_entities_same_line
+        Script_with_tag_2_entities_same_line
     },
     {
         "with_tag_2_levels",
-        Plecs_with_tag_2_levels
+        Script_with_tag_2_levels
     },
     {
         "with_tag_2_levels_2_subtrees",
-        Plecs_with_tag_2_levels_2_subtrees
+        Script_with_tag_2_levels_2_subtrees
     },
     {
         "with_n_tags",
-        Plecs_with_n_tags
+        Script_with_n_tags
     },
     {
         "with_n_tags_2_levels",
-        Plecs_with_n_tags_2_levels
+        Script_with_n_tags_2_levels
     },
     {
         "with_after_scope",
-        Plecs_with_after_scope
+        Script_with_after_scope
     },
     {
         "with_after_with",
-        Plecs_with_after_with
+        Script_with_after_with
     },
     {
         "scope_inside_with_inside_scope",
-        Plecs_scope_inside_with_inside_scope
+        Script_scope_inside_with_inside_scope
     },
     {
         "with_inside_scope",
-        Plecs_with_inside_scope
+        Script_with_inside_scope
     },
     {
         "assignment_w_1",
-        Plecs_assignment_w_1
+        Script_assignment_w_1
     },
     {
         "assignment_w_2",
-        Plecs_assignment_w_2
+        Script_assignment_w_2
     },
     {
         "assignment_w_pair",
-        Plecs_assignment_w_pair
+        Script_assignment_w_pair
     },
     {
         "assignment_w_invalid_subject",
-        Plecs_assignment_w_invalid_subject
+        Script_assignment_w_invalid_subject
     },
     {
         "assignment_w_invalid_with",
-        Plecs_assignment_w_invalid_with
+        Script_assignment_w_invalid_with
     },
     {
         "inherit_w_colon",
-        Plecs_inherit_w_colon
+        Script_inherit_w_colon
     },
     {
         "inherit_w_colon_w_scope",
-        Plecs_inherit_w_colon_w_scope
+        Script_inherit_w_colon_w_scope
     },
     {
         "inherit_w_colon_w_assign",
-        Plecs_inherit_w_colon_w_assign
+        Script_inherit_w_colon_w_assign
     },
     {
         "assign_component_value",
-        Plecs_assign_component_value
+        Script_assign_component_value
     },
     {
         "assign_2_component_values",
-        Plecs_assign_2_component_values
+        Script_assign_2_component_values
     },
     {
         "assign_component_value_in_assign_scope",
-        Plecs_assign_component_value_in_assign_scope
+        Script_assign_component_value_in_assign_scope
     },
     {
         "assign_2_component_values_in_assign_scope",
-        Plecs_assign_2_component_values_in_assign_scope
+        Script_assign_2_component_values_in_assign_scope
     },
     {
         "type_and_assign_in_plecs",
-        Plecs_type_and_assign_in_plecs
+        Script_type_and_assign_in_plecs
     },
     {
         "type_and_assign_in_plecs_w_2_members",
-        Plecs_type_and_assign_in_plecs_w_2_members
+        Script_type_and_assign_in_plecs_w_2_members
     },
     {
         "type_and_assign_in_plecs_w_3_members",
-        Plecs_type_and_assign_in_plecs_w_3_members
+        Script_type_and_assign_in_plecs_w_3_members
     },
     {
         "type_and_assign_in_plecs_w_enum",
-        Plecs_type_and_assign_in_plecs_w_enum
+        Script_type_and_assign_in_plecs_w_enum
     },
     {
         "type_and_assign_in_plecs_w_enum_using_meta",
-        Plecs_type_and_assign_in_plecs_w_enum_using_meta
+        Script_type_and_assign_in_plecs_w_enum_using_meta
     },
     {
         "type_and_assign_in_plecs_w_enum_primitive_using_meta",
-        Plecs_type_and_assign_in_plecs_w_enum_primitive_using_meta
+        Script_type_and_assign_in_plecs_w_enum_primitive_using_meta
     },
     {
         "type_and_assign_in_plecs_w_enum_primitive_and_struct",
-        Plecs_type_and_assign_in_plecs_w_enum_primitive_and_struct
+        Script_type_and_assign_in_plecs_w_enum_primitive_and_struct
     },
     {
         "type_and_assign_in_plecs_nested_member",
-        Plecs_type_and_assign_in_plecs_nested_member
+        Script_type_and_assign_in_plecs_nested_member
     },
     {
         "dot_assign_nested_member",
-        Plecs_dot_assign_nested_member
+        Script_dot_assign_nested_member
     },
     {
         "dot_assign_binary_expr",
-        Plecs_dot_assign_binary_expr
+        Script_dot_assign_binary_expr
     },
     {
         "open_scope_no_parent",
-        Plecs_open_scope_no_parent
+        Script_open_scope_no_parent
     },
     {
         "create_subject_in_root_scope_w_resolvable_id",
-        Plecs_create_subject_in_root_scope_w_resolvable_id
+        Script_create_subject_in_root_scope_w_resolvable_id
     },
     {
         "create_subject_in_scope_w_resolvable_id",
-        Plecs_create_subject_in_scope_w_resolvable_id
+        Script_create_subject_in_scope_w_resolvable_id
     },
     {
         "create_subject_in_scope_w_resolvable_id_using",
-        Plecs_create_subject_in_scope_w_resolvable_id_using
+        Script_create_subject_in_scope_w_resolvable_id_using
     },
     {
         "using_scope",
-        Plecs_using_scope
+        Script_using_scope
     },
     {
         "using_nested_scope",
-        Plecs_using_nested_scope
+        Script_using_nested_scope
     },
     {
         "using_nested_in_scope",
-        Plecs_using_nested_in_scope
+        Script_using_nested_in_scope
     },
     {
         "using_with_scope",
-        Plecs_using_with_scope
+        Script_using_with_scope
     },
     {
         "using_w_entity_ref_in_value_2_members",
-        Plecs_using_w_entity_ref_in_value_2_members
+        Script_using_w_entity_ref_in_value_2_members
     },
     {
         "using_w_entity_ref_in_value_3_members",
-        Plecs_using_w_entity_ref_in_value_3_members
+        Script_using_w_entity_ref_in_value_3_members
     },
     {
         "2_using_scope",
-        Plecs_2_using_scope
+        Script_2_using_scope
     },
     {
         "2_using_in_different_scope",
-        Plecs_2_using_in_different_scope
+        Script_2_using_in_different_scope
     },
     {
         "empty_scope_after_using",
-        Plecs_empty_scope_after_using
+        Script_empty_scope_after_using
     },
     {
         "assignment_to_non_component",
-        Plecs_assignment_to_non_component
+        Script_assignment_to_non_component
     },
     {
         "struct_w_member_w_assignment_to_nothing",
-        Plecs_struct_w_member_w_assignment_to_nothing
+        Script_struct_w_member_w_assignment_to_nothing
     },
     {
         "struct_w_member_w_assignment_to_empty_scope",
-        Plecs_struct_w_member_w_assignment_to_empty_scope
+        Script_struct_w_member_w_assignment_to_empty_scope
     },
     {
         "scope_after_assign",
-        Plecs_scope_after_assign
+        Script_scope_after_assign
     },
     {
         "assign_after_inherit",
-        Plecs_assign_after_inherit
+        Script_assign_after_inherit
     },
     {
         "multiple_assignments_single_line",
-        Plecs_multiple_assignments_single_line
+        Script_multiple_assignments_single_line
     },
     {
         "2_stmts_in_scope_w_no_parent",
-        Plecs_2_stmts_in_scope_w_no_parent
+        Script_2_stmts_in_scope_w_no_parent
     },
     {
         "scope_after_assign_1_tag",
-        Plecs_scope_after_assign_1_tag
+        Script_scope_after_assign_1_tag
     },
     {
         "scope_after_assign_2_tags",
-        Plecs_scope_after_assign_2_tags
+        Script_scope_after_assign_2_tags
     },
     {
         "invalid_nested_assignment",
-        Plecs_invalid_nested_assignment
+        Script_invalid_nested_assignment
     },
     {
         "invalid_partial_pair_assignment",
-        Plecs_invalid_partial_pair_assignment
+        Script_invalid_partial_pair_assignment
     },
     {
         "empty_assignment",
-        Plecs_empty_assignment
+        Script_empty_assignment
     },
     {
         "assign_tag_to_parent",
-        Plecs_assign_tag_to_parent
+        Script_assign_tag_to_parent
     },
     {
         "assign_component_to_parent",
-        Plecs_assign_component_to_parent
+        Script_assign_component_to_parent
     },
     {
         "empty_assignment_before_end_of_scope",
-        Plecs_empty_assignment_before_end_of_scope
+        Script_empty_assignment_before_end_of_scope
     },
     {
         "assign_to_parent_pair_w_new_entities_in_scope",
-        Plecs_assign_to_parent_pair_w_new_entities_in_scope
+        Script_assign_to_parent_pair_w_new_entities_in_scope
     },
     {
         "assign_to_parent_pair_w_existing_entities_in_scope",
-        Plecs_assign_to_parent_pair_w_existing_entities_in_scope
+        Script_assign_to_parent_pair_w_existing_entities_in_scope
     },
     {
         "default_child_component",
-        Plecs_default_child_component
+        Script_default_child_component
     },
     {
         "default_child_component_w_assign",
-        Plecs_default_child_component_w_assign
+        Script_default_child_component_w_assign
     },
     {
         "struct_type_w_default_child_component",
-        Plecs_struct_type_w_default_child_component
+        Script_struct_type_w_default_child_component
     },
     {
         "struct_type_w_default_child_component_nested_member",
-        Plecs_struct_type_w_default_child_component_nested_member
+        Script_struct_type_w_default_child_component_nested_member
     },
     {
         "enum_type_w_default_child_component",
-        Plecs_enum_type_w_default_child_component
+        Script_enum_type_w_default_child_component
     },
     {
         "default_type_from_with",
-        Plecs_default_type_from_with
+        Script_default_type_from_with
     },
     {
         "scope_w_1_subj_and_2_pairs",
-        Plecs_scope_w_1_subj_and_2_pairs
+        Script_scope_w_1_subj_and_2_pairs
     },
     {
         "inherit_from_multiple",
-        Plecs_inherit_from_multiple
+        Script_inherit_from_multiple
     },
     {
         "assign_pair_component",
-        Plecs_assign_pair_component
+        Script_assign_pair_component
     },
     {
         "assign_pair_component_in_scope",
-        Plecs_assign_pair_component_in_scope
+        Script_assign_pair_component_in_scope
     },
     {
         "assign_pair_component_in_script",
-        Plecs_assign_pair_component_in_script
+        Script_assign_pair_component_in_script
     },
     {
         "assign_pair_component_in_script_update",
-        Plecs_assign_pair_component_in_script_update
+        Script_assign_pair_component_in_script_update
     },
     {
         "set_entity_names",
-        Plecs_set_entity_names
+        Script_set_entity_names
     },
     {
         "oneof",
-        Plecs_oneof
+        Script_oneof
     },
     {
         "invalid_oneof",
-        Plecs_invalid_oneof
+        Script_invalid_oneof
     },
     {
         "brief_annotation",
-        Plecs_brief_annotation
+        Script_brief_annotation
     },
     {
         "name_annotation",
-        Plecs_name_annotation
+        Script_name_annotation
     },
     {
         "link_annotation",
-        Plecs_link_annotation
+        Script_link_annotation
     },
     {
         "color_annotation",
-        Plecs_color_annotation
+        Script_color_annotation
     },
     {
         "multiple_annotations",
-        Plecs_multiple_annotations
+        Script_multiple_annotations
     },
     {
         "annotation_w_trailing_space",
-        Plecs_annotation_w_trailing_space
+        Script_annotation_w_trailing_space
     },
     {
         "multiline_string",
-        Plecs_multiline_string
+        Script_multiline_string
     },
     {
         "unterminated_multiline_string",
-        Plecs_unterminated_multiline_string
+        Script_unterminated_multiline_string
     },
     {
         "declaration_w_underscore_name",
-        Plecs_declaration_w_underscore_name
+        Script_declaration_w_underscore_name
     },
     {
         "annotate_declaration",
-        Plecs_annotate_declaration
+        Script_annotate_declaration
     },
     {
         "anonymous_entity",
-        Plecs_anonymous_entity
+        Script_anonymous_entity
     },
     {
         "anonymous_entity_in_scope",
-        Plecs_anonymous_entity_in_scope
+        Script_anonymous_entity_in_scope
     },
     {
         "anonymous_declaration",
-        Plecs_anonymous_declaration
+        Script_anonymous_declaration
     },
     {
         "const_var_int",
-        Plecs_const_var_int
+        Script_const_var_int
     },
     {
         "const_var_float",
-        Plecs_const_var_float
+        Script_const_var_float
     },
     {
         "const_var_bool",
-        Plecs_const_var_bool
+        Script_const_var_bool
     },
     {
         "const_var_string",
-        Plecs_const_var_string
+        Script_const_var_string
     },
     {
         "const_var_struct",
-        Plecs_const_var_struct
+        Script_const_var_struct
     },
     {
         "const_var_redeclare",
-        Plecs_const_var_redeclare
+        Script_const_var_redeclare
     },
     {
         "const_var_scoped",
-        Plecs_const_var_scoped
+        Script_const_var_scoped
     },
     {
         "assign_component_from_var",
-        Plecs_assign_component_from_var
+        Script_assign_component_from_var
     },
     {
         "assign_component_from_var_in_scope",
-        Plecs_assign_component_from_var_in_scope
+        Script_assign_component_from_var_in_scope
     },
     {
         "scope_w_component_after_const_var",
-        Plecs_scope_w_component_after_const_var
+        Script_scope_w_component_after_const_var
     },
     {
         "component_after_const_paren_expr",
-        Plecs_component_after_const_paren_expr
+        Script_component_after_const_paren_expr
     },
     {
         "component_after_const_add_expr",
-        Plecs_component_after_const_add_expr
+        Script_component_after_const_add_expr
     },
     {
         "component_after_const_sub_expr",
-        Plecs_component_after_const_sub_expr
+        Script_component_after_const_sub_expr
     },
     {
         "component_after_const_mul_expr",
-        Plecs_component_after_const_mul_expr
+        Script_component_after_const_mul_expr
     },
     {
         "component_after_const_div_expr",
-        Plecs_component_after_const_div_expr
+        Script_component_after_const_div_expr
     },
     {
         "parse_with",
-        Plecs_parse_with
+        Script_parse_with
     },
     {
         "parse_with_w_with",
-        Plecs_parse_with_w_with
+        Script_parse_with_w_with
     },
     {
         "parse_with_w_tag",
-        Plecs_parse_with_w_tag
+        Script_parse_with_w_tag
     },
     {
         "parse_with_value",
-        Plecs_parse_with_value
+        Script_parse_with_value
     },
     {
         "parse_with_2_values",
-        Plecs_parse_with_2_values
+        Script_parse_with_2_values
     },
     {
         "parse_with_2_nested_values",
-        Plecs_parse_with_2_nested_values
+        Script_parse_with_2_nested_values
     },
     {
         "parse_with_var",
-        Plecs_parse_with_var
+        Script_parse_with_var
     },
     {
         "parse_with_2_vars",
-        Plecs_parse_with_2_vars
+        Script_parse_with_2_vars
     },
     {
         "parse_with_2_nested_vars",
-        Plecs_parse_with_2_nested_vars
+        Script_parse_with_2_nested_vars
     },
     {
         "parse_with_var_in_scope",
-        Plecs_parse_with_var_in_scope
+        Script_parse_with_var_in_scope
     },
     {
         "assign_const_w_expr",
-        Plecs_assign_const_w_expr
+        Script_assign_const_w_expr
     },
     {
         "const_w_type",
-        Plecs_const_w_type
+        Script_const_w_type
     },
     {
         "assembly_no_scope",
-        Plecs_assembly_no_scope
+        Script_assembly_no_scope
     },
     {
         "assembly_empty",
-        Plecs_assembly_empty
+        Script_assembly_empty
     },
     {
         "assembly_no_props",
-        Plecs_assembly_no_props
+        Script_assembly_no_props
     },
     {
         "assembly_prop_no_type",
-        Plecs_assembly_prop_no_type
+        Script_assembly_prop_no_type
     },
     {
         "assembly_prop_no_default",
-        Plecs_assembly_prop_no_default
+        Script_assembly_prop_no_default
     },
     {
         "assembly_prop",
-        Plecs_assembly_prop
+        Script_assembly_prop
     },
     {
         "assembly_prop_space_colon",
-        Plecs_assembly_prop_space_colon
+        Script_assembly_prop_space_colon
     },
     {
         "assembly_2_props",
-        Plecs_assembly_2_props
+        Script_assembly_2_props
     },
     {
         "assembly_instance_w_default_values",
-        Plecs_assembly_instance_w_default_values
+        Script_assembly_instance_w_default_values
     },
     {
         "assembly_instance_w_assign_default_values",
-        Plecs_assembly_instance_w_assign_default_values
+        Script_assembly_instance_w_assign_default_values
     },
     {
         "assembly_instance_w_overridden_values",
-        Plecs_assembly_instance_w_overridden_values
+        Script_assembly_instance_w_overridden_values
     },
     {
         "assembly_w_child",
-        Plecs_assembly_w_child
+        Script_assembly_w_child
     },
     {
         "assembly_w_child_parse_script",
-        Plecs_assembly_w_child_parse_script
+        Script_assembly_w_child_parse_script
     },
     {
         "assembly_w_child_parse_script_twice",
-        Plecs_assembly_w_child_parse_script_twice
+        Script_assembly_w_child_parse_script_twice
     },
     {
         "assembly_w_child_update_after_parse",
-        Plecs_assembly_w_child_update_after_parse
+        Script_assembly_w_child_update_after_parse
     },
     {
         "assembly_w_nested_child",
-        Plecs_assembly_w_nested_child
+        Script_assembly_w_nested_child
     },
     {
         "assembly_w_prefab",
-        Plecs_assembly_w_prefab
+        Script_assembly_w_prefab
     },
     {
         "assembly_w_prefab_tree",
-        Plecs_assembly_w_prefab_tree
+        Script_assembly_w_prefab_tree
     },
     {
         "assembly_w_nested_assembly",
-        Plecs_assembly_w_nested_assembly
+        Script_assembly_w_nested_assembly
     },
     {
         "instantiate_prefab_w_assembly",
-        Plecs_instantiate_prefab_w_assembly
+        Script_instantiate_prefab_w_assembly
     },
     {
         "assembly_w_prefab_w_assembly",
-        Plecs_assembly_w_prefab_w_assembly
+        Script_assembly_w_prefab_w_assembly
     },
     {
         "3_assemblies",
-        Plecs_3_assemblies
+        Script_3_assemblies
     },
     {
         "assembly_nested_w_default_var",
-        Plecs_assembly_nested_w_default_var
+        Script_assembly_nested_w_default_var
     },
     {
         "assembly_w_anonymous",
-        Plecs_assembly_w_anonymous
+        Script_assembly_w_anonymous
     },
     {
         "assembly_w_anonymous_parse_again",
-        Plecs_assembly_w_anonymous_parse_again
+        Script_assembly_w_anonymous_parse_again
     },
     {
         "typed_const_w_composite_type_invalid_assignment",
-        Plecs_typed_const_w_composite_type_invalid_assignment
+        Script_typed_const_w_composite_type_invalid_assignment
     },
     {
         "typed_const_w_composite_type",
-        Plecs_typed_const_w_composite_type
+        Script_typed_const_w_composite_type
     },
     {
         "assign_var_to_typed_const_w_composite_type",
-        Plecs_assign_var_to_typed_const_w_composite_type
+        Script_assign_var_to_typed_const_w_composite_type
     },
     {
         "typed_const_w_composite_type_invalid_assignment",
-        Plecs_typed_const_w_composite_type_invalid_assignment
+        Script_typed_const_w_composite_type_invalid_assignment
     },
     {
         "assembly_w_composite_prop_invalid_assignment",
-        Plecs_assembly_w_composite_prop_invalid_assignment
+        Script_assembly_w_composite_prop_invalid_assignment
     },
     {
         "assembly_w_composite_prop",
-        Plecs_assembly_w_composite_prop
+        Script_assembly_w_composite_prop
     },
     {
         "assembly_with_with",
-        Plecs_assembly_with_with
+        Script_assembly_with_with
     },
     {
         "using_wildcard",
-        Plecs_using_wildcard
+        Script_using_wildcard
     },
     {
         "single_line_comment_in_value",
-        Plecs_single_line_comment_in_value
+        Script_single_line_comment_in_value
     },
     {
         "single_line_comment_in_value_after_scope",
-        Plecs_single_line_comment_in_value_after_scope
+        Script_single_line_comment_in_value_after_scope
     },
     {
         "multi_line_comment_in_value",
-        Plecs_multi_line_comment_in_value
+        Script_multi_line_comment_in_value
     },
     {
         "multi_line_comment_in_value_after_scope",
-        Plecs_multi_line_comment_in_value_after_scope
+        Script_multi_line_comment_in_value_after_scope
     },
     {
         "unterminated_multi_line_comment_in_value",
-        Plecs_unterminated_multi_line_comment_in_value
+        Script_unterminated_multi_line_comment_in_value
     },
     {
         "module_stmt",
-        Plecs_module_stmt
+        Script_module_stmt
     },
     {
         "nested_module_stmt",
-        Plecs_nested_module_stmt
+        Script_nested_module_stmt
     },
     {
         "module_stmt_w_scope",
-        Plecs_module_stmt_w_scope
+        Script_module_stmt_w_scope
     },
     {
         "module_stmt_w_nested_scope",
-        Plecs_module_stmt_w_nested_scope
+        Script_module_stmt_w_nested_scope
     },
     {
         "module_w_assembly",
-        Plecs_module_w_assembly
+        Script_module_w_assembly
     },
     {
         "module_w_nested_assembly",
-        Plecs_module_w_nested_assembly
+        Script_module_w_nested_assembly
     },
     {
         "assign_singleton_tag",
-        Plecs_assign_singleton_tag
+        Script_assign_singleton_tag
     },
     {
         "assign_singleton_component",
-        Plecs_assign_singleton_component
+        Script_assign_singleton_component
     },
     {
         "assign_singleton_tag_w_scope",
-        Plecs_assign_singleton_tag_w_scope
+        Script_assign_singleton_tag_w_scope
     },
     {
         "assign_singleton_2_tags_w_scope",
-        Plecs_assign_singleton_2_tags_w_scope
+        Script_assign_singleton_2_tags_w_scope
     },
     {
         "assign_singleton_component_w_scope",
-        Plecs_assign_singleton_component_w_scope
+        Script_assign_singleton_component_w_scope
     },
     {
         "assign_singleton_2_components_w_scope",
-        Plecs_assign_singleton_2_components_w_scope
+        Script_assign_singleton_2_components_w_scope
     },
     {
         "with_pair_in_scope",
-        Plecs_with_pair_in_scope
+        Script_with_pair_in_scope
     },
     {
         "assembly_redeclare_prop_as_const",
-        Plecs_assembly_redeclare_prop_as_const
+        Script_assembly_redeclare_prop_as_const
     },
     {
         "assembly_redeclare_prop_as_prop",
-        Plecs_assembly_redeclare_prop_as_prop
+        Script_assembly_redeclare_prop_as_prop
     },
     {
         "assembly_redeclare_const_as_const",
-        Plecs_assembly_redeclare_const_as_const
+        Script_assembly_redeclare_const_as_const
     },
     {
         "add_auto_override",
-        Plecs_add_auto_override
+        Script_add_auto_override
     },
     {
         "add_auto_override_pair",
-        Plecs_add_auto_override_pair
+        Script_add_auto_override_pair
     },
     {
         "scope_w_auto_override",
-        Plecs_scope_w_auto_override
+        Script_scope_w_auto_override
     },
     {
         "scope_w_auto_override_pair",
-        Plecs_scope_w_auto_override_pair
+        Script_scope_w_auto_override_pair
     },
     {
         "pair_w_rel_var",
-        Plecs_pair_w_rel_var
+        Script_pair_w_rel_var
     },
     {
         "pair_w_tgt_var",
-        Plecs_pair_w_tgt_var
+        Script_pair_w_tgt_var
     },
     {
         "assembly_w_pair_w_this_var",
-        Plecs_assembly_w_pair_w_this_var
+        Script_assembly_w_pair_w_this_var
     },
     {
         "with_value_not_a_component",
-        Plecs_with_value_not_a_component
+        Script_with_value_not_a_component
     },
     {
         "component_in_with_scope",
-        Plecs_component_in_with_scope
+        Script_component_in_with_scope
     },
     {
         "component_in_with_scope_nested",
-        Plecs_component_in_with_scope_nested
+        Script_component_in_with_scope_nested
     },
     {
         "component_in_with_scope_in_scope",
-        Plecs_component_in_with_scope_in_scope
+        Script_component_in_with_scope_in_scope
     },
     {
         "assign_after_with_in_scope",
-        Plecs_assign_after_with_in_scope
+        Script_assign_after_with_in_scope
     },
     {
         "array_component",
-        Plecs_array_component
+        Script_array_component
     }
 };
 
@@ -3645,11 +3645,11 @@ bake_test_param MultiThreadStaging_params[] = {
 
 static bake_test_suite suites[] = {
     {
-        "Plecs",
+        "Script",
         NULL,
         NULL,
         237,
-        Plecs_testcases
+        Script_testcases
     },
     {
         "Doc",

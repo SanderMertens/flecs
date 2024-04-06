@@ -746,8 +746,8 @@ static const char *flecs_addons_info[] = {
 #ifdef FLECS_MODULE
     "FLECS_MODULE",
 #endif
-#ifdef FLECS_PLECS
-    "FLECS_PLECS",
+#ifdef FLECS_SCRIPT
+    "FLECS_SCRIPT",
 #endif
 #ifdef FLECS_RULES
     "FLECS_RULES",

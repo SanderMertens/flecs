@@ -5,7 +5,7 @@
 
 #include "flecs.h"
 
-#ifdef FLECS_PLECS
+#ifdef FLECS_SCRIPT
 
 ECS_COMPONENT_DECLARE(EcsScript);
 
@@ -2088,7 +2088,7 @@ error:
     return -1;
 }
 
-int ecs_plecs_from_str(
+int ecs_script_from_str(
     ecs_world_t *world,
     const char *name,
     const char *expr)
@@ -2096,7 +2096,7 @@ int ecs_plecs_from_str(
     return flecs_plecs_parse(world, name, expr, NULL, 0, 0);
 }
 
-int ecs_plecs_from_file(
+int ecs_script_from_file(
     ecs_world_t *world,
     const char *filename) 
 {
@@ -2105,7 +2105,7 @@ int ecs_plecs_from_file(
         return -1;
     }
 
-    int result = ecs_plecs_from_str(world, filename, script);
+    int result = ecs_script_from_str(world, filename, script);
     ecs_os_free(script);
     return result;
 }

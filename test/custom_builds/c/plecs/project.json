@@ -9,6 +9,6 @@
         "standalone": true
     },
     "lang.c": {
-        "defines": ["FLECS_CUSTOM_BUILD", "FLECS_PLECS"]
+        "defines": ["FLECS_CUSTOM_BUILD", "FLECS_SCRIPT"]
     }
 }

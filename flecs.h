@@ -180,7 +180,7 @@
 // #define FLECS_C          /**< C API convenience macros, always enabled */
 #define FLECS_CPP           /**< C++ API */
 #define FLECS_MODULE        /**< Module support */
-#define FLECS_PLECS         /**< ECS data definition format */
+#define FLECS_SCRIPT         /**< ECS data definition format */
 #define FLECS_STATS         /**< Access runtime statistics */
 #define FLECS_MONITOR       /**< Track runtime statistics periodically */
 #define FLECS_METRICS       /**< Expose component data as statistics */
@@ -9300,8 +9300,8 @@ int ecs_value_move_ctor(
 #ifdef FLECS_NO_MODULE
 #undef FLECS_MODULE
 #endif
-#ifdef FLECS_NO_PLECS
-#undef FLECS_PLECS
+#ifdef FLECS_NO_SCRIPT
+#undef FLECS_SCRIPT
 #endif
 #ifdef FLECS_NO_MONITOR
 #undef FLECS_MONITOR
@@ -10023,7 +10023,7 @@ int ecs_log_last_error(void);
 #define FLECS_HTTP
 #endif
 
-#ifdef FLECS_PLECS
+#ifdef FLECS_SCRIPT
 #define FLECS_EXPR
 #endif
 
@@ -14699,9 +14699,9 @@ void ecs_iter_to_vars(
 
 #endif
 
-#ifdef FLECS_PLECS
-#ifdef FLECS_NO_PLECS
-#error "FLECS_NO_PLECS failed: PLECS is required by other addons"
+#ifdef FLECS_SCRIPT
+#ifdef FLECS_NO_SCRIPT
+#error "FLECS_NO_SCRIPT failed: SCRIPT is required by other addons"
 #endif
 /**
  * @file addons/plecs.h
@@ -14710,7 +14710,7 @@ void ecs_iter_to_vars(
  * For script, see examples/plecs.
  */
 
-#ifdef FLECS_PLECS
+#ifdef FLECS_SCRIPT
 
 /**
  * @defgroup c_addons_plecs Flecs script
@@ -14728,8 +14728,8 @@ void ecs_iter_to_vars(
 #define FLECS_EXPR
 #endif
 
-#ifndef FLECS_PLECS_H
-#define FLECS_PLECS_H
+#ifndef FLECS_SCRIPT_H
+#define FLECS_SCRIPT_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -14755,7 +14755,7 @@ typedef struct EcsScript {
  * @return Zero if success, non-zero otherwise.
  */
 FLECS_API
-int ecs_plecs_from_str(
+int ecs_script_from_str(
     ecs_world_t *world,
     const char *name,
     const char *str);
@@ -14763,22 +14763,22 @@ int ecs_plecs_from_str(
 /** Parse plecs file.
  * This parses a plecs file and instantiates the entities in the world. This
  * operation is equivalent to loading the file contents and passing it to
- * ecs_plecs_from_str().
+ * ecs_script_from_str().
  *
  * @param world The world.
  * @param filename The plecs file name.
  * @return Zero if success, non-zero otherwise.
  */
 FLECS_API
-int ecs_plecs_from_file(
+int ecs_script_from_file(
     ecs_world_t *world,
     const char *filename);
 
 /** Used with ecs_script_init() */
 typedef struct ecs_script_desc_t {
-    ecs_entity_t entity;      /* Set to customize entity handle associated with script */
-    const char *filename;     /* Set to load script from file */
-    const char *str;          /* Set to parse script from string */
+    ecs_entity_t entity;   /* Set to customize entity handle associated with script */
+    const char *filename;  /* Set to load script from file */
+    const char *str;       /* Set to parse script from string */
 } ecs_script_desc_t;
 
 /** Load managed script.
@@ -20454,7 +20454,7 @@ flecs::timer timer(Args &&... args) const;
 void randomize_timers() const;
 
 #   endif
-#   ifdef FLECS_PLECS
+#   ifdef FLECS_SCRIPT
 /**
  * @file addons/cpp/mixins/plecs/mixin.inl
  * @brief Plecs world mixin.
@@ -20469,17 +20469,17 @@ void randomize_timers() const;
  */
 
 /** Load plecs string.
- * @see ecs_plecs_from_str
+ * @see ecs_script_from_str
  */
 int plecs_from_str(const char *name, const char *str) const {
-    return ecs_plecs_from_str(world_, name, str);
+    return ecs_script_from_str(world_, name, str);
 }
 
 /** Load plecs from file.
- * @see ecs_plecs_from_file
+ * @see ecs_script_from_file
  */
 int plecs_from_file(const char *filename) const {
-    return ecs_plecs_from_file(world_, filename);
+    return ecs_script_from_file(world_, filename);
 }
 
 /** @} */

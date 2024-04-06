@@ -344,10 +344,10 @@ jobs:
           bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_STATS
           bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_STATS
 
-      - name: FLECS_PLECS
+      - name: FLECS_SCRIPT
         run: |
-          bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_PLECS
-          bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_PLECS
+          bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_SCRIPT
+          bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_SCRIPT
 
       - name: FLECS_META
         run: |

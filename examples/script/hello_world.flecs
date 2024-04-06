@@ -10,7 +10,7 @@
 // To see what the result of parsing this file looks like, copy the code and
 // paste it into the editor at https://flecs.dev/explorer
 //
-// To load this file yourself, call ecs_plecs_from_file("hello_world.flecs");
+// To load this file yourself, call ecs_script_from_file("hello_world.flecs");
 
 // This creates an entity my_spaceship with the SpaceShip tag. Note how neither
 // the entity nor tag need to be defined in advance, if an entity did not yet

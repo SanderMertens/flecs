@@ -12,17 +12,17 @@
  */
 
 /** Load plecs string.
- * @see ecs_plecs_from_str
+ * @see ecs_script_from_str
  */
 int plecs_from_str(const char *name, const char *str) const {
-    return ecs_plecs_from_str(world_, name, str);
+    return ecs_script_from_str(world_, name, str);
 }
 
 /** Load plecs from file.
- * @see ecs_plecs_from_file
+ * @see ecs_script_from_file
  */
 int plecs_from_file(const char *filename) const {
-    return ecs_plecs_from_file(world_, filename);
+    return ecs_script_from_file(world_, filename);
 }
 
 /** @} */

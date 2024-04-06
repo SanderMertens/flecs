@@ -5,7 +5,7 @@
  * For script, see examples/plecs.
  */
 
-#ifdef FLECS_PLECS
+#ifdef FLECS_SCRIPT
 
 /**
  * @defgroup c_addons_plecs Flecs script
@@ -23,8 +23,8 @@
 #define FLECS_EXPR
 #endif
 
-#ifndef FLECS_PLECS_H
-#define FLECS_PLECS_H
+#ifndef FLECS_SCRIPT_H
+#define FLECS_SCRIPT_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -50,7 +50,7 @@ typedef struct EcsScript {
  * @return Zero if success, non-zero otherwise.
  */
 FLECS_API
-int ecs_plecs_from_str(
+int ecs_script_from_str(
     ecs_world_t *world,
     const char *name,
     const char *str);
@@ -58,22 +58,22 @@ int ecs_plecs_from_str(
 /** Parse plecs file.
  * This parses a plecs file and instantiates the entities in the world. This
  * operation is equivalent to loading the file contents and passing it to
- * ecs_plecs_from_str().
+ * ecs_script_from_str().
  *
  * @param world The world.
  * @param filename The plecs file name.
  * @return Zero if success, non-zero otherwise.
  */
 FLECS_API
-int ecs_plecs_from_file(
+int ecs_script_from_file(
     ecs_world_t *world,
     const char *filename);
 
 /** Used with ecs_script_init() */
 typedef struct ecs_script_desc_t {
-    ecs_entity_t entity;      /* Set to customize entity handle associated with script */
-    const char *filename;     /* Set to load script from file */
-    const char *str;          /* Set to parse script from string */
+    ecs_entity_t entity;   /* Set to customize entity handle associated with script */
+    const char *filename;  /* Set to load script from file */
+    const char *str;       /* Set to parse script from string */
 } ecs_script_desc_t;
 
 /** Load managed script.

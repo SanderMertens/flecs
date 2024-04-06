@@ -341,7 +341,7 @@ bool flecs_rest_script(
     (void)world;
     (void)req;
     (void)reply;
-#ifdef FLECS_PLECS
+#ifdef FLECS_SCRIPT
     const char *data = ecs_http_get_param(req, "data");
     if (!data) {
         flecs_reply_error(reply, "missing data parameter");
@@ -1367,7 +1367,7 @@ void FlecsRestImport(
     ECS_MODULE(world, FlecsRest);
 
     ECS_IMPORT(world, FlecsPipeline);
-#ifdef FLECS_PLECS
+#ifdef FLECS_SCRIPT
     ECS_IMPORT(world, FlecsScript);
 #endif
 #ifdef FLECS_DOC

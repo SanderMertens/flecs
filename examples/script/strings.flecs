@@ -1,13 +1,13 @@
 // To see what the result of parsing this file looks like, copy the code and
 // paste it into the editor at https://flecs.dev/explorer
 //
-// To load this file yourself, call ecs_plecs_from_file("strings.flecs");
+// To load this file yourself, call ecs_script_from_file("strings.flecs");
 
 // Plecs component values can be populated with strings. To see how this works,
 // we first need to create a component type (see reflection example).
 using flecs.meta
 
-Struct Shader {
+struct Shader {
   filename :- {string}
   code :- {string}
 }

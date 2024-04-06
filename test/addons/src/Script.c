@@ -3,74 +3,74 @@
 #define HEAD
 #define LINE "\n"
 
-void Plecs_null(void) {
+void Script_null(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_plecs_from_str(world, NULL, NULL) == 0);
+    test_assert(ecs_script_from_str(world, NULL, NULL) == 0);
 
     ecs_fini(world);
 }
 
-void Plecs_empty(void) {
+void Script_empty(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_plecs_from_str(world, NULL, "") == 0);
+    test_assert(ecs_script_from_str(world, NULL, "") == 0);
 
     ecs_fini(world);
 }
 
-void Plecs_space(void) {
+void Script_space(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_plecs_from_str(world, NULL, " ") == 0);
+    test_assert(ecs_script_from_str(world, NULL, " ") == 0);
 
     ecs_fini(world);
 }
 
-void Plecs_space_newline(void) {
+void Script_space_newline(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_plecs_from_str(world, NULL, " \n \n") == 0);
+    test_assert(ecs_script_from_str(world, NULL, " \n \n") == 0);
 
     ecs_fini(world);
 }
 
-void Plecs_two_empty_newlines(void) {
+void Script_two_empty_newlines(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_plecs_from_str(world, NULL, "\n\n") == 0);
+    test_assert(ecs_script_from_str(world, NULL, "\n\n") == 0);
 
     ecs_fini(world);
 }
 
-void Plecs_three_empty_newlines(void) {
+void Script_three_empty_newlines(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_plecs_from_str(world, NULL, "\n\n\n") == 0);
+    test_assert(ecs_script_from_str(world, NULL, "\n\n\n") == 0);
 
     ecs_fini(world);
 }
 
-void Plecs_newline_trailing_space(void) {
+void Script_newline_trailing_space(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_plecs_from_str(world, NULL, "\n ") == 0);
+    test_assert(ecs_script_from_str(world, NULL, "\n ") == 0);
 
     ecs_fini(world);
 }
 
-void Plecs_newline_trailing_spaces(void) {
+void Script_newline_trailing_spaces(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_plecs_from_str(world, NULL, "\n   ") == 0);
+    test_assert(ecs_script_from_str(world, NULL, "\n   ") == 0);
 
     ecs_fini(world);
 }
 
-void Plecs_multiple_trailing_newlines(void) {
+void Script_multiple_trailing_newlines(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_plecs_from_str(world, NULL, "Foo\n\n\n") == 0);
+    test_assert(ecs_script_from_str(world, NULL, "Foo\n\n\n") == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -80,10 +80,10 @@ void Plecs_multiple_trailing_newlines(void) {
     ecs_fini(world);
 }
 
-void Plecs_entity(void) {
+void Script_entity(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_plecs_from_str(world, NULL, "Foo") == 0);
+    test_assert(ecs_script_from_str(world, NULL, "Foo") == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -93,10 +93,10 @@ void Plecs_entity(void) {
     ecs_fini(world);
 }
 
-void Plecs_entity_w_entity(void) {
+void Script_entity_w_entity(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_plecs_from_str(world, NULL, "Foo(Subj)") == 0);
+    test_assert(ecs_script_from_str(world, NULL, "Foo(Subj)") == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -111,10 +111,10 @@ void Plecs_entity_w_entity(void) {
     ecs_fini(world);
 }
 
-void Plecs_entity_w_pair(void) {
+void Script_entity_w_pair(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_plecs_from_str(world, NULL, "Rel(Subj, Obj)") == 0);
+    test_assert(ecs_script_from_str(world, NULL, "Rel(Subj, Obj)") == 0);
 
     ecs_entity_t rel = ecs_lookup(world, "Rel");
     test_assert(rel != 0);
@@ -133,10 +133,10 @@ void Plecs_entity_w_pair(void) {
     ecs_fini(world);
 }
 
-void Plecs_2_entities(void) {
+void Script_2_entities(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_plecs_from_str(world, NULL, "Foo\nBar\n") == 0);
+    test_assert(ecs_script_from_str(world, NULL, "Foo\nBar\n") == 0);
 
     ecs_entity_t e = ecs_lookup(world, "Foo");
     test_assert(e != 0);
@@ -145,10 +145,10 @@ void Plecs_2_entities(void) {
     ecs_fini(world);
 }
 
-void Plecs_2_entities_w_entities(void) {
+void Script_2_entities_w_entities(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_plecs_from_str(world, NULL, "Foo(Subj_1)\nBar(Subj_2)\n") == 0);
+    test_assert(ecs_script_from_str(world, NULL, "Foo(Subj_1)\nBar(Subj_2)\n") == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -172,10 +172,10 @@ void Plecs_2_entities_w_entities(void) {
     ecs_fini(world);
 }
 
-void Plecs_3_entities_w_pairs(void) {
+void Script_3_entities_w_pairs(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_plecs_from_str(world, NULL, 
+    test_assert(ecs_script_from_str(world, NULL, 
         "Rel_1(Subj_1, Obj_1)\n"
         "Rel_1(Subj_2, Obj_2)\n"
         "Rel_2(Subj_3, Obj_2)\n") == 0);
@@ -215,10 +215,10 @@ void Plecs_3_entities_w_pairs(void) {
     ecs_fini(world);
 }
 
-void Plecs_line_comment(void) {
+void Script_line_comment(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_plecs_from_str(world, NULL, "// Foo(Bar)\n") == 0);
+    test_assert(ecs_script_from_str(world, NULL, "// Foo(Bar)\n") == 0);
 
     test_assert(ecs_lookup(world, "Foo") == 0);
     test_assert(ecs_lookup(world, "Bar") == 0);
@@ -226,10 +226,10 @@ void Plecs_line_comment(void) {
     ecs_fini(world);
 }
 
-void Plecs_line_comment_before_stmt(void) {
+void Script_line_comment_before_stmt(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_plecs_from_str(world, NULL, "// Hello(World)\nFoo\n") == 0);
+    test_assert(ecs_script_from_str(world, NULL, "// Hello(World)\nFoo\n") == 0);
 
     test_assert(ecs_lookup(world, "Hello") == 0);
     test_assert(ecs_lookup_child(world, 0, "World") == 0);
@@ -238,10 +238,10 @@ void Plecs_line_comment_before_stmt(void) {
     ecs_fini(world);
 }
 
-void Plecs_line_comment_after_stmt(void) {
+void Script_line_comment_after_stmt(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_plecs_from_str(world, NULL, "Foo\n// Hello(World)\n") == 0);
+    test_assert(ecs_script_from_str(world, NULL, "Foo\n// Hello(World)\n") == 0);
 
     test_assert(ecs_lookup(world, "Hello") == 0);
     test_assert(ecs_lookup_child(world, 0, "World") == 0);
@@ -250,10 +250,10 @@ void Plecs_line_comment_after_stmt(void) {
     ecs_fini(world);
 }
 
-void Plecs_line_comment_between_stmt(void) {
+void Script_line_comment_between_stmt(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_plecs_from_str(world, NULL, "Foo\n// Hello(World)\nBar\n") == 0);
+    test_assert(ecs_script_from_str(world, NULL, "Foo\n// Hello(World)\nBar\n") == 0);
 
     test_assert(ecs_lookup(world, "Hello") == 0);
     test_assert(ecs_lookup_child(world, 0, "World") == 0);
@@ -263,10 +263,10 @@ void Plecs_line_comment_between_stmt(void) {
     ecs_fini(world);
 }
 
-void Plecs_multiple_line_comment(void) {
+void Script_multiple_line_comment(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_plecs_from_str(world, NULL, "// Hello(World)\n// Boo(Baz)\nFoo") == 0);
+    test_assert(ecs_script_from_str(world, NULL, "// Hello(World)\n// Boo(Baz)\nFoo") == 0);
 
     test_assert(ecs_lookup(world, "Hello") == 0);
     test_assert(ecs_lookup_child(world, 0, "World") == 0);
@@ -277,10 +277,10 @@ void Plecs_multiple_line_comment(void) {
     ecs_fini(world);
 }
 
-void Plecs_line_comment_after_stmt_same_line(void) {
+void Script_line_comment_after_stmt_same_line(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_plecs_from_str(world, NULL, "Foo // Hello(World)\nBar\n") == 0);
+    test_assert(ecs_script_from_str(world, NULL, "Foo // Hello(World)\nBar\n") == 0);
 
     test_assert(ecs_lookup(world, "Hello") == 0);
     test_assert(ecs_lookup_child(world, 0, "World") == 0);
@@ -290,10 +290,10 @@ void Plecs_line_comment_after_stmt_same_line(void) {
     ecs_fini(world);
 }
 
-void Plecs_comma_separated_pred(void) {
+void Script_comma_separated_pred(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_plecs_from_str(world, NULL, "Foo,Bar,Hello,Worlds") == 0);
+    test_assert(ecs_script_from_str(world, NULL, "Foo,Bar,Hello,Worlds") == 0);
 
     test_assert(ecs_lookup(world, "Hello") != 0);
     test_assert(ecs_lookup(world, "Worlds") != 0);
@@ -303,10 +303,10 @@ void Plecs_comma_separated_pred(void) {
     ecs_fini(world);
 }
 
-void Plecs_comma_separated_pred_w_subj(void) {
+void Script_comma_separated_pred_w_subj(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_plecs_from_str(world, NULL, "Foo(Bar),Hello(Worlds)") == 0);
+    test_assert(ecs_script_from_str(world, NULL, "Foo(Bar),Hello(Worlds)") == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -324,10 +324,10 @@ void Plecs_comma_separated_pred_w_subj(void) {
     ecs_fini(world);
 }
 
-void Plecs_comma_separated_pred_w_subj_obj(void) {
+void Script_comma_separated_pred_w_subj_obj(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_plecs_from_str(world, NULL, "Foo(Bar, Obj1),Hello(Worlds, Obj2)") == 0);
+    test_assert(ecs_script_from_str(world, NULL, "Foo(Bar, Obj1),Hello(Worlds, Obj2)") == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -349,10 +349,10 @@ void Plecs_comma_separated_pred_w_subj_obj(void) {
     ecs_fini(world);
 }
 
-void Plecs_comma_separated_pred_trailing_comma(void) {
+void Script_comma_separated_pred_trailing_comma(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_plecs_from_str(world, NULL, "Foo,Bar,Hello,Worlds,") == 0);
+    test_assert(ecs_script_from_str(world, NULL, "Foo,Bar,Hello,Worlds,") == 0);
 
     test_assert(ecs_lookup(world, "Hello") != 0);
     test_assert(ecs_lookup(world, "Worlds") != 0);
@@ -362,10 +362,10 @@ void Plecs_comma_separated_pred_trailing_comma(void) {
     ecs_fini(world);
 }
 
-void Plecs_comma_separated_pred_trailing_comma_newline(void) {
+void Script_comma_separated_pred_trailing_comma_newline(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_plecs_from_str(world, NULL, "Foo,Bar,Hello,Worlds,\n") == 0);
+    test_assert(ecs_script_from_str(world, NULL, "Foo,Bar,Hello,Worlds,\n") == 0);
 
     test_assert(ecs_lookup(world, "Hello") != 0);
     test_assert(ecs_lookup(world, "Worlds") != 0);
@@ -375,10 +375,10 @@ void Plecs_comma_separated_pred_trailing_comma_newline(void) {
     ecs_fini(world);
 }
 
-void Plecs_comma_separated_pred_trailing_comma_newline_multiline(void) {
+void Script_comma_separated_pred_trailing_comma_newline_multiline(void) {
     ecs_world_t *world = ecs_init();
 
-    test_assert(ecs_plecs_from_str(world, NULL, "Foo,Bar,\nHello,Worlds,") == 0);
+    test_assert(ecs_script_from_str(world, NULL, "Foo,Bar,\nHello,Worlds,") == 0);
 
     test_assert(ecs_lookup(world, "Hello") != 0);
     test_assert(ecs_lookup(world, "Worlds") != 0);
@@ -388,7 +388,7 @@ void Plecs_comma_separated_pred_trailing_comma_newline_multiline(void) {
     ecs_fini(world);
 }
 
-void Plecs_hierarchy_1_child(void) {
+void Script_hierarchy_1_child(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -396,7 +396,7 @@ void Plecs_hierarchy_1_child(void) {
     LINE " Child"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     test_assert(ecs_lookup(world, "Child") == 0);
 
@@ -411,7 +411,7 @@ void Plecs_hierarchy_1_child(void) {
     ecs_fini(world);
 }
 
-void Plecs_hierarchy_2_children(void) {
+void Script_hierarchy_2_children(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -420,7 +420,7 @@ void Plecs_hierarchy_2_children(void) {
     LINE " ChildB"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     test_assert(ecs_lookup(world, "ChildA") == 0);
     test_assert(ecs_lookup(world, "ChildB") == 0);
@@ -439,13 +439,13 @@ void Plecs_hierarchy_2_children(void) {
     ecs_fini(world);
 }
 
-void Plecs_hierarchy_1_child_same_line(void) {
+void Script_hierarchy_1_child_same_line(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
     HEAD "Parent { Child }";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     test_assert(ecs_lookup(world, "Child") == 0);
 
@@ -460,13 +460,13 @@ void Plecs_hierarchy_1_child_same_line(void) {
     ecs_fini(world);
 }
 
-void Plecs_hierarchy_2_children_same_line(void) {
+void Script_hierarchy_2_children_same_line(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
     HEAD "Parent { ChildA, ChildB }";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     test_assert(ecs_lookup(world, "ChildA") == 0);
     test_assert(ecs_lookup(world, "ChildB") == 0);
@@ -485,7 +485,7 @@ void Plecs_hierarchy_2_children_same_line(void) {
     ecs_fini(world);
 }
 
-void Plecs_entity_after_hierarchy(void) {
+void Script_entity_after_hierarchy(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -494,7 +494,7 @@ void Plecs_entity_after_hierarchy(void) {
     LINE "}"
     LINE "Foo";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     test_assert(ecs_lookup(world, "Child") == 0);
 
@@ -513,7 +513,7 @@ void Plecs_entity_after_hierarchy(void) {
     ecs_fini(world);
 }
 
-void Plecs_newline_before_scope_open(void) {
+void Script_newline_before_scope_open(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -523,7 +523,7 @@ void Plecs_newline_before_scope_open(void) {
     LINE "}"
     LINE "Foo";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     test_assert(ecs_lookup(world, "Child") == 0);
 
@@ -538,7 +538,7 @@ void Plecs_newline_before_scope_open(void) {
     ecs_fini(world);
 }
 
-void Plecs_comment_before_scope_open(void) {
+void Script_comment_before_scope_open(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -548,7 +548,7 @@ void Plecs_comment_before_scope_open(void) {
     LINE "}"
     LINE "Foo";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     test_assert(ecs_lookup(world, "Child") == 0);
 
@@ -566,7 +566,7 @@ void Plecs_comment_before_scope_open(void) {
     ecs_fini(world);
 }
 
-void Plecs_comment_after_newline_before_scope_open(void) {
+void Script_comment_after_newline_before_scope_open(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -577,7 +577,7 @@ void Plecs_comment_after_newline_before_scope_open(void) {
     LINE "}"
     LINE "Foo";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     test_assert(ecs_lookup(world, "Child") == 0);
 
@@ -595,7 +595,7 @@ void Plecs_comment_after_newline_before_scope_open(void) {
     ecs_fini(world);
 }
 
-void Plecs_hierarchy_2_levels(void) {
+void Script_hierarchy_2_levels(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -605,7 +605,7 @@ void Plecs_hierarchy_2_levels(void) {
     LINE " }"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     test_assert(ecs_lookup(world, "Child") == 0);
     test_assert(ecs_lookup(world, "GrandChild") == 0);
@@ -624,7 +624,7 @@ void Plecs_hierarchy_2_levels(void) {
     ecs_fini(world);
 }
 
-void Plecs_hierarchy_2_levels_2_subtrees(void) {
+void Script_hierarchy_2_levels_2_subtrees(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -637,7 +637,7 @@ void Plecs_hierarchy_2_levels_2_subtrees(void) {
     LINE " }"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     test_assert(ecs_lookup(world, "ChildA") == 0);
     test_assert(ecs_lookup(world, "ChildB") == 0);
@@ -665,7 +665,7 @@ void Plecs_hierarchy_2_levels_2_subtrees(void) {
     ecs_fini(world);
 }
 
-void Plecs_missing_end_of_scope(void) {
+void Script_missing_end_of_scope(void) {
     ecs_log_set_level(-4);
     ecs_world_t *world = ecs_init();
 
@@ -673,7 +673,7 @@ void Plecs_missing_end_of_scope(void) {
     HEAD "Parent {"
     LINE " Child";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) != 0);
 
     test_assert(ecs_get_scope(world) == 0);
     test_assert(ecs_get_with(world) == 0);
@@ -681,7 +681,7 @@ void Plecs_missing_end_of_scope(void) {
     ecs_fini(world);
 }
 
-void Plecs_missing_end_of_predicate_scope(void) {
+void Script_missing_end_of_predicate_scope(void) {
     ecs_log_set_level(-4);
     ecs_world_t *world = ecs_init();
 
@@ -689,7 +689,7 @@ void Plecs_missing_end_of_predicate_scope(void) {
     HEAD "Parent() {"
     LINE " Child";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) != 0);
 
     test_assert(ecs_get_scope(world) == 0);
     test_assert(ecs_get_with(world) == 0);
@@ -697,7 +697,7 @@ void Plecs_missing_end_of_predicate_scope(void) {
     ecs_fini(world);
 }
 
-void Plecs_create_in_scope(void) {
+void Script_create_in_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Root);
@@ -707,7 +707,7 @@ void Plecs_create_in_scope(void) {
     const char *expr =
     HEAD "Parent { Child }";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     test_assert(ecs_get_scope(world) == Root);
 
@@ -727,7 +727,7 @@ void Plecs_create_in_scope(void) {
     ecs_fini(world);
 }
 
-void Plecs_hierarchy_w_pred_subj(void) {
+void Script_hierarchy_w_pred_subj(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -735,7 +735,7 @@ void Plecs_hierarchy_w_pred_subj(void) {
     LINE " Child"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     test_assert(ecs_lookup(world, "Child") == 0);
 
@@ -753,7 +753,7 @@ void Plecs_hierarchy_w_pred_subj(void) {
     ecs_fini(world);
 }
 
-void Plecs_hierarchy_custom_relation(void) {
+void Script_hierarchy_custom_relation(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -761,7 +761,7 @@ void Plecs_hierarchy_custom_relation(void) {
     LINE " Child"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -780,7 +780,7 @@ void Plecs_hierarchy_custom_relation(void) {
     ecs_fini(world);
 }
 
-void Plecs_hierarchy_custom_relation_2_levels(void) {
+void Script_hierarchy_custom_relation_2_levels(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -795,7 +795,7 @@ void Plecs_hierarchy_custom_relation_2_levels(void) {
     LINE "  }"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -836,7 +836,7 @@ void Plecs_hierarchy_custom_relation_2_levels(void) {
     ecs_fini(world);
 }
 
-void Plecs_entity_after_hierarchy_custom_relation(void) {
+void Script_entity_after_hierarchy_custom_relation(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -845,7 +845,7 @@ void Plecs_entity_after_hierarchy_custom_relation(void) {
     LINE "}"
     LINE "Hello";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -867,7 +867,7 @@ void Plecs_entity_after_hierarchy_custom_relation(void) {
     ecs_fini(world);
 }
 
-void Plecs_entity_after_hierarchy_custom_relation_2_levels(void) {
+void Script_entity_after_hierarchy_custom_relation_2_levels(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -884,7 +884,7 @@ void Plecs_entity_after_hierarchy_custom_relation_2_levels(void) {
     LINE "}"
     LINE "TestB";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -937,7 +937,7 @@ void Plecs_entity_after_hierarchy_custom_relation_2_levels(void) {
     ecs_fini(world);
 }
 
-void Plecs_hierarchy_custom_relation_apply_to_object(void) {
+void Script_hierarchy_custom_relation_apply_to_object(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -947,7 +947,7 @@ void Plecs_hierarchy_custom_relation_apply_to_object(void) {
     LINE " }"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t rel = ecs_lookup(world, "Rel");
     ecs_entity_t obj_a = ecs_lookup(world, "ObjA");
@@ -966,7 +966,7 @@ void Plecs_hierarchy_custom_relation_apply_to_object(void) {
     ecs_fini(world);
 }
 
-void Plecs_hierarchy_custom_relation_apply_to_object_2_levels(void) {
+void Script_hierarchy_custom_relation_apply_to_object_2_levels(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -978,7 +978,7 @@ void Plecs_hierarchy_custom_relation_apply_to_object_2_levels(void) {
     LINE " }"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t rel = ecs_lookup(world, "Rel");
     ecs_entity_t obj_a = ecs_lookup(world, "ObjA");
@@ -1002,7 +1002,7 @@ void Plecs_hierarchy_custom_relation_apply_to_object_2_levels(void) {
     ecs_fini(world);
 }
 
-void Plecs_pred_scope(void) {
+void Script_pred_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1010,7 +1010,7 @@ void Plecs_pred_scope(void) {
     LINE " Hello"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t hello = ecs_lookup(world, "Foo.Hello");
@@ -1024,7 +1024,7 @@ void Plecs_pred_scope(void) {
     ecs_fini(world);
 }
 
-void Plecs_pred_scope_2_levels(void) {
+void Script_pred_scope_2_levels(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1034,7 +1034,7 @@ void Plecs_pred_scope_2_levels(void) {
     LINE "  }"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -1055,7 +1055,7 @@ void Plecs_pred_scope_2_levels(void) {
     ecs_fini(world);
 }
 
-void Plecs_pred_scope_inside_with(void) {
+void Script_pred_scope_inside_with(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1065,7 +1065,7 @@ void Plecs_pred_scope_inside_with(void) {
     LINE " }"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t tag = ecs_lookup(world, "Tag");
     ecs_entity_t foo = ecs_lookup(world, "Foo");
@@ -1084,7 +1084,7 @@ void Plecs_pred_scope_inside_with(void) {
     ecs_fini(world);
 }
 
-void Plecs_pred_scope_nested_w_subj_scope(void) {
+void Script_pred_scope_nested_w_subj_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1094,7 +1094,7 @@ void Plecs_pred_scope_nested_w_subj_scope(void) {
     LINE " }"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t parent = ecs_lookup(world, "Parent");
     ecs_entity_t foo = ecs_lookup(world, "Foo");
@@ -1114,7 +1114,7 @@ void Plecs_pred_scope_nested_w_subj_scope(void) {
 }
 
 
-void Plecs_with_tag(void) {
+void Script_with_tag(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1122,7 +1122,7 @@ void Plecs_with_tag(void) {
     LINE "  Foo"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t tag = ecs_lookup(world, "Tag");
@@ -1135,7 +1135,7 @@ void Plecs_with_tag(void) {
     ecs_fini(world);
 }
 
-void Plecs_with_tag_2_entities(void) {
+void Script_with_tag_2_entities(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1144,7 +1144,7 @@ void Plecs_with_tag_2_entities(void) {
     LINE "  Bar"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -1160,13 +1160,13 @@ void Plecs_with_tag_2_entities(void) {
     ecs_fini(world);
 }
 
-void Plecs_with_tag_same_line(void) {
+void Script_with_tag_same_line(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
     HEAD "with Tag { Foo }";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t tag = ecs_lookup(world, "Tag");
@@ -1179,13 +1179,13 @@ void Plecs_with_tag_same_line(void) {
     ecs_fini(world);
 }
 
-void Plecs_with_tag_2_entities_same_line(void) {
+void Script_with_tag_2_entities_same_line(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
     HEAD "with Tag { Foo, Bar }";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -1201,7 +1201,7 @@ void Plecs_with_tag_2_entities_same_line(void) {
     ecs_fini(world);
 }
 
-void Plecs_with_tag_2_levels(void) {
+void Script_with_tag_2_levels(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1211,7 +1211,7 @@ void Plecs_with_tag_2_levels(void) {
     LINE " }"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t tag_a = ecs_lookup(world, "TagA");
@@ -1227,7 +1227,7 @@ void Plecs_with_tag_2_levels(void) {
     ecs_fini(world);
 }
 
-void Plecs_with_tag_2_levels_2_subtrees(void) {
+void Script_with_tag_2_levels_2_subtrees(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1242,7 +1242,7 @@ void Plecs_with_tag_2_levels_2_subtrees(void) {
     LINE " }"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t tag_a = ecs_lookup(world, "TagA");
@@ -1273,7 +1273,7 @@ void Plecs_with_tag_2_levels_2_subtrees(void) {
     ecs_fini(world);
 }
 
-void Plecs_with_n_tags(void) {
+void Script_with_n_tags(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1282,7 +1282,7 @@ void Plecs_with_n_tags(void) {
     LINE " Bar"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -1303,7 +1303,7 @@ void Plecs_with_n_tags(void) {
     ecs_fini(world);
 }
 
-void Plecs_with_n_tags_2_levels(void) {
+void Script_with_n_tags_2_levels(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1319,7 +1319,7 @@ void Plecs_with_n_tags_2_levels(void) {
     LINE "}"
     LINE "HelloC";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t tag_a = ecs_lookup(world, "TagA");
     ecs_entity_t tag_b = ecs_lookup(world, "TagB");
@@ -1399,7 +1399,7 @@ void Plecs_with_n_tags_2_levels(void) {
     ecs_fini(world);
 }
 
-void Plecs_with_after_scope(void) {
+void Script_with_after_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1409,7 +1409,7 @@ void Plecs_with_after_scope(void) {
     LINE "  E4 { }"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t e1 = ecs_lookup(world, "E1");
     ecs_entity_t e2 = ecs_lookup(world, "E2");
@@ -1431,7 +1431,7 @@ void Plecs_with_after_scope(void) {
     ecs_fini(world);
 }
 
-void Plecs_with_after_with(void) {
+void Script_with_after_with(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1441,7 +1441,7 @@ void Plecs_with_after_with(void) {
     LINE "  E4 { }"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t e1 = ecs_lookup(world, "E1");
     ecs_entity_t e2 = ecs_lookup(world, "E2");
@@ -1463,7 +1463,7 @@ void Plecs_with_after_with(void) {
     ecs_fini(world);
 }
 
-void Plecs_scope_inside_with_inside_scope(void) {
+void Script_scope_inside_with_inside_scope(void) {
     ecs_world_t *world = ecs_init();
     
     const char *expr =
@@ -1476,7 +1476,7 @@ void Plecs_scope_inside_with_inside_scope(void) {
     LINE "  }"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t sun = ecs_lookup(world, "Sun");
     ecs_entity_t planet = ecs_lookup(world, "Planet");
@@ -1507,7 +1507,7 @@ void Plecs_scope_inside_with_inside_scope(void) {
     ecs_fini(world);
 }
 
-void Plecs_with_inside_scope(void) {
+void Script_with_inside_scope(void) {
     ecs_world_t *world = ecs_init();
     
     const char *expr =
@@ -1518,7 +1518,7 @@ void Plecs_with_inside_scope(void) {
     LINE "  Europe"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t earth = ecs_lookup(world, "Earth");
     ecs_entity_t continent = ecs_lookup(world, "Continent");
@@ -1536,13 +1536,13 @@ void Plecs_with_inside_scope(void) {
     ecs_fini(world);
 }
 
-void Plecs_assignment_w_1(void) {
+void Script_assignment_w_1(void) {
     ecs_world_t *world = ecs_init();
     
     const char *expr =
     HEAD "Earth :- Planet";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t earth = ecs_lookup(world, "Earth");
     ecs_entity_t planet = ecs_lookup(world, "Planet");
@@ -1555,13 +1555,13 @@ void Plecs_assignment_w_1(void) {
     ecs_fini(world);
 }
 
-void Plecs_assignment_w_2(void) {
+void Script_assignment_w_2(void) {
     ecs_world_t *world = ecs_init();
     
     const char *expr =
     HEAD "Earth :- Planet, Habitable";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t earth = ecs_lookup(world, "Earth");
     ecs_entity_t planet = ecs_lookup(world, "Planet");
@@ -1577,13 +1577,13 @@ void Plecs_assignment_w_2(void) {
     ecs_fini(world);
 }
 
-void Plecs_assignment_w_pair(void) {
+void Script_assignment_w_pair(void) {
     ecs_world_t *world = ecs_init();
     
     const char *expr =
     HEAD "Earth :- Planet, (ChildOf, Sun)";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t earth = ecs_lookup(world, "Sun.Earth");
     ecs_entity_t planet = ecs_lookup(world, "Planet");
@@ -1599,7 +1599,7 @@ void Plecs_assignment_w_pair(void) {
     ecs_fini(world);
 }
 
-void Plecs_assignment_w_invalid_subject(void) {
+void Script_assignment_w_invalid_subject(void) {
     ecs_log_set_level(-4);
 
     ecs_world_t *world = ecs_init();
@@ -1607,12 +1607,12 @@ void Plecs_assignment_w_invalid_subject(void) {
     const char *expr =
     HEAD "Earth :- Planet(Mars)";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) != 0);
 
     ecs_fini(world);
 }
 
-void Plecs_assignment_w_invalid_with(void) {
+void Script_assignment_w_invalid_with(void) {
     ecs_log_set_level(-4);
     
     ecs_world_t *world = ecs_init();
@@ -1620,18 +1620,18 @@ void Plecs_assignment_w_invalid_with(void) {
     const char *expr =
     HEAD "Earth :- with Planet { Mars }";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) != 0);
 
     ecs_fini(world);
 }
 
-void Plecs_inherit_w_colon(void) {    
+void Script_inherit_w_colon(void) {    
     ecs_world_t *world = ecs_init();
     
     const char *expr =
     HEAD "Foo : Bar";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -1644,13 +1644,13 @@ void Plecs_inherit_w_colon(void) {
     ecs_fini(world);
 }
 
-void Plecs_inherit_w_colon_w_scope(void) {
+void Script_inherit_w_colon_w_scope(void) {
     ecs_world_t *world = ecs_init();
     
     const char *expr =
     HEAD "Foo : Bar { Child }";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -1665,13 +1665,13 @@ void Plecs_inherit_w_colon_w_scope(void) {
     ecs_fini(world);
 }
 
-void Plecs_inherit_w_colon_w_assign(void) {
+void Script_inherit_w_colon_w_assign(void) {
     ecs_world_t *world = ecs_init();
     
     const char *expr =
     HEAD "Foo : Bar :- Comp";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -1686,7 +1686,7 @@ void Plecs_inherit_w_colon_w_assign(void) {
     ecs_fini(world);
 }
 
-void Plecs_assign_component_value(void) {
+void Script_assign_component_value(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -1700,7 +1700,7 @@ void Plecs_assign_component_value(void) {
     const char *expr =
     HEAD "Foo :- Position{10, 20}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
     ecs_entity_t foo = ecs_lookup(world, "Foo");
 
     test_assert(foo != 0);
@@ -1715,7 +1715,7 @@ void Plecs_assign_component_value(void) {
     ecs_fini(world);
 }
 
-void Plecs_assign_2_component_values(void) {
+void Script_assign_2_component_values(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -1738,7 +1738,7 @@ void Plecs_assign_2_component_values(void) {
     HEAD "Foo :- Position{10, 20}"
     LINE "Foo :- Velocity {1, 2}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
     ecs_entity_t foo = ecs_lookup(world, "Foo");
 
     test_assert(foo != 0);
@@ -1763,7 +1763,7 @@ void Plecs_assign_2_component_values(void) {
     ecs_fini(world);
 }
 
-void Plecs_assign_component_value_in_assign_scope(void) {
+void Script_assign_component_value_in_assign_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -1779,7 +1779,7 @@ void Plecs_assign_component_value_in_assign_scope(void) {
     LINE " - Position {10, 20}"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
     ecs_entity_t foo = ecs_lookup(world, "Foo");
 
     test_assert(foo != 0);
@@ -1795,7 +1795,7 @@ void Plecs_assign_component_value_in_assign_scope(void) {
     ecs_fini(world);
 }
 
-void Plecs_assign_2_component_values_in_assign_scope(void) {
+void Script_assign_2_component_values_in_assign_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -1820,7 +1820,7 @@ void Plecs_assign_2_component_values_in_assign_scope(void) {
     LINE " -Velocity {1, 2}"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
     ecs_entity_t foo = ecs_lookup(world, "Foo");
 
     test_assert(foo != 0);
@@ -1845,7 +1845,7 @@ void Plecs_assign_2_component_values_in_assign_scope(void) {
     ecs_fini(world);
 }
 
-void Plecs_type_and_assign_in_plecs(void) {
+void Script_type_and_assign_in_plecs(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1856,7 +1856,7 @@ void Plecs_type_and_assign_in_plecs(void) {
     LINE
     LINE "Foo :- Position{10, 20}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
     ecs_entity_t ecs_id(Position) = ecs_lookup(world, "Position");
     ecs_entity_t foo = ecs_lookup(world, "Foo");
 
@@ -1875,7 +1875,7 @@ void Plecs_type_and_assign_in_plecs(void) {
     ecs_fini(world);
 }
 
-void Plecs_type_and_assign_in_plecs_w_2_members(void) {
+void Script_type_and_assign_in_plecs_w_2_members(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1886,7 +1886,7 @@ void Plecs_type_and_assign_in_plecs_w_2_members(void) {
     LINE ""
     LINE "Foo :- Position{x: 10, y: 20}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
     ecs_entity_t ecs_id(Position) = ecs_lookup(world, "Position");
     ecs_entity_t foo = ecs_lookup(world, "Foo");
 
@@ -1905,7 +1905,7 @@ void Plecs_type_and_assign_in_plecs_w_2_members(void) {
     ecs_fini(world);
 }
 
-void Plecs_type_and_assign_in_plecs_w_3_members(void) {
+void Script_type_and_assign_in_plecs_w_3_members(void) {
     ecs_world_t *world = ecs_init();
 
     typedef struct {
@@ -1923,7 +1923,7 @@ void Plecs_type_and_assign_in_plecs_w_3_members(void) {
     LINE ""
     LINE "Foo :- Position{x: 10, y: 20, z: 30}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
     ecs_entity_t ecs_id(Position3D) = ecs_lookup(world, "Position");
     ecs_entity_t foo = ecs_lookup(world, "Foo");
 
@@ -1943,7 +1943,7 @@ void Plecs_type_and_assign_in_plecs_w_3_members(void) {
     ecs_fini(world);
 }
 
-void Plecs_type_and_assign_in_plecs_w_enum(void) {
+void Script_type_and_assign_in_plecs_w_enum(void) {
     ecs_world_t *world = ecs_init();
 
     typedef enum {
@@ -1967,7 +1967,7 @@ void Plecs_type_and_assign_in_plecs_w_enum(void) {
     LINE ""
     LINE "Foo :- SomeType{value: Blue}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
     ecs_entity_t ecs_id(SomeType) = ecs_lookup(world, "SomeType");
     ecs_entity_t foo = ecs_lookup(world, "Foo");
 
@@ -1985,7 +1985,7 @@ void Plecs_type_and_assign_in_plecs_w_enum(void) {
     ecs_fini(world);
 }
 
-void Plecs_type_and_assign_in_plecs_w_enum_using_meta(void) {
+void Script_type_and_assign_in_plecs_w_enum_using_meta(void) {
     ecs_world_t *world = ecs_init();
 
     typedef enum {
@@ -2011,7 +2011,7 @@ void Plecs_type_and_assign_in_plecs_w_enum_using_meta(void) {
     LINE
     LINE "Foo :- SomeType{value: Blue}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
     ecs_entity_t ecs_id(SomeType) = ecs_lookup(world, "SomeType");
     ecs_entity_t foo = ecs_lookup(world, "Foo");
 
@@ -2037,7 +2037,7 @@ void Plecs_type_and_assign_in_plecs_w_enum_using_meta(void) {
     ecs_fini(world);
 }
 
-void Plecs_type_and_assign_in_plecs_w_enum_primitive_using_meta(void) {
+void Script_type_and_assign_in_plecs_w_enum_primitive_using_meta(void) {
     ecs_world_t *world = ecs_init();
 
     typedef enum {
@@ -2054,7 +2054,7 @@ void Plecs_type_and_assign_in_plecs_w_enum_primitive_using_meta(void) {
     LINE ""
     LINE "Foo :- Color{Blue}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
     ecs_entity_t ecs_id(Color) = ecs_lookup(world, "Color");
     ecs_entity_t foo = ecs_lookup(world, "Foo");
 
@@ -2081,7 +2081,7 @@ void Plecs_type_and_assign_in_plecs_w_enum_primitive_using_meta(void) {
 }
 
 
-void Plecs_type_and_assign_in_plecs_w_enum_primitive_and_struct(void) {
+void Script_type_and_assign_in_plecs_w_enum_primitive_and_struct(void) {
     ecs_world_t *world = ecs_init();
 
     typedef enum {
@@ -2107,7 +2107,7 @@ void Plecs_type_and_assign_in_plecs_w_enum_primitive_and_struct(void) {
     LINE "  - Color {Green}"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
     ecs_entity_t ecs_id(Position) = ecs_lookup(world, "Position");
     ecs_entity_t ecs_id(Color) = ecs_lookup(world, "Color");
     ecs_entity_t foo = ecs_lookup(world, "Foo");
@@ -2143,7 +2143,7 @@ void Plecs_type_and_assign_in_plecs_w_enum_primitive_and_struct(void) {
     ecs_fini(world);
 }
 
-void Plecs_type_and_assign_in_plecs_nested_member(void) {
+void Script_type_and_assign_in_plecs_nested_member(void) {
     ecs_world_t *world = ecs_init();
 
     typedef struct {
@@ -2174,7 +2174,7 @@ void Plecs_type_and_assign_in_plecs_nested_member(void) {
     LINE
     LINE "l :- Line{start: {x: 10, y: 20}, stop: {x: 30, y: 40}}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
     ecs_entity_t ecs_id(Line) = ecs_lookup(world, "Line");
     ecs_entity_t l = ecs_lookup(world, "l");
 
@@ -2196,7 +2196,7 @@ void Plecs_type_and_assign_in_plecs_nested_member(void) {
     ecs_fini(world);
 }
 
-void Plecs_dot_assign_nested_member(void) {
+void Script_dot_assign_nested_member(void) {
     ecs_world_t *world = ecs_init();
 
     typedef struct {
@@ -2227,7 +2227,7 @@ void Plecs_dot_assign_nested_member(void) {
     LINE
     LINE "l :- Line{start.x: 10, start.y: 20, stop.x: 30, stop.y: 40}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
     ecs_entity_t ecs_id(Line) = ecs_lookup(world, "Line");
     ecs_entity_t l = ecs_lookup(world, "l");
 
@@ -2249,7 +2249,7 @@ void Plecs_dot_assign_nested_member(void) {
     ecs_fini(world);
 }
 
-void Plecs_dot_assign_binary_expr(void) {
+void Script_dot_assign_binary_expr(void) {
     ecs_world_t *world = ecs_init();
 
     typedef struct {
@@ -2280,7 +2280,7 @@ void Plecs_dot_assign_binary_expr(void) {
     LINE
     LINE "l :- Line{start.x: 2 + 8, start.y: 5 + 15, stop.x: 10 + 20, stop.y: 15 + 25}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
     ecs_entity_t ecs_id(Line) = ecs_lookup(world, "Line");
     ecs_entity_t l = ecs_lookup(world, "l");
 
@@ -2302,7 +2302,7 @@ void Plecs_dot_assign_binary_expr(void) {
     ecs_fini(world);
 }
 
-void Plecs_open_scope_no_parent(void) {
+void Script_open_scope_no_parent(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2314,7 +2314,7 @@ void Plecs_open_scope_no_parent(void) {
     LINE "}"
     LINE "Hello";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Foo.Bar");
     ecs_entity_t zoo = ecs_lookup(world, "Zoo");
@@ -2332,13 +2332,13 @@ void Plecs_open_scope_no_parent(void) {
     ecs_fini(world);
 }
 
-void Plecs_create_subject_in_root_scope_w_resolvable_id(void) {
+void Script_create_subject_in_root_scope_w_resolvable_id(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
     HEAD "Tag";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
     ecs_entity_t tag = ecs_lookup_child(world, 0, "Tag");
     test_assert(tag != 0);
     test_assert(tag != EcsPairIsTag);
@@ -2346,7 +2346,7 @@ void Plecs_create_subject_in_root_scope_w_resolvable_id(void) {
     ecs_fini(world);
 }
 
-void Plecs_create_subject_in_scope_w_resolvable_id(void) {
+void Script_create_subject_in_scope_w_resolvable_id(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2354,7 +2354,7 @@ void Plecs_create_subject_in_scope_w_resolvable_id(void) {
     LINE "  Tag"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
 
@@ -2367,7 +2367,7 @@ void Plecs_create_subject_in_scope_w_resolvable_id(void) {
     ecs_fini(world);
 }
 
-void Plecs_create_subject_in_scope_w_resolvable_id_using(void) {
+void Script_create_subject_in_scope_w_resolvable_id_using(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2379,7 +2379,7 @@ void Plecs_create_subject_in_scope_w_resolvable_id_using(void) {
     LINE
     LINE "Hello(Bar)";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Foo.Bar");
     ecs_entity_t root_bar = ecs_lookup(world, "Bar");
@@ -2398,7 +2398,7 @@ void Plecs_create_subject_in_scope_w_resolvable_id_using(void) {
     ecs_fini(world);
 }
 
-void Plecs_using_scope(void) {
+void Script_using_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2410,7 +2410,7 @@ void Plecs_using_scope(void) {
     LINE "Bar(Hello)"
     LINE "Foo.Bar(World)";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Foo.Bar");
     ecs_entity_t not_bar = ecs_lookup(world, "Bar");
@@ -2432,7 +2432,7 @@ void Plecs_using_scope(void) {
     ecs_fini(world);
 }
 
-void Plecs_using_nested_scope(void) {
+void Script_using_nested_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2446,7 +2446,7 @@ void Plecs_using_nested_scope(void) {
     LINE "Zoo(Hello)"
     LINE "Foo.Bar.Zoo(World)";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Foo.Bar");
     ecs_entity_t zoo = ecs_lookup(world, "Foo.Bar.Zoo");
@@ -2471,7 +2471,7 @@ void Plecs_using_nested_scope(void) {
     ecs_fini(world);
 }
 
-void Plecs_using_nested_in_scope(void) {
+void Script_using_nested_in_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2486,7 +2486,7 @@ void Plecs_using_nested_in_scope(void) {
     LINE "}"
     LINE "Zoo(World)";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Foo.Bar");
     ecs_entity_t zoo = ecs_lookup(world, "Foo.Bar.Zoo");
@@ -2511,7 +2511,7 @@ void Plecs_using_nested_in_scope(void) {
     ecs_fini(world);
 }
 
-void Plecs_using_with_scope(void) {
+void Script_using_with_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2527,7 +2527,7 @@ void Plecs_using_with_scope(void) {
     LINE ""
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
     ecs_entity_t scope = ecs_lookup(world, "Scope");
     ecs_entity_t foo = ecs_lookup(world, "Scope.Foo");
     ecs_entity_t bar = ecs_lookup(world, "Scope.Bar");
@@ -2551,7 +2551,7 @@ void Plecs_using_with_scope(void) {
     ecs_fini(world);
 }
 
-void Plecs_using_w_entity_ref_in_value_2_members(void) {
+void Script_using_w_entity_ref_in_value_2_members(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2564,7 +2564,7 @@ void Plecs_using_w_entity_ref_in_value_2_members(void) {
     LINE ""
     LINE "Foo :- Position{x: 10, y: 20}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
     ecs_entity_t ecs_id(Position) = ecs_lookup(world, "Position");
     ecs_entity_t foo = ecs_lookup(world, "Foo");
 
@@ -2583,7 +2583,7 @@ void Plecs_using_w_entity_ref_in_value_2_members(void) {
     ecs_fini(world);
 }
 
-void Plecs_using_w_entity_ref_in_value_3_members(void) {
+void Script_using_w_entity_ref_in_value_3_members(void) {
     ecs_world_t *world = ecs_init();
 
     typedef struct {
@@ -2603,7 +2603,7 @@ void Plecs_using_w_entity_ref_in_value_3_members(void) {
     LINE
     LINE "Foo :- Position{x: 10, y: 20, z: 30}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
     ecs_entity_t ecs_id(Position3D) = ecs_lookup(world, "Position");
     ecs_entity_t foo = ecs_lookup(world, "Foo");
 
@@ -2623,7 +2623,7 @@ void Plecs_using_w_entity_ref_in_value_3_members(void) {
     ecs_fini(world);
 }
 
-void Plecs_2_using_scope(void) {
+void Script_2_using_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2641,7 +2641,7 @@ void Plecs_2_using_scope(void) {
     LINE "Hello(E1)"
     LINE "TheWorld(E2)";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t hello = ecs_lookup(world, "Foo.Hello");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -2668,7 +2668,7 @@ void Plecs_2_using_scope(void) {
     ecs_fini(world);
 }
 
-void Plecs_2_using_in_different_scope(void) {
+void Script_2_using_in_different_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2698,7 +2698,7 @@ void Plecs_2_using_in_different_scope(void) {
     LINE "TheWorld(RootChild)"
     LINE;
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t hello = ecs_lookup(world, "Foo.Hello");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -2744,19 +2744,19 @@ void Plecs_2_using_in_different_scope(void) {
     ecs_fini(world);
 }
 
-void Plecs_assignment_to_non_component(void) {
+void Script_assignment_to_non_component(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
     HEAD "Foo :- Position{x: 10, y: 20}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) != 0);
 
     ecs_fini(world);
 }
 
-void Plecs_struct_w_member_w_assignment_to_nothing(void) {
+void Script_struct_w_member_w_assignment_to_nothing(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2765,12 +2765,12 @@ void Plecs_struct_w_member_w_assignment_to_nothing(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) != 0);
 
     ecs_fini(world);
 }
 
-void Plecs_struct_w_member_w_assignment_to_empty_scope(void) {
+void Script_struct_w_member_w_assignment_to_empty_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2779,12 +2779,12 @@ void Plecs_struct_w_member_w_assignment_to_empty_scope(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) != 0);
 
     ecs_fini(world);
 }
 
-void Plecs_scope_after_assign(void) {
+void Script_scope_after_assign(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -2801,12 +2801,12 @@ void Plecs_scope_after_assign(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) != 0);
 
     ecs_fini(world);
 }
 
-void Plecs_assign_after_inherit(void) {
+void Script_assign_after_inherit(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -2821,7 +2821,7 @@ void Plecs_assign_after_inherit(void) {
     HEAD "Foo : Position"
     LINE "Bar :- Position{10, 20}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -2843,7 +2843,7 @@ void Plecs_assign_after_inherit(void) {
     ecs_fini(world);
 }
 
-void Plecs_multiple_assignments_single_line(void) {
+void Script_multiple_assignments_single_line(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -2865,7 +2865,7 @@ void Plecs_multiple_assignments_single_line(void) {
     const char *expr =
     HEAD "Foo :- Position{10, 20}, Velocity{1, 2}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -2887,7 +2887,7 @@ void Plecs_multiple_assignments_single_line(void) {
     ecs_fini(world);
 }
 
-void Plecs_2_stmts_in_scope_w_no_parent(void) {
+void Script_2_stmts_in_scope_w_no_parent(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2896,7 +2896,7 @@ void Plecs_2_stmts_in_scope_w_no_parent(void) {
     LINE "Foo"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -2913,7 +2913,7 @@ void Plecs_2_stmts_in_scope_w_no_parent(void) {
     ecs_fini(world);
 }
 
-void Plecs_scope_after_assign_1_tag(void) {
+void Script_scope_after_assign_1_tag(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2922,12 +2922,12 @@ void Plecs_scope_after_assign_1_tag(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) != 0);
 
     ecs_fini(world);
 }
 
-void Plecs_scope_after_assign_2_tags(void) {
+void Script_scope_after_assign_2_tags(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2936,12 +2936,12 @@ void Plecs_scope_after_assign_2_tags(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) != 0);
 
     ecs_fini(world);
 }
 
-void Plecs_empty_scope_after_using(void) {
+void Script_empty_scope_after_using(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2950,7 +2950,7 @@ void Plecs_empty_scope_after_using(void) {
     LINE "  Foo"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert( foo != 0);
@@ -2959,7 +2959,7 @@ void Plecs_empty_scope_after_using(void) {
     ecs_fini(world);
 }
 
-void Plecs_invalid_nested_assignment(void) {
+void Script_invalid_nested_assignment(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2967,48 +2967,48 @@ void Plecs_invalid_nested_assignment(void) {
     LINE "Bar :- Hello";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) != 0);
 
     ecs_fini(world);
 }
 
-void Plecs_invalid_partial_pair_assignment(void) {
+void Script_invalid_partial_pair_assignment(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
     HEAD "Foo :- (Hello, ";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) != 0);
 
     ecs_fini(world);
 }
 
-void Plecs_empty_assignment(void) {
+void Script_empty_assignment(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
     HEAD "Foo :-";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) != 0);
 
     ecs_fini(world);
 }
 
-void Plecs_empty_assignment_before_end_of_scope(void) {
+void Script_empty_assignment_before_end_of_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
     HEAD "{Foo :-}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) != 0);
 
     ecs_fini(world);
 }
 
-void Plecs_assign_tag_to_parent(void) {
+void Script_assign_tag_to_parent(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3017,7 +3017,7 @@ void Plecs_assign_tag_to_parent(void) {
     LINE "  Child"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -3035,7 +3035,7 @@ void Plecs_assign_tag_to_parent(void) {
     ecs_fini(world);
 }
 
-void Plecs_assign_component_to_parent(void) {
+void Script_assign_component_to_parent(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -3052,7 +3052,7 @@ void Plecs_assign_component_to_parent(void) {
     LINE "  Child"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t child = ecs_lookup(world, "Foo.Child");
@@ -3073,7 +3073,7 @@ void Plecs_assign_component_to_parent(void) {
     ecs_fini(world);
 }
 
-void Plecs_assign_to_parent_pair_w_new_entities_in_scope(void) {
+void Script_assign_to_parent_pair_w_new_entities_in_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3081,7 +3081,7 @@ void Plecs_assign_to_parent_pair_w_new_entities_in_scope(void) {
     LINE "  - (Rel, Obj)"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t rel = ecs_lookup(world, "Rel");
@@ -3098,7 +3098,7 @@ void Plecs_assign_to_parent_pair_w_new_entities_in_scope(void) {
     ecs_fini(world);
 }
 
-void Plecs_assign_to_parent_pair_w_existing_entities_in_scope(void) {
+void Script_assign_to_parent_pair_w_existing_entities_in_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3107,7 +3107,7 @@ void Plecs_assign_to_parent_pair_w_existing_entities_in_scope(void) {
     LINE "  - (Rel, Obj)"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t rel = ecs_lookup(world, "Rel");
@@ -3124,7 +3124,7 @@ void Plecs_assign_to_parent_pair_w_existing_entities_in_scope(void) {
     ecs_fini(world);
 }
 
-void Plecs_default_child_component(void) {
+void Script_default_child_component(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3134,7 +3134,7 @@ void Plecs_default_child_component(void) {
     LINE "  ChildB"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -3160,7 +3160,7 @@ void Plecs_default_child_component(void) {
     ecs_fini(world);
 }
 
-void Plecs_default_child_component_w_assign(void) {
+void Script_default_child_component_w_assign(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -3178,7 +3178,7 @@ void Plecs_default_child_component_w_assign(void) {
     LINE "  ChildB :- {10, 20}"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     
@@ -3202,7 +3202,7 @@ void Plecs_default_child_component_w_assign(void) {
     ecs_fini(world);
 }
 
-void Plecs_struct_type_w_default_child_component(void) {
+void Script_struct_type_w_default_child_component(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3215,7 +3215,7 @@ void Plecs_struct_type_w_default_child_component(void) {
     LINE
     LINE "Foo :- Position{x: 10, y: 20}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t ecs_id(Position) = ecs_lookup(world, "Position");
@@ -3233,7 +3233,7 @@ void Plecs_struct_type_w_default_child_component(void) {
     ecs_fini(world);
 }
 
-void Plecs_struct_type_w_default_child_component_nested_member(void) {
+void Script_struct_type_w_default_child_component_nested_member(void) {
     ecs_world_t *world = ecs_init();
 
     typedef struct {
@@ -3264,7 +3264,7 @@ void Plecs_struct_type_w_default_child_component_nested_member(void) {
     LINE
     LINE "Foo :- Line{start: {10, 20}, stop: {30, 40}}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t ecs_id(Line) = ecs_lookup(world, "Line");
@@ -3284,7 +3284,7 @@ void Plecs_struct_type_w_default_child_component_nested_member(void) {
     ecs_fini(world);
 }
 
-void Plecs_enum_type_w_default_child_component(void) {
+void Script_enum_type_w_default_child_component(void) {
     ecs_world_t *world = ecs_init();
 
     typedef enum {
@@ -3300,7 +3300,7 @@ void Plecs_enum_type_w_default_child_component(void) {
     LINE
     LINE "Foo :- Color{Green}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t ecs_id(Color) = ecs_lookup(world, "Color");
@@ -3317,7 +3317,7 @@ void Plecs_enum_type_w_default_child_component(void) {
     ecs_fini(world);
 }
 
-void Plecs_default_type_from_with(void) {
+void Script_default_type_from_with(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -3334,7 +3334,7 @@ void Plecs_default_type_from_with(void) {
     LINE "  e2 :- {30, 40}"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t e1 = ecs_lookup(world, "e1");
     ecs_entity_t e2 = ecs_lookup(world, "e2");
@@ -3355,7 +3355,7 @@ void Plecs_default_type_from_with(void) {
     ecs_fini(world);
 }
 
-void Plecs_scope_w_1_subj_and_2_pairs(void) {
+void Script_scope_w_1_subj_and_2_pairs(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3364,7 +3364,7 @@ void Plecs_scope_w_1_subj_and_2_pairs(void) {
     LINE " RelB(Foo, Bar)"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t parent = ecs_lookup(world, "Parent");
     ecs_entity_t rel_a = ecs_lookup(world, "RelA");
@@ -3384,13 +3384,13 @@ void Plecs_scope_w_1_subj_and_2_pairs(void) {
     ecs_fini(world);
 }
 
-void Plecs_inherit_from_multiple(void) {
+void Script_inherit_from_multiple(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
     HEAD "Inst : Foo, Bar";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t inst = ecs_lookup(world, "Inst");
     ecs_entity_t foo = ecs_lookup(world, "Foo");
@@ -3413,7 +3413,7 @@ void Plecs_inherit_from_multiple(void) {
 // }
 // Foo :- (Position, Bar){x: 10, y: 20}
 
-void Plecs_assign_pair_component(void) {
+void Script_assign_pair_component(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3426,7 +3426,7 @@ void Plecs_assign_pair_component(void) {
     LINE
     LINE "Foo :- (Position, Bar){x: 10, y: 20}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -3446,7 +3446,7 @@ void Plecs_assign_pair_component(void) {
     ecs_fini(world);
 }
 
-void Plecs_assign_pair_component_in_scope(void) {
+void Script_assign_pair_component_in_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3462,7 +3462,7 @@ void Plecs_assign_pair_component_in_scope(void) {
     LINE "  - (Position, Bar) {x: 20, y: 30}"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t parent = ecs_lookup(world, "Parent");
     ecs_entity_t foo = ecs_lookup(world, "Foo");
@@ -3491,7 +3491,7 @@ void Plecs_assign_pair_component_in_scope(void) {
     ecs_fini(world);
 }
 
-void Plecs_assign_pair_component_in_script(void) {
+void Script_assign_pair_component_in_script(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3528,7 +3528,7 @@ void Plecs_assign_pair_component_in_script(void) {
     ecs_fini(world);
 }
 
-void Plecs_assign_pair_component_in_script_update(void) {
+void Script_assign_pair_component_in_script_update(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3567,7 +3567,7 @@ void Plecs_assign_pair_component_in_script_update(void) {
     ecs_fini(world);
 }
 
-void Plecs_set_entity_names(void) {
+void Script_set_entity_names(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3577,7 +3577,7 @@ void Plecs_set_entity_names(void) {
     LINE "foo(down)"
     LINE "foo(up)";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "foo");
     ecs_entity_t self = ecs_lookup(world, "self");
@@ -3602,7 +3602,7 @@ void Plecs_set_entity_names(void) {
     ecs_fini(world);
 }
 
-void Plecs_oneof(void) {
+void Script_oneof(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3613,7 +3613,7 @@ void Plecs_oneof(void) {
     LINE "}"
     LINE "e :- (Color, Green)";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t color = ecs_lookup(world, "Color");
     ecs_entity_t green = ecs_lookup(world, "Color.Green");
@@ -3631,7 +3631,7 @@ void Plecs_oneof(void) {
     ecs_fini(world);
 }
 
-void Plecs_invalid_oneof(void) {
+void Script_invalid_oneof(void) {
     ecs_log_set_level(-4);
     
     ecs_world_t *world = ecs_init();
@@ -3644,7 +3644,7 @@ void Plecs_invalid_oneof(void) {
     LINE "}"
     LINE "e :- (Color, Foo)";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) != 0);
 
     ecs_entity_t color = ecs_lookup(world, "Color");
     ecs_entity_t foo = ecs_lookup(world, "Foo");
@@ -3659,7 +3659,7 @@ void Plecs_invalid_oneof(void) {
     ecs_fini(world);
 }
 
-void Plecs_brief_annotation(void) {
+void Script_brief_annotation(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3670,7 +3670,7 @@ void Plecs_brief_annotation(void) {
     LINE "@brief Another description"
     LINE "Baz";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -3687,7 +3687,7 @@ void Plecs_brief_annotation(void) {
     ecs_fini(world);
 }
 
-void Plecs_name_annotation(void) {
+void Script_name_annotation(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3698,7 +3698,7 @@ void Plecs_name_annotation(void) {
     LINE "@name Another name"
     LINE "Baz";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -3715,7 +3715,7 @@ void Plecs_name_annotation(void) {
     ecs_fini(world);
 }
 
-void Plecs_link_annotation(void) {
+void Script_link_annotation(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3726,7 +3726,7 @@ void Plecs_link_annotation(void) {
     LINE "@link Another link"
     LINE "Baz";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -3743,7 +3743,7 @@ void Plecs_link_annotation(void) {
     ecs_fini(world);
 }
 
-void Plecs_color_annotation(void) {
+void Script_color_annotation(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3754,7 +3754,7 @@ void Plecs_color_annotation(void) {
     LINE "@color rgb(10, 20, 30, 1.0)"
     LINE "Baz";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -3771,7 +3771,7 @@ void Plecs_color_annotation(void) {
     ecs_fini(world);
 }
 
-void Plecs_multiple_annotations(void) {
+void Script_multiple_annotations(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3786,7 +3786,7 @@ void Plecs_multiple_annotations(void) {
     LINE "@name Another name"
     LINE "Baz";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -3807,14 +3807,14 @@ void Plecs_multiple_annotations(void) {
     ecs_fini(world);
 }
 
-void Plecs_annotation_w_trailing_space(void) {
+void Script_annotation_w_trailing_space(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
     HEAD "@brief   A description  "
     LINE "Foo";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -3828,7 +3828,7 @@ typedef struct String {
     char *value;
 } String;
 
-void Plecs_multiline_string(void) {
+void Script_multiline_string(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(String) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -3845,7 +3845,7 @@ void Plecs_multiline_string(void) {
     LINE "Special characters }{\"\"'',"
     LINE "`}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -3866,7 +3866,7 @@ void Plecs_multiline_string(void) {
     ecs_fini(world);
 }
 
-void Plecs_unterminated_multiline_string(void) {
+void Script_unterminated_multiline_string(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -3884,19 +3884,19 @@ void Plecs_unterminated_multiline_string(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) != 0);
 
     ecs_fini(world);
 }
 
-void Plecs_annotate_declaration(void) {
+void Script_annotate_declaration(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
     HEAD "@brief A brief description"
     LINE "Foo Bar";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -3913,13 +3913,13 @@ void Plecs_annotate_declaration(void) {
     ecs_fini(world);
 }
 
-void Plecs_declaration_w_underscore_name(void) {
+void Script_declaration_w_underscore_name(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
     HEAD "Foo _Bar";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -3933,13 +3933,13 @@ void Plecs_declaration_w_underscore_name(void) {
     ecs_fini(world);
 }
 
-void Plecs_anonymous_entity(void) {
+void Script_anonymous_entity(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
     HEAD "_ :- Foo";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -3955,7 +3955,7 @@ void Plecs_anonymous_entity(void) {
     ecs_fini(world);
 }
 
-void Plecs_anonymous_entity_in_scope(void) {
+void Script_anonymous_entity_in_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3963,7 +3963,7 @@ void Plecs_anonymous_entity_in_scope(void) {
     LINE "  _ :- Foo"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -3982,13 +3982,13 @@ void Plecs_anonymous_entity_in_scope(void) {
     ecs_fini(world);
 }
 
-void Plecs_anonymous_declaration(void) {
+void Script_anonymous_declaration(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
     HEAD "Foo _";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -4004,7 +4004,7 @@ void Plecs_anonymous_declaration(void) {
     ecs_fini(world);
 }
 
-void Plecs_const_var_int(void) {
+void Script_const_var_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -4021,7 +4021,7 @@ void Plecs_const_var_int(void) {
     LINE ""
     LINE "e :- Position{$var_x, $var_y}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -4035,7 +4035,7 @@ void Plecs_const_var_int(void) {
     ecs_fini(world);
 }
 
-void Plecs_const_var_float(void) {
+void Script_const_var_float(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -4052,7 +4052,7 @@ void Plecs_const_var_float(void) {
     LINE ""
     LINE "e :- Position{$var_x, $var_y}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -4066,7 +4066,7 @@ void Plecs_const_var_float(void) {
     ecs_fini(world);
 }
 
-void Plecs_const_var_bool(void) {
+void Script_const_var_bool(void) {
     ecs_world_t *world = ecs_init();
 
     typedef struct Bools {
@@ -4088,7 +4088,7 @@ void Plecs_const_var_bool(void) {
     LINE ""
     LINE "e :- Bools{$var_x, $var_y}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -4102,7 +4102,7 @@ void Plecs_const_var_bool(void) {
     ecs_fini(world);
 }
 
-void Plecs_const_var_string(void) {
+void Script_const_var_string(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -4119,7 +4119,7 @@ void Plecs_const_var_string(void) {
     LINE ""
     LINE "e :- Position{$var_x, $var_y}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -4138,7 +4138,7 @@ typedef struct Line {
     Position stop;
 } Line;
 
-void Plecs_const_var_struct(void) {
+void Script_const_var_struct(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -4163,7 +4163,7 @@ void Plecs_const_var_struct(void) {
     LINE ""
     LINE "e :- Line{start: $var_start, stop: $var_stop}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -4179,7 +4179,7 @@ void Plecs_const_var_struct(void) {
     ecs_fini(world);
 }
 
-void Plecs_const_var_redeclare(void) {
+void Script_const_var_redeclare(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -4187,12 +4187,12 @@ void Plecs_const_var_redeclare(void) {
     LINE "const var_x = 20";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) != 0);
 
     ecs_fini(world);
 }
 
-void Plecs_const_var_scoped(void) {
+void Script_const_var_scoped(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -4216,7 +4216,7 @@ void Plecs_const_var_scoped(void) {
     LINE "  c :- Position{$var_x, $var_y}"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t a = ecs_lookup(world, "a");
     test_assert(a != 0);
@@ -4248,7 +4248,7 @@ void Plecs_const_var_scoped(void) {
     ecs_fini(world);
 }
 
-void Plecs_assign_component_from_var(void) {
+void Script_assign_component_from_var(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -4264,7 +4264,7 @@ void Plecs_assign_component_from_var(void) {
     LINE "a :- $var_pos"
     LINE "";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t var = ecs_lookup(world, "var_pos");
     test_assert(var == 0);
@@ -4280,7 +4280,7 @@ void Plecs_assign_component_from_var(void) {
     ecs_fini(world);
 }
 
-void Plecs_assign_component_from_var_in_scope(void) {
+void Script_assign_component_from_var_in_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -4298,7 +4298,7 @@ void Plecs_assign_component_from_var_in_scope(void) {
     LINE "}"
     LINE "";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t var = ecs_lookup(world, "var_pos");
     test_assert(var == 0);
@@ -4314,7 +4314,7 @@ void Plecs_assign_component_from_var_in_scope(void) {
     ecs_fini(world);
 }
 
-void Plecs_scope_w_component_after_const_var(void) {
+void Script_scope_w_component_after_const_var(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -4331,7 +4331,7 @@ void Plecs_scope_w_component_after_const_var(void) {
     LINE "  - Position{x: 10, y: $var}"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -4345,7 +4345,7 @@ void Plecs_scope_w_component_after_const_var(void) {
     ecs_fini(world);
 }
 
-void Plecs_component_after_const_add_expr(void) {
+void Script_component_after_const_add_expr(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -4362,7 +4362,7 @@ void Plecs_component_after_const_add_expr(void) {
     LINE "  - Position{x: 10, y: $var}"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -4376,7 +4376,7 @@ void Plecs_component_after_const_add_expr(void) {
     ecs_fini(world);
 }
 
-void Plecs_component_after_const_sub_expr(void) {
+void Script_component_after_const_sub_expr(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -4393,7 +4393,7 @@ void Plecs_component_after_const_sub_expr(void) {
     LINE "  - Position{x: 10, y: $var}"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -4407,7 +4407,7 @@ void Plecs_component_after_const_sub_expr(void) {
     ecs_fini(world);
 }
 
-void Plecs_component_after_const_mul_expr(void) {
+void Script_component_after_const_mul_expr(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -4424,7 +4424,7 @@ void Plecs_component_after_const_mul_expr(void) {
     LINE "  - Position{x: 10, y: $var}"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -4438,7 +4438,7 @@ void Plecs_component_after_const_mul_expr(void) {
     ecs_fini(world);
 }
 
-void Plecs_component_after_const_div_expr(void) {
+void Script_component_after_const_div_expr(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -4455,7 +4455,7 @@ void Plecs_component_after_const_div_expr(void) {
     LINE "  - Position{x: 10, y: $var}"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -4469,7 +4469,7 @@ void Plecs_component_after_const_div_expr(void) {
     ecs_fini(world);
 }
 
-void Plecs_component_after_const_paren_expr(void) {
+void Script_component_after_const_paren_expr(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -4488,7 +4488,7 @@ void Plecs_component_after_const_paren_expr(void) {
     LINE "  - Position{$val, $val * 2}"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -4502,7 +4502,7 @@ void Plecs_component_after_const_paren_expr(void) {
     ecs_fini(world);
 }
 
-void Plecs_parse_with(void) {
+void Script_parse_with(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -4514,7 +4514,7 @@ void Plecs_parse_with(void) {
     ECS_TAG(world, Tag);
 
     ecs_set_with(world, Tag);
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
     ecs_set_with(world, 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
@@ -4532,7 +4532,7 @@ void Plecs_parse_with(void) {
     ecs_fini(world);
 }
 
-void Plecs_parse_with_w_with(void) {
+void Script_parse_with_w_with(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, TagA);
@@ -4547,7 +4547,7 @@ void Plecs_parse_with_w_with(void) {
     LINE "}";
 
     ecs_set_with(world, TagA);
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
     ecs_set_with(world, 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
@@ -4570,7 +4570,7 @@ void Plecs_parse_with_w_with(void) {
     ecs_fini(world);
 }
 
-void Plecs_parse_with_w_tag(void) {
+void Script_parse_with_w_tag(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, TagA);
@@ -4585,7 +4585,7 @@ void Plecs_parse_with_w_tag(void) {
     LINE "}";
 
     ecs_set_with(world, TagA);
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
     ecs_set_with(world, 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
@@ -4609,7 +4609,7 @@ void Plecs_parse_with_w_tag(void) {
     ecs_fini(world);
 }
 
-void Plecs_parse_with_value(void) {
+void Script_parse_with_value(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -4628,7 +4628,7 @@ void Plecs_parse_with_value(void) {
     LINE "  Bar"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -4653,7 +4653,7 @@ void Plecs_parse_with_value(void) {
     ecs_fini(world);
 }
 
-void Plecs_parse_with_2_values(void) {
+void Script_parse_with_2_values(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -4681,7 +4681,7 @@ void Plecs_parse_with_2_values(void) {
     LINE "  Bar"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -4718,7 +4718,7 @@ void Plecs_parse_with_2_values(void) {
     ecs_fini(world);
 }
 
-void Plecs_parse_with_2_nested_values(void) {
+void Script_parse_with_2_nested_values(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -4748,7 +4748,7 @@ void Plecs_parse_with_2_nested_values(void) {
     LINE "  }"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -4785,7 +4785,7 @@ void Plecs_parse_with_2_nested_values(void) {
     ecs_fini(world);
 }
 
-void Plecs_parse_with_var(void) {
+void Script_parse_with_var(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -4805,7 +4805,7 @@ void Plecs_parse_with_var(void) {
     LINE "  Bar"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -4829,7 +4829,7 @@ void Plecs_parse_with_var(void) {
     ecs_fini(world);
 }
 
-void Plecs_parse_with_2_vars(void) {
+void Script_parse_with_2_vars(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -4859,7 +4859,7 @@ void Plecs_parse_with_2_vars(void) {
     LINE "  Bar"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -4896,7 +4896,7 @@ void Plecs_parse_with_2_vars(void) {
     ecs_fini(world);
 }
 
-void Plecs_parse_with_2_nested_vars(void) {
+void Script_parse_with_2_nested_vars(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -4928,7 +4928,7 @@ void Plecs_parse_with_2_nested_vars(void) {
     LINE "  }"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");
@@ -4965,7 +4965,7 @@ void Plecs_parse_with_2_nested_vars(void) {
     ecs_fini(world);
 }
 
-void Plecs_parse_with_var_in_scope(void) {
+void Script_parse_with_var_in_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -4987,7 +4987,7 @@ void Plecs_parse_with_var_in_scope(void) {
     LINE "  }"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t parent = ecs_lookup(world, "Parent");
     ecs_entity_t foo = ecs_lookup(world, "Parent.Foo");
@@ -5014,7 +5014,7 @@ void Plecs_parse_with_var_in_scope(void) {
 }
 
 
-void Plecs_assign_const_w_expr(void) {
+void Script_assign_const_w_expr(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -5029,7 +5029,7 @@ void Plecs_assign_const_w_expr(void) {
     LINE "const var = 5 + 1"
     LINE "e :- Position{x: $var, y: $var * 2}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -5043,7 +5043,7 @@ void Plecs_assign_const_w_expr(void) {
     ecs_fini(world);
 }
 
-void Plecs_const_w_type(void) {
+void Script_const_w_type(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -5058,7 +5058,7 @@ void Plecs_const_w_type(void) {
     LINE "const var : flecs.meta.i32 = 5 / 2"
     LINE "e :- Position{x: $var, y: $var * 3}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -5072,7 +5072,7 @@ void Plecs_const_w_type(void) {
     ecs_fini(world);
 }
 
-void Plecs_assembly_no_scope(void) {
+void Script_assembly_no_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -5088,7 +5088,7 @@ void Plecs_assembly_no_scope(void) {
     const char *expr =
     LINE "assembly Tree";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -5096,7 +5096,7 @@ void Plecs_assembly_no_scope(void) {
     ecs_fini(world);
 }
 
-void Plecs_assembly_empty(void) {
+void Script_assembly_empty(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -5114,12 +5114,12 @@ void Plecs_assembly_empty(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) != 0);
 
     ecs_fini(world);
 }
 
-void Plecs_assembly_no_props(void) {
+void Script_assembly_no_props(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -5138,12 +5138,12 @@ void Plecs_assembly_no_props(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) != 0);
 
     ecs_fini(world);
 }
 
-void Plecs_assembly_prop_no_type(void) {
+void Script_assembly_prop_no_type(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -5162,12 +5162,12 @@ void Plecs_assembly_prop_no_type(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) != 0);
 
     ecs_fini(world);
 }
 
-void Plecs_assembly_prop_no_default(void) {
+void Script_assembly_prop_no_default(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -5186,12 +5186,12 @@ void Plecs_assembly_prop_no_default(void) {
     LINE "}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) != 0);
 
     ecs_fini(world);
 }
 
-void Plecs_assembly_prop(void) {
+void Script_assembly_prop(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -5209,7 +5209,7 @@ void Plecs_assembly_prop(void) {
     LINE "  prop height: flecs.meta.f32 = 0"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -5223,7 +5223,7 @@ void Plecs_assembly_prop(void) {
     ecs_fini(world);
 }
 
-void Plecs_assembly_prop_space_colon(void) {
+void Script_assembly_prop_space_colon(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -5241,7 +5241,7 @@ void Plecs_assembly_prop_space_colon(void) {
     LINE "  prop height : flecs.meta.f32 = 0"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -5255,7 +5255,7 @@ void Plecs_assembly_prop_space_colon(void) {
     ecs_fini(world);
 }
 
-void Plecs_assembly_2_props(void) {
+void Script_assembly_2_props(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -5274,7 +5274,7 @@ void Plecs_assembly_2_props(void) {
     LINE "  prop height : flecs.meta.f32 = 0"
     LINE "}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -5290,7 +5290,7 @@ void Plecs_assembly_2_props(void) {
     ecs_fini(world);
 }
 
-void Plecs_assembly_instance_w_default_values(void) {
+void Script_assembly_instance_w_default_values(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -5312,7 +5312,7 @@ void Plecs_assembly_instance_w_default_values(void) {
     LINE "e :- Tree"
     LINE "";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -5339,7 +5339,7 @@ void Plecs_assembly_instance_w_default_values(void) {
     ecs_fini(world);
 }
 
-void Plecs_assembly_instance_w_assign_default_values(void) {
+void Script_assembly_instance_w_assign_default_values(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -5361,7 +5361,7 @@ void Plecs_assembly_instance_w_assign_default_values(void) {
     LINE "e :- Tree{}"
     LINE "";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -5388,7 +5388,7 @@ void Plecs_assembly_instance_w_assign_default_values(void) {
     ecs_fini(world);
 }
 
-void Plecs_assembly_instance_w_overridden_values(void) {
+void Script_assembly_instance_w_overridden_values(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -5410,7 +5410,7 @@ void Plecs_assembly_instance_w_overridden_values(void) {
     LINE "e :- Tree{width: 30, height: 40}"
     LINE "";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -5437,7 +5437,7 @@ void Plecs_assembly_instance_w_overridden_values(void) {
     ecs_fini(world);
 }
 
-void Plecs_assembly_w_child(void) {
+void Script_assembly_w_child(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -5460,7 +5460,7 @@ void Plecs_assembly_w_child(void) {
     LINE "e :- Tree{width: 1, height: 2}"
     LINE "";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -5495,7 +5495,7 @@ void Plecs_assembly_w_child(void) {
     ecs_fini(world);
 }
 
-void Plecs_assembly_w_child_parse_script(void) {
+void Script_assembly_w_child_parse_script(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -5517,72 +5517,6 @@ void Plecs_assembly_w_child_parse_script(void) {
     LINE ""
     LINE "e :- Tree{width: 1, height: 2}"
     LINE "";
-
-    test_assert(ecs_script(world, {
-        .entity = ecs_entity(world, { .name = "main" }),
-        .str = expr
-    }) != 0);
-
-    ecs_entity_t tree = ecs_lookup(world, "Tree");
-    test_assert(tree != 0);
-
-    ecs_entity_t e = ecs_lookup(world, "e");
-    test_assert(e != 0);
-
-    ecs_entity_t child = ecs_lookup(world, "e.child");
-    test_assert(child != 0);
-
-    const EcsStruct *st = ecs_get(world, tree, EcsStruct);
-    test_assert(st != NULL);
-    test_int(st->members.count, 2);
-    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "width");
-    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
-    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 1)->name, "height");
-    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 1)->type, ecs_id(ecs_f32_t));
-
-    test_assert(ecs_has_id(world, e, tree));
-    const void *ptr = ecs_get_id(world, e, tree);
-    test_assert(ptr != NULL);
-    char *str = ecs_ptr_to_expr(world, tree, ptr);
-    test_assert(str != NULL);
-    test_str(str, "{width: 1, height: 2}");
-    ecs_os_free(str);
-
-    const Position *p = ecs_get(world, child, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 11);
-    test_int(p->y, 42);
-
-    ecs_fini(world);
-}
-
-void Plecs_assembly_w_child_parse_script_twice(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    LINE "assembly Tree {"
-    LINE "  prop width : flecs.meta.f32 = 0"
-    LINE "  prop height : flecs.meta.f32 = 0"
-    LINE "  child :- Position{$width * 10 + 1, $height * 20 + 2}"
-    LINE "}"
-    LINE ""
-    LINE "e :- Tree{width: 1, height: 2}"
-    LINE "";
-
-    test_assert(ecs_script(world, {
-        .entity = ecs_entity(world, { .name = "main" }),
-        .str = expr
-    }) != 0);
 
     test_assert(ecs_script(world, {
         .entity = ecs_entity(world, { .name = "main" }),
@@ -5622,7 +5556,73 @@ void Plecs_assembly_w_child_parse_script_twice(void) {
     ecs_fini(world);
 }
 
-void Plecs_assembly_w_child_update_after_parse(void) {
+void Script_assembly_w_child_parse_script_twice(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "assembly Tree {"
+    LINE "  prop width : flecs.meta.f32 = 0"
+    LINE "  prop height : flecs.meta.f32 = 0"
+    LINE "  child :- Position{$width * 10 + 1, $height * 20 + 2}"
+    LINE "}"
+    LINE ""
+    LINE "e :- Tree{width: 1, height: 2}"
+    LINE "";
+
+    test_assert(ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .str = expr
+    }) != 0);
+
+    test_assert(ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .str = expr
+    }) != 0);
+
+    ecs_entity_t tree = ecs_lookup(world, "Tree");
+    test_assert(tree != 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    ecs_entity_t child = ecs_lookup(world, "e.child");
+    test_assert(child != 0);
+
+    const EcsStruct *st = ecs_get(world, tree, EcsStruct);
+    test_assert(st != NULL);
+    test_int(st->members.count, 2);
+    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "width");
+    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
+    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 1)->name, "height");
+    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 1)->type, ecs_id(ecs_f32_t));
+
+    test_assert(ecs_has_id(world, e, tree));
+    const void *ptr = ecs_get_id(world, e, tree);
+    test_assert(ptr != NULL);
+    char *str = ecs_ptr_to_expr(world, tree, ptr);
+    test_assert(str != NULL);
+    test_str(str, "{width: 1, height: 2}");
+    ecs_os_free(str);
+
+    const Position *p = ecs_get(world, child, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 11);
+    test_int(p->y, 42);
+
+    ecs_fini(world);
+}
+
+void Script_assembly_w_child_update_after_parse(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -5667,7 +5667,7 @@ void Plecs_assembly_w_child_update_after_parse(void) {
     LINE "e :- Tree{width: 3, height: 4}"
     LINE "";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr_update) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr_update) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -5702,7 +5702,7 @@ void Plecs_assembly_w_child_update_after_parse(void) {
     ecs_fini(world);
 }
 
-void Plecs_assembly_w_nested_child(void) {
+void Script_assembly_w_nested_child(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -5728,7 +5728,7 @@ void Plecs_assembly_w_nested_child(void) {
     LINE "e :- Tree{width: 1, height: 2}"
     LINE "";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -5775,7 +5775,7 @@ void Plecs_assembly_w_nested_child(void) {
     ecs_fini(world);
 }
 
-void Plecs_assembly_w_prefab(void) {
+void Script_assembly_w_prefab(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -5812,7 +5812,7 @@ void Plecs_assembly_w_prefab(void) {
     LINE "e :- Tree{width: 1, height: 2}"
     LINE "";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -5868,7 +5868,7 @@ void Plecs_assembly_w_prefab(void) {
     ecs_fini(world);
 }
 
-void Plecs_assembly_w_prefab_tree(void) {
+void Script_assembly_w_prefab_tree(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -5908,7 +5908,7 @@ void Plecs_assembly_w_prefab_tree(void) {
     LINE "e :- Tree{width: 1, height: 2}"
     LINE "";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -5974,7 +5974,7 @@ void Plecs_assembly_w_prefab_tree(void) {
     ecs_fini(world);
 }
 
-void Plecs_assembly_w_nested_assembly(void) {
+void Script_assembly_w_nested_assembly(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -6005,7 +6005,7 @@ void Plecs_assembly_w_nested_assembly(void) {
     LINE "}"
     LINE "";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -6043,7 +6043,7 @@ void Plecs_assembly_w_nested_assembly(void) {
     const char *expr_instance =
     LINE "f :- Forest{10, 20}"
     LINE "";
-    test_assert(ecs_plecs_from_str(world, NULL, expr_instance) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr_instance) == 0);
 
     ecs_entity_t f = ecs_lookup(world, "f");
     test_assert(f != 0);
@@ -6094,7 +6094,7 @@ void Plecs_assembly_w_nested_assembly(void) {
     ecs_fini(world);
 }
 
-void Plecs_instantiate_prefab_w_assembly(void) {
+void Script_instantiate_prefab_w_assembly(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -6117,7 +6117,7 @@ void Plecs_instantiate_prefab_w_assembly(void) {
     LINE "Prefab p :- Tree{width: 10, height: 20}"
     LINE "";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -6129,7 +6129,7 @@ void Plecs_instantiate_prefab_w_assembly(void) {
     const char *expr_instance =
     LINE "e : p"
     LINE "";
-    test_assert(ecs_plecs_from_str(world, NULL, expr_instance) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr_instance) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -6166,7 +6166,7 @@ void Plecs_instantiate_prefab_w_assembly(void) {
     ecs_fini(world);
 }
 
-void Plecs_assembly_w_prefab_w_assembly(void) {
+void Script_assembly_w_prefab_w_assembly(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -6185,7 +6185,7 @@ void Plecs_assembly_w_prefab_w_assembly(void) {
     LINE "}"
     LINE "f :- Forest{10}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -6234,7 +6234,7 @@ void Plecs_assembly_w_prefab_w_assembly(void) {
     ecs_fini(world);
 }
 
-void Plecs_3_assemblies(void) {
+void Script_3_assemblies(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -6255,7 +6255,7 @@ void Plecs_3_assemblies(void) {
     LINE "c :- Park{}"
     LINE "";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -6318,7 +6318,7 @@ void Plecs_3_assemblies(void) {
     ecs_fini(world);
 }
 
-void Plecs_assembly_nested_w_default_var(void) {
+void Script_assembly_nested_w_default_var(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -6343,7 +6343,7 @@ void Plecs_assembly_nested_w_default_var(void) {
     LINE "}"
     LINE "f :- Forest{10}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -6398,7 +6398,7 @@ void Plecs_assembly_nested_w_default_var(void) {
     ecs_fini(world);
 }
 
-void Plecs_assembly_w_anonymous(void) {
+void Script_assembly_w_anonymous(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -6420,7 +6420,7 @@ void Plecs_assembly_w_anonymous(void) {
     LINE ""
     LINE "t :- Tree{10}";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -6457,7 +6457,7 @@ void Plecs_assembly_w_anonymous(void) {
     ecs_fini(world);
 }
 
-void Plecs_assembly_w_anonymous_parse_again(void) {
+void Script_assembly_w_anonymous_parse_again(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -6478,11 +6478,11 @@ void Plecs_assembly_w_anonymous_parse_again(void) {
     LINE "}"
     LINE ""
     LINE "t :- Tree{10}";
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     const char *expr_again =
     LINE "t :- Tree{10}";
-    test_assert(ecs_plecs_from_str(world, NULL, expr_again) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr_again) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -6519,7 +6519,7 @@ void Plecs_assembly_w_anonymous_parse_again(void) {
     ecs_fini(world);
 }
 
-void Plecs_typed_const_w_composite_type_invalid_assignment(void) {
+void Script_typed_const_w_composite_type_invalid_assignment(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_struct(world, {
@@ -6536,12 +6536,12 @@ void Plecs_typed_const_w_composite_type_invalid_assignment(void) {
     LINE "";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) != 0);
 
     ecs_fini(world);
 }
 
-void Plecs_typed_const_w_composite_type(void) {
+void Script_typed_const_w_composite_type(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -6557,7 +6557,7 @@ void Plecs_typed_const_w_composite_type(void) {
     LINE "a :- $var_pos"
     LINE "";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t var = ecs_lookup(world, "var_pos");
     test_assert(var == 0);
@@ -6573,7 +6573,7 @@ void Plecs_typed_const_w_composite_type(void) {
     ecs_fini(world);
 }
 
-void Plecs_assign_var_to_typed_const_w_composite_type(void) {
+void Script_assign_var_to_typed_const_w_composite_type(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -6590,7 +6590,7 @@ void Plecs_assign_var_to_typed_const_w_composite_type(void) {
     LINE "a :- $var_pos_b"
     LINE "";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t var = ecs_lookup(world, "var_pos");
     test_assert(var == 0);
@@ -6606,7 +6606,7 @@ void Plecs_assign_var_to_typed_const_w_composite_type(void) {
     ecs_fini(world);
 }
 
-void Plecs_assembly_w_composite_prop_invalid_assignment(void) {
+void Script_assembly_w_composite_prop_invalid_assignment(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -6628,12 +6628,12 @@ void Plecs_assembly_w_composite_prop_invalid_assignment(void) {
     LINE "t :- Tree{pos: {20, 30}}";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) != 0);
 
     ecs_fini(world);
 }
 
-void Plecs_assembly_w_composite_prop(void) {
+void Script_assembly_w_composite_prop(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -6653,7 +6653,7 @@ void Plecs_assembly_w_composite_prop(void) {
     LINE "}"
     LINE "t :- Tree{pos: {20, 30}}"
     LINE "";
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -6680,7 +6680,7 @@ void Plecs_assembly_w_composite_prop(void) {
     ecs_fini(world);
 }
 
-void Plecs_assembly_with_with(void) {
+void Script_assembly_with_with(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -6702,7 +6702,7 @@ void Plecs_assembly_with_with(void) {
     LINE "}"
     LINE "t :- Tree{count: 10}"
     LINE "";
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
     test_assert(tree != 0);
@@ -6731,7 +6731,7 @@ void Plecs_assembly_with_with(void) {
     ecs_fini(world);
 }
 
-void Plecs_using_wildcard(void) {
+void Script_using_wildcard(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t p1 = ecs_entity(world, { .name = "foo.p1" });
@@ -6765,7 +6765,7 @@ void Plecs_using_wildcard(void) {
     LINE "using foo.*\n"
     LINE "e :- Position{10, 20}\n"
     LINE "e :- Velocity{1, 2}\n";
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t pos = ecs_lookup(world, "foo.p1.Position");
     test_assert(pos == ecs_id(Position));
@@ -6793,7 +6793,7 @@ void Plecs_using_wildcard(void) {
     ecs_fini(world);
 }
 
-void Plecs_single_line_comment_in_value(void) {
+void Script_single_line_comment_in_value(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -6812,7 +6812,7 @@ void Plecs_single_line_comment_in_value(void) {
     LINE "  //foo\n"
     LINE "  y: 20\n"
     LINE "}";
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -6827,7 +6827,7 @@ void Plecs_single_line_comment_in_value(void) {
     ecs_fini(world);
 }
 
-void Plecs_single_line_comment_in_value_after_scope(void) {
+void Script_single_line_comment_in_value_after_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -6846,7 +6846,7 @@ void Plecs_single_line_comment_in_value_after_scope(void) {
     LINE "  x: 10\n"
     LINE "  y: 20\n"
     LINE "}";
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -6861,7 +6861,7 @@ void Plecs_single_line_comment_in_value_after_scope(void) {
     ecs_fini(world);
 }
 
-void Plecs_multi_line_comment_in_value(void) {
+void Script_multi_line_comment_in_value(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -6882,7 +6882,7 @@ void Plecs_multi_line_comment_in_value(void) {
     LINE "   */\n"
     LINE "  y: 20\n"
     LINE "}";
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -6897,7 +6897,7 @@ void Plecs_multi_line_comment_in_value(void) {
     ecs_fini(world);
 }
 
-void Plecs_multi_line_comment_in_value_after_scope(void) {
+void Script_multi_line_comment_in_value_after_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -6918,7 +6918,7 @@ void Plecs_multi_line_comment_in_value_after_scope(void) {
     LINE "  x: 10\n"
     LINE "  y: 20\n"
     LINE "}";
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
     test_assert(e != 0);
@@ -6933,7 +6933,7 @@ void Plecs_multi_line_comment_in_value_after_scope(void) {
     ecs_fini(world);
 }
 
-void Plecs_unterminated_multi_line_comment_in_value(void) {
+void Script_unterminated_multi_line_comment_in_value(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -6954,12 +6954,12 @@ void Plecs_unterminated_multi_line_comment_in_value(void) {
     LINE "  y: 20\n"
     LINE "}";
     ecs_log_set_level(-4);
-    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) != 0);
 
     ecs_fini(world);
 }
 
-void Plecs_module_stmt(void) {
+void Script_module_stmt(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -6976,7 +6976,7 @@ void Plecs_module_stmt(void) {
     LINE "module hello\n"
     LINE "e :- Position{10, 20}\n"
     LINE "e :- Foo\n";
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t hello = ecs_lookup(world, "hello");
     test_assert(hello != 0);
@@ -7000,7 +7000,7 @@ void Plecs_module_stmt(void) {
     ecs_fini(world);
 }
 
-void Plecs_nested_module_stmt(void) {
+void Script_nested_module_stmt(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -7017,7 +7017,7 @@ void Plecs_nested_module_stmt(void) {
     LINE "module hello.world\n"
     LINE "e :- Position{10, 20}\n"
     LINE "e :- Foo\n";
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t hello = ecs_lookup(world, "hello");
     test_assert(hello != 0);
@@ -7044,7 +7044,7 @@ void Plecs_nested_module_stmt(void) {
     ecs_fini(world);
 }
 
-void Plecs_module_stmt_w_scope(void) {
+void Script_module_stmt_w_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -7066,7 +7066,7 @@ void Plecs_module_stmt_w_scope(void) {
     LINE "f :- Position{30, 40}\n"
     LINE "f :- Foo\n"
     LINE "";
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t hello = ecs_lookup(world, "hello");
     test_assert(hello != 0);
@@ -7105,7 +7105,7 @@ void Plecs_module_stmt_w_scope(void) {
     ecs_fini(world);
 }
 
-void Plecs_module_stmt_w_nested_scope(void) {
+void Script_module_stmt_w_nested_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -7129,7 +7129,7 @@ void Plecs_module_stmt_w_nested_scope(void) {
     LINE "f :- Position{30, 40}\n"
     LINE "f :- Foo\n"
     LINE "";
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t hello = ecs_lookup(world, "hello");
     test_assert(hello != 0);
@@ -7170,7 +7170,7 @@ void Plecs_module_stmt_w_nested_scope(void) {
     ecs_fini(world);
 }
 
-void Plecs_module_w_assembly(void) {
+void Script_module_w_assembly(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -7190,11 +7190,11 @@ void Plecs_module_w_assembly(void) {
     LINE "  child :- Position{$count, $count * 2}\n"
     LINE "}\n"
     LINE "";
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     const char *expr_inst =
     LINE "t :- hello.world.Tree{10}\n";
-    test_assert(ecs_plecs_from_str(world, NULL, expr_inst) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr_inst) == 0);
 
     ecs_entity_t tree = ecs_lookup(world, "hello.world.Tree");
     test_assert(tree != 0);
@@ -7223,7 +7223,7 @@ void Plecs_module_w_assembly(void) {
     ecs_fini(world);
 }
 
-void Plecs_module_w_nested_assembly(void) {
+void Script_module_w_nested_assembly(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -7247,11 +7247,11 @@ void Plecs_module_w_nested_assembly(void) {
     LINE "  t :- Tree{count:$}\n"
     LINE "}\n"
     LINE "";
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     const char *expr_inst =
     LINE "f :- hello.world.Forest{10}\n";
-    test_assert(ecs_plecs_from_str(world, NULL, expr_inst) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr_inst) == 0);
 
     ecs_entity_t forest = ecs_lookup(world, "hello.world.Forest");
     test_assert(forest != 0);
@@ -7291,12 +7291,12 @@ void Plecs_module_w_nested_assembly(void) {
     ecs_fini(world);
 }
 
-void Plecs_assign_singleton_tag(void) {
+void Script_assign_singleton_tag(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
     LINE "$ :- Foo\n";
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -7306,7 +7306,7 @@ void Plecs_assign_singleton_tag(void) {
     ecs_fini(world);
 }
 
-void Plecs_assign_singleton_component(void) {
+void Script_assign_singleton_component(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -7321,7 +7321,7 @@ void Plecs_assign_singleton_component(void) {
 
     const char *expr =
     LINE "$ :- Position{10, 20}\n";
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     test_assert(ecs_has(world, ecs_id(Position), Position));
 
@@ -7333,14 +7333,14 @@ void Plecs_assign_singleton_component(void) {
     ecs_fini(world);
 }
 
-void Plecs_assign_singleton_tag_w_scope(void) {
+void Script_assign_singleton_tag_w_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
     LINE "$ {\n"
     LINE "  - Foo\n"
     LINE "}\n";
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -7350,7 +7350,7 @@ void Plecs_assign_singleton_tag_w_scope(void) {
     ecs_fini(world);
 }
 
-void Plecs_assign_singleton_2_tags_w_scope(void) {
+void Script_assign_singleton_2_tags_w_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -7358,7 +7358,7 @@ void Plecs_assign_singleton_2_tags_w_scope(void) {
     LINE "  - Foo\n"
     LINE "  - Bar\n"
     LINE "}\n";
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     test_assert(foo != 0);
@@ -7371,7 +7371,7 @@ void Plecs_assign_singleton_2_tags_w_scope(void) {
     ecs_fini(world);
 }
 
-void Plecs_assign_singleton_component_w_scope(void) {
+void Script_assign_singleton_component_w_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -7388,7 +7388,7 @@ void Plecs_assign_singleton_component_w_scope(void) {
     LINE "$ {\n"
     LINE "  - Position{10, 20}\n"
     LINE "}\n";
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     test_assert(ecs_has(world, ecs_id(Position), Position));
 
@@ -7400,7 +7400,7 @@ void Plecs_assign_singleton_component_w_scope(void) {
     ecs_fini(world);
 }
 
-void Plecs_assign_singleton_2_components_w_scope(void) {
+void Script_assign_singleton_2_components_w_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -7427,7 +7427,7 @@ void Plecs_assign_singleton_2_components_w_scope(void) {
     LINE "  - Position{10, 20}\n"
     LINE "  - Velocity{1, 2}\n"
     LINE "}\n";
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     const Position *p = ecs_get(world, ecs_id(Position), Position);
     test_assert(p != NULL);
@@ -7442,7 +7442,7 @@ void Plecs_assign_singleton_2_components_w_scope(void) {
     ecs_fini(world);
 }
 
-void Plecs_with_pair_in_scope(void) {
+void Script_with_pair_in_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -7455,7 +7455,7 @@ void Plecs_with_pair_in_scope(void) {
     LINE "  }\n"
     LINE "}\n";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t parent = ecs_lookup(world, "Parent");
     ecs_entity_t child = ecs_lookup(world, "Parent.Child");
@@ -7475,7 +7475,7 @@ void Plecs_with_pair_in_scope(void) {
     ecs_fini(world);
 }
 
-void Plecs_assembly_redeclare_prop_as_const(void) {
+void Script_assembly_redeclare_prop_as_const(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -7488,12 +7488,12 @@ void Plecs_assembly_redeclare_prop_as_const(void) {
     LINE "\n";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) != 0);
 
     ecs_fini(world);
 }
 
-void Plecs_assembly_redeclare_prop_as_prop(void) {
+void Script_assembly_redeclare_prop_as_prop(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -7506,12 +7506,12 @@ void Plecs_assembly_redeclare_prop_as_prop(void) {
     LINE "\n";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) != 0);
 
     ecs_fini(world);
 }
 
-void Plecs_assembly_redeclare_const_as_const(void) {
+void Script_assembly_redeclare_const_as_const(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -7524,12 +7524,12 @@ void Plecs_assembly_redeclare_const_as_const(void) {
     LINE "\n";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) != 0);
 
     ecs_fini(world);
 }
 
-void Plecs_add_auto_override(void) {
+void Script_add_auto_override(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -7538,7 +7538,7 @@ void Plecs_add_auto_override(void) {
     LINE "p :- OVERRIDE|Tag"
     LINE "\n";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t p = ecs_lookup(world, "p");
     test_assert(p != 0);
@@ -7551,7 +7551,7 @@ void Plecs_add_auto_override(void) {
     ecs_fini(world);
 }
 
-void Plecs_add_auto_override_pair(void) {
+void Script_add_auto_override_pair(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Rel);
@@ -7561,7 +7561,7 @@ void Plecs_add_auto_override_pair(void) {
     LINE "p :- OVERRIDE|(Rel, Tgt)"
     LINE "\n";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t p = ecs_lookup(world, "p");
     test_assert(p != 0);
@@ -7574,7 +7574,7 @@ void Plecs_add_auto_override_pair(void) {
     ecs_fini(world);
 }
 
-void Plecs_scope_w_auto_override(void) {
+void Script_scope_w_auto_override(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -7585,7 +7585,7 @@ void Plecs_scope_w_auto_override(void) {
     LINE "}"
     LINE "\n";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t p = ecs_lookup(world, "p");
     test_assert(p != 0);
@@ -7598,7 +7598,7 @@ void Plecs_scope_w_auto_override(void) {
     ecs_fini(world);
 }
 
-void Plecs_scope_w_auto_override_pair(void) {
+void Script_scope_w_auto_override_pair(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Rel);
@@ -7610,7 +7610,7 @@ void Plecs_scope_w_auto_override_pair(void) {
     LINE "}"
     LINE "\n";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t p = ecs_lookup(world, "p");
     test_assert(p != 0);
@@ -7623,7 +7623,7 @@ void Plecs_scope_w_auto_override_pair(void) {
     ecs_fini(world);
 }
 
-void Plecs_pair_w_rel_var(void) {
+void Script_pair_w_rel_var(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Rel);
@@ -7636,7 +7636,7 @@ void Plecs_pair_w_rel_var(void) {
     LINE "}\n"
     LINE "\n";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t ent = ecs_lookup(world, "ent");
 
@@ -7645,7 +7645,7 @@ void Plecs_pair_w_rel_var(void) {
     ecs_fini(world);
 }
 
-void Plecs_pair_w_tgt_var(void) {
+void Script_pair_w_tgt_var(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Rel);
@@ -7658,7 +7658,7 @@ void Plecs_pair_w_tgt_var(void) {
     LINE "}\n"
     LINE "\n";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t ent = ecs_lookup(world, "ent");
 
@@ -7667,7 +7667,7 @@ void Plecs_pair_w_tgt_var(void) {
     ecs_fini(world);
 }
 
-void Plecs_assembly_w_pair_w_this_var(void) {
+void Script_assembly_w_pair_w_this_var(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Rel);
@@ -7680,7 +7680,7 @@ void Plecs_assembly_w_pair_w_this_var(void) {
     LINE "ent :- Foo{}\n"
     LINE "\n";
 
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t ent = ecs_lookup(world, "ent");
@@ -7691,7 +7691,7 @@ void Plecs_assembly_w_pair_w_this_var(void) {
     ecs_fini(world);
 }
 
-void Plecs_with_value_not_a_component(void) {
+void Script_with_value_not_a_component(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -7701,12 +7701,12 @@ void Plecs_with_value_not_a_component(void) {
     LINE "\n";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) != 0);
 
     ecs_fini(world);
 }
 
-void Plecs_component_in_with_scope(void) {
+void Script_component_in_with_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -7726,12 +7726,12 @@ void Plecs_component_in_with_scope(void) {
     LINE "\n";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) != 0);
 
     ecs_fini(world);
 }
 
-void Plecs_component_in_with_scope_nested(void) {
+void Script_component_in_with_scope_nested(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -7762,12 +7762,12 @@ void Plecs_component_in_with_scope_nested(void) {
     LINE "\n";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_plecs_from_str(world, NULL, expr) != 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) != 0);
 
     ecs_fini(world);
 }
 
-void Plecs_component_in_with_scope_in_scope(void) {
+void Script_component_in_with_scope_in_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -7789,7 +7789,7 @@ void Plecs_component_in_with_scope_in_scope(void) {
     LINE "}\n";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "foo");
     test_assert(foo != 0);
@@ -7807,7 +7807,7 @@ void Plecs_component_in_with_scope_in_scope(void) {
     ecs_fini(world);
 }
 
-void Plecs_assign_after_with_in_scope(void) {
+void Script_assign_after_with_in_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -7837,7 +7837,7 @@ void Plecs_assign_after_with_in_scope(void) {
     LINE "}\n";
 
     ecs_log_set_level(-4);
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "foo");
     test_assert(foo != 0);
@@ -7858,7 +7858,7 @@ void Plecs_assign_after_with_in_scope(void) {
     ecs_fini(world);
 }
 
-void Plecs_array_component(void) {
+void Script_array_component(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -7871,7 +7871,7 @@ void Plecs_array_component(void) {
 
     const char *expr =
     LINE "foo :- Position[10, 20]\n";
-    test_assert(ecs_plecs_from_str(world, NULL, expr) == 0);
+    test_assert(ecs_script_from_str(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "foo");
     test_assert(foo != 0);

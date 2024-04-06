@@ -1,7 +1,7 @@
 // To see what the result of parsing this file looks like, copy the code and
 // paste it into the editor at https://flecs.dev/explorer
 //
-// To load this file yourself, call ecs_plecs_from_file("reflection.flecs");
+// To load this file yourself, call ecs_script_from_file("reflection.flecs");
 
 // It is possible to set component values in a plecs file as long as the 
 // component is described with reflection data. Since we don't have a component
@@ -18,23 +18,23 @@ using flecs.meta
 // We can now create a struct like this. "Struct Position" is the shorthand
 // declaration syntax for "Position :- Struct", and has as benefit that we can
 // open a scope after the statement
-Struct Position {
+struct Position {
   // Add two child entities with the Member component
-  x :- Member{type: f32}
-  y :- Member{type: f32}
+  x :- member{type: f32}
+  y :- member{type: f32}
 }
 
 // Plecs has a feature which makes it possible to specify a default type for a
 // scope. The Struct component has Member as default type. This means we can
 // also create a type like this, which is a bit shorter:
-Struct Mass {
+struct Mass {
   value :- {f32} // 'type' can be ommitted since it's the first member
 }
 
 // Similarly we can also define an enumeration type. The default scope type for
 // Enum is Constant, which ensures amongst others that the child entities will
 // be assigned with an incremenenting constant value automatically.
-Enum Color {
+enum Color {
   Red
   Green
   Blue
