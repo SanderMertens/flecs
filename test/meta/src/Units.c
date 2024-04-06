@@ -51,7 +51,7 @@ void Units_member_w_unit_type(void) {
     });
     test_assert(u != 0);
     test_str("percentage", ecs_get_name(world, u));
-    test_assert(ecs_has(world, u, EcsMetaType));
+    test_assert(ecs_has(world, u, EcsType));
 
     ecs_unit_init(world, &(ecs_unit_desc_t){
         .entity = u,

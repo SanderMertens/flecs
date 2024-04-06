@@ -13130,13 +13130,13 @@ void FlecsUnitsImport(
  * two components:
  *
  * - EcsComponent: core component, contains size & alignment
- * - EcsMetaType:  component that indicates what kind of type the entity is
+ * - EcsType:  component that indicates what kind of type the entity is
  *
  * Additionally the type may have an additional component that contains the
  * reflection data for the type. For example, structs have these components:
  *
  * - EcsComponent
- * - EcsMetaType
+ * - EcsType
  * - EcsStruct
  *
  * Structs can be populated by adding child entities with the EcsMember
@@ -13157,7 +13157,7 @@ void FlecsUnitsImport(
  * components for the types.
  *
  * When a type is created it automatically receives the EcsComponent and
- * EcsMetaType components. The former means that the resulting type can be
+ * EcsType components. The former means that the resulting type can be
  * used as a regular component:
  *
  * @code
@@ -13233,8 +13233,8 @@ typedef double ecs_f64_t;
 typedef char* ecs_string_t;
 
 /* Meta module component ids */
-FLECS_API extern const ecs_entity_t ecs_id(EcsMetaType);
-FLECS_API extern const ecs_entity_t ecs_id(EcsMetaTypeSerialized);
+FLECS_API extern const ecs_entity_t ecs_id(EcsType);
+FLECS_API extern const ecs_entity_t ecs_id(EcsTypeSerializer);
 FLECS_API extern const ecs_entity_t ecs_id(EcsPrimitive);
 FLECS_API extern const ecs_entity_t ecs_id(EcsEnum);
 FLECS_API extern const ecs_entity_t ecs_id(EcsBitmask);
@@ -13282,11 +13282,11 @@ typedef enum ecs_type_kind_t {
 } ecs_type_kind_t;
 
 /** Component that is automatically added to every type with the right kind. */
-typedef struct EcsMetaType {
+typedef struct EcsType {
     ecs_type_kind_t kind;
     bool existing;         /**< Did the type exist or is it populated from reflection */
     bool partial;          /**< Is the reflection data a partial type description */
-} EcsMetaType;
+} EcsType;
 
 /** Primitive type kinds supported by meta addon */
 typedef enum ecs_primitive_kind_t {
@@ -13639,9 +13639,9 @@ typedef struct ecs_meta_type_op_t {
     ecs_hashmap_t *members; /**< string -> member index (structs only) */
 } ecs_meta_type_op_t;
 
-typedef struct EcsMetaTypeSerialized {
+typedef struct EcsTypeSerializer {
     ecs_vec_t ops;      /**< vector<ecs_meta_type_op_t> */
-} EcsMetaTypeSerialized;
+} EcsTypeSerializer;
 
 
 /* Deserializer utilities */
@@ -17044,8 +17044,8 @@ using enum_constant_t = ecs_enum_constant_t;
 using bitmask_constant_t = ecs_bitmask_constant_t;
 
 /* Components */
-using MetaType = EcsMetaType;
-using MetaTypeSerialized = EcsMetaTypeSerialized;
+using Type = EcsType;
+using TypeSerializer = EcsTypeSerializer;
 using Primitive = EcsPrimitive;
 using Enum = EcsEnum;
 using Bitmask = EcsBitmask;
@@ -29440,22 +29440,22 @@ inline void init(flecs::world& world) {
 
     world.component<type_kind_t>("flecs::meta::type_kind");
     world.component<primitive_kind_t>("flecs::meta::primitive_kind");
-    world.component<member_t>("flecs::meta::member");
+    world.component<member_t>("flecs::meta::member_t");
     world.component<enum_constant_t>("flecs::meta::enum_constant");
     world.component<bitmask_constant_t>("flecs::meta::bitmask_constant");
 
-    world.component<MetaType>("flecs::meta::MetaType");
-    world.component<MetaTypeSerialized>("flecs::meta::MetaTypeSerialized");
-    world.component<Primitive>("flecs::meta::Primitive");
-    world.component<Enum>("flecs::meta::Enum");
-    world.component<Bitmask>("flecs::meta::Bitmask");
-    world.component<Member>("flecs::meta::Member");
-    world.component<MemberRanges>("flecs::meta::MemberRanges");
-    world.component<Struct>("flecs::meta::Struct");
-    world.component<Array>("flecs::meta::Array");
-    world.component<Vector>("flecs::meta::Vector");
+    world.component<Type>("flecs::meta::type");
+    world.component<TypeSerializer>("flecs::meta::TypeSerializer");
+    world.component<Primitive>("flecs::meta::primitive");
+    world.component<Enum>("flecs::meta::enum");
+    world.component<Bitmask>("flecs::meta::bitmask");
+    world.component<Member>("flecs::meta::member");
+    world.component<MemberRanges>("flecs::meta::member_ranges");
+    world.component<Struct>("flecs::meta::struct");
+    world.component<Array>("flecs::meta::array");
+    world.component<Vector>("flecs::meta::vector");
 
-    world.component<Unit>("flecs::meta::Unit");
+    world.component<Unit>("flecs::meta::unit");
 
     // To support member<uintptr_t> and member<intptr_t> register components
     // (that do not have conflicting symbols with builtin ones) for platform

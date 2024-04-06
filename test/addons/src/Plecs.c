@@ -1849,9 +1849,9 @@ void Plecs_type_and_assign_in_plecs(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    HEAD "flecs.meta.Struct Position {"
-    LINE "  x :- flecs.meta.Member{flecs.meta.f32}"
-    LINE "  y :- flecs.meta.Member{flecs.meta.f32}"
+    HEAD "flecs.meta.struct Position {"
+    LINE "  x :- flecs.meta.member{flecs.meta.f32}"
+    LINE "  y :- flecs.meta.member{flecs.meta.f32}"
     LINE "}"
     LINE
     LINE "Foo :- Position{10, 20}";
@@ -1879,9 +1879,9 @@ void Plecs_type_and_assign_in_plecs_w_2_members(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    HEAD "flecs.meta.Struct Position {"
-    LINE "  x :- flecs.meta.Member{flecs.meta.f32}"
-    LINE "  y :- flecs.meta.Member{flecs.meta.f32}"
+    HEAD "flecs.meta.struct Position {"
+    LINE "  x :- flecs.meta.member{flecs.meta.f32}"
+    LINE "  y :- flecs.meta.member{flecs.meta.f32}"
     LINE "}"
     LINE ""
     LINE "Foo :- Position{x: 10, y: 20}";
@@ -1915,10 +1915,10 @@ void Plecs_type_and_assign_in_plecs_w_3_members(void) {
     } Position3D;
 
     const char *expr =
-    HEAD "flecs.meta.Struct Position {"
-    LINE "  x :- flecs.meta.Member{flecs.meta.f32}"
-    LINE "  y :- flecs.meta.Member{flecs.meta.f32}"
-    LINE "  z :- flecs.meta.Member{flecs.meta.f32}"
+    HEAD "flecs.meta.struct Position {"
+    LINE "  x :- flecs.meta.member{flecs.meta.f32}"
+    LINE "  y :- flecs.meta.member{flecs.meta.f32}"
+    LINE "  z :- flecs.meta.member{flecs.meta.f32}"
     LINE "}"
     LINE ""
     LINE "Foo :- Position{x: 10, y: 20, z: 30}";
@@ -1955,14 +1955,14 @@ void Plecs_type_and_assign_in_plecs_w_enum(void) {
     } SomeType;
 
     const char *expr =
-    HEAD "flecs.meta.Enum Color {"
-    LINE "  flecs.meta.Constant Red"
-    LINE "  flecs.meta.Constant Green"
-    LINE "  flecs.meta.Constant Blue"
+    HEAD "flecs.meta.enum Color {"
+    LINE "  flecs.meta.constant Red"
+    LINE "  flecs.meta.constant Green"
+    LINE "  flecs.meta.constant Blue"
     LINE "}"
     LINE ""
-    LINE "flecs.meta.Struct SomeType {"
-    LINE "  value :- flecs.meta.Member{Color}"
+    LINE "flecs.meta.struct SomeType {"
+    LINE "  value :- flecs.meta.member{Color}"
     LINE "}"
     LINE ""
     LINE "Foo :- SomeType{value: Blue}";
@@ -1999,14 +1999,14 @@ void Plecs_type_and_assign_in_plecs_w_enum_using_meta(void) {
     const char *expr =
     HEAD "using flecs.meta"
     LINE
-    LINE "Enum Color {"
-    LINE "  Constant Red"
-    LINE "  Constant Green"
-    LINE "  Constant Blue"
+    LINE "enum Color {"
+    LINE "  constant Red"
+    LINE "  constant Green"
+    LINE "  constant Blue"
     LINE "}"
     LINE
-    LINE "Struct SomeType {"
-    LINE "  value :- Member{Color}"
+    LINE "struct SomeType {"
+    LINE "  value :- member{Color}"
     LINE "}"
     LINE
     LINE "Foo :- SomeType{value: Blue}";
@@ -2046,10 +2046,10 @@ void Plecs_type_and_assign_in_plecs_w_enum_primitive_using_meta(void) {
 
     const char *expr =
     HEAD "using flecs.meta"
-    LINE "Enum Color {"
-    LINE "  Constant Red"
-    LINE "  Constant Green"
-    LINE "  Constant Blue"
+    LINE "enum Color {"
+    LINE "  constant Red"
+    LINE "  constant Green"
+    LINE "  constant Blue"
     LINE "}"
     LINE ""
     LINE "Foo :- Color{Blue}";
@@ -2091,15 +2091,15 @@ void Plecs_type_and_assign_in_plecs_w_enum_primitive_and_struct(void) {
     const char *expr =
     HEAD "using flecs.meta"
     LINE 
-    LINE "Struct Position {"
-    LINE "  x :- Member{f32}"
-    LINE "  y :- Member{f32}"
+    LINE "struct Position {"
+    LINE "  x :- member{f32}"
+    LINE "  y :- member{f32}"
     LINE "}"
     LINE 
-    LINE "Enum Color {"
-    LINE "  Constant Red"
-    LINE "  Constant Green"
-    LINE "  Constant Blue"
+    LINE "enum Color {"
+    LINE "  constant Red"
+    LINE "  constant Green"
+    LINE "  constant Blue"
     LINE "}"
     LINE 
     LINE "Foo {"
@@ -2161,14 +2161,14 @@ void Plecs_type_and_assign_in_plecs_nested_member(void) {
     const char *expr =
     HEAD "using flecs.meta"
     LINE
-    LINE "Struct Line {"
-    LINE "  Member start {"
-    LINE "    x :- Member{f32}"
-    LINE "    y :- Member{f32}"
+    LINE "struct Line {"
+    LINE "  member start {"
+    LINE "    x :- member{f32}"
+    LINE "    y :- member{f32}"
     LINE "  }"
-    LINE "  Member stop {"
-    LINE "    x :- Member{f32}"
-    LINE "    y :- Member{f32}"
+    LINE "  member stop {"
+    LINE "    x :- member{f32}"
+    LINE "    y :- member{f32}"
     LINE "  }"
     LINE "}"
     LINE
@@ -2214,14 +2214,14 @@ void Plecs_dot_assign_nested_member(void) {
     const char *expr =
     HEAD "using flecs.meta"
     LINE
-    LINE "Struct Line {"
-    LINE "  Member start {"
-    LINE "    x :- Member{f32}"
-    LINE "    y :- Member{f32}"
+    LINE "struct Line {"
+    LINE "  member start {"
+    LINE "    x :- member{f32}"
+    LINE "    y :- member{f32}"
     LINE "  }"
-    LINE "  Member stop {"
-    LINE "    x :- Member{f32}"
-    LINE "    y :- Member{f32}"
+    LINE "  member stop {"
+    LINE "    x :- member{f32}"
+    LINE "    y :- member{f32}"
     LINE "  }"
     LINE "}"
     LINE
@@ -2267,14 +2267,14 @@ void Plecs_dot_assign_binary_expr(void) {
     const char *expr =
     HEAD "using flecs.meta"
     LINE
-    LINE "Struct Line {"
-    LINE "  Member start {"
-    LINE "    x :- Member{f32}"
-    LINE "    y :- Member{f32}"
+    LINE "struct Line {"
+    LINE "  member start {"
+    LINE "    x :- member{f32}"
+    LINE "    y :- member{f32}"
     LINE "  }"
-    LINE "  Member stop {"
-    LINE "    x :- Member{f32}"
-    LINE "    y :- Member{f32}"
+    LINE "  member stop {"
+    LINE "    x :- member{f32}"
+    LINE "    y :- member{f32}"
     LINE "  }"
     LINE "}"
     LINE
@@ -2521,8 +2521,8 @@ void Plecs_using_with_scope(void) {
     LINE ""
     LINE "Foo {}"
     LINE ""
-    LINE "Struct Bar {"
-    LINE "  x :- Member{f32}"
+    LINE "struct Bar {"
+    LINE "  x :- member{f32}"
     LINE "}"
     LINE ""
     LINE "}";
@@ -2557,9 +2557,9 @@ void Plecs_using_w_entity_ref_in_value_2_members(void) {
     const char *expr =
     HEAD "using flecs.meta"
     LINE
-    LINE "Struct Position {"
-    LINE "  x :- Member{f32}" // member type is looked up in flecs.meta
-    LINE "  y :- Member{f32}"
+    LINE "struct Position {"
+    LINE "  x :- member{f32}" // member type is looked up in flecs.meta
+    LINE "  y :- member{f32}"
     LINE "}"
     LINE ""
     LINE "Foo :- Position{x: 10, y: 20}";
@@ -2595,10 +2595,10 @@ void Plecs_using_w_entity_ref_in_value_3_members(void) {
     const char *expr =
     HEAD "using flecs.meta"
     LINE
-    LINE "Struct Position {"
-    LINE "  x :- Member{f32}" // member type is looked up in flecs.meta
-    LINE "  y :- Member{f32}"
-    LINE "  z :- Member{f32}"
+    LINE "struct Position {"
+    LINE "  x :- member{f32}" // member type is looked up in flecs.meta
+    LINE "  y :- member{f32}"
+    LINE "  z :- member{f32}"
     LINE "}"
     LINE
     LINE "Foo :- Position{x: 10, y: 20, z: 30}";
@@ -2760,7 +2760,7 @@ void Plecs_struct_w_member_w_assignment_to_nothing(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    HEAD "flecs.meta.Struct Position {"
+    HEAD "flecs.meta.struct Position {"
     LINE "  flecs.meta.Member(x) = "
     LINE "}";
 
@@ -2774,8 +2774,8 @@ void Plecs_struct_w_member_w_assignment_to_empty_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    HEAD "flecs.meta.Struct Position {"
-    LINE "  x :- flecs.meta.Member{"
+    HEAD "flecs.meta.struct Position {"
+    LINE "  x :- flecs.meta.member{"
     LINE "}";
 
     ecs_log_set_level(-4);
@@ -3208,7 +3208,7 @@ void Plecs_struct_type_w_default_child_component(void) {
     const char *expr =
     HEAD "using flecs.meta"
     LINE
-    LINE "Struct(Position) {"
+    LINE "struct(Position) {"
     LINE "  x :- {f32}"
     LINE "  y :- {f32}"
     LINE "}"
@@ -3251,7 +3251,7 @@ void Plecs_struct_type_w_default_child_component_nested_member(void) {
     const char *expr =
     HEAD "using flecs.meta"
     LINE
-    LINE "Struct(Line) {"
+    LINE "struct(Line) {"
     LINE "  start {"
     LINE "    x :- {f32}"
     LINE "    y :- {f32}"
@@ -3294,7 +3294,7 @@ void Plecs_enum_type_w_default_child_component(void) {
     const char *expr =
     HEAD "using flecs.meta"
     LINE
-    LINE "Enum Color {"
+    LINE "enum Color {"
     LINE "  Red, Green, Blue"
     LINE "}"
     LINE
@@ -3407,7 +3407,7 @@ void Plecs_inherit_from_multiple(void) {
 }
 
 // using flecs.meta
-// Struct(Position) {
+// struct(Position) {
 //   x :- {f32}
 //   y :- {f32}
 // }
@@ -3419,7 +3419,7 @@ void Plecs_assign_pair_component(void) {
     const char *expr =
     HEAD "using flecs.meta"
     LINE
-    LINE "Struct(Position) {"
+    LINE "struct(Position) {"
     LINE "  x :- {f32}"
     LINE "  y :- {f32}"
     LINE "}"
@@ -3452,7 +3452,7 @@ void Plecs_assign_pair_component_in_scope(void) {
     const char *expr =
     HEAD "using flecs.meta"
     LINE
-    LINE "Struct(Position) {"
+    LINE "struct(Position) {"
     LINE "  x :- {f32}"
     LINE "  y :- {f32}"
     LINE "}"
@@ -3497,7 +3497,7 @@ void Plecs_assign_pair_component_in_script(void) {
     const char *expr =
     HEAD "using flecs.meta"
     LINE
-    LINE "Struct(Position) {"
+    LINE "struct(Position) {"
     LINE "  x :- {f32}"
     LINE "  y :- {f32}"
     LINE "}"
@@ -3534,7 +3534,7 @@ void Plecs_assign_pair_component_in_script_update(void) {
     const char *expr =
     HEAD "using flecs.meta"
     LINE
-    LINE "Struct(Position) {"
+    LINE "struct(Position) {"
     LINE "  x :- {f32}"
     LINE "  y :- {f32}"
     LINE "}"
@@ -3606,10 +3606,10 @@ void Plecs_oneof(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    HEAD "flecs.meta.Enum(Color) {"
-    LINE "  flecs.meta.Constant(Red)"
-    LINE "  flecs.meta.Constant(Green)"
-    LINE "  flecs.meta.Constant(Blue)"
+    HEAD "flecs.meta.enum(Color) {"
+    LINE "  flecs.meta.constant(Red)"
+    LINE "  flecs.meta.constant(Green)"
+    LINE "  flecs.meta.constant(Blue)"
     LINE "}"
     LINE "e :- (Color, Green)";
 
@@ -3637,10 +3637,10 @@ void Plecs_invalid_oneof(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    HEAD "flecs.meta.Enum(Color) {"
-    LINE "  flecs.meta.Constant(Red)"
-    LINE "  flecs.meta.Constant(Green)"
-    LINE "  flecs.meta.Constant(Blue)"
+    HEAD "flecs.meta.enum(Color) {"
+    LINE "  flecs.meta.constant(Red)"
+    LINE "  flecs.meta.constant(Green)"
+    LINE "  flecs.meta.constant(Blue)"
     LINE "}"
     LINE "e :- (Color, Foo)";
 

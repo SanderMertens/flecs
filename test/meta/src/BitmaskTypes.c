@@ -11,7 +11,7 @@ void meta_test_bitmask(
     test_int(ct->size, ECS_SIZEOF(ecs_i32_t));
     test_int(ct->alignment, ECS_ALIGNOF(ecs_i32_t));
 
-    const EcsMetaType *mt = ecs_get(world, t, EcsMetaType);
+    const EcsType *mt = ecs_get(world, t, EcsType);
     test_assert(mt != NULL);
     test_assert(mt->kind == EcsBitmaskType);
 

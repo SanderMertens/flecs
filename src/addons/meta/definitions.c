@@ -44,7 +44,10 @@ void flecs_meta_import_core_definitions(
     });
 
     ecs_entity_t string_vec = ecs_vector(world, {
-        .entity = ecs_entity(world, { .name = "flecs.core.string_vec_t "}),
+        .entity = ecs_entity(world, { 
+            .name = "flecs.core.string_vec_t",
+            .root_sep = ""
+        }),
         .type = ecs_id(ecs_string_t)
     });
 
@@ -117,7 +120,7 @@ void flecs_meta_import_meta_definitions(
     });
 
     ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity = ecs_id(EcsMetaType),
+        .entity = ecs_id(EcsType),
         .members = {
             { .name = "kind", .type = type_kind }
         }
@@ -235,8 +238,8 @@ void flecs_meta_import_meta_definitions(
     ecs_entity_t meta = ecs_lookup(world, "flecs.meta");
     ecs_doc_set_brief(world, meta, "Flecs module with reflection components");
 
-    ecs_doc_set_brief(world, ecs_id(EcsMetaType), "Component added to types");
-    ecs_doc_set_brief(world, ecs_id(EcsMetaTypeSerialized), "Component that stores reflection data in an optimized format");
+    ecs_doc_set_brief(world, ecs_id(EcsType), "Component added to types");
+    ecs_doc_set_brief(world, ecs_id(EcsTypeSerializer), "Component that stores reflection data in an optimized format");
     ecs_doc_set_brief(world, ecs_id(EcsPrimitive), "Component added to primitive types");
     ecs_doc_set_brief(world, ecs_id(EcsEnum), "Component added to enumeration types");
     ecs_doc_set_brief(world, ecs_id(EcsBitmask), "Component added to bitmask types");

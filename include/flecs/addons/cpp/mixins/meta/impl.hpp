@@ -43,22 +43,22 @@ inline void init(flecs::world& world) {
 
     world.component<type_kind_t>("flecs::meta::type_kind");
     world.component<primitive_kind_t>("flecs::meta::primitive_kind");
-    world.component<member_t>("flecs::meta::member");
+    world.component<member_t>("flecs::meta::member_t");
     world.component<enum_constant_t>("flecs::meta::enum_constant");
     world.component<bitmask_constant_t>("flecs::meta::bitmask_constant");
 
-    world.component<MetaType>("flecs::meta::MetaType");
-    world.component<MetaTypeSerialized>("flecs::meta::MetaTypeSerialized");
-    world.component<Primitive>("flecs::meta::Primitive");
-    world.component<Enum>("flecs::meta::Enum");
-    world.component<Bitmask>("flecs::meta::Bitmask");
-    world.component<Member>("flecs::meta::Member");
-    world.component<MemberRanges>("flecs::meta::MemberRanges");
-    world.component<Struct>("flecs::meta::Struct");
-    world.component<Array>("flecs::meta::Array");
-    world.component<Vector>("flecs::meta::Vector");
+    world.component<Type>("flecs::meta::type");
+    world.component<TypeSerializer>("flecs::meta::TypeSerializer");
+    world.component<Primitive>("flecs::meta::primitive");
+    world.component<Enum>("flecs::meta::enum");
+    world.component<Bitmask>("flecs::meta::bitmask");
+    world.component<Member>("flecs::meta::member");
+    world.component<MemberRanges>("flecs::meta::member_ranges");
+    world.component<Struct>("flecs::meta::struct");
+    world.component<Array>("flecs::meta::array");
+    world.component<Vector>("flecs::meta::vector");
 
-    world.component<Unit>("flecs::meta::Unit");
+    world.component<Unit>("flecs::meta::unit");
 
     // To support member<uintptr_t> and member<intptr_t> register components
     // (that do not have conflicting symbols with builtin ones) for platform

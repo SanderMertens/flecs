@@ -604,7 +604,7 @@ void Meta_primitive_type(void) {
     test_assert(t != 0);
 
     test_assert(t.has<flecs::Component>());
-    test_assert(t.has<flecs::MetaType>());
+    test_assert(t.has<flecs::Type>());
     test_assert(t.has<flecs::Primitive>());
 
     const flecs::Component *c = t.get<flecs::Component>();
@@ -612,7 +612,7 @@ void Meta_primitive_type(void) {
     test_int(c->size, 4);
     test_int(c->alignment, 4);
 
-    const flecs::MetaType *mt = t.get<flecs::MetaType>();
+    const flecs::Type *mt = t.get<flecs::Type>();
     test_assert(mt != nullptr);
     test_assert(mt->kind == flecs::meta::PrimitiveType);
 
@@ -628,7 +628,7 @@ void Meta_array_type(void) {
     test_assert(t != 0);
 
     test_assert(t.has<flecs::Component>());
-    test_assert(t.has<flecs::MetaType>());
+    test_assert(t.has<flecs::Type>());
     test_assert(t.has<flecs::Array>());
 
     const flecs::Component *c = t.get<flecs::Component>();
@@ -636,7 +636,7 @@ void Meta_array_type(void) {
     test_int(c->size, 3 * 4);
     test_int(c->alignment, 4);
 
-    const flecs::MetaType *mt = t.get<flecs::MetaType>();
+    const flecs::Type *mt = t.get<flecs::Type>();
     test_assert(mt != nullptr);
     test_assert(mt->kind == flecs::meta::ArrayType);
 
@@ -653,7 +653,7 @@ void Meta_vector_type(void) {
     test_assert(t != 0);
 
     test_assert(t.has<flecs::Component>());
-    test_assert(t.has<flecs::MetaType>());
+    test_assert(t.has<flecs::Type>());
     test_assert(t.has<flecs::Vector>());
 
     const flecs::Component *c = t.get<flecs::Component>();
@@ -661,7 +661,7 @@ void Meta_vector_type(void) {
     test_int(c->size, ECS_SIZEOF(ecs_vec_t));
     test_int(c->alignment, ECS_SIZEOF(void*));
 
-    const flecs::MetaType *mt = t.get<flecs::MetaType>();
+    const flecs::Type *mt = t.get<flecs::Type>();
     test_assert(mt != nullptr);
     test_assert(mt->kind == flecs::meta::VectorType);
 

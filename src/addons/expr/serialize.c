@@ -280,8 +280,8 @@ int expr_ser_type_elements(
     ecs_strbuf_t *str,
     bool is_array)
 {
-    const EcsMetaTypeSerialized *ser = ecs_get(
-        world, type, EcsMetaTypeSerialized);
+    const EcsTypeSerializer *ser = ecs_get(
+        world, type, EcsTypeSerializer);
     ecs_assert(ser != NULL, ECS_INTERNAL_ERROR, NULL);
 
     const EcsComponent *comp = ecs_get(world, type, EcsComponent);
@@ -502,8 +502,8 @@ int ecs_ptr_to_expr_buf(
     const void *ptr,
     ecs_strbuf_t *buf_out)
 {
-    const EcsMetaTypeSerialized *ser = ecs_get(
-        world, type, EcsMetaTypeSerialized);
+    const EcsTypeSerializer *ser = ecs_get(
+        world, type, EcsTypeSerializer);
     if (ser == NULL) {
         char *path = ecs_get_fullpath(world, type);
         ecs_err("cannot serialize value for type '%s'", path);
@@ -541,8 +541,8 @@ int ecs_ptr_to_str_buf(
     const void *ptr,
     ecs_strbuf_t *buf_out)
 {
-    const EcsMetaTypeSerialized *ser = ecs_get(
-        world, type, EcsMetaTypeSerialized);
+    const EcsTypeSerializer *ser = ecs_get(
+        world, type, EcsTypeSerializer);
     if (ser == NULL) {
         char *path = ecs_get_fullpath(world, type);
         ecs_err("cannot serialize value for type '%s'", path);

@@ -566,7 +566,7 @@ ecs_entity_t meta_lookup_bitmask(
 
 #ifndef FLECS_NDEBUG
     /* Make sure this is a bitmask type */
-    const EcsMetaType *type_ptr = ecs_get(world, bitmask_type, EcsMetaType);
+    const EcsType *type_ptr = ecs_get(world, bitmask_type, EcsType);
     ecs_check(type_ptr != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(type_ptr->kind == EcsBitmaskType, ECS_INVALID_PARAMETER, NULL);
 #endif

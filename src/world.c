@@ -136,8 +136,8 @@ const ecs_entity_t ecs_id(ecs_entity_t) =           FLECS_HI_COMPONENT_ID + 96;
 const ecs_entity_t ecs_id(ecs_id_t) =               FLECS_HI_COMPONENT_ID + 97;
 
 /** Meta module component ids */
-const ecs_entity_t ecs_id(EcsMetaType) =            FLECS_HI_COMPONENT_ID + 98;
-const ecs_entity_t ecs_id(EcsMetaTypeSerialized) =  FLECS_HI_COMPONENT_ID + 99;
+const ecs_entity_t ecs_id(EcsType) =            FLECS_HI_COMPONENT_ID + 98;
+const ecs_entity_t ecs_id(EcsTypeSerializer) =  FLECS_HI_COMPONENT_ID + 99;
 const ecs_entity_t ecs_id(EcsPrimitive) =           FLECS_HI_COMPONENT_ID + 100;
 const ecs_entity_t ecs_id(EcsEnum) =                FLECS_HI_COMPONENT_ID + 101;
 const ecs_entity_t ecs_id(EcsBitmask) =             FLECS_HI_COMPONENT_ID + 102;

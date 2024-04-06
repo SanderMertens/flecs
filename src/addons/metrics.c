@@ -540,7 +540,7 @@ int flecs_member_metric_init(
         goto error;
     }
 
-    const EcsMetaType *mt = ecs_get(world, type, EcsMetaType);
+    const EcsType *mt = ecs_get(world, type, EcsType);
     if (!mt) {
         char *metric_name = ecs_get_fullpath(world, metric);
         char *member_name = ecs_get_fullpath(world, desc->member);

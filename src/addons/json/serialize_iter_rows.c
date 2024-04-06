@@ -312,7 +312,7 @@ bool flecs_json_serialize_get_value_ctx(
         }
 
         ctx->type = type;
-        ctx->ser = ecs_get(world, type, EcsMetaTypeSerialized);
+        ctx->ser = ecs_get(world, type, EcsTypeSerializer);
         if (!ctx->ser) {
             return false;
         }

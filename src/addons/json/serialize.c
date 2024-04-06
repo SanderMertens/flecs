@@ -145,8 +145,8 @@ int flecs_json_ser_type_elements(
     ecs_strbuf_t *str,
     bool is_array)
 {
-    const EcsMetaTypeSerialized *ser = ecs_get(
-        world, type, EcsMetaTypeSerialized);
+    const EcsTypeSerializer *ser = ecs_get(
+        world, type, EcsTypeSerializer);
     ecs_assert(ser != NULL, ECS_INTERNAL_ERROR, NULL);
 
     const EcsComponent *comp = ecs_get(world, type, EcsComponent);
@@ -239,7 +239,7 @@ int json_ser_custom_type(
     ecs_assert(ct->serialize != NULL, ECS_INVALID_OPERATION, 
         ecs_get_name(world, op->type));
 
-    const EcsMetaType *pt = ecs_get(world, ct->as_type, EcsMetaType);
+    const EcsType *pt = ecs_get(world, ct->as_type, EcsType);
     ecs_assert(pt != NULL, ECS_INVALID_OPERATION, NULL);
 
     ecs_type_kind_t kind = pt->kind;
@@ -498,7 +498,7 @@ int array_to_json_buf_w_type_data(
     int32_t count,
     ecs_strbuf_t *buf,
     const EcsComponent *comp,
-    const EcsMetaTypeSerialized *ser)
+    const EcsTypeSerializer *ser)
 {
     if (count) {
         ecs_size_t size = comp->size;
@@ -539,8 +539,8 @@ int ecs_array_to_json_buf(
         return -1;
     }
 
-    const EcsMetaTypeSerialized *ser = ecs_get(
-        world, type, EcsMetaTypeSerialized);
+    const EcsTypeSerializer *ser = ecs_get(
+        world, type, EcsTypeSerializer);
     if (!ser) {
         char *path = ecs_get_fullpath(world, type);
         ecs_err("cannot serialize to JSON, '%s' has no reflection data", path);
@@ -717,8 +717,8 @@ int flecs_json_append_type_values(
             bool serialized = false;
             ecs_entity_t typeid = ecs_get_typeid(world, id);
             if (typeid) {
-                const EcsMetaTypeSerialized *ser = ecs_get(
-                    world, typeid, EcsMetaTypeSerialized);
+                const EcsTypeSerializer *ser = ecs_get(
+                    world, typeid, EcsTypeSerializer);
                 if (ser) {
                     const void *ptr = ecs_get_id(world, ent, id);
                     ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -2089,8 +2089,8 @@ int flecs_json_serialize_iter_result_values(
             continue;
         }
 
-        const EcsMetaTypeSerialized *ser = ecs_get(
-            world, type, EcsMetaTypeSerialized);
+        const EcsTypeSerializer *ser = ecs_get(
+            world, type, EcsTypeSerializer);
         if (!ser) {
             /* Not odd, component just has no reflection data */
             ecs_strbuf_appendch(buf, '0');
@@ -2177,8 +2177,8 @@ int flecs_json_serialize_iter_result_columns(
             continue;
         }
 
-        const EcsMetaTypeSerialized *ser = ecs_get(
-            world, typeid, EcsMetaTypeSerialized);
+        const EcsTypeSerializer *ser = ecs_get(
+            world, typeid, EcsTypeSerializer);
         if (!ser) {
             ecs_strbuf_appendch(buf, '0');
             continue;

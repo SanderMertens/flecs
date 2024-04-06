@@ -28,7 +28,7 @@ typedef enum ecs_json_token_t {
 
 typedef struct ecs_json_value_ser_ctx_t {
     ecs_entity_t type;
-    const EcsMetaTypeSerialized *ser;
+    const EcsTypeSerializer *ser;
     char *id_label;
     bool initialized;
 } ecs_json_value_ser_ctx_t;

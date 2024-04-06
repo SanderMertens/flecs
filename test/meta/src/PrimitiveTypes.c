@@ -12,7 +12,7 @@ static void meta_test_primitive(
     test_assert(ct->size == size);
     test_assert(ct->alignment == alignment);
 
-    const EcsMetaType *mt = ecs_get(world, t, EcsMetaType);
+    const EcsType *mt = ecs_get(world, t, EcsType);
     test_assert(mt != NULL);
     test_assert(mt->kind == EcsPrimitiveType);
 
@@ -505,7 +505,7 @@ void PrimitiveTypes_primitive_init(void) {
     test_assert(prim_ptr != NULL);
     test_int(prim_ptr->kind, EcsU16);
 
-    const EcsMetaType *type_ptr = ecs_get(world, t, EcsMetaType);
+    const EcsType *type_ptr = ecs_get(world, t, EcsType);
     test_assert(type_ptr != NULL);
     test_int(type_ptr->kind, EcsPrimitiveType);
 
@@ -527,7 +527,7 @@ void PrimitiveTypes_primitive_w_short_notation(void) {
     test_assert(prim_ptr != NULL);
     test_int(prim_ptr->kind, EcsU16);
 
-    const EcsMetaType *type_ptr = ecs_get(world, t, EcsMetaType);
+    const EcsType *type_ptr = ecs_get(world, t, EcsType);
     test_assert(type_ptr != NULL);
     test_int(type_ptr->kind, EcsPrimitiveType);
 

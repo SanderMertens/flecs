@@ -392,8 +392,8 @@ int json_typeinfo_ser_type(
         return 0;
     }
 
-    const EcsMetaTypeSerialized *ser = ecs_get(
-        world, type, EcsMetaTypeSerialized);
+    const EcsTypeSerializer *ser = ecs_get(
+        world, type, EcsTypeSerializer);
     if (!ser) {
         ecs_strbuf_appendch(buf, '0');
         return 0;

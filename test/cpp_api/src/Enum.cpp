@@ -1045,7 +1045,7 @@ void Enum_component_registered_as_enum(void) {
 
     test_assert(e.has<flecs::Enum>());
 
-    const flecs::MetaType *mt = e.get<flecs::MetaType>();
+    const flecs::Type *mt = e.get<flecs::Type>();
 
     test_assert(mt != nullptr);
     test_assert(mt->kind == flecs::meta::EnumType);
@@ -1098,7 +1098,7 @@ void Enum_mixed_auto_manual_constants(void) {
 
     test_assert(e.has<flecs::Enum>());
 
-    const flecs::MetaType *mt = e.get<flecs::MetaType>();
+    const flecs::Type *mt = e.get<flecs::Type>();
     test_assert(mt != nullptr);
     test_assert(mt->kind == flecs::meta::EnumType);
 
@@ -1150,7 +1150,7 @@ void Enum_enum_class_mixed_auto_manual_constants(void) {
 
     test_assert(e.has<flecs::Enum>());
 
-    const flecs::MetaType *mt = e.get<flecs::MetaType>();
+    const flecs::Type *mt = e.get<flecs::Type>();
     test_assert(mt != nullptr);
     test_assert(mt->kind == flecs::meta::EnumType);
 

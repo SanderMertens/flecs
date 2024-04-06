@@ -7,13 +7,13 @@
  * two components:
  *
  * - EcsComponent: core component, contains size & alignment
- * - EcsMetaType:  component that indicates what kind of type the entity is
+ * - EcsType:  component that indicates what kind of type the entity is
  *
  * Additionally the type may have an additional component that contains the
  * reflection data for the type. For example, structs have these components:
  *
  * - EcsComponent
- * - EcsMetaType
+ * - EcsType
  * - EcsStruct
  *
  * Structs can be populated by adding child entities with the EcsMember
@@ -34,7 +34,7 @@
  * components for the types.
  *
  * When a type is created it automatically receives the EcsComponent and
- * EcsMetaType components. The former means that the resulting type can be
+ * EcsType components. The former means that the resulting type can be
  * used as a regular component:
  *
  * @code
@@ -110,8 +110,8 @@ typedef double ecs_f64_t;
 typedef char* ecs_string_t;
 
 /* Meta module component ids */
-FLECS_API extern const ecs_entity_t ecs_id(EcsMetaType);
-FLECS_API extern const ecs_entity_t ecs_id(EcsMetaTypeSerialized);
+FLECS_API extern const ecs_entity_t ecs_id(EcsType);
+FLECS_API extern const ecs_entity_t ecs_id(EcsTypeSerializer);
 FLECS_API extern const ecs_entity_t ecs_id(EcsPrimitive);
 FLECS_API extern const ecs_entity_t ecs_id(EcsEnum);
 FLECS_API extern const ecs_entity_t ecs_id(EcsBitmask);
@@ -159,11 +159,11 @@ typedef enum ecs_type_kind_t {
 } ecs_type_kind_t;
 
 /** Component that is automatically added to every type with the right kind. */
-typedef struct EcsMetaType {
+typedef struct EcsType {
     ecs_type_kind_t kind;
     bool existing;         /**< Did the type exist or is it populated from reflection */
     bool partial;          /**< Is the reflection data a partial type description */
-} EcsMetaType;
+} EcsType;
 
 /** Primitive type kinds supported by meta addon */
 typedef enum ecs_primitive_kind_t {
@@ -516,9 +516,9 @@ typedef struct ecs_meta_type_op_t {
     ecs_hashmap_t *members; /**< string -> member index (structs only) */
 } ecs_meta_type_op_t;
 
-typedef struct EcsMetaTypeSerialized {
+typedef struct EcsTypeSerializer {
     ecs_vec_t ops;      /**< vector<ecs_meta_type_op_t> */
-} EcsMetaTypeSerialized;
+} EcsTypeSerializer;
 
 
 /* Deserializer utilities */

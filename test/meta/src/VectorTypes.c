@@ -10,7 +10,7 @@ void meta_test_vector(
     test_int(ct->size, ECS_SIZEOF(ecs_vec_t));
     test_int(ct->alignment, ECS_ALIGNOF(ecs_vec_t));
 
-    const EcsMetaType *mt = ecs_get(world, t, EcsMetaType);
+    const EcsType *mt = ecs_get(world, t, EcsType);
     test_assert(mt != NULL);
     test_assert(mt->kind == EcsVectorType);
 

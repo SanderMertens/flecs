@@ -172,8 +172,8 @@ int flecs_meta_cursor_push_type(
     ecs_entity_t type,
     void *ptr)
 {
-    const EcsMetaTypeSerialized *ser = ecs_get(
-        world, type, EcsMetaTypeSerialized);
+    const EcsTypeSerializer *ser = ecs_get(
+        world, type, EcsTypeSerializer);
     if (ser == NULL) {
         char *str = ecs_id_str(world, type);
         ecs_err("cannot open scope for '%s' (missing reflection data)", str);
@@ -474,7 +474,7 @@ int ecs_meta_push(
     case EcsOpOpaque: {
         const EcsOpaque *type_ptr = ecs_get(world, op->type, EcsOpaque);
         ecs_entity_t as_type = type_ptr->as_type;
-        const EcsMetaType *mtype_ptr = ecs_get(world, as_type, EcsMetaType);
+        const EcsType *mtype_ptr = ecs_get(world, as_type, EcsType);
 
         /* Check what kind of type the opaque type represents */
         switch(mtype_ptr->kind) {
@@ -621,8 +621,8 @@ int ecs_meta_pop(
         } else if (op->kind == EcsOpOpaque) {
             const EcsOpaque *opaque = scope->opaque;
             if (scope->is_collection) {
-                const EcsMetaType *mtype = ecs_get(cursor->world, 
-                    opaque->as_type, EcsMetaType);
+                const EcsType *mtype = ecs_get(cursor->world, 
+                    opaque->as_type, EcsType);
                 ecs_assert(mtype != NULL, ECS_INTERNAL_ERROR, NULL);
 
                 /* When popping a opaque collection type, call resize to make 
@@ -1116,7 +1116,7 @@ int ecs_meta_set_value(
     ecs_check(value != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_entity_t type = value->type;
     ecs_check(type != 0, ECS_INVALID_PARAMETER, NULL);
-    const EcsMetaType *mt = ecs_get(cursor->world, type, EcsMetaType);
+    const EcsType *mt = ecs_get(cursor->world, type, EcsType);
     if (!mt) {
         ecs_err("type of value does not have reflection data");
         return -1;
