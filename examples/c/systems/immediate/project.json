@@ -1,11 +1,10 @@
 {
-    "id": "no_readonly",
+    "id": "immediate",
     "type": "application",
     "value": {
         "use": [
             "flecs"
         ],
-        "language": "c++",
         "public": false
     }
 }

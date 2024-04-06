@@ -72,8 +72,8 @@ public:
      *
      * @param value If false system will always run staged.
      */
-    Base& no_readonly(bool value = true) {
-        m_desc->no_readonly = value;
+    Base& immediate(bool value = true) {
+        m_desc->immediate = value;
         return *this;
     }
 

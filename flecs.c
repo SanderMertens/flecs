@@ -18805,7 +18805,7 @@ void FlecsAlertsImport(ecs_world_t *world) {
 
     ecs_system(world, {
         .entity = ecs_id(MonitorAlerts),
-        .no_readonly = true,
+        .immediate = true,
         .interval = (ecs_ftime_t)0.5
     });
 
@@ -27592,8 +27592,8 @@ void flecs_pipeline_stats_to_json(
             ecs_strbuf_list_appendlit(reply, "\"multi_threaded\":");
             ecs_strbuf_appendbool(reply, sync_stats->multi_threaded);
 
-            ecs_strbuf_list_appendlit(reply, "\"no_readonly\":");
-            ecs_strbuf_appendbool(reply, sync_stats->no_readonly);
+            ecs_strbuf_list_appendlit(reply, "\"immediate\":");
+            ecs_strbuf_appendbool(reply, sync_stats->immediate);
 
             ECS_GAUGE_APPEND_T(reply, sync_stats, 
                 time_spent, stats->stats.t, "");
@@ -28244,7 +28244,7 @@ void FlecsRestImport(
 
     ecs_system(world, {
         .entity = ecs_id(DequeueRest),
-        .no_readonly = true
+        .immediate = true
     });
 
     ecs_observer(world, {
@@ -28296,7 +28296,7 @@ typedef struct ecs_system_t {
     
     /* Schedule parameters */
     bool multi_threaded;
-    bool no_readonly;
+    bool immediate;
 
     ecs_ftime_t time_spent;         /* Time spent on running system */
     ecs_ftime_t time_passed;        /* Time passed since last invocation */
@@ -28356,7 +28356,7 @@ typedef struct ecs_pipeline_op_t {
     double time_spent;          /* Time spent merging commands for sync point */
     int64_t commands_enqueued;  /* Number of commands enqueued for sync point */
     bool multi_threaded;        /* Whether systems can be ran multi threaded */
-    bool no_readonly;           /* Whether systems are staged or not */
+    bool immediate;           /* Whether systems are staged or not */
 } ecs_pipeline_op_t;
 
 struct ecs_pipeline_state_t {
@@ -28375,7 +28375,7 @@ struct ecs_pipeline_state_t {
     ecs_pipeline_op_t *cur_op;  /* Current pipeline op */
     int32_t cur_i;              /* Index in current result */
     int32_t ran_since_merge;    /* Index in current op */
-    bool no_readonly;           /* Is pipeline in readonly mode */
+    bool immediate;           /* Is pipeline in readonly mode */
 };
 
 typedef struct EcsPipeline {
@@ -29016,7 +29016,7 @@ bool ecs_pipeline_stats_get(
 
                 el->system_count = cur->count;
                 el->multi_threaded = cur->multi_threaded;
-                el->no_readonly = cur->no_readonly;
+                el->immediate = cur->immediate;
             }
         }
     }
@@ -29078,7 +29078,7 @@ void ecs_pipeline_stats_reduce(
             ECS_METRIC_FIRST(src_el), dst->t, src->t);
         dst_el->system_count = src_el->system_count;
         dst_el->multi_threaded = src_el->multi_threaded;
-        dst_el->no_readonly = src_el->no_readonly;
+        dst_el->immediate = src_el->immediate;
     }
 
     ecs_map_init_if(&dst->system_stats, NULL);
@@ -29110,7 +29110,7 @@ void ecs_pipeline_stats_reduce_last(
             ECS_METRIC_FIRST(src_el), dst->t, src->t, count);
         dst_el->system_count = src_el->system_count;
         dst_el->multi_threaded = src_el->multi_threaded;
-        dst_el->no_readonly = src_el->no_readonly;
+        dst_el->immediate = src_el->immediate;
     }
 
     ecs_map_init_if(&dst->system_stats, NULL);
@@ -29163,7 +29163,7 @@ void ecs_pipeline_stats_copy_last(
             ECS_METRIC_FIRST(src_el), dst->t, t_next(src->t));
         dst_el->system_count = src_el->system_count;
         dst_el->multi_threaded = src_el->multi_threaded;
-        dst_el->no_readonly = src_el->no_readonly;
+        dst_el->immediate = src_el->immediate;
     }
 
     ecs_map_init_if(&dst->system_stats, NULL);
@@ -66598,7 +66598,7 @@ bool flecs_pipeline_build(
     ecs_vec_reset_t(a, &pq->systems, ecs_entity_t);
 
     bool multi_threaded = false;
-    bool no_readonly = false;
+    bool immediate = false;
     bool first = true;
 
     /* Iterate systems in pipeline, add ops for running / merging */
@@ -66620,7 +66620,7 @@ bool flecs_pipeline_build(
             if (is_active) {
                 if (first) {
                     multi_threaded = sys->multi_threaded;
-                    no_readonly = sys->no_readonly;
+                    immediate = sys->immediate;
                     first = false;
                 }
 
@@ -66628,13 +66628,13 @@ bool flecs_pipeline_build(
                     needs_merge = true;
                     multi_threaded = sys->multi_threaded;
                 }
-                if (sys->no_readonly != no_readonly) {
+                if (sys->immediate != immediate) {
                     needs_merge = true;
-                    no_readonly = sys->no_readonly;
+                    immediate = sys->immediate;
                 }
             }
 
-            if (no_readonly) {
+            if (immediate) {
                 needs_merge = true;
             }
 
@@ -66670,7 +66670,7 @@ bool flecs_pipeline_build(
                 op->offset = ecs_vec_count(&pq->systems);
                 op->count = 0;
                 op->multi_threaded = false;
-                op->no_readonly = false;
+                op->immediate = false;
                 op->time_spent = 0;
                 op->commands_enqueued = 0;
             }
@@ -66682,7 +66682,7 @@ bool flecs_pipeline_build(
                     it.entities[i];
                 if (!op->count) {
                     op->multi_threaded = multi_threaded;
-                    op->no_readonly = no_readonly;
+                    op->immediate = immediate;
                 }
                 op->count ++;
             }
@@ -66707,7 +66707,7 @@ bool flecs_pipeline_build(
         ecs_log_push_1();
 
         ecs_dbg("#[green]schedule#[reset]: threading: %d, staging: %d:", 
-            op->multi_threaded, !op->no_readonly);
+            op->multi_threaded, !op->immediate);
         ecs_log_push_1();
 
         int32_t i, count = ecs_vec_count(&pq->systems);
@@ -66751,7 +66751,7 @@ bool flecs_pipeline_build(
                         "#[green]schedule#[reset]: "
                         "threading: %d, staging: %d:",
                         op[op_index].multi_threaded, 
-                        !op[op_index].no_readonly);
+                        !op[op_index].immediate);
                 }
                 ecs_log_push_1();
             }
@@ -66884,8 +66884,8 @@ int32_t flecs_run_pipeline_ops(
         sys->last_frame = world->info.frame_count_total + 1;
 
         ecs_stage_t* s = NULL;
-        if (!op->no_readonly) {
-            /* If system is no_readonly it operates on the actual world, not
+        if (!op->immediate) {
+            /* If system is immediate it operates on the actual world, not
              * the stage. Only pass stage to system if it's readonly. */
             s = stage;
         }
@@ -66936,12 +66936,12 @@ void flecs_run_pipeline(
             continue;
         }
 
-        bool no_readonly = pq->cur_op->no_readonly;
+        bool immediate = pq->cur_op->immediate;
         bool op_multi_threaded = multi_threaded && pq->cur_op->multi_threaded;
 
-        pq->no_readonly = no_readonly;
+        pq->immediate = immediate;
 
-        if (!no_readonly) {
+        if (!immediate) {
             ecs_readonly_begin(world, multi_threaded);
         }
 
@@ -66970,7 +66970,7 @@ void flecs_run_pipeline(
             flecs_wait_for_sync(world);
         }
 
-        if (!no_readonly) {
+        if (!immediate) {
             ecs_time_t mt = { 0 };
             if (measure_time) {
                 ecs_time_measure(&mt);
@@ -67861,7 +67861,7 @@ ecs_entity_t ecs_system_init(
         system->tick_source = desc->tick_source;
 
         system->multi_threaded = desc->multi_threaded;
-        system->no_readonly = desc->no_readonly;
+        system->immediate = desc->immediate;
 
         flecs_system_init_timer(world, entity, desc);
 
@@ -67911,8 +67911,8 @@ ecs_entity_t ecs_system_init(
         if (desc->multi_threaded) {
             system->multi_threaded = desc->multi_threaded;
         }
-        if (desc->no_readonly) {
-            system->no_readonly = desc->no_readonly;
+        if (desc->immediate) {
+            system->immediate = desc->immediate;
         }
 
         flecs_system_init_timer(world, entity, desc);

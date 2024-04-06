@@ -1,8 +1,8 @@
-#ifndef NO_READONLY_H
-#define NO_READONLY_H
+#ifndef IMMEDIATE_H
+#define IMMEDIATE_H
 
 /* This generated file contains includes for project dependencies */
-#include "no_readonly/bake_config.h"
+#include "immediate/bake_config.h"
 
 #ifdef __cplusplus
 extern "C" {

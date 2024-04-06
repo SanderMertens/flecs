@@ -294,7 +294,7 @@ ecs_entity_t ecs_system_init(
         system->tick_source = desc->tick_source;
 
         system->multi_threaded = desc->multi_threaded;
-        system->no_readonly = desc->no_readonly;
+        system->immediate = desc->immediate;
 
         flecs_system_init_timer(world, entity, desc);
 
@@ -344,8 +344,8 @@ ecs_entity_t ecs_system_init(
         if (desc->multi_threaded) {
             system->multi_threaded = desc->multi_threaded;
         }
-        if (desc->no_readonly) {
-            system->no_readonly = desc->no_readonly;
+        if (desc->immediate) {
+            system->immediate = desc->immediate;
         }
 
         flecs_system_init_timer(world, entity, desc);

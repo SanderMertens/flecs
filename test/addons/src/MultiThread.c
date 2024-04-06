@@ -1119,7 +1119,7 @@ void MultiThread_no_staging_w_multithread(void) {
 
         ecs_system_init(world, &(ecs_system_desc_t){
             .callback = CreateQuery,
-            .no_readonly = true,
+            .immediate = true,
             .entity = ecs_entity(world, {.add = ecs_ids(ecs_dependson(EcsOnUpdate))})
         });
 
@@ -1266,7 +1266,7 @@ void MultiThread_bulk_new_in_no_readonly_w_multithread(void) {
 
     ecs_system(world, {
         .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnUpdate) )}),
-        .no_readonly = true,
+        .immediate = true,
         .callback = sys_bulk_init
     });
 
@@ -1321,7 +1321,7 @@ void MultiThread_bulk_new_in_no_readonly_w_multithread_2(void) {
             .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
         }),
         .callback = sys_bulk_init_2,
-        .no_readonly = true,
+        .immediate = true,
         .ctx = q
     });
 

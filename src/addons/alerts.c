@@ -784,7 +784,7 @@ void FlecsAlertsImport(ecs_world_t *world) {
 
     ecs_system(world, {
         .entity = ecs_id(MonitorAlerts),
-        .no_readonly = true,
+        .immediate = true,
         .interval = (ecs_ftime_t)0.5
     });
 

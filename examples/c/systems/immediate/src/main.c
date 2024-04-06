@@ -1,4 +1,4 @@
-#include <no_readonly.h>
+#include <immediate.h>
 #include <stdio.h>
 
 // When an application calls ecs_progress(), the world is put in readonly mode.
@@ -8,16 +8,16 @@
 // or removing components) are not visible until the end of the frame (see the
 // sync_point example for more details).
 // Sometimes this is not what you want, and you need a change to be visible
-// immediately. For these use cases, applications can use a no_readonly system.
+// immediately. For these use cases, applications can use a immediate system.
 // This temporarily takes the world out of readonly mode, so a system can make
 // changes that are directly visible.
-// Because they mutate the world directly, no_readonly systems are never ran on
+// Because they mutate the world directly, immediate systems are never ran on
 // more than one thread, and no other systems are ran at the same time.
 
 ECS_DECLARE(Waiter);
 ECS_DECLARE(Plate);
 
-// System that assigns plates to waiter. By making this system no_readonly
+// System that assigns plates to waiter. By making this system immediate
 // plate assignments are assigned directly (not deferred) to waiters, which 
 // ensures that we won't assign plates to the same waiter more than once.
 void AssignPlate(ecs_iter_t *it) {
@@ -36,7 +36,7 @@ void AssignPlate(ecs_iter_t *it) {
             // next plate will no longer find it.
             // The defer_suspend function temporarily suspends deferring 
             // operations, which ensures that our plate is assigned immediately.
-            // Even though this is a no_readonly system, defering is still 
+            // Even though this is a immediate system, defering is still 
             // enabled by default, as adding/removing components to the entities
             // being iterated would intefere with the system iterator.
             ecs_defer_suspend(ecs);
@@ -89,7 +89,7 @@ int main(int argc, char *argv[]) {
         },
         .callback = AssignPlate,
         .ctx = q_waiter,
-        .no_readonly = true // disable readonly mode for this system
+        .immediate = true // disable readonly mode for this system
     });
 
     // Create a few plates and waiters

@@ -27,7 +27,7 @@ typedef struct ecs_system_t {
     
     /* Schedule parameters */
     bool multi_threaded;
-    bool no_readonly;
+    bool immediate;
 
     ecs_ftime_t time_spent;         /* Time spent on running system */
     ecs_ftime_t time_passed;        /* Time passed since last invocation */

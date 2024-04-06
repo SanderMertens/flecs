@@ -11025,7 +11025,7 @@ typedef struct ecs_system_desc_t {
 
     /** If true, system will have access to the actual world. Cannot be true at the
      * same time as multi_threaded. */
-    bool no_readonly;
+    bool immediate;
 } ecs_system_desc_t;
 
 /** Create a system */
@@ -11405,7 +11405,7 @@ typedef struct ecs_sync_stats_t {
 
     int32_t system_count;
     bool multi_threaded;
-    bool no_readonly;
+    bool immediate;
 } ecs_sync_stats_t;
 
 /** Statistics for all systems in a pipeline. */
@@ -28678,8 +28678,8 @@ public:
      *
      * @param value If false system will always run staged.
      */
-    Base& no_readonly(bool value = true) {
-        m_desc->no_readonly = value;
+    Base& immediate(bool value = true) {
+        m_desc->immediate = value;
         return *this;
     }
 

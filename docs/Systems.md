@@ -840,7 +840,7 @@ There are a number of things applications can do to force merging of operations,
 1. Commands to be merged before another system
 2. Operations not to be enqueued as commands.
 
-The mechanisms to accomplish this are sync points for 1), and `no_readonly` systems for 2).
+The mechanisms to accomplish this are sync points for 1), and `immediate` systems for 2).
 
 ### Sync points
 Sync points are moments during the frame where all commands are flushed to the storage. Systems that run after a sync point will be able to see all operations that happened up until the sync point. Sync points are inserted automatically by analyzing which commands could have been inserted and which components are being read by systems.
@@ -951,14 +951,14 @@ By default systems are ran while the world is in "readonly" mode, where all ECS 
 
 In some cases however, operations need to be immediately visible to a system. A typical example is a system that assigns tasks to resources, like assigning plates to a waiter. A system should only assign plates to a waiter that hasn't been assigned any plates yet, but to know which waiters are free, the operation that assigns a plate to a waiter must be immediately visible.
 
-To accomplish this, systems can be marked with the `no_readonly` flag, which signals that a system should be ran while the world is not in readonly mode. This causes ECS operations to not get enqueued, and allows the system to directly see the results of operations. There are a few limitations to `no_readonly` systems:
+To accomplish this, systems can be marked with the `immediate` flag, which signals that a system should be ran while the world is not in readonly mode. This causes ECS operations to not get enqueued, and allows the system to directly see the results of operations. There are a few limitations to `immediate` systems:
 
-- `no_readonly` systems are always single threaded
+- `immediate` systems are always single threaded
 - operations on the iterated over entity must still be deferred
 
 The reason for the latter limitation is that allowing for operations on the iterated over entity would cause the system to modify the storage it is iterating, which could cause undefined behavior similar to what you'd see when changing a vector while iterating it.
 
-The following example shows how to create a `no_readonly` system:
+The following example shows how to create a `immediate` system:
 <div class="flecs-snippet-tabs">
 <ul>
 <li><b class="tab-title">C</b>
@@ -973,7 +973,7 @@ ecs_system(ecs, {
         { .id = Plate },
     },
     .callback = AssignPlate,
-    .no_readonly = true // disable readonly mode for this system
+    .immediate = true // disable readonly mode for this system
 });
 ```
 </li>
@@ -982,7 +982,7 @@ ecs_system(ecs, {
 ```cpp
     ecs.system("AssignPlate")
         .with<Plate>()
-        .no_readonly() // disable readonly mode for this system
+        .immediate() // disable readonly mode for this system
         .iter([&](flecs::iter& it) { /* ... */ })
 ```
 </li>
@@ -1048,7 +1048,7 @@ void AssignPlate(ecs_iter_t *it) {
 </ul>
 </div>
 
-Note that `defer_suspend` and `defer_resume` may only be called from within a `no_readonly` system.
+Note that `defer_suspend` and `defer_resume` may only be called from within a `immediate` system.
 
 ### Threading
 Systems in Flecs can be multithreaded. This requires both the system to be created as a multithreaded system, as well as configuring the world to have a number of worker threads. To create worker threads, use the `set_threads` function:

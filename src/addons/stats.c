@@ -600,7 +600,7 @@ bool ecs_pipeline_stats_get(
 
                 el->system_count = cur->count;
                 el->multi_threaded = cur->multi_threaded;
-                el->no_readonly = cur->no_readonly;
+                el->immediate = cur->immediate;
             }
         }
     }
@@ -662,7 +662,7 @@ void ecs_pipeline_stats_reduce(
             ECS_METRIC_FIRST(src_el), dst->t, src->t);
         dst_el->system_count = src_el->system_count;
         dst_el->multi_threaded = src_el->multi_threaded;
-        dst_el->no_readonly = src_el->no_readonly;
+        dst_el->immediate = src_el->immediate;
     }
 
     ecs_map_init_if(&dst->system_stats, NULL);
@@ -694,7 +694,7 @@ void ecs_pipeline_stats_reduce_last(
             ECS_METRIC_FIRST(src_el), dst->t, src->t, count);
         dst_el->system_count = src_el->system_count;
         dst_el->multi_threaded = src_el->multi_threaded;
-        dst_el->no_readonly = src_el->no_readonly;
+        dst_el->immediate = src_el->immediate;
     }
 
     ecs_map_init_if(&dst->system_stats, NULL);
@@ -747,7 +747,7 @@ void ecs_pipeline_stats_copy_last(
             ECS_METRIC_FIRST(src_el), dst->t, t_next(src->t));
         dst_el->system_count = src_el->system_count;
         dst_el->multi_threaded = src_el->multi_threaded;
-        dst_el->no_readonly = src_el->no_readonly;
+        dst_el->immediate = src_el->immediate;
     }
 
     ecs_map_init_if(&dst->system_stats, NULL);

@@ -1209,7 +1209,7 @@ void Pipeline_mixed_staging(void) {
         .entity = ecs_entity(world, { .name = "SysA", .add = ecs_ids(Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
         .query.expr = "Position",
         .callback = SysA,
-        .no_readonly = true
+        .immediate = true
     });
     ecs_entity_t s2 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, { .name = "SysB", .add = ecs_ids(Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
@@ -1225,13 +1225,13 @@ void Pipeline_mixed_staging(void) {
         .entity = ecs_entity(world, { .name = "SysD", .add = ecs_ids(Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
         .query.expr = "Position",
         .callback = SysD,
-        .no_readonly = true
+        .immediate = true
     });
     ecs_entity_t s5 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, { .name = "SysE", .add = ecs_ids(Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
         .query.expr = "Position",
         .callback = SysE,
-        .no_readonly = true
+        .immediate = true
     });
     ecs_entity_t s6 = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, { .name = "SysF", .add = ecs_ids(Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
@@ -1567,7 +1567,7 @@ void Pipeline_no_staging_system_create_query(void) {
     ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t){
         .entity = ecs_entity(world, { .name = "CreateQuery", .add = ecs_ids(Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
         .callback = CreateQuery,
-        .no_readonly = true
+        .immediate = true
     });
 
     ECS_PIPELINE(world, P, flecs.system.System, flecs.pipeline.Phase(cascade(DependsOn)), Tag);
@@ -1850,7 +1850,7 @@ void Pipeline_no_staging_after_inactive_system(void) {
             .add = ecs_ids( ecs_dependson(EcsOnUpdate ))
         }),
         .callback = NoStagingSystem,
-        .no_readonly = true
+        .immediate = true
     });
 
     ecs_progress(world, 0);
@@ -1937,7 +1937,7 @@ void Pipeline_inactive_system_after_no_staging_system_no_defer_w_filter(void) {
             .add = ecs_ids( ecs_dependson(EcsOnUpdate ))
         }),
         .callback = NoStagingSystemCreatePosition,
-        .no_readonly = true
+        .immediate = true
     });
 
     ecs_system(world, {
@@ -1973,7 +1973,7 @@ void Pipeline_inactive_system_after_no_staging_system_no_defer_w_filter_w_no_sta
             .add = ecs_ids( ecs_dependson(EcsOnUpdate ))
         }),
         .callback = NoStagingSystemCreatePosition,
-        .no_readonly = true
+        .immediate = true
     });
 
     ecs_system(world, {
@@ -1989,7 +1989,7 @@ void Pipeline_inactive_system_after_no_staging_system_no_defer_w_filter_w_no_sta
             .add = ecs_ids( ecs_dependson(EcsOnUpdate ))
         }),
         .callback = SysA,
-        .no_readonly = true
+        .immediate = true
     });
 
     ecs_progress(world, 0);
@@ -2018,7 +2018,7 @@ void Pipeline_inactive_system_after_2_no_staging_system_no_defer_w_filter(void) 
             .add = ecs_ids( ecs_dependson(EcsOnUpdate ))
         }),
         .callback = NoStagingSystemCreatePosition,
-        .no_readonly = true
+        .immediate = true
     });
 
     ecs_system(world, {
@@ -2026,7 +2026,7 @@ void Pipeline_inactive_system_after_2_no_staging_system_no_defer_w_filter(void) 
             .add = ecs_ids( ecs_dependson(EcsOnUpdate ))
         }),
         .callback = NoStagingSystemCreateVelocity,
-        .no_readonly = true
+        .immediate = true
     });
 
     ecs_system(world, {
@@ -2080,7 +2080,7 @@ void Pipeline_inactive_multithread_system_after_no_staging_system_no_defer_inter
             .add = ecs_ids( ecs_dependson(EcsOnUpdate ))
         }),
         .callback = NoStagingSystemCreatePosition,
-        .no_readonly = true
+        .immediate = true
     });
 
     ecs_system(world, {
@@ -2136,7 +2136,7 @@ void Pipeline_inactive_multithread_system_after_no_staging_system_no_defer_w_no_
             .add = ecs_ids( ecs_dependson(EcsOnUpdate ))
         }),
         .callback = NoStagingSystemCreatePosition,
-        .no_readonly = true
+        .immediate = true
     });
 
     ecs_system(world, {
@@ -2153,7 +2153,7 @@ void Pipeline_inactive_multithread_system_after_no_staging_system_no_defer_w_no_
             .add = ecs_ids( ecs_dependson(EcsOnUpdate ))
         }),
         .callback = ReadPosition,
-        .no_readonly = true
+        .immediate = true
     });
 
     if (task_threads)
@@ -2433,7 +2433,7 @@ void Pipeline_on_merge_activate_system_before_merge(void) {
     ecs_system(world, {
         .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnUpdate) )}),
         .query.terms = {{ TagA, .inout = EcsIn }},
-        .no_readonly = true,
+        .immediate = true,
         .callback = sys_no_readonly
     });
 
@@ -2572,7 +2572,7 @@ void Pipeline_multi_threaded_no_staging_w_add_after_read_internal(bool task_thre
     ecs_system(world, {
         .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnUpdate) )}),
         .callback = NoReadonlyAddPosition,
-        .no_readonly = true
+        .immediate = true
     });
 
     ecs_progress(world, 0);
@@ -2911,7 +2911,7 @@ void Pipeline_last_no_readonly_system_merge_count(void) {
             { TagD }
         },
         .callback = CreateEntity,
-        .no_readonly = true
+        .immediate = true
     });
 
     test_int(stats->merge_count_total, 0);
@@ -3030,7 +3030,7 @@ void Pipeline_switch_from_threads_to_tasks(void) {
     ecs_system(world, {
         .entity = ecs_entity(world, {.add = ecs_ids( ecs_dependson(EcsOnUpdate) )}),
         .callback = NoReadonlyAddPosition,
-        .no_readonly = true
+        .immediate = true
         });
 
     ecs_set_threads(world, 2);
@@ -3066,7 +3066,7 @@ void Pipeline_switch_from_tasks_to_threads(void) {
     ecs_system(world, {
         .entity = ecs_entity(world, {.add = ecs_ids( ecs_dependson(EcsOnUpdate) )}),
         .callback = NoReadonlyAddPosition,
-        .no_readonly = true
+        .immediate = true
         });
 
     ecs_set_threads(world, 2);

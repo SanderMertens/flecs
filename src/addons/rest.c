@@ -736,8 +736,8 @@ void flecs_pipeline_stats_to_json(
             ecs_strbuf_list_appendlit(reply, "\"multi_threaded\":");
             ecs_strbuf_appendbool(reply, sync_stats->multi_threaded);
 
-            ecs_strbuf_list_appendlit(reply, "\"no_readonly\":");
-            ecs_strbuf_appendbool(reply, sync_stats->no_readonly);
+            ecs_strbuf_list_appendlit(reply, "\"immediate\":");
+            ecs_strbuf_appendbool(reply, sync_stats->immediate);
 
             ECS_GAUGE_APPEND_T(reply, sync_stats, 
                 time_spent, stats->stats.t, "");
@@ -1388,7 +1388,7 @@ void FlecsRestImport(
 
     ecs_system(world, {
         .entity = ecs_id(DequeueRest),
-        .no_readonly = true
+        .immediate = true
     });
 
     ecs_observer(world, {

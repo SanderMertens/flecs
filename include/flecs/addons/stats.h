@@ -186,7 +186,7 @@ typedef struct ecs_sync_stats_t {
 
     int32_t system_count;
     bool multi_threaded;
-    bool no_readonly;
+    bool immediate;
 } ecs_sync_stats_t;
 
 /** Statistics for all systems in a pipeline. */
